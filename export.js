@@ -1793,6 +1793,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         //    item.product.price 는 m² 단가/기본가라 그대로 쓰면 견적서 금액이 결제 금액과 어긋남.
         if (item.cutPrint) {
             pdfPrice = (item.cutPrint.size === 'half') ? 100000 : 150000;
+            // 2026-05-22: 재단인쇄 양면 → 단가 2배 (cart wallSide / order wall_side)
+            if (item.wallSide === 'double' || item.wall_side === 'double') pdfPrice *= 2;
         } else if (item.boxSize && typeof item.boxSize.unit === 'number') {
             pdfPrice = item.boxSize.unit;
         } else if (item.customSize && typeof item.customSize.unit === 'number') {

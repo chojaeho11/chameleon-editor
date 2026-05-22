@@ -905,6 +905,14 @@
               <span style="font-size:13px; font-weight:800;">${fmtPrice(100000)}</span>
             </button>
           </div>
+          <!-- 2026-05-22: 재단인쇄 단면/양면 (양면 = 단가 ×2). _soPickSide 가 state.wallSide 설정 → 가격 2배 -->
+          <div style="margin-top:10px;">
+            <div style="font-size:12px; color:#451a03; font-weight:700; margin-bottom:6px;">${tr('인쇄면', '印刷面', 'Print side')}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit;">${tr('양면 (×2)', '両面 (×2)', 'Double (×2)')}</button>
+            </div>
+          </div>
         </div>
 
         <!-- 2026-05-13: 허니콤 박스 사이즈 입력 (가로×세로×높이 mm → 자동 단가 계산) -->
@@ -1719,6 +1727,8 @@
             unit = (state.cutSize === 'half') ? 100000 : 150000;
             qty = state.qty || 1;
             subtotal = unit * qty;
+            // 2026-05-22: 양면 인쇄 → 가격 2배
+            if (state.wallSide === 'double') subtotal *= 2;
             state.wallHeightExtra = 0;
         } else if (state.isBox) {
             // 허니콤 박스: 가로/세로/높이로 계산된 박스 단가 사용
@@ -1815,8 +1825,11 @@
             setText('soWallSizeText', qty + 'm × ' + (state.wallHeight || 2.4) + 'm · ' + sideTxt);
         } else if (state.isCutPrint) {
             var cutLabel = (state.cutSize === 'half') ? tr('반판 이내', 'ハーフ', 'Half') : tr('한판', 'フル', 'Full');
-            setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + cutLabel + ')');
-            setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
+            // 2026-05-22: 양면이면 단가 표시도 ×2
+            var _cpDbl = (state.wallSide === 'double');
+            var _cpDispUnit = _cpDbl ? unit * 2 : unit;
+            setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + cutLabel + (_cpDbl ? ' · ' + tr('양면 ×2', '両面 ×2', '2-side ×2') : '') + ')');
+            setText('soUnit', fmtPrice(_cpDispUnit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         } else if (state.isBox) {
             var dimStr = (state.boxW || 0) + '×' + (state.boxH || 0) + '×' + (state.boxD || 0) + 'mm';
@@ -3364,6 +3377,17 @@
         // 자유인쇄커팅 사이즈 섹션
         var cutSec = document.getElementById('soCutPrintSizeSection');
         if (cutSec) cutSec.style.display = state.isCutPrint ? '' : 'none';
+        // 2026-05-22: 재단인쇄 단면/양면 — 진입 시 단면으로 초기화 + 버튼 동기화 (가격 2배는 wallSide 로 처리)
+        if (state.isCutPrint) {
+            state.wallSide = 'single';
+            document.querySelectorAll('.so-side-btn').forEach(function (b) {
+                var on = b.dataset.side === 'single';
+                b.classList.toggle('active', on);
+                b.style.background = on ? '#4338ca' : '#fff';
+                b.style.color = on ? '#fff' : '#451a03';
+                b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+            });
+        }
         // 박스 사이즈 입력 섹션 + 초기 계산
         var boxSec = document.getElementById('soBoxSizeSection');
         if (boxSec) boxSec.style.display = state.isBox ? '' : 'none';
@@ -3770,8 +3794,8 @@
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
             // 2026-05-13: 가벽 사이즈 (가로/세로 m)
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
-            // 2026-05-13: 단면/양면 (가벽만)
-            wallSide: state.isWall ? (state.wallSide || 'single') : null,
+            // 2026-05-13: 단면/양면 (가벽) — 2026-05-22: 재단인쇄(자유인쇄커팅)도 포함 (양면 ×2)
+            wallSide: (state.isWall || state.isCutPrint) ? (state.wallSide || 'single') : null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             bundleShipping: !!state.bundleShipping,
@@ -5055,7 +5079,7 @@
                     lines.push('   📦 박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
                 }
                 if (it.cutPrint && it.cutPrint.size) {
-                    lines.push('   ✂️ 재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판'));
+                    lines.push('   ✂️ 재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판') + (it.wallSide === 'double' ? ' · 양면 (×2)' : ' · 단면'));
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
                     Object.values(it.selectedAddons).forEach(function (code) {
