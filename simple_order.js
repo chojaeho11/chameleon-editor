@@ -3550,8 +3550,8 @@
             // 등신대·자유인쇄커팅이면 60×40 컴팩트 택배도 추가
             if (state.isStandee || _soIsCutPrintProduct(p)) allowed.push('compact_parcel');
         } else if (state.isForexFoam) {
-            // 포맥스·폼보드 — 대형택배만
-            allowed = ['self_pickup', 'large_parcel'];
+            // 2026-05-22: 포맥스·폼보드 — 소형택배(5천) / 대형택배(3만) / 수도권 용차배송(10만)
+            allowed = ['self_pickup', 'small_parcel', 'large_parcel', 'metro_delivery'];
         } else if (state.isGeneralPrint) {
             // 일반 인쇄물 — 묶음 소형택배만
             allowed = ['self_pickup', 'small_parcel'];
@@ -3596,8 +3596,8 @@
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' +
                     tr('착불 (수령 시 결제)', '着払い (受取時)', 'Cash on delivery') + '</span>';
             }
-        } else if (state.isPaperDisplay) {
-            // 2026-05-15: 종이매대 — 수도권/지방 용차배송 라벨
+        } else if (state.isPaperDisplay || state.isForexFoam) {
+            // 2026-05-15: 종이매대 / 2026-05-22: 포맥스·폼보드 — 수도권 용차배송 라벨
             if (_rb_metroBtn) {
                 _rb_metroBtn.innerHTML = '🚚 ' + tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' + fmtPrice(100000) + '</span>';
