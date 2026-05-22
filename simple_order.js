@@ -2679,6 +2679,20 @@
 
     // 2026-05-13: 사용자 정의 사이즈 변경 → 면적 × 단가 (현수막·실사출력 등)
     // 공식: area_m² × per_m²_rate, 최소 product.price (1m² 미만은 평방미터당 단가 그대로 적용)
+    // 2026-05-22: 포맥스·폼보드 — 가로+세로(cm) 합으로 배송수단 자동 선택
+    //   <100 묶음 소형택배(5천) / 100~200 대형택배(3만) / >200 수도권 용차배송(10만)
+    //   지방 용차배송(20만)은 지역 선택이므로 자동으로 덮어쓰지 않음 (사용자가 직접 고른 경우 유지)
+    window._soFoamApplyAutoShip = function () {
+        if (!state.isForexFoam || !state.isCustomSize) return;
+        if (state.shipMethod === 'regional_delivery') return;
+        var sum = (parseInt(state.customW, 10) || 0) + (parseInt(state.customH, 10) || 0);
+        var m = (sum < 100) ? 'small_parcel' : (sum <= 200) ? 'large_parcel' : 'metro_delivery';
+        state.shipMethod = m;
+        document.querySelectorAll('.so-ship-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.ship === m);
+        });
+    };
+
     window._soOnCustomDimsChange = function () {
         var wEl = document.getElementById('soCustomW');
         var hEl = document.getElementById('soCustomH');
@@ -2709,6 +2723,10 @@
         if (isAcrGoods && calcPrice < 100) calcPrice = 100;
         state.customUnitPrice = calcPrice;
         state.customAreaM2 = areaM2;
+        // 2026-05-22: 포맥스·폼보드 — 사이즈(가로+세로)에 따라 배송수단 자동 변경
+        if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
+            window._soFoamApplyAutoShip();
+        }
         if (unitEl) unitEl.textContent = fmtPrice(calcPrice);
         if (infoEl) {
             if (isAcrGoods) {
@@ -3550,8 +3568,9 @@
             // 등신대·자유인쇄커팅이면 60×40 컴팩트 택배도 추가
             if (state.isStandee || _soIsCutPrintProduct(p)) allowed.push('compact_parcel');
         } else if (state.isForexFoam) {
-            // 2026-05-22: 포맥스·폼보드 — 소형택배(5천) / 대형택배(3만) / 수도권 용차배송(10만)
-            allowed = ['self_pickup', 'small_parcel', 'large_parcel', 'metro_delivery'];
+            // 2026-05-22: 포맥스·폼보드 — 본사방문 없음. 사이즈(가로+세로 cm)로 자동:
+            //   <100 소형택배(5천) / 100~200 대형택배(3만) / >200 수도권 용차(10만) + 지방 용차(20만, 수동)
+            allowed = ['small_parcel', 'large_parcel', 'metro_delivery', 'regional_delivery'];
         } else if (state.isGeneralPrint) {
             // 일반 인쇄물 — 묶음 소형택배만
             allowed = ['self_pickup', 'small_parcel'];
@@ -3580,6 +3599,10 @@
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
+        // 2026-05-22: 포맥스·폼보드 — 모달 열릴 때 사이즈 합으로 배송 자동 선택
+        if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
+            window._soFoamApplyAutoShip();
+        }
         // 2026-05-15: 원판 — 배송 버튼 라벨 커스텀 (수도권 무료 기준 + 지방 착불 안내)
         var _rb_metroBtn = document.querySelector('.so-ship-btn[data-ship="metro_delivery"]');
         var _rb_regBtn = document.querySelector('.so-ship-btn[data-ship="regional_delivery"]');
