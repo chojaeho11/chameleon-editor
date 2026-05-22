@@ -633,8 +633,8 @@ window._cdCalcHoebae = function() {
         const iW = document.getElementById('imgWcm'); if (iW && document.activeElement !== iW) iW.value = w;
         const iH = document.getElementById('imgHcm'); if (iH && document.activeElement !== iH) iH.value = h;
     }
-    // 이어박기 자동 결정
-    state.seamExtra = (w > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
+    // 이어박기 자동 결정 — 2026-05-22: 가로·세로 둘 다 130cm 초과일 때만 (한 변이 130 이하면 돌려서 출력 가능)
+    state.seamExtra = (w > ROLL_MAX_WIDTH_CM && h > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
     const seamEl = document.getElementById('seamNotice');
     if (seamEl) seamEl.style.display = state.seamExtra > 0 ? '' : 'none';
     const rawHoebae = calcHoebae();
@@ -1487,7 +1487,7 @@ function buildCartItem() {
         hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
         accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
         seamExtra: state.seamExtra || 0,
-        oversize: state.orderWcm > ROLL_MAX_WIDTH_CM,
+        oversize: (state.orderWcm > ROLL_MAX_WIDTH_CM && state.orderHcm > ROLL_MAX_WIDTH_CM),
         subtotal: subtotal,
         discountPct: disc.pct,
         discountAmt: discountAmt,
