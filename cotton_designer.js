@@ -477,6 +477,51 @@ const FABRIC_SWATCH = {
 };
 const COTTON_COLOR_BG = { white: '#ffffff', natural: '#e7d8b8', ivory: '#f5ecd3' };
 
+// 2026-05-22: 원단 실사진 (있으면 스왓치 대신 사진 표시). /fabric/ 폴더에 업로드하면 자동 노출.
+//   파일이 없거나 로드 실패하면 기존 색+아이콘 스왓치로 자동 폴백.
+const FABRIC_PHOTO = {
+    cotton20: '/fabric/cotton20.jpg',
+    cotton30: '/fabric/cotton30.jpg',
+    cotton16: '/fabric/cotton16.jpg',
+    cotton10: '/fabric/cotton10.jpg',
+    chiffon:  '/fabric/chiffon.jpg',
+    oxford:   '/fabric/oxford.jpg',
+    rayon:    '/fabric/rayon.jpg',
+    linen:    '/fabric/linen.jpg'
+};
+// 상세 카드 스왓치(색+아이콘) 렌더 — 사진이 없거나 로드 실패 시 폴백
+function _cdSwatchFallback() {
+    var img = document.getElementById('fabricImg');
+    if (!img) return;
+    var f = getFabric(); if (!f) return;
+    var sw = FABRIC_SWATCH[state.fabricType] || {};
+    var bg = f.isCotton ? (COTTON_COLOR_BG[state.fabricColor] || '#ffffff') : (sw.bg || '#f5f5f4');
+    img.style.background = bg;
+    img.style.border = '1px solid #d6d3d1';
+    img.style.display = 'flex';
+    img.style.alignItems = 'center';
+    img.style.justifyContent = 'center';
+    img.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.05)';
+    img.style.overflow = 'hidden';
+    img.innerHTML = '<i class="fa-solid ' + (sw.icon || 'fa-scroll') + '" style="font-size:28px; color:' + (sw.accent || '#78350f') + '; opacity:0.55;"></i>';
+}
+window._cdSwatchFallback = _cdSwatchFallback;
+// 원단 칩(둥근 버튼)에 실사진 썸네일 — 사진이 로드되면 아이콘 대신 표시, 실패하면 아이콘 유지
+function _cdApplyFabricChipPhotos() {
+    document.querySelectorAll('.fabric-type[data-fab]').forEach(function (chip) {
+        var photo = FABRIC_PHOTO[chip.dataset.fab];
+        if (!photo) return;
+        var iconWrap = chip.querySelector('.fabric-type-icon');
+        if (!iconWrap) return;
+        var im = new Image();
+        im.onload = function () {
+            iconWrap.innerHTML = '<img src="' + photo + '" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover; display:block;">';
+        };
+        im.src = photo;
+    });
+}
+window._cdApplyFabricChipPhotos = _cdApplyFabricChipPhotos;
+
 function updateFabricDetail() {
     const f = getFabric();
     if (!f) return;
@@ -486,17 +531,18 @@ function updateFabricDetail() {
     if (_colorWrap) _colorWrap.style.display = f.isCotton ? '' : 'none';
     const img = document.getElementById('fabricImg');
     if (img) {
-        var sw = FABRIC_SWATCH[state.fabricType] || {};
-        var bg;
-        if (f.isCotton) bg = COTTON_COLOR_BG[state.fabricColor] || '#ffffff';
-        else bg = sw.bg || '#f5f5f4';
-        img.style.background = bg;
-        img.style.border = '1px solid #d6d3d1';
-        img.style.display = 'flex';
-        img.style.alignItems = 'center';
-        img.style.justifyContent = 'center';
-        img.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.05)';
-        img.innerHTML = '<i class="fa-solid ' + (sw.icon || 'fa-scroll') + '" style="font-size:28px; color:' + (sw.accent || '#78350f') + '; opacity:0.55;"></i>';
+        // 2026-05-22: 실사진 우선 — 있으면 사진, 없거나 로드 실패하면 색+아이콘 스왓치
+        var photo = FABRIC_PHOTO[state.fabricType];
+        if (photo) {
+            img.style.background = '#f5f5f4';
+            img.style.border = '1px solid #d6d3d1';
+            img.style.display = 'block';
+            img.style.boxShadow = 'none';
+            img.style.overflow = 'hidden';
+            img.innerHTML = '<img src="' + photo + '" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="window._cdSwatchFallback && window._cdSwatchFallback()">';
+        } else {
+            _cdSwatchFallback();
+        }
     }
     // 2026-05-11: 현재 언어로 원단 이름/설명 표시 + 최대폭 라벨도 i18n
     var nm = pickFabricName(f);
@@ -2348,6 +2394,7 @@ loadDbFabrics().then(() => {
     updatePrice();
     renderFinishOptions(); // 마감/고리/부자재 가격 라벨 동적 갱신 (언어/통화)
     updateFabricDetail(); // 원단 상세 텍스트도 새로 적용
+    if (window._cdApplyFabricChipPhotos) _cdApplyFabricChipPhotos(); // 칩 썸네일 (사진 있으면)
     if (window._cdCalcHoebae) window._cdCalcHoebae();
 });
 // i18n 적용 후 한 번 더 (ui i18n 적용된 후 가격 라벨 다시)
