@@ -1124,6 +1124,16 @@ function calcCartTotal() {
     return subtotal + getShippingFeeKrw();
 }
 
+// 2026-05-22: 패브릭 체크아웃 전용 합계 — 패브릭 항목만 + 택배비.
+//   calcCartTotal 은 통합 카트(드로어)용이라 일반상품까지 합산 → 패브릭 체크아웃 요약엔
+//   패브릭 항목만 보이는데 합계엔 일반상품이 더해져 과다청구되던 버그(예: 16,900 항목인데 합계 122만).
+//   _cpOpenCheckout/_cpSubmitOrder/_cpCreateMgrQuote 는 패브릭만 처리하므로 이 합계를 사용.
+function calcFabricCartTotal() {
+    var fabricTotal = getCart().reduce(function (s, it) { return s + (it.price || 0); }, 0);
+    if (fabricTotal <= 0) return 0;
+    return fabricTotal + getShippingFeeKrw();
+}
+
 window._cpUpdateCartUI = function() {
     const cart = getCart();
     const gen = getGeneralItems();
@@ -1627,8 +1637,8 @@ function checkMinOrderAmount(_total_krw) {
 window._cpOpenCheckout = function() {
     const cart = getCart();
     if (cart.length === 0) return;
-    // 2026-05-12: 최소주문금액 검증 (장바구니 합계 기준)
-    if (!checkMinOrderAmount(calcCartTotal())) return;
+    // 2026-05-12: 최소주문금액 검증 (패브릭 합계 기준)
+    if (!checkMinOrderAmount(calcFabricCartTotal())) return;
     // 요약 렌더
     const list = document.getElementById('coItemList');
     // 2026-05-13: 체크아웃 요약 라벨 다국어 (마감/고리/부자재/출력) + 옵션명 코드 기반 i18n 폴백
@@ -1659,7 +1669,7 @@ window._cpOpenCheckout = function() {
         const opts = parts.filter(Boolean).join(' · ');
         return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
     }).join('');
-    document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcCartTotal());
+    document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcFabricCartTotal());
     document.getElementById('checkoutOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
     // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출 (패브릭)
@@ -1737,7 +1747,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
                 uploadedFiles.push({ name: it.imgFileName || ('fabric' + (i + 1)), url: u, type: mime });
             }
         }
-        var total = calcCartTotal();
+        var total = calcFabricCartTotal();
         var items = cart.map(function (it, idx) {
             // 2026-05-15: cartImageUrl → uploadedFiles → designerOriginalUrl 우선순위
             var artworkUrl = null, artworkName = null;
@@ -2000,7 +2010,7 @@ window._cpSubmitOrder = async function() {
             }
         }
 
-        const total = calcCartTotal();
+        const total = calcFabricCartTotal();
         // orders.items: 통합주문관리에서 인식할 수 있는 형식으로
         const items = cart.map(function(it, idx){
             // 2026-05-11: 한 아이템에 매핑된 작가 원본 이미지.
