@@ -986,6 +986,12 @@
             <button type="button" class="so-base-btn" data-base="banner_large" onclick="window._soPickBaseStand('banner_large')"
               style="padding:10px 8px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit; line-height:1.4; grid-column:span 2;">${tr('배너형 (가로 ≥70cm)', 'バナー型 ≥70cm', 'Banner ≥70cm')}<br><span style="font-size:11px; font-weight:600; color:#6b7280;">+${fmtPrice(50000)}</span></button>
           </div>
+          <!-- 2026-05-22: 받침대 수량 — 한 대지에 여러 개 들어가는 경우 (받침대 선택 시 표시) -->
+          <div id="soBaseStandQtyRow" style="display:none; align-items:center; gap:8px; margin-top:8px;">
+            <span style="font-size:12px; color:#451a03; font-weight:700;">${tr('받침대 수량', 'スタンド数量', 'Stand qty')}</span>
+            <input type="number" id="soBaseStandQty" min="1" value="1" oninput="window._soSetBaseStandQty(this)" style="width:64px; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;">
+            <span style="font-size:11px; color:#9ca3af;">${tr('개', '個', 'pcs')}</span>
+          </div>
         </div>
 
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
@@ -1770,15 +1776,16 @@
             });
         } catch (e) {}
 
-        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
+        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅) — 2026-05-22: 수량 반영
         var baseStandFee = 0;
         if (state.baseStand && state.baseStand !== 'none' && BASE_STAND_OPTS[state.baseStand]) {
             var bOpt = BASE_STAND_OPTS[state.baseStand];
-            baseStandFee = bOpt.fee || 0;
+            var bQty = state.baseStandQty || 1;
+            baseStandFee = (bOpt.fee || 0) * bQty;
             if (baseStandFee > 0) {
                 addonTotal += baseStandFee;
                 addonBreakdownLines.push(
-                    '<div class="so-price-row"><span>🦵 ' + bOpt.label_ko + '</span><span>+' + fmtPrice(baseStandFee) + '</span></div>'
+                    '<div class="so-price-row"><span>🦵 ' + bOpt.label_ko + (bQty > 1 ? ' × ' + bQty : '') + '</span><span>+' + fmtPrice(baseStandFee) + '</span></div>'
                 );
             }
         }
@@ -2641,7 +2648,9 @@
                   '<div style="font-weight:700; color:#451a03;">' + safe + '</div>' +
                   (descSafe ? '<div style="font-size:11px; color:#6b7280; margin-top:2px;">' + descSafe + '</div>' : '') +
                 '</div>' +
-                '<span style="font-weight:800; color:#dc2626; font-size:13px;">+' + fmtPrice(price) + '</span>' +
+                // 2026-05-22: 옵션 수량 직접 입력 (한 대지에 여러 개 들어가는 경우). 수량 입력 시 자동 체크.
+                '<input type="number" min="1" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '" onclick="event.stopPropagation();" oninput="window._soSetAddonQty(this)" title="수량" style="width:50px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700; flex-shrink:0;">' +
+                '<span style="font-weight:800; color:#dc2626; font-size:13px; flex-shrink:0;">+' + fmtPrice(price) + '</span>' +
                 '</label>';
         }).join('');
         list.innerHTML = html;
@@ -2781,6 +2790,24 @@
             b.style.color = on ? '#fff' : '#451a03';
             b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
         });
+        // 2026-05-22: 받침대 수량 입력칸 — 받침대 선택 시만 표시
+        var qRow = document.getElementById('soBaseStandQtyRow');
+        if (qRow) qRow.style.display = (key !== 'none') ? 'flex' : 'none';
+        if (key === 'none') {
+            state.baseStandQty = 1;
+            var qEl0 = document.getElementById('soBaseStandQty'); if (qEl0) qEl0.value = 1;
+        } else if (!state.baseStandQty || state.baseStandQty < 1) {
+            state.baseStandQty = 1;
+            var qEl1 = document.getElementById('soBaseStandQty'); if (qEl1) qEl1.value = 1;
+        }
+        recalc();
+    };
+
+    // 2026-05-22: 받침대 수량 직접 입력
+    window._soSetBaseStandQty = function (inp) {
+        var q = Math.max(1, parseInt(inp.value, 10) || 1);
+        inp.value = q;
+        state.baseStandQty = q;
         recalc();
     };
 
@@ -2998,20 +3025,40 @@
         var isLight = inp.dataset.addonLight === '1';
         if (!state.selectedAddons) state.selectedAddons = {};
         if (!state.addonQuantities) state.addonQuantities = {};
+        var _lbl = inp.closest('label');
+        var _qInp = _lbl ? _lbl.querySelector('input[data-addon-qty-code]') : null;
         if (inp.checked) {
             state.selectedAddons[code] = code;
-            // 조명이면 가로(m), 아크릴 굿즈·등신대면 제품 수량과 동일, 그 외는 1개
+            // 조명이면 가로(m), 아크릴 굿즈·등신대면 제품 수량과 동일, 그 외는 수량 입력값(기본 1)
             if (isLight) {
                 state.addonQuantities[code] = state.wallWidth || 1;
             } else if (state.isAcrylicGoods || state.isStandee) {
                 state.addonQuantities[code] = state.qty || 1;
             } else {
-                state.addonQuantities[code] = 1;
+                state.addonQuantities[code] = (_qInp && parseInt(_qInp.value, 10) > 0) ? parseInt(_qInp.value, 10) : 1;
             }
+            if (_qInp) _qInp.value = state.addonQuantities[code];
         } else {
             delete state.selectedAddons[code];
             delete state.addonQuantities[code];
+            if (_qInp) _qInp.value = 1;
         }
+        recalc();
+    };
+
+    // 2026-05-22: 옵션 수량 직접 입력 — 한 대지에 여러 개 들어가는 경우 (자유인쇄커팅 등)
+    window._soSetAddonQty = function (inp) {
+        var code = inp.dataset.addonQtyCode;
+        var q = Math.max(1, parseInt(inp.value, 10) || 1);
+        inp.value = q;
+        if (!state.selectedAddons) state.selectedAddons = {};
+        if (!state.addonQuantities) state.addonQuantities = {};
+        // 수량을 입력하면 해당 옵션 자동 체크
+        var lbl = inp.closest('label');
+        var cb = lbl ? lbl.querySelector('input[type=checkbox][data-addon-code]') : null;
+        if (cb && !cb.checked) cb.checked = true;
+        state.selectedAddons[code] = code;
+        state.addonQuantities[code] = q;
         recalc();
     };
 
@@ -3023,6 +3070,9 @@
         var newQty = state.qty || 1;
         Object.keys(state.selectedAddons).forEach(function (code) {
             state.addonQuantities[code] = newQty;
+            // 2026-05-22: 옵션 수량 입력칸도 동기화
+            var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g, '\\"') + '"]');
+            if (qi) qi.value = newQty;
         });
     }
 
@@ -3429,6 +3479,7 @@
         // 2026-05-13: 받침대 옵션이 필요한 상품 (등신대 + 자유인쇄커팅)
         state.needsBaseStand = _soNeedsBaseStand(p);
         state.baseStand = 'none';
+        state.baseStandQty = 1; // 2026-05-22: 받침대 수량 초기화
         var baseSec = document.getElementById('soBaseStandSection');
         if (baseSec) baseSec.style.display = state.needsBaseStand ? '' : 'none';
         // 받침대 버튼 초기화
@@ -3439,6 +3490,9 @@
             b.style.color = on ? '#fff' : '#451a03';
             b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
         });
+        // 받침대 수량 입력칸 초기화 (받침대 없음 → 숨김)
+        var _bsQRow = document.getElementById('soBaseStandQtyRow'); if (_bsQRow) _bsQRow.style.display = 'none';
+        var _bsQEl = document.getElementById('soBaseStandQty'); if (_bsQEl) _bsQEl.value = 1;
         state.isStandee = _soIsStandeeProduct(p);
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
@@ -3809,6 +3863,7 @@
             baseStand: (state.baseStand && state.baseStand !== 'none') ? {
                 key: state.baseStand,
                 fee: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].fee) || 0,
+                qty: state.baseStandQty || 1,
                 label: (BASE_STAND_OPTS[state.baseStand] && BASE_STAND_OPTS[state.baseStand].label_ko) || ''
             } : null,
             // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
@@ -4359,9 +4414,9 @@
                 base += (addon.price || 0) * aQty;
             });
         }
-        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
+        // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅) — 2026-05-22: 수량 반영
         if (it.baseStand && typeof it.baseStand.fee === 'number') {
-            base += it.baseStand.fee;
+            base += it.baseStand.fee * (it.baseStand.qty || 1);
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
@@ -5131,7 +5186,8 @@
                     });
                 }
                 if (it.baseStand && it.baseStand.label) {
-                    lines.push('   🦵 받침대: ' + it.baseStand.label + (it.baseStand.fee > 0 ? ' (+' + it.baseStand.fee.toLocaleString() + '원)' : ''));
+                    var _bsQ = it.baseStand.qty || 1;
+                    lines.push('   🦵 받침대: ' + it.baseStand.label + (_bsQ > 1 ? ' × ' + _bsQ : '') + (it.baseStand.fee > 0 ? ' (+' + ((it.baseStand.fee * _bsQ).toLocaleString()) + '원)' : ''));
                 }
                 if (it.itemNote) lines.push('   💬 전달사항: ' + it.itemNote);
                 if (it.shipping) {
