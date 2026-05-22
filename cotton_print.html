@@ -463,12 +463,12 @@ window._cottonSearch = function(){
 </script>
 
 <!-- 히어로 (cotton 영상 백그라운드) -->
-<section class="hero" style="position:relative; background:#0c0a09; padding:0; overflow:hidden; height:560px;">
+<section class="hero" style="position:relative; background:#0c0a09; padding:0; overflow:hidden; min-height:560px; display:flex; flex-direction:column; justify-content:center;">
     <video autoplay muted loop playsinline style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.55;">
         <source src="/cotton.mp4" type="video/mp4">
     </video>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.3) 0%, rgba(12,10,9,0.55) 100%);"></div>
-    <div class="hero-content" style="position:relative; z-index:2; padding:80px 24px 60px; max-width:960px; margin:0 auto; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <div class="hero-content" style="position:relative; z-index:2; padding:60px 24px 50px; max-width:960px; margin:0 auto; width:100%; box-sizing:border-box; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <h1 class="cotton-title" style="font-family:'Anton','Black Han Sans','Noto Sans KR',sans-serif; font-size:96px; font-weight:900; line-height:1; margin:0 0 22px; letter-spacing:4px; filter:drop-shadow(0 6px 18px rgba(0,0,0,0.5));">
             <span style="color:#fff; text-shadow:0 4px 24px rgba(0,0,0,0.4);">COTTON</span>
             <span style="background:linear-gradient(135deg,#fef3c7 0%,#fde047 30%,#facc15 60%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; padding-left:14px;">PRINT</span>
@@ -480,20 +480,28 @@ window._cottonSearch = function(){
         <button onclick="openRollFabricRequest()" class="hero-badge" style="cursor:pointer; border:1.5px solid rgba(255,255,255,0.55); background:rgba(0,0,0,0.25); color:#fff; font-family:inherit; font-weight:800; padding:9px 22px; border-radius:50px; font-size:14px; backdrop-filter:blur(8px); margin:4px 0 30px;">
             <i class="fa-solid fa-scroll" style="color:#fde047;"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
         </button>
-        <!-- 2026-05-22: CTA — 무료 샘플 받기 + LINE 문의 -->
+        <!-- 2026-05-22: CTA — 무료 샘플 신청 버튼 -->
         <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-            <button onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 30px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
+            <button onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
                 <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 패브릭 샘플 요청</span>
             </button>
-            <button onclick="openLineContact()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 30px; border-radius:50px; border:none; background:#06C755; color:#fff; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(6,199,85,0.4);">
-                <i class="fa-brands fa-line"></i> <span data-i18n="cp_hero_line">LINEで問い合わせ</span>
-            </button>
         </div>
+        <!-- 2026-05-22: LINE 문의 — 메인 사이트와 동일한 깔끔한 인라인 QR 카드 (JP 전용) -->
+        <div id="cpLineCard" style="display:none; max-width:430px; margin:18px auto 0;">
+            <div style="background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:11px 16px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
+                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:64px; height:64px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
+                <div style="text-align:left; min-width:0;">
+                    <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                    <div style="font-size:11px; color:#555; line-height:1.5;">ご注文・お見積もりはLINEが便利。<br>QRから友だち追加してください。</div>
+                </div>
+            </div>
+        </div>
+        <script>(function(){ if((window.__PS_LANG||'')==='ja'){ var el=document.getElementById('cpLineCard'); if(el) el.style.display=''; } })();</script>
     </div>
 </section>
 <style>
 @media (max-width:768px) {
-    .hero { height:480px !important; }
+    .hero { min-height:480px !important; }
     .hero-content { padding:50px 16px 36px !important; }
     .hero .cotton-title { font-size:48px !important; letter-spacing:2px !important; margin-bottom:14px !important; }
     .hero p { font-size:14px !important; padding:6px 14px !important; }
