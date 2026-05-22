@@ -1844,6 +1844,18 @@ window._cpDownloadQuote = async function (btnEl) {
         if (!window.SITE_CONFIG) window.SITE_CONFIG = {};
         if (!window.SITE_CONFIG.CURRENCY_RATE) window.SITE_CONFIG.CURRENCY_RATE = { KR: 1, JP: 0.1, US: 0.001 };
 
+        // 이 페이지엔 window.loadEditorLibraries 가 없어 export.js 내부 jsPDF 로더가 동작 안 함 →
+        // generateQuotationPDF 가 undefined 반환. jsPDF UMD 를 직접 보장 로드.
+        if (!window.jspdf) {
+            await new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                s.onload = resolve;
+                s.onerror = function () { reject(new Error('jsPDF 라이브러리 로드 실패')); };
+                document.head.appendChild(s);
+            });
+        }
+
         var mod = await import('./export.js?v=434');
         if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
