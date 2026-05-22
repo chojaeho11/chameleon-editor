@@ -1926,7 +1926,9 @@
 
         var widths, heights;
         if (variant === 'reinforced') {
-            widths = [{ v: '1', label: '1 m', selected: true }];
+            // 2026-05-22: 강화 골판지 가벽 — 가로 1~10m 선택 가능 (세로 2.2m 고정)
+            widths = [];
+            for (var rw = 1; rw <= 10; rw++) widths.push({ v: String(rw), label: rw + ' m', selected: rw === 1 });
             heights = [{ v: '2.2', label: '2.2 m', selected: true }];
         } else if (variant === 'partition') {
             widths = [];
@@ -1949,8 +1951,8 @@
         };
         wEl.innerHTML = mkOpts(widths);
         hEl.innerHTML = mkOpts(heights);
-        // 옵션이 1개뿐이면 비활성화 (강화 골판지: 가로/세로 모두)
-        wEl.disabled = (variant === 'reinforced');
+        // 2026-05-22: 가로는 항상 선택 가능. 강화 골판지는 세로(2.2m)만 고정.
+        wEl.disabled = false;
         hEl.disabled = (variant === 'reinforced');
 
         // 가이드 카드 chip / 본문 범위 텍스트도 동시 업데이트
@@ -1959,11 +1961,11 @@
         var lang = getLang();
         var fmtLine = function(kr, ja, en) { return lang === 'ja' ? ja : (/^(en|us)$/i.test(lang) || lang === 'en' ? en : (/(es|de|fr|zh|ar)/i.test(lang) ? en : kr)); };
         if (variant === 'reinforced') {
-            if (chip) chip.innerHTML = '📏 ' + fmtLine('1m × 2.2m 고정', '1m × 2.2m 固定', 'Fixed 1m × 2.2m');
+            if (chip) chip.innerHTML = '📏 ' + fmtLine('가로 1~10m · 세로 2.2m', '横 1~10m · 縦 2.2m', 'Width 1-10m · Height 2.2m');
             if (range) range.textContent = fmtLine(
-                '강화 골판지 가벽은 1m × 2.2m 사이즈로 고정 제작되며, 기본 양면 인쇄입니다.',
-                '強化段ボール壁は1m×2.2mサイズ固定で、両面印刷が標準です。',
-                'Reinforced corrugated walls ship fixed at 1m × 2.2m with double-sided print by default.'
+                '강화 골판지 가벽은 세로 2.2m 고정이며, 가로는 1m~10m 중 선택 가능합니다. 기본 양면 인쇄입니다.',
+                '強化段ボール壁は縦2.2m固定で、横は1m〜10mから選択可能です。両面印刷が標準です。',
+                'Reinforced corrugated walls are fixed at 2.2m height; width is selectable 1m-10m. Double-sided by default.'
             );
         } else if (variant === 'partition') {
             if (chip) chip.innerHTML = '📏 ' + fmtLine('세로 1.2 · 1.0 · 0.8m', '縦 1.2/1.0/0.8m', 'Height 1.2/1.0/0.8m');
