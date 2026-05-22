@@ -3562,8 +3562,8 @@
         var defaultShip = 'self_pickup';
         if (state.isPaperDisplay) {
             defaultShip = ((parseInt(state.qty, 10) || 1) >= 100) ? 'pd_bulk_free' : 'pd_parcel_2';
-        } else if (state.isDeliveryOnly && allowed.indexOf('metro_delivery') >= 0) {
-            // 2026-05-22: 허니콤보드 — 기본 배송 = 수도권 배송 (10만원)
+        } else if ((state.isDeliveryOnly || state.isRawBoard) && allowed.indexOf('metro_delivery') >= 0) {
+            // 2026-05-22: 허니콤보드(배송형·원판) — 기본 배송 = 수도권 배송 (10만원)
             defaultShip = 'metro_delivery';
         } else {
             for (var pi = 0; pi < parcelKeys.length; pi++) {
