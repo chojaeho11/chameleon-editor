@@ -1491,9 +1491,11 @@ async function _cdPersistItemImage(item) {
         item.imgDataUrl = '';
         return item;
     }
+    if (item.cartImageUrl) return item; // 이미 업로드됨
     if (!item.imgDataUrl || typeof item.imgDataUrl !== 'string') return item;
-    // 200KB 이하면 localStorage 에 그대로 둠 (네트워크 라운드트립 회피)
-    if (item.imgDataUrl.length < 200 * 1024) return item;
+    // 2026-05-22: 크기 무관 항상 Storage 업로드.
+    //   이전엔 200KB 미만은 localStorage 에 base64 로만 뒀는데, 카트 용량이 차면
+    //   cart_sync 가 imgDataUrl 을 떼어내 주문에 디자인 이미지가 누락되던 버그.
     var sb = (window.sb && typeof window.sb.from === 'function') ? window.sb : null;
     if (!sb && window.supabase && window.supabase.createClient) {
         try {
@@ -1937,6 +1939,30 @@ window._cpSubmitOrder = async function() {
                 }
             };
         });
+
+        // 2026-05-22: 안전망 — 디자인 이미지가 없는 패브릭 항목이 있으면 주문 차단.
+        //   (이미지 업로드 실패/누락 상태로 결제되어 작업지시서에 디자인이 비던 문제 방지)
+        const _missingArt = items.filter(function(it){ return !it.artwork_url; });
+        if (_missingArt.length > 0) {
+            // 한 번 더 base64 재업로드 시도 후에도 비어있으면 차단
+            var _stillMissing = [];
+            for (var _mi = 0; _mi < cart.length; _mi++) {
+                if (items[_mi] && !items[_mi].artwork_url) {
+                    var _it2 = cart[_mi];
+                    try { await _cdPersistItemImage(_it2); } catch(e){}
+                    if (_it2.cartImageUrl) items[_mi].artwork_url = _it2.cartImageUrl;
+                    else _stillMissing.push(_mi + 1);
+                }
+            }
+            if (_stillMissing.length > 0) {
+                var _L = (window.__CD_LANG || 'ko');
+                var _msg = _L === 'ja' ? ('デザイン画像が確認できない項目があります（' + _stillMissing.join(', ') + '番目）。\nお手数ですが画像を再アップロードしてから注文してください。')
+                         : _L === 'en' ? ('Some items are missing their design image (#' + _stillMissing.join(', ') + ').\nPlease re-upload the image before ordering.')
+                         : ('디자인 이미지가 누락된 항목이 있습니다 (' + _stillMissing.join(', ') + '번째).\n이미지를 다시 올린 후 주문해주세요.');
+                alert(_msg);
+                return; // finally 블록이 버튼 상태 복구
+            }
+        }
 
         const fullAddr = '[' + zip + '] ' + addr1 + ' ' + addr2;
         const adminNote = '[COTTON-PRINT] 출처: cotton-print.com\n결제방법: ' + (payMethod==='bank'?'무통장입금':'카드결제(Toss)') + '\n이메일: ' + (email||'없음');
