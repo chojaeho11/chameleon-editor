@@ -1330,6 +1330,16 @@ window._cpCartOpen = function() {
             if (!topCats || !topCats.length) return;
             var lang = window.__CD_LANG || 'ko';
             track.innerHTML = '';
+            // 2026-05-22: 모바일 — 가로 스크롤 제스처가 카테고리 버튼 클릭(→/paper-stand 등)을
+            //   발동시켜 엉뚱한 페이지로 가던 문제 방지. 스크롤 중이면 다음 클릭 1회 무시.
+            var _tcmScrolled = false;
+            track.addEventListener('touchstart', function(){ _tcmScrolled = false; }, { passive: true });
+            track.addEventListener('touchmove', function(){ _tcmScrolled = true; }, { passive: true });
+            window.__tcmScrolled = function(){ return _tcmScrolled; };
+            // 메뉴가 그려진 직후 600ms 동안은 클릭 무시 — 이전 페이지(내원단 만들기) 탭의
+            // '고스트 클릭'이 새 페이지의 같은 좌표(종이매대 버튼)에 발동하는 것을 방지.
+            var _tcmReadyAt = Date.now() + 600;
+            window.__tcmReady = function(){ return Date.now() >= _tcmReadyAt; };
             topCats.forEach(function (top) {
                 // 메인 페이지 nav 와 동일: user_artwork, default 는 제외
                 if (top.code === 'user_artwork' || top.code === 'default') return;
@@ -1342,6 +1352,9 @@ window._cpCartOpen = function() {
                 btn.textContent = name || '';
                 btn.dataset.topCode = top.code;
                 btn.onclick = function () {
+                    // 가로 스크롤 제스처 또는 로드 직후 고스트 클릭이면 무시 (모바일 오작동 방지)
+                    if (window.__tcmScrolled && window.__tcmScrolled()) return;
+                    if (window.__tcmReady && !window.__tcmReady()) return;
                     // 패브릭 (현재 페이지)
                     if (top.code === '22222') {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
