@@ -88,7 +88,7 @@ window.addEventListener('DOMContentLoaded', function(){
     var mall = document.getElementById('brandMallLink');
     if (mall) {
         var mallHost = (cur === 'ja') ? 'https://www.cafe0101.com/'
-                     : (cur === 'en') ? 'https://www.cafe3355.com/'
+                     : (cur === 'en') ? 'https://chameleon.design/'
                      : 'https://www.cafe2626.com/';
         mall.setAttribute('href', mallHost);
     }
@@ -838,7 +838,7 @@ a { text-decoration: none; color: inherit; }
                 if (b) {
                     // 종합인쇄몰도 같은 언어로
                     var mallHost = l === 'ja' || l === 'jp' ? 'www.cafe0101.com' :
-                                   l === 'en' || l === 'us' ? 'www.cafe3355.com' :
+                                   l === 'en' || l === 'us' ? 'chameleon.design' :
                                    'www.cafe2626.com';
                     b.href = 'https://' + mallHost + '/';
                 }

@@ -439,7 +439,9 @@ export default {
             const langParam = _isCottonPrinter ? 'ja' : (url.searchParams.get('lang') || '').toLowerCase();
             let cafeHost = 'www.cafe2626.com';
             if (langParam === 'ja' || langParam === 'jp') cafeHost = 'www.cafe0101.com';
-            else if (langParam === 'en' || langParam === 'us') cafeHost = 'www.cafe3355.com';
+            // 2026-05-22: US 패브릭 디자이너는 chameleon.design 으로 (cafe3355.com 은 종이매대 전용 도메인으로 변경됨).
+            //   이전엔 en → cafe3355.com/fabric 으로 보내 종이매대 페이지가 떠버리는 버그.
+            else if (langParam === 'en' || langParam === 'us') cafeHost = 'chameleon.design';
 
             // 자산 (JS/CSS/이미지 등) 은 그대로 ASSETS 에서 — Cloudflare Pages 동일 프로젝트
             const isAsset = path.includes('.') && (
