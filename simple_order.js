@@ -1189,6 +1189,22 @@
         </div>
       </div>
 
+      <!-- 2026-05-22: 마일리지/예치금 사용 (KR + 로그인 사용자만 — _soInitWallet 에서 노출) -->
+      <div class="so-co-section" id="soCoWalletBox" style="display:none;">
+        <span class="so-co-label">💰 ${tr('마일리지 / 예치금','マイル / 預り金','Mileage / Deposit')}</span>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+          <span style="font-size:12px; color:#6b7280;">${tr('보유 마일리지','保有マイル','Mileage')}: <b id="soOwnMileage" style="color:#b45309;">0 P</b></span>
+          <input id="soUseMileage" type="number" min="0" step="100" placeholder="0" oninput="window._soOnWalletChange()" style="width:110px; padding:8px 10px; border:1.5px solid #e7d6b8; border-radius:8px; font-size:13px;">
+          <span style="font-size:11px; color:#9ca3af;">${tr('최대','最大','Max')} <b id="soMileageMax">0</b> P</span>
+          <button type="button" onclick="window._soFillMaxMileage()" style="padding:6px 10px; background:#fef3c7; color:#92400e; border:1px solid #fbbf24; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">${tr('최대 사용','全額','Max')}</button>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+          <input type="checkbox" id="soUseDepositAll" onchange="window._soOnWalletChange()">
+          <span>${tr('예치금 전액 사용','預り金を全額使用','Use full deposit')} <b id="soOwnDeposit" style="color:#0e7490;">0원</b></span>
+        </label>
+        <div id="soWalletExcludedMsg" style="display:none; font-size:11px; color:#ef4444; margin-top:6px;">${tr('* 마일리지 사용 불가 상품이 포함되어 있습니다.','* マイル利用不可の商品が含まれています。','* Cart contains items where mileage cannot be used.')}</div>
+      </div>
+
       <!-- 2026-05-18: 무통장 입금 — 입금자 이름 (주문자와 다를 수 있어 별도 입력) -->
       <div class="so-co-section" id="soCoDepositorBox" style="display:none;">
         <span class="so-co-label">🧾 ${tr('입금자 이름', '振込名義', 'Depositor name')}</span>
@@ -1237,6 +1253,7 @@
     <aside class="so-co-summary">
       <h4 style="margin:0 0 12px; font-size:14px; font-weight:800; color:#451a03;">${tr('주문 요약', '注文要約', 'Order summary')}</h4>
       <div id="soCoItemList" style="flex:1; margin-bottom:12px;"></div>
+      <div id="soCoWalletBreakdown" style="font-size:12px; line-height:1.7; margin-bottom:4px;"></div>
       <div class="so-co-total">
         <span style="font-size:13px; color:#6b7280; font-weight:700;">${tr('합계', '合計', 'Total')}</span>
         <span class="so-co-total-amt" id="soCoTotalAmt">0원</span>
@@ -4395,6 +4412,94 @@
             var cr = card.querySelector('input'); if (cr) cr.checked = true;
         }
     }
+    // 2026-05-22: 마일리지/예치금 — KR + 로그인 사용자만. 메인 장바구니(order.js)와 동일 정책.
+    //   마일리지 한도 = min(보유, 할인적용금액(taxBase)의 5%), 제외 카테고리 포함 시 마일리지 불가.
+    //   잔액(profiles.mileage/deposit)·원장(wallet_logs)은 order.js 와 동일 스키마 사용.
+    window._soWallet = { ready: false };
+    window._soInitWallet = async function () {
+        var box = document.getElementById('soCoWalletBox');
+        window._soWallet = { ready: false };
+        if (box) box.style.display = 'none';
+        var bd = document.getElementById('soCoWalletBreakdown'); if (bd) bd.innerHTML = '';
+        var inp = document.getElementById('soUseMileage'); if (inp) inp.value = '';
+        var chk = document.getElementById('soUseDepositAll'); if (chk) chk.checked = false;
+        if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
+        var sb = getSb(); if (!sb) return;
+        var uid = null;
+        try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
+        if (!uid) return; // 비로그인 → 숨김
+        var prof = null;
+        try { var r = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
+        if (!prof) return;
+        var mileageBal = parseInt(prof.mileage || 0) || 0;
+        var depositBal = parseInt(prof.deposit || 0) || 0;
+        if (mileageBal <= 0 && depositBal <= 0) return; // 둘 다 없으면 숨김
+        var cart = _soReadAllCart();
+        var excludedSet = window.excludedCategoryCodes || new Set();
+        var excluded = false;
+        cart.forEach(function (it) { if (it.product && excludedSet.has(it.product.category)) excluded = true; });
+        var calc = _soCalcCartTotal(cart);
+        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.05));
+        window._soWallet = { ready: true, userId: uid, mileageBalKRW: mileageBal, depositBalKRW: depositBal, capKRW: capKRW, excluded: excluded };
+        var elOwnM = document.getElementById('soOwnMileage'); if (elOwnM) elOwnM.textContent = mileageBal.toLocaleString() + ' P';
+        var elMax = document.getElementById('soMileageMax'); if (elMax) elMax.textContent = capKRW.toLocaleString();
+        var elOwnD = document.getElementById('soOwnDeposit'); if (elOwnD) elOwnD.textContent = depositBal.toLocaleString() + '원';
+        var mInp = document.getElementById('soUseMileage');
+        if (mInp) { mInp.max = capKRW; mInp.disabled = (capKRW <= 0); }
+        var exMsg = document.getElementById('soWalletExcludedMsg'); if (exMsg) exMsg.style.display = excluded ? '' : 'none';
+        var dChk = document.getElementById('soUseDepositAll'); if (dChk) dChk.disabled = (depositBal <= 0);
+        if (box) box.style.display = '';
+        _soApplyWalletToTotal();
+    };
+    // 사용액(KRW) 산출 — 클램프 적용. grand = 현재 결제 총액(할인 반영).
+    function _soGetWalletUseKRW(grand) {
+        var st = window._soWallet || {};
+        if (!st.ready) return { useMileage: 0, useDeposit: 0 };
+        var useMileage = 0;
+        if (!st.excluded) {
+            var inp = document.getElementById('soUseMileage');
+            var v = inp ? (parseInt(inp.value, 10) || 0) : 0;
+            useMileage = Math.max(0, Math.min(v, st.capKRW || 0, st.mileageBalKRW || 0));
+        }
+        var useDeposit = 0;
+        var chk = document.getElementById('soUseDepositAll');
+        if (chk && chk.checked) {
+            useDeposit = Math.min(st.depositBalKRW || 0, Math.max(0, grand - useMileage));
+        }
+        return { useMileage: useMileage, useDeposit: useDeposit };
+    }
+    function _soApplyWalletToTotal() {
+        var grand = window._soCheckoutGrandTotal || 0;
+        var w = _soGetWalletUseKRW(grand);
+        var finalAmt = Math.max(0, grand - w.useMileage - w.useDeposit);
+        var totalEl = document.getElementById('soCoTotalAmt');
+        if (totalEl) totalEl.textContent = _soFormatPrice(finalAmt);
+        var bd = document.getElementById('soCoWalletBreakdown');
+        if (bd) {
+            var html = '';
+            if (w.useMileage > 0) html += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('마일리지 사용','マイル使用','Mileage') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
+            if (w.useDeposit > 0) html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
+            bd.innerHTML = html;
+        }
+    }
+    window._soOnWalletChange = function () {
+        var st = window._soWallet || {};
+        var inp = document.getElementById('soUseMileage');
+        if (inp && st.ready) {
+            var v = parseInt(inp.value, 10) || 0;
+            var maxv = Math.min(st.capKRW || 0, st.mileageBalKRW || 0);
+            if (v > maxv) inp.value = maxv;
+            else if (v < 0) inp.value = 0;
+        }
+        _soApplyWalletToTotal();
+    };
+    window._soFillMaxMileage = function () {
+        var st = window._soWallet || {};
+        var inp = document.getElementById('soUseMileage');
+        if (inp && st.ready) inp.value = Math.min(st.capKRW || 0, st.mileageBalKRW || 0);
+        window._soOnWalletChange();
+    };
+
     window._soOpenCheckout = function () {
         var cart = _soReadAllCart();
         if (cart.length === 0) {
@@ -4405,6 +4510,7 @@
         document.getElementById('soCheckoutOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
         _soApplyFranchisePay();
+        if (typeof window._soInitWallet === 'function') window._soInitWallet();
         // 2026-05-14: 결제수단 초기상태 동기화 (해외 사이트는 증빙 박스 숨김, 한국은 표시)
         if (typeof window._soOnPayMethodChange === 'function') window._soOnPayMethodChange();
         // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출
@@ -4474,6 +4580,9 @@
 
         list.innerHTML = itemsHtml + discHtml;
         document.getElementById('soCoTotalAmt').textContent = _soFormatPrice(calc.grandTotal);
+        // 2026-05-22: 마일리지/예치금 사용액을 합계에 반영 (항목 삭제 등 재렌더 시에도 유지)
+        window._soCheckoutGrandTotal = calc.grandTotal;
+        if (typeof _soApplyWalletToTotal === 'function') _soApplyWalletToTotal();
         var subBtn2 = document.getElementById('soCoSubmitBtn');
         if (subBtn2) subBtn2.disabled = false;
     }
@@ -4778,6 +4887,24 @@
             var cartCalc = _soCalcCartTotal(cart);
             var total = cartCalc.grandTotal;
 
+            // 2026-05-22: 마일리지/예치금 사용 — KR + 로그인 시. 실제 잔액 재조회로 검증 후 차감은 주문 생성 직후.
+            var _useMileage = 0, _useDeposit = 0, _walletUid = null;
+            if (window._soWallet && window._soWallet.ready) {
+                var _wu = _soGetWalletUseKRW(total);
+                _useMileage = _wu.useMileage; _useDeposit = _wu.useDeposit;
+                _walletUid = window._soWallet.userId;
+            }
+            if ((_useMileage > 0 || _useDeposit > 0) && _walletUid) {
+                // 잔액 실시간 재검증 (UI 캐시와 DB 불일치 방지)
+                var _balRow = null;
+                try { var _br = await sb.from('profiles').select('mileage, deposit').eq('id', _walletUid).maybeSingle(); _balRow = _br.data; } catch (e) {}
+                var _curMile = parseInt((_balRow && _balRow.mileage) || 0) || 0;
+                var _curDep = parseInt((_balRow && _balRow.deposit) || 0) || 0;
+                if (_useMileage > _curMile) { alert('마일리지 잔액이 부족합니다. (보유: ' + _curMile.toLocaleString() + ' P)'); btn.disabled = false; btn.innerHTML = origLabel; return; }
+                if (_useDeposit > _curDep) { _useDeposit = _curDep; } // 예치금은 보유분까지만
+            }
+            var _finalTotal = Math.max(0, total - _useMileage - _useDeposit);
+
             // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
             // 동시에 orderRow.files 도 채우기 위해 파일 정보 수집
             var orderFiles = [];
@@ -4966,6 +5093,11 @@
             if (cartCalc.proPct > 0) {
                 discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원)';
             }
+            if (_useMileage > 0) discountSummary += '\n마일리지 사용 (-' + _useMileage.toLocaleString() + '원)';
+            if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
+            // 마일리지/예치금으로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
+            var _fullyCovered = (_useMileage > 0 || _useDeposit > 0) && _finalTotal <= 0;
+            var _walletPayLabel = _useDeposit > 0 ? '예치금' : '마일리지';
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
                 '\n이메일: ' + (email || loggedInEmail || '없음') +
@@ -4983,12 +5115,12 @@
                 phone: phone,
                 address: fullAddr,
                 request_note: memo || '',
-                status: payMethod === 'bank' ? '접수됨' : '임시작성',
-                payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
-                payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
-                depositor_name: payMethod === 'bank' ? depositorName : null,
-                total_amount: total,
-                discount_amount: 0,
+                status: _fullyCovered ? '접수됨' : (payMethod === 'bank' ? '접수됨' : '임시작성'),
+                payment_status: _fullyCovered ? '결제완료' : (payMethod === 'bank' ? '입금대기' : '미결제'),
+                payment_method: _fullyCovered ? _walletPayLabel : (payMethod === 'bank' ? '무통장입금' : '카드'),
+                depositor_name: (!_fullyCovered && payMethod === 'bank') ? depositorName : null,
+                total_amount: _finalTotal,
+                discount_amount: _useMileage + _useDeposit,
                 items: items,
                 site_code: _soGetSiteCode(),
                 franchise_slug: _frSlug2,
@@ -5007,12 +5139,17 @@
                 var updateRow = {
                     address: fullAddr || orderRow.address,
                     request_note: memo || orderRow.request_note,
-                    status: payMethod === 'bank' ? '접수됨' : '임시작성',
-                    payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
+                    status: orderRow.status,
+                    payment_status: orderRow.payment_status,
                     payment_method: orderRow.payment_method
                 };
+                // 2026-05-22: 마일리지/예치금 사용 시 결제금액·할인 반영 (매니저견적 결제 경로)
+                if (_useMileage > 0 || _useDeposit > 0) {
+                    updateRow.total_amount = _finalTotal;
+                    updateRow.discount_amount = _useMileage + _useDeposit;
+                }
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
-                if (payMethod === 'bank') updateRow.depositor_name = depositorName;
+                if (!_fullyCovered && payMethod === 'bank') updateRow.depositor_name = depositorName;
                 var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
                 insertedOrder = upRes.data; insertErr = upRes.error;
                 if (insertErr) throw insertErr;
@@ -5028,6 +5165,27 @@
                 newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
             }
 
+            // 2026-05-22: 마일리지/예치금 차감 + 원장(wallet_logs) 기록 — 주문 생성 직후 (order.js 와 동일 스키마)
+            if (_walletUid && (_useMileage > 0 || _useDeposit > 0)) {
+                try {
+                    if (_useMileage > 0) {
+                        var _mr = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
+                        var _cm = parseInt((_mr.data && _mr.data.mileage) || 0) || 0;
+                        await sb.from('profiles').update({ mileage: Math.max(0, _cm - _useMileage) }).eq('id', _walletUid);
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useMileage, description: '간편주문 결제 사용 (주문번호: ' + newOrderId + ')' });
+                    }
+                    if (_useDeposit > 0) {
+                        var _dr = await sb.from('profiles').select('deposit').eq('id', _walletUid).maybeSingle();
+                        var _cd = parseInt((_dr.data && _dr.data.deposit) || 0) || 0;
+                        await sb.from('profiles').update({ deposit: Math.max(0, _cd - _useDeposit) }).eq('id', _walletUid);
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'payment_order', amount: -_useDeposit, description: '간편주문 예치금 사용 (주문번호: ' + newOrderId + ')' });
+                    }
+                } catch (we) {
+                    console.error('[so wallet deduct]', we);
+                    try { await sb.from('orders').update({ admin_note: adminNote + '\n[경고] 마일리지/예치금 차감 실패 — 수동 확인 필요: ' + (we.message || we) }).eq('id', newOrderId); } catch (e2) {}
+                }
+            }
+
             // 2026-05-12: Google Drive 동기화 트리거 (패브릭과 동일)
             // 무통장(status=접수됨) → 즉시 폴더 생성. 카드(status=임시작성) → Edge Function 이 skip,
             // 결제 완료 시 confirm-payment 등에서 재호출 (멱등성)
@@ -5040,6 +5198,22 @@
                     .catch(function (e) { console.warn('[drive sync] enqueue failed:', e && e.message || e); });
             } catch (e) { console.warn('[drive sync] try failed:', e && e.message || e); }
 
+            // 2026-05-22: 마일리지/예치금으로 전액 결제됨 — 카드/무통장 불필요. 완료 안내 후 종료.
+            if (_fullyCovered) {
+                try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
+                alert(
+                    tr('주문이 완료되었습니다!', 'ご注文が完了しました！', 'Your order is complete!') + '\n\n' +
+                    tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
+                    (_useMileage > 0 ? (tr('마일리지', 'マイル', 'Mileage') + ' ' + _useMileage.toLocaleString() + ' P\n') : '') +
+                    (_useDeposit > 0 ? (tr('예치금', '預り金', 'Deposit') + ' ' + _useDeposit.toLocaleString() + tr('원', '円', ' KRW') + '\n') : '') +
+                    tr('영업일 내 제작이 시작됩니다.', '営業日内に製作を開始します。', 'Production starts within business days.')
+                );
+                _showLoadingShield();
+                window._soCloseCheckout();
+                setTimeout(function () { location.href = state.frSlug ? ('/store/' + state.frSlug) : '/'; }, 600);
+                return;
+            }
+
             // 무통장: 안내 메시지 + 카트 비우기
             if (payMethod === 'bank') {
                 // 2026-05-17: 가맹점 주문이면 가맹점 계좌로 안내
@@ -5050,7 +5224,7 @@
                 alert(
                     tr('주문이 접수되었습니다!', 'ご注文を受け付けました！', 'Your order has been received!') + '\n\n' +
                     tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
-                    tr('입금하실 금액', 'お振込金額', 'Amount to transfer') + ': ' + _soFormatPrice(total) + '\n\n' +
+                    tr('입금하실 금액', 'お振込金額', 'Amount to transfer') + ': ' + _soFormatPrice(_finalTotal) + '\n\n' +
                     _acct + '\n\n' +
                     tr('입금 후 영업일 내 제작이 시작됩니다.', 'ご入金後、営業日内に製作を開始します。', 'Production starts within business days of payment.')
                 );
