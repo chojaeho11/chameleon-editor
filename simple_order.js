@@ -4192,6 +4192,16 @@
 
         let totalAmt = 0;
         const sections = [];
+        // 2026-05-22: 장바구니 썸네일 — 업로드 디자인(originalUrl 등, 이미지 형식만) 우선. 박스 대신 실제 이미지.
+        const _imgLike = function (u) { return !!u && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(u); };
+        const _pickCartThumb = function (item) {
+            return item.thumb
+                || (_imgLike(item.originalUrl) ? item.originalUrl : '')
+                || (_imgLike(item.fileUrl) ? item.fileUrl : '')
+                || (_imgLike(item.artwork_url) ? item.artwork_url : '')
+                || (_imgLike(item.back_file_url) ? item.back_file_url : '')
+                || (item.product && item.product.img) || '';
+        };
 
         // 일반상품 섹션
         if (generalItems.length > 0) {
@@ -4200,14 +4210,14 @@
                 const genIdx = generalItems.indexOf(item); // 일반상품 카트 인덱스
                 const calc = calcCartItemPrice(item);
                 totalAmt += calc.final;
-                const thumb = item.thumb || (item.product && item.product.img) || '';
+                const thumb = _pickCartThumb(item);
                 const meta = [];
                 if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
                 if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
                 return `
                 <div class="so-cart-item">
                     ${thumb
-                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
+                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" onerror="this.onerror=null;var d=document.createElement('div');d.className='so-cart-item-thumb';d.style.cssText='display:flex;align-items:center;justify-content:center;font-size:20px';d.textContent='📦';this.replaceWith(d);" />`
                         : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>`}
                     <div class="so-cart-item-info">
                         <div class="so-cart-item-name">${escapeHtml(fmtCartName(item))}</div>
@@ -4238,13 +4248,13 @@
             const fabHtml = fabricItems.map((it) => {
                 const sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
                 const opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? '마감: ' + it.finishName : ''].filter(Boolean).join(' · ');
-                const thumb = it.thumbDataUrl || it.img || '';
+                const thumb = it.thumbDataUrl || it.cartImageUrl || it.designerOriginalUrl || it.imgUrl || it.img || '';
                 const allIdx = allItems.indexOf(it);
                 totalAmt += (it.price || 0);
                 return `
                 <div class="so-cart-item">
                     ${thumb
-                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" />`
+                        ? `<img class="so-cart-item-thumb" src="${escapeHtml(thumb)}" alt="" onerror="this.onerror=null;var d=document.createElement('div');d.className='so-cart-item-thumb';d.style.cssText='display:flex;align-items:center;justify-content:center;font-size:20px';d.textContent='✂️';this.replaceWith(d);" />`
                         : `<div class="so-cart-item-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px;">✂️</div>`}
                     <div class="so-cart-item-info">
                         <div class="so-cart-item-name">${escapeHtml(it.title || it.fabricName || '패브릭')}</div>
