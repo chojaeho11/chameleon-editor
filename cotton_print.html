@@ -777,26 +777,9 @@ async function submitRollFabricRequest() {
     </div>
 </div>
 
-<!-- 2026-05-14: CTA 2장 — 노란(내원단/자동패턴) + 하늘(패브릭포스터/1장 그대로) -->
+<!-- 2026-05-22: CTA — 디자이너 진입은 한 장으로 통합 (둘 다 같은 디자이너로 진입). 패브릭포스터만 유지. -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px; display:flex; flex-direction:column; gap:16px;">
-    <!-- 내 원단 만들기 (자동 패턴) -->
-    <a href="/cotton-designer" style="display:block; background:linear-gradient(135deg, #fde047 0%, #facc15 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:var(--brown-dark); position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(180,83,9,0.15);">
-        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
-            <div>
-                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px;" data-i18n="cta_yellow_title">
-                    배경없는 PNG파일 또는 PDF파일을 올리세요. 자동패턴 및 배경색을 만들 수 있습니다.
-                </h2>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
-                <div style="background:var(--brown-dark); color:#fde047; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(69,26,3,0.3); white-space:nowrap;">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> &nbsp;<span data-i18n="cta_yellow_btn">내원단 만들기</span>
-                </div>
-                <div style="font-size:11px; color:var(--brown); opacity:0.7;" data-i18n="cta_yellow_sample">샘플 9,460원부터</div>
-            </div>
-        </div>
-    </a>
-
-    <!-- 패브릭 포스터 (1장 그대로 인쇄) -->
+    <!-- 패브릭 포스터 / 내원단 만들기 (통합 진입) -->
     <a href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#0c4a6e; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(14,116,144,0.15);">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>

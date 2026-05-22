@@ -107,7 +107,7 @@ const state = {
     fabricType: 'cotton20',           // 8종 중 1
     fabricColor: 'white',             // 면 종류일 때만 사용
     fabricCode: 'cotton20_white',     // 합성 코드 (orders.items 저장용)
-    layout: _cdIsPosterMode ? 'centered' : 'basic',
+    layout: 'centered',               // 2026-05-22: 기본 레이아웃 Centered (이미지 없이 주문 후 추후 전달 케이스 多)
     bgColor: '#ffffff',               // 캔버스 배경색 (투명 PNG 패턴용 — 2026-05-11)
     imgScale: 1.0,                    // 패턴 셀 내 이미지 비율 (1.0 = 셀 가득, 0.3 = 30%만; 2026-05-11)
     orderWcm: 130,
@@ -115,7 +115,7 @@ const state = {
     orderQty: 1,
     imgWcm: 10,
     imgHcm: 10,
-    imgAspect: 1,
+    imgAspect: null,                  // 2026-05-22: 이미지 없을 땐 null → 출력 사이즈 1:1 잠금 해제 (자유 입력)
     img: null,
     imgDataUrl: null,
     imgFileName: '',
@@ -1553,9 +1553,22 @@ async function _cdPersistItemImage(item) {
 }
 
 window._cdAddToCart = async function() {
-    // 2026-05-12: UX 개선 — 파일 없이 클릭 시 그냥 카트 드로어 열기 (기존 카트 확인용)
+    // 2026-05-22: 이미지 없이도 주문 허용 (디자인은 추후 이메일 등으로 전달). 확인 후 추가.
     if (!state.img || !state.imgDataUrl) {
-        if (window._cpCartOpen) window._cpCartOpen();
+        var _L1 = window.__CD_LANG || 'ko';
+        var _ask1 = _L1==='ja' ? '画像なしで注文しますか？\nデザインは後ほどメール等でお送りいただけます。'
+                  : _L1==='en' ? 'Order without an image?\nYou can send the design later by email.'
+                  : '이미지 없이 주문할까요?\n디자인은 나중에 이메일 등으로 보내실 수 있습니다.';
+        if (!window.confirm(_ask1)) { if (window._cpCartOpen) window._cpCartOpen(); return; }
+        var _it1 = buildCartItem();
+        if (!_it1) return;
+        _it1.artworkLater = true;
+        var _later = _L1==='ja' ? '画像は後送' : _L1==='en' ? 'image to follow' : '이미지 추후 전달';
+        _it1.title = (_it1.fabricName || _it1.title || '원단') + ' — ' + _later;
+        var _c1 = getCart(); _c1.push(_it1); saveCart(_c1);
+        window._cpUpdateCartUI();
+        showToast((window.cdT && window.cdT('cart_added_toast') ? window.cdT('cart_added_toast').replace('{n}', _c1.length) : '장바구니에 담았습니다 (' + _c1.length + '개)'));
+        setTimeout(window._cpCartOpen, 400);
         return;
     }
     const item = buildCartItem();
@@ -1574,9 +1587,21 @@ window._cdAddToCart = async function() {
 };
 
 window._cdBuyNow = async function() {
-    // 2026-05-12: 파일 없이 클릭 시 → 카트 드로어 열기 (기존 카트 → 결제하기)
+    // 2026-05-22: 이미지 없이도 바로 주문 허용 (디자인 추후 전달)
     if (!state.img || !state.imgDataUrl) {
-        if (window._cpCartOpen) window._cpCartOpen();
+        var _L2 = window.__CD_LANG || 'ko';
+        var _ask2 = _L2==='ja' ? '画像なしで注文しますか？\nデザインは後ほどメール等でお送りいただけます。'
+                  : _L2==='en' ? 'Order without an image?\nYou can send the design later by email.'
+                  : '이미지 없이 주문할까요?\n디자인은 나중에 이메일 등으로 보내실 수 있습니다.';
+        if (!window.confirm(_ask2)) { if (window._cpCartOpen) window._cpCartOpen(); return; }
+        var _it2 = buildCartItem();
+        if (!_it2) return;
+        _it2.artworkLater = true;
+        var _later2 = _L2==='ja' ? '画像は後送' : _L2==='en' ? 'image to follow' : '이미지 추후 전달';
+        _it2.title = (_it2.fabricName || _it2.title || '원단') + ' — ' + _later2;
+        var _c2 = getCart(); _c2.push(_it2); saveCart(_c2);
+        window._cpUpdateCartUI();
+        window._cpOpenCheckout();
         return;
     }
     const item = buildCartItem();
@@ -1945,6 +1970,8 @@ window._cpSubmitOrder = async function() {
                 unit_price: it.unitPrice,
                 price: it.price,
                 source: 'cotton-print',
+                artwork_url: artworkUrl,                                  // 최상위에도 — 작업지시서/관리자 조회 편의
+                artwork_later: !!it.artworkLater,                         // 2026-05-22: 이미지 추후 전달(이메일 등) 주문 표시
                 // 2026-05-11: 패턴 재조합 메타 — 다크팩토리 정보.txt 와 Python 스크립트에서 사용.
                 //   원본 1장 + 이 spec만 있으면 어떤 해상도로든 패턴 재현 가능.
                 pattern_spec: {
@@ -1964,14 +1991,14 @@ window._cpSubmitOrder = async function() {
             };
         });
 
-        // 2026-05-22: 안전망 — 디자인 이미지가 없는 패브릭 항목이 있으면 주문 차단.
-        //   (이미지 업로드 실패/누락 상태로 결제되어 작업지시서에 디자인이 비던 문제 방지)
-        const _missingArt = items.filter(function(it){ return !it.artwork_url; });
+        // 2026-05-22: 안전망 — 디자인 이미지가 '있어야 하는데' 누락된 항목만 주문 차단.
+        //   (업로드 실패로 디자인이 비던 문제 방지). 단, '이미지 추후 전달(artwork_later)' 의도 주문은 통과.
+        const _missingArt = items.filter(function(it){ return !it.artwork_url && !it.artwork_later; });
         if (_missingArt.length > 0) {
             // 한 번 더 base64 재업로드 시도 후에도 비어있으면 차단
             var _stillMissing = [];
             for (var _mi = 0; _mi < cart.length; _mi++) {
-                if (items[_mi] && !items[_mi].artwork_url) {
+                if (items[_mi] && !items[_mi].artwork_url && !items[_mi].artwork_later) {
                     var _it2 = cart[_mi];
                     try { await _cdPersistItemImage(_it2); } catch(e){}
                     if (_it2.cartImageUrl) items[_mi].artwork_url = _it2.cartImageUrl;
