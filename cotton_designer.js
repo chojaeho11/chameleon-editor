@@ -33,6 +33,17 @@ function pickFabricName(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.na
 function pickFabricDesc(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.desc_ja) return f.desc_ja; if (L==='en' && f.desc_en) return f.desc_en; return f.desc; }
 const COLOR_LABELS = { white: '화이트', natural: '네츄럴', ivory: '백아이보리' };
 
+// 2026-05-22: 패브릭 주문 site_code — 언어/호스트 기준 (이전엔 'KR' 하드코딩 → JP/US 패브릭 주문이 한국으로 잡힘)
+function _cpSiteCode(){
+    var l = (window.__CD_LANG || '').toLowerCase();
+    if (l === 'ja' || l === 'jp') return 'JP';
+    if (l === 'en' || l === 'us') return 'US';
+    var h = (location.hostname || '').toLowerCase();
+    if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'JP';
+    if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'US';
+    return 'KR';
+}
+
 // 대량 할인 정책 (수량 기준)
 // 2026-05-14: 사용자 요청 — 10+ 10% / 100+ 20% / 500+ 30%
 function getVolumeDiscount(qty) {
@@ -1734,7 +1745,7 @@ window._cpCreateMgrQuote = async function (btnEl) {
             total_amount: total,
             discount_amount: 0,
             items: items,
-            site_code: 'KR',
+            site_code: _cpSiteCode(),
             files: uploadedFiles.length ? uploadedFiles : null,
             admin_note: '[MANAGER_QUOTE] [Cotton Print] manager=' + (mgrEmail || 'unknown') + '\n패브릭 매니저 카트 기반 결제창 생성 — 고객 결제 대기'
         };
@@ -1980,7 +1991,7 @@ window._cpSubmitOrder = async function() {
             total_amount: total,
             discount_amount: 0,
             items: items,
-            site_code: 'KR',
+            site_code: _cpSiteCode(),
             files: uploadedFiles.length ? uploadedFiles : null,
             admin_note: adminNote
         };

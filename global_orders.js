@@ -1749,20 +1749,16 @@ window.loadOrders = async () => {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
             }
         }
-        // 국가별 필터 — 라벨(site_code) + 이름 감지 + 결제수단을 통합해 한 버튼으로 처리.
-        // 사유: 옛 simple_order.js 버그로 해외 주문도 site_code='KR' 로 저장됐고,
-        //       Stripe 결제는 본질적으로 해외 결제이므로 같이 묶음.
+        // 국가별 필터 — site_code 기준(안정적). 일본어/영문 정규식은 PostgREST .or() 에서
+        // 불안정하여 제거. 라벨이 KR 로 잘못된 해외 주문은 '해외 결제(Stripe)' 로 잡음.
         if (siteFilter === '__jp__' || siteFilter === '__jp_text__') {
-            // 일본: site_code=JP 또는 일본어 이름/주소
-            query = query.or('site_code.eq.JP,manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯]');
+            query = query.eq('site_code', 'JP');
         } else if (siteFilter === '__us__' || siteFilter === '__en_text__') {
-            // 미국: site_code=US 또는 영문 이름
-            query = query.or('site_code.eq.US,manager_name.match.^[A-Za-z][^가-힣]*$');
+            query = query.eq('site_code', 'US');
         } else if (siteFilter === '__overseas_pay__' || siteFilter === '__overseas_text__' || siteFilter === '__overseas__') {
-            // 해외 결제 = Stripe 결제 또는 해외 site_code 또는 일본어/영문 이름 (가맹점 제외하지 않음)
-            query = query.or('payment_method.ilike.*Stripe*,site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
+            // 해외 결제 = Stripe 결제 또는 해외 site_code
+            query = query.or('payment_method.ilike.*Stripe*,site_code.in.(JP,US,CN,SA,ES,DE,FR)');
         } else if (siteFilter === '__fr__') {
-            // 가맹점 주문만 (franchise_slug 가 있는 주문)
             query = query.not('franchise_slug', 'is', null);
         } else if (siteFilter !== 'all') query = query.eq('site_code', siteFilter);
         if (managerFilter === 'none') query = query.is('staff_manager_id', null);
@@ -3383,17 +3379,10 @@ window.loadStripeStuckOrders = async () => {
             .order('created_at', { ascending: false })
             .limit(300);
         if (siteSel === '__fr__') q = q.not('franchise_slug', 'is', null);
-        else if (siteSel === '__jp_text__') {
-            q = q.or('manager_name.match.[ぁ-ヿ一-龯],address.match.[ぁ-ヿ一-龯],depositor_name.match.[ぁ-ヿ一-龯]');
-        }
-        else if (siteSel === '__en_text__') {
-            q = q.filter('manager_name', 'match', '^[A-Za-z][^가-힣]*$');
-        }
-        else if (siteSel === '__overseas__') {
-            q = q.in('site_code', ['JP', 'US', 'CN', 'SA', 'ES', 'DE', 'FR']);
-        }
-        else if (siteSel === '__overseas_text__') {
-            q = q.or('site_code.in.(JP,US,CN,SA,ES,DE,FR),manager_name.match.[ぁ-ヿ一-龯],manager_name.match.^[A-Za-z][^가-힣]*$');
+        else if (siteSel === '__jp_text__') q = q.eq('site_code', 'JP');
+        else if (siteSel === '__en_text__') q = q.eq('site_code', 'US');
+        else if (siteSel === '__overseas__' || siteSel === '__overseas_text__') {
+            q = q.or('payment_method.ilike.*Stripe*,site_code.in.(JP,US,CN,SA,ES,DE,FR)');
         }
         else if (siteSel) q = q.eq('site_code', siteSel);
         const { data, error } = await q;
