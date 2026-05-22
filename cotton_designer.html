@@ -881,6 +881,23 @@ a { text-decoration: none; color: inherit; }
 }
 </style>
 
+<!-- 2026-05-22: 일본 LINE 문의 배너 (cafe0101 / cotton-printer.com / lang=ja 에서만) -->
+<div id="jpLineBanner" style="display:none; max-width:1100px; margin:14px auto 0; padding:0 16px;">
+    <div style="background:#fff; border:2px solid #06C755; border-radius:14px; padding:14px 18px; box-shadow:0 6px 18px -10px rgba(6,199,85,0.5); display:flex; align-items:center; gap:18px; flex-wrap:wrap; justify-content:center;">
+        <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:96px; height:96px; border-radius:10px; flex-shrink:0; border:1px solid #e5e7eb;">
+        <div style="text-align:center; min-width:180px;">
+            <div style="font-size:17px; font-weight:900; color:#06C755; margin-bottom:6px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせください</div>
+            <div style="font-size:13px; color:#444; line-height:1.7;">ご注文・お見積もり・ご相談は<b>LINE</b>が便利です。<br>QRコードを読み取って友だち追加してください。</div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    var l = (window.__CD_LANG || new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+    if (l === 'ja' || l === 'jp') { var el = document.getElementById('jpLineBanner'); if (el) el.style.display = ''; }
+})();
+</script>
+
 <!-- 메인 디자이너 -->
 <div class="designer-wrap">
 
