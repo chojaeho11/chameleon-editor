@@ -1979,9 +1979,29 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 drawCell(doc, curX, y, cols[4], addonHeight, formatCurrencyForPDF(addPrice), 'right'); curX += cols[4];
                 drawCell(doc, curX, y, cols[5], addonHeight, formatCurrencyForPDF(aTotal), 'right');
                 
-                y += addonHeight; 
+                y += addonHeight;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
+        }
+
+        // 2026-05-22: 등신대·자유인쇄커팅 받침대(뒷받침) — 견적서에서 누락되던 항목. 주문과 동일하게 1회 부과.
+        if (item.baseStand && Number(item.baseStand.fee) > 0) {
+            let bsPrice = Number(item.baseStand.fee);
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) { if (_cr && _cr.JP) bsPrice = Math.round(bsPrice * _cr.JP); }
+            else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') { if (_cr && _cr.US) bsPrice = Math.round(bsPrice * _cr.US * 100) / 100; }
+            totalAmt += bsPrice;
+            const bsName = "└ " + (item.baseStand.label || (TEXT.opt_add || '받침대'));
+            const splitBs = doc.splitTextToSize(bsName, nameColWidth - 4);
+            const bsHeight = Math.max(8, 4 + (splitBs.length * 5));
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], bsHeight, "", 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], bsHeight, splitBs, 'left', 8); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], bsHeight, TEXT.opt_add, 'left', 8); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], bsHeight, "1", 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], bsHeight, formatCurrencyForPDF(bsPrice), 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], bsHeight, formatCurrencyForPDF(bsPrice), 'right');
+            y += bsHeight;
+            if(y > 260) { doc.addPage(); y = 20; }
         }
     });
 
