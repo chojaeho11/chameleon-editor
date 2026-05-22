@@ -882,17 +882,20 @@ async function loadPdfFonts(doc) {
         const dbLangCode = langMap[CURRENT_LANG_CODE] || 'KR';
         
         // Supabase DB 조회 (site_fonts 테이블)
-        const { data, error } = await sb
-            .from('site_fonts')
-            .select('file_url')
-            .eq('site_code', dbLangCode)
-            .order('id', { ascending: true }) // 정렬 기준
-            .limit(1); // 가장 첫 번째 폰트 가져오기
+        // 2026-05-22: 패브릭 페이지 등 sb 미초기화 환경에서 sb.from() null 오류 방지 — 없으면 CDN 기본 폰트 사용.
+        if (sb) {
+            const { data, error } = await sb
+                .from('site_fonts')
+                .select('file_url')
+                .eq('site_code', dbLangCode)
+                .order('id', { ascending: true }) // 정렬 기준
+                .limit(1); // 가장 첫 번째 폰트 가져오기
 
-        if (data && data.length > 0 && data[0].file_url) {
-            targetUrl = data[0].file_url;
-        } else {
-            console.warn("[PDF] DB에 해당 언어 폰트가 없어 기본 설정 사용");
+            if (data && data.length > 0 && data[0].file_url) {
+                targetUrl = data[0].file_url;
+            } else {
+                console.warn("[PDF] DB에 해당 언어 폰트가 없어 기본 설정 사용");
+            }
         }
     } catch (err) {
         console.error("[PDF] DB 조회 중 오류 (기본값 사용):", err);

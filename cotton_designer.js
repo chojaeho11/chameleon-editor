@@ -1669,6 +1669,12 @@ window._cpOpenCheckout = function() {
         const opts = parts.filter(Boolean).join(' · ');
         return '<div class="co-summary-item"><div class="co-summary-item-name">' + it.title + '</div><div class="co-summary-item-opts">' + opts + '</div><div class="co-summary-item-price">' + cdFmtPrice(it.price) + '</div></div>';
     }).join('');
+    // 2026-05-22: 배송비 라인 — 합계엔 포함되는데 요약에 안 보여 금액이 안 맞아 보이던 문제.
+    var _shipFee = cart.length > 0 ? getShippingFeeKrw() : 0;
+    if (_shipFee > 0) {
+        var _shipLabel = ({ ko: '배송비', ja: '送料', en: 'Shipping' })[_cdL] || '배송비';
+        list.innerHTML += '<div class="co-summary-item"><div class="co-summary-item-name">' + _shipLabel + '</div><div class="co-summary-item-opts"></div><div class="co-summary-item-price">' + cdFmtPrice(_shipFee) + '</div></div>';
+    }
     document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcFabricCartTotal());
     document.getElementById('checkoutOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
