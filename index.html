@@ -937,13 +937,33 @@ if ('caches' in window) {
         })();
         </script>
 
-    <!-- 2026-05-22: 일본 LINE 문의 카드 (cafe0101 / lang=ja 만) — 컴팩트하게 (메인 가림 방지) -->
-    <div id="jpLineContact" style="display:none; max-width:560px; margin:8px auto 0; padding:0 16px;">
-        <div style="background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:10px 14px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
-            <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:64px; height:64px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
-            <div style="text-align:left; min-width:0;">
-                <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                <div style="font-size:11.5px; color:#555; line-height:1.5;">ご注文・お見積もりはLINEが便利。<br>QRから友だち追加してください。</div>
+    <!-- 2026-05-22: 일본 — LINE 문의 + 해외 파트너 카드 좌우 배치(PC) / 세로(모바일). cafe0101/lang=ja -->
+    <div id="jpHeroRow" style="max-width:1100px; margin:8px auto 0; padding:0 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:stretch;">
+        <!-- LINE 문의 카드 (lang=ja 일 때만 JS 로 표시) -->
+        <div id="jpLineContact" style="display:none; flex:1 1 280px; min-width:0;">
+            <div style="height:100%; box-sizing:border-box; background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:12px 16px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
+                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:72px; height:72px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
+                <div style="text-align:left; min-width:0;">
+                    <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                    <div style="font-size:11.5px; color:#555; line-height:1.5;">ご注文・お見積もりはLINEが便利。<br>QRから友だち追加してください。</div>
+                </div>
+            </div>
+        </div>
+        <!-- 해외 파트너 카드 (JP/US) — 여기로 이동(좌우 배치). 표시는 style.css [data-site] 규칙이 제어 -->
+        <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
+            <div style="height:100%; box-sizing:border-box; background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:12px; padding:14px 18px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:10px;">
+                    <div style="font-size:26px; line-height:1; flex-shrink:0;">🌐</div>
+                    <div style="flex:1; min-width:0;">
+                        <div id="overseasBranchTitle" style="font-size:15px; font-weight:800; color:#78350f; margin-bottom:3px;">해외 파트너 모집</div>
+                        <div id="overseasBranchDesc" style="font-size:11.5px; color:#92400e; line-height:1.5;">전 세계 어디서나 카멜레온프린팅의 가맹 파트너로 함께하세요.</div>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:center; align-items:center;">
+                    <a href="/franchise" id="overseasFranchiseBtn" style="padding:9px 18px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+                        🤝 <span id="overseasFranchiseBtnLabel">해외가맹점 모집</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -1084,25 +1104,7 @@ if ('caches' in window) {
         </div>
     </div>
 
-    <!-- 2026-05-15: 해외(JP/US) 전용 — 글로벌 지사 안내 카드 + 해외가맹점 모집 버튼.
-         KR 에서는 CSS 로 숨김. mgrQuoteHero 와 동일한 노랑 카드 스타일. -->
-    <div id="overseasBranchHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
-        <div style="background:linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border:1.5px solid #fbbf24; border-radius:16px; padding:22px 28px; box-shadow:0 6px 20px -8px rgba(251,191,36,0.4);">
-            <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
-                <div style="font-size:32px; line-height:1; flex-shrink:0;">🌐</div>
-                <div style="flex:1; min-width:0;">
-                    <div id="overseasBranchTitle" style="font-size:16px; font-weight:800; color:#78350f; margin-bottom:4px;">해외 파트너 모집</div>
-                    <div id="overseasBranchDesc" style="font-size:12px; color:#92400e; line-height:1.5;">전 세계 어디서나 카멜레온프린팅의 가맹 파트너로 함께하세요. 현지 언어로 상담해 드립니다.</div>
-                </div>
-            </div>
-            <!-- 2026-05-16: 해외몰 — 지사 전화번호 카드 제거, 파트너 신청 버튼만 유지 -->
-            <div style="display:flex; justify-content:center; align-items:center; margin-top:6px;">
-                <a href="/franchise" id="overseasFranchiseBtn" style="padding:11px 22px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(180,83,9,0.45); letter-spacing:0.5px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
-                    🤝 <span id="overseasFranchiseBtnLabel">해외가맹점 모집</span>
-                </a>
-            </div>
-        </div>
-    </div>
+    <!-- 2026-05-22: 해외 파트너 카드는 위 #jpHeroRow 안으로 이동(LINE 카드와 좌우 배치). 아래 다국어 스크립트는 getElementById 로 동작 유지. -->
     <script>
     // 2026-05-15: 해외 지사 카드 다국어 (간단 인라인)
     (function(){
@@ -1114,7 +1116,7 @@ if ('caches' in window) {
              (window.CURRENT_LANG || 'kr'));
         var T = {
             kr: { title:'해외 파트너 모집', desc:'전 세계 어디서나 카멜레온프린팅의 가맹 파트너로 함께하세요. 현지 언어로 상담해 드립니다.', btn:'해외가맹점 모집' },
-            ja: { title:'海外パートナー募集', desc:'世界中どこからでもカメレオンプリンティングの加盟パートナーになりませんか。現地語でご相談を承ります。', btn:'海外加盟店募集' },
+            ja: { title:'海外パートナー募集', desc:'世界中から加盟パートナー募集中。現地語でご相談OK。', btn:'海外加盟店募集' },
             en: { title:'Become Our Partner', desc:'Join Chameleon Printing as a franchise partner from anywhere in the world — local language support.', btn:'Overseas Franchise' },
             zh: { title:'海外合作伙伴招募', desc:'欢迎世界各地的伙伴加入Chameleon Printing成为加盟伙伴，提供本地语言咨询。', btn:'海外加盟招募' },
             es: { title:'Conviértete en Socio', desc:'Únase a Chameleon Printing como socio de franquicia desde cualquier parte del mundo — soporte en su idioma.', btn:'Franquicia Internacional' },
