@@ -120,7 +120,7 @@
         var m = (typeof state !== 'undefined' && state && state.frMargin) || 0;
         return m > 0 ? Math.round(base * (1 + m / 100)) : base;
     }
-    function pickImg(p) { return p.img || p.image_url || p.image_kr || p.image || p.thumb_url || ''; }
+    function pickImg(p) { return p.img_url || p.img || p.image_url || p.image_kr || p.image || p.thumb_url || ''; }
 
     // ─────────────────────────────────────────────
     // CSS + 모달 HTML 주입
@@ -4194,13 +4194,19 @@
         const sections = [];
         // 2026-05-22: 장바구니 썸네일 — 업로드 디자인(originalUrl 등, 이미지 형식만) 우선. 박스 대신 실제 이미지.
         const _imgLike = function (u) { return !!u && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(u); };
+        const _catalogImg = function (item) {
+            if (item.product && item.product.img) return item.product.img;
+            var c = item.product && item.product.code;
+            var pp = (c && window.PRODUCT_DB) ? window.PRODUCT_DB[c] : null;
+            return pp ? (pp.img_url || pp.img || pp.image_url || pp.thumb_url || '') : '';
+        };
         const _pickCartThumb = function (item) {
             return item.thumb
                 || (_imgLike(item.originalUrl) ? item.originalUrl : '')
                 || (_imgLike(item.fileUrl) ? item.fileUrl : '')
                 || (_imgLike(item.artwork_url) ? item.artwork_url : '')
                 || (_imgLike(item.back_file_url) ? item.back_file_url : '')
-                || (item.product && item.product.img) || '';
+                || _catalogImg(item) || '';
         };
 
         // 일반상품 섹션
