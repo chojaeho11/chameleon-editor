@@ -2970,10 +2970,10 @@
         if (!state.addonQuantities) state.addonQuantities = {};
         if (inp.checked) {
             state.selectedAddons[code] = code;
-            // 조명이면 가로(m), 아크릴 굿즈면 제품 수량과 동일, 그 외는 1개
+            // 조명이면 가로(m), 아크릴 굿즈·등신대면 제품 수량과 동일, 그 외는 1개
             if (isLight) {
                 state.addonQuantities[code] = state.wallWidth || 1;
-            } else if (state.isAcrylicGoods) {
+            } else if (state.isAcrylicGoods || state.isStandee) {
                 state.addonQuantities[code] = state.qty || 1;
             } else {
                 state.addonQuantities[code] = 1;
@@ -2986,8 +2986,9 @@
     };
 
     // 2026-05-14: 아크릴 굿즈 — 제품 수량 변경 시 체크된 모든 부자재 수량을 제품 수량과 동일하게 동기화
+    // 2026-05-22: 등신대도 동일 — 동일 사이즈 수량 추가 시 모양컷팅 등 옵션 수량도 함께 증가
     function _soSyncAcrylicAddonQty() {
-        if (!state.isAcrylicGoods) return;
+        if (!state.isAcrylicGoods && !state.isStandee) return;
         if (!state.selectedAddons || !state.addonQuantities) return;
         var newQty = state.qty || 1;
         Object.keys(state.selectedAddons).forEach(function (code) {
