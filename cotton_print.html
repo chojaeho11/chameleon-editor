@@ -1739,23 +1739,61 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
 <div id="productGrid" style="display:none;"></div>
 <div id="emptyState" style="display:none;"></div>
 
-<!-- 코튼프린팅 영업시간 -->
+<!-- 베스트 작가 -->
+<style>
+.bd-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.bd-card { position:relative; background:linear-gradient(135deg,var(--cream),#fef9e7); border:1px solid var(--cream-dark); border-radius:16px; padding:24px 16px 18px; text-align:center; transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s; }
+.bd-card:hover { transform:translateY(-6px); box-shadow:0 18px 34px -16px rgba(69,26,3,0.4); }
+.bd-rank { position:absolute; top:11px; left:11px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#fff; box-shadow:0 3px 8px rgba(0,0,0,.18); }
+.bd-r1 { background:linear-gradient(135deg,#fbbf24,#d97706); }
+.bd-r2 { background:linear-gradient(135deg,#cbd5e1,#94a3b8); }
+.bd-r3 { background:linear-gradient(135deg,#dca87f,#b45309); }
+.bd-r4 { background:linear-gradient(135deg,#a8a29e,#78716c); }
+.bd-avatar { width:62px; height:62px; border-radius:50%; margin:4px auto 12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:25px; box-shadow:0 6px 16px rgba(0,0,0,.2); }
+.bd-name { font-weight:900; font-size:15px; color:var(--brown-dark); margin-bottom:2px; }
+.bd-handle { font-size:12px; color:var(--text-light); margin-bottom:14px; font-weight:600; }
+.bd-earn { border-top:1px dashed var(--cream-dark); padding-top:12px; display:flex; flex-direction:column; gap:3px; }
+.bd-earn span { font-size:11px; color:var(--text-light); font-weight:700; letter-spacing:0.5px; }
+.bd-earn strong { font-size:18px; color:var(--accent); font-weight:900; }
+@media (max-width:760px){ .bd-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:420px){ .bd-grid{ grid-template-columns:1fr; } }
+</style>
 <section class="section" style="background:#fff; padding-top:24px; padding-bottom:36px;">
-    <div style="max-width:760px; margin:0 auto; background:linear-gradient(135deg,var(--cream),#fef9e7); padding:28px 32px; border-radius:16px; border:1px solid var(--cream-dark); text-align:center;">
-        <div style="font-size:11px; letter-spacing:5px; color:var(--accent); font-weight:700; margin-bottom:10px;">— BUSINESS HOURS —</div>
-        <h3 style="font-size:22px; font-weight:900; color:var(--brown-dark); margin:0 0 14px;" data-i18n="cp_hours_title">코튼프린팅 영업시간</h3>
-        <div style="display:flex; align-items:center; justify-content:center; gap:24px; flex-wrap:wrap; font-size:14px; color:var(--brown-dark); font-weight:700;">
-            <span><i class="fa-solid fa-clock" style="color:var(--accent); margin-right:6px;"></i> <span data-i18n="cp_hours_weekday">평일 09:00 ~ 18:00</span></span>
-            <span style="color:var(--text-light); font-size:12px; font-weight:500;" data-i18n="cp_hours_closed">(토·일·공휴일 휴무)</span>
+    <div style="max-width:980px; margin:0 auto;">
+        <div style="text-align:center; margin-bottom:22px;">
+            <div style="font-size:11px; letter-spacing:5px; color:var(--accent); font-weight:700; margin-bottom:8px;">— BEST DESIGNERS —</div>
+            <h3 style="font-size:22px; font-weight:900; color:var(--brown-dark); margin:0 0 6px;" data-i18n="bd_title">베스트 작가</h3>
+            <p style="color:var(--text-light); font-size:13.5px; margin:0; font-weight:600;" data-i18n="bd_subtitle">가장 많은 사랑을 받은 디자이너들의 누적 수익</p>
         </div>
-        <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--cream-dark); display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap;">
-            <a href="tel:0313661984" class="cp-kr-only-phone" style="color:var(--brown-dark); font-weight:800; font-size:15px; text-decoration:none;">
-                <i class="fa-solid fa-phone" style="color:var(--accent);"></i> 031-366-1984
-            </a>
-            <span class="cp-kr-only-phone" style="color:#d6d3d1;">·</span>
-            <a href="mailto:design@chameleon.design" style="color:var(--brown-dark); font-weight:700; font-size:14px; text-decoration:none;">
-                <i class="fa-solid fa-envelope" style="color:var(--accent);"></i> design@chameleon.design
-            </a>
+        <div class="bd-grid">
+            <div class="bd-card">
+                <div class="bd-rank bd-r1">1</div>
+                <div class="bd-avatar" style="background:linear-gradient(135deg,#fbbf24,#b45309);">K</div>
+                <div class="bd-name">Komorebi Studio</div>
+                <div class="bd-handle">@komorebi</div>
+                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt1">12,840,000원</strong></div>
+            </div>
+            <div class="bd-card">
+                <div class="bd-rank bd-r2">2</div>
+                <div class="bd-avatar" style="background:linear-gradient(135deg,#f472b6,#a21caf);">M</div>
+                <div class="bd-name">Mira Studio</div>
+                <div class="bd-handle">@mira</div>
+                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt2">9,520,000원</strong></div>
+            </div>
+            <div class="bd-card">
+                <div class="bd-rank bd-r3">3</div>
+                <div class="bd-avatar" style="background:linear-gradient(135deg,#4ade80,#15803d);">S</div>
+                <div class="bd-name">Shinrin Pattern</div>
+                <div class="bd-handle">@shinrin</div>
+                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt3">7,360,000원</strong></div>
+            </div>
+            <div class="bd-card">
+                <div class="bd-rank bd-r4">4</div>
+                <div class="bd-avatar" style="background:linear-gradient(135deg,#fb923c,#c2410c);">E</div>
+                <div class="bd-name">Ember Atelier</div>
+                <div class="bd-handle">@ember</div>
+                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt4">5,180,000원</strong></div>
+            </div>
         </div>
     </div>
 </section>
@@ -2822,6 +2860,13 @@ adv3_t: { ko:'도매상을 위한 시스템', ja:'卸売業者のためのシス
 adv3_d: { ko:'우수한 견뢰도와 해상도로, 패브릭 인쇄물을 판매하시는 도매상에게 품질 클레임 없는 최상의 제품을 공급합니다.', ja:'優れた堅牢度と解像度で、ファブリック印刷物を販売する卸売業者へ、品質クレームのない最高の製品を供給します。', en:'With excellent colorfastness and resolution, we supply wholesalers of fabric prints with top-quality products that draw zero quality complaints.' },
 adv4_t: { ko:'세계 최고 수준의 피그먼트 인쇄', ja:'世界最高水準のピグメント印刷', en:'World-class pigment printing' },
 adv4_d: { ko:'2026년 최신 기술을 바탕으로 한 피그먼트 인쇄 방식은 보는 즐거움뿐 아니라 촉감에서 느껴지는 부드러움까지 선사합니다.', ja:'2026年の最新技術に基づくピグメント印刷方式は、見る楽しさだけでなく、肌で感じるやわらかさまでお届けします。', en:'Built on the latest 2026 technology, our pigment printing delivers not just visual delight but a softness you can feel to the touch.' },
+bd_title: { ko:'베스트 작가', ja:'ベストデザイナー', en:'Best Designers' },
+bd_subtitle: { ko:'가장 많은 사랑을 받은 디자이너들의 누적 수익', ja:'最も愛されたデザイナーの累計収益', en:'Cumulative earnings of our most-loved designers' },
+bd_earn_label: { ko:'누적 수익', ja:'累計収益', en:'Total earned' },
+bd_amt1: { ko:'12,840,000원', ja:'¥1,284,000', en:'$12,840' },
+bd_amt2: { ko:'9,520,000원', ja:'¥952,000', en:'$9,520' },
+bd_amt3: { ko:'7,360,000원', ja:'¥736,000', en:'$7,360' },
+bd_amt4: { ko:'5,180,000원', ja:'¥518,000', en:'$5,180' },
 cta_yellow_btn: { ko:'내원단 만들기', ja:'デザイナーを開く', en:'Open Designer', zh:'打开设计师', ar:'افتح المصمم', es:'Abrir Disenador', de:'Designer offnen', fr:'Ouvrir Designer' },
 cta_yellow_sample: { ko:'샘플 9,460원부터', ja:'サンプル¥946〜', en:'Samples from $9.46', zh:'样品 $9.46起', ar:'عينات من $9.46', es:'Muestras desde $9.46', de:'Muster ab $9.46', fr:'Echantillons des $9.46' },
 cat_section_title: { ko:'원단 카테고리', ja:'生地カテゴリー', en:'Fabric Categories', zh:'面料类别', ar:'فئات القماش', es:'Categorias de Tela', de:'Stoff-Kategorien', fr:'Categories de Tissu' },
