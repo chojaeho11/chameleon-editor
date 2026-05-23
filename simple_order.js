@@ -2310,6 +2310,28 @@
     }
     window._soShipMethodLabel = _soShipMethodLabel;
 
+    // 2026-05-23: 비용 안내(料金案内) 박스의 parts[] 라벨 번역 (기존엔 한국어 그대로 노출되던 버그)
+    function _soPartLabel(ko) {
+        var M = {
+            '수도권 설치':                       tr('수도권 설치',                   '首都圏設置',                 'Metro install'),
+            '수도권 철거':                       tr('수도권 철거',                   '首都圏撤去',                 'Metro removal'),
+            '수도권 야간/주말 설치':             tr('수도권 야간/주말 설치',         '首都圏夜間/週末設置',         'Metro night/weekend install'),
+            '수도권 야간/주말 설치 (자동 적용)': tr('수도권 야간/주말 설치 (자동 적용)', '首都圏夜間/週末設置 (自動適用)', 'Metro night/weekend install (auto)'),
+            '지방 용차배송':                     tr('지방 용차배송',                 '地方トラック配送',           'Regional truck delivery'),
+            '지방 설치배송':                     tr('지방 설치배송',                 '地方設置配送',               'Regional install + delivery'),
+            '수도권 배송':                       tr('수도권 배송',                   '首都圏配送',                 'Metro delivery'),
+            '지방 배송':                         tr('지방 배송',                     '地方配送',                   'Regional delivery'),
+            '택배배송 (2장 묶음)':               tr('택배배송 (2장 묶음)',           '宅配便 (2枚セット)',         'Parcel (2-pack)'),
+            '대형택배':                          tr('대형택배',                      '大型宅配',                   'Large parcel'),
+            '묶음 소형택배':                     tr('묶음 소형택배',                 '小型宅配 (まとめ)',           'Small parcel (bundled)'),
+            '택배배송 60×40 이하':               tr('택배배송 60×40 이하',           '宅配便 60×40以下',           'Parcel ≤60×40'),
+            '1개씩 포장 택배배송 (3만원/개)':    tr('1개씩 포장 택배배송 (3만원/개)',    '1個ずつ梱包 宅配 (3万ウォン/個)',   'Parcel · 1 per box (₩30k/ea)'),
+            '2개씩 포장 택배배송 (1.5만원/2개)': tr('2개씩 포장 택배배송 (1.5만원/2개)', '2個ずつ梱包 宅配 (1.5万ウォン/2個)', 'Parcel · 2 per box (₩15k/2)')
+        };
+        return M[ko] || ko;
+    }
+    window._soPartLabel = _soPartLabel;
+
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
         // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
@@ -2551,18 +2573,18 @@
         var lines = [];
         lines.push('<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' + tr('비용 안내', '料金案内', 'Cost') + '</div>');
         parts.forEach(function (p) {
-            lines.push('<div style="display:flex; justify-content:space-between;"><span>· ' + p[0] + '</span><span style="font-weight:700;">' + fmtPrice(p[1]) + '</span></div>');
+            lines.push('<div style="display:flex; justify-content:space-between;"><span>· ' + _soPartLabel(p[0]) + '</span><span style="font-weight:700;">' + fmtPrice(p[1]) + '</span></div>');
         });
         if (parts.length > 1) {
             var sum = parts.reduce(function (s, p) { return s + p[1]; }, 0);
             lines.push('<div style="display:flex; justify-content:space-between; border-top:1px solid #c7d2fe; padding-top:4px; margin-top:4px;"><span style="font-weight:800;">' + tr('합계', '合計', 'Total') + '</span><span style="font-weight:900; color:#dc2626;">' + fmtPrice(sum) + '</span></div>');
         }
         if (sd && sd.value) {
-            var timeLabel = { am:'오전', pm:'오후', night:'야간', any:'시간상관없음', '':'시간 미지정' }[st ? st.value : ''] || '';
+            var timeLabel = { am:tr('오전','午前','AM'), pm:tr('오후','午後','PM'), night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[st ? st.value : ''] || '';
             lines.push('<div style="margin-top:6px; font-size:11px;">🚚 ' + tr('배송', '配送', 'Ship') + ': ' + sd.value + (timeLabel ? ' / ' + timeLabel : '') + '</div>');
         }
         if (state.shipMethod === 'metro_install_removal' && rd && rd.value) {
-            var rTimeLabel = { night:'야간', any:'시간상관없음', '':'시간 미지정' }[rt ? rt.value : ''] || '';
+            var rTimeLabel = { night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[rt ? rt.value : ''] || '';
             lines.push('<div style="font-size:11px;">🔧 ' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
         }
         box.innerHTML = lines.join('');
