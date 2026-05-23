@@ -1593,8 +1593,10 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
     function getCatLabel(cat) {
         if (!cat) return '';
         var code = CAT_CODE_MAP[cat] || cat;
-        var i18n = (typeof t === 'function') ? t('cat_' + code) : '';
-        if (i18n) return i18n;
+        // window.__PS_I18N / __PS_LANG 직접 사용 — IIFE 스코프에서 전역 t()가 안 잡히는 문제 회피
+        var lang = window.__PS_LANG || 'ko';
+        var entry = window.__PS_I18N && window.__PS_I18N['cat_' + code];
+        if (entry) return entry[lang] || entry['ko'] || '';
         return CAT_LABELS[cat] || cat;
     }
 
