@@ -753,7 +753,8 @@ window._cdCalcHoebae = function() {
     var tierLbl = '';
     if (tier === 'half') tierLbl = lang==='ja' ? ' (半マ特価)' : lang==='en' ? ' (half-meter)' : ' (반마 특가)';
     else if (tier === 'min') tierLbl = lang==='ja' ? ' (1回杯適用)' : lang==='en' ? ' (1-unit min)' : ' (1회배 적용)';
-    document.getElementById('hoebaeAmount').textContent = rawHoebae.toFixed(2) + ' 회배' + tierLbl;
+    var hoebaeUnit = window.cdT ? (window.cdT('unit_hoebae') || '회배') : '회배';
+    document.getElementById('hoebaeAmount').textContent = rawHoebae.toFixed(2) + ' ' + hoebaeUnit + tierLbl;
     document.getElementById('hoebaePrice').textContent = cdFmtPrice(itemPrice);
     // 단가 안내 노티스 표시/숨김
     const tierEl = document.getElementById('tierNotice');
