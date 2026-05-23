@@ -848,7 +848,7 @@ async function submitRollFabricRequest() {
 <!-- 2026-05-22: CTA — 디자이너 진입은 한 장으로 통합 (둘 다 같은 디자이너로 진입). 패브릭포스터만 유지. -->
 <section style="max-width:1100px; margin:48px auto 0; padding:0 24px; display:flex; flex-direction:column; gap:16px;">
     <!-- 패브릭 포스터 / 내원단 만들기 (통합 진입) -->
-    <a href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#0c4a6e; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(14,116,144,0.15);">
+    <a id="ctaOrderFabric" href="/cotton-designer?mode=poster" style="display:block; background:linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%); border-radius:20px; padding:32px 32px; text-decoration:none; color:#0c4a6e; position:relative; overflow:hidden; box-shadow:0 12px 32px rgba(14,116,144,0.15);">
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px;" data-i18n="cta_poster_title">
@@ -899,6 +899,36 @@ async function submitRollFabricRequest() {
         </div>
     </div>
 </section>
+<script>
+// 2026-05-23: "원단 주문하기" CTA — 화면에 표시된 언어(__PS_LANG)에 맞는 디자이너로 이동.
+//   cotton-printer.com(JP 도메인)에서 한국어로 보고 있을 때도, 버튼은 한국 상세(cafe2626)로 가도록
+//   언어별 cafe 도메인 절대주소로 직접 지정. (새로고침/도메인 언어고정 로직은 건드리지 않음)
+(function(){
+    function cafeHost(l){
+        if (l === 'ja' || l === 'jp') return 'www.cafe0101.com';
+        if (l === 'en' || l === 'us') return 'chameleon.design';
+        return 'www.cafe2626.com'; // ko 및 기타
+    }
+    function setCta(){
+        var a = document.getElementById('ctaOrderFabric');
+        if (!a) return;
+        var lang = window.__PS_LANG || 'ko';
+        var url = 'https://' + cafeHost(lang) + '/fabric?mode=poster';
+        // 광고 클릭 파라미터(gclid 등) 이어붙이기 — 크로스도메인 전환 추적 유지
+        try {
+            var sp = new URLSearchParams(location.search);
+            ['gclid','gbraid','wbraid','gclsrc','utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach(function(k){
+                var v = sp.get(k); if (v) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
+            });
+        } catch(e){}
+        a.setAttribute('href', url);
+        a.setAttribute('data-adq','1'); // 다른 데코레이터가 중복 처리하지 않도록
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setCta);
+    else setCta();
+    setTimeout(setCta, 400); // 다른 링크 데코레이터 이후 한 번 더 보정
+})();
+</script>
 <style>
 @media (max-width:768px) {
     .cta-grid { grid-template-columns:1fr !important; text-align:center; }
