@@ -852,17 +852,52 @@ async function submitRollFabricRequest() {
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px;" data-i18n="cta_poster_title">
-                    이미지를 올리고 인쇄할 가로 또는 세로 사이즈를 적어주세요.
+                    원단 주문하기
                 </h2>
             </div>
             <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
                 <div style="background:#0c4a6e; color:#bae6fd; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(12,74,110,0.3); white-space:nowrap;">
-                    <i class="fa-solid fa-image"></i> &nbsp;<span data-i18n="cta_poster_btn">패브릭포스터</span>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> &nbsp;<span data-i18n="cta_poster_btn">내원단 만들기</span>
                 </div>
                 <div style="font-size:11px; color:#075985; opacity:0.7;" data-i18n="cta_poster_sample">1장 그대로 인쇄</div>
             </div>
         </div>
     </a>
+
+    <!-- 2026-05-23: 코튼프린트 장점 설명 (하늘색 버튼 아래) -->
+    <div style="background:#fffdf7; border:1px solid #f0e6d2; border-radius:20px; padding:28px 28px;">
+        <h3 style="font-size:18px; font-weight:900; color:#451a03; margin:0 0 20px; text-align:center;" data-i18n="adv_title">왜 코튼프린트일까요?</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px;">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="font-size:24px; line-height:1; flex-shrink:0;">🧵</div>
+                <div>
+                    <div style="font-weight:800; color:#451a03; font-size:14px; margin-bottom:5px;" data-i18n="adv1_t">원하는 원단을 소량부터</div>
+                    <div style="font-size:13px; color:#6b5b4a; line-height:1.65;" data-i18n="adv1_d">내가 원하는 원단을 가장 높은 수준의 패브릭 인쇄 시스템으로 소량부터 인쇄할 수 있습니다.</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="font-size:24px; line-height:1; flex-shrink:0;">🌿</div>
+                <div>
+                    <div style="font-weight:800; color:#451a03; font-size:14px; margin-bottom:5px;" data-i18n="adv2_t">그린가드 골드 · 무독성 안전</div>
+                    <div style="font-size:13px; color:#6b5b4a; line-height:1.65;" data-i18n="adv2_d">화학 냄새가 전혀 나지 않는 그린가드 골드 등급 프린팅. 세탁해도 색빠짐이 없고, 아기가 입에 넣고 놀아도 안전합니다.</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="font-size:24px; line-height:1; flex-shrink:0;">🔍</div>
+                <div>
+                    <div style="font-weight:800; color:#451a03; font-size:14px; margin-bottom:5px;" data-i18n="adv3_t">완벽한 해상도</div>
+                    <div style="font-size:13px; color:#6b5b4a; line-height:1.65;" data-i18n="adv3_d">아주 작은 글씨까지 완벽한 해상도로 선명하게 인쇄됩니다.</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+                <div style="font-size:24px; line-height:1; flex-shrink:0;">🏆</div>
+                <div>
+                    <div style="font-weight:800; color:#451a03; font-size:14px; margin-bottom:5px;" data-i18n="adv4_t">세계 최초 피그먼트 인쇄</div>
+                    <div style="font-size:13px; color:#6b5b4a; line-height:1.65;" data-i18n="adv4_d">2026년 개발된 세계 최초의 피그먼트 인쇄 방식으로 당신의 제품에 품격을 더합니다.</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 <style>
 @media (max-width:768px) {
@@ -2712,17 +2747,27 @@ cta_yellow_title: {
 },
 cta_yellow_desc: { ko:'', ja:'', en:'', zh:'', ar:'', es:'', de:'', fr:'' },
 cta_poster_title: {
-    ko:'이미지를 올리고 인쇄할 가로 또는 세로 사이즈를 적어주세요.',
-    ja:'画像をアップロードして、横または縦の印刷サイズを入力してください。',
-    en:'Upload an image and enter the desired print width or height.',
-    zh:'上传图片，输入打印的横向或纵向尺寸。',
-    ar:'ارفع صورة وأدخل العرض أو الارتفاع المطلوب للطباعة.',
-    es:'Sube una imagen e introduce el ancho o alto de impresión.',
-    de:'Bild hochladen und gewünschte Druckbreite oder -höhe eingeben.',
-    fr:'Téléchargez une image et indiquez la largeur ou hauteur d\'impression.'
+    ko:'원단 주문하기',
+    ja:'生地を注文する',
+    en:'Order fabric',
+    zh:'订购面料',
+    ar:'اطلب القماش',
+    es:'Pedir tela',
+    de:'Stoff bestellen',
+    fr:'Commander le tissu'
 },
-cta_poster_btn: { ko:'패브릭포스터', ja:'ファブリックポスター', en:'Fabric Poster', zh:'布艺海报', ar:'ملصق قماش', es:'Póster de Tela', de:'Stoffposter', fr:'Affiche en tissu' },
+cta_poster_btn: { ko:'내원단 만들기', ja:'オリジナル生地を作る', en:'Make my fabric', zh:'制作我的面料', ar:'اصنع قماشي', es:'Crear mi tela', de:'Meinen Stoff erstellen', fr:'Créer mon tissu' },
 cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
+// 2026-05-23: 코튼프린트 장점 설명
+adv_title: { ko:'왜 코튼프린트일까요?', ja:'なぜコットンプリントなのか', en:'Why Cotton Print?' },
+adv1_t: { ko:'원하는 원단을 소량부터', ja:'お好みの生地を小ロットから', en:'Any fabric, even small runs' },
+adv1_d: { ko:'내가 원하는 원단을 가장 높은 수준의 패브릭 인쇄 시스템으로 소량부터 인쇄할 수 있습니다.', ja:'お好みの生地を、最高水準のファブリック印刷システムで小ロットから印刷できます。', en:'Print the fabric you want — even in small runs — on the highest-grade fabric printing system.' },
+adv2_t: { ko:'그린가드 골드 · 무독성 안전', ja:'グリーンガード・ゴールド認証', en:'GREENGUARD Gold · non-toxic' },
+adv2_d: { ko:'화학 냄새가 전혀 나지 않는 그린가드 골드 등급 프린팅. 세탁해도 색빠짐이 없고, 아기가 입에 넣고 놀아도 안전합니다.', ja:'化学臭が全くしないグリーンガード・ゴールド認証プリント。洗濯しても色落ちせず、赤ちゃんが口に入れて遊んでも安全です。', en:'GREENGUARD Gold certified printing with zero chemical odor — no fading in the wash, and safe even if a baby puts it in their mouth.' },
+adv3_t: { ko:'완벽한 해상도', ja:'完璧な解像度', en:'Perfect resolution' },
+adv3_d: { ko:'아주 작은 글씨까지 완벽한 해상도로 선명하게 인쇄됩니다.', ja:'極小の文字まで完璧な解像度で鮮明に印刷されます。', en:'Even the tiniest text prints in perfect, crisp resolution.' },
+adv4_t: { ko:'세계 최초 피그먼트 인쇄', ja:'世界初のピグメント印刷', en:"World's-first pigment printing" },
+adv4_d: { ko:'2026년 개발된 세계 최초의 피그먼트 인쇄 방식으로 당신의 제품에 품격을 더합니다.', ja:'2026年に開発された世界初のピグメント印刷方式で、あなたの製品に品格を添えます。', en:'The world\'s first pigment printing method (developed 2026) adds premium quality to your product.' },
 cta_yellow_btn: { ko:'내원단 만들기', ja:'デザイナーを開く', en:'Open Designer', zh:'打开设计师', ar:'افتح المصمم', es:'Abrir Disenador', de:'Designer offnen', fr:'Ouvrir Designer' },
 cta_yellow_sample: { ko:'샘플 9,460원부터', ja:'サンプル¥946〜', en:'Samples from $9.46', zh:'样品 $9.46起', ar:'عينات من $9.46', es:'Muestras desde $9.46', de:'Muster ab $9.46', fr:'Echantillons des $9.46' },
 cat_section_title: { ko:'원단 카테고리', ja:'生地カテゴリー', en:'Fabric Categories', zh:'面料类别', ar:'فئات القماش', es:'Categorias de Tela', de:'Stoff-Kategorien', fr:'Categories de Tissu' },
