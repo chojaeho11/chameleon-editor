@@ -1665,6 +1665,7 @@ window._cdAddToCart = async function() {
         var _later = _L1==='ja' ? '画像は後送' : _L1==='en' ? 'image to follow' : '이미지 추후 전달';
         _it1.title = (_it1.fabricName || _it1.title || '원단') + ' — ' + _later;
         var _c1 = getCart(); _c1.push(_it1); saveCart(_c1);
+        try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(_it1.price, 'KRW'); } catch(e){}
         window._cpUpdateCartUI();
         showToast((window.cdT && window.cdT('cart_added_toast') ? window.cdT('cart_added_toast').replace('{n}', _c1.length) : '장바구니에 담았습니다 (' + _c1.length + '개)'));
         setTimeout(window._cpCartOpen, 400);
@@ -1678,6 +1679,7 @@ window._cdAddToCart = async function() {
     const cart = getCart();
     cart.push(item);
     saveCart(cart);
+    try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(item.price, 'KRW'); } catch(e){}
     window._cpUpdateCartUI();
     showToast((window.cdT && window.cdT('cart_added_toast')
         ? window.cdT('cart_added_toast').replace('{n}', cart.length)
@@ -1699,6 +1701,7 @@ window._cdBuyNow = async function() {
         var _later2 = _L2==='ja' ? '画像は後送' : _L2==='en' ? 'image to follow' : '이미지 추후 전달';
         _it2.title = (_it2.fabricName || _it2.title || '원단') + ' — ' + _later2;
         var _c2 = getCart(); _c2.push(_it2); saveCart(_c2);
+        try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(_it2.price, 'KRW'); } catch(e){}
         window._cpUpdateCartUI();
         window._cpGoCheckout();
         return;
@@ -1714,6 +1717,7 @@ window._cdBuyNow = async function() {
     // 통과 — cart에 추가 후 즉시 체크아웃
     cart.push(item);
     saveCart(cart);
+    try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(item.price, 'KRW'); } catch(e){}
     window._cpUpdateCartUI();
     window._cpGoCheckout();
 };
