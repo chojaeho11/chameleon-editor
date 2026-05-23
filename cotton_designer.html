@@ -136,6 +136,9 @@ window.__CD_I18N = {
     side_fabric: { ko:'원단 선택', ja:'生地を選ぶ', en:'Select Fabric' },
     side_color: { ko:'색상 선택', ja:'色を選ぶ', en:'Color' },
     side_image_size: { ko:'이미지 사이즈 (한 패턴 단위)', ja:'画像サイズ (1パターン)', en:'Image size (one tile)' },
+    side_pattern_size: { ko:'패턴 사이즈 (한 패턴 단위)', ja:'パターンサイズ (1パターン)', en:'Pattern size (one tile)' },
+    layout_poster: { ko:'패브릭포스터', ja:'ファブリックポスター', en:'Fabric Poster' },
+    layout_pattern_toggle: { ko:'패턴 원단 인쇄', ja:'パターン生地印刷', en:'Pattern fabric print' },
     aspect_lock: { ko:'비율 유지', ja:'比率固定', en:'Lock ratio' },
     width_cm: { ko:'가로 (mm)', ja:'横 (mm)', en:'Width (mm)' },
     height_cm: { ko:'세로 (mm)', ja:'縦 (mm)', en:'Height (mm)' },
@@ -686,10 +689,22 @@ a { text-decoration: none; color: inherit; }
     border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer;
 }
 
-/* 레이아웃 (5 패턴) */
+/* 레이아웃 */
 .layouts {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
 }
+/* 2026-05-23: 패브릭포스터(기본·초록) / 패턴 원단 인쇄 토글 버튼 */
+.poster-btn, .pattern-toggle-btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:14px; border-radius:10px; cursor:pointer;
+    font-weight:800; font-size:14px; box-sizing:border-box; margin-bottom:8px;
+    transition:all 0.15s; font-family:inherit;
+}
+.poster-btn { border:2px solid #16a34a; background:#f0fdf4; color:#15803d; }
+.poster-btn.active { background:#16a34a; color:#fff; }
+.pattern-toggle-btn { border:2px solid var(--cream-dark); background:#fff; color:var(--brown); }
+.pattern-toggle-btn:hover { border-color:var(--accent); }
+.pattern-toggle-btn.active { border-color:var(--brown-dark); background:var(--cream-dark); }
 .layout-btn {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
     padding: 10px 4px; border: 1.5px solid var(--border); border-radius: 8px;
@@ -1027,15 +1042,22 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 레이아웃 (2026-05-11: 이미지 사이즈 위로 이동 — 패턴 배치 먼저 선택) -->
+        <!-- 레이아웃 (2026-05-23: 기본=패브릭포스터, 패턴 원단 인쇄 선택 시에만 4개 패턴 노출) -->
         <div class="side-card">
             <div class="side-card-title" data-cdi18n="side_layout">레이아웃</div>
-            <div class="layouts">
-                <div class="layout-btn" data-layout="centered" onclick="window._cdSelectLayout('centered')">
-                    <div class="layout-preview" style="font-size:18px;">R</div>
-                    <div class="layout-name">Centered</div>
-                </div>
-                <div class="layout-btn active" data-layout="basic" onclick="window._cdSelectLayout('basic')">
+            <!-- 패브릭포스터 (기본·초록) -->
+            <div id="posterBtn" class="poster-btn active" onclick="window._cdSelectLayout('centered')">
+                <i class="fa-solid fa-image"></i>
+                <span data-cdi18n="layout_poster">패브릭포스터</span>
+            </div>
+            <!-- 패턴 원단 인쇄 (누르면 4개 패턴 + 배경색 + 패턴사이즈 노출) -->
+            <div id="patternToggle" class="pattern-toggle-btn" onclick="window._cdEnterPatternMode()">
+                <i class="fa-solid fa-table-cells"></i>
+                <span data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</span>
+            </div>
+            <!-- 4개 패턴 (패턴 원단 인쇄 클릭 시 표시) -->
+            <div class="layouts" id="patternLayouts" style="display:none; margin-top:4px;">
+                <div class="layout-btn" data-layout="basic" onclick="window._cdSelectLayout('basic')">
                     <div class="layout-preview">RR<br>RR</div>
                     <div class="layout-name">Basic</div>
                 </div>
@@ -1054,8 +1076,8 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 배경색 (2026-05-12: 레이아웃 바로 아래로 이동 — 시각 옵션 같이) -->
-        <div class="side-card" id="bgColorCard">
+        <!-- 배경색 (2026-05-23: 패턴 원단 인쇄 선택 시에만 표시) -->
+        <div class="side-card" id="bgColorCard" style="display:none;">
             <div class="side-card-title" data-cdi18n="side_bgcolor">배경색</div>
             <div style="font-size:11px; color:var(--text-light); line-height:1.5; margin-bottom:10px;" data-cdi18n="side_bgcolor_desc">투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.</div>
             <div class="bg-swatches" id="bgSwatches">
@@ -1081,10 +1103,10 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 이미지 사이즈 -->
-        <div class="side-card">
+        <!-- 패턴 사이즈 (2026-05-23: 패턴 원단 인쇄 선택 시에만 표시 · 이미지사이즈→패턴사이즈) -->
+        <div class="side-card" id="imgSizeCard" style="display:none;">
             <div class="side-card-title">
-                <span data-cdi18n="side_image_size">이미지 사이즈 (한 패턴 단위)</span>
+                <span data-cdi18n="side_pattern_size">패턴 사이즈 (한 패턴 단위)</span>
                 <label style="font-size:11px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:var(--brown);">
                     <input type="checkbox" id="aspectLock" checked style="margin:0;"> <span data-cdi18n="aspect_lock">비율 유지</span>
                 </label>
@@ -1525,6 +1547,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=66"></script>
+<script src="/cotton_designer.js?v=67"></script>
 </body>
 </html>

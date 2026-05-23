@@ -648,6 +648,14 @@ window._cdSelectLayout = function(name) {
     const prev = state.layout;
     state.layout = name;
     document.querySelectorAll('.layout-btn').forEach(el => el.classList.toggle('active', el.dataset.layout === name));
+    // 2026-05-23: 패브릭포스터(centered) = 기본 / 그 외 = 패턴 모드.
+    //   패턴 모드일 때만 4개 패턴 + 배경색 + 패턴사이즈 패널 노출.
+    var isPoster = (name === 'centered');
+    var _pl = document.getElementById('patternLayouts'); if (_pl) _pl.style.display = isPoster ? 'none' : '';
+    var _bg = document.getElementById('bgColorCard');    if (_bg) _bg.style.display = isPoster ? 'none' : '';
+    var _ic = document.getElementById('imgSizeCard');    if (_ic) _ic.style.display = isPoster ? 'none' : '';
+    var _pb = document.getElementById('posterBtn');      if (_pb) _pb.classList.toggle('active', isPoster);
+    var _pt = document.getElementById('patternToggle');  if (_pt) _pt.classList.toggle('active', !isPoster);
     // 2026-05-14: 다른 레이아웃 → centered 전환 시 이미지 사이즈에 출력 사이즈를 맞춤 (꽉차게).
     //   이미 centered 였거나 이미지 미로드면 skip.
     if (name === 'centered' && prev !== 'centered' && state.img && state.imgAspect) {
@@ -658,6 +666,13 @@ window._cdSelectLayout = function(name) {
         if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
     window._cdRender();
+};
+
+// 2026-05-23: "패턴 원단 인쇄" 클릭 → 4개 패턴 노출 + 패턴 모드 진입 (기본 패턴=basic).
+//   이미 패턴 모드면 현재 패턴 유지.
+window._cdEnterPatternMode = function() {
+    var pl = document.getElementById('patternLayouts'); if (pl) pl.style.display = '';
+    if (state.layout === 'centered') window._cdSelectLayout('basic');
 };
 
 // ────────────────────────────────────────────────
