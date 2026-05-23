@@ -4275,7 +4275,7 @@
         if (fabricItems.length > 0) {
             sections.push('<div style="font-size:11px; font-weight:800; color:#64748b; margin:10px 0 6px;">✂️ ' + tr('패브릭', 'ファブリック', 'Fabric') + '</div>');
             const fabHtml = fabricItems.map((it) => {
-                const sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
+                const sz = it.orderSize || ((it.width_mm || Math.round((it.orderWcm||0)*10)) + '×' + (it.height_mm || Math.round((it.orderHcm||0)*10)) + 'mm');
                 const opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? '마감: ' + it.finishName : ''].filter(Boolean).join(' · ');
                 const thumb = it.thumbDataUrl || it.cartImageUrl || it.designerOriginalUrl || it.imgUrl || it.img || '';
                 const allIdx = allItems.indexOf(it);
@@ -4685,7 +4685,7 @@
             var name, opts;
             if (_soIsFabricItem(it)) {
                 name = it.title || it.fabricName || '패브릭';
-                var sz = it.orderSize || ((it.orderWcm || (it.orderWmm/10)) + '×' + (it.orderHcm || (it.orderHmm/10)) + 'cm');
+                var sz = it.orderSize || ((it.width_mm || Math.round((it.orderWcm||0)*10)) + '×' + (it.height_mm || Math.round((it.orderHcm||0)*10)) + 'mm');
                 opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? ('마감: ' + it.finishName) : ''].filter(Boolean).join(' · ');
             } else {
                 name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || tr('상품','商品','Item'));

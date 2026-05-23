@@ -16,6 +16,11 @@ const ROLL_MAX_WIDTH_CM = 130;     // 대폭 한계 — 초과 시 이어박기
 const SEAM_EXTRA_KRW = 10000;      // 이어박기 추가비 (130cm 초과 시, 1회 부과)
 const HALF_HOEBAE_PRICE = 6000;    // 반마(0.5회배 이하) 특가
 
+// 2026-05-23: 화면 표시·입력은 mm, 내부 계산·저장은 cm 그대로 유지 (가격 100% 동일).
+//   경계(입력 읽기 / 입력 쓰기 / 라벨)에서만 변환한다. cm↔mm.
+function _cdMm(cm) { return Math.round((parseFloat(cm) || 0) * 10); }   // cm → mm (표시용 정수)
+function _cdCm(mm) { return (parseFloat(mm) || 0) / 10; }               // mm → cm (내부 계산)
+
 // 원단 8종 (가격 동일, 회배 단가 사용)
 // 2026-05-11: name_ja/en + desc_ja/en 추가 — 일본/미국 사이트 번역
 const FABRIC_TYPES = {
@@ -275,14 +280,14 @@ window._cdUploadImage = async function(files) {
                 state.imgHcm = Math.round(hCm * 10) / 10;
                 state.orderWcm = state.imgWcm;
                 state.orderHcm = state.imgHcm;
-                const oW = document.getElementById('orderWcm'); if (oW) oW.value = state.orderWcm;
-                const oH = document.getElementById('orderHcm'); if (oH) oH.value = state.orderHcm;
+                const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
+                const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
             } else {
                 state.imgWcm = 10;
                 state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
             }
-            document.getElementById('imgWcm').value = state.imgWcm;
-            document.getElementById('imgHcm').value = state.imgHcm;
+            document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
+            document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
             document.getElementById('uploadZone').style.display = 'none';
             document.getElementById('previewArea').classList.add('active');
             document.getElementById('btnReset').style.display = '';
@@ -590,7 +595,7 @@ function updateFabricDetail() {
     // 2026-05-11: 현재 언어로 원단 이름/설명 표시 + 최대폭 라벨도 i18n
     var nm = pickFabricName(f);
     var ds = pickFabricDesc(f);
-    var maxLbl = window.cdT ? (window.cdT('side_output_max') || '대폭 130cm') : '대폭 130cm';
+    var maxLbl = window.cdT ? (window.cdT('side_output_max') || '대폭 1300mm') : '대폭 1300mm';
     document.getElementById('fabricDesc').innerHTML = `<b>${nm}</b><div style="font-size:11px; color:var(--text-light); margin-top:4px;">${ds} · ${maxLbl}</div>`;
 }
 
@@ -627,13 +632,13 @@ function renderFinishOptions() {
 
 function updateSizeLabels() {
     // 2026-05-11: 상/좌 라벨 제거 — 캔버스 아래 "가로 × 세로 : W × H" 형식 (dimW/dimH spans)
-    var w = state.orderWcm.toFixed(0);
-    var h = state.orderHcm.toFixed(0);
+    var w = _cdMm(state.orderWcm);   // 2026-05-23: 화면 표시는 mm
+    var h = _cdMm(state.orderHcm);
     var dW = document.getElementById('dimW'); if (dW) dW.textContent = w;
     var dH = document.getElementById('dimH'); if (dH) dH.textContent = h;
     // 레거시 ID 참조 안전장치 (다른 코드에서 호출돼도 깨지지 않게)
-    var top = document.getElementById('topSizeLabel'); if (top) top.textContent = w + 'cm';
-    var side = document.getElementById('sideSizeLabel'); if (side) side.textContent = h + 'cm';
+    var top = document.getElementById('topSizeLabel'); if (top) top.textContent = w + 'mm';
+    var side = document.getElementById('sideSizeLabel'); if (side) side.textContent = h + 'mm';
 }
 
 // ────────────────────────────────────────────────
@@ -648,8 +653,8 @@ window._cdSelectLayout = function(name) {
     if (name === 'centered' && prev !== 'centered' && state.img && state.imgAspect) {
         state.orderWcm = state.imgWcm;
         state.orderHcm = state.imgHcm;
-        const oW = document.getElementById('orderWcm'); if (oW) oW.value = state.orderWcm;
-        const oH = document.getElementById('orderHcm'); if (oH) oH.value = state.orderHcm;
+        const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
+        const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
         if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
     window._cdRender();
@@ -681,11 +686,11 @@ window._cdCalcHoebae = function() {
     const wEl = document.getElementById('orderWcm');
     const hEl = document.getElementById('orderHcm');
     const qEl = document.getElementById('orderQty');
-    let w = parseFloat(wEl.value) || 130;
-    let h = parseFloat(hEl.value) || 100;
+    let w = _cdCm(wEl.value) || 130;   // 2026-05-23: 입력값은 mm → 내부는 cm 로 변환
+    let h = _cdCm(hEl.value) || 100;
     let q = parseInt(qEl.value) || 1;
     // 130cm 초과 허용 — 이어박기 처리 (상한 1000cm 안전장치)
-    if (w > 1000) { w = 1000; wEl.value = 1000; }
+    if (w > 1000) { w = 1000; wEl.value = _cdMm(1000); }
     if (w < 10) w = 10;
     if (h < 10) h = 10;
     if (q < 1) q = 1;
@@ -702,7 +707,7 @@ window._cdCalcHoebae = function() {
             const newH = Math.round((w / state.imgAspect) * 10) / 10;
             if (newH >= 10) {
                 h = newH;
-                hEl.value = h;
+                hEl.value = _cdMm(h);
                 _ctSyncImg = true;
             }
         } else if (h !== prevH && w === prevW) {
@@ -710,7 +715,7 @@ window._cdCalcHoebae = function() {
             const newW = Math.round((h * state.imgAspect) * 10) / 10;
             if (newW >= 10 && newW <= 1000) {
                 w = newW;
-                wEl.value = w;
+                wEl.value = _cdMm(w);
                 _ctSyncImg = true;
             }
         }
@@ -719,8 +724,8 @@ window._cdCalcHoebae = function() {
     // 이미지 인풋 sync — aspect 재계산이 일어났을 때만 (사용자가 image 인풋에 타이핑 중일 땐 X).
     if (_ctSyncImg) {
         state.imgWcm = w; state.imgHcm = h;
-        const iW = document.getElementById('imgWcm'); if (iW && document.activeElement !== iW) iW.value = w;
-        const iH = document.getElementById('imgHcm'); if (iH && document.activeElement !== iH) iH.value = h;
+        const iW = document.getElementById('imgWcm'); if (iW && document.activeElement !== iW) iW.value = _cdMm(w);
+        const iH = document.getElementById('imgHcm'); if (iH && document.activeElement !== iH) iH.value = _cdMm(h);
     }
     // 이어박기 자동 결정 — 2026-05-22: 가로·세로 둘 다 130cm 초과일 때만 (한 변이 130 이하면 돌려서 출력 가능)
     state.seamExtra = (w > ROLL_MAX_WIDTH_CM && h > ROLL_MAX_WIDTH_CM) ? SEAM_EXTRA_KRW : 0;
@@ -848,35 +853,36 @@ window._cdOnSizeInput = function(which) {
     const hInput = document.getElementById('imgHcm');
     const lockEl = document.getElementById('aspectLock');
     const locked = lockEl ? lockEl.checked : true;
+    // 2026-05-23: 입력값은 mm. 비율(aspect)은 무차원이라 mm 끼리 그대로 계산.
     if (locked && state.imgAspect) {
         if (which === 'w') {
-            const w = parseFloat(wInput.value) || 1;
-            const h = Math.round((w / state.imgAspect) * 10) / 10;
+            const w = parseFloat(wInput.value) || 1;          // mm
+            const h = Math.round(w / state.imgAspect);        // mm
             hInput.value = h;
         } else {
-            const h = parseFloat(hInput.value) || 1;
-            const w = Math.round((h * state.imgAspect) * 10) / 10;
+            const h = parseFloat(hInput.value) || 1;          // mm
+            const w = Math.round(h * state.imgAspect);        // mm
             wInput.value = w;
         }
     }
-    // 패턴 한 타일 폭 경고 (이미지 타일 사이즈)
-    const w = parseFloat(wInput.value) || 0;
-    if (w > 130) {
+    // 패턴 한 타일 폭 경고 (이미지 타일 사이즈) — mm 기준
+    const w = parseFloat(wInput.value) || 0;                  // mm
+    if (w > 1300) {
         var lang = window.__CD_LANG || 'ko';
-        var msg = lang === 'ja' ? 'パターンタイルの最大幅は130cmです'
-                : lang === 'en' ? 'Max tile width is 130cm'
-                : '패턴 타일의 최대 폭은 130cm입니다';
+        var msg = lang === 'ja' ? 'パターンタイルの最大幅は1300mmです'
+                : lang === 'en' ? 'Max tile width is 1300mm'
+                : '패턴 타일의 최대 폭은 1300mm입니다';
         showToast(msg);
     }
-    // 2026-05-14: centered 레이아웃 = 패브릭포스터 모드 → 출력 사이즈 동기화
+    // 2026-05-14: centered 레이아웃 = 패브릭포스터 모드 → 출력 사이즈 동기화 (입력 mm → 내부 cm)
     if (state.layout === 'centered') {
-        const newW = parseFloat(wInput.value) || 0;
-        const newH = parseFloat(hInput.value) || 0;
+        const newWmm = parseFloat(wInput.value) || 0;
+        const newHmm = parseFloat(hInput.value) || 0;
         const oW = document.getElementById('orderWcm');
         const oH = document.getElementById('orderHcm');
-        if (oW && newW > 0) oW.value = newW;
-        if (oH && newH > 0) oH.value = newH;
-        state.orderWcm = newW; state.orderHcm = newH;
+        if (oW && newWmm > 0) oW.value = newWmm;
+        if (oH && newHmm > 0) oH.value = newHmm;
+        state.orderWcm = _cdCm(newWmm); state.orderHcm = _cdCm(newHmm);
         if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
     window._cdRender();
@@ -927,8 +933,8 @@ window._cdOnAccessoryChange = function() {
 window._cdRender = function() {
     if (!state.img) return;
 
-    state.imgWcm = parseFloat(document.getElementById('imgWcm').value) || 10;
-    state.imgHcm = parseFloat(document.getElementById('imgHcm').value) || 10;
+    state.imgWcm = _cdCm(document.getElementById('imgWcm').value) || 10;   // 2026-05-23: 입력 mm → cm
+    state.imgHcm = _cdCm(document.getElementById('imgHcm').value) || 10;
 
     // 출력 사이즈 (cm) — 가용 폭 자동 감지
     const fabricW = state.orderWcm || 130;
@@ -1061,7 +1067,7 @@ function drawRulers(cw, ch, pxPerCm, fabricW, fabricH) {
             rc.lineTo(x, rh - tickH);
             rc.stroke();
             if (cm % 10 === 0 && cm > 0) {
-                rc.fillText(cm.toString(), x, rh - 10);
+                rc.fillText((cm * 10).toString(), x, rh - 10);   // 2026-05-23: mm 라벨 (10cm마다 = 100mm)
             }
         }
     }
@@ -1095,7 +1101,7 @@ function drawRulers(cw, ch, pxPerCm, fabricW, fabricH) {
                 lc.translate(rw - 11, y);
                 lc.rotate(-Math.PI / 2);
                 lc.textAlign = 'center';
-                lc.fillText(cm.toString(), 0, 0);
+                lc.fillText((cm * 10).toString(), 0, 0);   // 2026-05-23: mm 라벨
                 lc.restore();
             }
         }
@@ -1267,7 +1273,7 @@ window._cpUpdateCartUI = function() {
             if (cart.length > 0) {
                 fabricHtml = '<div style="font-size:12px; font-weight:800; color:#64748b; margin:4px 0 8px;"><i class="fa-solid fa-scissors" style="margin-right:6px;"></i>' + T('cart_section_fabric', '패브릭') + '</div>' +
                 cart.map(function(it, i) {
-                    const sz = it.orderSize || ((it.orderWcm||(it.orderWmm/10)) + '×' + (it.orderHcm||(it.orderHmm/10)) + 'cm');
+                    const sz = it.orderSize || ((it.width_mm || Math.round((it.orderWcm||0)*10)) + '×' + (it.height_mm || Math.round((it.orderHcm||0)*10)) + 'mm');
                     const opts = [
                         it.fabricName,
                         L.output + ' ' + sz,
@@ -1561,13 +1567,13 @@ function buildCartItem() {
         fabricColor: f.isCotton ? state.fabricColor : null,
         orderWcm: state.orderWcm,
         orderHcm: state.orderHcm,
-        orderSize: state.orderWcm + '×' + state.orderHcm + 'cm',
+        orderSize: _cdMm(state.orderWcm) + '×' + _cdMm(state.orderHcm) + 'mm',
         width_mm: Math.round(state.orderWcm * 10),
         height_mm: Math.round(state.orderHcm * 10),
         hoebae: hoebae,
         rawHoebae: rawHoebae,
         unitPrice: itemPrice,
-        imageSize: state.imgWcm + '×' + state.imgHcm + 'cm',
+        imageSize: _cdMm(state.imgWcm) + '×' + _cdMm(state.imgHcm) + 'mm',
         // 2026-05-11: 패턴 셀 크기 — pattern_spec.cell_cm 으로 정확히 흘러가도록 명시.
         // 이전엔 imageSize 문자열만 있어서 작업지시서에 'undefined×undefined' 표시되던 버그 fix.
         imgWcm: state.imgWcm,
@@ -2156,7 +2162,7 @@ window._cpSubmitOrder = async function() {
                     if (it.finishCode) arr.push({ type:'finish', code:it.finishCode, name:it.finishName, price:it.finishExtra||0 });
                     if (it.hookCode) arr.push({ type:'hook', code:it.hookCode, name:it.hookName, price:it.hookExtra||0 });
                     if (it.accCode) arr.push({ type:'accessory', code:it.accCode, name:it.accName, price:it.accExtra||0 });
-                    if (it.seamExtra && it.seamExtra > 0) arr.push({ type:'seam', code:'seam_join', name:'이어박기 (대폭 130cm 초과)', price:it.seamExtra });
+                    if (it.seamExtra && it.seamExtra > 0) arr.push({ type:'seam', code:'seam_join', name:'이어박기 (대폭 1300mm 초과)', price:it.seamExtra });
                     return arr;
                 })(),
                 unit_price: it.unitPrice,
@@ -2419,8 +2425,8 @@ async function autoLoadPatternFromUrl() {
                 const ratio = img.width / img.height;
                 state.imgWcm = 10;
                 state.imgHcm = Math.round(10 / ratio * 10) / 10;
-                document.getElementById('imgWcm').value = state.imgWcm;
-                document.getElementById('imgHcm').value = state.imgHcm;
+                document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
+                document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
                 document.getElementById('uploadZone').style.display = 'none';
                 document.getElementById('previewArea').classList.add('active');
                 document.getElementById('btnReset').style.display = '';
