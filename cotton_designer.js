@@ -608,7 +608,7 @@ function renderFinishOptions() {
         if (!priceEl) return;
         if (extra === 0) {
             priceEl.textContent = '+' + cdFmtPrice(0) + ' / ' + unitLabel;
-            // 가격 표시: +0원/회배 → +0원/회배 (KR), +¥0/回杯 (JP), +$0/unit (EN)
+            // 가격 표시: +0원/회배 → +0원/회배 (KR), +¥0/m² (JP), +$0/unit (EN)
         } else {
             priceEl.textContent = '+' + cdFmtPrice(extra) + ' / ' + unitLabel;
         }
@@ -752,7 +752,7 @@ window._cdCalcHoebae = function() {
     var lang = window.__CD_LANG || 'ko';
     var tierLbl = '';
     if (tier === 'half') tierLbl = lang==='ja' ? ' (半マ特価)' : lang==='en' ? ' (half-meter)' : ' (반마 특가)';
-    else if (tier === 'min') tierLbl = lang==='ja' ? ' (1回杯適用)' : lang==='en' ? ' (1-unit min)' : ' (1회배 적용)';
+    else if (tier === 'min') tierLbl = lang==='ja' ? ' (1m²適用)' : lang==='en' ? ' (1-unit min)' : ' (1회배 적용)';
     var hoebaeUnit = window.cdT ? (window.cdT('unit_hoebae') || '회배') : '회배';
     document.getElementById('hoebaeAmount').textContent = rawHoebae.toFixed(2) + ' ' + hoebaeUnit + tierLbl;
     document.getElementById('hoebaePrice').textContent = cdFmtPrice(itemPrice);

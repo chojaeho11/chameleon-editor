@@ -147,14 +147,14 @@ window.__CD_I18N = {
     side_output: { ko:'출력 사이즈 (실제 출력)', ja:'出力サイズ (実寸)', en:'Output Size (actual)' },
     width_max: { ko:'가로 (mm)', ja:'横 (mm)', en:'Width (mm)' },
     height_unl: { ko:'세로 (mm) — 무제한', ja:'縦 (mm) — 無制限', en:'Height (mm) — unlimited' },
-    hoebae_label: { ko:'회배 (1m² 기준)', ja:'回杯 (1m²基準)', en:'Units (1m² base)' },
+    hoebae_label: { ko:'회배 (1m² 기준)', ja:'面積 (m²)', en:'Units (1m² base)' },
     hoebae_price: { ko:'회배 단가 × 회배 수', ja:'単価 × 数量', en:'Unit price × count' },
-    hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000 (1m² 기준). 단가: 0.5회배(반마) 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원. 마감도 회배 비례.', ja:'回杯 = 横(mm)×縦(mm) ÷ 1,000,000 (1m²基準)。単価: 0.5回杯(半マ)以下 800円 / 1回杯未満 1,500円 / 1回杯以上 回杯×1,500円。仕上げも回杯比例。', en:'Units = (W × H in mm) ÷ 1,000,000 (1m² base). Price: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units. Finish scales with units.' },
+    hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000 (1m² 기준). 단가: 0.5회배(반마) 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원. 마감도 회배 비례.', ja:'面積(m²) = 横(mm)×縦(mm) ÷ 1,000,000。単価: 0.5m²(半マ)以下 800円 / 1m²未満 1,500円 / 1m²以上 m²×1,500円。仕上げもm²比例。', en:'Units = (W × H in mm) ÷ 1,000,000 (1m² base). Price: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units. Finish scales with units.' },
     seam_notice: { ko:'⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 縦横ともに1300mm超の場合、継ぎ縫い処理となります (+1,000円)', en:'⚠️ Seam joining applies only when both width and height exceed 1300mm (+$10)' },
     seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
-    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5回杯(半マ)以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
-    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1回杯未満は1回杯価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
-    tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원', ja:'単価: 0.5回杯以下 800円 / 1回杯未満 1,500円 / 1回杯以上 回杯×1,500円', en:'Pricing: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units' },
+    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5m²(半マ)以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
+    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1m²未満は1m²価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
+    tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원', ja:'単価: 0.5m²以下 800円 / 1m²未満 1,500円 / 1m²以上 m²×1,500円', en:'Pricing: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
     finish_required: { ko:'필수 / 제곱미터당', ja:'必須 / m²あたり', en:'Required / per m²' },
     finish_roll: { ko:'롤인쇄', ja:'ロール印刷', en:'Roll Print' },
@@ -197,9 +197,9 @@ window.__CD_I18N = {
     side_bgcolor_desc: { ko:'투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.', ja:'透明PNGの場合に背景色が反映されます。通常画像では隠れることがあります。', en:'Background shows through transparent PNGs. Solid images may cover it.' },
     side_bgcolor_custom: { ko:'직접 선택', ja:'カラー選択', en:'Custom' },
     side_qty: { ko:'주문 수량', ja:'注文数量', en:'Order Quantity' },
-    p_unit: { ko:'출력 단가 (회배×15,000)', ja:'印刷単価 (回杯×15,000)', en:'Unit price (units×15,000)' },
+    p_unit: { ko:'출력 단가 (회배×15,000)', ja:'印刷単価 (m²×15,000)', en:'Unit price (units×15,000)' },
     p_qty: { ko:'수량', ja:'数量', en:'Qty' },
-    p_finish: { ko:'마감 / 회배', ja:'仕上げ / 回杯', en:'Finish / unit' },
+    p_finish: { ko:'마감 / 회배', ja:'仕上げ / m²', en:'Finish / unit' },
     p_total: { ko:'합계', ja:'合計', en:'Total' },
     btn_cart: { ko:'장바구니에 담기', ja:'カートに追加', en:'Add to Cart' },
     btn_buynow: { ko:'바로 주문하기', ja:'今すぐ注文', en:'Buy Now' },
@@ -268,7 +268,7 @@ window.__CD_I18N = {
     p_discount: { ko:'대량 할인', ja:'大量割引', en:'Volume discount' },
     hook: { ko:'고리', ja:'吊り具', en:'Hook' },
     acc: { ko:'부자재', ja:'付属品', en:'Accessory' },
-    unit_hoebae: { ko:'회배', ja:'回杯', en:'unit' },
+    unit_hoebae: { ko:'회배', ja:'m²', en:'unit' },
     cart_output: { ko:'출력', ja:'出力', en:'Print' },
     cart_finish: { ko:'마감', ja:'仕上げ', en:'Finish' },
     cart_hook: { ko:'고리', ja:'吊り具', en:'Hook' },
@@ -1548,6 +1548,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=69"></script>
+<script src="/cotton_designer.js?v=70"></script>
 </body>
 </html>
