@@ -876,14 +876,11 @@ async function submitRollFabricRequest() {
     .adv-card:hover { transform:translateY(-10px) scale(1.01); box-shadow:0 28px 50px -16px rgba(69,26,3,0.55); }
     .adv-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .65s ease; }
     .adv-card:hover img { transform:scale(1.1); }
-    .adv-ov { position:absolute; inset:0; background:linear-gradient(to top, rgba(12,8,4,.92) 4%, rgba(12,8,4,.5) 42%, rgba(12,8,4,.06) 78%); }
-    .adv-ic { position:absolute; top:14px; left:14px; width:48px; height:48px; border-radius:50%;
-        background:rgba(255,255,255,.94); display:flex; align-items:center; justify-content:center;
-        font-size:25px; box-shadow:0 6px 18px rgba(0,0,0,.3); }
-    .adv-num { position:absolute; top:18px; right:18px; font-size:34px; font-weight:900; color:rgba(255,255,255,.28); line-height:1; }
-    .adv-tx { position:absolute; left:0; right:0; bottom:0; padding:18px 16px; color:#fff; }
+    .adv-ov { position:absolute; left:0; right:0; bottom:0; height:48%; background:rgba(10,7,3,.6); }
+    .adv-num { position:absolute; top:18px; right:18px; font-size:34px; font-weight:900; color:rgba(255,255,255,.5); line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.35); }
+    .adv-tx { position:absolute; left:0; right:0; bottom:0; height:48%; padding:16px 15px; color:#fff; box-sizing:border-box; display:flex; flex-direction:column; justify-content:flex-start; }
     .adv-t { font-weight:900; font-size:15.5px; line-height:1.3; margin-bottom:7px; text-shadow:0 2px 8px rgba(0,0,0,.55); }
-    .adv-d { font-size:12px; line-height:1.6; opacity:.94; text-shadow:0 1px 5px rgba(0,0,0,.6); }
+    .adv-d { font-size:12px; line-height:1.5; opacity:.94; text-shadow:0 1px 5px rgba(0,0,0,.6); }
     @media (max-width:900px){ .adv-grid{ grid-template-columns:repeat(2,1fr); } }
     @media (max-width:520px){ .adv-grid{ grid-template-columns:1fr; } .adv-card{ aspect-ratio:16/10; } .adv-head h3{ font-size:21px; } }
     </style>
@@ -895,7 +892,7 @@ async function submitRollFabricRequest() {
         <div class="adv-grid">
             <div class="adv-card" style="--g:linear-gradient(150deg,#38bdf8,#0c4a6e);">
                 <img src="/fabric/adv1.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-ic">🧵</div><div class="adv-num">01</div>
+                <div class="adv-ov"></div><div class="adv-num">01</div>
                 <div class="adv-tx">
                     <div class="adv-t" data-i18n="adv1_t">원하는 원단을 소량부터</div>
                     <div class="adv-d" data-i18n="adv1_d">내가 원하는 원단을 가장 높은 수준의 패브릭 인쇄 시스템으로 소량부터 인쇄할 수 있습니다.</div>
@@ -903,7 +900,7 @@ async function submitRollFabricRequest() {
             </div>
             <div class="adv-card" style="--g:linear-gradient(150deg,#4ade80,#14532d);">
                 <img src="/fabric/adv2.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-ic">🌿</div><div class="adv-num">02</div>
+                <div class="adv-ov"></div><div class="adv-num">02</div>
                 <div class="adv-tx">
                     <div class="adv-t" data-i18n="adv2_t">그린가드 골드 · 무독성 안전</div>
                     <div class="adv-d" data-i18n="adv2_d">화학 냄새가 전혀 나지 않는 그린가드 골드 등급 프린팅. 세탁해도 색빠짐이 없고, 아기가 입에 넣고 놀아도 안전합니다.</div>
@@ -911,7 +908,7 @@ async function submitRollFabricRequest() {
             </div>
             <div class="adv-card" style="--g:linear-gradient(150deg,#a78bfa,#4c1d95);">
                 <img src="/fabric/adv3.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-ic">🔍</div><div class="adv-num">03</div>
+                <div class="adv-ov"></div><div class="adv-num">03</div>
                 <div class="adv-tx">
                     <div class="adv-t" data-i18n="adv3_t">완벽한 해상도</div>
                     <div class="adv-d" data-i18n="adv3_d">아주 작은 글씨까지 완벽한 해상도로 선명하게 인쇄됩니다.</div>
@@ -919,7 +916,7 @@ async function submitRollFabricRequest() {
             </div>
             <div class="adv-card" style="--g:linear-gradient(150deg,#fbbf24,#b45309);">
                 <img src="/fabric/adv4.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-ic">🏆</div><div class="adv-num">04</div>
+                <div class="adv-ov"></div><div class="adv-num">04</div>
                 <div class="adv-tx">
                     <div class="adv-t" data-i18n="adv4_t">세계 최초 피그먼트 인쇄</div>
                     <div class="adv-d" data-i18n="adv4_d">2026년 개발된 세계 최초의 피그먼트 인쇄 방식으로 당신의 제품에 품격을 더합니다.</div>
