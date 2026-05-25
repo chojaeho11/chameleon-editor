@@ -982,15 +982,6 @@ ALWAYS match customer's terminology to the correct product category and show rel
                     const m = txt.match(/(?:뒷|끝|마지막|last|下)\s*(?:4\s*)?(?:자리|번호|four|桁)?\s*[:：]?\s*(\d{4})\b/i);
                     return m ? m[1] : '';
                 };
-                const _phoneCandidates = (raw: string): string[] => {
-                    const out = new Set<string>();
-                    if (!raw) return [];
-                    out.add(raw);
-                    if (raw.length === 11 && raw.startsWith('010')) out.add(`${raw.slice(0, 3)}-${raw.slice(3, 7)}-${raw.slice(7)}`);
-                    if (raw.length === 10) out.add(`${raw.slice(0, 3)}-${raw.slice(3, 6)}-${raw.slice(6)}`);
-                    return Array.from(out);
-                };
-
                 // ----- 주문 → 진행상황 텍스트 (담당매니저/배송/결제 포함) -----
                 const _stepOf = (o: any): number => {
                     const s = o.status || '', note = o.admin_note || '';
@@ -1066,15 +1057,36 @@ ALWAYS match customer's terminology to the correct product category and show rel
                 const _SELECT = 'id,status,payment_status,payment_method,total_amount,manager_name,phone,selected_customer_phone,delivery_target_date,delivery_time,staff_manager_id,admin_note,items,created_at,site_code';
                 const _EXCLUDE = ['취소됨', '취소', '삭제됨', '삭제', 'deleted', 'trash', '임시작성', '관리자차단'];
 
-                const orderId = _extractOrderId(trimmedMsg) || _extractOrderId(_scan);
-                const providedFullPhone = _phoneFromMsg(_scan) || _digits(clientCustPhone || '');
-                const providedLast4 = _last4FromMsg(_scan) || (providedFullPhone ? providedFullPhone.slice(-4) : '');
+                // ⚠️ 주문번호는 현재 메시지에서만 추출 (대화기록의 오래된 숫자가 섞이지 않도록).
+                const orderId = _extractOrderId(trimmedMsg);
+                // 전화번호: 현재 메시지 우선 → 저장된 고객전화 → (보조) 최근 대화
+                const _msgPhone = _phoneFromMsg(trimmedMsg);
+                const providedFullPhone = _msgPhone || _digits(clientCustPhone || '') || _phoneFromMsg(_recentConv);
+                const providedLast4 = _last4FromMsg(trimmedMsg) || _last4FromMsg(_recentConv) || (providedFullPhone ? providedFullPhone.slice(-4) : '');
 
-                if (orderId) {
-                    // (2) 주문번호 경로 — 본인확인 필요
+                // 전화 → 정규화 매칭으로 주문목록 조회 (형식 무관: 뒤4자리로 좁힌 뒤 JS 에서 풀번호 대조)
+                const _findOrdersByPhone = async (fullPhone: string): Promise<any[]> => {
+                    if (!fullPhone || fullPhone.length < 8) return [];
+                    const last4 = fullPhone.slice(-4);
+                    let rows: any[] = [];
+                    try {
+                        const { data } = await sb.from('orders').select(_SELECT)
+                            .or(`phone.ilike.%${last4}%,selected_customer_phone.ilike.%${last4}%`)
+                            .order('created_at', { ascending: false }).limit(60);
+                        rows = data || [];
+                    } catch (e) { console.warn('[order-lookup] phone query failed:', (e as any)?.message || e); }
+                    const tail = fullPhone.slice(-10);
+                    return rows.filter((o: any) => {
+                        const ps = [_digits(o.phone), _digits(o.selected_customer_phone)].filter(Boolean);
+                        return ps.some(p => p === fullPhone || (p.length >= 10 && p.slice(-10) === tail) || (p.length >= 8 && p.slice(-8) === fullPhone.slice(-8)));
+                    }).filter((o: any) => !_EXCLUDE.includes(o.status));
+                };
+
+                if (orderId && !_msgPhone) {
+                    // (2) 주문번호 경로 — 본인확인(전화) 후 안내
                     const { data: ord } = await sb.from('orders').select(_SELECT).eq('id', orderId).maybeSingle();
                     if (!ord) {
-                        orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 를 문의했으나 그 번호의 주문이 존재하지 않는다. "주문번호를 다시 확인해 주세요. 또는 주문하실 때 사용한 휴대폰 번호를 알려주시면 바로 조회해 드릴게요" 라고 안내해라. 임의의 주문 정보를 지어내지 마라.`;
+                        orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 를 말했으나 그 번호의 주문이 없다. "주문번호는 모르셔도 괜찮아요. 주문하실 때 입력하신 휴대폰 번호를 알려주시면 제가 바로 조회해 드릴게요" 라고 안내해라. 임의의 주문 정보를 지어내지 마라.`;
                     } else {
                         const _orderPhones = [ord.phone, ord.selected_customer_phone].map(_digits).filter(Boolean);
                         let verified = false;
@@ -1083,34 +1095,24 @@ ALWAYS match customer's terminology to the correct product category and show rel
                         else if (providedLast4 && _orderPhones.some(p => p.slice(-4) === providedLast4)) verified = true;
 
                         if (!verified) {
-                            orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 의 진행상황을 문의했다. 개인정보 보호를 위해 본인확인이 필요하다. "본인 확인을 위해 주문하실 때 입력하신 휴대폰 번호(또는 뒤 4자리)를 알려주세요" 라고 정중히 요청해라. 확인 전에는 절대 주문 상세(금액/배송일/담당자/결제상태 등)를 알려주지 마라.`;
+                            orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 의 진행상황을 문의했다. 개인정보 보호를 위해 본인확인이 필요하다. "본인 확인을 위해, 주문하실 때 입력하신 휴대폰 번호 뒤 4자리만 알려주세요" 라고 정중히 요청해라. 확인 전에는 절대 주문 상세(금액/배송일/담당자/결제상태 등)를 알려주지 마라.`;
                         } else {
                             orderContext = `[주문조회시스템 — 실제 DB 조회 결과다. 이 정보만 사용해 사람처럼 친절히 안내하고, 없는 항목은 지어내지 마라. 반드시 고객의 언어로 답해라.]\n` + (await _orderLine(ord)) + `\n  - 본사: 031-366-1984\n안내 지침: 진행 단계를 자연스럽게 설명하고 배송 예정일을 알려줘라. 추가 문의는 담당 매니저(번호 있으면 포함) 또는 본사로 안내. '입금 전'이면 입금 계좌 안내 포함. 이미 '배송 완료'면 이용 감사 인사를 덧붙여라.`;
                         }
                     }
                 } else if (providedFullPhone) {
-                    // (1) 휴대폰 번호 경로 — 그 번호의 최근 주문 목록 조회
-                    const cands = _phoneCandidates(providedFullPhone);
-                    const orParts: string[] = [];
-                    cands.forEach(c => { orParts.push(`phone.eq.${c}`); orParts.push(`selected_customer_phone.eq.${c}`); });
-                    let list: any[] = [];
-                    try {
-                        const { data } = await sb.from('orders').select(_SELECT)
-                            .or(orParts.join(','))
-                            .order('created_at', { ascending: false }).limit(8);
-                        list = (data || []).filter((o: any) => !_EXCLUDE.includes(o.status));
-                    } catch (e) { console.warn('[order-lookup] phone query failed:', (e as any)?.message || e); }
-
+                    // (1) 휴대폰 번호 경로 (기본) — 그 번호의 최근 주문 목록 조회
+                    const list = await _findOrdersByPhone(providedFullPhone);
                     if (!list.length) {
-                        orderContext = `[주문조회시스템] 고객이 휴대폰 번호 ${providedFullPhone} 로 주문 조회를 요청했으나 그 번호로 접수된 주문이 없다. "입력하신 번호로 접수된 주문을 찾지 못했어요. 번호를 다시 확인해 주시거나, 주문번호를 알려주시면 조회해 드릴게요. 회원이시면 마이페이지 > 주문내역에서도 확인 가능합니다" 라고 정중히 안내해라. 임의의 주문 정보를 지어내지 마라.`;
+                        orderContext = `[주문조회시스템] 고객이 휴대폰 번호 ${providedFullPhone} 로 주문 조회를 요청했으나 그 번호로 접수된 주문이 없다. "입력하신 번호(${providedFullPhone})로 접수된 주문을 찾지 못했어요. 혹시 다른 번호로 주문하셨거나 오타가 없는지 확인해 주시겠어요? 회원이시면 마이페이지 > 주문내역에서도 확인 가능합니다" 라고 정중히 안내해라. 임의의 주문 정보를 지어내지 마라.`;
                     } else {
                         const lines: string[] = [];
                         for (const o of list.slice(0, 5)) lines.push(await _orderLine(o));
                         orderContext = `[주문조회시스템 — 실제 DB 조회 결과다. 이 정보만 사용해 사람처럼 친절히 안내하고, 없는 항목은 지어내지 마라. 반드시 고객의 언어로 답해라.]\n휴대폰 ${providedFullPhone} 로 접수된 최근 주문 ${list.length > 5 ? '5건(이상)' : list.length + '건'}:\n${lines.join('\n')}\n  - 본사: 031-366-1984\n안내 지침: 각 주문의 진행 단계와 배송 예정일을 자연스럽게 정리해서 안내해라. 주문이 여러 건이면 최신순으로 보여줘라. 추가 문의는 담당 매니저(번호 있으면 포함) 또는 본사로 안내. '입금 전'이면 입금 계좌 안내 포함.`;
                     }
                 } else {
-                    // 의도는 있으나 번호 정보 없음 → 휴대폰/주문번호 요청
-                    orderContext = `[주문조회시스템] 고객이 주문 진행/배송 상태(주문내역)를 문의하는 것으로 보인다. "주문하실 때 사용하신 휴대폰 번호를 알려주시면 바로 조회해 드릴게요 (또는 주문번호를 알려주셔도 됩니다)" 라고 정중히 요청해라. 회원이면 마이페이지 > 주문내역에서도 확인 가능하다고 덧붙여라. 번호 확인 전에는 어떤 주문 정보도 지어내거나 노출하지 마라.`;
+                    // 의도는 있으나 번호 정보 없음 → 휴대폰 번호 요청 (주문번호 아님!)
+                    orderContext = `[주문조회시스템] 고객이 주문 진행/배송 상태(주문내역)를 문의하는 것으로 보인다. 주문번호 대신 휴대폰 번호로 바로 조회할 수 있다. "주문번호는 모르셔도 괜찮아요. 주문하실 때 입력하신 휴대폰 번호를 알려주시면 제가 바로 조회해 드릴게요" 라고 정중히 요청해라. (회원이면 마이페이지 > 주문내역에서도 확인 가능). 번호 확인 전에는 어떤 주문 정보도 지어내거나 노출하지 마라.`;
                 }
             }
         } catch (e) { console.warn('[order-lookup] failed:', (e as any)?.message || e); }
