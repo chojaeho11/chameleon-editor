@@ -382,6 +382,31 @@ export default {
         const ua = request.headers.get('user-agent') || '';
         const path = url.pathname.replace(/^\/|\/$/g, '');
 
+        // ========== 2026-05-25: hexa-board.com → 허니콤보드 원판(Hexalite) 전용 도메인 ==========
+        //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
+        //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.
+        if (url.hostname.includes('hexa-board.com')) {
+            const isAssetHB = path.includes('.') && (
+                path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') ||
+                path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.svg') ||
+                path.endsWith('.ico') || path.endsWith('.txt') || path.endsWith('.xml') ||
+                path.endsWith('.mp4') || path.endsWith('.json') || path.endsWith('.webp') ||
+                path.endsWith('.woff') || path.endsWith('.woff2') || path.endsWith('.ttf') ||
+                path.endsWith('.gif')
+            );
+            if (isAssetHB) return await env.ASSETS.fetch(request);
+            // 모든 비-자산 경로 → raw_board.html 프록시 (URL 은 hexa-board.com 유지)
+            const rbRewrite = new URL('/raw_board.html', url.origin);
+            let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
+            if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
+                const loc = new URL(rbResp.headers.get('Location'), url.origin);
+                rbResp = await env.ASSETS.fetch(new Request(loc.toString(), request));
+            }
+            const rbHdrs = new Headers(rbResp.headers);
+            rbHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return new Response(rbResp.body, { status: rbResp.status, headers: rbHdrs });
+        }
+
         // ========== 2026-05-15: cafe3355.com → 종이매대(paper-stand) 전용 도메인 ==========
         // 사용자 결정: cafe3355.com 은 더 이상 US 사이트 아님 (US 는 chameleon.design).
         //   Hexalite(원판) 도메인처럼 cafe3355.com 전체를 paper_stand 랜딩 전용으로 서빙.
