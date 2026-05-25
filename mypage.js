@@ -441,26 +441,37 @@ async function loadOrders() {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">${window.t('msg_loading', 'Loading...')}</td></tr>`;
 
     const { data: orders } = await sb.from('orders')
-        .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, delivery_time, staff_driver_id, admin_note, site_code, files, has_partner_items, selected_customer_phone')
+        .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, delivery_time, staff_manager_id, staff_driver_id, admin_note, site_code, files, has_partner_items, selected_customer_phone')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(100);
 
-    // 2026-05-26: 담당 매니저 전화 + 배송기사 이름 매핑 로드 (진행/배송 안내용, best-effort)
-    var _mgrPhoneMap = {}, _driverMap = {};
+    // 2026-05-26: 매니저 전화(_managers) + admin_staff 이름 매핑 로드 (best-effort)
+    var _mgrPhoneMap = {}, _staffMap = {};
     try {
         const { data: _mgrs } = await sb.from('chatbot_knowledge').select('question,answer').eq('category', '_managers');
         (_mgrs || []).forEach(function(m){ var ph=''; try{ ph=(JSON.parse(m.answer||'{}').phone||'').toString(); }catch(e){} if(ph) _mgrPhoneMap[(m.question||'').trim()] = ph; });
     } catch(e) {}
     try {
         const { data: _stf } = await sb.from('admin_staff').select('id,name');
-        (_stf || []).forEach(function(s){ _driverMap[s.id] = s.name; });
+        (_stf || []).forEach(function(s){ _staffMap[s.id] = s.name; });
     } catch(e) {}
     function _mgrPhone(nm){
         if(!nm) return '';
         if(nm.indexOf('본사')>=0) return '031-366-1984';
         for(var k in _mgrPhoneMap){ var kn=k.replace(/\s*매니저/,''); if(k.indexOf(nm)>=0 || nm.indexOf(kn)>=0) return _mgrPhoneMap[k]; }
         return '';
+    }
+    var _DTIME = { am:'오전', pm:'오후', night:'야간', any:'시간무관' };
+    function _orderDelivery(o){
+        var d=o.delivery_target_date||'', t=o.delivery_time||'';
+        if(!d){
+            try{ var its=(typeof o.items==='string')?JSON.parse(o.items):o.items;
+                if(Array.isArray(its)){ for(var i=0;i<its.length;i++){ var sh=its[i]&&its[i].shipping; if(sh&&sh.delivery_date){ d=sh.delivery_date; if(!t) t=sh.delivery_time||''; break; } } }
+            }catch(e){}
+        }
+        var tl = (_DTIME[t]!==undefined)?_DTIME[t]:t;
+        return (d||'') + (tl?(' '+tl):'');
     }
     function _orderStep(o){
         var s=o.status||'', note=o.admin_note||'';
@@ -483,16 +494,23 @@ async function loadOrders() {
                +(done?'background:#6366f1;color:#fff;':'background:#e2e8f0;color:#94a3b8;')+(cur?'box-shadow:0 0 0 3px rgba(99,102,241,0.2);':'')+'">'+(done?'✓':(i+1))+'</div>'
                +'<div style="font-size:10px; line-height:1.2; '+(cur?'color:#4f46e5;font-weight:800;':'color:#94a3b8;')+'">'+lbl+'</div></div>';
         });
-        var mgr=o.manager_name||'', mp=_mgrPhone(mgr)||'031-366-1984';
-        var drv=o.staff_driver_id?(_driverMap[o.staff_driver_id]||''):'';
-        var dd=o.delivery_target_date||'', dt=o.delivery_time||'';
-        var info='';
-        info+='<div>👤 '+window.t('od_manager','담당 매니저')+': <b>'+(mgr||window.t('od_assigning','배정 중'))+'</b>'+(mp?' · <a href="tel:'+mp.replace(/-/g,'')+'" style="color:#4f46e5;text-decoration:none;font-weight:700;">'+mp+'</a>':'')+'</div>';
-        info+='<div>🚚 '+window.t('od_driver','배송 기사')+': <b>'+(drv||window.t('od_driver_wait','배차 준비 중'))+'</b></div>';
-        info+='<div>📅 '+window.t('od_delivery','배송 예정')+': <b>'+(dd?(dd+(dt?(' '+dt):'')):window.t('od_sched_tbd','일정 협의 중'))+'</b></div>';
-        return '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-top:8px;">'
-             +'<div style="display:flex; align-items:flex-start; margin-bottom:10px;">'+bar+'</div>'
-             +'<div style="font-size:12px; color:#475569; line-height:1.9;">'+info+'</div></div>';
+        // 담당 매니저 = 관리자 지정(staff_manager_id) → admin_staff 이름 (manager_name 은 고객명이라 사용 안 함)
+        var mgr = (o.staff_manager_id && _staffMap[o.staff_manager_id]) ? _staffMap[o.staff_manager_id] : '';
+        var mp = _mgrPhone(mgr);
+        var deliv = _orderDelivery(o);
+        var chip = 'display:inline-flex; align-items:center; gap:7px; padding:10px 15px; border-radius:10px; font-size:13px; text-decoration:none; border:1px solid #e2e8f0; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.06);';
+        var lab = 'color:#94a3b8; font-weight:600; font-size:11.5px;';
+        var val = 'color:#1e293b; font-weight:800;';
+        var valLink = 'color:#4f46e5; font-weight:800;';
+        var btns='';
+        btns += (mp
+            ? '<a href="tel:'+mp.replace(/-/g,'')+'" style="'+chip+'"><span style="'+lab+'">👤 '+window.t('od_manager','담당 매니저')+'</span><span style="'+valLink+'">'+(mgr?mgr+' · ':'')+mp+'</span></a>'
+            : '<div style="'+chip+'"><span style="'+lab+'">👤 '+window.t('od_manager','담당 매니저')+'</span><span style="'+val+'">'+(mgr||window.t('od_assigning','배정 중'))+'</span></div>');
+        btns += '<div style="'+chip+'"><span style="'+lab+'">📅 '+window.t('od_delivery','배송 예정일')+'</span><span style="'+val+'">'+(deliv||window.t('od_sched_tbd','일정 협의 중'))+'</span></div>';
+        btns += '<a href="tel:0313661984" style="'+chip+'"><span style="'+lab+'">🏢 '+window.t('od_hq','본사')+'</span><span style="'+valLink+'">031-366-1984</span></a>';
+        return '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-top:8px;">'
+             +'<div style="display:flex; align-items:flex-start; margin-bottom:14px;">'+bar+'</div>'
+             +'<div style="display:flex; flex-wrap:wrap; gap:8px;">'+btns+'</div></div>';
     }
 
     tbody.innerHTML = '';
@@ -569,10 +587,10 @@ async function loadOrders() {
                     <div style="font-weight:bold; color:#1e293b; margin-bottom:8px;">${fmtMoney(o.total_amount || 0)}</div>
                     ${actionBtn}
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="font-size:11px; padding:5px 10px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                        <button onclick="reOrder('${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
+                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="font-size:12px; font-weight:700; padding:7px 14px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                        <button onclick="reOrder('${o.id}')" style="height:32px; font-size:12px; font-weight:700; padding:5px 14px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:28px; font-size:11px; padding:5px 10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:32px; font-size:12px; font-weight:700; padding:5px 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
                             <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden; min-width:140px;">
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
@@ -599,14 +617,14 @@ async function loadOrders() {
                     ${refundLabel}
                     ${actionBtn}
                 </td>
-                <td style="min-width:110px;">
-                    <div style="display:flex; flex-direction:column; gap:3px;">
-                        <div style="display:flex; gap:3px;">
-                            ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:10px; padding:3px 6px;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                            <button onclick="reOrder('${o.id}')" style="flex:1; height:24px; font-size:10px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
+                <td style="min-width:132px;">
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <div style="display:flex; gap:5px;">
+                            ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:12px; font-weight:700; padding:6px 8px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
+                            <button onclick="reOrder('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
                         </div>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:24px; font-size:10px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:30px; font-size:12px; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
                             <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden;">
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
@@ -1499,15 +1517,15 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
     let totalAmt = 0, no = 1;
 
     cartItems.forEach(item => {
-        if (!item.product) return;
-        let pdfName = item.productName || item.product.name;
-        let pdfPrice = item.product.price || item.price || 0;
+        const _p = item.product || {};
+        let pdfName = item.productName || _p.name || item.name || '-';
+        let pdfPrice = _p.price || item.price || (item._simple && item._simple.unit) || 0;
 
         if (PDF_LANG === 'ja' || PDF_LANG === 'jp') {
-            if (item.product.name_jp) pdfName = item.product.name_jp;
+            if (_p.name_jp) pdfName = _p.name_jp;
             if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
         } else if (PDF_LANG === 'us' || PDF_LANG === 'en') {
-            if (item.product.name_us) pdfName = item.product.name_us;
+            if (_p.name_us) pdfName = _p.name_us;
             if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
         }
 
@@ -1590,8 +1608,7 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
 // ============ 작업지시서 (간소화 - fabric 없이 썸네일 사용) ============
 async function _genOrderSheet(doc, orderInfo, cartItems) {
     for (let i = 0; i < cartItems.length; i++) {
-        const item = cartItems[i];
-        if (!item.product) continue;
+        const item = cartItems[i] || {};
         if (i > 0) doc.addPage();
 
         // 헤더 바
@@ -1637,7 +1654,7 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
         _dt(doc, PTXT.os_prod_spec, 20, prodY + 7, { weight: 'bold' });
         _dt(doc, `${PTXT.os_qty_label}: ${item.qty || 1}${PTXT.os_qty_unit}`, 185, prodY + 7, { align: 'right', weight: 'bold' }, "#ff0000");
 
-        const pName = item.productName || item.product.name || '';
+        const pName = item.productName || (item.product && item.product.name) || item.name || '-';
         const infoY = prodY + 18; doc.setFontSize(16);
         _dt(doc, pName, 20, infoY, { weight: 'bold' });
 
@@ -1658,7 +1675,7 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
         doc.setDrawColor(0); doc.setLineWidth(0.2); doc.rect(15, imgBoxY, 180, imgBoxH);
         _dt(doc, `< ${PTXT.os_design_preview} >`, 105, imgBoxY - 2, { align: 'center' });
 
-        const thumbUrl = item.thumb || item.product.img || null;
+        const thumbUrl = item.thumb || (item.product && item.product.img) || null;
         let imgData = null;
         if (thumbUrl) imgData = await _imgToDataUrl(thumbUrl);
         if (imgData) {
