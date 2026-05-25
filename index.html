@@ -553,7 +553,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=444">
+<link rel="stylesheet" href="./style.css?v=445">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -795,7 +795,8 @@ if ('caches' in window) {
         <button class="btn" id="btnMyLibrary" onclick="document.getElementById('libraryModal').style.display='flex'; if(window.loadMyDesigns) window.loadMyDesigns();" style="background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
             <span data-i18n="btn_my_library">My page</span>
         </button>
-        <button class="btn" id="btnOrderTracking" onclick="window.openMyOrderList()" style="background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700; margin-right:5px;">
+        <!-- 2026-05-26: 상단 주문배송조회 버튼 제거 (My page 에서 주문내역 조회) -->
+        <button class="btn" id="btnOrderTracking" onclick="window.openMyOrderList()" style="display:none !important;">
     <span data-i18n="menu_orders">🚚 주문배송조회</span>
 </button>
 
@@ -1012,15 +1013,15 @@ if ('caches' in window) {
 
     <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
     <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
-        <div style="background:linear-gradient(135deg, #405DE6 0%, #833AB4 28%, #C13584 52%, #E1306C 74%, #F77737 100%); border:1px solid rgba(255,255,255,0.25); border-radius:16px; padding:22px 28px; box-shadow:0 12px 30px -8px rgba(131,58,180,0.5);">
+        <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
             <div style="text-align:center; margin-bottom:16px;">
                 <div id="mgrQuoteTitle" style="font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2);">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
                 <div id="mgrQuoteDesc" style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.</div>
             </div>
             <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
-                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1px solid rgba(255,255,255,0.6); border-radius:10px; text-decoration:none; color:#833AB4; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:0 4px 12px -4px rgba(0,0,0,0.15);">
+                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
-                    <b style="color:#C13584; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                    <b style="color:#f472b6; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
                 <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
                 <div id="mgrPhoneSlot" style="display:contents;">
@@ -1071,9 +1072,9 @@ if ('caches' in window) {
                                     '<span style="font-size:11px;">휴가중</span>' +
                                     '</div>';
                             }
-                            return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#fff; border:1px solid rgba(255,255,255,0.6); border-radius:10px; text-decoration:none; color:#833AB4; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:0 4px 12px -4px rgba(0,0,0,0.15);">' +
+                            return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">' +
                                 '<span>' + nm + '</span>' +
-                                '<b style="color:#C13584; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
+                                '<b style="color:#f472b6; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
                                 '</a>';
                         }).join('');
                         // DB 에 매니저 등록 안 됐으면 슬롯 자체를 제거 (본사 카드만 남음 + auto-fit 으로 가운데 정렬)
@@ -1111,13 +1112,13 @@ if ('caches' in window) {
                  합의된 금액을 직접 입력해서 즉시 결제 모달을 띄우는 빠른 경로. -->
             <div id="mgrQuoteActions" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; margin-top:6px;">
                 <!-- 금액 입력 + 주문하기 (좌측 그룹) -->
-                <div style="display:flex; align-items:center; gap:6px; background:#fff; border:1px solid rgba(255,255,255,0.7); border-radius:10px; padding:4px 4px 4px 12px; box-shadow:0 4px 12px -4px rgba(0,0,0,0.2);">
+                <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
                     <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
                            placeholder=""
                            oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
-                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#C13584; width:130px; text-align:right; padding:6px 0; background:transparent;">
-                    <span id="mgrQuoteUnit" style="font-size:12px; color:#833AB4; font-weight:700; padding-right:4px;">원</span>
+                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:130px; text-align:right; padding:6px 0; background:transparent;">
+                    <span id="mgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
                     <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()"
                             style="padding:9px 18px; background:linear-gradient(135deg,#833AB4,#C13584,#E1306C); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
                         ⚡ 주문하기

@@ -6831,10 +6831,9 @@ footer, .site-footer { padding-top: 28px !important; }
     z-index: 4 !important;
 }
 #mgrQuoteHero > div {
-    backdrop-filter: blur(6px) !important;
-    background: linear-gradient(135deg, #405DE6 0%, #833AB4 28%, #C13584 52%, #E1306C 74%, #F77737 100%) !important;
-    box-shadow: 0 16px 48px -8px rgba(131,58,180,0.5), 0 0 0 1px rgba(255,255,255,0.25) !important;
-    border-color: rgba(255,255,255,0.3) !important;
+    background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%) !important;
+    box-shadow: 0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+    border-color: rgba(255,255,255,0.1) !important;
 }
 
 @media (max-width: 768px) {
