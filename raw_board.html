@@ -54,7 +54,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;200;300;400;500;700;900&display=swap" rel="stylesheet">
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -153,20 +153,21 @@ a { text-decoration: none; color: inherit; }
     box-shadow: 0 8px 24px rgba(99,102,241,0.45);
 }
 .hero h1 {
-    font-size: 34px; font-weight: 900; line-height: 1.35;
-    color: #fff; margin-bottom: 22px; letter-spacing: -0.4px;
+    font-size: 30px; font-weight: 200; line-height: 1.4;
+    color: #fff; margin-bottom: 22px; letter-spacing: 1px;
     text-shadow: 0 2px 20px rgba(0,0,0,0.55);
     animation: heroRise 0.8s cubic-bezier(.2,.8,.2,1) both;
 }
 .hero h1 em {
-    display: block; font-style: normal;
-    font-size: 92px; line-height: 1.05; margin-top: 14px;
+    display: block; font-style: normal; font-weight: 300;
+    font-size: 94px; line-height: 1.05; margin-top: 16px; letter-spacing: 2px;
     background: linear-gradient(110deg, #38bdf8 0%, #60a5fa 20%, #818cf8 40%, #a78bfa 55%, #8b5cf6 70%, #60a5fa 88%, #38bdf8 100%);
     background-size: 260% auto;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    filter: drop-shadow(0 4px 26px rgba(129,140,248,0.7));
+    filter: drop-shadow(0 4px 26px rgba(129,140,248,0.6));
     animation: heroShine 4.5s linear infinite, heroRise 0.9s cubic-bezier(.2,.8,.2,1) both;
 }
+.hero-steps, .hero-steps .step-text { font-weight: 200 !important; }
 @keyframes heroShine { to { background-position: 260% center; } }
 @keyframes heroRise { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
 .hero p {
@@ -1020,14 +1021,14 @@ hero_h1: {
     fr:'Specialiste du panneau alveolaire pour impression<br><em>Hexalite</em>'
 },
 hero_p: {
-    ko:'<div class="step"><div class="step-text"><b>전세계에 무료로 배송됩니다.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· 서혜림 대표</span></div>',
-    ja:'<div class="step"><div class="step-text"><b>世界中へ送料無料でお届けします。</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· 代表 ソ・ヘリム</span></div>',
-    en:'<div class="step"><div class="step-text"><b>Free shipping worldwide.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>',
-    zh:'<div class="step"><div class="step-text"><b>全球免费配送。</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>',
-    ar:'<div class="step"><div class="step-text"><b>شحن مجاني إلى جميع أنحاء العالم.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>',
-    es:'<div class="step"><div class="step-text"><b>Envio gratis a todo el mundo.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>',
-    de:'<div class="step"><div class="step-text"><b>Weltweit kostenloser Versand.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>',
-    fr:'<div class="step"><div class="step-text"><b>Livraison gratuite dans le monde entier.</b></div></div><div style="margin-top:18px; font-size:23px; font-weight:900; color:#fff;">📞 <a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:15px; color:rgba(255,255,255,0.72); font-weight:700;">· CEO Hyerim Seo</span></div>'
+    ko:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· 서혜림 대표</span></div>',
+    ja:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· 代表 ソ・ヘリム</span></div>',
+    en:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>',
+    zh:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>',
+    ar:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>',
+    es:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>',
+    de:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>',
+    fr:'<div style="font-size:24px; font-weight:200; color:#fff; letter-spacing:1px;"><a href="tel:+821034913535" style="color:#fff; text-decoration:none;">+82 10 3491 3535</a> <span style="font-size:14px; color:rgba(255,255,255,0.7);">· CEO Hyerim Seo</span></div>'
 },
 // ── Video 1 ──
 video1_h2: {
