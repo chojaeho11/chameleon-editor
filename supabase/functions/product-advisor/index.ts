@@ -946,8 +946,120 @@ When customers ask about products, match their local terminology to our product 
 - **Roller Blind/ستارة/卷帘/Rollo/Store enrouleur/Estor** → category: rr29948
 ALWAYS match customer's terminology to the correct product category and show relevant product cards.`;
         }
+
+        // ===== Tier 2: 실시간 주문 상태 조회 (사람처럼 안내) =====
+        // 고객이 주문 진행/배송 상태를 물으면, 주문번호 + 휴대폰 뒤4자리(본인확인) 로 실제 상태를 조회해
+        // systemPrompt 최상단에 사실(fact)로 주입한다. 본인확인 전에는 상세를 절대 노출하지 않는다.
+        let orderContext = '';
+        try {
+            const _recentConv = (conversation_history || [])
+                .filter((h: any) => h && typeof h.content === 'string')
+                .slice(-6).map((h: any) => h.content).join(' ');
+            const _scan = trimmedMsg + ' ' + _recentConv;
+            const _statusIntent = /주문.*(어디|언제|상태|진행|확인|조회|배송|작업|준비|됐|되었)|배송.*(언제|어디|상태|조회|준비|예정|와요|올까)|언제.*(와|도착|배송|받|발송|나와|완성)|작업.*(어디|언제|상태|진행)|내\s*주문|제\s*주문|주문\s*번호|注文.*(状況|どこ|いつ|確認|配送|進|どう)|配送.*(いつ|状況|どこ|予定)|order.*(status|where|when|track|progress|ready|update)|where.*(is\s*)?(my|the)?\s*order|delivery.*(when|status|track|date|eta)|track.*(my\s*)?order|when.*(ship|arrive|deliver)/i;
+            if (_statusIntent.test(_scan)) {
+                const _digits = (s: string) => (s || '').replace(/\D/g, '');
+                const _extractOrderId = (txt: string): number | null => {
+                    let m = txt.match(/(?:주문\s*번호|주문\s*#|order\s*#|注文番号|order\s*no\.?|no\.?|#)\s*[:：]?\s*(\d{2,7})/i);
+                    if (m) return parseInt(m[1], 10);
+                    m = txt.match(/(\d{3,7})\s*번/); // '3186번'
+                    if (m) return parseInt(m[1], 10);
+                    // 단독 숫자 3~7자리 — 앞뒤가 다른 숫자/소수점이 아니고, 단위(mm/cm/m/장/매/원/개/% 등) 미부착
+                    const re = /(?<![\d.])(\d{3,7})(?!\d|\.|\s*(?:mm|cm|m\b|장|매|원|개|%|x|×|\*|px|kg|g\b))/gi;
+                    const cands: number[] = []; let mm;
+                    while ((mm = re.exec(txt)) !== null) cands.push(parseInt(mm[1], 10));
+                    return cands.length ? cands[cands.length - 1] : null;
+                };
+                const _phoneFromMsg = (txt: string): string => {
+                    const full = txt.match(/(01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}|\d{10,11})/);
+                    return full ? _digits(full[1]) : '';
+                };
+                const _last4FromMsg = (txt: string): string => {
+                    const m = txt.match(/(?:뒷|끝|마지막|last|下)\s*(?:4\s*)?(?:자리|번호|four|桁)?\s*[:：]?\s*(\d{4})\b/i);
+                    return m ? m[1] : '';
+                };
+                let orderId = _extractOrderId(trimmedMsg) || _extractOrderId(_scan);
+                const providedFullPhone = _phoneFromMsg(_scan) || _digits(clientCustPhone || '');
+                const providedLast4 = _last4FromMsg(_scan) || (providedFullPhone ? providedFullPhone.slice(-4) : '');
+
+                if (orderId) {
+                    const { data: ord } = await sb.from('orders')
+                        .select('id,status,payment_status,payment_method,total_amount,manager_name,phone,selected_customer_phone,delivery_target_date,delivery_time,staff_manager_id,admin_note,items,created_at,site_code')
+                        .eq('id', orderId).maybeSingle();
+                    if (!ord) {
+                        orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 를 문의했으나 그 번호의 주문이 존재하지 않는다. "주문번호를 다시 확인해 주세요 (마이페이지 > 주문내역, 또는 주문완료 안내에서 확인 가능)" 라고 정중히 안내하고, 계속 어려우면 본사 031-366-1984 로 연락하도록 해라. 절대 임의의 주문 정보를 지어내지 마라.`;
+                    } else {
+                        const _orderPhones = [ord.phone, ord.selected_customer_phone].map(_digits).filter(Boolean);
+                        let verified = false;
+                        if (_orderPhones.length === 0) verified = false;
+                        else if (providedFullPhone && _orderPhones.some(p => p === providedFullPhone || (p.length >= 8 && p.slice(-8) === providedFullPhone.slice(-8)))) verified = true;
+                        else if (providedLast4 && _orderPhones.some(p => p.slice(-4) === providedLast4)) verified = true;
+
+                        if (!verified) {
+                            orderContext = `[주문조회시스템] 고객이 주문번호 ${orderId} 의 진행상황을 문의했다. 개인정보 보호를 위해 본인확인이 필요하다. "본인 확인을 위해 주문하실 때 입력하신 휴대폰 번호 뒤 4자리를 알려주세요" 라고 정중히 요청해라. 4자리를 확인하기 전에는 절대 주문 상세(금액/배송일/담당자/결제상태 등)를 알려주지 마라.`;
+                        } else {
+                            const _stepOf = (o: any): number => {
+                                const s = o.status || '', note = o.admin_note || '';
+                                if (s === '배송완료' || s === '완료됨' || s === '구매확정') return 4;
+                                if (/\[CHK:delivered=1\]|\[CHK:installed=1\]/.test(note) || s === '배송중') return 3;
+                                if (/\[CHK:loaded=1\]/.test(note)) return 2;
+                                if (s === '제작중' || s === '파일처리중' || s === '제작준비') return 1;
+                                return 0;
+                            };
+                            const _STEP_LBL = ['주문 접수 (결제 확인 단계)', '제작 중', '배송 준비 중', '배송 중', '배송 완료'];
+                            const step = _stepOf(ord);
+                            const _DTIME: Record<string, string> = { am: '오전', pm: '오후', night: '야간', any: '시간무관' };
+                            let dDate = ord.delivery_target_date || '', dTime = ord.delivery_time || '';
+                            if (!dDate) {
+                                try {
+                                    const its = typeof ord.items === 'string' ? JSON.parse(ord.items) : ord.items;
+                                    if (Array.isArray(its)) for (const it of its) { if (it && it.shipping && it.shipping.delivery_date) { dDate = it.shipping.delivery_date; if (!dTime) dTime = it.shipping.delivery_time || ''; break; } }
+                                } catch (e) {}
+                            }
+                            const dTimeLbl = _DTIME[dTime] || dTime || '';
+                            const deliveryStr = dDate ? (dDate + (dTimeLbl ? (' ' + dTimeLbl) : '')) : '일정 협의 중';
+                            // 담당 매니저 (admin_staff 이름 → _managers 전화 퍼지매칭, mypage 와 동일)
+                            let mgrName = '', mgrPhone = '';
+                            if (ord.staff_manager_id) {
+                                try { const { data: st } = await sb.from('admin_staff').select('name').eq('id', ord.staff_manager_id).maybeSingle(); if (st) mgrName = st.name || ''; } catch (e) {}
+                                if (mgrName) {
+                                    try {
+                                        const { data: mgs } = await sb.from('chatbot_knowledge').select('question,answer').eq('category', '_managers');
+                                        (mgs || []).forEach((m: any) => {
+                                            if (mgrPhone) return;
+                                            const k = (m.question || '').trim(), kn = k.replace(/\s*매니저/, '');
+                                            if (k.indexOf(mgrName) >= 0 || mgrName.indexOf(kn) >= 0) { try { mgrPhone = (JSON.parse(m.answer || '{}').phone || '').toString(); } catch (e) {} }
+                                        });
+                                    } catch (e) {}
+                                }
+                            }
+                            const _pm = (ord.payment_method || '').toLowerCase(), _ps = ord.payment_status || '';
+                            const _isCard = /카드|card|stripe/.test(_pm), _isBank = /무통장|계좌|bank/.test(_pm);
+                            const _paid = ['결제완료', '입금완료', '승인완료', '구매확정'].includes(_ps);
+                            let payStr = _ps || '확인 필요';
+                            if (_isCard) payStr = '카드결제 완료';
+                            else if (_isBank) payStr = _paid ? '입금완료' : '입금 전 (미입금) — 국민은행 647701-04-277763 (예금주 카멜레온프린팅)';
+                            const amountStr = (ord.total_amount || 0).toLocaleString() + '원';
+
+                            orderContext = `[주문조회시스템 — 아래는 실제 DB에서 조회한 정확한 정보다. 이 정보만 사용해 사람처럼 친절하게 안내하고, 없는 항목은 절대 지어내지 마라. 반드시 고객의 언어로 답해라.]
+- 주문번호: #${ord.id}
+- 진행 상태: ${_STEP_LBL[step]} (${step + 1}/5단계)
+- 결제: ${payStr}
+- 주문금액: ${amountStr}
+- 배송 예정일: ${deliveryStr}
+- 담당 매니저: ${mgrName || '배정 중'}${mgrPhone ? (' (' + mgrPhone + ')') : ''}
+- 본사: 031-366-1984
+안내 지침: 현재 진행 단계를 자연스럽게 설명하고 배송 예정일을 알려줘라. 추가 문의는 담당 매니저(번호 있으면 포함) 또는 본사로 안내해라. '입금 전' 이면 입금 계좌 안내를 포함해라. 이미 '배송 완료' 면 이용 감사 인사를 덧붙여라.`;
+                        }
+                    }
+                } else {
+                    orderContext = `[주문조회시스템] 고객이 주문 진행/배송 상태를 문의하는 것으로 보인다. 정확한 조회를 위해 "주문번호(예: #3186)와 주문 시 입력하신 휴대폰 번호 뒤 4자리를 함께 알려주시면 바로 확인해 드릴게요" 라고 정중히 요청해라. 주문번호는 마이페이지 > 주문내역 또는 주문완료 안내에서 확인할 수 있다고 덧붙여라. 본인확인 전에는 어떤 주문 정보도 지어내거나 노출하지 마라.`;
+                }
+            }
+        } catch (e) { console.warn('[order-lookup] failed:', (e as any)?.message || e); }
+
         // ★ Q&A 학습 섹션을 시스템 프롬프트 최상단에 배치 (AI가 가장 우선 참고하도록)
-        const systemPrompt = `${qaSection ? qaSection + '\n\n' : ''}${selectedPrompt || langPrompts['kr']}
+        const systemPrompt = `${orderContext ? orderContext + '\n\n' : ''}${qaSection ? qaSection + '\n\n' : ''}${selectedPrompt || langPrompts['kr']}
 ${labels.note}
 ## ${labels.products}
 (c=code,n=name,cat=category,p=price,cs=custom_size,bo=bulk_order,psm=price/m²,w=width_mm,h=height_mm,d=description)
