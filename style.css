@@ -6760,58 +6760,66 @@ footer, .site-footer { padding-top: 28px !important; }
 
 /* 타이틀 */
 .hero-section .hero-title {
-    font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
     margin-bottom: 28px !important;
     font-size: 56px !important;
+    font-weight: 200 !important;
 }
 .hero-section .hero-title .hero-tagline {
     display: block;
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif !important;
     font-size: 12px !important;
-    color: #fef3c7 !important;
-    font-weight: 700 !important;
+    color: #fff !important;
+    font-weight: 300 !important;
     margin-bottom: 18px !important;
-    letter-spacing: 4px !important;
+    letter-spacing: 5px !important;
     text-transform: uppercase;
-    opacity: 0.92;
+    opacity: 0.85;
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 .hero-section .hero-title span {
-    background: none !important;
-    -webkit-text-fill-color: initial !important;
-    color: #ffffff !important;
-    font-family: 'Anton', 'Black Han Sans', 'Noto Sans KR', sans-serif !important;
-    letter-spacing: 3px !important;
-    text-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4) !important;
-    filter: none !important;
-    font-size: 72px !important;
-    line-height: 1.05 !important;
+    background: linear-gradient(110deg, #38bdf8 0%, #22d3ee 25%, #34d399 50%, #4ade80 70%, #22d3ee 88%, #38bdf8 100%) !important;
+    background-size: 260% auto !important;
+    -webkit-background-clip: text !important; background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
+    font-weight: 200 !important;
+    letter-spacing: 5px !important;
+    text-shadow: none !important;
+    filter: drop-shadow(0 4px 24px rgba(34,211,238,0.45)) !important;
+    font-size: 70px !important;
+    line-height: 1.08 !important;
     display: block !important;
     white-space: nowrap;
     visibility: visible !important;
     opacity: 1 !important;
+    animation: heroTitleShine 4.5s linear infinite;
 }
 .hero-section .hero-title span b.ht-prn {
-    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 35%, #f59e0b 70%, #b45309 100%) !important;
+    background: linear-gradient(110deg, #34d399 0%, #4ade80 35%, #22d3ee 70%, #38bdf8 100%) !important;
+    background-size: 260% auto !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    padding-left: 14px;
-    font-weight: 900;
+    padding-left: 16px;
+    font-weight: 300 !important;
     font-family: inherit !important;
-    filter: drop-shadow(0 4px 16px rgba(251,191,36,0.45));
+    filter: drop-shadow(0 4px 16px rgba(74,222,128,0.4));
     text-shadow: none !important;
+    animation: heroTitleShine 4.5s linear infinite;
 }
+@keyframes heroTitleShine { to { background-position: 260% center; } }
 .hero-section .hero-title .hero-min-order {
     display: block;
     font-family: 'Pretendard', 'Noto Sans KR', sans-serif !important;
     font-size: 13px !important;
     color: #ffffff !important;
     margin-top: 22px !important;
-    font-weight: 500 !important;
+    font-weight: 300 !important;
     font-style: normal !important;
-    letter-spacing: 0;
-    opacity: 0.88;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 .hero-section .hero-mascot { display: none !important; }
