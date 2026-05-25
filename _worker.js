@@ -409,8 +409,10 @@ export default {
                 path.endsWith('.gif')
             );
             if (isAssetHB) return await env.ASSETS.fetch(request);
-            // 모든 비-자산 경로 → raw_board.html 프록시 (URL 은 hexa-board.com 유지)
-            const rbRewrite = new URL('/raw_board.html', url.origin);
+            // 상품 상세(?product= / ?_p=) → 메인 SPA(index.html) 를 hexa-board 도메인에서 그대로 서빙 (화이트라벨, URL 유지).
+            //   그 외 모든 경로 → raw_board.html(원판 랜딩). index.html 의 hexa-mode 가 카멜레온 흔적을 숨김.
+            const _hbTarget = (url.searchParams.has('product') || url.searchParams.has('_p')) ? '/index.html' : '/raw_board.html';
+            const rbRewrite = new URL(_hbTarget, url.origin);
             let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
             if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
                 const loc = new URL(rbResp.headers.get('Location'), url.origin);

@@ -571,6 +571,13 @@ window.loadEditorLibraries = function() {
         var code = 'KR';
         if (h.indexOf('cafe0101') !== -1) code = 'JP';
         else if (h.indexOf('chameleon.design') !== -1) code = 'US';
+        // 2026-05-25: hexa-board.com — 허니콤보드 원판 화이트라벨. lang 으로 통화 결정 + 카멜레온 흔적 숨김(hexa-mode).
+        //   이 분기는 hexa-board.com 에서만 실행 → 메인 3개 사이트엔 영향 없음.
+        if (h.indexOf('hexa-board') !== -1) {
+            var _hl = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+            code = (_hl === 'ja') ? 'JP' : (_hl === 'en' || _hl === 'zh' || _hl === 'es' || _hl === 'de' || _hl === 'fr' || _hl === 'ar') ? 'US' : 'KR';
+            try { document.documentElement.classList.add('hexa-mode'); } catch(e) {}
+        }
         window.__SITE_CODE = code;
         // 2026-05-14: 해외 사이트는 매니저 견적 카드 숨기고 타이틀 키움 (CSS 분기용 data 속성)
         try { document.documentElement.setAttribute('data-site', code); } catch(e) {}
@@ -599,6 +606,31 @@ window.loadEditorLibraries = function() {
         // 그 외(이미지 URL, data: URL 등) 그대로
         return raw;
     };
+</script>
+<style id="hexaModeStyle">
+/* hexa-board.com 화이트라벨: 카멜레온 헤더·네비·홈·챗봇·브랜드 텍스트 숨김 (hexa-board 에서만 적용) */
+html.hexa-mode .topbar,
+html.hexa-mode #topCatMenu,
+html.hexa-mode #startScreen,
+html.hexa-mode #chatbotBtnWrap,
+html.hexa-mode #couponBanner,
+html.hexa-mode .so-brand { display:none !important; }
+html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
+</style>
+<script>
+    // hexa-board.com 전용: 상품 모달 닫기/뒤로 → 카멜레온 홈(숨김) 대신 hexa-board 랜딩으로 이동
+    if (document.documentElement.classList.contains('hexa-mode')) {
+        (function(){
+            var iv = setInterval(function(){
+                if (typeof window.closeSimpleOrderModal === 'function' && !window.__hexaClosePatched) {
+                    window.__hexaClosePatched = true;
+                    window.closeSimpleOrderModal = function(){ location.href = 'https://www.hexa-board.com/'; };
+                    clearInterval(iv);
+                }
+            }, 150);
+            setTimeout(function(){ clearInterval(iv); }, 12000);
+        })();
+    }
 </script>
 <script>
     // 해외 사이트: 번역 적용 전 한글 깜빡임 방지 (CSS를 head에 즉시 삽입)

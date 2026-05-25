@@ -166,17 +166,12 @@
                 '<div class="product-price">' + LANG.fromPrice + ' ' + price + '</div>' +
             '</div>';
 
-        // 클릭 시 메인 에디터로 이동 (언어별 도메인)
+        // 클릭 시 hexa-board.com 도메인에서 상세/주문 (화이트라벨 — 카멜레온 노출 안 함)
         card.onclick = function() {
             var lang = window.__PS_LANG || 'ko';
-            var base;
-            if (lang === 'ko') base = 'https://www.cafe2626.com';
-            else if (lang === 'ja') base = 'https://www.cafe0101.com';
-            else if (lang === 'en') base = 'https://chameleon.design';
-            else base = 'https://chameleon.design';
             var params = '?product=' + encodeURIComponent(product.code);
-            if (lang !== 'ko' && lang !== 'ja' && lang !== 'en') params += '&lang=' + lang;
-            window.location.href = base + '/' + params;
+            if (lang && lang !== 'ko') params += '&lang=' + lang;
+            window.location.href = 'https://www.hexa-board.com/' + params;
         };
 
         return card;
