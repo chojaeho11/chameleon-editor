@@ -2384,7 +2384,7 @@
             if (method === 'self_pickup' || method === 'regional_delivery') return 0;
             if (method === 'metro_delivery') {
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
-                return totalRawQty >= 5 ? 0 : 100000;
+                return totalRawQty >= 10 ? 0 : 100000;
             }
         }
         // 2026-05-15: 종이매대 — 100개 이상 무료, 1개씩(3만/개), 2개씩(1.5만/2개), 수도권 용차 10만, 지방 용차 20만
@@ -2521,19 +2521,19 @@
         if (state.isRawBoard) {
             if (state.shipMethod === 'metro_delivery') {
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
-                var need = Math.max(0, 5 - totalRawQty);
-                if (totalRawQty >= 5) {
+                var need = Math.max(0, 10 - totalRawQty);
+                if (totalRawQty >= 10) {
                     box.innerHTML = '<div style="font-weight:800; color:#14532d;">✅ ' +
-                        tr('수도권 무료배송 (총 ' + totalRawQty + '장 ≥ 5)',
-                           '首都圏 無料配送 (計' + totalRawQty + '枚 ≥ 5)',
-                           'Free metro delivery (' + totalRawQty + ' sheets ≥ 5)') + '</div>';
+                        tr('수도권 무료배송 (총 ' + totalRawQty + '장 ≥ 10)',
+                           '首都圏 無料配送 (計' + totalRawQty + '枚 ≥ 10)',
+                           'Free metro delivery (' + totalRawQty + ' sheets ≥ 10)') + '</div>';
                 } else {
                     box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' +
                         tr('수도권 배송비', '首都圏配送料', 'Metro delivery') + ' · ' + fmtPrice(100000) + '</div>' +
                         '<div style="font-size:11px; color:#3730a3;">' +
-                        tr('5장 이상 주문 시 무료 (' + need + '장 더 담기)',
-                           'あと' + need + '枚で無料 (5枚以上で適用)',
-                           'Free at 5+ sheets (add ' + need + ' more)') + '</div>';
+                        tr('10장 이상 주문 시 무료 (' + need + '장 더 담기)',
+                           'あと' + need + '枚で無料 (10枚以上で適用)',
+                           'Free at 10+ sheets (add ' + need + ' more)') + '</div>';
                 }
             } else if (state.shipMethod === 'regional_delivery') {
                 box.innerHTML = '<div style="font-weight:800; color:#9a3412;">🛻 ' +
@@ -3965,7 +3965,9 @@
             shipping: shipping,
             // 2026-05-22: 디자인 파일 없이 주문 (이미지 추후 전달) 표시
             artworkLater: !!state.artworkLater,
-            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: calc.tierPct, discount: calc.discount, final: calc.final },
+            // 2026-05-25: 원판 여부 — 장바구니에서 할인 라벨 숨김용
+            _isRawBoard: !!state.isRawBoard,
+            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
 
@@ -4210,6 +4212,8 @@
             const tier = getDiscountTier(qty);
             tierPct = tier.pct;
         }
+        // 2026-05-25: 원판은 대량할인 없음 — 할인율 라벨/계산 0 처리
+        if (item._isRawBoard || _soIsRawBoardProduct(item.product)) tierPct = 0;
         const discount = Math.round(subtotal * tierPct / 100);
         // final 은 _soCalcItemPrice 통해 정확히 계산 (addon + shipping + PRO 할인 포함)
         const final = (typeof _soCalcItemPrice === 'function')
@@ -4390,7 +4394,9 @@
         if (cart[idx]._simple) {
             const unit = cart[idx]._simple.unit;
             const qty = cart[idx].qty;
-            const tier = getDiscountTier(qty);
+            // 2026-05-25: 원판은 대량할인 없음
+            const _rbItem = cart[idx]._isRawBoard || _soIsRawBoardProduct(cart[idx].product);
+            const tier = _rbItem ? { pct: 0 } : getDiscountTier(qty);
             cart[idx]._simple.subtotal = unit * qty;
             cart[idx]._simple.discountPct = tier.pct;
             cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
@@ -4408,7 +4414,9 @@
         if (cart[idx]._simple) {
             const unit = cart[idx]._simple.unit;
             const qty = cart[idx].qty;
-            const tier = getDiscountTier(qty);
+            // 2026-05-25: 원판은 대량할인 없음
+            const _rbItem = cart[idx]._isRawBoard || _soIsRawBoardProduct(cart[idx].product);
+            const tier = _rbItem ? { pct: 0 } : getDiscountTier(qty);
             cart[idx]._simple.subtotal = unit * qty;
             cart[idx]._simple.discountPct = tier.pct;
             cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
