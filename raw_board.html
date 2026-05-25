@@ -483,6 +483,156 @@ async function submitPdSample() {
 }
 </style>
 
+<!-- ===== 커스텀 원판 제작 계산기 ===== -->
+<style>
+.rb-calc-wrap{max-width:760px;margin:0 auto 26px;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:24px;box-shadow:0 8px 30px rgba(0,0,0,.06);}
+.rb-type-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.rb-type{border:2px solid #e5e7eb;background:#fafbfc;border-radius:14px;padding:14px;cursor:pointer;text-align:left;transition:all .2s;font-family:inherit;}
+.rb-type:hover{border-color:#c7d2fe;}
+.rb-type.active{border-color:#6366f1;background:#eef2ff;box-shadow:0 4px 14px rgba(99,102,241,.15);}
+.rb-type-name{font-weight:900;font-size:15px;color:#1e293b;}
+.rb-type-sub{font-size:11.5px;color:#64748b;margin-top:3px;line-height:1.4;}
+.rb-input-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.rb-input-grid label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#475569;}
+.rb-input-grid input,.rb-input-grid select{padding:10px;border:1px solid #d4d4d8;border-radius:10px;font-size:14px;font-family:inherit;font-weight:700;color:#1e293b;background:#fff;}
+.rb-input-grid input:focus,.rb-input-grid select:focus{outline:none;border-color:#6366f1;}
+.rb-result{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;}
+.rb-res-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#475569;padding:5px 0;font-weight:700;}
+.rb-res-row b{color:#1e293b;font-size:15px;font-weight:900;}
+.rb-res-total{border-top:1px dashed #cbd5e1;margin-top:5px;padding-top:11px;}
+.rb-res-total b{color:#6366f1;font-size:20px;}
+.rb-res-note{font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.5;}
+.rb-order-info{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:760px;margin:0 auto;}
+.rb-oi-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px 18px;}
+.rb-oi-flag{font-size:19px;margin-bottom:6px;}
+.rb-oi-title{font-weight:900;font-size:13px;color:#1e293b;margin-bottom:5px;line-height:1.4;}
+.rb-oi-desc{font-size:12px;color:#64748b;line-height:1.6;}
+@media(max-width:680px){.rb-input-grid{grid-template-columns:1fr 1fr;}.rb-order-info{grid-template-columns:1fr;}.rb-type-row{grid-template-columns:1fr;}}
+.rb-feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1100px;margin:0 auto;}
+.rb-feat-card{background:#fafbfc;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:all .3s;}
+.rb-feat-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px -16px rgba(0,0,0,.25);}
+.rb-feat-img{aspect-ratio:16/10;background:linear-gradient(135deg,#6366f1,#8b5cf6);position:relative;overflow:hidden;}
+.rb-feat-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.rb-feat-img.rb-noimg img{display:none;}
+.rb-feat-img.rb-noimg::after{content:"\f03e";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:30px;}
+.rb-feat-num{position:absolute;top:10px;left:12px;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.92);color:#6366f1;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+.rb-feat-body{padding:15px 16px 18px;}
+.rb-feat-t{font-weight:900;font-size:14px;color:#1e293b;line-height:1.35;margin-bottom:8px;}
+.rb-feat-d{font-size:12.5px;color:#64748b;line-height:1.65;}
+.rb-feat-contact{text-align:center;margin-top:26px;font-size:15px;font-weight:800;color:#1e293b;}
+.rb-feat-contact a{color:#6366f1;text-decoration:none;margin-left:6px;}
+@media(max-width:880px){.rb-feat-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.rb-feat-grid{grid-template-columns:1fr;}}
+</style>
+<section class="section" id="rbCalc" style="padding-top:8px;">
+    <h2 class="section-title" data-i18n="calc_title">커스텀 원판 제작 계산기</h2>
+    <p class="section-desc" data-i18n="calc_desc">원하는 사이즈와 두께를 입력하면 예상 단가를 바로 확인하실 수 있습니다.</p>
+    <div class="rb-calc-wrap">
+        <div class="rb-type-row">
+            <button type="button" class="rb-type active" data-type="premium" onclick="rbSetType('premium')">
+                <div class="rb-type-name" data-i18n="calc_type_premium">고급 인쇄용</div>
+                <div class="rb-type-sub" data-i18n="calc_type_premium_sub">우수한 발색 · 두께 8~16mm</div>
+            </button>
+            <button type="button" class="rb-type" data-type="core" onclick="rbSetType('core')">
+                <div class="rb-type-name" data-i18n="calc_type_core">내장재용</div>
+                <div class="rb-type-sub" data-i18n="calc_type_core_sub">건축·문짝내부·차량·포장용 · 10~100mm</div>
+            </button>
+        </div>
+        <div class="rb-input-grid">
+            <label><span data-i18n="calc_width">가로 (mm)</span><input id="rbW" type="number" value="1300" min="1" oninput="rbCalc()"></label>
+            <label><span data-i18n="calc_length">세로 (mm)</span><input id="rbL" type="number" value="2500" min="1" oninput="rbCalc()"></label>
+            <label><span data-i18n="calc_thick">두께 (mm)</span><select id="rbT" onchange="rbCalc()"></select></label>
+            <label><span data-i18n="calc_qty">수량 (장)</span><input id="rbQ" type="number" value="100" min="1" oninput="rbCalc()"></label>
+        </div>
+        <div class="rb-result">
+            <div class="rb-res-row"><span data-i18n="calc_res_persqm">제곱미터당 단가</span><b id="rbPerSqm">-</b></div>
+            <div class="rb-res-row"><span data-i18n="calc_res_persheet">1장당 가격</span><b id="rbPerSheet">-</b></div>
+            <div class="rb-res-row rb-res-total"><span data-i18n="calc_res_total">합계 (수량 기준)</span><b id="rbTotal">-</b></div>
+            <div class="rb-res-note" data-i18n="calc_res_note">VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.</div>
+        </div>
+    </div>
+    <div class="rb-order-info">
+        <div class="rb-oi-card">
+            <div class="rb-oi-flag">🇰🇷 🇯🇵 🇺🇸 🇲🇦</div>
+            <div class="rb-oi-title" data-i18n="calc_oi_local_t">현지 공장 보유국 (한국·일본·미국·모로코)</div>
+            <div class="rb-oi-desc" data-i18n="calc_oi_local_d">최소 수량 100장부터 · 전세계 무료 배송</div>
+        </div>
+        <div class="rb-oi-card">
+            <div class="rb-oi-flag">🌍</div>
+            <div class="rb-oi-title" data-i18n="calc_oi_global_t">그 외 국가</div>
+            <div class="rb-oi-desc" data-i18n="calc_oi_global_d">최소 주문 40ft 컨테이너 단위 · 고급 인쇄용 배송비는 당사 부담, 내장재용 배송비는 구매자 부담</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== 장점 4가지 ===== -->
+<section class="section" id="rbFeatures" style="background:#fff;">
+    <h2 class="section-title" data-i18n="feat_title">왜 헥사라이트 원판인가요?</h2>
+    <div class="rb-feat-grid">
+        <div class="rb-feat-card">
+            <div class="rb-feat-img"><div class="rb-feat-num">1</div><img src="/hexa/feature1.jpg" alt="" loading="lazy" onerror="this.closest('.rb-feat-img').classList.add('rb-noimg')"></div>
+            <div class="rb-feat-body"><div class="rb-feat-t" data-i18n="feat1_t">인쇄 전문 보드 · 우수한 발색</div><div class="rb-feat-d" data-i18n="feat1_d">인쇄에 최적화된 표면으로 선명하고 정확한 색 표현이 가능합니다.</div></div>
+        </div>
+        <div class="rb-feat-card">
+            <div class="rb-feat-img"><div class="rb-feat-num">2</div><img src="/hexa/feature2.jpg" alt="" loading="lazy" onerror="this.closest('.rb-feat-img').classList.add('rb-noimg')"></div>
+            <div class="rb-feat-body"><div class="rb-feat-t" data-i18n="feat2_t">버진펄프 · V컷 칼날 손상 최소</div><div class="rb-feat-d" data-i18n="feat2_d">불순물이 전혀 없는 버진펄프만 사용해 V컷 가공 시 칼날 손상이 매우 적어 비용 절감에 효과적입니다.</div></div>
+        </div>
+        <div class="rb-feat-card">
+            <div class="rb-feat-img"><div class="rb-feat-num">3</div><img src="/hexa/feature3.jpg" alt="" loading="lazy" onerror="this.closest('.rb-feat-img').classList.add('rb-noimg')"></div>
+            <div class="rb-feat-body"><div class="rb-feat-t" data-i18n="feat3_t">원가 도매 공급 (소매가 약 50%)</div><div class="rb-feat-d" data-i18n="feat3_d">도매 공급을 원하는 고객사와 윈윈할 수 있도록 원가 수준으로 공급합니다. 40ft 컨테이너 물량 기준.</div></div>
+        </div>
+        <div class="rb-feat-card">
+            <div class="rb-feat-img"><div class="rb-feat-num">4</div><img src="/hexa/feature4.jpg" alt="" loading="lazy" onerror="this.closest('.rb-feat-img').classList.add('rb-noimg')"></div>
+            <div class="rb-feat-body"><div class="rb-feat-t" data-i18n="feat4_t">전세계 공급사와 협력</div><div class="rb-feat-d" data-i18n="feat4_d">전세계 공급사와 협력해 어디서나 안정적으로 공급합니다.</div></div>
+        </div>
+    </div>
+    <div class="rb-feat-contact"><span data-i18n="feat_contact_label">직통 문의</span><a href="tel:+821034913535">+82 10 3491 3535</a></div>
+</section>
+<script>
+(function(){
+    var RB_THICK = { premium:[8,10,12,16], core:[10,20,30,40,50,60,70,80,90,100] };
+    var rbType = 'premium';
+    function rbCur(){
+        var l = window.__PS_LANG || 'ko';
+        if (l === 'ko') return function(krw){ return Math.round(krw).toLocaleString() + '원'; };
+        if (l === 'ja') return function(krw){ return '¥' + Math.round(krw*0.1).toLocaleString(); };
+        return function(krw){ return '$' + (krw*0.001).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    }
+    function rbPerSqmKRW(){
+        if (rbType === 'premium') return 5000;
+        var t = parseInt((document.getElementById('rbT')||{}).value,10) || 10;
+        var extra = Math.max(0, (t-10)/10) * 100;   // 20mm부터 10mm당 +100원
+        return 3000 + extra;
+    }
+    function rbFillThick(){
+        var sel = document.getElementById('rbT'); if(!sel) return;
+        sel.innerHTML = RB_THICK[rbType].map(function(v){ return '<option value="'+v+'">'+v+' mm</option>'; }).join('');
+    }
+    window.rbSetType = function(t){
+        rbType = t;
+        document.querySelectorAll('.rb-type').forEach(function(b){ b.classList.toggle('active', b.dataset.type===t); });
+        rbFillThick(); rbCalc();
+    };
+    window.rbCalc = function(){
+        var w = parseFloat((document.getElementById('rbW')||{}).value) || 0;
+        var l = parseFloat((document.getElementById('rbL')||{}).value) || 0;
+        var q = parseInt((document.getElementById('rbQ')||{}).value,10) || 0;
+        var area = (w/1000) * (l/1000);
+        var psqm = rbPerSqmKRW();
+        var sheet = area * psqm;
+        var total = sheet * q;
+        var fmt = rbCur();
+        var elA=document.getElementById('rbPerSqm'), elB=document.getElementById('rbPerSheet'), elC=document.getElementById('rbTotal');
+        if(elA) elA.textContent = fmt(psqm) + ' / m²';
+        if(elB) elB.textContent = fmt(sheet);
+        if(elC) elC.textContent = fmt(total);
+    };
+    function rbInit(){ rbFillThick(); rbCalc(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rbInit);
+    else rbInit();
+})();
+</script>
+
 <!-- 상품 목록 (최상단) -->
 <section class="section" id="products" style="padding-top:32px;">
     <h2 class="section-title" data-i18n="section_products_title">허니콤보드 원판 상품</h2>
@@ -918,6 +1068,35 @@ raw_contact_jp: {
     ko:'일본지사 나나미', ja:'日本支社 ナナミ', en:'Japan Branch · Nanami', zh:'日本分公司 娜娜美',
     ar:'فرع اليابان · ناNAمي', es:'Sucursal Japón · Nanami', de:'Japan-Niederlassung · Nanami', fr:'Filiale Japon · Nanami'
 },
+// ── Custom Calculator & Features ──
+calc_title: { ko:'커스텀 원판 제작 계산기', ja:'カスタム原板 製作 計算機', en:'Custom Raw Board Price Calculator', zh:'Custom Raw Board Price Calculator', ar:'Custom Raw Board Price Calculator', es:'Custom Raw Board Price Calculator', de:'Custom Raw Board Price Calculator', fr:'Custom Raw Board Price Calculator' },
+calc_desc: { ko:'원하는 사이즈와 두께를 입력하면 예상 단가를 바로 확인하실 수 있습니다.', ja:'ご希望のサイズと厚みを入力すると、概算単価をすぐに確認できます。', en:'Enter your size and thickness to instantly see the estimated price.', zh:'Enter your size and thickness to instantly see the estimated price.', ar:'Enter your size and thickness to instantly see the estimated price.', es:'Enter your size and thickness to instantly see the estimated price.', de:'Enter your size and thickness to instantly see the estimated price.', fr:'Enter your size and thickness to instantly see the estimated price.' },
+calc_type_premium: { ko:'고급 인쇄용', ja:'高級印刷用', en:'Premium Print Grade', zh:'Premium Print Grade', ar:'Premium Print Grade', es:'Premium Print Grade', de:'Premium Print Grade', fr:'Premium Print Grade' },
+calc_type_premium_sub: { ko:'우수한 발색 · 두께 8~16mm', ja:'優れた発色 · 厚み 8〜16mm', en:'Superb color · 8–16mm', zh:'Superb color · 8–16mm', ar:'Superb color · 8–16mm', es:'Superb color · 8–16mm', de:'Superb color · 8–16mm', fr:'Superb color · 8–16mm' },
+calc_type_core: { ko:'내장재용', ja:'内装材用', en:'Core / Filler Grade', zh:'Core / Filler Grade', ar:'Core / Filler Grade', es:'Core / Filler Grade', de:'Core / Filler Grade', fr:'Core / Filler Grade' },
+calc_type_core_sub: { ko:'건축·문짝내부·차량·포장용 · 10~100mm', ja:'建築·ドア内部·車両·梱包用 · 10〜100mm', en:'Construction, doors, automotive, packaging · 10–100mm', zh:'Construction, doors, automotive, packaging · 10–100mm', ar:'Construction, doors, automotive, packaging · 10–100mm', es:'Construction, doors, automotive, packaging · 10–100mm', de:'Construction, doors, automotive, packaging · 10–100mm', fr:'Construction, doors, automotive, packaging · 10–100mm' },
+calc_width: { ko:'가로 (mm)', ja:'横 (mm)', en:'Width (mm)', zh:'Width (mm)', ar:'Width (mm)', es:'Width (mm)', de:'Width (mm)', fr:'Width (mm)' },
+calc_length: { ko:'세로 (mm)', ja:'縦 (mm)', en:'Length (mm)', zh:'Length (mm)', ar:'Length (mm)', es:'Length (mm)', de:'Length (mm)', fr:'Length (mm)' },
+calc_thick: { ko:'두께 (mm)', ja:'厚み (mm)', en:'Thickness (mm)', zh:'Thickness (mm)', ar:'Thickness (mm)', es:'Thickness (mm)', de:'Thickness (mm)', fr:'Thickness (mm)' },
+calc_qty: { ko:'수량 (장)', ja:'数量 (枚)', en:'Quantity (sheets)', zh:'Quantity (sheets)', ar:'Quantity (sheets)', es:'Quantity (sheets)', de:'Quantity (sheets)', fr:'Quantity (sheets)' },
+calc_res_persqm: { ko:'제곱미터당 단가', ja:'1m²あたり単価', en:'Price per m²', zh:'Price per m²', ar:'Price per m²', es:'Price per m²', de:'Price per m²', fr:'Price per m²' },
+calc_res_persheet: { ko:'1장당 가격', ja:'1枚あたり価格', en:'Price per sheet', zh:'Price per sheet', ar:'Price per sheet', es:'Price per sheet', de:'Price per sheet', fr:'Price per sheet' },
+calc_res_total: { ko:'합계 (수량 기준)', ja:'合計 (数量)', en:'Total (for quantity)', zh:'Total (for quantity)', ar:'Total (for quantity)', es:'Total (for quantity)', de:'Total (for quantity)', fr:'Total (for quantity)' },
+calc_res_note: { ko:'VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.', ja:'税別 · 表示価格はサイズ·厚み·数量により変動する場合があります。', en:'VAT excluded · Final price may vary by size, thickness, and volume.', zh:'VAT excluded · Final price may vary by size, thickness, and volume.', ar:'VAT excluded · Final price may vary by size, thickness, and volume.', es:'VAT excluded · Final price may vary by size, thickness, and volume.', de:'VAT excluded · Final price may vary by size, thickness, and volume.', fr:'VAT excluded · Final price may vary by size, thickness, and volume.' },
+calc_oi_local_t: { ko:'현지 공장 보유국 (한국·일본·미국·모로코)', ja:'現地工場あり (韓国·日本·米国·モロッコ)', en:'Local factory countries (Korea · Japan · USA · Morocco)', zh:'Local factory countries (Korea · Japan · USA · Morocco)', ar:'Local factory countries (Korea · Japan · USA · Morocco)', es:'Local factory countries (Korea · Japan · USA · Morocco)', de:'Local factory countries (Korea · Japan · USA · Morocco)', fr:'Local factory countries (Korea · Japan · USA · Morocco)' },
+calc_oi_local_d: { ko:'최소 수량 100장부터 · 전세계 무료 배송', ja:'最小100枚から · 送料無料', en:'From 100 sheets minimum · Free shipping', zh:'From 100 sheets minimum · Free shipping', ar:'From 100 sheets minimum · Free shipping', es:'From 100 sheets minimum · Free shipping', de:'From 100 sheets minimum · Free shipping', fr:'From 100 sheets minimum · Free shipping' },
+calc_oi_global_t: { ko:'그 외 국가', ja:'その他の国', en:'Other countries', zh:'Other countries', ar:'Other countries', es:'Other countries', de:'Other countries', fr:'Other countries' },
+calc_oi_global_d: { ko:'최소 주문 40ft 컨테이너 단위 · 고급 인쇄용 배송비는 당사 부담, 내장재용 배송비는 구매자 부담', ja:'最小注文は40ftコンテナ単位 · 高級印刷用の送料は当社負担、内装材用は購入者負担', en:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', zh:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', ar:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', es:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', de:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', fr:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade' },
+feat_title: { ko:'왜 헥사라이트 원판인가요?', ja:'なぜHexaliteの原板なのか', en:'Why Hexalite Raw Board?', zh:'Why Hexalite Raw Board?', ar:'Why Hexalite Raw Board?', es:'Why Hexalite Raw Board?', de:'Why Hexalite Raw Board?', fr:'Why Hexalite Raw Board?' },
+feat1_t: { ko:'인쇄 전문 보드 · 우수한 발색', ja:'印刷専門ボード · 優れた発色', en:'Print-grade board · superb color', zh:'Print-grade board · superb color', ar:'Print-grade board · superb color', es:'Print-grade board · superb color', de:'Print-grade board · superb color', fr:'Print-grade board · superb color' },
+feat1_d: { ko:'인쇄에 최적화된 표면으로 선명하고 정확한 색 표현이 가능합니다.', ja:'印刷に最適化された表面で、鮮明で正確な色再現が可能です。', en:'A surface optimized for printing delivers vivid, accurate color reproduction.', zh:'A surface optimized for printing delivers vivid, accurate color reproduction.', ar:'A surface optimized for printing delivers vivid, accurate color reproduction.', es:'A surface optimized for printing delivers vivid, accurate color reproduction.', de:'A surface optimized for printing delivers vivid, accurate color reproduction.', fr:'A surface optimized for printing delivers vivid, accurate color reproduction.' },
+feat2_t: { ko:'버진펄프 · V컷 칼날 손상 최소', ja:'バージンパルプ · Vカット刃の損傷最小', en:'Virgin pulp · minimal V-cut blade wear', zh:'Virgin pulp · minimal V-cut blade wear', ar:'Virgin pulp · minimal V-cut blade wear', es:'Virgin pulp · minimal V-cut blade wear', de:'Virgin pulp · minimal V-cut blade wear', fr:'Virgin pulp · minimal V-cut blade wear' },
+feat2_d: { ko:'불순물이 전혀 없는 버진펄프만 사용해 V컷 가공 시 칼날 손상이 매우 적어 비용 절감에 효과적입니다.', ja:'不純物のないバージンパルプのみ使用。Vカット加工時の刃の損傷が非常に少なく、コスト削減に効果的です。', en:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.', zh:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.', ar:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.', es:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.', de:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.', fr:'Made only from impurity-free virgin pulp, greatly reducing blade wear during V-cutting — effective for cutting your costs.' },
+feat3_t: { ko:'원가 도매 공급 (소매가 약 50%)', ja:'原価卸供給 (小売価格の約50%)', en:'Wholesale at cost (~50% of retail)', zh:'Wholesale at cost (~50% of retail)', ar:'Wholesale at cost (~50% of retail)', es:'Wholesale at cost (~50% of retail)', de:'Wholesale at cost (~50% of retail)', fr:'Wholesale at cost (~50% of retail)' },
+feat3_d: { ko:'도매 공급을 원하는 고객사와 윈윈할 수 있도록 원가 수준으로 공급합니다. 40ft 컨테이너 물량 기준.', ja:'卸供給をご希望のお客様とwin-winできるよう、原価水準で供給します。40ftコンテナ物量基準。', en:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.', zh:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.', ar:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.', es:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.', de:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.', fr:'For B2B partners we supply at cost for a true win-win — about half of retail, based on a 40ft container volume.' },
+feat4_t: { ko:'전세계 공급사와 협력', ja:'世界中のサプライヤーと協力', en:'Global supplier network', zh:'Global supplier network', ar:'Global supplier network', es:'Global supplier network', de:'Global supplier network', fr:'Global supplier network' },
+feat4_d: { ko:'전세계 공급사와 협력해 어디서나 안정적으로 공급합니다.', ja:'世界中のサプライヤーと協力し、どこでも安定して供給します。', en:'We partner with suppliers worldwide for reliable global supply.', zh:'We partner with suppliers worldwide for reliable global supply.', ar:'We partner with suppliers worldwide for reliable global supply.', es:'We partner with suppliers worldwide for reliable global supply.', de:'We partner with suppliers worldwide for reliable global supply.', fr:'We partner with suppliers worldwide for reliable global supply.' },
+feat_contact_label: { ko:'직통 문의', ja:'直通お問い合わせ', en:'Direct inquiry', zh:'Direct inquiry', ar:'Direct inquiry', es:'Direct inquiry', de:'Direct inquiry', fr:'Direct inquiry' },
 // ── Products Section ──
 section_products_title: {
     ko:'허니콤보드 원판 상품', ja:'ハニカムボード原板 商品', en:'Raw Honeycomb Board Products', zh:'蜂窝原板产品',
