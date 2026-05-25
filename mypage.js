@@ -508,6 +508,19 @@ async function loadOrders() {
             : '<div style="'+chip+'"><span style="'+lab+'">👤 '+window.t('od_manager','담당 매니저')+'</span><span style="'+val+'">'+(mgr||window.t('od_assigning','배정 중'))+'</span></div>');
         btns += '<div style="'+chip+'"><span style="'+lab+'">📅 '+window.t('od_delivery','배송 예정일')+'</span><span style="'+val+'">'+(deliv||window.t('od_sched_tbd','일정 협의 중'))+'</span></div>';
         btns += '<a href="tel:0313661984" style="'+chip+'"><span style="'+lab+'">🏢 '+window.t('od_hq','본사')+'</span><span style="'+valLink+'">031-366-1984</span></a>';
+        // 결제 상태 (본사 옆)
+        var _pm=(o.payment_method||'').toLowerCase(), _ps=o.payment_status||'';
+        var _isCard=_pm.indexOf('카드')>=0||_pm.indexOf('card')>=0||_pm.indexOf('stripe')>=0;
+        var _isBank=_pm.indexOf('무통장')>=0||_pm.indexOf('계좌')>=0||_pm.indexOf('bank')>=0;
+        var _paid=(_ps==='결제완료'||_ps==='입금완료'||_ps==='승인완료'||_ps==='구매확정');
+        if(_isCard){
+            btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_card','카드결제 완료')+'</span></div>';
+        } else if(_isBank){
+            if(_paid) btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_bank_done','입금완료')+'</span></div>';
+            else btns += '<div style="'+chip+' flex-direction:column; align-items:flex-start; gap:3px;"><span style="color:#dc2626;font-weight:800;">⚠️ '+window.t('od_pay_unpaid','입금 전 (미입금)')+'</span><span style="font-size:11.5px; color:#475569; font-weight:700;">국민은행 647701-04-277763</span></div>';
+        } else if(_ps){
+            btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="'+val+'">'+_ps+'</span></div>';
+        }
         return '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-top:8px;">'
              +'<div style="display:flex; align-items:flex-start; margin-bottom:14px;">'+bar+'</div>'
              +'<div style="display:flex; flex-wrap:wrap; gap:8px;">'+btns+'</div></div>';
@@ -1518,18 +1531,25 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
 
     cartItems.forEach(item => {
         const _p = item.product || {};
+        const _sm = item._simple || {};
+        const _q = item.qty || 1;
         let pdfName = item.productName || _p.name || item.name || '-';
-        let pdfPrice = _p.price || item.price || (item._simple && item._simple.unit) || 0;
+        // 단가: _simple.unit(정확한 1개 단가) 우선
+        let pdfPrice = (typeof _sm.unit === 'number') ? _sm.unit : (_p.price || item.price || 0);
+        // 라인 합계: 할인 반영된 _simple.final 우선, 없으면 단가×수량
+        let lineTot = (typeof _sm.final === 'number') ? _sm.final : (pdfPrice * _q);
 
         if (PDF_LANG === 'ja' || PDF_LANG === 'jp') {
             if (_p.name_jp) pdfName = _p.name_jp;
-            if (_cr && _cr.JP) pdfPrice = Math.round(pdfPrice * _cr.JP);
+            if (_cr && _cr.JP) { pdfPrice = Math.round(pdfPrice * _cr.JP); lineTot = Math.round(lineTot * _cr.JP); }
         } else if (PDF_LANG === 'us' || PDF_LANG === 'en') {
             if (_p.name_us) pdfName = _p.name_us;
-            if (_cr && _cr.US) pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100;
+            if (_cr && _cr.US) { pdfPrice = Math.round(pdfPrice * _cr.US * 100) / 100; lineTot = Math.round(lineTot * _cr.US * 100) / 100; }
         }
 
-        const pTotal = (pdfPrice || 0) * (item.qty || 1);
+        // 단가×수량 ≠ 라인합계 면 단가를 합계 기준으로 보정 → 행 내부 일관성 보장
+        if (_q > 0 && Math.round((pdfPrice || 0) * _q) !== Math.round(lineTot)) pdfPrice = Math.round(lineTot / _q);
+        const pTotal = lineTot;
         totalAmt += pTotal;
         const splitTitle = doc.splitTextToSize(pdfName, cols[1] - 4);
         const rowHeight = Math.max(8, 4 + (splitTitle.length * 5));
