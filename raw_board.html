@@ -26,22 +26,25 @@
 <meta name="twitter:image" content="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/paper_stand_hero.jpg">
 <!-- hreflang (다국어) -->
 <link rel="alternate" hreflang="ko" href="https://www.hexa-board.com/">
-<link rel="alternate" hreflang="ja" href="https://www.hexa-board.com/?lang=ja">
-<link rel="alternate" hreflang="en" href="https://www.hexa-board.com/?lang=en">
-<link rel="alternate" hreflang="zh" href="https://www.hexa-board.com/?lang=zh">
-<link rel="alternate" hreflang="es" href="https://www.hexa-board.com/?lang=es">
-<link rel="alternate" hreflang="de" href="https://www.hexa-board.com/?lang=de">
-<link rel="alternate" hreflang="fr" href="https://www.hexa-board.com/?lang=fr">
-<link rel="alternate" hreflang="ar" href="https://www.hexa-board.com/?lang=ar">
+<link rel="alternate" hreflang="ja" href="https://www.hexa-board.com/ja">
+<link rel="alternate" hreflang="en" href="https://www.hexa-board.com/en">
+<link rel="alternate" hreflang="zh" href="https://www.hexa-board.com/zh">
+<link rel="alternate" hreflang="es" href="https://www.hexa-board.com/es">
+<link rel="alternate" hreflang="de" href="https://www.hexa-board.com/de">
+<link rel="alternate" hreflang="fr" href="https://www.hexa-board.com/fr">
+<link rel="alternate" hreflang="ar" href="https://www.hexa-board.com/ar">
 <link rel="alternate" hreflang="x-default" href="https://www.hexa-board.com/">
 <script>
 (function(){
     var params = new URLSearchParams(location.search);
     var langParam = params.get('lang');
     var h = location.hostname;
-    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
-    var lang = langParam || hostLang;
     var supported = ['ko','ja','en','zh','ar','es','de','fr'];
+    // hexa-board.com: 경로 기반 언어 (/en, /ja ...) — 깔끔한 URL. ?lang= 은 하위호환으로 우선.
+    var seg = (location.pathname.split('/')[1]||'').toLowerCase();
+    var pathLang = supported.indexOf(seg)>=0 ? seg : '';
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'en':'ko';
+    var lang = langParam || pathLang || hostLang;
     if(supported.indexOf(lang)<0) lang='ko';
     window.__PS_LANG = lang;
     document.documentElement.lang = lang;
@@ -1332,6 +1335,11 @@ function applyI18n() {
     _setMeta('meta[name="twitter:description"]', t('meta_desc'));
     var _ogLocaleMap={ko:'ko_KR',ja:'ja_JP',en:'en_US',zh:'zh_CN',ar:'ar_SA',es:'es_ES',de:'de_DE',fr:'fr_FR'};
     _setMeta('meta[property="og:locale"]', _ogLocaleMap[LANG]||'ko_KR');
+    // canonical / og:url — 현재 언어의 깔끔한 경로로 자기참조 (예: /en, /ja)
+    var _canonUrl = 'https://www.hexa-board.com/' + (LANG && LANG!=='ko' ? LANG : '');
+    var _canonEl = document.querySelector('link[rel="canonical"]');
+    if(_canonEl) _canonEl.setAttribute('href', _canonUrl);
+    _setMeta('meta[property="og:url"]', _canonUrl);
 }
 
 function buildLangSelector() {
@@ -1339,13 +1347,13 @@ function buildLangSelector() {
     if (!sel) return;
     var langs = [
         {code:'ko', label:'KR',  url:'https://www.hexa-board.com/'},
-        {code:'ja', label:'JP',  url:'https://www.hexa-board.com/?lang=ja'},
-        {code:'en', label:'US',  url:'https://www.hexa-board.com/?lang=en'},
-        {code:'zh', label:'CN',  url:'https://www.hexa-board.com/?lang=zh'},
-        {code:'ar', label:'SA',  url:'https://www.hexa-board.com/?lang=ar'},
-        {code:'es', label:'ES',  url:'https://www.hexa-board.com/?lang=es'},
-        {code:'de', label:'DE',  url:'https://www.hexa-board.com/?lang=de'},
-        {code:'fr', label:'FR',  url:'https://www.hexa-board.com/?lang=fr'}
+        {code:'ja', label:'JP',  url:'https://www.hexa-board.com/ja'},
+        {code:'en', label:'US',  url:'https://www.hexa-board.com/en'},
+        {code:'zh', label:'CN',  url:'https://www.hexa-board.com/zh'},
+        {code:'ar', label:'SA',  url:'https://www.hexa-board.com/ar'},
+        {code:'es', label:'ES',  url:'https://www.hexa-board.com/es'},
+        {code:'de', label:'DE',  url:'https://www.hexa-board.com/de'},
+        {code:'fr', label:'FR',  url:'https://www.hexa-board.com/fr'}
     ];
     var html = '';
     langs.forEach(function(l) {

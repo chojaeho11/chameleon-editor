@@ -393,7 +393,7 @@ export default {
             }
             // sitemap.xml — 전용 (홈 1개 + 언어별 hreflang). 검색엔진 색인 가속 + Search Console/네이버 제출용.
             if (path === 'sitemap.xml') {
-                const langs = [['ko','/'],['ja','/?lang=ja'],['en','/?lang=en'],['zh','/?lang=zh'],['es','/?lang=es'],['de','/?lang=de'],['fr','/?lang=fr'],['ar','/?lang=ar']];
+                const langs = [['ko','/'],['ja','/ja'],['en','/en'],['zh','/zh'],['es','/es'],['de','/de'],['fr','/fr'],['ar','/ar']];
                 const today = new Date().toISOString().slice(0,10);
                 const altLinks = langs.map(([l,p]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="https://www.hexa-board.com${p}"/>`).join('\n')
                     + `\n    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.hexa-board.com/"/>`;
@@ -428,7 +428,7 @@ export default {
             const _rl = (url.searchParams.get('lang') || '').toLowerCase()
                 || (url.hostname.includes('cafe0101') ? 'ja'
                   : (url.hostname.includes('chameleon.design') ? 'en' : 'ko'));
-            const _rsfx = (_rl && _rl !== 'ko') ? ('/?lang=' + _rl) : '/';
+            const _rsfx = (_rl && _rl !== 'ko') ? ('/' + _rl) : '/';
             return Response.redirect('https://www.hexa-board.com' + _rsfx, 301);
         }
 
