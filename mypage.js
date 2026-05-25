@@ -441,10 +441,59 @@ async function loadOrders() {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">${window.t('msg_loading', 'Loading...')}</td></tr>`;
 
     const { data: orders } = await sb.from('orders')
-        .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, files, has_partner_items, selected_customer_phone')
+        .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, delivery_time, staff_driver_id, admin_note, site_code, files, has_partner_items, selected_customer_phone')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(100);
+
+    // 2026-05-26: 담당 매니저 전화 + 배송기사 이름 매핑 로드 (진행/배송 안내용, best-effort)
+    var _mgrPhoneMap = {}, _driverMap = {};
+    try {
+        const { data: _mgrs } = await sb.from('chatbot_knowledge').select('question,answer').eq('category', '_managers');
+        (_mgrs || []).forEach(function(m){ var ph=''; try{ ph=(JSON.parse(m.answer||'{}').phone||'').toString(); }catch(e){} if(ph) _mgrPhoneMap[(m.question||'').trim()] = ph; });
+    } catch(e) {}
+    try {
+        const { data: _stf } = await sb.from('admin_staff').select('id,name');
+        (_stf || []).forEach(function(s){ _driverMap[s.id] = s.name; });
+    } catch(e) {}
+    function _mgrPhone(nm){
+        if(!nm) return '';
+        if(nm.indexOf('본사')>=0) return '031-366-1984';
+        for(var k in _mgrPhoneMap){ var kn=k.replace(/\s*매니저/,''); if(k.indexOf(nm)>=0 || nm.indexOf(kn)>=0) return _mgrPhoneMap[k]; }
+        return '';
+    }
+    function _orderStep(o){
+        var s=o.status||'', note=o.admin_note||'';
+        if(s==='배송완료'||s==='완료됨'||s==='구매확정') return 4;
+        if(/\[CHK:delivered=1\]|\[CHK:installed=1\]/.test(note) || s==='배송중') return 3;
+        if(/\[CHK:loaded=1\]/.test(note)) return 2;
+        if(s==='제작중'||s==='파일처리중'||s==='제작준비') return 1;
+        return 0;
+    }
+    function _orderDetailBlock(o){
+        if(o.status==='취소됨'||o.status==='취소요청'||o.status==='임시작성') return '';
+        var STEPS=[window.t('od_s1','주문 접수'),window.t('od_s2','제작 중'),window.t('od_s3','배송 준비'),window.t('od_s4','배송 중'),window.t('od_s5','배송 완료')];
+        var step=_orderStep(o);
+        var bar='';
+        STEPS.forEach(function(lbl,i){
+            if(i>0) bar+='<div style="flex:0 0 12px;height:2px;background:'+(i<=step?'#6366f1':'#e2e8f0')+';margin-top:9px;"></div>';
+            var done=i<=step, cur=i===step;
+            bar+='<div style="flex:1; text-align:center; min-width:0;">'
+               +'<div style="width:20px;height:20px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;'
+               +(done?'background:#6366f1;color:#fff;':'background:#e2e8f0;color:#94a3b8;')+(cur?'box-shadow:0 0 0 3px rgba(99,102,241,0.2);':'')+'">'+(done?'✓':(i+1))+'</div>'
+               +'<div style="font-size:10px; line-height:1.2; '+(cur?'color:#4f46e5;font-weight:800;':'color:#94a3b8;')+'">'+lbl+'</div></div>';
+        });
+        var mgr=o.manager_name||'', mp=_mgrPhone(mgr)||'031-366-1984';
+        var drv=o.staff_driver_id?(_driverMap[o.staff_driver_id]||''):'';
+        var dd=o.delivery_target_date||'', dt=o.delivery_time||'';
+        var info='';
+        info+='<div>👤 '+window.t('od_manager','담당 매니저')+': <b>'+(mgr||window.t('od_assigning','배정 중'))+'</b>'+(mp?' · <a href="tel:'+mp.replace(/-/g,'')+'" style="color:#4f46e5;text-decoration:none;font-weight:700;">'+mp+'</a>':'')+'</div>';
+        info+='<div>🚚 '+window.t('od_driver','배송 기사')+': <b>'+(drv||window.t('od_driver_wait','배차 준비 중'))+'</b></div>';
+        info+='<div>📅 '+window.t('od_delivery','배송 예정')+': <b>'+(dd?(dd+(dt?(' '+dt):'')):window.t('od_sched_tbd','일정 협의 중'))+'</b></div>';
+        return '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-top:8px;">'
+             +'<div style="display:flex; align-items:flex-start; margin-bottom:10px;">'+bar+'</div>'
+             +'<div style="font-size:12px; color:#475569; line-height:1.9;">'+info+'</div></div>';
+    }
 
     tbody.innerHTML = '';
 
@@ -532,6 +581,7 @@ async function loadOrders() {
                             </div>
                         </div>
                     </div>
+                    ${_orderDetailBlock(o)}
                 </div>
             </td></tr>`;
         } else {
@@ -566,7 +616,8 @@ async function loadOrders() {
                         </div>
                     </div>
                 </td>
-            </tr>`;
+            </tr>
+            ${_orderDetailBlock(o) ? `<tr class="order-detail-row"><td colspan="5" style="padding:0 16px 14px;">${_orderDetailBlock(o)}</td></tr>` : ''}`;
         }
     });
 }
