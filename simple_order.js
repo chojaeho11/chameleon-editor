@@ -814,6 +814,11 @@
                  'Selected boards are shipped as-is without printing or design. No file upload needed.')}
           </div>
         </div>
+        <!-- 2026-05-25: 원판 상품 — 업로드 영역 대체로 다른 원판 제품 더 담기 그리드 -->
+        <div id="soRawBoardMore" style="display:none; margin-top:18px;">
+          <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:10px;">🧩 ${tr('다른 원판 제품 더 담기', '他の原板商品を追加', 'Add more raw boards')}</div>
+          <div id="soRawBoardMoreGrid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+        </div>
 
         <!-- 2026-05-15: 업로드 영역 바로 아래 — 파일 사이즈 초과 등 업로드 에러를 즉시·크게 표시 -->
         <div id="soUploadError" class="so-upload-error" style="display:none;">
@@ -2117,6 +2122,39 @@
         return /양면|double.?sided|two.?side/i.test(name);
     }
 
+    // 2026-05-25: 원판 상품 상세에서 "다른 원판 제품 더 담기" 그리드 (업로드 영역 대체)
+    var _soRbMoreCache = null;
+    async function _soLoadRawBoardMore(currentCode) {
+        var wrap = document.getElementById('soRawBoardMore');
+        var grid = document.getElementById('soRawBoardMoreGrid');
+        if (!wrap || !grid) return;
+        wrap.style.display = '';
+        try {
+            if (!_soRbMoreCache) {
+                var sb = getSb(); if (!sb) { wrap.style.display = 'none'; return; }
+                var sc = await sb.from('admin_categories').select('code').eq('top_category_code', 'Wholesale Board Prices');
+                var codes = (sc.data || []).map(function (c) { return c.code; });
+                if (!codes.length) { wrap.style.display = 'none'; return; }
+                var pr = await sb.from('admin_products').select('code,name,name_jp,name_us,img_url,category,sort_order').in('category', codes);
+                _soRbMoreCache = (pr.data || []).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+            }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            var items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 8);
+            if (!items.length) { wrap.style.display = 'none'; return; }
+            grid.innerHTML = items.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Board';
+                var sfx = (lang && lang !== 'ko') ? ('&lang=' + lang) : '';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                return '<a href="https://www.hexa-board.com/?product=' + encodeURIComponent(p.code) + sfx + '" style="display:block; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; text-decoration:none; background:#fff; transition:box-shadow .2s;" onmouseover="this.style.boxShadow=\'0 6px 16px rgba(0,0,0,.1)\'" onmouseout="this.style.boxShadow=\'none\'">' +
+                    '<div style="aspect-ratio:1/1; background:#f8fafc;"><img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0"></div>' +
+                    '<div style="padding:8px 10px;"><div style="font-size:12px; font-weight:700; color:#1e293b; line-height:1.3; height:32px; overflow:hidden;">' + safeNm + '</div>' +
+                    '<div style="font-size:12px; font-weight:800; color:#6366f1; margin-top:4px;">+ ' + tr('담기', '追加', 'Add') + '</div></div></a>';
+            }).join('');
+        } catch (e) { wrap.style.display = 'none'; }
+    }
+    window._soLoadRawBoardMore = _soLoadRawBoardMore;
+
     // 2026-05-15: 장바구니에 담긴 원판 상품들의 총 수량 합계 (수도권 10장 이상 무료배송 판정용)
     function _soGetCartRawBoardQty() {
         var cart = (window.cartData && Array.isArray(window.cartData)) ? window.cartData : [];
@@ -2346,7 +2384,7 @@
             if (method === 'self_pickup' || method === 'regional_delivery') return 0;
             if (method === 'metro_delivery') {
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
-                return totalRawQty >= 10 ? 0 : 100000;
+                return totalRawQty >= 5 ? 0 : 100000;
             }
         }
         // 2026-05-15: 종이매대 — 100개 이상 무료, 1개씩(3만/개), 2개씩(1.5만/2개), 수도권 용차 10만, 지방 용차 20만
@@ -2483,19 +2521,19 @@
         if (state.isRawBoard) {
             if (state.shipMethod === 'metro_delivery') {
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
-                var need = Math.max(0, 10 - totalRawQty);
-                if (totalRawQty >= 10) {
+                var need = Math.max(0, 5 - totalRawQty);
+                if (totalRawQty >= 5) {
                     box.innerHTML = '<div style="font-weight:800; color:#14532d;">✅ ' +
-                        tr('수도권 무료배송 (원판 총 ' + totalRawQty + '장 ≥ 10)',
-                           '首都圏 無料配送 (原板計' + totalRawQty + '枚 ≥ 10)',
-                           'Free metro delivery (' + totalRawQty + ' raw boards ≥ 10)') + '</div>';
+                        tr('수도권 무료배송 (총 ' + totalRawQty + '장 ≥ 5)',
+                           '首都圏 無料配送 (計' + totalRawQty + '枚 ≥ 5)',
+                           'Free metro delivery (' + totalRawQty + ' sheets ≥ 5)') + '</div>';
                 } else {
                     box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' +
                         tr('수도권 배송비', '首都圏配送料', 'Metro delivery') + ' · ' + fmtPrice(100000) + '</div>' +
                         '<div style="font-size:11px; color:#3730a3;">' +
-                        tr('원판을 ' + need + '장 더 담으면 무료 (총 10장 기준)',
-                           '原板をあと' + need + '枚で無料 (計10枚で適用)',
-                           'Add ' + need + ' more raw board(s) for free shipping (total ≥10)') + '</div>';
+                        tr('5장 이상 주문 시 무료 (' + need + '장 더 담기)',
+                           'あと' + need + '枚で無料 (5枚以上で適用)',
+                           'Free at 5+ sheets (add ' + need + ' more)') + '</div>';
                 }
             } else if (state.shipMethod === 'regional_delivery') {
                 box.innerHTML = '<div style="font-weight:800; color:#9a3412;">🛻 ' +
@@ -3491,7 +3529,8 @@
             if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
         }
         // 2026-05-13: 허니콤보드 원판인쇄 — 양면이면 단가 2배 자동
-        state.isRawBoard = _soIsRawBoardProduct(p);
+        // 2026-05-25: hexa-board.com(화이트라벨)에서 열린 상품은 모두 원판으로 처리 (카테고리 매핑 미로드 대비)
+        state.isRawBoard = _soIsRawBoardProduct(p) || (typeof document !== 'undefined' && document.documentElement.classList.contains('hexa-mode'));
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
@@ -3507,6 +3546,9 @@
         if (_rb_uploadWrap) _rb_uploadWrap.style.display = _hideUpload ? 'none' : '';
         if (_rb_uploadLabel) _rb_uploadLabel.style.display = _hideUpload ? 'none' : '';
         if (_rb_notice) _rb_notice.style.display = state.isRawBoard ? '' : 'none';
+        // 2026-05-25: 원판이면 "다른 원판 제품 더 담기" 그리드 로드, 아니면 숨김
+        if (state.isRawBoard) { try { window._soLoadRawBoardMore(p.code); } catch(e){} }
+        else { var _rbMore = document.getElementById('soRawBoardMore'); if (_rbMore) _rbMore.style.display = 'none'; }
         if (_rb_tier) _rb_tier.style.display = _hideUpload ? 'none' : '';
         if (_rb_note) _rb_note.style.display = _hideUpload ? 'none' : '';
         // 2026-05-15: 금액주문 — 시공/배송 섹션 자체 숨김, 수량 input max 무제한(천만)
