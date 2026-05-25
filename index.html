@@ -6310,7 +6310,7 @@ async function handleSubReturn() {
                 <div class="pd-phone"><span class="pd-phone-lang">${L.p1l}</span><span class="pd-phone-ic">📞</span> <a href="tel:${PH1.replace(/\s/g,'')}">${PH1}</a></div>
                 <div class="pd-phone"><span class="pd-phone-lang">${L.p2l}</span><span class="pd-phone-ic">📞</span> <a href="tel:${PH2.replace(/\s/g,'')}">${PH2}</a></div>
             </div>
-            <a href="${(function(){var h=window.location.hostname;var langMap={ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};var q=langMap[lang]?'?lang='+langMap[lang]:'';if(h.includes('cafe0101.com'))return 'https://cafe0101.com/raw-board'+q;if(h.includes('cafe3355.com')||h.includes('chameleon.design'))return 'https://chameleon.design/raw-board'+q;return 'https://cafe2626.com/raw-board'+q;})()}" target="_blank" class="hb-raw-btn">
+            <a href="${(function(){var langMap={ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};var q=langMap[lang]?'?lang='+langMap[lang]:'';return 'https://www.hexa-board.com/'+q;})()}" target="_blank" class="hb-raw-btn">
                 <span class="hb-raw-ic">🧱</span>
                 <span class="hb-raw-txt">${({kr:'허니콤보드 원판 구입 사이트',ja:'ハニカムボード原板 購入サイト',en:'Honeycomb Board Raw Sheets Shop',zh:'蜂窝板原板购买网站',ar:'موقع شراء ألواح خلية النحل الخام',es:'Tienda de láminas nido de abeja',de:'Waben-Rohplatten Shop',fr:'Site d\'achat de plaques nid d\'abeille'})[lang]||'Honeycomb Board Raw Sheets Shop'}</span>
                 <span class="hb-raw-arrow">→</span>
@@ -10620,7 +10620,7 @@ async function renderQuickMenu() {
                 if (top.code === 'Wholesale Board Prices') {
                     const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr',kr:'ko'};
                     const rbLang = langMap[CURRENT_LANG] || '';
-                    location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
+                    location.href = 'https://www.hexa-board.com/' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
                     return;
                 }
                 // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)
@@ -10729,7 +10729,7 @@ async function renderQuickMenu() {
                     if (top.code === 'Wholesale Board Prices') {
                         const langMap = {ja:'ja',en:'en',zh:'zh',ar:'ar',es:'es',de:'de',fr:'fr'};
                         const rbLang = langMap[CURRENT_LANG];
-                        location.href = '/raw-board' + (rbLang ? '?lang=' + rbLang : '');
+                        location.href = 'https://www.hexa-board.com/' + (rbLang ? '?lang=' + rbLang : '');
                         return;
                     }
                     // ★ 패브릭 인쇄 → https://www.cotton-print.com/ (2026-05-14: 별도 도메인으로 이동, 해외는 ?lang=)

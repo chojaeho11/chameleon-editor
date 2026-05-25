@@ -421,6 +421,17 @@ export default {
             return new Response(rbResp.body, { status: rbResp.status, headers: rbHdrs });
         }
 
+        // 2026-05-25: 허니콤보드 원판 페이지는 hexa-board.com 전용 도메인으로 이전.
+        //   이전 도메인의 /raw-board(및 /raw_board) 접속은 hexa-board.com 으로 301 영구 이전 (SEO 통합/주소 통일).
+        //   ※ hexa-board.com 자체는 위 블록에서 이미 처리되어 여기 도달하지 않음. 봇도 301 을 받아 색인이 이전됨.
+        if (path === 'raw-board' || path === 'raw_board') {
+            const _rl = (url.searchParams.get('lang') || '').toLowerCase()
+                || (url.hostname.includes('cafe0101') ? 'ja'
+                  : (url.hostname.includes('chameleon.design') ? 'en' : 'ko'));
+            const _rsfx = (_rl && _rl !== 'ko') ? ('/?lang=' + _rl) : '/';
+            return Response.redirect('https://www.hexa-board.com' + _rsfx, 301);
+        }
+
         // ========== 2026-05-15: cafe3355.com → 종이매대(paper-stand) 전용 도메인 ==========
         // 사용자 결정: cafe3355.com 은 더 이상 US 사이트 아님 (US 는 chameleon.design).
         //   Hexalite(원판) 도메인처럼 cafe3355.com 전체를 paper_stand 랜딩 전용으로 서빙.
