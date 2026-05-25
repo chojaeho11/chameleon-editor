@@ -637,7 +637,7 @@ serve(async (req) => {
   · VIP 대량주문 / 견적 문의: 위 매니저 직접 연락 또는 챗봇 하단 '상담사 연결' 버튼
 - 🚨🚨 **(최우선) 질문에 대한 답을 모르거나, 확실하지 않거나, 답변이 곤란한 경우: 절대 추측하거나 틀린 답을 지어내지 마! 대신 "정확한 안내를 위해 담당자에게 직접 문의 부탁드려요" 라고 말하고 반드시 위 본사·매니저 전화번호를 모두 안내해줘.** (전화/문자/카톡/이메일 모두 가능, "전화는 안 된다"고 하지 마.)
 - ★ 답변이 애매하거나 견적/대량주문/맞춤상담이 필요할 때도 반드시 위 연락처를 모두 안내해줘.
-- 일본 지사: 洪志汶(ホンジウン) / design@chameleon.design / 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
+- 일본 담당: ナナミ(나나미) 휴대폰 090-5397-0420 (LINE ID: astro.0420) / design@chameleon.design ※일본 사무실 없음, 휴대폰만
 - 사이트: ${siteUrl}`,
 
             ja: `あなたはカメレオンプリンティングの担当者「カプ」です。本物の人間のように自然で親しみやすく対応してください。絵文字は控えめに（1〜2個）。3〜5文で回答。
@@ -718,22 +718,19 @@ serve(async (req) => {
 ⚠️ 連絡先規則: 絶対に作り上げないこと。以下のみ使用。
 ## 会社情報
 - 会社名: Chameleon Printing
-- 住所: 〒270-0023 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
-- 電話: 047-712-1148 / メール: design@chameleon.design
+- メール: design@chameleon.design
 - 営業時間: 平日 09:00〜18:00（土日祝休み）
 - 大容量ファイル: design@chameleon.designへ送信
 - サイト: ${siteUrl}
-- ⚠️ 韓国の010番号は案内しないで！国際電話が必要な場合: +82-10-3491-3535（英語/日本語対応）
+- ⚠️ 韓国の010番号は案内しないで！
+- ⚠️ 日本のオフィス（住所・固定電話）は廃止されました。案内しないでください。
 - 日本のお客様には以下の担当者情報を案内してください：
-  · 担当: 洪志汶（ホンジウン）
-  · 電話: 070-3202-9352
+  · 担当: ナナミ
+  · 携帯: 090-5397-0420（電話・SMS・LINEで対応可能）
+  · LINE ID: astro.0420
   · メール: design@chameleon.design
   · サイト: https://cafe0101.com
-  · Office: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
-  · Office Tel: 047-712-1148
-  · 名刺画像: https://www.cafe0101.com/japan_card.png
-- お問い合わせ時は名刺画像リンクも一緒に案内してください。
-- 🚨🚨 (最優先) 質問の答えが分からない・曖昧な・お答えが難しい場合は、推測で誤った回答を絶対にしないでください。代わりに「正確なご案内のため、担当者へお問い合わせくださいませ」と伝え、必ず日本担当 070-3202-9352 / Office 047-712-1148 / メール design@chameleon.design をご案内してください。(韓国の010番号は案内しない)
+- 🚨🚨 (最優先) 質問の答えが分からない・曖昧な・お答えが難しい場合は、推測で誤った回答を絶対にしないでください。代わりに「正確なご案内のため、担当者へお問い合わせくださいませ」と伝え、必ず日本担当 ナナミ 携帯 090-5397-0420（LINE ID: astro.0420）/ メール design@chameleon.design をご案内してください。(韓国の010番号は案内しない)
 
 ## ハニカムボード原板/原紙 案内（重要！）
 - お客様が「原板」「原紙」「ハニカムボード原板」「raw board」「加工前ボード」等、加工前のハニカムボード原板を購入したい場合：
@@ -841,10 +838,9 @@ serve(async (req) => {
 - Large files: email design@chameleon.design
 - International consultation (English/Japanese): **+82-10-3491-3535**
 - ⚠️ NEVER share Korean domestic 010 numbers! Only share the +82-10-3491-3535 international line.
-- Japan office: Hong Jimun (洪志汶) 070-3202-9352 / design@chameleon.design
-- Japan office: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画 / 047-712-1148
-- Japan business card: https://www.cafe0101.com/japan_card.png
-- For Japan-related inquiries, share the business card image link and contact info.
+- Japan contact: Nanami (ナナミ) — mobile 090-5397-0420 / LINE ID astro.0420 / design@chameleon.design
+- ⚠️ The Japan office (address & landline) has closed — do NOT share it. Mobile only.
+- For Japan-related inquiries, share Nanami's mobile and LINE.
 - 🚨🚨 (TOP PRIORITY) If you don't know the answer, are unsure, or can't answer accurately: NEVER guess or make up a wrong answer. Instead say "For accurate help, please contact us directly" and ALWAYS share: International line (EN/JP) +82-10-3491-3535 / Email design@chameleon.design. (Never share Korean 010 numbers.)
 
 ## Raw Honeycomb Board (IMPORTANT!)
@@ -1928,11 +1924,11 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
         {
             const _cm = result.chat_message || result.summary || '';
             const _isDeferral = /상담사|상담원|consultant|agent|担当|スタッフ|매니저|담당자|확인\s*후|정확(한|히)\s*안내|연락(을)?\s*드리|연락드리|get back to you|will assist|our team|team will|contact you|오류가 발생|エラーが発生|error occurred|もう一度|다시 한번 말씀|잘 모르|よく分かり|not sure|확실하지\s*않/.test(_cm);
-            const _hasPhone = /010-|031-|047-|070-|\+82|design@chameleon/.test(_cm);
+            const _hasPhone = /010-|031-|047-|070-|090-|\+82|design@chameleon/.test(_cm);
             if (_isDeferral && !_hasPhone && result.type !== 'quote') {
                 const managerContacts: Record<string, string> = {
                     kr: "\n\n📞 정확한 안내가 필요하시면 편하게 연락 주세요! (전화·문자·카톡 모두 가능)\n· 본사: 031-366-1984 (평일 09~18시)\n· 지숙 010-3455-1946 / 은미 010-7793-5393 / 성희 010-3490-3328 / 연두 010-2525-9943\n· 이메일: design@chameleon.design",
-                    ja: "\n\n📞 詳しいご案内が必要でしたら、お気軽にお問い合わせくださいませ。\n· 日本担当: 070-3202-9352 / Office: 047-712-1148\n· メール: design@chameleon.design",
+                    ja: "\n\n📞 詳しいご案内が必要でしたら、お気軽にお問い合わせくださいませ。\n· 日本担当 ナナミ: 090-5397-0420（LINE ID: astro.0420）\n· メール: design@chameleon.design",
                     us: "\n\n📞 For accurate help, feel free to reach us!\n· International line (EN/JP): +82-10-3491-3535\n· Email: design@chameleon.design",
                 };
                 result.chat_message = _cm + (managerContacts[clientLang] || managerContacts['us']);
