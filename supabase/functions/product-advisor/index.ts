@@ -606,7 +606,7 @@ serve(async (req) => {
   - 반드시 products 배열에 허니콤보드 원판 관련 제품 4개를 포함해서 카드로 보여줘! (상품 데이터에서 카테고리가 원판/wholesale board 관련인 제품 검색)
   - ★ **원판은 구독(PRO) 할인 외에 수량 할인, 금액별 할인 등 다른 할인이 전혀 없음!** 할인 안내를 하지 마!
   - ★ **원판 사이즈**: 국내 1300×2500mm, 해외 1300×2200mm (고정 사이즈)
-  - ★ **원판 문의 연락처**: 본사 031-366-1984, 매니저 010-3455-1946/010-7793-5393/010-3490-3328, 이메일 design@chameleon.design
+  - ★ **원판 문의 연락처**: 본사 031-366-1984, 매니저 010-3455-1946/010-7793-5393/010-3490-3328/010-2525-9943, 이메일 design@chameleon.design
 
 ## 종이매대/종이진열대 안내 (중요!)
 - 고객이 "종이매대", "종이진열대", "종이 진열대", "paper stand", "cardboard display stand", "紙スタンド", "紙什器", "매대" 등 종이매대를 물어보면:
@@ -632,10 +632,11 @@ serve(async (req) => {
 - ★ **해외 계좌 문의 시**: "Community Federal Savings Bank, Acct: 8487335989, Routing: 026073150, SWIFT: CMFGUS33 (CHAMELEON PRINTING INC.)" 안내
 - ⭐ **매니저 연락처 (답변이 곤란하거나 고객이 직접 문의를 원할 때 적극 안내)**:
   · 본사 대표: **031-366-1984** (평일 09~18시)
-  · 지숙 매니저: **010-3455-1946** / 은미 매니저: **010-7793-5393** / 성희 매니저: **010-3490-3328**
+  · 지숙 매니저: **010-3455-1946** / 은미 매니저: **010-7793-5393** / 성희 매니저: **010-3490-3328** / 연두 매니저: **010-2525-9943**
   · 이메일: **design@chameleon.design** (대용량 파일/견적 문의)
   · VIP 대량주문 / 견적 문의: 위 매니저 직접 연락 또는 챗봇 하단 '상담사 연결' 버튼
-- ★ 답변이 애매하거나 견적/대량주문/맞춤상담이 필요할 때는 반드시 위 연락처를 모두 안내해줘 (전화/문자/카톡/이메일 모두 가능). "전화는 안 된다"고 하지 마.
+- 🚨🚨 **(최우선) 질문에 대한 답을 모르거나, 확실하지 않거나, 답변이 곤란한 경우: 절대 추측하거나 틀린 답을 지어내지 마! 대신 "정확한 안내를 위해 담당자에게 직접 문의 부탁드려요" 라고 말하고 반드시 위 본사·매니저 전화번호를 모두 안내해줘.** (전화/문자/카톡/이메일 모두 가능, "전화는 안 된다"고 하지 마.)
+- ★ 답변이 애매하거나 견적/대량주문/맞춤상담이 필요할 때도 반드시 위 연락처를 모두 안내해줘.
 - 일본 지사: 洪志汶(ホンジウン) / design@chameleon.design / 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画
 - 사이트: ${siteUrl}`,
 
@@ -732,6 +733,7 @@ serve(async (req) => {
   · Office Tel: 047-712-1148
   · 名刺画像: https://www.cafe0101.com/japan_card.png
 - お問い合わせ時は名刺画像リンクも一緒に案内してください。
+- 🚨🚨 (最優先) 質問の答えが分からない・曖昧な・お答えが難しい場合は、推測で誤った回答を絶対にしないでください。代わりに「正確なご案内のため、担当者へお問い合わせくださいませ」と伝え、必ず日本担当 070-3202-9352 / Office 047-712-1148 / メール design@chameleon.design をご案内してください。(韓国の010番号は案内しない)
 
 ## ハニカムボード原板/原紙 案内（重要！）
 - お客様が「原板」「原紙」「ハニカムボード原板」「raw board」「加工前ボード」等、加工前のハニカムボード原板を購入したい場合：
@@ -843,6 +845,7 @@ serve(async (req) => {
 - Japan office: 千葉県松戸市八ヶ崎七丁目32番地11 3階 B区画 / 047-712-1148
 - Japan business card: https://www.cafe0101.com/japan_card.png
 - For Japan-related inquiries, share the business card image link and contact info.
+- 🚨🚨 (TOP PRIORITY) If you don't know the answer, are unsure, or can't answer accurately: NEVER guess or make up a wrong answer. Instead say "For accurate help, please contact us directly" and ALWAYS share: International line (EN/JP) +82-10-3491-3535 / Email design@chameleon.design. (Never share Korean 010 numbers.)
 
 ## Raw Honeycomb Board (IMPORTANT!)
 - When customer asks about "raw board", "raw honeycomb board", "unprocessed board", "board sheets", "wholesale board" — they want to buy raw/unprocessed honeycomb boards:
@@ -1917,6 +1920,23 @@ ${JSON.stringify(categories.filter((c: any) => !_skipSubCats.has(c.code) && !_sk
             const hasContact = chatMsg.includes('010-') || chatMsg.includes('047-') || chatMsg.includes('support@');
             if (!hasContact) {
                 result.chat_message = chatMsg + (contactInfos[clientLang] || contactInfos['us']);
+            }
+        }
+
+        // ⭐ 2026-05-25: 봇이 답을 모르거나(상담사/매니저 안내·확인후답변·오류 등) 확신이 없을 때
+        //   → 본사·매니저 전화번호를 자동으로 덧붙여 안내. (JP/US는 한국 010 번호 금지 → 현지 연락처)
+        {
+            const _cm = result.chat_message || result.summary || '';
+            const _isDeferral = /상담사|상담원|consultant|agent|担当|スタッフ|매니저|담당자|확인\s*후|정확(한|히)\s*안내|연락(을)?\s*드리|연락드리|get back to you|will assist|our team|team will|contact you|오류가 발생|エラーが発生|error occurred|もう一度|다시 한번 말씀|잘 모르|よく分かり|not sure|확실하지\s*않/.test(_cm);
+            const _hasPhone = /010-|031-|047-|070-|\+82|design@chameleon/.test(_cm);
+            if (_isDeferral && !_hasPhone && result.type !== 'quote') {
+                const managerContacts: Record<string, string> = {
+                    kr: "\n\n📞 정확한 안내가 필요하시면 편하게 연락 주세요! (전화·문자·카톡 모두 가능)\n· 본사: 031-366-1984 (평일 09~18시)\n· 지숙 010-3455-1946 / 은미 010-7793-5393 / 성희 010-3490-3328 / 연두 010-2525-9943\n· 이메일: design@chameleon.design",
+                    ja: "\n\n📞 詳しいご案内が必要でしたら、お気軽にお問い合わせくださいませ。\n· 日本担当: 070-3202-9352 / Office: 047-712-1148\n· メール: design@chameleon.design",
+                    us: "\n\n📞 For accurate help, feel free to reach us!\n· International line (EN/JP): +82-10-3491-3535\n· Email: design@chameleon.design",
+                };
+                result.chat_message = _cm + (managerContacts[clientLang] || managerContacts['us']);
+                if (result.summary) result.summary = result.chat_message;
             }
         }
 
