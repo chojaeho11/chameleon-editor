@@ -5233,12 +5233,14 @@
             });
 
             var fullAddr = (zip ? '[' + zip + '] ' : '') + addr1 + ' ' + addr2;
-            // 로그인 사용자 정보 조회 (admin_note 에 기록)
+            // 로그인 사용자 정보 조회 (admin_note 에 기록 + 마이페이지 주문내역 연동용 user_id)
             var loggedInEmail = null;
+            var loggedInUid = null;
             try {
                 var sess = await sb.auth.getSession();
                 if (sess && sess.data && sess.data.session && sess.data.session.user) {
                     loggedInEmail = sess.data.session.user.email;
+                    loggedInUid = sess.data.session.user.id;
                 }
             } catch (e) {}
             // 2026-05-13: admin_note 에 각 항목별 옵션·전달사항·가벽사이즈·시공일정 요약 포함
@@ -5359,6 +5361,7 @@
             var _frSlug2 = (function(){ try { return sessionStorage.getItem('_franchise_ref') || null; } catch(e){ return null; } })();
             var orderRow = {
                 order_date: new Date().toISOString(),
+                user_id: loggedInUid,   // 2026-05-26: 로그인 고객 주문은 user_id 연결 → 마이페이지 주문내역에 노출
                 manager_name: name,
                 phone: phone,
                 address: fullAddr,
@@ -5391,6 +5394,8 @@
                     payment_status: orderRow.payment_status,
                     payment_method: orderRow.payment_method
                 };
+                // 2026-05-26: 로그인 고객이 매니저 견적을 결제하면 user_id 연결 → 마이페이지 노출
+                if (loggedInUid) updateRow.user_id = loggedInUid;
                 // 2026-05-22: 마일리지/예치금 사용 시 결제금액·할인 반영 (매니저견적 결제 경로)
                 if (_useMileage > 0 || _useDeposit > 0) {
                     updateRow.total_amount = _finalTotal;
