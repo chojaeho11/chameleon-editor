@@ -507,7 +507,10 @@ async function submitPdSample() {
 .rb-oi-flag{font-size:19px;margin-bottom:6px;}
 .rb-oi-title{font-weight:900;font-size:13px;color:#1e293b;margin-bottom:5px;line-height:1.4;}
 .rb-oi-desc{font-size:12px;color:#64748b;line-height:1.6;}
-@media(max-width:680px){.rb-calc-wrap{padding:16px;}.rb-input-grid{grid-template-columns:1fr 1fr;gap:10px;}.rb-order-info{grid-template-columns:1fr;}.rb-type-row{grid-template-columns:1fr;}}
+.rb-ship-notice{max-width:760px;margin:16px auto 0;background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;padding:14px 20px;font-size:13px;color:#3730a3;line-height:1.7;text-align:center;font-weight:600;}
+.rb-ship-notice b{color:#4338ca;font-weight:900;}
+.rb-wholesale-note{max-width:760px;margin:0 auto 22px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 18px;font-size:13px;color:#92400e;font-weight:700;text-align:center;line-height:1.6;}
+@media(max-width:680px){.rb-calc-wrap{padding:16px;}.rb-input-grid{grid-template-columns:1fr 1fr;gap:10px;}.rb-order-info{grid-template-columns:1fr;}.rb-type-row{grid-template-columns:1fr;}.rb-ship-notice,.rb-wholesale-note{font-size:12px;}}
 .rb-feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1100px;margin:0 auto;}
 .rb-feat-card{background:#fafbfc;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:all .3s;}
 .rb-feat-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px -16px rgba(0,0,0,.25);}
@@ -554,15 +557,16 @@ async function submitPdSample() {
     <div class="rb-order-info">
         <div class="rb-oi-card">
             <div class="rb-oi-flag">🇰🇷 🇯🇵 🇺🇸 🇲🇦</div>
-            <div class="rb-oi-title" data-i18n="calc_oi_local_t">현지 공장 보유국 (한국·일본·미국·모로코)</div>
-            <div class="rb-oi-desc" data-i18n="calc_oi_local_d">최소 수량 100장부터 · 전세계 무료 배송</div>
+            <div class="rb-oi-title" data-i18n="calc_oi_local_t">맞춤제작 최소수량 · 한국·일본·미국·모로코</div>
+            <div class="rb-oi-desc" data-i18n="calc_oi_local_d">최소 100매부터 · 무료 배송</div>
         </div>
         <div class="rb-oi-card">
-            <div class="rb-oi-flag">🌍</div>
-            <div class="rb-oi-title" data-i18n="calc_oi_global_t">그 외 국가</div>
-            <div class="rb-oi-desc" data-i18n="calc_oi_global_d">최소 주문 40ft 컨테이너 단위 · 고급 인쇄용 배송비는 당사 부담, 내장재용 배송비는 구매자 부담</div>
+            <div class="rb-oi-flag">🇪🇺 🌏</div>
+            <div class="rb-oi-title" data-i18n="calc_oi_global_t">그 외 유럽·동남아시아 국가</div>
+            <div class="rb-oi-desc" data-i18n="calc_oi_global_d">최소 주문 40ft 컨테이너 단위</div>
         </div>
     </div>
+    <div class="rb-ship-notice" data-i18n-html="calc_ship_notice"><b>고급 인쇄용</b> 맞춤제작은 <b>전세계 무료배송</b>됩니다. <b>내장재용</b>은 단가가 낮아 별도의 배송비가 발생할 수 있으니 담당자에게 문의해 주세요.</div>
 </section>
 
 <!-- ===== 장점 4가지 ===== -->
@@ -637,6 +641,7 @@ async function submitPdSample() {
 <section class="section" id="products" style="padding-top:32px;">
     <h2 class="section-title" data-i18n="section_products_title">허니콤보드 원판 상품</h2>
     <p class="section-desc" data-i18n="section_products_desc">10매 단위로 합배송됩니다. 한국 1300x2500 | 그 외 국가 1400x2200으로 배송됩니다.</p>
+    <div class="rb-wholesale-note" data-i18n="calc_wholesale_note">📦 1,000매 이상 도매·유통업체는 위 단가 계산기 금액을 참조하세요 (예: 장당 16,250원).</div>
     <div id="productGrid" class="product-grid">
         <div class="loading-spinner"></div>
     </div>
@@ -833,27 +838,27 @@ function toggleKapuChat() {
     <div style="max-width:1000px; margin:0 auto;">
         <div style="display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; margin-bottom:32px;">
             <!-- 브랜드 -->
-            <div style="min-width:200px;">
+            <div style="min-width:220px;">
                 <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:10px;">
                     <i class="fa-solid fa-layer-group" style="color:#818cf8; margin-right:6px;"></i>Hexalite
                 </div>
-                <p style="font-size:12px; line-height:1.7;" data-i18n="footer_brand_desc">광고인쇄 전용 보드 생산</p>
+                <p style="font-size:12px; line-height:1.7; margin-bottom:12px;" data-i18n="footer_brand_desc">허니콤보드 원판·인쇄 전용 보드 전문</p>
+                <div style="font-size:13px; color:#cbd5e1; font-weight:700;"><span data-i18n="footer_main_tel_label">대표번호</span> <a href="tel:+821034913535" style="color:#a5b4fc; font-weight:800; text-decoration:none;">+82 10 3491 3535</a></div>
             </div>
-            <!-- 링크 -->
-            <div style="min-width:120px;">
-                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_links_title">바로가기</div>
-                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;">
-                    <a href="/" id="footerHomeLink" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_main">카멜레온프린팅 메인</a>
-                    <a href="/board.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_community">커뮤니티</a>
-                    <a href="/mypage.html" style="color:#94a3b8; transition:color 0.2s;" data-i18n="footer_mypage">마이페이지</a>
+            <!-- 국가별 문의 -->
+            <div style="min-width:280px;">
+                <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_country_title">국가별 문의</div>
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px; line-height:1.5;">
+                    <div>🇰🇷 <span data-i18n="raw_contact_kr">한국 사무실</span> <a href="tel:0313661984" style="color:#cbd5e1;text-decoration:none;font-weight:700;">031-366-1984</a></div>
+                    <div>🇯🇵 <span data-i18n="raw_contact_jp">일본지사 나나미</span> <a href="tel:09053970420" style="color:#cbd5e1;text-decoration:none;font-weight:700;">090-5397-0420</a></div>
+                    <div>🇬🇧 English / 🇨🇳 中文 <a href="tel:+821034913535" style="color:#cbd5e1;text-decoration:none;font-weight:700;">+82 10 3491 3535</a></div>
+                    <div>🇸🇦 العربية / 🇫🇷 Français <a href="tel:+212617901092" style="color:#cbd5e1;text-decoration:none;font-weight:700;">+212 617 901 092</a></div>
                 </div>
             </div>
-            <!-- 연락처 -->
-            <div style="min-width:180px;">
+            <!-- 이메일/시간 -->
+            <div style="min-width:170px;">
                 <div style="font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:10px;" data-i18n="footer_contact_title">문의</div>
-                <div style="font-size:12px; line-height:2;" data-i18n-html="footer_contact_info">
-                    📞 02-000-0000<br>📧 info@chameleonprinting.com<br>🕐 평일 09:00~18:00
-                </div>
+                <div style="font-size:12px; line-height:2;" data-i18n-html="footer_contact_info">📧 design@chameleon.design<br>🕐 평일 09:00~18:00</div>
             </div>
         </div>
         <div style="border-top:1px solid #334155; padding-top:16px; text-align:center; font-size:11px; color:#64748b;">
@@ -1083,10 +1088,12 @@ calc_res_persqm: { ko:'제곱미터당 단가', ja:'1m²あたり単価', en:'Pr
 calc_res_persheet: { ko:'1장당 가격', ja:'1枚あたり価格', en:'Price per sheet', zh:'Price per sheet', ar:'Price per sheet', es:'Price per sheet', de:'Price per sheet', fr:'Price per sheet' },
 calc_res_total: { ko:'합계 (수량 기준)', ja:'合計 (数量)', en:'Total (for quantity)', zh:'Total (for quantity)', ar:'Total (for quantity)', es:'Total (for quantity)', de:'Total (for quantity)', fr:'Total (for quantity)' },
 calc_res_note: { ko:'VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.', ja:'税別 · 表示価格はサイズ·厚み·数量により変動する場合があります。', en:'VAT excluded · Final price may vary by size, thickness, and volume.', zh:'VAT excluded · Final price may vary by size, thickness, and volume.', ar:'VAT excluded · Final price may vary by size, thickness, and volume.', es:'VAT excluded · Final price may vary by size, thickness, and volume.', de:'VAT excluded · Final price may vary by size, thickness, and volume.', fr:'VAT excluded · Final price may vary by size, thickness, and volume.' },
-calc_oi_local_t: { ko:'현지 공장 보유국 (한국·일본·미국·모로코)', ja:'現地工場あり (韓国·日本·米国·モロッコ)', en:'Local factory countries (Korea · Japan · USA · Morocco)', zh:'Local factory countries (Korea · Japan · USA · Morocco)', ar:'Local factory countries (Korea · Japan · USA · Morocco)', es:'Local factory countries (Korea · Japan · USA · Morocco)', de:'Local factory countries (Korea · Japan · USA · Morocco)', fr:'Local factory countries (Korea · Japan · USA · Morocco)' },
-calc_oi_local_d: { ko:'최소 수량 100장부터 · 전세계 무료 배송', ja:'最小100枚から · 送料無料', en:'From 100 sheets minimum · Free shipping', zh:'From 100 sheets minimum · Free shipping', ar:'From 100 sheets minimum · Free shipping', es:'From 100 sheets minimum · Free shipping', de:'From 100 sheets minimum · Free shipping', fr:'From 100 sheets minimum · Free shipping' },
-calc_oi_global_t: { ko:'그 외 국가', ja:'その他の国', en:'Other countries', zh:'Other countries', ar:'Other countries', es:'Other countries', de:'Other countries', fr:'Other countries' },
-calc_oi_global_d: { ko:'최소 주문 40ft 컨테이너 단위 · 고급 인쇄용 배송비는 당사 부담, 내장재용 배송비는 구매자 부담', ja:'最小注文は40ftコンテナ単位 · 高級印刷用の送料は当社負担、内装材用は購入者負担', en:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', zh:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', ar:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', es:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', de:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade', fr:'Minimum order 1×40ft container · We cover shipping for Premium grade; buyer covers shipping for Core grade' },
+calc_oi_local_t: { ko:'맞춤제작 최소수량 · 한국·일본·미국·모로코', ja:'受注製作 最小数量 · 韓国·日本·米国·モロッコ', en:'Custom order minimum · Korea·Japan·USA·Morocco', zh:'Custom order minimum · Korea·Japan·USA·Morocco', ar:'Custom order minimum · Korea·Japan·USA·Morocco', es:'Custom order minimum · Korea·Japan·USA·Morocco', de:'Custom order minimum · Korea·Japan·USA·Morocco', fr:'Custom order minimum · Korea·Japan·USA·Morocco' },
+calc_oi_local_d: { ko:'최소 100매부터 · 무료 배송', ja:'最小100枚から · 送料無料', en:'From 100 sheets · Free shipping', zh:'From 100 sheets · Free shipping', ar:'From 100 sheets · Free shipping', es:'From 100 sheets · Free shipping', de:'From 100 sheets · Free shipping', fr:'From 100 sheets · Free shipping' },
+calc_oi_global_t: { ko:'그 외 유럽·동남아시아 국가', ja:'その他 欧州·東南アジア諸国', en:'Other Europe & Southeast Asia', zh:'Other Europe & Southeast Asia', ar:'Other Europe & Southeast Asia', es:'Other Europe & Southeast Asia', de:'Other Europe & Southeast Asia', fr:'Other Europe & Southeast Asia' },
+calc_oi_global_d: { ko:'최소 주문 40ft 컨테이너 단위', ja:'最小注文は40ftコンテナ単位', en:'Minimum order: 1×40ft container', zh:'Minimum order: 1×40ft container', ar:'Minimum order: 1×40ft container', es:'Minimum order: 1×40ft container', de:'Minimum order: 1×40ft container', fr:'Minimum order: 1×40ft container' },
+calc_ship_notice: { ko:'<b>고급 인쇄용</b> 맞춤제작은 <b>전세계 무료배송</b>됩니다. <b>내장재용</b>은 단가가 낮아 별도의 배송비가 발생할 수 있으니 담당자에게 문의해 주세요.', ja:'<b>高級印刷用</b>のカスタム製作は<b>世界中送料無料</b>です。<b>内装材用</b>は単価が低いため別途送料が発生する場合があります。担当者にお問い合わせください。', en:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.', zh:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.', ar:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.', es:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.', de:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.', fr:'<b>Premium print</b> custom orders ship <b>free worldwide</b>. <b>Core/filler grade</b> has a low unit price, so a separate shipping fee may apply — please contact our team.' },
+calc_wholesale_note: { ko:'📦 1,000매 이상 도매·유통업체는 위 단가 계산기 금액을 참조하세요 (예: 장당 16,250원).', ja:'📦 1,000枚以上の卸·流通業者は上記の単価計算機の金額をご参照ください（例：1枚あたり ¥1,625）。', en:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).', zh:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).', ar:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).', es:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).', de:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).', fr:'📦 Wholesale & distributors ordering 1,000+ sheets: refer to the calculator above (e.g., $16.25 per sheet).' },
 feat_title: { ko:'왜 헥사라이트 원판인가요?', ja:'なぜHexaliteの原板なのか', en:'Why Hexalite Raw Board?', zh:'Why Hexalite Raw Board?', ar:'Why Hexalite Raw Board?', es:'Why Hexalite Raw Board?', de:'Why Hexalite Raw Board?', fr:'Why Hexalite Raw Board?' },
 feat1_t: { ko:'인쇄 전문 보드 · 우수한 발색', ja:'印刷専門ボード · 優れた発色', en:'Print-grade board · superb color', zh:'Print-grade board · superb color', ar:'Print-grade board · superb color', es:'Print-grade board · superb color', de:'Print-grade board · superb color', fr:'Print-grade board · superb color' },
 feat1_d: { ko:'인쇄에 최적화된 표면으로 선명하고 정확한 색 표현이 가능합니다.', ja:'印刷に最適化された表面で、鮮明で正確な色再現が可能です。', en:'A surface optimized for printing delivers vivid, accurate color reproduction.', zh:'A surface optimized for printing delivers vivid, accurate color reproduction.', ar:'A surface optimized for printing delivers vivid, accurate color reproduction.', es:'A surface optimized for printing delivers vivid, accurate color reproduction.', de:'A surface optimized for printing delivers vivid, accurate color reproduction.', fr:'A surface optimized for printing delivers vivid, accurate color reproduction.' },
@@ -1367,15 +1374,17 @@ footer_mypage: {
     ar:'صفحتي', es:'Mi Pagina', de:'Meine Seite', fr:'Ma Page'
 },
 footer_brand_desc: {
-    ko:'광고인쇄 전용 보드 생산',
-    ja:'広告印刷専用ボード製造',
-    en:'Advertising Print Board Manufacturing',
-    zh:'广告印刷专用板材生产',
-    ar:'تصنيع ألواح الطباعة الإعلانية',
-    es:'Fabricacion de tableros para impresion publicitaria',
-    de:'Herstellung von Werbedruckplatten',
-    fr:'Fabrication de panneaux pour impression publicitaire'
+    ko:'허니콤보드 원판·인쇄 전용 보드 전문 · 전세계 공급',
+    ja:'ハニカムボード原板·印刷専用ボード専門 · 世界供給',
+    en:'Raw honeycomb board & print-grade board specialist · Global supply',
+    zh:'蜂窝原板·印刷专用板材专家 · 全球供应',
+    ar:'متخصص في ألواح خلية النحل الخام · توريد عالمي',
+    es:'Especialista en tablero de panal bruto · Suministro global',
+    de:'Spezialist fur Wabenplatten-Rohware · Weltweite Lieferung',
+    fr:'Specialiste du panneau alveolaire brut · Approvisionnement mondial'
 },
+footer_main_tel_label: { ko:'대표번호', ja:'代表番号', en:'Main line', zh:'代表号码', ar:'الخط الرئيسي', es:'Linea principal', de:'Hauptnummer', fr:'Ligne principale' },
+footer_country_title: { ko:'국가별 문의', ja:'国別お問い合わせ', en:'Contact by country', zh:'各国联系方式', ar:'الاتصال حسب الدولة', es:'Contacto por pais', de:'Kontakt nach Land', fr:'Contact par pays' },
 footer_links_title: {
     ko:'바로가기', ja:'リンク', en:'Quick Links', zh:'快速链接',
     ar:'روابط سريعة', es:'Enlaces', de:'Links', fr:'Liens rapides'
@@ -1385,14 +1394,14 @@ footer_contact_title: {
     ar:'اتصل بنا', es:'Contacto', de:'Kontakt', fr:'Contact'
 },
 footer_contact_info: {
-    ko:'📞 031-366-1984<br>📧 design@chameleon.design<br>🕐 평일 09:00~18:00',
-    ja:'📞 047-712-1148<br>📧 design@chameleon.design<br>🕐 平日 09:00~18:00 (JST)',
-    en:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Mon-Fri 09:00~18:00 (KST)',
-    zh:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 周一至周五 09:00~18:00 (KST)',
-    ar:'📧 design@chameleon.design<br>📞 3535-3491-10-82+<br>🕐 الاثنين-الجمعة 09:00~18:00',
-    es:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Lun-Vie 09:00~18:00 (KST)',
-    de:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Mo-Fr 09:00~18:00 (KST)',
-    fr:'📧 design@chameleon.design<br>📞 +82-10-3491-3535<br>🕐 Lun-Ven 09:00~18:00 (KST)'
+    ko:'📧 design@chameleon.design<br>🕐 평일 09:00~18:00 (KST)',
+    ja:'📧 design@chameleon.design<br>🕐 平日 09:00~18:00 (KST)',
+    en:'📧 design@chameleon.design<br>🕐 Mon-Fri 09:00~18:00 (KST)',
+    zh:'📧 design@chameleon.design<br>🕐 周一至周五 09:00~18:00 (KST)',
+    ar:'📧 design@chameleon.design<br>🕐 الاثنين-الجمعة 09:00~18:00 (KST)',
+    es:'📧 design@chameleon.design<br>🕐 Lun-Vie 09:00~18:00 (KST)',
+    de:'📧 design@chameleon.design<br>🕐 Mo-Fr 09:00~18:00 (KST)',
+    fr:'📧 design@chameleon.design<br>🕐 Lun-Ven 09:00~18:00 (KST)'
 },
 review_title: {
     ko:'고객 후기', ja:'お客様レビュー', en:'Customer Reviews', zh:'客户评价',
