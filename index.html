@@ -1021,7 +1021,7 @@ if ('caches' in window) {
             <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
                 <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
-                    <b style="color:#f472b6; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                    <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
                 <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
                 <div id="mgrPhoneSlot" style="display:contents;">
@@ -1074,7 +1074,7 @@ if ('caches' in window) {
                             }
                             return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">' +
                                 '<span>' + nm + '</span>' +
-                                '<b style="color:#f472b6; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
+                                '<b style="color:#ffffff; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
                                 '</a>';
                         }).join('');
                         // DB 에 매니저 등록 안 됐으면 슬롯 자체를 제거 (본사 카드만 남음 + auto-fit 으로 가운데 정렬)
@@ -1120,12 +1120,12 @@ if ('caches' in window) {
                            style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:130px; text-align:right; padding:6px 0; background:transparent;">
                     <span id="mgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
                     <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()"
-                            style="padding:9px 18px; background:linear-gradient(135deg,#833AB4,#C13584,#E1306C); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
+                            style="padding:9px 18px; background:#fff; color:#111; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
                         ⚡ 주문하기
                     </button>
                 </div>
                 <!-- 개인결제창 (우측) -->
-                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 22px; background:linear-gradient(135deg,#833AB4,#C13584,#F77737); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(193,53,132,0.5); letter-spacing:0.5px; white-space:nowrap;">
+                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 22px; background:#fff; color:#111; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(0,0,0,0.4); letter-spacing:0.5px; white-space:nowrap;">
                     📋 개인결제창
                 </button>
             </div>
