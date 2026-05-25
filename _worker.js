@@ -386,6 +386,20 @@ export default {
         //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
         //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.
         if (url.hostname.includes('hexa-board.com')) {
+            // robots.txt — 전용 (Sitemap 지시문 포함, 공유 robots 대신)
+            if (path === 'robots.txt') {
+                const robotsBody = 'User-agent: *\nAllow: /\n\nSitemap: https://www.hexa-board.com/sitemap.xml\n';
+                return new Response(robotsBody, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+            }
+            // sitemap.xml — 전용 (홈 1개 + 언어별 hreflang). 검색엔진 색인 가속 + Search Console/네이버 제출용.
+            if (path === 'sitemap.xml') {
+                const langs = [['ko','/'],['ja','/?lang=ja'],['en','/?lang=en'],['zh','/?lang=zh'],['es','/?lang=es'],['de','/?lang=de'],['fr','/?lang=fr'],['ar','/?lang=ar']];
+                const today = new Date().toISOString().slice(0,10);
+                const altLinks = langs.map(([l,p]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="https://www.hexa-board.com${p}"/>`).join('\n')
+                    + `\n    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.hexa-board.com/"/>`;
+                const sitemapBody = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n  <url>\n    <loc>https://www.hexa-board.com/</loc>\n${altLinks}\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n</urlset>\n`;
+                return new Response(sitemapBody, { status: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+            }
             const isAssetHB = path.includes('.') && (
                 path.endsWith('.js') || path.endsWith('.css') || path.endsWith('.png') ||
                 path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.svg') ||
