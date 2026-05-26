@@ -256,11 +256,11 @@
                 <div class="jx-a"><span class="lbl">AI</span>${esc(a)}</div>
                 <textarea class="jx-input" id="jxa-${it.id}" placeholder="${placeholder}"></textarea>
                 <div class="jx-actions">
-                    <button class="btn btn-save" onclick="jxSave(${it.id})">💾 저장 · AI 학습</button>
+                    <button class="btn btn-save" onclick="jxSave('${it.id}')">💾 저장 · AI 학습</button>
                 </div>
                 <div class="jx-actions-row">
-                    <button class="btn btn-mgr" onclick="jxMgrAnswer(${it.id})">🏢 매니저 안내</button>
-                    <button class="btn btn-pass" onclick="jxPass(${it.id})">⏭ 패스 (코드)</button>
+                    <button class="btn btn-mgr" onclick="jxMgrAnswer('${it.id}')">🏢 매니저 안내</button>
+                    <button class="btn btn-pass" onclick="jxPass('${it.id}')">⏭ 패스 (코드)</button>
                 </div>
                 <div class="jx-status" id="jxs-${it.id}"></div>
             </div>`;
