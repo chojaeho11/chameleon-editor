@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🤖 자비스 리포트 — AI 학습</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #0b0f1c; color: #e2e8f0;
+            font-family: 'Pretendard', sans-serif;
+            margin: 0; padding: 16px 14px 60px;
+            max-width: 640px; margin: 0 auto;
+            min-height: 100vh; -webkit-font-smoothing: antialiased;
+        }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .header h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 0; flex: 1; letter-spacing: -0.5px; }
+        .header .sub { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+        .refresh-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(148,163,184,0.2);
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            color: #cbd5e1; cursor: pointer; font-size: 16px;
+            transition: all 0.15s;
+        }
+        .refresh-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
+
+        .summary { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .chip {
+            background: rgba(99,102,241,0.18); color: #c7d2fe;
+            padding: 6px 13px; border-radius: 18px; font-size: 12px; font-weight: 800;
+        }
+        .chip.warn { background: rgba(239,68,68,0.18); color: #fca5a5; }
+        .chip.ok { background: rgba(34,197,94,0.18); color: #86efac; }
+
+        .empty {
+            text-align: center; padding: 80px 20px; color: #86efac;
+            font-size: 17px; font-weight: 800; line-height: 1.6;
+        }
+
+        .jx-item {
+            background: linear-gradient(165deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid rgba(148,163,184,0.15);
+            border-radius: 16px; padding: 14px; margin-bottom: 14px;
+            box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4);
+            transition: opacity 0.35s, transform 0.35s;
+        }
+        .jx-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .jx-lang { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 7px; letter-spacing: 0.3px; }
+        .jx-lang.kr { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+        .jx-lang.ja { background: rgba(236,72,153,0.25); color: #fbcfe8; }
+        .jx-lang.us { background: rgba(34,197,94,0.25); color: #86efac; }
+        .jx-time { font-size: 11px; color: #94a3b8; }
+
+        .jx-q { font-size: 14px; font-weight: 700; color: #f8fafc; line-height: 1.5; margin-bottom: 6px; word-break: break-word; }
+        .jx-q .lbl { color: #fca5a5; font-weight: 900; margin-right: 5px; font-size: 11px; vertical-align: 2px; }
+        .jx-q-tr {
+            font-size: 12.5px; color: #cbd5e1; line-height: 1.5;
+            margin-bottom: 10px; padding: 8px 11px;
+            background: rgba(99,102,241,0.08); border-left: 3px solid rgba(99,102,241,0.5);
+            border-radius: 6px; word-break: break-word;
+        }
+        .jx-q-tr.loading { color: #64748b; font-style: italic; }
+
+        .jx-a {
+            font-size: 12.5px; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px;
+            padding: 8px 11px;
+            background: rgba(239,68,68,0.08); border-left: 3px solid rgba(239,68,68,0.5);
+            border-radius: 6px; white-space: pre-wrap; word-break: break-word;
+            max-height: 200px; overflow-y: auto;
+        }
+        .jx-a .lbl { color: #fca5a5; font-weight: 900; margin-right: 5px; font-size: 11px; vertical-align: 2px; }
+
+        .jx-input {
+            width: 100%; border-radius: 10px;
+            border: 1px solid rgba(148,163,184,0.3); background: rgba(255,255,255,0.06);
+            color: #f8fafc; font-family: 'Pretendard', sans-serif; font-size: 14px;
+            padding: 10px 12px; resize: vertical; min-height: 80px; line-height: 1.55;
+        }
+        .jx-input::placeholder { color: #64748b; font-size: 13px; }
+        .jx-input:focus { outline: none; border-color: #818cf8; background: rgba(255,255,255,0.1); }
+
+        .jx-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+        .jx-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .btn {
+            border: none; border-radius: 10px; padding: 12px 8px;
+            font-family: 'Pretendard', sans-serif; font-size: 13px; font-weight: 800;
+            cursor: pointer; transition: transform 0.1s, opacity 0.15s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-save { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.5); }
+        .btn-mgr { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+        .btn-pass { background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+
+        .jx-status { font-size: 11px; color: #64748b; margin-top: 8px; min-height: 15px; padding: 0 2px; }
+        .jx-status.busy { color: #c7d2fe; }
+        .jx-status.ok { color: #86efac; }
+        .jx-status.err { color: #fca5a5; }
+
+        .fade-out { opacity: 0; transform: scale(0.95); }
+
+        .toast {
+            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #16a34a; color: #fff;
+            padding: 13px 22px; border-radius: 14px;
+            font-weight: 800; font-size: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 10000; opacity: 0;
+            transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+            max-width: 90vw; text-align: center;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.err { background: #dc2626; }
+
+        .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #475569; }
+        .footer a { color: #64748b; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="flex:1;">
+            <h1>🤖 자비스 리포트</h1>
+            <div class="sub">AI가 헷갈린 상담 · 정답 학습</div>
+        </div>
+        <button class="refresh-btn" onclick="loadJarvis()" title="새로고침">↻</button>
+    </div>
+
+    <div class="summary">
+        <span class="chip" id="dateChip">-</span>
+        <span class="chip warn" id="countChip">- 건</span>
+    </div>
+
+    <div id="list">
+        <div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>
+    </div>
+
+    <div class="footer">
+        <a href="/admin_m_secret_882">← 관리자 대시보드</a>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+        import { sb, initConfig } from './config.js?v=434';
+
+        const LANG_MAP = {
+            kr: { tag: 'KR 🇰🇷', kb: 'ko', cls: 'kr' },
+            ko: { tag: 'KR 🇰🇷', kb: 'ko', cls: 'kr' },
+            ja: { tag: 'JP 🇯🇵', kb: 'ja', cls: 'ja' },
+            jp: { tag: 'JP 🇯🇵', kb: 'ja', cls: 'ja' },
+            us: { tag: 'US 🇺🇸', kb: 'en', cls: 'us' },
+            en: { tag: 'EN 🇺🇸', kb: 'en', cls: 'us' }
+        };
+
+        // 매니저 안내 템플릿 (언어별)
+        const MGR_TPL = {
+            ko: `안녕하세요 고객님 😊\n\n빠른 안내를 위해 매니저에게 직접 연락 주시거나 본사로 문의 부탁드립니다!\n\n📞 본사: 031-366-1984 (평일 09:00~18:00)\n• 지숙 매니저: 010-3455-1946\n• 은미 매니저: 010-7793-5393\n• 성희 매니저: 010-3490-3328\n• 연두 매니저: 010-2525-9943\n\n편하신 분께 연락 주세요!`,
+            ja: `お問い合わせありがとうございます 😊\n\n詳しいご案内は担当者に直接ご連絡いただくのが最も早いです。\n\n📞 ナナミ (海外担当): 090-5397-0420\n\nお気軽にご連絡ください!`,
+            en: `Hello! Thank you for your inquiry 😊\n\nFor the fastest response, please contact our overseas representative directly:\n\n📞 Hyerim Seo (CEO, Overseas): +82-10-3491-3535\n\nFeel free to reach out anytime!`
+        };
+
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function fmtTime(iso) {
+            try {
+                const d = new Date(iso);
+                const m = ('0' + (d.getMonth() + 1)).slice(-2), dd = ('0' + d.getDate()).slice(-2);
+                const h = ('0' + d.getHours()).slice(-2), mi = ('0' + d.getMinutes()).slice(-2);
+                return `${m}/${dd} ${h}:${mi}`;
+            } catch (e) { return ''; }
+        }
+        function toast(msg, isErr) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (isErr ? ' err' : '');
+            setTimeout(() => { t.className = 'toast' + (isErr ? ' err' : ''); }, 2600);
+        }
+        async function translate(text, to_lang) {
+            try {
+                const { data, error } = await sb.functions.invoke('translate', { body: { text, to: to_lang } });
+                if (error) { console.warn('[translate] err', error); return ''; }
+                return (data && data.translated) ? data.translated : '';
+            } catch (e) { console.warn('[translate] failed', e); return ''; }
+        }
+
+        window.loadJarvis = async function () {
+            const listEl = document.getElementById('list');
+            const countEl = document.getElementById('countChip');
+            const dateEl = document.getElementById('dateChip');
+            const now = new Date();
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            dateEl.textContent = `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()} (${dayNames[now.getDay()]})`;
+            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>';
+            try {
+                const { data: logs, error } = await sb.from('advisor_qa_log')
+                    .select('id, room_id, lang, customer_message, customer_message_ko, ai_response, created_at')
+                    .eq('needs_learning', true).eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+                if (error) throw error;
+                const items = (logs || []).filter(l => l.customer_message || l.customer_message_ko);
+                countEl.textContent = items.length ? items.length + ' 건' : '0 건';
+                countEl.className = 'chip ' + (items.length ? 'warn' : 'ok');
+                if (!items.length) {
+                    listEl.innerHTML = '<div class="empty">✅ AI가 헷갈린 상담이 없습니다.<br>깔끔합니다!</div>';
+                    return;
+                }
+                listEl.innerHTML = items.map(renderItem).join('');
+                // 외국어 자동 번역 (한국어로) — 비동기로 채워짐
+                items.forEach(async (it) => {
+                    const lang = (it.lang || 'kr').toLowerCase();
+                    if (lang === 'kr' || lang === 'ko') return;
+                    const el = document.getElementById('jxqtr-' + it.id);
+                    if (!el) return;
+                    if (it.customer_message_ko) {
+                        el.textContent = '🇰🇷 ' + it.customer_message_ko;
+                        el.classList.remove('loading'); return;
+                    }
+                    const tr = await translate(it.customer_message || '', 'ko');
+                    el.textContent = tr ? ('🇰🇷 ' + tr) : '(번역 실패 — 원문만 확인하세요)';
+                    el.classList.remove('loading');
+                });
+            } catch (e) {
+                console.error('[jarvis] load failed', e);
+                listEl.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:40px 0;">불러오기 실패: ' + esc(e?.message || e) + '</div>';
+            }
+        };
+
+        function renderItem(it) {
+            const L = LANG_MAP[(it.lang || 'kr').toLowerCase()] || LANG_MAP.kr;
+            const q = it.customer_message || it.customer_message_ko || '';
+            const a = (it.ai_response || '').trim() || '(AI 응답 없음 / 답변 회피)';
+            const isForeign = !['kr', 'ko'].includes((it.lang || 'kr').toLowerCase());
+            const trBlock = isForeign
+                ? `<div class="jx-q-tr loading" id="jxqtr-${it.id}">🇰🇷 한국어로 번역 중...</div>`
+                : '';
+            const placeholder = isForeign
+                ? `한국어로 정답을 적으세요. ${L.tag.split(' ')[0]} 로 자동 번역되어 저장됩니다.`
+                : `정답을 적으세요. 다음부터 AI가 이렇게 답합니다.`;
+            return `<div class="jx-item" id="jx-${it.id}">
+                <div class="jx-meta">
+                    <span class="jx-lang ${L.cls}">${L.tag}</span>
+                    <span class="jx-time">${fmtTime(it.created_at)}</span>
+                </div>
+                <div class="jx-q"><span class="lbl">고객</span>${esc(q)}</div>
+                ${trBlock}
+                <div class="jx-a"><span class="lbl">AI</span>${esc(a)}</div>
+                <textarea class="jx-input" id="jxa-${it.id}" placeholder="${placeholder}"></textarea>
+                <div class="jx-actions">
+                    <button class="btn btn-save" onclick="jxSave(${it.id})">💾 저장 · AI 학습</button>
+                </div>
+                <div class="jx-actions-row">
+                    <button class="btn btn-mgr" onclick="jxMgrAnswer(${it.id})">🏢 매니저 안내</button>
+                    <button class="btn btn-pass" onclick="jxPass(${it.id})">⏭ 패스 (코드)</button>
+                </div>
+                <div class="jx-status" id="jxs-${it.id}"></div>
+            </div>`;
+        }
+
+        // 매니저 안내 답변 자동 채우기 + 저장
+        window.jxMgrAnswer = async function (id) {
+            const ta = document.getElementById('jxa-' + id);
+            if (!ta) return;
+            try {
+                const { data: row } = await sb.from('advisor_qa_log').select('lang').eq('id', id).maybeSingle();
+                const lang = (row && row.lang || 'kr').toLowerCase();
+                const kb = (LANG_MAP[lang] || LANG_MAP.kr).kb;
+                ta.value = MGR_TPL[kb] || MGR_TPL.ko;
+                // 자동 저장 (매니저 템플릿은 이미 해당 언어이므로 번역 스킵 표시 안 함, jxSave 가 알아서 처리)
+                await window.jxSave(id, true);
+            } catch (e) {
+                toast('매니저 안내 처리 실패: ' + (e?.message || e), true);
+            }
+        };
+
+        window.jxSave = async function (id, fromMgrBtn) {
+            const ta = document.getElementById('jxa-' + id);
+            const item = document.getElementById('jx-' + id);
+            const statusEl = document.getElementById('jxs-' + id);
+            const saveBtn = item && item.querySelector('.btn-save');
+            const ans = (ta && ta.value || '').trim();
+            if (!ans) {
+                ta && ta.focus();
+                toast('정답을 입력해주세요', true);
+                return;
+            }
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
+            if (statusEl) { statusEl.className = 'jx-status busy'; statusEl.textContent = '저장 준비 중...'; }
+            try {
+                const { data: row, error: rowErr } = await sb.from('advisor_qa_log')
+                    .select('room_id, lang, customer_message, customer_message_ko').eq('id', id).maybeSingle();
+                if (rowErr) throw rowErr;
+                const lang = (row && row.lang || 'kr').toLowerCase();
+                const kb = (LANG_MAP[lang] || LANG_MAP.kr).kb;
+                const q = (row && (row.customer_message || row.customer_message_ko)) || '';
+
+                // 한국어 답변 → 고객 언어 번역 (매니저 템플릿은 이미 해당 언어라 스킵)
+                let finalAns = ans;
+                if (kb !== 'ko' && !fromMgrBtn) {
+                    if (statusEl) statusEl.textContent = '✈️ ' + kb.toUpperCase() + ' 로 번역 중...';
+                    const tr = await translate(ans, kb);
+                    if (tr) finalAns = tr;
+                    else if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '번역 실패 — 한국어 그대로 저장합니다.'; }
+                }
+
+                if (statusEl) { statusEl.className = 'jx-status busy'; statusEl.textContent = '📥 chatbot_knowledge 저장 중...'; }
+                const { data: ins, error: insErr } = await sb.from('chatbot_knowledge').insert({
+                    category: 'general', question: q, answer: finalAns,
+                    language: kb, priority: 50, is_active: true
+                }).select().single();
+                if (insErr) throw insErr;
+
+                // 학습 로그 마킹 (room_id 기준이 있으면 우선, 없으면 id)
+                const upd = { needs_learning: false, admin_answer: ans, admin_answer_ko: ans, is_reviewed: true, reviewed_at: new Date().toISOString() };
+                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
+                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
+
+                // ✅ 반영 검증 — 방금 넣은 row 가 실제 활성 상태로 존재하는지 재조회
+                if (statusEl) statusEl.textContent = '🔍 AI 반영 확인 중...';
+                const { data: verify } = await sb.from('chatbot_knowledge')
+                    .select('id, answer, language, is_active').eq('id', ins.id).maybeSingle();
+                const ok = !!(verify && verify.is_active && verify.answer === finalAns);
+
+                if (ok) {
+                    toast('✅ AI 학습 완료 — 반영 확인됨');
+                    if (item) {
+                        item.classList.add('fade-out');
+                        setTimeout(() => { item.remove(); updateCount(); }, 380);
+                    }
+                } else {
+                    if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '⚠️ 저장은 됐으나 반영 검증 실패 — 챗봇 학습 페이지에서 확인하세요.'; }
+                    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 저장 · AI 학습'; }
+                }
+            } catch (e) {
+                console.error('[jarvis] save failed', e);
+                if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '저장 실패: ' + (e?.message || e); }
+                toast('저장 실패: ' + (e?.message || e), true);
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 저장 · AI 학습'; }
+            }
+        };
+
+        window.jxPass = async function (id) {
+            if (!confirm('이 상담은 코드 수정 / 별도 처리 건으로 패스합니다. (AI 학습 없이 목록에서 제거)\n진행할까요?')) return;
+            const item = document.getElementById('jx-' + id);
+            try {
+                const { data: row } = await sb.from('advisor_qa_log').select('room_id').eq('id', id).maybeSingle();
+                const upd = {
+                    needs_learning: false, is_reviewed: true, reviewed_at: new Date().toISOString(),
+                    admin_answer: '[PASS · 코드 수정 필요]', admin_answer_ko: '[PASS · 코드 수정 필요]'
+                };
+                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
+                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
+                toast('⏭ 패스 처리됨');
+                if (item) {
+                    item.classList.add('fade-out');
+                    setTimeout(() => { item.remove(); updateCount(); }, 380);
+                }
+            } catch (e) {
+                toast('처리 실패: ' + (e?.message || e), true);
+            }
+        };
+
+        function updateCount() {
+            const countEl = document.getElementById('countChip');
+            const remaining = document.querySelectorAll('.jx-item').length;
+            countEl.textContent = remaining ? remaining + ' 건' : '0 건';
+            countEl.className = 'chip ' + (remaining ? 'warn' : 'ok');
+            if (!remaining) {
+                document.getElementById('list').innerHTML = '<div class="empty">✅ 모든 상담을 처리했습니다.<br>깔끔합니다!</div>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initConfig();
+            loadJarvis();
+        });
+    </script>
+</body>
+</html>
