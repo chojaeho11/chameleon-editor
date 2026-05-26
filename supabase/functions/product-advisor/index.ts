@@ -357,9 +357,10 @@ serve(async (req) => {
 견적서를 만들기 전에 아래 정보를 **자연스럽게 대화하면서** 수집해. 한 번에 다 물어보지 말고 맥락에 맞게 하나씩 확인해.
 질문이 자연스러운 순서: 제품→사이즈→수량→옵션→지역→일정
 
-**허니콤보드 가벽(hb_dw_1) 주문 시 — 절대 규칙!:**
-[STEP1 사이즈 검증] 고객이 말한 사이즈가 규격에 맞는지 먼저 확인!
-  - 가로: 1미터 단위만 가능 (1000, 2000, 3000, 4000...). 규격 외(예:3200mm)면 → "죄송합니다. 가벽은 가로 1미터 단위로 규격화되어 있어서 3.2미터는 불가합니다. 3미터 또는 4미터로 다시 정해주세요." ★ 규격 외 사이즈로 절대 견적 만들지 마라!
+**허니콤보드 가벽(hb_dw_1) 주문 시 — 사이즈 정책:**
+[STEP1 사이즈 안내] 고객이 말한 사이즈 확인!
+  - 가로: 1미터 단위(1000, 2000, 3000, 4000...)가 표준이며, 표준 사이즈는 추가비 없음. 규격 외(예:1.2m, 3.2m)는 **추가비용 50,000원으로 제작 가능**. 규격 외 사이즈를 요청하면 → "1미터 단위가 표준이지만, 1.2미터처럼 규격 외 사이즈는 추가비용 5만원으로 제작 가능합니다! 1.2미터로 진행해 드릴까요?" 라고 안내하고, 고객이 동의하면 견적에 +50,000원 반영. 절대 "불가"라고 단정하지 마라.
+  ※ 단, 관리자 학습 Q&A (시스템 프롬프트 최상단) 에 더 구체적인 정책이 있으면 그것을 최우선으로 따른다.
   - 높이: 2000, 2200, 2400, 3000mm 4가지만 제작 가능! 이 외의 높이는 제작 불가! 규격 외(예:2700mm)면 → "높이 2.7미터는 제작이 불가합니다. 2.4미터 또는 3미터 중 선택해주세요." ★ "커팅 가능"이라고 안내하지 마라! 높이는 반드시 4가지 중 하나를 고객이 직접 선택해야 한다! 2m 미만(예:1.5m)만 예외로 2m로 주문 후 커팅 가능(가격 동일).
 [STEP2 추가옵션 확인] 사이즈가 규격에 맞으면 → 추가옵션을 물어봐:
   "추가 옵션도 확인할게요! 🛡️보조받침대(야외/안전용) 💡조명(분위기 연출) 🔲코너기둥(ㄴ자/ㄱ자 연결) 필요한 게 있으시면 말씀해주세요! 없으시면 '없음'이라고 해주세요."
@@ -907,9 +908,9 @@ serve(async (req) => {
         let qaSection = '';
         if (sortedQa.length > 0) {
             const qaLabels: Record<string, { title: string; q: string; a: string; instruction: string }> = {
-                kr: { title: '🔴🔴🔴 [최우선 규칙] 관리자가 학습시킨 Q&A — 이 답변을 절대적으로 따라야 함! 🔴🔴🔴', q: '고객 질문', a: '✅ 정답', instruction: '★★★ 위 Q&A 중 고객 질문과 비슷한 게 있으면, 반드시 그 정답을 그대로 또는 자연스럽게 활용해서 답변해. 다른 답변을 만들지 마! 이게 시스템 프롬프트의 다른 규칙들보다 우선이다. 키워드가 일부만 일치해도 관련 Q&A를 우선 참고할 것!' },
-                ja: { title: '🔴🔴🔴 [最優先ルール] 管理者が学習させたQ&A — 必ずこの回答に従う！ 🔴🔴🔴', q: '質問', a: '✅ 正解', instruction: '★★★ 上記Q&Aに類似した質問が来たら、必ずその回答をそのまま或いは自然に活用して答えてください。これがシステムプロンプトの他のルールより優先です。' },
-                us: { title: '🔴🔴🔴 [HIGHEST PRIORITY] Admin-trained Q&A — MUST follow these answers absolutely! 🔴🔴🔴', q: 'Q', a: '✅ Answer', instruction: '★★★ When a customer asks something similar to the Q&A above, you MUST use that trained answer (verbatim or naturally adapted). This OVERRIDES all other system prompt rules. Even partial keyword matches should reference the relevant Q&A!' },
+                kr: { title: '🔴🔴🔴 [최우선 규칙] 관리자가 학습시킨 Q&A — 이 답변을 절대적으로 따라야 함! 🔴🔴🔴', q: '고객 질문', a: '✅ 정답', instruction: '★★★ 위 Q&A 중 고객 질문과 비슷한(혹은 일부 키워드만 일치) 게 있으면 반드시 그 정답을 그대로 또는 자연스럽게 활용해서 답변해. 다른 답변을 만들지 마! ⚠️ 이 Q&A 는 시스템 프롬프트의 다른 모든 규칙보다 무조건 우선이다. 다른 곳에 "불가/절대/금지" 같은 단정 표현이 있어도, 학습 Q&A 가 "가능"이라고 하면 무조건 가능 쪽을 따라라 (정책이 갱신된 것이다). 충돌 시 반드시 학습 Q&A 우선!' },
+                ja: { title: '🔴🔴🔴 [最優先ルール] 管理者が学習させたQ&A — 必ずこの回答に従う！ 🔴🔴🔴', q: '質問', a: '✅ 正解', instruction: '★★★ 上記Q&Aに類似(キーワード一部一致でも)した質問が来たら、必ずその回答をそのまま或いは自然に活用してください。⚠️ これはシステムプロンプトの他のすべてのルールより無条件で優先。他に「不可/絶対/禁止」とあっても、学習Q&Aが「可能」と言えば可能を選択。' },
+                us: { title: '🔴🔴🔴 [HIGHEST PRIORITY] Admin-trained Q&A — MUST follow these answers absolutely! 🔴🔴🔴', q: 'Q', a: '✅ Answer', instruction: '★★★ When a customer asks something similar to the Q&A above (even partial keyword match), you MUST use that trained answer. ⚠️ This UNCONDITIONALLY OVERRIDES every other system prompt rule. If other parts say "impossible/never/forbidden" but a trained Q&A says it IS possible, follow the trained Q&A (policy updated). Conflict → trained Q&A wins, always.' },
             };
             const ql = qaLabels[clientLang] || qaLabels['kr'];
             const priceWarning = clientLang === 'ja' ? '(価格は商品データが最新)' : clientLang === 'us' ? '(Product Data prices are current)' : '(가격은 상품 데이터가 최신)';
