@@ -86,7 +86,8 @@
         .jx-input:focus { outline: none; border-color: #818cf8; background: rgba(255,255,255,0.1); }
 
         .jx-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
-        .jx-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .jx-actions-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .jx-actions-row .btn { padding: 11px 4px; font-size: 12px; }
         .btn {
             border: none; border-radius: 10px; padding: 12px 8px;
             font-family: 'Pretendard', sans-serif; font-size: 13px; font-weight: 800;
@@ -96,6 +97,7 @@
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-save { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.5); }
         .btn-mgr { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+        .btn-ok { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.35); }
         .btn-pass { background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
 
         .jx-status { font-size: 11px; color: #64748b; margin-top: 8px; min-height: 15px; padding: 0 2px; }
@@ -259,6 +261,7 @@
                     <button class="btn btn-save" onclick="jxSave('${it.id}')">💾 저장 · AI 학습</button>
                 </div>
                 <div class="jx-actions-row">
+                    <button class="btn btn-ok" onclick="jxOk('${it.id}')">✅ 답변 OK</button>
                     <button class="btn btn-mgr" onclick="jxMgrAnswer('${it.id}')">🏢 매니저 안내</button>
                     <button class="btn btn-pass" onclick="jxPass('${it.id}')">⏭ 패스 (코드)</button>
                 </div>
@@ -345,6 +348,26 @@
                 if (statusEl) { statusEl.className = 'jx-status err'; statusEl.textContent = '저장 실패: ' + (e?.message || e); }
                 toast('저장 실패: ' + (e?.message || e), true);
                 if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 저장 · AI 학습'; }
+            }
+        };
+
+        window.jxOk = async function (id) {
+            const item = document.getElementById('jx-' + id);
+            try {
+                const { data: row } = await sb.from('advisor_qa_log').select('room_id').eq('id', id).maybeSingle();
+                const upd = {
+                    needs_learning: false, is_reviewed: true, reviewed_at: new Date().toISOString(),
+                    admin_answer: '[OK · AI 답변 양호]', admin_answer_ko: '[OK · AI 답변 양호]'
+                };
+                if (row && row.room_id) await sb.from('advisor_qa_log').update(upd).eq('room_id', row.room_id);
+                else await sb.from('advisor_qa_log').update(upd).eq('id', id);
+                toast('✅ 답변 OK 처리됨');
+                if (item) {
+                    item.classList.add('fade-out');
+                    setTimeout(() => { item.remove(); updateCount(); }, 380);
+                }
+            } catch (e) {
+                toast('처리 실패: ' + (e?.message || e), true);
             }
         };
 
