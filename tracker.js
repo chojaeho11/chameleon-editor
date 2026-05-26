@@ -95,7 +95,12 @@
 
         // 광고 파라미터 우선
         var hasGclid = params.has('gclid');
-        var hasNaverAd = params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid');
+        // 2026-05-26: Naver 광고 마커 확장 — 파워링크/브랜드검색/쇼핑광고 등 대부분의 paid 마커 포함.
+        //   기존 3개만 체크해서 대부분의 Naver 광고가 'Naver Search (자연검색)' 으로 잘못 잡혔던 문제 fix.
+        //   n_query 는 organic 에서도 쓰므로 제외.
+        var hasNaverAd = params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid')
+            || params.has('n_keyword') || params.has('n_ad_group') || params.has('n_ad') || params.has('n_ad_id')
+            || params.has('n_media') || params.has('n_match') || params.has('n_rank_loc') || params.has('n_campaign');
         var utmMedium = (params.get('utm_medium') || '').toLowerCase();
         var utmSource = (params.get('utm_source') || '').toLowerCase();
         var isCpc = utmMedium === 'cpc';
