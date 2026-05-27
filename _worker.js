@@ -424,6 +424,37 @@ export default {
             }
             const rbHdrs = new Headers(rbResp.headers);
             rbHdrs.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            // ===== 2026-05-27: 경로별 OG 메타 동적 교체 (Kakao/Naver 크롤러용) =====
+            //   /ja → 일본어 우선, /en /us → 영어 우선, /zh → 중국어, /ko 또는 / → 한국어/혼합
+            //   카카오는 og:title 을 ~30자 정도에서 잘라 노출하므로 첫 번째 언어가 중요. URL 별로 다른 OG 를 가지면
+            //   캐시도 path 별로 잡혀 한 페이지 한 언어 일관성 확보.
+            const ct = (rbHdrs.get('content-type') || '').toLowerCase();
+            if (ct.includes('text/html') && (_hbTarget === '/raw_board.html')) {
+                const _hbLang = (_hbPath.match(/^\/(ko|kr|ja|jp|en|us|zh|ar|es|de|fr)\b/) || [, ''])[1].toLowerCase();
+                const _OG = {
+                    ja: { t: 'ハニカムボード原板 卸売 · Hexalite | 韓国工場直送・全世界無料配送', d: '印刷・展示・パッケージ用ハニカムボード原板。8〜100mm 厚、カット可、全世界無料配送。代理店募集中。', loc: 'ja_JP' },
+                    jp: { t: 'ハニカムボード原板 卸売 · Hexalite | 韓国工場直送・全世界無料配送', d: '印刷・展示・パッケージ用ハニカムボード原板。8〜100mm 厚、カット可、全世界無料配送。代理店募集中。', loc: 'ja_JP' },
+                    en: { t: 'Hexalite | Raw Honeycomb Boards Wholesale · Korean Factory Direct · Free Worldwide Shipping', d: 'Raw honeycomb boards from a Korean manufacturer. 8mm-100mm thickness, custom cut, free worldwide shipping. Distributor program available.', loc: 'en_US' },
+                    us: { t: 'Hexalite | Raw Honeycomb Boards Wholesale · Korean Factory Direct · Free Worldwide Shipping', d: 'Raw honeycomb boards from a Korean manufacturer. 8mm-100mm thickness, custom cut, free worldwide shipping. Distributor program available.', loc: 'en_US' },
+                    zh: { t: '蜂窝板原板 批发 · Hexalite | 韩国工厂直供 · 全球免费配送', d: '印刷·展示·包装用蜂窝板原板。厚度 8-100mm，可定制切割，全球免费配送。诚招代理商。', loc: 'zh_CN' },
+                    ar: { t: 'Hexalite | ألواح نحل العسل بالجملة · مصنع كوري مباشر · شحن مجاني عالميًا', d: 'ألواح نحل العسل من مصنع كوري. سماكة 8-100 ملم، قص حسب الطلب، شحن مجاني عالميًا.', loc: 'ar_AR' },
+                    es: { t: 'Hexalite | Paneles de Nido de Abeja al por Mayor · Fábrica Coreana · Envío Mundial Gratis', d: 'Paneles de nido de abeja desde fábrica coreana. 8-100 mm de grosor, corte personalizado, envío mundial gratuito.', loc: 'es_ES' },
+                    de: { t: 'Hexalite | Wabenplatten Großhandel · Koreanischer Hersteller · Kostenloser Weltweiter Versand', d: 'Wabenplatten direkt vom koreanischen Hersteller. 8-100 mm Dicke, Zuschnitt, kostenloser weltweiter Versand.', loc: 'de_DE' },
+                    fr: { t: 'Hexalite | Panneaux Alvéolaires en Gros · Fabricant Coréen · Livraison Mondiale Gratuite', d: 'Panneaux nid d\'abeille du fabricant coréen. Épaisseur 8-100 mm, découpe sur mesure, livraison mondiale gratuite.', loc: 'fr_FR' },
+                    ko: { t: '허니콤보드 원판 도매 · Hexalite | 한국 공장 직거래 · 전세계 무료배송', d: '인쇄·전시·포장용 허니콤보드 원판. 8~100mm 두께, 맞춤 커팅, 전세계 무료배송. 유통사 모집중.', loc: 'ko_KR' },
+                    kr: { t: '허니콤보드 원판 도매 · Hexalite | 한국 공장 직거래 · 전세계 무료배송', d: '인쇄·전시·포장용 허니콤보드 원판. 8~100mm 두께, 맞춤 커팅, 전세계 무료배송. 유통사 모집중.', loc: 'ko_KR' }
+                };
+                const og = _OG[_hbLang];
+                if (og) {
+                    let body = await rbResp.text();
+                    body = body.replace(/<meta property="og:title" content="[^"]*">/i, `<meta property="og:title" content="${og.t.replace(/"/g,'&quot;')}">`);
+                    body = body.replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${og.d.replace(/"/g,'&quot;')}">`);
+                    body = body.replace(/<meta property="og:locale" content="[^"]*">/i, `<meta property="og:locale" content="${og.loc}">`);
+                    body = body.replace(/<title>[^<]*<\/title>/i, `<title>${og.t.replace(/</g,'&lt;')}</title>`);
+                    rbHdrs.delete('content-length');
+                    return new Response(body, { status: rbResp.status, headers: rbHdrs });
+                }
+            }
             return new Response(rbResp.body, { status: rbResp.status, headers: rbHdrs });
         }
 
