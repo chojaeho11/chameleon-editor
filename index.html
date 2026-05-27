@@ -553,7 +553,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=447">
+<link rel="stylesheet" href="./style.css?v=448">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -9682,6 +9682,18 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         }
 
         head.appendChild(fontLink);
+
+        // 2026-05-27: 모든 언어에서 Pretendard 도 같이 로드 — '.hero-title span' 같은 라틴 브랜드 텍스트가
+        // 한국어 사이트와 동일한 얇은 weight(200/300) 으로 렌더링되도록. (Noto Sans JP/Inter/SC 는 weight 200 에서도 두꺼움)
+        if (CURRENT_LANG !== 'kr' && CURRENT_LANG !== 'ko') {
+            try {
+                var pre = document.createElement('link');
+                pre.rel = 'stylesheet';
+                pre.href = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css';
+                head.appendChild(pre);
+            } catch(e){}
+        }
+
         const style = document.createElement('style');
         style.innerHTML = `body, button, input, select, textarea { font-family: ${fontFamily} !important; }`;
         head.appendChild(style);
