@@ -348,13 +348,19 @@ function openPdSampleRequest() {
                     <input id="pdSamplePhone" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="+82-10-0000-0000">
                 </div>
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
-                <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
+                    <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_country">국가 (Country)</label>
+                    <input id="pdSampleCountry" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="USA / Germany / ...">
+                </div>
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용</label>
-                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용 (제품/사이즈/수량/용도)</label>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="예: Paper display stand, 1.8m height, 500 units/month, retail POSM use."></textarea>
             </div>
             <div style="margin-bottom:16px;">
                 <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_file">참고 파일</label>
@@ -383,6 +389,7 @@ async function submitPdSample() {
     var name = document.getElementById('pdSampleName').value.trim();
     var phone = document.getElementById('pdSamplePhone').value.trim();
     var email = document.getElementById('pdSampleEmail').value.trim();
+    var country = document.getElementById('pdSampleCountry').value.trim();
     var memo = document.getElementById('pdSampleMemo').value.trim();
     if (!name || (!phone && !email)) { alert(window.__PS_LANG==='ko'?'성함과 연락처를 입력해주세요.':'Please enter your name and contact info.'); return; }
     try {
@@ -403,10 +410,24 @@ async function submitPdSample() {
             customer_name: name,
             customer_phone: phone || email,
             preferred_manager: '본사담당자',
-            memo: '[종이매대 샘플 요청] Email: ' + email + ' | ' + memo,
+            memo: '[종이매대 샘플 요청] Email: ' + email + ' | Country: ' + (country||'-') + ' | ' + memo,
             files: uploadedFiles.length > 0 ? uploadedFiles : null,
             status: 'pending'
         });
+        try {
+            await sb.from('lead_requests').insert({
+                type: 'sample',
+                site: 'cafe3355',
+                lang: (window.__PS_LANG || 'en'),
+                name: name,
+                email: email || null,
+                phone: phone || null,
+                country: country || null,
+                details: { product: 'paper_display_stand' },
+                message: memo || null,
+                files: uploadedFiles.length > 0 ? uploadedFiles : null
+            });
+        } catch(_e) { console.warn('lead_requests insert failed:', _e); }
         document.getElementById('pdSampleModal').style.display = 'none';
         _pdSampleFiles = [];
         alert(window.__PS_LANG==='ko'?'샘플 요청이 접수되었습니다! 담당자가 곧 연락드리겠습니다.':window.__PS_LANG==='ja'?'サンプルリクエストが送信されました！担当者がすぐにご連絡いたします。':'Sample request submitted! Our team will contact you shortly.');

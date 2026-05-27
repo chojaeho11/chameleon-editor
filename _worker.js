@@ -410,8 +410,12 @@ export default {
             );
             if (isAssetHB) return await env.ASSETS.fetch(request);
             // 상품 상세(?product= / ?_p=) → 메인 SPA(index.html) 를 hexa-board 도메인에서 그대로 서빙 (화이트라벨, URL 유지).
+            //   /distributors (또는 /distributors.html) → 유통사 모집 랜딩 페이지.
             //   그 외 모든 경로 → raw_board.html(원판 랜딩). index.html 의 hexa-mode 가 카멜레온 흔적을 숨김.
-            const _hbTarget = (url.searchParams.has('product') || url.searchParams.has('_p')) ? '/index.html' : '/raw_board.html';
+            const _hbPath = (url.pathname || '/').toLowerCase().replace(/\.html$/, '').replace(/\/$/, '');
+            const _hbTarget = (url.searchParams.has('product') || url.searchParams.has('_p'))
+                ? '/index.html'
+                : (_hbPath === '/distributors' ? '/distributors.html' : '/raw_board.html');
             const rbRewrite = new URL(_hbTarget, url.origin);
             let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
             if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {

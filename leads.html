@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📥 해외 리드 관리</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #0b0f1c; color: #e2e8f0; font-family: 'Pretendard', sans-serif;
+            margin: 0; padding: 16px 14px 60px;
+            max-width: 720px; margin: 0 auto;
+            min-height: 100vh; -webkit-font-smoothing: antialiased;
+        }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .header h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 0; flex: 1; letter-spacing: -0.5px; }
+        .header .sub { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+        .refresh-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(148,163,184,0.2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; cursor: pointer; font-size: 16px; }
+        .refresh-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
+
+        .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tab { padding: 7px 13px; border-radius: 18px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid rgba(148,163,184,0.2); background: rgba(255,255,255,0.04); color: #94a3b8; transition: all 0.15s; }
+        .tab:hover { background: rgba(255,255,255,0.08); color: #cbd5e1; }
+        .tab.active { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border-color: transparent; }
+        .tab .cnt { display: inline-block; margin-left: 5px; padding: 1px 6px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 10px; }
+
+        .empty { text-align: center; padding: 70px 20px; color: #86efac; font-size: 16px; font-weight: 800; line-height: 1.6; }
+
+        .lead {
+            background: linear-gradient(165deg, #1e1b4b 0%, #0f172a 100%);
+            border: 1px solid rgba(148,163,184,0.15);
+            border-radius: 16px; padding: 14px; margin-bottom: 12px;
+            box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4);
+            transition: opacity 0.35s, transform 0.35s;
+        }
+        .lead.expanded { border-color: rgba(99,102,241,0.4); }
+        .lead-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; cursor: pointer; }
+        .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px; }
+        .badge.sample { background: rgba(34,197,94,0.25); color: #86efac; }
+        .badge.distributor { background: rgba(245,158,11,0.25); color: #fcd34d; }
+        .badge.site { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+        .badge.status-new { background: rgba(239,68,68,0.25); color: #fca5a5; }
+        .badge.status-contacted { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+        .badge.status-qualified { background: rgba(34,197,94,0.25); color: #86efac; }
+        .badge.status-closed { background: rgba(148,163,184,0.2); color: #94a3b8; }
+        .badge.status-lost { background: rgba(148,163,184,0.15); color: #64748b; }
+        .lead-time { font-size: 11px; color: #94a3b8; margin-left: auto; }
+
+        .lead-title { font-size: 15px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
+        .lead-meta { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+        .lead-meta a { color: #c7d2fe; text-decoration: none; }
+        .lead-meta b { color: #cbd5e1; font-weight: 700; }
+
+        .lead-body { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(148,163,184,0.12); }
+        .lead.expanded .lead-body { display: block; }
+
+        .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 12.5px; line-height: 1.55; margin-bottom: 12px; }
+        .kv .k { color: #94a3b8; font-weight: 700; }
+        .kv .v { color: #e2e8f0; word-break: break-word; }
+        .kv .v a { color: #c7d2fe; }
+
+        .msg-box {
+            background: rgba(255,255,255,0.04); border-left: 3px solid rgba(99,102,241,0.5);
+            padding: 9px 11px; border-radius: 6px; font-size: 12.5px;
+            line-height: 1.55; color: #cbd5e1; white-space: pre-wrap; margin-bottom: 12px;
+        }
+        .files-list { font-size: 12px; margin-bottom: 12px; }
+        .files-list a { color: #c7d2fe; text-decoration: none; }
+        .files-list a:hover { text-decoration: underline; }
+
+        .actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+        .act-btn { padding: 9px 4px; border: none; border-radius: 8px; font-family: inherit; font-size: 11px; font-weight: 800; cursor: pointer; transition: transform 0.1s; }
+        .act-btn:active { transform: scale(0.96); }
+        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .act-new { background: rgba(239,68,68,0.18); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+        .act-contacted { background: rgba(99,102,241,0.18); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.35); }
+        .act-qualified { background: rgba(34,197,94,0.18); color: #86efac; border: 1px solid rgba(34,197,94,0.35); }
+        .act-closed { background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.3); }
+        .act-lost { background: rgba(120,53,15,0.2); color: #fca5a5; border: 1px solid rgba(120,53,15,0.4); }
+        .act-btn.current { box-shadow: 0 0 0 2px rgba(255,255,255,0.25) inset; }
+
+        .note-row { margin-top: 10px; display: flex; gap: 8px; }
+        .note-row input { flex: 1; padding: 9px 11px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.25); background: rgba(255,255,255,0.05); color: #fff; font-family: inherit; font-size: 12px; }
+        .note-row input::placeholder { color: #64748b; }
+        .note-row button { padding: 9px 14px; background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer; }
+
+        .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: #16a34a; color: #fff; padding: 13px 22px; border-radius: 14px; font-weight: 800; font-size: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 10000; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; max-width: 90vw; text-align: center; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.err { background: #dc2626; }
+
+        .footer-link { text-align: center; margin-top: 30px; font-size: 11px; }
+        .footer-link a { color: #64748b; text-decoration: none; margin: 0 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="flex:1;">
+            <h1>📥 해외 리드 관리</h1>
+            <div class="sub">샘플 요청 · 유통사 신청 · 상태 관리</div>
+        </div>
+        <button class="refresh-btn" onclick="loadLeads()" title="새로고침">↻</button>
+    </div>
+
+    <div class="tabs" id="tabs">
+        <div class="tab active" data-filter="new">🔴 신규 <span class="cnt" id="cntNew">-</span></div>
+        <div class="tab" data-filter="contacted">📞 연락중 <span class="cnt" id="cntContacted">-</span></div>
+        <div class="tab" data-filter="qualified">✅ 검증완료 <span class="cnt" id="cntQualified">-</span></div>
+        <div class="tab" data-filter="all">전체 <span class="cnt" id="cntAll">-</span></div>
+        <div class="tab" data-filter="closed">🏁 종료 <span class="cnt" id="cntClosed">-</span></div>
+        <div class="tab" data-filter="lost">❌ 실패 <span class="cnt" id="cntLost">-</span></div>
+    </div>
+    <div class="tabs" id="typeTabs" style="margin-top:-6px;">
+        <div class="tab active" data-type="all">모든 종류</div>
+        <div class="tab" data-type="sample">🎁 샘플 요청</div>
+        <div class="tab" data-type="distributor">🌍 유통사 신청</div>
+    </div>
+
+    <div id="list">
+        <div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>
+    </div>
+
+    <div class="footer-link">
+        <a href="/admin_m_secret_882">← 관리자 대시보드</a>
+        <a href="/jarvis">🤖 자비스 리포트</a>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+        const sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true } });
+
+        let _all = [];
+        let _statusFilter = 'new';
+        let _typeFilter = 'all';
+
+        function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+        function fmtTime(iso){try{const d=new Date(iso),Y=d.getFullYear(),m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2),h=('0'+d.getHours()).slice(-2),mi=('0'+d.getMinutes()).slice(-2);return `${Y}/${m}/${dd} ${h}:${mi}`;}catch(e){return '';}}
+        function toast(m, err){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast'+(err?' err':''),2400);}
+
+        async function loadLeads(){
+            const list = document.getElementById('list');
+            list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>';
+            try {
+                // 로그인 확인 (관리자만 SELECT 가능)
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session) {
+                    list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px; line-height:1.6;">⚠️ 관리자 로그인이 필요합니다.<br><br><a href="/login.html?next=/leads" style="color:#c7d2fe;">로그인 페이지로 이동 →</a></div>';
+                    return;
+                }
+                const { data, error } = await sb.from('lead_requests')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(500);
+                if (error) throw error;
+                _all = data || [];
+                updateCounts();
+                renderList();
+            } catch(e){
+                console.error('[leads] load failed', e);
+                list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px;">불러오기 실패: '+esc(e?.message||e)+'</div>';
+            }
+        }
+
+        function updateCounts(){
+            const c = { new:0, contacted:0, qualified:0, closed:0, lost:0 };
+            _all.forEach(l => { if (c[l.status]!==undefined) c[l.status]++; });
+            document.getElementById('cntNew').textContent = c.new;
+            document.getElementById('cntContacted').textContent = c.contacted;
+            document.getElementById('cntQualified').textContent = c.qualified;
+            document.getElementById('cntClosed').textContent = c.closed;
+            document.getElementById('cntLost').textContent = c.lost;
+            document.getElementById('cntAll').textContent = _all.length;
+        }
+
+        function renderList(){
+            const list = document.getElementById('list');
+            let items = _all.slice();
+            if (_statusFilter !== 'all') items = items.filter(l => l.status === _statusFilter);
+            if (_typeFilter !== 'all') items = items.filter(l => l.type === _typeFilter);
+            if (!items.length){
+                list.innerHTML = '<div class="empty">✅ 표시할 리드가 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = items.map(renderLead).join('');
+        }
+
+        function renderLead(l){
+            const typeBadge = l.type === 'distributor'
+                ? '<span class="badge distributor">🌍 유통사</span>'
+                : '<span class="badge sample">🎁 샘플</span>';
+            const site = l.site === 'hexa-board' ? 'Hexalite' : l.site === 'cafe3355' ? '종이매대' : (l.site || '-');
+            const statusBadge = `<span class="badge status-${l.status}">${statusLabel(l.status)}</span>`;
+            const title = l.type === 'distributor'
+                ? esc(l.company || l.name || '(이름 없음)')
+                : esc(l.name || l.company || '(이름 없음)');
+            const subtitle = [l.country, l.email, l.phone].filter(Boolean).map(esc).join(' · ');
+            const det = l.details || {};
+            const detRows = [];
+            if (det.product) detRows.push(['제품', det.product==='raw_honeycomb_board'?'허니콤보드 원판':det.product==='paper_display_stand'?'종이매대':det.product]);
+            if (det.business_type) detRows.push(['업종', det.business_type]);
+            if (det.years_in_business) detRows.push(['경력', det.years_in_business]);
+            if (det.monthly_volume) detRows.push(['월 예상물량', det.monthly_volume]);
+            if (det.current_suppliers) detRows.push(['현재 공급사', det.current_suppliers]);
+            if (l.website) detRows.push(['웹사이트', `<a href="${esc(l.website)}" target="_blank">${esc(l.website)}</a>`]);
+
+            const kvHtml = detRows.map(([k,v])=>`<div class="k">${k}</div><div class="v">${v}</div>`).join('');
+            const filesHtml = (l.files && l.files.length)
+                ? '<div class="files-list">📎 ' + l.files.map(f=>`<a href="${esc(f.url)}" target="_blank">${esc(f.name)}</a>`).join(' · ') + '</div>'
+                : '';
+            const msgHtml = l.message ? `<div class="msg-box">${esc(l.message)}</div>` : '';
+            const noteRow = `<div class="note-row"><input id="note-${l.id}" placeholder="관리자 메모..." value="${esc(l.admin_note||'')}"><button onclick="saveNote('${l.id}')">저장</button></div>`;
+
+            return `<div class="lead" id="lead-${l.id}">
+                <div class="lead-head" onclick="toggleLead('${l.id}')">
+                    ${typeBadge}
+                    <span class="badge site">${esc(site)}</span>
+                    ${statusBadge}
+                    <span class="lead-time">${fmtTime(l.created_at)}</span>
+                </div>
+                <div class="lead-title">${title}</div>
+                <div class="lead-meta">${subtitle || '<span style="color:#64748b;">연락처 없음</span>'}</div>
+                <div class="lead-body">
+                    ${kvHtml ? `<div class="kv">${kvHtml}</div>` : ''}
+                    ${msgHtml}
+                    ${filesHtml}
+                    <div style="font-size:11px; color:#64748b; margin-bottom:6px; font-weight:700;">상태 변경:</div>
+                    <div class="actions">
+                        <button class="act-btn act-new ${l.status==='new'?'current':''}" onclick="setStatus('${l.id}','new')">🔴 신규</button>
+                        <button class="act-btn act-contacted ${l.status==='contacted'?'current':''}" onclick="setStatus('${l.id}','contacted')">📞 연락중</button>
+                        <button class="act-btn act-qualified ${l.status==='qualified'?'current':''}" onclick="setStatus('${l.id}','qualified')">✅ 검증</button>
+                        <button class="act-btn act-closed ${l.status==='closed'?'current':''}" onclick="setStatus('${l.id}','closed')">🏁 종료</button>
+                        <button class="act-btn act-lost ${l.status==='lost'?'current':''}" onclick="setStatus('${l.id}','lost')">❌ 실패</button>
+                    </div>
+                    ${noteRow}
+                </div>
+            </div>`;
+        }
+
+        function statusLabel(s){return {new:'🔴 신규',contacted:'📞 연락중',qualified:'✅ 검증',closed:'🏁 종료',lost:'❌ 실패'}[s]||s;}
+
+        window.toggleLead = function(id){
+            const el = document.getElementById('lead-'+id);
+            if (el) el.classList.toggle('expanded');
+        };
+
+        window.setStatus = async function(id, status){
+            try {
+                const upd = { status };
+                if (status === 'contacted') upd.contacted_at = new Date().toISOString();
+                if (status === 'closed' || status === 'lost') upd.closed_at = new Date().toISOString();
+                const { error } = await sb.from('lead_requests').update(upd).eq('id', id);
+                if (error) throw error;
+                // local update
+                const l = _all.find(x => x.id === id);
+                if (l) { l.status = status; if (upd.contacted_at) l.contacted_at = upd.contacted_at; if (upd.closed_at) l.closed_at = upd.closed_at; }
+                updateCounts();
+                renderList();
+                toast('✅ 상태 변경됨');
+            } catch (e) { toast('실패: '+(e?.message||e), true); }
+        };
+
+        window.saveNote = async function(id){
+            const note = (document.getElementById('note-'+id).value || '').trim();
+            try {
+                const { error } = await sb.from('lead_requests').update({ admin_note: note }).eq('id', id);
+                if (error) throw error;
+                const l = _all.find(x => x.id === id); if (l) l.admin_note = note;
+                toast('✅ 메모 저장');
+            } catch (e) { toast('실패: '+(e?.message||e), true); }
+        };
+
+        // tabs
+        document.getElementById('tabs').addEventListener('click', (e) => {
+            const t = e.target.closest('.tab'); if (!t) return;
+            document.querySelectorAll('#tabs .tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            _statusFilter = t.dataset.filter;
+            renderList();
+        });
+        document.getElementById('typeTabs').addEventListener('click', (e) => {
+            const t = e.target.closest('.tab'); if (!t) return;
+            document.querySelectorAll('#typeTabs .tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            _typeFilter = t.dataset.type;
+            renderList();
+        });
+
+        loadLeads();
+    </script>
+</body>
+</html>

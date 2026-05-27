@@ -419,13 +419,19 @@ function openPdSampleRequest() {
                     <input id="pdSamplePhone" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="+82-10-0000-0000">
                 </div>
             </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
-                <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_email">이메일</label>
+                    <input id="pdSampleEmail" type="email" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="email@company.com">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_country">국가 (Country)</label>
+                    <input id="pdSampleCountry" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:14px; font-family:inherit;" placeholder="USA / Germany / ...">
+                </div>
             </div>
             <div style="margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용</label>
-                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="원하시는 제품 종류, 사이즈, 수량, 용도 등을 자유롭게 적어주세요."></textarea>
+                <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_memo">요청 내용 (제품/사이즈/수량/용도)</label>
+                <textarea id="pdSampleMemo" rows="3" style="width:100%; padding:10px; border:1px solid #d4d4d8; border-radius:8px; font-size:13px; font-family:inherit; resize:vertical;" data-i18n-placeholder="pd_sample_memo_ph" placeholder="예: Raw honeycomb board 16mm, 1220x2440mm, 500 sheets/month, exhibition booth use."></textarea>
             </div>
             <div style="margin-bottom:16px;">
                 <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;" data-i18n="pd_sample_file">참고 파일</label>
@@ -454,6 +460,7 @@ async function submitPdSample() {
     var name = document.getElementById('pdSampleName').value.trim();
     var phone = document.getElementById('pdSamplePhone').value.trim();
     var email = document.getElementById('pdSampleEmail').value.trim();
+    var country = document.getElementById('pdSampleCountry').value.trim();
     var memo = document.getElementById('pdSampleMemo').value.trim();
     if (!name || (!phone && !email)) { alert(window.__PS_LANG==='ko'?'성함과 연락처를 입력해주세요.':'Please enter your name and contact info.'); return; }
     try {
@@ -470,14 +477,30 @@ async function submitPdSample() {
                 uploadedFiles.push({ name: f.name, url: urlData.publicUrl, type: f.type });
             }
         }
+        // 기존 vip_orders 도 호환 유지
         await sb.from('vip_orders').insert({
             customer_name: name,
             customer_phone: phone || email,
             preferred_manager: '본사담당자',
-            memo: '[허니콤보드 원판 견적] Email: ' + email + ' | ' + memo,
+            memo: '[허니콤보드 원판 견적] Email: ' + email + ' | Country: ' + (country||'-') + ' | ' + memo,
             files: uploadedFiles.length > 0 ? uploadedFiles : null,
             status: 'pending'
         });
+        // 신규 lead_requests (관리자 leads 페이지에서 추적)
+        try {
+            await sb.from('lead_requests').insert({
+                type: 'sample',
+                site: 'hexa-board',
+                lang: (window.__PS_LANG || 'en'),
+                name: name,
+                email: email || null,
+                phone: phone || null,
+                country: country || null,
+                details: { product: 'raw_honeycomb_board' },
+                message: memo || null,
+                files: uploadedFiles.length > 0 ? uploadedFiles : null
+            });
+        } catch(_e) { console.warn('lead_requests insert failed:', _e); }
         document.getElementById('pdSampleModal').style.display = 'none';
         _pdSampleFiles = [];
         alert(window.__PS_LANG==='ko'?'샘플 요청이 접수되었습니다! 담당자가 곧 연락드리겠습니다.':window.__PS_LANG==='ja'?'サンプルリクエストが送信されました！担当者がすぐにご連絡いたします。':'Sample request submitted! Our team will contact you shortly.');
@@ -492,10 +515,13 @@ async function submitPdSample() {
         <h2 data-i18n-html="raw_hero_h2" style="font-size:32px; font-weight:900; line-height:1.3; color:#1e293b; margin-bottom:20px; word-break:keep-all;">
             인쇄 및 커팅용<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">허니콤보드 전문생산</em>
         </h2>
-        <p data-i18n-html="raw_hero_p" style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:20px;">
+        <p data-i18n-html="raw_hero_p" style="font-size:16px; color:#64748b; line-height:1.8; margin-bottom:14px;">
             고급스러운 표면 질감과 우수한 가공성의 허니콤보드를 전문으로 생산합니다.<br>
             <b style="color:#6366f1;">전세계에 함께할 대리점을 모집합니다.</b>
         </p>
+        <a href="/distributors" style="display:inline-flex; align-items:center; gap:6px; margin-bottom:20px; padding:8px 16px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; text-decoration:none; border-radius:20px; font-size:13px; font-weight:700; box-shadow:0 4px 14px rgba(99,102,241,0.35);">
+            🌍 <span data-i18n="raw_distributor_btn">Become a Distributor</span> →
+        </a>
         <style>
         .rb-ctc { display:flex; align-items:center; gap:10px; padding:11px 16px; text-decoration:none; transition:background .15s; }
         .rb-ctc + .rb-ctc { border-top:1px solid #f1f5f9; }
