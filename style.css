@@ -5612,9 +5612,14 @@ html[lang="ja"] .hero-title {
 }
 html[lang="ja"] .hero-title span {
     /* 2026-05-16: 미국(en)과 동일 크기로 — CHAMELEON PRINTING 은 라틴 브랜드라 일본어 축소 불필요 */
-    /* 2026-05-27: weight 200 — 한국어와 동일한 세련된 얇은 폰트 */
+    /* 2026-05-27: weight 200 + Pretendard/Inter 폰트 강제 — 한국어와 동일한 세련된 얇은 렌더링 (Noto Sans JP 는 weight 200에서도 두꺼움) */
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
     font-size: 72px !important;
     font-weight: 200 !important;
+}
+html[lang="ja"] .hero-title span b.ht-prn {
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
+    font-weight: 300 !important;
 }
 html[lang="ja"] .hero-desc {
     font-size: 17px !important;
@@ -5623,14 +5628,16 @@ html[lang="ja"] .hero-desc {
     color: #fff !important;
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
 }
-/* 해외 사이트 공통 — 한국어와 동일한 얇고 세련된 weight (2026-05-27) + hero-desc 보라 배경 강제 */
+/* 해외 사이트 공통 — 한국어와 동일한 얇고 세련된 weight + Pretendard 폰트 강제 (2026-05-27) */
 html:not([lang="kr"]):not([lang="ko"]) .hero-title {
     font-weight: 200 !important;
 }
 html:not([lang="kr"]):not([lang="ko"]) .hero-title span {
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
     font-weight: 200 !important;
 }
 html:not([lang="kr"]):not([lang="ko"]) .hero-title span b.ht-prn {
+    font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
     font-weight: 300 !important;
 }
 html:not([lang="kr"]):not([lang="ko"]) .hero-desc {
@@ -5680,7 +5687,8 @@ html[lang="ja"] .product-detail-render div {
     }
     html[lang="ja"] .hero-title span {
         /* 2026-05-16: 모바일도 미국과 동일 크기 */
-        /* 2026-05-27: weight 200 */
+        /* 2026-05-27: weight 200 + Pretendard 폰트 강제 */
+        font-family: 'Pretendard', 'Inter', 'Noto Sans KR', sans-serif !important;
         font-size: 40px !important;
         font-weight: 200 !important;
     }
