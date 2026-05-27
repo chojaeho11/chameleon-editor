@@ -3265,17 +3265,19 @@ window.addEventListener('load', function() {
 })();
 </script>
 
-<!-- 2026-05-27: 브랜드 영상 — 이전 원판광고를 YouTube 영상으로 교체. ID는 그대로(honeycombVideoSection) 유지 — 다른 스크립트(line 2204)가 이 ID로 섹션 위치 재배치함. -->
-<section id="honeycombVideoSection" style="max-width:1100px; margin:30px auto 0 auto; padding:20px 24px;">
-    <div style="position:relative; aspect-ratio:16/9; border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(30,41,59,0.3); background:#000;">
+<!-- 2026-05-27: 브랜드 영상 — 이전 원판광고를 YouTube 영상으로 교체. ID는 그대로(honeycombVideoSection) 유지 — 다른 스크립트(line 2204)가 이 ID로 섹션 위치 재배치함. padding-bottom 56.25% 방식으로 16:9 비율 강제. -->
+<section id="honeycombVideoSection" style="max-width:1100px; width:100%; box-sizing:border-box; margin:30px auto 0 auto; padding:20px 24px; display:block;">
+    <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(30,41,59,0.3); background:#000;">
         <iframe src="https://www.youtube.com/embed/176LglNxvn0?rel=0&modestbranding=1"
-                style="position:absolute; inset:0; width:100%; height:100%; border:none;"
+                style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; display:block;"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen loading="lazy"
+                allowfullscreen
                 title="Chameleon Printing 브랜드 영상"></iframe>
     </div>
 </section>
 <style>
+#honeycombVideoSection { display:block !important; visibility:visible !important; opacity:1 !important; }
+#honeycombVideoSection > div { display:block !important; }
 @media (max-width:768px){
     #honeycombVideoSection { padding:14px 16px !important; margin-top:18px !important; }
     #honeycombVideoSection > div { border-radius:14px !important; box-shadow:0 14px 30px -16px rgba(30,41,59,0.3) !important; }
