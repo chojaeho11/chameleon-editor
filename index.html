@@ -3265,101 +3265,22 @@ window.addEventListener('load', function() {
 })();
 </script>
 
-<!-- 허니콤보드 소개 영상 (hotDeal 바로 아래 삽입용) -->
-<style>
-#honeycombVideoSection .hc-video-box { flex: 0 0 60%; max-width: 60%; border-radius: 16px; overflow: hidden; }
-#honeycombVideoSection .hc-text-box { flex: 1; min-width: 0; padding: 0 10px; }
-@media (max-width: 768px) {
-    #honeycombVideoSection {
-        display: block !important;
-        padding: 20px 16px !important;
-        gap: 0 !important;
-    }
-    #honeycombVideoSection .hc-video-box {
-        width: 100% !important; max-width: 100% !important;
-        flex: none !important; margin-bottom: 16px !important;
-    }
-    #honeycombVideoSection .hc-text-box {
-        width: 100% !important;
-        flex: none !important; padding: 0 !important;
-        text-align: center !important;
-    }
-    #honeycombVideoSection h2.hc-title { font-size: 24px !important; }
-    #honeycombVideoSection p.hc-desc { font-size: 14px !important; }
-    #honeycombVideoSection a.hc-cta { margin-bottom: 8px !important; }
-}
-</style>
-<section id="honeycombVideoSection" style="max-width:1100px; margin:18px auto 0 auto; padding:30px 24px; display:flex; align-items:center; gap:24px; background:transparent; border:none; box-shadow:none;">
-    <div class="hc-video-box">
-        <video autoplay muted loop playsinline style="width:100%; display:block;">
-            <source src="/123123.mp4" type="video/mp4">
-        </video>
-    </div>
-    <div class="hc-text-box" style="display:block !important; visibility:visible !important; opacity:1 !important;">
-        <h2 class="hc-title" id="hcVideoTitle" style="display:block !important; font-size:32px; font-weight:900; line-height:1.25; color:#1e293b !important; margin:0 0 18px 0; word-break:keep-all; visibility:visible !important;">
-            허니콤보드<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">원판부터 포장재까지</em>
-        </h2>
-        <p class="hc-desc" id="hcVideoDesc" style="display:block !important; font-size:15px; color:#64748b !important; line-height:1.7; margin:0 0 14px 0; visibility:visible !important;">
-            전시부스, 팝업스토어, 상업 인테리어 공간.<br>
-            친환경 허니콤보드를 원판 재단 인쇄 포장재까지.<br>
-            <b style="color:#6366f1 !important;">전세계 어디나 배송됩니다.</b>
-        </p>
-        <div class="hc-phones" id="hcVideoPhones" style="display:block; font-size:12px; color:#475569; line-height:1.7; margin-bottom:18px; background:#f8fafc; padding:8px 12px; border-radius:10px; border:1px solid #e2e8f0; text-align:left;">
-            <div>🇰🇷 한국 사무실 <a href="tel:0313661984" style="color:#1e293b;font-weight:700;text-decoration:none;">031-366-1984</a></div>
-            <div>🇯🇵 日本支社 ナナミ <a href="tel:09053970420" style="color:#1e293b;font-weight:700;text-decoration:none;">090-5397-0420</a></div>
-            <div>🇬🇧 EN / 🇨🇳 CN <a href="tel:+821034913535" style="color:#1e293b;font-weight:700;text-decoration:none;">+82 10 3491 3535</a></div>
-            <div>🇸🇦 AR / 🇫🇷 FR <a href="tel:+212617901092" style="color:#1e293b;font-weight:700;text-decoration:none;">+212 617 901 092</a></div>
-        </div>
-        <a href="/franchise" class="hc-cta" id="hcVideoCta" style="display:inline-flex !important; align-items:center; gap:8px; padding:14px 28px; border-radius:50px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff !important; font-size:15px; font-weight:800; text-decoration:none; box-shadow:0 6px 20px rgba(99,102,241,0.4);">
-            🤝 가맹문의하기 <i class="fa-solid fa-arrow-right"></i>
-        </a>
+<!-- 2026-05-27: 브랜드 영상 — 이전 honeycombVideoSection(원판광고)을 YouTube 영상으로 교체 -->
+<section id="brandVideoSection" style="max-width:1100px; margin:30px auto 0 auto; padding:20px 24px;">
+    <div style="position:relative; aspect-ratio:16/9; border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(30,41,59,0.3); background:#000;">
+        <iframe src="https://www.youtube.com/embed/176LglNxvn0?rel=0&modestbranding=1"
+                style="position:absolute; inset:0; width:100%; height:100%; border:none;"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen loading="lazy"
+                title="Chameleon Printing 브랜드 영상"></iframe>
     </div>
 </section>
-<script>
-(function(){
-    const HC_VIDEO_I18N = {
-        kr:{title:'허니콤보드<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">원판부터 포장재까지</em>', desc:'전시부스, 팝업스토어, 상업 인테리어 공간.<br>친환경 허니콤보드를 원판 재단 인쇄 포장재까지.<br><b style="color:#6366f1 !important;">전세계 어디나 배송됩니다.</b>', p1:'🇰🇷 한국 사무실', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 가맹문의하기'},
-        ja:{title:'ハニカムボード<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">原板から包装材まで</em>', desc:'展示ブース、ポップアップストア、商業インテリア空間。<br>エコなハニカムボードを原板から断裁・印刷・包装材まで。<br><b style="color:#6366f1 !important;">世界中どこへでも配送いたします。</b>', p1:'🇰🇷 韓国オフィス', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 加盟店お問い合わせ'},
-        en:{title:'Honeycomb Board<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">from raw sheet to packaging</em>', desc:'For exhibition booths, pop-up stores, and commercial interiors.<br>Eco honeycomb board — raw sheet, cutting, printing, packaging — all in one.<br><b style="color:#6366f1 !important;">We ship worldwide.</b>', p1:'🇰🇷 Korea Office', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 Franchise Inquiry'},
-        zh:{title:'蜂窝板<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">从原板到包装材</em>', desc:'展示摊位、快闪店、商业室内空间。<br>环保蜂窝板 — 原板、裁切、印刷、包装材一站式。<br><b style="color:#6366f1 !important;">配送至全球各地。</b>', p1:'🇰🇷 韩国办公室', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 加盟咨询'},
-        ar:{title:'ألواح خلية النحل<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">من اللوح الخام إلى التغليف</em>', desc:'لأجنحة المعارض والمتاجر المنبثقة والديكورات التجارية.<br>ألواح خلية النحل الصديقة للبيئة — من اللوح الخام إلى القص والطباعة والتغليف.<br><b style="color:#6366f1 !important;">نشحن إلى أي مكان في العالم.</b>', p1:'🇰🇷 مكتب كوريا', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 استفسار الامتياز'},
-        es:{title:'Panel nido de abeja<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">de la lámina al embalaje</em>', desc:'Para stands de exhibición, pop-up stores e interiorismo comercial.<br>Panel nido de abeja ecológico — lámina, corte, impresión y embalaje.<br><b style="color:#6366f1 !important;">Enviamos a todo el mundo.</b>', p1:'🇰🇷 Oficina Corea', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 Consulta franquicia'},
-        de:{title:'Wabenplatte<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">von Rohplatte bis Verpackung</em>', desc:'Für Messestände, Pop-up-Stores und Ladenbau.<br>Öko-Wabenplatte — Rohplatte, Zuschnitt, Druck, Verpackung.<br><b style="color:#6366f1 !important;">Wir versenden weltweit.</b>', p1:'🇰🇷 Korea Büro', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 Franchise-Anfrage'},
-        fr:{title:'Panneau nid d\'abeille<br><em style="font-style:normal; background:linear-gradient(135deg,#6366f1,#8b5cf6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">de la plaque à l\'emballage</em>', desc:'Pour stands d\'exposition, pop-up stores et aménagements commerciaux.<br>Panneau nid d\'abeille écologique — plaque, découpe, impression, emballage.<br><b style="color:#6366f1 !important;">Livraison dans le monde entier.</b>', p1:'🇰🇷 Bureau Corée', p2:'🇬🇧 EN / 🇨🇳 CN', p3:'🇸🇦 AR / 🇫🇷 FR', cta:'🤝 Demande de franchise'}
-    };
-    function applyHcVideoI18n(){
-        var lang = window.CURRENT_LANG || 'kr';
-        var L = HC_VIDEO_I18N[lang] || HC_VIDEO_I18N.kr;
-        var titleEl = document.getElementById('hcVideoTitle');
-        var descEl = document.getElementById('hcVideoDesc');
-        var phonesEl = document.getElementById('hcVideoPhones');
-        var ctaEl = document.getElementById('hcVideoCta');
-        if (titleEl) titleEl.innerHTML = L.title;
-        if (descEl) descEl.innerHTML = L.desc;
-        if (phonesEl) {
-            // 2026-05-15: 일본지사 나나미 직통 라인 추가
-            var _jpLabelMap = {
-                kr:'🇯🇵 일본지사 나나미', ja:'🇯🇵 日本支社 ナナミ', en:'🇯🇵 Japan Branch · Nanami',
-                zh:'🇯🇵 日本分公司 娜娜美', ar:'🇯🇵 فرع اليابان · نانامي',
-                es:'🇯🇵 Sucursal Japón · Nanami', de:'🇯🇵 Japan-Niederlassung · Nanami',
-                fr:'🇯🇵 Filiale Japon · Nanami'
-            };
-            var _jpLabel = _jpLabelMap[lang] || _jpLabelMap.ja;
-            phonesEl.innerHTML = '<div>' + L.p1 + ' <a href="tel:0313661984" style="color:#1e293b;font-weight:700;text-decoration:none;">031-366-1984</a></div>' +
-                '<div>' + _jpLabel + ' <a href="tel:09053970420" style="color:#1e293b;font-weight:700;text-decoration:none;">090-5397-0420</a></div>' +
-                '<div>' + L.p2 + ' <a href="tel:+821034913535" style="color:#1e293b;font-weight:700;text-decoration:none;">+82 10 3491 3535</a></div>' +
-                '<div>' + L.p3 + ' <a href="tel:+212617901092" style="color:#1e293b;font-weight:700;text-decoration:none;">+212 617 901 092</a></div>';
-        }
-        if (ctaEl) ctaEl.innerHTML = L.cta + ' <i class="fa-solid fa-arrow-right"></i>';
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){ setTimeout(applyHcVideoI18n, 100); });
-    } else {
-        setTimeout(applyHcVideoI18n, 100);
-    }
-    window.applyHcVideoI18n = applyHcVideoI18n;
-})();
-</script>
+<style>
+@media (max-width:768px){
+    #brandVideoSection { padding:14px 16px !important; margin-top:18px !important; }
+    #brandVideoSection > div { border-radius:14px !important; box-shadow:0 14px 30px -16px rgba(30,41,59,0.3) !important; }
+}
+</style>
 
 <!-- 오늘의핫딜 -->
 <div id="hotDealSection" class="hotdeal-wrapper" style="display:none;">
