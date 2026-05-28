@@ -6936,30 +6936,15 @@ html[data-site="JP"] .cs-center .cs-contact-jp { display: inline; }
    사용자 요청: "해외는 상담사가 별도로 없으므로 이부분은 빼고 타이틀을 키워줘"
    2026-05-15: 해외는 매니저 견적 대신 #overseasBranchHero (글로벌 지사 안내) 표시
    ───────────────────────────────────────────────────────────────────── */
-/* 2026-05-28: JP 도 한국 사이트와 동일한 매니저 견적 카드 표시 — 円 입력 → KRW 환산 → Stripe 결제 */
+/* 2026-05-28: 해외(JP/US) 모두 #mgrQuoteHero 숨김
+   - JP: LINE 카드 안에 결제 패널 통합됨 → mgrQuoteHero 중복 (이전 가려져 보인 원인)
+   - US: 매니저 없음 */
+html[data-site="JP"] #mgrQuoteHero,
 html[data-site="US"] #mgrQuoteHero {
     display: none !important;
 }
-/* JP: 한국 매니저 4명(은미/성희/지숙/연두) + 본사 한국 카드 숨김 (대신 ナナミ 카드 1개만) */
-html[data-site="JP"] #mgrPhoneList > a.mgr-kr-only,
-html[data-site="JP"] #mgrPhoneSlot { display: none !important; }
-html[data-site="JP"] #mgrPhoneJp { display: flex !important; }
-/* KR/기타: ナナミ 카드 숨김 */
+/* ナナミ 카드는 JP 가 아닌 곳에서 숨김 (KR/US/etc 에서 보일 필요 없음) */
 #mgrPhoneJp { display: none; }
-html[data-site="JP"] #mgrPhoneList { grid-template-columns: minmax(260px, 380px) !important; justify-content: center !important; }
-/* JP: 매니저 견적 카드 강제 표시 + 위에 마진 충분히 — 다른 요소에 가려지지 않게 */
-html[data-site="JP"] #mgrQuoteHero {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 5 !important;
-    margin-top: 28px !important;
-    margin-bottom: 28px !important;
-}
-html[data-site="JP"] #mgrQuoteHero > div {
-    background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%) !important;
-}
 /* 2026-05-28: JP 메인 — 히어로 영역 padding 축소 (마진/패딩만 줄임, min-height 건드리지 않음) */
 html[data-site="JP"] .hero-section {
     padding-top: 32px !important;
@@ -6977,6 +6962,47 @@ html[data-site="JP"] #overseasBranchHero {
 html .hero-title span,
 html .hero-title span b.ht-prn {
     font-family: 'Pretendard Variable', 'Pretendard', 'Inter', sans-serif !important;
+}
+/* 2026-05-28: 모바일 컴팩트화 — 히어로 타이틀/카드가 첫 화면에 다 들어오도록 */
+@media (max-width:768px) {
+    html[data-site="JP"] .hero-section,
+    html[data-site="US"] .hero-section {
+        padding-top: 24px !important;
+        padding-bottom: 14px !important;
+    }
+    /* 타이틀 크기 축소 — 모바일에서 한 줄에 들어가도록 */
+    .hero-section .hero-title span,
+    html .hero-title span {
+        font-size: 34px !important;
+        letter-spacing: 1px !important;
+        line-height: 1.1 !important;
+    }
+    .hero-section .hero-title .hero-tagline,
+    html .hero-title .hero-tagline {
+        font-size: 9px !important;
+        letter-spacing: 2.5px !important;
+        margin-bottom: 8px !important;
+    }
+    /* 좌우 카드 — 모바일에서 패딩 축소 + 폰트 줄임 */
+    #jpLineContact > div,
+    #overseasBranchHero > div {
+        padding: 14px 16px !important;
+    }
+    #jpLineContact img[alt="LINE QR"] {
+        width: 60px !important;
+        height: 60px !important;
+    }
+    #influencerCardTitle, #jpLineContact [style*="font-size:13.5px"] {
+        font-size: 13px !important;
+    }
+    #jpHeroRow { gap: 10px !important; }
+}
+@media (max-width:480px) {
+    .hero-section .hero-title span,
+    html .hero-title span {
+        font-size: 28px !important;
+        letter-spacing: 0.5px !important;
+    }
 }
 /* 2026-05-28: 인플루언서 모집 카드 — 모든 로케일에서 표시 (KR/JP/US/CN/etc) */
 #overseasBranchHero { display: block; }
