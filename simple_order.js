@@ -4889,7 +4889,7 @@
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=293');
+            var mod = await import('./export.js?v=294');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
@@ -4904,6 +4904,12 @@
             var cartCalc = _soCalcCartTotal(cart);
             // 구매금액 할인 + PRO 할인 합산 비율 (export.js 는 0~1 rate 사용)
             var _quoteDiscRate = ((cartCalc.amountPct || 0) + (cartCalc.proPct || 0)) / 100;
+            // 2026-05-28: 현재 화면의 마일리지/예치금 사용액도 견적서에 반영 (결제창과 동일)
+            var _walletUse = { useMileage: 0, useDeposit: 0 };
+            try {
+                var _grand = window._soCheckoutGrandTotal || (cartCalc.grandTotal || 0);
+                if (typeof _soGetWalletUseKRW === 'function') _walletUse = _soGetWalletUseKRW(_grand);
+            } catch (e) {}
             var orderInfo = {
                 id: '미리보기',
                 manager: name, phone: phone, address: fullAddr,
@@ -4917,7 +4923,7 @@
             //   (source/orderWcm 만 있고 fabricCode 없는 shape)이 견적서에서 빠짐.
             //   요약(_renderCheckoutSummary)과 동일하게 _soIsFabricItem 으로 판별.
             var pdfCart = cart.filter(function (it) { return !!it.product || _soIsFabricItem(it); });
-            var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, _quoteDiscRate, 0);
+            var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, _quoteDiscRate, _walletUse.useMileage || 0, _walletUse.useDeposit || 0);
             if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
 
             var url = URL.createObjectURL(blob);

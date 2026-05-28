@@ -1645,37 +1645,37 @@ export async function generateWallPanelPDF(pdfPages, wallConfigs, boardX, boardY
 // [5] 견적서, 명세서, 영수증, 지시서 (order.js용)
 // ==========================================================
 
-export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
-    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
-    if (!window.jspdf) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    await loadPdfFonts(doc); 
-    // [수정] 언어에 맞는 제목 사용
-    return generateCommonDocument(doc, TEXT.quote_title, orderInfo, cartItems, discountRate, usedMileage);
-}
-
-export async function generateTransactionStatementPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+export async function generateQuotationPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0, usedDeposit = 0) {
     if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     await loadPdfFonts(doc);
-    return generateCommonDocument(doc, TEXT.statement_title, orderInfo, cartItems, discountRate, usedMileage);
+    // [수정] 언어에 맞는 제목 사용
+    return generateCommonDocument(doc, TEXT.quote_title, orderInfo, cartItems, discountRate, usedMileage, usedDeposit);
 }
 
-export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0) {
+export async function generateTransactionStatementPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0, usedDeposit = 0) {
     if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
     if (!window.jspdf) return;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    await loadPdfFonts(doc); 
-    return generateCommonDocument(doc, TEXT.receipt_title, orderInfo, cartItems, discountRate, usedMileage);
+    await loadPdfFonts(doc);
+    return generateCommonDocument(doc, TEXT.statement_title, orderInfo, cartItems, discountRate, usedMileage, usedDeposit);
+}
+
+export async function generateReceiptPDF(orderInfo, cartItems, discountRate = 0, usedMileage = 0, usedDeposit = 0) {
+    if (!window.jspdf && window.loadEditorLibraries) await window.loadEditorLibraries();
+    if (!window.jspdf) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    await loadPdfFonts(doc);
+    return generateCommonDocument(doc, TEXT.receipt_title, orderInfo, cartItems, discountRate, usedMileage, usedDeposit);
 }
 
 // 공통 문서 생성기 (견적서/명세서/영수증)
 // 공통 문서 생성기 (견적서/명세서/영수증) - 다국어 완벽 적용
-async function generateCommonDocument(doc, title, orderInfo, cartItems, discountRate, usedMileage) {
+async function generateCommonDocument(doc, title, orderInfo, cartItems, discountRate, usedMileage, usedDeposit = 0) {
     doc.setFontSize(26); 
     // 제목 출력
     drawText(doc, title, 105, 22, { align: 'center', weight: 'bold' });
@@ -2059,8 +2059,9 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     const _discountBase = Math.max(0, totalAmt - nonDiscountableAmt);
     const rateDiscountAmt = Math.round(_discountBase * discountRate);
     const afterRateDiscount = totalAmt - rateDiscountAmt;
-    const finalAmt = afterRateDiscount - usedMileage + shippingFee;
-    
+    // 2026-05-28: 예치금 사용액도 합계에서 차감 (이전엔 견적서에 반영 안됨)
+    const finalAmt = afterRateDiscount - usedMileage - usedDeposit + shippingFee;
+
     // [수정] 부가세 계산 (일본 10%, 한국 10%)
     const vat = Math.floor(finalAmt / 11);
     const supply = finalAmt - vat;
@@ -2085,6 +2086,13 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         doc.setTextColor(255, 0, 0);
         drawText(doc, TEXT.mileage, summaryX, y+5, {align:'right'}, "#ff0000");
         drawText(doc, "-" + usedMileage.toLocaleString() + " P", 195, y+5, {align:'right'}, "#ff0000"); y+=6;
+    }
+    // 2026-05-28: 예치금 사용액 표시 — PDF에도 결제창과 동일하게 차감 반영
+    if (usedDeposit > 0) {
+        doc.setTextColor(14, 116, 144);
+        const depositLabel = CURRENT_LANG_CODE === 'ja' ? '預り金使用 :' : CURRENT_LANG_CODE === 'us' ? 'Deposit used :' : '예치금 사용 :';
+        drawText(doc, depositLabel, summaryX, y+5, {align:'right'}, "#0e7490");
+        drawText(doc, "-" + _fmtSummary(usedDeposit), 195, y+5, {align:'right'}, "#0e7490"); y+=6;
     }
     if (shippingFee > 0) {
         doc.setTextColor(0, 0, 0);
