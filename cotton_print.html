@@ -513,80 +513,95 @@ window._cottonSearch = function(){
         <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 14px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;" data-i18n="cp_hero_subtitle">
             도매업자를 위한 고품격 프린팅 시스템
         </p>
-        <!-- 2026-05-22: 30% 할인 배지 제거. 원단제공 인쇄(1m 150円)을 위로 이동 — 컴팩트 배지 -->
-        <button onclick="openRollFabricRequest()" class="hero-badge" style="cursor:pointer; border:1.5px solid rgba(255,255,255,0.55); background:rgba(0,0,0,0.25); color:#fff; font-family:inherit; font-weight:800; padding:9px 22px; border-radius:50px; font-size:14px; backdrop-filter:blur(8px); margin:4px 0 30px;">
-            <i class="fa-solid fa-scroll" style="color:#fde047;"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
-        </button>
-        <!-- 2026-05-22: CTA — 무료 샘플 신청 버튼 -->
-        <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
-            <button onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; gap:8px; padding:16px 32px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,0.35);">
-                <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 패브릭 샘플 요청</span>
-            </button>
-        </div>
+        <!-- 2026-05-28: 3컬럼 히어로 — 좌(견적 결제) / 중앙(1m 150円 + 샘플) / 우(인플루언서) -->
+        <div class="cp-hero-3col" style="max-width:1100px; width:100%; margin:24px auto 0; padding:0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:stretch;">
 
-        <!-- 2026-05-28: 매니저 견적 빠른 주문 — 메인 사이트와 동일 (cotton_print.html 통합) -->
-        <div id="cpMgrQuoteHero" style="max-width:720px; margin:24px auto 0; width:100%;">
-            <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 24px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
-                <div style="text-align:center; margin-bottom:16px;">
-                    <div id="cpMgrQuoteTitle" style="font-size:16px; font-weight:800; color:#fff; margin-bottom:5px;">담당 매니저와 상담 후 견적 금액을 입력하세요</div>
-                    <div id="cpMgrQuoteDesc" style="font-size:12px; color:rgba(255,255,255,0.85); line-height:1.5;">통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.</div>
-                </div>
-                <!-- 매니저 카드 — 한국/일본 분기 -->
-                <div id="cpMgrPhones" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; margin-bottom:14px;">
-                    <!-- KR 매니저 4명 + 본사 (cotton_print KR 도메인) -->
-                    <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
-                        <span>본사</span><b style="font-size:12.5px; white-space:nowrap;">031-366-1984</b>
-                    </a>
-                    <a class="cp-kr-phone" href="tel:01077935393" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
-                        <span>은미</span><b style="font-size:12.5px; white-space:nowrap;">010-7793-5393</b>
-                    </a>
-                    <a class="cp-kr-phone" href="tel:01034903328" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
-                        <span>성희</span><b style="font-size:12.5px; white-space:nowrap;">010-3490-3328</b>
-                    </a>
-                    <a class="cp-kr-phone" href="tel:01034551946" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
-                        <span>지숙</span><b style="font-size:12.5px; white-space:nowrap;">010-3455-1946</b>
-                    </a>
-                    <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
-                        <span>연두</span><b style="font-size:12.5px; white-space:nowrap;">010-2525-9943</b>
-                    </a>
-                    <!-- JP 전용 ナナミ — QR + 연락처 통합 -->
-                    <div class="cp-jp-phone" style="display:none; align-items:center; gap:14px; padding:14px 16px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; color:#fff; grid-column:1/-1; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25);">
-                        <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:80px; height:80px; border-radius:10px; flex-shrink:0; border:1px solid rgba(255,255,255,0.25); background:#fff;">
+            <!-- ▌▌▌ LEFT: 견적 결제 (Nanami QR + 円 입력) ▌▌▌ -->
+            <div id="cpMgrQuoteHero" class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+                <!-- 매니저/연락처 영역 — KR/JP 분기 -->
+                <div id="cpMgrPhones" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+                    <!-- KR 매니저 (5명, 컴팩트 2×3 그리드) -->
+                    <div class="cp-kr-phone-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                        <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">본사</span><b style="font-size:11px; white-space:nowrap;">031-366-1984</b></a>
+                        <a class="cp-kr-phone" href="tel:01077935393" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">은미</span><b style="font-size:11px; white-space:nowrap;">010-7793-5393</b></a>
+                        <a class="cp-kr-phone" href="tel:01034903328" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">성희</span><b style="font-size:11px; white-space:nowrap;">010-3490-3328</b></a>
+                        <a class="cp-kr-phone" href="tel:01034551946" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">지숙</span><b style="font-size:11px; white-space:nowrap;">010-3455-1946</b></a>
+                        <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600; grid-column:1/-1;"><span style="opacity:0.7;">연두</span><b style="font-size:11px; white-space:nowrap;">010-2525-9943</b></a>
+                    </div>
+                    <!-- JP 전용 ナナミ — QR + 연락처 -->
+                    <div class="cp-jp-phone" style="display:none; align-items:center; gap:10px; padding:10px; background:rgba(6,199,85,0.12); border:1px solid rgba(6,199,85,0.45); border-radius:10px; color:#fff;">
+                        <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:62px; height:62px; border-radius:8px; flex-shrink:0; border:1px solid rgba(255,255,255,0.25); background:#fff;">
                         <div style="text-align:left; flex:1; min-width:0;">
-                            <div style="font-size:11px; font-weight:700; color:#86efac; letter-spacing:1px; margin-bottom:4px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                            <div style="font-size:11px; opacity:0.85; margin-bottom:2px;">東京・大阪 直通担当: <b style="color:#fff;">ナナミ</b></div>
-                            <div style="font-size:13px; font-weight:800; line-height:1.5;">
-                                <a href="tel:09053970420" style="color:#fff; text-decoration:none; display:block;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
-                                <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; text-decoration:none; display:block; font-size:12px;">LINE ID: astro.0420</a>
-                            </div>
+                            <div style="font-size:10px; font-weight:300; color:#86efac; letter-spacing:0.5px; margin-bottom:3px;"><i class="fa-brands fa-line"></i> LINEで問い合わせ</div>
+                            <div style="font-size:12px; color:#fff; font-weight:500; margin-bottom:2px;">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:300; text-decoration:none; font-size:11px; margin-left:3px;">@astro.0420</a></div>
+                            <a href="tel:09053970420" style="color:#86efac; font-weight:300; text-decoration:none; font-size:11.5px;"><i class="fa-solid fa-phone" style="font-size:9px;"></i> 090-5397-0420</a>
                         </div>
                     </div>
                 </div>
-                <!-- 금액 입력 + 주문 + 개인결제창 -->
-                <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px;">
+                <!-- 안내 텍스트 -->
+                <div style="text-align:center; margin-bottom:8px;">
+                    <div id="cpMgrQuoteDesc" style="font-size:10.5px; color:rgba(255,255,255,0.7); line-height:1.4; font-weight:300;">상담 후 합의 금액 입력 → 즉시 결제</div>
+                </div>
+                <!-- 금액 입력 + 주문 버튼 (세로 스택) -->
+                <div style="margin-top:auto;">
+                    <div style="display:flex; align-items:center; gap:4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:9px; padding:3px 3px 3px 10px; margin-bottom:6px;">
                         <input id="cpMgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
                                placeholder="50,000"
                                oninput="window._cpMgrQuoteFormat && window._cpMgrQuoteFormat(this)"
                                onkeydown="if(event.key==='Enter'){event.preventDefault();window._cpMgrQuoteOrder&&window._cpMgrQuoteOrder();}"
-                               style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:130px; text-align:right; padding:6px 0; background:transparent;">
-                        <span id="cpMgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
-                        <button type="button" id="cpMgrQuoteBtn" onclick="window._cpMgrQuoteOrder && window._cpMgrQuoteOrder()" style="padding:9px 18px; background:#fff; color:#111; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
-                            ⚡ 주문하기
-                        </button>
+                               style="border:none; outline:none; font-size:13px; font-weight:300; color:#fff; flex:1; min-width:0; text-align:right; padding:6px 0; background:transparent; font-family:inherit;">
+                        <span id="cpMgrQuoteUnit" style="font-size:11px; color:rgba(255,255,255,0.75); font-weight:300; padding-right:4px;">원</span>
                     </div>
+                    <button type="button" id="cpMgrQuoteBtn" onclick="window._cpMgrQuoteOrder && window._cpMgrQuoteOrder()" style="width:100%; padding:10px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 4px 12px rgba(6,199,85,0.35); font-family:inherit;">
+                        ⚡ 주문하기
+                    </button>
                 </div>
             </div>
+
+            <!-- ▌▌▌ CENTER: 1m 150円 + 무료 샘플 ▌▌▌ -->
+            <div class="cp-col-card" style="background:linear-gradient(165deg, #451a03 0%, #78350f 50%, #b45309 100%); border:1px solid rgba(253,224,71,0.35); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(120,53,15,0.55), inset 0 1px 0 rgba(253,224,71,0.2); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
+                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">📜</div>
+                <!-- 1m 150円 클릭 (持込印刷) -->
+                <button onclick="openRollFabricRequest()" class="hero-badge" style="cursor:pointer; border:1.5px solid rgba(253,224,71,0.55); background:rgba(0,0,0,0.25); color:#fff; font-family:inherit; font-weight:300; padding:8px 14px; border-radius:50px; font-size:12.5px; backdrop-filter:blur(8px); width:100%; text-align:center; margin-bottom:14px; letter-spacing:0.3px;">
+                    <i class="fa-solid fa-scroll" style="color:#fde047;"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
+                </button>
+                <!-- 무료 샘플 강조 -->
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:6px 0;">
+                    <div style="font-size:32px; margin-bottom:6px;">🎁</div>
+                    <div id="cpFreeSampleTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:4px; letter-spacing:-0.2px;">무료 패브릭 샘플</div>
+                    <div id="cpFreeSampleDesc" style="font-size:10.5px; color:rgba(253,224,71,0.85); font-weight:300; line-height:1.4; margin-bottom:10px;">실물로 품질을 확인하세요</div>
+                </div>
+                <button onclick="openPdSampleRequest()" id="cpFreeSampleBtn" style="width:100%; padding:11px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:13px; font-weight:500; letter-spacing:0.3px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(245,158,11,0.55); font-family:inherit;">
+                    <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 샘플 요청</span>
+                </button>
+            </div>
+
+            <!-- ▌▌▌ RIGHT: 인플루언서 모집 ▌▌▌ -->
+            <div class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
+                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
+                <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45); margin-bottom:8px;">
+                    <i class="fa-solid fa-film" style="color:#fff; font-size:14px;"></i>
+                </div>
+                <div id="cpInfTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:2px; letter-spacing:-0.2px;">인플루언서 모집</div>
+                <div id="cpInfDesc" style="font-size:10.5px; color:rgba(255,255,255,0.65); line-height:1.4; font-weight:300; margin-bottom:8px;">SNS로 카멜레온프린팅을 홍보하세요</div>
+                <div id="cpInfReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:11px; font-weight:300; color:#fbcfe8; letter-spacing:0.2px; width:100%;">
+                    조회수 10,000회 = 100,000원
+                </div>
+                <div style="margin-top:auto; width:100%;">
+                    <button type="button" onclick="window._openCpInfluencerModal && window._openCpInfluencerModal()" id="cpInfBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55); font-family:inherit;">
+                        📝 응모하기
+                    </button>
+                </div>
+            </div>
+
         </div>
         <style>
-        /* JP 도메인일 때 한국 매니저 숨기고 ナナミ (QR + 연락처 통합) 표시 */
-        html[lang="ja"] #cpMgrPhones .cp-kr-phone { display:none !important; }
+        /* JP 도메인일 때 한국 매니저 그리드 숨기고 ナナミ 카드 표시 */
+        html[lang="ja"] #cpMgrPhones .cp-kr-phone-grid { display:none !important; }
         html[lang="ja"] #cpMgrPhones .cp-jp-phone { display:flex !important; }
-        /* JP 도메인 — 매니저 패널 자체에 충분한 너비 */
-        html[lang="ja"] #cpMgrQuoteHero { max-width:600px !important; }
-        @media (max-width:560px){
-            #cpMgrPhones .cp-jp-phone { flex-direction:column; text-align:center; }
-            #cpMgrPhones .cp-jp-phone > div { text-align:center !important; }
+        /* 모바일 — 3컬럼 → 1컬럼 세로 */
+        @media (max-width:900px) {
+            .cp-hero-3col { grid-template-columns: 1fr !important; }
         }
         </style>
         <script>
@@ -668,11 +683,118 @@ window._cottonSearch = function(){
                 }
             };
         })();
+        // 2026-05-28: 중앙·우측 카드 i18n + 인플루언서 모달
+        (function(){
+            var lang = window.__PS_LANG || 'ko';
+            var SAMPLE = {
+                ko: { t:'무료 패브릭 샘플', d:'실물로 품질을 확인하세요', btn:'무료 샘플 요청' },
+                ja: { t:'無料ファブリックサンプル', d:'実物で品質をご確認ください', btn:'サンプル請求' },
+                en: { t:'Free Fabric Sample', d:'Check quality in person', btn:'Request Sample' }
+            };
+            var INF = {
+                ko: { t:'인플루언서 모집', d:'SNS로 카멜레온프린팅을 홍보하세요', r:'조회수 10,000회 = 100,000원', btn:'📝 응모하기',
+                      mt:'인플루언서 응모', ms:'홍보 후 조회수 10,000회당 100,000원 지급', name:'이름', sns:'SNS 주소', bank:'계좌번호', email:'이메일 (선택)', submit:'응모 제출', ok:'응모 접수 완료', req:'이름·SNS·계좌는 필수' },
+                ja: { t:'インフルエンサー募集', d:'SNSでカメレオンプリンティングをPR', r:'再生10,000回 = 10,000円', btn:'📝 応募する',
+                      mt:'インフルエンサー応募', ms:'PR後、再生10,000回ごとに10,000円お支払い', name:'お名前', sns:'SNS URL', bank:'振込口座', email:'メール (任意)', submit:'応募する', ok:'応募を受け付けました', req:'お名前・SNS・口座は必須' },
+                en: { t:'Influencer Wanted', d:'Promote Chameleon Printing on SNS', r:'10,000 views = $100', btn:'📝 Apply',
+                      mt:'Influencer Application', ms:'$100 per 10,000 views after promotion', name:'Name', sns:'SNS URL', bank:'Bank Account', email:'Email (optional)', submit:'Submit', ok:'Application received', req:'Name/SNS/Account required' }
+            };
+            var s = SAMPLE[lang] || SAMPLE.ko;
+            var i = INF[lang] || INF.ko;
+            function $(id){ return document.getElementById(id); }
+            if ($('cpFreeSampleTitle')) $('cpFreeSampleTitle').textContent = s.t;
+            if ($('cpFreeSampleDesc')) $('cpFreeSampleDesc').textContent = s.d;
+            if ($('cpInfTitle')) $('cpInfTitle').textContent = i.t;
+            if ($('cpInfDesc')) $('cpInfDesc').textContent = i.d;
+            if ($('cpInfReward')) $('cpInfReward').textContent = i.r;
+            if ($('cpInfBtn')) $('cpInfBtn').textContent = i.btn;
+            window.__CP_INF = i;
+            window.__CP_LANG = lang;
+        })();
+        // 인플루언서 모달 open/close/submit
+        window._openCpInfluencerModal = function(){
+            var m = document.getElementById('cpInfluencerModal');
+            if (m) m.style.display = 'flex';
+        };
+        window._closeCpInfluencerModal = function(){
+            var m = document.getElementById('cpInfluencerModal');
+            if (m) m.style.display = 'none';
+        };
+        window._submitCpInfluencer = async function(){
+            var i = window.__CP_INF || {};
+            var name = (document.getElementById('cpInfName').value||'').trim();
+            var sns  = (document.getElementById('cpInfSns').value||'').trim();
+            var bank = (document.getElementById('cpInfBank').value||'').trim();
+            var email = (document.getElementById('cpInfEmail').value||'').trim();
+            if (!name || !sns || !bank) { alert(i.req || 'Required'); return; }
+            var btn = document.getElementById('cpInfSubmitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+            try {
+                var sb = window.sb;
+                if (!sb && typeof supabase !== 'undefined') {
+                    sb = supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
+                }
+                if (!sb) throw new Error('DB');
+                var { error } = await sb.from('chatbot_knowledge').insert({
+                    category: '_influencer_apps',
+                    question: 'Influencer Application - ' + name + ' (cotton_print, ' + (window.__CP_LANG||'ko') + ')',
+                    answer: JSON.stringify({ name:name, sns_url:sns, bank_account:bank, email:email, lang:window.__CP_LANG||'ko', from:'cotton_print', submitted_at:new Date().toISOString(), view_count:0, paid_amount:0, status:'pending' }),
+                    is_active: true,
+                    keywords: 'influencer cotton_print ' + (window.__CP_LANG||'ko')
+                });
+                if (error) throw error;
+                alert(i.ok || 'OK');
+                window._closeCpInfluencerModal();
+                ['cpInfName','cpInfSns','cpInfBank','cpInfEmail'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+            } catch(e) {
+                alert('Failed: ' + (e.message||e));
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = i.submit || 'Submit'; }
+            }
+        };
         </script>
-        <!-- 2026-05-28: 기존 별도 LINE QR 카드 제거 — 매니저 견적 패널 안의 ナナミ 카드에 QR + LINE ID 통합 -->
 
     </div>
 </section>
+
+<!-- 인플루언서 응모 모달 (cotton_print 페이지 전용) -->
+<div id="cpInfluencerModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeCpInfluencerModal()">
+    <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+        <button onclick="window._closeCpInfluencerModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:14px 18px; color:#fff; flex-shrink:0;">
+            <div id="cpInfModalTitle" style="font-size:16px; font-weight:300; margin-bottom:3px;">인플루언서 응모</div>
+            <div id="cpInfModalSub" style="font-size:11px; opacity:0.95; line-height:1.45; font-weight:300; padding-right:34px;">조회수 10,000회당 100,000원 지급</div>
+        </div>
+        <div style="padding:14px 18px; overflow-y:auto; flex:1; min-height:0;">
+            <label id="cpInfLblName" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">이름</label>
+            <input id="cpInfName" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+            <label id="cpInfLblSns" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">SNS 주소</label>
+            <input id="cpInfSns" type="url" placeholder="https://www.instagram.com/..." style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+            <label id="cpInfLblBank" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">계좌번호</label>
+            <input id="cpInfBank" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+            <label id="cpInfLblEmail" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">이메일 (선택)</label>
+            <input id="cpInfEmail" type="email" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+            <button id="cpInfSubmitBtn" type="button" onclick="window._submitCpInfluencer()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">응모 제출</button>
+            <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;">조회수 달성 후 입금신청 → 등록 계좌 지급</p>
+        </div>
+    </div>
+</div>
+<script>
+// 모달 라벨 i18n
+(function(){
+    var i = window.__CP_INF;
+    if (!i) return;
+    function $(id){ return document.getElementById(id); }
+    if ($('cpInfModalTitle'))  $('cpInfModalTitle').textContent  = i.mt;
+    if ($('cpInfModalSub'))    $('cpInfModalSub').textContent    = i.ms;
+    if ($('cpInfLblName'))     $('cpInfLblName').textContent     = i.name;
+    if ($('cpInfLblSns'))      $('cpInfLblSns').textContent      = i.sns;
+    if ($('cpInfLblBank'))     $('cpInfLblBank').textContent     = i.bank;
+    if ($('cpInfLblEmail'))    $('cpInfLblEmail').textContent    = i.email;
+    if ($('cpInfSubmitBtn'))   $('cpInfSubmitBtn').textContent   = i.submit;
+})();
+</script>
 <style>
 @media (max-width:768px) {
     .hero { min-height:480px !important; }
