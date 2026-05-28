@@ -6960,9 +6960,23 @@ html[data-site="JP"] #mgrQuoteHero {
 html[data-site="JP"] #mgrQuoteHero > div {
     background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%) !important;
 }
-/* 2026-05-28: JP 메인 — 히어로/카드 컴팩트화 (이전 min-height:auto 시도는 히어로 컨텐츠 전체가 사라져서 원복) */
+/* 2026-05-28: JP 메인 — 히어로 영역 padding 축소 (마진/패딩만 줄임, min-height 건드리지 않음) */
+html[data-site="JP"] .hero-section {
+    padding-top: 32px !important;
+    padding-bottom: 18px !important;
+}
+html[data-site="JP"] .hero-section .hero-title {
+    margin-bottom: 14px !important;
+}
 html[data-site="JP"] #overseasBranchHero {
-    margin-top: 8px !important;
+    margin-top: 6px !important;
+}
+/* 2026-05-28: hero 타이틀 — Pretendard Variable 폰트 강제 (cdn 로딩 즉시 사용. 모든 로케일 동일) */
+.hero-section .hero-title span,
+.hero-section .hero-title span b.ht-prn,
+html .hero-title span,
+html .hero-title span b.ht-prn {
+    font-family: 'Pretendard Variable', 'Pretendard', 'Inter', sans-serif !important;
 }
 /* 2026-05-28: 인플루언서 모집 카드 — 모든 로케일에서 표시 (KR/JP/US/CN/etc) */
 #overseasBranchHero { display: block; }
