@@ -555,7 +555,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=456">
+<link rel="stylesheet" href="./style.css?v=457">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -978,11 +978,12 @@ if ('caches' in window) {
         <!-- LINE 문의 + 견적 결제 통합 카드 (lang=ja 일 때만 JS 로 표시) — 다크 톤으로 세련되게 -->
         <div id="jpLineContact" style="display:none; flex:1 1 320px; min-width:0;">
             <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(6,199,85,0.18); font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
-                <div style="display:flex; align-items:center; gap:14px; padding-bottom:12px; border-bottom:1px dashed rgba(6,199,85,0.25);">
+                <div style="display:flex; align-items:center; gap:14px; padding-bottom:10px; border-bottom:1px dashed rgba(6,199,85,0.25);">
                     <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:72px; height:72px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; box-shadow:0 4px 14px rgba(6,199,85,0.3);">
                     <div style="text-align:left; min-width:0; flex:1;">
-                        <div style="font-size:13.5px; font-weight:300; color:#86efac; margin-bottom:4px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                        <div style="font-size:11.5px; color:rgba(255,255,255,0.75); line-height:1.65; font-weight:300;">担当: <b style="color:#fff; font-weight:500;">ナナミ</b><br><a href="tel:09053970420" style="color:#86efac; font-weight:400; text-decoration:none;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a><br>LINE ID: <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:400; text-decoration:none;">astro.0420</a></div>
+                        <div style="font-size:13.5px; font-weight:300; color:#86efac; margin-bottom:6px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                        <div style="font-size:12px; color:#fff; font-weight:500; line-height:1.45; margin-bottom:3px;">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:300; text-decoration:none; font-size:11px; margin-left:4px;">@astro.0420</a></div>
+                        <a href="tel:09053970420" style="color:#86efac; font-weight:300; text-decoration:none; font-size:12px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
                     </div>
                 </div>
                 <!-- 견적 금액 입력 + 결제 (LINE 카드 안에 통합) -->
@@ -1004,22 +1005,22 @@ if ('caches' in window) {
         </div>
         <!-- 인플루언서 모집 카드 — 모든 로케일에 표시 (KR/JP/US/etc). 다크 톤 + 얇은 폰트로 세련되게 -->
         <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
-            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
-                <div style="position:absolute; top:-30px; right:-20px; font-size:90px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
-                <div style="display:flex; gap:14px; align-items:center; margin-bottom:10px; position:relative;">
-                    <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
-                        <i class="fa-solid fa-film" style="color:#fff; font-size:16px;"></i>
+            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
+                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px; position:relative;">
+                    <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
+                        <i class="fa-solid fa-film" style="color:#fff; font-size:14px;"></i>
                     </div>
                     <div style="flex:1; min-width:0;">
-                        <div id="influencerCardTitle" style="font-size:16px; font-weight:300; color:#fff; margin-bottom:2px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
-                        <div id="influencerCardDesc" style="font-size:11.5px; color:rgba(255,255,255,0.65); line-height:1.5; font-weight:300;">SNS로 카멜레온프린팅을 홍보하세요</div>
+                        <div id="influencerCardTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:1px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
+                        <div id="influencerCardDesc" style="font-size:11px; color:rgba(255,255,255,0.65); line-height:1.4; font-weight:300;">SNS로 카멜레온프린팅을 홍보하세요</div>
                     </div>
                 </div>
-                <div id="influencerCardReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:10px; padding:8px 12px; margin:10px 0 14px; font-size:12px; font-weight:300; color:#fbcfe8; text-align:center; letter-spacing:0.2px;">
+                <div id="influencerCardReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin:6px 0 10px; font-size:11.5px; font-weight:300; color:#fbcfe8; text-align:center; letter-spacing:0.2px;">
                     조회수 10,000회 = 100,000원 지급
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; position:relative;">
-                    <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:11px 22px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:13px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
+                    <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:9px 20px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
                         📝 응모하기
                     </button>
                 </div>
@@ -1281,34 +1282,34 @@ if ('caches' in window) {
     </script>
 
     <!-- 인플루언서 응모 모달 -->
-    <div id="influencerModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._closeInfluencerModal()">
-        <div style="background:#fff; border-radius:18px; max-width:480px; width:100%; max-height:88vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative;">
+    <div id="influencerModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeInfluencerModal()">
+        <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative;">
             <!-- 닫기 버튼 — 모달 우상단 절대 고정. 스크롤해도 항상 보임 -->
-            <button onclick="window._closeInfluencerModal()" aria-label="close" style="position:absolute; top:12px; right:12px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:34px; height:34px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
-            <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:18px 22px; color:#fff; flex-shrink:0;">
-                <div id="infModalTitle" style="font-size:17px; font-weight:300; margin-bottom:4px; letter-spacing:-0.2px;">인플루언서 응모</div>
-                <div id="infModalSub" style="font-size:11.5px; opacity:0.95; line-height:1.5; font-weight:300;">카멜레온프린팅을 SNS로 홍보하세요. 조회수 10,000회당 100,000원 지급.</div>
+            <button onclick="window._closeInfluencerModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
+            <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:14px 18px; color:#fff; flex-shrink:0;">
+                <div id="infModalTitle" style="font-size:16px; font-weight:300; margin-bottom:3px; letter-spacing:-0.2px;">인플루언서 응모</div>
+                <div id="infModalSub" style="font-size:11px; opacity:0.95; line-height:1.45; font-weight:300; padding-right:34px;">카멜레온프린팅을 SNS로 홍보하세요. 조회수 10,000회당 100,000원 지급.</div>
             </div>
-            <div style="padding:18px 22px; overflow-y:auto; flex:1; min-height:0;">
-                <label style="display:block; font-size:11.5px; font-weight:700; color:#374151; margin-bottom:4px;" id="infLblName">이름</label>
-                <input id="infName" type="text" style="width:100%; padding:9px 11px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13.5px; margin-bottom:10px; box-sizing:border-box;">
+            <div style="padding:14px 18px; overflow-y:auto; flex:1; min-height:0;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblName">이름</label>
+                <input id="infName" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
 
-                <label style="display:block; font-size:11.5px; font-weight:700; color:#374151; margin-bottom:4px;" id="infLblSns">SNS 주소</label>
-                <input id="infSns" type="url" style="width:100%; padding:9px 11px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13.5px; margin-bottom:10px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblSns">SNS 주소</label>
+                <input id="infSns" type="url" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
 
-                <label style="display:block; font-size:11.5px; font-weight:700; color:#374151; margin-bottom:4px;" id="infLblBank">계좌번호</label>
-                <input id="infBank" type="text" style="width:100%; padding:9px 11px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13.5px; margin-bottom:10px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblBank">계좌번호</label>
+                <input id="infBank" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
 
-                <label style="display:block; font-size:11.5px; font-weight:700; color:#374151; margin-bottom:4px;" id="infLblEmail">이메일 (선택)</label>
-                <input id="infEmail" type="email" style="width:100%; padding:9px 11px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13.5px; margin-bottom:10px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblEmail">이메일 (선택)</label>
+                <input id="infEmail" type="email" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
 
-                <label style="display:block; font-size:11.5px; font-weight:700; color:#374151; margin-bottom:4px;" id="infLblNote">홍보 계획 (선택)</label>
-                <textarea id="infNote" rows="2" style="width:100%; padding:9px 11px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblNote">홍보 계획 (선택)</label>
+                <textarea id="infNote" rows="2" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12.5px; margin-bottom:10px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
 
-                <button id="infSubmitBtn" type="button" onclick="window._submitInfluencer()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 20px -6px rgba(190,24,93,0.4); font-family:inherit;">
+                <button id="infSubmitBtn" type="button" onclick="window._submitInfluencer()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">
                     응모 제출
                 </button>
-                <p style="font-size:10.5px; color:#6b7280; line-height:1.6; margin-top:8px; text-align:center;" id="infFooterNote">조회수 달성 후 입금신청 → 등록한 계좌로 지급됩니다.</p>
+                <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;" id="infFooterNote">조회수 달성 후 입금신청 → 등록한 계좌로 지급됩니다.</p>
             </div>
         </div>
     </div>
