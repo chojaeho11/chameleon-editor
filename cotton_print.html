@@ -549,14 +549,18 @@ window._cottonSearch = function(){
                     <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
                         <span>연두</span><b style="font-size:12.5px; white-space:nowrap;">010-2525-9943</b>
                     </a>
-                    <!-- JP 전용 ナナミ -->
-                    <a class="cp-jp-phone" href="tel:09053970420" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:12px; padding:14px 16px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; grid-column:1/-1;">
-                        <span style="font-size:20px;">🇯🇵</span>
-                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
-                            <span style="font-size:10px; opacity:0.85;">東京・大阪 直通担当</span>
-                            <b style="font-size:15px; white-space:nowrap;">ナナミ · 090-5397-0420</b>
+                    <!-- JP 전용 ナナミ — QR + 연락처 통합 -->
+                    <div class="cp-jp-phone" style="display:none; align-items:center; gap:14px; padding:14px 16px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; color:#fff; grid-column:1/-1; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25);">
+                        <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:80px; height:80px; border-radius:10px; flex-shrink:0; border:1px solid rgba(255,255,255,0.25); background:#fff;">
+                        <div style="text-align:left; flex:1; min-width:0;">
+                            <div style="font-size:11px; font-weight:700; color:#86efac; letter-spacing:1px; margin-bottom:4px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                            <div style="font-size:11px; opacity:0.85; margin-bottom:2px;">東京・大阪 直通担当: <b style="color:#fff;">ナナミ</b></div>
+                            <div style="font-size:13px; font-weight:800; line-height:1.5;">
+                                <a href="tel:09053970420" style="color:#fff; text-decoration:none; display:block;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
+                                <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; text-decoration:none; display:block; font-size:12px;">LINE ID: astro.0420</a>
+                            </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
                 <!-- 금액 입력 + 주문 + 개인결제창 -->
                 <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
@@ -575,9 +579,15 @@ window._cottonSearch = function(){
             </div>
         </div>
         <style>
-        /* JP 도메인일 때 한국 매니저 숨기고 ナナミ 표시 */
+        /* JP 도메인일 때 한국 매니저 숨기고 ナナミ (QR + 연락처 통합) 표시 */
         html[lang="ja"] #cpMgrPhones .cp-kr-phone { display:none !important; }
         html[lang="ja"] #cpMgrPhones .cp-jp-phone { display:flex !important; }
+        /* JP 도메인 — 매니저 패널 자체에 충분한 너비 */
+        html[lang="ja"] #cpMgrQuoteHero { max-width:600px !important; }
+        @media (max-width:560px){
+            #cpMgrPhones .cp-jp-phone { flex-direction:column; text-align:center; }
+            #cpMgrPhones .cp-jp-phone > div { text-align:center !important; }
+        }
         </style>
         <script>
         (function(){
@@ -659,17 +669,8 @@ window._cottonSearch = function(){
             };
         })();
         </script>
-        <!-- 2026-05-22: LINE 문의 — 메인 사이트와 동일한 깔끔한 인라인 QR 카드 (JP 전용) -->
-        <div id="cpLineCard" style="display:none; max-width:430px; margin:18px auto 0;">
-            <div style="background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:11px 16px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
-                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:64px; height:64px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
-                <div style="text-align:left; min-width:0;">
-                    <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                    <div style="font-size:11.5px; color:#555; line-height:1.6;">担当: <b style="color:#333;">ナナミ</b><br><a href="tel:09053970420" style="color:#06C755; font-weight:800; text-decoration:none;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a><br>LINE ID: <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#06C755; font-weight:800; text-decoration:none;">astro.0420</a></div>
-                </div>
-            </div>
-        </div>
-        <script>(function(){ if((window.__PS_LANG||'')==='ja'){ var el=document.getElementById('cpLineCard'); if(el) el.style.display=''; } })();</script>
+        <!-- 2026-05-28: 기존 별도 LINE QR 카드 제거 — 매니저 견적 패널 안의 ナナミ 카드에 QR + LINE ID 통합 -->
+
     </div>
 </section>
 <style>

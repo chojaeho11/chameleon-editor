@@ -6960,6 +6960,20 @@ html[data-site="JP"] #mgrQuoteHero {
 html[data-site="JP"] #mgrQuoteHero > div {
     background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%) !important;
 }
+/* 2026-05-28: JP 메인 — 히어로 영역 컴팩트화. 매니저 패널이 잘리지 않게 hero min-height 줄이고 marb 조정 */
+html[data-site="JP"] .hero-section {
+    min-height: auto !important;
+    padding-bottom: 18px !important;
+}
+/* JP: マネージャーと相談 hero 버튼은 매니저 패널과 중복되므로 숨김 */
+html[data-site="JP"] #aiDesignHero,
+html[data-site="JP"] .hero-section #aiDesignHero { display: none !important; }
+/* JP: 매니저 패널을 LINE/해외 카드보다 먼저 표시되도록 — DOM 순서가 자연스러우므로 z-index 만 */
+html[data-site="JP"] #overseasBranchHero {
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 8px !important;
+}
 /* KR 에서는 해외 지사 카드 숨김 */
 #overseasBranchHero { display: none; }
 html[data-site="JP"] #overseasBranchHero,
