@@ -318,6 +318,164 @@ a { text-decoration: none; color: inherit; }
     </div>
 </section>
 
+<!-- 2026-05-28: 로케일별 매니저 컨택 패널 — index.html 의 mgrQuoteHero / jpLineContact / enHibaContact 와 동일 구성.
+     KR=매니저 전화번호 / JP=LINE QR+ナナミ / EN/외국=Talk to Manager.
+     주문/결제 버튼은 paper_stand 에는 결제 흐름이 없어 pdSampleModal (무료 샘플 요청) 을 열어 fallback 처리. -->
+<section id="psMgrPanel" style="max-width:1100px; margin:0 auto 32px; padding:0 16px;">
+    <!-- ════ KR: 매니저 전화번호 패널 ════ -->
+    <div id="psKrMgrCard" style="display:none;">
+        <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
+            <div style="text-align:center; margin-bottom:16px;">
+                <div style="font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2);">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
+                <div style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 직접 통화 후 견적 받으세요.</div>
+            </div>
+            <div id="psMgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px;">
+                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
+                    <span>본사</span>
+                    <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                </a>
+                <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 -->
+                <div id="psMgrPhoneSlot" style="display:contents;">
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ JP: LINE 컨택 카드 ════ -->
+    <div id="psJpCard" style="display:none;">
+        <div style="box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(6,199,85,0.18);">
+            <div style="display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px dashed rgba(6,199,85,0.25);">
+                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:80px; height:80px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; box-shadow:0 4px 14px rgba(6,199,85,0.3);">
+                <div style="text-align:left; min-width:0; flex:1;">
+                    <div style="font-size:14px; font-weight:300; color:#86efac; margin-bottom:6px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                    <div style="font-size:13px; color:#fff; font-weight:500; line-height:1.45; margin-bottom:4px;">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:300; text-decoration:none; font-size:12px; margin-left:4px;">@astro.0420</a></div>
+                    <a href="tel:09053970420" style="color:#86efac; font-weight:300; text-decoration:none; font-size:13px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
+                </div>
+            </div>
+            <div style="padding-top:14px; text-align:center;">
+                <div style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:10px; letter-spacing:0.2px;">サンプルや見積もりのご相談はこちら</div>
+                <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(6,199,85,0.55); letter-spacing:0.5px; font-family:inherit;">
+                    <i class="fa-solid fa-bolt" style="font-size:11px;"></i> サンプル・見積を依頼
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ EN/외국: Talk to Manager 카드 ════ -->
+    <div id="psEnCard" style="display:none;">
+        <div style="box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(124,58,237,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(124,58,237,0.3); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(124,58,237,0.18);">
+            <div style="text-align:center; padding-bottom:14px; border-bottom:1px dashed rgba(124,58,237,0.25);">
+                <a href="javascript:void(0)" onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:14px 34px; border-radius:999px; color:#fff; font-size:15px; font-weight:300; letter-spacing:0.5px; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.55); white-space:nowrap; font-family:inherit;">
+                    <i class="fa-solid fa-headset"></i> <span id="psEnTalkLabel">Talk to Manager</span>
+                </a>
+                <div style="font-size:11px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:10px;">English · 中文 · العربية · Español · Deutsch · Français</div>
+            </div>
+            <div style="padding-top:14px; text-align:center;">
+                <div id="psEnDesc" style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:12px; letter-spacing:0.2px;">Send your product photo &amp; we'll quote within 24h</div>
+                <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(76,29,149,0.55); letter-spacing:0.5px; font-family:inherit;">
+                    <i class="fa-solid fa-paper-plane" style="font-size:11px;"></i> <span id="psEnOrderBtn">Request Sample / Quote</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// 2026-05-28: paper_stand 매니저 컨택 패널 — 로케일별 카드 표시 + KR 매니저 전화번호 동적 로드.
+(function(){
+    var lang = window.__PS_LANG || 'ko';
+    var isKR = (lang === 'ko' || lang === 'kr');
+    var isJP = (lang === 'ja' || lang === 'jp');
+    var isForeign = !isKR && !isJP;
+
+    if (isKR) {
+        var krEl = document.getElementById('psKrMgrCard');
+        if (krEl) krEl.style.display = '';
+    } else if (isJP) {
+        var jpEl = document.getElementById('psJpCard');
+        if (jpEl) jpEl.style.display = '';
+    } else if (isForeign) {
+        var enEl = document.getElementById('psEnCard');
+        if (enEl) enEl.style.display = '';
+        // 다국어 라벨 (index.html 의 EN 카드와 동일)
+        var EN = {
+            en: { talk:'Talk to Manager', desc:"Send your product photo & we'll quote within 24h", btn:'Request Sample / Quote' },
+            zh: { talk:'联系经理', desc:'发送产品照片，24小时内报价', btn:'申请样品 / 报价' },
+            es: { talk:'Hablar con un gerente', desc:'Envíe la foto de su producto y le cotizaremos en 24h', btn:'Solicitar muestra / cotización' },
+            de: { talk:'Mit Manager sprechen', desc:'Senden Sie ein Produktfoto, Angebot binnen 24h', btn:'Muster / Angebot anfordern' },
+            fr: { talk:'Parler au responsable', desc:'Envoyez la photo du produit, devis sous 24h', btn:'Demander un échantillon / devis' },
+            ar: { talk:'تواصل مع المدير', desc:'أرسل صورة المنتج، سنرسل عرض الأسعار خلال 24 ساعة', btn:'طلب عينة / عرض' }
+        };
+        var t = EN[lang] || EN.en;
+        var $ = function(id){ return document.getElementById(id); };
+        if ($('psEnTalkLabel')) $('psEnTalkLabel').textContent = t.talk;
+        if ($('psEnDesc'))      $('psEnDesc').textContent      = t.desc;
+        if ($('psEnOrderBtn'))  $('psEnOrderBtn').textContent  = t.btn;
+    }
+
+    // KR: 매니저 전화번호 동적 로드 (chatbot_knowledge.category='_managers')
+    if (isKR) {
+        async function loadPsMgrPhones() {
+            var slot = document.getElementById('psMgrPhoneSlot');
+            if (!slot) return;
+            try {
+                var sb = window.supabase ? window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                ) : null;
+                if (!sb) { slot.remove(); return; }
+                var res = await sb.from('chatbot_knowledge')
+                    .select('question, answer, is_active, keywords')
+                    .eq('category', '_managers');
+                if (res.error || !res.data) { slot.remove(); return; }
+                var FIELD = ['은미','성희','지숙','연두'];
+                var rows = (res.data || []).filter(function(r){ return FIELD.some(function(n){ return (r.question||'').includes(n); }); });
+                rows.sort(function(a,b){
+                    var ai = FIELD.findIndex(function(n){ return (a.question||'').includes(n); });
+                    var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
+                    return ai - bi;
+                });
+                if (rows.length === 0) rows = (res.data || []).filter(function(r){ return r.is_active !== false; });
+                var html = rows.map(function(r){
+                    var phone = '';
+                    try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
+                    if (!phone && r.keywords) phone = String(r.keywords).replace(/[^0-9-]/g, '');
+                    var phoneFmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                    var tel = phone.replace(/-/g, '');
+                    var off = r.is_active === false;
+                    var nm = (r.question || '').replace(/[<>"'&]/g, '');
+                    if (off) {
+                        return '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:rgba(255,255,255,0.45); font-size:12px; font-weight:700; text-align:center; opacity:0.7;">' +
+                            '<div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🌴</span><span style="text-decoration:line-through;">' + nm + '</span></div>' +
+                            '<span style="font-size:11px;">휴가중</span>' +
+                            '</div>';
+                    }
+                    return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">' +
+                        '<span>' + nm + '</span>' +
+                        '<b style="color:#ffffff; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
+                        '</a>';
+                }).join('');
+                if (html) slot.innerHTML = html;
+                else slot.remove();
+            } catch (e) {
+                console.warn('[ps mgrPhones] load failed:', e);
+                var slot2 = document.getElementById('psMgrPhoneSlot');
+                if (slot2) slot2.remove();
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadPsMgrPhones);
+        } else {
+            loadPsMgrPhones();
+        }
+    }
+})();
+</script>
+
 <script>
 function openPdSampleRequest() {
     // 메인 사이트의 VIP 모달이 있으면 사용, 없으면 자체 모달
