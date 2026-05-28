@@ -4884,7 +4884,7 @@
     window._soDownloadQuotePreview = async function (btnEl) {
         var origLabel = btnEl ? btnEl.innerHTML : '';
         try {
-            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 생성중'; }
+            if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('생성중', '生成中', 'Generating'); }
             var cart = _soReadAllCart();
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
@@ -5100,7 +5100,7 @@
         var btn = document.getElementById('soCoSubmitBtn');
         btn.disabled = true;
         var origLabel = btn.innerHTML;
-        btn.innerHTML = '⏳ 처리 중...';
+        btn.innerHTML = '⏳ ' + tr('처리 중...', '処理中...', 'Processing...');
 
         try {
             var sb = getSb();
