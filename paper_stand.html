@@ -391,8 +391,15 @@ a { text-decoration: none; color: inherit; }
     </div>
 </header>
 
-<!-- 2026-05-28: 영상 배경 다크 hero — 허니콤보드 영상(/123123.mp4)을 백그라운드로 깔고 매니저 컨택 패널을 그 위에 배치.
-     기존 설명(badge + title + hero_p)은 이 섹션 아래로 이동. -->
+<!-- 히어로 (설명) — 2026-05-28: 상단으로 이동. -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 data-i18n-html="hero_h1"><em>5초 설치</em> 원터치 종이매대.<br><em>60kg 하중</em>을 견디는 견고함.</h1>
+        <div data-i18n-html="hero_p" class="hero-steps"></div>
+    </div>
+</section>
+
+<!-- 2026-05-28: 영상 배경 다크 hero — 매니저 컨택 패널. 허니콤보드 영상(/123123.mp4) 배경. -->
 <section class="psHero">
     <video class="psHero-bgvideo" autoplay muted loop playsinline preload="metadata" poster="">
         <source src="/123123.mp4" type="video/mp4">
@@ -459,14 +466,6 @@ a { text-decoration: none; color: inherit; }
     </div>
 </section>
 
-<!-- 히어로 (설명) — 영상 hero 아래로 이동. 2026-05-28: 무료샘플 뱃지 제거, 카피 변경. -->
-<section class="hero">
-    <div class="hero-content">
-        <h1 data-i18n-html="hero_h1"><em>5초 설치</em> 원터치 종이매대.<br><em>60kg 하중</em>을 견디는 견고함.</h1>
-        <div data-i18n-html="hero_p" class="hero-steps"></div>
-    </div>
-</section>
-
 <script>
 // 2026-05-28: paper_stand 매니저 컨택 패널 — 로케일별 카드 표시 + KR 매니저 전화번호 동적 로드.
 (function(){
@@ -478,14 +477,14 @@ a { text-decoration: none; color: inherit; }
 
     // psHero 상단 타이틀/서브 다국어 — em 으로 감싼 단어가 그라데이션 컬러로 강조됨
     var HEROT = {
-        ko: { t:'전문 <em>매니저</em>가 직접 안내합니다', s:'담당 매니저와 직접 통화 후 견적·샘플을 받아보세요.' },
-        ja: { t:'専門 <em>マネージャー</em>が直接ご案内します', s:'担当マネージャーと相談後、お見積り・サンプルをお受け取りください。' },
-        en: { t:'Our <em>Specialists</em> Guide You Personally', s:'Talk to your dedicated manager, then receive your quote &amp; sample.' },
-        zh: { t:'专业 <em>经理</em> 一对一为您服务', s:'与负责经理沟通后，获取报价与样品。' },
-        es: { t:'Nuestros <em>especialistas</em> le guían personalmente', s:'Hable con su gerente y reciba la cotización y muestra.' },
-        de: { t:'Unsere <em>Spezialisten</em> beraten Sie persönlich', s:'Sprechen Sie mit Ihrem Manager und erhalten Sie Angebot &amp; Muster.' },
-        fr: { t:'Nos <em>spécialistes</em> vous guident personnellement', s:'Parlez à votre responsable et recevez devis et échantillon.' },
-        ar: { t:'<em>المختصون</em> لدينا يرشدونك شخصياً', s:'تحدث مع مدير حسابك واستلم عرض السعر والعينة.' }
+        ko: { t:'전문 <em>매니저</em>가 직접 안내합니다', s:'전담 매니저가 친절하게 상담합니다.' },
+        ja: { t:'専門 <em>マネージャー</em>が直接ご案内します', s:'専任マネージャーが丁寧にご案内します。' },
+        en: { t:'Our <em>Specialists</em> Guide You Personally', s:'A dedicated specialist will guide you with care.' },
+        zh: { t:'专业 <em>经理</em> 一对一为您服务', s:'专属经理为您耐心服务。' },
+        es: { t:'Nuestros <em>especialistas</em> le guían personalmente', s:'Un especialista dedicado le atiende con amabilidad.' },
+        de: { t:'Unsere <em>Spezialisten</em> beraten Sie persönlich', s:'Ein dedizierter Spezialist berät Sie persönlich und zuvorkommend.' },
+        fr: { t:'Nos <em>spécialistes</em> vous guident personnellement', s:'Un spécialiste dédié vous conseille avec attention.' },
+        ar: { t:'<em>المختصون</em> لدينا يرشدونك شخصياً', s:'مختص مخصص يخدمك بكل لطف واهتمام.' }
     };
     var ht = HEROT[lang] || HEROT.ko;
     if (_$('psHeroTitle')) {
