@@ -94,16 +94,21 @@
         }
 
         // 광고 파라미터 우선
-        var hasGclid = params.has('gclid');
-        // 2026-05-26: Naver 광고 마커 확장 — 파워링크/브랜드검색/쇼핑광고 등 대부분의 paid 마커 포함.
-        //   기존 3개만 체크해서 대부분의 Naver 광고가 'Naver Search (자연검색)' 으로 잘못 잡혔던 문제 fix.
+        var hasGclid = params.has('gclid') || params.has('gbraid') || params.has('wbraid'); // Google Ads (iOS gbraid 포함)
+        // 2026-05-26: Naver 광고 마커 확장 — 파워링크/브랜드검색/쇼핑광고/GFA/디스플레이/스마트스토어 등 모든 paid 마커
+        //   2026-05-28: adcr, where=ad, n_link_event 등 추가 — 더 정확한 분류
         //   n_query 는 organic 에서도 쓰므로 제외.
         var hasNaverAd = params.has('na_click_id') || params.has('n_campaign_type') || params.has('nclid')
             || params.has('n_keyword') || params.has('n_ad_group') || params.has('n_ad') || params.has('n_ad_id')
-            || params.has('n_media') || params.has('n_match') || params.has('n_rank_loc') || params.has('n_campaign');
+            || params.has('n_media') || params.has('n_match') || params.has('n_rank_loc') || params.has('n_campaign')
+            || params.has('adcr') || params.has('n_link_event') || params.has('n_clicked') || params.has('n_ad_keyword')
+            || params.has('pcParam') || params.has('event_id') || params.has('NaPm') || params.has('na_id')
+            || (params.get('where') || '').toLowerCase() === 'ad'
+            || refHost.indexOf('searchad.naver') >= 0 || refHost.indexOf('ad.naver') >= 0
+            || refHost.indexOf('shopping.naver') >= 0 && params.has('adcr'); // 쇼핑검색 광고
         var utmMedium = (params.get('utm_medium') || '').toLowerCase();
         var utmSource = (params.get('utm_source') || '').toLowerCase();
-        var isCpc = utmMedium === 'cpc';
+        var isCpc = utmMedium === 'cpc' || utmMedium === 'ppc' || utmMedium === 'paidsearch' || utmMedium === 'paid';
 
         if (hasGclid || (utmSource === 'google' && isCpc)) {
             var c1 = params.get('utm_campaign') || '';
@@ -236,6 +241,31 @@
     }
 
     // ── 메인 ──
+    // 2026-05-28: First-touch attribution — 광고로 진입한 사용자가 재방문 시에도 광고 소스 유지 (30일)
+    //   기존엔 광고 클릭 → 페이지 진입(광고 집계) → 새로고침/재방문(직접 집계) 으로 데이터 분리 문제
+    var ATTR_KEY = 'cm_first_touch';
+    var ATTR_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30일
+
+    function persistFirstTouch(source) {
+        try {
+            // 광고로 진입한 경우만 저장 (자연검색/SNS/직접은 저장 안 함 — 매번 정확히 분류)
+            if (source && source.indexOf('Ads (광고)') >= 0) {
+                localStorage.setItem(ATTR_KEY, JSON.stringify({ source: source, ts: Date.now() }));
+            }
+        } catch (_) {}
+    }
+
+    function getFirstTouch() {
+        try {
+            var raw = localStorage.getItem(ATTR_KEY);
+            if (!raw) return null;
+            var d = JSON.parse(raw);
+            if (!d || !d.source || !d.ts) return null;
+            if (Date.now() - d.ts > ATTR_TTL_MS) { localStorage.removeItem(ATTR_KEY); return null; }
+            return d.source;
+        } catch (_) { return null; }
+    }
+
     function track() {
         // 동일 페이지 로드에서 중복 호출 방지
         if (window.__tracker_fired) return;
@@ -246,6 +276,16 @@
             // 내부 이동은 페이지뷰 기록 X
             return;
         }
+
+        // 2026-05-28: 광고로 진입 시 first-touch 저장 / 직접·자연검색이면 저장된 광고 소스 복원
+        if (source.indexOf('Ads (광고)') >= 0) {
+            persistFirstTouch(source);
+        } else if (source === '직접/즐겨찾기' || source.indexOf('Search (자연검색)') >= 0) {
+            // 30일 이내 광고 클릭 이력이 있으면 그 소스로 attribution (세션복원 마크 추가)
+            var prev = getFirstTouch();
+            if (prev) source = prev + '|세션복원';
+        }
+
         var siteDomain = detectSiteDomain();
 
         detectCountry(function (country) {
