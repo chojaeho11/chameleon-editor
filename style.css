@@ -6936,10 +6936,17 @@ html[data-site="JP"] .cs-center .cs-contact-jp { display: inline; }
    사용자 요청: "해외는 상담사가 별도로 없으므로 이부분은 빼고 타이틀을 키워줘"
    2026-05-15: 해외는 매니저 견적 대신 #overseasBranchHero (글로벌 지사 안내) 표시
    ───────────────────────────────────────────────────────────────────── */
-html[data-site="JP"] #mgrQuoteHero,
+/* 2026-05-28: JP 도 한국 사이트와 동일한 매니저 견적 카드 표시 — 円 입력 → KRW 환산 → Stripe 결제 */
 html[data-site="US"] #mgrQuoteHero {
     display: none !important;
 }
+/* JP: 한국 매니저 4명(은미/성희/지숙/연두) + 본사 한국 카드 숨김 (대신 ナナミ 카드 1개만) */
+html[data-site="JP"] #mgrPhoneList > a.mgr-kr-only,
+html[data-site="JP"] #mgrPhoneSlot { display: none !important; }
+html[data-site="JP"] #mgrPhoneJp { display: flex !important; }
+/* KR/기타: ナナミ 카드 숨김 */
+#mgrPhoneJp { display: none; }
+html[data-site="JP"] #mgrPhoneList { grid-template-columns: minmax(260px, 380px) !important; justify-content: center !important; }
 /* KR 에서는 해외 지사 카드 숨김 */
 #overseasBranchHero { display: none; }
 html[data-site="JP"] #overseasBranchHero,

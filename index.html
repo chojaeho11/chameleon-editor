@@ -553,7 +553,7 @@ window.loadEditorLibraries = function() {
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=448">
+<link rel="stylesheet" href="./style.css?v=449">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -1019,9 +1019,17 @@ if ('caches' in window) {
                 <div id="mgrQuoteDesc" style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.</div>
             </div>
             <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
-                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
+                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
                     <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                </a>
+                <!-- 2026-05-28: JP 전용 ナナミ 직통 카드 — 일본 도메인(cafe0101.com)에서만 표시 -->
+                <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
+                    <span style="font-size:22px;">🇯🇵</span>
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
+                        <span style="font-size:11px; opacity:0.85; letter-spacing:0.5px;">東京・大阪 直通担当</span>
+                        <b style="color:#fff; font-size:16px; white-space:nowrap; letter-spacing:0.3px;">ナナミ · 090-5397-0420</b>
+                    </div>
                 </a>
                 <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
                 <div id="mgrPhoneSlot" style="display:contents;">
@@ -1177,8 +1185,8 @@ if ('caches' in window) {
         }
         var L = _mqLang();
         var T = {
-            kr: { title:'전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다', desc:'담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.', ph:'', unit:'원', btn:'⚡ 주문하기', hint:'최소 1,000원부터 • 입력 즉시 결제창이 열립니다' },
-            ja: { title:'専門マネージャーがスムーズなご注文をご案内します', desc:'担当マネージャーと相談後、見積金額を入力してすぐにご決済ください。', ph:'', unit:'円', btn:'⚡ 注文する', hint:'最低100円から • 入力後すぐに決済画面が開きます' },
+            kr: { title:'전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다', desc:'담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.', ph:'예: 50,000', unit:'원', btn:'⚡ 주문하기', hint:'최소 1,000원부터 • 입력 즉시 결제창이 열립니다' },
+            ja: { title:'担当マネージャーがスムーズなご注文をご案内します', desc:'ナナミ担当と相談後、お見積り金額を入力してすぐにご決済(クレジットカード)できます。', ph:'例: 5,000', unit:'円', btn:'⚡ 注文する', hint:'最低100円から • 入力後すぐに決済画面が開きます' },
             en: { title:'Our specialists guide you to order with ease', desc:'After consulting your manager, enter the quote amount and pay right away.', ph:'', unit:'$', btn:'⚡ Order', hint:'Minimum $1 • Checkout opens immediately' },
             es: { title:'Nuestros especialistas le guían para pedir con facilidad', desc:'Tras consultar con su gerente, ingrese el monto y pague de inmediato.', ph:'', unit:'€', btn:'⚡ Pedir', hint:'Mínimo €1 • Pago inmediato' },
             de: { title:'Unsere Spezialisten begleiten Ihre Bestellung', desc:'Nach Rücksprache mit Ihrem Manager den Betrag eingeben und sofort bezahlen.', ph:'', unit:'€', btn:'⚡ Bestellen', hint:'Mindestens €1 • Sofortige Bezahlung' },
