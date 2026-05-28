@@ -6964,10 +6964,8 @@ html[data-site="JP"] #mgrQuoteHero > div {
 html[data-site="JP"] #overseasBranchHero {
     margin-top: 8px !important;
 }
-/* KR 에서는 해외 지사 카드 숨김 */
-#overseasBranchHero { display: none; }
-html[data-site="JP"] #overseasBranchHero,
-html[data-site="US"] #overseasBranchHero { display: block; }
+/* 2026-05-28: 인플루언서 모집 카드 — 모든 로케일에서 표시 (KR/JP/US/CN/etc) */
+#overseasBranchHero { display: block; }
 /* 2026-05-15: 해외도 KR 과 동일한 hero 크기/레이아웃 — 별도 enlargement 제거.
    (이전: 매니저 카드 숨김에 맞춰 hero 를 키웠으나, 이제 해외 지사 카드를 표시하므로 원복) */
 
