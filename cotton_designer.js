@@ -2439,10 +2439,18 @@ async function autoLoadPatternFromUrl() {
                 state.designerName = data.author || null;
                 state.designerOriginalUrl = data.original_url || null;
                 const ratio = img.width / img.height;
-                state.imgWcm = 10;
-                state.imgHcm = Math.round(10 / ratio * 10) / 10;
+                // 2026-05-28: 기본 패턴 크기를 캔버스 가로폭(orderWcm)에 맞춤
+                // + aspect 비율 저장 → 사용자가 출력 사이즈 변경하면 _cdCalcHoebae 가 이미지도 비례 조정
+                state.imgAspect = ratio;
+                state.layout = 'centered'; // 이미지가 캔버스를 꽉 채우는 모드 — 출력 사이즈와 동기화
+                state.imgWcm = state.orderWcm || 130;            // 캔버스 가로폭 (기본 130cm = 1300mm)
+                state.imgHcm = Math.round(state.imgWcm / ratio * 10) / 10;
+                // 출력 세로도 이미지 비율에 맞춰 조정 (가로 폭은 그대로)
+                state.orderHcm = state.imgHcm;
                 document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
                 document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
+                const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
+                const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
                 document.getElementById('uploadZone').style.display = 'none';
                 document.getElementById('previewArea').classList.add('active');
                 document.getElementById('btnReset').style.display = '';
