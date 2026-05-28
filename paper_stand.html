@@ -136,6 +136,88 @@ a { text-decoration: none; color: inherit; }
 }
 .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
 
+/* ── 2026-05-28: 영상 배경 hero (매니저 패널 상단 배치) ── */
+.psHero {
+    position: relative; overflow: hidden;
+    background: #050507;
+    padding: 64px 24px 56px;
+    color: #fff;
+    isolation: isolate;
+}
+.psHero-bgvideo {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    opacity: 0.42;
+    filter: saturate(1.2) contrast(1.05);
+    animation: psHeroZoom 32s ease-in-out infinite alternate;
+}
+@keyframes psHeroZoom {
+    0%   { transform: scale(1.0)  translate(0, 0); }
+    100% { transform: scale(1.12) translate(-1.5%, -2%); }
+}
+.psHero-overlay {
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(120% 80% at 50% -10%, rgba(139,92,246,0.32) 0%, rgba(99,102,241,0.18) 30%, transparent 60%),
+        radial-gradient(80% 60% at 80% 110%, rgba(244,114,182,0.18) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(5,5,7,0.55) 0%, rgba(5,5,7,0.7) 55%, rgba(5,5,7,0.92) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+.psHero-inner {
+    position: relative; z-index: 2;
+    max-width: 1100px; margin: 0 auto;
+    animation: psHeroRise 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes psHeroRise {
+    0%   { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.psHero-title {
+    text-align: center;
+    color: #fff;
+    font-size: 38px; font-weight: 900; letter-spacing: -0.8px; line-height: 1.2;
+    margin: 0 0 10px;
+    text-shadow: 0 4px 28px rgba(0,0,0,0.55);
+}
+.psHero-title em {
+    font-style: normal;
+    background: linear-gradient(135deg, #a78bfa 0%, #f0abfc 45%, #fbbf24 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: psHeroShine 5.5s ease-in-out infinite;
+}
+@keyframes psHeroShine {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+.psHero-sub {
+    text-align: center;
+    color: rgba(255,255,255,0.78);
+    font-size: 14px; font-weight: 400; letter-spacing: 0.2px;
+    margin: 0 0 28px;
+}
+.psHero-pulse {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: #34d399;
+    margin-right: 6px; vertical-align: middle;
+    box-shadow: 0 0 0 0 rgba(52,211,153,0.6);
+    animation: psHeroPulse 1.8s ease-in-out infinite;
+}
+@keyframes psHeroPulse {
+    0%   { box-shadow: 0 0 0 0   rgba(52,211,153,0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(52,211,153,0);    }
+    100% { box-shadow: 0 0 0 0    rgba(52,211,153,0);    }
+}
+@media (max-width: 768px) {
+    .psHero { padding: 44px 16px 40px; }
+    .psHero-title { font-size: 26px; letter-spacing: -0.4px; }
+    .psHero-sub { font-size: 12.5px; margin-bottom: 22px; }
+}
+
 /* ── 특장점 ── */
 .features {
     max-width: 1200px; margin: -40px auto 0; padding: 0 24px;
@@ -309,78 +391,80 @@ a { text-decoration: none; color: inherit; }
     </div>
 </header>
 
-<!-- 히어로 -->
+<!-- 2026-05-28: 영상 배경 다크 hero — 허니콤보드 영상(/123123.mp4)을 백그라운드로 깔고 매니저 컨택 패널을 그 위에 배치.
+     기존 설명(badge + title + hero_p)은 이 섹션 아래로 이동. -->
+<section class="psHero">
+    <video class="psHero-bgvideo" autoplay muted loop playsinline preload="metadata" poster="">
+        <source src="/123123.mp4" type="video/mp4">
+    </video>
+    <div class="psHero-overlay"></div>
+    <div class="psHero-inner">
+        <h2 class="psHero-title" id="psHeroTitle">
+            <span class="psHero-pulse"></span>전문 <em>매니저</em>가 직접 안내합니다
+        </h2>
+        <div class="psHero-sub" id="psHeroSub">담당 매니저와 직접 통화 후 견적·샘플을 받아보세요.</div>
+
+        <!-- ════ KR: 매니저 전화번호 패널 (영상 위) ════ -->
+        <div id="psKrMgrCard" style="display:none;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px;" id="psMgrPhoneList">
+                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:14px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:12px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 18px rgba(0,0,0,0.35); backdrop-filter:blur(6px); transition:transform 0.2s, background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.transform='translateY(0)';">
+                    <span>본사</span>
+                    <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                </a>
+                <div id="psMgrPhoneSlot" style="display:contents;">
+                    <div style="padding:14px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:14px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:14px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                    <div style="padding:14px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ JP: LINE 컨택 카드 (영상 위) ════ -->
+        <div id="psJpCard" style="display:none; max-width:560px; margin:0 auto;">
+            <div style="box-sizing:border-box; background:rgba(6,199,85,0.08); border:1px solid rgba(6,199,85,0.35); border-radius:16px; padding:22px 26px; backdrop-filter:blur(8px); box-shadow:0 22px 55px -14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(6,199,85,0.2);">
+                <div style="display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px dashed rgba(6,199,85,0.3);">
+                    <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:80px; height:80px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; box-shadow:0 4px 14px rgba(6,199,85,0.35);">
+                    <div style="text-align:left; min-width:0; flex:1;">
+                        <div style="font-size:14px; font-weight:300; color:#86efac; margin-bottom:6px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                        <div style="font-size:13px; color:#fff; font-weight:500; line-height:1.45; margin-bottom:4px;">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:300; text-decoration:none; font-size:12px; margin-left:4px;">@astro.0420</a></div>
+                        <a href="tel:09053970420" style="color:#86efac; font-weight:300; text-decoration:none; font-size:13px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
+                    </div>
+                </div>
+                <div style="padding-top:14px; text-align:center;">
+                    <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(6,199,85,0.55); letter-spacing:0.5px; font-family:inherit;">
+                        <i class="fa-solid fa-bolt" style="font-size:11px;"></i> サンプル・見積を依頼
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ EN/외국: Talk to Manager 카드 (영상 위) ════ -->
+        <div id="psEnCard" style="display:none; max-width:560px; margin:0 auto;">
+            <div style="box-sizing:border-box; background:rgba(124,58,237,0.1); border:1px solid rgba(124,58,237,0.35); border-radius:16px; padding:22px 26px; backdrop-filter:blur(8px); box-shadow:0 22px 55px -14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(124,58,237,0.2);">
+                <div style="text-align:center; padding-bottom:14px; border-bottom:1px dashed rgba(124,58,237,0.3);">
+                    <a href="javascript:void(0)" onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:14px 34px; border-radius:999px; color:#fff; font-size:15px; font-weight:300; letter-spacing:0.5px; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.55); white-space:nowrap; font-family:inherit;">
+                        <i class="fa-solid fa-headset"></i> <span id="psEnTalkLabel">Talk to Manager</span>
+                    </a>
+                    <div style="font-size:11px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:10px;">English · 中文 · العربية · Español · Deutsch · Français</div>
+                </div>
+                <div style="padding-top:14px; text-align:center;">
+                    <div id="psEnDesc" style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:12px; letter-spacing:0.2px;">Send your product photo &amp; we'll quote within 24h</div>
+                    <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(76,29,149,0.55); letter-spacing:0.5px; font-family:inherit;">
+                        <i class="fa-solid fa-paper-plane" style="font-size:11px;"></i> <span id="psEnOrderBtn">Request Sample / Quote</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 히어로 (설명) — 영상 hero 아래로 이동 -->
 <section class="hero">
     <div class="hero-content">
         <button class="hero-badge" style="cursor:pointer; border:2px solid #6366f1; background:rgba(255,255,255,0.9); font-family:inherit; transition:all 0.2s;" onclick="openPdSampleRequest()" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='rgba(255,255,255,0.9)'" data-i18n-html="hero_badge"><i class="fa-solid fa-gift" style="color:#6366f1;"></i> 무료 샘플 요청하기</button>
         <h1 data-i18n-html="hero_h1">디자인 <em>샘플제작</em> 무료.<br>타사대비 <em>반값</em>제작.</h1>
         <div data-i18n-html="hero_p" class="hero-steps"></div>
-    </div>
-</section>
-
-<!-- 2026-05-28: 로케일별 매니저 컨택 패널 — index.html 의 mgrQuoteHero / jpLineContact / enHibaContact 와 동일 구성.
-     KR=매니저 전화번호 / JP=LINE QR+ナナミ / EN/외국=Talk to Manager.
-     주문/결제 버튼은 paper_stand 에는 결제 흐름이 없어 pdSampleModal (무료 샘플 요청) 을 열어 fallback 처리. -->
-<section id="psMgrPanel" style="max-width:1100px; margin:0 auto 32px; padding:0 16px;">
-    <!-- ════ KR: 매니저 전화번호 패널 ════ -->
-    <div id="psKrMgrCard" style="display:none;">
-        <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
-            <div style="text-align:center; margin-bottom:16px;">
-                <div style="font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2);">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
-                <div style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 직접 통화 후 견적 받으세요.</div>
-            </div>
-            <div id="psMgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px;">
-                <a href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
-                    <span>본사</span>
-                    <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
-                </a>
-                <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 -->
-                <div id="psMgrPhoneSlot" style="display:contents;">
-                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
-                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
-                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
-                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:rgba(255,255,255,0.6);">⌛ 로딩중...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ════ JP: LINE 컨택 카드 ════ -->
-    <div id="psJpCard" style="display:none;">
-        <div style="box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(6,199,85,0.18);">
-            <div style="display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px dashed rgba(6,199,85,0.25);">
-                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:80px; height:80px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; box-shadow:0 4px 14px rgba(6,199,85,0.3);">
-                <div style="text-align:left; min-width:0; flex:1;">
-                    <div style="font-size:14px; font-weight:300; color:#86efac; margin-bottom:6px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                    <div style="font-size:13px; color:#fff; font-weight:500; line-height:1.45; margin-bottom:4px;">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:300; text-decoration:none; font-size:12px; margin-left:4px;">@astro.0420</a></div>
-                    <a href="tel:09053970420" style="color:#86efac; font-weight:300; text-decoration:none; font-size:13px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
-                </div>
-            </div>
-            <div style="padding-top:14px; text-align:center;">
-                <div style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:10px; letter-spacing:0.2px;">サンプルや見積もりのご相談はこちら</div>
-                <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(6,199,85,0.55); letter-spacing:0.5px; font-family:inherit;">
-                    <i class="fa-solid fa-bolt" style="font-size:11px;"></i> サンプル・見積を依頼
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ════ EN/외국: Talk to Manager 카드 ════ -->
-    <div id="psEnCard" style="display:none;">
-        <div style="box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(124,58,237,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(124,58,237,0.3); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(124,58,237,0.18);">
-            <div style="text-align:center; padding-bottom:14px; border-bottom:1px dashed rgba(124,58,237,0.25);">
-                <a href="javascript:void(0)" onclick="openPdSampleRequest()" style="display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:14px 34px; border-radius:999px; color:#fff; font-size:15px; font-weight:300; letter-spacing:0.5px; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.55); white-space:nowrap; font-family:inherit;">
-                    <i class="fa-solid fa-headset"></i> <span id="psEnTalkLabel">Talk to Manager</span>
-                </a>
-                <div style="font-size:11px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:10px;">English · 中文 · العربية · Español · Deutsch · Français</div>
-            </div>
-            <div style="padding-top:14px; text-align:center;">
-                <div id="psEnDesc" style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:12px; letter-spacing:0.2px;">Send your product photo &amp; we'll quote within 24h</div>
-                <button type="button" onclick="openPdSampleRequest()" style="padding:11px 26px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; box-shadow:0 6px 18px -4px rgba(76,29,149,0.55); letter-spacing:0.5px; font-family:inherit;">
-                    <i class="fa-solid fa-paper-plane" style="font-size:11px;"></i> <span id="psEnOrderBtn">Request Sample / Quote</span>
-                </button>
-            </div>
-        </div>
     </div>
 </section>
 
@@ -391,15 +475,34 @@ a { text-decoration: none; color: inherit; }
     var isKR = (lang === 'ko' || lang === 'kr');
     var isJP = (lang === 'ja' || lang === 'jp');
     var isForeign = !isKR && !isJP;
+    var _$ = function(id){ return document.getElementById(id); };
+
+    // psHero 상단 타이틀/서브 다국어 — em 으로 감싼 단어가 그라데이션 컬러로 강조됨
+    var HEROT = {
+        ko: { t:'전문 <em>매니저</em>가 직접 안내합니다', s:'담당 매니저와 직접 통화 후 견적·샘플을 받아보세요.' },
+        ja: { t:'専門 <em>マネージャー</em>が直接ご案内します', s:'担当マネージャーと相談後、お見積り・サンプルをお受け取りください。' },
+        en: { t:'Our <em>Specialists</em> Guide You Personally', s:'Talk to your dedicated manager, then receive your quote &amp; sample.' },
+        zh: { t:'专业 <em>经理</em> 一对一为您服务', s:'与负责经理沟通后，获取报价与样品。' },
+        es: { t:'Nuestros <em>especialistas</em> le guían personalmente', s:'Hable con su gerente y reciba la cotización y muestra.' },
+        de: { t:'Unsere <em>Spezialisten</em> beraten Sie persönlich', s:'Sprechen Sie mit Ihrem Manager und erhalten Sie Angebot &amp; Muster.' },
+        fr: { t:'Nos <em>spécialistes</em> vous guident personnellement', s:'Parlez à votre responsable et recevez devis et échantillon.' },
+        ar: { t:'<em>المختصون</em> لدينا يرشدونك شخصياً', s:'تحدث مع مدير حسابك واستلم عرض السعر والعينة.' }
+    };
+    var ht = HEROT[lang] || HEROT.ko;
+    if (_$('psHeroTitle')) {
+        // psHero-pulse 점 유지 + 다국어 타이틀
+        _$('psHeroTitle').innerHTML = '<span class="psHero-pulse"></span>' + ht.t;
+    }
+    if (_$('psHeroSub')) _$('psHeroSub').innerHTML = ht.s;
 
     if (isKR) {
-        var krEl = document.getElementById('psKrMgrCard');
+        var krEl = _$('psKrMgrCard');
         if (krEl) krEl.style.display = '';
     } else if (isJP) {
-        var jpEl = document.getElementById('psJpCard');
+        var jpEl = _$('psJpCard');
         if (jpEl) jpEl.style.display = '';
     } else if (isForeign) {
-        var enEl = document.getElementById('psEnCard');
+        var enEl = _$('psEnCard');
         if (enEl) enEl.style.display = '';
         // 다국어 라벨 (index.html 의 EN 카드와 동일)
         var EN = {
@@ -411,10 +514,9 @@ a { text-decoration: none; color: inherit; }
             ar: { talk:'تواصل مع المدير', desc:'أرسل صورة المنتج، سنرسل عرض الأسعار خلال 24 ساعة', btn:'طلب عينة / عرض' }
         };
         var t = EN[lang] || EN.en;
-        var $ = function(id){ return document.getElementById(id); };
-        if ($('psEnTalkLabel')) $('psEnTalkLabel').textContent = t.talk;
-        if ($('psEnDesc'))      $('psEnDesc').textContent      = t.desc;
-        if ($('psEnOrderBtn'))  $('psEnOrderBtn').textContent  = t.btn;
+        if (_$('psEnTalkLabel')) _$('psEnTalkLabel').textContent = t.talk;
+        if (_$('psEnDesc'))      _$('psEnDesc').textContent      = t.desc;
+        if (_$('psEnOrderBtn'))  _$('psEnOrderBtn').textContent  = t.btn;
     }
 
     // KR: 매니저 전화번호 동적 로드 (chatbot_knowledge.category='_managers')
