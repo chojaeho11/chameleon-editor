@@ -1003,7 +1003,35 @@ if ('caches' in window) {
                 </div>
             </div>
         </div>
-        <!-- 인플루언서 모집 카드 — 모든 로케일에 표시 (KR/JP/US/etc). 다크 톤 + 얇은 폰트로 세련되게 -->
+        <!-- 2026-05-28: 영어/외국 사이트 전용 — Hiba 직통 + 금액 입력 + 문의하기 카드 (한국/일본 제외) -->
+        <div id="enHibaContact" style="display:none; flex:1 1 320px; min-width:0;">
+            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(96,165,250,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(96,165,250,0.3); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(96,165,250,0.18); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+                <div style="text-align:center; padding-bottom:12px; border-bottom:1px dashed rgba(96,165,250,0.25);">
+                    <div style="font-size:11px; font-weight:300; color:#93c5fd; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">📱 Global Direct</div>
+                    <div style="font-size:15px; color:#fff; font-weight:500; margin-bottom:3px;">Hiba</div>
+                    <a href="tel:+821034913535" style="color:#93c5fd; font-weight:300; text-decoration:none; font-size:13px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> +82 10 3491 3535</a>
+                    <div style="font-size:10px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:4px;">English · 中文 · العربية · Español · Deutsch · Français</div>
+                </div>
+                <div style="padding-top:14px; text-align:center;">
+                    <div id="enContactDesc" style="font-size:11.5px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:10px; letter-spacing:0.2px;">Enter your quote amount &amp; pay instantly</div>
+                    <div style="display:flex; align-items:center; gap:6px; background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.35); border-radius:10px; padding:4px 4px 4px 14px; margin-bottom:8px;">
+                        <input id="enInlineAmount" type="text" inputmode="numeric" autocomplete="off"
+                               placeholder="50"
+                               oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._enInlineOrder&&window._enInlineOrder();}"
+                               style="border:none; outline:none; font-size:14px; font-weight:300; color:#fff; flex:1; min-width:0; text-align:right; padding:7px 0; background:transparent; font-family:inherit;">
+                        <span id="enInlineUnit" style="font-size:12px; color:#93c5fd; font-weight:400; padding-right:6px;">$</span>
+                        <button id="enInlineBtn" type="button" onclick="window._enInlineOrder && window._enInlineOrder()" style="padding:10px 16px; background:linear-gradient(135deg,#60a5fa,#1d4ed8); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; font-family:inherit; box-shadow:0 4px 12px rgba(29,78,216,0.35); display:inline-flex; align-items:center; gap:4px;">
+                            <i class="fa-solid fa-bolt" style="font-size:10px;"></i> <span id="enInlineBtnLabel">Order</span>
+                        </button>
+                    </div>
+                    <a href="mailto:design@chameleon.design" id="enContactInquiry" style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:50px; color:#fff; font-size:11.5px; font-weight:300; text-decoration:none;">
+                        <i class="fa-solid fa-envelope" style="font-size:10px;"></i> <span id="enContactInquiryLabel">Email inquiry</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- 인플루언서 모집 카드 — KR 에선 숨김. JP/US/외국에서만 표시 -->
         <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
             <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
                 <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
@@ -1012,12 +1040,21 @@ if ('caches' in window) {
                         <i class="fa-solid fa-film" style="color:#fff; font-size:14px;"></i>
                     </div>
                     <div style="flex:1; min-width:0;">
-                        <div id="influencerCardTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:1px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
-                        <div id="influencerCardDesc" style="font-size:11px; color:rgba(255,255,255,0.65); line-height:1.4; font-weight:300;">SNS로 카멜레온프린팅을 홍보하세요</div>
+                        <div id="influencerCardTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:3px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
+                        <div style="font-size:10px; color:rgba(255,255,255,0.85); line-height:1.4; font-weight:300;">
+                            <i class="fa-brands fa-instagram" style="color:#e1306c;"></i>
+                            <i class="fa-brands fa-youtube" style="color:#ff0000; margin-left:3px;"></i>
+                            <i class="fa-brands fa-tiktok" style="color:#fff; margin-left:3px;"></i>
+                            <i class="fa-brands fa-threads" style="color:#fff; margin-left:3px;"></i>
+                            <span id="influencerCardPlatformsTxt" style="margin-left:4px;">어디든 OK</span>
+                        </div>
                     </div>
                 </div>
+                <div id="influencerCardDesc" style="font-size:10.5px; color:rgba(255,255,255,0.7); line-height:1.5; font-weight:300; margin:6px 0 8px;">
+                    카멜레온을 홍보하고 조회수 10만 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>
+                </div>
                 <div id="influencerCardReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin:6px 0 10px; font-size:11.5px; font-weight:300; color:#fbcfe8; text-align:center; letter-spacing:0.2px;">
-                    조회수 10,000회 = 100,000원 지급
+                    조회수 10만 달성 시 100,000원
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; position:relative;">
                     <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:9px 20px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
@@ -1028,13 +1065,68 @@ if ('caches' in window) {
         </div>
     </div>
     <script>
+    // 2026-05-28: 로케일별 카드 표시 분기
+    // KR: 인플루언서 카드 숨김 (mgrQuoteHero 만 사용)
+    // JP: jpLineContact 표시 + 인플루언서 카드 표시
+    // EN/CN/ES/DE/FR/AR: enHibaContact 표시 + 인플루언서 카드 표시
     (function(){
         var u = new URLSearchParams(location.search);
-        var lang = u.get('lang') || (location.hostname.indexOf('cafe0101') >= 0 ? 'ja' : (window.__SITE_CODE === 'JP' ? 'ja' : ''));
-        if (lang === 'ja' || lang === 'jp') {
-            var el = document.getElementById('jpLineContact');
-            if (el) el.style.display = '';
+        var host = location.hostname || '';
+        var lang = u.get('lang') ||
+            (host.indexOf('cafe0101') >= 0 ? 'ja' :
+             (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
+             (window.CURRENT_LANG || window.__SITE_CODE === 'JP' ? 'ja' : 'kr'));
+        var isKR = (lang === 'kr' || lang === 'ko');
+        var isJP = (lang === 'ja' || lang === 'jp');
+        var isForeign = !isKR && !isJP;
+
+        if (isJP) {
+            var jpEl = document.getElementById('jpLineContact');
+            if (jpEl) jpEl.style.display = '';
         }
+        if (isForeign) {
+            var enEl = document.getElementById('enHibaContact');
+            if (enEl) enEl.style.display = '';
+        }
+        // KR 은 인플루언서 카드 숨김
+        if (isKR) {
+            var infEl = document.getElementById('overseasBranchHero');
+            if (infEl) infEl.style.display = 'none';
+            // KR 에선 jpHeroRow 자체가 빈 줄이 될 수 있으므로 row 도 숨김
+            var rowEl = document.getElementById('jpHeroRow');
+            if (rowEl) rowEl.style.display = 'none';
+        }
+    })();
+    // EN/외국 사이트 인라인 주문 — _mgrQuoteOrder 위임
+    window._enInlineOrder = function(){
+        var inp = document.getElementById('enInlineAmount');
+        var hidden = document.getElementById('mgrQuoteAmount');
+        if (inp && hidden) hidden.value = inp.value;
+        if (typeof window._mgrQuoteOrder === 'function') window._mgrQuoteOrder();
+    };
+    // EN/외국 사이트 라벨 다국어
+    (function(){
+        var u = new URLSearchParams(location.search);
+        var host = location.hostname || '';
+        var lang = u.get('lang') ||
+            (host.indexOf('cafe0101') >= 0 ? 'ja' :
+             (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
+             (window.CURRENT_LANG || 'kr'));
+        var EN = {
+            en: { desc:'Enter your quote amount & pay instantly', unit:'$', btn:'Order', inquiry:'Email inquiry', ph:'50' },
+            zh: { desc:'输入与经理协商的金额立即付款', unit:'¥', btn:'下单', inquiry:'邮件咨询', ph:'250' },
+            es: { desc:'Ingrese el monto y pague de inmediato', unit:'€', btn:'Pedir', inquiry:'Consulta por email', ph:'50' },
+            de: { desc:'Betrag eingeben und sofort bezahlen', unit:'€', btn:'Bestellen', inquiry:'E-Mail Anfrage', ph:'50' },
+            fr: { desc:'Entrez le montant et payez immédiatement', unit:'€', btn:'Commander', inquiry:'Email', ph:'50' },
+            ar: { desc:'أدخل المبلغ وادفع فوراً', unit:'$', btn:'طلب', inquiry:'بريد إلكتروني', ph:'50' }
+        };
+        var t = EN[lang] || EN.en;
+        function $(id){ return document.getElementById(id); }
+        if ($('enContactDesc')) $('enContactDesc').textContent = t.desc;
+        if ($('enInlineUnit'))  $('enInlineUnit').textContent  = t.unit;
+        if ($('enInlineBtnLabel')) $('enInlineBtnLabel').textContent = t.btn;
+        if ($('enContactInquiryLabel')) $('enContactInquiryLabel').textContent = t.inquiry;
+        if ($('enInlineAmount')) $('enInlineAmount').setAttribute('placeholder', t.ph);
     })();
     </script>
 
@@ -1180,17 +1272,17 @@ if ('caches' in window) {
              (window.CURRENT_LANG || 'kr'));
         // 인플루언서 모집 다국어
         var INF = {
-            kr: { title:'홍보 인플루언서 모집', desc:'SNS로 카멜레온프린팅을 홍보하세요', reward:'조회수 10,000회 = 100,000원 지급', btn:'📝 응모하기',
+            kr: { title:'홍보 인플루언서 모집', platforms:'어디든 OK', desc:'카멜레온을 홍보하고 조회수 <b style="color:#fbcfe8;">10만</b> 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>', reward:'조회수 10만 달성 시 100,000원', btn:'📝 응모하기',
                   modalTitle:'인플루언서 응모', modalSub:'어떤 방식이든 카멜레온프린팅을 홍보해 주세요. 조회수 10,000회당 100,000원을 지급합니다.',
                   fName:'이름', fSns:'SNS 주소 (Instagram/YouTube/TikTok 등 URL)', fBank:'계좌번호 (지급용)', fEmail:'이메일 (선택)', fNote:'홍보 계획 (선택)',
                   submit:'응모 제출', success:'응모가 접수되었습니다. 검토 후 연락드리겠습니다.', failPrefix:'제출 실패:',
                   alertReq:'이름·SNS 주소·계좌번호는 필수입니다.' },
-            ja: { title:'インフルエンサー募集', desc:'SNSでカメレオンプリンティングをPR', reward:'再生10,000回ごとに10,000円お支払い', btn:'📝 応募する',
+            ja: { title:'インフルエンサー募集', platforms:'どこでもOK', desc:'カメレオンをPRし、再生数 <b style="color:#fbcfe8;">10万</b> 達成でPR料お支払い。<br>PR後にURLを送信 → <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', reward:'再生10万達成時 10,000円', btn:'📝 応募する',
                   modalTitle:'インフルエンサー応募', modalSub:'どんな方法でもカメレオンプリンティングをPRしてください。再生10,000回ごとに10,000円をお支払いします。',
                   fName:'お名前', fSns:'SNSアドレス (Instagram/YouTube/TikTok等のURL)', fBank:'振込口座番号', fEmail:'メールアドレス (任意)', fNote:'PR計画 (任意)',
                   submit:'応募する', success:'応募を受け付けました。確認後ご連絡いたします。', failPrefix:'送信失敗:',
                   alertReq:'お名前・SNSアドレス・口座番号は必須です。' },
-            en: { title:'Influencer Wanted', desc:'Promote Chameleon Printing on social media', reward:'10,000 views = $100 paid', btn:'📝 Apply Now',
+            en: { title:'Influencer Wanted', platforms:'Any platform', desc:'Promote Chameleon — reach <b style="color:#fbcfe8;">100K views</b> for payout.<br>Just submit your URL → <b style="color:#fbcfe8; font-weight:500;">Instant payout</b>', reward:'100,000 views = $100', btn:'📝 Apply Now',
                   modalTitle:'Influencer Application', modalSub:'Promote Chameleon Printing in any way you like. Get $100 for every 10,000 views.',
                   fName:'Your Name', fSns:'SNS URL (Instagram/YouTube/TikTok etc)', fBank:'Bank Account / PayPal Email', fEmail:'Email (optional)', fNote:'Promotion plan (optional)',
                   submit:'Submit Application', success:'Application received. We will contact you soon.', failPrefix:'Submission failed:',
@@ -1224,8 +1316,9 @@ if ('caches' in window) {
         var t = INF[lang] || INF.kr;
         function $(id){ return document.getElementById(id); }
         if ($('influencerCardTitle')) $('influencerCardTitle').textContent = t.title;
-        if ($('influencerCardDesc'))  $('influencerCardDesc').textContent  = t.desc;
+        if ($('influencerCardDesc'))  $('influencerCardDesc').innerHTML  = t.desc;
         if ($('influencerCardReward')) $('influencerCardReward').textContent = t.reward;
+        if ($('influencerCardPlatformsTxt') && t.platforms) $('influencerCardPlatformsTxt').textContent = t.platforms;
         if ($('influencerCardBtn'))   $('influencerCardBtn').textContent   = t.btn;
         // 글로벌 변수로 노출 — 모달 표시 + 제출에서 사용
         window.__INF_T = t;
