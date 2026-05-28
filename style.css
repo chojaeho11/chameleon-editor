@@ -6947,6 +6947,19 @@ html[data-site="JP"] #mgrPhoneJp { display: flex !important; }
 /* KR/기타: ナナミ 카드 숨김 */
 #mgrPhoneJp { display: none; }
 html[data-site="JP"] #mgrPhoneList { grid-template-columns: minmax(260px, 380px) !important; justify-content: center !important; }
+/* JP: 매니저 견적 카드 강제 표시 + 위에 마진 충분히 — 다른 요소에 가려지지 않게 */
+html[data-site="JP"] #mgrQuoteHero {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 5 !important;
+    margin-top: 28px !important;
+    margin-bottom: 28px !important;
+}
+html[data-site="JP"] #mgrQuoteHero > div {
+    background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%) !important;
+}
 /* KR 에서는 해외 지사 카드 숨김 */
 #overseasBranchHero { display: none; }
 html[data-site="JP"] #overseasBranchHero,

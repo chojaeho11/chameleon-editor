@@ -523,6 +523,142 @@ window._cottonSearch = function(){
                 <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 패브릭 샘플 요청</span>
             </button>
         </div>
+
+        <!-- 2026-05-28: 매니저 견적 빠른 주문 — 메인 사이트와 동일 (cotton_print.html 통합) -->
+        <div id="cpMgrQuoteHero" style="max-width:720px; margin:24px auto 0; width:100%;">
+            <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 24px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
+                <div style="text-align:center; margin-bottom:16px;">
+                    <div id="cpMgrQuoteTitle" style="font-size:16px; font-weight:800; color:#fff; margin-bottom:5px;">담당 매니저와 상담 후 견적 금액을 입력하세요</div>
+                    <div id="cpMgrQuoteDesc" style="font-size:12px; color:rgba(255,255,255,0.85); line-height:1.5;">통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.</div>
+                </div>
+                <!-- 매니저 카드 — 한국/일본 분기 -->
+                <div id="cpMgrPhones" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; margin-bottom:14px;">
+                    <!-- KR 매니저 4명 + 본사 (cotton_print KR 도메인) -->
+                    <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
+                        <span>본사</span><b style="font-size:12.5px; white-space:nowrap;">031-366-1984</b>
+                    </a>
+                    <a class="cp-kr-phone" href="tel:01077935393" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
+                        <span>은미</span><b style="font-size:12.5px; white-space:nowrap;">010-7793-5393</b>
+                    </a>
+                    <a class="cp-kr-phone" href="tel:01034903328" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
+                        <span>성희</span><b style="font-size:12.5px; white-space:nowrap;">010-3490-3328</b>
+                    </a>
+                    <a class="cp-kr-phone" href="tel:01034551946" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
+                        <span>지숙</span><b style="font-size:12.5px; white-space:nowrap;">010-3455-1946</b>
+                    </a>
+                    <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:11px; font-weight:800;">
+                        <span>연두</span><b style="font-size:12.5px; white-space:nowrap;">010-2525-9943</b>
+                    </a>
+                    <!-- JP 전용 ナナミ -->
+                    <a class="cp-jp-phone" href="tel:09053970420" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:12px; padding:14px 16px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; grid-column:1/-1;">
+                        <span style="font-size:20px;">🇯🇵</span>
+                        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
+                            <span style="font-size:10px; opacity:0.85;">東京・大阪 直通担当</span>
+                            <b style="font-size:15px; white-space:nowrap;">ナナミ · 090-5397-0420</b>
+                        </div>
+                    </a>
+                </div>
+                <!-- 금액 입력 + 주문 + 개인결제창 -->
+                <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px;">
+                        <input id="cpMgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
+                               placeholder="50,000"
+                               oninput="window._cpMgrQuoteFormat && window._cpMgrQuoteFormat(this)"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._cpMgrQuoteOrder&&window._cpMgrQuoteOrder();}"
+                               style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:130px; text-align:right; padding:6px 0; background:transparent;">
+                        <span id="cpMgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
+                        <button type="button" id="cpMgrQuoteBtn" onclick="window._cpMgrQuoteOrder && window._cpMgrQuoteOrder()" style="padding:9px 18px; background:#fff; color:#111; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
+                            ⚡ 주문하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+        /* JP 도메인일 때 한국 매니저 숨기고 ナナミ 표시 */
+        html[lang="ja"] #cpMgrPhones .cp-kr-phone { display:none !important; }
+        html[lang="ja"] #cpMgrPhones .cp-jp-phone { display:flex !important; }
+        </style>
+        <script>
+        (function(){
+            var lang = window.__PS_LANG || 'ko';
+            // 다국어 라벨
+            var L = {
+                ko: { title:'담당 매니저와 상담 후 견적 금액을 입력하세요', desc:'통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.', unit:'원', btn:'⚡ 주문하기', ph:'50,000', min:1000, minAlert:'최소 1,000원부터 입력 가능합니다.' },
+                ja: { title:'ナナミ担当と相談後、ご注文金額を入力してください', desc:'LINE・お電話で相談後、合意金額を入力すると即座に決済画面が開きます。', unit:'円', btn:'⚡ 注文する', ph:'5,000', min:100, minAlert:'最低100円から入力可能です。' },
+                en: { title:'After consulting your manager, enter the quote amount', desc:'Checkout opens immediately after entering the agreed amount.', unit:'$', btn:'⚡ Order', ph:'50', min:1, minAlert:'Minimum $1.' }
+            };
+            var t = L[lang] || L.ko;
+            function $(id){ return document.getElementById(id); }
+            if ($('cpMgrQuoteTitle')) $('cpMgrQuoteTitle').textContent = t.title;
+            if ($('cpMgrQuoteDesc'))  $('cpMgrQuoteDesc').textContent  = t.desc;
+            if ($('cpMgrQuoteUnit'))  $('cpMgrQuoteUnit').textContent  = t.unit;
+            if ($('cpMgrQuoteBtn'))   $('cpMgrQuoteBtn').textContent   = t.btn;
+            if ($('cpMgrQuoteAmount')) $('cpMgrQuoteAmount').setAttribute('placeholder', t.ph);
+
+            // 천단위 콤마
+            window._cpMgrQuoteFormat = function(inp){
+                var raw = (inp.value || '').replace(/[^\d]/g, '');
+                if (!raw) { inp.value = ''; return; }
+                inp.value = parseInt(raw, 10).toLocaleString();
+            };
+            // 입력값(현지통화) → KRW
+            function toKrw(amount){
+                if (lang === 'ja') return Math.round(amount * 10);
+                if (lang === 'en') return Math.round(amount * 1000);
+                return amount;
+            }
+            // 주문 → orders 생성 → 결제 페이지 이동 (KR=Toss, JP=Stripe)
+            window._cpMgrQuoteOrder = async function(){
+                var inp = $('cpMgrQuoteAmount');
+                var entered = parseInt((inp && inp.value || '').replace(/[^\d]/g, ''), 10) || 0;
+                if (entered < t.min) { alert(t.minAlert); if (inp) inp.focus(); return; }
+                var krw = toKrw(entered);
+                var btn = $('cpMgrQuoteBtn');
+                if (btn) { btn.disabled = true; btn.textContent = '...'; }
+                try {
+                    var sb = window.sb;
+                    if (!sb && typeof supabase !== 'undefined') {
+                        sb = supabase.createClient(
+                            'https://qinvtnhiidtmrzosyvys.supabase.co',
+                            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                        );
+                    }
+                    if (!sb) throw new Error('Supabase 미초기화');
+
+                    var siteCode = lang === 'ja' ? 'JP' : (lang === 'en' ? 'US' : 'KR');
+                    var orderName = (lang === 'ja' ? 'マネージャー見積注文 (' + entered.toLocaleString() + ' ' + t.unit + ')'
+                                  : lang === 'en' ? 'Manager Quote Order ($' + entered.toLocaleString() + ')'
+                                  : '매니저 견적 주문 (' + entered.toLocaleString() + '원)');
+                    var { data, error } = await sb.from('orders').insert({
+                        total_amount: krw,
+                        site_code: siteCode,
+                        payment_status: '결제대기',
+                        status: '결제대기',
+                        manager_name: '매니저 견적',
+                        request_note: '매니저 상담 후 빠른 주문 (cotton_print)',
+                        items: [{
+                            product_code: 'manager_quote_' + Date.now(),
+                            product_name: orderName,
+                            unit_price: krw,
+                            quantity: 1,
+                            subtotal: krw
+                        }]
+                    }).select('id').single();
+                    if (error || !data) throw error || new Error('주문 생성 실패');
+
+                    // 결제 페이지로 이동
+                    var url = (siteCode === 'KR')
+                        ? '/cotton_checkout.html?order_id=' + data.id
+                        : '/cotton_stripe_checkout.html?order_id=' + data.id + '&lang=' + lang;
+                    location.href = url;
+                } catch (e) {
+                    alert('주문 생성 실패: ' + (e.message || e));
+                    if (btn) { btn.disabled = false; btn.textContent = t.btn; }
+                }
+            };
+        })();
+        </script>
         <!-- 2026-05-22: LINE 문의 — 메인 사이트와 동일한 깔끔한 인라인 QR 카드 (JP 전용) -->
         <div id="cpLineCard" style="display:none; max-width:430px; margin:18px auto 0;">
             <div style="background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:11px 16px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45); display:flex; align-items:center; gap:12px; justify-content:center;">
