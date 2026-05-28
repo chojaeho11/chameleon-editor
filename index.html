@@ -965,8 +965,9 @@ if ('caches' in window) {
             if (el && M[lang]) el.textContent = M[lang];
             // 2026-05-16: 한국은 아래 '매니저 견적 빠른 주문' 카드가 있어 hero 버튼 숨김
             // 2026-05-28: 일본도 LINE 카드 안에 결제 패널이 통합되었으므로 매니저 연결 버튼 숨김 (중복 제거)
+            // 2026-05-28: EN/외국도 enHibaContact 카드 안에 Talk to Manager 버튼이 들어가므로 상단 hero 버튼 숨김
             var btn = document.getElementById('heroMgrConnectBtn');
-            if (btn && (lang === 'kr' || lang === 'ko' || lang === 'ja' || lang === 'jp')) {
+            if (btn) {
                 var wrap = btn.parentElement;
                 if (wrap) wrap.style.display = 'none';
             }
@@ -1003,31 +1004,30 @@ if ('caches' in window) {
                 </div>
             </div>
         </div>
-        <!-- 2026-05-28: 영어/외국 사이트 전용 — Hiba 직통 + 금액 입력 + 문의하기 카드 (한국/일본 제외) -->
+        <!-- 2026-05-28: 영어/외국 사이트 전용 — Talk to Manager + 금액 입력 카드 (Hiba/전화 제거) -->
         <div id="enHibaContact" style="display:none; flex:1 1 320px; min-width:0;">
-            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(96,165,250,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(96,165,250,0.3); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(96,165,250,0.18); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
-                <div style="text-align:center; padding-bottom:12px; border-bottom:1px dashed rgba(96,165,250,0.25);">
-                    <div style="font-size:11px; font-weight:300; color:#93c5fd; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;">📱 Global Direct</div>
-                    <div style="font-size:15px; color:#fff; font-weight:500; margin-bottom:3px;">Hiba</div>
-                    <a href="tel:+821034913535" style="color:#93c5fd; font-weight:300; text-decoration:none; font-size:13px;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> +82 10 3491 3535</a>
-                    <div style="font-size:10px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:4px;">English · 中文 · العربية · Español · Deutsch · Français</div>
+            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(124,58,237,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(124,58,237,0.3); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(124,58,237,0.18); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+                <!-- Talk to Manager 버튼 — 상단의 보라색 버튼이 이 카드로 이동 -->
+                <div style="text-align:center; padding-bottom:12px; border-bottom:1px dashed rgba(124,58,237,0.25);">
+                    <a href="javascript:void(0)" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()"
+                       style="display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:13px 30px; border-radius:999px; color:#fff; font-size:14px; font-weight:300; letter-spacing:0.5px; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.55); white-space:nowrap; font-family:inherit;">
+                        <i class="fa-solid fa-headset"></i> <span id="enTalkMgrLabel">Talk to Manager</span>
+                    </a>
+                    <div style="font-size:10px; color:rgba(255,255,255,0.55); font-weight:300; margin-top:8px;">English · 中文 · العربية · Español · Deutsch · Français</div>
                 </div>
                 <div style="padding-top:14px; text-align:center;">
                     <div id="enContactDesc" style="font-size:11.5px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:10px; letter-spacing:0.2px;">Enter your quote amount &amp; pay instantly</div>
-                    <div style="display:flex; align-items:center; gap:6px; background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.35); border-radius:10px; padding:4px 4px 4px 14px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:6px; background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.35); border-radius:10px; padding:4px 4px 4px 14px; margin-bottom:8px;">
                         <input id="enInlineAmount" type="text" inputmode="numeric" autocomplete="off"
                                placeholder="50"
                                oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
                                onkeydown="if(event.key==='Enter'){event.preventDefault();window._enInlineOrder&&window._enInlineOrder();}"
                                style="border:none; outline:none; font-size:14px; font-weight:300; color:#fff; flex:1; min-width:0; text-align:right; padding:7px 0; background:transparent; font-family:inherit;">
-                        <span id="enInlineUnit" style="font-size:12px; color:#93c5fd; font-weight:400; padding-right:6px;">$</span>
-                        <button id="enInlineBtn" type="button" onclick="window._enInlineOrder && window._enInlineOrder()" style="padding:10px 16px; background:linear-gradient(135deg,#60a5fa,#1d4ed8); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; font-family:inherit; box-shadow:0 4px 12px rgba(29,78,216,0.35); display:inline-flex; align-items:center; gap:4px;">
+                        <span id="enInlineUnit" style="font-size:12px; color:#a78bfa; font-weight:400; padding-right:6px;">$</span>
+                        <button id="enInlineBtn" type="button" onclick="window._enInlineOrder && window._enInlineOrder()" style="padding:10px 16px; background:linear-gradient(135deg,#7c3aed,#4c1d95); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; font-family:inherit; box-shadow:0 4px 12px rgba(76,29,149,0.45); display:inline-flex; align-items:center; gap:4px;">
                             <i class="fa-solid fa-bolt" style="font-size:10px;"></i> <span id="enInlineBtnLabel">Order</span>
                         </button>
                     </div>
-                    <a href="mailto:design@chameleon.design" id="enContactInquiry" style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:50px; color:#fff; font-size:11.5px; font-weight:300; text-decoration:none;">
-                        <i class="fa-solid fa-envelope" style="font-size:10px;"></i> <span id="enContactInquiryLabel">Email inquiry</span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -1113,19 +1113,19 @@ if ('caches' in window) {
              (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
              (window.CURRENT_LANG || 'kr'));
         var EN = {
-            en: { desc:'Enter your quote amount & pay instantly', unit:'$', btn:'Order', inquiry:'Email inquiry', ph:'50' },
-            zh: { desc:'输入与经理协商的金额立即付款', unit:'¥', btn:'下单', inquiry:'邮件咨询', ph:'250' },
-            es: { desc:'Ingrese el monto y pague de inmediato', unit:'€', btn:'Pedir', inquiry:'Consulta por email', ph:'50' },
-            de: { desc:'Betrag eingeben und sofort bezahlen', unit:'€', btn:'Bestellen', inquiry:'E-Mail Anfrage', ph:'50' },
-            fr: { desc:'Entrez le montant et payez immédiatement', unit:'€', btn:'Commander', inquiry:'Email', ph:'50' },
-            ar: { desc:'أدخل المبلغ وادفع فوراً', unit:'$', btn:'طلب', inquiry:'بريد إلكتروني', ph:'50' }
+            en: { talk:'Talk to Manager', desc:'Enter your quote amount & pay instantly', unit:'$', btn:'Order', ph:'50' },
+            zh: { talk:'联系经理', desc:'输入与经理协商的金额立即付款', unit:'¥', btn:'下单', ph:'250' },
+            es: { talk:'Hablar con un gerente', desc:'Ingrese el monto y pague de inmediato', unit:'€', btn:'Pedir', ph:'50' },
+            de: { talk:'Mit Manager sprechen', desc:'Betrag eingeben und sofort bezahlen', unit:'€', btn:'Bestellen', ph:'50' },
+            fr: { talk:'Parler au responsable', desc:'Entrez le montant et payez immédiatement', unit:'€', btn:'Commander', ph:'50' },
+            ar: { talk:'تواصل مع المدير', desc:'أدخل المبلغ وادفع فوراً', unit:'$', btn:'طلب', ph:'50' }
         };
         var t = EN[lang] || EN.en;
         function $(id){ return document.getElementById(id); }
+        if ($('enTalkMgrLabel')) $('enTalkMgrLabel').textContent = t.talk;
         if ($('enContactDesc')) $('enContactDesc').textContent = t.desc;
         if ($('enInlineUnit'))  $('enInlineUnit').textContent  = t.unit;
         if ($('enInlineBtnLabel')) $('enInlineBtnLabel').textContent = t.btn;
-        if ($('enContactInquiryLabel')) $('enContactInquiryLabel').textContent = t.inquiry;
         if ($('enInlineAmount')) $('enInlineAmount').setAttribute('placeholder', t.ph);
     })();
     </script>
