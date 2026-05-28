@@ -972,49 +972,51 @@ if ('caches' in window) {
 
     <!-- 2026-05-22: 일본 — LINE 문의 + 해외 파트너 카드 좌우 배치(PC) / 세로(모바일). cafe0101/lang=ja -->
     <div id="jpHeroRow" style="max-width:1100px; margin:8px auto 0; padding:0 16px; display:flex; flex-wrap:wrap; gap:12px; align-items:stretch;">
-        <!-- LINE 문의 + 견적 결제 통합 카드 (lang=ja 일 때만 JS 로 표시) -->
+        <!-- LINE 문의 + 견적 결제 통합 카드 (lang=ja 일 때만 JS 로 표시) — 다크 톤으로 세련되게 -->
         <div id="jpLineContact" style="display:none; flex:1 1 320px; min-width:0;">
-            <div style="height:100%; box-sizing:border-box; background:#fff; border:1.5px solid #06C755; border-radius:12px; padding:14px 16px; box-shadow:0 6px 16px -10px rgba(6,199,85,0.45);">
-                <div style="display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px dashed #d1fae5;">
-                    <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:72px; height:72px; border-radius:8px; flex-shrink:0; border:1px solid #e5e7eb;">
+            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(6,199,85,0.18); font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
+                <div style="display:flex; align-items:center; gap:14px; padding-bottom:12px; border-bottom:1px dashed rgba(6,199,85,0.25);">
+                    <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:72px; height:72px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; box-shadow:0 4px 14px rgba(6,199,85,0.3);">
                     <div style="text-align:left; min-width:0; flex:1;">
-                        <div style="font-size:14px; font-weight:900; color:#06C755; margin-bottom:2px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
-                        <div style="font-size:11.5px; color:#555; line-height:1.6;">担当: <b style="color:#333;">ナナミ</b><br><a href="tel:09053970420" style="color:#06C755; font-weight:800; text-decoration:none;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a><br>LINE ID: <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#06C755; font-weight:800; text-decoration:none;">astro.0420</a></div>
+                        <div style="font-size:13.5px; font-weight:300; color:#86efac; margin-bottom:4px; letter-spacing:0.3px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                        <div style="font-size:11.5px; color:rgba(255,255,255,0.75); line-height:1.65; font-weight:300;">担当: <b style="color:#fff; font-weight:500;">ナナミ</b><br><a href="tel:09053970420" style="color:#86efac; font-weight:400; text-decoration:none;"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a><br>LINE ID: <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="color:#86efac; font-weight:400; text-decoration:none;">astro.0420</a></div>
                     </div>
                 </div>
                 <!-- 견적 금액 입력 + 결제 (LINE 카드 안에 통합) -->
-                <div style="padding-top:12px; text-align:center;">
-                    <div style="font-size:11.5px; color:#374151; font-weight:700; margin-bottom:8px;">相談後の見積金額を入力して即決済</div>
-                    <div style="display:flex; align-items:center; gap:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:4px 4px 4px 12px;">
+                <div style="padding-top:14px; text-align:center;">
+                    <div style="font-size:11.5px; color:rgba(255,255,255,0.7); font-weight:300; margin-bottom:10px; letter-spacing:0.2px;">相談後の見積金額を入力して即決済</div>
+                    <div style="display:flex; align-items:center; gap:6px; background:rgba(6,199,85,0.08); border:1px solid rgba(6,199,85,0.35); border-radius:10px; padding:4px 4px 4px 14px;">
                         <input id="jpInlineAmount" type="text" inputmode="numeric" autocomplete="off"
                                placeholder="例: 5,000"
                                oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
                                onkeydown="if(event.key==='Enter'){event.preventDefault();window._jpInlineOrder&&window._jpInlineOrder();}"
-                               style="border:none; outline:none; font-size:14px; font-weight:700; color:#065f46; flex:1; min-width:0; text-align:right; padding:6px 0; background:transparent;">
-                        <span style="font-size:12px; color:#065f46; font-weight:800; padding-right:4px;">円</span>
-                        <button type="button" onclick="window._jpInlineOrder && window._jpInlineOrder()" style="padding:9px 16px; background:#06C755; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
-                            ⚡ 注文する
+                               style="border:none; outline:none; font-size:14px; font-weight:300; color:#fff; flex:1; min-width:0; text-align:right; padding:7px 0; background:transparent; font-family:inherit;">
+                        <span style="font-size:12px; color:#86efac; font-weight:400; padding-right:6px;">円</span>
+                        <button type="button" onclick="window._jpInlineOrder && window._jpInlineOrder()" style="padding:10px 18px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:300; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; font-family:inherit; box-shadow:0 4px 12px rgba(6,199,85,0.35); display:inline-flex; align-items:center; gap:4px;">
+                            <i class="fa-solid fa-bolt" style="font-size:10px;"></i> 注文する
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- 인플루언서 모집 카드 — 모든 로케일에 표시 (KR/JP/US/etc) -->
+        <!-- 인플루언서 모집 카드 — 모든 로케일에 표시 (KR/JP/US/etc). 다크 톤 + 얇은 폰트로 세련되게 -->
         <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
-            <div style="height:100%; box-sizing:border-box; background:linear-gradient(135deg, #fce7f3 0%, #fbcfe8 50%, #f9a8d4 100%); border:1.5px solid #ec4899; border-radius:12px; padding:14px 18px; box-shadow:0 6px 20px -8px rgba(236,72,153,0.4); position:relative; overflow:hidden;">
-                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.18; transform:rotate(-15deg);">🎬</div>
-                <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px; position:relative;">
-                    <div style="font-size:26px; line-height:1; flex-shrink:0;">🎬</div>
+            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:18px 22px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
+                <div style="position:absolute; top:-30px; right:-20px; font-size:90px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
+                <div style="display:flex; gap:14px; align-items:center; margin-bottom:10px; position:relative;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
+                        <i class="fa-solid fa-film" style="color:#fff; font-size:16px;"></i>
+                    </div>
                     <div style="flex:1; min-width:0;">
-                        <div id="influencerCardTitle" style="font-size:15px; font-weight:900; color:#831843; margin-bottom:3px; letter-spacing:-0.3px;">홍보 인플루언서 모집</div>
-                        <div id="influencerCardDesc" style="font-size:11.5px; color:#9d174d; line-height:1.5;">SNS로 카멜레온프린팅을 홍보하세요</div>
+                        <div id="influencerCardTitle" style="font-size:16px; font-weight:300; color:#fff; margin-bottom:2px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
+                        <div id="influencerCardDesc" style="font-size:11.5px; color:rgba(255,255,255,0.65); line-height:1.5; font-weight:300;">SNS로 카멜레온프린팅을 홍보하세요</div>
                     </div>
                 </div>
-                <div id="influencerCardReward" style="background:rgba(255,255,255,0.55); border:1px dashed #ec4899; border-radius:8px; padding:6px 10px; margin:8px 0; font-size:11.5px; font-weight:800; color:#831843; text-align:center;">
+                <div id="influencerCardReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:10px; padding:8px 12px; margin:10px 0 14px; font-size:12px; font-weight:300; color:#fbcfe8; text-align:center; letter-spacing:0.2px;">
                     조회수 10,000회 = 100,000원 지급
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; position:relative;">
-                    <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:9px 18px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); white-space:nowrap;">
+                    <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:11px 22px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:13px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
                         📝 응모하기
                     </button>
                 </div>
@@ -1403,6 +1405,19 @@ if ('caches' in window) {
             return '최소 1,000원부터 입력 가능합니다.\n담당 매니저와 상담하신 견적 금액을 입력하세요.';
         }
 
+        // 2026-05-28: 매니저 견적 주문 항목 — 로케일별 표시명 + 현지 통화 금액 표시
+        function _mqItemName(localAmount) {
+            var l = _mqGetLang();
+            var locStr = localAmount.toLocaleString();
+            if (l === 'ja') return 'マネージャー見積注文 (¥' + locStr + ')';
+            if (l === 'en') return 'Manager Quote Order ($' + locStr + ')';
+            if (l === 'zh') return '经理报价订单 (¥' + locStr + ')';
+            if (l === 'es') return 'Pedido de cotización (€' + locStr + ')';
+            if (l === 'de') return 'Manager-Angebot (€' + locStr + ')';
+            if (l === 'fr') return 'Commande devis (€' + locStr + ')';
+            if (l === 'ar') return 'طلب عرض السعر ($' + locStr + ')';
+            return '매니저 견적 주문 (' + locStr + '원)';
+        }
         // 주문 버튼 클릭 → simple_order 결제 모달 띄우기
         window._mgrQuoteOrder = function() {
             var inp = document.getElementById('mgrQuoteAmount');
@@ -1418,12 +1433,12 @@ if ('caches' in window) {
             if (typeof window._soEnsureModalReady === 'function') {
                 window._soEnsureModalReady();
             }
-            // 카트에 매니저 견적 항목 추가 (1회성 — 결제 후 자동 비움)
+            // 카트에 매니저 견적 항목 — 이전 카트 완전 비우고 이 항목 1개만 넣음 (이전 항목 오염 방지)
             var item = {
                 uid: Date.now(),
                 product: {
                     code: 'manager_quote_' + Date.now(),
-                    name: '매니저 견적 주문 (' + amountKrw.toLocaleString() + '원)',
+                    name: _mqItemName(entered),  // 현지 통화 + 로케일 표시명
                     price: amountKrw,
                     category: 'manager_quote',
                     img: '/mascot-character.png'
@@ -1432,13 +1447,12 @@ if ('caches' in window) {
                 qty: 1,
                 selectedAddons: {},
                 addonQuantities: {},
-                itemNote: '담당 매니저 견적 상담 후 빠른 주문',
+                itemNote: 'manager quote (' + _mqGetLang() + ')',
                 _simple: { unit: amountKrw, subtotal: amountKrw, discount: 0, final: amountKrw, tierPct: 0 }
             };
             try {
-                var cart = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
-                cart.push(item);
-                localStorage.setItem('chameleon_cart_current', JSON.stringify(cart));
+                // 2026-05-28: 이전 카트 항목들이 결제창에 함께 떴던 버그 fix — 매니저 견적은 항상 단독 결제
+                localStorage.setItem('chameleon_cart_current', JSON.stringify([item]));
             } catch (e) {}
             // simple_order 결제 모달 띄우기
             if (typeof window._soOpenCheckout === 'function') {
