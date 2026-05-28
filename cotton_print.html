@@ -520,13 +520,13 @@ window._cottonSearch = function(){
             <div id="cpMgrQuoteHero" class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
                 <!-- 매니저/연락처 영역 — KR/JP 분기 -->
                 <div id="cpMgrPhones" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
-                    <!-- KR 매니저 (5명, 컴팩트 2×3 그리드) -->
+                    <!-- KR 매니저 (5명: 매니저4명 → 본사 맨아래 풀폭) -->
                     <div class="cp-kr-phone-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                        <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">본사</span><b style="font-size:11px; white-space:nowrap;">031-366-1984</b></a>
                         <a class="cp-kr-phone" href="tel:01077935393" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">은미</span><b style="font-size:11px; white-space:nowrap;">010-7793-5393</b></a>
                         <a class="cp-kr-phone" href="tel:01034903328" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">성희</span><b style="font-size:11px; white-space:nowrap;">010-3490-3328</b></a>
                         <a class="cp-kr-phone" href="tel:01034551946" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">지숙</span><b style="font-size:11px; white-space:nowrap;">010-3455-1946</b></a>
-                        <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600; grid-column:1/-1;"><span style="opacity:0.7;">연두</span><b style="font-size:11px; white-space:nowrap;">010-2525-9943</b></a>
+                        <a class="cp-kr-phone" href="tel:01025259943" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600;"><span style="opacity:0.7;">연두</span><b style="font-size:11px; white-space:nowrap;">010-2525-9943</b></a>
+                        <a class="cp-kr-phone" href="tel:031-366-1984" style="display:flex; flex-direction:column; align-items:center; gap:1px; padding:7px 4px; background:rgba(253,224,71,0.12); border:1px solid rgba(253,224,71,0.35); border-radius:8px; text-decoration:none; color:#fff; font-size:10px; font-weight:600; grid-column:1/-1;"><span style="opacity:0.8; color:#fde047;">본사</span><b style="font-size:11px; white-space:nowrap;">031-366-1984</b></a>
                     </div>
                     <!-- JP 전용 ナナミ — QR + 연락처 -->
                     <div class="cp-jp-phone" style="display:none; align-items:center; gap:10px; padding:10px; background:rgba(6,199,85,0.12); border:1px solid rgba(6,199,85,0.45); border-radius:10px; color:#fff;">
@@ -579,11 +579,20 @@ window._cottonSearch = function(){
             <!-- ▌▌▌ RIGHT: 인플루언서 모집 ▌▌▌ -->
             <div class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
                 <!-- 큰 보상 금액 (필름 아이콘 자리) -->
-                <div id="cpInfRewardBig" style="font-size:30px; font-weight:300; color:#fbcfe8; line-height:1; margin:2px 0 10px; letter-spacing:-1px; text-shadow:0 4px 16px rgba(244,114,182,0.35);">100,000원</div>
-                <div id="cpInfTitle" style="font-size:14px; font-weight:300; color:#fff; margin-bottom:2px; letter-spacing:-0.2px;">인플루언서 모집</div>
-                <div id="cpInfDesc" style="font-size:10.5px; color:rgba(255,255,255,0.65); line-height:1.4; font-weight:300; margin-bottom:8px;">SNS로 카멜레온프린팅을 홍보하세요</div>
+                <div id="cpInfRewardBig" style="font-size:30px; font-weight:300; color:#fbcfe8; line-height:1; margin:2px 0 8px; letter-spacing:-1px; text-shadow:0 4px 16px rgba(244,114,182,0.35);">100,000원</div>
+                <div id="cpInfTitle" style="font-size:14px; font-weight:300; color:#fff; margin-bottom:6px; letter-spacing:-0.2px;">인플루언서 모집</div>
+                <div id="cpInfPlatforms" style="font-size:10px; color:rgba(255,255,255,0.85); line-height:1.5; font-weight:300; margin-bottom:6px; padding:0 4px;">
+                    <i class="fa-brands fa-instagram" style="color:#e1306c;"></i>
+                    <i class="fa-brands fa-youtube" style="color:#ff0000; margin-left:3px;"></i>
+                    <i class="fa-brands fa-tiktok" style="color:#fff; margin-left:3px;"></i>
+                    <i class="fa-brands fa-threads" style="color:#fff; margin-left:3px;"></i>
+                    <span style="margin-left:4px;">どこでもOK</span>
+                </div>
+                <div id="cpInfDesc" style="font-size:10.5px; color:rgba(255,255,255,0.7); line-height:1.5; font-weight:300; margin-bottom:8px; padding:0 2px;">
+                    카멜레온을 홍보하고 조회수 10만 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>
+                </div>
                 <div id="cpInfReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:11px; font-weight:300; color:#fbcfe8; letter-spacing:0.2px; width:100%;">
-                    조회수 10,000회 달성 시
+                    조회수 10만 달성 시
                 </div>
                 <div style="margin-top:auto; width:100%;">
                     <button type="button" onclick="window._openCpInfluencerModal && window._openCpInfluencerModal()" id="cpInfBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55); font-family:inherit;">
@@ -690,12 +699,12 @@ window._cottonSearch = function(){
                 en: { priceBig:'1㎡ $1.5〜', t:'Free Fabric Sample', d:'Check quality in person', btn:'Request Sample' }
             };
             var INF = {
-                ko: { rewardBig:'100,000원', t:'인플루언서 모집', d:'SNS로 카멜레온프린팅을 홍보하세요', r:'조회수 10,000회 달성 시', btn:'📝 응모하기',
-                      mt:'인플루언서 응모', ms:'홍보 후 조회수 10,000회당 100,000원 지급', name:'이름', sns:'SNS 주소', bank:'계좌번호', email:'이메일 (선택)', submit:'응모 제출', ok:'응모 접수 완료', req:'이름·SNS·계좌는 필수' },
-                ja: { rewardBig:'10,000円', t:'インフルエンサー募集', d:'SNSでカメレオンプリンティングをPR', r:'再生10,000回達成時', btn:'📝 応募する',
-                      mt:'インフルエンサー応募', ms:'PR後、再生10,000回ごとに10,000円お支払い', name:'お名前', sns:'SNS URL', bank:'振込口座', email:'メール (任意)', submit:'応募する', ok:'応募を受け付けました', req:'お名前・SNS・口座は必須' },
-                en: { rewardBig:'$100', t:'Influencer Wanted', d:'Promote Chameleon Printing on SNS', r:'Per 10,000 views', btn:'📝 Apply',
-                      mt:'Influencer Application', ms:'$100 per 10,000 views after promotion', name:'Name', sns:'SNS URL', bank:'Bank Account', email:'Email (optional)', submit:'Submit', ok:'Application received', req:'Name/SNS/Account required' }
+                ko: { rewardBig:'100,000원', t:'인플루언서 모집', platforms:'어디든 OK', d:'카멜레온을 홍보하고 조회수 <b style="color:#fbcfe8;">10만</b> 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>', r:'조회수 10만 달성 시', btn:'📝 응모하기',
+                      mt:'인플루언서 응모', ms:'홍보 후 조회수 10만 달성 시 홍보비 지급 · 즉시지급', name:'이름', sns:'SNS 주소', bank:'계좌번호', email:'이메일 (선택)', submit:'응모 제출', ok:'응모 접수 완료', req:'이름·SNS·계좌는 필수' },
+                ja: { rewardBig:'10,000円', t:'インフルエンサー募集', platforms:'どこでもOK', d:'カメレオンをPRし、再生数 <b style="color:#fbcfe8;">10万</b> 達成でPR料お支払い。<br>PR後にURLを送信 → <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', r:'再生10万達成時', btn:'📝 応募する',
+                      mt:'インフルエンサー応募', ms:'PR後、再生10万達成でPR料を即時支払い', name:'お名前', sns:'SNS URL', bank:'振込口座', email:'メール (任意)', submit:'応募する', ok:'応募を受け付けました', req:'お名前・SNS・口座は必須' },
+                en: { rewardBig:'$100', t:'Influencer Wanted', platforms:'Any platform', d:'Promote Chameleon — reach <b style="color:#fbcfe8;">100K views</b> for payout.<br>Just submit your URL → <b style="color:#fbcfe8; font-weight:500;">Instant payout</b>', r:'100,000 views reached', btn:'📝 Apply',
+                      mt:'Influencer Application', ms:'$100 paid instantly after 100,000 views', name:'Name', sns:'SNS URL', bank:'Bank Account', email:'Email (optional)', submit:'Submit', ok:'Application received', req:'Name/SNS/Account required' }
             };
             var s = SAMPLE[lang] || SAMPLE.ko;
             var i = INF[lang] || INF.ko;
@@ -705,7 +714,12 @@ window._cottonSearch = function(){
             if ($('cpFreeSampleDesc'))  $('cpFreeSampleDesc').textContent  = s.d;
             if ($('cpInfRewardBig')) $('cpInfRewardBig').textContent = i.rewardBig;
             if ($('cpInfTitle')) $('cpInfTitle').textContent = i.t;
-            if ($('cpInfDesc'))  $('cpInfDesc').textContent  = i.d;
+            // 플랫폼 라인 — 아이콘은 그대로 두고 끝의 텍스트만 교체
+            if ($('cpInfPlatforms')) {
+                var pSpan = $('cpInfPlatforms').querySelector('span');
+                if (pSpan && i.platforms) pSpan.textContent = i.platforms;
+            }
+            if ($('cpInfDesc'))  $('cpInfDesc').innerHTML = i.d;
             if ($('cpInfReward')) $('cpInfReward').textContent = i.r;
             if ($('cpInfBtn'))   $('cpInfBtn').textContent   = i.btn;
             window.__CP_INF = i;
