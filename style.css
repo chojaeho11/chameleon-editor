@@ -6967,13 +6967,13 @@ html .hero-title span b.ht-prn {
 @media (max-width:768px) {
     html[data-site="JP"] .hero-section,
     html[data-site="US"] .hero-section {
-        padding-top: 24px !important;
-        padding-bottom: 14px !important;
+        padding-top: 20px !important;
+        padding-bottom: 10px !important;
     }
     /* 타이틀 크기 축소 — 모바일에서 한 줄에 들어가도록 */
     .hero-section .hero-title span,
     html .hero-title span {
-        font-size: 34px !important;
+        font-size: 30px !important;
         letter-spacing: 1px !important;
         line-height: 1.1 !important;
     }
@@ -6981,26 +6981,29 @@ html .hero-title span b.ht-prn {
     html .hero-title .hero-tagline {
         font-size: 9px !important;
         letter-spacing: 2.5px !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
     }
     /* 좌우 카드 — 모바일에서 패딩 축소 + 폰트 줄임 */
     #jpLineContact > div,
     #overseasBranchHero > div {
-        padding: 14px 16px !important;
+        padding: 12px 14px !important;
     }
     #jpLineContact img[alt="LINE QR"] {
-        width: 60px !important;
-        height: 60px !important;
+        width: 56px !important;
+        height: 56px !important;
     }
-    #influencerCardTitle, #jpLineContact [style*="font-size:13.5px"] {
-        font-size: 13px !important;
-    }
-    #jpHeroRow { gap: 10px !important; }
+    #influencerCardTitle { font-size: 13px !important; }
+    #influencerCardDesc, #influencerCardReward { font-size: 11px !important; }
+    #influencerCardReward { padding: 6px 10px !important; margin: 6px 0 10px !important; }
+    #influencerCardBtn { padding: 9px 18px !important; font-size: 12px !important; }
+    #jpHeroRow { gap: 10px !important; margin-top: 4px !important; }
+    /* 인플루언서 카드 우상단 워터마크 아이콘 제거 (공간 절약) */
+    #overseasBranchHero > div > div:first-child { font-size: 60px !important; }
 }
 @media (max-width:480px) {
     .hero-section .hero-title span,
     html .hero-title span {
-        font-size: 28px !important;
+        font-size: 26px !important;
         letter-spacing: 0.5px !important;
     }
 }
