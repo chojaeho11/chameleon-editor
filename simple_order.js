@@ -5769,7 +5769,9 @@
                 compact_parcel:        '택배배송 60×40 이하 (1만원)',
                 pd_bulk_free:          '100개 이상 무료배송',
                 pd_parcel_1:           '1개씩 포장 택배배송 (3만원/개)',
-                pd_parcel_2:           '2개씩 포장 택배배송 (1.5만원/2개)'
+                pd_parcel_2:           '2개씩 포장 택배배송 (1.5만원/2개)',
+                // 2026-05-30: 베스트굿즈 정액배송 (3000원)
+                preset_goods_flat:     '베스트굿즈 정액배송 (3,000원)'
             };
             // 일정(배송일자/시간) 이 의미 있는 메소드만 안내 — 단순 배송/택배는 일정 무관
             var _shipWithSchedule = ['metro_install','metro_weekend','metro_install_removal','regional_truck','regional_install'];
@@ -5799,12 +5801,21 @@
                     lines.push('   ✂️ 재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판') + (it.wallSide === 'double' ? ' · 양면 (×2)' : ' · 단면'));
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
+                    // 2026-05-30: 키링/코롯토(presetHasHooks) — 고리 300원 균일 + 제품 수량 자동
+                    var _hasHooksNote = !!it._presetHasHooks;
                     Object.values(it.selectedAddons).forEach(function (code) {
                         var a = window.ADDON_DB[code];
                         if (!a) return;
                         var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
-                        lines.push('   ➕ ' + (a.display_name || a.name) + ' × ' + aQty + ' = ' + (((a.price || 0) * aQty).toLocaleString()) + '원');
+                        if (_hasHooksNote && aQty < (it.qty || 1)) aQty = it.qty || 1;
+                        var aPrice = _hasHooksNote ? 300 : (a.price || 0);
+                        lines.push('   ➕ ' + (a.display_name || a.name) + ' × ' + aQty + ' = ' + ((aPrice * aQty).toLocaleString()) + '원');
                     });
+                }
+                // 2026-05-30: 프리셋 굿즈 개별포장 옵션 (+200원/개)
+                if (it._isPresetGoods && it._presetWrap) {
+                    var _wrapQ = it.qty || 1;
+                    lines.push('   🎁 개별포장 × ' + _wrapQ + ' = ' + ((200 * _wrapQ).toLocaleString()) + '원');
                 }
                 if (Array.isArray(it.baseStands)) {
                     it.baseStands.forEach(function (b) {
@@ -5816,9 +5827,18 @@
                     lines.push('   🦵 받침대: ' + it.baseStand.label + (_bsQ > 1 ? ' × ' + _bsQ : '') + (it.baseStand.fee > 0 ? ' (+' + ((it.baseStand.fee * _bsQ).toLocaleString()) + '원)' : ''));
                 }
                 if (it.itemNote) lines.push('   💬 전달사항: ' + it.itemNote);
+                // 2026-05-30: 베스트굿즈 100개+ 50% 할인 라인
+                if (it._isBestGoods && (it.qty || 1) >= 100) {
+                    lines.push('   🏷️ 100개 이상 50% 할인 적용');
+                }
                 if (it.shipping) {
                     var _m = it.shipping.method;
-                    lines.push('   🚚 시공/배송: ' + (shipLabel[_m] || _m));
+                    // 2026-05-30: 베스트굿즈는 정액 배송 3,000원 (preset_goods_flat) — old shipping method 가 저장되어 있어도 강제 표시
+                    if (it._isBestGoods) {
+                        lines.push('   🚚 배송: 베스트굿즈 정액배송 (3,000원)');
+                    } else {
+                        lines.push('   🚚 시공/배송: ' + (shipLabel[_m] || _m));
+                    }
                     // 배송/시공 일정은 의미 있는 메소드만 표시
                     if (_shipWithSchedule.indexOf(_m) >= 0) {
                         if (it.shipping.delivery_date) {
@@ -5847,6 +5867,17 @@
             }
             if (cartCalc.proPct > 0) {
                 discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원)';
+            }
+            // 2026-05-30: 베스트굿즈 100개+ 50% 할인 — 카트에 베스트굿즈가 있고 100개+ 인 항목이 있으면 합산 표시
+            var _bestDiscTotal = 0;
+            cart.forEach(function (it) {
+                if (it._isBestGoods && (it.qty || 1) >= 100) {
+                    var _u = (it.customSize && it.customSize.unit) || (it.product && it.product.price) || 0;
+                    _bestDiscTotal += Math.round(_u * (it.qty || 1) * 0.5);
+                }
+            });
+            if (_bestDiscTotal > 0) {
+                discountSummary += '\n베스트굿즈 100개+ 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원)';
             }
             if (_useMileage > 0) discountSummary += '\n마일리지 사용 (-' + _useMileage.toLocaleString() + '원)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
