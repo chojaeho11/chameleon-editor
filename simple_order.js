@@ -1848,7 +1848,9 @@
                 const addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
                 const aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
-                const line = (addon.price || 0) * aQty;
+                // 2026-05-29: 프리셋 굿즈 — 고리 옵션은 300원 균일 (DB 가격 무시)
+                const addonPrice = state.isPresetGoods ? 300 : (addon.price || 0);
+                const line = addonPrice * aQty;
                 addonTotal += line;
                 let nm = addon.name || code;
                 addonBreakdownLines.push(
@@ -2491,11 +2493,11 @@
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
         // 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) — 정액 배송비
-        //   KR 5,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$5
+        //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
         if (state.isPresetGoods) {
             state._shipUpgradeReason = null;
             var lng = getLang();
-            return (lng === 'ja') ? 10000 : 5000;
+            return (lng === 'ja') ? 10000 : 3000;
         }
         // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
         if (state.bundleShipping) {
@@ -2806,7 +2808,8 @@
             var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
             else if ((lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'zh' || lang === 'ar') && a.name_us) name = a.name_us;
-            var price = a.price || 0;
+            // 2026-05-29: 프리셋 굿즈(키링/코롯토) — 고리/색상 옵션은 모두 300원 균일 (DB 가격 무시)
+            var price = (compactMode && state.isPresetGoods) ? 300 : (a.price || 0);
             var safe = String(name).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             });
@@ -3876,8 +3879,9 @@
         var custSec = document.getElementById('soCustomSizeSection');
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
+        //   기본금액 500원 (4×4cm) 부터 시작 — 네이버 스마트스토어 기준
         var _PRESET_KEYRING = [
-            { w:4,  h:4,  label:'4×4',  price:800  },
+            { w:4,  h:4,  label:'4×4',  price:500  },
             { w:5,  h:5,  label:'5×5',  price:1000 },
             { w:5,  h:7,  label:'5×7',  price:1200 },
             { w:6,  h:4,  label:'6×4',  price:1000 },
