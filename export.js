@@ -1780,7 +1780,10 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             || _ndTop === 'wholesale board prices' || _ndTop.indexOf('raw') >= 0 || _ndTop.indexOf('원판') >= 0
             || _ndCode.toLowerCase().indexOf('hb_rb') === 0 || _ndCode.toLowerCase().indexOf('hb_raw') === 0
             || /원판|raw\s*board|raw\s*sheet/.test(_ndName);
-        var _isAmountDiscExempt = _isAmtOrder || _isRawBoard;
+        // 2026-05-30: 베스트굿즈 — 100개+ 50%만 적용, 금액티어/PRO/일반수량할인 모두 제외
+        var _isBestGoodsItem = !!item._isBestGoods;
+        var _isPresetGoodsItem = !!item._isPresetGoods;
+        var _isAmountDiscExempt = _isAmtOrder || _isRawBoard || _isBestGoodsItem;
         var _beforeItemAmt = totalAmt;
 
         // 다국어 상품명/가격 선택 로직
@@ -1891,18 +1894,24 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             const _pCode2 = item.product.code || '';
             const _pCat2 = item.product.category || '';
             const _pTopCat2 = window._getTopCategoryCode ? window._getTopCategoryCode(_pCat2) : '';
+            // 2026-05-30: 베스트굿즈는 일반 수량할인 (20/30/40%) 비적용 → 별도 100개+ 50% 만 적용
             const _noDiscount2 = _pCode2 === '21355677' || _pCode2 === '21355677_copy'
                 || _pTopCat2 === 'Wholesale Board Prices'
                 || _pTopCat2 === 'honeycomb_board'
                 || _pTopCat2 === '123456789'
                 || _pCat2 === 'hb_display_wall' || _pCode2.startsWith('hb_dw')
-                || item.product._calculated_price;
+                || item.product._calculated_price
+                || _isBestGoodsItem;
             let _qtyDiscRate2 = 0;
             if (!_noDiscount2 && item.qty >= 3) {
                 if (item.qty >= 501) _qtyDiscRate2 = 0.50;
                 else if (item.qty >= 101) _qtyDiscRate2 = 0.40;
                 else if (item.qty >= 10) _qtyDiscRate2 = 0.30;
                 else _qtyDiscRate2 = 0.20;
+            }
+            // 2026-05-30: 베스트굿즈 — 100개+ 시 50% 할인
+            if (_isBestGoodsItem && item.qty >= 100) {
+                _qtyDiscRate2 = 0.50;
             }
 
             // 2026-05-15: simple_order 가벽 (wallSize, wallSide) — recalc()과 동일한 면적/양면/세로3m 가산.
@@ -1982,10 +1991,12 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                     if(y > 260) { doc.addPage(); y = 20; }
                     return;
                 }
-                const uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                // 2026-05-30: 프리셋 굿즈(키링/코롯토) — 고리 옵션은 300원·제품 수량만큼 자동 곱셈
+                let uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                if (_isPresetGoodsItem && uQty < (item.qty || 1)) uQty = item.qty || 1;
 
                 // [수정] 옵션 가격 다국어 처리 (ADDON_DB.price는 KRW 등가 - config.js에서 역환산 완료)
-                let addPrice = add.price;
+                let addPrice = _isPresetGoodsItem ? 300 : add.price;
                 let addName = add.display_name || add.name;
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) {
                     if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP);
@@ -2013,6 +2024,28 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 y += addonHeight;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
+        }
+
+        // 2026-05-30: 프리셋 굿즈 개별포장 — +200원 × 제품 수량
+        if (_isPresetGoodsItem && item._presetWrap) {
+            let _wrapUnit = 200;
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _wrapUnit = Math.round(_wrapUnit * _cr.JP);
+            else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _wrapUnit = Math.round(_wrapUnit * _cr.US * 100) / 100;
+            const _wrapQty = item.qty || 1;
+            const _wrapTotal = _wrapUnit * _wrapQty;
+            totalAmt += _wrapTotal;
+            const _wrapName = '└ ' + (CURRENT_LANG_CODE === 'ja' ? '個別包装' : (CURRENT_LANG_CODE === 'en' || CURRENT_LANG_CODE === 'us') ? 'Individual wrap' : '개별포장');
+            const _wrapSplit = doc.splitTextToSize(_wrapName, nameColWidth - 4);
+            const _wrapH = Math.max(8, 4 + (_wrapSplit.length * 5));
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], _wrapH, '', 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], _wrapH, _wrapSplit, 'left', 8); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], _wrapH, TEXT.opt_add, 'left', 8); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], _wrapH, String(_wrapQty), 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], _wrapH, formatCurrencyForPDF(_wrapUnit), 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], _wrapH, formatCurrencyForPDF(_wrapTotal), 'right');
+            y += _wrapH;
+            if (y > 260) { doc.addPage(); y = 20; }
         }
 
         // 2026-05-22: 받침대(뒷받침) — 다중 종류·수량 (배열) + 레거시 단일 호환.

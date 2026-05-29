@@ -1847,7 +1847,16 @@
             Object.values(state.selectedAddons || {}).forEach(function (code) {
                 const addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
-                const aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                // 2026-05-30: 프리셋 굿즈(키링/코롯토) — 고리는 제품 수량만큼 자동 곱셈 (100개 주문 → 고리 100개)
+                let aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                if (state.isPresetGoods) {
+                    aQty = qty;
+                    // state 와 hidden input 도 동기화 — buildCartItem 이 정확한 수량으로 저장하도록
+                    if (!state.addonQuantities) state.addonQuantities = {};
+                    state.addonQuantities[code] = qty;
+                    var _qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g, '\\"') + '"]');
+                    if (_qi) _qi.value = qty;
+                }
                 // 2026-05-29: 프리셋 굿즈 — 고리 옵션은 300원 균일 (DB 가격 무시)
                 const addonPrice = state.isPresetGoods ? 300 : (addon.price || 0);
                 const line = addonPrice * aQty;
@@ -4381,6 +4390,11 @@
             artworkLater: !!state.artworkLater,
             // 2026-05-25: 원판 여부 — 장바구니에서 할인 라벨 숨김용
             _isRawBoard: !!state.isRawBoard,
+            // 2026-05-30: 베스트굿즈 / 프리셋 플래그 — _soCalcItemPrice / 견적서 / 주문관리에서 100개+ 50%·정액배송·고리 300원 적용 트리거
+            _isBestGoods: !!state.isBestGoods,
+            _isPresetGoods: !!state.isPresetGoods,
+            // 프리셋 굿즈 개별포장 옵션 (+200원/개)
+            _presetWrap: !!state.presetWrap,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -4628,6 +4642,10 @@
         }
         // 2026-05-25: 원판은 대량할인 없음 — 할인율 라벨/계산 0 처리
         if (item._isRawBoard || _soIsRawBoardProduct(item.product)) tierPct = 0;
+        // 2026-05-30: 베스트굿즈 — 30%·40% 등 일반 수량할인 라벨 비표시, 100개+ 50% 만 표시
+        if (item._isBestGoods) {
+            tierPct = (qty >= 100) ? 50 : 0;
+        }
         const discount = Math.round(subtotal * tierPct / 100);
         // final 은 _soCalcItemPrice 통해 정확히 계산 (addon + shipping + PRO 할인 포함)
         const final = (typeof _soCalcItemPrice === 'function')
@@ -4924,7 +4942,13 @@
         if (it.product && it.product.code && it.product.code.indexOf('goods_') === 0 && qty >= 100) {
             unit = unit * 0.5;
         }
+        // 2026-05-30: 베스트굿즈 (키링/코롯토 + 손수건/티셔츠/머그/허니콤/스마트톡) — 100개+ 50% 할인 (상품 단가만)
+        var _isBest = !!it._isBestGoods;
+        var _isPreset = !!it._isPresetGoods;
         var subtotal = unit * qty;
+        if (_isBest && qty >= 100) {
+            subtotal = Math.round(subtotal * 0.5);
+        }
         // 가벽 양면 → 가격 2배
         var isDouble = (it.wallSide === 'double');
         if (isDouble) subtotal *= 2;
@@ -4935,13 +4959,16 @@
             if (isDouble) hExtra *= 2;
             base += hExtra;
         }
-        // addon 가격
+        // addon 가격 — 프리셋 굿즈는 고리 300원 균일 + 제품 수량만큼 자동 곱셈
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
                 var addon = window.ADDON_DB[code];
                 if (!addon) return;
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
-                base += (addon.price || 0) * aQty;
+                // 프리셋 굿즈: 저장된 addonQty 가 잘못된 경우 (모달 외부에서 담긴 경우 등) 안전망으로 product qty 사용
+                if (_isPreset && aQty < qty) aQty = qty;
+                var addonPrice = _isPreset ? 300 : (addon.price || 0);
+                base += addonPrice * aQty;
             });
         }
         // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산 (+ 레거시 단일 호환)
@@ -4950,12 +4977,19 @@
         } else if (it.baseStand && typeof it.baseStand.fee === 'number') {
             base += it.baseStand.fee * (it.baseStand.qty || 1);
         }
+        // 2026-05-30: 프리셋 굿즈 — 개별포장 옵션 +200원/개
+        if (_isPreset && it._presetWrap) {
+            base += 200 * qty;
+        }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
         // 2026-05-29: 굿즈 (goods_*) 는 무료배송 — 배송비 합산 skip
         var _isGoodsItm = it.product && it.product.code && it.product.code.indexOf('goods_') === 0;
         if (it.bundleShipping || _isGoodsItm) {
             // skip — 배송비 0
+        } else if (_isBest) {
+            // 2026-05-30: 베스트굿즈 — 3,000원 정액 배송비 (저장된 shipping 무시, 항상 새로 계산)
+            base += 3000;
         } else if (it.shipping && it.shipping.fee) {
             base += (it.shipping.fee || 0);
         }
@@ -4983,10 +5017,17 @@
                 return;
             }
             var subPrice = _soCalcItemPrice(it);
-            var shipFee = (it.shipping && it.shipping.fee) || 0;
+            // 2026-05-30: 베스트굿즈는 정액 3,000원 배송 — shipping.fee 가 비어있어도 _soCalcItemPrice 가 +3000 반영하므로 별도로 빼야 함
+            var shipFee;
+            if (it._isBestGoods) {
+                shipFee = 3000;
+            } else {
+                shipFee = (it.shipping && it.shipping.fee) || 0;
+            }
             // 2026-05-13: 매니저 견적 주문은 할인 대상에서 제외 (담당자가 이미 할인 반영)
             // 2026-05-15: 원판 / 금액주문 — 단순 발송·입력 금액 그대로이므로 수량/구독 할인 제외
-            if (_soIsManagerQuoteItem(it) || (it.product && (_soIsRawBoardProduct(it.product) || _soIsAmountOrder(it.product)))) {
+            // 2026-05-30: 베스트굿즈 — 100개+ 50% 만 적용, 금액티어(1M/5M/10M)·PRO 할인 모두 제외
+            if (_soIsManagerQuoteItem(it) || it._isBestGoods || (it.product && (_soIsRawBoardProduct(it.product) || _soIsAmountOrder(it.product)))) {
                 nonDiscountBase += (subPrice - shipFee);
             } else {
                 taxBase += (subPrice - shipFee);
