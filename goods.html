@@ -140,20 +140,30 @@ a { text-decoration: none; color: inherit; }
 }
 .best-feat-hero {
     display: inline-block; padding: 14px 22px; border-radius: 14px;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 50%, #4c1d95 100%);
     color: #fff;
     font-size: 16px; font-weight: 900; letter-spacing: 0.2px;
-    box-shadow: 0 8px 24px rgba(220,38,38,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+    box-shadow: 0 8px 24px rgba(139,92,246,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
     text-align: center; line-height: 1.4;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
     max-width: 720px;
 }
 .best-feat-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 14px;
+    align-items: stretch;
 }
-.best-feat-grid .product-card { border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+.best-feat-grid .product-card {
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.best-feat-grid .product-card .product-info { flex: 1; display: flex; flex-direction: column; }
+.best-feat-grid .best-size-pills { margin-top: auto; }
 .best-feat-empty {
     grid-column: 1 / -1;
     padding: 30px; text-align: center;
@@ -566,9 +576,6 @@ a { text-decoration: none; color: inherit; }
             <div class="best-feat-hero" id="bestFeatHero">🔥 리셀러 강추 · 100개 이상 주문시 반값 · 전세계에서 가장 저렴합니다</div>
         </div>
         <div class="best-feat-grid" id="bestFeatGrid"></div>
-        <div class="best-feat-note" id="bestFeatNote">
-            <span id="bestFeatNoteText">베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.</span>
-        </div>
     </div>
 </section>
 
@@ -1026,10 +1033,8 @@ a { text-decoration: none; color: inherit; }
             var Tk = T[LANG] || T.ko;
             var titleEl = document.getElementById('bestFeatTitle');
             var heroEl  = document.getElementById('bestFeatHero');
-            var noteEl  = document.getElementById('bestFeatNoteText');
             if (titleEl) titleEl.textContent = Tk.t;
             if (heroEl)  heroEl.textContent  = Tk.hero;
-            if (noteEl)  noteEl.innerHTML    = Tk.note;
             grid.innerHTML = bests.map(productCard).join('');
             // 2026-05-29: 베스트 섹션 카드에선 "최소 N개" MOQ 배지 숨김
             grid.querySelectorAll('.moq-badge').forEach(function(b){ b.remove(); });
