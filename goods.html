@@ -146,7 +146,7 @@ a { text-decoration: none; color: inherit; }
 }
 .best-feat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 14px;
 }
 .best-feat-grid .product-card { border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 14px rgba(252,211,77,0.18); }
@@ -156,7 +156,21 @@ a { text-decoration: none; color: inherit; }
     color: #92400e; font-size: 13px; font-weight: 600;
     background: rgba(255,255,255,0.5); border-radius: 12px;
 }
-@media (max-width: 768px) {
+.best-feat-note {
+    margin-top: 22px; padding: 16px 20px;
+    background: rgba(255,255,255,0.55); border: 1px dashed rgba(120,53,15,0.3);
+    border-radius: 12px; text-align: center;
+    font-size: 13px; color: #78350f; line-height: 1.6;
+    backdrop-filter: blur(4px);
+}
+.best-feat-note b { font-weight: 800; color: #451a03; }
+.best-feat-note .tagline {
+    display: inline-block; margin-top: 6px;
+    font-size: 12px; color: #92400e; font-weight: 700; letter-spacing: 0.3px;
+}
+@media (max-width: 1100px) { .best-feat-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px)  { .best-feat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px)  {
     .best-feat { padding: 24px 16px 28px; }
     .best-feat-title { font-size: 18px; }
     .best-feat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -533,6 +547,10 @@ a { text-decoration: none; color: inherit; }
             <div class="best-feat-sub" id="bestFeatSub">최저가 / 즉시 출고 가능</div>
         </div>
         <div class="best-feat-grid" id="bestFeatGrid"></div>
+        <div class="best-feat-note" id="bestFeatNote">
+            <span id="bestFeatNoteText">베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.</span>
+            <div class="tagline" id="bestFeatTagline">⭐ 최상의 품질 · 최저의 가격</div>
+        </div>
     </div>
 </section>
 
@@ -918,37 +936,61 @@ a { text-decoration: none; color: inherit; }
         });
     }
 
-    // ─── ⭐ 베스트 굿즈 featured 섹션 — 기존 카멜레온 굿즈 판촉물에서 노출 ───
+    // ─── ⭐ 베스트 굿즈 featured 섹션 — 10개 큐레이션 + 가격 오버라이드 ───
+    // 메인 사이트 DB 의 원래 가격은 그대로 두고, /goods 표시 시에만 베스트 가격 적용
+    var BEST_CURATED = [
+        { code: '345345353',        price: 1000 },   // 홀로그램 자개 키링 양면
+        { code: '3453455',          price: 1000 },   // 손수건
+        { code: '435645654666',     price: 6500 },   // 반려동물 티셔츠
+        { code: '456444',           price: 2000 },   // 커스텀머그컵
+        { code: '64564882_copy',    price: 5000 },   // 허니콤보드 팝업굿즈
+        { code: 'acr_crt_cl_8t',    price: 2000 },   // 8T 투명 아크릴 코롯토
+        { code: 'acr_crt_stand_01', price: 3000 },   // 10T 두꺼운 아크릴 입체 스탠드
+        { code: 'acr_crt_stand_10t',price: 2000 },   // 10T 자립형 아크릴 코롯토
+        { code: 'acr_smtgr_02',     price: 3000 },   // 아크릴 자개 스마트톡
+        { code: 'gds_acr_kr_10',    price: 1000 }    // 투명 3mm단면 키링
+    ];
     async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');
         var grid = document.getElementById('bestFeatGrid');
         if (!sec || !grid || !SB) return;
         try {
-            // is_goods=true 인 기존 카멜레온 굿즈 판촉물 (acr_key_ring / acr_crtt / 3244432 등),
-            // 자동 생성한 placeholder (code: goods_* 또는 category: pkg_*) 는 제외
+            var codes = BEST_CURATED.map(function(x){ return x.code; });
             var res = await SB.from('admin_products')
                 .select('code, category, name, name_jp, name_us, price, img_url')
-                .eq('is_goods', true)
-                .not('code', 'like', 'goods_%')
-                .not('category', 'like', 'pkg_%')
-                .not('img_url', 'is', null)
-                .neq('img_url', '')
-                .order('code', { ascending: true })
-                .limit(24);
-            var bests = (res && res.data) || [];
+                .in('code', codes);
+            var fetched = (res && res.data) || [];
+            if (fetched.length === 0) { sec.style.display = 'none'; return; }
+            // BEST_CURATED 순서대로 정렬 + 가격 override
+            var byCode = {};
+            fetched.forEach(function(p){ byCode[p.code] = p; });
+            var bests = [];
+            BEST_CURATED.forEach(function(ov){
+                var p = byCode[ov.code];
+                if (!p) return;
+                // 원본 DB 변경 없이 display 용 복사본에 가격만 override
+                bests.push(Object.assign({}, p, { price: ov.price }));
+            });
             if (bests.length === 0) { sec.style.display = 'none'; return; }
             var T = {
-                ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'카멜레온 인기 굿즈 — 즉시 주문 가능' },
-                ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'カメレオン人気グッズ' },
-                en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Chameleon bestsellers' }
+                ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'카멜레온 인기 굿즈 — 즉시 주문 가능',
+                      note:'베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.', tag:'⭐ 최상의 품질 · 최저의 가격' },
+                ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'カメレオン人気グッズ',
+                      note:'ベストグッズは <b>金具と個別包装</b> 込みの価格です。', tag:'⭐ 最高品質 · 最安値' },
+                en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Chameleon bestsellers',
+                      note:'Best Goods prices include <b>keyring + individual packaging</b>.', tag:'⭐ Top quality · Lowest price' }
             };
             var Tk = T[LANG] || T.ko;
             var titleEl = document.getElementById('bestFeatTitle');
             var badgeEl = document.getElementById('bestFeatBadge');
             var subEl   = document.getElementById('bestFeatSub');
+            var noteEl  = document.getElementById('bestFeatNoteText');
+            var tagEl   = document.getElementById('bestFeatTagline');
             if (titleEl) titleEl.textContent = Tk.t;
             if (badgeEl) badgeEl.textContent = Tk.badge;
             if (subEl)   subEl.textContent   = Tk.sub;
+            if (noteEl)  noteEl.innerHTML    = Tk.note;
+            if (tagEl)   tagEl.textContent   = Tk.tag;
             grid.innerHTML = bests.map(productCard).join('');
             sec.style.display = '';
         } catch (e) {
