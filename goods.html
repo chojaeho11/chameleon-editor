@@ -978,6 +978,16 @@ a { text-decoration: none; color: inherit; }
         { id:'8x6',  label:'8×6cm',  price:2200 },
         { id:'10x10',label:'10×10cm',price:2500 }
     ];
+    // 2026-05-30: 자개 키링 (홀로그램) — 일반 키링의 2배
+    var BEST_SIZES_KEYRING_PEARL = [
+        { id:'4x4',  label:'4×4cm',  price:3000 },
+        { id:'5x5',  label:'5×5cm',  price:3600 },
+        { id:'5x7',  label:'5×7cm',  price:4000 },
+        { id:'6x4',  label:'6×4cm',  price:3600 },
+        { id:'7x7',  label:'7×7cm',  price:4000 },
+        { id:'8x6',  label:'8×6cm',  price:4400 },
+        { id:'10x10',label:'10×10cm',price:5000 }
+    ];
     // 2026-05-29: 코롯토 3배 비례 상향 (5×5=6000 기준)
     var BEST_SIZES_KOROTTO = [
         { id:'5x5',  label:'5×5cm',  price:6000  },
@@ -993,16 +1003,16 @@ a { text-decoration: none; color: inherit; }
     ];
     // 2026-05-29: 비-사이즈 베스트 상품 가격 상향
     var BEST_CURATED = [
-        { code: '345345353',        sizes: BEST_SIZES_KEYRING },     // 홀로그램 자개 키링 양면
-        { code: '3453455',          sizes: BEST_SIZES_HANDKERCHIEF },// 손수건 (40/50/60cm 사이즈 선택)
-        { code: '435645654666',     price: 13000 },                  // 반려동물 티셔츠
-        { code: '456444',           price: 4000  },                  // 커스텀머그컵
-        { code: '64564882_copy',    price: 8000  },                  // 허니콤보드 팝업굿즈
-        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },     // 8T 투명 아크릴 코롯토
-        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },     // 10T 입체 스탠드 (코롯토류)
-        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },     // 10T 자립형 아크릴 코롯토
-        { code: 'acr_smtgr_02',     price: 6000  },                  // 아크릴 자개 스마트톡
-        { code: 'gds_acr_kr_10',    sizes: BEST_SIZES_KEYRING }      // 투명 3mm단면 키링
+        { code: '345345353',        sizes: BEST_SIZES_KEYRING_PEARL },// 홀로그램 자개 키링 양면 (2배)
+        { code: '3453455',          sizes: BEST_SIZES_HANDKERCHIEF }, // 손수건 (40/50/60cm 사이즈 선택)
+        { code: '435645654666',     price: 13000 },                   // 반려동물 티셔츠
+        { code: '456444',           price: 4000  },                   // 커스텀머그컵
+        { code: '64564882_copy',    price: 8000  },                   // 허니콤보드 팝업굿즈
+        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },      // 8T 투명 아크릴 코롯토
+        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },      // 10T 입체 스탠드 (코롯토류)
+        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },      // 10T 자립형 아크릴 코롯토
+        { code: 'acr_smtgr_02',     price: 6000  },                   // 아크릴 자개 스마트톡
+        { code: 'gds_acr_kr_10',    sizes: BEST_SIZES_KEYRING }       // 투명 3mm단면 키링
     ];
     async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');

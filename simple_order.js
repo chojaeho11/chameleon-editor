@@ -3899,6 +3899,16 @@
             { w:8,  h:6,  label:'8×6',  price:2200 },
             { w:10, h:10, label:'10×10',price:2500 }
         ];
+        // 2026-05-30: 자개 키링 — 일반 키링의 2배 (홀로그램 자개 자재 단가 상승분 반영)
+        var _PRESET_KEYRING_PEARL = [
+            { w:4,  h:4,  label:'4×4',  price:3000 },
+            { w:5,  h:5,  label:'5×5',  price:3600 },
+            { w:5,  h:7,  label:'5×7',  price:4000 },
+            { w:6,  h:4,  label:'6×4',  price:3600 },
+            { w:7,  h:7,  label:'7×7',  price:4000 },
+            { w:8,  h:6,  label:'8×6',  price:4400 },
+            { w:10, h:10, label:'10×10',price:5000 }
+        ];
         // 2026-05-29: 코롯토 3배 비례 상향 (5×5=6000 기준)
         var _PRESET_KOROTTO = [
             { w:5,  h:5,  label:'5×5',  price:6000  },
@@ -3913,8 +3923,8 @@
             { w:60, h:60, label:'60×60', price:6000 }
         ];
         var _PRESET_MAP = {
-            '345345353':        _PRESET_KEYRING,
-            'gds_acr_kr_10':    _PRESET_KEYRING,
+            '345345353':        _PRESET_KEYRING_PEARL,  // 자개 키링 (2배)
+            'gds_acr_kr_10':    _PRESET_KEYRING,        // 일반 투명 3mm 키링
             'acr_crt_cl_8t':    _PRESET_KOROTTO,
             'acr_crt_stand_01': _PRESET_KOROTTO,
             'acr_crt_stand_10t':_PRESET_KOROTTO,
