@@ -3398,6 +3398,31 @@
         }
         state.product = p;
 
+        // 2026-05-29: 굿즈 (goods_*) 상품 — 무료배송 + 100개+ 50% 할인 + 라벨 변경
+        state.isGoods = !!(p && p.code && p.code.indexOf('goods_') === 0);
+        if (state.isGoods) {
+            // 업로드 라벨 — "이미지를 올려주세요" → "인쇄할 로고를 올려주세요"
+            var ulEl = document.getElementById('soUploadTitle');
+            if (ulEl) ulEl.textContent = tr('인쇄할 로고를 올려주세요', '印刷するロゴをアップロード', 'Upload your logo to print');
+            // 전달사항 placeholder — "예: 색상 강조..." → "들어갈 문구를 적어주세요"
+            var noteEl = document.getElementById('soItemNote');
+            if (noteEl) noteEl.setAttribute('placeholder', tr('들어갈 문구를 적어주세요', '記載する文言を入力してください', 'Enter the text to include'));
+            // 무료배송 안내 배너 — 가격 박스 위에 삽입 (중복 방지)
+            setTimeout(function() {
+                var pBox = document.querySelector('#soPriceBox, .so-price-box, #soFinalPrice');
+                if (pBox && !document.getElementById('soGoodsFreeShipBanner')) {
+                    var banner = document.createElement('div');
+                    banner.id = 'soGoodsFreeShipBanner';
+                    banner.style.cssText = 'background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:800; text-align:center; margin-bottom:10px; box-shadow:0 4px 12px rgba(16,185,129,0.35);';
+                    banner.innerHTML = '🚚 ' + tr('이 제품은 무료배송 됩니다', 'この商品は送料無料です', 'Free shipping on this item') +
+                        '<div style="font-size:11px; font-weight:500; margin-top:3px; opacity:0.95;">' +
+                        tr('100개 이상 주문 시 50% 자동 할인', '100個以上で50%自動割引', '50% off automatically on 100+ orders') +
+                        '</div>';
+                    pBox.parentNode.insertBefore(banner, pBox);
+                }
+            }, 100);
+        }
+
         // 2026-05-17: 가맹점 스토어 경유 주문 — 마진율 + 결제 정보(계좌·PG) 로드
         try {
             var _frRef = sessionStorage.getItem('_franchise_ref') || '';
@@ -4624,6 +4649,10 @@
         if (it.rawBoardDouble || (it.product && _soIsRawBoardDoubleSided(it.product))) {
             unit = unit * 2;
         }
+        // 2026-05-29: 굿즈 (goods_*) — 100개 이상 주문 시 50% 자동 할인
+        if (it.product && it.product.code && it.product.code.indexOf('goods_') === 0 && qty >= 100) {
+            unit = unit * 0.5;
+        }
         var subtotal = unit * qty;
         // 가벽 양면 → 가격 2배
         var isDouble = (it.wallSide === 'double');
@@ -4652,7 +4681,9 @@
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
-        if (it.bundleShipping) {
+        // 2026-05-29: 굿즈 (goods_*) 는 무료배송 — 배송비 합산 skip
+        var _isGoodsItm = it.product && it.product.code && it.product.code.indexOf('goods_') === 0;
+        if (it.bundleShipping || _isGoodsItm) {
             // skip — 배송비 0
         } else if (it.shipping && it.shipping.fee) {
             base += (it.shipping.fee || 0);

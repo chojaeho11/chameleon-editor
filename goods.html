@@ -118,6 +118,55 @@ a { text-decoration: none; color: inherit; }
     .hero p { font-size: 15px; }
 }
 
+/* ── 매니저 컨택 패널 (메인 카멜레온과 동일 톤) ── */
+.mgr-panel {
+    background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%);
+    padding: 28px 24px 30px;
+}
+.mgr-inner { max-width: 1100px; margin: 0 auto; }
+.mgr-title { text-align:center; font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2); }
+.mgr-sub   { text-align:center; font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5; margin-bottom:14px; }
+.mgr-phone-grid {
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+    gap:8px; max-width:900px; margin:0 auto;
+}
+.mgr-phone-card {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; padding:12px 8px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+    border-radius:10px; text-decoration:none; color:#fff;
+    font-size:12px; font-weight:800; text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);
+    transition: transform 0.18s, background 0.18s;
+}
+.mgr-phone-card:hover { background:rgba(255,255,255,0.14); transform:translateY(-2px); }
+.mgr-phone-card b { color:#ffffff; font-size:13px; white-space:nowrap; }
+.mgr-jp-card, .mgr-en-card {
+    max-width:520px; margin:0 auto;
+    background:rgba(6,199,85,0.08); border:1px solid rgba(6,199,85,0.35);
+    border-radius:14px; padding:18px 22px; backdrop-filter:blur(8px);
+}
+.mgr-en-card { background:rgba(124,58,237,0.1); border-color:rgba(124,58,237,0.35); }
+.mgr-jp-card .row, .mgr-en-card .row {
+    display:flex; align-items:center; gap:14px;
+}
+.mgr-jp-card img { width:80px; height:80px; border-radius:10px; flex-shrink:0; background:#fff; padding:3px; }
+.mgr-jp-card .info { flex:1; text-align:left; }
+.mgr-jp-card .info-label { font-size:13.5px; font-weight:300; color:#86efac; margin-bottom:6px; }
+.mgr-jp-card .info-name { font-size:13px; color:#fff; font-weight:500; margin-bottom:4px; }
+.mgr-jp-card a { color:#86efac; font-weight:300; text-decoration:none; font-size:12px; }
+.mgr-en-card .talk-btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    padding:13px 30px; border-radius:999px; color:#fff;
+    font-size:14px; font-weight:300; letter-spacing:0.5px;
+    text-decoration:none; cursor:pointer;
+    background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95);
+    background-size:200% 200%;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.55);
+    white-space:nowrap;
+}
+.mgr-en-card .langs { font-size:10px; color:rgba(255,255,255,0.55); margin-top:8px; }
+
 /* ── 카테고리 탭 — Apple 스타일 미니멀 ── */
 .cat-nav-wrap {
     position: sticky; top: 60px; z-index: 90;
@@ -135,7 +184,8 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-btn {
     flex-shrink: 0;
-    padding: 8px 16px; border: none; background: transparent;
+    padding: 8px 16px; border: none;
+    background: #e0f2fe;
     border-radius: 999px; font-size: 13px; font-weight: 500;
     color: #1d1d1f; cursor: pointer; font-family: inherit;
     white-space: nowrap; letter-spacing: -0.2px;
@@ -373,6 +423,53 @@ a { text-decoration: none; color: inherit; }
         <i class="fa-solid fa-arrow-down"></i>
         <span id="heroCtaLabel">카테고리 둘러보기</span>
     </button>
+</section>
+
+<!-- 매니저 컨택 패널 (메인 카멜레온과 동일) -->
+<section class="mgr-panel" id="mgrPanel">
+    <div class="mgr-inner">
+        <div class="mgr-title" id="mgrTitle">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
+        <div class="mgr-sub" id="mgrSub">담당 매니저와 통화·상담 후 견적·샘플을 받아보세요.</div>
+
+        <!-- KR: 매니저 전화 그리드 -->
+        <div id="mgrKr" style="display:none;">
+            <div class="mgr-phone-grid" id="mgrKrGrid">
+                <a href="tel:031-366-1984" class="mgr-phone-card">
+                    <span>본사</span>
+                    <b>031-366-1984</b>
+                </a>
+                <div id="mgrKrSlot" style="display:contents;">
+                    <div class="mgr-phone-card" style="opacity:0.4;">⌛ 로딩중</div>
+                    <div class="mgr-phone-card" style="opacity:0.4;">⌛ 로딩중</div>
+                    <div class="mgr-phone-card" style="opacity:0.4;">⌛ 로딩중</div>
+                    <div class="mgr-phone-card" style="opacity:0.4;">⌛ 로딩중</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JP: LINE QR + ナナミ 카드 -->
+        <div id="mgrJp" class="mgr-jp-card" style="display:none;">
+            <div class="row">
+                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR">
+                <div class="info">
+                    <div class="info-label"><i class="fa-brands fa-line"></i> LINEでお問い合わせ</div>
+                    <div class="info-name">ナナミ <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener">@astro.0420</a></div>
+                    <a href="tel:09053970420">📞 090-5397-0420</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- EN/외국: Hiba / Talk to Manager -->
+        <div id="mgrEn" class="mgr-en-card" style="display:none; text-align:center;">
+            <a href="tel:212617901092" class="talk-btn">
+                <i class="fa-solid fa-headset"></i> Talk to Manager
+            </a>
+            <div class="langs">English · 中文 · العربية · Español · Deutsch · Français</div>
+            <div style="margin-top:10px; font-size:12px; color:rgba(255,255,255,0.75);">
+                🇲🇦 Hiba (Morocco Branch) · <a href="tel:212617901092" style="color:#a78bfa; text-decoration:none;"><b>+212-617-901-092</b></a>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- 카테고리 탭 + 서브 칩 -->
@@ -1128,10 +1225,75 @@ a { text-decoration: none; color: inherit; }
         }
     };
 
+    // ─── 매니저 컨택 패널 — 로케일별 표시 + KR 전화 DB 로드 ───
+    function setupMgrPanel() {
+        var isKR = (LANG === 'ko' || LANG === 'kr');
+        var isJP = (LANG === 'ja' || LANG === 'jp');
+        var isForeign = !isKR && !isJP;
+        var krEl = document.getElementById('mgrKr');
+        var jpEl = document.getElementById('mgrJp');
+        var enEl = document.getElementById('mgrEn');
+        var title = document.getElementById('mgrTitle');
+        var sub   = document.getElementById('mgrSub');
+        // 로케일별 타이틀
+        var T = {
+            ko: { t:'전문 매니저가 친절하게 안내합니다', s:'담당 매니저와 통화·상담 후 견적·샘플을 받아보세요.' },
+            ja: { t:'専任マネージャーが丁寧にご案内します',     s:'担当マネージャーと相談後、お見積り・サンプルをお受け取りください。' },
+            en: { t:'Our specialists guide you personally',  s:'Talk to your dedicated manager — get quotes & samples.' }
+        };
+        var Tk = T[LANG] || T.ko;
+        if (title) title.textContent = Tk.t;
+        if (sub)   sub.textContent   = Tk.s;
+        if (isKR) { if (krEl) krEl.style.display = ''; }
+        else if (isJP) { if (jpEl) jpEl.style.display = ''; }
+        else if (isForeign) { if (enEl) enEl.style.display = ''; }
+        // KR: 매니저 전화번호 동적 로드 (chatbot_knowledge.category='_managers')
+        if (isKR && SB) {
+            (async function loadMgrPhones() {
+                try {
+                    var res = await SB.from('chatbot_knowledge')
+                        .select('question, answer, is_active, keywords')
+                        .eq('category', '_managers');
+                    if (res.error || !res.data) return;
+                    var FIELD = ['은미','성희','지숙','연두'];
+                    var rows = (res.data || []).filter(function(r){
+                        return FIELD.some(function(n){ return (r.question||'').includes(n); });
+                    });
+                    rows.sort(function(a,b){
+                        var ai = FIELD.findIndex(function(n){ return (a.question||'').includes(n); });
+                        var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
+                        return ai - bi;
+                    });
+                    if (rows.length === 0) rows = (res.data || []).filter(function(r){ return r.is_active !== false; });
+                    var slot = document.getElementById('mgrKrSlot');
+                    if (!slot) return;
+                    var html = rows.map(function(r){
+                        var phone = '';
+                        try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
+                        if (!phone && r.keywords) phone = String(r.keywords).replace(/[^0-9-]/g, '');
+                        var phoneFmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                        var tel = phone.replace(/-/g, '');
+                        var off = r.is_active === false;
+                        var nm = (r.question || '').replace(/[<>"'&]/g, '');
+                        if (off) {
+                            return '<div class="mgr-phone-card" style="opacity:0.6;"><div style="text-decoration:line-through;">🌴 ' + nm + '</div><span style="font-size:11px;">휴가중</span></div>';
+                        }
+                        return '<a href="tel:' + tel + '" class="mgr-phone-card"><span>' + nm + '</span><b>' + (phoneFmt || phone || '-') + '</b></a>';
+                    }).join('');
+                    if (html) slot.innerHTML = html;
+                    else slot.remove();
+                } catch (e) {
+                    console.warn('[mgr phones] load failed:', e);
+                }
+            })();
+        }
+    }
+
     // ─── 초기화 ───
     function init() {
         applyI18n();
         iqApplyLang();
+        setupMgrPanel();
         renderCatNav();
         loadProducts();
     }
