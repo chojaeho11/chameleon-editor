@@ -47,9 +47,25 @@
             padding: 4px 10px; border-radius: 8px;
             background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);
             font-size: 12px; font-weight: 700; color: #d8b4fe;
-            margin-bottom: 6px;
+            margin-bottom: 6px; cursor: pointer;
+            text-decoration: none; transition: all 0.15s;
+        }
+        .product-pill:hover {
+            background: rgba(168,85,247,0.22); border-color: rgba(168,85,247,0.55);
+            color: #f5d0fe;
         }
         .product-pill code { font-size: 10.5px; color: #a78bfa; font-family: monospace; }
+        .product-pill .ext-icon { font-size: 9px; opacity: 0.7; margin-left: 2px; }
+        .act-delete { background: rgba(220,38,38,0.18); color: #fca5a5; border: 1px solid rgba(220,38,38,0.45); }
+        .act-delete:hover { background: rgba(220,38,38,0.3); }
+        .summary-row {
+            display: flex; flex-wrap: wrap; gap: 6px 14px;
+            font-size: 11.5px; color: #94a3b8; margin-top: 6px;
+        }
+        .summary-row .item { display: inline-flex; align-items: center; gap: 4px; }
+        .summary-row .item b { color: #cbd5e1; font-weight: 700; }
+        .summary-row a { color: #c7d2fe; text-decoration: none; }
+        .summary-row a:hover { text-decoration: underline; }
         .qty-pill {
             display: inline-block; padding: 2px 9px; border-radius: 999px;
             background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.35);
@@ -241,15 +257,29 @@
             if (det.current_suppliers) detRows.push(['현재 공급사', det.current_suppliers]);
             if (l.website) detRows.push(['웹사이트', `<a href="${esc(l.website)}" target="_blank">${esc(l.website)}</a>`]);
 
-            // 굿즈 문의 — head 아래에 상품 pill + 수량 pill 즉시 표시 (펼치지 않아도 식별 가능)
+            // 굿즈 문의 — head 아래 클릭 가능한 상품 pill (상품 페이지로 이동)
+            const prodHref = det.product_code
+                ? '/?product=' + encodeURIComponent(det.product_code)
+                : null;
             const prodPill = (l.type === 'goods_inquiry' && (det.product_code || det.quantity))
-                ? `<div class="product-pill">
+                ? `<a class="product-pill" href="${prodHref||'#'}" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="상품 페이지 열기">
                        <span>🛍️</span>
                        <span>${esc(det.product_name || '상품')}</span>
                        <code>${esc(det.product_code || '')}</code>
                        ${det.quantity ? `<span class="qty-pill">${det.quantity==='custom' ? '수량: 메모 참조' : (Number(det.quantity)||0).toLocaleString() + '개'}</span>` : ''}
-                   </div>`
+                       <span class="ext-icon">↗</span>
+                   </a>`
                 : '';
+            // 항상 보이는 요약 — 이메일·전화·수량·등록시간 등
+            const summaryItems = [];
+            if (l.email) summaryItems.push(`<span class="item">📧 <a href="mailto:${esc(l.email)}">${esc(l.email)}</a></span>`);
+            if (l.phone) summaryItems.push(`<span class="item">📞 <a href="tel:${esc((l.phone||'').replace(/[^\d+]/g,''))}">${esc(l.phone)}</a></span>`);
+            if (l.country) summaryItems.push(`<span class="item">🌐 <b>${esc(l.country)}</b></span>`);
+            if (l.company) summaryItems.push(`<span class="item">🏢 <b>${esc(l.company)}</b></span>`);
+            if (l.type === 'goods_inquiry' && det.quantity && det.quantity !== 'custom') {
+                summaryItems.push(`<span class="item">📦 <b>${(Number(det.quantity)||0).toLocaleString()}개</b></span>`);
+            }
+            const summaryHtml = summaryItems.length ? `<div class="summary-row">${summaryItems.join('')}</div>` : '';
 
             const kvHtml = detRows.map(([k,v])=>`<div class="k">${k}</div><div class="v">${v}</div>`).join('');
             const filesHtml = (l.files && l.files.length)
@@ -268,6 +298,7 @@
                 ${prodPill}
                 <div class="lead-title">${title}</div>
                 <div class="lead-meta">${subtitle || '<span style="color:#64748b;">연락처 없음</span>'}</div>
+                ${summaryHtml}
                 <div class="lead-body">
                     ${kvHtml ? `<div class="kv">${kvHtml}</div>` : ''}
                     ${msgHtml}
@@ -281,6 +312,9 @@
                         <button class="act-btn act-lost ${l.status==='lost'?'current':''}" onclick="setStatus('${l.id}','lost')">❌ 실패</button>
                     </div>
                     ${noteRow}
+                    <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                        <button class="act-btn act-delete" style="padding:8px 18px; font-size:11.5px;" onclick="deleteLead('${l.id}', this)">🗑️ 리드 삭제</button>
+                    </div>
                 </div>
             </div>`;
         }
@@ -290,6 +324,30 @@
         window.toggleLead = function(id){
             const el = document.getElementById('lead-'+id);
             if (el) el.classList.toggle('expanded');
+        };
+
+        window.deleteLead = async function(id, btn){
+            if (!confirm('이 리드를 영구 삭제합니다. 되돌릴 수 없습니다.\n진행할까요?')) return;
+            if (btn) { btn.disabled = true; btn.textContent = '삭제 중...'; }
+            try {
+                const { error } = await sb.from('lead_requests').delete().eq('id', id);
+                if (error) throw error;
+                // local 제거 + 즉시 페이드아웃
+                const idx = _all.findIndex(x => x.id === id);
+                if (idx >= 0) _all.splice(idx, 1);
+                const el = document.getElementById('lead-'+id);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.95)';
+                    setTimeout(() => { updateCounts(); renderList(); }, 350);
+                } else {
+                    updateCounts(); renderList();
+                }
+                toast('🗑️ 삭제됨');
+            } catch (e) {
+                toast('실패: '+(e?.message||e), true);
+                if (btn) { btn.disabled = false; btn.textContent = '🗑️ 리드 삭제'; }
+            }
         };
 
         window.setStatus = async function(id, status){
