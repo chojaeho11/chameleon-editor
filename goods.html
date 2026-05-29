@@ -215,6 +215,61 @@ a { text-decoration: none; color: inherit; }
     background: #f1f5f9; color: var(--text-light);
     font-size: 10px; font-weight: 700;
 }
+.inquiry-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 999px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; font-size: 11px; font-weight: 800;
+    letter-spacing: -0.2px;
+}
+.moq-badge {
+    position: absolute; top: 8px; left: 8px;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(15,23,42,0.85); color: #fff;
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    z-index: 2;
+}
+.product-thumb { position: relative; }
+/* 가격문의 모달 */
+.iq-overlay {
+    display: none; position: fixed; inset: 0; z-index: 99999;
+    background: rgba(15,23,42,0.78); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+    padding: 20px;
+}
+.iq-overlay.open { display: flex; }
+.iq-modal {
+    width: 100%; max-width: 480px;
+    background: #fff; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 24px 64px -16px rgba(0,0,0,0.5);
+}
+.iq-head {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff; padding: 20px 22px;
+}
+.iq-head h3 { font-size: 17px; font-weight: 900; margin-bottom: 4px; }
+.iq-head p { font-size: 12px; opacity: 0.9; }
+.iq-body { padding: 20px 22px; }
+.iq-body label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.iq-body input, .iq-body textarea, .iq-body select {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-family: inherit;
+    margin-bottom: 12px;
+}
+.iq-body textarea { resize: vertical; min-height: 80px; }
+.iq-actions { display: flex; gap: 8px; padding: 0 22px 22px; }
+.iq-actions button {
+    flex: 1; padding: 12px; border: none; border-radius: 10px;
+    font-family: inherit; font-weight: 800; font-size: 14px; cursor: pointer;
+}
+.iq-submit { background: var(--primary); color: #fff; }
+.iq-submit:hover { background: var(--primary-dark); }
+.iq-cancel { background: #f1f5f9; color: var(--text-light); }
+.iq-prod { font-size: 13px; color: var(--text); background: #f8fafc; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-weight: 700; }
+.iq-prod span { display: block; font-size: 11px; color: var(--text-light); font-weight: 500; margin-top: 2px; }
 
 /* 빈 상태 */
 .empty-state {
@@ -308,6 +363,39 @@ a { text-decoration: none; color: inherit; }
         <p class="empty-hint" id="emptyHint">곧 신규 상품이 추가될 예정입니다.</p>
     </div>
 </section>
+
+<!-- 가격문의 모달 -->
+<div class="iq-overlay" id="iqOverlay" onclick="if(event.target===this)window._goodsCloseInquiry()">
+    <div class="iq-modal">
+        <div class="iq-head">
+            <h3 id="iqTitle">가격 문의</h3>
+            <p id="iqSubtitle">최소주문 1,000개부터. 담당자가 24시간 내 견적 회신.</p>
+        </div>
+        <div class="iq-body">
+            <div class="iq-prod" id="iqProd"></div>
+            <label id="iqLNm">이름·회사명</label>
+            <input id="iqNm" type="text" placeholder="예: 홍길동 / (주)ABC">
+            <label id="iqLPh">연락처</label>
+            <input id="iqPh" type="text" placeholder="010-0000-0000">
+            <label id="iqLEm">이메일</label>
+            <input id="iqEm" type="email" placeholder="email@company.com">
+            <label id="iqLQty">예상 수량</label>
+            <select id="iqQty">
+                <option value="1000">1,000개</option>
+                <option value="3000">3,000개</option>
+                <option value="5000">5,000개</option>
+                <option value="10000">10,000개+</option>
+                <option value="custom">기타 (메모에 입력)</option>
+            </select>
+            <label id="iqLMemo">요청사항 (디자인·인쇄·납기 등)</label>
+            <textarea id="iqMemo" placeholder="예: 회사 로고 풀컬러 인쇄, 납기 3주 이내 희망"></textarea>
+        </div>
+        <div class="iq-actions">
+            <button class="iq-cancel" id="iqCancel" onclick="window._goodsCloseInquiry()">취소</button>
+            <button class="iq-submit" id="iqSubmit" onclick="window._goodsSubmitInquiry()">견적 요청</button>
+        </div>
+    </div>
+</div>
 
 <!-- 푸터 -->
 <footer class="site-footer">
@@ -454,22 +542,102 @@ a { text-decoration: none; color: inherit; }
             { id:'tissue', dbCat:'pkg_parts_tissue', kr:'티슈 페이퍼', ja:'ティッシュ',   en:'Tissue Paper' },
             { id:'string', dbCat:'pkg_parts_string', kr:'끈·핸들',    ja:'紐・ハンドル', en:'String / Handle' },
             { id:'seal',   dbCat:'pkg_parts_seal',   kr:'봉투 씰',     ja:'封筒シール',   en:'Envelope Seal' }
+        ]},
+        // 2026-05-29: 굿즈 풀스펙 확장 — 업계 일반 분류
+        { id:'acrylic', icon:'🔷', dbCat:'pkg_acr', kr:'아크릴 굿즈', ja:'アクリルグッズ', en:'Acrylic Goods', subs:[
+            { id:'keyring', dbCat:'pkg_acr_keyring', kr:'키링',     ja:'キーホルダー',   en:'Keyring' },
+            { id:'stand',   dbCat:'pkg_acr_stand',   kr:'스탠드',   ja:'スタンド',       en:'Stand' },
+            { id:'badge',   dbCat:'pkg_acr_badge',   kr:'뱃지',     ja:'バッジ',         en:'Badge' },
+            { id:'magnet',  dbCat:'pkg_acr_magnet',  kr:'자석',     ja:'マグネット',     en:'Magnet' },
+            { id:'jibbitz', dbCat:'pkg_acr_jibbitz', kr:'지비츠',   ja:'シューズチャーム', en:'Shoe Charm' },
+            { id:'nametag', dbCat:'pkg_acr_nametag', kr:'네임택',   ja:'ネームタグ',     en:'Nametag' }
+        ]},
+        { id:'silicon', icon:'🤍', dbCat:'pkg_sil', kr:'실리콘 굿즈', ja:'シリコングッズ', en:'Silicone Goods', subs:[
+            { id:'keyring',   dbCat:'pkg_sil_keyring',   kr:'실리콘 키링', ja:'シリコンキー', en:'Silicone Keyring' },
+            { id:'wristband', dbCat:'pkg_sil_wristband', kr:'손목띠',     ja:'リストバンド',  en:'Wristband' },
+            { id:'coaster',   dbCat:'pkg_sil_coaster',   kr:'코스터',     ja:'コースター',    en:'Coaster' },
+            { id:'grip',      dbCat:'pkg_sil_grip',      kr:'폰그립',     ja:'スマホグリップ', en:'Phone Grip' }
+        ]},
+        { id:'metalbadge', icon:'🏅', dbCat:'pkg_mtb', kr:'메탈 뱃지', ja:'メタルバッジ', en:'Metal Badge', subs:[
+            { id:'enamel', dbCat:'pkg_mtb_enamel', kr:'에나멜핀',     ja:'エナメルピン',  en:'Enamel Pin' },
+            { id:'metal',  dbCat:'pkg_mtb_metal',  kr:'메탈뱃지',    ja:'メタルバッジ',  en:'Metal Badge' },
+            { id:'gold',   dbCat:'pkg_mtb_gold',   kr:'골드뱃지',    ja:'ゴールドバッジ', en:'Gold Badge' },
+            { id:'patch',  dbCat:'pkg_mtb_patch',  kr:'자수 와펜',   ja:'刺繍ワッペン',  en:'Embroidery Patch' }
+        ]},
+        { id:'mug', icon:'☕', dbCat:'pkg_mug', kr:'머그·텀블러', ja:'マグ・タンブラー', en:'Mug & Tumbler', subs:[
+            { id:'ceramic', dbCat:'pkg_mug_ceramic', kr:'도자기 머그',     ja:'陶器マグ',   en:'Ceramic Mug' },
+            { id:'tumbler', dbCat:'pkg_mug_tumbler', kr:'스테인레스 텀블러', ja:'タンブラー', en:'Stainless Tumbler' },
+            { id:'glass',   dbCat:'pkg_mug_glass',   kr:'유리컵',         ja:'グラス',     en:'Glass Cup' }
+        ]},
+        { id:'mirror', icon:'🪞', dbCat:'pkg_mir', kr:'거울·미러', ja:'ミラー', en:'Mirror', subs:[
+            { id:'hand',  dbCat:'pkg_mir_hand',  kr:'손거울',     ja:'手鏡',     en:'Hand Mirror' },
+            { id:'card',  dbCat:'pkg_mir_card',  kr:'카드거울',   ja:'カード鏡', en:'Card Mirror' },
+            { id:'stand', dbCat:'pkg_mir_stand', kr:'스탠드 거울', ja:'スタンド鏡', en:'Stand Mirror' }
+        ]},
+        { id:'stationery', icon:'✏️', dbCat:'pkg_stn', kr:'문구류', ja:'文具', en:'Stationery', subs:[
+            { id:'pen',     dbCat:'pkg_stn_pen',     kr:'볼펜',     ja:'ボールペン',   en:'Pen' },
+            { id:'note',    dbCat:'pkg_stn_note',    kr:'노트',     ja:'ノート',       en:'Notebook' },
+            { id:'diary',   dbCat:'pkg_stn_diary',   kr:'다이어리',  ja:'手帳',         en:'Diary' },
+            { id:'memo',    dbCat:'pkg_stn_memo',    kr:'메모지',   ja:'メモ帳',       en:'Memo Pad' },
+            { id:'stkbook', dbCat:'pkg_stn_stkbook', kr:'스티커북', ja:'シールブック', en:'Sticker Book' }
+        ]},
+        { id:'apparel', icon:'👕', dbCat:'pkg_apl', kr:'의류·잡화', ja:'アパレル', en:'Apparel', subs:[
+            { id:'tshirt', dbCat:'pkg_apl_tshirt', kr:'티셔츠', ja:'Tシャツ', en:'T-shirt' },
+            { id:'hoodie', dbCat:'pkg_apl_hoodie', kr:'후드',   ja:'パーカー', en:'Hoodie' },
+            { id:'socks',  dbCat:'pkg_apl_socks',  kr:'양말',   ja:'靴下',     en:'Socks' },
+            { id:'cap',    dbCat:'pkg_apl_cap',    kr:'모자',   ja:'キャップ', en:'Cap' },
+            { id:'mask',   dbCat:'pkg_apl_mask',   kr:'마스크', ja:'マスク',   en:'Mask' }
+        ]},
+        { id:'accessory', icon:'🧴', dbCat:'pkg_acc', kr:'휴대 잡화', ja:'携帯アクセ', en:'Mobile Accessory', subs:[
+            { id:'phonecase',   dbCat:'pkg_acc_phonecase',   kr:'폰케이스',   ja:'スマホケース', en:'Phone Case' },
+            { id:'strap',       dbCat:'pkg_acc_strap',       kr:'폰스트랩',   ja:'ストラップ',   en:'Phone Strap' },
+            { id:'cardwallet',  dbCat:'pkg_acc_cardwallet',  kr:'카드지갑',   ja:'カードケース', en:'Card Wallet' },
+            { id:'coinpurse',   dbCat:'pkg_acc_coinpurse',   kr:'동전지갑',   ja:'コインケース', en:'Coin Purse' }
+        ]},
+        { id:'decor', icon:'🎀', dbCat:'pkg_dec', kr:'장식 굿즈', ja:'装飾グッズ', en:'Decorative Goods', subs:[
+            { id:'plushie',   dbCat:'pkg_dec_plushie',   kr:'캐릭터 인형', ja:'ぬいぐるみ',   en:'Plushie' },
+            { id:'plushring', dbCat:'pkg_dec_plushring', kr:'인형 키링',   ja:'マスコット',   en:'Mascot Keyring' },
+            { id:'hairtie',   dbCat:'pkg_dec_hairtie',   kr:'머리끈',     ja:'ヘアゴム',     en:'Hair Tie' },
+            { id:'wristband', dbCat:'pkg_dec_wristband', kr:'팔찌',       ja:'ブレスレット', en:'Bracelet' }
+        ]},
+        { id:'living', icon:'🛏️', dbCat:'pkg_liv', kr:'리빙', ja:'リビング', en:'Living', subs:[
+            { id:'diffuser',  dbCat:'pkg_liv_diffuser',  kr:'디퓨저', ja:'ディフューザー',   en:'Diffuser' },
+            { id:'candle',    dbCat:'pkg_liv_candle',    kr:'캔들',   ja:'キャンドル',       en:'Candle' },
+            { id:'incense',   dbCat:'pkg_liv_incense',   kr:'인센스 홀더', ja:'お香立て',    en:'Incense Holder' },
+            { id:'moodlight', dbCat:'pkg_liv_moodlight', kr:'무드등', ja:'ムードライト',     en:'Mood Light' }
+        ]},
+        { id:'season', icon:'🏖️', dbCat:'pkg_sea', kr:'시즌 굿즈', ja:'シーズン', en:'Seasonal', subs:[
+            { id:'fan',      dbCat:'pkg_sea_fan',      kr:'부채',       ja:'うちわ',           en:'Hand Fan' },
+            { id:'umbrella', dbCat:'pkg_sea_umbrella', kr:'우산',       ja:'傘',               en:'Umbrella' },
+            { id:'towel',    dbCat:'pkg_sea_towel',    kr:'타올',       ja:'タオル',           en:'Towel' },
+            { id:'picmat',   dbCat:'pkg_sea_picmat',   kr:'피크닉 매트', ja:'ピクニックマット', en:'Picnic Mat' }
         ]}
     ];
 
     // 카테고리별 placeholder 그라데이션 (실제 이미지 등록 전까지)
     var CAT_GRADIENT = {
-        all:      'linear-gradient(135deg,#f3e8ff,#fae8ff)',
-        paperbox: 'linear-gradient(135deg,#fef3c7,#fde68a)',
-        shopbag:  'linear-gradient(135deg,#fce7f3,#fbcfe8)',
-        nonwoven: 'linear-gradient(135deg,#dcfce7,#bbf7d0)',
-        plastic:  'linear-gradient(135deg,#dbeafe,#bfdbfe)',
-        reuse:    'linear-gradient(135deg,#d1fae5,#a7f3d0)',
-        tin:      'linear-gradient(135deg,#fef9c3,#fef08a)',
-        pouch:    'linear-gradient(135deg,#fae8ff,#f5d0fe)',
-        folding:  'linear-gradient(135deg,#fed7aa,#fdba74)',
-        label:    'linear-gradient(135deg,#fecaca,#fca5a5)',
-        parts:    'linear-gradient(135deg,#e9d5ff,#d8b4fe)'
+        all:        'linear-gradient(135deg,#f3e8ff,#fae8ff)',
+        paperbox:   'linear-gradient(135deg,#fef3c7,#fde68a)',
+        shopbag:    'linear-gradient(135deg,#fce7f3,#fbcfe8)',
+        nonwoven:   'linear-gradient(135deg,#dcfce7,#bbf7d0)',
+        plastic:    'linear-gradient(135deg,#dbeafe,#bfdbfe)',
+        reuse:      'linear-gradient(135deg,#d1fae5,#a7f3d0)',
+        tin:        'linear-gradient(135deg,#fef9c3,#fef08a)',
+        pouch:      'linear-gradient(135deg,#fae8ff,#f5d0fe)',
+        folding:    'linear-gradient(135deg,#fed7aa,#fdba74)',
+        label:      'linear-gradient(135deg,#fecaca,#fca5a5)',
+        parts:      'linear-gradient(135deg,#e9d5ff,#d8b4fe)',
+        acrylic:    'linear-gradient(135deg,#cffafe,#a5f3fc)',
+        silicon:    'linear-gradient(135deg,#f5f5f4,#e7e5e4)',
+        metalbadge: 'linear-gradient(135deg,#fef3c7,#facc15)',
+        mug:        'linear-gradient(135deg,#fed7aa,#fb923c)',
+        mirror:     'linear-gradient(135deg,#e0e7ff,#c7d2fe)',
+        stationery: 'linear-gradient(135deg,#fce7f3,#f9a8d4)',
+        apparel:    'linear-gradient(135deg,#ddd6fe,#c4b5fd)',
+        accessory:  'linear-gradient(135deg,#cffafe,#67e8f9)',
+        decor:      'linear-gradient(135deg,#fbcfe8,#f472b6)',
+        living:     'linear-gradient(135deg,#fef9c3,#fde047)',
+        season:     'linear-gradient(135deg,#bae6fd,#7dd3fc)'
     };
 
     var currentCatId = 'all';
@@ -539,19 +707,28 @@ a { text-decoration: none; color: inherit; }
                    LANG === 'en' ? (p.name_us || p.name) :
                                    (p.name_kr || p.name);
         var price = p.price || 0;
+        // 굿즈 도매 모델 — price=0 또는 pkg_* 전체를 "가격문의" 로 통일
+        var isInquiry = (price === 0) || (p.category && p.category.indexOf('pkg_') === 0);
         var priceStr = price > 0 ? formatPrice(price) : '';
         var imgHtml = p.img_url
             ? '<img src="' + escapeHtml(p.img_url) + '" alt="' + escapeHtml(name) + '" loading="lazy">'
             : placeholderThumb(p);
-        return '<div class="product-card" onclick="window._goodsOpenProduct(\'' + escapeJs(p.code) + '\')">' +
+        var inquiryLabel = LANG === 'ja' ? 'お見積り' : LANG === 'en' ? 'Get Quote' : '가격 문의';
+        var moqLabel     = LANG === 'ja' ? 'MOQ 1,000~' : LANG === 'en' ? 'MOQ 1,000+' : '최소 1,000개';
+        var clickFn = isInquiry
+            ? 'window._goodsOpenInquiry(\'' + escapeJs(p.code) + '\',\'' + escapeJs(name).replace(/'/g,"\\'") + '\')'
+            : 'window._goodsOpenProduct(\'' + escapeJs(p.code) + '\')';
+        return '<div class="product-card" onclick="' + clickFn + '">' +
             '<div class="product-thumb" style="background:' + (CAT_GRADIENT[mapDbCatToId(p.category)] || CAT_GRADIENT.all) + ';">' +
             imgHtml +
+            (isInquiry ? '<div class="moq-badge">' + moqLabel + '</div>' : '') +
             '</div>' +
             '<div class="product-info">' +
               '<div class="product-name">' + escapeHtml(name) + '</div>' +
               '<div class="product-meta">' +
-                (priceStr ? '<span class="product-price">' + priceStr + '</span>'
-                          : '<span class="badge-custom">' + t('customBadge') + '</span>') +
+                (isInquiry
+                  ? '<span class="inquiry-tag"><i class="fa-solid fa-comment-dots" style="font-size:11px;"></i> ' + inquiryLabel + '</span>'
+                  : '<span class="product-price">' + priceStr + '</span>') +
                 '<span><i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></span>' +
               '</div>' +
             '</div>' +
@@ -723,15 +900,105 @@ a { text-decoration: none; color: inherit; }
     // ─── 상품 클릭 → 메인 페이지의 simple_order 모달 진입 ───
     window._goodsOpenProduct = function(code) {
         if (!code) return;
-        // 메인 페이지로 product 파라미터 전달 → loadProductDetailAndOpen 자동 호출
         var u = '/?product=' + encodeURIComponent(code);
         if (LANG !== 'ko') u += '&lang=' + LANG;
         location.href = u;
     };
 
+    // ─── 가격문의 모달 ───
+    var IQ_LABELS = {
+        ko: { title:'가격 문의', sub:'최소주문 1,000개부터. 담당자가 24시간 내 견적 회신.',
+              nm:'이름·회사명', ph:'연락처', em:'이메일', qty:'예상 수량', memo:'요청사항 (디자인·인쇄·납기 등)',
+              cancel:'취소', submit:'견적 요청',
+              nmPh:'예: 홍길동 / (주)ABC', phPh:'010-0000-0000', emPh:'email@company.com',
+              memoPh:'예: 회사 로고 풀컬러 인쇄, 납기 3주 이내 희망',
+              ok:'견적 요청이 접수되었습니다. 24시간 내 담당자가 연락드립니다.',
+              err:'전송 실패: ', need:'이름과 연락처(또는 이메일)는 필수입니다.' },
+        ja: { title:'お見積りのご依頼', sub:'最小注文1,000個から。24時間以内に担当者より回答。',
+              nm:'お名前・会社名', ph:'お電話番号', em:'メール', qty:'ご予定数量', memo:'ご要望（デザイン・印刷・納期など）',
+              cancel:'キャンセル', submit:'見積依頼',
+              nmPh:'例：山田太郎 / 株式会社ABC', phPh:'090-0000-0000', emPh:'email@company.com',
+              memoPh:'例：会社ロゴをフルカラー印刷、納期3週間以内希望',
+              ok:'お見積り依頼を受け付けました。24時間以内にご連絡いたします。',
+              err:'送信失敗：', need:'お名前と連絡先（電話または メール）は必須です。' },
+        en: { title:'Request a Quote', sub:'Minimum order 1,000 units. Our team replies within 24h.',
+              nm:'Name / Company', ph:'Phone', em:'Email', qty:'Expected Quantity', memo:'Requirements (design / print / lead time)',
+              cancel:'Cancel', submit:'Send Request',
+              nmPh:'e.g. John Doe / ABC Inc.', phPh:'+1-000-000-0000', emPh:'email@company.com',
+              memoPh:'e.g. Full-color logo print, delivery within 3 weeks',
+              ok:'Your quote request has been received. Our team will contact you within 24 hours.',
+              err:'Submission failed: ', need:'Name and a contact (phone or email) are required.' }
+    };
+    function iqApplyLang() {
+        var L = IQ_LABELS[LANG] || IQ_LABELS.ko;
+        var set = function(id, v){ var e=document.getElementById(id); if(e) e.textContent = v; };
+        var setPh= function(id, v){ var e=document.getElementById(id); if(e) e.setAttribute('placeholder', v); };
+        set('iqTitle', L.title); set('iqSubtitle', L.sub);
+        set('iqLNm', L.nm); set('iqLPh', L.ph); set('iqLEm', L.em); set('iqLQty', L.qty); set('iqLMemo', L.memo);
+        set('iqCancel', L.cancel); set('iqSubmit', L.submit);
+        setPh('iqNm', L.nmPh); setPh('iqPh', L.phPh); setPh('iqEm', L.emPh); setPh('iqMemo', L.memoPh);
+    }
+
+    window._goodsOpenInquiry = function(code, name) {
+        var prodEl = document.getElementById('iqProd');
+        if (prodEl) {
+            prodEl.innerHTML = '<b>' + escapeHtml(name) + '</b><span>code: ' + escapeHtml(code) + '</span>';
+            prodEl.dataset.code = code;
+            prodEl.dataset.name = name;
+        }
+        document.getElementById('iqOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+    window._goodsCloseInquiry = function() {
+        document.getElementById('iqOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    };
+    window._goodsSubmitInquiry = async function() {
+        var L = IQ_LABELS[LANG] || IQ_LABELS.ko;
+        var nm = (document.getElementById('iqNm').value || '').trim();
+        var ph = (document.getElementById('iqPh').value || '').trim();
+        var em = (document.getElementById('iqEm').value || '').trim();
+        var qty = document.getElementById('iqQty').value;
+        var memo = (document.getElementById('iqMemo').value || '').trim();
+        var prodEl = document.getElementById('iqProd');
+        var code = prodEl.dataset.code || '';
+        var name = prodEl.dataset.name || '';
+        if (!nm || (!ph && !em)) { alert(L.need); return; }
+        var btn = document.getElementById('iqSubmit');
+        btn.disabled = true; btn.textContent = '...';
+        try {
+            if (!SB) throw new Error('Supabase not initialized');
+            // lead_requests 테이블 활용 (이미 leads-system 으로 구축됨 — managers.md 참고)
+            var res = await SB.from('lead_requests').insert({
+                source: 'goods_inquiry',
+                lang: LANG,
+                product_code: code,
+                product_name: name,
+                contact_name: nm,
+                phone: ph,
+                email: em,
+                quantity: qty,
+                memo: memo,
+                status: 'new'
+            });
+            if (res.error) throw new Error(res.error.message);
+            alert(L.ok);
+            window._goodsCloseInquiry();
+            // 폼 리셋
+            ['iqNm','iqPh','iqEm','iqMemo'].forEach(function(id){
+                var e = document.getElementById(id); if (e) e.value = '';
+            });
+        } catch (e) {
+            alert(L.err + (e.message || e));
+        } finally {
+            btn.disabled = false; btn.textContent = L.submit;
+        }
+    };
+
     // ─── 초기화 ───
     function init() {
         applyI18n();
+        iqApplyLang();
         renderCatNav();
         loadProducts();
     }

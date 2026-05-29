@@ -201,7 +201,24 @@
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"hero: mgrQuote visible + title 72/56 + min-height auto + mascot hidden\")",
       "PowerShell(npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message=\"redesign: cream hero \\(no video\\) + calm buttons + ?sid URL cleanup\")",
       "PowerShell($r = Invoke-WebRequest -Uri \"https://www.cafe2626.com/?nocache=$\\(Get-Random\\)\" -UseBasicParsing -TimeoutSec 30; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'CHAMELEON'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'mgrQuoteHero'\\).Count; [System.Text.RegularExpressions.Regex]::Matches\\($r.Content, 'hero-bg-video'\\).Count)",
-      "Bash(powershell -NoProfile -Command \"\\(Get-Content index.html -Raw\\) -replace 'config\\\\.js\\\\?v=435', 'config.js?v=436' | Set-Content index.html -NoNewline -Encoding utf8NoBOM\")"
+      "Bash(powershell -NoProfile -Command \"\\(Get-Content index.html -Raw\\) -replace 'config\\\\.js\\\\?v=435', 'config.js?v=436' | Set-Content index.html -NoNewline -Encoding utf8NoBOM\")",
+      "Bash(supabase --help)",
+      "Bash(git checkout *)",
+      "Bash(python -c \"import io; d=io.open\\('admin_m_secret_882.html','rb'\\).read\\(\\); print\\('restored len', len\\(d\\), 'lines', d.count\\(b chr\\(10\\)\\)\\)\")",
+      "Bash(powershell -Command \"\\(Get-Content cotton_print.html -Raw\\) -replace [regex]::Escape\\(\\\\\"t\\('rf_alert_name'\\)\\\\\"\\),\\\\\"_rfT\\('rf_alert_name'\\)\\\\\" -replace [regex]::Escape\\(\\\\\"t\\('rf_alert_phone'\\)\\\\\"\\),\\\\\"_rfT\\('rf_alert_phone'\\)\\\\\" -replace [regex]::Escape\\(\\\\\"t\\('rf_alert_agree'\\)\\\\\"\\),\\\\\"_rfT\\('rf_alert_agree'\\)\\\\\" -replace [regex]::Escape\\(\\\\\"t\\('rf_submitting'\\)\\\\\"\\),\\\\\"_rfT\\('rf_submitting'\\)\\\\\" -replace [regex]::Escape\\(\\\\\"t\\('rf_alert_done'\\)\\\\\"\\),\\\\\"_rfT\\('rf_alert_done'\\)\\\\\" -replace [regex]::Escape\\(\\\\\"t\\('rf_alert_err'\\)\\\\\"\\),\\\\\"_rfT\\('rf_alert_err'\\)\\\\\" | Set-Content cotton_print.html -NoNewline\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" -Recurse -File -Filter \"*.html\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx wrangler@latest pages domain add hexa-board.com --project-name=chameleon-print)",
+      "Bash(nslookup chameleon.design 8.8.8.8)",
+      "Bash(sed -n '3240,3250p' simple_order.js)",
+      "Bash(sed -n '5485,5498p' simple_order.js)",
+      "Bash(sed -n '212,220p' driver.html)",
+      "Bash(sed -n '362,368p' driver.html)",
+      "Bash(ls supabase/functions/product-advisor/)",
+      "Bash(wc -l advisor-panel.js supabase/functions/product-advisor/index.ts)",
+      "Bash(awk -F: '$1>3265 && $1<3290 {print}')",
+      "Bash(awk 'NR>=860 && /id=\"startScreen\"/{found=1} found && /^<\\\\/div>/{depth--; if\\(depth<0\\){print NR\": close startScreen\"; exit}} found && /<div/{depth++}' \"c:/Users/win 10/Desktop/작업/index.html\")",
+      "Bash(bash /c/tmp/goods-loop.sh)"
     ],
     "additionalDirectories": [
       "\\tmp"

@@ -229,6 +229,34 @@ var FIN_METAL = [
     { id:'gold',   kr:'골드',  ja:'ゴールド', en:'Gold',   delta:400 },
     { id:'black',  kr:'블랙',  ja:'ブラック', en:'Black',  delta:300 }
 ];
+// 2026-05-29: 굿즈 풀스펙용 추가 프리셋
+var SIZE_SMALL = [
+    { id:'s', kr:'S 40mm',  ja:'S 40mm',  en:'S 40mm',  delta:0 },
+    { id:'m', kr:'M 60mm',  ja:'M 60mm',  en:'M 60mm',  delta:0 },
+    { id:'l', kr:'L 80mm',  ja:'L 80mm',  en:'L 80mm',  delta:0 }
+];
+var SIZE_MUG = [
+    { id:'325', kr:'325ml', ja:'325ml', en:'325ml', delta:0 },
+    { id:'450', kr:'450ml', ja:'450ml', en:'450ml', delta:0 },
+    { id:'500', kr:'500ml', ja:'500ml', en:'500ml', delta:0 }
+];
+var SIZE_APPAREL = [
+    { id:'s',  kr:'S',  ja:'S',  en:'S',  delta:0 },
+    { id:'m',  kr:'M',  ja:'M',  en:'M',  delta:0 },
+    { id:'l',  kr:'L',  ja:'L',  en:'L',  delta:0 },
+    { id:'xl', kr:'XL', ja:'XL', en:'XL', delta:0 }
+];
+var FIN_COLORS = [
+    { id:'white',  kr:'화이트',  ja:'ホワイト', en:'White',  delta:0 },
+    { id:'black',  kr:'블랙',    ja:'ブラック', en:'Black',  delta:0 },
+    { id:'pink',   kr:'핑크',    ja:'ピンク',   en:'Pink',   delta:0 },
+    { id:'blue',   kr:'블루',    ja:'ブルー',   en:'Blue',   delta:0 }
+];
+var FIN_CLEAR = [
+    { id:'clear', kr:'투명',  ja:'クリア', en:'Clear', delta:0 },
+    { id:'white', kr:'화이트', ja:'ホワイト', en:'White', delta:0 },
+    { id:'black', kr:'블랙',   ja:'ブラック', en:'Black', delta:0 }
+];
 
 // ─── 39 서브카테고리 템플릿 ───
 // sub: 서브카 메타 / sizes, finishes: 변형 / base: 기준가(KRW) / unit: 단위명 / mainKr/mainJp/mainEn: 메인 카테고리 라벨
@@ -281,7 +309,65 @@ var TEMPLATES = [
     { dbCat:'pkg_parts_ribbon', sub:{kr:'리본',     ja:'リボン',         en:'Ribbon'},          sizes:SIZE_LABEL,fins:FIN_FABRIC, base:200 },
     { dbCat:'pkg_parts_tissue', sub:{kr:'티슈 페이퍼',ja:'ティッシュ',     en:'Tissue Paper'},    sizes:SIZE_LABEL,fins:FIN_PAPER,  base:150 },
     { dbCat:'pkg_parts_string', sub:{kr:'끈·핸들',  ja:'紐・ハンドル',   en:'String / Handle'}, sizes:SIZE_LABEL,fins:FIN_FABRIC, base:250 },
-    { dbCat:'pkg_parts_seal',   sub:{kr:'봉투 씰',  ja:'封筒シール',     en:'Envelope Seal'},   sizes:SIZE_LABEL,fins:FIN_PAPER,  base:180 }
+    { dbCat:'pkg_parts_seal',   sub:{kr:'봉투 씰',  ja:'封筒シール',     en:'Envelope Seal'},   sizes:SIZE_LABEL,fins:FIN_PAPER,  base:180 },
+    // ───── 2026-05-29 굿즈 풀스펙 확장 (가격문의 모드, base:0) ─────
+    // 아크릴
+    { dbCat:'pkg_acr_keyring', sub:{kr:'아크릴 키링',   ja:'アクリルキー',     en:'Acrylic Keyring'},  sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    { dbCat:'pkg_acr_stand',   sub:{kr:'아크릴 스탠드', ja:'アクリルスタンド', en:'Acrylic Stand'},    sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    { dbCat:'pkg_acr_badge',   sub:{kr:'아크릴 뱃지',   ja:'アクリルバッジ',   en:'Acrylic Badge'},    sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    { dbCat:'pkg_acr_magnet',  sub:{kr:'아크릴 자석',   ja:'アクリルマグネット',en:'Acrylic Magnet'},   sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    { dbCat:'pkg_acr_jibbitz', sub:{kr:'아크릴 지비츠', ja:'シューズチャーム', en:'Shoe Charm'},       sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    { dbCat:'pkg_acr_nametag', sub:{kr:'아크릴 네임택', ja:'ネームタグ',       en:'Acrylic Nametag'},  sizes:SIZE_SMALL,fins:FIN_CLEAR, base:0 },
+    // 실리콘
+    { dbCat:'pkg_sil_keyring',   sub:{kr:'실리콘 키링', ja:'シリコンキー',  en:'Silicone Keyring'}, sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sil_wristband', sub:{kr:'실리콘 손목띠',ja:'リストバンド',  en:'Silicone Wristband'},sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sil_coaster',   sub:{kr:'실리콘 코스터',ja:'シリコンコースター',en:'Silicone Coaster'},sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sil_grip',      sub:{kr:'실리콘 폰그립',ja:'スマホグリップ',en:'Phone Grip'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 메탈 뱃지
+    { dbCat:'pkg_mtb_enamel', sub:{kr:'에나멜 핀', ja:'エナメルピン',   en:'Enamel Pin'},        sizes:SIZE_SMALL,fins:FIN_METAL,base:0 },
+    { dbCat:'pkg_mtb_metal',  sub:{kr:'메탈 뱃지', ja:'メタルバッジ',   en:'Metal Badge'},       sizes:SIZE_SMALL,fins:FIN_METAL,base:0 },
+    { dbCat:'pkg_mtb_gold',   sub:{kr:'골드 뱃지', ja:'ゴールドバッジ', en:'Gold Badge'},        sizes:SIZE_SMALL,fins:FIN_METAL,base:0 },
+    { dbCat:'pkg_mtb_patch',  sub:{kr:'자수 와펜', ja:'刺繍ワッペン',   en:'Embroidery Patch'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 머그/텀블러
+    { dbCat:'pkg_mug_ceramic', sub:{kr:'도자기 머그',     ja:'陶器マグ',   en:'Ceramic Mug'},      sizes:SIZE_MUG,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_mug_tumbler', sub:{kr:'스테인레스 텀블러',ja:'タンブラー',en:'Stainless Tumbler'},sizes:SIZE_MUG,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_mug_glass',   sub:{kr:'유리컵',          ja:'グラス',     en:'Glass Cup'},        sizes:SIZE_MUG,fins:FIN_CLEAR, base:0 },
+    // 거울
+    { dbCat:'pkg_mir_hand',  sub:{kr:'손거울',     ja:'手鏡',     en:'Hand Mirror'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_mir_card',  sub:{kr:'카드거울',   ja:'カード鏡', en:'Card Mirror'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_mir_stand', sub:{kr:'스탠드 거울',ja:'スタンド鏡',en:'Stand Mirror'},sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 문구류
+    { dbCat:'pkg_stn_pen',     sub:{kr:'볼펜',     ja:'ボールペン',   en:'Pen'},           sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_stn_note',    sub:{kr:'노트',     ja:'ノート',       en:'Notebook'},      sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_stn_diary',   sub:{kr:'다이어리', ja:'手帳',         en:'Diary'},         sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_stn_memo',    sub:{kr:'메모지',   ja:'メモ帳',       en:'Memo Pad'},      sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_stn_stkbook', sub:{kr:'스티커북', ja:'シールブック', en:'Sticker Book'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 의류
+    { dbCat:'pkg_apl_tshirt', sub:{kr:'티셔츠', ja:'Tシャツ', en:'T-shirt'}, sizes:SIZE_APPAREL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_apl_hoodie', sub:{kr:'후드',   ja:'パーカー', en:'Hoodie'},  sizes:SIZE_APPAREL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_apl_socks',  sub:{kr:'양말',   ja:'靴下',     en:'Socks'},   sizes:SIZE_APPAREL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_apl_cap',    sub:{kr:'모자',   ja:'キャップ', en:'Cap'},     sizes:SIZE_SMALL,  fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_apl_mask',   sub:{kr:'마스크', ja:'マスク',   en:'Mask'},    sizes:SIZE_SMALL,  fins:FIN_COLORS,base:0 },
+    // 휴대잡화
+    { dbCat:'pkg_acc_phonecase',  sub:{kr:'폰케이스',   ja:'スマホケース', en:'Phone Case'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_acc_strap',      sub:{kr:'폰스트랩',   ja:'ストラップ',   en:'Phone Strap'}, sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_acc_cardwallet', sub:{kr:'카드지갑',   ja:'カードケース', en:'Card Wallet'}, sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_acc_coinpurse',  sub:{kr:'동전지갑',   ja:'コインケース', en:'Coin Purse'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 장식 굿즈
+    { dbCat:'pkg_dec_plushie',   sub:{kr:'캐릭터 인형', ja:'ぬいぐるみ',   en:'Plushie'},        sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_dec_plushring', sub:{kr:'인형 키링',   ja:'マスコット',   en:'Mascot Keyring'}, sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_dec_hairtie',   sub:{kr:'머리끈',     ja:'ヘアゴム',     en:'Hair Tie'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_dec_wristband', sub:{kr:'팔찌',       ja:'ブレスレット', en:'Bracelet'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 리빙
+    { dbCat:'pkg_liv_diffuser',  sub:{kr:'디퓨저',     ja:'ディフューザー',   en:'Diffuser'},        sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_liv_candle',    sub:{kr:'캔들',       ja:'キャンドル',       en:'Candle'},          sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_liv_incense',   sub:{kr:'인센스 홀더', ja:'お香立て',         en:'Incense Holder'},  sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_liv_moodlight', sub:{kr:'무드등',     ja:'ムードライト',     en:'Mood Light'},      sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    // 시즌 굿즈
+    { dbCat:'pkg_sea_fan',      sub:{kr:'부채',       ja:'うちわ',           en:'Hand Fan'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sea_umbrella', sub:{kr:'우산',       ja:'傘',               en:'Umbrella'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sea_towel',    sub:{kr:'타올',       ja:'タオル',           en:'Towel'},          sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 },
+    { dbCat:'pkg_sea_picmat',   sub:{kr:'피크닉 매트', ja:'ピクニックマット', en:'Picnic Mat'},     sizes:SIZE_SMALL,fins:FIN_COLORS,base:0 }
 ];
 
 // ─── 설명 템플릿 ───
