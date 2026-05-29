@@ -1091,6 +1091,8 @@ ${hreflangTags('/editor')}
             'goods': '/goods.html',
             // 2026-05-29: 패키지 굿즈 시드 데이터 어드민 도구 — /seed-goods (login-gated)
             'seed-goods': '/seed-goods.html',
+            // 2026-05-29: 굿즈 이미지 자동화 도구 — /goods-images (login-gated, upload + DALL-E)
+            'goods-images': '/goods-images.html',
         };
         // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
         if (path.indexOf('store/') === 0 && path.length > 6) {

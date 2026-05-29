@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>굿즈 이미지 자동화 — Admin Only</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR', sans-serif; background:#0f172a; color:#e2e8f0; padding:24px; min-height:100vh; }
+.wrap { max-width:1200px; margin:0 auto; }
+h1 { font-size:24px; font-weight:900; margin-bottom:8px; color:#fff; }
+.sub { font-size:13px; color:#94a3b8; margin-bottom:24px; }
+.card { background:#1e293b; border-radius:14px; padding:20px 22px; margin-bottom:16px; border:1px solid #334155; }
+.card h2 { font-size:15px; font-weight:800; color:#cbd5e1; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card h2 i { color:#818cf8; }
+.row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.stat { background:#0f172a; padding:14px 18px; border-radius:10px; flex:1; min-width:160px; border:1px solid #334155; }
+.stat-label { font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.stat-val { font-size:26px; font-weight:900; color:#fff; margin-top:4px; }
+.stat-val.green { color:#34d399; }
+.stat-val.yellow { color:#fbbf24; }
+.stat-val.red { color:#f87171; }
+.btn { padding:9px 16px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-primary { background:#6366f1; color:#fff; }
+.btn-primary:hover { background:#4f46e5; }
+.btn-primary:disabled { background:#475569; cursor:not-allowed; opacity:0.6; }
+.btn-success { background:#10b981; color:#fff; }
+.btn-success:hover { background:#059669; }
+.btn-ghost { background:transparent; color:#cbd5e1; border:1px solid #475569; }
+.btn-ghost:hover { background:#334155; }
+.btn-danger { background:#dc2626; color:#fff; }
+.btn-danger:hover { background:#b91c1c; }
+.tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; }
+.tab-btn { padding:10px 18px; background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
+.tab-btn.active { background:#6366f1; color:#fff; border-color:#6366f1; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+.dropzone {
+    border:2px dashed #475569; border-radius:12px; padding:48px 24px;
+    text-align:center; cursor:pointer; transition:all 0.2s;
+    background:#0f172a;
+}
+.dropzone:hover, .dropzone.drag { border-color:#6366f1; background:#1e1b4b; }
+.dropzone i { font-size:48px; color:#475569; margin-bottom:12px; display:block; }
+.dropzone p { color:#94a3b8; font-size:14px; margin-bottom:4px; }
+.dropzone .hint { font-size:11px; color:#64748b; }
+input[type="file"] { display:none; }
+.file-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:16px; }
+.file-table th { background:#0f172a; padding:8px 10px; text-align:left; color:#94a3b8; font-weight:700; font-size:11px; border-bottom:1px solid #334155; }
+.file-table td { padding:6px 10px; border-bottom:1px solid #1e293b; font-size:12px; }
+.file-table tr:hover td { background:#0f172a; }
+.match-yes { color:#34d399; font-weight:700; }
+.match-no  { color:#f87171; font-weight:700; }
+.match-up  { color:#60a5fa; font-weight:700; }
+.match-done{ color:#34d399; font-weight:700; }
+.match-err { color:#fbbf24; font-weight:700; }
+.progress { background:#0f172a; border-radius:999px; height:8px; overflow:hidden; margin-top:8px; border:1px solid #334155; }
+.progress-bar { background:linear-gradient(90deg,#6366f1,#8b5cf6); height:100%; transition:width 0.3s; width:0%; }
+.log { background:#020617; border-radius:8px; padding:12px 14px; font-family:'SF Mono', Consolas, monospace; font-size:11px; color:#94a3b8; max-height:260px; overflow-y:auto; line-height:1.6; }
+.log .ok { color:#34d399; }
+.log .err { color:#f87171; }
+.log .warn { color:#fbbf24; }
+.log .info { color:#60a5fa; }
+label { font-size:12px; color:#94a3b8; font-weight:600; }
+input[type="password"], input[type="text"], input[type="number"], select {
+    background:#0f172a; color:#fff; border:1px solid #334155; border-radius:6px;
+    padding:8px 12px; font-size:13px; font-family:inherit;
+}
+input[type="checkbox"] { accent-color:#6366f1; }
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:10px; }
+.cat-row { background:#0f172a; border:1px solid #334155; border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:10px; }
+.cat-row .cat-name { flex:1; font-size:13px; font-weight:700; color:#cbd5e1; }
+.cat-row .cat-meta { font-size:10px; color:#64748b; }
+.cat-row .cat-btns { display:flex; gap:6px; }
+.cat-row button { padding:5px 9px; font-size:11px; }
+.gate { text-align:center; padding:80px 24px; }
+.gate i { font-size:64px; color:#475569; margin-bottom:16px; display:block; }
+.gate h2 { font-size:20px; color:#cbd5e1; margin-bottom:8px; }
+.gate p { color:#64748b; font-size:13px; margin-bottom:20px; }
+.code-tag { font-family:monospace; font-size:11px; padding:1px 5px; background:#312e81; color:#a5b4fc; border-radius:3px; }
+.cost-est { background:#422006; border:1px solid #f59e0b; color:#fbbf24; padding:10px 14px; border-radius:8px; font-size:12px; margin-top:10px; }
+.cost-est b { color:#fde68a; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>🖼️ 굿즈 이미지 자동화</h1>
+    <p class="sub">시드된 상품(<code class="code-tag">goods_*</code>)에 이미지를 일괄 등록·갱신. 수동 업로드 / AI 자동 생성 둘 다 지원.</p>
+
+    <div id="gate" class="gate" style="display:none;">
+        <i class="fa-solid fa-lock"></i>
+        <h2>관리자 로그인 필요</h2>
+        <p>이 페이지는 본사 관리자만 접근 가능합니다.</p>
+        <p id="gateMsg" style="color:#f87171; font-size:12px;"></p>
+        <a href="/" class="btn btn-ghost" style="text-decoration:none;">메인으로</a>
+    </div>
+
+    <div id="app" style="display:none;">
+
+        <!-- 통계 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-chart-bar"></i> 현재 상태</h2>
+            <div class="row">
+                <div class="stat">
+                    <div class="stat-label">전체 굿즈 상품</div>
+                    <div class="stat-val" id="statTotal">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">이미지 등록됨</div>
+                    <div class="stat-val green" id="statWithImg">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">이미지 미등록</div>
+                    <div class="stat-val red" id="statNoImg">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">로그인</div>
+                    <div class="stat-val yellow" id="statUser" style="font-size:13px; padding-top:8px;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 탭 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="prompts" onclick="window._giTab('prompts')">📝 프롬프트 헬퍼</button>
+            <button class="tab-btn" data-tab="upload"  onclick="window._giTab('upload')">📤 일괄 업로드</button>
+            <button class="tab-btn" data-tab="ai"      onclick="window._giTab('ai')">🤖 DALL-E 자동생성</button>
+        </div>
+
+        <!-- ─── 탭 1: 프롬프트 헬퍼 ─── -->
+        <div class="tab-content active" id="tab-prompts">
+            <div class="card">
+                <h2><i class="fa-solid fa-clipboard"></i> 카테고리별 프롬프트 + 파일명 목록</h2>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    카테고리별 "프롬프트 복사" → Midjourney/DALL-E 에서 이미지 생성 → "파일명 목록" 받아서 파일명 그대로 저장 → 탭 2 로 일괄 업로드.
+                </p>
+                <div class="row" style="margin-bottom:12px;">
+                    <button class="btn btn-ghost" onclick="window._giDownloadAllFilenames()"><i class="fa-solid fa-download"></i> 전체 파일명 .txt 다운로드</button>
+                    <span style="font-size:11px; color:#64748b;">현재 모든 굿즈 상품의 필요한 파일명 목록 한 번에 받기</span>
+                </div>
+                <div class="cat-grid" id="catGrid"></div>
+            </div>
+        </div>
+
+        <!-- ─── 탭 2: 일괄 업로드 ─── -->
+        <div class="tab-content" id="tab-upload">
+            <div class="card">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> 이미지 일괄 업로드</h2>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    파일명은 <b>상품 code 와 일치</b> 해야 함 (확장자 무관). 예: <code class="code-tag">goods_pkg_box_plain_s_white.png</code>
+                </p>
+                <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p>여기에 이미지 드래그하거나 클릭하여 선택</p>
+                    <div class="hint">PNG / JPG / WebP · 다중 파일 선택 가능 · 50MB 이하 권장</div>
+                </div>
+                <input type="file" id="fileInput" multiple accept="image/*">
+
+                <div style="overflow-x:auto; margin-top:14px;">
+                    <table class="file-table" id="fileTable" style="display:none;">
+                        <thead><tr><th>파일명</th><th>매칭 상품 code</th><th>상품명</th><th>상태</th></tr></thead>
+                        <tbody id="fileTbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="row" id="uploadActions" style="margin-top:14px; display:none;">
+                    <button class="btn btn-primary" onclick="window._giUploadAll()" id="giUploadBtn"><i class="fa-solid fa-rocket"></i> 매칭된 파일 일괄 업로드</button>
+                    <button class="btn btn-ghost" onclick="window._giClearFiles()">목록 초기화</button>
+                    <span style="margin-left:auto; font-size:12px; color:#94a3b8;" id="uploadSummary"></span>
+                </div>
+                <div class="progress" id="upProgWrap" style="display:none;"><div class="progress-bar" id="upProgBar"></div></div>
+            </div>
+        </div>
+
+        <!-- ─── 탭 3: DALL-E 자동생성 ─── -->
+        <div class="tab-content" id="tab-ai">
+            <div class="card">
+                <h2><i class="fa-solid fa-robot"></i> OpenAI DALL-E 3 자동 생성</h2>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    OpenAI API 키로 카테고리별 프롬프트를 자동 실행 → 생성된 이미지 → Supabase Storage → DB <code class="code-tag">img_url</code> 자동 갱신.
+                </p>
+
+                <div class="row" style="margin-bottom:12px;">
+                    <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+                        OpenAI API Key (sk-...)
+                        <input type="password" id="oaiKey" placeholder="sk-proj-..." style="width:100%;">
+                    </label>
+                    <label style="display:flex; flex-direction:column; gap:4px;">
+                        품질
+                        <select id="oaiQuality">
+                            <option value="standard">standard ($0.040)</option>
+                            <option value="hd">hd ($0.080)</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="row" style="margin-bottom:12px;">
+                    <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+                        대상 카테고리
+                        <select id="oaiTarget">
+                            <option value="missing">이미지 없는 상품만 (권장)</option>
+                            <option value="all">전체 (기존 이미지 덮어쓰기)</option>
+                        </select>
+                    </label>
+                    <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+                        카테고리 필터 (선택)
+                        <select id="oaiCatFilter">
+                            <option value="">전체 카테고리</option>
+                        </select>
+                    </label>
+                    <label style="flex:1; display:flex; flex-direction:column; gap:4px;">
+                        최대 생성 수
+                        <input type="number" id="oaiMaxN" value="10" min="1" max="500" placeholder="10">
+                    </label>
+                </div>
+
+                <div class="cost-est" id="costEst">
+                    예상 비용: <b id="costVal">$0.40</b> (10개 × standard) — OpenAI 청구
+                </div>
+
+                <div class="row" style="margin-top:14px;">
+                    <button class="btn btn-success" onclick="window._giAIStart()" id="aiStartBtn"><i class="fa-solid fa-play"></i> AI 자동생성 시작</button>
+                    <button class="btn btn-danger"  onclick="window._giAIStop()"  id="aiStopBtn" disabled><i class="fa-solid fa-stop"></i> 중지</button>
+                    <span style="margin-left:auto; font-size:12px; color:#94a3b8;" id="aiSummary"></span>
+                </div>
+                <div class="progress" id="aiProgWrap" style="display:none;"><div class="progress-bar" id="aiProgBar"></div></div>
+
+                <p style="font-size:11px; color:#64748b; margin-top:12px;">
+                    💡 API 키는 브라우저 localStorage 에만 저장됨 (외부 전송 X). DALL-E 3 1024×1024 standard = $0.04/장. 한 장 생성 ~15초.
+                </p>
+            </div>
+        </div>
+
+        <!-- 로그 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-terminal"></i> 로그</h2>
+            <div class="log" id="giLog"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// 굿즈 이미지 자동화 — 어드민 전용
+// ════════════════════════════════════════════════════════════════════════════
+
+var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+var ADMIN_EMAILS = ['korea900as@gmail.com', 'doubleu202201@gmail.com', 'seonyul661@gmail.com'];
+var STORAGE_BUCKET = 'products';
+var STORAGE_PATH = 'goods';   // products/goods/{code}.png
+
+var sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession:true, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' }
+});
+
+// ─── 카테고리 + 프롬프트 정의 (ai-prompts.md 와 동기) ───
+// {finish} 와 {sizeText} 토큰은 자동 치환
+var STYLE_SUFFIX = ', product photography, soft studio lighting, white seamless background, 3/4 angle view, commercial catalog style, high detail, sharp focus, no text, no logo, blank surface';
+
+var PROMPT_TPL = {
+    'pkg_box_plain':  'A minimalist plain paper box with clean folded edges, matte cardboard surface, lid slightly open showing depth, {finish} finish',
+    'pkg_box_fold':   'A flat-pack foldable paper box laid open showing the fold pattern, {finish} cardstock, geometric crease lines visible',
+    'pkg_box_mag':    'A premium hinged magnetic-closure rigid box with smooth matte exterior, {finish} finish, lid slightly open at 30 degrees, luxury packaging look',
+    'pkg_box_sleeve': 'A two-piece sleeve-style paper box, the sliding inner tray pulled out halfway, {finish} outer sleeve, minimal elegant design',
+    'pkg_box_round':  'A cylindrical round paper box with matching lid, {finish} finish, smooth seam, slight overhead angle',
+    'pkg_bag_kraft':  'A natural kraft paper shopping bag standing upright, twisted paper handles, gusseted sides, blank front face, {finish} color',
+    'pkg_bag_coat':   'A glossy coated paper shopping bag with smooth reflective surface, {finish} finish, ribbon handles, crisp edges, luxury retail look',
+    'pkg_bag_string': 'A paper shopping bag with rope-style cotton string handles, {finish} body, eyelet reinforced handle holes',
+    'pkg_bag_fold':   'A flat-folded paper shopping bag shown semi-opened, {finish} color, compact design',
+    'pkg_nw_basic':   'A simple non-woven polypropylene tote bag with flat handles, matte fabric texture, {finish} color, stands upright',
+    'pkg_nw_handle':  'A non-woven bag with reinforced loop handles, slightly larger gusset, {finish} color, spunbond fabric texture',
+    'pkg_nw_shoulder':'A non-woven shoulder bag with long straps, medium-sized rectangular body, {finish} color, modern tote style',
+    'pkg_nw_cooler':  'A thermal-insulated non-woven cooler bag, silver foil interior visible at top opening, {finish} exterior, zipper top',
+    'pkg_pp_pp':      'A woven polypropylene bag with flat handles, {finish} finish, durable plastic weave texture',
+    'pkg_pp_pvc':     'A clear transparent PVC tote bag, visible plastic seam edges, vinyl handles, modern fashion-forward look',
+    'pkg_pp_pe':      'A polyethylene plastic shopping bag with die-cut handle, {finish} finish, slight wrinkle texture',
+    'pkg_rpet_rpet':  'A recycled PET fabric tote bag, slightly heathered texture, {finish} color, sturdy long handles, eco-conscious design',
+    'pkg_rpet_canvas':'A heavy-weight cotton canvas tote bag, {finish} color, visible weave, sturdy cotton handles, lifestyle look',
+    'pkg_rpet_cotton':'A lightweight cotton fabric tote bag, soft cotton drape, {finish} color, casual everyday style, long shoulder straps',
+    'pkg_rpet_tarp':  'A tarpaulin tote bag made from recycled banner material, waterproof glossy texture, {finish} body, industrial-chic look',
+    'pkg_tin_sq':     'A small rectangular metal tin box with hinged lid slightly open, {finish} finish, smooth matte metal surface, clean edges',
+    'pkg_tin_round':  'A circular metal tin with pull-off lid resting beside, {finish} finish, shallow profile, brushed metal',
+    'pkg_tin_slide':  'A flat metal slide-top tin, the sliding lid pulled out halfway showing the rail, {finish} finish, pocket-sized, brushed metal',
+    'pkg_pouch_zip':  'A flat zipper pouch with metal zipper across the top, {finish} body, slightly unzipped, clean rectangular shape',
+    'pkg_pouch_canvas':'A canvas zippered pouch, {finish} color, visible cotton weave, contrast zipper pull',
+    'pkg_pouch_leather':'A premium leather zip pouch, {finish} color, smooth surface with subtle grain texture, metal zipper, luxury feel',
+    'pkg_pouch_pvc':  'A clear vinyl zipper pouch with {finish} piping, contents visible through transparent body, travel pouch style',
+    'pkg_fold_mag':   'A collapsible magnetic-flap gift box partially unfolded, {finish} exterior, magnetic side flaps, mid-assembly view',
+    'pkg_fold_ribbon':'A flat-folded gift box tied with a satin ribbon bow, {finish} cardstock, elegant gift presentation',
+    'pkg_fold_auto':  'A snap-bottom auto-lock box shown in folded flat state next to assembled version, {finish} cardboard, practical shipping box',
+    'pkg_label_round':'A small circular paper label, {finish} surface, slight peel from backing showing adhesive, blank face',
+    'pkg_label_sq':   'A rectangular paper sticker label, {finish} surface, slight curl at corner, clean cut edges',
+    'pkg_label_clear':'A transparent vinyl sticker with no visible background, slight glossy reflection, {finish} accent',
+    'pkg_label_metal':'A metallic foil sticker with mirror finish, {finish} surface, high-reflective brushed texture',
+    'pkg_label_holo': 'A holographic rainbow sticker with prismatic surface, visible rainbow refraction pattern, {finish} accent',
+    'pkg_parts_ribbon':'A spool of satin gift-wrap ribbon, {finish} color, partially unrolled showing texture, clean studio shot',
+    'pkg_parts_tissue':'A stack of thin tissue paper sheets, {finish} color, top sheet slightly raised showing translucency',
+    'pkg_parts_string':'A coil of cotton twine, {finish} color, neatly wound, slight texture detail',
+    'pkg_parts_seal':  'A wax-style adhesive seal sticker on neutral surface, {finish} finish, embossed circular border, luxury closure'
+};
+
+// 카테고리 → 한글명 매핑
+var CAT_LABEL = {
+    'pkg_box_plain':'무지박스','pkg_box_fold':'접이식박스','pkg_box_mag':'자석박스','pkg_box_sleeve':'슬리브박스','pkg_box_round':'원형박스',
+    'pkg_bag_kraft':'크래프트쇼핑백','pkg_bag_coat':'코팅쇼핑백','pkg_bag_string':'끈손잡이쇼핑백','pkg_bag_fold':'접이식쇼핑백',
+    'pkg_nw_basic':'기본부직포','pkg_nw_handle':'핸들부직포','pkg_nw_shoulder':'어깨끈부직포','pkg_nw_cooler':'보냉부직포',
+    'pkg_pp_pp':'PP가방','pkg_pp_pvc':'PVC투명','pkg_pp_pe':'PE비닐',
+    'pkg_rpet_rpet':'rPET','pkg_rpet_canvas':'캔버스백','pkg_rpet_cotton':'면토트','pkg_rpet_tarp':'타포린',
+    'pkg_tin_sq':'사각틴','pkg_tin_round':'원형틴','pkg_tin_slide':'슬라이드틴',
+    'pkg_pouch_zip':'지퍼파우치','pkg_pouch_canvas':'캔버스파우치','pkg_pouch_leather':'가죽파우치','pkg_pouch_pvc':'비닐파우치',
+    'pkg_fold_mag':'자석폴딩','pkg_fold_ribbon':'리본폴딩','pkg_fold_auto':'자동조립',
+    'pkg_label_round':'원형라벨','pkg_label_sq':'사각라벨','pkg_label_clear':'투명스티커','pkg_label_metal':'메탈스티커','pkg_label_holo':'홀로그램',
+    'pkg_parts_ribbon':'리본','pkg_parts_tissue':'티슈','pkg_parts_string':'끈핸들','pkg_parts_seal':'봉투씰'
+};
+
+// finish 한글 → 영어 매핑 (code parsing 시)
+var FINISH_EN = {
+    white:'white', kraft:'kraft brown', black:'black',
+    natural:'natural', navy:'navy',
+    clear:'clear', matte:'matte',
+    silver:'silver brushed metal', gold:'gold brushed metal'
+};
+
+// 전역 상태
+var allProducts = [];
+var pendingFiles = [];   // 드래그된 파일 목록
+var aiStopFlag = false;
+var aiRunning = false;
+
+// ─── 유틸 ───
+function log(msg, cls) {
+    var el = document.getElementById('giLog');
+    var ts = new Date().toTimeString().slice(0,8);
+    el.innerHTML += '<div class="' + (cls||'') + '">[' + ts + '] ' + msg + '</div>';
+    el.scrollTop = el.scrollHeight;
+}
+function escHtml(s) { return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+function parseCode(code) {
+    // goods_pkg_box_plain_s_white → { category:'pkg_box_plain', sizeId:'s', finishId:'white' }
+    if (!code || code.indexOf('goods_') !== 0) return null;
+    var rest = code.slice(6); // pkg_box_plain_s_white
+    var parts = rest.split('_');
+    if (parts.length < 4) return null;
+    var finishId = parts[parts.length-1];
+    var sizeId   = parts[parts.length-2];
+    var category = parts.slice(0, parts.length-2).join('_');
+    return { category:category, sizeId:sizeId, finishId:finishId };
+}
+
+function buildPrompt(product) {
+    var parsed = parseCode(product.code);
+    if (!parsed) return null;
+    var tpl = PROMPT_TPL[parsed.category];
+    if (!tpl) return null;
+    var finishWord = FINISH_EN[parsed.finishId] || parsed.finishId;
+    return tpl.replace('{finish}', finishWord) + STYLE_SUFFIX;
+}
+
+// ─── 상품 로드 + 통계 ───
+async function loadProducts() {
+    var res = await sb.from('admin_products')
+        .select('code, category, name, img_url')
+        .like('category', 'pkg_%')
+        .order('code')
+        .limit(2000);
+    if (res.error) {
+        log('상품 로드 실패: ' + res.error.message, 'err');
+        return;
+    }
+    allProducts = res.data || [];
+    var withImg = allProducts.filter(function(p){ return p.img_url && p.img_url.length > 0; }).length;
+    document.getElementById('statTotal').textContent = allProducts.length;
+    document.getElementById('statWithImg').textContent = withImg;
+    document.getElementById('statNoImg').textContent = allProducts.length - withImg;
+}
+
+// ─── 탭 전환 ───
+window._giTab = function(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === tab); });
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.toggle('active', c.id === 'tab-' + tab); });
+    if (tab === 'prompts') renderPromptHelper();
+    if (tab === 'ai') renderAiCatFilter();
+};
+
+// ─── 탭 1: 프롬프트 헬퍼 ───
+function renderPromptHelper() {
+    var grid = document.getElementById('catGrid');
+    var cats = Object.keys(PROMPT_TPL);
+    grid.innerHTML = cats.map(function(c){
+        var count = allProducts.filter(function(p){ return p.category === c; }).length;
+        return '<div class="cat-row">' +
+            '<div style="flex:1;">' +
+                '<div class="cat-name">' + escHtml(CAT_LABEL[c] || c) + '</div>' +
+                '<div class="cat-meta"><span class="code-tag">' + c + '</span> · ' + count + '개 상품</div>' +
+            '</div>' +
+            '<div class="cat-btns">' +
+                '<button class="btn btn-ghost" onclick="window._giCopyPrompt(\'' + c + '\')">📋 프롬프트</button>' +
+                '<button class="btn btn-ghost" onclick="window._giDownloadCatFilenames(\'' + c + '\')">📄 파일명</button>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+window._giCopyPrompt = function(cat) {
+    var tpl = PROMPT_TPL[cat];
+    if (!tpl) return;
+    var text = '# ' + (CAT_LABEL[cat] || cat) + ' (' + cat + ')\n\n' +
+               '# 베이스 프롬프트 — {finish} 부분만 색상/마감 단어로 치환\n' +
+               tpl + STYLE_SUFFIX + '\n\n' +
+               '# 변형 예시 (각 색상별로 생성)\n';
+    var variants = allProducts.filter(function(p){ return p.category === cat; });
+    variants.slice(0, 5).forEach(function(v){
+        var p = buildPrompt(v);
+        if (p) text += '# ' + v.code + '\n' + p + '\n\n';
+    });
+    navigator.clipboard.writeText(text).then(function(){
+        log('프롬프트 복사 완료: ' + cat, 'ok');
+    });
+};
+
+window._giDownloadCatFilenames = function(cat) {
+    var prods = allProducts.filter(function(p){ return p.category === cat; });
+    var lines = prods.map(function(p){ return p.code + '.png'; });
+    download((cat || 'goods') + '_filenames.txt', lines.join('\n'));
+    log('파일명 목록 다운로드: ' + cat + ' (' + lines.length + '개)', 'info');
+};
+
+window._giDownloadAllFilenames = function() {
+    var by = {};
+    allProducts.forEach(function(p){
+        if (!by[p.category]) by[p.category] = [];
+        by[p.category].push(p.code + '.png');
+    });
+    var lines = [];
+    Object.keys(by).sort().forEach(function(c){
+        lines.push('# ─── ' + (CAT_LABEL[c] || c) + ' (' + c + ') ───');
+        lines = lines.concat(by[c]);
+        lines.push('');
+    });
+    download('goods_all_filenames.txt', lines.join('\n'));
+    log('전체 파일명 목록 다운로드 — ' + allProducts.length + '개', 'info');
+};
+
+function download(name, text) {
+    var blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+// ─── 탭 2: 일괄 업로드 ───
+function setupDropzone() {
+    var dz = document.getElementById('dropzone');
+    var input = document.getElementById('fileInput');
+    ['dragenter','dragover'].forEach(function(e){ dz.addEventListener(e, function(ev){ ev.preventDefault(); dz.classList.add('drag'); }); });
+    ['dragleave','drop'].forEach(function(e){ dz.addEventListener(e, function(ev){ ev.preventDefault(); dz.classList.remove('drag'); }); });
+    dz.addEventListener('drop', function(ev){
+        var files = Array.from(ev.dataTransfer.files).filter(function(f){ return f.type.indexOf('image/') === 0; });
+        addFiles(files);
+    });
+    input.addEventListener('change', function(){
+        var files = Array.from(input.files);
+        addFiles(files);
+        input.value = '';
+    });
+}
+
+function addFiles(files) {
+    files.forEach(function(f){
+        var base = f.name.replace(/\.[^.]+$/, '');  // 확장자 제거
+        var match = allProducts.find(function(p){ return p.code === base; });
+        pendingFiles.push({ file:f, name:f.name, code:base, product:match || null, status:'대기' });
+    });
+    renderFileTable();
+}
+
+function renderFileTable() {
+    var tb = document.getElementById('fileTbody');
+    var tbl = document.getElementById('fileTable');
+    var act = document.getElementById('uploadActions');
+    if (pendingFiles.length === 0) {
+        tbl.style.display = 'none'; act.style.display = 'none'; return;
+    }
+    tbl.style.display = ''; act.style.display = 'flex';
+    tb.innerHTML = pendingFiles.map(function(f, i){
+        var matched = !!f.product;
+        var statusHtml;
+        if (f.status === '완료') statusHtml = '<span class="match-done">✓ 완료</span>';
+        else if (f.status === '업로드중') statusHtml = '<span class="match-up">⏳ 업로드중</span>';
+        else if (f.status.indexOf('실패') === 0) statusHtml = '<span class="match-err">⚠ ' + escHtml(f.status) + '</span>';
+        else statusHtml = matched ? '<span class="match-yes">✓ 매칭</span>' : '<span class="match-no">✗ 매칭 없음</span>';
+        return '<tr><td><code class="code-tag">' + escHtml(f.name) + '</code></td>' +
+               '<td>' + (matched ? '<code class="code-tag">' + escHtml(f.code) + '</code>' : '-') + '</td>' +
+               '<td>' + (f.product ? escHtml(f.product.name) : '<span style="color:#64748b;">미발견</span>') + '</td>' +
+               '<td>' + statusHtml + '</td></tr>';
+    }).join('');
+    var matched = pendingFiles.filter(function(f){ return !!f.product; }).length;
+    document.getElementById('uploadSummary').textContent = '총 ' + pendingFiles.length + '개 · 매칭 ' + matched + '개';
+}
+
+window._giClearFiles = function() {
+    pendingFiles = [];
+    renderFileTable();
+};
+
+window._giUploadAll = async function() {
+    var matched = pendingFiles.filter(function(f){ return !!f.product; });
+    if (matched.length === 0) { log('업로드할 매칭 파일 없음.', 'warn'); return; }
+    var btn = document.getElementById('giUploadBtn');
+    btn.disabled = true;
+    document.getElementById('upProgWrap').style.display = '';
+    var bar = document.getElementById('upProgBar');
+    log('=== 업로드 시작 — ' + matched.length + '개 ===', 'info');
+    var done = 0, ok = 0, fail = 0;
+    for (var i = 0; i < matched.length; i++) {
+        var f = matched[i];
+        f.status = '업로드중'; renderFileTable();
+        try {
+            var ext = (f.name.split('.').pop() || 'png').toLowerCase();
+            var path = STORAGE_PATH + '/' + f.code + '.' + ext;
+            var up = await sb.storage.from(STORAGE_BUCKET).upload(path, f.file, { upsert:true, contentType:f.file.type });
+            if (up.error) { f.status = '실패: ' + up.error.message; fail++; log(f.name + ' 업로드 실패: ' + up.error.message, 'err'); }
+            else {
+                var pub = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+                var imgUrl = pub.data.publicUrl;
+                var upd = await sb.from('admin_products').update({ img_url:imgUrl }).eq('code', f.code);
+                if (upd.error) { f.status = '실패(DB): ' + upd.error.message; fail++; log(f.name + ' DB 갱신 실패: ' + upd.error.message, 'err'); }
+                else { f.status = '완료'; ok++; log(f.name + ' → ' + f.code, 'ok'); }
+            }
+        } catch (e) { f.status = '실패: ' + e.message; fail++; log(f.name + ' 예외: ' + e.message, 'err'); }
+        done++;
+        bar.style.width = (done/matched.length*100).toFixed(1) + '%';
+        renderFileTable();
+    }
+    log('=== 완료 — 성공 ' + ok + ' / 실패 ' + fail + ' ===', fail ? 'warn' : 'ok');
+    btn.disabled = false;
+    await loadProducts();
+};
+
+// ─── 탭 3: DALL-E 자동생성 ───
+function renderAiCatFilter() {
+    var sel = document.getElementById('oaiCatFilter');
+    var cats = Object.keys(PROMPT_TPL);
+    sel.innerHTML = '<option value="">전체 카테고리</option>' + cats.map(function(c){
+        return '<option value="' + c + '">' + (CAT_LABEL[c]||c) + ' (' + c + ')</option>';
+    }).join('');
+    updateCostEstimate();
+    ['oaiMaxN','oaiQuality','oaiTarget','oaiCatFilter'].forEach(function(id){
+        var el = document.getElementById(id);
+        el.addEventListener('input', updateCostEstimate);
+        el.addEventListener('change', updateCostEstimate);
+    });
+    // localStorage 에서 키 복원
+    var key = localStorage.getItem('oai_key') || '';
+    document.getElementById('oaiKey').value = key;
+    document.getElementById('oaiKey').addEventListener('input', function(){
+        localStorage.setItem('oai_key', document.getElementById('oaiKey').value);
+    });
+}
+
+function getAiTargets() {
+    var target = document.getElementById('oaiTarget').value;
+    var catFilter = document.getElementById('oaiCatFilter').value;
+    var maxN = parseInt(document.getElementById('oaiMaxN').value, 10) || 10;
+    var list = allProducts.filter(function(p){
+        if (catFilter && p.category !== catFilter) return false;
+        if (target === 'missing' && p.img_url && p.img_url.length > 0) return false;
+        return true;
+    });
+    return list.slice(0, maxN);
+}
+
+function updateCostEstimate() {
+    var n = getAiTargets().length;
+    var q = document.getElementById('oaiQuality').value;
+    var unit = q === 'hd' ? 0.080 : 0.040;
+    var cost = n * unit;
+    document.getElementById('costVal').textContent = '$' + cost.toFixed(2);
+    document.getElementById('costEst').innerHTML = '예상 비용: <b>$' + cost.toFixed(2) + '</b> (' + n + '개 × ' + q + ') — OpenAI 청구';
+}
+
+window._giAIStop = function() { aiStopFlag = true; log('중지 요청됨 — 현재 작업 완료 후 정지.', 'warn'); };
+
+window._giAIStart = async function() {
+    if (aiRunning) return;
+    var key = document.getElementById('oaiKey').value.trim();
+    if (!key || key.indexOf('sk-') !== 0) { alert('OpenAI API 키를 입력하세요. sk- 로 시작.'); return; }
+    var targets = getAiTargets();
+    if (targets.length === 0) { alert('생성할 상품 없음. 필터/대상 조정.'); return; }
+    var quality = document.getElementById('oaiQuality').value;
+    var cost = targets.length * (quality === 'hd' ? 0.080 : 0.040);
+    if (!confirm(targets.length + '개 상품 생성 시작합니다.\n예상 비용 $' + cost.toFixed(2) + ' (OpenAI 청구)\n진행할까요?')) return;
+
+    aiRunning = true; aiStopFlag = false;
+    document.getElementById('aiStartBtn').disabled = true;
+    document.getElementById('aiStopBtn').disabled = false;
+    document.getElementById('aiProgWrap').style.display = '';
+    var bar = document.getElementById('aiProgBar');
+    log('=== DALL-E 자동생성 시작 — ' + targets.length + '개 ===', 'info');
+    var ok = 0, fail = 0;
+    for (var i = 0; i < targets.length; i++) {
+        if (aiStopFlag) { log('사용자 중지 — 진행 ' + i + '/' + targets.length, 'warn'); break; }
+        var p = targets[i];
+        document.getElementById('aiSummary').textContent = (i+1) + '/' + targets.length + ' · ' + p.code;
+        try {
+            var prompt = buildPrompt(p);
+            if (!prompt) { log(p.code + ': 프롬프트 생성 실패 (카테고리 매핑 없음)', 'warn'); fail++; }
+            else {
+                log(p.code + ' 생성 중…', 'info');
+                var imgBlob = await callDallE(key, prompt, quality);
+                var path = STORAGE_PATH + '/' + p.code + '.png';
+                var up = await sb.storage.from(STORAGE_BUCKET).upload(path, imgBlob, { upsert:true, contentType:'image/png' });
+                if (up.error) { log(p.code + ' Storage 업로드 실패: ' + up.error.message, 'err'); fail++; }
+                else {
+                    var pub = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+                    var upd = await sb.from('admin_products').update({ img_url:pub.data.publicUrl }).eq('code', p.code);
+                    if (upd.error) { log(p.code + ' DB 갱신 실패: ' + upd.error.message, 'err'); fail++; }
+                    else { log(p.code + ' ✓', 'ok'); ok++; }
+                }
+            }
+        } catch (e) {
+            log(p.code + ' 예외: ' + (e.message || e), 'err'); fail++;
+        }
+        bar.style.width = ((i+1)/targets.length*100).toFixed(1) + '%';
+    }
+    log('=== 완료 — 성공 ' + ok + ' / 실패 ' + fail + ' ===', fail ? 'warn' : 'ok');
+    aiRunning = false;
+    document.getElementById('aiStartBtn').disabled = false;
+    document.getElementById('aiStopBtn').disabled = true;
+    await loadProducts();
+    updateCostEstimate();
+};
+
+async function callDallE(apiKey, prompt, quality) {
+    var res = await fetch('https://api.openai.com/v1/images/generations', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + apiKey },
+        body: JSON.stringify({
+            model:'dall-e-3',
+            prompt: prompt,
+            n: 1,
+            size:'1024x1024',
+            quality: quality,
+            response_format:'b64_json'
+        })
+    });
+    if (!res.ok) {
+        var txt = await res.text();
+        throw new Error('OpenAI ' + res.status + ': ' + txt.slice(0, 200));
+    }
+    var json = await res.json();
+    var b64 = json.data && json.data[0] && json.data[0].b64_json;
+    if (!b64) throw new Error('OpenAI 응답에 b64_json 없음');
+    // base64 → Blob
+    var bin = atob(b64);
+    var arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type:'image/png' });
+}
+
+// ─── 로그인 게이트 ───
+(async function init() {
+    try {
+        var ses = await sb.auth.getSession();
+        var email = (ses.data && ses.data.session && ses.data.session.user && ses.data.session.user.email) || '';
+        if (!email) {
+            document.getElementById('gate').style.display = '';
+            document.getElementById('gateMsg').textContent = '메인 사이트에서 먼저 로그인하세요.';
+            return;
+        }
+        if (ADMIN_EMAILS.indexOf(email.toLowerCase()) < 0) {
+            document.getElementById('gate').style.display = '';
+            document.getElementById('gateMsg').textContent = '권한 없는 계정: ' + email;
+            return;
+        }
+        document.getElementById('app').style.display = '';
+        document.getElementById('statUser').textContent = email;
+        log('관리자 인증 완료: ' + email, 'ok');
+        await loadProducts();
+        renderPromptHelper();
+        setupDropzone();
+        log('상품 ' + allProducts.length + '개 로드 완료', 'info');
+    } catch (e) {
+        document.getElementById('gate').style.display = '';
+        document.getElementById('gateMsg').textContent = '초기화 실패: ' + e.message;
+    }
+})();
+</script>
+</body>
+</html>
