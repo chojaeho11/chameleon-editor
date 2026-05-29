@@ -100,6 +100,10 @@ function buildPrompt(code: string): string | null {
 }
 
 async function callDallE(apiKey: string, prompt: string, quality: string): Promise<Uint8Array> {
+  // gpt-image-1 (신규, 2026~) — quality: low/medium/high. 구버전 standard/hd 자동 매핑.
+  const qMap: Record<string, string> = { standard: "medium", hd: "high", low: "low", medium: "medium", high: "high" };
+  const finalQuality = qMap[quality] || "medium";
+
   const res = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
@@ -107,12 +111,12 @@ async function callDallE(apiKey: string, prompt: string, quality: string): Promi
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt,
       n: 1,
       size: "1024x1024",
-      quality,
-      response_format: "b64_json",
+      quality: finalQuality,
+      output_format: "png",
     }),
   });
   if (!res.ok) {
@@ -120,13 +124,21 @@ async function callDallE(apiKey: string, prompt: string, quality: string): Promi
     throw new Error(`OpenAI ${res.status}: ${txt.slice(0, 200)}`);
   }
   const json = await res.json();
+  // gpt-image-1 은 b64_json 기본 반환
   const b64 = json.data?.[0]?.b64_json;
-  if (!b64) throw new Error("OpenAI 응답 b64_json 누락");
-  // base64 → Uint8Array
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
+  const url = json.data?.[0]?.url;
+  if (b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+  if (url) {
+    const imgRes = await fetch(url);
+    if (!imgRes.ok) throw new Error(`이미지 다운로드 실패: ${imgRes.status}`);
+    return new Uint8Array(await imgRes.arrayBuffer());
+  }
+  throw new Error("OpenAI 응답에 b64_json/url 둘 다 없음");
 }
 
 Deno.serve(async (req) => {
