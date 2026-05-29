@@ -1848,8 +1848,9 @@
                 const addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
                 // 2026-05-30: 프리셋 굿즈(키링/코롯토) — 고리는 제품 수량만큼 자동 곱셈 (100개 주문 → 고리 100개)
+                //   손수건 등 고리 없는 프리셋은 일반 addon 처리
                 let aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
-                if (state.isPresetGoods) {
+                if (state.presetHasHooks) {
                     aQty = qty;
                     // state 와 hidden input 도 동기화 — buildCartItem 이 정확한 수량으로 저장하도록
                     if (!state.addonQuantities) state.addonQuantities = {};
@@ -1858,7 +1859,7 @@
                     if (_qi) _qi.value = qty;
                 }
                 // 2026-05-29: 프리셋 굿즈 — 고리 옵션은 300원 균일 (DB 가격 무시)
-                const addonPrice = state.isPresetGoods ? 300 : (addon.price || 0);
+                const addonPrice = state.presetHasHooks ? 300 : (addon.price || 0);
                 const line = addonPrice * aQty;
                 addonTotal += line;
                 let nm = addon.name || code;
@@ -2818,7 +2819,8 @@
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
             else if ((lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'zh' || lang === 'ar') && a.name_us) name = a.name_us;
             // 2026-05-29: 프리셋 굿즈(키링/코롯토) — 고리/색상 옵션은 모두 300원 균일 (DB 가격 무시)
-            var price = (compactMode && state.isPresetGoods) ? 300 : (a.price || 0);
+            //   2026-05-30: 손수건 등 고리 없는 프리셋은 override 비적용 (DB 가격 유지)
+            var price = (compactMode && state.presetHasHooks) ? 300 : (a.price || 0);
             var safe = String(name).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             });
@@ -3904,17 +3906,33 @@
             { w:7,  h:7,  label:'7×7',  price:9000  },
             { w:10, h:10, label:'10×10',price:12000 }
         ];
+        // 2026-05-30: 손수건 사이즈 프리셋 (cm × cm → 고정가)
+        var _PRESET_HANDKERCHIEF = [
+            { w:40, h:40, label:'40×40', price:4000 },
+            { w:50, h:50, label:'50×50', price:5000 },
+            { w:60, h:60, label:'60×60', price:6000 }
+        ];
         var _PRESET_MAP = {
             '345345353':        _PRESET_KEYRING,
             'gds_acr_kr_10':    _PRESET_KEYRING,
             'acr_crt_cl_8t':    _PRESET_KOROTTO,
             'acr_crt_stand_01': _PRESET_KOROTTO,
-            'acr_crt_stand_10t':_PRESET_KOROTTO
+            'acr_crt_stand_10t':_PRESET_KOROTTO,
+            '3453455':          _PRESET_HANDKERCHIEF
+        };
+        // 2026-05-30: 프리셋 타입 — 안내문구·고리(300원 override) 적용 여부 분기
+        var _PRESET_TYPE = {
+            '345345353':        'keyring',
+            'gds_acr_kr_10':    'keyring',
+            'acr_crt_cl_8t':    'korotto',
+            'acr_crt_stand_01': 'korotto',
+            'acr_crt_stand_10t':'korotto',
+            '3453455':          'handkerchief'
         };
         // 2026-05-29: 비-사이즈 베스트 굿즈 가격 override
         //   100개+ 50%할인 + 3000원 정액배송 동일 적용 (state.isBestGoods)
+        //   2026-05-30: 손수건은 _PRESET_MAP 으로 이동 (사이즈 pill 사용)
         var _BEST_PRICE_OVERRIDES = {
-            '3453455':       4000,   // 손수건
             '435645654666':  13000,  // 반려동물 티셔츠
             '456444':        4000,   // 커스텀머그컵
             '64564882_copy': 8000,   // 허니콤보드 팝업굿즈
@@ -3922,6 +3940,11 @@
         };
         state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
         state.isPresetGoods = !!state.presetSizes;
+        // 2026-05-30: 프리셋 타입 / 고리 옵션 보유 여부 (키링·코롯토만 고리 300원 override + 안내문구 변경)
+        state.presetType = (p && _PRESET_TYPE[p.code]) || null;
+        state.presetHasHooks = (state.presetType === 'keyring' || state.presetType === 'korotto');
+        // 프리셋 굿즈는 사이즈 입력 UI 강제 활성화 — DB 의 is_custom_size 와 무관
+        if (state.presetSizes) state.isCustomSize = true;
         // 비-사이즈 베스트 굿즈: 가격 override (단가만, 100개+ 50%/3000원배송 동일)
         if (p && _BEST_PRICE_OVERRIDES[p.code] != null) {
             p.price = _BEST_PRICE_OVERRIDES[p.code];
@@ -3955,7 +3978,15 @@
             if (dimsRow)  dimsRow.style.display  = 'none';
             if (areaInfo) areaInfo.style.display = 'none';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price');
-            if (pillsNote) pillsNote.style.display = '';
+            if (pillsNote) {
+                // 2026-05-30: 프리셋 타입별 안내문구 — 키링/코롯토만 "고리 선택" 안내, 손수건 등은 사이즈 안내만
+                if (state.presetHasHooks) {
+                    pillsNote.innerHTML = '🔗 ' + tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped');
+                } else {
+                    pillsNote.innerHTML = '✨ ' + tr('사이즈를 선택해주세요. 위 옵션 중 골라주세요', 'サイズを選択してください', 'Please select a size');
+                }
+                pillsNote.style.display = '';
+            }
             // 개별포장 토글 — 새 상품 진입 시 항상 OFF 로 초기화
             state.presetWrap = false;
             var _wbtn = document.getElementById('soPresetWrapBtn');
@@ -4393,6 +4424,8 @@
             // 2026-05-30: 베스트굿즈 / 프리셋 플래그 — _soCalcItemPrice / 견적서 / 주문관리에서 100개+ 50%·정액배송·고리 300원 적용 트리거
             _isBestGoods: !!state.isBestGoods,
             _isPresetGoods: !!state.isPresetGoods,
+            _presetType: state.presetType || null,
+            _presetHasHooks: !!state.presetHasHooks,
             // 프리셋 굿즈 개별포장 옵션 (+200원/개)
             _presetWrap: !!state.presetWrap,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
@@ -4959,15 +4992,17 @@
             if (isDouble) hExtra *= 2;
             base += hExtra;
         }
-        // addon 가격 — 프리셋 굿즈는 고리 300원 균일 + 제품 수량만큼 자동 곱셈
+        // addon 가격 — 키링/코롯토 (presetHasHooks) 만 고리 300원 균일 + 제품 수량 자동 곱셈
+        //   손수건 등 다른 프리셋은 DB 가격 그대로
+        var _hasHooks = !!it._presetHasHooks;
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
                 var addon = window.ADDON_DB[code];
                 if (!addon) return;
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
-                // 프리셋 굿즈: 저장된 addonQty 가 잘못된 경우 (모달 외부에서 담긴 경우 등) 안전망으로 product qty 사용
-                if (_isPreset && aQty < qty) aQty = qty;
-                var addonPrice = _isPreset ? 300 : (addon.price || 0);
+                // 키링/코롯토 고리: 저장된 addonQty 가 잘못된 경우 (모달 외부에서 담긴 경우 등) 안전망으로 product qty 사용
+                if (_hasHooks && aQty < qty) aQty = qty;
+                var addonPrice = _hasHooks ? 300 : (addon.price || 0);
                 base += addonPrice * aQty;
             });
         }
