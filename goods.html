@@ -156,6 +156,25 @@ a { text-decoration: none; color: inherit; }
     color: #92400e; font-size: 13px; font-weight: 600;
     background: rgba(255,255,255,0.5); border-radius: 12px;
 }
+.best-size-pills {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin: 6px 0 8px;
+}
+.best-size-pill {
+    padding: 3px 8px; border: 1px solid rgba(0,0,0,0.1);
+    background: #fff; border-radius: 6px;
+    font-size: 10.5px; font-weight: 600;
+    color: #64748b; cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.best-size-pill:hover {
+    border-color: #6366f1; color: #6366f1;
+}
+.best-size-pill.active {
+    background: #0f172a; border-color: #0f172a; color: #fff;
+    font-weight: 800;
+}
 .best-feat-note {
     margin-top: 22px; padding: 16px 20px;
     background: rgba(255,255,255,0.55); border: 1px dashed rgba(120,53,15,0.3);
@@ -936,19 +955,33 @@ a { text-decoration: none; color: inherit; }
         });
     }
 
-    // ─── ⭐ 베스트 굿즈 featured 섹션 — 10개 큐레이션 + 가격 오버라이드 ───
+    // ─── ⭐ 베스트 굿즈 featured — 10개 큐레이션 + 가격/사이즈 오버라이드 ───
     // 메인 사이트 DB 의 원래 가격은 그대로 두고, /goods 표시 시에만 베스트 가격 적용
+    // 사이즈 옵션 프리셋 — 키링/코롯토류
+    var BEST_SIZES_KEYRING = [
+        { id:'5x5',  label:'5×5cm',  price:1000 },
+        { id:'5x7',  label:'5×7cm',  price:1200 },
+        { id:'7x7',  label:'7×7cm',  price:1500 },
+        { id:'10x10',label:'10×10cm',price:2000 },
+        { id:'6x4',  label:'6×4cm',  price:1000 }
+    ];
+    var BEST_SIZES_KOROTTO = [
+        { id:'5x5',  label:'5×5cm',  price:2000 },
+        { id:'5x7',  label:'5×7cm',  price:2500 },
+        { id:'7x7',  label:'7×7cm',  price:3000 },
+        { id:'10x10',label:'10×10cm',price:4000 }
+    ];
     var BEST_CURATED = [
-        { code: '345345353',        price: 1000 },   // 홀로그램 자개 키링 양면
-        { code: '3453455',          price: 1000 },   // 손수건
-        { code: '435645654666',     price: 6500 },   // 반려동물 티셔츠
-        { code: '456444',           price: 2000 },   // 커스텀머그컵
-        { code: '64564882_copy',    price: 5000 },   // 허니콤보드 팝업굿즈
-        { code: 'acr_crt_cl_8t',    price: 2000 },   // 8T 투명 아크릴 코롯토
-        { code: 'acr_crt_stand_01', price: 3000 },   // 10T 두꺼운 아크릴 입체 스탠드
-        { code: 'acr_crt_stand_10t',price: 2000 },   // 10T 자립형 아크릴 코롯토
-        { code: 'acr_smtgr_02',     price: 3000 },   // 아크릴 자개 스마트톡
-        { code: 'gds_acr_kr_10',    price: 1000 }    // 투명 3mm단면 키링
+        { code: '345345353',        sizes: BEST_SIZES_KEYRING },  // 홀로그램 자개 키링 양면
+        { code: '3453455',          price: 1000 },                // 손수건
+        { code: '435645654666',     price: 6500 },                // 반려동물 티셔츠
+        { code: '456444',           price: 2000 },                // 커스텀머그컵
+        { code: '64564882_copy',    price: 5000 },                // 허니콤보드 팝업굿즈
+        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },  // 8T 투명 아크릴 코롯토
+        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },  // 10T 입체 스탠드 (코롯토류)
+        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },  // 10T 자립형 아크릴 코롯토
+        { code: 'acr_smtgr_02',     price: 3000 },                // 아크릴 자개 스마트톡
+        { code: 'gds_acr_kr_10',    sizes: BEST_SIZES_KEYRING }   // 투명 3mm단면 키링
     ];
     async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');
@@ -968,8 +1001,11 @@ a { text-decoration: none; color: inherit; }
             BEST_CURATED.forEach(function(ov){
                 var p = byCode[ov.code];
                 if (!p) return;
-                // 원본 DB 변경 없이 display 용 복사본에 가격만 override
-                bests.push(Object.assign({}, p, { price: ov.price }));
+                // 사이즈 옵션이 있으면 첫 사이즈를 기본가로, 없으면 ov.price 사용
+                var defaultPrice = ov.sizes ? ov.sizes[0].price : ov.price;
+                var copy = Object.assign({}, p, { price: defaultPrice, _isBestFeat: true });
+                if (ov.sizes) copy._bestSizes = ov.sizes;
+                bests.push(copy);
             });
             if (bests.length === 0) { sec.style.display = 'none'; return; }
             var T = {
@@ -1063,9 +1099,11 @@ a { text-decoration: none; color: inherit; }
         if (!p || !p.category) return CAT_MOQ.default;
         return CAT_MOQ[p.category] || CAT_MOQ.default;
     }
-    // 베스트 굿즈는 할인 미표시 (이미 최저가)
+    // 베스트 굿즈는 할인 미표시 (이미 최저가) — BEST_CURATED 플래그 또는 pkg_best* 카테고리
     function isBestGoods(p) {
-        return p && p.category && p.category.indexOf('pkg_best') === 0;
+        if (!p) return false;
+        if (p._isBestFeat) return true;
+        return p.category && p.category.indexOf('pkg_best') === 0;
     }
 
     // ─── 상품 카드 HTML ───
@@ -1093,11 +1131,23 @@ a { text-decoration: none; color: inherit; }
         if (isInquiry) {
             priceBlock = '<span class="inquiry-tag"><i class="fa-solid fa-comment-dots" style="font-size:11px;"></i> ' + inquiryLabel + '</span>';
         } else if (isBest) {
-            // 베스트 굿즈 — 가격 그대로 (할인 표시 없음)
+            // 베스트 굿즈 — 가격 그대로 (할인 표시 없음). 사이즈 pill 옵션이 있으면 위에 표시
             var perUnit = LANG === 'ja' ? '/個' : LANG === 'en' ? '/unit' : '/개';
+            var sizesHtml = '';
+            if (p._bestSizes && p._bestSizes.length) {
+                sizesHtml = '<div class="best-size-pills" onclick="event.stopPropagation();">' +
+                    p._bestSizes.map(function(s, i){
+                        return '<button type="button" class="best-size-pill' + (i === 0 ? ' active' : '') + '" ' +
+                               'data-price="' + s.price + '" ' +
+                               'onclick="event.stopPropagation(); window._bestPickSize(this);">' +
+                               escapeHtml(s.label) + '</button>';
+                    }).join('') +
+                '</div>';
+            }
             priceBlock =
+                sizesHtml +
                 '<div class="price-stack">' +
-                  '<div class="price-disc">' + formatPrice(price) + '<span style="font-size:11px; color:#94a3b8; font-weight:600;">' + perUnit + '</span></div>' +
+                  '<div class="price-disc best-price-display">' + formatPrice(price) + '<span style="font-size:11px; color:#94a3b8; font-weight:600;">' + perUnit + '</span></div>' +
                 '</div>';
         } else {
             priceBlock =
@@ -1299,6 +1349,22 @@ a { text-decoration: none; color: inherit; }
         var u = '/?product=' + encodeURIComponent(code);
         if (LANG !== 'ko') u += '&lang=' + LANG;
         location.href = u;
+    };
+
+    // ─── 베스트 굿즈 사이즈 pill 선택 → 카드 내 가격 표시만 갱신 ───
+    window._bestPickSize = function(btn) {
+        if (!btn) return;
+        var pillsRow = btn.parentElement;
+        if (!pillsRow) return;
+        pillsRow.querySelectorAll('.best-size-pill').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        var price = parseInt(btn.getAttribute('data-price'), 10) || 0;
+        var card = btn.closest('.product-card');
+        if (!card) return;
+        var disp = card.querySelector('.best-price-display');
+        if (!disp) return;
+        var perUnit = LANG === 'ja' ? '/個' : LANG === 'en' ? '/unit' : '/개';
+        disp.innerHTML = formatPrice(price) + '<span style="font-size:11px; color:#94a3b8; font-weight:600;">' + perUnit + '</span>';
     };
 
     // ─── 가격문의 모달 ───
