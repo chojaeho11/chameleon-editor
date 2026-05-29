@@ -153,18 +153,20 @@ input[type="checkbox"] { accent-color:#6366f1; }
                     <table class="file-table" id="priceTable">
                         <thead style="position:sticky; top:0; z-index:1; background:#0f172a;">
                             <tr>
-                                <th style="width:35%;">상품명</th>
-                                <th style="width:25%;">코드</th>
-                                <th style="width:15%; text-align:right;">정상가 (원)</th>
-                                <th style="width:15%; text-align:right; color:#34d399;">할인가 50%</th>
-                                <th style="width:10%;">상태</th>
+                                <th style="width:70px;">이미지</th>
+                                <th style="min-width:240px;">상품명 (편집)</th>
+                                <th style="width:200px;">코드</th>
+                                <th style="width:120px; text-align:right;">정상가 (원)</th>
+                                <th style="width:100px; text-align:right; color:#34d399;">할인가 50%</th>
+                                <th style="width:80px;">상태</th>
+                                <th style="width:100px;">액션</th>
                             </tr>
                         </thead>
                         <tbody id="priceTbody"></tbody>
                     </table>
                 </div>
                 <p style="font-size:11px; color:#64748b; margin-top:12px;">
-                    💡 가격 입력 후 다른 행 클릭하면 자동 dirty 마킹. 일괄 저장 버튼으로 변경분만 DB 업데이트.
+                    💡 가격·이름 입력 후 다른 행 클릭하면 자동 변경됨 마킹. 일괄 저장 버튼으로 변경분만 DB 업데이트. 🖼️ 버튼 클릭 → 파일 선택 → 즉시 이미지 교체.
                 </p>
             </div>
         </div>
@@ -720,6 +722,7 @@ window._giAIStart = async function() {
 
 // ─── 탭 5: 가격 관리 ───
 var priceDirty = {};   // { code: newPrice }
+var nameDirty = {};    // { code: newName }
 
 function renderPriceTable() {
     var tbody = document.getElementById('priceTbody');
@@ -736,21 +739,37 @@ function renderPriceTable() {
     });
     tbody.innerHTML = list.map(function(p){
         var curPrice = priceDirty[p.code] !== undefined ? priceDirty[p.code] : (p.price || 0);
+        var curName = nameDirty[p.code] !== undefined ? nameDirty[p.code] : (p.name || '');
         var disc = Math.round(curPrice / 2);
-        var isDirty = priceDirty[p.code] !== undefined && priceDirty[p.code] !== (p.price || 0);
-        var statusHtml = isDirty
+        var priceDrt = priceDirty[p.code] !== undefined && priceDirty[p.code] !== (p.price || 0);
+        var nameDrt = nameDirty[p.code] !== undefined && nameDirty[p.code] !== (p.name || '');
+        var anyDirty = priceDrt || nameDrt;
+        var statusHtml = anyDirty
             ? '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>'
             : (curPrice === 0 ? '<span style="color:#a78bfa;">가격문의</span>' : '<span style="color:#34d399;">설정됨</span>');
+        // 썸네일 — img_url 있으면 표시, 없으면 placeholder 박스
+        var thumbHtml = p.img_url
+            ? '<img src="' + escHtml(p.img_url) + '" alt="" loading="lazy" ' +
+              'style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">'
+            : '<div style="width:54px; height:54px; border-radius:8px; background:linear-gradient(135deg,#1e293b,#334155); ' +
+              'display:flex; align-items:center; justify-content:center; font-size:24px; opacity:0.5;">📦</div>';
         return '<tr data-code="' + escHtml(p.code) + '">' +
-            '<td>' + escHtml(p.name) + '</td>' +
+            '<td>' + thumbHtml + '</td>' +
+            '<td><input type="text" value="' + escHtml(curName) + '" ' +
+                'data-code="' + escHtml(p.code) + '" onchange="window._giNameChg(this)" ' +
+                'style="width:100%; padding:5px 8px; font-size:12px;"></td>' +
             '<td><span class="code-tag">' + escHtml(p.code) + '</span></td>' +
             '<td style="text-align:right;"><input type="number" min="0" step="100" value="' + curPrice + '" ' +
                 'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)" ' +
                 'style="width:100px; text-align:right; padding:5px 8px;"></td>' +
             '<td style="text-align:right; color:#34d399; font-weight:800;">' + disc.toLocaleString() + '</td>' +
-            '<td>' + statusHtml + '</td></tr>';
+            '<td>' + statusHtml + '</td>' +
+            '<td><button class="btn btn-ghost" style="padding:5px 8px; font-size:11px;" ' +
+                'onclick="window._giChangeImage(\'' + escHtml(p.code) + '\', this)">🖼️ 변경</button></td>' +
+            '</tr>';
     }).join('');
-    document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length;
+    var totalDirty = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
+    document.getElementById('dirtyCount').textContent = totalDirty;
 }
 
 function renderPriceCatFilter() {
@@ -766,56 +785,120 @@ function renderPriceCatFilter() {
     document.getElementById('priceFilter').addEventListener('input', renderPriceTable);
 }
 
+function _updateDirtyUI(code, tr, newPrice) {
+    if (!tr) return;
+    // 컬럼: 0=이미지 1=이름 2=코드 3=정상가 4=할인가 5=상태 6=액션
+    if (typeof newPrice === 'number') {
+        var disc = Math.round(newPrice / 2);
+        tr.children[4].textContent = disc.toLocaleString();
+    }
+    var statusCell = tr.children[5];
+    var anyDirty = priceDirty[code] !== undefined || nameDirty[code] !== undefined;
+    if (anyDirty) {
+        statusCell.innerHTML = '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>';
+    } else {
+        var prod = allProducts.find(function(p){ return p.code === code; });
+        var curP = (prod && prod.price) || 0;
+        statusCell.innerHTML = curP === 0
+            ? '<span style="color:#a78bfa;">가격문의</span>'
+            : '<span style="color:#34d399;">설정됨</span>';
+    }
+    document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
+}
+
 window._giPriceChg = function(input) {
     var code = input.getAttribute('data-code');
     var newPrice = parseInt(input.value, 10) || 0;
     var prod = allProducts.find(function(p){ return p.code === code; });
     var orig = (prod && prod.price) || 0;
-    if (newPrice === orig) {
-        delete priceDirty[code];
-    } else {
-        priceDirty[code] = newPrice;
-    }
-    // 행만 갱신
-    var tr = input.closest('tr');
-    if (tr) {
-        var disc = Math.round(newPrice / 2);
-        tr.children[3].textContent = disc.toLocaleString();
-        var statusCell = tr.children[4];
-        if (priceDirty[code] !== undefined) {
-            statusCell.innerHTML = '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>';
-        } else {
-            statusCell.innerHTML = newPrice === 0
-                ? '<span style="color:#a78bfa;">가격문의</span>'
-                : '<span style="color:#34d399;">설정됨</span>';
+    if (newPrice === orig) delete priceDirty[code];
+    else                    priceDirty[code] = newPrice;
+    _updateDirtyUI(code, input.closest('tr'), newPrice);
+};
+
+window._giNameChg = function(input) {
+    var code = input.getAttribute('data-code');
+    var newName = (input.value || '').trim();
+    var prod = allProducts.find(function(p){ return p.code === code; });
+    var orig = (prod && prod.name) || '';
+    if (newName === orig || !newName) delete nameDirty[code];
+    else                               nameDirty[code] = newName;
+    _updateDirtyUI(code, input.closest('tr'), null);
+};
+
+window._giChangeImage = function(code, btn) {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.onchange = async function() {
+        if (!input.files || !input.files[0]) { input.remove(); return; }
+        var file = input.files[0];
+        var origLabel = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '⏳ 업로드중';
+        try {
+            var ext = (file.name.split('.').pop() || 'png').toLowerCase();
+            var path = STORAGE_PATH + '/' + code + '.' + ext;
+            var up = await sb.storage.from(STORAGE_BUCKET).upload(path, file, {
+                upsert: true, contentType: file.type
+            });
+            if (up.error) throw new Error(up.error.message);
+            var pub = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+            // 캐시 버스트 — 같은 경로 덮어쓰기 시 브라우저 캐시 무력화
+            var newUrl = pub.data.publicUrl + '?t=' + Date.now();
+            var upd = await sb.from('admin_products').update({ img_url: newUrl }).eq('code', code);
+            if (upd.error) throw new Error(upd.error.message);
+            // 로컬 갱신
+            var prod = allProducts.find(function(p){ return p.code === code; });
+            if (prod) prod.img_url = newUrl;
+            btn.innerHTML = '✓ 완료';
+            log(code + ' 이미지 교체 완료', 'ok');
+            // 해당 행 썸네일만 새 이미지로 즉시 교체
+            var tr = btn.closest('tr');
+            if (tr) {
+                var imgCell = tr.children[0];
+                imgCell.innerHTML = '<img src="' + newUrl + '" alt="" style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">';
+            }
+            setTimeout(function() { btn.disabled = false; btn.innerHTML = origLabel; }, 1500);
+        } catch (e) {
+            log(code + ' 이미지 교체 실패: ' + e.message, 'err');
+            btn.innerHTML = '⚠ 실패';
+            setTimeout(function() { btn.disabled = false; btn.innerHTML = origLabel; }, 2000);
+        } finally {
+            input.remove();
+            await loadProducts();
         }
-    }
-    document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length;
+    };
+    input.click();
 };
 
 window._giSaveAllPrices = async function() {
-    var codes = Object.keys(priceDirty);
-    if (codes.length === 0) { log('변경된 가격 없음.', 'warn'); return; }
-    if (!confirm(codes.length + '개 상품의 가격을 일괄 저장합니다. 진행할까요?')) return;
+    var allCodes = new Set([...Object.keys(priceDirty), ...Object.keys(nameDirty)]);
+    if (allCodes.size === 0) { log('변경된 항목 없음.', 'warn'); return; }
+    if (!confirm(allCodes.size + '개 상품을 일괄 저장합니다. 진행할까요?')) return;
     var btn = document.getElementById('savePriceBtn');
     btn.disabled = true;
-    log('=== 가격 일괄 저장 시작 — ' + codes.length + '개 ===', 'info');
+    log('=== 일괄 저장 시작 — ' + allCodes.size + '개 ===', 'info');
     var ok = 0, fail = 0;
-    for (var i = 0; i < codes.length; i++) {
-        var code = codes[i];
-        var newPrice = priceDirty[code];
+    for (var code of allCodes) {
+        var patch = {};
+        if (priceDirty[code] !== undefined) patch.price = priceDirty[code];
+        if (nameDirty[code] !== undefined)  patch.name  = nameDirty[code];
         try {
-            var res = await sb.from('admin_products').update({ price: newPrice }).eq('code', code);
+            var res = await sb.from('admin_products').update(patch).eq('code', code);
             if (res.error) { log(code + ' 실패: ' + res.error.message, 'err'); fail++; }
             else {
                 ok++;
-                // 로컬도 갱신
                 var prod = allProducts.find(function(p){ return p.code === code; });
-                if (prod) prod.price = newPrice;
+                if (prod) {
+                    if (patch.price !== undefined) prod.price = patch.price;
+                    if (patch.name  !== undefined) prod.name  = patch.name;
+                }
             }
         } catch (e) { log(code + ' 예외: ' + e.message, 'err'); fail++; }
     }
-    priceDirty = {};
+    priceDirty = {}; nameDirty = {};
     log('=== 완료 — 성공 ' + ok + ' / 실패 ' + fail + ' ===', fail ? 'warn' : 'ok');
     btn.disabled = false;
     renderPriceTable();
