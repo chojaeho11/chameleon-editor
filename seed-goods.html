@@ -230,6 +230,9 @@ var FIN_METAL = [
     { id:'black',  kr:'블랙',  ja:'ブラック', en:'Black',  delta:300 }
 ];
 // 2026-05-29: 굿즈 풀스펙용 추가 프리셋
+var SIZE_KEYRING_5 = [
+    { id:'5cm', kr:'기본 5×5cm', ja:'基本 5×5cm', en:'Standard 5×5cm', delta:0 }
+];
 var SIZE_SMALL = [
     { id:'s', kr:'S 40mm',  ja:'S 40mm',  en:'S 40mm',  delta:0 },
     { id:'m', kr:'M 60mm',  ja:'M 60mm',  en:'M 60mm',  delta:0 },
@@ -261,6 +264,9 @@ var FIN_CLEAR = [
 // ─── 39 서브카테고리 템플릿 ───
 // sub: 서브카 메타 / sizes, finishes: 변형 / base: 기준가(KRW) / unit: 단위명 / mainKr/mainJp/mainEn: 메인 카테고리 라벨
 var TEMPLATES = [
+    // ───── ⭐ 베스트 굿즈 (리셀러용 — MOQ/할인 별도, /goods 최상단) ─────
+    { dbCat:'pkg_best_keyring', sub:{kr:'아크릴 키링 5×5cm', ja:'アクリルキーリング 5×5cm', en:'Acrylic Keyring 5×5cm'}, sizes:SIZE_KEYRING_5, fins:FIN_CLEAR,  base:1000 },
+    { dbCat:'pkg_best_tshirt',  sub:{kr:'프리미엄 티셔츠',   ja:'プレミアムTシャツ',         en:'Premium T-shirt'},        sizes:SIZE_APPAREL,   fins:FIN_COLORS, base:6500 },
     // ───── 페이퍼박스 ─────
     { dbCat:'pkg_box_plain',  sub:{kr:'무지 페이퍼박스',  ja:'無地ペーパーボックス', en:'Plain Paper Box'},   sizes:SIZE_BOX,   fins:FIN_PAPER,   base:4000 },
     { dbCat:'pkg_box_fold',   sub:{kr:'접이식 페이퍼박스', ja:'折り畳みペーパーボックス',en:'Foldable Paper Box'},sizes:SIZE_BOX,   fins:FIN_PAPER,   base:5500 },

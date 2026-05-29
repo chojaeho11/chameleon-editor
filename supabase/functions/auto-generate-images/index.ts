@@ -164,7 +164,10 @@ const PROMPT_TPL: Record<string, string> = {
   pkg_stk_cut:     "A die-cut shaped paper sticker partially peeled from its release paper backing showing adhesive, {finish} color matte paper, blank front, white background",
   pkg_stk_sheet:   "A sheet of small printed paper stickers in a grid layout on release paper, {finish} color matte, blank designs, white background",
   pkg_stk_roll:    "A small roll of paper stickers partially unrolled showing the strip, {finish} color matte paper, blank repeating spots, white background",
-  pkg_stk_kiss:    "A kiss-cut sticker sheet with multiple shapes on a single backing, {finish} color matte paper, blank designs, white background"
+  pkg_stk_kiss:    "A kiss-cut sticker sheet with multiple shapes on a single backing, {finish} color matte paper, blank designs, white background",
+  // ───── ⭐ 베스트 굿즈 (리셀러용) ─────
+  pkg_best_keyring: "A small 5×5cm acrylic keyring charm with thin profile, individually packaged in clear bag with metal keyring attached, {finish} tinted acrylic body, blank surface, premium product photo on pure white background, soft natural daylight",
+  pkg_best_tshirt:  "A premium 100% cotton crewneck t-shirt folded flat on white surface, soft heavyweight cotton fabric with visible texture, {finish} color, blank front for branding, professional product photo, soft natural daylight"
 };
 
 const FINISH_EN: Record<string, string> = {

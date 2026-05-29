@@ -606,6 +606,11 @@ a { text-decoration: none; color: inherit; }
     // 신규 상품 등록 시 category 를 'pkg_box_mag' 같이 서브카 코드로 지정하면 자동으로 해당 칩에 노출.
     var CATS = [
         { id:'all', icon:'🌟', dbCat:null, kr:'전체', ja:'すべて', en:'All', subs:[] },
+        // 2026-05-29: 베스트 굿즈 — 리셀러용 최상단 특별 카테고리 (50% 할인 표시 없음, MOQ 별도)
+        { id:'best', icon:'⭐', dbCat:'pkg_best', kr:'⭐ 베스트 굿즈', ja:'⭐ ベストグッズ', en:'⭐ Best Goods', subs:[
+            { id:'keyring', dbCat:'pkg_best_keyring', kr:'아크릴 키링 5×5cm', ja:'アクリルキーリング 5×5cm', en:'Acrylic Keyring 5×5cm' },
+            { id:'tshirt',  dbCat:'pkg_best_tshirt',  kr:'프리미엄 티셔츠',   ja:'プレミアムTシャツ',     en:'Premium T-shirt' }
+        ]},
         { id:'paperbox', icon:'📦', dbCat:'pkg_box', kr:'페이퍼박스', ja:'ペーパーボックス', en:'Paper Box', subs:[
             { id:'plain',  dbCat:'pkg_box_plain',  kr:'무지 박스',    ja:'無地ボックス',   en:'Plain Box' },
             { id:'fold',   dbCat:'pkg_box_fold',   kr:'접이식 박스',  ja:'折り畳み',      en:'Foldable' },
@@ -802,6 +807,7 @@ a { text-decoration: none; color: inherit; }
     // 카테고리별 placeholder 그라데이션 (실제 이미지 등록 전까지)
     var CAT_GRADIENT = {
         all:        'linear-gradient(135deg,#f3e8ff,#fae8ff)',
+        best:       'linear-gradient(135deg,#fef3c7,#fbbf24)',
         paperbox:   'linear-gradient(135deg,#fef3c7,#fde68a)',
         shopbag:    'linear-gradient(135deg,#fce7f3,#fbcfe8)',
         nonwoven:   'linear-gradient(135deg,#dcfce7,#bbf7d0)',
@@ -905,6 +911,21 @@ a { text-decoration: none; color: inherit; }
         subNav.style.display = 'flex';
     }
 
+    // 카테고리별 MOQ 매핑 (베스트 굿즈 — 키링 100, 티셔츠 10)
+    var CAT_MOQ = {
+        'pkg_best_keyring': 100,
+        'pkg_best_tshirt': 10,
+        'default': 10
+    };
+    function getMoq(p) {
+        if (!p || !p.category) return CAT_MOQ.default;
+        return CAT_MOQ[p.category] || CAT_MOQ.default;
+    }
+    // 베스트 굿즈는 할인 미표시 (이미 최저가)
+    function isBestGoods(p) {
+        return p && p.category && p.category.indexOf('pkg_best') === 0;
+    }
+
     // ─── 상품 카드 HTML ───
     function productCard(p) {
         var name = LANG === 'ja' ? (p.name_jp || p.name) :
@@ -913,12 +934,14 @@ a { text-decoration: none; color: inherit; }
         var price = p.price || 0;
         // price > 0 → 정상 가격 표시 (반값 할인 모델) / price === 0 → 가격문의
         var isInquiry = price === 0;
+        var isBest = isBestGoods(p);
+        var moq = getMoq(p);
         var discountPrice = isInquiry ? 0 : Math.round(price / 2);
         var imgHtml = p.img_url
             ? '<img src="' + escapeHtml(p.img_url) + '" alt="' + escapeHtml(name) + '" loading="lazy">'
             : placeholderThumb(p);
         var inquiryLabel = LANG === 'ja' ? 'お見積り' : LANG === 'en' ? 'Get Quote' : '가격 문의';
-        var moqLabel     = LANG === 'ja' ? '最低 10個~' : LANG === 'en' ? 'Min 10+' : '최소 10개';
+        var moqLabel     = LANG === 'ja' ? ('最低 ' + moq + '個~') : LANG === 'en' ? ('Min ' + moq + '+') : ('최소 ' + moq + '개');
         var bulkLabel    = LANG === 'ja' ? '100個以上 50%OFF' : LANG === 'en' ? '100+ units 50% OFF' : '100개 이상 50% 할인';
         var offLabel     = LANG === 'ja' ? '50%OFF' : LANG === 'en' ? '50% OFF' : '50% 할인';
         var clickFn = isInquiry
@@ -927,6 +950,13 @@ a { text-decoration: none; color: inherit; }
         var priceBlock;
         if (isInquiry) {
             priceBlock = '<span class="inquiry-tag"><i class="fa-solid fa-comment-dots" style="font-size:11px;"></i> ' + inquiryLabel + '</span>';
+        } else if (isBest) {
+            // 베스트 굿즈 — 가격 그대로 (할인 표시 없음)
+            var perUnit = LANG === 'ja' ? '/個' : LANG === 'en' ? '/unit' : '/개';
+            priceBlock =
+                '<div class="price-stack">' +
+                  '<div class="price-disc">' + formatPrice(price) + '<span style="font-size:11px; color:#94a3b8; font-weight:600;">' + perUnit + '</span></div>' +
+                '</div>';
         } else {
             priceBlock =
                 '<div class="price-stack">' +
