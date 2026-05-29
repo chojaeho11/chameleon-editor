@@ -1087,6 +1087,8 @@ ${hreflangTags('/editor')}
             // 2026-05-12: 도메인 통합 — /fabric 이 패브릭 디자이너의 새 canonical 경로
             'fabric': '/cotton_designer.html',
             'fabric-designer': '/cotton_designer.html',
+            // 2026-05-29: 패키지 굿즈 카탈로그 — /goods 깔끔한 URL
+            'goods': '/goods.html',
         };
         // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
         if (path.indexOf('store/') === 0 && path.length > 6) {

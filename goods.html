@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>패키지 굿즈 - 카멜레온프린팅 | 박스·쇼핑백·파우치 맞춤 제작</title>
+<meta name="description" content="페이퍼박스, 종이쇼핑백, 부직포백, 파우치, 틴케이스 등 패키지 굿즈 맞춤 제작. 브랜드 로고 인쇄 + 소량부터 대량까지.">
+<meta name="keywords" content="패키지굿즈,페이퍼박스,쇼핑백,부직포가방,파우치,틴케이스,굿즈제작,브랜드굿즈,카멜레온프린팅">
+<script>
+(function(){
+    var params = new URLSearchParams(location.search);
+    var langParam = params.get('lang');
+    var h = location.hostname;
+    var hostLang = h.indexOf('cafe0101')>=0?'ja':(h.indexOf('chameleon.design')>=0||h.indexOf('cafe3355')>=0)?'en':'ko';
+    var lang = langParam || hostLang;
+    var supported = ['ko','ja','en'];
+    if(supported.indexOf(lang)<0) lang='ko';
+    window.__GOODS_LANG = lang;
+    document.documentElement.lang = lang;
+})();
+</script>
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --accent: #10b981;
+    --bg: #fafbfc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e5e7eb;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --radius: 16px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ── 헤더 ── */
+.site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+.header-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+}
+.logo { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+.lang-selector { display: flex; gap: 4px; }
+.lang-selector button {
+    padding: 4px 8px; background: transparent; border: 1px solid transparent;
+    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+    color: var(--text-light); font-family: inherit; transition: all 0.15s;
+}
+.lang-selector button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.lang-selector button:hover:not(.active) { color: var(--primary); }
+
+/* ── 히어로 ── */
+.hero {
+    position: relative; overflow: hidden;
+    background:
+        radial-gradient(120% 80% at 20% 20%, rgba(255,255,255,0.6) 0%, transparent 50%),
+        linear-gradient(135deg, #fef3c7 0%, #fde68a 25%, #fdba74 60%, #f472b6 100%);
+    padding: 72px 24px 64px;
+    text-align: center;
+}
+.hero h1 {
+    font-size: 44px; font-weight: 900; line-height: 1.2;
+    color: #1e293b; margin-bottom: 16px; letter-spacing: -1px;
+}
+.hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, #4338ca, #7c3aed, #db2777);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero p {
+    font-size: 16px; color: #475569; max-width: 640px; margin: 0 auto 28px;
+    font-weight: 500;
+}
+.hero-cta {
+    display: inline-flex; gap: 8px; align-items: center;
+    padding: 14px 32px; border-radius: 999px;
+    background: #1e293b; color: #fff;
+    font-size: 14px; font-weight: 800; cursor: pointer; border: none;
+    box-shadow: 0 8px 24px rgba(30,41,59,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+.hero-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(30,41,59,0.4); }
+
+/* ── 카테고리 탭 ── */
+.cat-nav-wrap {
+    position: sticky; top: 60px; z-index: 90;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+}
+.cat-nav {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; gap: 4px;
+    overflow-x: auto;
+    padding: 14px 24px;
+    scrollbar-width: none;
+}
+.cat-nav::-webkit-scrollbar { display: none; }
+.cat-btn {
+    flex-shrink: 0;
+    padding: 10px 18px; border: 1px solid var(--border); background: #fff;
+    border-radius: 999px; font-size: 13px; font-weight: 700;
+    color: var(--text-light); cursor: pointer; font-family: inherit;
+    white-space: nowrap; transition: all 0.18s;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.cat-btn:hover { border-color: var(--primary); color: var(--primary); }
+.cat-btn.active {
+    background: #1e293b; border-color: #1e293b; color: #fff;
+    box-shadow: 0 4px 14px rgba(30,41,59,0.25);
+}
+.cat-icon { font-size: 15px; }
+
+/* ── 상품 그리드 ── */
+.products-wrap {
+    max-width: 1280px; margin: 0 auto;
+    padding: 36px 24px 80px;
+}
+.section-title {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 24px;
+}
+.section-title h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+.section-title .count { font-size: 14px; color: var(--text-light); font-weight: 600; }
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+.product-card {
+    background: #fff; border-radius: 14px; overflow: hidden;
+    cursor: pointer; transition: transform 0.22s, box-shadow 0.22s;
+    border: 1px solid var(--border);
+}
+.product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -12px rgba(0,0,0,0.18);
+    border-color: transparent;
+}
+.product-thumb {
+    aspect-ratio: 1/1; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+}
+.product-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.4s;
+}
+.product-card:hover .product-thumb img { transform: scale(1.06); }
+.product-thumb-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; opacity: 0.55;
+}
+.product-info {
+    padding: 14px 16px 16px;
+}
+.product-name {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    margin-bottom: 4px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; line-height: 1.4; min-height: 2.8em;
+}
+.product-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--text-light);
+}
+.product-price { font-size: 14px; font-weight: 800; color: var(--primary); }
+.badge-custom {
+    display: inline-block;
+    padding: 2px 7px; border-radius: 4px;
+    background: #f1f5f9; color: var(--text-light);
+    font-size: 10px; font-weight: 700;
+}
+
+/* 빈 상태 */
+.empty-state {
+    text-align: center; padding: 80px 24px;
+    color: var(--text-light);
+    background: #fff; border-radius: var(--radius);
+    border: 1px dashed var(--border);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; display: block; }
+.empty-state p { font-size: 14px; }
+.empty-state .empty-hint { font-size: 12px; margin-top: 8px; opacity: 0.7; }
+
+/* ── 푸터 ── */
+.site-footer {
+    background: #1e293b; color: #94a3b8;
+    padding: 48px 24px 32px; margin-top: 0;
+    text-align: center; font-size: 13px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 768px) {
+    .hero { padding: 56px 20px 48px; }
+    .hero h1 { font-size: 30px; letter-spacing: -0.5px; }
+    .hero p { font-size: 14px; }
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .product-info { padding: 10px 12px 12px; }
+    .product-name { font-size: 13px; }
+    .product-price { font-size: 13px; }
+    .section-title h2 { font-size: 20px; }
+    .cat-btn { padding: 8px 14px; font-size: 12px; }
+}
+@media (max-width: 480px) {
+    .hero h1 { font-size: 26px; }
+    .cat-icon { font-size: 13px; }
+}
+
+/* 스켈레톤 로딩 */
+.skeleton {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shine 1.4s ease infinite;
+}
+@keyframes skeleton-shine {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="site-header">
+    <div class="header-inner">
+        <a href="/" class="logo">
+            <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Chameleon Printing
+        </a>
+        <div class="lang-selector" id="langSelector">
+            <button data-lang="ko" onclick="window._goodsSwitchLang('ko')">KR</button>
+            <button data-lang="ja" onclick="window._goodsSwitchLang('ja')">JP</button>
+            <button data-lang="en" onclick="window._goodsSwitchLang('en')">EN</button>
+        </div>
+    </div>
+</header>
+
+<!-- 히어로 -->
+<section class="hero">
+    <h1 id="heroTitle">브랜드를 담는 <em>패키지 굿즈</em></h1>
+    <p id="heroDesc">박스 · 쇼핑백 · 파우치까지. 소량부터 대량까지 한 곳에서.</p>
+    <button class="hero-cta" onclick="document.getElementById('catNavSec').scrollIntoView({behavior:'smooth'})">
+        <i class="fa-solid fa-arrow-down"></i>
+        <span id="heroCtaLabel">카테고리 둘러보기</span>
+    </button>
+</section>
+
+<!-- 카테고리 탭 -->
+<div class="cat-nav-wrap" id="catNavSec">
+    <nav class="cat-nav" id="catNav"></nav>
+</div>
+
+<!-- 상품 그리드 -->
+<section class="products-wrap">
+    <div class="section-title">
+        <h2 id="curCatTitle">전체</h2>
+        <span class="count" id="curCatCount"></span>
+    </div>
+    <div id="productGrid" class="product-grid"></div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fa-solid fa-box-open"></i>
+        <p id="emptyMsg">아직 등록된 상품이 없습니다.</p>
+        <p class="empty-hint" id="emptyHint">곧 신규 상품이 추가될 예정입니다.</p>
+    </div>
+</section>
+
+<!-- 푸터 -->
+<footer class="site-footer">
+    <div style="max-width:1000px; margin:0 auto;">
+        <div style="font-size:18px; font-weight:800; color:#fff; margin-bottom:8px;">
+            <i class="fa-solid fa-layer-group" style="color:#818cf8; margin-right:6px;"></i>Chameleon Printing
+        </div>
+        <p style="font-size:12px; line-height:1.7; max-width:520px; margin:0 auto 16px;">
+            <span id="footerDesc">전 세계 브랜드의 패키지 굿즈 파트너. 디자인부터 제작·배송까지 한번에.</span>
+        </p>
+        <div style="display:inline-block; text-align:left; font-size:12px; line-height:2;">
+            📞 031-366-1984<br>
+            📧 design@chameleon.design<br>
+            🕐 평일 09:00~18:00
+        </div>
+        <div style="border-top:1px solid #334155; margin-top:20px; padding-top:16px; font-size:11px; color:#64748b;">
+            &copy; 2026 Chameleon Printing. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// 굿즈 카탈로그 — 카테고리 + 상품 그리드 (DB 연동 + 플레이스홀더)
+// ════════════════════════════════════════════════════════════════
+(function(){
+    var LANG = window.__GOODS_LANG || 'ko';
+    var SB = null;
+    try {
+        SB = window.supabase ? window.supabase.createClient(
+            'https://qinvtnhiidtmrzosyvys.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+        ) : null;
+    } catch(e) { console.warn('[goods] supabase init failed:', e); }
+
+    // ─── i18n ───
+    var I18N = {
+        ko: {
+            heroTitle: '브랜드를 담는 <em>패키지 굿즈</em>',
+            heroDesc: '박스 · 쇼핑백 · 파우치까지. 소량부터 대량까지 한 곳에서.',
+            heroCta: '카테고리 둘러보기',
+            sectionAll: '전체',
+            countSuffix: '종',
+            emptyMsg: '아직 등록된 상품이 없습니다.',
+            emptyHint: '곧 신규 상품이 추가될 예정입니다.',
+            footerDesc: '전 세계 브랜드의 패키지 굿즈 파트너. 디자인부터 제작·배송까지 한번에.',
+            customBadge: '맞춤제작',
+            priceFrom: '부터',
+            currencyPrefix: '',
+            currencySuffix: '원'
+        },
+        ja: {
+            heroTitle: 'ブランドを包む <em>パッケージグッズ</em>',
+            heroDesc: '箱・ショッパー・ポーチまで。小ロットから大量生産まで一括対応。',
+            heroCta: 'カテゴリを見る',
+            sectionAll: 'すべて',
+            countSuffix: '種',
+            emptyMsg: 'まだ登録されている商品はありません。',
+            emptyHint: '近日中に新商品が追加されます。',
+            footerDesc: '世界中のブランドのパッケージグッズパートナー。デザインから製作・配送まで。',
+            customBadge: 'カスタム',
+            priceFrom: '〜',
+            currencyPrefix: '¥',
+            currencySuffix: ''
+        },
+        en: {
+            heroTitle: 'Branded <em>Package Goods</em>',
+            heroDesc: 'Boxes, shopping bags, pouches — small to large orders, all in one place.',
+            heroCta: 'Browse Categories',
+            sectionAll: 'All',
+            countSuffix: ' items',
+            emptyMsg: 'No products listed yet.',
+            emptyHint: 'New items coming soon.',
+            footerDesc: 'A package-goods partner for brands worldwide — design, production, and delivery in one stop.',
+            customBadge: 'Custom',
+            priceFrom: 'from',
+            currencyPrefix: '$',
+            currencySuffix: ''
+        }
+    };
+    function t(k) { return (I18N[LANG] && I18N[LANG][k]) || I18N.ko[k] || ''; }
+
+    // ─── 카테고리 정의 (업계 일반 분류) ───
+    // dbCat: admin_products.category 컬럼 값과 매칭. 신규 코드를 자유롭게 사용.
+    var CATS = [
+        { id: 'all',     icon: '🌟', dbCat: null,        kr: '전체',         ja: 'すべて',         en: 'All' },
+        { id: 'paperbox',icon: '📦', dbCat: 'pkg_box',   kr: '페이퍼박스',    ja: 'ペーパーボックス', en: 'Paper Box' },
+        { id: 'shopbag', icon: '🛍️', dbCat: 'pkg_bag',   kr: '종이쇼핑백',    ja: '紙ショッパー',    en: 'Paper Shopping Bag' },
+        { id: 'nonwoven',icon: '👜', dbCat: 'pkg_nw',    kr: '부직포 가방',   ja: '不織布バッグ',    en: 'Non-woven Bag' },
+        { id: 'plastic', icon: '🎒', dbCat: 'pkg_pp',    kr: 'PP·PVC 가방',  ja: 'PP/PVCバッグ',    en: 'PP/PVC Bag' },
+        { id: 'reuse',   icon: '♻️', dbCat: 'pkg_rpet',  kr: '리유저블백',    ja: 'リユーザブル',    en: 'Reusable Bag' },
+        { id: 'tin',     icon: '🥫', dbCat: 'pkg_tin',   kr: '틴케이스',      ja: '缶ケース',        en: 'Tin Case' },
+        { id: 'pouch',   icon: '🪪', dbCat: 'pkg_pouch', kr: '파우치',        ja: 'ポーチ',          en: 'Pouch' },
+        { id: 'folding', icon: '📂', dbCat: 'pkg_fold',  kr: '폴딩박스',      ja: '折り畳みボックス', en: 'Folding Box' },
+        { id: 'label',   icon: '🏷️', dbCat: 'pkg_label', kr: '라벨·스티커',   ja: 'ラベル・シール',   en: 'Label / Sticker' },
+        { id: 'parts',   icon: '🎀', dbCat: 'pkg_parts', kr: '부자재',        ja: '副資材',          en: 'Accessories' }
+    ];
+
+    // 카테고리별 placeholder 그라데이션 (실제 이미지 등록 전까지)
+    var CAT_GRADIENT = {
+        all:      'linear-gradient(135deg,#f3e8ff,#fae8ff)',
+        paperbox: 'linear-gradient(135deg,#fef3c7,#fde68a)',
+        shopbag:  'linear-gradient(135deg,#fce7f3,#fbcfe8)',
+        nonwoven: 'linear-gradient(135deg,#dcfce7,#bbf7d0)',
+        plastic:  'linear-gradient(135deg,#dbeafe,#bfdbfe)',
+        reuse:    'linear-gradient(135deg,#d1fae5,#a7f3d0)',
+        tin:      'linear-gradient(135deg,#fef9c3,#fef08a)',
+        pouch:    'linear-gradient(135deg,#fae8ff,#f5d0fe)',
+        folding:  'linear-gradient(135deg,#fed7aa,#fdba74)',
+        label:    'linear-gradient(135deg,#fecaca,#fca5a5)',
+        parts:    'linear-gradient(135deg,#e9d5ff,#d8b4fe)'
+    };
+
+    var currentCatId = 'all';
+    var allProducts = [];   // DB 에서 로드한 패키지 카테고리 상품 전체
+
+    // ─── i18n 라벨 적용 ───
+    function applyI18n() {
+        var $ = function(id){ return document.getElementById(id); };
+        if ($('heroTitle'))    $('heroTitle').innerHTML    = t('heroTitle');
+        if ($('heroDesc'))     $('heroDesc').textContent   = t('heroDesc');
+        if ($('heroCtaLabel')) $('heroCtaLabel').textContent = t('heroCta');
+        if ($('emptyMsg'))     $('emptyMsg').textContent   = t('emptyMsg');
+        if ($('emptyHint'))    $('emptyHint').textContent  = t('emptyHint');
+        if ($('footerDesc'))   $('footerDesc').textContent = t('footerDesc');
+        // 페이지 타이틀
+        document.title = LANG === 'ja' ? 'パッケージグッズ - Chameleon Printing'
+                       : LANG === 'en' ? 'Package Goods - Chameleon Printing'
+                       : '패키지 굿즈 - 카멜레온프린팅';
+        // 언어 셀렉터 active
+        document.querySelectorAll('#langSelector button').forEach(function(b){
+            b.classList.toggle('active', b.getAttribute('data-lang') === LANG);
+        });
+    }
+
+    // ─── 카테고리 탭 렌더 ───
+    function renderCatNav() {
+        var nav = document.getElementById('catNav');
+        if (!nav) return;
+        nav.innerHTML = CATS.map(function(c){
+            var label = c[LANG] || c.kr;
+            return '<button class="cat-btn' + (c.id === currentCatId ? ' active' : '') + '" ' +
+                   'data-cat="' + c.id + '" onclick="window._goodsSwitchCat(\'' + c.id + '\')">' +
+                   '<span class="cat-icon">' + c.icon + '</span>' +
+                   '<span>' + label + '</span>' +
+                   '</button>';
+        }).join('');
+    }
+
+    // ─── 상품 카드 HTML ───
+    function productCard(p) {
+        var name = LANG === 'ja' ? (p.name_jp || p.name) :
+                   LANG === 'en' ? (p.name_us || p.name) :
+                                   (p.name_kr || p.name);
+        var price = p.price || 0;
+        var priceStr = price > 0 ? formatPrice(price) : '';
+        var imgHtml = p.img_url
+            ? '<img src="' + escapeHtml(p.img_url) + '" alt="' + escapeHtml(name) + '" loading="lazy">'
+            : placeholderThumb(p);
+        return '<div class="product-card" onclick="window._goodsOpenProduct(\'' + escapeJs(p.code) + '\')">' +
+            '<div class="product-thumb" style="background:' + (CAT_GRADIENT[mapDbCatToId(p.category)] || CAT_GRADIENT.all) + ';">' +
+            imgHtml +
+            '</div>' +
+            '<div class="product-info">' +
+              '<div class="product-name">' + escapeHtml(name) + '</div>' +
+              '<div class="product-meta">' +
+                (priceStr ? '<span class="product-price">' + priceStr + '</span>'
+                          : '<span class="badge-custom">' + t('customBadge') + '</span>') +
+                '<span><i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></span>' +
+              '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function placeholderThumb(p) {
+        // 카테고리 아이콘 + 카멜레온 로고 워터마크 (자체 이미지 등록 전 placeholder)
+        var cat = CATS.find(function(c){ return c.dbCat === p.category; }) || CATS[0];
+        return '<div class="product-thumb-placeholder">' +
+               '<div style="text-align:center;">' +
+                 '<div style="font-size:72px; line-height:1;">' + cat.icon + '</div>' +
+                 '<div style="margin-top:8px; font-size:10px; font-weight:800; color:rgba(30,41,59,0.4); letter-spacing:1px;">CHAMELEON</div>' +
+               '</div>' +
+               '</div>';
+    }
+
+    function mapDbCatToId(dbCat) {
+        var hit = CATS.find(function(c){ return c.dbCat === dbCat; });
+        return hit ? hit.id : 'all';
+    }
+
+    function formatPrice(krw) {
+        if (LANG === 'ja') return '¥' + Math.round(krw * 0.1).toLocaleString();
+        if (LANG === 'en') return '$' + (Math.round(krw * 0.001 * 100) / 100).toFixed(2);
+        return krw.toLocaleString() + '원';
+    }
+
+    function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, function(c){
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+        });
+    }
+    function escapeJs(s) { return String(s || '').replace(/['\\]/g, '\\$&'); }
+
+    // ─── 상품 그리드 렌더 ───
+    function renderGrid() {
+        var grid = document.getElementById('productGrid');
+        var empty = document.getElementById('emptyState');
+        var title = document.getElementById('curCatTitle');
+        var countEl = document.getElementById('curCatCount');
+        if (!grid) return;
+
+        var cat = CATS.find(function(c){ return c.id === currentCatId; }) || CATS[0];
+        title.textContent = cat[LANG] || cat.kr;
+
+        var list = currentCatId === 'all' ? allProducts
+                 : allProducts.filter(function(p){ return p.category === cat.dbCat; });
+
+        countEl.textContent = list.length ? (list.length + t('countSuffix')) : '';
+
+        if (list.length === 0) {
+            grid.innerHTML = '';
+            empty.style.display = '';
+            return;
+        }
+        empty.style.display = 'none';
+        grid.innerHTML = list.map(productCard).join('');
+    }
+
+    // ─── 상품 로드 (DB) ───
+    async function loadProducts() {
+        var grid = document.getElementById('productGrid');
+        // 스켈레톤 표시
+        if (grid) {
+            var skel = '';
+            for (var i = 0; i < 8; i++) {
+                skel += '<div class="product-card"><div class="product-thumb skeleton"></div>' +
+                        '<div class="product-info"><div style="height:14px; background:#f1f5f9; border-radius:4px; margin-bottom:8px;"></div>' +
+                        '<div style="height:12px; background:#f1f5f9; border-radius:4px; width:60%;"></div></div></div>';
+            }
+            grid.innerHTML = skel;
+        }
+        if (!SB) {
+            allProducts = [];
+            renderGrid();
+            return;
+        }
+        try {
+            // 패키지 굿즈 카테고리 (pkg_* prefix) 만 조회 — 현재 등록된 게 없으면 빈 배열
+            var dbCats = CATS.filter(function(c){ return c.dbCat; }).map(function(c){ return c.dbCat; });
+            var res = await SB.from('admin_products')
+                .select('code, category, name, name_kr, name_jp, name_us, price, img_url, description')
+                .in('category', dbCats)
+                .order('code', { ascending: true })
+                .limit(2000);
+            if (res.error) {
+                console.warn('[goods] DB load error:', res.error.message);
+                allProducts = [];
+            } else {
+                allProducts = res.data || [];
+            }
+        } catch (e) {
+            console.warn('[goods] DB exception:', e);
+            allProducts = [];
+        }
+        renderGrid();
+    }
+
+    // ─── 카테고리 전환 ───
+    window._goodsSwitchCat = function(catId) {
+        currentCatId = catId;
+        document.querySelectorAll('.cat-btn').forEach(function(b){
+            b.classList.toggle('active', b.getAttribute('data-cat') === catId);
+        });
+        renderGrid();
+        // 모바일: 그리드로 스크롤
+        if (window.innerWidth <= 768) {
+            var sec = document.querySelector('.products-wrap');
+            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    // ─── 언어 전환 ───
+    window._goodsSwitchLang = function(lang) {
+        if (!I18N[lang]) return;
+        var u = new URL(location.href);
+        u.searchParams.set('lang', lang);
+        location.href = u.toString();
+    };
+
+    // ─── 상품 클릭 → 메인 페이지의 simple_order 모달 진입 ───
+    window._goodsOpenProduct = function(code) {
+        if (!code) return;
+        // 메인 페이지로 product 파라미터 전달 → loadProductDetailAndOpen 자동 호출
+        var u = '/?product=' + encodeURIComponent(code);
+        if (LANG !== 'ko') u += '&lang=' + LANG;
+        location.href = u;
+    };
+
+    // ─── 초기화 ───
+    function init() {
+        applyI18n();
+        renderCatNav();
+        loadProducts();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+</body>
+</html>
