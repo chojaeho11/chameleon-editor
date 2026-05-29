@@ -3879,15 +3879,14 @@
         var custSec = document.getElementById('soCustomSizeSection');
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
-        //   기본금액 500원 (4×4cm) 부터 시작 — 네이버 스마트스토어 기준
         var _PRESET_KEYRING = [
-            { w:4,  h:4,  label:'4×4',  price:500  },
-            { w:5,  h:5,  label:'5×5',  price:1000 },
-            { w:5,  h:7,  label:'5×7',  price:1200 },
-            { w:6,  h:4,  label:'6×4',  price:1000 },
-            { w:7,  h:7,  label:'7×7',  price:1500 },
-            { w:8,  h:6,  label:'8×6',  price:1500 },
-            { w:10, h:10, label:'10×10',price:2000 }
+            { w:4,  h:4,  label:'4×4',  price:1500 },
+            { w:5,  h:5,  label:'5×5',  price:1800 },
+            { w:5,  h:7,  label:'5×7',  price:2000 },
+            { w:6,  h:4,  label:'6×4',  price:1800 },
+            { w:7,  h:7,  label:'7×7',  price:2000 },
+            { w:8,  h:6,  label:'8×6',  price:2200 },
+            { w:10, h:10, label:'10×10',price:2500 }
         ];
         var _PRESET_KOROTTO = [
             { w:5,  h:5,  label:'5×5',  price:2000 },
