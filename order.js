@@ -2152,6 +2152,11 @@ async function addCanvasToCart() {
     } else if (product.is_file_upload) {
         calcProduct._calculated_price = false;
         calcProduct.is_custom_size = true;
+    // ★ 베스트 굿즈 프리셋 사이즈 (키링/코롯토류) — 선택된 사이즈 고정가 유지
+    } else if (product._artworkTypeFixed && product._artworkTypePrice) {
+        calcProduct.price = product._artworkTypePrice;
+        calcProduct._calculated_price = false; // 수량할인 적용 가능
+        calcProduct.is_custom_size = true;
     } else if (product.is_custom_size) {
         // 이미 계산된 가격이 있고, 사이즈가 일치하면 유지 (수량할인 가능하도록 _calculated_price = false)
         // ★ 견적서에서 담은 상품은 가격 재계산하지 않음

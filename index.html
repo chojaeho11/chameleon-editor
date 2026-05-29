@@ -8278,7 +8278,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./shortcuts.js?v=434"></script>
 <script type="module" src="./context-menu.js?v=434"></script>
 <script type="module" src="./export.js?v=434"></script>
-<script type="module" src="./order.js?v=461"></script>
+<script type="module" src="./order.js?v=462"></script>
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./my-design.js?v=434"></script>
 <script type="module" src="./ppt-mode.js?v=434"></script>
@@ -9514,7 +9514,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=434';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=461'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=462'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=434';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=438';
 
@@ -12714,6 +12714,49 @@ window.showChoiceModal = async function(key) {
                         <input type="hidden" id="inputCustH" value="2200">
                     </div>`;
                 }
+                // ★ 베스트 굿즈 사이즈 프리셋 (키링/코롯토류) — /goods 베스트 굿즈와 동일한 가격표
+                const _BEST_KEYRING = [
+                    { id:'5x5',  w:50,  h:50,  label:'5×5',  price:1000 },
+                    { id:'5x7',  w:50,  h:70,  label:'5×7',  price:1200 },
+                    { id:'7x7',  w:70,  h:70,  label:'7×7',  price:1500 },
+                    { id:'10x10',w:100, h:100, label:'10×10',price:2000 },
+                    { id:'6x4',  w:60,  h:40,  label:'6×4',  price:1000 }
+                ];
+                const _BEST_KOROTTO = [
+                    { id:'5x5',  w:50,  h:50,  label:'5×5',  price:2000 },
+                    { id:'5x7',  w:50,  h:70,  label:'5×7',  price:2500 },
+                    { id:'7x7',  w:70,  h:70,  label:'7×7',  price:3000 },
+                    { id:'10x10',w:100, h:100, label:'10×10',price:4000 }
+                ];
+                const _PRESET_SIZES_MAP = {
+                    '345345353':       _BEST_KEYRING,
+                    'gds_acr_kr_10':   _BEST_KEYRING,
+                    'acr_crt_cl_8t':   _BEST_KOROTTO,
+                    'acr_crt_stand_01':_BEST_KOROTTO,
+                    'acr_crt_stand_10t':_BEST_KOROTTO
+                };
+                const _presetSizes = _PRESET_SIZES_MAP[product.code];
+                if (_presetSizes && _presetSizes.length) {
+                    // 첫 사이즈로 자동 설정 — calcCustomPrice 가 고정가 분기를 타도록
+                    const _ds = _presetSizes[0];
+                    product._artworkTypeFixed = true;
+                    product._artworkTypePrice = _ds.price;
+                    const _sizeTitle = {ja:'サイズ選択',en:'Choose Size',zh:'选择尺寸',ar:'اختر الحجم',es:'Elegir tamaño',de:'Größe wählen',fr:'Choisir la taille',kr:'사이즈 선택'}[lang]||'Choose Size';
+                    const _sizeNote = {ja:'cm単位 · 上記サイズから選択',en:'cm · pick one of the sizes above',zh:'厘米 · 请选择上方尺寸',ar:'سم · اختر من الأحجام أعلاه',es:'cm · seleccione un tamaño',de:'cm · Größe wählen',fr:'cm · choisir une taille',kr:'단위: cm · 위 사이즈 중 선택'}[lang]||'cm · pick a size';
+                    let _pillsHtml = '<div data-npc="size" style="background:#f8fafc; border-radius:12px; padding:14px; margin-top:10px;">';
+                    _pillsHtml += `<div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:10px;">📐 ${_sizeTitle}</div>`;
+                    _pillsHtml += '<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px;">';
+                    _presetSizes.forEach((s, i) => {
+                        const _act = i === 0;
+                        _pillsHtml += `<button type="button" class="preset-size-pill${_act?' active':''}" data-w="${s.w*10}" data-h="${s.h*10}" data-price="${s.price}" data-label="${s.label}cm" onclick="window._pickPresetSize(this)" style="aspect-ratio:1/1; border:2px solid ${_act?'#0f172a':'#e2e8f0'}; background:${_act?'#0f172a':'#fff'}; color:${_act?'#fff':'#334155'}; border-radius:50%; font-size:11px; font-weight:800; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease; font-family:inherit; line-height:1;">${s.label}</button>`;
+                    });
+                    _pillsHtml += '</div>';
+                    _pillsHtml += `<div style="font-size:11px; color:#94a3b8; margin-top:8px;">${_sizeNote}</div>`;
+                    _pillsHtml += `<input type="hidden" id="inputCustW" value="${_ds.w*10}">`;
+                    _pillsHtml += `<input type="hidden" id="inputCustH" value="${_ds.h*10}">`;
+                    _pillsHtml += '</div>';
+                    return _pillsHtml;
+                }
                 return `<div data-npc="size" style="background:#f8fafc; border-radius:8px; padding:10px; margin-top:10px;">
                 <div style="font-size:12px; font-weight:bold; color:#6366f1; margin-bottom:8px;">📏 ${lang==='ja'?'製品サイズ入力':lang==='zh'?'产品尺寸输入':lang==='ar'?'إدخال حجم المنتج':lang==='es'?'Tamaño del producto':lang==='de'?'Produktgröße':lang==='fr'?'Taille du produit':lang==='en'?'Product Size':'제품사이즈 입력'}</div>
                 <div style="display:flex; gap:5px;">
@@ -13525,6 +13568,43 @@ window.updateModalTotal = function() {
     window._addWallPanel = function() {
         window._wallPanels.push({ w: 2000, h: 2200, side: 1 }); // side: 1=단면, 2=양면
         window._renderWallPanels();
+    };
+
+    // ★ 베스트 굿즈 프리셋 사이즈 pill 클릭 → 고정가 분기로 진입
+    window._pickPresetSize = function(btn) {
+        if (!btn) return;
+        const row = btn.parentElement;
+        if (row) {
+            row.querySelectorAll('.preset-size-pill').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#fff';
+                b.style.borderColor = '#e2e8f0';
+                b.style.color = '#334155';
+            });
+        }
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.borderColor = '#0f172a';
+        btn.style.color = '#fff';
+
+        const w = parseInt(btn.getAttribute('data-w'), 10);
+        const h = parseInt(btn.getAttribute('data-h'), 10);
+        const price = parseInt(btn.getAttribute('data-price'), 10);
+
+        const wIn = document.getElementById('inputCustW');
+        const hIn = document.getElementById('inputCustH');
+        if (wIn) wIn.value = w;
+        if (hIn) hIn.value = h;
+
+        if (window.selectedProductForChoice) {
+            window.selectedProductForChoice._artworkTypeFixed = true;
+            window.selectedProductForChoice._artworkTypePrice = price;
+            window.selectedProductForChoice.width_mm = w;
+            window.selectedProductForChoice.height_mm = h;
+        }
+
+        if (typeof window.calcCustomPrice === 'function') window.calcCustomPrice();
+        if (typeof window.updateModalTotal === 'function') window.updateModalTotal();
     };
 
     window._removeWallPanel = function(idx) {
@@ -14720,7 +14800,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=461');
+                    const m = await import('./order.js?v=462');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -14790,7 +14870,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=461').then(m => {
+            import('./order.js?v=462').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -15410,7 +15490,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=461').then(m => {
+        import('./order.js?v=462').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -19946,7 +20026,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=461').then(function(mod) {
+            import('./order.js?v=462').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
