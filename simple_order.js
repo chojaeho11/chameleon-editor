@@ -3888,7 +3888,7 @@
         }
         state.customUnitPrice = 0;
         var custSec = document.getElementById('soCustomSizeSection');
-        if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
+        // 2026-05-30: custSec display 결정은 프리셋 감지 이후로 미룸 — 손수건은 isCustomSize=false 로 시작해도 프리셋이면 강제 표시
         // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
         var _PRESET_KEYRING = [
             { w:4,  h:4,  label:'4×4',  price:1500 },
@@ -3960,6 +3960,8 @@
             p.price = _BEST_PRICE_OVERRIDES[p.code];
         }
         state.isBestGoods = state.isPresetGoods || !!(p && _BEST_PRICE_OVERRIDES[p.code] != null);
+        // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
+        if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         var pillsBox = document.getElementById('soPresetSizePills');
         var pillsNote = document.getElementById('soPresetSizeNote');
         var dimsRow  = document.getElementById('soCustomDimsRow');
