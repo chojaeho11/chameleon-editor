@@ -1026,7 +1026,12 @@
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
-          <div id="soPresetSizeNote" style="display:none; font-size:11px; color:#0f766e; font-weight:700; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:8px 10px; margin-bottom:8px; text-align:center;">🎁 ${tr('무료로 개별포장되어 발송됩니다', '無料で個別包装してお届けします', 'Free individual packaging included')}</div>
+          <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
+          <button type="button" id="soPresetWrapBtn" onclick="window._soTogglePresetWrap()" style="display:none; width:100%; padding:10px 12px; margin-bottom:8px; border:1.5px dashed #cbd5e1; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:800; font-family:inherit; transition:all 0.15s;">
+            <span id="soPresetWrapLabel">🎁 ${tr('개별포장 추가', '個別包装を追加', 'Add individual packaging')}</span>
+            <span style="color:#dc2626;"> +${fmtPrice(200)}</span>
+            <span style="color:#94a3b8; font-weight:600; font-size:11px;"> · ${tr('개당', '個あたり', 'per unit')}</span>
+          </button>
           <div id="soCustomDimsRow" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
@@ -1898,8 +1903,13 @@
         if (state.isPresetGoods && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
         }
+        // 2026-05-29: 베스트굿즈 프리셋 — 개별포장 옵션 (+200원/개)
+        let presetWrapFee = 0;
+        if (state.isPresetGoods && state.presetWrap) {
+            presetWrapFee = 200 * qty;
+        }
 
-        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + shipFee;
+        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + shipFee;
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -1953,6 +1963,10 @@
                 ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
                 : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
             bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+        }
+        // 2026-05-29: 베스트굿즈 프리셋 — 개별포장 라인 (옵션 breakdown 옆에 함께 표시)
+        if (presetWrapFee > 0) {
+            bdHtml += '<div class="so-price-row"><span>· ' + tr('개별포장', '個別包装', 'Individual wrap') + ' × ' + qty + '</span><span>+' + fmtPrice(presetWrapFee) + '</span></div>';
         }
         setHTML('soAddonBreakdown', bdHtml);
         // 2026-05-13: 구매금액 할인 라인 (구간 적용 시만)
@@ -2894,6 +2908,28 @@
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             b.classList.toggle('active', b.dataset.ship === m);
         });
+    };
+
+    // 2026-05-29: 베스트굿즈 프리셋 — 개별포장 추가/해제 토글 (+200원/개)
+    window._soTogglePresetWrap = function () {
+        var btn = document.getElementById('soPresetWrapBtn');
+        if (!btn) return;
+        state.presetWrap = !state.presetWrap;
+        var lbl = document.getElementById('soPresetWrapLabel');
+        if (state.presetWrap) {
+            btn.style.background = '#ecfdf5';
+            btn.style.borderStyle = 'solid';
+            btn.style.borderColor = '#10b981';
+            btn.style.color = '#065f46';
+            if (lbl) lbl.innerHTML = '✅ ' + tr('개별포장 추가됨', '個別包装 追加済み', 'Individual packaging added');
+        } else {
+            btn.style.background = '#fff';
+            btn.style.borderStyle = 'dashed';
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#475569';
+            if (lbl) lbl.innerHTML = '🎁 ' + tr('개별포장 추가', '個別包装を追加', 'Add individual packaging');
+        }
+        if (typeof recalc === 'function') recalc();
     };
 
     // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 pill 클릭 — 고정가 적용
@@ -3893,6 +3929,18 @@
             if (areaInfo) areaInfo.style.display = 'none';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price');
             if (pillsNote) pillsNote.style.display = '';
+            // 개별포장 토글 — 새 상품 진입 시 항상 OFF 로 초기화
+            state.presetWrap = false;
+            var _wbtn = document.getElementById('soPresetWrapBtn');
+            if (_wbtn) {
+                _wbtn.style.display = '';
+                _wbtn.style.background = '#fff';
+                _wbtn.style.borderStyle = 'dashed';
+                _wbtn.style.borderColor = '#cbd5e1';
+                _wbtn.style.color = '#475569';
+                var _wlbl = document.getElementById('soPresetWrapLabel');
+                if (_wlbl) _wlbl.innerHTML = '🎁 ' + tr('개별포장 추가', '個別包装を追加', 'Add individual packaging');
+            }
             // 프리셋 굿즈 — 디자인에디터 숨김 / 업로드 안내 변경
             if (editorBtn) editorBtn.style.display = 'none';
             if (uploadTitle) uploadTitle.innerHTML = tr('로고나 이미지를 올려주세요', 'ロゴまたは画像をアップロード', 'Upload your logo or image') +
@@ -3913,8 +3961,10 @@
         } else if (state.isCustomSize) {
             // 일반 면적계산 모드
             state.presetSizeFixed = false;
+            state.presetWrap = false;
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
+            var _wbtn2 = document.getElementById('soPresetWrapBtn'); if (_wbtn2) _wbtn2.style.display = 'none';
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
@@ -3926,8 +3976,10 @@
         } else {
             // 사이즈 섹션 자체 미사용 — 프리셋 잔존 상태 리셋
             state.presetSizeFixed = false;
+            state.presetWrap = false;
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
+            var _wbtn3 = document.getElementById('soPresetWrapBtn'); if (_wbtn3) _wbtn3.style.display = 'none';
             if (editorBtn) editorBtn.style.display = '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
