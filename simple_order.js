@@ -684,6 +684,56 @@
     font-size: 11px; color: #b45309; font-weight: 700; margin-top: 4px;
 }
 
+/* 2026-05-29: 디자인 에디터 진입 카드 + 상세페이지 */
+.so-editor-card {
+    width: 100%; padding: 18px 22px; margin-top: 18px;
+    border: none; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 35%, #ec4899 70%, #f59e0b 100%);
+    background-size: 220% 220%;
+    border-radius: 16px;
+    color: #fff; font-weight: 800; text-align: left;
+    box-shadow: 0 12px 30px -10px rgba(139,92,246,0.55), inset 0 1px 0 rgba(255,255,255,0.28);
+    display: flex; align-items: center; gap: 16px;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    animation: soEditorShine 7s ease-in-out infinite;
+    position: relative; overflow: hidden;
+}
+.so-editor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 38px -10px rgba(139,92,246,0.7), inset 0 1px 0 rgba(255,255,255,0.32);
+}
+.so-editor-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120% 60% at 20% 20%, rgba(255,255,255,0.22), transparent 60%);
+    pointer-events: none;
+}
+.so-editor-icon { font-size: 34px; flex-shrink: 0; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25)); }
+.so-editor-title { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; margin-bottom: 2px; }
+.so-editor-sub { font-size: 12px; font-weight: 500; opacity: 0.94; }
+.so-editor-arrow { font-size: 22px; font-weight: 900; flex-shrink: 0; opacity: 0.9; }
+@keyframes soEditorShine {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+.so-prod-detail {
+    margin-top: 18px; padding: 18px 18px 12px;
+    border: 1px solid #e2e8f0; border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+}
+.so-prod-detail-label {
+    font-size: 12px; font-weight: 700; color: #64748b;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px dashed #e2e8f0;
+    display: flex; align-items: center; gap: 6px;
+}
+.so-prod-detail-body {
+    font-size: 14px; line-height: 1.7; color: #334155;
+}
+.so-prod-detail-body img { max-width: 100%; height: auto; display: block; margin: 8px auto; border-radius: 8px; }
+.so-prod-detail-body table { max-width: 100%; }
+.so-prod-detail-body * { max-width: 100%; box-sizing: border-box; }
+
 /* 모바일 — 세로 스택, 풀스크린 유지 */
 @media (max-width: 768px) {
     .so-head { padding: 12px 16px; }
@@ -836,6 +886,24 @@
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
             <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
           </div>
+        </div>
+
+        <!-- 2026-05-29: 디자인 에디터 진입 카드 (예쁘게) + 상품 상세 HTML (admin_products.description_*) -->
+        <button type="button" id="soOpenEditorBtn" class="so-editor-card" onclick="window._soOpenEditor && window._soOpenEditor()">
+          <span class="so-editor-icon">🎨</span>
+          <div style="flex:1; min-width:0;">
+            <div class="so-editor-title">${tr('디자인에디터', 'デザインエディタ', 'Design Editor')}</div>
+            <div class="so-editor-sub">${tr('쉬운 디자인 — 클릭 한 번으로 시작', 'カンタン操作 — ワンクリックで開始', 'Easy design — start with one click')}</div>
+          </div>
+          <span class="so-editor-arrow">→</span>
+        </button>
+
+        <div id="soProductDetailWrap" class="so-prod-detail" style="display:none;">
+          <div class="so-prod-detail-label">
+            <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
+            <span>${tr('상품 상세정보', '商品詳細', 'Product Details')}</span>
+          </div>
+          <div id="soProductDetailBody" class="so-prod-detail-body"></div>
         </div>
       </div>
 
@@ -3347,6 +3415,56 @@
 
         document.getElementById('soName').textContent = pickName(p);
         document.getElementById('soDesc').textContent = pickDescPlain(p, 150);
+
+        // 2026-05-29: 상품 상세 HTML (description_kr / description_jp / description_us …) 주입
+        // showChoiceModal 의 로케일 fallback 과 동일 우선순위
+        (function _injectDetail() {
+            var wrap = document.getElementById('soProductDetailWrap');
+            var body = document.getElementById('soProductDetailBody');
+            if (!wrap || !body) return;
+            var lang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
+            var html = '';
+            if (lang === 'ja')      html = p.description_jp || p.description || p.description_kr || '';
+            else if (lang === 'en') html = p.description_us || p.description || '';
+            else if (lang === 'zh') html = p.description_cn || p.description_us || p.description || '';
+            else if (lang === 'ar') html = p.description_ar || p.description_us || p.description || '';
+            else if (lang === 'es') html = p.description_es || p.description_us || p.description || '';
+            else if (lang === 'de') html = p.description_de || p.description_us || p.description || '';
+            else if (lang === 'fr') html = p.description_fr || p.description_us || p.description || '';
+            else                    html = p.description_kr || p.description || '';
+            if (!html || !html.trim()) { wrap.style.display = 'none'; return; }
+            // <script> 만 제거 (보안). <style> 등 디자인 보존.
+            html = String(html).replace(/<script[\s\S]*?<\/script>/gi, '');
+            // 내부 중복 ID 제거 (모달 ID 와 충돌 방지)
+            html = html.replace(/\sid="[^"]*"/gi, '');
+            body.innerHTML = html;
+            wrap.style.display = '';
+        })();
+
+        // 2026-05-29: 디자인 에디터 진입 — 메인 index.html 의 startEditorDirect 사용
+        window._soOpenEditor = function() {
+            try {
+                var prod = state && state.product;
+                if (!prod || !prod.code) return;
+                // showChoiceModal 흐름과 호환되도록 선택 상품 컨텍스트 세팅
+                window.selectedProductForChoice = prod;
+                window.currentProductKey = prod.code;
+                if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
+                window.PRODUCT_DB[prod.code] = prod;
+                // 현재 simple_order 모달 닫기 (product modal — soCheckoutOverlay 와 다름)
+                var soModal = document.getElementById('simpleOrderModal');
+                if (soModal) soModal.classList.remove('open');
+                document.body.style.overflow = '';
+                // 메인의 에디터 진입 함수 호출 (없으면 URL 폴백)
+                if (typeof window.startEditorDirect === 'function') {
+                    window.startEditorDirect(prod.code);
+                } else {
+                    location.href = '/?product=' + encodeURIComponent(prod.code) + '&open=editor';
+                }
+            } catch (e) {
+                console.warn('[so editor open] failed:', e);
+            }
+        };
         // 2026-05-13: 가벽이면 일반 설명 숨기고 가벽 전용 안내 카드 표시
         // 2026-05-15: 종이매대면 일반 설명 숨기고 담당자 칼선/FOB 안내 카드 표시
         var descEl = document.getElementById('soDesc');
