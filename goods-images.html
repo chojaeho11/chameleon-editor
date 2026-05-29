@@ -130,6 +130,43 @@ input[type="checkbox"] { accent-color:#6366f1; }
             <button class="tab-btn" data-tab="upload"  onclick="window._giTab('upload')">📤 일괄 업로드</button>
             <button class="tab-btn" data-tab="ai"      onclick="window._giTab('ai')">🤖 DALL-E 자동생성</button>
             <button class="tab-btn" data-tab="auto"    onclick="window._giTab('auto')">⚡ 서버 자동화</button>
+            <button class="tab-btn" data-tab="prices"  onclick="window._giTab('prices')">💰 가격 관리</button>
+        </div>
+
+        <!-- ─── 탭 5: 가격 관리 ─── -->
+        <div class="tab-content" id="tab-prices">
+            <div class="card">
+                <h2><i class="fa-solid fa-tag"></i> 상품별 가격 편집</h2>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    입력한 가격이 정상가. <code class="code-tag">/goods</code> 에서 <b>50% 할인가 + MOQ 10 + 100개 이상 할인</b> 으로 표시됨. <code class="code-tag">0</code> 입력 시 "가격 문의" 모드.
+                </p>
+                <div class="row" style="margin-bottom:12px;">
+                    <input type="text" id="priceFilter" placeholder="🔍 상품명/코드로 필터..." style="flex:1; min-width:200px; padding:8px 12px;">
+                    <select id="priceCatFilter" style="padding:8px 12px;">
+                        <option value="">전체 카테고리</option>
+                    </select>
+                    <button class="btn btn-success" onclick="window._giSaveAllPrices()" id="savePriceBtn">
+                        <i class="fa-solid fa-floppy-disk"></i> 변경된 가격 일괄 저장 <span id="dirtyCount" style="background:rgba(255,255,255,0.2); padding:1px 8px; border-radius:999px; margin-left:4px;">0</span>
+                    </button>
+                </div>
+                <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
+                    <table class="file-table" id="priceTable">
+                        <thead style="position:sticky; top:0; z-index:1; background:#0f172a;">
+                            <tr>
+                                <th style="width:35%;">상품명</th>
+                                <th style="width:25%;">코드</th>
+                                <th style="width:15%; text-align:right;">정상가 (원)</th>
+                                <th style="width:15%; text-align:right; color:#34d399;">할인가 50%</th>
+                                <th style="width:10%;">상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priceTbody"></tbody>
+                    </table>
+                </div>
+                <p style="font-size:11px; color:#64748b; margin-top:12px;">
+                    💡 가격 입력 후 다른 행 클릭하면 자동 dirty 마킹. 일괄 저장 버튼으로 변경분만 DB 업데이트.
+                </p>
+            </div>
         </div>
 
         <!-- ─── 탭 4: 서버 자동화 (Edge Function) ─── -->
@@ -429,6 +466,7 @@ window._giTab = function(tab) {
     document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.toggle('active', c.id === 'tab-' + tab); });
     if (tab === 'prompts') renderPromptHelper();
     if (tab === 'ai') renderAiCatFilter();
+    if (tab === 'prices') { renderPriceCatFilter(); renderPriceTable(); }
 };
 
 // ─── 탭 1: 프롬프트 헬퍼 ───
@@ -678,6 +716,109 @@ window._giAIStart = async function() {
     document.getElementById('aiStopBtn').disabled = true;
     await loadProducts();
     updateCostEstimate();
+};
+
+// ─── 탭 5: 가격 관리 ───
+var priceDirty = {};   // { code: newPrice }
+
+function renderPriceTable() {
+    var tbody = document.getElementById('priceTbody');
+    if (!tbody) return;
+    var filter = (document.getElementById('priceFilter').value || '').toLowerCase();
+    var catFilter = document.getElementById('priceCatFilter').value;
+    var list = allProducts.filter(function(p){
+        if (catFilter && p.category !== catFilter) return false;
+        if (filter) {
+            var hay = (p.code + ' ' + p.name).toLowerCase();
+            if (hay.indexOf(filter) < 0) return false;
+        }
+        return true;
+    });
+    tbody.innerHTML = list.map(function(p){
+        var curPrice = priceDirty[p.code] !== undefined ? priceDirty[p.code] : (p.price || 0);
+        var disc = Math.round(curPrice / 2);
+        var isDirty = priceDirty[p.code] !== undefined && priceDirty[p.code] !== (p.price || 0);
+        var statusHtml = isDirty
+            ? '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>'
+            : (curPrice === 0 ? '<span style="color:#a78bfa;">가격문의</span>' : '<span style="color:#34d399;">설정됨</span>');
+        return '<tr data-code="' + escHtml(p.code) + '">' +
+            '<td>' + escHtml(p.name) + '</td>' +
+            '<td><span class="code-tag">' + escHtml(p.code) + '</span></td>' +
+            '<td style="text-align:right;"><input type="number" min="0" step="100" value="' + curPrice + '" ' +
+                'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)" ' +
+                'style="width:100px; text-align:right; padding:5px 8px;"></td>' +
+            '<td style="text-align:right; color:#34d399; font-weight:800;">' + disc.toLocaleString() + '</td>' +
+            '<td>' + statusHtml + '</td></tr>';
+    }).join('');
+    document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length;
+}
+
+function renderPriceCatFilter() {
+    var sel = document.getElementById('priceCatFilter');
+    if (!sel) return;
+    var cats = [...new Set(allProducts.map(function(p){ return p.category; }))].sort();
+    sel.innerHTML = '<option value="">전체 카테고리 (' + allProducts.length + '개)</option>' +
+        cats.map(function(c){
+            var cnt = allProducts.filter(function(p){ return p.category === c; }).length;
+            return '<option value="' + c + '">' + c + ' (' + cnt + ')</option>';
+        }).join('');
+    sel.addEventListener('change', renderPriceTable);
+    document.getElementById('priceFilter').addEventListener('input', renderPriceTable);
+}
+
+window._giPriceChg = function(input) {
+    var code = input.getAttribute('data-code');
+    var newPrice = parseInt(input.value, 10) || 0;
+    var prod = allProducts.find(function(p){ return p.code === code; });
+    var orig = (prod && prod.price) || 0;
+    if (newPrice === orig) {
+        delete priceDirty[code];
+    } else {
+        priceDirty[code] = newPrice;
+    }
+    // 행만 갱신
+    var tr = input.closest('tr');
+    if (tr) {
+        var disc = Math.round(newPrice / 2);
+        tr.children[3].textContent = disc.toLocaleString();
+        var statusCell = tr.children[4];
+        if (priceDirty[code] !== undefined) {
+            statusCell.innerHTML = '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>';
+        } else {
+            statusCell.innerHTML = newPrice === 0
+                ? '<span style="color:#a78bfa;">가격문의</span>'
+                : '<span style="color:#34d399;">설정됨</span>';
+        }
+    }
+    document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length;
+};
+
+window._giSaveAllPrices = async function() {
+    var codes = Object.keys(priceDirty);
+    if (codes.length === 0) { log('변경된 가격 없음.', 'warn'); return; }
+    if (!confirm(codes.length + '개 상품의 가격을 일괄 저장합니다. 진행할까요?')) return;
+    var btn = document.getElementById('savePriceBtn');
+    btn.disabled = true;
+    log('=== 가격 일괄 저장 시작 — ' + codes.length + '개 ===', 'info');
+    var ok = 0, fail = 0;
+    for (var i = 0; i < codes.length; i++) {
+        var code = codes[i];
+        var newPrice = priceDirty[code];
+        try {
+            var res = await sb.from('admin_products').update({ price: newPrice }).eq('code', code);
+            if (res.error) { log(code + ' 실패: ' + res.error.message, 'err'); fail++; }
+            else {
+                ok++;
+                // 로컬도 갱신
+                var prod = allProducts.find(function(p){ return p.code === code; });
+                if (prod) prod.price = newPrice;
+            }
+        } catch (e) { log(code + ' 예외: ' + e.message, 'err'); fail++; }
+    }
+    priceDirty = {};
+    log('=== 완료 — 성공 ' + ok + ' / 실패 ' + fail + ' ===', fail ? 'warn' : 'ok');
+    btn.disabled = false;
+    renderPriceTable();
 };
 
 // ─── 탭 4: Edge Function 트리거 ───

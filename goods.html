@@ -208,6 +208,16 @@ a { text-decoration: none; color: inherit; }
     font-size: 12px; color: var(--text-light);
 }
 .product-price { font-size: 14px; font-weight: 800; color: var(--primary); }
+.price-stack { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.price-row { display: flex; align-items: center; gap: 6px; }
+.price-orig { font-size: 11.5px; color: var(--text-light); text-decoration: line-through; font-weight: 600; }
+.off-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 4px;
+    background: #ef4444; color: #fff;
+    font-size: 9.5px; font-weight: 900; letter-spacing: 0.3px;
+}
+.price-disc { font-size: 17px; font-weight: 900; color: var(--primary); letter-spacing: -0.4px; line-height: 1.1; }
+.price-bulk { font-size: 10.5px; color: var(--text-light); font-weight: 600; margin-top: 1px; }
 .badge-custom {
     display: inline-block;
     padding: 2px 7px; border-radius: 4px;
@@ -702,30 +712,41 @@ a { text-decoration: none; color: inherit; }
                    LANG === 'en' ? (p.name_us || p.name) :
                                    (p.name_kr || p.name);
         var price = p.price || 0;
-        // 굿즈 도매 모델 — price=0 또는 pkg_* 전체를 "가격문의" 로 통일
-        var isInquiry = (price === 0) || (p.category && p.category.indexOf('pkg_') === 0);
-        var priceStr = price > 0 ? formatPrice(price) : '';
+        // price > 0 → 정상 가격 표시 (반값 할인 모델) / price === 0 → 가격문의
+        var isInquiry = price === 0;
+        var discountPrice = isInquiry ? 0 : Math.round(price / 2);
         var imgHtml = p.img_url
             ? '<img src="' + escapeHtml(p.img_url) + '" alt="' + escapeHtml(name) + '" loading="lazy">'
             : placeholderThumb(p);
         var inquiryLabel = LANG === 'ja' ? 'お見積り' : LANG === 'en' ? 'Get Quote' : '가격 문의';
-        var moqLabel     = LANG === 'ja' ? 'MOQ 1,000~' : LANG === 'en' ? 'MOQ 1,000+' : '최소 1,000개';
+        var moqLabel     = LANG === 'ja' ? '最低 10個~' : LANG === 'en' ? 'Min 10+' : '최소 10개';
+        var bulkLabel    = LANG === 'ja' ? '100個以上 50%OFF' : LANG === 'en' ? '100+ units 50% OFF' : '100개 이상 50% 할인';
+        var offLabel     = LANG === 'ja' ? '50%OFF' : LANG === 'en' ? '50% OFF' : '50% 할인';
         var clickFn = isInquiry
             ? 'window._goodsOpenInquiry(\'' + escapeJs(p.code) + '\',\'' + escapeJs(name).replace(/'/g,"\\'") + '\')'
             : 'window._goodsOpenProduct(\'' + escapeJs(p.code) + '\')';
+        var priceBlock;
+        if (isInquiry) {
+            priceBlock = '<span class="inquiry-tag"><i class="fa-solid fa-comment-dots" style="font-size:11px;"></i> ' + inquiryLabel + '</span>';
+        } else {
+            priceBlock =
+                '<div class="price-stack">' +
+                  '<div class="price-row">' +
+                    '<span class="price-orig">' + formatPrice(price) + '</span>' +
+                    '<span class="off-badge">' + offLabel + '</span>' +
+                  '</div>' +
+                  '<div class="price-disc">' + formatPrice(discountPrice) + '</div>' +
+                  '<div class="price-bulk">' + bulkLabel + '</div>' +
+                '</div>';
+        }
         return '<div class="product-card" onclick="' + clickFn + '">' +
             '<div class="product-thumb" style="background:' + (CAT_GRADIENT[mapDbCatToId(p.category)] || CAT_GRADIENT.all) + ';">' +
             imgHtml +
-            (isInquiry ? '<div class="moq-badge">' + moqLabel + '</div>' : '') +
+            '<div class="moq-badge">' + moqLabel + '</div>' +
             '</div>' +
             '<div class="product-info">' +
               '<div class="product-name">' + escapeHtml(name) + '</div>' +
-              '<div class="product-meta">' +
-                (isInquiry
-                  ? '<span class="inquiry-tag"><i class="fa-solid fa-comment-dots" style="font-size:11px;"></i> ' + inquiryLabel + '</span>'
-                  : '<span class="product-price">' + priceStr + '</span>') +
-                '<span><i class="fa-solid fa-arrow-right" style="font-size:10px;"></i></span>' +
-              '</div>' +
+              priceBlock +
             '</div>' +
         '</div>';
     }
