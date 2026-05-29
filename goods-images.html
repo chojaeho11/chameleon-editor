@@ -129,6 +129,50 @@ input[type="checkbox"] { accent-color:#6366f1; }
             <button class="tab-btn active" data-tab="prompts" onclick="window._giTab('prompts')">📝 프롬프트 헬퍼</button>
             <button class="tab-btn" data-tab="upload"  onclick="window._giTab('upload')">📤 일괄 업로드</button>
             <button class="tab-btn" data-tab="ai"      onclick="window._giTab('ai')">🤖 DALL-E 자동생성</button>
+            <button class="tab-btn" data-tab="auto"    onclick="window._giTab('auto')">⚡ 서버 자동화</button>
+        </div>
+
+        <!-- ─── 탭 4: 서버 자동화 (Edge Function) ─── -->
+        <div class="tab-content" id="tab-auto">
+            <div class="card">
+                <h2><i class="fa-solid fa-bolt"></i> Edge Function 자동 파이프라인</h2>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+                    <code class="code-tag">supabase/functions/auto-generate-images</code> 가 Supabase 에 배포되어 있다면, 사용자 개입 없이 자동 처리. cron 으로 매 N분마다 호출 가능 (큐 빌 때까지 반복).
+                </p>
+
+                <div class="row" style="margin-bottom:12px;">
+                    <button class="btn btn-success" onclick="window._giTriggerEdge()" id="edgeTrigBtn">
+                        <i class="fa-solid fa-play"></i> Edge Function 한 번 호출 (batch 6개)
+                    </button>
+                    <button class="btn btn-primary" onclick="window._giTriggerLoop()" id="edgeLoopBtn">
+                        <i class="fa-solid fa-rotate"></i> 큐 비울 때까지 반복 호출
+                    </button>
+                    <button class="btn btn-danger" onclick="window._giTriggerStop()" id="edgeStopBtn" disabled>
+                        <i class="fa-solid fa-stop"></i> 중지
+                    </button>
+                    <span style="margin-left:auto; font-size:12px; color:#94a3b8;" id="edgeSummary"></span>
+                </div>
+                <div class="progress" id="edgeProgWrap" style="display:none;"><div class="progress-bar" id="edgeProgBar"></div></div>
+
+                <hr style="margin:18px 0; border:none; border-top:1px dashed #334155;">
+
+                <h3 style="font-size:13px; font-weight:800; color:#cbd5e1; margin-bottom:8px;">📋 배포 + cron 설치 가이드</h3>
+                <ol style="font-size:12px; color:#94a3b8; padding-left:20px; line-height:2;">
+                    <li>Supabase CLI 로 함수 배포:
+                        <div style="background:#020617; padding:8px 12px; border-radius:6px; margin:6px 0; font-family:monospace; font-size:11px; color:#86efac;">
+                            supabase functions deploy auto-generate-images --no-verify-jwt
+                        </div>
+                    </li>
+                    <li>Supabase Dashboard → Edge Functions → Secrets 에 <code class="code-tag">OPENAI_API_KEY</code> 등록 (이미 있다면 skip)</li>
+                    <li>위 "한 번 호출" 버튼으로 테스트 → 성공 응답 확인</li>
+                    <li>cron 자동화: <code class="code-tag">supabase/functions/auto-generate-images/cron.sql</code> 파일 내용을 Dashboard → SQL Editor 에 붙여넣고 실행</li>
+                    <li>cron 등록 확인:
+                        <div style="background:#020617; padding:8px 12px; border-radius:6px; margin:6px 0; font-family:monospace; font-size:11px; color:#86efac;">
+                            SELECT * FROM cron.job WHERE jobname = 'auto-generate-images';
+                        </div>
+                    </li>
+                </ol>
+            </div>
         </div>
 
         <!-- ─── 탭 1: 프롬프트 헬퍼 ─── -->
@@ -634,6 +678,90 @@ window._giAIStart = async function() {
     document.getElementById('aiStopBtn').disabled = true;
     await loadProducts();
     updateCostEstimate();
+};
+
+// ─── 탭 4: Edge Function 트리거 ───
+var edgeLoopStop = false;
+var edgeLoopRunning = false;
+
+window._giTriggerEdge = async function() {
+    var btn = document.getElementById('edgeTrigBtn');
+    btn.disabled = true;
+    document.getElementById('edgeSummary').textContent = '호출 중…';
+    log('Edge Function 호출 중…', 'info');
+    try {
+        var res = await fetch(SB_URL + '/functions/v1/auto-generate-images', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + SB_KEY },
+            body: JSON.stringify({ batchLimit: 6, categoryPrefix: 'pkg_' })
+        });
+        var json = await res.json();
+        if (!res.ok) {
+            log('Edge 호출 실패 (' + res.status + '): ' + (json.error || JSON.stringify(json)), 'err');
+        } else {
+            log('Edge 응답 — 처리 ' + (json.processed||0) + ', 성공 ' + (json.ok||0) + ', 실패 ' + (json.fail||0) + ', 남은큐 ' + (json.remaining||0), json.ok > 0 ? 'ok' : 'warn');
+            if (json.results) {
+                json.results.forEach(function(r){
+                    log('  ' + r.code + ' → ' + r.status + (r.error ? ' (' + r.error + ')' : ''), r.status === 'ok' ? 'ok' : 'err');
+                });
+            }
+            document.getElementById('edgeSummary').textContent = '✓ 처리 ' + (json.processed||0) + ' / 남은큐 ' + (json.remaining||'?');
+        }
+        await loadProducts();
+    } catch (e) {
+        log('Edge 예외: ' + e.message, 'err');
+        document.getElementById('edgeSummary').textContent = '실패';
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+window._giTriggerStop = function() { edgeLoopStop = true; log('루프 중지 요청 — 현재 배치 완료 후 정지.', 'warn'); };
+
+window._giTriggerLoop = async function() {
+    if (edgeLoopRunning) return;
+    if (!confirm('큐가 빌 때까지 Edge Function 을 반복 호출합니다.\nDALL-E 비용이 발생합니다 (현재 남은 큐 × $0.04).\n진행할까요?')) return;
+    edgeLoopRunning = true; edgeLoopStop = false;
+    document.getElementById('edgeLoopBtn').disabled = true;
+    document.getElementById('edgeStopBtn').disabled = false;
+    document.getElementById('edgeProgWrap').style.display = '';
+    var bar = document.getElementById('edgeProgBar');
+    log('=== 루프 시작 — 큐 빌 때까지 ===', 'info');
+    var totalOk = 0, totalFail = 0, iter = 0, initRemaining = null;
+    while (!edgeLoopStop) {
+        iter++;
+        try {
+            var res = await fetch(SB_URL + '/functions/v1/auto-generate-images', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + SB_KEY },
+                body: JSON.stringify({ batchLimit: 6 })
+            });
+            var json = await res.json();
+            if (!res.ok) { log('iter ' + iter + ' HTTP ' + res.status + ': ' + (json.error||''), 'err'); break; }
+            totalOk += (json.ok || 0);
+            totalFail += (json.fail || 0);
+            if (initRemaining === null && json.remaining != null) initRemaining = (json.remaining + json.processed);
+            var rem = json.remaining || 0;
+            log('iter ' + iter + ' — 처리 ' + (json.processed||0) + ', 누계 OK ' + totalOk + ' / 실패 ' + totalFail + ' / 남은큐 ' + rem, 'info');
+            if (initRemaining > 0) {
+                var pct = ((initRemaining - rem) / initRemaining * 100).toFixed(1);
+                bar.style.width = pct + '%';
+                document.getElementById('edgeSummary').textContent = '진행 ' + (initRemaining - rem) + '/' + initRemaining;
+            }
+            if (json.processed === 0 || rem === 0) {
+                log('=== 루프 완료 — 큐 비었음. 누계 OK ' + totalOk + ' / 실패 ' + totalFail + ' ===', 'ok');
+                break;
+            }
+            await new Promise(r => setTimeout(r, 2000)); // 다음 iter 까지 2초 대기 (rate limit 보호)
+        } catch (e) {
+            log('iter ' + iter + ' 예외: ' + e.message, 'err');
+            break;
+        }
+    }
+    edgeLoopRunning = false;
+    document.getElementById('edgeLoopBtn').disabled = false;
+    document.getElementById('edgeStopBtn').disabled = true;
+    await loadProducts();
 };
 
 async function callDallE(apiKey, prompt, quality) {
