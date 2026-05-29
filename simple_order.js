@@ -1018,9 +1018,11 @@
         </div>
 
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
+        <!-- 2026-05-29: 키링/코롯토 베스트굿즈는 pill UI 로 고정 사이즈 선택 -->
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
-          <div class="so-section-title">📐 ${tr('사이즈 입력', 'サイズ入力', 'Size Input')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
-          <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
+          <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
+          <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
+          <div id="soCustomDimsRow" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
               <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
@@ -1034,7 +1036,7 @@
             </div>
           </div>
           <div id="soCustomCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #fbbf24; border-radius:10px; text-align:center;">
-            <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">💰 ${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
+            <div id="soCustomCalcLabel" style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">💰 ${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
@@ -2743,6 +2745,8 @@
         }
         if (!renderList.length) return;
 
+        // 2026-05-29: 아크릴 굿즈 (키링/코롯토) — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
+        var compactMode = !!state.isAcrylicGoods;
         var html = renderList.map(function (a) {
             var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
@@ -2761,6 +2765,24 @@
             var isLight = a.isLight === true || /조명|light|lamp/i.test(name);
             // 2026-05-14: 원형 썸네일 — admin_addons.img_url 사용, 없으면 작은 점 아이콘
             var imgUrl = a.img_url || a.image_url || a.thumb_url || '';
+            if (compactMode) {
+                // 컴팩트 카드: 썸네일(상) + 이름(축약, 중) + 가격(하). 체크되면 외곽 보더 강조
+                var imgHtmlC;
+                if (imgUrl) {
+                    imgHtmlC = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
+                        '" loading="lazy" alt="" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1.5px solid #e7d6b8; background:#fff;" ' +
+                        'onerror="this.style.display=&quot;none&quot;">';
+                } else {
+                    imgHtmlC = '<span style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px;">🔗</span>';
+                }
+                return '<label class="so-addon-card" style="display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; background:#fff; transition:border-color 0.15s ease, background 0.15s ease; min-width:0;">' +
+                    '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="0" onchange="window._soToggleAddon(this); this.closest(&quot;.so-addon-card&quot;).style.borderColor=this.checked?&quot;#0f172a&quot;:&quot;#e7e5e4&quot;; this.closest(&quot;.so-addon-card&quot;).style.background=this.checked?&quot;#f8fafc&quot;:&quot;#fff&quot;;" style="display:none;">' +
+                    imgHtmlC +
+                    '<div style="font-size:10.5px; font-weight:700; color:#451a03; text-align:center; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;">' + safe + '</div>' +
+                    '<span style="font-weight:800; color:#dc2626; font-size:10.5px;">+' + fmtPrice(price) + '</span>' +
+                    '<input type="hidden" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '">' +
+                    '</label>';
+            }
             var imgHtml;
             if (imgUrl) {
                 imgHtml = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
@@ -2781,6 +2803,18 @@
                 '<span style="font-weight:800; color:#dc2626; font-size:13px; flex-shrink:0;">+' + fmtPrice(price) + '</span>' +
                 '</label>';
         }).join('');
+        // 2026-05-29: 컴팩트 모드면 그리드(1줄 6개), 그 외 flex column
+        if (compactMode) {
+            list.style.display = 'grid';
+            list.style.gridTemplateColumns = 'repeat(6, 1fr)';
+            list.style.gap = '6px';
+            list.style.flexDirection = '';
+        } else {
+            list.style.display = 'flex';
+            list.style.flexDirection = 'column';
+            list.style.gridTemplateColumns = '';
+            list.style.gap = '6px';
+        }
         list.innerHTML = html;
         sec.style.display = '';
     }
@@ -2821,7 +2855,40 @@
         });
     };
 
+    // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 pill 클릭 — 고정가 적용
+    window._soPickPresetSize = function (btn) {
+        if (!btn) return;
+        var row = btn.parentElement;
+        if (row) {
+            row.querySelectorAll('.so-preset-pill').forEach(function (b) {
+                b.classList.remove('active');
+                b.style.background = '#fff';
+                b.style.borderColor = '#e2e8f0';
+                b.style.color = '#334155';
+            });
+        }
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.borderColor = '#0f172a';
+        btn.style.color = '#fff';
+        var w = parseInt(btn.getAttribute('data-w'), 10) || 5;
+        var h = parseInt(btn.getAttribute('data-h'), 10) || 5;
+        var price = parseInt(btn.getAttribute('data-price'), 10) || 0;
+        state.customW = w;
+        state.customH = h;
+        state.customUnitPrice = price;
+        state.customAreaM2 = (w / 100) * (h / 100);
+        state.presetSizeFixed = true;
+        var wEl = document.getElementById('soCustomW'); if (wEl) wEl.value = w;
+        var hEl = document.getElementById('soCustomH'); if (hEl) hEl.value = h;
+        var unitEl = document.getElementById('soCustomUnitPrice');
+        if (unitEl) unitEl.textContent = fmtPrice(price);
+        if (typeof recalc === 'function') recalc();
+    };
+
     window._soOnCustomDimsChange = function () {
+        // 프리셋 모드면 W/H input 입력 무시 (pill 선택값 유지)
+        if (state && state.presetSizeFixed) return;
         var wEl = document.getElementById('soCustomW');
         var hEl = document.getElementById('soCustomH');
         if (!wEl || !hEl) return;
@@ -3731,7 +3798,71 @@
         state.customUnitPrice = 0;
         var custSec = document.getElementById('soCustomSizeSection');
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
-        if (state.isCustomSize) {
+        // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
+        var _PRESET_KEYRING = [
+            { w:5,  h:5,  label:'5×5',  price:1000 },
+            { w:5,  h:7,  label:'5×7',  price:1200 },
+            { w:7,  h:7,  label:'7×7',  price:1500 },
+            { w:10, h:10, label:'10×10',price:2000 },
+            { w:6,  h:4,  label:'6×4',  price:1000 }
+        ];
+        var _PRESET_KOROTTO = [
+            { w:5,  h:5,  label:'5×5',  price:2000 },
+            { w:5,  h:7,  label:'5×7',  price:2500 },
+            { w:7,  h:7,  label:'7×7',  price:3000 },
+            { w:10, h:10, label:'10×10',price:4000 }
+        ];
+        var _PRESET_MAP = {
+            '345345353':        _PRESET_KEYRING,
+            'gds_acr_kr_10':    _PRESET_KEYRING,
+            'acr_crt_cl_8t':    _PRESET_KOROTTO,
+            'acr_crt_stand_01': _PRESET_KOROTTO,
+            'acr_crt_stand_10t':_PRESET_KOROTTO
+        };
+        state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
+        var pillsBox = document.getElementById('soPresetSizePills');
+        var dimsRow  = document.getElementById('soCustomDimsRow');
+        var calcLbl  = document.getElementById('soCustomCalcLabel');
+        var areaInfo = document.getElementById('soCustomAreaInfo');
+        if (state.isCustomSize && state.presetSizes) {
+            // 프리셋 모드: pill row 표시, W/H 입력·면적 표시 숨김
+            if (pillsBox) {
+                pillsBox.style.display = 'grid';
+                pillsBox.innerHTML = state.presetSizes.map(function(s, i){
+                    var act = i === 0;
+                    return '<button type="button" class="so-preset-pill' + (act?' active':'') + '" '
+                        + 'data-w="' + s.w + '" data-h="' + s.h + '" data-price="' + s.price + '" data-label="' + s.label + 'cm" '
+                        + 'onclick="window._soPickPresetSize(this)" '
+                        + 'style="aspect-ratio:1/1; border:2px solid ' + (act?'#0f172a':'#e2e8f0') + '; '
+                        + 'background:' + (act?'#0f172a':'#fff') + '; color:' + (act?'#fff':'#334155') + '; '
+                        + 'border-radius:50%; font-size:11px; font-weight:800; cursor:pointer; padding:0; '
+                        + 'display:flex; align-items:center; justify-content:center; '
+                        + 'transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease; '
+                        + 'font-family:inherit; line-height:1;">' + s.label + '</button>';
+                }).join('');
+            }
+            if (dimsRow)  dimsRow.style.display  = 'none';
+            if (areaInfo) areaInfo.style.display = 'none';
+            if (calcLbl)  calcLbl.textContent = '💰 ' + tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price');
+            // 첫 사이즈를 자동 선택
+            var first = state.presetSizes[0];
+            state.customW = first.w;
+            state.customH = first.h;
+            state.customUnitPrice = first.price;
+            state.customAreaM2 = (first.w/100) * (first.h/100);
+            state.presetSizeFixed = true;
+            var cwEl0 = document.getElementById('soCustomW'); if (cwEl0) cwEl0.value = first.w;
+            var chEl0 = document.getElementById('soCustomH'); if (chEl0) chEl0.value = first.h;
+            var unitEl0 = document.getElementById('soCustomUnitPrice');
+            if (unitEl0) unitEl0.textContent = fmtPrice(first.price);
+            if (typeof recalc === 'function') recalc();
+        } else if (state.isCustomSize) {
+            // 일반 면적계산 모드
+            state.presetSizeFixed = false;
+            if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
+            if (dimsRow)  dimsRow.style.display  = '';
+            if (areaInfo) areaInfo.style.display = '';
+            if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
