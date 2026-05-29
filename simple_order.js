@@ -1885,9 +1885,9 @@
         // 100만+ 10%, 500만+ 20%, 1000만+ 30%, PRO 구독자 +10%
         // 적용 대상: 상품가 + 옵션 + 세로 3m 옵션 (배송 제외)
         // 2026-05-15: 원판·금액주문은 할인 없음 (단순 발송 / 입력 금액 그대로 결제)
-        // 2026-05-29: 베스트굿즈 프리셋 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
+        // 2026-05-29: 베스트굿즈 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
         const taxBase = subtotal + addonTotal + heightExtra;
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isPresetGoods;
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -1900,9 +1900,9 @@
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
 
-        // 2026-05-29: 베스트굿즈 프리셋 100개+ 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
+        // 2026-05-29: 베스트굿즈 100개+ 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
         let presetBulkDiscount = 0;
-        if (state.isPresetGoods && qty >= 100) {
+        if (state.isBestGoods && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
         }
         // 2026-05-29: 베스트굿즈 프리셋 — 개별포장 옵션 (+200원/개)
@@ -1981,11 +1981,11 @@
         // 2026-05-29: 베스트굿즈 프리셋 100개+ 50% 할인 라인
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
         setText('soPresetBulkDisc', '-' + fmtPrice(presetBulkDiscount));
-        // 2026-05-29: 프리셋 굿즈는 금액할인 tier 숨김 + 전용 tier(100개+ 50%) 표시
-        //   (rawBoard/amountOrder 의 tier 숨김은 별도 로직이 처리 — 여기선 preset 일 때만 강제 변경)
+        // 2026-05-29: 베스트굿즈는 금액할인 tier 숨김 + 전용 tier(100개+ 50%) 표시
+        //   (rawBoard/amountOrder 의 tier 숨김은 별도 로직이 처리 — 여기선 best 일 때만 강제 변경)
         var _regularTier = document.getElementById('soTierTable');
         var _presetTier = document.getElementById('soPresetTierTable');
-        if (state.isPresetGoods) {
+        if (state.isBestGoods) {
             if (_regularTier) _regularTier.style.display = 'none';
             if (_presetTier)  _presetTier.style.display = '';
         } else {
@@ -1993,9 +1993,9 @@
             // _regularTier 는 _hideUpload 분기(rawBoard/amountOrder)가 제어 — 여기선 손대지 않음
         }
         // 배송/시공 (묶음배송이면 0원이어도 표시)
-        // 2026-05-29: 베스트굿즈 프리셋 — "배송비" 라벨만 (시공·옵션명 없음)
+        // 2026-05-29: 베스트굿즈 — "배송비" 라벨만 (시공·옵션명 없음)
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping);
-        if (state.isPresetGoods) {
+        if (state.isBestGoods) {
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', '+' + fmtPrice(shipFee));
         } else {
@@ -2492,9 +2492,9 @@
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
-        // 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) — 정액 배송비
+        // 2026-05-29: 베스트굿즈 전체 — 정액 배송비
         //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
-        if (state.isPresetGoods) {
+        if (state.isBestGoods) {
             state._shipUpgradeReason = null;
             var lng = getLang();
             return (lng === 'ja') ? 10000 : 3000;
@@ -3888,11 +3888,12 @@
             { w:8,  h:6,  label:'8×6',  price:2200 },
             { w:10, h:10, label:'10×10',price:2500 }
         ];
+        // 2026-05-29: 코롯토 3배 비례 상향 (5×5=6000 기준)
         var _PRESET_KOROTTO = [
-            { w:5,  h:5,  label:'5×5',  price:2000 },
-            { w:5,  h:7,  label:'5×7',  price:2500 },
-            { w:7,  h:7,  label:'7×7',  price:3000 },
-            { w:10, h:10, label:'10×10',price:4000 }
+            { w:5,  h:5,  label:'5×5',  price:6000  },
+            { w:5,  h:7,  label:'5×7',  price:7500  },
+            { w:7,  h:7,  label:'7×7',  price:9000  },
+            { w:10, h:10, label:'10×10',price:12000 }
         ];
         var _PRESET_MAP = {
             '345345353':        _PRESET_KEYRING,
@@ -3901,8 +3902,22 @@
             'acr_crt_stand_01': _PRESET_KOROTTO,
             'acr_crt_stand_10t':_PRESET_KOROTTO
         };
+        // 2026-05-29: 비-사이즈 베스트 굿즈 가격 override
+        //   100개+ 50%할인 + 3000원 정액배송 동일 적용 (state.isBestGoods)
+        var _BEST_PRICE_OVERRIDES = {
+            '3453455':       4000,   // 손수건
+            '435645654666':  13000,  // 반려동물 티셔츠
+            '456444':        4000,   // 커스텀머그컵
+            '64564882_copy': 8000,   // 허니콤보드 팝업굿즈
+            'acr_smtgr_02':  6000    // 아크릴 자개 스마트톡
+        };
         state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
         state.isPresetGoods = !!state.presetSizes;
+        // 비-사이즈 베스트 굿즈: 가격 override (단가만, 100개+ 50%/3000원배송 동일)
+        if (p && _BEST_PRICE_OVERRIDES[p.code] != null) {
+            p.price = _BEST_PRICE_OVERRIDES[p.code];
+        }
+        state.isBestGoods = state.isPresetGoods || !!(p && _BEST_PRICE_OVERRIDES[p.code] != null);
         var pillsBox = document.getElementById('soPresetSizePills');
         var pillsNote = document.getElementById('soPresetSizeNote');
         var dimsRow  = document.getElementById('soCustomDimsRow');
@@ -4000,10 +4015,10 @@
         // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물·종이매대 모두 표시
         var schedSec = document.getElementById('soScheduleSection');
         // 2026-05-15: 금액주문은 배송 개념 자체가 없음 — 시공/배송 섹션 강제 숨김
-        // 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) — 시공/배송 옵션 자체 비표시, 5천원 정액 배송비
-        var anyShipScope = !state.isAmountOrder && !state.isPresetGoods && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+        // 2026-05-29: 베스트굿즈 전체 (10종) — 시공/배송 옵션 자체 비표시, 3천원 정액 배송비
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
-        if (state.isPresetGoods) {
+        if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
             state.shipMethod = 'preset_goods_flat';
             state.bundleShipping = false;

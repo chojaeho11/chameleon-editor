@@ -119,42 +119,46 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ── ⭐ 베스트 굿즈 featured 섹션 (카테고리 탭과 상품 그리드 사이) ── */
+/* 2026-05-29: 다크 배경 + 리셀러 강추 hero 배지 */
 .best-feat {
-    background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 35%, #fed7aa 100%);
-    border-top: 1px solid rgba(0,0,0,0.04);
-    border-bottom: 1px solid rgba(0,0,0,0.04);
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1625 50%, #0f172a 100%);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
     padding: 40px 24px 44px;
     margin-top: 18px;
 }
 .best-feat-inner { max-width: 1280px; margin: 0 auto; }
 .best-feat-head {
-    display: flex; align-items: center; gap: 14px;
-    margin-bottom: 18px; flex-wrap: wrap;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    margin-bottom: 22px;
 }
 .best-feat-title {
-    font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
-    color: #78350f;
-    display: flex; align-items: center; gap: 8px;
+    font-size: 28px; font-weight: 900; letter-spacing: -0.5px;
+    color: #fde68a;
+    display: flex; align-items: center; gap: 10px;
+    text-shadow: 0 2px 12px rgba(252,211,77,0.25);
 }
-.best-feat-sub {
-    font-size: 13px; color: #92400e; font-weight: 600;
-}
-.best-feat-badge {
-    display: inline-block; padding: 4px 10px; border-radius: 999px;
-    background: #78350f; color: #fde68a;
-    font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+.best-feat-hero {
+    display: inline-block; padding: 14px 22px; border-radius: 14px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    font-size: 16px; font-weight: 900; letter-spacing: 0.2px;
+    box-shadow: 0 8px 24px rgba(220,38,38,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+    text-align: center; line-height: 1.4;
+    border: 1px solid rgba(255,255,255,0.12);
+    max-width: 720px;
 }
 .best-feat-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 14px;
 }
-.best-feat-grid .product-card { border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 14px rgba(252,211,77,0.18); }
+.best-feat-grid .product-card { border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
 .best-feat-empty {
     grid-column: 1 / -1;
     padding: 30px; text-align: center;
-    color: #92400e; font-size: 13px; font-weight: 600;
-    background: rgba(255,255,255,0.5); border-radius: 12px;
+    color: #fcd34d; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,0.04); border-radius: 12px;
 }
 .best-size-pills {
     display: flex; flex-wrap: wrap; gap: 4px;
@@ -176,22 +180,18 @@ a { text-decoration: none; color: inherit; }
     font-weight: 800;
 }
 .best-feat-note {
-    margin-top: 22px; padding: 16px 20px;
-    background: rgba(255,255,255,0.55); border: 1px dashed rgba(120,53,15,0.3);
+    margin-top: 22px; padding: 14px 18px;
+    background: rgba(255,255,255,0.05); border: 1px dashed rgba(252,211,77,0.4);
     border-radius: 12px; text-align: center;
-    font-size: 13px; color: #78350f; line-height: 1.6;
-    backdrop-filter: blur(4px);
+    font-size: 13px; color: #fde68a; line-height: 1.6;
 }
-.best-feat-note b { font-weight: 800; color: #451a03; }
-.best-feat-note .tagline {
-    display: inline-block; margin-top: 6px;
-    font-size: 12px; color: #92400e; font-weight: 700; letter-spacing: 0.3px;
-}
+.best-feat-note b { font-weight: 800; color: #fff; }
 @media (max-width: 1100px) { .best-feat-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 900px)  { .best-feat-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 600px)  {
     .best-feat { padding: 24px 16px 28px; }
-    .best-feat-title { font-size: 18px; }
+    .best-feat-title { font-size: 22px; }
+    .best-feat-hero { font-size: 13px; padding: 11px 14px; }
     .best-feat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
@@ -558,17 +558,16 @@ a { text-decoration: none; color: inherit; }
 </div>
 
 <!-- ⭐ 베스트 굿즈 featured 섹션 (카테고리 탭과 상품 그리드 사이, 항상 노출) -->
+<!-- 2026-05-29: 다크 배경 + 리셀러 강추 hero 배지 단일화 -->
 <section class="best-feat" id="bestFeatSec" style="display:none;">
     <div class="best-feat-inner">
         <div class="best-feat-head">
             <div class="best-feat-title">⭐ <span id="bestFeatTitle">베스트 굿즈</span></div>
-            <span class="best-feat-badge" id="bestFeatBadge">리셀러 추천</span>
-            <div class="best-feat-sub" id="bestFeatSub">최저가 / 즉시 출고 가능</div>
+            <div class="best-feat-hero" id="bestFeatHero">🔥 리셀러 강추 · 100개 이상 주문시 반값 · 전세계에서 가장 저렴합니다</div>
         </div>
         <div class="best-feat-grid" id="bestFeatGrid"></div>
         <div class="best-feat-note" id="bestFeatNote">
             <span id="bestFeatNoteText">베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.</span>
-            <div class="tagline" id="bestFeatTagline">⭐ 최상의 품질 · 최저의 가격</div>
         </div>
     </div>
 </section>
@@ -967,22 +966,24 @@ a { text-decoration: none; color: inherit; }
         { id:'8x6',  label:'8×6cm',  price:2200 },
         { id:'10x10',label:'10×10cm',price:2500 }
     ];
+    // 2026-05-29: 코롯토 3배 비례 상향 (5×5=6000 기준)
     var BEST_SIZES_KOROTTO = [
-        { id:'5x5',  label:'5×5cm',  price:2000 },
-        { id:'5x7',  label:'5×7cm',  price:2500 },
-        { id:'7x7',  label:'7×7cm',  price:3000 },
-        { id:'10x10',label:'10×10cm',price:4000 }
+        { id:'5x5',  label:'5×5cm',  price:6000  },
+        { id:'5x7',  label:'5×7cm',  price:7500  },
+        { id:'7x7',  label:'7×7cm',  price:9000  },
+        { id:'10x10',label:'10×10cm',price:12000 }
     ];
+    // 2026-05-29: 비-사이즈 베스트 상품 가격 상향
     var BEST_CURATED = [
         { code: '345345353',        sizes: BEST_SIZES_KEYRING },  // 홀로그램 자개 키링 양면
-        { code: '3453455',          price: 1000 },                // 손수건
-        { code: '435645654666',     price: 6500 },                // 반려동물 티셔츠
-        { code: '456444',           price: 2000 },                // 커스텀머그컵
-        { code: '64564882_copy',    price: 5000 },                // 허니콤보드 팝업굿즈
+        { code: '3453455',          price: 4000  },               // 손수건 (1000 → 4000)
+        { code: '435645654666',     price: 13000 },               // 반려동물 티셔츠 (6500 → 13000)
+        { code: '456444',           price: 4000  },               // 커스텀머그컵 (2000 → 4000)
+        { code: '64564882_copy',    price: 8000  },               // 허니콤보드 팝업굿즈 (5000 → 8000)
         { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },  // 8T 투명 아크릴 코롯토
         { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },  // 10T 입체 스탠드 (코롯토류)
         { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },  // 10T 자립형 아크릴 코롯토
-        { code: 'acr_smtgr_02',     price: 3000 },                // 아크릴 자개 스마트톡
+        { code: 'acr_smtgr_02',     price: 6000  },               // 아크릴 자개 스마트톡 (3000 → 6000)
         { code: 'gds_acr_kr_10',    sizes: BEST_SIZES_KEYRING }   // 투명 3mm단면 키링
     ];
     async function renderBestFeatured() {
@@ -1010,26 +1011,28 @@ a { text-decoration: none; color: inherit; }
                 bests.push(copy);
             });
             if (bests.length === 0) { sec.style.display = 'none'; return; }
+            // 2026-05-29: hero 배지 단일화 + 다국어
             var T = {
-                ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'카멜레온 인기 굿즈 — 즉시 주문 가능',
-                      note:'베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.', tag:'⭐ 최상의 품질 · 최저의 가격' },
-                ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'カメレオン人気グッズ',
-                      note:'ベストグッズは <b>金具と個別包装</b> 込みの価格です。', tag:'⭐ 最高品質 · 最安値' },
-                en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Chameleon bestsellers',
-                      note:'Best Goods prices include <b>keyring + individual packaging</b>.', tag:'⭐ Top quality · Lowest price' }
+                ko: { t:'베스트 굿즈',
+                      hero:'🔥 리셀러 강추 · 100개 이상 주문시 반값 · 전세계에서 가장 저렴합니다',
+                      note:'베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.' },
+                ja: { t:'ベストグッズ',
+                      hero:'🔥 リセラー必見 · 100個以上で半額 · 世界最安値',
+                      note:'ベストグッズは <b>金具と個別包装</b> 込みの価格です。' },
+                en: { t:'Best Goods',
+                      hero:"🔥 Reseller Pick · 50% off on 100+ · World's lowest price",
+                      note:'Best Goods prices include <b>keyring + individual packaging</b>.' }
             };
             var Tk = T[LANG] || T.ko;
             var titleEl = document.getElementById('bestFeatTitle');
-            var badgeEl = document.getElementById('bestFeatBadge');
-            var subEl   = document.getElementById('bestFeatSub');
+            var heroEl  = document.getElementById('bestFeatHero');
             var noteEl  = document.getElementById('bestFeatNoteText');
-            var tagEl   = document.getElementById('bestFeatTagline');
             if (titleEl) titleEl.textContent = Tk.t;
-            if (badgeEl) badgeEl.textContent = Tk.badge;
-            if (subEl)   subEl.textContent   = Tk.sub;
+            if (heroEl)  heroEl.textContent  = Tk.hero;
             if (noteEl)  noteEl.innerHTML    = Tk.note;
-            if (tagEl)   tagEl.textContent   = Tk.tag;
             grid.innerHTML = bests.map(productCard).join('');
+            // 2026-05-29: 베스트 섹션 카드에선 "최소 N개" MOQ 배지 숨김
+            grid.querySelectorAll('.moq-badge').forEach(function(b){ b.remove(); });
             sec.style.display = '';
         } catch (e) {
             console.warn('[best featured] failed:', e);
