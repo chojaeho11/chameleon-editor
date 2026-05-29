@@ -924,6 +924,10 @@
             <div data-amt-tier="30"><b>${fmtPrice(10000000)}+</b> 30%</div>
             <div style="background:#ede9fe; color:#5b21b6; font-weight:800;">${tr('PRO 구독자', 'PRO会員', 'PRO')} 10%</div>
           </div>
+          <!-- 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) 전용 — 100개 이상 50% 할인 -->
+          <div class="so-tier-table" id="soPresetTierTable" style="display:none;">
+            <div data-qty-tier="50" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;">${tr('100개 이상', '100個以上', '100+ pcs')} <b style="color:#dc2626;">50%</b></div>
+          </div>
         </div>
 
         <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위). 안내는 좌측 #soWallGuide 로 이동 -->
@@ -1163,6 +1167,8 @@
           <div id="soAddonBreakdown"></div>
           <!-- 2026-05-13: 구매금액 할인 (100만 10% / 500만 20% / 1000만 30%) -->
           <div class="so-price-row discount" id="soAmountDiscRow" style="display:none;"><span>${tr('구매금액 할인', '購入金額割引', 'Volume disc')} <span class="so-tier-tag" id="soAmountTier">10%</span></span><span id="soAmountDisc">-0원</span></div>
+          <!-- 2026-05-29: 베스트굿즈 프리셋 100개 이상 50% 할인 -->
+          <div class="so-price-row discount" id="soPresetBulkDiscRow" style="display:none;"><span>${tr('100개 이상 50% 할인', '100個以上 50%割引', '100+ pcs 50% off')} <span class="so-tier-tag" style="background:#dc2626; color:#fff;">50%</span></span><span id="soPresetBulkDisc">-0원</span></div>
           <!-- 구독자 할인 (PRO 회원, 중복 가능) -->
           <div class="so-price-row discount" id="soProDiscRow" style="display:none;"><span>${tr('PRO 구독자 할인', 'PRO会員割引', 'PRO discount')} <span class="so-tier-tag" style="background:#7c3aed; color:#fff;">10%</span></span><span id="soProDisc">-0원</span></div>
           <!-- 배송/시공 라인 -->
@@ -1872,8 +1878,9 @@
         // 100만+ 10%, 500만+ 20%, 1000만+ 30%, PRO 구독자 +10%
         // 적용 대상: 상품가 + 옵션 + 세로 3m 옵션 (배송 제외)
         // 2026-05-15: 원판·금액주문은 할인 없음 (단순 발송 / 입력 금액 그대로 결제)
+        // 2026-05-29: 베스트굿즈 프리셋 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
         const taxBase = subtotal + addonTotal + heightExtra;
-        const _noDisc = state.isRawBoard || state.isAmountOrder;
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isPresetGoods;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -1886,7 +1893,13 @@
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
 
-        const final = taxBase - amountDiscount - proDiscount + shipFee;
+        // 2026-05-29: 베스트굿즈 프리셋 100개+ 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
+        let presetBulkDiscount = 0;
+        if (state.isPresetGoods && qty >= 100) {
+            presetBulkDiscount = Math.round(subtotal * 0.5);
+        }
+
+        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + shipFee;
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -1949,6 +1962,20 @@
         // 구독자 할인
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
+        // 2026-05-29: 베스트굿즈 프리셋 100개+ 50% 할인 라인
+        showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
+        setText('soPresetBulkDisc', '-' + fmtPrice(presetBulkDiscount));
+        // 2026-05-29: 프리셋 굿즈는 금액할인 tier 숨김 + 전용 tier(100개+ 50%) 표시
+        //   (rawBoard/amountOrder 의 tier 숨김은 별도 로직이 처리 — 여기선 preset 일 때만 강제 변경)
+        var _regularTier = document.getElementById('soTierTable');
+        var _presetTier = document.getElementById('soPresetTierTable');
+        if (state.isPresetGoods) {
+            if (_regularTier) _regularTier.style.display = 'none';
+            if (_presetTier)  _presetTier.style.display = '';
+        } else {
+            if (_presetTier)  _presetTier.style.display = 'none';
+            // _regularTier 는 _hideUpload 분기(rawBoard/amountOrder)가 제어 — 여기선 손대지 않음
+        }
         // 배송/시공 (묶음배송이면 0원이어도 표시)
         // 2026-05-29: 베스트굿즈 프리셋 — "배송비" 라벨만 (시공·옵션명 없음)
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping);
