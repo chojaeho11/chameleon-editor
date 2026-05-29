@@ -41,6 +41,20 @@
         .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px; }
         .badge.sample { background: rgba(34,197,94,0.25); color: #86efac; }
         .badge.distributor { background: rgba(245,158,11,0.25); color: #fcd34d; }
+        .badge.goods_inquiry { background: rgba(168,85,247,0.25); color: #d8b4fe; }
+        .product-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 8px;
+            background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);
+            font-size: 12px; font-weight: 700; color: #d8b4fe;
+            margin-bottom: 6px;
+        }
+        .product-pill code { font-size: 10.5px; color: #a78bfa; font-family: monospace; }
+        .qty-pill {
+            display: inline-block; padding: 2px 9px; border-radius: 999px;
+            background: rgba(99,102,241,0.18); border: 1px solid rgba(99,102,241,0.35);
+            font-size: 11px; font-weight: 800; color: #c7d2fe; margin-left: 6px;
+        }
         .badge.site { background: rgba(99,102,241,0.25); color: #c7d2fe; }
         .badge.status-new { background: rgba(239,68,68,0.25); color: #fca5a5; }
         .badge.status-contacted { background: rgba(99,102,241,0.25); color: #c7d2fe; }
@@ -114,6 +128,7 @@
     </div>
     <div class="tabs" id="typeTabs" style="margin-top:-6px;">
         <div class="tab active" data-type="all">모든 종류</div>
+        <div class="tab" data-type="goods_inquiry">🛍️ 굿즈 문의</div>
         <div class="tab" data-type="sample">🎁 샘플 요청</div>
         <div class="tab" data-type="distributor">🌍 유통사 신청</div>
     </div>
@@ -190,23 +205,51 @@
         }
 
         function renderLead(l){
-            const typeBadge = l.type === 'distributor'
-                ? '<span class="badge distributor">🌍 유통사</span>'
-                : '<span class="badge sample">🎁 샘플</span>';
-            const site = l.site === 'hexa-board' ? 'Hexalite' : l.site === 'cafe3355' ? '종이매대' : (l.site || '-');
+            let typeBadge;
+            if (l.type === 'distributor')         typeBadge = '<span class="badge distributor">🌍 유통사</span>';
+            else if (l.type === 'goods_inquiry')  typeBadge = '<span class="badge goods_inquiry">🛍️ 굿즈 문의</span>';
+            else                                  typeBadge = '<span class="badge sample">🎁 샘플</span>';
+            const site = l.site === 'hexa-board' ? 'Hexalite' : l.site === 'cafe3355' ? '종이매대' : l.site === 'cafe2626' ? '카멜레온' : (l.site || '-');
             const statusBadge = `<span class="badge status-${l.status}">${statusLabel(l.status)}</span>`;
-            const title = l.type === 'distributor'
-                ? esc(l.company || l.name || '(이름 없음)')
-                : esc(l.name || l.company || '(이름 없음)');
-            const subtitle = [l.country, l.email, l.phone].filter(Boolean).map(esc).join(' · ');
             const det = l.details || {};
+            // 굿즈 문의는 상품명을 타이틀로, 고객명은 메타로
+            let title, subtitle;
+            if (l.type === 'goods_inquiry') {
+                title = esc(det.product_name || '굿즈 문의');
+                subtitle = [esc(l.name || '(이름 없음)'), l.email && esc(l.email), l.phone && esc(l.phone)].filter(Boolean).join(' · ');
+            } else if (l.type === 'distributor') {
+                title = esc(l.company || l.name || '(이름 없음)');
+                subtitle = [l.country, l.email, l.phone].filter(Boolean).map(esc).join(' · ');
+            } else {
+                title = esc(l.name || l.company || '(이름 없음)');
+                subtitle = [l.country, l.email, l.phone].filter(Boolean).map(esc).join(' · ');
+            }
             const detRows = [];
+            // 굿즈 문의 전용 행 (head 상단에도 노출되도록 별도 prodPill 만들고, 본문엔 풀 상세)
+            if (l.type === 'goods_inquiry') {
+                if (det.product_code) detRows.push(['상품 코드', `<code>${esc(det.product_code)}</code>`]);
+                if (det.product_name) detRows.push(['상품명', esc(det.product_name)]);
+                if (det.quantity) {
+                    const q = det.quantity === 'custom' ? '기타 (메모 참조)' : (Number(det.quantity)||0).toLocaleString() + '개';
+                    detRows.push(['예상 수량', `<b style="color:#c7d2fe;">${q}</b>`]);
+                }
+            }
             if (det.product) detRows.push(['제품', det.product==='raw_honeycomb_board'?'허니콤보드 원판':det.product==='paper_display_stand'?'종이매대':det.product]);
             if (det.business_type) detRows.push(['업종', det.business_type]);
             if (det.years_in_business) detRows.push(['경력', det.years_in_business]);
             if (det.monthly_volume) detRows.push(['월 예상물량', det.monthly_volume]);
             if (det.current_suppliers) detRows.push(['현재 공급사', det.current_suppliers]);
             if (l.website) detRows.push(['웹사이트', `<a href="${esc(l.website)}" target="_blank">${esc(l.website)}</a>`]);
+
+            // 굿즈 문의 — head 아래에 상품 pill + 수량 pill 즉시 표시 (펼치지 않아도 식별 가능)
+            const prodPill = (l.type === 'goods_inquiry' && (det.product_code || det.quantity))
+                ? `<div class="product-pill">
+                       <span>🛍️</span>
+                       <span>${esc(det.product_name || '상품')}</span>
+                       <code>${esc(det.product_code || '')}</code>
+                       ${det.quantity ? `<span class="qty-pill">${det.quantity==='custom' ? '수량: 메모 참조' : (Number(det.quantity)||0).toLocaleString() + '개'}</span>` : ''}
+                   </div>`
+                : '';
 
             const kvHtml = detRows.map(([k,v])=>`<div class="k">${k}</div><div class="v">${v}</div>`).join('');
             const filesHtml = (l.files && l.files.length)
@@ -222,6 +265,7 @@
                     ${statusBadge}
                     <span class="lead-time">${fmtTime(l.created_at)}</span>
                 </div>
+                ${prodPill}
                 <div class="lead-title">${title}</div>
                 <div class="lead-meta">${subtitle || '<span style="color:#64748b;">연락처 없음</span>'}</div>
                 <div class="lead-body">
