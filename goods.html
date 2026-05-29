@@ -133,6 +133,28 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-icon { font-size: 15px; }
 
+/* 서브카테고리 칩 — 메인 탭 아래 한 줄 더 */
+.sub-nav {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    padding: 0 24px 12px;
+    scrollbar-width: none;
+}
+.sub-nav::-webkit-scrollbar { display: none; }
+.sub-btn {
+    flex-shrink: 0;
+    padding: 6px 14px; border: 1px solid var(--border); background: #fafbfc;
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+    color: var(--text-light); cursor: pointer; font-family: inherit;
+    white-space: nowrap; transition: all 0.15s;
+}
+.sub-btn:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
+.sub-btn.active {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+    font-weight: 700;
+}
+
 /* ── 상품 그리드 ── */
 .products-wrap {
     max-width: 1280px; margin: 0 auto;
@@ -268,9 +290,10 @@ a { text-decoration: none; color: inherit; }
     </button>
 </section>
 
-<!-- 카테고리 탭 -->
+<!-- 카테고리 탭 + 서브 칩 -->
 <div class="cat-nav-wrap" id="catNavSec">
     <nav class="cat-nav" id="catNav"></nav>
+    <nav class="sub-nav" id="subNav" style="display:none;"></nav>
 </div>
 
 <!-- 상품 그리드 -->
@@ -369,19 +392,70 @@ a { text-decoration: none; color: inherit; }
     function t(k) { return (I18N[LANG] && I18N[LANG][k]) || I18N.ko[k] || ''; }
 
     // ─── 카테고리 정의 (업계 일반 분류) ───
-    // dbCat: admin_products.category 컬럼 값과 매칭. 신규 코드를 자유롭게 사용.
+    // dbCat: admin_products.category 컬럼 값과 매칭.
+    // 메인 탭은 prefix 매칭 (pkg_box → pkg_box*). 서브칩은 정확 매칭.
+    // 신규 상품 등록 시 category 를 'pkg_box_mag' 같이 서브카 코드로 지정하면 자동으로 해당 칩에 노출.
     var CATS = [
-        { id: 'all',     icon: '🌟', dbCat: null,        kr: '전체',         ja: 'すべて',         en: 'All' },
-        { id: 'paperbox',icon: '📦', dbCat: 'pkg_box',   kr: '페이퍼박스',    ja: 'ペーパーボックス', en: 'Paper Box' },
-        { id: 'shopbag', icon: '🛍️', dbCat: 'pkg_bag',   kr: '종이쇼핑백',    ja: '紙ショッパー',    en: 'Paper Shopping Bag' },
-        { id: 'nonwoven',icon: '👜', dbCat: 'pkg_nw',    kr: '부직포 가방',   ja: '不織布バッグ',    en: 'Non-woven Bag' },
-        { id: 'plastic', icon: '🎒', dbCat: 'pkg_pp',    kr: 'PP·PVC 가방',  ja: 'PP/PVCバッグ',    en: 'PP/PVC Bag' },
-        { id: 'reuse',   icon: '♻️', dbCat: 'pkg_rpet',  kr: '리유저블백',    ja: 'リユーザブル',    en: 'Reusable Bag' },
-        { id: 'tin',     icon: '🥫', dbCat: 'pkg_tin',   kr: '틴케이스',      ja: '缶ケース',        en: 'Tin Case' },
-        { id: 'pouch',   icon: '🪪', dbCat: 'pkg_pouch', kr: '파우치',        ja: 'ポーチ',          en: 'Pouch' },
-        { id: 'folding', icon: '📂', dbCat: 'pkg_fold',  kr: '폴딩박스',      ja: '折り畳みボックス', en: 'Folding Box' },
-        { id: 'label',   icon: '🏷️', dbCat: 'pkg_label', kr: '라벨·스티커',   ja: 'ラベル・シール',   en: 'Label / Sticker' },
-        { id: 'parts',   icon: '🎀', dbCat: 'pkg_parts', kr: '부자재',        ja: '副資材',          en: 'Accessories' }
+        { id:'all', icon:'🌟', dbCat:null, kr:'전체', ja:'すべて', en:'All', subs:[] },
+        { id:'paperbox', icon:'📦', dbCat:'pkg_box', kr:'페이퍼박스', ja:'ペーパーボックス', en:'Paper Box', subs:[
+            { id:'plain',  dbCat:'pkg_box_plain',  kr:'무지 박스',    ja:'無地ボックス',   en:'Plain Box' },
+            { id:'fold',   dbCat:'pkg_box_fold',   kr:'접이식 박스',  ja:'折り畳み',      en:'Foldable' },
+            { id:'mag',    dbCat:'pkg_box_mag',    kr:'자석 박스',    ja:'マグネット',    en:'Magnetic' },
+            { id:'sleeve', dbCat:'pkg_box_sleeve', kr:'슬리브 박스',  ja:'スリーブ',      en:'Sleeve' },
+            { id:'round',  dbCat:'pkg_box_round',  kr:'원형 박스',    ja:'円形ボックス',  en:'Round' }
+        ]},
+        { id:'shopbag', icon:'🛍️', dbCat:'pkg_bag', kr:'종이쇼핑백', ja:'紙ショッパー', en:'Paper Shopping Bag', subs:[
+            { id:'kraft',  dbCat:'pkg_bag_kraft',  kr:'크래프트',    ja:'クラフト',     en:'Kraft' },
+            { id:'coat',   dbCat:'pkg_bag_coat',   kr:'코팅',        ja:'コーティング', en:'Coated' },
+            { id:'string', dbCat:'pkg_bag_string', kr:'끈 손잡이',   ja:'紐ハンドル',   en:'String Handle' },
+            { id:'fold',   dbCat:'pkg_bag_fold',   kr:'접이식',      ja:'折り畳み',     en:'Foldable' }
+        ]},
+        { id:'nonwoven', icon:'👜', dbCat:'pkg_nw', kr:'부직포 가방', ja:'不織布バッグ', en:'Non-woven Bag', subs:[
+            { id:'basic',    dbCat:'pkg_nw_basic',    kr:'기본형',     ja:'ベーシック', en:'Basic' },
+            { id:'handle',   dbCat:'pkg_nw_handle',   kr:'핸들형',     ja:'ハンドル',   en:'Handle' },
+            { id:'shoulder', dbCat:'pkg_nw_shoulder', kr:'어깨끈',     ja:'ショルダー', en:'Shoulder' },
+            { id:'cooler',   dbCat:'pkg_nw_cooler',   kr:'보냉',       ja:'保冷',       en:'Cooler' }
+        ]},
+        { id:'plastic', icon:'🎒', dbCat:'pkg_pp', kr:'PP·PVC 가방', ja:'PP/PVCバッグ', en:'PP/PVC Bag', subs:[
+            { id:'pp',  dbCat:'pkg_pp_pp',  kr:'PP 가방',    ja:'PPバッグ',    en:'PP Bag' },
+            { id:'pvc', dbCat:'pkg_pp_pvc', kr:'PVC 투명',   ja:'PVC透明',     en:'Clear PVC' },
+            { id:'pe',  dbCat:'pkg_pp_pe',  kr:'PE 비닐',    ja:'PEビニール',  en:'PE Plastic' }
+        ]},
+        { id:'reuse', icon:'♻️', dbCat:'pkg_rpet', kr:'리유저블백', ja:'リユーザブル', en:'Reusable Bag', subs:[
+            { id:'rpet',   dbCat:'pkg_rpet_rpet',   kr:'rPET',       ja:'rPET',         en:'rPET' },
+            { id:'canvas', dbCat:'pkg_rpet_canvas', kr:'캔버스',     ja:'キャンバス',    en:'Canvas' },
+            { id:'cotton', dbCat:'pkg_rpet_cotton', kr:'면 토트',    ja:'コットン',      en:'Cotton Tote' },
+            { id:'tarp',   dbCat:'pkg_rpet_tarp',   kr:'타포린',     ja:'ターポリン',    en:'Tarpaulin' }
+        ]},
+        { id:'tin', icon:'🥫', dbCat:'pkg_tin', kr:'틴케이스', ja:'缶ケース', en:'Tin Case', subs:[
+            { id:'sq',    dbCat:'pkg_tin_sq',    kr:'사각형',   ja:'角型',     en:'Square' },
+            { id:'round', dbCat:'pkg_tin_round', kr:'원형',     ja:'丸型',     en:'Round' },
+            { id:'slide', dbCat:'pkg_tin_slide', kr:'슬라이드', ja:'スライド', en:'Slide' }
+        ]},
+        { id:'pouch', icon:'🪪', dbCat:'pkg_pouch', kr:'파우치', ja:'ポーチ', en:'Pouch', subs:[
+            { id:'zip',     dbCat:'pkg_pouch_zip',     kr:'지퍼백',     ja:'ジップ',     en:'Zipper' },
+            { id:'canvas',  dbCat:'pkg_pouch_canvas',  kr:'캔버스',     ja:'キャンバス', en:'Canvas' },
+            { id:'leather', dbCat:'pkg_pouch_leather', kr:'가죽',       ja:'レザー',     en:'Leather' },
+            { id:'pvc',     dbCat:'pkg_pouch_pvc',     kr:'비닐 파우치', ja:'ビニール',   en:'Clear PVC' }
+        ]},
+        { id:'folding', icon:'📂', dbCat:'pkg_fold', kr:'폴딩박스', ja:'折り畳みボックス', en:'Folding Box', subs:[
+            { id:'mag',    dbCat:'pkg_fold_mag',    kr:'자석 폴딩',   ja:'マグネット折', en:'Magnetic' },
+            { id:'ribbon', dbCat:'pkg_fold_ribbon', kr:'리본 폴딩',   ja:'リボン折',     en:'Ribbon' },
+            { id:'auto',   dbCat:'pkg_fold_auto',   kr:'자동 조립',   ja:'自動組立',     en:'Auto-assembly' }
+        ]},
+        { id:'label', icon:'🏷️', dbCat:'pkg_label', kr:'라벨·스티커', ja:'ラベル・シール', en:'Label / Sticker', subs:[
+            { id:'round', dbCat:'pkg_label_round', kr:'원형',     ja:'円形',         en:'Round' },
+            { id:'sq',    dbCat:'pkg_label_sq',    kr:'사각',     ja:'角型',         en:'Square' },
+            { id:'clear', dbCat:'pkg_label_clear', kr:'투명',     ja:'透明',         en:'Clear' },
+            { id:'metal', dbCat:'pkg_label_metal', kr:'메탈',     ja:'メタル',       en:'Metallic' },
+            { id:'holo',  dbCat:'pkg_label_holo',  kr:'홀로그램', ja:'ホログラム',   en:'Holographic' }
+        ]},
+        { id:'parts', icon:'🎀', dbCat:'pkg_parts', kr:'부자재', ja:'副資材', en:'Accessories', subs:[
+            { id:'ribbon', dbCat:'pkg_parts_ribbon', kr:'리본',       ja:'リボン',       en:'Ribbon' },
+            { id:'tissue', dbCat:'pkg_parts_tissue', kr:'티슈 페이퍼', ja:'ティッシュ',   en:'Tissue Paper' },
+            { id:'string', dbCat:'pkg_parts_string', kr:'끈·핸들',    ja:'紐・ハンドル', en:'String / Handle' },
+            { id:'seal',   dbCat:'pkg_parts_seal',   kr:'봉투 씰',     ja:'封筒シール',   en:'Envelope Seal' }
+        ]}
     ];
 
     // 카테고리별 placeholder 그라데이션 (실제 이미지 등록 전까지)
@@ -400,7 +474,8 @@ a { text-decoration: none; color: inherit; }
     };
 
     var currentCatId = 'all';
-    var allProducts = [];   // DB 에서 로드한 패키지 카테고리 상품 전체
+    var currentSubId = null;   // 서브카테고리 필터 (null = 메인 카테고리 전체)
+    var allProducts = [];      // DB 에서 로드한 패키지 카테고리 상품 전체
 
     // ─── i18n 라벨 적용 ───
     function applyI18n() {
@@ -433,6 +508,30 @@ a { text-decoration: none; color: inherit; }
                    '<span>' + label + '</span>' +
                    '</button>';
         }).join('');
+        renderSubNav();
+    }
+
+    // ─── 서브카테고리 칩 렌더 (메인이 'all' 이거나 subs 가 비어있으면 숨김) ───
+    function renderSubNav() {
+        var subNav = document.getElementById('subNav');
+        if (!subNav) return;
+        var cat = CATS.find(function(c){ return c.id === currentCatId; });
+        if (!cat || !cat.subs || cat.subs.length === 0) {
+            subNav.style.display = 'none';
+            subNav.innerHTML = '';
+            return;
+        }
+        var allLabel = LANG === 'ja' ? 'すべて' : LANG === 'en' ? 'All' : '전체';
+        var chips = '<button class="sub-btn' + (!currentSubId ? ' active' : '') + '" ' +
+                    'onclick="window._goodsSwitchSub(null)">' + allLabel + '</button>';
+        chips += cat.subs.map(function(s){
+            var label = s[LANG] || s.kr;
+            return '<button class="sub-btn' + (s.id === currentSubId ? ' active' : '') + '" ' +
+                   'data-sub="' + s.id + '" onclick="window._goodsSwitchSub(\'' + s.id + '\')">' +
+                   label + '</button>';
+        }).join('');
+        subNav.innerHTML = chips;
+        subNav.style.display = 'flex';
     }
 
     // ─── 상품 카드 HTML ───
@@ -461,8 +560,8 @@ a { text-decoration: none; color: inherit; }
     }
 
     function placeholderThumb(p) {
-        // 카테고리 아이콘 + 카멜레온 로고 워터마크 (자체 이미지 등록 전 placeholder)
-        var cat = CATS.find(function(c){ return c.dbCat === p.category; }) || CATS[0];
+        // 메인 카테고리 prefix 매칭으로 아이콘 선택 (서브카 pkg_box_mag → 📦)
+        var cat = findMainCat(p.category) || CATS[0];
         return '<div class="product-thumb-placeholder">' +
                '<div style="text-align:center;">' +
                  '<div style="font-size:72px; line-height:1;">' + cat.icon + '</div>' +
@@ -471,8 +570,16 @@ a { text-decoration: none; color: inherit; }
                '</div>';
     }
 
+    // 서브카 코드(pkg_box_mag)·메인 코드(pkg_box) 모두 메인 CAT 객체로 매핑
+    function findMainCat(dbCat) {
+        if (!dbCat) return null;
+        return CATS.find(function(c){
+            return c.dbCat && (c.dbCat === dbCat || dbCat.indexOf(c.dbCat + '_') === 0 || dbCat === c.dbCat);
+        });
+    }
+
     function mapDbCatToId(dbCat) {
-        var hit = CATS.find(function(c){ return c.dbCat === dbCat; });
+        var hit = findMainCat(dbCat);
         return hit ? hit.id : 'all';
     }
 
@@ -498,10 +605,25 @@ a { text-decoration: none; color: inherit; }
         if (!grid) return;
 
         var cat = CATS.find(function(c){ return c.id === currentCatId; }) || CATS[0];
-        title.textContent = cat[LANG] || cat.kr;
+        var sub = (cat.subs || []).find(function(s){ return s.id === currentSubId; });
 
-        var list = currentCatId === 'all' ? allProducts
-                 : allProducts.filter(function(p){ return p.category === cat.dbCat; });
+        // 타이틀: 서브 선택 시 "메인 · 서브" 표기
+        var label = cat[LANG] || cat.kr;
+        if (sub) label += ' · ' + (sub[LANG] || sub.kr);
+        title.textContent = label;
+
+        // 필터링: all → 전체 / sub 선택 → 정확 매칭 / 메인만 → prefix 매칭
+        var list;
+        if (currentCatId === 'all') {
+            list = allProducts;
+        } else if (sub) {
+            list = allProducts.filter(function(p){ return p.category === sub.dbCat; });
+        } else {
+            // 메인 카테고리 prefix 매칭 — 서브카 코드 (pkg_box_mag) 도 포함
+            list = allProducts.filter(function(p){
+                return p.category && (p.category === cat.dbCat || p.category.indexOf(cat.dbCat + '_') === 0);
+            });
+        }
 
         countEl.textContent = list.length ? (list.length + t('countSuffix')) : '';
 
@@ -533,11 +655,10 @@ a { text-decoration: none; color: inherit; }
             return;
         }
         try {
-            // 패키지 굿즈 카테고리 (pkg_* prefix) 만 조회 — 현재 등록된 게 없으면 빈 배열
-            var dbCats = CATS.filter(function(c){ return c.dbCat; }).map(function(c){ return c.dbCat; });
+            // 패키지 굿즈 카테고리 — pkg_* prefix 매칭 (서브카 코드 pkg_box_mag 등 모두 포함)
             var res = await SB.from('admin_products')
                 .select('code, category, name, name_kr, name_jp, name_us, price, img_url, description')
-                .in('category', dbCats)
+                .like('category', 'pkg_%')
                 .order('code', { ascending: true })
                 .limit(2000);
             if (res.error) {
@@ -556,15 +677,25 @@ a { text-decoration: none; color: inherit; }
     // ─── 카테고리 전환 ───
     window._goodsSwitchCat = function(catId) {
         currentCatId = catId;
+        currentSubId = null;   // 메인 바뀌면 서브 리셋
         document.querySelectorAll('.cat-btn').forEach(function(b){
             b.classList.toggle('active', b.getAttribute('data-cat') === catId);
         });
+        renderSubNav();   // 서브 칩 갱신 (해당 카테고리의 subs 또는 숨김)
         renderGrid();
-        // 모바일: 그리드로 스크롤
         if (window.innerWidth <= 768) {
             var sec = document.querySelector('.products-wrap');
             if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+    };
+
+    // ─── 서브카테고리 전환 ───
+    window._goodsSwitchSub = function(subId) {
+        currentSubId = subId;
+        document.querySelectorAll('.sub-btn').forEach(function(b){
+            b.classList.toggle('active', b.getAttribute('data-sub') === subId || (!subId && !b.getAttribute('data-sub')));
+        });
+        renderGrid();
     };
 
     // ─── 언어 전환 ───
