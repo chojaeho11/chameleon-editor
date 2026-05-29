@@ -657,7 +657,7 @@ a { text-decoration: none; color: inherit; }
         try {
             // 패키지 굿즈 카테고리 — pkg_* prefix 매칭 (서브카 코드 pkg_box_mag 등 모두 포함)
             var res = await SB.from('admin_products')
-                .select('code, category, name, name_kr, name_jp, name_us, price, img_url, description')
+                .select('code, category, name, name_jp, name_us, price, img_url, description')
                 .like('category', 'pkg_%')
                 .order('code', { ascending: true })
                 .limit(2000);

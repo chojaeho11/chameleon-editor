@@ -343,19 +343,19 @@ function genProductsForTpl(tpl, maxPerSub, includeOptions) {
         };
         out.push({
             code: code,
+            site_code: 'KR',
             category: tpl.dbCat,
-            name:        nm('kr'),
-            name_kr:     nm('kr'),
-            name_jp:     nm('ja'),
-            name_us:     nm('en'),
-            price:       price,
+            name:           nm('kr'),
+            name_jp:        nm('ja'),
+            name_us:        nm('en'),
+            price:          price,
             description:    makeDesc(tpl, c.size, c.fin, includeOptions, 'kr'),
-            description_kr: makeDesc(tpl, c.size, c.fin, includeOptions, 'kr'),
             description_jp: makeDesc(tpl, c.size, c.fin, includeOptions, 'ja'),
             description_us: makeDesc(tpl, c.size, c.fin, includeOptions, 'en'),
             img_url: null,
             is_custom_size: false,
-            is_general_product: true
+            is_general_product: true,
+            is_goods: true
         });
     });
     return out;
@@ -417,7 +417,7 @@ window._sgPreview = function() {
     tb.innerHTML = products.slice(0, 10).map(function(p){
         return '<tr><td><span class="tag">' + p.code + '</span></td>' +
             '<td>' + p.category + '</td>' +
-            '<td>' + p.name_kr + '</td>' +
+            '<td>' + p.name + '</td>' +
             '<td>' + p.price.toLocaleString() + '원</td></tr>';
     }).join('');
     document.getElementById('previewCard').style.display = '';
