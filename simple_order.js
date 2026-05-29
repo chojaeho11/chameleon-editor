@@ -1022,6 +1022,7 @@
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
+          <div id="soPresetSizeNote" style="display:none; font-size:11px; color:#0f766e; font-weight:700; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:8px 10px; margin-bottom:8px; text-align:center;">🎁 ${tr('무료로 개별포장되어 발송됩니다', '無料で個別包装してお届けします', 'Free individual packaging included')}</div>
           <div id="soCustomDimsRow" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
@@ -1949,21 +1950,27 @@
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
         // 배송/시공 (묶음배송이면 0원이어도 표시)
+        // 2026-05-29: 베스트굿즈 프리셋 — "배송비" 라벨만 (시공·옵션명 없음)
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping);
-        var shipName;
-        if (state.bundleShipping) {
-            shipName = tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled');
+        if (state.isPresetGoods) {
+            setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
+            setText('soShipAmount', '+' + fmtPrice(shipFee));
         } else {
-            // 2026-05-15: SHIP_OPTS.label_ko 대신 현재 언어로 변환 (가격 박스에 한국어 잔존 방지)
-            shipName = _soShipMethodLabel(state.shipMethod);
-            // 2026-05-13: 택배배송이면 박스 수 표시 (qty/2 올림)
-            if (state.shipMethod === 'parcel_shipping' && qty > 0) {
-                var boxes = Math.ceil(qty / 2);
-                shipName += ' · ' + boxes + tr('박스 (2장 묶음)', '箱 (2枚まとめ)', ' boxes (2 per)');
+            var shipName;
+            if (state.bundleShipping) {
+                shipName = tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled');
+            } else {
+                // 2026-05-15: SHIP_OPTS.label_ko 대신 현재 언어로 변환 (가격 박스에 한국어 잔존 방지)
+                shipName = _soShipMethodLabel(state.shipMethod);
+                // 2026-05-13: 택배배송이면 박스 수 표시 (qty/2 올림)
+                if (state.shipMethod === 'parcel_shipping' && qty > 0) {
+                    var boxes = Math.ceil(qty / 2);
+                    shipName += ' · ' + boxes + tr('박스 (2장 묶음)', '箱 (2枚まとめ)', ' boxes (2 per)');
+                }
             }
+            setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
+            setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         }
-        setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
-        setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         // 합계
         setText('soTotal', fmtPrice(final));
 
@@ -2442,6 +2449,13 @@
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) — 정액 배송비
+        //   KR 5,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$5
+        if (state.isPresetGoods) {
+            state._shipUpgradeReason = null;
+            var lng = getLang();
+            return (lng === 'ja') ? 10000 : 5000;
+        }
         // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
         if (state.bundleShipping) {
             state._shipUpgradeReason = null;
@@ -3800,11 +3814,13 @@
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 (cm × cm → 고정가)
         var _PRESET_KEYRING = [
+            { w:4,  h:4,  label:'4×4',  price:800  },
             { w:5,  h:5,  label:'5×5',  price:1000 },
             { w:5,  h:7,  label:'5×7',  price:1200 },
+            { w:6,  h:4,  label:'6×4',  price:1000 },
             { w:7,  h:7,  label:'7×7',  price:1500 },
-            { w:10, h:10, label:'10×10',price:2000 },
-            { w:6,  h:4,  label:'6×4',  price:1000 }
+            { w:8,  h:6,  label:'8×6',  price:1500 },
+            { w:10, h:10, label:'10×10',price:2000 }
         ];
         var _PRESET_KOROTTO = [
             { w:5,  h:5,  label:'5×5',  price:2000 },
@@ -3820,10 +3836,15 @@
             'acr_crt_stand_10t':_PRESET_KOROTTO
         };
         state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
+        state.isPresetGoods = !!state.presetSizes;
         var pillsBox = document.getElementById('soPresetSizePills');
+        var pillsNote = document.getElementById('soPresetSizeNote');
         var dimsRow  = document.getElementById('soCustomDimsRow');
         var calcLbl  = document.getElementById('soCustomCalcLabel');
         var areaInfo = document.getElementById('soCustomAreaInfo');
+        var editorBtn = document.getElementById('soOpenEditorBtn');
+        var uploadTitle = document.getElementById('soUploadTitle');
+        var uploadHint = document.querySelector('#soUploadWrap .so-upload-hint, .so-upload .so-upload-hint');
         if (state.isCustomSize && state.presetSizes) {
             // 프리셋 모드: pill row 표시, W/H 입력·면적 표시 숨김
             if (pillsBox) {
@@ -3844,6 +3865,12 @@
             if (dimsRow)  dimsRow.style.display  = 'none';
             if (areaInfo) areaInfo.style.display = 'none';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price');
+            if (pillsNote) pillsNote.style.display = '';
+            // 프리셋 굿즈 — 디자인에디터 숨김 / 업로드 안내 변경
+            if (editorBtn) editorBtn.style.display = 'none';
+            if (uploadTitle) uploadTitle.innerHTML = tr('로고나 이미지를 올려주세요', 'ロゴまたは画像をアップロード', 'Upload your logo or image') +
+                '<div style="font-size:11px; font-weight:600; color:#059669; margin-top:4px;">✂️ ' +
+                tr('무료로 칼선을 만들어 드립니다', '無料でカットラインを作成します', 'Free die-cut line creation') + '</div>';
             // 첫 사이즈를 자동 선택
             var first = state.presetSizes[0];
             state.customW = first.w;
@@ -3860,12 +3887,22 @@
             // 일반 면적계산 모드
             state.presetSizeFixed = false;
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
+            if (pillsNote) pillsNote.style.display = 'none';
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
+            if (editorBtn) editorBtn.style.display = '';
+            if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+        } else {
+            // 사이즈 섹션 자체 미사용 — 프리셋 잔존 상태 리셋
+            state.presetSizeFixed = false;
+            if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
+            if (pillsNote) pillsNote.style.display = 'none';
+            if (editorBtn) editorBtn.style.display = '';
+            if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         var qtySec = document.getElementById('soQtySection');
@@ -3881,8 +3918,14 @@
         // 시공/배송 일정 섹션 — 가벽·포토존·배송전용허니콤·포맥스폼보드·일반인쇄물·종이매대 모두 표시
         var schedSec = document.getElementById('soScheduleSection');
         // 2026-05-15: 금액주문은 배송 개념 자체가 없음 — 시공/배송 섹션 강제 숨김
-        var anyShipScope = !state.isAmountOrder && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+        // 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) — 시공/배송 옵션 자체 비표시, 5천원 정액 배송비
+        var anyShipScope = !state.isAmountOrder && !state.isPresetGoods && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
+        if (state.isPresetGoods) {
+            // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
+            state.shipMethod = 'preset_goods_flat';
+            state.bundleShipping = false;
+        }
         // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
         var installKeys = ['metro_install', 'metro_weekend', 'metro_install_removal', 'regional_truck', 'regional_install'];
         var hbDeliveryKeys = ['metro_delivery', 'regional_delivery'];
