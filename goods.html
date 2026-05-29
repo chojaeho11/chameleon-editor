@@ -973,17 +973,20 @@ a { text-decoration: none; color: inherit; }
         btn.disabled = true; btn.textContent = '...';
         try {
             if (!SB) throw new Error('Supabase not initialized');
-            // lead_requests 테이블 활용 (이미 leads-system 으로 구축됨 — managers.md 참고)
+            // lead_requests 테이블 — 실제 스키마: type/site/lang/name/email/phone/details(jsonb)/message
             var res = await SB.from('lead_requests').insert({
-                source: 'goods_inquiry',
+                type: 'goods_inquiry',
+                site: 'cafe2626',
                 lang: LANG,
-                product_code: code,
-                product_name: name,
-                contact_name: nm,
+                name: nm,
                 phone: ph,
                 email: em,
-                quantity: qty,
-                memo: memo,
+                message: memo,
+                details: {
+                    product_code: code,
+                    product_name: name,
+                    quantity: qty
+                },
                 status: 'new'
             });
             if (res.error) throw new Error(res.error.message);
