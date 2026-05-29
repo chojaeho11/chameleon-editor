@@ -724,6 +724,37 @@ window._giAIStart = async function() {
 var priceDirty = {};   // { code: newPrice }
 var nameDirty = {};    // { code: newName }
 
+function _renderProductRow(p) {
+    var curPrice = priceDirty[p.code] !== undefined ? priceDirty[p.code] : (p.price || 0);
+    var curName = nameDirty[p.code] !== undefined ? nameDirty[p.code] : (p.name || '');
+    var disc = Math.round(curPrice / 2);
+    var priceDrt = priceDirty[p.code] !== undefined && priceDirty[p.code] !== (p.price || 0);
+    var nameDrt = nameDirty[p.code] !== undefined && nameDirty[p.code] !== (p.name || '');
+    var anyDirty = priceDrt || nameDrt;
+    var statusHtml = anyDirty
+        ? '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>'
+        : (curPrice === 0 ? '<span style="color:#a78bfa;">가격문의</span>' : '<span style="color:#34d399;">설정됨</span>');
+    var thumbHtml = p.img_url
+        ? '<img src="' + escHtml(p.img_url) + '" alt="" loading="lazy" ' +
+          'style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">'
+        : '<div style="width:54px; height:54px; border-radius:8px; background:linear-gradient(135deg,#1e293b,#334155); ' +
+          'display:flex; align-items:center; justify-content:center; font-size:24px; opacity:0.5;">📦</div>';
+    return '<tr data-code="' + escHtml(p.code) + '">' +
+        '<td>' + thumbHtml + '</td>' +
+        '<td><input type="text" value="' + escHtml(curName) + '" ' +
+            'data-code="' + escHtml(p.code) + '" onchange="window._giNameChg(this)" ' +
+            'style="width:100%; padding:5px 8px; font-size:12px;"></td>' +
+        '<td><span class="code-tag">' + escHtml(p.code) + '</span></td>' +
+        '<td style="text-align:right;"><input type="number" min="0" step="100" value="' + curPrice + '" ' +
+            'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)" ' +
+            'style="width:100px; text-align:right; padding:5px 8px;"></td>' +
+        '<td style="text-align:right; color:#34d399; font-weight:800;">' + disc.toLocaleString() + '</td>' +
+        '<td>' + statusHtml + '</td>' +
+        '<td><button class="btn btn-ghost" style="padding:5px 8px; font-size:11px;" ' +
+            'onclick="window._giChangeImage(\'' + escHtml(p.code) + '\', this)">🖼️ 변경</button></td>' +
+        '</tr>';
+}
+
 function renderPriceTable() {
     var tbody = document.getElementById('priceTbody');
     if (!tbody) return;
@@ -737,40 +768,48 @@ function renderPriceTable() {
         }
         return true;
     });
-    tbody.innerHTML = list.map(function(p){
-        var curPrice = priceDirty[p.code] !== undefined ? priceDirty[p.code] : (p.price || 0);
-        var curName = nameDirty[p.code] !== undefined ? nameDirty[p.code] : (p.name || '');
-        var disc = Math.round(curPrice / 2);
-        var priceDrt = priceDirty[p.code] !== undefined && priceDirty[p.code] !== (p.price || 0);
-        var nameDrt = nameDirty[p.code] !== undefined && nameDirty[p.code] !== (p.name || '');
-        var anyDirty = priceDrt || nameDrt;
-        var statusHtml = anyDirty
-            ? '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>'
-            : (curPrice === 0 ? '<span style="color:#a78bfa;">가격문의</span>' : '<span style="color:#34d399;">설정됨</span>');
-        // 썸네일 — img_url 있으면 표시, 없으면 placeholder 박스
-        var thumbHtml = p.img_url
-            ? '<img src="' + escHtml(p.img_url) + '" alt="" loading="lazy" ' +
-              'style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">'
-            : '<div style="width:54px; height:54px; border-radius:8px; background:linear-gradient(135deg,#1e293b,#334155); ' +
-              'display:flex; align-items:center; justify-content:center; font-size:24px; opacity:0.5;">📦</div>';
-        return '<tr data-code="' + escHtml(p.code) + '">' +
-            '<td>' + thumbHtml + '</td>' +
-            '<td><input type="text" value="' + escHtml(curName) + '" ' +
-                'data-code="' + escHtml(p.code) + '" onchange="window._giNameChg(this)" ' +
-                'style="width:100%; padding:5px 8px; font-size:12px;"></td>' +
-            '<td><span class="code-tag">' + escHtml(p.code) + '</span></td>' +
-            '<td style="text-align:right;"><input type="number" min="0" step="100" value="' + curPrice + '" ' +
-                'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)" ' +
-                'style="width:100px; text-align:right; padding:5px 8px;"></td>' +
-            '<td style="text-align:right; color:#34d399; font-weight:800;">' + disc.toLocaleString() + '</td>' +
-            '<td>' + statusHtml + '</td>' +
-            '<td><button class="btn btn-ghost" style="padding:5px 8px; font-size:11px;" ' +
-                'onclick="window._giChangeImage(\'' + escHtml(p.code) + '\', this)">🖼️ 변경</button></td>' +
-            '</tr>';
-    }).join('');
+    // 카테고리별 그룹화
+    var byCat = {};
+    list.forEach(function(p){
+        var c = p.category || '기타';
+        if (!byCat[c]) byCat[c] = [];
+        byCat[c].push(p);
+    });
+    var cats = Object.keys(byCat).sort();
+    var html = '';
+    cats.forEach(function(cat){
+        var prods = byCat[cat];
+        var label = CAT_LABEL[cat] || cat;
+        html += '<tr class="cat-divider-row" data-cat="' + escHtml(cat) + '">' +
+            '<td colspan="7" style="padding:0;">' +
+              '<div style="background:linear-gradient(90deg,#4338ca,#7c3aed); padding:10px 16px; ' +
+                   'display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;" ' +
+                   'onclick="window._giToggleCatSection(\'' + escHtml(cat) + '\', this)">' +
+                '<span class="cat-toggle-icon" style="font-size:12px; color:#fff; transition:transform 0.2s;">▼</span>' +
+                '<span style="font-size:14px; font-weight:900; color:#fff;">' + escHtml(label) + '</span>' +
+                '<code class="code-tag" style="font-size:10px;">' + escHtml(cat) + '</code>' +
+                '<span style="margin-left:auto; font-size:12px; font-weight:700; color:rgba(255,255,255,0.85);">' +
+                  prods.length + '개 상품' +
+                '</span>' +
+              '</div>' +
+            '</td></tr>';
+        prods.forEach(function(p){
+            html += _renderProductRow(p).replace('<tr ', '<tr class="prod-row-cat-' + escHtml(cat) + '" ');
+        });
+    });
+    tbody.innerHTML = html;
     var totalDirty = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
     document.getElementById('dirtyCount').textContent = totalDirty;
 }
+
+// 카테고리 섹션 접기/펼치기
+window._giToggleCatSection = function(cat, headerDiv) {
+    var rows = document.querySelectorAll('.prod-row-cat-' + cat.replace(/"/g,'\\"'));
+    var icon = headerDiv.querySelector('.cat-toggle-icon');
+    var hidden = rows.length && rows[0].style.display === 'none';
+    rows.forEach(function(r){ r.style.display = hidden ? '' : 'none'; });
+    if (icon) icon.style.transform = hidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+};
 
 function renderPriceCatFilter() {
     var sel = document.getElementById('priceCatFilter');
