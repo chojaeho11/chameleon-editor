@@ -616,6 +616,69 @@ a { text-decoration: none; color: inherit; }
             { id:'umbrella', dbCat:'pkg_sea_umbrella', kr:'우산',       ja:'傘',               en:'Umbrella' },
             { id:'towel',    dbCat:'pkg_sea_towel',    kr:'타올',       ja:'タオル',           en:'Towel' },
             { id:'picmat',   dbCat:'pkg_sea_picmat',   kr:'피크닉 매트', ja:'ピクニックマット', en:'Picnic Mat' }
+        ]},
+        // 2026-05-29: 인쇄물 카테고리 10개 추가 — 업계 일반 분류
+        { id:'bsc', icon:'📇', dbCat:'pkg_bsc', kr:'명함', ja:'名刺', en:'Business Card', subs:[
+            { id:'std',      dbCat:'pkg_bsc_std',      kr:'일반 명함',  ja:'スタンダード',   en:'Standard' },
+            { id:'premium',  dbCat:'pkg_bsc_premium',  kr:'고급 명함',  ja:'プレミアム',     en:'Premium' },
+            { id:'foil',     dbCat:'pkg_bsc_foil',     kr:'박 명함',    ja:'箔押し',         en:'Foil Stamp' },
+            { id:'clear',    dbCat:'pkg_bsc_clear',    kr:'투명 명함',  ja:'透明',           en:'Clear' },
+            { id:'metal',    dbCat:'pkg_bsc_metal',    kr:'메탈 명함',  ja:'メタル',         en:'Metal' }
+        ]},
+        { id:'flyer', icon:'📰', dbCat:'pkg_flyer', kr:'전단지·찌라시', ja:'チラシ', en:'Flyer', subs:[
+            { id:'a4',     dbCat:'pkg_flyer_a4',     kr:'A4 전단지', ja:'A4チラシ', en:'A4 Flyer' },
+            { id:'a5',     dbCat:'pkg_flyer_a5',     kr:'A5 전단지', ja:'A5チラシ', en:'A5 Flyer' },
+            { id:'b5',     dbCat:'pkg_flyer_b5',     kr:'B5 전단지', ja:'B5チラシ', en:'B5 Flyer' },
+            { id:'double', dbCat:'pkg_flyer_double', kr:'양면 인쇄', ja:'両面印刷', en:'Double-sided' },
+            { id:'fold',   dbCat:'pkg_flyer_fold',   kr:'접지 전단', ja:'折り加工', en:'Folded' }
+        ]},
+        { id:'poster', icon:'🎨', dbCat:'pkg_pst', kr:'포스터', ja:'ポスター', en:'Poster', subs:[
+            { id:'a3',  dbCat:'pkg_pst_a3',  kr:'A3 포스터', ja:'A3ポスター', en:'A3 Poster' },
+            { id:'a2',  dbCat:'pkg_pst_a2',  kr:'A2 포스터', ja:'A2ポスター', en:'A2 Poster' },
+            { id:'a1',  dbCat:'pkg_pst_a1',  kr:'A1 포스터', ja:'A1ポスター', en:'A1 Poster' },
+            { id:'b2',  dbCat:'pkg_pst_b2',  kr:'B2 포스터', ja:'B2ポスター', en:'B2 Poster' }
+        ]},
+        { id:'catalog', icon:'📒', dbCat:'pkg_cat', kr:'카탈로그·브로셔', ja:'カタログ', en:'Catalog', subs:[
+            { id:'8p',     dbCat:'pkg_cat_8p',     kr:'8p 카탈로그',  ja:'8p',     en:'8 pages' },
+            { id:'16p',    dbCat:'pkg_cat_16p',    kr:'16p 카탈로그', ja:'16p',    en:'16 pages' },
+            { id:'32p',    dbCat:'pkg_cat_32p',    kr:'32p 카탈로그', ja:'32p',    en:'32 pages' },
+            { id:'fold',   dbCat:'pkg_cat_fold',   kr:'접지 브로셔',  ja:'折りパンフ', en:'Folded Brochure' }
+        ]},
+        { id:'env', icon:'✉️', dbCat:'pkg_env', kr:'봉투', ja:'封筒', en:'Envelope', subs:[
+            { id:'small',  dbCat:'pkg_env_small',  kr:'소봉투 (4×9)', ja:'長3', en:'Small (4×9)' },
+            { id:'medium', dbCat:'pkg_env_medium', kr:'중봉투 (6×9)', ja:'角6', en:'Medium (6×9)' },
+            { id:'large',  dbCat:'pkg_env_large',  kr:'대봉투 (9×12)',ja:'角2', en:'Large (9×12)' },
+            { id:'a4',     dbCat:'pkg_env_a4',     kr:'A4 봉투',     ja:'A4封筒',en:'A4 Envelope' }
+        ]},
+        { id:'tag', icon:'🏷️', dbCat:'pkg_tag', kr:'가격표·태그', ja:'タグ', en:'Tag', subs:[
+            { id:'sq',     dbCat:'pkg_tag_sq',     kr:'사각 태그', ja:'角タグ',     en:'Square Tag' },
+            { id:'round',  dbCat:'pkg_tag_round',  kr:'원형 태그', ja:'丸タグ',     en:'Round Tag' },
+            { id:'hang',   dbCat:'pkg_tag_hang',   kr:'행 택',     ja:'下げ札',     en:'Hang Tag' },
+            { id:'cloth',  dbCat:'pkg_tag_cloth',  kr:'옷걸이 태그',ja:'衣類タグ',  en:'Clothing Tag' }
+        ]},
+        { id:'cal', icon:'📅', dbCat:'pkg_cal', kr:'캘린더', ja:'カレンダー', en:'Calendar', subs:[
+            { id:'desk',  dbCat:'pkg_cal_desk',  kr:'탁상 캘린더', ja:'卓上',     en:'Desk Calendar' },
+            { id:'wall',  dbCat:'pkg_cal_wall',  kr:'벽 캘린더',   ja:'壁掛け',   en:'Wall Calendar' },
+            { id:'mini',  dbCat:'pkg_cal_mini',  kr:'미니 캘린더', ja:'ミニ',     en:'Mini Calendar' },
+            { id:'card',  dbCat:'pkg_cal_card',  kr:'카드 캘린더', ja:'カード型', en:'Card Calendar' }
+        ]},
+        { id:'tkt', icon:'🎟️', dbCat:'pkg_tkt', kr:'티켓·쿠폰', ja:'チケット', en:'Ticket', subs:[
+            { id:'std',   dbCat:'pkg_tkt_std',   kr:'일반 티켓',   ja:'スタンダード', en:'Standard Ticket' },
+            { id:'cpn',   dbCat:'pkg_tkt_cpn',   kr:'쿠폰',       ja:'クーポン',     en:'Coupon' },
+            { id:'entry', dbCat:'pkg_tkt_entry', kr:'입장권',     ja:'入場券',       en:'Entry Pass' },
+            { id:'meal',  dbCat:'pkg_tkt_meal',  kr:'식권',       ja:'食券',         en:'Meal Voucher' }
+        ]},
+        { id:'card', icon:'💌', dbCat:'pkg_card', kr:'카드·청첩장', ja:'カード', en:'Greeting Card', subs:[
+            { id:'wed',     dbCat:'pkg_card_wed',     kr:'청첩장',   ja:'招待状',     en:'Wedding Invitation' },
+            { id:'greet',   dbCat:'pkg_card_greet',   kr:'인사장',   ja:'グリーティング', en:'Greeting' },
+            { id:'thanks',  dbCat:'pkg_card_thanks',  kr:'감사 카드', ja:'サンクスカード', en:'Thank You' },
+            { id:'invite',  dbCat:'pkg_card_invite',  kr:'초대장',   ja:'招待状',     en:'Invitation' }
+        ]},
+        { id:'sticker', icon:'🎯', dbCat:'pkg_stk', kr:'스티커 인쇄', ja:'シール印刷', en:'Sticker Print', subs:[
+            { id:'cut',    dbCat:'pkg_stk_cut',    kr:'도무송 스티커', ja:'抜き加工', en:'Die-cut' },
+            { id:'sheet',  dbCat:'pkg_stk_sheet',  kr:'시트 스티커',   ja:'シート',   en:'Sheet' },
+            { id:'roll',   dbCat:'pkg_stk_roll',   kr:'롤 스티커',     ja:'ロール',   en:'Roll' },
+            { id:'kiss',   dbCat:'pkg_stk_kiss',   kr:'키스컷 스티커', ja:'キスカット', en:'Kiss-cut' }
         ]}
     ];
 
@@ -642,7 +705,17 @@ a { text-decoration: none; color: inherit; }
         accessory:  'linear-gradient(135deg,#cffafe,#67e8f9)',
         decor:      'linear-gradient(135deg,#fbcfe8,#f472b6)',
         living:     'linear-gradient(135deg,#fef9c3,#fde047)',
-        season:     'linear-gradient(135deg,#bae6fd,#7dd3fc)'
+        season:     'linear-gradient(135deg,#bae6fd,#7dd3fc)',
+        bsc:        'linear-gradient(135deg,#fef3c7,#fcd34d)',
+        flyer:      'linear-gradient(135deg,#fef2f2,#fecaca)',
+        poster:     'linear-gradient(135deg,#ede9fe,#c4b5fd)',
+        catalog:    'linear-gradient(135deg,#ecfeff,#67e8f9)',
+        env:        'linear-gradient(135deg,#fef9c3,#fef08a)',
+        tag:        'linear-gradient(135deg,#dbeafe,#93c5fd)',
+        cal:        'linear-gradient(135deg,#f0fdf4,#86efac)',
+        tkt:        'linear-gradient(135deg,#fff7ed,#fed7aa)',
+        card:       'linear-gradient(135deg,#fdf2f8,#fbcfe8)',
+        sticker:    'linear-gradient(135deg,#ecfccb,#bef264)'
     };
 
     var currentCatId = 'all';
@@ -668,11 +741,20 @@ a { text-decoration: none; color: inherit; }
         });
     }
 
-    // ─── 카테고리 탭 렌더 ───
+    // ─── 카테고리 탭 렌더 — 상품 0개 카테고리는 자동 숨김 ───
     function renderCatNav() {
         var nav = document.getElementById('catNav');
         if (!nav) return;
-        nav.innerHTML = CATS.map(function(c){
+        // 카테고리별 상품 수 카운트 (prefix 매칭)
+        function catCount(c) {
+            if (c.id === 'all') return allProducts.length;
+            if (!c.dbCat) return 0;
+            return allProducts.filter(function(p){
+                return p.category && (p.category === c.dbCat || p.category.indexOf(c.dbCat + '_') === 0);
+            }).length;
+        }
+        var visibleCats = CATS.filter(function(c){ return c.id === 'all' || catCount(c) > 0; });
+        nav.innerHTML = visibleCats.map(function(c){
             var label = c[LANG] || c.kr;
             return '<button class="cat-btn' + (c.id === currentCatId ? ' active' : '') + '" ' +
                    'data-cat="' + c.id + '" onclick="window._goodsSwitchCat(\'' + c.id + '\')">' +

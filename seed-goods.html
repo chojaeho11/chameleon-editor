@@ -367,7 +367,60 @@ var TEMPLATES = [
     { dbCat:'pkg_sea_fan',      sub:{kr:'부채',       ja:'うちわ',           en:'Hand Fan'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:2500 },
     { dbCat:'pkg_sea_umbrella', sub:{kr:'우산',       ja:'傘',               en:'Umbrella'},       sizes:SIZE_SMALL,fins:FIN_COLORS,base:11000 },
     { dbCat:'pkg_sea_towel',    sub:{kr:'타올',       ja:'タオル',           en:'Towel'},          sizes:SIZE_SMALL,fins:FIN_COLORS,base:4500 },
-    { dbCat:'pkg_sea_picmat',   sub:{kr:'피크닉 매트', ja:'ピクニックマット', en:'Picnic Mat'},     sizes:SIZE_SMALL,fins:FIN_COLORS,base:18000 }
+    { dbCat:'pkg_sea_picmat',   sub:{kr:'피크닉 매트', ja:'ピクニックマット', en:'Picnic Mat'},     sizes:SIZE_SMALL,fins:FIN_COLORS,base:18000 },
+    // ───── 2026-05-29 인쇄물 카테고리 10개 추가 (업계 일반 분류) ─────
+    // 명함
+    { dbCat:'pkg_bsc_std',     sub:{kr:'일반 명함',  ja:'スタンダード名刺', en:'Standard Business Card'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:3000 },
+    { dbCat:'pkg_bsc_premium', sub:{kr:'고급 명함',  ja:'プレミアム名刺',    en:'Premium Business Card'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:5000 },
+    { dbCat:'pkg_bsc_foil',    sub:{kr:'박 명함',    ja:'箔押し名刺',        en:'Foil Stamp Card'},        sizes:SIZE_SMALL,fins:FIN_METAL,base:8000 },
+    { dbCat:'pkg_bsc_clear',   sub:{kr:'투명 명함',  ja:'透明名刺',          en:'Clear Card'},             sizes:SIZE_SMALL,fins:FIN_CLEAR,base:6500 },
+    { dbCat:'pkg_bsc_metal',   sub:{kr:'메탈 명함',  ja:'メタル名刺',        en:'Metal Card'},             sizes:SIZE_SMALL,fins:FIN_METAL,base:12000 },
+    // 전단지
+    { dbCat:'pkg_flyer_a4',     sub:{kr:'A4 전단지',  ja:'A4チラシ',   en:'A4 Flyer'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:200 },
+    { dbCat:'pkg_flyer_a5',     sub:{kr:'A5 전단지',  ja:'A5チラシ',   en:'A5 Flyer'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:150 },
+    { dbCat:'pkg_flyer_b5',     sub:{kr:'B5 전단지',  ja:'B5チラシ',   en:'B5 Flyer'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:170 },
+    { dbCat:'pkg_flyer_double', sub:{kr:'양면 전단',  ja:'両面チラシ', en:'Double-sided Flyer'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:250 },
+    { dbCat:'pkg_flyer_fold',   sub:{kr:'접지 전단',  ja:'折り加工',   en:'Folded Flyer'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:350 },
+    // 포스터
+    { dbCat:'pkg_pst_a3', sub:{kr:'A3 포스터', ja:'A3ポスター', en:'A3 Poster'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:3000 },
+    { dbCat:'pkg_pst_a2', sub:{kr:'A2 포스터', ja:'A2ポスター', en:'A2 Poster'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:5000 },
+    { dbCat:'pkg_pst_a1', sub:{kr:'A1 포스터', ja:'A1ポスター', en:'A1 Poster'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:8500 },
+    { dbCat:'pkg_pst_b2', sub:{kr:'B2 포스터', ja:'B2ポスター', en:'B2 Poster'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:6000 },
+    // 카탈로그
+    { dbCat:'pkg_cat_8p',   sub:{kr:'8p 카탈로그',  ja:'8pカタログ',  en:'8 Page Catalog'},   sizes:SIZE_SMALL,fins:FIN_PAPER,base:3500 },
+    { dbCat:'pkg_cat_16p',  sub:{kr:'16p 카탈로그', ja:'16pカタログ', en:'16 Page Catalog'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:5500 },
+    { dbCat:'pkg_cat_32p',  sub:{kr:'32p 카탈로그', ja:'32pカタログ', en:'32 Page Catalog'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:9500 },
+    { dbCat:'pkg_cat_fold', sub:{kr:'접지 브로셔',  ja:'折りパンフ',  en:'Folded Brochure'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:2500 },
+    // 봉투
+    { dbCat:'pkg_env_small',  sub:{kr:'소봉투 (4×9)',  ja:'長3封筒', en:'Small Envelope'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:300 },
+    { dbCat:'pkg_env_medium', sub:{kr:'중봉투 (6×9)',  ja:'角6封筒', en:'Medium Envelope'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:450 },
+    { dbCat:'pkg_env_large',  sub:{kr:'대봉투 (9×12)', ja:'角2封筒', en:'Large Envelope'},  sizes:SIZE_SMALL,fins:FIN_PAPER,base:600 },
+    { dbCat:'pkg_env_a4',     sub:{kr:'A4 봉투',       ja:'A4封筒',  en:'A4 Envelope'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:700 },
+    // 태그
+    { dbCat:'pkg_tag_sq',    sub:{kr:'사각 태그',   ja:'角タグ',   en:'Square Tag'},   sizes:SIZE_SMALL,fins:FIN_PAPER,base:300 },
+    { dbCat:'pkg_tag_round', sub:{kr:'원형 태그',   ja:'丸タグ',   en:'Round Tag'},    sizes:SIZE_SMALL,fins:FIN_PAPER,base:300 },
+    { dbCat:'pkg_tag_hang',  sub:{kr:'행 택',       ja:'下げ札',   en:'Hang Tag'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:400 },
+    { dbCat:'pkg_tag_cloth', sub:{kr:'옷걸이 태그', ja:'衣類タグ', en:'Clothing Tag'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:500 },
+    // 캘린더
+    { dbCat:'pkg_cal_desk', sub:{kr:'탁상 캘린더', ja:'卓上カレンダー',   en:'Desk Calendar'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:4500 },
+    { dbCat:'pkg_cal_wall', sub:{kr:'벽 캘린더',   ja:'壁掛けカレンダー', en:'Wall Calendar'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:6500 },
+    { dbCat:'pkg_cal_mini', sub:{kr:'미니 캘린더', ja:'ミニカレンダー',   en:'Mini Calendar'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:3500 },
+    { dbCat:'pkg_cal_card', sub:{kr:'카드 캘린더', ja:'カード型',         en:'Card Calendar'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:2500 },
+    // 티켓·쿠폰
+    { dbCat:'pkg_tkt_std',   sub:{kr:'일반 티켓', ja:'スタンダードチケット', en:'Standard Ticket'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:400 },
+    { dbCat:'pkg_tkt_cpn',   sub:{kr:'쿠폰',      ja:'クーポン',             en:'Coupon'},          sizes:SIZE_SMALL,fins:FIN_PAPER,base:300 },
+    { dbCat:'pkg_tkt_entry', sub:{kr:'입장권',    ja:'入場券',               en:'Entry Pass'},      sizes:SIZE_SMALL,fins:FIN_PAPER,base:500 },
+    { dbCat:'pkg_tkt_meal',  sub:{kr:'식권',      ja:'食券',                 en:'Meal Voucher'},    sizes:SIZE_SMALL,fins:FIN_PAPER,base:350 },
+    // 카드·청첩장
+    { dbCat:'pkg_card_wed',    sub:{kr:'청첩장',    ja:'結婚招待状',     en:'Wedding Invitation'}, sizes:SIZE_SMALL,fins:FIN_PAPER,base:1500 },
+    { dbCat:'pkg_card_greet',  sub:{kr:'인사장',    ja:'グリーティング', en:'Greeting Card'},      sizes:SIZE_SMALL,fins:FIN_PAPER,base:1800 },
+    { dbCat:'pkg_card_thanks', sub:{kr:'감사 카드', ja:'サンクスカード', en:'Thank You Card'},     sizes:SIZE_SMALL,fins:FIN_PAPER,base:2000 },
+    { dbCat:'pkg_card_invite', sub:{kr:'초대장',    ja:'招待状',         en:'Invitation Card'},    sizes:SIZE_SMALL,fins:FIN_PAPER,base:2200 },
+    // 스티커 인쇄
+    { dbCat:'pkg_stk_cut',   sub:{kr:'도무송 스티커', ja:'抜き加工シール',  en:'Die-cut Sticker'},  sizes:SIZE_LABEL,fins:FIN_PAPER,base:500 },
+    { dbCat:'pkg_stk_sheet', sub:{kr:'시트 스티커',   ja:'シートシール',    en:'Sheet Sticker'},    sizes:SIZE_LABEL,fins:FIN_PAPER,base:400 },
+    { dbCat:'pkg_stk_roll',  sub:{kr:'롤 스티커',     ja:'ロールシール',    en:'Roll Sticker'},     sizes:SIZE_LABEL,fins:FIN_PAPER,base:600 },
+    { dbCat:'pkg_stk_kiss',  sub:{kr:'키스컷 스티커', ja:'キスカットシール',en:'Kiss-cut Sticker'}, sizes:SIZE_LABEL,fins:FIN_PAPER,base:550 }
 ];
 
 // ─── 설명 템플릿 ───
