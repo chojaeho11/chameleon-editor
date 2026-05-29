@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>굿즈 시드 데이터 등록 — Admin Only</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR', sans-serif; background:#0f172a; color:#e2e8f0; padding:24px; min-height:100vh; }
+.wrap { max-width:1100px; margin:0 auto; }
+h1 { font-size:24px; font-weight:900; margin-bottom:8px; color:#fff; }
+.sub { font-size:13px; color:#94a3b8; margin-bottom:24px; }
+.card { background:#1e293b; border-radius:14px; padding:20px 22px; margin-bottom:16px; border:1px solid #334155; }
+.card h2 { font-size:15px; font-weight:800; color:#cbd5e1; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card h2 i { color:#818cf8; }
+.row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.stat { background:#0f172a; padding:14px 18px; border-radius:10px; flex:1; min-width:180px; border:1px solid #334155; }
+.stat-label { font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+.stat-val { font-size:28px; font-weight:900; color:#fff; margin-top:4px; }
+.stat-val.green { color:#34d399; }
+.stat-val.yellow { color:#fbbf24; }
+.btn { padding:10px 18px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; transition:all 0.15s; }
+.btn-primary { background:#6366f1; color:#fff; }
+.btn-primary:hover { background:#4f46e5; }
+.btn-primary:disabled { background:#475569; cursor:not-allowed; }
+.btn-danger { background:#dc2626; color:#fff; }
+.btn-danger:hover { background:#b91c1c; }
+.btn-ghost { background:transparent; color:#cbd5e1; border:1px solid #475569; }
+.btn-ghost:hover { background:#334155; }
+.btn-success { background:#10b981; color:#fff; }
+.btn-success:hover { background:#059669; }
+label { font-size:12px; color:#94a3b8; font-weight:600; }
+input[type="checkbox"] { accent-color:#6366f1; }
+select, input[type="number"], input[type="text"] {
+    background:#0f172a; color:#fff; border:1px solid #334155; border-radius:6px;
+    padding:8px 12px; font-size:13px; font-family:inherit;
+}
+.cat-list { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:8px; }
+.cat-item { background:#0f172a; padding:8px 12px; border-radius:6px; border:1px solid #334155; display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; }
+.cat-item:hover { border-color:#6366f1; }
+.cat-item input { margin:0; }
+.cat-item .cat-count { margin-left:auto; color:#64748b; font-size:11px; }
+.log { background:#020617; border-radius:8px; padding:12px 14px; font-family:'SF Mono', Consolas, monospace; font-size:11px; color:#94a3b8; max-height:280px; overflow-y:auto; line-height:1.6; }
+.log .ok { color:#34d399; }
+.log .err { color:#f87171; }
+.log .warn { color:#fbbf24; }
+.log .info { color:#60a5fa; }
+.progress { background:#0f172a; border-radius:999px; height:8px; overflow:hidden; margin-top:8px; border:1px solid #334155; }
+.progress-bar { background:linear-gradient(90deg,#6366f1,#8b5cf6); height:100%; transition:width 0.3s; width:0%; }
+.preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+.preview-table th { background:#0f172a; padding:8px 10px; text-align:left; color:#94a3b8; font-weight:700; font-size:11px; border-bottom:1px solid #334155; }
+.preview-table td { padding:8px 10px; border-bottom:1px solid #1e293b; }
+.preview-table tr:hover td { background:#0f172a; }
+.tag { display:inline-block; padding:1px 6px; background:#312e81; color:#a5b4fc; border-radius:4px; font-size:10px; font-weight:700; }
+.gate { text-align:center; padding:80px 24px; }
+.gate i { font-size:64px; color:#475569; margin-bottom:16px; display:block; }
+.gate h2 { font-size:20px; color:#cbd5e1; margin-bottom:8px; }
+.gate p { color:#64748b; font-size:13px; margin-bottom:20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>🎁 패키지 굿즈 시드 데이터 등록</h1>
+    <p class="sub">39 서브카테고리 × 약 15 변형 = 약 <b>585개 placeholder 상품</b> 일괄 생성. 카멜레온 워터마크 placeholder 카드로 표시되며, 추후 AI 이미지로 교체.</p>
+
+    <div id="gate" class="gate" style="display:none;">
+        <i class="fa-solid fa-lock"></i>
+        <h2>관리자 로그인 필요</h2>
+        <p>이 페이지는 본사 관리자만 접근 가능합니다.</p>
+        <p id="gateMsg" style="color:#f87171; font-size:12px;"></p>
+        <a href="/" class="btn btn-ghost" style="text-decoration:none;">메인으로</a>
+    </div>
+
+    <div id="app" style="display:none;">
+        <!-- 통계 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-chart-bar"></i> 현재 상태</h2>
+            <div class="row">
+                <div class="stat">
+                    <div class="stat-label">현재 pkg_* 상품</div>
+                    <div class="stat-val" id="statExisting">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">생성 예정 상품</div>
+                    <div class="stat-val green" id="statPlan">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">로그인 계정</div>
+                    <div class="stat-val yellow" id="statUser" style="font-size:14px; padding-top:8px; word-break:break-all;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 카테고리 선택 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-list-check"></i> 카테고리 선택</h2>
+            <div class="row" style="margin-bottom:12px;">
+                <button class="btn btn-ghost" onclick="window._sgCheckAll(true)">전체 선택</button>
+                <button class="btn btn-ghost" onclick="window._sgCheckAll(false)">전체 해제</button>
+                <label style="margin-left:auto;">서브카당 변형 수
+                    <input type="number" id="sgPerSub" value="15" min="1" max="50" style="width:70px; margin-left:8px;">
+                </label>
+            </div>
+            <div class="cat-list" id="catList"></div>
+        </div>
+
+        <!-- 옵션 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-sliders"></i> 옵션</h2>
+            <div class="row">
+                <label style="display:flex; align-items:center; gap:6px;">
+                    <input type="checkbox" id="sgUpsert" checked>
+                    <span>UPSERT (같은 code 이미 있으면 업데이트, 없으면 INSERT)</span>
+                </label>
+            </div>
+            <div class="row" style="margin-top:8px;">
+                <label style="display:flex; align-items:center; gap:6px;">
+                    <input type="checkbox" id="sgIncludeOptions" checked>
+                    <span>상품 설명에 표준 옵션 안내 (사이즈/색상/수량 단계) 포함</span>
+                </label>
+            </div>
+            <div class="row" style="margin-top:8px;">
+                <label style="display:flex; align-items:center; gap:6px;">
+                    <input type="checkbox" id="sgDryRun">
+                    <span>드라이런 (DB 변경 없이 미리보기만)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 액션 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-play"></i> 실행</h2>
+            <div class="row">
+                <button class="btn btn-ghost" onclick="window._sgPreview()"><i class="fa-solid fa-eye"></i> 미리보기 (처음 10개)</button>
+                <button class="btn btn-primary" onclick="window._sgRun()" id="sgRunBtn"><i class="fa-solid fa-rocket"></i> 일괄 등록 시작</button>
+                <button class="btn btn-danger" onclick="window._sgDeleteAll()" style="margin-left:auto;"><i class="fa-solid fa-trash"></i> pkg_* 전체 삭제</button>
+            </div>
+            <div class="progress" id="sgProgWrap" style="display:none;">
+                <div class="progress-bar" id="sgProgBar"></div>
+            </div>
+        </div>
+
+        <!-- 미리보기 -->
+        <div class="card" id="previewCard" style="display:none;">
+            <h2><i class="fa-solid fa-table"></i> 미리보기</h2>
+            <div style="overflow-x:auto;">
+                <table class="preview-table">
+                    <thead><tr><th>code</th><th>category</th><th>name_kr</th><th>price</th></tr></thead>
+                    <tbody id="previewTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 로그 -->
+        <div class="card">
+            <h2><i class="fa-solid fa-terminal"></i> 로그</h2>
+            <div class="log" id="sgLog"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// 패키지 굿즈 시드 데이터 생성기 — 어드민 전용
+// 카테고리 템플릿에서 사이즈×마감 조합으로 상품 변형 자동 생성
+// ════════════════════════════════════════════════════════════════════════════
+
+var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+var ADMIN_EMAILS = ['korea900as@gmail.com', 'doubleu202201@gmail.com', 'seonyul661@gmail.com'];
+
+var sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession: true, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' }
+});
+
+// ─── 공통 사이즈/마감 프리셋 ───
+var SIZE_BOX = [
+    { id:'mini', kr:'미니 50×50×30mm',  ja:'ミニ 50×50×30mm',   en:'Mini 50×50×30mm',   delta:0 },
+    { id:'s',    kr:'S 100×100×80mm',  ja:'S 100×100×80mm',    en:'S 100×100×80mm',    delta:500 },
+    { id:'m',    kr:'M 150×150×100mm', ja:'M 150×150×100mm',   en:'M 150×150×100mm',   delta:1300 },
+    { id:'l',    kr:'L 200×200×150mm', ja:'L 200×200×150mm',   en:'L 200×200×150mm',   delta:2700 },
+    { id:'xl',   kr:'XL 300×300×200mm',ja:'XL 300×300×200mm',  en:'XL 300×300×200mm',  delta:4900 }
+];
+var SIZE_BAG = [
+    { id:'s',  kr:'S 200×260×100mm',  ja:'S 200×260×100mm',  en:'S 200×260×100mm',  delta:0 },
+    { id:'m',  kr:'M 260×340×130mm',  ja:'M 260×340×130mm',  en:'M 260×340×130mm',  delta:600 },
+    { id:'l',  kr:'L 320×420×160mm',  ja:'L 320×420×160mm',  en:'L 320×420×160mm',  delta:1400 },
+    { id:'xl', kr:'XL 380×500×200mm', ja:'XL 380×500×200mm', en:'XL 380×500×200mm', delta:2400 }
+];
+var SIZE_POUCH = [
+    { id:'s', kr:'S 100×150mm', ja:'S 100×150mm', en:'S 100×150mm', delta:0 },
+    { id:'m', kr:'M 150×200mm', ja:'M 150×200mm', en:'M 150×200mm', delta:400 },
+    { id:'l', kr:'L 200×280mm', ja:'L 200×280mm', en:'L 200×280mm', delta:900 },
+    { id:'xl',kr:'XL 250×340mm',ja:'XL 250×340mm',en:'XL 250×340mm',delta:1600 }
+];
+var SIZE_LABEL = [
+    { id:'30', kr:'30mm',  ja:'30mm',  en:'30mm',  delta:0 },
+    { id:'50', kr:'50mm',  ja:'50mm',  en:'50mm',  delta:100 },
+    { id:'80', kr:'80mm',  ja:'80mm',  en:'80mm',  delta:300 },
+    { id:'120',kr:'120mm', ja:'120mm', en:'120mm', delta:600 }
+];
+var SIZE_TIN = [
+    { id:'s', kr:'S 85×60mm',  ja:'S 85×60mm',  en:'S 85×60mm',  delta:0 },
+    { id:'m', kr:'M 110×80mm', ja:'M 110×80mm', en:'M 110×80mm', delta:500 },
+    { id:'l', kr:'L 160×110mm',ja:'L 160×110mm',en:'L 160×110mm',delta:1200 }
+];
+
+var FIN_PAPER = [
+    { id:'white', kr:'화이트',   ja:'ホワイト', en:'White', delta:0 },
+    { id:'kraft', kr:'크래프트', ja:'クラフト', en:'Kraft', delta:200 },
+    { id:'black', kr:'블랙',     ja:'ブラック', en:'Black', delta:500 }
+];
+var FIN_FABRIC = [
+    { id:'natural', kr:'내추럴', ja:'ナチュラル', en:'Natural', delta:0 },
+    { id:'black',   kr:'블랙',   ja:'ブラック',   en:'Black',   delta:300 },
+    { id:'navy',    kr:'네이비', ja:'ネイビー',   en:'Navy',    delta:300 }
+];
+var FIN_PLASTIC = [
+    { id:'clear', kr:'투명',     ja:'透明',     en:'Clear', delta:0 },
+    { id:'white', kr:'화이트',   ja:'ホワイト', en:'White', delta:200 },
+    { id:'matte', kr:'무광',     ja:'マット',   en:'Matte', delta:400 }
+];
+var FIN_METAL = [
+    { id:'silver', kr:'실버',  ja:'シルバー', en:'Silver', delta:0 },
+    { id:'gold',   kr:'골드',  ja:'ゴールド', en:'Gold',   delta:400 },
+    { id:'black',  kr:'블랙',  ja:'ブラック', en:'Black',  delta:300 }
+];
+
+// ─── 39 서브카테고리 템플릿 ───
+// sub: 서브카 메타 / sizes, finishes: 변형 / base: 기준가(KRW) / unit: 단위명 / mainKr/mainJp/mainEn: 메인 카테고리 라벨
+var TEMPLATES = [
+    // ───── 페이퍼박스 ─────
+    { dbCat:'pkg_box_plain',  sub:{kr:'무지 페이퍼박스',  ja:'無地ペーパーボックス', en:'Plain Paper Box'},   sizes:SIZE_BOX,   fins:FIN_PAPER,   base:4000 },
+    { dbCat:'pkg_box_fold',   sub:{kr:'접이식 페이퍼박스', ja:'折り畳みペーパーボックス',en:'Foldable Paper Box'},sizes:SIZE_BOX,   fins:FIN_PAPER,   base:5500 },
+    { dbCat:'pkg_box_mag',    sub:{kr:'자석 페이퍼박스',  ja:'マグネット式ボックス', en:'Magnetic Paper Box'},sizes:SIZE_BOX,   fins:FIN_PAPER,   base:8000 },
+    { dbCat:'pkg_box_sleeve', sub:{kr:'슬리브 페이퍼박스', ja:'スリーブボックス',     en:'Sleeve Paper Box'},  sizes:SIZE_BOX,   fins:FIN_PAPER,   base:6500 },
+    { dbCat:'pkg_box_round',  sub:{kr:'원형 페이퍼박스',  ja:'円形ペーパーボックス', en:'Round Paper Box'},   sizes:SIZE_BOX,   fins:FIN_PAPER,   base:7000 },
+    // ───── 종이쇼핑백 ─────
+    { dbCat:'pkg_bag_kraft',  sub:{kr:'크래프트 쇼핑백',  ja:'クラフトショッパー',    en:'Kraft Shopping Bag'},sizes:SIZE_BAG,   fins:FIN_PAPER,   base:1800 },
+    { dbCat:'pkg_bag_coat',   sub:{kr:'코팅 쇼핑백',      ja:'コーティング ショッパー',en:'Coated Shopping Bag'},sizes:SIZE_BAG,  fins:FIN_PAPER,   base:2500 },
+    { dbCat:'pkg_bag_string', sub:{kr:'끈손잡이 쇼핑백',  ja:'紐ハンドルバッグ',     en:'String Handle Bag'},sizes:SIZE_BAG,   fins:FIN_PAPER,   base:3200 },
+    { dbCat:'pkg_bag_fold',   sub:{kr:'접이식 쇼핑백',    ja:'折り畳みショッパー',    en:'Foldable Shopping Bag'},sizes:SIZE_BAG,fins:FIN_PAPER,   base:2200 },
+    // ───── 부직포 가방 ─────
+    { dbCat:'pkg_nw_basic',    sub:{kr:'기본형 부직포백',  ja:'ベーシック不織布',     en:'Basic Non-woven Bag'},sizes:SIZE_BAG,fins:FIN_FABRIC,  base:900 },
+    { dbCat:'pkg_nw_handle',   sub:{kr:'핸들형 부직포백',  ja:'ハンドル不織布',       en:'Handled Non-woven Bag'},sizes:SIZE_BAG,fins:FIN_FABRIC,base:1200 },
+    { dbCat:'pkg_nw_shoulder', sub:{kr:'어깨끈 부직포백',  ja:'ショルダー不織布',     en:'Shoulder Non-woven Bag'},sizes:SIZE_BAG,fins:FIN_FABRIC,base:1500 },
+    { dbCat:'pkg_nw_cooler',   sub:{kr:'보냉 부직포백',    ja:'保冷不織布',           en:'Cooler Non-woven Bag'},sizes:SIZE_BAG,fins:FIN_FABRIC,base:2800 },
+    // ───── PP/PVC ─────
+    { dbCat:'pkg_pp_pp',      sub:{kr:'PP 가방',         ja:'PPバッグ',     en:'PP Bag'},      sizes:SIZE_BAG, fins:FIN_PLASTIC, base:700 },
+    { dbCat:'pkg_pp_pvc',     sub:{kr:'PVC 투명백',      ja:'PVC透明バッグ', en:'Clear PVC Bag'},sizes:SIZE_BAG, fins:FIN_PLASTIC, base:1100 },
+    { dbCat:'pkg_pp_pe',      sub:{kr:'PE 비닐백',       ja:'PEビニールバッグ',en:'PE Plastic Bag'},sizes:SIZE_BAG,fins:FIN_PLASTIC, base:500 },
+    // ───── 리유저블 ─────
+    { dbCat:'pkg_rpet_rpet',   sub:{kr:'rPET 리유저블백', ja:'rPETリユーザブル', en:'rPET Reusable Bag'},sizes:SIZE_BAG,fins:FIN_FABRIC,base:3500 },
+    { dbCat:'pkg_rpet_canvas', sub:{kr:'캔버스백',        ja:'キャンバスバッグ',  en:'Canvas Bag'},      sizes:SIZE_BAG,fins:FIN_FABRIC,base:4500 },
+    { dbCat:'pkg_rpet_cotton', sub:{kr:'면 토트백',       ja:'コットントート',    en:'Cotton Tote'},     sizes:SIZE_BAG,fins:FIN_FABRIC,base:4200 },
+    { dbCat:'pkg_rpet_tarp',   sub:{kr:'타포린 백',       ja:'ターポリンバッグ',  en:'Tarpaulin Bag'},   sizes:SIZE_BAG,fins:FIN_FABRIC,base:5500 },
+    // ───── 틴케이스 ─────
+    { dbCat:'pkg_tin_sq',     sub:{kr:'사각 틴케이스',  ja:'角型缶ケース',  en:'Square Tin Case'},  sizes:SIZE_TIN, fins:FIN_METAL, base:3200 },
+    { dbCat:'pkg_tin_round',  sub:{kr:'원형 틴케이스',  ja:'丸型缶ケース',  en:'Round Tin Case'},   sizes:SIZE_TIN, fins:FIN_METAL, base:3500 },
+    { dbCat:'pkg_tin_slide',  sub:{kr:'슬라이드 틴케이스',ja:'スライド缶ケース',en:'Slide Tin Case'}, sizes:SIZE_TIN, fins:FIN_METAL, base:3800 },
+    // ───── 파우치 ─────
+    { dbCat:'pkg_pouch_zip',     sub:{kr:'지퍼 파우치',  ja:'ジップポーチ',     en:'Zipper Pouch'},  sizes:SIZE_POUCH,fins:FIN_PLASTIC,base:1400 },
+    { dbCat:'pkg_pouch_canvas',  sub:{kr:'캔버스 파우치',ja:'キャンバスポーチ', en:'Canvas Pouch'},   sizes:SIZE_POUCH,fins:FIN_FABRIC, base:2800 },
+    { dbCat:'pkg_pouch_leather', sub:{kr:'가죽 파우치',  ja:'レザーポーチ',     en:'Leather Pouch'},  sizes:SIZE_POUCH,fins:FIN_FABRIC, base:6500 },
+    { dbCat:'pkg_pouch_pvc',     sub:{kr:'비닐 파우치',  ja:'ビニールポーチ',   en:'Clear PVC Pouch'},sizes:SIZE_POUCH,fins:FIN_PLASTIC,base:1100 },
+    // ───── 폴딩박스 ─────
+    { dbCat:'pkg_fold_mag',    sub:{kr:'자석 폴딩박스', ja:'マグネット折箱', en:'Magnetic Folding Box'},sizes:SIZE_BOX,fins:FIN_PAPER,base:7800 },
+    { dbCat:'pkg_fold_ribbon', sub:{kr:'리본 폴딩박스', ja:'リボン折箱',     en:'Ribbon Folding Box'},  sizes:SIZE_BOX,fins:FIN_PAPER,base:6800 },
+    { dbCat:'pkg_fold_auto',   sub:{kr:'자동 조립박스', ja:'自動組立箱',     en:'Auto-assembly Box'},   sizes:SIZE_BOX,fins:FIN_PAPER,base:4500 },
+    // ───── 라벨·스티커 ─────
+    { dbCat:'pkg_label_round', sub:{kr:'원형 라벨',  ja:'円形ラベル',  en:'Round Label'},  sizes:SIZE_LABEL,fins:FIN_PAPER,  base:300 },
+    { dbCat:'pkg_label_sq',    sub:{kr:'사각 라벨',  ja:'角型ラベル',  en:'Square Label'}, sizes:SIZE_LABEL,fins:FIN_PAPER,  base:300 },
+    { dbCat:'pkg_label_clear', sub:{kr:'투명 스티커',ja:'透明シール',  en:'Clear Sticker'},sizes:SIZE_LABEL,fins:FIN_PLASTIC,base:400 },
+    { dbCat:'pkg_label_metal', sub:{kr:'메탈 스티커',ja:'メタルシール',en:'Metal Sticker'},sizes:SIZE_LABEL,fins:FIN_METAL,  base:600 },
+    { dbCat:'pkg_label_holo',  sub:{kr:'홀로그램 스티커',ja:'ホログラムシール',en:'Holo Sticker'},sizes:SIZE_LABEL,fins:FIN_METAL,base:700 },
+    // ───── 부자재 ─────
+    { dbCat:'pkg_parts_ribbon', sub:{kr:'리본',     ja:'リボン',         en:'Ribbon'},          sizes:SIZE_LABEL,fins:FIN_FABRIC, base:200 },
+    { dbCat:'pkg_parts_tissue', sub:{kr:'티슈 페이퍼',ja:'ティッシュ',     en:'Tissue Paper'},    sizes:SIZE_LABEL,fins:FIN_PAPER,  base:150 },
+    { dbCat:'pkg_parts_string', sub:{kr:'끈·핸들',  ja:'紐・ハンドル',   en:'String / Handle'}, sizes:SIZE_LABEL,fins:FIN_FABRIC, base:250 },
+    { dbCat:'pkg_parts_seal',   sub:{kr:'봉투 씰',  ja:'封筒シール',     en:'Envelope Seal'},   sizes:SIZE_LABEL,fins:FIN_PAPER,  base:180 }
+];
+
+// ─── 설명 템플릿 ───
+function makeDesc(tpl, size, fin, includeOptions, lang) {
+    var n = tpl.sub[lang] || tpl.sub.kr;
+    var sz = size[lang] || size.kr;
+    var fn = fin[lang] || fin.kr;
+    var labels = {
+        kr: { intro:'카멜레온프린팅의 맞춤 제작 패키지 굿즈입니다.',
+              custom:'로고 / 일러스트 / 풀컬러 인쇄 모두 가능합니다.',
+              moq:'최소 주문 수량', moqUnit:'개', lead:'리드타임', leadUnit:'영업일',
+              opt:'주문 옵션', sizeL:'사이즈', finL:'마감', tier:'수량 할인',
+              tier1:'1,000개 이상 10% / 5,000개 이상 20% / 1만개 이상 30%' },
+        ja: { intro:'Chameleon Printing のオリジナル パッケージグッズ。',
+              custom:'ロゴ / イラスト / フルカラー印刷すべて対応。',
+              moq:'最小注文数', moqUnit:'個', lead:'納期', leadUnit:'営業日',
+              opt:'注文オプション', sizeL:'サイズ', finL:'仕上げ', tier:'数量割引',
+              tier1:'1,000個以上10% / 5,000個以上20% / 1万個以上30%' },
+        en: { intro:'Chameleon Printing custom package goods.',
+              custom:'Logo / illustration / full-color printing available.',
+              moq:'Minimum order', moqUnit:'units', lead:'Lead time', leadUnit:'business days',
+              opt:'Order options', sizeL:'Size', finL:'Finish', tier:'Quantity discount',
+              tier1:'1,000+ 10% / 5,000+ 20% / 10,000+ 30%' }
+    };
+    var L = labels[lang] || labels.kr;
+    var html = '<div style="line-height:1.7; color:#334155;">';
+    html += '<p><b>' + n + '</b> · ' + sz + ' · ' + fn + '</p>';
+    html += '<p>' + L.intro + ' ' + L.custom + '</p>';
+    html += '<p style="font-size:13px; color:#64748b;">' + L.moq + ': <b>100' + L.moqUnit + '</b> · ' + L.lead + ': <b>7–10' + L.leadUnit + '</b></p>';
+    if (includeOptions) {
+        html += '<hr style="margin:14px 0; border:none; border-top:1px dashed #cbd5e1;">';
+        html += '<p style="font-weight:700; margin-bottom:6px;">📦 ' + L.opt + '</p>';
+        html += '<ul style="padding-left:20px; margin-bottom:8px;">';
+        html += '<li>' + L.sizeL + ': ' + tpl.sizes.map(function(s){ return s[lang]||s.kr; }).join(' · ') + '</li>';
+        html += '<li>' + L.finL + ': ' + tpl.fins.map(function(f){ return f[lang]||f.kr; }).join(' · ') + '</li>';
+        html += '<li>' + L.tier + ': ' + L.tier1 + '</li>';
+        html += '</ul>';
+    }
+    html += '</div>';
+    return html;
+}
+
+// ─── 상품 생성 ───
+function genProductsForTpl(tpl, maxPerSub, includeOptions) {
+    var out = [];
+    var combos = [];
+    tpl.sizes.forEach(function(sz){
+        tpl.fins.forEach(function(fn){
+            combos.push({ size:sz, fin:fn });
+        });
+    });
+    // maxPerSub 만큼 자르기 (콤보가 더 많으면 앞에서부터)
+    combos = combos.slice(0, maxPerSub);
+    combos.forEach(function(c){
+        var price = tpl.base + c.size.delta + c.fin.delta;
+        var code = 'goods_' + tpl.dbCat + '_' + c.size.id + '_' + c.fin.id;
+        var nm = function(lang){
+            return (c.fin[lang]||c.fin.kr) + ' ' + (tpl.sub[lang]||tpl.sub.kr) + ' ' + (c.size[lang]||c.size.kr);
+        };
+        out.push({
+            code: code,
+            category: tpl.dbCat,
+            name:        nm('kr'),
+            name_kr:     nm('kr'),
+            name_jp:     nm('ja'),
+            name_us:     nm('en'),
+            price:       price,
+            description:    makeDesc(tpl, c.size, c.fin, includeOptions, 'kr'),
+            description_kr: makeDesc(tpl, c.size, c.fin, includeOptions, 'kr'),
+            description_jp: makeDesc(tpl, c.size, c.fin, includeOptions, 'ja'),
+            description_us: makeDesc(tpl, c.size, c.fin, includeOptions, 'en'),
+            img_url: null,
+            is_custom_size: false,
+            is_general_product: true
+        });
+    });
+    return out;
+}
+
+// ─── 전체 생성 ───
+function generateAll() {
+    var checked = Array.from(document.querySelectorAll('.cat-list input[type=checkbox]:checked')).map(function(i){ return i.value; });
+    var perSub = parseInt(document.getElementById('sgPerSub').value, 10) || 15;
+    var includeOptions = document.getElementById('sgIncludeOptions').checked;
+    var products = [];
+    checked.forEach(function(dbCat){
+        var tpl = TEMPLATES.find(function(t){ return t.dbCat === dbCat; });
+        if (!tpl) return;
+        products = products.concat(genProductsForTpl(tpl, perSub, includeOptions));
+    });
+    return products;
+}
+
+// ─── UI ───
+function log(msg, cls) {
+    var el = document.getElementById('sgLog');
+    var ts = new Date().toTimeString().slice(0,8);
+    el.innerHTML += '<div class="' + (cls||'') + '">[' + ts + '] ' + msg + '</div>';
+    el.scrollTop = el.scrollHeight;
+}
+function logClear() { document.getElementById('sgLog').innerHTML = ''; }
+
+function renderCatList() {
+    var list = document.getElementById('catList');
+    list.innerHTML = TEMPLATES.map(function(t){
+        var combos = t.sizes.length * t.fins.length;
+        return '<label class="cat-item">' +
+            '<input type="checkbox" value="' + t.dbCat + '" checked>' +
+            '<span>' + t.sub.kr + '</span>' +
+            '<span class="cat-count">×' + combos + '</span>' +
+        '</label>';
+    }).join('');
+    list.querySelectorAll('input').forEach(function(inp){
+        inp.addEventListener('change', updatePlanStat);
+    });
+    document.getElementById('sgPerSub').addEventListener('input', updatePlanStat);
+    updatePlanStat();
+}
+function updatePlanStat() {
+    var n = generateAll().length;
+    document.getElementById('statPlan').textContent = n.toLocaleString();
+}
+
+window._sgCheckAll = function(state) {
+    document.querySelectorAll('.cat-list input').forEach(function(i){ i.checked = state; });
+    updatePlanStat();
+};
+
+window._sgPreview = function() {
+    var products = generateAll();
+    if (products.length === 0) { log('미리보기할 상품 없음 — 카테고리를 선택하세요.', 'warn'); return; }
+    var tb = document.getElementById('previewTbody');
+    tb.innerHTML = products.slice(0, 10).map(function(p){
+        return '<tr><td><span class="tag">' + p.code + '</span></td>' +
+            '<td>' + p.category + '</td>' +
+            '<td>' + p.name_kr + '</td>' +
+            '<td>' + p.price.toLocaleString() + '원</td></tr>';
+    }).join('');
+    document.getElementById('previewCard').style.display = '';
+    log('미리보기: ' + products.length + '개 중 10개 표시', 'info');
+};
+
+window._sgRun = async function() {
+    var products = generateAll();
+    if (products.length === 0) { log('생성할 상품 없음.', 'warn'); return; }
+    var upsert = document.getElementById('sgUpsert').checked;
+    var dryRun = document.getElementById('sgDryRun').checked;
+    if (!confirm((dryRun?'[드라이런] ':'') + products.length + '개 상품을 ' + (upsert?'UPSERT':'INSERT') + ' 합니다. 계속할까요?')) return;
+
+    var btn = document.getElementById('sgRunBtn');
+    btn.disabled = true;
+    document.getElementById('sgProgWrap').style.display = '';
+    var bar = document.getElementById('sgProgBar');
+    bar.style.width = '0%';
+    log('=== 일괄 등록 시작 — 총 ' + products.length + '개 ===', 'info');
+
+    var BATCH = 50;
+    var done = 0, ok = 0, fail = 0;
+    for (var i = 0; i < products.length; i += BATCH) {
+        var chunk = products.slice(i, i + BATCH);
+        if (dryRun) {
+            log('[드라이런] ' + (i+1) + '–' + (i+chunk.length) + ' (스킵, 실제 등록 안함)', 'warn');
+            ok += chunk.length;
+        } else {
+            try {
+                var q = sb.from('admin_products');
+                var res = upsert ? await q.upsert(chunk, { onConflict:'code' }) : await q.insert(chunk);
+                if (res.error) {
+                    fail += chunk.length;
+                    log('배치 ' + (i+1) + '–' + (i+chunk.length) + ' 실패: ' + res.error.message, 'err');
+                } else {
+                    ok += chunk.length;
+                    log('배치 ' + (i+1) + '–' + (i+chunk.length) + ' 성공', 'ok');
+                }
+            } catch (e) {
+                fail += chunk.length;
+                log('배치 ' + (i+1) + '–' + (i+chunk.length) + ' 예외: ' + e.message, 'err');
+            }
+        }
+        done += chunk.length;
+        bar.style.width = (done / products.length * 100).toFixed(1) + '%';
+    }
+    log('=== 완료 — 성공 ' + ok + ' / 실패 ' + fail + ' ===', fail ? 'warn' : 'ok');
+    btn.disabled = false;
+    await loadStats();
+};
+
+window._sgDeleteAll = async function() {
+    if (!confirm('⚠️ pkg_* 로 시작하는 모든 상품을 DB 에서 삭제합니다. 정말 진행하시겠습니까?')) return;
+    if (!confirm('한 번 더 확인 — 되돌릴 수 없습니다. 진행할까요?')) return;
+    log('=== pkg_* 전체 삭제 시작 ===', 'warn');
+    try {
+        var res = await sb.from('admin_products').delete().like('category', 'pkg_%');
+        if (res.error) { log('삭제 실패: ' + res.error.message, 'err'); }
+        else { log('pkg_* 전체 삭제 완료', 'ok'); }
+    } catch (e) {
+        log('삭제 예외: ' + e.message, 'err');
+    }
+    await loadStats();
+};
+
+async function loadStats() {
+    try {
+        var res = await sb.from('admin_products').select('code', { count:'exact', head:true }).like('category', 'pkg_%');
+        document.getElementById('statExisting').textContent = (res.count || 0).toLocaleString();
+    } catch (e) {
+        document.getElementById('statExisting').textContent = '?';
+    }
+}
+
+// ─── 로그인 게이트 ───
+(async function init() {
+    try {
+        var ses = await sb.auth.getSession();
+        var email = (ses.data && ses.data.session && ses.data.session.user && ses.data.session.user.email) || '';
+        if (!email) {
+            document.getElementById('gate').style.display = '';
+            document.getElementById('gateMsg').textContent = '메인 사이트에서 먼저 로그인하세요.';
+            return;
+        }
+        if (ADMIN_EMAILS.indexOf(email.toLowerCase()) < 0) {
+            document.getElementById('gate').style.display = '';
+            document.getElementById('gateMsg').textContent = '권한 없는 계정: ' + email;
+            return;
+        }
+        document.getElementById('app').style.display = '';
+        document.getElementById('statUser').textContent = email;
+        renderCatList();
+        await loadStats();
+        log('관리자 인증 완료: ' + email, 'ok');
+        log('카테고리 ' + TEMPLATES.length + '개 로드 완료. 우측 상단 "서브카당 변형 수" 조정 후 일괄 등록 가능.', 'info');
+    } catch (e) {
+        document.getElementById('gate').style.display = '';
+        document.getElementById('gateMsg').textContent = '초기화 실패: ' + e.message;
+    }
+})();
+</script>
+</body>
+</html>

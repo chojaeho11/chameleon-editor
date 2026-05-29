@@ -11070,6 +11070,22 @@ async function renderQuickMenu() {
                 };
                 tcmTrack.appendChild(btn);
             });
+
+            // 2026-05-29: 패키지 굿즈 카탈로그 — DB 카테고리와 무관한 별도 랜딩 (/goods)
+            (function _addGoodsLink(){
+                var goodsBtn = document.createElement('button');
+                goodsBtn.className = 'tcm-btn';
+                var lab = { kr:'🎁 굿즈', ko:'🎁 굿즈', ja:'🎁 グッズ', en:'🎁 Goods',
+                            zh:'🎁 礼品', ar:'🎁 هدايا', es:'🎁 Goods', de:'🎁 Goods', fr:'🎁 Goods' };
+                goodsBtn.textContent = lab[CURRENT_LANG] || lab.kr;
+                goodsBtn.onclick = function(){
+                    var goodsLangMap = { ja:'ja', en:'en', zh:'en', ar:'en', es:'en', de:'en', fr:'en' };
+                    var gLang = goodsLangMap[CURRENT_LANG];
+                    location.href = '/goods' + (gLang ? '?lang=' + gLang : '');
+                };
+                tcmTrack.appendChild(goodsBtn);
+            })();
+
             // 메뉴 밖 클릭 시 닫기
             document.addEventListener('click', e => {
                 if (!tcMenu.contains(e.target)) {
