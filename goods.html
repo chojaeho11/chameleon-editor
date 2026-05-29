@@ -112,12 +112,11 @@ a { text-decoration: none; color: inherit; }
 }
 .cat-nav {
     max-width: 1280px; margin: 0 auto;
-    display: flex; gap: 4px;
-    overflow-x: auto;
+    display: flex; gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
     padding: 14px 24px;
-    scrollbar-width: none;
 }
-.cat-nav::-webkit-scrollbar { display: none; }
 .cat-btn {
     flex-shrink: 0;
     padding: 10px 18px; border: 1px solid var(--border); background: #fff;
@@ -299,7 +298,9 @@ a { text-decoration: none; color: inherit; }
     .product-name { font-size: 13px; }
     .product-price { font-size: 13px; }
     .section-title h2 { font-size: 20px; }
-    .cat-btn { padding: 8px 14px; font-size: 12px; }
+    .cat-btn { padding: 7px 11px; font-size: 11.5px; gap: 4px; }
+    .cat-nav { padding: 12px 14px; gap: 5px; }
+    .cat-icon { font-size: 13px; }
 }
 @media (max-width: 480px) {
     .hero h1 { font-size: 26px; }
