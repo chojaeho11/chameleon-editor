@@ -123,7 +123,8 @@ a { text-decoration: none; color: inherit; }
     background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 35%, #fed7aa 100%);
     border-top: 1px solid rgba(0,0,0,0.04);
     border-bottom: 1px solid rgba(0,0,0,0.04);
-    padding: 32px 24px 36px;
+    padding: 40px 24px 44px;
+    margin-top: 18px;
 }
 .best-feat-inner { max-width: 1280px; margin: 0 auto; }
 .best-feat-head {
@@ -216,15 +217,17 @@ a { text-decoration: none; color: inherit; }
     background: rgba(255,255,255,0.92);
     backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid rgba(0,0,0,0.06);
-    padding: 0;
+    padding: 8px 0 4px;
 }
 .cat-nav {
     max-width: 1280px; margin: 0 auto;
-    display: flex; gap: 2px;
+    display: flex; gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 10px 24px;
+    padding: 16px 24px 12px;
+    row-gap: 10px;
 }
+.sub-nav { padding: 4px 24px 14px; row-gap: 8px; }
 .cat-btn {
     flex-shrink: 0;
     padding: 8px 16px; border: none;
@@ -915,31 +918,43 @@ a { text-decoration: none; color: inherit; }
         });
     }
 
-    // ─── ⭐ 베스트 굿즈 featured 섹션 렌더 ───
-    function renderBestFeatured() {
+    // ─── ⭐ 베스트 굿즈 featured 섹션 — 기존 카멜레온 굿즈 판촉물에서 노출 ───
+    async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');
         var grid = document.getElementById('bestFeatGrid');
-        if (!sec || !grid) return;
-        var bests = allProducts.filter(function(p){
-            return p.category && p.category.indexOf('pkg_best') === 0;
-        });
-        if (bests.length === 0) { sec.style.display = 'none'; return; }
-        // 로케일별 타이틀
-        var T = {
-            ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'최저가 · 즉시 출고 가능' },
-            ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'最安値・即時発送' },
-            en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Best price · ready to ship' }
-        };
-        var Tk = T[LANG] || T.ko;
-        var titleEl = document.getElementById('bestFeatTitle');
-        var badgeEl = document.getElementById('bestFeatBadge');
-        var subEl   = document.getElementById('bestFeatSub');
-        if (titleEl) titleEl.textContent = Tk.t;
-        if (badgeEl) badgeEl.textContent = Tk.badge;
-        if (subEl)   subEl.textContent   = Tk.sub;
-        // 카드 렌더 — productCard 재사용
-        grid.innerHTML = bests.map(productCard).join('');
-        sec.style.display = '';
+        if (!sec || !grid || !SB) return;
+        try {
+            // is_goods=true 인 기존 카멜레온 굿즈 판촉물 (acr_key_ring / acr_crtt / 3244432 등),
+            // 자동 생성한 placeholder (code: goods_* 또는 category: pkg_*) 는 제외
+            var res = await SB.from('admin_products')
+                .select('code, category, name, name_jp, name_us, price, img_url')
+                .eq('is_goods', true)
+                .not('code', 'like', 'goods_%')
+                .not('category', 'like', 'pkg_%')
+                .not('img_url', 'is', null)
+                .neq('img_url', '')
+                .order('code', { ascending: true })
+                .limit(24);
+            var bests = (res && res.data) || [];
+            if (bests.length === 0) { sec.style.display = 'none'; return; }
+            var T = {
+                ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'카멜레온 인기 굿즈 — 즉시 주문 가능' },
+                ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'カメレオン人気グッズ' },
+                en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Chameleon bestsellers' }
+            };
+            var Tk = T[LANG] || T.ko;
+            var titleEl = document.getElementById('bestFeatTitle');
+            var badgeEl = document.getElementById('bestFeatBadge');
+            var subEl   = document.getElementById('bestFeatSub');
+            if (titleEl) titleEl.textContent = Tk.t;
+            if (badgeEl) badgeEl.textContent = Tk.badge;
+            if (subEl)   subEl.textContent   = Tk.sub;
+            grid.innerHTML = bests.map(productCard).join('');
+            sec.style.display = '';
+        } catch (e) {
+            console.warn('[best featured] failed:', e);
+            sec.style.display = 'none';
+        }
     }
 
     // ─── 카테고리 탭 렌더 — 상품 0개 카테고리는 자동 숨김 ───
@@ -989,11 +1004,18 @@ a { text-decoration: none; color: inherit; }
         subNav.style.display = 'flex';
     }
 
-    // 카테고리별 MOQ 매핑 (베스트 굿즈 — 키링 100, 티셔츠 10)
+    // 카테고리별 MOQ 매핑 (기존 카멜레온 굿즈 판촉물 카테고리 별도 + pkg_* 기본 10)
     var CAT_MOQ = {
-        'pkg_best_keyring': 100,
-        'pkg_best_tshirt': 10,
-        'default': 10
+        // 기존 카멜레온 굿즈 판촉물
+        'acr_key_ring':  100,   // 아크릴 키링
+        'acr_crtt':      100,   // 아크릴 코롯토
+        'acr_smt_tck':   100,   // 스마트톡
+        'acr_mgnt':      100,   // 마그넷
+        'acr_badge':     100,   // 뱃지
+        '3244432':       10,    // 티셔츠
+        'pp_fan':        100,   // 부채/잡화
+        '546465463':     10,    // 허니콤 굿즈
+        'default':       10
     };
     function getMoq(p) {
         if (!p || !p.category) return CAT_MOQ.default;
