@@ -1001,11 +1001,20 @@ a { text-decoration: none; color: inherit; }
         { id:'50x50', label:'50×50cm', price:5000 },
         { id:'60x60', label:'60×60cm', price:6000 }
     ];
+    // 2026-05-30: 티셔츠 종류 (베스트 카드 표시용 — 첫 항목 가격이 카드 단가)
+    var BEST_SIZES_TSHIRT = [
+        { id:'short_20',   label:'20수 반팔',   price:6000  },
+        { id:'short_30',   label:'30수 반팔',   price:6000  },
+        { id:'short_func', label:'기능성 반팔', price:6500  },
+        { id:'collar',     label:'카라티',       price:9000  },
+        { id:'hood',       label:'후드티',       price:17000 },
+        { id:'sweat',      label:'맨투맨',       price:12000 }
+    ];
     // 2026-05-29: 비-사이즈 베스트 상품 가격 상향
     var BEST_CURATED = [
         { code: '345345353',        sizes: BEST_SIZES_KEYRING_PEARL },// 홀로그램 자개 키링 양면 (2배)
         { code: '3453455',          sizes: BEST_SIZES_HANDKERCHIEF }, // 손수건 (40/50/60cm 사이즈 선택)
-        { code: '435645654666',     price: 13000 },                   // 반려동물 티셔츠
+        { code: '435645654666',     sizes: BEST_SIZES_TSHIRT },       // 반려동물 티셔츠 (종류 선택)
         { code: '456444',           price: 4000  },                   // 커스텀머그컵
         { code: '64564882_copy',    price: 8000  },                   // 허니콤보드 팝업굿즈
         { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },      // 8T 투명 아크릴 코롯토

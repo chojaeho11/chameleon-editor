@@ -1849,6 +1849,7 @@
                 if (!addon) return;
                 // 2026-05-30: 프리셋 굿즈(키링/코롯토) — 고리는 제품 수량만큼 자동 곱셈 (100개 주문 → 고리 100개)
                 //   손수건 등 고리 없는 프리셋은 일반 addon 처리
+                //   티셔츠는 사이즈·색상 추가금 0원
                 let aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
                 if (state.presetHasHooks) {
                     aQty = qty;
@@ -1859,7 +1860,8 @@
                     if (_qi) _qi.value = qty;
                 }
                 // 2026-05-29: 프리셋 굿즈 — 고리 옵션은 300원 균일 (DB 가격 무시)
-                const addonPrice = state.presetHasHooks ? 300 : (addon.price || 0);
+                // 2026-05-30: 티셔츠 — 사이즈/색상 추가금 0원
+                const addonPrice = state.presetHasHooks ? 300 : (state.presetType === 'tshirt' ? 0 : (addon.price || 0));
                 const line = addonPrice * aQty;
                 addonTotal += line;
                 let nm = addon.name || code;
@@ -2814,13 +2816,28 @@
 
         // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 프리셋 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
         var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods);
+        // 2026-05-30: 티셔츠 — 사이즈 addon 은 S/M/L 로 단축, 가격 0 (사이즈별 추가금 없음)
+        var _isTshirt = (state.presetType === 'tshirt');
+        function _tshirtSizeAlias(nm) {
+            if (/스몰|small|^s$|\bs\b/i.test(nm)) return 'S';
+            if (/미디움|middle|medium|^m$|\bm\b/i.test(nm)) return 'M';
+            if (/라지|large|^l$|\bl\b/i.test(nm)) return 'L';
+            if (/엑스라지|xl|extra/i.test(nm)) return 'XL';
+            return null;
+        }
         var html = renderList.map(function (a) {
             var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;
             else if ((lang === 'en' || lang === 'es' || lang === 'de' || lang === 'fr' || lang === 'zh' || lang === 'ar') && a.name_us) name = a.name_us;
             // 2026-05-29: 프리셋 굿즈(키링/코롯토) — 고리/색상 옵션은 모두 300원 균일 (DB 가격 무시)
             //   2026-05-30: 손수건 등 고리 없는 프리셋은 override 비적용 (DB 가격 유지)
-            var price = (compactMode && state.presetHasHooks) ? 300 : (a.price || 0);
+            //   2026-05-30: 티셔츠 — 사이즈·색상 모두 추가금 0원
+            var price = (compactMode && state.presetHasHooks) ? 300 : (_isTshirt ? 0 : (a.price || 0));
+            // 2026-05-30: 티셔츠 사이즈 addon 은 S/M/L 로 라벨 단축
+            if (_isTshirt) {
+                var alias = _tshirtSizeAlias(name);
+                if (alias) name = alias;
+            }
             var safe = String(name).replace(/[<>"'&]/g, function (c) {
                 return ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'})[c];
             });
@@ -3922,13 +3939,23 @@
             { w:50, h:50, label:'50×50', price:5000 },
             { w:60, h:60, label:'60×60', price:6000 }
         ];
+        // 2026-05-30: 티셔츠 종류 프리셋 (label·price; w/h 사용 안함)
+        var _PRESET_TSHIRT_TYPES = [
+            { w:0, h:0, label:'20수 반팔',  price:6000  },
+            { w:0, h:0, label:'30수 반팔',  price:6000  },
+            { w:0, h:0, label:'기능성 반팔',price:6500  },
+            { w:0, h:0, label:'카라티',     price:9000  },
+            { w:0, h:0, label:'후드티',     price:17000 },
+            { w:0, h:0, label:'맨투맨',     price:12000 }
+        ];
         var _PRESET_MAP = {
             '345345353':        _PRESET_KEYRING_PEARL,  // 자개 키링 (2배)
             'gds_acr_kr_10':    _PRESET_KEYRING,        // 일반 투명 3mm 키링
             'acr_crt_cl_8t':    _PRESET_KOROTTO,
             'acr_crt_stand_01': _PRESET_KOROTTO,
             'acr_crt_stand_10t':_PRESET_KOROTTO,
-            '3453455':          _PRESET_HANDKERCHIEF
+            '3453455':          _PRESET_HANDKERCHIEF,
+            '435645654666':     _PRESET_TSHIRT_TYPES    // 반려동물 티셔츠 (종류 선택)
         };
         // 2026-05-30: 프리셋 타입 — 안내문구·고리(300원 override) 적용 여부 분기
         var _PRESET_TYPE = {
@@ -3937,13 +3964,13 @@
             'acr_crt_cl_8t':    'korotto',
             'acr_crt_stand_01': 'korotto',
             'acr_crt_stand_10t':'korotto',
-            '3453455':          'handkerchief'
+            '3453455':          'handkerchief',
+            '435645654666':     'tshirt'
         };
         // 2026-05-29: 비-사이즈 베스트 굿즈 가격 override
         //   100개+ 50%할인 + 3000원 정액배송 동일 적용 (state.isBestGoods)
-        //   2026-05-30: 손수건은 _PRESET_MAP 으로 이동 (사이즈 pill 사용)
+        //   2026-05-30: 손수건·티셔츠는 _PRESET_MAP 으로 이동 (종류·사이즈 pill 사용)
         var _BEST_PRICE_OVERRIDES = {
-            '435645654666':  13000,  // 반려동물 티셔츠
             '456444':        4000,   // 커스텀머그컵
             '64564882_copy': 8000,   // 허니콤보드 팝업굿즈
             'acr_smtgr_02':  6000    // 아크릴 자개 스마트톡
@@ -3972,10 +3999,36 @@
         var uploadHint = document.querySelector('#soUploadWrap .so-upload-hint, .so-upload .so-upload-hint');
         if (state.isCustomSize && state.presetSizes) {
             // 프리셋 모드: pill row 표시, W/H 입력·면적 표시 숨김
+            // 2026-05-30: 티셔츠는 텍스트형 직사각 pill (종류명+가격), 그 외는 원형 pill (사이즈)
+            var _isTshirtPreset = (state.presetType === 'tshirt');
             if (pillsBox) {
-                pillsBox.style.display = 'grid';
+                if (_isTshirtPreset) {
+                    pillsBox.style.display = 'grid';
+                    pillsBox.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                    pillsBox.style.gap = '6px';
+                } else {
+                    pillsBox.style.display = 'grid';
+                    pillsBox.style.gridTemplateColumns = 'repeat(7, 1fr)';
+                    pillsBox.style.gap = '6px';
+                }
                 pillsBox.innerHTML = state.presetSizes.map(function(s, i){
                     var act = i === 0;
+                    if (_isTshirtPreset) {
+                        // 텍스트형: "20수 반팔\n6,000원"
+                        return '<button type="button" class="so-preset-pill' + (act?' active':'') + '" '
+                            + 'data-w="' + s.w + '" data-h="' + s.h + '" data-price="' + s.price + '" data-label="' + s.label + '" '
+                            + 'onclick="window._soPickPresetSize(this)" '
+                            + 'style="border:2px solid ' + (act?'#0f172a':'#e2e8f0') + '; '
+                            + 'background:' + (act?'#0f172a':'#fff') + '; color:' + (act?'#fff':'#334155') + '; '
+                            + 'border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; padding:8px 6px; '
+                            + 'display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; '
+                            + 'transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease; '
+                            + 'font-family:inherit; line-height:1.2; min-height:48px;">'
+                            + '<span>' + s.label + '</span>'
+                            + '<span style="font-size:10.5px; font-weight:700; opacity:0.85;">' + fmtPrice(s.price) + '</span>'
+                            + '</button>';
+                    }
+                    // 원형 사이즈 pill (키링/코롯토/손수건)
                     return '<button type="button" class="so-preset-pill' + (act?' active':'') + '" '
                         + 'data-w="' + s.w + '" data-h="' + s.h + '" data-price="' + s.price + '" data-label="' + s.label + 'cm" '
                         + 'onclick="window._soPickPresetSize(this)" '
@@ -3989,11 +4042,13 @@
             }
             if (dimsRow)  dimsRow.style.display  = 'none';
             if (areaInfo) areaInfo.style.display = 'none';
-            if (calcLbl)  calcLbl.textContent = '💰 ' + tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price');
+            if (calcLbl)  calcLbl.textContent = '💰 ' + (_isTshirtPreset ? tr('선택한 종류 단가', '選択した種類の単価', 'Selected type price') : tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price'));
             if (pillsNote) {
-                // 2026-05-30: 프리셋 타입별 안내문구 — 키링/코롯토만 "고리 선택" 안내, 손수건 등은 사이즈 안내만
+                // 2026-05-30: 프리셋 타입별 안내문구
                 if (state.presetHasHooks) {
                     pillsNote.innerHTML = '🔗 ' + tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped');
+                } else if (_isTshirtPreset) {
+                    pillsNote.innerHTML = '👕 ' + tr('종류를 선택해주세요. 사이즈·색상은 추가비용 없음', '種類を選択してください。サイズ・カラーは追加料金なし', 'Please choose a type. Size/color no extra charge');
                 } else {
                     pillsNote.innerHTML = '✨ ' + tr('사이즈를 선택해주세요. 위 옵션 중 골라주세요', 'サイズを選択してください', 'Please select a size');
                 }
@@ -5006,7 +5061,9 @@
         }
         // addon 가격 — 키링/코롯토 (presetHasHooks) 만 고리 300원 균일 + 제품 수량 자동 곱셈
         //   손수건 등 다른 프리셋은 DB 가격 그대로
+        //   티셔츠 — 사이즈·색상 추가금 0원
         var _hasHooks = !!it._presetHasHooks;
+        var _isTshirtItm = (it._presetType === 'tshirt');
         if (it.selectedAddons && window.ADDON_DB) {
             Object.values(it.selectedAddons).forEach(function (code) {
                 var addon = window.ADDON_DB[code];
@@ -5014,7 +5071,7 @@
                 var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
                 // 키링/코롯토 고리: 저장된 addonQty 가 잘못된 경우 (모달 외부에서 담긴 경우 등) 안전망으로 product qty 사용
                 if (_hasHooks && aQty < qty) aQty = qty;
-                var addonPrice = _hasHooks ? 300 : (addon.price || 0);
+                var addonPrice = _hasHooks ? 300 : (_isTshirtItm ? 0 : (addon.price || 0));
                 base += addonPrice * aQty;
             });
         }
@@ -5814,14 +5871,18 @@
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
                     // 2026-05-30: 키링/코롯토(presetHasHooks) — 고리 300원 균일 + 제품 수량 자동
+                    //   티셔츠 — 사이즈·색상 추가금 0원
                     var _hasHooksNote = !!it._presetHasHooks;
+                    var _isTshirtNote = (it._presetType === 'tshirt');
                     Object.values(it.selectedAddons).forEach(function (code) {
                         var a = window.ADDON_DB[code];
                         if (!a) return;
                         var aQty = (it.addonQuantities && it.addonQuantities[code]) || 1;
                         if (_hasHooksNote && aQty < (it.qty || 1)) aQty = it.qty || 1;
-                        var aPrice = _hasHooksNote ? 300 : (a.price || 0);
-                        lines.push('   ➕ ' + (a.display_name || a.name) + ' × ' + aQty + ' = ' + ((aPrice * aQty).toLocaleString()) + '원');
+                        var aPrice = _hasHooksNote ? 300 : (_isTshirtNote ? 0 : (a.price || 0));
+                        var aLabel = (a.display_name || a.name) + ' × ' + aQty;
+                        if (aPrice > 0) aLabel += ' = ' + ((aPrice * aQty).toLocaleString()) + '원';
+                        lines.push('   ➕ ' + aLabel);
                     });
                 }
                 // 2026-05-30: 프리셋 굿즈 개별포장 옵션 (+200원/개)

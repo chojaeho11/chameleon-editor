@@ -1993,12 +1993,14 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 }
                 // 2026-05-30: 키링/코롯토(presetHasHooks) — 고리 옵션은 300원·제품 수량만큼 자동 곱셈
                 //   손수건 등 고리 없는 프리셋은 DB 가격 그대로
+                //   티셔츠 — 사이즈·색상 추가금 0원
                 var _hasHooksPdf = !!item._presetHasHooks;
+                var _isTshirtPdf = (item._presetType === 'tshirt');
                 let uQty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 if (_hasHooksPdf && uQty < (item.qty || 1)) uQty = item.qty || 1;
 
                 // [수정] 옵션 가격 다국어 처리 (ADDON_DB.price는 KRW 등가 - config.js에서 역환산 완료)
-                let addPrice = _hasHooksPdf ? 300 : add.price;
+                let addPrice = _hasHooksPdf ? 300 : (_isTshirtPdf ? 0 : add.price);
                 let addName = add.display_name || add.name;
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')) {
                     if (_cr && _cr.JP) addPrice = Math.round(addPrice * _cr.JP);
