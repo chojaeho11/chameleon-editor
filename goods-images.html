@@ -82,6 +82,65 @@ input[type="checkbox"] { accent-color:#6366f1; }
 .gate h2 { font-size:20px; color:#cbd5e1; margin-bottom:8px; }
 .gate p { color:#64748b; font-size:13px; margin-bottom:20px; }
 .code-tag { font-family:monospace; font-size:11px; padding:1px 5px; background:#312e81; color:#a5b4fc; border-radius:3px; }
+/* 가격 관리 — 카드 그리드 */
+.pcat-section { margin-bottom:18px; border-radius:12px; overflow:hidden; }
+.pcat-header {
+    background:linear-gradient(90deg,#4338ca,#7c3aed);
+    padding:11px 16px; display:flex; align-items:center; gap:10px;
+    cursor:pointer; user-select:none; font-size:14px; font-weight:900; color:#fff;
+    transition:background 0.15s;
+}
+.pcat-header:hover { background:linear-gradient(90deg,#4f46e5,#8b5cf6); }
+.pcat-header .toggle { font-size:11px; transition:transform 0.2s; }
+.pcat-header.collapsed .toggle { transform:rotate(-90deg); }
+.pcat-header .count { margin-left:auto; font-size:12px; font-weight:700; opacity:0.85; }
+.pcat-grid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+    gap:10px; padding:12px; background:rgba(15,23,42,0.5);
+}
+.pcat-section.collapsed .pcat-grid { display:none; }
+.pprod-card {
+    background:#0f172a; border:1px solid #334155; border-radius:10px;
+    overflow:hidden; transition:border-color 0.15s, transform 0.15s;
+}
+.pprod-card:hover { border-color:#6366f1; transform:translateY(-2px); }
+.pprod-card.dirty { border-color:#fbbf24; box-shadow:0 0 0 1px #fbbf24; }
+.pprod-thumb {
+    position:relative; aspect-ratio:1/1; background:#1e293b;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.pprod-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.pprod-thumb .placeholder { font-size:54px; opacity:0.35; }
+.pprod-img-btn {
+    position:absolute; bottom:6px; right:6px;
+    padding:5px 10px; background:rgba(15,23,42,0.85); color:#fff;
+    border:1px solid rgba(255,255,255,0.2); border-radius:6px;
+    font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;
+    backdrop-filter:blur(4px); transition:all 0.15s;
+    opacity:0; transform:translateY(4px);
+}
+.pprod-card:hover .pprod-img-btn { opacity:1; transform:translateY(0); }
+.pprod-img-btn:hover { background:#6366f1; border-color:#6366f1; }
+.pprod-img-btn:disabled { opacity:0.7 !important; cursor:not-allowed; }
+.pprod-info { padding:10px 12px; }
+.pprod-name {
+    width:100%; padding:4px 6px; font-size:12.5px; font-weight:700;
+    background:transparent; color:#e2e8f0; border:1px solid transparent;
+    border-radius:5px; font-family:inherit; margin-bottom:4px;
+}
+.pprod-name:hover, .pprod-name:focus { background:#020617; border-color:#475569; outline:none; }
+.pprod-code { font-size:10px; color:#64748b; font-family:monospace; margin-bottom:6px; }
+.pprod-price-row { display:flex; align-items:baseline; gap:6px; }
+.pprod-price {
+    width:80px; padding:4px 6px; font-size:13px; font-weight:800;
+    background:#020617; color:#fff; border:1px solid #334155;
+    border-radius:5px; text-align:right; font-family:inherit;
+}
+.pprod-price:focus { outline:none; border-color:#6366f1; }
+.pprod-price-suffix { font-size:11px; color:#94a3b8; }
+.pprod-disc { font-size:11px; color:#34d399; font-weight:700; margin-left:auto; }
+.pprod-status { font-size:10px; margin-top:6px; font-weight:700; }
+.pprod-empty { padding:40px; text-align:center; color:#64748b; font-size:13px; grid-column:1 / -1; }
 .cost-est { background:#422006; border:1px solid #f59e0b; color:#fbbf24; padding:10px 14px; border-radius:8px; font-size:12px; margin-top:10px; }
 .cost-est b { color:#fde68a; font-size:14px; }
 </style>
@@ -149,24 +208,9 @@ input[type="checkbox"] { accent-color:#6366f1; }
                         <i class="fa-solid fa-floppy-disk"></i> 변경된 가격 일괄 저장 <span id="dirtyCount" style="background:rgba(255,255,255,0.2); padding:1px 8px; border-radius:999px; margin-left:4px;">0</span>
                     </button>
                 </div>
-                <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-                    <table class="file-table" id="priceTable">
-                        <thead style="position:sticky; top:0; z-index:1; background:#0f172a;">
-                            <tr>
-                                <th style="width:70px;">이미지</th>
-                                <th style="min-width:240px;">상품명 (편집)</th>
-                                <th style="width:200px;">코드</th>
-                                <th style="width:120px; text-align:right;">정상가 (원)</th>
-                                <th style="width:100px; text-align:right; color:#34d399;">할인가 50%</th>
-                                <th style="width:80px;">상태</th>
-                                <th style="width:100px;">액션</th>
-                            </tr>
-                        </thead>
-                        <tbody id="priceTbody"></tbody>
-                    </table>
-                </div>
+                <div id="priceContainer" style="max-height:75vh; overflow-y:auto; padding-right:6px;"></div>
                 <p style="font-size:11px; color:#64748b; margin-top:12px;">
-                    💡 가격·이름 입력 후 다른 행 클릭하면 자동 변경됨 마킹. 일괄 저장 버튼으로 변경분만 DB 업데이트. 🖼️ 버튼 클릭 → 파일 선택 → 즉시 이미지 교체.
+                    💡 카드 위에 마우스 올리면 🖼️ 이미지 변경 버튼 표시. 이름·가격 input 클릭해서 직접 수정. 모든 변경은 "변경된 가격 일괄 저장" 버튼으로 한번에.
                 </p>
             </div>
         </div>
@@ -724,7 +768,7 @@ window._giAIStart = async function() {
 var priceDirty = {};   // { code: newPrice }
 var nameDirty = {};    // { code: newName }
 
-function _renderProductRow(p) {
+function _renderProductCard(p) {
     var curPrice = priceDirty[p.code] !== undefined ? priceDirty[p.code] : (p.price || 0);
     var curName = nameDirty[p.code] !== undefined ? nameDirty[p.code] : (p.name || '');
     var disc = Math.round(curPrice / 2);
@@ -732,32 +776,36 @@ function _renderProductRow(p) {
     var nameDrt = nameDirty[p.code] !== undefined && nameDirty[p.code] !== (p.name || '');
     var anyDirty = priceDrt || nameDrt;
     var statusHtml = anyDirty
-        ? '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>'
-        : (curPrice === 0 ? '<span style="color:#a78bfa;">가격문의</span>' : '<span style="color:#34d399;">설정됨</span>');
-    var thumbHtml = p.img_url
-        ? '<img src="' + escHtml(p.img_url) + '" alt="" loading="lazy" ' +
-          'style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">'
-        : '<div style="width:54px; height:54px; border-radius:8px; background:linear-gradient(135deg,#1e293b,#334155); ' +
-          'display:flex; align-items:center; justify-content:center; font-size:24px; opacity:0.5;">📦</div>';
-    return '<tr data-code="' + escHtml(p.code) + '">' +
-        '<td>' + thumbHtml + '</td>' +
-        '<td><input type="text" value="' + escHtml(curName) + '" ' +
-            'data-code="' + escHtml(p.code) + '" onchange="window._giNameChg(this)" ' +
-            'style="width:100%; padding:5px 8px; font-size:12px;"></td>' +
-        '<td><span class="code-tag">' + escHtml(p.code) + '</span></td>' +
-        '<td style="text-align:right;"><input type="number" min="0" step="100" value="' + curPrice + '" ' +
-            'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)" ' +
-            'style="width:100px; text-align:right; padding:5px 8px;"></td>' +
-        '<td style="text-align:right; color:#34d399; font-weight:800;">' + disc.toLocaleString() + '</td>' +
-        '<td>' + statusHtml + '</td>' +
-        '<td><button class="btn btn-ghost" style="padding:5px 8px; font-size:11px;" ' +
-            'onclick="window._giChangeImage(\'' + escHtml(p.code) + '\', this)">🖼️ 변경</button></td>' +
-        '</tr>';
+        ? '<span style="color:#fbbf24;">● 변경됨 (저장 대기)</span>'
+        : (curPrice === 0 ? '<span style="color:#a78bfa;">가격 문의 모드</span>' : '<span style="color:#34d399;">설정됨</span>');
+    var thumbInner = p.img_url
+        ? '<img src="' + escHtml(p.img_url) + '" alt="" loading="lazy">'
+        : '<div class="placeholder">📦</div>';
+    var dirtyCls = anyDirty ? ' dirty' : '';
+    return '<div class="pprod-card' + dirtyCls + '" data-code="' + escHtml(p.code) + '">' +
+        '<div class="pprod-thumb">' +
+            thumbInner +
+            '<button class="pprod-img-btn" onclick="window._giChangeImage(\'' + escHtml(p.code) + '\', this)">🖼️ 이미지 변경</button>' +
+        '</div>' +
+        '<div class="pprod-info">' +
+            '<input class="pprod-name" type="text" value="' + escHtml(curName) + '" ' +
+                'data-code="' + escHtml(p.code) + '" onchange="window._giNameChg(this)" ' +
+                'placeholder="상품명">' +
+            '<div class="pprod-code">' + escHtml(p.code) + '</div>' +
+            '<div class="pprod-price-row">' +
+                '<input class="pprod-price" type="number" min="0" step="100" value="' + curPrice + '" ' +
+                    'data-code="' + escHtml(p.code) + '" onchange="window._giPriceChg(this)">' +
+                '<span class="pprod-price-suffix">원</span>' +
+                '<span class="pprod-disc">→ ' + disc.toLocaleString() + '원</span>' +
+            '</div>' +
+            '<div class="pprod-status">' + statusHtml + '</div>' +
+        '</div>' +
+    '</div>';
 }
 
 function renderPriceTable() {
-    var tbody = document.getElementById('priceTbody');
-    if (!tbody) return;
+    var container = document.getElementById('priceContainer');
+    if (!container) return;
     var filter = (document.getElementById('priceFilter').value || '').toLowerCase();
     var catFilter = document.getElementById('priceCatFilter').value;
     var list = allProducts.filter(function(p){
@@ -768,6 +816,13 @@ function renderPriceTable() {
         }
         return true;
     });
+    if (list.length === 0) {
+        container.innerHTML = '<div class="pprod-empty">' +
+            (filter || catFilter ? '🔍 조건에 맞는 상품 없음. 검색어/카테고리 필터 확인.' : '아직 시드된 상품 없음. /seed-goods 에서 먼저 등록.') +
+            '</div>';
+        document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
+        return;
+    }
     // 카테고리별 그룹화
     var byCat = {};
     list.forEach(function(p){
@@ -780,35 +835,30 @@ function renderPriceTable() {
     cats.forEach(function(cat){
         var prods = byCat[cat];
         var label = CAT_LABEL[cat] || cat;
-        html += '<tr class="cat-divider-row" data-cat="' + escHtml(cat) + '">' +
-            '<td colspan="7" style="padding:0;">' +
-              '<div style="background:linear-gradient(90deg,#4338ca,#7c3aed); padding:10px 16px; ' +
-                   'display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;" ' +
-                   'onclick="window._giToggleCatSection(\'' + escHtml(cat) + '\', this)">' +
-                '<span class="cat-toggle-icon" style="font-size:12px; color:#fff; transition:transform 0.2s;">▼</span>' +
-                '<span style="font-size:14px; font-weight:900; color:#fff;">' + escHtml(label) + '</span>' +
+        var safeCat = cat.replace(/[^a-z0-9_]/gi, '_');
+        html += '<div class="pcat-section" id="pcat-' + safeCat + '">' +
+            '<div class="pcat-header" onclick="window._giToggleCatSection(\'' + safeCat + '\')">' +
+                '<span class="toggle">▼</span>' +
+                '<span>' + escHtml(label) + '</span>' +
                 '<code class="code-tag" style="font-size:10px;">' + escHtml(cat) + '</code>' +
-                '<span style="margin-left:auto; font-size:12px; font-weight:700; color:rgba(255,255,255,0.85);">' +
-                  prods.length + '개 상품' +
-                '</span>' +
-              '</div>' +
-            '</td></tr>';
-        prods.forEach(function(p){
-            html += _renderProductRow(p).replace('<tr ', '<tr class="prod-row-cat-' + escHtml(cat) + '" ');
-        });
+                '<span class="count">' + prods.length + '개 상품</span>' +
+            '</div>' +
+            '<div class="pcat-grid">' +
+                prods.map(_renderProductCard).join('') +
+            '</div>' +
+        '</div>';
     });
-    tbody.innerHTML = html;
+    container.innerHTML = html;
     var totalDirty = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
     document.getElementById('dirtyCount').textContent = totalDirty;
 }
 
-// 카테고리 섹션 접기/펼치기
-window._giToggleCatSection = function(cat, headerDiv) {
-    var rows = document.querySelectorAll('.prod-row-cat-' + cat.replace(/"/g,'\\"'));
-    var icon = headerDiv.querySelector('.cat-toggle-icon');
-    var hidden = rows.length && rows[0].style.display === 'none';
-    rows.forEach(function(r){ r.style.display = hidden ? '' : 'none'; });
-    if (icon) icon.style.transform = hidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+window._giToggleCatSection = function(safeCat) {
+    var sec = document.getElementById('pcat-' + safeCat);
+    if (!sec) return;
+    sec.classList.toggle('collapsed');
+    var hdr = sec.querySelector('.pcat-header');
+    if (hdr) hdr.classList.toggle('collapsed');
 };
 
 function renderPriceCatFilter() {
@@ -824,23 +874,28 @@ function renderPriceCatFilter() {
     document.getElementById('priceFilter').addEventListener('input', renderPriceTable);
 }
 
-function _updateDirtyUI(code, tr, newPrice) {
-    if (!tr) return;
-    // 컬럼: 0=이미지 1=이름 2=코드 3=정상가 4=할인가 5=상태 6=액션
-    if (typeof newPrice === 'number') {
-        var disc = Math.round(newPrice / 2);
-        tr.children[4].textContent = disc.toLocaleString();
-    }
-    var statusCell = tr.children[5];
+function _updateCardDirty(code, newPrice) {
+    var card = document.querySelector('.pprod-card[data-code="' + code.replace(/"/g,'\\"') + '"]');
+    if (!card) return;
     var anyDirty = priceDirty[code] !== undefined || nameDirty[code] !== undefined;
-    if (anyDirty) {
-        statusCell.innerHTML = '<span style="color:#fbbf24; font-weight:800;">● 변경됨</span>';
-    } else {
-        var prod = allProducts.find(function(p){ return p.code === code; });
-        var curP = (prod && prod.price) || 0;
-        statusCell.innerHTML = curP === 0
-            ? '<span style="color:#a78bfa;">가격문의</span>'
-            : '<span style="color:#34d399;">설정됨</span>';
+    card.classList.toggle('dirty', anyDirty);
+    // 할인가 갱신
+    if (typeof newPrice === 'number') {
+        var discEl = card.querySelector('.pprod-disc');
+        if (discEl) discEl.textContent = '→ ' + Math.round(newPrice / 2).toLocaleString() + '원';
+    }
+    // 상태 텍스트 갱신
+    var statusEl = card.querySelector('.pprod-status');
+    if (statusEl) {
+        if (anyDirty) {
+            statusEl.innerHTML = '<span style="color:#fbbf24;">● 변경됨 (저장 대기)</span>';
+        } else {
+            var prod = allProducts.find(function(p){ return p.code === code; });
+            var curP = (prod && prod.price) || 0;
+            statusEl.innerHTML = curP === 0
+                ? '<span style="color:#a78bfa;">가격 문의 모드</span>'
+                : '<span style="color:#34d399;">설정됨</span>';
+        }
     }
     document.getElementById('dirtyCount').textContent = Object.keys(priceDirty).length + Object.keys(nameDirty).length;
 }
@@ -852,7 +907,7 @@ window._giPriceChg = function(input) {
     var orig = (prod && prod.price) || 0;
     if (newPrice === orig) delete priceDirty[code];
     else                    priceDirty[code] = newPrice;
-    _updateDirtyUI(code, input.closest('tr'), newPrice);
+    _updateCardDirty(code, newPrice);
 };
 
 window._giNameChg = function(input) {
@@ -862,7 +917,7 @@ window._giNameChg = function(input) {
     var orig = (prod && prod.name) || '';
     if (newName === orig || !newName) delete nameDirty[code];
     else                               nameDirty[code] = newName;
-    _updateDirtyUI(code, input.closest('tr'), null);
+    _updateCardDirty(code, null);
 };
 
 window._giChangeImage = function(code, btn) {
@@ -893,11 +948,21 @@ window._giChangeImage = function(code, btn) {
             if (prod) prod.img_url = newUrl;
             btn.innerHTML = '✓ 완료';
             log(code + ' 이미지 교체 완료', 'ok');
-            // 해당 행 썸네일만 새 이미지로 즉시 교체
-            var tr = btn.closest('tr');
-            if (tr) {
-                var imgCell = tr.children[0];
-                imgCell.innerHTML = '<img src="' + newUrl + '" alt="" style="width:54px; height:54px; object-fit:cover; border-radius:8px; background:#0f172a; display:block;">';
+            // 카드의 썸네일을 새 이미지로 즉시 교체 (button 유지)
+            var card = btn.closest('.pprod-card');
+            if (card) {
+                var thumb = card.querySelector('.pprod-thumb');
+                if (thumb) {
+                    // 기존 img/placeholder 제거 + 새 img 삽입 (button 은 유지)
+                    var oldImg = thumb.querySelector('img');
+                    var oldPh  = thumb.querySelector('.placeholder');
+                    if (oldImg) oldImg.remove();
+                    if (oldPh)  oldPh.remove();
+                    var newImg = document.createElement('img');
+                    newImg.src = newUrl;
+                    newImg.alt = '';
+                    thumb.insertBefore(newImg, thumb.firstChild);
+                }
             }
             setTimeout(function() { btn.disabled = false; btn.innerHTML = origLabel; }, 1500);
         } catch (e) {
