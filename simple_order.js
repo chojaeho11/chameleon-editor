@@ -5240,8 +5240,11 @@
         var calc = _soCalcCartTotal(cart);
         var discHtml = '';
         if (calc.amountPct > 0 || calc.proPct > 0 || calc.shipTotal > 0) {
+            // 2026-05-30: 소계 = 할인 대상(taxBase) + 비할인 대상(nonDiscountBase: 베스트굿즈/원판/금액주문/매니저견적)
+            //   기존엔 taxBase 만 표시해 베스트굿즈가 0원으로 보였음 → "배송비만 더한 것처럼" 보이는 시각적 버그
+            var _itemsSub = (calc.taxBase || 0) + (calc.nonDiscountBase || 0);
             discHtml = '<div style="margin:10px 0; padding:10px 12px; background:#fff; border-radius:10px; font-size:12px; line-height:1.7;">' +
-                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('소계 (상품+옵션)','小計 (商品+オプション)','Subtotal (item + option)') + '</span><span>' + _soFormatPrice(calc.taxBase) + '</span></div>';
+                '<div style="display:flex; justify-content:space-between; color:#6b7280;"><span>' + tr('소계 (상품+옵션)','小計 (商品+オプション)','Subtotal (item + option)') + '</span><span>' + _soFormatPrice(_itemsSub) + '</span></div>';
             if (calc.amountPct > 0) {
                 discHtml += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('구매금액','購入金額','Volume') + ' ' + calc.amountPct + '% ' + tr('할인','割引','off') + '</span><span>-' + _soFormatPrice(calc.amountDisc) + '</span></div>';
             }
