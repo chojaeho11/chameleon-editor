@@ -118,6 +118,49 @@ a { text-decoration: none; color: inherit; }
     .hero p { font-size: 15px; }
 }
 
+/* ── ⭐ 베스트 굿즈 featured 섹션 (카테고리 탭과 상품 그리드 사이) ── */
+.best-feat {
+    background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 35%, #fed7aa 100%);
+    border-top: 1px solid rgba(0,0,0,0.04);
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    padding: 32px 24px 36px;
+}
+.best-feat-inner { max-width: 1280px; margin: 0 auto; }
+.best-feat-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 18px; flex-wrap: wrap;
+}
+.best-feat-title {
+    font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+    color: #78350f;
+    display: flex; align-items: center; gap: 8px;
+}
+.best-feat-sub {
+    font-size: 13px; color: #92400e; font-weight: 600;
+}
+.best-feat-badge {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    background: #78350f; color: #fde68a;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+}
+.best-feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+}
+.best-feat-grid .product-card { border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 14px rgba(252,211,77,0.18); }
+.best-feat-empty {
+    grid-column: 1 / -1;
+    padding: 30px; text-align: center;
+    color: #92400e; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,0.5); border-radius: 12px;
+}
+@media (max-width: 768px) {
+    .best-feat { padding: 24px 16px 28px; }
+    .best-feat-title { font-size: 18px; }
+    .best-feat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
 /* ── 매니저 컨택 패널 (메인 카멜레온과 동일 톤) ── */
 .mgr-panel {
     background: radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%);
@@ -478,6 +521,18 @@ a { text-decoration: none; color: inherit; }
     <nav class="sub-nav" id="subNav" style="display:none;"></nav>
 </div>
 
+<!-- ⭐ 베스트 굿즈 featured 섹션 (카테고리 탭과 상품 그리드 사이, 항상 노출) -->
+<section class="best-feat" id="bestFeatSec" style="display:none;">
+    <div class="best-feat-inner">
+        <div class="best-feat-head">
+            <div class="best-feat-title">⭐ <span id="bestFeatTitle">베스트 굿즈</span></div>
+            <span class="best-feat-badge" id="bestFeatBadge">리셀러 추천</span>
+            <div class="best-feat-sub" id="bestFeatSub">최저가 / 즉시 출고 가능</div>
+        </div>
+        <div class="best-feat-grid" id="bestFeatGrid"></div>
+    </div>
+</section>
+
 <!-- 상품 그리드 -->
 <section class="products-wrap">
     <div class="section-title">
@@ -606,11 +661,7 @@ a { text-decoration: none; color: inherit; }
     // 신규 상품 등록 시 category 를 'pkg_box_mag' 같이 서브카 코드로 지정하면 자동으로 해당 칩에 노출.
     var CATS = [
         { id:'all', icon:'🌟', dbCat:null, kr:'전체', ja:'すべて', en:'All', subs:[] },
-        // 2026-05-29: 베스트 굿즈 — 리셀러용 최상단 특별 카테고리 (50% 할인 표시 없음, MOQ 별도)
-        { id:'best', icon:'⭐', dbCat:'pkg_best', kr:'⭐ 베스트 굿즈', ja:'⭐ ベストグッズ', en:'⭐ Best Goods', subs:[
-            { id:'keyring', dbCat:'pkg_best_keyring', kr:'아크릴 키링 5×5cm', ja:'アクリルキーリング 5×5cm', en:'Acrylic Keyring 5×5cm' },
-            { id:'tshirt',  dbCat:'pkg_best_tshirt',  kr:'프리미엄 티셔츠',   ja:'プレミアムTシャツ',     en:'Premium T-shirt' }
-        ]},
+        // 2026-05-29: 베스트 굿즈는 카테고리 탭 X — 별도 featured 섹션으로 표시 (renderBestFeatured)
         { id:'paperbox', icon:'📦', dbCat:'pkg_box', kr:'페이퍼박스', ja:'ペーパーボックス', en:'Paper Box', subs:[
             { id:'plain',  dbCat:'pkg_box_plain',  kr:'무지 박스',    ja:'無地ボックス',   en:'Plain Box' },
             { id:'fold',   dbCat:'pkg_box_fold',   kr:'접이식 박스',  ja:'折り畳み',      en:'Foldable' },
@@ -864,6 +915,33 @@ a { text-decoration: none; color: inherit; }
         });
     }
 
+    // ─── ⭐ 베스트 굿즈 featured 섹션 렌더 ───
+    function renderBestFeatured() {
+        var sec = document.getElementById('bestFeatSec');
+        var grid = document.getElementById('bestFeatGrid');
+        if (!sec || !grid) return;
+        var bests = allProducts.filter(function(p){
+            return p.category && p.category.indexOf('pkg_best') === 0;
+        });
+        if (bests.length === 0) { sec.style.display = 'none'; return; }
+        // 로케일별 타이틀
+        var T = {
+            ko: { t:'베스트 굿즈', badge:'리셀러 추천', sub:'최저가 · 즉시 출고 가능' },
+            ja: { t:'ベストグッズ', badge:'リセラー推奨', sub:'最安値・即時発送' },
+            en: { t:'Best Goods',   badge:'Reseller Pick', sub:'Best price · ready to ship' }
+        };
+        var Tk = T[LANG] || T.ko;
+        var titleEl = document.getElementById('bestFeatTitle');
+        var badgeEl = document.getElementById('bestFeatBadge');
+        var subEl   = document.getElementById('bestFeatSub');
+        if (titleEl) titleEl.textContent = Tk.t;
+        if (badgeEl) badgeEl.textContent = Tk.badge;
+        if (subEl)   subEl.textContent   = Tk.sub;
+        // 카드 렌더 — productCard 재사용
+        grid.innerHTML = bests.map(productCard).join('');
+        sec.style.display = '';
+    }
+
     // ─── 카테고리 탭 렌더 — 상품 0개 카테고리는 자동 숨김 ───
     function renderCatNav() {
         var nav = document.getElementById('catNav');
@@ -1049,9 +1127,15 @@ a { text-decoration: none; color: inherit; }
         title.textContent = label;
 
         // 필터링: all → 전체 / sub 선택 → 정확 매칭 / 메인만 → prefix 매칭
+        // pkg_best_* 는 별도 featured 섹션에 표시 → 메인 그리드에서 제외
+        function _excludeBest(arr) {
+            return arr.filter(function(p){
+                return !(p.category && p.category.indexOf('pkg_best') === 0);
+            });
+        }
         var list;
         if (currentCatId === 'all') {
-            list = allProducts;
+            list = _excludeBest(allProducts);
         } else if (sub) {
             list = allProducts.filter(function(p){ return p.category === sub.dbCat; });
         } else {
@@ -1109,6 +1193,7 @@ a { text-decoration: none; color: inherit; }
             allProducts = [];
         }
         renderCatNav();  // 상품 로드 후 카테고리 재렌더 — 빈 카테고리 자동 숨김 정확히 반영
+        renderBestFeatured();  // 베스트 굿즈 featured 섹션 갱신
         renderGrid();
     }
 
