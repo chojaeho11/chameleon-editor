@@ -2800,8 +2800,8 @@
         }
         if (!renderList.length) return;
 
-        // 2026-05-29: 아크릴 굿즈 (키링/코롯토) — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
-        var compactMode = !!state.isAcrylicGoods;
+        // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 프리셋 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
+        var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods);
         var html = renderList.map(function (a) {
             var name = a.name || a.code;
             if (lang === 'ja' && a.name_jp) name = a.name_jp;

@@ -8308,7 +8308,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./ppt-mode.js?v=434"></script>
 <script type="module" src="./main.js?v=441"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=121"></script>
+<script src="/simple_order.js?v=122"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=16"></script>
 
@@ -11011,6 +11011,9 @@ async function renderQuickMenu() {
 
             topCats.forEach(top => {
                 if (top.code === 'user_artwork' || top.code === 'default') return; // 작품, 기본대분류 제외
+                // 2026-05-29: 굿즈 판촉물 (구) 상단 탭 숨김 — /goods (신규) 카탈로그로 통합
+                var _tnRaw = ((top.name || '') + ' ' + (top.name_us || '')).replace(/\s+/g, '').toLowerCase();
+                if (/굿즈판촉물|goodspromotional|promotionalgoods|판촉물굿즈/.test(_tnRaw)) return;
                 const btn = document.createElement('button');
                 btn.className = 'tcm-btn';
                 let tName = top.name;
