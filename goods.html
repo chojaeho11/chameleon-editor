@@ -960,6 +960,7 @@ a { text-decoration: none; color: inherit; }
         }
         if (!SB) {
             allProducts = [];
+            renderCatNav();
             renderGrid();
             return;
         }
@@ -980,6 +981,7 @@ a { text-decoration: none; color: inherit; }
             console.warn('[goods] DB exception:', e);
             allProducts = [];
         }
+        renderCatNav();  // 상품 로드 후 카테고리 재렌더 — 빈 카테고리 자동 숨김 정확히 반영
         renderGrid();
     }
 
