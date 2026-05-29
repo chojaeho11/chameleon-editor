@@ -1161,20 +1161,37 @@ if ('caches' in window) {
             </div>
             <script>
             // 2026-05-14: 매니저 전화번호 DB 동적 로드 (chatbot_knowledge.category='_managers')
+            // 2026-05-29: 모바일에서 무한 로딩 버그 — 모든 실패 경로에서 슬롯 제거 + 재시도 1회
             (function(){
+                // 슬롯 정리: 실패하면 본사 카드만 남기고 스켈레톤 제거 (auto-fit 으로 가운데 정렬됨)
+                function _cleanupSlot() {
+                    var s = document.getElementById('mgrPhoneSlot');
+                    if (s) s.remove();
+                }
+                async function _fetchManagers(sb) {
+                    var res = await sb.from('chatbot_knowledge')
+                        .select('question, answer, is_active, keywords')
+                        .eq('category', '_managers');
+                    return res;
+                }
                 async function loadMgrPhones() {
                     var slot = document.getElementById('mgrPhoneSlot');
                     if (!slot) return;
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; } catch(e){}
+                            try { var mod = await import('./config.js?v=438'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
                         }
-                        if (!sb) { console.warn('[mgrPhones] sb 미초기화'); return; }
-                        var { data, error } = await sb.from('chatbot_knowledge')
-                            .select('question, answer, is_active, keywords')
-                            .eq('category', '_managers');
-                        if (error || !data) { console.warn('[mgrPhones] fetch 실패:', error); return; }
+                        if (!sb) { console.warn('[mgrPhones] sb 미초기화 — 슬롯 정리'); _cleanupSlot(); return; }
+                        // 1차 fetch 실패 시 1.5초 후 재시도 (모바일 네트워크 불안정 대응)
+                        var resp = await _fetchManagers(sb);
+                        if (resp.error || !resp.data) {
+                            console.warn('[mgrPhones] 1차 fetch 실패, 재시도:', resp.error);
+                            await new Promise(function(r){ setTimeout(r, 1500); });
+                            try { resp = await _fetchManagers(sb); } catch(e){ resp = { error: e, data: null }; }
+                        }
+                        if (resp.error || !resp.data) { console.warn('[mgrPhones] 재시도도 실패 — 슬롯 정리'); _cleanupSlot(); return; }
+                        var data = resp.data;
                         var FIELD = ['은미','성희','지숙','연두'];
                         var rows = (data || []).filter(function(r){ return FIELD.some(function(n){ return (r.question||'').includes(n); }); });
                         rows.sort(function(a,b){
@@ -1208,24 +1225,31 @@ if ('caches' in window) {
                         if (html) {
                             slot.innerHTML = html;
                         } else {
-                            slot.remove();
+                            _cleanupSlot();
                             console.warn('[mgrPhones] chatbot_knowledge._managers 에 매니저 미등록 — 본사 카드만 표시');
                         }
                     } catch (e) {
                         console.warn('[mgrPhones] load failed:', e);
-                        var slot2 = document.getElementById('mgrPhoneSlot');
-                        if (slot2) slot2.remove();
+                        _cleanupSlot();
                     }
                 }
                 // 2026-05-14: window.sb 준비될 때까지 폴링 후 실행 — 모바일에서 인위적 setTimeout 없이
-                //   초기화 끝나는 즉시 매니저 전화 로드. 최대 8초 후 fallback (sb 안 와도 함수 내부에서 처리).
+                //   초기화 끝나는 즉시 매니저 전화 로드. 최대 6초 후 fallback (sb 안 와도 loadMgrPhones 내부에서 import 시도).
+                // 2026-05-29: 안전망 — 어떤 경우에도 12초 후 스켈레톤이 남아있으면 강제 제거 (모바일 무한로딩 방지)
                 function _whenSb(cb) {
-                    var deadline = Date.now() + 8000;
+                    var deadline = Date.now() + 6000;
                     (function poll(){
                         if (window.sb || Date.now() > deadline) { cb(); return; }
                         setTimeout(poll, 100);
                     })();
                 }
+                setTimeout(function(){
+                    var s = document.getElementById('mgrPhoneSlot');
+                    if (s && (s.textContent || '').indexOf('로딩중') >= 0) {
+                        console.warn('[mgrPhones] 12s 안전망 — 스켈레톤 강제 제거');
+                        s.remove();
+                    }
+                }, 12000);
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function(){ _whenSb(loadMgrPhones); });
                 } else {
