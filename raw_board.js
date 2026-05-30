@@ -167,14 +167,32 @@
             '</div>';
 
         // 클릭 시 hexa-board.com 도메인에서 상세/주문 (화이트라벨 — 카멜레온 노출 안 함)
+        // 2026-05-30: 클릭 즉시 화면 어둠 처리 + 스피너 → 사용자가 "멈춰있다" 느끼지 않게 navigate 전 시각 피드백.
         card.onclick = function() {
+            try { _rbShowNavLoading(); } catch (e) {}
             var lang = window.__PS_LANG || 'ko';
             var params = '?product=' + encodeURIComponent(product.code);
             if (lang && lang !== 'ko') params += '&lang=' + lang;
-            window.location.href = 'https://www.hexa-board.com/' + params;
+            // 약간의 지연 (브라우저가 prefetch 한 리소스를 활용해 새 페이지 진입을 더 빠르게 할 시간)
+            setTimeout(function(){ window.location.href = 'https://www.hexa-board.com/' + params; }, 30);
         };
 
         return card;
+    }
+
+    // 2026-05-30: 카드 클릭 시 즉시 표시하는 풀스크린 로딩 오버레이 (멈춰있는 느낌 제거).
+    //   navigate 직전 사용자에게 "처리 중" 시각 피드백.
+    function _rbShowNavLoading() {
+        if (document.getElementById('_rbNavLoading')) return;
+        var ov = document.createElement('div');
+        ov.id = '_rbNavLoading';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);';
+        ov.innerHTML = '<div style="background:#fff; padding:24px 32px; border-radius:16px; display:flex; flex-direction:column; align-items:center; gap:14px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">'
+            + '<div style="width:38px; height:38px; border:4px solid #f1f5f9; border-top-color:#b45309; border-radius:50%; animation:_rbSp 0.7s linear infinite;"></div>'
+            + '<div style="font-size:13px; font-weight:700; color:#451a03;">' + (window.__PS_LANG === 'ja' ? '読み込み中...' : window.__PS_LANG === 'en' ? 'Loading...' : '상품을 불러오는 중...') + '</div>'
+            + '</div>'
+            + '<style>@keyframes _rbSp{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>';
+        document.body.appendChild(ov);
     }
 
     // 상품 로드
