@@ -525,8 +525,7 @@
     .so-right { position: static; width: 100%; max-width: none; }
 }
 
-/* 우측: 옵션 패널 — sticky + 내부 독립 스크롤 (좌/우 마우스 휠 독립).
-   overscroll-behavior:contain 으로 내부 스크롤 끝나도 페이지로 전파 안 됨 → 좌측 영향 없음. */
+/* 우측: 옵션 패널 — sticky + 내부 스크롤. 내부 끝에 도달하면 페이지로 자연스럽게 전파 (사용자 요청). */
 .so-right {
     flex: 1; background: #faf6ed; padding: 0;
     min-width: 320px; max-width: 420px;
@@ -535,7 +534,7 @@
     align-self: flex-start;
     max-height: calc(100vh - 90px);
     overflow-y: auto;
-    overscroll-behavior: contain;
+    /* overscroll-behavior 없음 → 우측 끝에 닿으면 페이지 스크롤로 자연스럽게 이어짐 */
 }
 .so-section {
     background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
@@ -2549,20 +2548,20 @@
             });
             localStorage.setItem(CART_KEY, JSON.stringify(cur));
             if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
-            // 10장 이상 무료배송 자동 보정
+            // 무료배송 자동 보정 — 수도권 10장+ / 지방 100장+
             try {
                 var rawTotal = 0;
                 cur.forEach(function (it) { if (_soIsRawBoardProduct(it && (it.product || it))) rawTotal += parseInt(it.qty || it.quantity || 1, 10) || 0; });
-                if (rawTotal >= 10) {
-                    var changed = false;
-                    cur.forEach(function (it) {
-                        if (!_soIsRawBoardProduct(it && (it.product || it))) return;
-                        if (it.shipping && it.shipping.method === 'metro_delivery' && it.shipping.fee > 0) { it.shipping.fee = 0; changed = true; }
-                    });
-                    if (changed) {
-                        localStorage.setItem(CART_KEY, JSON.stringify(cur));
-                        if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
-                    }
+                var changed = false;
+                cur.forEach(function (it) {
+                    if (!_soIsRawBoardProduct(it && (it.product || it))) return;
+                    if (!it.shipping) return;
+                    if (it.shipping.method === 'metro_delivery' && rawTotal >= 10 && it.shipping.fee > 0)    { it.shipping.fee = 0; changed = true; }
+                    if (it.shipping.method === 'regional_delivery' && rawTotal >= 100 && it.shipping.fee > 0) { it.shipping.fee = 0; changed = true; }
+                });
+                if (changed) {
+                    localStorage.setItem(CART_KEY, JSON.stringify(cur));
+                    if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
                 }
             } catch (e) {}
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
@@ -2865,14 +2864,13 @@
             return 0;
         }
         var method = state.shipMethod || 'self_pickup';
-        // 2026-05-15: 원판 상품 — 수도권은 총 10장 이상 무료, 지방은 착불(0원)
+        // 2026-05-30: 원판 — 수도권 10장 이상 무료/미만 10만, 지방 100장 이상 무료/미만 20만
         if (state.isRawBoard) {
             state._shipUpgradeReason = null;
-            if (method === 'self_pickup' || method === 'regional_delivery') return 0;
-            if (method === 'metro_delivery') {
-                var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
-                return totalRawQty >= 10 ? 0 : 100000;
-            }
+            if (method === 'self_pickup') return 0;
+            var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
+            if (method === 'metro_delivery')    return totalRawQty >= 10  ? 0 : 100000;
+            if (method === 'regional_delivery') return totalRawQty >= 100 ? 0 : 200000;
         }
         // 2026-05-15: 종이매대 — 100개 이상 무료, 1개씩(3만/개), 2개씩(1.5만/2개), 수도권 용차 10만, 지방 용차 20만
         if (state.isPaperDisplay) {
@@ -5226,7 +5224,9 @@
             if (_rb_regBtn) {
                 _rb_regBtn.innerHTML = '🛻 ' + tr('지방 배송', '地方配送', 'Regional delivery') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' +
-                    tr('착불 (수령 시 결제)', '着払い (受取時)', 'Cash on delivery') + '</span>';
+                    tr('100장 이상 무료 · 미만 ' + fmtPrice(200000),
+                       '100枚以上 無料 · 未満 ' + fmtPrice(200000),
+                       'Free if total ≥100 · else ' + fmtPrice(200000)) + '</span>';
             }
         } else if (state.isPaperDisplay || state.isForexFoam) {
             // 2026-05-15: 종이매대 / 2026-05-22: 포맥스·폼보드 — 수도권 용차배송 라벨
