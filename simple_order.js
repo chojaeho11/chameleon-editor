@@ -2427,24 +2427,17 @@
                 var sc = await sb.from('admin_categories').select('code').eq('top_category_code', 'Wholesale Board Prices');
                 var codes = (sc.data || []).map(function (c) { return c.code; }).filter(function(c){ return !!c; });
                 if (!codes.length) { sec.style.display = 'none'; return; }
-                // 2026-05-30 fix: admin_categories.code 에 공백 포함 코드 ('Honeycomb Board' 등) 존재 →
-                //   PostgREST `.in('category', codes)` URL 인코딩이 공백을 +로 만들고 IN 절 파서가 깨져 400 에러.
-                //   해결: 공백/특수문자 포함 코드만 별도 .or('category.eq...') 쿼리로 분리해서 합산.
-                var simple = codes.filter(function(c){ return !/[\s,()"]/.test(c); });
-                var complex = codes.filter(function(c){ return /[\s,()"]/.test(c); });
-                var allRows = [];
-                if (simple.length) {
-                    var pr1 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm').in('category', simple);
-                    if (pr1 && pr1.data) allRows = allRows.concat(pr1.data);
-                }
-                // 공백/특수문자 포함 코드는 개별 .eq 로 (순차 호출 — 보통 1-2개 뿐).
-                for (var ci = 0; ci < complex.length; ci++) {
-                    try {
-                        var pr2 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm').eq('category', complex[ci]);
-                        if (pr2 && pr2.data) allRows = allRows.concat(pr2.data);
-                    } catch (e2) { /* 개별 코드 실패는 다른 코드 영향 없게 */ }
-                }
+                // 2026-05-30 v=156 fix: 코드값에 공백 등 특수문자가 있어 `.in()` 절이 깨지는 사례 발견.
+                //   가장 안전하게 코드별 .eq() 루프로 통일 (parallel — Promise.all). 보통 10-20 코드 정도라 부담 X.
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm';
+                var results = await Promise.all(codes.map(function(c){
+                    return sb.from('admin_products').select(_COLS).eq('category', c)
+                        .then(function(r){ return (r && r.data) || []; })
+                        .catch(function(err){ console.warn('[so] rawBoard cat fetch fail:', c, err && err.message); return []; });
+                }));
+                var allRows = [].concat.apply([], results);
                 _soRbMoreCache = allRows.sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                console.log('[so] rawBoard cache loaded:', _soRbMoreCache.length, 'products from', codes.length, 'categories');
             }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             var items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 12);
@@ -4579,6 +4572,9 @@
         if (_rb_uploadLabel) _rb_uploadLabel.style.display = _hideUpload ? 'none' : '';
         // 2026-05-30: '원판 그대로 발송' 안내문은 사용자 요청으로 영구 비표시 (불필요한 정보).
         if (_rb_notice) _rb_notice.style.display = 'none';
+        // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
+        var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
+        if (_rb_editorBtn) _rb_editorBtn.style.display = state.isRawBoard ? 'none' : '';
         // 2026-05-25: 원판이면 우측 컬럼에 "다른 원판 제품 더 담기" 그리드 로드, 아니면 숨김
         if (state.isRawBoard) { try { window._soLoadRawBoardMore(p.code); } catch(e){} }
         else {
