@@ -3185,14 +3185,19 @@
         grid.innerHTML = areas.map(function(a){
             var cfg = CFG[a] || CFG.front_logo;
             var f = state.tshirtFiles[a] || {};
-            // 박스 위치+회전은 state 에 저장된 값이 있으면 우선, 없으면 init 사용
-            var box = (f.box && typeof f.box.left === 'number') ? f.box : Object.assign({ rotation:0 }, cfg.init);
-            if (typeof box.rotation !== 'number') box.rotation = 0;
+            // 박스 위치+회전은 state 에 저장된 값이 있으면 우선, 없으면 init 사용 — 모든 값 Number 강제
+            var savedBox = (f.box && typeof f.box.left === 'number') ? f.box : null;
+            var src = savedBox || cfg.init;
+            var box = {
+                left:     (typeof src.left     === 'number' && isFinite(src.left))     ? src.left     : cfg.init.left,
+                top:      (typeof src.top      === 'number' && isFinite(src.top))      ? src.top      : cfg.init.top,
+                width:    (typeof src.width    === 'number' && isFinite(src.width))    ? src.width    : cfg.init.width,
+                height:   (typeof src.height   === 'number' && isFinite(src.height))   ? src.height   : cfg.init.height,
+                rotation: (typeof src.rotation === 'number' && isFinite(src.rotation)) ? src.rotation : 0
+            };
             // 저장
-            if (!f.box) {
-                state.tshirtFiles[a] = state.tshirtFiles[a] || {};
-                state.tshirtFiles[a].box = box;
-            }
+            state.tshirtFiles[a] = state.tshirtFiles[a] || {};
+            state.tshirtFiles[a].box = box;
             var areaSafe = String(a).replace(/[^a-z0-9_]/gi,'');
             var label = tr(cfg.ko, cfg.jp, cfg.en);
             var inputId = 'soTshirtFile_' + areaSafe;
@@ -3206,36 +3211,24 @@
             var status = f.dataUrl
                 ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✓ ' + (f.name || 'image') + '</div>'
                 : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('박스를 끌어 위치 조정 → 클릭하여 이미지 업로드', 'ボックスをドラッグして配置 → クリックでアップロード', 'Drag box to position → Click to upload') + '</div>';
-            return '<div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:8px; background:#fff;">'
-                + '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:6px;">'
-                +   '<span style="display:inline-flex; width:8px; height:8px; border-radius:50%; background:#0f172a;"></span>'
-                +   '<span>' + label + '</span>'
-                +   '<span style="margin-left:auto; font-size:10px; color:#94a3b8; font-weight:700;">' + (cfg.side === 'back' ? 'BACK' : 'FRONT') + '</span>'
-                + '</div>'
-                + '<input type="file" id="' + inputId + '" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" '
-                +   'onchange="window._soTshirtPickFile(\'' + areaSafe + '\', this.files)" style="display:none;">'
-                + '<div class="so-tshirt-mockup" data-area="' + areaSafe + '" '
-                +   'style="position:relative; width:100%; aspect-ratio:1/1; background:#0a0a0f url(' + MOCKUP + ') no-repeat center; background-size:200% auto; background-position:' + cfg.bgPos + ' center; border-radius:8px; overflow:hidden; user-select:none; touch-action:none;">'
-                +   '<div class="so-tshirt-box" data-area="' + areaSafe + '" '
-                +     'style="position:absolute; left:' + box.left + '%; top:' + box.top + '%; width:' + box.width + '%; height:' + box.height + '%; '
-                +     'transform:rotate(' + box.rotation + 'deg); transform-origin:center center; '
-                +     'border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">'
-                +     boxInner
-                +     // 회전 핸들 — 박스 상단 위 (회전 모드)
-                +     '<div class="so-tshirt-rot-handle" data-area="' + areaSafe + '" '
-                +       'style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); '
-                +       'width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; '
-                +       'display:flex; align-items:center; justify-content:center; cursor:grab; '
-                +       'box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:13px; touch-action:none; pointer-events:auto;">'
-                +       '<i class="fa-solid fa-rotate" style="pointer-events:none;"></i>'
-                +     '</div>'
-                +     // 회전 핸들과 박스 상단을 연결하는 점선
-                +     '<div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div>'
-                +   '</div>'
-                + '</div>'
-                + '<div style="margin-top:6px;">' + status + '</div>'
-                + (f.dataUrl ? '<button type="button" onclick="window._soTshirtRemoveFile(\'' + areaSafe + '\')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ' + tr('제거 / 다시 업로드', '削除 / 再アップロード', 'Remove / Re-upload') + '</button>' : '')
-                + '</div>';
+            // 2026-05-30: template literals — 따옴표/문자열 결합 실수 방지
+            var sideLabel = (cfg.side === 'back') ? 'BACK' : 'FRONT';
+            var removeBtn = f.dataUrl
+                ? `<button type="button" onclick="window._soTshirtRemoveFile('${areaSafe}')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ${tr('제거 / 다시 업로드', '削除 / 再アップロード', 'Remove / Re-upload')}</button>`
+                : '';
+            return `<div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:8px; background:#fff;">
+                <div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <span style="display:inline-flex; width:8px; height:8px; border-radius:50%; background:#0f172a;"></span>
+                  <span>${label}</span>
+                  <span style="margin-left:auto; font-size:10px; color:#94a3b8; font-weight:700;">${sideLabel}</span>
+                </div>
+                <input type="file" id="${inputId}" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soTshirtPickFile('${areaSafe}', this.files)" style="display:none;">
+                <div class="so-tshirt-mockup" data-area="${areaSafe}" style="position:relative; width:100%; aspect-ratio:1/1; background:#0a0a0f url(${MOCKUP}) no-repeat center; background-size:200% auto; background-position:${cfg.bgPos} center; border-radius:8px; overflow:hidden; user-select:none; touch-action:none;">
+                  <div class="so-tshirt-box" data-area="${areaSafe}" style="position:absolute; left:${box.left}%; top:${box.top}%; width:${box.width}%; height:${box.height}%; transform:rotate(${box.rotation}deg); transform-origin:center center; border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">${boxInner}<div class="so-tshirt-rot-handle" data-area="${areaSafe}" style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; display:flex; align-items:center; justify-content:center; cursor:grab; box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:15px; touch-action:none; pointer-events:auto; font-weight:900;">↻</div><div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div></div>
+                </div>
+                <div style="margin-top:6px;">${status}</div>
+                ${removeBtn}
+              </div>`;
         }).join('');
         // 박스에 드래그 + 클릭 핸들러 부착, 회전 핸들에 회전 핸들러 부착
         grid.querySelectorAll('.so-tshirt-box').forEach(function(box){
