@@ -525,13 +525,17 @@
     .so-right { position: static; width: 100%; max-width: none; }
 }
 
-/* 우측: 옵션 패널 — 페이지 스크롤 사용 (내부 스크롤 제거) */
+/* 우측: 옵션 패널 — sticky + 내부 독립 스크롤 (좌/우 마우스 휠 독립).
+   overscroll-behavior:contain 으로 내부 스크롤 끝나도 페이지로 전파 안 됨 → 좌측 영향 없음. */
 .so-right {
     flex: 1; background: #faf6ed; padding: 0;
     min-width: 320px; max-width: 420px;
     display: flex; flex-direction: column; gap: 14px;
-    position: sticky; top: 70px;     /* PC 에서 옵션 패널만 상단 고정 (페이지 스크롤은 자유) */
+    position: sticky; top: 70px;
     align-self: flex-start;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 .so-section {
     background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
@@ -2455,7 +2459,8 @@
             var WL = (window._SO_RB_WHITELIST && Array.isArray(window._SO_RB_WHITELIST)) ? window._SO_RB_WHITELIST : _SO_RB_DEFAULT_WL;
             var byCode = {};
             _soRbMoreCache.forEach(function(p){ byCode[p.code] = p; });
-            var items = WL.map(function(c){ return byCode[c]; }).filter(function(p){ return p && p.code !== currentCode; });
+            // 2026-05-30: 사용자 요청 — 현재 상품 포함해서 6개 다 보이게 (이전: currentCode 제외).
+            var items = WL.map(function(c){ return byCode[c]; }).filter(function(p){ return !!p; });
             if (!items.length) { sec.style.display = 'none'; return; }
             console.log('[so] rawBoard right-panel showing', items.length, 'products:', items.map(function(p){ return p.code + '/' + (p.name || ''); }));
             grid.innerHTML = items.map(function (p) {
@@ -4591,6 +4596,20 @@
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
         var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
         if (_rb_editorBtn) _rb_editorBtn.style.display = state.isRawBoard ? 'none' : '';
+        // 2026-05-30: 원판은 우측의 6개 카드별 담기 버튼만 사용 — 메인 수량/가격/카트/주문 버튼 숨김.
+        //   장바구니 보기 (#soBtnViewCart) 만 남겨서 사용자가 6개 담은 카트로 이동할 수 있게.
+        if (state.isRawBoard) {
+            var _rbQtyS = document.getElementById('soQtySection'); if (_rbQtyS) _rbQtyS.style.display = 'none';
+            var _rbPriceBox = document.querySelector('#simpleOrderModal .so-price-box'); if (_rbPriceBox) _rbPriceBox.style.display = 'none';
+            var _rbBtnC = document.getElementById('soBtnCart'); if (_rbBtnC) _rbBtnC.style.display = 'none';
+            var _rbBtnB = document.getElementById('soBtnBuy'); if (_rbBtnB) _rbBtnB.style.display = 'none';
+        } else {
+            // 원판이 아닌 상품으로 모달 재진입 시 복구
+            var _rbQtyS2 = document.getElementById('soQtySection'); if (_rbQtyS2 && _rbQtyS2.style.display === 'none' && !state.isWall) _rbQtyS2.style.display = '';
+            var _rbPriceBox2 = document.querySelector('#simpleOrderModal .so-price-box'); if (_rbPriceBox2 && _rbPriceBox2.style.display === 'none') _rbPriceBox2.style.display = '';
+            var _rbBtnC2 = document.getElementById('soBtnCart'); if (_rbBtnC2 && _rbBtnC2.style.display === 'none') _rbBtnC2.style.display = '';
+            var _rbBtnB2 = document.getElementById('soBtnBuy'); if (_rbBtnB2 && _rbBtnB2.style.display === 'none') _rbBtnB2.style.display = '';
+        }
         // 2026-05-25: 원판이면 우측 컬럼에 "다른 원판 제품 더 담기" 그리드 로드, 아니면 숨김
         if (state.isRawBoard) { try { window._soLoadRawBoardMore(p.code); } catch(e){} }
         else {
@@ -5061,8 +5080,8 @@
             // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
             allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
         } else if (state.isRawBoard) {
-            // 2026-05-15: 원판 — 본사 방문 / 수도권 배송 / 지방 배송 (착불) 만
-            allowed = ['self_pickup', 'metro_delivery', 'regional_delivery'];
+            // 2026-05-30: 사용자 요청 — 원판은 본사 방문 제거, 수도권 배송 + 지방 배송만.
+            allowed = ['metro_delivery', 'regional_delivery'];
         } else if (state.isDeliveryOnly) {
             // 가벽 외 허니콤 — 수도권/지방 배송 (+ 배너·인스타판넬이면 택배도)
             allowed = ['self_pickup'].concat(hbDeliveryKeys);
