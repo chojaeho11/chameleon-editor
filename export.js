@@ -2115,7 +2115,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 var _printTotal = _printUnit * _printQty;
                 if (_printTotal > 0) {
                     totalAmt += _printTotal;
-                    var _discTxt = (item.qty >= 3) ? ' (3+ 50%)' : '';
+                    var _discTxt = (item.qty >= 3) ? ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? ' (3枚以上で50%割引)' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? ' (3+ pcs: 50% off)' : ' (3장 이상이라 50% 할인)') : '';
                     var _printName = '└ ' + ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '印刷費' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Print fee' : '인쇄비') + ' (' + _areasFeePdf.join('+') + ')' + _discTxt;
                     var _printSplit = doc.splitTextToSize(_printName, nameColWidth - 4);
                     var _printH = Math.max(8, 4 + (_printSplit.length * 5));

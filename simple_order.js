@@ -2098,7 +2098,7 @@
                 back_full:  tr('뒷면 전체', '背面全体', 'Full back')
             };
             var _printNames = state.tshirtPrintAreas.map(function(a){ return _AREA_NAMES[a] || a; });
-            var _bulkSuffix = (qty >= 3) ? (' · ' + tr('3장+ 50% 적용', '3枚以上 50%適用', '3+ 50% off')) : '';
+            var _bulkSuffix = (qty >= 3) ? (' · ' + tr('3장 이상 주문이라서 50%할인', '3枚以上のご注文で50%割引', '3+ pcs: 50% off')) : '';
             bdHtml += '<div class="so-price-row"><span>· ' + tr('인쇄비', '印刷費', 'Print fee') + ' (' + _printNames.join(' + ') + ') × ' + qty + tr('장','枚','pcs') + _bulkSuffix + '</span><span>+' + fmtPrice(tshirtPrintFee) + '</span></div>';
         }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 라인 (3종 / 정액 5만원)
@@ -2143,10 +2143,19 @@
             if (_presetTier) {
                 var _badgeEl = _presetTier.querySelector('[data-qty-tier="50"]');
                 if (_badgeEl) {
-                    var _badgeText = (state.presetType === 'tshirt')
-                        ? tr('3장+ 인쇄비 50%', '3枚以上 印刷費50%', 'Print 50% off on 3+')
-                        : tr('100개 이상', '100個以上', '100+ pcs');
-                    _badgeEl.innerHTML = _badgeText + ' <b style="color:#dc2626;">50%</b>';
+                    if (state.presetType === 'tshirt') {
+                        _badgeEl.innerHTML = tr(
+                            '3장 이상 주문이라서 인쇄비 <b style="color:#dc2626;">50% 할인</b>',
+                            '3枚以上のご注文で印刷費 <b style="color:#dc2626;">50%割引</b>',
+                            '3+ pcs order: print fee <b style="color:#dc2626;">50% off</b>'
+                        );
+                    } else {
+                        _badgeEl.innerHTML = tr(
+                            '100개 이상 주문이라서 <b style="color:#dc2626;">50% 할인</b>',
+                            '100個以上のご注文で <b style="color:#dc2626;">50%割引</b>',
+                            '100+ pcs order: <b style="color:#dc2626;">50% off</b>'
+                        );
+                    }
                 }
             }
         } else {
@@ -6318,7 +6327,7 @@
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=294');
+            var mod = await import('./export.js?v=295');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
@@ -6760,7 +6769,7 @@
                         var _mlt = ((it.qty || 0) >= 3) ? 0.5 : 1;
                         var _printAdd = Math.round(_basePc * _mlt * (it.qty || 0));
                         if (_printAdd > 0) {
-                            var _discTxt = ((it.qty || 0) >= 3) ? ' (3장+ 50% 할인)' : '';
+                            var _discTxt = ((it.qty || 0) >= 3) ? ' (3장 이상 주문이라서 50% 할인)' : '';
                             lines.push('       └ 인쇄비' + _discTxt + ': ' + _basePc.toLocaleString() + '원/장 × ' + (it.qty||0) + '장 × ' + (_mlt === 0.5 ? '0.5 = ' : '= ') + _printAdd.toLocaleString() + '원');
                         }
                         // 위치별 업로드 파일 명세 + 드래그한 박스 좌표
@@ -6886,7 +6895,7 @@
                 }
             });
             if (_bestDiscTotal > 0) {
-                discountSummary += '\n베스트굿즈 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원) — 티셔츠 3장+ / 그 외 100개+ 자동';
+                discountSummary += '\n베스트굿즈 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원) — 티셔츠 3장 이상 / 그 외 100개 이상 주문 자동 적용';
             }
             if (_useMileage > 0) discountSummary += '\n마일리지 사용 (-' + _useMileage.toLocaleString() + '원)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';

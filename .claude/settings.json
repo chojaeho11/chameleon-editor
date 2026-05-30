@@ -218,7 +218,8 @@
       "Bash(wc -l advisor-panel.js supabase/functions/product-advisor/index.ts)",
       "Bash(awk -F: '$1>3265 && $1<3290 {print}')",
       "Bash(awk 'NR>=860 && /id=\"startScreen\"/{found=1} found && /^<\\\\/div>/{depth--; if\\(depth<0\\){print NR\": close startScreen\"; exit}} found && /<div/{depth++}' \"c:/Users/win 10/Desktop/작업/index.html\")",
-      "Bash(bash /c/tmp/goods-loop.sh)"
+      "Bash(bash /c/tmp/goods-loop.sh)",
+      "Bash(file keyringcut/*.jpg)"
     ],
     "additionalDirectories": [
       "\\tmp"
