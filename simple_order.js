@@ -2429,7 +2429,9 @@
                 if (!codes.length) { sec.style.display = 'none'; return; }
                 // 2026-05-30 v=156 fix: 코드값에 공백 등 특수문자가 있어 `.in()` 절이 깨지는 사례 발견.
                 //   가장 안전하게 코드별 .eq() 루프로 통일 (parallel — Promise.all). 보통 10-20 코드 정도라 부담 X.
-                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm';
+                // 2026-05-30 v=157 fix: admin_products 의 사이즈 컬럼은 width_mm/height_mm (w_mm/h_mm 은 존재 X → 400 Bad Request).
+                //   콘솔 '0 products from 4 categories' 가 이 컬럼 오류의 직접적 결과였음.
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
                 var results = await Promise.all(codes.map(function(c){
                     return sb.from('admin_products').select(_COLS).eq('category', c)
                         .then(function(r){ return (r && r.data) || []; })
@@ -2488,7 +2490,7 @@
                 product: {
                     code: p.code, name: pickedName, name_kr: p.name, name_jp: p.name_jp, name_us: p.name_us,
                     price: p.price, price_jp: p.price_jp, price_us: p.price_us,
-                    category: p.category, w_mm: p.w_mm, h_mm: p.h_mm, img: p.img_url
+                    category: p.category, w_mm: p.width_mm || p.w_mm, h_mm: p.height_mm || p.h_mm, img: p.img_url
                 },
                 type: 'file_upload',
                 fileName: '(원판 발송 — 파일 없음)',
@@ -4799,12 +4801,13 @@
             if (_tshirtMethSec) _tshirtMethSec.style.display = 'none';
             if (_tshirtAreaSec) _tshirtAreaSec.style.display = 'none';
             if (_tshirtQtySec)  _tshirtQtySec.style.display  = '';
-            // 표준 업로드/에디터 복원
+            // 표준 업로드/에디터 복원 — 단 원판/금액주문은 다시 보이지 않게 (state.isRawBoard / isAmountOrder 분기 보강)
             var _stdUpload2 = document.getElementById('soUploadWrap');
             var _stdUploadLabel2 = document.getElementById('soUploadLabel');
             var _tshirtUpload2 = document.getElementById('soTshirtUploadSection');
-            if (_stdUpload2) _stdUpload2.style.display = '';
-            if (_stdUploadLabel2) _stdUploadLabel2.style.display = '';
+            var _keepHidden = state.isRawBoard || state.isAmountOrder;
+            if (_stdUpload2) _stdUpload2.style.display = _keepHidden ? 'none' : '';
+            if (_stdUploadLabel2) _stdUploadLabel2.style.display = _keepHidden ? 'none' : '';
             if (_tshirtUpload2) _tshirtUpload2.style.display = 'none';
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
@@ -4986,7 +4989,8 @@
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
-            if (editorBtn) editorBtn.style.display = '';
+            // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
@@ -5003,7 +5007,8 @@
             var _wbtn3 = document.getElementById('soPresetWrapWrap'); if (_wbtn3) _wbtn3.style.display = 'none';
             var _cutS3 = document.getElementById('soPresetCutSection'); if (_cutS3) _cutS3.style.display = 'none';
             var _sideRow3 = document.getElementById('soKeyringSideRow'); if (_sideRow3) _sideRow3.style.display = 'none';
-            if (editorBtn) editorBtn.style.display = '';
+            // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
