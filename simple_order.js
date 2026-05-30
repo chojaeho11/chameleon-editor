@@ -1938,9 +1938,11 @@
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
 
-        // 2026-05-29: 베스트굿즈 100개+ 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
+        // 2026-05-29: 베스트굿즈 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
+        // 2026-05-30: 티셔츠는 3장+ / 그 외 베스트굿즈는 100개+
         let presetBulkDiscount = 0;
-        if (state.isBestGoods && qty >= 100) {
+        var _bulkThr = (state.presetType === 'tshirt') ? 3 : 100;
+        if (state.isBestGoods && qty >= _bulkThr) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
         }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 3종
@@ -2029,16 +2031,37 @@
         // 구독자 할인
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
-        // 2026-05-29: 베스트굿즈 프리셋 100개+ 50% 할인 라인
+        // 2026-05-29: 베스트굿즈 프리셋 50% 할인 라인 (티셔츠는 3장+, 그 외 100개+)
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
+        var _bulkRowLabel = (state.presetType === 'tshirt')
+            ? tr('3장 이상 50% 할인', '3枚以上 50%割引', '50% off on 3+')
+            : tr('100개 이상 50% 할인', '100個以上 50%割引', '50% off on 100+');
+        var _bulkRowEl = document.getElementById('soPresetBulkDiscRow');
+        if (_bulkRowEl) {
+            var _lblSpan = _bulkRowEl.querySelector('span');
+            if (_lblSpan) {
+                var _tag = _lblSpan.querySelector('.so-tier-tag');
+                _lblSpan.innerHTML = _bulkRowLabel + ' ' + (_tag ? _tag.outerHTML : '<span class="so-tier-tag" style="background:#dc2626; color:#fff;">50%</span>');
+            }
+        }
         setText('soPresetBulkDisc', '-' + fmtPrice(presetBulkDiscount));
-        // 2026-05-29: 베스트굿즈는 금액할인 tier 숨김 + 전용 tier(100개+ 50%) 표시
+        // 2026-05-29: 베스트굿즈는 금액할인 tier 숨김 + 전용 tier(N개+ 50%) 표시
         //   (rawBoard/amountOrder 의 tier 숨김은 별도 로직이 처리 — 여기선 best 일 때만 강제 변경)
         var _regularTier = document.getElementById('soTierTable');
         var _presetTier = document.getElementById('soPresetTierTable');
         if (state.isBestGoods) {
             if (_regularTier) _regularTier.style.display = 'none';
             if (_presetTier)  _presetTier.style.display = '';
+            // tier 표 배지 텍스트도 동적 (티셔츠 → 3장 이상 50%)
+            if (_presetTier) {
+                var _badgeEl = _presetTier.querySelector('[data-qty-tier="50"]');
+                if (_badgeEl) {
+                    var _badgeText = (state.presetType === 'tshirt')
+                        ? tr('3장 이상', '3枚以上', '3+ pcs')
+                        : tr('100개 이상', '100個以上', '100+ pcs');
+                    _badgeEl.innerHTML = _badgeText + ' <b style="color:#dc2626;">50%</b>';
+                }
+            }
         } else {
             if (_presetTier)  _presetTier.style.display = 'none';
             // _regularTier 는 _hideUpload 분기(rawBoard/amountOrder)가 제어 — 여기선 손대지 않음
@@ -5022,9 +5045,11 @@
         }
         // 2026-05-25: 원판은 대량할인 없음 — 할인율 라벨/계산 0 처리
         if (item._isRawBoard || _soIsRawBoardProduct(item.product)) tierPct = 0;
-        // 2026-05-30: 베스트굿즈 — 30%·40% 등 일반 수량할인 라벨 비표시, 100개+ 50% 만 표시
+        // 2026-05-30: 베스트굿즈 — 30%·40% 등 일반 수량할인 라벨 비표시, 임계값+ 50% 만 표시
+        //   티셔츠는 3장+, 그 외는 100개+
         if (item._isBestGoods) {
-            tierPct = (qty >= 100) ? 50 : 0;
+            var _bulkThrCart = (item._presetType === 'tshirt') ? 3 : 100;
+            tierPct = (qty >= _bulkThrCart) ? 50 : 0;
         }
         const discount = Math.round(subtotal * tierPct / 100);
         // final 은 _soCalcItemPrice 통해 정확히 계산 (addon + shipping + PRO 할인 포함)
@@ -5322,7 +5347,8 @@
         if (it.product && it.product.code && it.product.code.indexOf('goods_') === 0 && qty >= 100) {
             unit = unit * 0.5;
         }
-        // 2026-05-30: 베스트굿즈 (키링/코롯토 + 손수건/티셔츠/머그/허니콤/스마트톡) — 100개+ 50% 할인 (상품 단가만)
+        // 2026-05-30: 베스트굿즈 (키링/코롯토 + 손수건/티셔츠/머그/허니콤/스마트톡) — 50% 할인 (상품 단가만)
+        //   티셔츠는 3장+, 그 외는 100개+
         var _isBest = !!it._isBestGoods;
         var _isPreset = !!it._isPresetGoods;
         // 2026-05-30: 키링 양면 = 단가 × 2 (장바구니 / 견적서 / 결제 일관성)
@@ -5330,7 +5356,8 @@
             unit = unit * 2;
         }
         var subtotal = unit * qty;
-        if (_isBest && qty >= 100) {
+        var _bulkThrItm = (it._presetType === 'tshirt') ? 3 : 100;
+        if (_isBest && qty >= _bulkThrItm) {
             subtotal = Math.round(subtotal * 0.5);
         }
         // 가벽 양면 → 가격 2배
@@ -6225,9 +6252,13 @@
                     lines.push('   🦵 받침대: ' + it.baseStand.label + (_bsQ > 1 ? ' × ' + _bsQ : '') + (it.baseStand.fee > 0 ? ' (+' + ((it.baseStand.fee * _bsQ).toLocaleString()) + '원)' : ''));
                 }
                 if (it.itemNote) lines.push('   💬 전달사항: ' + it.itemNote);
-                // 2026-05-30: 베스트굿즈 100개+ 50% 할인 라인
-                if (it._isBestGoods && (it.qty || 1) >= 100) {
-                    lines.push('   🏷️ 100개 이상 50% 할인 적용');
+                // 2026-05-30: 베스트굿즈 50% 할인 라인 (티셔츠 3장+ / 그 외 100개+)
+                if (it._isBestGoods) {
+                    var _thrA = (it._presetType === 'tshirt') ? 3 : 100;
+                    if ((it.qty || 1) >= _thrA) {
+                        var _thrLbl = (it._presetType === 'tshirt') ? '3장 이상' : '100개 이상';
+                        lines.push('   🏷️ ' + _thrLbl + ' 50% 할인 적용');
+                    }
                 }
                 if (it.shipping) {
                     var _m = it.shipping.method;
@@ -6266,16 +6297,19 @@
             if (cartCalc.proPct > 0) {
                 discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원)';
             }
-            // 2026-05-30: 베스트굿즈 100개+ 50% 할인 — 카트에 베스트굿즈가 있고 100개+ 인 항목이 있으면 합산 표시
+            // 2026-05-30: 베스트굿즈 50% 할인 — 카트에 베스트굿즈가 있고 임계값+ 인 항목 합산 표시
+            //   티셔츠는 3장+ / 그 외는 100개+
             var _bestDiscTotal = 0;
             cart.forEach(function (it) {
-                if (it._isBestGoods && (it.qty || 1) >= 100) {
+                if (!it._isBestGoods) return;
+                var _thrB = (it._presetType === 'tshirt') ? 3 : 100;
+                if ((it.qty || 1) >= _thrB) {
                     var _u = (it.customSize && it.customSize.unit) || (it.product && it.product.price) || 0;
                     _bestDiscTotal += Math.round(_u * (it.qty || 1) * 0.5);
                 }
             });
             if (_bestDiscTotal > 0) {
-                discountSummary += '\n베스트굿즈 100개+ 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원)';
+                discountSummary += '\n베스트굿즈 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원) — 티셔츠 3장+ / 그 외 100개+ 자동';
             }
             if (_useMileage > 0) discountSummary += '\n마일리지 사용 (-' + _useMileage.toLocaleString() + '원)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';

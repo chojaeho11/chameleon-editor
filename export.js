@@ -1942,9 +1942,10 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 else if (item.qty >= 10) _qtyDiscRate2 = 0.30;
                 else _qtyDiscRate2 = 0.20;
             }
-            // 2026-05-30: 베스트굿즈 — 100개+ 시 50% 할인
-            if (_isBestGoodsItem && item.qty >= 100) {
-                _qtyDiscRate2 = 0.50;
+            // 2026-05-30: 베스트굿즈 — 50% 할인 (티셔츠 3장+ / 그 외 100개+)
+            if (_isBestGoodsItem) {
+                var _bulkThrPdf = (item._presetType === 'tshirt') ? 3 : 100;
+                if (item.qty >= _bulkThrPdf) _qtyDiscRate2 = 0.50;
             }
 
             // 2026-05-15: simple_order 가벽 (wallSize, wallSide) — recalc()과 동일한 면적/양면/세로3m 가산.
