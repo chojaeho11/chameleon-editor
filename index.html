@@ -691,7 +691,7 @@ if ('caches' in window) {
     <div class="ctx-item" id="ctxLock"><i class="fa-solid fa-lock"></i> <span data-i18n="ctx_lock">잠금 (Lock)</span></div>
 </div>
 <div class="topbar">
-        <div class="brand" id="siteBrand" onclick="window.goHome()"><i class="fa-solid fa-palette"></i> Chameleon</div>
+        <div class="brand" id="siteBrand" onclick="if(typeof window.goHome==='function'){window.goHome()}else{location.href='/'}"><i class="fa-solid fa-palette"></i> Chameleon</div>
         <script>
         // 2026-05-16: 가맹점 스토어 경유(_franchise_ref) 시 — 헤더 브랜드를 가맹점 로고/상호로 교체.
         //   고객이 /store/{slug} 에서 상품을 눌러 주문 페이지로 와도 사장님 홈페이지처럼 보이게.
@@ -744,7 +744,7 @@ if ('caches' in window) {
         
         <div style="flex:1;"></div>
 
-        <button class="btn" id="btnHomeTop" onclick="window.goHome()" style="margin-right:5px; background:#6366f1; border:none; color:#fff; padding:8px 14px; border-radius:8px; font-weight:700;">
+        <button class="btn" id="btnHomeTop" onclick="if(typeof window.goHome==='function'){window.goHome()}else{location.href='/'}" style="margin-right:5px; background:#6366f1; border:none; color:#fff; padding:8px 14px; border-radius:8px; font-weight:700;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
 </button>
 
