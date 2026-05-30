@@ -1128,7 +1128,21 @@ a { text-decoration: none; color: inherit; }
                     .eq('category', cfg.category)
                     .order('code')
                     .limit(cfg.limit);
-                var rows = (data || []).map(function(p){
+                var fetched = (data || []).slice();
+                // 2026-05-30: 섹션별 코드 우선순위 — 지정된 코드는 맨 앞으로 끌어올림
+                var PRIORITY = {
+                    tshirt: ['4653231'] // 반팔티 first
+                };
+                var pri = PRIORITY[name];
+                if (pri && pri.length) {
+                    fetched.sort(function(a, b){
+                        var ai = pri.indexOf(a.code); if (ai < 0) ai = 999;
+                        var bi = pri.indexOf(b.code); if (bi < 0) bi = 999;
+                        if (ai !== bi) return ai - bi;
+                        return (a.code || '').localeCompare(b.code || '');
+                    });
+                }
+                var rows = fetched.map(function(p){
                     var item = { code: p.code };
                     if (cfg.defaultSizes) item.sizes = cfg.defaultSizes;
                     // 가격은 DB 의 admin_products.price 그대로 사용
