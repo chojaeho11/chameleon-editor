@@ -293,7 +293,22 @@ window.__CD_I18N = {
     bulk_title: { ko:'대량 구매 할인', ja:'まとめ買い割引', en:'Bulk Discount' },
     bulk_t10:   { ko:'10개+', ja:'10個+', en:'10+' },
     bulk_t100:  { ko:'100개+', ja:'100個+', en:'100+' },
-    bulk_t500:  { ko:'500개+', ja:'500個+', en:'500+' }
+    bulk_t500:  { ko:'500개+', ja:'500個+', en:'500+' },
+    // 2026-05-30: 상세/리뷰
+    cd_detail_title:        { ko:'상품 상세정보', ja:'商品詳細', en:'Product Details' },
+    cd_review_title:        { ko:'고객 리뷰', ja:'カスタマーレビュー', en:'Customer Reviews' },
+    cd_review_worldwide:    { ko:'🌍 전세계 친구들의 리뷰보기', ja:'🌍 世界中の友達のレビューを見る', en:'🌍 See reviews from friends worldwide' },
+    cd_review_more:         { ko:'더보기', ja:'もっと見る', en:'Load More' },
+    cd_review_none:         { ko:'아직 리뷰가 없습니다. 첫 리뷰를 남겨주세요!', ja:'まだレビューがありません。最初のレビューをお書きください！', en:'No reviews yet. Be the first to review!' },
+    cd_review_count:        { ko:'개의 리뷰', ja:'件のレビュー', en:'reviews' },
+    cd_review_write:        { ko:'리뷰 작성', ja:'レビューを書く', en:'Write a Review' },
+    cd_review_nick_ph:      { ko:'닉네임 (예: 행복한고객)', ja:'ニックネーム (例: ハッピー顧客)', en:'Nickname (e.g. HappyCustomer)' },
+    cd_review_comment_ph:   { ko:'상품에 대한 솔직한 리뷰를 남겨주세요', ja:'商品についての率直なレビューをお書きください', en:'Share your honest review' },
+    cd_review_photo:        { ko:'사진 첨부', ja:'写真添付', en:'Attach Photo' },
+    cd_review_submit:       { ko:'리뷰 등록', ja:'レビュー投稿', en:'Submit Review' },
+    cd_review_submitted:    { ko:'리뷰가 등록되었습니다 ✨', ja:'レビューを投稿しました ✨', en:'Review submitted ✨' },
+    cd_review_login_or_nick:{ ko:'닉네임을 입력해주세요', ja:'ニックネームを入力してください', en:'Please enter a nickname' },
+    cd_review_comment_min:  { ko:'리뷰 내용을 입력해주세요', ja:'レビュー内容を入力してください', en:'Please enter review content' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1374,6 +1389,60 @@ a { text-decoration: none; color: inherit; }
     </aside>
 </div>
 
+<!-- 2026-05-30: 패브릭 상세 + 리뷰 섹션 (선택된 fabricType 기준 — 소분류 상세) -->
+<section id="cdFabricDetailSec" style="max-width:1280px; margin:30px auto 0; padding:0 16px; box-sizing:border-box;">
+    <div style="background:#fff; border-radius:14px; padding:24px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid #f3f4f6;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <i class="fa-solid fa-circle-info" style="color:#0ea5e9; font-size:18px;"></i>
+            <h2 id="cdDetailTitle" style="margin:0; font-size:20px; font-weight:800; color:#1f2937;" data-cdi18n="cd_detail_title">상품 상세정보</h2>
+        </div>
+        <div id="cdDetailBody" style="font-size:14px; line-height:1.75; color:#374151;"></div>
+    </div>
+</section>
+
+<section id="cdReviewSec" style="max-width:1280px; margin:20px auto 40px; padding:0 16px; box-sizing:border-box;">
+    <div style="background:#fff; border-radius:14px; padding:24px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border:1px solid #f3f4f6;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <i class="fa-solid fa-star" style="color:#f59e0b; font-size:18px;"></i>
+            <h2 style="margin:0; font-size:20px; font-weight:800; color:#1f2937;" data-cdi18n="cd_review_title">고객 리뷰</h2>
+            <span id="cdReviewCount" style="margin-left:auto; font-size:13px; color:#64748b; font-weight:500;"></span>
+        </div>
+        <div id="cdReviewSummary" style="display:none; gap:16px; align-items:center; padding:14px 16px; background:#fef3c7; border-radius:10px; margin-bottom:14px;"></div>
+        <div style="margin:10px 0;">
+            <div style="font-size:13px; font-weight:700; color:#64748b; margin-bottom:8px;" data-cdi18n="cd_review_worldwide">🌍 전세계 친구들의 리뷰보기</div>
+            <div id="cdRvFlagBar" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;"></div>
+        </div>
+        <div id="cdReviewWriteArea" style="margin:18px 0;"></div>
+        <div id="cdReviewList"></div>
+        <button id="cdBtnLoadMore" onclick="window._cdLoadMoreReviews()" style="display:none; width:100%; margin-top:12px; padding:12px; border:1px solid #e5e7eb; background:#fff; color:#0f172a; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;" data-cdi18n="cd_review_more">더보기</button>
+    </div>
+</section>
+
+<style>
+/* 2026-05-30: 패브릭 리뷰 전용 스타일 */
+#cdReviewSec .rv-item { padding:14px; border:1px solid #f3f4f6; border-radius:10px; margin-bottom:10px; background:#fff; }
+#cdReviewSec .rv-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+#cdReviewSec .rv-name { font-weight:700; color:#0f172a; font-size:14px; }
+#cdReviewSec .rv-stars { color:#f59e0b; font-size:13px; letter-spacing:1px; }
+#cdReviewSec .rv-date { font-size:12px; color:#94a3b8; }
+#cdReviewSec .rv-comment { font-size:14px; color:#374151; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+#cdReviewSec .rv-photo { margin-top:8px; max-width:200px; max-height:200px; border-radius:8px; cursor:pointer; object-fit:cover; }
+#cdReviewSec .cd-flag-btn { width:36px; height:36px; border-radius:50%; border:2px solid #e2e8f0; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; overflow:hidden; transition:all .2s; }
+#cdReviewSec .cd-flag-btn.active { border-color:#6366f1; box-shadow:0 2px 8px rgba(99,102,241,0.25); }
+#cdReviewSec .cd-write-box { padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
+#cdReviewSec .cd-star-row { font-size:24px; color:#f59e0b; cursor:pointer; user-select:none; margin-bottom:10px; }
+#cdReviewSec .cd-star-row i { cursor:pointer; margin-right:2px; }
+#cdReviewSec .cd-input { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+#cdReviewSec .cd-textarea { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; font-family:inherit; height:80px; resize:vertical; box-sizing:border-box; margin-top:8px; }
+#cdReviewSec .cd-submit-btn { padding:10px 18px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit; }
+#cdReviewSec .cd-submit-btn:hover { background:#4f46e5; }
+#cdReviewSec .cd-photo-btn { padding:10px 16px; background:#fff; color:#6366f1; border:2px solid #6366f1; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit; }
+@media (max-width:768px){
+    #cdFabricDetailSec, #cdReviewSec { padding:0 12px; }
+    #cdFabricDetailSec > div, #cdReviewSec > div { padding:16px; }
+}
+</style>
+
 <div id="toast"></div>
 
 <!-- ===== 장바구니 드로어 ===== -->
@@ -1548,6 +1617,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=70"></script>
+<script src="/cotton_designer.js?v=71"></script>
 </body>
 </html>

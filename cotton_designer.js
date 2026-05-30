@@ -195,6 +195,8 @@ window._cdSelectFabricType = function(type) {
     document.getElementById('fabricColorWrap').style.display = t.isCotton ? '' : 'none';
     updateFabricDetail();
     updatePrice();
+    // 2026-05-30: 상세/리뷰 섹션도 새 fabricType 기준으로 갱신
+    if (typeof window._cdRefreshDetailAndReviews === 'function') window._cdRefreshDetailAndReviews();
 };
 
 window._cdSelectColor = function(color, btn) {
@@ -2505,6 +2507,306 @@ window.addEventListener('resize', function(){
     clearTimeout(_cdResizeT);
     _cdResizeT = setTimeout(function(){ window._cdRender(); }, 120);
 });
+
+// ════════════════════════════════════════════════════
+// 2026-05-30: 패브릭 상세 + 리뷰 시스템 (소분류 = fabricType)
+// product_reviews 테이블 재사용, product_code = 'fab_' + fabricType
+// ════════════════════════════════════════════════════
+const _CD_RV_PAGE = 5;
+window._cdRvState = { page:0, productCode:'', filterLang:'all', rating:5, photoData:null };
+
+function _cdLangCode() {
+    var L = (window.__CD_LANG || 'ko').toLowerCase();
+    if (L === 'ko') return 'kr';
+    return L;
+}
+
+function _cdT(k, fallback) {
+    return (window.cdT && window.cdT(k)) || fallback || '';
+}
+
+function _cdEscape(s) {
+    return String(s || '').replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; });
+}
+
+// 상세 정보 카드 — FABRIC_TYPES 데이터 + 공통 인쇄/주문 정보
+function renderFabricFullDetail() {
+    const sec = document.getElementById('cdFabricDetailSec');
+    const body = document.getElementById('cdDetailBody');
+    const titleEl = document.getElementById('cdDetailTitle');
+    if (!sec || !body) return;
+    const f = FABRIC_TYPES[state.fabricType];
+    if (!f) { sec.style.display = 'none'; return; }
+    const name = pickFabricName(f);
+    const desc = pickFabricDesc(f);
+    const L = (window.__CD_LANG || 'ko');
+    var moreInfo;
+    if (L === 'ja') {
+        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
+                 + '<li>最大幅: <b>1300mm</b> (固定幅・長さは無制限)</li>'
+                 + '<li>印刷方式: デジタル昇華プリント (鮮明な発色・洗濯堅牢度AAA)</li>'
+                 + '<li>最小注文: 1回背 (5.625m²) 単位、10+/100+/500+ で大量割引</li>'
+                 + '<li>制作期間: 5〜7営業日</li>'
+                 + '<li>付属オプション: フチ縫い・縫製・アイレット・ハトメ・カット加工</li>'
+                 + '</ul>';
+    } else if (L === 'en') {
+        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
+                 + '<li>Max width: <b>1300mm</b> (fixed width, unlimited length)</li>'
+                 + '<li>Printing: Digital sublimation (vivid colors, AAA wash fastness)</li>'
+                 + '<li>Min order: per 회배 unit (5.625m²), bulk discounts at 10+/100+/500+</li>'
+                 + '<li>Production: 5–7 business days</li>'
+                 + '<li>Finishes: hem, sewing, eyelets, grommets, custom cutting</li>'
+                 + '</ul>';
+    } else {
+        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
+                 + '<li>대폭: <b>1300mm</b> (고정 폭, 길이 무제한)</li>'
+                 + '<li>인쇄 방식: 디지털 승화 인쇄 (선명한 발색, 세탁견뢰도 AAA)</li>'
+                 + '<li>최소 주문: 1회배 (5.625m²) 단위, 10+/100+/500+ 수량 할인</li>'
+                 + '<li>제작 기간: 5~7영업일</li>'
+                 + '<li>옵션: 변접기·재봉·아일릿·하토메·재단</li>'
+                 + '</ul>';
+    }
+    body.innerHTML = '<h3 style="margin:0 0 8px; font-size:18px; color:#0f172a; font-weight:800;">' + _cdEscape(name) + '</h3>'
+                   + '<p style="margin:0; color:#475569; font-size:14px; line-height:1.7;">' + _cdEscape(desc) + '</p>'
+                   + moreInfo;
+    if (titleEl) titleEl.textContent = _cdT('cd_detail_title', '상품 상세정보');
+    sec.style.display = '';
+}
+
+async function loadFabricReviews(productCode, page) {
+    const sb = window.sb || window.__unified_sb;
+    if (!sb) return;
+    window._cdRvState.productCode = productCode;
+    window._cdRvState.page = page;
+    const fl = window._cdRvState.filterLang || 'all';
+    const from = page * _CD_RV_PAGE, to = from + _CD_RV_PAGE - 1;
+    try {
+        let q = sb.from('product_reviews').select('*', { count:'exact' }).eq('product_code', productCode);
+        if (fl !== 'all') q = q.eq('lang', fl);
+        const { data, count, error } = await q.order('created_at', { ascending:false }).range(from, to);
+        if (error) { console.warn('[cd rv] load:', error.message); renderFabricReviews([], 0, page, 0); return; }
+        let avg = 0;
+        if (page === 0 && (count || 0) > 0) {
+            let aq = sb.from('product_reviews').select('rating').eq('product_code', productCode);
+            if (fl !== 'all') aq = aq.eq('lang', fl);
+            const ar = await aq;
+            if (ar.data && ar.data.length) avg = ar.data.reduce((s, x) => s + (x.rating || 0), 0) / ar.data.length;
+        }
+        renderFabricReviews(data || [], count || 0, page, avg);
+    } catch (e) {
+        console.warn('[cd rv] ex:', e);
+        renderFabricReviews([], 0, 0, 0);
+    }
+}
+
+function renderFabricReviews(reviews, total, page, avg) {
+    const listEl = document.getElementById('cdReviewList');
+    const sumEl = document.getElementById('cdReviewSummary');
+    const moreBtn = document.getElementById('cdBtnLoadMore');
+    const countEl = document.getElementById('cdReviewCount');
+    if (!listEl) return;
+    if (page === 0) {
+        if (total > 0 && sumEl) {
+            const a = (avg || 0).toFixed(1);
+            const fs = Math.round(avg || 0);
+            const stars = '★'.repeat(Math.min(fs, 5)) + '☆'.repeat(Math.max(5 - fs, 0));
+            sumEl.innerHTML = '<div style="font-size:32px; font-weight:900; color:#f59e0b; line-height:1;">' + a + '</div>'
+                           + '<div><div style="font-size:18px; color:#f59e0b; letter-spacing:2px;">' + stars + '</div>'
+                           + '<div style="font-size:12px; color:#64748b; margin-top:4px;">' + total + ' ' + _cdT('cd_review_count', '개의 리뷰') + '</div></div>';
+            sumEl.style.display = 'flex';
+        } else if (sumEl) {
+            sumEl.style.display = 'none';
+        }
+        if (countEl) countEl.textContent = total > 0 ? (total + ' ' + _cdT('cd_review_count', '리뷰')) : '';
+        listEl.innerHTML = '';
+    }
+    if (total === 0 && page === 0) {
+        listEl.innerHTML = '<div style="padding:30px; text-align:center; color:#94a3b8; font-size:14px; border:1px dashed #e5e7eb; border-radius:10px;">' + _cdT('cd_review_none', '아직 리뷰가 없습니다') + '</div>';
+        if (moreBtn) moreBtn.style.display = 'none';
+        return;
+    }
+    reviews.forEach(function(r){
+        const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+        const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+        const photoHtml = r.photo_url ? '<img src="' + r.photo_url + '" class="rv-photo" onclick="window._cdOpenRvPhoto(\'' + r.photo_url + '\')">' : '';
+        const div = document.createElement('div');
+        div.className = 'rv-item';
+        div.innerHTML = '<div class="rv-head"><span class="rv-name">' + _cdEscape(r.user_name || 'Anonymous') + '</span><span class="rv-date">' + date + '</span></div>'
+                      + '<div class="rv-stars">' + stars + '</div>'
+                      + '<div class="rv-comment">' + _cdEscape(r.comment || '') + '</div>' + photoHtml;
+        listEl.appendChild(div);
+    });
+    const loaded = (page + 1) * _CD_RV_PAGE;
+    if (moreBtn) moreBtn.style.display = loaded < total ? 'block' : 'none';
+}
+
+window._cdLoadMoreReviews = function() {
+    const s = window._cdRvState;
+    loadFabricReviews(s.productCode, (s.page || 0) + 1);
+};
+
+window._cdFilterReviews = function(lang) {
+    window._cdRvState.filterLang = lang;
+    document.querySelectorAll('#cdRvFlagBar .cd-flag-btn').forEach(function(b){
+        b.classList.toggle('active', b.dataset.lang === lang);
+    });
+    loadFabricReviews(window._cdRvState.productCode, 0);
+};
+
+window._cdOpenRvPhoto = function(url) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:999999; display:flex; align-items:center; justify-content:center; cursor:zoom-out;';
+    ov.innerHTML = '<img src="' + url + '" style="max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">';
+    ov.onclick = function(){ ov.remove(); };
+    document.body.appendChild(ov);
+};
+
+window._cdSetRvRating = function(n) {
+    window._cdRvState.rating = n;
+    for (let i = 1; i <= 5; i++) {
+        const st = document.getElementById('cdStar' + i);
+        if (st) st.className = 'fa-' + (i <= n ? 'solid' : 'regular') + ' fa-star';
+    }
+};
+
+window._cdRvPhotoChange = function(input) {
+    const file = input.files[0];
+    const prev = document.getElementById('cdRvPhotoPrev');
+    if (!file) { window._cdRvState.photoData = null; if (prev) prev.innerHTML = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function(e){
+        window._cdRvState.photoData = e.target.result;
+        if (prev) prev.innerHTML = '<img src="' + e.target.result + '" style="max-width:120px; max-height:120px; border-radius:8px; margin-top:8px; object-fit:cover;">';
+    };
+    reader.readAsDataURL(file);
+};
+
+window._cdSubmitReview = async function() {
+    const sb = window.sb || window.__unified_sb;
+    if (!sb) { showToast('DB error'); return; }
+    const u = window.currentUser || window._cpCurrentUser;
+    let name;
+    if (u) {
+        const meta = u.user_metadata || {};
+        name = meta.full_name || meta.name || (u.email || '').split('@')[0] || 'User';
+    } else {
+        const ne = document.getElementById('cdReviewNick');
+        name = ne ? ne.value.trim() : '';
+        if (!name) { alert(_cdT('cd_review_login_or_nick', '닉네임을 입력해주세요')); return; }
+    }
+    const ce = document.getElementById('cdReviewComment');
+    const comment = ce ? ce.value.trim() : '';
+    if (!comment) { alert(_cdT('cd_review_comment_min', '내용을 입력해주세요')); return; }
+    let photoUrl = null;
+    if (window._cdRvState.photoData) {
+        try {
+            const blob = await (await fetch(window._cdRvState.photoData)).blob();
+            const path = 'reviews/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.jpg';
+            const up = await sb.storage.from('design').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
+            if (!up.error) photoUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+        } catch (e) { console.warn('[cd rv] photo:', e); }
+    }
+    const code = window._cdRvState.productCode || ('fab_' + state.fabricType);
+    const { error } = await sb.from('product_reviews').insert({
+        product_code: code,
+        user_name: name,
+        rating: window._cdRvState.rating || 5,
+        comment: comment,
+        photo_url: photoUrl,
+        lang: _cdLangCode()
+    });
+    if (error) { alert('Submit failed: ' + error.message); return; }
+    showToast(_cdT('cd_review_submitted', '리뷰가 등록되었습니다 ✨'));
+    if (ce) ce.value = '';
+    const ne = document.getElementById('cdReviewNick'); if (ne) ne.value = '';
+    window._cdRvState.photoData = null;
+    const pp = document.getElementById('cdRvPhotoPrev'); if (pp) pp.innerHTML = '';
+    window._cdSetRvRating(5);
+    loadFabricReviews(code, 0);
+};
+
+function renderRvWriteForm() {
+    const area = document.getElementById('cdReviewWriteArea');
+    if (!area) return;
+    const u = window.currentUser || window._cpCurrentUser;
+    let nickRow;
+    if (u) {
+        const meta = u.user_metadata || {};
+        const dn = meta.full_name || meta.name || (u.email || '').split('@')[0];
+        nickRow = '<div style="padding:10px 14px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; margin-bottom:10px; color:#4338ca; font-weight:600;"><i class="fa-solid fa-user-circle"></i> ' + _cdEscape(dn) + '</div>';
+    } else {
+        nickRow = '<input type="text" id="cdReviewNick" class="cd-input" placeholder="' + _cdT('cd_review_nick_ph', '닉네임') + '" maxlength="20" style="margin-bottom:10px;">';
+    }
+    area.innerHTML = '<div class="cd-write-box">'
+        + '<div style="font-weight:700; font-size:14px; margin-bottom:10px; color:#0f172a;">' + _cdT('cd_review_write', '리뷰 작성') + '</div>'
+        + nickRow
+        + '<div class="cd-star-row">'
+        + [1,2,3,4,5].map(function(n){ return '<i id="cdStar' + n + '" class="fa-solid fa-star" onclick="window._cdSetRvRating(' + n + ')"></i>'; }).join('')
+        + '</div>'
+        + '<textarea id="cdReviewComment" class="cd-textarea" placeholder="' + _cdT('cd_review_comment_ph', '리뷰를 남겨주세요') + '"></textarea>'
+        + '<div id="cdRvPhotoPrev"></div>'
+        + '<div style="display:flex; gap:10px; margin-top:12px;">'
+        + '<label class="cd-photo-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;">'
+        + '<i class="fa-solid fa-camera"></i> ' + _cdT('cd_review_photo', '사진 첨부')
+        + '<input type="file" accept="image/*" style="display:none;" onchange="window._cdRvPhotoChange(this)">'
+        + '</label>'
+        + '<button class="cd-submit-btn" style="flex:1;" onclick="window._cdSubmitReview()">' + _cdT('cd_review_submit', '리뷰 등록') + '</button>'
+        + '</div>'
+        + '</div>';
+}
+
+function renderRvFlagBar() {
+    const bar = document.getElementById('cdRvFlagBar');
+    if (!bar) return;
+    const cur = window._cdRvState.filterLang || 'all';
+    const flags = [
+        { code:'all', html:'<i class="fa-solid fa-globe" style="font-size:18px; color:#6366f1;"></i>' },
+        { code:'kr',  html:'🇰🇷' },
+        { code:'ja',  html:'🇯🇵' },
+        { code:'en',  html:'🇺🇸' }
+    ];
+    bar.innerHTML = flags.map(function(f){
+        const isAct = f.code === cur;
+        return '<button class="cd-flag-btn ' + (isAct ? 'active' : '') + '" data-lang="' + f.code + '" onclick="window._cdFilterReviews(\'' + f.code + '\')" style="font-size:20px;">' + f.html + '</button>';
+    }).join('');
+}
+
+// 통합 진입점 — 페이지 로드 + fabricType 변경 시 호출
+window._cdRefreshDetailAndReviews = function() {
+    try {
+        renderFabricFullDetail();
+        renderRvWriteForm();
+        renderRvFlagBar();
+        const code = 'fab_' + state.fabricType;
+        window._cdRvState.productCode = code;
+        window._cdRvState.filterLang = 'all';
+        window._cdRvState.page = 0;
+        window._cdRvState.rating = 5;
+        loadFabricReviews(code, 0);
+    } catch (e) {
+        console.warn('[cd] detail+reviews refresh failed:', e);
+    }
+};
+
+// 페이지 로드 + sb 준비 후 첫 호출 (sb 가 cart_sync 등 외부에서 늦게 set 될 수 있어 polling)
+(function _cdInitDetailReviews() {
+    let tries = 0;
+    function tryInit() {
+        if (window.sb || window.__unified_sb) {
+            window._cdRefreshDetailAndReviews();
+        } else if (tries++ < 40) {
+            setTimeout(tryInit, 200);
+        } else {
+            // sb 못 잡으면 상세만 (FABRIC_TYPES 기반) 렌더, 리뷰는 빈 상태
+            renderFabricFullDetail();
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInit);
+    } else {
+        tryInit();
+    }
+})();
 
 // 2026-05-13: 스크립트 로드 전에 사용자가 누른 버튼/업로드 이벤트 (cotton_designer.html 의
 // 인라인 스텁이 대기열에 쌓아둔 것) 을 비움 → 첫 클릭이 무시되지 않도록
