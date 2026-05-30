@@ -2478,20 +2478,104 @@
                     '<div style="padding:8px 10px;">' +
                         '<div style="font-size:11.5px; font-weight:700; color:#1e293b; line-height:1.3; height:30px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
                         '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:4px;">' + fmtPrice(priceVal) + '</div>' +
-                        '<div style="display:flex; gap:4px; margin-top:6px; align-items:center;">' +
-                            '<input type="number" min="1" value="1" id="soRbQ_' + p.code + '" style="width:46px; padding:4px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:12px; font-weight:700;" onclick="event.stopPropagation();">' +
-                            '<button onclick="window._soAddRawBoardOther(\'' + safeCode + '\')" style="flex:1; padding:5px 4px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:11.5px; font-weight:800; cursor:pointer;">+ ' + tr('담기', '追加', 'Add') + '</button>' +
+                        // 2026-05-30: 카드별 즉시 담기 제거 — 수량만 입력하고 아래 일괄 "장바구니 담기" 로 한꺼번에 추가.
+                        //   기본값 0 (담을 의사 표시), >0 인 카드들만 일괄 담김.
+                        '<div style="display:flex; gap:4px; margin-top:6px; align-items:center; justify-content:flex-end;">' +
+                            '<span style="font-size:11px; color:#64748b; font-weight:600;">' + tr('수량', '数量', 'Qty') + '</span>' +
+                            '<input type="number" min="0" value="0" data-rb-qty-code="' + safeCode + '" id="soRbQ_' + p.code + '" style="width:60px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;" onclick="event.stopPropagation();">' +
                         '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
             sec.style.display = '';
+            // 2026-05-30: 일괄 담기 버튼은 우측 메인 actions 의 #soBtnCart 를 재활용 — 라벨/onclick 만 raw-board 전용으로 교체.
+            try {
+                var _rbBatchBtn = document.getElementById('soBtnCart');
+                if (_rbBatchBtn) {
+                    _rbBatchBtn.disabled = false;
+                    _rbBatchBtn.style.display = '';
+                    _rbBatchBtn.innerHTML = '🛒 ' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
+                    _rbBatchBtn.onclick = function(){ window._soAddRawBoardBatch && window._soAddRawBoardBatch(); };
+                }
+            } catch (e) {}
         } catch (e) { console.warn('[so] rawBoardMore render', e); sec.style.display = 'none'; }
     }
     window._soLoadRawBoardMore = _soLoadRawBoardMore;
 
-    // 2026-05-30: 다른 원판 제품을 (수량과 함께) 즉시 cart 에 추가.
-    //   현재 모달의 상품과 별개의 line item 으로 들어감. 원판은 metro_delivery 100,000원, 카트 합계 10+ 일 때 0원 보정 (기존 로직 재사용).
+    // 2026-05-30: 원판 6개 카드 일괄 담기 — 수량 >0 인 카드들만 cart 에 추가.
+    //   각 카드는 별도 line item, 배송은 metro_delivery 100,000원 (10장+ 일 때 자동 0원 보정).
+    window._soAddRawBoardBatch = function () {
+        try {
+            if (!_soRbMoreCache) { console.warn('[so] rb batch: cache empty'); return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            var qtyInputs = document.querySelectorAll('#soRawBoardMoreRight input[data-rb-qty-code]');
+            var picks = [];
+            qtyInputs.forEach(function(inp){
+                var q = parseInt(inp.value, 10) || 0;
+                if (q > 0) picks.push({ code: inp.getAttribute('data-rb-qty-code'), qty: q });
+            });
+            if (!picks.length) {
+                showStatus(tr('수량을 입력해주세요 (1 이상).', '数量を入力してください (1以上)。', 'Please enter qty (≥1).'), 'warn');
+                return;
+            }
+            var cur = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+            var addedCount = 0;
+            picks.forEach(function(pick, idx){
+                var p = _soRbMoreCache.find(function(x){ return x.code === pick.code; });
+                if (!p) return;
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var pickedName = p.name; if (lang === 'ja' && p.name_jp) pickedName = p.name_jp; else if (lang !== 'ko' && p.name_us) pickedName = p.name_us;
+                cur.push({
+                    uid: Date.now() + idx * 10 + Math.floor(Math.random() * 10),
+                    product: {
+                        code: p.code, name: pickedName, name_kr: p.name, name_jp: p.name_jp, name_us: p.name_us,
+                        price: p.price, price_jp: p.price_jp, price_us: p.price_us,
+                        category: p.category, w_mm: p.width_mm || p.w_mm, h_mm: p.height_mm || p.h_mm, img: p.img_url
+                    },
+                    type: 'file_upload',
+                    fileName: '(원판 발송 — 파일 없음)',
+                    mimeType: '', fileData: null, originalUrl: null, filePath: null,
+                    thumb: p.img_url || null,
+                    isOpen: false,
+                    qty: pick.qty,
+                    selectedAddons: {}, addonQuantities: {},
+                    rawBoardDouble: false, bundleShipping: false,
+                    shipping: { method: 'metro_delivery', fee: 100000 },
+                    _isRawBoardAuto: true
+                });
+                addedCount++;
+            });
+            localStorage.setItem(CART_KEY, JSON.stringify(cur));
+            if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
+            // 10장 이상 무료배송 자동 보정
+            try {
+                var rawTotal = 0;
+                cur.forEach(function (it) { if (_soIsRawBoardProduct(it && (it.product || it))) rawTotal += parseInt(it.qty || it.quantity || 1, 10) || 0; });
+                if (rawTotal >= 10) {
+                    var changed = false;
+                    cur.forEach(function (it) {
+                        if (!_soIsRawBoardProduct(it && (it.product || it))) return;
+                        if (it.shipping && it.shipping.method === 'metro_delivery' && it.shipping.fee > 0) { it.shipping.fee = 0; changed = true; }
+                    });
+                    if (changed) {
+                        localStorage.setItem(CART_KEY, JSON.stringify(cur));
+                        if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
+                    }
+                }
+            } catch (e) {}
+            try { if (window.renderCart) window.renderCart(); } catch (e) {}
+            try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
+            showStatus('✅ ' + tr(addedCount + '개 상품 담겼습니다', addedCount + '点 追加しました', addedCount + ' items added'), 'ok');
+            // 입력값 초기화
+            qtyInputs.forEach(function(inp){ inp.value = 0; });
+            // 카트 드로어 자동 오픈
+            try { if (window._soToggleCart) window._soToggleCart(true); } catch (e) {}
+        } catch (e) { console.error('[so] rawBoardBatch', e); }
+    };
+
+    // 2026-05-30: (구) 카드별 즉시 담기 — 다른 곳에서 호출될 수 있어 함수는 유지.
     window._soAddRawBoardOther = function (code) {
         try {
             if (!_soRbMoreCache) return;
@@ -4596,19 +4680,22 @@
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
         var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
         if (_rb_editorBtn) _rb_editorBtn.style.display = state.isRawBoard ? 'none' : '';
-        // 2026-05-30: 원판은 우측의 6개 카드별 담기 버튼만 사용 — 메인 수량/가격/카트/주문 버튼 숨김.
-        //   장바구니 보기 (#soBtnViewCart) 만 남겨서 사용자가 6개 담은 카트로 이동할 수 있게.
+        // 2026-05-30: 원판은 가격 박스 + 바로 주문 버튼 숨김. 장바구니 담기 버튼은 일괄 담기 핸들러로 재사용 (loadRawBoardMore 내부에서 onclick 교체).
         if (state.isRawBoard) {
-            var _rbQtyS = document.getElementById('soQtySection'); if (_rbQtyS) _rbQtyS.style.display = 'none';
             var _rbPriceBox = document.querySelector('#simpleOrderModal .so-price-box'); if (_rbPriceBox) _rbPriceBox.style.display = 'none';
-            var _rbBtnC = document.getElementById('soBtnCart'); if (_rbBtnC) _rbBtnC.style.display = 'none';
             var _rbBtnB = document.getElementById('soBtnBuy'); if (_rbBtnB) _rbBtnB.style.display = 'none';
+            // 장바구니 담기 버튼 활성화 — onclick 교체는 _soLoadRawBoardMore 안에서.
+            var _rbBtnC = document.getElementById('soBtnCart');
+            if (_rbBtnC) { _rbBtnC.disabled = false; _rbBtnC.style.display = ''; }
         } else {
-            // 원판이 아닌 상품으로 모달 재진입 시 복구
-            var _rbQtyS2 = document.getElementById('soQtySection'); if (_rbQtyS2 && _rbQtyS2.style.display === 'none' && !state.isWall) _rbQtyS2.style.display = '';
+            // 원판이 아닌 상품으로 모달 재진입 시 복구 — 가격박스/바로주문/카트 버튼 복원 + 카트 버튼 onclick 복원
             var _rbPriceBox2 = document.querySelector('#simpleOrderModal .so-price-box'); if (_rbPriceBox2 && _rbPriceBox2.style.display === 'none') _rbPriceBox2.style.display = '';
-            var _rbBtnC2 = document.getElementById('soBtnCart'); if (_rbBtnC2 && _rbBtnC2.style.display === 'none') _rbBtnC2.style.display = '';
             var _rbBtnB2 = document.getElementById('soBtnBuy'); if (_rbBtnB2 && _rbBtnB2.style.display === 'none') _rbBtnB2.style.display = '';
+            var _rbBtnC2 = document.getElementById('soBtnCart');
+            if (_rbBtnC2) {
+                _rbBtnC2.onclick = function(){ window._soAddCart && window._soAddCart(); };
+                _rbBtnC2.innerHTML = '🛒 ' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
+            }
         }
         // 2026-05-25: 원판이면 우측 컬럼에 "다른 원판 제품 더 담기" 그리드 로드, 아니면 숨김
         if (state.isRawBoard) { try { window._soLoadRawBoardMore(p.code); } catch(e){} }
@@ -5045,8 +5132,9 @@
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
+        // 2026-05-30: 원판도 숨김 — 우측 6개 카드 각각의 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
-        if (qtySec) qtySec.style.display = state.isWall ? 'none' : '';
+        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard) ? 'none' : '';
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
         state.isDeliveryOnly = _soUsesDeliveryShipping(p);
         // 2026-05-13: 택배배송 가능 (배너·인스타판넬)
