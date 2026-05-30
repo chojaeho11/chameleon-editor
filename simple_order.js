@@ -1031,6 +1031,20 @@
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
         <!-- 2026-05-29: 키링/코롯토 베스트굿즈는 pill UI 로 고정 사이즈 선택 -->
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
+          <!-- 2026-05-30: 키링 단면/양면 토글 (양면 × 2배) — keyring 전용 -->
+          <div id="soKeyringSideRow" style="display:none; margin-bottom:10px;">
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">${tr('인쇄 면', '印刷面', 'Print side')}</div>
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;">
+              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickKeyringSide(this)"
+                style="padding:10px 12px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
+                ${tr('단면', '片面', 'Single')} <span style="font-size:11px; opacity:0.75;">(${tr('기본가', '基本価格', 'Base')})</span>
+              </button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickKeyringSide(this)"
+                style="padding:10px 12px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
+                ${tr('양면', '両面', 'Double')} <span style="font-size:11px; color:#dc2626; font-weight:800;">×2</span>
+              </button>
+            </div>
+          </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
@@ -1833,6 +1847,10 @@
         } else if (state.isCustomSize) {
             // 현수막·실사출력 등 면적 기반: 계산된 단가 × 수량
             unit = state.customUnitPrice || 0;
+            // 2026-05-30: 키링 양면 = 단가 × 2
+            if (state.presetType === 'keyring' && state.keyringSide === 'double') {
+                unit = unit * 2;
+            }
             qty = state.qty || 1;
             subtotal = unit * qty;
             state.wallHeightExtra = 0;
@@ -2979,6 +2997,24 @@
     };
 
     // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 pill 클릭 — 고정가 적용
+    // 2026-05-30: 키링 단면/양면 선택 클릭 — 양면 = ×2 가격
+    window._soPickKeyringSide = function (btn) {
+        if (!btn) return;
+        var row = btn.parentElement;
+        if (row) row.querySelectorAll('.so-side-btn').forEach(function(b){
+            b.classList.remove('active');
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+            b.style.borderColor = '#e2e8f0';
+        });
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#0f172a';
+        state.keyringSide = btn.getAttribute('data-side') === 'double' ? 'double' : 'single';
+        if (typeof recalc === 'function') recalc();
+    };
+
     // 2026-05-30: 키링/코롯토 모양 선택 클릭 — 6종 컷팅 옵션
     window._soPickKeyringCut = function (btn) {
         if (!btn) return;
@@ -4151,6 +4187,23 @@
                 }
                 pillsNote.style.display = '';
             }
+            // 2026-05-30: 키링 — 단면/양면 토글 (양면 ×2 가격). 새 상품 진입 시 항상 단면 초기화
+            state.keyringSide = 'single';
+            var sideRow = document.getElementById('soKeyringSideRow');
+            if (sideRow) {
+                if (state.presetType === 'keyring') {
+                    sideRow.style.display = '';
+                    sideRow.querySelectorAll('.so-side-btn').forEach(function(b){
+                        var isDef = (b.getAttribute('data-side') === 'single');
+                        b.classList.toggle('active', isDef);
+                        b.style.background = isDef ? '#0f172a' : '#fff';
+                        b.style.color = isDef ? '#fff' : '#334155';
+                        b.style.borderColor = isDef ? '#0f172a' : '#e2e8f0';
+                    });
+                } else {
+                    sideRow.style.display = 'none';
+                }
+            }
             // 2026-05-30: 키링/코롯토 — 모양 선택 6종 (이미지 그리드)
             var cutSec = document.getElementById('soPresetCutSection');
             var cutGrid = document.getElementById('soPresetCutGrid');
@@ -4215,10 +4268,12 @@
             state.presetSizeFixed = false;
             state.presetWrap = false;
             state.keyringCut = null;
+            state.keyringSide = 'single';
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
             var _wbtn2 = document.getElementById('soPresetWrapBtn'); if (_wbtn2) _wbtn2.style.display = 'none';
             var _cutS2 = document.getElementById('soPresetCutSection'); if (_cutS2) _cutS2.style.display = 'none';
+            var _sideRow2 = document.getElementById('soKeyringSideRow'); if (_sideRow2) _sideRow2.style.display = 'none';
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
@@ -4232,10 +4287,12 @@
             state.presetSizeFixed = false;
             state.presetWrap = false;
             state.keyringCut = null;
+            state.keyringSide = 'single';
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
             var _wbtn3 = document.getElementById('soPresetWrapBtn'); if (_wbtn3) _wbtn3.style.display = 'none';
             var _cutS3 = document.getElementById('soPresetCutSection'); if (_cutS3) _cutS3.style.display = 'none';
+            var _sideRow3 = document.getElementById('soKeyringSideRow'); if (_sideRow3) _sideRow3.style.display = 'none';
             if (editorBtn) editorBtn.style.display = '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
@@ -4633,6 +4690,8 @@
                 label_jp: state.keyringCut.label_jp || state.keyringCut.label,
                 label_en: state.keyringCut.label_en || state.keyringCut.label
             } : null,
+            // 2026-05-30: 키링 단면/양면 (양면 = unit price × 2)
+            _keyringSide: (state.presetType === 'keyring') ? (state.keyringSide || 'single') : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -5183,6 +5242,10 @@
         // 2026-05-30: 베스트굿즈 (키링/코롯토 + 손수건/티셔츠/머그/허니콤/스마트톡) — 100개+ 50% 할인 (상품 단가만)
         var _isBest = !!it._isBestGoods;
         var _isPreset = !!it._isPresetGoods;
+        // 2026-05-30: 키링 양면 = 단가 × 2 (장바구니 / 견적서 / 결제 일관성)
+        if (it._presetType === 'keyring' && it._keyringSide === 'double') {
+            unit = unit * 2;
+        }
         var subtotal = unit * qty;
         if (_isBest && qty >= 100) {
             subtotal = Math.round(subtotal * 0.5);
@@ -5465,6 +5528,10 @@
             } else {
                 name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || tr('상품','商品','Item'));
                 opts = (it.qty || 1) + tr('개','個',' pcs');
+                // 2026-05-30: 키링 — 단면/양면 표시
+                if (it._presetType === 'keyring' && it._keyringSide) {
+                    opts += ' · ' + (it._keyringSide === 'double' ? tr('양면 (×2)','両面 (×2)','Double (×2)') : tr('단면','片面','Single'));
+                }
                 // 2026-05-30: 키링/코롯토 — 선택된 모양 표시
                 if (it._keyringCut && it._keyringCut.label) {
                     var _cl = it._keyringCut.label;
@@ -6011,6 +6078,10 @@
                 }
                 if (it.customSize && it.customSize.w_cm) {
                     lines.push('   📐 사이즈: ' + it.customSize.w_cm + 'cm × ' + it.customSize.h_cm + 'cm');
+                }
+                // 2026-05-30: 키링 단면/양면 (양면이면 단가 ×2 표기)
+                if (it._presetType === 'keyring' && it._keyringSide) {
+                    lines.push('   🖨️ 인쇄 면: ' + (it._keyringSide === 'double' ? '양면 (단가 ×2)' : '단면'));
                 }
                 // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
                 if (it._keyringCut && it._keyringCut.label) {

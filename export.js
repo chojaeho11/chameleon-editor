@@ -1804,6 +1804,10 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             pdfPrice = item.customSize.unit;
         }
         if (item.rawBoardDouble) pdfPrice = pdfPrice * 2;
+        // 2026-05-30: 키링 양면 — 단가 ×2
+        if (item._presetType === 'keyring' && item._keyringSide === 'double') {
+            pdfPrice = pdfPrice * 2;
+        }
 
         // ★ 가벽: 벽면 상세 표시 (extraFields 또는 product 내부에서 읽기)
         const _wallPanelsList = item._wallPanels || (item.product && item.product._wallPanels) || null;
@@ -1825,6 +1829,20 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if (item.product._wallDiscountRate > 0) optParts.push(`할인${Math.round(item.product._wallDiscountRate*100)}%`);
         } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
+        }
+        // 2026-05-30: 키링 단면/양면 — 견적서 규격 컬럼에 표시
+        if (item._presetType === 'keyring' && item._keyringSide) {
+            var _sidePrefix = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '印刷面: ' :
+                              (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Side: ' : '인쇄면: ';
+            var _sideTxt;
+            if (item._keyringSide === 'double') {
+                _sideTxt = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '両面 (×2)' :
+                           (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Double (×2)' : '양면 (×2)';
+            } else {
+                _sideTxt = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '片面' :
+                           (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Single' : '단면';
+            }
+            optParts.push(_sidePrefix + _sideTxt);
         }
         // 2026-05-30: 키링/코롯토 선택된 모양 (1~6) — 견적서 규격 컬럼에 표시
         if (item._keyringCut && item._keyringCut.label) {
