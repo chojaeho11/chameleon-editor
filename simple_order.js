@@ -843,6 +843,13 @@
           </div>
         </div>
 
+        <!-- 2026-05-30: 티셔츠 — 선택한 인쇄 위치별 이미지 업로드 (표준 업로드/에디터 대체) -->
+        <div id="soTshirtUploadSection" style="display:none;">
+          <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">📤 ${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
+          <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
+        </div>
+
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
         <div id="soUploadWrap">
         <div class="so-upload-section-label" id="soUploadLabel">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
@@ -3151,6 +3158,71 @@
         state.tshirtPrintMethod = btn.getAttribute('data-method') || 'dtg';
     };
 
+    // 2026-05-30: 티셔츠 — 선택된 인쇄 위치별 업로드 카드 렌더
+    window._soRenderTshirtUploads = function () {
+        var grid = document.getElementById('soTshirtUploadGrid');
+        if (!grid) return;
+        var areas = Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas : ['front_logo'];
+        if (!state.tshirtFiles) state.tshirtFiles = {};
+        var LABELS = {
+            front_logo: { ko:'앞면 로고', jp:'前面ロゴ',  en:'Front logo', img:'/t/print1.png' },
+            front_full: { ko:'앞면 전체', jp:'前面全体',  en:'Full front', img:'/t/print2.jpg' },
+            back_full:  { ko:'뒷면 전체', jp:'背面全体',  en:'Full back',  img:'/t/print3.jpg' }
+        };
+        // 더 이상 선택되지 않은 영역의 파일 제거
+        Object.keys(state.tshirtFiles).forEach(function(k){ if (areas.indexOf(k) < 0) delete state.tshirtFiles[k]; });
+        grid.innerHTML = areas.map(function(a){
+            var lbl = LABELS[a] || { ko:a, jp:a, en:a, img:'' };
+            var f = state.tshirtFiles[a];
+            var thumb = f && f.dataUrl
+                ? '<img src="' + f.dataUrl + '" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">'
+                : '<div style="width:100%; aspect-ratio:1/1; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8; font-size:11.5px; font-weight:700; gap:4px;">'
+                + '<i class="fa-solid fa-cloud-arrow-up" style="font-size:24px;"></i>'
+                + '<span>' + tr('클릭해서 업로드', 'クリックでアップロード', 'Click to upload') + '</span>'
+                + '</div>';
+            var status = f
+                ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✓ ' + (f.name || 'file') + '</div>'
+                : '<div style="font-size:10.5px; color:#94a3b8; font-weight:700;">' + tr('미업로드','未アップロード','Not uploaded') + '</div>';
+            var areaSafe = String(a).replace(/[^a-z0-9_]/gi,'');
+            return '<div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:8px; background:#fff;">'
+                + '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:6px;">'
+                +   '<img src="' + lbl.img + '" style="width:24px; height:24px; object-fit:cover; border-radius:4px;">'
+                +   '<span>' + tr(lbl.ko, lbl.jp, lbl.en) + '</span>'
+                + '</div>'
+                + '<label style="display:block; cursor:pointer;">'
+                +   '<input type="file" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" '
+                +     'onchange="window._soTshirtPickFile(\'' + areaSafe + '\', this.files)" style="display:none;">'
+                +   thumb
+                + '</label>'
+                + '<div style="margin-top:6px;">' + status + '</div>'
+                + (f ? '<button type="button" onclick="window._soTshirtRemoveFile(\'' + areaSafe + '\')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ' + tr('제거', '削除', 'Remove') + '</button>' : '')
+                + '</div>';
+        }).join('');
+    };
+    // 파일 선택 → state.tshirtFiles 에 저장 + 썸네일 데이터URL 생성
+    window._soTshirtPickFile = function (area, files) {
+        if (!files || !files[0]) return;
+        var f = files[0];
+        if (!state.tshirtFiles) state.tshirtFiles = {};
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            state.tshirtFiles[area] = {
+                name: f.name,
+                type: f.type,
+                size: f.size,
+                dataUrl: e.target.result,
+                file: f
+            };
+            if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
+        };
+        reader.readAsDataURL(f);
+    };
+    window._soTshirtRemoveFile = function (area) {
+        if (!state.tshirtFiles) return;
+        delete state.tshirtFiles[area];
+        if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
+    };
+
     // 2026-05-30: 티셔츠 인쇄 위치 토글 (복수 선택). 최소 1개 유지 (모두 해제 불가)
     //   앞면 로고 = 무료 / 앞면 전체·뒷면 전체 = +3,000원/장
     window._soToggleTshirtPrintArea = function (btn) {
@@ -3176,6 +3248,8 @@
             var spans = b.querySelectorAll('span');
             if (spans[0]) spans[0].style.color = on ? '#fff' : '#334155';
         });
+        // 인쇄 위치 변경 시 업로드 카드 그리드 재렌더
+        if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
         if (typeof recalc === 'function') recalc();
     };
 
@@ -4395,14 +4469,34 @@
             // 전체 수량은 0 으로 시작 (사용자가 S/M/L 입력해야 함)
             state.qty = 0;
             var _soQtyInp = document.getElementById('soQty'); if (_soQtyInp) _soQtyInp.value = 0;
+            // 2026-05-30: 티셔츠 — 표준 업로드/에디터 숨김, 인쇄 위치별 업로드 활성화
+            state.tshirtFiles = {}; // { area_id: { name, type, size, dataUrl } }
+            var _stdUpload = document.getElementById('soUploadWrap');
+            var _stdUploadLabel = document.getElementById('soUploadLabel');
+            var _tshirtUpload = document.getElementById('soTshirtUploadSection');
+            if (_stdUpload) _stdUpload.style.display = 'none';
+            if (_stdUploadLabel) _stdUploadLabel.style.display = 'none';
+            if (_tshirtUpload) _tshirtUpload.style.display = '';
+            // 에디터 카드는 이미 hideEditor 로직이 처리 — 추가 보강
+            if (editorBtn) editorBtn.style.display = 'none';
+            // 초기 렌더
+            setTimeout(function(){ if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads(); }, 0);
         } else {
             state.tshirtSizes = null;
             state.tshirtPrintMethod = null;
             state.tshirtPrintAreas = null;
+            state.tshirtFiles = null;
             if (_tshirtSizeSec) _tshirtSizeSec.style.display = 'none';
             if (_tshirtMethSec) _tshirtMethSec.style.display = 'none';
             if (_tshirtAreaSec) _tshirtAreaSec.style.display = 'none';
             if (_tshirtQtySec)  _tshirtQtySec.style.display  = '';
+            // 표준 업로드/에디터 복원
+            var _stdUpload2 = document.getElementById('soUploadWrap');
+            var _stdUploadLabel2 = document.getElementById('soUploadLabel');
+            var _tshirtUpload2 = document.getElementById('soTshirtUploadSection');
+            if (_stdUpload2) _stdUpload2.style.display = '';
+            if (_stdUploadLabel2) _stdUploadLabel2.style.display = '';
+            if (_tshirtUpload2) _tshirtUpload2.style.display = 'none';
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
@@ -5000,10 +5094,23 @@
             } : null,
             // 2026-05-30: 키링 단면/양면 (양면 = unit price × 2)
             _keyringSide: (state.presetType === 'keyring') ? (state.keyringSide || 'single') : null,
-            // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치 (복수 — 배열)
+            // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치 (복수 — 배열) / 위치별 업로드 파일 정보
             _tshirtSizes: (state.presetType === 'tshirt') ? (state.tshirtSizes || null) : null,
             _tshirtPrintMethod: (state.presetType === 'tshirt') ? (state.tshirtPrintMethod || null) : null,
             _tshirtPrintAreas: (state.presetType === 'tshirt') ? (Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas.slice() : null) : null,
+            _tshirtFilesMeta: (state.presetType === 'tshirt' && state.tshirtFiles)
+                ? (function(){
+                    var out = {};
+                    Object.keys(state.tshirtFiles).forEach(function(k){
+                        var f = state.tshirtFiles[k];
+                        if (!f) return;
+                        // localStorage 용량 보호: dataUrl 은 작은 썸네일만 (50KB 이하만 보존)
+                        var thumb = (f.dataUrl && f.dataUrl.length < 50000) ? f.dataUrl : null;
+                        out[k] = { name: f.name || '', size: f.size || 0, type: f.type || '', thumb: thumb };
+                    });
+                    return out;
+                  })()
+                : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -6469,6 +6576,18 @@
                         if (_paid.length > 0) {
                             var _printAdd = _paid.length * 3000 * (it.qty || 0);
                             lines.push('       └ 추가 인쇄비: ' + _paid.length + ' × 3,000원 × ' + (it.qty||0) + '장 = ' + _printAdd.toLocaleString() + '원');
+                        }
+                        // 위치별 업로드 파일 명세
+                        if (it._tshirtFilesMeta) {
+                            _areas.forEach(function(a){
+                                var meta = it._tshirtFilesMeta[a];
+                                var areaKo = a === 'front_logo' ? '앞면 로고' : a === 'front_full' ? '앞면 전체' : a === 'back_full' ? '뒷면 전체' : a;
+                                if (meta && meta.name) {
+                                    lines.push('       └ 📎 ' + areaKo + ' 파일: ' + meta.name + ' (' + Math.round((meta.size||0)/1024) + ' KB)');
+                                } else {
+                                    lines.push('       └ ⚠️ ' + areaKo + ' 파일: 미업로드');
+                                }
+                            });
                         }
                     }
                 }
