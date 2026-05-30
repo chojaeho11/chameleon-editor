@@ -1978,10 +1978,9 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 else if (item.qty >= 10) _qtyDiscRate2 = 0.30;
                 else _qtyDiscRate2 = 0.20;
             }
-            // 2026-05-30: 베스트굿즈 — 50% 할인 (티셔츠 3장+ / 그 외 100개+)
-            if (_isBestGoodsItem) {
-                var _bulkThrPdf = (item._presetType === 'tshirt') ? 3 : 100;
-                if (item.qty >= _bulkThrPdf) _qtyDiscRate2 = 0.50;
+            // 2026-05-30: 베스트굿즈 — 100개+ 50% 할인 (티셔츠는 인쇄비에서 별도 할인 — 상품가 고정)
+            if (_isBestGoodsItem && item._presetType !== 'tshirt' && item.qty >= 100) {
+                _qtyDiscRate2 = 0.50;
             }
 
             // 2026-05-15: simple_order 가벽 (wallSize, wallSide) — recalc()과 동일한 면적/양면/세로3m 가산.
@@ -2100,29 +2099,36 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             });
         }
 
-        // 2026-05-30: 티셔츠 — 인쇄 위치 추가비 (앞면로고 무료, 앞면전체/뒷면전체 +3,000원/장)
+        // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (로고 3000, 앞면전체 8000, 뒷면전체 8000 / 장)
+        //   3장+ 50% 할인
         if (item._presetType === 'tshirt') {
             var _areasFeePdf = Array.isArray(item._tshirtPrintAreas) ? item._tshirtPrintAreas : (item._tshirtPrintArea ? [item._tshirtPrintArea] : []);
-            var _paidPdf = _areasFeePdf.filter(function(a){ return a === 'front_full' || a === 'back_full'; });
-            if (_paidPdf.length > 0) {
-                var _printUnit = 3000;
-                var _printQty = (item.qty || 0) * _paidPdf.length;
+            if (_areasFeePdf.length > 0) {
+                var _FEE_PDF = { front_logo: 3000, front_full: 8000, back_full: 8000 };
+                var _basePerPc = 0;
+                _areasFeePdf.forEach(function(a){ _basePerPc += (_FEE_PDF[a] || 0); });
+                var _mlt = (item.qty >= 3) ? 0.5 : 1;
+                var _printUnit = Math.round(_basePerPc * _mlt);
+                var _printQty = (item.qty || 0);
                 if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _printUnit = Math.round(_printUnit * _cr.JP);
                 else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _printUnit = Math.round(_printUnit * _cr.US * 100) / 100;
                 var _printTotal = _printUnit * _printQty;
-                totalAmt += _printTotal;
-                var _printName = '└ ' + ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '追加印刷費' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Extra print fee' : '추가 인쇄비') + ' (' + _paidPdf.join('+') + ')';
-                var _printSplit = doc.splitTextToSize(_printName, nameColWidth - 4);
-                var _printH = Math.max(8, 4 + (_printSplit.length * 5));
-                curX = 15;
-                drawCell(doc, curX, y, cols[0], _printH, '', 'center'); curX += cols[0];
-                drawCell(doc, curX, y, cols[1], _printH, _printSplit, 'left', 8); curX += cols[1];
-                drawCell(doc, curX, y, cols[2], _printH, TEXT.opt_add, 'left', 8); curX += cols[2];
-                drawCell(doc, curX, y, cols[3], _printH, String(_printQty), 'center'); curX += cols[3];
-                drawCell(doc, curX, y, cols[4], _printH, formatCurrencyForPDF(_printUnit), 'right'); curX += cols[4];
-                drawCell(doc, curX, y, cols[5], _printH, formatCurrencyForPDF(_printTotal), 'right');
-                y += _printH;
-                if (y > 260) { doc.addPage(); y = 20; }
+                if (_printTotal > 0) {
+                    totalAmt += _printTotal;
+                    var _discTxt = (item.qty >= 3) ? ' (3+ 50%)' : '';
+                    var _printName = '└ ' + ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '印刷費' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Print fee' : '인쇄비') + ' (' + _areasFeePdf.join('+') + ')' + _discTxt;
+                    var _printSplit = doc.splitTextToSize(_printName, nameColWidth - 4);
+                    var _printH = Math.max(8, 4 + (_printSplit.length * 5));
+                    curX = 15;
+                    drawCell(doc, curX, y, cols[0], _printH, '', 'center'); curX += cols[0];
+                    drawCell(doc, curX, y, cols[1], _printH, _printSplit, 'left', 8); curX += cols[1];
+                    drawCell(doc, curX, y, cols[2], _printH, TEXT.opt_add, 'left', 8); curX += cols[2];
+                    drawCell(doc, curX, y, cols[3], _printH, String(_printQty), 'center'); curX += cols[3];
+                    drawCell(doc, curX, y, cols[4], _printH, formatCurrencyForPDF(_printUnit), 'right'); curX += cols[4];
+                    drawCell(doc, curX, y, cols[5], _printH, formatCurrencyForPDF(_printTotal), 'right');
+                    y += _printH;
+                    if (y > 260) { doc.addPage(); y = 20; }
+                }
             }
         }
 
