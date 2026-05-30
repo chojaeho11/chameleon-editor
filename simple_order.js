@@ -1253,6 +1253,21 @@
             style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
         </div>
 
+        <!-- 2026-05-30: 티셔츠 입어보기 주문 (체험 샘플) — S/M/L 1장씩 발송, 3일 후 회수, 왕복 10,000원 -->
+        <div class="so-section" id="soTshirtTryOnSection" style="display:none;">
+          <button type="button" id="soTshirtTryOnBtn" onclick="window._soToggleTshirtTryOn()" style="width:100%; padding:14px 16px; border:2px dashed #f59e0b; background:linear-gradient(135deg,#fffbeb,#fef3c7); color:#92400e; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
+            <div style="font-size:16px;">👕 ${tr('입어보기 주문 (체험)', '試着注文 (体験)', 'Try-on order (sample)')} <span style="color:#dc2626;">+${fmtPrice(10000)}</span></div>
+            <div style="font-size:11px; font-weight:600; margin-top:4px; line-height:1.5; color:#78350f;">
+              ${tr('S · M · L 각 1장씩 발송 → 3일 후 택배기사 회수', 'S · M · L 各1枚発送 → 3日後 宅配便回収', 'Ship S/M/L 1pc each → courier picks up after 3 days')}<br>
+              ${tr('왕복 택배비 포함 · 결제금액 10,000원 정액', '往復配送料込み · 一律10,000ウォン', 'Round-trip shipping included · flat 10,000 KRW')}
+            </div>
+          </button>
+          <div id="soTshirtTryOnActive" style="display:none; margin-top:8px; padding:12px 14px; background:#10b981; color:#fff; border-radius:10px; font-size:12.5px; font-weight:700; line-height:1.6;">
+            ✅ ${tr('입어보기 주문 활성 — 결제금액 10,000원 (왕복 택배 포함)', '試着注文 有効 — 10,000ウォン (往復配送含む)', 'Try-on order active — 10,000 KRW (round-trip shipping incl.)')}<br>
+            <span style="font-size:11px; font-weight:600; opacity:0.95;">${tr('S · M · L 1장씩 발송 → 3일 후 택배기사 회수', 'S・M・L 各1枚発送 → 3日後 回収', 'S/M/L 1pc each → courier picks up after 3 days')}</span>
+          </div>
+        </div>
+
         <div class="so-section so-price-box">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
           <div class="so-price-row"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
@@ -2031,7 +2046,11 @@
             }
         }
 
-        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee;
+        let final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee;
+        // 2026-05-30: 티셔츠 입어보기 주문 — 다른 옵션 무시, 정액 10,000원 (왕복 택배 포함)
+        if (state.presetType === 'tshirt' && state.tshirtTryOn) {
+            final = 10000;
+        }
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -3138,6 +3157,49 @@
         var qIn = document.getElementById('soQty'); if (qIn) qIn.value = total;
         var hint = document.getElementById('soTshirtTotalHint');
         if (hint) hint.textContent = tr('합계: ' + total + '장', '合計: ' + total + '枚', 'Total: ' + total + ' pcs');
+        if (typeof recalc === 'function') recalc();
+    };
+
+    // 2026-05-30: 티셔츠 입어보기 주문 토글 — 활성 시 결제금액 10,000원 정액 (왕복 택배 포함)
+    window._soToggleTshirtTryOn = function () {
+        state.tshirtTryOn = !state.tshirtTryOn;
+        var btn = document.getElementById('soTshirtTryOnBtn');
+        var active = document.getElementById('soTshirtTryOnActive');
+        if (state.tshirtTryOn) {
+            // S/M/L 1장씩 자동 설정
+            state.tshirtSizes = { S:1, M:1, L:1 };
+            ['S','M','L'].forEach(function(s){
+                var inp = document.getElementById('soTshirtQty' + s);
+                if (inp) inp.value = 1;
+            });
+            state.qty = 3;
+            var qIn = document.getElementById('soQty'); if (qIn) qIn.value = 3;
+            var hint = document.getElementById('soTshirtTotalHint');
+            if (hint) hint.textContent = tr('합계: 3장 (체험)', '合計: 3枚 (試着)', 'Total: 3 pcs (try-on)');
+            if (btn) {
+                btn.style.background = '#10b981';
+                btn.style.borderStyle = 'solid';
+                btn.style.color = '#fff';
+            }
+            if (active) active.style.display = '';
+        } else {
+            // 토글 해제 — S/M/L 0 으로 초기화
+            state.tshirtSizes = { S:0, M:0, L:0 };
+            ['S','M','L'].forEach(function(s){
+                var inp = document.getElementById('soTshirtQty' + s);
+                if (inp) inp.value = 0;
+            });
+            state.qty = 0;
+            var qIn2 = document.getElementById('soQty'); if (qIn2) qIn2.value = 0;
+            var hint2 = document.getElementById('soTshirtTotalHint');
+            if (hint2) hint2.textContent = tr('합계: 0장', '合計: 0枚', 'Total: 0 pcs');
+            if (btn) {
+                btn.style.background = 'linear-gradient(135deg,#fffbeb,#fef3c7)';
+                btn.style.borderStyle = 'dashed';
+                btn.style.color = '#92400e';
+            }
+            if (active) active.style.display = 'none';
+        }
         if (typeof recalc === 'function') recalc();
     };
 
@@ -4615,6 +4677,18 @@
             // 전체 수량은 0 으로 시작 (사용자가 S/M/L 입력해야 함)
             state.qty = 0;
             var _soQtyInp = document.getElementById('soQty'); if (_soQtyInp) _soQtyInp.value = 0;
+            // 2026-05-30: 티셔츠 입어보기 주문 — 기본 OFF
+            state.tshirtTryOn = false;
+            var _tryOnSec = document.getElementById('soTshirtTryOnSection');
+            var _tryOnBtn = document.getElementById('soTshirtTryOnBtn');
+            var _tryOnActive = document.getElementById('soTshirtTryOnActive');
+            if (_tryOnSec) _tryOnSec.style.display = '';
+            if (_tryOnBtn) {
+                _tryOnBtn.style.background = 'linear-gradient(135deg,#fffbeb,#fef3c7)';
+                _tryOnBtn.style.borderStyle = 'dashed';
+                _tryOnBtn.style.color = '#92400e';
+            }
+            if (_tryOnActive) _tryOnActive.style.display = 'none';
             // 2026-05-30: 티셔츠 — 표준 업로드/에디터 숨김, 인쇄 위치별 업로드 활성화
             state.tshirtFiles = {}; // { area_id: { name, type, size, dataUrl } }
             var _stdUpload = document.getElementById('soUploadWrap');
@@ -4632,6 +4706,9 @@
             state.tshirtPrintMethod = null;
             state.tshirtPrintAreas = null;
             state.tshirtFiles = null;
+            state.tshirtTryOn = false;
+            var _tryOnSec2 = document.getElementById('soTshirtTryOnSection');
+            if (_tryOnSec2) _tryOnSec2.style.display = 'none';
             if (_tshirtSizeSec) _tshirtSizeSec.style.display = 'none';
             if (_tshirtMethSec) _tshirtMethSec.style.display = 'none';
             if (_tshirtAreaSec) _tshirtAreaSec.style.display = 'none';
@@ -5244,6 +5321,7 @@
             _tshirtSizes: (state.presetType === 'tshirt') ? (state.tshirtSizes || null) : null,
             _tshirtPrintMethod: (state.presetType === 'tshirt') ? (state.tshirtPrintMethod || null) : null,
             _tshirtPrintAreas: (state.presetType === 'tshirt') ? (Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas.slice() : null) : null,
+            _tshirtTryOn: (state.presetType === 'tshirt') ? !!state.tshirtTryOn : false,
             _tshirtFilesMeta: (state.presetType === 'tshirt' && state.tshirtFiles)
                 ? (function(){
                     var out = {};
@@ -5791,6 +5869,8 @@
 
     function _soCalcItemPrice(it) {
         if (_soIsFabricItem(it)) return it.price || 0;
+        // 2026-05-30: 티셔츠 입어보기 주문 — 다른 옵션 무시, 정액 10,000원 (왕복 택배 포함)
+        if (it._tshirtTryOn) return 10000;
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
@@ -6125,8 +6205,12 @@
                         ? tr('내지인쇄 포장','内側印刷','Insert print')
                         : tr('상단인쇄 포장','上部印刷','Top print'));
                 }
+                // 2026-05-30: 티셔츠 입어보기 주문 라벨
+                if (it._tshirtTryOn) {
+                    opts += ' · 🔄 ' + tr('입어보기 (S/M/L 3장, 3일 후 회수)','試着 (3枚 3日後回収)','Try-on (3pcs, return after 3d)');
+                }
                 // 2026-05-30: 티셔츠 — 사이즈별/인쇄 방식/위치
-                if (it._presetType === 'tshirt') {
+                if (it._presetType === 'tshirt' && !it._tshirtTryOn) {
                     if (it._tshirtSizes) {
                         var _tsCart = it._tshirtSizes;
                         var _tsParts = [];
@@ -6698,8 +6782,12 @@
                 if (it._presetType === 'keyring' && it._keyringSide) {
                     lines.push('   🖨️ 인쇄 면: ' + (it._keyringSide === 'double' ? '양면 (단가 ×2)' : '단면'));
                 }
-                // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
-                if (it._presetType === 'tshirt') {
+                // 2026-05-30: 티셔츠 입어보기 주문 — 별도 라인
+                if (it._tshirtTryOn) {
+                    lines.push('   🔄 입어보기 주문 (체험): S/M/L 1장씩 발송 → 3일 후 택배 회수 / 결제 10,000원 (왕복 택배비 포함)');
+                }
+                // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치 (입어보기 주문 외)
+                if (it._presetType === 'tshirt' && !it._tshirtTryOn) {
                     if (it._tshirtSizes) {
                         var _ts = it._tshirtSizes;
                         var _parts = [];
