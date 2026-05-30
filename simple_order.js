@@ -2502,7 +2502,9 @@
     window._soLoadRawBoardMore = _soLoadRawBoardMore;
 
     // 2026-05-30: 원판 6개 카드 일괄 담기 — 수량 >0 인 카드들만 cart 에 추가.
-    //   각 카드는 별도 line item, 배송은 metro_delivery 100,000원 (10장+ 일 때 자동 0원 보정).
+    //   배송: state.shipMethod 사용 (사용자가 선택한 수도권/지방). fee 는 카트 내 모든 원판 합산 qty 기준으로 계산하여
+    //         "첫 번째 추가 item" 에만 부과 (item 별 중복 방지 — 한 번의 배송이라 정액).
+    //   _isRawBoardAuto 플래그로 _soIsRawBoardProduct 보조 인식 보강.
     window._soAddRawBoardBatch = function () {
         try {
             if (!_soRbMoreCache) { console.warn('[so] rb batch: cache empty'); return; }
@@ -2518,14 +2520,35 @@
                 return;
             }
             var cur = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+            // 배송 방법은 사용자가 모달에서 선택한 것 사용 (없으면 수도권 기본).
+            var shipMethod = (state.shipMethod === 'regional_delivery') ? 'regional_delivery' : 'metro_delivery';
+            // 합산 raw qty (기존 카트에 있던 + 이번 batch 의 picks) → free 한도 판정용.
+            var existingRawQty = 0;
+            cur.forEach(function (it) {
+                var prod = it && (it.product || it);
+                if (it && it._isRawBoardAuto) existingRawQty += parseInt(it.qty || it.quantity || 1, 10) || 0;
+                else if (prod && _soIsRawBoardProduct(prod)) existingRawQty += parseInt(it.qty || it.quantity || 1, 10) || 0;
+            });
+            var newQtySum = 0;
+            picks.forEach(function(p){ newQtySum += p.qty; });
+            var totalRawQty = existingRawQty + newQtySum;
+            // 배송비 산출 (정액 1회) — 수도권 10+/지방 100+ 무료, 미만 100K/200K.
+            var batchShipFee;
+            if (shipMethod === 'regional_delivery') batchShipFee = (totalRawQty >= 100) ? 0 : 200000;
+            else                                    batchShipFee = (totalRawQty >= 10)  ? 0 : 100000;
+            // 기존 카트에 이미 배송비를 들고 있는 원판 item 이 있으면 그 fee 를 0 으로 만들고, 새 item 첫 번째에 합산 fee 부여.
+            cur.forEach(function (it) {
+                if (it && it.shipping && (it._isRawBoardAuto || _soIsRawBoardProduct(it && (it.product || it)))) {
+                    if (it.shipping.fee > 0) it.shipping.fee = 0;
+                }
+            });
             var addedCount = 0;
             picks.forEach(function(pick, idx){
                 var p = _soRbMoreCache.find(function(x){ return x.code === pick.code; });
                 if (!p) return;
-                var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var pickedName = p.name; if (lang === 'ja' && p.name_jp) pickedName = p.name_jp; else if (lang !== 'ko' && p.name_us) pickedName = p.name_us;
+                // 배송비는 FIRST item 에만 부여 (중복 방지).
+                var feeOnThisItem = (idx === 0) ? batchShipFee : 0;
                 cur.push({
                     uid: Date.now() + idx * 10 + Math.floor(Math.random() * 10),
                     product: {
@@ -2541,29 +2564,14 @@
                     qty: pick.qty,
                     selectedAddons: {}, addonQuantities: {},
                     rawBoardDouble: false, bundleShipping: false,
-                    shipping: { method: 'metro_delivery', fee: 100000 },
+                    shipping: { method: shipMethod, fee: feeOnThisItem },
                     _isRawBoardAuto: true
                 });
                 addedCount++;
             });
             localStorage.setItem(CART_KEY, JSON.stringify(cur));
             if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
-            // 무료배송 자동 보정 — 수도권 10장+ / 지방 100장+
-            try {
-                var rawTotal = 0;
-                cur.forEach(function (it) { if (_soIsRawBoardProduct(it && (it.product || it))) rawTotal += parseInt(it.qty || it.quantity || 1, 10) || 0; });
-                var changed = false;
-                cur.forEach(function (it) {
-                    if (!_soIsRawBoardProduct(it && (it.product || it))) return;
-                    if (!it.shipping) return;
-                    if (it.shipping.method === 'metro_delivery' && rawTotal >= 10 && it.shipping.fee > 0)    { it.shipping.fee = 0; changed = true; }
-                    if (it.shipping.method === 'regional_delivery' && rawTotal >= 100 && it.shipping.fee > 0) { it.shipping.fee = 0; changed = true; }
-                });
-                if (changed) {
-                    localStorage.setItem(CART_KEY, JSON.stringify(cur));
-                    if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
-                }
-            } catch (e) {}
+            console.log('[so] rawBoard batch added:', addedCount, 'items; method=', shipMethod, 'totalQty=', totalRawQty, 'fee=', batchShipFee);
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
             showStatus('✅ ' + tr(addedCount + '개 상품 담겼습니다', addedCount + '点 追加しました', addedCount + ' items added'), 'ok');
