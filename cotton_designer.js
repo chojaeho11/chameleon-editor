@@ -1477,6 +1477,9 @@ window._cpCartOpen = function() {
             topCats.forEach(function (top) {
                 // 메인 페이지 nav 와 동일: user_artwork, default 는 제외
                 if (top.code === 'user_artwork' || top.code === 'default') return;
+                // 2026-05-30: 굿즈 판촉물 (구) 상단 탭 숨김 — 아래에서 /goods (신규) 카탈로그 버튼으로 통합 (index.html L11063-11065 mirror).
+                var _tnRaw = ((top.name || '') + ' ' + (top.name_us || '')).replace(/\s+/g, '').toLowerCase();
+                if (/굿즈판촉물|goodspromotional|promotionalgoods|판촉물굿즈/.test(_tnRaw)) return;
                 var name = top.name;
                 if (lang === 'ja' && top.name_jp) name = top.name_jp;
                 else if (lang === 'en' && top.name_us) name = top.name_us;
@@ -1515,6 +1518,22 @@ window._cpCartOpen = function() {
                 };
                 track.appendChild(btn);
             });
+            // 2026-05-30: /goods (신규) 카탈로그 버튼 — 모든 도메인에서 메인사이트의 /goods 로 이동 (cafe2626/0101 도메인 동일 경로).
+            //   기존 '굿즈판촉물' 탭이 메인 (cafe0101.com) 으로 갔던 문제 대체.
+            (function _addGoodsLink(){
+                var goodsBtn = document.createElement('button');
+                goodsBtn.className = 'tcm-btn';
+                var labMap = { ko:'🎁 굿즈', ja:'🎁 グッズ', en:'🎁 Goods' };
+                goodsBtn.textContent = labMap[lang] || labMap.ko;
+                goodsBtn.onclick = function(){
+                    if (window.__tcmScrolled && window.__tcmScrolled()) return;
+                    if (window.__tcmReady && !window.__tcmReady()) return;
+                    var langMap2 = { ja:'ja', en:'en' };
+                    var gLang = langMap2[lang];
+                    location.href = '/goods' + (gLang ? '?lang=' + gLang : '');
+                };
+                track.appendChild(goodsBtn);
+            })();
             _populated = true;
         } catch (e) { console.warn('[cd-topcat]', e); }
     }
