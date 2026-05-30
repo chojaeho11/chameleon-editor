@@ -2063,26 +2063,53 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             });
         }
 
-        // 2026-05-30: 프리셋 굿즈 개별포장 — +200원 × 제품 수량
-        if (_isPresetGoodsItem && item._presetWrap) {
-            let _wrapUnit = 200;
-            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _wrapUnit = Math.round(_wrapUnit * _cr.JP);
-            else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _wrapUnit = Math.round(_wrapUnit * _cr.US * 100) / 100;
-            const _wrapQty = item.qty || 1;
-            const _wrapTotal = _wrapUnit * _wrapQty;
-            totalAmt += _wrapTotal;
-            const _wrapName = '└ ' + (CURRENT_LANG_CODE === 'ja' ? '個別包装' : (CURRENT_LANG_CODE === 'en' || CURRENT_LANG_CODE === 'us') ? 'Individual wrap' : '개별포장');
-            const _wrapSplit = doc.splitTextToSize(_wrapName, nameColWidth - 4);
-            const _wrapH = Math.max(8, 4 + (_wrapSplit.length * 5));
-            curX = 15;
-            drawCell(doc, curX, y, cols[0], _wrapH, '', 'center'); curX += cols[0];
-            drawCell(doc, curX, y, cols[1], _wrapH, _wrapSplit, 'left', 8); curX += cols[1];
-            drawCell(doc, curX, y, cols[2], _wrapH, TEXT.opt_add, 'left', 8); curX += cols[2];
-            drawCell(doc, curX, y, cols[3], _wrapH, String(_wrapQty), 'center'); curX += cols[3];
-            drawCell(doc, curX, y, cols[4], _wrapH, formatCurrencyForPDF(_wrapUnit), 'right'); curX += cols[4];
-            drawCell(doc, curX, y, cols[5], _wrapH, formatCurrencyForPDF(_wrapTotal), 'right');
-            y += _wrapH;
-            if (y > 260) { doc.addPage(); y = 20; }
+        // 2026-05-30: 프리셋 굿즈 개별포장 (3종)
+        //   포장없음=0 / 내지인쇄·상단인쇄=5만원 정액 (수량 무관)
+        //   legacy boolean _presetWrap (구 카트) → 200원/개 환산 유지
+        if (_isPresetGoodsItem) {
+            var _wt3 = item._presetWrapType;
+            var _wrapUnit = 0;
+            var _wrapQty = 1;
+            var _wrapTotal = 0;
+            var _wrapNameKo = '';
+            if (_wt3 === 'insert' || _wt3 === 'top') {
+                _wrapUnit = 50000;
+                _wrapQty = 1;
+                _wrapTotal = 50000;
+                _wrapNameKo = _wt3 === 'insert' ? '내지인쇄 포장' : '상단인쇄 포장';
+            } else if (item._presetWrap && !_wt3) {
+                _wrapUnit = 200;
+                _wrapQty = item.qty || 1;
+                _wrapTotal = _wrapUnit * _wrapQty;
+                _wrapNameKo = '개별포장';
+            }
+            if (_wrapTotal > 0) {
+                if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) {
+                    _wrapUnit = Math.round(_wrapUnit * _cr.JP);
+                    _wrapTotal = Math.round(_wrapTotal * _cr.JP);
+                } else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) {
+                    _wrapUnit = Math.round(_wrapUnit * _cr.US * 100) / 100;
+                    _wrapTotal = Math.round(_wrapTotal * _cr.US * 100) / 100;
+                }
+                totalAmt += _wrapTotal;
+                var _wrapNameLocalized = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')
+                    ? (_wt3 === 'insert' ? '内側印刷ラッピング' : _wt3 === 'top' ? '上部印刷ラッピング' : '個別包装')
+                    : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en')
+                        ? (_wt3 === 'insert' ? 'Insert-print wrap' : _wt3 === 'top' ? 'Top-print wrap' : 'Individual wrap')
+                        : _wrapNameKo;
+                var _wrapName = '└ ' + _wrapNameLocalized;
+                var _wrapSplit = doc.splitTextToSize(_wrapName, nameColWidth - 4);
+                var _wrapH = Math.max(8, 4 + (_wrapSplit.length * 5));
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], _wrapH, '', 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], _wrapH, _wrapSplit, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], _wrapH, TEXT.opt_add, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], _wrapH, String(_wrapQty), 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], _wrapH, formatCurrencyForPDF(_wrapUnit), 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], _wrapH, formatCurrencyForPDF(_wrapTotal), 'right');
+                y += _wrapH;
+                if (y > 260) { doc.addPage(); y = 20; }
+            }
         }
 
         // 2026-05-22: 받침대(뒷받침) — 다중 종류·수량 (배열) + 레거시 단일 호환.
