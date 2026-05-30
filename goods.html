@@ -1179,7 +1179,11 @@ a { text-decoration: none; color: inherit; }
                 S.items.forEach(function(ov){
                     var p = byCode[ov.code];
                     if (!p) return;
-                    var defaultPrice = ov.sizes ? ov.sizes[0].price : ov.price;
+                    // 2026-05-30: sizes/price 둘 다 없으면 DB 가격 그대로 유지 (티셔츠처럼 각 상품마다 다른 가격)
+                    var defaultPrice;
+                    if (ov.sizes) defaultPrice = ov.sizes[0].price;
+                    else if (ov.price != null) defaultPrice = ov.price;
+                    else defaultPrice = p.price;  // ← DB 가격 사용
                     var copy = Object.assign({}, p, { price: defaultPrice, _isBestFeat: true });
                     if (ov.sizes) copy._bestSizes = ov.sizes;
                     bests.push(copy);
