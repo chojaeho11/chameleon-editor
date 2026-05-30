@@ -10183,7 +10183,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 20);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 15);
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
-            loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 15);
+            loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
@@ -10323,22 +10323,43 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
     // [새로운 통합 함수] 일반 핫딜 + 업자용 핫딜 모두 처리
     // [수정됨] 핫딜 상품 로드 (언어/화폐 감지 추가)
 // [최적화됨] 핫딜/추천상품 로드 (언어 로직 제거됨 -> getLocalizedData 위임)
-async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6) {
+// 2026-05-30: 성수동굿즈샵 큐레이션 — 키링 5종 + 티셔츠 5종만 (is_goods 전체 대신 좁힘).
+// 키링: BEST_KEYRING 5코드 하드코딩 (goods.html 의 BEST_KEYRING 과 동일 순서).
+// 티셔츠: category='3244432' 에서 5개, 반팔티(4653231) 우선.
+window._loadGoodsCuratedQuery = async function() {
+    const keyringCodes = ['gds_acr_kr_10', '345345353', 'gds_acr_kr_05', 'gds_ksty_kr_02', 'gds_ksty_kr_03'];
+    const SELECT_COLS = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size';
+    const [kRes, tRes] = await Promise.all([
+        sb.from('admin_products').select(SELECT_COLS).in('code', keyringCodes),
+        sb.from('admin_products').select(SELECT_COLS).eq('category', '3244432').order('code').limit(5)
+    ]);
+    const keyrings = (kRes.data || []).slice().sort((a, b) =>
+        keyringCodes.indexOf(a.code) - keyringCodes.indexOf(b.code)
+    );
+    const tshirts = (tRes.data || []).slice().sort((a, b) => {
+        if (a.code === '4653231') return -1;
+        if (b.code === '4653231') return 1;
+        return (a.code || '').localeCompare(b.code || '');
+    });
+    return keyrings.concat(tshirts);
+};
+
+async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6, customQueryFn = null) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
     if (!grid) return;
     if (!sb) { console.warn("[loadSpecialProducts] sb가 아직 초기화되지 않음"); return; }
 
     try {
-        // 5분 캐시 — 같은 flagColumn+limit 조합당 별도 키
-        const _cacheKey = 'special_' + flagColumn + '_' + limitCount;
-        const productsRaw = await window.cachedFetch(_cacheKey, 5, () =>
+        // 5분 캐시 — flagColumn+limit (또는 customQueryFn 지정 시 sectionId) 조합당 별도 키
+        const _cacheKey = customQueryFn ? ('special_custom_' + sectionId) : ('special_' + flagColumn + '_' + limitCount);
+        const productsRaw = await window.cachedFetch(_cacheKey, 5, customQueryFn || (() =>
             sb.from('admin_products')
                 .select('code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size')
                 .eq(flagColumn, true)
                 .order('sort_order', { ascending: true })
                 .limit(limitCount)
-        );
+        ));
 
         if (!productsRaw || productsRaw.length === 0) {
             section.style.display = 'none';
@@ -16504,7 +16525,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 20);
             loadSpecialProducts('bizDealSection', 'bizDealGrid', 'is_biz_deal', 15);
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
-            loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 15);
+            loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
