@@ -3158,69 +3158,135 @@
         state.tshirtPrintMethod = btn.getAttribute('data-method') || 'dtg';
     };
 
-    // 2026-05-30: 티셔츠 — 선택된 인쇄 위치별 업로드 카드 (목업 + 디자인 오버레이) 렌더
+    // 2026-05-30: 티셔츠 — 새 통합 목업 (앞면+뒷면 가로 한 장) + 드래그 가능한 인쇄 영역 박스
+    //   front_logo: 로고 사이즈 정사각 (가슴 위치 기본)
+    //   front_full / back_full: A4 비례(210:297) 큰 직사각형
+    //   사용자가 박스 드래그 → 인쇄 위치 지정 → 박스 클릭 또는 박스에 이미지 업로드
     window._soRenderTshirtUploads = function () {
         var grid = document.getElementById('soTshirtUploadGrid');
         if (!grid) return;
         var areas = Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas : ['front_logo'];
         if (!state.tshirtFiles) state.tshirtFiles = {};
-        var LABELS = {
-            front_logo: { ko:'앞면 로고', jp:'前面ロゴ',  en:'Front logo', img:'/t/print1.png',
-                          // 가슴 좌측 로고 위치 (앞면 mockup 기준)
-                          overlay: { top:'30%', left:'30%', width:'18%', height:'14%' } },
-            front_full: { ko:'앞면 전체', jp:'前面全体',  en:'Full front', img:'/t/print2.jpg',
-                          // 앞면 가슴~배 영역 큰 박스
-                          overlay: { top:'25%', left:'22%', width:'56%', height:'52%' } },
-            back_full:  { ko:'뒷면 전체', jp:'背面全体',  en:'Full back',  img:'/t/print3.jpg',
-                          // 뒷면 등 전체 영역
-                          overlay: { top:'22%', left:'22%', width:'56%', height:'55%' } }
+        // 통합 목업 (앞면 좌, 뒷면 우). t/tshirt_mockup.jpg 가 없으면 기존 print1/2/3 로 fallback.
+        var MOCKUP = '/t/tshirt_mockup.jpg';
+        // side = 'front' (목업 좌측 표시) | 'back' (목업 우측 표시)
+        // bgPos = background-position-x 값 (목업 좌측만 보이게 0%, 우측만 보이게 100%)
+        // initBox = 초기 박스 위치/크기 (% 기준, 박스 좌상단 기준)
+        var CFG = {
+            front_logo: { side:'front', bgPos:'0%',   ko:'앞면 로고', jp:'前面ロゴ', en:'Front logo',
+                          init:{ left:38, top:28, width:18, height:18 } }, // 로고 (정사각, 가슴 중앙)
+            front_full: { side:'front', bgPos:'0%',   ko:'앞면 전체', jp:'前面全体', en:'Full front',
+                          init:{ left:25, top:22, width:42, height:60 } }, // A4 비례 (42:60 ≈ 210:297)
+            back_full:  { side:'back',  bgPos:'100%', ko:'뒷면 전체', jp:'背面全体', en:'Full back',
+                          init:{ left:25, top:22, width:42, height:60 } }
         };
         // 더 이상 선택되지 않은 영역의 파일 제거
         Object.keys(state.tshirtFiles).forEach(function(k){ if (areas.indexOf(k) < 0) delete state.tshirtFiles[k]; });
         grid.innerHTML = areas.map(function(a){
-            var lbl = LABELS[a] || { ko:a, jp:a, en:a, img:'', overlay:{top:'30%',left:'30%',width:'40%',height:'40%'} };
-            var f = state.tshirtFiles[a];
-            var pos = lbl.overlay;
-            var posStyle = 'top:' + pos.top + '; left:' + pos.left + '; width:' + pos.width + '; height:' + pos.height + ';';
-            var overlay;
-            if (f && f.dataUrl) {
-                // 업로드된 디자인을 mockup 위에 오버레이 (지정된 인쇄 영역에 맞춰)
-                overlay = '<img src="' + f.dataUrl + '" alt="design" style="position:absolute; ' + posStyle
-                    + ' object-fit:contain; border:1.5px dashed rgba(99,102,241,0.85); box-shadow:0 4px 12px rgba(0,0,0,0.15); background:rgba(255,255,255,0.2); pointer-events:none;">';
-            } else {
-                // 미업로드 — 영역 표시용 점선 박스 (클릭 안내)
-                overlay = '<div style="position:absolute; ' + posStyle
-                    + ' border:2.5px dashed #6366f1; background:rgba(99,102,241,0.12); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#4338ca; font-size:11px; font-weight:800; pointer-events:none; text-align:center; padding:2px;">'
-                    + '<span>' + tr('여기에<br>이미지', 'ここに<br>画像', 'Image<br>here') + '</span>'
-                    + '</div>';
+            var cfg = CFG[a] || CFG.front_logo;
+            var f = state.tshirtFiles[a] || {};
+            // 박스 위치는 state 에 저장된 값이 있으면 우선, 없으면 init 사용
+            var box = (f.box && typeof f.box.left === 'number') ? f.box : Object.assign({}, cfg.init);
+            // 저장
+            if (!f.box) {
+                state.tshirtFiles[a] = state.tshirtFiles[a] || {};
+                state.tshirtFiles[a].box = box;
             }
-            var status = f
-                ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✓ ' + (f.name || 'file') + '</div>'
-                : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('👆 클릭해서 이미지 업로드', '👆 クリックでアップロード', '👆 Click to upload') + '</div>';
             var areaSafe = String(a).replace(/[^a-z0-9_]/gi,'');
+            var label = tr(cfg.ko, cfg.jp, cfg.en);
+            var inputId = 'soTshirtFile_' + areaSafe;
+            // 박스 내부: 이미지 (있으면) 또는 점선 안내
+            var boxInner = (f.dataUrl)
+                ? '<img src="' + f.dataUrl + '" alt="" style="width:100%; height:100%; object-fit:contain; pointer-events:none;">'
+                : '<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#4338ca; font-size:10.5px; font-weight:800; gap:4px; pointer-events:none; text-align:center; padding:4px;">'
+                  + '<i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>'
+                  + '<span>' + tr('드래그로 이동<br>클릭하여 업로드','ドラッグ移動<br>クリック追加','Drag to move<br>Click to upload') + '</span>'
+                  + '</div>';
+            var status = f.dataUrl
+                ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✓ ' + (f.name || 'image') + '</div>'
+                : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('박스를 끌어 위치 조정 → 클릭하여 이미지 업로드', 'ボックスをドラッグして配置 → クリックでアップロード', 'Drag box to position → Click to upload') + '</div>';
             return '<div style="border:1.5px solid #e2e8f0; border-radius:12px; padding:8px; background:#fff;">'
                 + '<div style="font-size:12px; font-weight:800; color:#0f172a; margin-bottom:6px; display:flex; align-items:center; gap:6px;">'
                 +   '<span style="display:inline-flex; width:8px; height:8px; border-radius:50%; background:#0f172a;"></span>'
-                +   '<span>' + tr(lbl.ko, lbl.jp, lbl.en) + '</span>'
+                +   '<span>' + label + '</span>'
+                +   '<span style="margin-left:auto; font-size:10px; color:#94a3b8; font-weight:700;">' + (cfg.side === 'back' ? 'BACK' : 'FRONT') + '</span>'
                 + '</div>'
-                + '<label style="display:block; cursor:pointer; position:relative;">'
-                +   '<input type="file" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" '
-                +     'onchange="window._soTshirtPickFile(\'' + areaSafe + '\', this.files)" style="display:none;">'
-                +   '<div style="position:relative; width:100%; aspect-ratio:1/1; background:#f8fafc; border-radius:8px; overflow:hidden;">'
-                +     '<img src="' + lbl.img + '" alt="' + tr(lbl.ko, lbl.jp, lbl.en) + ' mockup" style="width:100%; height:100%; object-fit:cover; display:block;">'
-                +     overlay
+                + '<input type="file" id="' + inputId + '" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" '
+                +   'onchange="window._soTshirtPickFile(\'' + areaSafe + '\', this.files)" style="display:none;">'
+                + '<div class="so-tshirt-mockup" data-area="' + areaSafe + '" '
+                +   'style="position:relative; width:100%; aspect-ratio:1/1; background:#0a0a0f url(' + MOCKUP + ') no-repeat center; background-size:200% auto; background-position:' + cfg.bgPos + ' center; border-radius:8px; overflow:hidden; user-select:none; touch-action:none;">'
+                +   '<div class="so-tshirt-box" data-area="' + areaSafe + '" '
+                +     'style="position:absolute; left:' + box.left + '%; top:' + box.top + '%; width:' + box.width + '%; height:' + box.height + '%; '
+                +     'border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">'
+                +     boxInner
                 +   '</div>'
-                + '</label>'
+                + '</div>'
                 + '<div style="margin-top:6px;">' + status + '</div>'
-                + (f ? '<button type="button" onclick="window._soTshirtRemoveFile(\'' + areaSafe + '\')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ' + tr('제거 / 다시 업로드', '削除 / 再アップロード', 'Remove / Re-upload') + '</button>' : '')
+                + (f.dataUrl ? '<button type="button" onclick="window._soTshirtRemoveFile(\'' + areaSafe + '\')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ' + tr('제거 / 다시 업로드', '削除 / 再アップロード', 'Remove / Re-upload') + '</button>' : '')
                 + '</div>';
         }).join('');
+        // 박스에 드래그 + 클릭 핸들러 부착
+        grid.querySelectorAll('.so-tshirt-box').forEach(function(box){
+            _attachTshirtBoxDrag(box);
+        });
     };
-    // 파일 선택 → state.tshirtFiles 에 저장 + 썸네일 데이터URL 생성
+
+    // 드래그 + 클릭 부착
+    function _attachTshirtBoxDrag(box) {
+        var dragging = false;
+        var moved = false;
+        var startX, startY, startLeft, startTop;
+        var container = box.parentElement;
+        var area = box.getAttribute('data-area');
+        box.addEventListener('pointerdown', function(e){
+            dragging = true;
+            moved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = parseFloat(box.style.left);
+            startTop = parseFloat(box.style.top);
+            try { box.setPointerCapture(e.pointerId); } catch(_){}
+            e.preventDefault();
+        });
+        box.addEventListener('pointermove', function(e){
+            if (!dragging) return;
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+            if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+            var bounds = container.getBoundingClientRect();
+            var w = bounds.width, h = bounds.height;
+            var widthPct = parseFloat(box.style.width);
+            var heightPct = parseFloat(box.style.height);
+            var newLeft = startLeft + (dx / w) * 100;
+            var newTop  = startTop  + (dy / h) * 100;
+            newLeft = Math.max(0, Math.min(100 - widthPct, newLeft));
+            newTop  = Math.max(0, Math.min(100 - heightPct, newTop));
+            box.style.left = newLeft + '%';
+            box.style.top  = newTop + '%';
+            if (state.tshirtFiles && state.tshirtFiles[area] && state.tshirtFiles[area].box) {
+                state.tshirtFiles[area].box.left = newLeft;
+                state.tshirtFiles[area].box.top  = newTop;
+            }
+        });
+        box.addEventListener('pointerup', function(e){
+            if (!dragging) return;
+            dragging = false;
+            try { box.releasePointerCapture(e.pointerId); } catch(_){}
+            // 단순 클릭(드래그 거의 없음) 이면 파일 선택창 열기
+            if (!moved) {
+                var input = document.getElementById('soTshirtFile_' + area);
+                if (input) input.click();
+            }
+        });
+        box.addEventListener('pointercancel', function(){ dragging = false; });
+    }
+    // 파일 선택 → state.tshirtFiles 에 저장 + 썸네일 데이터URL 생성 (박스 위치 유지)
     window._soTshirtPickFile = function (area, files) {
         if (!files || !files[0]) return;
         var f = files[0];
         if (!state.tshirtFiles) state.tshirtFiles = {};
+        // 기존 박스 위치 보존
+        var prevBox = (state.tshirtFiles[area] && state.tshirtFiles[area].box) || null;
         var reader = new FileReader();
         reader.onload = function (e) {
             state.tshirtFiles[area] = {
@@ -3228,7 +3294,8 @@
                 type: f.type,
                 size: f.size,
                 dataUrl: e.target.result,
-                file: f
+                file: f,
+                box: prevBox  // 드래그한 위치 유지
             };
             if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
         };
@@ -5127,7 +5194,14 @@
                         if (!f) return;
                         // localStorage 용량 보호: dataUrl 은 작은 썸네일만 (50KB 이하만 보존)
                         var thumb = (f.dataUrl && f.dataUrl.length < 50000) ? f.dataUrl : null;
-                        out[k] = { name: f.name || '', size: f.size || 0, type: f.type || '', thumb: thumb };
+                        out[k] = {
+                            name: f.name || '',
+                            size: f.size || 0,
+                            type: f.type || '',
+                            thumb: thumb,
+                            // 사용자가 드래그한 인쇄 위치 박스 (% 기준)
+                            box: f.box ? { left: f.box.left, top: f.box.top, width: f.box.width, height: f.box.height } : null
+                        };
                     });
                     return out;
                   })()
@@ -6598,7 +6672,7 @@
                             var _printAdd = _paid.length * 3000 * (it.qty || 0);
                             lines.push('       └ 추가 인쇄비: ' + _paid.length + ' × 3,000원 × ' + (it.qty||0) + '장 = ' + _printAdd.toLocaleString() + '원');
                         }
-                        // 위치별 업로드 파일 명세
+                        // 위치별 업로드 파일 명세 + 드래그한 박스 좌표
                         if (it._tshirtFilesMeta) {
                             _areas.forEach(function(a){
                                 var meta = it._tshirtFilesMeta[a];
@@ -6607,6 +6681,10 @@
                                     lines.push('       └ 📎 ' + areaKo + ' 파일: ' + meta.name + ' (' + Math.round((meta.size||0)/1024) + ' KB)');
                                 } else {
                                     lines.push('       └ ⚠️ ' + areaKo + ' 파일: 미업로드');
+                                }
+                                if (meta && meta.box) {
+                                    var b = meta.box;
+                                    lines.push('         └ 위치 (목업 % 기준): left ' + Math.round(b.left) + '%, top ' + Math.round(b.top) + '%, ' + Math.round(b.width) + '×' + Math.round(b.height) + '%');
                                 }
                             });
                         }
