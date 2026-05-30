@@ -69,52 +69,57 @@ a { text-decoration: none; color: inherit; }
 .lang-selector button:hover:not(.active) { color: var(--primary); }
 
 /* ── 히어로 — 미니멀 라이프스타일 톤 ── */
+/* 2026-05-30: 다크 hero — 타이틀 2줄, 그라데이션 강조어 유지, CTA 흰 보더 */
 .hero {
     position: relative; overflow: hidden;
-    background: linear-gradient(180deg, #fafafa 0%, #f5f5f4 100%);
+    background: linear-gradient(180deg, #050506 0%, #0f0f14 100%);
     padding: 96px 24px 80px;
     text-align: center;
 }
 .hero::before {
     content: ''; position: absolute; inset: 0;
     background:
-        radial-gradient(60% 50% at 25% 35%, rgba(251, 191, 36, 0.16) 0%, transparent 60%),
-        radial-gradient(50% 40% at 80% 65%, rgba(244, 114, 182, 0.13) 0%, transparent 60%),
-        radial-gradient(40% 30% at 50% 100%, rgba(99, 102, 241, 0.10) 0%, transparent 65%);
+        radial-gradient(60% 50% at 25% 35%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
+        radial-gradient(50% 40% at 80% 65%, rgba(219, 39, 119, 0.14) 0%, transparent 60%),
+        radial-gradient(40% 30% at 50% 100%, rgba(99, 102, 241, 0.12) 0%, transparent 65%);
     pointer-events: none;
 }
 .hero > * { position: relative; z-index: 1; }
 .hero .hero-eyebrow {
     font-size: 11.5px; font-weight: 700; letter-spacing: 0.18em;
-    color: #94a3b8; text-transform: uppercase;
+    color: rgba(255,255,255,0.55); text-transform: uppercase;
     margin-bottom: 16px;
 }
 .hero h1 {
-    font-size: 56px; font-weight: 800; line-height: 1.1;
-    color: #0f172a; margin-bottom: 20px; letter-spacing: -1.8px;
+    font-size: 52px; font-weight: 800; line-height: 1.18;
+    color: #ffffff; margin-bottom: 22px; letter-spacing: -1.6px;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.35);
 }
 .hero h1 em {
     font-style: normal; font-weight: 900;
-    background: linear-gradient(135deg, #4338ca, #7c3aed, #db2777);
+    background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+.hero h1 .hero-title-break { display: block; }
 .hero p {
-    font-size: 17px; color: #64748b; max-width: 560px; margin: 0 auto 36px;
+    font-size: 17px; color: rgba(255,255,255,0.78); max-width: 560px; margin: 0 auto 36px;
     font-weight: 500; line-height: 1.55; letter-spacing: -0.2px;
 }
 .hero-cta {
     display: inline-flex; gap: 8px; align-items: center;
     padding: 14px 28px; border-radius: 999px;
-    background: #0f172a; color: #fff;
-    font-size: 14px; font-weight: 700; cursor: pointer; border: none;
+    background: rgba(255,255,255,0.05); color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.35);
     transition: all 0.2s ease;
     font-family: inherit; letter-spacing: -0.1px;
+    backdrop-filter: blur(6px);
 }
-.hero-cta:hover { transform: translateY(-1px); background: #1e293b; box-shadow: 0 16px 32px -8px rgba(0,0,0,0.25); }
+.hero-cta:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); border-color: #fff; box-shadow: 0 16px 32px -8px rgba(255,255,255,0.18); }
 @media (max-width: 768px) {
     .hero { padding: 64px 20px 56px; }
-    .hero h1 { font-size: 36px; letter-spacing: -1px; }
+    .hero h1 { font-size: 32px; letter-spacing: -0.8px; line-height: 1.22; }
     .hero p { font-size: 15px; }
 }
 
@@ -699,7 +704,7 @@ a { text-decoration: none; color: inherit; }
     // ─── i18n ───
     var I18N = {
         ko: {
-            heroTitle: '<em>100개 이상 주문시 반값할인</em> · 굿즈 판매자의 쇼핑몰',
+            heroTitle: '<em>100개 이상 주문시 반값할인</em><span class="hero-title-break">굿즈 판매자의 쇼핑몰</span>',
             heroDesc: '저렴하게 많이 만들어본 경험이 더 퀄리티 높은 굿즈를 만듭니다.',
             heroCta: '카테고리 둘러보기',
             sectionAll: '전체',
@@ -713,7 +718,7 @@ a { text-decoration: none; color: inherit; }
             currencySuffix: '원'
         },
         ja: {
-            heroTitle: '<em>100個以上で半額</em> · グッズ販売者のショッピングモール',
+            heroTitle: '<em>100個以上で半額</em><span class="hero-title-break">グッズ販売者のショッピングモール</span>',
             heroDesc: '安く大量に作ってきた経験こそが、より高品質なグッズを生み出します。',
             heroCta: 'カテゴリを見る',
             sectionAll: 'すべて',
@@ -727,7 +732,7 @@ a { text-decoration: none; color: inherit; }
             currencySuffix: ''
         },
         en: {
-            heroTitle: '<em>50% off on 100+ orders</em> · Shop for goods resellers',
+            heroTitle: '<em>50% off on 100+ orders</em><span class="hero-title-break">Shop for goods resellers</span>',
             heroDesc: 'Years of making lots — at low cost — is exactly what produces higher quality goods.',
             heroCta: 'Browse Categories',
             sectionAll: 'All',
