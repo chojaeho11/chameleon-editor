@@ -2425,10 +2425,26 @@
             if (!_soRbMoreCache) {
                 var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
                 var sc = await sb.from('admin_categories').select('code').eq('top_category_code', 'Wholesale Board Prices');
-                var codes = (sc.data || []).map(function (c) { return c.code; });
+                var codes = (sc.data || []).map(function (c) { return c.code; }).filter(function(c){ return !!c; });
                 if (!codes.length) { sec.style.display = 'none'; return; }
-                var pr = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm').in('category', codes);
-                _soRbMoreCache = (pr.data || []).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                // 2026-05-30 fix: admin_categories.code 에 공백 포함 코드 ('Honeycomb Board' 등) 존재 →
+                //   PostgREST `.in('category', codes)` URL 인코딩이 공백을 +로 만들고 IN 절 파서가 깨져 400 에러.
+                //   해결: 공백/특수문자 포함 코드만 별도 .or('category.eq...') 쿼리로 분리해서 합산.
+                var simple = codes.filter(function(c){ return !/[\s,()"]/.test(c); });
+                var complex = codes.filter(function(c){ return /[\s,()"]/.test(c); });
+                var allRows = [];
+                if (simple.length) {
+                    var pr1 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm').in('category', simple);
+                    if (pr1 && pr1.data) allRows = allRows.concat(pr1.data);
+                }
+                // 공백/특수문자 포함 코드는 개별 .eq 로 (순차 호출 — 보통 1-2개 뿐).
+                for (var ci = 0; ci < complex.length; ci++) {
+                    try {
+                        var pr2 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,w_mm,h_mm').eq('category', complex[ci]);
+                        if (pr2 && pr2.data) allRows = allRows.concat(pr2.data);
+                    } catch (e2) { /* 개별 코드 실패는 다른 코드 영향 없게 */ }
+                }
+                _soRbMoreCache = allRows.sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
             }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             var items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 12);
