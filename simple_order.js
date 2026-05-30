@@ -3735,12 +3735,13 @@
         document.getElementById('soDesc').textContent = pickDescPlain(p, 150);
 
         // 2026-05-29: 상품 상세 HTML (description_kr / description_jp / description_us …) 주입
-        // showChoiceModal 의 로케일 fallback 과 동일 우선순위
-        (function _injectDetail() {
+        // 2026-05-30: + common_info(소분류·대분류·전체 공통) 도 함께 로드 (관리자 통합 편집기 저장값 반영)
+        (async function _injectDetail() {
             var wrap = document.getElementById('soProductDetailWrap');
             var body = document.getElementById('soProductDetailBody');
             if (!wrap || !body) return;
             var lang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
+            // 1) 상품 자체 description
             var html = '';
             if (lang === 'ja')      html = p.description_jp || p.description || p.description_kr || '';
             else if (lang === 'en') html = p.description_us || p.description || '';
@@ -3750,12 +3751,56 @@
             else if (lang === 'de') html = p.description_de || p.description_us || p.description || '';
             else if (lang === 'fr') html = p.description_fr || p.description_us || p.description || '';
             else                    html = p.description_kr || p.description || '';
-            if (!html || !html.trim()) { wrap.style.display = 'none'; return; }
+            // 2) common_info — 대분류·소분류·전체 공통 (index.html 의 동일 로직 mirror)
+            var commonHtml = '';
+            try {
+                var subCatCode = p && p.category;
+                var topCat = subCatCode;
+                if (subCatCode && window.globalSubCats && window.globalSubCats.length) {
+                    var m = window.globalSubCats.find(function(c){ return c.code === subCatCode; });
+                    if (m && m.top_category_code) topCat = m.top_category_code;
+                }
+                if (subCatCode && (topCat === subCatCode)) {
+                    try {
+                        var cm = await sb.from('admin_categories').select('top_category_code').eq('code', subCatCode).maybeSingle();
+                        if (cm && cm.data && cm.data.top_category_code) topCat = cm.data.top_category_code;
+                    } catch (e) {}
+                }
+                var codes = ['all'];
+                if (topCat) codes.push(topCat);
+                if (subCatCode && subCatCode !== topCat) codes.push(subCatCode);
+                var cinfo = await sb.from('common_info').select('*').in('category_code', codes).eq('section', 'top');
+                var list = (cinfo && cinfo.data) || [];
+                function _pickLang(row) {
+                    if (!row) return '';
+                    if (lang === 'ja' && row.content_jp) return row.content_jp;
+                    if (lang === 'zh' && row.content_cn) return row.content_cn;
+                    if (lang === 'ar' && row.content_ar) return row.content_ar;
+                    if (lang === 'es' && row.content_es) return row.content_es;
+                    if (lang === 'de' && row.content_de) return row.content_de;
+                    if (lang === 'fr' && row.content_fr) return row.content_fr;
+                    if (lang === 'en' && row.content_us) return row.content_us;
+                    if (lang !== 'kr' && row.content_us) return row.content_us;
+                    return row.content || '';
+                }
+                var catRow = list.find(function(c){ return c.category_code === topCat; });
+                var subRow = list.find(function(c){ return c.category_code === subCatCode && subCatCode !== topCat; });
+                var allRow = list.find(function(c){ return c.category_code === 'all'; });
+                var pieces = [];
+                var catC = _pickLang(catRow);   if (catC)   pieces.push('<div class="so-common-cat">' + catC + '</div>');
+                var subC = _pickLang(subRow);   if (subC)   pieces.push('<div class="so-common-sub">' + subC + '</div>');
+                var allC = _pickLang(allRow);   if (allC)   pieces.push('<div class="so-common-all">' + allC + '</div>');
+                commonHtml = pieces.join('');
+            } catch (e) {
+                console.warn('[simple_order] common_info load failed:', e);
+            }
+            var combined = (html || '') + (commonHtml || '');
+            if (!combined || !combined.trim()) { wrap.style.display = 'none'; return; }
             // <script> 만 제거 (보안). <style> 등 디자인 보존.
-            html = String(html).replace(/<script[\s\S]*?<\/script>/gi, '');
+            combined = String(combined).replace(/<script[\s\S]*?<\/script>/gi, '');
             // 내부 중복 ID 제거 (모달 ID 와 충돌 방지)
-            html = html.replace(/\sid="[^"]*"/gi, '');
-            body.innerHTML = html;
+            combined = combined.replace(/\sid="[^"]*"/gi, '');
+            body.innerHTML = combined;
             wrap.style.display = '';
         })();
 
