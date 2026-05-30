@@ -1067,10 +1067,11 @@ a { text-decoration: none; color: inherit; }
     var BEST_FABRIC = [];   // category='546465463' 에서 자동 로드 (limit 5)
     var BEST_POPULAR = [];  // category='pp_fan' 에서 자동 로드 (limit 10)
     // 카테고리 기반 자동 채우기 설정
+    //   2026-05-30: 티셔츠는 상품별 DB 가격 사용 (sizes 미부여 → admin_products.price 그대로)
     var _AUTO_BY_CATEGORY = {
-        tshirt:  { category:'3244432',   limit:5,  defaultSizes: BEST_SIZES_TSHIRT },        // 티셔츠
-        fabric:  { category:'546465463', limit:5,  defaultPrice: null },                     // 패브릭굿즈
-        popular: { category:'pp_fan',    limit:10, defaultPrice: null }                      // 판촉홍보용품
+        tshirt:  { category:'3244432',   limit:5 },  // 티셔츠 — 각 상품의 DB 가격
+        fabric:  { category:'546465463', limit:5 },  // 패브릭굿즈
+        popular: { category:'pp_fan',    limit:10 }  // 판촉홍보용품
     };
     // 모든 섹션의 코드 합산 (한 번에 조회)
     function _bestAllCodes() {

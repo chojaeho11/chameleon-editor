@@ -2876,8 +2876,9 @@
         }
         if (!renderList.length) return;
 
-        // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 프리셋 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
-        var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods);
+        // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
+        //   2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외됐으나 카테고리 기반 isBestGoods 로 compact 유지
+        var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods || state.isBestGoods);
         // 2026-05-30: 티셔츠 — 사이즈 addon 은 S/M/L 로 단축, 가격 0 (사이즈별 추가금 없음)
         var _isTshirt = (state.presetType === 'tshirt');
         function _tshirtSizeAlias(nm) {
@@ -4140,8 +4141,8 @@
             'acr_crt_cl_8t':    _PRESET_KOROTTO,
             'acr_crt_stand_01': _PRESET_KOROTTO,
             'acr_crt_stand_10t':_PRESET_KOROTTO,
-            '3453455':          _PRESET_HANDKERCHIEF,
-            '435645654666':     _PRESET_TSHIRT_TYPES    // 반려동물 티셔츠 (종류 선택)
+            '3453455':          _PRESET_HANDKERCHIEF
+            // 2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외 — 각 상품이 DB 의 자체 가격을 가지므로 종류 pill 불필요
         };
         // 2026-05-30: 프리셋 타입 — 안내문구·고리(300원 override) 적용 여부 분기
         var _PRESET_TYPE = {
@@ -4150,9 +4151,12 @@
             'acr_crt_cl_8t':    'korotto',
             'acr_crt_stand_01': 'korotto',
             'acr_crt_stand_10t':'korotto',
-            '3453455':          'handkerchief',
-            '435645654666':     'tshirt'
+            '3453455':          'handkerchief'
+            // tshirt 는 카테고리 '3244432' 로 인식 (아래 _resolvedType 분기)
         };
+        // 2026-05-30: 베스트 카테고리 — 카테고리만으로 isBestGoods (100개+ 50%, 3000원 정액배송) 트리거
+        //   '3244432' 티셔츠 (단 임계값 3장+) / '546465463' 패브릭 / 'pp_fan' 판촉홍보용품
+        var _BEST_CATEGORIES = { '3244432':1, '546465463':1, 'pp_fan':1 };
         // 2026-05-29: 비-사이즈 베스트 굿즈 가격 override
         //   100개+ 50%할인 + 3000원 정액배송 동일 적용 (state.isBestGoods)
         //   2026-05-30: 손수건·티셔츠는 _PRESET_MAP 으로 이동 (종류·사이즈 pill 사용)
@@ -4173,21 +4177,21 @@
         // 2026-05-30: 코드 기반 매핑 우선, 미매칭이면 카테고리 기반 추론
         //   카테고리 매핑:
         //     'acr_key_ring' (아크릴 키링) → 자개 프리셋 (단, gds_acr_kr_10 만 일반 키링)
-        //     '3244432'     (티셔츠)       → 티셔츠 종류 프리셋
         //     'acr_crtt'    (아크릴 코롯토) → 코롯토 프리셋
+        //     '3244432'     (티셔츠)       → 사이즈 pill 없음, DB 가격 사용, 종류만 'tshirt' 로 표기 (S/M/L + 0원 + 3장+ 50% 로직 활성)
         var _resolvedSizes = (p && _PRESET_MAP[p.code]) || null;
         var _resolvedType  = (p && _PRESET_TYPE[p.code]) || null;
-        if (!_resolvedSizes && p && p.category) {
-            if (p.category === 'acr_key_ring') {
-                // 키링: 3mm 투명만 저가, 나머지 모두 자개와 동일
+        if (p && p.category) {
+            if (!_resolvedSizes && p.category === 'acr_key_ring') {
                 _resolvedSizes = (p.code === 'gds_acr_kr_10') ? _PRESET_KEYRING : _PRESET_KEYRING_PEARL;
                 _resolvedType = 'keyring';
-            } else if (p.category === '3244432') {
-                _resolvedSizes = _PRESET_TSHIRT_TYPES;
-                _resolvedType = 'tshirt';
-            } else if (p.category === 'acr_crtt') {
+            } else if (!_resolvedSizes && p.category === 'acr_crtt') {
                 _resolvedSizes = _PRESET_KOROTTO;
                 _resolvedType = 'korotto';
+            }
+            // 티셔츠는 sizes 미부여 — type 만 표시
+            if (!_resolvedType && p.category === '3244432') {
+                _resolvedType = 'tshirt';
             }
         }
         state.presetSizes = _resolvedSizes;
@@ -4201,7 +4205,10 @@
         if (p && _BEST_PRICE_OVERRIDES[p.code] != null) {
             p.price = _BEST_PRICE_OVERRIDES[p.code];
         }
-        state.isBestGoods = state.isPresetGoods || !!(p && _BEST_PRICE_OVERRIDES[p.code] != null);
+        // 2026-05-30: isBestGoods — 프리셋 / 가격 override / 베스트 카테고리 (티셔츠/패브릭/판촉) 중 하나라도 매칭되면 true
+        state.isBestGoods = state.isPresetGoods
+            || !!(p && _BEST_PRICE_OVERRIDES[p.code] != null)
+            || !!(p && p.category && _BEST_CATEGORIES[p.category]);
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         var pillsBox = document.getElementById('soPresetSizePills');
