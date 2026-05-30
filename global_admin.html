@@ -2154,250 +2154,22 @@
                 </div>
             </div>
 
-            <div class="form-group" style="margin-top: 25px; padding: 18px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-    <label class="form-label" style="font-weight: 800; color: #1e1b4b; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-        <i class="fa-solid fa-file-circle-plus" style="color: #6366f1;"></i> 럭셔리 상세페이지 편집
-    </label>
-    <button type="button" class="btn btn-vip" style="width: 100%; height: 50px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); border: none; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);" onclick="window.openDetailPageEditor()">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> 상세페이지 제작
-    </button>
-    <button type="button" class="btn" style="width:100%; height:50px; margin-top:8px; font-size:15px; font-weight:800; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:12px; box-shadow:0 4px 12px rgba(245,158,11,0.3); cursor:pointer;" onclick="window.openDetailWizard()">
-        <i class="fa-solid fa-hat-wizard"></i> AI 상세페이지 마법사
-    </button>
-    <input type="hidden" id="newProdDetailKR">
-    <input type="hidden" id="newProdDetailJP">
-    <input type="hidden" id="newProdDetailUS">
-    <input type="hidden" id="newProdDetailCN">
-    <input type="hidden" id="newProdDetailAR">
-    <input type="hidden" id="newProdDetailES">
-    <input type="hidden" id="newProdDetailDE">
-    <input type="hidden" id="newProdDetailFR">
-</div>
+            <!-- 2026-05-30: 럭셔리 상세페이지 편집 UI 제거 (사용자 요청 — 구글번역 기반 번역이 모두 틀려서 폐기).
+                 hidden inputs 만 유지 (global_products.js 의 save 가 참조 — 제거하면 TypeError).
+                 새 상세페이지 콘텐츠는 [상세페이지 통합 편집기] 의 common_info 시스템을 사용. -->
+            <input type="hidden" id="newProdDetailKR">
+            <input type="hidden" id="newProdDetailJP">
+            <input type="hidden" id="newProdDetailUS">
+            <input type="hidden" id="newProdDetailCN">
+            <input type="hidden" id="newProdDetailAR">
+            <input type="hidden" id="newProdDetailES">
+            <input type="hidden" id="newProdDetailDE">
+            <input type="hidden" id="newProdDetailFR">
 
-<div id="detailEditorModal" class="modal-overlay" style="z-index: 40000; display: none;">
-    <div class="modal-box" style="width: 1100px; max-width: 98%; height: 92vh; display: flex; flex-direction: column; padding: 0; background: #fff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        <div style="background: #1e1b4b; color: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-shrink:0;">
-            <h3 style="margin:0; font-size: 20px; font-weight: 900;"><i class="fa-solid fa-pen-to-square"></i> 상세페이지 마스터 에디터</h3>
-            <div style="display: flex; gap: 12px;">
-                <button type="button" class="btn" onclick="window.saveDetailAndClose()" style="background: #10b981; color:#fff; border: none; padding: 10px 25px; font-weight:800;">작업 완료 후 닫기</button>
-                <button type="button" class="btn" onclick="document.getElementById('detailEditorModal').style.display='none'" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);">취소</button>
-            </div>
-        </div>
-
-        <div style="background: #f1f5f9; padding: 12px 30px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: flex-end; gap: 5px; flex-shrink:0;">
-            <button type="button" id="tabKR" class="pop-editor-tab active" onclick="window.switchPopupLang('KR')">🇰🇷 한국어</button>
-            <button type="button" id="tabJP" class="pop-editor-tab" onclick="window.switchPopupLang('JP')">🇯🇵 日本語</button>
-            <button type="button" id="tabUS" class="pop-editor-tab" onclick="window.switchPopupLang('US')">🇺🇸 English</button>
-            <button type="button" id="tabCN" class="pop-editor-tab" onclick="window.switchPopupLang('CN')">🇨🇳 中文</button>
-            <button type="button" id="tabAR" class="pop-editor-tab" onclick="window.switchPopupLang('AR')">🇸🇦 العربية</button>
-            <button type="button" id="tabES" class="pop-editor-tab" onclick="window.switchPopupLang('ES')">🇪🇸 Español</button>
-            <button type="button" id="tabDE" class="pop-editor-tab" onclick="window.switchPopupLang('DE')">🇩🇪 Deutsch</button>
-            <button type="button" id="tabFR" class="pop-editor-tab" onclick="window.switchPopupLang('FR')">🇫🇷 Français</button>
-            <button type="button" class="btn btn-vip btn-sm" onclick="window.autoTranslatePopupDetail()" style="margin-left: auto; height: 34px; margin-bottom: 5px; font-size: 12px;">
-                <i class="fa-solid fa-language"></i> KR 본문으로 전체 자동번역
-            </button>
-        </div>
-
-        <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative;">
-            <div id="popup-quill-editor" style="height: 100%; font-size: 16px; border: none;"></div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .pop-editor-tab {
-        padding: 12px 24px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none;
-        background: #cbd5e1; font-size: 14px; font-weight: 800; color: #475569; cursor: pointer; transition: 0.2s;
-    }
-    .pop-editor-tab.active { background: #fff; color: #6366f1; border-top: 4px solid #6366f1; height: 45px; }
-    #popup-quill-editor .ql-toolbar { border: none !important; background: #fff; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2e8f0 !important; }
-    #popup-quill-editor .ql-container { border: none !important; flex: 1; overflow-y: auto; }
-    #popup-quill-editor .ql-editor { padding: 40px; min-height: 100%; max-width: 900px; margin: 0 auto; background: #fff; }
-    /* Image grid: 3 per row */
-    #popup-quill-editor .ql-editor img {
-        display:inline-block !important; width:calc(33.33% - 8px) !important; margin:4px !important;
-        height:220px !important; object-fit:cover !important; border-radius:8px; vertical-align:top;
-    }
-</style>
-
-<!-- ★ AI 상세페이지 마법사 모달 -->
-<div id="wizardModal" class="modal-overlay" style="z-index:41000; display:none;">
-<div class="modal-box" style="width:1100px; max-width:98%; height:94vh; display:flex; flex-direction:column; padding:0; background:#fff; border-radius:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
-
-<!-- Header -->
-<div style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; padding:18px 28px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; border-radius:24px 24px 0 0;">
-    <h3 style="margin:0; font-size:20px; font-weight:900;"><i class="fa-solid fa-hat-wizard"></i> AI 상세페이지 마법사</h3>
-    <div style="display:flex; gap:8px;">
-        <button type="button" class="btn" onclick="window.wizReset && window.wizReset()" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:8px 16px; font-weight:700; border-radius:8px; font-size:13px;"><i class="fa-solid fa-rotate-right"></i> 초기화</button>
-        <button type="button" class="btn" onclick="document.getElementById('wizardModal').style.display='none'" style="background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.4); padding:8px 20px; font-weight:700; border-radius:8px;">닫기</button>
-    </div>
-</div>
-
-<!-- Body (scrollable) -->
-<div style="flex:1; overflow-y:auto; padding:24px 28px;">
-
-    <!-- 1. 이미지 업로드 -->
-    <div style="margin-bottom:24px;">
-        <label style="font-size:16px; font-weight:800; color:#1e1b4b; display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <i class="fa-solid fa-images" style="color:#f59e0b;"></i> 사진 업로드 (여러 장)
-        </label>
-        <div id="wizImgZone" style="border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; background:#fafafa; transition:0.2s;"
-             ondragover="event.preventDefault(); this.style.borderColor='#f59e0b'; this.style.background='#fffbeb';"
-             ondragleave="this.style.borderColor='#d1d5db'; this.style.background='#fafafa';"
-             ondrop="event.preventDefault(); this.style.borderColor='#d1d5db'; this.style.background='#fafafa'; window.wizAddImages(event.dataTransfer.files);"
-             onclick="document.getElementById('wizFileInput').click();">
-            <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px; color:#9ca3af; margin-bottom:8px;"></i>
-            <div style="color:#6b7280; font-size:14px;">클릭 또는 드래그하여 사진을 올려주세요</div>
-            <div style="color:#9ca3af; font-size:12px; margin-top:4px;">JPG, PNG, WebP (최대 20장)</div>
-        </div>
-        <input type="file" id="wizFileInput" accept="image/*" multiple style="display:none;" onchange="window.wizAddImages(this.files); this.value='';">
-
-        <div id="wizImgGrid" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;"></div>
-        <div style="color:#9ca3af; font-size:12px; margin-top:6px;"><i class="fa-solid fa-hand-pointer"></i> 클릭하면 썸네일로 지정됩니다 (녹색 테두리)</div>
-    </div>
-
-    <!-- 2. 상품 정보 -->
-    <div style="margin-bottom:24px; background:#f8fafc; padding:20px; border-radius:12px; border:1px solid #e2e8f0;">
-        <label style="font-size:16px; font-weight:800; color:#1e1b4b; display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-            <i class="fa-solid fa-pen" style="color:#6366f1;"></i> 상품 정보
-        </label>
-        <div style="display:flex; gap:12px; margin-bottom:12px;">
-            <div style="flex:1;">
-                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">상품명 (한국어)</label>
-                <input id="wizTitle" class="input-text" placeholder="예: 프리미엄 허니콤보드 A1" style="width:100%; padding:10px 14px; font-size:14px;">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">카테고리</label>
-                <select id="wizCategory" class="input-text" style="width:100%; padding:10px 14px; font-size:14px;"><option value="">로딩 중...</option></select>
-            </div>
-        </div>
-        <div style="display:flex; gap:12px; margin-bottom:12px;">
-            <div style="flex:1;">
-                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">가격 (원, KRW)</label>
-                <input id="wizPrice" type="number" class="input-text" placeholder="예: 50000" style="width:100%; padding:10px 14px; font-size:14px;">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px; display:block;">레퍼런스 / 참고 내용</label>
-                <input id="wizRef" class="input-text" placeholder="제품 특징, 소재, 용도 등" style="width:100%; padding:10px 14px; font-size:14px;">
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. 기존 상품 적용 옵션 -->
-    <div style="margin-bottom:24px; background:#fefce8; padding:16px 20px; border-radius:12px; border:1px solid #fde68a;">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:#854d0e; font-size:14px;">
-            <input type="checkbox" id="wizExistingCheck" onchange="document.getElementById('wizExistingWrap').style.display=this.checked?'block':'none';">
-            기존 등록된 상품에 적용하기
-        </label>
-        <div id="wizExistingWrap" style="display:none; margin-top:12px;">
-            <input id="wizExistingSearch" class="input-text" placeholder="상품명 또는 코드로 검색..." style="width:100%; padding:10px 14px; font-size:14px; margin-bottom:8px;" oninput="window.wizFilterProducts && window.wizFilterProducts(this.value)">
-            <select id="wizExistingSelect" class="input-text" size="6" style="width:100%; padding:6px; font-size:14px;" onchange="window.wizOnSelectExisting && window.wizOnSelectExisting(this)">
-                <option value="">검색 결과가 여기에 표시됩니다...</option>
-            </select>
-            <div id="wizExistingInfo" style="display:none; margin-top:8px; padding:10px; background:#fff; border-radius:8px; border:1px solid #e2e8f0; font-size:13px; color:#475569;"></div>
-            <!-- 기존 상품 바로 블로그+쇼츠 버튼 -->
-            <div id="wizDirectPipeline" style="display:none; margin-top:12px; padding:16px; background:linear-gradient(135deg,#0f172a,#1e1b4b); border-radius:12px; text-align:center;">
-                <p style="color:#a5b4fc; font-size:12px; margin-bottom:8px;">이미 상세페이지가 있는 상품 → 바로 블로그 + 쇼츠 실행</p>
-                <button id="wizDirectPipeBtn" type="button" onclick="window.wizRunDirectPipeline()" style="padding:14px 36px; font-size:15px; font-weight:900; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.4);">
-                    <i class="fa-solid fa-bolt"></i> 블로그 + 쇼츠만 바로 실행
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. 생성 버튼 -->
-    <div style="text-align:center; margin-bottom:24px;">
-        <button id="wizGenerateBtn" type="button" onclick="window.wizGenerate()" style="padding:16px 48px; font-size:17px; font-weight:900; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; border-radius:14px; cursor:pointer; box-shadow:0 6px 20px rgba(99,102,241,0.4); transition:0.2s;">
-            <i class="fa-solid fa-robot"></i> AI 상세페이지 생성
-        </button>
-        <div id="wizStatus" style="margin-top:10px; font-size:13px; color:#6b7280;"></div>
-    </div>
-
-    <!-- 5. 미리보기 영역 -->
-    <div id="wizPreviewSection" style="display:none; margin-bottom:20px;">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-            <h4 style="margin:0; font-size:16px; font-weight:800; color:#1e1b4b;"><i class="fa-solid fa-eye"></i> 생성 결과 미리보기</h4>
-        </div>
-        <div id="wizLangTabs" style="display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap;">
-            <button type="button" class="wiz-lang-tab active" onclick="window.wizPreviewLang('kr')">🇰🇷 한국어</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('jp')">🇯🇵 日本語</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('us')">🇺🇸 English</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('cn')">🇨🇳 中文</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('ar')">🇸🇦 العربية</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('es')">🇪🇸 Español</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('de')">🇩🇪 Deutsch</button>
-            <button type="button" class="wiz-lang-tab" onclick="window.wizPreviewLang('fr')">🇫🇷 Français</button>
-        </div>
-        <div id="wizPreview" style="border:1px solid #e2e8f0; border-radius:12px; padding:30px; background:#fff; min-height:300px; max-height:600px; overflow-y:auto; line-height:1.8; font-size:15px;"></div>
-
-        <div style="display:flex; gap:10px; margin-top:16px; justify-content:center;">
-            <button type="button" onclick="window.wizApplyToForm()" style="padding:12px 32px; font-size:15px; font-weight:800; background:#10b981; color:#fff; border:none; border-radius:10px; cursor:pointer;">
-                <i class="fa-solid fa-clipboard-check"></i> 새 상품 폼에 적용
-            </button>
-            <button type="button" onclick="window.wizApplyToExisting()" id="wizApplyExistingBtn" style="display:none; padding:12px 32px; font-size:15px; font-weight:800; background:#f59e0b; color:#fff; border:none; border-radius:10px; cursor:pointer;">
-                <i class="fa-solid fa-database"></i> 기존 상품에 저장
-            </button>
-            <button type="button" onclick="window.wizOpenInEditor()" style="padding:12px 32px; font-size:15px; font-weight:800; background:#6366f1; color:#fff; border:none; border-radius:10px; cursor:pointer;">
-                <i class="fa-solid fa-pen-to-square"></i> 에디터에서 수정
-            </button>
-        </div>
-
-        <!-- 원클릭 자동 파이프라인 버튼 -->
-        <div style="text-align:center; margin-top:20px; padding:20px; background:linear-gradient(135deg,#0f172a,#1e1b4b); border-radius:14px;">
-            <p style="color:#a5b4fc; font-size:13px; margin-bottom:10px;">상세페이지 저장 + 8개국 블로그 + 일본어 쇼츠 자동 제작</p>
-            <button id="wizPipelineBtn" type="button" onclick="window.wizRunPipeline()" style="padding:16px 48px; font-size:17px; font-weight:900; background:linear-gradient(135deg,#f59e0b,#dc2626); color:#fff; border:none; border-radius:14px; cursor:pointer; box-shadow:0 6px 20px rgba(245,158,11,0.4); transition:0.2s;">
-                <i class="fa-solid fa-rocket"></i> 원클릭 자동 파이프라인
-            </button>
-        </div>
-    </div>
-
-    <!-- 6. 파이프라인 진행 상태 -->
-    <div id="wizPipelineSection" style="display:none; margin-bottom:20px;">
-        <h4 style="margin:0 0 14px; font-size:16px; font-weight:800; color:#1e1b4b;">
-            <i class="fa-solid fa-gears"></i> 자동 파이프라인 진행 상태
-        </h4>
-        <div id="wizPipelineSteps" style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
-            <div id="wp-save" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 상품 저장</div>
-            <div id="wp-blog-kr" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (한국어)</div>
-            <div id="wp-blog-ja" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (日本語)</div>
-            <div id="wp-blog-en" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (English)</div>
-            <div id="wp-blog-cn" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (中文)</div>
-            <div id="wp-blog-ar" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (العربية)</div>
-            <div id="wp-blog-es" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Español)</div>
-            <div id="wp-blog-de" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Deutsch)</div>
-            <div id="wp-blog-fr" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 블로그 (Français)</div>
-            <div id="wp-shorts-ai" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 AI 콘텐츠</div>
-            <div id="wp-shorts-tts" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 TTS 음성</div>
-            <div id="wp-shorts-render" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 영상 렌더링</div>
-            <div id="wp-shorts-upload" class="wp-step"><i class="fa-solid fa-circle-notch"></i> 쇼츠 YouTube 업로드</div>
-        </div>
-        <div id="wizPipelineResult" style="margin-top:14px; padding:14px; background:#f1f5f9; border-radius:10px; font-size:13px; display:none;"></div>
-    </div>
-
-</div>
-</div>
-</div>
-
-<!-- 쇼츠 렌더링용 숨김 캔버스 -->
-<canvas id="wizShortsCanvas" width="1080" height="1920" style="position:fixed;left:-9999px;top:0;width:1080px;height:1920px;"></canvas>
-
-<style>
-.wiz-lang-tab { padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9; font-size:13px; font-weight:700; color:#475569; cursor:pointer; transition:0.15s; }
-.wiz-lang-tab.active { background:#6366f1; color:#fff; border-color:#6366f1; }
-.wiz-img-card { position:relative; width:120px; height:120px; border-radius:10px; overflow:hidden; border:3px solid #e2e8f0; cursor:pointer; transition:0.2s; flex-shrink:0; }
-.wiz-img-card.thumb { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.3); }
-.wiz-img-card img { width:100%; height:100%; object-fit:cover; }
-.wiz-img-card .wiz-thumb-badge { position:absolute; top:4px; left:4px; background:#10b981; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:4px; }
-.wiz-img-card .wiz-remove-btn { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; width:22px; height:22px; border-radius:50%; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.wp-step { padding:8px 14px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; display:flex; align-items:center; gap:8px; }
-.wp-step.active { background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; font-weight:700; }
-.wp-step.active i { animation: spin 1s linear infinite; }
-.wp-step.done { background:#f0fdf4; border-color:#22c55e; color:#15803d; }
-.wp-step.done i::before { content:"\f058"; }
-.wp-step.error { background:#fef2f2; border-color:#ef4444; color:#dc2626; }
-.wp-step.error i::before { content:"\f06a"; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-</style>
+<!-- 2026-05-30: 상세페이지 마스터 에디터 + AI 상세페이지 마법사 모달 영구 제거.
+     사유: 구글번역 기반 자동 번역이 모두 틀려 사용 불가 (사용자 요청).
+     관련 JS (popupQuill init, openDetailPageEditor, openDetailWizard 등) 는 global_products.js 에 남아있지만
+     트리거하는 UI 가 없으므로 호출되지 않음 — save 경로의 hidden input 만 사용 (description_* 컬럼은 빈 문자열로 저장됨). -->
 
             <div class="form-group">
                 <label class="form-label">이미지</label>
@@ -2547,6 +2319,10 @@
                         <button class="btn btn-success btn-sm" onclick="bulkTranslateAll()">일괄 번역</button>
                         <button class="btn btn-vip btn-sm" onclick="openCommonInfoModal()" style="background:#7c3aed; border-color:#6d28d9; margin-left:5px;">
     <i class="fa-solid fa-layer-group"></i> 상세페이지 통합 편집기
+</button>
+                        <!-- 2026-05-30: 구 럭셔리 상세페이지 (admin_products.description_*) 일괄 삭제 — 확인 2회. -->
+                        <button class="btn btn-sm" onclick="window.wipeOldProductDescriptions && window.wipeOldProductDescriptions()" style="background:#dc2626; color:#fff; border-color:#991b1b; margin-left:5px;" title="구 럭셔리 상세페이지 (description_*) 전체 삭제 — 구글번역 잔여물 정리">
+    <i class="fa-solid fa-trash-can"></i> 구 상세페이지 일괄 삭제
 </button>
                     </div>
                 </div>

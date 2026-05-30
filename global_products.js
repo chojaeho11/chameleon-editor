@@ -2215,6 +2215,42 @@ window._ciReset = () => {
     showToast('초기화되었습니다.', 'info');
 };
 
+// 2026-05-30: 구 럭셔리 상세페이지 (admin_products.description_*) 일괄 삭제 도구.
+//   사용자 요청 — 구글번역 기반 자동 번역이 모두 틀려서 폐기.
+//   확인 2회 후 실행. 8개 언어 칼럼 모두 null 로 update.
+window.wipeOldProductDescriptions = async () => {
+    const dbClient = window.sb || window._supabase;
+    if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
+    if (!confirm('⚠️ 모든 상품의 [럭셔리 상세페이지] 8개 언어 콘텐츠를 영구 삭제합니다.\n\n· admin_products.description, description_jp, _us, _cn, _ar, _es, _de, _fr → 모두 NULL\n· 되돌릴 수 없음.\n· /raw-board 랜딩, 메인 상세, 헥사보드 등에서 노출되는 텍스트도 사라집니다.\n\n계속할까요?')) return;
+    if (!confirm('⚠️ 정말로 진행할까요? (마지막 확인)\n\n"확인" 누르면 즉시 DB 업데이트가 시작됩니다.')) return;
+    try {
+        const btn = document.querySelector('button[onclick*="wipeOldProductDescriptions"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 삭제 중...'; }
+        // .neq('code', '__never__') 트릭으로 "모든 행" 매칭 (PostgREST 는 WHERE 절 없는 UPDATE 거부).
+        const { error, count } = await dbClient.from('admin_products').update({
+            description: null,
+            description_jp: null,
+            description_us: null,
+            description_cn: null,
+            description_ar: null,
+            description_es: null,
+            description_de: null,
+            description_fr: null
+        }, { count: 'exact' }).neq('code', '__never_match_sentinel__');
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> 구 상세페이지 일괄 삭제'; }
+        if (error) {
+            console.error('[wipe descriptions] failed:', error);
+            showToast('삭제 실패: ' + error.message, 'error');
+            return;
+        }
+        console.log('[wipe descriptions] cleared', count, 'rows');
+        showToast('✅ ' + (count != null ? (count + '개 상품의 ') : '') + '구 상세페이지가 모두 삭제되었습니다.', 'success');
+    } catch (e) {
+        console.error('[wipe descriptions] exception:', e);
+        showToast('예외: ' + (e.message || e), 'error');
+    }
+};
+
 window.openCommonInfoModal = async () => {
     const dbClient = window.sb || window._supabase;
     if (!dbClient) { showToast('DB 연결 실패', 'error'); return; }
