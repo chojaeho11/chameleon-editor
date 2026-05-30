@@ -4339,6 +4339,8 @@
             var wrap = document.getElementById('soProductDetailWrap');
             var body = document.getElementById('soProductDetailBody');
             if (!wrap || !body) return;
+            // 2026-05-30: 원판은 상세정보 섹션 자체 비표시 — 비동기 fetch 도 건너뛰어 카트/네트워크 절약.
+            if (state.isRawBoard) { wrap.style.display = 'none'; return; }
             var lang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
             // 1) 상품 자체 description
             var html = '';
@@ -4693,6 +4695,11 @@
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
         var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
         if (_rb_editorBtn) _rb_editorBtn.style.display = state.isRawBoard ? 'none' : '';
+        // 2026-05-30: 원판 상품은 '상품 상세정보' 섹션 자체도 숨김 (description + common_info 통째로).
+        //   DB 의 description / common_info 는 다른 페이지(/raw-board 랜딩, 메인 상세)에서도 쓰여서 거기서 지우면 영향 확산.
+        //   모달에서만 강제 비표시로 처리.
+        var _rb_detailWrap = document.getElementById('soProductDetailWrap');
+        if (_rb_detailWrap) _rb_detailWrap.style.display = state.isRawBoard ? 'none' : '';
         // 2026-05-30: 원판은 가격 박스 + 바로 주문 버튼 숨김. 장바구니 담기 버튼은 일괄 담기 핸들러로 재사용 (loadRawBoardMore 내부에서 onclick 교체).
         if (state.isRawBoard) {
             var _rbPriceBox = document.querySelector('#simpleOrderModal .so-price-box'); if (_rbPriceBox) _rbPriceBox.style.display = 'none';
