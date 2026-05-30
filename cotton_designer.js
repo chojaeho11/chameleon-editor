@@ -2734,45 +2734,82 @@ window._cdRvPhotoChange = function(input) {
 window._cdSubmitReview = async function() {
     const sb = window.sb || window.__unified_sb;
     if (!sb) { showToast('DB error'); return; }
-    const u = window.currentUser || window._cpCurrentUser;
-    let name;
-    if (u) {
-        const meta = u.user_metadata || {};
-        name = meta.full_name || meta.name || (u.email || '').split('@')[0] || 'User';
+    // 세션 사용자 (cotton_designer 는 window.currentUser 를 채우지 않으므로 직접 조회)
+    let user = null;
+    try {
+        if (sb.auth && sb.auth.getSession) {
+            const sess = await sb.auth.getSession();
+            user = sess && sess.data && sess.data.session && sess.data.session.user || null;
+        }
+    } catch (e) {}
+    if (!user) user = window.currentUser || window._cpCurrentUser || null;
+
+    let name, userId;
+    if (user) {
+        const meta = user.user_metadata || {};
+        name = meta.full_name || meta.name || (user.email || '').split('@')[0] || 'User';
+        userId = user.id || null;
     } else {
         const ne = document.getElementById('cdReviewNick');
         name = ne ? ne.value.trim() : '';
         if (!name) { alert(_cdT('cd_review_login_or_nick', '닉네임을 입력해주세요')); return; }
+        userId = null;
     }
     const ce = document.getElementById('cdReviewComment');
     const comment = ce ? ce.value.trim() : '';
     if (!comment) { alert(_cdT('cd_review_comment_min', '내용을 입력해주세요')); return; }
+
+    // 2026-05-30 fix: 제출 lang 은 (1) 국가 필터가 'all' 이 아니면 그 필터 lang, (2) 아니면 UI lang.
+    // 사용자가 JP 깃발 클릭 후 일본어 입력 → lang='ja' 저장 → JP 필터에 즉시 노출됨.
+    const filterL = window._cdRvState.filterLang || 'all';
+    const submitLang = (filterL && filterL !== 'all') ? filterL : _cdLangCode();
+
     let photoUrl = null;
     if (window._cdRvState.photoData) {
         try {
             const blob = await (await fetch(window._cdRvState.photoData)).blob();
-            const path = 'reviews/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.jpg';
-            const up = await sb.storage.from('design').upload(path, blob, { contentType: blob.type || 'image/jpeg' });
-            if (!up.error) photoUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+            const path = Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.jpg';
+            // 2026-05-30 fix: index.html 의 리뷰와 같은 버킷 ('review-photos') 사용 — 기존 RLS 정책과 호환.
+            const up = await sb.storage.from('review-photos').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+            if (!up.error && up.data) {
+                const u = sb.storage.from('review-photos').getPublicUrl(up.data.path);
+                photoUrl = u && u.data && u.data.publicUrl || null;
+            } else if (up.error) {
+                console.warn('[cd rv] photo upload error:', up.error.message);
+            }
         } catch (e) { console.warn('[cd rv] photo:', e); }
     }
-    const code = window._cdRvState.productCode || ('fab_' + state.fabricType);
+    const code = window._cdRvState.productCode || _cdMapFabricToCode(state.fabricType, state.fabricColor) || ('fab_' + state.fabricType);
+    // 2026-05-30 fix: index.html submit schema 와 일치 (user_id + is_fake:false) — RLS 정책 통과 보장.
     const { error } = await sb.from('product_reviews').insert({
         product_code: code,
+        user_id: userId,
         user_name: name,
         rating: window._cdRvState.rating || 5,
         comment: comment,
         photo_url: photoUrl,
-        lang: _cdLangCode()
+        lang: submitLang,
+        is_fake: false
     });
-    if (error) { alert('Submit failed: ' + error.message); return; }
+    if (error) {
+        console.error('[cd rv] insert error:', error);
+        alert('Submit failed: ' + (error.message || 'unknown'));
+        return;
+    }
     showToast(_cdT('cd_review_submitted', '리뷰가 등록되었습니다 ✨'));
     if (ce) ce.value = '';
     const ne = document.getElementById('cdReviewNick'); if (ne) ne.value = '';
     window._cdRvState.photoData = null;
     const pp = document.getElementById('cdRvPhotoPrev'); if (pp) pp.innerHTML = '';
     window._cdSetRvRating(5);
-    loadFabricReviews(code, 0);
+    // 제출 lang 으로 필터 자동 전환 (현재 필터와 다르면) → 방금 쓴 리뷰가 바로 보임
+    if (filterL !== 'all' && filterL !== submitLang) {
+        window._cdFilterReviews(submitLang);
+    } else if (filterL === 'all') {
+        loadFabricReviews(code, 0);
+    } else {
+        loadFabricReviews(code, 0);
+    }
 };
 
 function renderRvWriteForm() {
