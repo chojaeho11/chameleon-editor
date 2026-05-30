@@ -1174,6 +1174,23 @@ if ('caches' in window) {
                         .eq('category', '_managers');
                     return res;
                 }
+                // 2026-05-30: sessionStorage 캐시 — 같은 세션에서 새로고침/페이지 이동 시 즉시 표시
+                var _MGR_CACHE_KEY = 'mgrPhones_html_v3';
+                var _MGR_CACHE_TTL = 30 * 60 * 1000; // 30분
+                function _hydrateFromCache() {
+                    try {
+                        var raw = sessionStorage.getItem(_MGR_CACHE_KEY);
+                        if (!raw) return false;
+                        var obj = JSON.parse(raw);
+                        if (!obj || !obj.html || !obj.ts) return false;
+                        if (Date.now() - obj.ts > _MGR_CACHE_TTL) return false;
+                        var slot = document.getElementById('mgrPhoneSlot');
+                        if (slot && obj.html) { slot.innerHTML = obj.html; return true; }
+                    } catch (e) {}
+                    return false;
+                }
+                // 페이지 표시 즉시 캐시 시도 (DOMContentLoaded 도 기다리지 않음 — 슬롯이 이미 HTML 에 있음)
+                _hydrateFromCache();
                 async function loadMgrPhones() {
                     var slot = document.getElementById('mgrPhoneSlot');
                     if (!slot) return;
@@ -1224,6 +1241,8 @@ if ('caches' in window) {
                         // DB 에 매니저 등록 안 됐으면 슬롯 자체를 제거 (본사 카드만 남음 + auto-fit 으로 가운데 정렬)
                         if (html) {
                             slot.innerHTML = html;
+                            // 2026-05-30: 세션 캐시 저장 (다음 페이지/새로고침 시 즉시 표시)
+                            try { sessionStorage.setItem(_MGR_CACHE_KEY, JSON.stringify({ html: html, ts: Date.now() })); } catch (e) {}
                         } else {
                             _cleanupSlot();
                             console.warn('[mgrPhones] chatbot_knowledge._managers 에 매니저 미등록 — 본사 카드만 표시');
@@ -1233,23 +1252,22 @@ if ('caches' in window) {
                         _cleanupSlot();
                     }
                 }
-                // 2026-05-14: window.sb 준비될 때까지 폴링 후 실행 — 모바일에서 인위적 setTimeout 없이
-                //   초기화 끝나는 즉시 매니저 전화 로드. 최대 6초 후 fallback (sb 안 와도 loadMgrPhones 내부에서 import 시도).
-                // 2026-05-29: 안전망 — 어떤 경우에도 12초 후 스켈레톤이 남아있으면 강제 제거 (모바일 무한로딩 방지)
+                // 2026-05-30: 캐시 hit 했으면 sb 폴링 없이 백그라운드로 최신화. 캐시 miss 만 3초 폴링.
+                //   안전망: 5초 후 여전히 스켈레톤이면 강제 제거 (이전 12초 → 5초로 단축)
                 function _whenSb(cb) {
-                    var deadline = Date.now() + 6000;
+                    var deadline = Date.now() + 3000;
                     (function poll(){
                         if (window.sb || Date.now() > deadline) { cb(); return; }
-                        setTimeout(poll, 100);
+                        setTimeout(poll, 80);
                     })();
                 }
                 setTimeout(function(){
                     var s = document.getElementById('mgrPhoneSlot');
                     if (s && (s.textContent || '').indexOf('로딩중') >= 0) {
-                        console.warn('[mgrPhones] 12s 안전망 — 스켈레톤 강제 제거');
+                        console.warn('[mgrPhones] 5s 안전망 — 스켈레톤 강제 제거');
                         s.remove();
                     }
-                }, 12000);
+                }, 5000);
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', function(){ _whenSb(loadMgrPhones); });
                 } else {
