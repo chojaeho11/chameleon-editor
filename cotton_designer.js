@@ -2755,8 +2755,9 @@ window._cdSubmitReview = async function() {
         const ne = document.getElementById('cdReviewNick');
         name = ne ? ne.value.trim() : '';
         if (!name) { alert(_cdT('cd_review_login_or_nick', '닉네임을 입력해주세요')); return; }
-        // 2026-05-30 fix: index.html 과 동일하게 게스트도 'guest_<ts>' user_id 사용 (RLS 정책 통과용 hint).
-        userId = 'guest_' + Date.now();
+        // 2026-05-30 fix: product_reviews.user_id 는 UUID 타입 → 게스트는 null 사용 (seed-reviews.js 와 동일).
+        //   ('guest_<ts>' 는 'invalid input syntax for type uuid' 로 22P02 에러 발생.)
+        userId = null;
     }
     const ce = document.getElementById('cdReviewComment');
     const comment = ce ? ce.value.trim() : '';
@@ -2771,20 +2772,18 @@ window._cdSubmitReview = async function() {
     const photoFile = window._cdRvState.photoFile;
     if (photoFile) {
         try {
-            // 2026-05-30 fix: index.html 의 submitProductReview L15482-15500 와 동일한 업로드 방식.
-            //   - 원본 File 객체 그대로 (dataURL→blob 변환 X — 메타데이터 손실 방지)
-            //   - 파일명: review_<ts>_<rand>.<ext>  (확장자 보존)
-            //   - cacheControl:'3600', upsert:false  (RLS 정책 호환)
-            const ext = (photoFile.name || '').split('.').pop() || 'jpg';
-            const fileName = 'review_' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
-            const up = await sb.storage.from('review-photos').upload(fileName, photoFile, {
+            // 2026-05-30 fix: 'review-photos' 버킷은 RLS 가 익명 업로드 차단 ("new row violates RLS").
+            //   cotton_print.html L2688-2691 의 showcase 가 이미 검증한 익명-OK 패턴 따라감 → 'design' 버킷 + 'reviews/' 경로 prefix.
+            const safeName = (photoFile.name || 'photo.jpg').replace(/[^a-zA-Z0-9._-]/g, '_');
+            const path = 'reviews/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + safeName;
+            const up = await sb.storage.from('design').upload(path, photoFile, {
                 cacheControl: '3600',
                 upsert: false
             });
             if (up.error) {
                 console.error('[cd rv] photo upload error:', up.error.message || up.error);
             } else if (up.data) {
-                const u = sb.storage.from('review-photos').getPublicUrl(up.data.path);
+                const u = sb.storage.from('design').getPublicUrl(up.data.path);
                 photoUrl = u && u.data && u.data.publicUrl || null;
             }
         } catch (e) { console.warn('[cd rv] photo upload exception:', e); }
