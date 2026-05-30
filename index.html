@@ -3604,19 +3604,40 @@ window.addEventListener('load', function() {
 </script>
 
 <!-- 2026-05-27: 브랜드 영상 — 이전 원판광고를 YouTube 영상으로 교체. ID는 그대로(honeycombVideoSection) 유지 — 다른 스크립트(line 2204)가 이 ID로 섹션 위치 재배치함. 한국어 사이트(KR)에서만 표시. -->
+<!-- 2026-05-30: 2단 레이아웃 — 좌측 카피 + 우측 영상(작게). 모바일에선 자동 stack. -->
 <section id="honeycombVideoSection" style="max-width:1100px; width:100%; box-sizing:border-box; margin:30px auto 0 auto; padding:20px 24px; display:none;">
-    <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(30,41,59,0.3); background:#000;">
-        <iframe src="https://www.youtube.com/embed/176LglNxvn0?rel=0&modestbranding=1"
-                style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; display:block;"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                title="Chameleon Printing 브랜드 영상"></iframe>
+    <div class="hc-video-wrap" style="display:flex; gap:32px; align-items:center; flex-wrap:wrap;">
+        <div class="hc-video-copy" style="flex:1 1 320px; min-width:0;">
+            <h2 style="margin:0 0 14px; font-size:30px; font-weight:900; color:#0f172a; line-height:1.25; letter-spacing:-0.5px;">
+                <span style="display:inline-block; background:linear-gradient(135deg,#dc2626 0%,#ea580c 100%); color:#fff; padding:4px 14px; border-radius:8px; font-size:20px; font-weight:900; margin-right:8px; box-shadow:0 4px 12px rgba(220,38,38,0.3);">POPUP</span>전문회사<br>
+                <span style="background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">카멜레온프린팅</span>
+            </h2>
+            <p style="margin:0; font-size:15px; line-height:1.75; color:#475569; font-weight:500;">
+                카멜레온프린팅은 전시 팝업스토어를 꾸밀때 필요한
+                <b style="color:#0f172a;">종이가벽 · 매대 · 굿즈 · 인쇄물</b>
+                을 전문으로 취급합니다.
+            </p>
+        </div>
+        <div class="hc-video-frame" style="flex:0 0 480px; max-width:100%;">
+            <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; border-radius:18px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(30,41,59,0.3); background:#000;">
+                <iframe src="https://www.youtube.com/embed/176LglNxvn0?rel=0&modestbranding=1"
+                        style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; display:block;"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        loading="lazy"
+                        title="Chameleon Printing 브랜드 영상"></iframe>
+            </div>
+        </div>
     </div>
 </section>
 <style>
 @media (max-width:768px){
     #honeycombVideoSection { padding:14px 16px !important; margin-top:18px !important; }
-    #honeycombVideoSection > div { border-radius:14px !important; box-shadow:0 14px 30px -16px rgba(30,41,59,0.3) !important; }
+    #honeycombVideoSection .hc-video-wrap { gap:18px !important; }
+    #honeycombVideoSection .hc-video-frame { flex:1 1 100% !important; }
+    #honeycombVideoSection .hc-video-frame > div { border-radius:14px !important; box-shadow:0 14px 30px -16px rgba(30,41,59,0.3) !important; }
+    #honeycombVideoSection h2 { font-size:22px !important; }
+    #honeycombVideoSection p { font-size:14px !important; }
 }
 </style>
 <script>
