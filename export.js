@@ -1853,15 +1853,17 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                               : item._tshirtPrintMethod;
                 optParts.push(_pmPfx + _pmLblPdf);
             }
-            if (item._tshirtPrintArea) {
+            var _areasPdf = Array.isArray(item._tshirtPrintAreas) ? item._tshirtPrintAreas : (item._tshirtPrintArea ? [item._tshirtPrintArea] : null);
+            if (_areasPdf && _areasPdf.length) {
                 var _paPfx = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '位置: ' :
                              (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Area: ' : '위치: ';
-                var _paLblPdf;
-                if (item._tshirtPrintArea === 'front_logo')      _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面ロゴ' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Front logo' : '앞면 로고';
-                else if (item._tshirtPrintArea === 'front_full') _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full front' : '앞면 전체';
-                else if (item._tshirtPrintArea === 'back_full')  _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '背面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full back' : '뒷면 전체';
-                else _paLblPdf = item._tshirtPrintArea;
-                optParts.push(_paPfx + _paLblPdf);
+                var _areaNamesPdf = _areasPdf.map(function(a){
+                    if (a === 'front_logo') return (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面ロゴ' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Front logo' : '앞면 로고';
+                    if (a === 'front_full') return (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full front' : '앞면 전체';
+                    if (a === 'back_full')  return (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '背面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full back' : '뒷면 전체';
+                    return a;
+                });
+                optParts.push(_paPfx + _areaNamesPdf.join(' + '));
             }
         }
         // 2026-05-30: 키링 단면/양면 — 견적서 규격 컬럼에 표시
@@ -2096,6 +2098,32 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 y += addonHeight;
                 if(y > 260) { doc.addPage(); y = 20; }
             });
+        }
+
+        // 2026-05-30: 티셔츠 — 인쇄 위치 추가비 (앞면로고 무료, 앞면전체/뒷면전체 +3,000원/장)
+        if (item._presetType === 'tshirt') {
+            var _areasFeePdf = Array.isArray(item._tshirtPrintAreas) ? item._tshirtPrintAreas : (item._tshirtPrintArea ? [item._tshirtPrintArea] : []);
+            var _paidPdf = _areasFeePdf.filter(function(a){ return a === 'front_full' || a === 'back_full'; });
+            if (_paidPdf.length > 0) {
+                var _printUnit = 3000;
+                var _printQty = (item.qty || 0) * _paidPdf.length;
+                if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _printUnit = Math.round(_printUnit * _cr.JP);
+                else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _printUnit = Math.round(_printUnit * _cr.US * 100) / 100;
+                var _printTotal = _printUnit * _printQty;
+                totalAmt += _printTotal;
+                var _printName = '└ ' + ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '追加印刷費' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Extra print fee' : '추가 인쇄비') + ' (' + _paidPdf.join('+') + ')';
+                var _printSplit = doc.splitTextToSize(_printName, nameColWidth - 4);
+                var _printH = Math.max(8, 4 + (_printSplit.length * 5));
+                curX = 15;
+                drawCell(doc, curX, y, cols[0], _printH, '', 'center'); curX += cols[0];
+                drawCell(doc, curX, y, cols[1], _printH, _printSplit, 'left', 8); curX += cols[1];
+                drawCell(doc, curX, y, cols[2], _printH, TEXT.opt_add, 'left', 8); curX += cols[2];
+                drawCell(doc, curX, y, cols[3], _printH, String(_printQty), 'center'); curX += cols[3];
+                drawCell(doc, curX, y, cols[4], _printH, formatCurrencyForPDF(_printUnit), 'right'); curX += cols[4];
+                drawCell(doc, curX, y, cols[5], _printH, formatCurrencyForPDF(_printTotal), 'right');
+                y += _printH;
+                if (y > 260) { doc.addPage(); y = 20; }
+            }
         }
 
         // 2026-05-30: 프리셋 굿즈 개별포장 (3종)

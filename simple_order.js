@@ -1140,21 +1140,24 @@
           </div>
         </div>
 
-        <!-- 2026-05-30: 티셔츠 — 인쇄 위치 (앞면로고 / 앞면전체 / 뒷면전체) -->
+        <!-- 2026-05-30: 티셔츠 — 인쇄 위치 (복수 선택). 앞면로고 무료 / 앞면전체·뒷면전체 +3,000원/장 -->
         <div class="so-section" id="soTshirtPrintAreaSection" style="display:none;">
-          <div class="so-section-title">🎨 ${tr('인쇄 위치', '印刷位置', 'Print area')}</div>
+          <div class="so-section-title">🎨 ${tr('인쇄 위치 (복수 선택)', '印刷位置 (複数選択)', 'Print area (multi)')}</div>
           <div id="soTshirtPrintAreaGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-            <button type="button" class="so-tpa-btn active" data-area="front_logo" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #0f172a; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
-              <img src="/t/print1.png" alt="앞면 로고" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
-              <span style="font-size:12px; font-weight:800; color:#0f172a; text-align:center; line-height:1.2;">${tr('앞면 로고', '前面ロゴ', 'Front logo')}</span>
+            <button type="button" class="so-tpa-btn active" data-area="front_logo" data-area-fee="0" onclick="window._soToggleTshirtPrintArea(this)" style="border:2px solid #0f172a; background:#0f172a; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease, background 0.15s ease; font-family:inherit;">
+              <img src="/t/print1.png" alt="앞면 로고" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#fff;">
+              <span style="font-size:12px; font-weight:800; color:#fff; text-align:center; line-height:1.2;">${tr('앞면 로고', '前面ロゴ', 'Front logo')}</span>
+              <span style="font-size:10.5px; font-weight:800; color:#10b981; background:rgba(16,185,129,0.18); padding:2px 6px; border-radius:6px;">${tr('무료', '無料', 'Free')}</span>
             </button>
-            <button type="button" class="so-tpa-btn" data-area="front_full" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
+            <button type="button" class="so-tpa-btn" data-area="front_full" data-area-fee="3000" onclick="window._soToggleTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease, background 0.15s ease; font-family:inherit;">
               <img src="/t/print2.jpg" alt="앞면 전체" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
               <span style="font-size:12px; font-weight:800; color:#334155; text-align:center; line-height:1.2;">${tr('앞면 전체', '前面全体', 'Full front')}</span>
+              <span style="font-size:10.5px; font-weight:800; color:#dc2626;">+${fmtPrice(3000)}<span style="font-size:9.5px; opacity:0.7; font-weight:700;"> · ${tr('장당', '枚あたり', '/pc')}</span></span>
             </button>
-            <button type="button" class="so-tpa-btn" data-area="back_full" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
+            <button type="button" class="so-tpa-btn" data-area="back_full" data-area-fee="3000" onclick="window._soToggleTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease, background 0.15s ease; font-family:inherit;">
               <img src="/t/print3.jpg" alt="뒷면 전체" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
               <span style="font-size:12px; font-weight:800; color:#334155; text-align:center; line-height:1.2;">${tr('뒷면 전체', '背面全体', 'Full back')}</span>
+              <span style="font-size:10.5px; font-weight:800; color:#dc2626;">+${fmtPrice(3000)}<span style="font-size:9.5px; opacity:0.7; font-weight:700;"> · ${tr('장당', '枚あたり', '/pc')}</span></span>
             </button>
           </div>
         </div>
@@ -2003,6 +2006,12 @@
         if (state.isBestGoods && qty >= _bulkThr) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
         }
+        // 2026-05-30: 티셔츠 — 인쇄 위치별 추가 인쇄비 (앞면로고 무료 / 앞면전체·뒷면전체 +3,000원/장)
+        let tshirtPrintFee = 0;
+        if (state.presetType === 'tshirt' && Array.isArray(state.tshirtPrintAreas)) {
+            var _paidAreas = state.tshirtPrintAreas.filter(function(a){ return a === 'front_full' || a === 'back_full'; });
+            tshirtPrintFee = _paidAreas.length * 3000 * qty;
+        }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 3종
         //   포장없음 = 0 / 내지인쇄·상단인쇄 = 5만원 정액 (수량 무관)
         let presetWrapFee = 0;
@@ -2015,7 +2024,7 @@
             }
         }
 
-        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + shipFee;
+        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee;
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -2069,6 +2078,16 @@
                 ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
                 : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
             bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+        }
+        // 2026-05-30: 티셔츠 — 인쇄 위치별 추가 인쇄비 라인
+        if (tshirtPrintFee > 0 && Array.isArray(state.tshirtPrintAreas)) {
+            var _paidNames = state.tshirtPrintAreas
+                .filter(function(a){ return a === 'front_full' || a === 'back_full'; })
+                .map(function(a){
+                    return a === 'front_full' ? tr('앞면 전체', '前面全体', 'Full front')
+                                              : tr('뒷면 전체', '背面全体', 'Full back');
+                });
+            bdHtml += '<div class="so-price-row"><span>· ' + tr('인쇄 위치', '印刷位置', 'Print area') + ' (' + _paidNames.join(' + ') + ') × ' + qty + tr('장','枚','pcs') + '</span><span>+' + fmtPrice(tshirtPrintFee) + '</span></div>';
         }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 라인 (3종 / 정액 5만원)
         if (presetWrapFee > 0) {
@@ -3132,19 +3151,32 @@
         state.tshirtPrintMethod = btn.getAttribute('data-method') || 'dtg';
     };
 
-    // 2026-05-30: 티셔츠 인쇄 위치 선택 (앞면로고 / 앞면전체 / 뒷면전체)
-    window._soPickTshirtPrintArea = function (btn) {
+    // 2026-05-30: 티셔츠 인쇄 위치 토글 (복수 선택). 최소 1개 유지 (모두 해제 불가)
+    //   앞면 로고 = 무료 / 앞면 전체·뒷면 전체 = +3,000원/장
+    window._soToggleTshirtPrintArea = function (btn) {
         if (!btn) return;
+        var area = btn.getAttribute('data-area');
+        if (!state.tshirtPrintAreas || !state.tshirtPrintAreas.length) state.tshirtPrintAreas = ['front_logo'];
+        var idx = state.tshirtPrintAreas.indexOf(area);
+        if (idx >= 0) {
+            // 이미 선택됨 → 해제 (단, 마지막 1개는 유지)
+            if (state.tshirtPrintAreas.length <= 1) return;
+            state.tshirtPrintAreas.splice(idx, 1);
+        } else {
+            state.tshirtPrintAreas.push(area);
+        }
+        // 시각 상태 동기화
         var row = btn.parentElement;
         if (row) row.querySelectorAll('.so-tpa-btn').forEach(function(b){
-            b.classList.remove('active');
-            b.style.borderColor = '#e2e8f0';
-            var sp = b.querySelector('span'); if (sp) sp.style.color = '#334155';
+            var on = state.tshirtPrintAreas.indexOf(b.getAttribute('data-area')) >= 0;
+            b.classList.toggle('active', on);
+            b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+            b.style.background = on ? '#0f172a' : '#fff';
+            // 라벨 색은 첫째 span (이름)
+            var spans = b.querySelectorAll('span');
+            if (spans[0]) spans[0].style.color = on ? '#fff' : '#334155';
         });
-        btn.classList.add('active');
-        btn.style.borderColor = '#0f172a';
-        var spAct = btn.querySelector('span'); if (spAct) spAct.style.color = '#0f172a';
-        state.tshirtPrintArea = btn.getAttribute('data-area') || 'front_logo';
+        if (typeof recalc === 'function') recalc();
     };
 
     // 2026-05-30: 키링 단면/양면 선택 클릭 — 양면 = ×2 가격
@@ -4338,8 +4370,8 @@
             if (_hint) _hint.textContent = tr('합계: 0장', '合計: 0枚', 'Total: 0 pcs');
             // 인쇄 방식 기본: DTG
             state.tshirtPrintMethod = 'dtg';
-            // 인쇄 위치 기본: 앞면 로고
-            state.tshirtPrintArea = 'front_logo';
+            // 인쇄 위치 기본: 앞면 로고 (배열 — 복수 선택)
+            state.tshirtPrintAreas = ['front_logo'];
             // 버튼 시각 초기화
             if (_tshirtMethSec) _tshirtMethSec.querySelectorAll('.so-tpm-btn').forEach(function(b){
                 var act = b.dataset.method === 'dtg';
@@ -4351,7 +4383,9 @@
             if (_tshirtAreaSec) _tshirtAreaSec.querySelectorAll('.so-tpa-btn').forEach(function(b){
                 var act = b.dataset.area === 'front_logo';
                 b.style.borderColor = act ? '#0f172a' : '#e2e8f0';
-                var sp = b.querySelector('span'); if (sp) sp.style.color = act ? '#0f172a' : '#334155';
+                b.style.background = act ? '#0f172a' : '#fff';
+                var spans = b.querySelectorAll('span');
+                if (spans[0]) spans[0].style.color = act ? '#fff' : '#334155';
                 b.classList.toggle('active', act);
             });
             if (_tshirtSizeSec) _tshirtSizeSec.style.display = '';
@@ -4364,7 +4398,7 @@
         } else {
             state.tshirtSizes = null;
             state.tshirtPrintMethod = null;
-            state.tshirtPrintArea = null;
+            state.tshirtPrintAreas = null;
             if (_tshirtSizeSec) _tshirtSizeSec.style.display = 'none';
             if (_tshirtMethSec) _tshirtMethSec.style.display = 'none';
             if (_tshirtAreaSec) _tshirtAreaSec.style.display = 'none';
@@ -4966,10 +5000,10 @@
             } : null,
             // 2026-05-30: 키링 단면/양면 (양면 = unit price × 2)
             _keyringSide: (state.presetType === 'keyring') ? (state.keyringSide || 'single') : null,
-            // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
+            // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치 (복수 — 배열)
             _tshirtSizes: (state.presetType === 'tshirt') ? (state.tshirtSizes || null) : null,
             _tshirtPrintMethod: (state.presetType === 'tshirt') ? (state.tshirtPrintMethod || null) : null,
-            _tshirtPrintArea: (state.presetType === 'tshirt') ? (state.tshirtPrintArea || null) : null,
+            _tshirtPrintAreas: (state.presetType === 'tshirt') ? (Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas.slice() : null) : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -5574,6 +5608,11 @@
                 base += 200 * qty;
             }
         }
+        // 2026-05-30: 티셔츠 — 인쇄 위치 추가비 (앞면로고 무료, 앞면전체/뒷면전체 +3,000/장)
+        if (it._presetType === 'tshirt' && Array.isArray(it._tshirtPrintAreas)) {
+            var _paidCnt = it._tshirtPrintAreas.filter(function(a){ return a === 'front_full' || a === 'back_full'; }).length;
+            base += _paidCnt * 3000 * qty;
+        }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
         // 2026-05-29: 굿즈 (goods_*) 는 무료배송 — 배송비 합산 skip
@@ -5826,15 +5865,27 @@
                         ? tr('내지인쇄 포장','内側印刷','Insert print')
                         : tr('상단인쇄 포장','上部印刷','Top print'));
                 }
-                // 2026-05-30: 티셔츠 — 사이즈별/인쇄
-                if (it._presetType === 'tshirt' && it._tshirtSizes) {
-                    var _tsCart = it._tshirtSizes;
-                    var _tsParts = [];
-                    if (_tsCart.S) _tsParts.push('S' + _tsCart.S);
-                    if (_tsCart.M) _tsParts.push('M' + _tsCart.M);
-                    if (_tsCart.L) _tsParts.push('L' + _tsCart.L);
-                    if (_tsParts.length) opts += ' · ' + _tsParts.join('/');
+                // 2026-05-30: 티셔츠 — 사이즈별/인쇄 방식/위치
+                if (it._presetType === 'tshirt') {
+                    if (it._tshirtSizes) {
+                        var _tsCart = it._tshirtSizes;
+                        var _tsParts = [];
+                        if (_tsCart.S) _tsParts.push('S' + _tsCart.S);
+                        if (_tsCart.M) _tsParts.push('M' + _tsCart.M);
+                        if (_tsCart.L) _tsParts.push('L' + _tsCart.L);
+                        if (_tsParts.length) opts += ' · ' + _tsParts.join('/');
+                    }
                     if (it._tshirtPrintMethod) opts += ' · ' + (it._tshirtPrintMethod === 'hologram' ? tr('홀로그램','ホログラム','Holo') : it._tshirtPrintMethod.toUpperCase());
+                    var _areasCart = Array.isArray(it._tshirtPrintAreas) ? it._tshirtPrintAreas : (it._tshirtPrintArea ? [it._tshirtPrintArea] : null);
+                    if (_areasCart && _areasCart.length) {
+                        var _abbr = _areasCart.map(function(a){
+                            return a === 'front_logo' ? tr('로고','ロゴ','Logo')
+                                 : a === 'front_full' ? tr('앞전체','前全','F-Full')
+                                 : a === 'back_full'  ? tr('뒤전체','背全','B-Full')
+                                 : a;
+                        });
+                        opts += ' · ' + _abbr.join('+');
+                    }
                 }
                 // 2026-05-30: 키링/코롯토 — 선택된 모양 표시
                 if (it._keyringCut && it._keyringCut.label) {
@@ -6404,12 +6455,21 @@
                                    : it._tshirtPrintMethod;
                         lines.push('   🖨️ 인쇄 방식: ' + _pmLbl);
                     }
-                    if (it._tshirtPrintArea) {
-                        var _paLbl = it._tshirtPrintArea === 'front_logo' ? '앞면 로고'
-                                   : it._tshirtPrintArea === 'front_full' ? '앞면 전체'
-                                   : it._tshirtPrintArea === 'back_full' ? '뒷면 전체'
-                                   : it._tshirtPrintArea;
-                        lines.push('   🎨 인쇄 위치: ' + _paLbl);
+                    // 인쇄 위치 (복수 가능) + 추가 인쇄비 명세
+                    var _areas = Array.isArray(it._tshirtPrintAreas) ? it._tshirtPrintAreas : (it._tshirtPrintArea ? [it._tshirtPrintArea] : null);
+                    if (_areas && _areas.length) {
+                        var _areaNames = _areas.map(function(a){
+                            return a === 'front_logo' ? '앞면 로고 (무료)'
+                                 : a === 'front_full' ? '앞면 전체 (+3,000원/장)'
+                                 : a === 'back_full'  ? '뒷면 전체 (+3,000원/장)'
+                                 : a;
+                        });
+                        lines.push('   🎨 인쇄 위치: ' + _areaNames.join(' + '));
+                        var _paid = _areas.filter(function(a){ return a === 'front_full' || a === 'back_full'; });
+                        if (_paid.length > 0) {
+                            var _printAdd = _paid.length * 3000 * (it.qty || 0);
+                            lines.push('       └ 추가 인쇄비: ' + _paid.length + ' × 3,000원 × ' + (it.qty||0) + '장 = ' + _printAdd.toLocaleString() + '원');
+                        }
                     }
                 }
                 // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
