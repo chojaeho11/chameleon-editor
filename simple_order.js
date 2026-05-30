@@ -2442,18 +2442,20 @@
                 console.log('[so] rawBoard cache loaded:', _soRbMoreCache.length, 'products from', codes.length, 'categories');
             }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
-            // 2026-05-30: 사용자 요청 — 우측 패널은 6개 (sort_order 빠른 순서) 만 노출.
-            //   특정 6개로 명시적으로 고정하려면 _SO_RB_WHITELIST 에 코드 배열 입력 (정의되어 있으면 우선 적용).
-            //   admin → 상품 → sort_order 를 조정하면 어떤 6개가 노출될지 제어 가능.
-            var WL = (window._SO_RB_WHITELIST && Array.isArray(window._SO_RB_WHITELIST)) ? window._SO_RB_WHITELIST : null;
-            var items;
-            if (WL && WL.length) {
-                var byCode = {};
-                _soRbMoreCache.forEach(function(p){ byCode[p.code] = p; });
-                items = WL.map(function(c){ return byCode[c]; }).filter(function(p){ return p && p.code !== currentCode; });
-            } else {
-                items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 6);
-            }
+            // 2026-05-30: 사용자 지정 6개 원판 제품 (hexa-board 사이드바 큐레이션).
+            //   변경 시 이 배열만 수정. 글로벌 window._SO_RB_WHITELIST 로도 override 가능.
+            var _SO_RB_DEFAULT_WL = [
+                '53453455435',   // 16mm 허니콤보드 올 화이트
+                'w23443243',     // 16mm 허니콤보드 올 크라프트 (1300×2500)
+                '675756756765',  // 16mm 허니콤보드 표면 화이트 내지 크라프트
+                '345535456',     // 10mm 허니콤보드 표면 화이트 내지 크라프트
+                '3454353676',    // 10mm 허니콤보드 올 크라프트
+                '34553545'       // 10mm 허니콤보드 화이트
+            ];
+            var WL = (window._SO_RB_WHITELIST && Array.isArray(window._SO_RB_WHITELIST)) ? window._SO_RB_WHITELIST : _SO_RB_DEFAULT_WL;
+            var byCode = {};
+            _soRbMoreCache.forEach(function(p){ byCode[p.code] = p; });
+            var items = WL.map(function(c){ return byCode[c]; }).filter(function(p){ return p && p.code !== currentCode; });
             if (!items.length) { sec.style.display = 'none'; return; }
             console.log('[so] rawBoard right-panel showing', items.length, 'products:', items.map(function(p){ return p.code + '/' + (p.name || ''); }));
             grid.innerHTML = items.map(function (p) {
