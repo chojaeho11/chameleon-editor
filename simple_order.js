@@ -2853,19 +2853,27 @@
             var imgUrl = a.img_url || a.image_url || a.thumb_url || '';
             if (compactMode) {
                 // 컴팩트 카드: 썸네일(상) + 이름(축약, 중) + 가격(하). 체크되면 외곽 보더 강조
+                // 2026-05-30: 키링/코롯토 고리는 썸네일만 (이름·가격 숨김) — 더 단순/직관적
+                var _hookOnly = !!state.presetHasHooks;
+                var _imgSize = _hookOnly ? 52 : 42;
+                var _padding = _hookOnly ? '8px 4px' : '8px 4px';
                 var imgHtmlC;
                 if (imgUrl) {
                     imgHtmlC = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
-                        '" loading="lazy" alt="" style="width:42px; height:42px; border-radius:50%; object-fit:cover; border:1.5px solid #e7d6b8; background:#fff;" ' +
+                        '" loading="lazy" alt="' + safe + '" title="' + safe + '" style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:50%; object-fit:cover; border:1.5px solid #e7d6b8; background:#fff;" ' +
                         'onerror="this.style.display=&quot;none&quot;">';
                 } else {
-                    imgHtmlC = '<span style="width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px;">🔗</span>';
+                    imgHtmlC = '<span style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:50%; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px;">🔗</span>';
                 }
-                return '<label class="so-addon-card" style="display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; background:#fff; transition:border-color 0.15s ease, background 0.15s ease; min-width:0;">' +
+                var nameHtml = _hookOnly ? '' :
+                    '<div style="font-size:10.5px; font-weight:700; color:#451a03; text-align:center; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;">' + safe + '</div>';
+                var priceHtml = (_hookOnly || price <= 0) ? '' :
+                    '<span style="font-weight:800; color:#dc2626; font-size:10.5px;">+' + fmtPrice(price) + '</span>';
+                return '<label class="so-addon-card" title="' + safe + '" style="display:flex; flex-direction:column; align-items:center; gap:5px; padding:' + _padding + '; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; background:#fff; transition:border-color 0.15s ease, background 0.15s ease; min-width:0;">' +
                     '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="0" onchange="window._soToggleAddon(this); this.closest(&quot;.so-addon-card&quot;).style.borderColor=this.checked?&quot;#0f172a&quot;:&quot;#e7e5e4&quot;; this.closest(&quot;.so-addon-card&quot;).style.background=this.checked?&quot;#f8fafc&quot;:&quot;#fff&quot;;" style="display:none;">' +
                     imgHtmlC +
-                    '<div style="font-size:10.5px; font-weight:700; color:#451a03; text-align:center; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;">' + safe + '</div>' +
-                    '<span style="font-weight:800; color:#dc2626; font-size:10.5px;">+' + fmtPrice(price) + '</span>' +
+                    nameHtml +
+                    priceHtml +
                     '<input type="hidden" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '">' +
                     '</label>';
             }
