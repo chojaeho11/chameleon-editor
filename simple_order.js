@@ -2519,15 +2519,22 @@
                 showStatus(tr('수량을 입력해주세요 (1 이상).', '数量を入力してください (1以上)。', 'Please enter qty (≥1).'), 'warn');
                 return;
             }
-            var cur = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+            var curRaw = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+            // 2026-05-30: 사용자 요청 — 매 batch 클릭마다 이전 원판 batch item 들은 모두 제거하고 새 batch 만 남김.
+            //   "자꾸 이전 상품이 담기는 문제" 해결. _isRawBoardAuto 플래그가 마커.
+            var removedPrev = 0;
+            var cur = curRaw.filter(function(it){
+                if (it && it._isRawBoardAuto) { removedPrev++; return false; }
+                return true;
+            });
+            if (removedPrev > 0) console.log('[so] rawBoard batch: removed', removedPrev, 'previous auto-added items before adding new batch');
             // 배송 방법은 사용자가 모달에서 선택한 것 사용 (없으면 수도권 기본).
             var shipMethod = (state.shipMethod === 'regional_delivery') ? 'regional_delivery' : 'metro_delivery';
-            // 합산 raw qty (기존 카트에 있던 + 이번 batch 의 picks) → free 한도 판정용.
+            // 합산 raw qty — 이전 _isRawBoardAuto 제거 후 남은 원판 + 이번 batch picks. (cart_sync 등 외부에서 들어온 진짜 raw-board 주문은 보존됨)
             var existingRawQty = 0;
             cur.forEach(function (it) {
                 var prod = it && (it.product || it);
-                if (it && it._isRawBoardAuto) existingRawQty += parseInt(it.qty || it.quantity || 1, 10) || 0;
-                else if (prod && _soIsRawBoardProduct(prod)) existingRawQty += parseInt(it.qty || it.quantity || 1, 10) || 0;
+                if (prod && _soIsRawBoardProduct(prod)) existingRawQty += parseInt(it.qty || it.quantity || 1, 10) || 0;
             });
             var newQtySum = 0;
             picks.forEach(function(p){ newQtySum += p.qty; });
@@ -2536,9 +2543,9 @@
             var batchShipFee;
             if (shipMethod === 'regional_delivery') batchShipFee = (totalRawQty >= 100) ? 0 : 200000;
             else                                    batchShipFee = (totalRawQty >= 10)  ? 0 : 100000;
-            // 기존 카트에 이미 배송비를 들고 있는 원판 item 이 있으면 그 fee 를 0 으로 만들고, 새 item 첫 번째에 합산 fee 부여.
+            // 외부 raw-board item 의 shipping fee 는 0 으로 (새 batch 의 첫 item 이 합산 fee 보유)
             cur.forEach(function (it) {
-                if (it && it.shipping && (it._isRawBoardAuto || _soIsRawBoardProduct(it && (it.product || it)))) {
+                if (it && it.shipping && _soIsRawBoardProduct(it && (it.product || it))) {
                     if (it.shipping.fee > 0) it.shipping.fee = 0;
                 }
             });
