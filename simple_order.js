@@ -3185,8 +3185,9 @@
         grid.innerHTML = areas.map(function(a){
             var cfg = CFG[a] || CFG.front_logo;
             var f = state.tshirtFiles[a] || {};
-            // 박스 위치는 state 에 저장된 값이 있으면 우선, 없으면 init 사용
-            var box = (f.box && typeof f.box.left === 'number') ? f.box : Object.assign({}, cfg.init);
+            // 박스 위치+회전은 state 에 저장된 값이 있으면 우선, 없으면 init 사용
+            var box = (f.box && typeof f.box.left === 'number') ? f.box : Object.assign({ rotation:0 }, cfg.init);
+            if (typeof box.rotation !== 'number') box.rotation = 0;
             // 저장
             if (!f.box) {
                 state.tshirtFiles[a] = state.tshirtFiles[a] || {};
@@ -3217,17 +3218,31 @@
                 +   'style="position:relative; width:100%; aspect-ratio:1/1; background:#0a0a0f url(' + MOCKUP + ') no-repeat center; background-size:200% auto; background-position:' + cfg.bgPos + ' center; border-radius:8px; overflow:hidden; user-select:none; touch-action:none;">'
                 +   '<div class="so-tshirt-box" data-area="' + areaSafe + '" '
                 +     'style="position:absolute; left:' + box.left + '%; top:' + box.top + '%; width:' + box.width + '%; height:' + box.height + '%; '
+                +     'transform:rotate(' + box.rotation + 'deg); transform-origin:center center; '
                 +     'border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">'
                 +     boxInner
+                +     // 회전 핸들 — 박스 상단 위 (회전 모드)
+                +     '<div class="so-tshirt-rot-handle" data-area="' + areaSafe + '" '
+                +       'style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); '
+                +       'width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; '
+                +       'display:flex; align-items:center; justify-content:center; cursor:grab; '
+                +       'box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:13px; touch-action:none; pointer-events:auto;">'
+                +       '<i class="fa-solid fa-rotate" style="pointer-events:none;"></i>'
+                +     '</div>'
+                +     // 회전 핸들과 박스 상단을 연결하는 점선
+                +     '<div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div>'
                 +   '</div>'
                 + '</div>'
                 + '<div style="margin-top:6px;">' + status + '</div>'
                 + (f.dataUrl ? '<button type="button" onclick="window._soTshirtRemoveFile(\'' + areaSafe + '\')" style="width:100%; margin-top:6px; padding:5px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✕ ' + tr('제거 / 다시 업로드', '削除 / 再アップロード', 'Remove / Re-upload') + '</button>' : '')
                 + '</div>';
         }).join('');
-        // 박스에 드래그 + 클릭 핸들러 부착
+        // 박스에 드래그 + 클릭 핸들러 부착, 회전 핸들에 회전 핸들러 부착
         grid.querySelectorAll('.so-tshirt-box').forEach(function(box){
             _attachTshirtBoxDrag(box);
+        });
+        grid.querySelectorAll('.so-tshirt-rot-handle').forEach(function(h){
+            _attachTshirtBoxRotate(h);
         });
     };
 
@@ -3239,6 +3254,8 @@
         var container = box.parentElement;
         var area = box.getAttribute('data-area');
         box.addEventListener('pointerdown', function(e){
+            // 회전 핸들에서 시작한 이벤트면 무시
+            if (e.target && e.target.closest && e.target.closest('.so-tshirt-rot-handle')) return;
             dragging = true;
             moved = false;
             startX = e.clientX;
@@ -3280,6 +3297,45 @@
         });
         box.addEventListener('pointercancel', function(){ dragging = false; });
     }
+
+    // 회전 핸들 부착 — 박스 중심 기준 각도 계산
+    function _attachTshirtBoxRotate(handle) {
+        var rotating = false;
+        var center = null;
+        var box = handle.closest('.so-tshirt-box');
+        var area = handle.getAttribute('data-area');
+        if (!box) return;
+        handle.addEventListener('pointerdown', function(e){
+            rotating = true;
+            var r = box.getBoundingClientRect();
+            center = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            handle.style.cursor = 'grabbing';
+            try { handle.setPointerCapture(e.pointerId); } catch(_){}
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        handle.addEventListener('pointermove', function(e){
+            if (!rotating || !center) return;
+            var dx = e.clientX - center.x;
+            var dy = e.clientY - center.y;
+            // atan2 (dy, dx) — 0 = 오른쪽. 핸들이 위쪽일 때 0도가 되도록 +90°
+            var angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+            angle = (angle + 360) % 360;
+            // shift 키 누르고 있으면 15° 스냅
+            if (e.shiftKey) angle = Math.round(angle / 15) * 15;
+            box.style.transform = 'rotate(' + angle + 'deg)';
+            if (state.tshirtFiles && state.tshirtFiles[area] && state.tshirtFiles[area].box) {
+                state.tshirtFiles[area].box.rotation = angle;
+            }
+        });
+        handle.addEventListener('pointerup', function(e){
+            rotating = false;
+            handle.style.cursor = 'grab';
+            try { handle.releasePointerCapture(e.pointerId); } catch(_){}
+            e.stopPropagation();
+        });
+        handle.addEventListener('pointercancel', function(){ rotating = false; handle.style.cursor = 'grab'; });
+    }
     // 파일 선택 → state.tshirtFiles 에 저장 + 썸네일 데이터URL 생성 (박스 위치 유지)
     window._soTshirtPickFile = function (area, files) {
         if (!files || !files[0]) return;
@@ -3309,6 +3365,7 @@
 
     // 2026-05-30: 티셔츠 인쇄 위치 토글 (복수 선택). 최소 1개 유지 (모두 해제 불가)
     //   앞면 로고 = 무료 / 앞면 전체·뒷면 전체 = +3,000원/장
+    //   앞면 전체 ↔ 앞면 로고 상호 배제 (둘 다 앞면이라 영역이 겹침)
     window._soToggleTshirtPrintArea = function (btn) {
         if (!btn) return;
         var area = btn.getAttribute('data-area');
@@ -3319,6 +3376,14 @@
             if (state.tshirtPrintAreas.length <= 1) return;
             state.tshirtPrintAreas.splice(idx, 1);
         } else {
+            // 상호 배제 — 앞면 전체 선택 시 앞면 로고 제거, 반대도 동일
+            if (area === 'front_full') {
+                var _li = state.tshirtPrintAreas.indexOf('front_logo');
+                if (_li >= 0) state.tshirtPrintAreas.splice(_li, 1);
+            } else if (area === 'front_logo') {
+                var _fi = state.tshirtPrintAreas.indexOf('front_full');
+                if (_fi >= 0) state.tshirtPrintAreas.splice(_fi, 1);
+            }
             state.tshirtPrintAreas.push(area);
         }
         // 시각 상태 동기화
@@ -5200,7 +5265,7 @@
                             type: f.type || '',
                             thumb: thumb,
                             // 사용자가 드래그한 인쇄 위치 박스 (% 기준)
-                            box: f.box ? { left: f.box.left, top: f.box.top, width: f.box.width, height: f.box.height } : null
+                            box: f.box ? { left: f.box.left, top: f.box.top, width: f.box.width, height: f.box.height, rotation: f.box.rotation || 0 } : null
                         };
                     });
                     return out;
@@ -6684,7 +6749,8 @@
                                 }
                                 if (meta && meta.box) {
                                     var b = meta.box;
-                                    lines.push('         └ 위치 (목업 % 기준): left ' + Math.round(b.left) + '%, top ' + Math.round(b.top) + '%, ' + Math.round(b.width) + '×' + Math.round(b.height) + '%');
+                                    var rotTxt = (b.rotation && b.rotation > 0.5) ? (', 회전 ' + Math.round(b.rotation) + '°') : '';
+                                    lines.push('         └ 위치 (목업 % 기준): left ' + Math.round(b.left) + '%, top ' + Math.round(b.top) + '%, ' + Math.round(b.width) + '×' + Math.round(b.height) + '%' + rotTxt);
                                 }
                             });
                         }
