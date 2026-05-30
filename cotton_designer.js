@@ -2526,7 +2526,7 @@ window.addEventListener('resize', function(){
 //          seed-reviews.js 가 admin_products 의 실제 code 별로 시드한 가짜 리뷰가 자동으로 노출됨
 // ════════════════════════════════════════════════════
 const _CD_RV_PAGE = 5;
-window._cdRvState = { page:0, productCode:'', filterLang:'all', rating:5, photoData:null };
+window._cdRvState = { page:0, productCode:'', filterLang:'all', rating:5, photoFile:null };
 
 // (fabricType, fabricColor) → admin_products code 매핑
 // global_admin.html L2095-2107 의 코드와 일치
@@ -2722,10 +2722,12 @@ window._cdSetRvRating = function(n) {
 window._cdRvPhotoChange = function(input) {
     const file = input.files[0];
     const prev = document.getElementById('cdRvPhotoPrev');
-    if (!file) { window._cdRvState.photoData = null; if (prev) prev.innerHTML = ''; return; }
+    if (!file) { window._cdRvState.photoFile = null; if (prev) prev.innerHTML = ''; return; }
+    // 2026-05-30: File 객체 그대로 보관 — Storage RLS 통과 위해 원본 file (filename/type 메타데이터 포함) 사용.
+    //             FileReader 는 미리보기 표시용으로만 사용.
+    window._cdRvState.photoFile = file;
     const reader = new FileReader();
     reader.onload = function(e){
-        window._cdRvState.photoData = e.target.result;
         if (prev) prev.innerHTML = '<img src="' + e.target.result + '" style="max-width:120px; max-height:120px; border-radius:8px; margin-top:8px; object-fit:cover;">';
     };
     reader.readAsDataURL(file);
@@ -2753,7 +2755,8 @@ window._cdSubmitReview = async function() {
         const ne = document.getElementById('cdReviewNick');
         name = ne ? ne.value.trim() : '';
         if (!name) { alert(_cdT('cd_review_login_or_nick', '닉네임을 입력해주세요')); return; }
-        userId = null;
+        // 2026-05-30 fix: index.html 과 동일하게 게스트도 'guest_<ts>' user_id 사용 (RLS 정책 통과용 hint).
+        userId = 'guest_' + Date.now();
     }
     const ce = document.getElementById('cdReviewComment');
     const comment = ce ? ce.value.trim() : '';
@@ -2765,19 +2768,26 @@ window._cdSubmitReview = async function() {
     const submitLang = (filterL && filterL !== 'all') ? filterL : _cdLangCode();
 
     let photoUrl = null;
-    if (window._cdRvState.photoData) {
+    const photoFile = window._cdRvState.photoFile;
+    if (photoFile) {
         try {
-            const blob = await (await fetch(window._cdRvState.photoData)).blob();
-            const path = Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.jpg';
-            // 2026-05-30 fix: index.html 의 리뷰와 같은 버킷 ('review-photos') 사용 — 기존 RLS 정책과 호환.
-            const up = await sb.storage.from('review-photos').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
-            if (!up.error && up.data) {
+            // 2026-05-30 fix: index.html 의 submitProductReview L15482-15500 와 동일한 업로드 방식.
+            //   - 원본 File 객체 그대로 (dataURL→blob 변환 X — 메타데이터 손실 방지)
+            //   - 파일명: review_<ts>_<rand>.<ext>  (확장자 보존)
+            //   - cacheControl:'3600', upsert:false  (RLS 정책 호환)
+            const ext = (photoFile.name || '').split('.').pop() || 'jpg';
+            const fileName = 'review_' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.' + ext;
+            const up = await sb.storage.from('review-photos').upload(fileName, photoFile, {
+                cacheControl: '3600',
+                upsert: false
+            });
+            if (up.error) {
+                console.error('[cd rv] photo upload error:', up.error.message || up.error);
+            } else if (up.data) {
                 const u = sb.storage.from('review-photos').getPublicUrl(up.data.path);
                 photoUrl = u && u.data && u.data.publicUrl || null;
-            } else if (up.error) {
-                console.warn('[cd rv] photo upload error:', up.error.message);
             }
-        } catch (e) { console.warn('[cd rv] photo:', e); }
+        } catch (e) { console.warn('[cd rv] photo upload exception:', e); }
     }
     const code = window._cdRvState.productCode || _cdMapFabricToCode(state.fabricType, state.fabricColor) || ('fab_' + state.fabricType);
     // 2026-05-30 fix: index.html submit schema 와 일치 (user_id + is_fake:false) — RLS 정책 통과 보장.
@@ -2799,7 +2809,7 @@ window._cdSubmitReview = async function() {
     showToast(_cdT('cd_review_submitted', '리뷰가 등록되었습니다 ✨'));
     if (ce) ce.value = '';
     const ne = document.getElementById('cdReviewNick'); if (ne) ne.value = '';
-    window._cdRvState.photoData = null;
+    window._cdRvState.photoFile = null;
     const pp = document.getElementById('cdRvPhotoPrev'); if (pp) pp.innerHTML = '';
     window._cdSetRvRating(5);
     // 제출 lang 으로 필터 자동 전환 (현재 필터와 다르면) → 방금 쓴 리뷰가 바로 보임
