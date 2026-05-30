@@ -1467,11 +1467,12 @@ a { text-decoration: none; color: inherit; }
         }
         try {
             // 패키지 굿즈 카테고리 — pkg_* prefix 매칭 (서브카 코드 pkg_box_mag 등 모두 포함)
+            // 2026-05-30 perf: description 컬럼 제거 (목록 렌더링에 미사용), limit 500 (실측 pkg_ 상품 < 300)
             var res = await SB.from('admin_products')
-                .select('code, category, name, name_jp, name_us, price, img_url, description')
+                .select('code, category, name, name_jp, name_us, price, img_url')
                 .like('category', 'pkg_%')
                 .order('code', { ascending: true })
-                .limit(2000);
+                .limit(500);
             if (res.error) {
                 console.warn('[goods] DB load error:', res.error.message);
                 allProducts = [];

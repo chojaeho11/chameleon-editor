@@ -219,7 +219,10 @@
       "Bash(awk -F: '$1>3265 && $1<3290 {print}')",
       "Bash(awk 'NR>=860 && /id=\"startScreen\"/{found=1} found && /^<\\\\/div>/{depth--; if\\(depth<0\\){print NR\": close startScreen\"; exit}} found && /<div/{depth++}' \"c:/Users/win 10/Desktop/작업/index.html\")",
       "Bash(bash /c/tmp/goods-loop.sh)",
-      "Bash(file keyringcut/*.jpg)"
+      "Bash(file keyringcut/*.jpg)",
+      "Bash(ffmpeg -y -i ai-img.png -compression_level 6 -quality 80 ai-img.webp)",
+      "Bash(ffmpeg -y -i mascot-character.png -compression_level 6 -quality 85 mascot-character.webp)",
+      "Bash(ffmpeg -y -i mascot-character.png -vf scale=128:128 -compression_level 9 mascot-favicon.png)"
     ],
     "additionalDirectories": [
       "\\tmp"
