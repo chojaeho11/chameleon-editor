@@ -912,6 +912,15 @@
           </div>
           <div id="soProductDetailBody" class="so-prod-detail-body"></div>
         </div>
+
+        <!-- 2026-05-30: 고객 리뷰 섹션 (index.html 의 product_reviews 시스템 재사용) -->
+        <div id="soReviewWrap" class="so-prod-detail" style="display:none; margin-top:18px;">
+          <div class="so-prod-detail-label">
+            <i class="fa-solid fa-star" style="color:#f59e0b;"></i>
+            <span>${tr('고객 리뷰', 'カスタマーレビュー', 'Customer Reviews')}</span>
+          </div>
+          <div id="soReviewBody" class="so-prod-detail-body"></div>
+        </div>
       </div>
 
       <!-- 우측: 옵션 + 가격 + 버튼 -->
@@ -4200,6 +4209,65 @@
             wrap.style.display = '';
         })();
 
+        // 2026-05-30: 고객 리뷰 섹션 초기화 — index.html 의 product_reviews 시스템 (loadProductReviews / renderReviewWriteForm) 재사용
+        (function _initReviews() {
+            try {
+                var rvWrap = document.getElementById('soReviewWrap');
+                var rvBody = document.getElementById('soReviewBody');
+                if (!rvWrap || !rvBody) return;
+                if (typeof window.loadProductReviews !== 'function' || typeof window.renderReviewWriteForm !== 'function') {
+                    // index.html 의 리뷰 시스템 미로드 (esp. 다른 페이지에서 모달만 단독 사용 시) → 섹션 숨김
+                    rvWrap.style.display = 'none';
+                    return;
+                }
+                var rvLang = (typeof window.CURRENT_LANG !== 'undefined' && window.CURRENT_LANG) ? window.CURRENT_LANG : 'kr';
+                var _rvT = {
+                    kr: { worldwide:'전세계 친구들의 리뷰보기', more:'더보기' },
+                    ja: { worldwide:'世界中の友達のレビューを見る', more:'もっと見る' },
+                    en: { worldwide:'See reviews from friends worldwide', more:'Load More' },
+                    zh: { worldwide:'查看全球朋友的评价', more:'加载更多' },
+                    ar: { worldwide:'مشاهدة تقييمات الأصدقاء حول العالم', more:'عرض المزيد' },
+                    es: { worldwide:'Ver opiniones de amigos de todo el mundo', more:'Ver más' },
+                    de: { worldwide:'Bewertungen von Freunden weltweit ansehen', more:'Mehr laden' },
+                    fr: { worldwide:'Voir les avis d\'amis du monde entier', more:'Voir plus' }
+                };
+                var _rv = _rvT[rvLang] || _rvT.en;
+                var _flagImgMap = { kr:'kr', ja:'jp', en:'us', zh:'cn', ar:'sa', es:'es', de:'de', fr:'fr' };
+                var _flags = [
+                    { code:'all', img:'<i class="fa-solid fa-globe" style="font-size:20px;color:#6366f1;"></i>' },
+                    { code:'kr' },{ code:'ja' },{ code:'en' },{ code:'zh' },
+                    { code:'ar' },{ code:'es' },{ code:'de' },{ code:'fr' }
+                ];
+                var _flagBtns = _flags.map(function(f){
+                    var isAct = f.code === rvLang;
+                    var inner = f.img || '<img src="https://flagcdn.com/w40/' + _flagImgMap[f.code] + '.png" alt="' + f.code + '" style="width:28px;height:28px;object-fit:cover;border-radius:50%;">';
+                    return '<button class="rv-flag-btn ' + (isAct?'active':'') + '" data-rv-lang="' + f.code + '" onclick="window.filterReviewsByCountry(\'' + f.code + '\')" style="width:44px;height:44px;border-radius:50%;border:3px solid ' + (isAct?'#6366f1':'#e2e8f0') + ';background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;overflow:hidden;">' + inner + '</button>';
+                }).join('');
+                // 이전에 다른 상품 리뷰 렌더되어 있으면 dedup 캐시 초기화
+                if (window._rvSeenPhotos && window._rvSeenPhotos.clear) window._rvSeenPhotos.clear();
+                if (window._rvSeenCommentHeads && window._rvSeenCommentHeads.clear) window._rvSeenCommentHeads.clear();
+                // 같은 페이지에 #reviewList 등이 이미 있으면 충돌하므로 모달 안 IDs 를 우선시 — 모달 열릴 때는 이 섹션만 노출.
+                rvBody.innerHTML =
+                    '<div id="reviewSummary" class="review-summary"></div>' +
+                    '<div style="margin:16px 0;">' +
+                        '<div style="font-size:14px;font-weight:700;color:#64748b;margin-bottom:8px;">🌍 ' + _rv.worldwide + '</div>' +
+                        '<div id="rvFlagBar" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + _flagBtns + '</div>' +
+                    '</div>' +
+                    '<div id="reviewWriteArea"></div>' +
+                    '<div id="reviewList" class="review-list"></div>' +
+                    '<button id="btnLoadMoreReviews" onclick="window.loadMoreReviews()" class="btn-round" style="display:none;width:100%;margin-top:10px;">' + _rv.more + '</button>';
+                rvWrap.style.display = '';
+                window.currentReviewProductCode = p.code;
+                window.currentReviewLang = rvLang;
+                window.currentReviewFilterLang = rvLang;
+                window.productReviewPage = 0;
+                window.renderReviewWriteForm(p.code);
+                window.loadProductReviews(p.code, 0);
+            } catch (e) {
+                console.warn('[simple_order] review section init failed:', e);
+            }
+        })();
+
         // 2026-05-29: 디자인 에디터 진입 — 메인 index.html 의 startEditorDirect 사용
         window._soOpenEditor = function() {
             try {
@@ -5058,6 +5126,9 @@
     window.closeSimpleOrderModal = function() {
         const m = document.getElementById('simpleOrderModal');
         if (m) m.classList.remove('open');
+        // 2026-05-30: 리뷰 섹션 ID 정리 — 닫은 후 다른 흐름(loadProductDetailAndOpen)에서 #reviewList 등 중복 충돌 방지
+        var rvBody = document.getElementById('soReviewBody');
+        if (rvBody) rvBody.innerHTML = '';
         document.body.style.overflow = '';
     };
 
