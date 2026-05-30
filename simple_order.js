@@ -1101,6 +1101,64 @@
           <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
+        <!-- 2026-05-30: 티셔츠 — 사이즈별 수량 (단체주문) -->
+        <div class="so-section" id="soTshirtSizeSection" style="display:none;">
+          <div class="so-section-title">📏 ${tr('사이즈별 수량 (단체 주문)', 'サイズ別数量 (団体注文)', 'Size × Qty (group order)')}</div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 6px; border:2px solid #e2e8f0; border-radius:12px; background:#fff;">
+              <span style="font-size:28px; font-weight:900; color:#0f172a; line-height:1; letter-spacing:-0.5px;">S</span>
+              <input type="number" id="soTshirtQtyS" min="0" value="0" oninput="window._soTshirtQtyChange()" style="width:100%; padding:6px 4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center; font-size:14px; font-weight:700; font-family:inherit;">
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 6px; border:2px solid #e2e8f0; border-radius:12px; background:#fff;">
+              <span style="font-size:28px; font-weight:900; color:#0f172a; line-height:1; letter-spacing:-0.5px;">M</span>
+              <input type="number" id="soTshirtQtyM" min="0" value="0" oninput="window._soTshirtQtyChange()" style="width:100%; padding:6px 4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center; font-size:14px; font-weight:700; font-family:inherit;">
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 6px; border:2px solid #e2e8f0; border-radius:12px; background:#fff;">
+              <span style="font-size:28px; font-weight:900; color:#0f172a; line-height:1; letter-spacing:-0.5px;">L</span>
+              <input type="number" id="soTshirtQtyL" min="0" value="0" oninput="window._soTshirtQtyChange()" style="width:100%; padding:6px 4px; border:1px solid #cbd5e1; border-radius:6px; text-align:center; font-size:14px; font-weight:700; font-family:inherit;">
+            </div>
+          </div>
+          <div id="soTshirtTotalHint" style="font-size:12px; color:#64748b; font-weight:700; margin-top:8px; text-align:right;">${tr('합계: 0장', '合計: 0枚', 'Total: 0 pcs')}</div>
+        </div>
+
+        <!-- 2026-05-30: 티셔츠 — 인쇄 방식 (DTG / DTF / 홀로그램) -->
+        <div class="so-section" id="soTshirtPrintMethodSection" style="display:none;">
+          <div class="so-section-title">🖨️ ${tr('인쇄 방식', '印刷方式', 'Print method')}</div>
+          <div id="soTshirtPrintMethodGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button type="button" class="so-tpm-btn" data-method="dtg" onclick="window._soPickTshirtPrintMethod(this)" style="padding:14px 8px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.15s ease;">
+              <div style="font-size:15px;">DTG</div>
+              <div style="font-size:10px; opacity:0.85; margin-top:3px; font-weight:600;">${tr('직접 인쇄', '直接印刷', 'Direct print')}</div>
+            </button>
+            <button type="button" class="so-tpm-btn" data-method="dtf" onclick="window._soPickTshirtPrintMethod(this)" style="padding:14px 8px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.15s ease;">
+              <div style="font-size:15px;">DTF</div>
+              <div style="font-size:10px; opacity:0.85; margin-top:3px; font-weight:600;">${tr('전사 필름', '転写フィルム', 'Transfer film')}</div>
+            </button>
+            <button type="button" class="so-tpm-btn" data-method="hologram" onclick="window._soPickTshirtPrintMethod(this)" style="padding:14px 8px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.15s ease;">
+              <div style="font-size:15px;">${tr('홀로그램', 'ホログラム', 'Hologram')}</div>
+              <div style="font-size:10px; opacity:0.85; margin-top:3px; font-weight:600;">${tr('홀로 전사', 'ホログラム転写', 'Holo transfer')}</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2026-05-30: 티셔츠 — 인쇄 위치 (앞면로고 / 앞면전체 / 뒷면전체) -->
+        <div class="so-section" id="soTshirtPrintAreaSection" style="display:none;">
+          <div class="so-section-title">🎨 ${tr('인쇄 위치', '印刷位置', 'Print area')}</div>
+          <div id="soTshirtPrintAreaGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button type="button" class="so-tpa-btn active" data-area="front_logo" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #0f172a; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
+              <img src="/t/print1.png" alt="앞면 로고" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
+              <span style="font-size:12px; font-weight:800; color:#0f172a; text-align:center; line-height:1.2;">${tr('앞면 로고', '前面ロゴ', 'Front logo')}</span>
+            </button>
+            <button type="button" class="so-tpa-btn" data-area="front_full" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
+              <img src="/t/print2.jpg" alt="앞면 전체" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
+              <span style="font-size:12px; font-weight:800; color:#334155; text-align:center; line-height:1.2;">${tr('앞면 전체', '前面全体', 'Full front')}</span>
+            </button>
+            <button type="button" class="so-tpa-btn" data-area="back_full" onclick="window._soPickTshirtPrintArea(this)" style="border:2px solid #e2e8f0; background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease; font-family:inherit;">
+              <img src="/t/print3.jpg" alt="뒷면 전체" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">
+              <span style="font-size:12px; font-weight:800; color:#334155; text-align:center; line-height:1.2;">${tr('뒷면 전체', '背面全体', 'Full back')}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 시공/배송 일정 (가벽·포토존 카테고리만) — 버튼형 디자인 + 가격 자동 breakdown -->
         <div class="so-section" id="soScheduleSection" style="display:none;">
           <div class="so-section-title">${tr('시공/배송 옵션', '施工/配送オプション', 'Install/Delivery')}</div>
@@ -2879,7 +2937,7 @@
         // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
         //   2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외됐으나 카테고리 기반 isBestGoods 로 compact 유지
         var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods || state.isBestGoods);
-        // 2026-05-30: 티셔츠 — 사이즈 addon 은 S/M/L 로 단축, 가격 0 (사이즈별 추가금 없음)
+        // 2026-05-30: 티셔츠 — 사이즈 addon 은 별도 섹션 (soTshirtSizeSection) 으로 분리. 색상만 컴팩트 grid 에 남김.
         var _isTshirt = (state.presetType === 'tshirt');
         function _tshirtSizeAlias(nm) {
             if (/스몰|small|^s$|\bs\b/i.test(nm)) return 'S';
@@ -2887,6 +2945,13 @@
             if (/라지|large|^l$|\bl\b/i.test(nm)) return 'L';
             if (/엑스라지|xl|extra/i.test(nm)) return 'XL';
             return null;
+        }
+        // 티셔츠: 사이즈 addon 은 addon 리스트에서 제외 (별도 섹션에서 처리)
+        if (_isTshirt) {
+            renderList = renderList.filter(function(a){
+                var nm = (a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '');
+                return !_tshirtSizeAlias(nm);
+            });
         }
         var html = renderList.map(function (a) {
             var name = a.name || a.code;
@@ -3035,6 +3100,53 @@
     };
 
     // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 pill 클릭 — 고정가 적용
+    // 2026-05-30: 티셔츠 — 사이즈별 수량 입력 (S/M/L 합계 → state.qty)
+    window._soTshirtQtyChange = function () {
+        var s = parseInt(document.getElementById('soTshirtQtyS') && document.getElementById('soTshirtQtyS').value, 10) || 0;
+        var m = parseInt(document.getElementById('soTshirtQtyM') && document.getElementById('soTshirtQtyM').value, 10) || 0;
+        var l = parseInt(document.getElementById('soTshirtQtyL') && document.getElementById('soTshirtQtyL').value, 10) || 0;
+        if (s < 0) s = 0; if (m < 0) m = 0; if (l < 0) l = 0;
+        state.tshirtSizes = { S:s, M:m, L:l };
+        var total = s + m + l;
+        state.qty = total;
+        var qIn = document.getElementById('soQty'); if (qIn) qIn.value = total;
+        var hint = document.getElementById('soTshirtTotalHint');
+        if (hint) hint.textContent = tr('합계: ' + total + '장', '合計: ' + total + '枚', 'Total: ' + total + ' pcs');
+        if (typeof recalc === 'function') recalc();
+    };
+
+    // 2026-05-30: 티셔츠 인쇄 방식 선택 (DTG / DTF / 홀로그램)
+    window._soPickTshirtPrintMethod = function (btn) {
+        if (!btn) return;
+        var row = btn.parentElement;
+        if (row) row.querySelectorAll('.so-tpm-btn').forEach(function(b){
+            b.classList.remove('active');
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+            b.style.borderColor = '#e2e8f0';
+        });
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#0f172a';
+        state.tshirtPrintMethod = btn.getAttribute('data-method') || 'dtg';
+    };
+
+    // 2026-05-30: 티셔츠 인쇄 위치 선택 (앞면로고 / 앞면전체 / 뒷면전체)
+    window._soPickTshirtPrintArea = function (btn) {
+        if (!btn) return;
+        var row = btn.parentElement;
+        if (row) row.querySelectorAll('.so-tpa-btn').forEach(function(b){
+            b.classList.remove('active');
+            b.style.borderColor = '#e2e8f0';
+            var sp = b.querySelector('span'); if (sp) sp.style.color = '#334155';
+        });
+        btn.classList.add('active');
+        btn.style.borderColor = '#0f172a';
+        var spAct = btn.querySelector('span'); if (spAct) spAct.style.color = '#0f172a';
+        state.tshirtPrintArea = btn.getAttribute('data-area') || 'front_logo';
+    };
+
     // 2026-05-30: 키링 단면/양면 선택 클릭 — 양면 = ×2 가격
     window._soPickKeyringSide = function (btn) {
         if (!btn) return;
@@ -4209,6 +4321,55 @@
         state.isBestGoods = state.isPresetGoods
             || !!(p && _BEST_PRICE_OVERRIDES[p.code] != null)
             || !!(p && p.category && _BEST_CATEGORIES[p.category]);
+        // 2026-05-30: 티셔츠 전용 섹션 (사이즈별 수량 / 인쇄 방식 / 인쇄 위치)
+        var _isTshirtProd = (state.presetType === 'tshirt');
+        var _tshirtSizeSec = document.getElementById('soTshirtSizeSection');
+        var _tshirtMethSec = document.getElementById('soTshirtPrintMethodSection');
+        var _tshirtAreaSec = document.getElementById('soTshirtPrintAreaSection');
+        var _tshirtQtySec = document.getElementById('soQtySection');
+        if (_isTshirtProd) {
+            // 사이즈별 수량 초기화
+            state.tshirtSizes = { S: 0, M: 0, L: 0 };
+            ['S','M','L'].forEach(function(s){
+                var inp = document.getElementById('soTshirtQty' + s);
+                if (inp) inp.value = 0;
+            });
+            var _hint = document.getElementById('soTshirtTotalHint');
+            if (_hint) _hint.textContent = tr('합계: 0장', '合計: 0枚', 'Total: 0 pcs');
+            // 인쇄 방식 기본: DTG
+            state.tshirtPrintMethod = 'dtg';
+            // 인쇄 위치 기본: 앞면 로고
+            state.tshirtPrintArea = 'front_logo';
+            // 버튼 시각 초기화
+            if (_tshirtMethSec) _tshirtMethSec.querySelectorAll('.so-tpm-btn').forEach(function(b){
+                var act = b.dataset.method === 'dtg';
+                b.style.background = act ? '#0f172a' : '#fff';
+                b.style.color = act ? '#fff' : '#334155';
+                b.style.borderColor = act ? '#0f172a' : '#e2e8f0';
+                b.classList.toggle('active', act);
+            });
+            if (_tshirtAreaSec) _tshirtAreaSec.querySelectorAll('.so-tpa-btn').forEach(function(b){
+                var act = b.dataset.area === 'front_logo';
+                b.style.borderColor = act ? '#0f172a' : '#e2e8f0';
+                var sp = b.querySelector('span'); if (sp) sp.style.color = act ? '#0f172a' : '#334155';
+                b.classList.toggle('active', act);
+            });
+            if (_tshirtSizeSec) _tshirtSizeSec.style.display = '';
+            if (_tshirtMethSec) _tshirtMethSec.style.display = '';
+            if (_tshirtAreaSec) _tshirtAreaSec.style.display = '';
+            if (_tshirtQtySec)  _tshirtQtySec.style.display  = 'none'; // 일반 qty 입력 숨김 (S/M/L 합계로 결정)
+            // 전체 수량은 0 으로 시작 (사용자가 S/M/L 입력해야 함)
+            state.qty = 0;
+            var _soQtyInp = document.getElementById('soQty'); if (_soQtyInp) _soQtyInp.value = 0;
+        } else {
+            state.tshirtSizes = null;
+            state.tshirtPrintMethod = null;
+            state.tshirtPrintArea = null;
+            if (_tshirtSizeSec) _tshirtSizeSec.style.display = 'none';
+            if (_tshirtMethSec) _tshirtMethSec.style.display = 'none';
+            if (_tshirtAreaSec) _tshirtAreaSec.style.display = 'none';
+            if (_tshirtQtySec)  _tshirtQtySec.style.display  = '';
+        }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
         var pillsBox = document.getElementById('soPresetSizePills');
@@ -4805,6 +4966,10 @@
             } : null,
             // 2026-05-30: 키링 단면/양면 (양면 = unit price × 2)
             _keyringSide: (state.presetType === 'keyring') ? (state.keyringSide || 'single') : null,
+            // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
+            _tshirtSizes: (state.presetType === 'tshirt') ? (state.tshirtSizes || null) : null,
+            _tshirtPrintMethod: (state.presetType === 'tshirt') ? (state.tshirtPrintMethod || null) : null,
+            _tshirtPrintArea: (state.presetType === 'tshirt') ? (state.tshirtPrintArea || null) : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -5661,6 +5826,16 @@
                         ? tr('내지인쇄 포장','内側印刷','Insert print')
                         : tr('상단인쇄 포장','上部印刷','Top print'));
                 }
+                // 2026-05-30: 티셔츠 — 사이즈별/인쇄
+                if (it._presetType === 'tshirt' && it._tshirtSizes) {
+                    var _tsCart = it._tshirtSizes;
+                    var _tsParts = [];
+                    if (_tsCart.S) _tsParts.push('S' + _tsCart.S);
+                    if (_tsCart.M) _tsParts.push('M' + _tsCart.M);
+                    if (_tsCart.L) _tsParts.push('L' + _tsCart.L);
+                    if (_tsParts.length) opts += ' · ' + _tsParts.join('/');
+                    if (it._tshirtPrintMethod) opts += ' · ' + (it._tshirtPrintMethod === 'hologram' ? tr('홀로그램','ホログラム','Holo') : it._tshirtPrintMethod.toUpperCase());
+                }
                 // 2026-05-30: 키링/코롯토 — 선택된 모양 표시
                 if (it._keyringCut && it._keyringCut.label) {
                     var _cl = it._keyringCut.label;
@@ -6211,6 +6386,31 @@
                 // 2026-05-30: 키링 단면/양면 (양면이면 단가 ×2 표기)
                 if (it._presetType === 'keyring' && it._keyringSide) {
                     lines.push('   🖨️ 인쇄 면: ' + (it._keyringSide === 'double' ? '양면 (단가 ×2)' : '단면'));
+                }
+                // 2026-05-30: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
+                if (it._presetType === 'tshirt') {
+                    if (it._tshirtSizes) {
+                        var _ts = it._tshirtSizes;
+                        var _parts = [];
+                        if (_ts.S) _parts.push('S ' + _ts.S);
+                        if (_ts.M) _parts.push('M ' + _ts.M);
+                        if (_ts.L) _parts.push('L ' + _ts.L);
+                        if (_parts.length) lines.push('   📏 사이즈: ' + _parts.join(' · ') + ' (합계 ' + ((_ts.S||0)+(_ts.M||0)+(_ts.L||0)) + '장)');
+                    }
+                    if (it._tshirtPrintMethod) {
+                        var _pmLbl = it._tshirtPrintMethod === 'dtg' ? 'DTG (직접 인쇄)'
+                                   : it._tshirtPrintMethod === 'dtf' ? 'DTF (전사 필름)'
+                                   : it._tshirtPrintMethod === 'hologram' ? '홀로그램'
+                                   : it._tshirtPrintMethod;
+                        lines.push('   🖨️ 인쇄 방식: ' + _pmLbl);
+                    }
+                    if (it._tshirtPrintArea) {
+                        var _paLbl = it._tshirtPrintArea === 'front_logo' ? '앞면 로고'
+                                   : it._tshirtPrintArea === 'front_full' ? '앞면 전체'
+                                   : it._tshirtPrintArea === 'back_full' ? '뒷면 전체'
+                                   : it._tshirtPrintArea;
+                        lines.push('   🎨 인쇄 위치: ' + _paLbl);
+                    }
                 }
                 // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
                 if (it._keyringCut && it._keyringCut.label) {

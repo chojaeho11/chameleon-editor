@@ -1830,6 +1830,40 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
         }
+        // 2026-05-30: 티셔츠 — 사이즈별/인쇄 방식/인쇄 위치 옵션 컬럼에 표시
+        if (item._presetType === 'tshirt') {
+            if (item._tshirtSizes) {
+                var _tsP = item._tshirtSizes;
+                var _szArr = [];
+                if (_tsP.S) _szArr.push('S ' + _tsP.S);
+                if (_tsP.M) _szArr.push('M ' + _tsP.M);
+                if (_tsP.L) _szArr.push('L ' + _tsP.L);
+                if (_szArr.length) {
+                    var _szPfx = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? 'サイズ: ' :
+                                 (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Size: ' : '사이즈: ';
+                    optParts.push(_szPfx + _szArr.join(' / '));
+                }
+            }
+            if (item._tshirtPrintMethod) {
+                var _pmPfx = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '印刷: ' :
+                             (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Print: ' : '인쇄: ';
+                var _pmLblPdf = item._tshirtPrintMethod === 'dtg' ? 'DTG'
+                              : item._tshirtPrintMethod === 'dtf' ? 'DTF'
+                              : item._tshirtPrintMethod === 'hologram' ? ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? 'ホログラム' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Hologram' : '홀로그램')
+                              : item._tshirtPrintMethod;
+                optParts.push(_pmPfx + _pmLblPdf);
+            }
+            if (item._tshirtPrintArea) {
+                var _paPfx = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '位置: ' :
+                             (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Area: ' : '위치: ';
+                var _paLblPdf;
+                if (item._tshirtPrintArea === 'front_logo')      _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面ロゴ' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Front logo' : '앞면 로고';
+                else if (item._tshirtPrintArea === 'front_full') _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '前面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full front' : '앞면 전체';
+                else if (item._tshirtPrintArea === 'back_full')  _paLblPdf = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '背面全体' : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Full back' : '뒷면 전체';
+                else _paLblPdf = item._tshirtPrintArea;
+                optParts.push(_paPfx + _paLblPdf);
+            }
+        }
         // 2026-05-30: 키링 단면/양면 — 견적서 규격 컬럼에 표시
         if (item._presetType === 'keyring' && item._keyringSide) {
             var _sidePrefix = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '印刷面: ' :
