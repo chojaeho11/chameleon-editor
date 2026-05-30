@@ -3397,6 +3397,27 @@
         if (!state.addonQuantities) state.addonQuantities = {};
         var _lbl = inp.closest('label');
         var _qInp = _lbl ? _lbl.querySelector('input[data-addon-qty-code]') : null;
+        // 2026-05-30: 키링/코롯토 — 고리는 1종류만 선택 (단일선택). 새 고리 체크 시 다른 고리 해제
+        if (inp.checked && state.presetHasHooks) {
+            Object.keys(state.selectedAddons).forEach(function (existingCode) {
+                if (existingCode === code) return;
+                delete state.selectedAddons[existingCode];
+                delete state.addonQuantities[existingCode];
+            });
+            // 다른 카드의 체크 박스 + 시각적 상태 모두 해제
+            var listEl = document.getElementById('soAddonList');
+            if (listEl) {
+                listEl.querySelectorAll('input[type=checkbox][data-addon-code]').forEach(function (cb) {
+                    if (cb === inp) return;
+                    if (cb.checked) cb.checked = false;
+                    var card = cb.closest('.so-addon-card');
+                    if (card) {
+                        card.style.borderColor = '#e7e5e4';
+                        card.style.background = '#fff';
+                    }
+                });
+            }
+        }
         if (inp.checked) {
             state.selectedAddons[code] = code;
             // 조명이면 가로(m), 아크릴 굿즈·등신대면 제품 수량과 동일, 그 외는 수량 입력값(기본 1)
