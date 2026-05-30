@@ -1826,6 +1826,21 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         } else if (_wMm && _hMm) {
             optParts.push(`${Math.round(_wMm)}x${Math.round(_hMm)}mm`);
         }
+        // 2026-05-30: 키링/코롯토 선택된 모양 (1~6) — 견적서 규격 컬럼에 표시
+        if (item._keyringCut && item._keyringCut.label) {
+            var _cutLbl = item._keyringCut.label;
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && item._keyringCut.label_jp) _cutLbl = item._keyringCut.label_jp;
+            else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && item._keyringCut.label_en) _cutLbl = item._keyringCut.label_en;
+            var _cutPrefix = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? 'カット: ' :
+                             (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Cut: ' : '모양: ';
+            optParts.push(_cutPrefix + item._keyringCut.id + '. ' + _cutLbl);
+        }
+        // 또한 사용자 정의 사이즈(키링/코롯토 pill 결과) 도 표시
+        if (item.customSize && item.customSize.w_cm) {
+            var _szPrefix = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? 'サイズ: ' :
+                            (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Size: ' : '사이즈: ';
+            optParts.push(_szPrefix + item.customSize.w_cm + '×' + item.customSize.h_cm + 'cm');
+        }
         // ★ addon 이름은 별도 └ 행으로 표시하므로 규격 컬럼에 넣지 않음 (챗봇 견적서와 동일)
         if (optParts.length > 0) pdfOptionLabel = optParts.join('\n');
 

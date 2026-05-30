@@ -1021,6 +1021,13 @@
           </div>
         </div>
 
+        <!-- 2026-05-30: 키링/코롯토 모양 선택 (6종 — 모양따기/사각배경/원형배경/모양배경/사각투명/원형투명) -->
+        <div class="so-section" id="soPresetCutSection" style="display:none;">
+          <div class="so-section-title">✂️ ${tr('모양 선택', 'カット形状の選択', 'Choose cut shape')}</div>
+          <div id="soPresetCutGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;"></div>
+          <div id="soPresetCutLabel" style="font-size:11px; color:#64748b; font-weight:600; margin-top:6px; text-align:center;"></div>
+        </div>
+
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
         <!-- 2026-05-29: 키링/코롯토 베스트굿즈는 pill UI 로 고정 사이즈 선택 -->
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
@@ -2972,6 +2979,38 @@
     };
 
     // 2026-05-29: 베스트굿즈 키링/코롯토 프리셋 사이즈 pill 클릭 — 고정가 적용
+    // 2026-05-30: 키링/코롯토 모양 선택 클릭 — 6종 컷팅 옵션
+    window._soPickKeyringCut = function (btn) {
+        if (!btn) return;
+        var row = btn.parentElement;
+        if (row) {
+            row.querySelectorAll('.so-cut-card').forEach(function (b) {
+                b.classList.remove('active');
+                b.style.borderColor = '#e2e8f0';
+                var sp = b.querySelector('span'); if (sp) sp.style.color = '#334155';
+            });
+        }
+        btn.classList.add('active');
+        btn.style.borderColor = '#0f172a';
+        var spAct = btn.querySelector('span'); if (spAct) spAct.style.color = '#0f172a';
+        var id = parseInt(btn.getAttribute('data-cut-id'), 10);
+        // _KEYRING_CUTS 는 상품 로더의 scope 안에 있으므로 라벨/ID 는 DOM data 에서 읽기
+        var cutLabelKo = btn.getAttribute('data-cut-label') || '';
+        // 다국어 lookup 은 라벨 텍스트로 간단 매핑 (단순화)
+        var cutMap = {
+            '모양따기': { jp:'シルエットカット', en:'Die-cut shape' },
+            '사각배경': { jp:'四角背景',         en:'Square BG' },
+            '원형배경': { jp:'円形背景',         en:'Round BG' },
+            '모양배경': { jp:'シェイプ背景',     en:'Shape BG' },
+            '사각투명': { jp:'四角クリア',       en:'Square Clear' },
+            '원형투명': { jp:'円形クリア',       en:'Round Clear' }
+        };
+        var mp = cutMap[cutLabelKo] || { jp: cutLabelKo, en: cutLabelKo };
+        state.keyringCut = { id: id, label: cutLabelKo, label_jp: mp.jp, label_en: mp.en };
+        var cutLbl = document.getElementById('soPresetCutLabel');
+        if (cutLbl) cutLbl.textContent = tr('현재 선택: ', '選択中：', 'Selected: ') + id + '. ' + tr(cutLabelKo, mp.jp, mp.en);
+    };
+
     window._soPickPresetSize = function (btn) {
         if (!btn) return;
         var row = btn.parentElement;
@@ -3983,6 +4022,15 @@
             '64564882_copy': 8000,   // 허니콤보드 팝업굿즈
             'acr_smtgr_02':  6000    // 아크릴 자개 스마트톡
         };
+        // 2026-05-30: 키링/코롯토 모양 선택 — 6가지 컷팅 옵션 (이미지 + 다국어 라벨)
+        var _KEYRING_CUTS = [
+            { id:1, label:'모양따기', label_jp:'シルエットカット', label_en:'Die-cut shape',     img:'/keyringcut/keyringcut1.jpg' },
+            { id:2, label:'사각배경', label_jp:'四角背景',         label_en:'Square BG',         img:'/keyringcut/keyringcut2.jpg' },
+            { id:3, label:'원형배경', label_jp:'円形背景',         label_en:'Round BG',          img:'/keyringcut/keyringcut3.jpg' },
+            { id:4, label:'모양배경', label_jp:'シェイプ背景',     label_en:'Shape BG',          img:'/keyringcut/keyringcut4.jpg' },
+            { id:5, label:'사각투명', label_jp:'四角クリア',       label_en:'Square Clear',      img:'/keyringcut/keyringcut5.jpg' },
+            { id:6, label:'원형투명', label_jp:'円形クリア',       label_en:'Round Clear',       img:'/keyringcut/keyringcut6.jpg' }
+        ];
         state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
         state.isPresetGoods = !!state.presetSizes;
         // 2026-05-30: 프리셋 타입 / 고리 옵션 보유 여부 (키링·코롯토만 고리 300원 override + 안내문구 변경)
@@ -4062,6 +4110,36 @@
                 }
                 pillsNote.style.display = '';
             }
+            // 2026-05-30: 키링/코롯토 — 모양 선택 6종 (이미지 그리드)
+            var cutSec = document.getElementById('soPresetCutSection');
+            var cutGrid = document.getElementById('soPresetCutGrid');
+            var cutLbl = document.getElementById('soPresetCutLabel');
+            if (state.presetHasHooks && cutSec) {
+                cutSec.style.display = '';
+                state.keyringCut = _KEYRING_CUTS[0]; // 기본: 1번 모양따기
+                if (cutGrid) {
+                    cutGrid.innerHTML = _KEYRING_CUTS.map(function (c, i) {
+                        var act = (i === 0);
+                        var lbl = tr(c.label, c.label_jp, c.label_en);
+                        return '<button type="button" class="so-cut-card' + (act ? ' active' : '') + '" '
+                            + 'data-cut-id="' + c.id + '" data-cut-label="' + c.label + '" '
+                            + 'onclick="window._soPickKeyringCut(this)" '
+                            + 'style="border:2px solid ' + (act ? '#0f172a' : '#e2e8f0') + '; '
+                            + 'background:#fff; border-radius:10px; padding:4px; cursor:pointer; '
+                            + 'display:flex; flex-direction:column; align-items:center; gap:3px; '
+                            + 'transition:border-color 0.15s ease; font-family:inherit;">'
+                            + '<img src="' + c.img + '" alt="' + lbl + '" loading="lazy" '
+                            + 'style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; background:#f8fafc;">'
+                            + '<span style="font-size:10px; font-weight:700; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.15;">'
+                            + (i + 1) + '. ' + lbl + '</span>'
+                            + '</button>';
+                    }).join('');
+                }
+                if (cutLbl) cutLbl.textContent = tr('현재 선택: ', '選択中：', 'Selected: ') + (_KEYRING_CUTS[0].id + '. ' + tr(_KEYRING_CUTS[0].label, _KEYRING_CUTS[0].label_jp, _KEYRING_CUTS[0].label_en));
+            } else if (cutSec) {
+                cutSec.style.display = 'none';
+                state.keyringCut = null;
+            }
             // 개별포장 토글 — 새 상품 진입 시 항상 OFF 로 초기화
             state.presetWrap = false;
             var _wbtn = document.getElementById('soPresetWrapBtn');
@@ -4095,9 +4173,11 @@
             // 일반 면적계산 모드
             state.presetSizeFixed = false;
             state.presetWrap = false;
+            state.keyringCut = null;
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
             var _wbtn2 = document.getElementById('soPresetWrapBtn'); if (_wbtn2) _wbtn2.style.display = 'none';
+            var _cutS2 = document.getElementById('soPresetCutSection'); if (_cutS2) _cutS2.style.display = 'none';
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
@@ -4110,9 +4190,11 @@
             // 사이즈 섹션 자체 미사용 — 프리셋 잔존 상태 리셋
             state.presetSizeFixed = false;
             state.presetWrap = false;
+            state.keyringCut = null;
             if (pillsBox) { pillsBox.style.display = 'none'; pillsBox.innerHTML = ''; }
             if (pillsNote) pillsNote.style.display = 'none';
             var _wbtn3 = document.getElementById('soPresetWrapBtn'); if (_wbtn3) _wbtn3.style.display = 'none';
+            var _cutS3 = document.getElementById('soPresetCutSection'); if (_cutS3) _cutS3.style.display = 'none';
             if (editorBtn) editorBtn.style.display = '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
@@ -4503,6 +4585,13 @@
             _presetHasHooks: !!state.presetHasHooks,
             // 프리셋 굿즈 개별포장 옵션 (+200원/개)
             _presetWrap: !!state.presetWrap,
+            // 2026-05-30: 키링/코롯토 선택된 모양 (1~6)
+            _keyringCut: state.keyringCut ? {
+                id: state.keyringCut.id,
+                label: state.keyringCut.label,
+                label_jp: state.keyringCut.label_jp || state.keyringCut.label,
+                label_en: state.keyringCut.label_en || state.keyringCut.label
+            } : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
         };
     }
@@ -5335,6 +5424,17 @@
             } else {
                 name = (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || tr('상품','商品','Item'));
                 opts = (it.qty || 1) + tr('개','個',' pcs');
+                // 2026-05-30: 키링/코롯토 — 선택된 모양 표시
+                if (it._keyringCut && it._keyringCut.label) {
+                    var _cl = it._keyringCut.label;
+                    var _lng = getLang();
+                    if (_lng === 'ja' && it._keyringCut.label_jp) _cl = it._keyringCut.label_jp;
+                    else if ((_lng === 'en' || _lng === 'es' || _lng === 'de' || _lng === 'fr' || _lng === 'zh' || _lng === 'ar') && it._keyringCut.label_en) _cl = it._keyringCut.label_en;
+                    opts += ' · ✂️ ' + _cl;
+                }
+                if (it.customSize && it.customSize.w_cm) {
+                    opts += ' · ' + it.customSize.w_cm + '×' + it.customSize.h_cm + 'cm';
+                }
             }
             var p = _soCalcItemPrice(it);
             return '<div class="so-co-summary-item" style="position:relative;">' +
@@ -5870,6 +5970,10 @@
                 }
                 if (it.customSize && it.customSize.w_cm) {
                     lines.push('   📐 사이즈: ' + it.customSize.w_cm + 'cm × ' + it.customSize.h_cm + 'cm');
+                }
+                // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
+                if (it._keyringCut && it._keyringCut.label) {
+                    lines.push('   ✂️ 모양: ' + it._keyringCut.id + '. ' + it._keyringCut.label);
                 }
                 if (it.boxSize && it.boxSize.w) {
                     lines.push('   📦 박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
