@@ -2812,15 +2812,29 @@ window._cdSubmitReview = async function() {
     }
 };
 
-function renderRvWriteForm() {
+async function renderRvWriteForm() {
     const area = document.getElementById('cdReviewWriteArea');
     if (!area) return;
-    const u = window.currentUser || window._cpCurrentUser;
+    // 세션 직접 조회 (cotton_designer 는 window.currentUser 안 채움)
+    let user = window.currentUser || window._cpCurrentUser || null;
+    if (!user) {
+        try {
+            const sb = window.sb || window.__unified_sb;
+            if (sb && sb.auth && sb.auth.getSession) {
+                const s = await sb.auth.getSession();
+                user = s && s.data && s.data.session && s.data.session.user || null;
+            }
+        } catch (e) {}
+    }
     let nickRow;
-    if (u) {
-        const meta = u.user_metadata || {};
-        const dn = meta.full_name || meta.name || (u.email || '').split('@')[0];
-        nickRow = '<div style="padding:10px 14px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; margin-bottom:10px; color:#4338ca; font-weight:600;"><i class="fa-solid fa-user-circle"></i> ' + _cdEscape(dn) + '</div>';
+    if (user) {
+        const meta = user.user_metadata || {};
+        const dn = meta.full_name || meta.name || (user.email || '').split('@')[0];
+        // 2026-05-30: 메인 상품 페이지 리뷰 폼과 동일 — 아이콘+이름을 인디고 박스 안에 표시
+        nickRow = '<div style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:10px;">'
+                + '<i class="fa-solid fa-user-circle" style="color:#6366f1; font-size:18px;"></i>'
+                + '<span style="font-weight:600; color:#4338ca;">' + _cdEscape(dn) + '</span>'
+                + '</div>';
     } else {
         nickRow = '<input type="text" id="cdReviewNick" class="cd-input" placeholder="' + _cdT('cd_review_nick_ph', '닉네임') + '" maxlength="20" style="margin-bottom:10px;">';
     }
@@ -2833,7 +2847,7 @@ function renderRvWriteForm() {
         + '<textarea id="cdReviewComment" class="cd-textarea" placeholder="' + _cdT('cd_review_comment_ph', '리뷰를 남겨주세요') + '"></textarea>'
         + '<div id="cdRvPhotoPrev"></div>'
         + '<div style="display:flex; gap:10px; margin-top:12px;">'
-        + '<label class="cd-photo-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;">'
+        + '<label class="cd-photo-btn" style="flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;">'
         + '<i class="fa-solid fa-camera"></i> ' + _cdT('cd_review_photo', '사진 첨부')
         + '<input type="file" accept="image/*" style="display:none;" onchange="window._cdRvPhotoChange(this)">'
         + '</label>'
@@ -2846,15 +2860,19 @@ function renderRvFlagBar() {
     const bar = document.getElementById('cdRvFlagBar');
     if (!bar) return;
     const cur = window._cdRvState.filterLang || 'all';
+    // 2026-05-30: 9개 국가 깃발 (메인 상품 페이지 리뷰 시스템과 동일)
+    // flagcdn 의 국가 코드 매핑 — ja→jp, en→us, zh→cn, ar→sa
+    const _flagImgMap = { kr:'kr', ja:'jp', en:'us', zh:'cn', ar:'sa', es:'es', de:'de', fr:'fr' };
     const flags = [
-        { code:'all', html:'<i class="fa-solid fa-globe" style="font-size:18px; color:#6366f1;"></i>' },
-        { code:'kr',  html:'🇰🇷' },
-        { code:'ja',  html:'🇯🇵' },
-        { code:'en',  html:'🇺🇸' }
+        { code:'all' }, { code:'kr' }, { code:'ja' }, { code:'en' },
+        { code:'zh' }, { code:'ar' }, { code:'es' }, { code:'de' }, { code:'fr' }
     ];
     bar.innerHTML = flags.map(function(f){
         const isAct = f.code === cur;
-        return '<button class="cd-flag-btn ' + (isAct ? 'active' : '') + '" data-lang="' + f.code + '" onclick="window._cdFilterReviews(\'' + f.code + '\')" style="font-size:20px;">' + f.html + '</button>';
+        const inner = f.code === 'all'
+            ? '<i class="fa-solid fa-globe" style="font-size:18px; color:#6366f1;"></i>'
+            : '<img src="https://flagcdn.com/w40/' + _flagImgMap[f.code] + '.png" alt="' + f.code + '" loading="lazy" style="width:26px; height:26px; object-fit:cover; border-radius:50%;">';
+        return '<button class="cd-flag-btn ' + (isAct ? 'active' : '') + '" data-lang="' + f.code + '" onclick="window._cdFilterReviews(\'' + f.code + '\')">' + inner + '</button>';
     }).join('');
 }
 
