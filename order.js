@@ -1857,7 +1857,7 @@ async function addCanvasToCart() {
                 const _ld = document.getElementById('loading');
                 if (_ld) _ld.style.display = 'flex';
                 await window.loadEditorLibraries();
-                if (window._pendingEditorInits) { window._pendingEditorInits(); delete window._pendingEditorInits; }
+                if (window._pendingEditorInits) { await window._pendingEditorInits(); delete window._pendingEditorInits; }
                 if (_ld) _ld.style.display = 'none';
             }
             canvas = window.canvas;

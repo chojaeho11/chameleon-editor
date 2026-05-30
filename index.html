@@ -8304,27 +8304,16 @@ window.filterFxCards = function(cat, btn) {
         </button>
     </div>
 </div>
+<!-- 2026-05-30 perf: 에디터 모듈 정적 <script> 태그 일괄 제거 (main.js 가 동적 import). -->
+<!-- 메인 페이지에서 ~16개 모듈, 약 1MB JS 다운로드/파싱 절감. -->
+<!-- 남은 정적 import: config(필수), order(필수, canvas-core/size/pages/export 도 자동 동반), login(필수), main(orchestrator). -->
+<!-- wall-3d-* 는 에디터 진입 후 wall 3D 미리보기에서 lazy-init 되도록 defer 유지. -->
 <script type="module" src="./config.js?v=438"></script>
-<script type="module" src="./canvas-core.js?v=434"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
-<script type="module" src="./canvas-size.js?v=434"></script>
-<script type="module" src="./canvas-guides.js?v=434"></script>
-<script type="module" src="./canvas-zoom-pan.js?v=434"></script>
-<script type="module" src="./canvas-objects.js?v=434"></script>
-<script type="module" src="./canvas-image.js?v=434"></script>
-<script type="module" src="./canvas-template.js?v=434"></script>
-<script type="module" src="./canvas-ai.js?v=434"></script>
-<script type="module" src="./canvas-retouch.js?v=434"></script>
-<script type="module" src="./canvas-utils.js?v=434"></script>
-<script type="module" src="./shortcuts.js?v=434"></script>
-<script type="module" src="./context-menu.js?v=434"></script>
-<script type="module" src="./export.js?v=434"></script>
 <script type="module" src="./order.js?v=462"></script>
 <script type="module" src="./login.js?v=434"></script>
-<script type="module" src="./my-design.js?v=434"></script>
-<script type="module" src="./ppt-mode.js?v=434"></script>
-<script type="module" src="./main.js?v=441"></script>
+<script type="module" src="./main.js?v=442"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=152"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
@@ -9258,7 +9247,7 @@ window.filterFxCards = function(cat, btn) {
     </div>
 </div>
 
-<script src="./text-wizard.js?v=434"></script> 
+<script src="./text-wizard.js?v=434" defer></script>
 <script>
     
     // [0] 파트너스 센터 입장 함수 (항상 partner.html로 이동)
@@ -15659,9 +15648,9 @@ if (w >= 20 && h >= 20) {
             var _loadMsg = document.getElementById('loading');
             if (_loadMsg) _loadMsg.style.display = 'flex';
             await window.loadEditorLibraries();
-            // Fabric.js 로드 후 캔버스 초기화가 안 됐으면 실행
+            // Fabric.js 로드 후 캔버스 초기화가 안 됐으면 실행 (runEditorInits 는 async — 반드시 await)
             if (window._pendingEditorInits) {
-                window._pendingEditorInits();
+                await window._pendingEditorInits();
                 delete window._pendingEditorInits;
             }
             if (_loadMsg) _loadMsg.style.display = 'none';
@@ -17090,7 +17079,7 @@ if (w >= 20 && h >= 20) {
 
 <audio id="orderAlertSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-<script src="./text-wizard.js"></script>
+<!-- 2026-05-30: text-wizard.js 중복 로드 제거 (이미 line 9261 에서 defer 로 로드됨) -->
 
 <!-- ═══ 움짤(GIF) 메이커 모달 ═══ -->
 <div id="gifMakerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f0f1a; z-index:9999999; flex-direction:column; overflow:hidden;">
@@ -21066,8 +21055,8 @@ window.dsmRenderProducts = async function(keyword) {
     });
 })();
 </script>
-<script src="./gif-maker.js?v=434"></script>
-<script src="./npc-wizard.js?v=434"></script>
+<script src="./gif-maker.js?v=434" defer></script>
+<script src="./npc-wizard.js?v=434" defer></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

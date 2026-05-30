@@ -1,28 +1,16 @@
 // main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=291";
-import { initCanvas, canvas } from "./canvas-core.js?v=291";
-import { initSizeControls, applySize } from "./canvas-size.js?v=291";
-import { initGuides } from "./canvas-guides.js?v=291";
-import { initZoomPan } from "./canvas-zoom-pan.js?v=291";
-import { initObjectTools } from "./canvas-objects.js?v=291";
-import { initPageTools } from "./canvas-pages.js?v=291"; // [추가] 페이지 도구
-import { initImageTools } from "./canvas-image.js?v=291";
-import { initTemplateTools, loadProductFixedTemplate } from "./canvas-template.js?v=291";
-import { initAiTools } from "./canvas-ai.js?v=291";
-import { initExport } from "./export.js?v=292";
 import { initOrderSystem } from "./order.js?v=454";
 import { initAuth } from "./login.js?v=291";
-import { initMyDesign } from "./my-design.js?v=291";
-import { initCanvasUtils } from "./canvas-utils.js?v=291";
-import { initShortcuts } from "./shortcuts.js?v=291";
-import { initContextMenu } from "./context-menu.js?v=291";
-import { createVectorOutline } from "./outlineMaker.js?v=291";
-import { initVideoMaker } from "./video-maker.js?v=291";
-import { initPptMode } from "./ppt-mode.js?v=291";
-import { initGreetingCardMode } from "./greeting-card-mode.js?v=291";
-import { initIconTools } from "./canvas-icons.js?v=291";
-import { initRetouchTools } from "./canvas-retouch.js?v=291";
+
+// 2026-05-30 perf: 에디터 모듈은 동적 import 로 변경 (runEditorInits 안에서 로드).
+// 메인 페이지 첫 로드에서 ~1MB JS 다운로드/파싱 절감. 에디터 진입 시 한 번만 로드.
+// 변환된 모듈: canvas-core/size/guides/zoom-pan/objects/pages/image/template/ai/retouch/utils/icons,
+//             shortcuts, context-menu, export, my-design, outlineMaker, video-maker, ppt-mode, greeting-card-mode.
+// (단, order.js 의 정적 import 가 canvas-core/size/pages, export, site-config 을 모듈 그래프로
+//  자동 다운로드하므로 그 5개는 이미 받음 — runEditorInits 의 dynamic import 는 캐시 hit.)
+// outlineMaker.createVectorOutline 은 initOutlineTool 안에서 사용 시점에 dynamic import.
 
 window.currentUploadedPdfUrl = null;
 
@@ -66,7 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (_hasEditorFlow && loading) loading.style.display = 'flex';
 
         // 1. 필수 설정 (Supabase, 인증, 상품 데이터)
-        window.loadProductFixedTemplate = loadProductFixedTemplate;
+        // (window.loadProductFixedTemplate 노출은 runEditorInits 안에서 동적 import 후 처리)
         await initConfig(); // DB 연결 및 PRODUCT_DB 로드 대기
         if (sb) window.sb = sb; // ★ 전역 참조 갱신
 
@@ -142,38 +130,70 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
 
         // 2. ★ 에디터 초기화 (Fabric.js 필요) — 라이브러리 로드 후 실행
-        function runEditorInits() {
-            initCanvas();
+        // 2026-05-30 perf: 동적 import 로 변경. 메인 페이지에선 호출되지 않아 ~1MB 절감.
+        async function runEditorInits() {
+            const _t0 = (window.performance && performance.now) ? performance.now() : 0;
+            console.log("⏳ 에디터 모듈 동적 로드 시작...");
+            // 16개 에디터 모듈 병렬 동적 import (Promise.all → 네트워크 동시성 최대)
+            const [coreM, sizeM, guidesM, zoomPanM, objsM, pagesM, imgM, tmplM,
+                   aiM, retouchM, utilsM, iconsM, shortcutsM, ctxM, exportM,
+                   myDesignM, videoM, pptM, greetingM] = await Promise.all([
+                import('./canvas-core.js?v=434'),
+                import('./canvas-size.js?v=434'),
+                import('./canvas-guides.js?v=434'),
+                import('./canvas-zoom-pan.js?v=434'),
+                import('./canvas-objects.js?v=434'),
+                import('./canvas-pages.js?v=434'),
+                import('./canvas-image.js?v=434'),
+                import('./canvas-template.js?v=434'),
+                import('./canvas-ai.js?v=434'),
+                import('./canvas-retouch.js?v=434'),
+                import('./canvas-utils.js?v=434'),
+                import('./canvas-icons.js?v=434'),
+                import('./shortcuts.js?v=434'),
+                import('./context-menu.js?v=434'),
+                import('./export.js?v=434'),
+                import('./my-design.js?v=434'),
+                import('./video-maker.js?v=434'),
+                import('./ppt-mode.js?v=434'),
+                import('./greeting-card-mode.js?v=434')
+            ]);
+            // 전역 노출 (외부 모듈/order.js 가 window.loadProductFixedTemplate 등 참조)
+            window.loadProductFixedTemplate = tmplM.loadProductFixedTemplate;
+            // (canvas, applySize 는 각자 init 함수가 window.canvas / window.applySize 로 노출)
+
+            coreM.initCanvas();
             const editorInits = [
-                ['CanvasUtils', initCanvasUtils],
-                ['Shortcuts', initShortcuts],
-                ['ContextMenu', initContextMenu],
-                ['SizeControls', initSizeControls],
-                ['Guides', initGuides],
-                ['ZoomPan', initZoomPan],
-                ['ObjectTools', initObjectTools],
-                ['ImageTools', initImageTools],
-                ['PageTools', initPageTools],
-                ['TemplateTools', initTemplateTools],
-                ['AiTools', initAiTools],
-                ['RetouchTools', initRetouchTools],
-                ['IconTools', initIconTools],
-                ['Export', initExport],
-                ['MyDesign', initMyDesign],
+                ['CanvasUtils', utilsM.initCanvasUtils],
+                ['Shortcuts', shortcutsM.initShortcuts],
+                ['ContextMenu', ctxM.initContextMenu],
+                ['SizeControls', sizeM.initSizeControls],
+                ['Guides', guidesM.initGuides],
+                ['ZoomPan', zoomPanM.initZoomPan],
+                ['ObjectTools', objsM.initObjectTools],
+                ['ImageTools', imgM.initImageTools],
+                ['PageTools', pagesM.initPageTools],
+                ['TemplateTools', tmplM.initTemplateTools],
+                ['AiTools', aiM.initAiTools],
+                ['RetouchTools', retouchM.initRetouchTools],
+                ['IconTools', iconsM.initIconTools],
+                ['Export', exportM.initExport],
+                ['MyDesign', myDesignM.initMyDesign],
                 ['MobileTextEditor', initMobileTextEditor],
                 ['PcTextQuickBar', initPcTextQuickBar],
                 ['OutlineTool', initOutlineTool],
                 ['FileUpload', initFileUploadListeners],
-                ['PptMode', initPptMode],
-                ['GreetingCardMode', initGreetingCardMode],
+                ['PptMode', pptM.initPptMode],
+                ['GreetingCardMode', greetingM.initGreetingCardMode],
             ];
             for (const [name, fn] of editorInits) {
                 try { fn(); } catch(e) { console.warn(`⚠️ ${name} init failed:`, e); }
             }
-            initVideoMaker();
+            videoM.initVideoMaker();
             // 폰트 로드
             if(window.preloadLanguageFont) window.preloadLanguageFont();
-            console.log("🚀 에디터 모듈 초기화 완료");
+            const _dt = _t0 ? Math.round(performance.now() - _t0) : 0;
+            console.log(`🚀 에디터 모듈 초기화 완료 (${_dt}ms)`);
         }
 
         if (typeof fabric !== 'undefined') {
@@ -198,7 +218,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             // ★ 에디터 라이브러리 동적 로드 (마이페이지→편집 복구)
             if (!window._editorLibsLoaded && window.loadEditorLibraries) {
                 await window.loadEditorLibraries();
-                if (window._pendingEditorInits) { window._pendingEditorInits(); delete window._pendingEditorInits; }
+                if (window._pendingEditorInits) { await window._pendingEditorInits(); delete window._pendingEditorInits; }
             }
 
             // 화면 강제 전환
@@ -227,7 +247,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                     }
 
                     window.currentProductKey = savedKey;
-                    if(canvas) canvas.currentProductKey = savedKey;
+                    if(window.canvas) window.canvas.currentProductKey = savedKey;
 
                     if (PRODUCT_DB && PRODUCT_DB[savedKey]) {
                         window.selectedProductForChoice = PRODUCT_DB[savedKey];
@@ -425,8 +445,10 @@ async function addPdfToCanvasAsImage(file) {
 }
 
 function fitImageToCanvas(img) {
-    if (!canvas) return;
-    const board = canvas.getObjects().find(o => o.isBoard);
+    // 2026-05-30: 정적 import 제거 → window.canvas 사용 (에디터 진입 후에만 정의됨)
+    const c = window.canvas;
+    if (!c) return;
+    const board = c.getObjects().find(o => o.isBoard);
     let targetW, targetH, targetCenterX, targetCenterY;
     if (board) {
         targetW = board.width * board.scaleX;
@@ -434,8 +456,8 @@ function fitImageToCanvas(img) {
         targetCenterX = board.left + (targetW / 2);
         targetCenterY = board.top + (targetH / 2);
     } else {
-        targetW = canvas.width;
-        targetH = canvas.height;
+        targetW = c.width;
+        targetH = c.height;
         targetCenterX = targetW / 2;
         targetCenterY = targetH / 2;
     }
@@ -444,17 +466,18 @@ function fitImageToCanvas(img) {
     const maxH = targetH * 0.3;
     const scale = Math.min(maxW / img.width, maxH / img.height, 1);
     img.set({ scaleX: scale, scaleY: scale, originX: 'center', originY: 'center', left: targetCenterX, top: targetCenterY });
-    canvas.add(img);
-    canvas.bringToFront(img);
-    canvas.setActiveObject(img);
-    canvas.requestRenderAll();
+    c.add(img);
+    c.bringToFront(img);
+    c.setActiveObject(img);
+    c.requestRenderAll();
 }
 
 function initOutlineTool() {
     const runOutlineMaker = async (btnId, type) => {
         const btn = document.getElementById(btnId);
         if (!btn) return; 
-        const currentCanvas = window.canvas || canvas;
+        const currentCanvas = window.canvas;
+        if (!currentCanvas) { showToast(window.t('msg_canvas_not_ready', 'Canvas not ready'), 'warn'); return; }
         const activeObj = currentCanvas.getActiveObject();
         if (!activeObj || activeObj.type !== 'image') {
             showToast(window.t('msg_select_image_for_outline'), "warn");
@@ -465,6 +488,8 @@ function initOutlineTool() {
         btn.disabled = true;
         try {
             var src = activeObj.getSrc();
+            // 2026-05-30 perf: outlineMaker.js 도 클릭 시 동적 import (메인 페이지 초기 로드 제외)
+            const { createVectorOutline } = await import('./outlineMaker.js?v=434');
             var result = await createVectorOutline(src, {
                 offset: 20, type: type
             });
