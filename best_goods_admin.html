@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>베스트 굿즈 큐레이션 — Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;
+    background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+    color:#e2e8f0; padding:24px; min-height:100vh;
+}
+.wrap { max-width:1180px; margin:0 auto; }
+h1 { font-size:22px; font-weight:900; color:#fde68a; margin-bottom:6px; }
+.sub { color:#94a3b8; font-size:13px; margin-bottom:24px; }
+.banner { background:rgba(252,211,77,0.08); border:1px solid rgba(252,211,77,0.3); border-radius:12px; padding:14px 18px; margin-bottom:18px; font-size:13px; color:#fde68a; line-height:1.6; }
+.banner b { color:#fff; }
+
+.sections { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+@media (max-width:900px) { .sections { grid-template-columns:1fr; } }
+
+.section-card {
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px; padding:18px;
+}
+.section-card h2 {
+    font-size:16px; font-weight:800; color:#fde68a;
+    margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+.section-card .max { background:rgba(252,211,77,0.15); color:#fbbf24; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+
+.item-list { display:flex; flex-direction:column; gap:6px; min-height:60px; margin-bottom:12px; }
+.item-row {
+    display:flex; align-items:center; gap:10px;
+    padding:8px 10px; background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px;
+}
+.item-thumb { width:40px; height:40px; border-radius:8px; object-fit:cover; background:#0f172a; flex-shrink:0; border:1px solid rgba(255,255,255,0.06); }
+.item-name { flex:1; min-width:0; font-size:13px; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.item-code { font-size:11px; color:#64748b; font-family:monospace; }
+.btn-remove { background:#ef4444; color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.btn-remove:hover { background:#dc2626; }
+.empty-slot { padding:14px; text-align:center; color:#475569; font-size:12px; border:1.5px dashed rgba(255,255,255,0.1); border-radius:10px; }
+
+.add-row { display:flex; gap:6px; }
+.add-input {
+    flex:1; padding:9px 12px; border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.25); color:#fff;
+    border-radius:8px; font-size:13px; font-family:inherit;
+    outline:none;
+}
+.add-input:focus { border-color:#fbbf24; }
+.add-btn {
+    padding:9px 14px; background:#fbbf24; color:#0f172a;
+    border:none; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer;
+    font-family:inherit;
+}
+.add-btn:hover { background:#f59e0b; }
+.search-dropdown {
+    position:absolute; background:#1e1b4b; border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px; max-height:240px; overflow-y:auto; z-index:10;
+    width:calc(100% - 80px); margin-top:4px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.search-item {
+    padding:8px 12px; cursor:pointer; font-size:12px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    display:flex; align-items:center; gap:8px;
+}
+.search-item:hover { background:rgba(252,211,77,0.1); }
+.search-item img { width:32px; height:32px; border-radius:6px; object-fit:cover; }
+.search-item .code { color:#64748b; font-family:monospace; font-size:10.5px; }
+
+.save-bar {
+    position:sticky; bottom:0; margin-top:20px;
+    padding:14px 0;
+    background:linear-gradient(180deg, transparent, rgba(15,23,42,0.95) 40%);
+    display:flex; justify-content:flex-end; gap:10px;
+}
+.btn-save {
+    padding:12px 28px; background:linear-gradient(135deg,#10b981,#059669);
+    color:#fff; border:none; border-radius:10px;
+    font-size:14px; font-weight:800; cursor:pointer;
+    box-shadow:0 8px 20px rgba(16,185,129,0.35);
+    font-family:inherit;
+}
+.btn-save:hover { transform:translateY(-1px); }
+.btn-save:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-preview {
+    padding:12px 22px; background:rgba(255,255,255,0.06);
+    color:#fff; border:1px solid rgba(255,255,255,0.12); border-radius:10px;
+    font-size:14px; font-weight:700; cursor:pointer; text-decoration:none;
+    font-family:inherit; display:inline-flex; align-items:center; gap:6px;
+}
+
+.status { font-size:13px; color:#10b981; font-weight:600; margin-right:auto; align-self:center; }
+.status.err { color:#ef4444; }
+
+.dragging { opacity:0.4; }
+.item-row { cursor:grab; }
+.item-row:active { cursor:grabbing; }
+.drag-over { border-color:#fbbf24; background:rgba(252,211,77,0.15); }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>⭐ 베스트 굿즈 큐레이션</h1>
+    <div class="sub">4 섹션별로 상품을 골라주세요. 상품 코드 입력 또는 이름으로 검색 → 추가. 드래그로 순서 변경 가능.</div>
+    <div class="banner">
+        <b>저장 위치:</b> Supabase <code>chatbot_knowledge</code> 테이블, category=<code>_best_goods</code>, question=<code>keyring/tshirt/fabric/popular</code>.
+        저장 후 <a href="/goods" target="_blank" style="color:#fbbf24;">/goods</a> 페이지에서 즉시 확인 가능합니다.
+    </div>
+
+    <div class="sections">
+        <div class="section-card">
+            <h2>🔑 키링 <span class="max">최대 5</span></h2>
+            <div class="item-list" id="list-keyring" data-section="keyring"></div>
+            <div class="add-row" style="position:relative;">
+                <input type="text" class="add-input" data-section="keyring" placeholder="상품 코드 또는 이름 검색…" autocomplete="off">
+                <button class="add-btn" data-add="keyring">추가</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>👕 티셔츠 <span class="max">최대 5</span></h2>
+            <div class="item-list" id="list-tshirt" data-section="tshirt"></div>
+            <div class="add-row" style="position:relative;">
+                <input type="text" class="add-input" data-section="tshirt" placeholder="상품 코드 또는 이름 검색…" autocomplete="off">
+                <button class="add-btn" data-add="tshirt">추가</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>🧵 패브릭 굿즈 <span class="max">최대 5</span></h2>
+            <div class="item-list" id="list-fabric" data-section="fabric"></div>
+            <div class="add-row" style="position:relative;">
+                <input type="text" class="add-input" data-section="fabric" placeholder="상품 코드 또는 이름 검색…" autocomplete="off">
+                <button class="add-btn" data-add="fabric">추가</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>🌟 인기 굿즈 <span class="max">최대 10</span></h2>
+            <div class="item-list" id="list-popular" data-section="popular"></div>
+            <div class="add-row" style="position:relative;">
+                <input type="text" class="add-input" data-section="popular" placeholder="상품 코드 또는 이름 검색…" autocomplete="off">
+                <button class="add-btn" data-add="popular">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="save-bar">
+        <span class="status" id="status"></span>
+        <a class="btn-preview" href="/goods" target="_blank">👁 미리보기</a>
+        <button class="btn-save" id="btnSave" onclick="saveAll()">💾 전체 저장</button>
+    </div>
+</div>
+
+<script>
+(async function(){
+    var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    // anon key 를 직접 박는 게 부담스러우면 admin 페이지 진입 시 별도 인증 가드 추가 권장
+    var sb = (typeof supabase !== 'undefined') ? supabase.createClient(SB_URL, SB_KEY) : null;
+    if (!sb) { setStatus('Supabase 로드 실패', true); return; }
+
+    var SECTIONS = ['keyring','tshirt','fabric','popular'];
+    var SEC_MAX = { keyring:5, tshirt:5, fabric:5, popular:10 };
+    // DEFAULTS — goods.html 의 BEST_KEYRING/TSHIRT/FABRIC/POPULAR 동일 코드
+    var DEFAULTS = {
+        keyring: ['345345353','gds_acr_kr_10','gds_acr_kr_05','gds_ksty_kr_02','gds_ksty_kr_03'],
+        tshirt:  ['435645654666'],
+        fabric:  ['3453455'],
+        popular: ['456444','64564882_copy','acr_crt_cl_8t','acr_crt_stand_01','acr_crt_stand_10t','acr_smtgr_02']
+    };
+
+    // 전 상품 목록 (검색용) + 큐레이션 상태
+    var allProducts = [];
+    var curation = { keyring:[], tshirt:[], fabric:[], popular:[] };
+
+    function setStatus(msg, isErr) {
+        var s = document.getElementById('status');
+        s.textContent = msg;
+        s.classList.toggle('err', !!isErr);
+        if (msg) setTimeout(function(){ s.textContent = ''; s.classList.remove('err'); }, 4000);
+    }
+
+    async function loadAll() {
+        // 1) 전 상품 (admin_products)
+        var pr = await sb.from('admin_products').select('code, name, name_jp, name_us, img_url').limit(2000);
+        allProducts = (pr && pr.data) || [];
+        // 2) 현재 큐레이션 (chatbot_knowledge category='_best_goods')
+        var kr = await sb.from('chatbot_knowledge').select('question, answer').eq('category', '_best_goods');
+        var rows = (kr && kr.data) || [];
+        SECTIONS.forEach(function(s){
+            var row = rows.find(function(r){ return r.question === s; });
+            if (row) {
+                try {
+                    var parsed = JSON.parse(row.answer || '{}');
+                    curation[s] = parsed.codes || [];
+                } catch(e) { curation[s] = []; }
+            }
+            // DB 비어있으면 default 사용 (최초 진입)
+            if (!curation[s] || curation[s].length === 0) curation[s] = DEFAULTS[s].slice();
+        });
+        renderAll();
+    }
+
+    function renderAll() {
+        SECTIONS.forEach(function(s){ renderSection(s); });
+    }
+
+    function renderSection(name) {
+        var list = document.getElementById('list-' + name);
+        if (!list) return;
+        var codes = curation[name] || [];
+        if (codes.length === 0) {
+            list.innerHTML = '<div class="empty-slot">아직 추가된 상품이 없습니다</div>';
+            return;
+        }
+        list.innerHTML = codes.map(function(code, idx){
+            var p = allProducts.find(function(x){ return x.code === code; });
+            var name_kr = p ? (p.name || p.name_jp || p.name_us || code) : code + ' (DB에서 미발견)';
+            var img = p && p.img_url ? '<img class="item-thumb" src="' + esc(p.img_url) + '">' : '<div class="item-thumb"></div>';
+            return '<div class="item-row" draggable="true" data-code="' + esc(code) + '" data-section="' + name + '">'
+                + img
+                + '<div style="flex:1; min-width:0;">'
+                + '<div class="item-name">' + esc(name_kr) + '</div>'
+                + '<div class="item-code">' + esc(code) + '</div>'
+                + '</div>'
+                + '<button class="btn-remove" onclick="removeItem(\'' + name + '\',\'' + esc(code) + '\')" title="제거">×</button>'
+                + '</div>';
+        }).join('');
+        // 드래그 정렬
+        attachDrag(list);
+    }
+
+    function attachDrag(list) {
+        var dragging = null;
+        list.querySelectorAll('.item-row').forEach(function(row){
+            row.addEventListener('dragstart', function(){ dragging = row; row.classList.add('dragging'); });
+            row.addEventListener('dragend', function(){ row.classList.remove('dragging'); list.querySelectorAll('.item-row').forEach(function(r){ r.classList.remove('drag-over'); }); commitOrder(list); });
+            row.addEventListener('dragover', function(e){ e.preventDefault(); });
+            row.addEventListener('dragenter', function(){ if (dragging && dragging !== row) row.classList.add('drag-over'); });
+            row.addEventListener('dragleave', function(){ row.classList.remove('drag-over'); });
+            row.addEventListener('drop', function(e){
+                e.preventDefault();
+                if (!dragging || dragging === row) return;
+                var rect = row.getBoundingClientRect();
+                var after = (e.clientY - rect.top) > rect.height / 2;
+                if (after) row.after(dragging); else row.before(dragging);
+            });
+        });
+    }
+
+    function commitOrder(list) {
+        var section = list.dataset.section;
+        var codes = [];
+        list.querySelectorAll('.item-row').forEach(function(r){ codes.push(r.dataset.code); });
+        curation[section] = codes;
+    }
+
+    window.removeItem = function(section, code) {
+        curation[section] = curation[section].filter(function(c){ return c !== code; });
+        renderSection(section);
+    };
+
+    function addItem(section, code) {
+        code = (code || '').trim();
+        if (!code) { setStatus('코드를 입력하세요', true); return; }
+        if (curation[section].length >= SEC_MAX[section]) {
+            setStatus('최대 ' + SEC_MAX[section] + '개까지 추가 가능합니다', true);
+            return;
+        }
+        if (curation[section].indexOf(code) >= 0) {
+            setStatus('이미 추가된 상품입니다', true);
+            return;
+        }
+        var p = allProducts.find(function(x){ return x.code === code; });
+        if (!p) {
+            if (!confirm('DB 에서 ' + code + ' 코드를 찾을 수 없습니다. 그래도 추가할까요?')) return;
+        }
+        curation[section].push(code);
+        renderSection(section);
+        setStatus('추가됨: ' + code);
+    }
+
+    // 검색 자동완성
+    document.querySelectorAll('.add-input').forEach(function(inp){
+        var box;
+        inp.addEventListener('input', function(){
+            var q = inp.value.trim().toLowerCase();
+            if (box) { box.remove(); box = null; }
+            if (q.length < 1) return;
+            var matches = allProducts.filter(function(p){
+                var n = ((p.name||'') + ' ' + (p.name_jp||'') + ' ' + (p.name_us||'')).toLowerCase();
+                return (p.code || '').toLowerCase().indexOf(q) >= 0 || n.indexOf(q) >= 0;
+            }).slice(0, 12);
+            if (matches.length === 0) return;
+            box = document.createElement('div');
+            box.className = 'search-dropdown';
+            box.innerHTML = matches.map(function(p){
+                var img = p.img_url ? '<img src="' + esc(p.img_url) + '">' : '<div style="width:32px; height:32px; background:#1e293b; border-radius:6px;"></div>';
+                return '<div class="search-item" data-code="' + esc(p.code) + '">'
+                    + img
+                    + '<div style="flex:1; min-width:0;">'
+                    + '<div style="color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + esc(p.name || p.code) + '</div>'
+                    + '<div class="code">' + esc(p.code) + '</div>'
+                    + '</div></div>';
+            }).join('');
+            inp.parentElement.appendChild(box);
+            box.querySelectorAll('.search-item').forEach(function(it){
+                it.addEventListener('click', function(){
+                    inp.value = '';
+                    box.remove(); box = null;
+                    addItem(inp.dataset.section, it.dataset.code);
+                });
+            });
+        });
+        inp.addEventListener('blur', function(){ setTimeout(function(){ if (box) { box.remove(); box = null; } }, 200); });
+        inp.addEventListener('keydown', function(e){
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem(inp.dataset.section, inp.value);
+                inp.value = '';
+                if (box) { box.remove(); box = null; }
+            }
+        });
+    });
+    document.querySelectorAll('.add-btn').forEach(function(b){
+        b.addEventListener('click', function(){
+            var section = b.dataset.add;
+            var inp = document.querySelector('.add-input[data-section="' + section + '"]');
+            if (inp) {
+                addItem(section, inp.value);
+                inp.value = '';
+            }
+        });
+    });
+
+    window.saveAll = async function() {
+        var btn = document.getElementById('btnSave');
+        btn.disabled = true;
+        setStatus('저장 중…');
+        try {
+            // 기존 _best_goods 행 모두 삭제 후 다시 삽입 (간단)
+            await sb.from('chatbot_knowledge').delete().eq('category', '_best_goods');
+            var rows = SECTIONS.map(function(s){
+                return {
+                    category: '_best_goods',
+                    question: s,
+                    answer: JSON.stringify({ codes: curation[s] || [] }),
+                    is_active: true
+                };
+            });
+            var { error } = await sb.from('chatbot_knowledge').insert(rows);
+            if (error) throw error;
+            setStatus('✅ 저장 완료');
+        } catch (e) {
+            console.error(e);
+            setStatus('❌ 저장 실패: ' + (e.message || e), true);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+
+    function esc(s) { return String(s||'').replace(/[<>"'&]/g, function(c){ return ({'<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;','&':'&amp;'})[c]; }); }
+
+    await loadAll();
+})();
+</script>
+</body>
+</html>

@@ -145,6 +145,27 @@ a { text-decoration: none; color: inherit; }
     gap: 14px;
     align-items: stretch;
 }
+/* 2026-05-30: 4 섹션 구분 */
+.best-section {
+    margin-top: 22px;
+}
+.best-section:first-of-type {
+    margin-top: 8px;
+}
+.best-section-title {
+    font-size: 16px; font-weight: 800; letter-spacing: -0.2px;
+    color: #fde68a;
+    margin: 0 0 12px 0;
+    display: flex; align-items: center; gap: 8px;
+    padding-left: 4px;
+    text-shadow: 0 2px 8px rgba(252,211,77,0.18);
+}
+.best-section-title::after {
+    content: "";
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(252,211,77,0.35), transparent);
+    margin-left: 10px;
+}
 .best-feat-grid .product-card {
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
@@ -575,12 +596,28 @@ a { text-decoration: none; color: inherit; }
 
 <!-- ⭐ 베스트 굿즈 featured 섹션 (카테고리 탭과 상품 그리드 사이, 항상 노출) -->
 <!-- 2026-05-29: 다크 배경 + 리셀러 강추 hero 배지 단일화 -->
+<!-- 2026-05-30: 4 섹션 분할 (키링 5 / 티셔츠 5 / 패브릭 5 / 인기 10) -->
 <section class="best-feat" id="bestFeatSec" style="display:none;">
     <div class="best-feat-inner">
         <div class="best-feat-head">
             <div class="best-feat-title">⭐ <span id="bestFeatTitle">베스트 굿즈</span></div>
         </div>
-        <div class="best-feat-grid" id="bestFeatGrid"></div>
+        <div class="best-section">
+            <h3 class="best-section-title" id="bestKeyringTitle">🔑 키링 BEST 5</h3>
+            <div class="best-feat-grid" id="bestKeyringGrid"></div>
+        </div>
+        <div class="best-section">
+            <h3 class="best-section-title" id="bestTshirtTitle">👕 티셔츠 BEST 5</h3>
+            <div class="best-feat-grid" id="bestTshirtGrid"></div>
+        </div>
+        <div class="best-section">
+            <h3 class="best-section-title" id="bestFabricTitle">🧵 패브릭 굿즈 BEST 5</h3>
+            <div class="best-feat-grid" id="bestFabricGrid"></div>
+        </div>
+        <div class="best-section">
+            <h3 class="best-section-title" id="bestPopularTitle">🌟 인기 굿즈 BEST 10</h3>
+            <div class="best-feat-grid" id="bestPopularGrid"></div>
+        </div>
     </div>
 </section>
 
@@ -1011,62 +1048,118 @@ a { text-decoration: none; color: inherit; }
         { id:'sweat',      label:'맨투맨',       price:12000 }
     ];
     // 2026-05-29: 비-사이즈 베스트 상품 가격 상향
-    var BEST_CURATED = [
-        { code: '345345353',        sizes: BEST_SIZES_KEYRING_PEARL },// 홀로그램 자개 키링 양면 (2배)
-        { code: '3453455',          sizes: BEST_SIZES_HANDKERCHIEF }, // 손수건 (40/50/60cm 사이즈 선택)
-        { code: '435645654666',     sizes: BEST_SIZES_TSHIRT },       // 반려동물 티셔츠 (종류 선택)
-        { code: '456444',           price: 4000  },                   // 커스텀머그컵
-        { code: '64564882_copy',    price: 8000  },                   // 허니콤보드 팝업굿즈
-        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },      // 8T 투명 아크릴 코롯토
-        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },      // 10T 입체 스탠드 (코롯토류)
-        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },      // 10T 자립형 아크릴 코롯토
-        { code: 'acr_smtgr_02',     price: 6000  },                   // 아크릴 자개 스마트톡
-        { code: 'gds_acr_kr_10',    sizes: BEST_SIZES_KEYRING }       // 투명 3mm단면 키링
+    // 2026-05-30: 4 섹션으로 분할 — 키링 5 / 티셔츠 5 / 패브릭 5 / 인기 10
+    //   관리자 페이지에서 동적 편집 예정 (chatbot_knowledge category='_best_goods')
+    var BEST_KEYRING = [
+        { code: '345345353',     sizes: BEST_SIZES_KEYRING_PEARL }, // 홀로그램 자개 키링 양면
+        { code: 'gds_acr_kr_10', sizes: BEST_SIZES_KEYRING },       // 투명 3mm 단면 키링
+        { code: 'gds_acr_kr_05', sizes: BEST_SIZES_KEYRING },       // 반투명 홀로그램 아크릴 키링
+        { code: 'gds_ksty_kr_02',sizes: BEST_SIZES_KEYRING },       // 반짝이 아크릴 키링
+        { code: 'gds_ksty_kr_03',sizes: BEST_SIZES_KEYRING }        // 반투명 무광 아크릴 키링
     ];
+    var BEST_TSHIRT = [
+        { code: '435645654666', sizes: BEST_SIZES_TSHIRT }          // 반려동물 티셔츠 (종류 선택)
+        // 4 개 추가 예정 (관리자 페이지에서 선택)
+    ];
+    var BEST_FABRIC = [
+        { code: '3453455', sizes: BEST_SIZES_HANDKERCHIEF }         // 손수건
+        // 4 개 추가 예정 (가방·파우치·앞치마 등)
+    ];
+    var BEST_POPULAR = [
+        { code: '456444',           price: 4000 },                  // 커스텀머그컵
+        { code: '64564882_copy',    price: 8000 },                  // 허니콤보드 팝업굿즈
+        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },    // 8T 투명 아크릴 코롯토
+        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },    // 10T 입체 스탠드
+        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },    // 10T 자립형 아크릴 코롯토
+        { code: 'acr_smtgr_02',     price: 6000 }                   // 아크릴 자개 스마트톡
+        // 4 개 추가 예정
+    ];
+    // 모든 섹션의 코드 합산 (한 번에 조회)
+    function _bestAllCodes() {
+        return BEST_KEYRING.concat(BEST_TSHIRT, BEST_FABRIC, BEST_POPULAR).map(function(x){ return x.code; });
+    }
+    // 2026-05-30: chatbot_knowledge.category='_best_goods' 에서 큐레이션 동적 로드
+    //   admin 페이지에서 저장한 코드 목록을 코드별 sizes/price metadata 와 결합
+    async function _loadCurationFromDB() {
+        if (!SB) return false;
+        try {
+            var { data } = await SB.from('chatbot_knowledge').select('question, answer').eq('category', '_best_goods');
+            if (!data || data.length === 0) return false;
+            // 코드 → sizes/price metadata 매핑 (기존 BEST_* 배열에서 찾고, 없으면 카테고리 휴리스틱)
+            var metaByCode = {};
+            [].concat(BEST_KEYRING, BEST_TSHIRT, BEST_FABRIC, BEST_POPULAR).forEach(function(x){ metaByCode[x.code] = x; });
+            function _wrap(code) {
+                if (metaByCode[code]) return metaByCode[code];
+                // 미등록 코드: 코드 prefix 로 사이즈 유추
+                if (/^gds_(acr|ksty)_kr|^acr_kr|^acr_g/.test(code)) return { code: code, sizes: BEST_SIZES_KEYRING };
+                if (/^acr_crt/.test(code)) return { code: code, sizes: BEST_SIZES_KOROTTO };
+                return { code: code }; // price 는 DB 의 admin_products.price 그대로 사용
+            }
+            data.forEach(function(r){
+                try {
+                    var parsed = JSON.parse(r.answer || '{}');
+                    var codes = parsed.codes || [];
+                    var arr = codes.map(_wrap);
+                    if (r.question === 'keyring') BEST_KEYRING = arr;
+                    else if (r.question === 'tshirt') BEST_TSHIRT = arr;
+                    else if (r.question === 'fabric') BEST_FABRIC = arr;
+                    else if (r.question === 'popular') BEST_POPULAR = arr;
+                } catch (e) {}
+            });
+            return true;
+        } catch (e) {
+            console.warn('[best featured] DB curation load failed, using defaults:', e);
+            return false;
+        }
+    }
     async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');
-        var grid = document.getElementById('bestFeatGrid');
-        if (!sec || !grid || !SB) return;
+        if (!sec || !SB) return;
+        // 2026-05-30: DB 큐레이션이 있으면 BEST_KEYRING/TSHIRT/FABRIC/POPULAR 를 덮어씀
+        await _loadCurationFromDB();
+        // 2026-05-30: 4 섹션 분할 렌더
+        var SECTIONS = [
+            { gridId:'bestKeyringGrid', titleId:'bestKeyringTitle', items: BEST_KEYRING, t:'🔑 키링 BEST 5', t_jp:'🔑 キーリング BEST 5', t_en:'🔑 Keyring BEST 5' },
+            { gridId:'bestTshirtGrid',  titleId:'bestTshirtTitle',  items: BEST_TSHIRT,  t:'👕 티셔츠 BEST 5', t_jp:'👕 Tシャツ BEST 5', t_en:'👕 T-shirt BEST 5' },
+            { gridId:'bestFabricGrid',  titleId:'bestFabricTitle',  items: BEST_FABRIC,  t:'🧵 패브릭 굿즈 BEST 5', t_jp:'🧵 ファブリック BEST 5', t_en:'🧵 Fabric Goods BEST 5' },
+            { gridId:'bestPopularGrid', titleId:'bestPopularTitle', items: BEST_POPULAR, t:'🌟 인기 굿즈 BEST 10', t_jp:'🌟 人気グッズ BEST 10', t_en:'🌟 Popular BEST 10' }
+        ];
         try {
-            var codes = BEST_CURATED.map(function(x){ return x.code; });
+            var codes = _bestAllCodes();
             var res = await SB.from('admin_products')
                 .select('code, category, name, name_jp, name_us, price, img_url')
                 .in('code', codes);
             var fetched = (res && res.data) || [];
             if (fetched.length === 0) { sec.style.display = 'none'; return; }
-            // BEST_CURATED 순서대로 정렬 + 가격 override
             var byCode = {};
             fetched.forEach(function(p){ byCode[p.code] = p; });
-            var bests = [];
-            BEST_CURATED.forEach(function(ov){
-                var p = byCode[ov.code];
-                if (!p) return;
-                // 사이즈 옵션이 있으면 첫 사이즈를 기본가로, 없으면 ov.price 사용
-                var defaultPrice = ov.sizes ? ov.sizes[0].price : ov.price;
-                var copy = Object.assign({}, p, { price: defaultPrice, _isBestFeat: true });
-                if (ov.sizes) copy._bestSizes = ov.sizes;
-                bests.push(copy);
-            });
-            if (bests.length === 0) { sec.style.display = 'none'; return; }
-            // 2026-05-29: hero 배지 단일화 + 다국어
-            var T = {
-                ko: { t:'베스트 굿즈',
-                      hero:'🔥 리셀러 강추 · 100개 이상 주문시 반값 · 전세계에서 가장 저렴합니다',
-                      note:'베스트굿즈는 <b>고리 및 개별포장</b>이 포함된 금액입니다.' },
-                ja: { t:'ベストグッズ',
-                      hero:'🔥 リセラー必見 · 100個以上で半額 · 世界最安値',
-                      note:'ベストグッズは <b>金具と個別包装</b> 込みの価格です。' },
-                en: { t:'Best Goods',
-                      hero:"🔥 Reseller Pick · 50% off on 100+ · World's lowest price",
-                      note:'Best Goods prices include <b>keyring + individual packaging</b>.' }
-            };
-            var Tk = T[LANG] || T.ko;
+            // 헤더 다국어
             var titleEl = document.getElementById('bestFeatTitle');
-            if (titleEl) titleEl.textContent = Tk.t;
-            grid.innerHTML = bests.map(productCard).join('');
-            // 2026-05-29: 베스트 섹션 카드에선 "최소 N개" MOQ 배지 숨김
-            grid.querySelectorAll('.moq-badge').forEach(function(b){ b.remove(); });
-            sec.style.display = '';
+            if (titleEl) titleEl.textContent = LANG === 'ja' ? 'ベストグッズ' : LANG === 'en' ? 'Best Goods' : '베스트 굿즈';
+            var anyRendered = false;
+            SECTIONS.forEach(function(S){
+                var grid = document.getElementById(S.gridId);
+                var titleNode = document.getElementById(S.titleId);
+                if (titleNode) titleNode.textContent = LANG === 'ja' ? S.t_jp : LANG === 'en' ? S.t_en : S.t;
+                if (!grid) return;
+                var bests = [];
+                S.items.forEach(function(ov){
+                    var p = byCode[ov.code];
+                    if (!p) return;
+                    var defaultPrice = ov.sizes ? ov.sizes[0].price : ov.price;
+                    var copy = Object.assign({}, p, { price: defaultPrice, _isBestFeat: true });
+                    if (ov.sizes) copy._bestSizes = ov.sizes;
+                    bests.push(copy);
+                });
+                if (bests.length === 0) {
+                    grid.innerHTML = '<div class="best-feat-empty">상품 준비 중입니다</div>';
+                    return;
+                }
+                anyRendered = true;
+                grid.innerHTML = bests.map(productCard).join('');
+                grid.querySelectorAll('.moq-badge').forEach(function(b){ b.remove(); });
+            });
+            sec.style.display = anyRendered ? '' : 'none';
         } catch (e) {
             console.warn('[best featured] failed:', e);
             sec.style.display = 'none';
