@@ -1051,29 +1051,22 @@ a { text-decoration: none; color: inherit; }
     // 2026-05-30: 4 섹션으로 분할 — 키링 5 / 티셔츠 5 / 패브릭 5 / 인기 10
     //   관리자 페이지에서 동적 편집 예정 (chatbot_knowledge category='_best_goods')
     var BEST_KEYRING = [
-        { code: '345345353',     sizes: BEST_SIZES_KEYRING_PEARL }, // 홀로그램 자개 키링 양면
-        { code: 'gds_acr_kr_10', sizes: BEST_SIZES_KEYRING },       // 투명 3mm 단면 키링
-        { code: 'gds_acr_kr_05', sizes: BEST_SIZES_KEYRING },       // 반투명 홀로그램 아크릴 키링
-        { code: 'gds_ksty_kr_02',sizes: BEST_SIZES_KEYRING },       // 반짝이 아크릴 키링
-        { code: 'gds_ksty_kr_03',sizes: BEST_SIZES_KEYRING }        // 반투명 무광 아크릴 키링
+        { code: 'gds_acr_kr_10', sizes: BEST_SIZES_KEYRING },       // 투명 3mm 단면 키링 — 유일하게 저가 (750원)
+        { code: '345345353',     sizes: BEST_SIZES_KEYRING_PEARL }, // 홀로그램 자개 키링 양면 (1500원 base)
+        { code: 'gds_acr_kr_05', sizes: BEST_SIZES_KEYRING_PEARL }, // 반투명 홀로그램 아크릴 키링 (자개와 동일)
+        { code: 'gds_ksty_kr_02',sizes: BEST_SIZES_KEYRING_PEARL }, // 반짝이 아크릴 키링 (자개와 동일)
+        { code: 'gds_ksty_kr_03',sizes: BEST_SIZES_KEYRING_PEARL }  // 반투명 무광 아크릴 키링 (자개와 동일)
     ];
-    var BEST_TSHIRT = [
-        { code: '435645654666', sizes: BEST_SIZES_TSHIRT }          // 반려동물 티셔츠 (종류 선택)
-        // 4 개 추가 예정 (관리자 페이지에서 선택)
-    ];
-    var BEST_FABRIC = [
-        { code: '3453455', sizes: BEST_SIZES_HANDKERCHIEF }         // 손수건
-        // 4 개 추가 예정 (가방·파우치·앞치마 등)
-    ];
-    var BEST_POPULAR = [
-        { code: '456444',           price: 4000 },                  // 커스텀머그컵
-        { code: '64564882_copy',    price: 8000 },                  // 허니콤보드 팝업굿즈
-        { code: 'acr_crt_cl_8t',    sizes: BEST_SIZES_KOROTTO },    // 8T 투명 아크릴 코롯토
-        { code: 'acr_crt_stand_01', sizes: BEST_SIZES_KOROTTO },    // 10T 입체 스탠드
-        { code: 'acr_crt_stand_10t',sizes: BEST_SIZES_KOROTTO },    // 10T 자립형 아크릴 코롯토
-        { code: 'acr_smtgr_02',     price: 6000 }                   // 아크릴 자개 스마트톡
-        // 4 개 추가 예정
-    ];
+    // 티셔츠/패브릭/인기는 카테고리 기반 자동 채우기 (DB 큐레이션 override 가능)
+    var BEST_TSHIRT = [];   // category='3244432' 에서 자동 로드 (limit 5)
+    var BEST_FABRIC = [];   // category='546465463' 에서 자동 로드 (limit 5)
+    var BEST_POPULAR = [];  // category='pp_fan' 에서 자동 로드 (limit 10)
+    // 카테고리 기반 자동 채우기 설정
+    var _AUTO_BY_CATEGORY = {
+        tshirt:  { category:'3244432',   limit:5,  defaultSizes: BEST_SIZES_TSHIRT },        // 티셔츠
+        fabric:  { category:'546465463', limit:5,  defaultPrice: null },                     // 패브릭굿즈
+        popular: { category:'pp_fan',    limit:10, defaultPrice: null }                      // 판촉홍보용품
+    };
     // 모든 섹션의 코드 합산 (한 번에 조회)
     function _bestAllCodes() {
         return BEST_KEYRING.concat(BEST_TSHIRT, BEST_FABRIC, BEST_POPULAR).map(function(x){ return x.code; });
@@ -1112,11 +1105,45 @@ a { text-decoration: none; color: inherit; }
             return false;
         }
     }
+    // 2026-05-30: 카테고리 기반 자동 채우기 — T/F/P 섹션이 DB 큐레이션으로 채워지지 않은 경우만 동작
+    async function _autoPopulateByCategory() {
+        if (!SB) return;
+        for (var name in _AUTO_BY_CATEGORY) {
+            var cfg = _AUTO_BY_CATEGORY[name];
+            var current;
+            if (name === 'tshirt')  current = BEST_TSHIRT;
+            else if (name === 'fabric') current = BEST_FABRIC;
+            else if (name === 'popular') current = BEST_POPULAR;
+            else continue;
+            if (current && current.length > 0) continue; // 이미 채워짐 (DB 큐레이션) — skip
+            try {
+                var { data } = await SB.from('admin_products')
+                    .select('code, name, name_jp, name_us, price, img_url, category')
+                    .eq('category', cfg.category)
+                    .order('code')
+                    .limit(cfg.limit);
+                var rows = (data || []).map(function(p){
+                    var item = { code: p.code };
+                    if (cfg.defaultSizes) item.sizes = cfg.defaultSizes;
+                    // 가격은 DB 의 admin_products.price 그대로 사용
+                    return item;
+                });
+                if (name === 'tshirt')  BEST_TSHIRT = rows;
+                else if (name === 'fabric') BEST_FABRIC = rows;
+                else if (name === 'popular') BEST_POPULAR = rows;
+            } catch (e) {
+                console.warn('[best featured] auto-populate failed for ' + name + ':', e);
+            }
+        }
+    }
+
     async function renderBestFeatured() {
         var sec = document.getElementById('bestFeatSec');
         if (!sec || !SB) return;
         // 2026-05-30: DB 큐레이션이 있으면 BEST_KEYRING/TSHIRT/FABRIC/POPULAR 를 덮어씀
         await _loadCurationFromDB();
+        // 큐레이션이 비어있는 섹션은 카테고리 기준으로 자동 채움
+        await _autoPopulateByCategory();
         // 2026-05-30: 4 섹션 분할 렌더
         var SECTIONS = [
             { gridId:'bestKeyringGrid', titleId:'bestKeyringTitle', items: BEST_KEYRING, t:'🔑 키링 BEST 5', t_jp:'🔑 キーリング BEST 5', t_en:'🔑 Keyring BEST 5' },

@@ -4052,10 +4052,30 @@
             { id:5, label:'사각투명', label_jp:'四角クリア',       label_en:'Square Clear',      img:'/keyringcut/keyringcut5.jpg' },
             { id:6, label:'원형투명', label_jp:'円形クリア',       label_en:'Round Clear',       img:'/keyringcut/keyringcut6.jpg' }
         ];
-        state.presetSizes = (p && _PRESET_MAP[p.code]) || null;
+        // 2026-05-30: 코드 기반 매핑 우선, 미매칭이면 카테고리 기반 추론
+        //   카테고리 매핑:
+        //     'acr_key_ring' (아크릴 키링) → 자개 프리셋 (단, gds_acr_kr_10 만 일반 키링)
+        //     '3244432'     (티셔츠)       → 티셔츠 종류 프리셋
+        //     'acr_crtt'    (아크릴 코롯토) → 코롯토 프리셋
+        var _resolvedSizes = (p && _PRESET_MAP[p.code]) || null;
+        var _resolvedType  = (p && _PRESET_TYPE[p.code]) || null;
+        if (!_resolvedSizes && p && p.category) {
+            if (p.category === 'acr_key_ring') {
+                // 키링: 3mm 투명만 저가, 나머지 모두 자개와 동일
+                _resolvedSizes = (p.code === 'gds_acr_kr_10') ? _PRESET_KEYRING : _PRESET_KEYRING_PEARL;
+                _resolvedType = 'keyring';
+            } else if (p.category === '3244432') {
+                _resolvedSizes = _PRESET_TSHIRT_TYPES;
+                _resolvedType = 'tshirt';
+            } else if (p.category === 'acr_crtt') {
+                _resolvedSizes = _PRESET_KOROTTO;
+                _resolvedType = 'korotto';
+            }
+        }
+        state.presetSizes = _resolvedSizes;
         state.isPresetGoods = !!state.presetSizes;
         // 2026-05-30: 프리셋 타입 / 고리 옵션 보유 여부 (키링·코롯토만 고리 300원 override + 안내문구 변경)
-        state.presetType = (p && _PRESET_TYPE[p.code]) || null;
+        state.presetType = _resolvedType;
         state.presetHasHooks = (state.presetType === 'keyring' || state.presetType === 'korotto');
         // 프리셋 굿즈는 사이즈 입력 UI 강제 활성화 — DB 의 is_custom_size 와 무관
         if (state.presetSizes) state.isCustomSize = true;
