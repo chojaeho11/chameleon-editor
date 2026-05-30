@@ -207,6 +207,17 @@ window._cdSelectColor = function(color, btn) {
     if (btn) btn.classList.add('active');
     updateFabricDetail();
     updatePrice();
+    // 2026-05-30: 색상 변경 시 리뷰만 갱신 (대분류 상세는 색상 무관 — common_info 호출 절감)
+    if (t.isCotton && typeof window._cdRefreshDetailAndReviews === 'function') {
+        // 상세는 동일 — write form / flag bar 도 동일. 리뷰만 새 코드로 다시 로드.
+        const code = _cdMapFabricToCode(state.fabricType, color);
+        if (code && code !== window._cdRvState.productCode) {
+            window._cdRvState.productCode = code;
+            window._cdRvState.page = 0;
+            window._cdRvState.filterLang = 'all';
+            loadFabricReviews(code, 0);
+        }
+    }
 };
 
 function calcHoebae() {
@@ -2509,11 +2520,45 @@ window.addEventListener('resize', function(){
 });
 
 // ════════════════════════════════════════════════════
-// 2026-05-30: 패브릭 상세 + 리뷰 시스템 (소분류 = fabricType)
-// product_reviews 테이블 재사용, product_code = 'fab_' + fabricType
+// 2026-05-30: 패브릭 상세 + 리뷰 시스템
+//   상세: common_info 테이블 — 대분류='22222' (패브릭인쇄) section='top' 의 내용
+//   리뷰: product_reviews 테이블 — (fabricType, fabricColor) → 광목 코드 (FG20N/FG30N/FSP 등) 매핑
+//          seed-reviews.js 가 admin_products 의 실제 code 별로 시드한 가짜 리뷰가 자동으로 노출됨
 // ════════════════════════════════════════════════════
 const _CD_RV_PAGE = 5;
 window._cdRvState = { page:0, productCode:'', filterLang:'all', rating:5, photoData:null };
+
+// (fabricType, fabricColor) → admin_products code 매핑
+// global_admin.html L2095-2107 의 코드와 일치
+const _CD_FAB_TO_CODE = {
+    // 면 종류 — 색상별 분기 (없는 색은 가까운 코드로 fallback)
+    'cotton20:white':   'FG20W',
+    'cotton20:natural': 'FG20N',
+    'cotton20:ivory':   'FG20B',
+    'cotton30:white':   'FG30B',  // 30수 white 미등록 → 백아이로 fallback
+    'cotton30:natural': 'FG30N',
+    'cotton30:ivory':   'FG30B',
+    'cotton16:white':   'FG16N',  // 16수 white/ivory 미등록 → 네츄럴로 fallback
+    'cotton16:natural': 'FG16N',
+    'cotton16:ivory':   'FG16N',
+    'cotton10:white':   'FG10N',  // 10수 white/ivory 미등록 → 네츄럴로 fallback
+    'cotton10:natural': 'FG10N',
+    'cotton10:ivory':   'FG10N',
+    // 비-면 — 색상 무관
+    'chiffon':  'FSP',
+    'oxford':   'FO20B',
+    'rayon':    'FB20R',
+    'linen':    'FRN'
+};
+function _cdMapFabricToCode(type, color) {
+    const f = FABRIC_TYPES[type];
+    if (!f) return null;
+    if (f.isCotton) return _CD_FAB_TO_CODE[type + ':' + (color || 'natural')] || null;
+    return _CD_FAB_TO_CODE[type] || null;
+}
+
+// 패브릭인쇄 대분류 코드 (cotton_print.js L216 참조: top_category_code='22222')
+const _CD_FABRIC_TOP_CAT = '22222';
 
 function _cdLangCode() {
     var L = (window.__CD_LANG || 'ko').toLowerCase();
@@ -2529,48 +2574,53 @@ function _cdEscape(s) {
     return String(s || '').replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; });
 }
 
-// 상세 정보 카드 — FABRIC_TYPES 데이터 + 공통 인쇄/주문 정보
-function renderFabricFullDetail() {
+// 상세 정보 카드 — DB common_info 에서 대분류(패브릭인쇄, code='22222') 공통 컨텐츠 로드
+//   global_admin.html 의 "상세페이지 통합 편집기" 에서 대분류=패브릭인쇄 / section=top 으로 저장한 내용을 그대로 표시.
+//   다국어 컬럼: content (KR) / content_jp / content_us / content_cn / content_ar / content_es / content_de / content_fr
+function _cdPickCommonInfoLang(row) {
+    if (!row) return '';
+    const L = (window.__CD_LANG || 'ko').toLowerCase();
+    if (L === 'ja' && row.content_jp) return row.content_jp;
+    if (L === 'en' && row.content_us) return row.content_us;
+    if (L === 'zh' && row.content_cn) return row.content_cn;
+    if (L === 'ar' && row.content_ar) return row.content_ar;
+    if (L === 'es' && row.content_es) return row.content_es;
+    if (L === 'de' && row.content_de) return row.content_de;
+    if (L === 'fr' && row.content_fr) return row.content_fr;
+    if (L !== 'ko' && L !== 'kr' && row.content_us) return row.content_us;
+    return row.content || '';
+}
+async function renderFabricFullDetail() {
     const sec = document.getElementById('cdFabricDetailSec');
     const body = document.getElementById('cdDetailBody');
     const titleEl = document.getElementById('cdDetailTitle');
     if (!sec || !body) return;
-    const f = FABRIC_TYPES[state.fabricType];
-    if (!f) { sec.style.display = 'none'; return; }
-    const name = pickFabricName(f);
-    const desc = pickFabricDesc(f);
-    const L = (window.__CD_LANG || 'ko');
-    var moreInfo;
-    if (L === 'ja') {
-        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
-                 + '<li>最大幅: <b>1300mm</b> (固定幅・長さは無制限)</li>'
-                 + '<li>印刷方式: デジタル昇華プリント (鮮明な発色・洗濯堅牢度AAA)</li>'
-                 + '<li>最小注文: 1回背 (5.625m²) 単位、10+/100+/500+ で大量割引</li>'
-                 + '<li>制作期間: 5〜7営業日</li>'
-                 + '<li>付属オプション: フチ縫い・縫製・アイレット・ハトメ・カット加工</li>'
-                 + '</ul>';
-    } else if (L === 'en') {
-        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
-                 + '<li>Max width: <b>1300mm</b> (fixed width, unlimited length)</li>'
-                 + '<li>Printing: Digital sublimation (vivid colors, AAA wash fastness)</li>'
-                 + '<li>Min order: per 회배 unit (5.625m²), bulk discounts at 10+/100+/500+</li>'
-                 + '<li>Production: 5–7 business days</li>'
-                 + '<li>Finishes: hem, sewing, eyelets, grommets, custom cutting</li>'
-                 + '</ul>';
-    } else {
-        moreInfo = '<ul style="margin:14px 0 0; padding-left:22px; line-height:1.95;">'
-                 + '<li>대폭: <b>1300mm</b> (고정 폭, 길이 무제한)</li>'
-                 + '<li>인쇄 방식: 디지털 승화 인쇄 (선명한 발색, 세탁견뢰도 AAA)</li>'
-                 + '<li>최소 주문: 1회배 (5.625m²) 단위, 10+/100+/500+ 수량 할인</li>'
-                 + '<li>제작 기간: 5~7영업일</li>'
-                 + '<li>옵션: 변접기·재봉·아일릿·하토메·재단</li>'
-                 + '</ul>';
-    }
-    body.innerHTML = '<h3 style="margin:0 0 8px; font-size:18px; color:#0f172a; font-weight:800;">' + _cdEscape(name) + '</h3>'
-                   + '<p style="margin:0; color:#475569; font-size:14px; line-height:1.7;">' + _cdEscape(desc) + '</p>'
-                   + moreInfo;
     if (titleEl) titleEl.textContent = _cdT('cd_detail_title', '상품 상세정보');
-    sec.style.display = '';
+    const sb = window.sb || window.__unified_sb;
+    if (!sb) { sec.style.display = 'none'; return; }
+    try {
+        // 대분류 공통 + 전체 공통 (all) 동시 조회 — 대분류 우선, 없으면 all
+        const { data } = await sb.from('common_info')
+            .select('*')
+            .in('category_code', [_CD_FABRIC_TOP_CAT, 'all'])
+            .eq('section', 'top');
+        const list = data || [];
+        const catRow = list.find(function(r){ return r.category_code === _CD_FABRIC_TOP_CAT; });
+        const allRow = list.find(function(r){ return r.category_code === 'all'; });
+        const catHtml = _cdPickCommonInfoLang(catRow);
+        const allHtml = _cdPickCommonInfoLang(allRow);
+        let combined = (catHtml || '') + (allHtml || '');
+        if (!combined.trim()) { sec.style.display = 'none'; return; }
+        // 보안: <script> 제거. 내부 id 충돌 방지로 id 속성 제거.
+        combined = combined.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/\sid="[^"]*"/gi, '');
+        body.innerHTML = combined;
+        // 이미지 lazy + width 100%
+        body.querySelectorAll('img').forEach(function(img){ img.loading = 'lazy'; img.style.maxWidth = '100%'; img.style.height = 'auto'; });
+        sec.style.display = '';
+    } catch (e) {
+        console.warn('[cd] common_info detail load failed:', e);
+        sec.style.display = 'none';
+    }
 }
 
 async function loadFabricReviews(productCode, page) {
@@ -2771,18 +2821,24 @@ function renderRvFlagBar() {
     }).join('');
 }
 
-// 통합 진입점 — 페이지 로드 + fabricType 변경 시 호출
+// 통합 진입점 — 페이지 로드 + fabricType/Color 변경 시 호출
 window._cdRefreshDetailAndReviews = function() {
     try {
-        renderFabricFullDetail();
+        renderFabricFullDetail();  // async, but fire-and-forget OK
         renderRvWriteForm();
         renderRvFlagBar();
-        const code = 'fab_' + state.fabricType;
-        window._cdRvState.productCode = code;
+        // 리뷰 코드 — admin_products 의 실제 코드 (FG20N 등) 와 동일하게 매핑
+        const code = _cdMapFabricToCode(state.fabricType, state.fabricColor);
+        if (!code) {
+            // 매핑 없으면 fallback 으로 fab_<type>
+            window._cdRvState.productCode = 'fab_' + state.fabricType;
+        } else {
+            window._cdRvState.productCode = code;
+        }
         window._cdRvState.filterLang = 'all';
         window._cdRvState.page = 0;
         window._cdRvState.rating = 5;
-        loadFabricReviews(code, 0);
+        loadFabricReviews(window._cdRvState.productCode, 0);
     } catch (e) {
         console.warn('[cd] detail+reviews refresh failed:', e);
     }
