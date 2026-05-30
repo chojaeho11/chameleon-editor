@@ -2442,8 +2442,20 @@
                 console.log('[so] rawBoard cache loaded:', _soRbMoreCache.length, 'products from', codes.length, 'categories');
             }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
-            var items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 12);
+            // 2026-05-30: 사용자 요청 — 우측 패널은 6개 (sort_order 빠른 순서) 만 노출.
+            //   특정 6개로 명시적으로 고정하려면 _SO_RB_WHITELIST 에 코드 배열 입력 (정의되어 있으면 우선 적용).
+            //   admin → 상품 → sort_order 를 조정하면 어떤 6개가 노출될지 제어 가능.
+            var WL = (window._SO_RB_WHITELIST && Array.isArray(window._SO_RB_WHITELIST)) ? window._SO_RB_WHITELIST : null;
+            var items;
+            if (WL && WL.length) {
+                var byCode = {};
+                _soRbMoreCache.forEach(function(p){ byCode[p.code] = p; });
+                items = WL.map(function(c){ return byCode[c]; }).filter(function(p){ return p && p.code !== currentCode; });
+            } else {
+                items = _soRbMoreCache.filter(function (p) { return p.code !== currentCode; }).slice(0, 6);
+            }
             if (!items.length) { sec.style.display = 'none'; return; }
+            console.log('[so] rawBoard right-panel showing', items.length, 'products:', items.map(function(p){ return p.code + '/' + (p.name || ''); }));
             grid.innerHTML = items.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
                 var img = p.img_url || 'https://placehold.co/200?text=Board';
