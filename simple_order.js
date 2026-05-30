@@ -1024,7 +1024,7 @@
         <!-- 2026-05-30: 키링/코롯토 모양 선택 (6종 — 모양따기/사각배경/원형배경/모양배경/사각투명/원형투명) -->
         <div class="so-section" id="soPresetCutSection" style="display:none;">
           <div class="so-section-title">✂️ ${tr('모양 선택', 'カット形状の選択', 'Choose cut shape')}</div>
-          <div id="soPresetCutGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px;"></div>
+          <div id="soPresetCutGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
           <div id="soPresetCutLabel" style="font-size:11px; color:#64748b; font-weight:600; margin-top:6px; text-align:center;"></div>
         </div>
 
@@ -4125,12 +4125,12 @@
                             + 'data-cut-id="' + c.id + '" data-cut-label="' + c.label + '" '
                             + 'onclick="window._soPickKeyringCut(this)" '
                             + 'style="border:2px solid ' + (act ? '#0f172a' : '#e2e8f0') + '; '
-                            + 'background:#fff; border-radius:10px; padding:4px; cursor:pointer; '
-                            + 'display:flex; flex-direction:column; align-items:center; gap:3px; '
+                            + 'background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; '
+                            + 'display:flex; flex-direction:column; align-items:center; gap:6px; '
                             + 'transition:border-color 0.15s ease; font-family:inherit;">'
                             + '<img src="' + c.img + '" alt="' + lbl + '" loading="lazy" '
-                            + 'style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; background:#f8fafc;">'
-                            + '<span style="font-size:10px; font-weight:700; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.15;">'
+                            + 'style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">'
+                            + '<span style="font-size:12px; font-weight:800; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.2;">'
                             + (i + 1) + '. ' + lbl + '</span>'
                             + '</button>';
                     }).join('');
