@@ -128,6 +128,8 @@
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
         const css = `
+/* 2026-05-31: 모달 열렸을 때 html/body 가 검정/회색으로 보이지 않도록 — 좌우 외곽 흰색 보장. */
+html, body { background: #ffffff !important; }
 /* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X).
    z-index 50000 — #topCatMenu (60000 카테고리 nav) 가 위로 떠야 사용자가 다른 카테고리 이동 가능. */
 .so-overlay {
@@ -547,7 +549,7 @@
          카드      #faf6ed  (배경과 같은 베이지로 frame 제거, 옅은 보더만)
          보더      transparent / #f0e7dc (필요한 경우만)
          텍스트    #1c1917 / #57534e / #a8a29e
-         프라이머리 #a82a2a (deep brand red)
+         프라이머리 #4338ca (deep brand red)
        ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
         background: #faf6ed;
@@ -611,8 +613,8 @@
     .so-body > .so-right textarea:focus,
     .so-body > .so-right select:focus {
         outline: none;
-        border-color: #a82a2a !important;
-        box-shadow: 0 0 0 3px rgba(168,42,42,0.1);
+        border-color: #4338ca !important;
+        box-shadow: 0 0 0 3px rgba(67,56,202,0.1);
     }
 
     /* 수량 입력 — 흰 배경 + 딥레드 +/- 버튼 */
@@ -631,12 +633,12 @@
     }
     .so-body > .so-right .so-qty-btn {
         background: #faf6f5 !important;
-        color: #a82a2a !important;
+        color: #4338ca !important;
         border: 1px solid #ede4e0 !important;
         font-weight: 700;
         border-radius: 8px;
     }
-    .so-body > .so-right .so-qty-btn:hover { background: #f5ebe9 !important; }
+    .so-body > .so-right .so-qty-btn:hover { background: #eef2ff !important; }
     .so-body > .so-right .so-qty-unit { color: #a8a29e !important; }
 
     /* 배송 옵션 버튼 — 세그먼티드 컨트롤 */
@@ -652,12 +654,12 @@
     .so-body > .so-right .so-ship-btn * { color: inherit !important; }
     .so-body > .so-right .so-ship-btn:hover {
         background: #faf6f5 !important;
-        border-color: #d4b1ab !important;
+        border-color: #c7d2fe !important;
     }
     .so-body > .so-right .so-ship-btn.active {
-        background: #a82a2a !important;
+        background: #4338ca !important;
         color: #ffffff !important;
-        border-color: #a82a2a !important;
+        border-color: #4338ca !important;
         font-weight: 700;
     }
     .so-body > .so-right .so-ship-btn.active * { color: #ffffff !important; }
@@ -670,7 +672,7 @@
         border-radius: 8px;
         font-size: 11px;
     }
-    .so-body > .so-right .so-tier-table > div b { color: #a82a2a !important; }
+    .so-body > .so-right .so-tier-table > div b { color: #4338ca !important; }
 
     /* addon 카드 */
     .so-body > .so-right .so-addon-card,
@@ -700,7 +702,7 @@
     }
     .so-body > .so-right .so-price-box .so-price-row.total span:last-child,
     .so-body > .so-right .so-price-box .so-price-row.total b {
-        color: #a82a2a !important; font-weight: 800; font-size: 22px; letter-spacing: -0.02em;
+        color: #4338ca !important; font-weight: 800; font-size: 22px; letter-spacing: -0.02em;
     }
 
     /* 액션 버튼 — 3단 위계 */
@@ -723,22 +725,22 @@
     /* 2. 장바구니 담기 — secondary outline (딥레드 보더) */
     .so-body > .so-right .so-btn-cart {
         background: #ffffff !important;
-        color: #a82a2a !important;
-        border: 1.5px solid #a82a2a !important;
+        color: #4338ca !important;
+        border: 1.5px solid #4338ca !important;
     }
     .so-body > .so-right .so-btn-cart:hover {
-        background: #a82a2a !important; color: #ffffff !important;
+        background: #4338ca !important; color: #ffffff !important;
     }
     /* 3. 바로 주문 — primary CTA (솔리드 딥레드) */
     .so-body > .so-right .so-btn-buy {
-        background: #a82a2a !important;
+        background: #4338ca !important;
         color: #ffffff !important;
         border: none !important;
-        box-shadow: 0 8px 24px -8px rgba(168,42,42,0.35);
+        box-shadow: 0 8px 24px -8px rgba(67,56,202,0.35);
         font-weight: 700 !important;
     }
     .so-body > .so-right .so-btn-buy:hover {
-        background: #8b1e1e !important;
+        background: #3730a3 !important;
     }
 
     /* 좌측 흰색 패널 — 베이지에서 흰색으로 부드러운 전환 */
