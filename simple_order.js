@@ -129,9 +129,9 @@
         if (document.getElementById('so-styles')) return;
         const css = `
 /* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X).
-   2026-05-31: z-index 50000 → 65000 — 메인 페이지 #topCatMenu (60000) 보라 nav 가 모달 위에 떠 보이던 색상 mismatch 제거. */
+   z-index 50000 — #topCatMenu (60000 카테고리 nav) 가 위로 떠야 사용자가 다른 카테고리 이동 가능. */
 .so-overlay {
-    position: fixed; inset: 0; background: #faf6ed; z-index: 65000;
+    position: fixed; inset: 0; background: #faf6ed; z-index: 50000;
     display: none;
     overflow-y: auto;          /* 페이지 전체 스크롤 */
     -webkit-overflow-scrolling: touch;
@@ -567,17 +567,19 @@
     .so-body > .so-right h3,
     .so-body > .so-right h4 { color: #1c1917; }
 
-    /* 섹션 카드 — 베이지 그대로 (frame 없애기), 매우 옅은 보더만 영역 힌트 */
+    /* 섹션 카드 — 배경/보더/그림자/구분선 모두 제거. 콘텐츠가 베이지 위에 자연스럽게 흐름. */
     .so-body > .so-right .so-section {
         background: transparent;
         border: none;
         border-radius: 0;
-        padding: 16px 6px;
-        margin-bottom: 4px;
+        padding: 16px 8px;
+        margin-bottom: 8px;
         box-shadow: none;
-        border-bottom: 1px solid rgba(168,42,42,0.08);
     }
-    .so-body > .so-right .so-section:last-child { border-bottom: none; }
+    /* simple_order modal 의 .so-head 그림자/하단 보더 제거 — 모달 헤더와 베이지 영역 사이의 어두운 line 제거. */
+    #simpleOrderModal .so-head { box-shadow: none; border-bottom: 1px solid #f5ebe0; }
+    /* 흰색 좌측 패널의 상단 보더 제거 — 베이지에서 흰색으로 부드러운 전환만 */
+    .so-body > .so-left { border-top: none; }
     .so-body > .so-right .so-section-title {
         color: #a8a29e !important;
         font-size: 11px !important;
