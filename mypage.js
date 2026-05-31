@@ -524,22 +524,22 @@ async function loadOrders() {
         var valLink = 'color:#4f46e5; font-weight:800;';
         var btns='';
         btns += (mp
-            ? '<a href="tel:'+mp.replace(/-/g,'')+'" style="'+chip+'"><span style="'+lab+'">👤 '+window.t('od_manager','담당 매니저')+'</span><span style="'+valLink+'">'+(mgr?mgr+' · ':'')+mp+'</span></a>'
-            : '<div style="'+chip+'"><span style="'+lab+'">👤 '+window.t('od_manager','담당 매니저')+'</span><span style="'+val+'">'+(mgr||window.t('od_assigning','배정 중'))+'</span></div>');
-        btns += '<div style="'+chip+'"><span style="'+lab+'">📅 '+window.t('od_delivery','배송 예정일')+'</span><span style="'+val+'">'+(deliv||window.t('od_sched_tbd','일정 협의 중'))+'</span></div>';
-        btns += '<a href="tel:0313661984" style="'+chip+'"><span style="'+lab+'">🏢 '+window.t('od_hq','본사')+'</span><span style="'+valLink+'">031-366-1984</span></a>';
+            ? '<a href="tel:'+mp.replace(/-/g,'')+'" style="'+chip+'"><span style="'+lab+'">'+window.t('od_manager','담당 매니저')+'</span><span style="'+valLink+'">'+(mgr?mgr+' · ':'')+mp+'</span></a>'
+            : '<div style="'+chip+'"><span style="'+lab+'">'+window.t('od_manager','담당 매니저')+'</span><span style="'+val+'">'+(mgr||window.t('od_assigning','배정 중'))+'</span></div>');
+        btns += '<div style="'+chip+'"><span style="'+lab+'">'+window.t('od_delivery','배송 예정일')+'</span><span style="'+val+'">'+(deliv||window.t('od_sched_tbd','일정 협의 중'))+'</span></div>';
+        btns += '<a href="tel:0313661984" style="'+chip+'"><span style="'+lab+'">'+window.t('od_hq','본사')+'</span><span style="'+valLink+'">031-366-1984</span></a>';
         // 결제 상태 (본사 옆)
         var _pm=(o.payment_method||'').toLowerCase(), _ps=o.payment_status||'';
         var _isCard=_pm.indexOf('카드')>=0||_pm.indexOf('card')>=0||_pm.indexOf('stripe')>=0;
         var _isBank=_pm.indexOf('무통장')>=0||_pm.indexOf('계좌')>=0||_pm.indexOf('bank')>=0;
         var _paid=(_ps==='결제완료'||_ps==='입금완료'||_ps==='승인완료'||_ps==='구매확정');
         if(_isCard){
-            btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_card','카드결제 완료')+'</span></div>';
+            btns += '<div style="'+chip+'"><span style="'+lab+'">'+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_card','카드결제 완료')+'</span></div>';
         } else if(_isBank){
-            if(_paid) btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_bank_done','입금완료')+'</span></div>';
-            else btns += '<div style="'+chip+' flex-direction:column; align-items:flex-start; gap:3px;"><span style="color:#dc2626;font-weight:800;">⚠️ '+window.t('od_pay_unpaid','입금 전 (미입금)')+'</span><span style="font-size:11.5px; color:#475569; font-weight:700;">국민은행 647701-04-277763</span></div>';
+            if(_paid) btns += '<div style="'+chip+'"><span style="'+lab+'">'+window.t('od_pay','결제')+'</span><span style="color:#16a34a;font-weight:800;">'+window.t('od_pay_bank_done','입금완료')+'</span></div>';
+            else btns += '<div style="'+chip+' flex-direction:column; align-items:flex-start; gap:3px;"><span style="color:#dc2626;font-weight:800;">'+window.t('od_pay_unpaid','입금 전 (미입금)')+'</span><span style="font-size:11.5px; color:#475569; font-weight:700;">국민은행 647701-04-277763</span></div>';
         } else if(_ps){
-            btns += '<div style="'+chip+'"><span style="'+lab+'">💳 '+window.t('od_pay','결제')+'</span><span style="'+val+'">'+_ps+'</span></div>';
+            btns += '<div style="'+chip+'"><span style="'+lab+'">'+window.t('od_pay','결제')+'</span><span style="'+val+'">'+_ps+'</span></div>';
         }
         return '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-top:8px;">'
              +'<div style="display:flex; align-items:flex-start; margin-bottom:14px;">'+bar+'</div>'
@@ -613,7 +613,10 @@ async function loadOrders() {
             // Line 3: 담당매니저 / 배송예정일 / 결제내역
             const _odate = new Date(o.created_at);
             const _dateStr = `${_odate.getFullYear()}. ${_odate.getMonth()+1}. ${_odate.getDate()}.`;
-            const _managerName = (o.manager_name || _staffMap[o.staff_manager_id] || window.t('msg_unassigned', '미배정')).toString();
+            // 2026-05-31: o.manager_name 은 주문자 이름이 들어가는 경우가 있어 신뢰 불가.
+            // 진짜 담당매니저는 admin_staff (강은미/조지숙/박성희/최연두) — staff_manager_id 만 사용.
+            // 미배정이면 기본 "본사" 로 표시 (사용자 요청).
+            const _managerName = (_staffMap[o.staff_manager_id] || '본사').toString();
             const _delivStr = o.delivery_target_date
                 ? (function () { const d = new Date(o.delivery_target_date); return `${d.getMonth()+1}/${d.getDate()}`; })()
                 : '-';
@@ -630,13 +633,13 @@ async function loadOrders() {
                     <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px;">
                         <span style="font-size:18px; font-weight:800; color:#0f172a; letter-spacing:-0.015em;">${fmtMoney(o.total_amount || 0)}</span>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:34px; padding:0 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition: all .15s;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
-                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 8px 24px -4px rgba(15,23,42,0.12); z-index:100; overflow:hidden; min-width:160px;">
-                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:10px 14px; font-size:12.5px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:34px; padding:0 16px; background:#1e3a8a; color:#fff; border:1px solid #1e3a8a; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition: all .15s;">${window.t('btn_documents', 'Documents')} ▾</button>
+                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 8px 24px -4px rgba(15,23,42,0.12); z-index:100; overflow:hidden; min-width:150px;">
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:10px 14px; font-size:12.5px; cursor:pointer;">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -679,13 +682,13 @@ async function loadOrders() {
                             <button onclick="reOrder('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
                         </div>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:30px; font-size:12px; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:30px; font-size:12px; font-weight:700; background:#1e3a8a; color:#fff; border:1px solid #1e3a8a; border-radius:7px; cursor:pointer;">${window.t('btn_documents', 'Documents')} ▾</button>
                             <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; right:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden;">
-                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
