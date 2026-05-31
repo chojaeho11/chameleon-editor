@@ -1490,8 +1490,8 @@ a { text-decoration: none; color: inherit; }
              배송비 5,000원은 getShippingFeeKrw() 가 합계 계산 시 별도 적용되므로 유지. -->
         <input type="checkbox" id="sampleBookCheck" style="display:none;">
 
-        <!-- 수량 -->
-        <div class="side-card">
+        <!-- 수량 — 패브릭포스터 전용 (패턴 모드는 rollCard 의 야드 입력 사용) -->
+        <div class="side-card" id="qtyCard">
             <div class="side-card-title" data-cdi18n="side_qty">주문 수량</div>
             <div style="display:flex; align-items:center; gap:10px; padding:12px; background:#fafaf9; border-radius:8px;">
                 <button onclick="window._cdQtyChg(-1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">−</button>

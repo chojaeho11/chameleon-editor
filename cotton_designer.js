@@ -708,6 +708,8 @@ window._cdSelectLayout = function(name) {
     var _fc = document.getElementById('finishCard');     if (_fc) _fc.style.display = isPoster ? '' : 'none';
     var _hc = document.getElementById('hookCard');       if (_hc) _hc.style.display = isPoster ? '' : 'none';
     var _ac = document.getElementById('accCard');        if (_ac) _ac.style.display = isPoster ? '' : 'none';
+    // 2026-06-01: 패턴 모드는 rollCard 의 야드 입력을 쓰니 일반 주문수량 카드 숨김 (사용자 요청 — '주문수량 2번 나오지 않게').
+    var _qc = document.getElementById('qtyCard');        if (_qc) _qc.style.display = isPoster ? '' : 'none';
     // 2026-05-14: 다른 레이아웃 → centered 전환 시 이미지 사이즈에 출력 사이즈를 맞춤 (꽉차게).
     //   이미 centered 였거나 이미지 미로드면 skip.
     if (name === 'centered' && prev !== 'centered' && state.img && state.imgAspect) {
