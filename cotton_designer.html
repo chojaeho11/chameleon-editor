@@ -139,7 +139,18 @@ window.__CD_I18N = {
     side_image_size: { ko:'이미지 사이즈 (한 패턴 단위)', ja:'画像サイズ (1パターン)', en:'Image size (one tile)' },
     side_pattern_size: { ko:'패턴 사이즈 (한 패턴 단위)', ja:'パターンサイズ (1パターン)', en:'Pattern size (one tile)' },
     layout_poster: { ko:'패브릭포스터', ja:'ファブリックポスター', en:'Fabric Poster' },
-    layout_pattern_toggle: { ko:'패턴 원단 인쇄', ja:'パターン生地印刷', en:'Pattern fabric print' },
+    layout_pattern_toggle: { ko:'패턴 원단 인쇄', ja:'柄生地プリント', en:'Pattern Fabric Roll' },
+    // 2026-05-31: 사용자 설명 텍스트 — 일본어는 의류 업계에서 실제 쓰는 자연스러운 표현으로
+    layout_poster_desc: {
+        ko:'화면 전체를 인쇄하는 낱장 인쇄로, 장식용 굿즈나 선물용으로 많이 사용합니다.',
+        ja:'生地全面に1枚ずつプリントするタイプ。インテリア装飾や贈り物にぴったりです。',
+        en:'A single-sheet print covering the full canvas — popular for decor items, gifts, and one-off pieces.'
+    },
+    layout_pattern_desc: {
+        ko:'의류 업체와 도매 원단 매장에서 판매용으로 주문하는 롤 패턴 인쇄입니다.',
+        ja:'アパレルメーカーや生地問屋が販売用に発注する、ロール状の柄プリント生地です。',
+        en:'Continuous roll-printed pattern fabric — for apparel makers and wholesale fabric stores selling by the yard.'
+    },
     aspect_lock: { ko:'비율 유지', ja:'比率固定', en:'Lock ratio' },
     width_cm: { ko:'가로 (mm)', ja:'横 (mm)', en:'Width (mm)' },
     height_cm: { ko:'세로 (mm)', ja:'縦 (mm)', en:'Height (mm)' },
@@ -458,23 +469,19 @@ a { text-decoration: none; color: inherit; }
     }
     .cd-lang-flags { gap: 3px !important; }
     .cd-flag { width: 30px; height: 30px; font-size: 17px; }
-    /* 장바구니 / 메인으로: 글씨 숨기고 아이콘만 */
-    .brand-back span[data-cdi18n] { display: none; }
-    .brand-back i { margin-right: 0 !important; }
-    .brand-back {
-        padding: 7px 11px;
-        min-width: 38px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    /* 2026-05-31: 아이콘 숨김 정책 적용 후엔 글씨가 유일한 단서 → 모바일에서도 텍스트 유지. */
+    .brand-back span[data-cdi18n], .brand-mall-link span { display: inline !important; }
+    .brand-back i, .brand-mall-link i { margin: 0 !important; }
+    .brand-back, .brand-mall-link {
+        padding: 7px 12px; font-size: 12px;
+        display: inline-flex; align-items: center; justify-content: center;
     }
-    #cartIconBtn i { margin-right: 0 !important; }
-    #cartIconBtn { padding: 7px 11px; min-width: 38px; }
+    #cartIconBtn { padding: 7px 12px; font-size: 12px; }
 }
 @media (max-width:380px) {
     .brand-logo { font-size: 13px; letter-spacing: 1.5px; }
     .cd-flag { width: 26px; height: 26px; font-size: 15px; }
-    .brand-back, #cartIconBtn { padding: 6px 9px; min-width: 32px; }
+    .brand-back, #cartIconBtn, .brand-mall-link { padding: 6px 10px; font-size: 11px; }
 }
 
 /* === 메인 레이아웃 === */
@@ -732,32 +739,45 @@ a { text-decoration: none; color: inherit; }
 /* 2026-05-31: 전역 — 모든 fa- 아이콘 숨김 (사용자 요청 '아이콘들 안 보이게'). */
 .fa-solid, .fa-regular, .fa-brands, i[class*="fa-"] { display: none !important; }
 
-/* 2026-05-31: 패브릭포스터 / 패턴 원단 인쇄 — 큰 이미지 썸네일 + 굵은 라벨 (시각 구분) */
+/* 2026-05-31: 패브릭포스터 / 패턴 원단 인쇄 — 큰 썸네일 + 라벨 + 설명. 둘 다 녹색 active 통일 */
 .poster-btn, .pattern-toggle-btn {
-    display:flex; align-items:center; gap:16px;
-    width:100%; padding:14px 18px; border-radius:14px; cursor:pointer;
-    font-weight:800; font-size:17px; box-sizing:border-box; margin-bottom:10px;
+    display:flex; align-items:flex-start; gap:14px;
+    width:100%; padding:12px 14px; border-radius:14px; cursor:pointer;
+    box-sizing:border-box; margin-bottom:10px;
     transition:all 0.15s; font-family:inherit;
-    text-align:left; letter-spacing:-0.01em;
+    text-align:left;
 }
 .poster-btn img, .pattern-toggle-btn img {
-    width:88px; height:88px; object-fit:cover; border-radius:10px;
+    width:78px; height:78px; object-fit:cover; border-radius:10px;
     flex-shrink:0; background:#f1f5f9;
     box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
-.poster-btn { border:2px solid #16a34a; background:#f0fdf4; color:#15803d; }
-.poster-btn.active { background:#16a34a; color:#fff; }
-.poster-btn.active img { box-shadow:0 0 0 2px #fff; }
-.pattern-toggle-btn { border:2px solid var(--cream-dark); background:#fff; color:var(--brown); }
-.pattern-toggle-btn:hover { border-color:var(--accent); }
-.pattern-toggle-btn.active { border-color:var(--brown-dark); background:var(--cream-dark); }
+.poster-btn-text, .pattern-toggle-text {
+    flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; padding-top:2px;
+}
+.poster-btn-title, .pattern-toggle-title {
+    font-weight:800; font-size:16px; letter-spacing:-0.01em; line-height:1.2;
+}
+.poster-btn-desc, .pattern-toggle-desc {
+    font-size:11.5px; font-weight:400; line-height:1.45; opacity:0.85;
+    word-break:keep-all; letter-spacing:-0.01em;
+}
+/* 비활성: 옅은 녹 배경 + 녹 보더 */
+.poster-btn, .pattern-toggle-btn { border:2px solid #16a34a; background:#f0fdf4; color:#15803d; }
+.poster-btn:hover, .pattern-toggle-btn:hover { background:#dcfce7; }
+/* 활성: 진녹 + 흰 글씨 */
+.poster-btn.active, .pattern-toggle-btn.active { background:#16a34a; color:#fff; }
+.poster-btn.active img, .pattern-toggle-btn.active img { box-shadow:0 0 0 2px #fff; }
 .layout-btn {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 10px 4px; border: 1.5px solid var(--border); border-radius: 8px;
-    cursor: pointer; background: #fff; transition: all 0.2s;
+    padding: 10px 4px; border: 1.5px solid #bbf7d0; border-radius: 8px;
+    cursor: pointer; background: #f0fdf4; transition: all 0.2s;
 }
-.layout-btn:hover { border-color: var(--accent); }
-.layout-btn.active { border-color: var(--brown-dark); background: var(--cream-dark); }
+.layout-btn:hover { border-color: #16a34a; }
+/* 2026-05-31: 활성 상태 = 패턴 원단 인쇄 톤과 통일 (녹색) */
+.layout-btn.active { border-color: #166534; background: #16a34a; color: #fff; }
+.layout-btn.active .layout-preview { background: #fff; color: #15803d; }
+.layout-btn.active .layout-name { color: #fff; }
 .layout-preview {
     width: 36px; height: 36px; background: #fff; border: 1px solid var(--border);
     border-radius: 4px; display: flex; align-items: center; justify-content: center;
@@ -1117,17 +1137,21 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 2026-05-31: '레이아웃' 라벨 제거 + 이미지 썸네일 (사용자 요청). poster.jpg/patten.jpg 미리보기로 시각 구분. -->
+        <!-- 2026-05-31: 두 버튼 모두 녹색 톤 + 썸네일 + 설명 텍스트 -->
         <div class="side-card">
-            <!-- 패브릭포스터 (기본·초록) -->
             <div id="posterBtn" class="poster-btn active" onclick="window._cdSelectLayout('centered')">
                 <img src="/fabric/poster.jpg" alt="">
-                <span data-cdi18n="layout_poster">패브릭포스터</span>
+                <div class="poster-btn-text">
+                    <div class="poster-btn-title" data-cdi18n="layout_poster">패브릭포스터</div>
+                    <div class="poster-btn-desc" data-cdi18n="layout_poster_desc">화면 전체를 인쇄하는 낱장 인쇄로, 장식용 굿즈나 선물용으로 많이 사용합니다.</div>
+                </div>
             </div>
-            <!-- 패턴 원단 인쇄 -->
             <div id="patternToggle" class="pattern-toggle-btn" onclick="window._cdEnterPatternMode()">
                 <img src="/fabric/patten.jpg" alt="">
-                <span data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</span>
+                <div class="pattern-toggle-text">
+                    <div class="pattern-toggle-title" data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</div>
+                    <div class="pattern-toggle-desc" data-cdi18n="layout_pattern_desc">의류 업체와 도매 원단 매장에서 판매용으로 주문하는 롤 패턴 인쇄입니다.</div>
+                </div>
             </div>
             <!-- 4개 패턴 (패턴 원단 인쇄 클릭 시 표시) -->
             <div class="layouts" id="patternLayouts" style="display:none; margin-top:4px;">
