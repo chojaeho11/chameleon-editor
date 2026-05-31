@@ -163,6 +163,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 대시보드 통계 및 지갑 로그 로드
     loadDashboardStats();
     loadWalletLogs();
+
+    // 2026-05-31: 사용자 요청 — 마이페이지 진입 시 주문 내역을 기본 표시. 즉시 로드.
+    loadOrders();
+
+    // 2026-05-31: 모바일↔데스크탑 폭 전환 시 주문목록 재렌더 (768px 경계).
+    // 카드/테이블 분기가 window.innerWidth 1회만 평가되어, devtools responsive 모드
+    // 전환 시 레이아웃이 안 바뀌는 문제 fix.
+    let _mpLastIsMobile = window.innerWidth <= 768;
+    window.addEventListener('resize', function () {
+        const nowMobile = window.innerWidth <= 768;
+        if (nowMobile !== _mpLastIsMobile) {
+            _mpLastIsMobile = nowMobile;
+            if (window.myOrdersData) loadOrders();
+        }
+    });
     
     // ★ [핵심] 전역 함수 연결 (이 코드가 실행되어야 버튼이 작동함)
     window.switchTab = switchTab;
