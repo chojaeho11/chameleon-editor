@@ -2431,14 +2431,44 @@ function _ciRenderPreview(html) {
     const frame = document.getElementById('ciPreviewFrame');
     if (!frame) return;
     const doc = frame.contentDocument || frame.contentWindow.document;
+    // 2026-05-31: 모바일 폭 (380px) 프리뷰 + 고객 화면과 동일한 본문 스타일 inject.
+    // 한글 word-break:keep-all 로 한글자 두글자 끊기는 줄바꿈 방지, 해외 번역(독/불/아랍) 대응.
+    const lang = (window._ciCurrentLang || 'KR').toLowerCase();
+    const langAttr = lang === 'kr' ? 'ko' : (lang === 'us' ? 'en' : (lang === 'jp' ? 'ja' : (lang === 'cn' ? 'zh' : lang)));
     doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;} img{max-width:100%;height:auto;}</style></head><body>${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</body></html>`);
+    doc.write(`<!DOCTYPE html><html lang="${langAttr}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body { margin:0; padding:20px 12px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Pretendard',sans-serif; background:#f1f5f9; }
+  .cmp-viewport-label { max-width:380px; margin:0 auto 10px; text-align:center; font-size:10.5px; color:#94a3b8; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+  .cmp-frame { max-width:380px; margin:0 auto; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px 16px;
+               font-size:13.5px; line-height:1.78; color:#1f2937;
+               letter-spacing:-0.005em; word-break:keep-all; overflow-wrap:anywhere; }
+  .cmp-frame * { max-width:100%; box-sizing:border-box; }
+  .cmp-frame img { width:100%; height:auto; display:block; margin:14px auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .cmp-frame p { margin:0 0 14px; color:#374151; line-height:1.78; }
+  .cmp-frame h1 { font-size:19px; font-weight:800; letter-spacing:-0.02em; margin:24px 0 10px; color:#111827; line-height:1.3; }
+  .cmp-frame h2 { font-size:16.5px; font-weight:800; letter-spacing:-0.02em; margin:22px 0 10px; color:#111827; line-height:1.3; }
+  .cmp-frame h3 { font-size:14.5px; font-weight:800; margin:20px 0 8px; color:#111827; line-height:1.3; }
+  .cmp-frame h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#6b7280; margin:18px 0 8px; font-weight:800; }
+  .cmp-frame strong, .cmp-frame b { color:#111827; font-weight:800; }
+  .cmp-frame ul, .cmp-frame ol { padding-left:22px; margin:0 0 14px; }
+  .cmp-frame li { margin-bottom:8px; font-size:13px; line-height:1.7; color:#374151; word-break:keep-all; overflow-wrap:anywhere; padding-left:4px; }
+  .cmp-frame li > strong:first-child, .cmp-frame li > b:first-child { color:#111827; margin-right:4px; }
+  .cmp-frame blockquote { margin:16px 0; padding:12px 16px; border-left:3px solid #6366f1; background:#f8fafc; border-radius:0 10px 10px 0; color:#475569; }
+  .cmp-frame [style*="font-size: 2"], .cmp-frame [style*="font-size:2"],
+  .cmp-frame [style*="font-size: 3"], .cmp-frame [style*="font-size:3"],
+  .cmp-frame [style*="font-size: 4"], .cmp-frame [style*="font-size:4"] { font-size:17px !important; line-height:1.4 !important; }
+  html[lang="ar"] .cmp-frame { direction:rtl; text-align:right; }
+  html[lang="ar"] .cmp-frame ul, html[lang="ar"] .cmp-frame ol { padding-right:22px; padding-left:0; }
+</style></head><body>
+  <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
+  <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
+</body></html>`);
     doc.close();
-    // iframe 높이 자동 조절
     setTimeout(() => {
         try {
             const h = doc.body.scrollHeight;
-            frame.style.height = Math.max(h + 20, 300) + 'px';
+            frame.style.height = Math.max(h + 20, 400) + 'px';
         } catch(e) {}
     }, 200);
 }
@@ -2586,7 +2616,25 @@ window._ciGenerate = async () => {
                 original_description: existingKrHtml || '',
                 price: 0,
                 mode: 'wizard',
-                langs: ["kr", "jp", "us", "cn", "ar", "es", "de", "fr"]
+                langs: ["kr", "jp", "us", "cn", "ar", "es", "de", "fr"],
+                // 2026-05-31: 모던 서술형 스타일 디렉티브 (사용자 요청 — 한글자 두글자 끊기는
+                // 짧은 불릿 대신 흐르는 문단으로, 해외번역에서도 자연스럽게).
+                // 엣지 함수가 이 필드를 읽도록 업데이트되면 자동 반영. 무시되어도 무해.
+                style: 'narrative-modern',
+                style_directives: {
+                    text_style: 'narrative_paragraphs',     // 짧은 불릿이 아닌 서술형 문단
+                    avoid_short_bullets: true,
+                    prefer_short_paragraphs: true,           // 한 문단 2~4 문장
+                    font_emphasis: 'sophisticated',
+                    target_width_px: 380,                    // 모바일 폭 기준
+                    mobile_first: true,
+                    image_layout: 'mixed-aspect-flexible',   // 가로/세로 사진 자동 조화
+                    translation_friendly: true,              // 독/불/아랍에서도 자연스러움
+                    language_targets: ['ko','ja','en','zh','ar','es','de','fr'],
+                    avoid_inline_font_sizes: true,           // 인라인 font-size 자제 (모바일 깨짐)
+                    heading_max_words: 8,                    // 헤딩이 너무 길어 줄바꿈 안 되게
+                    paragraph_max_sentences: 4
+                }
             }
         });
 

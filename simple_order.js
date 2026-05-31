@@ -1049,12 +1049,72 @@ html, body { background: #ffffff !important; }
     border-bottom: 1px dashed #e2e8f0;
     display: flex; align-items: center; gap: 6px;
 }
+/* 2026-05-31: 상세페이지 본문 — 세련된 타이포 + 한글 word-break:keep-all 로
+   '한글자 두글자씩 잘리는' 줄바꿈 방지 + 해외번역(독/불/아랍) 대응.
+   AI 가 어떤 HTML 을 뽑아내도 일관되게 보이도록 모든 자식 태그 다 잡아둠. */
 .so-prod-detail-body {
-    font-size: 14px; line-height: 1.7; color: #334155;
+    font-size: 14.5px; line-height: 1.78; color: #1f2937;
+    letter-spacing: -0.005em;
+    word-break: keep-all;        /* 한글이 단어 중간에 끊어지지 않음 */
+    overflow-wrap: anywhere;     /* 너무 긴 영문/독일어 단어는 어디서든 끊김 */
 }
-.so-prod-detail-body img { max-width: 100%; height: auto; display: block; margin: 8px auto; border-radius: 8px; }
-.so-prod-detail-body table { max-width: 100%; }
 .so-prod-detail-body * { max-width: 100%; box-sizing: border-box; }
+.so-prod-detail-body img,
+.so-prod-detail-body picture > img,
+.so-prod-detail-body figure > img {
+    max-width: 100%; height: auto; display: block;
+    margin: 14px auto; border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.so-prod-detail-body table { max-width: 100%; }
+/* 단락 */
+.so-prod-detail-body p { margin: 0 0 14px; color: #374151; line-height: 1.78; }
+/* 헤딩 위계 — 작지만 명확 */
+.so-prod-detail-body h1,
+.so-prod-detail-body h2,
+.so-prod-detail-body h3,
+.so-prod-detail-body h4 {
+    font-weight: 800; letter-spacing: -0.02em;
+    color: #111827; line-height: 1.3;
+    margin: 28px 0 12px;
+}
+.so-prod-detail-body h1 { font-size: 22px; }
+.so-prod-detail-body h2 { font-size: 18px; }
+.so-prod-detail-body h3 { font-size: 15.5px; }
+.so-prod-detail-body h4 {
+    font-size: 11.5px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: #6b7280; margin-top: 22px;
+}
+.so-prod-detail-body strong, .so-prod-detail-body b { color: #111827; font-weight: 800; }
+/* 리스트 — 긴 번역문도 안 깨지게 */
+.so-prod-detail-body ul,
+.so-prod-detail-body ol { padding-left: 22px; margin: 0 0 16px; list-style-position: outside; }
+.so-prod-detail-body li {
+    margin-bottom: 8px; font-size: 13.5px; line-height: 1.7;
+    color: #374151; word-break: keep-all; overflow-wrap: anywhere;
+    padding-left: 4px;
+}
+.so-prod-detail-body li > strong:first-child,
+.so-prod-detail-body li > b:first-child { color: #111827; font-weight: 800; margin-right: 4px; }
+/* 인용/콜아웃 */
+.so-prod-detail-body blockquote {
+    margin: 18px 0; padding: 14px 18px;
+    border-left: 3px solid #6366f1;
+    background: #f8fafc; border-radius: 0 10px 10px 0;
+    color: #475569; font-style: normal;
+}
+/* AI 가 박은 거대한 인라인 font-size (24px+) 는 모바일에서 깨지므로 클램프 */
+.so-prod-detail-body [style*="font-size: 2"],
+.so-prod-detail-body [style*="font-size:2"],
+.so-prod-detail-body [style*="font-size: 3"],
+.so-prod-detail-body [style*="font-size:3"],
+.so-prod-detail-body [style*="font-size: 4"],
+.so-prod-detail-body [style*="font-size:4"] { font-size: 17px !important; line-height: 1.4 !important; }
+/* RTL — 아랍어 자동 정렬 */
+[lang="ar"] .so-prod-detail-body,
+.so-prod-detail-body[dir="rtl"] { direction: rtl; text-align: right; }
+[lang="ar"] .so-prod-detail-body ul,
+[lang="ar"] .so-prod-detail-body ol { padding-right: 22px; padding-left: 0; }
 
 /* 모바일 — 세로 스택, 풀스크린 유지 */
 @media (max-width: 768px) {
@@ -1075,6 +1135,13 @@ html, body { background: #ffffff !important; }
     .so-prod-img { width: 96px; height: 96px; }   /* 2026-05-31: 모바일에서도 크게 */
     .so-prod-name { font-size: 18px; }
     .so-prod-name { font-size: 15px; }
+    /* 2026-05-31: 모바일에서 상세페이지 본문 — 좀더 작게 + 한 줄 길이 안정화 */
+    .so-prod-detail-body { font-size: 13.5px; line-height: 1.78; }
+    .so-prod-detail-body p { font-size: 13.5px; }
+    .so-prod-detail-body li { font-size: 13px; }
+    .so-prod-detail-body h1 { font-size: 19px; }
+    .so-prod-detail-body h2 { font-size: 16.5px; }
+    .so-prod-detail-body h3 { font-size: 14.5px; }
 }
         `;
         const st = document.createElement('style');
