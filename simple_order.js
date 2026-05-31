@@ -241,11 +241,13 @@
     display: flex; flex-direction: column; align-items: flex-start;
     margin: 0 auto 12px; padding-left: 22px; padding-top: 22px;
     position: relative;
+    max-width: 100%; overflow: hidden;        /* 2026-05-31: 모바일에서 인라인 width 가 viewport 넘어도 페이지 밀림 방지 */
 }
 .so-print-frame {
     border: 1.5px solid #78350f; background: #fff;
     box-shadow: 0 6px 20px rgba(69,26,3,0.12);
     overflow: hidden; position: relative;
+    max-width: 100%;                          /* 2026-05-31: 안전 cap — JS 인라인 width 가 부모 폭을 넘어도 잘림 */
 }
 
 /* 줄자 (cm 눈금) */
@@ -1674,10 +1676,13 @@
         // 2) 프리뷰 영역 — 파일 비율에 맞춰 프레임 크기 결정
         // 2026-05-15: 업로드 영역을 가변형으로 — 컨테이너 폭에 맞춰 그림이 꽉 차게 보이도록
         // 좌우 padding 40px (좌측 줄자 22px + 여백) + 안전 마진 고려
+        // 2026-05-31: viewport 기준 hard cap 추가 — clientWidth 가 부정확할 때(0/지연/parent>viewport) 가로 이미지가 화면 밖으로 밀려나가던 문제 해결.
         const aspectRatio = w_mm / h_mm;
         const zoneEl = document.getElementById('soUpload');
-        const zoneInnerW = zoneEl ? Math.max(280, (zoneEl.clientWidth || 800) - 60) : 800;
-        const maxW = Math.min(900, zoneInnerW);   // 가로 최대 — 컨테이너 폭 따라감
+        const viewportW = Math.min(window.innerWidth || 800, document.documentElement && document.documentElement.clientWidth || 800);
+        const viewportCap = Math.max(240, viewportW - 64); // 좌우 패딩/마진 32px씩 안전 여유
+        const zoneInnerW = zoneEl ? Math.max(220, (zoneEl.clientWidth || viewportCap) - 60) : viewportCap;
+        const maxW = Math.min(900, zoneInnerW, viewportCap);   // viewport 보다 절대 크지 않게
         const maxH = Math.min(900, Math.round(maxW * 1.3)); // 세로 최대 — 가로의 1.3배 (긴 PDF도 시원하게)
         let frameW = maxW;
         let frameH = frameW / aspectRatio;
