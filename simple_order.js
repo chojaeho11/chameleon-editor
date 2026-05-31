@@ -1124,14 +1124,24 @@ html, body { background: #ffffff !important; }
     position: relative; overflow: hidden; border-radius: 14px;
     margin: 0 0 28px; aspect-ratio: 4/5; background: #1c1917;
 }
-.so-prod-detail-body .cmp-hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.92; margin: 0; border-radius: 0; box-shadow: none; }
+.so-prod-detail-body .cmp-hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.96; margin: 0; border-radius: 0; box-shadow: none; }
+/* 바닥 다크 그라데이션 — 흰 글씨가 어떤 배경에서도 읽히도록 */
+.so-prod-detail-body .cmp-hero::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 65%; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.62) 100%);
+    pointer-events: none; z-index: 1;
+}
 .so-prod-detail-body .cmp-hero-overlay {
     position: absolute; left: 22px; right: 22px; bottom: 24px;
-    color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.45);
+    color: #fff; z-index: 2;
 }
+/* h1/h2/h3/h4 전역 룰을 누르고 흰색 강제 — 사용자 요청 '사진 안 글씨 흰색' */
+.so-prod-detail-body .cmp-hero-overlay,
+.so-prod-detail-body .cmp-hero-overlay *,
+.so-prod-detail-body .cmp-hero-title { color: #fff !important; }
 .so-prod-detail-body .cmp-hero-tag {
     font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    opacity: 0.85; margin-bottom: 8px; font-weight: 600;
+    opacity: 0.88; margin-bottom: 8px; font-weight: 600;
     font-family: 'Times New Roman', serif; font-style: italic;
 }
 .so-prod-detail-body .cmp-hero-title {
@@ -1139,21 +1149,18 @@ html, body { background: #ffffff !important; }
     line-height: 1.12; margin: 0; word-break: keep-all;
 }
 .so-prod-detail-body .cmp-title-block { padding: 24px 0 12px; text-align: center; }
-.so-prod-detail-body .cmp-hero-title-stand { color: #111827; text-shadow: none; }
-.so-prod-detail-body .cmp-section { margin: 28px 0 24px; }
-.so-prod-detail-body .cmp-section-label {
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: #94a3b8; margin-bottom: 10px; font-weight: 700;
-    font-family: 'Times New Roman', serif; font-style: italic;
-}
+.so-prod-detail-body .cmp-hero-title-stand { color: #111827 !important; text-shadow: none; }
+.so-prod-detail-body .cmp-section { margin: 32px 0 20px; }
+/* Chapter 라벨 제거됨 (사용자 요청 '챕터 123 이렇거 말고') */
 .so-prod-detail-body .cmp-section-title {
-    font-size: 19px; font-weight: 800; letter-spacing: -0.02em;
-    color: #111827; margin: 0 0 12px; line-height: 1.32; word-break: keep-all;
+    font-size: 18px; font-weight: 800; letter-spacing: -0.025em;
+    color: #111827; margin: 0 0 10px; line-height: 1.3; word-break: keep-all;
 }
+/* 본문 — 문장 단위 <p> 분리. 얇고 자간/행간 좁게 (NEVV 톤) */
 .so-prod-detail-body .cmp-section-body {
-    font-size: 12.5px; line-height: 1.85; color: #4b5563;
-    font-weight: 400; letter-spacing: -0.012em;
-    word-break: keep-all; overflow-wrap: anywhere; margin: 0;
+    font-size: 12px; line-height: 1.68; color: #475569;
+    font-weight: 400; letter-spacing: -0.022em;
+    word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 5px;
 }
 .so-prod-detail-body .cmp-full {
     width: 100%; height: auto; display: block;
@@ -1187,20 +1194,15 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-mosaic img:first-child {
     grid-column: 1 / -1; aspect-ratio: 16/9;
 }
-/* 브랜드 스토리 — 모든 상세페이지 끝 (사용자 요청) */
+/* 브랜드 스토리 — 모든 상세페이지 끝 (사용자 요청). 라벨 없이 단락만, 더 작게 */
 .so-prod-detail-body .cmp-brand-story {
-    margin: 36px 0 12px; padding: 18px 0 6px;
+    margin: 36px 0 12px; padding: 20px 0 6px;
     border-top: 1px solid #e2e8f0;
 }
-.so-prod-detail-body .cmp-bs-label {
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: #94a3b8; margin-bottom: 8px; font-weight: 700;
-    font-family: 'Times New Roman', serif; font-style: italic;
-}
 .so-prod-detail-body .cmp-bs-body {
-    font-size: 11px; line-height: 1.85; color: #94a3b8;
-    font-weight: 400; letter-spacing: -0.01em;
-    word-break: keep-all; margin: 0;
+    font-size: 10.5px; line-height: 1.7; color: #94a3b8;
+    font-weight: 400; letter-spacing: -0.018em;
+    word-break: keep-all; margin: 0 0 5px;
 }
 
 /* 모바일 — 세로 스택, 풀스크린 유지 */

@@ -2460,19 +2460,23 @@ function _ciRenderPreview(html) {
   .cmp-frame [style*="font-size: 4"], .cmp-frame [style*="font-size:4"] { font-size:17px !important; line-height:1.4 !important; }
   html[lang="ar"] .cmp-frame { direction:rtl; text-align:right; }
   html[lang="ar"] .cmp-frame ul, html[lang="ar"] .cmp-frame ol { padding-right:22px; padding-left:0; }
-  /* ═══ Designer Template (BOMNAL-style editorial) ═══ */
+  /* ═══ Designer Template (BOMNAL/NEVV-style editorial) ═══ */
   .cmp-designer { color:#1f2937; }
   .cmp-hero { position:relative; overflow:hidden; border-radius:14px; margin:0 0 28px; aspect-ratio:4/5; background:#1c1917; }
-  .cmp-hero img { width:100%; height:100%; object-fit:cover; opacity:0.92; }
-  .cmp-hero-overlay { position:absolute; left:22px; right:22px; bottom:24px; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.45); }
-  .cmp-hero-tag { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; opacity:0.85; margin-bottom:8px; font-weight:600; font-family:'Times New Roman',serif; font-style:italic; }
+  .cmp-hero img { width:100%; height:100%; object-fit:cover; opacity:0.96; }
+  /* 바닥 다크 그라데이션 — 흰 글씨 어떤 배경에서도 읽힘 */
+  .cmp-hero::after { content:''; position:absolute; left:0; right:0; bottom:0; height:65%; background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.62) 100%); pointer-events:none; z-index:1; }
+  .cmp-hero-overlay { position:absolute; left:22px; right:22px; bottom:24px; color:#fff; z-index:2; }
+  .cmp-hero-overlay, .cmp-hero-overlay * { color:#fff !important; }
+  .cmp-hero-tag { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; opacity:0.88; margin-bottom:8px; font-weight:600; font-family:'Times New Roman',serif; font-style:italic; }
   .cmp-hero-title { font-size:28px; font-weight:800; letter-spacing:-0.025em; line-height:1.12; margin:0; word-break:keep-all; }
   .cmp-title-block { padding:24px 0 12px; text-align:center; }
-  .cmp-hero-title-stand { color:#111827; text-shadow:none; }
-  .cmp-section { margin:28px 0 24px; }
-  .cmp-section-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:#94a3b8; margin-bottom:10px; font-weight:700; font-family:'Times New Roman',serif; font-style:italic; }
-  .cmp-section-title { font-size:19px; font-weight:800; letter-spacing:-0.02em; color:#111827; margin:0 0 12px; line-height:1.32; word-break:keep-all; }
-  .cmp-section-body { font-size:12.5px; line-height:1.85; color:#4b5563; font-weight:400; letter-spacing:-0.012em; word-break:keep-all; overflow-wrap:anywhere; margin:0; }
+  .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
+  .cmp-section { margin:32px 0 20px; }
+  /* Chapter 라벨 제거됨 — 그냥 제목+본문 흐름으로 */
+  .cmp-section-title { font-size:18px; font-weight:800; letter-spacing:-0.025em; color:#111827; margin:0 0 10px; line-height:1.3; word-break:keep-all; }
+  /* 본문 — 단락 단위 <p> 로 쪼개진 각 문장. 얇고 자간/행간 좁게 (NEVV 톤) */
+  .cmp-section-body { font-size:12px; line-height:1.68; color:#475569; font-weight:400; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 5px; }
   .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
   .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
@@ -2483,10 +2487,9 @@ function _ciRenderPreview(html) {
   .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
   .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
-  /* 브랜드 스토리 — 모든 페이지 끝 (사용자 요청, 아주 작은 글씨 + 서술형) */
-  .cmp-brand-story { margin:36px 0 12px; padding:18px 0 6px; border-top:1px solid #e2e8f0; }
-  .cmp-bs-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:#94a3b8; margin-bottom:8px; font-weight:700; font-family:'Times New Roman',serif; font-style:italic; }
-  .cmp-bs-body { font-size:11px; line-height:1.85; color:#94a3b8; font-weight:400; letter-spacing:-0.01em; word-break:keep-all; margin:0; }
+  /* 브랜드 스토리 — 모든 페이지 끝 (사용자 요청, 아주 작은 글씨 + 서술형). 라벨 없이 단락만 */
+  .cmp-brand-story { margin:36px 0 12px; padding:20px 0 6px; border-top:1px solid #e2e8f0; }
+  .cmp-bs-body { font-size:10.5px; line-height:1.7; color:#94a3b8; font-weight:400; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 5px; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2507,18 +2510,18 @@ function _ciRenderPreview(html) {
 // 사용자 요청: '세련되고 깔끔, 제목 + 긴 설명, 글자 작게, 사진 다이나믹 배치'.
 // ═══════════════════════════════════════════════════════════════════
 
-// 2026-05-31: '—' / ' - ' (em-dash, en-dash, spaced hyphen) 같은 불릿 구분자를
-// 자연스러운 마침표로 변환 — 사용자 요청 '서술형으로 - 없이 그냥 이야기하듯'.
-// 결과: "병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…" (이후 파서가
-// 짧은 첫 문장은 제목으로, 긴 두번째 문장은 본문으로 자동 분리).
+// 2026-05-31: 불릿 구분자 / 옛 챕터 라벨 모두 정리 — '서술형으로 - 없이 그냥 이야기하듯'.
+// 결과 예: "Chapter 01 병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…"
 function _ciDenarcize(text) {
     if (!text) return '';
     return String(text)
-        .replace(/\s*[—–]\s*/g, '. ')   // em/en-dash → period
-        .replace(/\s+-\s+/g, '. ')                  // " - " (spaced hyphen) → period
-        .replace(/\s+·\s+/g, ' ')                   // middle-dot → space (·)
-        .replace(/\s*\.\s*/g, '. ')                 // period 앞뒤 공백 정규화
-        .replace(/\.{2,}/g, '.')                    // 중복 마침표 합치기
+        .replace(/CHAPTER\s+\d+\s*\.?/gi, '. ')       // 옛 designer 출력의 "Chapter 01" 라벨 제거
+        .replace(/Our\s+story\s*\.?/gi, '. ')         // 옛 브랜드 라벨도 제거 (재조립 시 다시 붙음)
+        .replace(/\s*[—–]\s*/g, '. ')                 // em/en-dash → period
+        .replace(/\s+-\s+/g, '. ')                    // " - " (spaced hyphen) → period
+        .replace(/\s+·\s+/g, ' ')                     // middle-dot → space
+        .replace(/\s*\.\s*/g, '. ')                   // period 앞뒤 공백 정규화
+        .replace(/\.{2,}/g, '.')                      // 중복 마침표 합치기
         .replace(/\s{2,}/g, ' ')
         .trim();
 }
@@ -2528,10 +2531,17 @@ function _ciDenarcize(text) {
 const _CMP_BRAND_STORY_KR = '우리는 업자를 위한 쇼핑몰입니다. 고객과 함께 성장할 수 있는 제품을 만들기 위해 매일 노력하고 있어요. 친환경 인쇄로 환경을 조금 더 아름답게 유지하고 싶습니다. 다만 친환경이라는 이유만으로 가격이 비싸다면 고객도 외면하기에, 더 저렴하게 만들 방법을 끊임없이 고민합니다. 우리가 사용하는 잉크는 그린가드 골드 등급의 친환경 잉크예요. 아기들에게도 안전한 수준이라, 안심하고 가까이 두실 수 있습니다.';
 
 function _ciBrandStoryHtml() {
+    // 문장 단위로 <p> 쪼개기 → 가독성 좋은 단락
+    const sentences = _CMP_BRAND_STORY_KR
+        .split(/(?<=[.!?。])\s+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    const bodyHtml = sentences
+        .map(s => `<p class="cmp-bs-body">${s}</p>`)
+        .join('');
     return `
 <section class="cmp-brand-story">
-    <div class="cmp-bs-label">Our story</div>
-    <p class="cmp-bs-body">${_CMP_BRAND_STORY_KR}</p>
+    ${bodyHtml}
 </section>`;
 }
 
@@ -2601,14 +2611,21 @@ function _ciAssembleDesignerHtml(copy, images) {
 </div>`;
     }
 
-    // Sections + 이미지 인터리브 — 4가지 스타일 순환 (full / split / circle / caption-row)
+    // Sections + 이미지 인터리브 — 4가지 스타일 순환 (full / split / circle / full)
+    // 2026-05-31: "Chapter NN" 라벨 제거 — 사용자 요청 '서술형'. 본문은 문장 단위 <p> 로
+    // 나누어 가독성 좋은 단락 (NEVV 레퍼런스처럼).
     (copy.sections || []).forEach((sec, i) => {
-        const chapter = String(i + 1).padStart(2, '0');
+        const bodySentences = (sec.body || '')
+            .split(/(?<=[.!?。])\s+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+        const bodyHtml = bodySentences
+            .map(s => `<p class="cmp-section-body">${esc(s)}</p>`)
+            .join('');
         html += `
 <section class="cmp-section">
-    <div class="cmp-section-label">Chapter ${chapter}</div>
     ${sec.title ? `<h2 class="cmp-section-title">${esc(sec.title)}</h2>` : ''}
-    ${sec.body ? `<p class="cmp-section-body">${esc(sec.body)}</p>` : ''}
+    ${bodyHtml}
 </section>`;
         if (!images[imgIdx]) return;
         const style = i % 4;
