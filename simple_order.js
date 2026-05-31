@@ -539,61 +539,207 @@
     /* 2026-05-31: 좌측 콘텐츠가 viewport 보다 커지면 (이미지 업로드 후 미리보기 등) 패널 안에서만 잘리도록 — 페이지 좌우 밀림 방지. */
     .so-left { overflow-x: hidden; min-width: 0; }
 
-    /* 2026-05-31: 모바일 — 우측 옵션창(상단) 세련된 다크 테마, 좌측 콘텐츠(하단) 흰색 테마 (모든 상품).
-       다크 영역: charcoal #18181f (검정+미세 회색) + 슬레이트 카드 #232333.
-       경계: 황금 그라데이션 라인 + 강한 그림자로 위/아래 명확히 분리.
-       모든 라벨/텍스트는 dark 영역에서 흰색 또는 옅은 색으로 강제 (인라인 brown #451a03 등 override). */
+    /* ════════════════════════════════════════════════════════════
+       2026-05-31: 프리미엄 다크 테마 — 미니멀, 단일 골드 액센트, 절제된 톤.
+       팔레트:
+         배경  #0f1014  →  #16171c  (charcoal gradient)
+         카드  #1c1d23  (subtle elevation)
+         보더  #2a2b33  (거의 안 보이는)
+         텍스트 #f5f5f7 (primary) / #a1a1aa (secondary) / #71717a (muted)
+         액센트 #c9a368  (champagne gold — 단 하나)
+       ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
-        background: linear-gradient(180deg, #18181f 0%, #1d1d27 100%);
-        color: #f4f4f5;
-        padding: 18px 16px 26px;
-        border-radius: 0 0 22px 22px;
-        box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5);
+        background: linear-gradient(180deg, #0f1014 0%, #16171c 100%);
+        color: #f5f5f7;
+        padding: 28px 20px 32px;
+        border-radius: 0 0 24px 24px;
+        letter-spacing: -0.01em;
     }
-    /* 다크 영역 안의 모든 텍스트/라벨 — 인라인 색상 override (가로/세로/인쇄면 라벨이 brown 으로 박혀 있어서 안 보임). */
+    /* 다크 영역 — 인라인 색상 강제 override */
+    .so-body > .so-right,
     .so-body > .so-right *,
     .so-body > .so-right label,
     .so-body > .so-right span,
-    .so-body > .so-right div { color: #e8e8ea; }
+    .so-body > .so-right div,
+    .so-body > .so-right h1,
+    .so-body > .so-right h2,
+    .so-body > .so-right h3,
+    .so-body > .so-right h4 { color: #f5f5f7; }
+
+    /* 섹션 카드 — 미니멀, 보더 없는 깊이 */
     .so-body > .so-right .so-section {
-        background: #232333; border: 1px solid #2f2f44; color: #f4f4f5;
-        border-radius: 12px;
+        background: #1c1d23;
+        border: 1px solid #2a2b33;
+        border-radius: 14px;
+        padding: 18px 16px;
+        margin-bottom: 12px;
     }
-    .so-body > .so-right .so-section-title { color: #fde047 !important; font-weight: 800; }
-    .so-body > .so-right .so-price-row { color: #d4d4d8; }
-    .so-body > .so-right .so-price-row.total span { color: #fde047 !important; font-weight: 900; }
-    .so-body > .so-right .so-ship-btn { background: #2a2a3e; color: #f4f4f5 !important; border: 1.5px solid #3d3d56; }
-    .so-body > .so-right .so-ship-btn.active { background: #fde047; color: #18181f !important; border-color: #fde047; }
-    .so-body > .so-right .so-ship-btn.active * { color: #18181f !important; }
-    .so-body > .so-right .so-qty-row { background: #2a2a3e; }
-    .so-body > .so-right .so-qty-input { background: #fff; color: #111 !important; border: none; }
-    .so-body > .so-right .so-qty-btn { background: #fde047; color: #18181f !important; border: none; }
-    .so-body > .so-right .so-tier-table > div { background: #232333; color: #fde047 !important; border: 1px solid #3d3d56; }
-    .so-body > .so-right .so-addon-card { background: #232333 !important; border-color: #3d3d56 !important; color: #f4f4f5 !important; }
-    .so-body > .so-right .so-addon-card * { color: #f4f4f5 !important; }
+    .so-body > .so-right .so-section-title {
+        color: #a1a1aa !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 14px !important;
+    }
+
+    /* 폼 라벨 — 가로/세로/인쇄면 등 brown 으로 박혀 있는 것 override */
+    .so-body > .so-right label {
+        color: #a1a1aa !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+    }
+
+    /* 인풋/셀렉트 — 다크 입력 (어두운 배경에 흰 글씨, border subtle) */
     .so-body > .so-right input[type="number"],
     .so-body > .so-right input[type="text"],
-    .so-body > .so-right textarea {
-        background: #fff !important; color: #111 !important; border: 1px solid #3d3d56;
-    }
+    .so-body > .so-right textarea,
     .so-body > .so-right select {
-        background: #fff !important; color: #111 !important; border: 1px solid #3d3d56;
+        background: #0f1014 !important;
+        color: #f5f5f7 !important;
+        border: 1px solid #2a2b33 !important;
+        border-radius: 8px;
+        font-family: inherit;
     }
-    /* 가격 박스 — 합계 강조 */
-    .so-body > .so-right .so-price-box .so-price-row.total {
-        border-top: 1px solid #3d3d56; padding-top: 8px; margin-top: 8px;
+    .so-body > .so-right input:focus,
+    .so-body > .so-right textarea:focus,
+    .so-body > .so-right select:focus {
+        outline: none;
+        border-color: #c9a368 !important;
     }
-    /* 액션 버튼 (장바구니 보기, 장바구니 담기, 바로 주문) — 다크에서도 잘 보이게 */
-    .so-body > .so-right .so-btn { font-weight: 800; }
-    .so-body > .so-right .so-btn-cart { background: #fde047 !important; color: #18181f !important; border: none; }
-    .so-body > .so-right .so-btn-buy  { background: linear-gradient(135deg, #b45309, #92400e) !important; color: #fff !important; border: none; }
-    .so-body > .so-right #soBtnViewCart { background: #2a2a3e !important; color: #fde047 !important; border: 1.5px solid #fde047 !important; }
 
+    /* 수량 입력 — 검정 배경 + 골드 +/- 버튼 */
+    .so-body > .so-right .so-qty-row {
+        background: #0f1014;
+        border: 1px solid #2a2b33;
+        border-radius: 10px;
+        padding: 6px;
+    }
+    .so-body > .so-right .so-qty-input {
+        background: transparent !important;
+        color: #f5f5f7 !important;
+        border: none !important;
+        font-weight: 700;
+        font-size: 16px;
+    }
+    .so-body > .so-right .so-qty-btn {
+        background: #1c1d23 !important;
+        color: #c9a368 !important;
+        border: 1px solid #2a2b33 !important;
+        font-weight: 700;
+        border-radius: 8px;
+    }
+    .so-body > .so-right .so-qty-btn:hover { background: #2a2b33 !important; }
+    .so-body > .so-right .so-qty-unit { color: #71717a !important; }
+
+    /* 배송 옵션 버튼 — 세그먼티드 컨트롤 스타일 */
+    .so-body > .so-right .so-ship-btn {
+        background: #1c1d23 !important;
+        color: #d4d4d8 !important;
+        border: 1px solid #2a2b33 !important;
+        border-radius: 10px;
+        font-weight: 500;
+        padding: 14px 10px;
+        transition: all .15s;
+    }
+    .so-body > .so-right .so-ship-btn * { color: inherit !important; }
+    .so-body > .so-right .so-ship-btn:hover {
+        background: #232429 !important;
+        border-color: #3a3b45 !important;
+    }
+    .so-body > .so-right .so-ship-btn.active {
+        background: #c9a368 !important;
+        color: #0f1014 !important;
+        border-color: #c9a368 !important;
+        font-weight: 700;
+    }
+    .so-body > .so-right .so-ship-btn.active * { color: #0f1014 !important; }
+
+    /* 수량 할인 tier table — 더 절제된 모노톤 */
+    .so-body > .so-right .so-tier-table > div {
+        background: #1c1d23 !important;
+        color: #a1a1aa !important;
+        border: 1px solid #2a2b33 !important;
+        border-radius: 8px;
+        font-size: 11px;
+    }
+    .so-body > .so-right .so-tier-table > div b { color: #c9a368 !important; }
+
+    /* addon 카드 (옵션) */
+    .so-body > .so-right .so-addon-card,
+    .so-body > .so-right .so-addon-card label {
+        background: #1c1d23 !important;
+        border-color: #2a2b33 !important;
+        color: #d4d4d8 !important;
+    }
+    .so-body > .so-right .so-addon-card *,
+    .so-body > .so-right .so-addon-card label * { color: inherit !important; }
+
+    /* 가격 박스 — 합계만 골드로 강조, 나머지는 차분 */
+    .so-body > .so-right .so-price-box .so-price-row {
+        color: #a1a1aa !important;
+        font-size: 13px;
+        padding: 4px 0;
+    }
+    .so-body > .so-right .so-price-box .so-price-row span,
+    .so-body > .so-right .so-price-box .so-price-row b { color: inherit !important; }
+    .so-body > .so-right .so-price-box .so-price-row.total {
+        border-top: 1px solid #2a2b33;
+        padding-top: 14px; margin-top: 10px;
+        font-size: 18px;
+    }
+    .so-body > .so-right .so-price-box .so-price-row.total span:first-child {
+        color: #f5f5f7 !important; font-weight: 600;
+    }
+    .so-body > .so-right .so-price-box .so-price-row.total span:last-child,
+    .so-body > .so-right .so-price-box .so-price-row.total b {
+        color: #c9a368 !important; font-weight: 800; font-size: 22px; letter-spacing: -0.02em;
+    }
+
+    /* 액션 버튼 — 3개 위계 정리 */
+    .so-body > .so-right .so-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .so-body > .so-right .so-btn {
+        font-weight: 600 !important; font-size: 14px;
+        padding: 16px 18px; border-radius: 12px; border: none;
+        letter-spacing: -0.01em; transition: all .15s; cursor: pointer;
+        font-family: inherit;
+    }
+    /* 1. 장바구니 보기 — ghost / lowest */
+    .so-body > .so-right #soBtnViewCart {
+        background: transparent !important;
+        color: #a1a1aa !important;
+        border: 1px solid #2a2b33 !important;
+    }
+    .so-body > .so-right #soBtnViewCart:hover {
+        background: #1c1d23 !important; color: #f5f5f7 !important;
+    }
+    /* 2. 장바구니 담기 — secondary */
+    .so-body > .so-right .so-btn-cart {
+        background: #1c1d23 !important;
+        color: #f5f5f7 !important;
+        border: 1px solid #c9a368 !important;
+    }
+    .so-body > .so-right .so-btn-cart:hover {
+        background: #c9a368 !important; color: #0f1014 !important;
+    }
+    /* 3. 바로 주문 — primary CTA */
+    .so-body > .so-right .so-btn-buy {
+        background: #c9a368 !important;
+        color: #0f1014 !important;
+        border: none !important;
+        box-shadow: 0 8px 24px -8px rgba(201,163,104,0.4);
+        font-weight: 700 !important;
+    }
+    .so-body > .so-right .so-btn-buy:hover {
+        background: #d4b07a !important;
+    }
+
+    /* 좌측 흰색 패널 — 다크와 명확히 분리 */
     .so-body > .so-left {
-        background: #fff; padding: 20px 16px;
-        border-radius: 22px 22px 0 0;
-        margin-top: -14px; position: relative; z-index: 2;
-        box-shadow: 0 -8px 24px -8px rgba(0,0,0,0.15);
+        background: #fff; padding: 28px 20px;
+        border-radius: 24px 24px 0 0;
+        margin-top: -12px; position: relative; z-index: 2;
+        box-shadow: 0 -8px 32px -12px rgba(0,0,0,0.18);
     }
 }
 
