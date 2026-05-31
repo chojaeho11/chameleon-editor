@@ -567,19 +567,25 @@ html, body { background: #ffffff !important; }
     .so-body > .so-right h3,
     .so-body > .so-right h4 { color: #1c1917; }
 
-    /* 섹션 카드 — 배경/보더/그림자/구분선 모두 제거. 콘텐츠가 베이지 위에 자연스럽게 흐름. */
+    /* 2026-05-31 v5: 각 섹션을 흰 카드 + 검정 보더 + 라운딩으로 명확히 구분 (사용자 요청). */
     .so-body > .so-right .so-section {
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 16px 8px;
-        margin-bottom: 8px;
+        background: #ffffff;
+        border: 1px solid #1c1917;
+        border-radius: 10px;
+        padding: 16px 14px;
+        margin-bottom: 10px;
         box-shadow: none;
     }
-    /* simple_order modal 의 .so-head 그림자/하단 보더 제거 — 모달 헤더와 베이지 영역 사이의 어두운 line 제거. */
-    #simpleOrderModal .so-head { box-shadow: none; border-bottom: 1px solid #f5ebe0; }
-    /* 흰색 좌측 패널의 상단 보더 제거 — 베이지에서 흰색으로 부드러운 전환만 */
-    .so-body > .so-left { border-top: none; }
+    /* 가격 박스도 같은 카드 스타일 */
+    .so-body > .so-right .so-price-box {
+        background: #ffffff !important;
+        border: 1px solid #1c1917 !important;
+        border-radius: 10px !important;
+        padding: 16px 14px !important;
+        margin-bottom: 10px !important;
+    }
+    /* simple_order modal 의 .so-head 그림자/하단 보더 제거 */
+    #simpleOrderModal .so-head { box-shadow: none; border-bottom: 1px solid #f1f1f1; }
     .so-body > .so-right .so-section-title {
         color: #a8a29e !important;
         font-size: 11px !important;
