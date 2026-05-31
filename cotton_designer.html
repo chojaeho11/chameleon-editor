@@ -729,15 +729,24 @@ a { text-decoration: none; color: inherit; }
 .layouts {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
 }
-/* 2026-05-23: 패브릭포스터(기본·초록) / 패턴 원단 인쇄 토글 버튼 */
+/* 2026-05-31: 전역 — 모든 fa- 아이콘 숨김 (사용자 요청 '아이콘들 안 보이게'). */
+.fa-solid, .fa-regular, .fa-brands, i[class*="fa-"] { display: none !important; }
+
+/* 2026-05-31: 패브릭포스터 / 패턴 원단 인쇄 — 이미지 썸네일 + 라벨 (시각 구분) */
 .poster-btn, .pattern-toggle-btn {
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    width:100%; padding:14px; border-radius:10px; cursor:pointer;
+    display:flex; align-items:center; gap:12px;
+    width:100%; padding:10px 14px; border-radius:10px; cursor:pointer;
     font-weight:800; font-size:14px; box-sizing:border-box; margin-bottom:8px;
     transition:all 0.15s; font-family:inherit;
+    text-align:left;
+}
+.poster-btn img, .pattern-toggle-btn img {
+    width:54px; height:54px; object-fit:cover; border-radius:8px;
+    flex-shrink:0; background:#f1f5f9;
 }
 .poster-btn { border:2px solid #16a34a; background:#f0fdf4; color:#15803d; }
 .poster-btn.active { background:#16a34a; color:#fff; }
+.poster-btn.active img { box-shadow:0 0 0 2px #fff; }
 .pattern-toggle-btn { border:2px solid var(--cream-dark); background:#fff; color:var(--brown); }
 .pattern-toggle-btn:hover { border-color:var(--accent); }
 .pattern-toggle-btn.active { border-color:var(--brown-dark); background:var(--cream-dark); }
@@ -1107,17 +1116,16 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 레이아웃 (2026-05-23: 기본=패브릭포스터, 패턴 원단 인쇄 선택 시에만 4개 패턴 노출) -->
+        <!-- 2026-05-31: '레이아웃' 라벨 제거 + 이미지 썸네일 (사용자 요청). poster.jpg/patten.jpg 미리보기로 시각 구분. -->
         <div class="side-card">
-            <div class="side-card-title" data-cdi18n="side_layout">레이아웃</div>
             <!-- 패브릭포스터 (기본·초록) -->
             <div id="posterBtn" class="poster-btn active" onclick="window._cdSelectLayout('centered')">
-                <i class="fa-solid fa-image"></i>
+                <img src="/fabric/poster.jpg" alt="">
                 <span data-cdi18n="layout_poster">패브릭포스터</span>
             </div>
-            <!-- 패턴 원단 인쇄 (누르면 4개 패턴 + 배경색 + 패턴사이즈 노출) -->
+            <!-- 패턴 원단 인쇄 -->
             <div id="patternToggle" class="pattern-toggle-btn" onclick="window._cdEnterPatternMode()">
-                <i class="fa-solid fa-table-cells"></i>
+                <img src="/fabric/patten.jpg" alt="">
                 <span data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</span>
             </div>
             <!-- 4개 패턴 (패턴 원단 인쇄 클릭 시 표시) -->
