@@ -160,12 +160,12 @@ window.__CD_I18N = {
     height_unl: { ko:'세로 (mm)', ja:'縦 (mm)', en:'Height (mm)' },
     hoebae_label: { ko:'회배 (1m² 기준)', ja:'面積 (m²)', en:'Units (1m² base)' },
     hoebae_price: { ko:'회배 단가 × 회배 수', ja:'単価 × 数量', en:'Unit price × count' },
-    hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 15,000원 / 그 이상 회배×15,000원.', ja:'面積 = W × H ÷ 100万。 ≤0.5m² 800円 / <1m² 1,500円 / ≥1m² m²×1,500円。', en:'Units = W × H ÷ 1M. ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units.' },
+    hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.', ja:'面積 = W × H ÷ 100万。 ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円。', en:'Units = W × H ÷ 1M. ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units.' },
     seam_notice: { ko:'⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 縦横ともに1300mm超の場合、継ぎ縫い処理となります (+1,000円)', en:'⚠️ Seam joining applies only when both width and height exceed 1300mm (+$10)' },
     seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
     tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5m²(半マ)以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
     tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1m²未満は1m²価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
-    tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원', ja:'単価: ≤0.5m² 800円 / <1m² 1,500円 / ≥1m² m²×1,500円', en:'Pricing: ≤0.5 unit $8 / <1 unit $15 / ≥1 unit $15 × units' },
+    tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 1회배 이상 회배×12,000원', ja:'単価: ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円', en:'Pricing: ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
     finish_required: { ko:'필수 / 제곱미터당', ja:'必須 / m²あたり', en:'Required / per m²' },
     finish_roll: { ko:'롤인쇄', ja:'ロール印刷', en:'Roll Print' },
@@ -208,7 +208,7 @@ window.__CD_I18N = {
     side_bgcolor_desc: { ko:'투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.', ja:'透明PNGの場合に背景色が反映されます。通常画像では隠れることがあります。', en:'Background shows through transparent PNGs. Solid images may cover it.' },
     side_bgcolor_custom: { ko:'직접 선택', ja:'カラー選択', en:'Custom' },
     side_qty: { ko:'주문 수량', ja:'注文数量', en:'Order Quantity' },
-    p_unit: { ko:'출력 단가 (회배×15,000)', ja:'印刷単価 (m²×15,000)', en:'Unit price (units×15,000)' },
+    p_unit: { ko:'출력 단가 (회배×12,000)', ja:'印刷単価 (m²×12,000)', en:'Unit price (units×12,000)' },
     p_qty: { ko:'수량', ja:'数量', en:'Qty' },
     p_finish: { ko:'마감 / 회배', ja:'仕上げ / m²', en:'Finish / unit' },
     p_total: { ko:'합계', ja:'合計', en:'Total' },
@@ -300,8 +300,8 @@ window.__CD_I18N = {
     ship_fee:         { ko:'5,000원', ja:'1,000円', en:'$10' },
     samplebook_label: { ko:'무료 샘플북 신청', ja:'無料サンプルブック申請', en:'Free Sample Book' },
     samplebook_sub:   { ko:'원단 주문 시 신청 가능', ja:'生地ご注文時にお申込み可', en:'Available with fabric order' },
-    // 2026-05-31: 단일 티어 — 100+ 50% (사용자 요청).
-    bulk_title: { ko:'대량 구매 할인', ja:'まとめ買い割引', en:'Bulk Discount' },
+    // 2026-06-01: 라벨 변경 — '대량 구매 할인' → '업자 할인' (KR) / '販売店割引' (JP, 의류 도매상 자연 표현) / 'Reseller Discount' (EN).
+    bulk_title: { ko:'업자 할인', ja:'販売店割引', en:'Reseller Discount' },
     bulk_t10:   { ko:'10개+', ja:'10個+', en:'10+' },
     bulk_t100:  { ko:'100개 이상', ja:'100点以上', en:'100+ pieces' },
     bulk_t500:  { ko:'500개+', ja:'500個+', en:'500+' },
@@ -1342,7 +1342,7 @@ a { text-decoration: none; color: inherit; }
             </div>
             <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
                 <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                <span data-cdi18n="hoebae_hint">회배 = 가로(cm) × 세로(cm) ÷ 10,000 (1m² 기준). 단가: 0.5회배(반마) 이하 8,000원 / 1회배 미만 15,000원 / 1회배 이상 회배×15,000원. 마감도 회배 비례.</span>
+                <span data-cdi18n="hoebae_hint">회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.</span>
             </div>
         </div>
 
@@ -1353,22 +1353,21 @@ a { text-decoration: none; color: inherit; }
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" data-cdi18n="finish_required">필수 / 제곱미터당</span>
             </div>
             <div id="finishOptions" style="display:flex; flex-direction:column; gap:6px;">
-                <!-- 2026-05-12: 순서 변경 — 오버록(기본)/인터록/말아박기/가재단. 롤인쇄는 옵션에서 제외 -->
-                <!-- 2026-05-14: 마감 가격 인하 — 오버록 5000→3000, 인터록 7000→4000, 말아박기 8000→4000, 가재단 3000→1000 -->
-                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="3000">
+                <!-- 2026-06-01: 마감 가격 재조정 — 오버록 4000 / 인터록 5000 / 말아박기 6000 / 가재단 1000 -->
+                <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="4000">
                     <input type="radio" name="finish" value="overlock" checked onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_overlock">오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_overlock_sub">올풀림 방지</span></span>
-                    <span class="fin-opt-price">+3,000원/회배</span>
+                    <span class="fin-opt-price">+4,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="4000">
+                <label class="fin-opt" data-finish="interlock" data-name="인터록" data-extra="5000">
                     <input type="radio" name="finish" value="interlock" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_interlock">인터록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_interlock_sub">튼튼한 이중 마감</span></span>
-                    <span class="fin-opt-price">+4,000원/회배</span>
+                    <span class="fin-opt-price">+5,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="4000">
+                <label class="fin-opt" data-finish="rolledhem" data-name="말아박기" data-extra="6000">
                     <input type="radio" name="finish" value="rolledhem" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_rolledhem">말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_rolledhem_sub">고급 접어박기</span></span>
-                    <span class="fin-opt-price">+4,000원/회배</span>
+                    <span class="fin-opt-price">+6,000원/회배</span>
                 </label>
                 <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="1000">
                     <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
@@ -1514,11 +1513,11 @@ a { text-decoration: none; color: inherit; }
         <!-- 가격 + 주문 -->
         <div class="side-card">
             <div class="price-summary">
-                <div class="price-row"><span data-cdi18n="p_unit">출력 단가</span><span id="pUnit">15,000원</span></div>
+                <div class="price-row"><span data-cdi18n="p_unit">출력 단가</span><span id="pUnit">12,000원</span></div>
                 <div class="price-row"><span data-cdi18n="p_qty">수량</span><span id="pQty">1개</span></div>
                 <div class="price-row"><span data-cdi18n="p_finish">마감 / 회배</span><span id="pFinish">-</span></div>
                 <div class="price-row" id="pDiscountRow" style="display:none;"><span data-cdi18n="p_discount">대량 할인</span><span id="pDiscount" style="color:#dc2626;">-0원</span></div>
-                <div class="price-row total"><span data-cdi18n="p_total">합계</span><span id="pTotal">15,000원</span></div>
+                <div class="price-row total"><span data-cdi18n="p_total">합계</span><span id="pTotal">12,000원</span></div>
             </div>
             <!-- 2026-05-12: disabled 제거 — 파일 없을 때도 클릭하면 기존 카트 보기 -->
             <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()">
