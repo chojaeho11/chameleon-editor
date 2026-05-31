@@ -184,16 +184,17 @@
     display: flex; flex-direction: column;
     border-radius: 14px; border: 1px solid #ede4d3;
 }
+/* 2026-05-31: 상품 배너 — 썸네일 크게 (사용자 요청). 데스크탑 92px, 모바일 96px. */
 .so-prod-banner {
-    display: flex; gap: 12px; padding-bottom: 14px; margin-bottom: 14px;
-    border-bottom: 1px solid #f1f1f1;
+    display: flex; gap: 14px; padding-bottom: 14px; margin-bottom: 14px;
+    border-bottom: 1px solid #f1f1f1; align-items: center;
 }
 .so-prod-img {
-    width: 64px; height: 64px; border-radius: 8px; background: #f5f5f5;
+    width: 92px; height: 92px; border-radius: 10px; background: #f5f5f5;
     object-fit: cover; flex-shrink: 0;
 }
 .so-prod-meta { flex: 1; min-width: 0; }
-.so-prod-name { font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
+.so-prod-name { font-size: 17px; font-weight: 800; color: #1a1a1a; margin: 0 0 4px; line-height: 1.3; }
 .so-prod-desc { font-size: 11.5px; color: #777; line-height: 1.5; }
 
 .so-upload-section-label {
@@ -532,11 +533,37 @@
     .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
     /* 2026-05-31: 모바일 — 우측 옵션(주문수량/가격/장바구니) 패널이 먼저, 좌측 (이미지업로드/상세/리뷰) 가 뒤로.
        column-reverse 대신 explicit order 사용 — 일부 브라우저에서 column-reverse 가 children 렌더 순서를 안 바꾸는 경우가 있음. */
-    .so-body { flex-direction: column; padding: 16px; gap: 16px; }
+    .so-body { flex-direction: column; padding: 0; gap: 0; background: #0f0f1a; }
     .so-body > .so-left  { order: 2; }
     .so-body > .so-right { order: 1; position: static; width: 100%; max-width: none; max-height: none; overflow: visible; }
     /* 2026-05-31: 좌측 콘텐츠가 viewport 보다 커지면 (이미지 업로드 후 미리보기 등) 패널 안에서만 잘리도록 — 페이지 좌우 밀림 방지. */
     .so-left { overflow-x: hidden; min-width: 0; }
+
+    /* 2026-05-31: 모바일 — 우측 옵션창(상단) 검정 테마, 좌측 콘텐츠(하단) 흰색 테마 (사용자 요청, 모든 상품). */
+    .so-body > .so-right {
+        background: #0f0f1a; color: #f5f5f4;
+        padding: 16px 16px 24px; border-radius: 0 0 18px 18px;
+    }
+    .so-body > .so-right .so-section { background: #1a1a2e; border-color: #2d2d44; color: #f5f5f4; }
+    .so-body > .so-right .so-section-title { color: #fde047; }
+    .so-body > .so-right .so-price-row { color: #d4d4d8; }
+    .so-body > .so-right .so-price-row.total span:last-child { color: #fde047; }
+    .so-body > .so-right .so-ship-btn { background: #1a1a2e; color: #e5e5e5; border-color: #3a3a52; }
+    .so-body > .so-right .so-ship-btn.active { background: #fde047; color: #111; border-color: #fde047; }
+    .so-body > .so-right .so-qty-row { background: #2a2a3e; color: #fff; }
+    .so-body > .so-right .so-qty-input { background: #fff; color: #111; }
+    .so-body > .so-right .so-qty-btn { background: #fde047; color: #111; }
+    .so-body > .so-right .so-tier-table > div { background: #1a1a2e; color: #fde047; }
+    .so-body > .so-right .so-addon-card { background: #1a1a2e !important; border-color: #3a3a52 !important; color: #e5e5e5 !important; }
+    .so-body > .so-right input[type="number"] { background: #fff; color: #111; }
+    .so-body > .so-right input[type="text"] { background: #fff; color: #111; }
+    .so-body > .so-right textarea { background: #fff; color: #111; }
+    .so-body > .so-right select { background: #fff; color: #111; }
+
+    .so-body > .so-left {
+        background: #fff; padding: 20px 16px;
+        border-radius: 18px 18px 0 0; margin-top: -6px; position: relative; z-index: 2;
+    }
 }
 
 /* 우측: 옵션 패널 — sticky + 내부 스크롤. 내부 끝에 도달하면 페이지로 자연스럽게 전파 (사용자 요청). */
@@ -767,7 +794,8 @@
     .so-upload-icon { font-size: 40px; }
     .so-upload-title { font-size: 15px; }
     .so-prod-banner { padding-bottom: 10px; margin-bottom: 10px; }
-    .so-prod-img { width: 52px; height: 52px; }
+    .so-prod-img { width: 96px; height: 96px; }   /* 2026-05-31: 모바일에서도 크게 */
+    .so-prod-name { font-size: 18px; }
     .so-prod-name { font-size: 15px; }
 }
         `;
@@ -829,15 +857,9 @@
                 <span>${tr('해외 배송은 FOB 방식으로 배송됩니다.', '海外配送はFOB方式で発送されます。', 'International orders are shipped on FOB terms.')}</span>
               </div>
             </div>
-            <!-- 2026-05-13: 가벽 상품 전용 안내 (버튼 형태) — 일반 설명 대신 표시 -->
+            <!-- 2026-05-13: 가벽 상품 전용 안내 — 2026-05-31: 알약 버튼 제거, 설명만 가운데 정렬로 표시 (사용자 요청). -->
             <div id="soWallGuide" style="display:none; margin-top:10px;">
-              <div id="soWallGuideChips" style="display:flex; flex-wrap:wrap; gap:6px;">
-                <span class="so-wall-info-btn">📐 ${tr('가로 1m 단위', '横 1m単位', 'Width per 1m')}</span>
-                <span class="so-wall-info-btn" id="soWallChipHeight">📏 ${tr('세로 2 · 2.2 · 2.4 · 3m', '縦 2/2.2/2.4/3m', 'Height 2/2.2/2.4/3m')}</span>
-                <span class="so-wall-info-btn">🎨 ${tr('작업은 1/10 사이즈', 'デザイン1/10サイズ', '1/10 scale design')}</span>
-                <span class="so-wall-info-btn">📄 ${tr('파일은 PDF로', 'PDFファイルで', 'PDF file please')}</span>
-              </div>
-              <div id="soWallGuideText" style="font-size:12px; color:#451a03; margin-top:10px; line-height:1.6; background:#faf6ed; padding:10px 12px; border-radius:8px; border-left:3px solid #b35900;">
+              <div id="soWallGuideText" style="font-size:13px; color:#451a03; line-height:1.7; background:#faf6ed; padding:14px 16px; border-radius:10px; border:1px solid #fde68a; text-align:center;">
                 <span id="soWallGuideRange">${tr('허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.', 'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。', 'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.')}</span><br><br>
                 <b>${tr('🎨 디자인 작업', 'デザイン', 'Design')}:</b> ${tr('실제 사이즈의 1/10로 작업해주세요. 예: 3m × 2.4m 가벽 → 30cm × 24cm 작업.', '実サイズの1/10で作業。例：3m×2.4m → 30cm×24cm。', 'Work at 1/10 of actual size. e.g., 3m × 2.4m wall → 30cm × 24cm.')}<br>
                 <b>${tr('📄 파일 형식', 'ファイル形式', 'Format')}:</b> ${tr('PDF 권장 (인쇄 품질 최상). PNG/JPG 도 가능.', 'PDF推奨。PNG/JPGも可。', 'PDF recommended. PNG/JPG also OK.')}
@@ -1315,9 +1337,7 @@
 <!-- 카트 드로어 (우측 슬라이드) — simpleOrderModal 바깥. 메인 nav(60000) 위에 떠야 하므로 별도 stacking context. -->
 <div class="so-cart-drawer-overlay" id="soCartOverlay" onclick="window._soToggleCart(false)"></div>
 <div class="so-cart-drawer" id="soCartDrawer">
-  <!-- 2026-05-31: 모바일에서 헤더가 메인 nav 뒤로 숨어 안 보이는 케이스 대비, 항상 보이는 floating X 추가. -->
-  <button id="soCartCloseFloat" onclick="window._soToggleCart(false)" aria-label="Close cart"
-          style="position:absolute; top:10px; right:10px; z-index:999999; width:44px; height:44px; border-radius:50%; border:2px solid rgba(253,224,71,0.6); background:rgba(15,23,42,0.85); color:#fde047; font-size:24px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; line-height:1; padding:0;">×</button>
+  <!-- 2026-05-31: z-index 999999 로 부모(.so-cart-drawer) 가 최상단에 있어 헤더의 기본 X 가 잘 보임 → 별도 floating X 는 제거. -->
   <div class="so-cart-head">
     <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
     <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
