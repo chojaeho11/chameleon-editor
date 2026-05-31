@@ -486,11 +486,20 @@ a { text-decoration: none; color: inherit; }
 
 /* === 좌측 캔버스 영역 === */
 /* 2026-05-30: sticky/overflow 제거 — 좌측 컬럼은 자연 스크롤 (업로드 → 상세 → 리뷰 연속 흐름). */
+/* 2026-05-31: overflow-x:hidden + min-width:0 — 이미지 업로드 후 캔버스/룰러가 viewport 보다 커지면 패널 안에서만 잘리도록. */
 .canvas-panel {
     background: #fff; border: 1px solid var(--border); border-radius: 12px;
     padding: 24px; min-height: 480px;
     display: flex; flex-direction: column;
     align-self: flex-start;
+    overflow-x: hidden;
+    min-width: 0;
+}
+
+/* 2026-05-31: 모바일에서 우측 옵션(주문 입력) 패널이 먼저 보이고 좌측(업로드/상세/리뷰)이 뒤로 가게 — 사용자 요청. */
+@media (max-width: 980px) {
+    .designer-wrap > .canvas-panel { order: 2; }
+    .designer-wrap > aside.sidebar { order: 1; }
 }
 .canvas-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -1640,6 +1649,6 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=78"></script>
+<script src="/cotton_designer.js?v=79"></script>
 </body>
 </html>
