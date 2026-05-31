@@ -139,7 +139,29 @@ const state = {
     accName: '',
     accExtra: 0,
     // 4) 이어박기 (130cm 초과 시 자동 +10,000원)
-    seamExtra: 0
+    seamExtra: 0,
+    // 2026-05-31: 패턴 원단 인쇄 — 롤폭/야드. 패턴 모드에서만 사용.
+    rollWidth: 'wide',   // 'wide' (130cm 13000원/마) | 'narrow' (100cm 10000원/마) | 'supplied' (3000원/마)
+    rollYards: 1
+};
+const ROLL_PRICE_PER_YARD = { wide: 13000, narrow: 10000, supplied: 3000 };
+window._cdPickRollWidth = function(w) {
+    if (!ROLL_PRICE_PER_YARD[w]) return;
+    state.rollWidth = w;
+    document.querySelectorAll('.roll-w-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.roll === w); });
+    if (typeof updatePrice === 'function') updatePrice();
+};
+window._cdOnRollYardsInput = function() {
+    var el = document.getElementById('rollYards');
+    var v = Math.max(1, Math.min(9999, parseInt(el.value || '1', 10) || 1));
+    state.rollYards = v;
+    el.value = v;
+    if (typeof updatePrice === 'function') updatePrice();
+};
+window._cdRollYardsChg = function(d) {
+    state.rollYards = Math.max(1, Math.min(9999, (state.rollYards || 1) + d));
+    var el = document.getElementById('rollYards'); if (el) el.value = state.rollYards;
+    if (typeof updatePrice === 'function') updatePrice();
 };
 
 // 언어별 원단/색상 이름 매핑 (i18n 사전과 동기화)
@@ -679,6 +701,13 @@ window._cdSelectLayout = function(name) {
     var _ic = document.getElementById('imgSizeCard');    if (_ic) _ic.style.display = isPoster ? 'none' : '';
     var _pb = document.getElementById('posterBtn');      if (_pb) _pb.classList.toggle('active', isPoster);
     var _pt = document.getElementById('patternToggle');  if (_pt) _pt.classList.toggle('active', !isPoster);
+    // 2026-05-31: 패턴 모드 전용 카드 = 롤폭+야드. 패턴 모드일 때만 노출.
+    //   패브릭포스터에만 의미 있는 카드 (출력사이즈/마감/고리/부자재) 는 패턴 모드에서 숨김.
+    var _rc = document.getElementById('rollCard');       if (_rc) _rc.style.display = isPoster ? 'none' : '';
+    var _os = document.getElementById('outputSizeCard'); if (_os) _os.style.display = isPoster ? '' : 'none';
+    var _fc = document.getElementById('finishCard');     if (_fc) _fc.style.display = isPoster ? '' : 'none';
+    var _hc = document.getElementById('hookCard');       if (_hc) _hc.style.display = isPoster ? '' : 'none';
+    var _ac = document.getElementById('accCard');        if (_ac) _ac.style.display = isPoster ? '' : 'none';
     // 2026-05-14: 다른 레이아웃 → centered 전환 시 이미지 사이즈에 출력 사이즈를 맞춤 (꽉차게).
     //   이미 centered 였거나 이미지 미로드면 skip.
     if (name === 'centered' && prev !== 'centered' && state.img && state.imgAspect) {
@@ -842,6 +871,30 @@ function getHoebaeTier() {
 }
 
 function updatePrice() {
+    // 2026-05-31: 패턴 원단 인쇄 모드 — 롤 폭(단가) × 마 수, 마감/고리/부자재/회배 무시.
+    if (state.layout !== 'centered') {
+        const perYard = ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide;
+        const yards = Math.max(1, state.rollYards || 1);
+        const subtotal = perYard * yards;
+        const disc = getVolumeDiscount(yards);
+        const discountAmt = Math.round(subtotal * disc.pct / 100);
+        const total = subtotal - discountAmt;
+
+        document.getElementById('pUnit').textContent = cdFmtPrice(perYard) + ' / 1마';
+        document.getElementById('pQty').textContent = yards + '마';
+        const pf = document.getElementById('pFinish'); if (pf) pf.innerHTML = '';
+        const dRow = document.getElementById('pDiscountRow');
+        if (disc.pct > 0) {
+            dRow.style.display = '';
+            var bd = document.getElementById('pDiscBadge'); if (bd) bd.textContent = disc.label;
+            document.getElementById('pDiscount').textContent = '-' + cdFmtPrice(discountAmt);
+        } else {
+            dRow.style.display = 'none';
+        }
+        document.getElementById('pTotal').textContent = cdFmtPrice(total);
+        return;
+    }
+
     const rawHoebae = calcHoebae();           // 표시용 (실제 비율)
     const hoebae = calcBillableHoebae();      // 청구용 회배 (반마=0.5 / 미만=1 / 그외 실제)
     const itemPrice = calcItemPrice();        // 출력 단가 (반마 8,000 / 1배 미만 15,000 / 그외 회배×15,000)
@@ -1599,15 +1652,28 @@ function captureThumbDataUrl() {
 function buildCartItem() {
     const f = getFabric();
     if (!f) { showToast(window.cdT?window.cdT("alert_no_fabric"):"원단을 선택해주세요"); return null; }
-    const rawHoebae = calcHoebae();
-    const hoebae = calcBillableHoebae();      // 반마=0.5 / 미만=1 / 그외 실제
-    const itemPrice = calcItemPrice();        // 반마 8,000 / 1배 미만 15,000 / 그외 회배×15,000
-    const finishPerItem = Math.round((state.finishExtra||0) * hoebae);
-    const otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
-    const subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
-    const disc = getVolumeDiscount(state.orderQty);
-    const discountAmt = Math.round(subtotal * disc.pct / 100);
-    const price = subtotal - discountAmt;
+    // 2026-05-31: 패턴 모드는 회배/마감/고리/부자재 무시, 롤폭×야드로 계산.
+    const isPatternMode = (state.layout !== 'centered');
+    let rawHoebae, hoebae, itemPrice, finishPerItem, otherPerItem, subtotal, disc, discountAmt, price;
+    if (isPatternMode) {
+        const perYard = ROLL_PRICE_PER_YARD[state.rollWidth] || ROLL_PRICE_PER_YARD.wide;
+        const yards = Math.max(1, state.rollYards || 1);
+        rawHoebae = 0; hoebae = 0; itemPrice = perYard; finishPerItem = 0; otherPerItem = 0;
+        subtotal = perYard * yards;
+        disc = getVolumeDiscount(yards);
+        discountAmt = Math.round(subtotal * disc.pct / 100);
+        price = subtotal - discountAmt;
+    } else {
+        rawHoebae = calcHoebae();
+        hoebae = calcBillableHoebae();
+        itemPrice = calcItemPrice();
+        finishPerItem = Math.round((state.finishExtra||0) * hoebae);
+        otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
+        subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
+        disc = getVolumeDiscount(state.orderQty);
+        discountAmt = Math.round(subtotal * disc.pct / 100);
+        price = subtotal - discountAmt;
+    }
 
     const cleanFile = state.imgFileName
         ? state.imgFileName.replace(/\.[^.]+$/, '').replace(/^[a-f0-9-]{20,}$/i, '').slice(0, 20)
@@ -1644,13 +1710,29 @@ function buildCartItem() {
         designerPatternId:  state.designerPatternId || null,
         designerName:       state.designerName || null,
         designerOriginalUrl: state.designerOriginalUrl || null,
-        qtyValue: state.orderQty,
-        qtyLabel: state.orderQty + (window.cdT ? (window.cdT('qty_unit') || '개') : '개'),
-        finishCode: state.finishCode, finishName: state.finishName, finishUnit: state.finishExtra || 0, finishTotal: finishPerItem,
-        hookCode: state.hookCode, hookName: state.hookName, hookExtra: state.hookExtra || 0,
-        accCode: state.accCode, accName: state.accName, accExtra: state.accExtra || 0,
-        seamExtra: state.seamExtra || 0,
-        oversize: (state.orderWcm > ROLL_MAX_WIDTH_CM && state.orderHcm > ROLL_MAX_WIDTH_CM),
+        qtyValue: isPatternMode ? state.rollYards : state.orderQty,
+        qtyLabel: isPatternMode
+            ? state.rollYards + (window.cdT ? (window.cdT('roll_yard_unit') || '마') : '마')
+            : state.orderQty + (window.cdT ? (window.cdT('qty_unit') || '개') : '개'),
+        finishCode: isPatternMode ? '' : state.finishCode,
+        finishName: isPatternMode ? '' : state.finishName,
+        finishUnit: isPatternMode ? 0 : (state.finishExtra || 0),
+        finishTotal: finishPerItem,
+        hookCode: isPatternMode ? '' : state.hookCode,
+        hookName: isPatternMode ? '' : state.hookName,
+        hookExtra: isPatternMode ? 0 : (state.hookExtra || 0),
+        accCode: isPatternMode ? '' : state.accCode,
+        accName: isPatternMode ? '' : state.accName,
+        accExtra: isPatternMode ? 0 : (state.accExtra || 0),
+        seamExtra: isPatternMode ? 0 : (state.seamExtra || 0),
+        oversize: !isPatternMode && (state.orderWcm > ROLL_MAX_WIDTH_CM && state.orderHcm > ROLL_MAX_WIDTH_CM),
+        // 2026-05-31: 패턴 모드 — 롤 폭/야드 보존 (주문서·관리자 화면용)
+        rollWidth: isPatternMode ? state.rollWidth : null,
+        rollWidthLabel: isPatternMode
+            ? ({ wide: '대폭 (130cm)', narrow: '소폭 (100cm)', supplied: '원단 제공' })[state.rollWidth]
+            : null,
+        rollYards: isPatternMode ? state.rollYards : null,
+        rollPerYard: isPatternMode ? (ROLL_PRICE_PER_YARD[state.rollWidth] || 0) : null,
         subtotal: subtotal,
         discountPct: disc.pct,
         discountAmt: discountAmt,
