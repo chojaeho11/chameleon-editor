@@ -540,22 +540,26 @@
     .so-left { overflow-x: hidden; min-width: 0; }
 
     /* ════════════════════════════════════════════════════════════
-       2026-05-31: 프리미엄 다크 테마 — 미니멀, 단일 골드 액센트, 절제된 톤.
+       2026-05-31 v2: 흰색 베이스 + 딥레드 액센트 (사용자 레퍼런스 토마토 페이지 톤).
        팔레트:
-         배경  #0f1014  →  #16171c  (charcoal gradient)
-         카드  #1c1d23  (subtle elevation)
-         보더  #2a2b33  (거의 안 보이는)
-         텍스트 #f5f5f7 (primary) / #a1a1aa (secondary) / #71717a (muted)
-         액센트 #c9a368  (champagne gold — 단 하나)
+         배경     #ffffff (흰색)
+         서브배경 #faf6f5 (베이지 워시)
+         카드     #ffffff (보더만으로 영역 구분)
+         보더     #ede4e0 (warm grey)
+         텍스트   #1c1917 (almost black) / #57534e (warm grey) / #a8a29e (muted)
+         프라이머리 #a82a2a (deep brand red)
+         프라이머리-호버 #8b1e1e
+         성공/안전 #16a34a (forest green, 안내 카드용)
+         별/평점   #fbbf24
        ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
-        background: linear-gradient(180deg, #0f1014 0%, #16171c 100%);
-        color: #f5f5f7;
-        padding: 28px 20px 32px;
+        background: #faf6f5;
+        color: #1c1917;
+        padding: 24px 18px 28px;
         border-radius: 0 0 24px 24px;
         letter-spacing: -0.01em;
     }
-    /* 다크 영역 — 인라인 색상 강제 override */
+    /* 인라인 brown 색상 등 override — 모든 텍스트 통일 */
     .so-body > .so-right,
     .so-body > .so-right *,
     .so-body > .so-right label,
@@ -564,18 +568,19 @@
     .so-body > .so-right h1,
     .so-body > .so-right h2,
     .so-body > .so-right h3,
-    .so-body > .so-right h4 { color: #f5f5f7; }
+    .so-body > .so-right h4 { color: #1c1917; }
 
-    /* 섹션 카드 — 미니멀, 보더 없는 깊이 */
+    /* 섹션 카드 — 흰 배경 + 얇은 warm grey 보더 */
     .so-body > .so-right .so-section {
-        background: #1c1d23;
-        border: 1px solid #2a2b33;
+        background: #ffffff;
+        border: 1px solid #ede4e0;
         border-radius: 14px;
         padding: 18px 16px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(168,42,42,0.04);
     }
     .so-body > .so-right .so-section-title {
-        color: #a1a1aa !important;
+        color: #a8a29e !important;
         font-size: 11px !important;
         font-weight: 600 !important;
         letter-spacing: 0.08em;
@@ -583,21 +588,21 @@
         margin-bottom: 14px !important;
     }
 
-    /* 폼 라벨 — 가로/세로/인쇄면 등 brown 으로 박혀 있는 것 override */
+    /* 폼 라벨 — 가로/세로/인쇄면 등 모두 통일 */
     .so-body > .so-right label {
-        color: #a1a1aa !important;
+        color: #57534e !important;
         font-size: 12px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
     }
 
-    /* 인풋/셀렉트 — 다크 입력 (어두운 배경에 흰 글씨, border subtle) */
+    /* 인풋/셀렉트 — 흰 배경, 따뜻한 보더 */
     .so-body > .so-right input[type="number"],
     .so-body > .so-right input[type="text"],
     .so-body > .so-right textarea,
     .so-body > .so-right select {
-        background: #0f1014 !important;
-        color: #f5f5f7 !important;
-        border: 1px solid #2a2b33 !important;
+        background: #ffffff !important;
+        color: #1c1917 !important;
+        border: 1px solid #ede4e0 !important;
         border-radius: 8px;
         font-family: inherit;
     }
@@ -605,38 +610,39 @@
     .so-body > .so-right textarea:focus,
     .so-body > .so-right select:focus {
         outline: none;
-        border-color: #c9a368 !important;
+        border-color: #a82a2a !important;
+        box-shadow: 0 0 0 3px rgba(168,42,42,0.1);
     }
 
-    /* 수량 입력 — 검정 배경 + 골드 +/- 버튼 */
+    /* 수량 입력 — 흰 배경 + 딥레드 +/- 버튼 */
     .so-body > .so-right .so-qty-row {
-        background: #0f1014;
-        border: 1px solid #2a2b33;
+        background: #ffffff;
+        border: 1px solid #ede4e0;
         border-radius: 10px;
         padding: 6px;
     }
     .so-body > .so-right .so-qty-input {
         background: transparent !important;
-        color: #f5f5f7 !important;
+        color: #1c1917 !important;
         border: none !important;
         font-weight: 700;
         font-size: 16px;
     }
     .so-body > .so-right .so-qty-btn {
-        background: #1c1d23 !important;
-        color: #c9a368 !important;
-        border: 1px solid #2a2b33 !important;
+        background: #faf6f5 !important;
+        color: #a82a2a !important;
+        border: 1px solid #ede4e0 !important;
         font-weight: 700;
         border-radius: 8px;
     }
-    .so-body > .so-right .so-qty-btn:hover { background: #2a2b33 !important; }
-    .so-body > .so-right .so-qty-unit { color: #71717a !important; }
+    .so-body > .so-right .so-qty-btn:hover { background: #f5ebe9 !important; }
+    .so-body > .so-right .so-qty-unit { color: #a8a29e !important; }
 
-    /* 배송 옵션 버튼 — 세그먼티드 컨트롤 스타일 */
+    /* 배송 옵션 버튼 — 세그먼티드 컨트롤 */
     .so-body > .so-right .so-ship-btn {
-        background: #1c1d23 !important;
-        color: #d4d4d8 !important;
-        border: 1px solid #2a2b33 !important;
+        background: #ffffff !important;
+        color: #57534e !important;
+        border: 1px solid #ede4e0 !important;
         border-radius: 10px;
         font-weight: 500;
         padding: 14px 10px;
@@ -644,59 +650,59 @@
     }
     .so-body > .so-right .so-ship-btn * { color: inherit !important; }
     .so-body > .so-right .so-ship-btn:hover {
-        background: #232429 !important;
-        border-color: #3a3b45 !important;
+        background: #faf6f5 !important;
+        border-color: #d4b1ab !important;
     }
     .so-body > .so-right .so-ship-btn.active {
-        background: #c9a368 !important;
-        color: #0f1014 !important;
-        border-color: #c9a368 !important;
+        background: #a82a2a !important;
+        color: #ffffff !important;
+        border-color: #a82a2a !important;
         font-weight: 700;
     }
-    .so-body > .so-right .so-ship-btn.active * { color: #0f1014 !important; }
+    .so-body > .so-right .so-ship-btn.active * { color: #ffffff !important; }
 
-    /* 수량 할인 tier table — 더 절제된 모노톤 */
+    /* 수량 할인 tier */
     .so-body > .so-right .so-tier-table > div {
-        background: #1c1d23 !important;
-        color: #a1a1aa !important;
-        border: 1px solid #2a2b33 !important;
+        background: #faf6f5 !important;
+        color: #57534e !important;
+        border: 1px solid #ede4e0 !important;
         border-radius: 8px;
         font-size: 11px;
     }
-    .so-body > .so-right .so-tier-table > div b { color: #c9a368 !important; }
+    .so-body > .so-right .so-tier-table > div b { color: #a82a2a !important; }
 
-    /* addon 카드 (옵션) */
+    /* addon 카드 */
     .so-body > .so-right .so-addon-card,
     .so-body > .so-right .so-addon-card label {
-        background: #1c1d23 !important;
-        border-color: #2a2b33 !important;
-        color: #d4d4d8 !important;
+        background: #ffffff !important;
+        border-color: #ede4e0 !important;
+        color: #1c1917 !important;
     }
     .so-body > .so-right .so-addon-card *,
     .so-body > .so-right .so-addon-card label * { color: inherit !important; }
 
-    /* 가격 박스 — 합계만 골드로 강조, 나머지는 차분 */
+    /* 가격 박스 — 합계만 딥레드로 강조 */
     .so-body > .so-right .so-price-box .so-price-row {
-        color: #a1a1aa !important;
+        color: #57534e !important;
         font-size: 13px;
         padding: 4px 0;
     }
     .so-body > .so-right .so-price-box .so-price-row span,
     .so-body > .so-right .so-price-box .so-price-row b { color: inherit !important; }
     .so-body > .so-right .so-price-box .so-price-row.total {
-        border-top: 1px solid #2a2b33;
+        border-top: 1px solid #ede4e0;
         padding-top: 14px; margin-top: 10px;
         font-size: 18px;
     }
     .so-body > .so-right .so-price-box .so-price-row.total span:first-child {
-        color: #f5f5f7 !important; font-weight: 600;
+        color: #1c1917 !important; font-weight: 700;
     }
     .so-body > .so-right .so-price-box .so-price-row.total span:last-child,
     .so-body > .so-right .so-price-box .so-price-row.total b {
-        color: #c9a368 !important; font-weight: 800; font-size: 22px; letter-spacing: -0.02em;
+        color: #a82a2a !important; font-weight: 800; font-size: 22px; letter-spacing: -0.02em;
     }
 
-    /* 액션 버튼 — 3개 위계 정리 */
+    /* 액션 버튼 — 3단 위계 */
     .so-body > .so-right .so-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
     .so-body > .so-right .so-btn {
         font-weight: 600 !important; font-size: 14px;
@@ -704,42 +710,43 @@
         letter-spacing: -0.01em; transition: all .15s; cursor: pointer;
         font-family: inherit;
     }
-    /* 1. 장바구니 보기 — ghost / lowest */
+    /* 1. 장바구니 보기 — ghost */
     .so-body > .so-right #soBtnViewCart {
         background: transparent !important;
-        color: #a1a1aa !important;
-        border: 1px solid #2a2b33 !important;
+        color: #57534e !important;
+        border: 1px solid #ede4e0 !important;
     }
     .so-body > .so-right #soBtnViewCart:hover {
-        background: #1c1d23 !important; color: #f5f5f7 !important;
+        background: #faf6f5 !important; color: #1c1917 !important;
     }
-    /* 2. 장바구니 담기 — secondary */
+    /* 2. 장바구니 담기 — secondary outline (딥레드 보더) */
     .so-body > .so-right .so-btn-cart {
-        background: #1c1d23 !important;
-        color: #f5f5f7 !important;
-        border: 1px solid #c9a368 !important;
+        background: #ffffff !important;
+        color: #a82a2a !important;
+        border: 1.5px solid #a82a2a !important;
     }
     .so-body > .so-right .so-btn-cart:hover {
-        background: #c9a368 !important; color: #0f1014 !important;
+        background: #a82a2a !important; color: #ffffff !important;
     }
-    /* 3. 바로 주문 — primary CTA */
+    /* 3. 바로 주문 — primary CTA (솔리드 딥레드) */
     .so-body > .so-right .so-btn-buy {
-        background: #c9a368 !important;
-        color: #0f1014 !important;
+        background: #a82a2a !important;
+        color: #ffffff !important;
         border: none !important;
-        box-shadow: 0 8px 24px -8px rgba(201,163,104,0.4);
+        box-shadow: 0 8px 24px -8px rgba(168,42,42,0.35);
         font-weight: 700 !important;
     }
     .so-body > .so-right .so-btn-buy:hover {
-        background: #d4b07a !important;
+        background: #8b1e1e !important;
     }
 
-    /* 좌측 흰색 패널 — 다크와 명확히 분리 */
+    /* 좌측 흰색 패널 — 다크 → 흰색 전환이라 부드럽게, 살짝 결만 */
     .so-body > .so-left {
         background: #fff; padding: 28px 20px;
         border-radius: 24px 24px 0 0;
         margin-top: -12px; position: relative; z-index: 2;
-        box-shadow: 0 -8px 32px -12px rgba(0,0,0,0.18);
+        box-shadow: 0 -2px 12px -4px rgba(168,42,42,0.06);
+        border-top: 1px solid #f5ebe9;
     }
 }
 
