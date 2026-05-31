@@ -717,14 +717,15 @@ html, body { background: #ffffff !important; }
         letter-spacing: -0.01em; transition: all .15s; cursor: pointer;
         font-family: inherit;
     }
-    /* 1. 장바구니 보기 — ghost-on-dark */
+    /* 1. 장바구니 보기 — 검정 패널 위에서 가독성 위해 흰 배경 (사용자 요청) */
     .so-body > .so-right #soBtnViewCart {
-        background: transparent !important;
-        color: #e7e5e4 !important;
-        border: 1px solid #44403c !important;
+        background: #ffffff !important;
+        color: #1c1917 !important;
+        border: 1px solid #1c1917 !important;
+        font-weight: 700 !important;
     }
     .so-body > .so-right #soBtnViewCart:hover {
-        background: rgba(255,255,255,0.06) !important; color: #ffffff !important;
+        background: #faf6f5 !important;
     }
     /* 2. 장바구니 담기 — secondary outline (딥레드 보더) */
     .so-body > .so-right .so-btn-cart {
@@ -801,6 +802,23 @@ html, body { background: #ffffff !important; }
         padding: 16px 14px !important;
         margin-top: 0 !important;
         margin-bottom: 10px !important;
+    }
+
+    /* 4-1. 리뷰 사진 — 4:3 고정 비율 + cover 로 위아래 빈 공간 제거 (사용자 요청) */
+    .so-body > .so-left #soReviewBody .review-photo-wrap {
+        aspect-ratio: 4 / 3 !important;
+        background: transparent !important;
+        border: none !important;
+        margin-top: 10px !important;
+        border-radius: 10px !important;
+        overflow: hidden;
+    }
+    .so-body > .so-left #soReviewBody .review-photo {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+        object-fit: cover !important;
+        border-radius: 10px !important;
     }
 
     /* 2026-05-31: 모바일에서 modal/overlay 스크롤바 완전 숨김 (검정 vertical strip 으로 보임). */
@@ -896,6 +914,8 @@ html, body { background: #ffffff !important; }
     background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
 }
 .so-btn-buy:hover:not(:disabled) { filter: brightness(1.1); }
+/* 2026-05-31: 바로 주문 버튼 영구 비표시 — 사용자 요청. 장바구니 담기 → 장바구니에서 주문 진행. */
+#soBtnBuy { display: none !important; }
 
 .so-status {
     padding: 10px; background: #f0fdf4; border-radius: 8px;
