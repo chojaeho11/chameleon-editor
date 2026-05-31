@@ -1366,26 +1366,9 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 2026-05-14: 택배비 + 무료샘플북 (2열) — 가격 카드 직전 -->
-        <div class="side-card">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <!-- 택배비 (초록) -->
-                <div style="background:#dcfce7; border:1.5px solid #16a34a; border-radius:10px; padding:14px 12px; text-align:center;">
-                    <div style="font-size:11px; font-weight:800; color:#15803d; margin-bottom:4px;">
-                        <i class="fa-solid fa-truck-fast"></i> <span data-cdi18n="ship_label">택배 배송</span>
-                    </div>
-                    <div style="font-size:17px; font-weight:900; color:#166534;" data-cdi18n="ship_fee">5,000원</div>
-                </div>
-                <!-- 무료 샘플북 (하늘) -->
-                <label style="background:#e0f2fe; border:1.5px solid #0ea5e9; border-radius:10px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px; text-align:center;">
-                    <div style="font-size:11px; font-weight:800; color:#0369a1; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        <input type="checkbox" id="sampleBookCheck" style="margin:0; accent-color:#0ea5e9;" onchange="window._cdOnSampleBookChange && window._cdOnSampleBookChange()">
-                        <i class="fa-solid fa-book"></i> <span data-cdi18n="samplebook_label">무료 샘플북 신청</span>
-                    </div>
-                    <div style="font-size:10px; color:#075985; line-height:1.3;" data-cdi18n="samplebook_sub">원단 주문 시 신청 가능</div>
-                </label>
-            </div>
-        </div>
+        <!-- 2026-05-31: 택배비 / 무료샘플북 시각 박스 제거 (사용자 요청).
+             배송비 5,000원은 getShippingFeeKrw() 가 합계 계산 시 별도 적용되므로 유지. -->
+        <input type="checkbox" id="sampleBookCheck" style="display:none;">
 
         <!-- 수량 -->
         <div class="side-card">
