@@ -747,12 +747,60 @@ html, body { background: #ffffff !important; }
         background: #3730a3 !important;
     }
 
-    /* 좌측 콘텐츠 패널 — 모두 흰색 베이스라 자연스럽게 이어짐, 둥근 모서리/그림자 없이 */
+    /* 2026-05-31: 좌측 패널도 우측처럼 검정 배경 + 섹션별 흰 카드 구분 (사용자 요청 '구간별로 나눠서'). */
     .so-body > .so-left {
-        background: #fff; padding: 8px 12px 24px;
+        background: #1c1917 !important;
+        padding: 12px 12px 24px !important;
         border-radius: 0;
         margin-top: 0; position: relative; z-index: 2;
-        border-top: 1px solid #f1f1f1;
+        border-top: none !important;
+    }
+
+    /* 1. 제품 배너 — 이미지 + 제품명 카드 */
+    .so-body > .so-left .so-prod-banner {
+        background: #ffffff;
+        border: 1px solid #1c1917 !important;
+        border-bottom: 1px solid #1c1917 !important;
+        border-radius: 10px;
+        padding: 14px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 2. 디자인 파일 업로드 — 라벨 + 드롭존을 하나의 카드로 묶음 */
+    .so-body > .so-left #soUploadWrap {
+        background: #ffffff;
+        border: 1px solid #1c1917;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 10px;
+    }
+    .so-body > .so-left #soUploadWrap .so-upload-section-label {
+        margin: 0 0 10px !important;
+        color: #1c1917 !important;
+    }
+    .so-body > .so-left #soUploadWrap .so-upload {
+        border: 1px dashed #c8c5c1 !important;
+        background: #fafafa !important;
+        border-radius: 10px !important;
+        min-height: 200px !important;
+        padding: 24px 12px !important;
+    }
+    .so-body > .so-left #soUploadWrap .so-upload-icon { color: #57534e !important; }
+
+    /* 3. 디자인 에디터 CTA — 그라데이션 카드 그대로 유지, 마진만 조정 */
+    .so-body > .so-left .so-editor-card {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 4. 상품 상세정보 + 고객 리뷰 — 검정 보더 카드 통일 */
+    .so-body > .so-left .so-prod-detail {
+        background: #ffffff !important;
+        border: 1px solid #1c1917 !important;
+        border-radius: 10px !important;
+        padding: 16px 14px !important;
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
     }
 
     /* 2026-05-31: 모바일에서 modal/overlay 스크롤바 완전 숨김 (검정 vertical strip 으로 보임). */
