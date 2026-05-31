@@ -2437,10 +2437,13 @@ function _ciRenderPreview(html) {
     const langAttr = lang === 'kr' ? 'ko' : (lang === 'us' ? 'en' : (lang === 'jp' ? 'ja' : (lang === 'cn' ? 'zh' : lang)));
     doc.open();
     doc.write(`<!DOCTYPE html><html lang="${langAttr}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- 2026-05-31: Pretendard 가변 폰트 — weight 100~900 모두 지원해야 .cmp-section-body의 weight 200 이 실제로 얇게 렌더 (시스템 Malgun Gothic 은 200/300 fallback→400). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
-  body { margin:0; padding:20px 12px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Pretendard',sans-serif; background:#f1f5f9; }
+  body { margin:0; padding:20px 12px; font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Apple SD Gothic Neo','Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif; background:#f1f5f9; }
   .cmp-viewport-label { max-width:380px; margin:0 auto 10px; text-align:center; font-size:10.5px; color:#94a3b8; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
   .cmp-frame { max-width:380px; margin:0 auto; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px 16px;
+               font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Apple SD Gothic Neo','Segoe UI','Noto Sans KR','Malgun Gothic',sans-serif;
                font-size:13.5px; line-height:1.78; color:#1f2937;
                letter-spacing:-0.005em; word-break:keep-all; overflow-wrap:anywhere; }
   .cmp-frame * { max-width:100%; box-sizing:border-box; }

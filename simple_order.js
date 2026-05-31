@@ -127,6 +127,15 @@
     // ─────────────────────────────────────────────
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
+        // 2026-05-31: Pretendard 가변 폰트 로드 — designer 본문 weight 200/300 이 실제로 얇게 렌더되도록
+        // (Malgun Gothic 등 시스템 한글 폰트는 200/300 미지원 → 자동 400 fallback 되어 두꺼워 보임).
+        if (!document.getElementById('so-pretendard-font')) {
+            var _pLink = document.createElement('link');
+            _pLink.id = 'so-pretendard-font';
+            _pLink.rel = 'stylesheet';
+            _pLink.href = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css';
+            document.head.appendChild(_pLink);
+        }
         const css = `
 /* 2026-05-31 v4: 전체 모달 흰색 베이스로 통일 — '검정 띠' 로 인식되던 beige 영역 제거. */
 html, body { background: #ffffff !important; }
@@ -1150,19 +1159,24 @@ html, body { background: #ffffff !important; }
 }
 .so-prod-detail-body .cmp-title-block { padding: 24px 0 12px; text-align: center; }
 .so-prod-detail-body .cmp-hero-title-stand { color: #111827 !important; text-shadow: none; }
+/* 2026-05-31: designer 템플릿 전체 — Pretendard 가변 폰트 강제 (weight 200/300 진짜 얇게) */
+.so-prod-detail-body .cmp-designer,
+.so-prod-detail-body .cmp-designer * {
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Segoe UI', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
 .so-prod-detail-body .cmp-section { margin: 28px 0 28px; }
-/* 제목 600 (Semibold) — 더 얇은 톤 */
+/* 제목 600 (Semibold) */
 .so-prod-detail-body .cmp-section-title {
     font-size: 17px; font-weight: 600; letter-spacing: -0.03em;
     color: #111827; margin: 0 0 12px; line-height: 1.3; word-break: keep-all;
 }
-/* 본문 — 2문장 덩어리 <p>. weight 200 (ExtraLight) — 사용자 요청 '더 얇은 서체' */
+/* 본문 — weight 200 (ExtraLight) 진짜 얇음 (Pretendard 로드 덕분) */
 .so-prod-detail-body .cmp-section-body {
     font-size: 12px; line-height: 1.45; color: #475569;
     font-weight: 200; letter-spacing: -0.022em;
     word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 14px;
 }
-/* 섹션 사이 분산 브랜드 chunk — inline 형식 (border 없음) */
+/* 섹션 사이 분산 브랜드 chunk — inline 형식 */
 .so-prod-detail-body .cmp-bs-inline {
     font-size: 10.5px; line-height: 1.45; color: #94a3b8;
     font-weight: 200; letter-spacing: -0.018em;
