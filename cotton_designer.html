@@ -646,15 +646,18 @@ a { text-decoration: none; color: inherit; }
     padding: 4px 10px; border: 1px solid var(--cream-dark); border-radius: 4px;
 }
 
-/* 원단 선택 — 8 옵션 (4×2 그리드, 동그라미 작게) */
+/* 원단 선택 — 8 옵션 (4×2 그리드, 동그라미 작게).
+   2026-05-31: minmax(0, 1fr) — column 최소가 0 까지 축소 가능 → 일본어 'コットン20番' 같이
+   긴 라벨이 column 폭을 키워서 페이지가 가로로 넓어지던 버그 fix. */
 .fabric-types {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+    width: 100%; max-width: 100%;
 }
 .fabric-type {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 8px 2px; border: 1.5px solid var(--border); border-radius: 50%;
     cursor: pointer; transition: all 0.2s; aspect-ratio: 1; justify-content: center;
-    min-width: 0; overflow: hidden;
+    min-width: 0; max-width: 100%; overflow: hidden;
 }
 .fabric-type:hover { border-color: var(--accent); }
 .fabric-type.active { border-color: var(--brown-dark); background: var(--cream-dark); }
