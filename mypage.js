@@ -42,6 +42,7 @@ const I18N_KO = {
     "doc_receipt": "영수증",
     "doc_order_sheet": "작업지시서",
     "doc_statement": "거래명세서",
+    "doc_card_sales": "카드매출전표",
     "btn_reorder": "다시담기",
     "btn_cancel": "취소",
     "btn_cancel_order": "주문취소",
@@ -608,7 +609,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer;">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                <div onclick="openTossReceipt('${o.id}')" style="padding:8px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>
                             </div>
                         </div>
                     </div>
@@ -642,7 +644,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                <div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>
                             </div>
                         </div>
                     </div>
@@ -1726,6 +1729,34 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
     }
     return doc.output('blob');
 }
+
+// ============ 카드매출전표 (Toss) 열기 — 2026-05-31 ============
+// 사용자 요청: 인터넷 사이트들처럼 토스에서 제공하는 매출전표 그대로 끌어와 열기.
+// supabase edge fn `get-toss-receipt` 가 paymentKey 로 Toss API 호출 → receipt.url 반환.
+window.openTossReceipt = async function (orderId) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) { showToast('Order not found', 'error'); return; }
+    document.querySelectorAll('.doc-dropdown').forEach(d => d.style.display = 'none');
+
+    const paymentKey = order.toss_payment_key || order.payment_key;
+    if (!paymentKey) {
+        showToast('카드결제 정보가 없습니다 (계좌이체/현금 결제는 매출전표 없음)', 'error');
+        return;
+    }
+    showToast('매출전표 조회 중...', 'info');
+    try {
+        const sb = window.sb || window._supabase;
+        const { data, error } = await sb.functions.invoke('get-toss-receipt', {
+            body: { paymentKey }
+        });
+        if (error) { showToast('조회 실패: ' + (error.message || error), 'error'); return; }
+        if (!data || !data.url) { showToast(data?.error || '매출전표 URL 없음', 'error'); return; }
+        window.open(data.url, '_blank', 'noopener');
+    } catch (e) {
+        console.error('[openTossReceipt] error:', e);
+        showToast('매출전표 조회 중 오류: ' + (e?.message || e), 'error');
+    }
+};
 
 // ============ 메인: 서류 다운로드 함수 ============
 window.downloadOrderDoc = async function (orderId, docType) {
