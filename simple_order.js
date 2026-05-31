@@ -128,19 +128,17 @@
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
         const css = `
-/* 2026-05-31: 모달 열렸을 때 html/body 가 검정/회색으로 보이지 않도록 — 좌우 외곽 흰색 보장. */
+/* 2026-05-31 v4: 전체 모달 흰색 베이스로 통일 — '검정 띠' 로 인식되던 beige 영역 제거. */
 html, body { background: #ffffff !important; }
-/* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X).
-   z-index 50000 — #topCatMenu (60000 카테고리 nav) 가 위로 떠야 사용자가 다른 카테고리 이동 가능. */
 .so-overlay {
-    position: fixed; inset: 0; background: #faf6ed; z-index: 50000;
+    position: fixed; inset: 0; background: #ffffff; z-index: 50000;
     display: none;
-    overflow-y: auto;          /* 페이지 전체 스크롤 */
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 .so-overlay.open { display: block; }
 .so-modal {
-    background: #faf6ed;
+    background: #ffffff;
     width: 100%; min-height: 100%;
     max-height: none; max-width: none;
     border-radius: 0; box-shadow: none;
@@ -540,7 +538,7 @@ html, body { background: #ffffff !important; }
     .so-body > .so-left  { order: 2; }
     .so-body > .so-right { order: 1; position: static; width: 100%; max-width: none; max-height: none; overflow: visible; }
     /* 2026-05-31: 좌측 콘텐츠가 viewport 보다 커지면 (이미지 업로드 후 미리보기 등) 패널 안에서만 잘리도록 — 페이지 좌우 밀림 방지. */
-    .so-left { overflow-x: hidden; min-width: 0; }
+    .so-left { overflow-x: hidden; min-width: 0; border: none !important; border-radius: 0 !important; }
 
     /* ════════════════════════════════════════════════════════════
        2026-05-31 v3: 흰색 베이스 + 딥레드 액센트.
@@ -552,10 +550,10 @@ html, body { background: #ffffff !important; }
          프라이머리 #4338ca (deep brand red)
        ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
-        background: #faf6ed;
+        background: #ffffff;
         color: #1c1917;
-        padding: 20px 12px 28px;
-        border-radius: 0 0 24px 24px;
+        padding: 16px 12px 24px;
+        border-radius: 0;
         letter-spacing: -0.01em;
     }
     /* 인라인 brown 색상 등 override — 모든 텍스트 통일 */
@@ -743,12 +741,12 @@ html, body { background: #ffffff !important; }
         background: #3730a3 !important;
     }
 
-    /* 좌측 흰색 패널 — 베이지에서 흰색으로 부드러운 전환 */
+    /* 좌측 콘텐츠 패널 — 모두 흰색 베이스라 자연스럽게 이어짐, 둥근 모서리/그림자 없이 */
     .so-body > .so-left {
-        background: #fff; padding: 24px 16px;
-        border-radius: 24px 24px 0 0;
-        margin-top: -8px; position: relative; z-index: 2;
-        border-top: 1px solid #f0e7dc;
+        background: #fff; padding: 8px 12px 24px;
+        border-radius: 0;
+        margin-top: 0; position: relative; z-index: 2;
+        border-top: 1px solid #f1f1f1;
     }
 
     /* 2026-05-31: 모바일에서 modal/overlay 스크롤바 완전 숨김 (검정 vertical strip 으로 보임). */
