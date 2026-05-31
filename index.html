@@ -3692,41 +3692,17 @@ window.addEventListener('load', function() {
     </div>
 </div>
 
-<!-- 방학동 천가게 → Cotton Print 통합 섹션 -->
+<!-- 방학동 천가게 → Cotton Print 통합 섹션. 2026-05-31: 헤더/desc/카테고리칩/샘플버튼 모두 제거.
+     내원단 만들기 = 보라 풀폭 메인 CTA / 등록판매 = 풀폭 보조 / 그 아래 검색 + 패턴 그리드. -->
 <div id="bizDealSection" class="hotdeal-wrapper" style="margin-top:0px;">
-    <div class="hotdeal-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px;">
-        <div>
-            <h2 style="color:#451a03; font-family:Georgia,serif; letter-spacing:3px; font-size:24px; margin-bottom:4px;">COTTON PRINT <span class="badge-hot" id="cpHomeBadge" style="background:#fde047; color:#451a03; font-family:'Noto Sans KR',sans-serif; letter-spacing:0; font-size:11px; vertical-align:middle;">패브릭 사업부</span></h2>
-            <p style="color:#78350f; font-size:13px;" id="cpHomeDesc">대폭 130cm 롤원단 · 회배당 15,000원 · 디자이너 패턴 마켓</p>
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a href="/fabric" class="cp-home-link cp-link-designer" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(69,26,3,0.2);">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="cpHomeBtn1">내원단 만들기</span>
-            </a>
-            <!-- 2026-05-13: 패브릭 무료 샘플 신청 — /cotton-print?sample=1 (모달 자동 열기) -->
-            <a href="/cotton-print?sample=1" class="cp-home-link cp-link-sample" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#ec4899,#db2777); color:#fff; font-size:13px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(236,72,153,0.3);">
-                <i class="fa-solid fa-gift"></i> <span id="cpHomeBtnSample">패브릭 무료 샘플 신청</span>
-            </a>
-            <!-- 2026-05-13: 디자이너 패턴 컬렉션 버튼 삭제 (사용자 요청) -->
-            <!-- 2026-05-13: 등록하고 판매하세요 → 패턴 업로드 모달 직접 열기 (/cotton-print?upload=1) -->
-            <a href="/cotton-print?upload=1" class="cp-home-link cp-link-sell" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:50px; background:linear-gradient(135deg,#fde047,#facc15); color:#451a03; font-size:13px; font-weight:800; text-decoration:none;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> <span id="cpHomeBtn3">등록하고 판매하세요</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- 패턴 카테고리 칩 -->
-    <div id="cpHomeChips" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding:0 4px;">
-        <button class="cp-home-chip cp-home-chip-active" data-cat="" data-cpkey="all" onclick="loadCpHomePatterns('', this)">전체</button>
-        <button class="cp-home-chip" data-cat="animal" data-cpkey="animal" onclick="loadCpHomePatterns('animal', this)">동물</button>
-        <button class="cp-home-chip" data-cat="plant" data-cpkey="plant" onclick="loadCpHomePatterns('plant', this)">식물</button>
-        <button class="cp-home-chip" data-cat="people" data-cpkey="people" onclick="loadCpHomePatterns('people', this)">사람</button>
-        <button class="cp-home-chip" data-cat="modern" data-cpkey="modern" onclick="loadCpHomePatterns('modern', this)">모던</button>
-        <button class="cp-home-chip" data-cat="scenery" data-cpkey="scenery" onclick="loadCpHomePatterns('scenery', this)">풍경</button>
-        <button class="cp-home-chip" data-cat="typo" data-cpkey="typo" onclick="loadCpHomePatterns('typo', this)">타이포</button>
-        <button class="cp-home-chip" data-cat="kids" data-cpkey="kids" onclick="loadCpHomePatterns('kids', this)">키즈</button>
-        <button class="cp-home-chip" data-cat="etc" data-cpkey="etc" onclick="loadCpHomePatterns('etc', this)">기타</button>
-    </div>
+    <!-- 내원단 만들기 — 보라 풀폭 메인 CTA -->
+    <a href="/fabric" class="cp-home-link cp-link-designer" style="display:block; width:100%; padding:22px 24px; border-radius:18px; background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 50%,#5b21b6 100%); color:#fff; font-size:18px; font-weight:900; text-decoration:none; box-shadow:0 12px 28px -10px rgba(124,58,237,0.5); text-align:center; letter-spacing:-0.01em; transition: transform .15s, box-shadow .15s; box-sizing:border-box;">
+        <span id="cpHomeBtn1">내 원단 만들기</span>
+    </a>
+    <!-- 등록하고 판매하세요 — 풀폭 보조 -->
+    <a href="/cotton-print?upload=1" class="cp-home-link cp-link-sell" style="display:block; width:100%; padding:14px 20px; margin-top:10px; border-radius:14px; background:#fef9c3; color:#451a03; font-size:14px; font-weight:800; text-decoration:none; text-align:center; border:1px solid #fde68a; box-sizing:border-box;">
+        <span id="cpHomeBtn3">등록하고 판매하세요</span>
+    </a>
 
     <!-- 2026-05-11: 좌우 캐러셀 → 5×2 그리드 + 검색창 + 페이지네이션 (5페이지 단위) -->
     <!-- 패턴 검색창 -->
