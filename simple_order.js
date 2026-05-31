@@ -750,6 +750,26 @@ html, body { background: #ffffff !important; }
         margin-top: -8px; position: relative; z-index: 2;
         border-top: 1px solid #f0e7dc;
     }
+
+    /* 2026-05-31: 모바일에서 modal/overlay 스크롤바 완전 숨김 (검정 vertical strip 으로 보임). */
+    .so-overlay, .so-modal, .so-body > .so-right, .so-body > .so-left, .so-cart-body {
+        scrollbar-width: none;            /* Firefox */
+        -ms-overflow-style: none;         /* IE/Edge legacy */
+    }
+    .so-overlay::-webkit-scrollbar,
+    .so-modal::-webkit-scrollbar,
+    .so-body > .so-right::-webkit-scrollbar,
+    .so-body > .so-left::-webkit-scrollbar,
+    .so-cart-body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+    /* 2026-05-31: addon/옵션 카드 안의 빨강(+50,000원 등) 금액 → 인디고로 통일.
+       inline color:#dc2626 박혀있는 span 까지 override. */
+    .so-body > .so-right [style*="color:#dc2626"],
+    .so-body > .so-right [style*="color: #dc2626"],
+    .so-body > .so-right .so-addon-card span[style*="font-weight:800"],
+    .so-body > .so-right .so-addon-card span[style*="font-weight: 800"] {
+        color: #4338ca !important;
+    }
 }
 
 /* 우측: 옵션 패널 — sticky + 내부 스크롤. 내부 끝에 도달하면 페이지로 자연스럽게 전파 (사용자 요청). */
