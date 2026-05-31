@@ -583,6 +583,21 @@ window.loadEditorLibraries = function() {
         window.__SITE_CODE = code;
         // 2026-05-14: 해외 사이트는 매니저 견적 카드 숨기고 타이틀 키움 (CSS 분기용 data 속성)
         try { document.documentElement.setAttribute('data-site', code); } catch(e) {}
+        // 2026-05-31: ?product= / ?_p= 로 진입한 경우 — main 페이지 (startScreen·매니저카드·홈섹션) flash 차단.
+        //   <html data-pdp="1"> 마커 + CSS 가 startScreen/main 컨텐트를 즉시 hidden 처리.
+        //   simple_order 모달이 열린 후엔 모달이 viewport 를 덮으므로 사용자는 main flash 를 보지 않음.
+        //   해외몰 (?product=...?lang=en) 진입 시 한국어 main 페이지가 잠깐 보이던 문제도 같이 해결.
+        try {
+            var _sp = window.location.search || '';
+            if (/[?&](product|_p)=/i.test(_sp)) {
+                document.documentElement.setAttribute('data-pdp', '1');
+                // <head> 안에서 inline CSS 한 줄 추가 — 외부 stylesheet 로드 전에 적용되도록.
+                var _styleEl = document.createElement('style');
+                _styleEl.id = '_pdp_flash_block';
+                _styleEl.textContent = 'html[data-pdp="1"] #startScreen, html[data-pdp="1"] #honeycombVideoSection, html[data-pdp="1"] .hotdeal-wrapper, html[data-pdp="1"] #artworkMarketBanner, html[data-pdp="1"] #homeReviewSection { visibility: hidden !important; }';
+                (document.head || document.documentElement).appendChild(_styleEl);
+            }
+        } catch(e) {}
     })();
 
     // 1. 프로젝트 버전
