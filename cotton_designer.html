@@ -1016,7 +1016,7 @@ a { text-decoration: none; color: inherit; }
         <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:96px; height:96px; border-radius:10px; flex-shrink:0; border:1px solid #e5e7eb;">
         <div class="jp-line-text" style="text-align:center; min-width:0; flex:1;">
             <div style="font-size:17px; font-weight:900; color:#06C755; margin-bottom:6px;"><i class="fa-brands fa-line"></i> LINEでお問い合わせください</div>
-            <div style="font-size:13px; color:#444; line-height:1.7; word-break:keep-all;">ご注文・お見積もり・ご相談は<b>LINE</b>が便利です。<br>QRコードを読み取って友だち追加してください。</div>
+            <div style="font-size:13px; color:#444; line-height:1.7; word-break:keep-all; overflow-wrap:anywhere;">ご注文・お見積もり・ご相談は<b>LINE</b>が便利です。<br>QRコードを読み取って友だち追加してください。</div>
         </div>
     </div>
 </div>
@@ -1528,7 +1528,52 @@ a { text-decoration: none; color: inherit; }
 }
 .cd-belowfold-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
 .cd-belowfold-head h2 { margin:0; font-size:18px; font-weight:800; color:#1f2937; }
-.cd-belowfold-body { font-size:14px; line-height:1.75; color:#374151; }
+.cd-belowfold-body { font-size:13.5px; line-height:1.78; color:#1f2937; letter-spacing:-0.005em; word-break:keep-all; overflow-wrap:anywhere; }
+/* 2026-05-31: 디자이너 모드 (.cmp-*) 본문이 admin 미리보기와 동일하게 보이도록 동일 CSS 카피 */
+.cd-belowfold-body * { max-width:100%; box-sizing:border-box; }
+.cd-belowfold-body p { margin:0 0 14px; color:#374151; line-height:1.78; }
+.cd-belowfold-body h1, .cd-belowfold-body h2, .cd-belowfold-body h3, .cd-belowfold-body h4 {
+    font-weight:800; letter-spacing:-0.02em; color:#111827; line-height:1.3; margin:24px 0 10px;
+}
+.cd-belowfold-body h1 { font-size:19px; }
+.cd-belowfold-body h2 { font-size:16.5px; }
+.cd-belowfold-body h3 { font-size:14.5px; }
+.cd-belowfold-body h4 { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#6b7280; margin-top:18px; }
+.cd-belowfold-body img { max-width:100%; height:auto; display:block; margin:14px auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+.cd-belowfold-body ul, .cd-belowfold-body ol { padding-left:22px; margin:0 0 14px; }
+.cd-belowfold-body li { margin-bottom:8px; font-size:13px; line-height:1.7; color:#374151; word-break:keep-all; }
+/* Designer 템플릿 (.cmp-*) 스코프 */
+.cd-belowfold-body .cmp-designer { color:#1f2937; }
+.cd-belowfold-body .cmp-hero { position:relative; overflow:hidden; border-radius:14px; margin:0 0 28px; aspect-ratio:4/5; background:#1c1917; }
+.cd-belowfold-body .cmp-hero img { width:100%; height:100%; object-fit:cover; opacity:0.96; margin:0; border-radius:0; box-shadow:none; }
+.cd-belowfold-body .cmp-hero::after { content:''; position:absolute; left:0; right:0; bottom:0; height:65%; background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.62) 100%); pointer-events:none; z-index:1; }
+.cd-belowfold-body .cmp-hero-overlay { position:absolute; left:22px; right:22px; bottom:24px; color:#fff !important; z-index:2; }
+.cd-belowfold-body .cmp-hero-overlay *, .cd-belowfold-body .cmp-hero-title { color:#fff !important; }
+.cd-belowfold-body .cmp-hero-tag { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; opacity:0.88; margin-bottom:8px; font-weight:600; font-family:'Times New Roman',serif; font-style:italic; }
+.cd-belowfold-body .cmp-hero-title { font-size:26px; font-weight:800; letter-spacing:-0.025em; line-height:1.12; margin:0; word-break:keep-all; }
+.cd-belowfold-body .cmp-title-block { padding:24px 0 12px; text-align:center; }
+.cd-belowfold-body .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
+.cd-belowfold-body .cmp-section { margin:24px 0; }
+.cd-belowfold-body .cmp-section-title { font-size:16.5px; font-weight:600; letter-spacing:-0.025em; color:#0f172a; margin:0 0 10px; line-height:1.3; word-break:keep-all; }
+.cd-belowfold-body .cmp-section-body { font-size:12px; line-height:1.55; color:#1e293b; font-weight:300; letter-spacing:-0.018em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 12px; }
+.cd-belowfold-body .cmp-bs-inline { font-size:11px; line-height:1.5; color:#475569; font-weight:300; letter-spacing:-0.015em; word-break:keep-all; margin:8px 0 24px; padding:0; text-align:left; }
+.cd-belowfold-body .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:20px 0; box-shadow:none; }
+.cd-belowfold-body .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:20px 0; }
+.cd-belowfold-body .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; margin:0; box-shadow:none; }
+.cd-belowfold-body .cmp-circle-wrap { display:flex; justify-content:center; padding:18px 0; margin:20px 0; }
+.cd-belowfold-body .cmp-circle-wrap-lg { padding:28px 0; margin:32px 0; }
+.cd-belowfold-body .cmp-circle { width:200px; height:200px; border-radius:50%; overflow:hidden; box-shadow:0 18px 36px -16px rgba(0,0,0,0.22); }
+.cd-belowfold-body .cmp-circle-lg { width:260px; height:260px; box-shadow:0 24px 48px -18px rgba(0,0,0,0.28); }
+.cd-belowfold-body .cmp-circle img { width:100%; height:100%; object-fit:cover; margin:0; border-radius:0; box-shadow:none; }
+.cd-belowfold-body .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:20px 0; }
+.cd-belowfold-body .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; margin:0; box-shadow:none; }
+.cd-belowfold-body .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
+.cd-belowfold-body .cmp-brand-story { margin:32px 0 12px; padding:18px 0 6px; border-top:1px solid #e2e8f0; }
+.cd-belowfold-body .cmp-bs-body { font-size:10.5px; line-height:1.5; color:#475569; font-weight:300; letter-spacing:-0.015em; word-break:keep-all; margin:0 0 10px; }
+.cd-belowfold-body .cmp-designer img { margin:0 !important; box-shadow:none !important; }
+.cd-belowfold-body [style*="font-size: 2"], .cd-belowfold-body [style*="font-size:2"],
+.cd-belowfold-body [style*="font-size: 3"], .cd-belowfold-body [style*="font-size:3"],
+.cd-belowfold-body [style*="font-size: 4"], .cd-belowfold-body [style*="font-size:4"] { font-size:16px !important; line-height:1.4 !important; }
 
 /* 2026-05-30: 패브릭 리뷰 전용 스타일 */
 #cdReviewSec .rv-item { padding:14px; border:1px solid #f3f4f6; border-radius:10px; margin-bottom:10px; background:#fff; }
