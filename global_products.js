@@ -2476,23 +2476,27 @@ function _ciRenderPreview(html) {
   .cmp-title-block { padding:24px 0 12px; text-align:center; }
   .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
   .cmp-section { margin:28px 0 28px; }
-  /* Chapter 라벨 제거 — 제목+본문 흐름. 제목 weight 700 으로 약간 얇게 */
-  .cmp-section-title { font-size:17px; font-weight:700; letter-spacing:-0.03em; color:#111827; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
-  /* 본문 — 2문장 덩어리 <p>. weight 300 (Light), line-height 1.45 (거의 붙도록), 덩어리 사이 14px */
-  .cmp-section-body { font-size:12px; line-height:1.45; color:#475569; font-weight:300; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 14px; }
+  /* 제목 600 (Semibold) — 더 얇은 톤 */
+  .cmp-section-title { font-size:17px; font-weight:600; letter-spacing:-0.03em; color:#111827; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
+  /* 본문 — 2문장 덩어리 <p>. weight 200 (ExtraLight) — 사용자 요청 '더 얇은 서체' */
+  .cmp-section-body { font-size:12px; line-height:1.45; color:#475569; font-weight:200; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 14px; }
+  /* 섹션 사이 분산 브랜드 chunk — inline 형식 (border 없음) */
+  .cmp-bs-inline { font-size:10.5px; line-height:1.45; color:#94a3b8; font-weight:200; letter-spacing:-0.018em; word-break:keep-all; margin:8px 0 28px; padding:0; text-align:left; }
   .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
   .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
   .cmp-circle-wrap { display:flex; justify-content:center; padding:18px 0; margin:22px 0; }
+  .cmp-circle-wrap-lg { padding:28px 0; margin:36px 0; }
   .cmp-circle { width:220px; height:220px; border-radius:50%; overflow:hidden; box-shadow:0 18px 36px -16px rgba(0,0,0,0.22); }
+  .cmp-circle-lg { width:280px; height:280px; box-shadow:0 24px 48px -18px rgba(0,0,0,0.28); }
   .cmp-circle img { width:100%; height:100%; object-fit:cover; }
   /* 모자이크 — 위 1개 풀폭 + 아래 2개 반반 (사용자 요청 '꽉채워서') */
   .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
   .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
-  /* 브랜드 스토리 — 모든 페이지 끝. 더 얇게 (weight 300), 행간 1.4 (덩어리 가까이) */
+  /* 브랜드 스토리 — 남는 chunks 끝에 한꺼번에. weight 200 (ExtraLight) */
   .cmp-brand-story { margin:36px 0 12px; padding:20px 0 6px; border-top:1px solid #e2e8f0; }
-  .cmp-bs-body { font-size:10.5px; line-height:1.4; color:#94a3b8; font-weight:300; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 12px; }
+  .cmp-bs-body { font-size:10.5px; line-height:1.4; color:#94a3b8; font-weight:200; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 12px; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2597,12 +2601,17 @@ function _ciParseTextIntoSections(text, productName) {
     return { tagline, bodyBlocks };
 }
 
-// 디자이너 템플릿 HTML 조립 — 섹션과 이미지를 4가지 스타일로 순환 배치
+// 디자이너 템플릿 HTML 조립 — 사진 페어 + 섹션 + 브랜드 분산 + 끝 홀수는 큰 원형
 function _ciAssembleDesignerHtml(copy, images) {
     images = images || [];
     let html = '<div class="cmp-designer">';
     let imgIdx = 0;
     const esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+    // 2026-05-31: 브랜드 스토리 chunks 를 섹션 사이사이에 분산 배치 (사용자 요청
+    // '단락별로 끈어진 글씨들을 사진 사이사이에 넣어줘')
+    const brandChunks = _ciChunkSentences(_CMP_BRAND_STORY_KR, 2);
+    let brandIdx = 0;
 
     // Hero — 첫 이미지 + 오버레이 (이미지 없으면 텍스트만)
     if (images[0]) {
@@ -2623,32 +2632,19 @@ function _ciAssembleDesignerHtml(copy, images) {
 </div>`;
     }
 
-    // 2026-05-31: 사용자 요청 — "사진 2장 → 내용 1, 사진 2장 → 내용 1" 패턴.
-    // 사진이 텍스트 위에 페어로 들어가고, 그 다음 텍스트 덩어리. 중간중간 가끔 원형 액센트.
-    (copy.sections || []).forEach((sec, i) => {
-        // (a) 사진 — 가능하면 split (2장), 부족하면 full (1장), 그 마저도 없으면 skip.
-        //     4번째 섹션마다 원형 액센트로 변주 (i % 4 === 2).
-        if (images[imgIdx]) {
-            if ((i % 4) === 2 && images[imgIdx]) {
-                // 원형 액센트
-                html += `
-<div class="cmp-circle-wrap">
-    <div class="cmp-circle"><img src="${esc(images[imgIdx])}" alt=""></div>
-</div>`;
-                imgIdx++;
-            } else if (images[imgIdx + 1]) {
-                // 2장 split
-                html += `
+    // 사진 페어 → 섹션 텍스트 → 브랜드 chunk 1개 패턴 반복
+    (copy.sections || []).forEach((sec) => {
+        // (a) 사진 — 2장이면 split, 1장만 남으면 cmp-full (끝 처리 위해 보존 안함)
+        if (images[imgIdx] && images[imgIdx + 1]) {
+            html += `
 <div class="cmp-split">
     <img class="cmp-split-img" src="${esc(images[imgIdx])}" alt="">
     <img class="cmp-split-img" src="${esc(images[imgIdx + 1])}" alt="">
 </div>`;
-                imgIdx += 2;
-            } else {
-                // 1장만 남으면 풀폭
-                html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
-                imgIdx++;
-            }
+            imgIdx += 2;
+        } else if (images[imgIdx]) {
+            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
+            imgIdx++;
         }
         // (b) 텍스트 — 2문장씩 덩어리 <p>
         const bodyChunks = _ciChunkSentences(sec.body || '', 2);
@@ -2658,25 +2654,43 @@ function _ciAssembleDesignerHtml(copy, images) {
     ${sec.title ? `<h2 class="cmp-section-title">${esc(sec.title)}</h2>` : ''}
     ${bodyHtml}
 </section>`;
+        // (c) 브랜드 chunk 한 단락 — 섹션마다 하나씩 분산
+        if (brandChunks[brandIdx]) {
+            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
+            brandIdx++;
+        }
     });
 
-    // 남는 이미지 — 모자이크 / 페어 / 단독
-    const rem = images.slice(imgIdx);
-    if (rem.length >= 3) {
-        html += '<div class="cmp-mosaic">';
-        rem.forEach(src => { html += `<img src="${esc(src)}" alt="">`; });
-        html += '</div>';
-    } else if (rem.length === 2) {
+    // 남는 이미지 — 페어로 split, 마지막 홀수 1장은 큰 원형 (사용자 요청)
+    let rem = images.slice(imgIdx);
+    let lastCircle = null;
+    if (rem.length % 2 === 1) {
+        lastCircle = rem[rem.length - 1];
+        rem = rem.slice(0, -1);
+    }
+    for (let k = 0; k < rem.length; k += 2) {
         html += `
 <div class="cmp-split">
-    <img class="cmp-split-img" src="${esc(rem[0])}" alt="">
-    <img class="cmp-split-img" src="${esc(rem[1])}" alt="">
+    <img class="cmp-split-img" src="${esc(rem[k])}" alt="">
+    <img class="cmp-split-img" src="${esc(rem[k + 1])}" alt="">
 </div>`;
-    } else if (rem.length === 1) {
-        html += `<img class="cmp-full" src="${esc(rem[0])}" alt="">`;
     }
-    // 2026-05-31: 모든 상세페이지에 브랜드 스토리 자동 삽입 (사용자 요청)
-    html += _ciBrandStoryHtml();
+    if (lastCircle) {
+        html += `
+<div class="cmp-circle-wrap cmp-circle-wrap-lg">
+    <div class="cmp-circle cmp-circle-lg"><img src="${esc(lastCircle)}" alt=""></div>
+</div>`;
+    }
+
+    // 남은 브랜드 chunks (섹션 부족해서 다 못 뿌린 경우) — 끝에 한꺼번에
+    if (brandIdx < brandChunks.length) {
+        html += '<section class="cmp-brand-story">';
+        for (let k = brandIdx; k < brandChunks.length; k++) {
+            html += `<p class="cmp-bs-body">${esc(brandChunks[k])}</p>`;
+        }
+        html += '</section>';
+    }
+
     html += '</div>';
     return html;
 }
@@ -2757,24 +2771,37 @@ window._ciGenerateDesigner = async () => {
         document.getElementById('ciHtmlKR').value = krHtml;
         _ciShowPreview(krHtml);
 
-        // === 4) 자동 번역 7개국어 (KR HTML 그대로 translate edge fn 통과) ===
+        // === 4) 자동 번역 — 사용자 요청: JP 일본어 + EN 영어 2개만, 나머지 (CN/AR/ES/DE/FR) 는 영문 복사.
+        // 일본 페이지는 일본어, 그 외 모든 비한국 사이트는 영어로 통일.
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
-        const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
-        const langs = ['ja','en','zh','ar','es','de','fr'];
+        let jpHtml = '', enHtml = '';
+        const targets = [
+            { lang: 'ja', field: 'JP', label: '일본어' },
+            { lang: 'en', field: 'US', label: '영어'   }
+        ];
         let trCount = 0;
-        for (const lang of langs) {
+        for (const t of targets) {
             try {
                 const { data, error } = await dbClient.functions.invoke('translate', {
-                    body: { text: krHtml, from: 'ko', to: lang, html: true }
+                    body: { text: krHtml, from: 'ko', to: t.lang, html: true }
                 });
                 if (!error && data?.translated) {
-                    document.getElementById('ciHtml' + langMap[lang]).value = data.translated;
+                    document.getElementById('ciHtml' + t.field).value = data.translated;
+                    if (t.lang === 'ja') jpHtml = data.translated;
+                    else if (t.lang === 'en') enHtml = data.translated;
                 } else {
-                    console.warn(`[CI Designer] 번역 실패 (${lang}):`, error);
+                    console.warn(`[CI Designer] 번역 실패 (${t.lang}):`, error);
                 }
-            } catch(e) { console.error(`[CI Designer] 번역 예외 (${lang}):`, e); }
+            } catch(e) { console.error(`[CI Designer] 번역 예외 (${t.lang}):`, e); }
             trCount++;
-            status.textContent = `🌐 7개국어 번역 중... (${trCount}/7)`;
+            status.textContent = `🌐 ${t.label} 번역 중... (${trCount}/2)`;
+        }
+        // 영문을 비-일본 다국어 슬롯 (CN/AR/ES/DE/FR) 에 복사 — 사용자 요청 '미국외 나머지 국가는 영어로'
+        if (enHtml) {
+            ['CN', 'AR', 'ES', 'DE', 'FR'].forEach(f => {
+                document.getElementById('ciHtml' + f).value = enHtml;
+            });
+            status.textContent = '📋 영문을 CN·AR·ES·DE·FR 슬롯에 복사 완료';
         }
 
         // === 5) DB 저장 (confirm 은 시작에서 이미 받았으므로 바로 저장) ===

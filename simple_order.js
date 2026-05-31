@@ -1151,19 +1151,24 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-title-block { padding: 24px 0 12px; text-align: center; }
 .so-prod-detail-body .cmp-hero-title-stand { color: #111827 !important; text-shadow: none; }
 .so-prod-detail-body .cmp-section { margin: 28px 0 28px; }
-/* Chapter 라벨 제거됨. 제목 weight 700 으로 살짝 얇게 */
+/* 제목 600 (Semibold) — 더 얇은 톤 */
 .so-prod-detail-body .cmp-section-title {
-    font-size: 17px; font-weight: 700; letter-spacing: -0.03em;
+    font-size: 17px; font-weight: 600; letter-spacing: -0.03em;
     color: #111827; margin: 0 0 12px; line-height: 1.3; word-break: keep-all;
 }
-/* 본문 — 2문장 덩어리 <p>. weight 300 (Light), line-height 1.45, 덩어리 사이 14px */
+/* 본문 — 2문장 덩어리 <p>. weight 200 (ExtraLight) — 사용자 요청 '더 얇은 서체' */
 .so-prod-detail-body .cmp-section-body {
     font-size: 12px; line-height: 1.45; color: #475569;
-    font-weight: 300; letter-spacing: -0.022em;
+    font-weight: 200; letter-spacing: -0.022em;
     word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 14px;
 }
-/* designer 템플릿 내부 img 는 자체 wrapper 가 처리 — 전역 .so-prod-detail-body img 룰의
-   margin:14px / border-radius:12px / box-shadow 영향 차단 (상단 검정 띠 버그 fix) */
+/* 섹션 사이 분산 브랜드 chunk — inline 형식 (border 없음) */
+.so-prod-detail-body .cmp-bs-inline {
+    font-size: 10.5px; line-height: 1.45; color: #94a3b8;
+    font-weight: 200; letter-spacing: -0.018em;
+    word-break: keep-all; margin: 8px 0 28px; padding: 0; text-align: left;
+}
+/* designer 템플릿 내부 img margin/box-shadow 영향 차단 (상단 검정 띠 버그 fix) */
 .so-prod-detail-body .cmp-designer img { margin: 0 !important; box-shadow: none !important; }
 .so-prod-detail-body .cmp-full {
     width: 100%; height: auto; display: block;
@@ -1179,9 +1184,15 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-circle-wrap {
     display: flex; justify-content: center; padding: 18px 0; margin: 22px 0;
 }
+.so-prod-detail-body .cmp-circle-wrap-lg { padding: 28px 0; margin: 36px 0; }
 .so-prod-detail-body .cmp-circle {
     width: 220px; height: 220px; border-radius: 50%;
     overflow: hidden; box-shadow: 0 18px 36px -16px rgba(0,0,0,0.22);
+}
+/* 맨 아래 홀수 사진 — 280px 큰 원형 (사용자 요청 '크게') */
+.so-prod-detail-body .cmp-circle-lg {
+    width: 280px; height: 280px;
+    box-shadow: 0 24px 48px -18px rgba(0,0,0,0.28);
 }
 .so-prod-detail-body .cmp-circle img {
     width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; box-shadow: none;
@@ -1197,14 +1208,14 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-mosaic img:first-child {
     grid-column: 1 / -1; aspect-ratio: 16/9;
 }
-/* 브랜드 스토리 — 모든 상세페이지 끝. weight 300, line-height 1.4 (덩어리 가까이) */
+/* 브랜드 스토리 — 남는 chunks 끝에 한꺼번에. weight 200 (ExtraLight) */
 .so-prod-detail-body .cmp-brand-story {
     margin: 36px 0 12px; padding: 20px 0 6px;
     border-top: 1px solid #e2e8f0;
 }
 .so-prod-detail-body .cmp-bs-body {
     font-size: 10.5px; line-height: 1.4; color: #94a3b8;
-    font-weight: 300; letter-spacing: -0.018em;
+    font-weight: 200; letter-spacing: -0.018em;
     word-break: keep-all; margin: 0 0 12px;
 }
 
