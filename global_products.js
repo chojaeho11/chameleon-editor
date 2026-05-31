@@ -2520,23 +2520,37 @@ function _ciRenderPreview(html) {
 // 사용자 요청: '세련되고 깔끔, 제목 + 긴 설명, 글자 작게, 사진 다이나믹 배치'.
 // ═══════════════════════════════════════════════════════════════════
 
-// 2026-05-31: 불릿 구분자 / 옛 챕터 라벨 / 이모지 픽토그램 모두 정리.
-// 결과 예: "🍂 Chapter 01 병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…"
+// 2026-05-31: 불릿 구분자 / 옛 챕터 / 이모지 / 한글 마침표 자동 삽입 / brand 중복 제거.
 function _ciDenarcize(text) {
     if (!text) return '';
-    return String(text)
-        .replace(/CHAPTER\s+\d+\s*\.?/gi, '. ')       // 옛 designer 출력의 "Chapter 01" 라벨 제거
-        .replace(/Our\s+story\s*\.?/gi, '. ')         // 옛 브랜드 라벨도 제거
-        // 2026-05-31: 이모지/픽토그램 제거 — 사용자 요청 '아이콘 픽토그램 안 들어가도록'.
-        // U+1F300~1FAFF (Symbols&Pictographs, Emoticons, Transport), U+2600~27BF (Misc Symbols+Dingbats),
-        // U+1F000~1F2FF (Mahjong/Playing Cards/Enclosed), U+2300~23FF (Misc Technical 시계/가위 등),
-        // U+2B00~2BFF (Misc Arrows/Stars), U+FE0E~FE0F (Variation Selectors)
+    let cleaned = String(text)
+        .replace(/CHAPTER\s+\d+\s*\.?/gi, '. ')
+        .replace(/Our\s+story\s*\.?/gi, '. ');
+
+    // 2026-05-31: 이전 designer 출력의 brand-story 문장 제거 — 재실행 시 중복 방지.
+    // _CMP_BRAND_STORY_KR 의 각 문장을 그대로 매칭해서 strip.
+    try {
+        const brandSentences = String(_CMP_BRAND_STORY_KR || '')
+            .split(/(?<=[.!?。])\s+/)
+            .map(s => s.trim())
+            .filter(s => s.length > 5);
+        brandSentences.forEach(s => {
+            const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            cleaned = cleaned.replace(new RegExp(escaped, 'g'), '');
+        });
+    } catch(e) { /* _CMP_BRAND_STORY_KR 아직 로드 안된 경우 무시 */ }
+
+    return cleaned
+        // 이모지 / 픽토그램 (Emoticons, Pictographs, Misc Symbols+Dingbats, 등)
         .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE0E}-\u{FE0F}]/gu, '')
-        .replace(/\s*[—–]\s*/g, '. ')                 // em/en-dash → period
-        .replace(/\s+-\s+/g, '. ')                    // " - " (spaced hyphen) → period
-        .replace(/\s+·\s+/g, ' ')                     // middle-dot → space
-        .replace(/\s*\.\s*/g, '. ')                   // period 앞뒤 공백 정규화
-        .replace(/\.{2,}/g, '.')                      // 중복 마침표 합치기
+        .replace(/\s*[—–]\s*/g, '. ')
+        .replace(/\s+-\s+/g, '. ')
+        .replace(/\s+·\s+/g, ' ')
+        // 2026-05-31: 한글 술어 어미 뒤 마침표 자동 삽입 — 마침표 없는 긴 텍스트도 split 가능.
+        // ex) "...간편합니다 풀컬러 인쇄..." → "...간편합니다. 풀컬러 인쇄..."
+        .replace(/(입니다|합니다|있습니다|있어요|예요|드립니다|됩니다|드려요|편리합니다|가능합니다|탁월합니다|뛰어납니다|구합니다)(\s+)(?=[가-힣A-Za-z(])/g, '$1.$2')
+        .replace(/\s*\.\s*/g, '. ')
+        .replace(/\.{2,}/g, '.')
         .replace(/\s{2,}/g, ' ')
         .trim();
 }
@@ -2701,30 +2715,53 @@ function _ciAssembleDesignerHtml(copy, images) {
         ci++;
     }
 
-    // ── 텍스트 블록 생성 — 섹션 body 를 1문장씩 잘게 + brand chunks 도 1문장씩
-    const flatBlocks = [];
+    // ── 텍스트 블록 생성 — 모든 문장을 sentenceItems[] 에 평탄화 후 사진 개수에 맞춰 균형 분배
+    const sentenceItems = [];   // [{ title?: string, body: string, isBrand?: bool }]
     (copy.sections || []).forEach(sec => {
-        const bodyChunks = _ciChunkSentences(sec.body || '', 1);
-        if (sec.title && bodyChunks.length > 0) {
-            flatBlocks.push({ type: 'titled', title: sec.title, body: bodyChunks[0] });
-            for (let k = 1; k < bodyChunks.length; k++) {
-                flatBlocks.push({ type: 'body', body: bodyChunks[k] });
-            }
-        } else if (sec.title) {
-            flatBlocks.push({ type: 'titled', title: sec.title, body: '' });
-        } else {
-            bodyChunks.forEach(c => flatBlocks.push({ type: 'body', body: c }));
+        const sentences = String(sec.body || '')
+            .split(/(?<=[.!?。])\s+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+        sentences.forEach((s, idx) => {
+            sentenceItems.push({
+                title: (idx === 0 && sec.title) ? sec.title : null,
+                body: s
+            });
+        });
+        if (sentences.length === 0 && sec.title) {
+            sentenceItems.push({ title: sec.title, body: '' });
         }
     });
-    // 브랜드 chunks 1문장씩 (6 문장 → 6 블록)
-    const brandChunks = _ciChunkSentences(_CMP_BRAND_STORY_KR, 1);
-    brandChunks.forEach(c => flatBlocks.push({ type: 'brand', body: c }));
+    // 브랜드 문장 — 1문장씩 sentenceItems 에 append
+    String(_CMP_BRAND_STORY_KR || '')
+        .split(/(?<=[.!?。])\s+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(s => sentenceItems.push({ title: null, body: s, isBrand: true }));
 
-    // ── 인터리브 — [photo][text][photo][text]…
+    // 사진 개수에 맞춰 묶음 크기 동적 결정 — 사용자 요청 '너무 많은 글이 모여있지 않게'
+    const target = Math.max(1, photoGroups.length);
+    const groupSize = Math.max(1, Math.ceil(sentenceItems.length / target));
+    const flatBlocks = [];
+    for (let i = 0; i < sentenceItems.length; i += groupSize) {
+        const slice = sentenceItems.slice(i, i + groupSize);
+        // 그룹 안에 title 이 있으면 첫 title 채택
+        let firstTitle = null;
+        for (const item of slice) { if (item.title) { firstTitle = item.title; break; } }
+        const combinedBody = slice.map(item => item.body).filter(Boolean).join(' ');
+        const allBrand = slice.every(item => item.isBrand);
+        flatBlocks.push({
+            type: firstTitle ? 'titled' : (allBrand ? 'brand' : 'body'),
+            title: firstTitle,
+            body: combinedBody
+        });
+    }
+
+    // ── 인터리브 — 사용자 요청 '제목+내용 그다음 사진' → TEXT FIRST, then PHOTO
     const maxLen = Math.max(photoGroups.length, flatBlocks.length);
     for (let i = 0; i < maxLen; i++) {
-        if (photoGroups[i]) html += _ciRenderPhotoGroup(photoGroups[i], esc);
         if (flatBlocks[i])  html += _ciRenderTextBlock(flatBlocks[i], esc);
+        if (photoGroups[i]) html += _ciRenderPhotoGroup(photoGroups[i], esc);
     }
 
     // ── 마지막 홀수 사진 → 280px 큰 원형 (사용자 요청)
