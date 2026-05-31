@@ -2615,24 +2615,51 @@ function _ciAssembleDesignerHtml(copy, images) {
     return html;
 }
 
-// 디자이너 모드 생성 — 사용자 텍스트 + 사진으로 즉시 조립 (AI 호출 옵션)
+// 디자이너 모드 — 한 번에: 사진/텍스트 수집 → 조립 → 7개국어 번역 → DB 저장.
+// 텍스트가 비었으면 기존 한국어 페이지에서 이미지+본문 추출해서 자동 fallback.
 window._ciGenerateDesigner = async () => {
     const dbClient = window.sb || window._supabase;
     const target = _ciGetTarget();
-    const descText = document.getElementById('ciDescription').value.trim();
+    let descText = document.getElementById('ciDescription').value.trim();
     const status = document.getElementById('ciStatus');
     const btn = document.getElementById('ciGenerateDesignerBtn');
+    if (!btn) return;
 
-    if (!descText && _ciImages.length === 0) {
+    // === 1) 입력 수집 — 텍스트/사진/기존 콘텐츠 ===
+    let imageUrls = [];
+    let usedExisting = false;
+    const existingKr = document.getElementById('ciHtmlKR').value || '';
+    if (existingKr) {
+        try {
+            const parser = new DOMParser();
+            const dom = parser.parseFromString(existingKr, 'text/html');
+            // 기존 이미지 URL 수집 (data: 제외)
+            const exImgs = Array.from(dom.querySelectorAll('img'))
+                .map(img => img.getAttribute('src') || img.src)
+                .filter(s => s && !s.startsWith('data:'));
+            // 기존 본문 텍스트 추출 (HTML 제거 + 문장 단위 줄바꿈 복원)
+            const rawText = (dom.body.textContent || '').trim().replace(/\s+/g, ' ');
+            const cleanText = rawText.replace(/([.!?。])\s+/g, '$1\n\n');
+            if (!descText && cleanText.length > 10) { descText = cleanText; usedExisting = true; }
+            imageUrls = exImgs;
+        } catch(e) { console.warn('[CI Designer] 기존 HTML 파싱 실패:', e); }
+    }
+
+    if (!descText && _ciImages.length === 0 && imageUrls.length === 0) {
         showToast('사진을 올리거나 설명을 입력해주세요.', 'warn');
         return;
     }
-    if (!btn) return;
+
+    const confirmMsg = usedExisting
+        ? '기존 한국어 상세페이지의 텍스트·사진을 디자이너 레이아웃으로 다시 조립하고,\n7개국어 자동 번역 + DB 저장까지 한 번에 진행합니다.\n계속할까요?'
+        : '디자이너 레이아웃 조립 + 7개국어 자동 번역 + DB 저장을 한 번에 진행합니다.\n계속할까요?';
+    if (!confirm(confirmMsg)) return;
+
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 조립 중...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 진행 중...';
 
     try {
-        // 1) 이미지 업로드
+        // === 2) 새로 올린 이미지 업로드 (있다면) ===
         if (_ciImages.length > 0) {
             status.textContent = '📤 이미지 업로드 중...';
             const timestamp = Date.now();
@@ -2647,32 +2674,87 @@ window._ciGenerateDesigner = async () => {
                 const { data: urlData } = dbClient.storage.from('products').getPublicUrl(path);
                 img.url = urlData.publicUrl;
             }));
+            // 새로 올린 사진 우선, 그 다음 기존 사진
+            const newUrls = _ciImages.filter(i => i.url).map(i => i.url);
+            imageUrls = Array.from(new Set([...newUrls, ...imageUrls]));
         }
-        const imageUrls = _ciImages.filter(i => i.url).map(i => i.url);
-        const productName = target.name || '상품';
 
-        // 2) 사용자 텍스트 → 섹션 파싱
+        // === 3) 디자이너 HTML 조립 (한국어) ===
         status.textContent = '✨ 디자이너 레이아웃 조립 중...';
+        const productName = target.name || target.categoryName || target.topCategoryName || target.label || '상품';
         const parsed = _ciParseTextIntoSections(descText, productName);
-
-        // 3) HTML 조립 (한국어)
         const krHtml = _ciAssembleDesignerHtml({
             hero_title: productName,
             hero_subtitle: parsed.tagline,
             sections: parsed.bodyBlocks
         }, imageUrls);
-
         document.getElementById('ciHtmlKR').value = krHtml;
-        status.textContent = '✅ 디자이너 모드 완료! 검토 후 [7개국어 번역만] 클릭.';
         _ciShowPreview(krHtml);
-        showToast('디자이너 모드 조립 완료! 번역은 [7개국어 번역만] 버튼으로.', 'success');
+
+        // === 4) 자동 번역 7개국어 (KR HTML 그대로 translate edge fn 통과) ===
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 번역 중...';
+        const langMap = { ja: 'JP', en: 'US', zh: 'CN', ar: 'AR', es: 'ES', de: 'DE', fr: 'FR' };
+        const langs = ['ja','en','zh','ar','es','de','fr'];
+        let trCount = 0;
+        for (const lang of langs) {
+            try {
+                const { data, error } = await dbClient.functions.invoke('translate', {
+                    body: { text: krHtml, from: 'ko', to: lang, html: true }
+                });
+                if (!error && data?.translated) {
+                    document.getElementById('ciHtml' + langMap[lang]).value = data.translated;
+                } else {
+                    console.warn(`[CI Designer] 번역 실패 (${lang}):`, error);
+                }
+            } catch(e) { console.error(`[CI Designer] 번역 예외 (${lang}):`, e); }
+            trCount++;
+            status.textContent = `🌐 7개국어 번역 중... (${trCount}/7)`;
+        }
+
+        // === 5) DB 저장 (confirm 은 시작에서 이미 받았으므로 바로 저장) ===
+        status.textContent = '💾 DB 저장 중...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...';
+        const kr = document.getElementById('ciHtmlKR').value;
+        const jp = document.getElementById('ciHtmlJP').value;
+        const us = document.getElementById('ciHtmlUS').value;
+        const cn = document.getElementById('ciHtmlCN').value;
+        const ar = document.getElementById('ciHtmlAR').value;
+        const es = document.getElementById('ciHtmlES').value;
+        const de = document.getElementById('ciHtmlDE').value;
+        const fr = document.getElementById('ciHtmlFR').value;
+        if (target.mode === 'product') {
+            const { error } = await dbClient.from('admin_products').update({
+                description: kr, description_jp: jp, description_us: us, description_cn: cn,
+                description_ar: ar, description_es: es, description_de: de, description_fr: fr
+            }).eq('id', target.id);
+            if (error) throw new Error('저장 실패: ' + error.message);
+        } else {
+            const { data: oldData } = await dbClient.from('common_info')
+                .select('*').eq('section', 'top').eq('category_code', target.code).maybeSingle();
+            const payload = {
+                section: 'top', category_code: target.code,
+                content: kr, content_jp: jp, content_us: us, content_cn: cn,
+                content_ar: ar, content_es: es, content_de: de, content_fr: fr,
+                content_backup: oldData ? oldData.content : null,
+                content_backup_jp: oldData ? oldData.content_jp : null,
+                content_backup_us: oldData ? oldData.content_us : null,
+                content_backup_cn: oldData ? oldData.content_cn : null,
+                content_backup_ar: oldData ? oldData.content_ar : null,
+                content_backup_es: oldData ? oldData.content_es : null
+            };
+            const { error } = await dbClient.from('common_info').upsert(payload, { onConflict: 'section, category_code' });
+            if (error) throw new Error('저장 실패: ' + error.message);
+        }
+
+        status.textContent = `✅ 완료! [${target.label}] 디자이너 페이지 생성·번역·저장 끝났습니다.`;
+        showToast(`완료! 디자이너 페이지 + 7개국어 번역 + DB 저장 끝!`, 'success');
     } catch (e) {
         console.error('Designer mode error:', e);
-        status.textContent = '❌ 실패: ' + e.message;
-        showToast('실패: ' + e.message, 'error');
+        status.textContent = '❌ 실패: ' + (e.message || e);
+        showToast('실패: ' + (e.message || e), 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ✨ 디자이너 모드';
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ✨ 디자이너 모드 (조립+번역+저장)';
     }
 };
 
