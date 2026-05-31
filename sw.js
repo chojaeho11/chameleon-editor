@@ -1,5 +1,5 @@
 // Chameleon Service Worker - HTML 캐시 강제 무효화 + 이미지 캐시
-var CACHE_VERSION = '20260309a';
+var CACHE_VERSION = '20260531a';
 var IMG_CACHE = 'img-cache-v1';
 
 self.addEventListener('install', function(e) {
