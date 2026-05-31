@@ -101,31 +101,55 @@
             #tab-profit > div:first-child { grid-template-columns: 1fr !important; }
             #tab-profit [style*="font-size: 36px"] { font-size: 24px !important; }
 
-            .mp-table { font-size: 12px; }
-            .mp-table th { padding: 10px 8px; font-size: 11px; }
-            .mp-table td { padding: 10px 8px; font-size: 12px; }
-
-            /* 2026-05-31: 주문내역 모바일 카드 — 좌우 여백 줄이고 카드 간격 살짝 ↑ */
-            #tab-orders { padding: 0; }
-            #tab-orders h3 { font-size: 16px; margin: 0 0 12px; }
-            #orderListBody > tr > td { padding: 0 !important; }
-            #orderListBody > tr > td > div[style*="padding"] {
+            /* 2026-05-31: 주문내역 모바일 — 깔끔하게 정리.
+               .mp-section 의 흰 카드 배경/보더/패딩 제거 → 본문 바로 카드 나열.
+               테이블 thead 도 모바일에서는 무의미 (카드뷰니까) → 숨김. */
+            #tab-orders.mp-section {
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+            #tab-orders h3 {
+                font-size: 16px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0 0 14px;
+                padding: 0 2px;
+                letter-spacing: -0.01em;
+            }
+            #tab-orders .mp-table { margin-top: 0; }
+            #tab-orders .mp-table thead { display: none; }
+            #tab-orders .mp-table,
+            #tab-orders .mp-table tbody,
+            #tab-orders .mp-table tr { display: block; width: 100%; }
+            #orderListBody > tr > td {
+                padding: 0 !important;
+                border: none !important;
+                display: block;
+            }
+            #orderListBody .mp-mob-card {
                 padding: 14px 14px !important;
                 margin-bottom: 10px !important;
-                border-radius: 12px !important;
+                border-radius: 14px !important;
                 border: 1px solid #e2e8f0 !important;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                box-shadow: 0 1px 3px rgba(15,23,42,0.04);
                 background: #fff;
+                transition: box-shadow .15s ease;
             }
-            #orderListBody .doc-dropdown { min-width: 150px !important; right: 0; left: auto !important; }
+            #orderListBody .mp-mob-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.06); }
+            #orderListBody .doc-dropdown { min-width: 160px !important; right: 0; left: auto !important; }
 
             .modal-box { width: 95vw !important; max-width: 95vw !important; }
+            .mp-main { padding: 14px 12px !important; }
         }
         @media (max-width: 480px) {
             .stat-grid { grid-template-columns: 1fr; }
             .mp-sidebar { padding: 8px 10px; }
             .mp-nav-item { padding: 6px 10px; font-size: 12px; }
-            #orderListBody > tr > td > div[style*="padding"] { padding: 12px 12px !important; }
+            #orderListBody .mp-mob-card { padding: 13px 12px !important; }
         }
     </style>
 </head>
@@ -353,7 +377,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=274"></script>
+    <script type="module" src="./mypage.js?v=275"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

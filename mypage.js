@@ -619,40 +619,40 @@ async function loadOrders() {
                 : '-';
             const _payLabel = (o.payment_status || translatedStatus || '-');
             tbody.innerHTML += `
-            <tr><td colspan="5" style="padding:0;">
-                <div class="mp-mob-card" style="padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+            <tr><td colspan="5">
+                <div class="mp-mob-card">
                     <!-- Line 1: 주문일 + 상품명 -->
-                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
-                        <span style="font-size:11px; color:#94a3b8; white-space:nowrap; padding-top:2px;">${_dateStr}</span>
-                        <span style="font-size:14px; font-weight:700; color:#1e293b; flex:1; line-height:1.35; word-break:keep-all;">${summary}</span>
+                    <div style="display:flex; gap:10px; align-items:baseline; margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed #e2e8f0;">
+                        <span style="font-size:11px; color:#94a3b8; white-space:nowrap; font-weight:500; letter-spacing:0.01em;">${_dateStr}</span>
+                        <span style="font-size:14.5px; font-weight:700; color:#0f172a; flex:1; line-height:1.35; word-break:keep-all; letter-spacing:-0.01em;">${summary}</span>
                     </div>
                     <!-- Line 2: 결제금액 + 서류 버튼 -->
-                    <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                        <span style="font-size:17px; font-weight:800; color:#0f172a; letter-spacing:-0.01em;">${fmtMoney(o.total_amount || 0)}</span>
+                    <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                        <span style="font-size:18px; font-weight:800; color:#0f172a; letter-spacing:-0.015em;">${fmtMoney(o.total_amount || 0)}</span>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:34px; padding:0 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
-                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; overflow:hidden; min-width:160px;">
-                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:9px 12px; font-size:12px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:9px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:34px; padding:0 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition: all .15s;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 8px 24px -4px rgba(15,23,42,0.12); z-index:100; overflow:hidden; min-width:160px;">
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:10px 14px; font-size:12.5px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
-                    <!-- Line 3: 담당매니저 · 배송예정일 · 결제내역 -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:11px; color:#64748b;">
-                        <div style="overflow:hidden;">
-                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_manager','담당매니저')}</div>
-                            <div style="font-weight:600; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${_managerName}</div>
+                    <!-- Line 3: 담당매니저 · 배송예정일 · 결제내역 (배경 옅은 슬레이트, 3등분) -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; background:#f8fafc; border-radius:10px; padding:10px 4px;">
+                        <div style="text-align:center; padding:0 4px; border-right:1px solid #e2e8f0;">
+                            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:3px; letter-spacing:0.04em; font-weight:600; text-transform:uppercase;">${window.t('mp_manager','담당매니저')}</div>
+                            <div style="font-size:12px; font-weight:700; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${_managerName}</div>
                         </div>
-                        <div style="overflow:hidden;">
-                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_delivery_date','배송예정')}</div>
-                            <div style="font-weight:600; color:#475569; white-space:nowrap;">${_delivStr}</div>
+                        <div style="text-align:center; padding:0 4px; border-right:1px solid #e2e8f0;">
+                            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:3px; letter-spacing:0.04em; font-weight:600; text-transform:uppercase;">${window.t('mp_delivery_date','배송예정')}</div>
+                            <div style="font-size:12px; font-weight:700; color:#334155; white-space:nowrap;">${_delivStr}</div>
                         </div>
-                        <div style="overflow:hidden;">
-                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_payment_status','결제내역')}</div>
-                            <span class="status-badge ${badgeClass}" style="padding:2px 8px; font-size:10px; font-weight:700;">${_payLabel}</span>
+                        <div style="text-align:center; padding:0 4px;">
+                            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:3px; letter-spacing:0.04em; font-weight:600; text-transform:uppercase;">${window.t('mp_payment_status','결제내역')}</div>
+                            <span class="status-badge ${badgeClass}" style="padding:2px 8px; font-size:10.5px; font-weight:700; border-radius:5px;">${_payLabel}</span>
                         </div>
                     </div>
                 </div>
