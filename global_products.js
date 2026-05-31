@@ -2478,7 +2478,7 @@ function _ciRenderPreview(html) {
   .cmp-hero-title { font-size:28px; font-weight:800; letter-spacing:-0.025em; line-height:1.12; margin:0; word-break:keep-all; }
   .cmp-title-block { padding:24px 0 12px; text-align:center; }
   .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
-  .cmp-section { margin:28px 0 28px; }
+  .cmp-section { margin:18px 0 18px; }   /* 1문장 블록 늘었으니 마진 줄임 */
   /* 제목 600 (Semibold) */
   .cmp-section-title { font-size:17px; font-weight:600; letter-spacing:-0.03em; color:#0f172a; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
   /* 본문 — weight 300 (Light) — 너무 얇아 안 보임 vs 두꺼움 사이 균형 (v=304 의 200 은 잘 안보임). 색도 진하게 */
@@ -2520,13 +2520,18 @@ function _ciRenderPreview(html) {
 // 사용자 요청: '세련되고 깔끔, 제목 + 긴 설명, 글자 작게, 사진 다이나믹 배치'.
 // ═══════════════════════════════════════════════════════════════════
 
-// 2026-05-31: 불릿 구분자 / 옛 챕터 라벨 모두 정리 — '서술형으로 - 없이 그냥 이야기하듯'.
-// 결과 예: "Chapter 01 병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…"
+// 2026-05-31: 불릿 구분자 / 옛 챕터 라벨 / 이모지 픽토그램 모두 정리.
+// 결과 예: "🍂 Chapter 01 병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…"
 function _ciDenarcize(text) {
     if (!text) return '';
     return String(text)
         .replace(/CHAPTER\s+\d+\s*\.?/gi, '. ')       // 옛 designer 출력의 "Chapter 01" 라벨 제거
-        .replace(/Our\s+story\s*\.?/gi, '. ')         // 옛 브랜드 라벨도 제거 (재조립 시 다시 붙음)
+        .replace(/Our\s+story\s*\.?/gi, '. ')         // 옛 브랜드 라벨도 제거
+        // 2026-05-31: 이모지/픽토그램 제거 — 사용자 요청 '아이콘 픽토그램 안 들어가도록'.
+        // U+1F300~1FAFF (Symbols&Pictographs, Emoticons, Transport), U+2600~27BF (Misc Symbols+Dingbats),
+        // U+1F000~1F2FF (Mahjong/Playing Cards/Enclosed), U+2300~23FF (Misc Technical 시계/가위 등),
+        // U+2B00~2BFF (Misc Arrows/Stars), U+FE0E~FE0F (Variation Selectors)
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE0E}-\u{FE0F}]/gu, '')
         .replace(/\s*[—–]\s*/g, '. ')                 // em/en-dash → period
         .replace(/\s+-\s+/g, '. ')                    // " - " (spaced hyphen) → period
         .replace(/\s+·\s+/g, ' ')                     // middle-dot → space
@@ -2604,19 +2609,55 @@ function _ciParseTextIntoSections(text, productName) {
     return { tagline, bodyBlocks };
 }
 
-// 디자이너 템플릿 HTML 조립 — 사진 페어 + 섹션 + 브랜드 분산 + 끝 홀수는 큰 원형
+// 사진 그룹 1개 렌더링
+function _ciRenderPhotoGroup(group, esc) {
+    if (group.type === 'split') {
+        return `
+<div class="cmp-split">
+    <img class="cmp-split-img" src="${esc(group.imgs[0])}" alt="">
+    <img class="cmp-split-img" src="${esc(group.imgs[1])}" alt="">
+</div>`;
+    }
+    if (group.type === 'circle') {
+        return `
+<div class="cmp-circle-wrap">
+    <div class="cmp-circle"><img src="${esc(group.imgs[0])}" alt=""></div>
+</div>`;
+    }
+    return `<img class="cmp-full" src="${esc(group.imgs[0])}" alt="">`;
+}
+
+// 텍스트 블록 1개 렌더링
+function _ciRenderTextBlock(block, esc) {
+    if (block.type === 'titled') {
+        return `
+<section class="cmp-section">
+    <h2 class="cmp-section-title">${esc(block.title)}</h2>
+    <p class="cmp-section-body">${esc(block.body)}</p>
+</section>`;
+    }
+    if (block.type === 'brand') {
+        return `
+<section class="cmp-section">
+    <p class="cmp-bs-inline">${esc(block.body)}</p>
+</section>`;
+    }
+    // body
+    return `
+<section class="cmp-section">
+    <p class="cmp-section-body">${esc(block.body)}</p>
+</section>`;
+}
+
+// 2026-05-31: 디자이너 어셈블러 v2 — 사진 그룹/텍스트 블록을 짝지어 인터리브.
+// 사진 사이클: [full, split, full, full, split, circle] (1/2/1/1/2/원형 — 사용자 패턴).
+// 텍스트는 섹션 + brand 를 1문장씩 잘게 쪼개서 사진 사이마다 한 블록씩 끼움.
 function _ciAssembleDesignerHtml(copy, images) {
     images = images || [];
     let html = '<div class="cmp-designer">';
-    let imgIdx = 0;
     const esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 
-    // 2026-05-31: 브랜드 스토리 chunks 를 섹션 사이사이에 분산 배치 (사용자 요청
-    // '단락별로 끈어진 글씨들을 사진 사이사이에 넣어줘')
-    const brandChunks = _ciChunkSentences(_CMP_BRAND_STORY_KR, 2);
-    let brandIdx = 0;
-
-    // Hero — 첫 이미지 + 오버레이 (이미지 없으면 텍스트만)
+    // ── Hero (첫 이미지 + 오버레이)
     if (images[0]) {
         html += `
 <div class="cmp-hero">
@@ -2626,7 +2667,6 @@ function _ciAssembleDesignerHtml(copy, images) {
         <h1 class="cmp-hero-title">${esc(copy.hero_title || '')}</h1>
     </div>
 </div>`;
-        imgIdx = 1;
     } else if (copy.hero_title) {
         html += `
 <div class="cmp-title-block">
@@ -2635,75 +2675,64 @@ function _ciAssembleDesignerHtml(copy, images) {
 </div>`;
     }
 
-    // 사진 페어 → 섹션 텍스트 → 브랜드 chunk 1개 패턴 반복
-    (copy.sections || []).forEach((sec) => {
-        // (a) 사진 — 2장이면 split, 1장만 남으면 cmp-full (끝 처리 위해 보존 안함)
-        if (images[imgIdx] && images[imgIdx + 1]) {
-            html += `
-<div class="cmp-split">
-    <img class="cmp-split-img" src="${esc(images[imgIdx])}" alt="">
-    <img class="cmp-split-img" src="${esc(images[imgIdx + 1])}" alt="">
-</div>`;
-            imgIdx += 2;
-        } else if (images[imgIdx]) {
-            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
-            imgIdx++;
+    // ── 사진 그룹 생성 — 1/2/1/1/2/원형 사이클 + 끝 홀수는 큰 원형으로 보존
+    let photoUrls = images.slice(1);
+    let lastBigCircle = null;
+    if (photoUrls.length >= 2 && photoUrls.length % 2 === 1) {
+        // 마지막 홀수 1장 → 끝 큰 원형
+        lastBigCircle = photoUrls[photoUrls.length - 1];
+        photoUrls = photoUrls.slice(0, -1);
+    }
+    const cycle = ['full', 'split', 'full', 'full', 'split', 'circle'];
+    const photoGroups = [];
+    let pi = 0, ci = 0;
+    while (pi < photoUrls.length) {
+        const layout = cycle[ci % cycle.length];
+        if (layout === 'split' && photoUrls[pi + 1]) {
+            photoGroups.push({ type: 'split', imgs: [photoUrls[pi], photoUrls[pi + 1]] });
+            pi += 2;
+        } else if (layout === 'circle') {
+            photoGroups.push({ type: 'circle', imgs: [photoUrls[pi]] });
+            pi++;
+        } else {
+            photoGroups.push({ type: 'full', imgs: [photoUrls[pi]] });
+            pi++;
         }
-        // (b) 텍스트 — 2문장씩 덩어리 <p>
-        const bodyChunks = _ciChunkSentences(sec.body || '', 2);
-        const bodyHtml = bodyChunks.map(c => `<p class="cmp-section-body">${esc(c)}</p>`).join('');
-        html += `
-<section class="cmp-section">
-    ${sec.title ? `<h2 class="cmp-section-title">${esc(sec.title)}</h2>` : ''}
-    ${bodyHtml}
-</section>`;
-        // (c) 브랜드 chunk 한 단락 — 섹션마다 하나씩 분산
-        if (brandChunks[brandIdx]) {
-            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
-            brandIdx++;
+        ci++;
+    }
+
+    // ── 텍스트 블록 생성 — 섹션 body 를 1문장씩 잘게 + brand chunks 도 1문장씩
+    const flatBlocks = [];
+    (copy.sections || []).forEach(sec => {
+        const bodyChunks = _ciChunkSentences(sec.body || '', 1);
+        if (sec.title && bodyChunks.length > 0) {
+            flatBlocks.push({ type: 'titled', title: sec.title, body: bodyChunks[0] });
+            for (let k = 1; k < bodyChunks.length; k++) {
+                flatBlocks.push({ type: 'body', body: bodyChunks[k] });
+            }
+        } else if (sec.title) {
+            flatBlocks.push({ type: 'titled', title: sec.title, body: '' });
+        } else {
+            bodyChunks.forEach(c => flatBlocks.push({ type: 'body', body: c }));
         }
     });
+    // 브랜드 chunks 1문장씩 (6 문장 → 6 블록)
+    const brandChunks = _ciChunkSentences(_CMP_BRAND_STORY_KR, 1);
+    brandChunks.forEach(c => flatBlocks.push({ type: 'brand', body: c }));
 
-    // 남는 이미지 — 페어로 split, 마지막 홀수 1장은 큰 원형 (사용자 요청).
-    // 2026-05-31: 트레일링 split 페어 사이에도 brand chunk 분산 — 사용자 요청
-    // '사진 사이사이에 글씨가 들어가도록 배치'.
-    let rem = images.slice(imgIdx);
-    let lastCircle = null;
-    if (rem.length % 2 === 1) {
-        lastCircle = rem[rem.length - 1];
-        rem = rem.slice(0, -1);
+    // ── 인터리브 — [photo][text][photo][text]…
+    const maxLen = Math.max(photoGroups.length, flatBlocks.length);
+    for (let i = 0; i < maxLen; i++) {
+        if (photoGroups[i]) html += _ciRenderPhotoGroup(photoGroups[i], esc);
+        if (flatBlocks[i])  html += _ciRenderTextBlock(flatBlocks[i], esc);
     }
-    for (let k = 0; k < rem.length; k += 2) {
-        html += `
-<div class="cmp-split">
-    <img class="cmp-split-img" src="${esc(rem[k])}" alt="">
-    <img class="cmp-split-img" src="${esc(rem[k + 1])}" alt="">
-</div>`;
-        // 각 페어 뒤에 brand chunk 한 줄 (남은 chunk 가 있을 때만)
-        if (brandChunks[brandIdx]) {
-            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
-            brandIdx++;
-        }
-    }
-    if (lastCircle) {
+
+    // ── 마지막 홀수 사진 → 280px 큰 원형 (사용자 요청)
+    if (lastBigCircle) {
         html += `
 <div class="cmp-circle-wrap cmp-circle-wrap-lg">
-    <div class="cmp-circle cmp-circle-lg"><img src="${esc(lastCircle)}" alt=""></div>
+    <div class="cmp-circle cmp-circle-lg"><img src="${esc(lastBigCircle)}" alt=""></div>
 </div>`;
-        // 큰 원형 뒤에도 brand chunk 한 줄
-        if (brandChunks[brandIdx]) {
-            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
-            brandIdx++;
-        }
-    }
-
-    // 그래도 남은 brand chunks (거의 없을 케이스) — 끝에 마무리 블록으로
-    if (brandIdx < brandChunks.length) {
-        html += '<section class="cmp-brand-story">';
-        for (let k = brandIdx; k < brandChunks.length; k++) {
-            html += `<p class="cmp-bs-body">${esc(brandChunks[k])}</p>`;
-        }
-        html += '</section>';
     }
 
     html += '</div>';

@@ -1164,7 +1164,7 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-designer * {
     font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Segoe UI', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
-.so-prod-detail-body .cmp-section { margin: 28px 0 28px; }
+.so-prod-detail-body .cmp-section { margin: 18px 0 18px; }
 /* 제목 600 (Semibold) */
 .so-prod-detail-body .cmp-section-title {
     font-size: 17px; font-weight: 600; letter-spacing: -0.03em;
