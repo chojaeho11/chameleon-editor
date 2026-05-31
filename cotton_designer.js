@@ -313,7 +313,18 @@ window._cdUploadImage = async function(files) {
             state.imgScale = 1.0;
             const pct = document.getElementById('shrinkPct'); if (pct) pct.textContent = '100%';
             window._cdRender();
-            showToast('✅ 업로드 완료');
+            // 2026-05-31: 사용자 요청 — 업로드 직후 출력 사이즈 입력으로 자동 스크롤.
+            // 이미지 픽셀 사이즈가 그대로 적용되니 사용자가 바로 조정할 수 있게 해당 input 위치로 이동 + focus + select.
+            setTimeout(function() {
+                const sizeInput = document.getElementById('orderWcm');
+                if (sizeInput) {
+                    sizeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // mobile 키보드 자동 팝업 방지 — focus 만 주고 select 는 약간 지연
+                    sizeInput.focus({ preventScroll: true });
+                    try { sizeInput.select(); } catch(e) {}
+                }
+            }, 150);
+            showToast('업로드 완료. 사이즈를 확인하세요.');
         };
         img.onerror = function() { showToast('변환된 이미지를 표시할 수 없습니다'); };
         img.src = dataUrl;
