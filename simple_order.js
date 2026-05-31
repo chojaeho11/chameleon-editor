@@ -1151,7 +1151,8 @@ html, body { background: #ffffff !important; }
     color: #111827; margin: 0 0 12px; line-height: 1.32; word-break: keep-all;
 }
 .so-prod-detail-body .cmp-section-body {
-    font-size: 13px; line-height: 1.92; color: #4b5563;
+    font-size: 12.5px; line-height: 1.85; color: #4b5563;
+    font-weight: 400; letter-spacing: -0.012em;
     word-break: keep-all; overflow-wrap: anywhere; margin: 0;
 }
 .so-prod-detail-body .cmp-full {
@@ -1159,7 +1160,7 @@ html, body { background: #ffffff !important; }
     border-radius: 12px; margin: 22px 0; box-shadow: none;
 }
 .so-prod-detail-body .cmp-split {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 22px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 22px 0;
 }
 .so-prod-detail-body .cmp-split-img {
     width: 100%; aspect-ratio: 1; object-fit: cover;
@@ -1175,16 +1176,31 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-circle img {
     width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; box-shadow: none;
 }
+/* 모자이크 — 위 1개 풀폭 + 아래 2개 반반 (사용자 요청 '꽉채워서') */
 .so-prod-detail-body .cmp-mosaic {
-    display: grid; grid-template-columns: 2fr 1fr;
-    grid-auto-rows: 1fr; gap: 6px; margin: 22px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 22px 0;
 }
 .so-prod-detail-body .cmp-mosaic img {
     width: 100%; aspect-ratio: 1; object-fit: cover;
     border-radius: 8px; display: block; margin: 0; box-shadow: none;
 }
 .so-prod-detail-body .cmp-mosaic img:first-child {
-    grid-row: span 2; aspect-ratio: 1/2;
+    grid-column: 1 / -1; aspect-ratio: 16/9;
+}
+/* 브랜드 스토리 — 모든 상세페이지 끝 (사용자 요청) */
+.so-prod-detail-body .cmp-brand-story {
+    margin: 36px 0 12px; padding: 18px 0 6px;
+    border-top: 1px solid #e2e8f0;
+}
+.so-prod-detail-body .cmp-bs-label {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: #94a3b8; margin-bottom: 8px; font-weight: 700;
+    font-family: 'Times New Roman', serif; font-style: italic;
+}
+.so-prod-detail-body .cmp-bs-body {
+    font-size: 11px; line-height: 1.85; color: #94a3b8;
+    font-weight: 400; letter-spacing: -0.01em;
+    word-break: keep-all; margin: 0;
 }
 
 /* 모바일 — 세로 스택, 풀스크린 유지 */

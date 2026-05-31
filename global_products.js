@@ -2472,20 +2472,21 @@ function _ciRenderPreview(html) {
   .cmp-section { margin:28px 0 24px; }
   .cmp-section-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:#94a3b8; margin-bottom:10px; font-weight:700; font-family:'Times New Roman',serif; font-style:italic; }
   .cmp-section-title { font-size:19px; font-weight:800; letter-spacing:-0.02em; color:#111827; margin:0 0 12px; line-height:1.32; word-break:keep-all; }
-  .cmp-section-body { font-size:13px; line-height:1.92; color:#4b5563; word-break:keep-all; overflow-wrap:anywhere; margin:0; }
+  .cmp-section-body { font-size:12.5px; line-height:1.85; color:#4b5563; font-weight:400; letter-spacing:-0.012em; word-break:keep-all; overflow-wrap:anywhere; margin:0; }
   .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
-  .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:22px 0; }
+  .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
   .cmp-circle-wrap { display:flex; justify-content:center; padding:18px 0; margin:22px 0; }
   .cmp-circle { width:220px; height:220px; border-radius:50%; overflow:hidden; box-shadow:0 18px 36px -16px rgba(0,0,0,0.22); }
   .cmp-circle img { width:100%; height:100%; object-fit:cover; }
-  .cmp-mosaic { display:grid; grid-template-columns:2fr 1fr; grid-auto-rows:1fr; gap:6px; margin:22px 0; }
+  /* 모자이크 — 위 1개 풀폭 + 아래 2개 반반 (사용자 요청 '꽉채워서') */
+  .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
-  .cmp-mosaic img:first-child { grid-row:span 2; aspect-ratio:1/2; }
-  .cmp-caption-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center; margin:22px 0; }
-  .cmp-caption-row img { width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:12px; }
-  .cmp-caption-row .cmp-cap-text { font-size:12.5px; line-height:1.85; color:#4b5563; word-break:keep-all; }
-  .cmp-caption-row .cmp-cap-text h3 { font-size:15px; font-weight:800; margin:0 0 8px; color:#111827; letter-spacing:-0.015em; word-break:keep-all; }
+  .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
+  /* 브랜드 스토리 — 모든 페이지 끝 (사용자 요청, 아주 작은 글씨 + 서술형) */
+  .cmp-brand-story { margin:36px 0 12px; padding:18px 0 6px; border-top:1px solid #e2e8f0; }
+  .cmp-bs-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:#94a3b8; margin-bottom:8px; font-weight:700; font-family:'Times New Roman',serif; font-style:italic; }
+  .cmp-bs-body { font-size:11px; line-height:1.85; color:#94a3b8; font-weight:400; letter-spacing:-0.01em; word-break:keep-all; margin:0; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2506,9 +2507,39 @@ function _ciRenderPreview(html) {
 // 사용자 요청: '세련되고 깔끔, 제목 + 긴 설명, 글자 작게, 사진 다이나믹 배치'.
 // ═══════════════════════════════════════════════════════════════════
 
-// 사용자 설명 텍스트를 섹션으로 파싱 — '제목: 본문' 패턴 자동 인식
+// 2026-05-31: '—' / ' - ' (em-dash, en-dash, spaced hyphen) 같은 불릿 구분자를
+// 자연스러운 마침표로 변환 — 사용자 요청 '서술형으로 - 없이 그냥 이야기하듯'.
+// 결과: "병풍형 구조 — 접고 펼치는…" → "병풍형 구조. 접고 펼치는…" (이후 파서가
+// 짧은 첫 문장은 제목으로, 긴 두번째 문장은 본문으로 자동 분리).
+function _ciDenarcize(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/\s*[—–]\s*/g, '. ')   // em/en-dash → period
+        .replace(/\s+-\s+/g, '. ')                  // " - " (spaced hyphen) → period
+        .replace(/\s+·\s+/g, ' ')                   // middle-dot → space (·)
+        .replace(/\s*\.\s*/g, '. ')                 // period 앞뒤 공백 정규화
+        .replace(/\.{2,}/g, '.')                    // 중복 마침표 합치기
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+// 2026-05-31: 모든 상세페이지에 자동 삽입되는 브랜드 스토리 (사용자 요청).
+// 한국어 원본 — 번역 단계에서 자동으로 7개국어로 변환됨.
+const _CMP_BRAND_STORY_KR = '우리는 업자를 위한 쇼핑몰입니다. 고객과 함께 성장할 수 있는 제품을 만들기 위해 매일 노력하고 있어요. 친환경 인쇄로 환경을 조금 더 아름답게 유지하고 싶습니다. 다만 친환경이라는 이유만으로 가격이 비싸다면 고객도 외면하기에, 더 저렴하게 만들 방법을 끊임없이 고민합니다. 우리가 사용하는 잉크는 그린가드 골드 등급의 친환경 잉크예요. 아기들에게도 안전한 수준이라, 안심하고 가까이 두실 수 있습니다.';
+
+function _ciBrandStoryHtml() {
+    return `
+<section class="cmp-brand-story">
+    <div class="cmp-bs-label">Our story</div>
+    <p class="cmp-bs-body">${_CMP_BRAND_STORY_KR}</p>
+</section>`;
+}
+
+// 사용자 설명 텍스트를 섹션으로 파싱 — '제목: 본문' 패턴 자동 인식.
+// 2026-05-31: 입력 단계에서 denarcize 적용해서 em-dash 없는 깔끔한 서술형으로.
 function _ciParseTextIntoSections(text, productName) {
     if (!text) return { tagline: '', bodyBlocks: [] };
+    text = _ciDenarcize(text);   // " — " / " - " 정리
     const paragraphs = text.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
     let tagline = '';
     const bodyBlocks = [];
@@ -2516,18 +2547,25 @@ function _ciParseTextIntoSections(text, productName) {
     // 첫 짧은 문단 (≤60자) → 태그라인
     if (paragraphs[0].length <= 60 && paragraphs.length > 1) tagline = paragraphs.shift();
     paragraphs.forEach(p => {
-        // '제목: 본문' 또는 '제목 — 본문' 패턴
-        const m = p.match(/^([^.\n—:：]{2,30})\s*[:：—-]\s*(.+)$/s);
+        // '제목: 본문' 패턴 (em-dash 는 이미 제거됨, 콜론만 검사)
+        const m = p.match(/^([^.\n:：]{2,30})\s*[:：]\s*(.+)$/s);
         if (m) {
-            bodyBlocks.push({ type: 'narrative', title: m[1].trim(), body: m[2].trim() });
+            bodyBlocks.push({ type: 'narrative', title: m[1].trim(), body: _ciDenarcize(m[2].trim()) });
         } else {
-            // 2문장+ 이면 첫 문장 → 제목, 나머지 → 본문
+            // 2문장+ 이면: 짧은 첫 문장 → 제목, 나머지 → 본문
             const sentences = p.split(/[.!?。]\s+/).filter(Boolean);
-            if (sentences.length >= 2 && sentences[0].length <= 40) {
+            if (sentences.length >= 2 && sentences[0].length <= 18) {
+                // 매우 짧은 첫 문장 (≤18자) → 제목
                 bodyBlocks.push({
                     type: 'narrative',
-                    title: sentences[0].replace(/[.!?。]$/, ''),
-                    body: sentences.slice(1).join(' ').trim()
+                    title: sentences[0].replace(/[.!?。]$/, '').trim(),
+                    body: sentences.slice(1).join('. ').trim() + (sentences.length > 1 ? '.' : '')
+                });
+            } else if (sentences.length >= 2 && sentences[0].length <= 40) {
+                bodyBlocks.push({
+                    type: 'narrative',
+                    title: '',
+                    body: sentences.join('. ').trim() + '.'
                 });
             } else {
                 bodyBlocks.push({ type: 'narrative', title: '', body: p });
@@ -2611,6 +2649,8 @@ function _ciAssembleDesignerHtml(copy, images) {
     } else if (rem.length === 1) {
         html += `<img class="cmp-full" src="${esc(rem[0])}" alt="">`;
     }
+    // 2026-05-31: 모든 상세페이지에 브랜드 스토리 자동 삽입 (사용자 요청)
+    html += _ciBrandStoryHtml();
     html += '</div>';
     return html;
 }
