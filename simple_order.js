@@ -576,6 +576,15 @@ html, body { background: #ffffff !important; }
     .so-body > .so-right h3,
     .so-body > .so-right h4 { color: #1c1917; }
 
+    /* 2026-05-31: 우측 패널 flex column + 사이즈 입력 섹션을 최상단으로 (사용자 요청 '사이즈 입력을 젤 위로') */
+    .so-body > .so-right { display: flex; flex-direction: column; }
+    .so-body > .so-right #soWallSizeSection,
+    .so-body > .so-right #soCutPrintSizeSection,
+    .so-body > .so-right #soBoxSizeSection,
+    .so-body > .so-right #soGoodsKeyringSizeSection,
+    .so-body > .so-right #soGoodsCutSection,
+    .so-body > .so-right #soTshirtSizeSection { order: -100; }
+
     /* 2026-05-31 v5: 각 섹션을 흰 카드 + 검정 보더 + 라운딩으로 명확히 구분 (사용자 요청). */
     .so-body > .so-right .so-section {
         background: #ffffff;
@@ -1278,14 +1287,14 @@ html, body { background: #ffffff !important; }
           ← ${tr('메인으로', 'メインへ', 'Main')}
         </button>
         <button class="so-back so-cat-home" id="soCatHome" style="display:none" onclick="window._soBackToCategory()" title="${tr('카테고리 목록', 'カテゴリー一覧', 'Category list')}">
-          📂 <span id="soCatHomeLabel"></span>
+          <span id="soCatHomeLabel"></span>
         </button>
         <span class="so-brand">Chameleon</span>
         <h2 id="soHeadTitle">${tr('상품 주문', '商品注文', 'Order')}</h2>
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
         <button class="so-back" id="soCartBtn" onclick="window._soToggleCart(true)" title="${tr('장바구니', 'カート', 'Cart')}">
-          🛒 <span id="soCartCount">0</span>
+          <span id="soCartCount">0</span>
         </button>
         <button class="so-close" onclick="window.closeSimpleOrderModal()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
       </div>
@@ -1328,7 +1337,7 @@ html, body { background: #ffffff !important; }
              2026-05-31: 위의 추가옵션·시공/배송 카드와 톤 통일 — 흰 카드 + 검정 보더 + 10px 라운딩. -->
         <div id="soCutlineDownload" style="display:none; margin-bottom:14px; padding:16px 14px; background:#ffffff; border:1px solid #1c1917; border-radius:10px;">
           <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:26px;">✂️</span>
+            <span style="font-size:26px;"></span>
             <div style="flex:1; min-width:0;">
               <div style="font-weight:800; color:#1c1917; font-size:13px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template available')}</div>
               <div style="font-size:11px; color:#57534e; margin-top:2px;">${tr('이 제품 전용 칼선 템플릿을 다운받아 디자인에 맞춰주세요.', 'この商品専用の型抜きテンプレートをダウンロードしてデザインしてください。', 'Download the die-cut template for this product to align your design.')}</div>
@@ -1341,17 +1350,17 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-30: 티셔츠 — 선택한 인쇄 위치별 이미지 업로드 (표준 업로드/에디터 대체) -->
         <div id="soTshirtUploadSection" style="display:none;">
-          <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">📤 ${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
+          <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
           <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
           <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
         </div>
 
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
         <div id="soUploadWrap">
-        <div class="so-upload-section-label" id="soUploadLabel">${tr('📤 디자인 파일 업로드', '📤 デザインファイルをアップロード', '📤 Upload design file')}</div>
+        <div class="so-upload-section-label" id="soUploadLabel">${tr('디자인 파일 업로드', 'デザインファイルをアップロード', 'Upload design file')}</div>
         <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
           <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-          <div class="so-upload-icon">📤</div>
+          <div class="so-upload-icon"></div>
           <div class="so-upload-title" id="soUploadTitle">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
           <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
           <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
@@ -1369,10 +1378,10 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
         <div id="soBackUploadWrap" style="display:none; margin-top:20px; padding:14px; background:#ede9fe; border:2px solid #7c3aed; border-radius:14px;">
-          <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">📤 ${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
+          <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
           <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()" style="background:#fff; max-width:none;">
             <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />
-            <div class="so-upload-icon" style="color:#7c3aed;">📤</div>
+            <div class="so-upload-icon" style="color:#7c3aed;"></div>
             <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
             <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
@@ -1381,7 +1390,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-29: 디자인 에디터 진입 카드 (예쁘게) + 상품 상세 HTML (admin_products.description_*) -->
         <button type="button" id="soOpenEditorBtn" class="so-editor-card" onclick="window._soOpenEditor && window._soOpenEditor()">
-          <span class="so-editor-icon">🎨</span>
+          <span class="so-editor-icon"></span>
           <div style="flex:1; min-width:0;">
             <div class="so-editor-title">${tr('디자인에디터', 'デザインエディタ', 'Design Editor')}</div>
             <div class="so-editor-sub">${tr('쉬운 디자인 — 클릭 한 번으로 시작', 'カンタン操作 — ワンクリックで開始', 'Easy design — start with one click')}</div>
@@ -1411,7 +1420,7 @@ html, body { background: #ffffff !important; }
       <div class="so-right">
         <!-- 2026-05-30: 원판 상품 — 다른 원판 제품 (이미지 + 수량 + 담기). 우측 컬럼 상단에 위치. -->
         <div class="so-section" id="soRawBoardMoreRightSec" style="display:none;">
-          <div class="so-section-title">🧩 ${tr('다른 원판 제품 더 담기', '他の原板商品を追加', 'Add more raw boards')}</div>
+          <div class="so-section-title">${tr('다른 원판 제품 더 담기', '他の原板商品を追加', 'Add more raw boards')}</div>
           <div id="soRawBoardMoreRight" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
         </div>
         <div class="so-section" id="soQtySection">
@@ -1499,7 +1508,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-13: 허니콤 박스 사이즈 입력 (가로×세로×높이 mm → 자동 단가 계산) -->
         <div class="so-section" id="soBoxSizeSection" style="display:none;">
-          <div class="so-section-title">📦 ${tr('박스 사이즈 입력', 'ボックスサイズ入力', 'Box Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
+          <div class="so-section-title">${tr('박스 사이즈 입력', 'ボックスサイズ入力', 'Box Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(mm)</span></div>
           <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '幅 (W)', 'Width (W)')}</div>
@@ -1520,7 +1529,7 @@ html, body { background: #ffffff !important; }
             </div>
           </div>
           <div id="soBoxCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1.5px solid #c7d2fe; border-radius:10px; text-align:center;">
-            <div style="font-size:11px; color:#6366f1; font-weight:700; margin-bottom:4px;">💰 ${tr('박스 단가', 'ボックス単価', 'Box unit price')}</div>
+            <div style="font-size:11px; color:#6366f1; font-weight:700; margin-bottom:4px;">${tr('박스 단가', 'ボックス単価', 'Box unit price')}</div>
             <div id="soBoxUnitPrice" style="font-size:20px; font-weight:900; color:#1e1b4b;">-</div>
             <div id="soBoxSheetInfo" style="font-size:10px; color:#64748b; margin-top:4px;"></div>
           </div>
@@ -1528,7 +1537,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-30: 키링/코롯토 모양 선택 (6종 — 모양따기/사각배경/원형배경/모양배경/사각투명/원형투명) -->
         <div class="so-section" id="soPresetCutSection" style="display:none;">
-          <div class="so-section-title">✂️ ${tr('모양 선택', 'カット形状の選択', 'Choose cut shape')}</div>
+          <div class="so-section-title">${tr('모양 선택', 'カット形状の選択', 'Choose cut shape')}</div>
           <div id="soPresetCutGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
           <div id="soPresetCutLabel" style="font-size:11px; color:#64748b; font-weight:600; margin-top:6px; text-align:center;"></div>
         </div>
@@ -1555,7 +1564,7 @@ html, body { background: #ffffff !important; }
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
           <!-- 2026-05-30: 개별포장 3가지 선택 (포장없음·내지인쇄·상단인쇄). 인쇄 포장 = 50,000원 정액 (수량 무관) -->
           <div id="soPresetWrapWrap" style="display:none; margin-bottom:10px;">
-            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">🎁 ${tr('개별포장', '個別包装', 'Individual packaging')}</div>
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">${tr('개별포장', '個別包装', 'Individual packaging')}</div>
             <div id="soPresetWrapGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
             <div id="soPresetWrapHint" style="font-size:11px; color:#94a3b8; margin-top:6px;"></div>
           </div>
@@ -1573,7 +1582,7 @@ html, body { background: #ffffff !important; }
             </div>
           </div>
           <div id="soCustomCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #fbbf24; border-radius:10px; text-align:center;">
-            <div id="soCustomCalcLabel" style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">💰 ${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
+            <div id="soCustomCalcLabel" style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
@@ -1647,7 +1656,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-30: 티셔츠 — 인쇄 위치 (복수 선택). 앞면로고 무료 / 앞면전체·뒷면전체 +3,000원/장 -->
         <div class="so-section" id="soTshirtPrintAreaSection" style="display:none;">
-          <div class="so-section-title">🎨 ${tr('인쇄 위치 (복수 선택)', '印刷位置 (複数選択)', 'Print area (multi)')}</div>
+          <div class="so-section-title">${tr('인쇄 위치 (복수 선택)', '印刷位置 (複数選択)', 'Print area (multi)')}</div>
           <div id="soTshirtPrintAreaGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
             <button type="button" class="so-tpa-btn active" data-area="front_logo" data-area-fee="3000" onclick="window._soToggleTshirtPrintArea(this)" style="border:2px solid #0f172a; background:#0f172a; border-radius:12px; padding:8px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color 0.15s ease, background 0.15s ease; font-family:inherit;">
               <img src="/t/print1.png" alt="앞면 로고" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#fff;">
@@ -1672,43 +1681,43 @@ html, body { background: #ffffff !important; }
           <div class="so-section-title">${tr('시공/배송 옵션', '施工/配送オプション', 'Install/Delivery')}</div>
           <!-- 배송 옵션 (버튼형 — 가격 라벨 없이 깔끔하게) -->
           <div id="soShipBtnGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-            <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">🏪 ${tr('본사 방문 수령', '本社受取', 'HQ pickup')}</button>
-            <button type="button" class="so-ship-btn" data-ship="metro_install" onclick="window._soPickShip('metro_install')">🚚 ${tr('수도권 설치', '首都圏設置', 'Metro install')}</button>
-            <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">🌙 ${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
-            <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">🔧 ${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
-            <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">🛻 ${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
-            <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">🚛 ${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
+            <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">${tr('본사 방문 수령', '本社受取', 'HQ pickup')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_install" onclick="window._soPickShip('metro_install')">${tr('수도권 설치', '首都圏設置', 'Metro install')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
+            <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
+            <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
             <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
-            <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">📦 ${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(100000)}</span></button>
-            <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">📦 ${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(200000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(100000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(200000)}</span></button>
             <!-- 2026-05-13: 택배배송 (배너·인스타판넬만, 2장 묶음 3만원) -->
-            <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">📮 ${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="parcel_shipping" onclick="window._soPickShip('parcel_shipping')" style="display:none;">${tr('택배배송', '宅配便', 'Parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)} / ${tr('2장 묶음', '2枚まとめ', '2 per box')}</span></button>
             <!-- 2026-05-13: 포맥스·폼보드 대형택배 (3만원) -->
-            <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">📦 ${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)}</span></button>
             <!-- 2026-05-13: 일반 인쇄물 소형 묶음택배 (5천원) -->
-            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">📨 ${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(5000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(5000)}</span></button>
             <!-- 2026-05-13: 등신대·자유인쇄커팅 컴팩트 택배 (60×40 이하, 1만원) -->
-            <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">📬 ${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(10000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(10000)}</span></button>
             <!-- 2026-05-15: 종이매대 전용 — 1개씩 / 2개씩 택배 (수량 곱셈) -->
-            <button type="button" class="so-ship-btn" data-ship="pd_parcel_1" onclick="window._soPickShip('pd_parcel_1')" style="display:none;">📦 ${tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-1">${fmtPrice(30000)} / ${tr('개', '個', 'each')}</span></button>
-            <button type="button" class="so-ship-btn" data-ship="pd_parcel_2" onclick="window._soPickShip('pd_parcel_2')" style="display:none;">📦 ${tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-2">${fmtPrice(15000)} / 2${tr('개', '個', 'pcs')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="pd_parcel_1" onclick="window._soPickShip('pd_parcel_1')" style="display:none;">${tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-1">${fmtPrice(30000)} / ${tr('개', '個', 'each')}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="pd_parcel_2" onclick="window._soPickShip('pd_parcel_2')" style="display:none;">${tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box')}<br><span style="font-size:11px; opacity:0.85;" class="so-ship-dynamic-2">${fmtPrice(15000)} / 2${tr('개', '個', 'pcs')}</span></button>
           </div>
           <!-- 2026-05-15: 종이매대 전용 — 100개 이상 무료배송 (크게 표시) -->
           <button type="button" class="so-ship-btn so-ship-pd-bulk" data-ship="pd_bulk_free" onclick="window._soPickShip('pd_bulk_free')" style="display:none; width:100%; margin-bottom:12px; padding:16px 18px; font-size:15px; font-weight:900; border-radius:14px; background:linear-gradient(135deg,#10b981 0%, #059669 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); letter-spacing:0.3px;">
-            🎁 ${tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs')}
+            ${tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs')}
             <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('대량 주문 시 자동 적용 (수도권/지방 동일)', '大量注文時に自動適用', 'Auto-applied for bulk orders')}</div>
           </button>
           <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
           <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
             style="display:none; width:100%; padding:12px 14px; margin-bottom:12px; border:2px dashed #16a34a; background:#f0fdf4; color:#15803d; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.2s;">
-            📦 ${tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items')}
+            ${tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items')}
             <div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">
               ${tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping')}
             </div>
           </button>
           <!-- 배송일 / 시공 시간 -->
           <div id="soScheduleDateWrap" style="display:none;">
-            <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">📅 ${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
+            <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
               <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('배송 희망일', '配送希望日', 'Delivery date')}</label>
               <input type="date" id="soScheduleDate" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
@@ -1719,13 +1728,13 @@ html, body { background: #ffffff !important; }
                 <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
                 <option value="am">🌅 ${tr('오전 (08-12)', '午前 (08-12)', 'AM (08-12)')}</option>
                 <option value="pm">☀️ ${tr('오후 (12-18)', '午後 (12-18)', 'PM (12-18)')}</option>
-                <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
-                <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
+                <option value="night">${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
+                <option value="any">${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
               </select>
             </div>
             <!-- 철거 일정 (수도권 설치+철거 선택 시만) -->
             <div id="soRemovalWrap" style="display:none; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px; padding:10px; margin-bottom:10px;">
-              <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:6px;">🔧 ${tr('철거 일정 (야간만 가능)', '撤去日程 (夜間のみ)', 'Removal (night only)')}</div>
+              <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:6px;">${tr('철거 일정 (야간만 가능)', '撤去日程 (夜間のみ)', 'Removal (night only)')}</div>
               <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                 <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 희망일', '撤去希望日', 'Date')}</label>
                 <input type="date" id="soRemovalDate" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
@@ -1734,8 +1743,8 @@ html, body { background: #ffffff !important; }
                 <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('철거 시간', '撤去時間', 'Time')}</label>
                 <select id="soRemovalTime" onchange="window._soUpdateShipBreakdown()" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px;">
                   <option value="">${tr('시간 선택', '時間選択', 'Select')}</option>
-                  <option value="night">🌙 ${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
-                  <option value="any">📅 ${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
+                  <option value="night">${tr('야간 (18-22)', '夜間 (18-22)', 'Night (18-22)')}</option>
+                  <option value="any">${tr('시간 상관없음', '時間指定なし', 'Any time')}</option>
                 </select>
               </div>
             </div>
@@ -1744,12 +1753,8 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-05-13: 전달사항 (제작 요청사항) — 2026-05-15: 원판 상품은 숨김 (인쇄 없음) -->
-        <div class="so-section" id="soItemNoteSection">
-          <div class="so-section-title">${tr('전달사항 (선택)', '備考 (任意)', 'Notes (optional)')}</div>
-          <textarea id="soItemNote" placeholder="${tr('예: 색상 강조, 특정 부분 수정 요청 등', '例：色の強調、特定部分の修正要望など', 'e.g., emphasize color, request specific changes')}" rows="3"
-            style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
-        </div>
+        <!-- 2026-05-31: 전달사항 섹션 제거 (사용자 요청). hidden 스텁만 유지 — JS 가 #soItemNote 참조해도 null-safe 동작. -->
+        <div id="soItemNoteSection" style="display:none;"><textarea id="soItemNote" style="display:none;"></textarea></div>
 
 
         <div class="so-section so-price-box">
@@ -1775,13 +1780,13 @@ html, body { background: #ffffff !important; }
         <div class="so-actions">
           <!-- 2026-05-12: 장바구니 보기 버튼 — 담지 않고 현재 카트만 열어보기 -->
           <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
-            👀 ${tr('장바구니 보기', 'カートを見る', 'View cart')}
+            ${tr('장바구니 보기', 'カートを見る', 'View cart')}
           </button>
           <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
-            🛒 ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
+            ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
           </button>
           <button class="so-btn so-btn-buy" id="soBtnBuy" onclick="window._soBuyNow()" disabled>
-            ⚡ ${tr('바로 주문하기', '今すぐ注文', 'Order now')}
+            ${tr('바로 주문하기', '今すぐ注文', 'Order now')}
           </button>
         </div>
       </div>
@@ -1796,7 +1801,7 @@ html, body { background: #ffffff !important; }
 <div class="so-cart-drawer" id="soCartDrawer">
   <!-- 2026-05-31: z-index 999999 로 부모(.so-cart-drawer) 가 최상단에 있어 헤더의 기본 X 가 잘 보임 → 별도 floating X 는 제거. -->
   <div class="so-cart-head">
-    <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
+    <h3>${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
     <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
   </div>
   <!-- 2026-05-12: 크로스도메인 카트 배너 (cart_sync.js 가 채움) -->
@@ -1876,7 +1881,7 @@ html, body { background: #ffffff !important; }
 
       <!-- 2026-05-22: 마일리지/예치금 사용 (KR + 로그인 사용자만 — _soInitWallet 에서 노출) -->
       <div class="so-co-section" id="soCoWalletBox" style="display:none;">
-        <span class="so-co-label">💰 ${tr('마일리지 / 예치금','マイル / 預り金','Mileage / Deposit')}</span>
+        <span class="so-co-label">${tr('마일리지 / 예치금','マイル / 預り金','Mileage / Deposit')}</span>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
           <span style="font-size:12px; color:#6b7280;">${tr('보유 마일리지','保有マイル','Mileage')}: <b id="soOwnMileage" style="color:#b45309;">0 P</b></span>
           <input id="soUseMileage" type="number" min="0" step="100" placeholder="0" oninput="window._soOnWalletChange()" style="width:110px; padding:8px 10px; border:1.5px solid #e7d6b8; border-radius:8px; font-size:13px;">
@@ -1944,20 +1949,20 @@ html, body { background: #ffffff !important; }
         <span class="so-co-total-amt" id="soCoTotalAmt">0원</span>
       </div>
       <button class="so-co-submit-btn" id="soCoSubmitBtn" onclick="window._soSubmitOrder()">
-        ✓ ${tr('주문 완료하기', '注文を確定', 'Place order')}
+        ${tr('주문 완료하기', '注文を確定', 'Place order')}
       </button>
       <div style="font-size:10px; color:#9ca3af; text-align:center; margin-top:8px;">
         ${tr('결제 확인 후 영업일 내 제작 시작', '入金確認後、営業日内に製作開始', 'Production starts after payment confirmation')}
       </div>
       <!-- 2026-05-14: 관리자/매니저 전용 — 본인이 결제하지 않고 고객에게 결제 URL 발송 -->
       <button id="soCoMgrQuoteBtn" type="button" onclick="window._soCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
-        🎁 ${tr('고객 결제창 만들어주기 (매니저)', 'お客様用決済リンク作成 (マネージャー)', 'Create customer payment link (Manager)')}
+        ${tr('고객 결제창 만들어주기 (매니저)', 'お客様用決済リンク作成 (マネージャー)', 'Create customer payment link (Manager)')}
       </button>
       <div id="soCoMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;">
         ☎️ ${tr('위 카트 그대로 고객에게 결제 URL 만 발송됩니다. 받는사람 = 고객명, 연락처 = 고객 휴대폰', '上記カートのまま決済URLのみ送信されます。宛先=顧客名、連絡先=顧客の携帯', 'Only a payment URL is sent to the customer with this cart. Recipient = customer name, contact = customer phone')}
       </div>
       <div id="soCoMgrQuoteResult" style="display:none; margin-top:12px; padding:12px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
-        <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">✅ ${tr('결제 URL 생성됨!', '決済URLを生成しました！', 'Payment URL created!')}</div>
+        <div style="font-weight:800; color:#15803d; margin-bottom:6px; font-size:12px;">${tr('결제 URL 생성됨!', '決済URLを生成しました！', 'Payment URL created!')}</div>
         <div style="display:flex; gap:6px; align-items:center;">
           <input id="soCoMgrQuoteUrl" type="text" readonly style="flex:1; padding:8px 10px; border:1.5px solid #86efac; border-radius:6px; font-size:11px; background:#fff; font-family:monospace; color:#15803d;">
           <button onclick="window._soCopyMgrQuoteUrl(this)" style="padding:8px 12px; background:#15803d; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📋</button>
@@ -2202,7 +2207,7 @@ html, body { background: #ffffff !important; }
             const wDiff = Math.abs(w_mm - prodW) / prodW;
             const hDiff = Math.abs(h_mm - prodH) / prodH;
             if (wDiff > 0.05 || hDiff > 0.05) {
-                mismatchHtml = `<div style="font-size:11px;color:#dc2626;margin-top:4px;text-align:center;">⚠️ ${tr('상품 권장 사이즈', '推奨サイズ', 'Recommended')}: ${prodW/10} × ${prodH/10} cm</div>`;
+                mismatchHtml = `<div style="font-size:11px;color:#dc2626;margin-top:4px;text-align:center;">${tr('상품 권장 사이즈', '推奨サイズ', 'Recommended')}: ${prodW/10} × ${prodH/10} cm</div>`;
             }
         }
 
@@ -2237,7 +2242,7 @@ html, body { background: #ffffff !important; }
             </div>
 
             <div style="font-size:12px;color:#16a34a;font-weight:700;margin-top:6px;">
-                ✅ ${tr('파일 업로드 준비 완료', 'ファイル準備完了', 'File ready')}
+                ${tr('파일 업로드 준비 완료', 'ファイル準備完了', 'File ready')}
             </div>
         `;
         zone.onclick = null;
@@ -2295,7 +2300,7 @@ html, body { background: #ffffff !important; }
         zone.classList.remove('done');
         zone.innerHTML = `
             <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-            <div class="so-upload-icon">📤</div>
+            <div class="so-upload-icon"></div>
             <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
             <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
@@ -2990,7 +2995,7 @@ html, body { background: #ffffff !important; }
                 if (_rbBatchBtn) {
                     _rbBatchBtn.disabled = false;
                     _rbBatchBtn.style.display = '';
-                    _rbBatchBtn.innerHTML = '🛒 ' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
+                    _rbBatchBtn.innerHTML = '' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
                     _rbBatchBtn.onclick = function(){ window._soAddRawBoardBatch && window._soAddRawBoardBatch(); };
                 }
             } catch (e) {}
@@ -3078,7 +3083,7 @@ html, body { background: #ffffff !important; }
             console.log('[so] rawBoard batch added:', addedCount, 'items; method=', shipMethod, 'totalQty=', totalRawQty, 'fee=', batchShipFee);
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
-            showStatus('✅ ' + tr(addedCount + '개 상품 담겼습니다', addedCount + '点 追加しました', addedCount + ' items added'), 'ok');
+            showStatus('' + tr(addedCount + '개 상품 담겼습니다', addedCount + '点 追加しました', addedCount + ' items added'), 'ok');
             // 입력값 초기화
             qtyInputs.forEach(function(inp){ inp.value = 0; });
             // 카트 드로어 자동 오픈
@@ -3141,7 +3146,7 @@ html, body { background: #ffffff !important; }
             } catch (e) {}
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
-            showStatus('✅ ' + pickedName + ' × ' + qty + ' ' + tr('담겼습니다', '追加しました', 'added'), 'ok');
+            showStatus('' + pickedName + ' × ' + qty + ' ' + tr('담겼습니다', '追加しました', 'added'), 'ok');
             if (qtyInput) qtyInput.value = 1;
         } catch (e) { console.error('[so] addRawBoardOther', e); }
     };
@@ -3472,7 +3477,7 @@ html, body { background: #ffffff !important; }
                 bBtn.style.background = '#f0fdf4';
                 bBtn.style.color = '#15803d';
                 bBtn.style.borderStyle = 'dashed';
-                bBtn.innerHTML = '📦 ' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
+                bBtn.innerHTML = '' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
                     '<div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">' +
                     tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping') +
                     '</div>';
@@ -3520,12 +3525,12 @@ html, body { background: #ffffff !important; }
                 var totalRawQty = _soGetCartRawBoardQty() + (parseInt(state.qty, 10) || 0);
                 var need = Math.max(0, 10 - totalRawQty);
                 if (totalRawQty >= 10) {
-                    box.innerHTML = '<div style="font-weight:800; color:#14532d;">✅ ' +
+                    box.innerHTML = '<div style="font-weight:800; color:#14532d;">' +
                         tr('수도권 무료배송 (총 ' + totalRawQty + '장 ≥ 10)',
                            '首都圏 無料配送 (計' + totalRawQty + '枚 ≥ 10)',
                            'Free metro delivery (' + totalRawQty + ' sheets ≥ 10)') + '</div>';
                 } else {
-                    box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' +
+                    box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">' +
                         tr('수도권 배송비', '首都圏配送料', 'Metro delivery') + ' · ' + fmtPrice(100000) + '</div>' +
                         '<div style="font-size:11px; color:#3730a3;">' +
                         tr('10장 이상 주문 시 무료 (' + need + '장 더 담기)',
@@ -3533,7 +3538,7 @@ html, body { background: #ffffff !important; }
                            'Free at 10+ sheets (add ' + need + ' more)') + '</div>';
                 }
             } else if (state.shipMethod === 'regional_delivery') {
-                box.innerHTML = '<div style="font-weight:800; color:#9a3412;">🛻 ' +
+                box.innerHTML = '<div style="font-weight:800; color:#9a3412;">' +
                     tr('착불 배송 (수령 시 결제)', '着払い (受取時にお支払い)', 'Cash on delivery (pay on receipt)') +
                     '</div><div style="font-size:11px; color:#9a3412; margin-top:4px;">' +
                     tr('지방 배송은 택배기사가 배송비를 수령합니다.',
@@ -3551,13 +3556,13 @@ html, body { background: #ffffff !important; }
             var m = state.shipMethod;
             if (m === 'pd_bulk_free') {
                 if (pdQ >= 100) {
-                    box.innerHTML = '<div style="font-weight:800; color:#14532d;">🎁 ' +
+                    box.innerHTML = '<div style="font-weight:800; color:#14532d;">' +
                         tr('무료배송 (현재 ' + pdQ + '개 ≥ 100)',
                            '無料配送 (現在 ' + pdQ + '個 ≥ 100)',
                            'Free shipping (' + pdQ + ' pcs ≥ 100)') + '</div>';
                 } else {
                     var pdNeed = 100 - pdQ;
-                    box.innerHTML = '<div style="font-weight:800; color:#92400e; margin-bottom:4px;">⚠️ ' +
+                    box.innerHTML = '<div style="font-weight:800; color:#92400e; margin-bottom:4px;">' +
                         tr('무료배송 미적용 — ' + pdNeed + '개 더 필요',
                            '無料配送未適用 — あと' + pdNeed + '個',
                            'Free shipping requires ' + pdNeed + ' more pcs') + '</div>' +
@@ -3568,7 +3573,7 @@ html, body { background: #ffffff !important; }
                 }
             } else if (m === 'pd_parcel_1') {
                 var pd1Total = 30000 * pdQ;
-                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📦 ' +
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">' +
                     tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box') + '</div>' +
                     '<div style="display:flex; justify-content:space-between; font-size:12px;"><span>· ' +
                     fmtPrice(30000) + ' × ' + pdQ + tr('개', '個', ' pcs') +
@@ -3576,16 +3581,16 @@ html, body { background: #ffffff !important; }
             } else if (m === 'pd_parcel_2') {
                 var pd2Boxes = Math.ceil(pdQ / 2);
                 var pd2Total = 15000 * pd2Boxes;
-                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📦 ' +
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">' +
                     tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box') + '</div>' +
                     '<div style="display:flex; justify-content:space-between; font-size:12px;"><span>· ' +
                     fmtPrice(15000) + ' × ' + pd2Boxes + tr('박스 (2개씩)', '箱 (2個ずつ)', ' boxes (2 each)') +
                     '</span><span style="font-weight:800; color:#dc2626;">' + fmtPrice(pd2Total) + '</span></div>';
             } else if (m === 'metro_delivery') {
-                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">🚚 ' +
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">' +
                     tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') + ' · ' + fmtPrice(100000) + '</div>';
             } else if (m === 'regional_delivery') {
-                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">🛻 ' +
+                box.innerHTML = '<div style="font-weight:800; color:#1e1b4b;">' +
                     tr('지방 용차배송', '地方トラック配送', 'Regional truck') + ' · ' + fmtPrice(200000) + '</div>';
             } else {
                 box.innerHTML = '';
@@ -3606,7 +3611,7 @@ html, body { background: #ffffff !important; }
             parts = [['수도권 야간/주말 설치 (자동 적용)', 200000]];
         }
         var lines = [];
-        lines.push('<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">📋 ' + tr('비용 안내', '料金案内', 'Cost') + '</div>');
+        lines.push('<div style="font-weight:800; color:#1e1b4b; margin-bottom:4px;">' + tr('비용 안내', '料金案内', 'Cost') + '</div>');
         parts.forEach(function (p) {
             lines.push('<div style="display:flex; justify-content:space-between;"><span>· ' + _soPartLabel(p[0]) + '</span><span style="font-weight:700;">' + fmtPrice(p[1]) + '</span></div>');
         });
@@ -3616,11 +3621,11 @@ html, body { background: #ffffff !important; }
         }
         if (sd && sd.value) {
             var timeLabel = { am:tr('오전','午前','AM'), pm:tr('오후','午後','PM'), night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[st ? st.value : ''] || '';
-            lines.push('<div style="margin-top:6px; font-size:11px;">🚚 ' + tr('배송', '配送', 'Ship') + ': ' + sd.value + (timeLabel ? ' / ' + timeLabel : '') + '</div>');
+            lines.push('<div style="margin-top:6px; font-size:11px;">' + tr('배송', '配送', 'Ship') + ': ' + sd.value + (timeLabel ? ' / ' + timeLabel : '') + '</div>');
         }
         if (state.shipMethod === 'metro_install_removal' && rd && rd.value) {
             var rTimeLabel = { night:tr('야간','夜間','Night'), any:tr('시간상관없음','時間指定なし','Anytime'), '':tr('시간 미지정','時間未定','Time TBD') }[rt ? rt.value : ''] || '';
-            lines.push('<div style="font-size:11px;">🔧 ' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
+            lines.push('<div style="font-size:11px;">' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
         }
         box.innerHTML = lines.join('');
         // 가격 박스도 재계산 (배송비 반영)
@@ -3921,7 +3926,7 @@ html, body { background: #ffffff !important; }
                   + '<span>' + tr('드래그로 이동<br>클릭하여 업로드','ドラッグ移動<br>クリック追加','Drag to move<br>Click to upload') + '</span>'
                   + '</div>';
             var status = f.dataUrl
-                ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">✓ ' + (f.name || 'image') + '</div>'
+                ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (f.name || 'image') + '</div>'
                 : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('박스를 끌어 위치 조정 → 클릭하여 이미지 업로드', 'ボックスをドラッグして配置 → クリックでアップロード', 'Drag box to position → Click to upload') + '</div>';
             // 2026-05-30: template literals — 따옴표/문자열 결합 실수 방지
             var sideLabel = (cfg.side === 'back') ? 'BACK' : 'FRONT';
@@ -4349,7 +4354,7 @@ html, body { background: #ffffff !important; }
                 btn.style.background = '#16a34a';
                 btn.style.color = '#fff';
                 btn.style.borderStyle = 'solid';
-                btn.innerHTML = '✅ ' + tr('다른 제품과 묶음배송 (선택됨)', '合わせて配送 (選択中)', 'Bundled with other items (selected)') +
+                btn.innerHTML = '' + tr('다른 제품과 묶음배송 (선택됨)', '合わせて配送 (選択中)', 'Bundled with other items (selected)') +
                     '<div style="font-size:11px; font-weight:600; color:#dcfce7; margin-top:4px;">' +
                     tr('이 상품의 배송비는 0원으로 계산됩니다', 'この商品の配送費は0円', 'Shipping fee for this item is 0') +
                     '</div>';
@@ -4359,7 +4364,7 @@ html, body { background: #ffffff !important; }
                 btn.style.background = '#f0fdf4';
                 btn.style.color = '#15803d';
                 btn.style.borderStyle = 'dashed';
-                btn.innerHTML = '📦 ' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
+                btn.innerHTML = '' + tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items') +
                     '<div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">' +
                     tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping') +
                     '</div>';
@@ -4387,27 +4392,27 @@ html, body { background: #ffffff !important; }
         var btnBulk = document.querySelector('.so-ship-btn[data-ship="pd_bulk_free"]');
         if (btn1) {
             var total1 = 30000 * q;
-            btn1.innerHTML = '📦 ' + tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box') +
+            btn1.innerHTML = '' + tr('1개씩 포장 택배배송', '1個ずつ宅配', 'Parcel · 1 per box') +
                 '<br><span style="font-size:11px; opacity:0.9; font-weight:600;">' +
                 fmtPrice(30000) + ' × ' + q + tr('개', '個', 'pcs') + ' = ' + fmtPrice(total1) + '</span>';
         }
         if (btn2) {
             var boxes = Math.ceil(q / 2);
             var total2 = 15000 * boxes;
-            btn2.innerHTML = '📦 ' + tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box') +
+            btn2.innerHTML = '' + tr('2개씩 포장 택배배송', '2個ずつ宅配', 'Parcel · 2 per box') +
                 '<br><span style="font-size:11px; opacity:0.9; font-weight:600;">' +
                 fmtPrice(15000) + ' × ' + boxes + tr('박스', '箱', ' boxes') + ' = ' + fmtPrice(total2) + '</span>';
         }
         if (btnBulk) {
             if (q >= 100) {
-                btnBulk.innerHTML = '🎁 ' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
+                btnBulk.innerHTML = '' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
                     '<div style="font-size:12px; font-weight:700; margin-top:4px; opacity:0.95;">' +
-                    tr('✅ 현재 ' + q + '개 — 무료배송 적용 가능', '✅ ' + q + '個 — 適用可能', '✅ ' + q + ' pcs — eligible') + '</div>';
+                    tr('현재 ' + q + '개 — 무료배송 적용 가능', '' + q + '個 — 適用可能', '' + q + ' pcs — eligible') + '</div>';
                 btnBulk.disabled = false;
                 btnBulk.style.opacity = '1';
                 btnBulk.style.cursor = 'pointer';
             } else {
-                btnBulk.innerHTML = '🎁 ' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
+                btnBulk.innerHTML = '' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
                     '<div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.9;">' +
                     tr('현재 ' + q + '개 — 100개 이상 시 자동 적용',
                        '現在 ' + q + '個 — 100個以上で適用',
@@ -4526,7 +4531,7 @@ html, body { background: #ffffff !important; }
         zone.innerHTML =
             '<input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />' +
             thumbHtml +
-            '<div style="font-weight:700; color:#451a03; font-size:13px; text-align:center;">✅ ' + safe + '</div>' +
+            '<div style="font-weight:700; color:#451a03; font-size:13px; text-align:center;">' + safe + '</div>' +
             '<div style="font-size:11px; color:#6b7280; margin-top:2px; text-align:center;">' + sizeMB + ' MB</div>' +
             '<button type="button" onclick="event.stopPropagation();document.getElementById(\'soBackFile\').click()" ' +
               'style="display:block; margin:8px auto 0; padding:5px 12px; border:1px solid #d1d5db; background:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-family:inherit;">변경</button>';
@@ -4803,7 +4808,7 @@ html, body { background: #ffffff !important; }
                     var banner = document.createElement('div');
                     banner.id = 'soGoodsFreeShipBanner';
                     banner.style.cssText = 'background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:800; text-align:center; margin-bottom:10px; box-shadow:0 4px 12px rgba(16,185,129,0.35);';
-                    banner.innerHTML = '🚚 ' + tr('이 제품은 무료배송 됩니다', 'この商品は送料無料です', 'Free shipping on this item') +
+                    banner.innerHTML = '' + tr('이 제품은 무료배송 됩니다', 'この商品は送料無料です', 'Free shipping on this item') +
                         '<div style="font-size:11px; font-weight:500; margin-top:3px; opacity:0.95;">' +
                         tr('100개 이상 주문 시 50% 자동 할인', '100個以上で50%自動割引', '50% off automatically on 100+ orders') +
                         '</div>';
@@ -5211,7 +5216,7 @@ html, body { background: #ffffff !important; }
             var _rbBtnC2 = document.getElementById('soBtnCart');
             if (_rbBtnC2) {
                 _rbBtnC2.onclick = function(){ window._soAddCart && window._soAddCart(); };
-                _rbBtnC2.innerHTML = '🛒 ' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
+                _rbBtnC2.innerHTML = '' + tr('장바구니에 담기', 'カートに追加', 'Add to cart');
             }
         }
         // 2026-05-25: 원판이면 우측 컬럼에 "다른 원판 제품 더 담기" 그리드 로드, 아니면 숨김
@@ -5502,7 +5507,7 @@ html, body { background: #ffffff !important; }
             }
             if (dimsRow)  dimsRow.style.display  = 'none';
             if (areaInfo) areaInfo.style.display = 'none';
-            if (calcLbl)  calcLbl.textContent = '💰 ' + (_isTshirtPreset ? tr('선택한 종류 단가', '選択した種類の単価', 'Selected type price') : tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price'));
+            if (calcLbl)  calcLbl.textContent = '' + (_isTshirtPreset ? tr('선택한 종류 단가', '選択した種類の単価', 'Selected type price') : tr('선택 사이즈 단가', '選択サイズ単価', 'Selected size price'));
             if (pillsNote) {
                 // 2026-05-30: 프리셋 타입별 안내문구
                 if (state.presetHasHooks) {
@@ -5597,7 +5602,7 @@ html, body { background: #ffffff !important; }
             // 프리셋 굿즈 — 디자인에디터 숨김 / 업로드 안내 변경
             if (editorBtn) editorBtn.style.display = 'none';
             if (uploadTitle) uploadTitle.innerHTML = tr('로고나 이미지를 올려주세요', 'ロゴまたは画像をアップロード', 'Upload your logo or image') +
-                '<div style="font-size:11px; font-weight:600; color:#059669; margin-top:4px;">✂️ ' +
+                '<div style="font-size:11px; font-weight:600; color:#059669; margin-top:4px;">' +
                 tr('무료로 칼선을 만들어 드립니다', '無料でカットラインを作成します', 'Free die-cut line creation') + '</div>';
             // 첫 사이즈를 자동 선택
             var first = state.presetSizes[0];
@@ -5625,7 +5630,7 @@ html, body { background: #ffffff !important; }
             var _sideRow2 = document.getElementById('soKeyringSideRow'); if (_sideRow2) _sideRow2.style.display = 'none';
             if (dimsRow)  dimsRow.style.display  = '';
             if (areaInfo) areaInfo.style.display = '';
-            if (calcLbl)  calcLbl.textContent = '💰 ' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
+            if (calcLbl)  calcLbl.textContent = '' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
             // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
             if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
@@ -5734,14 +5739,14 @@ html, body { background: #ffffff !important; }
         var _rb_regBtn = document.querySelector('.so-ship-btn[data-ship="regional_delivery"]');
         if (state.isRawBoard) {
             if (_rb_metroBtn) {
-                _rb_metroBtn.innerHTML = '📦 ' + tr('수도권 배송', '首都圏配送', 'Metro delivery') +
+                _rb_metroBtn.innerHTML = '' + tr('수도권 배송', '首都圏配送', 'Metro delivery') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' +
                     tr('10장 이상 무료 · 미만 ' + fmtPrice(100000),
                        '10枚以上 無料 · 未満 ' + fmtPrice(100000),
                        'Free if total ≥10 · else ' + fmtPrice(100000)) + '</span>';
             }
             if (_rb_regBtn) {
-                _rb_regBtn.innerHTML = '🛻 ' + tr('지방 배송', '地方配送', 'Regional delivery') +
+                _rb_regBtn.innerHTML = '' + tr('지방 배송', '地方配送', 'Regional delivery') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' +
                     tr('100장 이상 무료 · 미만 ' + fmtPrice(200000),
                        '100枚以上 無料 · 未満 ' + fmtPrice(200000),
@@ -5750,21 +5755,21 @@ html, body { background: #ffffff !important; }
         } else if (state.isPaperDisplay || state.isForexFoam) {
             // 2026-05-15: 종이매대 / 2026-05-22: 포맥스·폼보드 — 수도권 용차배송 라벨
             if (_rb_metroBtn) {
-                _rb_metroBtn.innerHTML = '🚚 ' + tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') +
+                _rb_metroBtn.innerHTML = '' + tr('수도권 용차배송', '首都圏トラック配送', 'Metro truck') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' + fmtPrice(100000) + '</span>';
             }
             if (_rb_regBtn) {
-                _rb_regBtn.innerHTML = '🛻 ' + tr('지방 용차배송', '地方トラック配送', 'Regional truck') +
+                _rb_regBtn.innerHTML = '' + tr('지방 용차배송', '地方トラック配送', 'Regional truck') +
                     '<br><span style="font-size:11px; opacity:0.85; font-weight:600;">' + fmtPrice(200000) + '</span>';
             }
         } else {
             // 일반 모드 라벨 복원 (다른 상품 전환 시 잔존 방지)
             if (_rb_metroBtn) {
-                _rb_metroBtn.innerHTML = '📦 ' + tr('수도권 배송', '首都圏配送', 'Metro delivery') +
+                _rb_metroBtn.innerHTML = '' + tr('수도권 배송', '首都圏配送', 'Metro delivery') +
                     '<br><span style="font-size:11px; opacity:0.8;">' + fmtPrice(100000) + '</span>';
             }
             if (_rb_regBtn) {
-                _rb_regBtn.innerHTML = '📦 ' + tr('지방 배송', '地方配送', 'Regional delivery') +
+                _rb_regBtn.innerHTML = '' + tr('지방 배송', '地方配送', 'Regional delivery') +
                     '<br><span style="font-size:11px; opacity:0.8;">' + fmtPrice(200000) + '</span>';
             }
         }
@@ -6133,7 +6138,7 @@ html, body { background: #ffffff !important; }
         }
         if (!state.product) {
             console.warn('[simple_order] state.product 미설정 — 상품 정보가 로드 안 됨');
-            showStatus(tr('❌ 상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
+            showStatus(tr('상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
             return false;
         }
         // 2026-05-22: 디자인 파일은 선택사항 — 패브릭과 동일하게 파일 없이도 주문 가능 (이미지 추후 전달).
@@ -6179,8 +6184,8 @@ html, body { background: #ffffff !important; }
         );
         showStatus(
             _noFileFlow
-                ? tr('📦 장바구니 처리 중...', '📦 カート処理中...', '📦 Processing...')
-                : tr('📤 파일 업로드 중...', '📤 アップロード中...', '📤 Uploading...'),
+                ? tr('장바구니 처리 중...', 'カート処理中...', 'Processing...')
+                : tr('파일 업로드 중...', 'アップロード中...', 'Uploading...'),
             'ok'
         );
         try {
@@ -6190,7 +6195,7 @@ html, body { background: #ffffff !important; }
             let backUrl = null, backPath = null;
             if (state.wallSide === 'double' && state.fileBack) {
                 updateUploadStep(tr('2/2 뒷면 파일 업로드 중', '2/2 裏面ファイル', '2/2 back side'));
-                showStatus(tr('📤 뒷면 파일 업로드 중...', '📤 裏面ファイル...', '📤 Uploading back...'), 'ok');
+                showStatus(tr('뒷면 파일 업로드 중...', '裏面ファイル...', 'Uploading back...'), 'ok');
                 const backResult = await uploadFileGeneric(state.fileBack);
                 backUrl = backResult.url;
                 backPath = backResult.path;
@@ -6248,7 +6253,7 @@ html, body { background: #ffffff !important; }
             }
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
-            showStatus(tr('✅ 장바구니에 담겼습니다.', '✅ カートに追加しました。', '✅ Added to cart.'), 'ok');
+            showStatus(tr('장바구니에 담겼습니다.', 'カートに追加しました。', 'Added to cart.'), 'ok');
             return true;
         } catch (e) {
             console.error('[simple_order] addToCart error', e);
@@ -6408,7 +6413,7 @@ html, body { background: #ffffff !important; }
         titleCountEl && (titleCountEl.textContent = '(' + totalCount + ')');
 
         if (totalCount === 0) {
-            list.innerHTML = '<div class="so-cart-empty"><i>🛒</i>' +
+            list.innerHTML = '<div class="so-cart-empty"><i></i>' +
                 tr('장바구니가 비어있습니다', 'カートは空です', 'Your cart is empty') +
                 '</div>';
             totalEl.textContent = fmtPrice(0);
@@ -6478,7 +6483,7 @@ html, body { background: #ffffff !important; }
 
         // 패브릭 섹션 (2026-05-12: 같은 카트 안에 함께 표시)
         if (fabricItems.length > 0) {
-            sections.push('<div style="font-size:11px; font-weight:800; color:#64748b; margin:10px 0 6px;">✂️ ' + tr('패브릭', 'ファブリック', 'Fabric') + '</div>');
+            sections.push('<div style="font-size:11px; font-weight:800; color:#64748b; margin:10px 0 6px;">' + tr('패브릭', 'ファブリック', 'Fabric') + '</div>');
             const fabHtml = fabricItems.map((it) => {
                 const sz = it.orderSize || ((it.width_mm || Math.round((it.orderWcm||0)*10)) + '×' + (it.height_mm || Math.round((it.orderHcm||0)*10)) + 'mm');
                 const opts = [it.fabricName, '출력 ' + sz, it.qtyLabel, it.finishName ? '마감: ' + it.finishName : ''].filter(Boolean).join(' · ');
@@ -6959,7 +6964,7 @@ html, body { background: #ffffff !important; }
                 }
                 // 2026-05-30: 개별포장 (3종) 표시
                 if (it._isPresetGoods && (it._presetWrapType === 'insert' || it._presetWrapType === 'top')) {
-                    opts += ' · 🎁 ' + (it._presetWrapType === 'insert'
+                    opts += ' · ' + (it._presetWrapType === 'insert'
                         ? tr('내지인쇄 포장','内側印刷','Insert print')
                         : tr('상단인쇄 포장','上部印刷','Top print'));
                 }
@@ -6991,7 +6996,7 @@ html, body { background: #ffffff !important; }
                     var _lng = getLang();
                     if (_lng === 'ja' && it._keyringCut.label_jp) _cl = it._keyringCut.label_jp;
                     else if ((_lng === 'en' || _lng === 'es' || _lng === 'de' || _lng === 'fr' || _lng === 'zh' || _lng === 'ar') && it._keyringCut.label_en) _cl = it._keyringCut.label_en;
-                    opts += ' · ✂️ ' + _cl;
+                    opts += ' · ' + _cl;
                 }
                 if (it.customSize && it.customSize.w_cm) {
                     opts += ' · ' + it.customSize.w_cm + '×' + it.customSize.h_cm + 'cm';
@@ -7283,7 +7288,7 @@ html, body { background: #ffffff !important; }
             } catch (e) {}
             // 카트 비우기 (다음 견적을 위해 깨끗이)
             try { localStorage.setItem('chameleon_cart_current', '[]'); } catch (e) {}
-            if (btnEl) { btnEl.innerHTML = '✅ 생성 완료 — URL 복사하여 고객에게 전송'; }
+            if (btnEl) { btnEl.innerHTML = '생성 완료 — URL 복사하여 고객에게 전송'; }
         } catch (e) {
             console.error('[soCreateMgrQuote]', e);
             alert('오류: ' + (e.message || e));
@@ -7562,7 +7567,7 @@ html, body { background: #ffffff !important; }
                             var ko = a === 'front_logo' ? '앞면 로고' : a === 'front_full' ? '앞면 전체' : a === 'back_full' ? '뒷면 전체' : a;
                             return ko + ' (' + fee.toLocaleString() + '원/장)';
                         });
-                        lines.push('   🎨 인쇄 위치: ' + _areaNames.join(' + '));
+                        lines.push('   인쇄 위치: ' + _areaNames.join(' + '));
                         var _basePc = 0;
                         _areas.forEach(function(a){ _basePc += (_FEE_NOTE[a] || 0); });
                         var _mlt = ((it.qty || 0) >= 3) ? 0.5 : 1;
@@ -7579,7 +7584,7 @@ html, body { background: #ffffff !important; }
                                 if (meta && meta.name) {
                                     lines.push('       └ 📎 ' + areaKo + ' 파일: ' + meta.name + ' (' + Math.round((meta.size||0)/1024) + ' KB)');
                                 } else {
-                                    lines.push('       └ ⚠️ ' + areaKo + ' 파일: 미업로드');
+                                    lines.push('       └ ' + areaKo + ' 파일: 미업로드');
                                 }
                                 if (meta && meta.box) {
                                     var b = meta.box;
@@ -7592,13 +7597,13 @@ html, body { background: #ffffff !important; }
                 }
                 // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
                 if (it._keyringCut && it._keyringCut.label) {
-                    lines.push('   ✂️ 모양: ' + it._keyringCut.id + '. ' + it._keyringCut.label);
+                    lines.push('   모양: ' + it._keyringCut.id + '. ' + it._keyringCut.label);
                 }
                 if (it.boxSize && it.boxSize.w) {
-                    lines.push('   📦 박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
+                    lines.push('   박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
                 }
                 if (it.cutPrint && it.cutPrint.size) {
-                    lines.push('   ✂️ 재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판') + (it.wallSide === 'double' ? ' · 양면 (×2)' : ' · 단면'));
+                    lines.push('   재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판') + (it.wallSide === 'double' ? ' · 양면 (×2)' : ' · 단면'));
                 }
                 if (it.selectedAddons && window.ADDON_DB) {
                     // 2026-05-30: 키링/코롯토(presetHasHooks) — 고리 300원 균일 + 제품 수량 자동
@@ -7621,10 +7626,10 @@ html, body { background: #ffffff !important; }
                     var _wt2 = it._presetWrapType;
                     if (_wt2 === 'insert' || _wt2 === 'top') {
                         var _wrapName = _wt2 === 'insert' ? '내지인쇄 포장' : '상단인쇄 포장';
-                        lines.push('   🎁 개별포장: ' + _wrapName + ' (정액 50,000원, 수량 무관)');
+                        lines.push('   개별포장: ' + _wrapName + ' (정액 50,000원, 수량 무관)');
                     } else if (it._presetWrap && !_wt2) {
                         var _wrapQ = it.qty || 1;
-                        lines.push('   🎁 개별포장 × ' + _wrapQ + ' = ' + ((200 * _wrapQ).toLocaleString()) + '원');
+                        lines.push('   개별포장 × ' + _wrapQ + ' = ' + ((200 * _wrapQ).toLocaleString()) + '원');
                     }
                 }
                 if (Array.isArray(it.baseStands)) {
@@ -7649,9 +7654,9 @@ html, body { background: #ffffff !important; }
                     var _m = it.shipping.method;
                     // 2026-05-30: 베스트굿즈는 정액 배송 3,000원 (preset_goods_flat) — old shipping method 가 저장되어 있어도 강제 표시
                     if (it._isBestGoods) {
-                        lines.push('   🚚 배송: 베스트굿즈 정액배송 (3,000원)');
+                        lines.push('   배송: 베스트굿즈 정액배송 (3,000원)');
                     } else {
-                        lines.push('   🚚 시공/배송: ' + (shipLabel[_m] || _m));
+                        lines.push('   시공/배송: ' + (shipLabel[_m] || _m));
                     }
                     // 배송/시공 일정은 의미 있는 메소드만 표시
                     if (_shipWithSchedule.indexOf(_m) >= 0) {
@@ -7660,13 +7665,13 @@ html, body { background: #ffffff !important; }
                                          it.shipping.delivery_time === 'pm' ? '오후' :
                                          it.shipping.delivery_time === 'night' ? '야간' :
                                          it.shipping.delivery_time === 'any' ? '시간상관없음' : (it.shipping.delivery_time || '');
-                            lines.push('       📅 ' + (_m === 'self_pickup' ? '수령일' : '배송/시공일') + ': ' + it.shipping.delivery_date + (_dTime ? ' (' + _dTime + ')' : ''));
+                            lines.push('       ' + (_m === 'self_pickup' ? '수령일' : '배송/시공일') + ': ' + it.shipping.delivery_date + (_dTime ? ' (' + _dTime + ')' : ''));
                         }
                         // 철거는 metro_install_removal 에만
                         if (_m === 'metro_install_removal' && it.shipping.removal_date) {
                             var _rTime = it.shipping.removal_time === 'night' ? '야간' :
                                          it.shipping.removal_time === 'any' ? '시간상관없음' : (it.shipping.removal_time || '');
-                            lines.push('       🔧 철거일: ' + it.shipping.removal_date + (_rTime ? ' (' + _rTime + ')' : ''));
+                            lines.push('       철거일: ' + it.shipping.removal_date + (_rTime ? ' (' + _rTime + ')' : ''));
                         }
                     }
                     totalShippingFee += (it.shipping.fee || 0);
