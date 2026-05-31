@@ -528,8 +528,11 @@
     .so-co-card { flex-direction: column; max-height: none; margin: 0 auto; border-radius: 16px; }
     .so-co-form { padding: 20px 18px; }
     .so-co-summary { width: 100%; border-left: none; border-top: 1px solid #e7e5e4; }
-    .so-body { flex-direction: column; padding: 16px; gap: 16px; }
-    .so-right { position: static; width: 100%; max-width: none; }
+    /* 2026-05-31: 모바일 — 우측 옵션(주문수량/가격/장바구니) 패널이 먼저, 좌측 (이미지업로드/상세/리뷰) 가 뒤로. */
+    .so-body { flex-direction: column-reverse; padding: 16px; gap: 16px; }
+    .so-right { position: static; width: 100%; max-width: none; max-height: none; overflow: visible; }
+    /* 2026-05-31: 좌측 콘텐츠가 viewport 보다 커지면 (이미지 업로드 후 미리보기 등) 패널 안에서만 잘리도록 — 페이지 좌우 밀림 방지. */
+    .so-left { overflow-x: hidden; min-width: 0; }
 }
 
 /* 우측: 옵션 패널 — sticky + 내부 스크롤. 내부 끝에 도달하면 페이지로 자연스럽게 전파 (사용자 요청). */
