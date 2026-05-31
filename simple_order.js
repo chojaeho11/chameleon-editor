@@ -550,7 +550,7 @@ html, body { background: #ffffff !important; }
          프라이머리 #4338ca (deep brand red)
        ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
-        background: #ffffff;
+        background: #1c1917;
         color: #1c1917;
         padding: 16px 12px 24px;
         border-radius: 0;
@@ -717,14 +717,14 @@ html, body { background: #ffffff !important; }
         letter-spacing: -0.01em; transition: all .15s; cursor: pointer;
         font-family: inherit;
     }
-    /* 1. 장바구니 보기 — ghost */
+    /* 1. 장바구니 보기 — ghost-on-dark */
     .so-body > .so-right #soBtnViewCart {
         background: transparent !important;
-        color: #57534e !important;
-        border: 1px solid #ede4e0 !important;
+        color: #e7e5e4 !important;
+        border: 1px solid #44403c !important;
     }
     .so-body > .so-right #soBtnViewCart:hover {
-        background: #faf6f5 !important; color: #1c1917 !important;
+        background: rgba(255,255,255,0.06) !important; color: #ffffff !important;
     }
     /* 2. 장바구니 담기 — secondary outline (딥레드 보더) */
     .so-body > .so-right .so-btn-cart {
