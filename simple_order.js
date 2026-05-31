@@ -128,9 +128,10 @@
     function injectStyles() {
         if (document.getElementById('so-styles')) return;
         const css = `
-/* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X) */
+/* 풀스크린 오버레이 — 자연스러운 페이지 스크롤 (사용자 요청: 칸마다 스크롤 X).
+   2026-05-31: z-index 50000 → 65000 — 메인 페이지 #topCatMenu (60000) 보라 nav 가 모달 위에 떠 보이던 색상 mismatch 제거. */
 .so-overlay {
-    position: fixed; inset: 0; background: #faf6ed; z-index: 50000;
+    position: fixed; inset: 0; background: #faf6ed; z-index: 65000;
     display: none;
     overflow-y: auto;          /* 페이지 전체 스크롤 */
     -webkit-overflow-scrolling: touch;
@@ -540,22 +541,18 @@
     .so-left { overflow-x: hidden; min-width: 0; }
 
     /* ════════════════════════════════════════════════════════════
-       2026-05-31 v2: 흰색 베이스 + 딥레드 액센트 (사용자 레퍼런스 토마토 페이지 톤).
-       팔레트:
-         배경     #ffffff (흰색)
-         서브배경 #faf6f5 (베이지 워시)
-         카드     #ffffff (보더만으로 영역 구분)
-         보더     #ede4e0 (warm grey)
-         텍스트   #1c1917 (almost black) / #57534e (warm grey) / #a8a29e (muted)
+       2026-05-31 v3: 흰색 베이스 + 딥레드 액센트.
+       팔레트 (단일 베이지 통일 — modal overlay #faf6ed 와 같은 톤):
+         배경      #faf6ed  (modal overlay 와 동일 — 색상 불일치 제거)
+         카드      #faf6ed  (배경과 같은 베이지로 frame 제거, 옅은 보더만)
+         보더      transparent / #f0e7dc (필요한 경우만)
+         텍스트    #1c1917 / #57534e / #a8a29e
          프라이머리 #a82a2a (deep brand red)
-         프라이머리-호버 #8b1e1e
-         성공/안전 #16a34a (forest green, 안내 카드용)
-         별/평점   #fbbf24
        ════════════════════════════════════════════════════════════ */
     .so-body > .so-right {
-        background: #faf6f5;
+        background: #faf6ed;
         color: #1c1917;
-        padding: 24px 18px 28px;
+        padding: 20px 12px 28px;
         border-radius: 0 0 24px 24px;
         letter-spacing: -0.01em;
     }
@@ -570,15 +567,17 @@
     .so-body > .so-right h3,
     .so-body > .so-right h4 { color: #1c1917; }
 
-    /* 섹션 카드 — 흰 배경 + 얇은 warm grey 보더 */
+    /* 섹션 카드 — 베이지 그대로 (frame 없애기), 매우 옅은 보더만 영역 힌트 */
     .so-body > .so-right .so-section {
-        background: #ffffff;
-        border: 1px solid #ede4e0;
-        border-radius: 14px;
-        padding: 18px 16px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(168,42,42,0.04);
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 16px 6px;
+        margin-bottom: 4px;
+        box-shadow: none;
+        border-bottom: 1px solid rgba(168,42,42,0.08);
     }
+    .so-body > .so-right .so-section:last-child { border-bottom: none; }
     .so-body > .so-right .so-section-title {
         color: #a8a29e !important;
         font-size: 11px !important;
@@ -740,13 +739,12 @@
         background: #8b1e1e !important;
     }
 
-    /* 좌측 흰색 패널 — 다크 → 흰색 전환이라 부드럽게, 살짝 결만 */
+    /* 좌측 흰색 패널 — 베이지에서 흰색으로 부드러운 전환 */
     .so-body > .so-left {
-        background: #fff; padding: 28px 20px;
+        background: #fff; padding: 24px 16px;
         border-radius: 24px 24px 0 0;
-        margin-top: -12px; position: relative; z-index: 2;
-        box-shadow: 0 -2px 12px -4px rgba(168,42,42,0.06);
-        border-top: 1px solid #f5ebe9;
+        margin-top: -8px; position: relative; z-index: 2;
+        border-top: 1px solid #f0e7dc;
     }
 }
 
