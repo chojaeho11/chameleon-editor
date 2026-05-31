@@ -49,12 +49,11 @@ function _cpSiteCode(){
     return 'KR';
 }
 
-// 대량 할인 정책 (수량 기준)
-// 2026-05-14: 사용자 요청 — 10+ 10% / 100+ 20% / 500+ 30%
+// 대량 할인 정책 (수량 기준).
+// 2026-05-31: 사용자 요청 — 패브릭포스터 100장+ / 패턴 원단 100마+ → 모두 50%.
+// 두 layout 모두 state.orderQty 가 동일 단위(장/마)로 쓰여서 단일 조건으로 처리 가능.
 function getVolumeDiscount(qty) {
-    if (qty >= 500) return { pct: 30, label: '500+ 30%↓' };
-    if (qty >= 100) return { pct: 20, label: '100+ 20%↓' };
-    if (qty >= 10)  return { pct: 10, label: '10+ 10%↓' };
+    if (qty >= 100) return { pct: 50, label: '100+ 50%↓' };
     return { pct: 0, label: '' };
 }
 

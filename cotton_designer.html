@@ -300,10 +300,10 @@ window.__CD_I18N = {
     ship_fee:         { ko:'5,000원', ja:'1,000円', en:'$10' },
     samplebook_label: { ko:'무료 샘플북 신청', ja:'無料サンプルブック申請', en:'Free Sample Book' },
     samplebook_sub:   { ko:'원단 주문 시 신청 가능', ja:'生地ご注文時にお申込み可', en:'Available with fabric order' },
-    // 2026-05-14: 대량 구매 할인 안내 (10+ 10% / 100+ 20% / 500+ 30%)
+    // 2026-05-31: 단일 티어 — 100+ 50% (사용자 요청).
     bulk_title: { ko:'대량 구매 할인', ja:'まとめ買い割引', en:'Bulk Discount' },
     bulk_t10:   { ko:'10개+', ja:'10個+', en:'10+' },
-    bulk_t100:  { ko:'100개+', ja:'100個+', en:'100+' },
+    bulk_t100:  { ko:'100개 이상', ja:'100点以上', en:'100+ pieces' },
     bulk_t500:  { ko:'500개+', ja:'500個+', en:'500+' },
     // 2026-05-30: 상세/리뷰
     cd_detail_title:        { ko:'상품 상세정보', ja:'商品詳細', en:'Product Details' },
@@ -1412,24 +1412,14 @@ a { text-decoration: none; color: inherit; }
                 <button onclick="window._cdQtyChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
                 <span style="font-size:12px; color:var(--text-light);" data-cdi18n="qty_unit">개</span>
             </div>
-            <!-- 2026-05-14: 대량 할인 안내 (수량 입력 바로 아래) -->
-            <div style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fff7ed 0%,#fed7aa 100%); border:1.5px solid #f97316; border-radius:8px;">
-                <div style="font-size:11px; font-weight:900; color:#9a3412; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-tags"></i> <span data-cdi18n="bulk_title">대량 구매 할인</span>
-                </div>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; font-size:11px; text-align:center;">
-                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
-                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t10">10개+</div>
-                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-10%</div>
+            <!-- 2026-05-31: 단일 할인 티어 — 100+ 50% (사용자 요청) -->
+            <div style="margin-top:10px; padding:14px 16px; background:linear-gradient(135deg,#16a34a 0%,#15803d 100%); border-radius:10px; box-shadow:0 4px 12px -4px rgba(22,163,74,0.4); color:#fff;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div>
+                        <div style="font-size:11px; font-weight:700; letter-spacing:0.04em; opacity:0.92; margin-bottom:2px;" data-cdi18n="bulk_title">대량 구매 할인</div>
+                        <div style="font-size:15px; font-weight:900; letter-spacing:-0.01em;" data-cdi18n="bulk_t100">100개 이상</div>
                     </div>
-                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
-                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t100">100개+</div>
-                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-20%</div>
-                    </div>
-                    <div style="background:#fff; border-radius:6px; padding:6px 4px;">
-                        <div style="color:#c2410c; font-weight:800;" data-cdi18n="bulk_t500">500개+</div>
-                        <div style="color:#ea580c; font-weight:900; font-size:13px;">-30%</div>
-                    </div>
+                    <div style="font-size:28px; font-weight:900; letter-spacing:-0.02em;">−50%</div>
                 </div>
             </div>
         </div>
