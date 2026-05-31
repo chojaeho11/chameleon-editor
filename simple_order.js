@@ -305,9 +305,9 @@
 }
 .so-file-change:hover { background: #fef7e6; }
 
-/* 카트 드로어 — 우측 슬라이드 */
+/* 카트 드로어 — 우측 슬라이드. z-index 매우 높게 (메인 nav 가 어떤 stacking context 에 있어도 위로). */
 .so-cart-drawer-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90000;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999998;
     display: none; opacity: 0; transition: opacity 0.25s;
 }
 .so-cart-drawer-overlay.open { display: block; opacity: 1; }
@@ -315,7 +315,7 @@
    100dvh(동적 뷰포트)로 실제 보이는 높이에 맞춰 결제 버튼이 항상 보이게. */
 .so-cart-drawer {
     position: fixed; right: 0; top: 0; height: 100vh; height: 100dvh; width: 440px;
-    max-width: 100%; background: #fff; z-index: 90001;
+    max-width: 100%; background: #fff; z-index: 999999;
     box-shadow: -8px 0 40px rgba(0,0,0,0.2);
     transform: translateX(100%); transition: transform 0.3s ease;
     display: flex; flex-direction: column;
@@ -1315,6 +1315,9 @@
 <!-- 카트 드로어 (우측 슬라이드) — simpleOrderModal 바깥. 메인 nav(60000) 위에 떠야 하므로 별도 stacking context. -->
 <div class="so-cart-drawer-overlay" id="soCartOverlay" onclick="window._soToggleCart(false)"></div>
 <div class="so-cart-drawer" id="soCartDrawer">
+  <!-- 2026-05-31: 모바일에서 헤더가 메인 nav 뒤로 숨어 안 보이는 케이스 대비, 항상 보이는 floating X 추가. -->
+  <button id="soCartCloseFloat" onclick="window._soToggleCart(false)" aria-label="Close cart"
+          style="position:absolute; top:10px; right:10px; z-index:999999; width:44px; height:44px; border-radius:50%; border:2px solid rgba(253,224,71,0.6); background:rgba(15,23,42,0.85); color:#fde047; font-size:24px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; line-height:1; padding:0;">×</button>
   <div class="so-cart-head">
     <h3>🛒 ${tr('장바구니', 'カート', 'Cart')} <span id="soCartCountTitle" style="font-size:13px; opacity:0.7;">(0)</span></h3>
     <button class="so-cart-close" onclick="window._soToggleCart(false)">×</button>
