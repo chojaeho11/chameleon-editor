@@ -609,8 +609,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                <div onclick="openTossReceipt('${o.id}')" style="padding:8px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:8px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -644,8 +644,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📋 ${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                <div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -1733,6 +1733,16 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
 // ============ 카드매출전표 (Toss) 열기 — 2026-05-31 ============
 // 사용자 요청: 인터넷 사이트들처럼 토스에서 제공하는 매출전표 그대로 끌어와 열기.
 // supabase edge fn `get-toss-receipt` 가 paymentKey 로 Toss API 호출 → receipt.url 반환.
+//
+// 결제 미완료 (임시작성/결제실패) 주문은 토스에 paymentKey 가 없거나 invalid 라
+// Toss API 가 거절함. _hasTossReceipt 로 사전 체크해서 버튼 자체를 숨김.
+window._hasTossReceipt = function (o) {
+    if (!o) return false;
+    if (!(o.toss_payment_key || o.payment_key)) return false;
+    // 결제완료 상태만 — 임시작성/결제대기/결제실패/취소 등은 매출전표 없음
+    const ps = String(o.payment_status || '').trim();
+    return ps === '결제완료';
+};
 window.openTossReceipt = async function (orderId) {
     const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
     if (!order) { showToast('Order not found', 'error'); return; }
@@ -1743,13 +1753,30 @@ window.openTossReceipt = async function (orderId) {
         showToast('카드결제 정보가 없습니다 (계좌이체/현금 결제는 매출전표 없음)', 'error');
         return;
     }
+    if (!window._hasTossReceipt(order)) {
+        showToast('결제완료 상태가 아닙니다 (' + (order.payment_status || '상태 미확인') + ')', 'error');
+        return;
+    }
     showToast('매출전표 조회 중...', 'info');
     try {
         const sb = window.sb || window._supabase;
         const { data, error } = await sb.functions.invoke('get-toss-receipt', {
             body: { paymentKey }
         });
-        if (error) { showToast('조회 실패: ' + (error.message || error), 'error'); return; }
+        // 2026-05-31: supabase-js 가 non-2xx 응답을 generic FunctionsHttpError 로 감싸서
+        // 진짜 Toss 에러 메시지가 가려짐. error.context.json() 으로 body 파싱 시도.
+        if (error) {
+            let detail = error.message || String(error);
+            try {
+                const ctx = error.context;
+                if (ctx && typeof ctx.json === 'function') {
+                    const body = await ctx.json();
+                    if (body?.error) detail = body.error;
+                }
+            } catch (_) { /* 파싱 실패 시 generic 메시지 유지 */ }
+            showToast('조회 실패: ' + detail, 'error');
+            return;
+        }
         if (!data || !data.url) { showToast(data?.error || '매출전표 URL 없음', 'error'); return; }
         window.open(data.url, '_blank', 'noopener');
     } catch (e) {
