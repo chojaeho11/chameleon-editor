@@ -764,8 +764,8 @@ a { text-decoration: none; color: inherit; }
 /* 2026-05-31: 패브릭포스터 / 패턴 원단 인쇄 — 큰 썸네일 + 라벨 + 설명. 둘 다 녹색 active 통일 */
 .poster-btn, .pattern-toggle-btn {
     display:flex; align-items:flex-start; gap:14px;
-    width:100%; padding:12px 14px; border-radius:14px; cursor:pointer;
-    box-sizing:border-box; margin-bottom:10px;
+    width:100%; max-width:100%; padding:12px 14px; border-radius:14px; cursor:pointer;
+    box-sizing:border-box; margin-bottom:10px; min-width:0;
     transition:all 0.15s; font-family:inherit;
     text-align:left;
 }
@@ -775,14 +775,17 @@ a { text-decoration: none; color: inherit; }
     box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
 .poster-btn-text, .pattern-toggle-text {
-    flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; padding-top:2px;
+    flex:1; min-width:0; max-width:100%; display:flex; flex-direction:column; gap:4px; padding-top:2px;
 }
 .poster-btn-title, .pattern-toggle-title {
     font-weight:800; font-size:16px; letter-spacing:-0.01em; line-height:1.2;
+    word-break:keep-all; overflow-wrap:anywhere;
 }
+/* 2026-06-01: word-break:keep-all 제거 — JP 'アパレルメーカーや生地問屋が販売用に...' 처럼 자연
+   break 없는 긴 일본어가 버튼 밖으로 새 나가던 버그 fix. overflow-wrap:anywhere 로 임의 위치 wrap. */
 .poster-btn-desc, .pattern-toggle-desc {
     font-size:11.5px; font-weight:400; line-height:1.45; opacity:0.85;
-    word-break:keep-all; letter-spacing:-0.01em;
+    overflow-wrap:anywhere; word-break:normal; letter-spacing:-0.01em; min-width:0;
 }
 /* 비활성: 옅은 녹 배경 + 녹 보더 */
 .poster-btn, .pattern-toggle-btn { border:2px solid #16a34a; background:#f0fdf4; color:#15803d; }
