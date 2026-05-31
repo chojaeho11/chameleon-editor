@@ -7110,6 +7110,8 @@ async function handleSubReturn() {
         }
     </style>
 
+    <!-- 2026-05-30: 모바일에서 메인 nav 가 위를 가려도 항상 보이는 floating 닫기 X -->
+    <button onclick="document.getElementById('cartPage').style.display='none'" aria-label="Close cart" style="position:fixed; top:8px; right:8px; z-index:999999; width:44px; height:44px; border-radius:50%; border:none; background:rgba(15,23,42,0.9); color:#fff; font-size:24px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; line-height:1;">×</button>
     <div style="max-width: 1000px; margin: 0 auto; padding-bottom: 60px;">
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px;">
             <h1>🛒 <span data-i18n="cart_title">장바구니</span> <span id="cartCount">(0)</span></h1>
@@ -8336,7 +8338,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./main.js?v=442"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=165"></script>
+<script src="/simple_order.js?v=166"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=16"></script>
 

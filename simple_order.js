@@ -327,10 +327,17 @@
 }
 .so-cart-head h3 { margin: 0; font-size: 17px; font-weight: 800; }
 .so-cart-close {
-    width: 30px; height: 30px; border: none; background: rgba(255,255,255,0.15);
-    color: #fde047; border-radius: 50%; cursor: pointer; font-size: 18px;
+    width: 40px; height: 40px; border: 2px solid rgba(253,224,71,0.5); background: rgba(255,255,255,0.18);
+    color: #fde047; border-radius: 50%; cursor: pointer; font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background .15s;
 }
-.so-cart-close:hover { background: rgba(255,255,255,0.25); }
+.so-cart-close:hover, .so-cart-close:active { background: rgba(255,255,255,0.32); }
+/* 2026-05-30: 모바일에서 닫기 X 가 메인 nav 뒤로 숨거나 화면 밖으로 밀리지 않게 — 헤더를 sticky 로 잠그고 더 크게. */
+@media (max-width: 768px) {
+    .so-cart-head { position: sticky; top: 0; z-index: 90002; }
+    .so-cart-close { width: 44px; height: 44px; font-size: 24px; border-width: 2px; }
+}
 .so-cart-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 20px; background: #faf6ed; }
 
 /* 2026-05-13: 스크롤바 매우 연한 하늘색 */
