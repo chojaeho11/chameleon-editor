@@ -2,6 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <!-- 2026-05-31: viewport meta 추가 — 없으면 모바일이 데스크탑 980px 로 fallback 되어
+         @media (max-width:768px) 가 절대 매치 안 됨. 사용자가 모바일 레이아웃 못 보던 원인. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>마이 스튜디오 | 카멜레온</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
