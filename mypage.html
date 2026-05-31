@@ -72,17 +72,22 @@
         /* ===== 모바일 반응형 ===== */
         @media (max-width: 768px) {
             body.mypage-body { flex-direction: column; height: auto; overflow: auto; }
+            /* 2026-05-31: 사용자 요청 — 모바일은 사이드바 탭 메뉴 숨김.
+               로고 + 로그아웃만 얇은 헤더로 유지. 주문내역만 풀스크린. */
             .mp-sidebar {
-                width: 100%; flex-direction: row; padding: 10px 15px; gap: 5px;
+                width: 100%; flex-direction: row; padding: 8px 14px; gap: 10px;
                 border-right: none; border-bottom: 1px solid #e2e8f0;
-                overflow-x: auto; -webkit-overflow-scrolling: touch;
+                align-items: center; justify-content: space-between;
             }
-            .mp-logo { margin-bottom: 0; margin-right: 15px; font-size: 16px; white-space: nowrap; }
-            .mp-nav-item { padding: 8px 12px; margin-bottom: 0; white-space: nowrap; font-size: 13px; }
-            .mp-sidebar > div[style*="margin-top: auto"] { margin-top: 0 !important; }
+            .mp-sidebar .mp-nav-item:not(:last-child):not([style*="color:#ef4444"]) { display: none; }
+            .mp-sidebar > div[style*="margin-top: auto"] { margin-top: 0 !important; margin-left: auto; }
+            .mp-logo { margin-bottom: 0; font-size: 16px; white-space: nowrap; }
+            .mp-nav-item { padding: 6px 10px; margin: 0; font-size: 12px; }
+            .mp-header { display: none !important; }
+            /* 다른 탭 영역도 숨김 — 모바일은 주문내역만 */
+            #tab-dashboard, #tab-designs, #tab-sales, #tab-profit { display: none !important; }
 
-            .mp-main { padding: 15px; overflow-y: visible; }
-            .mp-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .mp-main { padding: 12px; overflow-y: visible; }
             .mp-welcome h1 { font-size: 20px; }
 
             .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -345,7 +350,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=273"></script>
+    <script type="module" src="./mypage.js?v=274"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

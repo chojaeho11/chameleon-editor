@@ -43,6 +43,10 @@ const I18N_KO = {
     "doc_order_sheet": "작업지시서",
     "doc_statement": "거래명세서",
     "doc_card_sales": "카드매출전표",
+    "mp_manager": "담당매니저",
+    "mp_delivery_date": "배송예정",
+    "mp_payment_status": "결제내역",
+    "msg_unassigned": "미배정",
     "btn_reorder": "다시담기",
     "btn_cancel": "취소",
     "btn_cancel_order": "주문취소",
@@ -603,33 +607,54 @@ async function loadOrders() {
 
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
-            // 모바일: 카드형 레이아웃
+            // 2026-05-31: 사용자 요청 — 모바일 3줄 카드 레이아웃.
+            // Line 1: 주문일 + 상품명
+            // Line 2: 결제금액 + 서류 버튼
+            // Line 3: 담당매니저 / 배송예정일 / 결제내역
+            const _odate = new Date(o.created_at);
+            const _dateStr = `${_odate.getFullYear()}. ${_odate.getMonth()+1}. ${_odate.getDate()}.`;
+            const _managerName = (o.manager_name || _staffMap[o.staff_manager_id] || window.t('msg_unassigned', '미배정')).toString();
+            const _delivStr = o.delivery_target_date
+                ? (function () { const d = new Date(o.delivery_target_date); return `${d.getMonth()+1}/${d.getDate()}`; })()
+                : '-';
+            const _payLabel = (o.payment_status || translatedStatus || '-');
             tbody.innerHTML += `
             <tr><td colspan="5" style="padding:0;">
-                <div style="padding:12px; border-bottom:2px solid #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span class="status-badge ${badgeClass}">${translatedStatus}</span>
-                        ${refundLabel}
-                        <small style="color:#888;">${new Date(o.created_at).toLocaleDateString()} #${o.id}</small>
+                <div class="mp-mob-card" style="padding:14px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                    <!-- Line 1: 주문일 + 상품명 -->
+                    <div style="display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+                        <span style="font-size:11px; color:#94a3b8; white-space:nowrap; padding-top:2px;">${_dateStr}</span>
+                        <span style="font-size:14px; font-weight:700; color:#1e293b; flex:1; line-height:1.35; word-break:keep-all;">${summary}</span>
                     </div>
-                    <div style="font-weight:bold; font-size:14px; margin-bottom:4px;">${summary}</div>
-                    <div style="font-weight:bold; color:#1e293b; margin-bottom:8px;">${fmtMoney(o.total_amount || 0)}</div>
-                    ${actionBtn}
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="font-size:12px; font-weight:700; padding:7px 14px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
-                        <button onclick="reOrder('${o.id}')" style="height:32px; font-size:12px; font-weight:700; padding:5px 14px; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer;">${window.t('btn_reorder', 'Reorder')}</button>
+                    <!-- Line 2: 결제금액 + 서류 버튼 -->
+                    <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-size:17px; font-weight:800; color:#0f172a; letter-spacing:-0.01em;">${fmtMoney(o.total_amount || 0)}</span>
                         <div style="position:relative;">
-                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:32px; font-size:12px; font-weight:700; padding:5px 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:7px; cursor:pointer;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
-                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; bottom:100%; left:0; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; margin-bottom:4px; overflow:hidden; min-width:140px;">
-                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:8px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:8px 12px; font-size:12px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:8px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                            <button onclick="toggleDocDropdown(event, '${o.id}')" style="height:34px; padding:0 14px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">📄 ${window.t('btn_documents', 'Documents')} ▾</button>
+                            <div id="docDrop-${o.id}" class="doc-dropdown" style="display:none; position:absolute; top:100%; right:0; margin-top:4px; background:white; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:100; overflow:hidden; min-width:160px;">
+                                <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📋 ${window.t('doc_quotation', 'Quotation')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">🧾 ${window.t('doc_receipt', 'Receipt')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:9px 12px; font-size:12px; cursor:pointer; border-bottom:1px solid #f1f5f9;">📝 ${window.t('doc_order_sheet', 'Work Order')}</div>
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:9px 12px; font-size:12px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">📑 ${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:9px 12px; font-size:12px; cursor:pointer;">💳 ${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
-                    ${_orderDetailBlock(o)}
+                    <!-- Line 3: 담당매니저 · 배송예정일 · 결제내역 -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; font-size:11px; color:#64748b;">
+                        <div style="overflow:hidden;">
+                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_manager','담당매니저')}</div>
+                            <div style="font-weight:600; color:#475569; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${_managerName}</div>
+                        </div>
+                        <div style="overflow:hidden;">
+                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_delivery_date','배송예정')}</div>
+                            <div style="font-weight:600; color:#475569; white-space:nowrap;">${_delivStr}</div>
+                        </div>
+                        <div style="overflow:hidden;">
+                            <div style="font-size:10px; color:#94a3b8; margin-bottom:2px;">${window.t('mp_payment_status','결제내역')}</div>
+                            <span class="status-badge ${badgeClass}" style="padding:2px 8px; font-size:10px; font-weight:700;">${_payLabel}</span>
+                        </div>
+                    </div>
                 </div>
             </td></tr>`;
         } else {
