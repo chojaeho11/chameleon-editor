@@ -2460,6 +2460,32 @@ function _ciRenderPreview(html) {
   .cmp-frame [style*="font-size: 4"], .cmp-frame [style*="font-size:4"] { font-size:17px !important; line-height:1.4 !important; }
   html[lang="ar"] .cmp-frame { direction:rtl; text-align:right; }
   html[lang="ar"] .cmp-frame ul, html[lang="ar"] .cmp-frame ol { padding-right:22px; padding-left:0; }
+  /* ═══ Designer Template (BOMNAL-style editorial) ═══ */
+  .cmp-designer { color:#1f2937; }
+  .cmp-hero { position:relative; overflow:hidden; border-radius:14px; margin:0 0 28px; aspect-ratio:4/5; background:#1c1917; }
+  .cmp-hero img { width:100%; height:100%; object-fit:cover; opacity:0.92; }
+  .cmp-hero-overlay { position:absolute; left:22px; right:22px; bottom:24px; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,0.45); }
+  .cmp-hero-tag { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; opacity:0.85; margin-bottom:8px; font-weight:600; font-family:'Times New Roman',serif; font-style:italic; }
+  .cmp-hero-title { font-size:28px; font-weight:800; letter-spacing:-0.025em; line-height:1.12; margin:0; word-break:keep-all; }
+  .cmp-title-block { padding:24px 0 12px; text-align:center; }
+  .cmp-hero-title-stand { color:#111827; text-shadow:none; }
+  .cmp-section { margin:28px 0 24px; }
+  .cmp-section-label { font-size:10px; letter-spacing:0.22em; text-transform:uppercase; color:#94a3b8; margin-bottom:10px; font-weight:700; font-family:'Times New Roman',serif; font-style:italic; }
+  .cmp-section-title { font-size:19px; font-weight:800; letter-spacing:-0.02em; color:#111827; margin:0 0 12px; line-height:1.32; word-break:keep-all; }
+  .cmp-section-body { font-size:13px; line-height:1.92; color:#4b5563; word-break:keep-all; overflow-wrap:anywhere; margin:0; }
+  .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
+  .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:22px 0; }
+  .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
+  .cmp-circle-wrap { display:flex; justify-content:center; padding:18px 0; margin:22px 0; }
+  .cmp-circle { width:220px; height:220px; border-radius:50%; overflow:hidden; box-shadow:0 18px 36px -16px rgba(0,0,0,0.22); }
+  .cmp-circle img { width:100%; height:100%; object-fit:cover; }
+  .cmp-mosaic { display:grid; grid-template-columns:2fr 1fr; grid-auto-rows:1fr; gap:6px; margin:22px 0; }
+  .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
+  .cmp-mosaic img:first-child { grid-row:span 2; aspect-ratio:1/2; }
+  .cmp-caption-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:center; margin:22px 0; }
+  .cmp-caption-row img { width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:12px; }
+  .cmp-caption-row .cmp-cap-text { font-size:12.5px; line-height:1.85; color:#4b5563; word-break:keep-all; }
+  .cmp-caption-row .cmp-cap-text h3 { font-size:15px; font-weight:800; margin:0 0 8px; color:#111827; letter-spacing:-0.015em; word-break:keep-all; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2472,6 +2498,183 @@ function _ciRenderPreview(html) {
         } catch(e) {}
     }, 200);
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 2026-05-31: 디자이너 모드 — AI HTML 대신 프론트엔드 템플릿 조립.
+// 사용자가 올린 사진 + 설명 → Hero / Split / Circle / Mosaic 가 섞인
+// 에디토리얼 레이아웃. AI 가 안 돌아도 작동 (서버 비용 0).
+// 사용자 요청: '세련되고 깔끔, 제목 + 긴 설명, 글자 작게, 사진 다이나믹 배치'.
+// ═══════════════════════════════════════════════════════════════════
+
+// 사용자 설명 텍스트를 섹션으로 파싱 — '제목: 본문' 패턴 자동 인식
+function _ciParseTextIntoSections(text, productName) {
+    if (!text) return { tagline: '', bodyBlocks: [] };
+    const paragraphs = text.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
+    let tagline = '';
+    const bodyBlocks = [];
+    if (!paragraphs.length) return { tagline: '', bodyBlocks: [] };
+    // 첫 짧은 문단 (≤60자) → 태그라인
+    if (paragraphs[0].length <= 60 && paragraphs.length > 1) tagline = paragraphs.shift();
+    paragraphs.forEach(p => {
+        // '제목: 본문' 또는 '제목 — 본문' 패턴
+        const m = p.match(/^([^.\n—:：]{2,30})\s*[:：—-]\s*(.+)$/s);
+        if (m) {
+            bodyBlocks.push({ type: 'narrative', title: m[1].trim(), body: m[2].trim() });
+        } else {
+            // 2문장+ 이면 첫 문장 → 제목, 나머지 → 본문
+            const sentences = p.split(/[.!?。]\s+/).filter(Boolean);
+            if (sentences.length >= 2 && sentences[0].length <= 40) {
+                bodyBlocks.push({
+                    type: 'narrative',
+                    title: sentences[0].replace(/[.!?。]$/, ''),
+                    body: sentences.slice(1).join(' ').trim()
+                });
+            } else {
+                bodyBlocks.push({ type: 'narrative', title: '', body: p });
+            }
+        }
+    });
+    return { tagline, bodyBlocks };
+}
+
+// 디자이너 템플릿 HTML 조립 — 섹션과 이미지를 4가지 스타일로 순환 배치
+function _ciAssembleDesignerHtml(copy, images) {
+    images = images || [];
+    let html = '<div class="cmp-designer">';
+    let imgIdx = 0;
+    const esc = s => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+    // Hero — 첫 이미지 + 오버레이 (이미지 없으면 텍스트만)
+    if (images[0]) {
+        html += `
+<div class="cmp-hero">
+    <img src="${esc(images[0])}" alt="">
+    <div class="cmp-hero-overlay">
+        ${copy.hero_subtitle ? `<div class="cmp-hero-tag">${esc(copy.hero_subtitle)}</div>` : ''}
+        <h1 class="cmp-hero-title">${esc(copy.hero_title || '')}</h1>
+    </div>
+</div>`;
+        imgIdx = 1;
+    } else if (copy.hero_title) {
+        html += `
+<div class="cmp-title-block">
+    ${copy.hero_subtitle ? `<div class="cmp-hero-tag" style="color:#94a3b8;text-shadow:none;">${esc(copy.hero_subtitle)}</div>` : ''}
+    <h1 class="cmp-hero-title cmp-hero-title-stand">${esc(copy.hero_title)}</h1>
+</div>`;
+    }
+
+    // Sections + 이미지 인터리브 — 4가지 스타일 순환 (full / split / circle / caption-row)
+    (copy.sections || []).forEach((sec, i) => {
+        const chapter = String(i + 1).padStart(2, '0');
+        html += `
+<section class="cmp-section">
+    <div class="cmp-section-label">Chapter ${chapter}</div>
+    ${sec.title ? `<h2 class="cmp-section-title">${esc(sec.title)}</h2>` : ''}
+    ${sec.body ? `<p class="cmp-section-body">${esc(sec.body)}</p>` : ''}
+</section>`;
+        if (!images[imgIdx]) return;
+        const style = i % 4;
+        if (style === 0) {
+            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
+            imgIdx++;
+        } else if (style === 1 && images[imgIdx + 1]) {
+            html += `
+<div class="cmp-split">
+    <img class="cmp-split-img" src="${esc(images[imgIdx])}" alt="">
+    <img class="cmp-split-img" src="${esc(images[imgIdx + 1])}" alt="">
+</div>`;
+            imgIdx += 2;
+        } else if (style === 2) {
+            html += `
+<div class="cmp-circle-wrap">
+    <div class="cmp-circle"><img src="${esc(images[imgIdx])}" alt=""></div>
+</div>`;
+            imgIdx++;
+        } else {
+            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
+            imgIdx++;
+        }
+    });
+
+    // 남는 이미지 — 모자이크 / 페어 / 단독
+    const rem = images.slice(imgIdx);
+    if (rem.length >= 3) {
+        html += '<div class="cmp-mosaic">';
+        rem.forEach(src => { html += `<img src="${esc(src)}" alt="">`; });
+        html += '</div>';
+    } else if (rem.length === 2) {
+        html += `
+<div class="cmp-split">
+    <img class="cmp-split-img" src="${esc(rem[0])}" alt="">
+    <img class="cmp-split-img" src="${esc(rem[1])}" alt="">
+</div>`;
+    } else if (rem.length === 1) {
+        html += `<img class="cmp-full" src="${esc(rem[0])}" alt="">`;
+    }
+    html += '</div>';
+    return html;
+}
+
+// 디자이너 모드 생성 — 사용자 텍스트 + 사진으로 즉시 조립 (AI 호출 옵션)
+window._ciGenerateDesigner = async () => {
+    const dbClient = window.sb || window._supabase;
+    const target = _ciGetTarget();
+    const descText = document.getElementById('ciDescription').value.trim();
+    const status = document.getElementById('ciStatus');
+    const btn = document.getElementById('ciGenerateDesignerBtn');
+
+    if (!descText && _ciImages.length === 0) {
+        showToast('사진을 올리거나 설명을 입력해주세요.', 'warn');
+        return;
+    }
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 조립 중...';
+
+    try {
+        // 1) 이미지 업로드
+        if (_ciImages.length > 0) {
+            status.textContent = '📤 이미지 업로드 중...';
+            const timestamp = Date.now();
+            await Promise.all(_ciImages.map(async (img, i) => {
+                if (img.url) return;
+                const resp = await fetch(img.preview);
+                const blob = await resp.blob();
+                const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
+                const path = `common/${timestamp}_${i}.${ext}`;
+                const { error } = await dbClient.storage.from('products').upload(path, blob, { contentType: blob.type });
+                if (error) throw new Error('이미지 업로드 실패: ' + error.message);
+                const { data: urlData } = dbClient.storage.from('products').getPublicUrl(path);
+                img.url = urlData.publicUrl;
+            }));
+        }
+        const imageUrls = _ciImages.filter(i => i.url).map(i => i.url);
+        const productName = target.name || '상품';
+
+        // 2) 사용자 텍스트 → 섹션 파싱
+        status.textContent = '✨ 디자이너 레이아웃 조립 중...';
+        const parsed = _ciParseTextIntoSections(descText, productName);
+
+        // 3) HTML 조립 (한국어)
+        const krHtml = _ciAssembleDesignerHtml({
+            hero_title: productName,
+            hero_subtitle: parsed.tagline,
+            sections: parsed.bodyBlocks
+        }, imageUrls);
+
+        document.getElementById('ciHtmlKR').value = krHtml;
+        status.textContent = '✅ 디자이너 모드 완료! 검토 후 [7개국어 번역만] 클릭.';
+        _ciShowPreview(krHtml);
+        showToast('디자이너 모드 조립 완료! 번역은 [7개국어 번역만] 버튼으로.', 'success');
+    } catch (e) {
+        console.error('Designer mode error:', e);
+        status.textContent = '❌ 실패: ' + e.message;
+        showToast('실패: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> ✨ 디자이너 모드';
+    }
+};
 
 // 미리보기 표시
 function _ciShowPreview(html) {

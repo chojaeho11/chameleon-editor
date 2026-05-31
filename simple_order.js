@@ -1116,6 +1116,77 @@ html, body { background: #ffffff !important; }
 [lang="ar"] .so-prod-detail-body ul,
 [lang="ar"] .so-prod-detail-body ol { padding-right: 22px; padding-left: 0; }
 
+/* ═══════════════ 2026-05-31: 디자이너 템플릿 (BOMNAL-style editorial) ═══════════════
+   global_products.js _ciAssembleDesignerHtml 이 만드는 .cmp-* 클래스용. 고객 화면
+   (.so-prod-detail-body 안쪽) 에서도 관리자 미리보기와 동일하게 보이도록 동일 CSS. */
+.so-prod-detail-body .cmp-designer { color: #1f2937; }
+.so-prod-detail-body .cmp-hero {
+    position: relative; overflow: hidden; border-radius: 14px;
+    margin: 0 0 28px; aspect-ratio: 4/5; background: #1c1917;
+}
+.so-prod-detail-body .cmp-hero img { width: 100%; height: 100%; object-fit: cover; opacity: 0.92; margin: 0; border-radius: 0; box-shadow: none; }
+.so-prod-detail-body .cmp-hero-overlay {
+    position: absolute; left: 22px; right: 22px; bottom: 24px;
+    color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.45);
+}
+.so-prod-detail-body .cmp-hero-tag {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    opacity: 0.85; margin-bottom: 8px; font-weight: 600;
+    font-family: 'Times New Roman', serif; font-style: italic;
+}
+.so-prod-detail-body .cmp-hero-title {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.025em;
+    line-height: 1.12; margin: 0; word-break: keep-all;
+}
+.so-prod-detail-body .cmp-title-block { padding: 24px 0 12px; text-align: center; }
+.so-prod-detail-body .cmp-hero-title-stand { color: #111827; text-shadow: none; }
+.so-prod-detail-body .cmp-section { margin: 28px 0 24px; }
+.so-prod-detail-body .cmp-section-label {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: #94a3b8; margin-bottom: 10px; font-weight: 700;
+    font-family: 'Times New Roman', serif; font-style: italic;
+}
+.so-prod-detail-body .cmp-section-title {
+    font-size: 19px; font-weight: 800; letter-spacing: -0.02em;
+    color: #111827; margin: 0 0 12px; line-height: 1.32; word-break: keep-all;
+}
+.so-prod-detail-body .cmp-section-body {
+    font-size: 13px; line-height: 1.92; color: #4b5563;
+    word-break: keep-all; overflow-wrap: anywhere; margin: 0;
+}
+.so-prod-detail-body .cmp-full {
+    width: 100%; height: auto; display: block;
+    border-radius: 12px; margin: 22px 0; box-shadow: none;
+}
+.so-prod-detail-body .cmp-split {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 22px 0;
+}
+.so-prod-detail-body .cmp-split-img {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 10px; display: block; margin: 0; box-shadow: none;
+}
+.so-prod-detail-body .cmp-circle-wrap {
+    display: flex; justify-content: center; padding: 18px 0; margin: 22px 0;
+}
+.so-prod-detail-body .cmp-circle {
+    width: 220px; height: 220px; border-radius: 50%;
+    overflow: hidden; box-shadow: 0 18px 36px -16px rgba(0,0,0,0.22);
+}
+.so-prod-detail-body .cmp-circle img {
+    width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; box-shadow: none;
+}
+.so-prod-detail-body .cmp-mosaic {
+    display: grid; grid-template-columns: 2fr 1fr;
+    grid-auto-rows: 1fr; gap: 6px; margin: 22px 0;
+}
+.so-prod-detail-body .cmp-mosaic img {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 8px; display: block; margin: 0; box-shadow: none;
+}
+.so-prod-detail-body .cmp-mosaic img:first-child {
+    grid-row: span 2; aspect-ratio: 1/2;
+}
+
 /* 모바일 — 세로 스택, 풀스크린 유지 */
 @media (max-width: 768px) {
     .so-head { padding: 12px 16px; }
