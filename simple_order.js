@@ -1168,18 +1168,18 @@ html, body { background: #ffffff !important; }
 /* 제목 600 (Semibold) */
 .so-prod-detail-body .cmp-section-title {
     font-size: 17px; font-weight: 600; letter-spacing: -0.03em;
-    color: #111827; margin: 0 0 12px; line-height: 1.3; word-break: keep-all;
+    color: #0f172a; margin: 0 0 12px; line-height: 1.3; word-break: keep-all;
 }
-/* 본문 — weight 200 (ExtraLight) 진짜 얇음 (Pretendard 로드 덕분) */
+/* 본문 — weight 300 (Light) 균형. Pretendard 덕분에 얇아도 깔끔 */
 .so-prod-detail-body .cmp-section-body {
-    font-size: 12px; line-height: 1.45; color: #475569;
-    font-weight: 200; letter-spacing: -0.022em;
+    font-size: 12.5px; line-height: 1.55; color: #1e293b;
+    font-weight: 300; letter-spacing: -0.018em;
     word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 14px;
 }
-/* 섹션 사이 분산 브랜드 chunk — inline 형식 */
+/* 사진 사이 분산 브랜드 chunk */
 .so-prod-detail-body .cmp-bs-inline {
-    font-size: 10.5px; line-height: 1.45; color: #94a3b8;
-    font-weight: 200; letter-spacing: -0.018em;
+    font-size: 11px; line-height: 1.5; color: #475569;
+    font-weight: 300; letter-spacing: -0.015em;
     word-break: keep-all; margin: 8px 0 28px; padding: 0; text-align: left;
 }
 /* designer 템플릿 내부 img margin/box-shadow 영향 차단 (상단 검정 띠 버그 fix) */
@@ -1222,14 +1222,14 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-mosaic img:first-child {
     grid-column: 1 / -1; aspect-ratio: 16/9;
 }
-/* 브랜드 스토리 — 남는 chunks 끝에 한꺼번에. weight 200 (ExtraLight) */
+/* 브랜드 스토리 — 남는 chunks 끝에. weight 300 (Light) */
 .so-prod-detail-body .cmp-brand-story {
     margin: 36px 0 12px; padding: 20px 0 6px;
     border-top: 1px solid #e2e8f0;
 }
 .so-prod-detail-body .cmp-bs-body {
-    font-size: 10.5px; line-height: 1.4; color: #94a3b8;
-    font-weight: 200; letter-spacing: -0.018em;
+    font-size: 11px; line-height: 1.5; color: #475569;
+    font-weight: 300; letter-spacing: -0.015em;
     word-break: keep-all; margin: 0 0 12px;
 }
 

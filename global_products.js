@@ -2479,12 +2479,12 @@ function _ciRenderPreview(html) {
   .cmp-title-block { padding:24px 0 12px; text-align:center; }
   .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
   .cmp-section { margin:28px 0 28px; }
-  /* 제목 600 (Semibold) — 더 얇은 톤 */
-  .cmp-section-title { font-size:17px; font-weight:600; letter-spacing:-0.03em; color:#111827; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
-  /* 본문 — 2문장 덩어리 <p>. weight 200 (ExtraLight) — 사용자 요청 '더 얇은 서체' */
-  .cmp-section-body { font-size:12px; line-height:1.45; color:#475569; font-weight:200; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 14px; }
-  /* 섹션 사이 분산 브랜드 chunk — inline 형식 (border 없음) */
-  .cmp-bs-inline { font-size:10.5px; line-height:1.45; color:#94a3b8; font-weight:200; letter-spacing:-0.018em; word-break:keep-all; margin:8px 0 28px; padding:0; text-align:left; }
+  /* 제목 600 (Semibold) */
+  .cmp-section-title { font-size:17px; font-weight:600; letter-spacing:-0.03em; color:#0f172a; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
+  /* 본문 — weight 300 (Light) — 너무 얇아 안 보임 vs 두꺼움 사이 균형 (v=304 의 200 은 잘 안보임). 색도 진하게 */
+  .cmp-section-body { font-size:12.5px; line-height:1.55; color:#1e293b; font-weight:300; letter-spacing:-0.018em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 14px; }
+  /* 분산 브랜드 chunk — 본문보다 살짝 작고 옅음 */
+  .cmp-bs-inline { font-size:11px; line-height:1.5; color:#475569; font-weight:300; letter-spacing:-0.015em; word-break:keep-all; margin:8px 0 28px; padding:0; text-align:left; }
   .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
   .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
@@ -2497,9 +2497,9 @@ function _ciRenderPreview(html) {
   .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
   .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
-  /* 브랜드 스토리 — 남는 chunks 끝에 한꺼번에. weight 200 (ExtraLight) */
+  /* 브랜드 스토리 — 남는 chunks 끝에 한꺼번에. weight 300 (Light) */
   .cmp-brand-story { margin:36px 0 12px; padding:20px 0 6px; border-top:1px solid #e2e8f0; }
-  .cmp-bs-body { font-size:10.5px; line-height:1.4; color:#94a3b8; font-weight:200; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 12px; }
+  .cmp-bs-body { font-size:11px; line-height:1.5; color:#475569; font-weight:300; letter-spacing:-0.015em; word-break:keep-all; margin:0 0 12px; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2664,7 +2664,9 @@ function _ciAssembleDesignerHtml(copy, images) {
         }
     });
 
-    // 남는 이미지 — 페어로 split, 마지막 홀수 1장은 큰 원형 (사용자 요청)
+    // 남는 이미지 — 페어로 split, 마지막 홀수 1장은 큰 원형 (사용자 요청).
+    // 2026-05-31: 트레일링 split 페어 사이에도 brand chunk 분산 — 사용자 요청
+    // '사진 사이사이에 글씨가 들어가도록 배치'.
     let rem = images.slice(imgIdx);
     let lastCircle = null;
     if (rem.length % 2 === 1) {
@@ -2677,15 +2679,25 @@ function _ciAssembleDesignerHtml(copy, images) {
     <img class="cmp-split-img" src="${esc(rem[k])}" alt="">
     <img class="cmp-split-img" src="${esc(rem[k + 1])}" alt="">
 </div>`;
+        // 각 페어 뒤에 brand chunk 한 줄 (남은 chunk 가 있을 때만)
+        if (brandChunks[brandIdx]) {
+            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
+            brandIdx++;
+        }
     }
     if (lastCircle) {
         html += `
 <div class="cmp-circle-wrap cmp-circle-wrap-lg">
     <div class="cmp-circle cmp-circle-lg"><img src="${esc(lastCircle)}" alt=""></div>
 </div>`;
+        // 큰 원형 뒤에도 brand chunk 한 줄
+        if (brandChunks[brandIdx]) {
+            html += `<p class="cmp-bs-inline">${esc(brandChunks[brandIdx])}</p>`;
+            brandIdx++;
+        }
     }
 
-    // 남은 브랜드 chunks (섹션 부족해서 다 못 뿌린 경우) — 끝에 한꺼번에
+    // 그래도 남은 brand chunks (거의 없을 케이스) — 끝에 마무리 블록으로
     if (brandIdx < brandChunks.length) {
         html += '<section class="cmp-brand-story">';
         for (let k = brandIdx; k < brandChunks.length; k++) {
