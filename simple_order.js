@@ -1067,26 +1067,21 @@ html, body { background: #ffffff !important; }
                 <span>${tr('해외 배송은 FOB 방식으로 배송됩니다.', '海外配送はFOB方式で発送されます。', 'International orders are shipped on FOB terms.')}</span>
               </div>
             </div>
-            <!-- 2026-05-13: 가벽 상품 전용 안내 — 2026-05-31: 알약 버튼 제거, 설명만 가운데 정렬로 표시 (사용자 요청). -->
-            <div id="soWallGuide" style="display:none; margin-top:10px;">
-              <div id="soWallGuideText" style="font-size:13px; color:#451a03; line-height:1.7; background:#faf6ed; padding:14px 16px; border-radius:10px; border:1px solid #fde68a; text-align:center;">
-                <span id="soWallGuideRange">${tr('허니콤 가벽은 가로 1m 단위로 제작됩니다. 가로 길이는 1m부터 8m까지 선택 가능하며, 세로는 2m / 2.2m / 2.4m / 3m 중 선택하실 수 있습니다.', 'ハニカム壁は横1m単位で製作されます。横は1m〜8m、縦は2/2.2/2.4/3mから選択。', 'Honeycomb walls are produced in 1m width units. Width 1m-8m, height 2/2.2/2.4/3m.')}</span><br><br>
-                <b>${tr('🎨 디자인 작업', 'デザイン', 'Design')}:</b> ${tr('실제 사이즈의 1/10로 작업해주세요. 예: 3m × 2.4m 가벽 → 30cm × 24cm 작업.', '実サイズの1/10で作業。例：3m×2.4m → 30cm×24cm。', 'Work at 1/10 of actual size. e.g., 3m × 2.4m wall → 30cm × 24cm.')}<br>
-                <b>${tr('📄 파일 형식', 'ファイル形式', 'Format')}:</b> ${tr('PDF 권장 (인쇄 품질 최상). PNG/JPG 도 가능.', 'PDF推奨。PNG/JPGも可。', 'PDF recommended. PNG/JPG also OK.')}
-              </div>
-            </div>
+            <!-- 2026-05-31: 가벽 설명 카드 (#soWallGuide) 제거 — 사용자 요청. 우측 사이즈 셀렉터로 충분. -->
+            <div id="soWallGuide" style="display:none;"></div>
           </div>
         </div>
 
-        <!-- 2026-05-14: 칼선 도안 제공 안내 + 다운로드 (admin_products.cutline_url 있을 때만 표시) -->
-        <div id="soCutlineDownload" style="display:none; margin-bottom:14px; padding:14px 16px; background:linear-gradient(135deg,#fef9e7 0%,#fed7aa 100%); border:1.5px solid #fbbf24; border-radius:14px;">
+        <!-- 2026-05-14: 칼선 도안 제공 안내 + 다운로드 (admin_products.cutline_url 있을 때만 표시).
+             2026-05-31: 위의 추가옵션·시공/배송 카드와 톤 통일 — 흰 카드 + 검정 보더 + 10px 라운딩. -->
+        <div id="soCutlineDownload" style="display:none; margin-bottom:14px; padding:16px 14px; background:#ffffff; border:1px solid #1c1917; border-radius:10px;">
           <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:26px;">✂️</span>
             <div style="flex:1; min-width:0;">
-              <div style="font-weight:800; color:#78350f; font-size:13px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template available')}</div>
-              <div style="font-size:11px; color:#92400e; margin-top:2px;">${tr('이 제품 전용 칼선 템플릿을 다운받아 디자인에 맞춰주세요.', 'この商品専用の型抜きテンプレートをダウンロードしてデザインしてください。', 'Download the die-cut template for this product to align your design.')}</div>
+              <div style="font-weight:800; color:#1c1917; font-size:13px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template available')}</div>
+              <div style="font-size:11px; color:#57534e; margin-top:2px;">${tr('이 제품 전용 칼선 템플릿을 다운받아 디자인에 맞춰주세요.', 'この商品専用の型抜きテンプレートをダウンロードしてデザインしてください。', 'Download the die-cut template for this product to align your design.')}</div>
             </div>
-            <a id="soCutlineDownloadBtn" href="#" download target="_blank" rel="noopener" style="flex-shrink:0; padding:10px 16px; background:linear-gradient(135deg,#b45309 0%,#78350f 100%); color:#fde047; border-radius:999px; font-size:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(120,53,15,0.3); white-space:nowrap;">
+            <a id="soCutlineDownloadBtn" href="#" download target="_blank" rel="noopener" style="flex-shrink:0; padding:10px 16px; background:#4338ca; color:#ffffff; border-radius:999px; font-size:12px; font-weight:700; text-decoration:none; box-shadow:0 4px 12px rgba(67,56,202,0.25); white-space:nowrap;">
               <i class="fa-solid fa-download"></i> ${tr('칼선 다운받기', 'ダウンロード', 'Download')}
             </a>
           </div>
