@@ -1150,18 +1150,21 @@ html, body { background: #ffffff !important; }
 }
 .so-prod-detail-body .cmp-title-block { padding: 24px 0 12px; text-align: center; }
 .so-prod-detail-body .cmp-hero-title-stand { color: #111827 !important; text-shadow: none; }
-.so-prod-detail-body .cmp-section { margin: 32px 0 20px; }
-/* Chapter 라벨 제거됨 (사용자 요청 '챕터 123 이렇거 말고') */
+.so-prod-detail-body .cmp-section { margin: 28px 0 28px; }
+/* Chapter 라벨 제거됨. 제목 weight 700 으로 살짝 얇게 */
 .so-prod-detail-body .cmp-section-title {
-    font-size: 18px; font-weight: 800; letter-spacing: -0.025em;
-    color: #111827; margin: 0 0 10px; line-height: 1.3; word-break: keep-all;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.03em;
+    color: #111827; margin: 0 0 12px; line-height: 1.3; word-break: keep-all;
 }
-/* 본문 — 문장 단위 <p> 분리. 얇고 자간/행간 좁게 (NEVV 톤) */
+/* 본문 — 2문장 덩어리 <p>. weight 300 (Light), line-height 1.45, 덩어리 사이 14px */
 .so-prod-detail-body .cmp-section-body {
-    font-size: 12px; line-height: 1.68; color: #475569;
-    font-weight: 400; letter-spacing: -0.022em;
-    word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 5px;
+    font-size: 12px; line-height: 1.45; color: #475569;
+    font-weight: 300; letter-spacing: -0.022em;
+    word-break: keep-all; overflow-wrap: anywhere; margin: 0 0 14px;
 }
+/* designer 템플릿 내부 img 는 자체 wrapper 가 처리 — 전역 .so-prod-detail-body img 룰의
+   margin:14px / border-radius:12px / box-shadow 영향 차단 (상단 검정 띠 버그 fix) */
+.so-prod-detail-body .cmp-designer img { margin: 0 !important; box-shadow: none !important; }
 .so-prod-detail-body .cmp-full {
     width: 100%; height: auto; display: block;
     border-radius: 12px; margin: 22px 0; box-shadow: none;
@@ -1194,15 +1197,15 @@ html, body { background: #ffffff !important; }
 .so-prod-detail-body .cmp-mosaic img:first-child {
     grid-column: 1 / -1; aspect-ratio: 16/9;
 }
-/* 브랜드 스토리 — 모든 상세페이지 끝 (사용자 요청). 라벨 없이 단락만, 더 작게 */
+/* 브랜드 스토리 — 모든 상세페이지 끝. weight 300, line-height 1.4 (덩어리 가까이) */
 .so-prod-detail-body .cmp-brand-story {
     margin: 36px 0 12px; padding: 20px 0 6px;
     border-top: 1px solid #e2e8f0;
 }
 .so-prod-detail-body .cmp-bs-body {
-    font-size: 10.5px; line-height: 1.7; color: #94a3b8;
-    font-weight: 400; letter-spacing: -0.018em;
-    word-break: keep-all; margin: 0 0 5px;
+    font-size: 10.5px; line-height: 1.4; color: #94a3b8;
+    font-weight: 300; letter-spacing: -0.018em;
+    word-break: keep-all; margin: 0 0 12px;
 }
 
 /* 모바일 — 세로 스택, 풀스크린 유지 */

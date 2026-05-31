@@ -2444,7 +2444,10 @@ function _ciRenderPreview(html) {
                font-size:13.5px; line-height:1.78; color:#1f2937;
                letter-spacing:-0.005em; word-break:keep-all; overflow-wrap:anywhere; }
   .cmp-frame * { max-width:100%; box-sizing:border-box; }
-  .cmp-frame img { width:100%; height:auto; display:block; margin:14px auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .cmp-frame > img,
+  .cmp-frame > p > img { width:100%; height:auto; display:block; margin:14px auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  /* designer 템플릿 내부 이미지는 자체 wrapper 가 처리 — 일반 img 룰의 margin/border-radius 영향 차단 */
+  .cmp-frame .cmp-designer img { margin:0; box-shadow:none; }
   .cmp-frame p { margin:0 0 14px; color:#374151; line-height:1.78; }
   .cmp-frame h1 { font-size:19px; font-weight:800; letter-spacing:-0.02em; margin:24px 0 10px; color:#111827; line-height:1.3; }
   .cmp-frame h2 { font-size:16.5px; font-weight:800; letter-spacing:-0.02em; margin:22px 0 10px; color:#111827; line-height:1.3; }
@@ -2472,11 +2475,11 @@ function _ciRenderPreview(html) {
   .cmp-hero-title { font-size:28px; font-weight:800; letter-spacing:-0.025em; line-height:1.12; margin:0; word-break:keep-all; }
   .cmp-title-block { padding:24px 0 12px; text-align:center; }
   .cmp-hero-title-stand { color:#111827 !important; text-shadow:none; }
-  .cmp-section { margin:32px 0 20px; }
-  /* Chapter 라벨 제거됨 — 그냥 제목+본문 흐름으로 */
-  .cmp-section-title { font-size:18px; font-weight:800; letter-spacing:-0.025em; color:#111827; margin:0 0 10px; line-height:1.3; word-break:keep-all; }
-  /* 본문 — 단락 단위 <p> 로 쪼개진 각 문장. 얇고 자간/행간 좁게 (NEVV 톤) */
-  .cmp-section-body { font-size:12px; line-height:1.68; color:#475569; font-weight:400; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 5px; }
+  .cmp-section { margin:28px 0 28px; }
+  /* Chapter 라벨 제거 — 제목+본문 흐름. 제목 weight 700 으로 약간 얇게 */
+  .cmp-section-title { font-size:17px; font-weight:700; letter-spacing:-0.03em; color:#111827; margin:0 0 12px; line-height:1.3; word-break:keep-all; }
+  /* 본문 — 2문장 덩어리 <p>. weight 300 (Light), line-height 1.45 (거의 붙도록), 덩어리 사이 14px */
+  .cmp-section-body { font-size:12px; line-height:1.45; color:#475569; font-weight:300; letter-spacing:-0.022em; word-break:keep-all; overflow-wrap:anywhere; margin:0 0 14px; }
   .cmp-full { width:100%; height:auto; display:block; border-radius:12px; margin:22px 0; }
   .cmp-split { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-split-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; display:block; }
@@ -2487,9 +2490,9 @@ function _ciRenderPreview(html) {
   .cmp-mosaic { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:22px 0; }
   .cmp-mosaic img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; display:block; }
   .cmp-mosaic img:first-child { grid-column:1 / -1; aspect-ratio:16/9; }
-  /* 브랜드 스토리 — 모든 페이지 끝 (사용자 요청, 아주 작은 글씨 + 서술형). 라벨 없이 단락만 */
+  /* 브랜드 스토리 — 모든 페이지 끝. 더 얇게 (weight 300), 행간 1.4 (덩어리 가까이) */
   .cmp-brand-story { margin:36px 0 12px; padding:20px 0 6px; border-top:1px solid #e2e8f0; }
-  .cmp-bs-body { font-size:10.5px; line-height:1.7; color:#94a3b8; font-weight:400; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 5px; }
+  .cmp-bs-body { font-size:10.5px; line-height:1.4; color:#94a3b8; font-weight:300; letter-spacing:-0.018em; word-break:keep-all; margin:0 0 12px; }
 </style></head><body>
   <div class="cmp-viewport-label">📱 ${langAttr === 'ar' ? 'معاينة الجوال' : (langAttr === 'ja' ? 'モバイルプレビュー' : (langAttr === 'en' ? 'Mobile preview' : '모바일 미리보기 — 실제 고객 화면 폭'))}</div>
   <div class="cmp-frame">${html || '<p style="padding:40px;text-align:center;color:#999;">내용이 없습니다</p>'}</div>
@@ -2530,15 +2533,24 @@ function _ciDenarcize(text) {
 // 한국어 원본 — 번역 단계에서 자동으로 7개국어로 변환됨.
 const _CMP_BRAND_STORY_KR = '우리는 업자를 위한 쇼핑몰입니다. 고객과 함께 성장할 수 있는 제품을 만들기 위해 매일 노력하고 있어요. 친환경 인쇄로 환경을 조금 더 아름답게 유지하고 싶습니다. 다만 친환경이라는 이유만으로 가격이 비싸다면 고객도 외면하기에, 더 저렴하게 만들 방법을 끊임없이 고민합니다. 우리가 사용하는 잉크는 그린가드 골드 등급의 친환경 잉크예요. 아기들에게도 안전한 수준이라, 안심하고 가까이 두실 수 있습니다.';
 
-function _ciBrandStoryHtml() {
-    // 문장 단위로 <p> 쪼개기 → 가독성 좋은 단락
-    const sentences = _CMP_BRAND_STORY_KR
+// 2026-05-31: 2문장씩 묶어 한 덩어리 <p> 로 — 사용자 요청 '글씨가 덩어리 덩어리 보이게'.
+function _ciChunkSentences(text, perChunk) {
+    perChunk = perChunk || 2;
+    const sentences = String(text || '')
         .split(/(?<=[.!?。])\s+/)
         .map(s => s.trim())
         .filter(Boolean);
-    const bodyHtml = sentences
-        .map(s => `<p class="cmp-bs-body">${s}</p>`)
-        .join('');
+    const chunks = [];
+    for (let i = 0; i < sentences.length; i += perChunk) {
+        chunks.push(sentences.slice(i, i + perChunk).join(' '));
+    }
+    return chunks;
+}
+
+function _ciBrandStoryHtml() {
+    // 2문장씩 덩어리로 묶기
+    const chunks = _ciChunkSentences(_CMP_BRAND_STORY_KR, 2);
+    const bodyHtml = chunks.map(c => `<p class="cmp-bs-body">${c}</p>`).join('');
     return `
 <section class="cmp-brand-story">
     ${bodyHtml}
@@ -2611,44 +2623,41 @@ function _ciAssembleDesignerHtml(copy, images) {
 </div>`;
     }
 
-    // Sections + 이미지 인터리브 — 4가지 스타일 순환 (full / split / circle / full)
-    // 2026-05-31: "Chapter NN" 라벨 제거 — 사용자 요청 '서술형'. 본문은 문장 단위 <p> 로
-    // 나누어 가독성 좋은 단락 (NEVV 레퍼런스처럼).
+    // 2026-05-31: 사용자 요청 — "사진 2장 → 내용 1, 사진 2장 → 내용 1" 패턴.
+    // 사진이 텍스트 위에 페어로 들어가고, 그 다음 텍스트 덩어리. 중간중간 가끔 원형 액센트.
     (copy.sections || []).forEach((sec, i) => {
-        const bodySentences = (sec.body || '')
-            .split(/(?<=[.!?。])\s+/)
-            .map(s => s.trim())
-            .filter(Boolean);
-        const bodyHtml = bodySentences
-            .map(s => `<p class="cmp-section-body">${esc(s)}</p>`)
-            .join('');
+        // (a) 사진 — 가능하면 split (2장), 부족하면 full (1장), 그 마저도 없으면 skip.
+        //     4번째 섹션마다 원형 액센트로 변주 (i % 4 === 2).
+        if (images[imgIdx]) {
+            if ((i % 4) === 2 && images[imgIdx]) {
+                // 원형 액센트
+                html += `
+<div class="cmp-circle-wrap">
+    <div class="cmp-circle"><img src="${esc(images[imgIdx])}" alt=""></div>
+</div>`;
+                imgIdx++;
+            } else if (images[imgIdx + 1]) {
+                // 2장 split
+                html += `
+<div class="cmp-split">
+    <img class="cmp-split-img" src="${esc(images[imgIdx])}" alt="">
+    <img class="cmp-split-img" src="${esc(images[imgIdx + 1])}" alt="">
+</div>`;
+                imgIdx += 2;
+            } else {
+                // 1장만 남으면 풀폭
+                html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
+                imgIdx++;
+            }
+        }
+        // (b) 텍스트 — 2문장씩 덩어리 <p>
+        const bodyChunks = _ciChunkSentences(sec.body || '', 2);
+        const bodyHtml = bodyChunks.map(c => `<p class="cmp-section-body">${esc(c)}</p>`).join('');
         html += `
 <section class="cmp-section">
     ${sec.title ? `<h2 class="cmp-section-title">${esc(sec.title)}</h2>` : ''}
     ${bodyHtml}
 </section>`;
-        if (!images[imgIdx]) return;
-        const style = i % 4;
-        if (style === 0) {
-            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
-            imgIdx++;
-        } else if (style === 1 && images[imgIdx + 1]) {
-            html += `
-<div class="cmp-split">
-    <img class="cmp-split-img" src="${esc(images[imgIdx])}" alt="">
-    <img class="cmp-split-img" src="${esc(images[imgIdx + 1])}" alt="">
-</div>`;
-            imgIdx += 2;
-        } else if (style === 2) {
-            html += `
-<div class="cmp-circle-wrap">
-    <div class="cmp-circle"><img src="${esc(images[imgIdx])}" alt=""></div>
-</div>`;
-            imgIdx++;
-        } else {
-            html += `<img class="cmp-full" src="${esc(images[imgIdx])}" alt="">`;
-            imgIdx++;
-        }
     });
 
     // 남는 이미지 — 모자이크 / 페어 / 단독
