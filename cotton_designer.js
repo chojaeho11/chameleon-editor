@@ -2720,7 +2720,10 @@ async function renderFabricFullDetail() {
         const allRow = list.find(function(r){ return r.category_code === 'all'; });
         const catHtml = _cdPickCommonInfoLang(catRow);
         const allHtml = _cdPickCommonInfoLang(allRow);
-        let combined = (catHtml || '') + (allHtml || '');
+        // 2026-06-01: 대분류 우선, 없을 때만 'all' fallback.
+        // 이전엔 concat 해서 — JP 의 'all' content_jp 에 골판지가벽 내용이 있으면
+        // 패브릭 페이지 하단에 골판지가벽 상세가 붙어 나오던 버그.
+        let combined = (catHtml && catHtml.trim()) ? catHtml : (allHtml || '');
         if (!combined.trim()) { sec.style.display = 'none'; return; }
         // 보안: <script> 제거. 내부 id 충돌 방지로 id 속성 제거.
         combined = combined.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/\sid="[^"]*"/gi, '');
