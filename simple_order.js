@@ -2841,7 +2841,8 @@ html, body { background: #ffffff !important; }
             addonTotal = 0;
         }
         const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBanner;
+        // 2026-06-01: 배너는 _noDisc 에서 제외 — 4-box (이벤트쿠폰/마일리지/예치금/PRO) 사용 가능. 볼륨티어는 자연히 1M 미만이라 적용 안 됨.
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -8662,14 +8663,8 @@ html, body { background: #ffffff !important; }
         // 라디오 전부 해제
         document.querySelectorAll('input[name="soDiscChoice"]').forEach(function(r){ r.checked = false; });
         if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
-        // 2026-06-01: 배너만 들어있는 카트면 할인 비적용 → wallet box 숨김
-        try {
-            var _cartForBan = _soReadAllCart();
-            var _allBanner = _cartForBan.length > 0 && _cartForBan.every(function(it){
-                return it && it.product && it.product.code && /^hb_bn/i.test(it.product.code);
-            });
-            if (_allBanner) return;  // wallet box 숨김 유지
-        } catch(e) {}
+        // 2026-06-01: 배너 카트도 4-box 쿠폰/마일리지/예치금/PRO 할인 표시 (사용자 요청 변경).
+        //   배너 자체 가격은 여전히 flat (55K/80K) — 볼륨티어 자동할인은 별도 룰.
         var sb = getSb(); if (!sb) return;
         var uid = null;
         try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
