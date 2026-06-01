@@ -1510,6 +1510,47 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-01: 허니콤배너 전용 섹션 — 안내문 + 파일 업로드 + 단면/양면. 사이즈는 60×180cm 고정. -->
+        <div class="so-section" id="soBannerSection" style="display:none;">
+          <div class="so-section-title">${tr('배너', 'バナー', 'Banner')}</div>
+          <div style="background:linear-gradient(135deg,#eff6ff 0%, #dbeafe 100%); padding:11px 13px; border-radius:10px; font-size:12px; color:#1e40af; line-height:1.6; margin-bottom:12px; border-left:3px solid #2563eb;">
+            📌 ${tr('배너는 <b>60 × 180cm 사이즈 고정</b>입니다.<br>한 파일에 모든 배너를 올리고 수량을 입력해 주세요.',
+                    'バナーは <b>60 × 180cm 固定サイズ</b>です。<br>1ファイルに全バナーをまとめてアップロードし、数量をご入力ください。',
+                    'Banners are <b>60 × 180cm fixed size</b>.<br>Upload all banners in one file and enter the quantity.')}
+          </div>
+          <!-- 파일 업로드 — #soFile (기존) 트리거 -->
+          <div id="soBannerUploadWrap">
+            <button type="button" id="soBannerUploadBtn" onclick="document.getElementById('soFile').click()"
+              style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
+              <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
+            </button>
+          </div>
+          <div id="soBannerUploadDone" style="display:none; margin-bottom:10px;">
+            <div style="padding:11px 14px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); border-radius:10px; color:#fff; box-shadow:0 4px 12px -4px rgba(79,70,229,0.4);">
+              <div style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800;">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>${tr('업로드 완료', 'アップロード完了', 'Upload complete')}</span>
+              </div>
+              <div id="soBannerFileInfo" style="margin-top:4px; font-size:11px; opacity:0.95;"></div>
+            </div>
+          </div>
+          <!-- 단면 / 양면 선택 -->
+          <div style="display:flex; gap:8px; align-items:center; margin-top:14px;">
+            <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('인쇄면', '印刷面', 'Side')}</label>
+            <div style="flex:1.6; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')"
+                style="padding:12px 10px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); line-height:1.3;">
+                ${tr('단면', '片面', 'Single')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">55,000원</span>
+              </button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')"
+                style="padding:12px 10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.3;">
+                ${tr('양면', '両面', 'Double')}<br><span style="font-size:11px; font-weight:600; opacity:0.8;">80,000원</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위). 안내는 좌측 #soWallGuide 로 이동 -->
         <div class="so-section" id="soWallSizeSection" style="display:none;">
           <div class="so-section-title">${tr('가벽 사이즈', '壁面サイズ', 'Wall size')}</div>
@@ -2376,6 +2417,21 @@ html, body { background: #ffffff !important; }
         const zone = document.getElementById('soUpload');
         if (!zone) return;
         zone.classList.add('done');
+        // 2026-06-01: 배너 — 전용 업로드 상태 표시 (점선 버튼 숨기고 완료 패널 노출)
+        if (state.isBanner) {
+            try {
+                var _bUpW = document.getElementById('soBannerUploadWrap');
+                var _bUpD = document.getElementById('soBannerUploadDone');
+                var _bInfo = document.getElementById('soBannerFileInfo');
+                if (_bUpW) _bUpW.style.display = 'none';
+                if (_bUpD) _bUpD.style.display = '';
+                if (_bInfo) {
+                    var _fn = state.file && state.file.name ? state.file.name : '';
+                    var _mb = state.file && state.file.size ? ' (' + (state.file.size/1024/1024).toFixed(1) + 'MB)' : '';
+                    _bInfo.textContent = _fn + _mb;
+                }
+            } catch(e) {}
+        }
 
         // 1) 사이즈 결정 — 우선순위:
         //    PDF면: PDF 페이지의 실제 mm
@@ -2867,6 +2923,13 @@ html, body { background: #ffffff !important; }
             // 원판 양면이면 (양면 ×2) 라벨 표시
             var unitLabel = tr('단가', '単価', 'Unit');
             if (state.isRawBoardDouble) unitLabel += ' ' + tr('(양면 ×2)', '(両面 ×2)', '(2-side ×2)');
+            // 2026-06-01: 배너 — "단가 (60×180cm · 단면)" 등 명시
+            if (state.isBanner) {
+                var _sideLbl = (state.wallSide === 'double')
+                    ? tr('양면', '両面', 'Double')
+                    : tr('단면', '片面', 'Single');
+                unitLabel = tr('단가', '単価', 'Unit') + ' (60×180cm · ' + _sideLbl + ')';
+            }
             setText('soUnitLabel', unitLabel);
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
@@ -6411,11 +6474,13 @@ html, body { background: #ffffff !important; }
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
         state.isCustomSize = _soIsCustomSizeProduct(p);
+        // 2026-06-01: 허니콤배너는 60×180cm 고정사이즈로 flat 가격. customSize 분기 진입 금지.
+        if (state.isBanner) state.isCustomSize = false;
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
         state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
-        if (state.isAdPrint) state.isCustomSize = true;
+        if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
@@ -7005,8 +7070,8 @@ html, body { background: #ffffff !important; }
                 if (_lpwN) _lpwN.style.display = 'none';
                 if (_lpN) _lpN.innerHTML = '';
             }
-            // 2026-06-01: 허니콤배너 (hb_bn_*) 단순화 — 사이즈 입력·큐·할인·시공 모두 숨김.
-            //   단면(55,000원) / 양면(80,000원) 선택 + 파일 업로드 + 수량 → 담기 끝.
+            // 2026-06-01: 허니콤배너 (hb_bn_*) 단순화 — 전용 #soBannerSection 사용.
+            //   사이즈 60×180cm 고정, 단면 55,000원 / 양면 80,000원, 사이즈/큐/할인 모두 숨김.
             if (state.isBanner) {
                 if (_multiSec) _multiSec.style.display = 'none';
                 if (_inlineUploadCard) _inlineUploadCard.style.display = 'none';
@@ -7021,17 +7086,34 @@ html, body { background: #ffffff !important; }
                 // 좌측 일반 업로드 활성화 (큐 인라인 업로드 대신)
                 if (_leftUpload) _leftUpload.style.display = '';
                 if (_leftUploadLabel) _leftUploadLabel.style.display = '';
-                // 단면/양면 선택 row 강제 노출 (재사용)
-                var _bSideRow = document.getElementById('soWallSideRow');
-                if (_bSideRow) _bSideRow.style.display = '';
+                // 배너 전용 섹션 표시 + 주문수량보다 위로 (flex order)
+                var _bannerSec = document.getElementById('soBannerSection');
+                if (_bannerSec) {
+                    _bannerSec.style.display = '';
+                    _bannerSec.style.order = '-300';  // 최상단
+                }
+                if (qtySec) qtySec.style.order = '-250';
                 state.wallSide = state.wallSide || 'single';
                 document.querySelectorAll('.so-side-btn').forEach(function(b){
                     var on = b.dataset.side === state.wallSide;
                     b.classList.toggle('active', on);
+                    b.style.background = on ? 'linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)' : '#fff';
+                    b.style.color = on ? '#fff' : '#475569';
+                    b.style.borderColor = on ? 'transparent' : '#e2e8f0';
+                    b.style.boxShadow = on ? '0 4px 12px -4px rgba(79,70,229,0.45)' : 'none';
                 });
                 // 금액 티어 테이블 숨김 (배너는 할인 비적용)
                 if (_tierTable) _tierTable.style.display = 'none';
                 if (_presetTier) _presetTier.style.display = 'none';
+                // 배너 업로드 상태 초기화 — 점선 버튼 노출 + 완료 패널 숨김
+                var _bUpW = document.getElementById('soBannerUploadWrap');
+                var _bUpD = document.getElementById('soBannerUploadDone');
+                if (_bUpW) _bUpW.style.display = '';
+                if (_bUpD) _bUpD.style.display = 'none';
+            } else {
+                // 배너 외 상품 — 배너 섹션 숨김
+                var _bannerSec2 = document.getElementById('soBannerSection');
+                if (_bannerSec2) _bannerSec2.style.display = 'none';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
