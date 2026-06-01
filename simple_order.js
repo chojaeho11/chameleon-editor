@@ -4198,15 +4198,19 @@ html, body { background: #ffffff !important; }
         var wEl = document.getElementById('soCustomW');
         var hEl = document.getElementById('soCustomH');
         if (!wEl || !hEl) return;
-        var wCm = parseInt(wEl.value, 10) || 0;
-        var hCm = parseInt(hEl.value, 10) || 0;
+        // 2026-06-01: 광고인쇄 — input 값은 mm. cm 으로 환산해 state 에 저장 (기존 area 계산 호환).
+        var isAd = state && state.isAdPrint;
+        var wRaw = parseFloat(wEl.value) || 0;
+        var hRaw = parseFloat(hEl.value) || 0;
+        var wCm = isAd ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
+        var hCm = isAd ? (hRaw / 10) : (parseInt(hRaw, 10) || 0);
         state.customW = wCm;
         state.customH = hCm;
         var unitEl = document.getElementById('soCustomUnitPrice');
         var infoEl = document.getElementById('soCustomAreaInfo');
         // 2026-05-14: 아크릴 굿즈는 5cm×5cm 같은 소형이 정상 → min 1cm 허용 (현수막·배너만 min 10cm)
         var isAcrGoods = state.isAcrylicGoods;
-        var minDim = isAcrGoods ? 1 : 10;
+        var minDim = isAcrGoods ? 1 : 10;  // 광고인쇄도 최소 100mm = 10cm
         if (wCm < minDim || hCm < minDim) {
             if (unitEl) unitEl.textContent = '-';
             if (infoEl) infoEl.textContent = '';
@@ -4230,7 +4234,14 @@ html, body { background: #ffffff !important; }
         }
         if (unitEl) unitEl.textContent = fmtPrice(calcPrice);
         if (infoEl) {
-            if (isAcrGoods) {
+            if (isAd) {
+                // 광고인쇄 — mm 단위 표시
+                var wMm = Math.round(wCm * 10);
+                var hMm = Math.round(hCm * 10);
+                infoEl.textContent =
+                    wMm + '×' + hMm + 'mm · ' +
+                    areaM2.toFixed(3) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+            } else if (isAcrGoods) {
                 // 아크릴 굿즈 — cm² 단위로 표시 (m² 보다 직관적)
                 var areaCm2 = wCm * hCm;
                 var perCm2 = perSqm / 10000; // m² → cm² 환산
@@ -5250,6 +5261,9 @@ html, body { background: #ffffff !important; }
         state.isCustomSize = _soIsCustomSizeProduct(p);
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
         state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
+        // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
+        state.isAdPrint = !!p.is_popular;
+        if (state.isAdPrint) state.isCustomSize = true;
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
@@ -5636,6 +5650,14 @@ html, body { background: #ffffff !important; }
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
+            // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
+            if (state.isAdPrint) {
+                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = 20000; cwEl.step = 1; }
+                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = 20000; chEl.step = 1; }
+            } else {
+                if (cwEl) { cwEl.min = 10; cwEl.max = 2000; cwEl.step = 1; }
+                if (chEl) { chEl.min = 10; chEl.max = 2000; chEl.step = 1; }
+            }
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         } else {
             // 사이즈 섹션 자체 미사용 — 프리셋 잔존 상태 리셋
@@ -5657,6 +5679,28 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 원판도 숨김 — 우측 6개 카드 각각의 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard) ? 'none' : '';
+
+        // 2026-06-01: 광고인쇄 — 사이즈 카드를 주문수량 카드 위로 이동 + 단위 라벨 (cm) → (mm)
+        (function _soApplyAdPrintLayout(){
+            var _custSec = document.getElementById('soCustomSizeSection');
+            if (!_custSec || !qtySec || !qtySec.parentNode) return;
+            // 단위 라벨 변경 — 제목 끝의 span(unit) 갈아끼우기
+            var _titleEl = _custSec.querySelector('.so-section-title');
+            if (_titleEl) {
+                var _unitSpan = _titleEl.querySelector('span:last-child');
+                if (_unitSpan) _unitSpan.textContent = state.isAdPrint ? '(mm)' : '(cm)';
+            }
+            // 위치: ad print 면 qtySec 직전, 아니면 원위치(addonSec 또는 baseStandSec 직전)로 환원
+            if (state.isAdPrint) {
+                if (_custSec.nextSibling !== qtySec) qtySec.parentNode.insertBefore(_custSec, qtySec);
+            } else {
+                // 환원 — soBaseStandSection 직전 (원래 위치). 없으면 soAddonSection 직전.
+                var _anchor = document.getElementById('soBaseStandSection') || document.getElementById('soAddonSection');
+                if (_anchor && _anchor.parentNode === _custSec.parentNode && _custSec.nextSibling !== _anchor) {
+                    _anchor.parentNode.insertBefore(_custSec, _anchor);
+                }
+            }
+        })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
         state.isDeliveryOnly = _soUsesDeliveryShipping(p);
         // 2026-05-13: 택배배송 가능 (배너·인스타판넬)
