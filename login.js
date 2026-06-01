@@ -1,6 +1,6 @@
 // login.js
 
-import { sb, currentUser, isAdmin } from "./config.js?v=291";
+import { sb, currentUser, isAdmin } from "./config.js?v=439";
 
 let isSignUpMode = false; 
 
@@ -291,6 +291,25 @@ async function handleAuthAction() {
         if (isSignUpMode) {
             const pwConfirm = pwConfirmInput?.value.trim();
             if (password !== pwConfirm) throw new Error(window.t('err_pw_mismatch', "비밀번호가 일치하지 않습니다."));
+            // 2026-06-02: 이미 로그인된 상태에서 가입 시도 → 안내 후 가입 모달 닫고 콜백 실행 (예: 쿠폰 모달 재오픈)
+            try {
+                const _sess = await sb.auth.getSession();
+                if (_sess && _sess.data && _sess.data.session && _sess.data.session.user) {
+                    const _curEmail = _sess.data.session.user.email || '';
+                    showToast(window.t('msg_already_logged_in', "이미 가입된 계정입니다 (" + _curEmail + "). 쿠폰은 자동 지급됩니다."), "success");
+                    const m = document.getElementById("loginModal");
+                    if (m) m.style.display = "none";
+                    if (window._authCallback) {
+                        const cb = window._authCallback;
+                        window._authCallback = null;
+                        setTimeout(cb, 200);
+                    }
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    window.__authInProgress = false;
+                    return;
+                }
+            } catch(_e) { /* 세션 확인 실패 시 그냥 가입 시도 */ }
 
             // IP 기반 국가 감지 (Cloudflare cdn-cgi/trace), 실패 시 도메인 기반 fallback
             let siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';

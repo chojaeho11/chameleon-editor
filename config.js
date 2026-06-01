@@ -298,7 +298,10 @@ function updateUserSession(session) {
 
         // 2차: profiles.role 비동기 확인 (admin 또는 manager 면 isAdmin=true)
         // → 스태프 목록 (admin_staff) 의 manager 들이 자기 ID 로 로그인 시 자동 활성화
-        sb.from('profiles').select('role').eq('id', currentUser.id).single()
+        // 2026-06-02: sb null 방어 — 초기화 race condition 시 "Cannot read properties of null (reading 'from')" 방지
+        const _sbRef = sb || window.sb;
+        if (!_sbRef || !_sbRef.from) return;
+        _sbRef.from('profiles').select('role').eq('id', currentUser.id).single()
             .then(function (res) {
                 if (res && res.data && (res.data.role === 'admin' || res.data.role === 'manager')) {
                     isAdmin = true;
