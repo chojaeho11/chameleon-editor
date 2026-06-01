@@ -570,22 +570,9 @@ window._cottonSearch = function(){
                 </div>
             </div>
 
-            <!-- ▌▌▌ CENTER: 무료 패브릭 샘플 (2026-06-01: '원단제공 인쇄 · 1마 1,500원' 버튼 삭제 — 사용자 요청) ▌▌▌ -->
-            <div class="cp-col-card" style="background:linear-gradient(165deg, #451a03 0%, #78350f 50%, #b45309 100%); border:1px solid rgba(253,224,71,0.35); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(120,53,15,0.55), inset 0 1px 0 rgba(253,224,71,0.2); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
-                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">📜</div>
-                <!-- 무료 샘플 강조 (큰 가격 숫자로 어필) -->
-                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:6px 0;">
-                    <div id="cpFreeSampleTitle" style="font-size:16px; font-weight:600; color:#fff; margin-bottom:6px; letter-spacing:-0.2px;">무료 패브릭 샘플</div>
-                    <div id="cpFreeSampleDesc" style="font-size:11px; color:rgba(253,224,71,0.85); font-weight:300; line-height:1.4; margin-bottom:10px;">실물로 품질을 확인하세요</div>
-                </div>
-                <button onclick="openPdSampleRequest()" id="cpFreeSampleBtn" style="width:100%; padding:11px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:13px; font-weight:500; letter-spacing:0.3px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(245,158,11,0.55); font-family:inherit;">
-                    <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 샘플 요청</span>
-                </button>
-            </div>
-
-            <!-- 2026-06-01: RIGHT 쿠폰 카드는 LEFT 매니저 카드 내부 통합됨 — 우측 컬럼 제거.
-                 cp-hero-3col 그리드를 2컬럼으로 자연 축소 (CSS auto-fit 으로 처리) -->
-            <style>.cp-hero-3col { grid-template-columns: 1fr 1fr !important; }
+            <!-- 2026-06-01: 무료 패브릭 샘플 카드 삭제 (사용자 요청) — 쿠폰은 좌측 매니저 카드 내부에 통합됨 -->
+            <style>
+            .cp-hero-3col { grid-template-columns: 1fr !important; max-width:540px !important; margin-left:auto !important; margin-right:auto !important; }
             @media (max-width: 900px) { .cp-hero-3col { grid-template-columns: 1fr !important; } }
             </style>
 
