@@ -8722,7 +8722,7 @@ html, body { background: #ffffff !important; }
             if (hintEl) hintEl.textContent = label;
         };
         setCard('event_coupon', 'soDiscEventAmount', 'soDiscEventHint', eventCouponBal, eventMax,
-            tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('20% / 100K 한도','20% / 100K上限','20% / 100K cap'),
+            tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('최대 10만원','最大1万円','Max $100'),
             ' P');
         setCard('mileage', 'soDiscMileageAmount', 'soDiscMileageHint', mileageBal, mileageMax,
             tr('보유 ','残高 ','Bal ') + mileageBal.toLocaleString() + ' · 5%',
