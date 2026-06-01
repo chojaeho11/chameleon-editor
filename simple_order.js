@@ -1702,11 +1702,11 @@ html, body { background: #ffffff !important; }
               <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
               <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
             </button>
-            <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.5;">
+            <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.6;">
               <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
-              ${tr('올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.',
-                   'アップロードした画像/PDFは左側のプレビュー領域に自動で表示されます。50MB以下。',
-                   'Uploaded image / PDF appears in the preview on the left. Max 50MB.')}
+              ${tr('파일은 담당 매니저를 통해 전달해 주셔도 되고, 이메일로 보내주셔도 됩니다 — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (50MB 이하)',
+                   'ファイルは担当マネージャーへ直接お渡しいただくか、メールでお送りください — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (50MB以下)',
+                   'You may hand the file to your manager or email it — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (max 50MB)')}
             </div>
           </div>
           <!-- 업로드 후 — "업로드 완료" 보라 그라데이션 + 이미지 미리보기 + 파일변경 버튼. handleFile 에서 표시 토글. -->
@@ -7019,6 +7019,11 @@ html, body { background: #ffffff !important; }
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
+        // 2026-06-01: 기본 ship 의 부수 효과 (날짜 입력 펼침, 가격 재계산 등) 도 실행 — 사용자 요청
+        //   사용자가 ship 버튼을 다시 클릭하지 않아도 schedule 영역이 열려있게.
+        if (anyShipScope && typeof window._soPickShip === 'function') {
+            try { window._soPickShip(defaultShip); } catch(e) {}
+        }
         // 2026-05-22: 포맥스·폼보드 — 모달 열릴 때 사이즈 합으로 배송 자동 선택
         if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
             window._soFoamApplyAutoShip();
