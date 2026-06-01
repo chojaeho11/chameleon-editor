@@ -1350,21 +1350,21 @@ window._tcmFallbackClick = function(code) {
              (window.CURRENT_LANG || 'kr'));
         // 인플루언서 모집 다국어
         var INF = {
-            kr: { title:'홍보 인플루언서 모집', platforms:'어디든 OK', desc:'카멜레온을 홍보하고 조회수 <b style="color:#fbcfe8;">10만</b> 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>', reward:'조회수 10만 달성 시 100,000원', btn:'📝 응모하기',
-                  modalTitle:'인플루언서 응모', modalSub:'어떤 방식이든 카멜레온프린팅을 홍보해 주세요. 조회수 10,000회당 100,000원을 지급합니다.',
-                  fName:'이름', fSns:'SNS 주소 (Instagram/YouTube/TikTok 등 URL)', fBank:'계좌번호 (지급용)', fEmail:'이메일 (선택)', fNote:'홍보 계획 (선택)',
-                  submit:'응모 제출', success:'응모가 접수되었습니다. 검토 후 연락드리겠습니다.', failPrefix:'제출 실패:',
-                  alertReq:'이름·SNS 주소·계좌번호는 필수입니다.' },
-            ja: { title:'インフルエンサー募集', platforms:'どこでもOK', desc:'カメレオンをPRし、再生数 <b style="color:#fbcfe8;">10万</b> 達成でPR料お支払い。<br>PR後にURLを送信 → <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', reward:'再生10万達成時 10,000円', btn:'📝 応募する',
-                  modalTitle:'インフルエンサー応募', modalSub:'どんな方法でもカメレオンプリンティングをPRしてください。再生10,000回ごとに10,000円をお支払いします。',
-                  fName:'お名前', fSns:'SNSアドレス (Instagram/YouTube/TikTok等のURL)', fBank:'振込口座番号', fEmail:'メールアドレス (任意)', fNote:'PR計画 (任意)',
-                  submit:'応募する', success:'応募を受け付けました。確認後ご連絡いたします。', failPrefix:'送信失敗:',
-                  alertReq:'お名前・SNSアドレス・口座番号は必須です。' },
-            en: { title:'Influencer Wanted', platforms:'Any platform', desc:'Promote Chameleon — reach <b style="color:#fbcfe8;">100K views</b> for payout.<br>Just submit your URL → <b style="color:#fbcfe8; font-weight:500;">Instant payout</b>', reward:'100,000 views = $100', btn:'📝 Apply Now',
-                  modalTitle:'Influencer Application', modalSub:'Promote Chameleon Printing in any way you like. Get $100 for every 10,000 views.',
-                  fName:'Your Name', fSns:'SNS URL (Instagram/YouTube/TikTok etc)', fBank:'Bank Account / PayPal Email', fEmail:'Email (optional)', fNote:'Promotion plan (optional)',
-                  submit:'Submit Application', success:'Application received. We will contact you soon.', failPrefix:'Submission failed:',
-                  alertReq:'Name, SNS URL, and bank account are required.' },
+            kr: { title:'홍보비 즉시 지급', platforms:'어디든 OK', desc:'카멜레온 홍보 영상·게시물을 SNS에 먼저 올린 후, <b style="color:#fbcfe8;">조회수 1만 회 이상</b> 달성한 <b style="color:#fbcfe8;">게시물 링크</b>를 제출하세요.<br>확인 후 <b style="color:#fbcfe8; font-weight:500;">즉시 지급</b>', reward:'조회 1만 회당 10,000원', btn:'💰 정산 신청',
+                  modalTitle:'홍보 정산 신청', modalSub:'⚠️ 이미 게시한 홍보 컨텐츠 URL을 제출해 주세요. 본인 계정 주소가 아닌 게시물·영상·릴스 링크여야 합니다.',
+                  fName:'이름', fSns:'홍보 컨텐츠 URL (게시물·영상·릴스 링크)', fBank:'계좌번호 (지급용)', fEmail:'이메일 (선택)', fNote:'메모 (선택 — 게시일·현재 조회수·여러 개면 모두 작성)',
+                  submit:'정산 신청', success:'신청이 접수되었습니다. 조회수 확인 후 입금 처리하겠습니다.', failPrefix:'제출 실패:',
+                  alertReq:'이름·컨텐츠 URL·계좌번호는 필수입니다.' },
+            ja: { title:'PR報酬 即時支払い', platforms:'どこでもOK', desc:'カメレオンのPR動画・投稿をSNSに先に投稿し、<b style="color:#fbcfe8;">再生1万回以上</b>達成した<b style="color:#fbcfe8;">投稿のURL</b>を送信してください。<br>確認後 <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', reward:'再生1万回ごとに 10,000円', btn:'💰 報酬を申請',
+                  modalTitle:'PR報酬 申請', modalSub:'⚠️ 既に投稿済みのPRコンテンツのURLを送ってください。アカウントURLではなく、投稿・動画・リールのリンクが必要です。',
+                  fName:'お名前', fSns:'PRコンテンツURL (投稿・動画・リールのリンク)', fBank:'振込口座番号', fEmail:'メールアドレス (任意)', fNote:'メモ (任意 — 投稿日・現在の再生数・複数あればすべて記入)',
+                  submit:'報酬を申請', success:'申請を受け付けました。再生数を確認後、お振込いたします。', failPrefix:'送信失敗:',
+                  alertReq:'お名前・コンテンツURL・口座番号は必須です。' },
+            en: { title:'Instant Payout for Views', platforms:'Any platform', desc:'Post promo content for Chameleon on social <b style="color:#fbcfe8;">first</b>. Then submit the URL of any post with <b style="color:#fbcfe8;">10K+ views</b>.<br>We verify and pay <b style="color:#fbcfe8; font-weight:500;">instantly</b>', reward:'$10 per 10K views', btn:'💰 Claim Payout',
+                  modalTitle:'Promo Payout Claim', modalSub:'⚠️ Submit the URL of content you already posted. Must be the POST / VIDEO / REEL link — not your account URL.',
+                  fName:'Your Name', fSns:'Content URL (post / video / reel)', fBank:'Bank Account / PayPal Email', fEmail:'Email (optional)', fNote:'Notes (optional — post date, current view count, multiple URLs OK)',
+                  submit:'Claim Payout', success:'Claim received. We will verify views and send payment.', failPrefix:'Submission failed:',
+                  alertReq:'Name, content URL, and bank account are required.' },
             zh: { title:'招募宣传达人', desc:'在SNS上推广变色龙印刷', reward:'1万次播放 = 100美元', btn:'📝 立即申请',
                   modalTitle:'达人申请', modalSub:'通过任何方式推广变色龙印刷。每10,000次播放支付$100。',
                   fName:'姓名', fSns:'SNS地址 (Instagram/YouTube/TikTok等)', fBank:'银行账号/PayPal', fEmail:'邮箱 (可选)', fNote:'推广计划 (可选)',
@@ -1501,14 +1501,14 @@ window._tcmFallbackClick = function(code) {
         if ($('infSubmitBtn'))  $('infSubmitBtn').textContent  = t.submit;
         // placeholder 다국어
         var PH = {
-            kr: { name:'홍길동', sns:'https://www.instagram.com/...', bank:'국민은행 123-456-789012', email:'you@example.com', note:'예: 인스타 릴스 + 유튜브 쇼츠로 제품 리뷰 영상 제작', footer:'조회수 10,000회 달성 후 입금신청 → 등록한 계좌로 지급됩니다.' },
-            ja: { name:'山田太郎', sns:'https://www.instagram.com/...', bank:'例: みずほ銀行 普通 1234567', email:'you@example.com', note:'例: インスタリール + YouTubeショートで商品レビュー動画を制作', footer:'再生10,000回達成後、入金申請をいただければご登録の口座へお振込いたします。' },
-            en: { name:'John Doe', sns:'https://www.instagram.com/...', bank:'Bank of America #1234567', email:'you@example.com', note:'e.g. Instagram reels + YouTube shorts product reviews', footer:'After reaching 10,000 views, request payout and we will send to your registered account.' },
-            zh: { name:'张三', sns:'https://www.instagram.com/...', bank:'例: 中国银行 6217-0001-2345-6789', email:'you@example.com', note:'例: 通过Instagram和YouTube Shorts制作产品评测视频', footer:'达成10,000次播放后申请付款，款项将汇入您注册的账户。' },
-            es: { name:'Juan García', sns:'https://www.instagram.com/...', bank:'Cuenta o PayPal', email:'you@example.com', note:'ej. Reels de Instagram + Shorts de YouTube con reseñas', footer:'Al alcanzar 10.000 vistas, solicite el pago y le transferiremos.' },
-            de: { name:'Max Mustermann', sns:'https://www.instagram.com/...', bank:'Konto oder PayPal', email:'you@example.com', note:'z.B. Instagram Reels + YouTube Shorts mit Produktreviews', footer:'Nach 10.000 Aufrufen Auszahlung anfordern, wir überweisen auf Ihr Konto.' },
-            fr: { name:'Jean Dupont', sns:'https://www.instagram.com/...', bank:'Compte ou PayPal', email:'you@example.com', note:'ex. Reels Instagram + Shorts YouTube avec critiques produits', footer:'Après 10 000 vues, demandez le paiement et nous virerons sur votre compte.' },
-            ar: { name:'محمد', sns:'https://www.instagram.com/...', bank:'حساب بنكي أو PayPal', email:'you@example.com', note:'مثال: مراجعات منتجات على Instagram Reels و YouTube Shorts', footer:'بعد 10,000 مشاهدة، اطلب الدفع وسنحول إلى حسابك المسجل.' }
+            kr: { name:'홍길동', sns:'https://www.instagram.com/reel/Cxxxxx... 또는 https://youtu.be/...', bank:'국민은행 123-456-789012', email:'you@example.com', note:'예: 2026/05/30 게시, 현재 12,300회 / 추가 1건: https://...', footer:'⚠️ 본인 계정 URL 아닌 게시물·영상·릴스 링크여야 함. 조회수 확인 후 등록 계좌로 즉시 지급됩니다.' },
+            ja: { name:'山田太郎', sns:'https://www.instagram.com/reel/Cxxxxx... または https://youtu.be/...', bank:'例: みずほ銀行 普通 1234567', email:'you@example.com', note:'例: 2026/05/30 投稿、現在12,300回 / 追加1件: https://...', footer:'⚠️ アカウントURLではなく、投稿・動画・リールのリンクが必要。再生数を確認後、ご登録の口座へ即時お振込いたします。' },
+            en: { name:'John Doe', sns:'https://www.instagram.com/reel/Cxxxxx... or https://youtu.be/...', bank:'Bank of America #1234567', email:'you@example.com', note:'e.g. Posted 2026-05-30, currently 12,300 views / extra: https://...', footer:'⚠️ Must be a POST / VIDEO / REEL link, not your account URL. After view check, we pay instantly.' },
+            zh: { name:'张三', sns:'https://www.instagram.com/reel/Cxxxxx... 或 https://youtu.be/...', bank:'例: 中国银行 6217-0001-2345-6789', email:'you@example.com', note:'例: 2026-05-30发布，目前12,300次播放', footer:'⚠️ 须为帖子/视频/Reel链接，非账号链接。播放量核实后即时汇款。' },
+            es: { name:'Juan García', sns:'https://www.instagram.com/reel/... o https://youtu.be/...', bank:'Cuenta o PayPal', email:'you@example.com', note:'ej. Publicado 30-05-2026, 12.300 vistas actuales', footer:'⚠️ Debe ser un enlace de POST / VIDEO / REEL, no de tu cuenta. Pago instantáneo tras verificar.' },
+            de: { name:'Max Mustermann', sns:'https://www.instagram.com/reel/... oder https://youtu.be/...', bank:'Konto oder PayPal', email:'you@example.com', note:'z.B. Veröffentlicht am 30.05.2026, aktuell 12.300 Aufrufe', footer:'⚠️ Muss ein POST/VIDEO/REEL-Link sein, nicht Ihr Konto. Sofortige Auszahlung nach Prüfung.' },
+            fr: { name:'Jean Dupont', sns:'https://www.instagram.com/reel/... ou https://youtu.be/...', bank:'Compte ou PayPal', email:'you@example.com', note:'ex. Publié le 30/05/2026, 12 300 vues actuelles', footer:'⚠️ Doit être un lien de POST/VIDEO/REEL, pas votre compte. Paiement instantané après vérification.' },
+            ar: { name:'محمد', sns:'https://www.instagram.com/reel/... أو https://youtu.be/...', bank:'حساب بنكي أو PayPal', email:'you@example.com', note:'مثال: نُشر في 2026/05/30، 12,300 مشاهدة حالياً', footer:'⚠️ يجب أن يكون رابط منشور/فيديو/ريل، وليس حسابك. دفع فوري بعد التحقق.' }
         };
         var ph = PH[lang] || PH.kr;
         if ($('infName'))  $('infName').setAttribute('placeholder', ph.name);

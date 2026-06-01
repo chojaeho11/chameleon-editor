@@ -75,8 +75,8 @@
 <body>
     <div class="header">
         <div style="flex:1;">
-            <h1>📣 인플루언서 신청</h1>
-            <div class="sub">홍보 PR 응모 — 재생 1만 회당 1만원 지급</div>
+            <h1>📣 인플루언서 정산 신청</h1>
+            <div class="sub">홍보 컨텐츠 URL 확인 → 조회수 1만회당 1만원 지급</div>
         </div>
         <button class="refresh-btn" onclick="loadApps()" title="새로고침"><i class="fa-solid fa-arrows-rotate"></i></button>
     </div>
@@ -190,7 +190,7 @@
                 </div>
                 <div class="name">${esc(a.name || '(이름 없음)')}</div>
                 <div class="meta" style="margin-top:10px;">신청 상세</div>
-                <div class="row"><span class="lbl">SNS</span><span class="val">${snsLink}</span></div>
+                <div class="row"><span class="lbl">컨텐츠 URL</span><span class="val">${snsLink}</span></div>
                 <div class="row"><span class="lbl">계좌</span><span class="val">${esc(a.bank_account || '-')}</span></div>
                 <div class="row"><span class="lbl">이메일</span><span class="val">${emailLink}</span></div>
                 ${a.note ? `<div class="row"><span class="lbl">PR 계획</span><span class="val" style="white-space:pre-wrap;">${esc(a.note)}</span></div>` : ''}
