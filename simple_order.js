@@ -2523,15 +2523,15 @@ html, body { background: #ffffff !important; }
         const shipFee = _soComputeShipFee();
         state.shipFee = shipFee;
 
-        // 2026-06-01: 광고인쇄 — 멀티-라인 (Line 1 외 추가 사이즈) 합계
+        // 2026-06-01: 광고인쇄 — 큐에 담긴 이전 라인들 합계 (각 라인 = 사이즈×수량 + 옵션 합)
         let adExtraLinesTotal = 0;
         const adExtraLinesBreakdown = [];
         if (state.isAdPrint && Array.isArray(state._adLines)) {
             state._adLines.forEach(function(line, i) {
-                const lineSub = (line.unitPrice || 0) * (line.qty || 0);
+                const lineSub = line.lineTotal || ((line.unitPrice || 0) * (line.qty || 0));
                 adExtraLinesTotal += lineSub;
                 adExtraLinesBreakdown.push(
-                    '<div class="so-price-row"><span>· ' + (i + 2) + tr('번째 사이즈','番目のサイズ','. Size') + ' ' + line.wMm + '×' + line.hMm + 'mm × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
+                    '<div class="so-price-row"><span>· #' + (i + 1) + ' ' + line.wMm + '×' + line.hMm + 'mm × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
                 );
             });
         }
@@ -4301,113 +4301,127 @@ html, body { background: #ffffff !important; }
         recalc();
     };
 
-    // 2026-06-01: 광고인쇄 — 다른 사이즈도 같이 주문 (멀티-라인) 관리 함수들
-    window._soAdAddLine = function() {
-        var container = document.getElementById('soAdExtraLines');
-        if (!container) return;
+    // 2026-06-01: 광고인쇄 — 큐 시스템.
+    //   현재 활성 라인 = state.customW/H/qty/file/selectedAddons.
+    //   "+다른 사이즈도 같이주문" → 현재 라인을 state._adLines 에 스냅샷 → 입력 초기화.
+    //   최종 장바구니에 담기 = 큐 + 현재 활성 라인을 각각 별도 cart item 으로 push.
+    window._soAdQueueCurrent = function() {
+        if (!state.isAdPrint) return;
         state._adLines = state._adLines || [];
-        var idx = state._adLines.length;
-        var lineId = 'adLine_' + idx + '_' + (container.children.length);
-        // 기본값: 메인 사이즈와 동일 (mm)
-        var defW = Math.max(100, Math.round((state.customW || 100) * 10));
-        var defH = Math.max(100, Math.round((state.customH || 100) * 10));
-        // 가격 계산
-        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
-        var area = (defW / 1000) * (defH / 1000);
-        var rawP = area * perSqm;
-        var unitP = Math.round(rawP / 10) * 10;
-        if (unitP < perSqm * 0.1) unitP = Math.round(perSqm * 0.1 / 10) * 10;
-        state._adLines.push({
-            id: lineId, wMm: defW, hMm: defH, qty: 1,
-            unitPrice: unitP, areaM2: area,
-            file: null, thumbDataUrl: null, fileWidthMm: null, fileHeightMm: null
+        // 현재 라인 검증
+        if (!state.customUnitPrice || (state.customW || 0) < 10 || (state.customH || 0) < 10) {
+            try { alert(tr('사이즈를 먼저 입력해 주세요.','サイズを入力してください。','Please enter size first.')); } catch(e) {}
+            return;
+        }
+        // 추가옵션 합산
+        var addonsTotal = 0;
+        Object.values(state.selectedAddons || {}).forEach(function(code){
+            var addon = (window.ADDON_DB || {})[code];
+            if (!addon) return;
+            var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+            addonsTotal += (addon.price || 0) * aQty;
         });
-        var idx2 = state._adLines.length - 1;
-        var div = document.createElement('div');
-        div.className = 'so-ad-extra-line';
-        div.dataset.lineId = lineId;
-        div.style.cssText = 'margin-top:10px; padding:14px; border:1.5px solid #c7d2fe; border-radius:14px; background:#fff; position:relative;';
-        var inputCss = 'width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-weight:800; text-align:center; box-sizing:border-box; font-family:inherit;';
-        div.innerHTML =
-            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
-                '<span style="font-size:12px; font-weight:800; color:#1e40af;">' + (idx2 + 2) + tr('번째 사이즈', '番目のサイズ', '. Size') + '</span>' +
-                '<button type="button" onclick="window._soAdRemoveLine(\'' + lineId + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>' +
-            '</div>' +
-            '<div style="display:flex; gap:6px; align-items:flex-end; margin-bottom:8px;">' +
-                '<div style="flex:1;"><div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px; text-align:center;">' + tr('가로(W) mm','幅(W) mm','Width (W) mm') + '</div><input type="number" data-ad-w="' + idx2 + '" value="' + defW + '" min="100" max="20000" oninput="window._soAdLineInput(this)" style="' + inputCss + '"></div>' +
-                '<span style="color:#94a3b8; padding:0 2px; margin-bottom:8px;">×</span>' +
-                '<div style="flex:1;"><div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px; text-align:center;">' + tr('세로(H) mm','高さ(H) mm','Height (H) mm') + '</div><input type="number" data-ad-h="' + idx2 + '" value="' + defH + '" min="100" max="20000" oninput="window._soAdLineInput(this)" style="' + inputCss + '"></div>' +
-            '</div>' +
-            '<div style="display:flex; gap:6px; align-items:center; margin-bottom:10px;">' +
-                '<span style="font-size:11px; color:#64748b; font-weight:700; min-width:36px;">' + tr('수량','数量','Qty') + '</span>' +
-                '<input type="number" data-ad-qty="' + idx2 + '" value="1" min="1" max="9999" oninput="window._soAdLineInput(this)" style="flex:1; ' + inputCss + '">' +
-                '<span style="font-size:13px; font-weight:900; color:#1e40af; min-width:90px; text-align:right;" data-ad-price="' + idx2 + '">' + fmtPrice(unitP) + '</span>' +
-            '</div>' +
-            '<input type="file" id="' + lineId + '_file" data-ad-file="' + idx2 + '" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none;" onchange="window._soAdLineFile(this)">' +
-            '<button type="button" onclick="document.getElementById(\'' + lineId + '_file\').click()" style="width:100%; padding:10px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">' +
-                '<i class="fa-solid fa-cloud-arrow-up"></i><span data-ad-file-label="' + idx2 + '">' + tr('파일 업로드','ファイルアップロード','Upload file') + '</span>' +
-            '</button>';
-        container.appendChild(div);
+        var qty = state.qty || 1;
+        var unit = state.customUnitPrice || 0;
+        var lineTotal = unit * qty + addonsTotal;
+        // 스냅샷
+        var snapshot = {
+            id: 'q_' + state._adLines.length + '_' + Math.floor((state._adLines.length + 1) * 1000),
+            wMm: Math.round((state.customW || 0) * 10),
+            hMm: Math.round((state.customH || 0) * 10),
+            qty: qty,
+            unitPrice: unit,
+            areaM2: state.customAreaM2 || 0,
+            file: state.file || null,
+            thumbDataUrl: state.thumbDataUrl || null,
+            fileWidthMm: state.fileWidthMm || null,
+            fileHeightMm: state.fileHeightMm || null,
+            fileWidthPx: state.fileWidthPx || null,
+            fileHeightPx: state.fileHeightPx || null,
+            fileKind: state.fileKind || null,
+            fileName: state.file ? state.file.name : null,
+            selectedAddons: Object.assign({}, state.selectedAddons || {}),
+            addonQuantities: Object.assign({}, state.addonQuantities || {}),
+            addonsTotal: addonsTotal,
+            lineTotal: lineTotal
+        };
+        state._adLines.push(snapshot);
+        // 입력 초기화 — 사이즈는 상품 기본값으로 환원, 나머지는 비움
+        var p = state.product || {};
+        var defWMm = p.width_mm || 1000;
+        var defHMm = p.height_mm || 1000;
+        state.customW = defWMm / 10;
+        state.customH = defHMm / 10;
+        state.qty = 1;
+        state.file = null;
+        state.thumbDataUrl = null;
+        state.fileWidthMm = null;
+        state.fileHeightMm = null;
+        state.fileWidthPx = null;
+        state.fileHeightPx = null;
+        state.fileKind = null;
+        state.selectedAddons = {};
+        state.addonQuantities = {};
+        // DOM 초기화
+        var wEl = document.getElementById('soCustomW');
+        var hEl = document.getElementById('soCustomH');
+        var qtyEl = document.getElementById('soQty');
+        if (wEl) wEl.value = defWMm;
+        if (hEl) hEl.value = defHMm;
+        if (qtyEl) qtyEl.value = 1;
+        var unitEl = document.getElementById('soCustomUnitPrice');
+        var areaInfoEl = document.getElementById('soCustomAreaInfo');
+        if (unitEl) unitEl.textContent = '-';
+        if (areaInfoEl) areaInfoEl.textContent = '';
+        var inlineInfo = document.getElementById('soAdInlineFileInfo');
+        if (inlineInfo) { inlineInfo.style.display = 'none'; inlineInfo.textContent = ''; }
+        var uploadZone = document.getElementById('soUpload');
+        if (uploadZone) uploadZone.classList.remove('done');
+        var fileInput = document.getElementById('soFile');
+        if (fileInput) fileInput.value = '';
+        document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
+        document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
+        // 큐 카드 다시 그리기 + 현재 라인 가격 갱신 + 사이즈 카드로 스크롤
+        window._soAdRenderQueue();
+        if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         if (typeof recalc === 'function') recalc();
+        var sizeCard = document.getElementById('soCustomSizeSection');
+        if (sizeCard) try { sizeCard.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e) {}
     };
+    // 호환성 — 구 함수명 alias
+    window._soAdAddLine = window._soAdQueueCurrent;
 
-    window._soAdRemoveLine = function(lineId) {
+    window._soAdRenderQueue = function() {
         var container = document.getElementById('soAdExtraLines');
         if (!container) return;
+        container.innerHTML = '';
+        (state._adLines || []).forEach(function(line, i) {
+            var div = document.createElement('div');
+            div.dataset.lineId = line.id;
+            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; display:flex; align-items:center; gap:10px;';
+            var fileChip = line.fileName
+                ? '<span style="display:inline-flex; align-items:center; gap:3px; padding:2px 6px; background:#dbeafe; color:#1e40af; border-radius:4px; font-size:10px; font-weight:700;"><i class="fa-solid fa-paperclip" style="font-size:9px;"></i>' + (line.fileName.length > 16 ? line.fileName.substring(0, 14) + '..' : line.fileName) + '</span>'
+                : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
+            var addonCount = Object.keys(line.selectedAddons || {}).length;
+            var addonStr = addonCount > 0 ? ' · +' + addonCount + tr('옵션','option','option') : '';
+            div.innerHTML =
+                '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
+                '<div style="flex:1; min-width:0;">' +
+                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.3;">' + line.wMm + '×' + line.hMm + 'mm × ' + line.qty + tr('개','個','pcs') + addonStr + '</div>' +
+                    '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
+                '</div>' +
+                '<button type="button" onclick="window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
+            container.appendChild(div);
+        });
+    };
+
+    window._soAdRemoveQueued = function(lineId) {
         state._adLines = (state._adLines || []).filter(function(l){ return l.id !== lineId; });
-        var elt = container.querySelector('[data-line-id="' + lineId + '"]');
-        if (elt && elt.parentNode) elt.parentNode.removeChild(elt);
-        // 남은 라인 인덱스 재할당 (DOM 라벨 + data-ad-* 인덱스)
-        Array.prototype.forEach.call(container.children, function(child, newIdx){
-            var titleSpan = child.querySelector('span');
-            if (titleSpan) titleSpan.textContent = (newIdx + 2) + tr('번째 사이즈', '番目のサイズ', '. Size');
-            ['w','h','qty','price','file','file-label'].forEach(function(k){
-                var attr = 'data-ad-' + k;
-                child.querySelectorAll('[' + attr + ']').forEach(function(el){
-                    el.setAttribute(attr, String(newIdx));
-                });
-            });
-        });
+        window._soAdRenderQueue();
         if (typeof recalc === 'function') recalc();
     };
-
-    window._soAdLineInput = function(input) {
-        var idx = parseInt(input.getAttribute('data-ad-w') || input.getAttribute('data-ad-h') || input.getAttribute('data-ad-qty'), 10);
-        if (isNaN(idx)) return;
-        var line = state._adLines && state._adLines[idx];
-        if (!line) return;
-        var container = document.getElementById('soAdExtraLines');
-        if (!container) return;
-        var wEl = container.querySelector('[data-ad-w="' + idx + '"]');
-        var hEl = container.querySelector('[data-ad-h="' + idx + '"]');
-        var qtyEl = container.querySelector('[data-ad-qty="' + idx + '"]');
-        var priceEl = container.querySelector('[data-ad-price="' + idx + '"]');
-        line.wMm = parseInt(wEl && wEl.value, 10) || 0;
-        line.hMm = parseInt(hEl && hEl.value, 10) || 0;
-        line.qty = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
-        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
-        var area = (line.wMm / 1000) * (line.hMm / 1000);
-        line.areaM2 = area;
-        var raw = area * perSqm;
-        var p = Math.round(raw / 10) * 10;
-        if (p < perSqm * 0.1) p = Math.round(perSqm * 0.1 / 10) * 10;
-        // 사이즈 너무 작으면 0
-        if (line.wMm < 100 || line.hMm < 100) p = 0;
-        line.unitPrice = p;
-        if (priceEl) priceEl.textContent = p > 0 ? fmtPrice(p) : '-';
-        if (typeof recalc === 'function') recalc();
-    };
-
-    window._soAdLineFile = function(input) {
-        var idx = parseInt(input.getAttribute('data-ad-file'), 10);
-        var line = state._adLines && state._adLines[idx];
-        if (!line || !input.files || !input.files[0]) return;
-        var file = input.files[0];
-        line.file = file;
-        var container = document.getElementById('soAdExtraLines');
-        var labelEl = container ? container.querySelector('[data-ad-file-label="' + idx + '"]') : null;
-        if (labelEl) labelEl.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + 'MB) ✓';
-    };
+    // 호환성 — 구 함수명 alias
+    window._soAdRemoveLine = window._soAdRemoveQueued;
 
     // 2026-05-13: 박스 사이즈 변경 → 단가 자동 계산
     window._soOnBoxDimsChange = async function () {
@@ -5867,12 +5881,17 @@ html, body { background: #ffffff !important; }
                 if (_multiSec)   _multiSec.style.display   = '';
                 if (_leftUpload) _leftUpload.style.display = 'none';
                 if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
-                // 2026-06-01: flex order 강제 — 모바일 .so-right 가 flex column 이라 다른 섹션의 order:-100 보다 우선해야
-                //              size 가 진짜 최상단에 옴. 일반 섹션(addon/schedule/price)은 order:0 → size 다음 자연 정렬.
+                // 2026-06-01: flex order 강제 — 모바일 .so-right 가 flex column 이라 size 가 진짜 최상단.
+                //   size(-200) → qty(-190) → addon(default 0) → multiSec(50, addon 뒤) → schedule(0) → price(0).
                 _custSec.style.order = '-200';
                 if (qtySec) qtySec.style.order = '-190';
-                if (_multiSec) _multiSec.style.order = '-180';
-                // 새 상품 진입시 멀티-라인 초기화
+                if (_multiSec) _multiSec.style.order = '50';
+                // 멀티-라인 섹션은 DOM 상에서도 addon 섹션 뒤로 이동 (order 동률시 DOM 순서 안전망)
+                var _addonSec = document.getElementById('soAddonSection');
+                if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
+                    _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
+                }
+                // 새 상품 진입시 큐 초기화
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
                 // 인라인 업로드 파일 정보도 초기화
@@ -6098,6 +6117,12 @@ html, body { background: #ffffff !important; }
         var rvBody = document.getElementById('soReviewBody');
         if (rvBody) rvBody.innerHTML = '';
         document.body.style.overflow = '';
+        // 2026-06-01: 카트 edit 모드 cancel — 닫기 시 자동 해제
+        state._editingCartIdx = null;
+        state._editingItem = null;
+        state._editingFileUrl = null;
+        state._editingFilePath = null;
+        state._editingFileName = null;
     };
 
     // ─────────────────────────────────────────────
@@ -6446,25 +6471,55 @@ html, body { background: #ffffff !important; }
                 delete item._backFileBlob;
             }
             const cart = readCart();
+            // 2026-06-01: 카트 "내용변경" 모드 — 기존 항목 교체. 파일 미변경시 기존 URL 유지.
+            if (state._editingCartIdx != null && cart[state._editingCartIdx]) {
+                if (!state.file && state._editingFileUrl) {
+                    item.originalUrl = state._editingFileUrl;
+                    item.filePath = state._editingFilePath;
+                    item.fileName = state._editingFileName;
+                }
+                // uid 는 보존 (cart_sync 호환)
+                item.uid = cart[state._editingCartIdx].uid || item.uid;
+                cart[state._editingCartIdx] = item;
+                state._editingCartIdx = null;
+                state._editingItem = null;
+                state._editingFileUrl = null;
+                state._editingFilePath = null;
+                state._editingFileName = null;
+                // edit 모드에서는 큐 무시 (단일 항목 수정만)
+                writeCart(cart);
+                try {
+                    if (Array.isArray(window.cartData)) {
+                        var freshAll0 = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
+                        window.cartData.length = 0;
+                        freshAll0.forEach(function (i) { window.cartData.push(i); });
+                    }
+                } catch (e) {}
+                try { if (window.renderCart) window.renderCart(); } catch (e) {}
+                showStatus(tr('수정되었습니다.', '変更を保存しました。', 'Updated.'), 'ok');
+                return true;
+            }
             cart.push(item);
-            // 2026-06-01: 광고인쇄 — 추가 사이즈 라인들을 각각 별도 cart item 으로 push
+            // 2026-06-01: 광고인쇄 — 큐 라인들도 각각 별도 cart item 으로 push (사이즈/수량/파일/추가옵션 각각 보존)
             if (state.isAdPrint && Array.isArray(state._adLines) && state._adLines.length > 0) {
-                var _saveW = state.customW, _saveH = state.customH, _saveQty = state.qty;
-                var _saveFile = state.file, _saveUnit = state.customUnitPrice, _saveArea = state.customAreaM2;
-                var _saveCartThumb = state._cartThumb;
+                var _sav = {
+                    w: state.customW, h: state.customH, qty: state.qty,
+                    file: state.file, unit: state.customUnitPrice, area: state.customAreaM2,
+                    cartThumb: state._cartThumb,
+                    addons: state.selectedAddons, addonQty: state.addonQuantities
+                };
                 for (var _li = 0; _li < state._adLines.length; _li++) {
                     var _ln = state._adLines[_li];
-                    // 파일 업로드 (있으면)
                     var _lnUrl = null, _lnPath = null;
                     if (_ln.file) {
                         try {
-                            updateUploadStep(tr('추가 사이즈 파일 업로드 중 ' + (_li+1) + '/' + state._adLines.length, '追加サイズ ' + (_li+1) + '/' + state._adLines.length, 'Extra size file ' + (_li+1) + '/' + state._adLines.length));
+                            updateUploadStep(tr('큐 라인 파일 업로드 ' + (_li+1) + '/' + state._adLines.length, 'キュー ' + (_li+1) + '/' + state._adLines.length, 'Queue file ' + (_li+1) + '/' + state._adLines.length));
                             var _lnRes = await uploadFileGeneric(_ln.file);
                             _lnUrl = _lnRes.url;
                             _lnPath = _lnRes.path;
-                        } catch (_le) { console.warn('[ad multi-line upload] line', _li, _le); }
+                        } catch (_le) { console.warn('[ad queue upload] line', _li, _le); }
                     }
-                    // state 를 임시로 라인 값으로 덮어쓰기 → buildCartItem 호출 → 복원
+                    // state 를 라인 값으로 임시 덮어쓰기 (size/qty/file/addons) → buildCartItem → 원복
                     state.customW = _ln.wMm / 10;
                     state.customH = _ln.hMm / 10;
                     state.qty = _ln.qty || 1;
@@ -6472,14 +6527,17 @@ html, body { background: #ffffff !important; }
                     state.customUnitPrice = _ln.unitPrice;
                     state.customAreaM2 = _ln.areaM2;
                     state._cartThumb = null;
+                    state.selectedAddons = _ln.selectedAddons || {};
+                    state.addonQuantities = _ln.addonQuantities || {};
                     var _lnItem = buildCartItem(_lnUrl, _lnPath);
                     _lnItem.uid = Date.now() + _li + 1;
                     cart.push(_lnItem);
                 }
                 // 원복
-                state.customW = _saveW; state.customH = _saveH; state.qty = _saveQty;
-                state.file = _saveFile; state.customUnitPrice = _saveUnit; state.customAreaM2 = _saveArea;
-                state._cartThumb = _saveCartThumb;
+                state.customW = _sav.w; state.customH = _sav.h; state.qty = _sav.qty;
+                state.file = _sav.file; state.customUnitPrice = _sav.unit; state.customAreaM2 = _sav.area;
+                state._cartThumb = _sav.cartThumb;
+                state.selectedAddons = _sav.addons; state.addonQuantities = _sav.addonQty;
             }
             writeCart(cart);
             // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
@@ -6738,8 +6796,9 @@ html, body { background: #ffffff !important; }
                                     onchange="window._soCartQtySet(${genIdx}, this.value)" />
                                 <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, 1)">+</button>
                             </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
                                 <span class="so-cart-item-price">${fmtPrice(calc.final)}</span>
+                                <button class="so-cart-item-edit" onclick="window._soCartEditItem(${genIdx})" title="${tr('내용변경','内容変更','Edit')}" style="background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; border-radius:6px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer;">${tr('내용변경','変更','Edit')}</button>
                                 <button class="so-cart-item-remove" onclick="window._soCartRemove(${genIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
                             </div>
                         </div>
@@ -6844,6 +6903,70 @@ html, body { background: #ffffff !important; }
         writeCart(cart);
         syncWindowCart(cart);
         renderSoCart();
+    };
+
+    // 2026-06-01: 카트 아이템 "내용변경" — 모달 다시 열고 state 복원, 저장 시 기존 항목 교체.
+    window._soCartEditItem = async function(genIdx) {
+        var allItems = (function(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch(e){ return []; } })();
+        var isFab = function (it) { return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null); };
+        var generalItems = allItems.filter(function(it){ return !isFab(it); });
+        var item = generalItems[genIdx];
+        if (!item || !item.product || !item.product.code) return;
+        var allIdx = allItems.indexOf(item);
+        state._editingCartIdx = allIdx;
+        state._editingItem = item;
+        state._editingFileUrl = item.originalUrl || null;
+        state._editingFilePath = item.filePath || null;
+        state._editingFileName = item.fileName || null;
+        try { window._soToggleCart(false); } catch(e) {}
+        if (window.loadProductDetailAndOpen) {
+            try { await window.loadProductDetailAndOpen(item.product.code); } catch(e) { console.warn('[cart edit] load product fail', e); }
+        }
+        // 모달이 그려진 후 state/UI 복원
+        setTimeout(function() {
+            // 수량
+            if (item.qty != null) {
+                state.qty = item.qty;
+                var qtyEl = document.getElementById('soQty');
+                if (qtyEl) qtyEl.value = item.qty;
+            }
+            // 사용자 정의 사이즈 (광고인쇄 / 현수막 / 실사출력 등)
+            if (item.customSize) {
+                state.customW = item.customSize.w_cm || state.customW;
+                state.customH = item.customSize.h_cm || state.customH;
+                state.customUnitPrice = item.customSize.unit || state.customUnitPrice;
+                state.customAreaM2 = item.customSize.area_m2 || state.customAreaM2;
+                var wEl = document.getElementById('soCustomW');
+                var hEl = document.getElementById('soCustomH');
+                if (wEl) wEl.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
+                if (hEl) hEl.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
+            }
+            // 추가옵션
+            if (item.selectedAddons) {
+                state.selectedAddons = Object.assign({}, item.selectedAddons);
+                state.addonQuantities = Object.assign({}, item.addonQuantities || {});
+                Object.values(item.selectedAddons).forEach(function(code){
+                    var cb = document.querySelector('#soAddonList input[type=checkbox][data-addon-code="' + String(code).replace(/"/g,'\\"') + '"]');
+                    if (cb) cb.checked = true;
+                    var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g,'\\"') + '"]');
+                    if (qi && item.addonQuantities && item.addonQuantities[code]) qi.value = item.addonQuantities[code];
+                });
+            }
+            // 파일 정보 표시 (state.file 은 null 유지 — 새로 안 올리면 기존 URL 재사용)
+            if (item.fileName) {
+                var inlineInfo = document.getElementById('soAdInlineFileInfo');
+                if (inlineInfo) {
+                    inlineInfo.style.display = 'block';
+                    inlineInfo.textContent = item.fileName + ' (' + tr('기존 파일 — 변경 시 새로 업로드','既存ファイル — 変更時に再アップロード','existing — re-upload to change') + ')';
+                }
+            }
+            // 사이즈 입력 트리거 → 단가 재계산 + 가격 재계산
+            if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+            if (typeof recalc === 'function') recalc();
+            // 장바구니 담기 버튼 라벨을 "변경 저장" 으로
+            var cartBtn = document.getElementById('soBtnCart');
+            if (cartBtn) cartBtn.textContent = tr('변경 저장','変更を保存','Save Changes');
+        }, 700);
     };
 
     function syncWindowCart(cart) {
