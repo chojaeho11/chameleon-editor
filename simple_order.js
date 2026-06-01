@@ -3700,6 +3700,13 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
+        //   해당: 박스 / 자유인쇄커팅 / 원판 / 등신대 / 허니콤포토존 등
+        //   가벽(state.isWall) 만 시공/배송 옵션 노출, 나머지는 강제 0
+        if (state.isHoneycomb && !state.isWall) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
         // 2026-05-29: 베스트굿즈 전체 — 정액 배송비
         //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
         if (state.isBestGoods) {
@@ -6965,7 +6972,10 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 금액주문은 배송 개념 자체가 없음 — 시공/배송 섹션 강제 숨김
         // 2026-05-29: 베스트굿즈 전체 (10종) — 시공/배송 옵션 자체 비표시, 3천원 정액 배송비
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+        // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
+        var _isHbFreeShip = state.isHoneycomb && !state.isWall;
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip
+            && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
@@ -7013,6 +7023,9 @@ html, body { background: #ffffff !important; }
         } else if ((state.isWall || state.isPhotozone) && allowed.indexOf('metro_install') >= 0) {
             // 2026-06-01: 가벽/포토존 — 기본 배송 = 수도권 설치 (사용자 요청)
             defaultShip = 'metro_install';
+        } else if (_isHbFreeShip) {
+            // 2026-06-01: 허니콤 가벽 외 — 무료 배송. shipMethod 는 self_pickup 으로 (배송비 0)
+            defaultShip = 'self_pickup';
         } else if ((state.isDeliveryOnly || state.isRawBoard) && allowed.indexOf('metro_delivery') >= 0) {
             // 2026-05-22: 허니콤보드(배송형·원판) — 기본 배송 = 수도권 배송 (10만원)
             defaultShip = 'metro_delivery';
