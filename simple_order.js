@@ -1887,14 +1887,8 @@ html, body { background: #ffffff !important; }
             ${tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs')}
             <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('대량 주문 시 자동 적용 (수도권/지방 동일)', '大量注文時に自動適用', 'Auto-applied for bulk orders')}</div>
           </button>
-          <!-- 2026-05-13: 다른 제품과 묶음배송 토글 (잘보이는 큰 버튼) -->
-          <button type="button" id="soBundleShipBtn" onclick="window._soToggleBundle()"
-            style="display:none; width:100%; padding:12px 14px; margin-bottom:12px; border:2px dashed #16a34a; background:#f0fdf4; color:#15803d; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.2s;">
-            ${tr('다른 제품과 묶음배송', '他の商品と合わせて配送', 'Bundle with other items')}
-            <div style="font-size:11px; font-weight:600; color:#16a34a; margin-top:4px;">
-              ${tr('다른 허니콤 상품에서 배송을 선택한 경우 무료', '他のハニカム商品の配送と一緒', 'Free if another honeycomb item has shipping')}
-            </div>
-          </button>
+          <!-- 2026-06-01: 묶음배송 토글 버튼 제거 — 카트 합계 시 자동 처리 (가장 큰 배송비 1건만 부과) -->
+          <button type="button" id="soBundleShipBtn" style="display:none;"></button>
           <!-- 배송일 / 시공 시간 -->
           <div id="soScheduleDateWrap" style="display:none;">
             <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
@@ -1937,7 +1931,7 @@ html, body { background: #ffffff !important; }
         <div id="soItemNoteSection" style="display:none;"><textarea id="soItemNote" style="display:none;"></textarea></div>
 
 
-        <div class="so-section so-price-box">
+        <div class="so-section so-price-box" id="soPriceBox">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
           <div class="so-price-row" id="soUnitRow"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
           <!-- 가벽 사이즈 라인 (가벽 상품만) -->
@@ -2962,11 +2956,14 @@ html, body { background: #ffffff !important; }
 
         // 2026-06-01: 담기 버튼 아래 "전체 합계 (배송 포함)" — 라인이 1개+ 일 때만 표시
         //   breakdown: "가벽 X원 + 추가옵션 Y원" + 배송 / 할인 별도 라인
+        //   전체 합계가 보일 때는 하단 "가격" 박스를 숨김 (중복 제거)
         try {
             var _qtWrap = document.getElementById('soAdQueueTotalWrap');
             var _qtVal  = document.getElementById('soAdQueueTotal');
             var _qtBrk  = document.getElementById('soAdQueueTotalBreak');
+            var _priceBox = document.getElementById('soPriceBox');
             var _hasQueueT = Array.isArray(state._adLines) && state._adLines.length > 0;
+            if (_priceBox) _priceBox.style.display = _hasQueueT ? 'none' : '';
             if (_qtWrap && _qtVal) {
                 if (_hasQueueT) {
                     _qtWrap.style.display = '';
@@ -7019,11 +7016,6 @@ html, body { background: #ffffff !important; }
             b.style.opacity = '1';
             b.style.pointerEvents = '';
         });
-        // 2026-06-01: 기본 ship 의 부수 효과 (날짜 입력 펼침, 가격 재계산 등) 도 실행 — 사용자 요청
-        //   사용자가 ship 버튼을 다시 클릭하지 않아도 schedule 영역이 열려있게.
-        if (anyShipScope && typeof window._soPickShip === 'function') {
-            try { window._soPickShip(defaultShip); } catch(e) {}
-        }
         // 2026-05-22: 포맥스·폼보드 — 모달 열릴 때 사이즈 합으로 배송 자동 선택
         if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
             window._soFoamApplyAutoShip();
@@ -7128,6 +7120,11 @@ html, body { background: #ffffff !important; }
         var dateWrap = document.getElementById('soScheduleDateWrap'); if (dateWrap) dateWrap.style.display = 'none';
         var remWrap = document.getElementById('soRemovalWrap'); if (remWrap) remWrap.style.display = 'none';
         var bdBox = document.getElementById('soShipBreakdown'); if (bdBox) bdBox.innerHTML = '';
+        // 2026-06-01: 기본 ship 의 부수 효과 (날짜 입력 펼침, 가격 재계산, breakdown) 실행 — 위 reset 뒤에 와야 함.
+        //   사용자가 ship 버튼을 다시 클릭하지 않아도 schedule 영역이 열려있게.
+        if (anyShipScope && typeof window._soPickShip === 'function') {
+            try { window._soPickShip(state.shipMethod); } catch(e) {}
+        }
 
         // 상품 추가 옵션 로드 (admin_addons 매칭)
         await _soPopulateAddons(p);
@@ -8325,7 +8322,9 @@ html, body { background: #ffffff !important; }
         if (!Array.isArray(cart)) cart = [];
         var taxBase = 0;          // 할인 적용 대상 (일반 상품가 + 옵션)
         var nonDiscountBase = 0;  // 할인 비적용 (매니저 견적 — 이미 협의가)
-        var shipTotal = 0;        // 배송비 (할인 미적용)
+        // 2026-06-01: 카트 합계 시 자동 묶음배송 — 모든 일반 항목의 개별 배송비 중 가장 큰 것 1건만 부과.
+        //   (베스트굿즈는 정액 3천원 별도, 패브릭은 별도 발송이므로 가산 — 둘 다 max 룰에서 제외)
+        var itemShipFees = [];
         cart.forEach(function (it) {
             if (_soIsFabricItem(it)) {
                 taxBase += (it.price || 0);
@@ -8347,8 +8346,13 @@ html, body { background: #ffffff !important; }
             } else {
                 taxBase += (subPrice - shipFee);
             }
-            shipTotal += shipFee;
+            // 베스트굿즈·광고인쇄는 별도 규칙 — max 룰 제외
+            if (!it._isBestGoods && !it._isAdPrint) itemShipFees.push(shipFee);
         });
+        // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송). 모든 항목이 0 이면 0.
+        var shipTotal = itemShipFees.length > 0 ? Math.max.apply(Math, itemShipFees.concat([0])) : 0;
+        // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
+        cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
         // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).
         //   패브릭 결제를 통합 결제창으로 라우팅해도 배송비가 누락되지 않도록.
         if (cart.some(_soIsFabricItem)) {
@@ -8356,7 +8360,7 @@ html, body { background: #ffffff !important; }
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
         }
         // 2026-06-01: 광고인쇄 카트 합계 룰 — 모든 ad-print 항목 상품가 합계 10만 이상 무료 / 미만 10,000원 (단일 통합).
-        //   per-item 으로 저장된 shipping.fee 는 무시하고 카트 합계 기준 재계산.
+        //   ad-print 의 per-item shipping.fee 는 max 룰에서 이미 제외했음. 여기서는 ad-print 전체 합계 기준 추가만.
         var _adItems = cart.filter(function(it){ return it && it._isAdPrint; });
         if (_adItems.length > 0) {
             var _adProductSub = 0;
@@ -8364,11 +8368,10 @@ html, body { background: #ffffff !important; }
                 var _itSub = _soCalcItemPrice(it);
                 var _itShip = (it.shipping && it.shipping.fee) || 0;
                 _adProductSub += (_itSub - _itShip);
-                // 기존 shipping.fee 가 shipTotal 에 합산됐다면 빼기
-                shipTotal -= _itShip;
             });
-            if (_adProductSub < 100000) shipTotal += 10000;
-            // 10만 이상이면 0 추가 = 무료
+            // 광고인쇄 카트 소계 < 10만 이고, 다른 일반 항목의 배송비 (shipTotal) 이 없으면 1만원 가산
+            // (다른 항목 배송이 있으면 그 max 안에 자동 묶음 — 추가 부담 X)
+            if (_adProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
         }
         var amountPct = 0;
         if (taxBase >= 10000000) amountPct = 30;
