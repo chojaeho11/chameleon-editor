@@ -5867,6 +5867,11 @@ html, body { background: #ffffff !important; }
                 if (_multiSec)   _multiSec.style.display   = '';
                 if (_leftUpload) _leftUpload.style.display = 'none';
                 if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
+                // 2026-06-01: flex order 강제 — 모바일 .so-right 가 flex column 이라 다른 섹션의 order:-100 보다 우선해야
+                //              size 가 진짜 최상단에 옴. 일반 섹션(addon/schedule/price)은 order:0 → size 다음 자연 정렬.
+                _custSec.style.order = '-200';
+                if (qtySec) qtySec.style.order = '-190';
+                if (_multiSec) _multiSec.style.order = '-180';
                 // 새 상품 진입시 멀티-라인 초기화
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
@@ -5879,6 +5884,10 @@ html, body { background: #ffffff !important; }
                 if (_multiSec)   _multiSec.style.display   = 'none';
                 if (_leftUpload && !(state.isRawBoard || state.isAmountOrder)) _leftUpload.style.display = '';
                 if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder)) _leftUploadLabel.style.display = '';
+                // flex order 환원
+                _custSec.style.order = '';
+                if (qtySec) qtySec.style.order = '';
+                if (_multiSec) _multiSec.style.order = '';
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
             }
