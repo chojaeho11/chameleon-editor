@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📣 인플루언서 신청 관리</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #0b0f1c; color: #e2e8f0; font-family: 'Pretendard', sans-serif;
+            margin: 0; padding: 16px 14px 60px;
+            max-width: 720px; margin: 0 auto;
+            min-height: 100vh; -webkit-font-smoothing: antialiased;
+        }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .header h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 0; flex: 1; letter-spacing: -0.5px; }
+        .header .sub { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+        .refresh-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(148,163,184,0.2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; cursor: pointer; font-size: 16px; }
+        .refresh-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
+
+        .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tab { padding: 7px 13px; border-radius: 18px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid rgba(148,163,184,0.2); background: rgba(255,255,255,0.04); color: #94a3b8; transition: all 0.15s; }
+        .tab:hover { background: rgba(255,255,255,0.08); color: #cbd5e1; }
+        .tab.active { background: linear-gradient(135deg,#ec4899,#be185d); color: #fff; border-color: transparent; }
+        .tab .cnt { display: inline-block; margin-left: 5px; padding: 1px 6px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 10px; }
+
+        .empty { text-align: center; padding: 70px 20px; color: #86efac; font-size: 16px; font-weight: 800; line-height: 1.6; }
+
+        .card {
+            background: linear-gradient(165deg, #2a1338 0%, #0f172a 100%);
+            border: 1px solid rgba(244,114,182,0.18);
+            border-radius: 16px; padding: 14px; margin-bottom: 12px;
+            box-shadow: 0 8px 20px -8px rgba(0,0,0,0.4);
+        }
+        .card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px; }
+        .badge.lang-kr { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+        .badge.lang-ja { background: rgba(236,72,153,0.25); color: #fbcfe8; }
+        .badge.lang-us, .badge.lang-en { background: rgba(34,197,94,0.25); color: #86efac; }
+        .badge.lang-cn { background: rgba(239,68,68,0.25); color: #fca5a5; }
+        .badge.status-pending { background: rgba(245,158,11,0.25); color: #fcd34d; }
+        .badge.status-approved { background: rgba(34,197,94,0.25); color: #86efac; }
+        .badge.status-paid { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+        .badge.status-rejected { background: rgba(239,68,68,0.25); color: #fca5a5; }
+
+        .name { font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -0.4px; }
+        .meta { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 6px; }
+        .time { font-size: 10.5px; color: #64748b; font-weight: 500; }
+
+        .row { display: flex; gap: 6px; margin-bottom: 6px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+        .row .lbl { color: #94a3b8; font-weight: 700; min-width: 80px; flex-shrink: 0; }
+        .row .val { color: #e2e8f0; word-break: break-all; flex: 1; }
+        .row .val a { color: #fbcfe8; text-decoration: none; border-bottom: 1px dashed rgba(244,114,182,0.5); }
+
+        .actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+        .act { padding: 7px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; background: rgba(255,255,255,0.06); color: #cbd5e1; }
+        .act:hover { background: rgba(255,255,255,0.12); }
+        .act.primary { background: linear-gradient(135deg,#ec4899,#be185d); color: #fff; border-color: transparent; }
+        .act.approve { background: rgba(34,197,94,0.2); color: #86efac; border-color: rgba(34,197,94,0.35); }
+        .act.reject { background: rgba(239,68,68,0.2); color: #fca5a5; border-color: rgba(239,68,68,0.35); }
+        .act.paid { background: rgba(99,102,241,0.2); color: #c7d2fe; border-color: rgba(99,102,241,0.35); }
+        .act.delete { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.2); }
+
+        .footer-link { text-align: center; margin-top: 24px; font-size: 12px; color: #64748b; }
+        .footer-link a { color: #64748b; text-decoration: none; margin: 0 8px; }
+
+        .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: #16a34a; color: #fff; padding: 12px 22px; border-radius: 10px; font-size: 13.5px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 9999; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+        .toast.err { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="flex:1;">
+            <h1>📣 인플루언서 신청</h1>
+            <div class="sub">홍보 PR 응모 — 재생 1만 회당 1만원 지급</div>
+        </div>
+        <button class="refresh-btn" onclick="loadApps()" title="새로고침"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+
+    <div class="tabs" id="tabs">
+        <div class="tab active" data-status="pending">대기 <span class="cnt" id="cntPending">0</span></div>
+        <div class="tab" data-status="approved">승인 <span class="cnt" id="cntApproved">0</span></div>
+        <div class="tab" data-status="paid">지급완료 <span class="cnt" id="cntPaid">0</span></div>
+        <div class="tab" data-status="rejected">반려 <span class="cnt" id="cntRejected">0</span></div>
+        <div class="tab" data-status="all">전체 <span class="cnt" id="cntAll">0</span></div>
+    </div>
+
+    <div id="list">
+        <div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>
+    </div>
+
+    <div class="footer-link">
+        <a href="/admin_m_secret_882">← 관리자 대시보드</a>
+        <a href="/leads">📥 해외 리드</a>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+        const sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true } });
+
+        let _all = [];
+        let _filter = 'pending';
+
+        function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+        function fmtTime(iso){try{const d=new Date(iso),Y=d.getFullYear(),m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2),h=('0'+d.getHours()).slice(-2),mi=('0'+d.getMinutes()).slice(-2);return `${Y}/${m}/${dd} ${h}:${mi}`;}catch(e){return '';}}
+        function toast(m, err){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast'+(err?' err':''),2400);}
+        function langLabel(l){return {kr:'🇰🇷 한국',ja:'🇯🇵 일본',us:'🇺🇸 미국',en:'🇺🇸 미국',cn:'🇨🇳 중국'}[l]||(l||'-').toUpperCase();}
+        function statusLabel(s){return {pending:'⏳ 대기',approved:'✅ 승인',paid:'💸 지급완료',rejected:'❌ 반려'}[s]||s;}
+
+        async function loadApps(){
+            const list = document.getElementById('list');
+            list.innerHTML = '<div style="text-align:center; color:#64748b; padding:40px 0;">불러오는 중...</div>';
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session) {
+                    list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px; line-height:1.6;">⚠️ 관리자 로그인이 필요합니다.<br><br><a href="/login.html?next=/influencers" style="color:#c7d2fe;">로그인 페이지로 이동 →</a></div>';
+                    return;
+                }
+                const { data, error } = await sb.from('chatbot_knowledge')
+                    .select('id, question, answer, created_at, is_active')
+                    .eq('category', '_influencer_apps')
+                    .order('created_at', { ascending: false })
+                    .limit(500);
+                if (error) throw error;
+                _all = (data || []).map(row => {
+                    let info = {};
+                    try { info = (typeof row.answer === 'string') ? JSON.parse(row.answer) : (row.answer || {}); } catch(e) {}
+                    return {
+                        id: row.id,
+                        created_at: row.created_at,
+                        is_active: row.is_active,
+                        name: info.name || '',
+                        sns_url: info.sns_url || '',
+                        bank_account: info.bank_account || '',
+                        email: info.email || '',
+                        note: info.note || '',
+                        lang: info.lang || 'kr',
+                        view_count: info.view_count || 0,
+                        paid_amount: info.paid_amount || 0,
+                        status: info.status || 'pending',
+                        _raw: info
+                    };
+                });
+                updateCounts();
+                renderList();
+            } catch(e){
+                console.error('[influencers] load failed', e);
+                list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px;">불러오기 실패: '+esc(e?.message||e)+'</div>';
+            }
+        }
+
+        function updateCounts(){
+            const c = { pending:0, approved:0, paid:0, rejected:0 };
+            _all.forEach(a => { if (c[a.status]!==undefined) c[a.status]++; });
+            document.getElementById('cntPending').textContent = c.pending;
+            document.getElementById('cntApproved').textContent = c.approved;
+            document.getElementById('cntPaid').textContent = c.paid;
+            document.getElementById('cntRejected').textContent = c.rejected;
+            document.getElementById('cntAll').textContent = _all.length;
+        }
+
+        function renderList(){
+            const list = document.getElementById('list');
+            let items = _all.slice();
+            if (_filter !== 'all') items = items.filter(a => a.status === _filter);
+            if (!items.length){
+                list.innerHTML = '<div class="empty">✅ 표시할 신청이 없습니다.</div>';
+                return;
+            }
+            list.innerHTML = items.map(renderApp).join('');
+        }
+
+        function renderApp(a){
+            const lang = (a.lang || 'kr').toLowerCase();
+            const snsLink = a.sns_url ? `<a href="${esc(a.sns_url)}" target="_blank" rel="noopener">${esc(a.sns_url)}</a>` : '-';
+            const emailLink = a.email ? `<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>` : '-';
+            return `
+            <div class="card" data-id="${esc(a.id)}">
+                <div class="card-head">
+                    <span class="badge lang-${lang}">${langLabel(lang)}</span>
+                    <span class="badge status-${a.status}">${statusLabel(a.status)}</span>
+                    <span class="time" style="margin-left:auto;">${fmtTime(a.created_at)}</span>
+                </div>
+                <div class="name">${esc(a.name || '(이름 없음)')}</div>
+                <div class="meta" style="margin-top:10px;">신청 상세</div>
+                <div class="row"><span class="lbl">SNS</span><span class="val">${snsLink}</span></div>
+                <div class="row"><span class="lbl">계좌</span><span class="val">${esc(a.bank_account || '-')}</span></div>
+                <div class="row"><span class="lbl">이메일</span><span class="val">${emailLink}</span></div>
+                ${a.note ? `<div class="row"><span class="lbl">PR 계획</span><span class="val" style="white-space:pre-wrap;">${esc(a.note)}</span></div>` : ''}
+                ${a.view_count > 0 ? `<div class="row"><span class="lbl">현재 조회</span><span class="val">${Number(a.view_count).toLocaleString()}회</span></div>` : ''}
+                ${a.paid_amount > 0 ? `<div class="row"><span class="lbl">지급 금액</span><span class="val" style="color:#86efac; font-weight:800;">${Number(a.paid_amount).toLocaleString()}원</span></div>` : ''}
+                <div class="actions">
+                    ${a.status === 'pending' ? `<button class="act approve" onclick="setStatus('${esc(a.id)}','approved')"><i class="fa-solid fa-check"></i> 승인</button>` : ''}
+                    ${a.status === 'pending' ? `<button class="act reject" onclick="setStatus('${esc(a.id)}','rejected')"><i class="fa-solid fa-xmark"></i> 반려</button>` : ''}
+                    ${a.status === 'approved' ? `<button class="act paid" onclick="markPaid('${esc(a.id)}')"><i class="fa-solid fa-money-bill-wave"></i> 지급완료 처리</button>` : ''}
+                    ${a.status !== 'pending' ? `<button class="act" onclick="setStatus('${esc(a.id)}','pending')"><i class="fa-solid fa-rotate-left"></i> 대기로 되돌리기</button>` : ''}
+                    <button class="act delete" onclick="removeApp('${esc(a.id)}')" style="margin-left:auto;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        }
+
+        async function setStatus(id, newStatus){
+            const a = _all.find(x => String(x.id) === String(id));
+            if (!a) return;
+            try {
+                const newInfo = Object.assign({}, a._raw, { status: newStatus, updated_at: new Date().toISOString() });
+                const { error } = await sb.from('chatbot_knowledge')
+                    .update({ answer: JSON.stringify(newInfo) })
+                    .eq('id', id);
+                if (error) throw error;
+                toast('상태가 ' + statusLabel(newStatus) + ' (으)로 변경되었습니다');
+                await loadApps();
+            } catch(e){ toast('실패: ' + (e.message||e), true); }
+        }
+
+        async function markPaid(id){
+            const a = _all.find(x => String(x.id) === String(id));
+            if (!a) return;
+            const view = prompt('조회수를 입력하세요 (재생 1만 회당 1만원)', String(a.view_count || 100000));
+            if (!view) return;
+            const v = parseInt(view, 10);
+            if (isNaN(v) || v < 10000) { toast('1만 이상이어야 합니다', true); return; }
+            const amount = Math.floor(v / 10000) * 10000;
+            const ok = confirm(`조회 ${v.toLocaleString()}회 → ${amount.toLocaleString()}원 지급으로 기록합니다.`);
+            if (!ok) return;
+            try {
+                const newInfo = Object.assign({}, a._raw, {
+                    status: 'paid',
+                    view_count: v,
+                    paid_amount: amount,
+                    paid_at: new Date().toISOString()
+                });
+                const { error } = await sb.from('chatbot_knowledge')
+                    .update({ answer: JSON.stringify(newInfo) })
+                    .eq('id', id);
+                if (error) throw error;
+                toast('지급 처리 완료: ' + amount.toLocaleString() + '원');
+                await loadApps();
+            } catch(e){ toast('실패: ' + (e.message||e), true); }
+        }
+
+        async function removeApp(id){
+            if (!confirm('이 신청을 삭제할까요? (복구 불가)')) return;
+            try {
+                const { error } = await sb.from('chatbot_knowledge').delete().eq('id', id);
+                if (error) throw error;
+                toast('삭제됨');
+                await loadApps();
+            } catch(e){ toast('실패: ' + (e.message||e), true); }
+        }
+
+        document.getElementById('tabs').addEventListener('click', e => {
+            const t = e.target.closest('.tab');
+            if (!t) return;
+            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+            t.classList.add('active');
+            _filter = t.dataset.status;
+            renderList();
+        });
+
+        loadApps();
+    </script>
+</body>
+</html>
