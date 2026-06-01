@@ -232,17 +232,21 @@
             const ok = confirm(`이 신청을 승인하고 ${a.email} 에게 ${couponDisplay(a.lang)} (= ${amt.toLocaleString()} KRW) 쿠폰을 즉시 지급합니다. 계속?`);
             if (!ok) return;
             try {
-                // 1) 현재 잔액 조회
+                // 1) 현재 이벤트 쿠폰 잔액 조회 (2026-06-01: event_coupon 컬럼 사용, legacy mileage 와 분리)
                 const { data: prof, error: pErr } = await sb.from('profiles')
-                    .select('mileage')
+                    .select('event_coupon, mileage')
                     .eq('id', a.user_id)
                     .maybeSingle();
                 if (pErr) throw pErr;
-                const currentBal = (prof && prof.mileage) ? parseInt(prof.mileage) : 0;
+                const useEventCoupon = (prof && 'event_coupon' in prof);
+                const currentBal = useEventCoupon
+                    ? ((prof && prof.event_coupon) ? parseInt(prof.event_coupon) : 0)
+                    : ((prof && prof.mileage) ? parseInt(prof.mileage) : 0);
                 const newBal = currentBal + amt;
-                // 2) 잔액 업데이트
+                // 2) 잔액 업데이트 — event_coupon 컬럼이 있으면 그쪽으로, 없으면 mileage 로 fallback
+                const updatePayload = useEventCoupon ? { event_coupon: newBal } : { mileage: newBal };
                 const { error: uErr } = await sb.from('profiles')
-                    .update({ mileage: newBal })
+                    .update(updatePayload)
                     .eq('id', a.user_id);
                 if (uErr) throw uErr;
                 // 3) 원장 기록

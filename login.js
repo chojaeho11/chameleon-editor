@@ -303,8 +303,9 @@ async function handleAuthAction() {
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
-            // 프로필에 가입 국가 설정 (일반 등급) + 가입 보너스 쿠폰 30,000 KRW 자동 지급
-            // (JP=3,000엔 / KR=30,000원 / US=$30 — CURRENCY_RATE 로 자동 환산 표시)
+            // 프로필에 가입 국가 설정 (일반 등급) + 가입 보너스 이벤트 쿠폰 30,000 KRW 자동 지급
+            // 2026-06-01: 기존 마일리지(legacy 5%) 와 분리하기 위해 profiles.event_coupon 컬럼 사용
+            //   (JP=3,000엔 / KR=30,000원 / US=$30 — CURRENCY_RATE 로 자동 환산 표시)
             if (data.user) {
                 let profileUpdated = false;
                 const SIGNUP_BONUS_KRW = 30000;  // 모든 사이트 동일 (표시는 통화 변환)
@@ -314,9 +315,22 @@ async function handleAuthAction() {
                         const { data: rows, error: upErr } = await sb.from('profiles').update({
                             site: siteCode,
                             role: 'customer',
-                            mileage: SIGNUP_BONUS_KRW
+                            event_coupon: SIGNUP_BONUS_KRW
                         }).eq('id', data.user.id).select('id');
                         if (!upErr && rows && rows.length > 0) { profileUpdated = true; break; }
+                        // event_coupon 컬럼이 없는 경우 (마이그레이션 미적용 환경) 마일리지로 fallback
+                        if (upErr && /event_coupon|column.*does.*not.*exist/i.test(upErr.message || '')) {
+                            const { data: rows2, error: upErr2 } = await sb.from('profiles').update({
+                                site: siteCode,
+                                role: 'customer',
+                                mileage: SIGNUP_BONUS_KRW
+                            }).eq('id', data.user.id).select('id');
+                            if (!upErr2 && rows2 && rows2.length > 0) {
+                                profileUpdated = true;
+                                console.warn('[signup] event_coupon column missing — fell back to mileage. Apply migration 20260601_event_coupon.sql');
+                                break;
+                            }
+                        }
                     } catch(e) { console.warn('profile update attempt', attempt, e); }
                 }
                 if (!profileUpdated) console.warn('Profile update failed after 3 attempts for', data.user.id);
@@ -326,7 +340,7 @@ async function handleAuthAction() {
                         user_id: data.user.id,
                         type: 'signup_bonus',
                         amount: SIGNUP_BONUS_KRW,
-                        description: '회원가입 무료 쿠폰 (이벤트)'
+                        description: '회원가입 무료 이벤트 쿠폰'
                     });
                 } catch(e) { console.warn('wallet_logs signup_bonus insert failed', e); }
             }

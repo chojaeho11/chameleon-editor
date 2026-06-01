@@ -2061,22 +2061,53 @@ html, body { background: #ffffff !important; }
         </div>
       </div>
 
-      <!-- 2026-05-22: 마일리지/예치금 사용 (KR + 로그인 사용자만 — _soInitWallet 에서 노출) -->
+      <!-- 2026-06-01: 할인 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / 구독할인) — 라디오 1개 선택 (중복 불가) -->
       <div class="so-co-section" id="soCoWalletBox" style="display:none;">
-        <span class="so-co-label">${tr('마일리지 / 예치금','マイル / 預り金','Mileage / Deposit')}</span>
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-          <span style="font-size:12px; color:#6b7280;">${tr('🎁 이벤트 쿠폰','🎁 イベントクーポン','🎁 Event Coupon')}: <b id="soOwnMileage" style="color:#b45309;">0 P</b></span>
-          <input id="soUseMileage" type="number" min="0" step="100" placeholder="0" oninput="window._soOnWalletChange()" style="width:110px; padding:8px 10px; border:1.5px solid #e7d6b8; border-radius:8px; font-size:13px;">
-          <span style="font-size:11px; color:#9ca3af;">${tr('최대','最大','Max')} <b id="soMileageMax">0</b> P</span>
-          <button type="button" onclick="window._soFillMaxMileage()" style="padding:6px 10px; background:#fef3c7; color:#92400e; border:1px solid #fbbf24; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">${tr('최대 사용','全額','Max')}</button>
+        <span class="so-co-label">${tr('할인 적용 (1개 선택)','割引選択 (1つのみ)','Discount (pick one)')}</span>
+        <div id="soDiscountGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:6px;">
+          <!-- 1) 이벤트 쿠폰 -->
+          <label class="so-disc-card" data-disc="event_coupon" style="cursor:pointer; padding:10px 12px; border:2px solid #fde68a; background:#fffbeb; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="radio" name="soDiscChoice" value="event_coupon" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#92400e;">🎁 ${tr('이벤트 쿠폰','イベントクーポン','Event Coupon')}</b>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:#b45309;" id="soDiscEventAmount">0 P</div>
+            <div style="font-size:10.5px; color:#92400e;" id="soDiscEventHint">${tr('보유 0','残高 0','Balance 0')}</div>
+          </label>
+          <!-- 2) 마일리지 (legacy 5%) -->
+          <label class="so-disc-card" data-disc="mileage" style="cursor:pointer; padding:10px 12px; border:2px solid #c7d2fe; background:#eef2ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="radio" name="soDiscChoice" value="mileage" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#3730a3;">⭐ ${tr('마일리지','マイル','Mileage')}</b>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:#4338ca;" id="soDiscMileageAmount">0 P</div>
+            <div style="font-size:10.5px; color:#4338ca;" id="soDiscMileageHint">${tr('보유 0 · 5%','残高 0 · 5%','Balance 0 · 5%')}</div>
+          </label>
+          <!-- 3) 예치금 -->
+          <label class="so-disc-card" data-disc="deposit" style="cursor:pointer; padding:10px 12px; border:2px solid #99f6e4; background:#ecfeff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="radio" name="soDiscChoice" value="deposit" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#0e7490;">💰 ${tr('예치금','預り金','Deposit')}</b>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:#0e7490;" id="soDiscDepositAmount">0 P</div>
+            <div style="font-size:10.5px; color:#0e7490;" id="soDiscDepositHint">${tr('전액 사용','全額使用','Full balance')}</div>
+          </label>
+          <!-- 4) 구독할인 -->
+          <label class="so-disc-card" data-disc="pro" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="radio" name="soDiscChoice" value="pro" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#6d28d9;">👑 ${tr('PRO 구독할인','PRO会員割引','PRO Subscriber')}</b>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
+            <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
+          </label>
         </div>
-        <div style="font-size:11px; color:#92400e; background:#fef3c7; padding:8px 10px; border-radius:6px; margin-top:6px; border-left:3px solid #f59e0b; line-height:1.6;">
-          💡 ${tr('이벤트 쿠폰은 <b>구매금액의 50%</b> 까지 + <b>최대 50,000원 (=5,000엔/$50)</b> 한도. PRO 구독자 10% 할인 등 다른 마일리지·쿠폰 할인과는 <b>중복 사용 불가</b> — 가장 큰 할인 1개만 적용됩니다.','イベントクーポンは<b>ご注文金額の50%</b>まで + <b>最大5,000円 (=$50)</b>。PRO会員10%割引等の他のマイル·クーポン割引と<b>併用不可</b> — 最も大きい割引1つのみ適用。','Event coupons: up to <b>50% of order</b> AND <b>max $50</b> (=5K JPY/50K KRW). <b>Cannot stack</b> with PRO 10% discount or other mileage/coupons — only the largest single discount applies.')}
+        <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
+          * ${tr('모든 할인은 중복사용 불가','すべての割引は併用不可','All discounts cannot stack — pick one')}
         </div>
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; margin-top:8px;">
-          <input type="checkbox" id="soUseDepositAll" onchange="window._soOnWalletChange()">
-          <span>${tr('예치금 전액 사용','預り金を全額使用','Use full deposit')} <b id="soOwnDeposit" style="color:#0e7490;">0원</b></span>
-        </label>
+        <!-- legacy hidden inputs — 기존 코드 호환용 (값은 _soOnDiscountSelect 에서 동기화) -->
+        <input id="soUseMileage" type="hidden" value="0">
+        <input id="soUseDepositAll" type="checkbox" style="display:none;">
         <div id="soWalletExcludedMsg" style="display:none; font-size:11px; color:#ef4444; margin-top:6px;">${tr('* 이벤트 쿠폰 사용 불가 상품이 포함되어 있습니다.','* クーポン利用不可の商品が含まれています。','* Cart contains items where event coupon cannot be used.')}</div>
       </div>
 
@@ -7634,7 +7665,9 @@ html, body { background: #ffffff !important; }
                     state.selectedAddons = _ln.selectedAddons || {};
                     state.addonQuantities = _ln.addonQuantities || {};
                     state.baseStands = _ln.baseStands || {};
-                    state.bundleShipping = true;  // 큐 라인 = 묶음배송
+                    // 2026-06-01: 현재 라인 push 가 skip 됐다면 첫 번째 큐 라인이 배송비 캐리어 (수도권 설치 등)
+                    //   _skipCurrent && _li===0 → bundleShipping=false (배송비 보존). 나머지는 묶음.
+                    state.bundleShipping = (_skipCurrent && _li === 0) ? false : true;
                     // 모드별 추가 state 복원
                     if (_ln.isAdPrint || _ln.wMm) {
                         state.customW = _ln.wMm / 10;
@@ -8447,81 +8480,110 @@ html, body { background: #ffffff !important; }
     window._soWallet = { ready: false };
     window._soInitWallet = async function () {
         var box = document.getElementById('soCoWalletBox');
-        window._soWallet = { ready: false };
+        window._soWallet = { ready: false, discChoice: null };
         if (box) box.style.display = 'none';
         var bd = document.getElementById('soCoWalletBreakdown'); if (bd) bd.innerHTML = '';
-        var inp = document.getElementById('soUseMileage'); if (inp) inp.value = '';
+        var inp = document.getElementById('soUseMileage'); if (inp) inp.value = '0';
         var chk = document.getElementById('soUseDepositAll'); if (chk) chk.checked = false;
+        // 라디오 전부 해제
+        document.querySelectorAll('input[name="soDiscChoice"]').forEach(function(r){ r.checked = false; });
         if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
         var sb = getSb(); if (!sb) return;
         var uid = null;
         try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
         if (!uid) return; // 비로그인 → 숨김
+        // 2026-06-01: event_coupon 컬럼 분리 — mileage(legacy 5%) / event_coupon(50%, 50k cap) / deposit
         var prof = null;
-        try { var r = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
-        if (!prof) return;
+        try { var r = await sb.from('profiles').select('mileage, deposit, event_coupon').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
+        if (!prof) {
+            // event_coupon 컬럼 미적용 환경 — mileage/deposit 만으로 fallback
+            try { var r2 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r2.data; } catch (e) {}
+            if (!prof) return;
+            prof.event_coupon = 0;
+        }
         var mileageBal = parseInt(prof.mileage || 0) || 0;
         var depositBal = parseInt(prof.deposit || 0) || 0;
-        if (mileageBal <= 0 && depositBal <= 0) return; // 둘 다 없으면 숨김
+        var eventCouponBal = parseInt(prof.event_coupon || 0) || 0;
+        var isPro = !!window.isProSubscriber;
+        if (mileageBal <= 0 && depositBal <= 0 && eventCouponBal <= 0 && !isPro) return; // 모두 없으면 숨김
         var cart = _soReadAllCart();
         var excludedSet = window.excludedCategoryCodes || new Set();
         var excluded = false;
         cart.forEach(function (it) { if (it.product && excludedSet.has(it.product.category)) excluded = true; });
         var calc = _soCalcCartTotal(cart);
-        // 2026-06-01: 이벤트 쿠폰 사용 한도 — 구매금액의 50% AND 절대 50,000원 한도 둘 다 적용 (사용자 요청)
-        //   잔액·주문×50%·50,000 셋 중 가장 작은 값
-        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.5), 50000);
-        window._soWallet = { ready: true, userId: uid, mileageBalKRW: mileageBal, depositBalKRW: depositBal, capKRW: capKRW, excluded: excluded };
-        var elOwnM = document.getElementById('soOwnMileage'); if (elOwnM) elOwnM.textContent = mileageBal.toLocaleString() + ' P';
-        var elMax = document.getElementById('soMileageMax'); if (elMax) elMax.textContent = capKRW.toLocaleString();
-        var elOwnD = document.getElementById('soOwnDeposit'); if (elOwnD) elOwnD.textContent = depositBal.toLocaleString() + '원';
-        var mInp = document.getElementById('soUseMileage');
-        if (mInp) { mInp.max = capKRW; mInp.disabled = (capKRW <= 0); }
+        var taxBase = calc.taxBase || 0;
+        // 4 옵션별 최대 가능 할인액 산출
+        // 1) 이벤트 쿠폰: 잔액 vs 주문×50% vs 50,000 셋 중 최소
+        var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(taxBase * 0.5), 50000);
+        // 2) 마일리지(legacy 5%): 잔액 vs 주문×5%
+        var mileageMax = excluded ? 0 : Math.min(mileageBal, Math.floor(taxBase * 0.05));
+        // 3) 예치금: 잔액 vs 주문 전액
+        var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || taxBase));
+        // 4) PRO 구독자 10%
+        var proMax = isPro ? Math.floor(taxBase * 0.1) : 0;
+
+        window._soWallet = {
+            ready: true, userId: uid,
+            mileageBalKRW: mileageBal, depositBalKRW: depositBal, eventCouponBalKRW: eventCouponBal,
+            eventMax: eventMax, mileageMax: mileageMax, depositMax: depositMax, proMax: proMax,
+            // legacy 호환: capKRW = 가장 큰 사용 가능값 (라디오로 선택된 것에 따라 동적 변경)
+            capKRW: 0, discChoice: null, excluded: excluded
+        };
+        // 각 카드 표시 갱신
+        var setCard = function(disc, amtId, hintId, balance, maxApply, label, suffix){
+            var amtEl = document.getElementById(amtId);
+            var hintEl = document.getElementById(hintId);
+            var card = document.querySelector('.so-disc-card[data-disc="' + disc + '"]');
+            var radio = card ? card.querySelector('input[type=radio]') : null;
+            var disable = (balance <= 0 && disc !== 'pro') || (disc === 'pro' && !isPro) || (maxApply <= 0);
+            if (card) {
+                card.style.opacity = disable ? '0.45' : '1';
+                card.style.cursor = disable ? 'not-allowed' : 'pointer';
+            }
+            if (radio) radio.disabled = disable;
+            if (amtEl) amtEl.textContent = disable ? '-' : ('-' + maxApply.toLocaleString() + suffix);
+            if (hintEl) hintEl.textContent = label;
+        };
+        setCard('event_coupon', 'soDiscEventAmount', 'soDiscEventHint', eventCouponBal, eventMax,
+            tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('50% / 50K 한도','50% / 50K上限','50% / 50K cap'),
+            ' P');
+        setCard('mileage', 'soDiscMileageAmount', 'soDiscMileageHint', mileageBal, mileageMax,
+            tr('보유 ','残高 ','Bal ') + mileageBal.toLocaleString() + ' · 5%',
+            ' P');
+        setCard('deposit', 'soDiscDepositAmount', 'soDiscDepositHint', depositBal, depositMax,
+            tr('보유 ','残高 ','Bal ') + depositBal.toLocaleString() + ' · ' + tr('전액 사용','全額','full'),
+            '원');
+        setCard('pro', 'soDiscProAmount', 'soDiscProHint', isPro ? 1 : 0, proMax,
+            isPro ? tr('주문의 10%','注文金額の10%','10% of order') : tr('미구독','未加入','Not subscribed'),
+            '원');
         var exMsg = document.getElementById('soWalletExcludedMsg'); if (exMsg) exMsg.style.display = excluded ? '' : 'none';
-        var dChk = document.getElementById('soUseDepositAll'); if (dChk) dChk.disabled = (depositBal <= 0);
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
     };
-    // 사용액(KRW) 산출 — 클램프 + PRO 구독자 할인과 mutex 처리 (사용자 요청 2026-06-01).
-    //   "모든 마일리지·쿠폰 할인은 PRO 10% 할인과 중복 불가, 가장 큰 할인만 적용."
-    //   - 사용자가 입력한 쿠폰이 PRO 할인보다 크면 → 쿠폰 적용, PRO 자동 제외
-    //   - 사용자가 입력한 쿠폰이 PRO 할인보다 작거나 같으면 → 쿠폰 무시, PRO 유지
-    //   반환값: { useMileage: 실제 적용 쿠폰액, useDeposit, requestedMileage: 사용자 입력값, proSuppressed: PRO 제외 여부, mileageRejected: 쿠폰 무시 여부 }
+    // 2026-06-01: 4박스 라디오 mutex — 선택된 1개의 할인만 사용.
+    //   _soWallet.discChoice ∈ { null, 'event_coupon', 'mileage', 'deposit', 'pro' }
+    //   _soGetWalletUseKRW 는 선택값에 따라 useMileage / useDeposit / proSuppressed 산출.
+    //   - 'event_coupon' : useMileage = eventMax, 잔액은 profiles.event_coupon 에서 차감 (소스 표시)
+    //   - 'mileage'      : useMileage = mileageMax (legacy 5%), 잔액은 profiles.mileage 에서 차감
+    //   - 'deposit'      : useDeposit = depositMax
+    //   - 'pro'          : useMileage=0, useDeposit=0. PRO 할인 그대로 유지 (suppress 안 함)
+    //   - null           : 아무것도 안 씀, PRO 가 있으면 PRO 자동 적용
     function _soGetWalletUseKRW(grand) {
         var st = window._soWallet || {};
-        if (!st.ready) return { useMileage: 0, useDeposit: 0, requestedMileage: 0, proSuppressed: false, mileageRejected: false };
-        var proDisc = window._soCheckoutProDisc || 0;
-        var requested = 0;
-        if (!st.excluded) {
-            var inp = document.getElementById('soUseMileage');
-            var v = inp ? (parseInt(inp.value, 10) || 0) : 0;
-            requested = Math.max(0, Math.min(v, st.capKRW || 0, st.mileageBalKRW || 0));
-        }
-        // mutex 적용
-        var useMileage = 0, proSuppressed = false, mileageRejected = false;
-        if (requested > 0) {
-            if (requested > proDisc) {
-                useMileage = requested;
-                proSuppressed = (proDisc > 0);
-            } else {
-                useMileage = 0;
-                mileageRejected = (proDisc > 0);
-            }
-        }
-        var useDeposit = 0;
-        var chk = document.getElementById('soUseDepositAll');
-        if (chk && chk.checked) {
-            // PRO 제외된 경우 grand 에 PRO 만큼 다시 더해야 정확한 남은 금액 계산됨
-            var grandForDeposit = proSuppressed ? (grand + proDisc) : grand;
-            useDeposit = Math.min(st.depositBalKRW || 0, Math.max(0, grandForDeposit - useMileage));
-        }
-        return { useMileage: useMileage, useDeposit: useDeposit, requestedMileage: requested, proSuppressed: proSuppressed, mileageRejected: mileageRejected };
+        if (!st.ready) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
+        if (st.excluded) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
+        var choice = st.discChoice;
+        if (choice === 'event_coupon') return { useMileage: st.eventMax || 0, useDeposit: 0, source:'event_coupon', proSuppressed: !!window._soCheckoutProDisc };
+        if (choice === 'mileage')      return { useMileage: st.mileageMax || 0, useDeposit: 0, source:'mileage', proSuppressed: !!window._soCheckoutProDisc };
+        if (choice === 'deposit')      return { useMileage: 0, useDeposit: st.depositMax || 0, source:'deposit', proSuppressed: !!window._soCheckoutProDisc };
+        if (choice === 'pro')          return { useMileage: 0, useDeposit: 0, source:'pro', proSuppressed: false };  // PRO 가 자동 적용 — suppress 안 함
+        return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };  // 미선택 — PRO 가 있으면 자동 적용 그대로
     }
     function _soApplyWalletToTotal() {
         var grand = window._soCheckoutGrandTotal || 0;
         var proDisc = window._soCheckoutProDisc || 0;
         var w = _soGetWalletUseKRW(grand);
-        // grand 는 이미 PRO 할인이 빠진 상태. 쿠폰이 PRO 보다 크면 PRO 를 복구 (더하기) 한 뒤 쿠폰 차감.
+        // grand 는 이미 PRO 할인이 빠진 상태. 사용자가 event_coupon/mileage/deposit 을 골랐다면 PRO 가 제외되므로 복원
         var grandAdjusted = w.proSuppressed ? (grand + proDisc) : grand;
         var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit);
         var totalEl = document.getElementById('soCoTotalAmt');
@@ -8529,15 +8591,19 @@ html, body { background: #ffffff !important; }
         var bd = document.getElementById('soCoWalletBreakdown');
         if (bd) {
             var html = '';
-            if (w.useMileage > 0) html += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('🎁 이벤트 쿠폰 사용','🎁 イベントクーポン使用','🎁 Event coupon') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
-            if (w.proSuppressed) {
-                html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 쿠폰 사용으로 자동 제외','PRO 10%割引 — クーポン使用により自動除外','PRO 10% — auto-excluded by coupon') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
+            if (w.source === 'event_coupon' && w.useMileage > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#b45309;"><span>· 🎁 ' + tr('이벤트 쿠폰 사용','イベントクーポン使用','Event coupon') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
             }
-            if (w.mileageRejected) {
-                html += '<div style="display:flex; justify-content:space-between; color:#92400e; font-size:11.5px; background:#fef3c7; padding:4px 6px; border-radius:4px;"><span>⚠️ ' + tr('쿠폰 입력액이 PRO 할인보다 작아 무시됨 (PRO 할인 유지)','クーポン入力額がPRO割引より小さく無視 (PRO割引維持)','Coupon below PRO discount — ignored (PRO kept)') + '</span><span>' + _soFormatPrice(w.requestedMileage) + ' → 0</span></div>';
+            if (w.source === 'mileage' && w.useMileage > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#4338ca;"><span>· ⭐ ' + tr('마일리지 사용','マイル使用','Mileage') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
             }
-            if (w.useDeposit > 0) html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
-            // 2026-05-22: 예치금/마일리지가 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
+            if (w.source === 'deposit' && w.useDeposit > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· 💰 ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
+            }
+            if (w.proSuppressed && proDisc > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 위 할인 선택으로 자동 제외','PRO 10%割引 — 上記割引選択により自動除外','PRO 10% — auto-excluded by selected discount') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
+            }
+            // 마일리지/예치금이 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
             if ((w.useMileage > 0 || w.useDeposit > 0) && finalAmt > 0) {
                 var _pm = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'card';
                 var _pmLabel = _pm === 'bank' ? tr('무통장 입금','銀行振込','Bank transfer') : tr('카드','カード','Card');
@@ -8546,23 +8612,22 @@ html, body { background: #ffffff !important; }
             bd.innerHTML = html;
         }
     }
-    window._soOnWalletChange = function () {
-        var st = window._soWallet || {};
-        var inp = document.getElementById('soUseMileage');
-        if (inp && st.ready) {
-            var v = parseInt(inp.value, 10) || 0;
-            var maxv = Math.min(st.capKRW || 0, st.mileageBalKRW || 0);
-            if (v > maxv) inp.value = maxv;
-            else if (v < 0) inp.value = 0;
-        }
+    // 라디오 선택 → discChoice 저장 → UI 갱신
+    window._soOnDiscountSelect = function() {
+        var sel = document.querySelector('input[name="soDiscChoice"]:checked');
+        var v = sel ? sel.value : null;
+        if (!window._soWallet) window._soWallet = { ready:false };
+        window._soWallet.discChoice = v;
+        // 시각 강조 — 선택된 카드 굵게
+        document.querySelectorAll('.so-disc-card').forEach(function(c){
+            var isSel = (c.dataset.disc === v);
+            c.style.boxShadow = isSel ? '0 0 0 3px rgba(99,102,241,0.25)' : 'none';
+        });
         _soApplyWalletToTotal();
     };
-    window._soFillMaxMileage = function () {
-        var st = window._soWallet || {};
-        var inp = document.getElementById('soUseMileage');
-        if (inp && st.ready) inp.value = Math.min(st.capKRW || 0, st.mileageBalKRW || 0);
-        window._soOnWalletChange();
-    };
+    // 2026-06-01: legacy handlers — 4박스 라디오로 대체됨. no-op 으로 유지 (외부 호출 호환).
+    window._soOnWalletChange = function () { _soApplyWalletToTotal(); };
+    window._soFillMaxMileage = function () { /* deprecated — radio UI */ };
 
     window._soOpenCheckout = function () {
         var cart = _soReadAllCart();
@@ -9438,14 +9503,34 @@ html, body { background: #ffffff !important; }
                 newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
             }
 
-            // 2026-05-22: 마일리지/예치금 차감 + 원장(wallet_logs) 기록 — 주문 생성 직후 (order.js 와 동일 스키마)
+            // 2026-06-01: 선택된 할인 소스에 따라 차감 컬럼 분기.
+            //   - source='event_coupon' → profiles.event_coupon 에서 차감
+            //   - source='mileage'      → profiles.mileage 에서 차감 (legacy)
+            //   - source='deposit'      → profiles.deposit 에서 차감
+            //   - source='pro'/null     → 차감 없음 (PRO 는 자동 적용)
+            var _walletSource = (window._soWallet && window._soWallet.discChoice) || null;
             if (_walletUid && (_useMileage > 0 || _useDeposit > 0)) {
                 try {
-                    if (_useMileage > 0) {
-                        var _mr = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
-                        var _cm = parseInt((_mr.data && _mr.data.mileage) || 0) || 0;
-                        await sb.from('profiles').update({ mileage: Math.max(0, _cm - _useMileage) }).eq('id', _walletUid);
-                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useMileage, description: '간편주문 결제 사용 (주문번호: ' + newOrderId + ')' });
+                    if (_useMileage > 0 && _walletSource === 'event_coupon') {
+                        // 이벤트 쿠폰 컬럼에서 차감
+                        var _ecRow = null;
+                        try { var _ecR = await sb.from('profiles').select('event_coupon').eq('id', _walletUid).maybeSingle(); _ecRow = _ecR.data; } catch(e) {}
+                        var _ce = parseInt((_ecRow && _ecRow.event_coupon) || 0) || 0;
+                        if (_ecRow && 'event_coupon' in _ecRow) {
+                            await sb.from('profiles').update({ event_coupon: Math.max(0, _ce - _useMileage) }).eq('id', _walletUid);
+                        } else {
+                            // 컬럼 미적용 환경 — mileage 에서 fallback 차감
+                            var _mr = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
+                            var _cm = parseInt((_mr.data && _mr.data.mileage) || 0) || 0;
+                            await sb.from('profiles').update({ mileage: Math.max(0, _cm - _useMileage) }).eq('id', _walletUid);
+                        }
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'event_coupon_use', amount: -_useMileage, description: '간편주문 이벤트 쿠폰 사용 (주문번호: ' + newOrderId + ')' });
+                    } else if (_useMileage > 0 && _walletSource === 'mileage') {
+                        // 일반 마일리지 차감
+                        var _mr2 = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
+                        var _cm2 = parseInt((_mr2.data && _mr2.data.mileage) || 0) || 0;
+                        await sb.from('profiles').update({ mileage: Math.max(0, _cm2 - _useMileage) }).eq('id', _walletUid);
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useMileage, description: '간편주문 마일리지 사용 (주문번호: ' + newOrderId + ')' });
                     }
                     if (_useDeposit > 0) {
                         var _dr = await sb.from('profiles').select('deposit').eq('id', _walletUid).maybeSingle();
@@ -9455,7 +9540,7 @@ html, body { background: #ffffff !important; }
                     }
                 } catch (we) {
                     console.error('[so wallet deduct]', we);
-                    try { await sb.from('orders').update({ admin_note: adminNote + '\n[경고] 마일리지/예치금 차감 실패 — 수동 확인 필요: ' + (we.message || we) }).eq('id', newOrderId); } catch (e2) {}
+                    try { await sb.from('orders').update({ admin_note: adminNote + '\n[경고] 마일리지/쿠폰/예치금 차감 실패 — 수동 확인 필요: ' + (we.message || we) }).eq('id', newOrderId); } catch (e2) {}
                 }
             }
 
