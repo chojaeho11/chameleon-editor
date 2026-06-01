@@ -1588,7 +1588,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-06-01: 가벽 형태 — 작고 세련된 원형 버튼. 활성시 인디고 그라데이션 + 내부 도형 흰색. -->
         <div class="so-section" id="soWallShapeSection" style="display:none;">
-          <div class="so-section-title">${tr('가벽 형태', '壁面の形状', 'Wall Shape')}</div>
+          <div class="so-section-title">${tr('위에서 본 공간 모양', '上から見た空間の形', 'Floor-plan layout')}</div>
           <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; padding:4px 0;">
             <button type="button" class="so-wall-shape-btn active" data-shape="straight" onclick="window._soPickWallShape('straight')"
               style="background:none; border:none; padding:4px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
