@@ -760,6 +760,12 @@ window._cdSelectBgColor = function(hex, btnEl) {
 // ════════════════════════════════════════════════════
 // 회배 계산기 + 수량
 // ════════════════════════════════════════════════════
+// 2026-06-01: 출력 사이즈 input — 가로/세로 한 곳만 입력해도 다른 값은 업로드 이미지 비율(state.imgAspect)에 따라 자동 계산.
+//   _cdCalcHoebae 가 centered 레이아웃 + state.imgAspect 있을 때 이미 자동 계산 로직 보유 → 그대로 위임.
+window._cdOnOrderSizeInput = function(which) {
+    if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
+};
+
 window._cdCalcHoebae = function() {
     const wEl = document.getElementById('orderWcm');
     const hEl = document.getElementById('orderHcm');

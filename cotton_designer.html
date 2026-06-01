@@ -1137,8 +1137,25 @@ a { text-decoration: none; color: inherit; }
     <!-- 우측: 옵션 사이드바 -->
     <aside class="sidebar">
 
-        <!-- 2026-06-01: 출력 사이즈 (최상단으로 이동) + 인라인 파일 업로드 카드.
-             기존 outputSizeCard/rollCard 의 본체 정의는 그대로 두고, 여기로 DOM 이동시킴 (cotton_designer.js 가 _cdSelectLayout 에서 둘 다 토글). -->
+        <!-- 2026-06-01: 파일 업로드 최상단 → 출력 사이즈 → 롤폭 (패턴) → 원단 선택 순. -->
+
+        <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 최상단. 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기. -->
+        <div class="side-card" id="sideUploadCard">
+            <div class="side-card-title">
+                <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
+                <span data-cdi18n="side_upload">디자인 파일 업로드</span>
+            </div>
+            <button type="button" onclick="document.getElementById('btnUpload').click()"
+                style="width:100%; padding:14px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:16px;"></i>
+                <span data-cdi18n="side_upload_btn">파일 업로드 (PDF · PNG · JPG)</span>
+            </button>
+            <div id="sideUploadInfo" style="display:none; margin-top:8px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
+            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                <span data-cdi18n="side_upload_hint">올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.</span>
+            </div>
+        </div>
 
         <!-- 출력 사이즈 + 회배 계산기 (대폭 1300mm 기준) — 패브릭포스터 전용. 모드 토글은 JS 가 담당. -->
         <div class="side-card" id="outputSizeCard">
@@ -1146,14 +1163,18 @@ a { text-decoration: none; color: inherit; }
                 <span data-cdi18n="side_output">출력 사이즈 (실제 출력)</span>
                 <span style="font-size:10px; font-weight:600; color:var(--text-light);" data-cdi18n="side_output_max">대폭 1300mm</span>
             </div>
+            <div style="font-size:11.5px; color:#1e40af; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.5; font-weight:700;">
+                <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i>
+                <span data-cdi18n="output_size_hint">가로 또는 세로 한 곳만 입력하시면 다른 값은 업로드 이미지 비율에 따라 자동 계산됩니다.</span>
+            </div>
             <div class="size-controls">
                 <div class="size-input-group">
                     <label data-cdi18n="width_max">가로 (mm)</label>
-                    <input type="number" class="size-input" id="orderWcm" value="1300" min="100" max="10000" step="1" oninput="window._cdCalcHoebae()">
+                    <input type="number" class="size-input" id="orderWcm" value="1300" min="100" max="10000" step="1" oninput="window._cdOnOrderSizeInput('w')">
                 </div>
                 <div class="size-input-group">
                     <label data-cdi18n="height_unl">세로 (mm) — 무제한</label>
-                    <input type="number" class="size-input" id="orderHcm" value="1000" min="100" step="1" oninput="window._cdCalcHoebae()">
+                    <input type="number" class="size-input" id="orderHcm" value="1000" min="100" step="1" oninput="window._cdOnOrderSizeInput('h')">
                 </div>
             </div>
             <div id="seamNotice" data-cdi18n="seam_notice" style="display:none; margin-top:8px; padding:8px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; font-size:11px; font-weight:700; color:#92400e;">⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)</div>
@@ -1205,23 +1226,7 @@ a { text-decoration: none; color: inherit; }
             <div style="font-size:11px; color:var(--text-light); margin-top:8px; line-height:1.5;" data-cdi18n="roll_hint">1마 = 약 91cm. 100마 이상 주문 시 자동 50% 할인 적용.</div>
         </div>
 
-        <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기 -->
-        <div class="side-card" id="sideUploadCard">
-            <div class="side-card-title">
-                <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
-                <span data-cdi18n="side_upload">디자인 파일 업로드</span>
-            </div>
-            <button type="button" onclick="document.getElementById('btnUpload').click()"
-                style="width:100%; padding:14px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size:16px;"></i>
-                <span data-cdi18n="side_upload_btn">파일 업로드 (PDF · PNG · JPG)</span>
-            </button>
-            <div id="sideUploadInfo" style="display:none; margin-top:8px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
-            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
-                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                <span data-cdi18n="side_upload_hint">올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.</span>
-            </div>
-        </div>
+        <!-- 2026-06-01: sideUploadCard 는 사이드바 최상단으로 이동했습니다. -->
 
         <!-- 원단 선택 (8종 고정) -->
         <div class="side-card">
