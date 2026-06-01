@@ -1579,6 +1579,11 @@ html, body { background: #ffffff !important; }
               </button>
             </div>
           </div>
+          <!-- 2026-06-01: 광고인쇄 배송 안내 배너 — isAdPrint 일 때만 노출 (_soApplyAdPrintLayout 에서 토글) -->
+          <div id="soAdShipNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:10px; font-size:12px; font-weight:700; color:#1e40af; line-height:1.5; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
+            <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 <b>1만원</b> 자동 적용', 'ご注文合計 <b>10万円以上 送料無料</b> · 未満 <b>1万円</b> 自動適用', 'Free shipping over ₩100k · ₩10k under (auto)')}</span>
+          </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
@@ -2731,10 +2736,10 @@ html, body { background: #ffffff !important; }
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint);
         if (state.isAdPrint) {
             if (shipFee === 0) {
-                setText('soShipLabel', tr('배송비 (10만원 이상 무료)', '送料 (10万円以上無料)', 'Shipping (free over ₩100k)'));
+                setText('soShipLabel', tr('배송비 · 10만원+ 무료 적용', '送料 · 10万+ 無料適用', 'Shipping · free over ₩100k'));
                 setText('soShipAmount', tr('무료', '無料', 'FREE'));
             } else {
-                setText('soShipLabel', tr('배송비 (10만원 미만)', '送料 (10万円未満)', 'Shipping (under ₩100k)'));
+                setText('soShipLabel', tr('배송비 · 10만원+ 무료 / 미만 1만원', '送料 · 10万+ 無料 / 未満 1万円', 'Shipping · free over ₩100k / under ₩10k'));
                 setText('soShipAmount', '+' + fmtPrice(shipFee));
             }
         } else if (state.isBestGoods) {
@@ -3445,7 +3450,7 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-01: 광고인쇄 — 모달 내 현재 + 큐 라인 합계 기준. 10만원 이상 무료, 미만 3만원.
+        // 2026-06-01: 광고인쇄 — 모달 내 현재 + 큐 라인 합계 기준. 10만원 이상 무료, 미만 1만원.
         if (state.isAdPrint) {
             state._shipUpgradeReason = null;
             var adSub = (state.customUnitPrice || 0) * (state.qty || 1);
@@ -3460,7 +3465,7 @@ html, body { background: #ffffff !important; }
             (state._adLines || []).forEach(function(line){
                 adSub += (line.lineTotal || 0);
             });
-            return adSub >= 100000 ? 0 : 30000;
+            return adSub >= 100000 ? 0 : 10000;
         }
         var method = state.shipMethod || 'self_pickup';
         // 2026-05-30: 원판 — 수도권 10장 이상 무료/미만 10만, 지방 100장 이상 무료/미만 20만
@@ -5991,8 +5996,11 @@ html, body { background: #ffffff !important; }
                 //   renderUploadDone 이 좌측 #soUpload 에 미리보기 표시). 사용자가 우측 인라인 + 좌측 프리뷰 동시 사용.
                 if (_leftUpload) _leftUpload.style.display = '';
                 if (_leftUploadLabel) _leftUploadLabel.style.display = '';
-                // 2026-06-01: 광고인쇄 시공/배송 옵션 자체 숨김 — 카트 합계 기준 자동 룰 적용 (10만+ 무료, 미만 3만)
+                // 2026-06-01: 광고인쇄 시공/배송 옵션 자체 숨김 — 카트 합계 기준 자동 룰 적용 (10만+ 무료, 미만 1만원)
                 if (_schedSec) _schedSec.style.display = 'none';
+                // 광고인쇄 배송 안내 배너 (사이즈 카드 상단에 표시)
+                var _shipNotice = document.getElementById('soAdShipNotice');
+                if (_shipNotice) _shipNotice.style.display = 'flex';
                 state.shipMethod = 'ad_print_threshold';  // 가짜 키 — _soComputeShipFee 가 분기 처리
                 // flex order — size → qty → addon → multi (addon 직후) → 가격/장바구니. shipping 은 숨김.
                 _custSec.style.order = '-200';
@@ -6031,6 +6039,9 @@ html, body { background: #ffffff !important; }
                 var _lp2 = document.getElementById('soAdLinePreviews');
                 if (_lpw2) _lpw2.style.display = 'none';
                 if (_lp2) _lp2.innerHTML = '';
+                // 광고인쇄 배송 안내 배너 숨김
+                var _shipNotice2 = document.getElementById('soAdShipNotice');
+                if (_shipNotice2) _shipNotice2.style.display = 'none';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
@@ -6045,7 +6056,8 @@ html, body { background: #ffffff !important; }
         var schedSec = document.getElementById('soScheduleSection');
         // 2026-05-15: 금액주문은 배송 개념 자체가 없음 — 시공/배송 섹션 강제 숨김
         // 2026-05-29: 베스트굿즈 전체 (10종) — 시공/배송 옵션 자체 비표시, 3천원 정액 배송비
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+        // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
@@ -7302,7 +7314,7 @@ html, body { background: #ffffff !important; }
             var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
         }
-        // 2026-06-01: 광고인쇄 카트 합계 룰 — 모든 ad-print 항목 상품가 합계 10만 이상 무료 / 미만 30,000원 (단일 통합).
+        // 2026-06-01: 광고인쇄 카트 합계 룰 — 모든 ad-print 항목 상품가 합계 10만 이상 무료 / 미만 10,000원 (단일 통합).
         //   per-item 으로 저장된 shipping.fee 는 무시하고 카트 합계 기준 재계산.
         var _adItems = cart.filter(function(it){ return it && it._isAdPrint; });
         if (_adItems.length > 0) {
@@ -7314,7 +7326,7 @@ html, body { background: #ffffff !important; }
                 // 기존 shipping.fee 가 shipTotal 에 합산됐다면 빼기
                 shipTotal -= _itShip;
             });
-            if (_adProductSub < 100000) shipTotal += 30000;
+            if (_adProductSub < 100000) shipTotal += 10000;
             // 10만 이상이면 0 추가 = 무료
         }
         var amountPct = 0;
