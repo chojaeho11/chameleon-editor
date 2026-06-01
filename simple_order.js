@@ -2540,15 +2540,28 @@ html, body { background: #ffffff !important; }
         const shipFee = _soComputeShipFee();
         state.shipFee = shipFee;
 
-        // 2026-06-01: 광고인쇄 — 큐에 담긴 이전 라인들 합계 (각 라인 = 사이즈×수량 + 옵션 합)
+        // 2026-06-01: 멀티-라인 큐 — 광고인쇄 + 허니콤보드. 각 라인 = 사이즈×수량 + 옵션 합.
         let adExtraLinesTotal = 0;
         const adExtraLinesBreakdown = [];
-        if (state.isAdPrint && Array.isArray(state._adLines)) {
+        if ((state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines)) {
             state._adLines.forEach(function(line, i) {
                 const lineSub = line.lineTotal || ((line.unitPrice || 0) * (line.qty || 0));
                 adExtraLinesTotal += lineSub;
+                // 모드별 사이즈 라벨
+                let _lbl = '';
+                if (line.isWall) {
+                    _lbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm' +
+                           (line.wallSide === 'double' ? ' · ' + tr('양면','両面','double') : '');
+                } else if (line.isBox) {
+                    _lbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+                } else if (line.isCutPrint) {
+                    _lbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full')) +
+                           (line.wallSide === 'double' ? ' · ' + tr('양면','両面','double') : '');
+                } else {
+                    _lbl = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
+                }
                 adExtraLinesBreakdown.push(
-                    '<div class="so-price-row"><span>· #' + (i + 1) + ' ' + line.wMm + '×' + line.hMm + 'mm × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
+                    '<div class="so-price-row"><span>· #' + (i + 1) + ' ' + _lbl + ' × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
                 );
             });
         }
@@ -4350,18 +4363,22 @@ html, body { background: #ffffff !important; }
         recalc();
     };
 
-    // 2026-06-01: 광고인쇄 — 큐 시스템.
-    //   현재 활성 라인 = state.customW/H/qty/file/selectedAddons.
+    // 2026-06-01: 멀티-라인 큐 시스템 — 광고인쇄 + 허니콤보드 (가벽/박스/자유인쇄커팅/등신대) 공용.
+    //   현재 활성 라인 = state 의 size/qty/file/addons + (가벽이면 wallSize, 박스면 boxSize, 자유인쇄면 cutSize) 등.
     //   "+다른 사이즈도 같이주문" → 현재 라인을 state._adLines 에 스냅샷 → 입력 초기화.
     //   최종 장바구니에 담기 = 큐 + 현재 활성 라인을 각각 별도 cart item 으로 push.
     window._soAdQueueCurrent = function() {
-        if (!state.isAdPrint) return;
+        if (!state.isAdPrint && !state.isHoneycomb) return;
         state._adLines = state._adLines || [];
-        // 현재 라인 검증
-        if (!state.customUnitPrice || (state.customW || 0) < 10 || (state.customH || 0) < 10) {
-            try { alert(tr('사이즈를 먼저 입력해 주세요.','サイズを入力してください。','Please enter size first.')); } catch(e) {}
-            return;
+        // 현재 라인 검증 — 상품 타입별
+        if (state.isAdPrint) {
+            if (!state.customUnitPrice || (state.customW || 0) < 10 || (state.customH || 0) < 10) {
+                try { alert(tr('사이즈를 먼저 입력해 주세요.','サイズを入力してください。','Please enter size first.')); } catch(e) {}
+                return;
+            }
         }
+        // (허니콤보드는 wall/box/cut 자체 검증을 가짐 — 큐 추가 단계에선 강제 검증 X. recalc 결과로 충분.)
+
         // 추가옵션 합산
         var addonsTotal = 0;
         Object.values(state.selectedAddons || {}).forEach(function(code){
@@ -4370,18 +4387,78 @@ html, body { background: #ffffff !important; }
             var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
             addonsTotal += (addon.price || 0) * aQty;
         });
+        // 받침대 옵션도 포함
+        var baseStandFee = 0;
+        if (state.baseStands && typeof state.baseStands === 'object') {
+            try {
+                Object.keys(state.baseStands).forEach(function(bk){
+                    var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
+                    if (o) baseStandFee += (o.fee || 0) * (state.baseStands[bk] || 1);
+                });
+            } catch(e) {}
+        }
+        addonsTotal += baseStandFee;
+
+        // 라인 단가/합계 — 상품 타입별
         var qty = state.qty || 1;
-        var unit = state.customUnitPrice || 0;
-        var lineTotal = unit * qty + addonsTotal;
-        // 스냅샷
+        var unit = 0;
+        var subtotal = 0;
+        if (state.isAdPrint) {
+            unit = state.customUnitPrice || 0;
+            subtotal = unit * qty;
+        } else if (state.isWall) {
+            unit = (state.product && state.product.price) || 0;
+            qty = state.wallWidth || 1;  // 가벽은 가로 m 가 수량
+            subtotal = unit * qty;
+            if (state.wallSide === 'double') subtotal *= 2;
+            if (parseFloat(state.wallHeight) === 3) {
+                var hExt = 50000 * qty;
+                if (state.wallSide === 'double') hExt *= 2;
+                subtotal += hExt;
+            }
+        } else if (state.isBox) {
+            unit = state.boxUnitPrice || 0;
+            subtotal = unit * qty;
+        } else if (state.isCutPrint) {
+            unit = (state.cutSize === 'half') ? 100000 : 150000;
+            subtotal = unit * qty;
+            if (state.wallSide === 'double') subtotal *= 2;
+        } else {
+            unit = (state.product && state.product.price) || 0;
+            subtotal = unit * qty;
+            if (state.isRawBoardDouble) subtotal *= 2;
+        }
+        var lineTotal = subtotal + addonsTotal;
+
+        // 스냅샷 — 모든 모드 공통 + 모드별 추가 필드
         var snapshot = {
             id: 'q_' + state._adLines.length + '_' + Math.floor((state._adLines.length + 1) * 1000),
+            // ad-print 사이즈 (cm 기준 → 표시는 mm)
             wMm: Math.round((state.customW || 0) * 10),
             hMm: Math.round((state.customH || 0) * 10),
             qty: qty,
             unitPrice: unit,
             areaM2: state.customAreaM2 || 0,
+            // 모드 플래그 (cart 재구성용)
+            isAdPrint: !!state.isAdPrint,
+            isWall: !!state.isWall,
+            isBox: !!state.isBox,
+            isCutPrint: !!state.isCutPrint,
+            isRawBoardDouble: !!state.isRawBoardDouble,
+            // 가벽
+            wallWidth: state.wallWidth || null,
+            wallHeight: state.wallHeight || null,
+            wallSide: state.wallSide || 'single',
+            // 박스
+            boxW: state.boxW || null,
+            boxH: state.boxH || null,
+            boxD: state.boxD || null,
+            boxUnitPrice: state.boxUnitPrice || 0,
+            // 자유인쇄커팅
+            cutSize: state.cutSize || null,
+            // 파일
             file: state.file || null,
+            fileBack: state.fileBack || null,
             thumbDataUrl: state.thumbDataUrl || null,
             fileWidthMm: state.fileWidthMm || null,
             fileHeightMm: state.fileHeightMm || null,
@@ -4389,19 +4466,46 @@ html, body { background: #ffffff !important; }
             fileHeightPx: state.fileHeightPx || null,
             fileKind: state.fileKind || null,
             fileName: state.file ? state.file.name : null,
+            // addon 스냅샷
             selectedAddons: Object.assign({}, state.selectedAddons || {}),
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
+            baseStands: Object.assign({}, state.baseStands || {}),
             addonsTotal: addonsTotal,
             lineTotal: lineTotal
         };
         state._adLines.push(snapshot);
-        // 입력 초기화 — 사이즈는 상품 기본값으로 환원, 나머지는 비움
+        // 입력 초기화 — 사이즈/모드별 기본값으로 환원, 나머지는 비움
         var p = state.product || {};
         var defWMm = p.width_mm || 1000;
         var defHMm = p.height_mm || 1000;
         state.customW = defWMm / 10;
         state.customH = defHMm / 10;
         state.qty = 1;
+        // 가벽 → 가로 m 기본 3, 세로 2.4
+        if (state.isWall) {
+            state.wallWidth = 3;
+            state.wallHeight = 2.4;
+            state.wallSide = 'single';
+            var ww = document.getElementById('soWallWidth'); if (ww) ww.value = '3';
+            var wh = document.getElementById('soWallHeight'); if (wh) wh.value = '2.4';
+        }
+        // 박스 → 기본값
+        if (state.isBox) {
+            state.boxW = p.width_mm || 400;
+            state.boxH = p.height_mm || 400;
+            state.boxD = 400;
+            var bw = document.getElementById('soBoxW'); if (bw) bw.value = state.boxW;
+            var bh = document.getElementById('soBoxH'); if (bh) bh.value = state.boxH;
+            var bd = document.getElementById('soBoxD'); if (bd) bd.value = state.boxD;
+        }
+        // 자유인쇄커팅 → full 기본
+        if (state.isCutPrint) {
+            state.cutSize = 'full';
+        }
+        // 받침대 초기화
+        state.baseStands = {};
+        document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){ cb.checked = false; });
+        document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function(qi){ qi.value = 1; });
         state.file = null;
         state.thumbDataUrl = null;
         state.fileWidthMm = null;
@@ -4464,10 +4568,22 @@ html, body { background: #ffffff !important; }
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
             var addonCount = Object.keys(line.selectedAddons || {}).length;
             var addonStr = addonCount > 0 ? ' · +' + addonCount + tr('옵션','option','option') : '';
+            // 모드별 사이즈 라벨
+            var sizeLbl;
+            if (line.isWall) {
+                sizeLbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm' +
+                          (line.wallSide === 'double' ? ' · ' + tr('양면','両面','dbl') : '');
+            } else if (line.isBox) {
+                sizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+            } else if (line.isCutPrint) {
+                sizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+            } else {
+                sizeLbl = line.wMm + '×' + line.hMm + 'mm';
+            }
             div.innerHTML =
                 '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
                 '<div style="flex:1; min-width:0;">' +
-                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.3;">' + line.wMm + '×' + line.hMm + 'mm × ' + line.qty + tr('개','個','pcs') + addonStr + '</div>' +
+                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.3;">' + sizeLbl + ' × ' + line.qty + tr('개','個','pcs') + addonStr + '</div>' +
                     '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
                 '</div>' +
                 '<button type="button" onclick="window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
@@ -4511,6 +4627,11 @@ html, body { background: #ffffff !important; }
                 thumbHtml = '<div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:13px; color:#94a3b8; background:#f8fafc;">' + tr('파일 없음','ファイルなし','no file') + '</div>';
             }
             var fileNameShort = line.fileName ? (line.fileName.length > 14 ? line.fileName.substring(0,12) + '..' : line.fileName) : '';
+            var prSizeLbl;
+            if (line.isWall) prSizeLbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
+            else if (line.isBox) prSizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+            else if (line.isCutPrint) prSizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+            else prSizeLbl = line.wMm + '×' + line.hMm + 'mm';
             return '<div data-preview-line-id="' + line.id + '" style="background:#fff; border:1.5px solid #c7d2fe; border-radius:10px; overflow:hidden; position:relative;">'+
                 '<div style="font-size:10px; font-weight:900; color:#fff; background:#2563eb; padding:3px 8px; display:flex; justify-content:space-between; align-items:center;">'+
                     '<span>#' + (i+1) + '</span>'+
@@ -4518,7 +4639,7 @@ html, body { background: #ffffff !important; }
                 '</div>'+
                 '<div style="aspect-ratio:1/1; overflow:hidden; background:#fff;">' + thumbHtml + '</div>'+
                 '<div style="padding:6px 8px; font-size:10.5px; line-height:1.4;">'+
-                    '<div style="font-weight:800; color:#1e3a8a;">' + line.wMm + '×' + line.hMm + 'mm × ' + line.qty + tr('개','個','pcs') + '</div>'+
+                    '<div style="font-weight:800; color:#1e3a8a;">' + prSizeLbl + ' × ' + line.qty + tr('개','個','pcs') + '</div>'+
                     (fileNameShort ? '<div style="color:#475569; font-size:10px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ' + fileNameShort + '</div>' : '')+
                 '</div>'+
             '</div>';
@@ -5401,6 +5522,8 @@ html, body { background: #ffffff !important; }
         // 가벽 카테고리 감지 (hb_dw_* 또는 hb_display_wall 등)
         state.isWall = _soIsWallProduct(p);
         state.isPhotozone = _soIsPhotozoneProduct(p);
+        // 2026-06-01: 허니콤 전체 감지 — 큐 멀티-라인 시스템 노출 조건에 사용
+        state.isHoneycomb = _soIsHoneycombProduct(p);
         // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_*)
         state.isCutPrint = _soIsCutPrintProduct(p);
         state.cutSize = 'full';
@@ -6025,23 +6148,46 @@ html, body { background: #ffffff !important; }
             } else {
                 if (_tierTable)  _tierTable.style.display  = '';
                 if (_inlineUpload) _inlineUpload.style.display = 'none';
-                if (_multiSec)   _multiSec.style.display   = 'none';
+                // multiSec / 큐 프리뷰는 아래 honeycomb 분기에서 따로 처리 (ad-print 외에 허니콤도 노출)
                 if (_leftUpload && !(state.isRawBoard || state.isAmountOrder)) _leftUpload.style.display = '';
                 if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder)) _leftUploadLabel.style.display = '';
                 // flex order 환원
                 _custSec.style.order = '';
                 if (qtySec) qtySec.style.order = '';
                 if (_multiSec) _multiSec.style.order = '';
-                state._adLines = [];
-                if (_extraLines) _extraLines.innerHTML = '';
-                // 큐 프리뷰 영역도 정리
-                var _lpw2 = document.getElementById('soAdLinePreviewsWrap');
-                var _lp2 = document.getElementById('soAdLinePreviews');
-                if (_lpw2) _lpw2.style.display = 'none';
-                if (_lp2) _lp2.innerHTML = '';
                 // 광고인쇄 배송 안내 배너 숨김
                 var _shipNotice2 = document.getElementById('soAdShipNotice');
                 if (_shipNotice2) _shipNotice2.style.display = 'none';
+            }
+            // 2026-06-01: 허니콤보드 — 같은 멀티-라인 큐 UI 활성화 (가벽/박스/등신대/자유인쇄커팅 등 모든 허니콤 제품).
+            //   ad-print 가 아니어도 honeycomb 이면 "+다른 사이즈도 같이 주문" 노출.
+            //   ad-print 처럼 shipping/order 강제 변경은 안 함 — 가벽은 자체 설치/배송 옵션 유지.
+            if (state.isHoneycomb && !state.isAdPrint) {
+                if (_multiSec) {
+                    _multiSec.style.display = '';
+                    _multiSec.style.order = '';
+                }
+                // 멀티-라인 섹션을 addon 섹션 바로 뒤로 이동
+                if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
+                    _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
+                }
+                state._adLines = [];
+                if (_extraLines) _extraLines.innerHTML = '';
+                var _lpwH = document.getElementById('soAdLinePreviewsWrap');
+                var _lpH = document.getElementById('soAdLinePreviews');
+                var _lpcH = document.getElementById('soAdLinePreviewCount');
+                if (_lpwH) _lpwH.style.display = 'none';
+                if (_lpH) _lpH.innerHTML = '';
+                if (_lpcH) _lpcH.textContent = '0';
+            } else if (!state.isAdPrint) {
+                // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI 끔
+                if (_multiSec) _multiSec.style.display = 'none';
+                state._adLines = [];
+                if (_extraLines) _extraLines.innerHTML = '';
+                var _lpwN = document.getElementById('soAdLinePreviewsWrap');
+                var _lpN = document.getElementById('soAdLinePreviews');
+                if (_lpwN) _lpwN.style.display = 'none';
+                if (_lpN) _lpN.innerHTML = '';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
@@ -6636,15 +6782,19 @@ html, body { background: #ffffff !important; }
                 return true;
             }
             cart.push(item);
-            // 2026-06-01: 광고인쇄 — 큐 라인들도 각각 별도 cart item 으로 push (사이즈/수량/파일/추가옵션 각각 보존)
-            //   배송비는 메인 1라인만 부담. 큐 라인은 bundleShipping=true → 배송 fee=0, method=bundle_shipping (묶음배송).
-            if (state.isAdPrint && Array.isArray(state._adLines) && state._adLines.length > 0) {
+            // 2026-06-01: 멀티-라인 큐 — 광고인쇄 + 허니콤보드 (가벽/박스/자유인쇄커팅/등신대) 공용.
+            //   각 큐 라인을 별도 cart item 으로 push. 큐 라인은 bundleShipping=true → 배송 fee=0.
+            if ((state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines) && state._adLines.length > 0) {
                 var _sav = {
                     w: state.customW, h: state.customH, qty: state.qty,
                     file: state.file, unit: state.customUnitPrice, area: state.customAreaM2,
                     cartThumb: state._cartThumb,
                     addons: state.selectedAddons, addonQty: state.addonQuantities,
-                    bundle: state.bundleShipping
+                    bundle: state.bundleShipping,
+                    wallW: state.wallWidth, wallH: state.wallHeight, wallSide: state.wallSide,
+                    boxW: state.boxW, boxH: state.boxH, boxD: state.boxD, boxUnit: state.boxUnitPrice,
+                    cutSize: state.cutSize,
+                    baseStands: state.baseStands
                 };
                 for (var _li = 0; _li < state._adLines.length; _li++) {
                     var _ln = state._adLines[_li];
@@ -6655,19 +6805,38 @@ html, body { background: #ffffff !important; }
                             var _lnRes = await uploadFileGeneric(_ln.file);
                             _lnUrl = _lnRes.url;
                             _lnPath = _lnRes.path;
-                        } catch (_le) { console.warn('[ad queue upload] line', _li, _le); }
+                        } catch (_le) { console.warn('[queue upload] line', _li, _le); }
                     }
-                    // state 를 라인 값으로 임시 덮어쓰기 (size/qty/file/addons + 묶음배송 강제) → buildCartItem → 원복
-                    state.customW = _ln.wMm / 10;
-                    state.customH = _ln.hMm / 10;
+                    // state 를 라인 값으로 임시 덮어쓰기 (모드별) → buildCartItem → 원복
                     state.qty = _ln.qty || 1;
                     state.file = _ln.file;
-                    state.customUnitPrice = _ln.unitPrice;
-                    state.customAreaM2 = _ln.areaM2;
                     state._cartThumb = null;
                     state.selectedAddons = _ln.selectedAddons || {};
                     state.addonQuantities = _ln.addonQuantities || {};
-                    state.bundleShipping = true;  // 큐 라인 = 묶음배송 (메인 라인이 배송비 전체 부담)
+                    state.baseStands = _ln.baseStands || {};
+                    state.bundleShipping = true;  // 큐 라인 = 묶음배송
+                    // 모드별 추가 state 복원
+                    if (_ln.isAdPrint || _ln.wMm) {
+                        state.customW = _ln.wMm / 10;
+                        state.customH = _ln.hMm / 10;
+                        state.customUnitPrice = _ln.unitPrice;
+                        state.customAreaM2 = _ln.areaM2;
+                    }
+                    if (_ln.isWall) {
+                        state.wallWidth = _ln.wallWidth;
+                        state.wallHeight = _ln.wallHeight;
+                        state.wallSide = _ln.wallSide || 'single';
+                    }
+                    if (_ln.isBox) {
+                        state.boxW = _ln.boxW;
+                        state.boxH = _ln.boxH;
+                        state.boxD = _ln.boxD;
+                        state.boxUnitPrice = _ln.boxUnitPrice;
+                    }
+                    if (_ln.isCutPrint) {
+                        state.cutSize = _ln.cutSize || 'full';
+                        if (_ln.wallSide) state.wallSide = _ln.wallSide;
+                    }
                     var _lnItem = buildCartItem(_lnUrl, _lnPath);
                     _lnItem.uid = Date.now() + _li + 1;
                     cart.push(_lnItem);
@@ -6678,6 +6847,10 @@ html, body { background: #ffffff !important; }
                 state._cartThumb = _sav.cartThumb;
                 state.selectedAddons = _sav.addons; state.addonQuantities = _sav.addonQty;
                 state.bundleShipping = _sav.bundle;
+                state.wallWidth = _sav.wallW; state.wallHeight = _sav.wallH; state.wallSide = _sav.wallSide;
+                state.boxW = _sav.boxW; state.boxH = _sav.boxH; state.boxD = _sav.boxD; state.boxUnitPrice = _sav.boxUnit;
+                state.cutSize = _sav.cutSize;
+                state.baseStands = _sav.baseStands;
             }
             writeCart(cart);
             // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
