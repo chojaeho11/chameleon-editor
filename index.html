@@ -8323,7 +8323,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=434"></script>
 <script type="module" src="./main.js?v=442"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=199"></script>
+<script src="/simple_order.js?v=200"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=16"></script>
 
@@ -12328,21 +12328,22 @@ window.showChoiceModal = async function(key) {
                 return data.content || "";
             };
 
-            // 순서: 대분류 공통 → 소분류 공통 → 전체 공통
+            // 순서: 대분류 공통 → 소분류 공통. '전체 공통' 은 catRow/subRow 가 모두 없을 때만 폴백으로 노출.
+            // 2026-06-01: JP 'all' 콘텐츠에 골판지가벽이 들어 있어 모든 상품 하단에 가벽이 붙는 문제 fix.
             let combinedHtml = "";
 
             const catContent = getContentByLang(catData);
+            const subCatContent = getContentByLang(subCatData);
+            const globalContent = getContentByLang(globalData);
+
             if (catContent) {
                 combinedHtml += `<div class="common-category-section" style="margin-bottom:30px;">${catContent}</div>`;
             }
-
-            const subCatContent = getContentByLang(subCatData);
             if (subCatContent) {
                 combinedHtml += `<div class="common-subcategory-section" style="margin-bottom:30px;">${subCatContent}</div>`;
             }
-
-            const globalContent = getContentByLang(globalData);
-            if (globalContent) {
+            // 'all' 은 정말 폴백일 때만
+            if (!catContent && !subCatContent && globalContent) {
                 combinedHtml += `<div class="common-global-section" style="margin-bottom:30px;">${globalContent}</div>`;
             }
 

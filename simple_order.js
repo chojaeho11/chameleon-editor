@@ -5067,9 +5067,18 @@ html, body { background: #ffffff !important; }
                 var subRow = list.find(function(c){ return c.category_code === subCatCode && subCatCode !== topCat; });
                 var allRow = list.find(function(c){ return c.category_code === 'all'; });
                 var pieces = [];
-                var catC = _pickLang(catRow);   if (catC)   pieces.push('<div class="so-common-cat">' + catC + '</div>');
-                var subC = _pickLang(subRow);   if (subC)   pieces.push('<div class="so-common-sub">' + subC + '</div>');
-                var allC = _pickLang(allRow);   if (allC)   pieces.push('<div class="so-common-all">' + allC + '</div>');
+                var catC = _pickLang(catRow);
+                var subC = _pickLang(subRow);
+                var allC = _pickLang(allRow);
+                // 2026-06-01: catRow/subRow (특정 카테고리) 가 있으면 allRow ('전체 공통') 은 미사용.
+                //   JP 'all' 에 골판지가벽 콘텐츠가 들어가 있어 모든 상품 하단에 가벽이 붙는 버그 fix.
+                //   원칙: 더 구체적인 카테고리 콘텐츠 우선, '전체' 는 진짜 폴백일 때만 노출.
+                if (catC || subC) {
+                    if (subC) pieces.push('<div class="so-common-sub">' + subC + '</div>');
+                    if (catC) pieces.push('<div class="so-common-cat">' + catC + '</div>');
+                } else if (allC) {
+                    pieces.push('<div class="so-common-all">' + allC + '</div>');
+                }
                 commonHtml = pieces.join('');
             } catch (e) {
                 console.warn('[simple_order] common_info load failed:', e);
