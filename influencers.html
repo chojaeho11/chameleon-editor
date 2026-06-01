@@ -195,7 +195,7 @@
                 <div class="row"><span class="lbl">이메일</span><span class="val">${emailLink}</span></div>
                 ${a.note ? `<div class="row"><span class="lbl">PR 계획</span><span class="val" style="white-space:pre-wrap;">${esc(a.note)}</span></div>` : ''}
                 ${a.view_count > 0 ? `<div class="row"><span class="lbl">현재 조회</span><span class="val">${Number(a.view_count).toLocaleString()}회</span></div>` : ''}
-                ${a.paid_amount > 0 ? `<div class="row"><span class="lbl">지급 금액</span><span class="val" style="color:#86efac; font-weight:800;">${Number(a.paid_amount).toLocaleString()}원</span></div>` : ''}
+                ${a.paid_amount > 0 ? `<div class="row"><span class="lbl">지급 금액</span><span class="val" style="color:#86efac; font-weight:800;">${(payoutRate(a.lang).unit === '$' ? '$' : '') + Number(a.paid_amount).toLocaleString() + (payoutRate(a.lang).unit !== '$' ? payoutRate(a.lang).unit : '')}</span></div>` : ''}
                 <div class="actions">
                     ${a.status === 'pending' ? `<button class="act approve" onclick="setStatus('${esc(a.id)}','approved')"><i class="fa-solid fa-check"></i> 승인</button>` : ''}
                     ${a.status === 'pending' ? `<button class="act reject" onclick="setStatus('${esc(a.id)}','rejected')"><i class="fa-solid fa-xmark"></i> 반려</button>` : ''}
@@ -220,15 +220,27 @@
             } catch(e){ toast('실패: ' + (e.message||e), true); }
         }
 
+        // 언어별 지급 단가 — 사이트 CURRENCY_RATE 기준 (KR=1, JP=0.1, US=0.001)
+        // KR: 1만회 = 10,000원 / JP: 10만회 = 10,000엔 / 기타: 10만회 = $100
+        function payoutRate(lang){
+            const L = (lang || 'kr').toLowerCase();
+            if (L === 'kr') return { per: 10000, amt: 10000, unit: '원', label: '조회 1만 회당 10,000원' };
+            if (L === 'ja') return { per: 100000, amt: 10000, unit: '엔', label: '재생 10만 회당 10,000엔' };
+            return { per: 100000, amt: 100, unit: '$', label: '10만 views = $100' };  // en/us/zh/es/de/fr/ar 공용
+        }
+
         async function markPaid(id){
             const a = _all.find(x => String(x.id) === String(id));
             if (!a) return;
-            const view = prompt('조회수를 입력하세요 (재생 1만 회당 1만원)', String(a.view_count || 100000));
+            const r = payoutRate(a.lang);
+            const view = prompt('조회수를 입력하세요 (' + r.label + ')', String(a.view_count || r.per));
             if (!view) return;
             const v = parseInt(view, 10);
-            if (isNaN(v) || v < 10000) { toast('1만 이상이어야 합니다', true); return; }
-            const amount = Math.floor(v / 10000) * 10000;
-            const ok = confirm(`조회 ${v.toLocaleString()}회 → ${amount.toLocaleString()}원 지급으로 기록합니다.`);
+            if (isNaN(v) || v < r.per) { toast(r.per.toLocaleString() + ' 이상이어야 합니다', true); return; }
+            const units = Math.floor(v / r.per);
+            const amount = units * r.amt;
+            const display = (r.unit === '$') ? ('$' + amount.toLocaleString()) : (amount.toLocaleString() + r.unit);
+            const ok = confirm('조회 ' + v.toLocaleString() + '회 → ' + display + ' 지급으로 기록합니다.');
             if (!ok) return;
             try {
                 const newInfo = Object.assign({}, a._raw, {
