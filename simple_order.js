@@ -1651,14 +1651,28 @@ html, body { background: #ffffff !important; }
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
-          <!-- 2026-06-01: 광고인쇄 — 단가 박스 바로 아래 인라인 파일 업로드 (좌측 큰 업로드는 숨김). -->
-          <div id="soAdInlineUploadWrap" style="display:none; margin-top:12px;">
+          <!-- 2026-06-01: 광고인쇄/허니콤 인라인 업로드는 별도 카드(#soInlineUploadCard)로 분리되어 사이드바 최상단으로 이동. -->
+        </div>
+
+        <!-- 2026-06-01: 인라인 파일 업로드 카드 — 광고인쇄/허니콤 상품에서 우측 사이드바 최상단으로 이동 (JS 로 위치 조정). -->
+        <div class="so-section" id="soInlineUploadCard" style="display:none;">
+          <div class="so-section-title">
+            <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
+            ${tr('디자인 파일 업로드', 'デザインファイルアップロード', 'Upload Design File')}
+          </div>
+          <div id="soAdInlineUploadWrap">
             <button type="button" id="soAdInlineUploadBtn" onclick="document.getElementById('soFile').click()"
               style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
               <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
               <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
             </button>
             <div id="soAdInlineFileInfo" style="display:none; margin-top:6px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
+            <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.5;">
+              <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
+              ${tr('올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.',
+                   'アップロードした画像/PDFは左側のプレビュー領域に自動で表示されます。50MB以下。',
+                   'Uploaded image / PDF appears in the preview on the left. Max 50MB.')}
+            </div>
           </div>
         </div>
 
@@ -6194,6 +6208,7 @@ html, body { background: #ffffff !important; }
             var _tierTable = document.getElementById('soTierTable');
             var _presetTier = document.getElementById('soPresetTierTable');
             var _inlineUpload = document.getElementById('soAdInlineUploadWrap');
+            var _inlineUploadCard = document.getElementById('soInlineUploadCard');
             var _multiSec = document.getElementById('soAdMultiLineSection');
             var _extraLines = document.getElementById('soAdExtraLines');
             var _leftUpload = document.getElementById('soUploadWrap');
@@ -6203,7 +6218,10 @@ html, body { background: #ffffff !important; }
             if (state.isAdPrint) {
                 if (_tierTable)  _tierTable.style.display  = 'none';
                 if (_presetTier) _presetTier.style.display = 'none';
-                if (_inlineUpload) _inlineUpload.style.display = '';
+                if (_inlineUploadCard) {
+                    _inlineUploadCard.style.display = '';
+                    _inlineUploadCard.style.order = '-220';  // 사이즈 카드(-200)보다 더 위로
+                }
                 if (_multiSec)   _multiSec.style.display   = '';
                 // 2026-06-01: 광고인쇄 — 좌측 soUploadWrap 은 그대로 표시 (인라인 업로드 클릭 시 같은 #soFile 가 트리거되어
                 //   renderUploadDone 이 좌측 #soUpload 에 미리보기 표시). 사용자가 우측 인라인 + 좌측 프리뷰 동시 사용.
@@ -6237,7 +6255,10 @@ html, body { background: #ffffff !important; }
                 if (_inlineInfo) { _inlineInfo.style.display = 'none'; _inlineInfo.textContent = ''; }
             } else {
                 if (_tierTable)  _tierTable.style.display  = '';
-                if (_inlineUpload) _inlineUpload.style.display = 'none';
+                if (_inlineUploadCard) {
+                    _inlineUploadCard.style.display = 'none';
+                    _inlineUploadCard.style.order = '';
+                }
                 // multiSec / 큐 프리뷰는 아래 honeycomb 분기에서 따로 처리 (ad-print 외에 허니콤도 노출)
                 if (_leftUpload && !(state.isRawBoard || state.isAmountOrder)) _leftUpload.style.display = '';
                 if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder)) _leftUploadLabel.style.display = '';
@@ -6257,8 +6278,11 @@ html, body { background: #ffffff !important; }
                     _multiSec.style.display = '';
                     _multiSec.style.order = '';
                 }
-                // 인라인 파일 업로드 카드도 표시 (좌측 큰 미리보기는 유지)
-                if (_inlineUpload) _inlineUpload.style.display = '';
+                // 인라인 파일 업로드 카드 — 사이드바 최상단으로 (좌측 큰 미리보기는 유지)
+                if (_inlineUploadCard) {
+                    _inlineUploadCard.style.display = '';
+                    _inlineUploadCard.style.order = '-220';
+                }
                 // 멀티-라인 섹션을 addon 섹션 바로 뒤로 이동
                 if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
                     _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
@@ -6274,7 +6298,10 @@ html, body { background: #ffffff !important; }
             } else if (!state.isAdPrint) {
                 // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI + 인라인 업로드 끔
                 if (_multiSec) _multiSec.style.display = 'none';
-                if (_inlineUpload) _inlineUpload.style.display = 'none';
+                if (_inlineUploadCard) {
+                    _inlineUploadCard.style.display = 'none';
+                    _inlineUploadCard.style.order = '';
+                }
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
                 var _lpwN = document.getElementById('soAdLinePreviewsWrap');
