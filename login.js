@@ -303,20 +303,32 @@ async function handleAuthAction() {
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
-            // 프로필에 가입 국가 설정 (일반 등급)
+            // 프로필에 가입 국가 설정 (일반 등급) + 가입 보너스 쿠폰 30,000 KRW 자동 지급
+            // (JP=3,000엔 / KR=30,000원 / US=$30 — CURRENCY_RATE 로 자동 환산 표시)
             if (data.user) {
                 let profileUpdated = false;
+                const SIGNUP_BONUS_KRW = 30000;  // 모든 사이트 동일 (표시는 통화 변환)
                 for (let attempt = 0; attempt < 3; attempt++) {
                     if (attempt > 0) await new Promise(r => setTimeout(r, 800));
                     try {
                         const { data: rows, error: upErr } = await sb.from('profiles').update({
                             site: siteCode,
-                            role: 'customer'
+                            role: 'customer',
+                            mileage: SIGNUP_BONUS_KRW
                         }).eq('id', data.user.id).select('id');
                         if (!upErr && rows && rows.length > 0) { profileUpdated = true; break; }
                     } catch(e) { console.warn('profile update attempt', attempt, e); }
                 }
                 if (!profileUpdated) console.warn('Profile update failed after 3 attempts for', data.user.id);
+                // 가입 보너스 원장 기록 — wallet_logs (감사 추적용)
+                try {
+                    await sb.from('wallet_logs').insert({
+                        user_id: data.user.id,
+                        type: 'signup_bonus',
+                        amount: SIGNUP_BONUS_KRW,
+                        description: '회원가입 무료 쿠폰 (이벤트)'
+                    });
+                } catch(e) { console.warn('wallet_logs signup_bonus insert failed', e); }
             }
 
             // ★ 가입 즉시 로그인 처리

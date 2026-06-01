@@ -2057,16 +2057,19 @@ html, body { background: #ffffff !important; }
       <div class="so-co-section" id="soCoWalletBox" style="display:none;">
         <span class="so-co-label">${tr('마일리지 / 예치금','マイル / 預り金','Mileage / Deposit')}</span>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-          <span style="font-size:12px; color:#6b7280;">${tr('보유 마일리지','保有マイル','Mileage')}: <b id="soOwnMileage" style="color:#b45309;">0 P</b></span>
+          <span style="font-size:12px; color:#6b7280;">${tr('🎁 이벤트 쿠폰','🎁 イベントクーポン','🎁 Event Coupon')}: <b id="soOwnMileage" style="color:#b45309;">0 P</b></span>
           <input id="soUseMileage" type="number" min="0" step="100" placeholder="0" oninput="window._soOnWalletChange()" style="width:110px; padding:8px 10px; border:1.5px solid #e7d6b8; border-radius:8px; font-size:13px;">
           <span style="font-size:11px; color:#9ca3af;">${tr('최대','最大','Max')} <b id="soMileageMax">0</b> P</span>
           <button type="button" onclick="window._soFillMaxMileage()" style="padding:6px 10px; background:#fef3c7; color:#92400e; border:1px solid #fbbf24; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">${tr('최대 사용','全額','Max')}</button>
         </div>
-        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+        <div style="font-size:11px; color:#92400e; background:#fef3c7; padding:6px 10px; border-radius:6px; margin-top:6px; border-left:3px solid #f59e0b;">
+          💡 ${tr('이벤트 쿠폰은 구매금액의 50%까지 사용 가능합니다.','イベントクーポンはご注文金額の50%までご利用可能です。','Event coupons usable up to 50% of order amount.')}
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; margin-top:8px;">
           <input type="checkbox" id="soUseDepositAll" onchange="window._soOnWalletChange()">
           <span>${tr('예치금 전액 사용','預り金を全額使用','Use full deposit')} <b id="soOwnDeposit" style="color:#0e7490;">0원</b></span>
         </label>
-        <div id="soWalletExcludedMsg" style="display:none; font-size:11px; color:#ef4444; margin-top:6px;">${tr('* 마일리지 사용 불가 상품이 포함되어 있습니다.','* マイル利用不可の商品が含まれています。','* Cart contains items where mileage cannot be used.')}</div>
+        <div id="soWalletExcludedMsg" style="display:none; font-size:11px; color:#ef4444; margin-top:6px;">${tr('* 이벤트 쿠폰 사용 불가 상품이 포함되어 있습니다.','* クーポン利用不可の商品が含まれています。','* Cart contains items where event coupon cannot be used.')}</div>
       </div>
 
       <!-- 2026-05-18: 무통장 입금 — 입금자 이름 (주문자와 다를 수 있어 별도 입력) -->
@@ -8442,7 +8445,8 @@ html, body { background: #ffffff !important; }
         var excluded = false;
         cart.forEach(function (it) { if (it.product && excludedSet.has(it.product.category)) excluded = true; });
         var calc = _soCalcCartTotal(cart);
-        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.05));
+        // 2026-06-01: 이벤트 쿠폰은 구매금액의 50%까지 사용 가능 (가입 보너스 30,000원 + SNS 공유 100,000원)
+        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.5));
         window._soWallet = { ready: true, userId: uid, mileageBalKRW: mileageBal, depositBalKRW: depositBal, capKRW: capKRW, excluded: excluded };
         var elOwnM = document.getElementById('soOwnMileage'); if (elOwnM) elOwnM.textContent = mileageBal.toLocaleString() + ' P';
         var elMax = document.getElementById('soMileageMax'); if (elMax) elMax.textContent = capKRW.toLocaleString();

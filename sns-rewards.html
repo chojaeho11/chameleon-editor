@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>📣 인플루언서 신청 관리</title>
+    <title>🎁 SNS 공유 쿠폰 신청 관리</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
@@ -11,15 +11,13 @@
         * { box-sizing: border-box; }
         body {
             background: #0b0f1c; color: #e2e8f0; font-family: 'Pretendard', sans-serif;
-            margin: 0; padding: 16px 14px 60px;
-            max-width: 720px; margin: 0 auto;
+            margin: 0 auto; padding: 16px 14px 60px; max-width: 720px;
             min-height: 100vh; -webkit-font-smoothing: antialiased;
         }
         .header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
         .header h1 { font-size: 20px; font-weight: 900; color: #fff; margin: 0; flex: 1; letter-spacing: -0.5px; }
         .header .sub { font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
         .refresh-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(148,163,184,0.2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; cursor: pointer; font-size: 16px; }
-        .refresh-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
 
         .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
         .tab { padding: 7px 13px; border-radius: 18px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid rgba(148,163,184,0.2); background: rgba(255,255,255,0.04); color: #94a3b8; transition: all 0.15s; }
@@ -39,15 +37,12 @@
         .badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 7px; letter-spacing: 0.3px; }
         .badge.lang-kr { background: rgba(99,102,241,0.25); color: #c7d2fe; }
         .badge.lang-ja { background: rgba(236,72,153,0.25); color: #fbcfe8; }
-        .badge.lang-us, .badge.lang-en { background: rgba(34,197,94,0.25); color: #86efac; }
-        .badge.lang-cn { background: rgba(239,68,68,0.25); color: #fca5a5; }
+        .badge.lang-en, .badge.lang-us { background: rgba(34,197,94,0.25); color: #86efac; }
         .badge.status-pending { background: rgba(245,158,11,0.25); color: #fcd34d; }
         .badge.status-approved { background: rgba(34,197,94,0.25); color: #86efac; }
-        .badge.status-paid { background: rgba(99,102,241,0.25); color: #c7d2fe; }
         .badge.status-rejected { background: rgba(239,68,68,0.25); color: #fca5a5; }
 
-        .name { font-size: 17px; font-weight: 900; color: #fff; letter-spacing: -0.4px; }
-        .meta { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 6px; }
+        .email { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.4px; word-break: break-all; }
         .time { font-size: 10.5px; color: #64748b; font-weight: 500; }
 
         .row { display: flex; gap: 6px; margin-bottom: 6px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
@@ -55,13 +50,19 @@
         .row .val { color: #e2e8f0; word-break: break-all; flex: 1; }
         .row .val a { color: #fbcfe8; text-decoration: none; border-bottom: 1px dashed rgba(244,114,182,0.5); }
 
+        .screenshot {
+            display: block; max-width: 100%; max-height: 320px; margin: 10px 0;
+            border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .screenshot:hover { transform: scale(1.02); }
+
         .actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-        .act { padding: 7px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; background: rgba(255,255,255,0.06); color: #cbd5e1; }
+        .act { padding: 9px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; background: rgba(255,255,255,0.06); color: #cbd5e1; }
         .act:hover { background: rgba(255,255,255,0.12); }
-        .act.primary { background: linear-gradient(135deg,#ec4899,#be185d); color: #fff; border-color: transparent; }
-        .act.approve { background: rgba(34,197,94,0.2); color: #86efac; border-color: rgba(34,197,94,0.35); }
+        .act.approve { background: rgba(34,197,94,0.25); color: #86efac; border-color: rgba(34,197,94,0.4); }
+        .act.approve:hover { background: rgba(34,197,94,0.4); color: #fff; }
         .act.reject { background: rgba(239,68,68,0.2); color: #fca5a5; border-color: rgba(239,68,68,0.35); }
-        .act.paid { background: rgba(99,102,241,0.2); color: #c7d2fe; border-color: rgba(99,102,241,0.35); }
         .act.delete { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.2); }
 
         .footer-link { text-align: center; margin-top: 24px; font-size: 12px; color: #64748b; }
@@ -75,17 +76,16 @@
 <body>
     <div class="header">
         <div style="flex:1;">
-            <h1>📣 인플루언서 정산 신청</h1>
-            <div class="sub">홍보 컨텐츠 URL 확인 → 조회수 1만회당 1만원 지급</div>
+            <h1>🎁 SNS 공유 쿠폰 신청</h1>
+            <div class="sub">스크린샷 확인 후 승인 → 100,000원 쿠폰 자동 지급</div>
         </div>
         <button class="refresh-btn" onclick="loadApps()" title="새로고침"><i class="fa-solid fa-arrows-rotate"></i></button>
     </div>
 
     <div class="tabs" id="tabs">
-        <div class="tab active" data-status="pending">대기 <span class="cnt" id="cntPending">0</span></div>
-        <div class="tab" data-status="approved">승인 <span class="cnt" id="cntApproved">0</span></div>
-        <div class="tab" data-status="paid">지급완료 <span class="cnt" id="cntPaid">0</span></div>
-        <div class="tab" data-status="rejected">반려 <span class="cnt" id="cntRejected">0</span></div>
+        <div class="tab active" data-status="pending">⏳ 대기 <span class="cnt" id="cntPending">0</span></div>
+        <div class="tab" data-status="approved">✅ 승인·지급완료 <span class="cnt" id="cntApproved">0</span></div>
+        <div class="tab" data-status="rejected">❌ 반려 <span class="cnt" id="cntRejected">0</span></div>
         <div class="tab" data-status="all">전체 <span class="cnt" id="cntAll">0</span></div>
     </div>
 
@@ -105,14 +105,24 @@
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
         const sb = supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { persistSession: true } });
 
+        // 100,000 KRW = 10,000 JPY (×0.1) = $100 (×0.001) — 사이트별 환산은 표시만, DB는 KRW 저장
+        const COUPON_AMOUNT_KRW = 100000;
+
         let _all = [];
         let _filter = 'pending';
 
         function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
         function fmtTime(iso){try{const d=new Date(iso),Y=d.getFullYear(),m=('0'+(d.getMonth()+1)).slice(-2),dd=('0'+d.getDate()).slice(-2),h=('0'+d.getHours()).slice(-2),mi=('0'+d.getMinutes()).slice(-2);return `${Y}/${m}/${dd} ${h}:${mi}`;}catch(e){return '';}}
         function toast(m, err){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast'+(err?' err':''),2400);}
-        function langLabel(l){return {kr:'🇰🇷 한국',ja:'🇯🇵 일본',us:'🇺🇸 미국',en:'🇺🇸 미국',cn:'🇨🇳 중국'}[l]||(l||'-').toUpperCase();}
-        function statusLabel(s){return {pending:'⏳ 대기',approved:'✅ 승인',paid:'💸 지급완료',rejected:'❌ 반려'}[s]||s;}
+        function langLabel(l){return {kr:'🇰🇷 한국',ja:'🇯🇵 일본',us:'🇺🇸 미국',en:'🇺🇸 미국'}[l]||(l||'-').toUpperCase();}
+        function statusLabel(s){return {pending:'⏳ 대기',approved:'✅ 승인 (지급완료)',rejected:'❌ 반려'}[s] || s;}
+        function couponDisplay(lang){
+            // 100,000 KRW를 사이트별로 표시
+            const L = (lang||'kr').toLowerCase();
+            if (L === 'ja') return '10,000円';
+            if (L === 'en' || L === 'us') return '$100';
+            return '100,000원';
+        }
 
         async function loadApps(){
             const list = document.getElementById('list');
@@ -120,12 +130,12 @@
             try {
                 const { data: { session } } = await sb.auth.getSession();
                 if (!session) {
-                    list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px; line-height:1.6;">⚠️ 관리자 로그인이 필요합니다.<br><br><a href="/login.html?next=/influencers" style="color:#c7d2fe;">로그인 페이지로 이동 →</a></div>';
+                    list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px; line-height:1.6;">⚠️ 관리자 로그인이 필요합니다.<br><br><a href="/login.html?next=/sns-rewards" style="color:#c7d2fe;">로그인 페이지로 이동 →</a></div>';
                     return;
                 }
                 const { data, error } = await sb.from('chatbot_knowledge')
-                    .select('id, question, answer, created_at, is_active')
-                    .eq('category', '_influencer_apps')
+                    .select('id, question, answer, created_at')
+                    .eq('category', '_sns_share_apps')
                     .order('created_at', { ascending: false })
                     .limit(500);
                 if (error) throw error;
@@ -135,35 +145,35 @@
                     return {
                         id: row.id,
                         created_at: row.created_at,
-                        is_active: row.is_active,
-                        name: info.name || '',
-                        sns_url: info.sns_url || '',
-                        bank_account: info.bank_account || '',
+                        user_id: info.user_id || null,
                         email: info.email || '',
+                        sns_url: info.sns_url || '',
+                        screenshot_url: info.screenshot_url || '',
                         note: info.note || '',
                         lang: info.lang || 'kr',
-                        view_count: info.view_count || 0,
-                        paid_amount: info.paid_amount || 0,
                         status: info.status || 'pending',
+                        coupon_amount_krw: info.coupon_amount_krw || COUPON_AMOUNT_KRW,
+                        approved_at: info.approved_at || null,
+                        rejected_reason: info.rejected_reason || null,
                         _raw: info
                     };
                 });
                 updateCounts();
                 renderList();
             } catch(e){
-                console.error('[influencers] load failed', e);
+                console.error('[sns-rewards] load failed', e);
                 list.innerHTML = '<div style="text-align:center; color:#fca5a5; padding:30px 12px;">불러오기 실패: '+esc(e?.message||e)+'</div>';
             }
         }
 
         function updateCounts(){
-            const c = { pending:0, approved:0, paid:0, rejected:0 };
+            const c = { pending:0, approved:0, rejected:0 };
             _all.forEach(a => { if (c[a.status]!==undefined) c[a.status]++; });
-            document.getElementById('cntPending').textContent = c.pending;
-            document.getElementById('cntApproved').textContent = c.approved;
-            document.getElementById('cntPaid').textContent = c.paid;
-            document.getElementById('cntRejected').textContent = c.rejected;
-            document.getElementById('cntAll').textContent = _all.length;
+            const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+            set('cntPending', c.pending);
+            set('cntApproved', c.approved);
+            set('cntRejected', c.rejected);
+            set('cntAll', _all.length);
         }
 
         function renderList(){
@@ -180,7 +190,9 @@
         function renderApp(a){
             const lang = (a.lang || 'kr').toLowerCase();
             const snsLink = a.sns_url ? `<a href="${esc(a.sns_url)}" target="_blank" rel="noopener">${esc(a.sns_url)}</a>` : '-';
-            const emailLink = a.email ? `<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>` : '-';
+            const screenshot = a.screenshot_url
+                ? `<img src="${esc(a.screenshot_url)}" alt="screenshot" class="screenshot" onclick="window.open('${esc(a.screenshot_url)}','_blank')">`
+                : '<div style="padding:24px; text-align:center; color:#fca5a5; background:rgba(239,68,68,0.08); border-radius:8px;">스크린샷 없음</div>';
             return `
             <div class="card" data-id="${esc(a.id)}">
                 <div class="card-head">
@@ -188,83 +200,120 @@
                     <span class="badge status-${a.status}">${statusLabel(a.status)}</span>
                     <span class="time" style="margin-left:auto;">${fmtTime(a.created_at)}</span>
                 </div>
-                <div class="name">${esc(a.name || '(이름 없음)')}</div>
-                <div class="meta" style="margin-top:10px;">신청 상세</div>
-                <div class="row"><span class="lbl">컨텐츠 URL</span><span class="val">${snsLink}</span></div>
-                <div class="row"><span class="lbl">계좌</span><span class="val">${esc(a.bank_account || '-')}</span></div>
-                <div class="row"><span class="lbl">이메일</span><span class="val">${emailLink}</span></div>
-                ${a.note ? `<div class="row"><span class="lbl">PR 계획</span><span class="val" style="white-space:pre-wrap;">${esc(a.note)}</span></div>` : ''}
-                ${a.view_count > 0 ? `<div class="row"><span class="lbl">현재 조회</span><span class="val">${Number(a.view_count).toLocaleString()}회</span></div>` : ''}
-                ${a.paid_amount > 0 ? `<div class="row"><span class="lbl">지급 금액</span><span class="val" style="color:#86efac; font-weight:800;">${(payoutRate(a.lang).unit === '$' ? '$' : '') + Number(a.paid_amount).toLocaleString() + (payoutRate(a.lang).unit !== '$' ? payoutRate(a.lang).unit : '')}</span></div>` : ''}
+                <div class="email">${esc(a.email || '(이메일 없음)')}</div>
+                <div class="row" style="margin-top:10px;"><span class="lbl">User ID</span><span class="val" style="font-family:monospace; font-size:11px; opacity:0.7;">${esc(a.user_id || '-')}</span></div>
+                <div class="row"><span class="lbl">SNS 게시물</span><span class="val">${snsLink}</span></div>
+                ${a.note ? `<div class="row"><span class="lbl">메모</span><span class="val" style="white-space:pre-wrap;">${esc(a.note)}</span></div>` : ''}
+                <div class="row"><span class="lbl">지급 금액</span><span class="val" style="color:#86efac; font-weight:800;">${couponDisplay(lang)} (= ${(a.coupon_amount_krw||COUPON_AMOUNT_KRW).toLocaleString()} KRW)</span></div>
+                ${a.status === 'rejected' && a.rejected_reason ? `<div class="row"><span class="lbl">반려 사유</span><span class="val" style="color:#fca5a5;">${esc(a.rejected_reason)}</span></div>` : ''}
+                ${a.status === 'approved' && a.approved_at ? `<div class="row"><span class="lbl">지급 시각</span><span class="val">${fmtTime(a.approved_at)}</span></div>` : ''}
+                ${screenshot}
                 <div class="actions">
-                    ${a.status === 'pending' ? `<button class="act approve" onclick="setStatus('${esc(a.id)}','approved')"><i class="fa-solid fa-check"></i> 승인</button>` : ''}
-                    ${a.status === 'pending' ? `<button class="act reject" onclick="setStatus('${esc(a.id)}','rejected')"><i class="fa-solid fa-xmark"></i> 반려</button>` : ''}
-                    ${a.status === 'approved' ? `<button class="act paid" onclick="markPaid('${esc(a.id)}')"><i class="fa-solid fa-money-bill-wave"></i> 지급완료 처리</button>` : ''}
+                    ${a.status === 'pending' ? `<button class="act approve" onclick="approveAndGrant('${esc(a.id)}')"><i class="fa-solid fa-check"></i> 승인 + ${couponDisplay(lang)} 지급</button>` : ''}
+                    ${a.status === 'pending' ? `<button class="act reject" onclick="rejectApp('${esc(a.id)}')"><i class="fa-solid fa-xmark"></i> 반려</button>` : ''}
                     ${a.status !== 'pending' ? `<button class="act" onclick="setStatus('${esc(a.id)}','pending')"><i class="fa-solid fa-rotate-left"></i> 대기로 되돌리기</button>` : ''}
                     <button class="act delete" onclick="removeApp('${esc(a.id)}')" style="margin-left:auto;"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>`;
         }
 
-        async function setStatus(id, newStatus){
+        // 핵심 — 승인 시 자동 쿠폰 지급
+        // 1) profiles.mileage 잔액 +100,000 (CURRENT + 100,000)
+        // 2) wallet_logs 에 'sns_share_bonus' 기록
+        // 3) chatbot_knowledge 의 status='approved' 로 업데이트
+        async function approveAndGrant(id){
             const a = _all.find(x => String(x.id) === String(id));
             if (!a) return;
+            if (!a.user_id) {
+                toast('user_id 없음 — 지급 불가', true);
+                return;
+            }
+            const amt = a.coupon_amount_krw || COUPON_AMOUNT_KRW;
+            const ok = confirm(`이 신청을 승인하고 ${a.email} 에게 ${couponDisplay(a.lang)} (= ${amt.toLocaleString()} KRW) 쿠폰을 즉시 지급합니다. 계속?`);
+            if (!ok) return;
             try {
-                const newInfo = Object.assign({}, a._raw, { status: newStatus, updated_at: new Date().toISOString() });
-                const { error } = await sb.from('chatbot_knowledge')
+                // 1) 현재 잔액 조회
+                const { data: prof, error: pErr } = await sb.from('profiles')
+                    .select('mileage')
+                    .eq('id', a.user_id)
+                    .maybeSingle();
+                if (pErr) throw pErr;
+                const currentBal = (prof && prof.mileage) ? parseInt(prof.mileage) : 0;
+                const newBal = currentBal + amt;
+                // 2) 잔액 업데이트
+                const { error: uErr } = await sb.from('profiles')
+                    .update({ mileage: newBal })
+                    .eq('id', a.user_id);
+                if (uErr) throw uErr;
+                // 3) 원장 기록
+                await sb.from('wallet_logs').insert({
+                    user_id: a.user_id,
+                    type: 'sns_share_bonus',
+                    amount: amt,
+                    description: 'SNS 공유 인증 쿠폰 (' + (a.sns_url||'') + ')'
+                });
+                // 4) 신청 상태 = approved
+                const newInfo = Object.assign({}, a._raw, {
+                    status: 'approved',
+                    approved_at: new Date().toISOString(),
+                    granted_to_user_id: a.user_id,
+                    granted_amount_krw: amt,
+                    prev_balance_krw: currentBal,
+                    new_balance_krw: newBal
+                });
+                await sb.from('chatbot_knowledge')
                     .update({ answer: JSON.stringify(newInfo) })
                     .eq('id', id);
-                if (error) throw error;
-                toast('상태가 ' + statusLabel(newStatus) + ' (으)로 변경되었습니다');
+                toast('✅ 지급 완료: ' + amt.toLocaleString() + ' KRW → 잔액 ' + newBal.toLocaleString());
+                await loadApps();
+            } catch(e){
+                console.error('[approve] fail', e);
+                toast('지급 실패: ' + (e.message||e), true);
+            }
+        }
+
+        async function rejectApp(id){
+            const a = _all.find(x => String(x.id) === String(id));
+            if (!a) return;
+            const reason = prompt('반려 사유 (인플루언서에게 표시됨):', '스크린샷에서 카멜레온 브랜드명·로고가 확인되지 않습니다.');
+            if (reason == null) return;
+            try {
+                const newInfo = Object.assign({}, a._raw, {
+                    status: 'rejected',
+                    rejected_at: new Date().toISOString(),
+                    rejected_reason: reason
+                });
+                await sb.from('chatbot_knowledge')
+                    .update({ answer: JSON.stringify(newInfo) })
+                    .eq('id', id);
+                toast('반려 처리됨');
                 await loadApps();
             } catch(e){ toast('실패: ' + (e.message||e), true); }
         }
 
-        // 언어별 지급 단가 — 사이트 CURRENCY_RATE 기준
-        // 1만회당 단가 + 최대 cap. KR: 1만원/만회 · max 10만원 / JP: 1000엔/만회 · max 1만엔 / 기타: $10/만회 · max $100
-        function payoutRate(lang){
-            const L = (lang || 'kr').toLowerCase();
-            if (L === 'kr') return { per: 10000, amt: 10000, maxAmt: 100000, unit: '원', label: '1만 회당 10,000원 (최대 100,000원)' };
-            if (L === 'ja') return { per: 10000, amt: 1000,  maxAmt: 10000,  unit: '엔', label: '1万回ごとに 1,000円 (최대 10,000엔)' };
-            return { per: 10000, amt: 10, maxAmt: 100, unit: '$', label: '$10 per 10K views (max $100)' };  // en/us/zh/es/de/fr/ar 공용
-        }
-
-        async function markPaid(id){
+        async function setStatus(id, newStatus){
             const a = _all.find(x => String(x.id) === String(id));
             if (!a) return;
-            const r = payoutRate(a.lang);
-            const view = prompt('조회수를 입력하세요 (' + r.label + ')', String(a.view_count || r.per));
-            if (!view) return;
-            const v = parseInt(view, 10);
-            if (isNaN(v) || v < r.per) { toast(r.per.toLocaleString() + ' 이상이어야 합니다', true); return; }
-            const units = Math.floor(v / r.per);
-            let amount = units * r.amt;
-            const capped = amount > r.maxAmt;
-            if (capped) amount = r.maxAmt;
-            const display = (r.unit === '$') ? ('$' + amount.toLocaleString()) : (amount.toLocaleString() + r.unit);
-            const ok = confirm('조회 ' + v.toLocaleString() + '회 → ' + display + (capped ? ' (최대치 도달)' : '') + ' 지급으로 기록합니다.');
-            if (!ok) return;
+            // 주의 — approved 에서 pending 으로 되돌릴 때 지급된 쿠폰을 회수해야 함.
+            //   사용자가 이미 사용했을 수도 있으니 자동 회수는 안 함. 수동 처리 안내만.
+            if (a.status === 'approved' && newStatus === 'pending') {
+                const ok = confirm('⚠️ 이미 지급된 쿠폰은 자동 회수되지 않습니다. 수동으로 마일리지를 차감해야 합니다. 계속?');
+                if (!ok) return;
+            }
             try {
-                const newInfo = Object.assign({}, a._raw, {
-                    status: 'paid',
-                    view_count: v,
-                    paid_amount: amount,
-                    paid_at: new Date().toISOString()
-                });
-                const { error } = await sb.from('chatbot_knowledge')
+                const newInfo = Object.assign({}, a._raw, { status: newStatus, updated_at: new Date().toISOString() });
+                await sb.from('chatbot_knowledge')
                     .update({ answer: JSON.stringify(newInfo) })
                     .eq('id', id);
-                if (error) throw error;
-                toast('지급 처리 완료: ' + amount.toLocaleString() + '원');
+                toast('상태 변경됨: ' + statusLabel(newStatus));
                 await loadApps();
             } catch(e){ toast('실패: ' + (e.message||e), true); }
         }
 
         async function removeApp(id){
-            if (!confirm('이 신청을 삭제할까요? (복구 불가)')) return;
+            if (!confirm('이 신청을 삭제할까요? (복구 불가, 지급된 쿠폰은 회수되지 않음)')) return;
             try {
-                const { error } = await sb.from('chatbot_knowledge').delete().eq('id', id);
-                if (error) throw error;
+                await sb.from('chatbot_knowledge').delete().eq('id', id);
                 toast('삭제됨');
                 await loadApps();
             } catch(e){ toast('실패: ' + (e.message||e), true); }

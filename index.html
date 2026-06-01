@@ -1067,34 +1067,41 @@ window._tcmFallbackClick = function(code) {
                 </div>
             </div>
         </div>
-        <!-- 인플루언서 모집 카드 — KR 에선 숨김. JP/US/외국에서만 표시 -->
+        <!-- 이벤트 쿠폰 안내 카드 — 회원가입 3,000엔 + SNS공유 10,000엔 -->
         <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
             <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
-                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎬</div>
+                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎁</div>
                 <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px; position:relative;">
                     <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
-                        <i class="fa-solid fa-film" style="color:#fff; font-size:14px;"></i>
+                        <i class="fa-solid fa-gift" style="color:#fff; font-size:14px;"></i>
                     </div>
                     <div style="flex:1; min-width:0;">
-                        <div id="influencerCardTitle" style="font-size:15px; font-weight:300; color:#fff; margin-bottom:3px; letter-spacing:-0.3px; line-height:1.25;">홍보 인플루언서 모집</div>
+                        <div id="couponCardTitle" style="font-size:15px; font-weight:600; color:#fff; margin-bottom:3px; letter-spacing:-0.3px; line-height:1.25;">이벤트 쿠폰 받기</div>
                         <div style="font-size:10px; color:rgba(255,255,255,0.85); line-height:1.4; font-weight:300;">
                             <i class="fa-brands fa-instagram" style="color:#e1306c;"></i>
                             <i class="fa-brands fa-youtube" style="color:#ff0000; margin-left:3px;"></i>
                             <i class="fa-brands fa-tiktok" style="color:#fff; margin-left:3px;"></i>
                             <i class="fa-brands fa-threads" style="color:#fff; margin-left:3px;"></i>
-                            <span id="influencerCardPlatformsTxt" style="margin-left:4px;">어디든 OK</span>
+                            <span id="couponCardPlatformsTxt" style="margin-left:4px;">SNS 어디든 OK</span>
                         </div>
                     </div>
                 </div>
-                <div id="influencerCardDesc" style="font-size:10.5px; color:rgba(255,255,255,0.7); line-height:1.5; font-weight:300; margin:6px 0 8px;">
-                    카멜레온을 홍보하고 조회수 10만 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>
+                <div style="font-size:11.5px; color:rgba(255,255,255,0.92); line-height:1.6; font-weight:400; margin:8px 0;">
+                    <div id="couponCardLine1" style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                        <span style="background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.5); border-radius:4px; padding:1px 6px; font-weight:700; color:#c7d2fe; min-width:18px; text-align:center;">1</span>
+                        <span><b style="color:#fbcfe8;">회원가입</b> 시 <b style="color:#fff;">3,000엔</b> 무료 쿠폰</span>
+                    </div>
+                    <div id="couponCardLine2" style="display:flex; align-items:center; gap:8px;">
+                        <span style="background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.5); border-radius:4px; padding:1px 6px; font-weight:700; color:#c7d2fe; min-width:18px; text-align:center;">2</span>
+                        <span>구매 후 <b style="color:#fbcfe8;">SNS 공유</b> 시 <b style="color:#fff;">10,000엔</b> 추가 쿠폰</span>
+                    </div>
                 </div>
-                <div id="influencerCardReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin:6px 0 10px; font-size:11.5px; font-weight:300; color:#fbcfe8; text-align:center; letter-spacing:0.2px;">
-                    조회수 10만 달성 시 100,000원
+                <div id="couponCardNote" style="font-size:9.5px; color:rgba(255,255,255,0.55); line-height:1.5; margin:6px 0 10px; text-align:center; font-weight:400;">
+                    * 이벤트 쿠폰은 구매금액의 50%까지 사용 가능
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; position:relative;">
-                    <button type="button" onclick="window._openInfluencerModal && window._openInfluencerModal()" id="influencerCardBtn" style="padding:9px 20px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
-                        📝 응모하기
+                    <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()" id="couponCardBtn" style="padding:9px 20px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:600; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
+                        🎁 쿠폰 받기
                     </button>
                 </div>
             </div>
@@ -1124,14 +1131,7 @@ window._tcmFallbackClick = function(code) {
             var enEl = document.getElementById('enHibaContact');
             if (enEl) enEl.style.display = '';
         }
-        // KR 은 인플루언서 카드 숨김
-        if (isKR) {
-            var infEl = document.getElementById('overseasBranchHero');
-            if (infEl) infEl.style.display = 'none';
-            // KR 에선 jpHeroRow 자체가 빈 줄이 될 수 있으므로 row 도 숨김
-            var rowEl = document.getElementById('jpHeroRow');
-            if (rowEl) rowEl.style.display = 'none';
-        }
+        // 2026-06-01: 쿠폰 카드는 모든 사이트에 노출 (KR 도 표시)
     })();
     // EN/외국 사이트 인라인 주문 — _mgrQuoteOrder 위임
     window._enInlineOrder = function(){
@@ -1339,7 +1339,7 @@ window._tcmFallbackClick = function(code) {
         </div>
     </div>
 
-    <!-- 2026-05-28: 인플루언서 모집 카드 다국어 + 응모 모달 + 제출 핸들러 -->
+    <!-- 2026-06-01: 쿠폰 이벤트 카드 i18n + SNS 공유 인증 모달 + 제출 핸들러 -->
     <script>
     (function(){
         var host = location.hostname || '';
@@ -1348,175 +1348,218 @@ window._tcmFallbackClick = function(code) {
             (host.indexOf('cafe0101.com') >= 0 ? 'ja' :
              (host.indexOf('cafe3355.com') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
              (window.CURRENT_LANG || 'kr'));
-        // 인플루언서 모집 다국어
-        var INF = {
-            kr: { title:'홍보비 즉시 지급', platforms:'어디든 OK', desc:'카멜레온 홍보 영상·게시물을 SNS에 먼저 올린 후, <b style="color:#fbcfe8;">조회수 1만 회 이상</b> 달성한 <b style="color:#fbcfe8;">게시물 링크</b>를 제출하세요.<br>확인 후 <b style="color:#fbcfe8; font-weight:500;">즉시 지급</b>', reward:'1만 회당 10,000원 · 최대 100,000원', btn:'💰 정산 신청',
-                  modalTitle:'홍보 정산 신청', modalSub:'⚠️ 이미 게시한 홍보 컨텐츠 URL을 제출해 주세요. 본인 계정 주소가 아닌 게시물·영상·릴스 링크여야 합니다. 1만 회당 10,000원 (최대 100,000원).',
-                  fName:'이름', fSns:'홍보 컨텐츠 URL (게시물·영상·릴스 링크)', fBank:'계좌번호 (지급용)', fEmail:'이메일 (선택)', fNote:'메모 (선택 — 게시일·현재 조회수·여러 개면 모두 작성)',
-                  submit:'정산 신청', success:'신청이 접수되었습니다. 조회수 확인 후 입금 처리하겠습니다.', failPrefix:'제출 실패:',
-                  alertReq:'이름·컨텐츠 URL·계좌번호는 필수입니다.' },
-            ja: { title:'PR報酬 即時支払い', platforms:'どこでもOK', desc:'カメレオンのPR動画・投稿をSNSに先に投稿し、<b style="color:#fbcfe8;">再生1万回以上</b>達成した<b style="color:#fbcfe8;">投稿のURL</b>を送信してください。<br>確認後 <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', reward:'1万回ごとに 1,000円 · 最大 10,000円', btn:'💰 報酬を申請',
-                  modalTitle:'PR報酬 申請', modalSub:'⚠️ 既に投稿済みのPRコンテンツのURLを送ってください。アカウントURLではなく、投稿・動画・リールのリンクが必要です。1万回ごとに1,000円 (最大 10,000円)。',
-                  fName:'お名前', fSns:'PRコンテンツURL (投稿・動画・リールのリンク)', fBank:'振込口座番号', fEmail:'メールアドレス (任意)', fNote:'メモ (任意 — 投稿日・現在の再生数・複数あればすべて記入)',
-                  submit:'報酬を申請', success:'申請を受け付けました。再生数を確認後、お振込いたします。', failPrefix:'送信失敗:',
-                  alertReq:'お名前・コンテンツURL・口座番号は必須です。' },
-            en: { title:'Instant Payout for Views', platforms:'Any platform', desc:'Post promo content for Chameleon on social <b style="color:#fbcfe8;">first</b>. Then submit the URL of any post with <b style="color:#fbcfe8;">10K+ views</b>.<br>We verify and pay <b style="color:#fbcfe8; font-weight:500;">instantly</b>', reward:'$10 per 10K views · max $100', btn:'💰 Claim Payout',
-                  modalTitle:'Promo Payout Claim', modalSub:'⚠️ Submit the URL of content you already posted. Must be the POST / VIDEO / REEL link — not your account URL. $10 per 10K views (max $100).',
-                  fName:'Your Name', fSns:'Content URL (post / video / reel)', fBank:'Bank Account / PayPal Email', fEmail:'Email (optional)', fNote:'Notes (optional — post date, current view count, multiple URLs OK)',
-                  submit:'Claim Payout', success:'Claim received. We will verify views and send payment.', failPrefix:'Submission failed:',
-                  alertReq:'Name, content URL, and bank account are required.' },
-            zh: { title:'宣传费即时支付', desc:'先在SNS上发布变色龙宣传内容，再提交达到<b style="color:#fbcfe8;">1万次播放以上</b>的<b style="color:#fbcfe8;">帖子链接</b>。每1万次播放支付$10，最高$100。', reward:'每1万次播放 $10 · 最高 $100', btn:'💰 申请报酬',
-                  modalTitle:'宣传报酬申请', modalSub:'⚠️ 请提交已发布的宣传内容URL（必须是帖子/视频/Reel链接，非账号URL）。每1万次播放 $10 (最高 $100)。',
-                  fName:'姓名', fSns:'宣传内容URL (帖子·视频·Reel链接)', fBank:'银行账号/PayPal', fEmail:'邮箱 (可选)', fNote:'备注 (可选 — 发布日期、当前播放量、多个链接可并列)',
-                  submit:'申请报酬', success:'申请已收到。我们将核实播放量后付款。', failPrefix:'提交失败:',
-                  alertReq:'姓名、内容URL、账号为必填项。' },
-            es: { title:'Pago instantáneo por vistas', desc:'Publica contenido de Chameleon en redes <b style="color:#fbcfe8;">primero</b>, luego envía la URL de cualquier publicación con <b style="color:#fbcfe8;">10K+ vistas</b>. $10 por cada 10K vistas, máximo $100, pago instantáneo.', reward:'$10 por cada 10K vistas · máx $100', btn:'💰 Reclamar pago',
-                  modalTitle:'Reclamo de pago', modalSub:'⚠️ Envíe la URL del contenido ya publicado. Debe ser un enlace POST/VIDEO/REEL, no su URL de cuenta. $10 por cada 10.000 vistas (máx $100).',
-                  fName:'Nombre', fSns:'URL del contenido (post / video / reel)', fBank:'Cuenta bancaria / PayPal', fEmail:'Email (opcional)', fNote:'Notas (opcional — fecha de publicación, vistas actuales)',
-                  submit:'Reclamar pago', success:'Reclamo recibido. Verificaremos las vistas y enviaremos el pago.', failPrefix:'Error al enviar:',
-                  alertReq:'Nombre, URL del contenido y cuenta son obligatorios.' },
-            de: { title:'Sofortige Auszahlung für Aufrufe', desc:'Veröffentliche Chameleon-Inhalte <b style="color:#fbcfe8;">zuerst</b> auf Social Media, dann sende die URL eines Beitrags mit <b style="color:#fbcfe8;">10K+ Aufrufen</b>. $10 pro 10.000 Aufrufe, max. $100, sofortige Zahlung.', reward:'$10 pro 10K Aufrufe · max. $100', btn:'💰 Auszahlung anfordern',
-                  modalTitle:'Auszahlungsantrag', modalSub:'⚠️ Senden Sie die URL des bereits veröffentlichten Inhalts. Muss ein POST/VIDEO/REEL-Link sein, nicht Ihre Konto-URL. $10 pro 10.000 Aufrufe (max. $100).',
-                  fName:'Name', fSns:'Inhalts-URL (Post / Video / Reel)', fBank:'Bankkonto / PayPal', fEmail:'E-Mail (optional)', fNote:'Notizen (optional — Veröffentlichungsdatum, aktuelle Aufrufe)',
-                  submit:'Auszahlung anfordern', success:'Antrag erhalten. Wir verifizieren die Aufrufe und zahlen aus.', failPrefix:'Senden fehlgeschlagen:',
-                  alertReq:'Name, Inhalts-URL und Konto sind Pflicht.' },
-            fr: { title:'Paiement instantané par vues', desc:'Publiez du contenu Chameleon sur les réseaux <b style="color:#fbcfe8;">d\'abord</b>, puis envoyez l\'URL d\'une publication avec <b style="color:#fbcfe8;">10K+ vues</b>. $10 par tranche de 10.000 vues, max $100, paiement instantané.', reward:'$10 par 10K vues · max $100', btn:'💰 Réclamer le paiement',
-                  modalTitle:'Demande de paiement', modalSub:'⚠️ Envoyez l\'URL du contenu déjà publié. Doit être un lien POST/VIDEO/REEL, pas votre URL de compte. $10 par tranche de 10 000 vues (max $100).',
-                  fName:'Nom', fSns:'URL du contenu (post / vidéo / reel)', fBank:'Compte bancaire / PayPal', fEmail:'Email (optionnel)', fNote:'Notes (optionnel — date de publication, vues actuelles)',
-                  submit:'Réclamer le paiement', success:'Demande reçue. Nous vérifierons les vues et vous paierons.', failPrefix:'Échec de l\'envoi:',
-                  alertReq:'Nom, URL du contenu et compte sont requis.' },
-            ar: { title:'دفع فوري حسب المشاهدات', desc:'انشر محتوى الترويج لـ Chameleon على وسائل التواصل أولاً، ثم أرسل رابط المنشور الذي تجاوز <b style="color:#fbcfe8;">10 آلاف مشاهدة</b>. 10$ لكل 10,000 مشاهدة، بحد أقصى 100$، دفع فوري.', reward:'10$ لكل 10 آلاف مشاهدة · حد أقصى 100$', btn:'💰 طلب الدفع',
-                  modalTitle:'طلب الدفع الترويجي', modalSub:'⚠️ أرسل رابط المحتوى المنشور بالفعل. يجب أن يكون رابط منشور/فيديو/ريل، وليس رابط حسابك. 10$ لكل 10,000 مشاهدة (حد أقصى 100$).',
-                  fName:'الاسم', fSns:'رابط المحتوى (منشور/فيديو/ريل)', fBank:'حساب بنكي / PayPal', fEmail:'البريد (اختياري)', fNote:'ملاحظات (اختياري — تاريخ النشر، المشاهدات الحالية)',
-                  submit:'طلب الدفع', success:'تم استلام الطلب. سنتحقق من المشاهدات ونرسل الدفعة.', failPrefix:'فشل الإرسال:',
-                  alertReq:'الاسم، رابط المحتوى، والحساب مطلوبة.' }
+        // 사이트 별 금액 (1배 = JP 엔, 10배 = KR 원, 0.01배 = USD)
+        // 표시는 lang 기준이지만 DB 저장은 모두 KRW 기준 (3,000엔 = 30,000원 KRW)
+        var COUPON = {
+            kr: { title:'이벤트 쿠폰 받기', platforms:'SNS 어디든 OK',
+                  line1:'<b style="color:#fbcfe8;">회원가입</b> 시 <b style="color:#fff;">30,000원</b> 무료 쿠폰',
+                  line2:'구매 후 <b style="color:#fbcfe8;">SNS 공유</b> 시 <b style="color:#fff;">100,000원</b> 추가 쿠폰',
+                  note:'* 이벤트 쿠폰은 구매금액의 50%까지 사용 가능',
+                  btn:'🎁 쿠폰 받기',
+                  modalTitle:'SNS 공유 쿠폰 신청',
+                  modalSub:'구매 후 SNS에 카멜레온프린팅 후기를 올리고 스크린샷을 제출하면 <b>100,000원</b> 쿠폰을 드립니다. 회원가입은 자동으로 30,000원 쿠폰이 지급됩니다.',
+                  fEmail:'가입 이메일 (쿠폰 받을 계정)',
+                  fSns:'SNS 공유 URL (게시물 직접 링크)',
+                  fScreenshot:'스크린샷 (필수)',
+                  fNote:'메모 (선택)',
+                  submit:'쿠폰 신청',
+                  success:'신청이 접수되었습니다! 관리자 확인 후 24시간 내 마이페이지에 100,000원 쿠폰이 지급됩니다.',
+                  failPrefix:'제출 실패:',
+                  alertReq:'이메일·SNS URL·스크린샷은 필수입니다.',
+                  alertLogin:'먼저 로그인해 주세요. 회원가입하면 30,000원 쿠폰이 자동 지급됩니다.' },
+            ja: { title:'クーポンプレゼント', platforms:'SNSどこでもOK',
+                  line1:'<b style="color:#fbcfe8;">会員登録</b>で <b style="color:#fff;">3,000円</b> 無料クーポン',
+                  line2:'購入後 <b style="color:#fbcfe8;">SNSシェア</b>で <b style="color:#fff;">10,000円</b> 追加クーポン',
+                  note:'* イベントクーポンはご注文金額の50%までご利用可能',
+                  btn:'🎁 クーポン申請',
+                  modalTitle:'SNSシェアクーポン申請',
+                  modalSub:'ご購入後にSNSでカメレオンプリンティングのレビューを投稿し、スクリーンショットを送ってください。<b>10,000円</b>クーポンをプレゼント。会員登録時に3,000円クーポンは自動付与されます。',
+                  fEmail:'登録メールアドレス (クーポン受取用)',
+                  fSns:'SNSシェアURL (投稿の直リンク)',
+                  fScreenshot:'スクリーンショット (必須)',
+                  fNote:'メモ (任意)',
+                  submit:'申請する',
+                  success:'申請を受け付けました！管理者確認後、24時間以内にマイページへ10,000円クーポンが付与されます。',
+                  failPrefix:'送信失敗:',
+                  alertReq:'メール・SNS URL・スクリーンショットは必須です。',
+                  alertLogin:'先にログインしてください。会員登録すると3,000円クーポンが自動付与されます。' },
+            en: { title:'Get Event Coupons', platforms:'Any SNS',
+                  line1:'<b style="color:#fbcfe8;">Sign up</b> → <b style="color:#fff;">$30</b> free coupon',
+                  line2:'<b style="color:#fbcfe8;">Share on SNS</b> after purchase → <b style="color:#fff;">$100</b> bonus coupon',
+                  note:'* Event coupons usable up to 50% of order amount',
+                  btn:'🎁 Claim Coupon',
+                  modalTitle:'SNS Share Coupon Claim',
+                  modalSub:'After purchasing, post a review on SNS and send a screenshot to receive a <b>$100</b> coupon. The signup $30 coupon is auto-granted.',
+                  fEmail:'Account email (where coupon will land)',
+                  fSns:'SNS post URL (direct link to your post)',
+                  fScreenshot:'Screenshot (required)',
+                  fNote:'Notes (optional)',
+                  submit:'Submit Claim',
+                  success:'Claim received! After admin review, $100 coupon will appear in your mypage within 24 hours.',
+                  failPrefix:'Submission failed:',
+                  alertReq:'Email, SNS URL, and screenshot are required.',
+                  alertLogin:'Please log in first. Signup grants a $30 coupon automatically.' }
         };
-        var t = INF[lang] || INF.kr;
+        var t = COUPON[lang] || COUPON.kr;
         function $(id){ return document.getElementById(id); }
-        if ($('influencerCardTitle')) $('influencerCardTitle').textContent = t.title;
-        if ($('influencerCardDesc'))  $('influencerCardDesc').innerHTML  = t.desc;
-        if ($('influencerCardReward')) $('influencerCardReward').textContent = t.reward;
-        if ($('influencerCardPlatformsTxt') && t.platforms) $('influencerCardPlatformsTxt').textContent = t.platforms;
-        if ($('influencerCardBtn'))   $('influencerCardBtn').textContent   = t.btn;
-        // 글로벌 변수로 노출 — 모달 표시 + 제출에서 사용
-        window.__INF_T = t;
-        window.__INF_LANG = lang;
+        if ($('couponCardTitle'))         $('couponCardTitle').textContent = t.title;
+        if ($('couponCardPlatformsTxt'))  $('couponCardPlatformsTxt').textContent = t.platforms;
+        if ($('couponCardLine1'))         $('couponCardLine1').children[1].innerHTML = t.line1;
+        if ($('couponCardLine2'))         $('couponCardLine2').children[1].innerHTML = t.line2;
+        if ($('couponCardNote'))          $('couponCardNote').textContent = t.note;
+        if ($('couponCardBtn'))           $('couponCardBtn').textContent = t.btn;
+        window.__COUPON_T = t;
+        window.__COUPON_LANG = lang;
     })();
 
-    // 인플루언서 응모 모달 열기/닫기
-    window._openInfluencerModal = function(){
-        var modal = document.getElementById('influencerModal');
+    // 모달 열기/닫기
+    window._openCouponShareModal = function(){
+        var modal = document.getElementById('couponShareModal');
         if (!modal) return;
-        modal.style.display = 'flex';
+        var t = window.__COUPON_T || {};
+        // 로그인 체크 — 미로그인이면 로그인 모달 띄움
+        (async function(){
+            try {
+                var sb = window.sb;
+                if (sb && sb.auth) {
+                    var r = await sb.auth.getSession();
+                    var sess = r && r.data && r.data.session;
+                    if (!sess) {
+                        alert(t.alertLogin || '로그인이 필요합니다.');
+                        if (typeof window.openAuthModal === 'function') window.openAuthModal('login');
+                        return;
+                    }
+                    // 로그인 이메일 자동 채움
+                    var emailIn = document.getElementById('couponEmail');
+                    if (emailIn && sess.user && sess.user.email) emailIn.value = sess.user.email;
+                }
+            } catch(e) {}
+            modal.style.display = 'flex';
+        })();
     };
-    window._closeInfluencerModal = function(){
-        var modal = document.getElementById('influencerModal');
+    window._closeCouponShareModal = function(){
+        var modal = document.getElementById('couponShareModal');
         if (modal) modal.style.display = 'none';
     };
-    // 제출 핸들러 — chatbot_knowledge 테이블에 category='_influencer_apps' 로 저장
-    window._submitInfluencer = async function(){
-        var t = window.__INF_T || {};
-        var name = (document.getElementById('infName').value || '').trim();
-        var sns  = (document.getElementById('infSns').value || '').trim();
-        var bank = (document.getElementById('infBank').value || '').trim();
-        var email = (document.getElementById('infEmail').value || '').trim();
-        var note = (document.getElementById('infNote').value || '').trim();
-        if (!name || !sns || !bank) { alert(t.alertReq || 'Required fields missing'); return; }
-        var btn = document.getElementById('infSubmitBtn');
+
+    // 스크린샷 → Supabase Storage 업로드
+    async function _couponUploadScreenshot(file){
+        var sb = window.sb;
+        if (!sb) throw new Error('DB not ready');
+        var ext = ((file.name || '').split('.').pop() || 'png').toLowerCase();
+        var path = 'sns-share/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+        var { data, error } = await sb.storage.from('share-screenshots').upload(path, file, { upsert:false, contentType:file.type });
+        if (error) {
+            // bucket이 없을 수 있음 — 일반 storage bucket 으로 fallback
+            try {
+                var fb = await sb.storage.from('public').upload(path, file, { upsert:false, contentType:file.type });
+                if (fb.error) throw fb.error;
+                var pub = sb.storage.from('public').getPublicUrl(path);
+                return pub.data.publicUrl;
+            } catch(e2) { throw error; }
+        }
+        var pub = sb.storage.from('share-screenshots').getPublicUrl(path);
+        return pub.data.publicUrl;
+    }
+
+    // 제출 핸들러 — chatbot_knowledge 에 category='_sns_share_apps' 로 저장. 관리자가 /sns-rewards 에서 승인하면 마일리지 +100k 지급.
+    window._submitCouponShare = async function(){
+        var t = window.__COUPON_T || {};
+        var email = (document.getElementById('couponEmail').value || '').trim();
+        var sns   = (document.getElementById('couponSns').value || '').trim();
+        var file  = document.getElementById('couponScreenshot').files[0];
+        var note  = (document.getElementById('couponNote').value || '').trim();
+        if (!email || !sns || !file) { alert(t.alertReq || 'Required fields missing'); return; }
+        var btn = document.getElementById('couponSubmitBtn');
         if (btn) { btn.disabled = true; btn.textContent = '...'; }
         try {
             var sb = window.sb;
-            if (!sb && typeof supabase !== 'undefined') {
-                sb = supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
-            }
             if (!sb) throw new Error('DB 미초기화');
+            // 1) 현재 로그인 사용자 (필수)
+            var sess = await sb.auth.getSession();
+            var user = sess && sess.data && sess.data.session && sess.data.session.user;
+            if (!user) { alert(t.alertLogin); return; }
+            // 2) 스크린샷 업로드
+            var screenshotUrl = await _couponUploadScreenshot(file);
+            // 3) DB 저장
+            var lang = window.__COUPON_LANG || 'kr';
+            var info = {
+                user_id: user.id,
+                email: email,
+                sns_url: sns,
+                screenshot_url: screenshotUrl,
+                note: note,
+                lang: lang,
+                submitted_at: new Date().toISOString(),
+                status: 'pending',
+                coupon_amount_krw: 100000  // 10,000엔 = $100 = 100,000 KRW (저장은 KRW 기준)
+            };
             var payload = {
-                category: '_influencer_apps',
-                question: 'Influencer Application - ' + name + ' (' + (window.__INF_LANG||'kr') + ')',
-                answer: JSON.stringify({ name:name, sns_url:sns, bank_account:bank, email:email, note:note, lang:window.__INF_LANG||'kr', submitted_at:new Date().toISOString(), view_count:0, paid_amount:0, status:'pending' }),
+                category: '_sns_share_apps',
+                question: 'SNS Share Claim - ' + email + ' (' + lang + ')',
+                answer: JSON.stringify(info),
                 is_active: true,
-                keywords: 'influencer ' + (window.__INF_LANG||'kr')
+                keywords: 'sns_share ' + lang + ' ' + user.id
             };
             var { error } = await sb.from('chatbot_knowledge').insert(payload);
             if (error) throw error;
             alert(t.success || 'Submitted.');
-            window._closeInfluencerModal();
-            // 폼 초기화
-            ['infName','infSns','infBank','infEmail','infNote'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
-        } catch(e){
+            window._closeCouponShareModal();
+            ['couponSns','couponNote'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+            var f = document.getElementById('couponScreenshot'); if (f) f.value = '';
+        } catch(e) {
             alert((t.failPrefix || 'Submit failed:') + ' ' + (e.message || e));
         } finally {
-            if (btn) { btn.disabled = false; btn.textContent = t.submit || 'Submit'; }
+            if (btn) { btn.disabled = false; btn.textContent = (window.__COUPON_T && window.__COUPON_T.submit) || 'Submit'; }
         }
     };
     </script>
 
-    <!-- 인플루언서 응모 모달 -->
-    <div id="influencerModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeInfluencerModal()">
+    <!-- SNS 공유 쿠폰 신청 모달 -->
+    <div id="couponShareModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeCouponShareModal()">
         <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative;">
-            <!-- 닫기 버튼 — 모달 우상단 절대 고정. 스크롤해도 항상 보임 -->
-            <button onclick="window._closeInfluencerModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
-            <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:14px 18px; color:#fff; flex-shrink:0;">
-                <div id="infModalTitle" style="font-size:16px; font-weight:300; margin-bottom:3px; letter-spacing:-0.2px;">인플루언서 응모</div>
-                <div id="infModalSub" style="font-size:11px; opacity:0.95; line-height:1.45; font-weight:300; padding-right:34px;">카멜레온프린팅을 SNS로 홍보하세요. 조회수 10,000회당 100,000원 지급.</div>
+            <button onclick="window._closeCouponShareModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
+            <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:16px 18px; color:#fff; flex-shrink:0;">
+                <div id="couponModalTitle" style="font-size:17px; font-weight:700; margin-bottom:4px; letter-spacing:-0.2px;">SNS 공유 쿠폰 신청</div>
+                <div id="couponModalSub" style="font-size:11.5px; opacity:0.95; line-height:1.55; font-weight:300; padding-right:34px;">구매 후 SNS 공유 인증으로 100,000원 쿠폰을 받으세요.</div>
             </div>
             <div style="padding:14px 18px; overflow-y:auto; flex:1; min-height:0;">
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblName">이름</label>
-                <input id="infName" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblEmail">가입 이메일</label>
+                <input id="couponEmail" type="email" readonly style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box; background:#f9fafb;">
 
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblSns">SNS 주소</label>
-                <input id="infSns" type="url" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblSns">SNS 공유 URL</label>
+                <input id="couponSns" type="url" placeholder="https://www.instagram.com/p/... 또는 youtu.be/..." style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
 
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblBank">계좌번호</label>
-                <input id="infBank" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblScreenshot">스크린샷 (게시물·게시 화면 캡쳐)</label>
+                <input id="couponScreenshot" type="file" accept="image/*" style="width:100%; padding:6px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12px; margin-bottom:8px; box-sizing:border-box; background:#fff;">
 
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblEmail">이메일 (선택)</label>
-                <input id="infEmail" type="email" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
+                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblNote">메모 (선택)</label>
+                <textarea id="couponNote" rows="2" placeholder="예: 인스타 릴스에 후기 영상 게시" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12.5px; margin-bottom:10px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
 
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="infLblNote">홍보 계획 (선택)</label>
-                <textarea id="infNote" rows="2" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12.5px; margin-bottom:10px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+                <div style="font-size:10.5px; color:#6b7280; line-height:1.5; margin:0 0 10px; padding:8px 10px; background:#fef3c7; border-radius:6px; border-left:3px solid #f59e0b;">
+                    💡 <b>이벤트 쿠폰은 구매금액의 50%까지 사용 가능</b>합니다. 예: 20,000원 주문 → 최대 10,000원 사용 / 200,000원 주문 → 보유 쿠폰 전액 사용.
+                </div>
 
-                <button id="infSubmitBtn" type="button" onclick="window._submitInfluencer()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">
-                    응모 제출
+                <button id="couponSubmitBtn" type="button" onclick="window._submitCouponShare()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">
+                    쿠폰 신청
                 </button>
-                <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;" id="infFooterNote">조회수 달성 후 입금신청 → 등록한 계좌로 지급됩니다.</p>
+                <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;" id="couponFooterNote">관리자 확인 후 24시간 내 마이페이지에 쿠폰이 지급됩니다.</p>
             </div>
         </div>
     </div>
     <script>
-    // 모달 라벨 + placeholder + 푸터 i18n 적용
+    // 모달 라벨 i18n 적용
     (function(){
-        var t = window.__INF_T;
-        var lang = window.__INF_LANG || 'kr';
+        var t = window.__COUPON_T;
         if (!t) return;
         function $(id){ return document.getElementById(id); }
-        if ($('infModalTitle')) $('infModalTitle').textContent = t.modalTitle;
-        if ($('infModalSub'))   $('infModalSub').textContent   = t.modalSub;
-        if ($('infLblName'))    $('infLblName').textContent    = t.fName;
-        if ($('infLblSns'))     $('infLblSns').textContent     = t.fSns;
-        if ($('infLblBank'))    $('infLblBank').textContent    = t.fBank;
-        if ($('infLblEmail'))   $('infLblEmail').textContent   = t.fEmail;
-        if ($('infLblNote'))    $('infLblNote').textContent    = t.fNote;
-        if ($('infSubmitBtn'))  $('infSubmitBtn').textContent  = t.submit;
-        // placeholder 다국어
-        var PH = {
-            kr: { name:'홍길동', sns:'https://www.instagram.com/reel/Cxxxxx... 또는 https://youtu.be/...', bank:'국민은행 123-456-789012', email:'you@example.com', note:'예: 2026/05/30 게시, 현재 12,300회 / 추가 1건: https://...', footer:'⚠️ 본인 계정 URL 아닌 게시물·영상·릴스 링크여야 함. 조회수 확인 후 등록 계좌로 즉시 지급됩니다.' },
-            ja: { name:'山田太郎', sns:'https://www.instagram.com/reel/Cxxxxx... または https://youtu.be/...', bank:'例: みずほ銀行 普通 1234567', email:'you@example.com', note:'例: 2026/05/30 投稿、現在12,300回 / 追加1件: https://...', footer:'⚠️ アカウントURLではなく、投稿・動画・リールのリンクが必要。再生数を確認後、ご登録の口座へ即時お振込いたします。' },
-            en: { name:'John Doe', sns:'https://www.instagram.com/reel/Cxxxxx... or https://youtu.be/...', bank:'Bank of America #1234567', email:'you@example.com', note:'e.g. Posted 2026-05-30, currently 12,300 views / extra: https://...', footer:'⚠️ Must be a POST / VIDEO / REEL link, not your account URL. After view check, we pay instantly.' },
-            zh: { name:'张三', sns:'https://www.instagram.com/reel/Cxxxxx... 或 https://youtu.be/...', bank:'例: 中国银行 6217-0001-2345-6789', email:'you@example.com', note:'例: 2026-05-30发布，目前12,300次播放', footer:'⚠️ 须为帖子/视频/Reel链接，非账号链接。播放量核实后即时汇款。' },
-            es: { name:'Juan García', sns:'https://www.instagram.com/reel/... o https://youtu.be/...', bank:'Cuenta o PayPal', email:'you@example.com', note:'ej. Publicado 30-05-2026, 12.300 vistas actuales', footer:'⚠️ Debe ser un enlace de POST / VIDEO / REEL, no de tu cuenta. Pago instantáneo tras verificar.' },
-            de: { name:'Max Mustermann', sns:'https://www.instagram.com/reel/... oder https://youtu.be/...', bank:'Konto oder PayPal', email:'you@example.com', note:'z.B. Veröffentlicht am 30.05.2026, aktuell 12.300 Aufrufe', footer:'⚠️ Muss ein POST/VIDEO/REEL-Link sein, nicht Ihr Konto. Sofortige Auszahlung nach Prüfung.' },
-            fr: { name:'Jean Dupont', sns:'https://www.instagram.com/reel/... ou https://youtu.be/...', bank:'Compte ou PayPal', email:'you@example.com', note:'ex. Publié le 30/05/2026, 12 300 vues actuelles', footer:'⚠️ Doit être un lien de POST/VIDEO/REEL, pas votre compte. Paiement instantané après vérification.' },
-            ar: { name:'محمد', sns:'https://www.instagram.com/reel/... أو https://youtu.be/...', bank:'حساب بنكي أو PayPal', email:'you@example.com', note:'مثال: نُشر في 2026/05/30، 12,300 مشاهدة حالياً', footer:'⚠️ يجب أن يكون رابط منشور/فيديو/ريل، وليس حسابك. دفع فوري بعد التحقق.' }
-        };
-        var ph = PH[lang] || PH.kr;
-        if ($('infName'))  $('infName').setAttribute('placeholder', ph.name);
-        if ($('infSns'))   $('infSns').setAttribute('placeholder', ph.sns);
-        if ($('infBank'))  $('infBank').setAttribute('placeholder', ph.bank);
-        if ($('infEmail')) $('infEmail').setAttribute('placeholder', ph.email);
-        if ($('infNote'))  $('infNote').setAttribute('placeholder', ph.note);
-        if ($('infFooterNote')) $('infFooterNote').textContent = ph.footer;
+        if ($('couponModalTitle')) $('couponModalTitle').textContent = t.modalTitle;
+        if ($('couponModalSub'))   $('couponModalSub').innerHTML     = t.modalSub;
+        if ($('couponLblEmail'))   $('couponLblEmail').textContent   = t.fEmail;
+        if ($('couponLblSns'))     $('couponLblSns').textContent     = t.fSns;
+        if ($('couponLblScreenshot')) $('couponLblScreenshot').textContent = t.fScreenshot;
+        if ($('couponLblNote'))    $('couponLblNote').textContent    = t.fNote;
+        if ($('couponSubmitBtn'))  $('couponSubmitBtn').textContent  = t.submit;
     })();
 
     // JP 인라인 결제 — LINE 카드 안의 円 입력 + 注文する → 메인 _mgrQuoteOrder 위임
@@ -8341,10 +8384,10 @@ window.filterFxCards = function(cat, btn) {
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script type="module" src="./order.js?v=462"></script>
-<script type="module" src="./login.js?v=434"></script>
+<script type="module" src="./login.js?v=435"></script>
 <script type="module" src="./main.js?v=443"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=223"></script>
+<script src="/simple_order.js?v=224"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=16"></script>
 
