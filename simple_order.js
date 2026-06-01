@@ -1478,6 +1478,14 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-06-01: 멀티-라인 — 큐 + 2버튼 (좌측 담기 = 장바구니 / 우측 가벽 추가 = 큐 적층) + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
+          <!-- 2026-06-01: 전체 합계 (배송 포함) — 큐 위쪽에 prominent 표시. 큐에 라인이 1개 이상이면 자동 표시 -->
+          <div id="soAdQueueTotalWrap" style="display:none; margin-bottom:10px; padding:14px 16px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%); color:#fff; border-radius:14px; box-shadow:0 6px 18px -6px rgba(79,70,229,0.45);">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px;">
+              <span style="font-size:13px; font-weight:700; opacity:0.92;">${tr('전체 합계 (배송 포함)', '合計 (送料込)', 'Total (incl. shipping)')}</span>
+              <span id="soAdQueueTotal" style="font-size:22px; font-weight:900; letter-spacing:-0.01em;">-</span>
+            </div>
+            <div id="soAdQueueTotalBreak" style="margin-top:6px; font-size:11px; opacity:0.88; line-height:1.5;"></div>
+          </div>
           <div id="soAdExtraLines"></div>
           <div id="soAdBtnStack" style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
             <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 보라 그라데이션. 항상 표시. -->
@@ -2812,80 +2820,10 @@ html, body { background: #ffffff !important; }
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         }
-        // 2026-06-01: 가벽 상품 — 가벽별로 블록 그룹핑 (현재 작업중 + 큐 각각). 비-가벽은 기존 flat 유지.
+        // 2026-06-01: 모든 상품 — 단순 flat breakdown. 가벽도 큐 chip 영역에 합계 표시되므로 중복 제거.
         var bdHtml = '';
-        if (state.isWall) {
-            // 가벽 모드: 상단의 일반 단가/가벽 사이즈 라인 숨김 — 블록 안에 모두 표시됨
-            showRow('soUnitRow', false);
-            showRow('soWallSizeRow', false);
-
-            var _sep = '<div style="border-top:1px dashed #cbd5e1; margin:10px 0;"></div>';
-
-            // ── 현재 작업중인 가벽 (active line) ──
-            var _curShapeLbl = state.wallShape === 'L' ? tr('ㄱ자','L字','L')
-                             : state.wallShape === 'U' ? tr('ㄷ자','コ字','U')
-                             : tr('一자','一字','straight');
-            var _curSideLbl = (state.wallSide === 'double') ? tr('양면','両面','double') : tr('단면','片面','single');
-            bdHtml += '<div style="font-size:12.5px; font-weight:900; color:#4338ca; margin-bottom:6px; padding:6px 8px; background:#eef2ff; border-radius:6px;">▶ ' + tr('이번 가벽','現在の壁面','Current wall') + '</div>';
-            bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (state.wallWidth||0) + 'm × ' + (state.wallHeight||0) + 'm · ' + _curSideLbl + ' · ' + _curShapeLbl + '</b></span></div>';
-            bdHtml += '<div class="so-price-row"><span>' + tr('단가','単価','Unit') + (state.wallSide === 'double' ? ' (양면×2)' : '') + '</span><span>' + fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal) + '</span></div>';
-            // 세로 3m 추가비
-            if (heightExtra > 0) {
-                bdHtml += '<div class="so-price-row"><span>· ' + tr('세로 3m 추가','縦3m追加','Height 3m extra') + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
-            }
-            // 가벽 형태 코너비
-            if (wallShapeFee > 0) {
-                var _shapeFeeLbl = state.wallShape === 'L' ? tr('ㄱ자 코너','L字コーナー','L-shape corner')
-                                 : state.wallShape === 'U' ? tr('ㄷ자 코너','コ字コーナー','U-shape corners')
-                                 : '';
-                bdHtml += '<div class="so-price-row"><span>· ' + tr('가벽 형태','壁面形状','Wall shape') + ' (' + _shapeFeeLbl + ')</span><span>+' + fmtPrice(wallShapeFee) + '</span></div>';
-            }
-            // 현재 라인 옵션들
-            if (addonBreakdownLines.length > 0) bdHtml += addonBreakdownLines.join('');
-            // 현재 라인 소계
-            var _curSubtotal = subtotal + heightExtra + wallShapeFee + addonTotal;
-            bdHtml += '<div class="so-price-row" style="margin-top:4px; padding-top:4px; border-top:1px solid #f1f5f9;"><span style="color:#475569; font-weight:700;">' + tr('소계','小計','Subtotal') + '</span><span style="color:#4338ca; font-weight:900;">' + fmtPrice(_curSubtotal) + '</span></div>';
-
-            // ── 큐에 담긴 가벽들 ──
-            if (Array.isArray(state._adLines) && state._adLines.length > 0) {
-                bdHtml += _sep;
-                bdHtml += '<div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:4px; padding:4px 0;">📋 ' + tr('이미 담긴 가벽','保存済みの壁面','Saved walls') + ' (' + state._adLines.length + ')</div>';
-                state._adLines.forEach(function(line, i) {
-                    bdHtml += '<div style="border-top:1px dotted #e2e8f0; margin:8px 0 6px;"></div>';
-                    var _lShapeLbl = line.wallShape === 'L' ? tr('ㄱ자형','L字','L-shape')
-                                   : line.wallShape === 'U' ? tr('ㄷ자형','コの字','U-shape')
-                                   : tr('一자형','ストレート','Straight');
-                    var _lSideLbl = (line.wallSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-                    var _ordKr2 = ['첫번째','두번째','세번째','네번째','다섯번째','여섯번째','일곱번째','여덟번째','아홉번째','열번째'];
-                    var _ordEn2 = function(n){ if(n===1)return'1st';if(n===2)return'2nd';if(n===3)return'3rd';return n+'th'; };
-                    var _ordLbl2 = tr((_ordKr2[i] || ((i+1)+'번째')), ((i+1)+'番目'), _ordEn2(i+1));
-                    bdHtml += '<div style="font-size:12px; font-weight:900; color:#1e40af; margin-bottom:4px;">' + _ordLbl2 + tr('가벽','壁面','Wall') + ' ' + _lShapeLbl + ' ' + _lSideLbl + '</div>';
-                    bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (line.wallWidth||0) + 'm × ' + (line.wallHeight||0) + 'm</b></span></div>';
-                    // 라인 옵션 — 이름+수량 펼치기
-                    try {
-                        var seen = {};
-                        Object.values(line.selectedAddons || {}).forEach(function(code){
-                            if (!code || seen[code]) return; seen[code] = true;
-                            var ad = (window.ADDON_DB || {})[code];
-                            if (!ad) return;
-                            var nm = ad.name_kr || ad.name || ad.display_name || code;
-                            var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
-                            var aPrice = (ad.price || 0) * aQty;
-                            bdHtml += '<div class="so-price-row"><span>· ' + escapeHtml(nm) + (aQty > 1 ? ' × ' + aQty : '') + '</span><span>+' + fmtPrice(aPrice) + '</span></div>';
-                        });
-                        Object.keys(line.baseStands || {}).forEach(function(bk){
-                            var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
-                            if (!o) return;
-                            var bQty = line.baseStands[bk] || 1;
-                            bdHtml += '<div class="so-price-row"><span>· ' + escapeHtml(o.label_ko || bk) + (bQty > 1 ? ' × ' + bQty : '') + '</span><span>+' + fmtPrice((o.fee || 0) * bQty) + '</span></div>';
-                        });
-                    } catch(e) {}
-                    bdHtml += '<div class="so-price-row" style="margin-top:4px;"><span style="color:#475569; font-weight:700;">' + tr('소계','小計','Subtotal') + '</span><span style="color:#4338ca; font-weight:900;">' + fmtPrice(line.lineTotal || 0) + '</span></div>';
-                });
-            }
-            bdHtml += _sep;
-        } else {
-            // 비-가벽 — 기존 flat. 단가 row 다시 표시.
+        {
+            // 단가 row + 가벽 사이즈 row 표시 (가벽이면 위쪽 가벽 사이즈 row 도 보여줌)
             showRow('soUnitRow', true);
             bdHtml = addonBreakdownLines.join('');
             if (adExtraLinesBreakdown.length > 0) bdHtml += adExtraLinesBreakdown.join('');
@@ -3009,6 +2947,33 @@ html, body { background: #ffffff !important; }
         }
         // 합계
         setText('soTotal', fmtPrice(final));
+
+        // 2026-06-01: 큐 chip 영역 상단의 "전체 합계 (배송 포함)" — 큐에 라인이 1개+ 일 때만 표시
+        try {
+            var _qtWrap = document.getElementById('soAdQueueTotalWrap');
+            var _qtVal  = document.getElementById('soAdQueueTotal');
+            var _qtBrk  = document.getElementById('soAdQueueTotalBreak');
+            var _hasQueue = Array.isArray(state._adLines) && state._adLines.length > 0;
+            if (_qtWrap && _qtVal) {
+                if (_hasQueue) {
+                    _qtWrap.style.display = '';
+                    _qtVal.textContent = fmtPrice(final);
+                    if (_qtBrk) {
+                        var _cur = subtotal + heightExtra + wallShapeFee + addonTotal;
+                        var _queueSum = 0;
+                        state._adLines.forEach(function(l){ _queueSum += (l.lineTotal || 0); });
+                        var _parts = [];
+                        _parts.push(tr('이번','現在','Current') + ' ' + fmtPrice(_cur));
+                        _parts.push(tr('큐','保存','Queue') + ' ' + fmtPrice(_queueSum));
+                        if (amountDiscount > 0) _parts.push(tr('할인','割引','Disc') + ' -' + fmtPrice(amountDiscount));
+                        if (shipFee > 0 && !state.bundleShipping) _parts.push(tr('배송','送料','Ship') + ' +' + fmtPrice(shipFee));
+                        _qtBrk.textContent = _parts.join(' · ');
+                    }
+                } else {
+                    _qtWrap.style.display = 'none';
+                }
+            }
+        } catch(e) {}
 
         // 활성 금액 티어 하이라이트
         const tbl = document.getElementById('soTierTable');
