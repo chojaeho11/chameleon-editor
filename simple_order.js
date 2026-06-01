@@ -1479,15 +1479,18 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-01: 멀티-라인 — 큐 + 2버튼 (좌측 담기 = 장바구니 / 우측 가벽 추가 = 큐 적층) + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
           <div id="soAdExtraLines"></div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
-            <button type="button" id="soAdCartLineBtn" onclick="window._soAddCart()"
-              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#4338ca,#6d28d9); color:#fff; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px -4px rgba(67,56,202,0.4);">
-              <i class="fa-solid fa-cart-shopping" style="font-size:14px;"></i>
-              <span>${tr('담기', 'カートに追加', 'Add to cart')}</span>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
+            <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 그라데이션 + 픽토그램 없음. -->
+            <button type="button" id="soAdCartLineBtn" onclick="window._soAdAddLine()"
+              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); color:#fff; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(79,70,229,0.55); transition:transform 0.12s, box-shadow 0.15s;"
+              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(79,70,229,0.65)'"
+              onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(79,70,229,0.55)'">
+              ${tr('담기', 'リストに追加', 'Save line')}
             </button>
             <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
-              style="padding:14px 10px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <i class="fa-solid fa-plus" style="font-size:14px;"></i>
+              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
+              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(251,191,36,0.6)'"
+              onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(251,191,36,0.5)'">
               <span id="soAdAddLineBtnLabel">${tr('가벽 추가', '壁面追加', 'Add wall')}</span>
             </button>
           </div>
@@ -1528,45 +1531,45 @@ html, body { background: #ffffff !important; }
           <div id="soWallSideRow" style="display:flex; gap:8px; align-items:center;">
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('인쇄면', '印刷面', 'Side')}</label>
             <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:8px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
-              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:8px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:6px; cursor:pointer; font-size:12px; font-weight:700; font-family:inherit;">${tr('양면', '両面', 'Double')}</button>
+              <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')" style="padding:10px 12px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); transition:all 0.18s;">${tr('단면', '片面', 'Single')}</button>
+              <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')" style="padding:10px 12px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; transition:all 0.18s;">${tr('양면', '両面', 'Double')}</button>
             </div>
           </div>
         </div>
 
-        <!-- 2026-06-01: 가벽 형태 — 직선/ㄱ자/ㄷ자. 원형 버튼 + 도형 + 글씨만. 가격/설명 제거. -->
+        <!-- 2026-06-01: 가벽 형태 — 작고 세련된 원형 버튼. 활성시 인디고 그라데이션 + 내부 도형 흰색. -->
         <div class="so-section" id="soWallShapeSection" style="display:none;">
           <div class="so-section-title">${tr('가벽 형태', '壁面の形状', 'Wall Shape')}</div>
-          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding:6px 0;">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; padding:4px 0;">
             <button type="button" class="so-wall-shape-btn active" data-shape="straight" onclick="window._soPickWallShape('straight')"
-              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
-              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#4338ca; border:3px solid #4338ca; color:#fff; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
-                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="straight">
+              style="background:none; border:none; padding:4px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div class="so-ws-circle" style="width:58px; height:58px; border-radius:50%; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); border:none; color:#fff; display:flex; align-items:center; justify-content:center; transition:all 0.18s ease; box-shadow:0 6px 16px -6px rgba(79,70,229,0.5);">
+                <svg viewBox="0 0 40 40" width="30" height="30" aria-label="straight">
                   <rect x="3" y="18" width="34" height="5" fill="currentColor" rx="1"/>
                 </svg>
               </div>
-              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#4338ca;">${tr('一자', '一字', 'Straight')}</div>
+              <div class="so-ws-label" style="font-size:12.5px; font-weight:800; color:#4f46e5;">${tr('一자', '一字', 'Straight')}</div>
             </button>
             <button type="button" class="so-wall-shape-btn" data-shape="L" onclick="window._soPickWallShape('L')"
-              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
-              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; border:3px solid #e2e8f0; color:#1c1917; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
-                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="L-shape">
+              style="background:none; border:none; padding:4px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div class="so-ws-circle" style="width:58px; height:58px; border-radius:50%; background:#f8fafc; border:1.5px solid #e2e8f0; color:#475569; display:flex; align-items:center; justify-content:center; transition:all 0.18s ease;">
+                <svg viewBox="0 0 40 40" width="30" height="30" aria-label="L-shape">
                   <rect x="3" y="18" width="22" height="5" fill="currentColor" rx="1"/>
                   <rect x="25" y="18" width="5" height="20" fill="currentColor" rx="1"/>
                 </svg>
               </div>
-              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#475569;">${tr('ㄱ자', 'L字', 'L-shape')}</div>
+              <div class="so-ws-label" style="font-size:12.5px; font-weight:800; color:#64748b;">${tr('ㄱ자', 'L字', 'L-shape')}</div>
             </button>
             <button type="button" class="so-wall-shape-btn" data-shape="U" onclick="window._soPickWallShape('U')"
-              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
-              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; border:3px solid #e2e8f0; color:#1c1917; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
-                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="U-shape">
+              style="background:none; border:none; padding:4px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div class="so-ws-circle" style="width:58px; height:58px; border-radius:50%; background:#f8fafc; border:1.5px solid #e2e8f0; color:#475569; display:flex; align-items:center; justify-content:center; transition:all 0.18s ease;">
+                <svg viewBox="0 0 40 40" width="30" height="30" aria-label="U-shape">
                   <rect x="3" y="10" width="5" height="28" fill="currentColor" rx="1"/>
                   <rect x="3" y="10" width="34" height="5" fill="currentColor" rx="1"/>
                   <rect x="32" y="10" width="5" height="28" fill="currentColor" rx="1"/>
                 </svg>
               </div>
-              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#475569;">${tr('ㄷ자', 'コ字', 'U-shape')}</div>
+              <div class="so-ws-label" style="font-size:12.5px; font-weight:800; color:#64748b;">${tr('ㄷ자', 'コ字', 'U-shape')}</div>
             </button>
           </div>
         </div>
@@ -4649,7 +4652,13 @@ html, body { background: #ffffff !important; }
         if (unitEl) unitEl.textContent = '-';
         if (areaInfoEl) areaInfoEl.textContent = '';
         var inlineInfo = document.getElementById('soAdInlineFileInfo');
-        if (inlineInfo) { inlineInfo.style.display = 'none'; inlineInfo.textContent = ''; }
+        if (inlineInfo) { inlineInfo.textContent = ''; }
+        // 2026-06-01: 인라인 업로드 카드 — "업로드 완료" 패널 닫고 "파일 업로드" 점선 버튼으로 복원.
+        //   다음 큐 라인에서 새 파일을 올릴 수 있도록.
+        var _inlineWrapR = document.getElementById('soAdInlineUploadWrap');
+        var _inlineDoneR = document.getElementById('soAdInlineDone');
+        if (_inlineWrapR) _inlineWrapR.style.display = '';
+        if (_inlineDoneR) _inlineDoneR.style.display = 'none';
         // soUpload 영역 — 'done' 클래스 제거 + drop-zone 기본 마크업 복원 + 이벤트 재바인딩.
         //   renderUploadDone 이 innerHTML 을 통째로 갈아치웠을 가능성에 대비.
         var uploadZone = document.getElementById('soUpload');
@@ -5149,9 +5158,11 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
             var on = b.dataset.side === state.wallSide;
             b.classList.toggle('active', on);
-            b.style.background = on ? '#4338ca' : '#fff';
-            b.style.color = on ? '#fff' : '#451a03';
-            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+            // 2026-06-01: 활성 시 인디고 그라데이션 + 글씨 흰색
+            b.style.background = on ? 'linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)' : '#fff';
+            b.style.color = on ? '#fff' : '#475569';
+            b.style.borderColor = on ? 'transparent' : '#e2e8f0';
+            b.style.boxShadow = on ? '0 4px 12px -4px rgba(79,70,229,0.45)' : 'none';
         });
         var backWrap = document.getElementById('soBackUploadWrap');
         if (backWrap) backWrap.style.display = (state.wallSide === 'double') ? '' : 'none';
@@ -5171,11 +5182,12 @@ html, body { background: #ffffff !important; }
             var circle = b.querySelector('.so-ws-circle');
             var label = b.querySelector('.so-ws-label');
             if (circle) {
-                circle.style.background = on ? '#4338ca' : '#f1f5f9';
-                circle.style.borderColor = on ? '#4338ca' : '#e2e8f0';
-                circle.style.color = on ? '#fff' : '#1c1917';
+                circle.style.background = on ? 'linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)' : '#f8fafc';
+                circle.style.border = on ? 'none' : '1.5px solid #e2e8f0';
+                circle.style.color = on ? '#fff' : '#475569';
+                circle.style.boxShadow = on ? '0 6px 16px -6px rgba(79,70,229,0.5)' : 'none';
             }
-            if (label) label.style.color = on ? '#4338ca' : '#475569';
+            if (label) label.style.color = on ? '#4f46e5' : '#64748b';
         });
         if (typeof recalc === 'function') recalc();
     };
