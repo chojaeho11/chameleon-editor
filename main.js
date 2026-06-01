@@ -210,6 +210,31 @@ window.addEventListener("DOMContentLoaded", async () => {
         // =========================================================
         let loadId = null; try { loadId = localStorage.getItem('load_design_id'); } catch(e) {}
         let cartFlag = null; try { cartFlag = localStorage.getItem('open_cart_on_load'); } catch(e) {}
+        // 2026-06-01: 마이페이지에서 "수정" 누르고 들어온 경우 — 모달 다시 열기 (단일 항목 edit)
+        let pendingEdit = null;
+        try {
+            const raw = localStorage.getItem('chameleon_pending_edit');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                // 5분 이내만 유효
+                if (parsed && parsed.item && (Date.now() - (parsed.ts||0) < 5*60*1000)) {
+                    pendingEdit = parsed.item;
+                }
+                localStorage.removeItem('chameleon_pending_edit');
+            }
+        } catch(e) {}
+        if (pendingEdit && pendingEdit.product && pendingEdit.product.code) {
+            // 페이지 본문이 보이도록 startScreen 표시 유지, simple_order 가 로드된 후 모달 열기
+            const _trigger = function() {
+                if (typeof window._soOrderEditItem === 'function') {
+                    window._soOrderEditItem(pendingEdit, { mode: 'reorder' });
+                } else {
+                    // simple_order.js 가 아직 안 올라왔으면 좀 더 기다리기
+                    setTimeout(_trigger, 300);
+                }
+            };
+            setTimeout(_trigger, 600);
+        }
 
         // [CASE A] 디자인 편집으로 들어온 경우
         if (loadId) {

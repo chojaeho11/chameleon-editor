@@ -7094,6 +7094,34 @@ html, body { background: #ffffff !important; }
         state._editingFileUrl = null;
         state._editingFilePath = null;
         state._editingFileName = null;
+        state._editingOrderId = null;
+        state._editingOrderItemIdx = null;
+        // 2026-06-01: 큐 + 임시 입력값도 닫을 때 초기화 — 재진입/새로고침 시 깨끗하게.
+        //   장바구니에 저장한 항목은 이미 cart 에 있고, 그것은 "내용변경" 흐름으로만 복원.
+        state._adLines = [];
+        state.file = null;
+        state.fileBack = null;
+        state.thumbDataUrl = null;
+        state.thumbDataUrlBack = null;
+        state.selectedAddons = {};
+        state.addonQuantities = {};
+        state.baseStands = {};
+        state.wallShape = 'straight';
+        state.wallShapeFee = 0;
+        state.wallSide = 'single';
+        state.bundleShipping = false;
+        // 큐 프리뷰 UI 도 비움
+        var _ep = document.getElementById('soAdExtraLines');
+        if (_ep) _ep.innerHTML = '';
+        var _lpw = document.getElementById('soAdLinePreviewsWrap');
+        var _lp = document.getElementById('soAdLinePreviews');
+        var _lpc = document.getElementById('soAdLinePreviewCount');
+        if (_lpw) _lpw.style.display = 'none';
+        if (_lp) _lp.innerHTML = '';
+        if (_lpc) _lpc.textContent = '0';
+        if (typeof window._soAdSyncAddBtn === 'function') {
+            try { window._soAdSyncAddBtn(); } catch(e) {}
+        }
     };
 
     // ─────────────────────────────────────────────
@@ -7980,6 +8008,77 @@ html, body { background: #ffffff !important; }
             // 장바구니 담기 버튼 라벨을 "변경 저장" 으로
             var cartBtn = document.getElementById('soBtnCart');
             if (cartBtn) cartBtn.textContent = tr('변경 저장','変更を保存','Save Changes');
+        }, 700);
+    };
+
+    // 2026-06-01: 마이페이지 "다시 주문/수정" — 이미 주문된 항목을 모달에 복원.
+    //   item: orders.items 배열의 element (또는 단일 객체)
+    //   mode: 'reorder' (장바구니에 새로 담기) | 'edit' (해당 주문 항목을 교체)
+    //   - reorder: state._editingCartIdx 미설정 → buildCartItem 으로 새 cart item push
+    //   - edit: state._editingOrderId/Idx 설정 → 저장 시 orders 테이블의 items[idx] 교체
+    window._soOrderEditItem = async function(item, opts) {
+        opts = opts || {};
+        var mode = opts.mode || 'reorder';
+        if (!item || !item.product || !item.product.code) {
+            console.warn('[order edit] invalid item', item);
+            return;
+        }
+        // edit 모드일 때만 order 식별자 보존, reorder 는 일반 카트 push
+        state._editingCartIdx = null;
+        state._editingItem = item;
+        state._editingOrderId = (mode === 'edit') ? (opts.orderId || null) : null;
+        state._editingOrderItemIdx = (mode === 'edit') ? (opts.itemIdx != null ? opts.itemIdx : null) : null;
+        state._editingFileUrl = item.originalUrl || item.fileUrl || null;
+        state._editingFilePath = item.filePath || null;
+        state._editingFileName = item.fileName || null;
+        try { window._soToggleCart(false); } catch(e) {}
+        if (window.loadProductDetailAndOpen) {
+            try { await window.loadProductDetailAndOpen(item.product.code); } catch(e) { console.warn('[order edit] load product fail', e); }
+        }
+        setTimeout(function() {
+            if (item.qty != null) {
+                state.qty = item.qty;
+                var qtyEl = document.getElementById('soQty');
+                if (qtyEl) qtyEl.value = item.qty;
+            }
+            if (item.customSize) {
+                state.customW = item.customSize.w_cm || state.customW;
+                state.customH = item.customSize.h_cm || state.customH;
+                state.customUnitPrice = item.customSize.unit || state.customUnitPrice;
+                state.customAreaM2 = item.customSize.area_m2 || state.customAreaM2;
+                var wEl = document.getElementById('soCustomW');
+                var hEl = document.getElementById('soCustomH');
+                if (wEl) wEl.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
+                if (hEl) hEl.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
+            }
+            if (item.wallShape) state.wallShape = item.wallShape;
+            if (item.wallShapeFee != null) state.wallShapeFee = item.wallShapeFee;
+            if (item.wallSide) state.wallSide = item.wallSide;
+            if (item.selectedAddons) {
+                state.selectedAddons = Object.assign({}, item.selectedAddons);
+                state.addonQuantities = Object.assign({}, item.addonQuantities || {});
+                Object.values(item.selectedAddons).forEach(function(code){
+                    var cb = document.querySelector('#soAddonList input[type=checkbox][data-addon-code="' + String(code).replace(/"/g,'\\"') + '"]');
+                    if (cb) cb.checked = true;
+                    var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g,'\\"') + '"]');
+                    if (qi && item.addonQuantities && item.addonQuantities[code]) qi.value = item.addonQuantities[code];
+                });
+            }
+            if (item.fileName) {
+                var inlineInfo = document.getElementById('soAdInlineFileInfo');
+                if (inlineInfo) {
+                    inlineInfo.style.display = 'block';
+                    inlineInfo.textContent = item.fileName + ' (' + tr('기존 파일 — 변경 시 새로 업로드','既存ファイル — 変更時に再アップロード','existing — re-upload to change') + ')';
+                }
+            }
+            if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+            if (typeof recalc === 'function') recalc();
+            var cartBtn = document.getElementById('soBtnCart');
+            if (cartBtn) {
+                cartBtn.textContent = (mode === 'edit')
+                    ? tr('주문 변경 저장','注文を変更','Save order changes')
+                    : tr('장바구니에 다시 담기','カートに再追加','Re-add to cart');
+            }
         }, 700);
     };
 

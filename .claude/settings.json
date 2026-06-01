@@ -222,10 +222,15 @@
       "Bash(file keyringcut/*.jpg)",
       "Bash(ffmpeg -y -i ai-img.png -compression_level 6 -quality 80 ai-img.webp)",
       "Bash(ffmpeg -y -i mascot-character.png -compression_level 6 -quality 85 mascot-character.webp)",
-      "Bash(ffmpeg -y -i mascot-character.png -vf scale=128:128 -compression_level 9 mascot-favicon.png)"
+      "Bash(ffmpeg -y -i mascot-character.png -vf scale=128:128 -compression_level 9 mascot-favicon.png)",
+      "Bash(git check-ignore *)",
+      "Bash(curl -sS \"https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/common_info?select=category_code,section,content,content_jp&category_code=in.\\(all,44444,banner\\)\" \\\\ *)",
+      "Bash(awk 'NR>=11050 && NR<=11220 && /subCats\\\\./' index.html)",
+      "Bash(awk 'NR>=11050 && NR<=11220' index.html)"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "c:\\Users\\win 10\\.claude\\projects\\c--Users-win-10-Desktop---\\memory"
     ]
   }
 }

@@ -643,6 +643,12 @@ async function loadOrders() {
                             </div>
                         </div>
                     </div>
+                    ${(Array.isArray(items) && items.length>0 && items[0] && items[0].product && items[0].product.code) ? `
+                    <!-- 다시담기 / 수정 — 모바일 -->
+                    <div style="display:flex; gap:6px; margin-bottom:10px;">
+                        <button onclick="reOrder('${o.id}')" style="flex:1; height:32px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer;">${window.t('btn_reorder','Reorder')}</button>
+                        <button onclick="pickOrderItemToEdit('${o.id}')" style="flex:1; height:32px; font-size:12px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:7px; cursor:pointer;">✎ ${window.t('btn_edit_item','수정')}</button>
+                    </div>` : ''}
                     <!-- Line 3: 담당매니저 · 배송예정일 · 결제내역 (배경 옅은 슬레이트, 3등분) -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; background:#f8fafc; border-radius:10px; padding:10px 4px;">
                         <div style="text-align:center; padding:0 4px; border-right:1px solid #e2e8f0;">
@@ -680,6 +686,7 @@ async function loadOrders() {
                         <div style="display:flex; gap:5px;">
                             ${canCancel ? `<button class="btn-cancel-order" onclick="cancelOrder('${o.id}')" style="flex:1; font-size:12px; font-weight:700; padding:6px 8px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; cursor:pointer;">${window.t('btn_cancel', 'Cancel')}</button>` : ''}
                             <button onclick="reOrder('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#eef2ff; color:#4f46e5; border:1px solid #c7d2fe; border-radius:7px; cursor:pointer; white-space:nowrap;">${window.t('btn_reorder', 'Reorder')}</button>
+                            ${(Array.isArray(items) && items.length>0 && items[0] && items[0].product && items[0].product.code) ? `<button onclick="pickOrderItemToEdit('${o.id}')" style="flex:1; height:30px; font-size:12px; font-weight:700; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:7px; cursor:pointer; white-space:nowrap;" title="${window.t('btn_edit_order_hint','옵션·파일을 바꿔서 다시 담기')}">✎ ${window.t('btn_edit_item','수정')}</button>` : ''}
                         </div>
                         <div style="position:relative;">
                             <button onclick="toggleDocDropdown(event, '${o.id}')" style="width:100%; height:30px; font-size:12px; font-weight:700; background:#1e3a8a; color:#fff; border:1px solid #1e3a8a; border-radius:7px; cursor:pointer;">${window.t('btn_documents', 'Documents')} ▾</button>
@@ -737,10 +744,10 @@ async function cancelOrder(orderId) {
 async function reOrder(orderId) {
     const order = window.myOrdersData?.find(o => o.id == orderId);
     if (!order) return;
-    
+
     let items = [];
     try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : order.items; } catch(e) {}
-    
+
     if (confirm(window.t('confirm_reorder', "Add these items to cart again?"))) {
         items.forEach(item => {
             const newItem = { ...item, uid: Date.now() + Math.random() };
@@ -753,6 +760,54 @@ async function reOrder(orderId) {
         }
     }
 }
+
+// 2026-06-01: 주문에 항목이 2개 이상이면 어떤 항목을 수정할지 prompt 로 묻고 진입.
+//   1개면 그냥 첫번째 항목 수정 흐름.
+window.pickOrderItemToEdit = function(orderId) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) return;
+    let items = [];
+    try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : (order.items || []); } catch(e) {}
+    items = items.filter(it => it && it.product && it.product.code);
+    if (items.length === 0) {
+        alert(window.t('msg_item_cannot_edit','이 항목은 수정할 수 없습니다 (상품 정보 누락)'));
+        return;
+    }
+    if (items.length === 1) { window.editOrderItem(orderId, 0); return; }
+    // 2개 이상 — 간단한 prompt 로 번호 선택
+    let msg = window.t('msg_pick_item','수정할 항목 번호를 입력하세요:') + '\n';
+    items.forEach((it, i) => {
+        const nm = it.productName || (it.product && it.product.name) || it.name || ('Item #' + (i+1));
+        msg += `${i+1}. ${nm}\n`;
+    });
+    const ans = prompt(msg, '1');
+    if (!ans) return;
+    const idx = parseInt(ans, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= items.length) {
+        alert(window.t('msg_invalid_pick','잘못된 번호입니다'));
+        return;
+    }
+    window.editOrderItem(orderId, idx);
+};
+
+// 2026-06-01: 주문 항목 1개를 모달에 다시 열어 수정 후 장바구니에 담기.
+//   simple_order.js 의 window._soOrderEditItem 이 모달 복원을 담당.
+//   기존 주문 자체를 수정하지는 않음 (paid order는 manager 워크플로) — 사용자가 모달에서
+//   "장바구니에 다시 담기" 누르면 새 cart item 으로 들어가고, 그 다음 결제하면 신규 주문.
+window.editOrderItem = async function(orderId, itemIdx) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) { alert(window.t('msg_order_not_found','Order not found')); return; }
+    let items = [];
+    try { items = (typeof order.items === 'string') ? JSON.parse(order.items) : (order.items || []); } catch(e) {}
+    const item = items[itemIdx];
+    if (!item || !item.product || !item.product.code) {
+        alert(window.t('msg_item_cannot_edit','이 항목은 수정할 수 없습니다 (상품 정보 누락)'));
+        return;
+    }
+    // index.html 로 이동 후 모달 열기 — _soOrderEditItem 호출은 페이지 로드 후 실행
+    try { localStorage.setItem('chameleon_pending_edit', JSON.stringify({ item: item, ts: Date.now() })); } catch(e) {}
+    location.href = 'index.html';
+};
 
 // [수정] 마켓플레이스 판매 작품 로드 (admin_products + partner_settlements 연동)
 async function loadMySales() {
