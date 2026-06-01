@@ -220,13 +220,13 @@
             } catch(e){ toast('실패: ' + (e.message||e), true); }
         }
 
-        // 언어별 지급 단가 — 사이트 CURRENCY_RATE 기준 (KR=1, JP=0.1, US=0.001)
-        // KR: 1만회 = 10,000원 / JP: 10만회 = 10,000엔 / 기타: 10만회 = $100
+        // 언어별 지급 단가 — 사이트 CURRENCY_RATE 기준
+        // 1만회당 단가 + 최대 cap. KR: 1만원/만회 · max 10만원 / JP: 1000엔/만회 · max 1만엔 / 기타: $10/만회 · max $100
         function payoutRate(lang){
             const L = (lang || 'kr').toLowerCase();
-            if (L === 'kr') return { per: 10000, amt: 10000, unit: '원', label: '조회 1만 회당 10,000원' };
-            if (L === 'ja') return { per: 100000, amt: 10000, unit: '엔', label: '재생 10만 회당 10,000엔' };
-            return { per: 100000, amt: 100, unit: '$', label: '10만 views = $100' };  // en/us/zh/es/de/fr/ar 공용
+            if (L === 'kr') return { per: 10000, amt: 10000, maxAmt: 100000, unit: '원', label: '1만 회당 10,000원 (최대 100,000원)' };
+            if (L === 'ja') return { per: 10000, amt: 1000,  maxAmt: 10000,  unit: '엔', label: '1万回ごとに 1,000円 (최대 10,000엔)' };
+            return { per: 10000, amt: 10, maxAmt: 100, unit: '$', label: '$10 per 10K views (max $100)' };  // en/us/zh/es/de/fr/ar 공용
         }
 
         async function markPaid(id){
@@ -238,9 +238,11 @@
             const v = parseInt(view, 10);
             if (isNaN(v) || v < r.per) { toast(r.per.toLocaleString() + ' 이상이어야 합니다', true); return; }
             const units = Math.floor(v / r.per);
-            const amount = units * r.amt;
+            let amount = units * r.amt;
+            const capped = amount > r.maxAmt;
+            if (capped) amount = r.maxAmt;
             const display = (r.unit === '$') ? ('$' + amount.toLocaleString()) : (amount.toLocaleString() + r.unit);
-            const ok = confirm('조회 ' + v.toLocaleString() + '회 → ' + display + ' 지급으로 기록합니다.');
+            const ok = confirm('조회 ' + v.toLocaleString() + '회 → ' + display + (capped ? ' (최대치 도달)' : '') + ' 지급으로 기록합니다.');
             if (!ok) return;
             try {
                 const newInfo = Object.assign({}, a._raw, {
