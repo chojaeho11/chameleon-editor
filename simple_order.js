@@ -1513,10 +1513,10 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-01: 허니콤배너 전용 섹션 — 안내문 + 파일 업로드 + 단면/양면. 사이즈는 60×180cm 고정. -->
         <div class="so-section" id="soBannerSection" style="display:none;">
           <div class="so-section-title">${tr('배너', 'バナー', 'Banner')}</div>
-          <div style="background:linear-gradient(135deg,#eff6ff 0%, #dbeafe 100%); padding:11px 13px; border-radius:10px; font-size:12px; color:#1e40af; line-height:1.6; margin-bottom:12px; border-left:3px solid #2563eb;">
-            📌 ${tr('배너는 <b>60 × 180cm 사이즈 고정</b>입니다.<br>한 파일에 모든 배너를 올리고 수량을 입력해 주세요.',
-                    'バナーは <b>60 × 180cm 固定サイズ</b>です。<br>1ファイルに全バナーをまとめてアップロードし、数量をご入力ください。',
-                    'Banners are <b>60 × 180cm fixed size</b>.<br>Upload all banners in one file and enter the quantity.')}
+          <div style="text-align:center; font-size:12.5px; color:#475569; line-height:1.7; margin-bottom:14px;">
+            ${tr('배너는 <b style="color:#1e293b;">60 × 180cm 사이즈 고정</b>입니다.<br>한 파일에 모든 배너를 올리고 수량을 입력해 주세요.<br><b style="color:#16a34a;">배너는 무료배송 됩니다.</b>',
+                 'バナーは <b style="color:#1e293b;">60 × 180cm 固定サイズ</b>です。<br>1ファイルに全バナーをまとめてアップロードし、数量をご入力ください。<br><b style="color:#16a34a;">バナーは送料無料です。</b>',
+                 'Banners are <b style="color:#1e293b;">60 × 180cm fixed size</b>.<br>Upload all banners in one file and enter the quantity.<br><b style="color:#16a34a;">Free shipping on banners.</b>')}
           </div>
           <!-- 파일 업로드 — #soFile (기존) 트리거 -->
           <div id="soBannerUploadWrap">
@@ -5564,11 +5564,13 @@ html, body { background: #ffffff !important; }
             b.style.borderColor = on ? 'transparent' : '#e2e8f0';
             b.style.boxShadow = on ? '0 4px 12px -4px rgba(79,70,229,0.45)' : 'none';
         });
+        // 2026-06-01: 배너는 양면이라도 파일 1개만 받음 (한 파일에 모든 배너 묶어서 업로드) — 뒷면 업로드 강제 숨김
+        var _showBack = (state.wallSide === 'double') && !state.isBanner;
         var backWrap = document.getElementById('soBackUploadWrap');
-        if (backWrap) backWrap.style.display = (state.wallSide === 'double') ? '' : 'none';
-        // 2026-06-01: 사이드바 인라인 뒷면 업로드 카드 — 양면일 때만 표시
+        if (backWrap) backWrap.style.display = _showBack ? '' : 'none';
+        // 2026-06-01: 사이드바 인라인 뒷면 업로드 카드 — 양면일 때만 표시 (배너 제외)
         var _backCard = document.getElementById('soBackInlineUploadCard');
-        if (_backCard) _backCard.style.display = (state.wallSide === 'double') ? '' : 'none';
+        if (_backCard) _backCard.style.display = _showBack ? '' : 'none';
         recalc();
         updateButtons();
     };
@@ -7110,6 +7112,11 @@ html, body { background: #ffffff !important; }
                 var _bUpD = document.getElementById('soBannerUploadDone');
                 if (_bUpW) _bUpW.style.display = '';
                 if (_bUpD) _bUpD.style.display = 'none';
+                // 뒷면 업로드는 배너에선 영구 숨김 (양면이라도 파일 1개만)
+                var _backWrapB = document.getElementById('soBackUploadWrap');
+                if (_backWrapB) _backWrapB.style.display = 'none';
+                var _backCardB = document.getElementById('soBackInlineUploadCard');
+                if (_backCardB) _backCardB.style.display = 'none';
             } else {
                 // 배너 외 상품 — 배너 섹션 숨김
                 var _bannerSec2 = document.getElementById('soBannerSection');
