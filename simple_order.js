@@ -2601,21 +2601,11 @@ html, body { background: #ffffff !important; }
             state._adLines.forEach(function(line, i) {
                 const lineSub = line.lineTotal || ((line.unitPrice || 0) * (line.qty || 0));
                 adExtraLinesTotal += lineSub;
-                // 모드별 사이즈 라벨
-                let _lbl = '';
-                if (line.isWall) {
-                    _lbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm' +
-                           (line.wallSide === 'double' ? ' · ' + tr('양면','両面','double') : '');
-                } else if (line.isBox) {
-                    _lbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
-                } else if (line.isCutPrint) {
-                    _lbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full')) +
-                           (line.wallSide === 'double' ? ' · ' + tr('양면','両面','double') : '');
-                } else {
-                    _lbl = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
-                }
+                // 큐 라인 요약 — _soFmtQueueLine 가 사이즈/형태/옵션 이름 모두 포맷팅
+                const _lbl = (typeof _soFmtQueueLine === 'function') ? _soFmtQueueLine(line)
+                    : ((line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1));
                 adExtraLinesBreakdown.push(
-                    '<div class="so-price-row"><span>· #' + (i + 1) + ' ' + _lbl + ' × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
+                    '<div class="so-price-row"><span>· #' + (i + 1) + ' ' + _lbl + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
                 );
             });
         }
@@ -4625,6 +4615,51 @@ html, body { background: #ffffff !important; }
     // 호환성 — 구 함수명 alias
     window._soAdAddLine = window._soAdQueueCurrent;
 
+    // 2026-06-01: 큐 라인 → 사람이 읽기 좋은 요약 문자열. 모드별 사이즈 + 가벽 형태 + 옵션 이름+수량.
+    function _soFmtQueueLine(line) {
+        var sizeLbl;
+        var qtySuffix = ' × ' + (line.qty || 1) + tr('개','個','pcs');
+        if (line.isWall) {
+            sizeLbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
+            if (line.wallShape === 'L') sizeLbl += ' · ' + tr('ㄱ자','L字','L');
+            else if (line.wallShape === 'U') sizeLbl += ' · ' + tr('ㄷ자','コ字','U');
+            else sizeLbl += ' · ' + tr('一자','一字','straight');
+            if (line.wallSide === 'double') sizeLbl += ' · ' + tr('양면','両面','dbl');
+            qtySuffix = '';  // 가벽은 가로 m 가 qty 역할 — 중복 표기 X
+        } else if (line.isBox) {
+            sizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+        } else if (line.isCutPrint) {
+            sizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+            if (line.wallSide === 'double') sizeLbl += ' · ' + tr('양면','両面','dbl');
+        } else {
+            sizeLbl = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
+        }
+        // addon 상세 (이름 + 수량)
+        var details = [];
+        try {
+            var seen = {};
+            Object.values(line.selectedAddons || {}).forEach(function(code){
+                if (!code || seen[code]) return; seen[code] = true;
+                var addon = (window.ADDON_DB || {})[code];
+                if (!addon) return;
+                var nm = addon.name_kr || addon.name || addon.display_name || code;
+                var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
+                details.push(nm + (aQty > 1 ? ' ' + aQty + tr('개','個','pcs') : ''));
+            });
+        } catch(e) {}
+        // 받침대 옵션
+        try {
+            Object.keys(line.baseStands || {}).forEach(function(bk){
+                var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
+                if (!o) return;
+                var bQty = line.baseStands[bk] || 1;
+                details.push((o.label_ko || bk) + (bQty > 1 ? ' ' + bQty + tr('개','個','pcs') : ''));
+            });
+        } catch(e) {}
+        var addonStr = details.length > 0 ? ' · ' + details.join(', ') : '';
+        return sizeLbl + qtySuffix + addonStr;
+    }
+
     window._soAdRenderQueue = function() {
         var container = document.getElementById('soAdExtraLines');
         if (!container) return;
@@ -4636,24 +4671,11 @@ html, body { background: #ffffff !important; }
             var fileChip = line.fileName
                 ? '<span style="display:inline-flex; align-items:center; gap:3px; padding:2px 6px; background:#dbeafe; color:#1e40af; border-radius:4px; font-size:10px; font-weight:700;"><i class="fa-solid fa-paperclip" style="font-size:9px;"></i>' + (line.fileName.length > 16 ? line.fileName.substring(0, 14) + '..' : line.fileName) + '</span>'
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
-            var addonCount = Object.keys(line.selectedAddons || {}).length;
-            var addonStr = addonCount > 0 ? ' · +' + addonCount + tr('옵션','option','option') : '';
-            // 모드별 사이즈 라벨
-            var sizeLbl;
-            if (line.isWall) {
-                sizeLbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm' +
-                          (line.wallSide === 'double' ? ' · ' + tr('양면','両面','dbl') : '');
-            } else if (line.isBox) {
-                sizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
-            } else if (line.isCutPrint) {
-                sizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
-            } else {
-                sizeLbl = line.wMm + '×' + line.hMm + 'mm';
-            }
+            var lineSummary = _soFmtQueueLine(line);
             div.innerHTML =
                 '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
                 '<div style="flex:1; min-width:0;">' +
-                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.3;">' + sizeLbl + ' × ' + line.qty + tr('개','個','pcs') + addonStr + '</div>' +
+                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35;">' + escapeHtml(lineSummary) + '</div>' +
                     '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
                 '</div>' +
                 '<button type="button" onclick="window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
@@ -4697,11 +4719,9 @@ html, body { background: #ffffff !important; }
                 thumbHtml = '<div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:13px; color:#94a3b8; background:#f8fafc;">' + tr('파일 없음','ファイルなし','no file') + '</div>';
             }
             var fileNameShort = line.fileName ? (line.fileName.length > 14 ? line.fileName.substring(0,12) + '..' : line.fileName) : '';
-            var prSizeLbl;
-            if (line.isWall) prSizeLbl = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
-            else if (line.isBox) prSizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
-            else if (line.isCutPrint) prSizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
-            else prSizeLbl = line.wMm + '×' + line.hMm + 'mm';
+            // 좌측 미리보기 카드 — 헬퍼로 한 줄 요약 (가벽은 × N개 안 보이도록)
+            var prSummary = (typeof _soFmtQueueLine === 'function') ? _soFmtQueueLine(line)
+                : ((line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1));
             return '<div data-preview-line-id="' + line.id + '" style="background:#fff; border:1.5px solid #c7d2fe; border-radius:10px; overflow:hidden; position:relative;">'+
                 '<div style="font-size:10px; font-weight:900; color:#fff; background:#2563eb; padding:3px 8px; display:flex; justify-content:space-between; align-items:center;">'+
                     '<span>#' + (i+1) + '</span>'+
@@ -4709,7 +4729,7 @@ html, body { background: #ffffff !important; }
                 '</div>'+
                 '<div style="aspect-ratio:1/1; overflow:hidden; background:#fff;">' + thumbHtml + '</div>'+
                 '<div style="padding:6px 8px; font-size:10.5px; line-height:1.4;">'+
-                    '<div style="font-weight:800; color:#1e3a8a;">' + prSizeLbl + ' × ' + line.qty + tr('개','個','pcs') + '</div>'+
+                    '<div style="font-weight:800; color:#1e3a8a; word-break:keep-all;">' + escapeHtml(prSummary) + '</div>'+
                     (fileNameShort ? '<div style="color:#475569; font-size:10px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ' + fileNameShort + '</div>' : '')+
                 '</div>'+
             '</div>';
