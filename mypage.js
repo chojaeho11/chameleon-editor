@@ -299,12 +299,26 @@ async function checkAndUpgradeTier(userId, currentRole) {
 async function loadDashboardStats() {
     try {
         // ★ [수정] contributor_tier와 penalty_reason을 명시적으로 조회
-        const { data: profile, error } = await sb.from('profiles')
-            .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason')
-            .eq('id', currentUser.id)
-            .single();
-        
-        if (error) throw error;
+        // 2026-06-01: event_coupon 컬럼 분리 — legacy mileage 와 별도 표시
+        let profile;
+        try {
+            const res = await sb.from('profiles')
+                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason, event_coupon')
+                .eq('id', currentUser.id)
+                .single();
+            if (res.error) throw res.error;
+            profile = res.data;
+        } catch (e) {
+            // event_coupon 컬럼 미적용 환경 — 옛 스키마 fallback
+            console.warn('[mypage] event_coupon column missing, falling back', e);
+            const res2 = await sb.from('profiles')
+                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason')
+                .eq('id', currentUser.id)
+                .single();
+            if (res2.error) throw res2.error;
+            profile = res2.data;
+            profile.event_coupon = 0;
+        }
 
         // ★ [핵심] 패널티 등급 확인 및 알림 표시 로직
         const tier = profile.contributor_tier || 'regular';
@@ -336,6 +350,10 @@ async function loadDashboardStats() {
         }
 
         // 기존 통계 데이터 바인딩
+        // 2026-06-01: 이벤트 쿠폰 표시 (event_coupon 컬럼)
+        const elEventCoupon = document.getElementById('eventCouponDisplay');
+        if(elEventCoupon) elEventCoupon.innerText = fmtMoney(profile.event_coupon || 0).replace(/[원¥$]/g, '').trim() + ' P';
+
         const elMileage = document.getElementById('mileageDisplay');
         if(elMileage) elMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim() + ' P';
 
