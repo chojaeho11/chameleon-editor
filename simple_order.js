@@ -1479,16 +1479,16 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-01: 멀티-라인 — 큐 + 2버튼 (좌측 담기 = 장바구니 / 우측 가벽 추가 = 큐 적층) + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
           <div id="soAdExtraLines"></div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
-            <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 그라데이션 + 픽토그램 없음. -->
+          <div id="soAdBtnStack" style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+            <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 보라 그라데이션. 항상 표시. -->
             <button type="button" id="soAdCartLineBtn" onclick="window._soAdAddLine()"
               style="padding:14px 10px; border:none; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); color:#fff; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(79,70,229,0.55); transition:transform 0.12s, box-shadow 0.15s;"
               onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(79,70,229,0.65)'"
               onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(79,70,229,0.55)'">
               ${tr('담기', 'リストに追加', 'Save line')}
             </button>
-            <button type="button" id="soAdAddLineBtn" onclick="window._soAdStartNew()"
-              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
+            <!-- 2026-06-01: 가벽 추가 = 폼 리셋 + 상단 업로드로 스크롤. 큐에 라인이 1개 이상일 때만 표시 (담기 아래쪽). -->
+            <button type="button" id="soAdAddLineBtn" onclick="window._soAdStartNew()" style="display:none; padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
               onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(251,191,36,0.6)'"
               onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(251,191,36,0.5)'">
               <span id="soAdAddLineBtnLabel">${tr('가벽 추가', '壁面追加', 'Add wall')}</span>
@@ -1709,16 +1709,18 @@ html, body { background: #ffffff !important; }
                    'Uploaded image / PDF appears in the preview on the left. Max 50MB.')}
             </div>
           </div>
-          <!-- 업로드 후 — "업로드 완료" + 파일변경 버튼. handleFile 에서 표시 토글. -->
+          <!-- 업로드 후 — "업로드 완료" 보라 그라데이션 + 이미지 미리보기 + 파일변경 버튼. handleFile 에서 표시 토글. -->
           <div id="soAdInlineDone" style="display:none;">
-            <div style="padding:12px 14px; background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%); border:1.5px solid #86efac; border-radius:12px; text-align:center; position:relative; overflow:hidden;">
-              <div class="so-sparkle-wrap" style="display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:900; color:#166534;">
-                <span class="so-sparkle s1">✨</span>
-                <i class="fa-solid fa-circle-check" style="font-size:18px; color:#16a34a;"></i>
+            <div style="padding:14px 16px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); border-radius:14px; color:#fff; box-shadow:0 6px 18px -6px rgba(79,70,229,0.5);">
+              <div style="display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:900; letter-spacing:0.01em;">
+                <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
                 <span>${tr('업로드 완료', 'アップロード完了', 'Upload complete')}</span>
-                <span class="so-sparkle s2">✨</span>
               </div>
-              <div id="soAdInlineFileInfo" style="margin-top:6px; font-size:11.5px; color:#15803d; font-weight:700;"></div>
+              <div id="soAdInlineFileInfo" style="margin-top:6px; font-size:12px; font-weight:700; opacity:0.95;"></div>
+            </div>
+            <!-- 2026-06-01: 보라 패널 바로 아래 — 업로드한 이미지 미리보기 (이미지일때만). handleFile 에서 src 세팅. -->
+            <div id="soAdInlineThumb" style="display:none; margin-top:8px; border-radius:10px; overflow:hidden; background:#f8fafc; border:1px solid #e2e8f0;">
+              <img id="soAdInlineThumbImg" src="" alt="" style="width:100%; max-height:240px; object-fit:contain; display:block; background:#fff;">
             </div>
             <button type="button" id="soAdInlineChangeBtn" onclick="document.getElementById('soFile').click()"
               style="width:100%; margin-top:8px; padding:10px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
@@ -2268,7 +2270,7 @@ html, body { background: #ffffff !important; }
             console.warn('[simple_order] thumb 생성 실패:', e);
             state.thumbDataUrl = null;
         }
-        // 2026-06-01: 광고인쇄/허니콤 — 인라인 업로드 카드의 업로드 완료 상태 전환 + sparkle 애니메이션 트리거
+        // 2026-06-01: 광고인쇄/허니콤 — 인라인 업로드 카드 = 보라 그라데이션 "업로드 완료" 패널 + 이미지 미리보기 노출.
         window._soHandleFile = handleFile;  // ad-print queue reset 에서 onchange 재바인딩에 사용
         if (state.isAdPrint || state.isHoneycomb) {
             var _inlineWrap = document.getElementById('soAdInlineUploadWrap');
@@ -2280,13 +2282,17 @@ html, body { background: #ffffff !important; }
                 var sizeMB = (file.size/1024/1024).toFixed(1);
                 _inlineInfo.textContent = '📎 ' + file.name + ' · ' + sizeMB + 'MB';
             }
-            // sparkle 첫 등장 — pop 애니메이션 트리거
-            var _sw = document.querySelector('#soAdInlineDone .so-sparkle-wrap');
-            if (_sw) {
-                _sw.classList.remove('first-show');
-                // reflow 강제 후 다시 추가 (애니메이션 재시작)
-                void _sw.offsetWidth;
-                _sw.classList.add('first-show');
+            // 이미지/PDF 썸네일 — 보라 패널 바로 아래
+            var _thumbWrap = document.getElementById('soAdInlineThumb');
+            var _thumbImg = document.getElementById('soAdInlineThumbImg');
+            if (_thumbWrap && _thumbImg) {
+                if (state.thumbDataUrl) {
+                    _thumbImg.src = state.thumbDataUrl;
+                    _thumbWrap.style.display = 'block';
+                } else {
+                    _thumbImg.src = '';
+                    _thumbWrap.style.display = 'none';
+                }
             }
         }
         renderUploadDone();
@@ -4653,12 +4659,16 @@ html, body { background: #ffffff !important; }
         if (areaInfoEl) areaInfoEl.textContent = '';
         var inlineInfo = document.getElementById('soAdInlineFileInfo');
         if (inlineInfo) { inlineInfo.textContent = ''; }
-        // 2026-06-01: 인라인 업로드 카드 — "업로드 완료" 패널 닫고 "파일 업로드" 점선 버튼으로 복원.
+        // 2026-06-01: 인라인 업로드 카드 — "업로드 완료" 패널 닫고 "파일 업로드" 점선 버튼으로 복원 + 썸네일 제거.
         //   다음 큐 라인에서 새 파일을 올릴 수 있도록.
         var _inlineWrapR = document.getElementById('soAdInlineUploadWrap');
         var _inlineDoneR = document.getElementById('soAdInlineDone');
+        var _inlineThumbR = document.getElementById('soAdInlineThumb');
+        var _inlineThumbImgR = document.getElementById('soAdInlineThumbImg');
         if (_inlineWrapR) _inlineWrapR.style.display = '';
         if (_inlineDoneR) _inlineDoneR.style.display = 'none';
+        if (_inlineThumbR) _inlineThumbR.style.display = 'none';
+        if (_inlineThumbImgR) _inlineThumbImgR.src = '';
         // soUpload 영역 — 'done' 클래스 제거 + drop-zone 기본 마크업 복원 + 이벤트 재바인딩.
         //   renderUploadDone 이 innerHTML 을 통째로 갈아치웠을 가능성에 대비.
         var uploadZone = document.getElementById('soUpload');
@@ -4675,16 +4685,25 @@ html, body { background: #ffffff !important; }
         }
         document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
         document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
-        // 큐 카드 + 좌측 프리뷰 그리기 + 현재 라인 가격 갱신 + 사이즈 카드로 스크롤
+        // 큐 카드 + 좌측 프리뷰 그리기 + 가벽추가 버튼 토글 + 현재 라인 가격 갱신
         window._soAdRenderQueue();
         window._soAdRenderLinePreviews();
+        if (typeof window._soAdSyncAddBtn === 'function') window._soAdSyncAddBtn();
         if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         if (typeof recalc === 'function') recalc();
-        var sizeCard = document.getElementById('soCustomSizeSection');
-        if (sizeCard) try { sizeCard.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e) {}
+        // 2026-06-01: 사이즈 카드 자동 스크롤 제거 — 사용자 요청 (큐 라인 클릭 등에서 스크롤 점프 싫어함)
     };
     // 호환성 — 구 함수명 alias
     window._soAdAddLine = window._soAdQueueCurrent;
+
+    // 2026-06-01: 큐 라인 1개 이상일 때만 "가벽 추가" 버튼 표시 (담기 아래쪽).
+    //   초기 상태 = 담기만 보임. 사용자가 첫 라인 담은 후 가벽 추가 등장.
+    window._soAdSyncAddBtn = function() {
+        var addBtn = document.getElementById('soAdAddLineBtn');
+        if (!addBtn) return;
+        var hasLines = Array.isArray(state._adLines) && state._adLines.length > 0;
+        addBtn.style.display = hasLines ? '' : 'none';
+    };
 
     // 2026-06-01: "가벽 추가" / "사이즈 추가" — 큐에 추가하지 않고 입력 영역만 초기화하고 상단(파일 업로드)으로 스크롤.
     //   담기 버튼 = 큐에 저장 / 가벽 추가 버튼 = 새 라인을 위한 폼 리셋.
@@ -4733,13 +4752,17 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){ cb.checked = false; });
         document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function(qi){ qi.value = 1; });
-        // 인라인 업로드 카드 — "업로드 완료" 패널 끄고 "파일 업로드" 점선 버튼으로 복원
+        // 인라인 업로드 카드 — "업로드 완료" 패널 끄고 "파일 업로드" 점선 버튼으로 복원 + 썸네일 제거
         var _inlineWrapS = document.getElementById('soAdInlineUploadWrap');
         var _inlineDoneS = document.getElementById('soAdInlineDone');
         var _inlineInfoS = document.getElementById('soAdInlineFileInfo');
+        var _inlineThumbS = document.getElementById('soAdInlineThumb');
+        var _inlineThumbImgS = document.getElementById('soAdInlineThumbImg');
         if (_inlineWrapS) _inlineWrapS.style.display = '';
         if (_inlineDoneS) _inlineDoneS.style.display = 'none';
         if (_inlineInfoS) _inlineInfoS.textContent = '';
+        if (_inlineThumbS) _inlineThumbS.style.display = 'none';
+        if (_inlineThumbImgS) _inlineThumbImgS.src = '';
         // 좌측 soUpload 영역도 리셋
         var uploadZone = document.getElementById('soUpload');
         if (uploadZone) {
@@ -4858,12 +4881,8 @@ html, body { background: #ffffff !important; }
             _inlineInfo.style.display = 'block';
             _inlineInfo.textContent = line.fileName + ' (' + _mb + 'MB) ✓';
         }
-        // 큐에서 제거 → 사용자가 수정 후 "+다른 사이즈" 누르면 새 라인으로 다시 들어감 (혹은 장바구니로 즉시 push)
-        state._adLines = state._adLines.filter(function(l){ return l.id !== lineId; });
-        window._soAdRenderQueue();
-        window._soAdRenderLinePreviews();
+        // 2026-06-01: 클릭한 라인은 큐에서 사라지지 않음 — 폼에 값만 로드. 사용자가 수정 후 담기 누르면 새 라인으로 추가됨 (현재 모델 — 추후 in-place update 로 발전 가능).
         if (typeof recalc === 'function') recalc();
-        // 2026-06-01: 스크롤 점프 제거 — 사용자 요청 ("화면이 휙 돌아감"). 입력 영역만 갱신, 페이지는 그 자리 그대로.
     };
 
     // 2026-06-01: 큐 라인 → 사람이 읽기 좋은 요약 문자열. 모드별 사이즈 + 가벽 형태 + 옵션 이름+수량.
@@ -5000,6 +5019,7 @@ html, body { background: #ffffff !important; }
         state._adLines = (state._adLines || []).filter(function(l){ return l.id !== lineId; });
         window._soAdRenderQueue();
         window._soAdRenderLinePreviews();
+        if (typeof window._soAdSyncAddBtn === 'function') window._soAdSyncAddBtn();
         if (typeof recalc === 'function') recalc();
     };
     // 호환성 — 구 함수명 alias
@@ -6605,13 +6625,19 @@ html, body { background: #ffffff !important; }
                 if (_lpw) _lpw.style.display = 'none';
                 if (_lp) _lp.innerHTML = '';
                 if (_lpc) _lpc.textContent = '0';
-                // 인라인 업로드 카드 — 초기 상태 (업로드 전 점선 버튼)로 리셋
+                // 인라인 업로드 카드 — 초기 상태 (업로드 전 점선 버튼)로 리셋 + 썸네일 제거
                 var _inlineWrapR = document.getElementById('soAdInlineUploadWrap');
                 var _inlineDoneR = document.getElementById('soAdInlineDone');
                 var _inlineInfo = document.getElementById('soAdInlineFileInfo');
+                var _inlineThumbR = document.getElementById('soAdInlineThumb');
+                var _inlineThumbImgR = document.getElementById('soAdInlineThumbImg');
                 if (_inlineWrapR) _inlineWrapR.style.display = '';
                 if (_inlineDoneR) _inlineDoneR.style.display = 'none';
                 if (_inlineInfo) { _inlineInfo.textContent = ''; }
+                if (_inlineThumbR) _inlineThumbR.style.display = 'none';
+                if (_inlineThumbImgR) _inlineThumbImgR.src = '';
+                // 가벽 추가 버튼 숨김 — 큐 비어있음
+                if (typeof window._soAdSyncAddBtn === 'function') window._soAdSyncAddBtn();
             } else {
                 if (_tierTable)  _tierTable.style.display  = '';
                 if (_inlineUploadCard) {
@@ -6654,13 +6680,19 @@ html, body { background: #ffffff !important; }
                 if (_lpwH) _lpwH.style.display = 'none';
                 if (_lpH) _lpH.innerHTML = '';
                 if (_lpcH) _lpcH.textContent = '0';
-                // 인라인 업로드 카드 — 초기 상태로 리셋 (업로드 전 점선 버튼)
+                // 인라인 업로드 카드 — 초기 상태로 리셋 (업로드 전 점선 버튼) + 썸네일 제거
                 var _iwH = document.getElementById('soAdInlineUploadWrap');
                 var _idH = document.getElementById('soAdInlineDone');
                 var _iiH = document.getElementById('soAdInlineFileInfo');
+                var _itH = document.getElementById('soAdInlineThumb');
+                var _itiH = document.getElementById('soAdInlineThumbImg');
                 if (_iwH) _iwH.style.display = '';
                 if (_idH) _idH.style.display = 'none';
                 if (_iiH) _iiH.textContent = '';
+                if (_itH) _itH.style.display = 'none';
+                if (_itiH) _itiH.src = '';
+                // 가벽 추가 버튼 숨김 — 큐 비어있음
+                if (typeof window._soAdSyncAddBtn === 'function') window._soAdSyncAddBtn();
             } else if (!state.isAdPrint) {
                 // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI + 인라인 업로드 끔
                 if (_multiSec) _multiSec.style.display = 'none';
