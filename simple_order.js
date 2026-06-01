@@ -1055,6 +1055,28 @@ html, body { background: #ffffff !important; }
     0%, 100% { background-position: 0% 50%; }
     50%      { background-position: 100% 50%; }
 }
+/* 2026-06-01: 업로드 완료 sparkle — 살랑살랑 반짝이며 회전 */
+@keyframes soSparkleSpin {
+    0%   { transform: rotate(0deg) scale(0.8);  opacity: 0.4; }
+    25%  { transform: rotate(45deg) scale(1.3); opacity: 1; }
+    50%  { transform: rotate(180deg) scale(0.9); opacity: 0.7; }
+    75%  { transform: rotate(270deg) scale(1.2); opacity: 1; }
+    100% { transform: rotate(360deg) scale(0.8); opacity: 0.4; }
+}
+@keyframes soSparklePop {
+    0%   { transform: scale(0) rotate(0deg); opacity: 0; }
+    40%  { transform: scale(1.3) rotate(180deg); opacity: 1; }
+    100% { transform: scale(1) rotate(360deg); opacity: 1; }
+}
+.so-sparkle {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+    animation: soSparkleSpin 2.2s ease-in-out infinite;
+}
+.so-sparkle.s1 { animation-delay: 0s; }
+.so-sparkle.s2 { animation-delay: 0.6s; }
+.so-sparkle-wrap.first-show .so-sparkle { animation: soSparklePop 0.8s ease-out, soSparkleSpin 2.2s 0.8s ease-in-out infinite; }
 .so-prod-detail {
     margin-top: 18px; padding: 18px 18px 12px;
     border: 1px solid #e2e8f0; border-radius: 14px;
@@ -1454,14 +1476,21 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-06-01: 광고인쇄 — 추가 사이즈 라인 컨테이너 + "다른 사이즈도 같이 주문" 버튼 + 안내 -->
+        <!-- 2026-06-01: 멀티-라인 — 큐 + 2버튼 (좌측 담기 = 장바구니 / 우측 가벽 추가 = 큐 적층) + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
           <div id="soAdExtraLines"></div>
-          <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
-            style="width:100%; margin-top:6px; padding:14px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <i class="fa-solid fa-plus" style="font-size:14px;"></i>
-            <span>${tr('다른 사이즈도 같이 주문', '別サイズも一緒に注文', 'Order more sizes')}</span>
-          </button>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
+            <button type="button" id="soAdCartLineBtn" onclick="window._soAddCart()"
+              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#4338ca,#6d28d9); color:#fff; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px -4px rgba(67,56,202,0.4);">
+              <i class="fa-solid fa-cart-shopping" style="font-size:14px;"></i>
+              <span>${tr('담기', 'カートに追加', 'Add to cart')}</span>
+            </button>
+            <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
+              style="padding:14px 10px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <i class="fa-solid fa-plus" style="font-size:14px;"></i>
+              <span id="soAdAddLineBtnLabel">${tr('가벽 추가', '壁面追加', 'Add wall')}</span>
+            </button>
+          </div>
           <div style="margin-top:10px; padding:8px 12px; background:#f1f5f9; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.6; text-align:center;">
             <i class="fa-solid fa-hand-pointer" style="color:#3b82f6;"></i>
             ${tr('위 큐 라인을 클릭해서 옵션·파일을 다시 편집할 수 있어요.',
@@ -1505,43 +1534,40 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-06-01: 가벽 형태 — 직선/ㄱ자/ㄷ자 (코너 추가비). 도형 SVG 로 다국어 친화. -->
+        <!-- 2026-06-01: 가벽 형태 — 직선/ㄱ자/ㄷ자. 원형 버튼 + 도형 + 글씨만. 가격/설명 제거. -->
         <div class="so-section" id="soWallShapeSection" style="display:none;">
           <div class="so-section-title">${tr('가벽 형태', '壁面の形状', 'Wall Shape')}</div>
-          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding:6px 0;">
             <button type="button" class="so-wall-shape-btn active" data-shape="straight" onclick="window._soPickWallShape('straight')"
-              style="padding:14px 6px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
-              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="straight">
-                <rect x="3" y="18" width="34" height="6" fill="currentColor" rx="1"/>
-              </svg>
-              <div style="font-size:13px; font-weight:900;">${tr('一자', '一字 (直線)', 'Straight')}</div>
-              <div style="font-size:10.5px; opacity:0.9; font-weight:700;">${tr('기본', '基本', 'Base')}</div>
+              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#4338ca; border:3px solid #4338ca; color:#fff; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
+                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="straight">
+                  <rect x="3" y="18" width="34" height="5" fill="currentColor" rx="1"/>
+                </svg>
+              </div>
+              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#4338ca;">${tr('一자', '一字', 'Straight')}</div>
             </button>
             <button type="button" class="so-wall-shape-btn" data-shape="L" onclick="window._soPickWallShape('L')"
-              style="padding:14px 6px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
-              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="L-shape">
-                <rect x="3" y="18" width="22" height="6" fill="currentColor" rx="1"/>
-                <rect x="25" y="18" width="6" height="20" fill="currentColor" rx="1"/>
-              </svg>
-              <div style="font-size:13px; font-weight:900;">${tr('ㄱ자', 'L字', 'L-shape')}</div>
-              <div style="font-size:10.5px; color:#dc2626; font-weight:800;">+${fmtPrice(100000)}</div>
+              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; border:3px solid #e2e8f0; color:#1c1917; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
+                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="L-shape">
+                  <rect x="3" y="18" width="22" height="5" fill="currentColor" rx="1"/>
+                  <rect x="25" y="18" width="5" height="20" fill="currentColor" rx="1"/>
+                </svg>
+              </div>
+              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#475569;">${tr('ㄱ자', 'L字', 'L-shape')}</div>
             </button>
             <button type="button" class="so-wall-shape-btn" data-shape="U" onclick="window._soPickWallShape('U')"
-              style="padding:14px 6px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
-              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="U-shape">
-                <rect x="3" y="10" width="6" height="28" fill="currentColor" rx="1"/>
-                <rect x="3" y="10" width="34" height="6" fill="currentColor" rx="1"/>
-                <rect x="31" y="10" width="6" height="28" fill="currentColor" rx="1"/>
-              </svg>
-              <div style="font-size:13px; font-weight:900;">${tr('ㄷ자', 'コ字', 'U-shape')}</div>
-              <div style="font-size:10.5px; color:#dc2626; font-weight:800;">+${fmtPrice(200000)}</div>
+              style="background:none; border:none; padding:6px 0; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div class="so-ws-circle" style="width:80px; height:80px; border-radius:50%; background:#f1f5f9; border:3px solid #e2e8f0; color:#1c1917; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">
+                <svg viewBox="0 0 40 40" width="42" height="42" aria-label="U-shape">
+                  <rect x="3" y="10" width="5" height="28" fill="currentColor" rx="1"/>
+                  <rect x="3" y="10" width="34" height="5" fill="currentColor" rx="1"/>
+                  <rect x="32" y="10" width="5" height="28" fill="currentColor" rx="1"/>
+                </svg>
+              </div>
+              <div class="so-ws-label" style="font-size:14px; font-weight:800; color:#475569;">${tr('ㄷ자', 'コ字', 'U-shape')}</div>
             </button>
-          </div>
-          <div style="font-size:11px; color:#64748b; margin-top:10px; line-height:1.5; padding:8px 10px; background:#fafaf9; border-radius:6px;">
-            <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
-            ${tr('꺽이는 가벽은 총 길이의 합계로 주문해주세요. (단면/양면 무관 동일 코너비)',
-                 '折れ曲がる仮壁は合計の長さでご注文ください。(片面・両面とも同額のコーナー費)',
-                 'For angled walls, order based on the total combined length. (Corner fee is the same for single or double-sided.)')}
           </div>
         </div>
 
@@ -1666,19 +1692,36 @@ html, body { background: #ffffff !important; }
             <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
             ${tr('디자인 파일 업로드', 'デザインファイルアップロード', 'Upload Design File')}
           </div>
+          <!-- 업로드 전 — 큰 점선 버튼 -->
           <div id="soAdInlineUploadWrap">
             <button type="button" id="soAdInlineUploadBtn" onclick="document.getElementById('soFile').click()"
               style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
               <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
               <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
             </button>
-            <div id="soAdInlineFileInfo" style="display:none; margin-top:6px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
             <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.5;">
               <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
               ${tr('올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.',
                    'アップロードした画像/PDFは左側のプレビュー領域に自動で表示されます。50MB以下。',
                    'Uploaded image / PDF appears in the preview on the left. Max 50MB.')}
             </div>
+          </div>
+          <!-- 업로드 후 — "업로드 완료" + 파일변경 버튼. handleFile 에서 표시 토글. -->
+          <div id="soAdInlineDone" style="display:none;">
+            <div style="padding:12px 14px; background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%); border:1.5px solid #86efac; border-radius:12px; text-align:center; position:relative; overflow:hidden;">
+              <div class="so-sparkle-wrap" style="display:inline-flex; align-items:center; gap:8px; font-size:14px; font-weight:900; color:#166534;">
+                <span class="so-sparkle s1">✨</span>
+                <i class="fa-solid fa-circle-check" style="font-size:18px; color:#16a34a;"></i>
+                <span>${tr('업로드 완료', 'アップロード完了', 'Upload complete')}</span>
+                <span class="so-sparkle s2">✨</span>
+              </div>
+              <div id="soAdInlineFileInfo" style="margin-top:6px; font-size:11.5px; color:#15803d; font-weight:700;"></div>
+            </div>
+            <button type="button" id="soAdInlineChangeBtn" onclick="document.getElementById('soFile').click()"
+              style="width:100%; margin-top:8px; padding:10px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <i class="fa-solid fa-arrows-rotate" style="font-size:12px;"></i>
+              <span>${tr('파일 변경', 'ファイル変更', 'Change file')}</span>
+            </button>
           </div>
         </div>
 
@@ -2222,14 +2265,25 @@ html, body { background: #ffffff !important; }
             console.warn('[simple_order] thumb 생성 실패:', e);
             state.thumbDataUrl = null;
         }
-        // 2026-06-01: 광고인쇄 — 인라인 파일 정보 표시
+        // 2026-06-01: 광고인쇄/허니콤 — 인라인 업로드 카드의 업로드 완료 상태 전환 + sparkle 애니메이션 트리거
         window._soHandleFile = handleFile;  // ad-print queue reset 에서 onchange 재바인딩에 사용
-        if (state.isAdPrint) {
+        if (state.isAdPrint || state.isHoneycomb) {
+            var _inlineWrap = document.getElementById('soAdInlineUploadWrap');
+            var _inlineDone = document.getElementById('soAdInlineDone');
             var _inlineInfo = document.getElementById('soAdInlineFileInfo');
+            if (_inlineWrap) _inlineWrap.style.display = 'none';
+            if (_inlineDone) _inlineDone.style.display = 'block';
             if (_inlineInfo) {
                 var sizeMB = (file.size/1024/1024).toFixed(1);
-                _inlineInfo.style.display = 'block';
-                _inlineInfo.textContent = file.name + ' (' + sizeMB + 'MB) ✓';
+                _inlineInfo.textContent = '📎 ' + file.name + ' · ' + sizeMB + 'MB';
+            }
+            // sparkle 첫 등장 — pop 애니메이션 트리거
+            var _sw = document.querySelector('#soAdInlineDone .so-sparkle-wrap');
+            if (_sw) {
+                _sw.classList.remove('first-show');
+                // reflow 강제 후 다시 추가 (애니메이션 재시작)
+                void _sw.offsetWidth;
+                _sw.classList.add('first-show');
             }
         }
         renderUploadDone();
@@ -5114,9 +5168,14 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
             var on = b.dataset.shape === shape;
             b.classList.toggle('active', on);
-            b.style.background = on ? '#4338ca' : '#fff';
-            b.style.color = on ? '#fff' : '#451a03';
-            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+            var circle = b.querySelector('.so-ws-circle');
+            var label = b.querySelector('.so-ws-label');
+            if (circle) {
+                circle.style.background = on ? '#4338ca' : '#f1f5f9';
+                circle.style.borderColor = on ? '#4338ca' : '#e2e8f0';
+                circle.style.color = on ? '#fff' : '#1c1917';
+            }
+            if (label) label.style.color = on ? '#4338ca' : '#475569';
         });
         if (typeof recalc === 'function') recalc();
     };
@@ -5825,13 +5884,18 @@ html, body { background: #ffffff !important; }
         if (state.isWall) {
             state.wallShape = state.wallShape || 'straight';
             state.wallShapeFee = (state.wallShape === 'L') ? 100000 : (state.wallShape === 'U') ? 200000 : 0;
-            // 버튼 active 동기화
+            // 원형 버튼 active 동기화 — _soPickWallShape 와 동일 로직
             document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
                 var on = b.dataset.shape === state.wallShape;
                 b.classList.toggle('active', on);
-                b.style.background = on ? '#4338ca' : '#fff';
-                b.style.color = on ? '#fff' : '#451a03';
-                b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+                var circle = b.querySelector('.so-ws-circle');
+                var label = b.querySelector('.so-ws-label');
+                if (circle) {
+                    circle.style.background = on ? '#4338ca' : '#f1f5f9';
+                    circle.style.borderColor = on ? '#4338ca' : '#e2e8f0';
+                    circle.style.color = on ? '#fff' : '#1c1917';
+                }
+                if (label) label.style.color = on ? '#4338ca' : '#475569';
             });
         } else {
             state.wallShape = 'straight';
@@ -5906,8 +5970,9 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: '원판 그대로 발송' 안내문은 사용자 요청으로 영구 비표시 (불필요한 정보).
         if (_rb_notice) _rb_notice.style.display = 'none';
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
+        // 2026-06-01: 허니콤 가벽 (hb_dw_*) 도 디자인에디터 진입 카드 숨김 — 사용자 요청
         var _rb_editorBtn = document.getElementById('soOpenEditorBtn');
-        if (_rb_editorBtn) _rb_editorBtn.style.display = state.isRawBoard ? 'none' : '';
+        if (_rb_editorBtn) _rb_editorBtn.style.display = (state.isRawBoard || state.isWall) ? 'none' : '';
         // 2026-05-30: 원판 상품은 '상품 상세정보' 섹션 자체도 숨김 (description + common_info 통째로).
         //   DB 의 description / common_info 는 다른 페이지(/raw-board 랜딩, 메인 상세)에서도 쓰여서 거기서 지우면 영향 확산.
         //   모달에서만 강제 비표시로 처리.
@@ -6411,6 +6476,14 @@ html, body { background: #ffffff !important; }
             var _leftUploadLabel = document.getElementById('soUploadLabel');
             var _schedSec = document.getElementById('soScheduleSection');
             var _addonSec = document.getElementById('soAddonSection');
+            // 멀티-라인 +버튼 라벨 — 상품 타입별
+            var _addLbl = document.getElementById('soAdAddLineBtnLabel');
+            if (_addLbl) {
+                if (state.isWall) _addLbl.textContent = tr('가벽 추가', '壁面追加', 'Add wall');
+                else if (state.isBox) _addLbl.textContent = tr('박스 추가', 'ボックス追加', 'Add box');
+                else if (state.isCutPrint) _addLbl.textContent = tr('재단 추가', 'カット追加', 'Add cut');
+                else _addLbl.textContent = tr('사이즈 추가', 'サイズ追加', 'Add size');
+            }
             if (state.isAdPrint) {
                 if (_tierTable)  _tierTable.style.display  = 'none';
                 if (_presetTier) _presetTier.style.display = 'none';
@@ -6446,9 +6519,13 @@ html, body { background: #ffffff !important; }
                 if (_lpw) _lpw.style.display = 'none';
                 if (_lp) _lp.innerHTML = '';
                 if (_lpc) _lpc.textContent = '0';
-                // 인라인 업로드 파일 정보도 초기화
+                // 인라인 업로드 카드 — 초기 상태 (업로드 전 점선 버튼)로 리셋
+                var _inlineWrapR = document.getElementById('soAdInlineUploadWrap');
+                var _inlineDoneR = document.getElementById('soAdInlineDone');
                 var _inlineInfo = document.getElementById('soAdInlineFileInfo');
-                if (_inlineInfo) { _inlineInfo.style.display = 'none'; _inlineInfo.textContent = ''; }
+                if (_inlineWrapR) _inlineWrapR.style.display = '';
+                if (_inlineDoneR) _inlineDoneR.style.display = 'none';
+                if (_inlineInfo) { _inlineInfo.textContent = ''; }
             } else {
                 if (_tierTable)  _tierTable.style.display  = '';
                 if (_inlineUploadCard) {
@@ -6491,6 +6568,13 @@ html, body { background: #ffffff !important; }
                 if (_lpwH) _lpwH.style.display = 'none';
                 if (_lpH) _lpH.innerHTML = '';
                 if (_lpcH) _lpcH.textContent = '0';
+                // 인라인 업로드 카드 — 초기 상태로 리셋 (업로드 전 점선 버튼)
+                var _iwH = document.getElementById('soAdInlineUploadWrap');
+                var _idH = document.getElementById('soAdInlineDone');
+                var _iiH = document.getElementById('soAdInlineFileInfo');
+                if (_iwH) _iwH.style.display = '';
+                if (_idH) _idH.style.display = 'none';
+                if (_iiH) _iiH.textContent = '';
             } else if (!state.isAdPrint) {
                 // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI + 인라인 업로드 끔
                 if (_multiSec) _multiSec.style.display = 'none';
