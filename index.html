@@ -1067,19 +1067,24 @@ window._tcmFallbackClick = function(code) {
                 </div>
             </div>
         </div>
-        <!-- 이벤트 쿠폰 안내 — 제목만 노출, 클릭 시 모달 직접 오픈 (사용자 요청 2026-06-01) -->
-        <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
+        <!-- 이벤트 쿠폰 안내 — 제목만 노출, 클릭 시 모달 직접 오픈. PC=우측 작게 / 모바일=풀폭 -->
+        <style>
+        #overseasBranchHero { flex:0 0 auto; max-width:280px; margin-left:auto; }
+        @media (max-width: 768px) {
+            #overseasBranchHero { flex:1 1 100%; max-width:100%; margin-left:0; }
+        }
+        </style>
+        <div id="overseasBranchHero">
             <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()" id="couponCardBtn"
-                style="width:100%; height:auto; padding:18px 22px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:14px; box-shadow:0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; align-items:center; gap:14px; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
-                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 22px 55px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
-                onmouseleave="this.style.transform=''; this.style.boxShadow='0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2)';">
-                <div style="position:absolute; top:-20px; right:-12px; font-size:64px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">🎁</div>
-                <div style="width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 6px 16px rgba(190,24,93,0.45);">
-                    <i class="fa-solid fa-gift" style="color:#fff; font-size:18px;"></i>
+                style="width:100%; height:auto; padding:12px 16px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:12px; box-shadow:0 12px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; align-items:center; gap:10px; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
+                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 18px 45px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
+                onmouseleave="this.style.transform=''; this.style.boxShadow='0 12px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(244,114,182,0.2)';">
+                <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
+                    <i class="fa-solid fa-gift" style="color:#fff; font-size:14px;"></i>
                 </div>
                 <div style="flex:1; text-align:left; min-width:0;">
-                    <div id="couponCardTitle" style="font-size:16px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3;">🎁 이벤트 쿠폰 받기</div>
-                    <div id="couponCardSubtitle" style="font-size:11px; color:#fbcfe8; margin-top:3px; line-height:1.4; font-weight:500;">클릭하여 자세히 보기 →</div>
+                    <div id="couponCardTitle" style="font-size:13.5px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3;">🎁 이벤트 쿠폰 받기</div>
+                    <div id="couponCardSubtitle" style="font-size:10.5px; color:#fbcfe8; margin-top:2px; line-height:1.3; font-weight:500;">자세히 보기 →</div>
                 </div>
             </button>
         </div>
@@ -1150,13 +1155,22 @@ window._tcmFallbackClick = function(code) {
                 <div id="mgrQuoteTitle" style="font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2);">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
                 <div id="mgrQuoteDesc" style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.</div>
             </div>
-            <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-bottom:12px;">
-                <a href="tel:031-366-1984" class="mgr-kr-only" style="grid-column:1 / -1; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:14px 12px; background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.25); border-radius:10px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
+            <!-- 2026-06-01: PC = auto-fit 가로 5열 / 모바일 = 2열 + 본사 풀폭 (media query 로 분기) -->
+            <style>
+            #mgrPhoneList { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px; }
+            @media (max-width: 600px) {
+                #mgrPhoneList { grid-template-columns:repeat(2, 1fr); }
+                #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
+                #mgrPhoneList #mgrPhoneJp { grid-column:1 / -1; }
+            }
+            </style>
+            <div id="mgrPhoneList">
+                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
                     <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
                 <!-- 2026-05-28: JP 전용 ナナミ 직통 카드 — 일본 도메인(cafe0101.com)에서만 표시 -->
-                <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
+                <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
                     <span style="font-size:22px;">🇯🇵</span>
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
                         <span style="font-size:11px; opacity:0.85; letter-spacing:0.5px;">東京・大阪 直通担当</span>
@@ -1442,24 +1456,16 @@ window._tcmFallbackClick = function(code) {
         if (modal) modal.style.display = 'none';
     };
 
-    // 스크린샷 → Supabase Storage 업로드
+    // 스크린샷 → Supabase Storage 업로드 (2026-06-01: 'orders' 버킷 사용 — share-screenshots 미생성)
     async function _couponUploadScreenshot(file){
         var sb = window.sb;
         if (!sb) throw new Error('DB not ready');
         var ext = ((file.name || '').split('.').pop() || 'png').toLowerCase();
         var path = 'sns-share/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
-        var { data, error } = await sb.storage.from('share-screenshots').upload(path, file, { upsert:false, contentType:file.type });
-        if (error) {
-            // bucket이 없을 수 있음 — 일반 storage bucket 으로 fallback
-            try {
-                var fb = await sb.storage.from('public').upload(path, file, { upsert:false, contentType:file.type });
-                if (fb.error) throw fb.error;
-                var pub = sb.storage.from('public').getPublicUrl(path);
-                return pub.data.publicUrl;
-            } catch(e2) { throw error; }
-        }
-        var pub = sb.storage.from('share-screenshots').getPublicUrl(path);
-        return pub.data.publicUrl;
+        // 'orders' 는 기존에 사용중인 public 버킷 — 검증된 위치
+        var { error } = await sb.storage.from('orders').upload(path, file, { upsert:false, contentType:file.type });
+        if (error) throw error;
+        return sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
     }
 
     // 제출 핸들러 — chatbot_knowledge 에 category='_sns_share_apps' 로 저장. 관리자가 /sns-rewards 에서 승인하면 마일리지 +100k 지급.

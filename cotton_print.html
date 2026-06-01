@@ -793,15 +793,10 @@ window._cottonSearch = function(){
             if (!sb) throw new Error('DB not ready');
             var ext = ((file.name||'').split('.').pop()||'png').toLowerCase();
             var path = 'sns-share/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
-            var { error } = await sb.storage.from('share-screenshots').upload(path, file, { upsert:false, contentType:file.type });
-            if (error) {
-                try {
-                    var fb = await sb.storage.from('public').upload(path, file, { upsert:false, contentType:file.type });
-                    if (fb.error) throw fb.error;
-                    return sb.storage.from('public').getPublicUrl(path).data.publicUrl;
-                } catch(e2) { throw error; }
-            }
-            return sb.storage.from('share-screenshots').getPublicUrl(path).data.publicUrl;
+            // 'orders' 는 기존에 사용중인 public 버킷 — 검증된 위치
+            var { error } = await sb.storage.from('orders').upload(path, file, { upsert:false, contentType:file.type });
+            if (error) throw error;
+            return sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
         }
         window._submitCpCoupon = async function(){
             var c = window.__CP_COUPON || {};
