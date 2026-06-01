@@ -2545,23 +2545,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // 영상2 (arco5) → 챗봇 다음
     if (psVideo2) { moveAfter(psVideo2, cursor); cursor = psVideo2; }
 
-    // 2026-06-01: 새 순서 — 허니콤보드 → 굿즈 → 광고 → 인쇄 → 패브릭 → 종이매대 → 허니콤보드 원지 → POPUP 영상 → psVideo1 → 인기상품
+    // 2026-06-01: 새 순서 — 허니콤보드 → 굿즈 → 광고인쇄(popular 재활용) → 인쇄 → 패브릭 → 종이매대 → 허니콤보드 원지 → POPUP 영상 → psVideo1
     var hotDeal = document.getElementById('hotDealSection');
     var goods = document.getElementById('goodsSection');
-    var adPrint = document.getElementById('adPrintSection');
+    var popular = document.getElementById('popularSection');  // 광고인쇄로 라벨 변경됨 (is_popular 큐레이션 그대로)
     var printService = document.getElementById('printServiceSection');
     var bizDeal = document.getElementById('bizDealSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
     var wholesaleBoard = document.getElementById('wholesaleBoardSection');
     var hcVideo = document.getElementById('honeycombVideoSection');
-    var popular = document.getElementById('popularSection');
-    [hotDeal, goods, adPrint, printService, bizDeal, paperDisplay, wholesaleBoard, hcVideo].forEach(function(sec){
+    [hotDeal, goods, popular, printService, bizDeal, paperDisplay, wholesaleBoard, hcVideo].forEach(function(sec){
         if (sec) { moveAfter(sec, cursor); cursor = sec; }
     });
     // 영상1 (expositor4) → POPUP 영상 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
-    // 인기 상품
-    if (popular) { moveAfter(popular, cursor); cursor = popular; }
 
     // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
@@ -3642,18 +3639,7 @@ window.addEventListener('load', function() {
     </div>
 </div>
 
-<!-- 광고인쇄 (top_category_code = '44444' — 포맥스/현수막/베너거치대/실사출력 등) -->
-<div id="adPrintSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #eff6ff; padding: 20px; border-radius: 12px;">
-    <div class="hotdeal-header">
-        <h2 style="color: #2563eb;"><span data-i18n="home_ad_title">광고인쇄</span> <span class="badge-hot" style="background:#2563eb;">Ad Print</span></h2>
-        <p data-i18n="home_ad_desc">현수막·베너·실사출력·간판 등 광고용 인쇄물</p>
-    </div>
-    <div class="hotdeal-scroll-wrap">
-        <button class="hotdeal-arrow hotdeal-arrow-left" onclick="scrollHotdeal('adPrintGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
-        <div id="adPrintGrid" class="hotdeal-grid"></div>
-        <button class="hotdeal-arrow hotdeal-arrow-right" onclick="scrollHotdeal('adPrintGrid',1)"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-</div>
+<!-- 2026-06-01: 광고인쇄 = #popularSection 재활용 (is_popular 플래그로 큐레이션). 위치: 굿즈와 인쇄 사이. -->
 
 <div id="printServiceSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #f0fdf4; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
@@ -4063,10 +4049,11 @@ window.addEventListener('load', function() {
 })();
 </script>
 
-<div id="popularSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #fefce8; padding: 20px; border-radius: 12px;">
+<!-- 2026-06-01: 인기절정샵 → 광고인쇄로 재활용. is_popular 플래그는 그대로 — 관리자 큐레이션이 이쪽 카드로 노출됨. -->
+<div id="popularSection" class="hotdeal-wrapper" style="display:none; margin-top:0px; background: #eff6ff; padding: 20px; border-radius: 12px;">
     <div class="hotdeal-header">
-        <h2 style="color: #dc2626;"><span data-i18n="home_popular_title">인기절정샵</span> <span class="badge-hot" style="background:#dc2626;">Popular</span></h2>
-        <p data-i18n="home_popular_desc">가장 많이 찾는 인기 제품을 만나보세요</p>
+        <h2 style="color: #2563eb;"><span data-i18n="home_popular_title">광고인쇄</span> <span class="badge-hot" style="background:#2563eb;">Ad Print</span></h2>
+        <p data-i18n="home_popular_desc">현수막·베너·실사출력·간판 등 광고용 인쇄물</p>
     </div>
     <div class="hotdeal-scroll-wrap">
         <button class="hotdeal-arrow left" onclick="scrollHotdeal('popularGrid',-1)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -10210,8 +10197,6 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
-        // 2026-06-01: 광고인쇄 (top_category_code='44444') — 새 #adPrintSection
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('adPrintSection', 'adPrintGrid', '44444', 15, { badge: { label:'AD', color:'#2563eb' } });
         // ★ 흘러가는 배너 로드
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
@@ -10541,14 +10526,14 @@ async function loadScrollBanner() {
         ));
         // 섹션별로 분리 저장 + 분류명 태그
         const _bl = {
-            kr:['허니콤보드','천가게','인쇄소','굿즈샵','인기절정'],
-            ja:['ハニカム','布屋','印刷所','グッズ','人気'],
-            en:['Honeycomb','Fabric','Print','Goods','Best'],
-            zh:['蜂窝板','布行','印刷','好物','爆款'],
-            ar:['Honeycomb','أقمشة','طباعة','هدايا','الأكثر'],
-            es:['Honeycomb','Telas','Imprenta','Regalos','Top'],
-            de:['Honeycomb','Stoff','Druck','Geschenke','Best'],
-            fr:['Honeycomb','Tissus','Imprimerie','Cadeaux','Top']
+            kr:['허니콤보드','천가게','인쇄소','굿즈샵','광고인쇄'],
+            ja:['ハニカム','布屋','印刷所','グッズ','広告印刷'],
+            en:['Honeycomb','Fabric','Print','Goods','Ad Print'],
+            zh:['蜂窝板','布行','印刷','好物','广告印刷'],
+            ar:['Honeycomb','أقمشة','طباعة','هدايا','إعلانات'],
+            es:['Honeycomb','Telas','Imprenta','Regalos','Anuncios'],
+            de:['Honeycomb','Stoff','Druck','Geschenke','Werbung'],
+            fr:['Honeycomb','Tissus','Imprimerie','Cadeaux','Pub']
         };
         const _lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG !== 'kr') ? CURRENT_LANG : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr');
         const badgeNames = _bl[_lang] || _bl.kr;
@@ -16553,8 +16538,6 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
         }
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
-        // 2026-06-01: 광고인쇄 (top_category_code='44444') — 새 #adPrintSection
-        if (typeof loadProductsByCategory === 'function') loadProductsByCategory('adPrintSection', 'adPrintGrid', '44444', 15, { badge: { label:'AD', color:'#2563eb' } });
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
         // 배송비 계산기 항상 표시
         var scSec2 = document.getElementById('shippingCalcSection');
