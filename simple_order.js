@@ -1494,11 +1494,19 @@ html, body { background: #ffffff !important; }
             </div>
             <div id="soAdQueueTotalBreak" style="margin-top:8px; font-size:12px; color:#ffffff; line-height:1.7;"></div>
           </div>
-          <div style="margin-top:10px; padding:8px 12px; background:#f1f5f9; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.6; text-align:center;">
-            <i class="fa-solid fa-hand-pointer" style="color:#3b82f6;"></i>
-            ${tr('담긴 라인을 클릭하면 옵션·파일을 다시 편집할 수 있어요. 담기 버튼이 수정하기로 바뀝니다.',
-                 '保存済みの行をクリックすると再編集できます。「保存」が「変更を保存」に切り替わります。',
-                 'Click a saved line to edit it — the Save button switches to Save Changes.')}
+          <div style="margin-top:10px; padding:10px 14px; background:#f1f5f9; border-radius:10px; font-size:11.5px; color:#475569; line-height:1.7; text-align:left;">
+            <div style="display:flex; gap:8px; align-items:flex-start; margin-bottom:6px;">
+              <i class="fa-solid fa-plus" style="color:#7c3aed; flex-shrink:0; margin-top:3px;"></i>
+              <span>${tr('제품을 담은 후 추가로 벽체가 필요하시다면 크기와 옵션을 선택한 후 <b>또다시 담기를 클릭</b>하면 벽체를 추가할 수 있습니다.',
+                         '商品を保存後、追加で壁面が必要な場合はサイズ・オプションを選び<b>もう一度「保存」をクリック</b>すると壁面を追加できます。',
+                         'After saving an item, if you need another wall, pick the size & options and <b>click Save again</b> to stack another wall.')}</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:flex-start;">
+              <i class="fa-solid fa-cart-plus" style="color:#16a34a; flex-shrink:0; margin-top:3px;"></i>
+              <span>${tr('이 외에 배너 등 다른 제품이 필요하시면 아래로 내려 <b>장바구니에 담고</b> 다른 제품을 추가하면 됩니다.',
+                         'バナー等の他の商品が必要な場合は下に進み<b>カートに追加</b>後、別の商品を追加してください。',
+                         'For banners or other products, scroll down and <b>add to cart</b>, then add the other products.')}</span>
+            </div>
           </div>
         </div>
 
@@ -2998,15 +3006,17 @@ html, body { background: #ffffff !important; }
                             : (state.isBox ? tr('박스','箱','Boxes')
                                 : (state.isCutPrint ? tr('인쇄커팅','カット印刷','Cut prints')
                                     : tr('인쇄물','商品','Items')));
-                        _lines.push('<div style="display:flex; justify-content:space-between;"><span>' + _wallLabel + (_addonSum > 0 ? ' + ' + tr('추가옵션','追加オプション','Add-ons') : '') + '</span><span>' + fmtPrice(_wallBaseSum + _addonSum) + '</span></div>');
+                        // 2026-06-01: breakdown 내부 텍스트 모두 흰색 강제 (이전 opacity로 회색기 있었음)
+                        var _rowStyle = 'display:flex; justify-content:space-between; color:#ffffff;';
+                        _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + _wallLabel + (_addonSum > 0 ? ' + ' + tr('추가옵션','追加オプション','Add-ons') : '') + '</span><span style="color:#ffffff;">' + fmtPrice(_wallBaseSum + _addonSum) + '</span></div>');
                         if (amountDiscount > 0) {
-                            _lines.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('할인','割引','Discount') + '</span><span>-' + fmtPrice(amountDiscount) + '</span></div>');
+                            _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('할인','割引','Discount') + '</span><span style="color:#ffffff;">-' + fmtPrice(amountDiscount) + '</span></div>');
                         }
                         if (shipFee > 0 && !state.bundleShipping) {
                             var _shipLbl2 = _soShipMethodLabel(state.shipMethod) || tr('배송','送料','Shipping');
-                            _lines.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + ' (' + _shipLbl2 + ')</span><span>+' + fmtPrice(shipFee) + '</span></div>');
+                            _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('배송','送料','Shipping') + ' (' + _shipLbl2 + ')</span><span style="color:#ffffff;">+' + fmtPrice(shipFee) + '</span></div>');
                         } else if (state.bundleShipping) {
-                            _lines.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + '</span><span>' + tr('묶음배송','合わせて配送','Bundled') + '</span></div>');
+                            _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('배송','送料','Shipping') + '</span><span style="color:#ffffff;">' + tr('묶음배송','合わせて配送','Bundled') + '</span></div>');
                         }
                         _qtBrk.innerHTML = _lines.join('');
                     }
