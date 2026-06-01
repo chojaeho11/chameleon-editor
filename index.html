@@ -1395,23 +1395,45 @@ window._tcmFallbackClick = function(code) {
         var modal = document.getElementById('couponShareModal');
         if (!modal) return;
         var t = window.__COUPON_T || {};
-        // 로그인 체크 — 미로그인이면 로그인 모달 띄움
+        // 2026-06-01: sb lazy-init + 로그인 여부에 따라 이메일 자동/수동 입력 토글
         (async function(){
+            var sb = window.sb;
+            if (!sb && typeof supabase !== 'undefined') {
+                sb = supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                    { auth: { persistSession: true } }
+                );
+                window.sb = sb;
+            }
+            var emailIn = document.getElementById('couponEmail');
             try {
-                var sb = window.sb;
                 if (sb && sb.auth) {
                     var r = await sb.auth.getSession();
                     var sess = r && r.data && r.data.session;
-                    if (!sess) {
-                        alert(t.alertLogin || '로그인이 필요합니다.');
-                        if (typeof window.openAuthModal === 'function') window.openAuthModal('login');
-                        return;
+                    if (sess && sess.user && sess.user.email) {
+                        // 로그인됨 — 이메일 자동 채움 + readonly 유지
+                        if (emailIn) {
+                            emailIn.value = sess.user.email;
+                            emailIn.readOnly = true;
+                            emailIn.style.background = '#f9fafb';
+                        }
+                    } else {
+                        // 미로그인 — 이메일 수동 입력 허용
+                        if (emailIn) {
+                            emailIn.value = '';
+                            emailIn.readOnly = false;
+                            emailIn.style.background = '#fff';
+                            emailIn.placeholder = 'you@example.com';
+                        }
                     }
-                    // 로그인 이메일 자동 채움
-                    var emailIn = document.getElementById('couponEmail');
-                    if (emailIn && sess.user && sess.user.email) emailIn.value = sess.user.email;
                 }
-            } catch(e) {}
+            } catch(e) {
+                if (emailIn) {
+                    emailIn.readOnly = false;
+                    emailIn.style.background = '#fff';
+                }
+            }
             modal.style.display = 'flex';
         })();
     };
@@ -8375,7 +8397,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=436"></script>
 <script type="module" src="./main.js?v=443"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=233"></script>
+<script src="/simple_order.js?v=234"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=16"></script>
 
