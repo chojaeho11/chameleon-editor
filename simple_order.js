@@ -1478,30 +1478,28 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-06-01: 멀티-라인 — 큐 + 2버튼 (좌측 담기 = 장바구니 / 우측 가벽 추가 = 큐 적층) + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
-          <!-- 2026-06-01: 전체 합계 (배송 포함) — 큐 위쪽에 prominent 표시. 큐에 라인이 1개 이상이면 자동 표시 -->
-          <div id="soAdQueueTotalWrap" style="display:none; margin-bottom:10px; padding:14px 16px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%); color:#fff; border-radius:14px; box-shadow:0 6px 18px -6px rgba(79,70,229,0.45);">
-            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px;">
-              <span style="font-size:13px; font-weight:700; opacity:0.92;">${tr('전체 합계 (배송 포함)', '合計 (送料込)', 'Total (incl. shipping)')}</span>
-              <span id="soAdQueueTotal" style="font-size:22px; font-weight:900; letter-spacing:-0.01em;">-</span>
-            </div>
-            <div id="soAdQueueTotalBreak" style="margin-top:6px; font-size:11px; opacity:0.88; line-height:1.5;"></div>
-          </div>
           <div id="soAdExtraLines"></div>
-          <div id="soAdBtnStack" style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
-            <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 보라 그라데이션. 항상 표시. -->
-            <button type="button" id="soAdCartLineBtn" onclick="window._soAdAddLine()"
-              style="padding:14px 10px; border:none; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); color:#fff; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(79,70,229,0.55); transition:transform 0.12s, box-shadow 0.15s;"
-              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(79,70,229,0.65)'"
-              onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(79,70,229,0.55)'">
-              ${tr('담기', 'リストに追加', 'Save line')}
-            </button>
-            <!-- 2026-06-01: 가벽 추가 = 폼 리셋 + 상단 업로드로 스크롤. 큐에 라인이 1개 이상일 때만 표시 (담기 아래쪽). -->
-            <button type="button" id="soAdAddLineBtn" onclick="window._soAdStartNew()" style="display:none; padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
-              onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(251,191,36,0.6)'"
-              onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(251,191,36,0.5)'">
-              <span id="soAdAddLineBtnLabel">${tr('가벽 추가', '壁面追加', 'Add wall')}</span>
-            </button>
+          <!-- 2026-06-01: 담기 = 큐에 추가 (장바구니 아님). 보라 그라데이션. 항상 표시. -->
+          <button type="button" id="soAdCartLineBtn" onclick="window._soAdAddLine()"
+            style="display:block; width:100%; margin-top:6px; padding:14px 10px; border:none; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%); color:#ffffff !important; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(79,70,229,0.55); transition:transform 0.12s, box-shadow 0.15s;"
+            onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(79,70,229,0.65)'"
+            onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(79,70,229,0.55)'">
+            <span style="color:#ffffff;">${tr('담기', 'リストに追加', 'Save line')}</span>
+          </button>
+          <!-- 2026-06-01: 전체 합계 (배송 포함) — 담기 버튼 바로 아래. 큐에 라인이 1개 이상이면 자동 표시 -->
+          <div id="soAdQueueTotalWrap" style="display:none; margin-top:10px; padding:14px 16px; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%); color:#ffffff; border-radius:14px; box-shadow:0 6px 18px -6px rgba(79,70,229,0.45);">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px;">
+              <span style="font-size:13px; font-weight:700; color:#ffffff;">${tr('전체 합계 (배송 포함)', '合計 (送料込)', 'Total (incl. shipping)')}</span>
+              <span id="soAdQueueTotal" style="font-size:22px; font-weight:900; letter-spacing:-0.01em; color:#ffffff;">-</span>
+            </div>
+            <div id="soAdQueueTotalBreak" style="margin-top:6px; font-size:11px; color:#ffffff; line-height:1.5;"></div>
           </div>
+          <!-- 2026-06-01: 가벽 추가 = 폼 리셋 + 상단 업로드로 스크롤. 큐에 라인이 1개 이상일 때만 표시. -->
+          <button type="button" id="soAdAddLineBtn" onclick="window._soAdStartNew()" style="display:none; width:100%; margin-top:10px; padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
+            onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(251,191,36,0.6)'"
+            onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(251,191,36,0.5)'">
+            <span id="soAdAddLineBtnLabel">${tr('가벽 추가', '壁面追加', 'Add wall')}</span>
+          </button>
           <div style="margin-top:10px; padding:8px 12px; background:#f1f5f9; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.6; text-align:center;">
             <i class="fa-solid fa-hand-pointer" style="color:#3b82f6;"></i>
             ${tr('위 큐 라인을 클릭해서 옵션·파일을 다시 편집할 수 있어요.',
@@ -2605,6 +2603,15 @@ html, body { background: #ffffff !important; }
         if (!state.product) return;
         let unit = pickPrice(state.product);
         let qty, subtotal;
+        // 2026-06-01: "현재 폼" 이 비어있는 초안 (큐에 라인이 있는데 새 라인 시작 전) 인지 판정.
+        //   조건 — 큐 1개+ 이고 파일이 없고 추가옵션도 없고 받침대도 없으면 = 빈 폼.
+        //   true 이면 subtotal/heightExtra/wallShapeFee/addonTotal 모두 0 처리 (큐 합계만 표시).
+        //   장바구니 담기에서도 이 상태면 현재 라인 push 하지 않음.
+        var _hasQueue = (state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines) && state._adLines.length > 0;
+        var _addonCount = state.selectedAddons ? Object.keys(state.selectedAddons).length : 0;
+        var _baseStandCount = state.baseStands ? Object.keys(state.baseStands).length : 0;
+        var _curIsDraft = _hasQueue && !state.file && !state.thumbDataUrl && _addonCount === 0 && _baseStandCount === 0;
+        state._adCurIsDraft = _curIsDraft;
         // 2026-05-13: 가벽 세로 3m → 가로 m당 +50,000원 + 양면 2배
         let heightExtra = 0;
         if (state.isWall) {
@@ -2732,7 +2739,14 @@ html, body { background: #ffffff !important; }
         // 2026-05-29: 베스트굿즈 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
         // 2026-06-01: 광고인쇄 — 할인 비적용 (가격 차분만 받는 단순 구조)
         // 2026-06-01: 가벽 형태 (ㄱ자/ㄷ자) 코너 추가비 — 단면/양면 무관
-        const wallShapeFee = (state.isWall && state.wallShapeFee) ? state.wallShapeFee : 0;
+        let wallShapeFee = (state.isWall && state.wallShapeFee) ? state.wallShapeFee : 0;
+        // 2026-06-01: 큐에 라인이 있는데 현재 폼이 빈 초안 — 현재 라인 합계 모두 0
+        if (_curIsDraft) {
+            subtotal = 0;
+            heightExtra = 0;
+            wallShapeFee = 0;
+            addonTotal = 0;
+        }
         const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
         const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
         let amountPct = 0;
@@ -2963,7 +2977,8 @@ html, body { background: #ffffff !important; }
                         var _queueSum = 0;
                         state._adLines.forEach(function(l){ _queueSum += (l.lineTotal || 0); });
                         var _parts = [];
-                        _parts.push(tr('이번','現在','Current') + ' ' + fmtPrice(_cur));
+                        // 현재 폼이 초안이면 (큐만 있고 새 라인 시작 전) "이번" 라인 숨김
+                        if (!_curIsDraft && _cur > 0) _parts.push(tr('이번','現在','Current') + ' ' + fmtPrice(_cur));
                         _parts.push(tr('큐','保存','Queue') + ' ' + fmtPrice(_queueSum));
                         if (amountDiscount > 0) _parts.push(tr('할인','割引','Disc') + ' -' + fmtPrice(amountDiscount));
                         if (shipFee > 0 && !state.bundleShipping) _parts.push(tr('배송','送料','Ship') + ' +' + fmtPrice(shipFee));
@@ -6919,6 +6934,9 @@ html, body { background: #ffffff !important; }
         var defaultShip = 'self_pickup';
         if (state.isPaperDisplay) {
             defaultShip = ((parseInt(state.qty, 10) || 1) >= 100) ? 'pd_bulk_free' : 'pd_parcel_2';
+        } else if ((state.isWall || state.isPhotozone) && allowed.indexOf('metro_install') >= 0) {
+            // 2026-06-01: 가벽/포토존 — 기본 배송 = 수도권 설치 (사용자 요청)
+            defaultShip = 'metro_install';
         } else if ((state.isDeliveryOnly || state.isRawBoard) && allowed.indexOf('metro_delivery') >= 0) {
             // 2026-05-22: 허니콤보드(배송형·원판) — 기본 배송 = 수도권 배송 (10만원)
             defaultShip = 'metro_delivery';
@@ -7483,7 +7501,10 @@ html, body { background: #ffffff !important; }
                 showStatus(tr('수정되었습니다.', '変更を保存しました。', 'Updated.'), 'ok');
                 return true;
             }
-            cart.push(item);
+            // 2026-06-01: 큐에 라인이 있는데 현재 폼이 빈 초안 = 사용자가 "가벽 추가" 만 누르고 새 가벽 설정 안 함.
+            //   이 경우 현재 라인 push 하지 않고 큐 라인들만 push. (recalc 에서 _adCurIsDraft 산출)
+            var _skipCurrent = !!state._adCurIsDraft;
+            if (!_skipCurrent) cart.push(item);
             // 2026-06-01: 멀티-라인 큐 — 광고인쇄 + 허니콤보드 (가벽/박스/자유인쇄커팅/등신대) 공용.
             //   각 큐 라인을 별도 cart item 으로 push. 큐 라인은 bundleShipping=true → 배송 fee=0.
             if ((state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines) && state._adLines.length > 0) {
