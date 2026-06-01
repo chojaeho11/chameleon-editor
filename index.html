@@ -2545,25 +2545,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // 영상2 (arco5) → 챗봇 다음
     if (psVideo2) { moveAfter(psVideo2, cursor); cursor = psVideo2; }
 
-    // 상품 섹션들 → 영상2 다음 (종이매대 다음에 영상1 삽입)
+    // 2026-06-01: 새 순서 — 허니콤보드 → 굿즈 → 광고 → 인쇄 → 패브릭 → 종이매대 → 허니콤보드 원지 → POPUP 영상 → psVideo1 → 인기상품
     var hotDeal = document.getElementById('hotDealSection');
-    var bizDeal = document.getElementById('bizDealSection');
-    var printService = document.getElementById('printServiceSection');
     var goods = document.getElementById('goodsSection');
+    var adPrint = document.getElementById('adPrintSection');
+    var printService = document.getElementById('printServiceSection');
+    var bizDeal = document.getElementById('bizDealSection');
     var paperDisplay = document.getElementById('paperDisplaySection');
-    var popular = document.getElementById('popularSection');
-    // 허니콤보드(HotDeal) → 허니콤 영상 → 종이매대(paperDisplay) → 나머지
-    if (hotDeal) { moveAfter(hotDeal, cursor); cursor = hotDeal; }
+    var wholesaleBoard = document.getElementById('wholesaleBoardSection');
     var hcVideo = document.getElementById('honeycombVideoSection');
-    if (hcVideo) { moveAfter(hcVideo, cursor); cursor = hcVideo; }
-    if (paperDisplay) { moveAfter(paperDisplay, cursor); cursor = paperDisplay; }
-    [bizDeal, printService, goods].forEach(function(sec) {
+    var popular = document.getElementById('popularSection');
+    [hotDeal, goods, adPrint, printService, bizDeal, paperDisplay, wholesaleBoard, hcVideo].forEach(function(sec){
         if (sec) { moveAfter(sec, cursor); cursor = sec; }
     });
-    // 허니콤보드 원판
-    var wholesaleBoard = document.getElementById('wholesaleBoardSection');
-    if (wholesaleBoard) { moveAfter(wholesaleBoard, cursor); cursor = wholesaleBoard; }
-    // 영상1 (expositor4) → 원판 바로 다음
+    // 영상1 (expositor4) → POPUP 영상 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
     // 인기 상품
     if (popular) { moveAfter(popular, cursor); cursor = popular; }
