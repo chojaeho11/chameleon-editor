@@ -562,6 +562,11 @@ window._cottonSearch = function(){
                     <button type="button" id="cpMgrQuoteBtn" onclick="window._cpMgrQuoteOrder && window._cpMgrQuoteOrder()" style="width:100%; padding:10px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 4px 12px rgba(6,199,85,0.35); font-family:inherit;">
                         ⚡ 주문하기
                     </button>
+                    <!-- 2026-06-01: 이벤트 쿠폰 받기 — 매니저 카드 내부 통합 -->
+                    <button type="button" onclick="window._openCpCouponModal && window._openCpCouponModal()"
+                        style="width:100%; margin-top:6px; padding:10px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:500; cursor:pointer; box-shadow:0 4px 12px -2px rgba(190,24,93,0.5); letter-spacing:0.3px; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        🎁 <span id="cpCouponInlineLabel">이벤트 쿠폰 받기</span>
+                    </button>
                 </div>
             </div>
 
@@ -578,20 +583,11 @@ window._cottonSearch = function(){
                 </button>
             </div>
 
-            <!-- ▌▌▌ RIGHT: 이벤트 쿠폰 받기 (2026-06-01: 인플루언서 모집 → 쿠폰 카드로 교체, 제목만 노출) ▌▌▌ -->
-            <div class="cp-col-card" style="padding:0; background:transparent; border:none; box-shadow:none;">
-                <button type="button" onclick="window._openCpCouponModal && window._openCpCouponModal()" id="cpCouponCardBtn"
-                    style="width:100%; height:100%; min-height:140px; padding:18px 20px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:14px; box-shadow:0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
-                    onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 22px 55px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
-                    onmouseleave="this.style.transform=''; this.style.boxShadow='0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2)';">
-                    <div style="position:absolute; top:-20px; right:-12px; font-size:72px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">🎁</div>
-                    <div style="width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 6px 16px rgba(190,24,93,0.45);">
-                        <i class="fa-solid fa-gift" style="color:#fff; font-size:18px;"></i>
-                    </div>
-                    <div id="cpCouponCardTitle" style="font-size:16px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3; text-align:center;">🎁 이벤트 쿠폰 받기</div>
-                    <div id="cpCouponCardSubtitle" style="font-size:11px; color:#fbcfe8; line-height:1.4; font-weight:500; text-align:center;">클릭하여 자세히 보기 →</div>
-                </button>
-            </div>
+            <!-- 2026-06-01: RIGHT 쿠폰 카드는 LEFT 매니저 카드 내부 통합됨 — 우측 컬럼 제거.
+                 cp-hero-3col 그리드를 2컬럼으로 자연 축소 (CSS auto-fit 으로 처리) -->
+            <style>.cp-hero-3col { grid-template-columns: 1fr 1fr !important; }
+            @media (max-width: 900px) { .cp-hero-3col { grid-template-columns: 1fr !important; } }
+            </style>
 
         </div>
         <style>
@@ -734,8 +730,8 @@ window._cottonSearch = function(){
             function $(id){ return document.getElementById(id); }
             if ($('cpFreeSampleTitle')) $('cpFreeSampleTitle').textContent = s.t;
             if ($('cpFreeSampleDesc'))  $('cpFreeSampleDesc').textContent  = s.d;
-            if ($('cpCouponCardTitle')) $('cpCouponCardTitle').textContent = c.title;
-            if ($('cpCouponCardSubtitle')) $('cpCouponCardSubtitle').textContent = c.subtitle;
+            // 2026-06-01: 우측 독립 카드 제거 — 좌측 매니저 박스 내부 inline 라벨만 갱신
+            if ($('cpCouponInlineLabel')) $('cpCouponInlineLabel').textContent = c.title;
             window.__CP_COUPON = c;
             window.__CP_LANG = lang;
         })();

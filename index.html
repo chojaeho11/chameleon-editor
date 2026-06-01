@@ -1037,6 +1037,11 @@ window._tcmFallbackClick = function(code) {
                             <i class="fa-solid fa-bolt" style="font-size:10px;"></i> 注文する
                         </button>
                     </div>
+                    <!-- 2026-06-01: 이벤트 쿠폰 받기 (JP 사이트 — LINE 박스 내부) -->
+                    <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()"
+                        style="width:100%; margin-top:8px; padding:11px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        🎁 <span id="jpCouponBtnLabel">クーポンプレゼント</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1064,30 +1069,15 @@ window._tcmFallbackClick = function(code) {
                             <i class="fa-solid fa-bolt" style="font-size:10px;"></i> <span id="enInlineBtnLabel">Order</span>
                         </button>
                     </div>
+                    <!-- 2026-06-01: 이벤트 쿠폰 받기 (en/외국 사이트 — Hiba 박스 내부) -->
+                    <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()"
+                        style="width:100%; margin-top:8px; padding:11px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        🎁 <span id="enCouponBtnLabel">Claim Event Coupon</span>
+                    </button>
                 </div>
             </div>
         </div>
-        <!-- 이벤트 쿠폰 안내 — 제목만 노출, 클릭 시 모달 직접 오픈. PC=우측 작게 / 모바일=풀폭 -->
-        <style>
-        #overseasBranchHero { flex:0 0 auto; max-width:280px; margin-left:auto; }
-        @media (max-width: 768px) {
-            #overseasBranchHero { flex:1 1 100%; max-width:100%; margin-left:0; }
-        }
-        </style>
-        <div id="overseasBranchHero">
-            <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()" id="couponCardBtn"
-                style="width:100%; height:auto; padding:12px 16px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:12px; box-shadow:0 12px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; align-items:center; gap:10px; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
-                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 18px 45px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
-                onmouseleave="this.style.transform=''; this.style.boxShadow='0 12px 30px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(244,114,182,0.2)';">
-                <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
-                    <i class="fa-solid fa-gift" style="color:#fff; font-size:14px;"></i>
-                </div>
-                <div style="flex:1; text-align:left; min-width:0;">
-                    <div id="couponCardTitle" style="font-size:13.5px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3;">🎁 이벤트 쿠폰 받기</div>
-                    <div id="couponCardSubtitle" style="font-size:10.5px; color:#fbcfe8; margin-top:2px; line-height:1.3; font-weight:500;">자세히 보기 →</div>
-                </div>
-            </button>
-        </div>
+        <!-- 2026-06-01: 독립 쿠폰 카드 삭제 — 각 contact 박스 (mgrQuoteHero / jpLineContact / enHibaContact) 내부로 이전됨 -->
     </div>
     <script>
     // 2026-05-28: 로케일별 카드 표시 분기
@@ -1324,6 +1314,11 @@ window._tcmFallbackClick = function(code) {
                 <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 22px; background:#fff; color:#111; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(0,0,0,0.4); letter-spacing:0.5px; white-space:nowrap;">
                     📋 개인결제창
                 </button>
+                <!-- 2026-06-01: 이벤트 쿠폰 받기 — mgrQuoteHero 박스 내부 우측에 통합 -->
+                <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()"
+                    style="padding:11px 18px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; white-space:nowrap; display:flex; align-items:center; gap:6px; font-family:inherit;">
+                    🎁 <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
+                </button>
             </div>
             <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 (텍스트 자체는 사용자 요청에 따라 제거) -->
             <div id="mgrQuoteHint" style="display:none;"></div>
@@ -1393,13 +1388,10 @@ window._tcmFallbackClick = function(code) {
         };
         var t = COUPON[lang] || COUPON.kr;
         function $(id){ return document.getElementById(id); }
-        // 카드는 제목만 노출 — 클릭 시 모달 오픈. line1/line2/note 등 본문은 모달에서만.
-        if ($('couponCardTitle')) $('couponCardTitle').textContent = '🎁 ' + t.title;
-        if ($('couponCardSubtitle')) {
-            $('couponCardSubtitle').textContent = (lang === 'ja') ? 'タップして詳細 →'
-                : (lang === 'en' || lang === 'us') ? 'Tap to learn more →'
-                : '클릭하여 자세히 보기 →';
-        }
+        // 2026-06-01: 독립 카드 → 각 contact 박스 내부 inline 버튼으로 이동. 인라인 라벨만 lang 별 갱신.
+        if ($('couponInlineBtnLabel')) $('couponInlineBtnLabel').textContent = t.title;
+        if ($('jpCouponBtnLabel'))     $('jpCouponBtnLabel').textContent = (COUPON.ja || {}).title || 'クーポン申請';
+        if ($('enCouponBtnLabel'))     $('enCouponBtnLabel').textContent = (COUPON.en || {}).title || 'Claim Event Coupon';
         window.__COUPON_T = t;
         window.__COUPON_LANG = lang;
     })();
