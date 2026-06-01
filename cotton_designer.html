@@ -178,8 +178,8 @@ window.__CD_I18N = {
     finish_interlock_sub: { ko:'튼튼한 이중 마감', ja:'丈夫な二重仕上げ', en:'Strong double-stitch' },
     finish_rolledhem: { ko:'말아박기', ja:'巻き縫い', en:'Rolled Hem' },
     finish_rolledhem_sub: { ko:'고급 접어박기', ja:'高級折り縫い', en:'Premium fold-stitch' },
-    side_hook: { ko:'고리가 필요하신가요?', ja:'吊り具は必要ですか？', en:'Need hanging hooks?' },
-    side_acc: { ko:'부자재가 필요하신가요?', ja:'付属品は必要ですか？', en:'Need accessories?' },
+    side_hook: { ko:'끈고리 · 봉끼움 · 미싱', ja:'ヒモ吊り・棒通し・縫製', en:'String loops · Rod sleeve · Stitching' },
+    side_acc: { ko:'실색상변경 · 목봉', ja:'糸色変更・木棒', en:'Thread color · Wood rod' },
     acc_thread_color: { ko:'실색상 변경', ja:'糸の色変更', en:'Thread color change' },
     acc_thread_color_sub: { ko:'기본 외 컬러 마감사', ja:'標準以外のカラー糸', en:'Non-default color thread' },
     acc_rod_30: { ko:'목봉 30cm', ja:'木棒 30cm', en:'Wood rod 30cm' },
@@ -1406,7 +1406,7 @@ a { text-decoration: none; color: inherit; }
         <!-- 2) 고리 옵션 (선택, 접이식) — 패브릭포스터 전용 -->
         <div class="side-card collapse-card" id="hookCard">
             <div class="side-card-title collapse-head" onclick="window._cdToggleCollapse('hookCollapse', this)">
-                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_hook">고리가 필요하신가요?</span></span>
+                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_hook">끈고리 · 봉끼움 · 미싱</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="hookSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
             <div id="hookCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
@@ -1456,7 +1456,7 @@ a { text-decoration: none; color: inherit; }
         <!-- 3) 부자재 옵션 (선택, 접이식) — 패브릭포스터 전용 -->
         <div class="side-card collapse-card" id="accCard">
             <div class="side-card-title collapse-head" onclick="window._cdToggleCollapse('accCollapse', this)">
-                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_acc">부자재가 필요하신가요?</span></span>
+                <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_acc">실색상변경 · 목봉</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="accSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
             <div id="accCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
