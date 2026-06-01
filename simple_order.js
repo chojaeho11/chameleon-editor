@@ -6510,12 +6510,14 @@ html, body { background: #ffffff !important; }
             }
             cart.push(item);
             // 2026-06-01: 광고인쇄 — 큐 라인들도 각각 별도 cart item 으로 push (사이즈/수량/파일/추가옵션 각각 보존)
+            //   배송비는 메인 1라인만 부담. 큐 라인은 bundleShipping=true → 배송 fee=0, method=bundle_shipping (묶음배송).
             if (state.isAdPrint && Array.isArray(state._adLines) && state._adLines.length > 0) {
                 var _sav = {
                     w: state.customW, h: state.customH, qty: state.qty,
                     file: state.file, unit: state.customUnitPrice, area: state.customAreaM2,
                     cartThumb: state._cartThumb,
-                    addons: state.selectedAddons, addonQty: state.addonQuantities
+                    addons: state.selectedAddons, addonQty: state.addonQuantities,
+                    bundle: state.bundleShipping
                 };
                 for (var _li = 0; _li < state._adLines.length; _li++) {
                     var _ln = state._adLines[_li];
@@ -6528,7 +6530,7 @@ html, body { background: #ffffff !important; }
                             _lnPath = _lnRes.path;
                         } catch (_le) { console.warn('[ad queue upload] line', _li, _le); }
                     }
-                    // state 를 라인 값으로 임시 덮어쓰기 (size/qty/file/addons) → buildCartItem → 원복
+                    // state 를 라인 값으로 임시 덮어쓰기 (size/qty/file/addons + 묶음배송 강제) → buildCartItem → 원복
                     state.customW = _ln.wMm / 10;
                     state.customH = _ln.hMm / 10;
                     state.qty = _ln.qty || 1;
@@ -6538,6 +6540,7 @@ html, body { background: #ffffff !important; }
                     state._cartThumb = null;
                     state.selectedAddons = _ln.selectedAddons || {};
                     state.addonQuantities = _ln.addonQuantities || {};
+                    state.bundleShipping = true;  // 큐 라인 = 묶음배송 (메인 라인이 배송비 전체 부담)
                     var _lnItem = buildCartItem(_lnUrl, _lnPath);
                     _lnItem.uid = Date.now() + _li + 1;
                     cart.push(_lnItem);
@@ -6547,6 +6550,7 @@ html, body { background: #ffffff !important; }
                 state.file = _sav.file; state.customUnitPrice = _sav.unit; state.customAreaM2 = _sav.area;
                 state._cartThumb = _sav.cartThumb;
                 state.selectedAddons = _sav.addons; state.addonQuantities = _sav.addonQty;
+                state.bundleShipping = _sav.bundle;
             }
             writeCart(cart);
             // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
