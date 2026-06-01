@@ -494,22 +494,32 @@
             var obs = new MutationObserver(patchLinksOnce);
             try { obs.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
             // 6) Re-sync when auth state changes (login/logout)
+            // 2026-06-02: 사용자 전환 시 (다른 계정 로그인 / 로그아웃) 이전 사용자의 localStorage 카트가
+            //   pickFreshState 의 localTs 우위로 새 사용자 카트를 덮어쓰는 버그 수정 → 그냥 서버 카트로 강제 교체.
             try {
                 var c = sb();
                 if (c && c.auth && typeof c.auth.onAuthStateChange === 'function') {
                     c.auth.onAuthStateChange(function (_event, session) {
                         var newUid = session && session.user ? session.user.id : null;
                         if (newUid !== _userId) {
+                            var prevUid = _userId;
                             _userId = newUid;
-                            // Re-pull with new key + cleanup anon orphan on login
+                            // 이전 사용자 카트를 메모리·로컬에서 비움 (사용자 전환 시 절대 이전 카트가 따라오면 안 됨)
+                            _unified = [];
+                            writeLocalTs(new Date().toISOString());
+                            rebuildLocalFromUnified();
+                            // 새 사용자 server 카트 pull (또는 로그아웃이면 빈 상태 유지)
                             (newUid ? cleanupAnonRow() : Promise.resolve())
-                                .then(function () { return pull(); })
+                                .then(function () { return newUid ? pull() : Promise.resolve(null); })
                                 .then(function (serverState) {
-                                    if (!serverState) return;
+                                    if (!serverState) {
+                                        // 로그인했지만 server 카트도 비어있음 → 그대로 빈 상태 유지
+                                        return;
+                                    }
                                     if (Array.isArray(serverState)) serverState = { items: serverState, updatedAt: null };
-                                    var picked = pickFreshState(serverState, _unified);
-                                    _unified = picked.items;
-                                    writeLocalTs(picked.tsIso);
+                                    var items = (serverState && Array.isArray(serverState.items)) ? serverState.items : [];
+                                    _unified = items;
+                                    writeLocalTs(serverState.updatedAt || new Date().toISOString());
                                     rebuildLocalFromUnified();
                                 });
                         }
