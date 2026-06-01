@@ -1499,6 +1499,46 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-01: 가벽 형태 — 직선/ㄱ자/ㄷ자 (코너 추가비). 도형 SVG 로 다국어 친화. -->
+        <div class="so-section" id="soWallShapeSection" style="display:none;">
+          <div class="so-section-title">${tr('가벽 형태', '壁面の形状', 'Wall Shape')}</div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button type="button" class="so-wall-shape-btn active" data-shape="straight" onclick="window._soPickWallShape('straight')"
+              style="padding:14px 6px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="straight">
+                <rect x="3" y="18" width="34" height="6" fill="currentColor" rx="1"/>
+              </svg>
+              <div style="font-size:13px; font-weight:900;">${tr('一자', '一字 (直線)', 'Straight')}</div>
+              <div style="font-size:10.5px; opacity:0.9; font-weight:700;">${tr('기본', '基本', 'Base')}</div>
+            </button>
+            <button type="button" class="so-wall-shape-btn" data-shape="L" onclick="window._soPickWallShape('L')"
+              style="padding:14px 6px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="L-shape">
+                <rect x="3" y="18" width="22" height="6" fill="currentColor" rx="1"/>
+                <rect x="25" y="18" width="6" height="20" fill="currentColor" rx="1"/>
+              </svg>
+              <div style="font-size:13px; font-weight:900;">${tr('ㄱ자', 'L字', 'L-shape')}</div>
+              <div style="font-size:10.5px; color:#dc2626; font-weight:800;">+${fmtPrice(100000)}</div>
+            </button>
+            <button type="button" class="so-wall-shape-btn" data-shape="U" onclick="window._soPickWallShape('U')"
+              style="padding:14px 6px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <svg viewBox="0 0 40 40" width="44" height="44" aria-label="U-shape">
+                <rect x="3" y="10" width="6" height="28" fill="currentColor" rx="1"/>
+                <rect x="3" y="10" width="34" height="6" fill="currentColor" rx="1"/>
+                <rect x="31" y="10" width="6" height="28" fill="currentColor" rx="1"/>
+              </svg>
+              <div style="font-size:13px; font-weight:900;">${tr('ㄷ자', 'コ字', 'U-shape')}</div>
+              <div style="font-size:10.5px; color:#dc2626; font-weight:800;">+${fmtPrice(200000)}</div>
+            </button>
+          </div>
+          <div style="font-size:11px; color:#64748b; margin-top:10px; line-height:1.5; padding:8px 10px; background:#fafaf9; border-radius:6px;">
+            <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
+            ${tr('꺽이는 가벽은 총 길이의 합계로 주문해주세요. (단면/양면 무관 동일 코너비)',
+                 '折れ曲がる仮壁は合計の長さでご注文ください。(片面・両面とも同額のコーナー費)',
+                 'For angled walls, order based on the total combined length. (Corner fee is the same for single or double-sided.)')}
+          </div>
+        </div>
+
         <!-- 2026-05-13: 허니콤 자유인쇄커팅 사이즈 (한판/반판) -->
         <div class="so-section" id="soCutPrintSizeSection" style="display:none;">
           <div class="so-section-title">${tr('재단 사이즈', 'カットサイズ', 'Cut size')}</div>
@@ -2572,7 +2612,9 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 원판·금액주문은 할인 없음 (단순 발송 / 입력 금액 그대로 결제)
         // 2026-05-29: 베스트굿즈 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
         // 2026-06-01: 광고인쇄 — 할인 비적용 (가격 차분만 받는 단순 구조)
-        const taxBase = subtotal + addonTotal + heightExtra + adExtraLinesTotal;
+        // 2026-06-01: 가벽 형태 (ㄱ자/ㄷ자) 코너 추가비 — 단면/양면 무관
+        const wallShapeFee = (state.isWall && state.wallShapeFee) ? state.wallShapeFee : 0;
+        const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
         const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
         let amountPct = 0;
         if (!_noDisc) {
@@ -2670,6 +2712,13 @@ html, body { background: #ffffff !important; }
                 ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
                 : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
             bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+        }
+        // 2026-06-01: 가벽 형태 (ㄱ자/ㄷ자) 라인
+        if (wallShapeFee > 0) {
+            var _shapeLbl = state.wallShape === 'L' ? tr('ㄱ자 코너','L字コーナー','L-shape corner')
+                          : state.wallShape === 'U' ? tr('ㄷ자 코너','コ字コーナー','U-shape corners')
+                          : '';
+            bdHtml += '<div class="so-price-row"><span>· ' + tr('가벽 형태','壁面形状','Wall shape') + ' (' + _shapeLbl + ')</span><span>+' + fmtPrice(wallShapeFee) + '</span></div>';
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 라인 (3장+ 50% 할인 포함 표시)
         if (tshirtPrintFee > 0 && Array.isArray(state.tshirtPrintAreas)) {
@@ -3782,6 +3831,13 @@ html, body { background: #ffffff !important; }
             var bv = (b && typeof b.sort_order === 'number') ? b.sort_order : 999999;
             return av - bv;
         });
+        // 2026-06-01: 가벽 상품은 코너기둥 addon 제거 — 별도 wallShape 섹션(ㄱ자/ㄷ자)으로 대체.
+        if (state.isWall) {
+            renderList = renderList.filter(function(a){
+                var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
+                return !/코너\s*기둥|corner.*post|corner.*pillar/i.test(nm);
+            });
+        }
 
         // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
         //   2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외됐으나 카테고리 기반 isBestGoods 로 compact 유지
@@ -4839,6 +4895,22 @@ html, body { background: #ffffff !important; }
         updateButtons();
     };
 
+    // 2026-06-01: 가벽 형태 선택 — 직선/ㄱ자/ㄷ자. 각 단면/양면 무관 동일 코너비.
+    var _WALL_SHAPE_FEE = { straight: 0, L: 100000, U: 200000 };
+    window._soPickWallShape = function (shape) {
+        if (!_WALL_SHAPE_FEE.hasOwnProperty(shape)) shape = 'straight';
+        state.wallShape = shape;
+        state.wallShapeFee = _WALL_SHAPE_FEE[shape] || 0;
+        document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
+            var on = b.dataset.shape === shape;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#4338ca' : '#fff';
+            b.style.color = on ? '#fff' : '#451a03';
+            b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+        });
+        if (typeof recalc === 'function') recalc();
+    };
+
     // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
     window._soOnBackFileChange = async function (files) {
         if (!files || !files.length) return;
@@ -5537,6 +5609,24 @@ html, body { background: #ffffff !important; }
         state.boxNesting = null;
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
+        // 2026-06-01: 가벽 형태 (-자/ㄱ자/ㄷ자) — 가벽 상품일 때만 표시. 기본 직선.
+        var wallShapeSec = document.getElementById('soWallShapeSection');
+        if (wallShapeSec) wallShapeSec.style.display = state.isWall ? '' : 'none';
+        if (state.isWall) {
+            state.wallShape = state.wallShape || 'straight';
+            state.wallShapeFee = (state.wallShape === 'L') ? 100000 : (state.wallShape === 'U') ? 200000 : 0;
+            // 버튼 active 동기화
+            document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
+                var on = b.dataset.shape === state.wallShape;
+                b.classList.toggle('active', on);
+                b.style.background = on ? '#4338ca' : '#fff';
+                b.style.color = on ? '#fff' : '#451a03';
+                b.style.borderColor = on ? '#4338ca' : '#e7e5e4';
+            });
+        } else {
+            state.wallShape = 'straight';
+            state.wallShapeFee = 0;
+        }
         // 2026-05-14: 가벽 변종별 옵션 재구성 + 인쇄면 UI 토글
         // 2026-05-15: 병풍형은 partition 보다 우선 (제품명에 '병풍' 있으면 무조건 folding)
         if (state.isWall) {
@@ -6167,6 +6257,8 @@ html, body { background: #ffffff !important; }
                     _multiSec.style.display = '';
                     _multiSec.style.order = '';
                 }
+                // 인라인 파일 업로드 카드도 표시 (좌측 큰 미리보기는 유지)
+                if (_inlineUpload) _inlineUpload.style.display = '';
                 // 멀티-라인 섹션을 addon 섹션 바로 뒤로 이동
                 if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
                     _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
@@ -6180,8 +6272,9 @@ html, body { background: #ffffff !important; }
                 if (_lpH) _lpH.innerHTML = '';
                 if (_lpcH) _lpcH.textContent = '0';
             } else if (!state.isAdPrint) {
-                // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI 끔
+                // 허니콤·광고인쇄 둘 다 아닌 일반 상품 — 큐 UI + 인라인 업로드 끔
                 if (_multiSec) _multiSec.style.display = 'none';
+                if (_inlineUpload) _inlineUpload.style.display = 'none';
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
                 var _lpwN = document.getElementById('soAdLinePreviewsWrap');
@@ -6545,6 +6638,9 @@ html, body { background: #ffffff !important; }
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
             // 2026-05-13: 단면/양면 (가벽) — 2026-05-22: 재단인쇄(자유인쇄커팅)도 포함 (양면 ×2)
             wallSide: (state.isWall || state.isCutPrint) ? (state.wallSide || 'single') : null,
+            // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
+            wallShape: state.isWall ? (state.wallShape || 'straight') : null,
+            wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             bundleShipping: !!state.bundleShipping,
