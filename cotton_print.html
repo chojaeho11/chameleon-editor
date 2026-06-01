@@ -565,47 +565,32 @@ window._cottonSearch = function(){
                 </div>
             </div>
 
-            <!-- ▌▌▌ CENTER: 1m 150円 + 무료 샘플 ▌▌▌ -->
+            <!-- ▌▌▌ CENTER: 무료 패브릭 샘플 (2026-06-01: '원단제공 인쇄 · 1마 1,500원' 버튼 삭제 — 사용자 요청) ▌▌▌ -->
             <div class="cp-col-card" style="background:linear-gradient(165deg, #451a03 0%, #78350f 50%, #b45309 100%); border:1px solid rgba(253,224,71,0.35); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(120,53,15,0.55), inset 0 1px 0 rgba(253,224,71,0.2); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
                 <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">📜</div>
-                <!-- 1m 150円 클릭 (持込印刷) -->
-                <button onclick="openRollFabricRequest()" class="hero-badge" style="cursor:pointer; border:1.5px solid rgba(253,224,71,0.55); background:rgba(0,0,0,0.25); color:#fff; font-family:inherit; font-weight:300; padding:8px 14px; border-radius:50px; font-size:12.5px; backdrop-filter:blur(8px); width:100%; text-align:center; margin-bottom:14px; letter-spacing:0.3px;">
-                    <i class="fa-solid fa-scroll" style="color:#fde047;"></i> <span data-i18n="cp_roll_print_btn">원단제공 인쇄 · 1마 1,500원</span>
-                </button>
                 <!-- 무료 샘플 강조 (큰 가격 숫자로 어필) -->
                 <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:6px 0;">
-                    <div id="cpSamplePriceBig" style="font-size:30px; font-weight:300; color:#fde047; line-height:1; margin-bottom:8px; letter-spacing:-1px; text-shadow:0 4px 16px rgba(253,224,71,0.35);">1㎡ 1,500원</div>
-                    <div id="cpFreeSampleTitle" style="font-size:14px; font-weight:300; color:#fff; margin-bottom:4px; letter-spacing:-0.2px;">무료 패브릭 샘플</div>
-                    <div id="cpFreeSampleDesc" style="font-size:10.5px; color:rgba(253,224,71,0.85); font-weight:300; line-height:1.4; margin-bottom:10px;">실물로 품질을 확인하세요</div>
+                    <div id="cpFreeSampleTitle" style="font-size:16px; font-weight:600; color:#fff; margin-bottom:6px; letter-spacing:-0.2px;">무료 패브릭 샘플</div>
+                    <div id="cpFreeSampleDesc" style="font-size:11px; color:rgba(253,224,71,0.85); font-weight:300; line-height:1.4; margin-bottom:10px;">실물로 품질을 확인하세요</div>
                 </div>
                 <button onclick="openPdSampleRequest()" id="cpFreeSampleBtn" style="width:100%; padding:11px; border-radius:50px; border:none; background:linear-gradient(135deg,#fde047,#f59e0b); color:#451a03; font-size:13px; font-weight:500; letter-spacing:0.3px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(245,158,11,0.55); font-family:inherit;">
                     <i class="fa-solid fa-gift"></i> <span data-i18n="cp_hero_sample">무료 샘플 요청</span>
                 </button>
             </div>
 
-            <!-- ▌▌▌ RIGHT: 인플루언서 모집 ▌▌▌ -->
-            <div class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; align-items:center; text-align:center; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; position:relative; overflow:hidden;">
-                <!-- 큰 보상 금액 (필름 아이콘 자리) -->
-                <div id="cpInfRewardBig" style="font-size:30px; font-weight:300; color:#fbcfe8; line-height:1; margin:2px 0 8px; letter-spacing:-1px; text-shadow:0 4px 16px rgba(244,114,182,0.35);">100,000원</div>
-                <div id="cpInfTitle" style="font-size:14px; font-weight:300; color:#fff; margin-bottom:6px; letter-spacing:-0.2px;">인플루언서 모집</div>
-                <div id="cpInfPlatforms" style="font-size:10px; color:rgba(255,255,255,0.85); line-height:1.5; font-weight:300; margin-bottom:6px; padding:0 4px;">
-                    <i class="fa-brands fa-instagram" style="color:#e1306c;"></i>
-                    <i class="fa-brands fa-youtube" style="color:#ff0000; margin-left:3px;"></i>
-                    <i class="fa-brands fa-tiktok" style="color:#fff; margin-left:3px;"></i>
-                    <i class="fa-brands fa-threads" style="color:#fff; margin-left:3px;"></i>
-                    <span style="margin-left:4px;">どこでもOK</span>
-                </div>
-                <div id="cpInfDesc" style="font-size:10.5px; color:rgba(255,255,255,0.7); line-height:1.5; font-weight:300; margin-bottom:8px; padding:0 2px;">
-                    카멜레온을 홍보하고 조회수 10만 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>
-                </div>
-                <div id="cpInfReward" style="background:rgba(244,114,182,0.1); border:1px dashed rgba(244,114,182,0.45); border-radius:8px; padding:6px 10px; margin-bottom:10px; font-size:11px; font-weight:300; color:#fbcfe8; letter-spacing:0.2px; width:100%;">
-                    조회수 10만 달성 시
-                </div>
-                <div style="margin-top:auto; width:100%;">
-                    <button type="button" onclick="window._openCpInfluencerModal && window._openCpInfluencerModal()" id="cpInfBtn" style="width:100%; padding:10px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55); font-family:inherit;">
-                        📝 응모하기
-                    </button>
-                </div>
+            <!-- ▌▌▌ RIGHT: 이벤트 쿠폰 받기 (2026-06-01: 인플루언서 모집 → 쿠폰 카드로 교체, 제목만 노출) ▌▌▌ -->
+            <div class="cp-col-card" style="padding:0; background:transparent; border:none; box-shadow:none;">
+                <button type="button" onclick="window._openCpCouponModal && window._openCpCouponModal()" id="cpCouponCardBtn"
+                    style="width:100%; height:100%; min-height:140px; padding:18px 20px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:14px; box-shadow:0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
+                    onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 22px 55px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
+                    onmouseleave="this.style.transform=''; this.style.boxShadow='0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2)';">
+                    <div style="position:absolute; top:-20px; right:-12px; font-size:72px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">🎁</div>
+                    <div style="width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 6px 16px rgba(190,24,93,0.45);">
+                        <i class="fa-solid fa-gift" style="color:#fff; font-size:18px;"></i>
+                    </div>
+                    <div id="cpCouponCardTitle" style="font-size:16px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3; text-align:center;">🎁 이벤트 쿠폰 받기</div>
+                    <div id="cpCouponCardSubtitle" style="font-size:11px; color:#fbcfe8; line-height:1.4; font-weight:500; text-align:center;">클릭하여 자세히 보기 →</div>
+                </button>
             </div>
 
         </div>
@@ -710,58 +695,95 @@ window._cottonSearch = function(){
                 }
             };
         })();
-        // 2026-05-28: 중앙·우측 카드 i18n + 인플루언서 모달
+        // 2026-06-01: 무료 샘플 카드 i18n + 이벤트 쿠폰 받기 카드 (인플루언서 모집 → 쿠폰 카드 교체)
         (function(){
             var lang = window.__PS_LANG || 'ko';
             var SAMPLE = {
-                ko: { priceBig:'1㎡ 1,500원', t:'무료 패브릭 샘플', d:'실물로 품질을 확인하세요', btn:'무료 샘플 요청' },
-                ja: { priceBig:'1㎡ 150円〜', t:'無料ファブリックサンプル', d:'実物で品質をご確認ください', btn:'サンプル請求' },
-                en: { priceBig:'1㎡ $1.5〜', t:'Free Fabric Sample', d:'Check quality in person', btn:'Request Sample' }
+                ko: { t:'무료 패브릭 샘플', d:'실물로 품질을 확인하세요', btn:'무료 샘플 요청' },
+                ja: { t:'無料ファブリックサンプル', d:'実物で品質をご確認ください', btn:'サンプル請求' },
+                en: { t:'Free Fabric Sample', d:'Check quality in person', btn:'Request Sample' }
             };
-            var INF = {
-                ko: { rewardBig:'100,000원', t:'인플루언서 모집', platforms:'어디든 OK', d:'카멜레온을 홍보하고 조회수 <b style="color:#fbcfe8;">10만</b> 달성 시 홍보비 지급.<br>홍보 후 주소만 제출 → <b style="color:#fbcfe8; font-weight:500;">즉시지급</b>', r:'조회수 10만 달성 시', btn:'📝 응모하기',
-                      mt:'인플루언서 응모', ms:'홍보 후 조회수 10만 달성 시 홍보비 지급 · 즉시지급', name:'이름', sns:'SNS 주소', bank:'계좌번호', email:'이메일 (선택)', submit:'응모 제출', ok:'응모 접수 완료', req:'이름·SNS·계좌는 필수' },
-                ja: { rewardBig:'10,000円', t:'インフルエンサー募集', platforms:'どこでもOK', d:'カメレオンをPRし、再生数 <b style="color:#fbcfe8;">10万</b> 達成でPR料お支払い。<br>PR後にURLを送信 → <b style="color:#fbcfe8; font-weight:500;">即時支払い</b>', r:'再生10万達成時', btn:'📝 応募する',
-                      mt:'インフルエンサー応募', ms:'PR後、再生10万達成でPR料を即時支払い', name:'お名前', sns:'SNS URL', bank:'振込口座', email:'メール (任意)', submit:'応募する', ok:'応募を受け付けました', req:'お名前・SNS・口座は必須' },
-                en: { rewardBig:'$100', t:'Influencer Wanted', platforms:'Any platform', d:'Promote Chameleon — reach <b style="color:#fbcfe8;">100K views</b> for payout.<br>Just submit your URL → <b style="color:#fbcfe8; font-weight:500;">Instant payout</b>', r:'100,000 views reached', btn:'📝 Apply',
-                      mt:'Influencer Application', ms:'$100 paid instantly after 100,000 views', name:'Name', sns:'SNS URL', bank:'Bank Account', email:'Email (optional)', submit:'Submit', ok:'Application received', req:'Name/SNS/Account required' }
+            var COUPON = {
+                ko: { title:'🎁 이벤트 쿠폰 받기', subtitle:'클릭하여 자세히 보기 →',
+                      modalTitle:'🎁 이벤트 쿠폰 받기',
+                      line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
+                      line2:'<b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b>',
+                      fEmail:'가입 이메일', fScreenshot:'스크린샷', submit:'쿠폰 신청',
+                      success:'신청이 접수되었습니다! 관리자 확인 후 24시간 내 100,000원 쿠폰이 지급됩니다.',
+                      reqLogin:'먼저 로그인해 주세요. 회원가입하면 30,000원 쿠폰이 자동 지급됩니다.',
+                      reqFields:'가입 이메일과 스크린샷은 필수입니다.' },
+                ja: { title:'🎁 イベントクーポン申請', subtitle:'タップして詳細 →',
+                      modalTitle:'🎁 イベントクーポン申請',
+                      line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
+                      line2:'<b>SNSに作品シェア</b>でクーポン獲得 <b style="color:#be185d;">10,000円</b>',
+                      fEmail:'登録メール', fScreenshot:'スクリーンショット', submit:'申請する',
+                      success:'申請を受け付けました！管理者確認後、24時間以内に10,000円クーポンが付与されます。',
+                      reqLogin:'先にログインしてください。会員登録すると3,000円クーポンが自動付与されます。',
+                      reqFields:'登録メールとスクリーンショットは必須です。' },
+                en: { title:'🎁 Claim Event Coupon', subtitle:'Tap to learn more →',
+                      modalTitle:'🎁 Claim Event Coupon',
+                      line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
+                      line2:'<b>Share on SNS</b> for a <b style="color:#be185d;">$100</b> coupon',
+                      fEmail:'Account email', fScreenshot:'Screenshot', submit:'Submit',
+                      success:'Claim received! Coupon will appear within 24 hours.',
+                      reqLogin:'Please log in first. Signup grants a $30 coupon automatically.',
+                      reqFields:'Email and screenshot are required.' }
             };
             var s = SAMPLE[lang] || SAMPLE.ko;
-            var i = INF[lang] || INF.ko;
+            var c = COUPON[lang] || COUPON.ko;
             function $(id){ return document.getElementById(id); }
-            if ($('cpSamplePriceBig'))  $('cpSamplePriceBig').textContent  = s.priceBig;
             if ($('cpFreeSampleTitle')) $('cpFreeSampleTitle').textContent = s.t;
             if ($('cpFreeSampleDesc'))  $('cpFreeSampleDesc').textContent  = s.d;
-            if ($('cpInfRewardBig')) $('cpInfRewardBig').textContent = i.rewardBig;
-            if ($('cpInfTitle')) $('cpInfTitle').textContent = i.t;
-            // 플랫폼 라인 — 아이콘은 그대로 두고 끝의 텍스트만 교체
-            if ($('cpInfPlatforms')) {
-                var pSpan = $('cpInfPlatforms').querySelector('span');
-                if (pSpan && i.platforms) pSpan.textContent = i.platforms;
-            }
-            if ($('cpInfDesc'))  $('cpInfDesc').innerHTML = i.d;
-            if ($('cpInfReward')) $('cpInfReward').textContent = i.r;
-            if ($('cpInfBtn'))   $('cpInfBtn').textContent   = i.btn;
-            window.__CP_INF = i;
+            if ($('cpCouponCardTitle')) $('cpCouponCardTitle').textContent = c.title;
+            if ($('cpCouponCardSubtitle')) $('cpCouponCardSubtitle').textContent = c.subtitle;
+            window.__CP_COUPON = c;
             window.__CP_LANG = lang;
         })();
-        // 인플루언서 모달 open/close/submit
-        window._openCpInfluencerModal = function(){
-            var m = document.getElementById('cpInfluencerModal');
+        // 이벤트 쿠폰 모달 open/close/submit
+        window._openCpCouponModal = async function(){
+            var c = window.__CP_COUPON || {};
+            try {
+                var sb = window.sb;
+                if (sb && sb.auth) {
+                    var r = await sb.auth.getSession();
+                    var sess = r && r.data && r.data.session;
+                    if (!sess) {
+                        alert(c.reqLogin || 'Login required');
+                        if (typeof window.openAuthModal === 'function') window.openAuthModal('login');
+                        return;
+                    }
+                    var emailIn = document.getElementById('cpCouponEmail');
+                    if (emailIn && sess.user && sess.user.email) emailIn.value = sess.user.email;
+                }
+            } catch(e) {}
+            var m = document.getElementById('cpCouponShareModal');
             if (m) m.style.display = 'flex';
         };
-        window._closeCpInfluencerModal = function(){
-            var m = document.getElementById('cpInfluencerModal');
+        window._closeCpCouponModal = function(){
+            var m = document.getElementById('cpCouponShareModal');
             if (m) m.style.display = 'none';
         };
-        window._submitCpInfluencer = async function(){
-            var i = window.__CP_INF || {};
-            var name = (document.getElementById('cpInfName').value||'').trim();
-            var sns  = (document.getElementById('cpInfSns').value||'').trim();
-            var bank = (document.getElementById('cpInfBank').value||'').trim();
-            var email = (document.getElementById('cpInfEmail').value||'').trim();
-            if (!name || !sns || !bank) { alert(i.req || 'Required'); return; }
-            var btn = document.getElementById('cpInfSubmitBtn');
+        async function _cpCouponUploadScreenshot(file){
+            var sb = window.sb;
+            if (!sb) throw new Error('DB not ready');
+            var ext = ((file.name||'').split('.').pop()||'png').toLowerCase();
+            var path = 'sns-share/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+            var { error } = await sb.storage.from('share-screenshots').upload(path, file, { upsert:false, contentType:file.type });
+            if (error) {
+                try {
+                    var fb = await sb.storage.from('public').upload(path, file, { upsert:false, contentType:file.type });
+                    if (fb.error) throw fb.error;
+                    return sb.storage.from('public').getPublicUrl(path).data.publicUrl;
+                } catch(e2) { throw error; }
+            }
+            return sb.storage.from('share-screenshots').getPublicUrl(path).data.publicUrl;
+        }
+        window._submitCpCoupon = async function(){
+            var c = window.__CP_COUPON || {};
+            var email = (document.getElementById('cpCouponEmail').value||'').trim();
+            var file  = document.getElementById('cpCouponScreenshot').files[0];
+            if (!email || !file) { alert(c.reqFields || 'Email & screenshot required'); return; }
+            var btn = document.getElementById('cpCouponSubmitBtn');
             if (btn) { btn.disabled = true; btn.textContent = '...'; }
             try {
                 var sb = window.sb;
@@ -770,21 +792,32 @@ window._cottonSearch = function(){
                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
                 }
                 if (!sb) throw new Error('DB');
+                var sess = await sb.auth.getSession();
+                var user = sess && sess.data && sess.data.session && sess.data.session.user;
+                if (!user) { alert(c.reqLogin); return; }
+                var screenshotUrl = await _cpCouponUploadScreenshot(file);
+                var info = {
+                    user_id: user.id, email: email,
+                    screenshot_url: screenshotUrl,
+                    lang: window.__CP_LANG||'ko', from:'cotton_print',
+                    submitted_at: new Date().toISOString(),
+                    status: 'pending', coupon_amount_krw: 100000
+                };
                 var { error } = await sb.from('chatbot_knowledge').insert({
-                    category: '_influencer_apps',
-                    question: 'Influencer Application - ' + name + ' (cotton_print, ' + (window.__CP_LANG||'ko') + ')',
-                    answer: JSON.stringify({ name:name, sns_url:sns, bank_account:bank, email:email, lang:window.__CP_LANG||'ko', from:'cotton_print', submitted_at:new Date().toISOString(), view_count:0, paid_amount:0, status:'pending' }),
+                    category: '_sns_share_apps',
+                    question: 'SNS Share Claim - ' + email + ' (cotton_print, ' + (window.__CP_LANG||'ko') + ')',
+                    answer: JSON.stringify(info),
                     is_active: true,
-                    keywords: 'influencer cotton_print ' + (window.__CP_LANG||'ko')
+                    keywords: 'sns_share cotton_print ' + (window.__CP_LANG||'ko') + ' ' + user.id
                 });
                 if (error) throw error;
-                alert(i.ok || 'OK');
-                window._closeCpInfluencerModal();
-                ['cpInfName','cpInfSns','cpInfBank','cpInfEmail'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+                alert(c.success || 'OK');
+                window._closeCpCouponModal();
+                var f = document.getElementById('cpCouponScreenshot'); if (f) f.value = '';
             } catch(e) {
                 alert('Failed: ' + (e.message||e));
             } finally {
-                if (btn) { btn.disabled = false; btn.textContent = i.submit || 'Submit'; }
+                if (btn) { btn.disabled = false; btn.textContent = c.submit || 'Submit'; }
             }
         };
         </script>
@@ -792,41 +825,44 @@ window._cottonSearch = function(){
     </div>
 </section>
 
-<!-- 인플루언서 응모 모달 (cotton_print 페이지 전용) -->
-<div id="cpInfluencerModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeCpInfluencerModal()">
+<!-- 이벤트 쿠폰 신청 모달 (cotton_print 페이지 전용 — 간소화: 이메일 + 스크린샷만) -->
+<div id="cpCouponShareModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeCpCouponModal()">
     <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
-        <button onclick="window._closeCpInfluencerModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
-        <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:14px 18px; color:#fff; flex-shrink:0;">
-            <div id="cpInfModalTitle" style="font-size:16px; font-weight:300; margin-bottom:3px;">인플루언서 응모</div>
-            <div id="cpInfModalSub" style="font-size:11px; opacity:0.95; line-height:1.45; font-weight:300; padding-right:34px;">조회수 10,000회당 100,000원 지급</div>
+        <button onclick="window._closeCpCouponModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:16px 18px; color:#fff; flex-shrink:0;">
+            <div id="cpCouponModalTitle" style="font-size:17px; font-weight:700; letter-spacing:-0.2px;">🎁 이벤트 쿠폰 받기</div>
         </div>
-        <div style="padding:14px 18px; overflow-y:auto; flex:1; min-height:0;">
-            <label id="cpInfLblName" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">이름</label>
-            <input id="cpInfName" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
-            <label id="cpInfLblSns" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">SNS 주소</label>
-            <input id="cpInfSns" type="url" placeholder="https://www.instagram.com/..." style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
-            <label id="cpInfLblBank" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">계좌번호</label>
-            <input id="cpInfBank" type="text" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
-            <label id="cpInfLblEmail" style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;">이메일 (선택)</label>
-            <input id="cpInfEmail" type="email" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
-            <button id="cpInfSubmitBtn" type="button" onclick="window._submitCpInfluencer()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:300; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">응모 제출</button>
-            <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;">조회수 달성 후 입금신청 → 등록 계좌 지급</p>
+        <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
+            <div style="margin-bottom:18px;">
+                <div id="cpCouponInfoLine1" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a;">
+                    <span style="font-size:20px;">1️⃣</span>
+                    <span><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                </div>
+                <div id="cpCouponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
+                    <span style="font-size:20px;">2️⃣</span>
+                    <span><b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b></span>
+                </div>
+            </div>
+            <label id="cpCouponLblEmail" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">가입 이메일</label>
+            <input id="cpCouponEmail" type="email" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
+            <label id="cpCouponLblScreenshot" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">스크린샷</label>
+            <input id="cpCouponScreenshot" type="file" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; margin-bottom:18px; box-sizing:border-box; background:#fff;">
+            <button id="cpCouponSubmitBtn" type="button" onclick="window._submitCpCoupon()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">쿠폰 신청</button>
         </div>
     </div>
 </div>
 <script>
-// 모달 라벨 i18n
+// 쿠폰 모달 라벨 i18n
 (function(){
-    var i = window.__CP_INF;
-    if (!i) return;
+    var c = window.__CP_COUPON;
+    if (!c) return;
     function $(id){ return document.getElementById(id); }
-    if ($('cpInfModalTitle'))  $('cpInfModalTitle').textContent  = i.mt;
-    if ($('cpInfModalSub'))    $('cpInfModalSub').textContent    = i.ms;
-    if ($('cpInfLblName'))     $('cpInfLblName').textContent     = i.name;
-    if ($('cpInfLblSns'))      $('cpInfLblSns').textContent      = i.sns;
-    if ($('cpInfLblBank'))     $('cpInfLblBank').textContent     = i.bank;
-    if ($('cpInfLblEmail'))    $('cpInfLblEmail').textContent    = i.email;
-    if ($('cpInfSubmitBtn'))   $('cpInfSubmitBtn').textContent   = i.submit;
+    if ($('cpCouponModalTitle')) $('cpCouponModalTitle').textContent = c.modalTitle;
+    if ($('cpCouponInfoLine1')) $('cpCouponInfoLine1').children[1].innerHTML = c.line1;
+    if ($('cpCouponInfoLine2')) $('cpCouponInfoLine2').children[1].innerHTML = c.line2;
+    if ($('cpCouponLblEmail')) $('cpCouponLblEmail').textContent = c.fEmail;
+    if ($('cpCouponLblScreenshot')) $('cpCouponLblScreenshot').textContent = c.fScreenshot;
+    if ($('cpCouponSubmitBtn')) $('cpCouponSubmitBtn').textContent = c.submit;
 })();
 </script>
 <style>

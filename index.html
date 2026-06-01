@@ -1067,44 +1067,21 @@ window._tcmFallbackClick = function(code) {
                 </div>
             </div>
         </div>
-        <!-- 이벤트 쿠폰 안내 카드 — 회원가입 3,000엔 + SNS공유 10,000엔 -->
+        <!-- 이벤트 쿠폰 안내 — 제목만 노출, 클릭 시 모달 직접 오픈 (사용자 요청 2026-06-01) -->
         <div id="overseasBranchHero" style="flex:1 1 320px; min-width:0;">
-            <div style="height:100%; box-sizing:border-box; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.18) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.25); border-radius:12px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(244,114,182,0.18); position:relative; overflow:hidden; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif;">
-                <div style="position:absolute; top:-30px; right:-20px; font-size:80px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎁</div>
-                <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px; position:relative;">
-                    <div style="width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(190,24,93,0.45);">
-                        <i class="fa-solid fa-gift" style="color:#fff; font-size:14px;"></i>
-                    </div>
-                    <div style="flex:1; min-width:0;">
-                        <div id="couponCardTitle" style="font-size:15px; font-weight:600; color:#fff; margin-bottom:3px; letter-spacing:-0.3px; line-height:1.25;">이벤트 쿠폰 받기</div>
-                        <div style="font-size:10px; color:rgba(255,255,255,0.85); line-height:1.4; font-weight:300;">
-                            <i class="fa-brands fa-instagram" style="color:#e1306c;"></i>
-                            <i class="fa-brands fa-youtube" style="color:#ff0000; margin-left:3px;"></i>
-                            <i class="fa-brands fa-tiktok" style="color:#fff; margin-left:3px;"></i>
-                            <i class="fa-brands fa-threads" style="color:#fff; margin-left:3px;"></i>
-                            <span id="couponCardPlatformsTxt" style="margin-left:4px;">SNS 어디든 OK</span>
-                        </div>
-                    </div>
+            <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()" id="couponCardBtn"
+                style="width:100%; height:auto; padding:18px 22px; background:radial-gradient(130% 90% at 50% -20%, rgba(244,114,182,0.22) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(244,114,182,0.3); border-radius:14px; box-shadow:0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2); cursor:pointer; display:flex; align-items:center; gap:14px; font-family:'Pretendard','Inter','Noto Sans KR',sans-serif; transition:transform 0.15s, box-shadow 0.15s; position:relative; overflow:hidden;"
+                onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 22px 55px -10px rgba(190,24,93,0.35), inset 0 1px 0 rgba(244,114,182,0.25)';"
+                onmouseleave="this.style.transform=''; this.style.boxShadow='0 18px 45px -12px rgba(0,0,0,0.7), inset 0 1px 0 rgba(244,114,182,0.2)';">
+                <div style="position:absolute; top:-20px; right:-12px; font-size:64px; opacity:0.1; transform:rotate(-12deg); pointer-events:none;">🎁</div>
+                <div style="width:42px; height:42px; border-radius:10px; background:linear-gradient(135deg,#f472b6,#be185d); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 6px 16px rgba(190,24,93,0.45);">
+                    <i class="fa-solid fa-gift" style="color:#fff; font-size:18px;"></i>
                 </div>
-                <div style="font-size:11.5px; color:rgba(255,255,255,0.92); line-height:1.6; font-weight:400; margin:8px 0;">
-                    <div id="couponCardLine1" style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
-                        <span style="background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.5); border-radius:4px; padding:1px 6px; font-weight:700; color:#c7d2fe; min-width:18px; text-align:center;">1</span>
-                        <span><b style="color:#fbcfe8;">회원가입</b> 시 <b style="color:#fff;">3,000엔</b> 무료 쿠폰</span>
-                    </div>
-                    <div id="couponCardLine2" style="display:flex; align-items:center; gap:8px;">
-                        <span style="background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.5); border-radius:4px; padding:1px 6px; font-weight:700; color:#c7d2fe; min-width:18px; text-align:center;">2</span>
-                        <span>구매 후 <b style="color:#fbcfe8;">SNS 공유</b> 시 <b style="color:#fff;">10,000엔</b> 추가 쿠폰</span>
-                    </div>
+                <div style="flex:1; text-align:left; min-width:0;">
+                    <div id="couponCardTitle" style="font-size:16px; font-weight:800; color:#fff; letter-spacing:-0.3px; line-height:1.3;">🎁 이벤트 쿠폰 받기</div>
+                    <div id="couponCardSubtitle" style="font-size:11px; color:#fbcfe8; margin-top:3px; line-height:1.4; font-weight:500;">클릭하여 자세히 보기 →</div>
                 </div>
-                <div id="couponCardNote" style="font-size:9.5px; color:rgba(255,255,255,0.55); line-height:1.5; margin:6px 0 10px; text-align:center; font-weight:400;">
-                    * 이벤트 쿠폰은 구매금액의 50%까지 사용 가능
-                </div>
-                <div style="display:flex; justify-content:center; align-items:center; position:relative;">
-                    <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()" id="couponCardBtn" style="padding:9px 20px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:50px; font-size:12.5px; font-weight:600; letter-spacing:0.5px; cursor:pointer; box-shadow:0 8px 22px -6px rgba(190,24,93,0.55), inset 0 1px 0 rgba(255,255,255,0.18); white-space:nowrap; font-family:inherit;">
-                        🎁 쿠폰 받기
-                    </button>
-                </div>
-            </div>
+            </button>
         </div>
     </div>
     <script>
@@ -1173,13 +1150,13 @@ window._tcmFallbackClick = function(code) {
                 <div id="mgrQuoteTitle" style="font-size:17px; font-weight:800; color:#fff; margin-bottom:5px; text-shadow:0 1px 6px rgba(0,0,0,0.2);">전문 매니저가 고객님이 편하게 주문하실 수 있도록 안내합니다</div>
                 <div id="mgrQuoteDesc" style="font-size:12.5px; color:rgba(255,255,255,0.9); line-height:1.5;">담당 매니저와 통화·상담 후, 견적 금액을 입력하고 바로 결제하세요.</div>
             </div>
-            <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px;">
-                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
+            <div id="mgrPhoneList" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-bottom:12px;">
+                <a href="tel:031-366-1984" class="mgr-kr-only" style="grid-column:1 / -1; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:14px 12px; background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.25); border-radius:10px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
                     <span>본사</span>
                     <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
                 </a>
                 <!-- 2026-05-28: JP 전용 ナナミ 직통 카드 — 일본 도메인(cafe0101.com)에서만 표시 -->
-                <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
+                <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
                     <span style="font-size:22px;">🇯🇵</span>
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:2px;">
                         <span style="font-size:11px; opacity:0.85; letter-spacing:0.5px;">東京・大阪 直通担当</span>
@@ -1402,12 +1379,13 @@ window._tcmFallbackClick = function(code) {
         };
         var t = COUPON[lang] || COUPON.kr;
         function $(id){ return document.getElementById(id); }
-        if ($('couponCardTitle'))         $('couponCardTitle').textContent = t.title;
-        if ($('couponCardPlatformsTxt'))  $('couponCardPlatformsTxt').textContent = t.platforms;
-        if ($('couponCardLine1'))         $('couponCardLine1').children[1].innerHTML = t.line1;
-        if ($('couponCardLine2'))         $('couponCardLine2').children[1].innerHTML = t.line2;
-        if ($('couponCardNote'))          $('couponCardNote').textContent = t.note;
-        if ($('couponCardBtn'))           $('couponCardBtn').textContent = t.btn;
+        // 카드는 제목만 노출 — 클릭 시 모달 오픈. line1/line2/note 등 본문은 모달에서만.
+        if ($('couponCardTitle')) $('couponCardTitle').textContent = '🎁 ' + t.title;
+        if ($('couponCardSubtitle')) {
+            $('couponCardSubtitle').textContent = (lang === 'ja') ? 'タップして詳細 →'
+                : (lang === 'en' || lang === 'us') ? 'Tap to learn more →'
+                : '클릭하여 자세히 보기 →';
+        }
         window.__COUPON_T = t;
         window.__COUPON_LANG = lang;
     })();
@@ -1466,10 +1444,11 @@ window._tcmFallbackClick = function(code) {
     window._submitCouponShare = async function(){
         var t = window.__COUPON_T || {};
         var email = (document.getElementById('couponEmail').value || '').trim();
-        var sns   = (document.getElementById('couponSns').value || '').trim();
         var file  = document.getElementById('couponScreenshot').files[0];
-        var note  = (document.getElementById('couponNote').value || '').trim();
-        if (!email || !sns || !file) { alert(t.alertReq || 'Required fields missing'); return; }
+        // 2026-06-01: SNS URL / 메모 필드 제거 — 이메일 + 스크린샷만 필수 (간소화)
+        var sns = '';  // 스크린샷에 포함되므로 별도 필드 불필요
+        var note = '';
+        if (!email || !file) { alert('가입 이메일과 스크린샷은 필수입니다. / Email & screenshot required.'); return; }
         var btn = document.getElementById('couponSubmitBtn');
         if (btn) { btn.disabled = true; btn.textContent = '...'; }
         try {
@@ -1505,7 +1484,6 @@ window._tcmFallbackClick = function(code) {
             if (error) throw error;
             alert(t.success || 'Submitted.');
             window._closeCouponShareModal();
-            ['couponSns','couponNote'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
             var f = document.getElementById('couponScreenshot'); if (f) f.value = '';
         } catch(e) {
             alert((t.failPrefix || 'Submit failed:') + ' ' + (e.message || e));
@@ -1515,51 +1493,61 @@ window._tcmFallbackClick = function(code) {
     };
     </script>
 
-    <!-- SNS 공유 쿠폰 신청 모달 -->
+    <!-- SNS 공유 쿠폰 신청 모달 — 간소화 (이메일 + 스크린샷만, 2024-06-01 사용자 요청) -->
     <div id="couponShareModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:8px;" onclick="if(event.target===this)window._closeCouponShareModal()">
         <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative;">
             <button onclick="window._closeCouponShareModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
             <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:16px 18px; color:#fff; flex-shrink:0;">
-                <div id="couponModalTitle" style="font-size:17px; font-weight:700; margin-bottom:4px; letter-spacing:-0.2px;">SNS 공유 쿠폰 신청</div>
-                <div id="couponModalSub" style="font-size:11.5px; opacity:0.95; line-height:1.55; font-weight:300; padding-right:34px;">구매 후 SNS 공유 인증으로 100,000원 쿠폰을 받으세요.</div>
+                <div id="couponModalTitle" style="font-size:17px; font-weight:700; letter-spacing:-0.2px;">🎁 이벤트 쿠폰 받기</div>
             </div>
-            <div style="padding:14px 18px; overflow-y:auto; flex:1; min-height:0;">
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblEmail">가입 이메일</label>
-                <input id="couponEmail" type="email" readonly style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box; background:#f9fafb;">
-
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblSns">SNS 공유 URL</label>
-                <input id="couponSns" type="url" placeholder="https://www.instagram.com/p/... 또는 youtu.be/..." style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:13px; margin-bottom:8px; box-sizing:border-box;">
-
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblScreenshot">스크린샷 (게시물·게시 화면 캡쳐)</label>
-                <input id="couponScreenshot" type="file" accept="image/*" style="width:100%; padding:6px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12px; margin-bottom:8px; box-sizing:border-box; background:#fff;">
-
-                <label style="display:block; font-size:11px; font-weight:700; color:#374151; margin-bottom:3px;" id="couponLblNote">메모 (선택)</label>
-                <textarea id="couponNote" rows="2" placeholder="예: 인스타 릴스에 후기 영상 게시" style="width:100%; padding:8px 10px; border:1.5px solid #e5e7eb; border-radius:7px; font-size:12.5px; margin-bottom:10px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
-
-                <div style="font-size:10.5px; color:#6b7280; line-height:1.5; margin:0 0 10px; padding:8px 10px; background:#fef3c7; border-radius:6px; border-left:3px solid #f59e0b;">
-                    💡 <b>이벤트 쿠폰은 구매금액의 50%까지 사용 가능</b>합니다. 예: 20,000원 주문 → 최대 10,000원 사용 / 200,000원 주문 → 보유 쿠폰 전액 사용.
+            <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
+                <!-- 2줄 간단 안내 -->
+                <div style="margin-bottom:18px;">
+                    <div id="couponInfoLine1" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a;">
+                        <span style="font-size:20px;">1️⃣</span>
+                        <span><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                    </div>
+                    <div id="couponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
+                        <span style="font-size:20px;">2️⃣</span>
+                        <span><b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b></span>
+                    </div>
                 </div>
 
-                <button id="couponSubmitBtn" type="button" onclick="window._submitCouponShare()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">
+                <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblEmail">가입 이메일</label>
+                <input id="couponEmail" type="email" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
+
+                <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblScreenshot">스크린샷</label>
+                <input id="couponScreenshot" type="file" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; margin-bottom:18px; box-sizing:border-box; background:#fff;">
+
+                <button id="couponSubmitBtn" type="button" onclick="window._submitCouponShare()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">
                     쿠폰 신청
                 </button>
-                <p style="font-size:10px; color:#6b7280; line-height:1.5; margin-top:6px; margin-bottom:0; text-align:center;" id="couponFooterNote">관리자 확인 후 24시간 내 마이페이지에 쿠폰이 지급됩니다.</p>
             </div>
         </div>
     </div>
     <script>
-    // 모달 라벨 i18n 적용
+    // 모달 라벨 i18n 적용 (간소화 — 이메일/스크린샷만 + 2줄 안내)
     (function(){
-        var t = window.__COUPON_T;
-        if (!t) return;
+        var lang = window.__COUPON_LANG || 'kr';
         function $(id){ return document.getElementById(id); }
-        if ($('couponModalTitle')) $('couponModalTitle').textContent = t.modalTitle;
-        if ($('couponModalSub'))   $('couponModalSub').innerHTML     = t.modalSub;
-        if ($('couponLblEmail'))   $('couponLblEmail').textContent   = t.fEmail;
-        if ($('couponLblSns'))     $('couponLblSns').textContent     = t.fSns;
+        var L = {
+            kr: { title:'🎁 이벤트 쿠폰 받기', line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
+                  line2:'<b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b>',
+                  fEmail:'가입 이메일', fScreenshot:'스크린샷', submit:'쿠폰 신청' },
+            ja: { title:'🎁 イベントクーポン申請', line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
+                  line2:'<b>SNSに作品シェア</b>でクーポン獲得 <b style="color:#be185d;">10,000円</b>',
+                  fEmail:'登録メール', fScreenshot:'スクリーンショット', submit:'申請する' },
+            en: { title:'🎁 Claim Event Coupon', line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
+                  line2:'<b>Share on SNS</b> for a <b style="color:#be185d;">$100</b> coupon',
+                  fEmail:'Account email', fScreenshot:'Screenshot', submit:'Submit' }
+        };
+        var t = L[lang] || L.kr;
+        if ($('couponModalTitle')) $('couponModalTitle').textContent = t.title;
+        if ($('couponInfoLine1')) $('couponInfoLine1').children[1].innerHTML = t.line1;
+        if ($('couponInfoLine2')) $('couponInfoLine2').children[1].innerHTML = t.line2;
+        if ($('couponLblEmail')) $('couponLblEmail').textContent = t.fEmail;
         if ($('couponLblScreenshot')) $('couponLblScreenshot').textContent = t.fScreenshot;
-        if ($('couponLblNote'))    $('couponLblNote').textContent    = t.fNote;
-        if ($('couponSubmitBtn'))  $('couponSubmitBtn').textContent  = t.submit;
+        if ($('couponSubmitBtn')) $('couponSubmitBtn').textContent = t.submit;
     })();
 
     // JP 인라인 결제 — LINE 카드 안의 円 입력 + 注文する → 메인 _mgrQuoteOrder 위임
