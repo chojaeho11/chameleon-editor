@@ -2852,12 +2852,15 @@ html, body { background: #ffffff !important; }
                 bdHtml += '<div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:4px; padding:4px 0;">📋 ' + tr('이미 담긴 가벽','保存済みの壁面','Saved walls') + ' (' + state._adLines.length + ')</div>';
                 state._adLines.forEach(function(line, i) {
                     bdHtml += '<div style="border-top:1px dotted #e2e8f0; margin:8px 0 6px;"></div>';
-                    var _lShapeLbl = line.wallShape === 'L' ? tr('ㄱ자','L字','L')
-                                   : line.wallShape === 'U' ? tr('ㄷ자','コ字','U')
-                                   : tr('一자','一字','straight');
-                    var _lSideLbl = (line.wallSide === 'double') ? tr('양면','両面','double') : tr('단면','片面','single');
-                    bdHtml += '<div style="font-size:12px; font-weight:900; color:#1e40af; margin-bottom:4px;">#' + (i+1) + ' ' + tr('가벽','壁面','Wall') + '</div>';
-                    bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (line.wallWidth||0) + 'm × ' + (line.wallHeight||0) + 'm · ' + _lSideLbl + ' · ' + _lShapeLbl + '</b></span></div>';
+                    var _lShapeLbl = line.wallShape === 'L' ? tr('ㄱ자형','L字','L-shape')
+                                   : line.wallShape === 'U' ? tr('ㄷ자형','コの字','U-shape')
+                                   : tr('一자형','ストレート','Straight');
+                    var _lSideLbl = (line.wallSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
+                    var _ordKr2 = ['첫번째','두번째','세번째','네번째','다섯번째','여섯번째','일곱번째','여덟번째','아홉번째','열번째'];
+                    var _ordEn2 = function(n){ if(n===1)return'1st';if(n===2)return'2nd';if(n===3)return'3rd';return n+'th'; };
+                    var _ordLbl2 = tr((_ordKr2[i] || ((i+1)+'번째')), ((i+1)+'番目'), _ordEn2(i+1));
+                    bdHtml += '<div style="font-size:12px; font-weight:900; color:#1e40af; margin-bottom:4px;">' + _ordLbl2 + tr('가벽','壁面','Wall') + ' ' + _lShapeLbl + ' ' + _lSideLbl + '</div>';
+                    bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (line.wallWidth||0) + 'm × ' + (line.wallHeight||0) + 'm</b></span></div>';
                     // 라인 옵션 — 이름+수량 펼치기
                     try {
                         var seen = {};
@@ -5117,23 +5120,35 @@ html, body { background: #ffffff !important; }
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
             // 가벽 형태 큰 아이콘 (좌측)
             var shapeIcon = (line.isWall) ? '<span style="color:#4338ca; flex-shrink:0;">' + _soShapeIconSvg(line.wallShape || 'straight', 24) + '</span>' : '';
-            // 사이즈 라벨 (텍스트만 — 아이콘은 별도)
+            // 2026-06-01: 가벽 라벨 — "첫번째가벽 ㄱ자형 단면 6m × 3m" 처럼 자연어로 풀어쓰기
+            var _ordKr = ['첫번째','두번째','세번째','네번째','다섯번째','여섯번째','일곱번째','여덟번째','아홉번째','열번째'];
+            var _ordEn = function(n){ if(n===1)return'1st';if(n===2)return'2nd';if(n===3)return'3rd';return n+'th'; };
+            var ordLabel = tr(
+                (_ordKr[i] || ((i+1)+'번째')),
+                ((i+1)+'番目'),
+                _ordEn(i+1)
+            );
             var sizeOnly;
             if (line.isWall) {
-                sizeOnly = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
-                if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','dbl');
+                var shapeName = (line.wallShape === 'L')
+                    ? tr('ㄱ자형','L字','L-shape')
+                    : (line.wallShape === 'U')
+                        ? tr('ㄷ자형','コの字','U-shape')
+                        : tr('一자형','ストレート','Straight');
+                var sideName = (line.wallSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
+                sizeOnly = ordLabel + tr('가벽','壁面','Wall') + ' ' + shapeName + ' ' + sideName + ' ' +
+                           (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
             } else if (line.isBox) {
-                sizeOnly = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+                sizeOnly = ordLabel + ' ' + (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
             } else if (line.isCutPrint) {
-                sizeOnly = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
-                if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','dbl');
+                sizeOnly = ordLabel + ' ' + (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+                if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','Double');
             } else {
-                sizeOnly = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1) + tr('개','個','pcs');
+                sizeOnly = ordLabel + ' ' + (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1) + tr('개','個','pcs');
             }
             var optionChipsHtml = _soOptionChips(line, 4);
             div.innerHTML =
                 '<div style="display:flex; align-items:center; gap:10px;">' +
-                    '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
                     shapeIcon +
                     '<div style="flex:1; min-width:0;">' +
                         '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35;">' + escapeHtml(sizeOnly) + '</div>' +
