@@ -1939,7 +1939,7 @@ html, body { background: #ffffff !important; }
 
         <div class="so-section so-price-box">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
-          <div class="so-price-row"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
+          <div class="so-price-row" id="soUnitRow"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
           <!-- 가벽 사이즈 라인 (가벽 상품만) -->
           <div class="so-price-row" id="soWallSizeRow" style="display:none;"><span>${tr('가벽 사이즈', '壁面サイズ', 'Wall')}</span><span id="soWallSizeText">-</span></div>
           <!-- 옵션별 라인 (동적) -->
@@ -2812,24 +2812,94 @@ html, body { background: #ffffff !important; }
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         }
-        // 옵션 breakdown 라인 + 세로 3m 추가 옵션 (가로 m × 5만, 양면이면 2배)
-        var bdHtml = addonBreakdownLines.join('');
-        // 2026-06-01: 광고인쇄 멀티-라인 breakdown
-        if (adExtraLinesBreakdown.length > 0) bdHtml += adExtraLinesBreakdown.join('');
-        if (heightExtra > 0) {
-            var hPrefix = '· ' + tr('세로 3m 추가', '縦3m追加', 'Height 3m extra');
-            var hUnit = fmtPrice(50000);
-            var hLabel = (state.wallSide === 'double')
-                ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
-                : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
-            bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
-        }
-        // 2026-06-01: 가벽 형태 (ㄱ자/ㄷ자) 라인
-        if (wallShapeFee > 0) {
-            var _shapeLbl = state.wallShape === 'L' ? tr('ㄱ자 코너','L字コーナー','L-shape corner')
-                          : state.wallShape === 'U' ? tr('ㄷ자 코너','コ字コーナー','U-shape corners')
-                          : '';
-            bdHtml += '<div class="so-price-row"><span>· ' + tr('가벽 형태','壁面形状','Wall shape') + ' (' + _shapeLbl + ')</span><span>+' + fmtPrice(wallShapeFee) + '</span></div>';
+        // 2026-06-01: 가벽 상품 — 가벽별로 블록 그룹핑 (현재 작업중 + 큐 각각). 비-가벽은 기존 flat 유지.
+        var bdHtml = '';
+        if (state.isWall) {
+            // 가벽 모드: 상단의 일반 단가/가벽 사이즈 라인 숨김 — 블록 안에 모두 표시됨
+            showRow('soUnitRow', false);
+            showRow('soWallSizeRow', false);
+
+            var _sep = '<div style="border-top:1px dashed #cbd5e1; margin:10px 0;"></div>';
+
+            // ── 현재 작업중인 가벽 (active line) ──
+            var _curShapeLbl = state.wallShape === 'L' ? tr('ㄱ자','L字','L')
+                             : state.wallShape === 'U' ? tr('ㄷ자','コ字','U')
+                             : tr('一자','一字','straight');
+            var _curSideLbl = (state.wallSide === 'double') ? tr('양면','両面','double') : tr('단면','片面','single');
+            bdHtml += '<div style="font-size:12.5px; font-weight:900; color:#4338ca; margin-bottom:6px; padding:6px 8px; background:#eef2ff; border-radius:6px;">▶ ' + tr('이번 가벽','現在の壁面','Current wall') + '</div>';
+            bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (state.wallWidth||0) + 'm × ' + (state.wallHeight||0) + 'm · ' + _curSideLbl + ' · ' + _curShapeLbl + '</b></span></div>';
+            bdHtml += '<div class="so-price-row"><span>' + tr('단가','単価','Unit') + (state.wallSide === 'double' ? ' (양면×2)' : '') + '</span><span>' + fmtPrice(unit) + ' × ' + qty + 'm = ' + fmtPrice(subtotal) + '</span></div>';
+            // 세로 3m 추가비
+            if (heightExtra > 0) {
+                bdHtml += '<div class="so-price-row"><span>· ' + tr('세로 3m 추가','縦3m追加','Height 3m extra') + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+            }
+            // 가벽 형태 코너비
+            if (wallShapeFee > 0) {
+                var _shapeFeeLbl = state.wallShape === 'L' ? tr('ㄱ자 코너','L字コーナー','L-shape corner')
+                                 : state.wallShape === 'U' ? tr('ㄷ자 코너','コ字コーナー','U-shape corners')
+                                 : '';
+                bdHtml += '<div class="so-price-row"><span>· ' + tr('가벽 형태','壁面形状','Wall shape') + ' (' + _shapeFeeLbl + ')</span><span>+' + fmtPrice(wallShapeFee) + '</span></div>';
+            }
+            // 현재 라인 옵션들
+            if (addonBreakdownLines.length > 0) bdHtml += addonBreakdownLines.join('');
+            // 현재 라인 소계
+            var _curSubtotal = subtotal + heightExtra + wallShapeFee + addonTotal;
+            bdHtml += '<div class="so-price-row" style="margin-top:4px; padding-top:4px; border-top:1px solid #f1f5f9;"><span style="color:#475569; font-weight:700;">' + tr('소계','小計','Subtotal') + '</span><span style="color:#4338ca; font-weight:900;">' + fmtPrice(_curSubtotal) + '</span></div>';
+
+            // ── 큐에 담긴 가벽들 ──
+            if (Array.isArray(state._adLines) && state._adLines.length > 0) {
+                bdHtml += _sep;
+                bdHtml += '<div style="font-size:12px; font-weight:800; color:#475569; margin-bottom:4px; padding:4px 0;">📋 ' + tr('이미 담긴 가벽','保存済みの壁面','Saved walls') + ' (' + state._adLines.length + ')</div>';
+                state._adLines.forEach(function(line, i) {
+                    bdHtml += '<div style="border-top:1px dotted #e2e8f0; margin:8px 0 6px;"></div>';
+                    var _lShapeLbl = line.wallShape === 'L' ? tr('ㄱ자','L字','L')
+                                   : line.wallShape === 'U' ? tr('ㄷ자','コ字','U')
+                                   : tr('一자','一字','straight');
+                    var _lSideLbl = (line.wallSide === 'double') ? tr('양면','両面','double') : tr('단면','片面','single');
+                    bdHtml += '<div style="font-size:12px; font-weight:900; color:#1e40af; margin-bottom:4px;">#' + (i+1) + ' ' + tr('가벽','壁面','Wall') + '</div>';
+                    bdHtml += '<div class="so-price-row"><span>' + tr('사이즈','サイズ','Size') + '</span><span><b>' + (line.wallWidth||0) + 'm × ' + (line.wallHeight||0) + 'm · ' + _lSideLbl + ' · ' + _lShapeLbl + '</b></span></div>';
+                    // 라인 옵션 — 이름+수량 펼치기
+                    try {
+                        var seen = {};
+                        Object.values(line.selectedAddons || {}).forEach(function(code){
+                            if (!code || seen[code]) return; seen[code] = true;
+                            var ad = (window.ADDON_DB || {})[code];
+                            if (!ad) return;
+                            var nm = ad.name_kr || ad.name || ad.display_name || code;
+                            var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
+                            var aPrice = (ad.price || 0) * aQty;
+                            bdHtml += '<div class="so-price-row"><span>· ' + escapeHtml(nm) + (aQty > 1 ? ' × ' + aQty : '') + '</span><span>+' + fmtPrice(aPrice) + '</span></div>';
+                        });
+                        Object.keys(line.baseStands || {}).forEach(function(bk){
+                            var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
+                            if (!o) return;
+                            var bQty = line.baseStands[bk] || 1;
+                            bdHtml += '<div class="so-price-row"><span>· ' + escapeHtml(o.label_ko || bk) + (bQty > 1 ? ' × ' + bQty : '') + '</span><span>+' + fmtPrice((o.fee || 0) * bQty) + '</span></div>';
+                        });
+                    } catch(e) {}
+                    bdHtml += '<div class="so-price-row" style="margin-top:4px;"><span style="color:#475569; font-weight:700;">' + tr('소계','小計','Subtotal') + '</span><span style="color:#4338ca; font-weight:900;">' + fmtPrice(line.lineTotal || 0) + '</span></div>';
+                });
+            }
+            bdHtml += _sep;
+        } else {
+            // 비-가벽 — 기존 flat. 단가 row 다시 표시.
+            showRow('soUnitRow', true);
+            bdHtml = addonBreakdownLines.join('');
+            if (adExtraLinesBreakdown.length > 0) bdHtml += adExtraLinesBreakdown.join('');
+            if (heightExtra > 0) {
+                var hPrefix = '· ' + tr('세로 3m 추가', '縦3m追加', 'Height 3m extra');
+                var hUnit = fmtPrice(50000);
+                var hLabel = (state.wallSide === 'double')
+                    ? hPrefix + ' (' + hUnit + ' × ' + qty + 'm × ' + tr('2면', '2面', '2 sides') + ')'
+                    : hPrefix + ' (' + hUnit + ' × ' + qty + 'm)';
+                bdHtml += '<div class="so-price-row"><span>' + hLabel + '</span><span>+' + fmtPrice(heightExtra) + '</span></div>';
+            }
+            if (wallShapeFee > 0) {
+                var _shapeLbl = state.wallShape === 'L' ? tr('ㄱ자 코너','L字コーナー','L-shape corner')
+                              : state.wallShape === 'U' ? tr('ㄷ자 코너','コ字コーナー','U-shape corners')
+                              : '';
+                bdHtml += '<div class="so-price-row"><span>· ' + tr('가벽 형태','壁面形状','Wall shape') + ' (' + _shapeLbl + ')</span><span>+' + fmtPrice(wallShapeFee) + '</span></div>';
+            }
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 라인 (3장+ 50% 할인 포함 표시)
         if (tshirtPrintFee > 0 && Array.isArray(state.tshirtPrintAreas)) {
