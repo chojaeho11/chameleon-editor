@@ -622,21 +622,12 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* === 우측 사이드바 === */
-/* 2026-05-30: 우측을 sticky 로 변경 — 좌측 스크롤 중 주문 패널이 viewport 상단에 고정. */
-/* 2026-06-01: top + max-height 조정 — 상단 fixed 메뉴바 (topbar 60 + topCatMenu 42 + 여유) 고려.
-   바닥 여유 16 + 패딩 16 추가. overflow-y:auto 로 사이드바 내부 스크롤 보장. */
+/* 2026-06-01: sticky + 내부 스크롤 제거 — 사용자 요청 "우측 화면이 짤려있어 아래까지 안보이고".
+   페이지 자연 스크롤로 일체화. 사이드바 전체 항상 보이게.
+   주문 버튼이 좌측 캔버스보다 한참 아래에 있어도, 사용자가 페이지를 끝까지 스크롤하면 자연스럽게 도달. */
 .sidebar {
     display: flex; flex-direction: column; gap: 18px;
-    position: sticky; top: 120px; align-self: flex-start;
-    max-height: calc(100vh - 140px); overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-bottom: 24px;  /* 마지막 카드(주문 버튼)가 잘리지 않도록 여유 */
-}
-.sidebar::-webkit-scrollbar { width: 8px; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(120,53,15,0.25); border-radius: 4px; }
-.sidebar::-webkit-scrollbar-track { background: transparent; }
-@media (max-width: 980px) {
-    .sidebar { position: static; max-height: none; overflow: visible; padding-bottom: 0; }
+    align-self: flex-start;
 }
 .side-card {
     background: #fff; border: 1px solid var(--border); border-radius: 12px;
