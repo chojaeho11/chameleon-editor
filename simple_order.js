@@ -1444,6 +1444,16 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-01: 광고인쇄 — 추가 사이즈 라인 컨테이너 + "다른 사이즈도 같이 주문" 버튼 -->
+        <div class="so-section" id="soAdMultiLineSection" style="display:none;">
+          <div id="soAdExtraLines"></div>
+          <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
+            style="width:100%; margin-top:6px; padding:14px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fa-solid fa-plus" style="font-size:14px;"></i>
+            <span>${tr('다른 사이즈도 같이 주문', '別サイズも一緒に注文', 'Order more sizes')}</span>
+          </button>
+        </div>
+
         <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위). 안내는 좌측 #soWallGuide 로 이동 -->
         <div class="so-section" id="soWallSizeSection" style="display:none;">
           <div class="so-section-title">${tr('가벽 사이즈', '壁面サイズ', 'Wall size')}</div>
@@ -1585,6 +1595,15 @@ html, body { background: #ffffff !important; }
             <div id="soCustomCalcLabel" style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:4px;">${tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)')}</div>
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
+          </div>
+          <!-- 2026-06-01: 광고인쇄 — 단가 박스 바로 아래 인라인 파일 업로드 (좌측 큰 업로드는 숨김). -->
+          <div id="soAdInlineUploadWrap" style="display:none; margin-top:12px;">
+            <button type="button" id="soAdInlineUploadBtn" onclick="document.getElementById('soFile').click()"
+              style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
+              <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
+            </button>
+            <div id="soAdInlineFileInfo" style="display:none; margin-top:6px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
           </div>
         </div>
 
@@ -2127,6 +2146,15 @@ html, body { background: #ffffff !important; }
             console.warn('[simple_order] thumb 생성 실패:', e);
             state.thumbDataUrl = null;
         }
+        // 2026-06-01: 광고인쇄 — 인라인 파일 정보 표시
+        if (state.isAdPrint) {
+            var _inlineInfo = document.getElementById('soAdInlineFileInfo');
+            if (_inlineInfo) {
+                var sizeMB = (file.size/1024/1024).toFixed(1);
+                _inlineInfo.style.display = 'block';
+                _inlineInfo.textContent = file.name + ' (' + sizeMB + 'MB) ✓';
+            }
+        }
         renderUploadDone();
     }
 
@@ -2495,13 +2523,27 @@ html, body { background: #ffffff !important; }
         const shipFee = _soComputeShipFee();
         state.shipFee = shipFee;
 
+        // 2026-06-01: 광고인쇄 — 멀티-라인 (Line 1 외 추가 사이즈) 합계
+        let adExtraLinesTotal = 0;
+        const adExtraLinesBreakdown = [];
+        if (state.isAdPrint && Array.isArray(state._adLines)) {
+            state._adLines.forEach(function(line, i) {
+                const lineSub = (line.unitPrice || 0) * (line.qty || 0);
+                adExtraLinesTotal += lineSub;
+                adExtraLinesBreakdown.push(
+                    '<div class="so-price-row"><span>· ' + (i + 2) + tr('번째 사이즈','番目のサイズ','. Size') + ' ' + line.wMm + '×' + line.hMm + 'mm × ' + (line.qty || 1) + tr('개','個','pcs') + '</span><span>+' + fmtPrice(lineSub) + '</span></div>'
+                );
+            });
+        }
+
         // 2026-05-13: 할인 정책 — 구매금액 할인 + 구독자 할인 (중복 가능)
         // 100만+ 10%, 500만+ 20%, 1000만+ 30%, PRO 구독자 +10%
         // 적용 대상: 상품가 + 옵션 + 세로 3m 옵션 (배송 제외)
         // 2026-05-15: 원판·금액주문은 할인 없음 (단순 발송 / 입력 금액 그대로 결제)
         // 2026-05-29: 베스트굿즈 — 금액 할인/PRO 할인 모두 비적용. 대신 100개+ 시 상품 50% 할인
-        const taxBase = subtotal + addonTotal + heightExtra;
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods;
+        // 2026-06-01: 광고인쇄 — 할인 비적용 (가격 차분만 받는 단순 구조)
+        const taxBase = subtotal + addonTotal + heightExtra + adExtraLinesTotal;
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -2589,6 +2631,8 @@ html, body { background: #ffffff !important; }
         }
         // 옵션 breakdown 라인 + 세로 3m 추가 옵션 (가로 m × 5만, 양면이면 2배)
         var bdHtml = addonBreakdownLines.join('');
+        // 2026-06-01: 광고인쇄 멀티-라인 breakdown
+        if (adExtraLinesBreakdown.length > 0) bdHtml += adExtraLinesBreakdown.join('');
         if (heightExtra > 0) {
             var hPrefix = '· ' + tr('세로 3m 추가', '縦3m追加', 'Height 3m extra');
             var hUnit = fmtPrice(50000);
@@ -4257,6 +4301,114 @@ html, body { background: #ffffff !important; }
         recalc();
     };
 
+    // 2026-06-01: 광고인쇄 — 다른 사이즈도 같이 주문 (멀티-라인) 관리 함수들
+    window._soAdAddLine = function() {
+        var container = document.getElementById('soAdExtraLines');
+        if (!container) return;
+        state._adLines = state._adLines || [];
+        var idx = state._adLines.length;
+        var lineId = 'adLine_' + idx + '_' + (container.children.length);
+        // 기본값: 메인 사이즈와 동일 (mm)
+        var defW = Math.max(100, Math.round((state.customW || 100) * 10));
+        var defH = Math.max(100, Math.round((state.customH || 100) * 10));
+        // 가격 계산
+        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
+        var area = (defW / 1000) * (defH / 1000);
+        var rawP = area * perSqm;
+        var unitP = Math.round(rawP / 10) * 10;
+        if (unitP < perSqm * 0.1) unitP = Math.round(perSqm * 0.1 / 10) * 10;
+        state._adLines.push({
+            id: lineId, wMm: defW, hMm: defH, qty: 1,
+            unitPrice: unitP, areaM2: area,
+            file: null, thumbDataUrl: null, fileWidthMm: null, fileHeightMm: null
+        });
+        var idx2 = state._adLines.length - 1;
+        var div = document.createElement('div');
+        div.className = 'so-ad-extra-line';
+        div.dataset.lineId = lineId;
+        div.style.cssText = 'margin-top:10px; padding:14px; border:1.5px solid #c7d2fe; border-radius:14px; background:#fff; position:relative;';
+        var inputCss = 'width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; font-weight:800; text-align:center; box-sizing:border-box; font-family:inherit;';
+        div.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+                '<span style="font-size:12px; font-weight:800; color:#1e40af;">' + (idx2 + 2) + tr('번째 사이즈', '番目のサイズ', '. Size') + '</span>' +
+                '<button type="button" onclick="window._soAdRemoveLine(\'' + lineId + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; align-items:flex-end; margin-bottom:8px;">' +
+                '<div style="flex:1;"><div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px; text-align:center;">' + tr('가로(W) mm','幅(W) mm','Width (W) mm') + '</div><input type="number" data-ad-w="' + idx2 + '" value="' + defW + '" min="100" max="20000" oninput="window._soAdLineInput(this)" style="' + inputCss + '"></div>' +
+                '<span style="color:#94a3b8; padding:0 2px; margin-bottom:8px;">×</span>' +
+                '<div style="flex:1;"><div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px; text-align:center;">' + tr('세로(H) mm','高さ(H) mm','Height (H) mm') + '</div><input type="number" data-ad-h="' + idx2 + '" value="' + defH + '" min="100" max="20000" oninput="window._soAdLineInput(this)" style="' + inputCss + '"></div>' +
+            '</div>' +
+            '<div style="display:flex; gap:6px; align-items:center; margin-bottom:10px;">' +
+                '<span style="font-size:11px; color:#64748b; font-weight:700; min-width:36px;">' + tr('수량','数量','Qty') + '</span>' +
+                '<input type="number" data-ad-qty="' + idx2 + '" value="1" min="1" max="9999" oninput="window._soAdLineInput(this)" style="flex:1; ' + inputCss + '">' +
+                '<span style="font-size:13px; font-weight:900; color:#1e40af; min-width:90px; text-align:right;" data-ad-price="' + idx2 + '">' + fmtPrice(unitP) + '</span>' +
+            '</div>' +
+            '<input type="file" id="' + lineId + '_file" data-ad-file="' + idx2 + '" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none;" onchange="window._soAdLineFile(this)">' +
+            '<button type="button" onclick="document.getElementById(\'' + lineId + '_file\').click()" style="width:100%; padding:10px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">' +
+                '<i class="fa-solid fa-cloud-arrow-up"></i><span data-ad-file-label="' + idx2 + '">' + tr('파일 업로드','ファイルアップロード','Upload file') + '</span>' +
+            '</button>';
+        container.appendChild(div);
+        if (typeof recalc === 'function') recalc();
+    };
+
+    window._soAdRemoveLine = function(lineId) {
+        var container = document.getElementById('soAdExtraLines');
+        if (!container) return;
+        state._adLines = (state._adLines || []).filter(function(l){ return l.id !== lineId; });
+        var elt = container.querySelector('[data-line-id="' + lineId + '"]');
+        if (elt && elt.parentNode) elt.parentNode.removeChild(elt);
+        // 남은 라인 인덱스 재할당 (DOM 라벨 + data-ad-* 인덱스)
+        Array.prototype.forEach.call(container.children, function(child, newIdx){
+            var titleSpan = child.querySelector('span');
+            if (titleSpan) titleSpan.textContent = (newIdx + 2) + tr('번째 사이즈', '番目のサイズ', '. Size');
+            ['w','h','qty','price','file','file-label'].forEach(function(k){
+                var attr = 'data-ad-' + k;
+                child.querySelectorAll('[' + attr + ']').forEach(function(el){
+                    el.setAttribute(attr, String(newIdx));
+                });
+            });
+        });
+        if (typeof recalc === 'function') recalc();
+    };
+
+    window._soAdLineInput = function(input) {
+        var idx = parseInt(input.getAttribute('data-ad-w') || input.getAttribute('data-ad-h') || input.getAttribute('data-ad-qty'), 10);
+        if (isNaN(idx)) return;
+        var line = state._adLines && state._adLines[idx];
+        if (!line) return;
+        var container = document.getElementById('soAdExtraLines');
+        if (!container) return;
+        var wEl = container.querySelector('[data-ad-w="' + idx + '"]');
+        var hEl = container.querySelector('[data-ad-h="' + idx + '"]');
+        var qtyEl = container.querySelector('[data-ad-qty="' + idx + '"]');
+        var priceEl = container.querySelector('[data-ad-price="' + idx + '"]');
+        line.wMm = parseInt(wEl && wEl.value, 10) || 0;
+        line.hMm = parseInt(hEl && hEl.value, 10) || 0;
+        line.qty = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
+        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
+        var area = (line.wMm / 1000) * (line.hMm / 1000);
+        line.areaM2 = area;
+        var raw = area * perSqm;
+        var p = Math.round(raw / 10) * 10;
+        if (p < perSqm * 0.1) p = Math.round(perSqm * 0.1 / 10) * 10;
+        // 사이즈 너무 작으면 0
+        if (line.wMm < 100 || line.hMm < 100) p = 0;
+        line.unitPrice = p;
+        if (priceEl) priceEl.textContent = p > 0 ? fmtPrice(p) : '-';
+        if (typeof recalc === 'function') recalc();
+    };
+
+    window._soAdLineFile = function(input) {
+        var idx = parseInt(input.getAttribute('data-ad-file'), 10);
+        var line = state._adLines && state._adLines[idx];
+        if (!line || !input.files || !input.files[0]) return;
+        var file = input.files[0];
+        line.file = file;
+        var container = document.getElementById('soAdExtraLines');
+        var labelEl = container ? container.querySelector('[data-ad-file-label="' + idx + '"]') : null;
+        if (labelEl) labelEl.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + 'MB) ✓';
+    };
+
     // 2026-05-13: 박스 사이즈 변경 → 단가 자동 계산
     window._soOnBoxDimsChange = async function () {
         var wEl = document.getElementById('soBoxW');
@@ -5680,7 +5832,7 @@ html, body { background: #ffffff !important; }
         var qtySec = document.getElementById('soQtySection');
         if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard) ? 'none' : '';
 
-        // 2026-06-01: 광고인쇄 — 사이즈 카드를 주문수량 카드 위로 이동 + 단위 라벨 (cm) → (mm)
+        // 2026-06-01: 광고인쇄 — 사이즈 카드 → qty 위 / 추가옵션 / 배송 순서 + 단위 mm + 인라인 업로드 + 멀티-라인
         (function _soApplyAdPrintLayout(){
             var _custSec = document.getElementById('soCustomSizeSection');
             if (!_custSec || !qtySec || !qtySec.parentNode) return;
@@ -5690,15 +5842,45 @@ html, body { background: #ffffff !important; }
                 var _unitSpan = _titleEl.querySelector('span:last-child');
                 if (_unitSpan) _unitSpan.textContent = state.isAdPrint ? '(mm)' : '(cm)';
             }
-            // 위치: ad print 면 qtySec 직전, 아니면 원위치(addonSec 또는 baseStandSec 직전)로 환원
+            // 사이즈 카드 위치: 광고인쇄 → qtySec 직전 (사이즈 최상단)
+            //                    아니면 원위치(addonSec/baseStandSec 직전)로 환원
             if (state.isAdPrint) {
                 if (_custSec.nextSibling !== qtySec) qtySec.parentNode.insertBefore(_custSec, qtySec);
             } else {
-                // 환원 — soBaseStandSection 직전 (원래 위치). 없으면 soAddonSection 직전.
                 var _anchor = document.getElementById('soBaseStandSection') || document.getElementById('soAddonSection');
                 if (_anchor && _anchor.parentNode === _custSec.parentNode && _custSec.nextSibling !== _anchor) {
                     _anchor.parentNode.insertBefore(_custSec, _anchor);
                 }
+            }
+            // 광고인쇄 모드 UI 토글
+            var _tierTable = document.getElementById('soTierTable');
+            var _presetTier = document.getElementById('soPresetTierTable');
+            var _inlineUpload = document.getElementById('soAdInlineUploadWrap');
+            var _multiSec = document.getElementById('soAdMultiLineSection');
+            var _extraLines = document.getElementById('soAdExtraLines');
+            var _leftUpload = document.getElementById('soUploadWrap');
+            var _leftUploadLabel = document.getElementById('soUploadLabel');
+            if (state.isAdPrint) {
+                if (_tierTable)  _tierTable.style.display  = 'none';
+                if (_presetTier) _presetTier.style.display = 'none';
+                if (_inlineUpload) _inlineUpload.style.display = '';
+                if (_multiSec)   _multiSec.style.display   = '';
+                if (_leftUpload) _leftUpload.style.display = 'none';
+                if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
+                // 새 상품 진입시 멀티-라인 초기화
+                state._adLines = [];
+                if (_extraLines) _extraLines.innerHTML = '';
+                // 인라인 업로드 파일 정보도 초기화
+                var _inlineInfo = document.getElementById('soAdInlineFileInfo');
+                if (_inlineInfo) { _inlineInfo.style.display = 'none'; _inlineInfo.textContent = ''; }
+            } else {
+                if (_tierTable)  _tierTable.style.display  = '';
+                if (_inlineUpload) _inlineUpload.style.display = 'none';
+                if (_multiSec)   _multiSec.style.display   = 'none';
+                if (_leftUpload && !(state.isRawBoard || state.isAmountOrder)) _leftUpload.style.display = '';
+                if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder)) _leftUploadLabel.style.display = '';
+                state._adLines = [];
+                if (_extraLines) _extraLines.innerHTML = '';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
@@ -6256,6 +6438,40 @@ html, body { background: #ffffff !important; }
             }
             const cart = readCart();
             cart.push(item);
+            // 2026-06-01: 광고인쇄 — 추가 사이즈 라인들을 각각 별도 cart item 으로 push
+            if (state.isAdPrint && Array.isArray(state._adLines) && state._adLines.length > 0) {
+                var _saveW = state.customW, _saveH = state.customH, _saveQty = state.qty;
+                var _saveFile = state.file, _saveUnit = state.customUnitPrice, _saveArea = state.customAreaM2;
+                var _saveCartThumb = state._cartThumb;
+                for (var _li = 0; _li < state._adLines.length; _li++) {
+                    var _ln = state._adLines[_li];
+                    // 파일 업로드 (있으면)
+                    var _lnUrl = null, _lnPath = null;
+                    if (_ln.file) {
+                        try {
+                            updateUploadStep(tr('추가 사이즈 파일 업로드 중 ' + (_li+1) + '/' + state._adLines.length, '追加サイズ ' + (_li+1) + '/' + state._adLines.length, 'Extra size file ' + (_li+1) + '/' + state._adLines.length));
+                            var _lnRes = await uploadFileGeneric(_ln.file);
+                            _lnUrl = _lnRes.url;
+                            _lnPath = _lnRes.path;
+                        } catch (_le) { console.warn('[ad multi-line upload] line', _li, _le); }
+                    }
+                    // state 를 임시로 라인 값으로 덮어쓰기 → buildCartItem 호출 → 복원
+                    state.customW = _ln.wMm / 10;
+                    state.customH = _ln.hMm / 10;
+                    state.qty = _ln.qty || 1;
+                    state.file = _ln.file;
+                    state.customUnitPrice = _ln.unitPrice;
+                    state.customAreaM2 = _ln.areaM2;
+                    state._cartThumb = null;
+                    var _lnItem = buildCartItem(_lnUrl, _lnPath);
+                    _lnItem.uid = Date.now() + _li + 1;
+                    cart.push(_lnItem);
+                }
+                // 원복
+                state.customW = _saveW; state.customH = _saveH; state.qty = _saveQty;
+                state.file = _saveFile; state.customUnitPrice = _saveUnit; state.customAreaM2 = _saveArea;
+                state._cartThumb = _saveCartThumb;
+            }
             writeCart(cart);
             // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
             // __cart_id 부여됨. cartData 도 그 최신 상태로 sync 해야 renderCart 가 중복 push 안 함.
