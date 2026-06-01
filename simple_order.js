@@ -1578,17 +1578,17 @@ html, body { background: #ffffff !important; }
             <div id="soPresetWrapGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
             <div id="soPresetWrapHint" style="font-size:11px; color:#94a3b8; margin-top:6px;"></div>
           </div>
-          <div id="soCustomDimsRow" style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
-            <div style="flex:1; text-align:center;">
+          <div id="soCustomDimsRow" style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:6px; align-items:flex-end; margin-bottom:8px;">
+            <div style="flex:1 1 0; min-width:0; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
               <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
-                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
-            <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
-            <div style="flex:1; text-align:center;">
+            <span style="color:#94a3b8; font-weight:bold; padding-bottom:8px; flex:0 0 auto;">×</span>
+            <div style="flex:1 1 0; min-width:0; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('세로 (H)', '縦 (H)', 'Height (H)')}</div>
               <input type="number" id="soCustomH" value="60" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
-                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+                style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
           </div>
           <div id="soCustomCalcResult" style="margin-top:10px; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #fbbf24; border-radius:10px; text-align:center;">
@@ -2715,8 +2715,17 @@ html, body { background: #ffffff !important; }
         }
         // 배송/시공 (묶음배송이면 0원이어도 표시)
         // 2026-05-29: 베스트굿즈 — "배송비" 라벨만 (시공·옵션명 없음)
-        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping);
-        if (state.isBestGoods) {
+        // 2026-06-01: 광고인쇄 — 항상 배송 행 표시 (10만+ 무료 / 미만 3만)
+        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint);
+        if (state.isAdPrint) {
+            if (shipFee === 0) {
+                setText('soShipLabel', tr('배송비 (10만원 이상 무료)', '送料 (10万円以上無料)', 'Shipping (free over ₩100k)'));
+                setText('soShipAmount', tr('무료', '無料', 'FREE'));
+            } else {
+                setText('soShipLabel', tr('배송비 (10만원 미만)', '送料 (10万円未満)', 'Shipping (under ₩100k)'));
+                setText('soShipAmount', '+' + fmtPrice(shipFee));
+            }
+        } else if (state.isBestGoods) {
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', '+' + fmtPrice(shipFee));
         } else {
@@ -3424,6 +3433,23 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
+        // 2026-06-01: 광고인쇄 — 모달 내 현재 + 큐 라인 합계 기준. 10만원 이상 무료, 미만 3만원.
+        if (state.isAdPrint) {
+            state._shipUpgradeReason = null;
+            var adSub = (state.customUnitPrice || 0) * (state.qty || 1);
+            try {
+                Object.values(state.selectedAddons || {}).forEach(function(code){
+                    var addon = (window.ADDON_DB || {})[code];
+                    if (!addon) return;
+                    var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                    adSub += (addon.price || 0) * aQty;
+                });
+            } catch(e) {}
+            (state._adLines || []).forEach(function(line){
+                adSub += (line.lineTotal || 0);
+            });
+            return adSub >= 100000 ? 0 : 30000;
+        }
         var method = state.shipMethod || 'self_pickup';
         // 2026-05-30: 원판 — 수도권 10장 이상 무료/미만 10만, 지방 100장 이상 무료/미만 20만
         if (state.isRawBoard) {
@@ -3720,6 +3746,12 @@ html, body { background: #ffffff !important; }
             });
         }
         if (!renderList.length) return;
+        // 2026-06-01: 관리자 admin_addons 의 sort_order 를 그대로 반영 (지난 1년간 product.addons CSV 순서만 보고 무시되던 버그 fix)
+        renderList.sort(function(a, b){
+            var av = (a && typeof a.sort_order === 'number') ? a.sort_order : 999999;
+            var bv = (b && typeof b.sort_order === 'number') ? b.sort_order : 999999;
+            return av - bv;
+        });
 
         // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
         //   2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외됐으나 카테고리 기반 isBestGoods 로 compact 유지
@@ -5883,6 +5915,8 @@ html, body { background: #ffffff !important; }
             var _extraLines = document.getElementById('soAdExtraLines');
             var _leftUpload = document.getElementById('soUploadWrap');
             var _leftUploadLabel = document.getElementById('soUploadLabel');
+            var _schedSec = document.getElementById('soScheduleSection');
+            var _addonSec = document.getElementById('soAddonSection');
             if (state.isAdPrint) {
                 if (_tierTable)  _tierTable.style.display  = 'none';
                 if (_presetTier) _presetTier.style.display = 'none';
@@ -5890,13 +5924,14 @@ html, body { background: #ffffff !important; }
                 if (_multiSec)   _multiSec.style.display   = '';
                 if (_leftUpload) _leftUpload.style.display = 'none';
                 if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
-                // 2026-06-01: flex order 강제 — 모바일 .so-right 가 flex column 이라 size 가 진짜 최상단.
-                //   size(-200) → qty(-190) → addon(default 0) → multiSec(50, addon 뒤) → schedule(0) → price(0).
+                // 2026-06-01: 광고인쇄 시공/배송 옵션 자체 숨김 — 카트 합계 기준 자동 룰 적용 (10만+ 무료, 미만 3만)
+                if (_schedSec) _schedSec.style.display = 'none';
+                state.shipMethod = 'ad_print_threshold';  // 가짜 키 — _soComputeShipFee 가 분기 처리
+                // flex order — size → qty → addon → multi (addon 직후) → 가격/장바구니. shipping 은 숨김.
                 _custSec.style.order = '-200';
                 if (qtySec) qtySec.style.order = '-190';
-                if (_multiSec) _multiSec.style.order = '50';
-                // 멀티-라인 섹션은 DOM 상에서도 addon 섹션 뒤로 이동 (order 동률시 DOM 순서 안전망)
-                var _addonSec = document.getElementById('soAddonSection');
+                if (_multiSec) _multiSec.style.order = '';  // 0 (default) — DOM 순서로 결정
+                // 멀티-라인 섹션을 addon 섹션 바로 뒤에 위치 (DOM 상)
                 if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
                     _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
                 }
@@ -6308,6 +6343,8 @@ html, body { background: #ffffff !important; }
             artworkLater: !!state.artworkLater,
             // 2026-05-25: 원판 여부 — 장바구니에서 할인 라벨 숨김용
             _isRawBoard: !!state.isRawBoard,
+            // 2026-06-01: 광고인쇄 (is_popular=true) — 카트 합계 기준 10만+ 무료 / 미만 30,000원 룰 적용용
+            _isAdPrint: !!state.isAdPrint,
             // 2026-05-30: 베스트굿즈 / 프리셋 플래그 — _soCalcItemPrice / 견적서 / 주문관리에서 100개+ 50%·정액배송·고리 300원 적용 트리거
             _isBestGoods: !!state.isBestGoods,
             _isPresetGoods: !!state.isPresetGoods,
@@ -6854,7 +6891,14 @@ html, body { background: #ffffff !important; }
         }
 
         list.innerHTML = sections.join('');
-        totalEl.textContent = fmtPrice(totalAmt);
+        // 2026-06-01: 카트 드로어 합계도 _soCalcCartTotal 사용 → 광고인쇄 10만+ 무료 룰 반영.
+        //   각 항목별 합산(totalAmt)은 시각용으로만 두고, 실제 총액은 cart-level 룰 적용.
+        try {
+            var _cartCalc = _soCalcCartTotal(allItems);
+            totalEl.textContent = fmtPrice(_cartCalc.grandTotal);
+        } catch(e) {
+            totalEl.textContent = fmtPrice(totalAmt);
+        }
         if (checkBtn) checkBtn.disabled = false;
     }
 
@@ -7179,6 +7223,21 @@ html, body { background: #ffffff !important; }
         if (cart.some(_soIsFabricItem)) {
             var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
+        }
+        // 2026-06-01: 광고인쇄 카트 합계 룰 — 모든 ad-print 항목 상품가 합계 10만 이상 무료 / 미만 30,000원 (단일 통합).
+        //   per-item 으로 저장된 shipping.fee 는 무시하고 카트 합계 기준 재계산.
+        var _adItems = cart.filter(function(it){ return it && it._isAdPrint; });
+        if (_adItems.length > 0) {
+            var _adProductSub = 0;
+            _adItems.forEach(function(it){
+                var _itSub = _soCalcItemPrice(it);
+                var _itShip = (it.shipping && it.shipping.fee) || 0;
+                _adProductSub += (_itSub - _itShip);
+                // 기존 shipping.fee 가 shipTotal 에 합산됐다면 빼기
+                shipTotal -= _itShip;
+            });
+            if (_adProductSub < 100000) shipTotal += 30000;
+            // 10만 이상이면 0 추가 = 무료
         }
         var amountPct = 0;
         if (taxBase >= 10000000) amountPct = 30;
