@@ -1040,7 +1040,7 @@ window._tcmFallbackClick = function(code) {
                     <!-- 2026-06-01: 이벤트 쿠폰 받기 (JP 사이트 — LINE 박스 내부) -->
                     <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()"
                         style="width:100%; margin-top:8px; padding:11px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        🎁 <span id="jpCouponBtnLabel">クーポンプレゼント</span>
+                        <span id="jpCouponBtnLabel">クーポンプレゼント</span>
                     </button>
                 </div>
             </div>
@@ -1072,7 +1072,7 @@ window._tcmFallbackClick = function(code) {
                     <!-- 2026-06-01: 이벤트 쿠폰 받기 (en/외국 사이트 — Hiba 박스 내부) -->
                     <button type="button" onclick="window._openCouponShareModal && window._openCouponShareModal()"
                         style="width:100%; margin-top:8px; padding:11px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
-                        🎁 <span id="enCouponBtnLabel">Claim Event Coupon</span>
+                        <span id="enCouponBtnLabel">Claim Event Coupon</span>
                     </button>
                 </div>
             </div>
@@ -1317,7 +1317,7 @@ window._tcmFallbackClick = function(code) {
                 <!-- 2026-06-01: 이벤트 쿠폰 받기 — mgrQuoteHero 박스 내부 우측에 통합 -->
                 <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()"
                     style="padding:11px 18px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; white-space:nowrap; display:flex; align-items:center; gap:6px; font-family:inherit;">
-                    🎁 <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
+                    <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
                 </button>
             </div>
             <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 (텍스트 자체는 사용자 요청에 따라 제거) -->
@@ -1447,6 +1447,35 @@ window._tcmFallbackClick = function(code) {
         var modal = document.getElementById('couponShareModal');
         if (modal) modal.style.display = 'none';
     };
+    // 2026-06-01: "1️⃣ 회원가입하고 쿠폰받기" 클릭 → 기존 회원가입 모달 오픈, 가입 후 이메일 자동 채움
+    //   login.js 의 signup 흐름이 profiles.event_coupon=30000 자동 적립함.
+    window._couponOpenSignup = function(){
+        if (typeof window.openAuthModal !== 'function') {
+            alert('회원가입 모달을 불러올 수 없습니다. 페이지를 새로고침해 주세요.');
+            return;
+        }
+        var couponModal = document.getElementById('couponShareModal');
+        if (couponModal) couponModal.style.display = 'none';
+        window.openAuthModal('signup', function(){
+            setTimeout(async function(){
+                try {
+                    var sb = window.sb;
+                    if (sb && sb.auth) {
+                        var r = await sb.auth.getSession();
+                        var sess = r && r.data && r.data.session;
+                        var emailIn = document.getElementById('couponEmail');
+                        if (sess && sess.user && sess.user.email && emailIn) {
+                            emailIn.value = sess.user.email;
+                            emailIn.readOnly = true;
+                            emailIn.style.background = '#f9fafb';
+                        }
+                    }
+                    if (couponModal) couponModal.style.display = 'flex';
+                    alert('🎉 가입 완료! 30,000원 이벤트 쿠폰이 마이페이지에 지급되었습니다.\n\nSNS 공유 인증으로 100,000원 추가 쿠폰도 받아보세요.');
+                } catch(e) {}
+            }, 400);
+        });
+    };
 
     // 스크린샷 → Supabase Storage 업로드 (2026-06-01: 'orders' 버킷 사용 — share-screenshots 미생성)
     async function _couponUploadScreenshot(file){
@@ -1521,20 +1550,24 @@ window._tcmFallbackClick = function(code) {
                 <div id="couponModalTitle" style="font-size:17px; font-weight:700; letter-spacing:-0.2px;">🎁 이벤트 쿠폰 받기</div>
             </div>
             <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
-                <!-- 2줄 간단 안내 -->
+                <!-- 2줄 간단 안내 (1번 라인은 회원가입 트리거) -->
                 <div style="margin-bottom:18px;">
-                    <div id="couponInfoLine1" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a;">
+                    <button type="button" id="couponInfoLine1" onclick="window._couponOpenSignup && window._couponOpenSignup()"
+                        style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a; cursor:pointer; font-family:inherit; text-align:left; transition:all 0.15s;"
+                        onmouseenter="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6';"
+                        onmouseleave="this.style.background='#eff6ff'; this.style.borderColor='#c7d2fe';">
                         <span style="font-size:20px;">1️⃣</span>
-                        <span><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
-                    </div>
+                        <span style="flex:1;"><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                        <span style="font-size:13px; color:#3b82f6;">→</span>
+                    </button>
                     <div id="couponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
                         <span style="font-size:20px;">2️⃣</span>
                         <span><b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b></span>
                     </div>
                 </div>
 
-                <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblEmail">가입 이메일</label>
-                <input id="couponEmail" type="email" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
+                <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblEmail">가입 아이디 또는 이메일</label>
+                <input id="couponEmail" type="text" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
 
                 <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblScreenshot">스크린샷</label>
                 <input id="couponScreenshot" type="file" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; margin-bottom:18px; box-sizing:border-box; background:#fff;">
@@ -1553,16 +1586,17 @@ window._tcmFallbackClick = function(code) {
         var L = {
             kr: { title:'🎁 이벤트 쿠폰 받기', line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
                   line2:'<b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b>',
-                  fEmail:'가입 이메일', fScreenshot:'스크린샷', submit:'쿠폰 신청' },
+                  fEmail:'가입 아이디 또는 이메일', fScreenshot:'스크린샷', submit:'쿠폰 신청' },
             ja: { title:'🎁 イベントクーポン申請', line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
                   line2:'<b>SNSに作品シェア</b>でクーポン獲得 <b style="color:#be185d;">10,000円</b>',
-                  fEmail:'登録メール', fScreenshot:'スクリーンショット', submit:'申請する' },
+                  fEmail:'登録ID または メール', fScreenshot:'スクリーンショット', submit:'申請する' },
             en: { title:'🎁 Claim Event Coupon', line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
                   line2:'<b>Share on SNS</b> for a <b style="color:#be185d;">$100</b> coupon',
-                  fEmail:'Account email', fScreenshot:'Screenshot', submit:'Submit' }
+                  fEmail:'Account ID or email', fScreenshot:'Screenshot', submit:'Submit' }
         };
         var t = L[lang] || L.kr;
         if ($('couponModalTitle')) $('couponModalTitle').textContent = t.title;
+        // children[1] = content span (1️⃣ span is [0], → arrow is [2] in button; or just one content span in info-line2 div)
         if ($('couponInfoLine1')) $('couponInfoLine1').children[1].innerHTML = t.line1;
         if ($('couponInfoLine2')) $('couponInfoLine2').children[1].innerHTML = t.line2;
         if ($('couponLblEmail')) $('couponLblEmail').textContent = t.fEmail;
