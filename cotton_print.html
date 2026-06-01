@@ -690,24 +690,24 @@ window._cottonSearch = function(){
                 ko: { title:'🎁 이벤트 쿠폰 받기', subtitle:'클릭하여 자세히 보기 →',
                       modalTitle:'🎁 이벤트 쿠폰 받기',
                       line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
-                      line2:'<b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b>',
-                      fEmail:'가입 아이디 또는 이메일', fScreenshot:'스크린샷', submit:'쿠폰 신청',
+                      line2:'SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득',
+                      fEmail:'가입 아이디 또는 이메일', fScreenshot:'스크린샷', hintScreenshot:'캡처해서 사진올려주세요.', submit:'쿠폰 신청',
                       success:'신청이 접수되었습니다! 관리자 확인 후 24시간 내 100,000원 쿠폰이 지급됩니다.',
                       reqLogin:'먼저 로그인해 주세요. 회원가입하면 30,000원 쿠폰이 자동 지급됩니다.',
                       reqFields:'가입 이메일과 스크린샷은 필수입니다.' },
                 ja: { title:'🎁 イベントクーポン申請', subtitle:'タップして詳細 →',
                       modalTitle:'🎁 イベントクーポン申請',
                       line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
-                      line2:'<b>SNSに作品シェア</b>でクーポン獲得 <b style="color:#be185d;">10,000円</b>',
-                      fEmail:'登録ID または メール', fScreenshot:'スクリーンショット', submit:'申請する',
+                      line2:'SNSに <b>Chameleonで作った作品</b> を投稿して <b style="color:#be185d;">10,000円</b> クーポンGET',
+                      fEmail:'登録ID または メール', fScreenshot:'スクリーンショット', hintScreenshot:'キャプチャした画像をアップロードしてください。', submit:'申請する',
                       success:'申請を受け付けました！管理者確認後、24時間以内に10,000円クーポンが付与されます。',
                       reqLogin:'先にログインしてください。会員登録すると3,000円クーポンが自動付与されます。',
                       reqFields:'登録メールとスクリーンショットは必須です。' },
                 en: { title:'🎁 Claim Event Coupon', subtitle:'Tap to learn more →',
                       modalTitle:'🎁 Claim Event Coupon',
                       line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
-                      line2:'<b>Share on SNS</b> for a <b style="color:#be185d;">$100</b> coupon',
-                      fEmail:'Account ID or email', fScreenshot:'Screenshot', submit:'Submit',
+                      line2:'Post your <b>Chameleon-made artwork</b> on SNS for a <b style="color:#be185d;">$100</b> coupon',
+                      fEmail:'Account ID or email', fScreenshot:'Screenshot', hintScreenshot:'Please upload a screenshot.', submit:'Submit',
                       success:'Claim received! Coupon will appear within 24 hours.',
                       reqLogin:'Please log in first. Signup grants a $30 coupon automatically.',
                       reqFields:'Email and screenshot are required.' }
@@ -886,12 +886,13 @@ window._cottonSearch = function(){
                 </button>
                 <div id="cpCouponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
                     <span style="font-size:20px;">2️⃣</span>
-                    <span><b>SNS에 작품 공유</b>하고 쿠폰받기 <b style="color:#be185d;">10만원</b></span>
+                    <span>SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득</span>
                 </div>
             </div>
             <label id="cpCouponLblEmail" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">가입 아이디 또는 이메일</label>
             <input id="cpCouponEmail" type="text" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
             <label id="cpCouponLblScreenshot" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">스크린샷</label>
+            <div id="cpCouponHintScreenshot" style="font-size:11.5px; color:#6b7280; margin-bottom:6px; line-height:1.45;">캡처해서 사진올려주세요.</div>
             <input id="cpCouponScreenshot" type="file" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; margin-bottom:18px; box-sizing:border-box; background:#fff;">
             <button id="cpCouponSubmitBtn" type="button" onclick="window._submitCpCoupon()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">쿠폰 신청</button>
         </div>
@@ -908,6 +909,7 @@ window._cottonSearch = function(){
     if ($('cpCouponInfoLine2')) $('cpCouponInfoLine2').children[1].innerHTML = c.line2;
     if ($('cpCouponLblEmail')) $('cpCouponLblEmail').textContent = c.fEmail;
     if ($('cpCouponLblScreenshot')) $('cpCouponLblScreenshot').textContent = c.fScreenshot;
+    if ($('cpCouponHintScreenshot') && c.hintScreenshot) $('cpCouponHintScreenshot').textContent = c.hintScreenshot;
     if ($('cpCouponSubmitBtn')) $('cpCouponSubmitBtn').textContent = c.submit;
 })();
 </script>
