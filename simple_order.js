@@ -1487,7 +1487,7 @@ html, body { background: #ffffff !important; }
               onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(79,70,229,0.55)'">
               ${tr('담기', 'リストに追加', 'Save line')}
             </button>
-            <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
+            <button type="button" id="soAdAddLineBtn" onclick="window._soAdStartNew()"
               style="padding:14px 10px; border:none; background:linear-gradient(135deg,#fef3c7 0%,#fde68a 60%,#fbbf24 100%); color:#78350f; border-radius:14px; font-size:14.5px; font-weight:900; letter-spacing:0.02em; cursor:pointer; font-family:inherit; box-shadow:0 6px 18px -6px rgba(251,191,36,0.5); transition:transform 0.12s, box-shadow 0.15s;"
               onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 22px -6px rgba(251,191,36,0.6)'"
               onmouseleave="this.style.transform=''; this.style.boxShadow='0 6px 18px -6px rgba(251,191,36,0.5)'">
@@ -4686,6 +4686,80 @@ html, body { background: #ffffff !important; }
     // 호환성 — 구 함수명 alias
     window._soAdAddLine = window._soAdQueueCurrent;
 
+    // 2026-06-01: "가벽 추가" / "사이즈 추가" — 큐에 추가하지 않고 입력 영역만 초기화하고 상단(파일 업로드)으로 스크롤.
+    //   담기 버튼 = 큐에 저장 / 가벽 추가 버튼 = 새 라인을 위한 폼 리셋.
+    //   사용자 요청: '빈 가벽이 추가되는데 이렇게 말고 젤 상단 파일 올리는 곳으로 보내줘'
+    window._soAdStartNew = function() {
+        if (!state.isAdPrint && !state.isHoneycomb) return;
+        var p = state.product || {};
+        // 입력 초기화 — 모드별 기본값
+        if (state.isWall) {
+            state.wallWidth = 3;
+            state.wallHeight = 2.4;
+            state.wallSide = 'single';
+            state.wallShape = 'straight';
+            state.wallShapeFee = 0;
+            var _ww = document.getElementById('soWallWidth'); if (_ww) _ww.value = '3';
+            var _wh = document.getElementById('soWallHeight'); if (_wh) _wh.value = '2.4';
+            try { if (typeof window._soPickSide === 'function') window._soPickSide('single'); } catch(e){}
+            try { if (typeof window._soPickWallShape === 'function') window._soPickWallShape('straight'); } catch(e){}
+        }
+        if (state.isBox) {
+            state.boxW = p.width_mm || 400;
+            state.boxH = p.height_mm || 400;
+            state.boxD = 400;
+            var _bw = document.getElementById('soBoxW'); if (_bw) _bw.value = state.boxW;
+            var _bh = document.getElementById('soBoxH'); if (_bh) _bh.value = state.boxH;
+            var _bd = document.getElementById('soBoxD'); if (_bd) _bd.value = state.boxD;
+        }
+        if (state.isCutPrint) state.cutSize = 'full';
+        if (state.isAdPrint) {
+            var defWMm = p.width_mm || 1000, defHMm = p.height_mm || 1000;
+            state.customW = defWMm / 10;
+            state.customH = defHMm / 10;
+            var _cw = document.getElementById('soCustomW'); if (_cw) _cw.value = defWMm;
+            var _ch = document.getElementById('soCustomH'); if (_ch) _ch.value = defHMm;
+        }
+        state.qty = 1;
+        var _q = document.getElementById('soQty'); if (_q) _q.value = 1;
+        // 파일 + 추가옵션 + 받침대 초기화
+        state.file = null; state.thumbDataUrl = null;
+        state.fileWidthMm = null; state.fileHeightMm = null;
+        state.fileWidthPx = null; state.fileHeightPx = null; state.fileKind = null;
+        state.selectedAddons = {};
+        state.addonQuantities = {};
+        state.baseStands = {};
+        document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
+        document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
+        document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){ cb.checked = false; });
+        document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function(qi){ qi.value = 1; });
+        // 인라인 업로드 카드 — "업로드 완료" 패널 끄고 "파일 업로드" 점선 버튼으로 복원
+        var _inlineWrapS = document.getElementById('soAdInlineUploadWrap');
+        var _inlineDoneS = document.getElementById('soAdInlineDone');
+        var _inlineInfoS = document.getElementById('soAdInlineFileInfo');
+        if (_inlineWrapS) _inlineWrapS.style.display = '';
+        if (_inlineDoneS) _inlineDoneS.style.display = 'none';
+        if (_inlineInfoS) _inlineInfoS.textContent = '';
+        // 좌측 soUpload 영역도 리셋
+        var uploadZone = document.getElementById('soUpload');
+        if (uploadZone) {
+            uploadZone.classList.remove('done');
+            uploadZone.innerHTML =
+                '<input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpeg,.jpg" style="display:none" />' +
+                '<div class="so-upload-icon"></div>' +
+                '<div class="so-upload-title" id="soUploadTitle">' + tr('이미지를 올려주세요','画像をアップロード','Upload your file') + '</div>' +
+                '<div class="so-upload-hint">' + tr('여기를 클릭하거나 파일을 끌어다 놓으세요','クリックまたはドラッグ&ドロップ','Click or drag & drop') + '</div>' +
+                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 50MB 이하','PDF・PNG・JPG・50MB以下','PDF / PNG / JPG · max 50MB') + '</div>';
+            uploadZone.onclick = function(){ document.getElementById('soFile').click(); };
+            if (typeof window._soWireUploadEvents === 'function') window._soWireUploadEvents();
+        }
+        // 가격 재계산
+        if (typeof recalc === 'function') recalc();
+        // 인라인 업로드 카드(우측 상단)로 부드럽게 스크롤
+        var topCard = document.getElementById('soInlineUploadCard');
+        if (topCard) try { topCard.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
+    };
+
     // 2026-06-01: 가벽 형태 작은 SVG 아이콘 (큐 칩에 사용 — 다국어 친화 그림 표시)
     function _soShapeIconSvg(shape, size) {
         size = size || 18;
@@ -6423,7 +6497,7 @@ html, body { background: #ffffff !important; }
             if (areaInfo) areaInfo.style.display = '';
             if (calcLbl)  calcLbl.textContent = '' + tr('단가 (면적 × 단가)', '単価 (面積 × 単価)', 'Unit price (area × rate)');
             // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
-            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder) ? 'none' : '';
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
@@ -6449,7 +6523,7 @@ html, body { background: #ffffff !important; }
             var _cutS3 = document.getElementById('soPresetCutSection'); if (_cutS3) _cutS3.style.display = 'none';
             var _sideRow3 = document.getElementById('soKeyringSideRow'); if (_sideRow3) _sideRow3.style.display = 'none';
             // 2026-05-30: 원판/금액주문은 디자인에디터 진입 불가 — 강제 hidden 유지
-            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder) ? 'none' : '';
+            if (editorBtn) editorBtn.style.display = (state.isRawBoard || state.isAmountOrder || state.isWall) ? 'none' : '';
             if (uploadTitle) uploadTitle.textContent = tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file');
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
