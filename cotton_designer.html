@@ -623,15 +623,20 @@ a { text-decoration: none; color: inherit; }
 
 /* === 우측 사이드바 === */
 /* 2026-05-30: 우측을 sticky 로 변경 — 좌측 스크롤 중 주문 패널이 viewport 상단에 고정. */
-/* overscroll-behavior:contain 으로 내부 스크롤 끝나도 페이지로 전파되지 않게 (mouse-over scroll 격리). */
+/* 2026-06-01: top + max-height 조정 — 상단 fixed 메뉴바 (topbar 60 + topCatMenu 42 + 여유) 고려.
+   바닥 여유 16 + 패딩 16 추가. overflow-y:auto 로 사이드바 내부 스크롤 보장. */
 .sidebar {
     display: flex; flex-direction: column; gap: 18px;
-    position: sticky; top: 16px; align-self: flex-start;
-    max-height: calc(100vh - 32px); overflow-y: auto;
+    position: sticky; top: 120px; align-self: flex-start;
+    max-height: calc(100vh - 140px); overflow-y: auto;
     overscroll-behavior: contain;
+    padding-bottom: 24px;  /* 마지막 카드(주문 버튼)가 잘리지 않도록 여유 */
 }
+.sidebar::-webkit-scrollbar { width: 8px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(120,53,15,0.25); border-radius: 4px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
 @media (max-width: 980px) {
-    .sidebar { position: static; max-height: none; overflow: visible; }
+    .sidebar { position: static; max-height: none; overflow: visible; padding-bottom: 0; }
 }
 .side-card {
     background: #fff; border: 1px solid var(--border); border-radius: 12px;
@@ -1141,6 +1146,92 @@ a { text-decoration: none; color: inherit; }
     <!-- 우측: 옵션 사이드바 -->
     <aside class="sidebar">
 
+        <!-- 2026-06-01: 출력 사이즈 (최상단으로 이동) + 인라인 파일 업로드 카드.
+             기존 outputSizeCard/rollCard 의 본체 정의는 그대로 두고, 여기로 DOM 이동시킴 (cotton_designer.js 가 _cdSelectLayout 에서 둘 다 토글). -->
+
+        <!-- 출력 사이즈 + 회배 계산기 (대폭 1300mm 기준) — 패브릭포스터 전용. 모드 토글은 JS 가 담당. -->
+        <div class="side-card" id="outputSizeCard">
+            <div class="side-card-title">
+                <span data-cdi18n="side_output">출력 사이즈 (실제 출력)</span>
+                <span style="font-size:10px; font-weight:600; color:var(--text-light);" data-cdi18n="side_output_max">대폭 1300mm</span>
+            </div>
+            <div class="size-controls">
+                <div class="size-input-group">
+                    <label data-cdi18n="width_max">가로 (mm)</label>
+                    <input type="number" class="size-input" id="orderWcm" value="1300" min="100" max="10000" step="1" oninput="window._cdCalcHoebae()">
+                </div>
+                <div class="size-input-group">
+                    <label data-cdi18n="height_unl">세로 (mm) — 무제한</label>
+                    <input type="number" class="size-input" id="orderHcm" value="1000" min="100" step="1" oninput="window._cdCalcHoebae()">
+                </div>
+            </div>
+            <div id="seamNotice" data-cdi18n="seam_notice" style="display:none; margin-top:8px; padding:8px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; font-size:11px; font-weight:700; color:#92400e;">⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)</div>
+            <div id="tierNotice" style="display:none; margin-top:8px; padding:8px 10px; background:#dcfce7; border:1px solid #86efac; border-radius:6px; font-size:11px; font-weight:700; color:#166534;"></div>
+            <div style="margin-top:10px; padding:12px; background:var(--cream); border-radius:8px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:var(--text-light);" data-cdi18n="hoebae_label">회배 (1m² 기준)</span>
+                    <b id="hoebaeAmount" style="color:var(--brown-dark);">1.30 회배</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-light);" data-cdi18n="hoebae_price">회배 단가 × 회배 수</span>
+                    <b id="hoebaePrice" style="color:var(--accent);">19,500원</b>
+                </div>
+            </div>
+            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                <span data-cdi18n="hoebae_hint">회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.</span>
+            </div>
+        </div>
+
+        <!-- 패턴 원단 인쇄 — 롤 폭 선택 + 야드 수 입력 (패턴 모드에서만 표시). 최상단으로 이동. -->
+        <div class="side-card" id="rollCard" style="display:none;">
+            <div class="side-card-title">
+                <span data-cdi18n="side_roll_width">롤 폭 선택</span>
+            </div>
+            <div class="roll-width-grid">
+                <button type="button" class="roll-w-btn active" data-roll="wide" onclick="window._cdPickRollWidth('wide')">
+                    <div class="roll-w-name" data-cdi18n="roll_wide">대폭 (130cm)</div>
+                    <div class="roll-w-price"><span data-cdi18n="roll_wide_price">13,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
+                </button>
+                <button type="button" class="roll-w-btn" data-roll="narrow" onclick="window._cdPickRollWidth('narrow')">
+                    <div class="roll-w-name" data-cdi18n="roll_narrow">소폭 (100cm)</div>
+                    <div class="roll-w-price"><span data-cdi18n="roll_narrow_price">10,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
+                </button>
+                <button type="button" class="roll-w-btn" data-roll="supplied" onclick="window._cdPickRollWidth('supplied')">
+                    <div class="roll-w-name" data-cdi18n="roll_supplied">원단 제공</div>
+                    <div class="roll-w-price"><span data-cdi18n="roll_supplied_price">3,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
+                </button>
+            </div>
+            <div class="side-card-title" style="margin-top:14px;">
+                <span data-cdi18n="side_roll_yards">주문 수량 (마)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#fafaf9; border-radius:8px;">
+                <button type="button" onclick="window._cdRollYardsChg(-1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">−</button>
+                <input type="number" id="rollYards" value="1" min="1" max="9999" style="flex:1; padding:8px; border:1px solid var(--cream-dark); border-radius:8px; text-align:center; font-size:16px; font-weight:800; font-family:inherit;" oninput="window._cdOnRollYardsInput()">
+                <button type="button" onclick="window._cdRollYardsChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
+                <span style="font-size:12px; font-weight:800; color:var(--brown);" data-cdi18n="roll_yard_unit">마</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-light); margin-top:8px; line-height:1.5;" data-cdi18n="roll_hint">1마 = 약 91cm. 100마 이상 주문 시 자동 50% 할인 적용.</div>
+        </div>
+
+        <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기 -->
+        <div class="side-card" id="sideUploadCard">
+            <div class="side-card-title">
+                <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
+                <span data-cdi18n="side_upload">디자인 파일 업로드</span>
+            </div>
+            <button type="button" onclick="document.getElementById('btnUpload').click()"
+                style="width:100%; padding:14px; border:2px dashed #2563eb; background:#eff6ff; color:#1e40af; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:16px;"></i>
+                <span data-cdi18n="side_upload_btn">파일 업로드 (PDF · PNG · JPG)</span>
+            </button>
+            <div id="sideUploadInfo" style="display:none; margin-top:8px; padding:8px 10px; background:#fff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;"></div>
+            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                <span data-cdi18n="side_upload_hint">올린 이미지/PDF는 좌측 미리보기 영역에 자동으로 표시됩니다. 50MB 이하.</span>
+            </div>
+        </div>
+
         <!-- 원단 선택 (8종 고정) -->
         <div class="side-card">
             <div class="side-card-title" data-cdi18n="side_fabric">원단 선택</div>
@@ -1281,70 +1372,7 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 2026-05-31: 패턴 원단 인쇄 — 롤 폭 선택 + 야드 수 입력 (패턴 모드에서만 표시) -->
-        <div class="side-card" id="rollCard" style="display:none;">
-            <div class="side-card-title">
-                <span data-cdi18n="side_roll_width">롤 폭 선택</span>
-            </div>
-            <div class="roll-width-grid">
-                <button type="button" class="roll-w-btn active" data-roll="wide" onclick="window._cdPickRollWidth('wide')">
-                    <div class="roll-w-name" data-cdi18n="roll_wide">대폭 (130cm)</div>
-                    <div class="roll-w-price"><span data-cdi18n="roll_wide_price">13,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
-                </button>
-                <button type="button" class="roll-w-btn" data-roll="narrow" onclick="window._cdPickRollWidth('narrow')">
-                    <div class="roll-w-name" data-cdi18n="roll_narrow">소폭 (100cm)</div>
-                    <div class="roll-w-price"><span data-cdi18n="roll_narrow_price">10,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
-                </button>
-                <button type="button" class="roll-w-btn" data-roll="supplied" onclick="window._cdPickRollWidth('supplied')">
-                    <div class="roll-w-name" data-cdi18n="roll_supplied">원단 제공</div>
-                    <div class="roll-w-price"><span data-cdi18n="roll_supplied_price">3,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
-                </button>
-            </div>
-            <div class="side-card-title" style="margin-top:14px;">
-                <span data-cdi18n="side_roll_yards">주문 수량 (마)</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#fafaf9; border-radius:8px;">
-                <button type="button" onclick="window._cdRollYardsChg(-1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">−</button>
-                <input type="number" id="rollYards" value="1" min="1" max="9999" style="flex:1; padding:8px; border:1px solid var(--cream-dark); border-radius:8px; text-align:center; font-size:16px; font-weight:800; font-family:inherit;" oninput="window._cdOnRollYardsInput()">
-                <button type="button" onclick="window._cdRollYardsChg(1)" style="width:36px; height:36px; border-radius:8px; border:1px solid var(--cream-dark); background:#fff; cursor:pointer; font-weight:900; font-size:16px;">+</button>
-                <span style="font-size:12px; font-weight:800; color:var(--brown);" data-cdi18n="roll_yard_unit">마</span>
-            </div>
-            <div style="font-size:11px; color:var(--text-light); margin-top:8px; line-height:1.5;" data-cdi18n="roll_hint">1마 = 약 91cm. 100마 이상 주문 시 자동 50% 할인 적용.</div>
-        </div>
-
-        <!-- 출력 사이즈 + 회배 계산기 (대폭 1300mm 기준) — 패브릭포스터 전용 -->
-        <div class="side-card" id="outputSizeCard">
-            <div class="side-card-title">
-                <span data-cdi18n="side_output">출력 사이즈 (실제 출력)</span>
-                <span style="font-size:10px; font-weight:600; color:var(--text-light);" data-cdi18n="side_output_max">대폭 1300mm</span>
-            </div>
-            <div class="size-controls">
-                <div class="size-input-group">
-                    <label data-cdi18n="width_max">가로 (mm)</label>
-                    <input type="number" class="size-input" id="orderWcm" value="1300" min="100" max="10000" step="1" oninput="window._cdCalcHoebae()">
-                </div>
-                <div class="size-input-group">
-                    <label data-cdi18n="height_unl">세로 (mm) — 무제한</label>
-                    <input type="number" class="size-input" id="orderHcm" value="1000" min="100" step="1" oninput="window._cdCalcHoebae()">
-                </div>
-            </div>
-            <div id="seamNotice" data-cdi18n="seam_notice" style="display:none; margin-top:8px; padding:8px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; font-size:11px; font-weight:700; color:#92400e;">⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)</div>
-            <div id="tierNotice" style="display:none; margin-top:8px; padding:8px 10px; background:#dcfce7; border:1px solid #86efac; border-radius:6px; font-size:11px; font-weight:700; color:#166534;"></div>
-            <div style="margin-top:10px; padding:12px; background:var(--cream); border-radius:8px; font-size:13px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                    <span style="color:var(--text-light);" data-cdi18n="hoebae_label">회배 (1m² 기준)</span>
-                    <b id="hoebaeAmount" style="color:var(--brown-dark);">1.30 회배</b>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="color:var(--text-light);" data-cdi18n="hoebae_price">회배 단가 × 회배 수</span>
-                    <b id="hoebaePrice" style="color:var(--accent);">19,500원</b>
-                </div>
-            </div>
-            <div style="font-size:10px; color:var(--text-light); margin-top:6px; line-height:1.5;">
-                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                <span data-cdi18n="hoebae_hint">회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.</span>
-            </div>
-        </div>
+        <!-- 2026-06-01: outputSizeCard + rollCard 는 사이드바 최상단으로 이동했습니다. 여기는 placeholder. -->
 
         <!-- 1) 원단 마감 (필수, 제곱미터당 가격) — 패브릭포스터 전용 -->
         <div class="side-card" id="finishCard">

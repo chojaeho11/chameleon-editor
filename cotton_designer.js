@@ -270,6 +270,15 @@ window._cdUploadImage = async function(files) {
         return;
     }
     state.imgFileName = file.name;
+    // 2026-06-01: 사이드바 인라인 업로드 카드의 파일 정보 표시 (좌측 미리보기와 함께)
+    try {
+        var _sui = document.getElementById('sideUploadInfo');
+        if (_sui) {
+            var _mb = (file.size / 1024 / 1024).toFixed(1);
+            _sui.style.display = 'block';
+            _sui.textContent = file.name + ' (' + _mb + 'MB) ✓';
+        }
+    } catch(e) {}
 
     // 변환이 필요한 포맷 → DataURL 직접 생성
     try {
