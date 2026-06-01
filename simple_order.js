@@ -1730,6 +1730,44 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-01: 뒷면 디자인 파일 업로드 — 가벽 양면일 때만 표시. 동일 패턴 (점선 → 보라 완료 + 썸네일). -->
+        <div class="so-section" id="soBackInlineUploadCard" style="display:none;">
+          <div class="so-section-title">
+            <i class="fa-solid fa-cloud-arrow-up" style="color:#7c3aed;"></i>
+            ${tr('뒷면 파일 업로드', '裏面ファイルアップロード', 'Back File Upload')}
+          </div>
+          <!-- 업로드 전 -->
+          <div id="soBackInlineUploadWrap">
+            <button type="button" id="soBackInlineUploadBtn" onclick="document.getElementById('soBackFile').click()"
+              style="width:100%; padding:14px; border:2px dashed #7c3aed; border-radius:12px; background:#f5f3ff; color:#5b21b6; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
+              <span>${tr('뒷면 파일 업로드 (PDF · PNG · JPG)', '裏面ファイル (PDF · PNG · JPG)', 'Back file (PDF · PNG · JPG)')}</span>
+            </button>
+            <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.5;">
+              <i class="fa-solid fa-circle-info" style="color:#a78bfa;"></i>
+              ${tr('양면 가벽의 뒷면 디자인 파일을 올려주세요.', '両面壁面の裏面デザインファイルをアップロードしてください。', 'Upload the back-side design for double-sided wall.')}
+            </div>
+          </div>
+          <!-- 업로드 후 -->
+          <div id="soBackInlineDone" style="display:none;">
+            <div style="padding:14px 16px; background:linear-gradient(135deg,#7c3aed 0%,#a855f7 60%,#c084fc 100%); border-radius:14px; color:#fff; box-shadow:0 6px 18px -6px rgba(124,58,237,0.5);">
+              <div style="display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:900; letter-spacing:0.01em;">
+                <i class="fa-solid fa-circle-check" style="font-size:18px;"></i>
+                <span>${tr('뒷면 업로드 완료', '裏面アップロード完了', 'Back uploaded')}</span>
+              </div>
+              <div id="soBackInlineFileInfo" style="margin-top:6px; font-size:12px; font-weight:700; opacity:0.95;"></div>
+            </div>
+            <div id="soBackInlineThumb" style="display:none; margin-top:8px; border-radius:10px; overflow:hidden; background:#f8fafc; border:1px solid #e2e8f0;">
+              <img id="soBackInlineThumbImg" src="" alt="" style="width:100%; max-height:240px; object-fit:contain; display:block; background:#fff;">
+            </div>
+            <button type="button" id="soBackInlineChangeBtn" onclick="document.getElementById('soBackFile').click()"
+              style="width:100%; margin-top:8px; padding:10px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <i class="fa-solid fa-arrows-rotate" style="font-size:12px;"></i>
+              <span>${tr('뒷면 파일 변경', '裏面ファイル変更', 'Change back file')}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 받침대 옵션 (등신대 + 자유인쇄커팅) -->
         <div class="so-section" id="soBaseStandSection" style="display:none;">
           <div class="so-section-title">🦵 ${tr('받침대 옵션 (여러 종류·수량 선택 가능)', 'スタンドオプション (複数選択可)', 'Stand options (multiple types & qty)')}</div>
@@ -4660,7 +4698,7 @@ html, body { background: #ffffff !important; }
         var inlineInfo = document.getElementById('soAdInlineFileInfo');
         if (inlineInfo) { inlineInfo.textContent = ''; }
         // 2026-06-01: 인라인 업로드 카드 — "업로드 완료" 패널 닫고 "파일 업로드" 점선 버튼으로 복원 + 썸네일 제거.
-        //   다음 큐 라인에서 새 파일을 올릴 수 있도록.
+        //   다음 큐 라인에서 새 파일을 올릴 수 있도록. 뒷면 카드도 같이.
         var _inlineWrapR = document.getElementById('soAdInlineUploadWrap');
         var _inlineDoneR = document.getElementById('soAdInlineDone');
         var _inlineThumbR = document.getElementById('soAdInlineThumb');
@@ -4669,6 +4707,17 @@ html, body { background: #ffffff !important; }
         if (_inlineDoneR) _inlineDoneR.style.display = 'none';
         if (_inlineThumbR) _inlineThumbR.style.display = 'none';
         if (_inlineThumbImgR) _inlineThumbImgR.src = '';
+        var _bWrapR = document.getElementById('soBackInlineUploadWrap');
+        var _bDoneR = document.getElementById('soBackInlineDone');
+        var _bInfoR = document.getElementById('soBackInlineFileInfo');
+        var _bThumbR = document.getElementById('soBackInlineThumb');
+        var _bThumbImgR = document.getElementById('soBackInlineThumbImg');
+        if (_bWrapR) _bWrapR.style.display = '';
+        if (_bDoneR) _bDoneR.style.display = 'none';
+        if (_bInfoR) _bInfoR.textContent = '';
+        if (_bThumbR) _bThumbR.style.display = 'none';
+        if (_bThumbImgR) _bThumbImgR.src = '';
+        state.fileBack = null; state.thumbDataUrlBack = null;
         // soUpload 영역 — 'done' 클래스 제거 + drop-zone 기본 마크업 복원 + 이벤트 재바인딩.
         //   renderUploadDone 이 innerHTML 을 통째로 갈아치웠을 가능성에 대비.
         var uploadZone = document.getElementById('soUpload');
@@ -4752,7 +4801,7 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){ cb.checked = false; });
         document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function(qi){ qi.value = 1; });
-        // 인라인 업로드 카드 — "업로드 완료" 패널 끄고 "파일 업로드" 점선 버튼으로 복원 + 썸네일 제거
+        // 인라인 업로드 카드 — "업로드 완료" 패널 끄고 "파일 업로드" 점선 버튼으로 복원 + 썸네일 제거 (앞면 + 뒷면)
         var _inlineWrapS = document.getElementById('soAdInlineUploadWrap');
         var _inlineDoneS = document.getElementById('soAdInlineDone');
         var _inlineInfoS = document.getElementById('soAdInlineFileInfo');
@@ -4763,6 +4812,18 @@ html, body { background: #ffffff !important; }
         if (_inlineInfoS) _inlineInfoS.textContent = '';
         if (_inlineThumbS) _inlineThumbS.style.display = 'none';
         if (_inlineThumbImgS) _inlineThumbImgS.src = '';
+        // 뒷면 카드도 같이 리셋
+        var _bWrapS = document.getElementById('soBackInlineUploadWrap');
+        var _bDoneS = document.getElementById('soBackInlineDone');
+        var _bInfoS = document.getElementById('soBackInlineFileInfo');
+        var _bThumbS = document.getElementById('soBackInlineThumb');
+        var _bThumbImgS = document.getElementById('soBackInlineThumbImg');
+        if (_bWrapS) _bWrapS.style.display = '';
+        if (_bDoneS) _bDoneS.style.display = 'none';
+        if (_bInfoS) _bInfoS.textContent = '';
+        if (_bThumbS) _bThumbS.style.display = 'none';
+        if (_bThumbImgS) _bThumbImgS.src = '';
+        state.fileBack = null; state.thumbDataUrlBack = null;
         // 좌측 soUpload 영역도 리셋
         var uploadZone = document.getElementById('soUpload');
         if (uploadZone) {
@@ -5260,6 +5321,9 @@ html, body { background: #ffffff !important; }
         });
         var backWrap = document.getElementById('soBackUploadWrap');
         if (backWrap) backWrap.style.display = (state.wallSide === 'double') ? '' : 'none';
+        // 2026-06-01: 사이드바 인라인 뒷면 업로드 카드 — 양면일 때만 표시
+        var _backCard = document.getElementById('soBackInlineUploadCard');
+        if (_backCard) _backCard.style.display = (state.wallSide === 'double') ? '' : 'none';
         recalc();
         updateButtons();
     };
@@ -5328,6 +5392,29 @@ html, body { background: #ffffff !important; }
             console.warn('[simple_order] back thumb 생성 실패:', e);
         }
         renderBackUploadDone();
+        // 2026-06-01: 사이드바 인라인 뒷면 카드 — 보라 그라데이션 "뒷면 업로드 완료" + 썸네일
+        try {
+            var _bWrap = document.getElementById('soBackInlineUploadWrap');
+            var _bDone = document.getElementById('soBackInlineDone');
+            var _bInfo = document.getElementById('soBackInlineFileInfo');
+            var _bThumb = document.getElementById('soBackInlineThumb');
+            var _bThumbImg = document.getElementById('soBackInlineThumbImg');
+            if (_bWrap) _bWrap.style.display = 'none';
+            if (_bDone) _bDone.style.display = 'block';
+            if (_bInfo) {
+                var sizeMB = (f.size / 1024 / 1024).toFixed(1);
+                _bInfo.textContent = '📎 ' + f.name + ' · ' + sizeMB + 'MB';
+            }
+            if (_bThumb && _bThumbImg) {
+                if (state.thumbDataUrlBack) {
+                    _bThumbImg.src = state.thumbDataUrlBack;
+                    _bThumb.style.display = 'block';
+                } else {
+                    _bThumbImg.src = '';
+                    _bThumb.style.display = 'none';
+                }
+            }
+        } catch(e) {}
     };
 
     function renderBackUploadDone() {
@@ -6577,6 +6664,9 @@ html, body { background: #ffffff !important; }
             var _inlineUpload = document.getElementById('soAdInlineUploadWrap');
             var _inlineUploadCard = document.getElementById('soInlineUploadCard');
             var _multiSec = document.getElementById('soAdMultiLineSection');
+            // 2026-06-01: 뒷면 업로드 카드 — 가벽+양면 외엔 모두 숨김. 아래 wall 분기에서 다시 평가.
+            var _backCardOff = document.getElementById('soBackInlineUploadCard');
+            if (_backCardOff) _backCardOff.style.display = 'none';
             var _extraLines = document.getElementById('soAdExtraLines');
             var _leftUpload = document.getElementById('soUploadWrap');
             var _leftUploadLabel = document.getElementById('soUploadLabel');
@@ -6663,11 +6753,24 @@ html, body { background: #ffffff !important; }
                     _multiSec.style.display = '';
                     _multiSec.style.order = '';
                 }
-                // 인라인 파일 업로드 카드 — 사이드바 최상단으로 (좌측 큰 미리보기는 유지)
-                if (_inlineUploadCard) {
-                    _inlineUploadCard.style.display = '';
-                    _inlineUploadCard.style.order = '-220';
+                // 2026-06-01: 가벽 사이즈 → 가벽 형태 → 앞면 업로드 → (뒷면 업로드 양면시) → 수량 ... 순서로 강제.
+                if (state.isWall) {
+                    var _wallSec = document.getElementById('soWallSizeSection');
+                    var _wallShapeSec = document.getElementById('soWallShapeSection');
+                    if (_wallSec) _wallSec.style.order = '-260';
+                    if (_wallShapeSec) _wallShapeSec.style.order = '-250';
+                    if (_inlineUploadCard) _inlineUploadCard.style.order = '-240';
+                    // 뒷면 업로드 카드 — 양면일 때만 표시 (_soPickSide 에서도 토글)
+                    var _backCard = document.getElementById('soBackInlineUploadCard');
+                    if (_backCard) {
+                        _backCard.style.order = '-235';
+                        _backCard.style.display = (state.wallSide === 'double') ? '' : 'none';
+                    }
+                    if (qtySec) qtySec.style.order = '-220';
+                } else {
+                    if (_inlineUploadCard) _inlineUploadCard.style.order = '-220';
                 }
+                if (_inlineUploadCard) _inlineUploadCard.style.display = '';
                 // 멀티-라인 섹션을 addon 섹션 바로 뒤로 이동
                 if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
                     _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
