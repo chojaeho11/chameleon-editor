@@ -1454,7 +1454,7 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-06-01: 광고인쇄 — 추가 사이즈 라인 컨테이너 + "다른 사이즈도 같이 주문" 버튼 -->
+        <!-- 2026-06-01: 광고인쇄 — 추가 사이즈 라인 컨테이너 + "다른 사이즈도 같이 주문" 버튼 + 안내 -->
         <div class="so-section" id="soAdMultiLineSection" style="display:none;">
           <div id="soAdExtraLines"></div>
           <button type="button" id="soAdAddLineBtn" onclick="window._soAdAddLine()"
@@ -1462,6 +1462,12 @@ html, body { background: #ffffff !important; }
             <i class="fa-solid fa-plus" style="font-size:14px;"></i>
             <span>${tr('다른 사이즈도 같이 주문', '別サイズも一緒に注文', 'Order more sizes')}</span>
           </button>
+          <div style="margin-top:10px; padding:8px 12px; background:#f1f5f9; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.6; text-align:center;">
+            <i class="fa-solid fa-hand-pointer" style="color:#3b82f6;"></i>
+            ${tr('위 큐 라인을 클릭해서 옵션·파일을 다시 편집할 수 있어요.',
+                 '上のキュー行をクリックでオプション・ファイルを再編集できます。',
+                 'Click any queued line above to edit its options or file.')}
+          </div>
         </div>
 
         <!-- 2026-05-13: 가벽 카테고리 전용 사이즈 입력 (가로 m 단위). 안내는 좌측 #soWallGuide 로 이동 -->
@@ -4720,9 +4726,7 @@ html, body { background: #ffffff !important; }
         window._soAdRenderQueue();
         window._soAdRenderLinePreviews();
         if (typeof recalc === 'function') recalc();
-        // 사이즈 카드로 스크롤
-        var target = document.getElementById('soWallSizeSection') || document.getElementById('soCustomSizeSection');
-        if (target && target.offsetParent !== null) try { target.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
+        // 2026-06-01: 스크롤 점프 제거 — 사용자 요청 ("화면이 휙 돌아감"). 입력 영역만 갱신, 페이지는 그 자리 그대로.
     };
 
     // 2026-06-01: 큐 라인 → 사람이 읽기 좋은 요약 문자열. 모드별 사이즈 + 가벽 형태 + 옵션 이름+수량.
@@ -4770,6 +4774,42 @@ html, body { background: #ffffff !important; }
         return sizeLbl + qtySuffix + addonStr;
     }
 
+    // 2026-06-01: 큐 칩에 들어갈 옵션별 작은 아이콘 (썸네일 이미지가 있으면 그걸, 없으면 이모지)
+    function _soOptionChips(line, maxN) {
+        maxN = maxN || 4;
+        var chips = [];
+        try {
+            var seen = {};
+            // 가벽 형태 아이콘 (이미 큐 칩 헤더에 큰 아이콘으로 표시 — 여기엔 추가 X)
+            // 추가옵션
+            Object.values(line.selectedAddons || {}).forEach(function(code){
+                if (!code || seen[code]) return; seen[code] = true;
+                var addon = (window.ADDON_DB || {})[code];
+                if (!addon) return;
+                var nm = addon.name_kr || addon.name || addon.display_name || code;
+                var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
+                var img = addon.img_url || '';
+                var iconHtml = img
+                    ? '<img src="' + escapeHtml(img) + '" alt="" onerror="this.style.display=\'none\'" style="width:18px; height:18px; border-radius:50%; object-fit:cover; background:#f1f5f9;">'
+                    : '<i class="fa-solid fa-circle-plus" style="font-size:13px; color:#94a3b8;"></i>';
+                chips.push('<span style="display:inline-flex; align-items:center; gap:4px; padding:2px 6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:10.5px; color:#334155; font-weight:700;">' + iconHtml + '<span>' + escapeHtml(nm) + (aQty > 1 ? ' ' + aQty + tr('개','個','pcs') : '') + '</span></span>');
+            });
+            // 받침대
+            Object.keys(line.baseStands || {}).forEach(function(bk){
+                var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
+                if (!o) return;
+                var bQty = line.baseStands[bk] || 1;
+                chips.push('<span style="display:inline-flex; align-items:center; gap:4px; padding:2px 6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:10.5px; color:#334155; font-weight:700;"><i class="fa-solid fa-stairs" style="font-size:11px; color:#94a3b8;"></i><span>' + escapeHtml(o.label_ko || bk) + (bQty > 1 ? ' ' + bQty + tr('개','個','pcs') : '') + '</span></span>');
+            });
+        } catch(e) {}
+        if (chips.length > maxN) {
+            var extra = chips.length - maxN;
+            chips = chips.slice(0, maxN);
+            chips.push('<span style="font-size:10.5px; color:#94a3b8; font-weight:700;">+' + extra + '</span>');
+        }
+        return chips.join('');
+    }
+
     window._soAdRenderQueue = function() {
         var container = document.getElementById('soAdExtraLines');
         if (!container) return;
@@ -4777,25 +4817,44 @@ html, body { background: #ffffff !important; }
         (state._adLines || []).forEach(function(line, i) {
             var div = document.createElement('div');
             div.dataset.lineId = line.id;
-            // 2026-06-01: 클릭 가능 — 클릭시 _soAdEditQueued 로 활성 입력 영역으로 로드
-            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; display:flex; align-items:center; gap:10px; cursor:pointer; transition:background 0.15s, border-color 0.15s;';
-            div.title = tr('클릭하면 이 라인을 다시 편집할 수 있습니다.', 'クリックでこのラインを再編集できます。', 'Click to re-edit this line.');
+            // 2026-06-01: 클릭 가능 — 활성 상태 시각적 강조 (눌렀을때 잠깐 active 색상 → load 후 chip 제거됨)
+            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; cursor:pointer; transition:background 0.15s, border-color 0.15s, transform 0.1s;';
+            div.title = tr('클릭하면 옵션·파일을 다시 편집할 수 있어요.', 'クリックでオプション・ファイルを再編集できます。', 'Click to edit options & file.');
             div.onmouseenter = function(){ div.style.background = '#eff6ff'; div.style.borderColor = '#3b82f6'; };
             div.onmouseleave = function(){ div.style.background = '#fff'; div.style.borderColor = '#c7d2fe'; };
+            div.onmousedown = function(){ div.style.background = '#dbeafe'; div.style.borderColor = '#2563eb'; div.style.transform = 'scale(0.99)'; };
+            div.onmouseup = function(){ div.style.transform = ''; };
             div.onclick = function(){ window._soAdEditQueued(line.id); };
             var fileChip = line.fileName
                 ? '<span style="display:inline-flex; align-items:center; gap:3px; padding:2px 6px; background:#dbeafe; color:#1e40af; border-radius:4px; font-size:10px; font-weight:700;"><i class="fa-solid fa-paperclip" style="font-size:9px;"></i>' + (line.fileName.length > 16 ? line.fileName.substring(0, 14) + '..' : line.fileName) + '</span>'
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
-            // 가벽이면 형태 SVG 아이콘 prefix
-            var shapeIcon = (line.isWall) ? '<span style="color:#4338ca; margin-right:6px;">' + _soShapeIconSvg(line.wallShape || 'straight', 20) + '</span>' : '';
-            var lineSummary = _soFmtQueueLine(line);
+            // 가벽 형태 큰 아이콘 (좌측)
+            var shapeIcon = (line.isWall) ? '<span style="color:#4338ca; flex-shrink:0;">' + _soShapeIconSvg(line.wallShape || 'straight', 24) + '</span>' : '';
+            // 사이즈 라벨 (텍스트만 — 아이콘은 별도)
+            var sizeOnly;
+            if (line.isWall) {
+                sizeOnly = (line.wallWidth || '?') + 'm × ' + (line.wallHeight || '?') + 'm';
+                if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','dbl');
+            } else if (line.isBox) {
+                sizeOnly = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
+            } else if (line.isCutPrint) {
+                sizeOnly = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+                if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','dbl');
+            } else {
+                sizeOnly = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1) + tr('개','個','pcs');
+            }
+            var optionChipsHtml = _soOptionChips(line, 4);
             div.innerHTML =
-                '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
-                '<div style="flex:1; min-width:0;">' +
-                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35; display:flex; align-items:center; flex-wrap:wrap; gap:2px;">' + shapeIcon + '<span>' + escapeHtml(lineSummary) + '</span></div>' +
-                    '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b><span style="font-size:10px; color:#3b82f6; margin-left:auto;"><i class="fa-solid fa-pen-to-square"></i> ' + tr('편집','編集','Edit') + '</span></div>' +
+                '<div style="display:flex; align-items:center; gap:10px;">' +
+                    '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
+                    shapeIcon +
+                    '<div style="flex:1; min-width:0;">' +
+                        '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35;">' + escapeHtml(sizeOnly) + '</div>' +
+                        '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
+                    '</div>' +
+                    '<button type="button" onclick="event.stopPropagation(); window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>' +
                 '</div>' +
-                '<button type="button" onclick="event.stopPropagation(); window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
+                (optionChipsHtml ? '<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e0e7ff; display:flex; flex-wrap:wrap; gap:4px;">' + optionChipsHtml + '</div>' : '');
             container.appendChild(div);
         });
     };
