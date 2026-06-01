@@ -1376,6 +1376,16 @@ html, body { background: #ffffff !important; }
           <span class="so-upload-error-text" id="soUploadErrorText"></span>
         </div>
 
+        <!-- 2026-06-01: 광고인쇄 큐 라인별 업로드 프리뷰 — "+다른 사이즈 같이 주문" 누를 때마다 1장씩 적층 -->
+        <div id="soAdLinePreviewsWrap" style="display:none; margin-top:14px;">
+          <div style="font-size:13px; font-weight:800; color:#1c1917; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-layer-group" style="color:#2563eb;"></i>
+            <span>${tr('큐에 담긴 사이즈 미리보기', 'キューに入ったサイズプレビュー', 'Queued line previews')}</span>
+            <span id="soAdLinePreviewCount" style="font-size:11px; color:#64748b; font-weight:700; margin-left:auto;">0</span>
+          </div>
+          <div id="soAdLinePreviews" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px;"></div>
+        </div>
+
         <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
         <div id="soBackUploadWrap" style="display:none; margin-top:20px; padding:14px; background:#ede9fe; border:2px solid #7c3aed; border-radius:14px;">
           <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
@@ -2021,6 +2031,7 @@ html, body { background: #ffffff !important; }
             dz.classList.remove('dragover');
             handleFile(e.dataTransfer.files[0]);
         };
+        window._soWireUploadEvents = wireUploadEvents;  // 2026-06-01: ad queue reset 에서 호출용
         // 2026-05-13: 뒷면 파일 (양면 가벽용)
         const bfi = document.getElementById('soBackFile');
         const bdz = document.getElementById('soBackUpload');
@@ -2147,6 +2158,7 @@ html, body { background: #ffffff !important; }
             state.thumbDataUrl = null;
         }
         // 2026-06-01: 광고인쇄 — 인라인 파일 정보 표시
+        window._soHandleFile = handleFile;  // ad-print queue reset 에서 onchange 재바인딩에 사용
         if (state.isAdPrint) {
             var _inlineInfo = document.getElementById('soAdInlineFileInfo');
             if (_inlineInfo) {
@@ -4407,14 +4419,25 @@ html, body { background: #ffffff !important; }
         if (areaInfoEl) areaInfoEl.textContent = '';
         var inlineInfo = document.getElementById('soAdInlineFileInfo');
         if (inlineInfo) { inlineInfo.style.display = 'none'; inlineInfo.textContent = ''; }
+        // soUpload 영역 — 'done' 클래스 제거 + drop-zone 기본 마크업 복원 + 이벤트 재바인딩.
+        //   renderUploadDone 이 innerHTML 을 통째로 갈아치웠을 가능성에 대비.
         var uploadZone = document.getElementById('soUpload');
-        if (uploadZone) uploadZone.classList.remove('done');
-        var fileInput = document.getElementById('soFile');
-        if (fileInput) fileInput.value = '';
+        if (uploadZone) {
+            uploadZone.classList.remove('done');
+            uploadZone.innerHTML =
+                '<input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />' +
+                '<div class="so-upload-icon"></div>' +
+                '<div class="so-upload-title" id="soUploadTitle">' + tr('이미지를 올려주세요','画像をアップロード','Upload your file') + '</div>' +
+                '<div class="so-upload-hint">' + tr('여기를 클릭하거나 파일을 끌어다 놓으세요','クリックまたはドラッグ&ドロップ','Click or drag & drop') + '</div>' +
+                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 50MB 이하','PDF・PNG・JPG・50MB以下','PDF / PNG / JPG · max 50MB') + '</div>';
+            uploadZone.onclick = function(){ document.getElementById('soFile').click(); };
+            if (typeof window._soWireUploadEvents === 'function') window._soWireUploadEvents();
+        }
         document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
         document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
-        // 큐 카드 다시 그리기 + 현재 라인 가격 갱신 + 사이즈 카드로 스크롤
+        // 큐 카드 + 좌측 프리뷰 그리기 + 현재 라인 가격 갱신 + 사이즈 카드로 스크롤
         window._soAdRenderQueue();
+        window._soAdRenderLinePreviews();
         if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         if (typeof recalc === 'function') recalc();
         var sizeCard = document.getElementById('soCustomSizeSection');
@@ -4450,10 +4473,52 @@ html, body { background: #ffffff !important; }
     window._soAdRemoveQueued = function(lineId) {
         state._adLines = (state._adLines || []).filter(function(l){ return l.id !== lineId; });
         window._soAdRenderQueue();
+        window._soAdRenderLinePreviews();
         if (typeof recalc === 'function') recalc();
     };
     // 호환성 — 구 함수명 alias
     window._soAdRemoveLine = window._soAdRemoveQueued;
+
+    // 2026-06-01: 좌측 패널 — 큐에 담긴 각 라인별 미리보기 카드 (썸네일 + 사이즈 + 수량 + 파일명)
+    window._soAdRenderLinePreviews = function() {
+        var wrap = document.getElementById('soAdLinePreviewsWrap');
+        var grid = document.getElementById('soAdLinePreviews');
+        var countEl = document.getElementById('soAdLinePreviewCount');
+        if (!wrap || !grid) return;
+        var lines = state._adLines || [];
+        if (!lines.length) {
+            wrap.style.display = 'none';
+            grid.innerHTML = '';
+            if (countEl) countEl.textContent = '0';
+            return;
+        }
+        wrap.style.display = '';
+        if (countEl) countEl.textContent = String(lines.length);
+        grid.innerHTML = lines.map(function(line, i){
+            var thumbHtml;
+            if (line.thumbDataUrl) {
+                thumbHtml = '<img src="' + line.thumbDataUrl + '" alt="design ' + (i+1) + '" style="width:100%; height:100%; object-fit:contain; background:#fff; display:block;">';
+            } else if (line.file && /\.pdf$/i.test(line.fileName || '')) {
+                thumbHtml = '<div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:36px; color:#dc2626; background:#fff;">📄</div>';
+            } else if (line.fileName) {
+                thumbHtml = '<div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:36px; color:#7c3aed; background:#fff;">🖼️</div>';
+            } else {
+                thumbHtml = '<div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:13px; color:#94a3b8; background:#f8fafc;">' + tr('파일 없음','ファイルなし','no file') + '</div>';
+            }
+            var fileNameShort = line.fileName ? (line.fileName.length > 14 ? line.fileName.substring(0,12) + '..' : line.fileName) : '';
+            return '<div data-preview-line-id="' + line.id + '" style="background:#fff; border:1.5px solid #c7d2fe; border-radius:10px; overflow:hidden; position:relative;">'+
+                '<div style="font-size:10px; font-weight:900; color:#fff; background:#2563eb; padding:3px 8px; display:flex; justify-content:space-between; align-items:center;">'+
+                    '<span>#' + (i+1) + '</span>'+
+                    '<button type="button" onclick="window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#fff; font-size:11px; cursor:pointer; padding:0 4px; line-height:1;">×</button>'+
+                '</div>'+
+                '<div style="aspect-ratio:1/1; overflow:hidden; background:#fff;">' + thumbHtml + '</div>'+
+                '<div style="padding:6px 8px; font-size:10.5px; line-height:1.4;">'+
+                    '<div style="font-weight:800; color:#1e3a8a;">' + line.wMm + '×' + line.hMm + 'mm × ' + line.qty + tr('개','個','pcs') + '</div>'+
+                    (fileNameShort ? '<div style="color:#475569; font-size:10px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ' + fileNameShort + '</div>' : '')+
+                '</div>'+
+            '</div>';
+        }).join('');
+    };
 
     // 2026-05-13: 박스 사이즈 변경 → 단가 자동 계산
     window._soOnBoxDimsChange = async function () {
@@ -5922,8 +5987,10 @@ html, body { background: #ffffff !important; }
                 if (_presetTier) _presetTier.style.display = 'none';
                 if (_inlineUpload) _inlineUpload.style.display = '';
                 if (_multiSec)   _multiSec.style.display   = '';
-                if (_leftUpload) _leftUpload.style.display = 'none';
-                if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
+                // 2026-06-01: 광고인쇄 — 좌측 soUploadWrap 은 그대로 표시 (인라인 업로드 클릭 시 같은 #soFile 가 트리거되어
+                //   renderUploadDone 이 좌측 #soUpload 에 미리보기 표시). 사용자가 우측 인라인 + 좌측 프리뷰 동시 사용.
+                if (_leftUpload) _leftUpload.style.display = '';
+                if (_leftUploadLabel) _leftUploadLabel.style.display = '';
                 // 2026-06-01: 광고인쇄 시공/배송 옵션 자체 숨김 — 카트 합계 기준 자동 룰 적용 (10만+ 무료, 미만 3만)
                 if (_schedSec) _schedSec.style.display = 'none';
                 state.shipMethod = 'ad_print_threshold';  // 가짜 키 — _soComputeShipFee 가 분기 처리
@@ -5935,9 +6002,15 @@ html, body { background: #ffffff !important; }
                 if (_addonSec && _multiSec && _addonSec.parentNode === _multiSec.parentNode) {
                     _addonSec.parentNode.insertBefore(_multiSec, _addonSec.nextSibling);
                 }
-                // 새 상품 진입시 큐 초기화
+                // 새 상품 진입시 큐 + 큐 프리뷰 초기화
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
+                var _lpw = document.getElementById('soAdLinePreviewsWrap');
+                var _lp = document.getElementById('soAdLinePreviews');
+                var _lpc = document.getElementById('soAdLinePreviewCount');
+                if (_lpw) _lpw.style.display = 'none';
+                if (_lp) _lp.innerHTML = '';
+                if (_lpc) _lpc.textContent = '0';
                 // 인라인 업로드 파일 정보도 초기화
                 var _inlineInfo = document.getElementById('soAdInlineFileInfo');
                 if (_inlineInfo) { _inlineInfo.style.display = 'none'; _inlineInfo.textContent = ''; }
@@ -5953,6 +6026,11 @@ html, body { background: #ffffff !important; }
                 if (_multiSec) _multiSec.style.order = '';
                 state._adLines = [];
                 if (_extraLines) _extraLines.innerHTML = '';
+                // 큐 프리뷰 영역도 정리
+                var _lpw2 = document.getElementById('soAdLinePreviewsWrap');
+                var _lp2 = document.getElementById('soAdLinePreviews');
+                if (_lpw2) _lpw2.style.display = 'none';
+                if (_lp2) _lp2.innerHTML = '';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
