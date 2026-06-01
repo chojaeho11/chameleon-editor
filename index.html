@@ -831,10 +831,31 @@ if ('caches' in window) {
     </div>
 
 <!-- ★ 상단 카테고리 메뉴 바 (startScreen 밖에 배치하여 모달 위에 표시 가능) -->
-<div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:fixed; top:60px; left:0; right:0; z-index:60000;">
+<div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:fixed; top:60px; left:0; right:0; z-index:60000; min-height:42px;">
     <div style="width:100%; margin:0 auto; display:flex; align-items:center; gap:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:0 16px;" id="topCatMenuTrack">
+        <!-- 2026-06-01: 정적 fallback — renderQuickMenu DB 로드 전에도 즉시 메뉴바 표시. JS 로드 후 동적 렌더가 이걸 갈아치움. -->
+        <button class="tcm-btn tcm-fallback" data-fb-key="honeycomb_board" onclick="window._tcmFallbackClick('honeycomb_board')">허니콤보드</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="22222" onclick="window._tcmFallbackClick('22222')">패브릭인쇄</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="44444" onclick="window._tcmFallbackClick('44444')">광고인쇄</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="paper_display" onclick="window._tcmFallbackClick('paper_display')">종이매대</button>
+        <button class="tcm-btn tcm-fallback" data-fb-key="printe_product" onclick="window._tcmFallbackClick('printe_product')">상업 인쇄물</button>
     </div>
 </div>
+<script>
+// 2026-06-01: 정적 fallback 클릭 라우팅 — DB 로드 안 됐을 때도 주요 카테고리 이동 가능.
+//   DB 가 로드되면 renderQuickMenu 가 .tcm-fallback 들을 갈아치우므로 이 핸들러는 자동으로 사라짐.
+window._tcmFallbackClick = function(code) {
+    var lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+    var lm = { ja:'ja', us:'en', en:'en', cn:'zh', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr', kr:'ko', ko:'ko' };
+    var psLang = lm[lang] || '';
+    if (code === 'paper_display') { location.href = '/paper-stand' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : ''); return; }
+    if (code === 'Wholesale Board Prices') { location.href = 'https://www.hexa-board.com/' + (psLang && psLang !== 'ko' ? psLang : ''); return; }
+    if (code === '22222') { location.href = (psLang === 'ja') ? 'https://www.cotton-printer.com/' : ('https://www.cotton-print.com/' + (psLang && psLang !== 'ko' ? '?lang=' + psLang : '')); return; }
+    // honeycomb_board / 44444 / printe_product: 같은 페이지 상단 카테고리로 스크롤. (DB 로드 후 동적 핸들러로 교체됨)
+    var grid = document.getElementById('cpHomePatterns') || document.getElementById('hotDealSection') || document.getElementById('bizDealSection');
+    if (grid) grid.scrollIntoView({behavior:'smooth', block:'start'});
+};
+</script>
 <style>
 #topCatMenuTrack::-webkit-scrollbar { display:none; }
 #topCatMenu .tcm-btn {
@@ -10908,14 +10929,22 @@ async function renderQuickMenu() {
     itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     try {
+        // 2026-06-01: 대분류·소분류·상품 DB fetch에 8초 타임아웃 — Supabase 응답이 멈췄을 때 페이지가 영영 메뉴 없는 상태로 남는 문제 방지.
+        //   타임아웃 발생시 null 로 떨어져 아래 로직이 부분 렌더하거나 정적 fallback 유지.
+        function _withTimeout(p, ms, label) {
+            return Promise.race([
+                p,
+                new Promise(function(resolve){ setTimeout(function(){ console.warn('[renderQuickMenu] ' + label + ' timeout ' + ms + 'ms'); resolve(null); }, ms); })
+            ]);
+        }
         // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴 (180분 캐시)
         const [topCats, subCats, allProds] = await Promise.all([
-            window.cachedFetch('top_cats', 3, () =>
-                sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })),
-            window.cachedFetch('subcats', 3, () =>
-                sb.from('admin_categories').select('*').order('sort_order', { ascending: true })),
-            window.cachedFetch('all_prods_lite', 5, () =>
-                sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true }))
+            _withTimeout(window.cachedFetch('top_cats', 3, () =>
+                sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })), 8000, 'top_cats'),
+            _withTimeout(window.cachedFetch('subcats', 3, () =>
+                sb.from('admin_categories').select('*').order('sort_order', { ascending: true })), 8000, 'subcats'),
+            _withTimeout(window.cachedFetch('all_prods_lite', 5, () =>
+                sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true })), 8000, 'all_prods_lite')
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
@@ -11015,9 +11044,12 @@ async function renderQuickMenu() {
         if (_defaultTabBtn) _defaultTabBtn.click();
 
         // ★ 상단 카테고리 메뉴 바 채우기
+        // 2026-06-01: topCats 가 1개 이상일 때만 정적 fallback 갈아치우기.
+        //   빈 배열/null 이면 fallback 유지 — DB 응답이 느리거나 실패해도 메뉴바가 사라지지 않도록.
         const tcmTrack = document.getElementById('topCatMenuTrack');
         const tcMenu = document.getElementById('topCatMenu');
-        if (tcmTrack && topCats && subCats) {
+        if (tcmTrack && topCats && topCats.length > 0) {
+            const _subCatsSafe = subCats || [];
             tcmTrack.innerHTML = '';
             // 드롭다운 컨테이너
             let dropdown = document.getElementById('topCatDropdown');
@@ -11094,7 +11126,7 @@ async function renderQuickMenu() {
                     if (wasActive) { dropdown.style.display = 'none'; activeTop = null; return; }
                     btn.classList.add('active');
                     activeTop = top.code;
-                    const subs = subCats.filter(s => s.top_category_code === top.code);
+                    const subs = _subCatsSafe.filter(s => s.top_category_code === top.code);
                     dropdown.innerHTML = '';
                     // 소분류 버튼들
                     const subBar = document.createElement('div');
