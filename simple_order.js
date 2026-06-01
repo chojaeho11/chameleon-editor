@@ -8096,7 +8096,15 @@ html, body { background: #ffffff !important; }
             try { await window.loadProductDetailAndOpen(item.product.code); } catch(e) { console.warn('[cart edit] load product fail', e); }
         }
         // 모달이 그려진 후 state/UI 복원
+        //   주의: openSimpleOrderModal 이 state 객체를 새로 할당하므로 _editingCartIdx 등
+        //   edit 식별자도 여기서 다시 세팅해야 함 (이전 세팅이 wiped 됨)
         setTimeout(function() {
+            // edit 식별자 재설정 — openSimpleOrderModal 의 state={...} 가 덮어쓴 것 복원
+            state._editingCartIdx = allIdx;
+            state._editingItem = item;
+            state._editingFileUrl = item.originalUrl || null;
+            state._editingFilePath = item.filePath || null;
+            state._editingFileName = item.fileName || null;
             // 수량
             if (item.qty != null) {
                 state.qty = item.qty;
@@ -8113,6 +8121,21 @@ html, body { background: #ffffff !important; }
                 var hEl = document.getElementById('soCustomH');
                 if (wEl) wEl.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
                 if (hEl) hEl.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
+            }
+            // 가벽 사이즈 복원
+            if (item.wallSize) {
+                state.wallWidth = item.wallSize.w_m || state.wallWidth;
+                state.wallHeight = item.wallSize.h_m || state.wallHeight;
+                var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = String(state.wallWidth);
+                var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = String(state.wallHeight);
+            }
+            if (item.wallSide) state.wallSide = item.wallSide;
+            if (item.wallShape) state.wallShape = item.wallShape;
+            if (item.wallShapeFee != null) state.wallShapeFee = item.wallShapeFee;
+            // 배송 복원
+            if (item.shipping && item.shipping.method) {
+                state.shipMethod = item.shipping.method;
+                state.bundleShipping = (item.shipping.method === 'bundle_shipping');
             }
             // 추가옵션
             if (item.selectedAddons) {
@@ -8167,6 +8190,14 @@ html, body { background: #ffffff !important; }
             try { await window.loadProductDetailAndOpen(item.product.code); } catch(e) { console.warn('[order edit] load product fail', e); }
         }
         setTimeout(function() {
+            // openSimpleOrderModal 이 state={...} 로 wipe — edit 식별자 재설정
+            state._editingCartIdx = null;  // mypage edit 은 새 cart item 으로 들어감 (reorder mode)
+            state._editingItem = item;
+            state._editingOrderId = (mode === 'edit') ? (opts.orderId || null) : null;
+            state._editingOrderItemIdx = (mode === 'edit') ? (opts.itemIdx != null ? opts.itemIdx : null) : null;
+            state._editingFileUrl = item.originalUrl || item.fileUrl || null;
+            state._editingFilePath = item.filePath || null;
+            state._editingFileName = item.fileName || null;
             if (item.qty != null) {
                 state.qty = item.qty;
                 var qtyEl = document.getElementById('soQty');
@@ -8182,9 +8213,19 @@ html, body { background: #ffffff !important; }
                 if (wEl) wEl.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
                 if (hEl) hEl.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
             }
+            if (item.wallSize) {
+                state.wallWidth = item.wallSize.w_m || state.wallWidth;
+                state.wallHeight = item.wallSize.h_m || state.wallHeight;
+                var wwEl = document.getElementById('soWallWidth'); if (wwEl) wwEl.value = String(state.wallWidth);
+                var whEl = document.getElementById('soWallHeight'); if (whEl) whEl.value = String(state.wallHeight);
+            }
             if (item.wallShape) state.wallShape = item.wallShape;
             if (item.wallShapeFee != null) state.wallShapeFee = item.wallShapeFee;
             if (item.wallSide) state.wallSide = item.wallSide;
+            if (item.shipping && item.shipping.method) {
+                state.shipMethod = item.shipping.method;
+                state.bundleShipping = (item.shipping.method === 'bundle_shipping');
+            }
             if (item.selectedAddons) {
                 state.selectedAddons = Object.assign({}, item.selectedAddons);
                 state.addonQuantities = Object.assign({}, item.addonQuantities || {});
