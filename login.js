@@ -1,6 +1,6 @@
 // login.js
 
-import { sb, currentUser, isAdmin } from "./config.js?v=439";
+import { sb, currentUser, isAdmin } from "./config.js?v=291";
 
 let isSignUpMode = false; 
 
@@ -265,7 +265,9 @@ async function handleAuthAction() {
     const password = pwInput?.value.trim();
 
     if (!email || !password) { showToast(window.t('err_input_required', "Input required."), "warn"); return; }
-    if (!sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
+    // 2026-06-02: 모듈 import 버전 mismatch 로 sb 가 null 일 경우 window.sb fallback
+    const _sb = sb || window.sb;
+    if (!_sb) { showToast(window.t('err_db_connection', "DB Error."), "error"); return; }
     window.__authInProgress = true; // 로그인/가입 중 SIGNED_OUT reload 방지
 
     // ★ '@' 없으면 자동으로 이메일 형식 생성 (간편 가입)
