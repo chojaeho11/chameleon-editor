@@ -1176,6 +1176,59 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
+        <!-- 2026-06-01: 패턴 모드 전용 (#bgColorCard + #imgSizeCard) — 패턴 토글 바로 아래에 위치. 패턴 선택 시에만 노출. -->
+
+        <!-- 배경색 (패턴 원단 인쇄 선택 시에만 표시) -->
+        <div class="side-card" id="bgColorCard" style="display:none;">
+            <div class="side-card-title" data-cdi18n="side_bgcolor">배경색</div>
+            <div style="font-size:11px; color:var(--text-light); line-height:1.5; margin-bottom:10px;" data-cdi18n="side_bgcolor_desc">투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.</div>
+            <div class="bg-swatches" id="bgSwatches">
+                <button type="button" class="bg-sw active" data-color="#ffffff" style="background:#ffffff; border:1.5px solid #d6d3d1;" title="화이트" onclick="window._cdSelectBgColor('#ffffff', this)"></button>
+                <button type="button" class="bg-sw" data-color="#1f2937" style="background:#1f2937;" title="차콜" onclick="window._cdSelectBgColor('#1f2937', this)"></button>
+                <button type="button" class="bg-sw" data-color="#000000" style="background:#000000;" title="블랙" onclick="window._cdSelectBgColor('#000000', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fef3c7" style="background:#fef3c7;" title="아이보리" onclick="window._cdSelectBgColor('#fef3c7', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fde68a" style="background:#fde68a;" title="머스타드 라이트" onclick="window._cdSelectBgColor('#fde68a', this)"></button>
+                <button type="button" class="bg-sw" data-color="#facc15" style="background:#facc15;" title="머스타드" onclick="window._cdSelectBgColor('#facc15', this)"></button>
+                <button type="button" class="bg-sw" data-color="#fca5a5" style="background:#fca5a5;" title="피치" onclick="window._cdSelectBgColor('#fca5a5', this)"></button>
+                <button type="button" class="bg-sw" data-color="#f9a8d4" style="background:#f9a8d4;" title="핑크" onclick="window._cdSelectBgColor('#f9a8d4', this)"></button>
+                <button type="button" class="bg-sw" data-color="#c4b5fd" style="background:#c4b5fd;" title="라벤더" onclick="window._cdSelectBgColor('#c4b5fd', this)"></button>
+                <button type="button" class="bg-sw" data-color="#93c5fd" style="background:#93c5fd;" title="베이비블루" onclick="window._cdSelectBgColor('#93c5fd', this)"></button>
+                <button type="button" class="bg-sw" data-color="#86efac" style="background:#86efac;" title="민트" onclick="window._cdSelectBgColor('#86efac', this)"></button>
+                <button type="button" class="bg-sw" data-color="#a3a380" style="background:#a3a380;" title="세이지" onclick="window._cdSelectBgColor('#a3a380', this)"></button>
+                <button type="button" class="bg-sw" data-color="#78350f" style="background:#78350f;" title="브라운" onclick="window._cdSelectBgColor('#78350f', this)"></button>
+                <button type="button" class="bg-sw" data-color="#d6d3d1" style="background:#d6d3d1;" title="라이트 그레이" onclick="window._cdSelectBgColor('#d6d3d1', this)"></button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#fafaf9; border-radius:8px;">
+                <span style="font-size:11px; font-weight:700; color:var(--brown-dark);" data-cdi18n="side_bgcolor_custom">직접 선택</span>
+                <input type="color" id="bgColorPicker" value="#ffffff" oninput="window._cdSelectBgColor(this.value, null)" style="flex:1; height:28px; border:1px solid var(--cream-dark); border-radius:6px; padding:0; cursor:pointer; background:transparent;">
+                <code id="bgColorHex" style="font-size:11px; color:var(--brown); font-family:monospace;">#ffffff</code>
+            </div>
+        </div>
+
+        <!-- 패턴 사이즈 (패턴 원단 인쇄 선택 시에만 표시) -->
+        <div class="side-card" id="imgSizeCard" style="display:none;">
+            <div class="side-card-title">
+                <span data-cdi18n="side_pattern_size">패턴 사이즈 (한 패턴 단위)</span>
+                <label style="font-size:11px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:var(--brown);">
+                    <input type="checkbox" id="aspectLock" checked style="margin:0;"> <span data-cdi18n="aspect_lock">비율 유지</span>
+                </label>
+            </div>
+            <div class="size-controls">
+                <div class="size-input-group">
+                    <label data-cdi18n="width_cm">가로 (mm)</label>
+                    <input type="number" class="size-input" id="imgWcm" value="100" min="10" max="1300" step="1" oninput="window._cdOnSizeInput('w')">
+                </div>
+                <div class="size-input-group">
+                    <label data-cdi18n="height_cm">세로 (mm)</label>
+                    <input type="number" class="size-input" id="imgHcm" value="100" min="10" max="5000" step="1" oninput="window._cdOnSizeInput('h')">
+                </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-light); margin-top:6px;">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
+                <span data-cdi18n="img_hint">롤원단 최대폭 1300mm. 비율 유지 켜면 가로 입력 시 세로 자동 조정.</span>
+            </div>
+        </div>
+
         <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기. -->
         <div class="side-card" id="sideUploadCard">
             <div class="side-card-title">
@@ -1319,57 +1372,7 @@ a { text-decoration: none; color: inherit; }
 
         <!-- 2026-06-01: 패브릭포스터/패턴 토글 카드는 사이드바 최상단으로 이동했습니다 (#layoutToggleCard). -->
 
-        <!-- 배경색 (2026-05-23: 패턴 원단 인쇄 선택 시에만 표시) -->
-        <div class="side-card" id="bgColorCard" style="display:none;">
-            <div class="side-card-title" data-cdi18n="side_bgcolor">배경색</div>
-            <div style="font-size:11px; color:var(--text-light); line-height:1.5; margin-bottom:10px;" data-cdi18n="side_bgcolor_desc">투명 PNG 패턴일 때 배경색이 보입니다. 일반 이미지는 가려질 수 있어요.</div>
-            <div class="bg-swatches" id="bgSwatches">
-                <button type="button" class="bg-sw active" data-color="#ffffff" style="background:#ffffff; border:1.5px solid #d6d3d1;" title="화이트" onclick="window._cdSelectBgColor('#ffffff', this)"></button>
-                <button type="button" class="bg-sw" data-color="#1f2937" style="background:#1f2937;" title="차콜" onclick="window._cdSelectBgColor('#1f2937', this)"></button>
-                <button type="button" class="bg-sw" data-color="#000000" style="background:#000000;" title="블랙" onclick="window._cdSelectBgColor('#000000', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fef3c7" style="background:#fef3c7;" title="아이보리" onclick="window._cdSelectBgColor('#fef3c7', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fde68a" style="background:#fde68a;" title="머스타드 라이트" onclick="window._cdSelectBgColor('#fde68a', this)"></button>
-                <button type="button" class="bg-sw" data-color="#facc15" style="background:#facc15;" title="머스타드" onclick="window._cdSelectBgColor('#facc15', this)"></button>
-                <button type="button" class="bg-sw" data-color="#fca5a5" style="background:#fca5a5;" title="피치" onclick="window._cdSelectBgColor('#fca5a5', this)"></button>
-                <button type="button" class="bg-sw" data-color="#f9a8d4" style="background:#f9a8d4;" title="핑크" onclick="window._cdSelectBgColor('#f9a8d4', this)"></button>
-                <button type="button" class="bg-sw" data-color="#c4b5fd" style="background:#c4b5fd;" title="라벤더" onclick="window._cdSelectBgColor('#c4b5fd', this)"></button>
-                <button type="button" class="bg-sw" data-color="#93c5fd" style="background:#93c5fd;" title="베이비블루" onclick="window._cdSelectBgColor('#93c5fd', this)"></button>
-                <button type="button" class="bg-sw" data-color="#86efac" style="background:#86efac;" title="민트" onclick="window._cdSelectBgColor('#86efac', this)"></button>
-                <button type="button" class="bg-sw" data-color="#a3a380" style="background:#a3a380;" title="세이지" onclick="window._cdSelectBgColor('#a3a380', this)"></button>
-                <button type="button" class="bg-sw" data-color="#78350f" style="background:#78350f;" title="브라운" onclick="window._cdSelectBgColor('#78350f', this)"></button>
-                <button type="button" class="bg-sw" data-color="#d6d3d1" style="background:#d6d3d1;" title="라이트 그레이" onclick="window._cdSelectBgColor('#d6d3d1', this)"></button>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#fafaf9; border-radius:8px;">
-                <span style="font-size:11px; font-weight:700; color:var(--brown-dark);" data-cdi18n="side_bgcolor_custom">직접 선택</span>
-                <input type="color" id="bgColorPicker" value="#ffffff" oninput="window._cdSelectBgColor(this.value, null)" style="flex:1; height:28px; border:1px solid var(--cream-dark); border-radius:6px; padding:0; cursor:pointer; background:transparent;">
-                <code id="bgColorHex" style="font-size:11px; color:var(--brown); font-family:monospace;">#ffffff</code>
-            </div>
-        </div>
-
-        <!-- 패턴 사이즈 (2026-05-23: 패턴 원단 인쇄 선택 시에만 표시 · 이미지사이즈→패턴사이즈) -->
-        <div class="side-card" id="imgSizeCard" style="display:none;">
-            <div class="side-card-title">
-                <span data-cdi18n="side_pattern_size">패턴 사이즈 (한 패턴 단위)</span>
-                <label style="font-size:11px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:var(--brown);">
-                    <input type="checkbox" id="aspectLock" checked style="margin:0;"> <span data-cdi18n="aspect_lock">비율 유지</span>
-                </label>
-            </div>
-            <div class="size-controls">
-                <div class="size-input-group">
-                    <label data-cdi18n="width_cm">가로 (mm)</label>
-                    <input type="number" class="size-input" id="imgWcm" value="100" min="10" max="1300" step="1" oninput="window._cdOnSizeInput('w')">
-                </div>
-                <div class="size-input-group">
-                    <label data-cdi18n="height_cm">세로 (mm)</label>
-                    <input type="number" class="size-input" id="imgHcm" value="100" min="10" max="5000" step="1" oninput="window._cdOnSizeInput('h')">
-                </div>
-            </div>
-            <div style="font-size:11px; color:var(--text-light); margin-top:6px;">
-                <i class="fa-solid fa-circle-info" style="color:var(--accent);"></i>
-                <span data-cdi18n="img_hint">롤원단 최대폭 1300mm. 비율 유지 켜면 가로 입력 시 세로 자동 조정.</span>
-            </div>
-        </div>
-
+        <!-- 2026-06-01: bgColorCard + imgSizeCard 는 패턴 토글 바로 아래로 이동했습니다. -->
         <!-- 2026-06-01: outputSizeCard + rollCard 는 사이드바 최상단으로 이동했습니다. 여기는 placeholder. -->
 
         <!-- 1) 원단 마감 (필수, 제곱미터당 가격) — 패브릭포스터 전용 -->
