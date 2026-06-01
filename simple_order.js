@@ -2062,8 +2062,8 @@ html, body { background: #ffffff !important; }
           <span style="font-size:11px; color:#9ca3af;">${tr('최대','最大','Max')} <b id="soMileageMax">0</b> P</span>
           <button type="button" onclick="window._soFillMaxMileage()" style="padding:6px 10px; background:#fef3c7; color:#92400e; border:1px solid #fbbf24; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">${tr('최대 사용','全額','Max')}</button>
         </div>
-        <div style="font-size:11px; color:#92400e; background:#fef3c7; padding:6px 10px; border-radius:6px; margin-top:6px; border-left:3px solid #f59e0b;">
-          💡 ${tr('이벤트 쿠폰은 구매금액의 50%까지 사용 가능합니다.','イベントクーポンはご注文金額の50%までご利用可能です。','Event coupons usable up to 50% of order amount.')}
+        <div style="font-size:11px; color:#92400e; background:#fef3c7; padding:8px 10px; border-radius:6px; margin-top:6px; border-left:3px solid #f59e0b; line-height:1.6;">
+          💡 ${tr('이벤트 쿠폰은 <b>구매금액의 50%</b> 까지 + <b>최대 50,000원 (=5,000엔/$50)</b> 한도. PRO 구독자 10% 할인 등 다른 마일리지·쿠폰 할인과는 <b>중복 사용 불가</b> — 가장 큰 할인 1개만 적용됩니다.','イベントクーポンは<b>ご注文金額の50%</b>まで + <b>最大5,000円 (=$50)</b>。PRO会員10%割引等の他のマイル·クーポン割引と<b>併用不可</b> — 最も大きい割引1つのみ適用。','Event coupons: up to <b>50% of order</b> AND <b>max $50</b> (=5K JPY/50K KRW). <b>Cannot stack</b> with PRO 10% discount or other mileage/coupons — only the largest single discount applies.')}
         </div>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; margin-top:8px;">
           <input type="checkbox" id="soUseDepositAll" onchange="window._soOnWalletChange()">
@@ -8445,8 +8445,9 @@ html, body { background: #ffffff !important; }
         var excluded = false;
         cart.forEach(function (it) { if (it.product && excludedSet.has(it.product.category)) excluded = true; });
         var calc = _soCalcCartTotal(cart);
-        // 2026-06-01: 이벤트 쿠폰은 구매금액의 50%까지 사용 가능 (가입 보너스 30,000원 + SNS 공유 100,000원)
-        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.5));
+        // 2026-06-01: 이벤트 쿠폰 사용 한도 — 구매금액의 50% AND 절대 50,000원 한도 둘 다 적용 (사용자 요청)
+        //   잔액·주문×50%·50,000 셋 중 가장 작은 값
+        var capKRW = excluded ? 0 : Math.min(mileageBal, Math.floor((calc.taxBase || 0) * 0.5), 50000);
         window._soWallet = { ready: true, userId: uid, mileageBalKRW: mileageBal, depositBalKRW: depositBal, capKRW: capKRW, excluded: excluded };
         var elOwnM = document.getElementById('soOwnMileage'); if (elOwnM) elOwnM.textContent = mileageBal.toLocaleString() + ' P';
         var elMax = document.getElementById('soMileageMax'); if (elMax) elMax.textContent = capKRW.toLocaleString();
@@ -8458,33 +8459,60 @@ html, body { background: #ffffff !important; }
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
     };
-    // 사용액(KRW) 산출 — 클램프 적용. grand = 현재 결제 총액(할인 반영).
+    // 사용액(KRW) 산출 — 클램프 + PRO 구독자 할인과 mutex 처리 (사용자 요청 2026-06-01).
+    //   "모든 마일리지·쿠폰 할인은 PRO 10% 할인과 중복 불가, 가장 큰 할인만 적용."
+    //   - 사용자가 입력한 쿠폰이 PRO 할인보다 크면 → 쿠폰 적용, PRO 자동 제외
+    //   - 사용자가 입력한 쿠폰이 PRO 할인보다 작거나 같으면 → 쿠폰 무시, PRO 유지
+    //   반환값: { useMileage: 실제 적용 쿠폰액, useDeposit, requestedMileage: 사용자 입력값, proSuppressed: PRO 제외 여부, mileageRejected: 쿠폰 무시 여부 }
     function _soGetWalletUseKRW(grand) {
         var st = window._soWallet || {};
-        if (!st.ready) return { useMileage: 0, useDeposit: 0 };
-        var useMileage = 0;
+        if (!st.ready) return { useMileage: 0, useDeposit: 0, requestedMileage: 0, proSuppressed: false, mileageRejected: false };
+        var proDisc = window._soCheckoutProDisc || 0;
+        var requested = 0;
         if (!st.excluded) {
             var inp = document.getElementById('soUseMileage');
             var v = inp ? (parseInt(inp.value, 10) || 0) : 0;
-            useMileage = Math.max(0, Math.min(v, st.capKRW || 0, st.mileageBalKRW || 0));
+            requested = Math.max(0, Math.min(v, st.capKRW || 0, st.mileageBalKRW || 0));
+        }
+        // mutex 적용
+        var useMileage = 0, proSuppressed = false, mileageRejected = false;
+        if (requested > 0) {
+            if (requested > proDisc) {
+                useMileage = requested;
+                proSuppressed = (proDisc > 0);
+            } else {
+                useMileage = 0;
+                mileageRejected = (proDisc > 0);
+            }
         }
         var useDeposit = 0;
         var chk = document.getElementById('soUseDepositAll');
         if (chk && chk.checked) {
-            useDeposit = Math.min(st.depositBalKRW || 0, Math.max(0, grand - useMileage));
+            // PRO 제외된 경우 grand 에 PRO 만큼 다시 더해야 정확한 남은 금액 계산됨
+            var grandForDeposit = proSuppressed ? (grand + proDisc) : grand;
+            useDeposit = Math.min(st.depositBalKRW || 0, Math.max(0, grandForDeposit - useMileage));
         }
-        return { useMileage: useMileage, useDeposit: useDeposit };
+        return { useMileage: useMileage, useDeposit: useDeposit, requestedMileage: requested, proSuppressed: proSuppressed, mileageRejected: mileageRejected };
     }
     function _soApplyWalletToTotal() {
         var grand = window._soCheckoutGrandTotal || 0;
+        var proDisc = window._soCheckoutProDisc || 0;
         var w = _soGetWalletUseKRW(grand);
-        var finalAmt = Math.max(0, grand - w.useMileage - w.useDeposit);
+        // grand 는 이미 PRO 할인이 빠진 상태. 쿠폰이 PRO 보다 크면 PRO 를 복구 (더하기) 한 뒤 쿠폰 차감.
+        var grandAdjusted = w.proSuppressed ? (grand + proDisc) : grand;
+        var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit);
         var totalEl = document.getElementById('soCoTotalAmt');
         if (totalEl) totalEl.textContent = _soFormatPrice(finalAmt);
         var bd = document.getElementById('soCoWalletBreakdown');
         if (bd) {
             var html = '';
-            if (w.useMileage > 0) html += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('마일리지 사용','マイル使用','Mileage') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
+            if (w.useMileage > 0) html += '<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>· ' + tr('🎁 이벤트 쿠폰 사용','🎁 イベントクーポン使用','🎁 Event coupon') + '</span><span>-' + _soFormatPrice(w.useMileage) + '</span></div>';
+            if (w.proSuppressed) {
+                html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 쿠폰 사용으로 자동 제외','PRO 10%割引 — クーポン使用により自動除外','PRO 10% — auto-excluded by coupon') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
+            }
+            if (w.mileageRejected) {
+                html += '<div style="display:flex; justify-content:space-between; color:#92400e; font-size:11.5px; background:#fef3c7; padding:4px 6px; border-radius:4px;"><span>⚠️ ' + tr('쿠폰 입력액이 PRO 할인보다 작아 무시됨 (PRO 할인 유지)','クーポン入力額がPRO割引より小さく無視 (PRO割引維持)','Coupon below PRO discount — ignored (PRO kept)') + '</span><span>' + _soFormatPrice(w.requestedMileage) + ' → 0</span></div>';
+            }
             if (w.useDeposit > 0) html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
             // 2026-05-22: 예치금/마일리지가 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
             if ((w.useMileage > 0 || w.useDeposit > 0) && finalAmt > 0) {
@@ -8641,6 +8669,8 @@ html, body { background: #ffffff !important; }
         document.getElementById('soCoTotalAmt').textContent = _soFormatPrice(calc.grandTotal);
         // 2026-05-22: 마일리지/예치금 사용액을 합계에 반영 (항목 삭제 등 재렌더 시에도 유지)
         window._soCheckoutGrandTotal = calc.grandTotal;
+        // 2026-06-01: 쿠폰 vs PRO 할인 mutex 처리용 — PRO 할인액 stash
+        window._soCheckoutProDisc = calc.proDisc || 0;
         if (typeof _soApplyWalletToTotal === 'function') _soApplyWalletToTotal();
         var subBtn2 = document.getElementById('soCoSubmitBtn');
         if (subBtn2) subBtn2.disabled = false;
@@ -8953,12 +8983,15 @@ html, body { background: #ffffff !important; }
             // 2026-05-13: 카트 전체 할인 (구매금액 + PRO 중복) 반영된 총액
             var cartCalc = _soCalcCartTotal(cart);
             var total = cartCalc.grandTotal;
+            // 2026-06-01: 쿠폰 vs PRO mutex stash (UI 와 동일 로직)
+            window._soCheckoutProDisc = cartCalc.proDisc || 0;
 
             // 2026-05-22: 마일리지/예치금 사용 — KR + 로그인 시. 실제 잔액 재조회로 검증 후 차감은 주문 생성 직후.
-            var _useMileage = 0, _useDeposit = 0, _walletUid = null;
+            var _useMileage = 0, _useDeposit = 0, _walletUid = null, _proSuppressed = false;
             if (window._soWallet && window._soWallet.ready) {
                 var _wu = _soGetWalletUseKRW(total);
                 _useMileage = _wu.useMileage; _useDeposit = _wu.useDeposit;
+                _proSuppressed = !!_wu.proSuppressed;
                 _walletUid = window._soWallet.userId;
             }
             if ((_useMileage > 0 || _useDeposit > 0) && _walletUid) {
@@ -8967,10 +9000,12 @@ html, body { background: #ffffff !important; }
                 try { var _br = await sb.from('profiles').select('mileage, deposit').eq('id', _walletUid).maybeSingle(); _balRow = _br.data; } catch (e) {}
                 var _curMile = parseInt((_balRow && _balRow.mileage) || 0) || 0;
                 var _curDep = parseInt((_balRow && _balRow.deposit) || 0) || 0;
-                if (_useMileage > _curMile) { alert('마일리지 잔액이 부족합니다. (보유: ' + _curMile.toLocaleString() + ' P)'); btn.disabled = false; btn.innerHTML = origLabel; return; }
+                if (_useMileage > _curMile) { alert('쿠폰 잔액이 부족합니다. (보유: ' + _curMile.toLocaleString() + ' P)'); btn.disabled = false; btn.innerHTML = origLabel; return; }
                 if (_useDeposit > _curDep) { _useDeposit = _curDep; } // 예치금은 보유분까지만
             }
-            var _finalTotal = Math.max(0, total - _useMileage - _useDeposit);
+            // 2026-06-01: 쿠폰 사용 시 PRO 할인은 자동 제외 — total 에서 빠져있는 PRO 복원 후 쿠폰 차감
+            var _totalForFinal = _proSuppressed ? (total + (cartCalc.proDisc || 0)) : total;
+            var _finalTotal = Math.max(0, _totalForFinal - _useMileage - _useDeposit);
 
             // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
             // 동시에 orderRow.files 도 채우기 위해 파일 정보 수집
@@ -9286,8 +9321,10 @@ html, body { background: #ffffff !important; }
             if (cartCalc.amountPct > 0) {
                 discountSummary += '\n할인: 구매금액 ' + cartCalc.amountPct + '% (-' + cartCalc.amountDisc.toLocaleString() + '원)';
             }
-            if (cartCalc.proPct > 0) {
+            if (cartCalc.proPct > 0 && !_proSuppressed) {
                 discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원)';
+            } else if (cartCalc.proPct > 0 && _proSuppressed) {
+                discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원) — 쿠폰 사용으로 자동 제외';
             }
             // 2026-05-30: 베스트굿즈 50% 할인 — 카트에 베스트굿즈가 있고 임계값+ 인 항목 합산 표시
             //   티셔츠는 3장+ / 그 외는 100개+
@@ -9303,7 +9340,7 @@ html, body { background: #ffffff !important; }
             if (_bestDiscTotal > 0) {
                 discountSummary += '\n베스트굿즈 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원) — 티셔츠 3장 이상 / 그 외 100개 이상 주문 자동 적용';
             }
-            if (_useMileage > 0) discountSummary += '\n마일리지 사용 (-' + _useMileage.toLocaleString() + '원)';
+            if (_useMileage > 0) discountSummary += '\n🎁 이벤트 쿠폰 사용 (-' + _useMileage.toLocaleString() + '원, 최대 50,000원 한도)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
             // 마일리지/예치금으로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
             var _fullyCovered = (_useMileage > 0 || _useDeposit > 0) && _finalTotal <= 0;
