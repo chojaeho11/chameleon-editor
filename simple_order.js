@@ -8690,8 +8690,8 @@ html, body { background: #ffffff !important; }
         var calc = _soCalcCartTotal(cart);
         var taxBase = calc.taxBase || 0;
         // 4 옵션별 최대 가능 할인액 산출
-        // 1) 이벤트 쿠폰: 잔액 vs 주문×50% vs 50,000 셋 중 최소
-        var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(taxBase * 0.5), 50000);
+        // 1) 이벤트 쿠폰: 잔액 vs 주문×20% vs 100,000 셋 중 최소 (2026-06-02: 50%/50K → 20%/100K 로 변경)
+        var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(taxBase * 0.2), 100000);
         // 2) 마일리지(legacy 5%): 잔액 vs 주문×5%
         var mileageMax = excluded ? 0 : Math.min(mileageBal, Math.floor(taxBase * 0.05));
         // 3) 예치금: 잔액 vs 주문 전액
@@ -8722,7 +8722,7 @@ html, body { background: #ffffff !important; }
             if (hintEl) hintEl.textContent = label;
         };
         setCard('event_coupon', 'soDiscEventAmount', 'soDiscEventHint', eventCouponBal, eventMax,
-            tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('50% / 50K 한도','50% / 50K上限','50% / 50K cap'),
+            tr('보유 ','残高 ','Bal ') + eventCouponBal.toLocaleString() + ' · ' + tr('20% / 100K 한도','20% / 100K上限','20% / 100K cap'),
             ' P');
         setCard('mileage', 'soDiscMileageAmount', 'soDiscMileageHint', mileageBal, mileageMax,
             tr('보유 ','残高 ','Bal ') + mileageBal.toLocaleString() + ' · 5%',
