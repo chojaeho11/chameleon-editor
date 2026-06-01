@@ -224,18 +224,29 @@
         async function approveAndGrant(id){
             const a = _all.find(x => String(x.id) === String(id));
             if (!a) return;
-            if (!a.user_id) {
-                toast('user_id 없음 — 지급 불가', true);
+            const amt = a.coupon_amount_krw || COUPON_AMOUNT_KRW;
+            // 2026-06-02: user_id 없으면 email 로 profiles 조회 (cotton-print 도메인 분리 케이스)
+            let targetUserId = a.user_id || null;
+            if (!targetUserId && a.email) {
+                const { data: profByEmail } = await sb.from('profiles')
+                    .select('id')
+                    .eq('email', a.email)
+                    .maybeSingle();
+                if (profByEmail && profByEmail.id) {
+                    targetUserId = profByEmail.id;
+                }
+            }
+            if (!targetUserId) {
+                toast('해당 이메일로 가입된 사용자가 없습니다 — 가입 후 다시 시도', true);
                 return;
             }
-            const amt = a.coupon_amount_krw || COUPON_AMOUNT_KRW;
             const ok = confirm(`이 신청을 승인하고 ${a.email} 에게 ${couponDisplay(a.lang)} (= ${amt.toLocaleString()} KRW) 쿠폰을 즉시 지급합니다. 계속?`);
             if (!ok) return;
             try {
                 // 1) 현재 이벤트 쿠폰 잔액 조회 (2026-06-01: event_coupon 컬럼 사용, legacy mileage 와 분리)
                 const { data: prof, error: pErr } = await sb.from('profiles')
                     .select('event_coupon, mileage')
-                    .eq('id', a.user_id)
+                    .eq('id', targetUserId)
                     .maybeSingle();
                 if (pErr) throw pErr;
                 const useEventCoupon = (prof && 'event_coupon' in prof);
@@ -247,20 +258,20 @@
                 const updatePayload = useEventCoupon ? { event_coupon: newBal } : { mileage: newBal };
                 const { error: uErr } = await sb.from('profiles')
                     .update(updatePayload)
-                    .eq('id', a.user_id);
+                    .eq('id', targetUserId);
                 if (uErr) throw uErr;
                 // 3) 원장 기록
                 await sb.from('wallet_logs').insert({
-                    user_id: a.user_id,
+                    user_id: targetUserId,
                     type: 'sns_share_bonus',
                     amount: amt,
-                    description: 'SNS 공유 인증 쿠폰 (' + (a.sns_url||'') + ')'
+                    description: 'SNS 공유 인증 쿠폰 (' + (a.sns_url||a.email||'') + ')'
                 });
                 // 4) 신청 상태 = approved
                 const newInfo = Object.assign({}, a._raw, {
                     status: 'approved',
                     approved_at: new Date().toISOString(),
-                    granted_to_user_id: a.user_id,
+                    granted_to_user_id: targetUserId,
                     granted_amount_krw: amt,
                     prev_balance_krw: currentBal,
                     new_balance_krw: newBal

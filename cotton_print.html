@@ -723,9 +723,10 @@ window._cottonSearch = function(){
             window.__CP_LANG = lang;
         })();
         // 이벤트 쿠폰 모달 open/close/submit
+        //   cotton-print.com 은 cafe2626.com 과 별도 도메인 → localStorage 세션 분리됨.
+        //   로그인 강제하지 않고 이메일 수동 입력으로 받음 — 관리자가 /sns-rewards 에서 이메일로 profiles 매칭.
         window._openCpCouponModal = async function(){
             var c = window.__CP_COUPON || {};
-            // 2026-06-01: cotton-print 는 window.sb 가 lazy-init 이라 직접 생성. 세션 체크 후 이메일 채움.
             var sb = window.sb;
             if (!sb && typeof supabase !== 'undefined') {
                 sb = supabase.createClient(
@@ -736,33 +737,24 @@ window._cottonSearch = function(){
                 window.sb = sb;
             }
             var emailIn = document.getElementById('cpCouponEmail');
+            // 같은 도메인 세션이 있으면 자동 채움 — 없으면 수동 입력 허용
             try {
                 if (sb && sb.auth) {
                     var r = await sb.auth.getSession();
                     var sess = r && r.data && r.data.session;
-                    if (sess && sess.user && sess.user.email) {
-                        // 로그인됨 — 이메일 자동 채움 + readonly 유지
-                        if (emailIn) {
-                            emailIn.value = sess.user.email;
-                            emailIn.readOnly = true;
-                            emailIn.style.background = '#f9fafb';
-                        }
-                    } else {
-                        // 미로그인 — 이메일 수동 입력 허용
-                        if (emailIn) {
-                            emailIn.value = '';
-                            emailIn.readOnly = false;
-                            emailIn.style.background = '#fff';
-                            emailIn.placeholder = 'you@example.com';
-                        }
+                    if (sess && sess.user && sess.user.email && emailIn) {
+                        emailIn.value = sess.user.email;
+                        emailIn.readOnly = false;  // 다른 ID 사용도 허용
+                        emailIn.style.background = '#fff';
+                    } else if (emailIn) {
+                        emailIn.value = emailIn.value || '';
+                        emailIn.readOnly = false;
+                        emailIn.style.background = '#fff';
+                        emailIn.placeholder = 'you@example.com';
                     }
                 }
             } catch(e) {
-                // 세션 조회 실패 — 수동 입력 허용
-                if (emailIn) {
-                    emailIn.readOnly = false;
-                    emailIn.style.background = '#fff';
-                }
+                if (emailIn) { emailIn.readOnly = false; emailIn.style.background = '#fff'; }
             }
             var m = document.getElementById('cpCouponShareModal');
             if (m) m.style.display = 'flex';
@@ -771,36 +763,46 @@ window._cottonSearch = function(){
             var m = document.getElementById('cpCouponShareModal');
             if (m) m.style.display = 'none';
         };
-        // 2026-06-01: "1️⃣ 회원가입하고 쿠폰받기" 클릭 → 기존 회원가입 모달 오픈, 가입 성공 후 이메일 자동 채움
-        //   login.js 의 signup 흐름이 profiles.event_coupon=30000 자동 적립함 (별도 작업 불필요).
+        // 2026-06-02: "1️⃣ 회원가입하고 쿠폰받기" 클릭 — 패브릭 도메인에서는 openAuthModal 미로드.
+        //   메인 사이트 (cafe2626.com) 회원가입 페이지로 이동. 가입 후 30K 쿠폰 자동 적립됨 (login.js).
         window._cpCouponOpenSignup = function(){
-            if (typeof window.openAuthModal !== 'function') {
-                alert('회원가입 모달을 불러올 수 없습니다. 페이지를 새로고침해 주세요.');
+            // openAuthModal 이 같은 도메인에 있으면 그걸 사용 (드물지만 보존)
+            if (typeof window.openAuthModal === 'function') {
+                var couponModal = document.getElementById('cpCouponShareModal');
+                if (couponModal) couponModal.style.display = 'none';
+                window.openAuthModal('signup', function(){
+                    setTimeout(async function(){
+                        try {
+                            var sb = window.sb;
+                            if (sb && sb.auth) {
+                                var r = await sb.auth.getSession();
+                                var sess = r && r.data && r.data.session;
+                                var emailIn = document.getElementById('cpCouponEmail');
+                                if (sess && sess.user && sess.user.email && emailIn) {
+                                    emailIn.value = sess.user.email;
+                                }
+                            }
+                            if (couponModal) couponModal.style.display = 'flex';
+                            alert('🎉 가입 완료! 30,000원 이벤트 쿠폰이 지급되었습니다.');
+                        } catch(e) {}
+                    }, 400);
+                });
                 return;
             }
-            // 쿠폰 모달은 임시로 숨김 (회원가입 후 다시 표시)
-            var couponModal = document.getElementById('cpCouponShareModal');
-            if (couponModal) couponModal.style.display = 'none';
-            window.openAuthModal('signup', function(){
-                // 가입 성공 콜백 — 새 세션에서 이메일 가져와 쿠폰 모달 이메일 필드에 채우고 다시 표시
-                setTimeout(async function(){
-                    try {
-                        var sb = window.sb;
-                        if (sb && sb.auth) {
-                            var r = await sb.auth.getSession();
-                            var sess = r && r.data && r.data.session;
-                            var emailIn = document.getElementById('cpCouponEmail');
-                            if (sess && sess.user && sess.user.email && emailIn) {
-                                emailIn.value = sess.user.email;
-                                emailIn.readOnly = true;
-                                emailIn.style.background = '#f9fafb';
-                            }
-                        }
-                        if (couponModal) couponModal.style.display = 'flex';
-                        alert('🎉 가입 완료! 30,000원 이벤트 쿠폰이 마이페이지에 지급되었습니다.\n\nSNS 공유 인증으로 100,000원 추가 쿠폰도 받아보세요.');
-                    } catch(e) {}
-                }, 400);
-            });
+            // Fallback — 메인 사이트로 이동 (cafe0101/2626/3355 자동 선택)
+            var host = location.hostname || '';
+            var c = window.__CP_COUPON || {};
+            var msg = (window.__CP_LANG === 'ja')
+                ? '会員登録はメインサイトで可能です。移動しますか?\n登録後、30,000円相当のクーポンが自動付与されます。'
+                : (window.__CP_LANG === 'en')
+                    ? 'Signup is on the main site. Continue?\nA $30 coupon will be granted after signup.'
+                    : '회원가입은 메인 사이트에서 가능합니다. 이동할까요?\n가입 후 30,000원 쿠폰이 자동 지급됩니다.';
+            if (!confirm(msg)) return;
+            // 도메인 매핑 — 사용자의 현재 lang 기준으로 적절한 사이트
+            var target = 'https://www.cafe2626.com/?login=1';
+            if (window.__CP_LANG === 'ja') target = 'https://www.cafe0101.com/?login=1';
+            else if (window.__CP_LANG === 'en') target = 'https://www.cafe3355.com/?login=1';
+            location.href = target;
         };
         async function _cpCouponUploadScreenshot(file){
             var sb = window.sb;
@@ -826,12 +828,17 @@ window._cottonSearch = function(){
                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
                 }
                 if (!sb) throw new Error('DB');
-                var sess = await sb.auth.getSession();
-                var user = sess && sess.data && sess.data.session && sess.data.session.user;
-                if (!user) { alert(c.reqLogin); return; }
+                // 2026-06-02: cotton-print.com 은 cafe2626 과 도메인 분리 — 로그인 강제 안 함.
+                //   user_id 는 같은 도메인 세션이 있으면 자동 첨부, 없으면 null. 관리자가 email 로 매칭.
+                var userId = null;
+                try {
+                    var sess = await sb.auth.getSession();
+                    var user = sess && sess.data && sess.data.session && sess.data.session.user;
+                    if (user) userId = user.id;
+                } catch(e) {}
                 var screenshotUrl = await _cpCouponUploadScreenshot(file);
                 var info = {
-                    user_id: user.id, email: email,
+                    user_id: userId, email: email,
                     screenshot_url: screenshotUrl,
                     lang: window.__CP_LANG||'ko', from:'cotton_print',
                     submitted_at: new Date().toISOString(),
