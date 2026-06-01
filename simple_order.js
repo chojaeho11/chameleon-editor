@@ -4509,6 +4509,8 @@ html, body { background: #ffffff !important; }
             wallWidth: state.wallWidth || null,
             wallHeight: state.wallHeight || null,
             wallSide: state.wallSide || 'single',
+            wallShape: state.wallShape || 'straight',
+            wallShapeFee: state.wallShapeFee || 0,
             // 박스
             boxW: state.boxW || null,
             boxH: state.boxH || null,
@@ -4615,6 +4617,114 @@ html, body { background: #ffffff !important; }
     // 호환성 — 구 함수명 alias
     window._soAdAddLine = window._soAdQueueCurrent;
 
+    // 2026-06-01: 가벽 형태 작은 SVG 아이콘 (큐 칩에 사용 — 다국어 친화 그림 표시)
+    function _soShapeIconSvg(shape, size) {
+        size = size || 18;
+        if (shape === 'L') {
+            return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" style="vertical-align:middle; flex-shrink:0;" aria-label="L"><rect x="2" y="11" width="13" height="3" fill="currentColor" rx="0.5"/><rect x="13" y="11" width="3" height="11" fill="currentColor" rx="0.5"/></svg>';
+        }
+        if (shape === 'U') {
+            return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" style="vertical-align:middle; flex-shrink:0;" aria-label="U"><rect x="2" y="6" width="3" height="16" fill="currentColor" rx="0.5"/><rect x="2" y="6" width="20" height="3" fill="currentColor" rx="0.5"/><rect x="19" y="6" width="3" height="16" fill="currentColor" rx="0.5"/></svg>';
+        }
+        // straight
+        return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" style="vertical-align:middle; flex-shrink:0;" aria-label="straight"><rect x="2" y="11" width="20" height="3" fill="currentColor" rx="0.5"/></svg>';
+    }
+
+    // 2026-06-01: 큐 라인 클릭 → 해당 라인의 모든 값을 활성 입력 영역에 로드. 큐에선 라인 제거 (사용자 수정 후 다시 +로 푸시).
+    window._soAdEditQueued = function(lineId) {
+        if (!state._adLines || !state._adLines.length) return;
+        var line = state._adLines.find(function(l){ return l.id === lineId; });
+        if (!line) return;
+        // 가벽
+        if (line.isWall && state.isWall) {
+            state.wallWidth = line.wallWidth || 3;
+            state.wallHeight = line.wallHeight || 2.4;
+            state.wallSide = line.wallSide || 'single';
+            state.wallShape = line.wallShape || 'straight';
+            state.wallShapeFee = line.wallShapeFee || 0;
+            var _ww = document.getElementById('soWallWidth'); if (_ww) _ww.value = String(state.wallWidth);
+            var _wh = document.getElementById('soWallHeight'); if (_wh) _wh.value = String(state.wallHeight);
+            try { if (typeof window._soPickSide === 'function') window._soPickSide(state.wallSide); } catch(e){}
+            try { if (typeof window._soPickWallShape === 'function') window._soPickWallShape(state.wallShape); } catch(e){}
+        }
+        // 박스
+        if (line.isBox && state.isBox) {
+            state.boxW = line.boxW; state.boxH = line.boxH; state.boxD = line.boxD;
+            state.boxUnitPrice = line.boxUnitPrice || 0;
+            var _bw = document.getElementById('soBoxW'); if (_bw) _bw.value = state.boxW;
+            var _bh = document.getElementById('soBoxH'); if (_bh) _bh.value = state.boxH;
+            var _bd = document.getElementById('soBoxD'); if (_bd) _bd.value = state.boxD;
+            if (typeof window._soOnBoxDimsChange === 'function') window._soOnBoxDimsChange();
+        }
+        // 자유인쇄커팅
+        if (line.isCutPrint && state.isCutPrint) {
+            state.cutSize = line.cutSize || 'full';
+            if (line.wallSide) state.wallSide = line.wallSide;
+            try { if (typeof window._soPickCutSize === 'function') window._soPickCutSize(state.cutSize); } catch(e){}
+        }
+        // 광고인쇄 / 사용자 정의 사이즈
+        if ((line.isAdPrint || (!line.isWall && !line.isBox && !line.isCutPrint)) && state.isCustomSize) {
+            state.customW = (line.wMm || 0) / 10;
+            state.customH = (line.hMm || 0) / 10;
+            state.customUnitPrice = line.unitPrice || 0;
+            state.customAreaM2 = line.areaM2 || 0;
+            var _cw = document.getElementById('soCustomW');
+            var _ch = document.getElementById('soCustomH');
+            if (_cw) _cw.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
+            if (_ch) _ch.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
+            if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+        }
+        // 수량
+        state.qty = line.qty || 1;
+        var _qe = document.getElementById('soQty'); if (_qe) _qe.value = state.qty;
+        // 추가옵션 복원
+        state.selectedAddons = Object.assign({}, line.selectedAddons || {});
+        state.addonQuantities = Object.assign({}, line.addonQuantities || {});
+        document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
+        Object.values(state.selectedAddons).forEach(function(code){
+            if (!code) return;
+            var cb = document.querySelector('#soAddonList input[type=checkbox][data-addon-code="' + String(code).replace(/"/g,'\\"') + '"]');
+            if (cb) cb.checked = true;
+            var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g,'\\"') + '"]');
+            if (qi && state.addonQuantities[code]) qi.value = state.addonQuantities[code];
+        });
+        // 받침대
+        state.baseStands = Object.assign({}, line.baseStands || {});
+        document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){
+            var k = cb.getAttribute('data-bs-key');
+            cb.checked = !!state.baseStands[k];
+        });
+        document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function(qi){
+            var k = qi.getAttribute('data-bs-qty-key');
+            if (state.baseStands[k]) qi.value = state.baseStands[k];
+        });
+        // 파일 — 라인에 보관된 file/thumb 복원
+        state.file = line.file || null;
+        state.thumbDataUrl = line.thumbDataUrl || null;
+        state.fileWidthMm = line.fileWidthMm || null;
+        state.fileHeightMm = line.fileHeightMm || null;
+        state.fileWidthPx = line.fileWidthPx || null;
+        state.fileHeightPx = line.fileHeightPx || null;
+        state.fileKind = line.fileKind || null;
+        if (state.file && typeof renderUploadDone === 'function') {
+            try { renderUploadDone(); } catch(e){}
+        }
+        var _inlineInfo = document.getElementById('soAdInlineFileInfo');
+        if (_inlineInfo && line.fileName) {
+            var _mb = state.file ? (state.file.size / 1024 / 1024).toFixed(1) : '?';
+            _inlineInfo.style.display = 'block';
+            _inlineInfo.textContent = line.fileName + ' (' + _mb + 'MB) ✓';
+        }
+        // 큐에서 제거 → 사용자가 수정 후 "+다른 사이즈" 누르면 새 라인으로 다시 들어감 (혹은 장바구니로 즉시 push)
+        state._adLines = state._adLines.filter(function(l){ return l.id !== lineId; });
+        window._soAdRenderQueue();
+        window._soAdRenderLinePreviews();
+        if (typeof recalc === 'function') recalc();
+        // 사이즈 카드로 스크롤
+        var target = document.getElementById('soWallSizeSection') || document.getElementById('soCustomSizeSection');
+        if (target && target.offsetParent !== null) try { target.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
+    };
+
     // 2026-06-01: 큐 라인 → 사람이 읽기 좋은 요약 문자열. 모드별 사이즈 + 가벽 형태 + 옵션 이름+수량.
     function _soFmtQueueLine(line) {
         var sizeLbl;
@@ -4667,18 +4777,25 @@ html, body { background: #ffffff !important; }
         (state._adLines || []).forEach(function(line, i) {
             var div = document.createElement('div');
             div.dataset.lineId = line.id;
-            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; display:flex; align-items:center; gap:10px;';
+            // 2026-06-01: 클릭 가능 — 클릭시 _soAdEditQueued 로 활성 입력 영역으로 로드
+            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; display:flex; align-items:center; gap:10px; cursor:pointer; transition:background 0.15s, border-color 0.15s;';
+            div.title = tr('클릭하면 이 라인을 다시 편집할 수 있습니다.', 'クリックでこのラインを再編集できます。', 'Click to re-edit this line.');
+            div.onmouseenter = function(){ div.style.background = '#eff6ff'; div.style.borderColor = '#3b82f6'; };
+            div.onmouseleave = function(){ div.style.background = '#fff'; div.style.borderColor = '#c7d2fe'; };
+            div.onclick = function(){ window._soAdEditQueued(line.id); };
             var fileChip = line.fileName
                 ? '<span style="display:inline-flex; align-items:center; gap:3px; padding:2px 6px; background:#dbeafe; color:#1e40af; border-radius:4px; font-size:10px; font-weight:700;"><i class="fa-solid fa-paperclip" style="font-size:9px;"></i>' + (line.fileName.length > 16 ? line.fileName.substring(0, 14) + '..' : line.fileName) + '</span>'
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
+            // 가벽이면 형태 SVG 아이콘 prefix
+            var shapeIcon = (line.isWall) ? '<span style="color:#4338ca; margin-right:6px;">' + _soShapeIconSvg(line.wallShape || 'straight', 20) + '</span>' : '';
             var lineSummary = _soFmtQueueLine(line);
             div.innerHTML =
                 '<span style="font-size:11px; font-weight:900; color:#1e40af; min-width:22px;">#' + (i + 1) + '</span>' +
                 '<div style="flex:1; min-width:0;">' +
-                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35;">' + escapeHtml(lineSummary) + '</div>' +
-                    '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
+                    '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35; display:flex; align-items:center; flex-wrap:wrap; gap:2px;">' + shapeIcon + '<span>' + escapeHtml(lineSummary) + '</span></div>' +
+                    '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:8px; align-items:center;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b><span style="font-size:10px; color:#3b82f6; margin-left:auto;"><i class="fa-solid fa-pen-to-square"></i> ' + tr('편집','編集','Edit') + '</span></div>' +
                 '</div>' +
-                '<button type="button" onclick="window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
+                '<button type="button" onclick="event.stopPropagation(); window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>';
             container.appendChild(div);
         });
     };
