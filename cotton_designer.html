@@ -1137,9 +1137,46 @@ a { text-decoration: none; color: inherit; }
     <!-- 우측: 옵션 사이드바 -->
     <aside class="sidebar">
 
-        <!-- 2026-06-01: 파일 업로드 최상단 → 출력 사이즈 → 롤폭 (패턴) → 원단 선택 순. -->
+        <!-- 2026-06-01: 새 순서 — 패브릭포스터/패턴 토글(최상단) → 파일 업로드 → 출력 사이즈 → 롤폭 → 원단 선택. -->
 
-        <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 최상단. 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기. -->
+        <!-- 2026-05-31: 패브릭포스터 / 패턴 원단 인쇄 토글 — 최상단 (사용자 가장 먼저 선택해야 할 결정) -->
+        <div class="side-card" id="layoutToggleCard">
+            <div id="posterBtn" class="poster-btn active" onclick="window._cdSelectLayout('centered')">
+                <img src="/fabric/poster.jpg" alt="">
+                <div class="poster-btn-text">
+                    <div class="poster-btn-title" data-cdi18n="layout_poster">패브릭포스터</div>
+                    <div class="poster-btn-desc" data-cdi18n="layout_poster_desc">화면 전체를 인쇄하는 낱장 인쇄로, 장식용 굿즈나 선물용으로 많이 사용합니다.</div>
+                </div>
+            </div>
+            <div id="patternToggle" class="pattern-toggle-btn" onclick="window._cdEnterPatternMode()">
+                <img src="/fabric/patten.jpg" alt="">
+                <div class="pattern-toggle-text">
+                    <div class="pattern-toggle-title" data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</div>
+                    <div class="pattern-toggle-desc" data-cdi18n="layout_pattern_desc">의류 업체와 도매 원단 매장에서 판매용으로 주문하는 롤 패턴 인쇄입니다.</div>
+                </div>
+            </div>
+            <!-- 4개 패턴 (패턴 원단 인쇄 클릭 시 표시) -->
+            <div class="layouts" id="patternLayouts" style="display:none; margin-top:4px;">
+                <div class="layout-btn" data-layout="basic" onclick="window._cdSelectLayout('basic')">
+                    <div class="layout-preview">RR<br>RR</div>
+                    <div class="layout-name">Basic</div>
+                </div>
+                <div class="layout-btn" data-layout="halfdrop" onclick="window._cdSelectLayout('halfdrop')">
+                    <div class="layout-preview" style="text-align:left; padding-left:6px; line-height:0.85;">R&nbsp;R<br>&nbsp;R<br>R&nbsp;R</div>
+                    <div class="layout-name">Half-Drop</div>
+                </div>
+                <div class="layout-btn" data-layout="halfbrick" onclick="window._cdSelectLayout('halfbrick')">
+                    <div class="layout-preview" style="line-height:0.85;">RR<br>&nbsp;R<br>RR</div>
+                    <div class="layout-name">Half-Brick</div>
+                </div>
+                <div class="layout-btn" data-layout="mirror" onclick="window._cdSelectLayout('mirror')">
+                    <div class="layout-preview">R<span style="display:inline-block;transform:scaleX(-1)">R</span><br><span style="display:inline-block;transform:scaleY(-1)">R</span><span style="display:inline-block;transform:scale(-1,-1)">R</span></div>
+                    <div class="layout-name">Mirror</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2026-06-01: 사이드바 인라인 파일 업로드 — 클릭시 기존 #btnUpload 트리거 → 좌측 캔버스에 미리보기. -->
         <div class="side-card" id="sideUploadCard">
             <div class="side-card-title">
                 <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
@@ -1280,42 +1317,7 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 2026-05-31: 두 버튼 모두 녹색 톤 + 썸네일 + 설명 텍스트 -->
-        <div class="side-card">
-            <div id="posterBtn" class="poster-btn active" onclick="window._cdSelectLayout('centered')">
-                <img src="/fabric/poster.jpg" alt="">
-                <div class="poster-btn-text">
-                    <div class="poster-btn-title" data-cdi18n="layout_poster">패브릭포스터</div>
-                    <div class="poster-btn-desc" data-cdi18n="layout_poster_desc">화면 전체를 인쇄하는 낱장 인쇄로, 장식용 굿즈나 선물용으로 많이 사용합니다.</div>
-                </div>
-            </div>
-            <div id="patternToggle" class="pattern-toggle-btn" onclick="window._cdEnterPatternMode()">
-                <img src="/fabric/patten.jpg" alt="">
-                <div class="pattern-toggle-text">
-                    <div class="pattern-toggle-title" data-cdi18n="layout_pattern_toggle">패턴 원단 인쇄</div>
-                    <div class="pattern-toggle-desc" data-cdi18n="layout_pattern_desc">의류 업체와 도매 원단 매장에서 판매용으로 주문하는 롤 패턴 인쇄입니다.</div>
-                </div>
-            </div>
-            <!-- 4개 패턴 (패턴 원단 인쇄 클릭 시 표시) -->
-            <div class="layouts" id="patternLayouts" style="display:none; margin-top:4px;">
-                <div class="layout-btn" data-layout="basic" onclick="window._cdSelectLayout('basic')">
-                    <div class="layout-preview">RR<br>RR</div>
-                    <div class="layout-name">Basic</div>
-                </div>
-                <div class="layout-btn" data-layout="halfdrop" onclick="window._cdSelectLayout('halfdrop')">
-                    <div class="layout-preview" style="text-align:left; padding-left:6px; line-height:0.85;">R&nbsp;R<br>&nbsp;R<br>R&nbsp;R</div>
-                    <div class="layout-name">Half-Drop</div>
-                </div>
-                <div class="layout-btn" data-layout="halfbrick" onclick="window._cdSelectLayout('halfbrick')">
-                    <div class="layout-preview" style="line-height:0.85;">RR<br>&nbsp;R<br>RR</div>
-                    <div class="layout-name">Half-Brick</div>
-                </div>
-                <div class="layout-btn" data-layout="mirror" onclick="window._cdSelectLayout('mirror')">
-                    <div class="layout-preview">R<span style="display:inline-block;transform:scaleX(-1)">R</span><br><span style="display:inline-block;transform:scaleY(-1)">R</span><span style="display:inline-block;transform:scale(-1,-1)">R</span></div>
-                    <div class="layout-name">Mirror</div>
-                </div>
-            </div>
-        </div>
+        <!-- 2026-06-01: 패브릭포스터/패턴 토글 카드는 사이드바 최상단으로 이동했습니다 (#layoutToggleCard). -->
 
         <!-- 배경색 (2026-05-23: 패턴 원단 인쇄 선택 시에만 표시) -->
         <div class="side-card" id="bgColorCard" style="display:none;">
