@@ -2687,8 +2687,11 @@ html, body { background: #ffffff !important; }
         } else {
             state.wallHeightExtra = 0;
             qty = state.qty;
-            // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
-            if (state.isRawBoardDouble) {
+            // 2026-06-01: 허니콤배너 — 단면 55K / 양면 80K flat (사이즈 무관, 사용자 요청)
+            if (state.isBanner) {
+                unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 55000);
+            } else if (state.isRawBoardDouble) {
+                // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
                 unit = unit * 2;
             }
             subtotal = unit * qty;
@@ -2782,7 +2785,7 @@ html, body { background: #ffffff !important; }
             addonTotal = 0;
         }
         const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBanner;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -6237,6 +6240,18 @@ html, body { background: #ffffff !important; }
         state.isPhotozone = _soIsPhotozoneProduct(p);
         // 2026-06-01: 허니콤 전체 감지 — 큐 멀티-라인 시스템 노출 조건에 사용
         state.isHoneycomb = _soIsHoneycombProduct(p);
+        // 2026-06-01: 허니콤배너 (hb_bn_*) — 단순 흐름: 단면 55K / 양면 80K, 사이즈/할인/큐 UI 모두 비활성.
+        state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code));
+        if (state.isBanner) {
+            // 가격 override (DB 값 무시) — 모든 배너 동일가
+            p.price = 55000;
+            state._bannerSinglePrice = 55000;
+            state._bannerDoublePrice = 80000;
+            state.wallSide = 'single';
+            // isHoneycomb 인 채로 두지만 wall/queue 흐름 차단용 플래그
+            state.isWall = false;
+            state.isPhotozone = false;
+        }
         // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_*)
         state.isCutPrint = _soIsCutPrintProduct(p);
         state.cutSize = 'full';
@@ -6927,7 +6942,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 허니콤보드 — 같은 멀티-라인 큐 UI 활성화 (가벽/박스/등신대/자유인쇄커팅 등 모든 허니콤 제품).
             //   ad-print 가 아니어도 honeycomb 이면 "+다른 사이즈도 같이 주문" 노출.
             //   ad-print 처럼 shipping/order 강제 변경은 안 함 — 가벽은 자체 설치/배송 옵션 유지.
-            if (state.isHoneycomb && !state.isAdPrint) {
+            //   2026-06-01: 허니콤배너 (isBanner) 는 큐 UI 사용 안 함 — 단순 단/양면 + 파일 + 수량 + 담기.
+            if (state.isHoneycomb && !state.isAdPrint && !state.isBanner) {
                 if (_multiSec) {
                     _multiSec.style.display = '';
                     _multiSec.style.order = '';
@@ -6988,6 +7004,34 @@ html, body { background: #ffffff !important; }
                 var _lpN = document.getElementById('soAdLinePreviews');
                 if (_lpwN) _lpwN.style.display = 'none';
                 if (_lpN) _lpN.innerHTML = '';
+            }
+            // 2026-06-01: 허니콤배너 (hb_bn_*) 단순화 — 사이즈 입력·큐·할인·시공 모두 숨김.
+            //   단면(55,000원) / 양면(80,000원) 선택 + 파일 업로드 + 수량 → 담기 끝.
+            if (state.isBanner) {
+                if (_multiSec) _multiSec.style.display = 'none';
+                if (_inlineUploadCard) _inlineUploadCard.style.display = 'none';
+                state._adLines = []; state._adEditingLineId = null;
+                // 사이즈 섹션 숨김 (광고인쇄 식 mm 입력)
+                if (_custSec) _custSec.style.display = 'none';
+                // 가벽 사이즈 / 형태 섹션 숨김
+                var _bWallSec = document.getElementById('soWallSizeSection');
+                var _bWallShape = document.getElementById('soWallShapeSection');
+                if (_bWallSec) _bWallSec.style.display = 'none';
+                if (_bWallShape) _bWallShape.style.display = 'none';
+                // 좌측 일반 업로드 활성화 (큐 인라인 업로드 대신)
+                if (_leftUpload) _leftUpload.style.display = '';
+                if (_leftUploadLabel) _leftUploadLabel.style.display = '';
+                // 단면/양면 선택 row 강제 노출 (재사용)
+                var _bSideRow = document.getElementById('soWallSideRow');
+                if (_bSideRow) _bSideRow.style.display = '';
+                state.wallSide = state.wallSide || 'single';
+                document.querySelectorAll('.so-side-btn').forEach(function(b){
+                    var on = b.dataset.side === state.wallSide;
+                    b.classList.toggle('active', on);
+                });
+                // 금액 티어 테이블 숨김 (배너는 할인 비적용)
+                if (_tierTable) _tierTable.style.display = 'none';
+                if (_presetTier) _presetTier.style.display = 'none';
             }
         })();
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
@@ -8529,6 +8573,14 @@ html, body { background: #ffffff !important; }
         // 라디오 전부 해제
         document.querySelectorAll('input[name="soDiscChoice"]').forEach(function(r){ r.checked = false; });
         if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
+        // 2026-06-01: 배너만 들어있는 카트면 할인 비적용 → wallet box 숨김
+        try {
+            var _cartForBan = _soReadAllCart();
+            var _allBanner = _cartForBan.length > 0 && _cartForBan.every(function(it){
+                return it && it.product && it.product.code && /^hb_bn/i.test(it.product.code);
+            });
+            if (_allBanner) return;  // wallet box 숨김 유지
+        } catch(e) {}
         var sb = getSb(); if (!sb) return;
         var uid = null;
         try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
