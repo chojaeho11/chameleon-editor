@@ -7521,7 +7521,9 @@ html, body { background: #ffffff !important; }
             // 2026-05-13: 가벽 사이즈 (가로/세로 m)
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
             // 2026-05-13: 단면/양면 (가벽) — 2026-05-22: 재단인쇄(자유인쇄커팅)도 포함 (양면 ×2)
-            wallSide: (state.isWall || state.isCutPrint) ? (state.wallSide || 'single') : null,
+            // 2026-06-02: 허니콤 배너 (isBanner) — 단면 55K / 양면 80K (×2 가 아닌 별도가) 양면 정보 보존 필요
+            wallSide: (state.isWall || state.isCutPrint || state.isBanner) ? (state.wallSide || 'single') : null,
+            _isBanner: !!state.isBanner,
             // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
             wallShape: state.isWall ? (state.wallShape || 'straight') : null,
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
@@ -7602,7 +7604,7 @@ html, body { background: #ffffff !important; }
                     return out;
                   })()
                 : null,
-            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: state.isRawBoard ? 0 : calc.tierPct, discount: state.isRawBoard ? 0 : calc.discount, final: calc.final },
+            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb) ? 0 : calc.discount, final: calc.final },
         };
     }
 
@@ -7954,6 +7956,8 @@ html, body { background: #ffffff !important; }
         }
         // 2026-05-25: 원판은 대량할인 없음 — 할인율 라벨/계산 0 처리
         if (item._isRawBoard || _soIsRawBoardProduct(item.product)) tierPct = 0;
+        // 2026-06-02: 허니콤보드 전 제품 (배너 포함) — 수량 할인 없음
+        if (item._isBanner || _soIsHoneycombProduct(item.product)) tierPct = 0;
         // 2026-05-30: 베스트굿즈 — 100개+ 시 50% 배지 (티셔츠는 인쇄비 할인이라 상품 tier 0)
         if (item._isBestGoods && item._presetType !== 'tshirt') {
             tierPct = (qty >= 100) ? 50 : 0;
@@ -8171,9 +8175,10 @@ html, body { background: #ffffff !important; }
         if (cart[idx]._simple) {
             const unit = cart[idx]._simple.unit;
             const qty = cart[idx].qty;
-            // 2026-05-25: 원판은 대량할인 없음
+            // 2026-05-25: 원판 + 2026-06-02: 허니콤보드(배너 포함) 는 수량할인 없음
             const _rbItem = cart[idx]._isRawBoard || _soIsRawBoardProduct(cart[idx].product);
-            const tier = _rbItem ? { pct: 0 } : getDiscountTier(qty);
+            const _hcItem = cart[idx]._isBanner || _soIsHoneycombProduct(cart[idx].product);
+            const tier = (_rbItem || _hcItem) ? { pct: 0 } : getDiscountTier(qty);
             cart[idx]._simple.subtotal = unit * qty;
             cart[idx]._simple.discountPct = tier.pct;
             cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
@@ -8191,9 +8196,10 @@ html, body { background: #ffffff !important; }
         if (cart[idx]._simple) {
             const unit = cart[idx]._simple.unit;
             const qty = cart[idx].qty;
-            // 2026-05-25: 원판은 대량할인 없음
+            // 2026-05-25: 원판 + 2026-06-02: 허니콤보드(배너 포함) 는 수량할인 없음
             const _rbItem = cart[idx]._isRawBoard || _soIsRawBoardProduct(cart[idx].product);
-            const tier = _rbItem ? { pct: 0 } : getDiscountTier(qty);
+            const _hcItem = cart[idx]._isBanner || _soIsHoneycombProduct(cart[idx].product);
+            const tier = (_rbItem || _hcItem) ? { pct: 0 } : getDiscountTier(qty);
             cart[idx]._simple.subtotal = unit * qty;
             cart[idx]._simple.discountPct = tier.pct;
             cart[idx]._simple.discount = Math.round(unit * qty * tier.pct / 100);
@@ -8443,6 +8449,11 @@ html, body { background: #ffffff !important; }
         if (_soIsFabricItem(it)) return it.price || 0;
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
+        // 2026-06-02: 허니콤 배너 (hb_bn_*) — 단면 55K / 양면 80K (별도가, ×2 아님)
+        var _isBannerItm = !!it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code));
+        if (_isBannerItm) {
+            unit = (it.wallSide === 'double') ? 80000 : 55000;
+        }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
         if (it.cutPrint) {
             unit = (it.cutPrint.size === 'half') ? 100000 : 150000;
@@ -8476,9 +8487,9 @@ html, body { background: #ffffff !important; }
         if (_isBest && it._presetType !== 'tshirt' && qty >= 100) {
             subtotal = Math.round(subtotal * 0.5);
         }
-        // 가벽 양면 → 가격 2배
+        // 가벽 양면 → 가격 2배 (배너는 단가가 이미 다르므로 ×2 skip)
         var isDouble = (it.wallSide === 'double');
-        if (isDouble) subtotal *= 2;
+        if (isDouble && !_isBannerItm) subtotal *= 2;
         var base = subtotal;
         // 가벽 세로 3m → 가로 m당 +5만 (양면이면 2배)
         if (it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
