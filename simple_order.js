@@ -1843,18 +1843,18 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-06-03: 명함/리플렛 (pp_bc_*) 전용 — 등급/면/용지/박/후가공 -->
         <div class="so-section" id="soBizCardSection" style="display:none;">
-          <!-- 1) 등급: 일반 / 프리미엄 -->
+          <!-- 1) 등급: 일반 / 프리미엄 — 핑크/로즈 톤 (인쇄면 인디고와 구분) -->
           <div class="so-section-title">🏷️ ${tr('명함 등급', 'グレード', 'Grade')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면 3,000 / 양면 5,000', '片面 3,000 / 両面 5,000', 'S 3K / D 5K')}</span></button>
-            <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('단면 8,000 / 양면 10,000', '片面 8,000 / 両面 10,000', 'S 8K / D 10K')}</span></button>
+            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #be185d; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span id="soBizTierPriceG" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(3000)} / ${tr('양면', '両面', 'D')} ${fmtPrice(5000)}</span></button>
+            <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(8000)} / ${tr('양면', '両面', 'D')} ${fmtPrice(10000)}</span></button>
           </div>
 
-          <!-- 2) 인쇄면 -->
+          <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
           <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">3,000원 / 200매</span></button>
-            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">5,000원 / 200매</span></button>
+            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(3000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
+            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(5000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
           </div>
 
           <!-- 3) 용지 (프리미엄만) -->
@@ -1865,7 +1865,7 @@ html, body { background: #ffffff !important; }
           </div>
 
           <!-- 4) 박 (선택) -->
-          <div class="so-section-title" style="margin-top:18px;">✨ ${tr('박 (선택)', '箔押し (任意)', 'Foil (optional)')} <span style="font-weight:600; color:#64748b; font-size:11px; margin-left:6px;">+10,000원</span></div>
+          <div class="so-section-title" style="margin-top:18px;">✨ ${tr('박 (선택)', '箔押し (任意)', 'Foil (optional)')} <span style="font-weight:600; color:#64748b; font-size:11px; margin-left:6px;">+${fmtPrice(10000)}</span></div>
           <div id="soBizFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
 
           <!-- 5) 후가공 (복수) -->
@@ -5675,14 +5675,17 @@ html, body { background: #ffffff !important; }
     function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
         // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
         // colorTopBg: 박은 박색상, 그 외는 검정. titleColor: 박 색감에 따른 글씨 색
+        // 2026-06-03: 설명 2줄 고정 (line-clamp + min-height) — 카드 높이 통일
         var border = sel ? '#4338ca' : '#d6d3d1';
         var shadow = sel ? '0 4px 12px -4px rgba(67,56,202,0.45)' : 'none';
         var topBg  = colorTopBg || '#0a0a0a';
         var topTxt = titleColor || '#ffffff';
         var pTag = priceTag ? '<span style="font-size:11px; font-weight:800; color:' + (titleColor || '#fbbf24') + '; opacity:0.95;">' + priceTag + '</span>' : '';
-        return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s; min-height:64px;">'
+        // 설명: 2줄 강제 (overflow ellipsis), min-height 로 한 줄짜리도 2줄 높이 차지
+        var descStyle = 'background:#ffffff; color:#0a0a0a; padding:8px 10px; font-size:11px; line-height:1.45; min-height:38px; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;';
+        return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s;">'
             + '<div style="background:' + topBg + '; color:' + topTxt + '; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px;"><span style="font-size:13px; font-weight:900;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
-            + '<div style="background:#ffffff; color:#0a0a0a; padding:8px 10px; font-size:11px; line-height:1.45; flex:1;">' + descHtml + '</div>'
+            + '<div style="' + descStyle + '">' + descHtml + '</div>'
             + '</div>';
     }
     // 박 색상 매핑 (상단 컬러 배경) + 그에 맞는 글씨색
@@ -5697,34 +5700,35 @@ html, body { background: #ffffff !important; }
     };
     function _soBizCardRender() {
         if (!state.isBizCard) return;
-        // 등급 버튼
+        // 등급 버튼 — 활성 시 핑크/로즈 그라데이션
         var tg = document.getElementById('soBizTierGeneral');
         var tp = document.getElementById('soBizTierPremium');
         if (tg && tp) {
             var prem = (state.bizTier === 'premium');
-            tg.style.background = prem ? '#fff' : '#4338ca';
+            tg.style.background = prem ? '#fff' : 'linear-gradient(135deg,#ec4899,#be185d)';
             tg.style.color      = prem ? '#451a03' : '#fff';
-            tg.style.borderColor= prem ? '#e7e5e4' : '#4338ca';
-            tp.style.background = prem ? '#4338ca' : '#fff';
+            tg.style.borderColor= prem ? '#e7e5e4' : '#be185d';
+            tp.style.background = prem ? 'linear-gradient(135deg,#ec4899,#be185d)' : '#fff';
             tp.style.color      = prem ? '#fff' : '#451a03';
-            tp.style.borderColor= prem ? '#4338ca' : '#e7e5e4';
+            tp.style.borderColor= prem ? '#be185d' : '#e7e5e4';
         }
-        // 인쇄면 버튼 + 가격 라벨 (등급에 따라 변경)
+        // 인쇄면 버튼 — 활성 시 인디고 그라데이션 (등급 핑크와 구분)
         var bs = document.getElementById('soBizSideSingle');
         var bd = document.getElementById('soBizSideDouble');
         var ps = document.getElementById('soBizSidePriceS');
         var pd = document.getElementById('soBizSidePriceD');
         if (bs && bd) {
             var dbl = (state.bizSide === 'double');
-            bs.style.background = dbl ? '#fff' : '#4338ca';
+            bs.style.background = dbl ? '#fff' : 'linear-gradient(135deg,#6366f1,#4338ca)';
             bs.style.color = dbl ? '#451a03' : '#fff';
             bs.style.borderColor = dbl ? '#e7e5e4' : '#4338ca';
-            bd.style.background = dbl ? '#4338ca' : '#fff';
+            bd.style.background = dbl ? 'linear-gradient(135deg,#6366f1,#4338ca)' : '#fff';
             bd.style.color = dbl ? '#fff' : '#451a03';
             bd.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
-        if (ps) ps.textContent = _bizPriceFor('single').toLocaleString() + '원 / 200매';
-        if (pd) pd.textContent = _bizPriceFor('double').toLocaleString() + '원 / 200매';
+        var _per200 = tr(' / 200매', ' / 200枚', ' / 200pcs');
+        if (ps) ps.textContent = fmtPrice(_bizPriceFor('single')) + _per200;
+        if (pd) pd.textContent = fmtPrice(_bizPriceFor('double')) + _per200;
         // 용지: 프리미엄일 때만 표시
         var pw = document.getElementById('soBizPaperWrap');
         if (pw) pw.style.display = (state.bizTier === 'premium') ? '' : 'none';
@@ -5748,7 +5752,7 @@ html, body { background: #ffffff !important; }
                 var sel = (state.bizFoil === o.key);
                 var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
                 return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel, fc.bg, fc.txt)
+                    + _bizCard2tone(o.name, o.desc, '+' + fmtPrice(o.price), sel, fc.bg, fc.txt)
                     + '</button>';
             }).join('');
         }
@@ -5758,7 +5762,7 @@ html, body { background: #ffffff !important; }
             gx.innerHTML = BIZ_FINISHES.map(function(o){
                 var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
                 return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel)
+                    + _bizCard2tone(o.name, o.desc, '+' + fmtPrice(o.price), sel)
                     + '</button>';
             }).join('');
         }
