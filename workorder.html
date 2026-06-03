@@ -582,9 +582,20 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 <div class="ef-list">${extraFiles}</div>
             </div>` : '';
 
-            // 사이즈: 자동 감지된 값 우선, 매니저가 수동 입력한 mgr_size 가 있으면 그걸로 override
-            const autoSizeText = (wMm && hMm) ? `${Math.round(wMm)} × ${Math.round(hMm)} mm` : '';
-            const sizeText = (it.mgr_size && it.mgr_size.trim()) ? it.mgr_size.trim() : (autoSizeText || '-');
+            // 사이즈: 자동 감지된 값 우선, 매니저가 수동 입력한 mgr_size_w/h 가 있으면 그걸로 override
+            const autoW = wMm ? Math.round(wMm) : '';
+            const autoH = hMm ? Math.round(hMm) : '';
+            const mgrW = (it.mgr_size_w != null && it.mgr_size_w !== '') ? it.mgr_size_w : '';
+            const mgrH = (it.mgr_size_h != null && it.mgr_size_h !== '') ? it.mgr_size_h : '';
+            // legacy mgr_size 문자열 파싱 (호환)
+            let _legacyW = '', _legacyH = '';
+            if (!mgrW && !mgrH && it.mgr_size) {
+                const _lm = String(it.mgr_size).match(/(\d+)\s*[×x*]\s*(\d+)/);
+                if (_lm) { _legacyW = _lm[1]; _legacyH = _lm[2]; }
+            }
+            const initW = mgrW || _legacyW || autoW || '';
+            const initH = mgrH || _legacyH || autoH || '';
+            const sizeText = (initW && initH) ? `${initW} × ${initH} mm` : '-';
             const _mgrMemoCurrent = (it.mgr_memo || '').trim();
 
             return `<div class="item">
@@ -599,27 +610,35 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         </div>
                         ${_woIsAdmin ? `<label class="wo-attach-btn" style="font-size:11px;font-weight:700;color:#7c3aed;border:1.5px solid #c4b5fd;border-radius:7px;padding:5px 10px;cursor:pointer;background:#faf5ff;white-space:nowrap;">📎 파일 첨부<input type="file" multiple style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>` : ''}
                     </div>
-                    <div class="item-spec">
-                        <div class="lbl">상품 코드</div><div class="val">${esc(product.code || '-')}</div>
-                        <div class="lbl">사이즈</div>
-                        <div class="val">${_woIsAdmin
-                            ? `<input type="text" id="woItemSize_${i}" value="${esc(sizeText === '-' ? '' : sizeText)}" placeholder="${esc(autoSizeText || '예: 90 × 50 mm')}" onblur="window._woSaveItemSize(${i}, this.value)" style="width:100%; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; font-weight:700; color:#1f2937; font-family:inherit;">`
-                            : `<b>${esc(sizeText)}</b>`}</div>
-                        <div class="lbl">수량</div><div class="val"><b>${qty}개</b></div>
-                        <div class="lbl">단가</div><div class="val">${fmt(unit)}원</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div class="item-spec">
+                            <div class="lbl">상품 코드</div><div class="val">${esc(product.code || '-')}</div>
+                            <div class="lbl">사이즈</div>
+                            <div class="val">${_woIsAdmin
+                                ? `<div style="display:flex; align-items:center; gap:4px;">
+                                    <input type="number" id="woItemW_${i}" value="${esc(String(initW))}" placeholder="${esc(String(autoW || '가로'))}" onblur="window._woSaveItemSizePart(${i}, 'w', this.value)" style="width:64px; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; font-weight:700; color:#1f2937; font-family:inherit; text-align:center;">
+                                    <span style="font-weight:700; color:#6b7280;">×</span>
+                                    <input type="number" id="woItemH_${i}" value="${esc(String(initH))}" placeholder="${esc(String(autoH || '세로'))}" onblur="window._woSaveItemSizePart(${i}, 'h', this.value)" style="width:64px; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; font-weight:700; color:#1f2937; font-family:inherit; text-align:center;">
+                                    <span style="font-size:11px; color:#6b7280; font-weight:700;">mm</span>
+                                </div>`
+                                : `<b>${esc(sizeText)}</b>`}</div>
+                            <div class="lbl">수량</div><div class="val"><b>${qty}개</b></div>
+                            <div class="lbl">단가</div><div class="val">${fmt(unit)}원</div>
+                        </div>
+                        ${_woIsAdmin
+                            ? `<div style="display:flex; gap:6px; align-items:flex-start;">
+                                <span style="font-size:11px; font-weight:800; color:#78350f; padding-top:5px; white-space:nowrap;">📝 메모</span>
+                                <input type="text" id="woItemMemo_${i}" value="${esc(_mgrMemoCurrent)}" placeholder="제품 관련 간단한 지시사항" onblur="window._woSaveItemMemo(${i})" style="flex:1; padding:5px 8px; border:1px solid #fbbf24; border-radius:4px; font-size:11px; font-family:inherit; background:#fffbeb; box-sizing:border-box;">
+                                <span id="woItemMemoSaved_${i}" style="font-size:10px; color:#16a34a; font-weight:700; padding-top:6px; display:none;">✓</span>
+                            </div>`
+                            : (_mgrMemoCurrent
+                                ? `<div style="display:flex; gap:6px; align-items:flex-start; font-size:11px;">
+                                    <span style="font-weight:800; color:#78350f; white-space:nowrap;">📝 메모</span>
+                                    <span style="color:#451a03;">${esc(_mgrMemoCurrent)}</span>
+                                </div>`
+                                : '')}
                     </div>
                     ${optGrid}
-                    ${_woIsAdmin ? `<div style="grid-column:1/-1; margin-top:10px; padding:10px 12px; background:#fffbeb; border:1px dashed #fbbf24; border-radius:6px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                            <span style="font-size:11px; font-weight:800; color:#78350f;">📝 제품 메모 (작업 지시용)</span>
-                            <button type="button" onclick="window._woSaveItemMemo(${i})" style="padding:3px 10px; border:none; background:#78350f; color:#fde047; border-radius:4px; font-size:10px; font-weight:700; cursor:pointer; font-family:inherit;">💾 저장</button>
-                        </div>
-                        <textarea id="woItemMemo_${i}" rows="2" placeholder="이 제품에 대한 추가 지시사항 (예: 인쇄 컬러, 후가공, 특이사항 등)" style="width:100%; padding:6px 8px; border:1px solid #fbbf24; border-radius:4px; font-size:11px; font-family:inherit; line-height:1.5; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
-                        <span id="woItemMemoSaved_${i}" style="font-size:10px; color:#16a34a; font-weight:700; display:none;">✓ 저장됨</span>
-                    </div>` : (_mgrMemoCurrent ? `<div class="opt-box" style="grid-column:1/-1; margin-top:8px; background:#fffbeb; border-left:3px solid #fbbf24; padding:8px 10px;">
-                        <div style="font-weight:800; font-size:10px; color:#78350f; margin-bottom:3px;">📝 제품 메모</div>
-                        <div style="font-size:11px; color:#451a03; white-space:pre-wrap;">${esc(_mgrMemoCurrent)}</div>
-                    </div>` : '')}
                     ${itemAttachHtml}
                     ${extraFilesHtml}
                 </div>
@@ -741,9 +760,19 @@ async function _woUpdateItemField(idx, patch) {
     }
 }
 
+// 사이즈 — 가로/세로 분리 저장 (mgr_size_w, mgr_size_h)
+window._woSaveItemSizePart = async function(idx, part, value) {
+    const v = String(value || '').trim();
+    const key = (part === 'w') ? 'mgr_size_w' : 'mgr_size_h';
+    const patch = {}; patch[key] = v;
+    await _woUpdateItemField(idx, patch);
+};
+// 후방 호환 (한 줄짜리 사이즈 input 이 어디서 호출될 경우)
 window._woSaveItemSize = async function(idx, value) {
-    const v = (value || '').trim();
-    await _woUpdateItemField(idx, { mgr_size: v });
+    const v = String(value || '').trim();
+    const m = v.match(/(\d+)\s*[×x*]\s*(\d+)/);
+    if (m) await _woUpdateItemField(idx, { mgr_size_w: m[1], mgr_size_h: m[2], mgr_size: v });
+    else await _woUpdateItemField(idx, { mgr_size: v });
 };
 
 window._woSaveItemMemo = async function(idx) {
