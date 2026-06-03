@@ -291,9 +291,16 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         const _currentStaffNote = _staffMatch ? _staffMatch[1].trim() : '';
         window._woCurrentStaffNote = _currentStaffNote;
 
-        // [작업지시완료] 마커 추출
+        // [작업지시완료] 마커 또는 orders.design_complete — 둘 중 하나라도 true 면 완료 상태
         const _completeMatch = _headerPart.match(/\[작업지시완료\]\s*(.+?)(?:\n|$)/);
-        const _currentComplete = _completeMatch ? _completeMatch[1].trim() : '';
+        let _currentComplete = _completeMatch ? _completeMatch[1].trim() : '';
+        if (!_currentComplete && order.design_complete) {
+            // 외부에서 design_complete 만 켜진 케이스 — 작업지시서 버튼도 완료 상태로 표시
+            const _d = order.design_complete_at ? new Date(order.design_complete_at) : null;
+            _currentComplete = _d ? (_d.getFullYear() + '-' + String(_d.getMonth()+1).padStart(2,'0') + '-' + String(_d.getDate()).padStart(2,'0')
+                                    + ' ' + String(_d.getHours()).padStart(2,'0') + ':' + String(_d.getMinutes()).padStart(2,'0'))
+                                  : '완료됨';
+        }
         window._woCurrentComplete = _currentComplete;
 
         // 기존 시스템 헤더 (간편주문 결제수단/이메일/배송메모) — 매니저가 손대지 않는 자동 정보
@@ -712,16 +719,58 @@ async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote, newComplete
 
 window._woToggleWorkorderComplete = async function() {
     const isComplete = !!window._woCurrentComplete;
+    const btn = document.getElementById('woWorkorderCompleteBtn');
+    const origHtml = btn ? btn.innerHTML : '';
     if (isComplete) {
-        if (!confirm('작업 완료 표시를 해제하시겠습니까?')) return;
-        const ok = await _woRebuildAndSaveAdminNote(null, null, '');
-        if (ok) location.reload();
+        if (!confirm('작업 완료 표시를 해제하시겠습니까?\n(디자인 완료 상태도 함께 해제됩니다)')) return;
+        try {
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 처리중...'; }
+            // design_complete 해제
+            await sb.from('orders').update({
+                design_complete: false,
+                design_complete_at: null,
+                design_complete_by: null
+            }).eq('id', window._woOrderId);
+            // admin_note 마커 제거
+            await _woRebuildAndSaveAdminNote(null, null, '');
+            location.reload();
+        } catch (e) {
+            console.error('[wo complete off]', e);
+            alert('해제 실패: ' + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        }
     } else {
-        const _now = new Date();
-        const _stamp = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0')
-                     + ' ' + String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
-        const ok = await _woRebuildAndSaveAdminNote(null, null, _stamp);
-        if (ok) location.reload();
+        if (!confirm('디자인 작업이 모두 완료되었습니까?\n\n완료 표시 후:\n• 본사에서 칼선/출력 작업 시작 가능\n• 다크팩토리 (Google Drive) 폴더에 최종 파일 동기화\n\n* 아직 디자인 미완성이면 취소를 누르세요.')) return;
+        try {
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 처리중...'; }
+            // 현재 로그인 매니저 이메일
+            let managerEmail = '';
+            try { const { data: sess } = await sb.auth.getUser(); managerEmail = (sess && sess.user && sess.user.email) || ''; } catch (e) {}
+            // 1) orders.design_complete = true + 타임스탬프 + 작성자
+            const { error: upErr } = await sb.from('orders').update({
+                design_complete: true,
+                design_complete_at: new Date().toISOString(),
+                design_complete_by: managerEmail || 'admin'
+            }).eq('id', window._woOrderId);
+            if (upErr) throw upErr;
+            // 2) admin_note 에 [작업지시완료] 도장
+            const _now = new Date();
+            const _stamp = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0')
+                         + ' ' + String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
+            await _woRebuildAndSaveAdminNote(null, null, _stamp);
+            // 3) 다크팩토리 (Google Drive) 동기화 트리거 — 비동기, 실패해도 진행
+            try {
+                sb.functions.invoke('sync-order-to-drive', { body: { order_id: window._woOrderId, design_finalized: true } })
+                    .then(function (r) { console.log('[drive sync] design finalized', (r && r.data) || r); })
+                    .catch(function (e) { console.warn('[drive sync] failed:', e && e.message || e); });
+            } catch (e) { console.warn('[drive sync] invoke failed:', e); }
+            alert('✅ 작업 완료 처리됨!\n다크팩토리(Google Drive)에 최종 파일이 동기화됩니다.');
+            location.reload();
+        } catch (e) {
+            console.error('[wo complete]', e);
+            alert('완료 처리 실패: ' + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        }
     }
 };
 

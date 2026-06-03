@@ -1987,7 +1987,7 @@ window.loadOrders = async () => {
                             : ''}
                         ${order.design_complete
                             ? `<div style="margin-top:3px; padding:3px 7px; background:#dcfce7; color:#15803d; font-size:9px; font-weight:800; border-radius:50px; letter-spacing:0.3px; display:inline-block;" title="${order.design_complete_at ? new Date(order.design_complete_at).toLocaleString('ko-KR') : ''} — ${(order.design_complete_by||'').replace(/"/g,'&quot;')}"><i class="fa-solid fa-check-circle"></i> 디자인완료</div>`
-                            : `<button type="button" onclick="event.stopPropagation();window.toggleDesignComplete && window.toggleDesignComplete('${order.id}', this)" style="display:inline-block; margin-top:3px; padding:3px 7px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:9px; font-weight:800; border-radius:50px; border:none; cursor:pointer; letter-spacing:0.3px; font-family:inherit;" title="디자인 파일 작업이 완료되어 다크팩토리에서 칼선/출력 시작해도 OK 라는 신호"><i class="fa-solid fa-paper-plane"></i> 데이터작업완료</button>`}
+                            : ''}
                     </td>
                     
                     <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${items.length ? items.map(i => `${_omItemLabel(i)} (${i.qty || 1})`).join(', ') : '주문 내역 없음'}">${items.length ? items.map(i => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">- ${_omItemLabel(i)} (${i.qty || 1})</div>`).join('') : '<div style="color:#ef4444;font-weight:bold;">⚠️ 내역없음</div>'}</td>
