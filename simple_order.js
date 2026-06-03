@@ -7229,6 +7229,8 @@ html, body { background: #ffffff !important; }
         state.isCustomSize = _soIsCustomSizeProduct(p);
         // 2026-06-01: 허니콤배너는 60×180cm 고정사이즈로 flat 가격. customSize 분기 진입 금지.
         if (state.isBanner) state.isCustomSize = false;
+        // 2026-06-03: 스티커는 자체 카테고리/사이즈 UI 사용 — 레거시 면적×단가 카드 차단
+        if (state.isSticker) state.isCustomSize = false;
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
         state.isAcrylicGoods = _soIsAcrylicGoodsProduct(p);
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
