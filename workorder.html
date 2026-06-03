@@ -549,18 +549,20 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     if (['ai','eps','psd','svg'].includes(ex)) return '🎨';
                     if (['doc','docx'].includes(ex)) return '📘';
                     if (['xls','xlsx','csv'].includes(ex)) return '📗';
+                    if (['ppt','pptx'].includes(ex)) return '📗';
                     if (['ppt','pptx'].includes(ex)) return '📙';
                     if (['zip','rar','7z'].includes(ex)) return '🗜️';
                     return '📎';
                 };
-                itemAttachHtml = `<div class="extra-files" style="background:#faf5ff; border-left-color:#7c3aed; grid-column:1/-1;">
-                    <div class="ef-head" style="color:#5b21b6;"><i class="fa-solid fa-paperclip"></i> 첨부 파일 (${_itemAttachments.length}건)</div>
+                itemAttachHtml = `<div style="background:#faf5ff; border:1px solid #e9d5ff; border-left:3px solid #7c3aed; border-radius:6px; padding:8px 10px;">
+                    <div style="font-weight:800; color:#5b21b6; font-size:11px; margin-bottom:5px;"><i class="fa-solid fa-paperclip"></i> 첨부 파일 (${_itemAttachments.length}건)</div>
                     <div style="display:flex; flex-direction:column; gap:4px;">
-                        ${_itemAttachments.map(f => `<a href="${esc(f.url)}" target="_blank" style="display:flex; gap:6px; align-items:center; padding:4px 8px; background:#fff; border:1px solid #e9d5ff; border-radius:5px; font-size:11px; color:#5b21b6; text-decoration:none; font-weight:700;">
+                        ${_itemAttachments.map((f, fi) => `<div style="display:flex; gap:6px; align-items:center; padding:4px 8px; background:#fff; border:1px solid #e9d5ff; border-radius:5px; font-size:11px;">
                             <span>${_fileIcon(f.type, f.name)}</span>
-                            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(f.name || '파일')}</span>
+                            <a href="${esc(f.url)}" target="_blank" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#5b21b6; text-decoration:none; font-weight:700;">${esc(f.name || '파일')}</a>
                             <span style="font-size:9px; color:#9ca3af; font-weight:500;">${f._uploaded_at ? new Date(f._uploaded_at).toLocaleDateString('ko-KR') : ''}</span>
-                        </a>`).join('')}
+                            ${_woIsAdmin ? `<button type="button" onclick="window._woDeleteItemAttachment(${i}, ${fi})" title="삭제" style="border:none; background:transparent; color:#dc2626; font-size:13px; font-weight:900; cursor:pointer; padding:0 4px; line-height:1;">×</button>` : ''}
+                        </div>`).join('')}
                     </div>
                 </div>`;
             }
@@ -612,7 +614,6 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     </div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div class="item-spec">
-                            <div class="lbl">상품 코드</div><div class="val">${esc(product.code || '-')}</div>
                             <div class="lbl">사이즈</div>
                             <div class="val">${_woIsAdmin
                                 ? `<div style="display:flex; align-items:center; gap:4px;">
@@ -623,7 +624,6 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                                 </div>`
                                 : `<b>${esc(sizeText)}</b>`}</div>
                             <div class="lbl">수량</div><div class="val"><b>${qty}개</b></div>
-                            <div class="lbl">단가</div><div class="val">${fmt(unit)}원</div>
                         </div>
                         ${_woIsAdmin
                             ? `<div style="display:flex; gap:6px; align-items:flex-start;">
@@ -637,9 +637,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                                     <span style="color:#451a03;">${esc(_mgrMemoCurrent)}</span>
                                 </div>`
                                 : '')}
+                        ${itemAttachHtml}
                     </div>
                     ${optGrid}
-                    ${itemAttachHtml}
                     ${extraFilesHtml}
                 </div>
             </div>`;
@@ -782,6 +782,41 @@ window._woSaveItemMemo = async function(idx) {
     if (ok) {
         const saved = document.getElementById('woItemMemoSaved_' + idx);
         if (saved) { saved.style.display = ''; setTimeout(function(){ saved.style.display = 'none'; }, 1800); }
+    }
+};
+
+// 2026-06-03: 항목별 첨부파일 삭제 (잘못 올린 파일 제거)
+window._woDeleteItemAttachment = async function(itemIdx, attachIdx) {
+    if (!window._woOrderId) return;
+    if (!confirm('이 파일을 삭제하시겠습니까?')) return;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items, files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[itemIdx] || !Array.isArray(items[itemIdx].attachments)) return;
+        const removed = items[itemIdx].attachments.splice(attachIdx, 1)[0];
+        // 현재 썸네일 (artwork_url) 이 삭제된 파일이면 클리어
+        if (removed && items[itemIdx].artwork_url === removed.url) {
+            items[itemIdx].artwork_url = null;
+            items[itemIdx].artwork_filename = null;
+            if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = null;
+        }
+        // 전역 files 배열에서도 제거 (URL 일치 기준)
+        let orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        if (removed) orderFiles = orderFiles.filter(function(f){ return f.url !== removed.url; });
+        // Storage 에서 실제 파일도 삭제 시도 (실패해도 무시)
+        if (removed && removed.url) {
+            try {
+                const _p = removed.url.match(/\/storage\/v1\/object\/public\/orders\/(.+)$/);
+                if (_p && _p[1]) await sb.storage.from('orders').remove([decodeURIComponent(_p[1])]);
+            } catch(e) { /* storage 삭제 실패는 무시 */ }
+        }
+        const { error: upErr } = await sb.from('orders').update({ items: items, files: orderFiles }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        location.reload();
+    } catch (e) {
+        console.error('[wo del attach]', e);
+        alert('삭제 실패: ' + (e.message || e));
     }
 };
 
