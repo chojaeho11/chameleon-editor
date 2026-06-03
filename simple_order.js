@@ -2909,7 +2909,8 @@ html, body { background: #ffffff !important; }
         }
         const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
         // 2026-06-01: 배너는 _noDisc 에서 제외 — 4-box (이벤트쿠폰/마일리지/예치금/PRO) 사용 가능. 볼륨티어는 자연히 1M 미만이라 적용 안 됨.
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint;
+        // 2026-06-03: 인쇄물 카테고리 전체 (state.isGeneralPrint = 허니콤/포맥스 제외 모든 상품) 수량/금액 할인 없음 (사용자 요청)
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isGeneralPrint;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -5671,27 +5672,28 @@ html, body { background: #ffffff !important; }
         if (t === 'premium') return (side === 'double') ? 10000 : 8000;
         return (side === 'double') ? 5000 : 3000;
     }
-    function _bizCard2tone(title, descHtml, priceTag, sel, foilBottomBg, titleBg) {
-        // sel: 선택 여부 → 인디고 테두리
+    function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
+        // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
+        // colorTopBg: 박은 박색상, 그 외는 검정. titleColor: 박 색감에 따른 글씨 색
         var border = sel ? '#4338ca' : '#d6d3d1';
         var shadow = sel ? '0 4px 12px -4px rgba(67,56,202,0.45)' : 'none';
-        var topBg  = titleBg || '#ffffff';
-        var botBg  = foilBottomBg || '#1c1917';
-        var pTag = priceTag ? '<span style="font-size:11px; font-weight:800; color:#fbbf24;">' + priceTag + '</span>' : '';
+        var topBg  = colorTopBg || '#0a0a0a';
+        var topTxt = titleColor || '#ffffff';
+        var pTag = priceTag ? '<span style="font-size:11px; font-weight:800; color:' + (titleColor || '#fbbf24') + '; opacity:0.95;">' + priceTag + '</span>' : '';
         return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s; min-height:64px;">'
-            + '<div style="background:' + topBg + '; color:#0a0a0a; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px;"><span style="font-size:13px; font-weight:900;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
-            + '<div style="background:' + botBg + '; color:#ffffff; padding:8px 10px; font-size:11px; line-height:1.4; flex:1;">' + descHtml + '</div>'
+            + '<div style="background:' + topBg + '; color:' + topTxt + '; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px;"><span style="font-size:13px; font-weight:900;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
+            + '<div style="background:#ffffff; color:#0a0a0a; padding:8px 10px; font-size:11px; line-height:1.45; flex:1;">' + descHtml + '</div>'
             + '</div>';
     }
-    // 박 색상 매핑 (하단 배경에 적용)
+    // 박 색상 매핑 (상단 컬러 배경) + 그에 맞는 글씨색
     var BIZ_FOIL_BG = {
-        gold_matte:   'linear-gradient(135deg,#7a5a1a 0%,#a07a2c 100%)',
-        gold_gloss:   'linear-gradient(135deg,#c9952b 0%,#f1c14d 60%,#a37315 100%)',
-        silver_gloss: 'linear-gradient(135deg,#1c1917 0%,#3f3a36 100%)',
-        black_matte:  '#0a0a0a',
-        red_foil:     'linear-gradient(135deg,#8a1318 0%,#dc2626 100%)',
-        blue_foil:    'linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%)',
-        holo_foil:    'linear-gradient(120deg,#f472b6 0%,#a78bfa 30%,#60a5fa 60%,#34d399 100%)'
+        gold_matte:   { bg:'linear-gradient(135deg,#7a5a1a 0%,#a07a2c 100%)',                              txt:'#fff' },
+        gold_gloss:   { bg:'linear-gradient(135deg,#c9952b 0%,#f1c14d 60%,#a37315 100%)',                  txt:'#1c1917' },
+        silver_gloss: { bg:'linear-gradient(135deg,#1c1917 0%,#3f3a36 100%)',                              txt:'#fff' },
+        black_matte:  { bg:'#0a0a0a',                                                                       txt:'#fff' },
+        red_foil:     { bg:'linear-gradient(135deg,#8a1318 0%,#dc2626 100%)',                              txt:'#fff' },
+        blue_foil:    { bg:'linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%)',                              txt:'#fff' },
+        holo_foil:    { bg:'linear-gradient(120deg,#f472b6 0%,#a78bfa 30%,#60a5fa 60%,#34d399 100%)',      txt:'#1c1917' }
     };
     function _soBizCardRender() {
         if (!state.isBizCard) return;
@@ -5740,13 +5742,13 @@ html, body { background: #ffffff !important; }
         if (gf) {
             var noneSel = !state.bizFoil;
             var foilNone = '<button type="button" onclick="window._soBizPickFoil(null)" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                + _bizCard2tone(tr('선택 안 함','選択しない','None'), tr('박 없이 인쇄만 진행','箔押しなし','Print only — no foil'), '', noneSel, '#475569')
+                + _bizCard2tone(tr('선택 안 함','選択しない','None'), tr('박 없이 인쇄만 진행','箔押しなし','Print only — no foil'), '', noneSel, '#475569', '#fff')
                 + '</button>';
             gf.innerHTML = foilNone + BIZ_FOILS.map(function(o){
                 var sel = (state.bizFoil === o.key);
-                var bg = BIZ_FOIL_BG[o.key] || '#1c1917';
+                var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
                 return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel, bg)
+                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel, fc.bg, fc.txt)
                     + '</button>';
             }).join('');
         }
@@ -6680,6 +6682,11 @@ html, body { background: #ffffff !important; }
         var _rb_note = document.getElementById('soItemNoteSection');
         if (_rb_uploadWrap) _rb_uploadWrap.style.display = _hideUpload ? 'none' : '';
         if (_rb_uploadLabel) _rb_uploadLabel.style.display = _hideUpload ? 'none' : '';
+        // 2026-06-03: 인쇄물 카테고리(모든 일반 인쇄물) — 수량할인 tier 표 숨김 (사용자 요청)
+        //   isGeneralPrint = 허니콤/포맥스 제외 = 광고/상업/홈/굿즈/기타 모든 인쇄물
+        if (_rb_tier && (_soIsGeneralPrintProduct(p) || _soIsBizCardProduct(p))) {
+            _rb_tier.style.display = 'none';
+        }
         // 2026-05-30: '원판 그대로 발송' 안내문은 사용자 요청으로 영구 비표시 (불필요한 정보).
         if (_rb_notice) _rb_notice.style.display = 'none';
         // 2026-05-30: 원판(hexa-board) 상품은 디자인에디터 진입 카드도 숨김 — 디자인 작업 불필요한 원자재.
