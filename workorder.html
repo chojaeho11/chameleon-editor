@@ -153,8 +153,27 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         </div>
     </div>
 
-    <div class="staff-bar">
-        배송책임자 : 서용규 (010-8272-3017) &nbsp;|&nbsp; 제작책임자 : 변지웅 (010-5512-5366)
+    <!-- 2026-06-03: 제품종류 선택 + 수동 견적서 업로드 (매니저 전용) -->
+    <div id="woMgrPanel" style="margin-top:12px; padding:12px 14px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; display:none;">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:12px; font-weight:800; color:#78350f;">📦 제품종류</label>
+                <select id="woProductCategory" onchange="window._woSaveProductCategory()" style="padding:6px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;">
+                    <option value="">-- 선택 --</option>
+                    <option value="허니콤보드">허니콤보드</option>
+                    <option value="패브릭">패브릭</option>
+                    <option value="광고물">광고물</option>
+                    <option value="인쇄물">인쇄물</option>
+                    <option value="종이매대">종이매대</option>
+                    <option value="허니콤원지">허니콤원지</option>
+                </select>
+                <span id="woCategorySaved" style="font-size:11px; color:#16a34a; font-weight:700; display:none;">✓ 저장됨</span>
+            </div>
+            <label style="font-size:12px; font-weight:700; color:#78350f; border:1.5px solid #f59e0b; border-radius:6px; padding:6px 12px; cursor:pointer; background:#fff;">
+                📄 견적서 업로드<input type="file" id="woMgrQuoteFile" accept=".pdf,image/*,.doc,.docx,.xlsx" style="display:none;" onchange="window._woUploadMgrQuote(this)">
+            </label>
+            <div id="woMgrQuoteList" style="font-size:11px; color:#78350f; display:flex; gap:8px; flex-wrap:wrap;"></div>
+        </div>
     </div>
 
     <div class="section">
@@ -167,7 +186,22 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         <span class="amt" id="woTotal">0원</span>
     </div>
 
+    <!-- 2026-06-03: 고객요청사항 (배송 메모) — DB 의 request_note 그대로 표시 -->
+    <div id="woCustomerReqBox" style="margin-top:14px; padding:12px 14px; background:#eff6ff; border-left:4px solid #3b82f6; border-radius:4px; font-size:12px; color:#1e3a8a; line-height:1.6; display:none;">
+        <div style="font-weight:900; margin-bottom:4px;">💬 고객 요청사항 (배송 메모)</div>
+        <div id="woCustomerReqText" style="white-space:pre-wrap;"></div>
+    </div>
+
+    <!-- 2026-06-03: 관리자 메모 — 매니저가 편집 가능 -->
     <div class="note" id="woAdminNote" style="display:none;"></div>
+    <div id="woAdminNoteEditor" style="margin-top:10px; padding:12px 14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:12px; font-weight:900; color:#451a03;">✏️ 관리자 메모 (직원 편집용)</span>
+            <button type="button" id="woAdminNoteSave" onclick="window._woSaveAdminNote()" style="padding:5px 12px; border:none; background:#451a03; color:#fde047; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">💾 저장</button>
+        </div>
+        <textarea id="woAdminNoteText" rows="4" placeholder="작업 관련 내부 메모를 적어주세요 (예: 인쇄담당, 작업 시작일, 특이사항 등)" style="width:100%; padding:8px 10px; border:1px solid #d1d5db; border-radius:5px; font-size:12px; font-family:inherit; line-height:1.6; resize:vertical; box-sizing:border-box;"></textarea>
+        <div id="woAdminNoteSaved" style="font-size:11px; color:#16a34a; font-weight:700; margin-top:4px; display:none;">✓ 저장됨</div>
+    </div>
 
     <div class="foot">
         <span>발행일: <span id="woPrintDate"></span></span>
@@ -237,23 +271,68 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
 
         // admin_note (관리자 메모) — 2026-06-01: '=== 상품별 옵션·요청 ===' 블록은 항목 카드 안의 box 들로 직접 렌더되므로
         //   여기서는 헤더(결제수단/이메일/배송비 등) 부분만 보존하고 항목별 블록은 잘라냄.
-        if (order.admin_note) {
+        // 2026-06-03: admin_note 안에 [제품종류]·[직원메모] 헤더 라인 파싱해서 매니저 패널과 편집기로 분리
+        const _adminRaw = order.admin_note || '';
+        const _splitIdx2 = _adminRaw.indexOf('=== 상품별 옵션·요청 ===');
+        const _headerPart = _splitIdx2 >= 0 ? _adminRaw.slice(0, _splitIdx2).trim() : _adminRaw;
+
+        // [제품종류] 추출
+        const _catMatch = _headerPart.match(/\[제품종류\]\s*(.+?)(?:\n|$)/);
+        const _currentCategory = _catMatch ? _catMatch[1].trim() : '';
+        window._woCurrentCategory = _currentCategory;
+
+        // [직원메모] 추출 (없으면 빈 문자열)
+        const _staffMatch = _headerPart.match(/\[직원메모\]\s*([\s\S]*?)(?=\n\[|$)/);
+        const _currentStaffNote = _staffMatch ? _staffMatch[1].trim() : '';
+        window._woCurrentStaffNote = _currentStaffNote;
+
+        // 기존 시스템 헤더 (간편주문 결제수단/이메일/배송메모) — 매니저가 손대지 않는 자동 정보
+        const _headerForDisplay = _headerPart
+            .replace(/\[제품종류\][^\n]*\n?/g, '')
+            .replace(/\[직원메모\][\s\S]*?(?=\n\[|$)/g, '')
+            .trim();
+
+        if (_headerForDisplay) {
             const note = document.getElementById('woAdminNote');
             note.style.display = '';
-            const raw = order.admin_note || '';
-            const splitIdx = raw.indexOf('=== 상품별 옵션·요청 ===');
-            const headerPart = splitIdx >= 0 ? raw.slice(0, splitIdx).trim() : raw;
-            const headerHtml = headerPart
-                ? '<div style="font-size:13px; line-height:1.7; color:#451a03;">' +
-                  esc(headerPart).replace(/\n/g, '<br>') + '</div>'
-                : '';
-            note.innerHTML = '<b>관리자 메모</b>' + (headerHtml ? '<div style="margin-top:6px;">' + headerHtml + '</div>' : '');
+            note.innerHTML = '<b>주문 정보</b><div style="margin-top:6px; font-size:13px; line-height:1.7; color:#451a03;">' + esc(_headerForDisplay).replace(/\n/g, '<br>') + '</div>';
         }
 
         // 고객 파일 (시스템 파일 제외)
         const customerFiles = (order.files || []).filter(f =>
-            f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log'
+            f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log' && f.type !== 'manager_quote'
         );
+
+        // 2026-06-03: 매니저 패널 (관리자 전용) — 제품종류 선택 + 견적서 업로드 + admin_note 편집기
+        if (_woIsAdmin) {
+            const _mgrPanel = document.getElementById('woMgrPanel');
+            const _adminEdit = document.getElementById('woAdminNoteEditor');
+            if (_mgrPanel) _mgrPanel.style.display = '';
+            if (_adminEdit) _adminEdit.style.display = '';
+            // 카테고리 드롭다운 초기값
+            const _catSel = document.getElementById('woProductCategory');
+            if (_catSel) _catSel.value = _currentCategory || '';
+            // 직원 메모 textarea 초기값
+            const _txt = document.getElementById('woAdminNoteText');
+            if (_txt) _txt.value = _currentStaffNote || '';
+            // 매니저 견적서 리스트
+            const _mgrQuotes = (order.files || []).filter(f => f && f.type === 'manager_quote');
+            const _qList = document.getElementById('woMgrQuoteList');
+            if (_qList) {
+                _qList.innerHTML = _mgrQuotes.map(function(f){
+                    return '<a href="' + esc(f.url) + '" target="_blank" style="color:#0369a1; font-weight:700; text-decoration:underline;">📄 ' + esc(f.name || '견적서') + '</a>';
+                }).join('');
+            }
+        }
+
+        // 2026-06-03: 고객 요청사항 (배송 메모 = order.request_note) 표시
+        const _custReqClean = (order.request_note || '').replace(/\n?##REF:[^#]+##/g, '').trim();
+        if (_custReqClean) {
+            const _crBox = document.getElementById('woCustomerReqBox');
+            const _crTxt = document.getElementById('woCustomerReqText');
+            if (_crBox) _crBox.style.display = '';
+            if (_crTxt) _crTxt.textContent = _custReqClean;
+        }
 
         // 옵션 라벨 헬퍼
         function addonLabel(code, qty) {
@@ -506,6 +585,96 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+ esc(e.message) + '</div>';
     }
 })();
+
+// 2026-06-03: admin_note 헤더 부분(자동 시스템 + [제품종류] + [직원메모]) 합쳐서 다시 저장
+async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote) {
+    if (!window._woOrderId) return false;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('admin_note').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const raw = cur.admin_note || '';
+        const splitIdx = raw.indexOf('=== 상품별 옵션·요청 ===');
+        const itemsPart = splitIdx >= 0 ? raw.slice(splitIdx) : '';
+        const headerPart = splitIdx >= 0 ? raw.slice(0, splitIdx).trim() : raw.trim();
+        // 기존 [제품종류] / [직원메모] 제거
+        const cleanHeader = headerPart
+            .replace(/\[제품종류\][^\n]*\n?/g, '')
+            .replace(/\[직원메모\][\s\S]*?(?=\n\[|$)/g, '')
+            .trim();
+        let newHeader = cleanHeader;
+        const _cat = (newCategory != null) ? newCategory : window._woCurrentCategory;
+        const _staff = (newStaffNote != null) ? newStaffNote : window._woCurrentStaffNote;
+        if (_cat) newHeader = (newHeader ? newHeader + '\n' : '') + '[제품종류] ' + _cat;
+        if (_staff) newHeader = (newHeader ? newHeader + '\n' : '') + '[직원메모] ' + _staff;
+        const finalNote = newHeader + (itemsPart ? '\n\n' + itemsPart : '');
+        const { error: upErr } = await sb.from('orders').update({ admin_note: finalNote }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        if (newCategory != null) window._woCurrentCategory = newCategory;
+        if (newStaffNote != null) window._woCurrentStaffNote = newStaffNote;
+        return true;
+    } catch (e) {
+        console.error('[wo save admin_note]', e);
+        alert('저장 실패: ' + (e.message || e));
+        return false;
+    }
+}
+
+window._woSaveProductCategory = async function() {
+    const sel = document.getElementById('woProductCategory');
+    if (!sel) return;
+    const cat = sel.value || '';
+    const ok = await _woRebuildAndSaveAdminNote(cat, null);
+    if (ok) {
+        const saved = document.getElementById('woCategorySaved');
+        if (saved) { saved.style.display = ''; setTimeout(function(){ saved.style.display = 'none'; }, 1800); }
+    }
+};
+
+window._woSaveAdminNote = async function() {
+    const ta = document.getElementById('woAdminNoteText');
+    if (!ta) return;
+    const txt = ta.value.trim();
+    const btn = document.getElementById('woAdminNoteSave');
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+    const ok = await _woRebuildAndSaveAdminNote(null, txt);
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+    if (ok) {
+        const saved = document.getElementById('woAdminNoteSaved');
+        if (saved) { saved.style.display = ''; setTimeout(function(){ saved.style.display = 'none'; }, 1800); }
+    }
+};
+
+window._woUploadMgrQuote = async function(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    if (!window._woOrderId) { alert('주문 정보를 찾을 수 없습니다.'); return; }
+    if (file.size > 30 * 1024 * 1024) { alert('파일은 30MB 이하만 가능합니다.'); return; }
+    const lbl = input.parentNode;
+    const origHtml = lbl ? lbl.firstChild.textContent : '';
+    if (lbl) lbl.firstChild.textContent = '업로드 중…';
+    try {
+        const ext = (file.name.split('.').pop() || 'pdf').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'pdf';
+        const path = 'orders/manager_quote/' + window._woOrderId + '_' + Date.now() + '.' + ext;
+        const up = await sb.storage.from('orders').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+        if (up.error) throw up.error;
+        const pub = sb.storage.from('orders').getPublicUrl(path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('URL 생성 실패');
+        const { data: cur, error: rdErr } = await sb.from('orders').select('files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const files = Array.isArray(cur.files) ? cur.files : [];
+        files.push({ name: file.name, url: url, type: 'manager_quote', _uploaded_at: new Date().toISOString() });
+        const { error: upErr } = await sb.from('orders').update({ files: files }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        alert('견적서가 업로드되었습니다.');
+        location.reload();
+    } catch (e) {
+        console.error('[wo mgr quote]', e);
+        alert('견적서 업로드 실패: ' + (e.message || e));
+        if (lbl) lbl.firstChild.textContent = origHtml;
+        input.value = '';
+    }
+};
 
 // 2026-05-22: 관리자 — 항목별 디자인 이미지 수동 첨부 (artwork_url 채움)
 // 고객이 LINE/메일로 보낸 이미지를 주문에 직접 붙여 작업지시서에 반영.
