@@ -860,16 +860,13 @@ html, body { background: #ffffff !important; }
     }
 }
 
-/* 우측: 옵션 패널 — sticky + 내부 스크롤. 내부 끝에 도달하면 페이지로 자연스럽게 전파 (사용자 요청). */
+/* 우측: 옵션 패널 — 2026-06-03: 좌우 분리 스크롤 제거. sticky/max-height/overflow 모두 해제 →
+   페이지 전체가 한 덩어리로 스크롤 되고, 더 긴 쪽(보통 좌측 상품 상세) 끝까지 자연스럽게 내려감. */
 .so-right {
     flex: 1; background: #faf6ed; padding: 0;
     min-width: 320px; max-width: 420px;
     display: flex; flex-direction: column; gap: 14px;
-    position: sticky; top: 70px;
     align-self: flex-start;
-    max-height: calc(100vh - 90px);
-    overflow-y: auto;
-    /* overscroll-behavior 없음 → 우측 끝에 닿으면 페이지 스크롤로 자연스럽게 이어짐 */
 }
 .so-section {
     background: #fff; border: 1px solid #e7e5e4; border-radius: 10px;
