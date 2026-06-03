@@ -1471,6 +1471,10 @@ html, body { background: #ffffff !important; }
           <div class="so-tier-table" id="soPresetTierTable" style="display:none;">
             <div data-qty-tier="50" style="background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; font-weight:900;">${tr('100개 이상', '100個以上', '100+ pcs')} <b style="color:#dc2626;">50%</b></div>
           </div>
+          <!-- 2026-06-03: 명함 전용 안내 (tier 자리에 대체) -->
+          <div id="soBizCardOrderInfo" style="display:none; margin-top:8px; padding:8px 12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; text-align:center; font-size:12px; font-weight:700; color:#7f1d1d; line-height:1.5;">
+            ${tr('200매 단위로 주문됩니다 · 1각 = 200매', '200枚単位でご注文 · 1ロット = 200枚', 'Orders are in batches of 200 · 1 set = 200 sheets')}
+          </div>
         </div>
 
         <!-- 2026-06-01: 멀티-라인 — 큐 chip 들 + 단일 담기/수정 버튼 + 전체 합계 카드 + 안내 -->
@@ -2794,12 +2798,11 @@ html, body { background: #ffffff !important; }
             if (state.isBanner) {
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 55000);
             } else if (state.isBizCard) {
-                // 2026-06-03: 명함 — 200매 단위. 등급별 단가 (일반 단면3K/양면5K, 프리미엄 단면8K/양면10K)
-                qty = Math.max(200, qty || 200);
-                var _bizSets = Math.ceil(qty / 200);
+                // 2026-06-03: 명함 — qty = 각 (1각 = 200매). 등급별 단가 (일반 단면3K/양면5K, 프리미엄 단면8K/양면10K)
+                qty = Math.max(1, qty || 1);
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
-                subtotal = _bizUnit * _bizSets;
+                subtotal = _bizUnit * qty;
             } else if (state.isRawBoardDouble) {
                 // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
                 unit = unit * 2;
@@ -2885,7 +2888,7 @@ html, body { background: #ffffff !important; }
                 : tr('일반', '一般', 'Standard');
             var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _qtyLbl  = qty.toLocaleString() + tr('매','枚','pcs');
+            var _qtyLbl  = qty.toLocaleString() + tr('각','ロット','set') + ' (' + (qty * 200).toLocaleString() + tr('매','枚','pcs') + ')';
             var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
@@ -3131,9 +3134,10 @@ html, body { background: #ffffff !important; }
                 setText('soShipLabel', tr('배송비 · 10만원+ 무료 / 미만 1만원', '送料 · 10万+ 無料 / 未満 1万円', 'Shipping · free over ₩100k / under ₩10k'));
                 setText('soShipAmount', '+' + fmtPrice(shipFee));
             }
-        } else if (state.isBestGoods) {
+        } else if (state.isBestGoods || state.isBizCard) {
+            // 2026-06-03: 명함도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
-            setText('soShipAmount', '+' + fmtPrice(shipFee));
+            setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else {
             var shipName;
             if (state.bundleShipping) {
@@ -6141,10 +6145,8 @@ html, body { background: #ffffff !important; }
         const cur = parseInt(input.value) || 1;
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        // 2026-06-03: 명함은 200매 단위
-        const _step = state.isBizCard ? 200 : 1;
-        const _min = state.isBizCard ? 200 : 1;
-        const next = Math.max(_min, Math.min(_qtyMax, cur + delta * _step));
+        // 2026-06-03: 명함 qty = 각 단위 (step 1, min 1)
+        const next = Math.max(1, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
         _soSyncAcrylicAddonQty();
@@ -6161,10 +6163,7 @@ html, body { background: #ffffff !important; }
         const input = document.getElementById('soQty');
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        // 2026-06-03: 명함은 200매 단위
-        const _min2 = state.isBizCard ? 200 : 1;
-        let v = Math.max(_min2, Math.min(_qtyMax, parseInt(input.value) || _min2));
-        if (state.isBizCard) v = Math.ceil(v / 200) * 200;
+        let v = Math.max(1, Math.min(_qtyMax, parseInt(input.value) || 1));
         if (v !== parseInt(input.value)) input.value = v;
         state.qty = v;
         _soSyncAcrylicAddonQty();
@@ -6656,22 +6655,31 @@ html, body { background: #ffffff !important; }
             state.bizSide = state.bizSide || 'single';
             state.bizFoil = (state.bizFoil === undefined) ? null : state.bizFoil;
             state.bizFinishes = state.bizFinishes || {};
-            // 기본 수량 200매 + step 200
-            if (!state.qty || state.qty < 200) state.qty = 200;
+            // 2026-06-03: 명함 qty = 각 단위 (1각 = 200매), step 1, min 1. 가격 단가 = 1각 기준
+            // 기존 매 단위 데이터 호환: 200 이상이면 200으로 나눠서 각 환산
+            if (state.qty == null) state.qty = 1;
+            else if (state.qty >= 200 && state.qty % 200 === 0) state.qty = state.qty / 200;
+            else if (state.qty < 1) state.qty = 1;
             var _qiBc = document.getElementById('soQty');
             if (_qiBc) {
                 _qiBc.value = state.qty;
-                _qiBc.min = 200;
-                _qiBc.step = 200;
+                _qiBc.min = 1;
+                _qiBc.step = 1;
             }
             var _quBc = document.querySelector('.so-qty-unit');
-            if (_quBc) _quBc.textContent = tr('매', '枚', 'pcs');
-            // 수량 할인 tier 테이블 숨김 (명함은 정액)
+            if (_quBc) _quBc.textContent = tr('각', 'ロット', 'set');
+            // 수량 할인 tier 테이블 숨김 + 명함 전용 안내 표시
             var _ttBc = document.getElementById('soTierTable');
             if (_ttBc) _ttBc.style.display = 'none';
+            var _ttBcInfo = document.getElementById('soBizCardOrderInfo');
+            if (_ttBcInfo) _ttBcInfo.style.display = '';
             // 일반 addon 선택은 모두 제거 (명함은 자체 UI 사용)
             state.selectedAddons = {};
             state.addonQuantities = {};
+        } else {
+            // 명함이 아닌 경우 안내 박스 숨김
+            var _ttBcInfo2 = document.getElementById('soBizCardOrderInfo');
+            if (_ttBcInfo2) _ttBcInfo2.style.display = 'none';
         }
         var bizSec = document.getElementById('soBizCardSection');
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
@@ -7367,7 +7375,10 @@ html, body { background: #ffffff !important; }
                 // 가벽 추가 버튼 숨김 — 큐 비어있음
                 if (typeof window._soAdSyncAddBtn === 'function') window._soAdSyncAddBtn();
             } else {
-                if (_tierTable)  _tierTable.style.display  = '';
+                // 2026-06-03: 인쇄물 카테고리 + 명함은 수량할인 tier 표 영구 숨김 (사용자 요청)
+                if (_tierTable) {
+                    _tierTable.style.display = (state.isBizCard || _soIsGeneralPrintProduct(p)) ? 'none' : '';
+                }
                 if (_inlineUploadCard) {
                     _inlineUploadCard.style.display = 'none';
                     _inlineUploadCard.style.order = '';
@@ -8854,13 +8865,15 @@ html, body { background: #ffffff !important; }
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
             var _bc = it.bizCard || {};
-            var _bcQty = Math.max(200, qty || 200);
-            var _bcSets = Math.ceil(_bcQty / 200);
+            // qty 는 각 단위. 호환: 200 이상이면 매 단위 데이터로 보고 200으로 나눠 각 환산
+            var _bcQty = qty || 1;
+            if (_bcQty >= 200 && _bcQty % 200 === 0) _bcQty = _bcQty / 200;
+            if (_bcQty < 1) _bcQty = 1;
             var _bcTier = _bc.tier || 'general';
             var _bcUnit = (_bcTier === 'premium')
                 ? ((_bc.side === 'double') ? 10000 : 8000)
                 : ((_bc.side === 'double') ? 5000  : 3000);
-            var _bcSub = _bcUnit * _bcSets;
+            var _bcSub = _bcUnit * _bcQty;
             // 박
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
