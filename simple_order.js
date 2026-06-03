@@ -1841,21 +1841,34 @@ html, body { background: #ffffff !important; }
           <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
-        <!-- 2026-06-03: 명함/리플렛 (pp_bc_*) 전용 — 용지/박/후가공 -->
+        <!-- 2026-06-03: 명함/리플렛 (pp_bc_*) 전용 — 등급/면/용지/박/후가공 -->
         <div class="so-section" id="soBizCardSection" style="display:none;">
-          <div class="so-section-title">📇 ${tr('용지 선택', '用紙選択', 'Paper')}</div>
-          <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.45;">${tr('이미지가 비슷하므로 카드에 마우스를 올리면 상세 설명이 표시됩니다.', '画像が似ているため、カードにマウスを乗せると説明が表示されます。', 'Hover over a card to see its description.')}</div>
-          <div id="soBizPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
-
-          <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
+          <!-- 1) 등급: 일반 / 프리미엄 -->
+          <div class="so-section-title">🏷️ ${tr('명함 등급', 'グレード', 'Grade')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">10,000원 / 200매</span></button>
-            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">15,000원 / 200매</span></button>
+            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면 3,000 / 양면 5,000', '片面 3,000 / 両面 5,000', 'S 3K / D 5K')}</span></button>
+            <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('단면 8,000 / 양면 10,000', '片面 8,000 / 両面 10,000', 'S 8K / D 10K')}</span></button>
           </div>
 
+          <!-- 2) 인쇄면 -->
+          <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">3,000원 / 200매</span></button>
+            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">5,000원 / 200매</span></button>
+          </div>
+
+          <!-- 3) 용지 (프리미엄만) -->
+          <div id="soBizPaperWrap" style="display:none;">
+            <div class="so-section-title" style="margin-top:18px;">📇 ${tr('용지 선택', '用紙選択', 'Paper')}</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.45;">${tr('이미지가 비슷해 보이므로 카드에 마우스를 올리면 상세 설명이 표시됩니다.', '画像が似ているため、カードにマウスを乗せると説明が表示されます。', 'Hover over a card to see its description.')}</div>
+            <div id="soBizPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
+
+          <!-- 4) 박 (선택) -->
           <div class="so-section-title" style="margin-top:18px;">✨ ${tr('박 (선택)', '箔押し (任意)', 'Foil (optional)')} <span style="font-weight:600; color:#64748b; font-size:11px; margin-left:6px;">+10,000원</span></div>
           <div id="soBizFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
 
+          <!-- 5) 후가공 (복수) -->
           <div class="so-section-title" style="margin-top:18px;">🛠️ ${tr('후가공 (복수 선택)', '後加工 (複数選択可)', 'Finishing (multi-select)')}</div>
           <div id="soBizFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
@@ -2763,10 +2776,10 @@ html, body { background: #ffffff !important; }
             if (state.isBanner) {
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 55000);
             } else if (state.isBizCard) {
-                // 2026-06-03: 명함 — 200매 단위 (단면 10K / 양면 15K) 박/후가공은 별도 옵션
+                // 2026-06-03: 명함 — 200매 단위. 등급별 단가 (일반 단면3K/양면5K, 프리미엄 단면8K/양면10K)
                 qty = Math.max(200, qty || 200);
                 var _bizSets = Math.ceil(qty / 200);
-                var _bizUnit = (state.bizSide === 'double') ? 15000 : 10000;
+                var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
                 subtotal = _bizUnit * _bizSets;
             } else if (state.isRawBoardDouble) {
@@ -2848,13 +2861,13 @@ html, body { background: #ffffff !important; }
                     );
                 });
             }
-            // 용지 정보는 가격 영향 없음 — 합계 위 한 줄 메모로만 표시
-            var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
-            if (_paperOpt) {
-                addonBreakdownLines.unshift(
-                    '<div class="so-price-row" style="color:#64748b;"><span>📇 ' + _paperOpt.name + ' · ' + (state.bizSide === 'double' ? '양면' : '단면') + ' · ' + (qty.toLocaleString()) + '매</span><span></span></div>'
-                );
-            }
+            // 용지/등급 정보는 가격 영향 없음 — 합계 위 한 줄 메모로만 표시
+            var _tierLbl = (state.bizTier === 'premium') ? '프리미엄' : '일반';
+            var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
+            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _paperOpt.name : '') + ' · ' + (state.bizSide === 'double' ? '양면' : '단면') + ' · ' + (qty.toLocaleString()) + '매';
+            addonBreakdownLines.unshift(
+                '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
+            );
         }
 
         // 배송/시공 비용 (야간 시간 보정 포함)
@@ -5651,50 +5664,54 @@ html, body { background: #ffffff !important; }
         }
     };
 
-    // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/면/박/후가공 핸들러 + 렌더
+    // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급/면/용지/박/후가공 핸들러 + 렌더
+    // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
+    function _bizPriceFor(side, tier) {
+        var t = tier || state.bizTier || 'general';
+        if (t === 'premium') return (side === 'double') ? 10000 : 8000;
+        return (side === 'double') ? 5000 : 3000;
+    }
+    function _bizCard2tone(title, descHtml, priceTag, sel, foilBottomBg, titleBg) {
+        // sel: 선택 여부 → 인디고 테두리
+        var border = sel ? '#4338ca' : '#d6d3d1';
+        var shadow = sel ? '0 4px 12px -4px rgba(67,56,202,0.45)' : 'none';
+        var topBg  = titleBg || '#ffffff';
+        var botBg  = foilBottomBg || '#1c1917';
+        var pTag = priceTag ? '<span style="font-size:11px; font-weight:800; color:#fbbf24;">' + priceTag + '</span>' : '';
+        return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s; min-height:64px;">'
+            + '<div style="background:' + topBg + '; color:#0a0a0a; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px;"><span style="font-size:13px; font-weight:900;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
+            + '<div style="background:' + botBg + '; color:#ffffff; padding:8px 10px; font-size:11px; line-height:1.4; flex:1;">' + descHtml + '</div>'
+            + '</div>';
+    }
+    // 박 색상 매핑 (하단 배경에 적용)
+    var BIZ_FOIL_BG = {
+        gold_matte:   'linear-gradient(135deg,#7a5a1a 0%,#a07a2c 100%)',
+        gold_gloss:   'linear-gradient(135deg,#c9952b 0%,#f1c14d 60%,#a37315 100%)',
+        silver_gloss: 'linear-gradient(135deg,#1c1917 0%,#3f3a36 100%)',
+        black_matte:  '#0a0a0a',
+        red_foil:     'linear-gradient(135deg,#8a1318 0%,#dc2626 100%)',
+        blue_foil:    'linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%)',
+        holo_foil:    'linear-gradient(120deg,#f472b6 0%,#a78bfa 30%,#60a5fa 60%,#34d399 100%)'
+    };
     function _soBizCardRender() {
         if (!state.isBizCard) return;
-        var gp = document.getElementById('soBizPaperGrid');
-        var gf = document.getElementById('soBizFoilGrid');
-        var gx = document.getElementById('soBizFinishGrid');
-        if (gp) {
-            gp.innerHTML = BIZ_PAPERS.map(function(o){
-                var sel = (state.bizPaper === o.key);
-                return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" '
-                    + 'style="text-align:left; padding:10px 12px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; transition:all 0.12s;">'
-                    + '<div style="font-size:13px; font-weight:800; color:' + (sel?'#3730a3':'#451a03') + '; margin-bottom:4px;">' + o.name + '</div>'
-                    + '<div style="font-size:11px; color:#64748b; line-height:1.4;">' + o.desc + '</div>'
-                    + '</button>';
-            }).join('');
+        // 등급 버튼
+        var tg = document.getElementById('soBizTierGeneral');
+        var tp = document.getElementById('soBizTierPremium');
+        if (tg && tp) {
+            var prem = (state.bizTier === 'premium');
+            tg.style.background = prem ? '#fff' : '#4338ca';
+            tg.style.color      = prem ? '#451a03' : '#fff';
+            tg.style.borderColor= prem ? '#e7e5e4' : '#4338ca';
+            tp.style.background = prem ? '#4338ca' : '#fff';
+            tp.style.color      = prem ? '#fff' : '#451a03';
+            tp.style.borderColor= prem ? '#4338ca' : '#e7e5e4';
         }
-        if (gf) {
-            var foilNone = '<button type="button" onclick="window._soBizPickFoil(null)" '
-                + 'style="text-align:left; padding:10px 12px; border:2px solid ' + (!state.bizFoil?'#4338ca':'#e7e5e4') + '; background:' + (!state.bizFoil?'#eef2ff':'#fff') + '; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit;">'
-                + '<div style="font-size:13px; font-weight:800; color:' + (!state.bizFoil?'#3730a3':'#451a03') + ';">선택 안 함</div>'
-                + '<div style="font-size:11px; color:#64748b; margin-top:4px;">박 없이 인쇄만 진행</div>'
-                + '</button>';
-            gf.innerHTML = foilNone + BIZ_FOILS.map(function(o){
-                var sel = (state.bizFoil === o.key);
-                return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" '
-                    + 'style="text-align:left; padding:10px 12px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit;">'
-                    + '<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:13px; font-weight:800; color:' + (sel?'#3730a3':'#451a03') + ';">' + o.name + '</span><span style="font-size:11px; font-weight:800; color:#be185d;">+' + o.price.toLocaleString() + '원</span></div>'
-                    + '<div style="font-size:11px; color:#64748b; line-height:1.4; margin-top:4px;">' + o.desc + '</div>'
-                    + '</button>';
-            }).join('');
-        }
-        if (gx) {
-            gx.innerHTML = BIZ_FINISHES.map(function(o){
-                var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
-                return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" '
-                    + 'style="text-align:left; padding:10px 12px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit;">'
-                    + '<div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:13px; font-weight:800; color:' + (sel?'#3730a3':'#451a03') + ';">' + (sel?'✓ ':'') + o.name + '</span><span style="font-size:11px; font-weight:800; color:#be185d;">+' + o.price.toLocaleString() + '원</span></div>'
-                    + '<div style="font-size:11px; color:#64748b; line-height:1.4; margin-top:4px;">' + o.desc + '</div>'
-                    + '</button>';
-            }).join('');
-        }
-        // 인쇄면 버튼 동기화
+        // 인쇄면 버튼 + 가격 라벨 (등급에 따라 변경)
         var bs = document.getElementById('soBizSideSingle');
         var bd = document.getElementById('soBizSideDouble');
+        var ps = document.getElementById('soBizSidePriceS');
+        var pd = document.getElementById('soBizSidePriceD');
         if (bs && bd) {
             var dbl = (state.bizSide === 'double');
             bs.style.background = dbl ? '#fff' : '#4338ca';
@@ -5704,7 +5721,54 @@ html, body { background: #ffffff !important; }
             bd.style.color = dbl ? '#fff' : '#451a03';
             bd.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
+        if (ps) ps.textContent = _bizPriceFor('single').toLocaleString() + '원 / 200매';
+        if (pd) pd.textContent = _bizPriceFor('double').toLocaleString() + '원 / 200매';
+        // 용지: 프리미엄일 때만 표시
+        var pw = document.getElementById('soBizPaperWrap');
+        if (pw) pw.style.display = (state.bizTier === 'premium') ? '' : 'none';
+        var gp = document.getElementById('soBizPaperGrid');
+        if (gp && state.bizTier === 'premium') {
+            gp.innerHTML = BIZ_PAPERS.map(function(o){
+                var sel = (state.bizPaper === o.key);
+                return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(o.name, o.desc, '', sel)
+                    + '</button>';
+            }).join('');
+        }
+        // 박
+        var gf = document.getElementById('soBizFoilGrid');
+        if (gf) {
+            var noneSel = !state.bizFoil;
+            var foilNone = '<button type="button" onclick="window._soBizPickFoil(null)" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                + _bizCard2tone(tr('선택 안 함','選択しない','None'), tr('박 없이 인쇄만 진행','箔押しなし','Print only — no foil'), '', noneSel, '#475569')
+                + '</button>';
+            gf.innerHTML = foilNone + BIZ_FOILS.map(function(o){
+                var sel = (state.bizFoil === o.key);
+                var bg = BIZ_FOIL_BG[o.key] || '#1c1917';
+                return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel, bg)
+                    + '</button>';
+            }).join('');
+        }
+        // 후가공
+        var gx = document.getElementById('soBizFinishGrid');
+        if (gx) {
+            gx.innerHTML = BIZ_FINISHES.map(function(o){
+                var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
+                return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(o.name, o.desc, '+' + o.price.toLocaleString() + '원', sel)
+                    + '</button>';
+            }).join('');
+        }
     }
+    window._soBizPickTier = function(t){
+        state.bizTier = (t === 'premium') ? 'premium' : 'general';
+        // 일반으로 가면 용지 선택 해제 (가격에 무관하지만 cart 표시 깔끔)
+        if (state.bizTier === 'general') state.bizPaper = null;
+        else if (!state.bizPaper) state.bizPaper = 'nuvegi240';
+        _soBizCardRender();
+        recalc();
+    };
     window._soBizPickPaper = function(k){ state.bizPaper = k; _soBizCardRender(); recalc(); };
     window._soBizPickFoil  = function(k){ state.bizFoil = k; _soBizCardRender(); recalc(); };
     window._soBizPickSide  = function(s){ state.bizSide = (s === 'double') ? 'double' : 'single'; _soBizCardRender(); recalc(); };
@@ -6473,10 +6537,11 @@ html, body { background: #ffffff !important; }
         state.isPhotozone = _soIsPhotozoneProduct(p);
         // 2026-06-01: 허니콤 전체 감지 — 큐 멀티-라인 시스템 노출 조건에 사용
         state.isHoneycomb = _soIsHoneycombProduct(p);
-        // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 전용 UI + 200매 단위 가격 (단면 10K / 양면 15K)
+        // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급(일반/프리미엄) + 면 + 박/후가공
         state.isBizCard = _soIsBizCardProduct(p);
         if (state.isBizCard) {
-            state.bizPaper = state.bizPaper || 'nuvegi240';
+            state.bizTier = state.bizTier || 'general';
+            state.bizPaper = state.bizPaper || ((state.bizTier === 'premium') ? 'nuvegi240' : null);
             state.bizSide = state.bizSide || 'single';
             state.bizFoil = (state.bizFoil === undefined) ? null : state.bizFoil;
             state.bizFinishes = state.bizFinishes || {};
@@ -7334,7 +7399,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         var _isHbFreeShip = state.isHoneycomb && !state.isWall;
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard
             && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
@@ -7724,8 +7789,9 @@ html, body { background: #ffffff !important; }
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
-            // 2026-06-03: 명함 옵션 (용지/면/박/후가공)
+            // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
             bizCard: state.isBizCard ? {
+                tier: state.bizTier || 'general',
                 paper: state.bizPaper, side: state.bizSide || 'single',
                 foil: state.bizFoil || null,
                 finishes: Object.assign({}, state.bizFinishes || {})
@@ -8479,7 +8545,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-03: 명함 옵션 복원
             if (item.bizCard) {
                 state.isBizCard = true;
-                state.bizPaper = item.bizCard.paper || state.bizPaper;
+                state.bizTier = item.bizCard.tier || 'general';
+                state.bizPaper = item.bizCard.paper || (state.bizTier === 'premium' ? 'nuvegi240' : null);
                 state.bizSide = item.bizCard.side || 'single';
                 state.bizFoil = item.bizCard.foil || null;
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
@@ -8673,7 +8740,10 @@ html, body { background: #ffffff !important; }
             var _bc = it.bizCard || {};
             var _bcQty = Math.max(200, qty || 200);
             var _bcSets = Math.ceil(_bcQty / 200);
-            var _bcUnit = (_bc.side === 'double') ? 15000 : 10000;
+            var _bcTier = _bc.tier || 'general';
+            var _bcUnit = (_bcTier === 'premium')
+                ? ((_bc.side === 'double') ? 10000 : 8000)
+                : ((_bc.side === 'double') ? 5000  : 3000);
             var _bcSub = _bcUnit * _bcSets;
             // 박
             if (_bc.foil) {
