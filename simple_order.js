@@ -1860,6 +1860,12 @@ html, body { background: #ffffff !important; }
             <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(3000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
             <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(5000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
           </div>
+          <!-- 2026-06-03: 명함 전용 — 인쇄면 바로 아래 파일 올리기 버튼 (좌측 soUpload 와 동기화) -->
+          <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="margin-top:10px; width:100%; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span style="font-size:18px;">📎</span>
+            <span>${tr('파일 올리기', 'ファイルをアップロード', 'Upload file')}</span>
+            <span style="font-size:11px; font-weight:700; color:#6366f1; background:#fff; padding:2px 8px; border-radius:4px; border:1px solid #c7d2fe;">${tr('PDF 권장', 'PDF推奨', 'PDF recommended')}</span>
+          </button>
 
           <!-- 3) 용지 (프리미엄만) -->
           <div id="soBizPaperWrap" style="display:none;">
@@ -1878,6 +1884,9 @@ html, body { background: #ffffff !important; }
             <span id="soBizFoilToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
           <div id="soBizFoilWrap" style="display:none; margin-top:8px;">
+            <div style="margin-bottom:8px; padding:9px 12px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#78350f; line-height:1.5; font-weight:700;">
+              💡 ${tr('박을 추가할 곳은 일러스트 작업에서 별도의 레이어에 <b>C100</b>으로 작업해주세요.', '箔押し位置はイラスト作業時、別レイヤーに <b>C100</b> で作成してください。', 'Mark foil areas on a separate Illustrator layer using <b>C100</b>.')}
+            </div>
             <div id="soBizFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
 
@@ -1891,6 +1900,9 @@ html, body { background: #ffffff !important; }
             <span id="soBizFinishToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
           <div id="soBizFinishWrap" style="display:none; margin-top:8px;">
+            <div style="margin-bottom:8px; padding:9px 12px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#78350f; line-height:1.5; font-weight:700;">
+              💡 ${tr('후가공 위치는 일러스트 작업에서 별도의 레이어에 <b>C100</b>으로 작업해주세요.', '後加工位置はイラスト作業時、別レイヤーに <b>C100</b> で作成してください。', 'Mark finishing areas on a separate Illustrator layer using <b>C100</b>.')}
+            </div>
             <div id="soBizFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
         </div>
@@ -5793,7 +5805,7 @@ html, body { background: #ffffff !important; }
                 var sel = (state.bizPaper === o.key);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
                 return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(nm, ds, '', sel)
+                    + _bizCard2tone(nm, ds, '', sel, '#e5e7eb', '#0a0a0a')
                     + '</button>';
             }).join('');
         }
