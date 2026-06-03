@@ -1864,13 +1864,31 @@ html, body { background: #ffffff !important; }
             <div id="soBizPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
 
-          <!-- 4) 박 (선택) -->
-          <div class="so-section-title" style="margin-top:18px;">✨ ${tr('박 (선택)', '箔押し (任意)', 'Foil (optional)')} <span style="font-weight:600; color:#64748b; font-size:11px; margin-left:6px;">+${fmtPrice(10000)}</span></div>
-          <div id="soBizFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          <!-- 4) 박 (선택) — 기본 접힘, 토글 버튼 클릭 시 펼침 -->
+          <button type="button" id="soBizFoilToggle" onclick="window._soBizToggleFoilSection()"
+            style="width:100%; margin-top:18px; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span style="font-weight:600; color:#be185d; font-size:11px; margin-left:4px;">+${fmtPrice(10000)}</span></span>
+              <span id="soBizFoilTogglePreview" style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
+            </div>
+            <span id="soBizFoilToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
+          </button>
+          <div id="soBizFoilWrap" style="display:none; margin-top:8px;">
+            <div id="soBizFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
 
-          <!-- 5) 후가공 (복수) -->
-          <div class="so-section-title" style="margin-top:18px;">🛠️ ${tr('후가공 (복수 선택)', '後加工 (複数選択可)', 'Finishing (multi-select)')}</div>
-          <div id="soBizFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          <!-- 5) 후가공 (복수) — 기본 접힘 -->
+          <button type="button" id="soBizFinishToggle" onclick="window._soBizToggleFinishSection()"
+            style="width:100%; margin-top:12px; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')}</span>
+              <span id="soBizFinishTogglePreview" style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
+            </div>
+            <span id="soBizFinishToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
+          </button>
+          <div id="soBizFinishWrap" style="display:none; margin-top:8px;">
+            <div id="soBizFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
         </div>
 
         <!-- 2026-05-30: 티셔츠 — 사이즈별 수량 (단체주문) -->
@@ -5775,9 +5793,28 @@ html, body { background: #ffffff !important; }
                     + '</button>';
             }).join('');
         }
+        // 박 토글 상태 + 선택 미리보기
+        var foilWrap = document.getElementById('soBizFoilWrap');
+        var foilArrow = document.getElementById('soBizFoilToggleArrow');
+        var foilPrev = document.getElementById('soBizFoilTogglePreview');
+        var foilOpen = !!state._bizFoilOpen;
+        if (foilWrap) foilWrap.style.display = foilOpen ? '' : 'none';
+        if (foilArrow) foilArrow.textContent = foilOpen ? '▲' : '▼';
+        if (foilPrev) {
+            if (state.bizFoil) {
+                var _selFoil = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
+                foilPrev.textContent = '✓ ' + (_selFoil ? _bizI18n(_selFoil, 'name') : '');
+                foilPrev.style.color = '#be185d';
+                foilPrev.style.fontWeight = '700';
+            } else {
+                foilPrev.textContent = tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose');
+                foilPrev.style.color = '#64748b';
+                foilPrev.style.fontWeight = '400';
+            }
+        }
         // 박
         var gf = document.getElementById('soBizFoilGrid');
-        if (gf) {
+        if (gf && foilOpen) {
             var noneSel = !state.bizFoil;
             var foilNone = '<button type="button" onclick="window._soBizPickFoil(null)" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
                 + _bizCard2tone(tr('선택 안 함','選択しない','None'), tr('박 없이 인쇄만 진행','箔押しなし','Print only — no foil'), '', noneSel, '#475569', '#fff')
@@ -5791,9 +5828,32 @@ html, body { background: #ffffff !important; }
                     + '</button>';
             }).join('');
         }
+        // 후가공 토글 상태 + 선택 미리보기
+        var fxWrap = document.getElementById('soBizFinishWrap');
+        var fxArrow = document.getElementById('soBizFinishToggleArrow');
+        var fxPrev = document.getElementById('soBizFinishTogglePreview');
+        var fxOpen = !!state._bizFinishOpen;
+        if (fxWrap) fxWrap.style.display = fxOpen ? '' : 'none';
+        if (fxArrow) fxArrow.textContent = fxOpen ? '▲' : '▼';
+        if (fxPrev) {
+            var _selFxs = (state.bizFinishes ? Object.keys(state.bizFinishes).filter(function(k){ return state.bizFinishes[k]; }) : []);
+            if (_selFxs.length > 0) {
+                var _selNames = _selFxs.map(function(k){
+                    var fo = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    return fo ? _bizI18n(fo, 'name') : '';
+                }).filter(Boolean).join(', ');
+                fxPrev.textContent = '✓ ' + _selNames;
+                fxPrev.style.color = '#be185d';
+                fxPrev.style.fontWeight = '700';
+            } else {
+                fxPrev.textContent = tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round');
+                fxPrev.style.color = '#64748b';
+                fxPrev.style.fontWeight = '400';
+            }
+        }
         // 후가공
         var gx = document.getElementById('soBizFinishGrid');
-        if (gx) {
+        if (gx && fxOpen) {
             gx.innerHTML = BIZ_FINISHES.map(function(o){
                 var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
@@ -5819,6 +5879,15 @@ html, body { background: #ffffff !important; }
         state.bizFinishes[k] = !state.bizFinishes[k];
         _soBizCardRender();
         recalc();
+    };
+    // 2026-06-03: 박/후가공 섹션 토글 — 클릭 시 펼침/접힘
+    window._soBizToggleFoilSection = function() {
+        state._bizFoilOpen = !state._bizFoilOpen;
+        _soBizCardRender();
+    };
+    window._soBizToggleFinishSection = function() {
+        state._bizFinishOpen = !state._bizFinishOpen;
+        _soBizCardRender();
     };
 
     window._soPickSide = function (side) {
