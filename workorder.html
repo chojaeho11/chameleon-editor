@@ -582,7 +582,10 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 <div class="ef-list">${extraFiles}</div>
             </div>` : '';
 
-            const sizeText = (wMm && hMm) ? `${Math.round(wMm)} × ${Math.round(hMm)} mm` : '-';
+            // 사이즈: 자동 감지된 값 우선, 매니저가 수동 입력한 mgr_size 가 있으면 그걸로 override
+            const autoSizeText = (wMm && hMm) ? `${Math.round(wMm)} × ${Math.round(hMm)} mm` : '';
+            const sizeText = (it.mgr_size && it.mgr_size.trim()) ? it.mgr_size.trim() : (autoSizeText || '-');
+            const _mgrMemoCurrent = (it.mgr_memo || '').trim();
 
             return `<div class="item">
                 <div class="item-head">
@@ -598,11 +601,25 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     </div>
                     <div class="item-spec">
                         <div class="lbl">상품 코드</div><div class="val">${esc(product.code || '-')}</div>
-                        <div class="lbl">사이즈</div><div class="val"><b>${sizeText}</b></div>
+                        <div class="lbl">사이즈</div>
+                        <div class="val">${_woIsAdmin
+                            ? `<input type="text" id="woItemSize_${i}" value="${esc(sizeText === '-' ? '' : sizeText)}" placeholder="${esc(autoSizeText || '예: 90 × 50 mm')}" onblur="window._woSaveItemSize(${i}, this.value)" style="width:100%; padding:4px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:11px; font-weight:700; color:#1f2937; font-family:inherit;">`
+                            : `<b>${esc(sizeText)}</b>`}</div>
                         <div class="lbl">수량</div><div class="val"><b>${qty}개</b></div>
                         <div class="lbl">단가</div><div class="val">${fmt(unit)}원</div>
                     </div>
                     ${optGrid}
+                    ${_woIsAdmin ? `<div style="grid-column:1/-1; margin-top:10px; padding:10px 12px; background:#fffbeb; border:1px dashed #fbbf24; border-radius:6px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <span style="font-size:11px; font-weight:800; color:#78350f;">📝 제품 메모 (작업 지시용)</span>
+                            <button type="button" onclick="window._woSaveItemMemo(${i})" style="padding:3px 10px; border:none; background:#78350f; color:#fde047; border-radius:4px; font-size:10px; font-weight:700; cursor:pointer; font-family:inherit;">💾 저장</button>
+                        </div>
+                        <textarea id="woItemMemo_${i}" rows="2" placeholder="이 제품에 대한 추가 지시사항 (예: 인쇄 컬러, 후가공, 특이사항 등)" style="width:100%; padding:6px 8px; border:1px solid #fbbf24; border-radius:4px; font-size:11px; font-family:inherit; line-height:1.5; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
+                        <span id="woItemMemoSaved_${i}" style="font-size:10px; color:#16a34a; font-weight:700; display:none;">✓ 저장됨</span>
+                    </div>` : (_mgrMemoCurrent ? `<div class="opt-box" style="grid-column:1/-1; margin-top:8px; background:#fffbeb; border-left:3px solid #fbbf24; padding:8px 10px;">
+                        <div style="font-weight:800; font-size:10px; color:#78350f; margin-bottom:3px;">📝 제품 메모</div>
+                        <div style="font-size:11px; color:#451a03; white-space:pre-wrap;">${esc(_mgrMemoCurrent)}</div>
+                    </div>` : '')}
                     ${itemAttachHtml}
                     ${extraFilesHtml}
                 </div>
@@ -702,6 +719,40 @@ window._woUploadMgrQuote = async function(input) {
         alert('견적서 업로드 실패: ' + (e.message || e));
         if (lbl) lbl.firstChild.textContent = origHtml;
         input.value = '';
+    }
+};
+
+// 2026-06-03: 항목별 사이즈/메모 저장 — items[idx].mgr_size, items[idx].mgr_memo
+async function _woUpdateItemField(idx, patch) {
+    if (!window._woOrderId) return false;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[idx]) throw new Error('항목 인덱스 오류');
+        Object.assign(items[idx], patch);
+        const { error: upErr } = await sb.from('orders').update({ items: items }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        return true;
+    } catch (e) {
+        console.error('[wo item field]', e);
+        alert('저장 실패: ' + (e.message || e));
+        return false;
+    }
+}
+
+window._woSaveItemSize = async function(idx, value) {
+    const v = (value || '').trim();
+    await _woUpdateItemField(idx, { mgr_size: v });
+};
+
+window._woSaveItemMemo = async function(idx) {
+    const ta = document.getElementById('woItemMemo_' + idx);
+    if (!ta) return;
+    const ok = await _woUpdateItemField(idx, { mgr_memo: ta.value.trim() });
+    if (ok) {
+        const saved = document.getElementById('woItemMemoSaved_' + idx);
+        if (saved) { saved.style.display = ''; setTimeout(function(){ saved.style.display = 'none'; }, 1800); }
     }
 };
 
