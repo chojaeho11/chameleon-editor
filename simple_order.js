@@ -2846,7 +2846,7 @@ html, body { background: #ffffff !important; }
                 if (_bizFoilOpt) {
                     addonTotal += _bizFoilOpt.price;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizFoilOpt.name + '</span><span>+' + fmtPrice(_bizFoilOpt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + '</span><span>+' + fmtPrice(_bizFoilOpt.price) + '</span></div>'
                     );
                 }
             }
@@ -2857,14 +2857,18 @@ html, body { background: #ffffff !important; }
                     if (!fopt) return;
                     addonTotal += fopt.price;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + fopt.name + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
                     );
                 });
             }
             // 용지/등급 정보는 가격 영향 없음 — 합계 위 한 줄 메모로만 표시
-            var _tierLbl = (state.bizTier === 'premium') ? '프리미엄' : '일반';
+            var _tierLbl = (state.bizTier === 'premium')
+                ? tr('프리미엄', 'プレミアム', 'Premium')
+                : tr('일반', '一般', 'Standard');
             var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
-            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _paperOpt.name : '') + ' · ' + (state.bizSide === 'double' ? '양면' : '단면') + ' · ' + (qty.toLocaleString()) + '매';
+            var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
+            var _qtyLbl  = qty.toLocaleString() + tr('매','枚','pcs');
+            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
@@ -3691,36 +3695,65 @@ html, body { background: #ffffff !important; }
         banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' }
     };
 
-    // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 옵션. 사용자가 마우스 hover 로 설명 확인 가능.
+    // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 옵션. KR/JP/EN 3개 언어 지원
     var BIZ_PAPERS = [
-        { key:'nuvegi240',     name:'누브지 240g',         desc:'고급스러운 부드러운 질감 · 가장 무난한 선택' },
-        { key:'whirale230',    name:'휘라레리넨 230g',     desc:'리넨 패턴의 직조 질감 · 자연스럽고 클래식한 느낌' },
-        { key:'stardream240',  name:'스타드림 240g',       desc:'미세한 펄이 반짝이는 고급지 · 화려한 인상' },
-        { key:'rendez240',     name:'랑데뷰내추럴 240g',   desc:'자연스러운 백색 · 매트한 표면 · 친환경 느낌' },
-        { key:'concept270',    name:'컨셉 270g',           desc:'두께감 있는 고급 백상지 · 묵직한 손맛' },
-        { key:'popset250',     name:'팝셋 250g',           desc:'밝고 깨끗한 컬러 · 디자인 색감이 잘 표현됨' },
-        { key:'yupoblue250',   name:'유포지블루 250g',     desc:'은은한 푸른빛 · 차분하고 모던한 느낌' },
-        { key:'scot220',       name:'스코틀랜드 백색 220g',desc:'고급 양면 코팅 · 선명한 인쇄 표현' },
-        { key:'montblanc240',  name:'몽블랑 백색 240g',    desc:'순백색 표면 · 깔끔하고 정갈한 인상' },
-        { key:'arte310',       name:'아르떼 울트라 화이트 310g', desc:'두꺼운 초백색 · 프리미엄 명함 추천' }
+        { key:'nuvegi240',     name_kr:'누브지 240g',              name_jp:'ヌーブ紙 240g',           name_us:'Nuvegi 240g',
+          desc_kr:'고급스러운 부드러운 질감 · 가장 무난한 선택',     desc_jp:'高級感のある柔らかな質感 · 最も無難な選択',                desc_us:'Smooth premium texture · safest pick' },
+        { key:'whirale230',    name_kr:'휘라레리넨 230g',          name_jp:'フィラレリネン 230g',      name_us:'Whirale Linen 230g',
+          desc_kr:'리넨 패턴의 직조 질감 · 자연스럽고 클래식한 느낌',desc_jp:'リネン柄の織り目 · 自然でクラシックな印象',                desc_us:'Woven linen pattern · natural classic feel' },
+        { key:'stardream240',  name_kr:'스타드림 240g',            name_jp:'スタードリーム 240g',      name_us:'Stardream 240g',
+          desc_kr:'미세한 펄이 반짝이는 고급지 · 화려한 인상',       desc_jp:'微細なパールが輝く高級紙 · 華やかな印象',                  desc_us:'Pearlescent shimmer · luxurious' },
+        { key:'rendez240',     name_kr:'랑데뷰내추럴 240g',        name_jp:'ランデブーナチュラル 240g', name_us:'Rendezvous Natural 240g',
+          desc_kr:'자연스러운 백색 · 매트한 표면 · 친환경 느낌',     desc_jp:'自然な白 · マットな表面 · エコな印象',                    desc_us:'Natural white · matte · eco vibe' },
+        { key:'concept270',    name_kr:'컨셉 270g',                name_jp:'コンセプト 270g',          name_us:'Concept 270g',
+          desc_kr:'두께감 있는 고급 백상지 · 묵직한 손맛',           desc_jp:'厚みのある高級白紙 · 重厚な手触り',                       desc_us:'Thick premium white stock · weighty feel' },
+        { key:'popset250',     name_kr:'팝셋 250g',                name_jp:'ポップセット 250g',        name_us:'Popset 250g',
+          desc_kr:'밝고 깨끗한 컬러 · 디자인 색감이 잘 표현됨',      desc_jp:'明るく清潔なカラー · デザインの発色が良い',                desc_us:'Bright clean color · vivid print' },
+        { key:'yupoblue250',   name_kr:'유포지블루 250g',          name_jp:'ユポブルー 250g',          name_us:'Yupo Blue 250g',
+          desc_kr:'은은한 푸른빛 · 차분하고 모던한 느낌',            desc_jp:'淡い青み · 落ち着いたモダンな印象',                       desc_us:'Soft blue cast · calm modern look' },
+        { key:'scot220',       name_kr:'스코틀랜드 백색 220g',     name_jp:'スコットランドホワイト 220g', name_us:'Scotland White 220g',
+          desc_kr:'고급 양면 코팅 · 선명한 인쇄 표현',               desc_jp:'高級両面コーティング · 鮮明な印刷',                       desc_us:'Premium double-coat · sharp print' },
+        { key:'montblanc240',  name_kr:'몽블랑 백색 240g',         name_jp:'モンブランホワイト 240g',  name_us:'Montblanc White 240g',
+          desc_kr:'순백색 표면 · 깔끔하고 정갈한 인상',              desc_jp:'純白の表面 · 清潔で整った印象',                            desc_us:'Pure white · clean refined look' },
+        { key:'arte310',       name_kr:'아르떼 울트라 화이트 310g',name_jp:'アルテ ウルトラホワイト 310g', name_us:'Arte Ultra White 310g',
+          desc_kr:'두꺼운 초백색 · 프리미엄 명함 추천',              desc_jp:'厚手の超白色 · プレミアム名刺向け',                       desc_us:'Thick ultra-white · premium pick' }
     ];
     var BIZ_FOILS = [
-        { key:'gold_matte',    name:'무광 금박',   price:10000, desc:'은은하고 차분한 골드 마감 · 고급스러운 분위기' },
-        { key:'gold_gloss',    name:'유광 금박',   price:10000, desc:'반짝이는 골드 · 화려하고 눈에 띄는 느낌' },
-        { key:'silver_gloss',  name:'먹박',       price:10000, desc:'유광 블랙 박 · 깊고 무게감 있는 마감' },
-        { key:'black_matte',   name:'흑박',       price:10000, desc:'무광 블랙 박 · 시크하고 모던한 인상' },
-        { key:'red_foil',      name:'적박',       price:10000, desc:'선명한 레드 박 · 강렬한 포인트' },
-        { key:'blue_foil',     name:'청박',       price:10000, desc:'쿨한 블루 박 · 차분하면서 세련된 느낌' },
-        { key:'holo_foil',     name:'홀로그램박', price:10000, desc:'빛에 따라 무지개빛으로 변하는 박 · 독특한 효과' }
+        { key:'gold_matte',    name_kr:'무광 금박',     name_jp:'マットゴールド箔',    name_us:'Matte Gold Foil',
+          desc_kr:'은은하고 차분한 골드 마감 · 고급스러운 분위기', desc_jp:'落ち着いたゴールド仕上げ · 高級感のある雰囲気',  desc_us:'Subtle gold finish · luxe vibe', price:10000 },
+        { key:'gold_gloss',    name_kr:'유광 금박',     name_jp:'グロスゴールド箔',    name_us:'Glossy Gold Foil',
+          desc_kr:'반짝이는 골드 · 화려하고 눈에 띄는 느낌',       desc_jp:'輝くゴールド · 華やかで目を引く印象',            desc_us:'Shiny gold · eye-catching & vivid', price:10000 },
+        { key:'silver_gloss',  name_kr:'먹박',          name_jp:'グロスブラック箔',    name_us:'Glossy Black Foil',
+          desc_kr:'유광 블랙 박 · 깊고 무게감 있는 마감',          desc_jp:'グロスブラック箔 · 深みと重厚感',                desc_us:'Glossy black · deep weighty finish', price:10000 },
+        { key:'black_matte',   name_kr:'흑박',          name_jp:'マットブラック箔',    name_us:'Matte Black Foil',
+          desc_kr:'무광 블랙 박 · 시크하고 모던한 인상',           desc_jp:'マットブラック箔 · シックでモダンな印象',         desc_us:'Matte black · chic modern impression', price:10000 },
+        { key:'red_foil',      name_kr:'적박',          name_jp:'レッド箔',            name_us:'Red Foil',
+          desc_kr:'선명한 레드 박 · 강렬한 포인트',                desc_jp:'鮮やかなレッド箔 · 強烈なアクセント',             desc_us:'Vivid red foil · bold accent', price:10000 },
+        { key:'blue_foil',     name_kr:'청박',          name_jp:'ブルー箔',            name_us:'Blue Foil',
+          desc_kr:'쿨한 블루 박 · 차분하면서 세련된 느낌',         desc_jp:'クールなブルー箔 · 落ち着いた洗練された印象',     desc_us:'Cool blue · calm yet refined', price:10000 },
+        { key:'holo_foil',     name_kr:'홀로그램박',    name_jp:'ホログラム箔',        name_us:'Hologram Foil',
+          desc_kr:'빛에 따라 무지개빛으로 변하는 박 · 독특한 효과',desc_jp:'光の角度で虹色に変わる箔 · 独特な効果',           desc_us:'Iridescent rainbow shift · unique', price:10000 }
     ];
     var BIZ_FINISHES = [
-        { key:'hyungap',  name:'형압',   price:20000, desc:'압력으로 표면에 입체감 · 로고/텍스트 돋움 효과' },
-        { key:'embossing',name:'엠보싱', price:20000, desc:'표면에 양각 무늬 · 부드러운 입체감' },
-        { key:'mising',   name:'미싱',   price:5000,  desc:'재봉선처럼 점선 절취 · 절취선/쿠폰형 명함' },
-        { key:'oshi',     name:'오시',   price:10000, desc:'접히는 라인을 미리 눌러줌 · 접지 명함 필수' },
-        { key:'taegong',  name:'타공',   price:5000,  desc:'원형 구멍 뚫기 · 끈/링 꿰기용' },
-        { key:'gwidori',  name:'귀도리', price:3000,  desc:'모서리 둥글게 · 부드러운 인상' }
+        { key:'hyungap',  name_kr:'형압',   name_jp:'型押し',       name_us:'Embossing (press)',
+          desc_kr:'압력으로 표면에 입체감 · 로고/텍스트 돋움 효과',desc_jp:'圧力で表面に立体感 · ロゴ/テキストを浮き出させる',desc_us:'Press for raised logo/text', price:20000 },
+        { key:'embossing',name_kr:'엠보싱', name_jp:'エンボス',     name_us:'Texture Emboss',
+          desc_kr:'표면에 양각 무늬 · 부드러운 입체감',            desc_jp:'表面に浮き彫り模様 · 柔らかな立体感',              desc_us:'Raised pattern · soft 3D feel', price:20000 },
+        { key:'mising',   name_kr:'미싱',   name_jp:'ミシン目',     name_us:'Perforation',
+          desc_kr:'재봉선처럼 점선 절취 · 절취선/쿠폰형 명함',     desc_jp:'ミシン目で切り取り · クーポン型名刺',              desc_us:'Tear line · coupon-style cards', price:5000 },
+        { key:'oshi',     name_kr:'오시',   name_jp:'スジ入れ',     name_us:'Creasing',
+          desc_kr:'접히는 라인을 미리 눌러줌 · 접지 명함 필수',    desc_jp:'折り目をあらかじめ付ける · 折り名刺に必須',         desc_us:'Pre-crease folds · for folded cards', price:10000 },
+        { key:'taegong',  name_kr:'타공',   name_jp:'穴あけ',       name_us:'Hole Punch',
+          desc_kr:'원형 구멍 뚫기 · 끈/링 꿰기용',                 desc_jp:'丸穴あけ · ひも/リング通し用',                     desc_us:'Round hole · string/ring threading', price:5000 },
+        { key:'gwidori',  name_kr:'귀도리', name_jp:'角丸',         name_us:'Rounded Corners',
+          desc_kr:'모서리 둥글게 · 부드러운 인상',                 desc_jp:'角を丸く · 柔らかい印象',                          desc_us:'Round corners · softer feel', price:3000 }
     ];
+    function _bizI18n(o, field) {
+        var lang = (typeof getLang === 'function') ? getLang() : 'ko';
+        if (lang === 'ja') return o[field + '_jp'] || o[field + '_kr'] || '';
+        if (lang === 'en') return o[field + '_us'] || o[field + '_kr'] || '';
+        return o[field + '_kr'] || '';
+    }
     function _soIsBizCardProduct(p) {
         return !!(p && p.code && /^pp_bc/i.test(p.code));
     }
@@ -5736,8 +5769,9 @@ html, body { background: #ffffff !important; }
         if (gp && state.bizTier === 'premium') {
             gp.innerHTML = BIZ_PAPERS.map(function(o){
                 var sel = (state.bizPaper === o.key);
-                return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '', sel)
+                var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+                return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(nm, ds, '', sel)
                     + '</button>';
             }).join('');
         }
@@ -5751,8 +5785,9 @@ html, body { background: #ffffff !important; }
             gf.innerHTML = foilNone + BIZ_FOILS.map(function(o){
                 var sel = (state.bizFoil === o.key);
                 var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
-                return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '+' + fmtPrice(o.price), sel, fc.bg, fc.txt)
+                var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+                return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel, fc.bg, fc.txt)
                     + '</button>';
             }).join('');
         }
@@ -5761,8 +5796,9 @@ html, body { background: #ffffff !important; }
         if (gx) {
             gx.innerHTML = BIZ_FINISHES.map(function(o){
                 var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
-                return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + o.desc.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(o.name, o.desc, '+' + fmtPrice(o.price), sel)
+                var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+                return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
                     + '</button>';
             }).join('');
         }
