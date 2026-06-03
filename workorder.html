@@ -153,12 +153,12 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         </div>
     </div>
 
-    <!-- 2026-06-03: 제품종류 선택 + 수동 견적서 업로드 (매니저 전용) -->
-    <div id="woMgrPanel" style="margin-top:12px; padding:12px 14px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; display:none;">
+    <!-- 2026-06-03: 제품종류 선택 + 수동 견적서 업로드 + 완료 버튼 (매니저 전용) — 빨강 강조 -->
+    <div id="woMgrPanel" style="margin-top:12px; padding:14px 16px; background:#fef2f2; border:2px solid #dc2626; border-radius:10px; box-shadow:0 4px 12px -4px rgba(220,38,38,0.25); display:none;">
         <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <label style="font-size:12px; font-weight:800; color:#78350f;">📦 제품종류</label>
-                <select id="woProductCategory" onchange="window._woSaveProductCategory()" style="padding:6px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;">
+                <label style="font-size:12px; font-weight:900; color:#7f1d1d;">📦 제품종류</label>
+                <select id="woProductCategory" onchange="window._woSaveProductCategory()" style="padding:6px 10px; border:1.5px solid #ef4444; border-radius:6px; font-size:12px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;">
                     <option value="">-- 선택 --</option>
                     <option value="허니콤보드">허니콤보드</option>
                     <option value="패브릭">패브릭</option>
@@ -169,10 +169,15 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
                 </select>
                 <span id="woCategorySaved" style="font-size:11px; color:#16a34a; font-weight:700; display:none;">✓ 저장됨</span>
             </div>
-            <label style="font-size:12px; font-weight:700; color:#78350f; border:1.5px solid #f59e0b; border-radius:6px; padding:6px 12px; cursor:pointer; background:#fff;">
+            <label style="font-size:12px; font-weight:800; color:#7f1d1d; border:1.5px solid #ef4444; border-radius:6px; padding:6px 12px; cursor:pointer; background:#fff;">
                 📄 견적서 업로드<input type="file" id="woMgrQuoteFile" accept=".pdf,image/*,.doc,.docx,.xlsx" style="display:none;" onchange="window._woUploadMgrQuote(this)">
             </label>
-            <div id="woMgrQuoteList" style="font-size:11px; color:#78350f; display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <button type="button" id="woWorkorderCompleteBtn" onclick="window._woToggleWorkorderComplete()" style="font-size:12px; font-weight:900; color:#fff; background:linear-gradient(135deg,#dc2626,#991b1b); border:none; border-radius:6px; padding:7px 16px; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(220,38,38,0.5);">✅ 완료</button>
+            <div id="woMgrQuoteList" style="font-size:11px; color:#7f1d1d; display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                <span style="font-size:14px; font-weight:900; color:#dc2626; letter-spacing:0.5px;">⚠️ 3가지 꼭 체크!</span>
+                <span style="font-size:10px; color:#7f1d1d; font-weight:700;">제품종류 · 견적서 · 완료</span>
+            </div>
         </div>
     </div>
 
@@ -286,10 +291,16 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         const _currentStaffNote = _staffMatch ? _staffMatch[1].trim() : '';
         window._woCurrentStaffNote = _currentStaffNote;
 
+        // [작업지시완료] 마커 추출
+        const _completeMatch = _headerPart.match(/\[작업지시완료\]\s*(.+?)(?:\n|$)/);
+        const _currentComplete = _completeMatch ? _completeMatch[1].trim() : '';
+        window._woCurrentComplete = _currentComplete;
+
         // 기존 시스템 헤더 (간편주문 결제수단/이메일/배송메모) — 매니저가 손대지 않는 자동 정보
         const _headerForDisplay = _headerPart
             .replace(/\[제품종류\][^\n]*\n?/g, '')
             .replace(/\[직원메모\][\s\S]*?(?=\n\[|$)/g, '')
+            .replace(/\[작업지시완료\][^\n]*\n?/g, '')
             .trim();
 
         if (_headerForDisplay) {
@@ -322,6 +333,17 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 _qList.innerHTML = _mgrQuotes.map(function(f){
                     return '<a href="' + esc(f.url) + '" target="_blank" style="color:#0369a1; font-weight:700; text-decoration:underline;">📄 ' + esc(f.name || '견적서') + '</a>';
                 }).join('');
+            }
+            // 완료 버튼 상태 표시
+            const _cBtn = document.getElementById('woWorkorderCompleteBtn');
+            if (_cBtn) {
+                if (_currentComplete) {
+                    _cBtn.innerHTML = '✓ 완료됨 <span style="font-size:10px; opacity:0.85; font-weight:600;">(' + esc(_currentComplete) + ')</span>';
+                    _cBtn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+                } else {
+                    _cBtn.innerHTML = '✅ 완료';
+                    _cBtn.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)';
+                }
             }
         }
 
@@ -651,8 +673,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
     }
 })();
 
-// 2026-06-03: admin_note 헤더 부분(자동 시스템 + [제품종류] + [직원메모]) 합쳐서 다시 저장
-async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote) {
+// 2026-06-03: admin_note 헤더 부분(자동 시스템 + [제품종류] + [직원메모] + [작업지시완료]) 합쳐서 다시 저장
+async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote, newComplete) {
     if (!window._woOrderId) return false;
     try {
         const { data: cur, error: rdErr } = await sb.from('orders').select('admin_note').eq('id', window._woOrderId).single();
@@ -661,21 +683,25 @@ async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote) {
         const splitIdx = raw.indexOf('=== 상품별 옵션·요청 ===');
         const itemsPart = splitIdx >= 0 ? raw.slice(splitIdx) : '';
         const headerPart = splitIdx >= 0 ? raw.slice(0, splitIdx).trim() : raw.trim();
-        // 기존 [제품종류] / [직원메모] 제거
+        // 기존 마커 모두 제거
         const cleanHeader = headerPart
             .replace(/\[제품종류\][^\n]*\n?/g, '')
             .replace(/\[직원메모\][\s\S]*?(?=\n\[|$)/g, '')
+            .replace(/\[작업지시완료\][^\n]*\n?/g, '')
             .trim();
         let newHeader = cleanHeader;
         const _cat = (newCategory != null) ? newCategory : window._woCurrentCategory;
         const _staff = (newStaffNote != null) ? newStaffNote : window._woCurrentStaffNote;
+        const _comp = (newComplete != null) ? newComplete : window._woCurrentComplete;
         if (_cat) newHeader = (newHeader ? newHeader + '\n' : '') + '[제품종류] ' + _cat;
         if (_staff) newHeader = (newHeader ? newHeader + '\n' : '') + '[직원메모] ' + _staff;
+        if (_comp) newHeader = (newHeader ? newHeader + '\n' : '') + '[작업지시완료] ' + _comp;
         const finalNote = newHeader + (itemsPart ? '\n\n' + itemsPart : '');
         const { error: upErr } = await sb.from('orders').update({ admin_note: finalNote }).eq('id', window._woOrderId);
         if (upErr) throw upErr;
         if (newCategory != null) window._woCurrentCategory = newCategory;
         if (newStaffNote != null) window._woCurrentStaffNote = newStaffNote;
+        if (newComplete != null) window._woCurrentComplete = newComplete;
         return true;
     } catch (e) {
         console.error('[wo save admin_note]', e);
@@ -683,6 +709,21 @@ async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote) {
         return false;
     }
 }
+
+window._woToggleWorkorderComplete = async function() {
+    const isComplete = !!window._woCurrentComplete;
+    if (isComplete) {
+        if (!confirm('작업 완료 표시를 해제하시겠습니까?')) return;
+        const ok = await _woRebuildAndSaveAdminNote(null, null, '');
+        if (ok) location.reload();
+    } else {
+        const _now = new Date();
+        const _stamp = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0')
+                     + ' ' + String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
+        const ok = await _woRebuildAndSaveAdminNote(null, null, _stamp);
+        if (ok) location.reload();
+    }
+};
 
 window._woSaveProductCategory = async function() {
     const sel = document.getElementById('woProductCategory');
