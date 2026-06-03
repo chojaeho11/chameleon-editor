@@ -1907,7 +1907,48 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-05-30: 티셔츠 — 사이즈별 수량 (단체주문) -->
+        <!-- 2026-06-03: 스티커 (st_*, 0000241) 전용 — 카테고리/모양/사이즈/용지/수량 -->
+        <div class="so-section" id="soStickerSection" style="display:none;">
+          <!-- 1) 카테고리 (12종) -->
+          <div class="so-section-title">🏷️ ${tr('스티커 종류', 'ステッカー種類', 'Sticker Type')}</div>
+          <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.45;">${tr('원하는 종류를 선택하면 하위 옵션이 나타납니다.', '種類を選ぶとサブオプションが表示されます。', 'Pick a type to see options.')}</div>
+          <div id="soStickerCatGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+
+          <!-- 2) 모양 (해당 카테고리만) -->
+          <div id="soStickerShapeWrap" style="display:none;">
+            <div class="so-section-title" style="margin-top:18px;">🔵 ${tr('모양', '形状', 'Shape')}</div>
+            <div id="soStickerShapeGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;"></div>
+          </div>
+
+          <!-- 3) 사이즈 -->
+          <div id="soStickerSizeWrap" style="display:none;">
+            <div class="so-section-title" style="margin-top:18px;">📐 ${tr('사이즈', 'サイズ', 'Size')}</div>
+            <select id="soStickerSize" onchange="window._soStickerPickSize(this.value)" style="width:100%; padding:11px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;"></select>
+          </div>
+
+          <!-- 4) 용지 -->
+          <div id="soStickerPaperWrap" style="display:none;">
+            <div class="so-section-title" style="margin-top:18px;">📇 ${tr('용지', '用紙', 'Paper')}</div>
+            <select id="soStickerPaper" onchange="window._soStickerPickPaper(this.value)" style="width:100%; padding:11px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;"></select>
+            <div id="soStickerPaperDesc" style="margin-top:6px; font-size:11.5px; color:#64748b; line-height:1.45;"></div>
+          </div>
+
+          <!-- 5) 수량 -->
+          <div id="soStickerQtyWrap" style="display:none;">
+            <div class="so-section-title" style="margin-top:18px;">🧮 ${tr('수량', '数量', 'Quantity')}</div>
+            <div id="soStickerQtyGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px;"></div>
+            <div style="margin-top:8px; padding:8px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font-size:11.5px; color:#1e3a8a; font-weight:700;">
+              💡 ${tr('1,000개 이상 구매 시, 기본 수량보다 80% 저렴하게 구매할 수 있어요.', '1,000枚以上で基本数量より80%安くなります。', '1,000+ qty: 80% cheaper than base.')}
+            </div>
+          </div>
+
+          <!-- 안내 -->
+          <div id="soStickerNotice" style="margin-top:14px; padding:10px 12px; background:#fffbeb; border-left:3px solid #fbbf24; border-radius:6px; font-size:11.5px; color:#78350f; line-height:1.5; display:none;">
+            📤 ${tr('아래 좌측 영역에 PDF/AI/PNG 파일을 업로드해주세요. 칼선이 필요한 경우 일러스트의 별도 레이어에 C100으로 작업해주세요.', '左側にPDF/AI/PNGファイルをアップロード。カット線は別レイヤーにC100で。', 'Upload PDF/AI/PNG on the left. Mark die-cut lines on a separate layer with C100.')}
+          </div>
+        </div>
+
+        <!-- 2025-05-30: 티셔츠 — 사이즈별 수량 (단체주문) -->
         <div class="so-section" id="soTshirtSizeSection" style="display:none;">
           <div class="so-section-title">📏 ${tr('사이즈별 수량 (단체 주문)', 'サイズ別数量 (団体注文)', 'Size × Qty (group order)')}</div>
           <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;">
@@ -2815,6 +2856,19 @@ html, body { background: #ffffff !important; }
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
                 subtotal = _bizUnit * qty;
+            } else if (state.isSticker) {
+                // 2026-06-03: 스티커 — 비즈하우스 가격 mirror. 카테고리/사이즈/용지/수량 조합 단가
+                var _stPrice = _stickerCalcPrice({
+                    category: state.stickerCategory,
+                    shape: state.stickerShape,
+                    size: state.stickerSize,
+                    paper: state.stickerPaper,
+                    qtyKey: state.stickerQtyKey
+                });
+                var _stQ = STICKER_QTYS.find(function(q){ return q.key === state.stickerQtyKey; }) || STICKER_QTYS[0];
+                qty = _stQ.qty;
+                unit = (qty > 0) ? Math.round(_stPrice / qty) : 0;
+                subtotal = _stPrice;
             } else if (state.isRawBoardDouble) {
                 // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
                 unit = unit * 2;
@@ -2906,6 +2960,23 @@ html, body { background: #ffffff !important; }
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
         }
+        // 2026-06-03: 스티커 메타 라벨
+        if (state.isSticker && state.stickerCategory) {
+            var _stCat   = STICKER_CATEGORIES.find(function(c){ return c.key === state.stickerCategory; });
+            var _stSizes = (state.stickerCategory === 'panel') ? STICKER_SIZES_PANEL : STICKER_SIZES_SINGLE;
+            var _stSize  = _stSizes.find(function(s){ return s.key === state.stickerSize; });
+            var _stPaper = STICKER_PAPERS.find(function(p){ return p.key === state.stickerPaper; });
+            var _stShapes = STICKER_SHAPES[state.stickerCategory];
+            var _stShape = (_stShapes || []).find(function(s){ return s.key === state.stickerShape; });
+            var _stMeta = (_stCat ? _stCat.icon + ' ' + _stickerI18n(_stCat, 'name') : '🏷️') +
+                          (_stShape ? ' · ' + _stickerI18n(_stShape, 'name') : '') +
+                          (_stSize ? ' · ' + _stSize.label : '') +
+                          (_stPaper ? ' · ' + _stickerI18n(_stPaper, 'name') : '') +
+                          ' · ' + qty.toLocaleString() + tr('매','枚','pcs');
+            addonBreakdownLines.unshift(
+                '<div class="so-price-row" style="color:#64748b;"><span>' + _stMeta + '</span><span></span></div>'
+            );
+        }
 
         // 배송/시공 비용 (야간 시간 보정 포함)
         const shipFee = _soComputeShipFee();
@@ -2947,7 +3018,7 @@ html, body { background: #ffffff !important; }
         const taxBase = subtotal + addonTotal + heightExtra + wallShapeFee + adExtraLinesTotal;
         // 2026-06-01: 배너는 _noDisc 에서 제외 — 4-box (이벤트쿠폰/마일리지/예치금/PRO) 사용 가능. 볼륨티어는 자연히 1M 미만이라 적용 안 됨.
         // 2026-06-03: 인쇄물 카테고리 전체 (state.isGeneralPrint = 허니콤/포맥스 제외 모든 상품) 수량/금액 할인 없음 (사용자 요청)
-        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isGeneralPrint;
+        const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
         let amountPct = 0;
         if (!_noDisc) {
             if (taxBase >= 10000000) amountPct = 30;
@@ -3146,8 +3217,8 @@ html, body { background: #ffffff !important; }
                 setText('soShipLabel', tr('배송비 · 10만원+ 무료 / 미만 1만원', '送料 · 10万+ 無料 / 未満 1万円', 'Shipping · free over ₩100k / under ₩10k'));
                 setText('soShipAmount', '+' + fmtPrice(shipFee));
             }
-        } else if (state.isBestGoods || state.isBizCard) {
-            // 2026-06-03: 명함도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
+        } else if (state.isBestGoods || state.isBizCard || state.isSticker) {
+            // 2026-06-03: 명함/스티커도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else {
@@ -3792,6 +3863,149 @@ html, body { background: #ffffff !important; }
         return !!(p && p.code && /^pp_bc/i.test(p.code));
     }
 
+    // 2026-06-03: 스티커 — 비즈하우스(미리캔버스 자회사) 카탈로그 mirror.
+    // anchor 가격: 원형 3.5cm × 100매 × 무코팅아트지 = 5,200원 (= 52원/매)
+    // 다른 조합은 anchor × shape multiplier × paper multiplier × qty discount.
+    // 마진 0 운영 — 비즈하우스 가격 그대로 통과. 사용자가 admin 에서 조정 가능.
+    var STICKER_CATEGORIES = [
+        { key:'single_std',     icon:'🔵', name_kr:'싱글 규격 스티커',     name_jp:'シングル規格ステッカー',   name_us:'Single Standard',
+          desc_kr:'가장 경제적 · 정해진 사이즈',          desc_jp:'最も経済的 · 規格サイズ',         desc_us:'Most economical · fixed sizes',
+          base:52, badge:'BEST' },
+        { key:'single_free',    icon:'⭐', name_kr:'싱글 비규격 스티커',   name_jp:'シングル非規格',           name_us:'Single Custom Size',
+          desc_kr:'원하는 사이즈 그대로',                 desc_jp:'お好みのサイズで',                 desc_us:'Any size you want',
+          base:8.9 },
+        { key:'panel',          icon:'🟦', name_kr:'판스티커',              name_jp:'シートステッカー',          name_us:'Sheet Sticker',
+          desc_kr:'한 장에 여러 개 · 한꺼번에 인쇄',     desc_jp:'1枚に複数 · まとめて印刷',         desc_us:'Multiple per sheet',
+          base:11, badge:'NEW' },
+        { key:'roll',           icon:'🌀', name_kr:'롤스티커',              name_jp:'ロールステッカー',          name_us:'Roll Sticker',
+          desc_kr:'대량 · 연속 부착용',                   desc_jp:'大量 · 連続貼付用',                desc_us:'Bulk · continuous use',
+          base:18 },
+        { key:'free_shape',     icon:'✂️', name_kr:'싱글 자유 스티커',     name_jp:'シングル自由型',           name_us:'Single Free Shape',
+          desc_kr:'원하는 모양 칼선',                     desc_jp:'お好きな形にカット',              desc_us:'Any shape die-cut',
+          base:33 },
+        { key:'premium_clear',  icon:'💎', name_kr:'프리미엄 투명 스티커', name_jp:'プレミアム透明',           name_us:'Premium Clear',
+          desc_kr:'고급 투명 PET',                        desc_jp:'高級透明PET',                      desc_us:'Premium clear PET',
+          base:78 },
+        { key:'floor',          icon:'🚧', name_kr:'바닥 스티커',           name_jp:'床用ステッカー',           name_us:'Floor Sticker',
+          desc_kr:'바닥 부착용 · 강한 내구성',           desc_jp:'床用 · 強い耐久性',                desc_us:'Floor-grade durable',
+          base:980 },
+        { key:'interior',       icon:'🪟', name_kr:'인테리어 스티커',       name_jp:'インテリア',                name_us:'Interior',
+          desc_kr:'벽/유리 인테리어',                     desc_jp:'壁/ガラス用',                      desc_us:'Wall/glass interior',
+          base:280 },
+        { key:'lettering',      icon:'🔠', name_kr:'레터링 스티커',         name_jp:'レタリング',                name_us:'Lettering',
+          desc_kr:'글자/로고 컷팅',                       desc_jp:'文字/ロゴカット',                 desc_us:'Text/logo cut',
+          base:150 },
+        { key:'self_shape',     icon:'🎨', name_kr:'셀프 모양 스티커',     name_jp:'セルフ型',                  name_us:'Self Shape',
+          desc_kr:'다양한 모양 · 배치 칼선',             desc_jp:'様々な形 · カット線',              desc_us:'Various shapes + die-cut',
+          base:45 },
+        { key:'double',         icon:'2️⃣', name_kr:'더블 (2분할) 스티커',  name_jp:'ダブル (2分割)',           name_us:'Double (2-split)',
+          desc_kr:'한 장에 2디자인',                      desc_jp:'1枚に2デザイン',                  desc_us:'2 designs per sheet',
+          base:21 },
+        { key:'quad',           icon:'4️⃣', name_kr:'따따블 (4분할) 스티커',name_jp:'クアッド (4分割)',         name_us:'Quad (4-split)',
+          desc_kr:'한 장에 4디자인',                      desc_jp:'1枚に4デザイン',                  desc_us:'4 designs per sheet',
+          base:37 }
+    ];
+    // 모양 × 사이즈 조합 (비즈하우스/미리캔버스 mirror — 카테고리별)
+    var STICKER_SHAPES = {
+        single_std: [
+            { key:'circle',    icon:'⚪', name_kr:'원형',        name_jp:'円形',       name_us:'Circle' },
+            { key:'square',    icon:'⬜', name_kr:'정사각',      name_jp:'正方形',     name_us:'Square' },
+            { key:'square_r',  icon:'🔲', name_kr:'라운드 정사각',name_jp:'角丸正方形', name_us:'Round Square' },
+            { key:'rect',      icon:'🟨', name_kr:'직사각',      name_jp:'長方形',     name_us:'Rectangle' }
+        ],
+        panel: [
+            { key:'circle',    icon:'⚪', name_kr:'원형',        name_jp:'円形',       name_us:'Circle' },
+            { key:'square',    icon:'⬜', name_kr:'정사각',      name_jp:'正方形',     name_us:'Square' },
+            { key:'square_r',  icon:'🔲', name_kr:'라운드 정사각',name_jp:'角丸正方形', name_us:'Round Square' },
+            { key:'rect',      icon:'🟨', name_kr:'직사각',      name_jp:'長方形',     name_us:'Rectangle' }
+        ]
+    };
+    // 사이즈 옵션: 미리캔버스 판스티커 mirror (사이즈 × 1매당 조각 수)
+    var STICKER_SIZES_PANEL = [
+        { key:'20',    label:'20×20mm',  per:40, mult:0.8 },
+        { key:'25',    label:'25×25mm',  per:24, mult:0.9 },
+        { key:'30',    label:'30×30mm',  per:15, mult:1.0 },
+        { key:'40',    label:'40×40mm',  per:12, mult:1.2, badge:'BEST' },
+        { key:'50',    label:'50×50mm',  per:6,  mult:1.4 },
+        { key:'60',    label:'60×60mm',  per:6,  mult:1.6 },
+        { key:'mixed', label:'25+45mm 혼합',per:15,mult:1.3 }
+    ];
+    // 싱글 규격 — 단일 스티커 사이즈 (직경 또는 가로/세로 cm)
+    var STICKER_SIZES_SINGLE = [
+        { key:'2.0',  label:'지름 2.0cm', mult:0.6 },
+        { key:'2.5',  label:'지름 2.5cm', mult:0.75 },
+        { key:'3.0',  label:'지름 3.0cm', mult:0.9 },
+        { key:'3.5',  label:'지름 3.5cm', mult:1.0 },  // anchor
+        { key:'4.0',  label:'지름 4.0cm', mult:1.15 },
+        { key:'5.0',  label:'지름 5.0cm', mult:1.4 },
+        { key:'6.0',  label:'지름 6.0cm', mult:1.7 },
+        { key:'8.0',  label:'지름 8.0cm', mult:2.3 },
+        { key:'10.0', label:'지름 10.0cm', mult:3.0 }
+    ];
+    // 용지 종류 (비즈하우스 13종 기반)
+    var STICKER_PAPERS = [
+        { key:'art_uncoated_90', name_kr:'무코팅 아트지 90g',  name_jp:'無コートアート紙 90g', name_us:'Uncoated Art 90g',
+          desc_kr:'기본 · 가장 경제적',     desc_jp:'基本 · 経済的',     desc_us:'Base · economical',     mult:1.0 },
+        { key:'art_matte_lami',  name_kr:'무광 라미네이팅',    name_jp:'マットラミネート',     name_us:'Matte Laminated',
+          desc_kr:'매트 코팅 · 차분',       desc_jp:'マット · 落ち着き', desc_us:'Matte finish',           mult:1.15 },
+        { key:'art_gloss_lami',  name_kr:'유광 라미네이팅',    name_jp:'光沢ラミネート',       name_us:'Glossy Laminated',
+          desc_kr:'유광 코팅 · 선명',       desc_jp:'光沢 · 鮮やか',     desc_us:'Glossy · vivid',         mult:1.15 },
+        { key:'yupo_clear',      name_kr:'유포지 투명',        name_jp:'ユポ 透明',            name_us:'Yupo Clear',
+          desc_kr:'투명 PP · 방수',         desc_jp:'透明PP · 防水',     desc_us:'Clear PP · waterproof',  mult:1.45 },
+        { key:'yupo_white',      name_kr:'유포지 백색',        name_jp:'ユポ 白',              name_us:'Yupo White',
+          desc_kr:'백색 PP · 방수',         desc_jp:'白PP · 防水',       desc_us:'White PP · waterproof',  mult:1.35 },
+        { key:'yupo_silver',     name_kr:'유포지 은색',        name_jp:'ユポ 銀',              name_us:'Yupo Silver',
+          desc_kr:'은빛 PP · 메탈릭',       desc_jp:'銀PP · メタル',     desc_us:'Silver PP · metallic',   mult:1.85 },
+        { key:'hologram',        name_kr:'홀로그램',           name_jp:'ホログラム',           name_us:'Hologram',
+          desc_kr:'무지개빛 반사',           desc_jp:'虹色反射',          desc_us:'Rainbow reflection',      mult:2.6 },
+        { key:'kraft',           name_kr:'크라프트',           name_jp:'クラフト',             name_us:'Kraft',
+          desc_kr:'갈색 종이질감',           desc_jp:'茶色紙質感',        desc_us:'Brown paper texture',    mult:1.25 },
+        { key:'writable',        name_kr:'필기 가능',          name_jp:'筆記可能',             name_us:'Writable',
+          desc_kr:'볼펜/유성펜 필기',       desc_jp:'ペン記入可',        desc_us:'Pen-writable',           mult:1.2 },
+        { key:'strong_adhesive', name_kr:'강접착',             name_jp:'強接着',               name_us:'Strong Adhesive',
+          desc_kr:'야외/거친 표면용',       desc_jp:'屋外/粗面用',       desc_us:'Outdoor/rough surface',  mult:1.3 }
+    ];
+    // 수량 옵션 + 수량 할인율 (수량 많아질수록 단가 ↓ — 비즈하우스 곡선 기반)
+    var STICKER_QTYS = [
+        { key:'100',  qty:100,  disc:1.00 },   // anchor
+        { key:'200',  qty:200,  disc:0.90 },
+        { key:'500',  qty:500,  disc:0.65 },
+        { key:'1000', qty:1000, disc:0.45 },   // 1000매+ 80% 저렴 안내와 매칭
+        { key:'2000', qty:2000, disc:0.38 },
+        { key:'3000', qty:3000, disc:0.33 },
+        { key:'5000', qty:5000, disc:0.28 }
+    ];
+    function _soIsStickerProduct(p) {
+        if (!p) return false;
+        if (p.code && /^st_/i.test(p.code)) return true;
+        if (p.code === '0000241') return true;   // 기존 자유모양 스티커 1000매 → 종합 스티커로 업그레이드
+        if (p.category && /sticker/i.test(p.category)) return true;
+        return false;
+    }
+    function _stickerI18n(o, field) {
+        var lang = (typeof getLang === 'function') ? getLang() : 'ko';
+        if (lang === 'ja') return o[field + '_jp'] || o[field + '_kr'] || '';
+        if (lang === 'en') return o[field + '_us'] || o[field + '_kr'] || '';
+        return o[field + '_kr'] || '';
+    }
+    // 가격 계산: anchor 5,200원 (3.5cm 원형 100매 무코팅아트지) 기준
+    // category.base = 1매 기준 anchor price (원) — 일부는 sheet 단위
+    function _stickerCalcPrice(stState) {
+        if (!stState || !stState.category) return 0;
+        var cat = STICKER_CATEGORIES.find(function(c){ return c.key === stState.category; });
+        if (!cat) return 0;
+        var sizes = (stState.category === 'panel') ? STICKER_SIZES_PANEL : STICKER_SIZES_SINGLE;
+        var sz = sizes.find(function(s){ return s.key === stState.size; }) || sizes[0];
+        var pp = STICKER_PAPERS.find(function(p){ return p.key === stState.paper; }) || STICKER_PAPERS[0];
+        var qt = STICKER_QTYS.find(function(q){ return q.key === stState.qtyKey; }) || STICKER_QTYS[0];
+        // unit price = base × size_mult × paper_mult × qty_disc
+        var unitPrice = cat.base * (sz.mult || 1) * (pp.mult || 1) * (qt.disc || 1);
+        // 총 가격 = unitPrice × qty
+        var total = Math.round(unitPrice * qt.qty);
+        // 최소 결제 5,200원 보장 (비즈하우스 정책)
+        return Math.max(5200, total);
+    }
+
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
     // admin_products.is_custom_size = true 이면서 가벽/박스/자유인쇄커팅 처럼 자체 UI가 없는 상품
     function _soIsCustomSizeProduct(p) {
@@ -3980,6 +4194,13 @@ html, body { background: #ffffff !important; }
             if (state.bundleShipping) return 0;
             var _lngBc = getLang();
             return (_lngBc === 'ja') ? 10000 : 3000;
+        }
+        // 2026-06-03: 스티커 (st_*, 0000241) — 명함과 동일 (KR 3K / JP 1K엔 / 묶음 0)
+        if (state.isSticker) {
+            state._shipUpgradeReason = null;
+            if (state.bundleShipping) return 0;
+            var _lngSt = getLang();
+            return (_lngSt === 'ja') ? 10000 : 3000;
         }
         // 2026-05-29: 베스트굿즈 전체 — 정액 배송비
         //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
@@ -4279,6 +4500,8 @@ html, body { background: #ffffff !important; }
         sec.style.display = 'none';
         // 2026-06-03: 명함 (pp_bc_*) — 자체 용지/박/후가공 UI 사용. 기존 admin_addons 표시 차단.
         if (_soIsBizCardProduct(p)) return;
+        // 2026-06-03: 스티커 — 자체 카테고리/사이즈/용지/수량 UI 사용. 기존 admin_addons 차단.
+        if (_soIsStickerProduct(p)) return;
 
         // 2026-05-13: getLang() (kr/ja/en/es/de/fr/zh) 사용 — 기존 'ko' 디폴트가 cafe0101 에서 미작동
         var lang = getLang();
@@ -5906,6 +6129,114 @@ html, body { background: #ffffff !important; }
         _soBizCardRender();
     };
 
+    // 2026-06-03: 스티커 렌더 + 핸들러
+    function _soStickerRender() {
+        if (!state.isSticker) return;
+        // 1) 카테고리 그리드 — CSS 프리뷰 카드 (이미지 대신 색상/모양 힌트)
+        var catGrid = document.getElementById('soStickerCatGrid');
+        if (catGrid) {
+            catGrid.innerHTML = STICKER_CATEGORIES.map(function(c){
+                var sel = (state.stickerCategory === c.key);
+                var badge = c.badge ? '<span style="position:absolute; top:6px; right:8px; font-size:9px; font-weight:900; padding:2px 5px; border-radius:4px; background:' + (c.badge==='BEST'?'#dc2626':'#16a34a') + '; color:#fff;">' + c.badge + '</span>' : '';
+                return '<button type="button" onclick="window._soStickerPickCategory(\'' + c.key + '\')" '
+                    + 'style="position:relative; padding:10px 12px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left;">'
+                    + badge
+                    + '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;"><span style="font-size:22px;">' + c.icon + '</span><span style="font-size:12.5px; font-weight:900; color:' + (sel?'#3730a3':'#451a03') + ';">' + (sel?'✓ ':'') + _stickerI18n(c, 'name') + '</span></div>'
+                    + '<div style="font-size:10.5px; color:#64748b; line-height:1.35;">' + _stickerI18n(c, 'desc') + '</div>'
+                    + '<div style="margin-top:5px; font-size:10px; font-weight:800; color:#be185d;">1매 ' + Math.round(c.base) + '원~</div>'
+                    + '</button>';
+            }).join('');
+        }
+        // 카테고리 미선택 시 하위 옵션 숨김
+        var shapeW = document.getElementById('soStickerShapeWrap');
+        var sizeW  = document.getElementById('soStickerSizeWrap');
+        var paperW = document.getElementById('soStickerPaperWrap');
+        var qtyW   = document.getElementById('soStickerQtyWrap');
+        var notice = document.getElementById('soStickerNotice');
+        if (!state.stickerCategory) {
+            if (shapeW) shapeW.style.display = 'none';
+            if (sizeW)  sizeW.style.display = 'none';
+            if (paperW) paperW.style.display = 'none';
+            if (qtyW)   qtyW.style.display = 'none';
+            if (notice) notice.style.display = 'none';
+            return;
+        }
+        if (notice) notice.style.display = '';
+        // 2) 모양 — 판스티커/싱글규격일 때만 표시
+        var shapes = STICKER_SHAPES[state.stickerCategory];
+        if (shapes && shapes.length > 0) {
+            if (shapeW) shapeW.style.display = '';
+            var shapeGrid = document.getElementById('soStickerShapeGrid');
+            if (shapeGrid) {
+                shapeGrid.innerHTML = shapes.map(function(s){
+                    var sel = (state.stickerShape === s.key);
+                    return '<button type="button" onclick="window._soStickerPickShape(\'' + s.key + '\')" '
+                        + 'style="padding:9px 6px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; border-radius:8px; cursor:pointer; font-family:inherit; text-align:center;">'
+                        + '<div style="font-size:22px; line-height:1; margin-bottom:3px;">' + s.icon + '</div>'
+                        + '<div style="font-size:11px; font-weight:800; color:' + (sel?'#3730a3':'#451a03') + ';">' + _stickerI18n(s, 'name') + '</div>'
+                        + '</button>';
+                }).join('');
+            }
+        } else {
+            if (shapeW) shapeW.style.display = 'none';
+        }
+        // 3) 사이즈
+        if (sizeW) sizeW.style.display = '';
+        var sizes = (state.stickerCategory === 'panel') ? STICKER_SIZES_PANEL : STICKER_SIZES_SINGLE;
+        var sizeSel = document.getElementById('soStickerSize');
+        if (sizeSel) {
+            sizeSel.innerHTML = sizes.map(function(s){
+                var perLabel = s.per ? ' (' + s.per + tr('개','個','pcs') + ')' : '';
+                var badge = s.badge ? ' ★' + s.badge : '';
+                return '<option value="' + s.key + '"' + (state.stickerSize === s.key ? ' selected' : '') + '>' + s.label + perLabel + badge + '</option>';
+            }).join('');
+            if (state.stickerSize) sizeSel.value = state.stickerSize;
+        }
+        // 4) 용지
+        if (paperW) paperW.style.display = '';
+        var paperSel = document.getElementById('soStickerPaper');
+        if (paperSel) {
+            paperSel.innerHTML = STICKER_PAPERS.map(function(p){
+                var multTag = (p.mult > 1) ? ' (+' + Math.round((p.mult-1)*100) + '%)' : '';
+                return '<option value="' + p.key + '"' + (state.stickerPaper === p.key ? ' selected' : '') + '>' + _stickerI18n(p, 'name') + multTag + '</option>';
+            }).join('');
+            if (state.stickerPaper) paperSel.value = state.stickerPaper;
+        }
+        var paperDesc = document.getElementById('soStickerPaperDesc');
+        if (paperDesc) {
+            var selP = STICKER_PAPERS.find(function(p){ return p.key === state.stickerPaper; });
+            paperDesc.textContent = selP ? _stickerI18n(selP, 'desc') : '';
+        }
+        // 5) 수량 그리드
+        if (qtyW) qtyW.style.display = '';
+        var qtyGrid = document.getElementById('soStickerQtyGrid');
+        if (qtyGrid) {
+            qtyGrid.innerHTML = STICKER_QTYS.map(function(q){
+                var sel = (state.stickerQtyKey === q.key);
+                return '<button type="button" onclick="window._soStickerPickQty(\'' + q.key + '\')" '
+                    + 'style="padding:8px 4px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'linear-gradient(135deg,#6366f1,#4338ca)':'#fff') + '; color:' + (sel?'#fff':'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800;">'
+                    + q.qty.toLocaleString() + tr('매','枚','pcs')
+                    + '</button>';
+            }).join('');
+        }
+    }
+    window._soStickerPickCategory = function(k) {
+        state.stickerCategory = k;
+        // 카테고리 변경 시 모양 초기화
+        var shapes = STICKER_SHAPES[k];
+        state.stickerShape = (shapes && shapes.length > 0) ? shapes[0].key : null;
+        var sizes = (k === 'panel') ? STICKER_SIZES_PANEL : STICKER_SIZES_SINGLE;
+        state.stickerSize = (state.stickerSize && sizes.find(function(s){ return s.key === state.stickerSize; })) ? state.stickerSize : sizes[0].key;
+        state.stickerPaper = state.stickerPaper || STICKER_PAPERS[0].key;
+        state.stickerQtyKey = state.stickerQtyKey || '100';
+        _soStickerRender();
+        recalc();
+    };
+    window._soStickerPickShape = function(k) { state.stickerShape = k; _soStickerRender(); recalc(); };
+    window._soStickerPickSize  = function(k) { state.stickerSize  = k; _soStickerRender(); recalc(); };
+    window._soStickerPickPaper = function(k) { state.stickerPaper = k; _soStickerRender(); recalc(); };
+    window._soStickerPickQty   = function(k) { state.stickerQtyKey= k; _soStickerRender(); recalc(); };
+
     window._soPickSide = function (side) {
         state.wallSide = (side === 'double') ? 'double' : 'single';
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
@@ -6659,6 +6990,29 @@ html, body { background: #ffffff !important; }
         state.isPhotozone = _soIsPhotozoneProduct(p);
         // 2026-06-01: 허니콤 전체 감지 — 큐 멀티-라인 시스템 노출 조건에 사용
         state.isHoneycomb = _soIsHoneycombProduct(p);
+        // 2026-06-03: 스티커 (st_*, 0000241) — 종합 스티커 페이지 (12 카테고리)
+        state.isSticker = _soIsStickerProduct(p);
+        var stickerSec = document.getElementById('soStickerSection');
+        if (stickerSec) stickerSec.style.display = state.isSticker ? '' : 'none';
+        if (state.isSticker) {
+            state.stickerCategory = state.stickerCategory || null;
+            state.stickerShape    = state.stickerShape || null;
+            state.stickerSize     = state.stickerSize || null;
+            state.stickerPaper    = state.stickerPaper || 'art_uncoated_90';
+            state.stickerQtyKey   = state.stickerQtyKey || '100';
+            // 스티커는 자체 수량 단위 (수량 옵션 그리드 사용) → 우측 수량 섹션 숨김
+            var _qtySec2 = document.getElementById('soQtySection');
+            if (_qtySec2) _qtySec2.style.display = 'none';
+            // 일반 addon / tier 비활성
+            state.selectedAddons = {};
+            state.addonQuantities = {};
+            _soStickerRender();
+        } else {
+            // 스티커가 아닌 경우 수량 섹션 복원
+            var _qtySec3 = document.getElementById('soQtySection');
+            if (_qtySec3) _qtySec3.style.display = '';
+        }
+
         // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급(일반/프리미엄) + 면 + 박/후가공
         state.isBizCard = _soIsBizCardProduct(p);
         if (state.isBizCard) {
@@ -6811,9 +7165,9 @@ html, body { background: #ffffff !important; }
         var _rb_note = document.getElementById('soItemNoteSection');
         if (_rb_uploadWrap) _rb_uploadWrap.style.display = _hideUpload ? 'none' : '';
         if (_rb_uploadLabel) _rb_uploadLabel.style.display = _hideUpload ? 'none' : '';
-        // 2026-06-03: 인쇄물 카테고리(모든 일반 인쇄물) — 수량할인 tier 표 숨김 (사용자 요청)
+        // 2026-06-03: 인쇄물 카테고리(모든 일반 인쇄물) + 스티커 — 수량할인 tier 표 숨김 (사용자 요청)
         //   isGeneralPrint = 허니콤/포맥스 제외 = 광고/상업/홈/굿즈/기타 모든 인쇄물
-        if (_rb_tier && (_soIsGeneralPrintProduct(p) || _soIsBizCardProduct(p))) {
+        if (_rb_tier && (_soIsGeneralPrintProduct(p) || _soIsBizCardProduct(p) || _soIsStickerProduct(p))) {
             _rb_tier.style.display = 'none';
         }
         // 2026-05-30: '원판 그대로 발송' 안내문은 사용자 요청으로 영구 비표시 (불필요한 정보).
@@ -7389,7 +7743,7 @@ html, body { background: #ffffff !important; }
             } else {
                 // 2026-06-03: 인쇄물 카테고리 + 명함은 수량할인 tier 표 영구 숨김 (사용자 요청)
                 if (_tierTable) {
-                    _tierTable.style.display = (state.isBizCard || _soIsGeneralPrintProduct(p)) ? 'none' : '';
+                    _tierTable.style.display = (state.isBizCard || state.isSticker || _soIsGeneralPrintProduct(p)) ? 'none' : '';
                 }
                 if (_inlineUploadCard) {
                     _inlineUploadCard.style.display = 'none';
@@ -7538,7 +7892,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         var _isHbFreeShip = state.isHoneycomb && !state.isWall;
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker
             && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
@@ -7936,6 +8290,12 @@ html, body { background: #ffffff !important; }
                 finishes: Object.assign({}, state.bizFinishes || {})
             } : null,
             _isBizCard: !!state.isBizCard,
+            // 2026-06-03: 스티커 옵션 (카테고리/모양/사이즈/용지/수량)
+            sticker: state.isSticker ? {
+                category: state.stickerCategory, shape: state.stickerShape,
+                size: state.stickerSize, paper: state.stickerPaper, qtyKey: state.stickerQtyKey
+            } : null,
+            _isSticker: !!state.isSticker,
             bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
@@ -8011,7 +8371,7 @@ html, body { background: #ffffff !important; }
                     return out;
                   })()
                 : null,
-            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard) ? 0 : calc.discount, final: calc.final },
+            _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.discount, final: calc.final },
         };
     }
 
@@ -8367,6 +8727,8 @@ html, body { background: #ffffff !important; }
         if (item._isBanner || _soIsHoneycombProduct(item.product)) tierPct = 0;
         // 2026-06-03: 명함/리플렛 — 정액 가격, 수량 할인 없음
         if (item._isBizCard || (item.bizCard != null) || _soIsBizCardProduct(item.product)) tierPct = 0;
+        // 2026-06-03: 스티커 — 비즈하우스 mirror, 수량 할인 없음 (단가에 이미 반영)
+        if (item._isSticker || (item.sticker != null) || _soIsStickerProduct(item.product)) tierPct = 0;
         // 2026-05-30: 베스트굿즈 — 100개+ 시 50% 배지 (티셔츠는 인쇄비 할인이라 상품 tier 0)
         if (item._isBestGoods && item._presetType !== 'tshirt') {
             tierPct = (qty >= 100) ? 50 : 0;
@@ -8691,6 +9053,16 @@ html, body { background: #ffffff !important; }
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
                 if (typeof _soBizCardRender === 'function') _soBizCardRender();
             }
+            // 2026-06-03: 스티커 옵션 복원
+            if (item.sticker) {
+                state.isSticker = true;
+                state.stickerCategory = item.sticker.category || null;
+                state.stickerShape    = item.sticker.shape || null;
+                state.stickerSize     = item.sticker.size || null;
+                state.stickerPaper    = item.sticker.paper || 'art_uncoated_90';
+                state.stickerQtyKey   = item.sticker.qtyKey || '100';
+                if (typeof _soStickerRender === 'function') _soStickerRender();
+            }
             // 배송 복원
             if (item.shipping && item.shipping.method) {
                 state.shipMethod = item.shipping.method;
@@ -8873,6 +9245,18 @@ html, body { background: #ffffff !important; }
         if (_isBannerItm) {
             unit = (it.wallSide === 'double') ? 80000 : 55000;
         }
+        // 2026-06-03: 스티커 — 비즈하우스 가격 mirror
+        var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241'));
+        if (_isStItm && it.sticker) {
+            var _stTotal = _stickerCalcPrice(it.sticker);
+            // 묶음배송 시 0, 아니면 3K KR / 1K JP equiv
+            if (!it.bundleShipping) {
+                var _stLng = (typeof getLang === 'function') ? getLang() : 'ko';
+                _stTotal += (_stLng === 'ja') ? 10000 : 3000;
+            }
+            return _stTotal;
+        }
+
         // 2026-06-03: 명함 — 200매 단위, 단면 10K / 양면 15K + 박 + 후가공 + 정액배송
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
