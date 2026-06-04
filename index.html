@@ -1748,22 +1748,94 @@ window._tcmFallbackClick = function(code) {
     })();
     </script>
 
-    <!-- 2026-06-04: 안내 섹션 — 수도권 무료배송 + 친환경 (이전엔 EDITOR/BAND/WITH 3 바로가기 버튼 자리) -->
+    <!-- 2026-06-04: 안내 2단 — 좌측 수도권 무료배송 / 우측 SUMMER SALE (각 카드: 좌 텍스트 + 우 이미지) -->
     <div id="freeDeliveryNotice" style="width:100%; max-width:1280px; margin:14px auto 8px; padding:0 20px; box-sizing:border-box;">
-        <div style="background:linear-gradient(135deg,#065f46 0%,#047857 50%,#059669 100%); border-radius:18px; padding:32px 28px; color:#fff; box-shadow:0 12px 32px -10px rgba(5,150,105,0.45); position:relative; overflow:hidden;">
-            <div style="position:absolute; top:-30px; right:-30px; font-size:160px; opacity:0.08; transform:rotate(-12deg);">🚚</div>
-            <div style="position:absolute; bottom:-40px; left:-20px; font-size:140px; opacity:0.08;">🌿</div>
-            <div style="position:relative; z-index:1;">
-                <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:50px; font-size:11.5px; font-weight:800; letter-spacing:1px; margin-bottom:14px;">
-                    <span style="font-size:14px;">🚚</span>
-                    <span data-i18n="free_delivery_badge">METRO FREE DELIVERY</span>
+        <div class="hero-twin-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <!-- 좌측 — 수도권 무료배송 -->
+            <a href="/?product=hb_dw_1" style="text-decoration:none;">
+                <div class="hero-twin-card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#334155 100%); border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(15,23,42,0.55); position:relative; overflow:hidden; min-height:200px; display:flex; align-items:center; gap:20px; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(15,23,42,0.6)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(15,23,42,0.55)';">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#cbd5e1;" data-twin-key="badgeFree">METRO FREE DELIVERY</div>
+                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff;" data-twin-key="titleFree">수도권 전제품 무료배송</h2>
+                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#e2e8f0;" data-twin-key="text1Free">허니콤보드 모든 제품은 수량 상관없이 <b style="color:#fff;">수도권 무료배송 · 무료설치</b> 됩니다.</p>
+                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#94a3b8;" data-twin-key="text2Free">카멜레온프린팅의 모든 제품은 <b style="color:#cbd5e1;">업사이클링이 가능한 친환경 제품</b>으로 무해한 환경을 만들고 있습니다.</p>
+                    </div>
+                    <div class="hero-twin-img-wrap" style="flex-shrink:0; width:170px; height:170px; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(0,0,0,0.4);">
+                        <img src="/ss.jpg" alt="Free Delivery" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    </div>
                 </div>
-                <h2 style="font-size:30px; font-weight:900; letter-spacing:-0.02em; margin:0 0 14px 0; line-height:1.2;" data-i18n="free_delivery_title">수도권 전제품 무료배송</h2>
-                <p style="font-size:15px; font-weight:600; line-height:1.7; margin:0 0 10px 0; color:#d1fae5;" data-i18n="free_delivery_text1">허니콤보드 모든 제품은 수량 상관없이 <b style="color:#fff;">수도권 무료배송 · 무료설치</b> 됩니다.</p>
-                <p style="font-size:13.5px; font-weight:500; line-height:1.7; margin:0; color:#a7f3d0;" data-i18n="free_delivery_text2">🌱 카멜레온프린팅의 모든 제품은 <b style="color:#fff;">업사이클링이 가능한 친환경 제품</b>으로 무해한 환경을 만들고 있습니다.</p>
-            </div>
+            </a>
+            <!-- 우측 — SUMMER SALE -->
+            <a href="#section-honeycomb" onclick="event.preventDefault(); var t=document.getElementById('section-honeycomb'); if(t) t.scrollIntoView({behavior:'smooth', block:'start'});" style="text-decoration:none;">
+                <div class="hero-twin-card" style="background:linear-gradient(135deg,#7c2d12 0%,#c2410c 45%,#ea580c 100%); border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(234,88,12,0.55); position:relative; overflow:hidden; min-height:200px; display:flex; align-items:center; gap:20px; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(234,88,12,0.65)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(234,88,12,0.55)';">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.32); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#fff;" data-twin-key="badgeSale">SUMMER SALE</div>
+                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff;" data-twin-key="titleSale">카멜레온프린팅 전제품<br>파격가 확인하세요</h2>
+                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#fff7ed;" data-twin-key="text1Sale">말도 안되는 특가 세일 이벤트에 참여하면 <b style="color:#fef3c7;">더 파격적인 할인 + 마일리지</b>.</p>
+                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#fed7aa;" data-twin-key="text2Sale">허니콤보드 업계 1위 — 카멜레온의 신화는 계속됩니다.</p>
+                    </div>
+                    <div class="hero-twin-img-wrap" style="flex-shrink:0; width:170px; height:170px; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(0,0,0,0.4);">
+                        <img src="/sm.jpg" alt="Summer Sale" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
+    <style>
+    @media (max-width: 880px) {
+        .hero-twin-grid { grid-template-columns: 1fr !important; }
+        .hero-twin-card { padding: 22px 18px !important; min-height: auto !important; }
+        .hero-twin-img-wrap { width: 110px !important; height: 110px !important; }
+    }
+    @media (max-width: 480px) {
+        .hero-twin-card h2 { font-size: 20px !important; }
+        .hero-twin-card p { font-size: 12px !important; }
+        .hero-twin-img-wrap { width: 88px !important; height: 88px !important; }
+    }
+    </style>
+    <script>
+    // 2026-06-04: hero twin 카드 다국어 인라인 swap — i18n JSON 안 거치고 직접 lang 감지
+    (function(){
+        var lang = 'ko';
+        try {
+            var h = location.hostname || '';
+            var ls = (typeof localStorage !== 'undefined') ? (localStorage.getItem('siteLang') || '') : '';
+            var qp = new URLSearchParams(location.search).get('lang') || '';
+            if (qp) lang = qp;
+            else if (ls) lang = ls;
+            else if (h.indexOf('cafe0101') >= 0) lang = 'ja';
+            else if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) lang = 'en';
+        } catch(e){}
+        var L = {
+            ja: {
+                badgeFree:'首都圏 全商品 送料無料',
+                titleFree:'首都圏 全商品<br>送料無料',
+                text1Free:'ハニカムボード全商品は <b style="color:#fff;">数量に関係なく首都圏送料無料・無料設置</b> されます。',
+                text2Free:'Chameleon Printing の全商品は <b style="color:#cbd5e1;">アップサイクル可能なエコ素材</b> で、環境にやさしい未来をつくります。',
+                badgeSale:'SUMMER SALE',
+                titleSale:'Chameleon Printing 全商品<br>驚きの特価で',
+                text1Sale:'驚きの特価セールイベントに参加すると <b style="color:#fef3c7;">さらに大幅な割引 + マイレージ</b>。',
+                text2Sale:'ハニカムボード業界1位 — Chameleon の神話は続きます。'
+            },
+            en: {
+                badgeFree:'METRO FREE DELIVERY',
+                titleFree:'Free Delivery<br>Across the Metro',
+                text1Free:'All honeycomb-board products ship <b style="color:#fff;">free with free installation</b> in the metro area — any quantity.',
+                text2Free:'Every Chameleon Printing product is <b style="color:#cbd5e1;">upcyclable & eco-friendly</b>, building a cleaner future.',
+                badgeSale:'SUMMER SALE',
+                titleSale:'Chameleon Printing<br>Summer Sale on Everything',
+                text1Sale:'Join our crazy sale event — <b style="color:#fef3c7;">extra discounts + mileage</b> on top.',
+                text2Sale:'#1 in honeycomb-board printing — the Chameleon legend continues.'
+            }
+        };
+        var dict = L[lang];
+        if (!dict) return;
+        document.querySelectorAll('[data-twin-key]').forEach(function(el){
+            var k = el.getAttribute('data-twin-key');
+            if (dict[k] != null) el.innerHTML = dict[k];
+        });
+    })();
+    </script>
 
     <!-- 2026-05-14: 매니저가 생성한 상담 완료 결제창 — ?quote=ID 또는 자동 매칭으로 표시 -->
     <!-- 상단 여백 64px: hero 영상이 충분히 보인 후 카드 등장. 폭/패딩은 .hotdeal-grid 부모(.section)와 동일 -->
