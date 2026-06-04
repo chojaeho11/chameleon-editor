@@ -1748,34 +1748,32 @@ window._tcmFallbackClick = function(code) {
     })();
     </script>
 
-    <!-- 2026-06-04: 안내 2단 — 좌측 수도권 무료배송 / 우측 SUMMER SALE (각 카드: 좌 텍스트 + 우 이미지) -->
+    <!-- 2026-06-04: 안내 2단 — 좌측 수도권 무료배송 / 우측 SUMMER SALE (이미지 자체가 배경) -->
     <div id="freeDeliveryNotice" style="width:100%; max-width:1280px; margin:14px auto 8px; padding:0 20px; box-sizing:border-box;">
         <div class="hero-twin-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
-            <!-- 좌측 — 수도권 무료배송 -->
+            <!-- 좌측 — 수도권 무료배송 (ss.jpg 배경) -->
             <a href="/?product=hb_dw_1" style="text-decoration:none;">
-                <div class="hero-twin-card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#334155 100%); border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(15,23,42,0.55); position:relative; overflow:hidden; min-height:200px; display:flex; align-items:center; gap:20px; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(15,23,42,0.6)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(15,23,42,0.55)';">
-                    <div style="flex:1; min-width:0;">
-                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#cbd5e1;" data-twin-key="badgeFree">METRO FREE DELIVERY</div>
-                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff;" data-twin-key="titleFree">수도권 전제품 무료배송</h2>
-                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#e2e8f0;" data-twin-key="text1Free">허니콤보드 모든 제품은 수량 상관없이 <b style="color:#fff;">수도권 무료배송 · 무료설치</b> 됩니다.</p>
-                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#94a3b8;" data-twin-key="text2Free">카멜레온프린팅의 모든 제품은 <b style="color:#cbd5e1;">업사이클링이 가능한 친환경 제품</b>으로 무해한 환경을 만들고 있습니다.</p>
-                    </div>
-                    <div class="hero-twin-img-wrap" style="flex-shrink:0; width:170px; height:170px; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(0,0,0,0.4);">
-                        <img src="/ss.jpg" alt="Free Delivery" style="width:100%; height:100%; object-fit:cover; display:block;">
+                <div class="hero-twin-card" style="background-image:url('/ss.jpg'); background-size:cover; background-position:center; background-repeat:no-repeat; border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(15,23,42,0.55); position:relative; overflow:hidden; min-height:220px; display:flex; align-items:center; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(15,23,42,0.65)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(15,23,42,0.55)';">
+                    <!-- 좌측 텍스트 가독성용 오버레이 (좌→투명 그라데이션) -->
+                    <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.6) 45%, rgba(15,23,42,0.15) 75%, rgba(15,23,42,0) 100%); pointer-events:none;"></div>
+                    <div style="position:relative; z-index:1; flex:1; min-width:0; max-width:60%;">
+                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.28); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#fff; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);" data-twin-key="badgeFree">METRO FREE DELIVERY</div>
+                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.4);" data-twin-key="titleFree">수도권 전제품 무료배송</h2>
+                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#f1f5f9; text-shadow:0 1px 4px rgba(0,0,0,0.5);" data-twin-key="text1Free">허니콤보드 모든 제품은 수량 상관없이 <b style="color:#fff;">수도권 무료배송 · 무료설치</b> 됩니다.</p>
+                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#cbd5e1; text-shadow:0 1px 4px rgba(0,0,0,0.5);" data-twin-key="text2Free">카멜레온프린팅의 모든 제품은 <b style="color:#fff;">업사이클링이 가능한 친환경 제품</b>으로 무해한 환경을 만들고 있습니다.</p>
                     </div>
                 </div>
             </a>
-            <!-- 우측 — SUMMER SALE -->
+            <!-- 우측 — SUMMER SALE (sm.jpg 배경) -->
             <a href="#section-honeycomb" onclick="event.preventDefault(); var t=document.getElementById('section-honeycomb'); if(t) t.scrollIntoView({behavior:'smooth', block:'start'});" style="text-decoration:none;">
-                <div class="hero-twin-card" style="background:linear-gradient(135deg,#7c2d12 0%,#c2410c 45%,#ea580c 100%); border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(234,88,12,0.55); position:relative; overflow:hidden; min-height:200px; display:flex; align-items:center; gap:20px; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(234,88,12,0.65)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(234,88,12,0.55)';">
-                    <div style="flex:1; min-width:0;">
-                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.32); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#fff;" data-twin-key="badgeSale">SUMMER SALE</div>
-                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff;" data-twin-key="titleSale">카멜레온프린팅 전제품<br>파격가 확인하세요</h2>
-                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#fff7ed;" data-twin-key="text1Sale">말도 안되는 특가 세일 이벤트에 참여하면 <b style="color:#fef3c7;">더 파격적인 할인 + 마일리지</b>.</p>
-                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#fed7aa;" data-twin-key="text2Sale">허니콤보드 업계 1위 — 카멜레온의 신화는 계속됩니다.</p>
-                    </div>
-                    <div class="hero-twin-img-wrap" style="flex-shrink:0; width:170px; height:170px; border-radius:14px; overflow:hidden; box-shadow:0 8px 20px -6px rgba(0,0,0,0.4);">
-                        <img src="/sm.jpg" alt="Summer Sale" style="width:100%; height:100%; object-fit:cover; display:block;">
+                <div class="hero-twin-card" style="background-image:url('/sm.jpg'); background-size:cover; background-position:center; background-repeat:no-repeat; border-radius:18px; padding:30px 26px; color:#fff; box-shadow:0 16px 36px -14px rgba(124,45,18,0.55); position:relative; overflow:hidden; min-height:220px; display:flex; align-items:center; transition:transform 0.2s, box-shadow 0.2s;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 20px 44px -14px rgba(124,45,18,0.7)';" onmouseleave="this.style.transform=''; this.style.boxShadow='0 16px 36px -14px rgba(124,45,18,0.55)';">
+                    <!-- 좌측 텍스트 가독성용 오버레이 -->
+                    <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(124,45,18,0.85) 0%, rgba(124,45,18,0.6) 45%, rgba(124,45,18,0.15) 75%, rgba(124,45,18,0) 100%); pointer-events:none;"></div>
+                    <div style="position:relative; z-index:1; flex:1; min-width:0; max-width:60%;">
+                        <div style="display:inline-block; padding:5px 12px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); border-radius:50px; font-size:10.5px; font-weight:800; letter-spacing:1.5px; margin-bottom:12px; color:#fff; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);" data-twin-key="badgeSale">SUMMER SALE</div>
+                        <h2 style="font-size:26px; font-weight:900; letter-spacing:-0.02em; margin:0 0 12px 0; line-height:1.2; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.4);" data-twin-key="titleSale">카멜레온프린팅 전제품<br>파격가 확인하세요</h2>
+                        <p style="font-size:13.5px; font-weight:600; line-height:1.65; margin:0 0 8px 0; color:#fff7ed; text-shadow:0 1px 4px rgba(0,0,0,0.5);" data-twin-key="text1Sale">말도 안되는 특가 세일 이벤트에 참여하면 <b style="color:#fef3c7;">더 파격적인 할인 + 마일리지</b>.</p>
+                        <p style="font-size:12px; font-weight:500; line-height:1.65; margin:0; color:#fed7aa; text-shadow:0 1px 4px rgba(0,0,0,0.5);" data-twin-key="text2Sale">허니콤보드 업계 1위 — 카멜레온의 신화는 계속됩니다.</p>
                     </div>
                 </div>
             </a>
@@ -1784,13 +1782,13 @@ window._tcmFallbackClick = function(code) {
     <style>
     @media (max-width: 880px) {
         .hero-twin-grid { grid-template-columns: 1fr !important; }
-        .hero-twin-card { padding: 22px 18px !important; min-height: auto !important; }
-        .hero-twin-img-wrap { width: 110px !important; height: 110px !important; }
+        .hero-twin-card { padding: 22px 18px !important; min-height: 180px !important; }
+        .hero-twin-card > div[style*="max-width:60%"] { max-width: 75% !important; }
     }
     @media (max-width: 480px) {
         .hero-twin-card h2 { font-size: 20px !important; }
         .hero-twin-card p { font-size: 12px !important; }
-        .hero-twin-img-wrap { width: 88px !important; height: 88px !important; }
+        .hero-twin-card { min-height: 160px !important; }
     }
     </style>
     <script>
