@@ -416,6 +416,19 @@ a { text-decoration: none; color: inherit; }
             <span id="hbAuthSwitchText">계정이 없으신가요?</span>
             <span id="hbAuthSwitchLink" onclick="window.hbToggleAuthMode()" style="color:#6366f1; font-weight:700; cursor:pointer; margin-left:5px; text-decoration:underline;">회원가입</span>
         </div>
+        <hr style="margin:16px 0 12px; border:0; border-top:1px solid #e2e8f0;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <button onclick="window.hbDoSocial('google')" style="width:100%; padding:10px; border:1.5px solid #e2e8f0; border-radius:9px; background:#fff; color:#1e293b; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-brands fa-google" style="color:#DB4437;"></i> <span id="hbGoogleLbl">Google로 시작하기</span>
+            </button>
+            <button id="hbKakaoBtn" onclick="window.hbDoSocial('kakao')" style="width:100%; padding:10px; border:none; border-radius:9px; background:#FEE500; color:#3C1E1E; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-comment"></i> <span id="hbKakaoLbl">카카오로 시작하기</span>
+            </button>
+        </div>
+        <div style="margin-top:12px; padding:8px 10px; background:#f1f5f9; border-radius:8px; font-size:11px; color:#475569; line-height:1.5; text-align:center;">
+            <i class="fa-solid fa-circle-info" style="color:#6366f1; margin-right:3px;"></i>
+            <span id="hbSyncNote">카멜레온 메인 사이트 (cafe2626.com) 와 <b>동일 계정</b> 사용 가능 — 적립금·쿠폰·PRO 등급이 모든 사이트에서 공유됩니다.</span>
+        </div>
         <div id="hbAuthMsg" style="margin-top:10px; font-size:12px; text-align:center; min-height:16px;"></div>
     </div>
 </div>
@@ -472,7 +485,28 @@ a { text-decoration: none; color: inherit; }
         document.getElementById('hbSignupGuide').style.display = _isSignup ? '' : 'none';
         setText('hbAuthSwitchText', _isSignup ? L('이미 계정이 있으신가요?','すでにアカウントをお持ちですか？','Already have an account?') : L('계정이 없으신가요?','アカウントがありませんか？',"Don't have an account?"));
         setText('hbAuthSwitchLink', _isSignup ? L('로그인','ログイン','Sign in') : L('회원가입','登録','Sign up'));
+        var gl = document.getElementById('hbGoogleLbl'); if (gl) gl.textContent = _isSignup ? L('Google로 가입','Googleで登録','Sign up with Google') : L('Google로 시작하기','Googleで始める','Continue with Google');
+        var kl = document.getElementById('hbKakaoLbl'); if (kl) kl.textContent = _isSignup ? L('카카오로 가입','カカオで登録','Sign up with Kakao') : L('카카오로 시작하기','カカオで始める','Continue with Kakao');
         setMsg('', '#64748b');
+    };
+    window.hbDoSocial = async function(provider){
+        var sb = getSb();
+        if (!sb) { setMsg(L('연결 오류 (Supabase).','接続エラー','Connection error.')); return; }
+        setMsg(L(provider === 'google' ? 'Google 로그인 페이지로 이동…' : '카카오 로그인 페이지로 이동…',
+                 provider === 'google' ? 'Googleログインに移動中…' : 'カカオログインに移動中…',
+                 provider === 'google' ? 'Redirecting to Google…' : 'Redirecting to Kakao…'), '#16a34a');
+        try {
+            var redirectUrl = window.location.origin + '/';
+            var lang = window.__PS_LANG || 'ko';
+            if (lang && lang !== 'ko') redirectUrl += '?lang=' + lang;
+            var { error } = await sb.auth.signInWithOAuth({
+                provider: provider,
+                options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } }
+            });
+            if (error) throw error;
+        } catch (err) {
+            setMsg((err && err.message) || L('소셜 로그인 실패','ソーシャルログイン失敗','Social login failed'));
+        }
     };
     window.hbDoAuth = async function(){
         var emEl = document.getElementById('hbLoginEmail');
