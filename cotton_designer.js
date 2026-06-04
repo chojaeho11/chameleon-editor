@@ -2805,7 +2805,102 @@ async function loadFabricReviews(productCode, page) {
     }
 }
 
-function renderFabricReviews(reviews, total, page, avg) {
+// 2026-06-04: 현재 사용자 인증 정보 (관리자 또는 작성자 권한 체크용). 한 번만 fetch 후 캐시.
+let _cdAuthCache = null;
+async function _cdGetCurrentAuthInfo(force) {
+    if (_cdAuthCache && !force) return _cdAuthCache;
+    const sb = window.sb || window.__unified_sb;
+    if (!sb) return { isAdmin: false, currentUserId: null };
+    try {
+        const { data: sess } = await sb.auth.getUser();
+        const user = sess && sess.user;
+        if (!user) { _cdAuthCache = { isAdmin: false, currentUserId: null }; return _cdAuthCache; }
+        const ADMIN_EMAILS = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
+        let isAdmin = !!window.isAdmin || ADMIN_EMAILS.indexOf(user.email) >= 0;
+        if (!isAdmin) {
+            try {
+                const { data: prof } = await sb.from('profiles').select('role').eq('id', user.id).single();
+                if (prof && (prof.role === 'admin' || prof.role === 'manager')) isAdmin = true;
+            } catch(e) {}
+        }
+        if (isAdmin) window.isAdmin = true;
+        _cdAuthCache = { isAdmin, currentUserId: user.id };
+        return _cdAuthCache;
+    } catch (e) {
+        _cdAuthCache = { isAdmin: false, currentUserId: null };
+        return _cdAuthCache;
+    }
+}
+
+// 2026-06-04: 리뷰 삭제 (관리자 또는 작성자)
+window._cdDeleteReview = async function(reviewId) {
+    if (!reviewId) return;
+    if (!confirm('이 리뷰를 삭제하시겠습니까?')) return;
+    const sb = window.sb || window.__unified_sb;
+    if (!sb) { alert('Supabase 연결 실패'); return; }
+    try {
+        const { error } = await sb.from('product_reviews').delete().eq('id', reviewId);
+        if (error) throw error;
+        const card = document.querySelector('[data-rv-id="' + reviewId + '"]');
+        if (card && card.parentNode) card.parentNode.removeChild(card);
+    } catch (e) {
+        alert('삭제 실패: ' + (e.message || e));
+    }
+};
+
+// 2026-06-04: 리뷰 인라인 편집 (관리자 또는 작성자)
+window._cdEditReview = function(reviewId, btnEl) {
+    if (!reviewId || !btnEl) return;
+    const card = btnEl.closest('[data-rv-id]');
+    if (!card) return;
+    const commentEl = card.querySelector('[data-rv-comment]');
+    if (!commentEl) return;
+    const oldText = commentEl.textContent;
+    const ta = document.createElement('textarea');
+    ta.value = oldText;
+    ta.rows = 3;
+    ta.style.cssText = 'width:100%; padding:8px; border:1.5px solid #6366f1; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;';
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = '💾 저장';
+    saveBtn.style.cssText = 'padding:6px 14px; border:none; background:#0f172a; color:#fff; border-radius:5px; font-size:11.5px; font-weight:800; cursor:pointer; font-family:inherit;';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = '취소';
+    cancelBtn.style.cssText = 'padding:6px 14px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:5px; font-size:11.5px; font-weight:800; cursor:pointer; font-family:inherit; margin-left:6px;';
+    const editBox = document.createElement('div');
+    editBox.setAttribute('data-rv-edit-box', '');
+    editBox.style.marginTop = '8px';
+    editBox.appendChild(ta);
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'margin-top:8px; display:flex; justify-content:flex-end; align-items:center;';
+    btnRow.appendChild(saveBtn); btnRow.appendChild(cancelBtn);
+    editBox.appendChild(btnRow);
+    commentEl.style.display = 'none';
+    commentEl.parentNode.insertBefore(editBox, commentEl.nextSibling);
+    ta.focus();
+    saveBtn.onclick = async function() {
+        const sb = window.sb || window.__unified_sb;
+        if (!sb) { alert('Supabase 연결 실패'); return; }
+        const newText = ta.value.trim();
+        if (!newText) { alert('내용을 입력해주세요'); return; }
+        saveBtn.disabled = true; saveBtn.textContent = '저장 중…';
+        try {
+            const { error } = await sb.from('product_reviews').update({ comment: newText }).eq('id', reviewId);
+            if (error) throw error;
+            commentEl.textContent = newText;
+            commentEl.style.display = '';
+            editBox.parentNode.removeChild(editBox);
+        } catch(e) {
+            alert('저장 실패: ' + (e.message || e));
+            saveBtn.disabled = false; saveBtn.textContent = '💾 저장';
+        }
+    };
+    cancelBtn.onclick = function() {
+        commentEl.style.display = '';
+        editBox.parentNode.removeChild(editBox);
+    };
+};
+
+async function renderFabricReviews(reviews, total, page, avg) {
     const listEl = document.getElementById('cdReviewList');
     const sumEl = document.getElementById('cdReviewSummary');
     const moreBtn = document.getElementById('cdBtnLoadMore');
@@ -2831,15 +2926,26 @@ function renderFabricReviews(reviews, total, page, avg) {
         if (moreBtn) moreBtn.style.display = 'none';
         return;
     }
+    // 2026-06-04: 권한 정보 (관리자 또는 작성자에게만 수정/삭제 노출)
+    const _auth = await _cdGetCurrentAuthInfo();
     reviews.forEach(function(r){
         const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
         const photoHtml = r.photo_url ? '<img src="' + r.photo_url + '" class="rv-photo" onclick="window._cdOpenRvPhoto(\'' + r.photo_url + '\')">' : '';
+        const _isOwner = !!(_auth.currentUserId && r.user_id && String(r.user_id) === String(_auth.currentUserId));
+        const _canEdit = !!(_auth.isAdmin || _isOwner);
+        const actionsHtml = _canEdit ? (
+            '<div class="rv-actions" style="display:flex; gap:6px; margin-top:8px; justify-content:flex-end;">' +
+                '<button type="button" onclick="window._cdEditReview(\'' + r.id + '\', this)" style="padding:5px 10px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">✏️ 수정</button>' +
+                '<button type="button" onclick="window._cdDeleteReview(\'' + r.id + '\')" style="padding:5px 10px; border:1px solid #fca5a5; background:#fff; color:#dc2626; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">🗑️ 삭제</button>' +
+            '</div>'
+        ) : '';
         const div = document.createElement('div');
         div.className = 'rv-item';
+        div.setAttribute('data-rv-id', r.id);
         div.innerHTML = '<div class="rv-head"><span class="rv-name">' + _cdEscape(r.user_name || 'Anonymous') + '</span><span class="rv-date">' + date + '</span></div>'
                       + '<div class="rv-stars">' + stars + '</div>'
-                      + '<div class="rv-comment">' + _cdEscape(r.comment || '') + '</div>' + photoHtml;
+                      + '<div class="rv-comment" data-rv-comment>' + _cdEscape(r.comment || '') + '</div>' + photoHtml + actionsHtml;
         listEl.appendChild(div);
     });
     const loaded = (page + 1) * _CD_RV_PAGE;
