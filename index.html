@@ -8521,7 +8521,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=437"></script>
 <script type="module" src="./main.js?v=443"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=254"></script>
+<script src="/simple_order.js?v=255"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -10589,14 +10589,14 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         section.style.display = 'block';
         grid.innerHTML = '';
 
-        // 2026-06-04: 강화 골판지 가벽 — 이름 "(기본양면)" → "(양면가격)" + 가격 99,000원 으로 override
+        // 2026-06-04: 강화 골판지 가벽 — 이름 "(기본양면)" → "(양면가격)" + 가격 98,000원 (= 49K × 양면 2면)
         products.forEach(p => {
             try {
                 var _nm = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
                 if (/강화\s*골판지|골판지\s*가벽|reinforced\s*corrugated/i.test(_nm)) {
-                    p.price = 99000;
-                    if (p.price_jp != null) p.price_jp = 9900;
-                    if (p.price_us != null) p.price_us = 99;
+                    p.price = 98000;
+                    if (p.price_jp != null) p.price_jp = 9800;
+                    if (p.price_us != null) p.price_us = 98;
                     if (p.name)    p.name    = p.name.replace(/\(\s*기본양면\s*\)/g, '(양면가격)');
                     if (p.name_jp) p.name_jp = p.name_jp.replace(/\(\s*기本両面\s*\)/g, '(両面価格)').replace(/\(\s*基本両面\s*\)/g, '(両面価格)');
                     if (p.name_us) p.name_us = p.name_us.replace(/\(\s*Default\s*Double[- ]Side\s*\)/gi, '(Double-Side Price)').replace(/\(\s*Basic\s*Double\s*\)/gi, '(Double-Side Price)');

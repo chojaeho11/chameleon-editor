@@ -1376,7 +1376,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
         <div id="soUploadWrap">
-        <div class="so-upload-section-label" id="soUploadLabel">${tr('디자인 파일 업로드', 'デザインファイルをアップロード', 'Upload design file')}</div>
+        <div class="so-upload-section-label" id="soUploadLabel">${tr('앞면 업로드', '表面アップロード', 'Front Upload')}</div>
         <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
           <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
           <div class="so-upload-icon"></div>
@@ -1407,7 +1407,7 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-13: 양면 선택 시 뒷면 파일 업로드 영역 (가벽 양면만) -->
         <div id="soBackUploadWrap" style="display:none; margin-top:20px; padding:14px; background:#ede9fe; border:2px solid #7c3aed; border-radius:14px;">
-          <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">${tr('뒷면 디자인 파일 업로드', '裏面デザインファイル', 'Upload BACK side design file')}</div>
+          <div class="so-upload-section-label" style="color:#5b21b6; font-weight:800;">${tr('뒷면 업로드', '裏面アップロード', 'Back Upload')}</div>
           <div id="soBackUpload" class="so-upload" onclick="document.getElementById('soBackFile').click()" style="background:#fff; max-width:none;">
             <input type="file" id="soBackFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soOnBackFileChange(this.files)" style="display:none" />
             <div class="so-upload-icon" style="color:#7c3aed;"></div>
@@ -1743,7 +1743,7 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soInlineUploadCard" style="display:none;">
           <div class="so-section-title">
             <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>
-            ${tr('디자인 파일 업로드', 'デザインファイルアップロード', 'Upload Design File')}
+            ${tr('앞면 업로드', '表面アップロード', 'Front Upload')}
           </div>
           <!-- 업로드 전 — 큰 점선 버튼 -->
           <div id="soAdInlineUploadWrap">
