@@ -3,13 +3,20 @@
 <head>
 <script>
 // 2026-06-04: hexa-board.com OAuth bridge — Supabase Site URL 이 cafe2626 으로 고정돼 있어
-//   hexa-board → Google/Kakao OAuth → 콜백이 여기로 떨어지는 경우, hash 토큰을 그대로 들고
-//   hexa-board.com 으로 즉시 리다이렉트. (createClient 가 hash 를 소비하기 전에 실행되도록 최상단 배치.)
+//   hexa-board → Google/Kakao OAuth → 콜백이 여기로 떨어지는 경우, 토큰/코드를 그대로 들고
+//   hexa-board.com 으로 즉시 리다이렉트. (createClient 가 토큰을 소비하기 전에 실행되도록 최상단 배치.)
+//   PKCE flow 는 ?code= (query) 로, implicit flow 는 #access_token= (hash) 로 반환되므로 둘 다 지원.
 (function(){
     try {
         if (location.search.indexOf('hexa_return=1') < 0) return;
-        if (location.hash.indexOf('access_token') < 0 && location.hash.indexOf('refresh_token') < 0 && location.hash.indexOf('error') < 0) return;
-        var dest = 'https://www.hexa-board.com/' + location.hash;
+        var hasHashToken = location.hash.indexOf('access_token') >= 0 || location.hash.indexOf('refresh_token') >= 0;
+        var hasQueryCode = /[?&]code=/.test(location.search);
+        var hasError = location.hash.indexOf('error') >= 0 || /[?&]error/.test(location.search);
+        if (!hasHashToken && !hasQueryCode && !hasError) return;
+        // hexa_return=1 만 제거, 나머지 query (code=...) 와 hash 는 유지
+        var srch = location.search.replace(/([?&])hexa_return=1&?/, '$1').replace(/[?&]$/, '');
+        if (srch === '?') srch = '';
+        var dest = 'https://www.hexa-board.com/' + srch + location.hash;
         location.replace(dest);
     } catch (e) {}
 })();

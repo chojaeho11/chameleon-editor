@@ -441,9 +441,10 @@ a { text-decoration: none; color: inherit; }
     function getSb(){
         if (_hbSb) return _hbSb;
         if (!window.supabase) return null;
-        // 2026-06-04: detectSessionInUrl=true 로 OAuth 콜백 hash 토큰 자동 소비 (cafe2626 bridge 에서 forward 된 #access_token=... 처리)
+        // 2026-06-04: PKCE flow (supabase-js v2 default) — cafe2626 bridge 가 ?code= 또는 #access_token 모두 forward,
+        //   여기 client 가 detectSessionInUrl 로 자동 처리. config.js (메인) 와 동일 설정 유지로 storage 호환성 확보.
         _hbSb = window.sb || window.supabase.createClient(SUPA_URL, SUPA_ANON, {
-            auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true, flowType: 'implicit' }
+            auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true }
         });
         window.sb = _hbSb;
         return _hbSb;
