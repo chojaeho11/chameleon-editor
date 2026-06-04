@@ -235,7 +235,8 @@ window._cdSelectColor = function(color, btn) {
         if (code && code !== window._cdRvState.productCode) {
             window._cdRvState.productCode = code;
             window._cdRvState.page = 0;
-            window._cdRvState.filterLang = 'all';
+            // 2026-06-04: 색상 변경 시에도 사이트 언어 기준으로 필터 유지
+            window._cdRvState.filterLang = (typeof _cdDefaultRvLang === 'function') ? _cdDefaultRvLang() : 'all';
             loadFabricReviews(code, 0);
         }
     }
@@ -2654,7 +2655,18 @@ window.addEventListener('resize', function(){
 //          seed-reviews.js 가 admin_products 의 실제 code 별로 시드한 가짜 리뷰가 자동으로 노출됨
 // ════════════════════════════════════════════════════
 const _CD_RV_PAGE = 5;
-window._cdRvState = { page:0, productCode:'', filterLang:'all', rating:5, photoFile:null };
+// 2026-06-04: 기본 리뷰 필터 = 현재 사이트 언어 (JP 사이트는 JP 리뷰만 우선 노출). 비면 다국어 fallback.
+function _cdDefaultRvLang() {
+    try {
+        var qp = new URLSearchParams(location.search).get('lang') || '';
+        if (qp) return qp === 'ko' ? 'kr' : qp;
+        var h = (location.hostname || '').toLowerCase();
+        if (h.indexOf('cafe0101') >= 0) return 'ja';
+        if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'en';
+    } catch(e) {}
+    return 'kr';
+}
+window._cdRvState = { page:0, productCode:'', filterLang:_cdDefaultRvLang(), rating:5, photoFile:null };
 
 // (fabricType, fabricColor) → admin_products code 매핑
 // global_admin.html L2095-2107 의 코드와 일치
@@ -2764,12 +2776,23 @@ async function loadFabricReviews(productCode, page) {
     try {
         let q = sb.from('product_reviews').select('*', { count:'exact' }).eq('product_code', productCode);
         if (fl !== 'all') q = q.eq('lang', fl);
-        const { data, count, error } = await q.order('created_at', { ascending:false }).range(from, to);
+        let { data, count, error } = await q.order('created_at', { ascending:false }).range(from, to);
         if (error) { console.warn('[cd rv] load:', error.message); renderFabricReviews([], 0, page, 0); return; }
+        // 2026-06-04: 해당 언어 리뷰가 0건이면 다국어 폴백 (빈 화면 방지). 페이지 0 때만.
+        if (page === 0 && (!data || data.length === 0) && fl !== 'all') {
+            let q2 = sb.from('product_reviews').select('*', { count:'exact' }).eq('product_code', productCode);
+            const r2 = await q2.order('created_at', { ascending:false }).range(from, to);
+            if (r2.data && r2.data.length) {
+                data = r2.data;
+                count = r2.count;
+                window._cdRvState.filterLang = 'all'; // 폴백 → 다국어로 잠금
+            }
+        }
         let avg = 0;
+        const effLang = window._cdRvState.filterLang || 'all';
         if (page === 0 && (count || 0) > 0) {
             let aq = sb.from('product_reviews').select('rating').eq('product_code', productCode);
-            if (fl !== 'all') aq = aq.eq('lang', fl);
+            if (effLang !== 'all') aq = aq.eq('lang', effLang);
             const ar = await aq;
             if (ar.data && ar.data.length) avg = ar.data.reduce((s, x) => s + (x.rating || 0), 0) / ar.data.length;
         }
