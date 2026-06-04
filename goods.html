@@ -235,7 +235,13 @@ a { text-decoration: none; color: inherit; }
     .best-feat-title { font-size: 20px; }
     .best-feat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .best-price-line .price-half { font-size: 17px; }
+    /* 2026-06-04: 모바일에서 BEST 섹션은 4개까지만 노출 (5번째부터 숨김) */
+    .best-feat-grid .product-card:nth-child(n+5) { display: none; }
 }
+/* 2026-06-04: 인기 굿즈 BEST 10 섹션 영구 숨김 (사용자 요청) */
+.best-section:has(#bestPopularTitle) { display: none !important; }
+#bestPopularGrid { display: none !important; }
+#bestPopularTitle { display: none !important; }
 
 /* ── 매니저 컨택 패널 (메인 카멜레온과 동일 톤) ── */
 .mgr-panel {
