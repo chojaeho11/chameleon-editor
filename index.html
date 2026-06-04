@@ -1748,8 +1748,22 @@ window._tcmFallbackClick = function(code) {
     })();
     </script>
 
-    <!-- ★ 2026-05-13: 바로가기 버튼 + BAND + WITH 배너 (AI 디자인 생성기 위로 이동) -->
-    <div id="advShortcutBtns" style="width:100%; margin:10px 0 8px 0;"></div>
+    <!-- 2026-06-04: 안내 섹션 — 수도권 무료배송 + 친환경 (이전엔 EDITOR/BAND/WITH 3 바로가기 버튼 자리) -->
+    <div id="freeDeliveryNotice" style="width:100%; max-width:1280px; margin:14px auto 8px; padding:0 20px; box-sizing:border-box;">
+        <div style="background:linear-gradient(135deg,#065f46 0%,#047857 50%,#059669 100%); border-radius:18px; padding:32px 28px; color:#fff; box-shadow:0 12px 32px -10px rgba(5,150,105,0.45); position:relative; overflow:hidden;">
+            <div style="position:absolute; top:-30px; right:-30px; font-size:160px; opacity:0.08; transform:rotate(-12deg);">🚚</div>
+            <div style="position:absolute; bottom:-40px; left:-20px; font-size:140px; opacity:0.08;">🌿</div>
+            <div style="position:relative; z-index:1;">
+                <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:50px; font-size:11.5px; font-weight:800; letter-spacing:1px; margin-bottom:14px;">
+                    <span style="font-size:14px;">🚚</span>
+                    <span data-i18n="free_delivery_badge">METRO FREE DELIVERY</span>
+                </div>
+                <h2 style="font-size:30px; font-weight:900; letter-spacing:-0.02em; margin:0 0 14px 0; line-height:1.2;" data-i18n="free_delivery_title">수도권 전제품 무료배송</h2>
+                <p style="font-size:15px; font-weight:600; line-height:1.7; margin:0 0 10px 0; color:#d1fae5;" data-i18n="free_delivery_text1">허니콤보드 모든 제품은 수량 상관없이 <b style="color:#fff;">수도권 무료배송 · 무료설치</b> 됩니다.</p>
+                <p style="font-size:13.5px; font-weight:500; line-height:1.7; margin:0; color:#a7f3d0;" data-i18n="free_delivery_text2">🌱 카멜레온프린팅의 모든 제품은 <b style="color:#fff;">업사이클링이 가능한 친환경 제품</b>으로 무해한 환경을 만들고 있습니다.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- 2026-05-14: 매니저가 생성한 상담 완료 결제창 — ?quote=ID 또는 자동 매칭으로 표시 -->
     <!-- 상단 여백 64px: hero 영상이 충분히 보인 후 카드 등장. 폭/패딩은 .hotdeal-grid 부모(.section)와 동일 -->
@@ -2637,14 +2651,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
-    // 히어로 바로 다음: [매니저 견적 결제 배너] → 3 바로가기 버튼 → AI 디자인 → 챗봇
-    var shortcutBtns = document.getElementById('advShortcutBtns');
+    // 2026-06-04: 3 바로가기 버튼(advShortcutBtns) 은 푸터 위로 영구 이동 — reorder 안 함
+    // 히어로 바로 다음: [매니저 견적 결제 배너] → 안내 섹션 → AI 디자인 → 챗봇
     var aiDesignHero = document.getElementById('aiDesignHero');
     var pendingBanner = document.getElementById('pendingQuoteBanner');
+    var freeDelivNotice = document.getElementById('freeDeliveryNotice');
     var cursor = hero;
-    // 2026-05-14: 매니저 견적 결제 배너 — hero 바로 다음 (3버튼 위에 표시)
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
-    if (shortcutBtns) { moveAfter(shortcutBtns, cursor); cursor = shortcutBtns; }
+    if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
@@ -5292,6 +5306,9 @@ async function handleSubReturn() {
         </a>
     </div>
 </div>
+
+    <!-- 2026-06-04: EDITOR / BAND / WITH 3 바로가기 — 푸터 바로 위로 이동 -->
+    <div id="advShortcutBtns" style="width:100%; max-width:1280px; margin:40px auto 24px; padding:0 20px; box-sizing:border-box;"></div>
 
     <div class="footer-wrap">
     <div class="footer-inner">
