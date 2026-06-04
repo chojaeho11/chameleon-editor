@@ -1718,19 +1718,22 @@ html, body { background: #ffffff !important; }
             <div id="soPresetWrapGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
             <div id="soPresetWrapHint" style="font-size:11px; color:#94a3b8; margin-top:6px;"></div>
           </div>
-          <!-- 2026-06-04: 쿠션 전용 옵션 — 솜포함 (×1.5) + 개별포장 (+500/개) -->
-          <div id="soCushionOpts" style="display:none; margin-bottom:10px;">
-            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <label id="soCushionStuffLabel" style="display:flex; align-items:center; gap:6px; padding:10px; border:1.5px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; color:#451a03; background:#fff;">
-                <input type="checkbox" id="soCushionStuff" onchange="window._soCushionToggleStuff()" style="margin:0;">
+          <!-- 2026-06-04: 쿠션 전용 옵션 — 솜포함 (×1.5) + 개별포장 (+500/개). 강조 박스. -->
+          <div id="soCushionOpts" style="display:none; margin:14px 0 12px 0; padding:12px 12px 14px; background:#fff7ed; border:2px solid #fb923c; border-radius:12px; box-shadow:0 6px 16px -8px rgba(251,146,60,0.35);">
+            <div style="font-size:13px; font-weight:900; color:#9a3412; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              <span style="font-size:16px;">✨</span>
+              ${tr('추가 옵션', '追加オプション', 'Add-ons')}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <label id="soCushionStuffLabel" style="display:flex; align-items:center; gap:8px; padding:14px 12px; border:2px solid #fdba74; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; color:#451a03; background:#fff;">
+                <input type="checkbox" id="soCushionStuff" onchange="window._soCushionToggleStuff()" style="margin:0; transform:scale(1.2);">
                 <span style="flex:1;">${tr('솜포함', '綿入り', 'Stuffing')}</span>
-                <span style="font-size:10.5px; font-weight:800; color:#be185d;">×1.5</span>
+                <span style="font-size:12px; font-weight:900; color:#dc2626; background:#fee2e2; padding:2px 7px; border-radius:6px;">×1.5</span>
               </label>
-              <label id="soCushionWrapLabel" style="display:flex; align-items:center; gap:6px; padding:10px; border:1.5px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; color:#451a03; background:#fff;">
-                <input type="checkbox" id="soCushionWrap" onchange="window._soCushionToggleWrap()" style="margin:0;">
+              <label id="soCushionWrapLabel" style="display:flex; align-items:center; gap:8px; padding:14px 12px; border:2px solid #fdba74; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; color:#451a03; background:#fff;">
+                <input type="checkbox" id="soCushionWrap" onchange="window._soCushionToggleWrap()" style="margin:0; transform:scale(1.2);">
                 <span style="flex:1;">${tr('개별포장', '個別包装', 'Individual wrap')}</span>
-                <span style="font-size:10.5px; font-weight:800; color:#be185d;">+${fmtPrice(500)}/${tr('개','個','pc')}</span>
+                <span style="font-size:11.5px; font-weight:900; color:#dc2626; background:#fee2e2; padding:2px 7px; border-radius:6px; white-space:nowrap;">+${fmtPrice(500)}/${tr('개','個','pc')}</span>
               </label>
             </div>
           </div>
@@ -7524,12 +7527,18 @@ html, body { background: #ffffff !important; }
         if (state.isCustomSize && state.presetSizes) {
             // 프리셋 모드: pill row 표시, W/H 입력·면적 표시 숨김
             // 2026-05-30: 티셔츠는 텍스트형 직사각 pill (종류명+가격), 그 외는 원형 pill (사이즈)
-            var _isTshirtPreset = (state.presetType === 'tshirt');
+            // 2026-06-04: 쿠션은 4열 × 2줄, 네모난 카드형 pill (원형 아님)
+            var _isTshirtPreset  = (state.presetType === 'tshirt');
+            var _isCushionPreset = (state.presetType === 'cushion');
             if (pillsBox) {
                 if (_isTshirtPreset) {
                     pillsBox.style.display = 'grid';
                     pillsBox.style.gridTemplateColumns = 'repeat(3, 1fr)';
                     pillsBox.style.gap = '6px';
+                } else if (_isCushionPreset) {
+                    pillsBox.style.display = 'grid';
+                    pillsBox.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                    pillsBox.style.gap = '8px';
                 } else {
                     pillsBox.style.display = 'grid';
                     pillsBox.style.gridTemplateColumns = 'repeat(7, 1fr)';
@@ -7548,6 +7557,21 @@ html, body { background: #ffffff !important; }
                             + 'display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; '
                             + 'transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease; '
                             + 'font-family:inherit; line-height:1.2; min-height:48px;">'
+                            + '<span>' + s.label + '</span>'
+                            + '<span style="font-size:10.5px; font-weight:700; opacity:0.85;">' + fmtPrice(s.price) + '</span>'
+                            + '</button>';
+                    }
+                    // 2026-06-04: 쿠션 — 네모 카드형 pill (사이즈 + 가격 동시 표시)
+                    if (_isCushionPreset) {
+                        return '<button type="button" class="so-preset-pill' + (act?' active':'') + '" '
+                            + 'data-w="' + s.w + '" data-h="' + s.h + '" data-price="' + s.price + '" data-label="' + s.label + 'cm" '
+                            + 'onclick="window._soPickPresetSize(this)" '
+                            + 'style="border:2px solid ' + (act?'#0f172a':'#e2e8f0') + '; '
+                            + 'background:' + (act?'#0f172a':'#fff') + '; color:' + (act?'#fff':'#334155') + '; '
+                            + 'border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; padding:10px 6px; '
+                            + 'display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; '
+                            + 'transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease; '
+                            + 'font-family:inherit; line-height:1.2; min-height:60px;">'
                             + '<span>' + s.label + '</span>'
                             + '<span style="font-size:10.5px; font-weight:700; opacity:0.85;">' + fmtPrice(s.price) + '</span>'
                             + '</button>';
@@ -7632,7 +7656,8 @@ html, body { background: #ffffff !important; }
             var _wrapGrid = document.getElementById('soPresetWrapGrid');
             var _wrapHint = document.getElementById('soPresetWrapHint');
             if (_wrapWrap && _wrapGrid) {
-                _wrapWrap.style.display = '';
+                // 2026-06-04: 쿠션은 자체 솜포함/개별포장 옵션을 사용하므로 기존 3종 박스 숨김
+                _wrapWrap.style.display = (state.presetType === 'cushion') ? 'none' : '';
                 var WRAP_OPTS = [
                     { type:'none',   img:'/keyringcut/pac3.jpg', label_ko:'포장없음',     label_jp:'包装なし',         label_en:'No wrap',         fee:0     },
                     { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'내지인쇄 포장', label_jp:'内側印刷ラッピング', label_en:'Insert print',    fee:50000 },
