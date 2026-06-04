@@ -7081,9 +7081,16 @@ html, body { background: #ffffff !important; }
         var wallSec = document.getElementById('soWallSizeSection');
         if (wallSec) wallSec.style.display = state.isWall ? '' : 'none';
         // 2026-06-01: 가벽 형태 (-자/ㄱ자/ㄷ자) — 가벽 상품일 때만 표시. 기본 직선.
+        // 2026-06-04: 허니콤 가벽 + 파티션 가벽 만 형태 옵션 노출 (강화골판지/병풍형/지붕형 제외 — 꺾이지 않음)
+        var _showWallShape = state.isWall
+            && !state.isReinforcedWall
+            && !state.isFoldingWall
+            && (state.isPartition || !state.isSingleSideWall);
         var wallShapeSec = document.getElementById('soWallShapeSection');
-        if (wallShapeSec) wallShapeSec.style.display = state.isWall ? '' : 'none';
+        if (wallShapeSec) wallShapeSec.style.display = _showWallShape ? '' : 'none';
         if (state.isWall) {
+            // 형태 옵션 안 보이는 변종은 강제 직선 + fee 0
+            if (!_showWallShape) { state.wallShape = 'straight'; state.wallShapeFee = 0; }
             state.wallShape = state.wallShape || 'straight';
             state.wallShapeFee = (state.wallShape === 'L') ? 100000 : (state.wallShape === 'U') ? 200000 : 0;
             // 원형 버튼 active 동기화 — _soPickWallShape 와 동일 로직
