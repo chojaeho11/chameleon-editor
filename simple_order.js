@@ -2015,9 +2015,9 @@ html, body { background: #ffffff !important; }
           <!-- 배송 옵션 (버튼형 — 가격 라벨 없이 깔끔하게) -->
           <div id="soShipBtnGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
             <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">${tr('본사 방문 수령', '本社受取', 'HQ pickup')}</button>
-            <button type="button" class="so-ship-btn" data-ship="metro_install" onclick="window._soPickShip('metro_install')">${tr('수도권 설치', '首都圏設置', 'Metro install')}</button>
+            <button type="button" class="so-ship-btn so-ship-free-metro" data-ship="metro_install" onclick="window._soPickShip('metro_install')" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border-color:#059669; font-weight:900; box-shadow:0 6px 16px -6px rgba(16,185,129,0.55);">${tr('수도권 무료배송 · 무료설치', '首都圏 送料・設置 無料', 'Metro · FREE delivery & install')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
-            <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 설치+철거', '首都圏設置+撤去', 'Metro install+remove')}</button>
+            <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 철거', '首都圏撤去', 'Metro removal')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
             <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
@@ -4105,10 +4105,13 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 배송 옵션별 가격 + breakdown 정보 (window 노출 — recalc 가 라벨 사용)
     var SHIP_OPTS = {
-        self_pickup:          { fee: 0,      label_ko: '본사 방문 수령',      parts: [] },
-        metro_install:        { fee: 100000, label_ko: '수도권 설치',         parts: [['수도권 설치', 100000]] },
-        metro_weekend:        { fee: 200000, label_ko: '수도권 야간/주말 설치', parts: [['수도권 야간/주말 설치', 200000]] },
-        metro_install_removal:{ fee: 300000, label_ko: '수도권 설치+철거',     parts: [['수도권 설치', 100000], ['수도권 철거', 200000]] },
+        self_pickup:          { fee: 0,      label_ko: '본사 방문 수령',                parts: [] },
+        // 2026-06-04: 수도권 무료배송 + 무료설치 통합 (이전: 본사방문수령 + 수도권설치 분리)
+        metro_install:        { fee: 0,      label_ko: '수도권 무료배송 · 무료설치',     parts: [] },
+        // 2026-06-04: 야간/주말 설치 10만원 (이전 20만원)
+        metro_weekend:        { fee: 100000, label_ko: '수도권 야간/주말 설치',         parts: [['수도권 야간/주말 설치', 100000]] },
+        // 2026-06-04: 수도권 철거 단독 10만원 (이전: 설치+철거 30만원)
+        metro_install_removal:{ fee: 100000, label_ko: '수도권 철거',                  parts: [['수도권 철거', 100000]] },
         regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
         regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] },
         // 2026-05-13: 허니콤 자유인쇄커팅용 (시공 없이 배송만)
@@ -4135,9 +4138,9 @@ html, body { background: #ffffff !important; }
     function _soShipMethodLabel(method) {
         switch (method) {
             case 'self_pickup':           return tr('본사 방문 수령',          '本社受取',           'HQ pickup');
-            case 'metro_install':         return tr('수도권 설치',             '首都圏設置',         'Metro install');
-            case 'metro_weekend':         return tr('수도권 야간/주말 설치',   '首都圏夜間/週末設置', 'Metro night/weekend install');
-            case 'metro_install_removal': return tr('수도권 설치+철거',        '首都圏設置+撤去',     'Metro install + removal');
+            case 'metro_install':         return tr('수도권 무료배송 · 무료설치', '首都圏 送料・設置 無料', 'Metro · FREE delivery & install');
+            case 'metro_weekend':         return tr('수도권 야간/주말 설치',     '首都圏夜間/週末設置',     'Metro night/weekend install');
+            case 'metro_install_removal': return tr('수도권 철거',               '首都圏撤去',              'Metro removal');
             case 'regional_truck':        return tr('지방 용차배송',           '地方トラック配送',   'Regional truck delivery');
             case 'regional_install':      return tr('지방 설치배송',           '地方設置配送',       'Regional install + delivery');
             case 'metro_delivery':        return tr('수도권 배송',             '首都圏配送',         'Metro delivery');
@@ -4273,7 +4276,8 @@ html, body { background: #ffffff !important; }
         }
         var nightOrWeekend = (timeVal === 'night') || isWeekend;
         if (method === 'metro_install' && nightOrWeekend) {
-            baseFee = 200000;
+            // 2026-06-04: 야간/주말 설치 100,000원 (이전 200,000원)
+            baseFee = 100000;
             state._shipUpgradeReason = '야간/주말 설치';
         } else {
             state._shipUpgradeReason = null;
@@ -7910,8 +7914,8 @@ html, body { background: #ffffff !important; }
             // 2026-05-15: 금액주문 — 배송 개념 없음. 입력 금액 그대로 (배송비 포함된 금액).
             allowed = ['self_pickup'];
         } else if (state.isWall || state.isPhotozone) {
-            // 가벽/포토존 — 시공 옵션
-            allowed = ['self_pickup'].concat(installKeys);
+            // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합)
+            allowed = installKeys.slice();
         } else if (state.isPaperDisplay) {
             // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
             allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
