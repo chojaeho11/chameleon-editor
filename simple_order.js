@@ -2105,6 +2105,8 @@ html, body { background: #ffffff !important; }
 
         <div class="so-section so-price-box" id="soPriceBox">
           <div class="so-section-title">${tr('가격', '価格', 'Price')}</div>
+          <!-- 2026-06-04: 원판(허니콤보드) — 우측 카드 수량 입력 시 라이브 미리보기 (단가 row 대체) -->
+          <div id="soRbPreview" style="display:none; flex-direction:column; gap:6px; padding:4px 0 6px;"></div>
           <div class="so-price-row" id="soUnitRow"><span id="soUnitLabel">${tr('단가', '単価', 'Unit')}</span><span id="soUnit">-</span></div>
           <!-- 가벽 사이즈 라인 (가벽 상품만) -->
           <div class="so-price-row" id="soWallSizeRow" style="display:none;"><span>${tr('가벽 사이즈', '壁面サイズ', 'Wall')}</span><span id="soWallSizeText">-</span></div>
@@ -3053,7 +3055,9 @@ html, body { background: #ffffff !important; }
             else if (taxBase >= 1000000) amountPct = 10;
         }
         const isPro = !!window.isProSubscriber;
-        const proPct = (isPro && !_noDisc) ? 10 : 0;
+        // 2026-06-04: PRO 구독자 10% 할인 — 원판은 적용 (사용자 요청). 볼륨티어만 _noDisc 로 제외.
+        const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
+        const proPct = (isPro && !_noProDisc) ? 10 : 0;
         const totalDiscPct = amountPct + proPct;
         const amountDiscount = Math.round(taxBase * amountPct / 100);
         const proDiscount = Math.round(taxBase * proPct / 100);
@@ -3266,6 +3270,11 @@ html, body { background: #ffffff !important; }
         }
         // 합계
         setText('soTotal', fmtPrice(final));
+
+        // 2026-06-04: 원판 — 우측 카드 수량 기반 라이브 미리보기로 덮어쓰기 (단가 row 숨김 + 합계 재산정)
+        if (state.isRawBoard && typeof window._soUpdateRawBoardPreview === 'function') {
+            try { window._soUpdateRawBoardPreview(); } catch (e) {}
+        }
 
         // 2026-06-01: 담기 버튼 아래 "전체 합계 (배송 포함)" — 라인이 1개+ 일 때만 표시
         //   breakdown: "가벽 X원 + 추가옵션 Y원" + 배송 / 할인 별도 라인
@@ -3618,7 +3627,7 @@ html, body { background: #ffffff !important; }
                         //   기본값 0 (담을 의사 표시), >0 인 카드들만 일괄 담김.
                         '<div style="display:flex; gap:4px; margin-top:6px; align-items:center; justify-content:flex-end;">' +
                             '<span style="font-size:11px; color:#64748b; font-weight:600;">' + tr('수량', '数量', 'Qty') + '</span>' +
-                            '<input type="number" min="0" value="0" data-rb-qty-code="' + safeCode + '" id="soRbQ_' + p.code + '" style="width:60px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;" onclick="event.stopPropagation();">' +
+                            '<input type="number" min="0" value="0" data-rb-qty-code="' + safeCode + '" id="soRbQ_' + p.code + '" style="width:60px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700;" onclick="event.stopPropagation();" oninput="if(window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();">' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -3634,9 +3643,106 @@ html, body { background: #ffffff !important; }
                     _rbBatchBtn.onclick = function(){ window._soAddRawBoardBatch && window._soAddRawBoardBatch(); };
                 }
             } catch (e) {}
+            // 2026-06-04: 카드 렌더 직후 미리보기 초기화 (모두 0 → 안내문구)
+            try { if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview(); } catch(e){}
         } catch (e) { console.warn('[so] rawBoardMore render', e); sec.style.display = 'none'; }
     }
     window._soLoadRawBoardMore = _soLoadRawBoardMore;
+
+    // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
+    //   - 단가 row 숨김, 제품별 라인 + 합계 + 배송비 표시
+    //   - PRO 구독자 10% 할인 자동 반영
+    window._soUpdateRawBoardPreview = function () {
+        try {
+            if (!state.isRawBoard) return;
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            var qtyInputs = document.querySelectorAll('#soRawBoardMoreRight input[data-rb-qty-code]');
+            var picks = [];
+            var totalQty = 0;
+            var subtotalKrw = 0;
+            qtyInputs.forEach(function (inp) {
+                var q = parseInt(inp.value, 10) || 0;
+                if (q <= 0) return;
+                var code = inp.getAttribute('data-rb-qty-code');
+                var p = (_soRbMoreCache || []).find(function (x) { return x.code === code; });
+                if (!p) return;
+                var nm = p.name;
+                if (lang === 'ja' && p.name_jp) nm = p.name_jp;
+                else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var priceKrw = p.price || 0;
+                picks.push({ name: nm, qty: q, lineKrw: priceKrw * q });
+                totalQty += q;
+                subtotalKrw += priceKrw * q;
+            });
+            var preview = document.getElementById('soRbPreview');
+            var unitRow = document.getElementById('soUnitRow');
+            var shipRow = document.getElementById('soShipRow');
+            var proRow = document.getElementById('soProDiscRow');
+            if (!preview) return;
+            // 빈 상태 — 안내문구만
+            if (picks.length === 0) {
+                preview.style.display = 'flex';
+                preview.innerHTML = '<div style="font-size:12.5px; color:#64748b; font-weight:600; text-align:center; padding:8px 4px;">' +
+                    tr('원하시는 원판의 수량을 입력해주세요', 'ご希望の原板の数量を入力してください', 'Enter qty in the boards above') +
+                    '</div>';
+                if (unitRow) unitRow.style.display = 'none';
+                if (shipRow) shipRow.style.display = 'none';
+                if (proRow)  proRow.style.display  = 'none';
+                var totalEl0 = document.getElementById('soTotal');
+                if (totalEl0) totalEl0.textContent = fmtPrice(0);
+                return;
+            }
+            // 배송비
+            var shipMethod = (state.shipMethod === 'regional_delivery') ? 'regional_delivery' : 'metro_delivery';
+            var shipFee;
+            if (shipMethod === 'regional_delivery') shipFee = (totalQty >= 100) ? 0 : 200000;
+            else                                    shipFee = (totalQty >= 10)  ? 0 : 100000;
+            // PRO 10%
+            var proPct = (!!window.isProSubscriber) ? 10 : 0;
+            var proDisc = Math.round(subtotalKrw * proPct / 100);
+            var finalKrw = subtotalKrw - proDisc + shipFee;
+            // 미리보기 라인 HTML
+            var lineHtml = picks.map(function (it) {
+                var safeName = String(it.name || '').replace(/[<>"]/g, '');
+                return '<div class="so-price-row" style="font-size:13px; align-items:center;">' +
+                    '<span style="max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;" title="' + safeName + '">' +
+                    safeName + ' × ' + it.qty + tr('개', '個', 'pcs') +
+                    '</span>' +
+                    '<span style="font-weight:700;">' + fmtPrice(it.lineKrw) + '</span>' +
+                    '</div>';
+            }).join('');
+            // 소계 라인
+            lineHtml += '<div class="so-price-row" style="font-size:12.5px; border-top:1px dashed #cbd5e1; padding-top:6px; margin-top:2px;">' +
+                '<span style="color:#475569; font-weight:600;">' + tr('소계', '小計', 'Subtotal') + ' (' + totalQty + tr('장', '枚', ' sheets') + ')</span>' +
+                '<span style="font-weight:700;">' + fmtPrice(subtotalKrw) + '</span>' +
+                '</div>';
+            preview.innerHTML = lineHtml;
+            preview.style.display = 'flex';
+            if (unitRow) unitRow.style.display = 'none';
+            // 배송 row
+            if (shipRow) {
+                shipRow.style.display = '';
+                var shipLabelEl = document.getElementById('soShipLabel');
+                var shipAmtEl = document.getElementById('soShipAmount');
+                if (shipLabelEl) shipLabelEl.textContent = tr('배송비', '送料', 'Shipping') +
+                    ' · ' + (shipMethod === 'regional_delivery'
+                        ? tr('지방', '地方', 'Regional')
+                        : tr('수도권', '首都圏', 'Metro'));
+                if (shipAmtEl) shipAmtEl.textContent = (shipFee === 0)
+                    ? tr('무료', '無料', 'FREE')
+                    : ('+' + fmtPrice(shipFee));
+            }
+            // PRO 라인
+            if (proRow) {
+                proRow.style.display = (proDisc > 0) ? '' : 'none';
+                var proDiscEl = document.getElementById('soProDisc');
+                if (proDiscEl) proDiscEl.textContent = '-' + fmtPrice(proDisc);
+            }
+            // 합계
+            var totalEl = document.getElementById('soTotal');
+            if (totalEl) totalEl.textContent = fmtPrice(finalKrw);
+        } catch (e) { console.warn('[so] rawBoardPreview', e); }
+    };
 
     // 2026-05-30: 원판 6개 카드 일괄 담기 — 수량 >0 인 카드들만 cart 에 추가.
     //   배송: state.shipMethod 사용 (사용자가 선택한 수도권/지방). fee 는 카트 내 모든 원판 합산 qty 기준으로 계산하여
