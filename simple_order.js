@@ -1718,6 +1718,22 @@ html, body { background: #ffffff !important; }
             <div id="soPresetWrapGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
             <div id="soPresetWrapHint" style="font-size:11px; color:#94a3b8; margin-top:6px;"></div>
           </div>
+          <!-- 2026-06-04: 쿠션 전용 옵션 — 솜포함 (×1.5) + 개별포장 (+500/개) -->
+          <div id="soCushionOpts" style="display:none; margin-bottom:10px;">
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px;">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <label id="soCushionStuffLabel" style="display:flex; align-items:center; gap:6px; padding:10px; border:1.5px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; color:#451a03; background:#fff;">
+                <input type="checkbox" id="soCushionStuff" onchange="window._soCushionToggleStuff()" style="margin:0;">
+                <span style="flex:1;">${tr('솜포함', '綿入り', 'Stuffing')}</span>
+                <span style="font-size:10.5px; font-weight:800; color:#be185d;">×1.5</span>
+              </label>
+              <label id="soCushionWrapLabel" style="display:flex; align-items:center; gap:6px; padding:10px; border:1.5px solid #e7e5e4; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; color:#451a03; background:#fff;">
+                <input type="checkbox" id="soCushionWrap" onchange="window._soCushionToggleWrap()" style="margin:0;">
+                <span style="flex:1;">${tr('개별포장', '個別包装', 'Individual wrap')}</span>
+                <span style="font-size:10.5px; font-weight:800; color:#be185d;">+${fmtPrice(500)}/${tr('개','個','pc')}</span>
+              </label>
+            </div>
+          </div>
           <div id="soCustomDimsRow" style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:6px; align-items:flex-end; margin-bottom:8px;">
             <div style="flex:1 1 0; min-width:0; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
@@ -2841,8 +2857,16 @@ html, body { background: #ffffff !important; }
             if (state.presetType === 'keyring' && state.keyringSide === 'double') {
                 unit = unit * 2;
             }
+            // 2026-06-04: 쿠션 솜포함 — 단가 × 1.5
+            if (state.presetType === 'cushion' && state.cushionStuff) {
+                unit = Math.round(unit * 1.5);
+            }
             qty = state.qty || 1;
             subtotal = unit * qty;
+            // 2026-06-04: 쿠션 개별포장 — +500원/개
+            if (state.presetType === 'cushion' && state.cushionWrap) {
+                subtotal += 500 * qty;
+            }
             state.wallHeightExtra = 0;
         } else {
             state.wallHeightExtra = 0;
@@ -5032,6 +5056,22 @@ html, body { background: #ffffff !important; }
         state.keyringCut = { id: id, label: cutLabelKo, label_jp: mp.jp, label_en: mp.en };
         var cutLbl = document.getElementById('soPresetCutLabel');
         if (cutLbl) cutLbl.textContent = tr('현재 선택: ', '選択中：', 'Selected: ') + id + '. ' + tr(cutLabelKo, mp.jp, mp.en);
+    };
+
+    // 2026-06-04: 쿠션 옵션 토글 (솜포함 / 개별포장)
+    window._soCushionToggleStuff = function() {
+        var el = document.getElementById('soCushionStuff');
+        state.cushionStuff = !!(el && el.checked);
+        var lbl = document.getElementById('soCushionStuffLabel');
+        if (lbl) { lbl.style.borderColor = state.cushionStuff ? '#4338ca' : '#e7e5e4'; lbl.style.background = state.cushionStuff ? '#eef2ff' : '#fff'; }
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soCushionToggleWrap = function() {
+        var el = document.getElementById('soCushionWrap');
+        state.cushionWrap = !!(el && el.checked);
+        var lbl = document.getElementById('soCushionWrapLabel');
+        if (lbl) { lbl.style.borderColor = state.cushionWrap ? '#4338ca' : '#e7e5e4'; lbl.style.background = state.cushionWrap ? '#eef2ff' : '#fff'; }
+        if (typeof recalc === 'function') recalc();
     };
 
     window._soPickPresetSize = function (btn) {
@@ -7294,6 +7334,17 @@ html, body { background: #ffffff !important; }
             { w:50, h:50, label:'50×50', price:5000 },
             { w:60, h:60, label:'60×60', price:6000 }
         ];
+        // 2026-06-04: 쿠션 사이즈 프리셋 (cm × cm → 고정가). 솜포함 시 ×1.5, 개별포장 +500원/개.
+        var _PRESET_CUSHION = [
+            { w:10, h:10,  label:'10×10',  price:3000  },
+            { w:10, h:15,  label:'10×15',  price:4000  },
+            { w:20, h:20,  label:'20×20',  price:5000  },
+            { w:30, h:30,  label:'30×30',  price:7000  },
+            { w:40, h:40,  label:'40×40',  price:9000  },
+            { w:50, h:50,  label:'50×50',  price:12000 },
+            { w:60, h:60,  label:'60×60',  price:20000 },
+            { w:60, h:150, label:'60×150', price:80000 }
+        ];
         // 2026-05-30: 티셔츠 종류 프리셋 (label·price; w/h 사용 안함)
         var _PRESET_TSHIRT_TYPES = [
             { w:0, h:0, label:'20수 반팔',  price:6000  },
@@ -7309,7 +7360,8 @@ html, body { background: #ffffff !important; }
             'acr_crt_cl_8t':    _PRESET_KOROTTO,
             'acr_crt_stand_01': _PRESET_KOROTTO,
             'acr_crt_stand_10t':_PRESET_KOROTTO,
-            '3453455':          _PRESET_HANDKERCHIEF
+            '3453455':          _PRESET_HANDKERCHIEF,
+            '345455':           _PRESET_CUSHION   // 쿠션 (8 사이즈)
             // 2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외 — 각 상품이 DB 의 자체 가격을 가지므로 종류 pill 불필요
         };
         // 2026-05-30: 프리셋 타입 — 안내문구·고리(300원 override) 적용 여부 분기
@@ -7319,7 +7371,8 @@ html, body { background: #ffffff !important; }
             'acr_crt_cl_8t':    'korotto',
             'acr_crt_stand_01': 'korotto',
             'acr_crt_stand_10t':'korotto',
-            '3453455':          'handkerchief'
+            '3453455':          'handkerchief',
+            '345455':           'cushion'
             // tshirt 는 카테고리 '3244432' 로 인식 (아래 _resolvedType 분기)
         };
         // 2026-05-30: 베스트 카테고리 — 카테고리만으로 isBestGoods (100개+ 50%, 3000원 정액배송) 트리거
@@ -7369,6 +7422,15 @@ html, body { background: #ffffff !important; }
         state.presetHasHooks = (state.presetType === 'keyring' || state.presetType === 'korotto');
         // 프리셋 굿즈는 사이즈 입력 UI 강제 활성화 — DB 의 is_custom_size 와 무관
         if (state.presetSizes) state.isCustomSize = true;
+        // 2026-06-04: 쿠션 — 솜포함 + 개별포장 옵션 초기화 + 섹션 표시
+        state.cushionStuff = !!state.cushionStuff;
+        state.cushionWrap  = !!state.cushionWrap;
+        var _cushSec = document.getElementById('soCushionOpts');
+        if (_cushSec) _cushSec.style.display = (state.presetType === 'cushion') ? '' : 'none';
+        var _cushStuffEl = document.getElementById('soCushionStuff');
+        if (_cushStuffEl) _cushStuffEl.checked = !!state.cushionStuff;
+        var _cushWrapEl = document.getElementById('soCushionWrap');
+        if (_cushWrapEl) _cushWrapEl.checked = !!state.cushionWrap;
         // 비-사이즈 베스트 굿즈: 가격 override (단가만, 100개+ 50%/3000원배송 동일)
         if (p && _BEST_PRICE_OVERRIDES[p.code] != null) {
             p.price = _BEST_PRICE_OVERRIDES[p.code];
@@ -8351,6 +8413,9 @@ html, body { background: #ffffff !important; }
             // 2026-05-30: 프리셋 굿즈 개별포장 (3종 / 5만원 정액 또는 무료)
             _presetWrap: !!state.presetWrap,         // legacy boolean
             _presetWrapType: state.presetWrapType || 'none', // 'none' | 'insert' | 'top'
+            // 2026-06-04: 쿠션 옵션 (솜포함 ×1.5 / 개별포장 +500/개)
+            _cushionStuff: !!state.cushionStuff,
+            _cushionWrap: !!state.cushionWrap,
             // 2026-05-30: 키링/코롯토 선택된 모양 (1~6)
             _keyringCut: state.keyringCut ? {
                 id: state.keyringCut.id,
@@ -9066,6 +9131,13 @@ html, body { background: #ffffff !important; }
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
                 if (typeof _soBizCardRender === 'function') _soBizCardRender();
             }
+            // 2026-06-04: 쿠션 옵션 복원
+            if (item._cushionStuff != null) state.cushionStuff = !!item._cushionStuff;
+            if (item._cushionWrap  != null) state.cushionWrap  = !!item._cushionWrap;
+            var _cStuff = document.getElementById('soCushionStuff'); if (_cStuff) _cStuff.checked = !!state.cushionStuff;
+            var _cWrap  = document.getElementById('soCushionWrap');  if (_cWrap)  _cWrap.checked  = !!state.cushionWrap;
+            if (state.cushionStuff && typeof window._soCushionToggleStuff === 'function') window._soCushionToggleStuff();
+            if (state.cushionWrap  && typeof window._soCushionToggleWrap  === 'function') window._soCushionToggleWrap();
             // 2026-06-03: 스티커 옵션 복원
             if (item.sticker) {
                 state.isSticker = true;
@@ -9331,7 +9403,15 @@ html, body { background: #ffffff !important; }
         if (it._presetType === 'keyring' && it._keyringSide === 'double') {
             unit = unit * 2;
         }
+        // 2026-06-04: 쿠션 솜포함 — 단가 × 1.5
+        if (it._presetType === 'cushion' && it._cushionStuff) {
+            unit = Math.round(unit * 1.5);
+        }
         var subtotal = unit * qty;
+        // 2026-06-04: 쿠션 개별포장 — +500원/개
+        if (it._presetType === 'cushion' && it._cushionWrap) {
+            subtotal += 500 * qty;
+        }
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 상품가 고정, 인쇄비에서만 할인)
         if (_isBest && it._presetType !== 'tshirt' && qty >= 100) {
             subtotal = Math.round(subtotal * 0.5);
