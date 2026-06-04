@@ -9780,8 +9780,14 @@ html, body { background: #ffffff !important; }
         // 2026-06-04: 로그인 + 0잔액 + 비PRO 도 박스 표시 (사용자가 어떤 할인이 있는지 인지 + PRO 가입 유도)
         var cart = _soReadAllCart();
         var excludedSet = window.excludedCategoryCodes || new Set();
+        // 2026-06-04: 원판(허니콤보드)은 hexa-board.com 의 메인 상품이라 이벤트쿠폰/마일리지 사용 허용 (사용자 요청).
+        //   raw-board 아이템은 excluded 판정에서 스킵 — 그 외 진짜 제외 카테고리만 차단.
         var excluded = false;
-        cart.forEach(function (it) { if (it.product && excludedSet.has(it.product.category)) excluded = true; });
+        cart.forEach(function (it) {
+            if (!it || !it.product) return;
+            if (it._isRawBoard || it._isRawBoardAuto || _soIsRawBoardProduct(it.product)) return;
+            if (excludedSet.has(it.product.category)) excluded = true;
+        });
         var calc = _soCalcCartTotal(cart);
         var taxBase = calc.taxBase || 0;
         // 4 옵션별 최대 가능 할인액 산출
