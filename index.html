@@ -10589,6 +10589,21 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         section.style.display = 'block';
         grid.innerHTML = '';
 
+        // 2026-06-04: 강화 골판지 가벽 — 이름 "(기본양면)" → "(양면가격)" + 가격 99,000원 으로 override
+        products.forEach(p => {
+            try {
+                var _nm = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+                if (/강화\s*골판지|골판지\s*가벽|reinforced\s*corrugated/i.test(_nm)) {
+                    p.price = 99000;
+                    if (p.price_jp != null) p.price_jp = 9900;
+                    if (p.price_us != null) p.price_us = 99;
+                    if (p.name)    p.name    = p.name.replace(/\(\s*기본양면\s*\)/g, '(양면가격)');
+                    if (p.name_jp) p.name_jp = p.name_jp.replace(/\(\s*기本両面\s*\)/g, '(両面価格)').replace(/\(\s*基本両面\s*\)/g, '(両面価格)');
+                    if (p.name_us) p.name_us = p.name_us.replace(/\(\s*Default\s*Double[- ]Side\s*\)/gi, '(Double-Side Price)').replace(/\(\s*Basic\s*Double\s*\)/gi, '(Double-Side Price)');
+                }
+            } catch(e) {}
+        });
+
         products.forEach(p => {
             if (!window.PRODUCT_DB) window.PRODUCT_DB = {};
             
