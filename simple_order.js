@@ -3307,7 +3307,8 @@ html, body { background: #ffffff !important; }
                             ? tr('가벽','壁面','Walls')
                             : (state.isBox ? tr('박스','箱','Boxes')
                                 : (state.isCutPrint ? tr('인쇄커팅','カット印刷','Cut prints')
-                                    : tr('인쇄물','商品','Items')));
+                                    : (state.isRawBoard ? tr('허니콤보드 원판','ハニカム原板','Raw Boards')
+                                        : tr('인쇄물','商品','Items'))));
                         // 2026-06-01: breakdown 내부 텍스트 모두 흰색 강제 (이전 opacity로 회색기 있었음)
                         var _rowStyle = 'display:flex; justify-content:space-between; color:#ffffff;';
                         _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + _wallLabel + (_addonSum > 0 ? ' + ' + tr('추가옵션','追加オプション','Add-ons') : '') + '</span><span style="color:#ffffff;">' + fmtPrice(_wallBaseSum + _addonSum) + '</span></div>');
@@ -7864,7 +7865,8 @@ html, body { background: #ffffff !important; }
             //   ad-print 가 아니어도 honeycomb 이면 "+다른 사이즈도 같이 주문" 노출.
             //   ad-print 처럼 shipping/order 강제 변경은 안 함 — 가벽은 자체 설치/배송 옵션 유지.
             //   2026-06-01: 허니콤배너 (isBanner) 는 큐 UI 사용 안 함 — 단순 단/양면 + 파일 + 수량 + 담기.
-            if (state.isHoneycomb && !state.isAdPrint && !state.isBanner) {
+            //   2026-06-04: 원판 (rawBoard / hexa-board) 도 큐/업로드 UI 사용 안 함 — 우측 카드 그리드에 수량만 입력해서 일괄 담기.
+            if (state.isHoneycomb && !state.isAdPrint && !state.isBanner && !state.isRawBoard) {
                 if (_multiSec) {
                     _multiSec.style.display = '';
                     _multiSec.style.order = '';
