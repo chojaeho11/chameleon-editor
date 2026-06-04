@@ -9790,16 +9790,18 @@ html, body { background: #ffffff !important; }
         });
         var calc = _soCalcCartTotal(cart);
         var taxBase = calc.taxBase || 0;
+        // 2026-06-04: 4-box 할인 (쿠폰/마일리지/예치금/PRO) 의 cap 기준 — 원판/금액주문/베스트굿즈 등 nonDiscountBase 도 합산.
+        //   volume tier (1M/5M/10M) 만 taxBase 기준 유지. 이렇게 해야 원판 단독 카트에서도 4-box 가 활성.
+        var discBase = taxBase + (calc.nonDiscountBase || 0);
         // 4 옵션별 최대 가능 할인액 산출
-        // 1) 이벤트 쿠폰: 잔액 vs 주문×20% vs 100,000 셋 중 최소 (2026-06-02: 50%/50K → 20%/100K 로 변경)
-        // 2026-06-04: 이벤트 쿠폰 — 10% 할인 / 1회 구매당 최대 3만원 (이전 20% / 10만원)
-        var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(taxBase * 0.1), 30000);
+        // 1) 이벤트 쿠폰: 잔액 vs 주문×10% vs 30,000 셋 중 최소
+        var eventMax  = excluded ? 0 : Math.min(eventCouponBal, Math.floor(discBase * 0.1), 30000);
         // 2) 마일리지(legacy 5%): 잔액 vs 주문×5%
-        var mileageMax = excluded ? 0 : Math.min(mileageBal, Math.floor(taxBase * 0.05));
+        var mileageMax = excluded ? 0 : Math.min(mileageBal, Math.floor(discBase * 0.05));
         // 3) 예치금: 잔액 vs 주문 전액
-        var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || taxBase));
+        var depositMax = excluded ? 0 : Math.min(depositBal, Math.max(0, calc.grandTotal || discBase));
         // 4) PRO 구독자 10%
-        var proMax = isPro ? Math.floor(taxBase * 0.1) : 0;
+        var proMax = isPro ? Math.floor(discBase * 0.1) : 0;
 
         window._soWallet = {
             ready: true, userId: uid,
