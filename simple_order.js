@@ -9738,24 +9738,46 @@ html, body { background: #ffffff !important; }
         if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
         // 2026-06-01: 배너 카트도 4-box 쿠폰/마일리지/예치금/PRO 할인 표시 (사용자 요청 변경).
         //   배너 자체 가격은 여전히 flat (55K/80K) — 볼륨티어 자동할인은 별도 룰.
+        // 2026-06-04: hexa-board.com 등 별도 도메인에서도 4-box UI 항상 노출 (비로그인 시 disabled + 로그인 안내)
         var sb = getSb(); if (!sb) return;
         var uid = null;
         try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
-        if (!uid) return; // 비로그인 → 숨김
+        // 2026-06-04: 비로그인 — 박스만 표시 (4 카드 disabled + 로그인 안내). 다른 상품/사이트와 시각적 일관성 확보.
+        if (!uid) {
+            var disableCard = function (disc) {
+                var card = document.querySelector('.so-disc-card[data-disc="' + disc + '"]');
+                var radio = card ? card.querySelector('input[type=radio]') : null;
+                if (card) { card.style.opacity = '0.45'; card.style.cursor = 'not-allowed'; }
+                if (radio) radio.disabled = true;
+            };
+            disableCard('event_coupon');
+            disableCard('mileage');
+            disableCard('deposit');
+            disableCard('pro');
+            var lblEl = box ? box.querySelector('.so-co-label') : null;
+            if (lblEl) {
+                lblEl.innerHTML = tr('할인 적용 (1개 선택)', '割引選択 (1つのみ)', 'Discount (pick one)') +
+                    ' <span style="color:#ef4444; font-size:11px; font-weight:700; margin-left:6px;">· ' +
+                    tr('로그인 후 사용 가능', 'ログイン後利用可能', 'Login required') + '</span>';
+            }
+            window._soWallet = { ready: false, discChoice: null };
+            if (box) box.style.display = '';
+            return;
+        }
         // 2026-06-01: event_coupon 컬럼 분리 — mileage(legacy 5%) / event_coupon(50%, 50k cap) / deposit
         var prof = null;
         try { var r = await sb.from('profiles').select('mileage, deposit, event_coupon').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
         if (!prof) {
             // event_coupon 컬럼 미적용 환경 — mileage/deposit 만으로 fallback
             try { var r2 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r2.data; } catch (e) {}
-            if (!prof) return;
-            prof.event_coupon = 0;
+            if (!prof) prof = { mileage: 0, deposit: 0, event_coupon: 0 };
+            else prof.event_coupon = 0;
         }
         var mileageBal = parseInt(prof.mileage || 0) || 0;
         var depositBal = parseInt(prof.deposit || 0) || 0;
         var eventCouponBal = parseInt(prof.event_coupon || 0) || 0;
         var isPro = !!window.isProSubscriber;
-        if (mileageBal <= 0 && depositBal <= 0 && eventCouponBal <= 0 && !isPro) return; // 모두 없으면 숨김
+        // 2026-06-04: 로그인 + 0잔액 + 비PRO 도 박스 표시 (사용자가 어떤 할인이 있는지 인지 + PRO 가입 유도)
         var cart = _soReadAllCart();
         var excludedSet = window.excludedCategoryCodes || new Set();
         var excluded = false;
