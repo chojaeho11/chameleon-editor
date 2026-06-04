@@ -2774,13 +2774,15 @@ async function loadFabricReviews(productCode, page) {
     const fl = window._cdRvState.filterLang || 'all';
     const from = page * _CD_RV_PAGE, to = from + _CD_RV_PAGE - 1;
     try {
-        let q = sb.from('product_reviews').select('*', { count:'exact' }).eq('product_code', productCode);
+        // 2026-06-04: 패브릭 메인 페이지처럼 cotton_showcase 도 같이 조회 — 사이트 언어 우선
+        const _codes = [productCode, 'cotton_showcase'];
+        let q = sb.from('product_reviews').select('*', { count:'exact' }).in('product_code', _codes);
         if (fl !== 'all') q = q.eq('lang', fl);
         let { data, count, error } = await q.order('created_at', { ascending:false }).range(from, to);
         if (error) { console.warn('[cd rv] load:', error.message); renderFabricReviews([], 0, page, 0); return; }
-        // 2026-06-04: 해당 언어 리뷰가 0건이면 다국어 폴백 (빈 화면 방지). 페이지 0 때만.
+        // 그래도 0건이면 다국어 폴백 (페이지 0 때만)
         if (page === 0 && (!data || data.length === 0) && fl !== 'all') {
-            let q2 = sb.from('product_reviews').select('*', { count:'exact' }).eq('product_code', productCode);
+            let q2 = sb.from('product_reviews').select('*', { count:'exact' }).in('product_code', _codes);
             const r2 = await q2.order('created_at', { ascending:false }).range(from, to);
             if (r2.data && r2.data.length) {
                 data = r2.data;
@@ -2791,7 +2793,7 @@ async function loadFabricReviews(productCode, page) {
         let avg = 0;
         const effLang = window._cdRvState.filterLang || 'all';
         if (page === 0 && (count || 0) > 0) {
-            let aq = sb.from('product_reviews').select('rating').eq('product_code', productCode);
+            let aq = sb.from('product_reviews').select('rating').in('product_code', _codes);
             if (effLang !== 'all') aq = aq.eq('lang', effLang);
             const ar = await aq;
             if (ar.data && ar.data.length) avg = ar.data.reduce((s, x) => s + (x.rating || 0), 0) / ar.data.length;
