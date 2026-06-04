@@ -391,10 +391,179 @@ a { text-decoration: none; color: inherit; }
             <i class="fa-solid fa-layer-group" style="margin-right:4px;"></i>Hexalite
         </a>
         <nav class="nav-links">
+            <!-- 2026-06-04: 로그인 버튼 — 적립금/이벤트쿠폰/예치금/PRO 할인 사용 위한 인증 -->
+            <button id="hbAuthBtn" onclick="window.hbOpenLogin()" style="display:inline-flex; align-items:center; gap:5px; padding:7px 12px; border-radius:8px; background:#fff; color:var(--primary); border:1.5px solid var(--primary); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; font-family:inherit;">
+                <i class="fa-solid fa-user" style="font-size:11px;"></i> <span id="hbAuthBtnLabel">로그인</span>
+            </button>
             <div class="lang-selector" id="langSelector"></div>
         </nav>
     </div>
 </header>
+
+<!-- 2026-06-04: 로그인/회원가입 모달 (cafe2626.com login.js 와 동일 로직 — 가짜 이메일 변환 + 짧은 비번 패딩) -->
+<div id="hbLoginModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.72); z-index:999990; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
+    <div style="background:#fff; padding:28px 24px 24px; border-radius:16px; width:100%; max-width:340px; box-shadow:0 20px 60px rgba(0,0,0,0.4); position:relative;">
+        <button onclick="window.hbCloseLogin()" style="position:absolute; top:10px; right:14px; background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8; line-height:1;">&times;</button>
+        <h3 id="hbAuthTitle" style="margin:0 0 14px; font-size:18px; font-weight:800; color:#1e293b;">로그인</h3>
+        <div id="hbSignupGuide" style="display:none; background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; padding:12px 14px; border-radius:10px; margin-bottom:14px; text-align:center;">
+            <div style="font-size:14px; font-weight:800; margin-bottom:2px;">🎁 회원가입 즉시 3만원 쿠폰</div>
+            <div style="font-size:11px; opacity:0.9;">인증 메일 없이 바로 가입</div>
+        </div>
+        <input id="hbLoginEmail" placeholder="아이디 (이메일도 가능)" autocomplete="username" style="width:100%; padding:11px 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:14px; margin-bottom:8px; box-sizing:border-box; font-family:inherit;">
+        <input id="hbLoginPw" type="password" placeholder="비밀번호" autocomplete="current-password" style="width:100%; padding:11px 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:14px; margin-bottom:12px; box-sizing:border-box; font-family:inherit;">
+        <button id="hbAuthSubmit" onclick="window.hbDoAuth()" style="width:100%; padding:12px; border:none; border-radius:9px; background:linear-gradient(135deg,#7c3aed,#6366f1); color:#fff; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit;">로그인</button>
+        <div style="margin-top:12px; font-size:12px; color:#64748b; text-align:center;">
+            <span id="hbAuthSwitchText">계정이 없으신가요?</span>
+            <span id="hbAuthSwitchLink" onclick="window.hbToggleAuthMode()" style="color:#6366f1; font-weight:700; cursor:pointer; margin-left:5px; text-decoration:underline;">회원가입</span>
+        </div>
+        <div id="hbAuthMsg" style="margin-top:10px; font-size:12px; text-align:center; min-height:16px;"></div>
+    </div>
+</div>
+
+<script>
+(function(){
+    var SUPA_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    var _hbSb = null;
+    function getSb(){
+        if (_hbSb) return _hbSb;
+        if (!window.supabase) return null;
+        _hbSb = window.sb || window.supabase.createClient(SUPA_URL, SUPA_ANON);
+        window.sb = _hbSb;
+        return _hbSb;
+    }
+    var _isSignup = false;
+    function setText(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; }
+    function setMsg(txt, color){ var el = document.getElementById('hbAuthMsg'); if (el){ el.textContent = txt; el.style.color = color || '#dc2626'; } }
+    function L(ko, ja, en){ var lang = window.__PS_LANG || 'ko'; return lang==='ja'?ja:(lang==='en'?en:ko); }
+
+    window.hbOpenLogin = function(){
+        var modal = document.getElementById('hbLoginModal');
+        if (!modal) return;
+        // 이미 로그인된 상태면 로그아웃 확인
+        var sb = getSb();
+        if (sb) {
+            sb.auth.getUser().then(function(r){
+                if (r && r.data && r.data.user) {
+                    if (confirm(L('로그아웃하시겠습니까?', 'ログアウトしますか？', 'Sign out?'))) {
+                        sb.auth.signOut().then(function(){
+                            updateAuthButton(null);
+                            alert(L('로그아웃되었습니다.','ログアウトしました。','Signed out.'));
+                        });
+                    }
+                    return;
+                }
+                modal.style.display = 'flex';
+                document.getElementById('hbLoginEmail').focus();
+            });
+        } else {
+            modal.style.display = 'flex';
+        }
+    };
+    window.hbCloseLogin = function(){
+        var modal = document.getElementById('hbLoginModal');
+        if (modal) modal.style.display = 'none';
+        setMsg('', '#64748b');
+    };
+    window.hbToggleAuthMode = function(){
+        _isSignup = !_isSignup;
+        setText('hbAuthTitle', _isSignup ? L('회원가입','会員登録','Sign up') : L('로그인','ログイン','Sign in'));
+        document.getElementById('hbAuthSubmit').textContent = _isSignup ? L('회원가입','登録','Sign up') : L('로그인','ログイン','Sign in');
+        document.getElementById('hbSignupGuide').style.display = _isSignup ? '' : 'none';
+        setText('hbAuthSwitchText', _isSignup ? L('이미 계정이 있으신가요?','すでにアカウントをお持ちですか？','Already have an account?') : L('계정이 없으신가요?','アカウントがありませんか？',"Don't have an account?"));
+        setText('hbAuthSwitchLink', _isSignup ? L('로그인','ログイン','Sign in') : L('회원가입','登録','Sign up'));
+        setMsg('', '#64748b');
+    };
+    window.hbDoAuth = async function(){
+        var emEl = document.getElementById('hbLoginEmail');
+        var pwEl = document.getElementById('hbLoginPw');
+        var em = (emEl && emEl.value || '').trim();
+        var pw = (pwEl && pwEl.value || '').trim();
+        if (!em || !pw) { setMsg(L('아이디와 비밀번호를 입력하세요.','IDとパスワードを入力してください。','Please enter ID and password.')); return; }
+        if (!em.includes('@')) em = em + '@cafe2626.com';
+        var padded = pw;
+        if (_isSignup && pw.length < 6) { setMsg(L('비밀번호는 6자 이상이어야 합니다.','パスワードは6文字以上必要です。','Password must be at least 6 characters.')); return; }
+        while (padded.length < 6) padded += '0';
+        var sb = getSb();
+        if (!sb) { setMsg(L('연결 오류 (Supabase).','接続エラー','Connection error.')); return; }
+        var btn = document.getElementById('hbAuthSubmit');
+        var origTxt = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = L('처리 중...','処理中...','Processing...');
+        try {
+            if (_isSignup) {
+                // 이미 가입된 계정 처리
+                try {
+                    var pre = await sb.auth.signInWithPassword({ email: em, password: padded });
+                    if (pre && pre.data && pre.data.session) {
+                        setMsg(L('이미 가입된 계정 — 로그인되었습니다.','すでに加入済み — ログインしました。','Already registered — signed in.'), '#16a34a');
+                        setTimeout(function(){ location.reload(); }, 700);
+                        return;
+                    }
+                } catch(e){}
+                var su = await sb.auth.signUp({ email: em, password: padded });
+                if (su.error) throw su.error;
+                if (su.data && su.data.user) {
+                    try {
+                        await sb.from('profiles').update({ site: 'KR', role: 'customer', event_coupon: 30000 }).eq('id', su.data.user.id);
+                    } catch(e) {
+                        try { await sb.from('profiles').update({ site: 'KR', role: 'customer', mileage: 30000 }).eq('id', su.data.user.id); } catch(_){}
+                    }
+                    try {
+                        await sb.from('wallet_logs').insert({ user_id: su.data.user.id, type: 'signup_bonus', amount: 30000, description: '회원가입 무료 이벤트 쿠폰 (hexa-board)' });
+                    } catch(e){}
+                }
+                if (!su.data || !su.data.session) {
+                    var lo = await sb.auth.signInWithPassword({ email: em, password: padded });
+                    if (lo.error) throw lo.error;
+                }
+                setMsg(L('가입 완료! 3만원 쿠폰 지급됨','登録完了！3千円クーポン進呈','Signup complete — ₩30,000 coupon granted'), '#16a34a');
+            } else {
+                var lo2 = await sb.auth.signInWithPassword({ email: em, password: padded });
+                if (lo2.error) throw lo2.error;
+                setMsg(L('로그인되었습니다','ログインしました','Signed in'), '#16a34a');
+            }
+            setTimeout(function(){ location.reload(); }, 600);
+        } catch (err) {
+            setMsg((err && err.message) || L('실패했습니다.','失敗しました。','Failed.'));
+            btn.disabled = false;
+            btn.textContent = origTxt;
+        }
+    };
+    function updateAuthButton(user){
+        var lbl = document.getElementById('hbAuthBtnLabel');
+        if (!lbl) return;
+        if (user) {
+            var disp = (user.email || '').replace('@cafe2626.com','').replace('@chameleon-print.local','');
+            if (disp.length > 12) disp = disp.substring(0,11) + '…';
+            lbl.textContent = disp + ' · ' + L('로그아웃','ログアウト','Sign out');
+        } else {
+            lbl.textContent = L('로그인','ログイン','Sign in');
+        }
+    }
+    // 페이지 로드 시 세션 확인
+    function init(){
+        var sb = getSb();
+        if (!sb) { setTimeout(init, 300); return; }
+        sb.auth.getUser().then(function(r){
+            updateAuthButton(r && r.data && r.data.user);
+        }).catch(function(){});
+        sb.auth.onAuthStateChange(function(_evt, sess){
+            updateAuthButton(sess && sess.user);
+        });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+    // Enter 키 제출
+    document.addEventListener('keydown', function(e){
+        if (e.key !== 'Enter') return;
+        var modal = document.getElementById('hbLoginModal');
+        if (!modal || modal.style.display === 'none') return;
+        var t = e.target;
+        if (t && (t.id === 'hbLoginEmail' || t.id === 'hbLoginPw')) { e.preventDefault(); window.hbDoAuth(); }
+    });
+})();
+</script>
 
 <!-- 히어로 -->
 <section class="hero">
