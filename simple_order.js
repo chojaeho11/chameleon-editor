@@ -1632,13 +1632,13 @@ html, body { background: #ffffff !important; }
               style="padding:14px 10px; border:2px solid #4338ca; background:#4338ca; color:#fff; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
               ${tr('한판', 'フル', 'Full')}<br>
               <span style="font-size:11px; font-weight:600; opacity:0.9;">2400 × 1200</span><br>
-              <span style="font-size:13px; font-weight:800;">${fmtPrice(150000)}</span>
+              <span style="font-size:13px; font-weight:800;">${fmtPrice(99000)}</span>
             </button>
             <button type="button" class="so-cut-btn" data-cut="half" onclick="window._soPickCutSize('half')"
               style="padding:14px 10px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:8px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.4;">
               ${tr('반판 이내', 'ハーフ以内', 'Half or less')}<br>
               <span style="font-size:11px; font-weight:600; color:#6b7280;">1200×1200 / 600×2400</span><br>
-              <span style="font-size:13px; font-weight:800;">${fmtPrice(100000)}</span>
+              <span style="font-size:13px; font-weight:800;">${fmtPrice(55000)}</span>
             </button>
           </div>
           <!-- 2026-05-22: 재단인쇄 단면/양면 (양면 = 단가 ×2). _soPickSide 가 state.wallSide 설정 → 가격 2배 -->
@@ -2821,8 +2821,8 @@ html, body { background: #ffffff !important; }
             }
             state.wallHeightExtra = heightExtra;
         } else if (state.isCutPrint) {
-            // 자유인쇄커팅: 한판 15만, 반판 10만 (수량은 곱셈)
-            unit = (state.cutSize === 'half') ? 100000 : 150000;
+            // 자유인쇄커팅: 한판 99,000원, 반판 55,000원 (단면 기준, 양면은 _soPickSide 가 ×2 처리)
+            unit = (state.cutSize === 'half') ? 55000 : 99000;
             qty = state.qty || 1;
             subtotal = unit * qty;
             // 2026-05-22: 양면 인쇄 → 가격 2배
@@ -9294,7 +9294,7 @@ html, body { background: #ffffff !important; }
         }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
         if (it.cutPrint) {
-            unit = (it.cutPrint.size === 'half') ? 100000 : 150000;
+            unit = (it.cutPrint.size === 'half') ? 55000 : 99000;
         }
         // 2026-05-13: 허니콤 박스 — 저장된 박스 단가 사용 (가로×세로×높이로 산출된 값)
         if (it.boxSize && typeof it.boxSize.unit === 'number') {
