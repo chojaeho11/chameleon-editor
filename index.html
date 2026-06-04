@@ -2,6 +2,19 @@
 <html lang="ko">
 <head>
 <script>
+// 2026-06-04: hexa-board.com OAuth bridge — Supabase Site URL 이 cafe2626 으로 고정돼 있어
+//   hexa-board → Google/Kakao OAuth → 콜백이 여기로 떨어지는 경우, hash 토큰을 그대로 들고
+//   hexa-board.com 으로 즉시 리다이렉트. (createClient 가 hash 를 소비하기 전에 실행되도록 최상단 배치.)
+(function(){
+    try {
+        if (location.search.indexOf('hexa_return=1') < 0) return;
+        if (location.hash.indexOf('access_token') < 0 && location.hash.indexOf('refresh_token') < 0 && location.hash.indexOf('error') < 0) return;
+        var dest = 'https://www.hexa-board.com/' + location.hash;
+        location.replace(dest);
+    } catch (e) {}
+})();
+</script>
+<script>
 // [SPA 라우팅] 서브패스 → history.replaceState (SEO 친화적, 리다이렉트 아님)
 // Google 렌더러: replaceState는 리다이렉트가 아니므로 원래 URL(/honeycomb)로 색인
 // 사용자: URL이 /?_p=honeycomb으로 변경되지만 페이지 이동 없음 (SPA 정상 작동)

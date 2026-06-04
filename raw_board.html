@@ -441,7 +441,10 @@ a { text-decoration: none; color: inherit; }
     function getSb(){
         if (_hbSb) return _hbSb;
         if (!window.supabase) return null;
-        _hbSb = window.sb || window.supabase.createClient(SUPA_URL, SUPA_ANON);
+        // 2026-06-04: detectSessionInUrl=true 로 OAuth 콜백 hash 토큰 자동 소비 (cafe2626 bridge 에서 forward 된 #access_token=... 처리)
+        _hbSb = window.sb || window.supabase.createClient(SUPA_URL, SUPA_ANON, {
+            auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true, flowType: 'implicit' }
+        });
         window.sb = _hbSb;
         return _hbSb;
     }
@@ -496,9 +499,11 @@ a { text-decoration: none; color: inherit; }
                  provider === 'google' ? 'Googleログインに移動中…' : 'カカオログインに移動中…',
                  provider === 'google' ? 'Redirecting to Google…' : 'Redirecting to Kakao…'), '#16a34a');
         try {
-            var redirectUrl = window.location.origin + '/';
+            // 2026-06-04: Supabase Site URL 이 cafe2626 으로 고정돼 hexa-board redirectTo 가 무시되는 문제 해결.
+            //   redirectTo = cafe2626 bridge URL → cafe2626 index.html 최상단 스크립트가 hash 토큰을 들고 hexa-board 로 즉시 forward.
+            var redirectUrl = 'https://www.cafe2626.com/?hexa_return=1';
             var lang = window.__PS_LANG || 'ko';
-            if (lang && lang !== 'ko') redirectUrl += '?lang=' + lang;
+            if (lang && lang !== 'ko') redirectUrl += '&lang=' + lang;
             var { error } = await sb.auth.signInWithOAuth({
                 provider: provider,
                 options: { redirectTo: redirectUrl, queryParams: { access_type: 'offline', prompt: 'consent' } }
