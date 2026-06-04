@@ -2504,6 +2504,99 @@ window.addEventListener('message', function(e){
     </div>
 </section>
 
+<!-- 2026-06-04: 댓글 디테일 모달 — 리뷰 카드 클릭 시 큰 화면으로 보고 좌우로 다른 댓글 탐색 -->
+<div id="cpReviewDetailModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:30000; align-items:center; justify-content:center; padding:14px;" onclick="if(event.target===this) window._cpCloseReviewDetail()">
+    <div style="background:#fff; border-radius:18px; width:520px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 24px 70px rgba(0,0,0,0.5); position:relative;">
+        <button onclick="window._cpCloseReviewDetail()" aria-label="close" style="position:absolute; top:12px; right:14px; width:38px; height:38px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; z-index:5; display:flex; align-items:center; justify-content:center;">&times;</button>
+        <div id="cpReviewDetailContent"></div>
+        <!-- 이전/다음 네비 -->
+        <div style="display:flex; gap:8px; padding:14px 18px 18px; background:#fafaf9; border-radius:0 0 18px 18px; border-top:1px solid #eee;">
+            <button id="cpReviewPrev" onclick="window._cpReviewDetailNav(-1)" style="flex:1; padding:12px; border:1.5px solid #d6d3d1; background:#fff; color:#451a03; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">
+                <i class="fa-solid fa-chevron-left"></i> <span data-i18n="cp_review_prev">이전</span>
+            </button>
+            <button id="cpReviewNext" onclick="window._cpReviewDetailNav(1)" style="flex:1; padding:12px; border:none; background:linear-gradient(135deg,#451a03,#78350f); color:#fde047; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">
+                <span data-i18n="cp_review_next">다음</span> <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+        <div style="padding:0 18px 16px; text-align:center;">
+            <button onclick="window._cpCloseReviewDetail()" style="padding:10px 22px; border:none; background:#fde047; color:#451a03; border-radius:50px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">
+                <i class="fa-solid fa-arrow-left"></i> <span data-i18n="cp_review_back_main">패브릭 메인으로</span>
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+// 2026-06-04: 댓글 디테일 모달 (탐색 + 닫기 → 메인)
+(function(){
+    var _idx = 0;
+    var _list = [];
+    function _findIndex(rev) {
+        for (var i = 0; i < _list.length; i++) {
+            if (_list[i].id && rev.id && _list[i].id === rev.id) return i;
+        }
+        return 0;
+    }
+    function _render() {
+        var r = _list[_idx]; if (!r) return;
+        var c = document.getElementById('cpReviewDetailContent');
+        if (!c) return;
+        var stars = '';
+        for (var i = 0; i < 5; i++) stars += i < r.rating ? '<i class="fa-solid fa-star" style="color:#fbbf24;"></i>' : '<i class="fa-regular fa-star" style="color:#fbbf24;"></i>';
+        var d = new Date(r.created_at);
+        var ds = d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+        var photo = (r.photo_url && r.photo_url.trim())
+            ? '<img src="'+r.photo_url+'" alt="" style="width:100%; max-height:420px; object-fit:cover; display:block; border-radius:18px 18px 0 0;" onerror="this.style.display=\'none\'">'
+            : '';
+        var safeComment = (r.comment || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var safeUser = (r.user_name || '').replace(/</g,'&lt;');
+        c.innerHTML =
+            photo +
+            '<div style="padding:18px 20px 8px;">' +
+                '<div style="font-size:22px; margin-bottom:10px;">' + stars + '</div>' +
+                '<p style="font-size:15px; color:#1c1917; line-height:1.65; margin:0 0 14px 0; white-space:pre-wrap;">' + safeComment + '</p>' +
+                '<div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#78716c; padding-top:10px; border-top:1px dashed #e7e5e4;">' +
+                    '<span style="font-weight:700;">' + safeUser + '</span>' +
+                    '<span>' + ds + '</span>' +
+                '</div>' +
+                '<div style="margin-top:8px; font-size:11px; color:#a8a29e; text-align:right;">' + (_idx + 1) + ' / ' + _list.length + '</div>' +
+            '</div>';
+        var prev = document.getElementById('cpReviewPrev');
+        var next = document.getElementById('cpReviewNext');
+        if (prev) { prev.disabled = (_idx === 0); prev.style.opacity = (_idx === 0) ? '0.4' : '1'; prev.style.cursor = (_idx === 0) ? 'not-allowed' : 'pointer'; }
+        if (next) { next.disabled = (_idx >= _list.length - 1); next.style.opacity = (_idx >= _list.length - 1) ? '0.4' : '1'; next.style.cursor = (_idx >= _list.length - 1) ? 'not-allowed' : 'pointer'; }
+    }
+    window.cpOpenReviewDetail = function(reviewObj) {
+        // 현재 그리드에 떠있는 리뷰들을 수집해 리스트 구성
+        var cards = document.querySelectorAll('#pdReviewGrid .rv-card');
+        _list = window._pdLoadedReviews && window._pdLoadedReviews.length ? window._pdLoadedReviews.slice() : [reviewObj];
+        if (window._pdLoadedReviews && window._pdLoadedReviews.length === 0) _list = [reviewObj];
+        _idx = _findIndex(reviewObj);
+        var m = document.getElementById('cpReviewDetailModal');
+        if (m) m.style.display = 'flex';
+        _render();
+        // 스크롤 위 잠금
+        document.body.style.overflow = 'hidden';
+    };
+    window._cpReviewDetailNav = function(dir) {
+        var newIdx = _idx + dir;
+        if (newIdx < 0 || newIdx >= _list.length) return;
+        _idx = newIdx;
+        _render();
+        // 디테일 컨테이너 스크롤 위로
+        var c = document.getElementById('cpReviewDetailContent');
+        if (c && c.parentNode) c.parentNode.scrollTop = 0;
+    };
+    window._cpCloseReviewDetail = function() {
+        var m = document.getElementById('cpReviewDetailModal');
+        if (m) m.style.display = 'none';
+        document.body.style.overflow = '';
+        // 패브릭 메인으로 — 스크롤만 위로 (이미 같은 페이지)
+        var rs = document.getElementById('reviewSection');
+        if (rs && rs.scrollIntoView) rs.scrollIntoView({behavior:'smooth', block:'start'});
+    };
+})();
+</script>
+
 <!-- 유저 뽐내기 업로드 모달 -->
 <div id="showcaseModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:30000; align-items:center; justify-content:center; padding:16px;">
     <div style="background:#fff; border-radius:18px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
@@ -3661,6 +3754,9 @@ cp_showcase_ph_comment: { ko:'작품 자랑이나 사용 후기를 짧게 남겨
 cp_showcase_photo_select: { ko:'클릭하여 사진 선택', ja:'クリックして写真を選択', en:'Click to select photo', zh:'点击选择照片', ar:'انقر لاختيار الصورة', es:'Haz clic para elegir foto', de:'Foto auswahlen', fr:'Cliquez pour choisir la photo' },
 cp_showcase_submit: { ko:'등록하기', ja:'投稿する', en:'Submit', zh:'发布', ar:'انشر', es:'Enviar', de:'Senden', fr:'Envoyer' },
 cp_showcase_empty: { ko:'첫 번째 댓글의 주인공이 되어주세요!', ja:'最初のコメントを書いてみましょう！', en:'Be the first to leave a comment!', zh:'成为第一位评论者！', ar:'كن أول من يعلق!', es:'Se el primero en comentar!', de:'Sei der erste, der kommentiert!', fr:'Soyez le premier a commenter!' },
+cp_review_prev: { ko:'이전', ja:'前へ', en:'Prev', zh:'上一条', ar:'السابق', es:'Anterior', de:'Zurück', fr:'Précédent' },
+cp_review_next: { ko:'다음', ja:'次へ', en:'Next', zh:'下一条', ar:'التالي', es:'Siguiente', de:'Weiter', fr:'Suivant' },
+cp_review_back_main: { ko:'패브릭 메인으로', ja:'ファブリックメインへ', en:'Back to Fabric Main', zh:'返回主页', ar:'العودة الى الرئيسية', es:'Volver a Principal', de:'Zur Hauptseite', fr:'Retour à l\'accueil' },
 footer_brand_desc: {
     ko:'전 세계 인쇄 파트너. 무료 에디터로 디자인하고 맞춤 제작까지.',
     ja:'世界中の印刷パートナー。無料エディタでデザインからカスタム製作まで。',
@@ -3971,6 +4067,11 @@ window.loadPdReviews = async function() {
             }
         }
 
+        // 2026-06-04: 디테일 모달 탐색용 — 전체 누적 리스트
+        if (_rvPage === 0) window._pdLoadedReviews = [];
+        if (data && data.length) {
+            window._pdLoadedReviews = (window._pdLoadedReviews || []).concat(data);
+        }
         if (!data || data.length === 0) {
             if (_rvPage === 0 && empty) empty.style.display = 'block';
             if (moreBtn) moreBtn.style.display = 'none';
@@ -4001,14 +4102,15 @@ window.loadPdReviews = async function() {
             var photoHtml = (r.photo_url && r.photo_url.trim()) ? '<img class="rv-photo" src="'+r.photo_url+'" alt="review" loading="lazy" onerror="this.style.display=\'none\'">' : '';
             var card = document.createElement('div');
             card.className = 'rv-card';
-            if (r.product_code) {
-                card.onclick = (function(code) { return function() {
-                    var base = LANG==='ko'?'https://www.cafe2626.com':LANG==='ja'?'https://www.cafe0101.com':'https://chameleon.design';
-                    var p = '?product='+encodeURIComponent(code);
-                    if (LANG!=='ko'&&LANG!=='ja'&&LANG!=='en') p+='&lang='+LANG;
-                    window.location.href = base+'/'+p;
-                }; })(r.product_code);
-            }
+            // 2026-06-04: 카드 클릭 → 상품 이동 대신 댓글 디테일 모달 (다른 댓글 탐색 가능)
+            (function(reviewObj) {
+                card.onclick = function(ev) {
+                    // 좋아요/댓글 버튼 내부 클릭은 카드 모달 안 띄움 (이미 stopPropagation 처리)
+                    if (typeof window.cpOpenReviewDetail === 'function') {
+                        window.cpOpenReviewDetail(reviewObj);
+                    }
+                };
+            })(r);
             // user showcase 항목만 좋아요/댓글 인터랙션 활성화
             var isShowcase = r.product_code === 'cotton_showcase';
             var showcaseId = r.id || (r.created_at + '_' + (r.user_name||''));
