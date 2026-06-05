@@ -1483,6 +1483,12 @@ html, body { background: #ffffff !important; }
           <div id="soRealVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-05: 배너 & 거치대 (X-배너/실내·야외 거치대/미니 배너 등) — 카드 그리드 -->
+        <div class="so-section" id="soBannerStandVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('배너 & 거치대 종류 선택', 'バナー&スタンド種類選択', 'Choose banner & stand')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soBannerStandVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
         <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -4404,6 +4410,81 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchRealPrint', e); }
+    };
+
+    // 2026-06-05: 배너 & 거치대 family — 8종 (관리자 표시 순서 그대로)
+    var BANNER_STAND_CODES_ORDERED = [
+        '752001',       // 1. 패트&실내거치대 세트
+        '752002',       // 2. 패트&야외거치대 세트
+        '752003',       // 3. 패트 & 실내철제거치대 세트
+        '752004',       // 4. 패트1장 및 실외철재거치대 세트
+        '752005',       // 5. 현수막 배너 (거치대 미포함)
+        '2342344243',   // 6. 미니 배너
+        '752006',       // 7. 페트베너 (거치대 미포함)
+        '752007'        // 8. 매쉬베너 (거치대 미포함)
+    ];
+    function _soIsBannerStandProduct(p) {
+        if (!p) return false;
+        return BANNER_STAND_CODES_ORDERED.indexOf(p.code) >= 0;
+    }
+    var _soBannerStandCache = null;
+    async function _soLoadBannerStandVariants(currentCode) {
+        var sec = document.getElementById('soBannerStandVariantsSec');
+        var grid = document.getElementById('soBannerStandVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soBannerStandCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var r1 = await sb.from('admin_products').select(_COLS).in('code', BANNER_STAND_CODES_ORDERED);
+                var rows = (r1 && r1.data) || [];
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code) _byCode[r.code] = r; });
+                _soBannerStandCache = BANNER_STAND_CODES_ORDERED
+                    .map(function(c){ return _byCode[c]; })
+                    .filter(function(r){ return !!r; });
+                console.log('[so] banner&stand variants loaded:', _soBannerStandCache.length);
+            }
+            if (_soBannerStandCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soBannerStandCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Banner';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchBannerStand(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] bannerStandVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadBannerStandVariants = _soLoadBannerStandVariants;
+    window._soIsBannerStandProduct = _soIsBannerStandProduct;
+
+    window._soSwitchBannerStand = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchBannerStand', e); }
     };
 
     // 2026-06-05: 게이트 (이름 매칭 '게이트' / 'gate') — 가로 2~6m, 세로 3~4m 선택, 동적 가격.
@@ -8508,6 +8589,15 @@ html, body { background: #ffffff !important; }
         } else {
             var _rpSec = document.getElementById('soRealVariantsSec');
             if (_rpSec) _rpSec.style.display = 'none';
+        }
+        // 2026-06-05: 배너 & 거치대 family (8종 — X배너/실내·야외/미니/페트·매쉬 베너)
+        var _isBSVariant = (typeof window._soIsBannerStandProduct === 'function')
+            ? window._soIsBannerStandProduct(p) : false;
+        if (_isBSVariant) {
+            try { window._soLoadBannerStandVariants(p.code); } catch(e){}
+        } else {
+            var _bsSec = document.getElementById('soBannerStandVariantsSec');
+            if (_bsSec) _bsSec.style.display = 'none';
         }
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
         var _isGate = _soIsGateProduct(p);
