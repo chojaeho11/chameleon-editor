@@ -2909,6 +2909,9 @@ html, body { background: #ffffff !important; }
         // 수정 모드에서는 폼 값이 라인 값으로 채워져 있음 — draft 아님
         var _isEditing = !!state._adEditingLineId;
         var _curIsDraft = _hasQueue && !_isEditing && !state.file && !state.thumbDataUrl && _addonCount === 0 && _baseStandCount === 0;
+        // 2026-06-05: 자유인쇄커팅 — 큐에 항목이 있으면 현재 폼은 항상 draft (다음 아이템 빌드용).
+        //   사용자 요청: 받침대 선택해도 합계에 안 더해지고 라인별 수량으로만 관리.
+        if (state.isCutPrint && _hasQueue && !_isEditing) _curIsDraft = true;
         state._adCurIsDraft = _curIsDraft;
         // 2026-05-13: 가벽 세로 3m → 가로 m당 +50,000원 + 양면 2배
         let heightExtra = 0;
@@ -6214,21 +6217,20 @@ html, body { background: #ffffff !important; }
     window._soAdRemoveLine = window._soAdRemoveQueued;
 
     // 2026-06-05: 자유인쇄커팅 — 큐 라인 인라인 수량 변경. line.qty + line.lineTotal 재계산 + 합계 갱신.
+    //   사용자 요청: "제품이 2개면 받침도 2개 값이 올라가야함" → addons (받침대 등) 도 수량만큼 곱.
     window._soAdUpdateLineQty = function(lineId, newQtyRaw) {
         var newQty = parseInt(newQtyRaw, 10);
         if (!newQty || newQty < 1) newQty = 1;
         var line = (state._adLines || []).find(function(l){ return l.id === lineId; });
         if (!line) return;
-        // 단가 (unit) 가 라인에 보존돼 있으므로 그대로 사용. base = unit × qty + addons. 양면이면 ×2.
-        var _oldQty = line.qty || 1;
         line.qty = newQty;
         var _unit = line.unitPrice || 0;
         var _base = _unit * newQty;
         if (line.wallSide === 'double') _base *= 2;
-        // addons 와 wallShapeFee 등은 라인에 저장돼 있음 — 단순히 차액만 반영
-        var _addons = line.addonsTotal || 0;
+        // 받침대 / addon 도 수량만큼 multiply (사용자 명시 요구)
+        var _addonsPerUnit = line.addonsTotal || 0;
         var _shape = line.wallShapeFee || 0;
-        line.lineTotal = _base + _addons + _shape;
+        line.lineTotal = _base + (_addonsPerUnit * newQty) + _shape;
         window._soAdRenderQueue();
         window._soAdRenderLinePreviews();
         if (typeof recalc === 'function') recalc();
@@ -7964,14 +7966,11 @@ html, body { background: #ffffff !important; }
                 }
             }
         } catch (e) {}
-        // 2026-06-05: cutPrint — 주문 수량 섹션을 담기 버튼 바로 위로 이동 (옵션 다 선택 후 수량 입력 → 담기 흐름).
+        // 2026-06-05: cutPrint — 주문 수량 섹션 hide (큐 라인별 인라인 수량 input 으로 대체).
         try {
             if (state.isCutPrint) {
                 var _qtySec = document.getElementById('soQtySection');
-                var _actions = document.querySelector('.so-right .so-actions') || document.querySelector('.so-actions');
-                if (_qtySec && _actions && _qtySec.parentNode === _actions.parentNode) {
-                    _actions.parentNode.insertBefore(_qtySec, _actions);
-                }
+                if (_qtySec) _qtySec.style.display = 'none';
             }
         } catch (e) {}
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
