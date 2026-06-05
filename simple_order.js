@@ -1550,6 +1550,11 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-01: 허니콤배너 전용 섹션 — 안내문 + 파일 업로드 + 단면/양면. 사이즈는 60×180cm 고정. -->
         <div class="so-section" id="soBannerSection" style="display:none;">
           <div class="so-section-title">${tr('배너', 'バナー', 'Banner')}</div>
+          <!-- 2026-06-05: 배너 family (단일/연결형) 변형 카드 그리드 — 글씨 스카시와 동일 패턴 -->
+          <div id="soBannerVariantsSec" style="display:none; margin-bottom:14px;">
+            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px;">${tr('배너 종류 선택', 'バナー種類選択', 'Banner type')} <span style="font-size:11px; font-weight:600; color:#94a3b8;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+            <div id="soBannerVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
           <div style="text-align:center; font-size:12.5px; color:#475569; line-height:1.7; margin-bottom:14px;">
             ${tr('배너는 <b style="color:#1e293b;">60 × 180cm 사이즈 고정</b>입니다.<br>한 파일에 모든 배너를 올리고 수량을 입력해 주세요.<br><b style="color:#16a34a;">배너는 무료배송 됩니다.</b>',
                  'バナーは <b style="color:#1e293b;">60 × 180cm 固定サイズ</b>です。<br>1ファイルに全バナーをまとめてアップロードし、数量をご入力ください。<br><b style="color:#16a34a;">バナーは送料無料です。</b>',
@@ -3870,6 +3875,67 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchScarci', e); }
+    };
+
+    // 2026-06-05: 허니콤 배너 family (hb_bn_*) — 단일 배너 / 연결형 배너 등 한 페이지에서 선택
+    var _soBannerCache = null;
+    async function _soLoadBannerVariants(currentCode) {
+        var sec = document.getElementById('soBannerVariantsSec');
+        var grid = document.getElementById('soBannerVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soBannerCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                // hb_bn_ 로 시작하는 모든 상품 fetch
+                var fb = await sb.from('admin_products').select(_COLS).like('code', 'hb_bn%');
+                var rows = (fb && fb.data) || [];
+                // 중복 제거 + sort_order 정렬
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
+                _soBannerCache = Object.values(_byCode).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                console.log('[so] banner variants loaded:', _soBannerCache.length);
+            }
+            if (_soBannerCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soBannerCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Banner';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                // 배너는 가격이 단면 45K / 양면 80K 고정 — DB 가격 무시하고 표시도 동일
+                var priceVal = 45000;
+                if (lang === 'ja') priceVal = 4500;
+                else if (lang === 'en' || window.__SITE_CODE === 'US') priceVal = 45;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchBanner(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
+                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + tr('~','~','~') + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] bannerVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadBannerVariants = _soLoadBannerVariants;
+
+    window._soSwitchBanner = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchBanner', e); }
     };
 
     // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
@@ -7666,6 +7732,14 @@ html, body { background: #ffffff !important; }
             // isHoneycomb 인 채로 두지만 wall/queue 흐름 차단용 플래그
             state.isWall = false;
             state.isPhotozone = false;
+            // 2026-06-05: 배너 family (단일/연결형) 변형 카드 그리드 로드
+            try { window._soLoadBannerVariants(p.code); } catch(e){}
+        } else {
+            // 배너가 아니면 variants 그리드 숨김
+            try {
+                var _bvSec = document.getElementById('soBannerVariantsSec');
+                if (_bvSec) _bvSec.style.display = 'none';
+            } catch(e){}
         }
         // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_*)
         state.isCutPrint = _soIsCutPrintProduct(p);
