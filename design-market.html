@@ -2119,9 +2119,30 @@ let portfolioUrls = [];
     // Check if designer
     await loadDesignerProfile();
 
-    // 국가 필터 초기화 (세션 저장값 없으면 사이트 기본값 적용)
-    if (sessionStorage.getItem('dm_country_filter') === null) {
-        COUNTRY_FILTER = detectDefaultCountry();
+    // 2026-06-04: 국가 강제 — 로그인 사용자의 profiles.site (또는 designer.country) 로 락.
+    //   "한국 의뢰는 한국인만 / 일본 의뢰는 일본인만" 정책. 사용자가 임의로 다른 국가 의뢰·디자이너를 볼 수 없음.
+    let _lockedCountry = '';
+    try {
+        const _u = await sb.auth.getUser();
+        const _uid = _u && _u.data && _u.data.user && _u.data.user.id;
+        if (_uid) {
+            const { data: _prof } = await sb.from('profiles').select('site').eq('id', _uid).maybeSingle();
+            if (_prof && _prof.site) _lockedCountry = _prof.site;
+        }
+    } catch (e) {}
+    if (!_lockedCountry && designerProfile && designerProfile.country) _lockedCountry = designerProfile.country;
+    if (_lockedCountry) {
+        COUNTRY_FILTER = _lockedCountry;
+        sessionStorage.setItem('dm_country_filter', _lockedCountry);
+        // 국가 필터 바 자체를 숨김 (사용자 선택 불가)
+        const _cfb = document.getElementById('countryFilterBar');
+        if (_cfb) _cfb.style.display = 'none';
+        console.log('[design-market] country locked to user:', _lockedCountry);
+    } else {
+        // 비로그인 사용자: 기본 국가 (세션 저장값 없으면 사이트 기본값 적용)
+        if (sessionStorage.getItem('dm_country_filter') === null) {
+            COUNTRY_FILTER = detectDefaultCountry();
+        }
     }
     renderCountryFilter();
     updateShowcaseTitle();
@@ -2336,6 +2357,8 @@ async function loadHqRequests() {
             .ilike('category', '본사-%')
             .order('created_at', { ascending: false });
         if (sf !== 'all') query = query.eq('status', sf);
+        // 2026-06-04: 본사의뢰도 국가별 격리 — 한국 매니저는 한국 본사의뢰, 일본 매니저는 일본 본사의뢰
+        if (COUNTRY_FILTER) query = query.eq('country', COUNTRY_FILTER);
         const { data: requests, error } = await query;
         if (error) throw error;
         if (!requests || requests.length === 0) {
