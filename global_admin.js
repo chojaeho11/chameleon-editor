@@ -15,22 +15,62 @@ import "./global_assets.js?v=296";
 import "./global_stats.js?v=294";
 import "./global_reviews.js?v=294";
 
-window.addEventListener('DOMContentLoaded', async () => { 
+window.addEventListener('DOMContentLoaded', async () => {
     // 1. 화면 깜빡임 방지
     document.body.style.visibility = 'hidden';
-    
-    // 2. 설정 초기화
-    await initConfig(); 
-    
-    // 3. 보안 체크
-    const isAdmin = await checkAdminAccess();
-    if (!isAdmin) return;
 
-    console.log("관리자 페이지 로드 완료");
+    // 2026-06-04: 직원 브라우저(Edge Tracking Prevention 등) 에서 Supabase 요청이 끊겨
+    //   checkAdminAccess 가 무한 대기 → body 가 영영 hidden 으로 남는 백지 버그 fix.
+    //   12초 timeout: 그 안에 권한 확인 못 하면 body 노출 + 안내 메시지 + 로그인 페이지 링크.
+    const _adminTimeout = setTimeout(() => {
+        if (document.body.style.visibility !== 'visible') {
+            console.warn('⚠️ checkAdminAccess timeout — Tracking Prevention 또는 네트워크 차단 의심.');
+            document.body.style.visibility = 'visible';
+            try {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.92); z-index:999999; display:flex; align-items:center; justify-content:center; padding:24px; font-family:-apple-system, sans-serif;';
+                overlay.innerHTML =
+                    '<div style="background:#fff; padding:28px 32px; border-radius:16px; max-width:500px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.4);">' +
+                        '<div style="font-size:42px; margin-bottom:12px;">⚠️</div>' +
+                        '<h2 style="margin:0 0 12px; color:#0f172a; font-size:20px; font-weight:900;">관리자 인증 확인 실패</h2>' +
+                        '<div style="font-size:13.5px; color:#475569; line-height:1.7; text-align:left; margin-bottom:18px;">' +
+                            '<b>가능한 원인:</b><br>' +
+                            '• 로그인 세션 만료 — 메인 페이지에서 다시 로그인<br>' +
+                            '• Edge 추적 방지 (Tracking Prevention) 강함 — 사이트 권한 허용 필요<br>' +
+                            '&nbsp;&nbsp;설정 → 개인정보 → 추적 방지 → <b>기본</b> 또는<br>' +
+                            '&nbsp;&nbsp;<b>cafe2626.com 예외 추가</b><br>' +
+                            '• 회사 방화벽이 supabase.co 차단 — IT팀에 문의<br>' +
+                            '• 브라우저 캐시 문제 — Ctrl+Shift+R 강력 새로고침' +
+                        '</div>' +
+                        '<button onclick="location.href=\'/\'" style="padding:12px 22px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:14px; margin-right:8px;">메인으로 (로그인)</button>' +
+                        '<button onclick="location.reload(true)" style="padding:12px 22px; background:#fff; color:#7c3aed; border:2px solid #7c3aed; border-radius:10px; font-weight:800; cursor:pointer; font-size:14px;">새로고침</button>' +
+                    '</div>';
+                document.body.appendChild(overlay);
+            } catch (e) {}
+        }
+    }, 12000);
 
-    // 4. 초기 탭 로드
-    if(window.showSection) {
-        window.showSection('sec-vip');
+    try {
+        // 2. 설정 초기화
+        await initConfig();
+
+        // 3. 보안 체크
+        const isAdmin = await checkAdminAccess();
+        clearTimeout(_adminTimeout);  // 성공/실패 어느 쪽이든 timeout 취소 (checkAdminAccess 가 redirect 처리)
+        if (!isAdmin) return;
+
+        console.log("관리자 페이지 로드 완료");
+
+        // 4. 초기 탭 로드
+        if(window.showSection) {
+            window.showSection('sec-vip');
+        }
+    } catch (e) {
+        clearTimeout(_adminTimeout);
+        console.error('❌ 관리자 페이지 초기화 실패:', e);
+        document.body.style.visibility = 'visible';
+        alert('관리자 페이지 초기화 실패: ' + (e && e.message ? e.message : '알 수 없는 오류') + '\n메인 페이지로 이동합니다.');
+        location.href = '/';
     }
 });
 
