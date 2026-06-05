@@ -1,4 +1,4 @@
-/* simple_order.js — 간편 주문 모달 (v=4 — 2단 레이아웃: 좌 업로드 / 우 옵션)
+﻿/* simple_order.js — 간편 주문 모달 (v=4 — 2단 레이아웃: 좌 업로드 / 우 옵션)
  *
  * 사용:
  *   <script src="simple_order.js?v=4"></script>
@@ -3838,8 +3838,8 @@ html, body { background: #ffffff !important; }
                 if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
                 else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 return '<div style="display:flex; flex-direction:column; border:1.5px solid #e7e5e4; border-radius:10px; overflow:hidden; background:#fff;">' +
-                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
-                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                     '</div>' +
                     '<div style="padding:8px 10px;">' +
                         '<div style="font-size:11.5px; font-weight:700; color:#1e293b; line-height:1.3; height:30px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
@@ -3970,8 +3970,8 @@ html, body { background: #ffffff !important; }
                 var borderW = isCur ? '2.5px' : '1.5px';
                 var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
                 return '<div onclick="window._soSwitchScarci(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
-                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
-                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                         (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
@@ -4034,8 +4034,8 @@ html, body { background: #ffffff !important; }
                 var borderW = isCur ? '2.5px' : '1.5px';
                 var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
                 return '<div onclick="window._soSwitchBanner(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
-                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
-                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                         (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
@@ -4145,8 +4145,8 @@ html, body { background: #ffffff !important; }
                 var borderW = isCur ? '2.5px' : '1.5px';
                 var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
                 return '<div onclick="window._soSwitchInsta(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
-                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
-                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                         (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
@@ -4212,8 +4212,8 @@ html, body { background: #ffffff !important; }
                 var borderW = isCur ? '2.5px' : '1.5px';
                 var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
                 return '<div onclick="window._soSwitchTable(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
-                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
-                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
                         (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
