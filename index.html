@@ -12592,6 +12592,25 @@ window.showChoiceModal = async function(key) {
             }
 
             if (combinedHtml) {
+                // 2026-06-04: 글씨 스카시 (hb_ss_* family) — 골판지가벽/기타 일반 카테고리 공통 콘텐츠 부적합.
+                //   해당 상품은 공통 정보 섹션 자체 skip (입체디자인 안내 배너가 우측에 별도 노출).
+                const _pCodeForCommon = (product.code || '').toLowerCase();
+                const _pNameForCommon = ((product.name || '') + ' ' + (product.name_us || '') + ' ' + (product.name_kr || '')).toLowerCase();
+                const _isScarciCommon = _pCodeForCommon.startsWith('hb_ss')
+                    || (/허니콤|honeycomb/.test(_pNameForCommon) && /글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout|스카시/.test(_pNameForCommon));
+                if (_isScarciCommon) {
+                    console.log('[common-info] scarci family → skipping common section (avoids 골판지가벽 leak)');
+                    combinedHtml = '';
+                } else {
+                    // 2026-06-04: 추가 안전망 — 비-스카시여도 비한국어 locale 에서 콘텐츠가 한국어 fallback 인데
+                    //   "골판지" 같은 부적합 키워드가 섞여 있으면 hide. JP 'all' 콘텐츠 누수 후속 fix.
+                    if (lang !== 'kr' && /골판지/.test(combinedHtml)) {
+                        console.warn('[common-info] non-KR locale + 골판지 detected in fallback content → hiding to avoid mistranslation');
+                        combinedHtml = '';
+                    }
+                }
+            }
+            if (combinedHtml) {
                 commonInfoHtml = `<div id="commonInfoInline" style="width:100%; margin-top:20px;">${combinedHtml}</div>`;
             }
         }
