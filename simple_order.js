@@ -3746,14 +3746,20 @@ html, body { background: #ffffff !important; }
                     }));
                     rows = [].concat.apply([], results);
                 }
-                // 2차 fallback: code 가 hb_ss_ 로 시작하는 상품 직접 조회
-                if (rows.length === 0) {
-                    try {
-                        var fb = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').like('code', 'hb_ss_%');
-                        rows = (fb && fb.data) || [];
-                    } catch (e) {}
-                }
-                _soScarciCache = rows.sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                // 2차: code 가 hb_ss_ 로 시작하는 상품 추가 (중복 제거 위해 byCode 사용)
+                try {
+                    var fb = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').like('code', 'hb_ss_%');
+                    if (fb && fb.data) rows = rows.concat(fb.data);
+                } catch (e) {}
+                // 3차: 이름에 "글씨 스카시" 또는 "스카시" 포함 상품 추가 (코드 비표준 — 아크릴 허니콤 글씨 스카시 234342423 등)
+                try {
+                    var fb2 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').ilike('name', '%스카시%');
+                    if (fb2 && fb2.data) rows = rows.concat(fb2.data);
+                } catch (e) {}
+                // 중복 제거 (같은 code 는 1개만)
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
+                _soScarciCache = Object.values(_byCode).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
                 console.log('[so] scarci variants loaded:', _soScarciCache.length);
             }
             if (_soScarciCache.length === 0) { sec.style.display = 'none'; return; }
@@ -4080,12 +4086,24 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
+    // 2026-06-04: 글씨 스카시 family 감지 — 코드(hb_ss_*) + 이름("글씨 스카시", "스카시")
+    //   아크릴 허니콤 글씨 스카시 같은 코드 비표준(234342423 등) 상품도 포함.
+    function _soIsScarciProduct(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
+        if (code.startsWith('hb_ss')) return true;
+        if (/글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout/i.test(name)) return true;
+        return false;
+    }
+
     // 2026-05-13: 받침대 옵션이 필요한 상품 — 등신대 + 자유인쇄커팅
-    // 2026-06-04: 글씨 스카시 (hb_ss_*) 와 포인트 (hb_point*) 는 받침대 불필요 (사용자 요청)
+    // 2026-06-04: 글씨 스카시 family (hb_ss_* + 이름매칭) 와 포인트 (hb_point*) 는 받침대 불필요
     function _soNeedsBaseStand(p) {
         if (!p) return false;
         const code = (p.code || '').toLowerCase();
-        if (code.startsWith('hb_ss') || code.startsWith('hb_point')) return false;
+        if (code.startsWith('hb_point')) return false;
+        if (_soIsScarciProduct(p)) return false;
         return _soIsStandeeProduct(p) || _soIsCutPrintProduct(p);
     }
 
@@ -7632,8 +7650,8 @@ html, body { background: #ffffff !important; }
             var _rbMoreR = document.getElementById('soRawBoardMoreRightSec');
             if (_rbMoreR) _rbMoreR.style.display = 'none';
         }
-        // 2026-06-04: 글씨 스카시 (hb_ss_*) — 우측 상단에 5종 변형 카드 그리드 표시
-        if (p && p.code && /^hb_ss/i.test(p.code)) {
+        // 2026-06-04: 글씨 스카시 family (hb_ss_* + 이름매칭) — 우측 상단에 변형 카드 그리드 표시
+        if (_soIsScarciProduct(p)) {
             try { window._soLoadScarciVariants(p.code); } catch(e){}
         } else {
             var _scSec = document.getElementById('soScarciVariantsSec');
