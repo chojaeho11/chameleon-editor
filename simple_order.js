@@ -1460,12 +1460,12 @@ html, body { background: #ffffff !important; }
             <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
             <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
           </div>
-          <!-- 2026-05-13: 수량 할인 제거 → 구매금액 할인으로 교체 -->
-          <div class="so-tier-table" id="soTierTable">
-            <div data-amt-tier="10"><b>${fmtPrice(1000000)}+</b> 10%</div>
-            <div data-amt-tier="20"><b>${fmtPrice(5000000)}+</b> 20%</div>
-            <div data-amt-tier="30"><b>${fmtPrice(10000000)}+</b> 30%</div>
-            <div style="background:#ede9fe; color:#5b21b6; font-weight:800;">${tr('PRO 구독자', 'PRO会員', 'PRO')} 10%</div>
+          <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
+          <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
+            <a href="/#subscriptionSection" style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:2px solid #7c3aed; border-radius:10px; text-decoration:none; color:#5b21b6; font-weight:800; font-size:13px; box-shadow:0 4px 12px -4px rgba(124,58,237,0.35); transition:transform .15s ease;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+              <span><span style="font-size:15px;">👑</span> ${tr('PRO 구독자 가입 시 전제품 10% 할인', 'PRO会員ご加入で全商品10%割引', 'Subscribe to PRO — 10% off all products')}</span>
+              <span style="background:#fff; color:#7c3aed; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:900; flex-shrink:0;">${tr('가입하기 →', '加入する →', 'Subscribe →')}</span>
+            </a>
           </div>
           <!-- 2026-05-29: 베스트굿즈 프리셋 (키링/코롯토) 전용 — 100개 이상 50% 할인 -->
           <div class="so-tier-table" id="soPresetTierTable" style="display:none;">
@@ -3048,12 +3048,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 배너는 _noDisc 에서 제외 — 4-box (이벤트쿠폰/마일리지/예치금/PRO) 사용 가능. 볼륨티어는 자연히 1M 미만이라 적용 안 됨.
         // 2026-06-03: 인쇄물 카테고리 전체 (state.isGeneralPrint = 허니콤/포맥스 제외 모든 상품) 수량/금액 할인 없음 (사용자 요청)
         const _noDisc = state.isRawBoard || state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
+        // 2026-06-04: 금액 자동할인 (1M/5M/10M → 10/20/30%) 완전 제거 (사용자 요청 — PRO 가입 유도로 단일화)
         let amountPct = 0;
-        if (!_noDisc) {
-            if (taxBase >= 10000000) amountPct = 30;
-            else if (taxBase >= 5000000) amountPct = 20;
-            else if (taxBase >= 1000000) amountPct = 10;
-        }
         const isPro = !!window.isProSubscriber;
         // 2026-06-04: PRO 구독자 10% 할인 — 원판은 적용 (사용자 요청). 볼륨티어만 _noDisc 로 제외.
         const _noProDisc = state.isAmountOrder || state.isBestGoods || state.isAdPrint || state.isBizCard || state.isSticker || state.isGeneralPrint;
@@ -9792,10 +9788,8 @@ html, body { background: #ffffff !important; }
             // (다른 항목 배송이 있으면 그 max 안에 자동 묶음 — 추가 부담 X)
             if (_adProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
         }
+        // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
-        if (taxBase >= 10000000) amountPct = 30;
-        else if (taxBase >= 5000000) amountPct = 20;
-        else if (taxBase >= 1000000) amountPct = 10;
         var proPct = window.isProSubscriber ? 10 : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
         var proDisc = Math.round(taxBase * proPct / 100);
