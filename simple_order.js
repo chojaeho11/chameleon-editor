@@ -5951,8 +5951,15 @@ html, body { background: #ffffff !important; }
         // 2026-05-14: 아크릴 굿즈 — 키링용 부자재만 자동 포함 (ADDON_DB 스캔)
         // 화이트리스트: 와이어링/키링/오링/볼체인/랍스터/jump ring 등 키링 전용 명칭
         // 블랙리스트: 봉/조명/글루건/받침대/타공/멜빵/텐션/허니콤 등 가벽·배너 전용 → 무조건 제외
-        // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3*) 는 키링 자동 추가 차단 — 4종 옵션만 표시
-        var _isAcrylicPrintFam = !!(p && /^acrl[23]/i.test(p.code || ''));
+        // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3* + 반투명아크릴 + 글씨스카시) 는 키링 자동 추가 차단.
+        var _isAcrylicPrintFam = (function(){
+            if (!p) return false;
+            if (/^acrl[23]/i.test(p.code || '')) return true;
+            var nm = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+            if (/반투명|半透明|translucent|frosted/.test(nm)) return true;
+            if (/스카시|スカシ|scarci|글씨\s*커팅|letter\s*cutout/.test(nm)) return true;
+            return false;
+        })();
         if (state.isAcrylicGoods && !_isAcrylicPrintFam && window.ADDON_DB) {
             var keyringWhiteRe = /와이어\s*링|wire\s*ring|키링|key\s*ring|key\s*chain|keyring|키체인|오링|원형\s*링|o-?ring|볼\s*체인|ball\s*chain|랍스터|lobster|jump\s*ring|메탈\s*링|metal\s*ring|키홀더|key\s*holder|핸드폰\s*고리|폰\s*고리|버블링|크리스탈\s*링/i;
             var bannerBlackRe = /봉|조명|글루건|받침대|타공|아일렛|eyelet|멜빵|텐션|tension|허니콤|honeycomb|광고|배너(?!\s*키링)|banner(?!\s*key)|가벽|wall\s*panel|상단끈|하단끈|마감|finish|POP|판넬|panel|글루|grout|매대|stand(?!ee)|히터|heat|박스|box/i;
@@ -5979,9 +5986,10 @@ html, body { background: #ffffff !important; }
                 return !/코너\s*기둥|corner.*post|corner.*pillar/i.test(nm);
             });
         }
-        // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3*) — 키링 옵션 제외, 4종만 화이트리스트.
+        // 2026-06-06: 아크릴 인쇄 family — 키링 옵션 제외, 4종만 화이트리스트.
         //   1) 모양커팅  2) 사각커팅  3) 아크릴 전면에 인쇄  4) 아크릴 뒷면에 인쇄
-        if (p && /^acrl[23]/i.test(p.code || '')) {
+        //   대상: acrl2*/acrl3* + 반투명아크릴 + 글씨스카시
+        if (_isAcrylicPrintFam) {
             var _acrAllowRe = /모양\s*커팅|모양커팅|사각\s*커팅|사각커팅|전면\s*에?\s*인쇄|전면인쇄|뒷면\s*에?\s*인쇄|뒷면인쇄|앞면\s*에?\s*인쇄|앞면인쇄|shape\s*cut|square\s*cut|front\s*print|back\s*print/i;
             renderList = renderList.filter(function(a){
                 var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || ''));
@@ -5991,7 +5999,8 @@ html, body { background: #ffffff !important; }
 
         // 2026-05-29: 아크릴 굿즈 (키링/코롯토) 또는 베스트굿즈 — 고리·색상 addon 을 1줄 6개 grid 카드로 표시
         //   2026-05-30: 티셔츠는 _PRESET_MAP 에서 제외됐으나 카테고리 기반 isBestGoods 로 compact 유지
-        var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods || state.isBestGoods);
+        //   2026-06-06: 아크릴 인쇄 family 도 compact 카드 (4-col 그리드로 꽉차게)
+        var compactMode = !!(state.isAcrylicGoods || state.isPresetGoods || state.isBestGoods || _isAcrylicPrintFam);
         // 2026-05-30: 티셔츠 — 사이즈 addon 은 별도 섹션 (soTshirtSizeSection) 으로 분리. 색상만 컴팩트 grid 에 남김.
         var _isTshirt = (state.presetType === 'tshirt');
         function _tshirtSizeAlias(nm) {
@@ -6081,7 +6090,14 @@ html, body { background: #ffffff !important; }
                 '</label>';
         }).join('');
         // 2026-05-29: 컴팩트 모드면 그리드(1줄 6개), 그 외 flex column
-        if (compactMode) {
+        // 2026-06-06: 아크릴 인쇄 family — 4개 옵션을 좌우 꽉차게 (4-col 또는 실제 개수). compact 강제 적용.
+        if (_isAcrylicPrintFam) {
+            var _acrCols = Math.max(1, Math.min(renderList.length, 4));
+            list.style.display = 'grid';
+            list.style.gridTemplateColumns = 'repeat(' + _acrCols + ', 1fr)';
+            list.style.gap = '6px';
+            list.style.flexDirection = '';
+        } else if (compactMode) {
             list.style.display = 'grid';
             list.style.gridTemplateColumns = 'repeat(6, 1fr)';
             list.style.gap = '6px';
@@ -9154,6 +9170,12 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
+        // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
+        //   cm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
+        if (typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p)) {
+            state.isAdPrint = false;
+            state.isCustomSize = true;  // cm 면적 입력 유지
+        }
         // 2026-06-04: 등신대 V2 (hb_pi_5 / acr_crt_stand) 만 면적×단가 + mm 입력. hb_ss/hb_point 은 원래 UI 유지.
         if (state.isStandeeV2) state.isCustomSize = true;
         // 2026-06-04: 자유인쇄커팅 — 면적 회베 계산기 모드로 전환 (이전 한판/반판 flat 가격 폐기)
