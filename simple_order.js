@@ -10397,30 +10397,15 @@ html, body { background: #ffffff !important; }
             var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
         }
-        // 2026-06-01: 광고인쇄 카트 합계 룰 — 모든 ad-print 항목 상품가 합계 10만 이상 무료 / 미만 10,000원 (단일 통합).
-        //   ad-print 의 per-item shipping.fee 는 max 룰에서 이미 제외했음. 여기서는 ad-print 전체 합계 기준 추가만.
-        var _adItems = cart.filter(function(it){ return it && it._isAdPrint; });
-        if (_adItems.length > 0) {
-            var _adProductSub = 0;
-            _adItems.forEach(function(it){
-                var _itSub = _soCalcItemPrice(it);
-                var _itShip = (it.shipping && it.shipping.fee) || 0;
-                _adProductSub += (_itSub - _itShip);
-            });
-            // 광고인쇄 카트 소계 < 10만 이고, 다른 일반 항목의 배송비 (shipTotal) 이 없으면 1만원 가산
-            // (다른 항목 배송이 있으면 그 max 안에 자동 묶음 — 추가 부담 X)
-            if (_adProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
-        }
-        // 2026-06-05: 자유인쇄커팅 카트 합계 룰 — 광고인쇄와 동일. cutPrint 항목 전체 10만 이상 무료 / 미만 1만원.
-        var _cpItems = cart.filter(function(it){ return it && it.cutPrint; });
-        if (_cpItems.length > 0) {
-            var _cpProductSub = 0;
-            _cpItems.forEach(function(it){
-                var _itSub = _soCalcItemPrice(it);
-                var _itShip = (it.shipping && it.shipping.fee) || 0;
-                _cpProductSub += (_itSub - _itShip);
-            });
-            if (_cpProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
+        // 2026-06-05: 카트 합계 룰 통합 — 장바구니 전체 상품가 합계 기준 단일 임계값.
+        //   사용자 요청: "모든 제품에 대해서 장바구니 합산 금액에서 10만원이 안되면 1만원 붙여줘".
+        //   - 카트 상품 소계 (taxBase + nonDiscountBase) ≥ 100,000원 → 추가 배송비 없음 (무료)
+        //   - 카트 상품 소계 < 100,000원 + 다른 자체 배송비(max룰)도 0 → 1만원 포장배송비 1회 가산
+        //   - 가벽 설치/원판 용차 등 자체 배송비가 있는 경우 그 안에 포함됨 (이중 부과 방지)
+        //   - 베스트굿즈 정액 3K / 패브릭 별도 발송은 별도 처리 (위에서 가산됨)
+        var _allProductSub = taxBase + nonDiscountBase;
+        if (_allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
+            shipTotal += 10000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
