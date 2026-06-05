@@ -12622,6 +12622,12 @@ window.showChoiceModal = async function(key) {
                 if (_isScarciCommon) {
                     console.log('[common-info] scarci family → skipping common section (avoids 골판지가벽 leak)');
                     combinedHtml = '';
+                } else if (lang === 'ja' && _pCodeForCommon.startsWith('hb_')) {
+                    // 2026-06-04: 일본 사이트 허니콤보드 (hb_*) 상품 — 공통 콘텐츠가 모든 상품에 동일 이미지/배너로 들어가는 문제.
+                    //   "あなたの空間をブランドで彩ります" 류 generic 배너 + 부적합 이미지 누수 차단.
+                    //   상품별 description_jp 에 メリット/環境/おすすめ 가 이미 들어있어 공통 정보 없어도 됨.
+                    console.log('[common-info] JP honeycomb product → skipping common section (generic banner leak)');
+                    combinedHtml = '';
                 } else {
                     // 2026-06-04: 추가 안전망 — 비-스카시여도 비한국어 locale 에서 콘텐츠가 한국어 fallback 인데
                     //   "골판지" 같은 부적합 키워드가 섞여 있으면 hide. JP 'all' 콘텐츠 누수 후속 fix.
