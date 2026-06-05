@@ -3297,8 +3297,12 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else if (state.isCutPrint) {
-            // 2026-06-04: 자유인쇄커팅 — 무조건 택배. 사이즈에 따라 10k/20k/30k/50k 자동 산출
-            setText('soShipLabel', tr('배송 (택배)', '配送 (宅配)', 'Shipping (parcel)'));
+            // 2026-06-04: 자유인쇄커팅 — 사이즈 ≤180cm 택배 / >180cm 용차배송 자동 라벨
+            var _cpMxCm = Math.max(parseFloat(state.customW) || 0, parseFloat(state.customH) || 0);
+            var _cpShipMode = (_cpMxCm > 180)
+                ? tr('용차배송', '専用車配送', 'Dedicated truck')
+                : tr('택배', '宅配', 'Parcel');
+            setText('soShipLabel', tr('배송', '配送', 'Shipping') + ' (' + _cpShipMode + ')');
             setText('soShipAmount', '+' + fmtPrice(shipFee));
         } else {
             var shipName;
@@ -3373,7 +3377,16 @@ html, body { background: #ffffff !important; }
                             _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('할인','割引','Discount') + '</span><span style="color:#ffffff;">-' + fmtPrice(amountDiscount) + '</span></div>');
                         }
                         if (shipFee > 0 && !state.bundleShipping) {
-                            var _shipLbl2 = _soShipMethodLabel(state.shipMethod) || tr('배송','送料','Shipping');
+                            // 2026-06-04: 자유인쇄커팅 — 사이즈에 따라 택배/용차배송 자동 라벨 (본사 방문 수령 표기 X)
+                            var _shipLbl2;
+                            if (state.isCutPrint) {
+                                var _mxCm = Math.max(parseFloat(state.customW) || 0, parseFloat(state.customH) || 0);
+                                _shipLbl2 = (_mxCm > 180)
+                                    ? tr('용차배송', '専用車配送', 'Dedicated truck')
+                                    : tr('택배', '宅配', 'Parcel');
+                            } else {
+                                _shipLbl2 = _soShipMethodLabel(state.shipMethod) || tr('배송','送料','Shipping');
+                            }
                             _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('배송','送料','Shipping') + ' (' + _shipLbl2 + ')</span><span style="color:#ffffff;">+' + fmtPrice(shipFee) + '</span></div>');
                         } else if (state.bundleShipping) {
                             _lines.push('<div style="' + _rowStyle + '"><span style="color:#ffffff;">' + tr('배송','送料','Shipping') + '</span><span style="color:#ffffff;">' + tr('묶음배송','合わせて配送','Bundled') + '</span></div>');
