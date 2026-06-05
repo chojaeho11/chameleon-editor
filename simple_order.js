@@ -6181,6 +6181,13 @@ html, body { background: #ffffff !important; }
                 sizeOnly = ordLabel + ' ' + (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1) + tr('개','個','pcs');
             }
             var optionChipsHtml = _soOptionChips(line, 4);
+            // 2026-06-05: 자유인쇄커팅 — 각 큐 라인에 인라인 수량 input 추가 (1번 N개, 2번 M개 ... 라인별 수량 조절)
+            var _qtyInputHtml = line.isCutPrint
+                ? '<div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">' +
+                    '<span style="font-size:10.5px; color:#64748b; font-weight:700;">' + tr('수량','数量','Qty') + '</span>' +
+                    '<input type="number" min="1" value="' + (line.qty || 1) + '" data-cp-qty-line="' + line.id + '" onclick="event.stopPropagation();" oninput="window._soAdUpdateLineQty(\'' + line.id + '\', this.value)" style="width:50px; padding:4px 4px; border:1px solid #cbd5e1; border-radius:5px; text-align:center; font-size:12px; font-weight:700; box-sizing:border-box;">' +
+                  '</div>'
+                : '';
             div.innerHTML =
                 '<div style="display:flex; align-items:center; gap:10px;">' +
                     shapeIcon +
@@ -6188,6 +6195,7 @@ html, body { background: #ffffff !important; }
                         '<div style="font-size:12.5px; font-weight:800; color:#1e3a8a; line-height:1.35;">' + escapeHtml(sizeOnly) + '</div>' +
                         '<div style="font-size:11px; color:#475569; margin-top:3px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">' + fileChip + '<b style="color:#1e40af;">' + fmtPrice(line.lineTotal) + '</b></div>' +
                     '</div>' +
+                    _qtyInputHtml +
                     '<button type="button" onclick="event.stopPropagation(); window._soAdRemoveQueued(\'' + line.id + '\')" title="' + tr('삭제','削除','Remove') + '" style="background:none; border:none; color:#dc2626; font-size:15px; cursor:pointer; padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>' +
                 '</div>' +
                 (optionChipsHtml ? '<div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e0e7ff; display:flex; flex-wrap:wrap; gap:4px;">' + optionChipsHtml + '</div>' : '');
@@ -6204,6 +6212,27 @@ html, body { background: #ffffff !important; }
     };
     // 호환성 — 구 함수명 alias
     window._soAdRemoveLine = window._soAdRemoveQueued;
+
+    // 2026-06-05: 자유인쇄커팅 — 큐 라인 인라인 수량 변경. line.qty + line.lineTotal 재계산 + 합계 갱신.
+    window._soAdUpdateLineQty = function(lineId, newQtyRaw) {
+        var newQty = parseInt(newQtyRaw, 10);
+        if (!newQty || newQty < 1) newQty = 1;
+        var line = (state._adLines || []).find(function(l){ return l.id === lineId; });
+        if (!line) return;
+        // 단가 (unit) 가 라인에 보존돼 있으므로 그대로 사용. base = unit × qty + addons. 양면이면 ×2.
+        var _oldQty = line.qty || 1;
+        line.qty = newQty;
+        var _unit = line.unitPrice || 0;
+        var _base = _unit * newQty;
+        if (line.wallSide === 'double') _base *= 2;
+        // addons 와 wallShapeFee 등은 라인에 저장돼 있음 — 단순히 차액만 반영
+        var _addons = line.addonsTotal || 0;
+        var _shape = line.wallShapeFee || 0;
+        line.lineTotal = _base + _addons + _shape;
+        window._soAdRenderQueue();
+        window._soAdRenderLinePreviews();
+        if (typeof recalc === 'function') recalc();
+    };
 
     // 2026-06-01: 좌측 패널 — 큐에 담긴 각 라인별 미리보기 카드 (썸네일 + 사이즈 + 수량 + 파일명)
     window._soAdRenderLinePreviews = function() {
