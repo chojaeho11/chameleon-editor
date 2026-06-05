@@ -3319,7 +3319,8 @@ html, body { background: #ffffff !important; }
         // 배송/시공 (묶음배송이면 0원이어도 표시)
         // 2026-05-29: 베스트굿즈 — "배송비" 라벨만 (시공·옵션명 없음)
         // 2026-06-01: 광고인쇄 — 항상 배송 행 표시 (10만+ 무료 / 미만 3만)
-        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint);
+        // 2026-06-04: 자유인쇄커팅도 항상 표시 (무료배송 안내)
+        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint || !!state.isCutPrint);
         if (state.isAdPrint) {
             if (shipFee === 0) {
                 setText('soShipLabel', tr('배송비 · 10만원+ 무료 적용', '送料 · 10万+ 無料適用', 'Shipping · free over ₩100k'));
@@ -3333,13 +3334,9 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else if (state.isCutPrint) {
-            // 2026-06-04: 자유인쇄커팅 — 사이즈 ≤180cm 택배 / >180cm 용차배송 자동 라벨
-            var _cpMxCm = Math.max(parseFloat(state.customW) || 0, parseFloat(state.customH) || 0);
-            var _cpShipMode = (_cpMxCm > 180)
-                ? tr('용차배송', '専用車配送', 'Dedicated truck')
-                : tr('택배', '宅配', 'Parcel');
-            setText('soShipLabel', tr('배송', '配送', 'Shipping') + ' (' + _cpShipMode + ')');
-            setText('soShipAmount', '+' + fmtPrice(shipFee));
+            // 2026-06-04: 자유인쇄커팅 — 무료배송 (사용자 요청)
+            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
+            setText('soShipAmount', tr('무료', '無料', 'FREE'));
         } else {
             var shipName;
             if (state.bundleShipping) {
@@ -4562,16 +4559,10 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
-        // 2026-06-04: 자유인쇄커팅 — 사이즈별 택배비 (사용자 요청, 허니콤 무료 정책에서 예외 처리)
-        //   max(가로, 세로) cm 기준: ≤60 → 1만, ≤120 → 2만, ≤180 → 3만, >180 → 5만
+        // 2026-06-04: 자유인쇄커팅 — 무료배송 (사용자 요청). 사이즈별 택배비 폐기.
         if (state.isCutPrint) {
             state._shipUpgradeReason = null;
-            var _maxCm = Math.max(parseFloat(state.customW) || 0, parseFloat(state.customH) || 0);
-            if (_maxCm <= 0) return 10000; // 사이즈 미입력 안전망
-            if (_maxCm <= 60)  return 10000;
-            if (_maxCm <= 120) return 20000;
-            if (_maxCm <= 180) return 30000;
-            return 50000;
+            return 0;
         }
         // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
         //   해당: 박스 / 원판 / 등신대 / 허니콤포토존 등 (자유인쇄커팅은 위에서 별도 처리)
@@ -5517,8 +5508,8 @@ html, body { background: #ffffff !important; }
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
-        // 자유인쇄커팅 — 너무 작은 객체는 최소 3,000원 보장
-        if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
+        // 2026-06-04: 자유인쇄커팅 — 최소 단가 30,000원 보장 (사용자 요청, 이전 3,000원 → 30,000원)
+        if (state.isCutPrint && calcPrice < 30000) calcPrice = 30000;
         // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
         else if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
         // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
