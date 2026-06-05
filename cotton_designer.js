@@ -1364,15 +1364,15 @@ function _cdGenItemPrice(it) {
     }
     if (it.boxSize && typeof it.boxSize.unit === 'number') unit = it.boxSize.unit;
     if (it.customSize && typeof it.customSize.unit === 'number') unit = it.customSize.unit;
-    // 아크릴 안전망 — per-m² 로 잘못 저장된 unit 을 area_m2 로 환산
+    // 아크릴 안전망 — per-m² 로 잘못 저장된 unit 을 area_m2 로 환산 + 기본 인쇄/가공비 1,000원
     try {
         var _code = (it.product && it.product.code) || '';
         var _nm = ((it.product && it.product.name) || '').toLowerCase();
         var _isAcr = /^acrl[23]/i.test(_code) || /반투명|스카시|글씨\s*커팅/.test(_nm);
         if (_isAcr && it.customSize && it.customSize.area_m2 != null) {
             var _am = parseFloat(it.customSize.area_m2);
-            if (_am > 0 && _am < 1 && unit > 1000) {
-                var _cu = Math.round(unit * _am / 10) * 10;
+            if (_am > 0 && _am < 1 && unit > 1500) {
+                var _cu = Math.round(unit * _am / 10) * 10 + 1000;
                 if (_cu < unit) unit = _cu;
             }
         }

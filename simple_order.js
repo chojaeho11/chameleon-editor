@@ -6627,6 +6627,11 @@ html, body { background: #ffffff !important; }
         }
         // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
         if (isAcrGoods && calcPrice < 100) calcPrice = 100;
+        // 2026-06-06: 아크릴 인쇄 family — 기본 인쇄/가공비 +1,000원/개 추가 (사용자 요청).
+        //   예: 50×50mm 380원 + 1000 = 1,380원/개. 2개면 2,760원.
+        if (typeof state.isAcrylicFamily !== 'undefined' && state.isAcrylicFamily) {
+            calcPrice += 1000;
+        }
         state.customUnitPrice = calcPrice;
         state.customAreaM2 = areaM2;
         // 2026-05-22: 포맥스·폼보드 — 사이즈(가로+세로)에 따라 배송수단 자동 변경
@@ -11515,16 +11520,16 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-06: 아크릴 family 안전망 — 저장된 unit 이 per-m² 그대로일 때 area_m2 로 환산.
         //   증상: customSize.unit = 150000 (per-m²) + area_m2 = 0.0025 (50×50mm) 같이 잘못 저장된 카트 데이터.
-        //   재계산 = unit × area_m2 (소수면 곱해서 calculated price 복원).
+        //   재계산 = unit × area_m2 + 1,000원 (기본 인쇄/가공비).
         try {
             var _acrCode = (it.product && it.product.code) || '';
             var _acrNm = ((it.product && it.product.name) || '').toLowerCase();
             var _isAcrItm = /^acrl[23]/i.test(_acrCode) || /반투명|스카시|글씨\s*커팅/.test(_acrNm);
             if (_isAcrItm && it.customSize && it.customSize.area_m2 != null) {
                 var _amA = parseFloat(it.customSize.area_m2);
-                if (_amA > 0 && _amA < 1 && unit > 1000) {
-                    // unit 이 per-m² 일 가능성 — area 로 환산
-                    var _calcU = Math.round(unit * _amA / 10) * 10;
+                if (_amA > 0 && _amA < 1 && unit > 1500) {
+                    // unit 이 per-m² 일 가능성 — area 로 환산 + 기본 인쇄/가공비 1000원
+                    var _calcU = Math.round(unit * _amA / 10) * 10 + 1000;
                     if (_calcU < unit) unit = _calcU;
                 }
             }
