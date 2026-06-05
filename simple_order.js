@@ -9986,7 +9986,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         var _isHbFreeShip = state.isHoneycomb && !state.isWall;
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily
             && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
