@@ -1687,6 +1687,23 @@ html, body { background: #ffffff !important; }
           <div id="soPresetCutLabel" style="font-size:11px; color:#64748b; font-weight:600; margin-top:6px; text-align:center;"></div>
         </div>
 
+        <!-- 2026-06-04: 등신대 전용 재질 선택 (허니콤보드 16mm / 포맥스 3mm — 동일 가격) -->
+        <div class="so-section" id="soStandeeMaterialSection" style="display:none;">
+          <div class="so-section-title">🧩 ${tr('재질 선택', '素材選択', 'Material')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">${tr('가격 동일', '同価格', 'Same price')}</span></div>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+            <button type="button" class="so-material-btn active" data-material="honeycomb_16mm" onclick="window._soPickStandeeMaterial(this)"
+              style="padding:14px 12px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:all .15s ease; display:flex; flex-direction:column; gap:3px; align-items:center;">
+              <span>${tr('허니콤보드', 'ハニカムボード', 'Honeycomb')}</span>
+              <span style="font-size:11.5px; font-weight:900; opacity:0.85;">16mm</span>
+            </button>
+            <button type="button" class="so-material-btn" data-material="foamex_3mm" onclick="window._soPickStandeeMaterial(this)"
+              style="padding:14px 12px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:all .15s ease; display:flex; flex-direction:column; gap:3px; align-items:center;">
+              <span>${tr('포맥스', 'フォーメックス', 'Foamex')}</span>
+              <span style="font-size:11.5px; font-weight:900; opacity:0.85;">3mm</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
         <!-- 2026-05-29: 키링/코롯토 베스트굿즈는 pill UI 로 고정 사이즈 선택 -->
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
@@ -5378,6 +5395,9 @@ html, body { background: #ffffff !important; }
             wallSide: state.wallSide || 'single',
             wallShape: state.wallShape || 'straight',
             wallShapeFee: state.wallShapeFee || 0,
+            // 2026-06-04: 등신대 재질 (큐 라인별 보존)
+            isStandee: !!state.isStandee,
+            standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 박스
             boxW: state.boxW || null,
             boxH: state.boxH || null,
@@ -6444,6 +6464,20 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
     };
 
+    // 2026-06-04: 등신대 재질 선택 (허니콤보드 16mm / 포맥스 3mm — 동일 가격, 표시용)
+    window._soPickStandeeMaterial = function (btn) {
+        if (!btn) return;
+        var mat = btn.getAttribute('data-material') || 'honeycomb_16mm';
+        state.standeeMaterial = mat;
+        document.querySelectorAll('.so-material-btn').forEach(function (b) {
+            var on = b.dataset.material === mat;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#0f172a' : '#fff';
+            b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+            b.style.color = on ? '#fff' : '#334155';
+        });
+    };
+
     // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
     window._soOnBackFileChange = async function (files) {
         if (!files || !files.length) return;
@@ -7394,6 +7428,20 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function (cb) { cb.checked = false; });
         document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function (qi) { qi.value = 1; });
         state.isStandee = _soIsStandeeProduct(p);
+        // 2026-06-04: 등신대 — 재질 선택 섹션 노출 + 기본값 (허니콤보드 16mm)
+        state.standeeMaterial = state.isStandee ? 'honeycomb_16mm' : null;
+        try {
+            var _matSec = document.getElementById('soStandeeMaterialSection');
+            if (_matSec) _matSec.style.display = state.isStandee ? '' : 'none';
+            // 버튼 active 상태 초기화 (재진입 시 잔존 active 제거)
+            document.querySelectorAll('.so-material-btn').forEach(function(b){
+                var on = b.dataset.material === 'honeycomb_16mm';
+                b.classList.toggle('active', on);
+                b.style.background = on ? '#0f172a' : '#fff';
+                b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+                b.style.color = on ? '#fff' : '#334155';
+            });
+        } catch (e) {}
         // 2026-06-04: 등신대 — 받침대 UI 를 2-card (끼우는 형태 / 뒷면받침) 로 교체 + 무료 안내. 사용자 요청.
         //   비-등신대로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
         try {
@@ -8591,6 +8639,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
             wallShape: state.isWall ? (state.wallShape || 'straight') : null,
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
+            // 2026-06-04: 등신대 재질 (honeycomb_16mm / foamex_3mm — 동일 가격, 표시 및 작업지시용)
+            standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
@@ -8907,6 +8957,10 @@ html, body { background: #ffffff !important; }
                         state.cutSize = _ln.cutSize || 'full';
                         if (_ln.wallSide) state.wallSide = _ln.wallSide;
                     }
+                    // 2026-06-04: 등신대 재질 복원 (큐 라인마다 다를 수 있음)
+                    if (_ln.isStandee) {
+                        state.standeeMaterial = _ln.standeeMaterial || 'honeycomb_16mm';
+                    }
                     var _lnItem = buildCartItem(_lnUrl, _lnPath);
                     _lnItem.uid = Date.now() + _li + 1;
                     cart.push(_lnItem);
@@ -9169,6 +9223,13 @@ html, body { background: #ffffff !important; }
                 const meta = [];
                 if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
                 if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
+                // 2026-06-04: 등신대 재질 표시 (허니콤보드 16mm / 포맥스 3mm)
+                if (item.standeeMaterial) {
+                    var _matLbl = item.standeeMaterial === 'foamex_3mm'
+                        ? tr('포맥스 3mm', 'フォーメックス 3mm', 'Foamex 3mm')
+                        : tr('허니콤보드 16mm', 'ハニカム 16mm', 'Honeycomb 16mm');
+                    meta.push('🧩 ' + _matLbl);
+                }
                 return `
                 <div class="so-cart-item">
                     ${thumb
