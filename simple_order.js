@@ -11674,9 +11674,15 @@ html, body { background: #ffffff !important; }
             if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송). 모든 항목이 0 이면 0.
-        // 2026-06-06: 무료배송 carryover — 일반 항목 중 하나라도 무료(0) 면 모두 묶어 보낼 수 있어 전체 0.
-        //   "허니콤보드 가벽 같은 무료배송 상품과 같이 담겨있으면 다른 제품도 무료" — 사용자 요청.
-        var _hasFreeShipItem = itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; });
+        // 2026-06-06: 무료배송 carryover — 일반 항목 중 하나라도 무료(0) 또는 가벽이 있으면 패브릭/기타 묶음 무료.
+        //   "가벽 주문 시 다른 상품 자체 배송비 붙지 않음" — 사용자 요청. 가벽 트럭에 같이 실어 보냄.
+        var _hasFreeShipItem = (itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; }))
+            || cart.some(function(_it){
+                if (!_it || !_it.product) return false;
+                var _c = (_it.product.code || '').toLowerCase();
+                var _n = ((_it.product.name) || '').toLowerCase();
+                return /^hb_dw/.test(_c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(_n);
+            });
         var shipTotal;
         if (_hasFreeShipItem) {
             shipTotal = 0;

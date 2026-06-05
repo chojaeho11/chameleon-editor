@@ -1307,8 +1307,9 @@ function getGeneralItems() {
 
 // 2026-05-14: 택배비 — 사이트별 KRW 고정 (KR 5000, JP 10000 = ¥1000, US 10000 = $10).
 //   카트에 아이템이 1개 이상일 때만 부과. 매니저 견적 등 일부 흐름에서는 별도 처리될 수 있음.
-// 2026-06-06: 무료배송 carryover — 일반 상품 중 0원(무료배송) 항목이 있으면 패브릭도 묶음 무료.
-//   예: 가벽 self_pickup / 등신대 / 포토존 등.
+// 2026-06-06: 무료배송 carryover — 일반 상품 중 0원(무료) 또는 "가벽" 이 있으면 패브릭도 묶음.
+//   가벽은 자체 시공/배송비 (수도권 10만 / 지방 20만 / 지방 설치 70만 등) 가 이미 들어가므로,
+//   같이 묶이는 패브릭/아크릴/기타에 별도 배송비 추가하지 않음. 가벽 트럭에 같이 실어 보냄.
 function _cdHasFreeShipItem() {
     try {
         var gens = (typeof getGeneralItems === 'function') ? getGeneralItems() : [];
@@ -1319,13 +1320,14 @@ function _cdHasFreeShipItem() {
             // 자체 ship 정보 — fee === 0 이면 무료
             var f = (it.shipping && typeof it.shipping.fee === 'number') ? it.shipping.fee : null;
             if (f === 0) return true;
-            // 허니콤 가벽 외 모든 허니콤 — 무료 배송 (등신대/박스/원판/포토존 등)
             var code = (it.product && it.product.code || '').toLowerCase();
             var nm   = ((it.product && it.product.name) || '').toLowerCase();
             var isHb = code.indexOf('hb_') === 0 || /허니콤|honeycomb/.test(nm);
-            var isWall = /^hb_dw|가벽|wall/.test(code) || /가벽|wall/.test(nm);
+            var isWall = /^hb_dw/.test(code) || /가벽|wall\s*panel|honeycomb\s*wall/.test(nm);
+            // 허니콤 가벽 외 모든 허니콤 — 무료 배송 (등신대/박스/원판/포토존 등)
             if (isHb && !isWall) return true;
-            // 가벽 self_pickup (사용자 직접 수령) 인 경우만 무료. 위 shipping.fee === 0 으로 잡힘.
+            // 가벽 — 자체 시공/배송 (유료/무료 무관) 이 카트에 있으면 나머지는 묶음 무료 (사용자 요청)
+            if (isWall) return true;
         }
     } catch (e) {}
     return false;
