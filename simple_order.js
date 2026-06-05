@@ -3928,6 +3928,7 @@ html, body { background: #ffffff !important; }
     }
 
     // 2026-05-13: 받침대 옵션 카탈로그
+    // 2026-06-04: 등신대 전용 무료 받침대 2종 추가 (insert/free_rear) — 사용자 요청
     var BASE_STAND_OPTS = {
         none:         { fee: 0,     label_ko: '받침대 없음',                label_jp: 'なし',           label_us: 'No stand' },
         a4:           { fee: 3000,  label_ko: 'A4 이하용 받침대',            label_jp: 'A4以下 スタンド',  label_us: 'A4 stand' },
@@ -3935,7 +3936,9 @@ html, body { background: #ffffff !important; }
         a2:           { fee: 10000, label_ko: 'A2 이하용 받침대',            label_jp: 'A2以下 スタンド',  label_us: 'A2 stand' },
         rear:         { fee: 20000, label_ko: '등신대용 후면받침',           label_jp: '等身大 背面支持',  label_us: 'Life-size rear support' },
         banner_small: { fee: 20000, label_ko: '가로 60cm 이하 배너형 받침',   label_jp: 'バナー型 ≤60cm',   label_us: 'Banner ≤60cm' },
-        banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' }
+        banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' },
+        insert:       { fee: 0,     label_ko: '끼우는 형태',                label_jp: '差し込み式',       label_us: 'Slot-in type' },
+        free_rear:    { fee: 0,     label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' }
     };
 
     // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 옵션. KR/JP/EN 3개 언어 지원
@@ -7395,6 +7398,57 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function (cb) { cb.checked = false; });
         document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function (qi) { qi.value = 1; });
         state.isStandee = _soIsStandeeProduct(p);
+        // 2026-06-04: 등신대 — 받침대 UI 를 2-card (끼우는 형태 / 뒷면받침) 로 교체 + 무료 안내. 사용자 요청.
+        //   비-등신대로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
+        try {
+            var _bsList = document.getElementById('soBaseStandList');
+            if (_bsList) {
+                if (!window._soBaseStandOriginalHTML) window._soBaseStandOriginalHTML = _bsList.innerHTML;
+                if (state.isStandee) {
+                    var _ssCards = [
+                        { k:'insert', img:'/down.png',
+                            title: tr('끼우는 형태', '差し込み式', 'Slot-in'),
+                            desc:  tr('허니콤보드로 쉽게 끼울 수 있어요', 'ハニカムボードで簡単に差し込み', 'Easy slot-in with honeycomb board') },
+                        { k:'free_rear', img:'/up.jpg',
+                            title: tr('뒷면받침', '背面サポート', 'Rear support'),
+                            desc:  tr('받침이 뒤에 있어서 등신대처럼 가려져요', 'スタンドが背面にあり等身大のように隠れます', 'Stand hidden behind — looks like a true life-size cutout') }
+                    ];
+                    _bsList.style.display = 'grid';
+                    _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                    _bsList.style.gap = '10px';
+                    _bsList.innerHTML =
+                        // 무료 안내 배너 — grid 전체 폭
+                        '<div style="grid-column:1/-1; padding:11px 14px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:12px; text-align:center; font-size:13.5px; font-weight:900; color:#14532d; box-shadow:0 4px 12px -4px rgba(22,163,74,0.35); display:flex; align-items:center; justify-content:center; gap:6px;">' +
+                          '<span style="font-size:16px;">✅</span>' +
+                          tr('받침대 비용과 배송비는 무료입니다', 'スタンド料金と送料は無料です', 'Stand and shipping are FREE') +
+                        '</div>' +
+                        _ssCards.map(function(o){
+                            var safeTitle = String(o.title).replace(/[<>"]/g,'');
+                            var safeDesc = String(o.desc).replace(/[<>"]/g,'');
+                            return '<label data-bs-card="' + o.k + '" style="display:flex; flex-direction:column; gap:8px; padding:10px 10px 12px; border:2px solid #e7e5e4; border-radius:14px; cursor:pointer; background:#fff; transition:border-color .15s ease, box-shadow .15s ease;">' +
+                                '<div style="position:relative; aspect-ratio:1/1; background:#f8fafc; border-radius:10px; overflow:hidden;">' +
+                                    '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                                '</div>' +
+                                '<div style="display:flex; align-items:center; gap:8px;">' +
+                                    '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin:0; width:18px; height:18px; flex-shrink:0;">' +
+                                    '<div style="flex:1; min-width:0;">' +
+                                        '<div style="font-weight:900; font-size:13.5px; color:#451a03; line-height:1.25;">' + safeTitle + '</div>' +
+                                        '<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:3px; line-height:1.35;">' + safeDesc + '</div>' +
+                                    '</div>' +
+                                    '<input type="number" min="1" value="1" data-bs-qty-key="' + o.k + '" onclick="event.stopPropagation();" oninput="window._soSetBaseStandTypeQty(this)" style="width:46px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700; flex-shrink:0;">' +
+                                '</div>' +
+                                '<div style="text-align:right; font-weight:900; font-size:12.5px; color:#16a34a;">' + tr('무료', '無料', 'FREE') + '</div>' +
+                            '</label>';
+                        }).join('');
+                } else if (window._soBaseStandOriginalHTML) {
+                    // 비-등신대 (자유인쇄커팅 등) — 원래 6종 리스트로 복원
+                    _bsList.style.display = 'flex';
+                    _bsList.style.gridTemplateColumns = '';
+                    _bsList.style.gap = '6px';
+                    _bsList.innerHTML = window._soBaseStandOriginalHTML;
+                }
+            }
+        } catch (e) { console.warn('[so standee base stand UI]', e); }
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
         state.isCustomSize = _soIsCustomSizeProduct(p);
