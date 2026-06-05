@@ -3160,8 +3160,8 @@ html, body { background: #ffffff !important; }
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         } else if (state.isCustomSize) {
-            // 2026-06-04: 광고인쇄/등신대는 mm 표기, 그 외는 cm
-            var _useMmDim = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            // 2026-06-04: 광고인쇄/등신대/자유인쇄커팅은 mm 표기, 그 외는 cm
+            var _useMmDim = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
             var custDim = _useMmDim
                 ? (Math.round((state.customW || 0) * 10) + '×' + Math.round((state.customH || 0) * 10) + 'mm')
                 : ((state.customW || 0) + '×' + (state.customH || 0) + 'cm');
@@ -5279,9 +5279,9 @@ html, body { background: #ffffff !important; }
         var hEl = document.getElementById('soCustomH');
         if (!wEl || !hEl) return;
         // 2026-06-01: 광고인쇄 — input 값은 mm. cm 으로 환산해 state 에 저장 (기존 area 계산 호환).
-        // 2026-06-04: 등신대 (hb_pi_5 등) 도 mm 단위 입력으로 통일 (사용자 요청)
+        // 2026-06-04: 등신대 + 자유인쇄커팅 도 mm 단위 입력으로 통일 (사용자 요청)
         var isAd = state && state.isAdPrint;
-        var isMmInput = isAd || (state && state.isStandee);
+        var isMmInput = isAd || (state && (state.isStandee || state.isCutPrint));
         var wRaw = parseFloat(wEl.value) || 0;
         var hRaw = parseFloat(hEl.value) || 0;
         var wCm = isMmInput ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
@@ -7637,16 +7637,16 @@ html, body { background: #ffffff !important; }
             var _customUnitEl = document.getElementById('soCustomSizeUnit');
             var _customWEl = document.getElementById('soCustomW');
             var _customHEl = document.getElementById('soCustomH');
-            var _useMm = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            var _useMm = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
             if (_customUnitEl) _customUnitEl.textContent = _useMm ? '(mm)' : '(cm)';
             if (_customWEl) {
                 _customWEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
-                _customWEl.max = _useMm ? 2500 : 2000;
+                _customWEl.max = _useMm ? (state.isCutPrint ? 3000 : 2500) : 2000;
                 _customWEl.value = _useMm ? (state.customW * 10) : state.customW;
             }
             if (_customHEl) {
                 _customHEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
-                _customHEl.max = _useMm ? 2500 : 2000;
+                _customHEl.max = _useMm ? (state.isCutPrint ? 3000 : 2500) : 2000;
                 _customHEl.value = _useMm ? (state.customH * 10) : state.customH;
             }
             // 2026-06-04: 입력값 갱신 후 단가 재계산 (input.value 설정은 oninput 이벤트 발생 X)
@@ -8074,13 +8074,14 @@ html, body { background: #ffffff !important; }
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
-            // 2026-06-04: 등신대도 동일 (mm 입력) + W/H 라벨도 "가로 mm" / "세로 mm" 로 명시 (사용자 요청 — (cm) 작은 라벨이 잘 안 보였음)
-            var _useMmHere = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            // 2026-06-04: 등신대 + 자유인쇄커팅도 동일 (mm 입력) + W/H 라벨도 "가로 mm" / "세로 mm" 로 명시 (사용자 요청)
+            var _useMmHere = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
             var _wLblEl = document.getElementById('soCustomWLabel');
             var _hLblEl = document.getElementById('soCustomHLabel');
             if (_useMmHere) {
-                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = state.isAdPrint ? 20000 : 2500; cwEl.step = 1; }
-                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = state.isAdPrint ? 20000 : 2500; chEl.step = 1; }
+                var _maxMm = state.isAdPrint ? 20000 : (state.isCutPrint ? 3000 : 2500);
+                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = _maxMm; cwEl.step = 1; }
+                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = _maxMm; chEl.step = 1; }
                 var _uEl = document.getElementById('soCustomSizeUnit');
                 if (_uEl) _uEl.textContent = '(mm)';
                 if (_wLblEl) _wLblEl.textContent = tr('가로 mm', '横 mm', 'Width mm');
