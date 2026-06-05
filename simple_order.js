@@ -1578,11 +1578,11 @@ html, body { background: #ffffff !important; }
             <div style="flex:1.6; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
               <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')"
                 style="padding:12px 10px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); line-height:1.3;">
-                ${tr('단면', '片面', 'Single')}<br><span style="font-size:11px; font-weight:600; opacity:0.9;">55,000원</span>
+                ${tr('단면', '片面', 'Single')}<br><span style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(45000)}</span>
               </button>
               <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')"
                 style="padding:12px 10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.3;">
-                ${tr('양면', '両面', 'Double')}<br><span style="font-size:11px; font-weight:600; opacity:0.8;">80,000원</span>
+                ${tr('양면', '両面', 'Double')}<br><span style="font-size:11px; font-weight:600; color:#475569;">${fmtPrice(80000)}</span>
               </button>
             </div>
           </div>
@@ -2974,7 +2974,7 @@ html, body { background: #ffffff !important; }
             qty = state.qty;
             // 2026-06-01: 허니콤배너 — 단면 55K / 양면 80K flat (사이즈 무관, 사용자 요청)
             if (state.isBanner) {
-                unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 55000);
+                unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
             } else if (state.isBizCard) {
                 // 2026-06-03: 명함 — qty = 각 (1각 = 200매). 등급별 단가 (일반 단면3K/양면5K, 프리미엄 단면8K/양면10K)
                 qty = Math.max(1, qty || 1);
@@ -6816,6 +6816,8 @@ html, body { background: #ffffff !important; }
             b.style.color = on ? '#fff' : '#475569';
             b.style.borderColor = on ? 'transparent' : '#e2e8f0';
             b.style.boxShadow = on ? '0 4px 12px -4px rgba(79,70,229,0.45)' : 'none';
+            // 2026-06-05: 자식 span (가격 표시) 도 명시적 흰색/회색 강제 — opacity 로 안 보이던 문제.
+            b.querySelectorAll('span').forEach(function(s){ s.style.color = on ? '#fff' : '#475569'; });
         });
         // 2026-06-01: 배너는 양면이라도 파일 1개만 받음 (한 파일에 모든 배너 묶어서 업로드) — 뒷면 업로드 강제 숨김
         var _showBack = (state.wallSide === 'double') && !state.isBanner;
@@ -7656,8 +7658,9 @@ html, body { background: #ffffff !important; }
         state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code));
         if (state.isBanner) {
             // 가격 override (DB 값 무시) — 모든 배너 동일가
-            p.price = 55000;
-            state._bannerSinglePrice = 55000;
+            // 2026-06-05: 단면 55K → 45K 조정
+            p.price = 45000;
+            state._bannerSinglePrice = 45000;
             state._bannerDoublePrice = 80000;
             state.wallSide = 'single';
             // isHoneycomb 인 채로 두지만 wall/queue 흐름 차단용 플래그
@@ -10216,10 +10219,10 @@ html, body { background: #ffffff !important; }
         if (_soIsFabricItem(it)) return it.price || 0;
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
-        // 2026-06-02: 허니콤 배너 (hb_bn_*) — 단면 55K / 양면 80K (별도가, ×2 아님)
+        // 2026-06-02: 허니콤 배너 (hb_bn_*) — 단면 45K / 양면 80K (별도가, ×2 아님)
         var _isBannerItm = !!it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code));
         if (_isBannerItm) {
-            unit = (it.wallSide === 'double') ? 80000 : 55000;
+            unit = (it.wallSide === 'double') ? 80000 : 45000;
         }
         // 2026-06-03: 스티커 — 비즈하우스 가격 mirror
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241'));
