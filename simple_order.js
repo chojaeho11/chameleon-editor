@@ -1494,6 +1494,50 @@ html, body { background: #ffffff !important; }
               style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
           </div>
         </div>
+
+        <!-- 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 안내 + 4종 입력 (우측) -->
+        <div class="so-section" id="soInstaNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
+          <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">🎨</span>
+            ${tr('무료 디자인 + 무료 배송 제품입니다', '無料デザイン + 送料無料 商品です', 'FREE design + FREE shipping included')}
+          </div>
+          <div style="font-size:12px; color:#166534; line-height:1.55; font-weight:600; margin-bottom:8px;">
+            ${tr('아래 칸에 타이틀·작은글씨·해시태그·로고 정보를 적어주시면 담당 디자이너가 무료로 시안을 제작해드립니다.', '下記の項目にタイトル・サブ文字・ハッシュタグ・ロゴ情報をご記入いただくと、担当デザイナーが無料で制作いたします。', 'Fill in the title, subtext, hashtag, and logo info — our designer will create the artwork for free.')}
+          </div>
+          <div style="font-size:11.5px; color:#365314; line-height:1.55; font-weight:600; padding-top:7px; border-top:1px dashed #86efac;">
+            <i class="fa-solid fa-truck" style="color:#15803d; margin-right:4px;"></i>
+            ${tr('<b>지방 배송 안내</b> · 작은 사이즈 2종 (A2 60~90cm / 스텐딩 60~180cm) <b style="color:#15803d;">무료택배</b>, 나머지 대형·초대형은 <b style="color:#b45309;">용차 착불배송</b> 됩니다.',
+                 '<b>地方配送案内</b> · 小サイズ2種 (A2 60~90cm / スタンディング 60~180cm) <b style="color:#15803d;">無料宅配</b>、大型・超大型は <b style="color:#b45309;">専用車 着払い配送</b> です。',
+                 '<b>Regional shipping</b> · Small 2 sizes (A2 60~90cm / Standing 60~180cm) <b style="color:#15803d;">FREE parcel</b>; large/X-large <b style="color:#b45309;">COD truck delivery</b>.')}
+          </div>
+        </div>
+        <div class="so-section" id="soInstaTextInputs" style="display:none;">
+          <div class="so-section-title">📝 ${tr('디자인 문구 (무료)', 'デザイン文字 (無料)', 'Design content (FREE)')}</div>
+          <div style="margin-bottom:10px;">
+            <label for="soInstaTitle" style="display:block; font-size:12.5px; font-weight:800; color:#1e293b; margin-bottom:5px;">${tr('타이틀 글씨', 'タイトル文字', 'Title text')} <span style="color:#dc2626; font-weight:900;">*</span></label>
+            <input type="text" id="soInstaTitle" oninput="window._soOnInstaTitleChange()"
+              placeholder="${tr('예: 2025 카멜레온 워크샵', '例: 2025 ワークショップ', 'e.g. 2025 Annual Workshop')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div style="margin-bottom:10px;">
+            <label for="soInstaSub" style="display:block; font-size:12.5px; font-weight:800; color:#1e293b; margin-bottom:5px;">${tr('작은 글씨', 'サブ文字', 'Subtext')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soInstaSub" oninput="window._soOnInstaSubChange()"
+              placeholder="${tr('예: 함께 만들어가는 미래', '例: 一緒に作る未来', 'e.g. Building the future together')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div style="margin-bottom:10px;">
+            <label for="soInstaHashtag" style="display:block; font-size:12.5px; font-weight:800; color:#1e293b; margin-bottom:5px;">${tr('해시태그', 'ハッシュタグ', 'Hashtag')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soInstaHashtag" oninput="window._soOnInstaHashtagChange()"
+              placeholder="${tr('예: #카멜레온 #2025워크샵', '例: #カメレオン #2025', 'e.g. #chameleon #2025event')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div>
+            <label for="soInstaLogo" style="display:block; font-size:12.5px; font-weight:800; color:#1e293b; margin-bottom:5px;">${tr('로고 / 회사명', 'ロゴ・社名', 'Logo / Brand name')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soInstaLogo" oninput="window._soOnInstaLogoChange()"
+              placeholder="${tr('회사명 입력 (로고 파일은 위 업로드)', '社名を入力 (ロゴファイルは上に)', 'Enter brand name (upload logo above)')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e2e8f0; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
+        </div>
         <div class="so-section" id="soQtySection">
           <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
           <div class="so-qty-row">
@@ -3782,6 +3826,24 @@ html, body { background: #ffffff !important; }
         if (el) state.scarciSub = (el.value || '').trim();
     };
 
+    // 2026-06-05: 인스타판넬 family — 타이틀/작은글씨/해시태그/로고 input 핸들러 (state.instaTitle 등 저장)
+    window._soOnInstaTitleChange = function () {
+        var el = document.getElementById('soInstaTitle');
+        if (el) state.instaTitle = (el.value || '').trim();
+    };
+    window._soOnInstaSubChange = function () {
+        var el = document.getElementById('soInstaSub');
+        if (el) state.instaSub = (el.value || '').trim();
+    };
+    window._soOnInstaHashtagChange = function () {
+        var el = document.getElementById('soInstaHashtag');
+        if (el) state.instaHashtag = (el.value || '').trim();
+    };
+    window._soOnInstaLogoChange = function () {
+        var el = document.getElementById('soInstaLogo');
+        if (el) state.instaLogo = (el.value || '').trim();
+    };
+
     // 2026-06-04: 글씨 스카시 (hb_ss_*) — 우측 상단에 5종 변형 카드 그리드.
     //   카드 클릭 시 해당 변형 상품 코드로 모달 재오픈 (openSimpleOrderModal).
     //   상품은 admin_categories.top_category_code = '허니콤 글씨 스카시' (또는 코드 hb_ss_*) 로 조회.
@@ -4745,6 +4807,11 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-05: 인스타판넬 포토존 — 무료배송 (모든 사이즈). 지방 안내는 별도 표시.
+        if (state.isInstaPanel) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
         // 2026-06-05: 자유인쇄커팅 — 광고인쇄와 동일 규칙. 큐+현재 라인 합계 10만 이상 무료 / 미만 1만원.
         if (state.isCutPrint) {
             state._shipUpgradeReason = null;
@@ -8018,11 +8085,48 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-05: 인스타판넬 포토존 family (hb_insta + 코드 4종) — 우측 상단에 변형 카드 그리드 표시
         var _isInsta = _soIsInstaPanelProduct(p);
+        state.isInstaPanel = _isInsta;
         if (_isInsta) {
             try { window._soLoadInstaVariants(p.code); } catch(e){}
+            // 2026-06-05: 가격 조정 — A2 60-90cm: 50K → 80K, 스텐딩 60-180cm: 80K → 100K
+            //   대형/초대형은 DB 가격 유지. 이름 키워드로 감지.
+            try {
+                var _nameLow = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+                if (/a2|60[\s\-~]*90/.test(_nameLow)) {
+                    p.price = 80000;
+                    if (p.price_jp != null) p.price_jp = 8000;
+                    if (p.price_us != null) p.price_us = 80;
+                    state.isInstaSmall = true;  // 지방 무료택배 가능 (작은 사이즈 2종)
+                } else if (/60[\s\-~]*180|스텐딩|スタンディング|standing/.test(_nameLow)) {
+                    p.price = 100000;
+                    if (p.price_jp != null) p.price_jp = 10000;
+                    if (p.price_us != null) p.price_us = 100;
+                    state.isInstaSmall = true;  // 지방 무료택배 가능
+                } else {
+                    state.isInstaSmall = false;  // 대형/초대형 → 지방 용차 착불
+                }
+            } catch(e){}
+            // 안내 배너 + 텍스트 input 섹션 표시 + 입력 초기화
+            try {
+                var _ipNotice = document.getElementById('soInstaNotice');
+                var _ipTextIn = document.getElementById('soInstaTextInputs');
+                if (_ipNotice) _ipNotice.style.display = '';
+                if (_ipTextIn) _ipTextIn.style.display = '';
+                ['soInstaTitle','soInstaSub','soInstaHashtag','soInstaLogo'].forEach(function(id){
+                    var _el = document.getElementById(id); if (_el) _el.value = '';
+                });
+                state.instaTitle = '';
+                state.instaSub = '';
+                state.instaHashtag = '';
+                state.instaLogo = '';
+            } catch(e){}
         } else {
             var _ipSec = document.getElementById('soInstaVariantsSec');
             if (_ipSec) _ipSec.style.display = 'none';
+            var _ipNotice = document.getElementById('soInstaNotice');
+            if (_ipNotice) _ipNotice.style.display = 'none';
+            var _ipTextIn = document.getElementById('soInstaTextInputs');
+            if (_ipTextIn) _ipTextIn.style.display = 'none';
         }
         // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
         try {
@@ -9369,6 +9473,13 @@ html, body { background: #ffffff !important; }
             // 2026-06-04: 글씨 스카시 family 전용 — 타이틀/서브 문구 (담당자 디자인용)
             scarciTitle: (state.scarciTitle || '') || null,
             scarciSub: (state.scarciSub || '') || null,
+            // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
+            isInstaPanel: !!state.isInstaPanel,
+            instaTitle: (state.instaTitle || '') || null,
+            instaSub: (state.instaSub || '') || null,
+            instaHashtag: (state.instaHashtag || '') || null,
+            instaLogo: (state.instaLogo || '') || null,
+            instaSmall: !!state.isInstaSmall,  // 지방 무료택배 가능 여부 표시용
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
@@ -9966,6 +10077,13 @@ html, body { background: #ffffff !important; }
                 if (item.scarciTitle) {
                     meta.push('📝 ' + escapeHtml(item.scarciTitle));
                     if (item.scarciSub) meta.push('📝 ' + escapeHtml(item.scarciSub));
+                }
+                // 2026-06-05: 인스타판넬 디자인 4종 입력 표시 (무료 디자인 의뢰용)
+                if (item.isInstaPanel || item.instaTitle || item.instaHashtag) {
+                    if (item.instaTitle)    meta.push('🎨 ' + tr('타이틀','タイトル','Title') + ': ' + escapeHtml(item.instaTitle));
+                    if (item.instaSub)      meta.push('📝 ' + tr('서브','サブ','Sub') + ': ' + escapeHtml(item.instaSub));
+                    if (item.instaHashtag)  meta.push('# ' + escapeHtml(item.instaHashtag));
+                    if (item.instaLogo)     meta.push('🏷️ ' + escapeHtml(item.instaLogo));
                 }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {
