@@ -1374,18 +1374,6 @@ html, body { background: #ffffff !important; }
           <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
         </div>
 
-        <!-- 2026-06-04: 글씨 스카시 (hb_ss_* family) 전용 안내문 — 입체디자인 제공 안내 -->
-        <div id="soScarciNotice" style="display:none; margin-bottom:14px; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
-          <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span style="font-size:16px;">✨</span>
-            ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
-          </div>
-          <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
-            ${tr('위에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 디자인 후 고객님께 시안을 보내드립니다.<br>결제 후 디자인이 시작되며 <b style="color:#dc2626;">디자인은 무료</b>입니다.',
-                 'ロゴや参考写真・テキストをアップロードしていただくと、担当者がデザイン後にお客様に校正をお送りします。お支払い後にデザインが開始され、<b style="color:#dc2626;">デザインは無料</b>です。',
-                 'Upload your logo, reference photos & text — our designer will send you a proof. Design begins after payment and is <b style="color:#dc2626;">free of charge</b>.')}
-          </div>
-        </div>
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
         <div id="soUploadWrap">
         <div class="so-upload-section-label" id="soUploadLabel">${tr('앞면 업로드', '表面アップロード', 'Front Upload')}</div>
@@ -1396,21 +1384,6 @@ html, body { background: #ffffff !important; }
           <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
           <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
         </div>
-        </div>
-        <!-- 2026-06-04: 글씨 스카시 (hb_ss_* family) 전용 — 타이틀 문구 + 서브 문구 입력 -->
-        <div id="soScarciTextInputs" style="display:none; margin-top:12px;">
-          <div style="margin-bottom:10px;">
-            <label for="soScarciTitle" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">📝 ${tr('타이틀 문구', 'タイトル文', 'Title text')} <span style="color:#dc2626; font-weight:900;">*</span></label>
-            <input type="text" id="soScarciTitle" oninput="window._soOnScarciTitleChange()"
-              placeholder="${tr('예: VISANG VIVAME', '例: VISANG VIVAME', 'e.g. VISANG VIVAME')}"
-              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
-          </div>
-          <div>
-            <label for="soScarciSub" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">📝 ${tr('서브 문구', 'サブ文', 'Subtitle')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
-            <input type="text" id="soScarciSub" oninput="window._soOnScarciSubChange()"
-              placeholder="${tr('예: 2025 신입사원 환영', '例: 2025年新入社員歓迎', 'e.g. Welcome New Hires 2025')}"
-              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
-          </div>
         </div>
         <!-- 2026-05-30: '원판 그대로 발송' 안내 및 좌측 '다른 원판 제품' 그리드는 제거.
              원판 안내문은 더 이상 표시하지 않고, 다른 원판 제품 그리드는 우측 컬럼의 soRawBoardMoreRight 으로 이동. -->
@@ -1484,6 +1457,36 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soScarciVariantsSec" style="display:none;">
           <div class="so-section-title">${tr('스카시 종류 선택', 'スカシ種類選択', 'Choose variant')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
           <div id="soScarciVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+        </div>
+
+        <!-- 2026-06-04: 글씨 스카시 family 전용 — 입체디자인 안내 배너 (우측) -->
+        <div class="so-section" id="soScarciNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
+          <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">✨</span>
+            ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
+          </div>
+          <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
+            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 디자인 후 고객님께 시안을 보내드립니다.<br>결제 후 디자인이 시작되며 <b style="color:#dc2626;">디자인은 무료</b>입니다.',
+                 '左側にロゴや参考写真・テキストをアップロードしていただくと、担当者がデザイン後にお客様に校正をお送りします。お支払い後にデザインが開始され、<b style="color:#dc2626;">デザインは無料</b>です。',
+                 'Upload your logo, reference photos & text on the left — our designer will send you a proof. Design begins after payment and is <b style="color:#dc2626;">free of charge</b>.')}
+          </div>
+        </div>
+
+        <!-- 2026-06-04: 글씨 스카시 family 전용 — 타이틀 문구 + 서브 문구 입력 (우측) -->
+        <div class="so-section" id="soScarciTextInputs" style="display:none;">
+          <div class="so-section-title">📝 ${tr('디자인 문구', 'デザイン文字', 'Design text')}</div>
+          <div style="margin-bottom:10px;">
+            <label for="soScarciTitle" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('타이틀 문구', 'タイトル文', 'Title text')} <span style="color:#dc2626; font-weight:900;">*</span></label>
+            <input type="text" id="soScarciTitle" oninput="window._soOnScarciTitleChange()"
+              placeholder="${tr('예: VISANG VIVAME', '例: VISANG VIVAME', 'e.g. VISANG VIVAME')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div>
+            <label for="soScarciSub" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('서브 문구', 'サブ文', 'Subtitle')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soScarciSub" oninput="window._soOnScarciSubChange()"
+              placeholder="${tr('예: 2025 신입사원 환영', '例: 2025年新入社員歓迎', 'e.g. Welcome New Hires 2025')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
         </div>
         <div class="so-section" id="soQtySection">
           <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
