@@ -2980,14 +2980,14 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
 
         // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산
-        // 2026-06-04: 등신대(hb_pi_5)는 모든 받침대 무료 override — cutPrint(hb_pt_*)만 BASE_STAND_OPTS 의 유료 가격 적용
+        // 2026-06-04: 등신대 V2 (hb_pi_5/acr_crt_stand) 만 모든 받침대 무료 override. hb_ss/cutPrint 는 BASE_STAND_OPTS 유료.
         var baseStandFee = 0;
         if (state.baseStands) {
             Object.keys(state.baseStands).forEach(function (bk) {
                 var bOpt = BASE_STAND_OPTS[bk];
                 if (!bOpt) return;
                 var bQty = state.baseStands[bk] || 1;
-                var _bFeeRaw = state.isStandee ? 0 : (bOpt.fee || 0);
+                var _bFeeRaw = state.isStandeeV2 ? 0 : (bOpt.fee || 0);
                 var bLine = _bFeeRaw * bQty;
                 if (bLine > 0) {
                     baseStandFee += bLine;
@@ -3162,8 +3162,8 @@ html, body { background: #ffffff !important; }
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         } else if (state.isCustomSize) {
-            // 2026-06-04: 광고인쇄/등신대/자유인쇄커팅은 mm 표기, 그 외는 cm
-            var _useMmDim = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
+            // 2026-06-04: 광고인쇄/등신대 V2/자유인쇄커팅은 mm 표기, 그 외는 cm (글씨 스카시 hb_ss 제외)
+            var _useMmDim = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
             var custDim = _useMmDim
                 ? (Math.round((state.customW || 0) * 10) + '×' + Math.round((state.customH || 0) * 10) + 'mm')
                 : ((state.customW || 0) + '×' + (state.customH || 0) + 'cm');
@@ -3976,6 +3976,17 @@ html, body { background: #ffffff !important; }
         if (code.startsWith('hb_ss') || code.startsWith('hb_point')) return true;
         if (code === 'hb_pi_5' || code.startsWith('acr_crt_stand')) return true;
         if (/등신대|standee|life-?size|cardboard\s*cutout/i.test(name)) return true;
+        return false;
+    }
+
+    // 2026-06-04: 신규 등신대 UI (재질 선택 + mm 입력 + 면적계산 + 무료 받침 4-카드) 적용 여부.
+    //   허니콤보드 등신대(hb_pi_5)와 아크릴 등신대(acr_crt_stand_*)만 신규 UI.
+    //   글씨 스카시(hb_ss_*) 와 포인트(hb_point*) 는 원래 UI 유지 (사용자 요청).
+    function _soUsesStandeeV2(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        if (code === 'hb_pi_5') return true;
+        if (code.startsWith('acr_crt_stand')) return true;
         return false;
     }
 
@@ -5299,9 +5310,9 @@ html, body { background: #ffffff !important; }
         var hEl = document.getElementById('soCustomH');
         if (!wEl || !hEl) return;
         // 2026-06-01: 광고인쇄 — input 값은 mm. cm 으로 환산해 state 에 저장 (기존 area 계산 호환).
-        // 2026-06-04: 등신대 + 자유인쇄커팅 도 mm 단위 입력으로 통일 (사용자 요청)
+        // 2026-06-04: 등신대 V2 + 자유인쇄커팅 도 mm 단위 입력 (글씨 스카시 hb_ss 는 제외, 원래 UI 유지)
         var isAd = state && state.isAdPrint;
-        var isMmInput = isAd || (state && (state.isStandee || state.isCutPrint));
+        var isMmInput = isAd || (state && (state.isStandeeV2 || state.isCutPrint));
         var wRaw = parseFloat(wEl.value) || 0;
         var hRaw = parseFloat(hEl.value) || 0;
         var wCm = isMmInput ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
@@ -5408,7 +5419,7 @@ html, body { background: #ffffff !important; }
                 Object.keys(state.baseStands).forEach(function(bk){
                     var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
                     if (o) {
-                        var _bF = state.isStandee ? 0 : (o.fee || 0);
+                        var _bF = state.isStandeeV2 ? 0 : (o.fee || 0);
                         baseStandFee += _bF * (state.baseStands[bk] || 1);
                     }
                 });
@@ -5475,9 +5486,9 @@ html, body { background: #ffffff !important; }
             wallSide: state.wallSide || 'single',
             wallShape: state.wallShape || 'straight',
             wallShapeFee: state.wallShapeFee || 0,
-            // 2026-06-04: 등신대 재질 (큐 라인별 보존)
+            // 2026-06-04: 등신대 V2 재질 (큐 라인별 보존) — hb_ss 는 재질 선택 없음
             isStandee: !!state.isStandee,
-            standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
+            standeeMaterial: state.isStandeeV2 ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 2026-06-04: 자유인쇄커팅 보드 재질 (큐 라인별 보존)
             cutBoardMaterial: state.isCutPrint ? (state.cutBoardMaterial || 'honeycomb_16mm_white') : null,
             // 박스
@@ -6100,8 +6111,8 @@ html, body { background: #ffffff !important; }
     window._soToggleBaseStand = function (inp) {
         var key = inp.dataset.bsKey;
         if (!state.baseStands) state.baseStands = {};
-        // mutex: 등신대 또는 cutPrint 의 4-card UI 면 다른 체크 해제
-        if (inp.checked && (state.isStandee || state.isCutPrint)) {
+        // mutex: 등신대 V2 또는 cutPrint 의 4-card UI 면 다른 체크 해제. hb_ss 는 다중선택 유지.
+        if (inp.checked && (state.isStandeeV2 || state.isCutPrint)) {
             document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(o){
                 if (o !== inp) o.checked = false;
             });
@@ -7547,11 +7558,13 @@ html, body { background: #ffffff !important; }
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function (cb) { cb.checked = false; });
         document.querySelectorAll('#soBaseStandList input[data-bs-qty-key]').forEach(function (qi) { qi.value = 1; });
         state.isStandee = _soIsStandeeProduct(p);
-        // 2026-06-04: 등신대 — 재질 선택 섹션 노출 + 기본값 (허니콤보드 16mm)
-        state.standeeMaterial = state.isStandee ? 'honeycomb_16mm' : null;
+        // 2026-06-04: 신규 등신대 UI 여부 (hb_pi_5 + acr_crt_stand_* 만). 글씨 스카시(hb_ss)는 원래 UI 유지.
+        state.isStandeeV2 = _soUsesStandeeV2(p);
+        // 2026-06-04: 등신대 — 재질 선택 섹션 노출 + 기본값 (허니콤보드 16mm) — V2 만
+        state.standeeMaterial = state.isStandeeV2 ? 'honeycomb_16mm' : null;
         try {
             var _matSec = document.getElementById('soStandeeMaterialSection');
-            if (_matSec) _matSec.style.display = state.isStandee ? '' : 'none';
+            if (_matSec) _matSec.style.display = state.isStandeeV2 ? '' : 'none';
             // 버튼 active 상태 초기화 (재진입 시 잔존 active 제거)
             document.querySelectorAll('.so-material-btn').forEach(function(b){
                 var on = b.dataset.material === 'honeycomb_16mm';
@@ -7567,14 +7580,15 @@ html, body { background: #ffffff !important; }
         //   비-등신대·비-cutPrint 로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
         try {
             var _bsList = document.getElementById('soBaseStandList');
-            var _bsIsFreeUi = state.isStandee || _soIsCutPrintProduct(p);
+            // 2026-06-04: 신규 4-카드 UI 는 hb_pi_5/acr_crt_stand (V2) + cutPrint 만. hb_ss/hb_point 은 원래 6옵션 유지.
+            var _bsIsFreeUi = state.isStandeeV2 || _soIsCutPrintProduct(p);
             if (_bsList) {
                 if (!window._soBaseStandOriginalHTML) window._soBaseStandOriginalHTML = _bsList.innerHTML;
                 if (_bsIsFreeUi) {
                     // 가위 SVG (받침없음 — 인쇄커팅 의미)
                     var _scissorsSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48%; height:48%; color:#7c3aed;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>';
-                    // 등신대는 전 카드 무료, cutPrint 는 각자 가격 표시
-                    var _stIsFree = state.isStandee;
+                    // 등신대 V2 는 전 카드 무료, cutPrint 는 각자 가격 표시
+                    var _stIsFree = state.isStandeeV2;
                     var _ssCards = [
                         { k:'insert', img:'/down.png', feeStandee:0, feeCut:3000,
                             title: tr('끼우는 형태', '差し込み式', 'Slot-in'),
@@ -7646,8 +7660,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
-        // 2026-06-04: 등신대 (hb_pi_5 등) 도 면적×단가 산정 + mm 단위 입력 (사용자 요청)
-        if (state.isStandee) state.isCustomSize = true;
+        // 2026-06-04: 등신대 V2 (hb_pi_5 / acr_crt_stand) 만 면적×단가 + mm 입력. hb_ss/hb_point 은 원래 UI 유지.
+        if (state.isStandeeV2) state.isCustomSize = true;
         // 2026-06-04: 자유인쇄커팅 — 면적 회베 계산기 모드로 전환 (이전 한판/반판 flat 가격 폐기)
         if (state.isCutPrint) state.isCustomSize = true;
         // 한판/반판 버튼은 숨김 (단면/양면 토글은 유지 — 같은 섹션 내부)
@@ -7666,9 +7680,8 @@ html, body { background: #ffffff !important; }
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
             state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
         }
-        // 2026-06-04: 등신대 기본 사이즈 — DB 의 width_mm 가 작은 값(20 등) 으로 잘못 저장된 경우 fallback.
-        //   등신대 표준 시작값 1000×1500mm (100×150cm). 사용자가 입력박스에서 수정 가능.
-        if (state.isStandee && (state.customW < 30 || state.customH < 30)) {
+        // 2026-06-04: 등신대 V2 기본 사이즈 — DB 의 width_mm 가 작은 값으로 잘못 저장된 경우 fallback.
+        if (state.isStandeeV2 && (state.customW < 30 || state.customH < 30)) {
             state.customW = 100;  // 100cm = 1000mm
             state.customH = 150;  // 150cm = 1500mm
         }
@@ -7678,7 +7691,7 @@ html, body { background: #ffffff !important; }
             var _customUnitEl = document.getElementById('soCustomSizeUnit');
             var _customWEl = document.getElementById('soCustomW');
             var _customHEl = document.getElementById('soCustomH');
-            var _useMm = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
+            var _useMm = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
             if (_customUnitEl) _customUnitEl.textContent = _useMm ? '(mm)' : '(cm)';
             if (_customWEl) {
                 _customWEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
@@ -8115,8 +8128,8 @@ html, body { background: #ffffff !important; }
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
-            // 2026-06-04: 등신대 + 자유인쇄커팅도 동일 (mm 입력) + W/H 라벨도 "가로 mm" / "세로 mm" 로 명시 (사용자 요청)
-            var _useMmHere = (state.isAdPrint || state.isStandee || state.isCutPrint) && !state.isBanner;
+            // 2026-06-04: 등신대 V2 + 자유인쇄커팅도 동일 (mm 입력). 글씨 스카시는 원래 cm UI 유지.
+            var _useMmHere = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
             var _wLblEl = document.getElementById('soCustomWLabel');
             var _hLblEl = document.getElementById('soCustomHLabel');
             if (_useMmHere) {
@@ -8788,8 +8801,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
             wallShape: state.isWall ? (state.wallShape || 'straight') : null,
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
-            // 2026-06-04: 등신대 재질 (honeycomb_16mm / foamex_3mm — 동일 가격, 표시 및 작업지시용)
-            standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
+            // 2026-06-04: 등신대 V2 재질 (honeycomb_16mm / foamex_3mm — 동일 가격, 표시 및 작업지시용)
+            standeeMaterial: state.isStandeeV2 ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 2026-06-04: 자유인쇄커팅 보드 재질 (6종 — 동일 가격, 표시 및 작업지시용)
             cutBoardMaterial: state.isCutPrint ? (state.cutBoardMaterial || 'honeycomb_16mm_white') : null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
@@ -8822,8 +8835,8 @@ html, body { background: #ffffff !important; }
                 if (state.baseStands) {
                     Object.keys(state.baseStands).forEach(function (bk) {
                         var o = BASE_STAND_OPTS[bk]; if (!o) return;
-                        // 2026-06-04: 등신대는 받침대 무료 override (cutPrint 만 BASE_STAND_OPTS 의 유료 가격 적용)
-                        var _bF = state.isStandee ? 0 : (o.fee || 0);
+                        // 2026-06-04: 등신대 V2 만 받침대 무료 override. hb_ss/cutPrint 는 BASE_STAND_OPTS 유료.
+                        var _bF = state.isStandeeV2 ? 0 : (o.fee || 0);
                         arr.push({ key: bk, fee: _bF, qty: state.baseStands[bk] || 1, label: o.label_ko || '' });
                     });
                 }
