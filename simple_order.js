@@ -3981,7 +3981,13 @@ html, body { background: #ffffff !important; }
                     if (r3 && r3.data) rows = rows.concat(r3.data);
                 } catch (e) {}
                 // family 필터 + 중복 제거 (같은 code 1개만)
-                rows = rows.filter(function(r){ return _soIsInstaPanelProduct(r); });
+                // 2026-06-05: "반제품" 은 family picker 에서 제외 (사용자 요청 — 완제품 4종만 노출)
+                rows = rows.filter(function(r){
+                    if (!_soIsInstaPanelProduct(r)) return false;
+                    var _nameCheck = ((r.name || '') + ' ' + (r.name_jp || '') + ' ' + (r.name_us || '')).toLowerCase();
+                    if (/반제품|半製品|semi[-\s]?finished/.test(_nameCheck)) return false;
+                    return true;
+                });
                 var _byCode = {};
                 rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
                 // 가격 오름차순 정렬 (저가 → 고가). sort_order 가 있으면 우선.
