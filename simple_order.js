@@ -7934,6 +7934,16 @@ html, body { background: #ffffff !important; }
                 }
             }
         } catch (e) {}
+        // 2026-06-05: cutPrint — 주문 수량 섹션을 담기 버튼 바로 위로 이동 (옵션 다 선택 후 수량 입력 → 담기 흐름).
+        try {
+            if (state.isCutPrint) {
+                var _qtySec = document.getElementById('soQtySection');
+                var _actions = document.querySelector('.so-right .so-actions') || document.querySelector('.so-actions');
+                if (_qtySec && _actions && _qtySec.parentNode === _actions.parentNode) {
+                    _actions.parentNode.insertBefore(_qtySec, _actions);
+                }
+            }
+        } catch (e) {}
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
