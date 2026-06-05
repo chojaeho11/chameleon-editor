@@ -1498,9 +1498,9 @@ html, body { background: #ffffff !important; }
           <div style="margin-top:10px; padding:10px 14px; background:#f1f5f9; border-radius:10px; font-size:11.5px; color:#475569; line-height:1.7; text-align:left;">
             <div style="display:flex; gap:8px; align-items:flex-start; margin-bottom:6px;">
               <i class="fa-solid fa-plus" style="color:#7c3aed; flex-shrink:0; margin-top:3px;"></i>
-              <span>${tr('제품을 담은 후 추가로 벽체가 필요하시다면 크기와 옵션을 선택한 후 <b>또다시 담기를 클릭</b>하면 벽체를 추가할 수 있습니다.',
-                         '商品を保存後、追加で壁面が必要な場合はサイズ・オプションを選び<b>もう一度「保存」をクリック</b>すると壁面を追加できます。',
-                         'After saving an item, if you need another wall, pick the size & options and <b>click Save again</b> to stack another wall.')}</span>
+              <span>${tr('다른 사이즈가 필요하신가요? 다른 제품의 크기와 옵션을 선택 후 <b>담기 버튼을 다시 한 번</b> 눌러주세요.',
+                         '別のサイズが必要ですか？別の商品のサイズ・オプションを選び、<b>もう一度「保存」</b>を押してください。',
+                         'Need a different size? Pick the size & options of another item and <b>click Save once more</b>.')}</span>
             </div>
             <div style="display:flex; gap:8px; align-items:flex-start;">
               <i class="fa-solid fa-cart-plus" style="color:#16a34a; flex-shrink:0; margin-top:3px;"></i>
@@ -7407,7 +7407,7 @@ html, body { background: #ffffff !important; }
                             desc:  tr('허니콤보드로 쉽게 끼울 수 있어요', 'ハニカムボードで簡単に差し込み', 'Easy slot-in with honeycomb board') },
                         { k:'free_rear', img:'/up.jpg',
                             title: tr('뒷면받침', '背面サポート', 'Rear support'),
-                            desc:  tr('받침이 뒤에 있어서 등신대처럼 가려져요', 'スタンドが背面にあり等身大のように隠れます', 'Stand hidden behind — looks like a true life-size cutout') }
+                            desc:  tr('받침이 뒤에 있음. 등신대 형태.', 'スタンドが背面にあり、等身大の形状', 'Stand at the back — life-size shape') }
                     ];
                     _bsList.style.display = 'grid';
                     _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
