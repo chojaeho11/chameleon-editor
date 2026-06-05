@@ -12417,6 +12417,9 @@ window.showChoiceModal = async function(key) {
     if (lang === 'ja') {
         if (product.name_jp) dName = _stripSz(product.name_jp);
         if (product.description_jp) dDesc = product.description_jp;
+        // 2026-06-04: JP description_jp 가 비어있으면 description 한국어 fallback → 골판지 등 부적합 텍스트 노출.
+        //   description_jp 없으면 dDesc 비움 (description 한국어 fallback 방지)
+        else dDesc = "";
         if (product.price_jp) dPrice = product.price_jp;
     } else if (lang === 'en') {
         if (product.name_us) dName = _stripSz(product.name_us);
@@ -12449,6 +12452,24 @@ window.showChoiceModal = async function(key) {
         const _sanitizeDiv = document.createElement('div');
         _sanitizeDiv.innerHTML = dDesc;
         dDesc = _sanitizeDiv.innerHTML;
+    }
+    // 2026-06-04: 비한국어 locale 인데 description 에 한국어 "골판지" 등 부적합 키워드가 섞이면 (DB 누수) 비움.
+    //   글씨 스카시 family 는 더 광범위하게 한국어 텍스트 자체를 의심해 비움.
+    if (dDesc && lang !== 'kr') {
+        const _pCodeCheck = (product.code || '').toLowerCase();
+        const _isScarciDesc = _pCodeCheck.startsWith('hb_ss')
+            || /글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout/i.test((product.name||'') + ' ' + (product.name_kr||''));
+        if (/골판지|허니콤보드\s*가벽/.test(dDesc)) {
+            console.warn('[product desc] non-KR locale + 골판지 detected → clearing description');
+            dDesc = "";
+        } else if (_isScarciDesc && /[가-힣]/.test(dDesc) && lang === 'ja') {
+            // 글씨 스카시 family + JP locale 인데 한국어 한글이 다량 포함된 경우 (description_jp 미작성)
+            const _krCharCount = (dDesc.match(/[가-힣]/g) || []).length;
+            if (_krCharCount > 30) {
+                console.warn('[product desc] scarci + JP + Korean chars > 30 → clearing description');
+                dDesc = "";
+            }
+        }
     }
 
     // 1000원단위 주문 상품은 일반상품으로 강제 (수량→구매 플로우)
