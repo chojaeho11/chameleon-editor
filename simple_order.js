@@ -2205,9 +2205,9 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
           <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
             <i class="fa-solid fa-truck" style="color:#7c3aed; margin-right:4px;"></i>
-            ${tr('포장 배송비 <b>1만원</b>, <b style="color:#16a34a;">10만원 이상 주문 시 무료배송</b>입니다.',
-                 '梱包配送料 <b>10,000円</b>、<b style="color:#16a34a;">100,000円以上で送料無料</b>です。',
-                 'Packaging & shipping <b>$10</b>, <b style="color:#16a34a;">FREE on orders over $100</b>.')}
+            ${tr('허니콤보드 소량제작은 최소 제작비 <b>10만원</b>이 안 될 경우 <b>3만원</b> 포장배송비가 붙고, <b style="color:#16a34a;">10만원 이상이면 무료배송</b>됩니다.',
+                 'ハニカムボード少量製作は最低製作費 <b>100,000円</b> 未満の場合 <b>30,000円</b> の梱包配送料が加算され、<b style="color:#16a34a;">100,000円以上で送料無料</b>です。',
+                 'Honeycomb board small-batch: <b>$30</b> packaging fee under <b>$100</b> minimum, <b style="color:#16a34a;">FREE on orders over $100</b>.')}
           </div>
         </div>
 
@@ -2246,6 +2246,11 @@ html, body { background: #ffffff !important; }
     <!-- 카트 아이템 동적 렌더 -->
   </div>
   <div class="so-cart-foot">
+    <!-- 2026-06-05: 허니콤보드 소량제작 배송 안내 — 카트 합계 동적 반영 (renderSoCart 가 갱신) -->
+    <div id="soCartShipNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:12px; color:#78350f; line-height:1.55; font-weight:600;">
+      <i class="fa-solid fa-truck" style="color:#b45309; margin-right:4px;"></i>
+      <span id="soCartShipNoticeText"></span>
+    </div>
     <div class="so-cart-total">
       <span class="so-cart-total-label">${tr('총 결제금액', '合計', 'Total')}</span>
       <span class="so-cart-total-amt" id="soCartTotalAmt">0원</span>
@@ -4603,7 +4608,7 @@ html, body { background: #ffffff !important; }
             (state._adLines || []).forEach(function(line){
                 cpSub += (line.lineTotal || 0);
             });
-            return cpSub >= 100000 ? 0 : 10000;
+            return cpSub >= 100000 ? 0 : 30000;
         }
         // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
         //   해당: 박스 / 원판 / 등신대 / 허니콤포토존 등 (자유인쇄커팅은 위에서 별도 처리)
@@ -9855,6 +9860,36 @@ html, body { background: #ffffff !important; }
         try {
             var _cartCalc = _soCalcCartTotal(allItems);
             totalEl.textContent = fmtPrice(_cartCalc.grandTotal);
+            // 2026-06-05: 허니콤보드 소량제작 배송 안내 — 카트 상품 소계 기준 동적 표시
+            var _noticeWrap = document.getElementById('soCartShipNotice');
+            var _noticeText = document.getElementById('soCartShipNoticeText');
+            if (_noticeWrap && _noticeText) {
+                var _sub = (_cartCalc.taxBase || 0) + (_cartCalc.nonDiscountBase || 0);
+                if (_sub <= 0) {
+                    _noticeWrap.style.display = 'none';
+                } else if (_sub >= 100000) {
+                    _noticeWrap.style.display = '';
+                    _noticeWrap.style.background = '#dcfce7';
+                    _noticeWrap.style.borderColor = '#86efac';
+                    _noticeWrap.style.color = '#14532d';
+                    _noticeText.innerHTML = tr(
+                        '<b>10만원 이상</b> 주문이므로 <b style="color:#15803d;">무료배송</b> 입니다.',
+                        '<b>100,000円以上</b> のご注文のため <b style="color:#15803d;">送料無料</b> です。',
+                        'Order is over <b>$100</b> — <b style="color:#15803d;">FREE shipping</b>.'
+                    );
+                } else {
+                    _noticeWrap.style.display = '';
+                    _noticeWrap.style.background = '#fef3c7';
+                    _noticeWrap.style.borderColor = '#fcd34d';
+                    _noticeWrap.style.color = '#78350f';
+                    var _short = 100000 - _sub;
+                    _noticeText.innerHTML = tr(
+                        '허니콤보드 소량제작 — 최소 제작비 <b>10만원</b> 미만이라 <b>3만원 배송비</b>가 포함됐어요. <b style="color:#b45309;">' + fmtPrice(_short) + '</b> 만 더 담으면 무료배송!',
+                        'ハニカムボード少量製作 — 最低製作費 <b>100,000円</b> 未満のため <b>30,000円の配送料</b> が含まれます。あと <b style="color:#b45309;">' + fmtPrice(_short) + '</b> で送料無料!',
+                        'Honeycomb small-batch — under <b>$100</b> minimum, <b>$30 shipping</b> applies. Add <b style="color:#b45309;">' + fmtPrice(_short) + '</b> more for FREE shipping!'
+                    );
+                }
+            }
         } catch(e) {
             totalEl.textContent = fmtPrice(totalAmt);
         }
@@ -10398,14 +10433,14 @@ html, body { background: #ffffff !important; }
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
         }
         // 2026-06-05: 카트 합계 룰 통합 — 장바구니 전체 상품가 합계 기준 단일 임계값.
-        //   사용자 요청: "모든 제품에 대해서 장바구니 합산 금액에서 10만원이 안되면 1만원 붙여줘".
+        //   사용자 요청: "최소 제작비 10만원 미만이면 3만원 가산, 10만원 이상이면 무료".
         //   - 카트 상품 소계 (taxBase + nonDiscountBase) ≥ 100,000원 → 추가 배송비 없음 (무료)
-        //   - 카트 상품 소계 < 100,000원 + 다른 자체 배송비(max룰)도 0 → 1만원 포장배송비 1회 가산
+        //   - 카트 상품 소계 < 100,000원 + 다른 자체 배송비(max룰)도 0 → 3만원 포장배송비 1회 가산
         //   - 가벽 설치/원판 용차 등 자체 배송비가 있는 경우 그 안에 포함됨 (이중 부과 방지)
         //   - 베스트굿즈 정액 3K / 패브릭 별도 발송은 별도 처리 (위에서 가산됨)
         var _allProductSub = taxBase + nonDiscountBase;
         if (_allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
-            shipTotal += 10000;
+            shipTotal += 30000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
