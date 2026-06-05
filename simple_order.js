@@ -1709,7 +1709,7 @@ html, body { background: #ffffff !important; }
             <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
             <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 <b>1만원</b> 자동 적용', 'ご注文合計 <b>10万円以上 送料無料</b> · 未満 <b>1万円</b> 自動適用', 'Free shipping over ₩100k · ₩10k under (auto)')}</span>
           </div>
-          <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
+          <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
           <!-- 2026-05-30: 개별포장 3가지 선택 (포장없음·내지인쇄·상단인쇄). 인쇄 포장 = 50,000원 정액 (수량 무관) -->
@@ -5221,11 +5221,13 @@ html, body { background: #ffffff !important; }
         var hEl = document.getElementById('soCustomH');
         if (!wEl || !hEl) return;
         // 2026-06-01: 광고인쇄 — input 값은 mm. cm 으로 환산해 state 에 저장 (기존 area 계산 호환).
+        // 2026-06-04: 등신대 (hb_pi_5 등) 도 mm 단위 입력으로 통일 (사용자 요청)
         var isAd = state && state.isAdPrint;
+        var isMmInput = isAd || (state && state.isStandee);
         var wRaw = parseFloat(wEl.value) || 0;
         var hRaw = parseFloat(hEl.value) || 0;
-        var wCm = isAd ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
-        var hCm = isAd ? (hRaw / 10) : (parseInt(hRaw, 10) || 0);
+        var wCm = isMmInput ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
+        var hCm = isMmInput ? (hRaw / 10) : (parseInt(hRaw, 10) || 0);
         state.customW = wCm;
         state.customH = hCm;
         var unitEl = document.getElementById('soCustomUnitPrice');
@@ -5256,8 +5258,8 @@ html, body { background: #ffffff !important; }
         }
         if (unitEl) unitEl.textContent = fmtPrice(calcPrice);
         if (infoEl) {
-            if (isAd) {
-                // 광고인쇄 — mm 단위 표시
+            if (isMmInput) {
+                // 광고인쇄 / 등신대 — mm 단위 표시
                 var wMm = Math.round(wCm * 10);
                 var hMm = Math.round(hCm * 10);
                 infoEl.textContent =
@@ -5287,7 +5289,7 @@ html, body { background: #ffffff !important; }
         if (!state.isAdPrint && !state.isHoneycomb) return;
         state._adLines = state._adLines || [];
         // 현재 라인 검증 — 상품 타입별
-        if (state.isAdPrint) {
+        if (state.isAdPrint || state.isCustomSize) {
             if (!state.customUnitPrice || (state.customW || 0) < 10 || (state.customH || 0) < 10) {
                 try { alert(tr('사이즈를 먼저 입력해 주세요.','サイズを入力してください。','Please enter size first.')); } catch(e) {}
                 return;
@@ -5339,6 +5341,10 @@ html, body { background: #ffffff !important; }
             unit = (state.cutSize === 'half') ? 100000 : 150000;
             subtotal = unit * qty;
             if (state.wallSide === 'double') subtotal *= 2;
+        } else if (state.isCustomSize && state.customUnitPrice > 0) {
+            // 2026-06-04: 등신대 등 면적×단가 상품은 라인마다 사이즈 별 단가 사용 (이전 버그: product.price 로 떨어져 모든 라인 동일 가격)
+            unit = state.customUnitPrice;
+            subtotal = unit * qty;
         } else {
             unit = (state.product && state.product.price) || 0;
             subtotal = unit * qty;
@@ -7397,6 +7403,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
+        // 2026-06-04: 등신대 (hb_pi_5 등) 도 면적×단가 산정 + mm 단위 입력 (사용자 요청)
+        if (state.isStandee) state.isCustomSize = true;
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
@@ -7408,6 +7416,25 @@ html, body { background: #ffffff !important; }
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
             state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
         }
+        // 2026-06-04: 광고인쇄/등신대는 mm 입력이라 W/H input 의 표시값·min·max 도 mm 로 갱신.
+        //   라벨 (cm)→(mm), input 기본값 mm 환산, min=100mm, max=2500mm.
+        try {
+            var _customUnitEl = document.getElementById('soCustomSizeUnit');
+            var _customWEl = document.getElementById('soCustomW');
+            var _customHEl = document.getElementById('soCustomH');
+            var _useMm = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            if (_customUnitEl) _customUnitEl.textContent = _useMm ? '(mm)' : '(cm)';
+            if (_customWEl) {
+                _customWEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
+                _customWEl.max = _useMm ? 2500 : 2000;
+                _customWEl.value = _useMm ? (state.customW * 10) : state.customW;
+            }
+            if (_customHEl) {
+                _customHEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
+                _customHEl.max = _useMm ? 2500 : 2000;
+                _customHEl.value = _useMm ? (state.customH * 10) : state.customH;
+            }
+        } catch (e) {}
         state.customUnitPrice = 0;
         var custSec = document.getElementById('soCustomSizeSection');
         // 2026-05-30: custSec display 결정은 프리셋 감지 이후로 미룸 — 손수건은 isCustomSize=false 로 시작해도 프리셋이면 강제 표시
