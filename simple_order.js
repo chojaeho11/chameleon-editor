@@ -2980,13 +2980,15 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
 
         // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산
+        // 2026-06-04: 등신대(hb_pi_5)는 모든 받침대 무료 override — cutPrint(hb_pt_*)만 BASE_STAND_OPTS 의 유료 가격 적용
         var baseStandFee = 0;
         if (state.baseStands) {
             Object.keys(state.baseStands).forEach(function (bk) {
                 var bOpt = BASE_STAND_OPTS[bk];
                 if (!bOpt) return;
                 var bQty = state.baseStands[bk] || 1;
-                var bLine = (bOpt.fee || 0) * bQty;
+                var _bFeeRaw = state.isStandee ? 0 : (bOpt.fee || 0);
+                var bLine = _bFeeRaw * bQty;
                 if (bLine > 0) {
                     baseStandFee += bLine;
                     addonTotal += bLine;
@@ -3294,6 +3296,10 @@ html, body { background: #ffffff !important; }
             // 2026-06-03: 명함/스티커도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
+        } else if (state.isCutPrint) {
+            // 2026-06-04: 자유인쇄커팅 — 무조건 택배. 사이즈에 따라 10k/20k/30k/50k 자동 산출
+            setText('soShipLabel', tr('배송 (택배)', '配送 (宅配)', 'Shipping (parcel)'));
+            setText('soShipAmount', '+' + fmtPrice(shipFee));
         } else {
             var shipName;
             if (state.bundleShipping) {
@@ -3975,9 +3981,10 @@ html, body { background: #ffffff !important; }
         rear:         { fee: 20000, label_ko: '등신대용 후면받침',           label_jp: '等身大 背面支持',  label_us: 'Life-size rear support' },
         banner_small: { fee: 20000, label_ko: '가로 60cm 이하 배너형 받침',   label_jp: 'バナー型 ≤60cm',   label_us: 'Banner ≤60cm' },
         banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' },
-        insert:       { fee: 0,     label_ko: '끼우는 형태',                label_jp: '差し込み式',       label_us: 'Slot-in type' },
-        free_rear:    { fee: 0,     label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' },
-        paper_stand:  { fee: 0,     label_ko: '종이받침대',                label_jp: '紙スタンド',       label_us: 'Paper stand' },
+        // 2026-06-04: 자유인쇄커팅 (hb_pt_*) — 받침 종류별 유료. 등신대(hb_pi_5)는 무료 유지 (별도 override).
+        insert:       { fee: 3000,  label_ko: '끼우는 형태',                label_jp: '差し込み式',       label_us: 'Slot-in type' },
+        free_rear:    { fee: 8000,  label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' },
+        paper_stand:  { fee: 500,   label_ko: '종이받침대',                label_jp: '紙スタンド',       label_us: 'Paper stand' },
         none_card:    { fee: 0,     label_ko: '받침없음 (인쇄커팅만)',      label_jp: 'スタンドなし',     label_us: 'No stand (cutout only)' }
     };
 
@@ -5387,7 +5394,10 @@ html, body { background: #ffffff !important; }
             try {
                 Object.keys(state.baseStands).forEach(function(bk){
                     var o = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
-                    if (o) baseStandFee += (o.fee || 0) * (state.baseStands[bk] || 1);
+                    if (o) {
+                        var _bF = state.isStandee ? 0 : (o.fee || 0);
+                        baseStandFee += _bF * (state.baseStands[bk] || 1);
+                    }
                 });
             } catch(e) {}
         }
@@ -6073,9 +6083,17 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 받침대 옵션 선택 (등신대·자유인쇄커팅)
     // 2026-05-22: 받침대 다중 선택 (key→qty) — 여러 종류·수량 (예: A4 3개 + 배너형 2개). 추가옵션과 동일 방식.
+    // 2026-06-04: 등신대/cutPrint 4-card UI 는 mutex (1개만 선택, 라디오 동작)
     window._soToggleBaseStand = function (inp) {
         var key = inp.dataset.bsKey;
         if (!state.baseStands) state.baseStands = {};
+        // mutex: 등신대 또는 cutPrint 의 4-card UI 면 다른 체크 해제
+        if (inp.checked && (state.isStandee || state.isCutPrint)) {
+            document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(o){
+                if (o !== inp) o.checked = false;
+            });
+            state.baseStands = {};
+        }
         var lbl = inp.closest('label');
         var qInp = lbl ? lbl.querySelector('input[data-bs-qty-key]') : null;
         if (inp.checked) {
@@ -7530,7 +7548,9 @@ html, body { background: #ffffff !important; }
                 b.style.color = on ? '#fff' : '#334155';
             });
         } catch (e) {}
-        // 2026-06-04: 등신대 + 자유인쇄커팅 — 받침대 UI 를 4-card (끼우는 형태 / 뒷면받침 / 종이받침대 / 받침없음) 로 교체 + 무료 안내.
+        // 2026-06-04: 등신대 + 자유인쇄커팅 — 받침대 UI 를 4-card 로 교체. 가격은 상품별로 다름:
+        //   등신대(hb_pi_5): 모두 무료 (안내 배너 + FREE 라벨)
+        //   자유인쇄커팅(hb_pt_*): 끼우는3k / 뒷면8k / 종이500원 / 받침없음 무료 (가격 표시)
         //   비-등신대·비-cutPrint 로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
         try {
             var _bsList = document.getElementById('soBaseStandList');
@@ -7540,17 +7560,19 @@ html, body { background: #ffffff !important; }
                 if (_bsIsFreeUi) {
                     // 가위 SVG (받침없음 — 인쇄커팅 의미)
                     var _scissorsSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48%; height:48%; color:#7c3aed;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>';
+                    // 등신대는 전 카드 무료, cutPrint 는 각자 가격 표시
+                    var _stIsFree = state.isStandee;
                     var _ssCards = [
-                        { k:'insert', img:'/down.png',
+                        { k:'insert', img:'/down.png', feeStandee:0, feeCut:3000,
                             title: tr('끼우는 형태', '差し込み式', 'Slot-in'),
                             desc:  tr('허니콤보드로 쉽게 끼울 수 있어요', 'ハニカムボードで簡単に差し込み', 'Easy slot-in with honeycomb board') },
-                        { k:'free_rear', img:'/up.jpg',
+                        { k:'free_rear', img:'/up.jpg', feeStandee:0, feeCut:8000,
                             title: tr('뒷면받침', '背面サポート', 'Rear support'),
                             desc:  tr('받침이 뒤에 있음. 등신대 형태.', 'スタンドが背面にあり、等身大の形状', 'Stand at the back — life-size shape') },
-                        { k:'paper_stand', img:'/paper.jpg',
+                        { k:'paper_stand', img:'/paper.jpg', feeStandee:0, feeCut:500,
                             title: tr('종이받침대', '紙スタンド', 'Paper stand'),
                             desc:  tr('양면테이프가 붙어있어요', '両面テープ付き', 'Double-sided tape included') },
-                        { k:'none_card', icon: _scissorsSvg,
+                        { k:'none_card', icon: _scissorsSvg, feeStandee:0, feeCut:0,
                             title: tr('받침없음', 'スタンドなし', 'No stand'),
                             desc:  tr('인쇄커팅만 (받침 없이 발송)', 'カットのみ (スタンドなしで発送)', 'Cutout only — no stand') }
                     ];
@@ -7558,30 +7580,36 @@ html, body { background: #ffffff !important; }
                     _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
                     _bsList.style.gap = '10px';
                     _bsList.innerHTML =
-                        // 무료 안내 배너 — grid 전체 폭
-                        '<div style="grid-column:1/-1; padding:11px 14px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:12px; text-align:center; font-size:13.5px; font-weight:900; color:#14532d; box-shadow:0 4px 12px -4px rgba(22,163,74,0.35); display:flex; align-items:center; justify-content:center; gap:6px;">' +
-                          '<span style="font-size:16px;">✅</span>' +
-                          tr('받침대 비용과 배송비는 무료입니다', 'スタンド料金と送料は無料です', 'Stand and shipping are FREE') +
-                        '</div>' +
+                        // 등신대 — 전체 무료 안내 / cutPrint — 안내 생략 (개별 카드에 가격 표시)
+                        (_stIsFree
+                            ? '<div style="grid-column:1/-1; padding:11px 14px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:12px; text-align:center; font-size:13.5px; font-weight:900; color:#14532d; box-shadow:0 4px 12px -4px rgba(22,163,74,0.35); display:flex; align-items:center; justify-content:center; gap:6px;"><span style="font-size:16px;">✅</span>' +
+                                tr('받침대 비용과 배송비는 무료입니다', 'スタンド料金と送料は無料です', 'Stand and shipping are FREE') + '</div>'
+                            : '<div style="grid-column:1/-1; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; text-align:center; font-size:12px; font-weight:700; color:#475569;">' +
+                                tr('받침대 선택 (체크 1개 — 받침없음은 인쇄커팅만)', 'スタンド選択 (チェック1つ)', 'Select a stand (one check)') + '</div>'
+                        ) +
                         _ssCards.map(function(o){
                             var safeTitle = String(o.title).replace(/[<>"]/g,'');
                             var safeDesc = String(o.desc).replace(/[<>"]/g,'');
                             var _imgBlock = o.icon
                                 ? '<div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">' + o.icon + '</div>'
                                 : '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">';
+                            var fee = _stIsFree ? o.feeStandee : o.feeCut;
+                            var feeStr = (fee === 0)
+                                ? '<span style="color:#16a34a;">' + tr('무료', '無料', 'FREE') + '</span>'
+                                : '<span style="color:#dc2626;">+' + fmtPrice(fee) + '</span>';
+                            // 수량 input 제거 — 체크박스만, 수량은 1 고정
                             return '<label data-bs-card="' + o.k + '" style="display:flex; flex-direction:column; gap:8px; padding:10px 10px 12px; border:2px solid #e7e5e4; border-radius:14px; cursor:pointer; background:#fff; transition:border-color .15s ease, box-shadow .15s ease;">' +
                                 '<div style="position:relative; aspect-ratio:1/1; background:#f8fafc; border-radius:10px; overflow:hidden;">' +
                                     _imgBlock +
                                 '</div>' +
-                                '<div style="display:flex; align-items:center; gap:8px;">' +
-                                    '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin:0; width:18px; height:18px; flex-shrink:0;">' +
+                                '<div style="display:flex; align-items:flex-start; gap:8px;">' +
+                                    '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin-top:2px; width:18px; height:18px; flex-shrink:0;">' +
                                     '<div style="flex:1; min-width:0;">' +
                                         '<div style="font-weight:900; font-size:13.5px; color:#451a03; line-height:1.25;">' + safeTitle + '</div>' +
                                         '<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:3px; line-height:1.35;">' + safeDesc + '</div>' +
                                     '</div>' +
-                                    '<input type="number" min="1" value="1" data-bs-qty-key="' + o.k + '" onclick="event.stopPropagation();" oninput="window._soSetBaseStandTypeQty(this)" style="width:46px; padding:5px 4px; border:1px solid #d1d5db; border-radius:6px; text-align:center; font-size:13px; font-weight:700; flex-shrink:0;">' +
                                 '</div>' +
-                                '<div style="text-align:right; font-weight:900; font-size:12.5px; color:#16a34a;">' + tr('무료', '無料', 'FREE') + '</div>' +
+                                '<div style="text-align:right; font-weight:900; font-size:13px;">' + feeStr + '</div>' +
                             '</label>';
                         }).join('');
                 } else if (window._soBaseStandOriginalHTML) {
@@ -8781,7 +8809,9 @@ html, body { background: #ffffff !important; }
                 if (state.baseStands) {
                     Object.keys(state.baseStands).forEach(function (bk) {
                         var o = BASE_STAND_OPTS[bk]; if (!o) return;
-                        arr.push({ key: bk, fee: o.fee || 0, qty: state.baseStands[bk] || 1, label: o.label_ko || '' });
+                        // 2026-06-04: 등신대는 받침대 무료 override (cutPrint 만 BASE_STAND_OPTS 의 유료 가격 적용)
+                        var _bF = state.isStandee ? 0 : (o.fee || 0);
+                        arr.push({ key: bk, fee: _bF, qty: state.baseStands[bk] || 1, label: o.label_ko || '' });
                     });
                 }
                 return arr.length ? arr : null;

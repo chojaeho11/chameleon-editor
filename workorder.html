@@ -473,15 +473,38 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 boxHtml = `<div>박스: <b>${it.boxSize.w || '-'} × ${it.boxSize.h || '-'} × ${it.boxSize.d || '-'} mm</b> ${it.boxSize.unit ? '(단가: ' + fmt(it.boxSize.unit) + '원)' : ''}</div>`;
             }
 
-            // 자유인쇄커팅
+            // 자유인쇄커팅 — 2026-06-04: 한판/반판 폐기 → customSize 면적+재질로 대체
+            //   legacy items: it.cutPrint.size 그대로 / 신규 items: it.cutBoardMaterial 표시
             let cutHtml = '';
-            if (it.cutPrint && it.cutPrint.size) {
+            if (it.cutBoardMaterial) {
+                var _cbMatMap = {
+                    'honeycomb_16mm_white':  '허니콤보드 16mm 화이트',
+                    'honeycomb_16mm_kraft':  '허니콤보드 16mm 크라프트',
+                    'foamex_3mm':            '포맥스 3mm',
+                    'foamex_5mm':            '포맥스 5mm',
+                    'foamboard_5mm':         '폼보드 5mm',
+                    'foamboard_10mm':        '폼보드 10mm'
+                };
+                cutHtml = `<div>보드 재질: <b style="color:#7c3aed;">${_cbMatMap[it.cutBoardMaterial] || it.cutBoardMaterial}</b></div>`;
+            } else if (it.cutPrint && it.cutPrint.size) {
                 cutHtml = `<div>사이즈: <b>${it.cutPrint.size === 'half' ? '하프' : '풀'}</b></div>`;
             }
+            // 등신대 재질 (hb_pi_5)
+            if (it.standeeMaterial) {
+                var _stMatMap = { 'honeycomb_16mm': '허니콤보드 16mm', 'foamex_3mm': '포맥스 3mm' };
+                cutHtml += `<div>등신대 재질: <b style="color:#7c3aed;">${_stMatMap[it.standeeMaterial] || it.standeeMaterial}</b></div>`;
+            }
 
-            // 받침대
+            // 받침대 — 2026-06-04: 신규 array 포맷 (baseStands: [{key, fee, qty, label}, ...]) + 레거시 baseStand 호환
             let standHtml = '';
-            if (it.baseStand) standHtml = `<div>받침대: <b>${typeof it.baseStand === 'object' ? (it.baseStand.name || JSON.stringify(it.baseStand)) : it.baseStand}</b></div>`;
+            if (Array.isArray(it.baseStands) && it.baseStands.length > 0) {
+                standHtml = it.baseStands.map(function(b){
+                    var feeStr = (b.fee > 0) ? ` (+${(b.fee * (b.qty||1)).toLocaleString()}원)` : ' (무료)';
+                    return `<div>받침대: <b>${b.label || b.key}</b> × ${b.qty || 1}${feeStr}</div>`;
+                }).join('');
+            } else if (it.baseStand) {
+                standHtml = `<div>받침대: <b>${typeof it.baseStand === 'object' ? (it.baseStand.name || JSON.stringify(it.baseStand)) : it.baseStand}</b></div>`;
+            }
 
             // 양면 원판
             let doubleHtml = '';
