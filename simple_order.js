@@ -5818,10 +5818,11 @@ html, body { background: #ffffff !important; }
     window._soAdSyncAddBtn = function() { /* no-op (legacy) */ };
 
     // 2026-06-01: 담기 버튼 라벨 동기화 — 수정 모드면 "수정하기", 아니면 "담기".
+    // 2026-06-05: cutPrint 는 수정 모드 비활성 (가벽 방식) — 항상 "담기".
     window._soAdSyncSaveBtn = function() {
         var labelEl = document.getElementById('soAdCartLineBtnLabel');
         if (!labelEl) return;
-        var editing = !!state._adEditingLineId;
+        var editing = !!state._adEditingLineId && !state.isCutPrint;
         labelEl.textContent = editing
             ? tr('수정하기', '保存', 'Save changes')
             : tr('담기', 'リストに追加', 'Save line');
@@ -5966,6 +5967,8 @@ html, body { background: #ffffff !important; }
         if (!state._adLines || !state._adLines.length) return;
         var line = state._adLines.find(function(l){ return l.id === lineId; });
         if (!line) return;
+        // 2026-06-05: cutPrint 는 수정 모드 비활성 (가벽 방식). 클릭으로 진입 차단.
+        if (line.isCutPrint || state.isCutPrint) return;
         state._adEditingLineId = lineId;
         try { window._soAdSyncSaveBtn(); } catch(e) {}
         // 가벽
@@ -6145,14 +6148,21 @@ html, body { background: #ffffff !important; }
         (state._adLines || []).forEach(function(line, i) {
             var div = document.createElement('div');
             div.dataset.lineId = line.id;
-            // 2026-06-01: 클릭 가능 — 활성 상태 시각적 강조 (눌렀을때 잠깐 active 색상 → load 후 chip 제거됨)
-            div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; cursor:pointer; transition:background 0.15s, border-color 0.15s, transform 0.1s;';
-            div.title = tr('클릭하면 옵션·파일을 다시 편집할 수 있어요.', 'クリックでオプション・ファイルを再編集できます。', 'Click to edit options & file.');
-            div.onmouseenter = function(){ div.style.background = '#eff6ff'; div.style.borderColor = '#3b82f6'; };
-            div.onmouseleave = function(){ div.style.background = '#fff'; div.style.borderColor = '#c7d2fe'; };
-            div.onmousedown = function(){ div.style.background = '#dbeafe'; div.style.borderColor = '#2563eb'; div.style.transform = 'scale(0.99)'; };
-            div.onmouseup = function(){ div.style.transform = ''; };
-            div.onclick = function(){ window._soAdEditQueued(line.id); };
+            // 2026-06-05: cutPrint 는 수정 모드 비활성 (가벽 방식) — 잘못 담았으면 X 로 지우고 다시 담기.
+            //   수정 모드 진입 시 단가/사이즈 복원 누락으로 합계 폭증 버그가 반복돼서 클릭-편집 자체를 막음.
+            var _editable = !line.isCutPrint;
+            if (_editable) {
+                div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff; cursor:pointer; transition:background 0.15s, border-color 0.15s, transform 0.1s;';
+                div.title = tr('클릭하면 옵션·파일을 다시 편집할 수 있어요.', 'クリックでオプション・ファイルを再編集できます。', 'Click to edit options & file.');
+                div.onmouseenter = function(){ div.style.background = '#eff6ff'; div.style.borderColor = '#3b82f6'; };
+                div.onmouseleave = function(){ div.style.background = '#fff'; div.style.borderColor = '#c7d2fe'; };
+                div.onmousedown = function(){ div.style.background = '#dbeafe'; div.style.borderColor = '#2563eb'; div.style.transform = 'scale(0.99)'; };
+                div.onmouseup = function(){ div.style.transform = ''; };
+                div.onclick = function(){ window._soAdEditQueued(line.id); };
+            } else {
+                // 수정 비활성 — 호버 효과 / 클릭 핸들러 없음. 인라인 수량 input 만 작동.
+                div.style.cssText = 'margin-bottom:8px; padding:12px 14px; border:1.5px solid #c7d2fe; border-radius:12px; background:#fff;';
+            }
             var fileChip = line.fileName
                 ? '<span style="display:inline-flex; align-items:center; gap:3px; padding:2px 6px; background:#dbeafe; color:#1e40af; border-radius:4px; font-size:10px; font-weight:700;"><i class="fa-solid fa-paperclip" style="font-size:9px;"></i>' + (line.fileName.length > 16 ? line.fileName.substring(0, 14) + '..' : line.fileName) + '</span>'
                 : '<span style="font-size:10px; color:#94a3b8;">' + tr('파일 없음','ファイルなし','No file') + '</span>';
