@@ -157,12 +157,12 @@ export function initConfig() {
                     }
                 }
 
-                if (event === 'SIGNED_OUT' && !window.__authInProgress && !document.body.classList.contains('editor-active') && !sessionStorage.getItem('_pendingEditorAction')) {
-                    // ★ 도메인 고정 사이트는 해당 도메인 루트로 이동 (cafe2626.com 이동 방지)
-                    const _soh = window.location.hostname;
-                    if (_soh.includes('cafe0101')) window.location.replace('/?lang=ja');
-                    else if (_soh.includes('cafe3355') || _soh.includes('chameleon.design')) window.location.replace('/');
-                    else location.reload();
+                // 2026-06-05: 네이버/쿠팡식 — SIGNED_OUT 시 페이지 reload 안 함. UI만 조용히 업데이트.
+                //   이유: 모바일에서 토큰 만료 → 자동 reload → 모달 큐 (1번/2번 인쇄커팅 등) 다 날아감.
+                //   사용자가 명시적 로그아웃 (btnLoginBtn 클릭) 한 경우는 위쪽 클릭 핸들러에서 별도 처리.
+                if (event === 'SIGNED_OUT') {
+                    // 카트/큐 데이터는 localStorage/sessionStorage 그대로 유지 — 다시 로그인 시 자연히 복원됨.
+                    // UI 상태 표시만 갱신 (로그인 버튼 등은 위쪽 updateUserSession 에서 이미 처리).
                 }
 
                 // 비밀번호 재설정 링크로 돌아온 경우 → 새 비밀번호 입력 모달 표시
