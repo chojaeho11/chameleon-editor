@@ -2121,17 +2121,29 @@ let portfolioUrls = [];
 
     // 2026-06-04: 국가 강제 — 로그인 사용자의 profiles.site (또는 designer.country) 로 락.
     //   "한국 의뢰는 한국인만 / 일본 의뢰는 일본인만" 정책. 사용자가 임의로 다른 국가 의뢰·디자이너를 볼 수 없음.
+    //   관리자/매니저는 락 X (본사 관리 목적 — 전 국가 의뢰 다 볼 수 있어야 함).
     let _lockedCountry = '';
+    let _isAdminUser = false;
     try {
         const _u = await sb.auth.getUser();
         const _uid = _u && _u.data && _u.data.user && _u.data.user.id;
+        const _email = _u && _u.data && _u.data.user && _u.data.user.email || '';
+        const _adminEmails = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
+        if (_adminEmails.includes(_email)) _isAdminUser = true;
         if (_uid) {
-            const { data: _prof } = await sb.from('profiles').select('site').eq('id', _uid).maybeSingle();
+            const { data: _prof } = await sb.from('profiles').select('site, role').eq('id', _uid).maybeSingle();
             if (_prof && _prof.site) _lockedCountry = _prof.site;
+            if (_prof && (_prof.role === 'admin' || _prof.role === 'manager' || _prof.role === 'staff')) _isAdminUser = true;
         }
     } catch (e) {}
     if (!_lockedCountry && designerProfile && designerProfile.country) _lockedCountry = designerProfile.country;
-    if (_lockedCountry) {
+    if (_isAdminUser) {
+        // 관리자 — 국가 락 해제. 사이트 기본 국가 적용 (현재 도메인이 KR 이면 KR 등)
+        const _siteDefault = detectDefaultCountry() || 'KR';
+        COUNTRY_FILTER = _siteDefault;
+        sessionStorage.setItem('dm_country_filter', _siteDefault);
+        console.log('[design-market] admin — country filter set to site default:', _siteDefault);
+    } else if (_lockedCountry) {
         COUNTRY_FILTER = _lockedCountry;
         sessionStorage.setItem('dm_country_filter', _lockedCountry);
         // 국가 필터 바 자체를 숨김 (사용자 선택 불가)
@@ -2418,15 +2430,26 @@ window.openHqRequestForm = function() {
                     '<label for="hqPages" style="display:block; font-size:13px; font-weight:800; color:#451a03; margin-bottom:5px;">페이지 수 *</label>' +
                     '<input type="number" id="hqPages" value="1" min="1" max="100" oninput="window._hqUpdateTotal()" style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">' +
                 '</div>' +
+                // 의뢰 매니저 이름
+                '<div style="margin-bottom:14px;">' +
+                    '<label for="hqMgrName" style="display:block; font-size:13px; font-weight:800; color:#451a03; margin-bottom:5px;">의뢰 매니저 이름 *</label>' +
+                    '<input type="text" id="hqMgrName" placeholder="예: 은미" style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">' +
+                '</div>' +
                 // 제목
                 '<div style="margin-bottom:14px;">' +
                     '<label for="hqTitle" style="display:block; font-size:13px; font-weight:800; color:#451a03; margin-bottom:5px;">제목 *</label>' +
                     '<input type="text" id="hqTitle" placeholder="예: VISANG 입체글씨 디자인 의뢰" style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">' +
                 '</div>' +
                 // 의뢰 내용
-                '<div style="margin-bottom:16px;">' +
+                '<div style="margin-bottom:14px;">' +
                     '<label for="hqDesc" style="display:block; font-size:13px; font-weight:800; color:#451a03; margin-bottom:5px;">의뢰 내용</label>' +
-                    '<textarea id="hqDesc" rows="4" placeholder="고객 요구사항·참고사항·로고 등을 자세히 적어주세요" style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:13px; font-weight:500; box-sizing:border-box; font-family:inherit; resize:vertical;"></textarea>' +
+                    '<textarea id="hqDesc" rows="4" placeholder="고객 요구사항·참고사항 등을 자세히 적어주세요" style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:13px; font-weight:500; box-sizing:border-box; font-family:inherit; resize:vertical;"></textarea>' +
+                '</div>' +
+                // 로고 파일 업로드
+                '<div style="margin-bottom:16px;">' +
+                    '<label for="hqLogo" style="display:block; font-size:13px; font-weight:800; color:#451a03; margin-bottom:5px;">로고/참고 파일 (선택, 여러 개)</label>' +
+                    '<input type="file" id="hqLogo" accept="image/*,application/pdf" multiple style="width:100%; padding:8px; border:2px dashed #c4b5fd; border-radius:9px; font-size:12px; box-sizing:border-box;">' +
+                    '<div id="hqLogoPreview" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;"></div>' +
                 '</div>' +
                 // 합계 표시
                 '<div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:10px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">' +
@@ -2447,6 +2470,9 @@ window.openHqRequestForm = function() {
     document.getElementById('hqTitle').value = '';
     document.getElementById('hqDesc').value = '';
     document.getElementById('hqPages').value = '1';
+    const _mgrEl = document.getElementById('hqMgrName'); if (_mgrEl) _mgrEl.value = '';
+    const _logoEl = document.getElementById('hqLogo'); if (_logoEl) _logoEl.value = '';
+    const _logoPv = document.getElementById('hqLogoPreview'); if (_logoPv) _logoPv.innerHTML = '';
     window._hqSetType('scarci');
     modal.style.display = 'flex';
 };
@@ -2478,35 +2504,43 @@ window._hqUpdateTotal = function() {
 window._hqSubmitRequest = async function() {
     const title = document.getElementById('hqTitle').value.trim();
     const desc = document.getElementById('hqDesc').value.trim();
+    const mgrName = document.getElementById('hqMgrName').value.trim();
     const type = window._hqCurrentType || 'scarci';
     const pages = (type === 'general') ? Math.max(1, parseInt(document.getElementById('hqPages').value, 10) || 1) : 1;
     const total = (type === 'scarci') ? 50000 : (30000 * pages);
     const catTag = (type === 'scarci') ? '본사-글씨스카시' : '본사-일반디자인';
     if (!title) { alert('제목을 입력하세요.'); return; }
+    if (!mgrName) { alert('의뢰 매니저 이름을 입력하세요.'); return; }
     const btn = document.getElementById('hqSubmitBtn');
     btn.disabled = true;
     btn.textContent = '등록 중...';
     try {
         const u = await sb.auth.getUser();
         const uid = u && u.data && u.data.user && u.data.user.id;
-        // 의뢰 국가 = 등록자 국가 (자동, 변경 불가) — country-restricted bidding 정책 일관성
-        // 의뢰 국가 = 사용자 국가 (정책: 한국 의뢰는 한국인만, 해외는 해당 국가 사람만)
-        let userCountry = '';
-        try {
-            const { data: prof } = await sb.from('profiles').select('site').eq('id', uid).maybeSingle();
-            if (prof && prof.site) userCountry = prof.site;
-        } catch (e) {}
-        const country = userCountry || (designerProfile && designerProfile.country) || COUNTRY_FILTER || 'KR';
-        // design_requests 실 컬럼: customer_id, title, category, description, budget_min, budget_max,
-        //                          phone, country, files, status (budget/min_budget/client_id 없음)
+        // 로고/참고 파일 업로드
+        const logoInput = document.getElementById('hqLogo');
+        const fileUrls = [];
+        if (logoInput && logoInput.files && logoInput.files.length > 0) {
+            for (const f of logoInput.files) {
+                try {
+                    const url = await uploadFile(f, 'hq-requests/' + uid);
+                    fileUrls.push(url);
+                } catch (upe) { console.warn('[hq logo upload]', upe); }
+            }
+        }
+        // 본사의뢰는 현재 site 도메인 기준 (admin 매니저가 어디서 등록해도 그 site 의 본사의뢰)
+        const country = detectDefaultCountry() || 'KR';
+        // description prefix 에 매니저 이름 (스키마에 manager_name 컬럼 없을 가능성 대비)
+        const finalDesc = `[의뢰 매니저: ${mgrName}]\n\n${desc}`;
         const payload = {
             customer_id: uid,
             title: title,
-            description: desc,
+            description: finalDesc,
             category: catTag,
             country: country,
             budget_min: total,
             budget_max: total,
+            files: fileUrls,
             status: 'open'
         };
         const { error } = await sb.from('design_requests').insert(payload);
@@ -5368,9 +5402,37 @@ async function showRequestDetail(requestId) {
     </div>`;
 }
 
-// 2026-06-04: 본사의뢰 전용 완료+지급 — 고객 승인/파일 업로드 절차 생략, 본사 매니저가 직접 디자이너에게 지급.
+// 2026-06-04: 본사의뢰 전용 완료+지급 — 담당 매니저 선택 → 디자이너 지갑에 지급. 고객 승인 절차 생략.
 window.hqMarkCompleteAndPay = async function(requestId, bidId) {
-    if (!confirm('이 본사의뢰를 완료 처리하고 디자이너에게 비용을 지급할까요?\n취소할 수 없습니다.')) return;
+    // 담당 매니저 4명 중 선택 modal
+    const managers = ['은미', '성희', '지숙', '연두'];
+    const sel = await new Promise((resolve) => {
+        let m = document.getElementById('hqMgrSelectModal');
+        if (m) m.remove();
+        m = document.createElement('div');
+        m.id = 'hqMgrSelectModal';
+        m.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.78); z-index:99995; display:flex; align-items:center; justify-content:center; padding:24px;';
+        m.innerHTML =
+            '<div style="background:#fff; padding:28px; border-radius:16px; max-width:380px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.35); font-family:inherit;">' +
+                '<h3 style="margin:0 0 8px; font-size:17px; font-weight:900; color:#0f172a;">담당 매니저 이름을 선택해 주세요</h3>' +
+                '<div style="font-size:12px; color:#64748b; margin-bottom:16px;">선택 후 완료 처리되며 디자이너에게 지급됩니다.</div>' +
+                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">' +
+                    managers.map(n => `<button data-mgr="${n}" style="padding:14px 8px; border:2px solid #e2e8f0; background:#fff; color:#0f172a; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; font-family:inherit;">👩 ${n}</button>`).join('') +
+                '</div>' +
+                '<div style="margin-top:14px; text-align:right;">' +
+                    '<button id="hqMgrCancelBtn" style="padding:8px 16px; background:#fff; border:2px solid #e2e8f0; border-radius:8px; font-weight:700; cursor:pointer; color:#475569; font-family:inherit;">취소</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(m);
+        m.querySelectorAll('button[data-mgr]').forEach(b => b.onclick = () => {
+            const n = b.getAttribute('data-mgr');
+            m.remove();
+            resolve(n);
+        });
+        m.querySelector('#hqMgrCancelBtn').onclick = () => { m.remove(); resolve(null); };
+    });
+    if (!sel) return;
+    if (!confirm(`담당 매니저: ${sel}\n\n완료 처리 후 디자이너에게 비용이 지급됩니다. 진행하시겠습니까?`)) return;
     try {
         // 1. 디자이너 지갑에 지급 (기존 RPC 재사용)
         const { error: rpcErr } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
@@ -5384,9 +5446,12 @@ window.hqMarkCompleteAndPay = async function(requestId, bidId) {
             const { error: rpcErr2 } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
             if (rpcErr2) throw rpcErr2;
         }
-        // 2. 의뢰 상태 → completed
+        // 2. 의뢰 상태 → completed + 담당 매니저 이름 description 에 append
+        const { data: _curReq } = await sb.from('design_requests').select('description').eq('id', requestId).maybeSingle();
+        const newDesc = (_curReq && _curReq.description ? _curReq.description : '') + `\n\n[담당 매니저: ${sel}]`;
         await sb.from('design_requests').update({
             status: 'completed',
+            description: newDesc,
             completed_at: new Date().toISOString()
         }).eq('id', requestId);
         // 3. bid 상태도 명시적 released 표시
@@ -5396,7 +5461,7 @@ window.hqMarkCompleteAndPay = async function(requestId, bidId) {
                 released_at: new Date().toISOString()
             }).eq('id', bidId);
         } catch (e) {}
-        showToast('완료 및 지급 처리되었습니다.', 'success');
+        showToast(`완료! 담당 매니저: ${sel} · 디자이너에게 지급 완료`, 'success');
         showRequestDetail(requestId);
     } catch (e) {
         console.error('[hqMarkCompleteAndPay]', e);
@@ -5407,11 +5472,13 @@ window.hqMarkCompleteAndPay = async function(requestId, bidId) {
 // ===== Bid Modal =====
 async function openBidModal(requestId) {
     // 2026-06-04: 국가별 입찰 제한 — 디자이너 country ≠ 의뢰 country 면 입찰 모달 차단
+    //   본사의뢰(category '본사-*')는 내부 의뢰이므로 국가 검사 skip
     try {
-        const { data: req } = await sb.from('design_requests').select('country').eq('id', requestId).maybeSingle();
+        const { data: req } = await sb.from('design_requests').select('country, category, customer_id').eq('id', requestId).maybeSingle();
+        const _isHq = req && (req.category || '').startsWith('본사-');
         const dC = (designerProfile && designerProfile.country) || '';
         const rC = (req && req.country) || '';
-        if (rC && dC && rC !== dC) {
+        if (!_isHq && rC && dC && rC !== dC) {
             const msg = LANG === 'ja'
                 ? `この依頼は ${rC} 限定です。あなたの国(${dC})では入札できません。`
                 : LANG === 'en'
@@ -5420,7 +5487,7 @@ async function openBidModal(requestId) {
             showToast(msg, 'error');
             return;
         }
-        if (rC && !dC) {
+        if (!_isHq && rC && !dC) {
             const msg2 = LANG === 'ja'
                 ? 'プロフィールで居住国を設定してください。'
                 : LANG === 'en'
@@ -5431,11 +5498,36 @@ async function openBidModal(requestId) {
         }
     } catch (e) { console.warn('[openBidModal country check]', e); }
     currentBidRequestId = requestId;
-    document.getElementById('bidPrice').value = '';
-    document.getElementById('bidTimeline').value = '';
-    document.getElementById('bidMessage').value = '';
+    // 2026-06-04: 본사의뢰 — 금액·포트폴리오·어필 input 자동 hide + 고정값으로 채워서 submit 통과
+    let _hqMeta = null;
+    try {
+        const { data: _r2 } = await sb.from('design_requests').select('budget_min, budget_max, category').eq('id', requestId).maybeSingle();
+        _hqMeta = _r2;
+    } catch (e) {}
+    const _isHqBid = _hqMeta && (_hqMeta.category || '').startsWith('본사-');
+    const _hqFixedPrice = _isHqBid ? (_hqMeta.budget_min || _hqMeta.budget_max || 50000) : 0;
+    // 폼 초기화
+    document.getElementById('bidPrice').value = _isHqBid ? _hqFixedPrice : '';
+    document.getElementById('bidTimeline').value = _isHqBid ? '1' : '';
+    document.getElementById('bidMessage').value = _isHqBid ? '본사의뢰 작업' : '';
     document.getElementById('bidPortfolioPreview').innerHTML = '';
     bidPortfolioFiles = [];
+    // 본사의뢰: 가격·기간·어필·포트폴리오 form-group 모두 hide
+    document.querySelectorAll('#bidModal .form-group').forEach(g => g.style.display = _isHqBid ? 'none' : '');
+    // 타이틀 + 부제 변경
+    const _bidTitle = document.querySelector('#bidModal h2');
+    const _bidSubtitle = document.querySelector('#bidModal h2 + p');
+    if (_bidTitle) _bidTitle.innerHTML = _isHqBid
+        ? '<i class="fa-solid fa-building"></i> 본사의뢰 작업 참여'
+        : '<i class="fa-solid fa-gavel"></i> 입찰 참여하기';
+    if (_bidSubtitle) _bidSubtitle.textContent = _isHqBid
+        ? '클릭 한 번으로 작업 신청. 완료 시 ' + _hqFixedPrice.toLocaleString() + '원이 지급됩니다.'
+        : '금액을 제시하고, 포트폴리오로 나를 어필해보세요!';
+    // 버튼 라벨
+    const _btnSub = document.getElementById('btnSubmitBid');
+    if (_btnSub) _btnSub.innerHTML = _isHqBid
+        ? '<i class="fa-solid fa-paper-plane"></i> 작업 신청'
+        : '<i class="fa-solid fa-paper-plane"></i> 입찰 제출하기';
     // Phase 3a: fee preview
     updateBidFeePreview();
     document.getElementById('bidModal').classList.add('show');
@@ -5495,12 +5587,13 @@ async function submitBid() {
         showToast(LANG === 'ja' ? 'すでに入札済みです' : LANG === 'en' ? 'You already bid on this request' : '이미 입찰한 의뢰입니다', 'error');
         return;
     }
-    // 2026-06-04: 국가별 입찰 제한 — submitBid 시 한 번 더 검증 (modal 우회 방지)
+    // 2026-06-04: 국가별 입찰 제한 — submitBid 시 한 번 더 검증 (modal 우회 방지). 본사의뢰는 skip.
     try {
-        const { data: _req } = await sb.from('design_requests').select('country').eq('id', currentBidRequestId).maybeSingle();
+        const { data: _req } = await sb.from('design_requests').select('country, category').eq('id', currentBidRequestId).maybeSingle();
+        const _isHq2 = _req && (_req.category || '').startsWith('본사-');
         const _dC = (designerProfile && designerProfile.country) || '';
         const _rC = (_req && _req.country) || '';
-        if (_rC && _dC && _rC !== _dC) {
+        if (!_isHq2 && _rC && _dC && _rC !== _dC) {
             showToast(LANG === 'ja' ? `${_rC} 限定の依頼です` : LANG === 'en' ? `Country-restricted (${_rC} only)` : `${_rC} 국가 전용 의뢰입니다`, 'error');
             return;
         }
