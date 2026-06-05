@@ -3751,11 +3751,13 @@ html, body { background: #ffffff !important; }
                     var fb = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').like('code', 'hb_ss_%');
                     if (fb && fb.data) rows = rows.concat(fb.data);
                 } catch (e) {}
-                // 3차: 이름에 "글씨 스카시" 또는 "스카시" 포함 상품 추가 (코드 비표준 — 아크릴 허니콤 글씨 스카시 234342423 등)
+                // 3차: 이름에 "스카시" 포함 상품 추가 후 family 필터 (아크릴 허니콤 글씨 스카시 234342423 포함 / 일반 아크릴 글씨 스카시 100k 제외)
                 try {
                     var fb2 = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').ilike('name', '%스카시%');
                     if (fb2 && fb2.data) rows = rows.concat(fb2.data);
                 } catch (e) {}
+                // family 필터 — _soIsScarciProduct 로 비-family 제외
+                rows = rows.filter(function(r){ return _soIsScarciProduct(r); });
                 // 중복 제거 (같은 code 는 1개만)
                 var _byCode = {};
                 rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
@@ -4086,15 +4088,18 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
-    // 2026-06-04: 글씨 스카시 family 감지 — 코드(hb_ss_*) + 이름("글씨 스카시", "스카시")
-    //   아크릴 허니콤 글씨 스카시 같은 코드 비표준(234342423 등) 상품도 포함.
+    // 2026-06-04: 글씨 스카시 family 감지 — 코드(hb_ss_*) + 이름매칭
+    //   포함: hb_ss_* / "아크릴 허니콤 글씨 스카시" (234342423)
+    //   제외: "아크릴 글씨 스카시" (허니콤 없는 별도 상품) — 비-hb_ss 코드는 이름에 "허니콤" 필요
     function _soIsScarciProduct(p) {
         if (!p) return false;
         const code = (p.code || '').toLowerCase();
         const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
         if (code.startsWith('hb_ss')) return true;
-        if (/글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout/i.test(name)) return true;
-        return false;
+        // 비-hb_ss: "허니콤" + ("글씨 스카시" 또는 "스카시" 또는 "글씨 포토존") 모두 있어야 함
+        var hasHc = /허니콤|honeycomb/.test(name);
+        var hasScarci = /글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout|스카시/.test(name);
+        return hasHc && hasScarci;
     }
 
     // 2026-05-13: 받침대 옵션이 필요한 상품 — 등신대 + 자유인쇄커팅
