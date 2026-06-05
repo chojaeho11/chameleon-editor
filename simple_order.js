@@ -4341,10 +4341,8 @@ html, body { background: #ffffff !important; }
     ];
     function _soIsRealPrintProduct(p) {
         if (!p) return false;
-        if (REAL_PRINT_CODES_ORDERED.indexOf(p.code) >= 0) return true;
-        var name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
-        // 이름 키워드 fallback — 9종 외 같은 카테고리 신상품도 자동 합류
-        return /후렉스|플렉스|flex|매쉬|mesh|부직포|nonwoven|캘지|canvas|인화지|photo\s*paper|패트|pet|유포지|synthetic|백릿|backlit|실사\s*출력/i.test(name);
+        // 2026-06-05: 명시 9종만 family 로 인정 (키워드 fallback 제거 — 다른 상품이 잘못 합류하던 문제)
+        return REAL_PRINT_CODES_ORDERED.indexOf(p.code) >= 0;
     }
     var _soRealCache = null;
     async function _soLoadRealVariants(currentCode) {
@@ -4355,34 +4353,15 @@ html, body { background: #ffffff !important; }
             if (!_soRealCache) {
                 var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
                 var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
-                var rows = [];
-                // 1차: 명시 코드 IN
-                try {
-                    var r1 = await sb.from('admin_products').select(_COLS).in('code', REAL_PRINT_CODES_ORDERED);
-                    if (r1 && r1.data) rows = rows.concat(r1.data);
-                } catch (e) {}
-                // 2차: 이름 키워드 ilike fallback (이미 IN 으로 가져온 것 외 추가)
-                try {
-                    var keys = ['후렉스','매쉬','부직포','캘지','인화지','패트','유포지','백릿','플렉스'];
-                    for (var ki = 0; ki < keys.length; ki++) {
-                        var rk = await sb.from('admin_products').select(_COLS).ilike('name', '%' + keys[ki] + '%');
-                        if (rk && rk.data) rows = rows.concat(rk.data);
-                    }
-                } catch (e) {}
-                // family 필터 + 중복 제거 (같은 code 1개만)
-                rows = rows.filter(function(r){ return _soIsRealPrintProduct(r); });
+                // 명시 9종 코드만 fetch — 이름 키워드 fallback 없음
+                var r1 = await sb.from('admin_products').select(_COLS).in('code', REAL_PRINT_CODES_ORDERED);
+                var rows = (r1 && r1.data) || [];
                 var _byCode = {};
-                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
-                var _all = Object.values(_byCode);
-                // 명시 순서 우선 → 나머지는 sort_order/가격 보조
-                _soRealCache = _all.sort(function (a, b) {
-                    var ia = REAL_PRINT_CODES_ORDERED.indexOf(a.code);
-                    var ib = REAL_PRINT_CODES_ORDERED.indexOf(b.code);
-                    if (ia >= 0 && ib >= 0) return ia - ib;
-                    if (ia >= 0) return -1;
-                    if (ib >= 0) return 1;
-                    return (a.price || 0) - (b.price || 0);
-                });
+                rows.forEach(function(r){ if (r && r.code) _byCode[r.code] = r; });
+                // 명시 순서 그대로 — 누락된 코드는 skip
+                _soRealCache = REAL_PRINT_CODES_ORDERED
+                    .map(function(c){ return _byCode[c]; })
+                    .filter(function(r){ return !!r; });
                 console.log('[so] real print variants loaded:', _soRealCache.length);
             }
             if (_soRealCache.length < 2) { sec.style.display = 'none'; return; }
