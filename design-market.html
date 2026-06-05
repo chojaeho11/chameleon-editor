@@ -2372,7 +2372,7 @@ async function loadHqRequests() {
             const cat = (r.category || '').replace(/^본사-/, '');
             const budget = r.budget_min || r.budget_max || r.min_budget || r.budget || 0;
             const bidCount = r.design_bids?.[0]?.count || 0;
-            return `<div class="request-card" onclick="openRequestDetail('${r.id}')">
+            return `<div class="request-card" onclick="showRequestDetail('${r.id}')">
                 <div style="display:flex; justify-content:space-between; gap:8px;">
                     <span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">🏢 본사 · ${cat || '기타'}</span>
                     <span style="background:${statusColor}20; color:${statusColor}; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">${statusLbl}</span>
@@ -5181,7 +5181,9 @@ async function showRequestDetail(requestId) {
     }
 
     const isOwner = r.customer_id === userId;
-    const canBid = designerProfile && !isOwner && r.status === 'open';
+    // 2026-06-04: 본사의뢰 (category 'category 본사-*') 는 본사 내부 의뢰 — 본인이 올린 사람이 입찰도 가능 (RLS 정책 별도).
+    const isHqRequest = (r.category || '').startsWith('본사-');
+    const canBid = designerProfile && (isHqRequest || !isOwner) && r.status === 'open';
     const _isCompletedDetail = r.status === 'completed' || r.status === 'in_progress';
 
     // 전화번호 공개 범위: 의뢰인 본인 OR 선정된 디자이너 본인
@@ -5348,8 +5350,59 @@ async function showRequestDetail(requestId) {
                 </button>` : ''}
             </div>
         </div>` : ''}
+        ${isHqRequest && isOwner && r.status === 'in_progress' && r.selected_bid_id ? `
+        <div style="margin-top:20px; padding:18px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:14px; text-align:center;">
+            <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:8px;">🏢 본사의뢰 — 본인 승인으로 즉시 지급</div>
+            <div style="font-size:12px; color:#451a03; margin-bottom:14px; line-height:1.6;">
+                고객 승인 절차 없이 매니저가 <b>완료</b> 누르면 디자이너에게 비용이 즉시 지급됩니다.<br>
+                작업물 확인 후에만 누르세요.
+            </div>
+            <button onclick="hqMarkCompleteAndPay('${r.id}','${r.selected_bid_id}')" style="padding:12px 28px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:900; font-size:14px; cursor:pointer; font-family:inherit;">
+                <i class="fa-solid fa-circle-check"></i> 완료 — 지급
+            </button>
+        </div>` : ''}
+        ${isHqRequest && isOwner && r.status === 'open' ? `
+        <div style="margin-top:16px; padding:14px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; text-align:center; font-size:12px; color:#475569; font-weight:600;">
+            📌 디자이너의 입찰을 기다린 후 <b>입찰 선정</b> 시 진행중 상태가 되며, 작업 후 본인이 직접 <b>완료</b> 버튼으로 지급할 수 있습니다.
+        </div>` : ''}
     </div>`;
 }
+
+// 2026-06-04: 본사의뢰 전용 완료+지급 — 고객 승인/파일 업로드 절차 생략, 본사 매니저가 직접 디자이너에게 지급.
+window.hqMarkCompleteAndPay = async function(requestId, bidId) {
+    if (!confirm('이 본사의뢰를 완료 처리하고 디자이너에게 비용을 지급할까요?\n취소할 수 없습니다.')) return;
+    try {
+        // 1. 디자이너 지갑에 지급 (기존 RPC 재사용)
+        const { error: rpcErr } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
+        if (rpcErr) {
+            // RPC 가 paid 상태를 요구하면 → 먼저 paid 로 만들고 재시도
+            console.warn('[hqMarkComplete] RPC fail, will pre-mark paid:', rpcErr.message || '');
+            await sb.from('design_bids').update({
+                payment_status: 'paid',
+                paid_at: new Date().toISOString()
+            }).eq('id', bidId);
+            const { error: rpcErr2 } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
+            if (rpcErr2) throw rpcErr2;
+        }
+        // 2. 의뢰 상태 → completed
+        await sb.from('design_requests').update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        }).eq('id', requestId);
+        // 3. bid 상태도 명시적 released 표시
+        try {
+            await sb.from('design_bids').update({
+                payment_status: 'released',
+                released_at: new Date().toISOString()
+            }).eq('id', bidId);
+        } catch (e) {}
+        showToast('완료 및 지급 처리되었습니다.', 'success');
+        showRequestDetail(requestId);
+    } catch (e) {
+        console.error('[hqMarkCompleteAndPay]', e);
+        alert('처리 실패: ' + (e && e.message ? e.message : '알 수 없는 오류'));
+    }
+};
 
 // ===== Bid Modal =====
 async function openBidModal(requestId) {
