@@ -7908,6 +7908,27 @@ html, body { background: #ffffff !important; }
             var _cutBtns = document.getElementById('soCutSizeBtnsWrap');
             if (_cutBtns) _cutBtns.style.display = 'none';
         } catch (e) {}
+        // 2026-06-05: cutPrint — 단면/양면 토글 섹션을 보드 종류 바로 아래로 이동, 사이즈 선택 위에 위치
+        try {
+            var _cutSec = document.getElementById('soCutPrintSizeSection');
+            var _boardSec = document.getElementById('soCutBoardMaterialSection');
+            var _sizeSec = document.getElementById('soCustomSizeSection');
+            if (state.isCutPrint && _cutSec) {
+                _cutSec.style.display = '';
+                // 보드 종류 바로 다음에 삽입 (= 사이즈 선택 바로 위)
+                if (_boardSec && _boardSec.parentNode && _cutSec.parentNode === _boardSec.parentNode) {
+                    _boardSec.parentNode.insertBefore(_cutSec, _boardSec.nextSibling);
+                }
+                // 인쇄면 안내 라벨이 잘 보이도록 섹션 타이틀 추가/갱신
+                if (!_cutSec.querySelector('.so-cut-side-title')) {
+                    var _t = document.createElement('div');
+                    _t.className = 'so-section-title so-cut-side-title';
+                    _t.style.cssText = 'margin-bottom:8px;';
+                    _t.textContent = tr('인쇄면 (단면 / 양면)', '印刷面 (片面 / 両面)', 'Print side (Single / Double)');
+                    _cutSec.insertBefore(_t, _cutSec.firstChild);
+                }
+            }
+        } catch (e) {}
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
