@@ -12462,13 +12462,17 @@ window.showChoiceModal = async function(key) {
             || /글씨\s*스카시|글씨\s*포토존|script\s*scarci|letter\s*cutout/i.test(_pNameCheck);
         // 이 상품 자체가 "강화 골판지 가벽" 류인지 — 자체적으로 골판지 콘텐츠 가지는 게 정상
         const _isCorrugatedProduct = /강화\s*골판지|골판지\s*가벽|강화\s*段ボール|強化\s*段ボール|reinforced\s*corrugated/i.test(_pNameCheck);
-        if (/골판지|허니콤보드\s*가벽/.test(dDesc) && !_isCorrugatedProduct) {
+        // 2026-06-05: 일본 사이트 + hb_* (허니콤보드) 모든 상품 — description_jp 가 DB 에서 강화골판지/제네릭 콘텐츠로 오염된 사례 다수.
+        //   가장 간단한 대응: 골판지 상품 (435355) 외 hb_* 의 description 통째로 비움. 우측 옵션·가격은 그대로 유지.
+        //   필요한 경우 admin 에서 상품별 description_jp 를 다시 작성하면 됨.
+        if (lang === 'ja' && _pCodeCheck.startsWith('hb_') && !_isCorrugatedProduct) {
+            console.warn('[product desc] JP + hb_* + non-corrugated → clearing description (DB leak prevention, code:', product.code, ')');
+            dDesc = "";
+        } else if (/골판지|허니콤보드\s*가벽/.test(dDesc) && !_isCorrugatedProduct) {
             console.warn('[product desc] non-KR locale + 한국어 골판지 keyword detected on non-corrugated product → clearing description');
             dDesc = "";
-        } else if (lang === 'ja' && /強化段ボール|段ボール仮壁|段ボール\s*の\s*仮壁/.test(dDesc) && !_isCorrugatedProduct) {
-            // 2026-06-04: JP description 누수 — 비-골판지 상품에 強化段ボール 콘텐츠가 들어있으면 제거.
-            //   강화 골판지 가벽 (435355) 의 description_jp 가 다른 hb_* 상품에 잘못 복사된 경우 차단.
-            console.warn('[product desc] JP + non-corrugated product with 強化段ボール description → clearing description');
+        } else if (lang === 'ja' && /強化段ボール|段ボール仮壁|段ボール\s*の\s*仮壁|段ボール/.test(dDesc) && !_isCorrugatedProduct) {
+            console.warn('[product desc] JP + non-corrugated product with 段ボール description → clearing description');
             dDesc = "";
         } else if (_isScarciDesc && /[가-힣]/.test(dDesc) && lang === 'ja') {
             // 글씨 스카시 family + JP locale 인데 한국어 한글이 다량 포함된 경우 (description_jp 미작성)
