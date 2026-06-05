@@ -5715,6 +5715,11 @@ html, body { background: #ffffff !important; }
         var p = state.product || {};
         var defWMm = p.width_mm || 1000;
         var defHMm = p.height_mm || 1000;
+        // 2026-06-05: 자유인쇄커팅 — 다음 라인 기본값도 200×300mm (모달 진입시와 동일). 1000×1000 fallback 방지.
+        if (state.isCutPrint) {
+            defWMm = 200;
+            defHMm = 300;
+        }
         state.customW = defWMm / 10;
         state.customH = defHMm / 10;
         state.qty = 1;
@@ -5818,14 +5823,18 @@ html, body { background: #ffffff !important; }
     window._soAdSyncAddBtn = function() { /* no-op (legacy) */ };
 
     // 2026-06-01: 담기 버튼 라벨 동기화 — 수정 모드면 "수정하기", 아니면 "담기".
-    // 2026-06-05: cutPrint 는 수정 모드 비활성 (가벽 방식) — 항상 "담기".
+    // 2026-06-05: cutPrint 는 수정 모드 비활성 + 큐 있으면 "추가담기" (가벽 방식 — 새 라인이 추가됨을 명시).
     window._soAdSyncSaveBtn = function() {
         var labelEl = document.getElementById('soAdCartLineBtnLabel');
         if (!labelEl) return;
         var editing = !!state._adEditingLineId && !state.isCutPrint;
+        var _hasQ = Array.isArray(state._adLines) && state._adLines.length > 0;
+        var _addLabel = (state.isCutPrint && _hasQ)
+            ? tr('추가담기', 'もう一つ追加', 'Add another')
+            : tr('담기', 'リストに追加', 'Save line');
         labelEl.textContent = editing
             ? tr('수정하기', '保存', 'Save changes')
-            : tr('담기', 'リストに追加', 'Save line');
+            : _addLabel;
     };
 
     // 2026-06-01: 담기 = 새 라인 추가 / 수정모드면 in-place 업데이트 (배열 위치 보존).
@@ -10258,10 +10267,13 @@ html, body { background: #ffffff !important; }
             });
         }
         // 2026-05-13: 받침대 옵션 — 2026-05-22: 다중 종류·수량 합산 (+ 레거시 단일 호환)
+        // 2026-06-05: 자유인쇄커팅 (it.cutPrint) — 받침대도 제품 수량만큼 곱 (사용자 명시 요구).
+        //   "제품이 2개면 받침도 2개 값이 올라가야함" — 모달 큐 표시와 동일 로직.
+        var _bsMult = it.cutPrint ? (qty || 1) : 1;
         if (Array.isArray(it.baseStands)) {
-            it.baseStands.forEach(function (b) { base += (b.fee || 0) * (b.qty || 1); });
+            it.baseStands.forEach(function (b) { base += (b.fee || 0) * (b.qty || 1) * _bsMult; });
         } else if (it.baseStand && typeof it.baseStand.fee === 'number') {
-            base += it.baseStand.fee * (it.baseStand.qty || 1);
+            base += it.baseStand.fee * (it.baseStand.qty || 1) * _bsMult;
         }
         // 2026-05-30: 프리셋 굿즈 — 개별포장 3종 (포장없음=0, 내지/상단인쇄=5만 정액)
         if (_isPreset) {
