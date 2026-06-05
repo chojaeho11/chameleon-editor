@@ -1459,6 +1459,12 @@ html, body { background: #ffffff !important; }
           <div id="soScarciVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-05: 인스타판넬 포토존 (hb_insta) 변형 4종 — 카드 그리드, 클릭 시 해당 사이즈로 전환 -->
+        <div class="so-section" id="soInstaVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('인스타판넬 사이즈 선택', 'インスタパネル サイズ選択', 'Choose size')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 사이즈 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soInstaVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-04: 글씨 스카시 family 전용 — 입체디자인 안내 배너 (우측) -->
         <div class="so-section" id="soScarciNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
           <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -3936,6 +3942,95 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchBanner', e); }
+    };
+
+    // 2026-06-05: 인스타판넬 포토존 (hb_insta + 코드 lll0/0ll/lllllp/ppp) family — 4종 사이즈 한 페이지에서 선택
+    function _soIsInstaPanelProduct(p) {
+        if (!p) return false;
+        var code = (p.code || '').toLowerCase();
+        var cat  = (p.category || '').toLowerCase();
+        var name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        if (cat === 'hb_insta' || cat.indexOf('insta') >= 0) return true;
+        if (['lll0', '0ll', 'lllllp', 'ppp'].indexOf(code) >= 0) return true;
+        if (/인스타\s*판넬|insta\s*panel|photo\s*booth/i.test(name)) return true;
+        return false;
+    }
+    var _soInstaCache = null;
+    async function _soLoadInstaVariants(currentCode) {
+        var sec = document.getElementById('soInstaVariantsSec');
+        var grid = document.getElementById('soInstaVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soInstaCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var rows = [];
+                // 1차: category = hb_insta
+                try {
+                    var r1 = await sb.from('admin_products').select(_COLS).eq('category', 'hb_insta');
+                    if (r1 && r1.data) rows = rows.concat(r1.data);
+                } catch (e) {}
+                // 2차: code 가 인스타판넬 family 코드 중 하나
+                try {
+                    var r2 = await sb.from('admin_products').select(_COLS).in('code', ['lll0','0ll','lllllp','ppp']);
+                    if (r2 && r2.data) rows = rows.concat(r2.data);
+                } catch (e) {}
+                // 3차: 이름 매칭 fallback
+                try {
+                    var r3 = await sb.from('admin_products').select(_COLS).ilike('name', '%인스타판넬%');
+                    if (r3 && r3.data) rows = rows.concat(r3.data);
+                } catch (e) {}
+                // family 필터 + 중복 제거 (같은 code 1개만)
+                rows = rows.filter(function(r){ return _soIsInstaPanelProduct(r); });
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
+                // 가격 오름차순 정렬 (저가 → 고가). sort_order 가 있으면 우선.
+                _soInstaCache = Object.values(_byCode).sort(function (a, b) {
+                    if (a.sort_order != null && b.sort_order != null) return (a.sort_order || 999) - (b.sort_order || 999);
+                    return (a.price || 0) - (b.price || 0);
+                });
+                console.log('[so] insta panel variants loaded:', _soInstaCache.length);
+            }
+            if (_soInstaCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soInstaCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Photo';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchInsta(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
+                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] instaVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadInstaVariants = _soLoadInstaVariants;
+    window._soIsInstaPanelProduct = _soIsInstaPanelProduct;
+
+    window._soSwitchInsta = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchInsta', e); }
     };
 
     // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
@@ -7914,6 +8009,14 @@ html, body { background: #ffffff !important; }
         } else {
             var _scSec = document.getElementById('soScarciVariantsSec');
             if (_scSec) _scSec.style.display = 'none';
+        }
+        // 2026-06-05: 인스타판넬 포토존 family (hb_insta + 코드 4종) — 우측 상단에 변형 카드 그리드 표시
+        var _isInsta = _soIsInstaPanelProduct(p);
+        if (_isInsta) {
+            try { window._soLoadInstaVariants(p.code); } catch(e){}
+        } else {
+            var _ipSec = document.getElementById('soInstaVariantsSec');
+            if (_ipSec) _ipSec.style.display = 'none';
         }
         // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
         try {
