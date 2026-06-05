@@ -4616,6 +4616,8 @@ html, body { background: #ffffff !important; }
             }
             if (_soAcrylicFamilyCache.length < 2) { sec.style.display = 'none'; return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            // 2026-06-06: 인쇄형 6종 (acrl2*/acrl3*) 은 5×5cm 단가 표시 (= perSqm/400). 탁상스탠드/스카시는 flat.
+            var _isAcrylicPrintFlat = function(p){ return /^acrl[23]/i.test(p && p.code || ''); };
             grid.innerHTML = _soAcrylicFamilyCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
                 var img = p.img_url || 'https://placehold.co/200?text=Acrylic';
@@ -4624,6 +4626,14 @@ html, body { background: #ffffff !important; }
                 var priceVal = p.price || 0;
                 if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
                 else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                // 인쇄형은 5×5cm = perSqm × (0.05 × 0.05) = perSqm/400
+                var priceLabel;
+                if (_isAcrylicPrintFlat(p)) {
+                    var per5 = Math.round(priceVal / 400);
+                    priceLabel = fmtPrice(per5) + tr(' / 5×5cm', ' / 5×5cm', ' / 5×5cm');
+                } else {
+                    priceLabel = fmtPrice(priceVal);
+                }
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -4635,7 +4645,7 @@ html, body { background: #ffffff !important; }
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
                         '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
-                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + priceLabel + '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
@@ -5856,7 +5866,9 @@ html, body { background: #ffffff !important; }
         // 2026-05-14: 아크릴 굿즈 — 키링용 부자재만 자동 포함 (ADDON_DB 스캔)
         // 화이트리스트: 와이어링/키링/오링/볼체인/랍스터/jump ring 등 키링 전용 명칭
         // 블랙리스트: 봉/조명/글루건/받침대/타공/멜빵/텐션/허니콤 등 가벽·배너 전용 → 무조건 제외
-        if (state.isAcrylicGoods && window.ADDON_DB) {
+        // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3*) 는 키링 자동 추가 차단 — 4종 옵션만 표시
+        var _isAcrylicPrintFam = !!(p && /^acrl[23]/i.test(p.code || ''));
+        if (state.isAcrylicGoods && !_isAcrylicPrintFam && window.ADDON_DB) {
             var keyringWhiteRe = /와이어\s*링|wire\s*ring|키링|key\s*ring|key\s*chain|keyring|키체인|오링|원형\s*링|o-?ring|볼\s*체인|ball\s*chain|랍스터|lobster|jump\s*ring|메탈\s*링|metal\s*ring|키홀더|key\s*holder|핸드폰\s*고리|폰\s*고리|버블링|크리스탈\s*링/i;
             var bannerBlackRe = /봉|조명|글루건|받침대|타공|아일렛|eyelet|멜빵|텐션|tension|허니콤|honeycomb|광고|배너(?!\s*키링)|banner(?!\s*key)|가벽|wall\s*panel|상단끈|하단끈|마감|finish|POP|판넬|panel|글루|grout|매대|stand(?!ee)|히터|heat|박스|box/i;
             Object.keys(window.ADDON_DB).forEach(function (k) {
@@ -5880,6 +5892,15 @@ html, body { background: #ffffff !important; }
             renderList = renderList.filter(function(a){
                 var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
                 return !/코너\s*기둥|corner.*post|corner.*pillar/i.test(nm);
+            });
+        }
+        // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3*) — 키링 옵션 제외, 4종만 화이트리스트.
+        //   1) 모양커팅  2) 사각커팅  3) 아크릴 전면에 인쇄  4) 아크릴 뒷면에 인쇄
+        if (p && /^acrl[23]/i.test(p.code || '')) {
+            var _acrAllowRe = /모양\s*커팅|모양커팅|사각\s*커팅|사각커팅|전면\s*에?\s*인쇄|전면인쇄|뒷면\s*에?\s*인쇄|뒷면인쇄|앞면\s*에?\s*인쇄|앞면인쇄|shape\s*cut|square\s*cut|front\s*print|back\s*print/i;
+            renderList = renderList.filter(function(a){
+                var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || ''));
+                return _acrAllowRe.test(nm);
             });
         }
 
