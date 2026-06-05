@@ -1465,6 +1465,12 @@ html, body { background: #ffffff !important; }
           <div id="soInstaVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-05: 허니콤 테이블 (hb_tb_*) 변형 4종 — 카드 그리드, 클릭 시 해당 단으로 전환 -->
+        <div class="so-section" id="soTableVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('테이블 종류 선택', 'テーブル種類選択', 'Choose table type')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soTableVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-04: 글씨 스카시 family 전용 — 입체디자인 안내 배너 (우측) -->
         <div class="so-section" id="soScarciNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
           <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -4116,6 +4122,73 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchInsta', e); }
+    };
+
+    // 2026-06-05: 허니콤 테이블 family (hb_tb_*) — 1단/2단/3단/십자 선반 등 한 페이지에서 선택
+    function _soIsTableProduct(p) {
+        if (!p) return false;
+        var code = (p.code || '').toLowerCase();
+        return code.indexOf('hb_tb') === 0;
+    }
+    var _soTableCache = null;
+    async function _soLoadTableVariants(currentCode) {
+        var sec = document.getElementById('soTableVariantsSec');
+        var grid = document.getElementById('soTableVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soTableCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var fb = await sb.from('admin_products').select(_COLS).like('code', 'hb_tb%');
+                var rows = (fb && fb.data) || [];
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
+                _soTableCache = Object.values(_byCode).sort(function (a, b) {
+                    if (a.sort_order != null && b.sort_order != null) return (a.sort_order || 999) - (b.sort_order || 999);
+                    return (a.code || '').localeCompare(b.code || '');
+                });
+                console.log('[so] table variants loaded:', _soTableCache.length);
+            }
+            if (_soTableCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soTableCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Table';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchTable(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
+                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] tableVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadTableVariants = _soLoadTableVariants;
+    window._soIsTableProduct = _soIsTableProduct;
+
+    window._soSwitchTable = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchTable', e); }
     };
 
     // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
@@ -8144,6 +8217,14 @@ html, body { background: #ffffff !important; }
             if (_ipNotice) _ipNotice.style.display = 'none';
             var _ipTextIn = document.getElementById('soInstaTextInputs');
             if (_ipTextIn) _ipTextIn.style.display = 'none';
+        }
+        // 2026-06-05: 허니콤 테이블 family (hb_tb_*) — 4종 변형 카드 그리드 표시
+        var _isTable = _soIsTableProduct(p);
+        if (_isTable) {
+            try { window._soLoadTableVariants(p.code); } catch(e){}
+        } else {
+            var _tbSec = document.getElementById('soTableVariantsSec');
+            if (_tbSec) _tbSec.style.display = 'none';
         }
         // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
         try {
