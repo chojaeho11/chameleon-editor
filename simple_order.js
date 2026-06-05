@@ -10610,6 +10610,9 @@ html, body { background: #ffffff !important; }
             updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
             // 2026-05-15: 카트 저장 전 썸네일 축소 — localStorage quota 초과로 카트가 silently 사라지던 버그 fix
             state._cartThumb = await _soShrinkThumb(state.thumbDataUrl, 220);
+            // 2026-06-06: 담기 직전 사이즈 입력값 강제 재계산 (oninput 미발생 케이스 안전망)
+            //   예: 키보드 입력 후 모달 닫기 전 다른 곳 클릭으로 blur 가 안 일어난 경우.
+            try { if (state.isCustomSize && typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
             const item = buildCartItem(url, path);
             // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
             if (backUrl) {
@@ -11510,6 +11513,22 @@ html, body { background: #ffffff !important; }
         if (it.customSize && typeof it.customSize.unit === 'number') {
             unit = it.customSize.unit;
         }
+        // 2026-06-06: 아크릴 family 안전망 — 저장된 unit 이 per-m² 그대로일 때 area_m2 로 환산.
+        //   증상: customSize.unit = 150000 (per-m²) + area_m2 = 0.0025 (50×50mm) 같이 잘못 저장된 카트 데이터.
+        //   재계산 = unit × area_m2 (소수면 곱해서 calculated price 복원).
+        try {
+            var _acrCode = (it.product && it.product.code) || '';
+            var _acrNm = ((it.product && it.product.name) || '').toLowerCase();
+            var _isAcrItm = /^acrl[23]/i.test(_acrCode) || /반투명|스카시|글씨\s*커팅/.test(_acrNm);
+            if (_isAcrItm && it.customSize && it.customSize.area_m2 != null) {
+                var _amA = parseFloat(it.customSize.area_m2);
+                if (_amA > 0 && _amA < 1 && unit > 1000) {
+                    // unit 이 per-m² 일 가능성 — area 로 환산
+                    var _calcU = Math.round(unit * _amA / 10) * 10;
+                    if (_calcU < unit) unit = _calcU;
+                }
+            }
+        } catch (e) {}
         // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (재계산 안전)
         if (it.rawBoardDouble || (it.product && _soIsRawBoardDoubleSided(it.product))) {
             unit = unit * 2;
