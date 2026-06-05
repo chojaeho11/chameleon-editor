@@ -2903,7 +2903,7 @@ html, body { background: #ffffff !important; }
         //   조건 — 큐 1개+ 이고 파일이 없고 추가옵션도 없고 받침대도 없으면 = 빈 폼.
         //   true 이면 subtotal/heightExtra/wallShapeFee/addonTotal 모두 0 처리 (큐 합계만 표시).
         //   장바구니 담기에서도 이 상태면 현재 라인 push 하지 않음.
-        var _hasQueue = (state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines) && state._adLines.length > 0;
+        var _hasQueue = (state.isAdPrint || state.isHoneycomb || state.isCutPrint) && Array.isArray(state._adLines) && state._adLines.length > 0;
         var _addonCount = state.selectedAddons ? Object.keys(state.selectedAddons).length : 0;
         var _baseStandCount = state.baseStands ? Object.keys(state.baseStands).length : 0;
         // 수정 모드에서는 폼 값이 라인 값으로 채워져 있음 — draft 아님
@@ -3105,7 +3105,7 @@ html, body { background: #ffffff !important; }
         //   수정 모드일 때 그 라인은 현재 폼이 대체하므로 큐 합계에서 제외.
         let adExtraLinesTotal = 0;
         const adExtraLinesBreakdown = [];
-        if ((state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines)) {
+        if ((state.isAdPrint || state.isHoneycomb || state.isCutPrint) && Array.isArray(state._adLines)) {
             state._adLines.forEach(function(line, i) {
                 if (state._adEditingLineId && line.id === state._adEditingLineId) return;
                 const lineSub = line.lineTotal || ((line.unitPrice || 0) * (line.qty || 0));
@@ -9379,7 +9379,7 @@ html, body { background: #ffffff !important; }
             if (!_skipCurrent) cart.push(item);
             // 2026-06-01: 멀티-라인 큐 — 광고인쇄 + 허니콤보드 (가벽/박스/자유인쇄커팅/등신대) 공용.
             //   각 큐 라인을 별도 cart item 으로 push. 큐 라인은 bundleShipping=true → 배송 fee=0.
-            if ((state.isAdPrint || state.isHoneycomb) && Array.isArray(state._adLines) && state._adLines.length > 0) {
+            if ((state.isAdPrint || state.isHoneycomb || state.isCutPrint) && Array.isArray(state._adLines) && state._adLines.length > 0) {
                 var _sav = {
                     w: state.customW, h: state.customH, qty: state.qty,
                     file: state.file, unit: state.customUnitPrice, area: state.customAreaM2,
