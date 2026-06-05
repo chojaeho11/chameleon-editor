@@ -4179,7 +4179,8 @@ html, body { background: #ffffff !important; }
         insert:       { fee: 3000,  label_ko: '끼우는 형태',                label_jp: '差し込み式',       label_us: 'Slot-in type' },
         free_rear:    { fee: 8000,  label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' },
         paper_stand:  { fee: 500,   label_ko: '종이받침대',                label_jp: '紙スタンド',       label_us: 'Paper stand' },
-        none_card:    { fee: 0,     label_ko: '받침없음 (인쇄커팅만)',      label_jp: 'スタンドなし',     label_us: 'No stand (cutout only)' }
+        none_card:    { fee: 0,     label_ko: '받침없음 (인쇄커팅만)',      label_jp: 'スタンドなし',     label_us: 'No stand (cutout only)' },
+        tier3_hc:     { fee: 10000, label_ko: '3단 허니콤받침',             label_jp: '3段ハニカムスタンド', label_us: '3-tier honeycomb stand' }
     };
 
     // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 옵션. KR/JP/EN 3개 언어 지원
@@ -6061,7 +6062,8 @@ html, body { background: #ffffff !important; }
         } else if (line.isBox) {
             sizeLbl = (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
         } else if (line.isCutPrint) {
-            sizeLbl = (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+            // 2026-06-05: 자유인쇄커팅 — 사이즈로 표시 (한판/반판 폐기)
+            sizeLbl = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
             if (line.wallSide === 'double') sizeLbl += ' · ' + tr('양면','両面','dbl');
         } else {
             sizeLbl = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
@@ -6169,7 +6171,10 @@ html, body { background: #ffffff !important; }
             } else if (line.isBox) {
                 sizeOnly = ordLabel + ' ' + (line.boxW || 0) + '×' + (line.boxH || 0) + '×' + (line.boxD || 0) + 'mm';
             } else if (line.isCutPrint) {
-                sizeOnly = ordLabel + ' ' + (line.cutSize === 'half' ? tr('반판','ハーフ','Half') : tr('한판','フル','Full'));
+                // 2026-06-05: 자유인쇄커팅 — "1번 인쇄커팅 (200×300mm)" 형태로 표시 (이전 "첫번째 한판" 폐기)
+                var _cpNum = tr((i+1)+'번', (i+1)+'番', '#'+(i+1));
+                var _cpSize = (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm';
+                sizeOnly = _cpNum + ' ' + tr('인쇄커팅','カット印刷','Cut print') + ' (' + _cpSize + ')';
                 if (line.wallSide === 'double') sizeOnly += ' · ' + tr('양면','両面','Double');
             } else {
                 sizeOnly = ordLabel + ' ' + (line.wMm || 0) + '×' + (line.hMm || 0) + 'mm × ' + (line.qty || 1) + tr('개','個','pcs');
@@ -7830,9 +7835,9 @@ html, body { background: #ffffff !important; }
                         { k:'free_rear', img:'/up.jpg', feeStandee:0, feeCut:8000,
                             title: tr('뒷면받침', '背面サポート', 'Rear support'),
                             desc:  tr('허니콤보드로 만들어서 예쁘고 튼튼합니다', 'ハニカムボード製で美しく丈夫', 'Made of honeycomb board — pretty & sturdy') },
-                        { k:'none_card', icon: _scissorsSvg, feeStandee:0, feeCut:0,
-                            title: tr('받침없음', 'スタンドなし', 'No stand'),
-                            desc:  tr('인쇄커팅만 (받침 없이 발송)', 'カットのみ (スタンドなしで発送)', 'Cutout only — no stand') }
+                        { k:'tier3_hc', img:'/banner.jpg', feeStandee:0, feeCut:10000,
+                            title: tr('3단 허니콤받침', '3段ハニカムスタンド', '3-tier honeycomb stand'),
+                            desc:  tr('배너형 디스플레이용 견고한 3단 받침', '3段バナー用ハニカムスタンド', 'Sturdy 3-tier stand for banner display') }
                     ];
                     _bsList.style.display = 'grid';
                     _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
@@ -7944,6 +7949,11 @@ html, body { background: #ffffff !important; }
         if (state.isStandeeV2 && (state.customW < 30 || state.customH < 30)) {
             state.customW = 100;  // 100cm = 1000mm
             state.customH = 150;  // 150cm = 1500mm
+        }
+        // 2026-06-05: 자유인쇄커팅 (cutPrint) 기본 사이즈 — A4 근처 (200×300mm = 20×30cm). 사용자 요청.
+        if (state.isCutPrint) {
+            state.customW = 20;  // 20cm = 200mm
+            state.customH = 30;  // 30cm = 300mm
         }
         // 2026-06-04: 광고인쇄/등신대는 mm 입력이라 W/H input 의 표시값·min·max 도 mm 로 갱신.
         //   라벨 (cm)→(mm), input 기본값 mm 환산, min=100mm, max=2500mm.
