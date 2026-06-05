@@ -1317,11 +1317,55 @@ function getShippingFeeKrw() {
     } catch (_) { return 5000; }
 }
 
+// 2026-06-06: 일반 상품 라인 가격 계산 — 저장된 customSize.unit / boxSize.unit / cutPrint 등 우선.
+//   기존 (it.product.price * qty) 는 아크릴(per-m²) 등 면적기반 상품을 잘못 표시하던 버그.
+function _cdGenItemPrice(it) {
+    if (!it) return 0;
+    var qty = it.qty || 1;
+    var unit = (it.product && it.product.price) || 0;
+    // 배너 (hb_bn_*) — 단면 45K / 양면 80K
+    if (it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code))) {
+        unit = (it.wallSide === 'double') ? 80000 : 45000;
+    }
+    // 자유인쇄커팅
+    if (it.cutPrint) unit = (it.cutPrint.size === 'half') ? 55000 : 99000;
+    // 게이트
+    if (it.isGate && it.gate) {
+        var _GW = { 2:500000, 3:700000, 4:1000000, 5:1300000, 6:1800000 };
+        var _gw = parseInt(it.gate.width_m, 10) || 3;
+        var _gh = parseInt(it.gate.height_m, 10) || 3;
+        unit = Math.round((_GW[_gw] || _GW[3]) * (_gh === 4 ? 1.5 : 1));
+    }
+    if (it.boxSize && typeof it.boxSize.unit === 'number') unit = it.boxSize.unit;
+    if (it.customSize && typeof it.customSize.unit === 'number') unit = it.customSize.unit;
+    // 아크릴 안전망 — per-m² 로 잘못 저장된 unit 을 area_m2 로 환산
+    try {
+        var _code = (it.product && it.product.code) || '';
+        var _nm = ((it.product && it.product.name) || '').toLowerCase();
+        var _isAcr = /^acrl[23]/i.test(_code) || /반투명|스카시|글씨\s*커팅/.test(_nm);
+        if (_isAcr && it.customSize && it.customSize.area_m2 != null) {
+            var _am = parseFloat(it.customSize.area_m2);
+            if (_am > 0 && _am < 1 && unit > 1000) {
+                var _cu = Math.round(unit * _am / 10) * 10;
+                if (_cu < unit) unit = _cu;
+            }
+        }
+    } catch (e) {}
+    var sub = unit * qty;
+    if (it.wallSide === 'double' && !it._isBanner) sub *= 2;
+    if (it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
+        var _hExt = 50000 * qty;
+        if (it.wallSide === 'double') _hExt *= 2;
+        sub += _hExt;
+    }
+    if (it.wallShapeFee) sub += it.wallShapeFee;
+    return sub;
+}
+
 function calcCartTotal() {
     var fabricTotal = getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
     var genTotal = getGeneralItems().reduce(function(s, it) {
-        var base = (it.product && it.product.price || 0) * (it.qty || 1);
-        return s + base;
+        return s + _cdGenItemPrice(it);
     }, 0);
     var subtotal = fabricTotal + genTotal;
     // 카트 비어있으면 택배비 X
@@ -1420,7 +1464,8 @@ window._cpUpdateCartUI = function() {
                     else if (_cnLang === 'en') name = _p.name_us || _p.name_en || _p.name || it.productName || 'Product';
                     else name = _p.name || _p.name_kr || it.productName || '상품';
                     var qty = it.qty || 1;
-                    var price = ((it.product && it.product.price) || 0) * qty;
+                    // 2026-06-06: 저장된 customSize.unit / cutPrint / boxSize / 게이트 등 모두 반영 (DB price만 쓰던 버그 fix)
+                    var price = (typeof _cdGenItemPrice === 'function') ? _cdGenItemPrice(it) : (((it.product && it.product.price) || 0) * qty);
                     var thumb = it.thumb || (it.product && it.product.img) || 'https://placehold.co/80?text=Item';
                     return '<div class="cart-item">' +
                         '<img class="cart-item-thumb" src="' + thumb + '" alt="">' +
