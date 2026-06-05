@@ -1374,6 +1374,18 @@ html, body { background: #ffffff !important; }
           <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
         </div>
 
+        <!-- 2026-06-04: 글씨 스카시 (hb_ss_* family) 전용 안내문 — 입체디자인 제공 안내 -->
+        <div id="soScarciNotice" style="display:none; margin-bottom:14px; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
+          <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">✨</span>
+            ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
+          </div>
+          <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
+            ${tr('위에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 디자인 후 고객님께 시안을 보내드립니다.<br>결제 후 디자인이 시작되며 <b style="color:#dc2626;">디자인은 무료</b>입니다.',
+                 'ロゴや参考写真・テキストをアップロードしていただくと、担当者がデザイン後にお客様に校正をお送りします。お支払い後にデザインが開始され、<b style="color:#dc2626;">デザインは無料</b>です。',
+                 'Upload your logo, reference photos & text — our designer will send you a proof. Design begins after payment and is <b style="color:#dc2626;">free of charge</b>.')}
+          </div>
+        </div>
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
         <div id="soUploadWrap">
         <div class="so-upload-section-label" id="soUploadLabel">${tr('앞면 업로드', '表面アップロード', 'Front Upload')}</div>
@@ -1384,6 +1396,21 @@ html, body { background: #ffffff !important; }
           <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
           <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
         </div>
+        </div>
+        <!-- 2026-06-04: 글씨 스카시 (hb_ss_* family) 전용 — 타이틀 문구 + 서브 문구 입력 -->
+        <div id="soScarciTextInputs" style="display:none; margin-top:12px;">
+          <div style="margin-bottom:10px;">
+            <label for="soScarciTitle" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">📝 ${tr('타이틀 문구', 'タイトル文', 'Title text')} <span style="color:#dc2626; font-weight:900;">*</span></label>
+            <input type="text" id="soScarciTitle" oninput="window._soOnScarciTitleChange()"
+              placeholder="${tr('예: VISANG VIVAME', '例: VISANG VIVAME', 'e.g. VISANG VIVAME')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div>
+            <label for="soScarciSub" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">📝 ${tr('서브 문구', 'サブ文', 'Subtitle')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soScarciSub" oninput="window._soOnScarciSubChange()"
+              placeholder="${tr('예: 2025 신입사원 환영', '例: 2025年新入社員歓迎', 'e.g. Welcome New Hires 2025')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
         </div>
         <!-- 2026-05-30: '원판 그대로 발송' 안내 및 좌측 '다른 원판 제품' 그리드는 제거.
              원판 안내문은 더 이상 표시하지 않고, 다른 원판 제품 그리드는 우측 컬럼의 soRawBoardMoreRight 으로 이동. -->
@@ -3716,6 +3743,16 @@ html, body { background: #ffffff !important; }
     }
     window._soLoadRawBoardMore = _soLoadRawBoardMore;
 
+    // 2026-06-04: 글씨 스카시 family — 타이틀/서브 문구 input 핸들러 (state.scarciTitle / state.scarciSub 저장)
+    window._soOnScarciTitleChange = function () {
+        var el = document.getElementById('soScarciTitle');
+        if (el) state.scarciTitle = (el.value || '').trim();
+    };
+    window._soOnScarciSubChange = function () {
+        var el = document.getElementById('soScarciSub');
+        if (el) state.scarciSub = (el.value || '').trim();
+    };
+
     // 2026-06-04: 글씨 스카시 (hb_ss_*) — 우측 상단에 5종 변형 카드 그리드.
     //   카드 클릭 시 해당 변형 상품 코드로 모달 재오픈 (openSimpleOrderModal).
     //   상품은 admin_categories.top_category_code = '허니콤 글씨 스카시' (또는 코드 hb_ss_*) 로 조회.
@@ -3762,6 +3799,15 @@ html, body { background: #ffffff !important; }
                 var _byCode = {};
                 rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
                 _soScarciCache = Object.values(_byCode).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                // 2026-06-04: 5종 전부 +50,000원 일괄 적용 (입체디자인 비용 포함). 중복 inflate 방지 flag.
+                _soScarciCache.forEach(function(r){
+                    if (!r._scarciInflated) {
+                        if (typeof r.price === 'number')    r.price    = r.price    + 50000;
+                        if (typeof r.price_jp === 'number') r.price_jp = r.price_jp + 5000;
+                        if (typeof r.price_us === 'number') r.price_us = r.price_us + 50;
+                        r._scarciInflated = true;
+                    }
+                });
                 console.log('[so] scarci variants loaded:', _soScarciCache.length);
             }
             if (_soScarciCache.length === 0) { sec.style.display = 'none'; return; }
@@ -7656,12 +7702,39 @@ html, body { background: #ffffff !important; }
             if (_rbMoreR) _rbMoreR.style.display = 'none';
         }
         // 2026-06-04: 글씨 스카시 family (hb_ss_* + 이름매칭) — 우측 상단에 변형 카드 그리드 표시
-        if (_soIsScarciProduct(p)) {
+        var _isScarci = _soIsScarciProduct(p);
+        if (_isScarci) {
             try { window._soLoadScarciVariants(p.code); } catch(e){}
         } else {
             var _scSec = document.getElementById('soScarciVariantsSec');
             if (_scSec) _scSec.style.display = 'none';
         }
+        // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
+        try {
+            var _scNotice = document.getElementById('soScarciNotice');
+            var _scTextIn = document.getElementById('soScarciTextInputs');
+            if (_scNotice) _scNotice.style.display = _isScarci ? '' : 'none';
+            if (_scTextIn) _scTextIn.style.display = _isScarci ? '' : 'none';
+            // 타이틀/서브 input 초기화
+            var _scT = document.getElementById('soScarciTitle');
+            var _scS = document.getElementById('soScarciSub');
+            if (_scT) _scT.value = '';
+            if (_scS) _scS.value = '';
+            state.scarciTitle = '';
+            state.scarciSub = '';
+            // 가격 +50,000원 일괄 적용 (DB 가격 그대로 두고 모달 표시·계산 단가만 inflate)
+            if (_isScarci && p && typeof p.price === 'number' && !p._scarciInflated) {
+                p.price = p.price + 50000;
+                if (typeof p.price_jp === 'number') p.price_jp = p.price_jp + 5000;  // JP rate 0.1
+                if (typeof p.price_us === 'number') p.price_us = p.price_us + 50;    // US rate 0.001
+                p._scarciInflated = true;
+            }
+            // 업로드 라벨 — "로고나 참고사진 올리기"
+            if (_isScarci) {
+                var _upTitleEl = document.getElementById('soUploadTitle');
+                if (_upTitleEl) _upTitleEl.textContent = tr('로고나 참고사진 올리기', 'ロゴや参考写真をアップロード', 'Upload logo or reference');
+            }
+        } catch (e) {}
         if (_rb_tier) _rb_tier.style.display = _hideUpload ? 'none' : '';
         if (_rb_note) _rb_note.style.display = _hideUpload ? 'none' : '';
         // 2026-05-15: 금액주문 — 시공/배송 섹션 자체 숨김, 수량 input max 무제한(천만)
@@ -8929,6 +9002,9 @@ html, body { background: #ffffff !important; }
             standeeMaterial: state.isStandeeV2 ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 2026-06-04: 자유인쇄커팅 보드 재질 (6종 — 동일 가격, 표시 및 작업지시용)
             cutBoardMaterial: state.isCutPrint ? (state.cutBoardMaterial || 'honeycomb_16mm_white') : null,
+            // 2026-06-04: 글씨 스카시 family 전용 — 타이틀/서브 문구 (담당자 디자인용)
+            scarciTitle: (state.scarciTitle || '') || null,
+            scarciSub: (state.scarciSub || '') || null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
@@ -9521,6 +9597,11 @@ html, body { background: #ffffff !important; }
                         ? tr('포맥스 3mm', 'フォーメックス 3mm', 'Foamex 3mm')
                         : tr('허니콤보드 16mm', 'ハニカム 16mm', 'Honeycomb 16mm');
                     meta.push('🧩 ' + _matLbl);
+                }
+                // 2026-06-04: 글씨 스카시 타이틀/서브 문구 표시
+                if (item.scarciTitle) {
+                    meta.push('📝 ' + escapeHtml(item.scarciTitle));
+                    if (item.scarciSub) meta.push('📝 ' + escapeHtml(item.scarciSub));
                 }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {

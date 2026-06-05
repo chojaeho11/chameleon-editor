@@ -494,6 +494,14 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 var _stMatMap = { 'honeycomb_16mm': '허니콤보드 16mm', 'foamex_3mm': '포맥스 3mm' };
                 cutHtml += `<div>등신대 재질: <b style="color:#7c3aed;">${_stMatMap[it.standeeMaterial] || it.standeeMaterial}</b></div>`;
             }
+            // 2026-06-04: 글씨 스카시 family — 입체디자인 타이틀/서브 문구 (디자이너 작업용, 강조 표시)
+            if (it.scarciTitle || it.scarciSub) {
+                cutHtml += '<div style="margin-top:6px; padding:8px 10px; background:#fffbeb; border:1.5px solid #f59e0b; border-radius:8px;">' +
+                    '<div style="font-size:11px; font-weight:800; color:#92400e; margin-bottom:3px;">✨ 입체디자인 의뢰</div>' +
+                    (it.scarciTitle ? `<div style="font-size:12px;">타이틀: <b style="color:#451a03;">${(it.scarciTitle).replace(/[<>]/g,'')}</b></div>` : '') +
+                    (it.scarciSub ? `<div style="font-size:12px;">서브: <b style="color:#451a03;">${(it.scarciSub).replace(/[<>]/g,'')}</b></div>` : '') +
+                '</div>';
+            }
 
             // 받침대 — 2026-06-04: 신규 array 포맷 (baseStands: [{key, fee, qty, label}, ...]) + 레거시 baseStand 호환
             let standHtml = '';
