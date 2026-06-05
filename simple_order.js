@@ -4622,8 +4622,16 @@ html, body { background: #ffffff !important; }
             }
             if (_soAcrylicFamilyCache.length < 2) { sec.style.display = 'none'; return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
-            // 2026-06-06: 인쇄형 6종 (acrl2*/acrl3*) 은 5×5cm 단가 표시 (= perSqm/400). 탁상스탠드/스카시는 flat.
-            var _isAcrylicPrintFlat = function(p){ return /^acrl[23]/i.test(p && p.code || ''); };
+            // 2026-06-06: 인쇄형 8종 (acrl2*/acrl3* + 반투명아크릴 + 글씨스카시) 은 5×5cm 단가 표시 (= perSqm/400).
+            //   탁상 스탠드(QR/완제품, 5,000원 같은 flat 소액가)는 그대로 표시.
+            var _isAcrylicPrintFlat = function(p){
+                if (!p) return false;
+                if (/^acrl[23]/i.test(p.code || '')) return true;
+                var nm = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+                if (/반투명|半透明|translucent|frosted/i.test(nm)) return true;
+                if (/스카시|スカシ|scarci|글씨\s*커팅|letter\s*cutout/i.test(nm)) return true;
+                return false;
+            };
             grid.innerHTML = _soAcrylicFamilyCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
                 var img = p.img_url || 'https://placehold.co/200?text=Acrylic';
