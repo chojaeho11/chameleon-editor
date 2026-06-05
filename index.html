@@ -12058,11 +12058,13 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
             // 2026-05-22: 패브릭 상품 딥링크/광고 → 패브릭 디자인 메인(/fabric)으로.
             //   원단류는 상위 카테고리 '22222'. 이름 기반 폴백도 함께(카테고리 매핑 미로드 대비).
+            // 2026-06-06: 현수막/배너 (예: "친환경현수막 썩는원단") 은 "원단" 키워드 매칭되지만 fabric 아님 — 제외.
             try {
                 var _fbTop = '';
                 try { if (window._getTopCategoryCode) _fbTop = window._getTopCategoryCode(product.category) || ''; } catch (e) {}
                 var _fbTxt = ((product.name || '') + ' ' + (product.name_jp || '') + ' ' + (product.name_us || '') + ' ' + (product.category || '')).toLowerCase();
-                if (_fbTop === '22222' || /패브릭|fabric|원단|生地|布|ファブリック|textile|텍스타일/.test(_fbTxt)) {
+                var _fbIsPlacard = /현수막|배너|banner|placard|横断幕|어깨띠|깃발|족자|텐트천|방염|어깨/.test(_fbTxt);
+                if (!_fbIsPlacard && (_fbTop === '22222' || /패브릭|fabric|원단|生地|布|ファブリック|textile|텍스타일/.test(_fbTxt))) {
                     location.replace('/fabric' + (currentLang ? ('?lang=' + currentLang) : ''));
                     return;
                 }
