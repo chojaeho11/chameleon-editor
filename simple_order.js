@@ -1739,13 +1739,13 @@ html, body { background: #ffffff !important; }
           </div>
           <div id="soCustomDimsRow" style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:6px; align-items:flex-end; margin-bottom:8px;">
             <div style="flex:1 1 0; min-width:0; text-align:center;">
-              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
+              <div id="soCustomWLabel" style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
               <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
             <span style="color:#94a3b8; font-weight:bold; padding-bottom:8px; flex:0 0 auto;">×</span>
             <div style="flex:1 1 0; min-width:0; text-align:center;">
-              <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('세로 (H)', '縦 (H)', 'Height (H)')}</div>
+              <div id="soCustomHLabel" style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('세로 (H)', '縦 (H)', 'Height (H)')}</div>
               <input type="number" id="soCustomH" value="60" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
@@ -7869,18 +7869,24 @@ html, body { background: #ffffff !important; }
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
-            // 2026-06-04: 등신대도 동일 (mm 입력)
+            // 2026-06-04: 등신대도 동일 (mm 입력) + W/H 라벨도 "가로 mm" / "세로 mm" 로 명시 (사용자 요청 — (cm) 작은 라벨이 잘 안 보였음)
             var _useMmHere = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            var _wLblEl = document.getElementById('soCustomWLabel');
+            var _hLblEl = document.getElementById('soCustomHLabel');
             if (_useMmHere) {
                 if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = state.isAdPrint ? 20000 : 2500; cwEl.step = 1; }
                 if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = state.isAdPrint ? 20000 : 2500; chEl.step = 1; }
                 var _uEl = document.getElementById('soCustomSizeUnit');
                 if (_uEl) _uEl.textContent = '(mm)';
+                if (_wLblEl) _wLblEl.textContent = tr('가로 mm', '横 mm', 'Width mm');
+                if (_hLblEl) _hLblEl.textContent = tr('세로 mm', '縦 mm', 'Height mm');
             } else {
                 if (cwEl) { cwEl.min = 10; cwEl.max = 2000; cwEl.step = 1; }
                 if (chEl) { chEl.min = 10; chEl.max = 2000; chEl.step = 1; }
                 var _uEl2 = document.getElementById('soCustomSizeUnit');
                 if (_uEl2) _uEl2.textContent = '(cm)';
+                if (_wLblEl) _wLblEl.textContent = tr('가로 (W)', '横 (W)', 'Width (W)');
+                if (_hLblEl) _hLblEl.textContent = tr('세로 (H)', '縦 (H)', 'Height (H)');
             }
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         } else {
