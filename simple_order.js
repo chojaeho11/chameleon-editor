@@ -1477,6 +1477,12 @@ html, body { background: #ffffff !important; }
           <div id="soPhotozoneVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-05: 실사출력 (현수막/래탁스/매쉬/부직포/UV/캘지/인화지/PET/유포지/백릿) — 카드 그리드 -->
+        <div class="so-section" id="soRealVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('실사출력 재질 선택', '実写出力 素材選択', 'Choose print material')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 재질 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soRealVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
         <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -4318,6 +4324,107 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchPhotozone', e); }
+    };
+
+    // 2026-06-05: 실사출력 family (현수막·라텍스·매쉬·부직포·UV·캘지·인화지·PET·유포지·백릿)
+    //   사용자 요청 — 9종 코드 명시 + 이름 키워드 fallback (카테고리=실사출력 다른 상품도 포함)
+    var REAL_PRINT_CODES_ORDERED = [
+        '345345436',    // 후렉스(플렉스)인쇄 라텍스
+        '34554322',     // 후렉스(플렉스)인쇄 UV
+        '35456345345',  // 매쉬천 인쇄
+        '75766757',     // 부직포 인쇄
+        '345645645',    // 캘지 인쇄
+        '4563435',      // 인화지 인쇄
+        '34534543',     // 패트(PET) 인쇄
+        '42355223',     // 유포지 인쇄
+        '456474546'     // 백릿 인쇄
+    ];
+    function _soIsRealPrintProduct(p) {
+        if (!p) return false;
+        if (REAL_PRINT_CODES_ORDERED.indexOf(p.code) >= 0) return true;
+        var name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
+        // 이름 키워드 fallback — 9종 외 같은 카테고리 신상품도 자동 합류
+        return /후렉스|플렉스|flex|매쉬|mesh|부직포|nonwoven|캘지|canvas|인화지|photo\s*paper|패트|pet|유포지|synthetic|백릿|backlit|실사\s*출력/i.test(name);
+    }
+    var _soRealCache = null;
+    async function _soLoadRealVariants(currentCode) {
+        var sec = document.getElementById('soRealVariantsSec');
+        var grid = document.getElementById('soRealVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soRealCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var rows = [];
+                // 1차: 명시 코드 IN
+                try {
+                    var r1 = await sb.from('admin_products').select(_COLS).in('code', REAL_PRINT_CODES_ORDERED);
+                    if (r1 && r1.data) rows = rows.concat(r1.data);
+                } catch (e) {}
+                // 2차: 이름 키워드 ilike fallback (이미 IN 으로 가져온 것 외 추가)
+                try {
+                    var keys = ['후렉스','매쉬','부직포','캘지','인화지','패트','유포지','백릿','플렉스'];
+                    for (var ki = 0; ki < keys.length; ki++) {
+                        var rk = await sb.from('admin_products').select(_COLS).ilike('name', '%' + keys[ki] + '%');
+                        if (rk && rk.data) rows = rows.concat(rk.data);
+                    }
+                } catch (e) {}
+                // family 필터 + 중복 제거 (같은 code 1개만)
+                rows = rows.filter(function(r){ return _soIsRealPrintProduct(r); });
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
+                var _all = Object.values(_byCode);
+                // 명시 순서 우선 → 나머지는 sort_order/가격 보조
+                _soRealCache = _all.sort(function (a, b) {
+                    var ia = REAL_PRINT_CODES_ORDERED.indexOf(a.code);
+                    var ib = REAL_PRINT_CODES_ORDERED.indexOf(b.code);
+                    if (ia >= 0 && ib >= 0) return ia - ib;
+                    if (ia >= 0) return -1;
+                    if (ib >= 0) return 1;
+                    return (a.price || 0) - (b.price || 0);
+                });
+                console.log('[so] real print variants loaded:', _soRealCache.length);
+            }
+            if (_soRealCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soRealCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Print';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchRealPrint(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:10.5px; font-weight:700; color:#1e293b; line-height:1.3; height:26px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:10.5px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + tr('/m²','/m²','/m²') + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] realVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadRealVariants = _soLoadRealVariants;
+    window._soIsRealPrintProduct = _soIsRealPrintProduct;
+
+    window._soSwitchRealPrint = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchRealPrint', e); }
     };
 
     // 2026-06-05: 게이트 (이름 매칭 '게이트' / 'gate') — 가로 2~6m, 세로 3~4m 선택, 동적 가격.
@@ -8413,6 +8520,15 @@ html, body { background: #ffffff !important; }
         } else {
             var _pzSec = document.getElementById('soPhotozoneVariantsSec');
             if (_pzSec) _pzSec.style.display = 'none';
+        }
+        // 2026-06-05: 실사출력 family (현수막/래탁스/매쉬/부직포/캘지/인화지/PET/유포지/백릿)
+        var _isRealVariant = (typeof window._soIsRealPrintProduct === 'function')
+            ? window._soIsRealPrintProduct(p) : false;
+        if (_isRealVariant) {
+            try { window._soLoadRealVariants(p.code); } catch(e){}
+        } else {
+            var _rpSec = document.getElementById('soRealVariantsSec');
+            if (_rpSec) _rpSec.style.display = 'none';
         }
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
         var _isGate = _soIsGateProduct(p);
