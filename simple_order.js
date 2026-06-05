@@ -6046,16 +6046,20 @@ html, body { background: #ffffff !important; }
             if (compactMode) {
                 // 컴팩트 카드: 썸네일(상) + 이름(축약, 중) + 가격(하). 체크되면 외곽 보더 강조
                 // 2026-05-30: 키링/코롯토 고리는 썸네일만 (이름·가격 숨김) — 더 단순/직관적
+                // 2026-06-06: 아크릴 인쇄 family — 카드 자체가 4-col 로 넓으므로 썸네일을 크게.
                 var _hookOnly = !!state.presetHasHooks;
-                var _imgSize = _hookOnly ? 52 : 42;
-                var _padding = _hookOnly ? '8px 4px' : '8px 4px';
+                var _imgSize = _isAcrylicPrintFam ? 78 : (_hookOnly ? 52 : 42);
+                var _padding = _isAcrylicPrintFam ? '12px 6px' : (_hookOnly ? '8px 4px' : '8px 4px');
+                // 2026-06-06: 아크릴 인쇄 family 는 원형 대신 라운드 사각형 (제품 이미지 보존)
+                var _imgRadius = _isAcrylicPrintFam ? '10px' : '50%';
+                var _imgBorder = _isAcrylicPrintFam ? '1.5px solid #e2e8f0' : '1.5px solid #e7d6b8';
                 var imgHtmlC;
                 if (imgUrl) {
                     imgHtmlC = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
-                        '" loading="lazy" alt="' + safe + '" title="' + safe + '" style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:50%; object-fit:cover; border:1.5px solid #e7d6b8; background:#fff;" ' +
+                        '" loading="lazy" alt="' + safe + '" title="' + safe + '" style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:' + _imgRadius + '; object-fit:cover; border:' + _imgBorder + '; background:#fff;" ' +
                         'onerror="this.style.display=&quot;none&quot;">';
                 } else {
-                    imgHtmlC = '<span style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:50%; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px;">🔗</span>';
+                    imgHtmlC = '<span style="width:' + _imgSize + 'px; height:' + _imgSize + 'px; border-radius:' + _imgRadius + '; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:inline-flex; align-items:center; justify-content:center; font-size:18px;">🔗</span>';
                 }
                 var nameHtml = _hookOnly ? '' :
                     '<div style="font-size:10.5px; font-weight:700; color:#451a03; text-align:center; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;">' + safe + '</div>';
