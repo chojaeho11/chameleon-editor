@@ -5993,18 +5993,22 @@ html, body { background: #ffffff !important; }
         if (line.isCutPrint && state.isCutPrint) {
             state.cutSize = line.cutSize || 'full';
             if (line.wallSide) state.wallSide = line.wallSide;
+            // 2026-06-04: 보드 재질도 복원
+            if (line.cutBoardMaterial) state.cutBoardMaterial = line.cutBoardMaterial;
             try { if (typeof window._soPickCutSize === 'function') window._soPickCutSize(state.cutSize); } catch(e){}
         }
-        // 광고인쇄 / 사용자 정의 사이즈
-        if ((line.isAdPrint || (!line.isWall && !line.isBox && !line.isCutPrint)) && state.isCustomSize) {
+        // 광고인쇄 / 자유인쇄커팅 / 사용자 정의 사이즈 — 사이즈/단가 복원
+        // 2026-06-05: cutPrint 도 사이즈 복원 (이전 누락 → 폼이 직전 기본값을 유지해 합계가 폭증)
+        if ((line.isAdPrint || line.isCutPrint || (!line.isWall && !line.isBox)) && state.isCustomSize) {
             state.customW = (line.wMm || 0) / 10;
             state.customH = (line.hMm || 0) / 10;
             state.customUnitPrice = line.unitPrice || 0;
             state.customAreaM2 = line.areaM2 || 0;
             var _cw = document.getElementById('soCustomW');
             var _ch = document.getElementById('soCustomH');
-            if (_cw) _cw.value = state.isAdPrint ? Math.round(state.customW * 10) : state.customW;
-            if (_ch) _ch.value = state.isAdPrint ? Math.round(state.customH * 10) : state.customH;
+            var _useMmEdit = state.isAdPrint || state.isCutPrint || state.isStandeeV2;
+            if (_cw) _cw.value = _useMmEdit ? Math.round(state.customW * 10) : state.customW;
+            if (_ch) _ch.value = _useMmEdit ? Math.round(state.customH * 10) : state.customH;
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         }
         // 수량
