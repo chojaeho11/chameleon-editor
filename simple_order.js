@@ -1738,11 +1738,14 @@ html, body { background: #ffffff !important; }
               { k:'foamboard_10mm',         line1:tr('폼보드','フォームボード','Foamboard'), line2:'10mm' }
             ].map(function(o, i){
                 var on = i === 0;
+                // 2026-06-05: active(검정) 시 자식 span 까지 흰색 강제 — 모바일에서 텍스트 안 보이던 문제.
+                var _spanColor = on ? '#fff' : '#334155';
+                var _line2Op   = on ? '0.95' : '0.85';
                 return '<button type="button" class="so-cutboard-btn' + (on?' active':'') + '" data-cutboard="' + o.k + '" onclick="window._soPickCutBoardMaterial(this)" '
                     + 'style="padding:10px 6px; border:2px solid ' + (on?'#0f172a':'#e2e8f0') + '; background:' + (on?'#0f172a':'#fff') + '; color:' + (on?'#fff':'#334155') + '; '
                     + 'border-radius:10px; font-size:11.5px; font-weight:800; cursor:pointer; font-family:inherit; transition:all .15s ease; display:flex; flex-direction:column; gap:2px; align-items:center; line-height:1.2;">'
-                    + '<span>' + o.line1 + '</span>'
-                    + '<span style="font-size:11px; font-weight:900; opacity:0.85;">' + o.line2 + '</span>'
+                    + '<span style="color:' + _spanColor + ';">' + o.line1 + '</span>'
+                    + '<span style="font-size:11px; font-weight:900; opacity:' + _line2Op + '; color:' + _spanColor + ';">' + o.line2 + '</span>'
                     + '</button>';
             }).join('')}
           </div>
@@ -6211,7 +6214,7 @@ html, body { background: #ffffff !important; }
             var _qtyInputHtml = line.isCutPrint
                 ? '<div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">' +
                     '<span style="font-size:10.5px; color:#64748b; font-weight:700;">' + tr('수량','数量','Qty') + '</span>' +
-                    '<input type="number" min="1" value="' + (line.qty || 1) + '" data-cp-qty-line="' + line.id + '" onclick="event.stopPropagation();" oninput="window._soAdUpdateLineQty(\'' + line.id + '\', this.value)" style="width:50px; padding:4px 4px; border:1px solid #cbd5e1; border-radius:5px; text-align:center; font-size:12px; font-weight:700; box-sizing:border-box;">' +
+                    '<input type="number" min="1" value="' + (line.qty || 1) + '" data-cp-qty-line="' + line.id + '" onclick="event.stopPropagation(); this.select();" onfocus="this.select();" oninput="window._soAdUpdateLineQty(\'' + line.id + '\', this.value)" style="width:50px; padding:4px 4px; border:1px solid #cbd5e1; border-radius:5px; text-align:center; font-size:12px; font-weight:700; box-sizing:border-box;">' +
                   '</div>'
                 : '';
             div.innerHTML =
@@ -6840,6 +6843,8 @@ html, body { background: #ffffff !important; }
             b.style.background = on ? '#0f172a' : '#fff';
             b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
             b.style.color = on ? '#fff' : '#334155';
+            // 2026-06-05: 자식 span 까지 흰색 강제 (active 검정 배경에서 텍스트 가시성).
+            b.querySelectorAll('span').forEach(function(s){ s.style.color = on ? '#fff' : '#334155'; });
         });
         // 재질에 따라 회베당 단가 달라짐 → 면적 단가 재계산
         try { if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
@@ -7646,6 +7651,7 @@ html, body { background: #ffffff !important; }
                 b.style.background = on ? '#0f172a' : '#fff';
                 b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
                 b.style.color = on ? '#fff' : '#334155';
+                b.querySelectorAll('span').forEach(function(s){ s.style.color = on ? '#fff' : '#334155'; });
             });
         } catch (e) {}
         // 2026-05-13: 허니콤 박스 감지 (hb_bx_*) — 가로/세로/높이로 동적 가격
@@ -7968,17 +7974,21 @@ html, body { background: #ffffff !important; }
             var _cutBtns = document.getElementById('soCutSizeBtnsWrap');
             if (_cutBtns) _cutBtns.style.display = 'none';
         } catch (e) {}
-        // 2026-06-05: cutPrint — 단면/양면 토글 섹션을 보드 종류 바로 아래로 이동, 사이즈 선택 위에 위치
+        // 2026-06-05: cutPrint — 섹션 순서 강제:
+        //   인쇄면(-260) → 보드 종류(-250) → 앞면 업로드(-240) → 뒷면 업로드(-235, 양면) → 사이즈(-230)
         try {
             var _cutSec = document.getElementById('soCutPrintSizeSection');
             var _boardSec = document.getElementById('soCutBoardMaterialSection');
             var _sizeSec = document.getElementById('soCustomSizeSection');
+            var _inlineCardCP = document.getElementById('soInlineUploadCard');
+            var _backCardCP = document.getElementById('soBackInlineUploadCard');
             if (state.isCutPrint && _cutSec) {
                 _cutSec.style.display = '';
-                // 보드 종류 바로 다음에 삽입 (= 사이즈 선택 바로 위)
-                if (_boardSec && _boardSec.parentNode && _cutSec.parentNode === _boardSec.parentNode) {
-                    _boardSec.parentNode.insertBefore(_cutSec, _boardSec.nextSibling);
-                }
+                _cutSec.style.order = '-260';
+                if (_boardSec) _boardSec.style.order = '-250';
+                if (_inlineCardCP) _inlineCardCP.style.order = '-240';
+                if (_backCardCP) _backCardCP.style.order = '-235';
+                if (_sizeSec) _sizeSec.style.order = '-230';
                 // 인쇄면 안내 라벨이 잘 보이도록 섹션 타이틀 추가/갱신
                 if (!_cutSec.querySelector('.so-cut-side-title')) {
                     var _t = document.createElement('div');
