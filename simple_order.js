@@ -11673,24 +11673,30 @@ html, body { background: #ffffff !important; }
             // 베스트굿즈·광고인쇄·자유인쇄커팅은 별도 규칙 — max 룰 제외
             if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint) itemShipFees.push(shipFee);
         });
-        // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송). 모든 항목이 0 이면 0.
-        // 2026-06-06: 무료배송 carryover — 일반 항목 중 하나라도 무료(0) 또는 가벽이 있으면 패브릭/기타 묶음 무료.
-        //   "가벽 주문 시 다른 상품 자체 배송비 붙지 않음" — 사용자 요청. 가벽 트럭에 같이 실어 보냄.
-        var _hasFreeShipItem = (itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; }))
-            || cart.some(function(_it){
-                if (!_it || !_it.product) return false;
-                var _c = (_it.product.code || '').toLowerCase();
-                var _n = ((_it.product.name) || '').toLowerCase();
-                return /^hb_dw/.test(_c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(_n);
-            });
+        // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송).
+        // 2026-06-06: 가벽 우선 룰 — 가벽이 카트에 있으면 가벽 자체 시공/철거비 (100K/200K/700K 등) 만 부과,
+        //   나머지 일반/패브릭 항목은 무료 (가벽 트럭에 같이 실어 보냄). 가벽 자체비는 절대 0 처리하지 않음.
+        // 무료배송 carryover — 가벽 없이 무료(0) 항목이 있으면 나머지도 0.
+        var _wallItems = cart.filter(function(_it){
+            if (!_it || !_it.product) return false;
+            var _c = (_it.product.code || '').toLowerCase();
+            var _n = ((_it.product.name) || '').toLowerCase();
+            return /^hb_dw/.test(_c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(_n);
+        });
+        var _wallShipFees = _wallItems.map(function(it){ return (it.shipping && it.shipping.fee) || 0; });
+        var _hasWall = _wallItems.length > 0;
+        var _hasFreeNonWall = itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; });
         var shipTotal;
-        if (_hasFreeShipItem) {
+        if (_hasWall) {
+            shipTotal = _wallShipFees.length > 0 ? Math.max.apply(Math, _wallShipFees.concat([0])) : 0;
+        } else if (_hasFreeNonWall) {
             shipTotal = 0;
         } else if (itemShipFees.length > 0) {
             shipTotal = Math.max.apply(Math, itemShipFees.concat([0]));
         } else {
             shipTotal = 0;
         }
+        var _hasFreeShipItem = _hasWall || _hasFreeNonWall;
         // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
         cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
         // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).

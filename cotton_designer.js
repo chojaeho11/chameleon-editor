@@ -1388,6 +1388,33 @@ function _cdGenItemPrice(it) {
     return sub;
 }
 
+// 2026-06-06: 일반 상품의 자체 shipping max — 가벽 우선 룰 (가벽 있으면 가벽 자체비만, 나머지 묶음 무료).
+function _cdGenShipMax() {
+    try {
+        var gens = (typeof getGeneralItems === 'function') ? getGeneralItems() : [];
+        if (!Array.isArray(gens) || gens.length === 0) return 0;
+        var _isWall = function(it){
+            if (!it || !it.product) return false;
+            var c = (it.product.code || '').toLowerCase();
+            var n = ((it.product.name) || '').toLowerCase();
+            return /^hb_dw/.test(c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(n);
+        };
+        var walls = gens.filter(_isWall);
+        if (walls.length > 0) {
+            // 가벽 있음 → 가벽 자체 시공/철거비 max 만 부과 (나머지는 묶음 무료)
+            return walls.reduce(function(mx, w){
+                var f = (w.shipping && typeof w.shipping.fee === 'number') ? w.shipping.fee : 0;
+                return f > mx ? f : mx;
+            }, 0);
+        }
+        // 가벽 없음 — 무료(0) 항목 있으면 carryover (전체 0)
+        var fees = gens.map(function(it){
+            return (it.shipping && typeof it.shipping.fee === 'number') ? it.shipping.fee : 0;
+        });
+        if (fees.some(function(f){ return f === 0; })) return 0;
+        return Math.max.apply(Math, fees.concat([0]));
+    } catch (e) { return 0; }
+}
 function calcCartTotal() {
     var fabricTotal = getCart().reduce(function(s, it) { return s + (it.price || 0); }, 0);
     var genTotal = getGeneralItems().reduce(function(s, it) {
@@ -1396,7 +1423,8 @@ function calcCartTotal() {
     var subtotal = fabricTotal + genTotal;
     // 카트 비어있으면 택배비 X
     if (subtotal <= 0) return 0;
-    return subtotal + getShippingFeeKrw();
+    // 일반 항목 자체 배송비 (가벽 시공/철거 등) max + 패브릭 택배비 (carryover 시 0)
+    return subtotal + _cdGenShipMax() + getShippingFeeKrw();
 }
 
 // 2026-05-22: 패브릭 체크아웃 전용 합계 — 패브릭 항목만 + 택배비.
