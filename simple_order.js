@@ -5516,8 +5516,9 @@ html, body { background: #ffffff !important; }
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
-        // 2026-06-04: 자유인쇄커팅 — 최소 단가 30,000원 보장 (사용자 요청, 이전 3,000원 → 30,000원)
-        if (state.isCutPrint && calcPrice < 30000) calcPrice = 30000;
+        // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
+        //   사용자 피드백: "가격이 3만원에 고정되어 있어 사이즈나 재질이 변해도" — 30k 최소가 모든 차이를 가림.
+        if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
         // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
         else if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
         // 2026-06-04: 자유인쇄커팅 — A3 (max 변 420mm) 초과 시 끼우는/종이 받침대 disable
