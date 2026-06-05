@@ -1471,6 +1471,48 @@ html, body { background: #ffffff !important; }
           <div id="soTableVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
+        <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
+          <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:16px;">🎨</span>
+            ${tr('무료 디자인 + 무료 배송 제품입니다', '無料デザイン + 送料無料 商品です', 'FREE design + FREE shipping included')}
+          </div>
+          <div style="font-size:12px; color:#166534; line-height:1.55; font-weight:600; margin-bottom:8px;">
+            ${tr('게이트는 <b>최대 가로 6m × 세로 4m</b> 이내에서 원하는 크기로 제작 가능합니다.', 'ゲートは <b>最大 横6m × 縦4m</b> 以内でご希望のサイズで製作可能です。', 'Gates can be custom-made within <b>max W 6m × H 4m</b>.')}
+          </div>
+          <div style="font-size:11.5px; color:#365314; line-height:1.55; font-weight:600; padding-top:7px; border-top:1px dashed #86efac;">
+            <i class="fa-solid fa-headset" style="color:#15803d; margin-right:4px;"></i>
+            ${tr('사이즈를 입력하고 결제하시면 <b style="color:#15803d;">담당 매니저가 연락드려 디자인부터 시공까지 안내</b>해 드립니다.', 'サイズをご入力後ご決済いただくと、<b style="color:#15803d;">担当マネージャーがご連絡し、デザインから施工までご案内</b>いたします。', 'After entering the size and paying, <b style="color:#15803d;">our manager will contact you to guide you from design to installation</b>.')}
+          </div>
+        </div>
+        <div class="so-section" id="soGateSizeSection" style="display:none;">
+          <div class="so-section-title">${tr('게이트 사이즈 선택', 'ゲート サイズ選択', 'Gate dimensions')}</div>
+          <!-- 가로 (m) -->
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:6px;">${tr('가로', '横', 'Width')} (m)</div>
+            <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px;">
+              ${[2,3,4,5,6].map(function(w){
+                  var on = (w === 3);
+                  return '<button type="button" class="so-gate-w-btn' + (on?' active':'') + '" data-gw="' + w + '" onclick="window._soPickGateWidth(' + w + ')" '
+                      + 'style="padding:10px 4px; border:2px solid ' + (on?'#0f172a':'#e2e8f0') + '; background:' + (on?'#0f172a':'#fff') + '; color:' + (on?'#fff':'#334155') + '; '
+                      + 'border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">' + w + 'm</button>';
+              }).join('')}
+            </div>
+          </div>
+          <!-- 세로 (m) -->
+          <div>
+            <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:6px;">${tr('세로', '縦', 'Height')} (m) <span style="font-size:11px; color:#94a3b8; font-weight:600;">${tr('4m 는 가격 ×1.5', '4mは価格×1.5', '4m = ×1.5 price')}</span></div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px;">
+              ${[3,4].map(function(h){
+                  var on = (h === 3);
+                  return '<button type="button" class="so-gate-h-btn' + (on?' active':'') + '" data-gh="' + h + '" onclick="window._soPickGateHeight(' + h + ')" '
+                      + 'style="padding:10px 6px; border:2px solid ' + (on?'#0f172a':'#e2e8f0') + '; background:' + (on?'#0f172a':'#fff') + '; color:' + (on?'#fff':'#334155') + '; '
+                      + 'border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">' + h + 'm</button>';
+              }).join('')}
+            </div>
+          </div>
+        </div>
+
         <!-- 2026-06-04: 글씨 스카시 family 전용 — 입체디자인 안내 배너 (우측) -->
         <div class="so-section" id="soScarciNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:12px; box-shadow:0 4px 12px -4px rgba(245,158,11,0.3);">
           <div style="font-size:14px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -2984,7 +3026,13 @@ html, body { background: #ffffff !important; }
         state._adCurIsDraft = _curIsDraft;
         // 2026-05-13: 가벽 세로 3m → 가로 m당 +50,000원 + 양면 2배
         let heightExtra = 0;
-        if (state.isWall) {
+        if (state.isGate) {
+            // 2026-06-05: 게이트 — 가로별 기준가 × 세로 배수 × 수량
+            unit = _soComputeGatePrice();
+            qty = state.qty || 1;
+            subtotal = unit * qty;
+            state.wallHeightExtra = 0;
+        } else if (state.isWall) {
             qty = state.wallWidth || 1;
             state.qty = qty;
             subtotal = unit * qty;
@@ -4191,6 +4239,51 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[so] switchTable', e); }
     };
 
+    // 2026-06-05: 게이트 (이름 매칭 '게이트' / 'gate') — 가로 2~6m, 세로 3~4m 선택, 동적 가격.
+    //   가로별 기준가 (세로 3m): 2m=500K, 3m=700K, 4m=1M, 5m=1.3M, 6m=1.8M
+    //   세로 4m → ×1.5
+    var GATE_PRICE_BY_WIDTH = { 2:500000, 3:700000, 4:1000000, 5:1300000, 6:1800000 };
+    function _soIsGateProduct(p) {
+        if (!p) return false;
+        var name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+        return /게이트|ゲート|\bgate\b/i.test(name);
+    }
+    function _soComputeGatePrice() {
+        var w = state.gateWidth || 3;
+        var h = state.gateHeight || 3;
+        var base = GATE_PRICE_BY_WIDTH[w] || GATE_PRICE_BY_WIDTH[3];
+        var mult = (h === 4) ? 1.5 : 1;
+        return Math.round(base * mult);
+    }
+    function _soUpdateGateButtonsUI() {
+        document.querySelectorAll('.so-gate-w-btn').forEach(function(b){
+            var on = parseInt(b.dataset.gw, 10) === state.gateWidth;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#0f172a' : '#fff';
+            b.style.color = on ? '#fff' : '#334155';
+            b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+        });
+        document.querySelectorAll('.so-gate-h-btn').forEach(function(b){
+            var on = parseInt(b.dataset.gh, 10) === state.gateHeight;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#0f172a' : '#fff';
+            b.style.color = on ? '#fff' : '#334155';
+            b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+        });
+    }
+    window._soPickGateWidth = function (w) {
+        state.gateWidth = parseInt(w, 10) || 3;
+        _soUpdateGateButtonsUI();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soPickGateHeight = function (h) {
+        state.gateHeight = parseInt(h, 10) || 3;
+        _soUpdateGateButtonsUI();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soIsGateProduct = _soIsGateProduct;
+    window._soComputeGatePrice = _soComputeGatePrice;
+
     // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
     //   - 단가 row 숨김, 제품별 라인 + 합계 + 배송비 표시
     //   - PRO 구독자 10% 할인 자동 반영
@@ -4897,6 +4990,11 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-05: 게이트 — 무료 배송 (담당자 협의)
+        if (state.isGate) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
         // 2026-06-05: 인스타판넬 포토존 — 무료배송 (모든 사이즈). 지방 안내는 별도 표시.
         if (state.isInstaPanel) {
             state._shipUpgradeReason = null;
@@ -8226,6 +8324,22 @@ html, body { background: #ffffff !important; }
             var _tbSec = document.getElementById('soTableVariantsSec');
             if (_tbSec) _tbSec.style.display = 'none';
         }
+        // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
+        var _isGate = _soIsGateProduct(p);
+        state.isGate = _isGate;
+        try {
+            var _gtNotice = document.getElementById('soGateNotice');
+            var _gtSize   = document.getElementById('soGateSizeSection');
+            if (_gtNotice) _gtNotice.style.display = _isGate ? '' : 'none';
+            if (_gtSize)   _gtSize.style.display   = _isGate ? '' : 'none';
+        } catch (e) {}
+        if (_isGate) {
+            // 기본 사이즈: 가로 3m, 세로 3m → 70만원
+            state.gateWidth  = 3;
+            state.gateHeight = 3;
+            // 디자인에디터/업로드 카드는 의미 없음 (담당자 디자인) — 숨기지 않고 안내만, 칼선 다운로드도 안 띄움
+            try { _soUpdateGateButtonsUI(); } catch (e) {}
+        }
         // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
         try {
             var _scNotice = document.getElementById('soScarciNotice');
@@ -9578,6 +9692,9 @@ html, body { background: #ffffff !important; }
             instaHashtag: (state.instaHashtag || '') || null,
             instaLogo: (state.instaLogo || '') || null,
             instaSmall: !!state.isInstaSmall,  // 지방 무료택배 가능 여부 표시용
+            // 2026-06-05: 게이트 — 가로/세로 + 동적 가격 (담당자 디자인+시공)
+            isGate: !!state.isGate,
+            gate: state.isGate ? { width_m: state.gateWidth || 3, height_m: state.gateHeight || 3 } : null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
@@ -10183,6 +10300,10 @@ html, body { background: #ffffff !important; }
                     if (item.instaHashtag)  meta.push('# ' + escapeHtml(item.instaHashtag));
                     if (item.instaLogo)     meta.push('🏷️ ' + escapeHtml(item.instaLogo));
                 }
+                // 2026-06-05: 게이트 사이즈 표시 (담당자 시공)
+                if (item.isGate && item.gate) {
+                    meta.push('🚪 ' + (item.gate.width_m || 3) + 'm × ' + (item.gate.height_m || 3) + 'm');
+                }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {
                     var _cbMap = {
@@ -10671,6 +10792,14 @@ html, body { background: #ffffff !important; }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
         if (it.cutPrint) {
             unit = (it.cutPrint.size === 'half') ? 55000 : 99000;
+        }
+        // 2026-06-05: 게이트 — 가로별 기준가 × 세로 배수 (저장된 가로/세로 기반 재계산)
+        if (it.isGate && it.gate) {
+            var _GATE_W_PRICE = { 2:500000, 3:700000, 4:1000000, 5:1300000, 6:1800000 };
+            var _gw = parseInt(it.gate.width_m, 10) || 3;
+            var _gh = parseInt(it.gate.height_m, 10) || 3;
+            var _gBase = _GATE_W_PRICE[_gw] || _GATE_W_PRICE[3];
+            unit = Math.round(_gBase * (_gh === 4 ? 1.5 : 1));
         }
         // 2026-05-13: 허니콤 박스 — 저장된 박스 단가 사용 (가로×세로×높이로 산출된 값)
         if (it.boxSize && typeof it.boxSize.unit === 'number') {
