@@ -1624,8 +1624,9 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-05-13: 허니콤 자유인쇄커팅 사이즈 (한판/반판) -->
+        <!-- 2026-05-13: 허니콤 자유인쇄커팅 사이즈 (한판/반판) — 2026-06-04: 면적 회베 계산기로 대체 (한판/반판 버튼 자동 hide) -->
         <div class="so-section" id="soCutPrintSizeSection" style="display:none;">
+          <div id="soCutSizeBtnsWrap" style="display:none;">
           <div class="so-section-title">${tr('재단 사이즈', 'カットサイズ', 'Cut size')}</div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
             <button type="button" class="so-cut-btn active" data-cut="full" onclick="window._soPickCutSize('full')"
@@ -1640,6 +1641,7 @@ html, body { background: #ffffff !important; }
               <span style="font-size:11px; font-weight:600; color:#6b7280;">1200×1200 / 600×2400</span><br>
               <span style="font-size:13px; font-weight:800;">${fmtPrice(55000)}</span>
             </button>
+          </div>
           </div>
           <!-- 2026-05-22: 재단인쇄 단면/양면 (양면 = 단가 ×2). _soPickSide 가 state.wallSide 설정 → 가격 2배 -->
           <div style="margin-top:10px;">
@@ -2882,11 +2884,11 @@ html, body { background: #ffffff !important; }
             }
             state.wallHeightExtra = heightExtra;
         } else if (state.isCutPrint) {
-            // 자유인쇄커팅: 한판 99,000원, 반판 55,000원 (단면 기준, 양면은 _soPickSide 가 ×2 처리)
-            unit = (state.cutSize === 'half') ? 55000 : 99000;
+            // 2026-06-04: 자유인쇄커팅 — 면적×재질 단가 (회베 계산기). state.customUnitPrice 가 _soOnCustomDimsChange 에서 산출됨.
+            //   양면은 _soPickSide 가 wallSide 설정 → 가격 2배.
+            unit = state.customUnitPrice || 0;
             qty = state.qty || 1;
             subtotal = unit * qty;
-            // 2026-05-22: 양면 인쇄 → 가격 2배
             if (state.wallSide === 'double') subtotal *= 2;
             state.wallHeightExtra = 0;
         } else if (state.isBox) {
@@ -4363,8 +4365,19 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-04: 자유인쇄커팅 — 사이즈별 택배비 (사용자 요청, 허니콤 무료 정책에서 예외 처리)
+        //   max(가로, 세로) cm 기준: ≤60 → 1만, ≤120 → 2만, ≤180 → 3만, >180 → 5만
+        if (state.isCutPrint) {
+            state._shipUpgradeReason = null;
+            var _maxCm = Math.max(parseFloat(state.customW) || 0, parseFloat(state.customH) || 0);
+            if (_maxCm <= 0) return 10000; // 사이즈 미입력 안전망
+            if (_maxCm <= 60)  return 10000;
+            if (_maxCm <= 120) return 20000;
+            if (_maxCm <= 180) return 30000;
+            return 50000;
+        }
         // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
-        //   해당: 박스 / 자유인쇄커팅 / 원판 / 등신대 / 허니콤포토존 등
+        //   해당: 박스 / 원판 / 등신대 / 허니콤포토존 등 (자유인쇄커팅은 위에서 별도 처리)
         //   가벽(state.isWall) 만 시공/배송 옵션 노출, 나머지는 강제 0
         if (state.isHoneycomb && !state.isWall) {
             state._shipUpgradeReason = null;
@@ -5287,12 +5300,30 @@ html, body { background: #ffffff !important; }
             recalc();
             return;
         }
-        var perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
+        // 2026-06-04: 자유인쇄커팅 — 보드 재질별 단가 (회베당 = m² 당). 사용자 요청.
+        //   honeycomb 16mm white/kraft = 50,000원/회베, foamex 3mm = 30,000, foamex 5mm = 50,000,
+        //   foamboard 5mm = 30,000, foamboard 10mm = 50,000. 최소 단가 3,000원.
+        var _CUT_BOARD_RATE = {
+            honeycomb_16mm_white: 50000,
+            honeycomb_16mm_kraft: 50000,
+            foamex_3mm:           30000,
+            foamex_5mm:           50000,
+            foamboard_5mm:        30000,
+            foamboard_10mm:       50000
+        };
+        var perSqm;
+        if (state.isCutPrint) {
+            perSqm = _CUT_BOARD_RATE[state.cutBoardMaterial || 'honeycomb_16mm_white'] || 50000;
+        } else {
+            perSqm = (state.product && (state.product._base_sqm_price || state.product.price)) || 0;
+        }
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
+        // 자유인쇄커팅 — 너무 작은 객체는 최소 3,000원 보장
+        if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
         // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
-        if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        else if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
         // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
         if (isAcrGoods && calcPrice < 100) calcPrice = 100;
         state.customUnitPrice = calcPrice;
@@ -5383,7 +5414,8 @@ html, body { background: #ffffff !important; }
             unit = state.boxUnitPrice || 0;
             subtotal = unit * qty;
         } else if (state.isCutPrint) {
-            unit = (state.cutSize === 'half') ? 100000 : 150000;
+            // 2026-06-04: 면적×재질 단가 (회베 계산기) — state.customUnitPrice 사용
+            unit = state.customUnitPrice || 0;
             subtotal = unit * qty;
             if (state.wallSide === 'double') subtotal *= 2;
         } else if (state.isCustomSize && state.customUnitPrice > 0) {
@@ -6505,7 +6537,7 @@ html, body { background: #ffffff !important; }
         });
     };
 
-    // 2026-06-04: 자유인쇄커팅 보드 재질 선택 (6종 — 동일 가격, 표시·작업지시용)
+    // 2026-06-04: 자유인쇄커팅 보드 재질 선택 (6종) — 재질에 따라 회베당 단가가 달라지므로 가격 재계산.
     window._soPickCutBoardMaterial = function (btn) {
         if (!btn) return;
         var mat = btn.getAttribute('data-cutboard') || 'honeycomb_16mm_white';
@@ -6517,6 +6549,8 @@ html, body { background: #ffffff !important; }
             b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
             b.style.color = on ? '#fff' : '#334155';
         });
+        // 재질에 따라 회베당 단가 달라짐 → 면적 단가 재계산
+        try { if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
     };
 
     // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
@@ -7573,6 +7607,13 @@ html, body { background: #ffffff !important; }
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
         // 2026-06-04: 등신대 (hb_pi_5 등) 도 면적×단가 산정 + mm 단위 입력 (사용자 요청)
         if (state.isStandee) state.isCustomSize = true;
+        // 2026-06-04: 자유인쇄커팅 — 면적 회베 계산기 모드로 전환 (이전 한판/반판 flat 가격 폐기)
+        if (state.isCutPrint) state.isCustomSize = true;
+        // 한판/반판 버튼은 숨김 (단면/양면 토글은 유지 — 같은 섹션 내부)
+        try {
+            var _cutBtns = document.getElementById('soCutSizeBtnsWrap');
+            if (_cutBtns) _cutBtns.style.display = 'none';
+        } catch (e) {}
         // 2026-05-14: 기본 사이즈 — 아크릴 굿즈는 5×5cm (보통 키링 사이즈), 그 외는 width_mm/height_mm 또는 100×60
         if (state.isAcrylicGoods) {
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 5, 10) || 5;
