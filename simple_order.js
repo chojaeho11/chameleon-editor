@@ -1452,6 +1452,12 @@ html, body { background: #ffffff !important; }
           <div class="so-section-title">${tr('다른 원판 제품 더 담기', '他の原板商品を追加', 'Add more raw boards')}</div>
           <div id="soRawBoardMoreRight" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
         </div>
+
+        <!-- 2026-06-04: 글씨 스카시 (hb_ss_*) 변형 5종 — 우측 상단 카드 그리드, 클릭 시 해당 변형으로 전환 -->
+        <div class="so-section" id="soScarciVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('스카시 종류 선택', 'スカシ種類選択', 'Choose variant')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soScarciVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+        </div>
         <div class="so-section" id="soQtySection">
           <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
           <div class="so-qty-row">
@@ -3709,6 +3715,90 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[so] rawBoardMore render', e); sec.style.display = 'none'; }
     }
     window._soLoadRawBoardMore = _soLoadRawBoardMore;
+
+    // 2026-06-04: 글씨 스카시 (hb_ss_*) — 우측 상단에 5종 변형 카드 그리드.
+    //   카드 클릭 시 해당 변형 상품 코드로 모달 재오픈 (openSimpleOrderModal).
+    //   상품은 admin_categories.top_category_code = '허니콤 글씨 스카시' (또는 코드 hb_ss_*) 로 조회.
+    var _soScarciCache = null;
+    async function _soLoadScarciVariants(currentCode) {
+        var sec = document.getElementById('soScarciVariantsSec');
+        var grid = document.getElementById('soScarciVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soScarciCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                // 1차: top_category_code 로 sub-cat 코드 조회 → 그 카테고리 상품 fetch
+                var _topCats = ['허니콤 글씨 스카시', 'Honeycomb Script Scarci', 'script_scarci'];
+                var subCodes = [];
+                for (var _ti = 0; _ti < _topCats.length && subCodes.length === 0; _ti++) {
+                    try {
+                        var sc = await sb.from('admin_categories').select('code').eq('top_category_code', _topCats[_ti]);
+                        subCodes = (sc.data || []).map(function (c) { return c.code; }).filter(function(c){ return !!c; });
+                    } catch (e) {}
+                }
+                var rows = [];
+                if (subCodes.length > 0) {
+                    var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                    var results = await Promise.all(subCodes.map(function(c){
+                        return sb.from('admin_products').select(_COLS).eq('category', c)
+                            .then(function(r){ return (r && r.data) || []; })
+                            .catch(function(){ return []; });
+                    }));
+                    rows = [].concat.apply([], results);
+                }
+                // 2차 fallback: code 가 hb_ss_ 로 시작하는 상품 직접 조회
+                if (rows.length === 0) {
+                    try {
+                        var fb = await sb.from('admin_products').select('code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm').like('code', 'hb_ss_%');
+                        rows = (fb && fb.data) || [];
+                    } catch (e) {}
+                }
+                _soScarciCache = rows.sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+                console.log('[so] scarci variants loaded:', _soScarciCache.length);
+            }
+            if (_soScarciCache.length === 0) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soScarciCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Scarci';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchScarci(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="aspect-ratio:1/1; background:#f8fafc; position:relative;">' +
+                        '<img src="' + img + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] scarciVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadScarciVariants = _soLoadScarciVariants;
+
+    // 카드 클릭 → 다른 글씨 스카시 변형으로 즉시 전환
+    window._soSwitchScarci = function (code) {
+        if (!code) return;
+        try {
+            // 현재 모달은 그대로 두고 같은 모달을 재초기화 (close→open)
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                // fallback: URL navigation
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchScarci', e); }
+    };
 
     // 2026-06-04: 원판 카드의 수량 입력 → 가격 박스에 라이브 미리보기 (장바구니에 담기 전 사전 확인용).
     //   - 단가 row 숨김, 제품별 라인 + 합계 + 배송비 표시
@@ -7537,6 +7627,13 @@ html, body { background: #ffffff !important; }
         else {
             var _rbMoreR = document.getElementById('soRawBoardMoreRightSec');
             if (_rbMoreR) _rbMoreR.style.display = 'none';
+        }
+        // 2026-06-04: 글씨 스카시 (hb_ss_*) — 우측 상단에 5종 변형 카드 그리드 표시
+        if (p && p.code && /^hb_ss/i.test(p.code)) {
+            try { window._soLoadScarciVariants(p.code); } catch(e){}
+        } else {
+            var _scSec = document.getElementById('soScarciVariantsSec');
+            if (_scSec) _scSec.style.display = 'none';
         }
         if (_rb_tier) _rb_tier.style.display = _hideUpload ? 'none' : '';
         if (_rb_note) _rb_note.style.display = _hideUpload ? 'none' : '';
