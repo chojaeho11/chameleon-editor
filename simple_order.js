@@ -1501,11 +1501,11 @@ html, body { background: #ffffff !important; }
           <div id="soAcrylicVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
-        <!-- 2026-06-06: 아크릴 인쇄 family 안내 — 기본 인쇄/커팅 1,000원 가공비 포함 안내 -->
+        <!-- 2026-06-06: 아크릴 인쇄 family 안내 — 기본 인쇄/커팅 가공비 포함 안내 (KR 1,000원 / JP 100엔 / US $1) -->
         <div class="so-section" id="soAcrylicFeeNotice" style="display:none; padding:10px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; font-size:12px; color:#1e3a8a; line-height:1.55; font-weight:600;">
           <i class="fa-solid fa-circle-info" style="color:#4f46e5; margin-right:4px;"></i>
           ${tr('크기·모양과 상관없이 <b>개당 1,000원</b>의 기본 인쇄/커팅 비용이 포함됩니다.',
-               'サイズ・形状に関わらず、<b>1個あたり1,000円</b>の基本印刷・カット費用が含まれます。',
+               'サイズ・形状に関わらず、<b>1個あたり100円</b>の基本印刷・カット費用が含まれます。',
                'A base <b>$1 per unit</b> print/cut fee is included regardless of size or shape.')}
         </div>
 
