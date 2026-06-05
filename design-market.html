@@ -2332,6 +2332,14 @@ function switchTab(tab) {
     if (tab === 'profile') { loadProfileForm(); renderWalletSection('walletSection'); loadMyGigs(); }
 }
 
+// 2026-06-04: 본사의뢰 카드 클릭 → browse 탭으로 전환 후 상세 표시
+//   showRequestDetail 이 #requestDetailView 를 보여주는데 그 요소가 tab-browse 안에 있어서
+//   tab-hq-browse 에서는 안 보임. 해결: 먼저 browse 탭으로 전환 후 showRequestDetail 호출.
+window._hqOpenDetail = function(requestId) {
+    try { switchTab('browse'); } catch (e) {}
+    setTimeout(() => { try { showRequestDetail(requestId); } catch (e) { console.error(e); } }, 50);
+};
+
 // 2026-06-04: 본사의뢰 (HQ requests) — 매니저 전용 탭 노출 + 의뢰 등록 + 목록
 async function _dmCheckAndShowHqTab() {
     try {
@@ -2384,7 +2392,7 @@ async function loadHqRequests() {
             const cat = (r.category || '').replace(/^본사-/, '');
             const budget = r.budget_min || r.budget_max || r.min_budget || r.budget || 0;
             const bidCount = r.design_bids?.[0]?.count || 0;
-            return `<div class="request-card" onclick="showRequestDetail('${r.id}')">
+            return `<div class="request-card" onclick="window._hqOpenDetail('${r.id}')">
                 <div style="display:flex; justify-content:space-between; gap:8px;">
                     <span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">🏢 본사 · ${cat || '기타'}</span>
                     <span style="background:${statusColor}20; color:${statusColor}; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">${statusLbl}</span>
