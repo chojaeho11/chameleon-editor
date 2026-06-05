@@ -1307,8 +1307,32 @@ function getGeneralItems() {
 
 // 2026-05-14: 택배비 — 사이트별 KRW 고정 (KR 5000, JP 10000 = ¥1000, US 10000 = $10).
 //   카트에 아이템이 1개 이상일 때만 부과. 매니저 견적 등 일부 흐름에서는 별도 처리될 수 있음.
+// 2026-06-06: 무료배송 carryover — 일반 상품 중 0원(무료배송) 항목이 있으면 패브릭도 묶음 무료.
+//   예: 가벽 self_pickup / 등신대 / 포토존 등.
+function _cdHasFreeShipItem() {
+    try {
+        var gens = (typeof getGeneralItems === 'function') ? getGeneralItems() : [];
+        if (!Array.isArray(gens) || gens.length === 0) return false;
+        for (var i = 0; i < gens.length; i++) {
+            var it = gens[i];
+            if (!it) continue;
+            // 자체 ship 정보 — fee === 0 이면 무료
+            var f = (it.shipping && typeof it.shipping.fee === 'number') ? it.shipping.fee : null;
+            if (f === 0) return true;
+            // 허니콤 가벽 외 모든 허니콤 — 무료 배송 (등신대/박스/원판/포토존 등)
+            var code = (it.product && it.product.code || '').toLowerCase();
+            var nm   = ((it.product && it.product.name) || '').toLowerCase();
+            var isHb = code.indexOf('hb_') === 0 || /허니콤|honeycomb/.test(nm);
+            var isWall = /^hb_dw|가벽|wall/.test(code) || /가벽|wall/.test(nm);
+            if (isHb && !isWall) return true;
+            // 가벽 self_pickup (사용자 직접 수령) 인 경우만 무료. 위 shipping.fee === 0 으로 잡힘.
+        }
+    } catch (e) {}
+    return false;
+}
 function getShippingFeeKrw() {
     try {
+        if (_cdHasFreeShipItem()) return 0;   // 무료배송 항목 있음 → 패브릭도 무료
         var cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
         var lang = (window.__CD_LANG || '').toLowerCase();
         if (cc === 'JP' || lang === 'ja') return 10000;   // ¥1,000
