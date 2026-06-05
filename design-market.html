@@ -721,6 +721,8 @@
     <nav class="tab-nav-pills" id="tabNav">
         <div class="tab-group tab-group-left">
             <button class="tab-pill active" data-tab="browse" onclick="switchTab('browse')"><i class="fa-solid fa-clipboard-list"></i> <span data-i18n-tab="browse">고객의뢰</span></button>
+            <!-- 2026-06-04: 본사의뢰 (HQ requests) — 관리자/매니저만 표시. 글씨 스카시 같은 입체디자인 의뢰를 매니저가 올림. -->
+            <button class="tab-pill" data-tab="hq-browse" onclick="switchTab('hq-browse')" id="tabHqBrowse" style="display:none; background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff;"><i class="fa-solid fa-building"></i> <span data-i18n-tab="hq-browse">본사의뢰</span></button>
             <button class="tab-pill" data-tab="gigs" onclick="switchTab('gigs')"><i class="fa-solid fa-store"></i> <span data-i18n-tab="gigs">디자인서비스</span></button>
         </div>
         <div class="tab-group tab-group-right">
@@ -759,6 +761,40 @@
         <div id="requestDetailView" style="display:none;"></div>
         <!-- 카드 그리드 -->
         <div class="request-grid" id="requestGrid">
+            <div class="loading" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+        </div>
+    </div>
+
+    <!-- ========== 탭: 본사의뢰 (HQ 의뢰 — 매니저 전용) ========== -->
+    <!-- 2026-06-04: 본사의뢰 — 글씨 스카시 등 입체디자인 의뢰를 매니저가 올림. 올린 사람이 입찰·작업·수익. -->
+    <div class="tab-content" id="tab-hq-browse">
+        <div style="background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:14px; padding:18px 22px; margin-bottom:18px;">
+            <div style="font-size:16px; font-weight:900; color:#78350f; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-building" style="color:#dc2626;"></i>
+                본사의뢰 — 매니저 전용
+            </div>
+            <div style="font-size:13px; color:#451a03; line-height:1.6; font-weight:600;">
+                글씨 스카시 등 <b>입체디자인</b> 이 필요한 고객 의뢰를 매니저가 직접 올리는 보드입니다.
+                올린 매니저가 입찰·작업하고 비용을 받습니다.
+                <br><b style="color:#dc2626;">단가:</b> 글씨 스카시 <b>50,000원</b> · 그 외 제품 <b>30,000원/페이지</b>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                <button onclick="openHqRequestForm()" style="padding:10px 18px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-plus"></i> 본사의뢰 등록
+                </button>
+                <span style="font-size:11.5px; color:#92400e; font-weight:600;">국가 제한 없음 (본사 내부 의뢰)</span>
+            </div>
+        </div>
+        <div class="filter-bar" style="margin-bottom:18px;">
+            <select class="filter-select" id="hqFilterStatus" onchange="loadHqRequests()" style="padding:9px 12px; border-radius:9px; border:1.5px solid #e2e8f0;">
+                <option value="all">전체</option>
+                <option value="open">모집중</option>
+                <option value="in_progress">진행중</option>
+                <option value="completed">진행완료</option>
+            </select>
+            <button class="filter-select" style="background:#f8fafc; cursor:pointer;" onclick="loadHqRequests()"><i class="fa-solid fa-arrows-rotate"></i> 새로고침</button>
+        </div>
+        <div class="request-grid" id="hqRequestGrid">
             <div class="loading" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
         </div>
     </div>
@@ -2256,11 +2292,122 @@ function switchTab(tab) {
 
     // Load data for tab
     if (tab === 'browse') { loadRequests(); hideRequestDetail(); }
+    if (tab === 'hq-browse') { loadHqRequests(); }
     if (tab === 'gigs') loadGigs();
     if (tab === 'my-requests') loadMyRequests();
     if (tab === 'my-bids') loadMyBids();
     if (tab === 'profile') { loadProfileForm(); renderWalletSection('walletSection'); loadMyGigs(); }
 }
+
+// 2026-06-04: 본사의뢰 (HQ requests) — 매니저 전용 탭 노출 + 의뢰 등록 + 목록
+async function _dmCheckAndShowHqTab() {
+    try {
+        const u = await sb.auth.getUser();
+        const uid = u && u.data && u.data.user && u.data.user.id;
+        if (!uid) return;
+        // 관리자 / 매니저 권한 확인
+        const adminEmails = ['korea900as@gmail.com', 'ceo@test.com', 'scr3257@naver.com'];
+        const email = u.data.user.email || '';
+        let isAdmin = adminEmails.includes(email);
+        if (!isAdmin) {
+            try {
+                const { data: prof } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle();
+                if (prof && (prof.role === 'admin' || prof.role === 'manager' || prof.role === 'staff')) isAdmin = true;
+            } catch(e) {}
+        }
+        if (isAdmin) {
+            const btn = document.getElementById('tabHqBrowse');
+            if (btn) btn.style.display = '';
+        }
+    } catch (e) { console.warn('[dm hq tab check]', e); }
+}
+// 페이지 로드 후 자동 실행
+if (document.readyState !== 'loading') _dmCheckAndShowHqTab();
+else document.addEventListener('DOMContentLoaded', _dmCheckAndShowHqTab);
+
+async function loadHqRequests() {
+    const grid = document.getElementById('hqRequestGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="loading" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+    try {
+        const sf = document.getElementById('hqFilterStatus')?.value || 'all';
+        let query = sb.from('design_requests')
+            .select('*, design_bids(count)')
+            .ilike('category', '본사-%')
+            .order('created_at', { ascending: false });
+        if (sf !== 'all') query = query.eq('status', sf);
+        const { data: requests, error } = await query;
+        if (error) throw error;
+        if (!requests || requests.length === 0) {
+            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-inbox"></i><p>본사의뢰가 아직 없습니다. 위에서 등록해주세요.</p></div>';
+            return;
+        }
+        grid.innerHTML = requests.map(r => {
+            const status = r.status || 'open';
+            const statusLbl = status === 'open' ? '모집중' : status === 'in_progress' ? '진행중' : status === 'completed' ? '완료' : status;
+            const statusColor = status === 'open' ? '#16a34a' : status === 'in_progress' ? '#0891b2' : '#6b7280';
+            const cat = (r.category || '').replace(/^본사-/, '');
+            const budget = r.min_budget || r.budget || 0;
+            const bidCount = r.design_bids?.[0]?.count || 0;
+            return `<div class="request-card" onclick="openRequestDetail('${r.id}')">
+                <div style="display:flex; justify-content:space-between; gap:8px;">
+                    <span style="background:#fef3c7; color:#92400e; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">🏢 본사 · ${cat || '기타'}</span>
+                    <span style="background:${statusColor}20; color:${statusColor}; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:800;">${statusLbl}</span>
+                </div>
+                <h4 style="font-size:15px; font-weight:800; margin:10px 0 6px; color:#1e293b;">${(r.title||'-').replace(/[<>]/g,'')}</h4>
+                <div style="font-size:12px; color:#7c3aed; font-weight:800; margin-bottom:4px;">↓ ${budget.toLocaleString()}원</div>
+                <div style="font-size:11px; color:#64748b;"><i class="fa-solid fa-gavel"></i> 입찰 ${bidCount}건 · ${timeAgo(r.created_at)}</div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        console.error('[loadHqRequests]', e);
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>불러오기 실패</p></div>';
+    }
+}
+
+window.openHqRequestForm = function() {
+    const title = prompt('의뢰 제목 (예: 입체글씨 디자인 의뢰)');
+    if (!title) return;
+    const type = prompt('제품 종류 — 1) 글씨스카시  2) 기타\n번호 입력 (1 또는 2)');
+    if (type !== '1' && type !== '2') { alert('1 또는 2 만 입력해주세요'); return; }
+    const isScarci = (type === '1');
+    let pages = 1;
+    let pricePerPage = isScarci ? 50000 : 30000;
+    if (!isScarci) {
+        const p = prompt('페이지 수 (1 이상)');
+        pages = parseInt(p, 10) || 1;
+        if (pages < 1) pages = 1;
+    }
+    const totalPrice = pricePerPage * pages;
+    const desc = prompt('의뢰 내용 (참고사항·고객 요구사항)') || '';
+    if (!confirm(`등록 확인:\n제목: ${title}\n종류: ${isScarci ? '글씨 스카시' : '기타'}\n페이지: ${pages}\n금액: ${totalPrice.toLocaleString()}원\n등록할까요?`)) return;
+    // category 에 "본사-" 접두 — 본사의뢰 목록 필터 키
+    const catTag = isScarci ? '본사-글씨스카시' : '본사-기타';
+    (async () => {
+        try {
+            const u = await sb.auth.getUser();
+            const uid = u && u.data && u.data.user && u.data.user.id;
+            const payload = {
+                title: title,
+                description: desc,
+                category: catTag,
+                country: COUNTRY_FILTER || (designerProfile && designerProfile.country) || 'KR',
+                min_budget: totalPrice,
+                budget: totalPrice,
+                status: 'open',
+                client_id: uid,
+                _country: COUNTRY_FILTER || null
+            };
+            const { error } = await sb.from('design_requests').insert(payload);
+            if (error) throw error;
+            alert('등록되었습니다. 본사의뢰 목록에서 확인하세요.');
+            loadHqRequests();
+        } catch (e) {
+            console.error('[openHqRequestForm]', e);
+            alert('등록 실패: ' + (e.message || ''));
+        }
+    })();
+};
 
 // ===== Auth =====
 async function logout() {
@@ -5091,7 +5238,31 @@ async function showRequestDetail(requestId) {
 }
 
 // ===== Bid Modal =====
-function openBidModal(requestId) {
+async function openBidModal(requestId) {
+    // 2026-06-04: 국가별 입찰 제한 — 디자이너 country ≠ 의뢰 country 면 입찰 모달 차단
+    try {
+        const { data: req } = await sb.from('design_requests').select('country').eq('id', requestId).maybeSingle();
+        const dC = (designerProfile && designerProfile.country) || '';
+        const rC = (req && req.country) || '';
+        if (rC && dC && rC !== dC) {
+            const msg = LANG === 'ja'
+                ? `この依頼は ${rC} 限定です。あなたの国(${dC})では入札できません。`
+                : LANG === 'en'
+                ? `This request is for ${rC} only. You (${dC}) cannot bid.`
+                : `이 의뢰는 ${rC} 국가 전용입니다. 본인 국가(${dC})에서 입찰할 수 없습니다.`;
+            showToast(msg, 'error');
+            return;
+        }
+        if (rC && !dC) {
+            const msg2 = LANG === 'ja'
+                ? 'プロフィールで居住国を設定してください。'
+                : LANG === 'en'
+                ? 'Please set your country in your profile first.'
+                : '먼저 마이프로필에서 거주 국가를 설정해주세요.';
+            showToast(msg2, 'error');
+            return;
+        }
+    } catch (e) { console.warn('[openBidModal country check]', e); }
     currentBidRequestId = requestId;
     document.getElementById('bidPrice').value = '';
     document.getElementById('bidTimeline').value = '';
@@ -5157,6 +5328,16 @@ async function submitBid() {
         showToast(LANG === 'ja' ? 'すでに入札済みです' : LANG === 'en' ? 'You already bid on this request' : '이미 입찰한 의뢰입니다', 'error');
         return;
     }
+    // 2026-06-04: 국가별 입찰 제한 — submitBid 시 한 번 더 검증 (modal 우회 방지)
+    try {
+        const { data: _req } = await sb.from('design_requests').select('country').eq('id', currentBidRequestId).maybeSingle();
+        const _dC = (designerProfile && designerProfile.country) || '';
+        const _rC = (_req && _req.country) || '';
+        if (_rC && _dC && _rC !== _dC) {
+            showToast(LANG === 'ja' ? `${_rC} 限定の依頼です` : LANG === 'en' ? `Country-restricted (${_rC} only)` : `${_rC} 국가 전용 의뢰입니다`, 'error');
+            return;
+        }
+    } catch (e) {}
 
     const btn = document.getElementById('btnSubmitBid');
     btn.disabled = true;
