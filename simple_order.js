@@ -8476,8 +8476,9 @@ html, body { background: #ffffff !important; }
         }
         // 2026-05-13: 가벽이면 주문 수량 섹션 숨김 (가로 m 수가 수량 역할)
         // 2026-05-30: 원판도 숨김 — 우측 6개 카드 각각의 수량 input 으로 대체.
+        // 2026-06-05: cutPrint 도 숨김 — 큐 라인별 인라인 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
-        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard) ? 'none' : '';
+        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || state.isCutPrint) ? 'none' : '';
 
         // 2026-06-01: 광고인쇄 — 사이즈 카드 → qty 위 / 추가옵션 / 배송 순서 + 단위 mm + 인라인 업로드 + 멀티-라인
         (function _soApplyAdPrintLayout(){
