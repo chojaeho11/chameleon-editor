@@ -4081,7 +4081,11 @@ html, body { background: #ffffff !important; }
     }
 
     // 2026-05-13: 받침대 옵션이 필요한 상품 — 등신대 + 자유인쇄커팅
+    // 2026-06-04: 글씨 스카시 (hb_ss_*) 와 포인트 (hb_point*) 는 받침대 불필요 (사용자 요청)
     function _soNeedsBaseStand(p) {
+        if (!p) return false;
+        const code = (p.code || '').toLowerCase();
+        if (code.startsWith('hb_ss') || code.startsWith('hb_point')) return false;
         return _soIsStandeeProduct(p) || _soIsCutPrintProduct(p);
     }
 
