@@ -4060,15 +4060,32 @@ html, body { background: #ffffff !important; }
                 console.log('[so] insta panel variants loaded:', _soInstaCache.length);
             }
             if (_soInstaCache.length < 2) { sec.style.display = 'none'; return; }
+            // 2026-06-05: 인스타판넬 가격 override — A2 50K→80K, 스텐딩 60-180 80K→100K. 대형/초대형은 DB 가격 유지.
+            //   이름 키워드 매칭으로 카드 표시도 일관되게.
+            var _instaOverrideKrw = function(p) {
+                var nm = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+                if (/a2|60[\s\-~]*90/.test(nm))                              return 80000;
+                if (/60[\s\-~]*180|스텐딩|スタンディング|standing/.test(nm)) return 100000;
+                return null;  // 변경 없음
+            };
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             grid.innerHTML = _soInstaCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
                 var img = p.img_url || 'https://placehold.co/200?text=Photo';
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
-                var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var _ovKrw = _instaOverrideKrw(p);
+                var priceVal;
+                if (_ovKrw != null) {
+                    // override 적용 — 통화 환산 (JP × 0.1, US × 0.001)
+                    if (lang === 'ja')                                       priceVal = Math.round(_ovKrw * 0.1);
+                    else if (lang === 'en' || window.__SITE_CODE === 'US')   priceVal = Math.round(_ovKrw * 0.001);
+                    else                                                     priceVal = _ovKrw;
+                } else {
+                    priceVal = p.price || 0;
+                    if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                    else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                }
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
