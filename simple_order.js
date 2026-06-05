@@ -1687,6 +1687,29 @@ html, body { background: #ffffff !important; }
           <div id="soPresetCutLabel" style="font-size:11px; color:#64748b; font-weight:600; margin-top:6px; text-align:center;"></div>
         </div>
 
+        <!-- 2026-06-04: 자유인쇄커팅 (hb_pt_*) 전용 보드 재질 선택 — 6종, 동일 가격 -->
+        <div class="so-section" id="soCutBoardMaterialSection" style="display:none;">
+          <div class="so-section-title">🧱 ${tr('보드 종류 선택', 'ボード材質選択', 'Board material')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">${tr('가격 동일', '同価格', 'Same price')}</span></div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+            ${[
+              { k:'honeycomb_16mm_white',   line1:tr('허니콤보드','ハニカム','Honeycomb'),  line2:tr('16mm 화이트','16mm ホワイト','16mm White') },
+              { k:'honeycomb_16mm_kraft',   line1:tr('허니콤보드','ハニカム','Honeycomb'),  line2:tr('16mm 크라프트','16mm クラフト','16mm Kraft') },
+              { k:'foamex_3mm',             line1:tr('포맥스','フォーメックス','Foamex'),     line2:'3mm' },
+              { k:'foamex_5mm',             line1:tr('포맥스','フォーメックス','Foamex'),     line2:'5mm' },
+              { k:'foamboard_5mm',          line1:tr('폼보드','フォームボード','Foamboard'), line2:'5mm' },
+              { k:'foamboard_10mm',         line1:tr('폼보드','フォームボード','Foamboard'), line2:'10mm' }
+            ].map(function(o, i){
+                var on = i === 0;
+                return '<button type="button" class="so-cutboard-btn' + (on?' active':'') + '" data-cutboard="' + o.k + '" onclick="window._soPickCutBoardMaterial(this)" '
+                    + 'style="padding:10px 6px; border:2px solid ' + (on?'#0f172a':'#e2e8f0') + '; background:' + (on?'#0f172a':'#fff') + '; color:' + (on?'#fff':'#334155') + '; '
+                    + 'border-radius:10px; font-size:11.5px; font-weight:800; cursor:pointer; font-family:inherit; transition:all .15s ease; display:flex; flex-direction:column; gap:2px; align-items:center; line-height:1.2;">'
+                    + '<span>' + o.line1 + '</span>'
+                    + '<span style="font-size:11px; font-weight:900; opacity:0.85;">' + o.line2 + '</span>'
+                    + '</button>';
+            }).join('')}
+          </div>
+        </div>
+
         <!-- 2026-06-04: 등신대 전용 재질 선택 (허니콤보드 16mm / 포맥스 3mm — 동일 가격) -->
         <div class="so-section" id="soStandeeMaterialSection" style="display:none;">
           <div class="so-section-title">🧩 ${tr('재질 선택', '素材選択', 'Material')} <span style="font-size:10px; color:#94a3b8; font-weight:400;">${tr('가격 동일', '同価格', 'Same price')}</span></div>
@@ -3951,7 +3974,9 @@ html, body { background: #ffffff !important; }
         banner_small: { fee: 20000, label_ko: '가로 60cm 이하 배너형 받침',   label_jp: 'バナー型 ≤60cm',   label_us: 'Banner ≤60cm' },
         banner_large: { fee: 50000, label_ko: '가로 70cm 이상 배너형 받침',   label_jp: 'バナー型 ≥70cm',   label_us: 'Banner ≥70cm' },
         insert:       { fee: 0,     label_ko: '끼우는 형태',                label_jp: '差し込み式',       label_us: 'Slot-in type' },
-        free_rear:    { fee: 0,     label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' }
+        free_rear:    { fee: 0,     label_ko: '뒷면받침',                  label_jp: '背面サポート',     label_us: 'Rear support' },
+        paper_stand:  { fee: 0,     label_ko: '종이받침대',                label_jp: '紙スタンド',       label_us: 'Paper stand' },
+        none_card:    { fee: 0,     label_ko: '받침없음 (인쇄커팅만)',      label_jp: 'スタンドなし',     label_us: 'No stand (cutout only)' }
     };
 
     // 2026-06-03: 명함/리플렛 (pp_bc_*) — 용지/박/후가공 옵션. KR/JP/EN 3개 언어 지원
@@ -5398,6 +5423,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-04: 등신대 재질 (큐 라인별 보존)
             isStandee: !!state.isStandee,
             standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
+            // 2026-06-04: 자유인쇄커팅 보드 재질 (큐 라인별 보존)
+            cutBoardMaterial: state.isCutPrint ? (state.cutBoardMaterial || 'honeycomb_16mm_white') : null,
             // 박스
             boxW: state.boxW || null,
             boxH: state.boxH || null,
@@ -6478,6 +6505,20 @@ html, body { background: #ffffff !important; }
         });
     };
 
+    // 2026-06-04: 자유인쇄커팅 보드 재질 선택 (6종 — 동일 가격, 표시·작업지시용)
+    window._soPickCutBoardMaterial = function (btn) {
+        if (!btn) return;
+        var mat = btn.getAttribute('data-cutboard') || 'honeycomb_16mm_white';
+        state.cutBoardMaterial = mat;
+        document.querySelectorAll('.so-cutboard-btn').forEach(function (b) {
+            var on = b.dataset.cutboard === mat;
+            b.classList.toggle('active', on);
+            b.style.background = on ? '#0f172a' : '#fff';
+            b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+            b.style.color = on ? '#fff' : '#334155';
+        });
+    };
+
     // 2026-05-13: 뒷면 파일 변경 핸들러 — 미리보기 포함
     window._soOnBackFileChange = async function (files) {
         if (!files || !files.length) return;
@@ -7264,6 +7305,19 @@ html, body { background: #ffffff !important; }
         state.isCutPrint = _soIsCutPrintProduct(p);
         state.cutSize = 'full';
         state.bundleShipping = false;
+        // 2026-06-04: 자유인쇄커팅 — 보드 재질 선택 (6종, 동일 가격)
+        state.cutBoardMaterial = state.isCutPrint ? 'honeycomb_16mm_white' : null;
+        try {
+            var _cbSec = document.getElementById('soCutBoardMaterialSection');
+            if (_cbSec) _cbSec.style.display = state.isCutPrint ? '' : 'none';
+            document.querySelectorAll('.so-cutboard-btn').forEach(function (b) {
+                var on = b.dataset.cutboard === 'honeycomb_16mm_white';
+                b.classList.toggle('active', on);
+                b.style.background = on ? '#0f172a' : '#fff';
+                b.style.borderColor = on ? '#0f172a' : '#e2e8f0';
+                b.style.color = on ? '#fff' : '#334155';
+            });
+        } catch (e) {}
         // 2026-05-13: 허니콤 박스 감지 (hb_bx_*) — 가로/세로/높이로 동적 가격
         state.isBox = _soIsBoxProduct(p);
         state.boxW = parseInt(p.width_mm || 400, 10) || 400;
@@ -7442,20 +7496,29 @@ html, body { background: #ffffff !important; }
                 b.style.color = on ? '#fff' : '#334155';
             });
         } catch (e) {}
-        // 2026-06-04: 등신대 — 받침대 UI 를 2-card (끼우는 형태 / 뒷면받침) 로 교체 + 무료 안내. 사용자 요청.
-        //   비-등신대로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
+        // 2026-06-04: 등신대 + 자유인쇄커팅 — 받침대 UI 를 4-card (끼우는 형태 / 뒷면받침 / 종이받침대 / 받침없음) 로 교체 + 무료 안내.
+        //   비-등신대·비-cutPrint 로 다시 진입할 때를 위해 원본 HTML 을 한 번만 캐싱.
         try {
             var _bsList = document.getElementById('soBaseStandList');
+            var _bsIsFreeUi = state.isStandee || _soIsCutPrintProduct(p);
             if (_bsList) {
                 if (!window._soBaseStandOriginalHTML) window._soBaseStandOriginalHTML = _bsList.innerHTML;
-                if (state.isStandee) {
+                if (_bsIsFreeUi) {
+                    // 가위 SVG (받침없음 — 인쇄커팅 의미)
+                    var _scissorsSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48%; height:48%; color:#7c3aed;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>';
                     var _ssCards = [
                         { k:'insert', img:'/down.png',
                             title: tr('끼우는 형태', '差し込み式', 'Slot-in'),
                             desc:  tr('허니콤보드로 쉽게 끼울 수 있어요', 'ハニカムボードで簡単に差し込み', 'Easy slot-in with honeycomb board') },
                         { k:'free_rear', img:'/up.jpg',
                             title: tr('뒷면받침', '背面サポート', 'Rear support'),
-                            desc:  tr('받침이 뒤에 있음. 등신대 형태.', 'スタンドが背面にあり、等身大の形状', 'Stand at the back — life-size shape') }
+                            desc:  tr('받침이 뒤에 있음. 등신대 형태.', 'スタンドが背面にあり、等身大の形状', 'Stand at the back — life-size shape') },
+                        { k:'paper_stand', img:'/paper.jpg',
+                            title: tr('종이받침대', '紙スタンド', 'Paper stand'),
+                            desc:  tr('양면테이프가 붙어있어요', '両面テープ付き', 'Double-sided tape included') },
+                        { k:'none_card', icon: _scissorsSvg,
+                            title: tr('받침없음', 'スタンドなし', 'No stand'),
+                            desc:  tr('인쇄커팅만 (받침 없이 발송)', 'カットのみ (スタンドなしで発送)', 'Cutout only — no stand') }
                     ];
                     _bsList.style.display = 'grid';
                     _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
@@ -7469,9 +7532,12 @@ html, body { background: #ffffff !important; }
                         _ssCards.map(function(o){
                             var safeTitle = String(o.title).replace(/[<>"]/g,'');
                             var safeDesc = String(o.desc).replace(/[<>"]/g,'');
+                            var _imgBlock = o.icon
+                                ? '<div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">' + o.icon + '</div>'
+                                : '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">';
                             return '<label data-bs-card="' + o.k + '" style="display:flex; flex-direction:column; gap:8px; padding:10px 10px 12px; border:2px solid #e7e5e4; border-radius:14px; cursor:pointer; background:#fff; transition:border-color .15s ease, box-shadow .15s ease;">' +
                                 '<div style="position:relative; aspect-ratio:1/1; background:#f8fafc; border-radius:10px; overflow:hidden;">' +
-                                    '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                                    _imgBlock +
                                 '</div>' +
                                 '<div style="display:flex; align-items:center; gap:8px;">' +
                                     '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin:0; width:18px; height:18px; flex-shrink:0;">' +
@@ -7485,14 +7551,14 @@ html, body { background: #ffffff !important; }
                             '</label>';
                         }).join('');
                 } else if (window._soBaseStandOriginalHTML) {
-                    // 비-등신대 (자유인쇄커팅 등) — 원래 6종 리스트로 복원
+                    // 비-등신대·비-cutPrint — 원래 6종 리스트로 복원
                     _bsList.style.display = 'flex';
                     _bsList.style.gridTemplateColumns = '';
                     _bsList.style.gap = '6px';
                     _bsList.innerHTML = window._soBaseStandOriginalHTML;
                 }
             }
-        } catch (e) { console.warn('[so standee base stand UI]', e); }
+        } catch (e) { console.warn('[so free-stand UI]', e); }
 
         // 2026-05-13: 사용자 정의 사이즈 (현수막·실사출력) — 가벽/박스/자유인쇄커팅 외
         state.isCustomSize = _soIsCustomSizeProduct(p);
@@ -8641,6 +8707,8 @@ html, body { background: #ffffff !important; }
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
             // 2026-06-04: 등신대 재질 (honeycomb_16mm / foamex_3mm — 동일 가격, 표시 및 작업지시용)
             standeeMaterial: state.isStandee ? (state.standeeMaterial || 'honeycomb_16mm') : null,
+            // 2026-06-04: 자유인쇄커팅 보드 재질 (6종 — 동일 가격, 표시 및 작업지시용)
+            cutBoardMaterial: state.isCutPrint ? (state.cutBoardMaterial || 'honeycomb_16mm_white') : null,
             // 2026-05-13: 자유인쇄커팅 사이즈 (한판/반판) + 묶음배송 여부
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
@@ -8956,6 +9024,8 @@ html, body { background: #ffffff !important; }
                     if (_ln.isCutPrint) {
                         state.cutSize = _ln.cutSize || 'full';
                         if (_ln.wallSide) state.wallSide = _ln.wallSide;
+                        // 2026-06-04: 자유인쇄커팅 보드 재질 복원 (큐 라인마다 다를 수 있음)
+                        if (_ln.cutBoardMaterial) state.cutBoardMaterial = _ln.cutBoardMaterial;
                     }
                     // 2026-06-04: 등신대 재질 복원 (큐 라인마다 다를 수 있음)
                     if (_ln.isStandee) {
@@ -9229,6 +9299,19 @@ html, body { background: #ffffff !important; }
                         ? tr('포맥스 3mm', 'フォーメックス 3mm', 'Foamex 3mm')
                         : tr('허니콤보드 16mm', 'ハニカム 16mm', 'Honeycomb 16mm');
                     meta.push('🧩 ' + _matLbl);
+                }
+                // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
+                if (item.cutBoardMaterial) {
+                    var _cbMap = {
+                        'honeycomb_16mm_white':  tr('허니콤보드 16mm 화이트', 'ハニカム 16mm ホワイト', 'Honeycomb 16mm White'),
+                        'honeycomb_16mm_kraft':  tr('허니콤보드 16mm 크라프트', 'ハニカム 16mm クラフト', 'Honeycomb 16mm Kraft'),
+                        'foamex_3mm':            tr('포맥스 3mm', 'フォーメックス 3mm', 'Foamex 3mm'),
+                        'foamex_5mm':            tr('포맥스 5mm', 'フォーメックス 5mm', 'Foamex 5mm'),
+                        'foamboard_5mm':         tr('폼보드 5mm', 'フォームボード 5mm', 'Foamboard 5mm'),
+                        'foamboard_10mm':        tr('폼보드 10mm', 'フォームボード 10mm', 'Foamboard 10mm')
+                    };
+                    var _cbLbl = _cbMap[item.cutBoardMaterial] || item.cutBoardMaterial;
+                    meta.push('🧱 ' + _cbLbl);
                 }
                 return `
                 <div class="so-cart-item">
