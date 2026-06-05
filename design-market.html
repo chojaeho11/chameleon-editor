@@ -2347,7 +2347,7 @@ async function loadHqRequests() {
             const statusLbl = status === 'open' ? '모집중' : status === 'in_progress' ? '진행중' : status === 'completed' ? '완료' : status;
             const statusColor = status === 'open' ? '#16a34a' : status === 'in_progress' ? '#0891b2' : '#6b7280';
             const cat = (r.category || '').replace(/^본사-/, '');
-            const budget = r.min_budget || r.budget || 0;
+            const budget = r.budget_min || r.budget_max || r.min_budget || r.budget || 0;
             const bidCount = r.design_bids?.[0]?.count || 0;
             return `<div class="request-card" onclick="openRequestDetail('${r.id}')">
                 <div style="display:flex; justify-content:space-between; gap:8px;">
@@ -2467,16 +2467,24 @@ window._hqSubmitRequest = async function() {
         const u = await sb.auth.getUser();
         const uid = u && u.data && u.data.user && u.data.user.id;
         // 의뢰 국가 = 등록자 국가 (자동, 변경 불가) — country-restricted bidding 정책 일관성
-        const country = (designerProfile && designerProfile.country) || COUNTRY_FILTER || 'KR';
+        // 의뢰 국가 = 사용자 국가 (정책: 한국 의뢰는 한국인만, 해외는 해당 국가 사람만)
+        let userCountry = '';
+        try {
+            const { data: prof } = await sb.from('profiles').select('site').eq('id', uid).maybeSingle();
+            if (prof && prof.site) userCountry = prof.site;
+        } catch (e) {}
+        const country = userCountry || (designerProfile && designerProfile.country) || COUNTRY_FILTER || 'KR';
+        // design_requests 실 컬럼: customer_id, title, category, description, budget_min, budget_max,
+        //                          phone, country, files, status (budget/min_budget/client_id 없음)
         const payload = {
+            customer_id: uid,
             title: title,
             description: desc,
             category: catTag,
             country: country,
-            min_budget: total,
-            budget: total,
-            status: 'open',
-            client_id: uid
+            budget_min: total,
+            budget_max: total,
+            status: 'open'
         };
         const { error } = await sb.from('design_requests').insert(payload);
         if (error) throw error;
