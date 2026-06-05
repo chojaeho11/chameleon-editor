@@ -3122,7 +3122,11 @@ html, body { background: #ffffff !important; }
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
         } else if (state.isCustomSize) {
-            var custDim = (state.customW || 0) + '×' + (state.customH || 0) + 'cm';
+            // 2026-06-04: 광고인쇄/등신대는 mm 표기, 그 외는 cm
+            var _useMmDim = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            var custDim = _useMmDim
+                ? (Math.round((state.customW || 0) * 10) + '×' + Math.round((state.customH || 0) * 10) + 'mm')
+                : ((state.customW || 0) + '×' + (state.customH || 0) + 'cm');
             setText('soUnitLabel', tr('단가', '単価', 'Unit') + ' (' + custDim + ')');
             setText('soUnit', fmtPrice(unit) + (qty > 1 ? (' × ' + qty + ' = ' + fmtPrice(subtotal)) : ''));
             showRow('soWallSizeRow', false);
@@ -7416,6 +7420,12 @@ html, body { background: #ffffff !important; }
             state.customW = parseInt(p.width_mm ? p.width_mm/10 : 100, 10) || 100;
             state.customH = parseInt(p.height_mm ? p.height_mm/10 : 60, 10) || 60;
         }
+        // 2026-06-04: 등신대 기본 사이즈 — DB 의 width_mm 가 작은 값(20 등) 으로 잘못 저장된 경우 fallback.
+        //   등신대 표준 시작값 1000×1500mm (100×150cm). 사용자가 입력박스에서 수정 가능.
+        if (state.isStandee && (state.customW < 30 || state.customH < 30)) {
+            state.customW = 100;  // 100cm = 1000mm
+            state.customH = 150;  // 150cm = 1500mm
+        }
         // 2026-06-04: 광고인쇄/등신대는 mm 입력이라 W/H input 의 표시값·min·max 도 mm 로 갱신.
         //   라벨 (cm)→(mm), input 기본값 mm 환산, min=100mm, max=2500mm.
         try {
@@ -7433,6 +7443,10 @@ html, body { background: #ffffff !important; }
                 _customHEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
                 _customHEl.max = _useMm ? 2500 : 2000;
                 _customHEl.value = _useMm ? (state.customH * 10) : state.customH;
+            }
+            // 2026-06-04: 입력값 갱신 후 단가 재계산 (input.value 설정은 oninput 이벤트 발생 X)
+            if (state.isCustomSize && (_customWEl || _customHEl)) {
+                try { if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
             }
         } catch (e) {}
         state.customUnitPrice = 0;
@@ -7855,12 +7869,18 @@ html, body { background: #ffffff !important; }
             var cwEl = document.getElementById('soCustomW'); if (cwEl) cwEl.value = state.customW;
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
-            if (state.isAdPrint) {
-                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = 20000; cwEl.step = 1; }
-                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = 20000; chEl.step = 1; }
+            // 2026-06-04: 등신대도 동일 (mm 입력)
+            var _useMmHere = (state.isAdPrint || state.isStandee) && !state.isBanner;
+            if (_useMmHere) {
+                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = state.isAdPrint ? 20000 : 2500; cwEl.step = 1; }
+                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = state.isAdPrint ? 20000 : 2500; chEl.step = 1; }
+                var _uEl = document.getElementById('soCustomSizeUnit');
+                if (_uEl) _uEl.textContent = '(mm)';
             } else {
                 if (cwEl) { cwEl.min = 10; cwEl.max = 2000; cwEl.step = 1; }
                 if (chEl) { chEl.min = 10; chEl.max = 2000; chEl.step = 1; }
+                var _uEl2 = document.getElementById('soCustomSizeUnit');
+                if (_uEl2) _uEl2.textContent = '(cm)';
             }
             if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
         } else {
