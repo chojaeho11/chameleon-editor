@@ -10860,7 +10860,12 @@ html, body { background: #ffffff !important; }
         const final = (typeof _soCalcItemPrice === 'function')
             ? _soCalcItemPrice(item)
             : subtotal - discount;
-        return { unit, subtotal, discount, final, tierPct };
+        // 2026-06-06: 라인 표시용 = 배송비 빼고 상품 가격만 (장바구니에서 배송비는 합계에서 1회만 부과).
+        //   _soCalcItemPrice 는 항목별 shipping.fee 를 포함하므로 row 표시 시 이를 차감해 중복 표시 방지.
+        var rowShipFee = (item && item.shipping && typeof item.shipping.fee === 'number') ? item.shipping.fee : 0;
+        if (item._isBestGoods) rowShipFee = 3000;  // 정액 3K (별도 가산)
+        var lineDisplay = Math.max(0, final - rowShipFee);
+        return { unit, subtotal, discount, final, lineDisplay, tierPct };
     }
 
     // 2026-05-15: 전체 비우기 — fabric + 일반상품 모두 + 서버 동기화
@@ -11030,7 +11035,7 @@ html, body { background: #ffffff !important; }
                                 <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, 1)">+</button>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
-                                <span class="so-cart-item-price">${fmtPrice(calc.final)}</span>
+                                <span class="so-cart-item-price">${fmtPrice(calc.lineDisplay != null ? calc.lineDisplay : calc.final)}</span>
                                 <button class="so-cart-item-edit" onclick="window._soCartEditItem(${genIdx})" title="${tr('내용변경','内容変更','Edit')}" style="background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; border-radius:6px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer;">${tr('내용변경','変更','Edit')}</button>
                                 <button class="so-cart-item-remove" onclick="window._soCartRemove(${genIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
                             </div>
@@ -11079,33 +11084,33 @@ html, body { background: #ffffff !important; }
         try {
             var _cartCalc = _soCalcCartTotal(allItems);
             totalEl.textContent = fmtPrice(_cartCalc.grandTotal);
-            // 2026-06-05: 허니콤보드 소량제작 배송 안내 — 카트 상품 소계 기준 동적 표시
+            // 2026-06-06: 카트 배송 안내 — 실제 적용된 shipTotal 기준 (이전엔 허니콤보드 전용 문구만 표시)
             var _noticeWrap = document.getElementById('soCartShipNotice');
             var _noticeText = document.getElementById('soCartShipNoticeText');
             if (_noticeWrap && _noticeText) {
                 var _sub = (_cartCalc.taxBase || 0) + (_cartCalc.nonDiscountBase || 0);
+                var _shipFinal = _cartCalc.shipTotal || 0;
                 if (_sub <= 0) {
                     _noticeWrap.style.display = 'none';
-                } else if (_sub >= 100000) {
+                } else if (_shipFinal === 0) {
                     _noticeWrap.style.display = '';
                     _noticeWrap.style.background = '#dcfce7';
                     _noticeWrap.style.borderColor = '#86efac';
                     _noticeWrap.style.color = '#14532d';
                     _noticeText.innerHTML = tr(
-                        '<b>10만원 이상</b> 주문이므로 <b style="color:#15803d;">무료배송</b> 입니다.',
-                        '<b>100,000円以上</b> のご注文のため <b style="color:#15803d;">送料無料</b> です。',
-                        'Order is over <b>$100</b> — <b style="color:#15803d;">FREE shipping</b>.'
+                        '<b style="color:#15803d;">무료배송</b> 입니다. (묶음배송)',
+                        '<b style="color:#15803d;">送料無料</b> です。(まとめて配送)',
+                        '<b style="color:#15803d;">FREE shipping</b> (bundled).'
                     );
                 } else {
                     _noticeWrap.style.display = '';
                     _noticeWrap.style.background = '#fef3c7';
                     _noticeWrap.style.borderColor = '#fcd34d';
                     _noticeWrap.style.color = '#78350f';
-                    var _short = 100000 - _sub;
                     _noticeText.innerHTML = tr(
-                        '허니콤보드 소량제작 — 최소 제작비 <b>10만원</b> 미만이라 <b>3만원 배송비</b>가 포함됐어요. <b style="color:#b45309;">' + fmtPrice(_short) + '</b> 만 더 담으면 무료배송!',
-                        'ハニカムボード少量製作 — 最低製作費 <b>100,000円</b> 未満のため <b>30,000円の配送料</b> が含まれます。あと <b style="color:#b45309;">' + fmtPrice(_short) + '</b> で送料無料!',
-                        'Honeycomb small-batch — under <b>$100</b> minimum, <b>$30 shipping</b> applies. Add <b style="color:#b45309;">' + fmtPrice(_short) + '</b> more for FREE shipping!'
+                        '주문 상품들은 <b>' + fmtPrice(_shipFinal) + '</b> 으로 <b>묶음배송</b> 됩니다. 무료배송 상품을 함께 담으면 모두 무료!',
+                        '商品は <b>' + fmtPrice(_shipFinal) + '</b> で <b>まとめて配送</b> されます。送料無料商品を一緒にどうぞ!',
+                        'Items ship together for <b>' + fmtPrice(_shipFinal) + '</b>. Add a free-shipping item to bundle for free!'
                     );
                 }
             }
@@ -11650,7 +11655,17 @@ html, body { background: #ffffff !important; }
             if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송). 모든 항목이 0 이면 0.
-        var shipTotal = itemShipFees.length > 0 ? Math.max.apply(Math, itemShipFees.concat([0])) : 0;
+        // 2026-06-06: 무료배송 carryover — 일반 항목 중 하나라도 무료(0) 면 모두 묶어 보낼 수 있어 전체 0.
+        //   "허니콤보드 가벽 같은 무료배송 상품과 같이 담겨있으면 다른 제품도 무료" — 사용자 요청.
+        var _hasFreeShipItem = itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; });
+        var shipTotal;
+        if (_hasFreeShipItem) {
+            shipTotal = 0;
+        } else if (itemShipFees.length > 0) {
+            shipTotal = Math.max.apply(Math, itemShipFees.concat([0]));
+        } else {
+            shipTotal = 0;
+        }
         // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
         cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
         // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).
