@@ -2205,9 +2205,9 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
           <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
             <i class="fa-solid fa-truck" style="color:#7c3aed; margin-right:4px;"></i>
-            ${tr('수도권을 제외한 <b>지방</b>의 경우, 60~180cm 이내는 <b style="color:#16a34a;">무료택배</b>, 그 이상 사이즈는 <b style="color:#dc2626;">착불 용차배송</b>됩니다.',
-                 '首都圏以外の地方は、60～180cm以内は<b style="color:#16a34a;">無料宅配</b>、それ以上は<b style="color:#dc2626;">着払い専用車配送</b>になります。',
-                 'Outside metro area: 60~180cm <b style="color:#16a34a;">free parcel</b>, larger sizes <b style="color:#dc2626;">COD truck delivery</b>.')}
+            ${tr('포장 배송비 <b>1만원</b>, <b style="color:#16a34a;">10만원 이상 주문 시 무료배송</b>입니다.',
+                 '梱包配送料 <b>10,000円</b>、<b style="color:#16a34a;">100,000円以上で送料無料</b>です。',
+                 'Packaging & shipping <b>$10</b>, <b style="color:#16a34a;">FREE on orders over $100</b>.')}
           </div>
         </div>
 
@@ -4573,10 +4573,37 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
-        // 2026-06-04: 자유인쇄커팅 — 무료배송 (사용자 요청). 사이즈별 택배비 폐기.
+        // 2026-06-05: 자유인쇄커팅 — 광고인쇄와 동일 규칙. 큐+현재 라인 합계 10만 이상 무료 / 미만 1만원.
         if (state.isCutPrint) {
             state._shipUpgradeReason = null;
-            return 0;
+            // 묶음배송 라인은 0원 (큐 라인 중 carrier 가 아닌 것들 — _soSubmitOrder 에서 자동 설정)
+            if (state.bundleShipping) return 0;
+            var cpSub = 0;
+            // 현재 폼이 draft (큐만 사용 중) 가 아닐 때만 현재 폼 가산
+            if (!state._adCurIsDraft) {
+                cpSub += (state.customUnitPrice || 0) * (state.qty || 1);
+                try {
+                    Object.values(state.selectedAddons || {}).forEach(function(code){
+                        var addon = (window.ADDON_DB || {})[code];
+                        if (!addon) return;
+                        var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
+                        cpSub += (addon.price || 0) * aQty;
+                    });
+                } catch(e) {}
+                try {
+                    if (state.baseStands) {
+                        var _q = state.qty || 1;
+                        Object.keys(state.baseStands).forEach(function(bk){
+                            var bo = (typeof BASE_STAND_OPTS !== 'undefined') ? BASE_STAND_OPTS[bk] : null;
+                            if (bo) cpSub += (bo.fee || 0) * (state.baseStands[bk] || 1) * _q;
+                        });
+                    }
+                } catch(e) {}
+            }
+            (state._adLines || []).forEach(function(line){
+                cpSub += (line.lineTotal || 0);
+            });
+            return cpSub >= 100000 ? 0 : 10000;
         }
         // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
         //   해당: 박스 / 원판 / 등신대 / 허니콤포토존 등 (자유인쇄커팅은 위에서 별도 처리)
@@ -10357,8 +10384,8 @@ html, body { background: #ffffff !important; }
             } else {
                 taxBase += (subPrice - shipFee);
             }
-            // 베스트굿즈·광고인쇄는 별도 규칙 — max 룰 제외
-            if (!it._isBestGoods && !it._isAdPrint) itemShipFees.push(shipFee);
+            // 베스트굿즈·광고인쇄·자유인쇄커팅은 별도 규칙 — max 룰 제외
+            if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송). 모든 항목이 0 이면 0.
         var shipTotal = itemShipFees.length > 0 ? Math.max.apply(Math, itemShipFees.concat([0])) : 0;
@@ -10383,6 +10410,17 @@ html, body { background: #ffffff !important; }
             // 광고인쇄 카트 소계 < 10만 이고, 다른 일반 항목의 배송비 (shipTotal) 이 없으면 1만원 가산
             // (다른 항목 배송이 있으면 그 max 안에 자동 묶음 — 추가 부담 X)
             if (_adProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
+        }
+        // 2026-06-05: 자유인쇄커팅 카트 합계 룰 — 광고인쇄와 동일. cutPrint 항목 전체 10만 이상 무료 / 미만 1만원.
+        var _cpItems = cart.filter(function(it){ return it && it.cutPrint; });
+        if (_cpItems.length > 0) {
+            var _cpProductSub = 0;
+            _cpItems.forEach(function(it){
+                var _itSub = _soCalcItemPrice(it);
+                var _itShip = (it.shipping && it.shipping.fee) || 0;
+                _cpProductSub += (_itSub - _itShip);
+            });
+            if (_cpProductSub < 100000 && shipTotal === 0) shipTotal += 10000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
