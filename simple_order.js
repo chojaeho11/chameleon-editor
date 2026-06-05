@@ -9559,6 +9559,11 @@ html, body { background: #ffffff !important; }
             if (isDouble) hExtra *= 2;
             base += hExtra;
         }
+        // 2026-06-04: 가벽 형태 (ㄱ자 +100,000 / ㄷ자 +200,000) — 코너 추가비 가산.
+        //   이전엔 buildCartItem 이 wallShapeFee 를 저장만 하고 _soCalcItemPrice 에서 누락 → 카트 합계에서 사라지던 버그.
+        if (it.wallSize && it.wallShapeFee && it.wallShapeFee > 0) {
+            base += it.wallShapeFee;
+        }
         // addon 가격 — 키링/코롯토 (presetHasHooks) 만 고리 300원 균일 + 제품 수량 자동 곱셈
         //   손수건 등 다른 프리셋은 DB 가격 그대로
         //   티셔츠 — 사이즈·색상 추가금 0원
