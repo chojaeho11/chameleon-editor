@@ -2199,6 +2199,13 @@ html, body { background: #ffffff !important; }
           <!-- 배송/시공 라인 -->
           <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
+          <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
+          <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
+            <i class="fa-solid fa-truck" style="color:#7c3aed; margin-right:4px;"></i>
+            ${tr('수도권을 제외한 <b>지방</b>의 경우, 60~180cm 이내는 <b style="color:#16a34a;">무료택배</b>, 그 이상 사이즈는 <b style="color:#dc2626;">착불 용차배송</b>됩니다.',
+                 '首都圏以外の地方は、60～180cm以内は<b style="color:#16a34a;">無料宅配</b>、それ以上は<b style="color:#dc2626;">着払い専用車配送</b>になります。',
+                 'Outside metro area: 60~180cm <b style="color:#16a34a;">free parcel</b>, larger sizes <b style="color:#dc2626;">COD truck delivery</b>.')}
+          </div>
         </div>
 
         <div id="soStatus" class="so-status"></div>
@@ -5512,6 +5519,32 @@ html, body { background: #ffffff !important; }
         if (state.isCutPrint && calcPrice < 30000) calcPrice = 30000;
         // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
         else if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        // 2026-06-04: 자유인쇄커팅 — A3 (max 변 420mm) 초과 시 끼우는/종이 받침대 disable
+        if (state.isCutPrint) {
+            try {
+                var _maxMm = Math.max(Math.round((wCm || 0) * 10), Math.round((hCm || 0) * 10));
+                var _overA3 = _maxMm > 420;
+                document.querySelectorAll('#soBaseStandList label[data-bs-a3only="1"]').forEach(function(lbl){
+                    var cb = lbl.querySelector('input[type=checkbox][data-bs-key]');
+                    if (_overA3) {
+                        lbl.style.opacity = '0.45';
+                        lbl.style.cursor = 'not-allowed';
+                        if (cb) {
+                            if (cb.checked) {
+                                cb.checked = false;
+                                var key = cb.getAttribute('data-bs-key');
+                                if (key && state.baseStands && state.baseStands[key]) delete state.baseStands[key];
+                            }
+                            cb.disabled = true;
+                        }
+                    } else {
+                        lbl.style.opacity = '1';
+                        lbl.style.cursor = 'pointer';
+                        if (cb) cb.disabled = false;
+                    }
+                });
+            } catch (e) {}
+        }
         // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
         if (isAcrGoods && calcPrice < 100) calcPrice = 100;
         state.customUnitPrice = calcPrice;
@@ -7538,8 +7571,12 @@ html, body { background: #ffffff !important; }
         state.isCutPrint = _soIsCutPrintProduct(p);
         state.cutSize = 'full';
         state.bundleShipping = false;
-        // 2026-06-04: 자유인쇄커팅 — 보드 재질 선택 (6종, 동일 가격)
+        // 2026-06-04: 자유인쇄커팅 — 보드 재질 선택 (6종, 동일 가격) + 지방 배송 안내 표시
         state.cutBoardMaterial = state.isCutPrint ? 'honeycomb_16mm_white' : null;
+        try {
+            var _shipNotice = document.getElementById('soCutShipNotice');
+            if (_shipNotice) _shipNotice.style.display = state.isCutPrint ? '' : 'none';
+        } catch (e) {}
         try {
             var _cbSec = document.getElementById('soCutBoardMaterialSection');
             if (_cbSec) _cbSec.style.display = state.isCutPrint ? '' : 'none';
@@ -7780,16 +7817,19 @@ html, body { background: #ffffff !important; }
                     var _scissorsSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:48%; height:48%; color:#7c3aed;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>';
                     // 등신대 V2 는 전 카드 무료, cutPrint 는 각자 가격 표시
                     var _stIsFree = state.isStandeeV2;
+                    // 2026-06-04: cutPrint — 카드 배치 변경.
+                    //   상단: 끼우는 형태 (insert) + 종이받침대 (paper_stand)  — A3 (max 변 ≤ 420mm) 까지만 가능
+                    //   하단: 뒷면받침 (free_rear) + 받침없음 (none_card)
                     var _ssCards = [
-                        { k:'insert', img:'/down.png', feeStandee:0, feeCut:3000,
+                        { k:'insert', img:'/down.png', feeStandee:0, feeCut:3000, a3Only:true,
                             title: tr('끼우는 형태', '差し込み式', 'Slot-in'),
                             desc:  tr('허니콤보드로 쉽게 끼울 수 있어요', 'ハニカムボードで簡単に差し込み', 'Easy slot-in with honeycomb board') },
-                        { k:'free_rear', img:'/up.jpg', feeStandee:0, feeCut:8000,
-                            title: tr('뒷면받침', '背面サポート', 'Rear support'),
-                            desc:  tr('받침이 뒤에 있음. 등신대 형태.', 'スタンドが背面にあり、等身大の形状', 'Stand at the back — life-size shape') },
-                        { k:'paper_stand', img:'/paper.jpg', feeStandee:0, feeCut:500,
+                        { k:'paper_stand', img:'/paper.jpg', feeStandee:0, feeCut:500, a3Only:true,
                             title: tr('종이받침대', '紙スタンド', 'Paper stand'),
                             desc:  tr('양면테이프가 붙어있어요', '両面テープ付き', 'Double-sided tape included') },
+                        { k:'free_rear', img:'/up.jpg', feeStandee:0, feeCut:8000,
+                            title: tr('뒷면받침', '背面サポート', 'Rear support'),
+                            desc:  tr('허니콤보드로 만들어서 예쁘고 튼튼합니다', 'ハニカムボード製で美しく丈夫', 'Made of honeycomb board — pretty & sturdy') },
                         { k:'none_card', icon: _scissorsSvg, feeStandee:0, feeCut:0,
                             title: tr('받침없음', 'スタンドなし', 'No stand'),
                             desc:  tr('인쇄커팅만 (받침 없이 발송)', 'カットのみ (スタンドなしで発送)', 'Cutout only — no stand') }
@@ -7797,39 +7837,47 @@ html, body { background: #ffffff !important; }
                     _bsList.style.display = 'grid';
                     _bsList.style.gridTemplateColumns = 'repeat(2, 1fr)';
                     _bsList.style.gap = '10px';
-                    _bsList.innerHTML =
-                        // 등신대 — 전체 무료 안내 / cutPrint — 안내 생략 (개별 카드에 가격 표시)
-                        (_stIsFree
-                            ? '<div style="grid-column:1/-1; padding:11px 14px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:12px; text-align:center; font-size:13.5px; font-weight:900; color:#14532d; box-shadow:0 4px 12px -4px rgba(22,163,74,0.35); display:flex; align-items:center; justify-content:center; gap:6px;"><span style="font-size:16px;">✅</span>' +
-                                tr('받침대 비용과 배송비는 무료입니다', 'スタンド料金と送料は無料です', 'Stand and shipping are FREE') + '</div>'
-                            : '<div style="grid-column:1/-1; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; text-align:center; font-size:12px; font-weight:700; color:#475569;">' +
-                                tr('받침대 선택 (체크 1개 — 받침없음은 인쇄커팅만)', 'スタンド選択 (チェック1つ)', 'Select a stand (one check)') + '</div>'
-                        ) +
-                        _ssCards.map(function(o){
-                            var safeTitle = String(o.title).replace(/[<>"]/g,'');
-                            var safeDesc = String(o.desc).replace(/[<>"]/g,'');
-                            var _imgBlock = o.icon
-                                ? '<div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">' + o.icon + '</div>'
-                                : '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">';
-                            var fee = _stIsFree ? o.feeStandee : o.feeCut;
-                            var feeStr = (fee === 0)
-                                ? '<span style="color:#16a34a;">' + tr('무료', '無料', 'FREE') + '</span>'
-                                : '<span style="color:#dc2626;">+' + fmtPrice(fee) + '</span>';
-                            // 수량 input 제거 — 체크박스만, 수량은 1 고정
-                            return '<label data-bs-card="' + o.k + '" style="display:flex; flex-direction:column; gap:8px; padding:10px 10px 12px; border:2px solid #e7e5e4; border-radius:14px; cursor:pointer; background:#fff; transition:border-color .15s ease, box-shadow .15s ease;">' +
-                                '<div style="position:relative; aspect-ratio:1/1; background:#f8fafc; border-radius:10px; overflow:hidden;">' +
-                                    _imgBlock +
+                    // cutPrint 면 A3 안내 row 를 0번째 인덱스 앞에, 그 외(_stIsFree)는 무료 배너
+                    var _topNoticeHtml;
+                    if (_stIsFree) {
+                        _topNoticeHtml = '<div style="grid-column:1/-1; padding:11px 14px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #16a34a; border-radius:12px; text-align:center; font-size:13.5px; font-weight:900; color:#14532d; box-shadow:0 4px 12px -4px rgba(22,163,74,0.35); display:flex; align-items:center; justify-content:center; gap:6px;"><span style="font-size:16px;">✅</span>' +
+                            tr('받침대 비용과 배송비는 무료입니다', 'スタンド料金と送料は無料です', 'Stand and shipping are FREE') + '</div>';
+                    } else {
+                        // cutPrint — 상단 안내 (A3 까지만 가능 - 끼우는/종이)
+                        _topNoticeHtml = '<div style="grid-column:1/-1; padding:9px 12px; background:#fef3c7; border:1.5px solid #fbbf24; border-radius:10px; text-align:center; font-size:12px; font-weight:800; color:#78350f;">' +
+                            tr('아래 끼우는 형태 · 종이받침대는 <b>A3까지만 가능</b>합니다 (받침없음 = 인쇄커팅만, 체크 1개)',
+                               '差し込み式・紙スタンドは<b>A3まで</b>のみ可能 (1つ選択)',
+                               'Slot-in & Paper stand: <b>A3 max</b> only (pick one)') + '</div>';
+                    }
+                    var _cardHtml = _ssCards.map(function(o){
+                        var safeTitle = String(o.title).replace(/[<>"]/g,'');
+                        var safeDesc = String(o.desc).replace(/[<>"]/g,'');
+                        var _imgBlock = o.icon
+                            ? '<div style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">' + o.icon + '</div>'
+                            : '<img src="' + o.img + '" alt="' + safeTitle + '" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">';
+                        var fee = _stIsFree ? o.feeStandee : o.feeCut;
+                        var feeStr = (fee === 0)
+                            ? '<span style="color:#16a34a;">' + tr('무료', '無料', 'FREE') + '</span>'
+                            : '<span style="color:#dc2626;">+' + fmtPrice(fee) + '</span>';
+                        // A3 only 배지 (cutPrint 의 insert / paper_stand)
+                        var _a3Badge = (o.a3Only && !_stIsFree)
+                            ? '<div style="position:absolute; top:6px; left:6px; background:#fbbf24; color:#fff; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:900; box-shadow:0 2px 4px rgba(251,191,36,0.4);">A3 ↓</div>'
+                            : '';
+                        return '<label data-bs-card="' + o.k + '" data-bs-a3only="' + (o.a3Only ? '1' : '0') + '" style="display:flex; flex-direction:column; gap:8px; padding:10px 10px 12px; border:2px solid #e7e5e4; border-radius:14px; cursor:pointer; background:#fff; transition:opacity .15s ease, border-color .15s ease, box-shadow .15s ease;">' +
+                            '<div style="position:relative; aspect-ratio:1/1; background:#f8fafc; border-radius:10px; overflow:hidden;">' +
+                                _imgBlock + _a3Badge +
+                            '</div>' +
+                            '<div style="display:flex; align-items:flex-start; gap:8px;">' +
+                                '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin-top:2px; width:18px; height:18px; flex-shrink:0;">' +
+                                '<div style="flex:1; min-width:0;">' +
+                                    '<div style="font-weight:900; font-size:13.5px; color:#451a03; line-height:1.25;">' + safeTitle + '</div>' +
+                                    '<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:3px; line-height:1.35;">' + safeDesc + '</div>' +
                                 '</div>' +
-                                '<div style="display:flex; align-items:flex-start; gap:8px;">' +
-                                    '<input type="checkbox" data-bs-key="' + o.k + '" onchange="window._soToggleBaseStand(this)" style="margin-top:2px; width:18px; height:18px; flex-shrink:0;">' +
-                                    '<div style="flex:1; min-width:0;">' +
-                                        '<div style="font-weight:900; font-size:13.5px; color:#451a03; line-height:1.25;">' + safeTitle + '</div>' +
-                                        '<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:3px; line-height:1.35;">' + safeDesc + '</div>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<div style="text-align:right; font-weight:900; font-size:13px;">' + feeStr + '</div>' +
-                            '</label>';
-                        }).join('');
+                            '</div>' +
+                            '<div style="text-align:right; font-weight:900; font-size:13px;">' + feeStr + '</div>' +
+                        '</label>';
+                    }).join('');
+                    _bsList.innerHTML = _topNoticeHtml + _cardHtml;
                 } else if (window._soBaseStandOriginalHTML) {
                     // 비-등신대·비-cutPrint — 원래 6종 리스트로 복원
                     _bsList.style.display = 'flex';
