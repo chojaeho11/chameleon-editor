@@ -1495,6 +1495,12 @@ html, body { background: #ffffff !important; }
           <div id="soPlacardVariants" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-06-06: 아크릴 8종 (2T/3T/5T/8T/금경/은경/탁상스탠드/글씨스카시) — 카드 그리드 -->
+        <div class="so-section" id="soAcrylicVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('아크릴 종류 선택', 'アクリル 種類選択', 'Choose acrylic type')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soAcrylicVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
         <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -4567,6 +4573,81 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchPlacard', e); }
+    };
+
+    // 2026-06-06: 아크릴 family — 8종 (관리자 표시 순서)
+    var ACRYLIC_CODES_ORDERED = [
+        'acrl20001',    // 1. 아크릴인쇄 2T
+        'acrl20002',    // 2. 아크릴인쇄 3T
+        'acrl20003',    // 3. 아크릴인쇄 5T
+        'acrl20004',    // 4. 아크릴인쇄 8T
+        'acrl30002',    // 5. 금경아크릴 3T
+        'acrl30001',    // 6. 은경아크릴 3T
+        '64545465',     // 7. 아크릴 탁상 스탠드 QR
+        '3455534543'    // 8. 아크릴 글씨 스카시
+    ];
+    function _soIsAcrylicFamilyProduct(p) {
+        if (!p) return false;
+        return ACRYLIC_CODES_ORDERED.indexOf(p.code) >= 0;
+    }
+    var _soAcrylicFamilyCache = null;
+    async function _soLoadAcrylicFamilyVariants(currentCode) {
+        var sec = document.getElementById('soAcrylicVariantsSec');
+        var grid = document.getElementById('soAcrylicVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soAcrylicFamilyCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var r1 = await sb.from('admin_products').select(_COLS).in('code', ACRYLIC_CODES_ORDERED);
+                var rows = (r1 && r1.data) || [];
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code) _byCode[r.code] = r; });
+                _soAcrylicFamilyCache = ACRYLIC_CODES_ORDERED
+                    .map(function(c){ return _byCode[c]; })
+                    .filter(function(r){ return !!r; });
+                console.log('[so] acrylic family variants loaded:', _soAcrylicFamilyCache.length);
+            }
+            if (_soAcrylicFamilyCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soAcrylicFamilyCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Acrylic';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchAcrylicFamily(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] acrylicFamilyVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadAcrylicFamilyVariants = _soLoadAcrylicFamilyVariants;
+    window._soIsAcrylicFamilyProduct = _soIsAcrylicFamilyProduct;
+
+    window._soSwitchAcrylicFamily = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') {
+                window.openSimpleOrderModal(code);
+            } else {
+                location.href = location.pathname + '?product=' + encodeURIComponent(code);
+            }
+        } catch (e) { console.warn('[so] switchAcrylicFamily', e); }
     };
 
     // 2026-06-05: 게이트 (이름 매칭 '게이트' / 'gate') — 가로 2~6m, 세로 3~4m 선택, 동적 가격.
@@ -8689,6 +8770,15 @@ html, body { background: #ffffff !important; }
         } else {
             var _plSec = document.getElementById('soPlacardVariantsSec');
             if (_plSec) _plSec.style.display = 'none';
+        }
+        // 2026-06-06: 아크릴 family (8종 — 2T/3T/5T/8T/금경/은경/탁상스탠드/글씨스카시)
+        var _isAcVariant = (typeof window._soIsAcrylicFamilyProduct === 'function')
+            ? window._soIsAcrylicFamilyProduct(p) : false;
+        if (_isAcVariant) {
+            try { window._soLoadAcrylicFamilyVariants(p.code); } catch(e){}
+        } else {
+            var _acSec = document.getElementById('soAcrylicVariantsSec');
+            if (_acSec) _acSec.style.display = 'none';
         }
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
         var _isGate = _soIsGateProduct(p);
