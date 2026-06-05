@@ -1851,6 +1851,14 @@ window._cdAddToCart = async function() {
     setTimeout(window._cpCartOpen, 400);
 };
 
+// 2026-06-06: 바로주문 대신 장바구니 보기 — 다른 상품과 묶음 (무료배송 carryover 활용)
+window._cdViewCart = function() {
+    try {
+        if (typeof window._cpCartOpen === 'function') return window._cpCartOpen();
+        if (typeof window._soToggleCart === 'function') return window._soToggleCart(true);
+    } catch (e) { console.warn('[cd] viewCart', e); }
+};
+
 window._cdBuyNow = async function() {
     // 2026-05-22: 이미지 없이도 바로 주문 허용 (디자인 추후 전달)
     if (!state.img || !state.imgDataUrl) {

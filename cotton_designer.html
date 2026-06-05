@@ -218,6 +218,7 @@ window.__CD_I18N = {
     p_total: { ko:'합계', ja:'合計', en:'Total' },
     btn_cart: { ko:'장바구니에 담기', ja:'カートに追加', en:'Add to Cart' },
     btn_buynow: { ko:'바로 주문하기', ja:'今すぐ注文', en:'Buy Now' },
+    btn_viewcart: { ko:'장바구니 보기', ja:'カートを見る', en:'View Cart' },
     help_link: { ko:'도움이 필요하신가요?', ja:'お困りですか？', en:'Need help?' },
     cart_drawer_title: { ko:'장바구니', ja:'カート', en:'Cart' },
     cart_empty: { ko:'장바구니가 비어있습니다', ja:'カートは空です', en:'Your cart is empty' },
@@ -1552,11 +1553,12 @@ a { text-decoration: none; color: inherit; }
                 <div class="price-row total"><span data-cdi18n="p_total">합계</span><span id="pTotal">12,000원</span></div>
             </div>
             <!-- 2026-05-12: disabled 제거 — 파일 없을 때도 클릭하면 기존 카트 보기 -->
+            <!-- 2026-06-06: 바로주문 → 장바구니 보기 변경 (다른 상품과 묶어 무료배송 carryover 활용 가능) -->
             <button class="order-btn" id="orderBtn" onclick="window._cdAddToCart()">
                 <i class="fa-solid fa-cart-plus"></i> &nbsp;<span data-cdi18n="btn_cart">장바구니에 담기</span>
             </button>
-            <button class="order-btn" id="buyNowBtn" onclick="window._cdBuyNow()" style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
-                <i class="fa-solid fa-bolt"></i> &nbsp;<span data-cdi18n="btn_buynow">바로 주문하기</span>
+            <button class="order-btn" id="viewCartBtn" onclick="window._cdViewCart && window._cdViewCart()" style="margin-top:8px; background:#fff; color:var(--brown-dark); border:1.5px solid var(--brown-dark);">
+                <i class="fa-solid fa-bag-shopping"></i> &nbsp;<span data-cdi18n="btn_viewcart">장바구니 보기</span>
             </button>
         </div>
     </aside>

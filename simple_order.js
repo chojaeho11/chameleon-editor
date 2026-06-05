@@ -11689,7 +11689,8 @@ html, body { background: #ffffff !important; }
         cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
         // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).
         //   패브릭 결제를 통합 결제창으로 라우팅해도 배송비가 누락되지 않도록.
-        if (cart.some(_soIsFabricItem)) {
+        // 2026-06-06: 무료배송 carryover — 일반 상품 중 0원 항목 있으면 패브릭도 묶어 무료.
+        if (cart.some(_soIsFabricItem) && !_hasFreeShipItem) {
             var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
             shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
         }
