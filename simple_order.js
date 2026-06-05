@@ -3368,7 +3368,8 @@ html, body { background: #ffffff !important; }
             showRow('soWallSizeRow', false);
         } else if (state.isCustomSize) {
             // 2026-06-04: 광고인쇄/등신대 V2/자유인쇄커팅은 mm 표기, 그 외는 cm (글씨 스카시 hb_ss 제외)
-            var _useMmDim = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
+            // 2026-06-06: 아크릴 family 도 mm 표기.
+            var _useMmDim = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint || state.isAcrylicFamily) && !state.isBanner;
             var custDim = _useMmDim
                 ? (Math.round((state.customW || 0) * 10) + '×' + Math.round((state.customH || 0) * 10) + 'mm')
                 : ((state.customW || 0) + '×' + (state.customH || 0) + 'cm');
@@ -5571,6 +5572,11 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-06: 아크릴 family — 정액 배송비 10,000원 (시공/배송 옵션 비표시)
+        if (state.isAcrylicFamily) {
+            state._shipUpgradeReason = null;
+            return 10000;
+        }
         // 2026-06-05: 게이트 — 무료 배송 (담당자 협의)
         if (state.isGate) {
             state._shipUpgradeReason = null;
@@ -6549,7 +6555,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄 — input 값은 mm. cm 으로 환산해 state 에 저장 (기존 area 계산 호환).
         // 2026-06-04: 등신대 V2 + 자유인쇄커팅 도 mm 단위 입력 (글씨 스카시 hb_ss 는 제외, 원래 UI 유지)
         var isAd = state && state.isAdPrint;
-        var isMmInput = isAd || (state && (state.isStandeeV2 || state.isCutPrint));
+        var isMmInput = isAd || (state && (state.isStandeeV2 || state.isCutPrint || state.isAcrylicFamily));
         var wRaw = parseFloat(wEl.value) || 0;
         var hRaw = parseFloat(hEl.value) || 0;
         var wCm = isMmInput ? (wRaw / 10) : (parseInt(wRaw, 10) || 0);
@@ -9175,10 +9181,16 @@ html, body { background: #ffffff !important; }
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
-        //   cm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
-        if (typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p)) {
+        //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
+        state.isAcrylicFamily = !!(typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p));
+        if (state.isAcrylicFamily) {
             state.isAdPrint = false;
-            state.isCustomSize = true;  // cm 면적 입력 유지
+            state.isCustomSize = true;
+            // 시공/배송 옵션 섹션 숨김 — 정액 1만원 배송 자동 적용
+            try {
+                var _acSchedSec = document.getElementById('soScheduleSection');
+                if (_acSchedSec) _acSchedSec.style.display = 'none';
+            } catch (e) {}
         }
         // 2026-06-04: 등신대 V2 (hb_pi_5 / acr_crt_stand) 만 면적×단가 + mm 입력. hb_ss/hb_point 은 원래 UI 유지.
         if (state.isStandeeV2) state.isCustomSize = true;
@@ -9248,15 +9260,16 @@ html, body { background: #ffffff !important; }
             var _customUnitEl = document.getElementById('soCustomSizeUnit');
             var _customWEl = document.getElementById('soCustomW');
             var _customHEl = document.getElementById('soCustomH');
-            var _useMm = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
+            // 2026-06-06: 아크릴 family 도 mm 입력 — min 10mm (1cm) 허용
+            var _useMm = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint || state.isAcrylicFamily) && !state.isBanner;
             if (_customUnitEl) _customUnitEl.textContent = _useMm ? '(mm)' : '(cm)';
             if (_customWEl) {
-                _customWEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
+                _customWEl.min = _useMm ? (state.isAcrylicFamily ? 10 : 100) : (state.isAcrylicGoods ? 1 : 10);
                 _customWEl.max = _useMm ? (state.isCutPrint ? 3000 : 2500) : 2000;
                 _customWEl.value = _useMm ? (state.customW * 10) : state.customW;
             }
             if (_customHEl) {
-                _customHEl.min = _useMm ? 100 : (state.isAcrylicGoods ? 1 : 10);
+                _customHEl.min = _useMm ? (state.isAcrylicFamily ? 10 : 100) : (state.isAcrylicGoods ? 1 : 10);
                 _customHEl.max = _useMm ? (state.isCutPrint ? 3000 : 2500) : 2000;
                 _customHEl.value = _useMm ? (state.customH * 10) : state.customH;
             }
@@ -9686,13 +9699,15 @@ html, body { background: #ffffff !important; }
             var chEl = document.getElementById('soCustomH'); if (chEl) chEl.value = state.customH;
             // 2026-06-01: 광고인쇄 — input 값을 mm 로 (state.customW 는 cm 유지, 표시만 ×10).
             // 2026-06-04: 등신대 V2 + 자유인쇄커팅도 동일 (mm 입력). 글씨 스카시는 원래 cm UI 유지.
-            var _useMmHere = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint) && !state.isBanner;
+            // 2026-06-06: 아크릴 family 도 mm 입력. min 10mm.
+            var _useMmHere = (state.isAdPrint || state.isStandeeV2 || state.isCutPrint || state.isAcrylicFamily) && !state.isBanner;
             var _wLblEl = document.getElementById('soCustomWLabel');
             var _hLblEl = document.getElementById('soCustomHLabel');
             if (_useMmHere) {
                 var _maxMm = state.isAdPrint ? 20000 : (state.isCutPrint ? 3000 : 2500);
-                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = 100; cwEl.max = _maxMm; cwEl.step = 1; }
-                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = 100; chEl.max = _maxMm; chEl.step = 1; }
+                var _minMm = state.isAcrylicFamily ? 10 : 100;
+                if (cwEl) { cwEl.value = Math.round(state.customW * 10); cwEl.min = _minMm; cwEl.max = _maxMm; cwEl.step = 1; }
+                if (chEl) { chEl.value = Math.round(state.customH * 10); chEl.min = _minMm; chEl.max = _maxMm; chEl.step = 1; }
                 var _uEl = document.getElementById('soCustomSizeUnit');
                 if (_uEl) _uEl.textContent = '(mm)';
                 if (_wLblEl) _wLblEl.textContent = tr('가로 mm', '横 mm', 'Width mm');
