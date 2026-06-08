@@ -11732,8 +11732,13 @@ html, body { background: #ffffff !important; }
         //   - 카트 상품 소계 < 100,000원 + 다른 자체 배송비(max룰)도 0 → 3만원 포장배송비 1회 가산
         //   - 가벽 설치/원판 용차 등 자체 배송비가 있는 경우 그 안에 포함됨 (이중 부과 방지)
         //   - 베스트굿즈 정액 3K / 패브릭 별도 발송은 별도 처리 (위에서 가산됨)
+        // 2026-06-08: 1원단위/천원단위 금액주문 (21355677*) 은 배송비 자동 가산 제외 — 입력 금액 그대로 결제.
         var _allProductSub = taxBase + nonDiscountBase;
-        if (_allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
+        var _hasAmountOrder = cart.some(function(_it){
+            var _c = (_it && _it.product && _it.product.code) || '';
+            return _c === '21355677' || _c === '21355677_copy';
+        });
+        if (!_hasAmountOrder && _allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
             shipTotal += 30000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
