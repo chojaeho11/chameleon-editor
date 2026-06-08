@@ -12223,11 +12223,41 @@ html, body { background: #ffffff !important; }
                 if (typeof _soGetWalletUseKRW === 'function') _walletUse = _soGetWalletUseKRW(_grand);
             } catch (e) {}
             // 2026-06-08: 고객 결제창 (?quote=ID) 으로 진입한 매니저 견적 — _payPendingQuote 가 각 아이템에
-            //   __pendingShipping 으로 원본 배송비 보존. cart-calc.shipTotal 은 carryover/__pendingQuoteId 면제로 0 이 되어
-            //   PDF 의 "비수도권 추가 배송비" 라인이 누락되던 문제를 직접 합산으로 복구.
-            var _pendingShipSum = cart.reduce(function (s, it) {
-                return s + (Number(it && it.__pendingShipping) || 0);
-            }, 0);
+            //   __pendingShipping 으로 원본 배송비 보존, 없으면 orderTotal - (PDF 라인가) 로 역산.
+            //   매니저가 시공/배송 옵션 미선택 케이스: it.shipping=null 이지만 cart-calc 의 _allProductSub<100K → +30K 자동가산이
+            //   total_amount 에 포함된 상태로 DB 저장. payPendingQuote 가 redistribute 로 it.price=orderTotal 만들지만
+            //   PDF 의 라인가는 customSize.unit/cutPrint/boxSize 에서 가져와 5K 만 표시 → 30K 누락.
+            //   inferShip = sum(it.price) - sum(PDF 라인가×qty) 로 누락 배송비 복구.
+            var _hasPending = cart.some(function (it) { return it && it.__pendingQuoteId; });
+            var _pendingShipSum = 0;
+            if (_hasPending) {
+                var _pendTotalSum = 0;   // sum of redistributed line totals (it.price)
+                var _pendLineSum = 0;    // sum of PDF-displayable line prices (customSize.unit etc × qty)
+                cart.forEach(function (it) {
+                    if (!it || !it.__pendingQuoteId) return;
+                    _pendTotalSum += Number(it.price) || 0;
+                    // 먼저 보존된 __pendingShipping 가 있으면 그대로 누적 (옵션 선택한 케이스)
+                    if (Number(it.__pendingShipping) > 0) {
+                        _pendLineSum += (Number(it.price) || 0) - Number(it.__pendingShipping);
+                        return;
+                    }
+                    var qty = Number(it.qty) || 1;
+                    var linePrice = 0;
+                    if (it.customSize && typeof it.customSize.unit === 'number' && it.customSize.unit > 0) {
+                        linePrice = it.customSize.unit * qty;
+                        if (it.wallSide === 'double') linePrice *= 2;
+                    } else if (it.cutPrint) {
+                        linePrice = ((it.cutPrint.size === 'half') ? 100000 : 150000) * qty;
+                        if (it.wallSide === 'double') linePrice *= 2;
+                    } else if (it.boxSize && typeof it.boxSize.unit === 'number' && it.boxSize.unit > 0) {
+                        linePrice = it.boxSize.unit * qty;
+                    } else {
+                        linePrice = ((it.product && Number(it.product.price)) || 0) * qty;
+                    }
+                    _pendLineSum += linePrice;
+                });
+                _pendingShipSum = Math.max(0, _pendTotalSum - _pendLineSum);
+            }
             var orderInfo = {
                 id: '미리보기',
                 manager: name, phone: phone, address: fullAddr,
