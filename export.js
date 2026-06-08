@@ -1794,16 +1794,17 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
 
         // ★ 2026-05-18: 면적가(현수막 등)·박스·자유인쇄커팅은 카트에 저장된 실제 산출 단가를 사용.
         //    item.product.price 는 m² 단가/기본가라 그대로 쓰면 견적서 금액이 결제 금액과 어긋남.
-        if (item.cutPrint) {
+        // 2026-06-08: customSize.unit (회베 계산기 결과) 가 있으면 cutPrint/customSize 무관 우선 사용.
+        //   이전엔 cutPrint 면 무조건 150K(full)/100K(half) 하드코딩 → 회베 계산 (예: 20×30cm = 3,000원) 무시되던 버그.
+        if (item.customSize && typeof item.customSize.unit === 'number' && item.customSize.unit > 0) {
+            pdfPrice = item.customSize.unit;
+            if (item.wallSide === 'double' || item.wall_side === 'double') pdfPrice *= 2;
+        } else if (item.cutPrint) {
+            // 옛 데이터 (customSize 누락) — 한판/반판 flat 가격 fallback
             pdfPrice = (item.cutPrint.size === 'half') ? 100000 : 150000;
-            // 2026-05-22: 재단인쇄 양면 → 단가 2배 (cart wallSide / order wall_side)
             if (item.wallSide === 'double' || item.wall_side === 'double') pdfPrice *= 2;
         } else if (item.boxSize && typeof item.boxSize.unit === 'number') {
             pdfPrice = item.boxSize.unit;
-        } else if (item.customSize && typeof item.customSize.unit === 'number') {
-            // 2026-06-06: 면적기반 상품 (등신대/현수막 등) — 카트에서 계산된 정확한 단가 사용.
-            //   cart 의 회베 계산 로직 결과 (예: 100×199.9cm = 99,950원). product.price (per-m² 단가) 가 아닌 이 값을 신뢰.
-            pdfPrice = item.customSize.unit;
         }
         if (item.rawBoardDouble) pdfPrice = pdfPrice * 2;
         // 2026-05-30: 키링 양면 — 단가 ×2
