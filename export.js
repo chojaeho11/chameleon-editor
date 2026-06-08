@@ -1803,6 +1803,19 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
         } else if (item.customSize && typeof item.customSize.unit === 'number') {
             pdfPrice = item.customSize.unit;
         }
+        // 2026-06-06: 안전망 — pdfPrice 가 product.price 와 거의 같으면서 area_m2 < 1m² 인 경우,
+        //   per-m² 단가가 그대로 들어간 잘못된 케이스로 보고 area 로 재환산.
+        //   대상: customSize 의 unit 이 누락됐거나, per-m² 로 잘못 저장된 옛 카트 데이터.
+        try {
+            var _basePr = (item.product && item.product.price) || 0;
+            if (item.customSize && item.customSize.area_m2 != null && _basePr > 10000 &&
+                Math.abs(pdfPrice - _basePr) < 100) {
+                var _am2 = parseFloat(item.customSize.area_m2);
+                if (_am2 > 0 && _am2 < 0.95) {
+                    pdfPrice = Math.round(pdfPrice * _am2 / 10) * 10;
+                }
+            }
+        } catch (e) {}
         if (item.rawBoardDouble) pdfPrice = pdfPrice * 2;
         // 2026-05-30: 키링 양면 — 단가 ×2
         if (item._presetType === 'keyring' && item._keyringSide === 'double') {
