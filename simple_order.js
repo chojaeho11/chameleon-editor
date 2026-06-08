@@ -9998,6 +9998,9 @@ html, body { background: #ffffff !important; }
             var _rpSec = document.getElementById('soRealPrintSection');
             var _rpCoatWrap = document.getElementById('soRpCoatingWrap');
             if (state.isRealPrint && _rpSec) {
+                // 재질 선택 그리드(9종 카드)는 모달 최상단
+                var _rpVarSec = document.getElementById('soRealVariantsSec');
+                if (_rpVarSec) _rpVarSec.style.order = '-300';
                 _rpSec.style.display = '';
                 _rpSec.style.order = '-200';
                 if (_custSec) _custSec.style.display = 'none';
