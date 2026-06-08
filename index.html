@@ -17279,14 +17279,21 @@ if (w >= 20 && h >= 20) {
 <!-- Google Ads 전환추적 + 리마케팅 헬퍼 -->
 <script>
   // ★ 장바구니 추가 전환 (실제 장바구니 추가 시에만 호출)
+  // 2026-06-09: 자동 통화 감지 — hostname 기반 JPY/USD/KRW 환산 (cafe0101→JPY, cafe3355→USD).
+  //   이전엔 KRW 하드코딩 → JP 사이트 전환가가 0으로 보고되던 버그 fix.
   window.gtagTrackAddToCart = function(value, currency) {
-      if (typeof gtag === 'function') {
-          gtag('event', 'conversion', {
-              'send_to': 'AW-11349651713/P7AtCKeNgfYaEIHi96Mq',
-              'value': value || 1.0,
-              'currency': currency || 'KRW'
-          });
-      }
+      if (typeof gtag !== 'function') return;
+      var _h = (location.hostname||'').toLowerCase();
+      var _c = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'JP'
+             : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'US' : 'KR';
+      var _rate = ({KR:1, JP:0.1, US:0.001})[_c] || 1;
+      var _curr = currency || (_c==='JP'?'JPY':_c==='US'?'USD':'KRW');
+      var _val  = currency ? (value||1.0) : Math.round((value||1.0)*_rate*100)/100;
+      gtag('event', 'conversion', {
+          'send_to': 'AW-11349651713/P7AtCKeNgfYaEIHi96Mq',
+          'value': _val,
+          'currency': _curr
+      });
   };
 
   // ★ 리마케팅: 페이지뷰 + 제품 조회 이벤트 (디스플레이 광고 리타겟팅용)

@@ -335,16 +335,50 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'AW-11349651713');
-      // 결제 완료 전환 이벤트
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('db_id') && (params.get('paymentKey') || params.get('session_id'))) {
-          gtag('event', 'conversion', {
-              'send_to': 'AW-11349651713/purchase',
-              'value': parseFloat(params.get('amount')) || 0,
-              'currency': 'KRW',
-              'transaction_id': params.get('db_id')
-          });
-      }
+      // 2026-06-09: 결제 완료 전환 — hostname 기반 자동 통화 감지 (KRW/JPY/USD).
+      //   Toss (KR): URL ?amount= 는 KRW. Stripe (JP/US): URL 에 amount 없어 DB total_amount fetch 후 환산.
+      //   이전 버그: 모든 사이트 KRW 하드코딩 → JP/US 전환 가치 0으로 보고됨.
+      (async function _fireConv() {
+          try {
+              var p = new URLSearchParams(window.location.search);
+              var _dbId = p.get('db_id');
+              var _pKey = p.get('paymentKey');
+              var _sId  = p.get('session_id');
+              if (!_dbId || (!_pKey && !_sId)) return;
+              var _host = (location.hostname || '').toLowerCase();
+              var _country = (_host.indexOf('cafe0101') >= 0 || _host.indexOf('cotton-printer') >= 0) ? 'JP'
+                           : (_host.indexOf('cafe3355') >= 0 || _host.indexOf('chameleon.design') >= 0) ? 'US'
+                           : 'KR';
+              var _rateMap = { KR:1, JP:0.1, US:0.001 };
+              var _rate = _rateMap[_country] || 1;
+              var _curr = _country === 'JP' ? 'JPY' : _country === 'US' ? 'USD' : 'KRW';
+              var _value = 0;
+              if (_pKey) {
+                  // Toss — URL amount 그대로 (KRW). KR 전용 게이트웨이.
+                  _value = parseFloat(p.get('amount')) || 0;
+              } else {
+                  // Stripe — DB 에서 total_amount (KRW) fetch 후 local 통화로 환산.
+                  try {
+                      var _r = await fetch(SUPABASE_URL + '/rest/v1/orders?id=eq.' + encodeURIComponent(_dbId) + '&select=total_amount', {
+                          headers: { 'Authorization':'Bearer '+SUPABASE_KEY, 'apikey':SUPABASE_KEY }
+                      });
+                      var _arr = await _r.json();
+                      var _ord = _arr && _arr[0];
+                      var _krw = (_ord && Number(_ord.total_amount)) || 0;
+                      _value = Math.round(_krw * _rate * 100) / 100;
+                  } catch(e) { console.warn('[gtag conv] DB fetch fail', e); }
+              }
+              if (typeof gtag === 'function' && _value > 0) {
+                  gtag('event', 'conversion', {
+                      'send_to': 'AW-11349651713/purchase',
+                      'value': _value,
+                      'currency': _curr,
+                      'transaction_id': _dbId
+                  });
+                  console.log('[gtag conv] sent', { value:_value, currency:_curr, country:_country });
+              }
+          } catch(e) { console.warn('[gtag conv] fail', e); }
+      })();
     </script>
 </body>
 </html>

@@ -14,11 +14,16 @@
   gtag('js', new Date());
   gtag('config', 'AW-11349651713');
   gtag('event', 'page_view', { 'send_to': 'AW-11349651713' });
-  // 장바구니 추가 전환 헬퍼 (기존 전환액션 라벨 재사용)
+  // 2026-06-09: 자동 통화 감지 — hostname 기반 JPY/USD/KRW 환산 (cafe0101→JPY, cafe3355→USD).
   window.gtagTrackAddToCart = function(value, currency){
-      if (typeof gtag === 'function') {
-          gtag('event','conversion',{ 'send_to':'AW-11349651713/P7AtCKeNgfYaEIHi96Mq', 'value': value||1.0, 'currency': currency||'KRW' });
-      }
+      if (typeof gtag !== 'function') return;
+      var _h = (location.hostname||'').toLowerCase();
+      var _c = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'JP'
+             : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'US' : 'KR';
+      var _rate = ({KR:1, JP:0.1, US:0.001})[_c] || 1;
+      var _curr = currency || (_c==='JP'?'JPY':_c==='US'?'USD':'KRW');
+      var _val  = currency ? (value||1.0) : Math.round((value||1.0)*_rate*100)/100;
+      gtag('event','conversion',{ 'send_to':'AW-11349651713/P7AtCKeNgfYaEIHi96Mq', 'value': _val, 'currency': _curr });
   };
   // ★ 크로스도메인 전환 연결: 광고 클릭 파라미터(gclid 등)를 디자이너(cafe 도메인) 링크로 전달.
   //   cotton-printer.com → cafe0101.com/fabric 으로 도메인이 바뀌면 gclid 가 끊겨 주문 전환이

@@ -14,16 +14,45 @@
   gtag('js', new Date());
   gtag('config', 'AW-11349651713');
   gtag('event', 'page_view', { 'send_to': 'AW-11349651713' });
-  // 장바구니 추가 전환 헬퍼 (기존 전환액션 라벨 재사용)
+  // 2026-06-09: 자동 통화 감지 — 호출자가 KRW 값만 넘기면 hostname 기반으로 JPY/USD/KRW 환산 후 송출.
+  //   currency 명시되면 그대로 (호환). 이전 'KRW' 하드코딩 → JP 사이트 전환가 0으로 보고됐던 버그 fix.
   window.gtagTrackAddToCart = function(value, currency){
-      if (typeof gtag === 'function') {
-          gtag('event','conversion',{ 'send_to':'AW-11349651713/P7AtCKeNgfYaEIHi96Mq', 'value': value||1.0, 'currency': currency||'KRW' });
-      }
+      if (typeof gtag !== 'function') return;
+      var _h = (location.hostname||'').toLowerCase();
+      var _c = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'JP'
+             : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'US' : 'KR';
+      var _rate = ({KR:1, JP:0.1, US:0.001})[_c] || 1;
+      var _curr = currency || (_c==='JP'?'JPY':_c==='US'?'USD':'KRW');
+      var _val  = currency ? (value||1.0) : Math.round((value||1.0)*_rate*100)/100;
+      gtag('event','conversion',{ 'send_to':'AW-11349651713/P7AtCKeNgfYaEIHi96Mq', 'value': _val, 'currency': _curr });
   };
 </script>
 <meta name="description" content="이미지를 올리면 자동으로 패턴 원단이 만들어집니다. 5가지 레이아웃, 면·인견·폴리·실크 원단, 110cm 폭 무제한 길이.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.cafe2626.com/fabric">
+<!-- 2026-06-09: hostname 기반 canonical 동적 갱신 — JP/US 트래픽이 KR 도메인으로 귀속되던 SEO/Ads 문제 fix -->
+<script>
+  (function _syncCanonical(){
+      try {
+          var _h = (location.hostname||'').toLowerCase();
+          var _domain = null;
+          if (_h.indexOf('cafe0101') >= 0) _domain = 'https://www.cafe0101.com';
+          else if (_h.indexOf('cafe3355') >= 0) _domain = 'https://www.cafe3355.com';
+          else if (_h.indexOf('cotton-printer') >= 0) _domain = 'https://www.cotton-printer.com';
+          else if (_h.indexOf('chameleon.design') >= 0) _domain = 'https://chameleon.design';
+          if (!_domain) return;  // cafe2626 또는 기타 — 기본값 유지
+          var _path = location.pathname || '/fabric';
+          var _set = function(){
+              try {
+                  var c = document.querySelector('link[rel="canonical"]');
+                  if (c) c.href = _domain + _path;
+              } catch(e){}
+          };
+          if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _set);
+          else _set();
+      } catch(e){}
+  })();
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
