@@ -1093,6 +1093,9 @@ ${hreflangTags('/editor')}
             'seed-goods': '/seed-goods.html',
             // 2026-05-29: 굿즈 이미지 자동화 도구 — /goods-images (login-gated, upload + DALL-E)
             'goods-images': '/goods-images.html',
+            // 2026-06-08: AI 챗봇 학습 관리 — 일본/모로코 직원용 별도 깨끗한 URL (같은 콘텐츠, 페이지 내부에서 UI 언어 + 필터 자동 설정)
+            'chatbot-learn-ja': '/chatbot_learn_882.html',
+            'chatbot-learn-ma': '/chatbot_learn_882.html',
         };
         // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
         if (path.indexOf('store/') === 0 && path.length > 6) {

@@ -255,6 +255,112 @@
 </div>
 
 <script>
+// ═══ 2026-06-08: i18n — URL pathname 으로 UI 언어 자동 선택 ═══
+//   /chatbot-learn-ja → 일본 직원용 (UI 일본어 + 일본 대화만 필터)
+//   /chatbot-learn-ma → 모로코 직원용 (UI 영어 + 외국어 대화만 필터)
+//   /chatbot_learn_882 → 한국 직원용 (UI 한국어 + 모든 언어)
+var _UI_LANG = 'ko';
+var _AUTO_LANG_FILTER = 'all';
+(function(){
+    var _p = (location.pathname || '').toLowerCase();
+    if (_p.indexOf('chatbot-learn-ja') >= 0 || _p.indexOf('chatbot_learn_ja') >= 0) {
+        _UI_LANG = 'ja';
+        _AUTO_LANG_FILTER = 'ja';
+        try { document.documentElement.lang = 'ja'; } catch(e){}
+    } else if (_p.indexOf('chatbot-learn-ma') >= 0 || _p.indexOf('chatbot_learn_ma') >= 0) {
+        _UI_LANG = 'en';
+        _AUTO_LANG_FILTER = 'foreign';
+        try { document.documentElement.lang = 'en'; } catch(e){}
+    }
+})();
+// 번역 사전 — UI 에 노출되는 주요 문구. 누락 시 한국어 원문 fallback.
+var _UI_DICT = {
+    'AI 챗봇 학습 관리': { ja:'AIチャットボット学習管理', en:'AI Chatbot Learning' },
+    '로그아웃': { ja:'ログアウト', en:'Logout' },
+    '상담 로그': { ja:'相談ログ', en:'Chat Logs' },
+    '학습 데이터': { ja:'学習データ', en:'Knowledge' },
+    '설정': { ja:'設定', en:'Settings' },
+    '서비스 AI 채팅': { ja:'サービスAIチャット', en:'Service AI Chat' },
+    '오늘의 챗봇 리포트': { ja:'本日のチャットボットレポート', en:"Today's Chatbot Report" },
+    '오늘 상담': { ja:'本日の相談', en:'Today\'s Chats' },
+    '학습 필요': { ja:'学習必要', en:'Needs Training' },
+    '총 대화': { ja:'総会話', en:'Total Chats' },
+    '한국 / 일본 / 외국어': { ja:'韓国 / 日本 / 外国語', en:'Korean / Japanese / Foreign' },
+    '오늘': { ja:'本日', en:'Today' },
+    '최근 7일': { ja:'最近7日', en:'Last 7 days' },
+    '최근 30일': { ja:'最近30日', en:'Last 30 days' },
+    '최근 90일': { ja:'最近90日', en:'Last 90 days' },
+    '전체': { ja:'全期間', en:'All time' },
+    '특정 날짜': { ja:'特定日', en:'Specific date' },
+    '🌐 모든 언어': { ja:'🌐 全言語', en:'🌐 All languages' },
+    '🇰🇷 한국용 (Korean)': { ja:'🇰🇷 韓国向け (Korean)', en:'🇰🇷 Korean' },
+    '🇯🇵 일본용 (日本語)': { ja:'🇯🇵 日本向け (日本語)', en:'🇯🇵 Japanese (日本語)' },
+    '🌍 영어/외국어용 (Foreign)': { ja:'🌍 外国語向け (Foreign)', en:'🌍 English / Foreign' },
+    '조회': { ja:'検索', en:'Search' },
+    '대화 로딩 중...': { ja:'会話読み込み中...', en:'Loading conversation...' },
+    '메시지 없음': { ja:'メッセージなし', en:'No messages' },
+    '좌측에서 대화를 선택하세요': { ja:'左から会話を選んでください', en:'Select a conversation from the left' },
+    '고객': { ja:'お客様', en:'Customer' },
+    '해외': { ja:'海外', en:'Foreign' },
+    '직접 답변 작성': { ja:'手動回答作成', en:'Write Reply' },
+    '답변 전송': { ja:'送信', en:'Send Reply' },
+    '관리자 답변': { ja:'管理者回答', en:'Admin Reply' },
+    '챗봇 답변': { ja:'チャットボット回답', en:'Chatbot Reply' },
+    '학습 데이터에 추가': { ja:'学習データに追加', en:'Add to Knowledge' },
+    '잘못된 답변': { ja:'誤った回答', en:'Wrong Answer' },
+    '문제없음': { ja:'問題なし', en:'OK' },
+    '들켰어': { ja:'バレた', en:'Caught' },
+    '오늘 답변에서 챗봇이 어려움을 겪었습니다. 검토가 필요합니다!': { ja:'本日の回答でチャットボットが困っていました。検討が必要です!', en:'Chatbot struggled with answers today. Review needed!' },
+    '어제 총': { ja:'昨日合計', en:'Yesterday' },
+    '학습필요': { ja:'学習必要', en:'needs training' },
+    '건': { ja:'件', en:'' },
+    '대화 새로고침': { ja:'会話を更新', en:'Refresh' }
+};
+function _trUI(text) {
+    if (!text || _UI_LANG === 'ko') return text;
+    var trimmed = text.replace(/\s+/g, ' ').trim();
+    var entry = _UI_DICT[trimmed];
+    if (entry && entry[_UI_LANG]) return text.replace(trimmed, entry[_UI_LANG]);
+    return text;
+}
+// DOM 텍스트 노드 walker — 페이지 로드 직후 한 번 + 비동기 렌더 후 재호출
+function _applyUiTranslate(root) {
+    if (_UI_LANG === 'ko') return;
+    root = root || document.body;
+    if (!root) return;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(n){
+            if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            var p = n.parentNode;
+            if (p && (p.tagName === 'SCRIPT' || p.tagName === 'STYLE')) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+        }
+    }, false);
+    var nodes = [];
+    var n; while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function(tn){
+        var raw = tn.nodeValue;
+        var trimmed = raw.replace(/\s+/g,' ').trim();
+        var entry = _UI_DICT[trimmed];
+        if (entry && entry[_UI_LANG]) tn.nodeValue = raw.replace(trimmed, entry[_UI_LANG]);
+    });
+    // option 텍스트도 번역
+    root.querySelectorAll && root.querySelectorAll('option').forEach(function(op){
+        var t = (op.textContent || '').replace(/\s+/g,' ').trim();
+        var e = _UI_DICT[t];
+        if (e && e[_UI_LANG]) op.textContent = e[_UI_LANG];
+    });
+    // placeholder/title 도 번역
+    root.querySelectorAll && root.querySelectorAll('[placeholder]').forEach(function(el){
+        var t = (el.getAttribute('placeholder')||'').trim();
+        var e = _UI_DICT[t];
+        if (e && e[_UI_LANG]) el.setAttribute('placeholder', e[_UI_LANG]);
+    });
+}
+window._applyUiTranslate = _applyUiTranslate;
+window._UI_LANG = _UI_LANG;
+window._AUTO_LANG_FILTER = _AUTO_LANG_FILTER;
+
 // ═══ Supabase Init ═══
 var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
@@ -302,7 +408,18 @@ function initApp(user) {
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     document.getElementById('userEmail').textContent = user.email;
-    cbLoadKnowledge();
+    // 2026-06-08: pathname 기반 자동 UI 번역 (일본/모로코 직원용)
+    try {
+        if (window._UI_LANG === 'ja') document.title = 'AIチャットボット学習管理';
+        else if (window._UI_LANG === 'en') document.title = 'AI Chatbot Learning';
+        if (window._applyUiTranslate) window._applyUiTranslate();
+    } catch (e) {}
+    // 2026-06-08: 일본/모로코 직원용 페이지는 시작 탭을 "상담 로그" 로 (학습 데이터 보단 즉시 대응이 우선)
+    if (window._UI_LANG && window._UI_LANG !== 'ko' && typeof window.cbShowTab === 'function') {
+        window.cbShowTab('logs');
+    } else {
+        cbLoadKnowledge();
+    }
 }
 
 checkSession();
@@ -324,20 +441,25 @@ function getSb() { return sb; }
         var svcBtn = document.getElementById('cbTabServices');
         if (svcBtn) svcBtn.style.opacity = (tab === 'services') ? '1' : '0.7';
         if (tab === 'logs') {
-            // 2026-06-08: URL ?lang=ja|kr|foreign 쿼리 → 드롭다운 자동 선택 (직원 북마크용)
+            // 2026-06-08: URL pathname (/chatbot-learn-ja|ma) 또는 ?lang= 쿼리 → 드롭다운 자동 선택
             try {
                 var _u = new URL(location.href);
                 var _qLang = (_u.searchParams.get('lang') || '').toLowerCase();
                 var _validLang = { kr:1, ja:1, foreign:1, all:1 };
-                if (_qLang && _validLang[_qLang]) {
-                    var _sel = document.getElementById('qaReportLang');
-                    if (_sel) _sel.value = _qLang;
+                var _sel = document.getElementById('qaReportLang');
+                if (_qLang && _validLang[_qLang] && _sel) {
+                    _sel.value = _qLang;
+                } else if (_sel && window._AUTO_LANG_FILTER && window._AUTO_LANG_FILTER !== 'all') {
+                    // pathname 기반 자동 선택 (일본/모로코 직원용 페이지)
+                    _sel.value = window._AUTO_LANG_FILTER;
                 }
             } catch (e) {}
             qaLoadSessions();
         }
         if (tab === 'knowledge') cbLoadKnowledge();
         if (tab === 'settings') cbLoadSettings();
+        // 탭 전환 후 새로 렌더링된 콘텐츠 번역
+        try { if (window._applyUiTranslate) setTimeout(function(){ window._applyUiTranslate(); }, 50); } catch (e) {}
     };
 
     var cbKnAllData = [];
@@ -544,12 +666,14 @@ function getSb() { return sb; }
         }).length;
         stats.innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+total+'</div><div style="font-size:11px;color:#64748b;">총 대화</div></div>' +
             '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+krC+' / '+jaC+' / '+foreignC+'</div><div style="font-size:11px;color:#64748b;">한국 / 일본 / 외국어</div></div>';
-        document.getElementById('qaReportCount').textContent = total + '개 세션';
+        document.getElementById('qaReportCount').textContent = total + (window._UI_LANG === 'ja' ? '個セッション' : window._UI_LANG === 'en' ? ' sessions' : '개 세션');
         _renderSessionList();
         // 각 세션의 최신 고객 메시지 로드 (미리보기용)
         _loadSessionPreviews(sb);
         _startQaRealtimeSub(sb);
         _loadDailyReport();
+        // 2026-06-08: 통계/세션 카운트 정적 라벨 번역
+        try { if (window._applyUiTranslate) setTimeout(function(){ window._applyUiTranslate(document.getElementById('qaReportStats')); window._applyUiTranslate(); }, 50); } catch (e) {}
     };
 
     async function _loadSessionPreviews(sb) {
