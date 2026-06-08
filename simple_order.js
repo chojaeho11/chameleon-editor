@@ -1943,18 +1943,6 @@ html, body { background: #ffffff !important; }
             <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
             <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 <b>1만원</b> 자동 적용', 'ご注文合計 <b>10万円以上 送料無料</b> · 未満 <b>1万円</b> 自動適用', 'Free shipping over ₩100k · ₩10k under (auto)')}</span>
           </div>
-          <!-- 2026-06-08: 실사출력 family 전용 안내 배너 — isRealPrint 일 때만 노출 (_soApplyAdPrintLayout 에서 토글) -->
-          <div id="soRealPrintNotice" style="display:none; margin-bottom:12px; padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:12px; font-size:13px; font-weight:700; color:#78350f; line-height:1.75;">
-            <div style="font-size:14px; font-weight:900; margin-bottom:8px; color:#92400e; display:flex; align-items:center; gap:6px;">
-              <i class="fa-solid fa-scissors" style="color:#d97706;"></i>
-              ${tr('실사출력 주문 안내', '実写出力 ご案内', 'Real-Print Order Info')}
-            </div>
-            <div>• <b>${tr('기본 재단(커팅)금액', '基本カット代', 'Base cutting fee')}</b>: ${tr('1개당', 'per piece', 'per piece')} <b>${tr('2,000원', '¥200', '$2')}</b> ${tr('(사이즈와 별도 가산)', '(サイズ別途加算)', '(added on top of size price)')}</div>
-            <div>• <b>${tr('최소 주문금액', '最低注文金額', 'Min. order amount')}</b>: <b>${tr('3만원', '¥3,000', '$30')}</b> ${tr('이상', '以上', 'or more')}</div>
-            <div>• <b>${tr('무료배송', '送料無料', 'Free shipping')}</b>: ${tr('수량·지역 상관없이 전국 무료', '数量·地域問わず全国無料', 'All quantities, all regions')}</div>
-            <div>• <b>${tr('100장 이상 50% 할인', '100枚以上 50%OFF', '50% off on 100+ pieces')}</b></div>
-            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #f59e0b; font-size:11px; color:#92400e; font-weight:600;">${tr('예: 10×10cm 1,100원 + 커팅비 2,000원 = 3,100원/장 × 10장 = 31,000원', '例: 10×10cm 110円 + カット代 200円 = 310円/枚 × 10枚 = 3,100円', 'Ex: 10×10cm $1.1 + cut $2 = $3.1/pc × 10pc = $31')}</div>
-          </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
@@ -2002,6 +1990,58 @@ html, body { background: #ffffff !important; }
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
           <!-- 2026-06-01: 광고인쇄/허니콤 인라인 업로드는 별도 카드(#soInlineUploadCard)로 분리되어 사이드바 최상단으로 이동. -->
+        </div>
+
+        <!-- 2026-06-08: 실사출력 family (9종) 전용 섹션 — 원단 폭(90/127) 선택 + 코팅(캘지/유포지 한정) + 안내. -->
+        <!--   사이즈 W×H 계산기 대신 m 단위 판매 — qty 가 곧 미터. 폭 선택으로 단가 자동 산출. -->
+        <div class="so-section" id="soRealPrintSection" style="display:none;">
+          <div class="so-section-title">📏 ${tr('원단 폭 선택', '生地幅選択', 'Fabric width')}</div>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:14px;">
+            <button type="button" class="so-rp-width-btn active" data-width="90" onclick="window._soPickRealPrintWidth(this)"
+              style="padding:14px 10px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:12px; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
+              <div style="font-size:14px; font-weight:900;">90폭 <span style="font-weight:600; opacity:0.85;">(90cm)</span></div>
+              <div style="font-size:11px; opacity:0.8; margin-top:3px;">${tr('표준 단가', '標準価格', 'Standard rate')}</div>
+            </button>
+            <button type="button" class="so-rp-width-btn" data-width="127" onclick="window._soPickRealPrintWidth(this)"
+              style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:12px; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
+              <div style="font-size:14px; font-weight:900;">127폭 <span style="font-weight:600; opacity:0.85;">(127cm)</span></div>
+              <div style="font-size:11px; color:#dc2626; font-weight:800; margin-top:3px;">×1.2 ${tr('단가', '価格', 'rate')}</div>
+            </button>
+          </div>
+          <!-- 코팅 — 캘지(345645645) / 유포지(42355223) 만 노출 -->
+          <div id="soRpCoatingWrap" style="display:none; margin-bottom:14px;">
+            <div class="so-section-title" style="margin-bottom:8px;">🎨 ${tr('표면 코팅', '表面コーティング', 'Surface coating')}</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+              <button type="button" class="so-rp-coat-btn active" data-coat="uv" onclick="window._soPickRealPrintCoating(this)"
+                style="padding:12px 8px; border:2px solid #0f172a; background:#0f172a; color:#fff; border-radius:10px; cursor:pointer; font-family:inherit;">
+                <div style="font-size:13px; font-weight:900;">UV ${tr('인쇄', '印刷', 'print')}</div>
+                <div style="font-size:10px; opacity:0.85; margin-top:2px; color:#86efac;">${tr('무료', '無料', 'Free')}</div>
+              </button>
+              <button type="button" class="so-rp-coat-btn" data-coat="matte" onclick="window._soPickRealPrintCoating(this)"
+                style="padding:12px 8px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; cursor:pointer; font-family:inherit;">
+                <div style="font-size:13px; font-weight:900;">${tr('무광 코팅', 'マット加工', 'Matte coat')}</div>
+                <div style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">+1,000원/m</div>
+              </button>
+              <button type="button" class="so-rp-coat-btn" data-coat="gloss" onclick="window._soPickRealPrintCoating(this)"
+                style="padding:12px 8px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; cursor:pointer; font-family:inherit;">
+                <div style="font-size:13px; font-weight:900;">${tr('유광 코팅', '光沢加工', 'Gloss coat')}</div>
+                <div style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">+2,000원/m</div>
+              </button>
+            </div>
+          </div>
+          <!-- 안내 -->
+          <div style="padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:12px; font-size:13px; font-weight:700; color:#78350f; line-height:1.8;">
+            <div style="font-size:14px; font-weight:900; margin-bottom:8px; color:#92400e; display:flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-circle-info" style="color:#d97706;"></i>
+              ${tr('실사출력 주문 안내', '実写出力 ご案内', 'Real-Print Order Info')}
+            </div>
+            <div>• <b>${tr('판매 단위', '販売単位', 'Sold by')}</b>: ${tr('1미터 단위 (수량 = m)', '1メートル単位 (数量 = m)', '1 meter unit (qty = m)')}</div>
+            <div>• <b>${tr('돔보커팅 비용', 'トンボカット代', 'Register cut fee')}</b>: <b style="color:#16a34a;">${tr('무료', '無料', 'Free')}</b></div>
+            <div>• <b>${tr('칼선 레이어', 'カットラインレイヤー', 'Cut-line layer')}</b>: ${tr('별도로 분리해서 접수해주세요', '別レイヤーで分けてご提出ください', 'Please submit on a separate layer')}</div>
+            <div>• <b>${tr('1제곱미터 이하', '1平方メートル以下', 'Under 1㎡')}</b>: ${tr('1제곱미터 가격으로 계산됩니다', '1㎡価格として計算されます', 'charged at 1㎡ rate')}</div>
+            <div>• <b>${tr('배송비', '配送料', 'Shipping')}</b>: ${tr('10만원 이하 1만원 · 10만원 이상 무료배송', '10万円未満1万円·10万円以上 送料無料', '<₩100K = ₩10K · ≥₩100K free')}</div>
+            <div>• <b style="color:#dc2626;">${tr('30미터 이상 30% 할인 자동 적용', '30m以上 30%自動割引', 'Auto 30% off on 30m+')}</b></div>
+          </div>
         </div>
 
         <!-- 2026-06-01: 인라인 파일 업로드 카드 — 광고인쇄/허니콤 상품에서 우측 사이드바 최상단으로 이동 (JS 로 위치 조정). -->
@@ -3139,12 +3179,18 @@ html, body { background: #ffffff !important; }
             if (state.presetType === 'cushion' && state.cushionWrap) {
                 subtotal += 500 * qty;
             }
-            // 2026-06-08: 실사출력 — 1개당 2,000원 기본 재단(커팅)금액 가산. 예: 10×10cm 1,100 + 2,000 = 3,100원/장.
-            //   100장+ 50% 할인 (커팅비 포함 전체에 적용).
-            if (state.isRealPrint) {
-                subtotal += 2000 * qty;
-                if (qty >= 100) subtotal = Math.round(subtotal * 0.5);
-            }
+            state.wallHeightExtra = 0;
+        } else if (state.isRealPrint) {
+            // 2026-06-08: 실사출력 — 1미터 단위 판매. 단가 = product.price × (90폭=1, 127폭=1.2) + 코팅비.
+            //   코팅: UV 0 / 무광 +1,000원/m / 유광 +2,000원/m. 30m+ 30% 할인.
+            var _rpBase = (state.product && state.product.price) || 0;
+            var _rpMult = (state.realPrintWidth === '127') ? 1.2 : 1;
+            var _rpCoat = (state.realPrintCoating === 'matte') ? 1000 : (state.realPrintCoating === 'gloss') ? 2000 : 0;
+            unit = Math.round(_rpBase * _rpMult + _rpCoat);
+            qty = Math.max(1, state.qty || 1);
+            subtotal = unit * qty;
+            if (qty >= 30) subtotal = Math.round(subtotal * 0.7);
+            state.customUnitPrice = unit;  // 견적서/카트 표시 일관성용
             state.wallHeightExtra = 0;
         } else {
             state.wallHeightExtra = 0;
@@ -5678,11 +5724,15 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-08: 실사출력 family — 항상 무료배송 (최소주문 3만원은 별도 검증).
-        //   광고인쇄 layout 을 공유하지만 (사이즈 카드 상단/mm 입력) 배송 룰은 다름.
+        // 2026-06-08: 실사출력 family — 10만원 이하 1만원 / 10만원 이상 무료배송. 모달은 단일 상품 합계 기준 표시
+        //   (카트 합계 기준 batch 룰은 _soCalcCartTotal 에서 별도 계산).
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
-            return 0;
+            var _rpUnit = state.customUnitPrice || 0;  // recalc 가 최신값 set
+            var _rpQty = Math.max(1, state.qty || 1);
+            var _rpSub = _rpUnit * _rpQty;
+            if (_rpQty >= 30) _rpSub = Math.round(_rpSub * 0.7);
+            return _rpSub >= 100000 ? 0 : 10000;
         }
         // 2026-06-01: 광고인쇄 — 모달 내 현재 + 큐 라인 합계 기준. 10만원 이상 무료, 미만 1만원.
         if (state.isAdPrint) {
@@ -6497,6 +6547,40 @@ html, body { background: #ffffff !important; }
         btn.style.color = '#fff';
         btn.style.borderColor = '#0f172a';
         state.keyringSide = btn.getAttribute('data-side') === 'double' ? 'double' : 'single';
+        if (typeof recalc === 'function') recalc();
+    };
+
+    // 2026-06-08: 실사출력 — 원단 폭 선택 (90 / 127). 127폭은 단가 × 1.2.
+    window._soPickRealPrintWidth = function (btn) {
+        if (!btn) return;
+        document.querySelectorAll('.so-rp-width-btn').forEach(function(b){
+            b.classList.remove('active');
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+            b.style.border = '2px solid #e2e8f0';
+        });
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.color = '#fff';
+        btn.style.border = '2px solid #0f172a';
+        state.realPrintWidth = btn.getAttribute('data-width') === '127' ? '127' : '90';
+        if (typeof recalc === 'function') recalc();
+    };
+    // 2026-06-08: 실사출력 (캘지/유포지 한정) — 표면 코팅 선택. UV 무료 / 무광 +1K/m / 유광 +2K/m.
+    window._soPickRealPrintCoating = function (btn) {
+        if (!btn) return;
+        document.querySelectorAll('.so-rp-coat-btn').forEach(function(b){
+            b.classList.remove('active');
+            b.style.background = '#fff';
+            b.style.color = '#334155';
+            b.style.border = '2px solid #e2e8f0';
+        });
+        btn.classList.add('active');
+        btn.style.background = '#0f172a';
+        btn.style.color = '#fff';
+        btn.style.border = '2px solid #0f172a';
+        var _c = btn.getAttribute('data-coat');
+        state.realPrintCoating = (_c === 'matte' || _c === 'gloss') ? _c : 'uv';
         if (typeof recalc === 'function') recalc();
     };
 
@@ -9233,9 +9317,22 @@ html, body { background: #ffffff !important; }
                 if (_acSchedSec) _acSchedSec.style.display = 'none';
             } catch (e) {}
         }
-        // 2026-06-08: 실사출력 family (9종) — 광고인쇄 layout 그대로 사용 (사이즈 카드 상단, mm 입력, 멀티-라인) 단
-        //   가격/배송/할인 룰만 override: ① 1개당 2,000원 기본 재단(커팅)금액 ② 100장+ 50% 할인 ③ 무료배송 ④ 최소주문 3만원.
+        // 2026-06-08: 실사출력 family (9종) — 1미터 단위 판매 + 폭(90/127) 선택 + 코팅(캘지/유포지) + 30m+ 30% 할인.
+        //   사이즈 W×H 계산기 비활성 (state.isCustomSize=false). 광고인쇄 layout 도 비활성 (state.isAdPrint=false).
+        //   단가 = product.price × (90폭=1, 127폭=1.2) + 코팅비 (UV 0, 무광 1000, 유광 2000). 수량=m.
+        //   배송비 10만원 이하 1만원 / 이상 무료 (카트 합계는 _soCalcCartTotal 에서 별도 batch 계산).
         state.isRealPrint = !!(typeof window._soIsRealPrintProduct === 'function' && window._soIsRealPrintProduct(p));
+        if (state.isRealPrint) {
+            state.isAdPrint = false;        // ad-print layout 비활성
+            state.isCustomSize = false;     // 사이즈 W×H 계산기 비활성
+            state.realPrintWidth = '90';    // 90폭 default
+            state.realPrintCoating = 'uv';  // UV (무료) default
+            // 시공/배송 옵션 섹션 숨김 — _soComputeShipFee 가 자동 처리
+            try {
+                var _rpSchedSec = document.getElementById('soScheduleSection');
+                if (_rpSchedSec) _rpSchedSec.style.display = 'none';
+            } catch (e) {}
+        }
         // 2026-06-04: 등신대 V2 (hb_pi_5 / acr_crt_stand) 만 면적×단가 + mm 입력. hb_ss/hb_point 은 원래 UI 유지.
         if (state.isStandeeV2) state.isCustomSize = true;
         // 2026-06-04: 자유인쇄커팅 — 면적 회베 계산기 모드로 전환 (이전 한판/반판 flat 가격 폐기)
@@ -9843,16 +9940,9 @@ html, body { background: #ffffff !important; }
                 if (_leftUploadLabel) _leftUploadLabel.style.display = '';
                 // 2026-06-01: 광고인쇄 시공/배송 옵션 자체 숨김 — 카트 합계 기준 자동 룰 적용 (10만+ 무료, 미만 1만원)
                 if (_schedSec) _schedSec.style.display = 'none';
-                // 광고인쇄 / 실사출력 배송 안내 배너 (사이즈 카드 상단에 표시) — 둘 중 하나만
+                // 광고인쇄 배송 안내 배너 (사이즈 카드 상단에 표시)
                 var _shipNotice = document.getElementById('soAdShipNotice');
-                var _realNoticeOn = document.getElementById('soRealPrintNotice');
-                if (state.isRealPrint) {
-                    if (_shipNotice) _shipNotice.style.display = 'none';
-                    if (_realNoticeOn) _realNoticeOn.style.display = 'block';
-                } else {
-                    if (_shipNotice) _shipNotice.style.display = 'flex';
-                    if (_realNoticeOn) _realNoticeOn.style.display = 'none';
-                }
+                if (_shipNotice) _shipNotice.style.display = 'flex';
                 state.shipMethod = 'ad_print_threshold';  // 가짜 키 — _soComputeShipFee 가 분기 처리
                 // flex order — size → qty → addon → multi (addon 직후) → 가격/장바구니. shipping 은 숨김.
                 _custSec.style.order = '-200';
@@ -9900,11 +9990,62 @@ html, body { background: #ffffff !important; }
                 _custSec.style.order = '';
                 if (qtySec) qtySec.style.order = '';
                 if (_multiSec) _multiSec.style.order = '';
-                // 광고인쇄 / 실사출력 배송 안내 배너 모두 숨김
+                // 광고인쇄 배송 안내 배너 숨김
                 var _shipNotice2 = document.getElementById('soAdShipNotice');
                 if (_shipNotice2) _shipNotice2.style.display = 'none';
-                var _realNoticeOff = document.getElementById('soRealPrintNotice');
-                if (_realNoticeOff) _realNoticeOff.style.display = 'none';
+            }
+            // 2026-06-08: 실사출력 family 전용 layout — width/coating 섹션 표시 + customSize/multi-line 숨김.
+            var _rpSec = document.getElementById('soRealPrintSection');
+            var _rpCoatWrap = document.getElementById('soRpCoatingWrap');
+            if (state.isRealPrint && _rpSec) {
+                _rpSec.style.display = '';
+                _rpSec.style.order = '-200';
+                if (_custSec) _custSec.style.display = 'none';
+                if (qtySec) {
+                    qtySec.style.display = '';
+                    qtySec.style.order = '-190';
+                    // 수량 단위 라벨 "개" → "m"
+                    var _qtyUnit = qtySec.querySelector('.so-qty-unit');
+                    if (_qtyUnit) _qtyUnit.textContent = 'm';
+                }
+                // 멀티-라인 큐 + tier 표 숨김
+                if (_multiSec) _multiSec.style.display = 'none';
+                if (_tierTable) _tierTable.style.display = 'none';
+                if (_presetTier) _presetTier.style.display = 'none';
+                // 시공/배송 옵션 섹션 숨김
+                if (_schedSec) _schedSec.style.display = 'none';
+                // 좌측 업로드는 표시 (디자인 파일 첨부용)
+                if (_leftUpload) _leftUpload.style.display = '';
+                if (_leftUploadLabel) _leftUploadLabel.style.display = '';
+                if (_inlineUploadCard) _inlineUploadCard.style.display = 'none';  // 인라인 업로드 카드는 ad-print 전용
+                // 코팅 선택은 캘지(345645645) / 유포지(42355223) 만
+                var _rpCode = (p && p.code) || '';
+                if (_rpCoatWrap) _rpCoatWrap.style.display = (_rpCode === '345645645' || _rpCode === '42355223') ? '' : 'none';
+                // 폭/코팅 active 버튼 초기화 (90 / uv)
+                document.querySelectorAll('.so-rp-width-btn').forEach(function(b){
+                    var _on = b.getAttribute('data-width') === '90';
+                    b.classList.toggle('active', _on);
+                    b.style.background = _on ? '#0f172a' : '#fff';
+                    b.style.color      = _on ? '#fff'    : '#334155';
+                    b.style.border     = '2px solid ' + (_on ? '#0f172a' : '#e2e8f0');
+                });
+                document.querySelectorAll('.so-rp-coat-btn').forEach(function(b){
+                    var _on = b.getAttribute('data-coat') === 'uv';
+                    b.classList.toggle('active', _on);
+                    b.style.background = _on ? '#0f172a' : '#fff';
+                    b.style.color      = _on ? '#fff'    : '#334155';
+                    b.style.border     = '2px solid ' + (_on ? '#0f172a' : '#e2e8f0');
+                });
+                // qty 입력 input min=1
+                var _rpQtyInp = document.getElementById('soQty');
+                if (_rpQtyInp) { _rpQtyInp.value = Math.max(1, parseInt(_rpQtyInp.value, 10) || 1); _rpQtyInp.min = 1; }
+            } else if (_rpSec) {
+                _rpSec.style.display = 'none';
+                // 다른 상품 진입 시 qty 단위 라벨 복원
+                if (qtySec) {
+                    var _qtyUnit2 = qtySec.querySelector('.so-qty-unit');
+                    if (_qtyUnit2) _qtyUnit2.textContent = tr('개', '個', 'pcs');
+                }
             }
             // 2026-06-01: 허니콤보드 — 같은 멀티-라인 큐 UI 활성화 (가벽/박스/등신대/자유인쇄커팅 등 모든 허니콤 제품).
             //   ad-print 가 아니어도 honeycomb 이면 "+다른 사이즈도 같이 주문" 노출.
@@ -10496,8 +10637,10 @@ html, body { background: #ffffff !important; }
             _isRawBoard: !!state.isRawBoard,
             // 2026-06-01: 광고인쇄 (is_popular=true) — 카트 합계 기준 10만+ 무료 / 미만 30,000원 룰 적용용
             _isAdPrint: !!state.isAdPrint,
-            // 2026-06-08: 실사출력 family — 1개당 2,000원 컷팅비 + 100장+ 50% 할인 + 무료배송 + 최소주문 3만원 트리거
+            // 2026-06-08: 실사출력 family — 1미터 단위, 폭(90/127) + 코팅(uv/matte/gloss) 트리거. 30m+ 30% 자동.
             _isRealPrint: !!state.isRealPrint,
+            realPrintWidth: state.isRealPrint ? (state.realPrintWidth || '90') : null,
+            realPrintCoating: state.isRealPrint ? (state.realPrintCoating || 'uv') : null,
             // 2026-05-30: 베스트굿즈 / 프리셋 플래그 — _soCalcItemPrice / 견적서 / 주문관리에서 100개+ 50%·정액배송·고리 300원 적용 트리거
             _isBestGoods: !!state.isBestGoods,
             _isPresetGoods: !!state.isPresetGoods,
@@ -10603,23 +10746,9 @@ html, body { background: #ffffff !important; }
             showStatus(tr('상품 정보를 로드 중입니다. 잠시 후 다시 시도해주세요.', '商品情報を読み込み中...', 'Loading product info...'), 'err');
             return false;
         }
-        // 2026-06-08: 실사출력 family — 최소 주문금액 3만원 검증 (현재 폼 + 큐 라인 합계 기준).
-        //   3만원 미만이면 alert 후 차단. 단가 + 커팅비(2K/장) + 100장+ 50% 모두 반영해서 합계 추정.
+        // 2026-06-08: 실사출력 family — 최소 1미터 주문 (qty < 1 인 경우 자동 보정).
         if (state.isRealPrint) {
-            var _rpQty = state.qty || 1;
-            var _rpUnit = state.customUnitPrice || 0;
-            var _rpSub = _rpUnit * _rpQty + 2000 * _rpQty;
-            if (_rpQty >= 100) _rpSub = Math.round(_rpSub * 0.5);
-            (state._adLines || []).forEach(function(line){ _rpSub += (line.lineTotal || 0); });
-            if (_rpSub < 30000) {
-                var _rpMsg = tr(
-                    '실사출력은 최소 주문금액 3만원 이상이어야 합니다.\n현재 합계: ' + _rpSub.toLocaleString() + '원\n수량을 늘리거나 다른 사이즈를 추가해주세요.',
-                    '実写出力は最低注文額3万円以上です。\n現在合計: ' + _rpSub.toLocaleString() + '円\n数量を増やすか他サイズを追加してください。',
-                    'Real-print min order is ₩30,000.\nCurrent: ₩' + _rpSub.toLocaleString() + '\nIncrease qty or add more sizes.'
-                );
-                alert(_rpMsg);
-                return false;
-            }
+            if (!state.qty || state.qty < 1) state.qty = 1;
         }
         // 2026-05-22: 디자인 파일은 선택사항 — 패브릭과 동일하게 파일 없이도 주문 가능 (이미지 추후 전달).
         //   원판·금액주문은 원래 파일 불필요. 그 외 상품은 파일 미첨부 시 확인창만 띄우고 진행.
@@ -11625,17 +11754,23 @@ html, body { background: #ffffff !important; }
         if (it._presetType === 'cushion' && it._cushionStuff) {
             unit = Math.round(unit * 1.5);
         }
+        // 2026-06-08: 실사출력 family — 1미터 단위. 단가 = product.price × (90폭 1.0 / 127폭 1.2) + 코팅비(0/1K/2K).
+        //   30m+ 30% 자동 할인. 배송비는 _soCalcCartTotal 의 batch 룰로 별도 처리 (이 함수에서는 skip).
+        var _isRealPrintItm = !!it._isRealPrint || (it.product && it.product.code &&
+            ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(it.product.code) >= 0);
+        if (_isRealPrintItm) {
+            var _rpBaseI = (it.product && Number(it.product.price)) || 0;
+            var _rpMultI = (it.realPrintWidth === '127') ? 1.2 : 1;
+            var _rpCoatI = (it.realPrintCoating === 'matte') ? 1000 : (it.realPrintCoating === 'gloss') ? 2000 : 0;
+            unit = Math.round(_rpBaseI * _rpMultI + _rpCoatI);
+        }
         var subtotal = unit * qty;
         // 2026-06-04: 쿠션 개별포장 — +500원/개
         if (it._presetType === 'cushion' && it._cushionWrap) {
             subtotal += 500 * qty;
         }
-        // 2026-06-08: 실사출력 family — 1개당 2,000원 기본 재단(커팅)금액 + 100장+ 50% 할인 (카트 사이드 재계산).
-        var _isRealPrintItm = !!it._isRealPrint || (it.product && it.product.code &&
-            ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(it.product.code) >= 0);
-        if (_isRealPrintItm) {
-            subtotal += 2000 * qty;
-            if (qty >= 100) subtotal = Math.round(subtotal * 0.5);
+        if (_isRealPrintItm && qty >= 30) {
+            subtotal = Math.round(subtotal * 0.7);
         }
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 상품가 고정, 인쇄비에서만 할인)
         if (_isBest && it._presetType !== 'tshirt' && qty >= 100) {
@@ -11754,8 +11889,11 @@ html, body { background: #ffffff !important; }
             } else {
                 taxBase += (subPrice - shipFee);
             }
-            // 베스트굿즈·광고인쇄·자유인쇄커팅은 별도 규칙 — max 룰 제외
-            if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint) itemShipFees.push(shipFee);
+            // 베스트굿즈·광고인쇄·자유인쇄커팅·실사출력은 별도 규칙 — max 룰 제외
+            //   실사출력은 batch 룰 (real-print 합계 < 100K → 10K, ≥ 100K → 0) 별도 가산.
+            var _itIsRealPrintCk = !!it._isRealPrint || (it.product && it.product.code &&
+                ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(it.product.code) >= 0);
+            if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint && !_itIsRealPrintCk) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송).
         // 2026-06-06: 가벽 우선 룰 — 가벽이 카트에 있으면 가벽 자체 시공/철거비 (100K/200K/700K 등) 만 부과,
@@ -11783,6 +11921,21 @@ html, body { background: #ffffff !important; }
         var _hasFreeShipItem = _hasWall || _hasFreeNonWall;
         // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
         cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
+        // 2026-06-08: 실사출력 family batch 배송비 — 카트 내 모든 실사출력 항목 합산.
+        //   합산 < 10만원 → +10,000원 / 합산 ≥ 10만원 → 무료. 가벽 carryover 시에는 무시 (가벽이 묶음).
+        if (!_hasWall) {
+            var _rpItems = cart.filter(function(_it){
+                if (!_it) return false;
+                if (_it._isRealPrint) return true;
+                var _c = (_it.product && _it.product.code) || '';
+                return ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(_c) >= 0;
+            });
+            if (_rpItems.length > 0) {
+                var _rpBatchSub = _rpItems.reduce(function(s, _it){ return s + _soCalcItemPrice(_it); }, 0);
+                if (_rpBatchSub < 100000) shipTotal += 10000;
+                // ≥ 10만원 이면 무료 — 가산 없음
+            }
+        }
         // 2026-05-22: 패브릭은 별도 택배 발송 — 플랫 배송비 1회 가산 (cotton_designer getShippingFeeKrw 와 동일).
         //   패브릭 결제를 통합 결제창으로 라우팅해도 배송비가 누락되지 않도록.
         // 2026-06-06: 무료배송 carryover — 일반 상품 중 0원 항목 있으면 패브릭도 묶어 무료.
@@ -11804,7 +11957,7 @@ html, body { background: #ffffff !important; }
             // 2026-06-08: 고객 결제창 (?quote=ID) 로 로드된 매니저 견적 아이템 — manager-set price 가 LINE total 진실 (배송비 포함).
             //   _payPendingQuote 가 patched item 에 __pendingQuoteId 를 박아둠. 이게 있으면 자동 배송비 가산 절대 금지.
             if (_it.__pendingQuoteId) return true;
-            // 2026-06-08: 실사출력 family — 자체 무료배송 + 최소주문 3만원 룰. 자동 +30K 가산 절대 금지.
+            // 2026-06-08: 실사출력 family — 자체 batch 배송 룰 적용 (위에서 가산). 자동 +30K 가산 절대 금지.
             if (_it._isRealPrint) return true;
             var _c = (_it.product && _it.product.code) || '';
             if (['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(_c) >= 0) return true;
