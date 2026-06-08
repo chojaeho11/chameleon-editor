@@ -12222,11 +12222,17 @@ html, body { background: #ffffff !important; }
                 var _grand = window._soCheckoutGrandTotal || (cartCalc.grandTotal || 0);
                 if (typeof _soGetWalletUseKRW === 'function') _walletUse = _soGetWalletUseKRW(_grand);
             } catch (e) {}
+            // 2026-06-08: 고객 결제창 (?quote=ID) 으로 진입한 매니저 견적 — _payPendingQuote 가 각 아이템에
+            //   __pendingShipping 으로 원본 배송비 보존. cart-calc.shipTotal 은 carryover/__pendingQuoteId 면제로 0 이 되어
+            //   PDF 의 "비수도권 추가 배송비" 라인이 누락되던 문제를 직접 합산으로 복구.
+            var _pendingShipSum = cart.reduce(function (s, it) {
+                return s + (Number(it && it.__pendingShipping) || 0);
+            }, 0);
             var orderInfo = {
                 id: '미리보기',
                 manager: name, phone: phone, address: fullAddr,
                 note: memo, date: '',
-                shippingFee: cartCalc.shipTotal || 0
+                shippingFee: _pendingShipSum > 0 ? _pendingShipSum : (cartCalc.shipTotal || 0)
             };
 
             // window.cartData 와 동일한 shape 으로 변환 (export.js 가 item.product 참조)

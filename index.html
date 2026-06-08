@@ -2219,6 +2219,9 @@ window._tcmFallbackClick = function(code) {
                     //   _soCalcItemPrice 에 __pendingQuoteId 우선 분기 추가 → it.price 가 곧 LINE total.
                     //   이전엔 source='cotton-print' 강제 + customSize/cutPrint null 처리로 등신대도 패브릭으로 보이고 사이즈 0×0mm 표시되던 버그.
                     //   shipping 만 null — resolvedPrice 에 배송비도 이미 비례 분배돼 있어 cart-calc 가 또 가산하면 이중 카운트.
+                    //   2026-06-08b: 원본 배송비를 __pendingShipping 에 보존 — 견적서 PDF 의 "비수도권 추가 배송비" 라인 표시용.
+                    //   shipping 은 null 유지 (cart-calc 의 max/carryover 룰과 충돌 없게), PDF 만 별도 path 로 읽음.
+                    patched.__pendingShipping = (it.shipping && Number(it.shipping.fee)) || 0;
                     patched.shipping = null;
                     patched.__redistributed = needRedistribute;
                     return patched;
@@ -8522,7 +8525,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=437"></script>
 <script type="module" src="./main.js?v=443"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=335"></script>
+<script src="/simple_order.js?v=336"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
