@@ -2215,30 +2215,11 @@ window._tcmFallbackClick = function(code) {
                         mimeType: f[idx] ? f[idx].type : (it.mimeType || 'image/png'),
                         __pendingQuoteId: order.id
                     });
-                    // 2026-05-14: needRedistribute 여부와 무관하게 — 매니저견적 주문은 항상
-                    //   "resolvedPrice = LINE total" 가 되도록 정규화한다.
-                    //
-                    //   예전엔 redistribute=true 일 때만 fabric 분기로 강제했는데, 그 결과
-                    //   redistribute=false (estSum 이 이미 일치) 경로에서 it.product 가 비어있으면
-                    //   _soCalcItemPrice 가 unit=0 으로 보고 합계 0원이 떴음 (윤덕수 케이스).
-                    //
-                    //   해결: 항상 qty=1, source='cotton-print' 강제 → _soIsFabricItem=true →
-                    //         _soCalcItemPrice 가 it.price 를 곧바로 LINE total 로 반환.
-                    //         가벽 양면 / 박스 단가 / 자유인쇄 사이즈 등 가격 가산 필드도 제거하여
-                    //         이미 orderTotal 에 포함된 금액이 이중 가산되지 않게 함.
-                    patched.qty = 1;
-                    if (patched.product) patched.product = Object.assign({}, patched.product, { price: resolvedPrice });
-                    patched.wallSize = null;
-                    patched.wallSide = 'single';
-                    patched.cutPrint = null;
-                    patched.boxSize = null;
-                    patched.customSize = null;
-                    patched.rawBoardDouble = false;
-                    patched.baseStand = null;
+                    // 2026-06-08: 원래 아이템 구조 (product, customSize, cutPrint 등) 보존 — 상품명/사이즈 표시용.
+                    //   _soCalcItemPrice 에 __pendingQuoteId 우선 분기 추가 → it.price 가 곧 LINE total.
+                    //   이전엔 source='cotton-print' 강제 + customSize/cutPrint null 처리로 등신대도 패브릭으로 보이고 사이즈 0×0mm 표시되던 버그.
+                    //   shipping 만 null — resolvedPrice 에 배송비도 이미 비례 분배돼 있어 cart-calc 가 또 가산하면 이중 카운트.
                     patched.shipping = null;
-                    patched.selectedAddons = {};
-                    patched.addonQuantities = {};
-                    patched.source = 'cotton-print';
                     patched.__redistributed = needRedistribute;
                     return patched;
                 });
@@ -8541,7 +8522,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=437"></script>
 <script type="module" src="./main.js?v=443"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=331"></script>
+<script src="/simple_order.js?v=332"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

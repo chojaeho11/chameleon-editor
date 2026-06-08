@@ -11458,6 +11458,9 @@ html, body { background: #ffffff !important; }
 
     function _soCalcItemPrice(it) {
         if (_soIsFabricItem(it)) return it.price || 0;
+        // 2026-06-08: 매니저견적 항목 — manager-set price 가 LINE total 진실. customSize.unit 등 계산 무시하고 그대로 사용.
+        //   __pendingQuoteId 가 있으면 고객 결제창 (?quote=ID) 에서 로드된 것. it.price 사용.
+        if (it && it.__pendingQuoteId && Number(it.price) > 0) return Number(it.price);
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
         // 2026-06-02: 허니콤 배너 (hb_bn_*) — 단면 45K / 양면 80K (별도가, ×2 아님)
