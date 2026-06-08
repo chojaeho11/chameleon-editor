@@ -111,11 +111,12 @@
                         <option value="day">특정 날짜</option>
                     </select>
                     <input type="date" id="qaReportDate" class="input-text" style="width:150px; display:none;">
-                    <select id="qaReportLang" class="input-text" style="width:120px;">
-                        <option value="all">모든 언어</option>
-                        <option value="kr">🇰🇷 한국어</option>
-                        <option value="ja">🇯🇵 日本語</option>
-                        <option value="us">🇺🇸 English</option>
+                    <!-- 2026-06-08: 한국용/일본용/영어외국어용 분리 — 각 지역 직원이 본인 담당 대화만 학습/대응 -->
+                    <select id="qaReportLang" class="input-text" style="width:180px;">
+                        <option value="all">🌐 모든 언어</option>
+                        <option value="kr">🇰🇷 한국용 (Korean)</option>
+                        <option value="ja">🇯🇵 일본용 (日本語)</option>
+                        <option value="foreign">🌍 영어/외국어용 (Foreign)</option>
                     </select>
                     <button class="btn btn-primary btn-sm" onclick="qaLoadSessions()">조회</button>
                     <span id="qaReportCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
@@ -322,7 +323,19 @@ function getSb() { return sb; }
         document.getElementById('cbTabSettings').className = 'btn btn-' + (tab === 'settings' ? 'primary' : 'outline') + ' btn-sm';
         var svcBtn = document.getElementById('cbTabServices');
         if (svcBtn) svcBtn.style.opacity = (tab === 'services') ? '1' : '0.7';
-        if (tab === 'logs') qaLoadSessions();
+        if (tab === 'logs') {
+            // 2026-06-08: URL ?lang=ja|kr|foreign 쿼리 → 드롭다운 자동 선택 (직원 북마크용)
+            try {
+                var _u = new URL(location.href);
+                var _qLang = (_u.searchParams.get('lang') || '').toLowerCase();
+                var _validLang = { kr:1, ja:1, foreign:1, all:1 };
+                if (_qLang && _validLang[_qLang]) {
+                    var _sel = document.getElementById('qaReportLang');
+                    if (_sel) _sel.value = _qLang;
+                }
+            } catch (e) {}
+            qaLoadSessions();
+        }
         if (tab === 'knowledge') cbLoadKnowledge();
         if (tab === 'settings') cbLoadSettings();
     };
@@ -512,16 +525,25 @@ function getSb() { return sb; }
             var from = new Date(Date.now() - days * 86400000 + 9*3600000).toISOString().split('T')[0];
             q = q.gte('created_at', from + 'T00:00:00+09:00');
         } // 'all': 필터 없음
-        if (lang !== 'all') q = q.eq('site_lang', lang);
+        // 2026-06-08: foreign = kr/ja 제외 모든 외국어 (us, en, cn, zh, sa, ar, es, de, fr, etc).
+        if (lang === 'foreign') {
+            q = q.in('site_lang', ['us', 'en', 'cn', 'zh', 'sa', 'ar', 'es', 'de', 'fr']);
+        } else if (lang !== 'all') {
+            q = q.eq('site_lang', lang);
+        }
         var res = await q;
         _sessions = res.data || [];
         var stats = document.getElementById('qaReportStats');
         var total = _sessions.length;
         var krC = _sessions.filter(function(s){return s.site_lang==='kr'}).length;
         var jaC = _sessions.filter(function(s){return s.site_lang==='ja'}).length;
-        var usC = _sessions.filter(function(s){return (s.site_lang==='us'||s.site_lang==='en')}).length;
+        // 2026-06-08: 외국어 = kr/ja 제외 모든 언어 (us/en/cn/zh/sa/ar/es/de/fr)
+        var foreignC = _sessions.filter(function(s){
+            var L = s.site_lang;
+            return L && L !== 'kr' && L !== 'ja';
+        }).length;
         stats.innerHTML = '<div style="background:#ede9fe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:22px;font-weight:900;color:#6366f1;">'+total+'</div><div style="font-size:11px;color:#64748b;">총 대화</div></div>' +
-            '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+krC+' / '+jaC+' / '+usC+'</div><div style="font-size:11px;color:#64748b;">KR / JP / US</div></div>';
+            '<div style="background:#dbeafe;padding:12px;border-radius:10px;text-align:center;"><div style="font-size:18px;font-weight:900;color:#2563eb;">'+krC+' / '+jaC+' / '+foreignC+'</div><div style="font-size:11px;color:#64748b;">한국 / 일본 / 외국어</div></div>';
         document.getElementById('qaReportCount').textContent = total + '개 세션';
         _renderSessionList();
         // 각 세션의 최신 고객 메시지 로드 (미리보기용)
@@ -693,34 +715,8 @@ function getSb() { return sb; }
             var messages = (d && d.messages) || [];
             var room = (d && d.room) || {};
 
-            // 같은 고객의 이전 대화 조회 (customer_name 매칭)
-            var priorRooms = [];
-            var priorMsgsByRoom = {};
-            try {
-                if (room.customer_name && room.customer_name.trim()) {
-                    var { data: others } = await sb.from('chat_rooms')
-                        .select('id, customer_name, site_lang, source, created_at')
-                        .eq('customer_name', room.customer_name)
-                        .neq('id', roomId)
-                        .or('source.like.bot-%,source.like.chatbot%,source.like.ai-%,source.like.embed-%')
-                        .not('source', 'like', 'services-hub%')
-                        .order('created_at', { ascending: true })
-                        .limit(20);
-                    priorRooms = others || [];
-                    if (priorRooms.length > 0) {
-                        var ids = priorRooms.map(function(r){return r.id});
-                        var { data: pm } = await sb.from('chat_messages')
-                            .select('room_id, sender_type, sender_name, message, created_at')
-                            .in('room_id', ids)
-                            .order('created_at', { ascending: true })
-                            .limit(600);
-                        (pm || []).forEach(function(m) {
-                            if (!priorMsgsByRoom[m.room_id]) priorMsgsByRoom[m.room_id] = [];
-                            priorMsgsByRoom[m.room_id].push(m);
-                        });
-                    }
-                }
-            } catch(e) { console.warn('prior rooms load fail:', e); }
+            // 2026-06-08: 같은 customer_name 이라도 별개 세션(다른 주제·다른 시점)인 경우가 대부분이라
+            //   "이전 대화" 묶음 노출은 혼란만 야기. 현재 세션에만 집중하도록 prior rooms 로드 제거.
             var isNonKr = _forceLang !== 'kr';
 
             if (!messages.length) { detail.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">메시지 없음</div>'; return; }
@@ -731,34 +727,7 @@ function getSb() { return sb; }
             if (isNonKr) h += '<span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;">해외 ('+room.site_lang+')</span>';
             h += '</div>';
 
-            // 이전 대화 섹션 (접힌 상태로 상단에 표시)
-            if (priorRooms.length > 0) {
-                h += '<div style="margin-bottom:14px;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:10px;">';
-                h += '<div style="font-size:12px;font-weight:800;color:#854d0e;margin-bottom:8px;">📜 같은 고객의 이전 대화 ('+priorRooms.length+'건)</div>';
-                priorRooms.forEach(function(pr, pIdx) {
-                    var pmsgs = priorMsgsByRoom[pr.id] || [];
-                    var pTime = new Date(pr.created_at).toLocaleString('ko-KR');
-                    var detailId = 'qaPrior_' + pIdx;
-                    h += '<details style="margin-bottom:4px;">';
-                    h += '<summary style="cursor:pointer;font-size:12px;font-weight:700;color:#713f12;padding:4px 6px;">';
-                    h += '🕐 ' + pTime + ' <span style="color:#a16207;font-weight:500;">(' + pmsgs.length + '건)</span>';
-                    h += '</summary>';
-                    h += '<div style="padding:8px 6px;display:flex;flex-direction:column;gap:4px;">';
-                    pmsgs.forEach(function(pm) {
-                        var pIsUser = pm.sender_type === 'customer';
-                        var pIsBot = pm.sender_type === 'chatbot';
-                        var ptxt = qaEsc((pm.message || '').replace(/<!--PRODUCTS:.*?-->/g, '').trim().substring(0, 300));
-                        var plabel = pIsUser ? '👤' : pIsBot ? '🦎' : '👨‍💼';
-                        var pbg = pIsUser ? '#dbeafe' : pIsBot ? '#ede9fe' : '#e0e7ff';
-                        h += '<div style="background:' + pbg + ';padding:6px 10px;border-radius:8px;font-size:11px;color:#1e293b;line-height:1.5;">';
-                        h += '<span style="font-weight:700;margin-right:4px;">' + plabel + '</span>' + ptxt;
-                        h += '</div>';
-                    });
-                    h += '</div></details>';
-                });
-                h += '</div>';
-            }
-
+            // 2026-06-08: 이전 대화 섹션 제거 — 현재 대화만 노출
             h += '<div style="display:flex;flex-direction:column;gap:8px;">';
             messages.forEach(function(m, idx) {
                 var isCustomer = m.sender_type === 'customer';
