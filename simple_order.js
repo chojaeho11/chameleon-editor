@@ -5609,6 +5609,7 @@ html, body { background: #ffffff !important; }
             case 'parcel_shipping':       return tr('택배배송',                '宅配便',             'Parcel');
             case 'large_parcel':          return tr('대형택배',                '大型宅配',           'Large parcel');
             case 'small_parcel':          return tr('묶음 소형택배',           '小型宅配 (まとめ)',   'Small parcel (bundled)');
+            case 'real_print_threshold':  return tr('배송비 (10만원 이상 무료)','配送料(10万円以上無料)','Shipping (free over ₩100k)');
             case 'compact_parcel':        return tr('택배배송 (60×40cm 이하)', '宅配 (60×40cm以下)', 'Parcel (≤60×40cm)');
             case 'pd_bulk_free':          return tr('100개 이상 무료배송',     '100個以上 無料配送', 'Free shipping (100+ pcs)');
             case 'pd_parcel_1':           return tr('1개씩 포장 택배배송',     '1個ずつ宅配',         'Parcel · 1 per box');
@@ -10003,6 +10004,8 @@ html, body { background: #ffffff !important; }
                 if (_rpVarSec) _rpVarSec.style.order = '-300';
                 _rpSec.style.display = '';
                 _rpSec.style.order = '-200';
+                // 가격 breakdown 라벨용 가짜 shipMethod (시공/배송 옵션 섹션은 별도 hidden)
+                state.shipMethod = 'real_print_threshold';
                 if (_custSec) _custSec.style.display = 'none';
                 if (qtySec) {
                     qtySec.style.display = '';
@@ -10183,7 +10186,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         var _isHbFreeShip = state.isHoneycomb && !state.isWall;
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily
             && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
