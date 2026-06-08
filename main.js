@@ -1,4 +1,4 @@
-// main.js - Complete Integrated Version
+﻿// main.js - Complete Integrated Version
 
 import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=291";
 import { initOrderSystem } from "./order.js?v=454";
@@ -152,7 +152,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 import('./canvas-icons.js?v=434'),
                 import('./shortcuts.js?v=434'),
                 import('./context-menu.js?v=434'),
-                import('./export.js?v=434'),
+                import('./export.js?v=435'),
                 import('./my-design.js?v=434'),
                 import('./video-maker.js?v=434'),
                 import('./ppt-mode.js?v=434'),

@@ -1,4 +1,4 @@
-// ════════════════════════════════════════════════════════════
+﻿// ════════════════════════════════════════════════════════════
 // Cotton Print Designer — 이미지 → 패턴 원단 미리보기
 // ════════════════════════════════════════════════════════════
 (function(){
@@ -2246,7 +2246,7 @@ window._cpDownloadQuote = async function (btnEl) {
             });
         }
 
-        var mod = await import('./export.js?v=434');
+        var mod = await import('./export.js?v=435');
         if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
         var gv = function (id) { var el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
