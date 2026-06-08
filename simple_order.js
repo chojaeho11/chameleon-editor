@@ -11737,6 +11737,9 @@ html, body { background: #ffffff !important; }
         var _allProductSub = taxBase + nonDiscountBase;
         var _hasAmountOrder = cart.some(function(_it){
             if (!_it) return false;
+            // 2026-06-08: 고객 결제창 (?quote=ID) 로 로드된 매니저 견적 아이템 — manager-set price 가 LINE total 진실 (배송비 포함).
+            //   _payPendingQuote 가 patched item 에 __pendingQuoteId 를 박아둠. 이게 있으면 자동 배송비 가산 절대 금지.
+            if (_it.__pendingQuoteId) return true;
             var _c = (_it.product && _it.product.code) || '';
             var _cat = (_it.product && _it.product.category) || '';
             var _type = _it.type || '';
