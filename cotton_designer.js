@@ -1438,9 +1438,13 @@ function calcFabricCartTotal() {
 }
 
 window._cpUpdateCartUI = function() {
+    // 2026-06-10: 패브릭 드로어 격리 (쿠팡/스마트스토어 패턴) —
+    //   기존엔 일반상품(허니콤보드 등)이 일본 패브릭 사이트에서도 드로어에 같이 보여
+    //   "내가 주문하지 않은 이상한 상품" 으로 인식 → 결제 직전 이탈. JP 신뢰도 ↓ 직격.
+    //   여기서는 일반상품을 드로어/뱃지/합계에서 완전히 격리. 카트 데이터 자체는 유지 (메인몰에서 접근 가능).
     const cart = getCart();
-    const gen = getGeneralItems();
-    const totalCount = cart.length + gen.length;
+    const gen = [];                       // ← 패브릭 드로어에서는 일반상품 무시
+    const totalCount = cart.length;       // ← 패브릭 개수만 카운트
     const badge = document.getElementById('cartBadge');
     const inline = document.getElementById('cartCountInline');
     const body = document.getElementById('cartBody');
@@ -1452,7 +1456,7 @@ window._cpUpdateCartUI = function() {
         else { badge.style.display = 'none'; }
     }
     if (inline) inline.textContent = totalCount ? '(' + totalCount + ')' : '';
-    if (totalAmt) totalAmt.textContent = cdFmtPrice(calcCartTotal());
+    if (totalAmt) totalAmt.textContent = cdFmtPrice(calcFabricCartTotal()); // 패브릭만
     if (checkoutBtn) checkoutBtn.disabled = totalCount === 0;
     // 2026-05-15: 전체 비우기 버튼 — 아이템이 1개 이상일 때만 표시
     var clearBtn = document.getElementById('cartClearAllBtn');
@@ -1732,19 +1736,20 @@ window._cpCartRemove = function(i) {
     saveCart(cart);
     window._cpUpdateCartUI();
 };
-// 2026-05-15: 전체 비우기 — fabric + 일반상품 모두 제거 + 서버 동기화 (cart_sync.clearAll)
+// 2026-06-10: 전체 비우기 — 패브릭 드로어 격리 후, 여기서는 fabric 만 제거 (일반상품은 메인몰에서 관리).
+//   기존 cartSync.clearAll() 은 모든 도메인의 모든 항목을 wipe 하던 cross-domain 파괴 동작 →
+//   사용자가 일본 패브릭 드로어에서 "全て削除" 만 눌렀는데 메인몰 카트까지 날아가는 부작용 fix.
 window._cpCartClearAll = function() {
     var msg = (window.cdT && window.cdT('cart_clear_confirm')) || '장바구니의 모든 항목을 삭제할까요?';
     if (!window.confirm(msg)) return;
     try {
-        if (window.cartSync && typeof window.cartSync.clearAll === 'function') {
-            window.cartSync.clearAll();
-        } else {
-            // fallback — 직접 localStorage 처리
-            try { localStorage.setItem(CART_KEY, '[]'); } catch (e) {}
-            try { localStorage.setItem('chameleon_cart_updated_at', new Date().toISOString()); } catch (e) {}
+        // 1) 로컬 패브릭 카트 비우기 (CART_KEY 는 patterns_v3 등 패브릭 전용 키)
+        saveCart([]);
+        // 2) cart_sync 에도 반영 — 일반상품은 보존, 패브릭(cotton-print source) 만 제거
+        if (window.cartSync && typeof window.cartSync.forceSync === 'function') {
+            window.cartSync.forceSync();
         }
-    } catch (e) { console.warn('[clearAll]', e); }
+    } catch (e) { console.warn('[clearFabric]', e); }
     window._cpUpdateCartUI();
 };
 
