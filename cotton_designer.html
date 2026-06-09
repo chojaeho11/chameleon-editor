@@ -226,7 +226,7 @@ window.__CD_I18N = {
     hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.', ja:'面積 = W × H ÷ 100万。 ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円。', en:'Units = W × H ÷ 1M. ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units.' },
     seam_notice: { ko:'⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 縦横ともに1300mm超の場合、継ぎ縫い処理となります (+1,000円)', en:'⚠️ Seam joining applies only when both width and height exceed 1300mm (+$10)' },
     seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
-    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5m²(半マ)以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
+    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5m²以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
     tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1m²未満は1m²価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
     tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 1회배 이상 회배×12,000원', ja:'単価: ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円', en:'Pricing: ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
@@ -252,11 +252,21 @@ window.__CD_I18N = {
     acc_rod_sub: { ko:'상단 봉 끼움용', ja:'上部ロッド挿入用', en:'Top rod insert' },
     acc_opp_pack: { ko:'OPP 개별포장', ja:'OPP個別包装', en:'OPP individual pack' },
     acc_opp_sub: { ko:'투명 비닐 포장', ja:'透明ビニール包装', en:'Clear poly bag' },
-    acc_press_rod: { ko:'압축봉', ja:'圧縮ロッド', en:'Tension rod' },
-    acc_press_sub: { ko:'탄성 압축 봉', ja:'伸縮性ロッド', en:'Elastic tension' },
+    acc_press_rod: { ko:'압축봉', ja:'突っ張り棒', en:'Tension rod' },
+    acc_press_sub: { ko:'탄성 압축 봉', ja:'伸縮性の突っ張り棒', en:'Elastic tension rod' },
     acc_ring_hook: { ko:'링고리', ja:'リング金具', en:'Ring hook' },
     acc_ring_sub: { ko:'상단 걸이용 링', ja:'上部吊り下げリング', en:'Top hanging ring' },
-    min_order_block: { ko:'패브릭 주문은 최소 10만원부터 가능합니다.', en:'Fabric orders require a minimum of 100,000 KRW.' },
+    min_order_block: { ko:'패브릭 주문은 최소 10만원부터 가능합니다.', ja:'生地のご注文は最低10,000円からとなります。', en:'Fabric orders require a minimum of 100,000 KRW.' },
+    // 2026-06-09: 입력 placeholder 전용 항목 — 라벨과 별도. 일본/영어 사용자가 한국식 예시 보고 이탈하는 문제 fix.
+    co_name_ph:   { ko:'홍길동',         ja:'山田 太郎',                 en:'John Smith' },
+    co_phone_ph:  { ko:'010-0000-0000', ja:'090-1234-5678',            en:'555-123-4567' },
+    co_email_ph2: { ko:'이메일 (선택)',   ja:'メール (任意)',              en:'Email (optional)' },
+    co_zip_ph:    { ko:'우편번호',        ja:'100-0001',                  en:'Zip code' },
+    co_addr1_ph:  { ko:'기본 주소 (도로명/지번)', ja:'例: 東京都渋谷区神南1-1-1', en:'e.g., 123 Main St, City' },
+    co_addr2_ph:  { ko:'상세 주소 (동/호수)',     ja:'マンション名・部屋番号など', en:'Apt/Suite (optional)' },
+    co_memo_ph2:  { ko:'예: 부재 시 경비실에 맡겨주세요', ja:'例: 不在時は宅配ボックスへ', en:'e.g., Leave at front desk if not home' },
+    // 2026-06-09: 한국 발송 안내 — 일본 고객이 결제 전 충격받지 않도록 사전 고지
+    jp_ship_notice: { ja:'🇰🇷 韓国 (本社) より発送 · お届け約5-7日 · 関税込', en:'🇰🇷 Ships from Korea (HQ) · Delivery ~5-7 days · Duties included' },
     optional: { ko:'선택 안 해도 됩니다', ja:'なしでもOK', en:'Optional' },
     none_selected: { ko:'선택 안 함', ja:'選択なし', en:'None' },
     hook_top_string: { ko:'상단 끈 고리', ja:'上部ひも掛け', en:'Top String Loop' },
@@ -291,7 +301,7 @@ window.__CD_I18N = {
     cart_total: { ko:'총 결제금액', ja:'お支払い合計', en:'Order Total' },
     cart_checkout: { ko:'주문하기', ja:'注文する', en:'Checkout' },
     co_title: { ko:'주문 정보 입력', ja:'注文情報', en:'Order Info' },
-    co_subtitle: { ko:'정확히 입력해주세요. 결제는 무통장 입금 또는 본사 연락 후 카드결제 가능합니다.', ja:'正確に入力してください。', en:'Please fill accurately.' },
+    co_subtitle: { ko:'정확히 입력해주세요. 결제는 무통장 입금 또는 본사 연락 후 카드결제 가능합니다.', ja:'正確にご入力ください。クレジットカードまたはコンビニ決済・銀行振込でお支払いいただけます。', en:'Please fill accurately. Pay by credit card, convenience store, or bank transfer.' },
     co_name: { ko:'받으시는 분', ja:'受取人', en:'Recipient' },
     co_phone: { ko:'연락처', ja:'電話番号', en:'Phone' },
     co_email: { ko:'이메일 (선택)', ja:'メール (任意)', en:'Email (optional)' },
@@ -305,7 +315,7 @@ window.__CD_I18N = {
     co_pay_bank: { ko:'무통장 입금', ja:'銀行振込', en:'Bank Transfer' },
     co_pay_bank_sub: { ko:'즉시 처리', ja:'即時処理', en:'Instant' },
     co_pay_card: { ko:'카드 결제', ja:'クレジットカード', en:'Credit Card' },
-    co_pay_card_sub: { ko:'토스/Stripe 결제', ja:'Stripe決済', en:'Stripe Checkout' },
+    co_pay_card_sub: { ko:'토스/Stripe 결제', ja:'クレジットカード決済 (Stripe)', en:'Credit Card (Stripe)' },
     co_summary: { ko:'주문 요약', ja:'注文まとめ', en:'Order Summary' },
     co_total: { ko:'합계', ja:'合計', en:'Total' },
     co_submit: { ko:'주문 완료하기', ja:'注文を確定', en:'Place Order' },
@@ -1798,26 +1808,42 @@ a { text-decoration: none; color: inherit; }
             <h3 data-cdi18n="co_title">주문 정보 입력</h3>
             <div class="co-form-sub" data-cdi18n="co_subtitle">정확히 입력해주세요.</div>
 
+            <!-- 2026-06-09: JP/EN 고객 한국 발송 안내 — 결제 전 사전 고지 (관세/배송기간) -->
+            <div id="cdJpShipNotice" style="display:none; margin:6px 0 14px; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:10px; font-size:12.5px; font-weight:700; color:#78350f; line-height:1.55;">
+                <span data-cdi18n="jp_ship_notice">🇰🇷 韓国 (本社) より発送 · お届け約5-7日 · 関税込</span>
+            </div>
+            <script>
+                (function _showJpShipIfNeeded(){
+                    try {
+                        var _l = window.__CD_LANG || document.documentElement.lang || 'ko';
+                        if (_l === 'ja' || _l === 'en') {
+                            var _el = document.getElementById('cdJpShipNotice');
+                            if (_el) _el.style.display = 'block';
+                        }
+                    } catch(e){}
+                })();
+            </script>
+
             <div class="co-section">
                 <span class="co-label"><span data-cdi18n="co_name">받으시는 분</span> <span style="color:#dc2626;">*</span></span>
-                <input id="coName" class="co-input" placeholder="홍길동" data-cdi18n-ph="co_name">
+                <input id="coName" class="co-input" placeholder="홍길동" data-cdi18n-ph="co_name_ph">
             </div>
             <div class="co-section">
                 <span class="co-label"><span data-cdi18n="co_phone">연락처</span> <span style="color:#dc2626;">*</span></span>
                 <div class="co-row">
-                    <input id="coPhone" class="co-input" placeholder="010-0000-0000">
-                    <input id="coEmail" class="co-input" type="email" placeholder="이메일 (선택)" data-cdi18n-ph="co_email">
+                    <input id="coPhone" class="co-input" placeholder="010-0000-0000" data-cdi18n-ph="co_phone_ph">
+                    <input id="coEmail" class="co-input" type="email" placeholder="이메일 (선택)" data-cdi18n-ph="co_email_ph2">
                 </div>
             </div>
             <div class="co-section">
                 <span class="co-label"><span data-cdi18n="co_address">배송지</span> <span style="color:#dc2626;">*</span></span>
-                <input id="coZip" class="co-input" placeholder="우편번호" data-cdi18n-ph="co_zip" style="width:160px; margin-bottom:6px;">
-                <input id="coAddr1" class="co-input" placeholder="기본 주소 (도로명/지번)" data-cdi18n-ph="co_addr1" style="margin-bottom:6px;">
-                <input id="coAddr2" class="co-input" placeholder="상세 주소 (동/호수)" data-cdi18n-ph="co_addr2">
+                <input id="coZip" class="co-input" placeholder="우편번호" data-cdi18n-ph="co_zip_ph" style="width:160px; margin-bottom:6px;">
+                <input id="coAddr1" class="co-input" placeholder="기본 주소 (도로명/지번)" data-cdi18n-ph="co_addr1_ph" style="margin-bottom:6px;">
+                <input id="coAddr2" class="co-input" placeholder="상세 주소 (동/호수)" data-cdi18n-ph="co_addr2_ph">
             </div>
             <div class="co-section">
                 <span class="co-label" data-cdi18n="co_memo">배송 메모 (선택)</span>
-                <input id="coMemo" class="co-input" placeholder="예: 부재 시 경비실에 맡겨주세요" data-cdi18n-ph="co_memo_ph">
+                <input id="coMemo" class="co-input" placeholder="예: 부재 시 경비실에 맡겨주세요" data-cdi18n-ph="co_memo_ph2">
             </div>
             <div class="co-section">
                 <span class="co-label" data-cdi18n="co_pay_method">결제 방법</span>
