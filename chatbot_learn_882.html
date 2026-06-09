@@ -56,24 +56,24 @@
             .card { padding: 14px; border-radius: 12px; }
             /* 통계 박스 4열 → 2열 (모바일) */
             #qaReportStats { grid-template-columns: repeat(2, 1fr) !important; }
-            /* 세션 목록 + 대화 상세 좌우분할 → 상하 스택 */
+            /* 세션 목록 + 대화 상세 좌우분할 → 상하 스택 — 직접 ID 로 정확히 타겟 */
+            #qaSplit {
+                flex-direction: column !important;
+                height: auto !important;
+                gap: 10px !important;
+            }
             #qaSessionList,
             #qaSessionDetail {
                 width: 100% !important;
                 min-width: 0 !important;
-            }
-            /* 부모 flex 컨테이너도 column 방향으로 */
-            .card > div[style*="display:flex"][style*="height:650px"] {
-                flex-direction: column !important;
-                height: auto !important;
-                gap: 10px !important;
+                flex: 0 0 auto !important;
             }
             #qaSessionList { max-height: 340px; }
             #qaSessionDetail { min-height: 360px; padding: 12px !important; }
             /* 입력/버튼 줄 — wrap 잘 되도록 */
             .input-text { width: auto !important; max-width: 100%; min-width: 100px; flex: 1 1 auto; }
-            /* 탭 버튼 묶음 wrap */
-            .card > div[style*="display:flex"][style*="justify-content:space-between"] { flex-wrap: wrap; gap: 8px; }
+            /* 탭 버튼 묶음 wrap — 카드 안의 모든 flex 컨테이너 wrap 허용 */
+            .card div[style*="display:flex"] { flex-wrap: wrap; }
         }
         @media (max-width: 480px) {
             .header h1 { font-size: 14px; }
@@ -164,7 +164,7 @@
                     <span id="qaReportCount" style="font-size:12px; color:#64748b; align-self:center;"></span>
                 </div>
                 <!-- 세션 목록 + 대화 상세 (좌우 분할) -->
-                <div style="display:flex; gap:12px; height:650px;">
+                <div id="qaSplit" style="display:flex; gap:12px; height:650px;">
                     <div id="qaSessionList" style="width:320px; min-width:280px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc;"></div>
                     <div id="qaSessionDetail" style="flex:1; overflow-y:auto; border:1px solid #e2e8f0; border-radius:12px; background:#fff; padding:16px;">
                         <div style="text-align:center; padding:80px 20px; color:#94a3b8;">
