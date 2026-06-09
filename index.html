@@ -5300,43 +5300,56 @@ async function handleSubReturn() {
         var siteLang = _langDb[_cl] || _cl;
 
         try {
-            // 1차: 현재 언어 — 최신순 30개 (중복제거 후 10개 확보용 여유)
+            // 2026-06-10: 사진 있는 리뷰만 8개 (AI 생성 느낌 제거 + 자연스러운 큐레이션)
+            //   기존: 사진 없는 리뷰까지 포함 → 일본 고객에게 부자연스럽게 보임
+            //   사진 + 코멘트 둘 다 필수, 최신순 + 중복제거 후 상위 8개
+            var TARGET_COUNT = 8;
             var res = await dbClient.from('product_reviews')
                 .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
                 .eq('lang', siteLang)
+                .not('photo_url', 'is', null)
+                .neq('photo_url', '')
                 .order('created_at', { ascending: false })
-                .limit(30);
+                .limit(40);
             var primary = res.data || [];
 
             var seenPhotos = new Set();
             var seenCommentHeads = new Set();
+            var seenNames = {};
             var deduped = [];
             function _pushIfNew(r) {
                 var photoKey = (r.photo_url || '').trim();
+                if (!photoKey) return; // 사진 없는 후기는 무조건 제외
                 var commentKey = (r.comment || '').trim().substring(0, 30).replace(/\s+/g,'');
-                if (photoKey && seenPhotos.has(photoKey)) return;
+                if (seenPhotos.has(photoKey)) return;
                 if (commentKey && seenCommentHeads.has(commentKey)) return;
-                if (photoKey) seenPhotos.add(photoKey);
+                // 같은 이름이 3번 이상이면 부자연스러움 → 스킵 (예: 田中** 반복)
+                var nm = (r.user_name || '').trim();
+                seenNames[nm] = (seenNames[nm] || 0) + 1;
+                if (seenNames[nm] > 2) return;
+                seenPhotos.add(photoKey);
                 if (commentKey) seenCommentHeads.add(commentKey);
                 deduped.push(r);
             }
             primary.forEach(_pushIfNew);
 
-            // 2차: 현재 언어 후기가 10개 미만이면 타 언어로 보충
-            if (deduped.length < 10) {
+            // 2차: 현재 언어 사진 후기가 8개 미만이면 타 언어로 보충 (사진 必)
+            if (deduped.length < TARGET_COUNT) {
                 var fb = await dbClient.from('product_reviews')
                     .select('user_name, rating, comment, photo_url, created_at, product_code, lang')
                     .neq('lang', siteLang)
+                    .not('photo_url', 'is', null)
+                    .neq('photo_url', '')
                     .order('created_at', { ascending: false })
-                    .limit(30);
+                    .limit(40);
                 (fb.data || []).forEach(function(r){
-                    if (deduped.length >= 10) return;
+                    if (deduped.length >= TARGET_COUNT) return;
                     _pushIfNew(r);
                 });
             }
 
-            var top10 = deduped.slice(0, 10);
-            console.log('[홈 후기] siteLang=' + siteLang + ' 표시:', top10.length, '개');
+            var top10 = deduped.slice(0, TARGET_COUNT);
+            console.log('[홈 후기] siteLang=' + siteLang + ' 표시:', top10.length, '개 (사진 必)');
 
             if (top10.length === 0) {
                 grid.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">아직 등록된 후기가 없습니다.</div>';

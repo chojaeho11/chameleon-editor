@@ -3982,8 +3982,9 @@ function addHreflangTags() {
 }
 
 // 종이매대 리뷰 로드 (페이지네이션 + 언어별 + 클릭 이동)
+// 2026-06-10: 8개 고정 + 사진 必 (AI 생성 느낌 제거, 자연스러운 큐레이션)
 var _rvPage = 0;
-var _rvPageSize = 20;
+var _rvPageSize = 8;
 var _rvSupa = null;
 var _rvFallback = false;
 
@@ -4031,11 +4032,13 @@ window.loadPdReviews = async function() {
             window._cottonFabCodes100 = combinedCodes;
             if (combinedCodes.length > 1) {
                 // 2026-06-04: 현재 사이트 언어 후기 우선 (JP 사이트는 JP 후기만 노출). 비면 다국어 폴백.
+                // 2026-06-10: 모든 쿼리에 photo_url 必 — 사진 없는 후기 (텍스트만) 는 자연스럽지 않게 보임.
                 var resL = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
                     .in('product_code', combinedCodes)
                     .eq('lang', siteLang)
                     .gte('rating', 3)
+                    .not('photo_url', 'is', null).neq('photo_url', '')
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 if (resL.data && resL.data.length > 0) {
@@ -4046,18 +4049,20 @@ window.loadPdReviews = async function() {
                         .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
                         .in('product_code', combinedCodes)
                         .gte('rating', 3)
+                        .not('photo_url', 'is', null).neq('photo_url', '')
                         .order('created_at', { ascending: false })
                         .range(from, to);
                     data = res.data;
                     if (data && data.length > 0) _rvFallback = 'fab_codes';
                 }
             }
-            // 2순위: cb%/cotton%/fabric%/ua_fabric% LIKE 검색
+            // 2순위: cb%/cotton%/fabric%/ua_fabric% LIKE 검색 (사진 必)
             if (!data || data.length === 0) {
                 var res2 = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
                     .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase')
                     .gte('rating', 3)
+                    .not('photo_url', 'is', null).neq('photo_url', '')
                     .order('created_at', { ascending: false })
                     .range(from, to);
                 if (res2.data && res2.data.length) { data = res2.data; _rvFallback = 'fabric_like'; }
@@ -4113,19 +4118,27 @@ window.loadPdReviews = async function() {
             return;
         }
 
-        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분)
+        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분 / 같은 user_name 3번 이상)
         if (!window._psSeenPhotos) window._psSeenPhotos = new Set();
         if (!window._psSeenCmtHead) window._psSeenCmtHead = new Set();
-        if (_rvPage === 0) { window._psSeenPhotos.clear(); window._psSeenCmtHead.clear(); }
+        if (!window._psSeenNames) window._psSeenNames = {};
+        if (_rvPage === 0) { window._psSeenPhotos.clear(); window._psSeenCmtHead.clear(); window._psSeenNames = {}; }
         data = data.filter(function(r) {
             var pk = (r.photo_url||'').trim();
+            if (!pk) return false;                         // 사진 없는 후기 무조건 제외 (자연스러움 ↑)
             var ck = (r.comment||'').trim().substring(0,30).replace(/\s+/g,'');
-            if (pk && window._psSeenPhotos.has(pk)) return false;
+            if (window._psSeenPhotos.has(pk)) return false;
             if (ck && window._psSeenCmtHead.has(ck)) return false;
-            if (pk) window._psSeenPhotos.add(pk);
+            // 같은 user_name 3번 이상 → 부자연스러움 (예: 田中** 반복) → 스킵
+            var nm = (r.user_name||'').trim();
+            window._psSeenNames[nm] = (window._psSeenNames[nm] || 0) + 1;
+            if (window._psSeenNames[nm] > 2) return false;
+            window._psSeenPhotos.add(pk);
             if (ck) window._psSeenCmtHead.add(ck);
             return true;
         });
+        // 8개 초과 시 자르기
+        if (data.length > _rvPageSize) data = data.slice(0, _rvPageSize);
 
         if (_rvPage === 0) grid.innerHTML = '';
 
@@ -4172,7 +4185,8 @@ window.loadPdReviews = async function() {
         if (window.cpLoadShowcaseStats) cpLoadShowcaseStats();
 
         _rvPage++;
-        if (moreBtn) moreBtn.style.display = data.length >= _rvPageSize ? 'inline-block' : 'none';
+        // 2026-06-10: 8개 고정 — 더보기 버튼 영구 숨김 (큐레이션 자연스러움 우선)
+        if (moreBtn) moreBtn.style.display = 'none';
 
     } catch(e) {
         console.error('[pdReviews]', e);
