@@ -318,17 +318,19 @@ var _AUTO_LANG_FILTER = 'all';
 // 번역 사전 — UI 에 노출되는 주요 문구. 누락 시 한국어 원문 fallback.
 var _UI_DICT = {
     'AI 챗봇 학습 관리': { ja:'AIチャットボット学習管理', en:'AI Chatbot Learning' },
+    '🦎 AI 챗봇 학습 관리': { ja:'🦎 AIチャットボット学習管理', en:'🦎 AI Chatbot Learning' },
     '로그아웃': { ja:'ログアウト', en:'Logout' },
     '상담 로그': { ja:'相談ログ', en:'Chat Logs' },
     '학습 데이터': { ja:'学習データ', en:'Knowledge' },
     '설정': { ja:'設定', en:'Settings' },
     '서비스 AI 채팅': { ja:'サービスAIチャット', en:'Service AI Chat' },
     '오늘의 챗봇 리포트': { ja:'本日のチャットボットレポート', en:"Today's Chatbot Report" },
-    '오늘 상담': { ja:'本日の相談', en:'Today\'s Chats' },
+    '오늘 상담': { ja:'本日の相談', en:"Today's Chats" },
     '학습 필요': { ja:'学習必要', en:'Needs Training' },
     '총 대화': { ja:'総会話', en:'Total Chats' },
     '한국 / 일본 / 외국어': { ja:'韓国 / 日本 / 外国語', en:'Korean / Japanese / Foreign' },
     '오늘': { ja:'本日', en:'Today' },
+    '어제': { ja:'昨日', en:'Yesterday' },
     '최근 7일': { ja:'最近7日', en:'Last 7 days' },
     '최근 30일': { ja:'最近30日', en:'Last 30 days' },
     '최근 90일': { ja:'最近90日', en:'Last 90 days' },
@@ -343,61 +345,163 @@ var _UI_DICT = {
     '메시지 없음': { ja:'メッセージなし', en:'No messages' },
     '좌측에서 대화를 선택하세요': { ja:'左から会話を選んでください', en:'Select a conversation from the left' },
     '고객': { ja:'お客様', en:'Customer' },
+    'Guest': { ja:'ゲスト', en:'Guest' },
     '해외': { ja:'海外', en:'Foreign' },
+    '관리자': { ja:'管理者', en:'Admin' },
+    '챗봇': { ja:'チャットボット', en:'Chatbot' },
     '직접 답변 작성': { ja:'手動回答作成', en:'Write Reply' },
     '답변 전송': { ja:'送信', en:'Send Reply' },
     '관리자 답변': { ja:'管理者回答', en:'Admin Reply' },
-    '챗봇 답변': { ja:'チャットボット回답', en:'Chatbot Reply' },
+    '챗봇 답변': { ja:'チャットボット回答', en:'Chatbot Reply' },
     '학습 데이터에 추가': { ja:'学習データに追加', en:'Add to Knowledge' },
     '잘못된 답변': { ja:'誤った回答', en:'Wrong Answer' },
     '문제없음': { ja:'問題なし', en:'OK' },
+    '문제없슴': { ja:'問題なし', en:'OK' },
     '들켰어': { ja:'バレた', en:'Caught' },
     '오늘 답변에서 챗봇이 어려움을 겪었습니다. 검토가 필요합니다!': { ja:'本日の回答でチャットボットが困っていました。検討が必要です!', en:'Chatbot struggled with answers today. Review needed!' },
     '어제 총': { ja:'昨日合計', en:'Yesterday' },
     '학습필요': { ja:'学習必要', en:'needs training' },
     '건': { ja:'件', en:'' },
-    '대화 새로고침': { ja:'会話を更新', en:'Refresh' }
+    '대화 새로고침': { ja:'会話を更新', en:'Refresh' },
+    '오전': { ja:'午前', en:'AM' },
+    '오후': { ja:'午後', en:'PM' },
+    '기준': { ja:'時点', en:'as of' },
+    '저장': { ja:'保存', en:'Save' },
+    '삭제': { ja:'削除', en:'Delete' },
+    '취소': { ja:'キャンセル', en:'Cancel' },
+    '편집': { ja:'編集', en:'Edit' },
+    '확인': { ja:'確認', en:'Confirm' },
+    '닫기': { ja:'閉じる', en:'Close' }
 };
+// 2026-06-09: 패턴 기반 번역 — 숫자/시간 포함 동적 문구. exact match 안 되는 케이스 처리.
+var _UI_PATTERNS = [
+    // "오늘 N건의 답변에서 챗봇이 어려움을 겪었습니다. 검토가 필요합니다!"
+    {
+        re: /^오늘\s+(\d+)건의\s+답변에서\s+챗봇이\s+어려움을\s+겪었습니다\.\s*검토가\s+필요합니다!$/,
+        ja: function(m){ return '本日 ' + m[1] + '件の回答でチャットボットが困っていました。検討が必要です!'; },
+        en: function(m){ return 'Chatbot struggled with ' + m[1] + ' answers today. Review needed!'; }
+    },
+    // "어제 총 N건 (학습필요 M건) | 오늘 K건 (-X)"
+    {
+        re: /^어제\s+총\s+(\d+)건\s*\(학습필요\s+(\d+)건\)\s*\|\s*오늘\s+(\d+)건\s*\(([-+]?\d+)\)$/,
+        ja: function(m){ return '昨日合計 ' + m[1] + '件 (学習必要 ' + m[2] + '件) | 本日 ' + m[3] + '件 (' + m[4] + ')'; },
+        en: function(m){ return 'Yesterday ' + m[1] + ' (training needed ' + m[2] + ') | Today ' + m[3] + ' (' + m[4] + ')'; }
+    },
+    // "N개 세션"
+    {
+        re: /^(\d+)개\s+세션$/,
+        ja: function(m){ return m[1] + '個セッション'; },
+        en: function(m){ return m[1] + ' sessions'; }
+    },
+    // "오전 HH:MM" / "오후 HH:MM"
+    {
+        re: /^오전\s+(\d{1,2}:\d{2})$/,
+        ja: function(m){ return '午前 ' + m[1]; },
+        en: function(m){ return m[1] + ' AM'; }
+    },
+    {
+        re: /^오후\s+(\d{1,2}:\d{2})$/,
+        ja: function(m){ return '午後 ' + m[1]; },
+        en: function(m){ return m[1] + ' PM'; }
+    },
+    // "오후 HH:MM 기준" (today report timestamp)
+    {
+        re: /^오후\s+(\d{1,2}:\d{2})\s+기준$/,
+        ja: function(m){ return m[1] + ' 時点 (午後)'; },
+        en: function(m){ return 'as of ' + m[1] + ' PM'; }
+    },
+    {
+        re: /^오전\s+(\d{1,2}:\d{2})\s+기준$/,
+        ja: function(m){ return m[1] + ' 時点 (午前)'; },
+        en: function(m){ return 'as of ' + m[1] + ' AM'; }
+    },
+    // "해외 (ja)" / "해외 (us)" 등 배지
+    {
+        re: /^해외\s*\(([a-z]+)\)$/i,
+        ja: function(m){ return '海外 (' + m[1] + ')'; },
+        en: function(m){ return 'Foreign (' + m[1] + ')'; }
+    }
+];
+
 function _trUI(text) {
     if (!text || _UI_LANG === 'ko') return text;
     var trimmed = text.replace(/\s+/g, ' ').trim();
+    // 1) 사전 exact match
     var entry = _UI_DICT[trimmed];
     if (entry && entry[_UI_LANG]) return text.replace(trimmed, entry[_UI_LANG]);
+    // 2) 패턴 match
+    for (var i = 0; i < _UI_PATTERNS.length; i++) {
+        var pat = _UI_PATTERNS[i];
+        var m = trimmed.match(pat.re);
+        if (m && pat[_UI_LANG]) {
+            return text.replace(trimmed, pat[_UI_LANG](m));
+        }
+    }
     return text;
 }
 // DOM 텍스트 노드 walker — 페이지 로드 직후 한 번 + 비동기 렌더 후 재호출
+var _translateInFlight = false;  // MutationObserver 무한루프 방지
 function _applyUiTranslate(root) {
     if (_UI_LANG === 'ko') return;
-    root = root || document.body;
-    if (!root) return;
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-        acceptNode: function(n){
-            if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-            var p = n.parentNode;
-            if (p && (p.tagName === 'SCRIPT' || p.tagName === 'STYLE')) return NodeFilter.FILTER_REJECT;
-            return NodeFilter.FILTER_ACCEPT;
-        }
-    }, false);
-    var nodes = [];
-    var n; while ((n = walker.nextNode())) nodes.push(n);
-    nodes.forEach(function(tn){
-        var raw = tn.nodeValue;
-        var trimmed = raw.replace(/\s+/g,' ').trim();
-        var entry = _UI_DICT[trimmed];
-        if (entry && entry[_UI_LANG]) tn.nodeValue = raw.replace(trimmed, entry[_UI_LANG]);
+    if (_translateInFlight) return;
+    _translateInFlight = true;
+    try {
+        root = root || document.body;
+        if (!root) return;
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: function(n){
+                if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                var p = n.parentNode;
+                if (p && (p.tagName === 'SCRIPT' || p.tagName === 'STYLE')) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }, false);
+        var nodes = [];
+        var n; while ((n = walker.nextNode())) nodes.push(n);
+        nodes.forEach(function(tn){
+            var raw = tn.nodeValue;
+            var trimmed = raw.replace(/\s+/g,' ').trim();
+            // 사전 exact
+            var entry = _UI_DICT[trimmed];
+            if (entry && entry[_UI_LANG]) {
+                tn.nodeValue = raw.replace(trimmed, entry[_UI_LANG]);
+                return;
+            }
+            // 패턴
+            for (var i = 0; i < _UI_PATTERNS.length; i++) {
+                var pat = _UI_PATTERNS[i];
+                var m = trimmed.match(pat.re);
+                if (m && pat[_UI_LANG]) {
+                    tn.nodeValue = raw.replace(trimmed, pat[_UI_LANG](m));
+                    return;
+                }
+            }
+        });
+        // option 텍스트도 번역
+        root.querySelectorAll && root.querySelectorAll('option').forEach(function(op){
+            var t = (op.textContent || '').replace(/\s+/g,' ').trim();
+            var e = _UI_DICT[t];
+            if (e && e[_UI_LANG]) op.textContent = e[_UI_LANG];
+        });
+        // placeholder/title 도 번역
+        root.querySelectorAll && root.querySelectorAll('[placeholder]').forEach(function(el){
+            var t = (el.getAttribute('placeholder')||'').trim();
+            var e = _UI_DICT[t];
+            if (e && e[_UI_LANG]) el.setAttribute('placeholder', e[_UI_LANG]);
+        });
+    } catch (e) { console.warn('[ui translate]', e); }
+    finally { _translateInFlight = false; }
+}
+// 2026-06-09: MutationObserver — 동적으로 추가된 콘텐츠도 자동 번역. infinite loop 방지: _translateInFlight 플래그.
+function _initUiTranslateObserver() {
+    if (_UI_LANG === 'ko' || !window.MutationObserver) return;
+    var debounce = null;
+    var observer = new MutationObserver(function(){
+        if (_translateInFlight) return;
+        clearTimeout(debounce);
+        debounce = setTimeout(function(){ _applyUiTranslate(); }, 80);
     });
-    // option 텍스트도 번역
-    root.querySelectorAll && root.querySelectorAll('option').forEach(function(op){
-        var t = (op.textContent || '').replace(/\s+/g,' ').trim();
-        var e = _UI_DICT[t];
-        if (e && e[_UI_LANG]) op.textContent = e[_UI_LANG];
-    });
-    // placeholder/title 도 번역
-    root.querySelectorAll && root.querySelectorAll('[placeholder]').forEach(function(el){
-        var t = (el.getAttribute('placeholder')||'').trim();
-        var e = _UI_DICT[t];
-        if (e && e[_UI_LANG]) el.setAttribute('placeholder', e[_UI_LANG]);
-    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 window._applyUiTranslate = _applyUiTranslate;
 window._UI_LANG = _UI_LANG;
@@ -463,6 +567,8 @@ function initApp(user) {
         if (window._UI_LANG === 'ja') document.title = 'AIチャットボット学習管理';
         else if (window._UI_LANG === 'en') document.title = 'AI Chatbot Learning';
         if (window._applyUiTranslate) window._applyUiTranslate();
+        // 2026-06-09: MutationObserver 시작 — 동적 콘텐츠 (세션 목록, 대화 상세, 통계) 자동 번역
+        if (typeof _initUiTranslateObserver === 'function') _initUiTranslateObserver();
     } catch (e) {}
     // 2026-06-08: 일본/모로코 직원용 페이지는 시작 탭을 "상담 로그" 로 (학습 데이터 보단 즉시 대응이 우선)
     if (window._UI_LANG && window._UI_LANG !== 'ko' && typeof window.cbShowTab === 'function') {
