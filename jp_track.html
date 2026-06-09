@@ -201,21 +201,46 @@ var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 })();
 
 // status (KR DB값) → JP 표시 + step index
+// step: -2=차단, -1=취소, 0=임시, 1=결제대기, 2=받음/결제완료, 3=제작중, 4=인쇄중, 5=발송준비, 6=발송완료, 7=배송완료
 var STATUS_MAP = {
-    '임시작성':   { label:'下書き', step:0 },
-    '결제대기':   { label:'お支払い待ち', step:1 },
-    '결제완료':   { label:'お支払い完了', step:2 },
-    '접수완료':   { label:'受付完了', step:2 },
-    '제작중':     { label:'デザイン制作中', step:3 },
-    '인쇄중':     { label:'印刷中', step:4 },
-    '발송준비':   { label:'発送準備中', step:5 },
-    '발송완료':   { label:'発送済み', step:6 },
-    '배송중':     { label:'配送中', step:6 },
-    '도착완료':   { label:'お届け完了', step:7 },
-    '완료':       { label:'完了', step:7 },
-    '취소됨':     { label:'キャンセル', step:-1 },
-    '취소':       { label:'キャンセル', step:-1 },
-    '관리자차단': { label:'管理者保留', step:-2 }
+    // 임시 / 상담 / 결제대기
+    '임시작성':    { label:'下書き',           step:0 },
+    '미결제':      { label:'お支払い待ち',     step:1 },
+    '결제대기':    { label:'お支払い待ち',     step:1 },
+    '상담대기':    { label:'お問い合わせ受付', step:1 },
+    '확인중':      { label:'確認中',           step:1 },
+    // 결제완료 / 접수
+    '결제완료':    { label:'お支払い完了',     step:2 },
+    '결제됨':      { label:'お支払い完了',     step:2 },
+    '접수됨':      { label:'受付完了',         step:2 },
+    '접수완료':    { label:'受付完了',         step:2 },
+    '접수대기':    { label:'受付確認中',       step:2 },
+    '제작준비':    { label:'制作準備中',       step:2 },
+    // 제작
+    '제작중':      { label:'デザイン制作中',   step:3 },
+    '디자인중':    { label:'デザイン制作中',   step:3 },
+    // 인쇄
+    '인쇄중':      { label:'印刷中',           step:4 },
+    '인쇄완료':    { label:'印刷完了',         step:4 },
+    // 발송 준비
+    '발송준비':    { label:'発送準備中',       step:5 },
+    '포장중':      { label:'梱包中',           step:5 },
+    // 발송 / 배송
+    '발송완료':    { label:'発送済み',         step:6 },
+    '발송됨':      { label:'発送済み',         step:6 },
+    '배송중':      { label:'配送中',           step:6 },
+    // 도착 / 완료
+    '도착완료':    { label:'お届け完了',       step:7 },
+    '배송완료':    { label:'お届け完了',       step:7 },
+    '완료':        { label:'完了',             step:7 },
+    '완료됨':      { label:'完了',             step:7 },
+    // 취소 / 차단
+    '취소됨':      { label:'キャンセル',       step:-1 },
+    '취소':        { label:'キャンセル',       step:-1 },
+    '환불완료':    { label:'返金完了',         step:-1 },
+    '환불실패':    { label:'返金処理中',       step:-1 },
+    '관리자차단':  { label:'お問い合わせください', step:-2 },
+    '관리자보류':  { label:'お問い合わせください', step:-2 }
 };
 
 var STEPS = [
@@ -300,7 +325,8 @@ function jptShowResult(order, minimal) {
     var area = document.getElementById('jptResultArea');
     area.classList.add('show');
 
-    var mapped = STATUS_MAP[order.status] || { label: order.status || '受付', step:1 };
+    // 매핑 누락 시 한글 노출 방지 — '受付済み' step 2 로 안전 fallback
+    var mapped = STATUS_MAP[order.status] || { label:'受付済み', step:2 };
     var curStep = mapped.step;
 
     // 배너
