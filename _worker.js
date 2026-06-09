@@ -1067,7 +1067,7 @@ ${hreflangTags('/editor')}
         // ========== STANDALONE PAGE REWRITES ==========
         // 별도 랜딩 페이지: 하이픈 경로만 사용 (언더스코어는 Pretty URLs 308 루프 발생)
         // 언더스코어 → 하이픈 301 리다이렉트
-        const UNDERSCORE_REDIRECTS = { 'paper_stand': '/paper-stand', 'raw_board': '/raw-board' };
+        const UNDERSCORE_REDIRECTS = { 'paper_stand': '/paper-stand', 'raw_board': '/raw-board', 'jp_track': '/jp-track' };
         if (UNDERSCORE_REDIRECTS[path]) {
             return new Response(null, { status: 301, headers: { 'Location': UNDERSCORE_REDIRECTS[path] } });
         }
@@ -1096,6 +1096,9 @@ ${hreflangTags('/editor')}
             // 2026-06-08: AI 챗봇 학습 관리 — 일본/모로코 직원용 별도 깨끗한 URL (같은 콘텐츠, 페이지 내부에서 UI 언어 + 필터 자동 설정)
             'chatbot-learn-ja': '/chatbot_learn_882.html',
             'chatbot-learn-ma': '/chatbot_learn_882.html',
+            // 2026-06-10: 일본 注文照会 + 特商法 표기 (JP 매출 신뢰도)
+            'jp-track': '/jp_track.html',
+            'tokushoho': '/tokushoho.html',
         };
         // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
         if (path.indexOf('store/') === 0 && path.length > 6) {

@@ -11,12 +11,7 @@
 # Standalone landing pages (hyphen only — underscore causes Pretty URLs 308 loop)
 /paper-stand  /paper_stand.html  200
 /raw-board  /raw_board.html  200
-
-# JP 전용: 注文照会 + 特商法 (clean URL alias)
-/jp-track     /jp_track.html     200
-/track-ja     /jp_track.html     200
-/tokushoho    /tokushoho.html    200
-/tokushou     /tokushoho.html    200
+# NOTE: /jp-track, /tokushoho 는 _worker.js STANDALONE_PAGES 가 처리 (여기 두면 Pretty URLs 308 루프)
 
 # NOTE: HTML page rewrites (/mypage → mypage.html) and SPA fallback
 # are NOT listed here because _worker.js handles all routing.
