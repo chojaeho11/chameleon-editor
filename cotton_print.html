@@ -4009,73 +4009,31 @@ window.loadPdReviews = async function() {
 
     try {
         var data = null;
-        // [Cotton Print] 패브릭 상품 후기만: 코드가 cb*, ua_fabric*, 패브릭 카테고리 코드들
-        // 1순위: cotton_print.js가 등록한 fabricCodes 배열 사용 (정확)
-        // 패브릭 카테고리 코드 자동 조회 (없으면)
-        if (!window._cottonFabricCodes) {
-            try {
-                var subCatRes = await _rvSupa.from('admin_categories').select('code').eq('top_category_code', '22222');
-                if (subCatRes.data) {
-                    var subCodes = subCatRes.data.map(function(c){ return c.code; });
-                    if (subCodes.length > 0) {
-                        var prodRes = await _rvSupa.from('admin_products').select('code').in('category', subCodes);
-                        window._cottonFabricCodes = (prodRes.data||[]).map(function(p){ return p.code; });
-                    }
-                }
-            } catch(e) { console.warn('fabric codes lookup failed', e); }
-        }
-        var fabCodes = window._cottonFabricCodes || [];
 
+        // 2026-06-10: 단순화 — 메인 사이트(cafe0101)와 동일하게 최신 8개 (사진 必, 현재언어 우선, 부족시 타언어 폴백)
+        //   기존엔 패브릭 카테고리 코드로만 좁혀서 일본 사이트엔 3개밖에 안 떴음.
+        //   USER SHOWCASE 는 패브릭 상품의 작품 갤러리 성격이므로 lang 만 일치하면 모두 표시.
         if (_rvPage === 0 && !_rvFallback) {
-            // 1순위: cotton_showcase + 정확한 fabric 코드 in 검색 (다국어 + 모든 평점)
-            var combinedCodes = fabCodes.slice(0, 200).concat(['cotton_showcase']);
-            window._cottonFabCodes100 = combinedCodes;
-            if (combinedCodes.length > 1) {
-                // 2026-06-04: 현재 사이트 언어 후기 우선 (JP 사이트는 JP 후기만 노출). 비면 다국어 폴백.
-                // 2026-06-10: 모든 쿼리에 photo_url 必 — 사진 없는 후기 (텍스트만) 는 자연스럽지 않게 보임.
-                var resL = await _rvSupa.from('product_reviews')
+            var resL = await _rvSupa.from('product_reviews')
+                .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
+                .eq('lang', siteLang)
+                .gte('rating', 3)
+                .not('photo_url', 'is', null).neq('photo_url', '')
+                .order('created_at', { ascending: false })
+                .limit(40);
+            data = (resL.data && resL.data.length > 0) ? resL.data : [];
+            _rvFallback = 'lang_first';
+
+            // 2차 폴백: 현재 언어 후기 8개 미만이면 타 언어 보충 (사진 必)
+            if (data.length < _rvPageSize) {
+                var resFb = await _rvSupa.from('product_reviews')
                     .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .in('product_code', combinedCodes)
-                    .eq('lang', siteLang)
-                    .gte('rating', 3)
+                    .neq('lang', siteLang)
+                    .gte('rating', 4)
                     .not('photo_url', 'is', null).neq('photo_url', '')
                     .order('created_at', { ascending: false })
-                    .range(from, to);
-                if (resL.data && resL.data.length > 0) {
-                    data = resL.data;
-                    _rvFallback = 'fab_codes_lang';
-                } else {
-                    var res = await _rvSupa.from('product_reviews')
-                        .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                        .in('product_code', combinedCodes)
-                        .gte('rating', 3)
-                        .not('photo_url', 'is', null).neq('photo_url', '')
-                        .order('created_at', { ascending: false })
-                        .range(from, to);
-                    data = res.data;
-                    if (data && data.length > 0) _rvFallback = 'fab_codes';
-                }
-            }
-            // 2순위: cb%/cotton%/fabric%/ua_fabric% LIKE 검색 (사진 必)
-            if (!data || data.length === 0) {
-                var res2 = await _rvSupa.from('product_reviews')
-                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .or('product_code.like.cb%,product_code.like.cotton%,product_code.like.fabric%,product_code.like.ua_fabric%,product_code.eq.cotton_showcase')
-                    .gte('rating', 3)
-                    .not('photo_url', 'is', null).neq('photo_url', '')
-                    .order('created_at', { ascending: false })
-                    .range(from, to);
-                if (res2.data && res2.data.length) { data = res2.data; _rvFallback = 'fabric_like'; }
-            }
-            // 3순위 (광역): 사진이 있는 모든 고평점 후기 (사진 있는 = 실제 후기)
-            if (!data || data.length === 0) {
-                var res3 = await _rvSupa.from('product_reviews')
-                    .select('id, user_name, rating, comment, photo_url, created_at, product_code, lang')
-                    .not('photo_url', 'is', null).gte('rating', 4)
-                    .order('created_at', { ascending: false })
-                    .range(from, to);
-                data = res3.data;
-                _rvFallback = 'photo_all';
+                    .limit(40);
+                data = data.concat(resFb.data || []);
             }
         }
         // 결정된 전략으로 페이지 로드 (더보기)
@@ -4118,26 +4076,33 @@ window.loadPdReviews = async function() {
             return;
         }
 
-        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분 / 같은 user_name 3번 이상)
+        // ★ 중복 제거 (같은 사진 / 같은 코멘트 시작부분 / 정규화된 이름 2번 초과)
+        // 2026-06-10: 이름 정규화 — 様 / さん / ちゃん / + / ** / 공백 제거 후 비교.
+        //   "田中** 様" 와 "田中** さん" 와 "田中**" 가 같은 사람으로 인식되도록 → 부자연스러운 반복 자동 제거.
+        function _normName(s) {
+            return (s || '').trim()
+                .replace(/[\s　]+/g, '')                       // 공백 (전각 포함)
+                .replace(/(様|さま|サマ|さん|サン|ちゃん|チャン|樣|선생님|씨|님)+$/g, '')  // 접미사
+                .replace(/\*+$/g, '')                              // 끝 ** 제거
+                .toLowerCase();
+        }
         if (!window._psSeenPhotos) window._psSeenPhotos = new Set();
         if (!window._psSeenCmtHead) window._psSeenCmtHead = new Set();
         if (!window._psSeenNames) window._psSeenNames = {};
         if (_rvPage === 0) { window._psSeenPhotos.clear(); window._psSeenCmtHead.clear(); window._psSeenNames = {}; }
         data = data.filter(function(r) {
             var pk = (r.photo_url||'').trim();
-            if (!pk) return false;                         // 사진 없는 후기 무조건 제외 (자연스러움 ↑)
+            if (!pk) return false;
             var ck = (r.comment||'').trim().substring(0,30).replace(/\s+/g,'');
             if (window._psSeenPhotos.has(pk)) return false;
             if (ck && window._psSeenCmtHead.has(ck)) return false;
-            // 같은 user_name 3번 이상 → 부자연스러움 (예: 田中** 반복) → 스킵
-            var nm = (r.user_name||'').trim();
+            var nm = _normName(r.user_name);
             window._psSeenNames[nm] = (window._psSeenNames[nm] || 0) + 1;
             if (window._psSeenNames[nm] > 2) return false;
             window._psSeenPhotos.add(pk);
             if (ck) window._psSeenCmtHead.add(ck);
             return true;
         });
-        // 8개 초과 시 자르기
         if (data.length > _rvPageSize) data = data.slice(0, _rvPageSize);
 
         if (_rvPage === 0) grid.innerHTML = '';

@@ -5316,15 +5316,22 @@ async function handleSubReturn() {
             var seenPhotos = new Set();
             var seenCommentHeads = new Set();
             var seenNames = {};
+            // 2026-06-10: 이름 정규화 — "田中** 様" / "田中** さん" / "田中**" 를 같은 이름으로 인식.
+            function _normName(s) {
+                return (s || '').trim()
+                    .replace(/[\s　]+/g, '')
+                    .replace(/(様|さま|サマ|さん|サン|ちゃん|チャン|樣|선생님|씨|님)+$/g, '')
+                    .replace(/\*+$/g, '')
+                    .toLowerCase();
+            }
             var deduped = [];
             function _pushIfNew(r) {
                 var photoKey = (r.photo_url || '').trim();
-                if (!photoKey) return; // 사진 없는 후기는 무조건 제외
+                if (!photoKey) return;
                 var commentKey = (r.comment || '').trim().substring(0, 30).replace(/\s+/g,'');
                 if (seenPhotos.has(photoKey)) return;
                 if (commentKey && seenCommentHeads.has(commentKey)) return;
-                // 같은 이름이 3번 이상이면 부자연스러움 → 스킵 (예: 田中** 반복)
-                var nm = (r.user_name || '').trim();
+                var nm = _normName(r.user_name);
                 seenNames[nm] = (seenNames[nm] || 0) + 1;
                 if (seenNames[nm] > 2) return;
                 seenPhotos.add(photoKey);
