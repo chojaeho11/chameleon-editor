@@ -1317,14 +1317,19 @@ window._tcmFallbackClick = function(code) {
                  2026-05-15: 옆에 "금액 주문" 입력 + 주문하기 버튼 복원 — 매니저와 통화 후
                  합의된 금액을 직접 입력해서 즉시 결제 모달을 띄우는 빠른 경로. -->
             <div id="mgrQuoteActions" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; margin-top:6px;">
-                <!-- 금액 입력 + 주문하기 (좌측 그룹) -->
-                <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
+                <!-- 금액 입력 + 내용 메모 + 주문하기 (좌측 그룹) -->
+                <!-- 2026-06-09: 내용 메모 input 추가 — 관리자 페이지에서 "매니저 견적 주문" 만 떠서 무슨 내용인지 보이지 않던 문제 fix -->
+                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
                     <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
                            placeholder=""
                            oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
                            onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
-                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:130px; text-align:right; padding:6px 0; background:transparent;">
+                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:120px; text-align:right; padding:6px 0; background:transparent;">
                     <span id="mgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
+                    <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
+                           placeholder="내용 (예: 등신대 10개)"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
+                           style="border:none; outline:none; font-size:13px; font-weight:600; color:#fff; width:200px; padding:7px 10px; background:rgba(255,255,255,0.08); border-radius:7px;">
                     <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()"
                             style="padding:9px 18px; background:#fff; color:#111; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
                         ⚡ 주문하기
@@ -1731,16 +1736,28 @@ window._tcmFallbackClick = function(code) {
             }
             // 입력값(현지통화) → KRW 변환 (DB·결제는 KRW 기준)
             var amountKrw = _mqToKrw(entered);
+            // 2026-06-09: 매니저가 입력한 내용 메모 — 관리자/주문관리에서 무슨 견적인지 보이도록.
+            //   비어있으면 기본 _mqItemName 사용 (기존 동작 유지).
+            var memoEl = document.getElementById('mgrQuoteMemo');
+            var memoText = (memoEl && memoEl.value || '').trim();
             // simple_order 의 결제 모달 띄우기 위해 모달 DOM 준비
             if (typeof window._soEnsureModalReady === 'function') {
                 window._soEnsureModalReady();
             }
             // 카트에 매니저 견적 항목 — 이전 카트 완전 비우고 이 항목 1개만 넣음 (이전 항목 오염 방지)
+            var _localStr = entered.toLocaleString();
+            var _lg = _mqGetLang();
+            var _withMemoName = memoText
+                ? (_lg === 'ja' ? 'マネージャー見積: ' + memoText + ' (¥' + _localStr + ')'
+                  : _lg === 'en' ? 'Manager Quote: ' + memoText + ' ($' + _localStr + ')'
+                  : _lg === 'zh' ? '经理报价: ' + memoText + ' (¥' + _localStr + ')'
+                  : '매니저 견적: ' + memoText + ' (' + _localStr + '원)')
+                : _mqItemName(entered);
             var item = {
                 uid: Date.now(),
                 product: {
                     code: 'manager_quote_' + Date.now(),
-                    name: _mqItemName(entered),  // 현지 통화 + 로케일 표시명
+                    name: _withMemoName,
                     price: amountKrw,
                     category: 'manager_quote',
                     img: '/mascot-character.png'
@@ -1749,7 +1766,8 @@ window._tcmFallbackClick = function(code) {
                 qty: 1,
                 selectedAddons: {},
                 addonQuantities: {},
-                itemNote: 'manager quote (' + _mqGetLang() + ')',
+                itemNote: memoText || ('manager quote (' + _lg + ')'),
+                _mgrMemo: memoText || null,  // 관리자 페이지 픽업용 명시 필드
                 _simple: { unit: amountKrw, subtotal: amountKrw, discount: 0, final: amountKrw, tierPct: 0 }
             };
             try {
@@ -1760,6 +1778,7 @@ window._tcmFallbackClick = function(code) {
             if (typeof window._soOpenCheckout === 'function') {
                 window._soOpenCheckout();
                 if (inp) inp.value = ''; // 입력 초기화
+                if (memoEl) memoEl.value = '';  // 메모도 초기화
             } else {
                 // simple_order 아직 로드 안 됐을 가능성 — 메인 카트로 폴백
                 location.href = '/?cart=open';
