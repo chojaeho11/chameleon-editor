@@ -350,6 +350,13 @@ window.__CD_I18N = {
     canvas_dim: { ko:'가로 × 세로', ja:'横 × 縦', en:'Width × Height' },
     footer_brand: { ko:'(주)카멜레온프린팅 · 패브릭 인쇄 전문', ja:'(株)カメレオンプリンティング・ファブリックプリント専門', en:'Chameleon Printing Co. · Fabric printing specialists' },
     footer_mall: { ko:'메인 인쇄 쇼핑몰', ja:'メイン印刷ショップ', en:'Main print shop' },
+    co_track_link: { ko:'주문 진행 상황 조회', ja:'ご注文照会', en:'Order Status' },
+    co_tokushoho_link: { ko:'특정상거래법 표기', ja:'特定商取引法に基づく表記', en:'Commercial Transactions Act' },
+    co_terms_consent: {
+        ko:'주문 시 위 약관에 동의한 것으로 간주됩니다.',
+        ja:'本注文をもって、特定商取引法に基づく表記の内容に同意したものとみなします。',
+        en:'Placing this order constitutes agreement to the terms outlined in our Commercial Transactions Act notice.'
+    },
     p_discount: { ko:'대량 할인', ja:'大量割引', en:'Volume discount' },
     hook: { ko:'고리', ja:'吊り具', en:'Hook' },
     acc: { ko:'부자재', ja:'付属品', en:'Accessory' },
@@ -1870,6 +1877,12 @@ a { text-decoration: none; color: inherit; }
             <div style="font-size:10px; color:var(--text-light); text-align:center; margin-top:8px;" data-cdi18n="co_note">
                 결제완료 확인 후 영업일 내 제작 시작됩니다
             </div>
+            <!-- 2026-06-10: 결제 전 법적 표기 동의 + 注문照會 + 特商法 (JP 法令 遵守) -->
+            <div style="margin-top:10px; padding:9px 10px; background:#faf6ed; border:1px dashed #d4a373; border-radius:8px; font-size:10px; color:#78350f; line-height:1.55; text-align:center;">
+                <div style="margin-bottom:6px;" data-cdi18n="co_terms_consent">주문 시 위 약관에 동의한 것으로 간주됩니다.</div>
+                <a href="/tokushoho" target="_blank" rel="noopener" style="color:#b45309; font-weight:700; text-decoration:underline; margin-right:8px;" data-cdi18n="co_tokushoho_link">특정상거래법 표기</a>
+                <a href="/jp-track" target="_blank" rel="noopener" style="color:#b45309; font-weight:700; text-decoration:underline;" data-cdi18n="co_track_link">주문 진행 상황 조회</a>
+            </div>
             <!-- 2026-05-14: 관리자/매니저 전용 — 패브릭 카트 기반 고객 결제창 생성 -->
             <button id="coMgrQuoteBtn" type="button" onclick="window._cpCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
                 🎁 고객 결제창 만들어주기 (매니저)
@@ -1892,6 +1905,11 @@ a { text-decoration: none; color: inherit; }
 <footer class="footer">
     Cotton Print · <span data-cdi18n="footer_brand">(주)카멜레온프린팅 · 패브릭 인쇄 전문</span><br>
     <a href="https://www.cafe2626.com">cafe2626.com</a> · <span data-cdi18n="footer_mall">메인 인쇄 쇼핑몰</span>
+    <div style="margin-top:10px; font-size:11px;">
+        <a href="/jp-track" data-cdi18n="co_track_link">주문 진행 상황 조회</a> &nbsp;·&nbsp;
+        <a href="/tokushoho" data-cdi18n="co_tokushoho_link">특정상거래법 표기</a> &nbsp;·&nbsp;
+        <a href="/privacy.html">プライバシーポリシー</a>
+    </div>
 </footer>
 
 <!-- 2026-05-11: PDF/AI/PSD 클라이언트 변환용 라이브러리
