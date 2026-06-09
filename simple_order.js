@@ -12576,7 +12576,12 @@ html, body { background: #ffffff !important; }
                     } else if (it.boxSize && typeof it.boxSize.unit === 'number' && it.boxSize.unit > 0) {
                         linePrice = it.boxSize.unit * qty;
                     } else {
-                        linePrice = ((it.product && Number(it.product.price)) || 0) * qty;
+                        // 2026-06-09: 매니저 견적 (flat 구조) — it.product 없고 it.price 가 manager-set 라인 총액.
+                        //   기존엔 it.product.price 만 봐서 0 → 전액이 배송비로 잘못 잡히던 버그.
+                        //   product 객체 있으면 그것의 price × qty, 없으면 it.price (이미 라인 총액) 그대로.
+                        var _pp = (it.product && Number(it.product.price)) || 0;
+                        if (_pp > 0) linePrice = _pp * qty;
+                        else linePrice = Number(it.price) || Number(it.unit_price) * qty || 0;
                     }
                     _pendLineSum += linePrice;
                 });
@@ -12594,7 +12599,20 @@ html, body { background: #ffffff !important; }
             // 2026-05-22: 패브릭 누락 버그 — 기존 it.fabricCode 만 보면 DB복원/동기화된 패브릭
             //   (source/orderWcm 만 있고 fabricCode 없는 shape)이 견적서에서 빠짐.
             //   요약(_renderCheckoutSummary)과 동일하게 _soIsFabricItem 으로 판별.
-            var pdfCart = cart.filter(function (it) { return !!it.product || _soIsFabricItem(it); });
+            // 2026-06-09: 매니저 견적 누락 버그 — DB 직렬화 시 product 객체 없이 flat (product_code/product_name) 구조 저장됨.
+            //   export.js 의 fabric 합성 경로가 product_name 으로 처리 가능하므로 필터에 포함시켜야 함.
+            //   이전엔 it.product 도 없고 fabric 표시도 없어 PDF cart 에서 제외 → 견적서 품목 비고 + 전액이 "배송비" 로 잘못 계산.
+            var pdfCart = cart.filter(function (it) {
+                if (!it) return false;
+                if (it.product) return true;
+                if (_soIsFabricItem(it)) return true;
+                // 매니저 견적 (flat 구조)
+                var _code = it.product_code || it.code || '';
+                if (typeof _code === 'string' && _code.indexOf('manager_quote_') === 0) return true;
+                if (it.type === 'manager_quote') return true;
+                if (it.product_name) return true;  // product 객체 없이 product_name 만 있는 케이스 (안전망)
+                return false;
+            });
             var blob = await mod.generateQuotationPDF(orderInfo, pdfCart, _quoteDiscRate, _walletUse.useMileage || 0, _walletUse.useDeposit || 0);
             if (!blob) { alert('견적서 생성 실패. 콘솔 확인.'); return; }
 
