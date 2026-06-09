@@ -226,7 +226,17 @@
       "Bash(git check-ignore *)",
       "Bash(curl -sS \"https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/common_info?select=category_code,section,content,content_jp&category_code=in.\\(all,44444,banner\\)\" \\\\ *)",
       "Bash(awk 'NR>=11050 && NR<=11220 && /subCats\\\\./' index.html)",
-      "Bash(awk 'NR>=11050 && NR<=11220' index.html)"
+      "Bash(awk 'NR>=11050 && NR<=11220' index.html)",
+      "WebFetch(domain:www.miricanvas.com)",
+      "WebFetch(domain:help.miricanvas.com)",
+      "WebFetch(domain:www.bizhows.com)",
+      "Bash(powershell -Command \"\\(Get-Content index.html -Raw -Encoding UTF8\\) -replace 'config\\\\.js\\\\?v=438', 'config.js?v=439' | Set-Content index.html -Encoding UTF8 -NoNewline\")",
+      "Bash(powershell -Command \"\\(Get-Content simple_order.js -Raw -Encoding UTF8\\) -replace 'aspect-ratio:1/1; background:#f8fafc; position:relative;', 'position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;' | Set-Content simple_order.js -Encoding UTF8 -NoNewline\")",
+      "Bash(powershell -Command \"\\(Get-Content simple_order.js -Raw -Encoding UTF8\\) -replace 'width:100%;height:100%;object-fit:cover;', 'position:absolute; inset:0; width:100%; height:100%; object-fit:cover;' | Set-Content simple_order.js -Encoding UTF8 -NoNewline\")",
+      "Bash(powershell -Command \"\\(Get-Content order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content order.js -Encoding UTF8 -NoNewline\")",
+      "Bash(powershell -Command \"\\(Get-Content cotton_designer.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content cotton_designer.js -Encoding UTF8 -NoNewline; \\(Get-Content main.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content main.js -Encoding UTF8 -NoNewline; \\(Get-Content canvas-pages.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=292', 'export.js?v=435' | Set-Content canvas-pages.js -Encoding UTF8 -NoNewline\")",
+      "Bash(powershell -Command \"\\(Get-Content simple_order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content simple_order.js -Encoding UTF8 -NoNewline; \\(Get-Content cotton_designer.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content cotton_designer.js -Encoding UTF8 -NoNewline; \\(Get-Content main.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content main.js -Encoding UTF8 -NoNewline; \\(Get-Content order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content order.js -Encoding UTF8 -NoNewline; \\(Get-Content canvas-pages.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content canvas-pages.js -Encoding UTF8 -NoNewline\")",
+      "Bash(git log *)"
     ],
     "additionalDirectories": [
       "\\tmp",

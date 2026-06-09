@@ -25,32 +25,28 @@ Deno.serve(async (req) => {
     // Stripe Checkout Session 생성 (REST API 직접 호출)
     const params = new URLSearchParams()
     params.append('mode', 'payment')
-    // 2026-06-09: 통화별 결제수단 분기 — JP 는 카드 단독이 아니라 콘비니/은행이체도 함께 제공.
-    //   일본 B2C 결제 점유: 銀行振込 ~30%, コンビニ ~25%, 카드 ~35%, 기타 ~10%.
-    //   카드만 제공 → 일본 신뢰도 낮은 사이트 인상 + 결제 단계 이탈률 ↑.
-    //   주의: customer_balance(JP bank) 와 konbini 는 즉시결제 아님 → success.html 에서 'processing' 상태 처리 필요.
+    // 2026-06-09: JP 는 Stripe 결제창을 일본어로 표시 (locale: ja).
+    //   콘비니/은행이체는 일본 법인 Stripe 계정 필요 → 한국 계정에서는 카드만 가능.
+    //   추후 일본 법인 등록 후 dashboard.stripe.com 에서 konbini/customer_balance 활성화하면
+    //   아래 주석 해제하여 추가 가능.
     const _curLower = (currency || '').toLowerCase();
-    if (_curLower === 'jpy') {
-      params.append('payment_method_types[]', 'card')
-      params.append('payment_method_types[]', 'konbini')
-      params.append('payment_method_types[]', 'customer_balance')
-      // customer_balance(JP bank) 활성화 — funding_type: bank_transfer, JPY 전용
-      params.append('payment_method_options[customer_balance][funding_type]', 'bank_transfer')
-      params.append('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer')
-      // konbini 결제 만료: 3일 (기본 3일, 최대 60일까지 설정 가능)
-      params.append('payment_method_options[konbini][expires_after_days]', '3')
-    } else {
-      params.append('payment_method_types[]', 'card')
-    }
+    params.append('payment_method_types[]', 'card')
+    // 미래 확장 (일본 법인 등록 후):
+    // if (_curLower === 'jpy') {
+    //   params.append('payment_method_types[]', 'konbini')
+    //   params.append('payment_method_types[]', 'customer_balance')
+    //   params.append('payment_method_options[customer_balance][funding_type]', 'bank_transfer')
+    //   params.append('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer')
+    //   params.append('payment_method_options[konbini][expires_after_days]', '3')
+    // }
     params.append('line_items[0][price_data][currency]', currency)
     params.append('line_items[0][price_data][product_data][name]', `Chameleon Order #${order_id}`)
     // Stripe amount: USD는 센트 단위, JPY는 그대로
     const stripeAmount = currency === 'jpy' ? amount : Math.round(amount * 100)
     params.append('line_items[0][price_data][unit_amount]', String(stripeAmount))
     params.append('line_items[0][quantity]', '1')
-    // 2026-06-09: 일본 konbini/은행이체는 이메일 필수 → Stripe Checkout 에서 자동 수집
+    // 2026-06-09: JP 사이트는 Stripe Checkout UI 를 일본어로 표시
     if (_curLower === 'jpy') {
-      params.append('customer_creation', 'always')
       params.append('locale', 'ja')
     }
     // success_url에 session_id 템플릿 추가
