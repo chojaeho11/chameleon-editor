@@ -28,6 +28,36 @@
   };
 </script>
 <meta name="description" content="이미지를 올리면 자동으로 패턴 원단이 만들어집니다. 5가지 레이아웃, 면·인견·폴리·실크 원단, 110cm 폭 무제한 길이.">
+<meta name="keywords" content="패브릭인쇄,천가게,원단쇼핑몰,패브릭포스터,천원단,천인쇄,실사출력,광목인쇄,면포인쇄,옥스포드인쇄,쉬폰인쇄,백월,포토존 배경,현수막 천,코튼프린팅,카멜레온프린팅">
+<!-- 2026-06-09: 호스트 언어별 keywords / description 동적 갱신 (JP: cotton-printer.com / cafe0101.com, EN: chameleon.design / cafe3355.com) -->
+<script>
+(function _syncFabricSeo(){
+    try {
+        var _h = (location.hostname||'').toLowerCase();
+        var _lng = (_h.indexOf('cafe0101')>=0 || _h.indexOf('cotton-printer')>=0) ? 'ja'
+                 : (_h.indexOf('cafe3355')>=0 || _h.indexOf('chameleon.design')>=0) ? 'en' : 'ko';
+        if (_lng === 'ko') return;
+        var _kw = '', _desc = '';
+        if (_lng === 'ja') {
+            _kw = 'ファブリック印刷,生地屋,生地通販,ファブリックポスター,タペストリー,生地素材,オリジナル生地,オリジナル生地プリント,生地ショップ,布生地,テキスタイル印刷,カメレオンプリンティング';
+            _desc = '画像をアップロードするとパターン生地を自動生成。5種類のレイアウト、コットン・シルク・ポリエステル等の生地、110cm幅・無制限の長さ。';
+        } else {
+            _kw = 'fabric printing,fabric shop,online fabric store,fabric poster,tapestry,custom fabric,original fabric,fabric mall,fabric material,textile printing,cotton printing,Chameleon Printing';
+            _desc = 'Upload an image and we will auto-generate pattern fabric. 5 layouts, cotton/silk/polyester fabrics, 110cm width unlimited length.';
+        }
+        var _set = function(){
+            try {
+                var k = document.querySelector('meta[name="keywords"]');
+                if (k) k.setAttribute('content', _kw);
+                var d = document.querySelector('meta[name="description"]');
+                if (d) d.setAttribute('content', _desc);
+            } catch(e){}
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _set);
+        else _set();
+    } catch(e){}
+})();
+</script>
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.cafe2626.com/fabric">
 <!-- 2026-06-09: hostname 기반 canonical 동적 갱신 — JP/US 트래픽이 KR 도메인으로 귀속되던 SEO/Ads 문제 fix -->
