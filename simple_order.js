@@ -10878,16 +10878,23 @@ html, body { background: #ffffff !important; }
             }
             const cart = readCart();
             // 2026-06-01: 카트 "내용변경" 모드 — 기존 항목 교체. 파일 미변경시 기존 URL 유지.
-            if (state._editingCartIdx != null && cart[state._editingCartIdx]) {
+            // 2026-06-09: 저장 시점에 uid 로 cart 인덱스 재조회 — cart_sync 가 사이에 cart 재배열했어도 정확.
+            var _editIdx = state._editingCartIdx;
+            if (state._editingCartUid != null) {
+                var _foundIdx = _findCartIdxByUid(cart, state._editingCartUid);
+                if (_foundIdx >= 0) _editIdx = _foundIdx;
+            }
+            if (_editIdx != null && _editIdx >= 0 && cart[_editIdx]) {
                 if (!state.file && state._editingFileUrl) {
                     item.originalUrl = state._editingFileUrl;
                     item.filePath = state._editingFilePath;
                     item.fileName = state._editingFileName;
                 }
                 // uid 는 보존 (cart_sync 호환)
-                item.uid = cart[state._editingCartIdx].uid || item.uid;
-                cart[state._editingCartIdx] = item;
+                item.uid = cart[_editIdx].uid || item.uid;
+                cart[_editIdx] = item;
                 state._editingCartIdx = null;
+                state._editingCartUid = null;
                 state._editingItem = null;
                 state._editingFileUrl = null;
                 state._editingFilePath = null;
@@ -11287,16 +11294,16 @@ html, body { background: #ffffff !important; }
                         <div class="so-cart-item-meta">${meta.join(' · ')}</div>
                         <div class="so-cart-item-bottom">
                             <div class="so-cart-qty-controls">
-                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, -1)">−</button>
+                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg('${item.uid || ''}', -1)">−</button>
                                 <input type="number" class="so-cart-qty-input" min="1" max="9999"
                                     value="${item.qty || 1}"
-                                    onchange="window._soCartQtySet(${genIdx}, this.value)" />
-                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg(${genIdx}, 1)">+</button>
+                                    onchange="window._soCartQtySet('${item.uid || ''}', this.value)" />
+                                <button class="so-cart-qty-btn" onclick="window._soCartQtyChg('${item.uid || ''}', 1)">+</button>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span class="so-cart-item-price">${fmtPrice(calc.lineDisplay != null ? calc.lineDisplay : calc.final)}</span>
-                                <button class="so-cart-item-edit" onclick="window._soCartEditItem(${genIdx})" title="${tr('내용변경','内容変更','Edit')}" style="background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; border-radius:6px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer;">${tr('내용변경','変更','Edit')}</button>
-                                <button class="so-cart-item-remove" onclick="window._soCartRemove(${genIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+                                <button class="so-cart-item-edit" onclick="window._soCartEditItem('${item.uid || ''}')" title="${tr('내용변경','内容変更','Edit')}" style="background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; border-radius:6px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer;">${tr('내용변경','変更','Edit')}</button>
+                                <button class="so-cart-item-remove" onclick="window._soCartRemove('${item.uid || ''}')" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
                             </div>
                         </div>
                     </div>
@@ -11390,9 +11397,10 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
     };
 
-    window._soCartQtyChg = function(idx, delta) {
+    window._soCartQtyChg = function(uid, delta) {
         const cart = readCart();
-        if (!cart[idx]) return;
+        const idx = _findCartIdxByUid(cart, uid);
+        if (idx < 0 || !cart[idx]) return;
         cart[idx].qty = Math.max(1, Math.min(9999, (cart[idx].qty || 1) + delta));
         // _simple 가격 재계산
         if (cart[idx]._simple) {
@@ -11412,9 +11420,22 @@ html, body { background: #ffffff !important; }
         renderSoCart();
     };
 
-    window._soCartQtySet = function(idx, val) {
+    // 2026-06-09: uid 로 카트 항목 인덱스 찾기 — cart_sync 가 cart 재배열했어도 정확히 식별.
+    //   직원 PC 등 다른 환경에서 "다른 항목이 변경/삭제"되던 버그 원인 = genIdx (일반상품 필터링 인덱스) 가
+    //   _soCartRemove/_soCartQtySet 에서 전체 cart 인덱스로 잘못 사용됐기 때문.
+    function _findCartIdxByUid(cart, uid) {
+        if (uid == null || uid === '' || !Array.isArray(cart)) return -1;
+        var s = String(uid);
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i] && String(cart[i].uid) === s) return i;
+        }
+        return -1;
+    }
+
+    window._soCartQtySet = function(uid, val) {
         const cart = readCart();
-        if (!cart[idx]) return;
+        const idx = _findCartIdxByUid(cart, uid);
+        if (idx < 0 || !cart[idx]) return;
         cart[idx].qty = Math.max(1, Math.min(9999, parseInt(val) || 1));
         if (cart[idx]._simple) {
             const unit = cart[idx]._simple.unit;
@@ -11433,8 +11454,10 @@ html, body { background: #ffffff !important; }
         renderSoCart();
     };
 
-    window._soCartRemove = function(idx) {
+    window._soCartRemove = function(uid) {
         const cart = readCart();
+        const idx = _findCartIdxByUid(cart, uid);
+        if (idx < 0) return;
         cart.splice(idx, 1);
         writeCart(cart);
         syncWindowCart(cart);
@@ -11442,14 +11465,14 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-06-01: 카트 아이템 "내용변경" — 모달 다시 열고 state 복원, 저장 시 기존 항목 교체.
-    window._soCartEditItem = async function(genIdx) {
+    window._soCartEditItem = async function(uid) {
         var allItems = (function(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch(e){ return []; } })();
-        var isFab = function (it) { return it && (it.__source === 'cotton-print' || it.fabricCode || it.orderWcm != null); };
-        var generalItems = allItems.filter(function(it){ return !isFab(it); });
-        var item = generalItems[genIdx];
+        // 2026-06-09: uid 기반 식별 — cart_sync 가 재배열했어도 정확한 항목 보장.
+        var allIdx = _findCartIdxByUid(allItems, uid);
+        var item = allIdx >= 0 ? allItems[allIdx] : null;
         if (!item || !item.product || !item.product.code) return;
-        var allIdx = allItems.indexOf(item);
         state._editingCartIdx = allIdx;
+        state._editingCartUid = item.uid;  // 저장 시 uid 로 재조회 — race 방지
         state._editingItem = item;
         state._editingFileUrl = item.originalUrl || null;
         state._editingFilePath = item.filePath || null;
@@ -11464,6 +11487,7 @@ html, body { background: #ffffff !important; }
         setTimeout(function() {
             // edit 식별자 재설정 — openSimpleOrderModal 의 state={...} 가 덮어쓴 것 복원
             state._editingCartIdx = allIdx;
+            state._editingCartUid = item.uid;  // 2026-06-09: uid 도 함께 복원
             state._editingItem = item;
             state._editingFileUrl = item.originalUrl || null;
             state._editingFilePath = item.filePath || null;
