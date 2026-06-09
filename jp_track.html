@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ご注文照会 | Chameleon Printing 株式会社</title>
+<meta name="description" content="ご注文の進行状況をご確認いただけます。受付完了・制作中・印刷中・発送済みなどリアルタイムでチェック。">
+<link rel="preconnect" href="https://qinvtnhiidtmrzosyvys.supabase.co" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { overflow-x:hidden; max-width:100%; }
+body { font-family:'Noto Sans JP',-apple-system,'Segoe UI',sans-serif; background:#0c0a09; color:#1e293b; line-height:1.6; min-height:100vh; }
+a { text-decoration:none; color:inherit; }
+
+.jpt-bg-video { position:fixed; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.18; z-index:0; }
+.jpt-bg-overlay { position:fixed; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.85) 0%, rgba(12,10,9,0.95) 100%); z-index:1; }
+
+.jpt-wrap { position:relative; z-index:2; min-height:100vh; padding:24px 16px 60px; }
+.jpt-header { max-width:760px; margin:0 auto 20px; text-align:center; }
+.jpt-logo { font-family:'Anton','Noto Sans JP',sans-serif; font-size:36px; font-weight:900; letter-spacing:3px; }
+.jpt-logo .yellow { background:linear-gradient(135deg,#fef3c7 0%,#fde047 30%,#facc15 60%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; padding-left:8px; }
+.jpt-logo .white { color:#fff; }
+.jpt-sub { color:#faf6ed; font-size:13px; margin-top:4px; opacity:0.85; letter-spacing:0.5px; }
+
+.jpt-card { max-width:540px; margin:0 auto 18px; background:#fff; border-radius:18px; padding:28px 24px; box-shadow:0 14px 50px rgba(0,0,0,0.45); }
+.jpt-card h2 { font-size:18px; font-weight:900; color:#1e293b; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.jpt-card .desc { font-size:12.5px; color:#64748b; margin-bottom:18px; line-height:1.7; }
+
+.jpt-label { display:block; font-size:11.5px; font-weight:700; color:#475569; margin:14px 0 6px; letter-spacing:0.3px; }
+.jpt-input { width:100%; padding:13px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:15px; font-family:inherit; background:#f8fafc; transition:all 0.2s; }
+.jpt-input:focus { outline:none; border-color:#06C755; background:#fff; box-shadow:0 0 0 3px rgba(6,199,85,0.1); }
+.jpt-input::placeholder { color:#cbd5e1; }
+.jpt-hint { font-size:11px; color:#94a3b8; margin-top:4px; }
+
+.jpt-btn { width:100%; margin-top:18px; padding:14px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:11px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:0.5px; box-shadow:0 6px 18px rgba(6,199,85,0.4); transition:all 0.2s; }
+.jpt-btn:hover { transform:translateY(-1px); box-shadow:0 8px 22px rgba(6,199,85,0.5); }
+.jpt-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+.jpt-result { display:none; }
+.jpt-result.show { display:block; animation:fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.jpt-status-banner { padding:18px 16px; border-radius:12px; margin-bottom:18px; text-align:center; }
+.jpt-status-banner.success { background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; color:#14532d; }
+.jpt-status-banner.pending { background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; color:#78350f; }
+.jpt-status-banner.error { background:linear-gradient(135deg,#fee2e2,#fecaca); border:2px solid #ef4444; color:#7f1d1d; }
+.jpt-status-banner .big { font-size:18px; font-weight:900; margin-bottom:4px; }
+.jpt-status-banner .small { font-size:12px; opacity:0.85; }
+
+/* タイムライン */
+.jpt-timeline { padding:8px 0; }
+.jpt-step { display:flex; gap:14px; padding:10px 0; position:relative; }
+.jpt-step:not(:last-child)::after { content:''; position:absolute; left:13px; top:34px; width:2px; height:calc(100% - 10px); background:#e2e8f0; }
+.jpt-step.active:not(:last-child)::after { background:#06C755; }
+.jpt-step-icon { width:28px; height:28px; border-radius:50%; background:#e2e8f0; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex-shrink:0; z-index:1; }
+.jpt-step.active .jpt-step-icon { background:#06C755; color:#fff; }
+.jpt-step.current .jpt-step-icon { background:#fff; color:#06C755; border:2.5px solid #06C755; animation:pulse 1.6s infinite; }
+@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(6,199,85,0.55); } 50% { box-shadow:0 0 0 8px rgba(6,199,85,0); } }
+.jpt-step-body { flex:1; }
+.jpt-step-title { font-size:13.5px; font-weight:700; color:#475569; }
+.jpt-step.active .jpt-step-title { color:#1e293b; }
+.jpt-step.current .jpt-step-title { color:#06C755; font-weight:900; }
+.jpt-step-date { font-size:11px; color:#94a3b8; margin-top:2px; }
+
+.jpt-detail-table { width:100%; font-size:12.5px; margin-top:14px; border-top:1px solid #e2e8f0; }
+.jpt-detail-table td { padding:9px 4px; border-bottom:1px solid #f1f5f9; }
+.jpt-detail-table td:first-child { color:#94a3b8; font-weight:600; width:35%; }
+.jpt-detail-table td:last-child { color:#1e293b; font-weight:500; }
+
+/* お問い合わせ */
+.jpt-contact { background:linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); color:#fff; border-radius:14px; padding:22px 18px; max-width:540px; margin:0 auto 18px; }
+.jpt-contact h3 { font-size:14px; color:#86efac; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.jpt-contact-row { display:flex; align-items:center; gap:12px; padding:11px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); border-radius:10px; margin-bottom:8px; }
+.jpt-contact-row img.qr { width:54px; height:54px; border-radius:6px; background:#fff; }
+.jpt-contact-row .info { flex:1; min-width:0; }
+.jpt-contact-row .name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.jpt-contact-row a { color:#86efac; font-size:12px; display:block; margin-top:3px; }
+
+/* 配送案内 */
+.jpt-info-card { background:#fff; border-radius:14px; padding:20px 18px; max-width:540px; margin:0 auto 14px; box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+.jpt-info-card h3 { font-size:14px; font-weight:900; color:#1e293b; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.jpt-info-card ul { list-style:none; padding:0; margin:0; }
+.jpt-info-card li { font-size:12.5px; color:#475569; padding:6px 0; border-bottom:1px dashed #e2e8f0; display:flex; gap:8px; }
+.jpt-info-card li:last-child { border-bottom:none; }
+.jpt-info-card li .check { color:#06C755; flex-shrink:0; font-weight:900; }
+
+/* リンク (約款 / 特商法) */
+.jpt-links { max-width:540px; margin:14px auto 30px; text-align:center; }
+.jpt-links a { display:inline-block; margin:6px 8px; padding:8px 14px; background:rgba(255,255,255,0.08); color:#faf6ed; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.18); transition:all 0.2s; }
+.jpt-links a:hover { background:rgba(255,255,255,0.16); transform:translateY(-1px); }
+
+.jpt-back { display:block; max-width:540px; margin:30px auto 0; text-align:center; }
+.jpt-back a { color:#faf6ed; font-size:12px; opacity:0.7; }
+.jpt-back a:hover { opacity:1; }
+
+@media (max-width:520px) {
+    .jpt-card { padding:22px 18px; }
+    .jpt-logo { font-size:30px; }
+}
+</style>
+</head>
+<body>
+
+<video autoplay muted loop playsinline class="jpt-bg-video">
+    <source src="/cotton.mp4" type="video/mp4">
+</video>
+<div class="jpt-bg-overlay"></div>
+
+<div class="jpt-wrap">
+    <div class="jpt-header">
+        <div class="jpt-logo"><span class="white">COTTON</span><span class="yellow">PRINT</span></div>
+        <div class="jpt-sub">Chameleon Printing 株式会社</div>
+    </div>
+
+    <!-- 조회 폼 -->
+    <div class="jpt-card" id="jptFormCard">
+        <h2><i class="fa-solid fa-magnifying-glass" style="color:#06C755;"></i> ご注文照会</h2>
+        <div class="desc">注文番号とご注文時のお電話番号で進行状況をご確認いただけます。</div>
+
+        <label class="jpt-label">注文番号 (Order ID) <span style="color:#ef4444;">*</span></label>
+        <input id="jptOrderId" class="jpt-input" type="text" inputmode="numeric" placeholder="例: 12345" autocomplete="off">
+        <div class="jpt-hint">ご注文後に送信されたメッセージ・LINEに記載されています</div>
+
+        <label class="jpt-label">電話番号 (末尾4桁でも可)</label>
+        <input id="jptPhone" class="jpt-input" type="tel" inputmode="tel" placeholder="例: 090-5397-0420 または 0420" autocomplete="off">
+        <div class="jpt-hint">入力時のみ詳細情報を表示します</div>
+
+        <button class="jpt-btn" id="jptSubmitBtn" onclick="jptLookup()">
+            <i class="fa-solid fa-search"></i> 照会する
+        </button>
+    </div>
+
+    <!-- 결과 -->
+    <div id="jptResultArea" class="jpt-result">
+        <div id="jptStatusBanner" class="jpt-status-banner"></div>
+        <div class="jpt-card">
+            <h2><i class="fa-solid fa-list-check" style="color:#06C755;"></i> 進行状況</h2>
+            <div class="jpt-timeline" id="jptTimeline"></div>
+            <table class="jpt-detail-table" id="jptDetailTable"></table>
+        </div>
+        <div style="max-width:540px; margin:0 auto;">
+            <button class="jpt-btn" style="background:linear-gradient(135deg,#64748b,#475569); box-shadow:0 6px 18px rgba(100,116,139,0.4);" onclick="jptReset()">
+                <i class="fa-solid fa-arrow-left"></i> 再照会
+            </button>
+        </div>
+    </div>
+
+    <!-- 配送案内 -->
+    <div class="jpt-info-card">
+        <h3><i class="fa-solid fa-truck-fast" style="color:#06C755;"></i> 配送について (日本国内)</h3>
+        <ul>
+            <li><span class="check">✓</span><span>受付完了後 <b>3営業日以内</b> に韓国本社より出荷</span></li>
+            <li><span class="check">✓</span><span>お届けまで <b>5〜7営業日</b> (営業日基準)</span></li>
+            <li><span class="check">✓</span><span>EMS / 国際宅配便にてお届け</span></li>
+            <li><span class="check">✓</span><span>関税・通関費用込み (¥16,666以下のご注文は免税)</span></li>
+            <li><span class="check">✓</span><span>追跡番号は出荷後 LINE でお知らせいたします</span></li>
+        </ul>
+    </div>
+
+    <!-- お問い合わせ -->
+    <div class="jpt-contact">
+        <h3><i class="fa-brands fa-line"></i> LINE で直接お問い合わせ</h3>
+        <div class="jpt-contact-row">
+            <img class="qr" src="/line_qr_jp.jpg?v=1" alt="LINE QR">
+            <div class="info">
+                <div class="name">ナナミ <span style="color:#86efac; font-weight:400; font-size:11px;">担当</span></div>
+                <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener"><i class="fa-brands fa-line"></i> LINE ID: @astro.0420</a>
+                <a href="tel:09053970420"><i class="fa-solid fa-phone" style="font-size:10px;"></i> 090-5397-0420</a>
+            </div>
+        </div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-top:8px; text-align:center;">
+            営業時間: 平日 10:00 - 19:00 (JST)
+        </div>
+    </div>
+
+    <!-- 약관 / 特商法 リンク -->
+    <div class="jpt-links">
+        <a href="/tokushoho.html"><i class="fa-solid fa-scale-balanced"></i> 特定商取引法に基づく表記</a>
+        <a href="/privacy.html"><i class="fa-solid fa-shield-halved"></i> プライバシーポリシー</a>
+    </div>
+
+    <div class="jpt-back">
+        <a href="https://www.cotton-printer.com"><i class="fa-solid fa-arrow-left"></i> COTTON PRINT トップへ戻る</a>
+    </div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+
+// URL 파라미터로 order_id 자동 입력
+(function autoFillFromQuery(){
+    var p = new URLSearchParams(location.search);
+    var oid = p.get('order_id') || p.get('id');
+    if (oid) {
+        var el = document.getElementById('jptOrderId');
+        if (el) el.value = oid;
+    }
+})();
+
+// status (KR DB값) → JP 표시 + step index
+var STATUS_MAP = {
+    '임시작성':   { label:'下書き', step:0 },
+    '결제대기':   { label:'お支払い待ち', step:1 },
+    '결제완료':   { label:'お支払い完了', step:2 },
+    '접수완료':   { label:'受付完了', step:2 },
+    '제작중':     { label:'デザイン制作中', step:3 },
+    '인쇄중':     { label:'印刷中', step:4 },
+    '발송준비':   { label:'発送準備中', step:5 },
+    '발송완료':   { label:'発送済み', step:6 },
+    '배송중':     { label:'配送中', step:6 },
+    '도착완료':   { label:'お届け完了', step:7 },
+    '완료':       { label:'完了', step:7 },
+    '취소됨':     { label:'キャンセル', step:-1 },
+    '취소':       { label:'キャンセル', step:-1 },
+    '관리자차단': { label:'管理者保留', step:-2 }
+};
+
+var STEPS = [
+    { idx:1, label:'お支払い待ち', icon:'fa-credit-card' },
+    { idx:2, label:'受付完了',     icon:'fa-circle-check' },
+    { idx:3, label:'デザイン制作', icon:'fa-pen-ruler' },
+    { idx:4, label:'印刷中',       icon:'fa-print' },
+    { idx:5, label:'発送準備中',   icon:'fa-box' },
+    { idx:6, label:'発送済み',     icon:'fa-paper-plane' },
+    { idx:7, label:'お届け完了',   icon:'fa-flag-checkered' }
+];
+
+function jptFormatDate(iso) {
+    if (!iso) return '';
+    try {
+        var d = new Date(iso);
+        var Y = d.getFullYear(), M = String(d.getMonth()+1).padStart(2,'0'), D = String(d.getDate()).padStart(2,'0');
+        var h = String(d.getHours()).padStart(2,'0'), m = String(d.getMinutes()).padStart(2,'0');
+        return Y + '-' + M + '-' + D + ' ' + h + ':' + m;
+    } catch(e) { return iso; }
+}
+
+function jptFormatPrice(krw, siteCode) {
+    var n = Number(krw) || 0;
+    if (siteCode === 'JP') return '¥' + Math.round(n * 0.1).toLocaleString();
+    if (siteCode === 'US') return '$' + (n * 0.001).toFixed(2);
+    return n.toLocaleString() + '원';
+}
+
+async function jptLookup() {
+    var oid = (document.getElementById('jptOrderId').value || '').trim();
+    var phone = (document.getElementById('jptPhone').value || '').trim();
+    if (!oid || !/^\d+$/.test(oid)) {
+        alert('正しい注文番号 (数字のみ) を入力してください。');
+        return;
+    }
+    var btn = document.getElementById('jptSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 照会中...';
+
+    try {
+        var resp = await fetch(SUPABASE_URL + '/functions/v1/get-order-status', {
+            method:'POST',
+            headers: {
+                'Content-Type':'application/json',
+                'Authorization':'Bearer ' + SUPABASE_ANON,
+                'apikey': SUPABASE_ANON
+            },
+            body: JSON.stringify({ order_id: oid, phone: phone })
+        });
+        var data = await resp.json();
+        if (data.error === 'not_found') {
+            jptShowError('該当する注文が見つかりません。注文番号をご確認ください。');
+            return;
+        }
+        if (!data.ok) {
+            jptShowError('照会に失敗しました。LINE で担当者にお問い合わせください。');
+            return;
+        }
+        jptShowResult(data.order, data.minimal);
+    } catch (e) {
+        jptShowError('通信エラーが発生しました。しばらく経ってから再度お試しください。');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-search"></i> 照会する';
+    }
+}
+
+function jptShowError(msg) {
+    document.getElementById('jptFormCard').style.display = 'none';
+    var area = document.getElementById('jptResultArea');
+    area.classList.add('show');
+    var bn = document.getElementById('jptStatusBanner');
+    bn.className = 'jpt-status-banner error';
+    bn.innerHTML = '<div class="big"><i class="fa-solid fa-circle-exclamation"></i> 照会できませんでした</div><div class="small">' + msg + '</div>';
+    document.getElementById('jptTimeline').innerHTML = '';
+    document.getElementById('jptDetailTable').innerHTML = '';
+}
+
+function jptShowResult(order, minimal) {
+    document.getElementById('jptFormCard').style.display = 'none';
+    var area = document.getElementById('jptResultArea');
+    area.classList.add('show');
+
+    var mapped = STATUS_MAP[order.status] || { label: order.status || '受付', step:1 };
+    var curStep = mapped.step;
+
+    // 배너
+    var bn = document.getElementById('jptStatusBanner');
+    if (curStep < 0) {
+        bn.className = 'jpt-status-banner error';
+        bn.innerHTML = '<div class="big">⛔ ' + mapped.label + '</div><div class="small">詳細は担当者にお問い合わせください</div>';
+    } else if (curStep >= 7) {
+        bn.className = 'jpt-status-banner success';
+        bn.innerHTML = '<div class="big">🎉 ' + mapped.label + '</div><div class="small">ご利用ありがとうございました</div>';
+    } else if (curStep >= 2) {
+        bn.className = 'jpt-status-banner success';
+        bn.innerHTML = '<div class="big">✅ ご注文 受付完了</div><div class="small">現在: ' + mapped.label + '</div>';
+    } else {
+        bn.className = 'jpt-status-banner pending';
+        bn.innerHTML = '<div class="big">⏳ ' + mapped.label + '</div><div class="small">お支払いをお待ちしております</div>';
+    }
+
+    // 타임라인
+    var html = '';
+    STEPS.forEach(function(s){
+        var cls = 'jpt-step';
+        var dateLine = '';
+        if (curStep >= s.idx) cls += ' active';
+        if (curStep === s.idx) {
+            cls += ' current';
+            dateLine = '<div class="jpt-step-date">現在進行中</div>';
+        } else if (s.idx === 2 && curStep >= 2 && order.created_at) {
+            dateLine = '<div class="jpt-step-date">' + jptFormatDate(order.created_at) + '</div>';
+        }
+        var iconHtml = (curStep >= s.idx) ? '<i class="fa-solid fa-check"></i>' : s.idx;
+        html += '<div class="' + cls + '">'
+              + '<div class="jpt-step-icon">' + iconHtml + '</div>'
+              + '<div class="jpt-step-body">'
+              + '<div class="jpt-step-title">' + s.label + '</div>'
+              + dateLine
+              + '</div></div>';
+    });
+    document.getElementById('jptTimeline').innerHTML = html;
+
+    // 상세 테이블
+    var t = '';
+    t += '<tr><td>注文番号</td><td>#' + order.id + '</td></tr>';
+    t += '<tr><td>受付日時</td><td>' + jptFormatDate(order.created_at) + '</td></tr>';
+    if (!minimal) {
+        if (order.total_amount != null) {
+            t += '<tr><td>ご注文金額</td><td><b>' + jptFormatPrice(order.total_amount, order.site_code) + '</b></td></tr>';
+        }
+        if (order.delivery_target_date) {
+            t += '<tr><td>お届け予定</td><td>' + order.delivery_target_date + '</td></tr>';
+        }
+        if (order.manager_name_masked) {
+            t += '<tr><td>お名前</td><td>' + order.manager_name_masked + '</td></tr>';
+        }
+        if (Array.isArray(order.items) && order.items.length) {
+            var names = order.items.map(function(x){ return x.product_name || x.name || ''; }).filter(Boolean);
+            if (names.length) t += '<tr><td>商品</td><td>' + names.join('<br>') + '</td></tr>';
+        }
+    } else {
+        t += '<tr><td colspan="2" style="color:#94a3b8; font-size:11.5px; text-align:center; padding:14px 4px;">詳細情報の表示にはお電話番号が必要です</td></tr>';
+    }
+    document.getElementById('jptDetailTable').innerHTML = t;
+}
+
+function jptReset() {
+    document.getElementById('jptFormCard').style.display = 'block';
+    document.getElementById('jptResultArea').classList.remove('show');
+    document.getElementById('jptOrderId').focus();
+}
+
+// Enter 키
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && (e.target.id === 'jptOrderId' || e.target.id === 'jptPhone')) {
+        e.preventDefault();
+        jptLookup();
+    }
+});
+
+// URL 파라미터 있으면 자동 조회
+(function autoLookup(){
+    var p = new URLSearchParams(location.search);
+    if (p.get('order_id') || p.get('id')) {
+        setTimeout(jptLookup, 200);
+    }
+})();
+</script>
+
+</body>
+</html>
