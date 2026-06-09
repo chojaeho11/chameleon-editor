@@ -5689,7 +5689,8 @@ html, body { background: #ffffff !important; }
             return 0;
         }
         // 2026-06-05: 자유인쇄커팅 — 광고인쇄와 동일 규칙. 큐+현재 라인 합계 10만 이상 무료 / 미만 1만원.
-        if (state.isCutPrint) {
+        // 2026-06-09: 단, hb_pt_1 (등신대 POP) 같이 시공가능 (isInstallEligible) 상품은 cutPrint 분기 skip — 새 시공 옵션 사용.
+        if (state.isCutPrint && !state.isInstallEligible) {
             state._shipUpgradeReason = null;
             // 묶음배송 라인은 0원 (큐 라인 중 carrier 가 아닌 것들 — _soSubmitOrder 에서 자동 설정)
             if (state.bundleShipping) return 0;
