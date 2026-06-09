@@ -2330,6 +2330,22 @@ html, body { background: #ffffff !important; }
             <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 철거', '首都圏撤去', 'Metro removal')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_truck" onclick="window._soPickShip('regional_truck')">${tr('지방 용차배송', '地方トラック', 'Regional truck')}</button>
             <button type="button" class="so-ship-btn" data-ship="regional_install" onclick="window._soPickShip('regional_install')">${tr('지방 설치배송', '地方設置配送', 'Regional install')}</button>
+            <!-- 2026-06-09: 등신대/글씨포토존 전용 — 설치 없는 배송 옵션 3종 -->
+            <button type="button" class="so-ship-btn so-ship-free-metro" data-ship="metro_install_simple" onclick="window._soPickShip('metro_install_simple')"
+              style="display:none; grid-column:1/-1; background:linear-gradient(135deg,#03c75a,#00b04f); color:#fff; border-color:#00b04f; font-weight:900; font-size:14px; padding:14px; box-shadow:0 6px 18px -6px rgba(3,199,90,0.55); letter-spacing:0.2px;">
+              ${tr('수도권 무료배송', '首都圏 送料無料', 'Metro · FREE delivery')}
+              <div style="font-size:11px; font-weight:600; margin-top:4px; opacity:0.95; letter-spacing:0;">
+                ${tr('※ 10만원 이하 주문은 수도권이라도 배송비 3만원 부가됩니다', '※ 10万円未満は首都圏でも配送料3万ウォン追加', '※ Orders under ₩100K — ₩30K shipping even in metro area')}
+              </div>
+            </button>
+            <button type="button" class="so-ship-btn" data-ship="regional_compact_60_180" onclick="window._soPickShip('regional_compact_60_180')" style="display:none;">
+              ${tr('60×180 이하 지방택배', '60×180以下 地方宅配', 'Regional parcel ≤60×180')}<br>
+              <span style="font-size:11px; opacity:0.85;">${fmtPrice(30000)} · ${tr('가로 60cm × 세로 180cm 이내', '横60cm×縦180cm以内', 'within 60×180cm')}</span>
+            </button>
+            <button type="button" class="so-ship-btn" data-ship="regional_delivery_simple" onclick="window._soPickShip('regional_delivery_simple')" style="display:none;">
+              ${tr('지방배송', '地方配送', 'Regional delivery')}<br>
+              <span style="font-size:11px; opacity:0.85;">${fmtPrice(200000)} · ${tr('택배 사이즈 초과', '宅配サイズ超過', 'Over parcel size')}</span>
+            </button>
             <!-- 2026-05-13: 자유인쇄커팅 전용 (시공 없이 배송만) -->
             <button type="button" class="so-ship-btn" data-ship="metro_delivery" onclick="window._soPickShip('metro_delivery')" style="display:none;">${tr('수도권 배송', '首都圏配送', 'Metro delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(100000)}</span></button>
             <button type="button" class="so-ship-btn" data-ship="regional_delivery" onclick="window._soPickShip('regional_delivery')" style="display:none;">${tr('지방 배송', '地方配送', 'Regional delivery')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(200000)}</span></button>
@@ -5579,6 +5595,10 @@ html, body { background: #ffffff !important; }
         metro_install_removal:{ fee: 100000, label_ko: '수도권 철거',                  parts: [['수도권 철거', 100000]] },
         regional_truck:       { fee: 200000, label_ko: '지방 용차배송',       parts: [['지방 용차배송', 200000]] },
         regional_install:     { fee: 700000, label_ko: '지방 설치배송',       parts: [['지방 설치배송', 700000]] },
+        // 2026-06-09: 등신대/글씨포토존 전용 — 설치 없이 배송만. 3가지 옵션 분리.
+        metro_install_simple:    { fee: 0,      label_ko: '수도권 무료배송',           parts: [] },
+        regional_compact_60_180: { fee: 30000,  label_ko: '60×180 이하 지방택배',     parts: [['60×180 이하 지방택배', 30000]] },
+        regional_delivery_simple:{ fee: 200000, label_ko: '지방배송',                 parts: [['지방배송', 200000]] },
         // 2026-05-13: 허니콤 자유인쇄커팅용 (시공 없이 배송만)
         metro_delivery:       { fee: 100000, label_ko: '수도권 배송',         parts: [['수도권 배송', 100000]] },
         regional_delivery:    { fee: 200000, label_ko: '지방 배송',           parts: [['지방 배송', 200000]] },
@@ -5615,6 +5635,9 @@ html, body { background: #ffffff !important; }
             case 'large_parcel':          return tr('대형택배',                '大型宅配',           'Large parcel');
             case 'small_parcel':          return tr('묶음 소형택배',           '小型宅配 (まとめ)',   'Small parcel (bundled)');
             case 'real_print_threshold':  return tr('배송비 (10만원 이상 무료)','配送料(10万円以上無料)','Shipping (free over ₩100k)');
+            case 'metro_install_simple':  return tr('수도권 무료배송',         '首都圏 送料無料',     'Metro · FREE delivery');
+            case 'regional_compact_60_180': return tr('60×180 이하 지방택배', '60×180以下 地方宅配', 'Regional parcel ≤60×180');
+            case 'regional_delivery_simple': return tr('지방배송',             '地方配送',            'Regional delivery');
             case 'compact_parcel':        return tr('택배배송 (60×40cm 이하)', '宅配 (60×40cm以下)', 'Parcel (≤60×40cm)');
             case 'pd_bulk_free':          return tr('100개 이상 무료배송',     '100個以上 無料配送', 'Free shipping (100+ pcs)');
             case 'pd_parcel_1':           return tr('1개씩 포장 택배배송',     '1個ずつ宅配',         'Parcel · 1 per box');
@@ -10219,14 +10242,15 @@ html, body { background: #ffffff !important; }
         if (state.isAmountOrder) {
             // 2026-05-15: 금액주문 — 배송 개념 없음. 입력 금액 그대로 (배송비 포함된 금액).
             allowed = ['self_pickup'];
-        } else if (state.isWall || state.isPhotozone || state.isInstallEligible) {
-            // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합)
-            // 2026-06-09: 등신대/스카시도 동일 5종 시공 옵션 + 카트 묶음배송 지원 (bundleShipping 옵션 자동 노출은 아래).
+        } else if (state.isWall || state.isPhotozone) {
+            // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합) — 5종 시공
             allowed = installKeys.slice();
-            // 가벽 외 (등신대/스카시) 면 묶음배송 옵션도 추가 — 카트에 가벽/다른 시공상품 있을 때 0원
-            if (!state.isWall && !state.isPhotozone) {
-                allowed.unshift('bundle_shipping');
-            }
+        } else if (state.isScarci) {
+            // 2026-06-09: 글씨포토존/스카시 — 택배 불가 (크기 큼). 수도권 무료 + 지방배송 20만 (카트 묶음은 자동 carryover)
+            allowed = ['metro_install_simple', 'regional_delivery_simple'];
+        } else if (state.isStandee) {
+            // 2026-06-09: 등신대 — 설치 없이 배송만. 3가지: 수도권 무료 / 60×180 택배 3만 / 지방배송 20만 (카트 묶음은 자동 carryover)
+            allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
         } else if (state.isPaperDisplay) {
             // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
             allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
