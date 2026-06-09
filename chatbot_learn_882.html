@@ -41,6 +41,48 @@
         .toast-warn { background: #f59e0b; }
         .toast-info { background: #3b82f6; }
         @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 2026-06-09: 모바일 반응형 — 가로 스크롤 제거 + 좌우분할 → 상하 스택 */
+        html, body { overflow-x: hidden; }
+        .container { width: 100%; box-sizing: border-box; }
+        .card { word-break: break-word; }
+
+        @media (max-width: 768px) {
+            .header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+            .header h1 { font-size: 16px; }
+            .header .user-info { font-size: 12px; gap: 8px; flex-wrap: wrap; }
+            .header .user-info button { padding: 5px 10px; font-size: 11px; }
+            .container { padding: 12px; }
+            .card { padding: 14px; border-radius: 12px; }
+            /* 통계 박스 4열 → 2열 (모바일) */
+            #qaReportStats { grid-template-columns: repeat(2, 1fr) !important; }
+            /* 세션 목록 + 대화 상세 좌우분할 → 상하 스택 */
+            #qaSessionList,
+            #qaSessionDetail {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            /* 부모 flex 컨테이너도 column 방향으로 */
+            .card > div[style*="display:flex"][style*="height:650px"] {
+                flex-direction: column !important;
+                height: auto !important;
+                gap: 10px !important;
+            }
+            #qaSessionList { max-height: 340px; }
+            #qaSessionDetail { min-height: 360px; padding: 12px !important; }
+            /* 입력/버튼 줄 — wrap 잘 되도록 */
+            .input-text { width: auto !important; max-width: 100%; min-width: 100px; flex: 1 1 auto; }
+            /* 탭 버튼 묶음 wrap */
+            .card > div[style*="display:flex"][style*="justify-content:space-between"] { flex-wrap: wrap; gap: 8px; }
+        }
+        @media (max-width: 480px) {
+            .header h1 { font-size: 14px; }
+            .header .user-info { width: 100%; justify-content: space-between; }
+            #qaReportStats { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+            #qaReportStats > div { padding: 8px !important; }
+            #qaReportStats > div > div:first-child { font-size: 18px !important; }
+            #qaReportStats > div > div:last-child { font-size: 10px !important; }
+        }
     </style>
 </head>
 <body>
