@@ -12002,11 +12002,19 @@ html, body { background: #ffffff !important; }
         var _hasWall = _wallItems.length > 0;
         var _hasInstall = _installItems.length > 0;
         var _hasFreeNonWall = itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; });
+        // 2026-06-09: 카트 상품가 합계 — 아래 install 배송비 면제 임계값 (10만원) 판정용.
+        var _cartProdSubForShip = taxBase + nonDiscountBase;
         var shipTotal;
         if (_hasInstall) {
             // 가벽/등신대/스카시 중 시공/배송 옵션 선택된 항목들의 max 1건만 (묶음 트럭 1회).
             //   carryover: 그 외 일반/패브릭/허니콤 항목들은 무료 (같이 실어 보냄).
-            shipTotal = _installShipFees.length > 0 ? Math.max.apply(Math, _installShipFees.concat([0])) : 0;
+            // 2026-06-09: 카트 상품가 ≥ 10만원이면 작은 배송비 (60×180 지방택배 3만원 등 10만원 미만) 면제.
+            //   큰 truck 비용 (가벽 설치 10만/20만/70만, 지방배송 20만) 은 그대로 — 실 비용.
+            var _effectiveFees = _installShipFees.map(function(fee){
+                if (_cartProdSubForShip >= 100000 && fee > 0 && fee < 100000) return 0;
+                return fee;
+            });
+            shipTotal = _effectiveFees.length > 0 ? Math.max.apply(Math, _effectiveFees.concat([0])) : 0;
         } else if (_hasFreeNonWall) {
             shipTotal = 0;
         } else if (itemShipFees.length > 0) {
