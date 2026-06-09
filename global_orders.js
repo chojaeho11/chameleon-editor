@@ -3349,7 +3349,17 @@ window.loadSubscriptions = async () => {
 // ───── 국가별 빠른 검색 버튼 ─────
 window.setCountryQuick = function(value, btn){
     var sel = document.getElementById('filterSite');
-    if (sel) sel.value = value;
+    if (sel) {
+        // 2026-06-09: 버튼 값 (__jp__/__us__/__overseas_pay__) 이 dropdown 옵션과 다름 →
+        //   <select>.value 에 없는 값 설정 시 HTML 이 빈 문자열로 무효화 → 필터 0건 버그.
+        //   dropdown 의 유효 옵션으로 매핑.
+        var _btnToDropdown = {
+            '__jp__': 'JP',
+            '__us__': 'US',
+            '__overseas_pay__': '__overseas__'
+        };
+        sel.value = _btnToDropdown[value] || value;
+    }
     document.querySelectorAll('#countryQuickBar .cq-btn').forEach(function(b){
         b.classList.toggle('cq-active', b === btn);
     });
