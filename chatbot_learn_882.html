@@ -398,16 +398,24 @@ async function doLogout() {
 }
 
 async function checkSession() {
-    var { data: { session } } = await sb.auth.getSession();
-    if (session && session.user && ALLOWED_EMAILS.indexOf(session.user.email) >= 0) {
-        initApp(session.user);
+    // 2026-06-09: URL 만 알면 누구나 접근 가능 — 로그인 / 권한 체크 제거.
+    //   세션이 있으면 그 이메일 사용, 없으면 게스트로 자동 진입.
+    try {
+        var { data: { session } } = await sb.auth.getSession();
+        if (session && session.user) {
+            initApp(session.user);
+        } else {
+            initApp({ email: 'guest@chameleon.public' });
+        }
+    } catch (e) {
+        initApp({ email: 'guest@chameleon.public' });
     }
 }
 
 function initApp(user) {
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userEmail').textContent = (user && user.email) || 'guest';
     // 2026-06-08: pathname 기반 자동 UI 번역 (일본/모로코 직원용)
     try {
         if (window._UI_LANG === 'ja') document.title = 'AIチャットボット学習管理';
