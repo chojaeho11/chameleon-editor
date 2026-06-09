@@ -5692,12 +5692,20 @@ html, body { background: #ffffff !important; }
             });
             return cpSub >= 100000 ? 0 : 30000;
         }
-        // 2026-06-01: 허니콤보드 가벽 외 모든 허니콤보드 제품 — 무료 배송 (사용자 요청)
-        //   해당: 박스 / 원판 / 등신대 / 허니콤포토존 등 (자유인쇄커팅은 위에서 별도 처리)
-        //   가벽(state.isWall) 만 시공/배송 옵션 노출, 나머지는 강제 0
-        if (state.isHoneycomb && !state.isWall) {
+        // 2026-06-09: 가벽 외 등신대/글씨스카시도 시공 옵션 노출 — 가벽 없이 단독 주문 시 시공/배송 요청 가능.
+        //   isInstallEligible (가벽/등신대/스카시) 가 시공 옵션을 받음. 그 외 허니콤은 기존대로 무료배송.
+        if (state.isHoneycomb && !state.isInstallEligible) {
             state._shipUpgradeReason = null;
             return 0;
+        }
+        // 2026-06-09: 등신대/스카시 (가벽 외 시공가능) — 가벽과 동일한 시공 옵션 가격 사용.
+        //   bundleShipping 시 0 (카트 내 다른 시공 상품에 묶임).
+        if (state.isInstallEligible && !state.isWall) {
+            if (state.bundleShipping) {
+                state._shipUpgradeReason = null;
+                return 0;
+            }
+            // 가벽과 동일한 옵션·가격 사용 (아래 일반 분기로 fall through)
         }
         // 2026-06-03: 명함/리플렛 (pp_bc_*) — KR 3,000원 / JP 1,000엔 (rate 0.1) / 묶음배송 시 0
         if (state.isBizCard) {
@@ -9195,6 +9203,10 @@ html, body { background: #ffffff !important; }
         state.isStandee = _soIsStandeeProduct(p);
         // 2026-06-04: 신규 등신대 UI 여부 (hb_pi_5 + acr_crt_stand_* 만). 글씨 스카시(hb_ss)는 원래 UI 유지.
         state.isStandeeV2 = _soUsesStandeeV2(p);
+        // 2026-06-09: 글씨 스카시 family 감지 + 시공 가능 상품 통합 플래그.
+        //   가벽/등신대/글씨스카시 — 가벽 없이도 시공 옵션 노출 + 카트에서 2종 이상 묶음 배송.
+        state.isScarci = _soIsScarciProduct(p);
+        state.isInstallEligible = state.isWall || state.isStandee || state.isScarci;
         // 2026-06-04: 등신대 — 재질 선택 섹션 노출 + 기본값 (허니콤보드 16mm) — V2 만
         state.standeeMaterial = state.isStandeeV2 ? 'honeycomb_16mm' : null;
         try {
@@ -10185,9 +10197,10 @@ html, body { background: #ffffff !important; }
         // 2026-05-29: 베스트굿즈 전체 (10종) — 시공/배송 옵션 자체 비표시, 3천원 정액 배송비
         // 2026-06-01: 광고인쇄(isAdPrint)도 시공/배송 옵션 자체 비표시 — 카트 합계 기준 자동 배송비 룰 적용
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
-        var _isHbFreeShip = state.isHoneycomb && !state.isWall;
+        // 2026-06-09: 등신대/스카시도 시공 옵션 노출 — 가벽 없이 단독 시공 요청 가능. isInstallEligible 로 통합 판정.
+        var _isHbFreeShip = state.isHoneycomb && !state.isInstallEligible;
         var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily
-            && (state.isWall || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
+            && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
@@ -10201,9 +10214,14 @@ html, body { background: #ffffff !important; }
         if (state.isAmountOrder) {
             // 2026-05-15: 금액주문 — 배송 개념 없음. 입력 금액 그대로 (배송비 포함된 금액).
             allowed = ['self_pickup'];
-        } else if (state.isWall || state.isPhotozone) {
+        } else if (state.isWall || state.isPhotozone || state.isInstallEligible) {
             // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합)
+            // 2026-06-09: 등신대/스카시도 동일 5종 시공 옵션 + 카트 묶음배송 지원 (bundleShipping 옵션 자동 노출은 아래).
             allowed = installKeys.slice();
+            // 가벽 외 (등신대/스카시) 면 묶음배송 옵션도 추가 — 카트에 가벽/다른 시공상품 있을 때 0원
+            if (!state.isWall && !state.isPhotozone) {
+                allowed.unshift('bundle_shipping');
+            }
         } else if (state.isPaperDisplay) {
             // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
             allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
@@ -11904,19 +11922,37 @@ html, body { background: #ffffff !important; }
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송).
         // 2026-06-06: 가벽 우선 룰 — 가벽이 카트에 있으면 가벽 자체 시공/철거비 (100K/200K/700K 등) 만 부과,
         //   나머지 일반/패브릭 항목은 무료 (가벽 트럭에 같이 실어 보냄). 가벽 자체비는 절대 0 처리하지 않음.
-        // 무료배송 carryover — 가벽 없이 무료(0) 항목이 있으면 나머지도 0.
+        // 2026-06-09: 가벽 + 등신대 + 글씨스카시 — 시공 가능 3종 통합 묶음. 2종 이상 함께 주문 시 max 1건만 부과.
+        // 무료배송 carryover — 시공상품 없이 무료(0) 항목이 있으면 나머지도 0.
+        var _isInstallCartItem = function(_it){
+            if (!_it || !_it.product) return false;
+            var _c = (_it.product.code || '').toLowerCase();
+            var _n = ((_it.product.name) || '').toLowerCase();
+            // 가벽
+            if (/^hb_dw/.test(_c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(_n)) return true;
+            // 등신대 (hb_pi_5, hb_point*, hb_ss*, acr_crt_stand*, 또는 이름에 등신대)
+            if (/^hb_ss|^hb_point|^acr_crt_stand/.test(_c) || _c === 'hb_pi_5') return true;
+            if (/등신대|standee|life-?size|cardboard\s*cutout/.test(_n)) return true;
+            // 글씨 스카시 (hb_ss_* 는 위에서 잡힘, 그 외 "허니콤 + 글씨 스카시" 이름매칭)
+            if (/허니콤|honeycomb/.test(_n) && /글씨\s*스카시|글씨\s*포토존|스카시/.test(_n)) return true;
+            return false;
+        };
+        var _installItems = cart.filter(_isInstallCartItem);
         var _wallItems = cart.filter(function(_it){
             if (!_it || !_it.product) return false;
             var _c = (_it.product.code || '').toLowerCase();
             var _n = ((_it.product.name) || '').toLowerCase();
             return /^hb_dw/.test(_c) || /가벽|wall\s*panel|honeycomb\s*wall/.test(_n);
         });
-        var _wallShipFees = _wallItems.map(function(it){ return (it.shipping && it.shipping.fee) || 0; });
+        var _installShipFees = _installItems.map(function(it){ return (it.shipping && it.shipping.fee) || 0; });
         var _hasWall = _wallItems.length > 0;
+        var _hasInstall = _installItems.length > 0;
         var _hasFreeNonWall = itemShipFees.length > 0 && itemShipFees.some(function(f){ return f === 0; });
         var shipTotal;
-        if (_hasWall) {
-            shipTotal = _wallShipFees.length > 0 ? Math.max.apply(Math, _wallShipFees.concat([0])) : 0;
+        if (_hasInstall) {
+            // 가벽/등신대/스카시 중 시공/배송 옵션 선택된 항목들의 max 1건만 (묶음 트럭 1회).
+            //   carryover: 그 외 일반/패브릭/허니콤 항목들은 무료 (같이 실어 보냄).
+            shipTotal = _installShipFees.length > 0 ? Math.max.apply(Math, _installShipFees.concat([0])) : 0;
         } else if (_hasFreeNonWall) {
             shipTotal = 0;
         } else if (itemShipFees.length > 0) {
@@ -11924,12 +11960,12 @@ html, body { background: #ffffff !important; }
         } else {
             shipTotal = 0;
         }
-        var _hasFreeShipItem = _hasWall || _hasFreeNonWall;
+        var _hasFreeShipItem = _hasInstall || _hasFreeNonWall;
         // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
         cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
         // 2026-06-08: 실사출력 family batch 배송비 — 카트 내 모든 실사출력 항목 합산.
-        //   합산 < 10만원 → +10,000원 / 합산 ≥ 10만원 → 무료. 가벽 carryover 시에는 무시 (가벽이 묶음).
-        if (!_hasWall) {
+        //   합산 < 10만원 → +10,000원 / 합산 ≥ 10만원 → 무료. 가벽/등신대/스카시 carryover 시에는 무시 (시공 트럭이 묶음).
+        if (!_hasInstall) {
             var _rpItems = cart.filter(function(_it){
                 if (!_it) return false;
                 if (_it._isRealPrint) return true;
