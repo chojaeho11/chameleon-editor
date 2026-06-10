@@ -21742,12 +21742,16 @@ window.dsmRenderProducts = async function(keyword) {
     // window.sb (config.js)를 재사용 — 새 클라이언트 생성 금지
     function getSb() { return window.sb || null; }
 
-    // 즉시 localStorage 확인: 저장된 실시간 상담방이 있으면 플래그 설정
-    // (AI 모듈의 500ms 복원보다 먼저 실행되어야 함)
+    // 2026-06-11: 라이브 상담 자동 복원 비활성화 — 챗봇 FAB 클릭 시 항상 AI 모드로 진입
+    //   (이전: localStorage 저장된 매니저 상담방이 있으면 매니저 선택 UI 자동 복원 → 사용자가 "옛날 챗봇" 으로 인식)
+    //   매니저와의 실제 상담은 챗봇 내부 "상담사 연결" 버튼으로 명시적 트리거
     try {
         var u = window.currentUser;
         var k = u ? 'cham_live_' + u.id : 'cham_live_guest';
-        if (localStorage.getItem(k)) window._chamLiveRestoring = true;
+        // 오래된 라이브 상태 자동 정리 (자동 복원 안 함)
+        if (localStorage.getItem(k)) {
+            try { localStorage.removeItem(k); } catch(e) {}
+        }
     } catch(e) {}
 
     // 언어 감지
@@ -22385,15 +22389,10 @@ window.dsmRenderProducts = async function(keyword) {
         });
     }
 
-    // 페이지 로드 시 복원 시도 (AI 모듈보다 먼저 실행)
-    function _scheduleLiveRestore() {
-        setTimeout(_tryRestoreLiveRoom, 600);
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _scheduleLiveRestore);
-    } else {
-        _scheduleLiveRestore();
-    }
+    // 2026-06-11: 페이지 로드 시 라이브 상담 자동 복원 비활성화
+    //   사용자는 챗봇 FAB 클릭 시 항상 AI 모드에서 시작
+    //   필요 시 챗봇 내 "상담사 연결" 버튼으로 매니저 연결
+    function _scheduleLiveRestore() { /* no-op */ }
 
     // 전역 접근용 (AI 모듈에서 newChat 시 사용)
     window._chamClearLiveRoom = function() {
