@@ -12811,12 +12811,27 @@ html, body { background: #ffffff !important; }
                 _walletUid = window._soWallet.userId;
             }
             if ((_useMileage > 0 || _useDeposit > 0) && _walletUid) {
-                // 잔액 실시간 재검증 (UI 캐시와 DB 불일치 방지)
+                // 2026-06-10: 잔액 재검증 시 wallet source 에 맞는 컬럼 조회 (이전엔 mileage만 보고 event_coupon 무시 → 30,000원 보유한 사용자도 0원이라며 차단)
+                var _src = (window._soWallet && window._soWallet.discChoice) || 'mileage';
                 var _balRow = null;
-                try { var _br = await sb.from('profiles').select('mileage, deposit').eq('id', _walletUid).maybeSingle(); _balRow = _br.data; } catch (e) {}
-                var _curMile = parseInt((_balRow && _balRow.mileage) || 0) || 0;
+                try {
+                    var _selCols = 'mileage, deposit' + (_src === 'event_coupon' ? ', event_coupon' : '');
+                    var _br = await sb.from('profiles').select(_selCols).eq('id', _walletUid).maybeSingle();
+                    _balRow = _br.data;
+                } catch (e) {}
                 var _curDep = parseInt((_balRow && _balRow.deposit) || 0) || 0;
-                if (_useMileage > _curMile) { alert('쿠폰 잔액이 부족합니다. (보유: ' + _curMile.toLocaleString() + ' P)'); btn.disabled = false; btn.innerHTML = origLabel; return; }
+                // 사용 가능 잔액 — event_coupon 선택 시 event_coupon 컬럼, 그 외엔 mileage
+                var _curAvail;
+                if (_src === 'event_coupon') {
+                    _curAvail = parseInt((_balRow && _balRow.event_coupon) || 0) || 0;
+                } else {
+                    _curAvail = parseInt((_balRow && _balRow.mileage) || 0) || 0;
+                }
+                if (_useMileage > _curAvail) {
+                    var _lbl = (_src === 'event_coupon') ? '쿠폰' : '마일리지';
+                    alert(_lbl + ' 잔액이 부족합니다. (보유: ' + _curAvail.toLocaleString() + ' P)');
+                    btn.disabled = false; btn.innerHTML = origLabel; return;
+                }
                 if (_useDeposit > _curDep) { _useDeposit = _curDep; } // 예치금은 보유분까지만
             }
             // 2026-06-01: 쿠폰 사용 시 PRO 할인은 자동 제외 — total 에서 빠져있는 PRO 복원 후 쿠폰 차감
