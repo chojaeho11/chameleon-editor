@@ -1459,9 +1459,9 @@ window._tcmFallbackClick = function(code) {
             /* hero-section — 명시적 높이로 캐러셀 가려짐 방지 */
             .hero-section {
                 background:linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%) !important;
-                min-height:480px !important;
+                min-height:540px !important;
                 height:auto !important;
-                padding:48px 20px 40px !important;
+                padding:48px 0 40px !important;
                 display:flex !important;
                 flex-direction:column;
                 align-items:stretch;
@@ -1474,11 +1474,11 @@ window._tcmFallbackClick = function(code) {
             }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
-                max-width:900px;
+                max-width:1100px;
                 width:100%;
                 margin:0 auto;
                 position:relative;
-                height:340px;
+                height:420px;
                 isolation:isolate;
                 z-index:1;
                 padding:0;
@@ -1487,14 +1487,17 @@ window._tcmFallbackClick = function(code) {
             .hc-track {
                 position:relative;
                 width:100%; height:100%;
-                perspective:1200px;
             }
+            /* 모든 슬라이드 동일 크기 — translateX 만으로 위치 이동, scale 없음 */
             .hc-slide {
-                position:absolute; inset:0;
+                position:absolute;
+                top:0; bottom:0;
+                left:0;
+                width:100%;
                 border-radius:24px;
                 opacity:0;
-                transform:scale(0.78) translateX(0);
-                transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease;
+                transform:translateX(0);
+                transition:opacity 0.6s ease, transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease;
                 pointer-events:none;
                 background:linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
                 overflow:hidden;
@@ -1510,19 +1513,20 @@ window._tcmFallbackClick = function(code) {
             }
             .hc-slide.is-active {
                 opacity:1;
-                transform:scale(1) translateX(0);
+                transform:translateX(0);
                 pointer-events:auto;
                 z-index:5;
                 box-shadow:0 24px 50px -20px rgba(15,23,42,0.22), 0 8px 18px -8px rgba(15,23,42,0.12);
             }
+            /* peek — 동일 크기, 좌우로 92% 만큼 이동 (8% 만 빼꼼) */
             .hc-slide.is-prev {
-                opacity:0.6;
-                transform:scale(0.86) translateX(-78%);
+                opacity:0.85;
+                transform:translateX(-92%);
                 z-index:2;
             }
             .hc-slide.is-next {
-                opacity:0.6;
-                transform:scale(0.86) translateX(78%);
+                opacity:0.85;
+                transform:translateX(92%);
                 z-index:2;
             }
             .hc-content {
@@ -1765,37 +1769,44 @@ window._tcmFallbackClick = function(code) {
                 gap:16px !important;
                 padding:0 !important;
             }
+            /* 버튼 — 테두리/그림자 없이 깔끔, 아이콘 칩 + 라벨만 */
             #mgrActionsGrid .mgr-action {
                 aspect-ratio:auto !important;
                 min-height:0 !important;
                 height:auto !important;
                 flex-direction:column !important;
                 justify-content:center !important;
-                border-radius:18px !important;
-                padding:14px 8px !important;
+                border-radius:0 !important;
+                padding:10px 6px !important;
                 gap:10px !important;
-                background:#fff !important;
-                border:1px solid #e5e7eb !important;
-                box-shadow:0 2px 8px rgba(15,23,42,0.04) !important;
+                background:transparent !important;
+                border:none !important;
+                box-shadow:none !important;
                 color:#374151 !important;
                 animation:none !important;
-                transition:transform .22s cubic-bezier(0.4,0,0.2,1), box-shadow .22s ease, border-color .22s ease;
+                transition:transform .22s cubic-bezier(0.4,0,0.2,1);
             }
             #mgrActionsGrid .mgr-action::before,
             #mgrActionsGrid .mgr-action::after { display:none !important; }
-            #mgrActionsGrid .mgr-action:hover {
-                border-color:#cbd5e1 !important;
-                box-shadow:0 10px 24px -8px rgba(15,23,42,0.18) !important;
-                transform:translateY(-3px);
-            }
-            #mgrActionsGrid .mgr-action:active { transform:translateY(-1px) scale(0.98); }
-            /* 둥근 컬러 아이콘 칩 */
+            #mgrActionsGrid .mgr-action:hover { transform:translateY(-2px); }
+            #mgrActionsGrid .mgr-action:hover .mgr-action-icon-wrap { transform:scale(1.06); }
+            #mgrActionsGrid .mgr-action:active { transform:translateY(0) scale(0.98); }
+            /* 둥근 컬러 아이콘 칩 — 부드러운 그림자만 (테두리 없음) */
             #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                width:54px !important; height:54px !important;
+                width:58px !important; height:58px !important;
                 font-size:24px !important;
-                border-radius:16px !important;
-                box-shadow:0 6px 14px -4px rgba(15,23,42,0.18) !important;
+                border-radius:18px !important;
+                border:none !important;
+                box-shadow:0 8px 20px -8px rgba(15,23,42,0.18) !important;
                 flex-shrink:0;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                transition:transform .22s cubic-bezier(0.4,0,0.2,1);
+            }
+            #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i {
+                font-size:22px;
+                line-height:1;
             }
             #mgrActionsGrid .mgr-action .mgr-action-label {
                 font-family:'Pretendard Variable', sans-serif;
@@ -1808,33 +1819,24 @@ window._tcmFallbackClick = function(code) {
                 color:#374151 !important;
                 text-shadow:none !important;
             }
-            /* 각 버튼 — 파스텔 컬러 아이콘 칩 */
+            /* 각 버튼 — 파스텔 컬러 아이콘 칩, 테두리 없음 */
             #mgrActionsGrid .mgr-action.mgr-phone .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #dbeafe, #93c5fd) !important; color:#1e40af !important;
+                background:linear-gradient(135deg, #dbeafe, #60a5fa) !important; color:#1e40af !important;
             }
             #mgrActionsGrid .mgr-action.mgr-chat .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #ede9fe, #c4b5fd) !important; color:#5b21b6 !important;
+                background:linear-gradient(135deg, #ede9fe, #a78bfa) !important; color:#5b21b6 !important;
             }
             #mgrActionsGrid .mgr-action.mgr-vip .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #fef9c3, #fde047) !important; color:#92400e !important;
+                background:linear-gradient(135deg, #fef9c3, #fbbf24) !important; color:#92400e !important;
             }
             #mgrActionsGrid .mgr-action.mgr-scrap .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #d1fae5, #6ee7b7) !important; color:#065f46 !important;
+                background:linear-gradient(135deg, #d1fae5, #34d399) !important; color:#065f46 !important;
             }
             #mgrActionsGrid .mgr-action.mgr-design .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #cffafe, #67e8f9) !important; color:#155e75 !important;
+                background:linear-gradient(135deg, #cffafe, #22d3ee) !important; color:#155e75 !important;
             }
             #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap {
-                background:linear-gradient(135deg, #fce7f3, #f9a8d4) !important; color:#831843 !important;
-            }
-            /* VIP 만 살짝 강조 (테두리 살짝 노랑) */
-            #mgrActionsGrid .mgr-action.mgr-vip {
-                border-color:#fcd34d !important;
-                box-shadow:0 6px 16px -4px rgba(245,158,11,0.25) !important;
-            }
-            #mgrActionsGrid .mgr-action.mgr-vip:hover {
-                border-color:#f59e0b !important;
-                box-shadow:0 14px 28px -8px rgba(245,158,11,0.35) !important;
+                background:linear-gradient(135deg, #fce7f3, #f472b6) !important; color:#831843 !important;
             }
             @media (max-width: 700px) {
                 #mgrQuoteHero { margin:16px auto 20px !important; padding:0 14px !important; }
@@ -1901,27 +1903,27 @@ window._tcmFallbackClick = function(code) {
                  행2: 상담후금액주문 | 디자인의뢰 | 이벤트쿠폰 -->
             <div id="mgrActionsGrid">
                 <button type="button" class="mgr-action mgr-phone" onclick="window._openMgrPhoneModal && window._openMgrPhoneModal()">
-                    <span class="mgr-action-icon-wrap">📞</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-phone-volume"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_phones">매니저 전화안내</span>
                 </button>
                 <button type="button" class="mgr-action mgr-chat" onclick="if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
-                    <span class="mgr-action-icon-wrap">💬</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_chat">챗봇 상담</span>
                 </button>
                 <button type="button" id="mgrVipPayBtn" class="mgr-action mgr-vip" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
-                    <span class="mgr-action-icon-wrap">👑</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-crown"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_vip_pay">VIP 개인결제</span>
                 </button>
                 <button type="button" class="mgr-action mgr-scrap" onclick="window._openMgrQuoteModal && window._openMgrQuoteModal()">
-                    <span class="mgr-action-icon-wrap">💴</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-wallet"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_scrap_pay">상담 후 금액주문</span>
                 </button>
                 <button type="button" class="mgr-action mgr-design" onclick="location.href='/design-market'">
-                    <span class="mgr-action-icon-wrap">🎨</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_design_request">디자인 의뢰하기</span>
                 </button>
                 <button type="button" class="mgr-action mgr-coupon" onclick="window._openCouponShareModal && window._openCouponShareModal()">
-                    <span class="mgr-action-icon-wrap">🎁</span>
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-gift"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_event_coupon">이벤트 쿠폰</span>
                 </button>
             </div>
