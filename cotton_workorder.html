@@ -155,6 +155,50 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
                 <span style="font-size:10px; color:#7f1d1d; font-weight:700;">제품종류 · 견적서 · 완료</span>
             </div>
         </div>
+        <!-- 2026-06-10: 인쇄 데이터 생성 도우미 (Python compose_fabric.py) — 매니저용 -->
+        <div style="margin-top:12px; padding-top:12px; border-top:1px dashed rgba(220,38,38,0.4); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button type="button" onclick="window._cwShowComposeCmd()"
+                style="font-size:12px; font-weight:800; color:#fff; background:linear-gradient(135deg,#7c3aed,#5b21b6); border:none; border-radius:7px; padding:8px 16px; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(124,58,237,0.55); display:flex; align-items:center; gap:6px;">
+                🖨️ 인쇄 데이터 생성 명령
+            </button>
+            <span style="font-size:11px; color:#6b7280; line-height:1.5;">
+                pattern_spec(셀/레이아웃/배경) + 아트워크 → 출력 사이즈 인쇄 파일 자동 합성 (Python)
+            </span>
+        </div>
+    </div>
+
+    <!-- 인쇄 데이터 생성 명령 모달 -->
+    <div id="cwComposeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#fff; border-radius:14px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <div style="padding:18px 22px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:15px; font-weight:900; color:#451a03;">🖨️ 인쇄 데이터 생성 명령 (Python)</div>
+                <button onclick="document.getElementById('cwComposeModal').style.display='none'" style="background:none; border:none; font-size:22px; color:#9ca3af; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:20px 22px;">
+                <div style="font-size:12px; color:#475569; line-height:1.7; margin-bottom:14px;">
+                    아래 명령을 터미널에서 실행하면 작업지시서의 셀 크기·레이아웃·배경색을 적용한 <b>출력 사이즈 인쇄 파일</b>이 자동 생성됩니다.<br>
+                    저장 위치: <code style="background:#fef3c7; padding:2px 6px; border-radius:4px;">tools/cotton_print_compose/output/</code>
+                </div>
+                <div style="font-size:11px; font-weight:800; color:#451a03; margin-bottom:6px;">📋 1단계 — 최초 1회 (설치)</div>
+                <div style="background:#1e293b; color:#bef264; padding:12px 14px; border-radius:8px; font-family:'SF Mono','Roboto Mono',monospace; font-size:12px; margin-bottom:14px; position:relative;">
+                    <pre style="margin:0; white-space:pre-wrap; overflow-wrap:break-word;">cd tools/cotton_print_compose
+pip install -r requirements.txt</pre>
+                    <button onclick="window._cwCopyCmd('install')" style="position:absolute; top:8px; right:8px; padding:4px 10px; background:#475569; color:#fff; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer;">복사</button>
+                </div>
+                <div style="font-size:11px; font-weight:800; color:#451a03; margin-bottom:6px;">📋 2단계 — 이 주문 인쇄 데이터 생성</div>
+                <div style="background:#1e293b; color:#bef264; padding:12px 14px; border-radius:8px; font-family:'SF Mono','Roboto Mono',monospace; font-size:13px; position:relative;">
+                    <pre id="cwComposeCmdText" style="margin:0; white-space:pre-wrap; overflow-wrap:break-word; font-weight:700;">python compose_fabric.py --order-id <span id="cwComposeOrderId">?</span></pre>
+                    <button onclick="window._cwCopyCmd('main')" style="position:absolute; top:8px; right:8px; padding:4px 10px; background:#7c3aed; color:#fff; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer;">복사</button>
+                </div>
+                <div style="font-size:11px; color:#6b7280; margin-top:8px; line-height:1.6;">
+                    💡 특정 항목만: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--item-idx 0</code> 추가<br>
+                    💡 JPG 출력: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--format jpg</code> 추가<br>
+                    💡 고해상도: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--dpi 300</code> (파일 4배 커짐)<br>
+                    💡 자세한 옵션: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">python compose_fabric.py --help</code>
+                </div>
+                <div id="cwComposeItems" style="margin-top:16px; padding-top:14px; border-top:1px solid #e5e7eb; font-size:11.5px;"></div>
+            </div>
+        </div>
     </div>
 
     <div class="section" style="margin-top:14px;">
@@ -214,6 +258,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         try { _woIsAdmin = !!(await sb.auth.getSession()).data.session; } catch (e) {}
         window._woOrderId = orderId;
         window._woIsAdmin = _woIsAdmin;
+        window._woItems = order.items || [];
 
         // 2026-06-10: admin_note 안의 [제품종류]·[작업지시완료] 마커 파싱
         const _adminRaw = order.admin_note || '';
@@ -396,6 +441,60 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+e.message+'</div>';
     }
 })();
+
+// 2026-06-10: 인쇄 데이터 생성 명령 모달 (Python compose_fabric.py 도우미)
+window._cwShowComposeCmd = function() {
+    const oid = window._woOrderId || '?';
+    document.getElementById('cwComposeOrderId').textContent = oid;
+    // 항목 사양 미리보기 (작업지시서에 있는 정보 그대로)
+    const items = window._woItems || [];
+    const itemsBox = document.getElementById('cwComposeItems');
+    if (itemsBox) {
+        if (!items.length) {
+            itemsBox.innerHTML = '<div style="color:#9ca3af;">항목 정보 없음</div>';
+        } else {
+            let html = '<div style="font-weight:800; color:#451a03; margin-bottom:8px;">📦 합성 사양 미리보기</div>';
+            items.forEach(function(it, i){
+                const spec = it.pattern_spec || {};
+                const cell = spec.cell_cm || {};
+                const wCm = it.width_cm || (it.width_mm ? it.width_mm/10 : '?');
+                const hCm = it.height_cm || (it.height_mm ? it.height_mm/10 : '?');
+                const sc = Math.round((spec.image_scale != null ? spec.image_scale : 1) * 100);
+                const art = it.artwork_url ? '✅' : '❌ (먼저 파일 첨부)';
+                html += '<div style="padding:8px 10px; background:#f9fafb; border-left:3px solid #7c3aed; border-radius:5px; margin-bottom:6px;">'
+                     + '<b>['+(i+1)+'] '+(it.product_name||it.fabric||'항목')+'</b>'
+                     + '<div style="color:#475569; margin-top:3px; font-family:monospace; font-size:10.5px;">'
+                     +   '출력 '+wCm+'×'+hCm+'cm  ·  셀 '+(cell.w||'?')+'×'+(cell.h||'?')+'cm  ·  '
+                     +   (spec.layout||'basic')+'  ·  '+(spec.bg_color||'#ffffff')+'  ·  '+sc+'%  ·  '
+                     +   '아트워크 '+art
+                     + '</div></div>';
+            });
+            itemsBox.innerHTML = html;
+        }
+    }
+    document.getElementById('cwComposeModal').style.display = 'flex';
+};
+
+window._cwCopyCmd = function(which) {
+    const oid = window._woOrderId || '?';
+    let txt = '';
+    if (which === 'install') {
+        txt = 'cd tools/cotton_print_compose\npip install -r requirements.txt';
+    } else {
+        txt = 'python compose_fabric.py --order-id ' + oid;
+    }
+    try {
+        navigator.clipboard.writeText(txt).then(function(){
+            alert('✅ 복사됨!\n' + txt);
+        }).catch(function(){
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = txt; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); alert('✅ 복사됨'); } catch(e) { alert(txt); }
+            document.body.removeChild(ta);
+        });
+    } catch(e) { prompt('복사하세요:', txt); }
+};
 
 // 2026-06-10: admin_note 헤더 재구성 — [제품종류] + [작업지시완료] 마커 갱신
 async function _cwRebuildAdminNote(newCategory, newComplete) {
