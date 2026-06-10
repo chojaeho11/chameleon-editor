@@ -1174,13 +1174,16 @@ window._tcmFallbackClick = function(code) {
     })();
     </script>
 
-    <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시) -->
-    <div id="mgrQuoteHero" style="max-width:1100px; margin:8px auto 24px; padding:0 16px;">
-        <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 28px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
-            <div style="text-align:center; margin-bottom:16px;">
-                <div id="mgrQuoteTitle" style="font-size:17px; font-weight:900; color:#fde047; margin-bottom:6px; text-shadow:0 1px 6px rgba(0,0,0,0.3);">허니콤보드 업계 1위 카멜레온프린팅</div>
-                <div id="mgrQuoteDesc" style="font-size:12.5px; color:#fef9c3; line-height:1.55;">허니콤보드 직접생산과 수도권 순회 무료배송으로 더 저렴하게 이용하실 수 있게 최선을 다하겠습니다.</div>
-            </div>
+    <!-- 2026-05-14: 매니저 견적 빠른 주문 — 전화 상담 패널 (추후 여기에 결제창 표시)
+         2026-06-10: 매니저 박스를 위로 올림 — hero 안내문(.hero-min-order) CSS 로 숨김 + 박스 내부 타이틀/설명 제거 -->
+    <style>
+    .hero-min-order { display:none !important; }
+    </style>
+    <div id="mgrQuoteHero" style="max-width:1100px; margin:-12px auto 24px; padding:0 16px; position:relative; z-index:5;">
+        <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
+            <!-- 2026-06-10: 내부 타이틀/설명 제거 — 영역 컴팩트화 위함. i18n 호환 위해 빈 노드 유지 -->
+            <div id="mgrQuoteTitle" style="display:none;"></div>
+            <div id="mgrQuoteDesc" style="display:none;"></div>
             <!-- 2026-06-10: 매니저 영역 = 6버튼 grid (PC 3열x2행 / 모바일 2열x3행) -->
             <style>
             /* 전화번호 그리드 — 모달 내부에서 사용 */
