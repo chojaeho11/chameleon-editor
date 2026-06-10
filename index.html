@@ -1547,9 +1547,11 @@ window._tcmFallbackClick = function(code) {
             /* startScreen 전체에 horizontal scroll 차단 */
             #startScreen { overflow-x:hidden; }
             /* 2026-06-11: 모든 로케일에서 6 버튼 영역 강제 표시 + 옛 JP/EN 카드 영구 숨김 (JS 안전망) */
-            #jpHeroRow { display:none !important; }
-            #jpLineContact, #enHibaContact { display:none !important; }
-            #mgrQuoteHero { display:block !important; }
+            #jpHeroRow { display:none !important; height:0 !important; overflow:hidden !important; padding:0 !important; margin:0 !important; }
+            #jpLineContact, #enHibaContact { display:none !important; height:0 !important; }
+            #mgrQuoteHero { display:block !important; min-height:120px !important; z-index:50 !important; position:relative !important; }
+            /* freeDeliveryNotice 가 mgrQuoteHero 와 겹치지 않도록 충분한 상단 마진 */
+            #freeDeliveryNotice { margin-top:32px !important; }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
@@ -20785,13 +20787,13 @@ window.dsmRenderProducts = async function(keyword) {
     </div>
 </div>
 
-<!-- ===== 카멜레온 AI 상담봇 (카프로 통일 - 숨김) ===== -->
-<div id="cham-bot-trigger" style="display:none !important;">
+<!-- ===== 카멜레온 AI 상담봇 (우측 하단 고정) ===== -->
+<div id="cham-bot-trigger">
     <i class="fa-solid fa-comments" id="cham-bot-icon"></i>
     <span id="cham-bot-badge">1</span>
 </div>
 
-<div id="cham-bot-window" style="display:none !important;">
+<div id="cham-bot-window">
     <div class="cham-header">
         <div class="cham-header-left">
             <div class="cham-avatar"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:24px;height:24px;border-radius:50%;"></div>
