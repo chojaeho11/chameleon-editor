@@ -242,7 +242,9 @@
       "Bash(sed -i 's/\\\\.js?v=293/\\\\.js?v=294/g' canvas-ai.js canvas-core.js canvas-guides.js canvas-icons.js canvas-image.js canvas-objects.js canvas-pages.js canvas-retouch.js canvas-size.js canvas-template.js canvas-utils.js canvas-zoom-pan.js context-menu.js export.js greeting-card-mode.js my-design.js ppt-mode.js shortcuts.js)",
       "Bash(sed -i 's/canvas-template\\\\.js?v=293/canvas-template.js?v=294/g; s/canvas-utils\\\\.js?v=293/canvas-utils.js?v=294/g; s/canvas-objects\\\\.js?v=293/canvas-objects.js?v=294/g; s/canvas-retouch\\\\.js?v=434/canvas-retouch.js?v=294/g; s/canvas-image\\\\.js?v=434/canvas-image.js?v=294/g' main.js)",
       "Bash(awk 'NR>3100 && NR<3225 && /@media/' style.css)",
-      "Bash(awk 'NR>=998 && NR<=1320 && /<div class=\"hero-section\"|</div>|hero-section/' index.html)"
+      "Bash(awk 'NR>=998 && NR<=1320 && /<div class=\"hero-section\"|</div>|hero-section/' index.html)",
+      "Bash(awk '/class=\"hero-section\"/{f=1; ln=NR} f && /<\\\\/div>/{c++; if\\(c==1\\) {print \"first /div at line\", NR; exit}}' index.html)",
+      "Bash(awk 'NR>=998 && NR<=1340' index.html)"
     ],
     "additionalDirectories": [
       "\\tmp",
