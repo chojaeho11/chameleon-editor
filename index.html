@@ -1002,28 +1002,51 @@ window._tcmFallbackClick = function(code) {
         </video>
         <div class="hero-video-overlay"></div>
         <div class="hero-deco-line"></div>
-        <!-- 2026-06-11: 카테고리 캐러셀 — 3초 자동 슬라이드, 실제 제품 사진 -->
+        <!-- 2026-06-11: 카테고리 캐러셀 — 3초 자동, 좌측정렬, 파스텔 BG + 같은 계열 진한 글씨 -->
         <div class="hero-carousel" id="heroCarousel">
             <div class="hc-track">
-                <article class="hc-slide is-active" data-slide="0" style="--g1:#1e293b; --g2:#0f172a;">
+                <!-- 1. 허니콤보드 — 파스텔 블루 -->
+                <article class="hc-slide is-active" data-slide="0" style="--bg:#e0f2fe; --bg2:#bae6fd; --txt:#075985; --accent:#0c4a6e;">
                     <div class="hc-content">
-                        <span class="hc-tag">BEST SELLER</span>
+                        <span class="hc-tag">HONEYCOMB</span>
                         <h2 class="hc-title">허니콤보드<br>업계 1위</h2>
                         <p class="hc-sub">전시·POP·인테리어 도매가 50% 할인<br>국내 직접 생산, 무료설치 가능</p>
                         <a href="/?cat=honeycomb" class="hc-cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="/hexa/feature3.jpg" alt="허니콤보드" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="허니콤보드" loading="lazy" decoding="async"></div>
                 </article>
-                <article class="hc-slide" data-slide="1" style="--g1:#065f46; --g2:#022c22;">
+                <!-- 2. 광고인쇄 / 명함 — 파스텔 민트 -->
+                <article class="hc-slide" data-slide="1" style="--bg:#d1fae5; --bg2:#a7f3d0; --txt:#065f46; --accent:#064e3b;">
                     <div class="hc-content">
-                        <span class="hc-tag">ECO BOARD</span>
-                        <h2 class="hc-title">친환경<br>에코 보드</h2>
-                        <p class="hc-sub">100% 재활용 가능한 친환경 자재<br>전시·디스플레이용 보드</p>
-                        <a href="/?cat=honeycomb" class="hc-cta">자세히 보기 <span>→</span></a>
+                        <span class="hc-tag">AD PRINT</span>
+                        <h2 class="hc-title">광고 인쇄<br>한 곳에서 모두</h2>
+                        <p class="hc-sub">현수막·배너·실사출력·간판<br>전국 익일 배송으로 빠르게</p>
+                        <a href="/?cat=ad" class="hc-cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="/hexa/feature1.jpg" alt="에코 보드" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="광고 인쇄" loading="lazy" decoding="async"></div>
                 </article>
-                <article class="hc-slide" data-slide="2" style="--g1:#1e3a8a; --g2:#0c1e3d;">
+                <!-- 3. 종이매대 — 파스텔 베이지 -->
+                <article class="hc-slide" data-slide="2" style="--bg:#fef3c7; --bg2:#fde68a; --txt:#92400e; --accent:#78350f;">
+                    <div class="hc-content">
+                        <span class="hc-tag">PAPER STAND</span>
+                        <h2 class="hc-title">종이매대<br>친환경 진열대</h2>
+                        <p class="hc-sub">팝업·전시·매장 진열용<br>친환경 종이로 부담 없이</p>
+                        <a href="/paper_stand" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/paper_stand_hero.jpg" alt="종이매대" loading="lazy" decoding="async"></div>
+                </article>
+                <!-- 4. 굿즈 / 키링 — 파스텔 핑크 -->
+                <article class="hc-slide" data-slide="3" style="--bg:#fce7f3; --bg2:#fbcfe8; --txt:#9d174d; --accent:#831843;">
+                    <div class="hc-content">
+                        <span class="hc-tag">BEST GOODS</span>
+                        <h2 class="hc-title">베스트 굿즈<br>100개+ 반값</h2>
+                        <p class="hc-sub">키링·코롯토·텀블러·머그<br>세계에서 가장 저렴한 도매가</p>
+                        <a href="/goods" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770968526644_1000004100_detail_07.jpg" alt="베스트 굿즈" loading="lazy" decoding="async"></div>
+                </article>
+                <!-- 5. 패브릭 인쇄 — 파스텔 라벤더 -->
+                <article class="hc-slide" data-slide="4" style="--bg:#ede9fe; --bg2:#ddd6fe; --txt:#5b21b6; --accent:#4c1d95;">
                     <div class="hc-content">
                         <span class="hc-tag">FABRIC PRINT</span>
                         <h2 class="hc-title">패브릭 인쇄<br>고해상도 출력</h2>
@@ -1032,32 +1055,15 @@ window._tcmFallbackClick = function(code) {
                     </div>
                     <div class="hc-visual"><img src="/fabric/poster.jpg" alt="패브릭 인쇄" loading="lazy" decoding="async"></div>
                 </article>
-                <article class="hc-slide" data-slide="3" style="--g1:#7c2d12; --g2:#451a03;">
+                <!-- 6. 허니콤 차량용 — 파스텔 피치 -->
+                <article class="hc-slide" data-slide="5" style="--bg:#ffedd5; --bg2:#fed7aa; --txt:#9a3412; --accent:#7c2d12;">
                     <div class="hc-content">
-                        <span class="hc-tag">AD PRINT</span>
-                        <h2 class="hc-title">광고 인쇄<br>한 곳에서 모두</h2>
-                        <p class="hc-sub">옥외광고·실내사인·POP<br>전국 익일 배송으로 빠르게</p>
-                        <a href="/?cat=ad" class="hc-cta">자세히 보기 <span>→</span></a>
+                        <span class="hc-tag">HONEYCOMB</span>
+                        <h2 class="hc-title">허니콤 차량용<br>POP·이동전시</h2>
+                        <p class="hc-sub">차량 부착·이동식 전시용<br>가벼우면서도 견고한 구조</p>
+                        <a href="/?cat=honeycomb" class="hc-cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="광고 인쇄" loading="lazy" decoding="async"></div>
-                </article>
-                <article class="hc-slide" data-slide="4" style="--g1:#831843; --g2:#4a044e;">
-                    <div class="hc-content">
-                        <span class="hc-tag">BEST GOODS</span>
-                        <h2 class="hc-title">베스트 굿즈<br>100개+ 반값</h2>
-                        <p class="hc-sub">키링·코롯토·텀블러·머그<br>세계에서 가장 저렴한 도매가</p>
-                        <a href="/goods" class="hc-cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="/keyringcut/keyringcut1.jpg" alt="베스트 굿즈" loading="lazy" decoding="async"></div>
-                </article>
-                <article class="hc-slide" data-slide="5" style="--g1:#0e7490; --g2:#083344;">
-                    <div class="hc-content">
-                        <span class="hc-tag">FABRIC ART</span>
-                        <h2 class="hc-title">패브릭 타피스트리<br>인테리어 완성</h2>
-                        <p class="hc-sub">고해상도 자수·디지털 인쇄<br>리빙·인테리어용 패브릭 아트</p>
-                        <a href="/?cat=fabric" class="hc-cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="/fabric/cotton16.jpg" alt="패브릭 아트" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="허니콤 차량용" loading="lazy" decoding="async"></div>
                 </article>
             </div>
             <button class="hc-arrow hc-prev" aria-label="이전">‹</button>
@@ -1457,13 +1463,13 @@ window._tcmFallbackClick = function(code) {
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
-                margin:0 auto;
+                margin:0 auto 0 max(24px, calc((100vw - 1400px) / 2));
                 position:relative;
                 border-radius:24px;
                 overflow:hidden;
                 aspect-ratio:16/6;
-                background:#0f172a;
-                box-shadow:0 30px 60px -25px rgba(15,23,42,0.35), 0 8px 20px -8px rgba(15,23,42,0.2);
+                background:#e0f2fe;
+                box-shadow:0 18px 40px -18px rgba(15,23,42,0.12), 0 6px 14px -6px rgba(15,23,42,0.08);
                 isolation:isolate;
                 z-index:1;
             }
@@ -1471,17 +1477,17 @@ window._tcmFallbackClick = function(code) {
             .hc-slide {
                 position:absolute; inset:0;
                 opacity:0;
-                transform:scale(1.03);
+                transform:scale(1.02);
                 transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.9s cubic-bezier(0.4,0,0.2,1);
                 pointer-events:none;
-                background:linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
+                background:linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
                 overflow:hidden;
             }
             .hc-slide::before {
                 content:''; position:absolute; inset:0;
                 background:
-                    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.15) 0%, transparent 50%),
-                    radial-gradient(circle at 0% 100%, rgba(0,0,0,0.18) 0%, transparent 50%);
+                    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.4) 0%, transparent 55%),
+                    radial-gradient(circle at 0% 100%, rgba(255,255,255,0.2) 0%, transparent 55%);
                 pointer-events:none;
             }
             .hc-slide.is-active {
@@ -1493,9 +1499,9 @@ window._tcmFallbackClick = function(code) {
             .hc-content {
                 position:absolute;
                 left:0; top:0; bottom:0;
-                width:62%;
-                padding:56px 60px;
-                color:#fff;
+                width:55%;
+                padding:48px 56px;
+                color:var(--txt);
                 display:flex;
                 flex-direction:column;
                 justify-content:center;
@@ -1507,13 +1513,13 @@ window._tcmFallbackClick = function(code) {
                 font-weight:800;
                 letter-spacing:0.32em;
                 padding-left:0.32em;
-                color:rgba(255,255,255,0.85);
+                color:var(--accent);
                 display:inline-block;
                 padding:6px 14px;
-                background:rgba(255,255,255,0.12);
-                border:1px solid rgba(255,255,255,0.2);
+                background:rgba(255,255,255,0.55);
+                border:1px solid rgba(255,255,255,0.8);
                 border-radius:999px;
-                margin-bottom:24px;
+                margin-bottom:22px;
                 width:fit-content;
                 backdrop-filter:blur(8px);
                 -webkit-backdrop-filter:blur(8px);
@@ -1523,39 +1529,40 @@ window._tcmFallbackClick = function(code) {
                 font-size:48px;
                 font-weight:900;
                 line-height:1.12;
-                letter-spacing:-0.02em;
+                letter-spacing:-0.025em;
                 margin:0 0 18px;
-                color:#fff;
-                text-shadow:0 4px 20px rgba(0,0,0,0.3);
+                color:var(--accent);
             }
             .hc-sub {
                 font-family:'Pretendard Variable', sans-serif;
                 font-size:15px;
-                font-weight:500;
+                font-weight:600;
                 line-height:1.6;
-                color:rgba(255,255,255,0.88);
-                margin:0 0 32px;
-                max-width:420px;
+                color:var(--txt);
+                opacity:0.85;
+                margin:0 0 30px;
+                max-width:380px;
             }
             .hc-cta {
                 display:inline-flex;
                 align-items:center;
                 gap:8px;
                 padding:13px 28px;
-                background:#fff;
-                color:#0f172a;
+                background:var(--accent);
+                color:#fff;
                 border-radius:999px;
                 font-family:'Pretendard Variable', sans-serif;
                 font-weight:800;
                 font-size:14px;
                 text-decoration:none;
                 width:fit-content;
-                box-shadow:0 10px 24px rgba(0,0,0,0.2);
-                transition:transform .25s ease, box-shadow .25s ease;
+                box-shadow:0 10px 24px rgba(15,23,42,0.18);
+                transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
             }
             .hc-cta:hover {
                 transform:translateY(-2px);
-                box-shadow:0 14px 32px rgba(0,0,0,0.28);
+                box-shadow:0 14px 28px rgba(15,23,42,0.25);
+                background:var(--txt);
             }
             .hc-cta span { transition:transform .25s ease; }
             .hc-cta:hover span { transform:translateX(4px); }
@@ -1565,7 +1572,7 @@ window._tcmFallbackClick = function(code) {
                 top:0;
                 bottom:0;
                 z-index:1;
-                width:45%;
+                width:50%;
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -1575,8 +1582,8 @@ window._tcmFallbackClick = function(code) {
                 content:'';
                 position:absolute;
                 left:0; top:0; bottom:0;
-                width:120px;
-                background:linear-gradient(90deg, var(--g1) 0%, transparent 100%);
+                width:140px;
+                background:linear-gradient(90deg, var(--bg) 0%, transparent 100%);
                 z-index:2;
                 pointer-events:none;
             }
@@ -1585,103 +1592,106 @@ window._tcmFallbackClick = function(code) {
                 height:100%;
                 object-fit:cover;
                 object-position:center;
-                filter:saturate(1.05) brightness(0.95);
+                filter:saturate(1.05);
             }
-            .hc-emoji {
-                font-size:140px;
-                line-height:1;
-                opacity:0.92;
-                filter:drop-shadow(0 24px 40px rgba(0,0,0,0.35));
-            }
-            /* 화살표 */
+            /* 화살표 — 파스텔 톤 매칭 */
             .hc-arrow {
                 position:absolute;
                 top:50%;
                 transform:translateY(-50%);
-                width:46px; height:46px;
+                width:44px; height:44px;
                 border-radius:50%;
-                background:rgba(255,255,255,0.95);
-                border:none;
-                font-size:24px;
+                background:rgba(255,255,255,0.85);
+                border:1px solid rgba(255,255,255,0.6);
+                font-size:22px;
                 font-weight:300;
-                color:#0f172a;
+                color:var(--accent);
                 cursor:pointer;
                 z-index:10;
-                box-shadow:0 8px 20px rgba(0,0,0,0.18);
+                box-shadow:0 6px 16px rgba(15,23,42,0.14);
                 display:flex; align-items:center; justify-content:center;
                 line-height:1;
+                backdrop-filter:blur(8px);
+                -webkit-backdrop-filter:blur(8px);
                 transition:transform .2s ease, background .2s ease;
             }
-            .hc-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.05); }
+            .hc-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.06); }
             .hc-prev { left:18px; }
             .hc-next { right:18px; }
             /* 도트 인디케이터 */
             .hc-dots {
                 position:absolute;
                 bottom:22px;
-                left:50%;
-                transform:translateX(-50%);
+                left:56px;
                 display:flex;
-                gap:8px;
+                gap:7px;
                 z-index:10;
-                background:rgba(15,23,42,0.45);
-                padding:8px 14px;
+                background:rgba(255,255,255,0.55);
+                padding:7px 12px;
                 border-radius:999px;
                 backdrop-filter:blur(10px);
                 -webkit-backdrop-filter:blur(10px);
+                border:1px solid rgba(255,255,255,0.4);
             }
             .hc-dot {
                 width:8px; height:8px;
                 border-radius:50%;
-                background:rgba(255,255,255,0.4);
+                background:rgba(15,23,42,0.25);
                 border:none;
                 padding:0;
                 cursor:pointer;
                 transition:all .3s ease;
             }
             .hc-dot.is-active {
-                background:#fff;
-                width:28px;
+                background:var(--accent);
+                width:26px;
                 border-radius:4px;
             }
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section { padding:14px 12px 18px !important; display:block !important; }
+                .hero-section { padding:12px 12px 18px !important; display:block !important; }
                 .hero-carousel {
                     aspect-ratio:auto;
-                    height:300px;
+                    height:280px;
                     border-radius:18px;
                     display:block !important;
-                    width:100%;
+                    width:auto;
+                    margin:0 !important;
                 }
                 .hc-content {
                     position:absolute;
-                    inset:0;
-                    width:100%;
-                    padding:28px 22px;
+                    left:0; top:0; bottom:0;
+                    width:62%;
+                    padding:22px 18px;
                     z-index:3;
-                    background:linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.85) 100%);
-                    justify-content:flex-end;
+                    justify-content:center;
+                    background:none;
                 }
-                .hc-tag { font-size:10px; padding:4px 10px; margin-bottom:12px; }
-                .hc-title { font-size:26px; margin-bottom:8px; line-height:1.15; }
-                .hc-sub { font-size:12px; margin-bottom:14px; line-height:1.5; }
-                .hc-cta { padding:10px 18px; font-size:12.5px; }
+                .hc-tag {
+                    font-size:9.5px; padding:4px 10px; margin-bottom:10px;
+                    letter-spacing:0.28em; padding-left:0.28em;
+                }
+                .hc-title { font-size:22px; margin-bottom:8px; line-height:1.15; }
+                .hc-sub { font-size:11.5px; margin-bottom:14px; line-height:1.45; }
+                .hc-cta { padding:9px 16px; font-size:11.5px; }
                 .hc-visual {
                     position:absolute;
-                    inset:0;
-                    width:100%;
+                    right:0; top:0; bottom:0;
+                    width:48%;
                     z-index:1;
                 }
-                .hc-visual::before { display:none; }
+                .hc-visual::before {
+                    width:60px;
+                    background:linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+                }
                 .hc-visual img {
                     width:100%;
                     height:100%;
                     object-fit:cover;
-                    filter:saturate(1.05) brightness(0.85);
+                    filter:saturate(1.05);
                 }
                 .hc-arrow { display:none; }
-                .hc-dots { bottom:10px; padding:5px 10px; gap:5px; z-index:4; }
+                .hc-dots { bottom:12px; left:18px; padding:5px 10px; gap:5px; z-index:4; }
                 .hc-dot { width:6px; height:6px; }
                 .hc-dot.is-active { width:20px; }
             }
