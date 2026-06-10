@@ -47,11 +47,19 @@ from pathlib import Path
 import urllib.request
 import urllib.error
 
+# 2026-06-10: Windows 한글 CMD (CP949) 에서 이모지/한자 print 시
+#   UnicodeEncodeError 가 발생하던 문제 fix — stdout/stderr 을 UTF-8 로 강제.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
 try:
     from PIL import Image
     Image.MAX_IMAGE_PIXELS = None      # 큰 패턴 이미지 허용 (decompression bomb 경고 비활성)
 except ImportError:
-    print("ERROR: Pillow 미설치. pip install Pillow", file=sys.stderr)
+    print("ERROR: Pillow not installed. Run: pip install Pillow", file=sys.stderr)
     sys.exit(1)
 
 

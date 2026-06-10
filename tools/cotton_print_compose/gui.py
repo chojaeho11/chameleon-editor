@@ -25,7 +25,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 
 
-__version__ = '2026.06.10.1'   # 업데이트 비교용 (YYYY.MM.DD.N)
+__version__ = '2026.06.10.2'   # 업데이트 비교용 (YYYY.MM.DD.N) — UTF-8 강제 fix
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'
@@ -378,6 +378,10 @@ class CottonPrintGUI:
 
     def _run_process(self, cmd, order_id):
         try:
+            # 2026-06-10: 자식 Python 도 stdout/stderr 을 UTF-8 로 강제 (CP949 우회)
+            child_env = dict(os.environ)
+            child_env['PYTHONIOENCODING'] = 'utf-8'
+            child_env['PYTHONUTF8'] = '1'
             kwargs = {
                 'stdout': subprocess.PIPE,
                 'stderr': subprocess.STDOUT,
@@ -386,6 +390,7 @@ class CottonPrintGUI:
                 'encoding': 'utf-8',
                 'errors': 'replace',
                 'cwd': str(self.work_dir),
+                'env': child_env,
             }
             if os.name == 'nt':
                 kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
