@@ -236,7 +236,9 @@
       "Bash(powershell -Command \"\\(Get-Content order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content order.js -Encoding UTF8 -NoNewline\")",
       "Bash(powershell -Command \"\\(Get-Content cotton_designer.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content cotton_designer.js -Encoding UTF8 -NoNewline; \\(Get-Content main.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=434', 'export.js?v=435' | Set-Content main.js -Encoding UTF8 -NoNewline; \\(Get-Content canvas-pages.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=292', 'export.js?v=435' | Set-Content canvas-pages.js -Encoding UTF8 -NoNewline\")",
       "Bash(powershell -Command \"\\(Get-Content simple_order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content simple_order.js -Encoding UTF8 -NoNewline; \\(Get-Content cotton_designer.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content cotton_designer.js -Encoding UTF8 -NoNewline; \\(Get-Content main.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content main.js -Encoding UTF8 -NoNewline; \\(Get-Content order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content order.js -Encoding UTF8 -NoNewline; \\(Get-Content canvas-pages.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content canvas-pages.js -Encoding UTF8 -NoNewline\")",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(head -25 *_칼선.svg)",
+      "Bash(head -25 *cut.svg)"
     ],
     "additionalDirectories": [
       "\\tmp",

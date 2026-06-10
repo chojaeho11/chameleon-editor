@@ -26,7 +26,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 
 
-__version__ = '2026.06.10.5'   # 포스터 nest 모드 (재질별 120폭 시트) + 돔보/바코드/라벨 per 항목, 롤인쇄 돔보 제거
+__version__ = '2026.06.10.6'   # 포스터: 인쇄 TIFF(이미지) + 칼선 SVG(돔보/칼선/라벨 3-레이어, Illustrator호환) 분리 출력
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'

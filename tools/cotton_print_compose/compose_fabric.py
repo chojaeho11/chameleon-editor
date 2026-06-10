@@ -265,21 +265,31 @@ def make_barcode_image(text: str, dpi: int,
 def render_poster_item(item: dict, order_id, manager_name: str, dpi: int,
                         tombow_mm: float = 5.0,
                         tombow_offset_mm: float = 5.0,
-                        label_height_mm: float = 22.0) -> 'Image.Image':
-    """layout=centered 한 항목을 포스터로 합성:
-       이미지 영역 (실제 출력 크기, 4 모서리 돔보) + 하단 라벨 (재질/고객/바코드)."""
+                        label_height_mm: float = 22.0,
+                        files: list = None, item_idx: int = None,
+                        image_only: bool = False) -> 'Image.Image':
+    """layout=centered 한 항목을 포스터로 합성.
+    image_only=True 면 이미지만 (인쇄 레이어용), False 면 + 돔보 + 라벨 (참고용).
+    files+item_idx 가 있으면 artwork_url 누락 시 files[idx] 로 폴백."""
     output_w_cm = float(item.get('width_cm') or (item.get('width_mm', 1000) / 10))
     output_h_cm = float(item.get('height_cm') or (item.get('height_mm', 1000) / 10))
 
     img_w_px = cm_to_px(output_w_cm, dpi)
     img_h_px = cm_to_px(output_h_cm, dpi)
 
-    # 아트워크 다운로드 + 리사이즈
+    # 아트워크 URL — 다중 폴백
     art_url = item.get('artwork_url') or item.get('cartImageUrl')
+    if not art_url and files is not None and item_idx is not None:
+        if 0 <= item_idx < len(files) and files[item_idx]:
+            art_url = files[item_idx].get('url')
     if not art_url:
-        raise ValueError('artwork_url 없음')
+        raise ValueError('artwork_url 없음 (item / files 모두 비어있음)')
     src = download_image(art_url)
     src = src.resize((img_w_px, img_h_px), Image.LANCZOS)
+
+    # image_only 모드 — 이미지만 반환 (인쇄 레이어)
+    if image_only:
+        return src.convert('RGB') if src.mode != 'RGB' else src
 
     # 라벨 높이 + 전체 캔버스
     label_h_px = max(1, int(round(label_height_mm * dpi / 25.4)))
@@ -293,9 +303,10 @@ def render_poster_item(item: dict, order_id, manager_name: str, dpi: int,
         poster.paste(src, (0, 0))
 
     # 이미지 영역에 돔보마크
-    draw_tombow_on_region(poster, 0, 0, img_w_px, img_h_px, dpi,
-                           diameter_mm=tombow_mm,
-                           edge_offset_mm=tombow_offset_mm)
+    if tombow_mm > 0:
+        draw_tombow_on_region(poster, 0, 0, img_w_px, img_h_px, dpi,
+                               diameter_mm=tombow_mm,
+                               edge_offset_mm=tombow_offset_mm)
 
     # 라벨 텍스트
     draw = ImageDraw.Draw(poster)
@@ -353,55 +364,181 @@ def render_poster_item(item: dict, order_id, manager_name: str, dpi: int,
 
 
 # ─── Shelf-pack 알고리즘 — 120cm 폭 시트에 nest 배치 ──────────
-def nest_posters_on_sheet(posters: list, sheet_width_cm: float, dpi: int,
-                           padding_cm: float = 0.5) -> 'Image.Image':
-    """Posters 들을 sheet_width 안에 빈틈없이 packing (shelf algorithm).
-       너무 넓은 항목은 90도 회전 시도 — 그래도 안 들어가면 scale down."""
+def compute_nest_placements(items_data: list, sheet_width_cm: float, dpi: int,
+                             padding_cm: float = 0.5) -> dict:
+    """Posters + meta 들을 sheet_width 안에 nest packing — 좌표 계산만.
+    items_data: [{'image': PIL.Image, 'item': dict, 'rotated': bool}, ...]
+    Returns: { sheet_w_px, sheet_h_px, placements: [(img, x_px, y_px, rotated, item), ...] }
+    """
     sheet_w_px = cm_to_px(sheet_width_cm, dpi)
     padding_px = max(0, cm_to_px(padding_cm, dpi))
 
-    # 1) 회전 처리 + scale-down (sheet_w 넘으면)
+    # 1) 회전 처리 + scale-down (sheet_w 넘으면) + 메타 보존
     prepared = []
-    for p in posters:
-        pw, ph = p.size
-        # 회전 시도 — 폭이 시트 폭 넘으면 90도 회전
+    for entry in items_data:
+        img = entry['image']
+        item = entry['item']
+        pw, ph = img.size
+        rotated = False
         if pw > sheet_w_px and ph <= sheet_w_px:
-            p = p.rotate(90, expand=True, resample=Image.BICUBIC)
-            pw, ph = p.size
-        # 그래도 넘으면 scale-down
+            img = img.rotate(90, expand=True, resample=Image.BICUBIC)
+            pw, ph = img.size
+            rotated = True
         if pw > sheet_w_px:
             r = sheet_w_px / pw
-            p = p.resize((sheet_w_px, max(1, int(ph * r))), Image.LANCZOS)
-            pw, ph = p.size
-        prepared.append(p)
+            img = img.resize((sheet_w_px, max(1, int(ph * r))), Image.LANCZOS)
+            pw, ph = img.size
+        prepared.append({'image': img, 'item': item, 'rotated': rotated, 'w': pw, 'h': ph})
 
-    # 2) 높이 내림차순 정렬 (shelf packing 효율)
-    prepared.sort(key=lambda x: -x.size[1])
+    # 2) 높이 내림차순 정렬
+    prepared.sort(key=lambda e: -e['h'])
 
     # 3) Shelf packing
-    placements = []   # (poster, x, y)
+    placements = []
     cur_x = 0
     cur_y = 0
     cur_shelf_h = 0
-    for p in prepared:
-        pw, ph = p.size
-        if cur_x + pw > sheet_w_px:
-            # 새 shelf
+    for e in prepared:
+        if cur_x + e['w'] > sheet_w_px:
             cur_y += cur_shelf_h + padding_px
             cur_x = 0
             cur_shelf_h = 0
-        placements.append((p, cur_x, cur_y))
-        cur_x += pw + padding_px
-        cur_shelf_h = max(cur_shelf_h, ph)
+        placements.append({
+            'image': e['image'],
+            'item': e['item'],
+            'x': cur_x, 'y': cur_y,
+            'w': e['w'], 'h': e['h'],
+            'rotated': e['rotated'],
+        })
+        cur_x += e['w'] + padding_px
+        cur_shelf_h = max(cur_shelf_h, e['h'])
 
     total_h_px = cur_y + cur_shelf_h
     if total_h_px <= 0:
         raise ValueError('빈 시트 — 합성할 항목 없음')
 
-    sheet = Image.new('RGB', (sheet_w_px, total_h_px), 'white')
-    for p, x, y in placements:
-        sheet.paste(p, (x, y))
+    return {
+        'sheet_w_px': sheet_w_px,
+        'sheet_h_px': total_h_px,
+        'placements': placements,
+    }
+
+
+def render_nest_sheet(nest_result: dict) -> 'Image.Image':
+    """placements 를 흰 시트에 합성 → 인쇄 가능한 TIFF."""
+    sheet = Image.new('RGB',
+                       (nest_result['sheet_w_px'], nest_result['sheet_h_px']),
+                       'white')
+    for p in nest_result['placements']:
+        img = p['image']
+        if img.mode == 'RGBA':
+            sheet.paste(img, (p['x'], p['y']), img)
+        else:
+            sheet.paste(img, (p['x'], p['y']))
     return sheet
+
+
+# ─── 칼선/돔보 SVG 생성 (Illustrator 호환 레이어) ──────────────
+def _px_to_mm(px: float, dpi: int) -> float:
+    return round(px * 25.4 / dpi, 3)
+
+
+def render_cut_svg(nest_result: dict, order_id, manager_name: str, dpi: int,
+                    tombow_mm: float = 5.0,
+                    tombow_offset_mm: float = 5.0) -> str:
+    """칼선/돔보/라벨 3-레이어 SVG (Illustrator 호환).
+    좌표는 mm 단위. <g id="..."> 가 Illustrator 레이어로 인식됨."""
+    sheet_w_mm = _px_to_mm(nest_result['sheet_w_px'], dpi)
+    sheet_h_mm = _px_to_mm(nest_result['sheet_h_px'], dpi)
+    radius_mm = tombow_mm / 2.0
+
+    lines = []
+    lines.append('<?xml version="1.0" encoding="UTF-8" standalone="no"?>')
+    lines.append(f'<svg xmlns="http://www.w3.org/2000/svg" '
+                 f'xmlns:xlink="http://www.w3.org/1999/xlink" '
+                 f'xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" '
+                 f'width="{sheet_w_mm}mm" height="{sheet_h_mm}mm" '
+                 f'viewBox="0 0 {sheet_w_mm} {sheet_h_mm}">')
+
+    # 메타 — 주문 정보
+    lines.append(f'  <title>Cotton Print Cut Layer — Order #{order_id} · {manager_name}</title>')
+    lines.append(f'  <desc>Generated by compose_fabric.py</desc>')
+
+    # 레이어 1: 칼선 (붉은색 윤곽선)
+    lines.append('  <g id="칼선" inkscape:groupmode="layer" inkscape:label="칼선" '
+                 'style="display:inline">')
+    for p in nest_result['placements']:
+        x_mm = _px_to_mm(p['x'], dpi)
+        y_mm = _px_to_mm(p['y'], dpi)
+        w_mm = _px_to_mm(p['w'], dpi)
+        h_mm = _px_to_mm(p['h'], dpi)
+        lines.append(f'    <rect x="{x_mm}" y="{y_mm}" '
+                     f'width="{w_mm}" height="{h_mm}" '
+                     f'stroke="#ff0000" fill="none" stroke-width="0.25"/>')
+    lines.append('  </g>')
+
+    # 레이어 2: 돔보마크 (검정 원, 4 모서리)
+    lines.append('  <g id="돔보" inkscape:groupmode="layer" inkscape:label="돔보" '
+                 'style="display:inline">')
+    for p in nest_result['placements']:
+        x_mm = _px_to_mm(p['x'], dpi)
+        y_mm = _px_to_mm(p['y'], dpi)
+        w_mm = _px_to_mm(p['w'], dpi)
+        h_mm = _px_to_mm(p['h'], dpi)
+        # 4 모서리 — edge_offset_mm 떨어진 위치 (원의 중심은 offset + radius)
+        cx_l = x_mm + tombow_offset_mm + radius_mm
+        cx_r = x_mm + w_mm - tombow_offset_mm - radius_mm
+        cy_t = y_mm + tombow_offset_mm + radius_mm
+        cy_b = y_mm + h_mm - tombow_offset_mm - radius_mm
+        for cx, cy in [(cx_l, cy_t), (cx_r, cy_t), (cx_l, cy_b), (cx_r, cy_b)]:
+            lines.append(f'    <circle cx="{cx}" cy="{cy}" r="{radius_mm}" '
+                         f'fill="#000000"/>')
+    lines.append('  </g>')
+
+    # 레이어 3: 라벨/바코드 (재질·고객명·주문번호 텍스트)
+    lines.append('  <g id="라벨" inkscape:groupmode="layer" inkscape:label="라벨" '
+                 'style="display:inline">')
+    for p in nest_result['placements']:
+        x_mm = _px_to_mm(p['x'], dpi)
+        y_mm = _px_to_mm(p['y'], dpi) + _px_to_mm(p['h'], dpi) + 3.0
+        item = p['item']
+        fabric = fabric_to_korean(item.get('fabric') or '').strip()
+        for sep in ('—', '-', '·'):
+            if sep in fabric:
+                fabric = fabric.split(sep, 1)[0].strip()
+                break
+        pname = (item.get('product_name') or '').replace('<', '&lt;').replace('>', '&gt;').replace('&', '&amp;')
+        # 작품명
+        work = ''
+        for sep in ('—', '-'):
+            if sep in pname:
+                work = pname.split(sep, 1)[1].strip()[:40]
+                break
+        rot_txt = ' (회전)' if p['rotated'] else ''
+        line1 = f'재질: {fabric}  ·  고객: {manager_name}  ·  주문 #{order_id}{rot_txt}'
+        if work:
+            line2 = f'작품: {work}'
+        else:
+            line2 = ''
+        # 라벨 텍스트
+        lines.append(f'    <text x="{x_mm}" y="{y_mm}" font-family="Malgun Gothic, sans-serif" '
+                     f'font-size="3.5" fill="#000000">{line1}</text>')
+        if line2:
+            lines.append(f'    <text x="{x_mm}" y="{y_mm + 4.5}" font-family="Malgun Gothic, sans-serif" '
+                         f'font-size="3" fill="#333333">{line2}</text>')
+    lines.append('  </g>')
+
+    lines.append('</svg>')
+    return '\n'.join(lines)
+
+
+# ─── 호환 래퍼 (기존 호출자 보존) ────────────────────────────
+def nest_posters_on_sheet(posters: list, sheet_width_cm: float, dpi: int,
+                           padding_cm: float = 0.5) -> 'Image.Image':
+    """기존 시그니처용 래퍼 — placements 정보 없이 sheet 만 반환."""
+    items_data = [{'image': p, 'item': {}} for p in posters]
+    res = compute_nest_placements(items_data, sheet_width_cm, dpi, padding_cm)
+    return render_nest_sheet(res)
 
 
 # ─── 기본 상수 ──────────────────────────────────────────────────────
@@ -692,54 +829,59 @@ def process_poster_batch(order_id, targets, files, args, out_dir):
     saved = 0
     for fab_kr, group in groups.items():
         print(f"\n  ── [{fab_kr}] {len(group)}건 처리 중 ──")
-        # 각 항목 포스터 렌더링
-        posters = []
+        # 각 항목 포스터 이미지 렌더링 (이미지만 — 인쇄 레이어용)
+        items_data = []
         for idx, item in group:
             try:
                 print(f"  [{idx+1}] {item.get('product_name','')[:50]}")
-                poster = render_poster_item(item, order_id, manager_name,
-                                              args.dpi,
-                                              tombow_mm=tombow_mm if do_tombow else 0,
-                                              tombow_offset_mm=tombow_off,
-                                              label_height_mm=label_mm)
-                posters.append(poster)
+                # 인쇄용: 이미지만 (돔보/라벨/바코드는 별도 SVG 레이어로)
+                img = render_poster_item(item, order_id, manager_name,
+                                          args.dpi,
+                                          files=files, item_idx=idx,
+                                          image_only=True)
+                items_data.append({'image': img, 'item': item})
             except Exception as e:
                 print(f"    ❌ 스킵: {e}")
 
-        if not posters:
+        if not items_data:
             print(f"  [!] {fab_kr} 그룹에 처리 가능한 항목 없음")
             continue
 
-        # nest OR 항목별 개별 저장
-        if use_nest and len(posters) > 1:
-            print(f"  🧩 nest packing: {len(posters)}개 → {sheet_w_cm}cm 폭 시트")
-            sheet = nest_posters_on_sheet(posters, sheet_w_cm, args.dpi,
-                                            padding_cm=pad_cm)
-            # 시트 저장
-            mgr_safe = sanitize_filename(manager_name)[:20]
-            fab_safe = sanitize_filename(fab_kr)[:20]
-            fname = (f'포스터_{fab_safe}_{int(sheet_w_cm)}폭'
-                     f'_{mgr_safe}_{len(posters)}점_#{order_id}.{args.format}')
-            out_path = out_dir / fname
-            final_path = _save_image(sheet, out_path, args)
-            try:
-                size_mb = final_path.stat().st_size / (1024 * 1024)
-            except Exception:
-                size_mb = 0
-            print(f'  ✅ 시트 저장: {final_path.name}  '
-                  f'({sheet.size[0]}×{sheet.size[1]}px, {size_mb:.1f}MB)')
+        mgr_safe = sanitize_filename(manager_name)[:20]
+        fab_safe = sanitize_filename(fab_kr)[:20]
+
+        # nest packing — placements 계산
+        print(f"  🧩 nest packing: {len(items_data)}개 → {sheet_w_cm}cm 폭 시트")
+        nest_res = compute_nest_placements(items_data, sheet_w_cm,
+                                            args.dpi, padding_cm=pad_cm)
+
+        # 1) 인쇄 TIFF — 이미지 + 흰 배경 (돔보/라벨 없음)
+        print_sheet = render_nest_sheet(nest_res)
+        print_fname = (f'포스터_{fab_safe}_{int(sheet_w_cm)}폭'
+                       f'_{mgr_safe}_{len(items_data)}점_#{order_id}.{args.format}')
+        print_path = out_dir / print_fname
+        final_print = _save_image(print_sheet, print_path, args)
+        try:
+            size_mb = final_print.stat().st_size / (1024 * 1024)
+        except Exception:
+            size_mb = 0
+        print(f'  🖨️  인쇄 레이어: {final_print.name}  '
+              f'({print_sheet.size[0]}×{print_sheet.size[1]}px, {size_mb:.1f}MB)')
+        saved += 1
+
+        # 2) 칼선 SVG — 돔보 + 칼선 + 라벨 (Illustrator 호환 레이어)
+        if do_tombow or True:   # 항상 SVG 도 생성
+            svg_str = render_cut_svg(nest_res, order_id, manager_name, args.dpi,
+                                      tombow_mm=tombow_mm,
+                                      tombow_offset_mm=tombow_off)
+            svg_fname = (f'포스터_{fab_safe}_{int(sheet_w_cm)}폭'
+                         f'_{mgr_safe}_{len(items_data)}점_#{order_id}_칼선.svg')
+            svg_path = out_dir / svg_fname
+            svg_path.write_text(svg_str, encoding='utf-8')
+            svg_kb = svg_path.stat().st_size / 1024
+            print(f'  ✂️  칼선 레이어: {svg_path.name}  ({svg_kb:.1f}KB · '
+                  f'Illustrator/Inkscape 에서 [칼선] [돔보] [라벨] 레이어로 열림)')
             saved += 1
-        else:
-            # 항목별 개별 저장
-            for i, poster in enumerate(posters):
-                mgr_safe = sanitize_filename(manager_name)[:20]
-                fab_safe = sanitize_filename(fab_kr)[:20]
-                fname = (f'포스터_{fab_safe}_{mgr_safe}_{i+1}_#{order_id}.'
-                         f'{args.format}')
-                out_path = out_dir / fname
-                final_path = _save_image(poster, out_path, args)
-                print(f'    ✅ {final_path.name}')
-                saved += 1
 
     return saved
 
