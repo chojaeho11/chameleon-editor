@@ -1623,6 +1623,8 @@ window._tcmFallbackClick = function(code) {
                 display:flex;
                 flex-direction:column;
                 justify-content:center;
+                align-items:center;       /* 모든 자식 가운데 정렬 */
+                text-align:center;
                 z-index:2;
             }
             .hc-tag {
@@ -1638,7 +1640,6 @@ window._tcmFallbackClick = function(code) {
                 border:1px solid rgba(255,255,255,0.8);
                 border-radius:999px;
                 margin-bottom:22px;
-                width:fit-content;
                 backdrop-filter:blur(8px);
                 -webkit-backdrop-filter:blur(8px);
             }
@@ -1650,6 +1651,7 @@ window._tcmFallbackClick = function(code) {
                 letter-spacing:-0.025em;
                 margin:0 0 18px;
                 color:var(--accent);
+                text-align:center;
             }
             .hc-sub {
                 font-family:'Pretendard Variable', sans-serif;
@@ -1659,7 +1661,8 @@ window._tcmFallbackClick = function(code) {
                 color:var(--txt);
                 opacity:0.85;
                 margin:0 0 30px;
-                max-width:380px;
+                max-width:none;
+                text-align:center;
             }
             .hc-cta {
                 display:inline-flex;
@@ -1787,9 +1790,11 @@ window._tcmFallbackClick = function(code) {
                     position:absolute;
                     left:0; top:0; bottom:0;
                     width:62%;
-                    padding:22px 18px;
+                    padding:22px 12px;
                     z-index:3;
                     justify-content:center;
+                    align-items:center;
+                    text-align:center;
                     background:none;
                 }
                 .hc-tag {
@@ -3716,13 +3721,15 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(advisorPanel);
     }
 
-    // 2026-05-13: 매니저 견적 카드는 hero-section 내부 자식이라 별도 reorder 불필요 (자동으로 hero 와 함께)
+    // 2026-06-11: mgrQuoteHero (6 버튼) 를 hero-section 바로 다음으로 이동 — 다른 섹션들이 위로 올라오기 전에
     // 2026-06-04: 3 바로가기 버튼(advShortcutBtns) 은 푸터 위로 영구 이동 — reorder 안 함
-    // 히어로 바로 다음: [매니저 견적 결제 배너] → 안내 섹션 → AI 디자인 → 챗봇
+    var mgrHero = document.getElementById('mgrQuoteHero');
     var aiDesignHero = document.getElementById('aiDesignHero');
     var pendingBanner = document.getElementById('pendingQuoteBanner');
     var freeDelivNotice = document.getElementById('freeDeliveryNotice');
     var cursor = hero;
+    // ★ 6 버튼 카드를 가장 먼저 hero 바로 뒤에 — 모바일에서 가려지지 않도록
+    if (mgrHero) { moveAfter(mgrHero, cursor); cursor = mgrHero; }
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
     if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
