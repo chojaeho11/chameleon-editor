@@ -70,7 +70,7 @@ echo.
 echo  [3/5] Downloading files (please wait)...
 cd /d "%INSTALL_DIR%"
 
-for %%F in (gui.py compose_fabric.py Cotton_Print_생성.bat) do (
+for %%F in (gui.py compose_fabric.py Cotton_Print.bat) do (
     echo       Downloading %%F ...
     powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri '%BASE_URL%/%%F?t=%RANDOM%' -OutFile '%%F' -UseBasicParsing -TimeoutSec 30 } catch { exit 1 }" 2>nul
     if not exist "%%F" (
@@ -106,7 +106,7 @@ REM --- 5) Create Desktop Shortcut ----------------------------
 echo.
 echo  [5/5] Creating Desktop shortcut...
 set "SHORTCUT=%USERPROFILE%\Desktop\Cotton Print.lnk"
-set "TARGET=%INSTALL_DIR%\Cotton_Print_생성.bat"
+set "TARGET=%INSTALL_DIR%\Cotton_Print.bat"
 
 powershell -NoProfile -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('%SHORTCUT%'); $s.TargetPath='%TARGET%'; $s.WorkingDirectory='%INSTALL_DIR%'; $s.IconLocation='%SystemRoot%\System32\imageres.dll,68'; $s.Description='Cotton Print Fabric Composer'; $s.Save()" 2>nul
 if exist "%SHORTCUT%" (
@@ -123,7 +123,7 @@ echo  ============================================================
 echo.
 echo    How to use:
 echo    1. Double-click "Cotton Print" shortcut on Desktop
-echo       OR open %INSTALL_DIR%\Cotton_Print_생성.bat
+echo       OR open %INSTALL_DIR%\Cotton_Print.bat
 echo    2. Enter order number in GUI
 echo    3. Click "Generate Print Data"
 echo.
