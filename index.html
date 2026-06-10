@@ -1775,7 +1775,8 @@ window._tcmFallbackClick = function(code) {
                     margin:0 12px !important;
                 }
                 /* 모바일에선 peek 카드 안 보이게 — 활성 슬라이드만 표시 */
-                .hc-slide { border-radius:18px; }
+                .hc-slide { border-radius:18px; box-shadow:none !important; }
+                .hc-slide.is-active { box-shadow:0 6px 14px -8px rgba(15,23,42,0.12) !important; }
                 .hc-slide.is-prev, .hc-slide.is-next {
                     opacity:0 !important;
                     transform:scale(0.9) translateX(0) !important;
@@ -1924,21 +1925,23 @@ window._tcmFallbackClick = function(code) {
                 background:linear-gradient(135deg, #fce7f3, #f472b6) !important; color:#831843 !important;
             }
             @media (max-width: 700px) {
-                #mgrQuoteHero { margin:16px auto 20px !important; padding:0 14px !important; }
+                /* 2026-06-11: 모바일에서도 6 버튼 1줄로 배치 + 캐러셀과 갭 최소화 */
+                #mgrQuoteHero { margin:4px auto 12px !important; padding:0 10px !important; min-height:0 !important; }
                 #mgrActionsGrid {
-                    grid-template-columns:repeat(3, 1fr) !important;
-                    gap:10px !important;
+                    grid-template-columns:repeat(6, 1fr) !important;
+                    gap:6px !important;
                 }
                 #mgrActionsGrid .mgr-action {
-                    padding:12px 6px !important;
-                    gap:8px !important;
-                    border-radius:14px !important;
+                    padding:8px 2px !important;
+                    gap:5px !important;
+                    border-radius:12px !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:46px !important; height:46px !important; font-size:20px !important;
-                    border-radius:14px !important;
+                    width:36px !important; height:36px !important; font-size:15px !important;
+                    border-radius:11px !important;
                 }
-                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:12px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:15px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:10.5px !important; line-height:1.15 !important; }
             }
             /* 공통 모달 (전화 + 상담후금액주문) */
             .mgr-modal {
