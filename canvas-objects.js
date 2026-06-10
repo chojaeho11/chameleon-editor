@@ -1,6 +1,6 @@
-import { canvas } from "./canvas-core.js?v=292";
-import { updateLockUI } from "./canvas-utils.js?v=292";
-import { sb, currentUser } from "./config.js?v=292";
+import { canvas } from "./canvas-core.js?v=293";
+import { updateLockUI } from "./canvas-utils.js?v=293";
+import { sb, currentUser } from "./config.js?v=293";
 
 // ============================================================
 // [설정] 현재 사이트 언어 및 폰트 변수
@@ -1245,14 +1245,17 @@ function initSelectionEffects() {
 
 function syncSelectionUI() {
     updateLockUI();
-    const active = canvas.getActiveObject();
+    // 2026-06-10: window.canvas 폴백 + 가드 (canvas-utils.updateLockUI 와 동일 패턴)
+    const c = canvas || window.canvas;
+    if (!c || typeof c.getActiveObject !== 'function') return;
+    const active = c.getActiveObject();
     if (!active) return;
-    
+
     let target = active;
     if (active.isOutlineGroup || active.isEffectGroup) {
         target = active.getObjects().find(o => o.isMainText) || active.getObjects()[0] || active;
     }
-    
+
     const strokeInput = document.getElementById("globalStroke");
     if(strokeInput) strokeInput.value = target.strokeWidth || 0;
 }

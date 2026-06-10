@@ -1,8 +1,8 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb as _importedSb, currentUser } from "./config.js?v=292";
-import { canvas } from "./canvas-core.js?v=292";
-import { applySize } from "./canvas-size.js?v=292";
+import { sb as _importedSb, currentUser } from "./config.js?v=293";
+import { canvas } from "./canvas-core.js?v=293";
+import { applySize } from "./canvas-size.js?v=293";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
@@ -493,8 +493,12 @@ async function loadTemplatePage(pageIndex) {
                     category: item.category,
                     product_key: item.product_key || 'custom'
                 };
+                // window 에도 노출 — useSelectedTemplate 가 window.selectedTpl 폴백 사용
+                window.selectedTpl = selectedTpl;
 
-                if (e.target.classList.contains('btn-use-mini')) useSelectedTemplate();
+                // 2026-06-10: 카드 한 번 클릭으로 바로 적용 (이전엔 카드 선택 + Apply Now 2클릭 필요)
+                // btn-use-mini 클릭이든 일반 카드 클릭이든 동일 동작.
+                useSelectedTemplate();
             };
             grid.appendChild(card);
         });
@@ -606,14 +610,106 @@ function renderPaginationControls(isEnabled, dataCount = 0, limit = 12) {
 
 async function useSelectedTemplate() {
     if (!selectedTpl) { showToast("Please select a template.", "info"); return; }
-    
-    const objects = canvas.getObjects().filter(o => !o.isBoard);
-    
+
+    // 2026-06-10: 대지(board) 없으면 사이즈 입력 모달 띄우고 만들어주기 → 그 다음 템플릿 적용
+    const c = window.canvas || canvas;
+    if (c) {
+        const hasBoard = c.getObjects().some(o => o.isBoard);
+        if (!hasBoard) {
+            _showQuickSizeDialog();
+            return;
+        }
+    }
+
+    const objects = c ? c.getObjects().filter(o => !o.isBoard) : [];
     if (objects.length > 0) {
         document.getElementById("templateActionModal").style.display = "flex";
     } else {
         processLoad('replace');
     }
+}
+
+// 2026-06-10: 사이즈 빠른 입력 다이얼로그 — 대지 만들고 자동 템플릿 적용
+function _showQuickSizeDialog() {
+    let modal = document.getElementById('quickSizeModal');
+    if (modal) modal.remove();
+    modal = document.createElement('div');
+    modal.id = 'quickSizeModal';
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:30000; display:flex; align-items:center; justify-content:center;';
+    const lang = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+    const T = {
+        KR: { title:'📏 어떤 크기로 만들까요?', sub:'사이즈를 입력하면 대지가 자동 생성되고 템플릿이 적용됩니다.', w:'가로 (mm)', h:'세로 (mm)', presets:'프리셋', custom:'직접 입력', apply:'대지 만들고 템플릿 적용', cancel:'취소' },
+        JP: { title:'📏 サイズを入力してください', sub:'入力サイズで台紙が作成され、テンプレートが適用されます。', w:'横 (mm)', h:'縦 (mm)', presets:'プリセット', custom:'手動入力', apply:'台紙作成 + テンプレート適用', cancel:'キャンセル' },
+        US: { title:'📏 What size?', sub:'A board will be created with the given size and the template applied.', w:'Width (mm)', h:'Height (mm)', presets:'Presets', custom:'Custom', apply:'Create board + apply template', cancel:'Cancel' }
+    };
+    const t = T[lang] || T.KR;
+    const presets = [
+        { name:'A4', w:210, h:297 },
+        { name:'A3', w:297, h:420 },
+        { name:'A2', w:420, h:594 },
+        { name:'명함', w:90, h:55 },
+        { name:'500×500', w:500, h:500 },
+        { name:'1000×1000', w:1000, h:1000 },
+    ];
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:16px; padding:24px 28px; width:480px; max-width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.35); font-family:inherit;">
+            <h3 style="margin:0 0 6px; font-size:18px; color:#1e293b;">${t.title}</h3>
+            <p style="margin:0 0 18px; font-size:13px; color:#64748b; line-height:1.5;">${t.sub}</p>
+            <div style="font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">${t.presets}</div>
+            <div id="qsmPresets" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:16px;">
+                ${presets.map(p => `<button class="qsm-preset" data-w="${p.w}" data-h="${p.h}" style="padding:9px 6px; border:1.5px solid #e2e8f0; background:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; color:#334155;">${p.name}<br><span style="font-size:10px; color:#94a3b8; font-weight:400;">${p.w}×${p.h}mm</span></button>`).join('')}
+            </div>
+            <div style="font-size:12px; font-weight:700; color:#334155; margin-bottom:6px;">${t.custom}</div>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:18px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:11px; color:#64748b; margin-bottom:3px;">${t.w}</label>
+                    <input id="qsmW" type="number" min="20" max="3000" value="500" style="width:100%; padding:9px 11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit;">
+                </div>
+                <div style="padding-top:18px; color:#94a3b8; font-size:14px;">×</div>
+                <div style="flex:1;">
+                    <label style="display:block; font-size:11px; color:#64748b; margin-bottom:3px;">${t.h}</label>
+                    <input id="qsmH" type="number" min="20" max="3000" value="500" style="width:100%; padding:9px 11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-family:inherit;">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="qsmCancel" style="padding:10px 18px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600;">${t.cancel}</button>
+                <button id="qsmApply" style="padding:10px 22px; border:none; background:#6366f1; color:#fff; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700;">${t.apply}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    // 프리셋 클릭 → 입력값 갱신
+    modal.querySelectorAll('.qsm-preset').forEach(b => {
+        b.onclick = () => {
+            modal.querySelector('#qsmW').value = b.dataset.w;
+            modal.querySelector('#qsmH').value = b.dataset.h;
+            modal.querySelectorAll('.qsm-preset').forEach(x => { x.style.borderColor = '#e2e8f0'; x.style.background = '#fff'; });
+            b.style.borderColor = '#6366f1';
+            b.style.background = '#eef2ff';
+        };
+    });
+
+    modal.querySelector('#qsmCancel').onclick = () => modal.remove();
+    modal.querySelector('#qsmApply').onclick = async () => {
+        const w_mm = parseInt(modal.querySelector('#qsmW').value, 10);
+        const h_mm = parseInt(modal.querySelector('#qsmH').value, 10);
+        if (!w_mm || !h_mm || w_mm < 20 || h_mm < 20) {
+            showToast('사이즈를 정확히 입력해주세요 (20mm 이상)', 'warn');
+            return;
+        }
+        modal.remove();
+        // mm → px (300dpi)
+        const PX_PER_MM = 300 / 25.4;
+        const w_px = Math.round(w_mm * PX_PER_MM);
+        const h_px = Math.round(h_mm * PX_PER_MM);
+        try {
+            if (typeof window.applySize === 'function') {
+                window.applySize(w_px, h_px, `Custom ${w_mm}×${h_mm}mm`, 'standard', 'replace');
+            }
+        } catch(e) { console.warn('[qsm applySize]', e); }
+        // 대지 생성 후 템플릿 적용
+        setTimeout(() => processLoad('replace'), 400);
+    };
 }
 
 // [최종 수정] 템플릿 로드 함수 (구형 데이터 잠금 해제 패치)
