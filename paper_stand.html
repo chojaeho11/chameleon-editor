@@ -1723,6 +1723,54 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- 상품 로딩 스크립트 -->
 <script src="paper_stand.js?v=188"></script>
 
+<!-- 2026-06-10: ChannelTalk 위젯 — KR 언어에서만 부팅 + 모바일 가시성 강제 -->
+<script>
+(function(){
+    var host = location.hostname || '';
+    var u = new URLSearchParams(location.search);
+    var explicit = u.get('lang');
+    var lang;
+    if (explicit) lang = explicit.toLowerCase();
+    else if (host.indexOf('cafe0101') >= 0) lang = 'ja';
+    else if (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) lang = 'en';
+    else lang = (window.CURRENT_LANG || 'kr').toLowerCase();
+    if (lang !== 'kr' && lang !== 'ko') return;
+
+    var w = window;
+    if (w.ChannelIO) return;
+    var ch = function(){ ch.c(arguments); };
+    ch.q = [];
+    ch.c = function(a){ ch.q.push(a); };
+    w.ChannelIO = ch;
+    function l(){
+        if (w.ChannelIOInitialized) return;
+        w.ChannelIOInitialized = true;
+        var s = document.createElement('script');
+        s.type = 'text/javascript'; s.async = true;
+        s.src = 'https://cdn.channel.io/plugin/ch-plugin-web.js';
+        var x = document.getElementsByTagName('script')[0];
+        if (x && x.parentNode) x.parentNode.insertBefore(s, x);
+        else document.head.appendChild(s);
+    }
+    if (document.readyState === 'complete') l();
+    else if (w.attachEvent) w.attachEvent('onload', l);
+    else { w.addEventListener('DOMContentLoaded', l, false); w.addEventListener('load', l, false); }
+    ChannelIO('boot', {
+        pluginKey: '752ba9ff-a447-4e10-9813-715e051995cd',
+        language: 'ko',
+        appearance: 'light'
+    });
+})();
+</script>
+<style>
+#ch-plugin, [id^="ch-plugin"] { z-index:2147483600 !important; opacity:1 !important; visibility:visible !important; pointer-events:auto !important; }
+#ch-plugin iframe, [id^="ch-plugin"] iframe { opacity:1 !important; visibility:visible !important; background-color:#fff !important; }
+@media (max-width:768px) {
+    #ch-plugin [class*="MessengerWrapper"], #ch-plugin [class*="messenger"] {
+        position:fixed !important; inset:0 !important; opacity:1 !important; background-color:#fff !important;
+    }
+}
+</style>
 
 </body>
 </html>
