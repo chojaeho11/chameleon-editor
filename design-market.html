@@ -5676,15 +5676,25 @@ async function submitRequest() {
     const phone = document.getElementById('postPhone').value.trim();
     // 2026-06-04: 의뢰 국가 = 사용자 국가 강제 (사용자가 선택한 값 무시).
     //   "한국 의뢰는 한국인만 / 해외 의뢰는 해당 국가 사람만" 정책 일관성.
+    // 2026-06-10: admin 은 postCountry 선택값 사용 (cross-country 의뢰 등록 가능),
+    //   또는 현재 도메인 (detectDefaultCountry) 우선 — profile.site 가 잘못된 경우 대비.
     let userCountry = '';
+    let userRole = '';
     try {
         const u = await sb.auth.getUser();
         const uid = u && u.data && u.data.user && u.data.user.id;
         if (uid) {
-            const { data: prof } = await sb.from('profiles').select('site').eq('id', uid).maybeSingle();
+            const { data: prof } = await sb.from('profiles').select('site,role').eq('id', uid).maybeSingle();
             if (prof && prof.site) userCountry = prof.site;
+            if (prof && prof.role) userRole = prof.role;
         }
     } catch (e) {}
+    // admin 은 현재 사이트 또는 postCountry 선택값 사용 (profile.site 우회)
+    if (userRole === 'admin') {
+        const selEl = document.getElementById('postCountry');
+        const selVal = selEl ? selEl.value : '';
+        userCountry = selVal || detectDefaultCountry() || userCountry || 'KR';
+    }
     if (!userCountry && designerProfile && designerProfile.country) userCountry = designerProfile.country;
     if (!userCountry) userCountry = detectDefaultCountry() || 'KR';
     const country = userCountry;
