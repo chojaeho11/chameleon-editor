@@ -1033,7 +1033,7 @@ window._tcmFallbackClick = function(code) {
                         <p class="hc-sub">팝업·전시·매장 진열용<br>친환경 종이로 부담 없이</p>
                         <a href="/paper_stand" class="hc-cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/paper_stand_hero.jpg" alt="종이매대" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1774978114372_20260401_012118.png" alt="종이매대" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 4. 굿즈 / 키링 — 파스텔 핑크 -->
                 <article class="hc-slide" data-slide="3" style="--bg:#fce7f3; --bg2:#fbcfe8; --txt:#9d174d; --accent:#831843;">
@@ -1103,7 +1103,15 @@ window._tcmFallbackClick = function(code) {
             var INTERVAL = 3000;
 
             function show(idx){
-                slides.forEach(function(s, i){ s.classList.toggle('is-active', i === idx); });
+                var n = slides.length;
+                var prevIdx = (idx - 1 + n) % n;
+                var nextIdx = (idx + 1) % n;
+                slides.forEach(function(s, i){
+                    s.classList.remove('is-active', 'is-prev', 'is-next');
+                    if (i === idx) s.classList.add('is-active');
+                    else if (i === prevIdx) s.classList.add('is-prev');
+                    else if (i === nextIdx) s.classList.add('is-next');
+                });
                 dots.forEach(function(d, i){ d.classList.toggle('is-active', i === idx); });
                 current = idx;
             }
@@ -1448,40 +1456,44 @@ window._tcmFallbackClick = function(code) {
                2026-06-11: 카테고리 캐러셀 + 깔끔한 6 아이콘 버튼
                ════════════════════════════════════════════════════════════════ */
             .hero-video, .hero-deco-line, .hero-video-overlay { display:none !important; }
-            /* hero-section — 라이트 배경, 카루셀 컨테이너 (오버랩 방지 위해 명시적 z-index/space) */
+            /* hero-section — peek 카드 위해 padding 키우고 overflow visible */
             .hero-section {
                 background:linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%) !important;
                 min-height:auto !important;
                 height:auto !important;
-                padding:24px 20px 24px !important;
+                padding:48px 20px 32px !important;
                 display:block !important;
                 position:relative !important;
-                overflow:visible !important;
+                overflow:hidden !important;
                 z-index:2 !important;
                 margin-bottom:0 !important;
             }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
-                max-width:1100px;
-                margin:0 auto 0 max(24px, calc((100vw - 1400px) / 2));
+                max-width:900px;
+                margin:0 auto;
                 position:relative;
-                border-radius:24px;
-                overflow:hidden;
                 aspect-ratio:16/6;
-                background:#e0f2fe;
-                box-shadow:0 18px 40px -18px rgba(15,23,42,0.12), 0 6px 14px -6px rgba(15,23,42,0.08);
                 isolation:isolate;
                 z-index:1;
+                padding:0;
             }
-            .hc-track { position:absolute; inset:0; }
+            .hc-track {
+                position:relative;
+                width:100%; height:100%;
+                perspective:1200px;
+            }
             .hc-slide {
                 position:absolute; inset:0;
+                border-radius:24px;
                 opacity:0;
-                transform:scale(1.02);
-                transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.9s cubic-bezier(0.4,0,0.2,1);
+                transform:scale(0.78) translateX(0);
+                transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease;
                 pointer-events:none;
                 background:linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
                 overflow:hidden;
+                box-shadow:0 8px 20px -10px rgba(15,23,42,0.1);
+                z-index:1;
             }
             .hc-slide::before {
                 content:''; position:absolute; inset:0;
@@ -1492,9 +1504,20 @@ window._tcmFallbackClick = function(code) {
             }
             .hc-slide.is-active {
                 opacity:1;
-                transform:scale(1);
+                transform:scale(1) translateX(0);
                 pointer-events:auto;
-                z-index:1;
+                z-index:5;
+                box-shadow:0 24px 50px -20px rgba(15,23,42,0.22), 0 8px 18px -8px rgba(15,23,42,0.12);
+            }
+            .hc-slide.is-prev {
+                opacity:0.6;
+                transform:scale(0.86) translateX(-78%);
+                z-index:2;
+            }
+            .hc-slide.is-next {
+                opacity:0.6;
+                transform:scale(0.86) translateX(78%);
+                z-index:2;
             }
             .hc-content {
                 position:absolute;
@@ -1649,14 +1672,22 @@ window._tcmFallbackClick = function(code) {
             }
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section { padding:12px 12px 18px !important; display:block !important; }
+                .hero-section { padding:12px 12px 18px !important; display:block !important; overflow:hidden !important; }
                 .hero-carousel {
                     aspect-ratio:auto;
                     height:280px;
                     border-radius:18px;
                     display:block !important;
                     width:auto;
+                    max-width:100%;
                     margin:0 !important;
+                }
+                /* 모바일에선 peek 카드 안 보이게 — 활성 슬라이드만 표시 */
+                .hc-slide { border-radius:18px; }
+                .hc-slide.is-prev, .hc-slide.is-next {
+                    opacity:0 !important;
+                    transform:scale(0.9) translateX(0) !important;
+                    pointer-events:none !important;
                 }
                 .hc-content {
                     position:absolute;
