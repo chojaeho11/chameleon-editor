@@ -3720,6 +3720,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 2026-06-11: mgrQuoteHero (6 버튼) 를 hero-section 바로 다음으로 이동 — 다른 섹션들이 위로 올라오기 전에
+    // 2026-06-11: freeDelivNotice (FREE/SUMMER 2 칸 광고) 는 모든 상품 섹션 아래로 이동 — KR/JP/US 공통
     // 2026-06-04: 3 바로가기 버튼(advShortcutBtns) 은 푸터 위로 영구 이동 — reorder 안 함
     var mgrHero = document.getElementById('mgrQuoteHero');
     var aiDesignHero = document.getElementById('aiDesignHero');
@@ -3729,7 +3730,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ★ 6 버튼 카드를 가장 먼저 hero 바로 뒤에 — 모바일에서 가려지지 않도록
     if (mgrHero) { moveAfter(mgrHero, cursor); cursor = mgrHero; }
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
-    if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
@@ -3753,6 +3753,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // 영상1 (expositor4) → POPUP 영상 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
+
+    // 2026-06-11: 수도권 무료배송 + SUMMER SALE 2 칸 광고 — 상품 섹션 모두 아래로 이동 (KR/JP/US 공통)
+    if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
 
     // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
