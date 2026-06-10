@@ -1,5 +1,5 @@
-import { canvas } from "./canvas-core.js?v=293";
-import { addToCenter } from "./canvas-objects.js?v=293";
+import { canvas } from "./canvas-core.js?v=294";
+import { addToCenter } from "./canvas-objects.js?v=294";
 
 /* ─────────────────────────────────────────────
    Canva-style Floating Toolbar + Eraser + BG Remove
@@ -32,7 +32,10 @@ function getScreenBounds(obj) {
 function positionFloatingToolbar() {
     const tb = document.getElementById('imageFloatingToolbar');
     if (!tb) return;
-    const active = canvas.getActiveObject();
+    // 2026-06-10: window.canvas 폴백 + 가드
+    const c = canvas || window.canvas;
+    if (!c || typeof c.getActiveObject !== 'function') { tb.style.display = 'none'; return; }
+    const active = c.getActiveObject();
     if (!active || active.type !== 'image') { tb.style.display = 'none'; return; }
 
     const isMobile = window.innerWidth <= 768;
@@ -43,7 +46,7 @@ function positionFloatingToolbar() {
     tb.style.maxWidth = '';
 
     // ★ 대지(board) 바로 위에 고정
-    const board = canvas.getObjects().find(o => o.isBoard);
+    const board = c.getObjects().find(o => o.isBoard);
     const tbW = tb.offsetWidth;
     const tbH = tb.offsetHeight || 40;
     let left, top;

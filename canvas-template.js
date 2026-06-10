@@ -1,8 +1,8 @@
 /* canvas-template.js - 버튼 페이징 버전 */
 
-import { sb as _importedSb, currentUser } from "./config.js?v=293";
-import { canvas } from "./canvas-core.js?v=293";
-import { applySize } from "./canvas-size.js?v=293";
+import { sb as _importedSb, currentUser } from "./config.js?v=294";
+import { canvas } from "./canvas-core.js?v=294";
+import { applySize } from "./canvas-size.js?v=294";
 
 // ★ 모듈 바인딩 불일치 방어: import된 sb 또는 window.sb 사용
 function _getSb() { return _importedSb || window.sb; }
@@ -717,7 +717,24 @@ async function processLoad(mode) {
     if (!selectedTpl && window.selectedTpl) selectedTpl = window.selectedTpl;
     if (!selectedTpl) { showToast(window.t('msg_no_template_selected', "No template selected."), "info"); return; }
 
-    document.getElementById("templateActionModal").style.display = "none"; 
+    // 2026-06-10: 모듈 import { canvas } 가 undefined 인 race fix
+    //   applyStartTemplate 가 에디터 로드 직후 호출되면 canvas-core.initCanvas() 보다 먼저 실행되어
+    //   canvas.getObjects() 가 'Cannot read properties of undefined' 로 실패.
+    //   window.canvas 가 세팅될 때까지 최대 5초 polling.
+    let _waited = 0;
+    while ((!window.canvas || typeof window.canvas.getObjects !== 'function') && _waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        _waited += 200;
+    }
+    if (!window.canvas) {
+        showToast('캔버스가 아직 준비되지 않았습니다.', 'warn');
+        const _l = document.getElementById('loading'); if (_l) _l.style.display = 'none';
+        return;
+    }
+    // 함수 내부 const 로 shadowing — 이후 캔버스 참조는 항상 안전
+    const canvas = window.canvas;
+
+    document.getElementById("templateActionModal").style.display = "none";
     document.getElementById("templateOverlay").style.display = "none";
     document.getElementById("loading").style.display = "flex";
 
@@ -820,24 +837,31 @@ async function processLoad(mode) {
             const callback = (obj) => {
                 if(!obj) return;
                 applyTemplateSettings(obj);
-                
-                // 단일 이미지는 배경 모드면 잠금, 아니면 해제
-                if(isBgMode) {
-                    obj.set({ selectable: false, evented: false, isTemplateBackground: true,
-                        lockMovementX: true, lockMovementY: true, lockRotation: true,
-                        lockScalingX: true, lockScalingY: true, hasControls: false });
-                } else {
-                    obj.set({ selectable: true, evented: true, isTemplateBackground: false,
-                        lockMovementX: false, lockMovementY: false, lockRotation: false,
-                        lockScalingX: false, lockScalingY: false, hasControls: true });
-                }
+
+                // 2026-06-10: 사용자 요청 — 이미지 템플릿 (photo-bg 등 isBgLike 카테고리)
+                //   진입 시 자동으로 대지 배경 레이어로 깔리도록.
+                //   isBgMode 가 true 면 완전 잠금 (이전 동작).
+                //   isBgLike 만 true 면 배경으로 sendToBack 하되 사용자가 선택/이동 가능 (편집 가능).
+                const markAsBg = !!(isBgMode || isBgLike);
+                obj.set({
+                    selectable: !isBgMode,
+                    evented: !isBgMode,
+                    isTemplateBackground: markAsBg,
+                    lockMovementX: !!isBgMode,
+                    lockMovementY: !!isBgMode,
+                    lockRotation:  !!isBgMode,
+                    lockScalingX:  !!isBgMode,
+                    lockScalingY:  !!isBgMode,
+                    hasControls:   !isBgMode,
+                });
 
                 canvas.add(obj);
-                arrangeLayers();
-                if(!isBgMode) {
-                    canvas.setActiveObject(obj);
-                } else {
+                arrangeLayers();   // isTemplateBackground 인 항목 sendToBack
+                if (markAsBg) {
+                    // 배경 깔린 후 사용자가 바로 객체 추가할 수 있도록 활성화 해제
                     canvas.discardActiveObject();
+                } else {
+                    canvas.setActiveObject(obj);
                 }
                 canvas.requestRenderAll();
 

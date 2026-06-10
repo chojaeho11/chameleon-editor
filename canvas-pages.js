@@ -1,7 +1,7 @@
 ﻿/* canvas-pages.js */
-import { canvas } from "./canvas-core.js?v=293";
-import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=293";
-import { calculateBoxPrice } from "./box-nesting.js?v=293";
+import { canvas } from "./canvas-core.js?v=294";
+import { applySize, resizeCanvasToFit } from "./canvas-size.js?v=294";
+import { calculateBoxPrice } from "./box-nesting.js?v=294";
 
 // 페이지 데이터를 저장할 배열
 export let pageDataList = [];

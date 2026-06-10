@@ -238,7 +238,9 @@
       "Bash(powershell -Command \"\\(Get-Content simple_order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content simple_order.js -Encoding UTF8 -NoNewline; \\(Get-Content cotton_designer.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content cotton_designer.js -Encoding UTF8 -NoNewline; \\(Get-Content main.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content main.js -Encoding UTF8 -NoNewline; \\(Get-Content order.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content order.js -Encoding UTF8 -NoNewline; \\(Get-Content canvas-pages.js -Raw -Encoding UTF8\\) -replace 'export\\\\.js\\\\?v=435', 'export.js?v=436' | Set-Content canvas-pages.js -Encoding UTF8 -NoNewline\")",
       "Bash(git log *)",
       "Bash(head -25 *_칼선.svg)",
-      "Bash(head -25 *cut.svg)"
+      "Bash(head -25 *cut.svg)",
+      "Bash(sed -i 's/\\\\.js?v=293/\\\\.js?v=294/g' canvas-ai.js canvas-core.js canvas-guides.js canvas-icons.js canvas-image.js canvas-objects.js canvas-pages.js canvas-retouch.js canvas-size.js canvas-template.js canvas-utils.js canvas-zoom-pan.js context-menu.js export.js greeting-card-mode.js my-design.js ppt-mode.js shortcuts.js)",
+      "Bash(sed -i 's/canvas-template\\\\.js?v=293/canvas-template.js?v=294/g; s/canvas-utils\\\\.js?v=293/canvas-utils.js?v=294/g; s/canvas-objects\\\\.js?v=293/canvas-objects.js?v=294/g; s/canvas-retouch\\\\.js?v=434/canvas-retouch.js?v=294/g; s/canvas-image\\\\.js?v=434/canvas-image.js?v=294/g' main.js)"
     ],
     "additionalDirectories": [
       "\\tmp",

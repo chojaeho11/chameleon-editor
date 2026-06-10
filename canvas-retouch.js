@@ -1,6 +1,6 @@
 // canvas-retouch.js — AI 보정 패널 (고품질 필터 + AILab Tools 전체 API)
-import { canvas } from "./canvas-core.js?v=293";
-import { sb } from "./config.js?v=293";
+import { canvas } from "./canvas-core.js?v=294";
+import { sb } from "./config.js?v=294";
 
 // ==========================================================
 // 슬라이더 & 프리셋 정의
@@ -186,7 +186,10 @@ export function initRetouchTools() {
 // Selection 핸들러
 // ==========================================================
 function onSelectionChange() {
-    const obj = canvas.getActiveObject();
+    // 2026-06-10: window.canvas 폴백 + 가드 (canvas-utils 패턴 동일)
+    const c = canvas || window.canvas;
+    if (!c || typeof c.getActiveObject !== 'function') return;
+    const obj = c.getActiveObject();
     const noSel = document.getElementById('retouchNoSel');
     const controls = document.getElementById('retouchControls');
     if (obj && obj.type === 'image') {
