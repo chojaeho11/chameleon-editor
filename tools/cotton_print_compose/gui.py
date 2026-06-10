@@ -26,7 +26,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 
 
-__version__ = '2026.06.10.6'   # 포스터: 인쇄 TIFF(이미지) + 칼선 SVG(돔보/칼선/라벨 3-레이어, Illustrator호환) 분리 출력
+__version__ = '2026.06.10.7'   # 미완료 재질별 일괄 처리 + Guillotine packing + 시트 상단 배치 바코드
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'
@@ -213,17 +213,31 @@ class CottonPrintGUI:
                   cursor='hand2', padx=10, pady=4,
                   command=self._reset_output).pack(side='left')
 
-        # ─── 생성 버튼 ───
-        self.gen_btn = tk.Button(main, text='🎨   인쇄 데이터 생성   ',
-                                 font=('Segoe UI', 14, 'bold'),
+        # ─── 생성 + 배치 버튼 (가로 배치) ───
+        btn_row = tk.Frame(main, bg=C_BG)
+        btn_row.pack(fill='x', pady=(4, 10))
+
+        self.gen_btn = tk.Button(btn_row, text='🎨   주문번호 생성   ',
+                                 font=('Segoe UI', 13, 'bold'),
                                  bg=C_ACCENT, fg='#fff',
                                  activebackground=C_BROWN,
                                  activeforeground=C_GOLD,
                                  relief='flat', bd=0,
-                                 padx=20, pady=14,
+                                 padx=14, pady=12,
                                  cursor='hand2',
                                  command=self._on_generate)
-        self.gen_btn.pack(fill='x', pady=(4, 10))
+        self.gen_btn.pack(side='left', fill='x', expand=True, padx=(0, 6))
+
+        self.batch_btn = tk.Button(btn_row, text='📋   미완료 재질별 일괄 처리   ',
+                                   font=('Segoe UI', 13, 'bold'),
+                                   bg=C_BROWN_D, fg=C_GOLD,
+                                   activebackground=C_BROWN,
+                                   activeforeground='#fff',
+                                   relief='flat', bd=0,
+                                   padx=14, pady=12,
+                                   cursor='hand2',
+                                   command=self._on_open_batch_dialog)
+        self.batch_btn.pack(side='left', fill='x', expand=True)
 
         # 진행 바
         self.progress = ttk.Progressbar(main, mode='indeterminate', length=300)
@@ -485,6 +499,183 @@ class CottonPrintGUI:
         self._log('주문번호 입력 후 [인쇄 데이터 생성] 버튼을 누르세요.')
 
     # ─── 생성 ──────────────────────────────────────────────
+    # ─── 미완료 재질별 일괄 처리 ────────────────────────
+    def _on_open_batch_dialog(self):
+        """미완료 주문 fetch → 재질별 다이얼로그 표시."""
+        if self.is_running:
+            messagebox.showwarning('실행 중', '먼저 현재 작업이 끝나기를 기다려주세요.')
+            return
+        if not self.script_path.exists():
+            messagebox.showerror('스크립트 누락',
+                                 'compose_fabric.py 가 없습니다. [🔄 업데이트] 눌러주세요.')
+            return
+
+        self._log('')
+        self._log('=' * 60)
+        self._log('  📋 미완료 주문 fetch 중...')
+        self._set_status('🟡 미완료 주문 fetch 중...', C_WARN)
+        threading.Thread(target=self._fetch_pending_materials, daemon=True).start()
+
+    def _fetch_pending_materials(self):
+        """compose_fabric.py --list-pending-json 호출 → JSON 파싱."""
+        try:
+            env = dict(os.environ)
+            env['PYTHONIOENCODING'] = 'utf-8'
+            env['PYTHONUTF8'] = '1'
+            kwargs = {
+                'cwd': str(self.work_dir),
+                'env': env,
+                'capture_output': True,
+                'text': True,
+                'encoding': 'utf-8',
+                'errors': 'replace',
+                'timeout': 60,
+            }
+            if os.name == 'nt':
+                kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+            cmd = [sys.executable, str(self.script_path),
+                   '--list-pending-json', '--output-dir', str(self.output_dir)]
+            result = subprocess.run(cmd, **kwargs)
+            if result.returncode != 0:
+                raise RuntimeError(f'스크립트 실패 (코드 {result.returncode}):\n{result.stderr[:500]}')
+
+            # JSON 추출
+            import json as _json
+            output = result.stdout or ''
+            start_marker = '__PENDING_JSON_START__'
+            end_marker = '__PENDING_JSON_END__'
+            start = output.find(start_marker)
+            end = output.find(end_marker)
+            if start < 0 or end < 0:
+                raise RuntimeError(f'JSON 마커 못 찾음. 출력:\n{output[:500]}')
+            json_str = output[start + len(start_marker):end].strip()
+            data = _json.loads(json_str)
+
+            self.root.after(0, self._show_batch_dialog, data)
+        except Exception as e:
+            self.root.after(0, self._log, f'[X] 미완료 fetch 실패: {e}')
+            self.root.after(0, self._set_status, '🔴 실패', C_DANGER)
+            self.root.after(0, messagebox.showerror, '실패',
+                            f'미완료 주문을 불러오지 못했습니다.\n\n{e}')
+
+    def _show_batch_dialog(self, materials_data: list):
+        """재질별 목록 다이얼로그 — 각 행에 [처리] 버튼."""
+        self._set_status('🟢 준비됨', C_SUCCESS)
+        self._log(f'[OK] 미완료 재질 {len(materials_data)}종')
+
+        win = tk.Toplevel(self.root)
+        win.title('재질별 일괄 처리')
+        win.geometry('720x560')
+        win.minsize(640, 480)
+        win.configure(bg=C_BG)
+
+        # 헤더
+        head = tk.Frame(win, bg=C_BROWN_D, height=56)
+        head.pack(fill='x')
+        head.pack_propagate(False)
+        tk.Label(head, text='📋 미완료 패브릭포스터 — 재질별',
+                 font=('Segoe UI', 14, 'bold'),
+                 bg=C_BROWN_D, fg=C_GOLD).pack(side='left', padx=18, pady=14)
+        total_items = sum(m['item_count'] for m in materials_data)
+        total_orders = sum(m['order_count'] for m in materials_data)
+        tk.Label(head, text=f'총 {len(materials_data)} 재질  ·  {total_items}점  ·  {total_orders}건',
+                 font=('Segoe UI', 10),
+                 bg=C_BROWN_D, fg='#fef3c7').pack(side='right', padx=18)
+
+        # 스크롤 가능 리스트
+        canvas = tk.Canvas(win, bg=C_BG, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(win, orient='vertical', command=canvas.yview)
+        listframe = tk.Frame(canvas, bg=C_BG, padx=18, pady=12)
+        listframe.bind('<Configure>',
+                       lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        canvas.create_window((0, 0), window=listframe, anchor='nw')
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+
+        # 마우스 휠
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+        canvas.bind_all('<MouseWheel>', _on_mousewheel)
+
+        if not materials_data:
+            tk.Label(listframe, text='(미완료 패브릭포스터 항목 없음)',
+                     font=('Segoe UI', 11),
+                     bg=C_BG, fg=C_MUTED).pack(pady=20)
+        else:
+            # 항목수 내림차순
+            materials_sorted = sorted(materials_data, key=lambda m: -m['item_count'])
+            for mat in materials_sorted:
+                row = tk.Frame(listframe, bg='#fff', bd=1, relief='solid',
+                                padx=14, pady=10)
+                row.pack(fill='x', pady=4)
+
+                # 좌측: 재질명 + 메타
+                left = tk.Frame(row, bg='#fff')
+                left.pack(side='left', fill='x', expand=True)
+                tk.Label(left, text=mat['material'],
+                         font=('Segoe UI', 12, 'bold'),
+                         bg='#fff', fg=C_BROWN_D, anchor='w').pack(anchor='w')
+                meta_txt = (f"{mat['item_count']}점  ·  {mat['order_count']}건 주문  ·  "
+                            f"{','.join('#' + str(o) for o in mat['order_ids'][:6])}"
+                            + ('...' if len(mat['order_ids']) > 6 else ''))
+                tk.Label(left, text=meta_txt,
+                         font=('Consolas', 9),
+                         bg='#fff', fg=C_MUTED, anchor='w').pack(anchor='w')
+
+                # 우측: 처리 버튼
+                btn = tk.Button(row, text='🎨  처리  ',
+                                font=('Segoe UI', 10, 'bold'),
+                                bg=C_ACCENT, fg='#fff',
+                                activebackground=C_BROWN,
+                                relief='flat', bd=0,
+                                cursor='hand2', padx=16, pady=8,
+                                command=lambda m=mat['material']:
+                                    self._run_batch_material(m, win))
+                btn.pack(side='right', padx=8)
+
+        # 하단 닫기
+        btn_close = tk.Button(win, text='닫기',
+                               font=('Segoe UI', 10), bg=C_CREAM_D, fg=C_BROWN_D,
+                               bd=0, cursor='hand2', padx=20, pady=6,
+                               command=win.destroy)
+        btn_close.pack(pady=10)
+
+    def _run_batch_material(self, material: str, parent_win=None):
+        """선택된 재질의 미완료 항목을 모두 일괄 처리."""
+        if self.is_running:
+            messagebox.showwarning('실행 중', '먼저 현재 작업이 끝나기를 기다려주세요.')
+            return
+        if not messagebox.askyesno(
+                '일괄 처리 확인',
+                f'재질 "{material}" 의 모든 미완료 항목을 일괄 처리합니다.\n\n'
+                f'대용량 시트가 생성될 수 있습니다 (수십 MB ~ 수 GB).\n'
+                f'시간이 오래 걸릴 수 있습니다.\n\n계속하시겠습니까?'):
+            return
+        if parent_win:
+            try: parent_win.destroy()
+            except Exception: pass
+
+        cmd = [sys.executable, str(self.script_path),
+               '--batch-material', material,
+               '--format', self.format_var.get(),
+               '--dpi', self.dpi_var.get(),
+               '--output-dir', str(self.output_dir)]
+
+        self.is_running = True
+        self.gen_btn.config(state='disabled')
+        self.batch_btn.config(state='disabled', text='🔄   처리 중...   ')
+        self.progress.start(10)
+        self._set_status(f'🟡 일괄 처리 중: {material}', C_WARN)
+
+        self._log('')
+        self._log('=' * 60)
+        self._log(f'  📋 일괄 처리: {material}')
+        self._log('=' * 60)
+
+        threading.Thread(target=self._run_process,
+                         args=(cmd, f'batch-{material}'), daemon=True).start()
+
     def _on_generate(self):
         if self.is_running:
             messagebox.showwarning('실행 중',
@@ -575,21 +766,28 @@ class CottonPrintGUI:
         except Exception as e:
             self.root.after(0, self._on_failure, str(e))
 
+    def _reset_buttons(self):
+        self.gen_btn.config(state='normal', text='🎨   주문번호 생성   ')
+        self.batch_btn.config(state='normal', text='📋   미완료 재질별 일괄 처리   ')
+
     def _on_success(self, order_id):
         self.is_running = False
         self.progress.stop()
-        self.gen_btn.config(state='normal', text='🎨   인쇄 데이터 생성   ')
-        self._set_status(f'🟢 완료! 주문 #{order_id}', C_SUCCESS)
+        self._reset_buttons()
+        is_batch = isinstance(order_id, str) and order_id.startswith('batch-')
+        label = order_id[6:] if is_batch else f'#{order_id}'
+        self._set_status(f'🟢 완료! {label}', C_SUCCESS)
         self._log('')
         self._log('✅ 완료! output 폴더를 엽니다.')
         self._open_output()
-        self.order_entry.delete(0, 'end')
-        self.order_entry.focus_set()
+        if not is_batch:
+            self.order_entry.delete(0, 'end')
+            self.order_entry.focus_set()
 
     def _on_failure(self, msg):
         self.is_running = False
         self.progress.stop()
-        self.gen_btn.config(state='normal', text='🎨   인쇄 데이터 생성   ')
+        self._reset_buttons()
         self._set_status('🔴 실패', C_DANGER)
         self._log('')
         self._log(f'❌ 실패: {msg}')
