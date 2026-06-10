@@ -1182,17 +1182,20 @@ window._tcmFallbackClick = function(code) {
                 <div id="mgrQuoteTitle" style="font-size:17px; font-weight:900; color:#fde047; margin-bottom:6px; text-shadow:0 1px 6px rgba(0,0,0,0.3);">허니콤보드 업계 1위 카멜레온프린팅</div>
                 <div id="mgrQuoteDesc" style="font-size:12.5px; color:#fef9c3; line-height:1.55;">허니콤보드 직접생산과 수도권 순회 무료배송으로 더 저렴하게 이용하실 수 있게 최선을 다하겠습니다.</div>
             </div>
-            <!-- 2026-06-01: PC = auto-fit 가로 5열 / 모바일 = 2열 + 본사 풀폭 (media query 로 분기) -->
+            <!-- 2026-06-10: 매니저 자리 정리
+                 1) 좌:전화안내(모달) / 우:챗봇 채팅상담
+                 2) ★ VIP 개인결제 — 가장 prominent 한 CTA
+                 3) 견적 빠른주문 행 (금액+메모+주문하기) 모바일에서도 정렬
+                 전화 그리드는 화면에 직접 노출 안 함 — 모달 안으로 이동 -->
             <style>
-            #mgrPhoneList { display:none; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px; }
-            #mgrPhoneList.is-open { display:grid; }
+            /* PC = auto-fit / 모바일 = 2열 — 모달 내부에서 사용 */
+            #mgrPhoneList { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; }
             @media (max-width: 600px) {
-                #mgrPhoneList.is-open { grid-template-columns:repeat(2, 1fr); }
+                #mgrPhoneList { grid-template-columns:repeat(2, 1fr); }
                 #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
                 #mgrPhoneList #mgrPhoneJp { grid-column:1 / -1; }
             }
-            /* 2026-06-10: 매니저 자리 — 좌:전화안내 토글 / 우:챗봇 채팅상담 버튼 */
-            #mgrAccessRow { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+            #mgrAccessRow { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
             #mgrAccessRow .mgr-access-btn {
                 display:flex; align-items:center; justify-content:center; gap:8px;
                 padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.18);
@@ -1211,11 +1214,47 @@ window._tcmFallbackClick = function(code) {
                 #mgrAccessRow { grid-template-columns:1fr 1fr; gap:8px; }
                 #mgrAccessRow .mgr-access-btn { padding:12px 10px; font-size:13px; }
             }
+            /* ★ VIP 개인결제 — 가장 눈에 띄게 */
+            #mgrVipPayBtn {
+                display:flex; align-items:center; justify-content:center; gap:12px;
+                width:100%; padding:18px 22px; margin:6px 0 14px; border:none; border-radius:14px;
+                background:linear-gradient(135deg,#fde047 0%,#facc15 45%,#eab308 100%);
+                color:#1f2937; font-size:17px; font-weight:900; letter-spacing:0.3px;
+                cursor:pointer; box-shadow:0 12px 28px -10px rgba(234,179,8,0.55), inset 0 1px 0 rgba(255,255,255,0.45);
+                transition:transform .15s ease, box-shadow .15s ease;
+            }
+            #mgrVipPayBtn:hover { transform:translateY(-1px); box-shadow:0 16px 34px -10px rgba(234,179,8,0.7), inset 0 1px 0 rgba(255,255,255,0.55); }
+            #mgrVipPayBtn .vip-crown { font-size:22px; }
+            #mgrVipPayBtn .vip-sub { font-size:11.5px; font-weight:700; opacity:0.75; margin-left:6px; }
+            @media (max-width: 600px) {
+                #mgrVipPayBtn { padding:15px 14px; font-size:15px; }
+                #mgrVipPayBtn .vip-sub { display:none; }
+            }
+            /* 매니저 전화 모달 */
+            #mgrPhoneModal {
+                position:fixed; inset:0; z-index:100000; display:none;
+                align-items:center; justify-content:center; padding:16px;
+                background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+            }
+            #mgrPhoneModal.is-open { display:flex; }
+            #mgrPhoneModal .mp-card {
+                width:100%; max-width:560px; max-height:90vh; overflow-y:auto;
+                background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%);
+                border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px 22px;
+                box-shadow:0 30px 60px -10px rgba(0,0,0,0.8);
+            }
+            #mgrPhoneModal .mp-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+            #mgrPhoneModal .mp-title { font-size:16px; font-weight:900; color:#fde047; }
+            #mgrPhoneModal .mp-close {
+                width:34px; height:34px; border-radius:50%; border:none;
+                background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer;
+            }
+            #mgrPhoneModal .mp-close:hover { background:rgba(255,255,255,0.2); }
             </style>
-            <!-- 좌:본사·매니저 전화안내 토글 / 우:챗봇 채팅상담 -->
+            <!-- 좌:본사·매니저 전화안내(모달) / 우:챗봇 채팅상담 -->
             <div id="mgrAccessRow">
-                <button type="button" id="mgrAccessPhone" class="mgr-access-btn" aria-expanded="false" aria-controls="mgrPhoneList"
-                    onclick="(function(b){var l=document.getElementById('mgrPhoneList');if(!l)return;var open=l.classList.toggle('is-open');b.setAttribute('aria-expanded',open?'true':'false');var lab=b.querySelector('.mgr-access-label');if(lab){var L=(window.CURRENT_LANG||'kr');var T={kr:{open:'전화 안내 닫기',shut:'본사·매니저 전화 안내'},ja:{open:'電話番号を閉じる',shut:'本社・担当の電話番号'},en:{open:'Hide phone numbers',shut:'HQ & Manager Phones'}};var t=T[L]||T.kr;lab.textContent=open?t.open:t.shut;}})(this)">
+                <button type="button" id="mgrAccessPhone" class="mgr-access-btn"
+                    onclick="window._openMgrPhoneModal && window._openMgrPhoneModal()">
                     <span class="mgr-access-icon">📞</span>
                     <span class="mgr-access-label" data-i18n="btn_mgr_phones">본사·매니저 전화 안내</span>
                 </button>
@@ -1225,6 +1264,16 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-access-label" data-i18n="btn_mgr_chat">챗봇 채팅상담</span>
                 </button>
             </div>
+
+            <!-- ★ VIP 개인결제 — 가장 자주 사용되는 기능. 큰 골드 CTA -->
+            <button type="button" id="mgrVipPayBtn" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
+                <span class="vip-crown">👑</span>
+                <span data-i18n="btn_vip_pay">VIP 개인결제</span>
+                <span class="vip-sub" data-i18n="btn_vip_pay_sub">결제대기·진행중 견적 모아보기</span>
+            </button>
+
+            <!-- 전화번호 그리드: 모달 안으로 이동 (display:none 컨테이너) -->
+            <div id="mgrPhoneListHidden" style="display:none;">
             <div id="mgrPhoneList">
                 <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
@@ -1363,43 +1412,180 @@ window._tcmFallbackClick = function(code) {
                 }
             })();
             </script>
+            </div><!-- /mgrPhoneListHidden -->
+
+            <!-- 매니저 전화 모달 -->
+            <div id="mgrPhoneModal" role="dialog" aria-modal="true" aria-labelledby="mgrPhoneModalTitle" onclick="if(event.target===this)window._closeMgrPhoneModal&&window._closeMgrPhoneModal()">
+                <div class="mp-card">
+                    <div class="mp-head">
+                        <div id="mgrPhoneModalTitle" class="mp-title" data-i18n="mgr_phone_modal_title">📞 본사 · 매니저 전화 안내</div>
+                        <button type="button" class="mp-close" aria-label="Close" onclick="window._closeMgrPhoneModal&&window._closeMgrPhoneModal()">✕</button>
+                    </div>
+                    <div id="mgrPhoneModalBody"></div>
+                    <div style="margin-top:14px; font-size:11.5px; color:rgba(255,255,255,0.55); line-height:1.5; text-align:center;" data-i18n="mgr_phone_modal_hint">
+                        담당 매니저와 통화 후 받으신 견적 금액을 아래 칸에 직접 입력하셔도 즉시 결제 모달이 열립니다.
+                    </div>
+                </div>
+            </div>
+            <script>
+            // 2026-06-10: 전화번호 모달 — 기존 mgrPhoneList 를 모달 안으로 이동
+            (function(){
+                var _origParent = null;
+                window._openMgrPhoneModal = function(){
+                    var modal = document.getElementById('mgrPhoneModal');
+                    var body  = document.getElementById('mgrPhoneModalBody');
+                    var list  = document.getElementById('mgrPhoneList');
+                    if (!modal || !body || !list) return;
+                    if (!_origParent) _origParent = list.parentNode;
+                    body.appendChild(list);
+                    modal.classList.add('is-open');
+                    document.body.style.overflow = 'hidden';
+                    // ESC 닫기
+                    document.addEventListener('keydown', _escHandler);
+                };
+                window._closeMgrPhoneModal = function(){
+                    var modal = document.getElementById('mgrPhoneModal');
+                    var list  = document.getElementById('mgrPhoneList');
+                    if (!modal) return;
+                    modal.classList.remove('is-open');
+                    document.body.style.overflow = '';
+                    if (list && _origParent) _origParent.appendChild(list);
+                    document.removeEventListener('keydown', _escHandler);
+                };
+                function _escHandler(e){ if (e.key === 'Escape') window._closeMgrPhoneModal(); }
+            })();
+            </script>
             <!-- 2026-05-14: 사용자 요청 — hint 텍스트 자리에 "개인결제창" 버튼.
                  클릭 시 결제대기/디자인작업중 VIP 카드 전체를 모달로 모아 표시.
                  2026-05-15: 옆에 "금액 주문" 입력 + 주문하기 버튼 복원 — 매니저와 통화 후
                  합의된 금액을 직접 입력해서 즉시 결제 모달을 띄우는 빠른 경로. -->
-            <div id="mgrQuoteActions" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; margin-top:6px;">
-                <!-- 금액 입력 + 내용 메모 + 주문하기 (좌측 그룹) -->
-                <!-- 2026-06-09: 내용 메모 input 추가 — 관리자 페이지에서 "매니저 견적 주문" 만 떠서 무슨 내용인지 보이지 않던 문제 fix -->
-                <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:4px 4px 4px 12px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); backdrop-filter:blur(4px);">
-                    <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
-                           placeholder=""
-                           oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
-                           style="border:none; outline:none; font-size:14px; font-weight:700; color:#fff; width:120px; text-align:right; padding:6px 0; background:transparent;">
-                    <span id="mgrQuoteUnit" style="font-size:12px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:4px;">원</span>
-                    <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
-                           placeholder="내용 (예: 등신대 10개)"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}"
-                           style="border:none; outline:none; font-size:13px; font-weight:600; color:#fff; width:200px; padding:7px 10px; background:rgba(255,255,255,0.08); border-radius:7px;">
-                    <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()"
-                            style="padding:9px 18px; background:#fff; color:#111; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;">
+            <!-- 2026-06-10: 견적 빠른주문 — 모바일에서 주문하기 버튼 치우침 해결 위해 grid + 풀폭 버튼 -->
+            <style>
+            #mgrQuoteActions { margin-top:6px; }
+            #mgrQuoteInline {
+                display:grid; grid-template-columns:160px 1fr auto; gap:8px;
+                background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+                border-radius:12px; padding:8px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
+                backdrop-filter:blur(4px);
+            }
+            #mgrQuoteInline .qi-amount, #mgrQuoteInline .qi-memo {
+                display:flex; align-items:center; background:rgba(255,255,255,0.06);
+                border:1px solid rgba(255,255,255,0.12); border-radius:9px; padding:0 12px;
+            }
+            #mgrQuoteInline input {
+                border:none; outline:none; background:transparent;
+                color:#fff; font-size:14px; font-weight:700; padding:10px 0; width:100%;
+            }
+            #mgrQuoteInline input::placeholder { color:rgba(255,255,255,0.4); font-weight:500; }
+            #mgrQuoteInline .qi-amount input { text-align:right; }
+            #mgrQuoteInline .qi-unit { font-size:12px; color:rgba(255,255,255,0.7); font-weight:700; padding-left:6px; white-space:nowrap; }
+            #mgrQuoteInline #mgrQuoteBtn {
+                padding:0 22px; background:#fff; color:#111; border:none; border-radius:9px;
+                font-size:14px; font-weight:900; cursor:pointer; white-space:nowrap;
+                box-shadow:0 4px 12px -2px rgba(0,0,0,0.25);
+            }
+            #mgrQuoteInline #mgrQuoteBtn:hover { background:#fde047; }
+            #mgrCouponWrap { display:flex; justify-content:center; margin-top:12px; }
+            #couponInlineBtn {
+                padding:11px 22px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff;
+                border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer;
+                box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px;
+                white-space:nowrap; display:inline-flex; align-items:center; gap:6px; font-family:inherit;
+            }
+            @media (max-width: 600px) {
+                #mgrQuoteInline { grid-template-columns:1fr; }
+                #mgrQuoteInline #mgrQuoteBtn { padding:14px; font-size:15px; }
+            }
+            </style>
+            <div id="mgrQuoteActions">
+                <!-- 금액 + 메모 + 주문하기 (단일 grid 행) -->
+                <div id="mgrQuoteInline">
+                    <div class="qi-amount">
+                        <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
+                               placeholder="50,000"
+                               oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
+                        <span id="mgrQuoteUnit" class="qi-unit">원</span>
+                    </div>
+                    <div class="qi-memo">
+                        <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
+                               placeholder="내용 (예: 등신대 10개)"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
+                    </div>
+                    <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()">
                         ⚡ 주문하기
                     </button>
                 </div>
-                <!-- 개인결제창 (우측) -->
-                <button type="button" id="mgrOpenPersonalPay" onclick="window._openPersonalPayModal()" style="padding:11px 22px; background:#fff; color:#111; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(0,0,0,0.4); letter-spacing:0.5px; white-space:nowrap;">
-                    📋 개인결제창
-                </button>
-                <!-- 2026-06-01: 이벤트 쿠폰 받기 — mgrQuoteHero 박스 내부 우측에 통합 -->
-                <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()"
-                    style="padding:11px 18px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px; white-space:nowrap; display:flex; align-items:center; gap:6px; font-family:inherit;">
-                    <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
-                </button>
+                <!-- 이벤트 쿠폰 (보조 CTA — 가운데 정렬, 작게) -->
+                <div id="mgrCouponWrap">
+                    <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()">
+                        <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
+                    </button>
+                </div>
             </div>
             <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 (텍스트 자체는 사용자 요청에 따라 제거) -->
             <div id="mgrQuoteHint" style="display:none;"></div>
         </div>
     </div>
+
+    <!-- 2026-06-10: 매니저 영역 신규 라벨 다국어 (KR/JP/EN) -->
+    <script>
+    (function(){
+        var host = location.hostname || '';
+        var u = new URLSearchParams(location.search);
+        var lang = u.get('lang') ||
+            (host.indexOf('cafe0101.com') >= 0 ? 'ja' :
+             (host.indexOf('cafe3355.com') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
+             (window.CURRENT_LANG || 'kr'));
+        var L = {
+            kr: {
+                phoneBtn:'본사·매니저 전화 안내', chatBtn:'챗봇 채팅상담',
+                vipMain:'VIP 개인결제', vipSub:'결제대기·진행중 견적 모아보기',
+                modalTitle:'📞 본사 · 매니저 전화 안내',
+                modalHint:'담당 매니저와 통화 후 받으신 견적 금액을 아래 칸에 직접 입력하셔도 즉시 결제 모달이 열립니다.',
+                amountPh:'50,000', unit:'원', memoPh:'내용 (예: 등신대 10개)', orderBtn:'⚡ 주문하기'
+            },
+            ja: {
+                phoneBtn:'本社・担当の電話番号', chatBtn:'チャット相談',
+                vipMain:'VIP 個別決済', vipSub:'お見積もり・お支払い管理',
+                modalTitle:'📞 本社・担当の電話番号',
+                modalHint:'担当との通話後にお受けしたお見積もり金額を下の欄に直接ご入力いただいても、すぐに決済モーダルが開きます。',
+                amountPh:'5,000', unit:'円', memoPh:'内容 (例: 等身大10個)', orderBtn:'⚡ 注文する'
+            },
+            en: {
+                phoneBtn:'HQ & Manager Phones', chatBtn:'Chat Support',
+                vipMain:'VIP Personal Pay', vipSub:'Open all pending & in-progress quotes',
+                modalTitle:'📞 HQ & Manager Phones',
+                modalHint:'After speaking with a manager, you can also type the agreed amount below to open the payment modal instantly.',
+                amountPh:'50', unit:'$', memoPh:'Note (e.g. 10 standees)', orderBtn:'⚡ Order'
+            }
+        };
+        var t = L[lang] || L.kr;
+        function setText(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
+        function setAttr(sel, attr, v){ document.querySelectorAll(sel).forEach(function(el){ el.setAttribute(attr, v); }); }
+        // 접근 버튼
+        var pBtn = document.querySelector('#mgrAccessPhone .mgr-access-label');
+        if (pBtn) pBtn.textContent = t.phoneBtn;
+        var cBtn = document.querySelector('#mgrAccessChat .mgr-access-label');
+        if (cBtn) cBtn.textContent = t.chatBtn;
+        // VIP 버튼 (crown 다음 메인 + sub)
+        var vipBtn = document.getElementById('mgrVipPayBtn');
+        if (vipBtn) {
+            var spans = vipBtn.querySelectorAll('span');
+            if (spans.length >= 2) spans[1].textContent = t.vipMain;
+            if (spans.length >= 3) spans[2].textContent = t.vipSub;
+        }
+        // 모달
+        setText('mgrPhoneModalTitle', t.modalTitle);
+        var hintEl = document.querySelector('#mgrPhoneModal [data-i18n="mgr_phone_modal_hint"]');
+        if (hintEl) hintEl.textContent = t.modalHint;
+        // 견적 인라인
+        var amt = document.getElementById('mgrQuoteAmount'); if (amt) amt.setAttribute('placeholder', t.amountPh);
+        var unit = document.getElementById('mgrQuoteUnit'); if (unit) unit.textContent = t.unit;
+        var memo = document.getElementById('mgrQuoteMemo'); if (memo) memo.setAttribute('placeholder', t.memoPh);
+        var ob = document.getElementById('mgrQuoteBtn'); if (ob) ob.textContent = t.orderBtn;
+    })();
+    </script>
 
     <!-- 2026-06-01: 쿠폰 이벤트 카드 i18n + SNS 공유 인증 모달 + 제출 핸들러 -->
     <script>
