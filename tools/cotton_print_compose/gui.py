@@ -26,7 +26,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 
 
-__version__ = '2026.06.10.3'   # 업데이트 비교용 (YYYY.MM.DD.N)
+__version__ = '2026.06.10.4'   # 패턴 파일명(롤인쇄N개_W폭_고객_원단) + 4모서리 돔보마크 5mm
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'

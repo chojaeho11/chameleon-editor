@@ -56,11 +56,129 @@ except Exception:
     pass
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageDraw
     Image.MAX_IMAGE_PIXELS = None      # 큰 패턴 이미지 허용 (decompression bomb 경고 비활성)
 except ImportError:
     print("ERROR: Pillow not installed. Run: pip install Pillow", file=sys.stderr)
     sys.exit(1)
+
+
+# ─── 일본어/영어 원단명 → 한국어 변환 ───────────────────────────────
+# cotton_designer.html 의 i18n 사전과 동일 매핑
+JP_KR_MAP = [
+    # 원단 종류 (긴 매칭부터)
+    ('コットン20番', '면20수'),
+    ('コットン30番', '면30수'),
+    ('コットン16番', '면16수'),
+    ('コットン10番', '면10수'),
+    ('Cotton 20s', '면20수'),
+    ('Cotton 30s', '면30수'),
+    ('Cotton 16s', '면16수'),
+    ('Cotton 10s', '면10수'),
+    ('オックスフォード', '옥스포드'),
+    ('シフォン',       '쉬폰'),
+    ('レーヨン',       '레이온'),
+    ('リネン',         '린넨'),
+    ('Oxford',  '옥스포드'),
+    ('Chiffon', '쉬폰'),
+    ('Rayon',   '레이온'),
+    ('Linen',   '린넨'),
+    # 직조
+    ('平織', '평직'),
+    ('綾織', '능직'),
+    ('朱子織', '주자직'),
+    # 색상
+    ('ホワイト',  '화이트'),
+    ('ナチュラル', '네츄럴'),
+    ('アイボリー', '아이보리'),
+    ('White',   '화이트'),
+    ('Natural', '네츄럴'),
+    ('Ivory',   '아이보리'),
+]
+
+
+def fabric_to_korean(text: str) -> str:
+    """JP/EN 원단명을 한국어로 변환 (cotton_designer.html i18n 기반)."""
+    out = str(text or '')
+    for jp, kr in JP_KR_MAP:
+        out = out.replace(jp, kr)
+    return out
+
+
+def sanitize_filename(name: str) -> str:
+    """Windows 금지 문자 + 제어 문자 제거, 양끝 공백/밑줄 정리."""
+    bad = '<>:"/\\|?*'
+    cleaned = ''.join(c for c in name if c not in bad and ord(c) > 31)
+    cleaned = cleaned.replace(' ', '').replace('　', '')  # 전각 공백도 제거
+    cleaned = cleaned.strip('._')
+    return cleaned or 'untitled'
+
+
+def build_pattern_filename(order_id, idx, item, output_w_cm, manager_name, layout, ext):
+    """패턴 주문용 파일명:
+        롤인쇄[수량]개_[원단폭]폭_[고객명]_[원단종류한글].ext
+    centered 등 단일 인쇄는 기존 형식 사용 가능 — 호출부에서 분기."""
+    qty = item.get('qty') or 1
+    width_cm = int(round(output_w_cm))
+    # 원단명 — fabric 우선, 없으면 product_name
+    fabric_src = item.get('fabric') or item.get('product_name') or ''
+    fabric_kr = fabric_to_korean(fabric_src)
+    # 괄호 제거 (파일명 깔끔하게)
+    fabric_kr = fabric_kr.replace('(', '').replace(')', '')
+    fabric_kr = sanitize_filename(fabric_kr)[:40]
+    # 고객명
+    name = sanitize_filename(manager_name or '고객')[:25]
+    parts = [
+        f'롤인쇄{qty}개',
+        f'{width_cm}폭',
+        name,
+        fabric_kr,
+    ]
+    base = '_'.join(p for p in parts if p)
+    base = sanitize_filename(base)[:120]
+    return f'{base}_#{order_id}.{ext}'
+
+
+# ─── 돔보마크 (トンボ / 사방 5mm 원형 등록 마크) ──────────────────
+def draw_tombow_marks(canvas: 'Image.Image', dpi: int,
+                       diameter_mm: float = 5.0,
+                       edge_offset_mm: float = 5.0,
+                       color=(0, 0, 0)) -> 'Image.Image':
+    """4 모서리에 지정 크기 원형 등록 마크 (커팅 가이드).
+
+    Args:
+        canvas: PIL 이미지 (RGB or RGBA)
+        dpi: 출력 DPI
+        diameter_mm: 원 지름 (mm) — 기본 5mm
+        edge_offset_mm: 외곽에서 떨어진 거리 (mm) — 기본 5mm
+        color: 마크 색상 RGB
+    """
+    # mm → px 환산 (1 inch = 25.4 mm)
+    diameter_px = max(1, int(round(diameter_mm * dpi / 25.4)))
+    offset_px   = max(1, int(round(edge_offset_mm * dpi / 25.4)))
+    radius = diameter_px / 2.0
+
+    w, h = canvas.size
+    # ImageDraw 는 RGB/RGBA 모드 다 OK
+    draw = ImageDraw.Draw(canvas)
+
+    # 4 모서리 — 원 외곽이 edge_offset_mm 만큼 떨어지도록 (즉, 원 중심은 edge_offset + radius)
+    cx_l = offset_px + radius
+    cx_r = w - offset_px - radius
+    cy_t = offset_px + radius
+    cy_b = h - offset_px - radius
+
+    centers = [
+        (cx_l, cy_t),  # 좌상
+        (cx_r, cy_t),  # 우상
+        (cx_l, cy_b),  # 좌하
+        (cx_r, cy_b),  # 우하
+    ]
+    for cx, cy in centers:
+        bbox = (cx - radius, cy - radius, cx + radius, cy + radius)
+        draw.ellipse(bbox, fill=color)
+
+    return canvas
 
 
 # ─── 기본 상수 ──────────────────────────────────────────────────────
@@ -285,10 +403,25 @@ def process_item(order_id, idx, item, files, args, out_dir):
         layout, bg, scale, args.dpi,
     )
 
-    # 파일명
-    safe_name = ''.join(c if c.isalnum() else '_' for c in name)[:30]
-    fname = (f"order{order_id or 'manual'}_item{idx + 1}"
-             f"_{safe_name}_{int(output_w)}x{int(output_h)}cm.{args.format}")
+    # 2026-06-10: 돔보마크 — 사방 5mm 떨어진 4 모서리에 5mm 원형 등록 마크
+    if not getattr(args, 'no_tombow', False):
+        diameter = getattr(args, 'tombow_mm', 5.0)
+        offset = getattr(args, 'tombow_offset_mm', 5.0)
+        out_img = draw_tombow_marks(out_img, args.dpi,
+                                     diameter_mm=diameter,
+                                     edge_offset_mm=offset)
+        print(f"  🎯 돔보마크: {diameter}mm 원 · 사방 {offset}mm 떨어짐")
+
+    # 파일명 — 패턴 주문(basic/brick/half_drop/mirror) 은 새 형식, centered 는 기존 형식
+    manager_name = getattr(args, '_manager_name', '') or ''
+    is_pattern = (layout or '').lower() not in ('centered', 'center')
+    if is_pattern and order_id:
+        fname = build_pattern_filename(order_id, idx, item, output_w,
+                                        manager_name, layout, args.format)
+    else:
+        safe_name = ''.join(c if c.isalnum() else '_' for c in name)[:30]
+        fname = (f"order{order_id or 'manual'}_item{idx + 1}"
+                 f"_{safe_name}_{int(output_w)}x{int(output_h)}cm.{args.format}")
     out_path = out_dir / fname
 
     save_kwargs = {'dpi': (args.dpi, args.dpi)}
@@ -342,8 +475,16 @@ def main():
                    help='cell_cm.w 누락시 기본값')
     p.add_argument('--fallback-cell-h', type=float, default=100.0,
                    help='cell_cm.h 누락시 기본값')
+    # 돔보마크 (등록 마크)
+    p.add_argument('--no-tombow', action='store_true',
+                   help='돔보마크 비활성화 (기본: 5mm 원 4모서리)')
+    p.add_argument('--tombow-mm', type=float, default=5.0,
+                   help='돔보마크 지름 mm (기본 5)')
+    p.add_argument('--tombow-offset-mm', type=float, default=5.0,
+                   help='돔보마크 외곽 거리 mm (기본 5)')
 
     args = p.parse_args()
+    args._manager_name = ''   # Supabase fetch 후 채워짐
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -361,7 +502,8 @@ def main():
 
         items = order.get('items') or []
         files = order.get('files') or []
-        print(f"  주문자: {order.get('manager_name', '-')}")
+        args._manager_name = order.get('manager_name', '') or ''
+        print(f"  주문자: {args._manager_name or '-'}")
         print(f"  항목수: {len(items)}건")
 
         if not items:
