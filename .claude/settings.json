@@ -246,7 +246,8 @@
       "Bash(awk '/class=\"hero-section\"/{f=1; ln=NR} f && /<\\\\/div>/{c++; if\\(c==1\\) {print \"first /div at line\", NR; exit}}' index.html)",
       "Bash(awk 'NR>=998 && NR<=1340' index.html)",
       "Bash(awk '/<div class=\"hero-section\">/,/<!-- \\\\/.hero-section -->/' index.html)",
-      "Bash(awk 'NR>=1387 && /^    <\\\\/div>$/{print NR; exit}' index.html)"
+      "Bash(awk 'NR>=1387 && /^    <\\\\/div>$/{print NR; exit}' index.html)",
+      "Bash(awk 'NR>=2560 && NR<=2575' index.html)"
     ],
     "additionalDirectories": [
       "\\tmp",
