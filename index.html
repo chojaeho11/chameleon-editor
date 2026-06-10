@@ -1456,27 +1456,33 @@ window._tcmFallbackClick = function(code) {
                2026-06-11: 카테고리 캐러셀 + 깔끔한 6 아이콘 버튼
                ════════════════════════════════════════════════════════════════ */
             .hero-video, .hero-deco-line, .hero-video-overlay { display:none !important; }
-            /* hero-section — peek 카드 위해 padding 키우고 overflow visible */
+            /* hero-section — 명시적 높이로 캐러셀 가려짐 방지 */
             .hero-section {
                 background:linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%) !important;
-                min-height:auto !important;
+                min-height:480px !important;
                 height:auto !important;
-                padding:48px 20px 32px !important;
-                display:block !important;
+                padding:48px 20px 40px !important;
+                display:flex !important;
+                flex-direction:column;
+                align-items:stretch;
+                justify-content:center;
                 position:relative !important;
                 overflow:hidden !important;
                 z-index:2 !important;
                 margin-bottom:0 !important;
+                box-sizing:border-box;
             }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:900px;
+                width:100%;
                 margin:0 auto;
                 position:relative;
-                aspect-ratio:16/6;
+                height:340px;
                 isolation:isolate;
                 z-index:1;
                 padding:0;
+                flex-shrink:0;
             }
             .hc-track {
                 position:relative;
@@ -1672,10 +1678,9 @@ window._tcmFallbackClick = function(code) {
             }
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section { padding:12px 12px 18px !important; display:block !important; overflow:hidden !important; }
+                .hero-section { padding:12px 12px 18px !important; min-height:300px !important; display:block !important; overflow:hidden !important; }
                 .hero-carousel {
-                    aspect-ratio:auto;
-                    height:280px;
+                    height:260px;
                     border-radius:18px;
                     display:block !important;
                     width:auto;
