@@ -668,11 +668,8 @@ export function initAdvisorPanel() {
         }
     };
 
-    // 우측 하단 챗봇 숨기기 (카프로 통일)
-    const chamTrigger = document.getElementById('cham-bot-trigger');
-    const chamWindow = document.getElementById('cham-bot-window');
-    if (chamTrigger) chamTrigger.style.display = 'none';
-    if (chamWindow) chamWindow.style.display = 'none';
+    // 2026-06-11: 우측 하단 챗봇 복귀 — advisor-panel 과 독립적으로 운영
+    // (이전: 카프로 통일 위해 숨김 처리. 사용자 요청으로 복귀)
 
     ['btnAiAdvisor', 'btnAiAdvisor2', 'btnChatbotOpen', 'floatingChatBtn'].forEach(id => {
         const btn = document.getElementById(id);

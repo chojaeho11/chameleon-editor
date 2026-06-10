@@ -1384,7 +1384,7 @@ window._tcmFallbackClick = function(code) {
     <style>
     .hero-min-order { display:none !important; }
     </style>
-    <div id="mgrQuoteHero" style="max-width:1100px; margin:-12px auto 24px; padding:0 16px; position:relative; z-index:5;">
+    <div id="mgrQuoteHero" style="max-width:1100px; margin:24px auto 32px; padding:0 16px; position:relative; z-index:50; min-height:120px;">
         <div style="background:radial-gradient(130% 90% at 50% -20%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:14px 18px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);">
             <!-- 2026-06-10: 내부 타이틀/설명 제거 — 영역 컴팩트화 위함. i18n 호환 위해 빈 노드 유지 -->
             <div id="mgrQuoteTitle" style="display:none;"></div>
@@ -11418,7 +11418,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=450').then(m => {
+        import('./advisor-panel.js?v=451').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
