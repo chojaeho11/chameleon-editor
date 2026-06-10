@@ -4173,7 +4173,7 @@ async function processFinalPayment() {
                 if (useMileage > 0) {
                     const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
                     await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
-                    await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
+                    await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
                 }
 
                 // 2) 주문에 예치금 사용 금액 기록
@@ -4204,7 +4204,7 @@ async function processFinalPayment() {
                 if(useMileage > 0) {
                      const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
                      await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
-                     await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
+                     await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
                 }
 
                 const bankUpdate = { status: '접수됨', payment_method: '무통장입금', payment_status: '입금대기', depositor_name: depositorName };
@@ -4301,7 +4301,7 @@ async function processDepositPayment(payAmount, useMileage) {
         if (useMileage > 0) {
             const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
             await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
-            await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용` });
+            await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
         }
 
         const newBalance = currentBalance - payAmount;

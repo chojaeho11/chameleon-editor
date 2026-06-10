@@ -13252,19 +13252,20 @@ html, body { background: #ffffff !important; }
                             var _cm = parseInt((_mr.data && _mr.data.mileage) || 0) || 0;
                             await sb.from('profiles').update({ mileage: Math.max(0, _cm - _useMileage) }).eq('id', _walletUid);
                         }
-                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'event_coupon_use', amount: -_useMileage, description: '간편주문 이벤트 쿠폰 사용 (주문번호: ' + newOrderId + ')' });
+                        // 2026-06-10: related_order_id 채워서 취소 시 트리거가 자동 환불 가능하도록
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'event_coupon_use', amount: -_useMileage, description: '간편주문 이벤트 쿠폰 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     } else if (_useMileage > 0 && _walletSource === 'mileage') {
                         // 일반 마일리지 차감
                         var _mr2 = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
                         var _cm2 = parseInt((_mr2.data && _mr2.data.mileage) || 0) || 0;
                         await sb.from('profiles').update({ mileage: Math.max(0, _cm2 - _useMileage) }).eq('id', _walletUid);
-                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useMileage, description: '간편주문 마일리지 사용 (주문번호: ' + newOrderId + ')' });
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useMileage, description: '간편주문 마일리지 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     }
                     if (_useDeposit > 0) {
                         var _dr = await sb.from('profiles').select('deposit').eq('id', _walletUid).maybeSingle();
                         var _cd = parseInt((_dr.data && _dr.data.deposit) || 0) || 0;
                         await sb.from('profiles').update({ deposit: Math.max(0, _cd - _useDeposit) }).eq('id', _walletUid);
-                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'payment_order', amount: -_useDeposit, description: '간편주문 예치금 사용 (주문번호: ' + newOrderId + ')' });
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'payment_order', amount: -_useDeposit, description: '간편주문 예치금 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     }
                 } catch (we) {
                     console.error('[so wallet deduct]', we);
