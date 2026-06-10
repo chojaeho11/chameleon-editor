@@ -651,6 +651,7 @@ html.hexa-mode #topCatMenu,
 html.hexa-mode #startScreen,
 html.hexa-mode #chatbotBtnWrap,
 html.hexa-mode #couponBanner,
+html.hexa-mode #ch-plugin,
 html.hexa-mode .so-brand { display:none !important; }
 html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
 </style>
@@ -1183,13 +1184,47 @@ window._tcmFallbackClick = function(code) {
             </div>
             <!-- 2026-06-01: PC = auto-fit 가로 5열 / 모바일 = 2열 + 본사 풀폭 (media query 로 분기) -->
             <style>
-            #mgrPhoneList { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px; }
+            #mgrPhoneList { display:none; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; margin-bottom:12px; }
+            #mgrPhoneList.is-open { display:grid; }
             @media (max-width: 600px) {
-                #mgrPhoneList { grid-template-columns:repeat(2, 1fr); }
+                #mgrPhoneList.is-open { grid-template-columns:repeat(2, 1fr); }
                 #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
                 #mgrPhoneList #mgrPhoneJp { grid-column:1 / -1; }
             }
+            /* 2026-06-10: 매니저 자리 — 좌:전화안내 토글 / 우:챗봇 채팅상담 버튼 */
+            #mgrAccessRow { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+            #mgrAccessRow .mgr-access-btn {
+                display:flex; align-items:center; justify-content:center; gap:8px;
+                padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.18);
+                background:rgba(255,255,255,0.08); color:#fff; font-size:14px; font-weight:800;
+                cursor:pointer; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), 0 6px 18px rgba(0,0,0,0.28);
+                backdrop-filter:blur(4px); transition:transform .15s ease, background .15s ease;
+            }
+            #mgrAccessRow .mgr-access-btn:hover { transform:translateY(-1px); background:rgba(255,255,255,0.14); }
+            #mgrAccessRow .mgr-access-btn .mgr-access-icon { font-size:18px; }
+            #mgrAccessRow #mgrAccessChat {
+                background:linear-gradient(135deg, rgba(99,102,241,0.45), rgba(139,92,246,0.45));
+                border-color:rgba(196,181,253,0.55);
+            }
+            #mgrAccessRow #mgrAccessChat:hover { background:linear-gradient(135deg, rgba(99,102,241,0.65), rgba(139,92,246,0.65)); }
+            @media (max-width: 600px) {
+                #mgrAccessRow { grid-template-columns:1fr 1fr; gap:8px; }
+                #mgrAccessRow .mgr-access-btn { padding:12px 10px; font-size:13px; }
+            }
             </style>
+            <!-- 좌:본사·매니저 전화안내 토글 / 우:챗봇 채팅상담 -->
+            <div id="mgrAccessRow">
+                <button type="button" id="mgrAccessPhone" class="mgr-access-btn" aria-expanded="false" aria-controls="mgrPhoneList"
+                    onclick="(function(b){var l=document.getElementById('mgrPhoneList');if(!l)return;var open=l.classList.toggle('is-open');b.setAttribute('aria-expanded',open?'true':'false');var lab=b.querySelector('.mgr-access-label');if(lab){var L=(window.CURRENT_LANG||'kr');var T={kr:{open:'전화 안내 닫기',shut:'본사·매니저 전화 안내'},ja:{open:'電話番号を閉じる',shut:'本社・担当の電話番号'},en:{open:'Hide phone numbers',shut:'HQ & Manager Phones'}};var t=T[L]||T.kr;lab.textContent=open?t.open:t.shut;}})(this)">
+                    <span class="mgr-access-icon">📞</span>
+                    <span class="mgr-access-label" data-i18n="btn_mgr_phones">본사·매니저 전화 안내</span>
+                </button>
+                <button type="button" id="mgrAccessChat" class="mgr-access-btn"
+                    onclick="if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
+                    <span class="mgr-access-icon">💬</span>
+                    <span class="mgr-access-label" data-i18n="btn_mgr_chat">챗봇 채팅상담</span>
+                </button>
+            </div>
             <div id="mgrPhoneList">
                 <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
                     <span>본사</span>
@@ -21767,10 +21802,34 @@ document.addEventListener('click', function(e) {
 });
 </script>
 
-<!-- 플로팅 챗봇 버튼 (body 직속 — fixed 보장) -->
-<div id="floatingChatBtn" onclick="if(window.toggleAdvisorPanel)window.toggleAdvisorPanel();" style="position:fixed;bottom:20px;right:20px;z-index:99999;width:60px;height:60px;border-radius:50%;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:24px;cursor:pointer;box-shadow:0 4px 24px rgba(99,102,241,0.45);display:flex;align-items:center;justify-content:center;">
-    <i class="fa-solid fa-comments"></i>
-</div>
+<!-- 2026-06-10: 플로팅 챗봇 → ChannelTalk 위젯으로 교체.
+     상단 매니저 영역의 "💬 챗봇 채팅상담" 버튼으로 자체 챗봇은 계속 접근 가능. -->
+<script>
+(function(){
+    var w = window;
+    if (w.ChannelIO) return;
+    var ch = function(){ ch.c(arguments); };
+    ch.q = [];
+    ch.c = function(a){ ch.q.push(a); };
+    w.ChannelIO = ch;
+    function l(){
+        if (w.ChannelIOInitialized) return;
+        w.ChannelIOInitialized = true;
+        var s = document.createElement('script');
+        s.type = 'text/javascript'; s.async = true;
+        s.src = 'https://cdn.channel.io/plugin/ch-plugin-web.js';
+        var x = document.getElementsByTagName('script')[0];
+        if (x && x.parentNode) x.parentNode.insertBefore(s, x);
+        else document.head.appendChild(s);
+    }
+    if (document.readyState === 'complete') l();
+    else if (w.attachEvent) w.attachEvent('onload', l);
+    else { w.addEventListener('DOMContentLoaded', l, false); w.addEventListener('load', l, false); }
+    ChannelIO('boot', {
+        pluginKey: '5e498286-0be8-4450-8771-0ddd44e50015'
+    });
+})();
+</script>
 
 </body>
 </html>
