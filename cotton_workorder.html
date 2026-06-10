@@ -169,6 +169,13 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sheet').style.display = '';
 
+        // 2026-06-10: 관리자 로그인 시 항목별 파일 수동 첨부 허용 (KR workorder.html 와 동일 패턴)
+        //   고객이 파일 수정 요청 시 매니저가 LINE/메일로 받아서 여기서 직접 업로드 → 작업지시서 즉시 반영.
+        let _woIsAdmin = false;
+        try { _woIsAdmin = !!(await sb.auth.getSession()).data.session; } catch (e) {}
+        window._woOrderId = orderId;
+        window._woIsAdmin = _woIsAdmin;
+
         show('woOrderNo', '#' + order.id);
         show('woOrderDate', dt(order.order_date));
         show('woName', order.manager_name || '-');
@@ -267,8 +274,12 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     <div class="price">${fmt(it.price)}원</div>
                 </div>
                 <div class="item-body">
-                    <div class="item-thumb">
+                    <div class="item-thumb" style="position:relative;">
                         ${thumb ? `<img src="${thumb}" alt="design ${i+1}">` : '<i class="fa-solid fa-image" style="font-size:32px; color:#d1d5db;"></i>'}
+                        ${_woIsAdmin ? `<label style="position:absolute; bottom:4px; left:4px; right:4px; cursor:pointer; font-size:10px; font-weight:700; color:#fff; background:rgba(124,58,237,0.92); border-radius:5px; padding:5px 6px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); line-height:1.2;">
+                            <i class="fa-solid fa-rotate"></i> ${thumb ? '파일 교체' : '파일 첨부'}
+                            <input type="file" multiple accept="image/*,.pdf,.ai,.psd,.zip" style="display:none;" onchange="window._cwAttachFile(${i}, this)">
+                        </label>` : ''}
                     </div>
                     <div class="item-spec">
                         <div class="lbl">원단</div><div class="val">${it.fabric || '-'}</div>
@@ -288,6 +299,62 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+e.message+'</div>';
     }
 })();
+
+// 2026-06-10: 관리자 — 항목별 파일 수동 첨부/교체 (workorder.html 의 _woAttachFile 패턴 그대로)
+//   고객이 디자인 파일 수정을 LINE/메일로 보내면 매니저가 여기서 업로드 → orders.items[idx].attachments + files[] 갱신
+//   이미지일 경우 썸네일(artwork_url) 까지 자동 교체.
+window._cwAttachFile = async function(idx, input) {
+    const files = input && input.files ? Array.from(input.files) : [];
+    if (!files.length) return;
+    if (!window._woOrderId) { alert('주문 정보를 찾을 수 없습니다.'); return; }
+    for (var i = 0; i < files.length; i++) {
+        if (files[i].size > 50 * 1024 * 1024) { alert(files[i].name + ': 50MB 초과 파일은 업로드할 수 없습니다.'); return; }
+    }
+    const lbl = input.parentNode;
+    const origHtml = lbl ? lbl.innerHTML : '';
+    if (lbl) lbl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> アップロード中...';
+    try {
+        const uploaded = [];
+        for (const file of files) {
+            const ext = (file.name.split('.').pop() || 'bin').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
+            const path = 'orders/manual_attach/' + window._woOrderId + '_' + idx + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
+            const up = await sb.storage.from('orders').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+            if (up.error) throw up.error;
+            const pub = sb.storage.from('orders').getPublicUrl(path);
+            const url = pub && pub.data && pub.data.publicUrl;
+            if (!url) throw new Error('URL 생성 실패');
+            uploaded.push({ name: file.name, url: url, type: file.type || ('application/' + ext), _uploaded_at: new Date().toISOString() });
+        }
+        // 최신 items / files 다시 읽어 갱신
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items, files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[idx]) throw new Error('항목 인덱스 오류');
+        if (!Array.isArray(items[idx].attachments)) items[idx].attachments = [];
+        const orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        for (const u of uploaded) {
+            items[idx].attachments.push(u);
+            // 이미지면 썸네일(artwork) 자동 교체
+            if ((u.type || '').indexOf('image/') === 0) {
+                items[idx].artwork_url = u.url;
+                items[idx].artwork_filename = u.name;
+                if (items[idx].pattern_spec) items[idx].pattern_spec.artwork_url = u.url;
+                items[idx].cartImageUrl = u.url;   // cotton_designer 의 카트 썸네일 키
+                items[idx].imgFileName = u.name;
+            }
+            // files[] 에 인덱스 정보 포함하여 push — workorder 렌더가 fileMap[i] 로 잡음
+            orderFiles[idx] = { name: u.name, url: u.url, type: u.type, _manual: true, _item_idx: idx };
+        }
+        const { error: upErr } = await sb.from('orders').update({ items: items, files: orderFiles }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        alert(uploaded.length + '개 파일이 첨부되었습니다.\n페이지를 새로고침합니다.');
+        location.reload();
+    } catch (e) {
+        console.error('[cw attach]', e);
+        alert('파일 첨부 실패: ' + (e.message || e) + '\n(관리자 계정으로 로그인되어 있는지 확인하세요.)');
+        if (lbl) lbl.innerHTML = origHtml;
+    }
+};
 </script>
 </body>
 </html>
