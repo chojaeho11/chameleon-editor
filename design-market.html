@@ -6205,58 +6205,12 @@ async function selectBid(requestId, bidId, designerId) {
     await sb.from('design_bids').update({ status: 'selected', payment_status: 'pending' }).eq('id', bidId);
     await sb.from('design_bids').update({ status: 'rejected' }).eq('request_id', requestId).neq('id', bidId);
 
-    // Phase 3a: stash pending bid so success.html can mark payment after PG confirms
-    try {
-        const key = 'dm_pending_design_bids';
-        let pending = [];
-        try { pending = JSON.parse(localStorage.getItem(key) || '[]'); } catch(_) {}
-        pending.push({ bidId, requestId, price: bid.price, designerId, ts: Date.now() });
-        localStorage.setItem(key, JSON.stringify(pending));
-    } catch(_) {}
-
-    // Push design fee into main cart (existing PG flow)
-    const cartKey = 'chameleon_cart_current';
-    let cart = [];
-    try { cart = JSON.parse(localStorage.getItem(cartKey) || '[]'); } catch(_) {}
-
-    const designTitle = req?.title || 'Design';
-    cart.push({
-        uid: Date.now(),
-        product: {
-            code: 'design_fee_' + requestId.substring(0, 8),
-            name: '[디자인비] ' + designTitle + ' (' + designerName + ')',
-            name_jp: '[デザイン料] ' + designTitle + ' (' + designerName + ')',
-            name_us: '[Design Fee] ' + designTitle + ' (' + designerName + ')',
-            price: bid.price,
-            price_jp: Math.round(bid.price * 0.1),
-            price_us: Math.round(bid.price * 0.001 * 100) / 100,
-            img: '',
-            category: 'design_fee',
-            addons: [],
-            w: 0, h: 0, w_mm: 0, h_mm: 0
-        },
-        type: 'product_only',
-        fileName: '',
-        thumb: '',
-        json: null,
-        width: 0,
-        height: 0,
-        isOpen: false,
-        qty: 1,
-        selectedAddons: {},
-        addonQuantities: {},
-        _designRequestId: requestId,
-        _designBidId: bidId,
-        _designerId: designerId
-    });
-    localStorage.setItem(cartKey, JSON.stringify(cart));
-
+    // 2026-06-10: 옛날 cart 흐름 (수도권배송/지방배송/택배 등 디자인비에 무관한 옵션 노출) 제거.
+    //   디자인 마켓 전용 결제 페이지 /design-pay 로 직접 이동 → 간결한 카드/무통장 결제 UI.
     showToast(t('toast_designer_selected'), 'success');
-
-    // Redirect to main page cart for real PG checkout
     setTimeout(() => {
-        window.location.href = location.origin + '/?open_cart=1';
-    }, 500);
+        window.location.href = '/design-pay?bid=' + encodeURIComponent(bidId) + '&lang=' + (LANG || 'ko');
+    }, 400);
 }
 
 // ═══════════════════════════════════════════════════════════════
