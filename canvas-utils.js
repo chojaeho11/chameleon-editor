@@ -1,4 +1,4 @@
-import { canvas } from "./canvas-core.js?v=291";
+import { canvas } from "./canvas-core.js?v=292";
 
 // --- History (Undo/Redo) State ---
 let undoStack = [];
@@ -198,9 +198,14 @@ function unlockObject(obj) {
 export function updateLockUI() {
     const btn = document.getElementById("btnLockWizard");
     if (!btn) return;
-    
-    const active = canvas.getActiveObject();
-    const hasLocked = canvas.getObjects().some(o => o.locked);
+
+    // 2026-06-10: 모듈 import 의 라이브 바인딩이 깨진 경우 (canvas-core.js initCanvas
+    //   실행 전 / DOM #designCanvas 부재) window.canvas 폴백 + null 가드
+    const c = canvas || window.canvas;
+    if (!c || typeof c.getActiveObject !== 'function') return;
+
+    const active = c.getActiveObject();
+    const hasLocked = c.getObjects().some(o => o.locked);
 
     if (active) {
         btn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>Lock Selection</span>';
