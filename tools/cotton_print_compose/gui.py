@@ -25,9 +25,15 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 
 
+__version__ = '2026.06.10.1'   # 업데이트 비교용 (YYYY.MM.DD.N)
+
 SCRIPT_NAME = 'compose_fabric.py'
-SCRIPT_URL  = ('https://raw.githubusercontent.com/chojaeho11/chameleon-editor/'
-               'main/tools/cotton_print_compose/compose_fabric.py')
+GUI_NAME    = 'gui.py'
+
+# Cloudflare Pages — public, always-on, CDN cached (GitHub raw 보다 안정)
+BASE_URL    = 'https://www.cafe2626.com/tools/cotton_print_compose'
+SCRIPT_URL  = f'{BASE_URL}/{SCRIPT_NAME}'
+GUI_URL     = f'{BASE_URL}/{GUI_NAME}'
 
 # 색상 팔레트 (cotton-print 브라운/크림 톤)
 C_BG       = '#faf6ed'
@@ -212,10 +218,23 @@ class CottonPrintGUI:
                   cursor='hand2', padx=14, pady=7,
                   command=self._show_help).pack(side='left')
 
+        tk.Button(bottom, text='🔄  업데이트 확인',
+                  font=('Segoe UI', 10), bd=0,
+                  bg=C_CREAM_D, fg=C_BROWN_D,
+                  activebackground='#e7d8a8',
+                  cursor='hand2', padx=14, pady=7,
+                  command=self._check_update).pack(side='left', padx=(8, 0))
+
         self.status_lbl = tk.Label(bottom, text='⚪ 준비 중...',
                                     font=('Segoe UI', 10, 'bold'),
                                     bg=C_BG, fg=C_MUTED)
         self.status_lbl.pack(side='right')
+
+        # 버전 표시 (작게)
+        ver_lbl = tk.Label(bottom, text=f'v{__version__}',
+                           font=('Consolas', 8),
+                           bg=C_BG, fg=C_MUTED)
+        ver_lbl.pack(side='right', padx=(0, 8))
 
         # Enter 키로 생성
         self.order_entry.bind('<Return>', lambda e: self._on_generate())
@@ -419,6 +438,83 @@ class CottonPrintGUI:
         except Exception as e:
             messagebox.showinfo('출력 폴더',
                                 f'output 폴더 위치:\n{self.output_dir}\n\n({e})')
+
+    # ─── 업데이트 ────────────────────────────────────────
+    def _check_update(self):
+        """수동 업데이트 확인 — 강제 재다운로드 + 버전 비교."""
+        if self.is_running:
+            messagebox.showwarning('실행 중',
+                                   '합성 작업 중에는 업데이트할 수 없습니다.\n'
+                                   '완료 후 다시 시도하세요.')
+            return
+
+        self._log('')
+        self._log('[..] 최신 버전 확인 중...')
+        self._set_status('🟡 업데이트 확인 중...', C_WARN)
+        threading.Thread(target=self._do_update, daemon=True).start()
+
+    def _do_update(self):
+        import re
+        import time
+        updated = []
+        failed = []
+        # gui.py + compose_fabric.py 둘 다 시도
+        targets = [(GUI_NAME, GUI_URL), (SCRIPT_NAME, SCRIPT_URL)]
+        for fname, url in targets:
+            local_path = self.work_dir / fname
+            try:
+                # 캐시 우회
+                fetch_url = f'{url}?t={int(time.time())}'
+                req = urllib.request.Request(fetch_url,
+                                              headers={'User-Agent': f'cotton-print-gui/{__version__}'})
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    new_bytes = resp.read()
+                if len(new_bytes) < 1000:
+                    failed.append(f'{fname}: 너무 작음')
+                    continue
+
+                # 기존 파일과 비교
+                old_bytes = b''
+                if local_path.exists():
+                    old_bytes = local_path.read_bytes()
+
+                if new_bytes == old_bytes:
+                    self.root.after(0, self._log, f'    [=] {fname}: 이미 최신')
+                else:
+                    # 새 버전 추출 시도 (gui.py 의 __version__)
+                    if fname == GUI_NAME:
+                        m = re.search(rb"__version__\s*=\s*['\"]([\d\.]+)['\"]",
+                                       new_bytes)
+                        new_ver = m.group(1).decode('ascii') if m else '?'
+                    else:
+                        new_ver = ''
+                    local_path.write_bytes(new_bytes)
+                    label = f'{fname} → v{new_ver}' if new_ver else fname
+                    updated.append(label)
+                    self.root.after(0, self._log, f'    [✓] {label} 업데이트됨')
+            except Exception as e:
+                failed.append(f'{fname}: {e}')
+                self.root.after(0, self._log, f'    [X] {fname}: {e}')
+
+        # 결과 안내
+        if updated:
+            self.root.after(0, self._update_done_dialog, updated)
+        elif failed:
+            self.root.after(0, self._set_status, '🔴 업데이트 실패', C_DANGER)
+            self.root.after(0, messagebox.showerror, '업데이트 실패',
+                            '업데이트 중 문제가 발생했습니다.\n\n' +
+                            '\n'.join(failed))
+        else:
+            self.root.after(0, self._set_status, '🟢 최신 버전 사용 중', C_SUCCESS)
+            self.root.after(0, messagebox.showinfo, '최신 버전',
+                            f'이미 최신 버전(v{__version__})을 사용 중입니다.')
+
+    def _update_done_dialog(self, updated):
+        self._set_status('🟢 업데이트 완료', C_SUCCESS)
+        msg = '다음 파일이 업데이트되었습니다:\n\n' + '\n'.join(f'  • {x}' for x in updated)
+        msg += '\n\n새 버전을 적용하려면 GUI를 다시 시작해주세요.\n지금 종료하시겠습니까?'
+        if messagebox.askyesno('업데이트 완료 — 재시작 필요', msg):
+            self.root.destroy()
 
     def _show_help(self):
         help_text = (
