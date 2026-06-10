@@ -176,11 +176,24 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
     }
     state.user = sess.user;
 
+    // 2026-06-10: PostgREST FK relationship 없어서 JOIN 실패하던 문제 fix — 별도 쿼리 분리
     var br = await sb.from('design_bids')
-      .select('*, designer_profiles:designer_id(display_name, photo_url)')
+      .select('*')
       .eq('id', bidId).maybeSingle();
-    if (br.error || !br.data){ centerMsg('🔍', T.notFound, T.notFoundDesc, T.toMarket, '/design-market'); return; }
+    if (br.error || !br.data){
+      console.error('[design-pay] bid fetch failed', br.error);
+      centerMsg('🔍', T.notFound, T.notFoundDesc, T.toMarket, '/design-market'); return;
+    }
     state.bid = br.data;
+    // 디자이너 프로필 별도 조회 (display_name, photo_url 만 필요)
+    try {
+      if (state.bid.designer_id) {
+        var dp = await sb.from('designer_profiles')
+          .select('display_name, photo_url')
+          .eq('id', state.bid.designer_id).maybeSingle();
+        if (dp.data) state.bid.designer_profiles = dp.data;
+      }
+    } catch(_) {}
 
     // 이미 결제 진행/완료된 건은 차단 (실결제 없는 중복 결제 방지)
     var ps = state.bid.payment_status;
