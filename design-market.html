@@ -6229,6 +6229,7 @@ async function selectBid(requestId, bidId, designerId) {
 }
 
 // 2026-06-10: 무통장 입금 신청 후 카드결제로 변경하고 싶을 때
+//   실제 컬럼: paid_order_id (bank_order_id 아님). bank_depositor 컬럼 없음.
 window.switchBankToCard = async function(bidId) {
     const confirmMsg = LANG==='en'
         ? 'Switch to card payment?\nThe bank transfer request will be cancelled and you will be redirected to the card payment page.'
@@ -6237,39 +6238,67 @@ window.switchBankToCard = async function(bidId) {
         : '카드결제로 변경하시겠어요?\n무통장 입금 신청은 취소되고 카드결제 페이지로 이동합니다.';
     if (!confirm(confirmMsg)) return;
     try {
-        // 1) 현재 입찰 정보 조회 (bank_order_id 가 있다면 해당 주문 취소)
-        const { data: bid } = await sb.from('design_bids')
-            .select('id, payment_status, bank_order_id')
+        // 1) 입찰 조회 — 실제 컬럼만 사용
+        const { data: bid, error: bidQErr } = await sb.from('design_bids')
+            .select('id, payment_status, paid_order_id')
             .eq('id', bidId).maybeSingle();
-        if (!bid) { showToast('입찰 정보를 찾을 수 없습니다.', 'error'); return; }
-        if (bid.payment_status !== 'bank_pending') {
-            showToast('이미 결제 처리 중인 항목입니다. 새로고침 후 다시 확인해주세요.', 'warn');
+        if (bidQErr) {
+            console.error('[switchBankToCard] bid query', bidQErr);
+            showToast('입찰 조회 실패: ' + bidQErr.message, 'error');
             return;
         }
-        // 2) 무통장 주문이 있으면 취소 처리 (트리거가 자동으로 쿠폰/마일리지 복구하지만 의도적 취소이므로 그냥 두기)
-        if (bid.bank_order_id) {
+        if (!bid) { showToast('입찰 정보를 찾을 수 없습니다.', 'error'); return; }
+        if (bid.payment_status !== 'bank_pending') {
+            showToast('이미 처리된 상태입니다 (현재: ' + (bid.payment_status || 'unknown') + '). 새로고침 후 다시 확인해주세요.', 'warn');
+            return;
+        }
+
+        // 2) 무통장 주문 취소 처리 — paid_order_id 있으면 그걸로, 없으면 request_note 패턴으로 검색
+        let orderIdToCancel = bid.paid_order_id;
+        if (!orderIdToCancel) {
+            // request_note 가 "DesignMarket bid#<bidId>" 패턴 포함, 무통장입금/입금대기인 가장 최근 주문 검색
+            try {
+                const { data: orders } = await sb.from('orders')
+                    .select('id, payment_method, payment_status, status')
+                    .ilike('request_note', '%bid#' + bidId + '%')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                if (orders && orders.length > 0) {
+                    const banky = orders.find(o => o.payment_method === '무통장입금' && (o.payment_status === '입금대기' || o.status === '접수됨'));
+                    if (banky) orderIdToCancel = banky.id;
+                }
+            } catch (e) { console.warn('[switchBankToCard] order search failed', e); }
+        }
+        if (orderIdToCancel) {
             try {
                 await sb.from('orders').update({
                     status: '취소됨',
                     payment_status: '취소됨',
                     admin_note: '[디자인 마켓] 고객이 무통장 → 카드결제로 변경 (자동 취소)'
-                }).eq('id', bid.bank_order_id);
+                }).eq('id', orderIdToCancel);
             } catch (e) {
-                console.warn('[switchBankToCard] order update failed', e);
-                // 주문 취소 실패해도 진행 (관리자가 수동으로 정리)
+                console.warn('[switchBankToCard] order cancel failed', e);
+                // 주문 취소 실패해도 bid reset 은 진행 (관리자가 수동 정리 가능)
             }
         }
-        // 3) bid 의 payment_status 를 pending 으로 reset → /design-pay 다시 진입 가능
-        const { error: bidErr } = await sb.from('design_bids').update({
-            payment_status: 'pending',
-            bank_depositor: null,
-            bank_order_id: null
-        }).eq('id', bidId);
+
+        // 3) bid payment_status → pending (실제 존재하는 컬럼만 업데이트)
+        const { error: bidErr } = await sb.from('design_bids')
+            .update({ payment_status: 'pending', paid_order_id: null })
+            .eq('id', bidId);
         if (bidErr) {
-            // bank_depositor / bank_order_id 컬럼이 없는 경우 fallback
-            await sb.from('design_bids').update({ payment_status: 'pending' }).eq('id', bidId);
+            // paid_order_id 컬럼 부재시 폴백
+            const { error: bidErr2 } = await sb.from('design_bids')
+                .update({ payment_status: 'pending' })
+                .eq('id', bidId);
+            if (bidErr2) {
+                console.error('[switchBankToCard] bid reset failed', bidErr2);
+                showToast('상태 변경 실패: ' + bidErr2.message, 'error');
+                return;
+            }
         }
-        // 4) /design-pay 로 이동 — 정상 카드/무통장 선택 UI 노출
+
+        // 4) /design-pay 로 이동 — 카드 결제 UI
         showToast(LANG==='en'?'Switching to card payment...':LANG==='ja'?'カード決済に切替中...':'카드결제 페이지로 이동합니다...', 'info');
         setTimeout(() => {
             window.location.href = '/design-pay?bid=' + encodeURIComponent(bidId) + '&lang=' + (LANG || 'ko');
