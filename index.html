@@ -1334,30 +1334,17 @@ window._tcmFallbackClick = function(code) {
         <!-- 2026-06-01: 독립 쿠폰 카드 삭제 — 각 contact 박스 (mgrQuoteHero / jpLineContact / enHibaContact) 내부로 이전됨 -->
     </div>
     <script>
-    // 2026-05-28: 로케일별 카드 표시 분기
-    // KR: 인플루언서 카드 숨김 (mgrQuoteHero 만 사용)
-    // JP: jpLineContact 표시 + 인플루언서 카드 표시
-    // EN/CN/ES/DE/FR/AR: enHibaContact 표시 + 인플루언서 카드 표시
+    // 2026-06-11: 모든 로케일에서 mgrQuoteHero (6 버튼) 만 사용 — jpLineContact/enHibaContact 비활성
+    //   전화/약관 등 로케일별 동작은 mgrQuoteHero 의 버튼들에 직접 분기 적용됨 (다음 인라인 스크립트)
     (function(){
-        var u = new URLSearchParams(location.search);
-        var host = location.hostname || '';
-        var lang = u.get('lang') ||
-            (host.indexOf('cafe0101') >= 0 ? 'ja' :
-             (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
-             (window.CURRENT_LANG || window.__SITE_CODE === 'JP' ? 'ja' : 'kr'));
-        var isKR = (lang === 'kr' || lang === 'ko');
-        var isJP = (lang === 'ja' || lang === 'jp');
-        var isForeign = !isKR && !isJP;
-
-        if (isJP) {
-            var jpEl = document.getElementById('jpLineContact');
-            if (jpEl) jpEl.style.display = '';
-        }
-        if (isForeign) {
-            var enEl = document.getElementById('enHibaContact');
-            if (enEl) enEl.style.display = '';
-        }
-        // 2026-06-01: 쿠폰 카드는 모든 사이트에 노출 (KR 도 표시)
+        var jpRow = document.getElementById('jpHeroRow');
+        if (jpRow) jpRow.style.display = 'none';
+        var jpEl = document.getElementById('jpLineContact');
+        if (jpEl) jpEl.style.display = 'none';
+        var enEl = document.getElementById('enHibaContact');
+        if (enEl) enEl.style.display = 'none';
+        var mgrHero = document.getElementById('mgrQuoteHero');
+        if (mgrHero) mgrHero.style.display = '';
     })();
     // EN/외국 사이트 인라인 주문 — _mgrQuoteOrder 위임
     window._enInlineOrder = function(){
