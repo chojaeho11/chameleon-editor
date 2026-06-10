@@ -56,11 +56,19 @@ except Exception:
     pass
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFont
     Image.MAX_IMAGE_PIXELS = None      # 큰 패턴 이미지 허용 (decompression bomb 경고 비활성)
 except ImportError:
     print("ERROR: Pillow not installed. Run: pip install Pillow", file=sys.stderr)
     sys.exit(1)
+
+# python-barcode 는 옵션 — 미설치 시 텍스트 라벨로 대체
+try:
+    import barcode as _barcode_mod
+    from barcode.writer import ImageWriter as _BarcodeWriter
+    HAS_BARCODE = True
+except ImportError:
+    HAS_BARCODE = False
 
 
 # ─── 일본어/영어 원단명 → 한국어 변환 ───────────────────────────────
@@ -139,46 +147,261 @@ def build_pattern_filename(order_id, idx, item, output_w_cm, manager_name, layou
     return f'{base}_#{order_id}.{ext}'
 
 
-# ─── 돔보마크 (トンボ / 사방 5mm 원형 등록 마크) ──────────────────
+# ─── 돔보마크 / 등록 마크 (커팅 가이드) ──────────────────────────
+def draw_tombow_on_region(canvas: 'Image.Image', x0: int, y0: int,
+                           w: int, h: int, dpi: int,
+                           diameter_mm: float = 5.0,
+                           edge_offset_mm: float = 5.0,
+                           color=(0, 0, 0)) -> None:
+    """캔버스 안 지정 사각 영역(x0, y0, w, h) 의 4 모서리에 돔보."""
+    diameter_px = max(1, int(round(diameter_mm * dpi / 25.4)))
+    offset_px   = max(1, int(round(edge_offset_mm * dpi / 25.4)))
+    radius = diameter_px / 2.0
+    draw = ImageDraw.Draw(canvas)
+    cx_l = x0 + offset_px + radius
+    cx_r = x0 + w - offset_px - radius
+    cy_t = y0 + offset_px + radius
+    cy_b = y0 + h - offset_px - radius
+    for cx, cy in [(cx_l, cy_t), (cx_r, cy_t), (cx_l, cy_b), (cx_r, cy_b)]:
+        bbox = (cx - radius, cy - radius, cx + radius, cy + radius)
+        draw.ellipse(bbox, fill=color)
+
+
 def draw_tombow_marks(canvas: 'Image.Image', dpi: int,
                        diameter_mm: float = 5.0,
                        edge_offset_mm: float = 5.0,
                        color=(0, 0, 0)) -> 'Image.Image':
-    """4 모서리에 지정 크기 원형 등록 마크 (커팅 가이드).
-
-    Args:
-        canvas: PIL 이미지 (RGB or RGBA)
-        dpi: 출력 DPI
-        diameter_mm: 원 지름 (mm) — 기본 5mm
-        edge_offset_mm: 외곽에서 떨어진 거리 (mm) — 기본 5mm
-        color: 마크 색상 RGB
-    """
-    # mm → px 환산 (1 inch = 25.4 mm)
-    diameter_px = max(1, int(round(diameter_mm * dpi / 25.4)))
-    offset_px   = max(1, int(round(edge_offset_mm * dpi / 25.4)))
-    radius = diameter_px / 2.0
-
+    """캔버스 전체 4 모서리에 돔보 (편의 래퍼)."""
     w, h = canvas.size
-    # ImageDraw 는 RGB/RGBA 모드 다 OK
-    draw = ImageDraw.Draw(canvas)
-
-    # 4 모서리 — 원 외곽이 edge_offset_mm 만큼 떨어지도록 (즉, 원 중심은 edge_offset + radius)
-    cx_l = offset_px + radius
-    cx_r = w - offset_px - radius
-    cy_t = offset_px + radius
-    cy_b = h - offset_px - radius
-
-    centers = [
-        (cx_l, cy_t),  # 좌상
-        (cx_r, cy_t),  # 우상
-        (cx_l, cy_b),  # 좌하
-        (cx_r, cy_b),  # 우하
-    ]
-    for cx, cy in centers:
-        bbox = (cx - radius, cy - radius, cx + radius, cy + radius)
-        draw.ellipse(bbox, fill=color)
-
+    draw_tombow_on_region(canvas, 0, 0, w, h, dpi,
+                           diameter_mm, edge_offset_mm, color)
     return canvas
+
+
+# ─── Korean 폰트 헬퍼 ─────────────────────────────────────────
+_FONT_CACHE = {}
+
+def get_korean_font(size_px: int):
+    """플랫폼별 한글 폰트 자동 탐지 (Windows 맑은고딕 우선)."""
+    key = size_px
+    if key in _FONT_CACHE:
+        return _FONT_CACHE[key]
+    candidates = [
+        # Windows
+        r'C:\Windows\Fonts\malgun.ttf',
+        r'C:\Windows\Fonts\malgunbd.ttf',
+        r'C:\Windows\Fonts\gulim.ttc',
+        # Mac
+        '/Library/Fonts/AppleGothic.ttf',
+        '/System/Library/Fonts/AppleSDGothicNeo.ttc',
+        # Linux
+        '/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
+        '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                f = ImageFont.truetype(path, size_px)
+                _FONT_CACHE[key] = f
+                return f
+            except Exception:
+                continue
+    # 폴백
+    _FONT_CACHE[key] = ImageFont.load_default()
+    return _FONT_CACHE[key]
+
+
+# ─── 바코드 생성 ─────────────────────────────────────────────
+def _text_label_fallback(text: str, dpi: int, target_height_mm: float) -> 'Image.Image':
+    """바코드 미지원/실패 시 텍스트 라벨 폴백."""
+    font_px = max(14, int(target_height_mm * dpi / 25.4 * 0.5))
+    font = get_korean_font(font_px)
+    txt = f'주문 #{text}'
+    tmp = Image.new('RGB', (10, 10))
+    d = ImageDraw.Draw(tmp)
+    bbox = d.textbbox((0, 0), txt, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    img = Image.new('RGB', (tw + 24, th + 12), 'white')
+    dd = ImageDraw.Draw(img)
+    dd.rectangle((0, 0, img.size[0] - 1, img.size[1] - 1), outline='black', width=2)
+    dd.text((12, 6), txt, fill='black', font=font)
+    return img
+
+
+def make_barcode_image(text: str, dpi: int,
+                        target_height_mm: float = 12.0,
+                        module_width_mm: float = 0.3) -> 'Image.Image':
+    """Code128 바코드 PNG 이미지 생성. python-barcode 미설치 시 폴백 텍스트."""
+    if not HAS_BARCODE:
+        return _text_label_fallback(text, dpi, target_height_mm)
+    # dpi 낮을 때 module_width 가 1px 미만 → python-barcode 실패 방지
+    # 최소 module_width = 2 px 유지
+    min_module_mm = (2.0 * 25.4) / max(dpi, 1)
+    effective_mw = max(module_width_mm, min_module_mm)
+    try:
+        code = _barcode_mod.get('code128', str(text), writer=_BarcodeWriter())
+        buf = BytesIO()
+        options = {
+            'module_width':  effective_mw,
+            'module_height': max(target_height_mm, 6.0),
+            'quiet_zone':    2.0,
+            'font_size':     8,
+            'text_distance': 2,
+            'background':    'white',
+            'foreground':    'black',
+            'write_text':    True,
+            'dpi':           dpi,
+        }
+        code.write(buf, options)
+        buf.seek(0)
+        return Image.open(buf).convert('RGB')
+    except Exception as e:
+        # 라이브러리 내부 오류 → 폴백
+        print(f'  [!] 바코드 생성 폴백 (텍스트): {e}')
+        return _text_label_fallback(text, dpi, target_height_mm)
+
+
+# ─── 포스터 한 항목 렌더링 ────────────────────────────────────
+def render_poster_item(item: dict, order_id, manager_name: str, dpi: int,
+                        tombow_mm: float = 5.0,
+                        tombow_offset_mm: float = 5.0,
+                        label_height_mm: float = 22.0) -> 'Image.Image':
+    """layout=centered 한 항목을 포스터로 합성:
+       이미지 영역 (실제 출력 크기, 4 모서리 돔보) + 하단 라벨 (재질/고객/바코드)."""
+    output_w_cm = float(item.get('width_cm') or (item.get('width_mm', 1000) / 10))
+    output_h_cm = float(item.get('height_cm') or (item.get('height_mm', 1000) / 10))
+
+    img_w_px = cm_to_px(output_w_cm, dpi)
+    img_h_px = cm_to_px(output_h_cm, dpi)
+
+    # 아트워크 다운로드 + 리사이즈
+    art_url = item.get('artwork_url') or item.get('cartImageUrl')
+    if not art_url:
+        raise ValueError('artwork_url 없음')
+    src = download_image(art_url)
+    src = src.resize((img_w_px, img_h_px), Image.LANCZOS)
+
+    # 라벨 높이 + 전체 캔버스
+    label_h_px = max(1, int(round(label_height_mm * dpi / 25.4)))
+    total_h_px = img_h_px + label_h_px
+
+    poster = Image.new('RGB', (img_w_px, total_h_px), 'white')
+    # 이미지 영역: 알파 합성 처리
+    if src.mode == 'RGBA':
+        poster.paste(src, (0, 0), src)
+    else:
+        poster.paste(src, (0, 0))
+
+    # 이미지 영역에 돔보마크
+    draw_tombow_on_region(poster, 0, 0, img_w_px, img_h_px, dpi,
+                           diameter_mm=tombow_mm,
+                           edge_offset_mm=tombow_offset_mm)
+
+    # 라벨 텍스트
+    draw = ImageDraw.Draw(poster)
+    fabric_kr = fabric_to_korean(item.get('fabric') or item.get('product_name') or '')
+    fabric_short = fabric_kr.replace('(', '').replace(')', '').strip()
+    # 작품명 — product_name 에서 fabric 부분 빼고 남은 추가 정보
+    pname = item.get('product_name') or ''
+    work_label = ''
+    if '—' in pname or '-' in pname:
+        sep = '—' if '—' in pname else '-'
+        parts = pname.split(sep, 1)
+        if len(parts) == 2:
+            work_label = parts[1].strip()
+
+    font_px = max(20, int(label_h_px * 0.32))
+    font_main = get_korean_font(font_px)
+    font_sub  = get_korean_font(max(14, int(font_px * 0.7)))
+
+    text_x = cm_to_px(0.4, dpi)
+    text_y = img_h_px + cm_to_px(0.3, dpi)
+
+    line1 = f'재질: {fabric_short}'
+    if work_label:
+        line1 += f'  ·  {work_label[:40]}'
+    line2 = f'고객: {manager_name}    주문 #{order_id}'
+
+    draw.text((text_x, text_y), line1, fill='black', font=font_main)
+    draw.text((text_x, text_y + font_px + cm_to_px(0.15, dpi)),
+              line2, fill='black', font=font_sub)
+
+    # 바코드 (우측)
+    try:
+        bc = make_barcode_image(str(order_id), dpi,
+                                 target_height_mm=label_height_mm * 0.5,
+                                 module_width_mm=0.28)
+        # 라벨 영역에 맞게 비율 조정 (높이 기준)
+        target_bc_h = int(label_h_px * 0.62)
+        ratio = target_bc_h / bc.size[1]
+        new_bc_w = max(1, int(bc.size[0] * ratio))
+        bc = bc.resize((new_bc_w, target_bc_h), Image.LANCZOS)
+        bc_x = img_w_px - new_bc_w - cm_to_px(0.4, dpi)
+        bc_y = img_h_px + cm_to_px(0.25, dpi)
+        # 폭이 좁아 라벨 영역과 겹치면 줄임
+        if bc_x < text_x + cm_to_px(8.0, dpi):
+            # 너무 좁은 항목은 폴백 — 작은 바코드
+            scale_down = 0.55
+            bc = bc.resize((max(1, int(new_bc_w * scale_down)),
+                            max(1, int(target_bc_h * scale_down))), Image.LANCZOS)
+            bc_x = img_w_px - bc.size[0] - cm_to_px(0.3, dpi)
+        poster.paste(bc, (bc_x, bc_y))
+    except Exception as e:
+        print(f'  [!] 바코드 생성 스킵: {e}')
+
+    return poster
+
+
+# ─── Shelf-pack 알고리즘 — 120cm 폭 시트에 nest 배치 ──────────
+def nest_posters_on_sheet(posters: list, sheet_width_cm: float, dpi: int,
+                           padding_cm: float = 0.5) -> 'Image.Image':
+    """Posters 들을 sheet_width 안에 빈틈없이 packing (shelf algorithm).
+       너무 넓은 항목은 90도 회전 시도 — 그래도 안 들어가면 scale down."""
+    sheet_w_px = cm_to_px(sheet_width_cm, dpi)
+    padding_px = max(0, cm_to_px(padding_cm, dpi))
+
+    # 1) 회전 처리 + scale-down (sheet_w 넘으면)
+    prepared = []
+    for p in posters:
+        pw, ph = p.size
+        # 회전 시도 — 폭이 시트 폭 넘으면 90도 회전
+        if pw > sheet_w_px and ph <= sheet_w_px:
+            p = p.rotate(90, expand=True, resample=Image.BICUBIC)
+            pw, ph = p.size
+        # 그래도 넘으면 scale-down
+        if pw > sheet_w_px:
+            r = sheet_w_px / pw
+            p = p.resize((sheet_w_px, max(1, int(ph * r))), Image.LANCZOS)
+            pw, ph = p.size
+        prepared.append(p)
+
+    # 2) 높이 내림차순 정렬 (shelf packing 효율)
+    prepared.sort(key=lambda x: -x.size[1])
+
+    # 3) Shelf packing
+    placements = []   # (poster, x, y)
+    cur_x = 0
+    cur_y = 0
+    cur_shelf_h = 0
+    for p in prepared:
+        pw, ph = p.size
+        if cur_x + pw > sheet_w_px:
+            # 새 shelf
+            cur_y += cur_shelf_h + padding_px
+            cur_x = 0
+            cur_shelf_h = 0
+        placements.append((p, cur_x, cur_y))
+        cur_x += pw + padding_px
+        cur_shelf_h = max(cur_shelf_h, ph)
+
+    total_h_px = cur_y + cur_shelf_h
+    if total_h_px <= 0:
+        raise ValueError('빈 시트 — 합성할 항목 없음')
+
+    sheet = Image.new('RGB', (sheet_w_px, total_h_px), 'white')
+    for p, x, y in placements:
+        sheet.paste(p, (x, y))
+    return sheet
 
 
 # ─── 기본 상수 ──────────────────────────────────────────────────────
@@ -403,16 +626,10 @@ def process_item(order_id, idx, item, files, args, out_dir):
         layout, bg, scale, args.dpi,
     )
 
-    # 2026-06-10: 돔보마크 — 사방 5mm 떨어진 4 모서리에 5mm 원형 등록 마크
-    if not getattr(args, 'no_tombow', False):
-        diameter = getattr(args, 'tombow_mm', 5.0)
-        offset = getattr(args, 'tombow_offset_mm', 5.0)
-        out_img = draw_tombow_marks(out_img, args.dpi,
-                                     diameter_mm=diameter,
-                                     edge_offset_mm=offset)
-        print(f"  🎯 돔보마크: {diameter}mm 원 · 사방 {offset}mm 떨어짐")
+    # 2026-06-10: 롤인쇄(basic/brick/half_drop/mirror)는 돔보 없음 (요청).
+    #            포스터(centered)는 별도 process_poster_group 에서 처리하므로 여기 안 옴.
 
-    # 파일명 — 패턴 주문(basic/brick/half_drop/mirror) 은 새 형식, centered 는 기존 형식
+    # 파일명 — 롤인쇄는 새 형식 (롤인쇄N개_W폭_고객명_원단_#주문)
     manager_name = getattr(args, '_manager_name', '') or ''
     is_pattern = (layout or '').lower() not in ('centered', 'center')
     if is_pattern and order_id:
@@ -441,6 +658,115 @@ def process_item(order_id, idx, item, files, args, out_dir):
     size_mb = out_path.stat().st_size / (1024 * 1024)
     print(f"  ✅ 저장: {out_path.name}  ({out_img.size[0]}×{out_img.size[1]}px, {size_mb:.1f}MB)")
     return True
+
+
+# ─── 포스터 배치 처리 (재질별 nest) ────────────────────────────
+def process_poster_batch(order_id, targets, files, args, out_dir):
+    """centered 항목들을 재질별로 묶어 120폭 시트에 nest packing.
+       각 포스터: 이미지 + 4 모서리 돔보 + 재질/고객명/바코드 라벨 포함."""
+    manager_name = getattr(args, '_manager_name', '') or '고객'
+    use_nest = not getattr(args, 'no_nest', False)
+    sheet_w_cm = float(getattr(args, 'sheet_width_cm', 120.0))
+    pad_cm = float(getattr(args, 'nest_padding_cm', 0.5))
+    label_mm = float(getattr(args, 'label_mm', 22.0))
+    tombow_mm = float(getattr(args, 'tombow_mm', 5.0))
+    tombow_off = float(getattr(args, 'tombow_offset_mm', 5.0))
+    do_tombow = not getattr(args, 'no_tombow', False)
+
+    # 재질별 group
+    groups = {}
+    for idx, item in targets:
+        fab = (item.get('fabric') or item.get('product_name') or '미분류')
+        fab_kr = fabric_to_korean(fab).strip()
+        # 작품명 등 추가 텍스트가 있으면 첫 단어만 (재질 분류용)
+        # 예: "쉬폰 — 김명련" → "쉬폰"
+        for sep in ('—', '-', '·'):
+            if sep in fab_kr:
+                fab_kr = fab_kr.split(sep, 1)[0].strip()
+                break
+        groups.setdefault(fab_kr, []).append((idx, item))
+
+    print(f"  재질별 그룹: {len(groups)}종 — " + ', '.join(
+        f'{k}({len(v)}건)' for k, v in groups.items()))
+
+    saved = 0
+    for fab_kr, group in groups.items():
+        print(f"\n  ── [{fab_kr}] {len(group)}건 처리 중 ──")
+        # 각 항목 포스터 렌더링
+        posters = []
+        for idx, item in group:
+            try:
+                print(f"  [{idx+1}] {item.get('product_name','')[:50]}")
+                poster = render_poster_item(item, order_id, manager_name,
+                                              args.dpi,
+                                              tombow_mm=tombow_mm if do_tombow else 0,
+                                              tombow_offset_mm=tombow_off,
+                                              label_height_mm=label_mm)
+                posters.append(poster)
+            except Exception as e:
+                print(f"    ❌ 스킵: {e}")
+
+        if not posters:
+            print(f"  [!] {fab_kr} 그룹에 처리 가능한 항목 없음")
+            continue
+
+        # nest OR 항목별 개별 저장
+        if use_nest and len(posters) > 1:
+            print(f"  🧩 nest packing: {len(posters)}개 → {sheet_w_cm}cm 폭 시트")
+            sheet = nest_posters_on_sheet(posters, sheet_w_cm, args.dpi,
+                                            padding_cm=pad_cm)
+            # 시트 저장
+            mgr_safe = sanitize_filename(manager_name)[:20]
+            fab_safe = sanitize_filename(fab_kr)[:20]
+            fname = (f'포스터_{fab_safe}_{int(sheet_w_cm)}폭'
+                     f'_{mgr_safe}_{len(posters)}점_#{order_id}.{args.format}')
+            out_path = out_dir / fname
+            final_path = _save_image(sheet, out_path, args)
+            try:
+                size_mb = final_path.stat().st_size / (1024 * 1024)
+            except Exception:
+                size_mb = 0
+            print(f'  ✅ 시트 저장: {final_path.name}  '
+                  f'({sheet.size[0]}×{sheet.size[1]}px, {size_mb:.1f}MB)')
+            saved += 1
+        else:
+            # 항목별 개별 저장
+            for i, poster in enumerate(posters):
+                mgr_safe = sanitize_filename(manager_name)[:20]
+                fab_safe = sanitize_filename(fab_kr)[:20]
+                fname = (f'포스터_{fab_safe}_{mgr_safe}_{i+1}_#{order_id}.'
+                         f'{args.format}')
+                out_path = out_dir / fname
+                final_path = _save_image(poster, out_path, args)
+                print(f'    ✅ {final_path.name}')
+                saved += 1
+
+    return saved
+
+
+def _save_image(img, path, args):
+    """포맷별 저장. JPG 는 65535×65535 px 제한이 있어 큰 nest 시트는 자동 TIFF 폴백.
+    실제 저장된 경로 반환 (포맷이 변경됐을 수 있음)."""
+    save_kwargs = {'dpi': (args.dpi, args.dpi)}
+    fmt = args.format
+    w, h = img.size
+    if fmt in ('jpg', 'jpeg') and (w > 65000 or h > 65000):
+        old_fmt = fmt
+        fmt = 'tiff'
+        path = path.with_suffix('.tiff')
+        print(f'  [!] 시트 사이즈 {w}×{h}px 가 {old_fmt.upper()} 한계 초과 → TIFF 자동 변경')
+    if fmt == 'tiff':
+        save_kwargs['compression'] = 'tiff_lzw'
+    elif fmt in ('jpg', 'jpeg'):
+        save_kwargs['quality'] = 92
+        if img.mode == 'RGBA':
+            bg = Image.new('RGB', img.size, (255, 255, 255))
+            bg.paste(img, mask=img.split()[-1])
+            img = bg
+    elif fmt == 'png':
+        save_kwargs['optimize'] = True
+    img.save(path, **save_kwargs)
+    return path
 
 
 # ─── CLI ──────────────────────────────────────────────────────────
@@ -475,13 +801,22 @@ def main():
                    help='cell_cm.w 누락시 기본값')
     p.add_argument('--fallback-cell-h', type=float, default=100.0,
                    help='cell_cm.h 누락시 기본값')
-    # 돔보마크 (등록 마크)
+    # 돔보마크 (포스터 모드 한정)
     p.add_argument('--no-tombow', action='store_true',
-                   help='돔보마크 비활성화 (기본: 5mm 원 4모서리)')
+                   help='돔보마크 비활성화 (포스터 모드 한정)')
     p.add_argument('--tombow-mm', type=float, default=5.0,
                    help='돔보마크 지름 mm (기본 5)')
     p.add_argument('--tombow-offset-mm', type=float, default=5.0,
                    help='돔보마크 외곽 거리 mm (기본 5)')
+    # 포스터 nesting (centered 항목들을 한 시트에 packing)
+    p.add_argument('--sheet-width-cm', type=float, default=120.0,
+                   help='포스터 nest 시트 폭 cm (기본 120)')
+    p.add_argument('--nest-padding-cm', type=float, default=0.5,
+                   help='포스터 사이 여백 cm (기본 0.5)')
+    p.add_argument('--no-nest', action='store_true',
+                   help='포스터 모드도 항목별 개별 파일로 (nest 비활성화)')
+    p.add_argument('--label-mm', type=float, default=22.0,
+                   help='포스터 하단 라벨 영역 높이 mm (기본 22)')
 
     args = p.parse_args()
     args._manager_name = ''   # Supabase fetch 후 채워짐
@@ -517,14 +852,37 @@ def main():
                 sys.exit(4)
             targets = [(args.item_idx, items[args.item_idx])]
 
-        ok = 0
+        # 2026-06-10: 모드 분기 — 롤인쇄(basic 등) vs 포스터(centered)
+        #   롤인쇄: 항목별 개별 파일 (돔보 없음)
+        #   포스터: 재질별로 group → 120폭 시트에 nest packing (돔보+라벨+바코드 포함)
+        roll_targets = []
+        poster_targets = []
         for idx, item in targets:
-            try:
-                if process_item(args.order_id, idx, item, files, args, out_dir):
-                    ok += 1
-            except Exception as e:
-                print(f"  ❌ 실패: {e}")
-        print(f"\n🏁 완료: {ok}/{len(targets)} 항목 합성됨 (저장 위치: {out_dir.resolve()})")
+            spec = item.get('pattern_spec') or {}
+            layout = (spec.get('layout') or 'basic').lower()
+            if layout in ('centered', 'center'):
+                poster_targets.append((idx, item))
+            else:
+                roll_targets.append((idx, item))
+
+        ok = 0
+        # 롤인쇄 처리
+        if roll_targets:
+            print(f"\n=== 롤인쇄 모드 ({len(roll_targets)}건) ===")
+            for idx, item in roll_targets:
+                try:
+                    if process_item(args.order_id, idx, item, files, args, out_dir):
+                        ok += 1
+                except Exception as e:
+                    print(f"  ❌ 실패: {e}")
+
+        # 포스터 처리 — 재질별 group, 120폭 시트에 nest
+        if poster_targets:
+            print(f"\n=== 패브릭포스터 모드 ({len(poster_targets)}건) ===")
+            ok += process_poster_batch(args.order_id, poster_targets,
+                                        files, args, out_dir)
+
+        print(f"\n🏁 완료: {ok} 출력 파일 생성됨 (저장 위치: {out_dir.resolve()})")
 
     # ─── 모드 2: 로컬 ───
     else:

@@ -26,7 +26,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 
 
-__version__ = '2026.06.10.4'   # 패턴 파일명(롤인쇄N개_W폭_고객_원단) + 4모서리 돔보마크 5mm
+__version__ = '2026.06.10.5'   # 포스터 nest 모드 (재질별 120폭 시트) + 돔보/바코드/라벨 per 항목, 롤인쇄 돔보 제거
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'
@@ -425,6 +425,36 @@ class CottonPrintGUI:
             self.root.after(0, self._set_status, '🔴 설치 실패', C_DANGER)
 
     def _after_pillow(self):
+        # python-barcode 도 확인 (포스터 모드 바코드용)
+        # 동적 import — IDE 정적 분석기 회피
+        import importlib
+        try:
+            importlib.import_module('barcode')
+            self._log('[OK] python-barcode 준비됨 (바코드 활성)')
+        except ImportError:
+            self._log('[..] python-barcode 자동 설치 중... (바코드 출력용)')
+            threading.Thread(target=self._install_barcode, daemon=True).start()
+            return
+        self._after_barcode()
+
+    def _install_barcode(self):
+        try:
+            result = subprocess.run(
+                [sys.executable, '-m', 'pip', 'install', '--quiet', 'python-barcode'],
+                capture_output=True, text=True, timeout=120
+            )
+            if result.returncode == 0:
+                self.root.after(0, self._log, '[OK] python-barcode 설치 완료')
+            else:
+                # 실패해도 진행 (텍스트 폴백)
+                self.root.after(0, self._log,
+                                '[!] python-barcode 설치 실패 — 바코드는 텍스트로 대체')
+        except Exception as e:
+            self.root.after(0, self._log,
+                            f'[!] python-barcode 설치 스킵: {e}')
+        self.root.after(0, self._after_barcode)
+
+    def _after_barcode(self):
         if not self.script_path.exists():
             self._log('[..] compose_fabric.py 다운로드 중...')
             threading.Thread(target=self._download_script, daemon=True).start()
