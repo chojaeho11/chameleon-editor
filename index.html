@@ -2255,6 +2255,23 @@ window._tcmFallbackClick = function(code) {
         </div>
     </div>
 
+    <!-- 2026-06-11: mgrQuoteHero 즉시 hero-section 밖으로 이동 (JP/US 에서 reorder JS 가 늦거나 실패하는 케이스 대비) -->
+    <script>
+    (function(){
+        try {
+            var mh = document.getElementById('mgrQuoteHero');
+            if (!mh) return;
+            var hero = document.querySelector('.hero-section');
+            if (!hero) return;
+            // hero-section 의 직계 자식이면 그 다음 sibling 으로 빼기
+            if (mh.parentNode === hero) {
+                if (hero.nextSibling) hero.parentNode.insertBefore(mh, hero.nextSibling);
+                else hero.parentNode.appendChild(mh);
+            }
+        } catch(e) { console.warn('mgrQuoteHero 이동 실패:', e); }
+    })();
+    </script>
+
     <!-- 2026-06-10: 매니저 영역 신규 라벨 다국어 (KR/JP/EN) -->
     <script>
     (function(){
