@@ -1370,89 +1370,73 @@ window._tcmFallbackClick = function(code) {
                     0%, 100% { transform:translateX(0) rotate(-3deg); }
                     50% { transform:translateX(-6px) rotate(3deg); }
                 }
-                /* 4) 매니저 박스 — 아래로 충분히 내림 + 영상 그대로 노출 */
+                /* 4) 매니저 박스 — 적당히 내림 + 영상 그대로 노출 */
                 #mgrQuoteHero {
-                    margin-top:30vh !important;
-                    margin-bottom:24px !important;
+                    margin-top:12vh !important;
+                    margin-bottom:16px !important;
                 }
                 #mgrQuoteHero > div {
                     background:transparent !important;
                     border:none !important;
                     box-shadow:none !important;
-                    padding:0 8px !important;
+                    padding:0 6px !important;
                 }
-                /* 5) 6개 알약(pill) 버튼 — 글래스모피즘, 단일 골드 액센트 */
+                /* 5) 6개 알약 — 3열x2행, 텍스트만 (아이콘 숨김), 좁은 간격 */
                 #mgrActionsGrid {
-                    grid-template-columns:repeat(2, 1fr) !important;
-                    gap:12px 14px !important;
+                    grid-template-columns:repeat(3, 1fr) !important;
+                    gap:8px 6px !important;
                     padding:0 !important;
                 }
                 #mgrActionsGrid .mgr-action {
                     aspect-ratio:auto !important;
-                    min-height:50px !important;
-                    height:50px !important;
+                    min-height:42px !important;
+                    height:42px !important;
                     flex-direction:row !important;
-                    justify-content:flex-start !important;
+                    justify-content:center !important;
                     border-radius:999px !important;
-                    padding:0 18px 0 8px !important;
-                    gap:10px !important;
-                    /* 글래스 효과 — 어두운 반투명 + blur */
+                    padding:0 6px !important;
+                    gap:0 !important;
+                    /* 글래스 효과 */
                     background:rgba(15, 23, 42, 0.42) !important;
                     -webkit-backdrop-filter:blur(20px) saturate(140%);
                     backdrop-filter:blur(20px) saturate(140%);
                     border:1px solid rgba(255,255,255,0.14) !important;
                     box-shadow:
-                        0 10px 30px -10px rgba(0,0,0,0.5),
+                        0 8px 22px -8px rgba(0,0,0,0.5),
                         inset 0 1px 0 rgba(255,255,255,0.08) !important;
                     color:#fff !important;
                     animation:none !important;
-                    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+                    transition:transform .18s ease, border-color .18s ease;
                 }
                 #mgrActionsGrid .mgr-action::before,
                 #mgrActionsGrid .mgr-action::after {
                     display:none !important;
                 }
                 #mgrActionsGrid .mgr-action:active {
-                    transform:scale(0.97);
+                    transform:scale(0.96);
                     border-color:rgba(255,255,255,0.28) !important;
                 }
-                /* 아이콘 — 작고 미니멀한 원형 */
+                /* 아이콘 — 모바일에서 숨김 */
                 #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:36px !important; height:36px !important;
-                    font-size:15px !important;
-                    border-radius:50% !important;
-                    flex-shrink:0;
-                    background:rgba(255,255,255,0.1) !important;
-                    box-shadow:inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 6px rgba(0,0,0,0.25) !important;
+                    display:none !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-label {
-                    font-size:13.5px !important;
+                    font-size:12.5px !important;
                     font-weight:700 !important;
-                    line-height:1.1 !important;
-                    letter-spacing:0.2px;
+                    line-height:1 !important;
+                    letter-spacing:0.1px;
                     padding:0;
                     white-space:nowrap;
                     text-shadow:0 1px 4px rgba(0,0,0,0.45) !important;
                 }
-                /* 컬러 — 대부분 모노톤, VIP만 골드 액센트 */
-                #mgrActionsGrid .mgr-action.mgr-phone .mgr-action-icon-wrap { color:#fcd34d !important; background:rgba(252,211,77,0.18) !important; }
-                #mgrActionsGrid .mgr-action.mgr-chat .mgr-action-icon-wrap { color:#a5b4fc !important; background:rgba(165,180,252,0.18) !important; }
-                #mgrActionsGrid .mgr-action.mgr-scrap .mgr-action-icon-wrap { color:#6ee7b7 !important; background:rgba(110,231,183,0.18) !important; }
-                #mgrActionsGrid .mgr-action.mgr-design .mgr-action-icon-wrap { color:#7dd3fc !important; background:rgba(125,211,252,0.18) !important; }
-                #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap { color:#fbcfe8 !important; background:rgba(251,207,232,0.18) !important; }
-                /* VIP 만 골드 액센트 — 메인 CTA 강조 */
+                /* VIP 만 골드 액센트 — 메인 CTA */
                 #mgrActionsGrid .mgr-action.mgr-vip {
                     background:linear-gradient(135deg, rgba(251,191,36,0.92), rgba(217,119,6,0.92)) !important;
                     border-color:rgba(252,211,77,0.5) !important;
                     color:#1f2937 !important;
                     box-shadow:
-                        0 10px 30px -8px rgba(217,119,6,0.55),
+                        0 8px 22px -6px rgba(217,119,6,0.5),
                         inset 0 1px 0 rgba(255,255,255,0.35) !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-vip .mgr-action-icon-wrap {
-                    background:rgba(255,255,255,0.25) !important;
-                    color:#7c2d12 !important;
-                    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 6px rgba(146,64,14,0.35) !important;
                 }
                 #mgrActionsGrid .mgr-action.mgr-vip .mgr-action-label {
                     text-shadow:0 1px 2px rgba(255,255,255,0.35) !important;
