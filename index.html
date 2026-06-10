@@ -1531,9 +1531,9 @@ window._tcmFallbackClick = function(code) {
             /* hero-section — 명시적 높이로 캐러셀 가려짐 방지, peek 슬라이드 보이도록 overflow visible */
             .hero-section {
                 background:linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%) !important;
-                min-height:540px !important;
+                min-height:0 !important;
                 height:auto !important;
-                padding:48px 0 40px !important;
+                padding:24px 0 12px !important;
                 display:flex !important;
                 flex-direction:column;
                 align-items:stretch;
@@ -1556,7 +1556,7 @@ window._tcmFallbackClick = function(code) {
                 width:100%;
                 margin:0 auto;
                 position:relative;
-                height:420px;
+                height:340px;
                 isolation:isolate;
                 z-index:1;
                 padding:0;
@@ -1611,7 +1611,7 @@ window._tcmFallbackClick = function(code) {
                 position:absolute;
                 left:0; top:0; bottom:0;
                 width:55%;
-                padding:48px 56px;
+                padding:32px 42px;
                 color:var(--txt);
                 display:flex;
                 flex-direction:column;
@@ -1622,52 +1622,52 @@ window._tcmFallbackClick = function(code) {
             }
             .hc-tag {
                 font-family:'Pretendard Variable', sans-serif;
-                font-size:11.5px;
+                font-size:10.5px;
                 font-weight:800;
                 letter-spacing:0.32em;
                 padding-left:0.32em;
                 color:var(--accent);
                 display:inline-block;
-                padding:6px 14px;
+                padding:5px 12px;
                 background:rgba(255,255,255,0.55);
                 border:1px solid rgba(255,255,255,0.8);
                 border-radius:999px;
-                margin-bottom:22px;
+                margin-bottom:14px;
                 backdrop-filter:blur(8px);
                 -webkit-backdrop-filter:blur(8px);
             }
             .hc-title {
                 font-family:'Pretendard Variable', sans-serif;
-                font-size:48px;
+                font-size:38px;
                 font-weight:900;
                 line-height:1.12;
                 letter-spacing:-0.025em;
-                margin:0 0 18px;
+                margin:0 0 12px;
                 color:var(--accent);
                 text-align:center;
             }
             .hc-sub {
                 font-family:'Pretendard Variable', sans-serif;
-                font-size:15px;
+                font-size:14px;
                 font-weight:600;
-                line-height:1.6;
+                line-height:1.55;
                 color:var(--txt);
                 opacity:0.85;
-                margin:0 0 30px;
+                margin:0 0 20px;
                 max-width:none;
                 text-align:center;
             }
             .hc-cta {
                 display:inline-flex;
                 align-items:center;
-                gap:8px;
-                padding:13px 28px;
+                gap:7px;
+                padding:10px 22px;
                 background:var(--accent);
                 color:#fff;
                 border-radius:999px;
                 font-family:'Pretendard Variable', sans-serif;
                 font-weight:800;
-                font-size:14px;
+                font-size:13px;
                 text-decoration:none;
                 width:fit-content;
                 box-shadow:0 10px 24px rgba(15,23,42,0.18);
@@ -1763,9 +1763,9 @@ window._tcmFallbackClick = function(code) {
             }
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section { padding:12px 0 16px !important; min-height:260px !important; display:block !important; overflow:hidden !important; }
+                .hero-section { padding:8px 0 4px !important; min-height:0 !important; display:block !important; overflow:hidden !important; }
                 .hero-carousel {
-                    height:220px;
+                    height:180px;
                     border-radius:18px;
                     display:block !important;
                     width:auto;
@@ -1831,7 +1831,7 @@ window._tcmFallbackClick = function(code) {
                ════════════════════════════════════════════════════════════════ */
             #mgrQuoteHero {
                 max-width:1100px !important;
-                margin:24px auto 32px !important;
+                margin:12px auto 20px !important;
                 padding:0 20px !important;
                 position:relative;
                 background:transparent !important;
