@@ -1914,7 +1914,19 @@ window.toggleBackgroundLock = function() {
 // =========================================================
 window.processLoad = async function(mode) {
     if (!window.selectedTpl) { showToast(window.t('msg_select_design', "No design selected."), "info"); return; }
-    
+
+    // 2026-06-10: ES 모듈 import { canvas } 가 undefined 인 케이스 fix
+    //   canvas-core.js 의 initCanvas() 가 완료되기 전 또는 임포트 바인딩 race 에서
+    //   `canvas.getObjects()` 가 'undefined' 오류로 에디터가 먹통됨.
+    //   window.canvas 폴백 + 즉시 가드.
+    const canvas = window.canvas;
+    if (!canvas || typeof canvas.getObjects !== 'function') {
+        showToast(window.t('msg_canvas_not_ready', '캔버스가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'), 'warn');
+        const _l = document.getElementById('loading');
+        if (_l) _l.style.display = 'none';
+        return;
+    }
+
     const loading = document.getElementById("loading");
     if(loading) loading.style.display = "flex";
 
