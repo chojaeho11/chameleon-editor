@@ -1002,26 +1002,135 @@ window._tcmFallbackClick = function(code) {
         </video>
         <div class="hero-video-overlay"></div>
         <div class="hero-deco-line"></div>
-        <!-- 2026-06-11: 카멜레온 마스코트 — hero 우상단 (hero-section 직속 child) -->
+        <!-- 2026-06-11: 카테고리 캐러셀 — 3초 자동 슬라이드 -->
+        <div class="hero-carousel" id="heroCarousel">
+            <div class="hc-track">
+                <article class="hc-slide is-active" data-slide="0" style="--g1:#0ea5e9; --g2:#0c4a6e;">
+                    <div class="hc-content">
+                        <span class="hc-tag">SUMMER SALE</span>
+                        <h2 class="hc-title">허니콤보드<br>업계 1위</h2>
+                        <p class="hc-sub">전시·POP·인테리어 도매가 50% 할인.<br>국내 직접 생산, 무료설치 가능.</p>
+                        <a href="/?cat=honeycomb" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">🏗️</span></div>
+                </article>
+                <article class="hc-slide" data-slide="1" style="--g1:#14b8a6; --g2:#134e4a;">
+                    <div class="hc-content">
+                        <span class="hc-tag">PREMIUM CARD</span>
+                        <h2 class="hc-title">첫인상을 압도하는<br>스페셜 명함</h2>
+                        <p class="hc-sub">실버·골드, 투명, 에폭시, 프리컷팅까지.<br>평범하지 않은 명함을 만나보세요.</p>
+                        <a href="/?cat=business_card" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">💳</span></div>
+                </article>
+                <article class="hc-slide" data-slide="2" style="--g1:#6366f1; --g2:#312e81;">
+                    <div class="hc-content">
+                        <span class="hc-tag">FABRIC PRINT</span>
+                        <h2 class="hc-title">패브릭 인쇄<br>고해상도 출력</h2>
+                        <p class="hc-sub">현수막·배너·전시용 패브릭.<br>실내·실외 모두 대응 가능.</p>
+                        <a href="/?cat=fabric" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">🎨</span></div>
+                </article>
+                <article class="hc-slide" data-slide="3" style="--g1:#f97316; --g2:#7c2d12;">
+                    <div class="hc-content">
+                        <span class="hc-tag">AD PRINT</span>
+                        <h2 class="hc-title">광고 인쇄<br>한 곳에서 모두</h2>
+                        <p class="hc-sub">옥외광고·실내사인·POP.<br>전국 익일 배송으로 빠르게.</p>
+                        <a href="/?cat=ad" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">📢</span></div>
+                </article>
+                <article class="hc-slide" data-slide="4" style="--g1:#a16207; --g2:#451a03;">
+                    <div class="hc-content">
+                        <span class="hc-tag">PAPER STAND</span>
+                        <h2 class="hc-title">종이매대<br>친환경 스탠드</h2>
+                        <p class="hc-sub">팝업·전시·매장 진열용.<br>친환경 종이로 부담 없이.</p>
+                        <a href="/?cat=paper_stand" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">📚</span></div>
+                </article>
+                <article class="hc-slide" data-slide="5" style="--g1:#db2777; --g2:#831843;">
+                    <div class="hc-content">
+                        <span class="hc-tag">RESELLER</span>
+                        <h2 class="hc-title">베스트 굿즈<br>100개+ 반값</h2>
+                        <p class="hc-sub">키링·코롯토·텀블러·머그.<br>세계에서 가장 저렴한 도매가.</p>
+                        <a href="/goods" class="hc-cta">자세히 보기 <span>→</span></a>
+                    </div>
+                    <div class="hc-visual"><span class="hc-emoji">🎁</span></div>
+                </article>
+            </div>
+            <button class="hc-arrow hc-prev" aria-label="이전">‹</button>
+            <button class="hc-arrow hc-next" aria-label="다음">›</button>
+            <div class="hc-dots" role="tablist">
+                <button class="hc-dot is-active" data-idx="0" aria-label="1"></button>
+                <button class="hc-dot" data-idx="1" aria-label="2"></button>
+                <button class="hc-dot" data-idx="2" aria-label="3"></button>
+                <button class="hc-dot" data-idx="3" aria-label="4"></button>
+                <button class="hc-dot" data-idx="4" aria-label="5"></button>
+                <button class="hc-dot" data-idx="5" aria-label="6"></button>
+            </div>
+        </div>
+
+        <!-- 기존 hero 요소들 (호환성 위해 보존, CSS 로 숨김) -->
         <img src="/mascot-character.webp" class="hero-mascot bouncing-char mobile-only-mascot" alt="Chameleon mascot" loading="lazy" decoding="async"
-             onerror="this.onerror=null;this.src='/mascot-character.png'">
-        <!-- 2026-06-11: Editorial 상단 텍스트 (50% SALE) -->
-        <div class="mobile-hero-top-text" aria-hidden="true">
+             onerror="this.onerror=null;this.src='/mascot-character.png'" style="display:none">
+        <div class="mobile-hero-top-text" aria-hidden="true" style="display:none">
             <div class="mht-line1">업자들을 위한 도매쇼핑몰</div>
             <div class="mht-line2"><span class="mht-num">50%</span> 세일</div>
         </div>
-        <div style="position:relative;">
+        <div style="position:relative; display:none">
             <h1 class="hero-title" data-i18n="hero_title"><small class="hero-tagline">업자를 위한 도매인쇄몰</small><span>CHAMELEON<b class="ht-prn">PRINTING</b></span><em class="hero-min-order">담당 매니저와 상담하고 정확한 결제창을 받아보세요</em></h1>
         </div>
-        <!-- 2026-06-11: Editorial 하단 배지 -->
-        <div class="mobile-hero-bottom-text" aria-hidden="true">
+        <div class="mobile-hero-bottom-text" aria-hidden="true" style="display:none">
             <span class="mhb-text">업자라면 꼭 알아야 하는 인쇄종합 쇼핑몰</span>
         </div>
 
-        <!-- 2026-05-16: 매니저 연결 버튼 — hero(검정 영상) 안으로. 하단 바로가기에서 이전됨 -->
-        <div style="position:relative; z-index:4; display:flex; justify-content:center; margin:4px auto 2px; padding:0 16px;">
-            <a href="javascript:void(0)" id="heroMgrConnectBtn" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()"
-               style="display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:15px 40px; border-radius:999px; color:#fff; font-size:16px; font-weight:800; text-decoration:none; cursor:pointer; background:linear-gradient(45deg,#4c1d95,#7c3aed,#a855f7,#7c3aed,#4c1d95); background-size:200% 200%; box-shadow:0 0 0 1px rgba(255,255,255,0.14), 0 10px 30px rgba(124,58,237,0.6); white-space:nowrap;">
+        <!-- 2026-06-11: 캐러셀 자동회전 JS -->
+        <script>
+        (function(){
+            var carousel = document.getElementById('heroCarousel');
+            if (!carousel) return;
+            var slides = carousel.querySelectorAll('.hc-slide');
+            var dots = carousel.querySelectorAll('.hc-dot');
+            var current = 0, timer = null;
+            var INTERVAL = 3000;
+
+            function show(idx){
+                slides.forEach(function(s, i){ s.classList.toggle('is-active', i === idx); });
+                dots.forEach(function(d, i){ d.classList.toggle('is-active', i === idx); });
+                current = idx;
+            }
+            function next(){ show((current + 1) % slides.length); }
+            function prev(){ show((current - 1 + slides.length) % slides.length); }
+            function start(){ stop(); timer = setInterval(next, INTERVAL); }
+            function stop(){ if (timer) clearInterval(timer); timer = null; }
+
+            var prevBtn = carousel.querySelector('.hc-prev');
+            var nextBtn = carousel.querySelector('.hc-next');
+            if (prevBtn) prevBtn.addEventListener('click', function(){ prev(); start(); });
+            if (nextBtn) nextBtn.addEventListener('click', function(){ next(); start(); });
+            dots.forEach(function(d, i){
+                d.addEventListener('click', function(){ show(i); start(); });
+            });
+            // hover/touch 일시정지
+            carousel.addEventListener('mouseenter', stop);
+            carousel.addEventListener('mouseleave', start);
+            carousel.addEventListener('touchstart', stop, { passive: true });
+            carousel.addEventListener('touchend', function(){ setTimeout(start, 800); }, { passive: true });
+
+            // 페이지 가시성 변경 시 일시정지
+            document.addEventListener('visibilitychange', function(){
+                if (document.hidden) stop(); else start();
+            });
+
+            start();
+        })();
+        </script>
+
+        <!-- 2026-05-16: 매니저 연결 버튼 — 새 디자인에서 카루셀 CTA 로 대체, 숨김 -->
+        <div style="display:none; position:relative; z-index:4; justify-content:center; margin:4px auto 2px; padding:0 16px;">
+            <a href="javascript:void(0)" id="heroMgrConnectBtn" onclick="(function(){if(window.openAdvisorPanel)window.openAdvisorPanel();setTimeout(function(){if(window.startQuoteFlow)window.startQuoteFlow();else if(window.startCallbackFlow)window.startCallbackFlow();},350);})()">
                 <i class="fa-solid fa-headset"></i> <span id="heroMgrConnectLabel">매니저 연결</span>
             </a>
         </div>
@@ -1330,315 +1439,340 @@ window._tcmFallbackClick = function(code) {
                 .mgr-action .mgr-action-label { font-size:12px; }
             }
             /* ════════════════════════════════════════════════════════════════
-               2026-06-11: Editorial Hero Design — summer.png 시네마틱 + 클린 타이포
-               PC + Mobile 공통 (마지막에 모바일 미세조정)
+               2026-06-11: 카테고리 캐러셀 + 깔끔한 6 아이콘 버튼
                ════════════════════════════════════════════════════════════════ */
-            .hero-video { display:none !important; }
-            .hero-deco-line { display:none !important; }
-            .hero-title .hero-tagline { display:none !important; }
-
-            /* 1) Hero — summer.png 위에 시네마틱 다크 그라데이션 */
+            .hero-video, .hero-deco-line, .hero-video-overlay { display:none !important; }
+            /* hero-section — 라이트 배경, 카루셀 컨테이너 */
             .hero-section {
-                background:
-                    linear-gradient(180deg,
-                        rgba(7,17,39,0.55) 0%,
-                        rgba(7,17,39,0.20) 25%,
-                        rgba(7,17,39,0.10) 50%,
-                        rgba(7,17,39,0.35) 80%,
-                        rgba(7,17,39,0.70) 100%
-                    ),
-                    url('/summer.png') center 30% / cover no-repeat #0c1e3d !important;
-                min-height:640px !important;
+                background:linear-gradient(180deg, #fafbfc 0%, #f3f4f6 100%) !important;
+                min-height:0 !important;
+                padding:32px 20px 8px !important;
+                display:block !important;
                 position:relative !important;
+                overflow:visible !important;
+            }
+            /* ─── 캐러셀 ─── */
+            .hero-carousel {
+                max-width:1100px;
+                margin:0 auto;
+                position:relative;
+                border-radius:24px;
                 overflow:hidden;
-                display:flex !important;
-                flex-direction:column;
-                align-items:center;
-                justify-content:flex-start;
-                padding:48px 20px 36px !important;
+                aspect-ratio:16/7;
+                background:#0f172a;
+                box-shadow:0 30px 60px -25px rgba(15,23,42,0.35), 0 8px 20px -8px rgba(15,23,42,0.2);
+                isolation:isolate;
             }
-            .hero-video-overlay { display:none !important; }
-
-            /* 2) Top — Editorial label + huge 50% */
-            .mobile-hero-top-text {
-                display:block;
-                position:relative;
-                z-index:5;
-                text-align:center;
-                margin:0;
-                color:#fff;
+            .hc-track { position:absolute; inset:0; }
+            .hc-slide {
+                position:absolute; inset:0;
                 opacity:0;
-                animation:fadeRise 0.9s 0.1s ease-out forwards;
+                transform:scale(1.03);
+                transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.9s cubic-bezier(0.4,0,0.2,1);
+                pointer-events:none;
+                background:linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
+                overflow:hidden;
             }
-            .mobile-hero-top-text .mht-line1 {
-                font-family:'Pretendard Variable', system-ui, sans-serif;
-                font-weight:700;
-                font-size:13px;
-                letter-spacing:0.45em;
-                padding-left:0.45em;
-                color:rgba(255,255,255,0.85);
-                text-transform:uppercase;
-                padding-bottom:16px;
-                margin-bottom:18px;
-                display:inline-block;
-                position:relative;
+            .hc-slide::before {
+                content:''; position:absolute; inset:0;
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 0% 100%, rgba(0,0,0,0.18) 0%, transparent 50%);
+                pointer-events:none;
             }
-            .mobile-hero-top-text .mht-line1::after {
-                content:'';
+            .hc-slide.is-active {
+                opacity:1;
+                transform:scale(1);
+                pointer-events:auto;
+                z-index:1;
+            }
+            .hc-content {
                 position:absolute;
-                bottom:0; left:50%;
-                transform:translateX(-50%);
-                width:48px; height:1px;
-                background:linear-gradient(90deg, transparent, rgba(252,211,77,0.95), transparent);
-            }
-            .mobile-hero-top-text .mht-line2 {
-                font-family:'Bagel Fat One', 'Fredoka', system-ui, sans-serif;
-                font-weight:400;
-                font-size:88px;
-                line-height:0.95;
-                letter-spacing:-0.02em;
+                left:0; top:0; bottom:0;
+                width:62%;
+                padding:56px 60px;
                 color:#fff;
-                text-shadow:0 8px 32px rgba(0,0,0,0.45);
-                animation:gentleShimmer 3.2s ease-in-out infinite;
+                display:flex;
+                flex-direction:column;
+                justify-content:center;
+                z-index:2;
             }
-            .mobile-hero-top-text .mht-num {
-                background:linear-gradient(180deg, #fef9c3 0%, #fde047 25%, #facc15 55%, #f59e0b 100%);
-                -webkit-background-clip:text;
-                background-clip:text;
-                -webkit-text-fill-color:transparent;
-                color:transparent;
-                font-family:'Bagel Fat One', sans-serif;
-                font-size:110px;
-                filter:drop-shadow(0 6px 16px rgba(245,158,11,0.45));
-                padding-right:8px;
+            .hc-tag {
+                font-family:'Pretendard Variable', sans-serif;
+                font-size:11.5px;
+                font-weight:800;
+                letter-spacing:0.32em;
+                padding-left:0.32em;
+                color:rgba(255,255,255,0.85);
+                display:inline-block;
+                padding:6px 14px;
+                background:rgba(255,255,255,0.12);
+                border:1px solid rgba(255,255,255,0.2);
+                border-radius:999px;
+                margin-bottom:24px;
+                width:fit-content;
+                backdrop-filter:blur(8px);
+                -webkit-backdrop-filter:blur(8px);
             }
-
-            /* 3) CHAMELEON PRINTING — 브랜드 마크 */
-            .hero-title {
-                margin:32px 0 0 !important;
-                opacity:0;
-                animation:fadeRise 0.9s 0.4s ease-out forwards;
+            .hc-title {
+                font-family:'Pretendard Variable', sans-serif;
+                font-size:48px;
+                font-weight:900;
+                line-height:1.12;
+                letter-spacing:-0.02em;
+                margin:0 0 18px;
+                color:#fff;
+                text-shadow:0 4px 20px rgba(0,0,0,0.3);
             }
-            .hero-title span {
-                font-family:'Bagel Fat One', 'Fredoka', system-ui, sans-serif !important;
-                font-weight:400 !important;
-                color:rgba(255,255,255,0.97) !important;
-                letter-spacing:0.5px !important;
-                text-shadow:0 4px 20px rgba(0,0,0,0.5) !important;
-                -webkit-text-stroke:0 !important;
+            .hc-sub {
+                font-family:'Pretendard Variable', sans-serif;
+                font-size:15px;
+                font-weight:500;
+                line-height:1.6;
+                color:rgba(255,255,255,0.88);
+                margin:0 0 32px;
+                max-width:420px;
             }
-            .hero-title .ht-prn {
-                background:linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #ea580c 100%) !important;
-                -webkit-background-clip:text !important;
-                background-clip:text !important;
-                -webkit-text-fill-color:transparent !important;
-                color:transparent !important;
-                font-family:'Bagel Fat One', sans-serif !important;
-                filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));
-            }
-
-            /* 4) Bottom badge — 글래스 알약 */
-            .mobile-hero-bottom-text {
-                display:block;
-                position:relative;
-                z-index:5;
-                text-align:center;
-                margin:28px 0 8px;
-                opacity:0;
-                animation:fadeRise 0.9s 0.7s ease-out forwards, gentleFloat 4.5s 1.6s ease-in-out infinite;
-            }
-            .mobile-hero-bottom-text .mhb-text {
+            .hc-cta {
                 display:inline-flex;
                 align-items:center;
-                gap:10px;
-                padding:11px 24px;
-                background:rgba(255,255,255,0.08);
-                -webkit-backdrop-filter:blur(16px) saturate(140%);
-                backdrop-filter:blur(16px) saturate(140%);
-                border:1px solid rgba(255,255,255,0.18);
+                gap:8px;
+                padding:13px 28px;
+                background:#fff;
+                color:#0f172a;
                 border-radius:999px;
                 font-family:'Pretendard Variable', sans-serif;
-                font-weight:700;
+                font-weight:800;
                 font-size:14px;
-                color:rgba(255,255,255,0.95);
-                letter-spacing:0.04em;
-                box-shadow:0 10px 30px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.12);
+                text-decoration:none;
+                width:fit-content;
+                box-shadow:0 10px 24px rgba(0,0,0,0.2);
+                transition:transform .25s ease, box-shadow .25s ease;
             }
-            .mobile-hero-bottom-text .mhb-text::before {
-                content:'';
-                width:5px; height:5px; border-radius:50%;
-                background:#fde047;
-                box-shadow:0 0 8px rgba(253,224,71,0.7);
-                animation:pulseDot 1.8s ease-in-out infinite;
+            .hc-cta:hover {
+                transform:translateY(-2px);
+                box-shadow:0 14px 32px rgba(0,0,0,0.28);
             }
-
-            /* 5) Animations */
-            @keyframes fadeRise {
-                from { opacity:0; transform:translateY(14px); }
-                to { opacity:1; transform:translateY(0); }
+            .hc-cta span { transition:transform .25s ease; }
+            .hc-cta:hover span { transform:translateX(4px); }
+            .hc-visual {
+                position:absolute;
+                right:6%;
+                top:50%;
+                transform:translateY(-50%);
+                z-index:1;
+                width:38%;
+                display:flex;
+                align-items:center;
+                justify-content:center;
             }
-            @keyframes gentleShimmer {
-                0%, 100% { filter:brightness(1); }
-                50% { filter:brightness(1.08); }
+            .hc-emoji {
+                font-size:200px;
+                line-height:1;
+                opacity:0.92;
+                filter:drop-shadow(0 24px 40px rgba(0,0,0,0.35));
+                animation:hcFloat 4s ease-in-out infinite;
             }
-            @keyframes gentleFloat {
-                0%, 100% { transform:translateY(0); }
-                50% { transform:translateY(-5px); }
+            @keyframes hcFloat {
+                0%, 100% { transform:translateY(0) rotate(-3deg); }
+                50% { transform:translateY(-10px) rotate(3deg); }
             }
-            @keyframes pulseDot {
-                0%, 100% { transform:scale(1); opacity:1; }
-                50% { transform:scale(1.35); opacity:0.75; }
+            /* 화살표 */
+            .hc-arrow {
+                position:absolute;
+                top:50%;
+                transform:translateY(-50%);
+                width:46px; height:46px;
+                border-radius:50%;
+                background:rgba(255,255,255,0.95);
+                border:none;
+                font-size:24px;
+                font-weight:300;
+                color:#0f172a;
+                cursor:pointer;
+                z-index:10;
+                box-shadow:0 8px 20px rgba(0,0,0,0.18);
+                display:flex; align-items:center; justify-content:center;
+                line-height:1;
+                transition:transform .2s ease, background .2s ease;
             }
-
-            /* 6) 카멜레온 마스코트 — 우상단 */
-            .mobile-only-mascot {
-                display:block !important;
-                position:absolute !important;
-                right:24px !important;
-                top:24px !important;
-                bottom:auto !important;
-                left:auto !important;
-                width:130px !important;
-                max-width:130px !important;
-                height:auto !important;
-                pointer-events:none;
-                z-index:6 !important;
-                animation:bounceUpDn 4s ease-in-out infinite, mascotSway 5.5s ease-in-out infinite !important;
-                filter:drop-shadow(0 12px 28px rgba(0,0,0,0.5)) !important;
-                transform-origin:center bottom;
+            .hc-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.05); }
+            .hc-prev { left:18px; }
+            .hc-next { right:18px; }
+            /* 도트 인디케이터 */
+            .hc-dots {
+                position:absolute;
+                bottom:22px;
+                left:50%;
+                transform:translateX(-50%);
+                display:flex;
+                gap:8px;
+                z-index:10;
+                background:rgba(15,23,42,0.45);
+                padding:8px 14px;
+                border-radius:999px;
+                backdrop-filter:blur(10px);
+                -webkit-backdrop-filter:blur(10px);
             }
-            @keyframes mascotSway {
-                0%, 100% { transform:translateX(0) rotate(-4deg); }
-                50% { transform:translateX(-6px) rotate(4deg); }
+            .hc-dot {
+                width:8px; height:8px;
+                border-radius:50%;
+                background:rgba(255,255,255,0.4);
+                border:none;
+                padding:0;
+                cursor:pointer;
+                transition:all .3s ease;
             }
-
-            /* ════════════════════════════════════════════════════════════════
-               모바일 미세 조정 (≤700px)
-               ════════════════════════════════════════════════════════════════ */
+            .hc-dot.is-active {
+                background:#fff;
+                width:28px;
+                border-radius:4px;
+            }
+            /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section {
-                    min-height:540px !important;
-                    padding:38px 18px 28px !important;
+                .hero-section { padding:14px 12px 8px !important; }
+                .hero-carousel {
+                    aspect-ratio:auto;
+                    height:360px;
+                    border-radius:20px;
                 }
-                .mobile-hero-top-text .mht-line1 { font-size:11.5px; letter-spacing:0.4em; padding-left:0.4em; }
-                .mobile-hero-top-text .mht-line2 { font-size:62px; }
-                .mobile-hero-top-text .mht-num { font-size:78px; }
-                .hero-title { margin:24px 0 0 !important; }
-                .mobile-hero-bottom-text { margin:22px 0 6px; }
-                .mobile-hero-bottom-text .mhb-text { padding:9px 18px; font-size:12.5px; }
-                .mobile-only-mascot {
-                    right:14px !important;
-                    top:18px !important;
-                    width:96px !important;
-                    max-width:96px !important;
+                .hc-content { width:100%; padding:32px 26px 26px; }
+                .hc-tag { font-size:10.5px; padding:5px 12px; margin-bottom:16px; }
+                .hc-title { font-size:30px; margin-bottom:12px; }
+                .hc-sub { font-size:13px; margin-bottom:22px; }
+                .hc-cta { padding:11px 22px; font-size:13px; }
+                .hc-visual {
+                    right:10px; top:auto; bottom:14px;
+                    transform:none;
+                    width:90px;
                 }
+                .hc-emoji { font-size:84px; }
+                .hc-arrow { width:38px; height:38px; font-size:20px; }
+                .hc-prev { left:10px; }
+                .hc-next { right:10px; }
+                .hc-dots { bottom:14px; padding:6px 12px; gap:6px; }
+                .hc-dot { width:7px; height:7px; }
+                .hc-dot.is-active { width:22px; }
             }
+
+            /* 기존 hero 요소들 (호환성 위해 보존, 화면에선 안 보임) */
+            .mobile-hero-top-text,
+            .mobile-hero-bottom-text,
+            .mobile-only-mascot,
+            .hero-title { display:none !important; }
+
+            /* 옛 hero 요소들의 CSS 는 모두 제거 — 새 캐러셀로 대체됨 (위 display:none 으로 안전) */
             /* ════════════════════════════════════════════════════════════════
-               버튼 영역 — 정제된 글래스 디자인 (PC+Mobile 공통)
+               2026-06-11: 깔끔한 6 아이콘 버튼 — swadpia 스타일 (PC 1줄 6개 / Mobile 3x2)
                ════════════════════════════════════════════════════════════════ */
             #mgrQuoteHero {
                 max-width:1100px !important;
-                margin:-40px auto 32px !important;
+                margin:24px auto 32px !important;
                 padding:0 20px !important;
                 position:relative;
-                z-index:10;
+                background:transparent !important;
             }
             #mgrQuoteHero > div {
-                background:rgba(7, 17, 39, 0.55) !important;
-                border:1px solid rgba(255,255,255,0.08) !important;
-                box-shadow:0 24px 60px -20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-                padding:18px !important;
-                border-radius:20px !important;
-                -webkit-backdrop-filter:blur(24px) saturate(140%);
-                backdrop-filter:blur(24px) saturate(140%);
+                background:transparent !important;
+                border:none !important;
+                box-shadow:none !important;
+                padding:0 !important;
+                border-radius:0 !important;
+                backdrop-filter:none !important;
+                -webkit-backdrop-filter:none !important;
             }
             #mgrQuoteHero #mgrQuoteTitle, #mgrQuoteHero #mgrQuoteDesc { display:none !important; }
-            /* 6 버튼 — 정제된 글래스 알약, 3열x2행 (PC+Mobile) */
+            /* 6 버튼 — PC: 1줄 6개, 텍스트 라벨 아래 */
             #mgrActionsGrid {
-                grid-template-columns:repeat(3, 1fr) !important;
-                gap:10px !important;
+                grid-template-columns:repeat(6, 1fr) !important;
+                gap:16px !important;
                 padding:0 !important;
             }
             #mgrActionsGrid .mgr-action {
                 aspect-ratio:auto !important;
-                min-height:52px !important;
-                height:52px !important;
-                flex-direction:row !important;
+                min-height:0 !important;
+                height:auto !important;
+                flex-direction:column !important;
                 justify-content:center !important;
-                border-radius:999px !important;
-                padding:0 12px !important;
-                gap:8px !important;
-                background:rgba(255,255,255,0.06) !important;
-                -webkit-backdrop-filter:blur(12px);
-                backdrop-filter:blur(12px);
-                border:1px solid rgba(255,255,255,0.12) !important;
-                box-shadow:0 6px 18px -4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-                color:#fff !important;
+                border-radius:18px !important;
+                padding:14px 8px !important;
+                gap:10px !important;
+                background:#fff !important;
+                border:1px solid #e5e7eb !important;
+                box-shadow:0 2px 8px rgba(15,23,42,0.04) !important;
+                color:#374151 !important;
                 animation:none !important;
-                transition:transform .2s ease, background .2s ease, border-color .2s ease;
+                transition:transform .22s cubic-bezier(0.4,0,0.2,1), box-shadow .22s ease, border-color .22s ease;
             }
             #mgrActionsGrid .mgr-action::before,
             #mgrActionsGrid .mgr-action::after { display:none !important; }
             #mgrActionsGrid .mgr-action:hover {
-                background:rgba(255,255,255,0.12) !important;
-                border-color:rgba(255,255,255,0.22) !important;
-                transform:translateY(-1px);
+                border-color:#cbd5e1 !important;
+                box-shadow:0 10px 24px -8px rgba(15,23,42,0.18) !important;
+                transform:translateY(-3px);
             }
-            #mgrActionsGrid .mgr-action:active { transform:scale(0.97); }
+            #mgrActionsGrid .mgr-action:active { transform:translateY(-1px) scale(0.98); }
+            /* 둥근 컬러 아이콘 칩 */
             #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                width:24px !important; height:24px !important;
-                font-size:13px !important;
-                border-radius:50% !important;
-                background:rgba(255,255,255,0.1) !important;
-                box-shadow:none !important;
+                width:54px !important; height:54px !important;
+                font-size:24px !important;
+                border-radius:16px !important;
+                box-shadow:0 6px 14px -4px rgba(15,23,42,0.18) !important;
                 flex-shrink:0;
             }
             #mgrActionsGrid .mgr-action .mgr-action-label {
                 font-family:'Pretendard Variable', sans-serif;
-                font-size:13.5px !important;
+                font-size:13px !important;
                 font-weight:700 !important;
-                line-height:1 !important;
-                letter-spacing:0.02em;
+                line-height:1.2 !important;
+                letter-spacing:-0.01em;
                 padding:0;
                 white-space:nowrap;
-                text-shadow:0 1px 4px rgba(0,0,0,0.4) !important;
+                color:#374151 !important;
+                text-shadow:none !important;
             }
-            /* VIP 만 골드 액센트 — 시그니처 CTA */
-            #mgrActionsGrid .mgr-action.mgr-vip {
-                background:linear-gradient(135deg, #fde047 0%, #f59e0b 100%) !important;
-                border-color:rgba(252,211,77,0.6) !important;
-                color:#1f2937 !important;
-                box-shadow:0 10px 24px -6px rgba(245,158,11,0.55), inset 0 1px 0 rgba(255,255,255,0.45) !important;
+            /* 각 버튼 — 파스텔 컬러 아이콘 칩 */
+            #mgrActionsGrid .mgr-action.mgr-phone .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #dbeafe, #93c5fd) !important; color:#1e40af !important;
+            }
+            #mgrActionsGrid .mgr-action.mgr-chat .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #ede9fe, #c4b5fd) !important; color:#5b21b6 !important;
             }
             #mgrActionsGrid .mgr-action.mgr-vip .mgr-action-icon-wrap {
-                background:rgba(255,255,255,0.3) !important;
-                color:#7c2d12 !important;
+                background:linear-gradient(135deg, #fef9c3, #fde047) !important; color:#92400e !important;
             }
-            #mgrActionsGrid .mgr-action.mgr-vip .mgr-action-label {
-                color:#1f2937 !important;
-                text-shadow:0 1px 2px rgba(255,255,255,0.35) !important;
-                font-weight:800 !important;
+            #mgrActionsGrid .mgr-action.mgr-scrap .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #d1fae5, #6ee7b7) !important; color:#065f46 !important;
+            }
+            #mgrActionsGrid .mgr-action.mgr-design .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #cffafe, #67e8f9) !important; color:#155e75 !important;
+            }
+            #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #fce7f3, #f9a8d4) !important; color:#831843 !important;
+            }
+            /* VIP 만 살짝 강조 (테두리 살짝 노랑) */
+            #mgrActionsGrid .mgr-action.mgr-vip {
+                border-color:#fcd34d !important;
+                box-shadow:0 6px 16px -4px rgba(245,158,11,0.25) !important;
             }
             #mgrActionsGrid .mgr-action.mgr-vip:hover {
-                background:linear-gradient(135deg, #fef08a 0%, #fbbf24 100%) !important;
-                border-color:rgba(252,211,77,0.8) !important;
+                border-color:#f59e0b !important;
+                box-shadow:0 14px 28px -8px rgba(245,158,11,0.35) !important;
             }
-            /* 아이콘 색 힌트 (subtle) */
-            #mgrActionsGrid .mgr-action.mgr-phone .mgr-action-icon-wrap { color:#fcd34d !important; }
-            #mgrActionsGrid .mgr-action.mgr-chat .mgr-action-icon-wrap { color:#a5b4fc !important; }
-            #mgrActionsGrid .mgr-action.mgr-scrap .mgr-action-icon-wrap { color:#6ee7b7 !important; }
-            #mgrActionsGrid .mgr-action.mgr-design .mgr-action-icon-wrap { color:#7dd3fc !important; }
-            #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap { color:#fbcfe8 !important; }
             @media (max-width: 700px) {
-                #mgrQuoteHero { margin:-30px auto 20px !important; padding:0 14px !important; }
-                #mgrQuoteHero > div { padding:14px !important; border-radius:18px !important; }
-                #mgrActionsGrid { gap:8px !important; }
+                #mgrQuoteHero { margin:16px auto 20px !important; padding:0 14px !important; }
+                #mgrActionsGrid {
+                    grid-template-columns:repeat(3, 1fr) !important;
+                    gap:10px !important;
+                }
                 #mgrActionsGrid .mgr-action {
-                    min-height:46px !important; height:46px !important;
-                    padding:0 8px !important; gap:6px !important;
+                    padding:12px 6px !important;
+                    gap:8px !important;
+                    border-radius:14px !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:22px !important; height:22px !important; font-size:12px !important;
+                    width:46px !important; height:46px !important; font-size:20px !important;
+                    border-radius:14px !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-label { font-size:12px !important; }
             }
