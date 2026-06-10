@@ -12,6 +12,7 @@ compose_fabric.py 를 subprocess 로 실행, 로그를 실시간 표시.
     or
     pythonw gui.py  (콘솔 창 없이 GUI 만)
 """
+import json
 import os
 import sys
 import threading
@@ -22,13 +23,14 @@ from pathlib import Path
 from queue import Queue, Empty
 
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, messagebox, filedialog
 
 
-__version__ = '2026.06.10.2'   # 업데이트 비교용 (YYYY.MM.DD.N) — UTF-8 강제 fix
+__version__ = '2026.06.10.3'   # 업데이트 비교용 (YYYY.MM.DD.N)
 
 SCRIPT_NAME = 'compose_fabric.py'
 GUI_NAME    = 'gui.py'
+CONFIG_NAME = 'config.json'
 
 # Cloudflare Pages — public, always-on, CDN cached (GitHub raw 보다 안정)
 BASE_URL    = 'https://www.cafe2626.com/tools/cotton_print_compose'
@@ -60,9 +62,15 @@ class CottonPrintGUI:
         self.root.configure(bg=C_BG)
 
         # 경로
-        self.work_dir   = Path(__file__).parent.resolve()
-        self.output_dir = self.work_dir / 'output'
+        self.work_dir    = Path(__file__).parent.resolve()
         self.script_path = self.work_dir / SCRIPT_NAME
+        self.config_path = self.work_dir / CONFIG_NAME
+
+        # 설정 로드 (output_dir 등)
+        self.config = self._load_config()
+        # output_dir — 설정 우선, 없으면 기본값 (work_dir/output)
+        cfg_out = self.config.get('output_dir')
+        self.output_dir = Path(cfg_out) if cfg_out else (self.work_dir / 'output')
 
         self.process = None
         self.is_running = False
@@ -70,6 +78,24 @@ class CottonPrintGUI:
         self._build_ui()
         # 잠시 후 셋업 체크 (UI 먼저 보여주기)
         self.root.after(200, self._check_setup)
+
+    # ─── 설정 로드/저장 ─────────────────────────────────────
+    def _load_config(self):
+        try:
+            if self.config_path.exists():
+                return json.loads(self.config_path.read_text(encoding='utf-8'))
+        except Exception:
+            pass
+        return {}
+
+    def _save_config(self):
+        try:
+            self.config_path.write_text(
+                json.dumps(self.config, ensure_ascii=False, indent=2),
+                encoding='utf-8'
+            )
+        except Exception as e:
+            self._log(f'[!] 설정 저장 실패: {e}')
 
     # ─── UI 구성 ──────────────────────────────────────────────
     def _build_ui(self):
@@ -164,6 +190,29 @@ class CottonPrintGUI:
                  font=('Segoe UI', 9),
                  bg=C_BG, fg=C_MUTED).pack(side='left')
 
+        # ─── 저장 폴더 ───
+        r = tk.Frame(input_frame, bg=C_BG)
+        r.pack(fill='x', pady=(10, 4))
+        tk.Label(r, text='저장 폴더:', font=('Segoe UI', 11, 'bold'),
+                 bg=C_BG, fg=C_BROWN_D, width=12, anchor='e').pack(side='left')
+        self.output_var = tk.StringVar(value=str(self.output_dir))
+        out_entry = tk.Entry(r, textvariable=self.output_var,
+                             font=('Consolas', 9),
+                             state='readonly',
+                             readonlybackground='#fff',
+                             bd=2, relief='solid')
+        out_entry.pack(side='left', padx=(10, 6), fill='x', expand=True)
+        tk.Button(r, text='📁 선택', font=('Segoe UI', 9),
+                  bg=C_CREAM_D, fg=C_BROWN_D, bd=0,
+                  activebackground='#e7d8a8',
+                  cursor='hand2', padx=10, pady=4,
+                  command=self._browse_output).pack(side='left', padx=(0, 4))
+        tk.Button(r, text='↩ 기본', font=('Segoe UI', 9),
+                  bg=C_CREAM_D, fg=C_BROWN_D, bd=0,
+                  activebackground='#e7d8a8',
+                  cursor='hand2', padx=10, pady=4,
+                  command=self._reset_output).pack(side='left')
+
         # ─── 생성 버튼 ───
         self.gen_btn = tk.Button(main, text='🎨   인쇄 데이터 생성   ',
                                  font=('Segoe UI', 14, 'bold'),
@@ -218,12 +267,21 @@ class CottonPrintGUI:
                   cursor='hand2', padx=14, pady=7,
                   command=self._show_help).pack(side='left')
 
-        tk.Button(bottom, text='🔄  업데이트 확인',
+        tk.Button(bottom, text='🔄  업데이트',
                   font=('Segoe UI', 10), bd=0,
                   bg=C_CREAM_D, fg=C_BROWN_D,
                   activebackground='#e7d8a8',
                   cursor='hand2', padx=14, pady=7,
                   command=self._check_update).pack(side='left', padx=(8, 0))
+
+        # Windows 만 — 바탕화면 바로가기 생성 버튼
+        if os.name == 'nt':
+            tk.Button(bottom, text='🖥️  바로가기',
+                      font=('Segoe UI', 10), bd=0,
+                      bg=C_CREAM_D, fg=C_BROWN_D,
+                      activebackground='#e7d8a8',
+                      cursor='hand2', padx=14, pady=7,
+                      command=self._create_desktop_shortcut).pack(side='left', padx=(8, 0))
 
         self.status_lbl = tk.Label(bottom, text='⚪ 준비 중...',
                                     font=('Segoe UI', 10, 'bold'),
@@ -257,6 +315,84 @@ class CottonPrintGUI:
 
     def _set_status(self, txt, color):
         self.status_lbl.config(text=txt, fg=color)
+
+    # ─── 저장 폴더 ────────────────────────────────────────
+    def _browse_output(self):
+        chosen = filedialog.askdirectory(
+            title='인쇄 데이터 저장 폴더 선택',
+            initialdir=str(self.output_dir) if self.output_dir.exists()
+                       else str(self.work_dir)
+        )
+        if chosen:
+            self.output_dir = Path(chosen)
+            self.output_var.set(str(self.output_dir))
+            self.config['output_dir'] = str(self.output_dir)
+            self._save_config()
+            self._log(f'[OK] 저장 폴더 변경: {self.output_dir}')
+
+    def _reset_output(self):
+        default = self.work_dir / 'output'
+        self.output_dir = default
+        self.output_var.set(str(default))
+        self.config.pop('output_dir', None)
+        self._save_config()
+        self._log(f'[OK] 저장 폴더 기본값으로 복원: {default}')
+
+    # ─── 바탕화면 바로가기 ───────────────────────────────
+    def _create_desktop_shortcut(self):
+        if os.name != 'nt':
+            messagebox.showinfo('알림', '바로가기 생성은 Windows 전용입니다.')
+            return
+        try:
+            desktop = Path(os.path.expanduser('~/Desktop'))
+            if not desktop.exists():
+                # OneDrive 백업 등으로 경로가 다를 수 있음 — USERPROFILE 폴백
+                desktop = Path(os.environ.get('USERPROFILE', '')) / 'Desktop'
+            shortcut_path = desktop / 'Cotton Print.lnk'
+            # 런처 BAT 우선, 없으면 직접 gui.py 실행
+            bat_path = self.work_dir / 'Cotton_Print.bat'
+            if bat_path.exists():
+                target = str(bat_path)
+                workdir = str(self.work_dir)
+            else:
+                # pythonw 로 gui.py 직접 실행
+                target = sys.executable.replace('python.exe', 'pythonw.exe')
+                if not Path(target).exists():
+                    target = sys.executable
+                workdir = str(self.work_dir)
+
+            # PowerShell COM 으로 .lnk 생성
+            ps_cmd = (
+                f'$s = (New-Object -ComObject WScript.Shell)'
+                f'.CreateShortcut("{shortcut_path}"); '
+                f'$s.TargetPath = "{target}"; '
+                f'$s.WorkingDirectory = "{workdir}"; '
+                f'$s.IconLocation = "%SystemRoot%\\System32\\imageres.dll,68"; '
+                f'$s.Description = "Cotton Print Fabric Composer"; '
+            )
+            # gui.py 직접 실행 모드면 인자 추가
+            if not bat_path.exists():
+                ps_cmd += f'$s.Arguments = """{self.work_dir / GUI_NAME}"""; '
+            ps_cmd += '$s.Save()'
+
+            r = subprocess.run(
+                ['powershell', '-NoProfile', '-Command', ps_cmd],
+                capture_output=True, text=True, timeout=15,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            if r.returncode == 0 and shortcut_path.exists():
+                self._log(f'[OK] 바탕화면 바로가기 생성: {shortcut_path.name}')
+                messagebox.showinfo('바로가기 생성 완료',
+                                    f'바탕화면에 "Cotton Print" 바로가기가 만들어졌습니다.\n\n'
+                                    f'위치: {shortcut_path}')
+            else:
+                err = r.stderr or '알 수 없는 오류'
+                self._log(f'[X] 바로가기 생성 실패: {err[:200]}')
+                messagebox.showerror('바로가기 생성 실패',
+                                     f'바로가기를 만들지 못했습니다.\n\n{err[:300]}')
+        except Exception as e:
+            self._log(f'[X] 바로가기 생성 오류: {e}')
+            messagebox.showerror('오류', str(e))
 
     # ─── 셋업 체크 (Pillow / 스크립트) ─────────────────────
     def _check_setup(self):
@@ -515,10 +651,41 @@ class CottonPrintGUI:
                             f'이미 최신 버전(v{__version__})을 사용 중입니다.')
 
     def _update_done_dialog(self, updated):
-        self._set_status('🟢 업데이트 완료', C_SUCCESS)
-        msg = '다음 파일이 업데이트되었습니다:\n\n' + '\n'.join(f'  • {x}' for x in updated)
-        msg += '\n\n새 버전을 적용하려면 GUI를 다시 시작해주세요.\n지금 종료하시겠습니까?'
-        if messagebox.askyesno('업데이트 완료 — 재시작 필요', msg):
+        """업데이트 완료 시 자동 재시작 (확인 다이얼로그만 한 번 표시)."""
+        self._set_status('🟢 업데이트 완료 — 재시작 중...', C_SUCCESS)
+        msg = ('다음 파일이 업데이트되었습니다:\n\n'
+               + '\n'.join(f'  • {x}' for x in updated)
+               + '\n\n새 버전으로 자동 재시작합니다.')
+        messagebox.showinfo('업데이트 완료', msg)
+        self._restart_app()
+
+    def _restart_app(self):
+        """현재 GUI 종료 후 새 인스턴스 실행."""
+        try:
+            gui_file = self.work_dir / GUI_NAME
+            # Windows: pythonw 우선 (콘솔 안 보임)
+            if os.name == 'nt':
+                pythonw = sys.executable.replace('python.exe', 'pythonw.exe')
+                exe = pythonw if Path(pythonw).exists() else sys.executable
+                # DETACHED_PROCESS: 부모와 분리 — 현재 GUI 종료해도 새 GUI 살아있음
+                DETACHED_PROCESS = 0x00000008
+                subprocess.Popen(
+                    [exe, str(gui_file)],
+                    cwd=str(self.work_dir),
+                    creationflags=DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+                    close_fds=True,
+                )
+            else:
+                # Mac/Linux
+                subprocess.Popen(
+                    [sys.executable, str(gui_file)],
+                    cwd=str(self.work_dir),
+                    start_new_session=True,
+                )
+        except Exception as e:
+            messagebox.showerror('재시작 실패',
+                                 f'자동 재시작 실패. 수동으로 BAT 를 다시 실행해주세요.\n\n{e}')
+        finally:
             self.root.destroy()
 
     def _show_help(self):
