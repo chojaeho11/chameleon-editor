@@ -653,6 +653,13 @@ html.hexa-mode #chatbotBtnWrap,
 html.hexa-mode #couponBanner,
 html.hexa-mode #ch-plugin,
 html.hexa-mode .so-brand { display:none !important; }
+/* 2026-06-10: 채널톡 모바일에서 가려지는 문제 — z-index 최상위 강제 */
+#ch-plugin, #ch-plugin-container, [id^="ch-plugin"] {
+    z-index: 2147483600 !important;
+}
+#ch-plugin iframe, [id^="ch-plugin"] iframe {
+    z-index: 2147483600 !important;
+}
 html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
 </style>
 <script>
