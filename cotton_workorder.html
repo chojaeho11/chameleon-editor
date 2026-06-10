@@ -117,7 +117,47 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         <div class="order-date" id="woOrderDate">-</div>
     </div>
 
-    <div class="section">
+    <!-- 2026-06-10: 작업 완료 표시 — 완료 시 시트 전체에 강한 시각 표시 (KR/JP 동일) -->
+    <div id="woCompletedBanner" style="display:none; margin-top:14px; padding:16px 20px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:3px solid #16a34a; border-radius:12px; box-shadow:0 6px 20px -4px rgba(22,163,74,0.35);">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <div style="font-size:30px;">✅</div>
+            <div style="flex:1;">
+                <div style="font-size:16px; font-weight:900; color:#14532d; letter-spacing:0.5px;">作業指示完了 · 작업지시 완료됨</div>
+                <div id="woCompletedMeta" style="font-size:11.5px; color:#166534; margin-top:3px; font-weight:600;">-</div>
+            </div>
+            <div style="font-size:11px; font-weight:800; color:#166534; background:#fff; padding:6px 10px; border-radius:6px; border:1.5px solid #86efac;">📁 Drive 동기화됨</div>
+        </div>
+    </div>
+
+    <!-- 2026-06-10: 매니저 패널 (관리자 전용) — 제품종류 / 견적서 업로드 / 완료 -->
+    <div id="woMgrPanel" style="margin-top:12px; padding:14px 16px; background:#fef2f2; border:2px solid #dc2626; border-radius:10px; box-shadow:0 4px 12px -4px rgba(220,38,38,0.25); display:none;">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:12px; font-weight:900; color:#7f1d1d;">📦 제품종류</label>
+                <select id="woProductCategory" onchange="window._cwSaveProductCategory()" style="padding:6px 10px; border:1.5px solid #ef4444; border-radius:6px; font-size:12px; font-weight:700; color:#451a03; background:#fff; font-family:inherit; cursor:pointer;">
+                    <option value="">-- 선택 --</option>
+                    <option value="패브릭">패브릭</option>
+                    <option value="허니콤보드">허니콤보드</option>
+                    <option value="광고물">광고물</option>
+                    <option value="인쇄물">인쇄물</option>
+                    <option value="종이매대">종이매대</option>
+                    <option value="허니콤원지">허니콤원지</option>
+                </select>
+                <span id="woCategorySaved" style="font-size:11px; color:#16a34a; font-weight:700; display:none;">✓ 저장됨</span>
+            </div>
+            <label style="font-size:12px; font-weight:800; color:#7f1d1d; border:1.5px solid #ef4444; border-radius:6px; padding:6px 12px; cursor:pointer; background:#fff;">
+                📄 견적서 업로드<input type="file" id="woMgrQuoteFile" accept=".pdf,image/*,.doc,.docx,.xlsx" style="display:none;" onchange="window._cwUploadMgrQuote(this)">
+            </label>
+            <button type="button" id="woWorkorderCompleteBtn" onclick="window._cwToggleWorkorderComplete()" style="font-size:12px; font-weight:900; color:#fff; background:linear-gradient(135deg,#dc2626,#991b1b); border:none; border-radius:6px; padding:7px 16px; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(220,38,38,0.5);">✅ 완료</button>
+            <div id="woMgrQuoteList" style="font-size:11px; color:#7f1d1d; display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:2px;">
+                <span style="font-size:14px; font-weight:900; color:#dc2626; letter-spacing:0.5px;">⚠️ 3가지 꼭 체크!</span>
+                <span style="font-size:10px; color:#7f1d1d; font-weight:700;">제품종류 · 견적서 · 완료</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-top:14px;">
         <div class="section-title">주문자 정보</div>
         <div class="kv">
             <div class="fullkey">받는 분</div><div id="woName">-</div>
@@ -169,12 +209,69 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sheet').style.display = '';
 
-        // 2026-06-10: 관리자 로그인 시 항목별 파일 수동 첨부 허용 (KR workorder.html 와 동일 패턴)
-        //   고객이 파일 수정 요청 시 매니저가 LINE/메일로 받아서 여기서 직접 업로드 → 작업지시서 즉시 반영.
+        // 2026-06-10: 관리자 로그인 시 항목별 파일 수동 첨부 + 매니저 패널 (제품종류/견적서/완료)
         let _woIsAdmin = false;
         try { _woIsAdmin = !!(await sb.auth.getSession()).data.session; } catch (e) {}
         window._woOrderId = orderId;
         window._woIsAdmin = _woIsAdmin;
+
+        // 2026-06-10: admin_note 안의 [제품종류]·[작업지시완료] 마커 파싱
+        const _adminRaw = order.admin_note || '';
+        const _catMatch = _adminRaw.match(/\[제품종류\]\s*(.+?)(?:\n|$)/);
+        const _currentCategory = _catMatch ? _catMatch[1].trim() : '';
+        const _compMatch = _adminRaw.match(/\[작업지시완료\]\s*(.+?)(?:\n|$)/);
+        const _currentComplete = _compMatch ? _compMatch[1].trim() : '';
+        window._woCurrentCategory = _currentCategory;
+        window._woCurrentComplete = _currentComplete;
+
+        // 완료 배너 + design_complete 컬럼 둘 다 확인 (둘 중 하나라도 있으면 완료)
+        const _isCompleted = !!(order.design_complete || _currentComplete);
+        if (_isCompleted) {
+            const _banner = document.getElementById('woCompletedBanner');
+            if (_banner) _banner.style.display = '';
+            const _bMeta = document.getElementById('woCompletedMeta');
+            if (_bMeta) {
+                let _metaTxt = '';
+                if (order.design_complete_at) {
+                    _metaTxt = '完了日時: ' + dt(order.design_complete_at);
+                } else if (_currentComplete) {
+                    _metaTxt = '完了日時: ' + _currentComplete;
+                }
+                if (order.design_complete_by) _metaTxt += ' · 担当: ' + order.design_complete_by;
+                _bMeta.textContent = _metaTxt || '-';
+            }
+            // 시트 전체에 옅은 초록 외곽선 (인쇄 시엔 자동 white로 fallback)
+            const _sheet = document.getElementById('sheet');
+            if (_sheet) _sheet.style.boxShadow = '0 0 0 4px #86efac, 0 4px 20px rgba(0,0,0,0.1)';
+        }
+
+        // 매니저 패널 표시 (관리자만)
+        if (_woIsAdmin) {
+            const _mgrPanel = document.getElementById('woMgrPanel');
+            if (_mgrPanel) _mgrPanel.style.display = '';
+            // 카테고리 초기값 (cotton_workorder 는 기본 패브릭)
+            const _catSel = document.getElementById('woProductCategory');
+            if (_catSel) _catSel.value = _currentCategory || '패브릭';
+            // 견적서 리스트 (files 중 type=manager_quote)
+            const _mgrQuotes = (order.files || []).filter(function(f){ return f && f.type === 'manager_quote'; });
+            const _qList = document.getElementById('woMgrQuoteList');
+            if (_qList) {
+                _qList.innerHTML = _mgrQuotes.map(function(f){
+                    return '<a href="' + (f.url || '#') + '" target="_blank" style="color:#0369a1; font-weight:700; text-decoration:underline;">📄 ' + (f.name || '見積書') + '</a>';
+                }).join('');
+            }
+            // 완료 버튼 상태 표시
+            const _cBtn = document.getElementById('woWorkorderCompleteBtn');
+            if (_cBtn) {
+                if (_currentComplete || order.design_complete) {
+                    _cBtn.innerHTML = '✓ 완료됨 <span style="font-size:10px; opacity:0.85; font-weight:600;">(' + (_currentComplete || dt(order.design_complete_at)) + ')</span>';
+                    _cBtn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+                } else {
+                    _cBtn.innerHTML = '✅ 완료';
+                    _cBtn.style.background = 'linear-gradient(135deg,#dc2626,#991b1b)';
+                }
+            }
+        }
 
         show('woOrderNo', '#' + order.id);
         show('woOrderDate', dt(order.order_date));
@@ -299,6 +396,137 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+e.message+'</div>';
     }
 })();
+
+// 2026-06-10: admin_note 헤더 재구성 — [제품종류] + [작업지시완료] 마커 갱신
+async function _cwRebuildAdminNote(newCategory, newComplete) {
+    if (!window._woOrderId) return false;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('admin_note').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const raw = cur.admin_note || '';
+        const splitIdx = raw.indexOf('=== 상품별 옵션·요청 ===');
+        const itemsPart = splitIdx >= 0 ? raw.slice(splitIdx) : '';
+        const headerPart = splitIdx >= 0 ? raw.slice(0, splitIdx).trim() : raw.trim();
+        const cleanHeader = headerPart
+            .replace(/\[제품종류\][^\n]*\n?/g, '')
+            .replace(/\[작업지시완료\][^\n]*\n?/g, '')
+            .trim();
+        let newHeader = cleanHeader;
+        const _cat = (newCategory != null) ? newCategory : window._woCurrentCategory;
+        const _comp = (newComplete != null) ? newComplete : window._woCurrentComplete;
+        if (_cat) newHeader = (newHeader ? newHeader + '\n' : '') + '[제품종류] ' + _cat;
+        if (_comp) newHeader = (newHeader ? newHeader + '\n' : '') + '[작업지시완료] ' + _comp;
+        const finalNote = newHeader + (itemsPart ? '\n\n' + itemsPart : '');
+        const { error: upErr } = await sb.from('orders').update({ admin_note: finalNote }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        if (newCategory != null) window._woCurrentCategory = newCategory;
+        if (newComplete != null) window._woCurrentComplete = newComplete;
+        return true;
+    } catch (e) {
+        console.error('[cw admin_note]', e);
+        alert('저장 실패: ' + (e.message || e));
+        return false;
+    }
+}
+
+// 제품종류 저장
+window._cwSaveProductCategory = async function() {
+    const sel = document.getElementById('woProductCategory');
+    if (!sel) return;
+    const ok = await _cwRebuildAdminNote(sel.value || '', null);
+    if (ok) {
+        const saved = document.getElementById('woCategorySaved');
+        if (saved) { saved.style.display = ''; setTimeout(function(){ saved.style.display = 'none'; }, 1800); }
+    }
+};
+
+// 견적서 업로드 (storage/orders/manager_quote/)
+window._cwUploadMgrQuote = async function(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    if (!window._woOrderId) { alert('주문 정보를 찾을 수 없습니다.'); return; }
+    if (file.size > 30 * 1024 * 1024) { alert('파일은 30MB 이하만 가능합니다.'); return; }
+    const lbl = input.parentNode;
+    const origText = lbl ? lbl.firstChild.textContent : '';
+    if (lbl) lbl.firstChild.textContent = '업로드 중…';
+    try {
+        const ext = (file.name.split('.').pop() || 'pdf').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'pdf';
+        const path = 'orders/manager_quote/' + window._woOrderId + '_' + Date.now() + '.' + ext;
+        const up = await sb.storage.from('orders').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+        if (up.error) throw up.error;
+        const pub = sb.storage.from('orders').getPublicUrl(path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('URL 생성 실패');
+        const { data: cur, error: rdErr } = await sb.from('orders').select('files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const files = Array.isArray(cur.files) ? cur.files : [];
+        files.push({ name: file.name, url: url, type: 'manager_quote', _uploaded_at: new Date().toISOString() });
+        const { error: upErr } = await sb.from('orders').update({ files: files }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        alert('견적서가 업로드되었습니다.');
+        location.reload();
+    } catch (e) {
+        console.error('[cw mgr quote]', e);
+        alert('견적서 업로드 실패: ' + (e.message || e));
+        if (lbl) lbl.firstChild.textContent = origText;
+        input.value = '';
+    }
+};
+
+// 완료 토글 (+ Google Drive 동기화 트리거)
+window._cwToggleWorkorderComplete = async function() {
+    const isComplete = !!window._woCurrentComplete;
+    const btn = document.getElementById('woWorkorderCompleteBtn');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (isComplete) {
+        if (!confirm('작업 완료 표시를 해제하시겠습니까?\n(디자인 완료 상태도 함께 해제됩니다)')) return;
+        try {
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 처리중...'; }
+            await sb.from('orders').update({
+                design_complete: false,
+                design_complete_at: null,
+                design_complete_by: null
+            }).eq('id', window._woOrderId);
+            await _cwRebuildAdminNote(null, '');
+            location.reload();
+        } catch (e) {
+            console.error('[cw complete off]', e);
+            alert('해제 실패: ' + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        }
+    } else {
+        if (!confirm('디자인 작업이 모두 완료되었습니까?\n\n완료 표시 후:\n• 본사에서 칼선/출력 작업 시작 가능\n• 다크팩토리 (Google Drive) 폴더에 최종 파일 동기화\n\n* 아직 디자인 미완성이면 취소를 누르세요.')) return;
+        try {
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ 처리중...'; }
+            let managerEmail = '';
+            try { const { data: sess } = await sb.auth.getUser(); managerEmail = (sess && sess.user && sess.user.email) || ''; } catch (e) {}
+            // 1) orders.design_complete 컬럼 갱신
+            const { error: upErr } = await sb.from('orders').update({
+                design_complete: true,
+                design_complete_at: new Date().toISOString(),
+                design_complete_by: managerEmail || 'admin'
+            }).eq('id', window._woOrderId);
+            if (upErr) throw upErr;
+            // 2) admin_note 에 [작업지시완료] 도장
+            const _now = new Date();
+            const _stamp = _now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0')
+                         + ' ' + String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
+            await _cwRebuildAdminNote(null, _stamp);
+            // 3) Google Drive 동기화 트리거 (sync-order-to-drive edge function)
+            try {
+                sb.functions.invoke('sync-order-to-drive', { body: { order_id: window._woOrderId, design_finalized: true } })
+                    .then(function (r) { console.log('[drive sync] design finalized', (r && r.data) || r); })
+                    .catch(function (e) { console.warn('[drive sync] failed:', e && e.message || e); });
+            } catch (e) { console.warn('[drive sync] invoke failed:', e); }
+            alert('✅ 작업 완료 처리됨!\n다크팩토리(Google Drive)에 최종 파일이 동기화됩니다.');
+            location.reload();
+        } catch (e) {
+            console.error('[cw complete]', e);
+            alert('완료 처리 실패: ' + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; }
+        }
+    }
+};
 
 // 2026-06-10: 관리자 — 항목별 파일 수동 첨부/교체 (workorder.html 의 _woAttachFile 패턴 그대로)
 //   고객이 디자인 파일 수정을 LINE/메일로 보내면 매니저가 여기서 업로드 → orders.items[idx].attachments + files[] 갱신
