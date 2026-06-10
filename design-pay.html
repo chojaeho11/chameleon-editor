@@ -369,10 +369,49 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
       +   '<div>'+esc(PLATFORM_BANK.holder)+'</div>'
       + '</div>'
       + '<button class="btn btn-ghost noprint" style="margin-top:14px;" onclick="window._dmPrintReceipt(\''+orderId+'\',\''+esc(depositor)+'\')">'+esc(T.receiptBtn)+'</button>'
+      // 2026-06-10: 무통장 신청 직후에도 카드결제로 변경 가능 — 마음 바뀐 고객 위한 옵션
+      + '<button class="btn btn-ghost noprint" style="margin-top:10px;border:1.5px dashed #fbbf24;color:#92400e;" onclick="window._dmSwitchToCard(\''+state.bid.id+'\',\''+orderId+'\')">💳 카드결제로 변경</button>'
       + '<a class="btn btn-pri noprint" style="margin-top:10px;display:block;text-decoration:none;" href="/design-market">'+esc(T.toMarket)+'</a>'
       + '</div>'
       + '<div class="docbox" id="docBox"></div>';
   }
+
+  // 2026-06-10: 무통장 신청 → 카드결제로 변경 (design-market 의 switchBankToCard 와 동일 로직)
+  window._dmSwitchToCard = async function(bidId, orderId) {
+    var lang = state.country === 'JP' ? 'ja' : (state.country === 'US' ? 'en' : 'ko');
+    var msg = lang === 'en'
+      ? 'Switch to card payment? The bank transfer request will be cancelled.'
+      : lang === 'ja'
+      ? 'カード決済に変更しますか？銀行振込申請はキャンセルされます。'
+      : '카드결제로 변경하시겠어요? 무통장 입금 신청은 취소됩니다.';
+    if (!confirm(msg)) return;
+    try {
+      // 무통장 주문 취소
+      if (orderId) {
+        try {
+          await sb.from('orders').update({
+            status: '취소됨',
+            payment_status: '취소됨',
+            admin_note: '[디자인 마켓] 고객이 무통장 → 카드결제로 변경 (자동 취소)'
+          }).eq('id', orderId);
+        } catch(_) {}
+      }
+      // bid payment_status 리셋
+      var up = await sb.from('design_bids').update({
+        payment_status: 'pending',
+        bank_depositor: null,
+        bank_order_id: null
+      }).eq('id', bidId);
+      if (up.error) {
+        await sb.from('design_bids').update({ payment_status: 'pending' }).eq('id', bidId);
+      }
+      // 페이지 새로고침 — init() 가 payment_status='pending' 보고 정상 카드 UI 노출
+      location.href = '/design-pay?bid=' + encodeURIComponent(bidId) + '&lang=' + lang;
+    } catch (e) {
+      console.error('[_dmSwitchToCard]', e);
+      alert((lang==='en'?'Failed to switch: ':lang==='ja'?'変更失敗: ':'변경 실패: ') + (e.message || e));
+    }
+  };
 
   // ===== 견적서 / 영수증 인쇄 =====
   function _docHtml(kind, orderId, depositor){

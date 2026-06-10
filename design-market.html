@@ -6034,9 +6034,24 @@ async function showMyRequestDetail(requestId) {
             }
             // 무통장 입금 — 관리자 입금확인 대기
             if (_ps === 'bank_pending') {
+                // 2026-06-10: 마음 바뀌면 카드결제로 변경 가능 (입금 전 한정)
+                const _switchLabel = LANG==='en' ? '💳 Switch to Card Payment' : LANG==='ja' ? '💳 カード決済に変更' : '💳 카드결제로 변경';
+                const _switchHelp = LANG==='en'
+                    ? 'Want to switch to card payment instead? This will cancel the bank transfer request.'
+                    : LANG==='ja'
+                    ? 'カード決済に変更しますか？銀行振込申請はキャンセルされます。'
+                    : '카드결제로 변경하시겠어요? 무통장 입금 신청은 취소됩니다.';
                 _myDetailFinalHtml += `
-                <div style="padding:14px 16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;text-align:center;margin-bottom:12px;font-size:13px;color:#92400e;font-weight:700;">
-                    <i class="fa-solid fa-hourglass-half"></i> ${LANG==='en'?'Bank transfer submitted — awaiting admin confirmation. The designer starts once your deposit is confirmed.':LANG==='ja'?'銀行振込を申請しました — 管理者の入金確認待ちです。確認後にデザイナーが作業を開始します。':'무통장 입금 신청 완료 — 관리자 입금확인 대기 중입니다. 입금이 확인되면 디자이너가 작업을 시작합니다.'}
+                <div style="padding:14px 16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;margin-bottom:12px;">
+                    <div style="text-align:center;font-size:13px;color:#92400e;font-weight:700;margin-bottom:12px;">
+                        <i class="fa-solid fa-hourglass-half"></i> ${LANG==='en'?'Bank transfer submitted — awaiting admin confirmation. The designer starts once your deposit is confirmed.':LANG==='ja'?'銀行振込を申請しました — 管理者の入金確認待ちです。確認後にデザイナーが作業を開始します。':'무통장 입금 신청 완료 — 관리자 입금확인 대기 중입니다. 입금이 확인되면 디자이너가 작업을 시작합니다.'}
+                    </div>
+                    <div style="padding-top:10px; border-top:1px dashed #fde68a; text-align:center;">
+                        <div style="font-size:11.5px; color:#a16207; margin-bottom:8px;">${_switchHelp}</div>
+                        <button onclick="window.switchBankToCard('${_selBid2.id}')" style="padding:9px 18px; border:1.5px solid #fbbf24; background:#fff; color:#92400e; border-radius:8px; cursor:pointer; font-size:12.5px; font-weight:700; font-family:inherit;">
+                            ${_switchLabel}
+                        </button>
+                    </div>
                 </div>`;
             }
 
@@ -6212,6 +6227,58 @@ async function selectBid(requestId, bidId, designerId) {
         window.location.href = '/design-pay?bid=' + encodeURIComponent(bidId) + '&lang=' + (LANG || 'ko');
     }, 400);
 }
+
+// 2026-06-10: 무통장 입금 신청 후 카드결제로 변경하고 싶을 때
+window.switchBankToCard = async function(bidId) {
+    const confirmMsg = LANG==='en'
+        ? 'Switch to card payment?\nThe bank transfer request will be cancelled and you will be redirected to the card payment page.'
+        : LANG==='ja'
+        ? 'カード決済に変更しますか？\n銀行振込申請はキャンセルされ、カード決済ページに移動します。'
+        : '카드결제로 변경하시겠어요?\n무통장 입금 신청은 취소되고 카드결제 페이지로 이동합니다.';
+    if (!confirm(confirmMsg)) return;
+    try {
+        // 1) 현재 입찰 정보 조회 (bank_order_id 가 있다면 해당 주문 취소)
+        const { data: bid } = await sb.from('design_bids')
+            .select('id, payment_status, bank_order_id')
+            .eq('id', bidId).maybeSingle();
+        if (!bid) { showToast('입찰 정보를 찾을 수 없습니다.', 'error'); return; }
+        if (bid.payment_status !== 'bank_pending') {
+            showToast('이미 결제 처리 중인 항목입니다. 새로고침 후 다시 확인해주세요.', 'warn');
+            return;
+        }
+        // 2) 무통장 주문이 있으면 취소 처리 (트리거가 자동으로 쿠폰/마일리지 복구하지만 의도적 취소이므로 그냥 두기)
+        if (bid.bank_order_id) {
+            try {
+                await sb.from('orders').update({
+                    status: '취소됨',
+                    payment_status: '취소됨',
+                    admin_note: '[디자인 마켓] 고객이 무통장 → 카드결제로 변경 (자동 취소)'
+                }).eq('id', bid.bank_order_id);
+            } catch (e) {
+                console.warn('[switchBankToCard] order update failed', e);
+                // 주문 취소 실패해도 진행 (관리자가 수동으로 정리)
+            }
+        }
+        // 3) bid 의 payment_status 를 pending 으로 reset → /design-pay 다시 진입 가능
+        const { error: bidErr } = await sb.from('design_bids').update({
+            payment_status: 'pending',
+            bank_depositor: null,
+            bank_order_id: null
+        }).eq('id', bidId);
+        if (bidErr) {
+            // bank_depositor / bank_order_id 컬럼이 없는 경우 fallback
+            await sb.from('design_bids').update({ payment_status: 'pending' }).eq('id', bidId);
+        }
+        // 4) /design-pay 로 이동 — 정상 카드/무통장 선택 UI 노출
+        showToast(LANG==='en'?'Switching to card payment...':LANG==='ja'?'カード決済に切替中...':'카드결제 페이지로 이동합니다...', 'info');
+        setTimeout(() => {
+            window.location.href = '/design-pay?bid=' + encodeURIComponent(bidId) + '&lang=' + (LANG || 'ko');
+        }, 500);
+    } catch (e) {
+        console.error('[switchBankToCard]', e);
+        showToast('변경 실패: ' + (e.message || e), 'error');
+    }
+};
 
 // ═══════════════════════════════════════════════════════════════
 // Help banners + localization (Gig Market intro, My Gigs guide)
