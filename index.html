@@ -1221,21 +1221,64 @@ window._tcmFallbackClick = function(code) {
                 #mgrAccessRow { grid-template-columns:1fr 1fr; gap:8px; }
                 #mgrAccessRow .mgr-access-btn { padding:12px 10px; font-size:13px; }
             }
-            /* ★ VIP 개인결제 — 가장 눈에 띄게 */
+            /* ★ VIP 개인결제 + 자투리금액 결제하기 — 좌우 2칸 grid */
+            #mgrPayRow {
+                display:grid; grid-template-columns:1fr 1.4fr; gap:12px;
+                margin:6px 0 14px;
+            }
             #mgrVipPayBtn {
-                display:flex; align-items:center; justify-content:center; gap:12px;
-                width:100%; padding:18px 22px; margin:6px 0 14px; border:none; border-radius:14px;
+                display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+                padding:18px 14px; border:none; border-radius:14px;
                 background:linear-gradient(135deg,#fde047 0%,#facc15 45%,#eab308 100%);
                 color:#1f2937; font-size:17px; font-weight:900; letter-spacing:0.3px;
                 cursor:pointer; box-shadow:0 12px 28px -10px rgba(234,179,8,0.55), inset 0 1px 0 rgba(255,255,255,0.45);
                 transition:transform .15s ease, box-shadow .15s ease;
             }
             #mgrVipPayBtn:hover { transform:translateY(-1px); box-shadow:0 16px 34px -10px rgba(234,179,8,0.7), inset 0 1px 0 rgba(255,255,255,0.55); }
+            #mgrVipPayBtn .vip-main-row { display:flex; align-items:center; gap:10px; }
             #mgrVipPayBtn .vip-crown { font-size:22px; }
-            #mgrVipPayBtn .vip-sub { font-size:11.5px; font-weight:700; opacity:0.75; margin-left:6px; }
+            #mgrVipPayBtn .vip-sub { font-size:11.5px; font-weight:700; opacity:0.75; }
+            /* 자투리금액 결제 박스 */
+            #mgrScrapPayBox {
+                display:flex; flex-direction:column; gap:8px;
+                padding:14px 14px 12px;
+                background:linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(139,92,246,0.18) 100%);
+                border:1px solid rgba(196,181,253,0.45);
+                border-radius:14px;
+                box-shadow:0 8px 22px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+            }
+            #mgrScrapPayBox .sp-label {
+                display:flex; align-items:center; gap:6px;
+                font-size:12.5px; font-weight:900; color:#fff;
+                letter-spacing:0.2px;
+            }
+            #mgrScrapPayBox .sp-label .sp-icon { font-size:15px; }
+            #mgrScrapPayBox .sp-row {
+                display:grid; grid-template-columns:130px 1fr auto; gap:6px;
+            }
+            #mgrScrapPayBox .qi-amount, #mgrScrapPayBox .qi-memo {
+                display:flex; align-items:center; background:rgba(255,255,255,0.08);
+                border:1px solid rgba(255,255,255,0.15); border-radius:9px; padding:0 10px;
+            }
+            #mgrScrapPayBox input {
+                border:none; outline:none; background:transparent;
+                color:#fff; font-size:13px; font-weight:700; padding:8px 0; width:100%;
+            }
+            #mgrScrapPayBox input::placeholder { color:rgba(255,255,255,0.45); font-weight:500; }
+            #mgrScrapPayBox .qi-amount input { text-align:right; }
+            #mgrScrapPayBox .qi-unit { font-size:11.5px; color:rgba(255,255,255,0.7); font-weight:700; padding-left:4px; white-space:nowrap; }
+            #mgrScrapPayBox #mgrQuoteBtn {
+                padding:0 16px; background:#fff; color:#111; border:none; border-radius:9px;
+                font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap;
+                box-shadow:0 4px 12px -2px rgba(0,0,0,0.25);
+            }
+            #mgrScrapPayBox #mgrQuoteBtn:hover { background:#fde047; }
             @media (max-width: 600px) {
+                #mgrPayRow { grid-template-columns:1fr; gap:10px; }
                 #mgrVipPayBtn { padding:15px 14px; font-size:15px; }
                 #mgrVipPayBtn .vip-sub { display:none; }
+                #mgrScrapPayBox .sp-row { grid-template-columns:1fr; }
+                #mgrScrapPayBox #mgrQuoteBtn { padding:12px; font-size:14px; }
             }
             /* 매니저 전화 모달 */
             #mgrPhoneModal {
@@ -1272,12 +1315,39 @@ window._tcmFallbackClick = function(code) {
                 </button>
             </div>
 
-            <!-- ★ VIP 개인결제 — 가장 자주 사용되는 기능. 큰 골드 CTA -->
-            <button type="button" id="mgrVipPayBtn" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
-                <span class="vip-crown">👑</span>
-                <span data-i18n="btn_vip_pay">VIP 개인결제</span>
-                <span class="vip-sub" data-i18n="btn_vip_pay_sub">결제대기·진행중 견적 모아보기</span>
-            </button>
+            <!-- ★ 좌:VIP 개인결제 / 우:자투리금액 결제하기 -->
+            <div id="mgrPayRow">
+                <button type="button" id="mgrVipPayBtn" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
+                    <span class="vip-main-row">
+                        <span class="vip-crown">👑</span>
+                        <span data-i18n="btn_vip_pay">VIP 개인결제</span>
+                    </span>
+                    <span class="vip-sub" data-i18n="btn_vip_pay_sub">결제대기·진행중 견적 모아보기</span>
+                </button>
+                <div id="mgrScrapPayBox">
+                    <div class="sp-label">
+                        <span class="sp-icon">💴</span>
+                        <span data-i18n="btn_scrap_pay">자투리금액 결제하기</span>
+                    </div>
+                    <div class="sp-row">
+                        <div class="qi-amount">
+                            <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
+                                   placeholder="50,000"
+                                   oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
+                            <span id="mgrQuoteUnit" class="qi-unit">원</span>
+                        </div>
+                        <div class="qi-memo">
+                            <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
+                                   placeholder="내용 (예: 등신대 10개)"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
+                        </div>
+                        <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()">
+                            ⚡ 주문하기
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- 전화번호 그리드: 모달 안으로 이동 (display:none 컨테이너) -->
             <div id="mgrPhoneListHidden" style="display:none;">
@@ -1466,69 +1536,20 @@ window._tcmFallbackClick = function(code) {
                  클릭 시 결제대기/디자인작업중 VIP 카드 전체를 모달로 모아 표시.
                  2026-05-15: 옆에 "금액 주문" 입력 + 주문하기 버튼 복원 — 매니저와 통화 후
                  합의된 금액을 직접 입력해서 즉시 결제 모달을 띄우는 빠른 경로. -->
-            <!-- 2026-06-10: 견적 빠른주문 — 모바일에서 주문하기 버튼 치우침 해결 위해 grid + 풀폭 버튼 -->
+            <!-- 이벤트 쿠폰 (보조 CTA — 가운데 정렬, 작게) -->
             <style>
-            #mgrQuoteActions { margin-top:6px; }
-            #mgrQuoteInline {
-                display:grid; grid-template-columns:160px 1fr auto; gap:8px;
-                background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
-                border-radius:12px; padding:8px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
-                backdrop-filter:blur(4px);
-            }
-            #mgrQuoteInline .qi-amount, #mgrQuoteInline .qi-memo {
-                display:flex; align-items:center; background:rgba(255,255,255,0.06);
-                border:1px solid rgba(255,255,255,0.12); border-radius:9px; padding:0 12px;
-            }
-            #mgrQuoteInline input {
-                border:none; outline:none; background:transparent;
-                color:#fff; font-size:14px; font-weight:700; padding:10px 0; width:100%;
-            }
-            #mgrQuoteInline input::placeholder { color:rgba(255,255,255,0.4); font-weight:500; }
-            #mgrQuoteInline .qi-amount input { text-align:right; }
-            #mgrQuoteInline .qi-unit { font-size:12px; color:rgba(255,255,255,0.7); font-weight:700; padding-left:6px; white-space:nowrap; }
-            #mgrQuoteInline #mgrQuoteBtn {
-                padding:0 22px; background:#fff; color:#111; border:none; border-radius:9px;
-                font-size:14px; font-weight:900; cursor:pointer; white-space:nowrap;
-                box-shadow:0 4px 12px -2px rgba(0,0,0,0.25);
-            }
-            #mgrQuoteInline #mgrQuoteBtn:hover { background:#fde047; }
-            #mgrCouponWrap { display:flex; justify-content:center; margin-top:12px; }
+            #mgrCouponWrap { display:flex; justify-content:center; margin-top:4px; }
             #couponInlineBtn {
                 padding:11px 22px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff;
                 border:none; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer;
                 box-shadow:0 6px 16px -4px rgba(190,24,93,0.45); letter-spacing:0.3px;
                 white-space:nowrap; display:inline-flex; align-items:center; gap:6px; font-family:inherit;
             }
-            @media (max-width: 600px) {
-                #mgrQuoteInline { grid-template-columns:1fr; }
-                #mgrQuoteInline #mgrQuoteBtn { padding:14px; font-size:15px; }
-            }
             </style>
-            <div id="mgrQuoteActions">
-                <!-- 금액 + 메모 + 주문하기 (단일 grid 행) -->
-                <div id="mgrQuoteInline">
-                    <div class="qi-amount">
-                        <input id="mgrQuoteAmount" type="text" inputmode="numeric" autocomplete="off"
-                               placeholder="50,000"
-                               oninput="window._mgrQuoteFormat && window._mgrQuoteFormat(this)"
-                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
-                        <span id="mgrQuoteUnit" class="qi-unit">원</span>
-                    </div>
-                    <div class="qi-memo">
-                        <input id="mgrQuoteMemo" type="text" maxlength="80" autocomplete="off"
-                               placeholder="내용 (예: 등신대 10개)"
-                               onkeydown="if(event.key==='Enter'){event.preventDefault();window._mgrQuoteOrder&&window._mgrQuoteOrder();}">
-                    </div>
-                    <button type="button" id="mgrQuoteBtn" onclick="window._mgrQuoteOrder && window._mgrQuoteOrder()">
-                        ⚡ 주문하기
-                    </button>
-                </div>
-                <!-- 이벤트 쿠폰 (보조 CTA — 가운데 정렬, 작게) -->
-                <div id="mgrCouponWrap">
-                    <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()">
-                        <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
-                    </button>
-                </div>
+            <div id="mgrCouponWrap">
+                <button type="button" id="couponInlineBtn" onclick="window._openCouponShareModal && window._openCouponShareModal()">
+                    <span id="couponInlineBtnLabel">이벤트 쿠폰 받기</span>
+                </button>
             </div>
             <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 (텍스트 자체는 사용자 요청에 따라 제거) -->
             <div id="mgrQuoteHint" style="display:none;"></div>
@@ -1548,6 +1569,7 @@ window._tcmFallbackClick = function(code) {
             kr: {
                 phoneBtn:'본사·매니저 전화 안내', chatBtn:'챗봇 채팅상담',
                 vipMain:'VIP 개인결제', vipSub:'결제대기·진행중 견적 모아보기',
+                scrapLabel:'자투리금액 결제하기',
                 modalTitle:'📞 본사 · 매니저 전화 안내',
                 modalHint:'담당 매니저와 통화 후 받으신 견적 금액을 아래 칸에 직접 입력하셔도 즉시 결제 모달이 열립니다.',
                 amountPh:'50,000', unit:'원', memoPh:'내용 (예: 등신대 10개)', orderBtn:'⚡ 주문하기'
@@ -1555,6 +1577,7 @@ window._tcmFallbackClick = function(code) {
             ja: {
                 phoneBtn:'本社・担当の電話番号', chatBtn:'チャット相談',
                 vipMain:'VIP 個別決済', vipSub:'お見積もり・お支払い管理',
+                scrapLabel:'残金・端数のお支払い',
                 modalTitle:'📞 本社・担当の電話番号',
                 modalHint:'担当との通話後にお受けしたお見積もり金額を下の欄に直接ご入力いただいても、すぐに決済モーダルが開きます。',
                 amountPh:'5,000', unit:'円', memoPh:'内容 (例: 等身大10個)', orderBtn:'⚡ 注文する'
@@ -1562,6 +1585,7 @@ window._tcmFallbackClick = function(code) {
             en: {
                 phoneBtn:'HQ & Manager Phones', chatBtn:'Chat Support',
                 vipMain:'VIP Personal Pay', vipSub:'Open all pending & in-progress quotes',
+                scrapLabel:'Pay Remaining Balance',
                 modalTitle:'📞 HQ & Manager Phones',
                 modalHint:'After speaking with a manager, you can also type the agreed amount below to open the payment modal instantly.',
                 amountPh:'50', unit:'$', memoPh:'Note (e.g. 10 standees)', orderBtn:'⚡ Order'
@@ -1569,19 +1593,19 @@ window._tcmFallbackClick = function(code) {
         };
         var t = L[lang] || L.kr;
         function setText(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
-        function setAttr(sel, attr, v){ document.querySelectorAll(sel).forEach(function(el){ el.setAttribute(attr, v); }); }
         // 접근 버튼
         var pBtn = document.querySelector('#mgrAccessPhone .mgr-access-label');
         if (pBtn) pBtn.textContent = t.phoneBtn;
         var cBtn = document.querySelector('#mgrAccessChat .mgr-access-label');
         if (cBtn) cBtn.textContent = t.chatBtn;
-        // VIP 버튼 (crown 다음 메인 + sub)
-        var vipBtn = document.getElementById('mgrVipPayBtn');
-        if (vipBtn) {
-            var spans = vipBtn.querySelectorAll('span');
-            if (spans.length >= 2) spans[1].textContent = t.vipMain;
-            if (spans.length >= 3) spans[2].textContent = t.vipSub;
-        }
+        // VIP 버튼 — data-i18n 으로 직접 타겟
+        var vipMain = document.querySelector('#mgrVipPayBtn [data-i18n="btn_vip_pay"]');
+        if (vipMain) vipMain.textContent = t.vipMain;
+        var vipSub = document.querySelector('#mgrVipPayBtn [data-i18n="btn_vip_pay_sub"]');
+        if (vipSub) vipSub.textContent = t.vipSub;
+        // 자투리금액 라벨
+        var scrapLab = document.querySelector('#mgrScrapPayBox [data-i18n="btn_scrap_pay"]');
+        if (scrapLab) scrapLab.textContent = t.scrapLabel;
         // 모달
         setText('mgrPhoneModalTitle', t.modalTitle);
         var hintEl = document.querySelector('#mgrPhoneModal [data-i18n="mgr_phone_modal_hint"]');
