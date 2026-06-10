@@ -1327,35 +1327,35 @@ window._tcmFallbackClick = function(code) {
                 .mgr-action .mgr-action-label { font-size:12px; }
             }
             /* ════════════════════════════════════════════════════════════════
-               2026-06-11: 모바일 라이트 테마 + 둥근 버튼 + 마스코트 redesign
+               2026-06-11: 모바일 — 알약 버튼 2열x3행, 영상 배경 그대로, 마스코트
                (PC 는 기존 다크 테마 유지)
                ════════════════════════════════════════════════════════════════ */
             .mobile-only-mascot { display:none; }
             @media (max-width: 700px) {
-                /* 1) 히어로 라이트 테마: 영상 위 어둠을 옅게 + 따뜻한 크림톤 오버레이 */
+                /* 1) hero 영상 그대로 — 어두운 오버레이 살짝만 (글씨 가독성 위해) */
                 .hero-video-overlay {
-                    background:linear-gradient(180deg, rgba(255,247,225,0.55) 0%, rgba(255,237,213,0.7) 50%, rgba(254,215,170,0.85) 100%) !important;
+                    background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.15) 100%) !important;
                 }
-                /* 2) 타이틀 — Fredoka 둥글둥글 두꺼운 폰트, 어두운 글씨 */
+                /* 2) 타이틀 — Fredoka 둥글둥글 두꺼운 폰트 (영상 위 흰 글씨) */
                 .hero-title { gap:0 !important; }
-                .hero-title .hero-tagline { color:#7c2d12 !important; opacity:0.85; }
+                .hero-title .hero-tagline { color:#fff !important; opacity:0.95; text-shadow:0 2px 8px rgba(0,0,0,0.6); }
                 .hero-title span {
                     font-family:'Fredoka', 'Pretendard Variable', system-ui, sans-serif !important;
                     font-weight:700 !important;
-                    color:#1f2937 !important;
+                    color:#fff !important;
                     letter-spacing:0.5px !important;
-                    text-shadow:0 2px 4px rgba(255,255,255,0.4), 0 4px 12px rgba(0,0,0,0.08) !important;
+                    text-shadow:0 2px 6px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.35) !important;
                     -webkit-text-stroke:0 !important;
                 }
                 .hero-title .ht-prn {
-                    background:linear-gradient(135deg, #f59e0b, #ea580c, #c2410c) !important;
+                    background:linear-gradient(135deg, #fde047, #f59e0b, #ea580c) !important;
                     -webkit-background-clip:text !important;
                     background-clip:text !important;
                     -webkit-text-fill-color:transparent !important;
                     color:transparent !important;
                     font-weight:700 !important;
                 }
-                /* 3) 마스코트 — hero 우측에 둥둥 떠다님 (style.css 기본 위치 override) */
+                /* 3) 마스코트 — hero 우측에 둥둥 떠다님 */
                 .mobile-only-mascot {
                     display:block !important;
                     position:absolute !important;
@@ -1369,83 +1369,86 @@ window._tcmFallbackClick = function(code) {
                     pointer-events:none;
                     z-index:6 !important;
                     animation:bounceUpDn 3s ease-in-out infinite, swayLR 4.5s ease-in-out infinite !important;
-                    filter:drop-shadow(0 8px 16px rgba(124,45,18,0.25)) !important;
+                    filter:drop-shadow(0 8px 16px rgba(0,0,0,0.4)) !important;
                     transform-origin:center;
                 }
                 @keyframes swayLR {
                     0%, 100% { transform:translateX(0) rotate(-3deg); }
                     50% { transform:translateX(-6px) rotate(3deg); }
                 }
-                /* 4) 매니저 영역 박스 라이트 테마 */
-                #mgrQuoteHero > div {
-                    background:linear-gradient(165deg, #fffdf8 0%, #fff7e6 50%, #fed7aa 100%) !important;
-                    border:1px solid rgba(251,191,36,0.35) !important;
-                    box-shadow:0 18px 40px -14px rgba(251,146,60,0.35), inset 0 1px 0 rgba(255,255,255,0.9) !important;
-                }
-                /* 5) 6개 버튼 — 원형 + 떠오르는 애니메이션 */
-                #mgrActionsGrid {
-                    grid-template-columns:repeat(3, 1fr) !important;
-                    gap:14px !important;
-                    padding:8px 4px 4px !important;
-                }
-                #mgrActionsGrid .mgr-action {
-                    aspect-ratio:1/1;
-                    min-height:0 !important;
-                    border-radius:50% !important;
-                    padding:0 !important;
-                    gap:4px !important;
-                    border:2px solid rgba(255,255,255,0.9) !important;
-                    box-shadow:
-                        0 8px 18px rgba(0,0,0,0.18),
-                        inset 0 -3px 8px rgba(0,0,0,0.12),
-                        inset 0 3px 8px rgba(255,255,255,0.35) !important;
-                    animation:floatBob 3.6s ease-in-out infinite;
-                }
-                /* 6개 버튼 각각 다른 위상 → 자연스러운 물결 효과 */
-                #mgrActionsGrid .mgr-action:nth-child(1) { animation-delay:0s; }
-                #mgrActionsGrid .mgr-action:nth-child(2) { animation-delay:0.3s; }
-                #mgrActionsGrid .mgr-action:nth-child(3) { animation-delay:0.6s; }
-                #mgrActionsGrid .mgr-action:nth-child(4) { animation-delay:0.9s; }
-                #mgrActionsGrid .mgr-action:nth-child(5) { animation-delay:1.2s; }
-                #mgrActionsGrid .mgr-action:nth-child(6) { animation-delay:1.5s; }
-                @keyframes floatBob {
-                    0%, 100% { transform:translateY(0); }
-                    50% { transform:translateY(-6px); }
-                }
-                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:30px !important; height:30px !important; font-size:16px !important;
-                    border-radius:50% !important;
-                }
-                #mgrActionsGrid .mgr-action .mgr-action-label {
-                    font-size:10.5px !important;
-                    line-height:1.1 !important;
-                    padding:0 4px;
-                }
-                /* 라이트 테마용 — 각 버튼 컬러 조정 (대비 강화) */
-                #mgrActionsGrid .mgr-action.mgr-phone {
-                    background:linear-gradient(155deg, #475569, #1e293b) !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-chat {
-                    background:linear-gradient(155deg, #6366f1, #4338ca) !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-vip {
-                    background:linear-gradient(155deg, #fbbf24, #d97706) !important;
-                    color:#1f2937 !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-scrap {
-                    background:linear-gradient(155deg, #10b981, #047857) !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-design {
-                    background:linear-gradient(155deg, #06b6d4, #0891b2) !important;
-                }
-                #mgrActionsGrid .mgr-action.mgr-coupon {
-                    background:linear-gradient(155deg, #f472b6, #be185d) !important;
-                }
-                /* 6) 매니저 박스 위치 — 아래로 모음 (hero 아래쪽에 붙도록) */
+                /* 4) 매니저 박스 — 배경 투명 (영상이 그대로 보임) */
                 #mgrQuoteHero {
                     margin-top:auto !important;
                     margin-bottom:18px !important;
-                    transform:translateY(-4px);
+                }
+                #mgrQuoteHero > div {
+                    background:transparent !important;
+                    border:none !important;
+                    box-shadow:none !important;
+                    padding:8px 12px !important;
+                }
+                /* 5) 6개 알약(pill) 버튼 — 2열 x 3행, 가로로 긴 둥근 모양 */
+                #mgrActionsGrid {
+                    grid-template-columns:repeat(2, 1fr) !important;
+                    gap:10px !important;
+                    padding:4px 0 !important;
+                }
+                #mgrActionsGrid .mgr-action {
+                    aspect-ratio:auto !important;
+                    min-height:48px !important;
+                    height:48px !important;
+                    flex-direction:row !important;
+                    border-radius:999px !important;
+                    padding:0 14px !important;
+                    gap:8px !important;
+                    border:2px solid rgba(255,255,255,0.85) !important;
+                    box-shadow:
+                        0 8px 18px rgba(0,0,0,0.25),
+                        inset 0 -2px 6px rgba(0,0,0,0.18),
+                        inset 0 2px 6px rgba(255,255,255,0.3) !important;
+                    animation:floatBob 3.6s ease-in-out infinite;
+                }
+                #mgrActionsGrid .mgr-action:nth-child(1) { animation-delay:0s; }
+                #mgrActionsGrid .mgr-action:nth-child(2) { animation-delay:0.25s; }
+                #mgrActionsGrid .mgr-action:nth-child(3) { animation-delay:0.5s; }
+                #mgrActionsGrid .mgr-action:nth-child(4) { animation-delay:0.75s; }
+                #mgrActionsGrid .mgr-action:nth-child(5) { animation-delay:1.0s; }
+                #mgrActionsGrid .mgr-action:nth-child(6) { animation-delay:1.25s; }
+                @keyframes floatBob {
+                    0%, 100% { transform:translateY(0); }
+                    50% { transform:translateY(-5px); }
+                }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
+                    width:28px !important; height:28px !important;
+                    font-size:14px !important;
+                    border-radius:50% !important;
+                    flex-shrink:0;
+                }
+                #mgrActionsGrid .mgr-action .mgr-action-label {
+                    font-size:13px !important;
+                    line-height:1.1 !important;
+                    padding:0;
+                    white-space:nowrap;
+                }
+                /* 컬러 (대비 강화) */
+                #mgrActionsGrid .mgr-action.mgr-phone {
+                    background:linear-gradient(135deg, #475569, #1e293b) !important;
+                }
+                #mgrActionsGrid .mgr-action.mgr-chat {
+                    background:linear-gradient(135deg, #6366f1, #4338ca) !important;
+                }
+                #mgrActionsGrid .mgr-action.mgr-vip {
+                    background:linear-gradient(135deg, #fbbf24, #d97706) !important;
+                    color:#1f2937 !important;
+                }
+                #mgrActionsGrid .mgr-action.mgr-scrap {
+                    background:linear-gradient(135deg, #10b981, #047857) !important;
+                }
+                #mgrActionsGrid .mgr-action.mgr-design {
+                    background:linear-gradient(135deg, #06b6d4, #0891b2) !important;
+                }
+                #mgrActionsGrid .mgr-action.mgr-coupon {
+                    background:linear-gradient(135deg, #f472b6, #be185d) !important;
                 }
             }
             /* 공통 모달 (전화 + 상담후금액주문) */
@@ -1770,9 +1773,9 @@ window._tcmFallbackClick = function(code) {
              (window.CURRENT_LANG || 'kr'));
         var L = {
             kr: {
-                btnPhone:'매니저 전화안내', btnChat:'챗봇 상담',
-                btnVip:'VIP 개인결제', btnScrap:'상담 후 금액주문',
-                btnDesign:'디자인 의뢰하기', btnCoupon:'이벤트 쿠폰',
+                btnPhone:'전화번호', btnChat:'챗봇상담',
+                btnVip:'개인결제', btnScrap:'금액주문',
+                btnDesign:'디자인의뢰', btnCoupon:'이벤트',
                 phoneTitle:'📞 본사 · 매니저 전화 안내',
                 phoneHint:'담당 매니저와 통화 후 받으신 견적 금액은 「상담 후 금액주문」 버튼에서 직접 입력하실 수 있습니다.',
                 quoteTitle:'💴 상담 후 금액주문',
