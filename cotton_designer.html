@@ -1965,13 +1965,8 @@ if (window.pdfjsLib) {
 })();
 </script>
 <style>
-#ch-plugin, [id^="ch-plugin"] { z-index:2147483600 !important; opacity:1 !important; visibility:visible !important; pointer-events:auto !important; }
-#ch-plugin iframe, [id^="ch-plugin"] iframe { opacity:1 !important; visibility:visible !important; background-color:#fff !important; }
-@media (max-width:768px) {
-    #ch-plugin [class*="MessengerWrapper"], #ch-plugin [class*="messenger"] {
-        position:fixed !important; inset:0 !important; opacity:1 !important; background-color:#fff !important;
-    }
-}
+/* 채널톡 위젯 — z-index 만 강제 (내부 UI 는 ChannelIO 가 직접 관리) */
+#ch-plugin, [id^="ch-plugin"] { z-index:2147483600 !important; }
 </style>
 </body>
 </html>

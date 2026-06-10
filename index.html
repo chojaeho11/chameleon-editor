@@ -22140,29 +22140,8 @@ document.addEventListener('click', function(e) {
 })();
 </script>
 <style>
-/* 채널톡 위젯 — 모바일에서 투명/가려짐 방지 위한 강제 가시성 */
-#ch-plugin, [id^="ch-plugin"] {
-    z-index: 2147483600 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
-#ch-plugin iframe, [id^="ch-plugin"] iframe {
-    opacity: 1 !important;
-    visibility: visible !important;
-    background-color: #fff !important;
-}
-/* 모바일에서 메신저 패널이 fullscreen 으로 정상 렌더 — 부모 transform 무관 */
-@media (max-width: 768px) {
-    #ch-plugin [class*="MessengerWrapper"],
-    #ch-plugin [class*="messenger"] {
-        position: fixed !important;
-        inset: 0 !important;
-        opacity: 1 !important;
-        background-color: #fff !important;
-    }
-}
-/* hexa-board 화이트라벨에서는 hexa-mode 일 때만 숨김 — 헥사라이트 KR 일반 페이지엔 표시 유지 */
+/* 채널톡 위젯 — z-index 만 강제 (내부 UI 는 ChannelIO 가 직접 관리) */
+#ch-plugin, [id^="ch-plugin"] { z-index: 2147483600 !important; }
 </style>
 
 </body>
