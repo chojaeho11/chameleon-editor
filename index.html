@@ -1765,7 +1765,7 @@ window._tcmFallbackClick = function(code) {
             }
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
-                .hero-section { padding:8px 0 4px !important; min-height:0 !important; display:block !important; overflow:hidden !important; }
+                .hero-section { padding:8px 0 4px !important; min-height:240px !important; display:block !important; overflow:visible !important; }
                 .hero-carousel {
                     height:220px;
                     border-radius:18px;
@@ -20787,13 +20787,13 @@ window.dsmRenderProducts = async function(keyword) {
     </div>
 </div>
 
-<!-- ===== 카멜레온 AI 상담봇 (우측 하단 고정) ===== -->
-<div id="cham-bot-trigger">
+<!-- ===== 카멜레온 AI 상담봇 — 2026-06-11: FAB 숨김 (위 6 버튼 그리드의 챗봇상담으로 통일) ===== -->
+<div id="cham-bot-trigger" style="display:none !important;">
     <i class="fa-solid fa-comments" id="cham-bot-icon"></i>
     <span id="cham-bot-badge">1</span>
 </div>
 
-<div id="cham-bot-window">
+<div id="cham-bot-window" style="display:none !important;">
     <div class="cham-header">
         <div class="cham-header-left">
             <div class="cham-avatar"><img src="https://gdadmin.signmini.com/data/common/favicon.ico" style="width:24px;height:24px;border-radius:50%;"></div>
