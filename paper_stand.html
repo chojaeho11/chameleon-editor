@@ -1756,10 +1756,8 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (w.attachEvent) w.attachEvent('onload', l);
     else { w.addEventListener('DOMContentLoaded', l, false); w.addEventListener('load', l, false); }
     ChannelIO('boot', {
-        pluginKey: '752ba9ff-a447-4e10-9813-715e051995cd',
-        language: 'ko',
-        appearance: 'light',
-        mobileMessengerMode: 'newTab'  // 모바일에서 투명/가려짐 회피 — chat.channel.io 새 탭으로
+        pluginKey: '752ba9ff-a447-4e10-9813-715e051995cd'
+        // 모바일 투명 버그 회피 위해 추가 옵션 모두 제거 — 채널톡 기본 동작에 맡김
     });
 })();
 </script>
