@@ -1550,8 +1550,9 @@ window._tcmFallbackClick = function(code) {
             #jpHeroRow { display:none !important; height:0 !important; overflow:hidden !important; padding:0 !important; margin:0 !important; }
             #jpLineContact, #enHibaContact { display:none !important; height:0 !important; }
             #mgrQuoteHero { display:block !important; min-height:120px !important; z-index:50 !important; position:relative !important; }
-            /* freeDeliveryNotice 가 mgrQuoteHero 와 겹치지 않도록 충분한 상단 마진 */
-            #freeDeliveryNotice { margin-top:32px !important; }
+            /* 2026-06-11: freeDeliveryNotice (FREE/SUMMER 2 칸 광고) — 위 6 버튼과 확실히 분리 */
+            #freeDeliveryNotice { margin-top:48px !important; }
+            @media (max-width: 700px) { #freeDeliveryNotice { margin-top:24px !important; } }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
@@ -1925,8 +1926,8 @@ window._tcmFallbackClick = function(code) {
                 background:linear-gradient(135deg, #fce7f3, #f472b6) !important; color:#831843 !important;
             }
             @media (max-width: 700px) {
-                /* 2026-06-11: 모바일에서도 6 버튼 1줄로 배치 + 캐러셀과 갭 최소화 */
-                #mgrQuoteHero { margin:4px auto 12px !important; padding:0 10px !important; min-height:0 !important; }
+                /* 2026-06-11: 모바일에서도 6 버튼 1줄로 배치 + 6 버튼 영역 최소 높이 보장 */
+                #mgrQuoteHero { margin:8px auto 20px !important; padding:0 10px !important; min-height:80px !important; }
                 #mgrActionsGrid {
                     grid-template-columns:repeat(6, 1fr) !important;
                     gap:6px !important;
@@ -3720,7 +3721,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 2026-06-11: mgrQuoteHero (6 버튼) 를 hero-section 바로 다음으로 이동 — 다른 섹션들이 위로 올라오기 전에
-    // 2026-06-11: freeDelivNotice (FREE/SUMMER 2 칸 광고) 는 모든 상품 섹션 아래로 이동 — KR/JP/US 공통
     // 2026-06-04: 3 바로가기 버튼(advShortcutBtns) 은 푸터 위로 영구 이동 — reorder 안 함
     var mgrHero = document.getElementById('mgrQuoteHero');
     var aiDesignHero = document.getElementById('aiDesignHero');
@@ -3730,6 +3730,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ★ 6 버튼 카드를 가장 먼저 hero 바로 뒤에 — 모바일에서 가려지지 않도록
     if (mgrHero) { moveAfter(mgrHero, cursor); cursor = mgrHero; }
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
+    if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
     if (aiDesignHero) { moveAfter(aiDesignHero, cursor); cursor = aiDesignHero; }
     [chatbotWrap, couponBanner, btnWrap].forEach(function(el) {
         if (el) { moveAfter(el, cursor); cursor = el; }
@@ -3753,9 +3754,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // 영상1 (expositor4) → POPUP 영상 다음
     if (psVideo1) { moveAfter(psVideo1, cursor); cursor = psVideo1; }
-
-    // 2026-06-11: 수도권 무료배송 + SUMMER SALE 2 칸 광고 — 상품 섹션 모두 아래로 이동 (KR/JP/US 공통)
-    if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
 
     // 흘러가는 배너 숨김
     if (scrollBanner) { scrollBanner.style.display = 'none'; }
