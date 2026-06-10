@@ -1553,9 +1553,8 @@ window._tcmFallbackClick = function(code) {
             /* 2026-06-11: freeDeliveryNotice (FREE/SUMMER 2 칸 광고) — 위 6 버튼과 확실히 분리 */
             #freeDeliveryNotice { margin-top:48px !important; }
             @media (max-width: 700px) { #freeDeliveryNotice { margin-top:24px !important; } }
-            /* 2026-06-11: JP/US 사이트에서는 FREE/SUMMER 배너 자체 숨김 (사용자 요청) */
-            html[data-site="JP"] #freeDeliveryNotice,
-            html[data-site="US"] #freeDeliveryNotice { display:none !important; }
+            /* 2026-06-11: FREE/SUMMER 2 칸 광고 자체 숨김 — 모든 사이트 (사용자 요청) */
+            #freeDeliveryNotice { display:none !important; }
             /* JP/US 6 버튼 영역 — 시각 가시화 위해 살짝 큰 min-height 보장 */
             html[data-site="JP"] #mgrQuoteHero,
             html[data-site="US"] #mgrQuoteHero { min-height:140px !important; margin-top:32px !important; margin-bottom:40px !important; }
@@ -2667,6 +2666,24 @@ window._tcmFallbackClick = function(code) {
     })();
     </script>
     </div><!-- /.hero-section -->
+
+    <!-- 2026-06-11: hero-section 이 닫힌 직후 — mgrQuoteHero 가 아직 hero-section 안에 있다면 강제로 밖으로 이동 -->
+    <script>
+    (function(){
+        try {
+            var mh = document.getElementById('mgrQuoteHero');
+            if (!mh) return;
+            var hero = document.querySelector('.hero-section');
+            if (!hero) return;
+            if (mh.parentNode === hero) {
+                // 이제 hero-section 다음 자리에 명확히 위치할 수 있음
+                if (hero.nextSibling) hero.parentNode.insertBefore(mh, hero.nextSibling);
+                else hero.parentNode.appendChild(mh);
+            }
+        } catch(e) { console.warn('[post-hero] mgrQuoteHero 이동 실패:', e); }
+    })();
+    </script>
+
     <script>
     (function() {
         // 매니저 견적 빠른 주문 — 금액 입력 시 천단위 콤마 자동
