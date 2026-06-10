@@ -46,6 +46,18 @@ function _omItemLabel(it) {
     else if (/포맥스|foamex|폼\s*보드|foam\s*board/i.test(name)) prefix = '🪟 폼/포맥스';
     else if (/티셔츠|tshirt|t-shirt/i.test(name)) prefix = '👕 티셔츠';
     else if (/매니저\s*견적|manager\s*quote/i.test(name) || it.type === 'manager_quote') prefix = '💼 매니저견적';
+    // 2026-06-10: 디자인 마켓 의뢰비 (design-pay.html 가 생성한 주문) 감지
+    else if (it.design_bid_id || it.design_request_id || it.category === 'design_fee' ||
+             (it.product && it.product.category === 'design_fee') ||
+             (code && code.indexOf('design_fee') === 0) ||
+             /디자인비|디자인\s*의뢰\s*결제|design\s*fee|デザイン\s*料/i.test(name)) {
+        prefix = '🎨 디자인 의뢰비';
+        // name 에 "디자인 의뢰 결제 — " prefix 가 박혀 있으면 제거 (중복 노출 방지)
+        name = name.replace(/^\s*\[?디자인비\]?\s*/, '')
+                   .replace(/^\s*디자인\s*의뢰\s*결제\s*[—\-:]\s*/, '')
+                   .replace(/^\s*\[?Design Fee\]?\s*/i, '')
+                   .replace(/^\s*\[?デザイン料\]?\s*/, '').trim();
+    }
     // 3) 라벨 조합 — 이름 있으면 prefix · name, 없으면 prefix 만, 둘 다 없으면 '상품'
     if (prefix && name) return prefix + ' · ' + name;
     if (prefix) return prefix;
