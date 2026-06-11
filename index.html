@@ -2022,7 +2022,7 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-phone-volume"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_phones">매니저 전화안내</span>
                 </button>
-                <button type="button" class="mgr-action mgr-chat" onclick="if(window.__SITE_CODE==='JP'){location.href='/jp-track';return;} if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
+                <button type="button" class="mgr-action mgr-chat" onclick="if(window.__SITE_CODE==='JP'){if(window._cpOpenOrderLookup){window._cpOpenOrderLookup();}else{location.href='/jp-track';}return;} if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots" id="mgrChatBtnIcon"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_chat">챗봇 상담</span>
                 </button>
@@ -11047,6 +11047,56 @@ window.filterFxCards = function(cat, btn) {
 </script>
 
     <script src="/jp-nanami-fab.js?v=2" defer></script>
+
+    <!-- 2026-06-12: JP 주문조회 모달 (cotton_print 패턴 — 로그인 자동조회 + 전화 4자리) — JP 에서만 활성 -->
+    <script src="/cp-order-lookup.js?v=1" defer></script>
+
+    <!-- 2026-06-12: JP 챗봇 FAB (cotton_print 스타일 보라 그라데이션 원형) — JP 사이트에서만 노출 -->
+    <div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:400px; height:620px; z-index:99998; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25); background:#374151;">
+        <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;display:block;"></iframe>
+    </div>
+    <button id="kapuFab" onclick="toggleKapuChat()" style="display:none; position:fixed; bottom:16px; right:16px; z-index:99999; width:56px; height:56px; border-radius:50%; border:none; background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; font-size:22px; cursor:pointer; box-shadow:0 4px 20px rgba(99,102,241,0.4); align-items:center; justify-content:center; transition:all 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="AI 相談">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+    </button>
+    <script>
+    // JP 전용 챗봇 FAB — 도메인/언어 감지 후 노출
+    (function(){
+        var h = (location.hostname||'').toLowerCase();
+        var isJp = (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0 || window.__SITE_CODE==='JP');
+        if (!isJp) return;
+        var fab = document.getElementById('kapuFab');
+        if (fab) fab.style.display = 'flex';
+    })();
+    window.toggleKapuChat = function() {
+        var wrap = document.getElementById('kapuChatWrap');
+        var frame = document.getElementById('kapuChatFrame');
+        var fab = document.getElementById('kapuFab');
+        if (!wrap || !frame || !fab) return;
+        if (wrap.style.display === 'none' || !wrap.style.display) {
+            if (!frame.src || frame.src === '' || frame.src === location.href) {
+                frame.src = '/chameleon-chatbot.html?lang=ja&from=jp-main&chat=1';
+            }
+            wrap.style.display = 'block';
+            fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        } else {
+            wrap.style.display = 'none';
+            fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        }
+    };
+    window.addEventListener('message', function(e){
+        if (e.data === 'closeKapuChat' || (e.data && e.data.type === 'closeKapuChat')) {
+            var wrap = document.getElementById('kapuChatWrap');
+            var fab = document.getElementById('kapuFab');
+            if (wrap) wrap.style.display = 'none';
+            if (fab) fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        }
+    });
+    </script>
+    <style>
+    @media (max-width: 480px) {
+        #kapuChatWrap { width: calc(100vw - 16px) !important; height: calc(100vh - 100px) !important; right: 8px !important; bottom: 76px !important; }
+    }
+    </style>
 </body>
 </html>
 

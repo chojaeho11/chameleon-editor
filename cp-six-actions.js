@@ -81,7 +81,7 @@
                 <span class="cp6ab-icon"><i class="fa-solid fa-phone-volume"></i></span>\
                 <span class="cp6ab-label">担当へお電話</span>\
             </button>\
-            <button type="button" class="cp6ab-btn cp6ab-lookup" onclick="location.href=\'/jp-track\'">\
+            <button type="button" class="cp6ab-btn cp6ab-lookup" onclick="if(window._cpOpenOrderLookup){window._cpOpenOrderLookup();}else{location.href=\'/jp-track\';}">\
                 <span class="cp6ab-icon"><i class="fa-solid fa-magnifying-glass"></i></span>\
                 <span class="cp6ab-label">ご注文照会</span>\
             </button>\
