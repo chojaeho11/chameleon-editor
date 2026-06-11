@@ -1555,9 +1555,9 @@ window._tcmFallbackClick = function(code) {
             @media (max-width: 700px) { #freeDeliveryNotice { margin-top:24px !important; } }
             /* 2026-06-11: FREE/SUMMER 2 칸 광고 자체 숨김 — 모든 사이트 (사용자 요청) */
             #freeDeliveryNotice { display:none !important; }
-            /* JP/US 6 버튼 영역 — 시각 가시화 위해 살짝 큰 min-height 보장 */
+            /* 2026-06-11: JP/US 에서는 mgrQuoteHero 6 버튼 대신 신규 jpUsContactBanner 사용 */
             html[data-site="JP"] #mgrQuoteHero,
-            html[data-site="US"] #mgrQuoteHero { min-height:140px !important; margin-top:32px !important; margin-bottom:40px !important; }
+            html[data-site="US"] #mgrQuoteHero { display:none !important; }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
@@ -2654,8 +2654,116 @@ window._tcmFallbackClick = function(code) {
     </script>
     </div><!-- /.hero-section -->
 
-    <!-- 2026-06-11: hero-section 이 닫힌 직후 — mgrQuoteHero 가 아직 hero-section 안에 있으면 정확히 그 다음으로 이동.
-         (이 시점엔 hero.nextSibling 이 명확히 평가됨 — null 이면 sibling 없음. DOMContentLoaded 보다 먼저 실행되어 다른 i18n 스크립트와의 race 회피.) -->
+    <!-- 2026-06-11: JP/US 전용 연락처 배너 — hero-section 직후에 물리적으로 박음 (JS reorder 의존 X).
+         KR 에서는 CSS 로 숨김 (KR 은 mgrQuoteHero 의 6 버튼이 동일 자리에 표시됨). -->
+    <div id="jpUsContactBanner" style="display:none;">
+        <div class="jpus-banner-card">
+            <div class="jpus-banner-left">
+                <div class="jpus-banner-label" id="jpUsBannerLabel">📞 担当者 直通</div>
+                <div class="jpus-banner-name" id="jpUsBannerName">ナナミ</div>
+                <a href="tel:+819053970420" id="jpUsBannerTel" class="jpus-banner-tel">090-5397-0420</a>
+                <div class="jpus-banner-hours" id="jpUsBannerHours">平日 10:00 - 19:00</div>
+                <a id="jpUsBannerLineLink" href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" class="jpus-banner-line">
+                    <i class="fa-brands fa-line"></i> <span>LINEで相談</span>
+                </a>
+            </div>
+            <div class="jpus-banner-right">
+                <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" class="jpus-banner-qr">
+                <div class="jpus-banner-qr-label" id="jpUsBannerQrLabel">QRコードでLINE追加</div>
+            </div>
+        </div>
+    </div>
+    <style>
+    /* 2026-06-11: JP/US 연락처 배너 — 카멜레온 KR 디자인과 같은 톤(다크 그라데이션 + 그린 포인트) */
+    #jpUsContactBanner { max-width:1100px; margin:32px auto; padding:0 16px; box-sizing:border-box; }
+    html[data-site="JP"] #jpUsContactBanner,
+    html[data-site="US"] #jpUsContactBanner { display:block !important; }
+    .jpus-banner-card {
+        background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.12) 0%, rgba(255,255,255,0) 42%),
+                   linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%);
+        border:1px solid rgba(6,199,85,0.28);
+        border-radius:16px;
+        padding:28px 32px;
+        box-shadow:0 22px 55px -14px rgba(0,0,0,0.55), inset 0 1px 0 rgba(6,199,85,0.18);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:24px;
+        color:#fff;
+        font-family:'Pretendard Variable','Pretendard','Inter','Noto Sans JP',sans-serif;
+    }
+    .jpus-banner-left { flex:1; min-width:0; }
+    .jpus-banner-label { font-size:12px; font-weight:700; color:#86efac; letter-spacing:1.5px; margin-bottom:8px; opacity:0.9; }
+    .jpus-banner-name { font-size:18px; font-weight:800; color:#fff; margin-bottom:4px; }
+    .jpus-banner-tel {
+        display:inline-block; font-size:32px; font-weight:900; color:#fff;
+        letter-spacing:-0.02em; line-height:1.1; text-decoration:none;
+        text-shadow:0 0 24px rgba(6,199,85,0.35);
+    }
+    .jpus-banner-tel:hover { color:#86efac; }
+    .jpus-banner-hours { font-size:13px; color:rgba(255,255,255,0.55); font-weight:500; margin-top:6px; margin-bottom:14px; }
+    .jpus-banner-line {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:11px 22px; background:linear-gradient(135deg,#06C755,#04a247);
+        color:#fff; border-radius:50px; text-decoration:none;
+        font-size:14px; font-weight:700; letter-spacing:0.5px;
+        box-shadow:0 6px 18px rgba(6,199,85,0.35);
+        transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .jpus-banner-line:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(6,199,85,0.5); }
+    .jpus-banner-line i { font-size:18px; }
+    .jpus-banner-right {
+        display:flex; flex-direction:column; align-items:center; gap:8px;
+        background:#fff; padding:12px; border-radius:14px;
+        box-shadow:0 4px 18px rgba(6,199,85,0.25);
+        flex-shrink:0;
+    }
+    .jpus-banner-qr { width:130px; height:130px; object-fit:contain; display:block; border-radius:6px; }
+    .jpus-banner-qr-label { font-size:11px; color:#374151; font-weight:700; }
+    @media (max-width:700px) {
+        #jpUsContactBanner { margin:20px auto; padding:0 12px; }
+        .jpus-banner-card { flex-direction:column; padding:22px 20px; gap:18px; text-align:center; align-items:center; }
+        .jpus-banner-tel { font-size:26px; }
+        .jpus-banner-qr { width:110px; height:110px; }
+    }
+    </style>
+    <script>
+    // 2026-06-11: US 사이트(chameleon.design / cafe3355.com) 또는 lang=en/zh/es 등에서는 라벨 영어로
+    (function(){
+        var host = location.hostname || '';
+        var u = new URLSearchParams(location.search);
+        var lang = u.get('lang') ||
+            (host.indexOf('cafe0101.com') >= 0 ? 'ja' :
+             ((host.indexOf('cafe3355.com') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' : 'kr'));
+        function $(id){ return document.getElementById(id); }
+        // KR 일땐 그냥 둠 (CSS 가 display:none 처리)
+        if (lang === 'kr') return;
+        var T = {
+            ja: { label:'📞 担当者 直通', name:'ナナミ', tel:'090-5397-0420', telHref:'+819053970420',
+                  hours:'平日 10:00 - 19:00', lineText:'LINEで相談', qrLabel:'QRコードでLINE追加' },
+            en: { label:'📞 Direct Contact', name:'Hiba', tel:'+81 90-5397-0420', telHref:'+819053970420',
+                  hours:'Mon-Fri 10:00 - 19:00 (JST)', lineText:'Chat on LINE', qrLabel:'Scan to add LINE' },
+            zh: { label:'📞 直接联系', name:'Hiba', tel:'+81 90-5397-0420', telHref:'+819053970420',
+                  hours:'周一至周五 10:00-19:00 (JST)', lineText:'LINE咨询', qrLabel:'扫码添加LINE' },
+            es: { label:'📞 Contacto Directo', name:'Hiba', tel:'+81 90-5397-0420', telHref:'+819053970420',
+                  hours:'Lun-Vie 10:00 - 19:00 (JST)', lineText:'Chat en LINE', qrLabel:'Escanear para LINE' },
+            de: { label:'📞 Direkter Kontakt', name:'Hiba', tel:'+81 90-5397-0420', telHref:'+819053970420',
+                  hours:'Mo-Fr 10:00 - 19:00 (JST)', lineText:'Auf LINE chatten', qrLabel:'QR scannen für LINE' },
+            fr: { label:'📞 Contact Direct', name:'Hiba', tel:'+81 90-5397-0420', telHref:'+819053970420',
+                  hours:'Lun-Ven 10:00 - 19:00 (JST)', lineText:'Chat sur LINE', qrLabel:'Scanner pour LINE' }
+        };
+        var t = T[lang] || T.en;
+        if ($('jpUsBannerLabel')) $('jpUsBannerLabel').textContent = t.label;
+        if ($('jpUsBannerName'))  $('jpUsBannerName').textContent  = t.name;
+        if ($('jpUsBannerTel'))   { $('jpUsBannerTel').textContent = t.tel; $('jpUsBannerTel').href = 'tel:' + t.telHref; }
+        if ($('jpUsBannerHours')) $('jpUsBannerHours').textContent = t.hours;
+        var lineLink = $('jpUsBannerLineLink');
+        if (lineLink) lineLink.querySelector('span').textContent = t.lineText;
+        if ($('jpUsBannerQrLabel')) $('jpUsBannerQrLabel').textContent = t.qrLabel;
+    })();
+    </script>
+
+    <!-- 2026-06-11: hero-section 이 닫힌 직후 — mgrQuoteHero 가 아직 hero-section 안에 있으면 정확히 그 다음으로 이동 -->
     <script>
     (function(){
         try {
@@ -2664,7 +2772,6 @@ window._tcmFallbackClick = function(code) {
             var hero = document.querySelector('.hero-section');
             if (!hero || !hero.parentNode) return;
             if (mh.parentNode === hero) {
-                // hero-section 다음 자리에 명확히 위치 — appendChild 폴백 절대 사용 안 함
                 hero.parentNode.insertBefore(mh, hero.nextSibling);
             }
         } catch(e) { console.warn('[post-hero] mgrQuoteHero 이동 실패:', e); }
