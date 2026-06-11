@@ -26,11 +26,17 @@
 
     if (!isJp()) return;
 
+    // 2026-06-11: 우측 하단 그린 LINE 원형 버튼(FAB) 비활성화 — 사용자 요청
+    //   모달 로직(window.__jpNanamiOpen)은 그대로 유지 → 6 버튼의 챗봇상담이 호출.
+    //   FAB 자체는 생성하지 않음. 모달만 미리 주입.
+    var DISABLE_FAB = true;
+
     function init() {
-        if (document.getElementById('jpNanamiFab')) return; // 이미 주입됨
+        if (document.getElementById('jpNanamiModal')) return; // 이미 주입됨
 
         var css = '\
-            #jpNanamiFab {\
+            #jpNanamiFab { display:none !important; }\
+            #jpNanamiFabKeep {\
                 position:fixed; bottom:24px; right:24px; width:62px; height:62px;\
                 border-radius:50%; background:linear-gradient(135deg,#06C755,#04a247);\
                 border:none; cursor:pointer; z-index:99998;\
@@ -110,13 +116,8 @@
         styleEl.textContent = css;
         document.head.appendChild(styleEl);
 
-        // FAB 버튼
-        var fab = document.createElement('button');
-        fab.id = 'jpNanamiFab';
-        fab.type = 'button';
-        fab.setAttribute('aria-label', 'ナナミ担当に連絡');
-        fab.innerHTML = '<i class="fa-brands fa-line"></i><span class="jp-nan-badge">1</span>';
-        document.body.appendChild(fab);
+        // 2026-06-11: FAB 버튼 비활성화 (사용자 요청). 모달만 주입.
+        var fab = null;
 
         // Modal
         var modal = document.createElement('div');
@@ -150,18 +151,14 @@
         function openModal() {
             modal.classList.add('is-open');
             document.body.style.overflow = 'hidden';
-            var badge = fab.querySelector('.jp-nan-badge');
-            if (badge) badge.style.display = 'none';
         }
         function closeModal() {
             modal.classList.remove('is-open');
             document.body.style.overflow = '';
         }
-        // 전역 노출 — 다른 곳 (6 버튼 챗봇 등) 에서 호출 가능
+        // 전역 노출 — 6 버튼 챗봇 (mgr-chat / cp-six-chat) 에서 호출
         window.__jpNanamiOpen = openModal;
         window.__jpNanamiClose = closeModal;
-
-        fab.addEventListener('click', openModal);
         modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
         var closeBtn = modal.querySelector('.jpn-close');
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
