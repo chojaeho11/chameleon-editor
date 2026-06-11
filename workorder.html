@@ -254,6 +254,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         }
         const addonDB = {};
         (addonResult.data || []).forEach(a => { addonDB[a.code] = a; });
+        // 2026-06-11: 외부 script (있다면) 와 가격 fallback 계산 호환 위해 window 노출
+        try { window.ADDON_DB = addonDB; } catch(e) {}
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sheet').style.display = '';
@@ -328,9 +330,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             note.innerHTML = '<b>주문 정보</b><div style="margin-top:6px; font-size:13px; line-height:1.7; color:#451a03;">' + esc(_headerForDisplay).replace(/\n/g, '<br>') + '</div>';
         }
 
-        // 고객 파일 (시스템 파일 제외)
+        // 고객 파일 (시스템 파일 제외) + 2026-06-11: soft-delete 된 파일 제외
         const customerFiles = (order.files || []).filter(f =>
-            f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log' && f.type !== 'manager_quote'
+            f && f.url && f.type !== 'order_sheet' && f.type !== 'quotation' && f.type !== '_error_log' && f.type !== 'manager_quote' && !f._deleted_at
         );
 
         // 2026-06-10: 완료 배너 표시 (관리자 / 일반 사용자 모두 — 작업자도 완료 여부 즉시 파악)
@@ -468,9 +470,16 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                      || (_cs.h_cm ? Math.round(_cs.h_cm * 10) : 0)
                      || _cs.h || 0;
             const qty = it.qty || 1;
-            const unit = product.price || it.price || 0;
+            // 2026-06-11: 단가 (unit) 우선순위 — customSize.unit (회베) > boxSize.unit > cutPrint flat > product.price
+            //   회베계산기로 산출된 단가가 있으면 그걸 표시해야 1회배 기본가가 노출되지 않음.
+            let unit = 0;
+            if (it.customSize && typeof it.customSize.unit === 'number' && it.customSize.unit > 0) unit = it.customSize.unit;
+            else if (it.boxSize && typeof it.boxSize.unit === 'number' && it.boxSize.unit > 0) unit = it.boxSize.unit;
+            else if (it.cutPrint && it.cutPrint.size) unit = (it.cutPrint.size === 'half') ? 100000 : 150000;
+            else unit = (product.price || it.unit_price || 0);
+
             // 2026-06-11: DB it.price 가 0/누락이면 fallback —
-            //   1) cart 와 동일 _soCalcItemPrice (simple_order 로드돼 있으면)
+            //   1) cart 와 동일 _soCalcItemPrice (simple_order 로드돼 있으면) — 가장 정확
             //   2) 가벽 인라인 재계산 (width × side × unit + heightExtra + addons)
             //   3) 마지막 fallback unit × qty
             let lineTotal = it.price || 0;
@@ -661,9 +670,12 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 : `<div class="opt-grid"><div class="opt-empty" style="grid-column:1/-1;">기본 사양 — 추가 옵션 없음</div></div>`;
 
             // 2026-06-03: 항목별 첨부파일 (이미지/PDF/AI/문서 등) — 매니저가 수동 첨부한 모든 파일을 카드 내부 리스트로 표시
+            // 2026-06-11: 휴지통 분리 (soft-delete) + 썸네일로 사용 버튼
             let itemAttachHtml = '';
-            const _itemAttachments = Array.isArray(it.attachments) ? it.attachments : [];
-            if (_itemAttachments.length > 0) {
+            const _allAttachments = Array.isArray(it.attachments) ? it.attachments : [];
+            const _liveAttachments = _allAttachments.map((f, fi) => ({ f, fi })).filter(x => !x.f._deleted_at);
+            const _trashedAttachments = _allAttachments.map((f, fi) => ({ f, fi })).filter(x => !!x.f._deleted_at);
+            if (_liveAttachments.length > 0 || _trashedAttachments.length > 0) {
                 const _fileIcon = function(t, name) {
                     const tt = (t || '').toLowerCase();
                     const ex = (name || '').toLowerCase().split('.').pop();
@@ -672,21 +684,47 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     if (['ai','eps','psd','svg'].includes(ex)) return '🎨';
                     if (['doc','docx'].includes(ex)) return '📘';
                     if (['xls','xlsx','csv'].includes(ex)) return '📗';
-                    if (['ppt','pptx'].includes(ex)) return '📗';
                     if (['ppt','pptx'].includes(ex)) return '📙';
                     if (['zip','rar','7z'].includes(ex)) return '🗜️';
                     return '📎';
                 };
-                itemAttachHtml = `<div style="background:#faf5ff; border:1px solid #e9d5ff; border-left:3px solid #7c3aed; border-radius:6px; padding:8px 10px;">
-                    <div style="font-weight:800; color:#5b21b6; font-size:11px; margin-bottom:5px;"><i class="fa-solid fa-paperclip"></i> 첨부 파일 (${_itemAttachments.length}건)</div>
+                const _curArtwork = it.artwork_url || '';
+                // 활성 첨부 영역
+                let _liveSection = '';
+                if (_liveAttachments.length > 0) {
+                    _liveSection = `<div style="font-weight:800; color:#5b21b6; font-size:11px; margin-bottom:5px;"><i class="fa-solid fa-paperclip"></i> 첨부 파일 (${_liveAttachments.length}건)</div>
                     <div style="display:flex; flex-direction:column; gap:4px;">
-                        ${_itemAttachments.map((f, fi) => `<div style="display:flex; gap:6px; align-items:center; padding:4px 8px; background:#fff; border:1px solid #e9d5ff; border-radius:5px; font-size:11px;">
-                            <span>${_fileIcon(f.type, f.name)}</span>
-                            <a href="${esc(f.url)}" target="_blank" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#5b21b6; text-decoration:none; font-weight:700;">${esc(f.name || '파일')}</a>
-                            <span style="font-size:9px; color:#9ca3af; font-weight:500;">${f._uploaded_at ? new Date(f._uploaded_at).toLocaleDateString('ko-KR') : ''}</span>
-                            ${_woIsAdmin ? `<button type="button" onclick="window._woDeleteItemAttachment(${i}, ${fi})" title="삭제" style="border:none; background:transparent; color:#dc2626; font-size:13px; font-weight:900; cursor:pointer; padding:0 4px; line-height:1;">×</button>` : ''}
-                        </div>`).join('')}
-                    </div>
+                        ${_liveAttachments.map(({f, fi}) => {
+                            const _isPrimary = (f.url === _curArtwork);
+                            const _isImg = ((f.type || '').indexOf('image/') === 0) || ['png','jpg','jpeg','gif','webp','bmp'].includes(((f.name || '').toLowerCase().split('.').pop()));
+                            return `<div style="display:flex; gap:6px; align-items:center; padding:4px 8px; background:${_isPrimary ? '#ede9fe' : '#fff'}; border:1px solid ${_isPrimary ? '#7c3aed' : '#e9d5ff'}; border-radius:5px; font-size:11px;">
+                                <span>${_fileIcon(f.type, f.name)}</span>
+                                <a href="${esc(f.url)}" target="_blank" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#5b21b6; text-decoration:none; font-weight:700;">${_isPrimary ? '★ ' : ''}${esc(f.name || '파일')}</a>
+                                <span style="font-size:9px; color:#9ca3af; font-weight:500;">${f._uploaded_at ? new Date(f._uploaded_at).toLocaleDateString('ko-KR') : ''}</span>
+                                ${(_woIsAdmin && _isImg && !_isPrimary) ? `<button type="button" onclick="window._woSetItemPrimaryAttachment(${i}, ${fi})" title="썸네일로 사용" style="border:1px solid #7c3aed; background:#fff; color:#7c3aed; font-size:10px; font-weight:700; cursor:pointer; padding:2px 6px; line-height:1; border-radius:4px;">썸네일로</button>` : ''}
+                                ${_woIsAdmin ? `<button type="button" onclick="window._woDeleteItemAttachment(${i}, ${fi})" title="휴지통으로 이동 (복구 가능)" style="border:none; background:transparent; color:#dc2626; font-size:13px; font-weight:900; cursor:pointer; padding:0 4px; line-height:1;">×</button>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>`;
+                }
+                // 휴지통 영역 (관리자만 노출 + 접힘)
+                let _trashSection = '';
+                if (_woIsAdmin && _trashedAttachments.length > 0) {
+                    _trashSection = `<details style="margin-top:8px; border-top:1px dashed #e9d5ff; padding-top:6px;">
+                        <summary style="font-weight:700; color:#9ca3af; font-size:11px; cursor:pointer;"><i class="fa-solid fa-trash"></i> 휴지통 (${_trashedAttachments.length}건) — 복구 가능</summary>
+                        <div style="display:flex; flex-direction:column; gap:4px; margin-top:6px;">
+                            ${_trashedAttachments.map(({f, fi}) => `<div style="display:flex; gap:6px; align-items:center; padding:4px 8px; background:#fafafa; border:1px solid #e5e7eb; border-radius:5px; font-size:11px; opacity:0.75;">
+                                <span>${_fileIcon(f.type, f.name)}</span>
+                                <a href="${esc(f.url)}" target="_blank" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#6b7280; text-decoration:line-through; font-weight:600;">${esc(f.name || '파일')}</a>
+                                <span style="font-size:9px; color:#9ca3af; font-weight:500;">삭제: ${f._deleted_at ? new Date(f._deleted_at).toLocaleDateString('ko-KR') : ''}</span>
+                                <button type="button" onclick="window._woRestoreItemAttachment(${i}, ${fi})" title="복구" style="border:1px solid #10b981; background:#fff; color:#10b981; font-size:10px; font-weight:700; cursor:pointer; padding:2px 6px; line-height:1; border-radius:4px;">↩ 복구</button>
+                            </div>`).join('')}
+                        </div>
+                    </details>`;
+                }
+                itemAttachHtml = `<div style="background:#faf5ff; border:1px solid #e9d5ff; border-left:3px solid #7c3aed; border-radius:6px; padding:8px 10px;">
+                    ${_liveSection}
+                    ${_trashSection}
                 </div>`;
             }
 
@@ -970,37 +1008,87 @@ window._woSaveItemMemo = async function(idx) {
 };
 
 // 2026-06-03: 항목별 첨부파일 삭제 (잘못 올린 파일 제거)
+// 2026-06-11: SOFT DELETE 로 변경 — Storage 파일 보존, _deleted_at 타임스탬프만 추가.
+//   휴지통에서 복구 가능. 현재 썸네일이면 직전 비-삭제 첨부로 자동 fallback.
 window._woDeleteItemAttachment = async function(itemIdx, attachIdx) {
     if (!window._woOrderId) return;
-    if (!confirm('이 파일을 삭제하시겠습니까?')) return;
+    if (!confirm('이 파일을 휴지통으로 이동하시겠습니까? (복구 가능)')) return;
     try {
         const { data: cur, error: rdErr } = await sb.from('orders').select('items, files').eq('id', window._woOrderId).single();
         if (rdErr) throw rdErr;
         const items = Array.isArray(cur.items) ? cur.items : [];
         if (!items[itemIdx] || !Array.isArray(items[itemIdx].attachments)) return;
-        const removed = items[itemIdx].attachments.splice(attachIdx, 1)[0];
-        // 현재 썸네일 (artwork_url) 이 삭제된 파일이면 클리어
-        if (removed && items[itemIdx].artwork_url === removed.url) {
-            items[itemIdx].artwork_url = null;
-            items[itemIdx].artwork_filename = null;
-            if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = null;
+        const target = items[itemIdx].attachments[attachIdx];
+        if (!target) return;
+        // soft delete
+        target._deleted_at = new Date().toISOString();
+        // 현재 썸네일 (artwork_url) 이 삭제 대상이면 직전 비-삭제 이미지로 fallback
+        if (items[itemIdx].artwork_url === target.url) {
+            const _live = items[itemIdx].attachments.filter(f => !f._deleted_at && (f.type || '').startsWith('image/'));
+            if (_live.length > 0) {
+                const _last = _live[_live.length - 1];
+                items[itemIdx].artwork_url = _last.url;
+                items[itemIdx].artwork_filename = _last.name;
+                if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = _last.url;
+            } else {
+                items[itemIdx].artwork_url = null;
+                items[itemIdx].artwork_filename = null;
+                if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = null;
+            }
         }
-        // 전역 files 배열에서도 제거 (URL 일치 기준)
-        let orderFiles = Array.isArray(cur.files) ? cur.files : [];
-        if (removed) orderFiles = orderFiles.filter(function(f){ return f.url !== removed.url; });
-        // Storage 에서 실제 파일도 삭제 시도 (실패해도 무시)
-        if (removed && removed.url) {
-            try {
-                const _p = removed.url.match(/\/storage\/v1\/object\/public\/orders\/(.+)$/);
-                if (_p && _p[1]) await sb.storage.from('orders').remove([decodeURIComponent(_p[1])]);
-            } catch(e) { /* storage 삭제 실패는 무시 */ }
-        }
+        // 전역 files 배열에서도 _deleted_at 마킹 (실제 제거 X)
+        const orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        orderFiles.forEach(f => { if (f.url === target.url) f._deleted_at = target._deleted_at; });
         const { error: upErr } = await sb.from('orders').update({ items: items, files: orderFiles }).eq('id', window._woOrderId);
         if (upErr) throw upErr;
         location.reload();
     } catch (e) {
         console.error('[wo del attach]', e);
         alert('삭제 실패: ' + (e.message || e));
+    }
+};
+
+// 2026-06-11: 휴지통에서 첨부파일 복구 — _deleted_at 제거
+window._woRestoreItemAttachment = async function(itemIdx, attachIdx) {
+    if (!window._woOrderId) return;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items, files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[itemIdx] || !Array.isArray(items[itemIdx].attachments)) return;
+        const target = items[itemIdx].attachments[attachIdx];
+        if (!target) return;
+        delete target._deleted_at;
+        const orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        orderFiles.forEach(f => { if (f.url === target.url) delete f._deleted_at; });
+        const { error: upErr } = await sb.from('orders').update({ items: items, files: orderFiles }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        location.reload();
+    } catch (e) {
+        console.error('[wo restore attach]', e);
+        alert('복구 실패: ' + (e.message || e));
+    }
+};
+
+// 2026-06-11: 특정 첨부파일을 썸네일(artwork_url) 로 설정 — 이전 파일을 다시 사용하고 싶을 때
+window._woSetItemPrimaryAttachment = async function(itemIdx, attachIdx) {
+    if (!window._woOrderId) return;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[itemIdx] || !Array.isArray(items[itemIdx].attachments)) return;
+        const target = items[itemIdx].attachments[attachIdx];
+        if (!target || target._deleted_at) return;
+        items[itemIdx].artwork_url = target.url;
+        items[itemIdx].artwork_filename = target.name;
+        if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = target.url;
+        const { error: upErr } = await sb.from('orders').update({ items: items }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        location.reload();
+    } catch (e) {
+        console.error('[wo set primary]', e);
+        alert('썸네일 설정 실패: ' + (e.message || e));
     }
 };
 
