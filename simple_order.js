@@ -892,6 +892,22 @@ html, body { background: #ffffff !important; }
 }
 .so-qty-unit { font-size: 12px; color: #888; }
 
+/* 2026-06-12: 종이매대 수량 프리셋 버튼 */
+#soPdQtyPresets { display:none; }
+#soPdQtyPresets.is-open { display:grid; }
+.so-pd-qty-btn {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:10px 4px; background:#fff; border:2px solid #e2e8f0; border-radius:10px;
+    cursor:pointer; font-family:inherit; color:#475569; transition:all 0.15s ease;
+    min-width:0;
+}
+.so-pd-qty-btn:hover { border-color:#a78bfa; background:#faf5ff; transform:translateY(-1px); }
+.so-pd-qty-btn.is-active {
+    border-color:#7c3aed; background:linear-gradient(135deg,#ede9fe,#ddd6fe); color:#5b21b6;
+    box-shadow:0 4px 12px -4px rgba(124,58,237,0.4);
+}
+.so-pd-qty-btn.is-active span:first-child { color:#5b21b6; }
+
 .so-tier-table {
     background: #fafaf9; border-radius: 8px; padding: 8px 10px;
     margin-top: 10px; font-size: 10.5px; color: #475569; line-height: 1.6;
@@ -1638,11 +1654,38 @@ html, body { background: #ffffff !important; }
         </div>
         <div class="so-section" id="soQtySection">
           <div class="so-section-title">${tr('주문 수량', '注文数量', 'Quantity')}</div>
-          <div class="so-qty-row">
+          <div class="so-qty-row" id="soQtyRowDefault">
             <button class="so-qty-btn" onclick="window._soQtyChg(-1)">−</button>
             <input type="number" id="soQty" class="so-qty-input" value="1" min="1" max="9999" oninput="window._soOnQtyInput()" />
             <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
             <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
+          </div>
+          <!-- 2026-06-12: 종이매대 전용 수량 프리셋 (1/100/300/500/1000) — DEFAULT row 를 대체 -->
+          <div id="soPdQtyPresets" style="display:none; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:6px;">
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="1" onclick="window._soPdQtyPick(1)">
+              <span style="font-size:14px; font-weight:900;">1${tr('개','個','')}</span>
+              <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('샘플','サンプル','Sample')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="100" onclick="window._soPdQtyPick(100)">
+              <span style="font-size:14px; font-weight:900;">100${tr('개','個','')}</span>
+              <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('최소수량','最小数量','MOQ')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="300" onclick="window._soPdQtyPick(300)">
+              <span style="font-size:14px; font-weight:900;">300${tr('개','個','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">10% ${tr('할인','割引','OFF')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="500" onclick="window._soPdQtyPick(500)">
+              <span style="font-size:14px; font-weight:900;">500${tr('개','個','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="1000" onclick="window._soPdQtyPick(1000)">
+              <span style="font-size:14px; font-weight:900;">1,000${tr('개','個','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
+            </button>
+          </div>
+          <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
+          <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
+            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개는 기본 디자인 및 샘플 제작비용입니다 (단가 5배)', '1個は基本デザイン・サンプル制作費 (単価5倍)', 'For 1 pc: base design + sample fee (5× unit price)')}
           </div>
           <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
           <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
@@ -2363,8 +2406,8 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-05-15: 종이매대 전용 — 100개 이상 무료배송 (크게 표시) -->
           <button type="button" class="so-ship-btn so-ship-pd-bulk" data-ship="pd_bulk_free" onclick="window._soPickShip('pd_bulk_free')" style="display:none; width:100%; margin-bottom:12px; padding:16px 18px; font-size:15px; font-weight:900; border-radius:14px; background:linear-gradient(135deg,#10b981 0%, #059669 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); letter-spacing:0.3px;">
-            ${tr('포장 없이 벌크배송 (무료, 기본)', '梱包なしバルク配送 (無料・標準)', 'Bulk shipping · no packaging (FREE, default)')}
-            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('100개 이상 모든 주문 자동 무료', '100個以上の注文すべて無料', 'Free for all 100+ orders')}</div>
+            ${tr('최소 주문수량 100개', '最小注文数量 100個', 'Minimum order: 100 pcs')}
+            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('포장 없이 벌크 무료배송 (기본)', '梱包なしバルク無料配送 (標準)', 'Bulk shipping (no packaging) — FREE default')}</div>
           </button>
           <!-- 2026-06-01: 묶음배송 토글 버튼 제거 — 카트 합계 시 자동 처리 (가장 큰 배송비 1건만 부과) -->
           <button type="button" id="soBundleShipBtn" style="display:none;"></button>
@@ -3243,6 +3286,10 @@ html, body { background: #ffffff !important; }
                 unit = unit * 2;
             }
             if (!state.isBizCard) subtotal = unit * qty;
+            // 2026-06-12: 종이매대 1개 = 샘플 (단가 5배, 기본 디자인 + 샘플 제작비용)
+            if (state.isPaperDisplay && qty === 1) {
+                subtotal = unit * 5;
+            }
         }
         const tierPct = 0;
         const discount = 0;
@@ -3402,12 +3449,16 @@ html, body { background: #ffffff !important; }
 
         // 2026-05-29: 베스트굿즈 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 티셔츠는 상품 가격 고정, 인쇄비에서만 할인)
-        // 2026-06-12: 종이매대 1000개+ → 50% (벌크 대량할인)
+        // 2026-06-12: 종이매대 수량 티어 — 100=정가 / 300=10% / 500=20% / 1000=50%. 1개 샘플은 할인 없음.
         let presetBulkDiscount = 0;
         if (state.isBestGoods && state.presetType !== 'tshirt' && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
-        } else if (state.isPaperDisplay && qty >= 1000) {
-            presetBulkDiscount = Math.round(subtotal * 0.5);
+        } else if (state.isPaperDisplay) {
+            var _pdPct = 0;
+            if (qty >= 1000) _pdPct = 0.5;
+            else if (qty >= 500) _pdPct = 0.2;
+            else if (qty >= 300) _pdPct = 0.1;
+            if (_pdPct > 0) presetBulkDiscount = Math.round(subtotal * _pdPct);
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
         //   3장 이상 주문 시 인쇄비만 50% 할인
@@ -8279,6 +8330,24 @@ html, body { background: #ffffff !important; }
         });
     }
 
+    // 2026-06-12: 종이매대 전용 수량 프리셋 핸들러 (1/100/300/500/1000)
+    window._soPdQtyPick = function(q) {
+        state.qty = q;
+        var inp = document.getElementById('soQty');
+        if (inp) inp.value = q;
+        // 활성화 토글
+        document.querySelectorAll('#soPdQtyPresets .so-pd-qty-btn').forEach(function(btn){
+            btn.classList.toggle('is-active', String(btn.getAttribute('data-pd-qty')) === String(q));
+        });
+        // 1개일 때 샘플 안내
+        var note = document.getElementById('soPdSampleNote');
+        if (note) note.style.display = (q === 1) ? 'block' : 'none';
+        if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
+        if (typeof recalc === 'function') recalc();
+        if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
+        if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+    };
+
     window._soQtyChg = function(delta) {
         const input = document.getElementById('soQty');
         const cur = parseInt(input.value) || 1;
@@ -8986,12 +9055,31 @@ html, body { background: #ffffff !important; }
         state.isRawBoard = _soIsRawBoardProduct(p) || (typeof document !== 'undefined' && document.documentElement.classList.contains('hexa-mode'));
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
-        // 2026-06-12: 종이매대 MOQ = 100. 모달 열릴 때 자동 초기화.
+        // 2026-06-12: 종이매대 — 5단 프리셋 (1/100/300/500/1000). 기본 100.
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
         if (state.isPaperDisplay) {
-            state.qty = Math.max(100, parseInt(state.qty, 10) || 100);
+            state.qty = 100; // 기본 MOQ
             var _qtyInpInit = document.getElementById('soQty');
-            if (_qtyInpInit) { _qtyInpInit.value = state.qty; _qtyInpInit.setAttribute('min', '100'); }
+            if (_qtyInpInit) { _qtyInpInit.value = 100; _qtyInpInit.setAttribute('min', '1'); }
+            // default +/- 숨김, preset 행 표시
+            var _defaultRow = document.getElementById('soQtyRowDefault');
+            if (_defaultRow) _defaultRow.style.display = 'none';
+            var _presetRow = document.getElementById('soPdQtyPresets');
+            if (_presetRow) { _presetRow.style.display = 'grid'; _presetRow.classList.add('is-open'); }
+            // 100 버튼 활성화
+            document.querySelectorAll('#soPdQtyPresets .so-pd-qty-btn').forEach(function(btn){
+                btn.classList.toggle('is-active', btn.getAttribute('data-pd-qty') === '100');
+            });
+            var _note = document.getElementById('soPdSampleNote');
+            if (_note) _note.style.display = 'none';
+        } else {
+            // 다른 상품 — preset 숨기고 default 행 복구
+            var _defaultRow2 = document.getElementById('soQtyRowDefault');
+            if (_defaultRow2) _defaultRow2.style.display = '';
+            var _presetRow2 = document.getElementById('soPdQtyPresets');
+            if (_presetRow2) { _presetRow2.style.display = 'none'; _presetRow2.classList.remove('is-open'); }
+            var _note2 = document.getElementById('soPdSampleNote');
+            if (_note2) _note2.style.display = 'none';
         }
         // 2026-05-15: 금액주문 (21355677) — 수량 무제한 + 할인·배송·이미지 전부 불필요
         state.isAmountOrder = _soIsAmountOrder(p);
