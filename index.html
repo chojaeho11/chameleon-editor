@@ -2037,21 +2037,10 @@ window._tcmFallbackClick = function(code) {
                     }
                 })();
                 </script>
-                <button type="button" id="mgrVipPayBtn" class="mgr-action mgr-vip" onclick="if(window.__SITE_CODE==='JP'){location.href='/tokushoho';return;} window._openPersonalPayModal && window._openPersonalPayModal()">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-crown" id="mgrVipBtnIcon"></i></span>
+                <button type="button" id="mgrVipPayBtn" class="mgr-action mgr-vip" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-crown"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_vip_pay">VIP 개인결제</span>
                 </button>
-                <script>
-                // 2026-06-12: JP 사이트는 VIP개인결제 → 特定商取引法 (특정상거래법 페이지) 로 변경 + 저울 아이콘
-                (function(){
-                    var h=(location.hostname||'').toLowerCase();
-                    var isJp = (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0 || window.__SITE_CODE==='JP');
-                    if (isJp) {
-                        var ic = document.getElementById('mgrVipBtnIcon');
-                        if (ic) { ic.classList.remove('fa-crown'); ic.classList.add('fa-scale-balanced'); }
-                    }
-                })();
-                </script>
                 <button type="button" class="mgr-action mgr-scrap" onclick="window._openMgrQuoteModal && window._openMgrQuoteModal()">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-wallet"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_scrap_pay">상담 후 금액주문</span>
@@ -2344,7 +2333,7 @@ window._tcmFallbackClick = function(code) {
             },
             ja: {
                 btnPhone:'担当へお電話', btnChat:'ご注文照会',
-                btnVip:'特定商取引法', btnScrap:'金額決済',
+                btnVip:'VIP 個別決済', btnScrap:'金額決済',
                 btnDesign:'デザイン依頼', btnCoupon:'クーポン',
                 phoneTitle:'📞 本社・担当の電話番号',
                 phoneHint:'担当との通話後にお受けしたお見積もり金額は「相談後の金額決済」ボタンから直接入力できます。',
