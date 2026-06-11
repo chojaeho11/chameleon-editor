@@ -518,8 +518,8 @@ window._cottonSearch = function(){
         <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 14px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;" data-i18n="cp_hero_subtitle">
             도매업자를 위한 고품격 프린팅 시스템
         </p>
-        <!-- 2026-05-28: 3컬럼 히어로 — 좌(견적 결제) / 중앙(1m 150円 + 샘플) / 우(인플루언서) -->
-        <div class="cp-hero-3col" style="max-width:1100px; width:100%; margin:24px auto 0; padding:0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:stretch;">
+        <!-- 2026-06-11: 3컬럼 히어로 박스 삭제 (사용자 요청). 대신 hero 다음에 4 카드 + 6 버튼 노출. CSS 로 강제 숨김. -->
+        <div class="cp-hero-3col" style="display:none !important; max-width:1100px; width:100%; margin:24px auto 0; padding:0; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:stretch;">
 
             <!-- ▌▌▌ LEFT: 견적 결제 (Nanami QR + 円 입력) ▌▌▌ -->
             <div id="cpMgrQuoteHero" class="cp-col-card" style="background:radial-gradient(130% 90% at 50% -20%, rgba(6,199,85,0.15) 0%, rgba(255,255,255,0) 42%), linear-gradient(165deg, #2c2c2e 0%, #1a1a1c 45%, #050506 100%); border:1px solid rgba(6,199,85,0.3); border-radius:14px; padding:16px; box-shadow:0 22px 55px -14px rgba(0,0,0,0.75); display:flex; flex-direction:column; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
@@ -1324,6 +1324,224 @@ async function submitRollFabricRequest() {
         </div>
     </div>
 </section>
+
+<!-- 2026-06-11: 6 버튼 그리드 (카멜레온 메인 페이지 스타일) — 4 카드 광고 아래 -->
+<section id="cpSixBtnSection" style="max-width:1100px; margin:40px auto 0; padding:0 24px;">
+    <style>
+    #cpSixBtnGrid { display:grid; grid-template-columns:repeat(6, 1fr); gap:16px; max-width:1100px; margin:0 auto; }
+    #cpSixBtnGrid .cp-six-btn {
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+        padding:18px 6px; background:transparent; border:none; border-radius:0;
+        cursor:pointer; transition:transform .22s cubic-bezier(0.4,0,0.2,1);
+        text-decoration:none; color:#374151;
+        font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;
+    }
+    #cpSixBtnGrid .cp-six-btn:hover { transform:translateY(-2px); }
+    #cpSixBtnGrid .cp-six-btn:hover .cp-six-icon { transform:scale(1.06); }
+    #cpSixBtnGrid .cp-six-icon {
+        width:58px; height:58px; border-radius:18px;
+        display:flex; align-items:center; justify-content:center; font-size:24px;
+        box-shadow:0 8px 20px -8px rgba(15,23,42,0.18);
+        flex-shrink:0;
+        transition:transform .22s cubic-bezier(0.4,0,0.2,1);
+    }
+    #cpSixBtnGrid .cp-six-label {
+        font-size:13px; font-weight:700; line-height:1.2; color:#374151;
+        white-space:nowrap; text-align:center; letter-spacing:-0.01em;
+    }
+    /* 색상 — 카멜레온 메인과 동일 */
+    .cp-six-phone .cp-six-icon  { background:linear-gradient(135deg,#dbeafe,#60a5fa); color:#1e40af; }
+    .cp-six-chat .cp-six-icon   { background:linear-gradient(135deg,#e9d5ff,#a855f7); color:#5b21b6; }
+    .cp-six-vip .cp-six-icon    { background:linear-gradient(135deg,#fef3c7,#fbbf24); color:#92400e; }
+    .cp-six-scrap .cp-six-icon  { background:linear-gradient(135deg,#d1fae5,#10b981); color:#065f46; }
+    .cp-six-design .cp-six-icon { background:linear-gradient(135deg,#ddd6fe,#7c3aed); color:#4c1d95; }
+    .cp-six-coupon .cp-six-icon { background:linear-gradient(135deg,#fce7f3,#f472b6); color:#831843; }
+    /* 모바일 — 1 줄 6 개 유지하되 작게 */
+    @media (max-width:700px) {
+        #cpSixBtnSection { margin:24px auto 0; padding:0 10px; }
+        #cpSixBtnGrid { grid-template-columns:repeat(6, 1fr); gap:6px; }
+        #cpSixBtnGrid .cp-six-btn { padding:8px 2px; gap:5px; }
+        #cpSixBtnGrid .cp-six-icon { width:36px; height:36px; font-size:15px; border-radius:11px; }
+        #cpSixBtnGrid .cp-six-label { font-size:10.5px; line-height:1.15; }
+    }
+    </style>
+    <div id="cpSixBtnGrid">
+        <button type="button" class="cp-six-btn cp-six-phone" onclick="window._cpOpenPhoneModal && window._cpOpenPhoneModal()">
+            <span class="cp-six-icon"><i class="fa-solid fa-phone-volume"></i></span>
+            <span class="cp-six-label" id="cpLblPhone">전화 안내</span>
+        </button>
+        <button type="button" class="cp-six-btn cp-six-chat" onclick="window.openAdvisorPanel ? window.openAdvisorPanel() : (window.toggleAdvisorPanel && window.toggleAdvisorPanel())">
+            <span class="cp-six-icon"><i class="fa-solid fa-comment-dots"></i></span>
+            <span class="cp-six-label" id="cpLblChat">챗봇 상담</span>
+        </button>
+        <button type="button" class="cp-six-btn cp-six-vip" id="cpBtnVip" onclick="location.href='/tokushoho'">
+            <span class="cp-six-icon"><i class="fa-solid fa-crown"></i></span>
+            <span class="cp-six-label" id="cpLblVip">VIP 개인결제</span>
+        </button>
+        <button type="button" class="cp-six-btn cp-six-scrap" onclick="window._cpOpenQuoteModal && window._cpOpenQuoteModal()">
+            <span class="cp-six-icon"><i class="fa-solid fa-wallet"></i></span>
+            <span class="cp-six-label" id="cpLblScrap">상담 후 금액주문</span>
+        </button>
+        <button type="button" class="cp-six-btn cp-six-design" onclick="location.href='/design-market'">
+            <span class="cp-six-icon"><i class="fa-solid fa-palette"></i></span>
+            <span class="cp-six-label" id="cpLblDesign">디자인 의뢰</span>
+        </button>
+        <button type="button" class="cp-six-btn cp-six-coupon" onclick="window._openCpCouponModal && window._openCpCouponModal()">
+            <span class="cp-six-icon"><i class="fa-solid fa-gift"></i></span>
+            <span class="cp-six-label" id="cpLblCoupon">이벤트 쿠폰</span>
+        </button>
+    </div>
+</section>
+
+<!-- 2026-06-11: 6 버튼 전화 안내 모달 — 모든 로케일에 Hiba + 본사 노출 -->
+<div id="cpPhoneModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._cpClosePhoneModal()">
+    <div style="background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px 22px; width:100%; max-width:520px; box-shadow:0 30px 60px -10px rgba(0,0,0,0.8); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="font-size:16px; font-weight:900; color:#fde047;" id="cpPhoneModalTitle">📞 担当者 直通</div>
+            <button type="button" onclick="window._cpClosePhoneModal()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer; line-height:1;">✕</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Hiba — 글로벌 직통 -->
+            <a href="tel:+821034913535" style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(96,165,250,0.14); border:1.5px solid rgba(96,165,250,0.5); border-radius:12px; text-decoration:none; color:#fff;">
+                <div style="width:46px; height:46px; border-radius:50%; background:rgba(96,165,250,0.25); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🌐</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:11px; color:#93c5fd; font-weight:700; letter-spacing:0.5px; margin-bottom:3px;">GLOBAL DIRECT · Hiba</div>
+                    <div style="font-size:18px; color:#fff; font-weight:900; letter-spacing:-0.02em;">+82 10 3491 3535</div>
+                    <div style="font-size:10px; color:rgba(255,255,255,0.55); margin-top:3px;">English · 中文 · العربية · Español · Deutsch · Français</div>
+                </div>
+            </a>
+            <!-- 본사 (한국 사무실) -->
+            <a href="tel:0313661984" style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(253,224,71,0.12); border:1.5px solid rgba(253,224,71,0.45); border-radius:12px; text-decoration:none; color:#fff;">
+                <div style="width:46px; height:46px; border-radius:50%; background:rgba(253,224,71,0.25); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">🏢</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:11px; color:#fde047; font-weight:700; letter-spacing:0.5px; margin-bottom:3px;" id="cpPhoneHQLabel">본사 (대한민국)</div>
+                    <div style="font-size:18px; color:#fff; font-weight:900; letter-spacing:-0.02em;">+82 31 366 1984</div>
+                    <div style="font-size:10px; color:rgba(255,255,255,0.55); margin-top:3px;" id="cpPhoneHQHours">평일 09:00 - 18:00 KST</div>
+                </div>
+            </a>
+            <!-- JP 전용 ナナミ (cp-jp-phone-modal) — JP 일 때만 표시 -->
+            <a href="tel:09053970420" id="cpPhoneNanami" style="display:none; align-items:center; gap:14px; padding:14px 16px; background:rgba(6,199,85,0.12); border:1.5px solid rgba(6,199,85,0.5); border-radius:12px; text-decoration:none; color:#fff;">
+                <div style="width:46px; height:46px; border-radius:50%; background:rgba(6,199,85,0.25); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🇯🇵</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:11px; color:#86efac; font-weight:700; letter-spacing:0.5px; margin-bottom:3px;">JAPAN DIRECT · ナナミ</div>
+                    <div style="font-size:18px; color:#fff; font-weight:900; letter-spacing:-0.02em;">090-5397-0420</div>
+                    <div style="font-size:10px; color:rgba(255,255,255,0.55); margin-top:3px;">平日 10:00 - 19:00 JST</div>
+                </div>
+            </a>
+        </div>
+        <div style="margin-top:14px; padding:12px 14px; background:rgba(255,255,255,0.04); border-radius:10px; font-size:11.5px; color:rgba(255,255,255,0.6); line-height:1.5; text-align:center;" id="cpPhoneModalHint">
+            상담 후 합의된 금액은 「상담 후 금액주문」 버튼으로 직접 결제하실 수 있습니다.
+        </div>
+    </div>
+</div>
+
+<!-- 2026-06-11: 금액주문 모달 — 6 버튼의 "상담 후 금액주문" 클릭 시 -->
+<div id="cpQuoteModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._cpCloseQuoteModal()">
+    <div style="background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px 22px; width:100%; max-width:420px; box-shadow:0 30px 60px -10px rgba(0,0,0,0.8); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="font-size:16px; font-weight:900; color:#fde047;" id="cpQuoteModalTitle">⚡ 상담 후 금액주문</div>
+            <button type="button" onclick="window._cpCloseQuoteModal()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer; line-height:1;">✕</button>
+        </div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.7); line-height:1.5; margin-bottom:14px; text-align:center;" id="cpQuoteModalDesc">담당 매니저와 통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.</div>
+        <div style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; padding:4px 4px 4px 14px; margin-bottom:12px;">
+            <input id="cpQuoteModalAmount" type="text" inputmode="numeric" autocomplete="off"
+                   placeholder="50,000"
+                   oninput="window._cpMgrQuoteFormat && window._cpMgrQuoteFormat(this)"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();window._cpMgrQuoteOrder&&window._cpMgrQuoteOrder();}"
+                   style="border:none; outline:none; font-size:18px; font-weight:700; color:#fff; flex:1; min-width:0; text-align:right; padding:10px 0; background:transparent; font-family:inherit;">
+            <span id="cpQuoteModalUnit" style="font-size:14px; color:rgba(255,255,255,0.75); font-weight:700; padding-right:8px;">원</span>
+        </div>
+        <button type="button" onclick="(function(){var srcInp=document.getElementById('cpQuoteModalAmount');var dst=document.getElementById('cpMgrQuoteAmount');if(dst&&srcInp){dst.value=srcInp.value;}if(window._cpMgrQuoteOrder) window._cpMgrQuoteOrder();})()" style="width:100%; padding:14px; background:linear-gradient(135deg,#fde047,#eab308); color:#1f2937; border:none; border-radius:11px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(234,179,8,0.6); font-family:inherit;">
+            ⚡ <span id="cpQuoteModalBtn">주문하기</span>
+        </button>
+    </div>
+</div>
+
+<script>
+// 2026-06-11: cotton_print 6 버튼 — 전화/금액주문 모달 + i18n
+(function(){
+    function $(id){ return document.getElementById(id); }
+    var lang = window.__PS_LANG || (function(){
+        var h = location.hostname;
+        if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
+        if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
+        return 'ko';
+    })();
+    // 6 버튼 라벨
+    var L = {
+        ko: { phone:'전화 안내', chat:'챗봇 상담', vip:'VIP 개인결제', scrap:'상담 후 금액주문', design:'디자인 의뢰', coupon:'이벤트 쿠폰',
+              phoneTitle:'📞 본사 · 담당자 전화', hqLabel:'본사 (대한민국)', hqHours:'평일 09:00 - 18:00 KST',
+              quoteTitle:'⚡ 상담 후 금액주문', quoteDesc:'담당 매니저와 통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.', quoteUnit:'원', quoteBtn:'주문하기',
+              modalHint:'상담 후 합의된 금액은 「상담 후 금액주문」 버튼으로 직접 결제하실 수 있습니다.' },
+        ja: { phone:'担当へお電話', chat:'チャット相談', vip:'特定商取引法', scrap:'相談後の金額決済', design:'デザイン依頼', coupon:'クーポン',
+              phoneTitle:'📞 本社・担当の電話', hqLabel:'本社 (韓国)', hqHours:'平日 09:00 - 18:00 KST',
+              quoteTitle:'⚡ 相談後の金額決済', quoteDesc:'担当と通話・LINE 相談後、合意金額を入力すると即座に決済画面が開きます。', quoteUnit:'円', quoteBtn:'注文する',
+              modalHint:'相談後に合意した金額は「相談後の金額決済」ボタンから直接お支払いいただけます。' },
+        en: { phone:'Call Manager', chat:'Chat Support', vip:'Legal Notice', scrap:'Order by Quote', design:'Design Request', coupon:'Coupon',
+              phoneTitle:'📞 Headquarters · Direct Line', hqLabel:'Headquarters (Korea)', hqHours:'Mon-Fri 09:00 - 18:00 KST',
+              quoteTitle:'⚡ Order by Quote', quoteDesc:'After consulting your manager, enter the agreed amount to open checkout instantly.', quoteUnit:'$', quoteBtn:'Order',
+              modalHint:'After consultation, you can pay the agreed amount directly through the "Order by Quote" button.' }
+    };
+    var t = L[lang] || L.ko;
+    // 6 버튼 라벨
+    if ($('cpLblPhone'))  $('cpLblPhone').textContent  = t.phone;
+    if ($('cpLblChat'))   $('cpLblChat').textContent   = t.chat;
+    if ($('cpLblVip'))    $('cpLblVip').textContent    = t.vip;
+    if ($('cpLblScrap'))  $('cpLblScrap').textContent  = t.scrap;
+    if ($('cpLblDesign')) $('cpLblDesign').textContent = t.design;
+    if ($('cpLblCoupon')) $('cpLblCoupon').textContent = t.coupon;
+    // VIP 아이콘 — 일본/영문은 두루마리 (특정상거래법) 로 변경
+    if (lang === 'ja' || lang === 'en') {
+        var vipBtn = $('cpBtnVip');
+        if (vipBtn) {
+            var ic = vipBtn.querySelector('.cp-six-icon i');
+            if (ic) ic.className = 'fa-solid fa-scale-balanced';
+        }
+    }
+    // 전화 모달
+    if ($('cpPhoneModalTitle'))  $('cpPhoneModalTitle').textContent  = t.phoneTitle;
+    if ($('cpPhoneHQLabel'))     $('cpPhoneHQLabel').textContent     = t.hqLabel;
+    if ($('cpPhoneHQHours'))     $('cpPhoneHQHours').textContent     = t.hqHours;
+    if ($('cpPhoneModalHint'))   $('cpPhoneModalHint').textContent   = t.modalHint;
+    // JP 일 때만 ナナミ 카드 노출
+    if (lang === 'ja') {
+        var nan = $('cpPhoneNanami');
+        if (nan) nan.style.display = 'flex';
+    }
+    // 금액주문 모달
+    if ($('cpQuoteModalTitle'))  $('cpQuoteModalTitle').textContent  = t.quoteTitle;
+    if ($('cpQuoteModalDesc'))   $('cpQuoteModalDesc').textContent   = t.quoteDesc;
+    if ($('cpQuoteModalUnit'))   $('cpQuoteModalUnit').textContent   = t.quoteUnit;
+    if ($('cpQuoteModalBtn'))    $('cpQuoteModalBtn').textContent    = t.quoteBtn;
+    // 모달 open/close
+    window._cpOpenPhoneModal = function(){
+        var m = $('cpPhoneModal'); if (!m) return;
+        if (m.parentNode !== document.body) { try { document.body.appendChild(m); } catch(e){} }
+        m.style.display = 'flex'; document.body.style.overflow = 'hidden';
+    };
+    window._cpClosePhoneModal = function(){
+        var m = $('cpPhoneModal'); if (!m) return;
+        m.style.display = 'none'; document.body.style.overflow = '';
+    };
+    window._cpOpenQuoteModal = function(){
+        var m = $('cpQuoteModal'); if (!m) return;
+        if (m.parentNode !== document.body) { try { document.body.appendChild(m); } catch(e){} }
+        m.style.display = 'flex'; document.body.style.overflow = 'hidden';
+        setTimeout(function(){ var i = $('cpQuoteModalAmount'); if (i) i.focus(); }, 80);
+    };
+    window._cpCloseQuoteModal = function(){
+        var m = $('cpQuoteModal'); if (!m) return;
+        m.style.display = 'none'; document.body.style.overflow = '';
+    };
+    // ESC 키
+    document.addEventListener('keydown', function(e){
+        if (e.key !== 'Escape') return;
+        var pm = $('cpPhoneModal'); if (pm && pm.style.display === 'flex') window._cpClosePhoneModal();
+        var qm = $('cpQuoteModal'); if (qm && qm.style.display === 'flex') window._cpCloseQuoteModal();
+    });
+})();
+</script>
+
 <!-- 2026-05-27: 한국어 사이트 전용 — 유튜브 브랜드 영상 -->
 <section id="koYoutubeSection" style="display:none; max-width:1100px; margin:60px auto 0; padding:0 24px;">
     <div style="text-align:center; margin-bottom:22px;">
