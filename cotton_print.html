@@ -504,20 +504,156 @@ window._cottonSearch = function(){
 };
 </script>
 
-<!-- 히어로 (cotton 영상 백그라운드) -->
-<section class="hero" style="position:relative; background:#0c0a09; padding:0; overflow:hidden; min-height:560px; display:flex; flex-direction:column; justify-content:center;">
-    <video autoplay muted loop playsinline style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0.55;">
-        <source src="/cotton.mp4" type="video/mp4">
-    </video>
-    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.3) 0%, rgba(12,10,9,0.55) 100%);"></div>
-    <div class="hero-content" style="position:relative; z-index:2; padding:60px 24px 50px; max-width:960px; margin:0 auto; width:100%; box-sizing:border-box; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <h1 class="cotton-title" style="font-family:'Anton','Black Han Sans','Noto Sans KR',sans-serif; font-size:96px; font-weight:900; line-height:1; margin:0 0 22px; letter-spacing:4px; filter:drop-shadow(0 6px 18px rgba(0,0,0,0.5));">
-            <span style="color:#fff; text-shadow:0 4px 24px rgba(0,0,0,0.4);">COTTON</span>
-            <span style="background:linear-gradient(135deg,#fef3c7 0%,#fde047 30%,#facc15 60%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; padding-left:14px;">PRINT</span>
-        </h1>
-        <p style="color:#faf6ed; font-size:22px; font-weight:700; line-height:1.5; margin:0 0 14px; text-shadow:0 2px 12px rgba(0,0,0,0.5); letter-spacing:-0.5px;" data-i18n="cp_hero_subtitle">
-            도매업자를 위한 고품격 프린팅 시스템
-        </p>
+<!-- 2026-06-11: 히어로 — 카멜레온 메인 스타일 캐러셀 (4 advantage 슬라이드) -->
+<section class="hero cp-hero-carousel-section" style="position:relative; background:linear-gradient(180deg,#fafbfc 0%,#f3f4f6 100%); padding:24px 0 12px; min-height:0; display:flex; flex-direction:column; justify-content:center;">
+    <style>
+    .cp-hero-carousel-section .hc-arrow { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.85); border:1px solid rgba(255,255,255,0.6); font-size:22px; font-weight:300; color:var(--accent); cursor:pointer; z-index:10; box-shadow:0 6px 16px rgba(15,23,42,0.14); display:flex; align-items:center; justify-content:center; line-height:1; backdrop-filter:blur(8px); }
+    .cp-hero-carousel-section .hc-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.06); }
+    .cp-hero-carousel-section .hc-prev { left:18px; } .cp-hero-carousel-section .hc-next { right:18px; }
+    .cp-hero-carousel-section .hero-carousel { max-width:1100px; width:100%; margin:0 auto; position:relative; height:420px; isolation:isolate; z-index:1; padding:0; flex-shrink:0; }
+    .cp-hero-carousel-section .hc-track { position:relative; width:100%; height:100%; }
+    .cp-hero-carousel-section .hc-slide { position:absolute; top:0; bottom:0; left:0; width:100%; border-radius:24px; opacity:0; transform:translateX(0); transition:opacity 0.6s ease, transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease; pointer-events:none; background:linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%); overflow:hidden; box-shadow:0 8px 20px -10px rgba(15,23,42,0.1); z-index:1; }
+    .cp-hero-carousel-section .hc-slide::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.4) 0%, transparent 55%), radial-gradient(circle at 0% 100%, rgba(255,255,255,0.2) 0%, transparent 55%); pointer-events:none; }
+    .cp-hero-carousel-section .hc-slide.is-active { opacity:1; transform:translateX(0); pointer-events:auto; z-index:5; box-shadow:0 24px 50px -20px rgba(15,23,42,0.22); }
+    .cp-hero-carousel-section .hc-slide.is-prev  { opacity:0.85; transform:translateX(-102%); z-index:2; }
+    .cp-hero-carousel-section .hc-slide.is-next  { opacity:0.85; transform:translateX(102%); z-index:2; }
+    .cp-hero-carousel-section .hc-content { position:absolute; left:0; top:0; bottom:0; width:55%; padding:48px 56px; color:var(--txt); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; z-index:2; }
+    .cp-hero-carousel-section .hc-tag { font-family:'Pretendard Variable',sans-serif; font-size:11.5px; font-weight:800; letter-spacing:0.32em; padding-left:0.32em; color:var(--accent); display:inline-block; padding:6px 14px; background:rgba(255,255,255,0.55); border:1px solid rgba(255,255,255,0.8); border-radius:999px; margin-bottom:22px; backdrop-filter:blur(8px); }
+    .cp-hero-carousel-section .hc-title { font-family:'Pretendard Variable',sans-serif; font-size:42px; font-weight:900; line-height:1.12; letter-spacing:-0.025em; margin:0 0 18px; color:var(--accent); text-align:center; }
+    .cp-hero-carousel-section .hc-sub { font-family:'Pretendard Variable',sans-serif; font-size:14px; font-weight:600; line-height:1.55; color:var(--txt); opacity:0.85; margin:0 0 22px; text-align:center; }
+    .cp-hero-carousel-section .hc-visual { position:absolute; right:0; top:0; bottom:0; z-index:1; width:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .cp-hero-carousel-section .hc-visual::before { content:''; position:absolute; left:0; top:0; bottom:0; width:140px; background:linear-gradient(90deg, var(--bg) 0%, transparent 100%); z-index:2; pointer-events:none; }
+    .cp-hero-carousel-section .hc-visual img { width:100%; height:100%; object-fit:cover; object-position:center; filter:saturate(1.05); }
+    .cp-hero-carousel-section .hc-dots { position:absolute; bottom:22px; left:56px; display:flex; gap:7px; z-index:10; background:rgba(255,255,255,0.55); padding:7px 12px; border-radius:999px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.4); }
+    .cp-hero-carousel-section .hc-dot { width:8px; height:8px; border-radius:50%; background:rgba(15,23,42,0.25); border:none; padding:0; cursor:pointer; transition:all .3s ease; }
+    .cp-hero-carousel-section .hc-dot.is-active { background:var(--accent); width:26px; border-radius:4px; }
+    @media (max-width:700px) {
+        .cp-hero-carousel-section { padding:8px 0 4px; }
+        .cp-hero-carousel-section .hero-carousel { height:220px; border-radius:18px; width:auto; max-width:100%; margin:0 12px; }
+        .cp-hero-carousel-section .hc-slide { border-radius:18px; box-shadow:none; }
+        .cp-hero-carousel-section .hc-slide.is-active { box-shadow:0 6px 14px -8px rgba(15,23,42,0.12); }
+        .cp-hero-carousel-section .hc-slide.is-prev, .cp-hero-carousel-section .hc-slide.is-next { opacity:0; transform:scale(0.9) translateX(0); pointer-events:none; }
+        .cp-hero-carousel-section .hc-content { width:62%; padding:22px 12px; }
+        .cp-hero-carousel-section .hc-tag { font-size:9.5px; padding:4px 10px; margin-bottom:10px; letter-spacing:0.28em; padding-left:0.28em; }
+        .cp-hero-carousel-section .hc-title { font-size:20px; margin-bottom:8px; line-height:1.15; }
+        .cp-hero-carousel-section .hc-sub { font-size:11px; margin-bottom:0; line-height:1.45; }
+        .cp-hero-carousel-section .hc-visual { width:48%; }
+        .cp-hero-carousel-section .hc-visual::before { width:60px; }
+        .cp-hero-carousel-section .hc-arrow { display:none; }
+        .cp-hero-carousel-section .hc-dots { bottom:12px; left:18px; padding:5px 10px; gap:5px; }
+        .cp-hero-carousel-section .hc-dot { width:6px; height:6px; }
+        .cp-hero-carousel-section .hc-dot.is-active { width:20px; }
+    }
+    </style>
+    <div class="hero-carousel" id="cpHeroCarousel">
+        <div class="hc-track">
+            <article class="hc-slide is-active" data-slide="0" style="--bg:#e0f2fe; --bg2:#bae6fd; --txt:#075985; --accent:#0c4a6e;">
+                <div class="hc-content">
+                    <span class="hc-tag" data-cphc="tag-0">SAFETY</span>
+                    <h2 class="hc-title" data-cphc="title-0">UV프린트가<br>아닙니다</h2>
+                    <p class="hc-sub" data-cphc="sub-0">친환경 OEKO-TEX® 잉크 사용<br>물빠짐 ZERO · 화학냄새 ZERO<br>6pt 글씨도 완벽한 해상도</p>
+                </div>
+                <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="UV 인쇄가 아닙니다" loading="lazy" decoding="async"></div>
+            </article>
+            <article class="hc-slide" data-slide="1" style="--bg:#d1fae5; --bg2:#a7f3d0; --txt:#065f46; --accent:#064e3b;">
+                <div class="hc-content">
+                    <span class="hc-tag" data-cphc="tag-1">GREENGUARD GOLD</span>
+                    <h2 class="hc-title" data-cphc="title-1">그린가드 골드<br>무독성 안전</h2>
+                    <p class="hc-sub" data-cphc="sub-1">병원·유아용품도 사용 가능<br>최상위 등급 안전 인증<br>피부에도 무해한 잉크</p>
+                </div>
+                <div class="hc-visual"><img src="/fabric/adv2.jpg" alt="그린가드 골드" loading="lazy" decoding="async"></div>
+            </article>
+            <article class="hc-slide" data-slide="2" style="--bg:#ede9fe; --bg2:#ddd6fe; --txt:#5b21b6; --accent:#4c1d95;">
+                <div class="hc-content">
+                    <span class="hc-tag" data-cphc="tag-2">WHOLESALE</span>
+                    <h2 class="hc-title" data-cphc="title-2">도매상을 위한<br>시스템</h2>
+                    <p class="hc-sub" data-cphc="sub-2">패브릭 포스터·의류 굿즈<br>제작·판매 고객 최적화<br>꼼꼼한 검수로 안심</p>
+                </div>
+                <div class="hc-visual"><img src="/fabric/adv3.jpg" alt="도매상 시스템" loading="lazy" decoding="async"></div>
+            </article>
+            <article class="hc-slide" data-slide="3" style="--bg:#fef3c7; --bg2:#fde68a; --txt:#92400e; --accent:#78350f;">
+                <div class="hc-content">
+                    <span class="hc-tag" data-cphc="tag-3">BEST PRICE</span>
+                    <h2 class="hc-title" data-cphc="title-3">커스텀 프린팅<br>업계 최저가</h2>
+                    <p class="hc-sub" data-cphc="sub-3">소량 주문도 저렴<br>100개+ 주문 시 특별가<br>고객 성원에 보답</p>
+                </div>
+                <div class="hc-visual"><img src="/fabric/adv4.jpg" alt="업계 최저가" loading="lazy" decoding="async"></div>
+            </article>
+        </div>
+        <button class="hc-arrow hc-prev" aria-label="이전">‹</button>
+        <button class="hc-arrow hc-next" aria-label="다음">›</button>
+        <div class="hc-dots" role="tablist">
+            <button class="hc-dot is-active" data-idx="0" aria-label="1"></button>
+            <button class="hc-dot" data-idx="1" aria-label="2"></button>
+            <button class="hc-dot" data-idx="2" aria-label="3"></button>
+            <button class="hc-dot" data-idx="3" aria-label="4"></button>
+        </div>
+    </div>
+    <script>
+    // 2026-06-11: 캐러셀 자동회전 + JP/EN 다국어
+    (function(){
+        var carousel = document.getElementById('cpHeroCarousel');
+        if (!carousel) return;
+        var slides = carousel.querySelectorAll('.hc-slide');
+        var dots = carousel.querySelectorAll('.hc-dot');
+        var current = 0, timer = null;
+        var INTERVAL = 3500;
+        function show(idx){
+            var n = slides.length;
+            var prevIdx = (idx - 1 + n) % n;
+            var nextIdx = (idx + 1) % n;
+            slides.forEach(function(s, i){
+                s.classList.remove('is-active', 'is-prev', 'is-next');
+                if (i === idx) s.classList.add('is-active');
+                else if (i === prevIdx) s.classList.add('is-prev');
+                else if (i === nextIdx) s.classList.add('is-next');
+            });
+            dots.forEach(function(d, i){ d.classList.toggle('is-active', i === idx); });
+            current = idx;
+        }
+        function next(){ show((current + 1) % slides.length); }
+        function prev(){ show((current - 1 + slides.length) % slides.length); }
+        function start(){ stop(); timer = setInterval(next, INTERVAL); }
+        function stop(){ if (timer) clearInterval(timer); timer = null; }
+        var prevBtn = carousel.querySelector('.hc-prev');
+        var nextBtn = carousel.querySelector('.hc-next');
+        if (prevBtn) prevBtn.addEventListener('click', function(){ prev(); start(); });
+        if (nextBtn) nextBtn.addEventListener('click', function(){ next(); start(); });
+        dots.forEach(function(d, i){ d.addEventListener('click', function(){ show(i); start(); }); });
+        carousel.addEventListener('mouseenter', stop);
+        carousel.addEventListener('mouseleave', start);
+        carousel.addEventListener('touchstart', stop, { passive: true });
+        carousel.addEventListener('touchend', function(){ setTimeout(start, 800); }, { passive: true });
+        document.addEventListener('visibilitychange', function(){ if (document.hidden) stop(); else start(); });
+        start();
+        // 슬라이드 다국어
+        var SLIDES = {
+            ko: { 'tag-0':'SAFETY','title-0':'UV프린트가<br>아닙니다','sub-0':'친환경 OEKO-TEX® 잉크 사용<br>물빠짐 ZERO · 화학냄새 ZERO<br>6pt 글씨도 완벽한 해상도',
+                  'tag-1':'GREENGUARD GOLD','title-1':'그린가드 골드<br>무독성 안전','sub-1':'병원·유아용품도 사용 가능<br>최상위 등급 안전 인증<br>피부에도 무해한 잉크',
+                  'tag-2':'WHOLESALE','title-2':'도매상을 위한<br>시스템','sub-2':'패브릭 포스터·의류 굿즈<br>제작·판매 고객 최적화<br>꼼꼼한 검수로 안심',
+                  'tag-3':'BEST PRICE','title-3':'커스텀 프린팅<br>업계 최저가','sub-3':'소량 주문도 저렴<br>100개+ 주문 시 특별가<br>고객 성원에 보답' },
+            ja: { 'tag-0':'SAFETY','title-0':'UVプリント<br>ではありません','sub-0':'OEKO-TEX®認証エコインク<br>洗濯時の色落ちZERO・化学臭ZERO<br>6pt文字まで完璧な解像度',
+                  'tag-1':'GREENGUARD GOLD','title-1':'グリーンガード<br>ゴールド認証','sub-1':'病院・乳幼児用品にも安心<br>最上位グレードの安全認証<br>肌にもやさしいエコインク',
+                  'tag-2':'WHOLESALE','title-2':'卸売業者のため<br>のシステム','sub-2':'ファブリックポスター・衣類グッズ<br>製作・販売のお客様に最適化<br>丁寧な検品で安心納品',
+                  'tag-3':'BEST PRICE','title-3':'カスタムプリント<br>業界 最安値','sub-3':'小ロット注文もお手頃<br>100枚以上ご注文で特別価格<br>お客様の声援にお応え' },
+            en: { 'tag-0':'SAFETY','title-0':"Not UV-printed",'sub-0':'OEKO-TEX® certified eco inks<br>ZERO color bleed · ZERO chemical odor<br>Razor-sharp even at 6pt',
+                  'tag-1':'GREENGUARD GOLD','title-1':'GREENGUARD Gold<br>Non-toxic & Safe','sub-1':'Safe for hospitals & infant products<br>Highest-grade safety certification<br>Skin-friendly eco inks',
+                  'tag-2':'WHOLESALE','title-2':'A system built for<br>wholesalers','sub-2':'Fabric posters · apparel goods<br>Optimized for resellers<br>Thorough quality inspection',
+                  'tag-3':'BEST PRICE','title-3':"Industry's<br>lowest price",'sub-3':'Low prices even for small orders<br>Special rates for 100+ units<br>Best value guaranteed' }
+        };
+        var lang = window.__PS_LANG || (function(){
+            var h = location.hostname;
+            if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
+            if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
+            return 'ko';
+        })();
+        var trans = SLIDES[lang] || SLIDES.ko;
+        Object.keys(trans).forEach(function(k){
+            var el = carousel.querySelector('[data-cphc="' + k + '"]');
+            if (el) el.innerHTML = trans[k];
+        });
+    })();
+    </script>
         <!-- 2026-06-11: 3컬럼 히어로 박스 삭제 (사용자 요청). 대신 hero 다음에 4 카드 + 6 버튼 노출. CSS 로 강제 숨김. -->
         <div class="cp-hero-3col" style="display:none !important; max-width:1100px; width:100%; margin:24px auto 0; padding:0; grid-template-columns:1fr 1fr 1fr; gap:12px; align-items:stretch;">
 
@@ -1263,66 +1399,7 @@ async function submitRollFabricRequest() {
         </div>
     </a>
 
-    <!-- 2026-05-23: 코튼프린트 장점 — 사진 4장 다이나믹 카드 -->
-    <style>
-    .adv-head { text-align:center; margin:8px 0 22px; }
-    .adv-head h3 { font-size:26px; font-weight:900; color:#451a03; margin:0 0 6px; letter-spacing:-0.6px; }
-    .adv-head p { color:#9a8a76; font-size:13.5px; margin:0; font-weight:600; }
-    .adv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-    .adv-card { position:relative; border-radius:20px; overflow:hidden; aspect-ratio:3/4;
-        background:var(--g,#451a03); box-shadow:0 14px 32px -14px rgba(69,26,3,0.4);
-        transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s; }
-    .adv-card:hover { transform:translateY(-10px) scale(1.01); box-shadow:0 28px 50px -16px rgba(69,26,3,0.55); }
-    .adv-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .65s ease; }
-    .adv-card:hover img { transform:scale(1.1); }
-    .adv-ov { position:absolute; left:0; right:0; bottom:0; height:48%; background:rgba(10,7,3,.6); }
-    .adv-num { position:absolute; top:18px; right:18px; font-size:34px; font-weight:900; color:rgba(255,255,255,.5); line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.35); }
-    .adv-tx { position:absolute; left:0; right:0; bottom:0; height:48%; padding:16px 15px; color:#fff; box-sizing:border-box; display:flex; flex-direction:column; justify-content:flex-start; }
-    .adv-t { font-weight:900; font-size:15.5px; line-height:1.3; margin-bottom:7px; text-shadow:0 2px 8px rgba(0,0,0,.55); }
-    .adv-d { font-size:12px; line-height:1.5; opacity:.94; text-shadow:0 1px 5px rgba(0,0,0,.6); }
-    @media (max-width:900px){ .adv-grid{ grid-template-columns:repeat(2,1fr); } }
-    @media (max-width:520px){ .adv-grid{ grid-template-columns:1fr; } .adv-card{ aspect-ratio:16/10; } .adv-head h3{ font-size:21px; } }
-    </style>
-    <div>
-        <div class="adv-head">
-            <h3 data-i18n="adv_title">왜 코튼프린트일까요?</h3>
-            <p data-i18n="adv_subtitle">소량부터 안전하게 — 세계 최고 수준의 패브릭 인쇄</p>
-        </div>
-        <div class="adv-grid">
-            <div class="adv-card" style="--g:linear-gradient(150deg,#38bdf8,#0c4a6e);">
-                <img src="/fabric/adv1.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-num">01</div>
-                <div class="adv-tx">
-                    <div class="adv-t" data-i18n="adv1_t">UV인쇄가 아닙니다</div>
-                    <div class="adv-d" data-i18n-html="adv1_d">UV인쇄는 세탁이 안 되고 화학냄새가 심합니다. 코튼프린트는 친환경 <b>OEKO-TEX®</b> 잉크로 세탁 시 물빠짐 ZERO, 화학냄새 ZERO. 6pt 글씨까지 뭉개짐 없는 완벽한 해상도를 자랑합니다.</div>
-                </div>
-            </div>
-            <div class="adv-card" style="--g:linear-gradient(150deg,#4ade80,#14532d);">
-                <img src="/fabric/adv2.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-num">02</div>
-                <div class="adv-tx">
-                    <div class="adv-t" data-i18n="adv2_t">그린가드 골드 · 무독성 안전</div>
-                    <div class="adv-d" data-i18n="adv2_d">병원이나 유아용품에 사용해도 안전한 최상위 등급 안전인증을 획득했어요. 아기가 입에 넣어도 안전하고 피부에도 무해한 잉크를 사용했습니다.</div>
-                </div>
-            </div>
-            <div class="adv-card" style="--g:linear-gradient(150deg,#a78bfa,#4c1d95);">
-                <img src="/fabric/adv3.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-num">03</div>
-                <div class="adv-tx">
-                    <div class="adv-t" data-i18n="adv3_t">도매상을 위한 시스템</div>
-                    <div class="adv-d" data-i18n="adv3_d">패브릭 포스터 및 의류 굿즈 등을 제작·판매하시는 고객님들이 대부분입니다. 판매하는 제품에 문제가 없도록 꼼꼼하게 검수합니다.</div>
-                </div>
-            </div>
-            <div class="adv-card" style="--g:linear-gradient(150deg,#fbbf24,#b45309);">
-                <img src="/fabric/adv4.jpg" alt="" onerror="this.style.display='none'">
-                <div class="adv-ov"></div><div class="adv-num">04</div>
-                <div class="adv-tx">
-                    <div class="adv-t" data-i18n="adv4_t">커스텀 프린팅 업계 최저가</div>
-                    <div class="adv-d" data-i18n="adv4_d">소량 주문도 저렴하지만, 100개 이상 주문 시 어느 곳에서도 볼 수 없는 특별한 가격으로 고객님들의 성원에 보답하겠습니다.</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 2026-06-11: 4-card adv 섹션 삭제 — 동일 콘텐츠가 hero 캐러셀 슬라이드 4 장으로 이전됨 -->
 </section>
 
 <!-- 2026-06-11: 6 버튼 그리드 (카멜레온 메인 페이지 스타일) — 4 카드 광고 아래 -->
