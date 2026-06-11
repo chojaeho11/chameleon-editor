@@ -469,7 +469,37 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                      || _cs.h || 0;
             const qty = it.qty || 1;
             const unit = product.price || it.price || 0;
-            const lineTotal = it.price || (unit * qty);
+            // 2026-06-11: DB it.price 가 0/누락이면 fallback —
+            //   1) cart 와 동일 _soCalcItemPrice (simple_order 로드돼 있으면)
+            //   2) 가벽 인라인 재계산 (width × side × unit + heightExtra + addons)
+            //   3) 마지막 fallback unit × qty
+            let lineTotal = it.price || 0;
+            if (!lineTotal && typeof window._soCalcItemPrice === 'function') {
+                try { lineTotal = window._soCalcItemPrice(it) || 0; } catch(e) {}
+            }
+            if (!lineTotal && it.wallSize && (it.wallSize.w_m || it.wall_size)) {
+                // 가벽 직접 계산: unit × wM × side + (h=3 이면) 5만/m × side + addons (DB 매핑된 것만)
+                try {
+                    const _ws = it.wallSize || it.wall_size || {};
+                    const _wM = parseFloat(_ws.w_m) || 1;
+                    const _hM = parseFloat(_ws.h_m) || 0;
+                    const _side = (it.wallSide === 'double' || it.wall_side === 'double') ? 2 : 1;
+                    let _wallBase = unit * _wM * _side;
+                    if (_hM === 3) _wallBase += 50000 * _wM * _side;
+                    if (it.wallShapeFee) _wallBase += it.wallShapeFee;
+                    // addon 합계 (DB 가 로드돼 있으면)
+                    if (it.selectedAddons && window.ADDON_DB) {
+                        Object.values(it.selectedAddons).forEach(code => {
+                            const a = window.ADDON_DB[code];
+                            if (!a) return;
+                            const aq = (it.addonQuantities && it.addonQuantities[code]) || 1;
+                            _wallBase += (a.price || 0) * aq;
+                        });
+                    }
+                    lineTotal = _wallBase;
+                } catch(e) {}
+            }
+            if (!lineTotal) lineTotal = unit * qty;
 
             // 썸네일 — fallback chain
             // 일반 주문: thumb / originalUrl / uploadedFiles
