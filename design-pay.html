@@ -288,8 +288,11 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
       depositor_name: method==='bank' ? (depositor||p.name) : null,
       total_amount: amount,
       discount_amount: 0,
+      // 2026-06-11: 양쪽 필드 모두 저장 — DB 트리거 tg_mark_design_bids_paid_on_order 는 _designBidId (camelCase) 로 조회
+      //   호환을 위해 snake_case (legacy) 와 camelCase (트리거용) 둘 다 기록.
       items: [{ name:'디자인 의뢰 결제 — '+(state.request.title||''), price:amount, qty:1,
-                design_bid_id:state.bid.id, design_request_id:state.request.id }],
+                design_bid_id:state.bid.id, design_request_id:state.request.id,
+                _designBidId:state.bid.id, _designRequestId:state.request.id }],
       site_code: (state.country==='JP'?'JP':(state.country==='US'?'US':'KR'))
     };
     var ins = await sb.from('orders').insert(row).select('id').single();
@@ -336,11 +339,12 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
     try {
       var orderId = await _createOrder('bank', depositor);
       // 입찰: 입금확인 대기 (관리자 승인 전까지 paid 아님)
+      // 2026-06-11: paid_order_id 가 실제 컬럼. orders.payment_status 가 결제완료 되면 confirmDepositSelected 가 이 bid 자동 paid 처리.
       var up = await sb.from('design_bids').update({
         status:'selected', payment_status:'bank_pending',
-        bank_depositor: depositor, bank_order_id: orderId
+        paid_order_id: orderId
       }).eq('id', state.bid.id);
-      // bank_depositor/bank_order_id 컬럼이 없으면 payment_status 만이라도 반영
+      // paid_order_id 컬럼이 없는 옛 환경 폴백
       if (up.error){
         await sb.from('design_bids').update({ status:'selected', payment_status:'bank_pending' }).eq('id', state.bid.id);
       }

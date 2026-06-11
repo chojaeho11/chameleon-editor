@@ -2604,15 +2604,56 @@ async function updateCancelReqBadge() {
 window.updateCancelReqBadge = updateCancelReqBadge;
 
 // [일괄 입금처리] 입금대기 탭에서 사용
+// 2026-06-11: 디자인 마켓 의뢰 결제 자동 연동 헬퍼
+//   주문이 결제완료 처리될 때 호출. orders.items[0].design_bid_id 또는 design_bids.paid_order_id 매칭으로
+//   design_bids.payment_status 를 'paid' 로 동시 업데이트 → 디자이너가 즉시 정산 신청 가능.
+//   리턴: { matched: boolean, bidId: string|null }
+async function _markDesignBidPaidIfLinked(orderId) {
+    try {
+        // 1) items[N] 에서 design_bid_id 또는 _designBidId 매칭 (양쪽 필드 호환)
+        const { data: ord } = await sb.from('orders').select('items').eq('id', orderId).maybeSingle();
+        let bidId = null;
+        if (ord && Array.isArray(ord.items)) {
+            for (const it of ord.items) {
+                const _bid = it && (it._designBidId || it.design_bid_id);
+                if (_bid) { bidId = _bid; break; }
+            }
+        }
+        if (bidId) {
+            const { error } = await sb.from('design_bids').update({ payment_status: 'paid' }).eq('id', bidId);
+            if (!error) return { matched: true, bidId };
+        }
+        // 2) paid_order_id 기준 fallback 매칭 (items 누락된 옛 데이터 대비)
+        const { data: bidRow } = await sb.from('design_bids')
+            .select('id, payment_status')
+            .eq('paid_order_id', orderId)
+            .in('payment_status', ['bank_pending', 'pending'])
+            .maybeSingle();
+        if (bidRow && bidRow.id) {
+            const { error: e2 } = await sb.from('design_bids').update({ payment_status: 'paid' }).eq('id', bidRow.id);
+            if (!e2) return { matched: true, bidId: bidRow.id };
+        }
+        return { matched: false, bidId: null };
+    } catch(e) {
+        console.warn('[design_bids 연동] 실패:', e);
+        return { matched: false, bidId: null };
+    }
+}
+window._markDesignBidPaidIfLinked = _markDesignBidPaidIfLinked;
+
 window.confirmDepositSelected = async () => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
     if (!confirm(`${ids.length}건을 입금처리 하시겠습니까?`)) return;
+    let _designBidsPaid = 0;
     for (const id of ids) {
         await sb.from('orders').update({ payment_status: '결제완료' }).eq('id', id);
         await creditReferralBonus(id);
+        const r = await _markDesignBidPaidIfLinked(id);
+        if (r.matched) _designBidsPaid++;
     }
-    showToast(`${ids.length}건 입금처리 완료`, 'success');
+    const _extraMsg = _designBidsPaid > 0 ? ` (디자인 마켓 ${_designBidsPaid}건 동시 결제완료)` : '';
+    showToast(`${ids.length}건 입금처리 완료${_extraMsg}`, 'success');
     loadOrders();
 };
 
@@ -3835,11 +3876,15 @@ window.executeAutoMatching = async (list) => {
             return Promise.all([p1, p2]);
         });
         await Promise.all(updates);
-        // 추천인 적립 처리
+        // 추천인 적립 + 2026-06-11: 디자인 마켓 의뢰 연동
+        let _dmLinked = 0;
         for (const item of list) {
             await creditReferralBonus(item.orderId);
+            const r = await _markDesignBidPaidIfLinked(item.orderId);
+            if (r.matched) _dmLinked++;
         }
-        showToast("완료되었습니다.", "success");
+        const _msg = _dmLinked > 0 ? `완료되었습니다. (디자인 마켓 ${_dmLinked}건 동시 결제완료)` : "완료되었습니다.";
+        showToast(_msg, "success");
         loadBankdaList();
     } catch(e) { showToast("오류: " + e.message, "error"); } finally { showLoading(false); }
 };
@@ -3862,7 +3907,10 @@ window.matchOrderManual = async (txId, name, suggestedId = '') => {
         await sb.from('orders').update({ payment_status: '결제완료', payment_method: '무통장입금' }).eq('id', orderId);
         await sb.from('bank_transactions').update({ match_status: 'matched', matched_order_id: orderId }).eq('id', txId);
         await creditReferralBonus(orderId); // 추천인 적립
-        showToast("연결되었습니다.", "success");
+        // 2026-06-11: 디자인 마켓 의뢰 연동
+        const r = await _markDesignBidPaidIfLinked(orderId);
+        const _msg = r.matched ? "연결되었습니다. (디자인 마켓 결제완료 동시 처리)" : "연결되었습니다.";
+        showToast(_msg, "success");
         loadBankdaList();
     } catch(e) { showToast("오류: " + e.message, "error"); }
 };
@@ -4884,7 +4932,10 @@ window.processDeposit = async (orderId, action) => {
                 request_note: noteArr.length ? noteArr.join('\n') : ord?.request_note || null
             }).eq('id', orderId);
             await creditReferralBonus(orderId);
-            showToast('입금처리 완료 → 결제완료', 'success');
+            // 2026-06-11: 디자인 마켓 의뢰 연동
+            const r = await _markDesignBidPaidIfLinked(orderId);
+            const _extraMsg = r.matched ? ' (디자인 마켓 결제완료 동시 처리)' : '';
+            showToast('입금처리 완료 → 결제완료' + _extraMsg, 'success');
         } else {
             const cancelNote = noteArr.length ? noteArr.join('\n') : (ord?.request_note || '');
             await sb.from('orders').update({
