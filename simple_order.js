@@ -3592,14 +3592,23 @@ html, body { background: #ffffff !important; }
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
         // 2026-05-29: 베스트굿즈 프리셋 50% 할인 라인 (100개+ — 티셔츠는 인쇄비 라인에서 별도 처리)
+        // 2026-06-12: 종이매대는 수량 티어 별 (300/10%, 500/20%, 1000/50%) — 라벨 정확히 표시
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
-        var _bulkRowLabel = tr('100개 이상 50% 할인', '100個以上 50%割引', '50% off on 100+');
+        var _bulkRowLabel, _bulkPct;
+        if (state.isPaperDisplay) {
+            if (qty >= 1000)      { _bulkRowLabel = tr('1,000개 이상 50% 할인', '1,000個以上 50%割引', '50% off on 1,000+'); _bulkPct = '50%'; }
+            else if (qty >= 500)  { _bulkRowLabel = tr('500개 이상 20% 할인',   '500個以上 20%割引',   '20% off on 500+');   _bulkPct = '20%'; }
+            else if (qty >= 300)  { _bulkRowLabel = tr('300개 이상 10% 할인',   '300個以上 10%割引',   '10% off on 300+');   _bulkPct = '10%'; }
+            else                  { _bulkRowLabel = '';                                                                              _bulkPct = ''; }
+        } else {
+            _bulkRowLabel = tr('100개 이상 50% 할인', '100個以上 50%割引', '50% off on 100+');
+            _bulkPct = '50%';
+        }
         var _bulkRowEl = document.getElementById('soPresetBulkDiscRow');
         if (_bulkRowEl) {
             var _lblSpan = _bulkRowEl.querySelector('span');
             if (_lblSpan) {
-                var _tag = _lblSpan.querySelector('.so-tier-tag');
-                _lblSpan.innerHTML = _bulkRowLabel + ' ' + (_tag ? _tag.outerHTML : '<span class="so-tier-tag" style="background:#dc2626; color:#fff;">50%</span>');
+                _lblSpan.innerHTML = _bulkRowLabel + ' <span class="so-tier-tag" style="background:#dc2626; color:#fff;">' + _bulkPct + '</span>';
             }
         }
         setText('soPresetBulkDisc', '-' + fmtPrice(presetBulkDiscount));
