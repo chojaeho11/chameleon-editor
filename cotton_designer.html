@@ -728,28 +728,32 @@ a { text-decoration: none; color: inherit; }
     padding: 4px 10px; border: 1px solid var(--cream-dark); border-radius: 4px;
 }
 
-/* 원단 선택 — 8 옵션 (4×2 그리드, 동그라미 작게).
+/* 원단 선택 — 8 옵션 (4×2 그리드).
+   2026-06-12: 네모난 버튼 + 큰 이미지로 변경. 이미지가 카드의 대부분을 채우도록.
    2026-05-31: minmax(0, 1fr) — column 최소가 0 까지 축소 가능 → 일본어 'コットン20番' 같이
    긴 라벨이 column 폭을 키워서 페이지가 가로로 넓어지던 버그 fix. */
 .fabric-types {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
     width: 100%; max-width: 100%;
 }
 .fabric-type {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    padding: 8px 2px; border: 1.5px solid var(--border); border-radius: 50%;
-    cursor: pointer; transition: all 0.2s; aspect-ratio: 1; justify-content: center;
-    min-width: 0; max-width: 100%; overflow: hidden;
+    display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+    padding: 6px 6px 8px; border: 1.5px solid var(--border); border-radius: 12px;
+    cursor: pointer; transition: all 0.2s; justify-content: flex-start;
+    min-width: 0; max-width: 100%; overflow: hidden; background:#fff;
 }
-.fabric-type:hover { border-color: var(--accent); }
-.fabric-type.active { border-color: var(--brown-dark); background: var(--cream-dark); }
-.fabric-type-icon { font-size: 16px; color: var(--brown); line-height: 1; }
+.fabric-type:hover { border-color: var(--accent); box-shadow:0 4px 12px rgba(120,53,15,0.10); transform:translateY(-1px); }
+.fabric-type.active { border-color: var(--brown-dark); background: var(--cream-dark); box-shadow:0 4px 14px rgba(120,53,15,0.18); }
+/* 아이콘 박스 — 카드 가로폭에 맞춰 정사각형, 큰 이미지를 위한 공간 */
+.fabric-type-icon { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:32px; color: var(--brown); line-height: 1; border-radius:8px; overflow:hidden; background:#faf6ed; }
 /* 2026-05-31: white-space:nowrap 제거 — 일본어 'コットン20番' 같은 긴 라벨이 column 폭을 키워
    페이지가 가로로 넓어지던 버그 fix. word-break:keep-all 로 한자/가나는 단어 단위로만 wrap. */
-.fabric-type-label { font-size: 10px; color: var(--brown); font-weight: 700; line-height:1.15; word-break:keep-all; overflow-wrap:anywhere; max-width:100%; text-align:center; }
+.fabric-type-label { font-size: 12px; color: var(--brown-dark); font-weight: 800; line-height:1.2; word-break:keep-all; overflow-wrap:anywhere; max-width:100%; text-align:center; padding:0 2px; }
 @media (max-width:480px) {
-    .fabric-type-icon { font-size: 14px; }
-    .fabric-type-label { font-size: 9px; }
+    .fabric-types { gap: 8px; }
+    .fabric-type { padding: 5px 5px 6px; border-radius:10px; gap:4px; }
+    .fabric-type-icon { font-size: 24px; border-radius:6px; }
+    .fabric-type-label { font-size: 11px; }
 }
 
 /* 색상 선택 (면 종류) */
@@ -1923,7 +1927,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=85"></script>
+<script src="/cotton_designer.js?v=86"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

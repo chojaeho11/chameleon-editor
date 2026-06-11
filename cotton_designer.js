@@ -577,7 +577,8 @@ function _cdApplyFabricChipPhotos() {
         if (!iconWrap) return;
         var im = new Image();
         im.onload = function () {
-            iconWrap.innerHTML = '<img src="' + photo + '" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover; display:block;">';
+            // 2026-06-12: 네모난 카드 — 칩 내부를 가득 채우는 큰 사각 이미지
+            iconWrap.innerHTML = '<img src="' + photo + '" alt="" style="width:100%; height:100%; border-radius:6px; object-fit:cover; display:block;">';
         };
         im.src = photo;
     });
