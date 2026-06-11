@@ -2097,30 +2097,69 @@ window._tcmFallbackClick = function(code) {
                         </a>
                     </div>
                 </div>
-                <!-- 2026-06-12: US/해외 전용 직통 안내 카드 — Hyerim Seo (Director). 풀와이드 단일 카드.
-                     2줄 텍스트 (1줄: Hyerim Seo · Director / 2줄: +82 10-3491-3535) + Call & WhatsApp 버튼 -->
-                <div id="mgrPhoneUsQr" style="display:none; flex-direction:column; gap:14px; padding:18px 18px; background:linear-gradient(135deg,#ffffff 0%,#eef2ff 100%); border:1.5px solid rgba(99,102,241,0.45); border-radius:14px; box-shadow:0 6px 20px rgba(99,102,241,0.18);">
-                    <div style="display:flex; align-items:center; gap:14px;">
-                        <div style="flex-shrink:0; width:54px; height:54px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#4338ca); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(99,102,241,0.35);">
-                            <i class="fa-solid fa-user-tie" style="font-size:24px; color:#fff;"></i>
+                <!-- 2026-06-12: US/해외 (한국·일본 제외 모든 사이트) 전용 듀얼 컨택 카드 컨테이너 -->
+                <!-- ① Hyerim Seo · Director (+82 10-3491-3535) ② Hiba · International Manager (+212 617-901092) -->
+                <div id="mgrPhoneUsQr" style="display:none; flex-direction:column; gap:12px; grid-column:1 / -1;">
+                    <style>
+                        .usct-card { display:flex; flex-direction:column; gap:12px; padding:16px 16px; border:1.5px solid; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,0.18); }
+                        .usct-card.hyerim { background:linear-gradient(135deg,#ffffff 0%,#eef2ff 100%); border-color:rgba(99,102,241,0.45); }
+                        .usct-card.hiba   { background:linear-gradient(135deg,#ffffff 0%,#fdf2f8 100%); border-color:rgba(236,72,153,0.45); }
+                        .usct-head { display:flex; align-items:center; gap:12px; min-width:0; }
+                        .usct-avatar { flex-shrink:0; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.2); }
+                        .usct-card.hyerim .usct-avatar { background:linear-gradient(135deg,#6366f1,#4338ca); }
+                        .usct-card.hiba .usct-avatar   { background:linear-gradient(135deg,#ec4899,#be185d); }
+                        .usct-avatar i { font-size:22px; color:#fff; }
+                        .usct-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+                        .usct-name { font-size:13.5px; font-weight:900; color:#1e1b4b; line-height:1.25; word-break:keep-all; }
+                        .usct-card.hyerim .usct-role { color:#4338ca; }
+                        .usct-card.hiba   .usct-role { color:#be185d; }
+                        .usct-phone { font-size:17px; font-weight:900; color:#1e1b4b; letter-spacing:-0.01em; line-height:1.2; word-break:keep-all; white-space:nowrap; }
+                        .usct-desc { font-size:10.5px; color:#64748b; line-height:1.4; margin-top:2px; word-break:keep-all; }
+                        .usct-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+                        .usct-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 8px; color:#fff; border-radius:10px; text-decoration:none; font-size:13px; font-weight:800; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+                        .usct-btn.call-h { background:linear-gradient(135deg,#6366f1,#4338ca); }
+                        .usct-btn.call-i { background:linear-gradient(135deg,#ec4899,#be185d); }
+                        .usct-btn.wa     { background:linear-gradient(135deg,#25d366,#128c7e); }
+                        .usct-btn i { font-size:12px; }
+                        @media (max-width:600px) {
+                            .usct-card { padding:14px 12px; gap:10px; }
+                            .usct-avatar { width:44px; height:44px; }
+                            .usct-avatar i { font-size:19px; }
+                            .usct-name { font-size:12.5px; }
+                            .usct-phone { font-size:15px; }
+                            .usct-desc { font-size:10px; }
+                            .usct-btn { padding:10px 6px; font-size:12px; }
+                        }
+                    </style>
+                    <!-- ① Hyerim Seo (한국 본사 다이렉트) -->
+                    <div class="usct-card hyerim">
+                        <div class="usct-head">
+                            <div class="usct-avatar"><i class="fa-solid fa-user-tie"></i></div>
+                            <div class="usct-info">
+                                <div class="usct-name">Hyerim Seo · <span class="usct-role">Director</span></div>
+                                <div class="usct-phone">+82 10-3491-3535</div>
+                                <div class="usct-desc">Korea HQ direct line · Mon-Fri 09:00-18:00 KST</div>
+                            </div>
                         </div>
-                        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;">
-                            <!-- 1줄: 이름 · 직함 -->
-                            <div style="font-size:14px; font-weight:900; color:#1e1b4b; line-height:1.25;">Hyerim Seo · <span style="color:#4338ca;">Director</span></div>
-                            <!-- 2줄: 전화번호 (크게, 잘 보이게) -->
-                            <div style="font-size:16px; font-weight:900; color:#1e1b4b; letter-spacing:-0.01em; line-height:1.2;">+82 10-3491-3535</div>
-                            <!-- 부가설명 (작게) -->
-                            <div style="font-size:10.5px; color:#64748b; line-height:1.4; margin-top:1px;">Direct line for international clients · Mon-Fri 09:00 - 18:00 KST</div>
+                        <div class="usct-btns">
+                            <a class="usct-btn call-h" href="tel:+821034913535"><i class="fa-solid fa-phone"></i> Call</a>
+                            <a class="usct-btn wa" href="https://api.whatsapp.com/send?phone=821034913535" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
                         </div>
                     </div>
-                    <!-- Call + WhatsApp 큰 버튼 가로로 -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <a href="tel:+821034913535" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 10px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; text-decoration:none; font-size:13px; font-weight:800; box-shadow:0 4px 12px rgba(99,102,241,0.35);">
-                            <i class="fa-solid fa-phone" style="font-size:12px;"></i> Call
-                        </a>
-                        <a href="https://api.whatsapp.com/send?phone=821034913535" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 10px; background:linear-gradient(135deg,#25d366,#128c7e); color:#fff; border-radius:10px; text-decoration:none; font-size:13px; font-weight:800; box-shadow:0 4px 12px rgba(37,211,102,0.35);">
-                            <i class="fa-brands fa-whatsapp" style="font-size:14px;"></i> WhatsApp
-                        </a>
+                    <!-- ② Hiba (해외 영업 매니저, Morocco/Africa) -->
+                    <div class="usct-card hiba">
+                        <div class="usct-head">
+                            <div class="usct-avatar"><i class="fa-solid fa-user"></i></div>
+                            <div class="usct-info">
+                                <div class="usct-name">Hiba · <span class="usct-role">International Manager</span></div>
+                                <div class="usct-phone">+212 617-901092</div>
+                                <div class="usct-desc">Overseas sales · EN / FR / AR</div>
+                            </div>
+                        </div>
+                        <div class="usct-btns">
+                            <a class="usct-btn call-i" href="tel:+212617901092"><i class="fa-solid fa-phone"></i> Call</a>
+                            <a class="usct-btn wa" href="https://api.whatsapp.com/send?phone=212617901092" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                        </div>
                     </div>
                 </div>
                 <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
