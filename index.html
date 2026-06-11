@@ -2624,22 +2624,22 @@ window._tcmFallbackClick = function(code) {
                     var lang = (window.__SITE_CODE === 'JP') ? 'ja'
                         : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
                     var T = {
-                        ko: { desc:'아이디와 비밀번호만 입력하면 끝! <b>각 4자 이상</b> 입력 후 가입.',
-                              phEmail:'아이디 (4자 이상)', phPw:'비밀번호 (4자 이상)', phPwc:'비밀번호 확인',
+                        ko: { desc:'아이디 4자 이상, 비밀번호 <b>6자 이상</b> 입력 후 가입.',
+                              phEmail:'아이디 (4자 이상)', phPw:'비밀번호 (6자 이상)', phPwc:'비밀번호 확인',
                               btn:'⚡ 5초 가입하고 3만원 쿠폰받기', btnLoading:'가입 중...',
-                              errEmail:'아이디는 4자 이상이어야 합니다.', errPwLen:'아이디·비밀번호는 4자 이상이어야 합니다.',
+                              errEmail:'아이디는 4자 이상이어야 합니다.', errPwLen:'비밀번호는 6자 이상이어야 합니다.',
                               errPwMatch:'비밀번호가 일치하지 않습니다.', errSignup:'가입 실패:',
                               successHtml:'🎉 가입 완료!<br>3만원 쿠폰이 자동 지급되었습니다.' },
-                        ja: { desc:'IDとパスワードを入力するだけ! <b>各4文字以上</b>で会員登録。',
-                              phEmail:'ID (4文字以上)', phPw:'パスワード (4文字以上)', phPwc:'パスワード確認',
+                        ja: { desc:'ID 4文字以上、パスワード <b>6文字以上</b> で会員登録。',
+                              phEmail:'ID (4文字以上)', phPw:'パスワード (6文字以上)', phPwc:'パスワード確認',
                               btn:'⚡ 5秒登録して3,000円クーポン獲得', btnLoading:'登録中...',
-                              errEmail:'IDは4文字以上にしてください。', errPwLen:'ID・パスワードは4文字以上にしてください。',
+                              errEmail:'IDは4文字以上にしてください。', errPwLen:'パスワードは6文字以上にしてください。',
                               errPwMatch:'パスワードが一致しません。', errSignup:'登録失敗:',
                               successHtml:'🎉 登録完了!<br>3,000円クーポンが自動付与されました。' },
-                        en: { desc:'Just enter an ID + password (<b>4+ chars each</b>) and join!',
-                              phEmail:'ID (4+ chars)', phPw:'Password (4+ chars)', phPwc:'Confirm password',
+                        en: { desc:'Enter ID (4+ chars) and password (<b>6+ chars</b>) to join!',
+                              phEmail:'ID (4+ chars)', phPw:'Password (6+ chars)', phPwc:'Confirm password',
                               btn:'⚡ 5-sec Signup & $30 Coupon', btnLoading:'Signing up...',
-                              errEmail:'ID must be 4+ characters.', errPwLen:'ID & password must be 4+ characters.',
+                              errEmail:'ID must be 4+ characters.', errPwLen:'Password must be 6+ characters.',
                               errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
                               successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
                     };
@@ -2664,7 +2664,7 @@ window._tcmFallbackClick = function(code) {
                         var pw = ($('quickSignupPw').value || '');
                         var pwc = ($('quickSignupPwc').value || '');
                         if (raw.length < 4) { alert(t.errEmail); return; }
-                        if (pw.length < 4)  { alert(t.errPwLen); return; }
+                        if (pw.length < 6)  { alert(t.errPwLen); return; }
                         if (pw !== pwc)     { alert(t.errPwMatch); return; }
                         // 2026-06-11: 이메일 형식 아니어도 OK — Supabase 합성 이메일 자동 부착, 원본은 username 보존
                         var em = raw.toLowerCase();
