@@ -1402,6 +1402,8 @@ window._tcmFallbackClick = function(code) {
             #mgrPhoneList { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:8px; }
             /* 2026-06-12: JP/US LINE QR 카드는 항상 전체 너비 차지 → 라벨 가로로 깔끔 표시 */
             #mgrPhoneList #mgrPhoneJpQr { grid-column:1 / -1; }
+            /* 2026-06-12: KR 본사·이메일 카드는 PC 에서도 풀와이드 (강조) — 매니저 4명만 2/3 열로 그리드 분포 */
+            #mgrPhoneList > .mgr-kr-only { grid-column:1 / -1; }
             @media (max-width: 600px) {
                 #mgrPhoneList { grid-template-columns:repeat(2, 1fr); }
                 #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
@@ -2195,6 +2197,17 @@ window._tcmFallbackClick = function(code) {
                     <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
                     <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
                 </div>
+                <!-- 2026-06-12: KR 전용 이메일 카드 — 매니저 4명 아래 풀와이드 -->
+                <a id="mgrPhoneKrEmail" href="mailto:design@chameleon.design" class="mgr-kr-only" style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:linear-gradient(135deg,rgba(251,191,36,0.18) 0%,rgba(217,119,6,0.12) 100%); border:1.5px solid rgba(251,191,36,0.5); border-radius:12px; text-decoration:none; color:#fff; grid-column:1 / -1; box-shadow:0 4px 14px rgba(251,191,36,0.18);">
+                    <div style="flex-shrink:0; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#fbbf24,#d97706); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(251,191,36,0.4);">
+                        <i class="fa-solid fa-envelope" style="font-size:20px; color:#fff;"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:11px; color:#fde047; font-weight:700; letter-spacing:0.5px; margin-bottom:3px;">이메일 문의 · 대표 이메일</div>
+                        <div style="font-size:15px; color:#fff; font-weight:900; word-break:break-all;">design@chameleon.design</div>
+                        <div style="font-size:10.5px; color:rgba(255,255,255,0.6); margin-top:3px;">24시간 내 회신 · 대용량 파일 전송 가능</div>
+                    </div>
+                </a>
             </div>
             <script>
             // 2026-05-14: 매니저 전화번호 DB 동적 로드 (chatbot_knowledge.category='_managers')

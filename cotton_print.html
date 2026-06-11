@@ -1632,8 +1632,29 @@ async function submitRollFabricRequest() {
             <button type="button" onclick="window._cpClosePhoneModal()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer; line-height:1;">✕</button>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;">
+            <!-- 2026-06-12: KR 전용 — 본사 직통 + 매니저 4명 (위→아래). 다른 로케일에서는 숨김 -->
+            <div id="cpPhoneKr" style="display:none; flex-direction:column; gap:10px;">
+                <!-- 본사 직통 (031-366-1984) -->
+                <a class="cpct-card" href="tel:0313661984" style="display:flex; flex-direction:column; gap:10px; padding:14px 14px; background:rgba(251,191,36,0.12); border:1.5px solid rgba(251,191,36,0.5); border-radius:12px; text-decoration:none; color:#fff;">
+                    <div class="cpct-head">
+                        <div class="cpct-avatar" style="background:linear-gradient(135deg,#fbbf24,#d97706);"><i class="fa-solid fa-building"></i></div>
+                        <div class="cpct-info">
+                            <div class="cpct-role" style="color:#fcd34d;">본사 (대한민국)</div>
+                            <div class="cpct-phone">031-366-1984</div>
+                            <div class="cpct-sub">평일 09:00 - 18:00 KST</div>
+                        </div>
+                    </div>
+                </a>
+                <!-- 매니저 4명 (DB chatbot_knowledge._managers 로드) -->
+                <div id="cpPhoneKrMgrs" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:11px; color:rgba(255,255,255,0.5);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:11px; color:rgba(255,255,255,0.5);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:11px; color:rgba(255,255,255,0.5);">⌛ 로딩중...</div>
+                    <div style="padding:12px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; text-align:center; font-size:11px; color:rgba(255,255,255,0.5);">⌛ 로딩중...</div>
+                </div>
+            </div>
             <!-- 2026-06-12: 듀얼 매니저 카드 — Hyerim Seo Director (보라) + Hiba International (핑크).
-                 cpPhoneHiba 컨테이너는 두 카드 묶음. JP 사이트에서만 숨김 -->
+                 cpPhoneHiba 컨테이너는 두 카드 묶음. JP/KR 에서 숨김 -->
             <div id="cpPhoneHiba" style="display:flex; flex-direction:column; gap:10px;">
                 <style>
                     .cpct-card { display:flex; flex-direction:column; gap:10px; padding:14px 14px; border-radius:12px; border:1.5px solid; }
@@ -1802,14 +1823,68 @@ async function submitRollFabricRequest() {
     if ($('cpPhoneHQLabel'))     $('cpPhoneHQLabel').textContent     = t.hqLabel;
     if ($('cpPhoneHQHours'))     $('cpPhoneHQHours').textContent     = t.hqHours;
     if ($('cpPhoneModalHint'))   $('cpPhoneModalHint').textContent   = t.modalHint;
-    // 2026-06-11: 로케일별 전화 카드 분기
-    //   JP: ナナミ 전화 + QR 만 노출 (Hiba/HQ 숨김)
-    //   KR/EN/etc: Hiba + HQ 노출 (Nanami/QR 숨김)
-    if (lang === 'ja') {
+    // 2026-06-12: 로케일별 전화 카드 분기
+    //   KR:  본사+매니저 4명 (cpPhoneKr) + 이메일 (cpPhoneHQ). Hyerim/Hiba 숨김
+    //   JP:  ナナミ + LINE QR. Hyerim/Hiba/본사/Email 모두 숨김
+    //   EN+: Hyerim+Hiba (cpPhoneHiba) + 이메일 (cpPhoneHQ). 본사+매니저 숨김
+    if (lang === 'ko') {
+        var kr   = $('cpPhoneKr');   if (kr)   kr.style.display = 'flex';
+        var hiba = $('cpPhoneHiba'); if (hiba) hiba.style.display = 'none';
+        // cpPhoneHQ (이메일) 그대로 표시
+        _loadCpKrMgrs();
+    } else if (lang === 'ja') {
         var hiba = $('cpPhoneHiba'); if (hiba) hiba.style.display = 'none';
         var hq   = $('cpPhoneHQ');   if (hq)   hq.style.display = 'none';
         var nan  = $('cpPhoneNanami');   if (nan)  nan.style.display = 'flex';
         var qr   = $('cpPhoneNanamiQr'); if (qr)   qr.style.display = 'flex';
+    }
+    // 매니저 4명 동적 로드 (chatbot_knowledge._managers) — KR 전용
+    async function _loadCpKrMgrs() {
+        var slot = $('cpPhoneKrMgrs');
+        if (!slot) return;
+        var _SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+        var _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+        try {
+            var sb = window.sb;
+            if (!sb && typeof supabase !== 'undefined') {
+                sb = supabase.createClient(_SB_URL, _SB_KEY, { auth:{ persistSession:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' } });
+                window.sb = sb;
+            }
+            if (!sb) { slot.style.display = 'none'; return; }
+            var res = await sb.from('chatbot_knowledge').select('question,answer,is_active,keywords').eq('category','_managers');
+            if (res.error || !res.data) { slot.style.display = 'none'; return; }
+            var FIELD = ['은미','성희','지숙','연두'];
+            var rows = (res.data || []).filter(function(r){ return FIELD.some(function(n){ return (r.question||'').includes(n); }); });
+            rows.sort(function(a,b){
+                var ai = FIELD.findIndex(function(n){ return (a.question||'').includes(n); });
+                var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
+                return ai - bi;
+            });
+            if (rows.length === 0) rows = (res.data || []).filter(function(r){ return r.is_active !== false; });
+            var html = rows.map(function(r){
+                var phone = '';
+                try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
+                if (!phone && r.keywords) phone = String(r.keywords).replace(/[^0-9-]/g, '');
+                var phoneFmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+                var tel = phone.replace(/-/g, '');
+                var off = r.is_active === false;
+                var nm = (r.question || '').replace(/[<>"'&]/g, '');
+                if (off) {
+                    return '<div style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:rgba(241,245,249,0.08); border:1.5px solid rgba(203,213,225,0.3); border-radius:10px; color:rgba(148,163,184,0.7); font-size:12px; font-weight:700; text-align:center;">'
+                      + '<span>🌴 <span style="text-decoration:line-through;">' + nm + '</span></span>'
+                      + '<span style="font-size:10.5px;">휴가중</span>'
+                      + '</div>';
+                }
+                return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center;">'
+                  + '<span>' + nm + '</span>'
+                  + '<b style="color:#fde047; font-size:12.5px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>'
+                  + '</a>';
+            }).join('');
+            if (html) slot.innerHTML = html;
+            else slot.style.display = 'none';
+        } catch (e) {
+            slot.style.display = 'none';
+        }
     }
     // 금액주문 모달
     if ($('cpQuoteModalTitle'))  $('cpQuoteModalTitle').textContent  = t.quoteTitle;
