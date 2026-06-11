@@ -223,12 +223,12 @@ window.__CD_I18N = {
     height_unl: { ko:'세로 (mm)', ja:'縦 (mm)', en:'Height (mm)' },
     hoebae_label: { ko:'회배 (1m² 기준)', ja:'面積 (m²)', en:'Units (1m² base)' },
     hoebae_price: { ko:'회배 단가 × 회배 수', ja:'単価 × 数量', en:'Unit price × count' },
-    hoebae_hint: { ko:'회배 = 가로(mm) × 세로(mm) ÷ 1,000,000. 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 그 이상 회배×12,000원.', ja:'面積 = W × H ÷ 100万。 ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円。', en:'Units = W × H ÷ 1M. ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units.' },
+    hoebae_hint: { ko:'반마(8,000원) = 가로+세로 ≤ 1500mm. 1회배 미만 12,000원 / 1회배 이상 회배×12,000원. 배송비 별도 5,000원.', ja:'半マ(800円) = W+H ≤ 1500mm。 <1m² 1,200円 / ≥1m² m²×1,200円。 送料1,000円別。', en:'Half ($8) = W+H ≤ 1500mm. <1 unit $12 / ≥1 unit $12 × units. Shipping +$10.' },
     seam_notice: { ko:'⚠️ 가로·세로 둘 다 1300mm 초과 시 이어박기 처리됩니다 (+10,000원)', ja:'⚠️ 縦横ともに1300mm超の場合、継ぎ縫い処理となります (+1,000円)', en:'⚠️ Seam joining applies only when both width and height exceed 1300mm (+$10)' },
     seam_label: { ko:'이어박기 (대폭 초과)', ja:'継ぎ縫い (幅超過)', en:'Seam joining (oversize)' },
-    tier_half_notice: { ko:'🎉 0.5회배(반마) 이하는 6,000원 특가로 구매 가능합니다', ja:'🎉 0.5m²以下は600円の特価でご購入いただけます', en:'🎉 Half-meter or less (≤0.5 unit) only $6' },
-    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(10,000원)으로 청구됩니다', ja:'ℹ️ 1m²未満は1m²価格(1,000円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($10)' },
-    tier_pricing_hint: { ko:'단가: 0.5회배 이하 8,000원 / 1회배 미만 12,000원 / 1회배 이상 회배×12,000원', ja:'単価: ≤0.5m² 800円 / <1m² 1,200円 / ≥1m² m²×1,200円', en:'Pricing: ≤0.5 unit $8 / <1 unit $12 / ≥1 unit $12 × units' },
+    tier_half_notice: { ko:'🎉 반마 특가 8,000원 (가로+세로 ≤ 1500mm)', ja:'🎉 半マ特価 800円 (W+H ≤ 1500mm)', en:'🎉 Half-tier special $8 (W+H ≤ 1500mm)' },
+    tier_min_notice: { ko:'ℹ️ 1회배 미만은 1회배 가격(12,000원)으로 청구됩니다', ja:'ℹ️ 1m²未満は1m²価格(1,200円)で請求されます', en:'ℹ️ Less than 1 unit is billed as 1 unit ($12)' },
+    tier_pricing_hint: { ko:'단가: 반마 8,000원 (가로+세로≤1500mm) / 1회배 미만 12,000원 / 1회배 이상 회배×12,000원', ja:'単価: 半マ 800円 (W+H≤1500mm) / <1m² 1,200円 / ≥1m² m²×1,200円', en:'Pricing: Half $8 (W+H≤1500mm) / <1 unit $12 / ≥1 unit $12 × units' },
     side_finish: { ko:'원단 마감', ja:'生地仕上げ', en:'Fabric Finishing' },
     finish_required: { ko:'필수 / 제곱미터당', ja:'必須 / m²あたり', en:'Required / per m²' },
     finish_roll: { ko:'롤인쇄', ja:'ロール印刷', en:'Roll Print' },
@@ -1923,7 +1923,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=84"></script>
+<script src="/cotton_designer.js?v=85"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

@@ -326,6 +326,8 @@ window._cdUploadImage = async function(files) {
                 state.orderHcm = state.imgHcm;
                 const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
                 const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
+                // 2026-06-12: 이미지 업로드 후 회배/가격 즉시 재계산 (안 하면 기본 1.30 표시되던 버그)
+                try { if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae(); } catch(e) {}
             } else {
                 state.imgWcm = 10;
                 state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
@@ -864,26 +866,35 @@ window._cdToggleCollapse = function(id, head) {
     if (card) card.classList.toggle('open', !open);
 };
 
-// 회배 청구 단위 — 0.5 이하는 0.5(반마), 0.5< x <1 은 1, 그 이상은 실제 회배
+// 2026-06-12: 반마 기준 변경 — 가로+세로 ≤ 1500mm 이면 반마 (면적 기준 X).
+//   사용자 요구: "가로 세로 합 1500mm 이하면 반마여야 하고".
+function _cdIsHalfTier() {
+    // state.orderWcm/Hcm 는 cm. 합산은 mm 기준이라 ×10.
+    var wMm = (state.orderWcm || 0) * 10;
+    var hMm = (state.orderHcm || 0) * 10;
+    return (wMm + hMm) <= 1500;
+}
+
+// 회배 청구 단위 — 반마=0.5 / 0.5< x <1 은 1 / 그 이상은 실제 회배
 function calcBillableHoebae() {
+    if (_cdIsHalfTier()) return 0.5;
     var h = calcHoebae();
-    if (h <= 0.5) return 0.5;
     if (h < 1) return 1;
     return h;
 }
 
-// 출력 단가 — 반마(≤0.5)는 8,000원 / 1배 미만은 15,000원 / 1배 이상은 회배×15,000
+// 출력 단가 — 반마(W+H≤1500)는 8,000원 / 1배 미만은 12,000원 / 1배 이상은 회배×12,000
 function calcItemPrice() {
+    if (_cdIsHalfTier()) return HALF_HOEBAE_PRICE;   // 반마 특가
     var h = calcHoebae();
-    if (h <= 0.5) return HALF_HOEBAE_PRICE;          // 반마 특가
     if (h < 1) return HOEBAE_UNIT_PRICE;             // 1회배 미만은 1회배 가격
     return Math.round(h * HOEBAE_UNIT_PRICE);
 }
 
 // 현재 사이즈가 어느 단계인지 — 표시용 라벨
 function getHoebaeTier() {
+    if (_cdIsHalfTier()) return 'half';
     var h = calcHoebae();
-    if (h <= 0.5) return 'half';
     if (h < 1) return 'min';
     return 'full';
 }
