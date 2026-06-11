@@ -453,6 +453,17 @@ img, video, canvas { max-width: 100%; height: auto; }
             <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰</span>
         </a>
         <nav class="nav-links">
+            <!-- 2026-06-11: 로그인 / 회원가입 버튼 — 같은 페이지에서 동작 (cpAuth 모달) -->
+            <button id="cpAuthLoginBtn" type="button" onclick="window._cpOpenAuth && window._cpOpenAuth('login')" style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 3px 10px rgba(99,102,241,0.35);">
+                <i class="fa-solid fa-user" style="font-size:11px; margin-right:4px;"></i><span id="cpLoginBtnLbl">로그인</span>
+            </button>
+            <!-- 로그인 상태일 때 보이는 본인 메뉴 -->
+            <div id="cpAuthLoggedIn" style="display:none; align-items:center; gap:8px;">
+                <span id="cpAuthUserLabel" style="font-size:12px; color:var(--brown-dark); font-weight:700;"></span>
+                <button type="button" onclick="window._cpDoLogout && window._cpDoLogout()" style="background:#fff; color:var(--brown); border:1.5px solid var(--cream-dark); padding:6px 12px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;">
+                    <span id="cpLogoutLbl">로그아웃</span>
+                </button>
+            </div>
             <!-- 국기 언어 전환 -->
             <div class="cp-lang-flags" style="display:flex; gap:4px; align-items:center; margin-left:8px;">
                 <button class="cp-flag" data-lang="ko" onclick="cpSwitchLang('ko')" title="한국어">🇰🇷</button>
@@ -1146,16 +1157,13 @@ window._cottonSearch = function(){
         if (raw.length < 4) { alert(t.errEmail); return; }
         if (pw.length < 6)  { alert(t.errPwLen); return; }
         if (pw !== pwc)     { alert(t.errPwMatch); return; }
-        // 2026-06-11: 이메일 형식 아니어도 OK — Supabase 는 email 필요해서 합성 도메인 자동 부착.
-        //   원본 ID 는 profiles.username 에 보존.
+        // 2026-06-11: 이메일 형식 아니어도 OK — login.js 와 동일하게 @cafe2626.com 자동 부착
+        //   (크로스사이트 로그인 호환성 유지). 원본 ID 는 profiles.username 에 보존.
         var em = raw.toLowerCase();
         var origUsername = null;
         if (em.indexOf('@') < 0) {
             origUsername = raw;
-            // 영숫자/언더스코어/하이픈만 남기고 합성 이메일 생성
-            var safe = em.replace(/[^a-z0-9_.-]/g, '');
-            if (safe.length < 3) safe = 'user' + safe;
-            em = safe + '@cp.localid'; // 합성 로컬 도메인
+            em = raw + '@cafe2626.com';
         }
         var btn = $('cpQuickSignupBtn'); var lbl = $('cpQuickSignupBtnLbl');
         btn.disabled = true;
@@ -4646,6 +4654,206 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     <script src="/jp-nanami-fab.js?v=2" defer></script>
+
+<!-- 2026-06-11: 로그인 / 회원가입 모달 (cotton 페이지 전용 — 메인 도메인 cafe2626.com 과 호환) -->
+<div id="cpAuthModal" style="display:none; position:fixed; inset:0; z-index:60001; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._cpCloseAuth()">
+    <div style="background:#fff; border-radius:16px; padding:24px 22px; width:100%; max-width:380px; box-shadow:0 30px 60px -10px rgba(0,0,0,0.4); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div style="font-size:17px; font-weight:900; color:#1f2937;" id="cpAuthTitle">로그인</div>
+            <button type="button" onclick="window._cpCloseAuth()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:#f3f4f6; color:#374151; font-size:18px; cursor:pointer; line-height:1;">✕</button>
+        </div>
+        <input id="cpAuthId" type="text" autocomplete="username" placeholder="아이디 또는 이메일" style="width:100%; padding:11px 14px; border:1.5px solid #d1d5db; border-radius:9px; font-size:14px; margin-bottom:8px; box-sizing:border-box; font-family:inherit;">
+        <input id="cpAuthPw" type="password" autocomplete="current-password" placeholder="비밀번호" style="width:100%; padding:11px 14px; border:1.5px solid #d1d5db; border-radius:9px; font-size:14px; margin-bottom:8px; box-sizing:border-box; font-family:inherit;">
+        <input id="cpAuthPwc" type="password" autocomplete="new-password" placeholder="비밀번호 확인" style="display:none; width:100%; padding:11px 14px; border:1.5px solid #d1d5db; border-radius:9px; font-size:14px; margin-bottom:8px; box-sizing:border-box; font-family:inherit;">
+        <button type="button" id="cpAuthSubmit" onclick="window._cpDoAuth && window._cpDoAuth()" style="width:100%; padding:13px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 6px 18px -4px rgba(99,102,241,0.4); font-family:inherit; margin-top:6px;">
+            <span id="cpAuthSubmitLbl">로그인</span>
+        </button>
+        <div style="text-align:center; margin-top:12px; font-size:12.5px; color:#6b7280;">
+            <span id="cpAuthSwitchTip">계정이 없으신가요?</span>
+            <a href="javascript:void(0)" onclick="window._cpSwitchAuthMode && window._cpSwitchAuthMode()" style="color:#4338ca; font-weight:700; text-decoration:none; margin-left:4px;" id="cpAuthSwitchLink">회원가입</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// 2026-06-11: cotton 로그인 / 회원가입 모달 — login.js 와 동일한 cafe2626.com 도메인 사용 → 메인 사이트와 세션 호환
+(function(){
+    function $(id){ return document.getElementById(id); }
+    var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    var lang = window.__PS_LANG || (function(){
+        var h = location.hostname;
+        if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
+        if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
+        return 'ko';
+    })();
+    var T = {
+        ko: { login:'로그인', signup:'회원가입', logout:'로그아웃',
+              loginTitle:'로그인', signupTitle:'회원가입',
+              phId:'아이디 또는 이메일', phPw:'비밀번호', phPwc:'비밀번호 확인',
+              switchToSignup:'계정이 없으신가요?', switchToLogin:'이미 계정이 있으신가요?',
+              linkSignup:'회원가입', linkLogin:'로그인',
+              errInput:'아이디와 비밀번호를 입력해주세요.', errPwMatch:'비밀번호가 일치하지 않습니다.',
+              errLogin:'로그인 실패: 아이디 또는 비밀번호를 확인해주세요.', errSignup:'가입 실패:',
+              loginSuccess:'로그인 완료!', signupSuccess:'가입 완료! 3만원 쿠폰 자동 지급.' },
+        ja: { login:'ログイン', signup:'会員登録', logout:'ログアウト',
+              loginTitle:'ログイン', signupTitle:'会員登録',
+              phId:'ID または メール', phPw:'パスワード', phPwc:'パスワード確認',
+              switchToSignup:'アカウントをお持ちでない方は', switchToLogin:'すでにアカウントをお持ちの方は',
+              linkSignup:'会員登録', linkLogin:'ログイン',
+              errInput:'IDとパスワードを入力してください。', errPwMatch:'パスワードが一致しません。',
+              errLogin:'ログイン失敗: IDまたはパスワードをご確認ください。', errSignup:'登録失敗:',
+              loginSuccess:'ログイン完了!', signupSuccess:'登録完了! 3,000円クーポン自動付与。' },
+        en: { login:'Login', signup:'Sign Up', logout:'Logout',
+              loginTitle:'Login', signupTitle:'Create Account',
+              phId:'ID or email', phPw:'Password', phPwc:'Confirm password',
+              switchToSignup:"Don't have an account?", switchToLogin:'Already have an account?',
+              linkSignup:'Sign up', linkLogin:'Login',
+              errInput:'Please enter ID and password.', errPwMatch:"Passwords don't match.",
+              errLogin:'Login failed: please check your ID/password.', errSignup:'Signup failed:',
+              loginSuccess:'Logged in!', signupSuccess:'Welcome! $30 coupon credited.' }
+    };
+    var t = T[lang] || T.ko;
+    // 헤더 버튼 라벨
+    if ($('cpLoginBtnLbl')) $('cpLoginBtnLbl').textContent = t.login;
+    if ($('cpLogoutLbl'))   $('cpLogoutLbl').textContent   = t.logout;
+
+    var isSignupMode = false;
+
+    function _applyLabels() {
+        if ($('cpAuthTitle')) $('cpAuthTitle').textContent = isSignupMode ? t.signupTitle : t.loginTitle;
+        if ($('cpAuthId'))   $('cpAuthId').placeholder = t.phId;
+        if ($('cpAuthPw'))   $('cpAuthPw').placeholder = t.phPw;
+        if ($('cpAuthPwc'))  { $('cpAuthPwc').placeholder = t.phPwc; $('cpAuthPwc').style.display = isSignupMode ? 'block' : 'none'; }
+        if ($('cpAuthSubmitLbl')) $('cpAuthSubmitLbl').textContent = isSignupMode ? t.signup : t.login;
+        if ($('cpAuthSwitchTip')) $('cpAuthSwitchTip').textContent = isSignupMode ? t.switchToLogin : t.switchToSignup;
+        if ($('cpAuthSwitchLink')) $('cpAuthSwitchLink').textContent = isSignupMode ? t.linkLogin : t.linkSignup;
+    }
+
+    window._cpOpenAuth = function(mode){
+        isSignupMode = (mode === 'signup');
+        _applyLabels();
+        var m = $('cpAuthModal'); if (!m) return;
+        if (m.parentNode !== document.body) { try { document.body.appendChild(m); } catch(e){} }
+        m.style.display = 'flex'; document.body.style.overflow = 'hidden';
+        setTimeout(function(){ var i = $('cpAuthId'); if (i) i.focus(); }, 80);
+    };
+    window._cpCloseAuth = function(){
+        var m = $('cpAuthModal'); if (!m) return;
+        m.style.display = 'none'; document.body.style.overflow = '';
+    };
+    window._cpSwitchAuthMode = function(){
+        isSignupMode = !isSignupMode;
+        _applyLabels();
+    };
+
+    function _getSb() {
+        var sb = window.sb;
+        if (!sb && typeof supabase !== 'undefined') {
+            sb = supabase.createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } });
+            window.sb = sb;
+        }
+        return sb;
+    }
+
+    window._cpDoAuth = async function(){
+        var raw = ($('cpAuthId').value || '').trim();
+        var pw = ($('cpAuthPw').value || '');
+        var pwc = ($('cpAuthPwc').value || '');
+        if (!raw || !pw) { alert(t.errInput); return; }
+        if (isSignupMode && pw !== pwc) { alert(t.errPwMatch); return; }
+        // 이메일 합성 — login.js 와 동일하게 cafe2626.com
+        var em = raw.toLowerCase();
+        var origUsername = null;
+        if (em.indexOf('@') < 0) { origUsername = raw; em = raw + '@cafe2626.com'; }
+        // 패스워드 패딩 — login.js 와 동일하게 6자 미만이면 0 패딩
+        var padded = pw;
+        while (padded.length < 6) padded += '0';
+
+        var btn = $('cpAuthSubmit'); var lbl = $('cpAuthSubmitLbl');
+        btn.disabled = true;
+        var prev = lbl ? lbl.textContent : '';
+        if (lbl) lbl.textContent = '...';
+        try {
+            var sb = _getSb();
+            if (!sb) throw new Error('DB');
+            if (isSignupMode) {
+                var up = await sb.auth.signUp({ email: em, password: padded });
+                if (up.error) throw new Error(up.error.message);
+                // 가입 즉시 로그인
+                var inResp = await sb.auth.signInWithPassword({ email: em, password: padded });
+                if (inResp.error) throw new Error(inResp.error.message);
+                // profile credit 30k
+                var uid = inResp.data && inResp.data.user && inResp.data.user.id;
+                if (uid) {
+                    try {
+                        var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
+                        var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
+                        if (!hasCoupon) {
+                            var payload = { id: uid, email: em, event_coupon: 30000 };
+                            if (origUsername) payload.username = origUsername;
+                            await sb.from('profiles').upsert(payload, { onConflict: 'id' });
+                        } else if (origUsername) {
+                            await sb.from('profiles').update({ username: origUsername }).eq('id', uid).is('username', null);
+                        }
+                    } catch(e) { console.warn('[cp credit]', e); }
+                }
+                alert(t.signupSuccess);
+            } else {
+                var inResp2 = await sb.auth.signInWithPassword({ email: em, password: padded });
+                if (inResp2.error) throw new Error(inResp2.error.message);
+                alert(t.loginSuccess);
+            }
+            window._cpCloseAuth();
+            _refreshAuthUI();
+        } catch(e){
+            console.error('[cp auth]', e);
+            alert((isSignupMode ? t.errSignup : t.errLogin) + ' ' + (e.message || ''));
+        } finally {
+            btn.disabled = false;
+            if (lbl) lbl.textContent = prev;
+        }
+    };
+
+    window._cpDoLogout = async function(){
+        var sb = _getSb(); if (!sb) return;
+        try { await sb.auth.signOut(); } catch(e){}
+        _refreshAuthUI();
+    };
+
+    async function _refreshAuthUI() {
+        var sb = _getSb(); if (!sb) return;
+        var sess = await sb.auth.getSession();
+        var user = sess && sess.data && sess.data.session && sess.data.session.user;
+        if (user) {
+            // username 우선 표시
+            var label = (user.email || '').split('@')[0];
+            try {
+                var prf = await sb.from('profiles').select('username').eq('id', user.id).maybeSingle();
+                if (prf && prf.data && prf.data.username) label = prf.data.username;
+            } catch(e){}
+            if ($('cpAuthLoginBtn')) $('cpAuthLoginBtn').style.display = 'none';
+            var li = $('cpAuthLoggedIn'); if (li) li.style.display = 'inline-flex';
+            if ($('cpAuthUserLabel')) $('cpAuthUserLabel').textContent = label;
+        } else {
+            if ($('cpAuthLoginBtn')) $('cpAuthLoginBtn').style.display = 'inline-block';
+            var li2 = $('cpAuthLoggedIn'); if (li2) li2.style.display = 'none';
+        }
+    }
+    setTimeout(_refreshAuthUI, 400);
+
+    // Enter 키 처리
+    ['cpAuthId','cpAuthPw','cpAuthPwc'].forEach(function(id){
+        var el = $(id); if (el) el.addEventListener('keydown', function(e){ if (e.key === 'Enter') window._cpDoAuth(); });
+    });
+    // ESC 닫기
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+            var m = $('cpAuthModal'); if (m && m.style.display === 'flex') window._cpCloseAuth();
+        }
+    });
+})();
+</script>
 
 <!-- 2026-06-11: 주문조회 모달 — 전화번호 뒷 4자리 입력 → 접수상태 + 예상 배송일 -->
 <div id="cpOrderLookupModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._cpCloseOrderLookup()">

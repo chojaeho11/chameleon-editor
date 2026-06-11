@@ -2666,14 +2666,12 @@ window._tcmFallbackClick = function(code) {
                         if (raw.length < 4) { alert(t.errEmail); return; }
                         if (pw.length < 6)  { alert(t.errPwLen); return; }
                         if (pw !== pwc)     { alert(t.errPwMatch); return; }
-                        // 2026-06-11: 이메일 형식 아니어도 OK — Supabase 합성 이메일 자동 부착, 원본은 username 보존
+                        // 2026-06-11: 이메일 형식 아니어도 OK — login.js 와 동일하게 @cafe2626.com 자동 부착
                         var em = raw.toLowerCase();
                         var origUsername = null;
                         if (em.indexOf('@') < 0) {
                             origUsername = raw;
-                            var safe = em.replace(/[^a-z0-9_.-]/g, '');
-                            if (safe.length < 3) safe = 'user' + safe;
-                            em = safe + '@cp.localid';
+                            em = raw + '@cafe2626.com';
                         }
                         var btn = $('quickSignupBtn'); var lbl = $('quickSignupBtnLbl');
                         btn.disabled = true;
