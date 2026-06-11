@@ -2406,8 +2406,8 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-05-15: 종이매대 전용 — 100개 이상 무료배송 (크게 표시) -->
           <button type="button" class="so-ship-btn so-ship-pd-bulk" data-ship="pd_bulk_free" onclick="window._soPickShip('pd_bulk_free')" style="display:none; width:100%; margin-bottom:12px; padding:16px 18px; font-size:15px; font-weight:900; border-radius:14px; background:linear-gradient(135deg,#10b981 0%, #059669 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); letter-spacing:0.3px;">
-            ${tr('최소 주문수량 100개', '最小注文数量 100個', 'Minimum order: 100 pcs')}
-            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('포장 없이 벌크 무료배송 (기본)', '梱包なしバルク無料配送 (標準)', 'Bulk shipping (no packaging) — FREE default')}</div>
+            ${tr('개별포장 없는 벌크포장 무료', '個別梱包なしバルク梱包 無料', 'Bulk packaging (no individual wrap) — FREE')}
+            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('기본 배송 방식 · 최소 주문수량 100개', '標準配送方式 · 最小注文数量 100個', 'Default shipping · MOQ 100 pcs')}</div>
           </button>
           <!-- 2026-06-01: 묶음배송 토글 버튼 제거 — 카트 합계 시 자동 처리 (가장 큰 배송비 1건만 부과) -->
           <button type="button" id="soBundleShipBtn" style="display:none;"></button>
@@ -7757,23 +7757,13 @@ html, body { background: #ffffff !important; }
                 fmtPrice(15000) + ' × ' + boxes + tr('박스', '箱', ' boxes') + ' = ' + fmtPrice(total2) + '</span>';
         }
         if (btnBulk) {
-            if (q >= 100) {
-                btnBulk.innerHTML = '' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
-                    '<div style="font-size:12px; font-weight:700; margin-top:4px; opacity:0.95;">' +
-                    tr('현재 ' + q + '개 — 무료배송 적용 가능', '' + q + '個 — 適用可能', '' + q + ' pcs — eligible') + '</div>';
-                btnBulk.disabled = false;
-                btnBulk.style.opacity = '1';
-                btnBulk.style.cursor = 'pointer';
-            } else {
-                btnBulk.innerHTML = '' + tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs') +
-                    '<div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.9;">' +
-                    tr('현재 ' + q + '개 — 100개 이상 시 자동 적용',
-                       '現在 ' + q + '個 — 100個以上で適用',
-                       'Currently ' + q + ' — applies at 100+ pcs') + '</div>';
-                // 시각적으로 dim 처리, 그러나 클릭은 가능 (수량 자동 보정)
-                btnBulk.style.opacity = '0.85';
-                btnBulk.style.cursor = 'pointer';
-            }
+            // 2026-06-12: 라벨 — "개별포장 없는 벌크포장 무료" (MOQ 100 강제이므로 분기 단순화)
+            btnBulk.innerHTML = '' + tr('개별포장 없는 벌크포장 무료', '個別梱包なしバルク梱包 無料', 'Bulk packaging (no individual wrap) — FREE') +
+                '<div style="font-size:12px; font-weight:700; margin-top:4px; opacity:0.95;">' +
+                tr('현재 ' + q + '개 — 기본 적용', '現在 ' + q + '個 — 標準適用', 'Currently ' + q + ' pcs — applied by default') + '</div>';
+            btnBulk.disabled = false;
+            btnBulk.style.opacity = '1';
+            btnBulk.style.cursor = 'pointer';
         }
     };
 
