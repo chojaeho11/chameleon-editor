@@ -219,7 +219,18 @@
 
             if (error) throw error;
 
-            const visible = (products || []).sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
+            // 2026-06-12: 종이 칸막이 (paper partition) 노출 제외 — 사용자 요청
+            const _EXCLUDE_KEYWORDS = ['칸막이', '간막이', 'partition', 'パーティション', '隔板'];
+            function _isExcluded(p) {
+                var names = [p.name_kr, p.name_jp, p.name_us, p.name_en, p.name_cn, p.name].filter(Boolean);
+                return names.some(function(n){
+                    var s = String(n || '').toLowerCase();
+                    return _EXCLUDE_KEYWORDS.some(function(k){ return s.indexOf(String(k).toLowerCase()) >= 0; });
+                });
+            }
+            const visible = (products || [])
+                .filter(function(p){ return !_isExcluded(p); })
+                .sort(function(a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
 
             grid.innerHTML = '';
 
