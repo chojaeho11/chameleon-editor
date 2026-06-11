@@ -1,5 +1,5 @@
-import { sb } from "./global_config.js?v=294";
-import { showLoading } from "./global_common.js?v=294";
+import { sb } from "./global_config.js?v=435";
+import { showLoading } from "./global_common.js?v=435";
 
 // [권한] 특수 관리자 (주문취소 복구 + 매니저 변경 허용)
 const _PRIV_EMAILS = ['doubleu202201@gmail.com', 'korea900as@gmail.com', 'seonyul661@gmail.com'];

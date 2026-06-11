@@ -2084,7 +2084,7 @@ window._tcmFallbackClick = function(code) {
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=439'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
+                            try { var mod = await import('./config.js?v=440'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
                         }
                         if (!sb) { console.warn('[mgrPhones] sb 미초기화 — 슬롯 정리'); _cleanupSlot(); return; }
                         // 1차 fetch 실패 시 1.5초 후 재시도 (모바일 네트워크 불안정 대응)
@@ -2953,7 +2953,7 @@ window._tcmFallbackClick = function(code) {
                 if (quoteId) _addPendingId(quoteId);
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=439'); sb = mod.sb || window.sb; }
+                    try { var mod = await import('./config.js?v=440'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
@@ -3212,7 +3212,7 @@ window._tcmFallbackClick = function(code) {
                 // 1) 주문의 items 를 카트에 로드
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=439'); sb = mod.sb || window.sb; } catch(e){}
+                    try { var mod = await import('./config.js?v=440'); sb = mod.sb || window.sb; } catch(e){}
                 }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var { data: order, error } = await sb
@@ -3314,7 +3314,7 @@ window._tcmFallbackClick = function(code) {
             try {
                 if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 처리중...'; }
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=439'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=440'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var em = '';
                 try { var { data: sess } = await sb.auth.getUser(); em = sess?.user?.email || ''; } catch (e) {}
@@ -9578,19 +9578,19 @@ window.filterFxCards = function(cat, btn) {
 <!-- 메인 페이지에서 ~16개 모듈, 약 1MB JS 다운로드/파싱 절감. -->
 <!-- 남은 정적 import: config(필수), order(필수, canvas-core/size/pages/export 도 자동 동반), login(필수), main(orchestrator). -->
 <!-- wall-3d-* 는 에디터 진입 후 wall 3D 미리보기에서 lazy-init 되도록 defer 유지. -->
-<script type="module" src="./config.js?v=439"></script>
+<script type="module" src="./config.js?v=440"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
-<script type="module" src="./order.js?v=462"></script>
-<script type="module" src="./login.js?v=437"></script>
-<script type="module" src="./main.js?v=446"></script>
+<script type="module" src="./order.js?v=463"></script>
+<script type="module" src="./login.js?v=438"></script>
+<script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=350"></script>
+<script src="/simple_order.js?v=351"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
 <script type="module">
-    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=434";
+    import { addNewPage, switchPage, deleteCurrentPage, goToPage } from "./canvas-pages.js?v=435";
     // HTML 버튼에서 onclick으로 쓰기 위해 전역 등록
     window.addPage = addNewPage;
     window.changePage = switchPage;
@@ -10814,10 +10814,10 @@ window.filterFxCards = function(cat, btn) {
 
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
-    import { canvas, setMaxLimits } from './canvas-core.js?v=434';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=462'; // [수정] 함수 추가됨
-    import { applySize } from './canvas-size.js?v=434';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=439';
+    import { canvas, setMaxLimits } from './canvas-core.js?v=435';
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=463'; // [수정] 함수 추가됨
+    import { applySize } from './canvas-size.js?v=435';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=440';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -11466,7 +11466,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=451').then(m => {
+        import('./advisor-panel.js?v=452').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
@@ -12620,7 +12620,7 @@ window.applyCanvasCrop = function() {
     });
 
     // 새 대지 크기 적용
-    import('./canvas-size.js?v=434').then(mod => {
+    import('./canvas-size.js?v=435').then(mod => {
         if (mod.applySize) {
             mod.applySize(Math.round(cropW), Math.round(cropH), 'CroppedCustom', 'standard', 'resize');
             // 오브젝트 다시 추가 (applySize가 resize 모드에서 보존)
@@ -15503,7 +15503,7 @@ if (w >= 20 && h >= 20) {
         const pricePerSheet = product._original_price || product.price || 0;
 
         // box-nesting.js의 calculateBoxPrice 동적 임포트
-        import('./box-nesting.js?v=434').then(mod => {
+        import('./box-nesting.js?v=435').then(mod => {
             const result = mod.calculateBoxPrice(w, h, d, pricePerSheet);
 
             if (result.error) {
@@ -16152,7 +16152,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=439')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=440')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -16204,7 +16204,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=439')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=440')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -16212,7 +16212,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=462');
+                    const m = await import('./order.js?v=463');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -16282,7 +16282,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=462').then(m => {
+            import('./order.js?v=463').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -16902,7 +16902,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=462').then(m => {
+        import('./order.js?v=463').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -17278,7 +17278,7 @@ if (w >= 20 && h >= 20) {
 
             setTimeout(async () => {
                 try {
-                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=434');
+                    const { initPaperDisplayPages } = await import('./canvas-pages.js?v=435');
                     initPaperDisplayPages(pd.widthMM, pd.heightMM, pd.adHeightMM, pd.shelfHeightMM, pd.depthMM, pd.bgColor, pd.shelfCount);
                 } catch (e) {
                     console.error('initPaperDisplayPages error:', e);
@@ -17655,7 +17655,7 @@ if (w >= 20 && h >= 20) {
 
         if (!window.isObjectsLoaded) {
             try {
-                await import('./canvas-objects.js?v=434');
+                await import('./canvas-objects.js?v=435');
                 window.isObjectsLoaded = true;
             } catch (e) {
                 console.error("스크립트 로딩 실패:", e);
@@ -19337,7 +19337,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=439';
+    import { sb, initConfig } from './config.js?v=440';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {
@@ -21525,7 +21525,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=462').then(function(mod) {
+            import('./order.js?v=463').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;

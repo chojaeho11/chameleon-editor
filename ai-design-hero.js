@@ -1,4 +1,4 @@
-import { sb } from './config.js?v=292';
+import { sb } from './config.js?v=440';
 
 // ── 다국어 ──
 function aiGetLang() {

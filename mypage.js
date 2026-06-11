@@ -1,4 +1,4 @@
-import { sb, initConfig, currentUser, cartData, PRODUCT_DB } from "./config.js?v=291";
+import { sb, initConfig, currentUser, cartData, PRODUCT_DB } from "./config.js?v=440";
 
 // KRW → 현지 통화 표시 헬퍼
 function fmtMoney(krw) {

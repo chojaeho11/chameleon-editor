@@ -248,7 +248,8 @@
       "Bash(awk '/<div class=\"hero-section\">/,/<!-- \\\\/.hero-section -->/' index.html)",
       "Bash(awk 'NR>=1387 && /^    <\\\\/div>$/{print NR; exit}' index.html)",
       "Bash(awk 'NR>=2560 && NR<=2575' index.html)",
-      "Bash(curl -s \"https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/admin_addons?select=code,name,price,price_jp,price_us,category_code&order=category_code.asc&limit=300\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y\" > /tmp/addons.json && wc -c /tmp/addons.json)"
+      "Bash(curl -s \"https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/admin_addons?select=code,name,price,price_jp,price_us,category_code&order=category_code.asc&limit=300\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y\" > /tmp/addons.json && wc -c /tmp/addons.json)",
+      "Bash(bash \"/c/tmp/unify_versions2.sh\")"
     ],
     "additionalDirectories": [
       "\\tmp",

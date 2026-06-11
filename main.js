@@ -1,8 +1,8 @@
 ﻿// main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=291";
-import { initOrderSystem } from "./order.js?v=454";
-import { initAuth } from "./login.js?v=291";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=440";
+import { initOrderSystem } from "./order.js?v=463";
+import { initAuth } from "./login.js?v=438";
 
 // 2026-05-30 perf: 에디터 모듈은 동적 import 로 변경 (runEditorInits 안에서 로드).
 // 메인 페이지 첫 로드에서 ~1MB JS 다운로드/파싱 절감. 에디터 진입 시 한 번만 로드.
@@ -138,12 +138,12 @@ window.addEventListener("DOMContentLoaded", async () => {
             const [coreM, sizeM, guidesM, zoomPanM, objsM, pagesM, imgM, tmplM,
                    aiM, retouchM, utilsM, iconsM, shortcutsM, ctxM, exportM,
                    myDesignM, videoM, pptM, greetingM] = await Promise.all([
-                import('./canvas-core.js?v=434'),
-                import('./canvas-size.js?v=434'),
-                import('./canvas-guides.js?v=434'),
+                import('./canvas-core.js?v=435'),
+                import('./canvas-size.js?v=435'),
+                import('./canvas-guides.js?v=435'),
                 import('./canvas-zoom-pan.js?v=434'),
-                import('./canvas-objects.js?v=294'),
-                import('./canvas-pages.js?v=434'),
+                import('./canvas-objects.js?v=435'),
+                import('./canvas-pages.js?v=435'),
                 import('./canvas-image.js?v=294'),
                 import('./canvas-template.js?v=294'),
                 import('./canvas-ai.js?v=434'),
@@ -152,7 +152,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 import('./canvas-icons.js?v=434'),
                 import('./shortcuts.js?v=434'),
                 import('./context-menu.js?v=434'),
-                import('./export.js?v=438'),
+                import('./export.js?v=439'),
                 import('./my-design.js?v=434'),
                 import('./video-maker.js?v=434'),
                 import('./ppt-mode.js?v=434'),

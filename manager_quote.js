@@ -4,7 +4,7 @@
 // 고객이 cafe2626.com/?quote=<id> 로 접속 시 메인 홈에 결제 배너 자동 표시
 // (index.html 의 pendingQuoteBanner 가 처리)
 
-import { sb } from './global_config.js?v=434';
+import { sb } from './global_config.js?v=435';
 
 // ─── State ──────────────────────────────────────────────
 let _mqRows = [];      // [{ code, name, qty, price }, ...]

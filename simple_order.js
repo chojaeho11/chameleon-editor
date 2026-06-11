@@ -1,7 +1,7 @@
 ﻿/* simple_order.js — 간편 주문 모달 (v=4 — 2단 레이아웃: 좌 업로드 / 우 옵션)
  *
  * 사용:
- *   <script src="simple_order.js?v=4"></script>
+ *   <script src="simple_order.js?v=351"></script>
  *   window.openSimpleOrderModal(productCode)   ← 어디서든 호출 가능
  *
  * 디자인 가이드:
@@ -5565,7 +5565,7 @@ html, body { background: #ffffff !important; }
     async function _soLoadBoxCalc() {
         if (_soBoxCalcModule) return _soBoxCalcModule;
         try {
-            _soBoxCalcModule = await import('./box-nesting.js?v=434');
+            _soBoxCalcModule = await import('./box-nesting.js?v=435');
             return _soBoxCalcModule;
         } catch (e) {
             console.warn('[simple_order] box-nesting load failed:', e);
@@ -12525,7 +12525,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=438');
+            var mod = await import('./export.js?v=439');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';

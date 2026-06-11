@@ -1,5 +1,5 @@
 // 관리자 안전거래 송금 처리
-import { sb } from "./global_config.js?v=294";
+import { sb } from "./global_config.js?v=435";
 
 window.loadSafeTxAdmin = async function(filter){
     filter = filter || 'received';
