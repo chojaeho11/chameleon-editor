@@ -1,7 +1,22 @@
 import { canvas } from "./canvas-core.js?v=294";
-import { ADDON_DB, currentUser, sb } from "./config.js?v=294";
+import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=294";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=294"; // 페이지 인덱스 가져오기
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=294";
+
+// 2026-06-11: config.js 가 파일별로 ?v= 가 달라 모듈 인스턴스가 분리됨 (export.js?v=294 / index.html?v=439 등).
+//   index.html 만 initConfig() 를 실행해 ADDON_DB 를 채우고 window.ADDON_DB 에 노출.
+//   export.js 가 import 한 ADDON_DB 는 빈 객체로 남아 견적서에서 b0001 등 addon 가격 누락.
+//   getter 로 항상 window.ADDON_DB 를 우선 사용.
+const ADDON_DB = new Proxy({}, {
+    get(_, key) {
+        const live = (typeof window !== 'undefined' && window.ADDON_DB) ? window.ADDON_DB : _IMPORTED_ADDON_DB;
+        return live ? live[key] : undefined;
+    },
+    has(_, key) {
+        const live = (typeof window !== 'undefined' && window.ADDON_DB) ? window.ADDON_DB : _IMPORTED_ADDON_DB;
+        return live ? (key in live) : false;
+    }
+});
 
 // [안전장치] 언어별 기본 폰트 URL 설정
 const FONT_CONFIG = {
