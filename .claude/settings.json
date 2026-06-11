@@ -251,7 +251,8 @@
       "Bash(curl -s \"https://qinvtnhiidtmrzosyvys.supabase.co/rest/v1/admin_addons?select=code,name,price,price_jp,price_us,category_code&order=category_code.asc&limit=300\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y\" > /tmp/addons.json && wc -c /tmp/addons.json)",
       "Bash(bash \"/c/tmp/unify_versions2.sh\")",
       "Bash(awk '/<section|<\\\\/section|<!--.*섹션|class=\"adv|<div id=\"cp/' cotton_print.html)",
-      "Bash(cd \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" && sed -i 's|jp-nanami-fab\\\\.js?v=1|jp-nanami-fab.js?v=2|g' *.html)"
+      "Bash(cd \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" && sed -i 's|jp-nanami-fab\\\\.js?v=1|jp-nanami-fab.js?v=2|g' *.html)",
+      "Bash(awk 'NR<=364 || NR>=579' \"c:/Users/win 10/Desktop/작업/jp_track.html\")"
     ],
     "additionalDirectories": [
       "\\tmp",

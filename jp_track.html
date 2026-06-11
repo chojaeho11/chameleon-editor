@@ -18,25 +18,35 @@ a { text-decoration:none; color:inherit; }
 .jpt-bg-overlay { position:fixed; inset:0; background:linear-gradient(180deg, rgba(12,10,9,0.85) 0%, rgba(12,10,9,0.95) 100%); z-index:1; }
 
 .jpt-wrap { position:relative; z-index:2; min-height:100vh; padding:24px 16px 60px; }
-.jpt-header { max-width:760px; margin:0 auto 20px; text-align:center; }
-.jpt-logo { font-family:'Anton','Noto Sans JP',sans-serif; font-size:36px; font-weight:900; letter-spacing:3px; }
-.jpt-logo .yellow { background:linear-gradient(135deg,#fef3c7 0%,#fde047 30%,#facc15 60%,#f59e0b 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; padding-left:8px; }
-.jpt-logo .white { color:#fff; }
-.jpt-sub { color:#faf6ed; font-size:13px; margin-top:4px; opacity:0.85; letter-spacing:0.5px; }
 
-.jpt-card { max-width:540px; margin:0 auto 18px; background:#fff; border-radius:18px; padding:28px 24px; box-shadow:0 14px 50px rgba(0,0,0,0.45); }
-.jpt-card h2 { font-size:18px; font-weight:900; color:#1e293b; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
-.jpt-card .desc { font-size:12.5px; color:#64748b; margin-bottom:18px; line-height:1.7; }
+/* 2026-06-12: cotton_print 주문조회 모달과 동일한 다크 카드 UI */
+.jpt-back-fixed { position:fixed; top:14px; left:14px; z-index:50; display:inline-flex; align-items:center; gap:6px; padding:9px 14px; background:rgba(255,255,255,0.95); color:#451a03; border:1.5px solid rgba(255,255,255,0.5); border-radius:50px; font-size:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,0.3); }
+.jpt-back-fixed:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,0.4); }
 
-.jpt-label { display:block; font-size:11.5px; font-weight:700; color:#475569; margin:14px 0 6px; letter-spacing:0.3px; }
-.jpt-input { width:100%; padding:13px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:15px; font-family:inherit; background:#f8fafc; transition:all 0.2s; }
-.jpt-input:focus { outline:none; border-color:#06C755; background:#fff; box-shadow:0 0 0 3px rgba(6,199,85,0.1); }
-.jpt-input::placeholder { color:#cbd5e1; }
-.jpt-hint { font-size:11px; color:#94a3b8; margin-top:4px; }
+.jpt-card { max-width:480px; margin:32px auto 18px; background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px 22px; box-shadow:0 30px 60px -10px rgba(0,0,0,0.85); }
+.jpt-card .jpt-cardhead { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.jpt-card .jpt-cardtitle { font-size:17px; font-weight:900; color:#fde047; letter-spacing:-0.01em; }
+.jpt-card .jpt-cardclose { width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center; }
+.jpt-card .jpt-cardclose:hover { background:rgba(255,255,255,0.2); }
+.jpt-card .desc { font-size:12.5px; color:rgba(255,255,255,0.7); margin-bottom:14px; line-height:1.65; }
 
-.jpt-btn { width:100%; margin-top:18px; padding:14px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border:none; border-radius:11px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:0.5px; box-shadow:0 6px 18px rgba(6,199,85,0.4); transition:all 0.2s; }
-.jpt-btn:hover { transform:translateY(-1px); box-shadow:0 8px 22px rgba(6,199,85,0.5); }
-.jpt-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+/* 로그인 카드 — 보라 그라데이션 */
+.jpt-loggedin { padding:12px 14px; margin-bottom:10px; background:rgba(99,102,241,0.15); border:1.5px solid rgba(99,102,241,0.45); border-radius:10px; }
+.jpt-loggedin-lbl { font-size:11.5px; color:#a5b4fc; font-weight:700; letter-spacing:0.3px; margin-bottom:4px; }
+.jpt-loggedin-user { font-size:13.5px; color:#fff; font-weight:800; margin-bottom:10px; }
+.jpt-byme-btn { width:100%; padding:12px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; border-radius:9px; font-size:13.5px; font-weight:900; cursor:pointer; box-shadow:0 4px 12px -2px rgba(99,102,241,0.5); font-family:inherit; }
+.jpt-byme-btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+.jpt-or-split { text-align:center; font-size:11px; color:rgba(255,255,255,0.4); margin:10px 0; letter-spacing:0.3em; }
+
+/* 4자리 전화번호 입력 */
+.jpt-phone-wrap { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.22); border-radius:10px; padding:6px 6px 6px 14px; margin-bottom:12px; }
+.jpt-phone-input { border:none; outline:none; font-size:22px; font-weight:800; color:#fff; flex:1; min-width:0; text-align:center; padding:10px 0; background:transparent; font-family:inherit; letter-spacing:0.6em; }
+.jpt-phone-input::placeholder { color:rgba(255,255,255,0.35); }
+
+.jpt-submit { width:100%; padding:14px; background:linear-gradient(135deg,#fde047,#eab308); color:#1f2937; border:none; border-radius:11px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(234,179,8,0.6); font-family:inherit; }
+.jpt-submit:hover { filter:brightness(1.05); }
+.jpt-submit:disabled { opacity:0.6; cursor:not-allowed; }
 
 .jpt-result { display:none; }
 .jpt-result.show { display:block; animation:fadeIn 0.4s ease; }
@@ -108,40 +118,45 @@ a { text-decoration:none; color:inherit; }
 </video>
 <div class="jpt-bg-overlay"></div>
 
+<!-- 2026-06-12: 좌측 상단 닫기 버튼 (cotton_print 모달과 동일) -->
+<a href="javascript:void(0)" class="jpt-back-fixed" onclick="if(history.length>1){history.back();}else{location.href='/'}">
+    <i class="fa-solid fa-arrow-left" style="font-size:11px;"></i> <span>戻る</span>
+</a>
+
 <div class="jpt-wrap">
-    <div class="jpt-header">
-        <div class="jpt-logo"><span class="white">COTTON</span><span class="yellow">PRINT</span></div>
-        <div class="jpt-sub">Chameleon Printing 株式会社</div>
-    </div>
 
-    <!-- 조회 폼 -->
+    <!-- 2026-06-12: cotton_print 주문조회 모달과 동일한 UI (다크 카드 + 로그인 / 전화 4자리) -->
     <div class="jpt-card" id="jptFormCard">
-        <h2><i class="fa-solid fa-magnifying-glass" style="color:#06C755;"></i> ご注文照会</h2>
-        <div class="desc">注文番号とご注文時のお電話番号で進行状況をご確認いただけます。</div>
+        <div class="jpt-cardhead">
+            <div class="jpt-cardtitle">🔍 ご注文照会</div>
+            <button type="button" class="jpt-cardclose" aria-label="Close" onclick="if(history.length>1){history.back();}else{location.href='/'}">✕</button>
+        </div>
 
-        <label class="jpt-label">注文番号 (Order ID) <span style="color:#ef4444;">*</span></label>
-        <input id="jptOrderId" class="jpt-input" type="text" inputmode="numeric" placeholder="例: 12345" autocomplete="off">
-        <div class="jpt-hint">ご注文後に送信されたメッセージ・LINEに記載されています</div>
+        <!-- 로그인 사용자 자동조회 카드 — 로그인 상태에서만 노출 -->
+        <div id="jptLoggedIn" class="jpt-loggedin" style="display:none;">
+            <div class="jpt-loggedin-lbl">📦 ご自身のご注文を照会</div>
+            <div class="jpt-loggedin-user" id="jptUserName">-</div>
+            <button type="button" id="jptByMeBtn" class="jpt-byme-btn" onclick="jptDoLookupByMe()">✨ 自動照会 (マイ注文)</button>
+        </div>
+        <div id="jptOrSplit" class="jpt-or-split" style="display:none;">ーーーー OR ーーーー</div>
 
-        <label class="jpt-label">電話番号 (末尾4桁でも可)</label>
-        <input id="jptPhone" class="jpt-input" type="tel" inputmode="tel" placeholder="例: 090-5397-0420 または 0420" autocomplete="off">
-        <div class="jpt-hint">入力時のみ詳細情報を表示します</div>
+        <div class="desc">お電話番号の下4桁を入力してください。最新のご注文状況と予想お届け日をお調べします。</div>
 
-        <button class="jpt-btn" id="jptSubmitBtn" onclick="jptLookup()">
-            <i class="fa-solid fa-search"></i> 照会する
+        <div class="jpt-phone-wrap">
+            <input id="jptPhone" class="jpt-phone-input" type="text" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" placeholder="1234">
+        </div>
+
+        <button class="jpt-submit" id="jptSubmitBtn" onclick="jptDoLookup()">
+            <span id="jptSubmitLbl">照会する</span>
         </button>
     </div>
 
     <!-- 결과 -->
     <div id="jptResultArea" class="jpt-result">
-        <div id="jptStatusBanner" class="jpt-status-banner"></div>
-        <div class="jpt-card">
-            <h2><i class="fa-solid fa-list-check" style="color:#06C755;"></i> 進行状況</h2>
-            <div class="jpt-timeline" id="jptTimeline"></div>
-            <table class="jpt-detail-table" id="jptDetailTable"></table>
-        </div>
-        <div style="max-width:540px; margin:0 auto;">
-            <button class="jpt-btn" style="background:linear-gradient(135deg,#64748b,#475569); box-shadow:0 6px 18px rgba(100,116,139,0.4);" onclick="jptReset()">
+        <div id="jptResultCard" class="jpt-card" style="background:#fff;">
+            <h2 style="font-size:16px; font-weight:900; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-list-check" style="color:#06C755;"></i> ご注文状況</h2>
+            <div id="jptResultBody"></div>
+            <button type="button" onclick="jptReset()" style="width:100%; margin-top:14px; padding:11px; background:#f1f5f9; border:1px solid #e2e8f0; color:#475569; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">
                 <i class="fa-solid fa-arrow-left"></i> 再照会
             </button>
         </div>
@@ -182,236 +197,171 @@ a { text-decoration:none; color:inherit; }
     </div>
 
     <div class="jpt-back">
-        <a href="https://www.cotton-printer.com"><i class="fa-solid fa-arrow-left"></i> COTTON PRINT トップへ戻る</a>
+        <a href="/"><i class="fa-solid fa-arrow-left"></i> トップへ戻る</a>
     </div>
 </div>
 
+<!-- 2026-06-12: Supabase JS SDK (로그인 감지용) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
-// URL 파라미터로 order_id 자동 입력
-(function autoFillFromQuery(){
-    var p = new URLSearchParams(location.search);
-    var oid = p.get('order_id') || p.get('id');
-    if (oid) {
-        var el = document.getElementById('jptOrderId');
-        if (el) el.value = oid;
-    }
+// 2026-06-12: cotton_print 와 동일한 로직 — 로그인 사용자는 자동조회, 비로그인은 전화 4자리
+var SB = null;
+try {
+    SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+        auth: { persistSession:true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' }
+    });
+    window.sb = SB;
+} catch(e) { console.warn('[jpt] sb init failed:', e); }
+
+// 로그인 상태 감지 → 자동조회 카드 노출
+(async function detectLogin(){
+    if (!SB || !SB.auth) return;
+    try {
+        var sess = await SB.auth.getSession();
+        var user = sess && sess.data && sess.data.session && sess.data.session.user;
+        if (!user) return;
+        var displayName = (user.email || '').split('@')[0];
+        try {
+            var prf = await SB.from('profiles').select('username').eq('id', user.id).maybeSingle();
+            if (prf && prf.data && prf.data.username) displayName = prf.data.username;
+        } catch(e) {}
+        document.getElementById('jptLoggedIn').style.display = 'block';
+        document.getElementById('jptOrSplit').style.display = 'block';
+        document.getElementById('jptUserName').textContent = displayName;
+    } catch(e) {}
 })();
 
-// status (KR DB값) → JP 표시 + step index
-// step: -2=차단, -1=취소, 0=임시, 1=결제대기, 2=받음/결제완료, 3=제작중, 4=인쇄중, 5=발송준비, 6=발송완료, 7=배송완료
-var STATUS_MAP = {
-    // 임시 / 상담 / 결제대기
-    '임시작성':    { label:'下書き',           step:0 },
-    '미결제':      { label:'お支払い待ち',     step:1 },
-    '결제대기':    { label:'お支払い待ち',     step:1 },
-    '상담대기':    { label:'お問い合わせ受付', step:1 },
-    '확인중':      { label:'確認中',           step:1 },
-    // 결제완료 / 접수
-    '결제완료':    { label:'お支払い完了',     step:2 },
-    '결제됨':      { label:'お支払い完了',     step:2 },
-    '접수됨':      { label:'受付完了',         step:2 },
-    '접수완료':    { label:'受付完了',         step:2 },
-    '접수대기':    { label:'受付確認中',       step:2 },
-    '제작준비':    { label:'制作準備中',       step:2 },
-    // 제작
-    '제작중':      { label:'デザイン制作中',   step:3 },
-    '디자인중':    { label:'デザイン制作中',   step:3 },
-    // 인쇄
-    '인쇄중':      { label:'印刷中',           step:4 },
-    '인쇄완료':    { label:'印刷完了',         step:4 },
-    // 발송 준비
-    '발송준비':    { label:'発送準備中',       step:5 },
-    '포장중':      { label:'梱包中',           step:5 },
-    // 발송 / 배송
-    '발송완료':    { label:'発送済み',         step:6 },
-    '발송됨':      { label:'発送済み',         step:6 },
-    '배송중':      { label:'配送中',           step:6 },
-    // 도착 / 완료
-    '도착완료':    { label:'お届け完了',       step:7 },
-    '배송완료':    { label:'お届け完了',       step:7 },
-    '완료':        { label:'完了',             step:7 },
-    '완료됨':      { label:'完了',             step:7 },
-    // 취소 / 차단
-    '취소됨':      { label:'キャンセル',       step:-1 },
-    '취소':        { label:'キャンセル',       step:-1 },
-    '환불완료':    { label:'返金完了',         step:-1 },
-    '환불실패':    { label:'返金処理中',       step:-1 },
-    '관리자차단':  { label:'お問い合わせください', step:-2 },
-    '관리자보류':  { label:'お問い合わせください', step:-2 }
-};
-
-var STEPS = [
-    { idx:1, label:'お支払い待ち', icon:'fa-credit-card' },
-    { idx:2, label:'受付完了',     icon:'fa-circle-check' },
-    { idx:3, label:'デザイン制作', icon:'fa-pen-ruler' },
-    { idx:4, label:'印刷中',       icon:'fa-print' },
-    { idx:5, label:'発送準備中',   icon:'fa-box' },
-    { idx:6, label:'発送済み',     icon:'fa-paper-plane' },
-    { idx:7, label:'お届け完了',   icon:'fa-flag-checkered' }
-];
-
-function jptFormatDate(iso) {
-    if (!iso) return '';
+function jptFmtDate(iso) {
+    if (!iso) return '-';
     try {
         var d = new Date(iso);
-        var Y = d.getFullYear(), M = String(d.getMonth()+1).padStart(2,'0'), D = String(d.getDate()).padStart(2,'0');
-        var h = String(d.getHours()).padStart(2,'0'), m = String(d.getMinutes()).padStart(2,'0');
-        return Y + '-' + M + '-' + D + ' ' + h + ':' + m;
-    } catch(e) { return iso; }
+        return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+    } catch(e){ return iso; }
+}
+function jptFmtJpy(krw) {
+    if (krw == null) return '-';
+    try { return '¥' + Math.round(Number(krw) * 0.1).toLocaleString(); } catch(e){ return krw; }
 }
 
-function jptFormatPrice(krw, siteCode) {
-    var n = Number(krw) || 0;
-    if (siteCode === 'JP') return '¥' + Math.round(n * 0.1).toLocaleString();
-    if (siteCode === 'US') return '$' + (n * 0.001).toFixed(2);
-    return n.toLocaleString() + '원';
-}
-
-async function jptLookup() {
-    var oid = (document.getElementById('jptOrderId').value || '').trim();
-    var phone = (document.getElementById('jptPhone').value || '').trim();
-    if (!oid || !/^\d+$/.test(oid)) {
-        alert('正しい注文番号 (数字のみ) を入力してください。');
-        return;
-    }
-    var btn = document.getElementById('jptSubmitBtn');
+// 로그인 사용자 — 본인 주문 자동 조회 (user_id 기반, RLS 가 본인 주문만 허용)
+async function jptDoLookupByMe() {
+    var btn = document.getElementById('jptByMeBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 照会中...';
-
+    var orig = btn.textContent;
+    btn.textContent = '照会中...';
     try {
-        var resp = await fetch(SUPABASE_URL + '/functions/v1/get-order-status', {
-            method:'POST',
-            headers: {
-                'Content-Type':'application/json',
-                'Authorization':'Bearer ' + SUPABASE_ANON,
-                'apikey': SUPABASE_ANON
-            },
-            body: JSON.stringify({ order_id: oid, phone: phone })
-        });
-        var data = await resp.json();
-        if (data.error === 'not_found') {
-            jptShowError('該当する注文が見つかりません。注文番号をご確認ください。');
-            return;
-        }
-        if (!data.ok) {
-            jptShowError('照会に失敗しました。LINE で担当者にお問い合わせください。');
-            return;
-        }
-        jptShowResult(data.order, data.minimal);
-    } catch (e) {
-        jptShowError('通信エラーが発生しました。しばらく経ってから再度お試しください。');
+        if (!SB) { jptShowError('Supabase 接続エラー'); return; }
+        var sess = await SB.auth.getSession();
+        var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+        if (!uid) { jptShowError('ログインが必要です'); return; }
+        var resp = await SB.from('orders')
+            .select('id,created_at,payment_status,design_complete,total_amount,status,phone,manager_name')
+            .eq('user_id', uid)
+            .order('created_at', { ascending: false })
+            .limit(5);
+        if (resp.error) throw resp.error;
+        jptRenderResult(resp.data || []);
+    } catch(e) {
+        console.warn('[byMe]', e);
+        jptShowError('照会中にエラーが発生しました');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-search"></i> 照会する';
+        btn.textContent = orig;
     }
+}
+window.jptDoLookupByMe = jptDoLookupByMe;
+
+// 전화번호 뒷 4자리로 조회 (REST API)
+async function jptDoLookup() {
+    var inp = document.getElementById('jptPhone');
+    var v = (inp.value || '').replace(/\D/g, '');
+    if (v.length !== 4) { alert('電話番号の下4桁を入力してください'); inp.focus(); return; }
+    var btn = document.getElementById('jptSubmitBtn');
+    var lbl = document.getElementById('jptSubmitLbl');
+    btn.disabled = true;
+    if (lbl) lbl.textContent = '照会中...';
+    try {
+        var url = SUPABASE_URL + '/rest/v1/orders'
+            + '?select=id,created_at,payment_status,design_complete,total_amount,status,phone,manager_name'
+            + '&phone=like.*' + v
+            + '&payment_status=in.(%22%EA%B2%B0%EC%A0%9C%EC%99%84%EB%A3%8C%22,%22%EC%9E%85%EA%B8%88%ED%99%95%EC%9D%B8%22,%22paid%22)'
+            + '&order=created_at.desc&limit=5';
+        var resp = await fetch(url, { headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON } });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        var rows = await resp.json();
+        jptRenderResult(rows || []);
+    } catch(e) {
+        console.warn('[lookup]', e);
+        jptShowError('照会中にエラーが発生しました');
+    } finally {
+        btn.disabled = false;
+        if (lbl) lbl.textContent = '照会する';
+    }
+}
+window.jptDoLookup = jptDoLookup;
+
+function jptRenderResult(rows) {
+    document.getElementById('jptFormCard').style.display = 'none';
+    var area = document.getElementById('jptResultArea');
+    area.classList.add('show');
+    var body = document.getElementById('jptResultBody');
+    if (!rows.length) {
+        body.innerHTML = '<div style="padding:20px 16px; background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; text-align:center; color:#7f1d1d; font-size:13px; font-weight:600; line-height:1.6;">ご注文が見つかりません。<br>お電話番号やログイン状態をご確認ください。</div>';
+        return;
+    }
+    var html = '';
+    rows.forEach(function(o){
+        var paidLike = (['결제완료','입금확인','paid'].indexOf(o.payment_status) >= 0);
+        var isProd = !!o.design_complete;
+        var statusTxt = isProd ? '製作進行中' : (paidLike ? '受付完了' : '入金確認待ち');
+        var statusBg = isProd ? 'linear-gradient(135deg,#60a5fa,#2563eb)' : (paidLike ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#fbbf24,#b45309)');
+        var cdate = o.created_at ? new Date(o.created_at) : null;
+        var etaLow = '', etaHigh = '';
+        if (cdate) {
+            var d1 = new Date(cdate); d1.setDate(d1.getDate()+5);
+            var d2 = new Date(cdate); d2.setDate(d2.getDate()+7);
+            etaLow = jptFmtDate(d1); etaHigh = jptFmtDate(d2);
+        }
+        html += '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:10px;">'
+            + '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">'
+                + '<div style="display:inline-block; padding:5px 12px; background:' + statusBg + '; color:#fff; font-size:11.5px; font-weight:900; border-radius:50px;">' + statusTxt + '</div>'
+                + '<div style="font-size:11px; color:#94a3b8; font-weight:600;">#' + o.id + '</div>'
+            + '</div>'
+            + '<div style="display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:12.5px; color:#1e293b;">'
+                + '<div style="color:#06C755; font-weight:600;">ご注文日</div><div>' + jptFmtDate(o.created_at) + '</div>'
+                + (o.total_amount ? '<div style="color:#06C755; font-weight:600;">お支払い金額</div><div style="font-weight:800;">' + jptFmtJpy(o.total_amount) + '</div>' : '')
+                + (cdate ? '<div style="color:#eab308; font-weight:700;">お届け予定</div><div style="font-weight:900; color:#1e293b;">' + etaLow + ' 〜 ' + etaHigh + '</div>' : '')
+            + '</div>'
+        + '</div>';
+    });
+    body.innerHTML = html;
 }
 
 function jptShowError(msg) {
     document.getElementById('jptFormCard').style.display = 'none';
     var area = document.getElementById('jptResultArea');
     area.classList.add('show');
-    var bn = document.getElementById('jptStatusBanner');
-    bn.className = 'jpt-status-banner error';
-    bn.innerHTML = '<div class="big"><i class="fa-solid fa-circle-exclamation"></i> 照会できませんでした</div><div class="small">' + msg + '</div>';
-    document.getElementById('jptTimeline').innerHTML = '';
-    document.getElementById('jptDetailTable').innerHTML = '';
-}
-
-function jptShowResult(order, minimal) {
-    document.getElementById('jptFormCard').style.display = 'none';
-    var area = document.getElementById('jptResultArea');
-    area.classList.add('show');
-
-    // 매핑 누락 시 한글 노출 방지 — '受付済み' step 2 로 안전 fallback
-    var mapped = STATUS_MAP[order.status] || { label:'受付済み', step:2 };
-    var curStep = mapped.step;
-
-    // 배너
-    var bn = document.getElementById('jptStatusBanner');
-    if (curStep < 0) {
-        bn.className = 'jpt-status-banner error';
-        bn.innerHTML = '<div class="big">⛔ ' + mapped.label + '</div><div class="small">詳細は担当者にお問い合わせください</div>';
-    } else if (curStep >= 7) {
-        bn.className = 'jpt-status-banner success';
-        bn.innerHTML = '<div class="big">🎉 ' + mapped.label + '</div><div class="small">ご利用ありがとうございました</div>';
-    } else if (curStep >= 2) {
-        bn.className = 'jpt-status-banner success';
-        bn.innerHTML = '<div class="big">✅ ご注文 受付完了</div><div class="small">現在: ' + mapped.label + '</div>';
-    } else {
-        bn.className = 'jpt-status-banner pending';
-        bn.innerHTML = '<div class="big">⏳ ' + mapped.label + '</div><div class="small">お支払いをお待ちしております</div>';
-    }
-
-    // 타임라인
-    var html = '';
-    STEPS.forEach(function(s){
-        var cls = 'jpt-step';
-        var dateLine = '';
-        if (curStep >= s.idx) cls += ' active';
-        if (curStep === s.idx) {
-            cls += ' current';
-            dateLine = '<div class="jpt-step-date">現在進行中</div>';
-        } else if (s.idx === 2 && curStep >= 2 && order.created_at) {
-            dateLine = '<div class="jpt-step-date">' + jptFormatDate(order.created_at) + '</div>';
-        }
-        var iconHtml = (curStep >= s.idx) ? '<i class="fa-solid fa-check"></i>' : s.idx;
-        html += '<div class="' + cls + '">'
-              + '<div class="jpt-step-icon">' + iconHtml + '</div>'
-              + '<div class="jpt-step-body">'
-              + '<div class="jpt-step-title">' + s.label + '</div>'
-              + dateLine
-              + '</div></div>';
-    });
-    document.getElementById('jptTimeline').innerHTML = html;
-
-    // 상세 테이블
-    var t = '';
-    t += '<tr><td>注文番号</td><td>#' + order.id + '</td></tr>';
-    t += '<tr><td>受付日時</td><td>' + jptFormatDate(order.created_at) + '</td></tr>';
-    if (!minimal) {
-        if (order.total_amount != null) {
-            t += '<tr><td>ご注文金額</td><td><b>' + jptFormatPrice(order.total_amount, order.site_code) + '</b></td></tr>';
-        }
-        if (order.delivery_target_date) {
-            t += '<tr><td>お届け予定</td><td>' + order.delivery_target_date + '</td></tr>';
-        }
-        if (order.manager_name_masked) {
-            t += '<tr><td>お名前</td><td>' + order.manager_name_masked + '</td></tr>';
-        }
-        if (Array.isArray(order.items) && order.items.length) {
-            var names = order.items.map(function(x){ return x.product_name || x.name || ''; }).filter(Boolean);
-            if (names.length) t += '<tr><td>商品</td><td>' + names.join('<br>') + '</td></tr>';
-        }
-    } else {
-        t += '<tr><td colspan="2" style="color:#94a3b8; font-size:11.5px; text-align:center; padding:14px 4px;">詳細情報の表示にはお電話番号が必要です</td></tr>';
-    }
-    document.getElementById('jptDetailTable').innerHTML = t;
+    document.getElementById('jptResultBody').innerHTML = '<div style="padding:20px 16px; background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; text-align:center; color:#7f1d1d; font-size:13px; font-weight:600; line-height:1.6;">' + msg + '</div>';
 }
 
 function jptReset() {
     document.getElementById('jptFormCard').style.display = 'block';
     document.getElementById('jptResultArea').classList.remove('show');
-    document.getElementById('jptOrderId').focus();
+    var inp = document.getElementById('jptPhone');
+    if (inp) { inp.value = ''; inp.focus(); }
 }
+window.jptReset = jptReset;
 
 // Enter 키
 document.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' && (e.target.id === 'jptOrderId' || e.target.id === 'jptPhone')) {
+    if (e.key === 'Enter' && e.target.id === 'jptPhone') {
         e.preventDefault();
-        jptLookup();
+        jptDoLookup();
     }
 });
-
-// URL 파라미터 있으면 자동 조회
-(function autoLookup(){
-    var p = new URLSearchParams(location.search);
-    if (p.get('order_id') || p.get('id')) {
-        setTimeout(jptLookup, 200);
-    }
-})();
 </script>
 
 </body>
