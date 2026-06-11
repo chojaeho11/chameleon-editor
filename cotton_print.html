@@ -1040,15 +1040,27 @@ window._cottonSearch = function(){
         </div>
         <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
             <div style="margin-bottom:18px;">
-                <!-- 1️⃣ 회원가입 — 클릭하면 회원가입 모달 오픈 -->
-                <button type="button" id="cpCouponInfoLine1" onclick="window._cpCouponOpenSignup && window._cpCouponOpenSignup()"
+                <!-- 1️⃣ 회원가입 — 클릭 시 인라인 폼 펼침 (2026-06-11) -->
+                <button type="button" id="cpCouponInfoLine1" onclick="window._cpToggleQuickSignup && window._cpToggleQuickSignup()"
                     style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a; cursor:pointer; font-family:inherit; text-align:left; transition:all 0.15s;"
                     onmouseenter="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6';"
                     onmouseleave="this.style.background='#eff6ff'; this.style.borderColor='#c7d2fe';">
                     <span style="font-size:20px;">1️⃣</span>
-                    <span style="flex:1;"><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
-                    <span style="font-size:13px; color:#3b82f6;">→</span>
+                    <span style="flex:1;"><b>5초 회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                    <span id="cpQuickSignupArrow" style="font-size:13px; color:#3b82f6;">→</span>
                 </button>
+                <!-- 2026-06-11: 인라인 회원가입 폼 — 아이디 + 비번 + 비번확인 (4자+) -->
+                <div id="cpQuickSignupForm" style="display:none; padding:14px; background:#f0f9ff; border:1.5px solid #93c5fd; border-radius:10px; margin-bottom:8px;">
+                    <div style="font-size:11.5px; color:#1e3a8a; font-weight:600; margin-bottom:10px; line-height:1.5;" id="cpQuickSignupDesc">
+                        아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.
+                    </div>
+                    <input id="cpQuickSignupEmail" type="email" autocomplete="username" placeholder="example@email.com" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                    <input id="cpQuickSignupPw" type="password" autocomplete="new-password" placeholder="비밀번호 (4자 이상)" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                    <input id="cpQuickSignupPwc" type="password" autocomplete="new-password" placeholder="비밀번호 확인" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                    <button type="button" id="cpQuickSignupBtn" onclick="window._cpDoQuickSignup && window._cpDoQuickSignup()" style="width:100%; padding:11px; background:linear-gradient(135deg,#3b82f6,#1e40af); color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px -2px rgba(30,64,175,0.45); font-family:inherit;">
+                        <span id="cpQuickSignupBtnLbl">⚡ 5초 가입하고 3만원 쿠폰받기</span>
+                    </button>
+                </div>
                 <div id="cpCouponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
                     <span style="font-size:20px;">2️⃣</span>
                     <span>SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득</span>
@@ -1070,12 +1082,124 @@ window._cottonSearch = function(){
     if (!c) return;
     function $(id){ return document.getElementById(id); }
     if ($('cpCouponModalTitle')) $('cpCouponModalTitle').textContent = c.modalTitle;
-    if ($('cpCouponInfoLine1')) $('cpCouponInfoLine1').children[1].innerHTML = c.line1;
+    if ($('cpCouponInfoLine1')) {
+        var sp = $('cpCouponInfoLine1').children[1];
+        if (sp) sp.innerHTML = c.line1;
+    }
     if ($('cpCouponInfoLine2')) $('cpCouponInfoLine2').children[1].innerHTML = c.line2;
     if ($('cpCouponLblEmail')) $('cpCouponLblEmail').textContent = c.fEmail;
     if ($('cpCouponLblScreenshot')) $('cpCouponLblScreenshot').textContent = c.fScreenshot;
     if ($('cpCouponHintScreenshot') && c.hintScreenshot) $('cpCouponHintScreenshot').textContent = c.hintScreenshot;
     if ($('cpCouponSubmitBtn')) $('cpCouponSubmitBtn').textContent = c.submit;
+})();
+
+// 2026-06-11: 인라인 5초 회원가입 — 아이디 + 비번 + 비번확인 (4자+) → sb.auth.signUp → 3만원 쿠폰 자동 적립
+(function(){
+    function $(id){ return document.getElementById(id); }
+    var lang = window.__CP_LANG || (function(){
+        var h = location.hostname;
+        if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
+        if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
+        return 'ko';
+    })();
+    var T = {
+        ko: { desc:'아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.',
+              phEmail:'example@email.com', phPw:'비밀번호 (4자 이상)', phPwc:'비밀번호 확인',
+              btn:'⚡ 5초 가입하고 3만원 쿠폰받기', btnLoading:'가입 중...',
+              errEmail:'이메일 형식이 올바르지 않습니다.', errPwLen:'비밀번호는 4자 이상이어야 합니다.',
+              errPwMatch:'비밀번호가 일치하지 않습니다.', errSignup:'가입 실패:',
+              successHtml:'🎉 가입 완료!<br>3만원 쿠폰이 자동 지급되었습니다.' },
+        ja: { desc:'IDとパスワードを入力するだけ! <b>4文字以上</b>で会員登録。',
+              phEmail:'example@email.com', phPw:'パスワード (4文字以上)', phPwc:'パスワード確認',
+              btn:'⚡ 5秒登録して3,000円クーポン獲得', btnLoading:'登録中...',
+              errEmail:'メール形式が正しくありません。', errPwLen:'パスワードは4文字以上にしてください。',
+              errPwMatch:'パスワードが一致しません。', errSignup:'登録失敗:',
+              successHtml:'🎉 登録完了!<br>3,000円クーポンが自動付与されました。' },
+        en: { desc:'Just enter ID + password (<b>4+ chars</b>) and join!',
+              phEmail:'example@email.com', phPw:'Password (4+ chars)', phPwc:'Confirm password',
+              btn:'⚡ 5-sec Signup & $30 Coupon', btnLoading:'Signing up...',
+              errEmail:'Invalid email format.', errPwLen:'Password must be 4+ characters.',
+              errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
+              successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
+    };
+    var t = T[lang] || T.ko;
+    // 라벨 적용
+    if ($('cpQuickSignupDesc')) $('cpQuickSignupDesc').innerHTML = t.desc;
+    if ($('cpQuickSignupEmail')) $('cpQuickSignupEmail').placeholder = t.phEmail;
+    if ($('cpQuickSignupPw'))    $('cpQuickSignupPw').placeholder    = t.phPw;
+    if ($('cpQuickSignupPwc'))   $('cpQuickSignupPwc').placeholder   = t.phPwc;
+    if ($('cpQuickSignupBtnLbl')) $('cpQuickSignupBtnLbl').textContent = t.btn;
+
+    window._cpToggleQuickSignup = function(){
+        var f = $('cpQuickSignupForm'); var ar = $('cpQuickSignupArrow');
+        if (!f) return;
+        var willOpen = (f.style.display === 'none' || !f.style.display);
+        f.style.display = willOpen ? 'block' : 'none';
+        if (ar) ar.textContent = willOpen ? '▾' : '→';
+        if (willOpen) setTimeout(function(){ var i = $('cpQuickSignupEmail'); if (i) i.focus(); }, 80);
+    };
+
+    window._cpDoQuickSignup = async function(){
+        var em = ($('cpQuickSignupEmail').value || '').trim().toLowerCase();
+        var pw = ($('cpQuickSignupPw').value || '');
+        var pwc = ($('cpQuickSignupPwc').value || '');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { alert(t.errEmail); return; }
+        if (pw.length < 4) { alert(t.errPwLen); return; }
+        if (pw !== pwc)    { alert(t.errPwMatch); return; }
+        var btn = $('cpQuickSignupBtn'); var lbl = $('cpQuickSignupBtnLbl');
+        btn.disabled = true;
+        if (lbl) lbl.textContent = t.btnLoading;
+        try {
+            // Supabase 클라이언트 확보
+            var sb = window.sb;
+            if (!sb && typeof supabase !== 'undefined') {
+                sb = supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+                );
+                window.sb = sb;
+            }
+            if (!sb) throw new Error('DB');
+            // 1) signUp
+            var up = await sb.auth.signUp({ email: em, password: pw });
+            if (up.error) {
+                var msg = up.error.message || 'signup error';
+                // 이미 가입된 이메일이면 sign in 시도
+                if (/already|exists|registered/i.test(msg)) {
+                    var inResp = await sb.auth.signInWithPassword({ email: em, password: pw });
+                    if (inResp.error) throw new Error(msg + ' (sign-in 도 실패)');
+                } else {
+                    throw new Error(msg);
+                }
+            }
+            // 2) 세션 확보 + profiles.event_coupon = 30000 적립 (이미 있으면 누적 안 함)
+            var sess = await sb.auth.getSession();
+            var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+            if (uid) {
+                try {
+                    // 기존 프로필 조회
+                    var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
+                    var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
+                    if (!hasCoupon) {
+                        // 신규 적립 (profile 없으면 upsert)
+                        await sb.from('profiles').upsert({ id: uid, email: em, event_coupon: 30000 }, { onConflict: 'id' });
+                    }
+                } catch(e) { console.warn('[profile credit]', e); }
+            }
+            // 3) 성공 메시지 + 모달 닫기 + cpCouponEmail 자동 채움
+            var coupEmailIn = $('cpCouponEmail');
+            if (coupEmailIn) coupEmailIn.value = em;
+            // 성공 패널 표시
+            var f = $('cpQuickSignupForm');
+            if (f) f.innerHTML = '<div style="text-align:center; padding:8px 4px; color:#065f46; font-weight:700; line-height:1.6;">' + t.successHtml + '</div>';
+        } catch (e) {
+            console.error('[quick signup]', e);
+            alert(t.errSignup + ' ' + (e.message || e));
+        } finally {
+            btn.disabled = false;
+            if (lbl) lbl.textContent = t.btn;
+        }
+    };
 })();
 </script>
 <style>

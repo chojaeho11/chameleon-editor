@@ -2591,19 +2591,125 @@ window._tcmFallbackClick = function(code) {
             <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
                 <!-- 2줄 간단 안내 (1번 라인은 회원가입 트리거) -->
                 <div style="margin-bottom:18px;">
-                    <button type="button" id="couponInfoLine1" onclick="window._couponOpenSignup && window._couponOpenSignup()"
+                    <button type="button" id="couponInfoLine1" onclick="window._toggleQuickSignup && window._toggleQuickSignup()"
                         style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a; cursor:pointer; font-family:inherit; text-align:left; transition:all 0.15s;"
                         onmouseenter="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6';"
                         onmouseleave="this.style.background='#eff6ff'; this.style.borderColor='#c7d2fe';">
                         <span style="font-size:20px;">1️⃣</span>
-                        <span style="flex:1;"><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
-                        <span style="font-size:13px; color:#3b82f6;">→</span>
+                        <span style="flex:1;"><b>5초 회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                        <span id="quickSignupArrow" style="font-size:13px; color:#3b82f6;">→</span>
                     </button>
+                    <!-- 2026-06-11: 인라인 5초 회원가입 폼 — 아이디+비번+비번확인 (4자+) -->
+                    <div id="quickSignupForm" style="display:none; padding:14px; background:#f0f9ff; border:1.5px solid #93c5fd; border-radius:10px; margin-bottom:8px;">
+                        <div style="font-size:11.5px; color:#1e3a8a; font-weight:600; margin-bottom:10px; line-height:1.5;" id="quickSignupDesc">
+                            아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.
+                        </div>
+                        <input id="quickSignupEmail" type="email" autocomplete="username" placeholder="example@email.com" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                        <input id="quickSignupPw" type="password" autocomplete="new-password" placeholder="비밀번호 (4자 이상)" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                        <input id="quickSignupPwc" type="password" autocomplete="new-password" placeholder="비밀번호 확인" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                        <button type="button" id="quickSignupBtn" onclick="window._doQuickSignup && window._doQuickSignup()" style="width:100%; padding:11px; background:linear-gradient(135deg,#3b82f6,#1e40af); color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px -2px rgba(30,64,175,0.45); font-family:inherit;">
+                            <span id="quickSignupBtnLbl">⚡ 5초 가입하고 3만원 쿠폰받기</span>
+                        </button>
+                    </div>
                     <div id="couponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
                         <span style="font-size:20px;">2️⃣</span>
                         <span>SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득</span>
                     </div>
                 </div>
+
+                <script>
+                // 2026-06-11: 인라인 5초 회원가입 — index.html 메인 사이트 버전 (KR/JP/EN)
+                (function(){
+                    function $(id){ return document.getElementById(id); }
+                    var lang = (window.__SITE_CODE === 'JP') ? 'ja'
+                        : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
+                    var T = {
+                        ko: { desc:'아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.',
+                              phEmail:'example@email.com', phPw:'비밀번호 (4자 이상)', phPwc:'비밀번호 확인',
+                              btn:'⚡ 5초 가입하고 3만원 쿠폰받기', btnLoading:'가입 중...',
+                              errEmail:'이메일 형식이 올바르지 않습니다.', errPwLen:'비밀번호는 4자 이상이어야 합니다.',
+                              errPwMatch:'비밀번호가 일치하지 않습니다.', errSignup:'가입 실패:',
+                              successHtml:'🎉 가입 완료!<br>3만원 쿠폰이 자동 지급되었습니다.' },
+                        ja: { desc:'IDとパスワードを入力するだけ! <b>4文字以上</b>で会員登録。',
+                              phEmail:'example@email.com', phPw:'パスワード (4文字以上)', phPwc:'パスワード確認',
+                              btn:'⚡ 5秒登録して3,000円クーポン獲得', btnLoading:'登録中...',
+                              errEmail:'メール形式が正しくありません。', errPwLen:'パスワードは4文字以上にしてください。',
+                              errPwMatch:'パスワードが一致しません。', errSignup:'登録失敗:',
+                              successHtml:'🎉 登録完了!<br>3,000円クーポンが自動付与されました。' },
+                        en: { desc:'Just enter ID + password (<b>4+ chars</b>) and join!',
+                              phEmail:'example@email.com', phPw:'Password (4+ chars)', phPwc:'Confirm password',
+                              btn:'⚡ 5-sec Signup & $30 Coupon', btnLoading:'Signing up...',
+                              errEmail:'Invalid email format.', errPwLen:'Password must be 4+ characters.',
+                              errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
+                              successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
+                    };
+                    var t = T[lang] || T.ko;
+                    if ($('quickSignupDesc'))   $('quickSignupDesc').innerHTML = t.desc;
+                    if ($('quickSignupEmail'))  $('quickSignupEmail').placeholder = t.phEmail;
+                    if ($('quickSignupPw'))     $('quickSignupPw').placeholder    = t.phPw;
+                    if ($('quickSignupPwc'))    $('quickSignupPwc').placeholder   = t.phPwc;
+                    if ($('quickSignupBtnLbl')) $('quickSignupBtnLbl').textContent = t.btn;
+
+                    window._toggleQuickSignup = function(){
+                        var f = $('quickSignupForm'); var ar = $('quickSignupArrow');
+                        if (!f) return;
+                        var willOpen = (f.style.display === 'none' || !f.style.display);
+                        f.style.display = willOpen ? 'block' : 'none';
+                        if (ar) ar.textContent = willOpen ? '▾' : '→';
+                        if (willOpen) setTimeout(function(){ var i = $('quickSignupEmail'); if (i) i.focus(); }, 80);
+                    };
+
+                    window._doQuickSignup = async function(){
+                        var em = ($('quickSignupEmail').value || '').trim().toLowerCase();
+                        var pw = ($('quickSignupPw').value || '');
+                        var pwc = ($('quickSignupPwc').value || '');
+                        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { alert(t.errEmail); return; }
+                        if (pw.length < 4) { alert(t.errPwLen); return; }
+                        if (pw !== pwc)    { alert(t.errPwMatch); return; }
+                        var btn = $('quickSignupBtn'); var lbl = $('quickSignupBtnLbl');
+                        btn.disabled = true;
+                        if (lbl) lbl.textContent = t.btnLoading;
+                        try {
+                            var sb = window.sb;
+                            if (!sb) throw new Error('DB');
+                            var up = await sb.auth.signUp({ email: em, password: pw });
+                            if (up.error) {
+                                var msg = up.error.message || 'signup error';
+                                if (/already|exists|registered/i.test(msg)) {
+                                    var inResp = await sb.auth.signInWithPassword({ email: em, password: pw });
+                                    if (inResp.error) throw new Error(msg);
+                                } else {
+                                    throw new Error(msg);
+                                }
+                            }
+                            // profiles.event_coupon = 30000 (이미 있으면 누적 안 함)
+                            var sess = await sb.auth.getSession();
+                            var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+                            if (uid) {
+                                try {
+                                    var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
+                                    var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
+                                    if (!hasCoupon) {
+                                        await sb.from('profiles').upsert({ id: uid, email: em, event_coupon: 30000 }, { onConflict: 'id' });
+                                    }
+                                } catch(e) { console.warn('[profile credit]', e); }
+                            }
+                            // cpCouponEmail / couponEmail 자동 채움
+                            var coupEmailIn = $('couponEmail');
+                            if (coupEmailIn) coupEmailIn.value = em;
+                            // 성공 패널
+                            var f = $('quickSignupForm');
+                            if (f) f.innerHTML = '<div style="text-align:center; padding:8px 4px; color:#065f46; font-weight:700; line-height:1.6;">' + t.successHtml + '</div>';
+                        } catch (e) {
+                            console.error('[quick signup]', e);
+                            alert(t.errSignup + ' ' + (e.message || e));
+                        } finally {
+                            btn.disabled = false;
+                            if (lbl) lbl.textContent = t.btn;
+                        }
+                    };
+                })();
+                </script>
 
                 <label style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;" id="couponLblEmail">가입 아이디 또는 이메일</label>
                 <input id="couponEmail" type="text" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
