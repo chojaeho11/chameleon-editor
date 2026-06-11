@@ -3181,51 +3181,22 @@ window._tcmFallbackClick = function(code) {
                 //   → 제작중/완료/배송 단계로 넘어간 주문은 더 이상 메인 배너에 표시 안 함
                 var PRE_PROD_STATUSES = ['접수됨', '파일처리중', '접수대기', '제작준비'];
                 // 2026-05-14: design_complete 컬럼이 아직 마이그레이션 안 됐을 수도 있음 — graceful fallback
-                // 2026-06-12: 로그인 사용자 본인 주문 자동 fetch — localStorage 비어있을 때도 user_id 기반 추가 표시
-                //   기존 동작 보존: localStorage IDs 쿼리는 그대로 유지하고, user_id 쿼리는 ADDITIONAL 로 병합.
-                var currentUserId = null;
-                try {
-                    var sess2 = await sb.auth.getUser();
-                    currentUserId = sess2?.data?.user?.id || null;
-                } catch (e) {}
+                // 2026-06-12: 결제대기 카드는 ALL 사용자에게 동일하게 노출 (어드민 권한 불필요).
+                //   고객이 본인 이름이 적힌 VIP 카드를 골라 결제할 수 있어야 하므로 비로그인/일반 사용자도
+                //   어드민과 동일한 풀 목록을 조회. RLS 가 select 를 허용하는 한 동작.
                 async function _selectOrders(withDesignCols) {
                     var cols = 'id, manager_name, phone, items, files, total_amount, status, payment_status, admin_note, created_at';
                     if (withDesignCols) cols += ', design_complete, design_complete_at';
-                    if (isAdm) {
-                        var q = sb.from('orders').select(cols).in('status', PRE_PROD_STATUSES);
-                        if (withDesignCols) {
-                            q = q.or('payment_status.eq.상담대기,payment_status.eq.미결제,payment_status.eq.입금대기,and(payment_status.in.(결제완료,입금확인),design_complete.is.false)');
-                        } else {
-                            q = q.in('payment_status', ['상담대기', '결제완료', '입금확인', '미결제', '입금대기']);
-                        }
-                        return await q.order('created_at', { ascending: false }).limit(30);
+                    var q = sb.from('orders').select(cols).in('status', PRE_PROD_STATUSES);
+                    if (withDesignCols) {
+                        q = q.or('payment_status.eq.상담대기,payment_status.eq.미결제,payment_status.eq.입금대기,and(payment_status.in.(결제완료,입금확인),design_complete.is.false)');
+                    } else {
+                        q = q.in('payment_status', ['상담대기', '결제완료', '입금확인', '미결제', '입금대기']);
                     }
-                    // 비관리자: localStorage IDs 쿼리 (기존 그대로) + 로그인 user_id 쿼리 (추가) → 병합
-                    var rows = []; var seen = new Set(); var firstErr = null;
-                    if (allIds.length > 0) {
-                        try {
-                            var r1 = await sb.from('orders').select(cols).in('id', allIds);
-                            if (r1.error) firstErr = r1.error;
-                            else if (r1.data) r1.data.forEach(function(o){ if(!seen.has(o.id)){seen.add(o.id); rows.push(o);} });
-                        } catch(e){ firstErr = firstErr || e; }
-                    }
-                    if (currentUserId) {
-                        try {
-                            var q2 = sb.from('orders').select(cols).eq('user_id', currentUserId).in('status', PRE_PROD_STATUSES);
-                            if (withDesignCols) {
-                                q2 = q2.or('payment_status.eq.상담대기,payment_status.eq.미결제,payment_status.eq.입금대기,and(payment_status.in.(결제완료,입금확인),design_complete.is.false)');
-                            } else {
-                                q2 = q2.in('payment_status', ['상담대기', '결제완료', '입금확인', '미결제', '입금대기']);
-                            }
-                            var r2 = await q2.order('created_at', { ascending: false }).limit(20);
-                            if (r2.data) r2.data.forEach(function(o){ if(!seen.has(o.id)){seen.add(o.id); rows.push(o);} });
-                        } catch(e){}
-                    }
-                    return { data: rows, error: (rows.length === 0 ? firstErr : null) };
+                    return await q.order('created_at', { ascending: false }).limit(50);
                 }
-                if (!isAdm && allIds.length === 0 && !currentUserId) {
-                    // 비관리자 + localStorage 비어있음 + 비로그인 → 조회할 ID 없음
-                } else {
+                // 비관리자 + localStorage 비어있음 케이스 — 이제는 모두 동일 쿼리이므로 분기 폐기 (항상 fetch)
+                {
                     var res = await _selectOrders(true);
                     if (res.error && /design_complete/i.test(res.error.message || '')) {
                         console.warn('[mgrQuote banner] design_complete 컬럼 미존재 — fallback 으로 재조회');
