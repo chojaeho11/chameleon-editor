@@ -2363,8 +2363,8 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-05-15: 종이매대 전용 — 100개 이상 무료배송 (크게 표시) -->
           <button type="button" class="so-ship-btn so-ship-pd-bulk" data-ship="pd_bulk_free" onclick="window._soPickShip('pd_bulk_free')" style="display:none; width:100%; margin-bottom:12px; padding:16px 18px; font-size:15px; font-weight:900; border-radius:14px; background:linear-gradient(135deg,#10b981 0%, #059669 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); letter-spacing:0.3px;">
-            ${tr('100개 이상 무료배송', '100個以上 無料配送', 'FREE shipping · 100+ pcs')}
-            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('대량 주문 시 자동 적용 (수도권/지방 동일)', '大量注文時に自動適用', 'Auto-applied for bulk orders')}</div>
+            ${tr('포장 없이 벌크배송 (무료, 기본)', '梱包なしバルク配送 (無料・標準)', 'Bulk shipping · no packaging (FREE, default)')}
+            <div style="font-size:12px; font-weight:600; margin-top:4px; opacity:0.92;">${tr('100개 이상 모든 주문 자동 무료', '100個以上の注文すべて無料', 'Free for all 100+ orders')}</div>
           </button>
           <!-- 2026-06-01: 묶음배송 토글 버튼 제거 — 카트 합계 시 자동 처리 (가장 큰 배송비 1건만 부과) -->
           <button type="button" id="soBundleShipBtn" style="display:none;"></button>
@@ -3402,8 +3402,11 @@ html, body { background: #ffffff !important; }
 
         // 2026-05-29: 베스트굿즈 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 티셔츠는 상품 가격 고정, 인쇄비에서만 할인)
+        // 2026-06-12: 종이매대 1000개+ → 50% (벌크 대량할인)
         let presetBulkDiscount = 0;
         if (state.isBestGoods && state.presetType !== 'tshirt' && qty >= 100) {
+            presetBulkDiscount = Math.round(subtotal * 0.5);
+        } else if (state.isPaperDisplay && qty >= 1000) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
@@ -5613,7 +5616,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-13: 등신대·자유인쇄커팅 택배 (60×40cm 이하, 1만원)
         compact_parcel:       { fee: 10000,  label_ko: '택배배송 (60×40cm 이하)', parts: [['택배배송 60×40 이하', 10000]] },
         // 2026-05-15: 종이매대 전용 — 동적 가격
-        pd_bulk_free:         { fee: 0,      label_ko: '100개 이상 무료배송', parts: [] },
+        pd_bulk_free:         { fee: 0,      label_ko: '포장 없이 벌크배송 (무료)', parts: [] },
         pd_parcel_1:          { fee: 30000,  label_ko: '1개씩 포장 택배배송', parts: [['1개씩 포장 택배배송 (3만원/개)', 30000]] },
         pd_parcel_2:          { fee: 15000,  label_ko: '2개씩 포장 택배배송', parts: [['2개씩 포장 택배배송 (1.5만원/2개)', 15000]] }
     };
@@ -5639,7 +5642,7 @@ html, body { background: #ffffff !important; }
             case 'regional_compact_60_180': return tr('60×180 이하 지방택배', '60×180以下 地方宅配', 'Regional parcel ≤60×180');
             case 'regional_delivery_simple': return tr('지방배송',             '地方配送',            'Regional delivery');
             case 'compact_parcel':        return tr('택배배송 (60×40cm 이하)', '宅配 (60×40cm以下)', 'Parcel (≤60×40cm)');
-            case 'pd_bulk_free':          return tr('100개 이상 무료배송',     '100個以上 無料配送', 'Free shipping (100+ pcs)');
+            case 'pd_bulk_free':          return tr('포장 없이 벌크배송 (무료)', '梱包なしバルク配送 (無料)', 'Bulk shipping · no packaging (FREE)');
             case 'pd_parcel_1':           return tr('1개씩 포장 택배배송',     '1個ずつ宅配',         'Parcel · 1 per box');
             case 'pd_parcel_2':           return tr('2개씩 포장 택배배송',     '2個ずつ宅配',         'Parcel · 2 per box');
             default:
@@ -5858,24 +5861,15 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 시공/배송 버튼 클릭
     window._soPickShip = function (method) {
-        // 2026-05-15: 종이매대 100개 이상 무료배송 — 100개 미만 시 자동 수량 보정
+        // 2026-06-12: 종이매대 MOQ 100 — qty 가 항상 100 이상이므로 확인창 불필요. 자동 보정만.
         if (method === 'pd_bulk_free' && state.isPaperDisplay) {
-            var curQ = parseInt(state.qty, 10) || 1;
+            var curQ = parseInt(state.qty, 10) || 100;
             if (curQ < 100) {
-                var ok = window.confirm(tr(
-                    '100개 이상 주문 시 무료배송됩니다. 수량을 100개로 변경할까요?',
-                    '100個以上で無料配送です。数量を100個に変更しますか？',
-                    'Free shipping requires 100+ pcs. Set quantity to 100?'
-                ));
-                if (ok) {
-                    state.qty = 100;
-                    var qIn = document.getElementById('soQty');
-                    if (qIn) qIn.value = 100;
-                    if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
-                    if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
-                } else {
-                    return; // 수량 안 늘리면 pd_bulk_free 선택 취소
-                }
+                state.qty = 100;
+                var qIn = document.getElementById('soQty');
+                if (qIn) qIn.value = 100;
+                if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
+                if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
             }
         }
         state.shipMethod = method;
@@ -8290,8 +8284,9 @@ html, body { background: #ffffff !important; }
         const cur = parseInt(input.value) || 1;
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        // 2026-06-03: 명함 qty = 각 단위 (step 1, min 1)
-        const next = Math.max(1, Math.min(_qtyMax, cur + delta));
+        // 2026-06-12: 종이매대 MOQ 100
+        const _qtyMin = state.isPaperDisplay ? 100 : 1;
+        const next = Math.max(_qtyMin, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
         _soSyncAcrylicAddonQty();
@@ -8308,7 +8303,9 @@ html, body { background: #ffffff !important; }
         const input = document.getElementById('soQty');
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        let v = Math.max(1, Math.min(_qtyMax, parseInt(input.value) || 1));
+        // 2026-06-12: 종이매대 MOQ = 100 (최소 주문수량)
+        const _qtyMin = state.isPaperDisplay ? 100 : 1;
+        let v = Math.max(_qtyMin, Math.min(_qtyMax, parseInt(input.value) || _qtyMin));
         if (v !== parseInt(input.value)) input.value = v;
         state.qty = v;
         _soSyncAcrylicAddonQty();
@@ -8989,7 +8986,13 @@ html, body { background: #ffffff !important; }
         state.isRawBoard = _soIsRawBoardProduct(p) || (typeof document !== 'undefined' && document.documentElement.classList.contains('hexa-mode'));
         state.isRawBoardDouble = _soIsRawBoardDoubleSided(p);
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
+        // 2026-06-12: 종이매대 MOQ = 100. 모달 열릴 때 자동 초기화.
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
+        if (state.isPaperDisplay) {
+            state.qty = Math.max(100, parseInt(state.qty, 10) || 100);
+            var _qtyInpInit = document.getElementById('soQty');
+            if (_qtyInpInit) { _qtyInpInit.value = state.qty; _qtyInpInit.setAttribute('min', '100'); }
+        }
         // 2026-05-15: 금액주문 (21355677) — 수량 무제한 + 할인·배송·이미지 전부 불필요
         state.isAmountOrder = _soIsAmountOrder(p);
         // 2026-05-15: 원판/금액주문은 인쇄 없이 발송 — 업로드 영역, 전달사항, 수량할인 안내, 양면 라벨 등 숨김
@@ -10253,8 +10256,9 @@ html, body { background: #ffffff !important; }
             // 2026-06-09: 등신대 — 설치 없이 배송만. 3가지: 수도권 무료 / 60×180 택배 3만 / 지방배송 20만 (카트 묶음은 자동 carryover)
             allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
         } else if (state.isPaperDisplay) {
-            // 2026-05-15: 종이매대 — 100개 이상 무료 / 1개씩(3만/개) / 2개씩(1.5만/2개) / 수도권 용차 10만 / 지방 용차 20만
-            allowed = ['self_pickup', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2', 'metro_delivery', 'regional_delivery'];
+            // 2026-06-12: 종이매대 — 배송 옵션 단순화. MOQ 100, 기본 벌크배송 무료.
+            //   1개씩 / 2개씩 포장 옵션 추가 가능. self_pickup / metro_delivery / regional_delivery 제거.
+            allowed = ['pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2'];
         } else if (state.isRawBoard) {
             // 2026-05-30: 사용자 요청 — 원판은 본사 방문 제거, 수도권 배송 + 지방 배송만.
             allowed = ['metro_delivery', 'regional_delivery'];
@@ -10275,11 +10279,17 @@ html, body { background: #ffffff !important; }
             allowed = ['self_pickup'];
         }
         // 2026-05-14: 택배 옵션이 있는 상품은 택배를 기본 선택 (본사 방문 대신)
-        // 2026-05-15: 종이매대 — qty >= 100 이면 pd_bulk_free, 아니면 pd_parcel_2 (가장 저렴) 기본
+        // 2026-06-12: 종이매대 MOQ 100 — qty < 100 이면 100 으로 자동 보정
+        if (state.isPaperDisplay && (parseInt(state.qty, 10) || 0) < 100) {
+            state.qty = 100;
+            var _qIn = document.getElementById('soQty');
+            if (_qIn) _qIn.value = 100;
+        }
+        // 2026-06-12: 종이매대 — 항상 pd_bulk_free 기본 (MOQ 100 강제이므로 분기 불필요)
         var parcelKeys = ['parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel'];
         var defaultShip = 'self_pickup';
         if (state.isPaperDisplay) {
-            defaultShip = ((parseInt(state.qty, 10) || 1) >= 100) ? 'pd_bulk_free' : 'pd_parcel_2';
+            defaultShip = 'pd_bulk_free'; // 항상 무료 벌크 기본
         } else if ((state.isWall || state.isPhotozone) && allowed.indexOf('metro_install') >= 0) {
             // 2026-06-01: 가벽/포토존 — 기본 배송 = 수도권 설치 (사용자 요청)
             defaultShip = 'metro_install';
