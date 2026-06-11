@@ -1224,6 +1224,13 @@ window._tcmFallbackClick = function(code) {
                     vipIcon.className = 'fa-solid fa-scale-balanced';
                 }
             }
+            // 2026-06-11: QR 카드 라벨 — JP/EN 분기
+            var qrLbl = document.getElementById('mgrPhoneJpQrLabel');
+            var qrBtn = document.getElementById('mgrPhoneJpQrBtn');
+            if (lang === 'en') {
+                if (qrLbl) qrLbl.textContent = 'Scan to add LINE';
+                if (qrBtn) qrBtn.textContent = 'Chat on LINE';
+            }
         })();
         </script>
 
@@ -1565,6 +1572,8 @@ window._tcmFallbackClick = function(code) {
             html[data-site="US"] #mgrPhoneList #mgrPhoneSlot { display:none !important; }
             html[data-site="JP"] #mgrPhoneList #mgrPhoneJp,
             html[data-site="US"] #mgrPhoneList #mgrPhoneJp { display:flex !important; }
+            html[data-site="JP"] #mgrPhoneList #mgrPhoneJpQr,
+            html[data-site="US"] #mgrPhoneList #mgrPhoneJpQr { display:flex !important; }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
@@ -2044,6 +2053,17 @@ window._tcmFallbackClick = function(code) {
                         <b style="color:#fff; font-size:16px; white-space:nowrap; letter-spacing:0.3px;">ナナミ · 090-5397-0420</b>
                     </div>
                 </a>
+                <!-- 2026-06-11: JP/US 전용 LINE QR 카드 — 모달에서 ナナミ 카드 옆 / 아래에 노출 -->
+                <div id="mgrPhoneJpQr" style="display:none; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:14px 16px; background:rgba(255,255,255,0.96); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; box-shadow:0 4px 14px rgba(6,199,85,0.25);">
+                    <img src="/line_qr_jp.jpg?v=1" alt="LINE QR" style="width:140px; height:140px; object-fit:contain; display:block; border-radius:6px;">
+                    <div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; color:#06C755;">
+                        <i class="fa-brands fa-line" style="font-size:14px;"></i>
+                        <span id="mgrPhoneJpQrLabel">QRコードでLINE追加</span>
+                    </div>
+                    <a href="https://line.me/ti/p/~astro.0420" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:linear-gradient(135deg,#06C755,#04a247); color:#fff; border-radius:30px; text-decoration:none; font-size:12px; font-weight:700; box-shadow:0 4px 12px rgba(6,199,85,0.35);">
+                        <span id="mgrPhoneJpQrBtn">LINEで相談</span>
+                    </a>
+                </div>
                 <!-- 매니저 4명 — chatbot_knowledge._managers 에서 동적 로드 (loadMgrPhones) -->
                 <div id="mgrPhoneSlot" style="display:contents;">
                     <!-- 로드 전 스켈레톤 placeholder -->
