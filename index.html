@@ -2624,28 +2624,28 @@ window._tcmFallbackClick = function(code) {
                     var lang = (window.__SITE_CODE === 'JP') ? 'ja'
                         : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
                     var T = {
-                        ko: { desc:'아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.',
-                              phEmail:'example@email.com', phPw:'비밀번호 (4자 이상)', phPwc:'비밀번호 확인',
+                        ko: { desc:'아이디와 비밀번호만 입력하면 끝! <b>각 4자 이상</b> 입력 후 가입.',
+                              phEmail:'아이디 (4자 이상)', phPw:'비밀번호 (4자 이상)', phPwc:'비밀번호 확인',
                               btn:'⚡ 5초 가입하고 3만원 쿠폰받기', btnLoading:'가입 중...',
-                              errEmail:'이메일 형식이 올바르지 않습니다.', errPwLen:'비밀번호는 4자 이상이어야 합니다.',
+                              errEmail:'아이디는 4자 이상이어야 합니다.', errPwLen:'아이디·비밀번호는 4자 이상이어야 합니다.',
                               errPwMatch:'비밀번호가 일치하지 않습니다.', errSignup:'가입 실패:',
                               successHtml:'🎉 가입 완료!<br>3만원 쿠폰이 자동 지급되었습니다.' },
-                        ja: { desc:'IDとパスワードを入力するだけ! <b>4文字以上</b>で会員登録。',
-                              phEmail:'example@email.com', phPw:'パスワード (4文字以上)', phPwc:'パスワード確認',
+                        ja: { desc:'IDとパスワードを入力するだけ! <b>各4文字以上</b>で会員登録。',
+                              phEmail:'ID (4文字以上)', phPw:'パスワード (4文字以上)', phPwc:'パスワード確認',
                               btn:'⚡ 5秒登録して3,000円クーポン獲得', btnLoading:'登録中...',
-                              errEmail:'メール形式が正しくありません。', errPwLen:'パスワードは4文字以上にしてください。',
+                              errEmail:'IDは4文字以上にしてください。', errPwLen:'ID・パスワードは4文字以上にしてください。',
                               errPwMatch:'パスワードが一致しません。', errSignup:'登録失敗:',
                               successHtml:'🎉 登録完了!<br>3,000円クーポンが自動付与されました。' },
-                        en: { desc:'Just enter ID + password (<b>4+ chars</b>) and join!',
-                              phEmail:'example@email.com', phPw:'Password (4+ chars)', phPwc:'Confirm password',
+                        en: { desc:'Just enter an ID + password (<b>4+ chars each</b>) and join!',
+                              phEmail:'ID (4+ chars)', phPw:'Password (4+ chars)', phPwc:'Confirm password',
                               btn:'⚡ 5-sec Signup & $30 Coupon', btnLoading:'Signing up...',
-                              errEmail:'Invalid email format.', errPwLen:'Password must be 4+ characters.',
+                              errEmail:'ID must be 4+ characters.', errPwLen:'ID & password must be 4+ characters.',
                               errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
                               successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
                     };
                     var t = T[lang] || T.ko;
                     if ($('quickSignupDesc'))   $('quickSignupDesc').innerHTML = t.desc;
-                    if ($('quickSignupEmail'))  $('quickSignupEmail').placeholder = t.phEmail;
+                    if ($('quickSignupEmail'))  { $('quickSignupEmail').placeholder = t.phEmail; $('quickSignupEmail').type = 'text'; }
                     if ($('quickSignupPw'))     $('quickSignupPw').placeholder    = t.phPw;
                     if ($('quickSignupPwc'))    $('quickSignupPwc').placeholder   = t.phPwc;
                     if ($('quickSignupBtnLbl')) $('quickSignupBtnLbl').textContent = t.btn;
@@ -2660,12 +2660,21 @@ window._tcmFallbackClick = function(code) {
                     };
 
                     window._doQuickSignup = async function(){
-                        var em = ($('quickSignupEmail').value || '').trim().toLowerCase();
+                        var raw = ($('quickSignupEmail').value || '').trim();
                         var pw = ($('quickSignupPw').value || '');
                         var pwc = ($('quickSignupPwc').value || '');
-                        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { alert(t.errEmail); return; }
-                        if (pw.length < 4) { alert(t.errPwLen); return; }
-                        if (pw !== pwc)    { alert(t.errPwMatch); return; }
+                        if (raw.length < 4) { alert(t.errEmail); return; }
+                        if (pw.length < 4)  { alert(t.errPwLen); return; }
+                        if (pw !== pwc)     { alert(t.errPwMatch); return; }
+                        // 2026-06-11: 이메일 형식 아니어도 OK — Supabase 합성 이메일 자동 부착, 원본은 username 보존
+                        var em = raw.toLowerCase();
+                        var origUsername = null;
+                        if (em.indexOf('@') < 0) {
+                            origUsername = raw;
+                            var safe = em.replace(/[^a-z0-9_.-]/g, '');
+                            if (safe.length < 3) safe = 'user' + safe;
+                            em = safe + '@cp.localid';
+                        }
                         var btn = $('quickSignupBtn'); var lbl = $('quickSignupBtnLbl');
                         btn.disabled = true;
                         if (lbl) lbl.textContent = t.btnLoading;
@@ -2682,21 +2691,25 @@ window._tcmFallbackClick = function(code) {
                                     throw new Error(msg);
                                 }
                             }
-                            // profiles.event_coupon = 30000 (이미 있으면 누적 안 함)
+                            // profiles.event_coupon = 30000 (이미 있으면 누적 안 함) + username 보존
                             var sess = await sb.auth.getSession();
                             var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
                             if (uid) {
                                 try {
-                                    var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
+                                    var prf = await sb.from('profiles').select('id, event_coupon, username').eq('id', uid).maybeSingle();
                                     var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
                                     if (!hasCoupon) {
-                                        await sb.from('profiles').upsert({ id: uid, email: em, event_coupon: 30000 }, { onConflict: 'id' });
+                                        var payload = { id: uid, email: em, event_coupon: 30000 };
+                                        if (origUsername) payload.username = origUsername;
+                                        await sb.from('profiles').upsert(payload, { onConflict: 'id' });
+                                    } else if (origUsername && (!prf.data.username)) {
+                                        await sb.from('profiles').update({ username: origUsername }).eq('id', uid);
                                     }
                                 } catch(e) { console.warn('[profile credit]', e); }
                             }
-                            // cpCouponEmail / couponEmail 자동 채움
+                            // couponEmail 자동 채움 (원본 ID 우선)
                             var coupEmailIn = $('couponEmail');
-                            if (coupEmailIn) coupEmailIn.value = em;
+                            if (coupEmailIn) coupEmailIn.value = origUsername || em;
                             // 성공 패널
                             var f = $('quickSignupForm');
                             if (f) f.innerHTML = '<div style="text-align:center; padding:8px 4px; color:#065f46; font-weight:700; line-height:1.6;">' + t.successHtml + '</div>';
