@@ -12525,7 +12525,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=436');
+            var mod = await import('./export.js?v=437');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
@@ -13443,5 +13443,9 @@ html, body { background: #ffffff !important; }
         injectStyles(); injectModal(); setupRouting();
     }
 
-    console.log('[simple_order] v=7 (actual file size detection for frame/ruler) loaded.');
+    // 2026-06-11: 견적서/작업지시서 등 외부 모듈에서 정확한 라인 총액 사용 위함 — _soCalcItemPrice 전역 노출
+    //   ADDON_DB 누락(b0001 등) 케이스에서도 cart UI 와 동일한 총액으로 PDF 가 생성되도록.
+    try { window._soCalcItemPrice = _soCalcItemPrice; } catch(e) {}
+
+    console.log('[simple_order] v=8 (expose _soCalcItemPrice for quote/workorder line total) loaded.');
 })();

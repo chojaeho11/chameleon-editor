@@ -2209,6 +2209,41 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if(y > 260) { doc.addPage(); y = 20; }
         });
 
+        // 2026-06-11: ADDON_DB 누락 (예: b0001 보조받침) 보정 — 실제 카트 라인 합계와 비교해 차액 행 추가
+        //   _soCalcItemPrice 는 cart UI 가 사용하는 정확한 라인 가격 계산 (가벽 size/side/addon/PRO 모두 반영)
+        if (typeof window._soCalcItemPrice === 'function') {
+            try {
+                var _trueLine = window._soCalcItemPrice(item) || 0;
+                var _shipInLine = (item.shipping && typeof item.shipping.fee === 'number') ? item.shipping.fee : 0;
+                _trueLine -= _shipInLine;
+                if (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') {
+                    if (_cr && _cr.JP) _trueLine = Math.round(_trueLine * _cr.JP);
+                } else if (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') {
+                    if (_cr && _cr.US) _trueLine = Math.round(_trueLine * _cr.US * 100) / 100;
+                }
+                var _renderedThisItem = totalAmt - _beforeItemAmt;
+                var _missing = Math.round(_trueLine - _renderedThisItem);
+                if (_missing > 100) {
+                    var _missLabelTxt = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? 'その他オプション'
+                        : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? 'Other options'
+                        : '기타 옵션';
+                    var _missLabel = '└ ' + _missLabelTxt;
+                    var _missSplit = doc.splitTextToSize(_missLabel, nameColWidth - 4);
+                    var _missH = Math.max(8, 4 + (_missSplit.length * 5));
+                    curX = 15;
+                    drawCell(doc, curX, y, cols[0], _missH, '', 'center'); curX += cols[0];
+                    drawCell(doc, curX, y, cols[1], _missH, _missSplit, 'left', 8); curX += cols[1];
+                    drawCell(doc, curX, y, cols[2], _missH, TEXT.opt_add, 'left', 8); curX += cols[2];
+                    drawCell(doc, curX, y, cols[3], _missH, '1', 'center'); curX += cols[3];
+                    drawCell(doc, curX, y, cols[4], _missH, formatCurrencyForPDF(_missing), 'right'); curX += cols[4];
+                    drawCell(doc, curX, y, cols[5], _missH, formatCurrencyForPDF(_missing), 'right');
+                    y += _missH;
+                    if (y > 260) { doc.addPage(); y = 20; }
+                    totalAmt += _missing;
+                }
+            } catch(e) { console.warn('[quote] _soCalcItemPrice 보정 실패:', e); }
+        }
+
         // 2026-05-22: 이 항목(상품+옵션+받침)이 할인 비적용이면 그 합을 누적해 할인 base 에서 제외.
         if (_isAmountDiscExempt) nonDiscountableAmt += (totalAmt - _beforeItemAmt);
     });
