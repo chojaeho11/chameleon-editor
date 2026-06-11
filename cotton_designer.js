@@ -915,8 +915,11 @@ function updatePrice() {
 
     const rawHoebae = calcHoebae();           // 표시용 (실제 비율)
     const hoebae = calcBillableHoebae();      // 청구용 회배 (반마=0.5 / 미만=1 / 그외 실제)
-    const itemPrice = calcItemPrice();        // 출력 단가 (반마 8,000 / 1배 미만 15,000 / 그외 회배×15,000)
-    const finishPerItem = Math.round((state.finishExtra || 0) * hoebae); // 회배 비례
+    const itemPrice = calcItemPrice();        // 출력 단가 (반마 8,000 / 1배 미만 12,000 / 그외 회배×12,000)
+    // 2026-06-11: 마감(오버록 등)·고리·부자재 — ceil(회배) 단위로 청구 (1마 이하 1개, 1.5마 2개, 2마 2개...)
+    //   기존: hoebae(billable) 곱 → ≤0.5 인 경우 4000×0.5=2000 으로 절반만 청구되던 버그.
+    const finishCount = Math.max(1, Math.ceil(rawHoebae));
+    const finishPerItem = (state.finishExtra || 0) * finishCount;
     const otherPerItem = (state.hookExtra || 0) + (state.accExtra || 0) + (state.seamExtra || 0);
     const perItem = itemPrice + finishPerItem + otherPerItem;
     const subtotal = perItem * state.orderQty;
@@ -928,7 +931,8 @@ function updatePrice() {
     document.getElementById('pQty').textContent = state.orderQty;
 
     const extraParts = [];
-    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + hoebae.toFixed(2) + ' = ' + cdFmtPrice(finishPerItem) : ''));
+    // 2026-06-11: 마감 표시 — ceil(회배) 개수로 표시 ("오버록 ×1 = 4,000원" / "×2 = 8,000원")
+    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + finishCount + ' = ' + cdFmtPrice(finishPerItem) : ''));
     if (state.hookCode) extraParts.push((window.cdT?window.cdT('hook'):'고리') + ': ' + state.hookName + ' (' + cdFmtPrice(state.hookExtra||0) + ')');
     if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' (' + cdFmtPrice(state.accExtra||0) + ')');
     if (state.seamExtra > 0) extraParts.push((window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)') + ' (+' + cdFmtPrice(state.seamExtra) + ')');
@@ -1789,7 +1793,9 @@ function buildCartItem() {
         rawHoebae = calcHoebae();
         hoebae = calcBillableHoebae();
         itemPrice = calcItemPrice();
-        finishPerItem = Math.round((state.finishExtra||0) * hoebae);
+        // 2026-06-11: 마감 — ceil(회배) 개수 단위 청구 (1마 이하 1개, 1.5마 2개, 2마 2개)
+        const _finishCount = Math.max(1, Math.ceil(rawHoebae));
+        finishPerItem = (state.finishExtra||0) * _finishCount;
         otherPerItem = (state.hookExtra||0) + (state.accExtra||0) + (state.seamExtra||0);
         subtotal = (itemPrice + finishPerItem + otherPerItem) * state.orderQty;
         disc = getVolumeDiscount(state.orderQty);
