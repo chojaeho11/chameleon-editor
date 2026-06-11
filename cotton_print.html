@@ -1447,7 +1447,7 @@ async function submitRollFabricRequest() {
             <span class="cp-six-icon"><i class="fa-solid fa-phone-volume"></i></span>
             <span class="cp-six-label" id="cpLblPhone">전화 안내</span>
         </button>
-        <button type="button" class="cp-six-btn cp-six-chat" onclick="window.openAdvisorPanel ? window.openAdvisorPanel() : (window.toggleAdvisorPanel && window.toggleAdvisorPanel())">
+        <button type="button" class="cp-six-btn cp-six-chat" onclick="if(window.__jpNanamiOpen){window.__jpNanamiOpen();return false;}return (window.openAdvisorPanel ? window.openAdvisorPanel() : (window.toggleAdvisorPanel && window.toggleAdvisorPanel()))">
             <span class="cp-six-icon"><i class="fa-solid fa-comment-dots"></i></span>
             <span class="cp-six-label" id="cpLblChat">챗봇 상담</span>
         </button>

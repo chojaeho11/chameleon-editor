@@ -1562,9 +1562,13 @@ window._tcmFallbackClick = function(code) {
             @media (max-width: 700px) { #freeDeliveryNotice { margin-top:24px !important; } }
             /* 2026-06-11: FREE/SUMMER 2 칸 광고 자체 숨김 — 모든 사이트 (사용자 요청) */
             #freeDeliveryNotice { display:none !important; }
-            /* 2026-06-11: JP/US 도 6 버튼 표시 — min-height 보장 */
+            /* 2026-06-11: JP/US 도 6 버튼 표시 — min-height 보장 (모바일 컴팩트) */
             html[data-site="JP"] #mgrQuoteHero,
-            html[data-site="US"] #mgrQuoteHero { display:block !important; min-height:140px !important; margin-top:20px !important; margin-bottom:40px !important; }
+            html[data-site="US"] #mgrQuoteHero { display:block !important; min-height:110px !important; margin-top:12px !important; margin-bottom:16px !important; }
+            @media (max-width:700px) {
+                html[data-site="JP"] #mgrQuoteHero,
+                html[data-site="US"] #mgrQuoteHero { min-height:80px !important; margin-top:6px !important; margin-bottom:8px !important; }
+            }
             /* 2026-06-11: JP/US 전화 모달 — 한국 매니저 카드들 (본사 + 4명) 숨김, ナナミ(mgrPhoneJp) 만 표시 */
             html[data-site="JP"] #mgrPhoneList .mgr-kr-only,
             html[data-site="US"] #mgrPhoneList .mgr-kr-only,
@@ -2016,7 +2020,7 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-phone-volume"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_phones">매니저 전화안내</span>
                 </button>
-                <button type="button" class="mgr-action mgr-chat" onclick="if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
+                <button type="button" class="mgr-action mgr-chat" onclick="if(window.__SITE_CODE==='JP'&&window.__jpNanamiOpen){window.__jpNanamiOpen();return;} if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_chat">챗봇 상담</span>
                 </button>
@@ -2914,14 +2918,14 @@ window._tcmFallbackClick = function(code) {
         <div style="max-width:1280px; max-height:calc(100vh - 120px); margin:0 auto; background:#fff; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 64px -16px rgba(0,0,0,0.5);">
             <div style="flex-shrink:0; background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 20px; display:flex; align-items:center; justify-content:center; gap:8px; position:relative;">
                 <span style="font-size:22px;">📋</span>
-                <h2 id="personalPayModalTitle" style="margin:0; font-size:20px; font-weight:900; color:#111827; letter-spacing:-0.01em;">개인결제창</h2>
+                <h2 id="personalPayModalTitle" data-i18n-html="vip_pay_modal_title" style="margin:0; font-size:20px; font-weight:900; color:#111827; letter-spacing:-0.01em;">개인결제창</h2>
                 <button type="button" onclick="window._closePersonalPayModal()" aria-label="close" style="position:absolute; top:50%; right:14px; transform:translateY(-50%); width:36px; height:36px; background:#f3f4f6; border:none; border-radius:50%; font-size:22px; font-weight:700; color:#374151; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
             </div>
             <div style="flex:1; min-height:0; overflow-y:auto; padding:20px;">
                 <div id="personalPayModalGrid" class="hotdeal-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;"></div>
                 <div id="personalPayModalEmpty" style="display:none; text-align:center; padding:48px 16px; color:#6b7280; font-size:14px;">
-                    현재 결제 대기 중인 견적이 없습니다.<br>
-                    <span style="font-size:12px; color:#9ca3af;">매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.</span>
+                    <span id="personalPayEmptyTxt">현재 결제 대기 중인 견적이 없습니다.</span><br>
+                    <span id="personalPayEmptyHint" style="font-size:12px; color:#9ca3af;">매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.</span>
                 </div>
             </div>
         </div>
@@ -3134,11 +3138,19 @@ window._tcmFallbackClick = function(code) {
                 var fallbackImg = imgUrl.replace(/"/g, '&quot;');
                 // 2026-05-14: 결제완료/입금확인 + 디자인 미완료 → '데이터작업완료' 버튼으로 전환
                 var isPaid = order.payment_status === '결제완료' || order.payment_status === '입금확인';
-                var badgeLabel = isPaid ? '🎨 디자인작업중' : '💬 결제대기';
+                // 2026-06-11: 로케일별 라벨/버튼 i18n
+                var _vipLang = (window.__SITE_CODE === 'JP') ? 'ja'
+                    : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
+                var _vipL = {
+                    ko: { working:'🎨 디자인작업중', waiting:'💬 결제대기', dataDone:'📦 데이터작업완료', pay:'⚡ 결제하기' },
+                    ja: { working:'🎨 デザイン作業中', waiting:'💬 決済待ち',  dataDone:'📦 データ作業完了', pay:'⚡ 決済する' },
+                    en: { working:'🎨 In Design', waiting:'💬 Awaiting Payment', dataDone:'📦 Data Done', pay:'⚡ Pay Now' }
+                }[_vipLang];
+                var badgeLabel = isPaid ? _vipL.working : _vipL.waiting;
                 var badgeBg = isPaid ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#fbbf24,#b45309)';
                 var actionBtnHtml = isPaid
-                    ? '<button type="button" onclick="event.stopPropagation(); window._markDesignComplete(\'' + esc(order.id) + '\', this)" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(16,185,129,0.5);">📦 데이터작업완료</button>'
-                    : '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">⚡ 결제하기</button>';
+                    ? '<button type="button" onclick="event.stopPropagation(); window._markDesignComplete(\'' + esc(order.id) + '\', this)" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(16,185,129,0.5);">' + _vipL.dataDone + '</button>'
+                    : '<button type="button" onclick="event.stopPropagation(); window._payPendingQuote(\'' + esc(order.id) + '\')" style="width:100%; margin-top:8px; padding:9px 12px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:0 4px 10px -3px rgba(251,191,36,0.5);">' + _vipL.pay + '</button>';
                 var cardClick = isPaid
                     ? 'window._markDesignComplete(\'' + esc(order.id) + '\')'
                     : 'window._payPendingQuote(\'' + esc(order.id) + '\')';
@@ -3149,7 +3161,7 @@ window._tcmFallbackClick = function(code) {
                         '<div style="position:absolute; top:10px; left:10px; background:' + badgeBg + '; color:#fff; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; box-shadow:0 2px 6px rgba(120,53,15,0.25);">' + badgeLabel + '</div>' +
                       '</div>' +
                       '<div class="hotdeal-info">' +
-                        '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + ' 고객님</div>' +
+                        '<div class="hotdeal-title" style="color:#78350f !important;">' + esc(customerName) + (_vipLang==='ja'?'様':(_vipLang==='en'?'':' 고객님')) + '</div>' +
                         '<div class="hotdeal-meta" style="color:#92400e; font-size:11px;">' + esc(primaryName) + esc(moreSuffix) + '</div>' +
                         '<div class="hotdeal-price" style="color:' + (isPaid ? '#059669' : '#b45309') + ' !important;">' + fmtKR(order.total_amount || 0) + (isPaid ? ' ✓' : '') + '</div>' +
                         actionBtnHtml +
@@ -3180,6 +3192,20 @@ window._tcmFallbackClick = function(code) {
             var grid = document.getElementById('personalPayModalGrid');
             var empty = document.getElementById('personalPayModalEmpty');
             if (!modal || !grid) return;
+            // 2026-06-11: 모달 타이틀/빈 메시지 i18n
+            var _vipLang2 = (window.__SITE_CODE === 'JP') ? 'ja'
+                : ((window.__SITE_CODE === 'US') ? 'en' : 'ko');
+            var _t = {
+                ko: { title:'개인결제창', empty:'현재 결제 대기 중인 견적이 없습니다.', hint:'매니저와 상담 후 발급된 결제 URL 로 들어오시거나, 로그인 후 다시 확인해주세요.' },
+                ja: { title:'個別決済',     empty:'現在、決済待ちの見積はありません。',  hint:'担当との相談後に発行された決済URLからアクセスするか、ログイン後に再度ご確認ください。' },
+                en: { title:'Personal Pay', empty:'No pending quotes at this time.',     hint:'Please access via the payment URL issued by your manager, or log in and check again.' }
+            }[_vipLang2];
+            var _ttl = document.getElementById('personalPayModalTitle');
+            if (_ttl) _ttl.textContent = _t.title;
+            var _eTxt = document.getElementById('personalPayEmptyTxt');
+            if (_eTxt) _eTxt.textContent = _t.empty;
+            var _eHint = document.getElementById('personalPayEmptyHint');
+            if (_eHint) _eHint.textContent = _t.hint;
             var bannerGrid = banner ? banner.querySelector('.hotdeal-grid, #pendingQuoteGrid') : null;
             if (bannerGrid && bannerGrid.children.length > 0) {
                 grid.innerHTML = bannerGrid.innerHTML;

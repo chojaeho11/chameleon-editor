@@ -147,28 +147,26 @@
         document.body.appendChild(modal);
 
         // 이벤트 바인딩
-        fab.addEventListener('click', function(){
+        function openModal() {
             modal.classList.add('is-open');
             document.body.style.overflow = 'hidden';
             var badge = fab.querySelector('.jp-nan-badge');
             if (badge) badge.style.display = 'none';
-        });
-        modal.addEventListener('click', function(e){
-            if (e.target === modal) {
-                modal.classList.remove('is-open');
-                document.body.style.overflow = '';
-            }
-        });
-        var closeBtn = modal.querySelector('.jpn-close');
-        if (closeBtn) closeBtn.addEventListener('click', function(){
+        }
+        function closeModal() {
             modal.classList.remove('is-open');
             document.body.style.overflow = '';
-        });
+        }
+        // 전역 노출 — 다른 곳 (6 버튼 챗봇 등) 에서 호출 가능
+        window.__jpNanamiOpen = openModal;
+        window.__jpNanamiClose = closeModal;
+
+        fab.addEventListener('click', openModal);
+        modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+        var closeBtn = modal.querySelector('.jpn-close');
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
         document.addEventListener('keydown', function(e){
-            if (e.key === 'Escape' && modal.classList.contains('is-open')) {
-                modal.classList.remove('is-open');
-                document.body.style.overflow = '';
-            }
+            if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
         });
     }
 
