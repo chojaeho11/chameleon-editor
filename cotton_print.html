@@ -1428,7 +1428,8 @@ async function submitRollFabricRequest() {
     }
     #cpSixBtnGrid .cp-six-label {
         font-size:13px; font-weight:700; line-height:1.2; color:#374151;
-        white-space:nowrap; text-align:center; letter-spacing:-0.01em;
+        text-align:center; letter-spacing:-0.01em;
+        word-break:keep-all; overflow-wrap:break-word; max-width:100%;
     }
     /* 색상 — 카멜레온 메인과 동일 */
     .cp-six-phone .cp-six-icon  { background:linear-gradient(135deg,#dbeafe,#60a5fa); color:#1e40af; }
@@ -1443,7 +1444,8 @@ async function submitRollFabricRequest() {
         #cpSixBtnGrid { grid-template-columns:repeat(6, 1fr); gap:6px; }
         #cpSixBtnGrid .cp-six-btn { padding:8px 2px; gap:5px; }
         #cpSixBtnGrid .cp-six-icon { width:36px; height:36px; font-size:15px; border-radius:11px; }
-        #cpSixBtnGrid .cp-six-label { font-size:10.5px; line-height:1.15; }
+        #cpSixBtnGrid .cp-six-label { font-size:9.5px; line-height:1.1; padding:0 1px; }
+        #cpSixBtnGrid .cp-six-btn { overflow:hidden; }
     }
     </style>
     <div id="cpSixBtnGrid">
@@ -1451,9 +1453,9 @@ async function submitRollFabricRequest() {
             <span class="cp-six-icon"><i class="fa-solid fa-phone-volume"></i></span>
             <span class="cp-six-label" id="cpLblPhone">전화 안내</span>
         </button>
-        <button type="button" class="cp-six-btn cp-six-chat" onclick="if(window.__jpNanamiOpen){window.__jpNanamiOpen();return false;}return (window.openAdvisorPanel ? window.openAdvisorPanel() : (window.toggleAdvisorPanel && window.toggleAdvisorPanel()))">
-            <span class="cp-six-icon"><i class="fa-solid fa-comment-dots"></i></span>
-            <span class="cp-six-label" id="cpLblChat">챗봇 상담</span>
+        <button type="button" class="cp-six-btn cp-six-chat" onclick="window._cpOpenOrderLookup && window._cpOpenOrderLookup()">
+            <span class="cp-six-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="cp-six-label" id="cpLblChat">주문조회</span>
         </button>
         <button type="button" class="cp-six-btn cp-six-vip" id="cpBtnVip" onclick="location.href='/tokushoho'">
             <span class="cp-six-icon"><i class="fa-solid fa-crown"></i></span>
@@ -1561,15 +1563,15 @@ async function submitRollFabricRequest() {
     })();
     // 6 버튼 라벨
     var L = {
-        ko: { phone:'전화 안내', chat:'챗봇 상담', vip:'VIP 개인결제', scrap:'상담 후 금액주문', design:'디자인 의뢰', coupon:'이벤트 쿠폰',
+        ko: { phone:'전화 안내', chat:'주문 조회', vip:'VIP 개인결제', scrap:'상담 후 금액주문', design:'디자인 의뢰', coupon:'이벤트 쿠폰',
               phoneTitle:'📞 본사 · 담당자 전화', hqLabel:'본사 (대한민국)', hqHours:'평일 09:00 - 18:00 KST',
               quoteTitle:'⚡ 상담 후 금액주문', quoteDesc:'담당 매니저와 통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.', quoteUnit:'원', quoteBtn:'주문하기',
               modalHint:'상담 후 합의된 금액은 「상담 후 금액주문」 버튼으로 직접 결제하실 수 있습니다.' },
-        ja: { phone:'担当へお電話', chat:'チャット相談', vip:'特定商取引法', scrap:'相談後の金額決済', design:'デザイン依頼', coupon:'クーポン',
+        ja: { phone:'担当へお電話', chat:'ご注文照会', vip:'特定商取引法', scrap:'相談後の金額決済', design:'デザイン依頼', coupon:'クーポン',
               phoneTitle:'📞 本社・担当の電話', hqLabel:'本社 (韓国)', hqHours:'平日 09:00 - 18:00 KST',
               quoteTitle:'⚡ 相談後の金額決済', quoteDesc:'担当と通話・LINE 相談後、合意金額を入力すると即座に決済画面が開きます。', quoteUnit:'円', quoteBtn:'注文する',
               modalHint:'相談後に合意した金額は「相談後の金額決済」ボタンから直接お支払いいただけます。' },
-        en: { phone:'Call Manager', chat:'Chat Support', vip:'Legal Notice', scrap:'Order by Quote', design:'Design Request', coupon:'Coupon',
+        en: { phone:'Call Manager', chat:'Track Order', vip:'Legal Notice', scrap:'Order by Quote', design:'Design Request', coupon:'Coupon',
               phoneTitle:'📞 Headquarters · Direct Line', hqLabel:'Headquarters (Korea)', hqHours:'Mon-Fri 09:00 - 18:00 KST',
               quoteTitle:'⚡ Order by Quote', quoteDesc:'After consulting your manager, enter the agreed amount to open checkout instantly.', quoteUnit:'$', quoteBtn:'Order',
               modalHint:'After consultation, you can pay the agreed amount directly through the "Order by Quote" button.' }
@@ -4504,5 +4506,187 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     <script src="/jp-nanami-fab.js?v=2" defer></script>
+
+<!-- 2026-06-11: 주문조회 모달 — 전화번호 뒷 4자리 입력 → 접수상태 + 예상 배송일 -->
+<div id="cpOrderLookupModal" style="display:none; position:fixed; inset:0; z-index:60000; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; padding:16px;" onclick="if(event.target===this)window._cpCloseOrderLookup()">
+    <div style="background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:24px 22px; width:100%; max-width:440px; box-shadow:0 30px 60px -10px rgba(0,0,0,0.85); font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div style="font-size:16px; font-weight:900; color:#fde047;" id="cpLookupTitle">🔍 ご注文照会</div>
+            <button type="button" onclick="window._cpCloseOrderLookup()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(255,255,255,0.1); color:#fff; font-size:18px; cursor:pointer; line-height:1;">✕</button>
+        </div>
+        <div id="cpLookupForm">
+            <div style="font-size:12.5px; color:rgba(255,255,255,0.7); line-height:1.55; margin-bottom:14px;" id="cpLookupDesc">お電話番号の下4桁を入力してください。最新のご注文状況と予想お届け日をお調べします。</div>
+            <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.22); border-radius:10px; padding:6px 6px 6px 14px; margin-bottom:12px;">
+                <input id="cpLookupPhone" type="text" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" placeholder="1234" style="border:none; outline:none; font-size:22px; font-weight:800; color:#fff; flex:1; min-width:0; text-align:center; padding:10px 0; background:transparent; font-family:inherit; letter-spacing:0.6em;">
+            </div>
+            <button type="button" id="cpLookupBtn" onclick="window._cpDoLookup()" style="width:100%; padding:14px; background:linear-gradient(135deg,#fde047,#eab308); color:#1f2937; border:none; border-radius:11px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(234,179,8,0.6); font-family:inherit;">
+                <span id="cpLookupBtnLabel">照会する</span>
+            </button>
+        </div>
+        <div id="cpLookupResult" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+// 2026-06-11: 주문조회 모달 — 전화번호 뒷 4자리 입력 → 접수상태 + 예상 배송일
+(function(){
+    function $(id){ return document.getElementById(id); }
+    var SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    var lang = window.__PS_LANG || (function(){
+        var h = location.hostname;
+        if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
+        if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
+        return 'ko';
+    })();
+    var T = {
+        ko: { title:'🔍 주문 조회', desc:'전화번호 뒷 4자리를 입력하시면 최근 주문의 진행 상태와 예상 배송일을 확인하실 수 있습니다.',
+              btn:'조회하기', searching:'조회 중...',
+              statusPaid:'접수완료', statusProd:'제작 진행중', statusPending:'결제 대기중',
+              etaLabel:'예상 배송일', orderDate:'주문일', amount:'결제금액',
+              notFound:'해당 전화번호의 주문을 찾을 수 없습니다.', err:'조회 중 오류가 발생했습니다.',
+              digitsErr:'전화번호 뒷 4자리를 입력해주세요.', back:'다시 조회' },
+        ja: { title:'🔍 ご注文照会', desc:'お電話番号の下4桁を入力してください。最新のご注文状況と予想お届け日をお調べします。',
+              btn:'照会する', searching:'照会中...',
+              statusPaid:'受付完了', statusProd:'製作進行中', statusPending:'入金確認待ち',
+              etaLabel:'お届け予定', orderDate:'ご注文日', amount:'お支払い金額',
+              notFound:'該当のお電話番号でご注文が見つかりません。', err:'照会中にエラーが発生しました。',
+              digitsErr:'電話番号の下4桁を入力してください。', back:'再照会' },
+        en: { title:'🔍 Track Order', desc:'Enter the last 4 digits of your phone number to check your order status and estimated delivery date.',
+              btn:'Search', searching:'Searching...',
+              statusPaid:'Order Received', statusProd:'In Production', statusPending:'Awaiting Payment',
+              etaLabel:'Estimated Delivery', orderDate:'Order Date', amount:'Total Amount',
+              notFound:'No orders found for that phone number.', err:'An error occurred during search.',
+              digitsErr:'Please enter the last 4 digits.', back:'Search Again' }
+    };
+    var t = T[lang] || T.ko;
+    // 라벨 i18n
+    if ($('cpLookupTitle'))     $('cpLookupTitle').textContent     = t.title;
+    if ($('cpLookupDesc'))      $('cpLookupDesc').textContent      = t.desc;
+    if ($('cpLookupBtnLabel'))  $('cpLookupBtnLabel').textContent  = t.btn;
+
+    function fmtDate(iso){
+        if (!iso) return '-';
+        try {
+            var d = new Date(iso);
+            var y = d.getFullYear(); var m = (d.getMonth()+1); var dd = d.getDate();
+            if (lang === 'ja') return y + '年' + m + '月' + dd + '日';
+            if (lang === 'en') return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] + ' ' + dd + ', ' + y;
+            return y + '. ' + m + '. ' + dd + '.';
+        } catch(e){ return iso; }
+    }
+    function fmtAmount(n){
+        if (n == null) return '-';
+        try {
+            if (lang === 'ja') return '¥' + Math.round(n * 0.1).toLocaleString();
+            if (lang === 'en') return '$' + (n * 0.001).toFixed(2);
+            return Number(n).toLocaleString() + '원';
+        } catch(e){ return n; }
+    }
+
+    window._cpOpenOrderLookup = function(){
+        var m = $('cpOrderLookupModal'); if (!m) return;
+        if (m.parentNode !== document.body) { try { document.body.appendChild(m); } catch(e){} }
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        // 초기화 — form 보이게, result 숨기기
+        if ($('cpLookupForm'))   $('cpLookupForm').style.display = 'block';
+        if ($('cpLookupResult')) { $('cpLookupResult').style.display = 'none'; $('cpLookupResult').innerHTML = ''; }
+        var inp = $('cpLookupPhone'); if (inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 100); }
+    };
+    window._cpCloseOrderLookup = function(){
+        var m = $('cpOrderLookupModal'); if (!m) return;
+        m.style.display = 'none';
+        document.body.style.overflow = '';
+    };
+
+    window._cpDoLookup = async function(){
+        var inp = $('cpLookupPhone');
+        var v = (inp.value || '').replace(/\D/g, '');
+        if (v.length !== 4) { alert(t.digitsErr); return; }
+        var btn = $('cpLookupBtn');
+        var btnLbl = $('cpLookupBtnLabel');
+        btn.disabled = true;
+        if (btnLbl) btnLbl.textContent = t.searching;
+        try {
+            // REST API: 결제완료/입금확인 주문 중 phone like 뒤 4자리
+            //   RLS 가 anon 차단해도 다음 단계 (fallback) 으로 사용자에게 안내
+            var url = SB_URL + '/rest/v1/orders'
+                + '?select=id,created_at,payment_status,design_complete,total_amount,status,phone,manager_name'
+                + '&phone=like.*' + v
+                + '&payment_status=in.(%22%EA%B2%B0%EC%A0%9C%EC%99%84%EB%A3%8C%22,%22%EC%9E%85%EA%B8%88%ED%99%95%EC%9D%B8%22,%22paid%22)'
+                + '&order=created_at.desc&limit=5';
+            var resp = await fetch(url, { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            var rows = await resp.json();
+            renderResult(rows || []);
+        } catch (e) {
+            console.warn('[lookup]', e);
+            renderError(t.err);
+        } finally {
+            btn.disabled = false;
+            if (btnLbl) btnLbl.textContent = t.btn;
+        }
+    };
+
+    function renderResult(rows){
+        var r = $('cpLookupResult'); var f = $('cpLookupForm');
+        if (!r || !f) return;
+        f.style.display = 'none'; r.style.display = 'block';
+        if (!rows.length) { renderError(t.notFound); return; }
+        var html = '';
+        rows.forEach(function(o){
+            // 상태 판정
+            // - design_complete=true → 制作進行中 (제작 진행중)
+            // - payment_status=결제완료/입금확인/paid → 受付完了 (접수완료)
+            // - 그 외 → 입금확인 대기
+            var paidLike = (['결제완료','입금확인','paid'].indexOf(o.payment_status) >= 0);
+            var isProduction = !!o.design_complete;
+            var statusTxt = isProduction ? t.statusProd : (paidLike ? t.statusPaid : t.statusPending);
+            var statusColor = isProduction
+                ? 'linear-gradient(135deg,#60a5fa,#2563eb)'
+                : (paidLike ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#fbbf24,#b45309)');
+            // ETA: created_at + 5~7 일
+            var cdate = o.created_at ? new Date(o.created_at) : null;
+            var etaLow = '', etaHigh = '';
+            if (cdate) {
+                var d1 = new Date(cdate); d1.setDate(d1.getDate() + 5);
+                var d2 = new Date(cdate); d2.setDate(d2.getDate() + 7);
+                etaLow = fmtDate(d1); etaHigh = fmtDate(d2);
+            }
+            html += '<div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:16px; margin-bottom:10px;">'
+                + '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">'
+                    + '<div style="display:inline-block; padding:5px 12px; background:' + statusColor + '; color:#fff; font-size:11.5px; font-weight:900; border-radius:50px;">' + statusTxt + '</div>'
+                    + '<div style="font-size:11px; color:rgba(255,255,255,0.55); font-weight:600;">#' + o.id + '</div>'
+                + '</div>'
+                + '<div style="display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:12.5px; color:rgba(255,255,255,0.85);">'
+                    + '<div style="color:#86efac; font-weight:600;">' + t.orderDate + '</div><div>' + fmtDate(o.created_at) + '</div>'
+                    + (o.total_amount ? '<div style="color:#86efac; font-weight:600;">' + t.amount + '</div><div style="font-weight:800;">' + fmtAmount(o.total_amount) + '</div>' : '')
+                    + (cdate ? '<div style="color:#fde047; font-weight:700;">' + t.etaLabel + '</div><div style="font-weight:900; color:#fff;">' + etaLow + ' ～ ' + etaHigh + '</div>' : '')
+                + '</div>'
+            + '</div>';
+        });
+        html += '<button type="button" onclick="(function(){var f=document.getElementById(\'cpLookupForm\');var r=document.getElementById(\'cpLookupResult\');if(f)f.style.display=\'block\';if(r){r.style.display=\'none\';r.innerHTML=\'\';}var i=document.getElementById(\'cpLookupPhone\');if(i){i.value=\'\';i.focus();}})()" style="width:100%; margin-top:6px; padding:11px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); color:#fff; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + t.back + '</button>';
+        r.innerHTML = html;
+    }
+    function renderError(msg){
+        var r = $('cpLookupResult'); var f = $('cpLookupForm');
+        if (!r || !f) return;
+        f.style.display = 'none'; r.style.display = 'block';
+        r.innerHTML = '<div style="padding:20px 16px; background:rgba(239,68,68,0.12); border:1.5px solid rgba(239,68,68,0.4); border-radius:12px; text-align:center; color:#fecaca; font-size:13px; font-weight:600; line-height:1.6;">' + msg + '</div>'
+            + '<button type="button" onclick="(function(){var f=document.getElementById(\'cpLookupForm\');var r=document.getElementById(\'cpLookupResult\');if(f)f.style.display=\'block\';if(r){r.style.display=\'none\';r.innerHTML=\'\';}var i=document.getElementById(\'cpLookupPhone\');if(i){i.value=\'\';i.focus();}})()" style="width:100%; margin-top:12px; padding:11px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); color:#fff; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + t.back + '</button>';
+    }
+    // Enter 키로 조회
+    var inp = $('cpLookupPhone');
+    if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') window._cpDoLookup(); });
+    // ESC 로 닫기
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') {
+            var m = $('cpOrderLookupModal');
+            if (m && m.style.display === 'flex') window._cpCloseOrderLookup();
+        }
+    });
+})();
+</script>
 </body>
 </html>
