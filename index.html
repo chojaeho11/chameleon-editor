@@ -1555,9 +1555,9 @@ window._tcmFallbackClick = function(code) {
             @media (max-width: 700px) { #freeDeliveryNotice { margin-top:24px !important; } }
             /* 2026-06-11: FREE/SUMMER 2 칸 광고 자체 숨김 — 모든 사이트 (사용자 요청) */
             #freeDeliveryNotice { display:none !important; }
-            /* 2026-06-11: JP/US 에서는 mgrQuoteHero 6 버튼 대신 신규 jpUsContactBanner 사용 */
+            /* 2026-06-11: JP/US 도 6 버튼 표시 — 배너 + 6 버튼 둘 다. min-height 보장 */
             html[data-site="JP"] #mgrQuoteHero,
-            html[data-site="US"] #mgrQuoteHero { display:none !important; }
+            html[data-site="US"] #mgrQuoteHero { display:block !important; min-height:140px !important; margin-top:20px !important; margin-bottom:40px !important; }
             /* ─── 캐러셀 ─── */
             .hero-carousel {
                 max-width:1100px;
@@ -3860,8 +3860,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var aiDesignHero = document.getElementById('aiDesignHero');
     var pendingBanner = document.getElementById('pendingQuoteBanner');
     var freeDelivNotice = document.getElementById('freeDeliveryNotice');
+    var jpUsBanner = document.getElementById('jpUsContactBanner'); // 2026-06-11: JP/US 전용 연락처 배너
     var cursor = hero;
-    // ★ 6 버튼 카드를 가장 먼저 hero 바로 뒤에 — 모바일에서 가려지지 않도록
+    // ★ 2026-06-11: JP/US 연락처 배너 — hero 바로 뒤 (KR 에서는 CSS 로 display:none)
+    if (jpUsBanner) { moveAfter(jpUsBanner, cursor); cursor = jpUsBanner; }
+    // ★ 6 버튼 카드 — KR 에서 그 다음 (JP/US 에서는 CSS 로 display:none)
     if (mgrHero) { moveAfter(mgrHero, cursor); cursor = mgrHero; }
     if (pendingBanner) { moveAfter(pendingBanner, cursor); cursor = pendingBanner; }
     if (freeDelivNotice) { moveAfter(freeDelivNotice, cursor); cursor = freeDelivNotice; }
