@@ -3450,6 +3450,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-29: 베스트굿즈 50% 할인 — 상품 단가(subtotal) 에만 적용 (옵션·배송 제외)
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 티셔츠는 상품 가격 고정, 인쇄비에서만 할인)
         // 2026-06-12: 종이매대 수량 티어 — 100=정가 / 300=10% / 500=20% / 1000=50%. 1개 샘플은 할인 없음.
+        // 2026-06-12: 거치대 없는 배너 (현수막/패트/매쉬) — 같은 디자인 10장+ 50% 할인 이벤트
         let presetBulkDiscount = 0;
         if (state.isBestGoods && state.presetType !== 'tshirt' && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
@@ -3459,6 +3460,8 @@ html, body { background: #ffffff !important; }
             else if (qty >= 500) _pdPct = 0.2;
             else if (qty >= 300) _pdPct = 0.1;
             if (_pdPct > 0) presetBulkDiscount = Math.round(subtotal * _pdPct);
+        } else if (state.isBannerDiscountEligible && qty >= 10) {
+            presetBulkDiscount = Math.round(subtotal * 0.5);
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
         //   3장 이상 주문 시 인쇄비만 50% 할인
@@ -3592,7 +3595,7 @@ html, body { background: #ffffff !important; }
         showRow('soProDiscRow', proDiscount > 0);
         setText('soProDisc', '-' + fmtPrice(proDiscount));
         // 2026-05-29: 베스트굿즈 프리셋 50% 할인 라인 (100개+ — 티셔츠는 인쇄비 라인에서 별도 처리)
-        // 2026-06-12: 종이매대는 수량 티어 별 (300/10%, 500/20%, 1000/50%) — 라벨 정확히 표시
+        // 2026-06-12: 종이매대 / 배너 family — 수량 티어 별 라벨
         showRow('soPresetBulkDiscRow', presetBulkDiscount > 0);
         var _bulkRowLabel, _bulkPct;
         if (state.isPaperDisplay) {
@@ -3600,6 +3603,9 @@ html, body { background: #ffffff !important; }
             else if (qty >= 500)  { _bulkRowLabel = tr('500개 이상 20% 할인',   '500個以上 20%割引',   '20% off on 500+');   _bulkPct = '20%'; }
             else if (qty >= 300)  { _bulkRowLabel = tr('300개 이상 10% 할인',   '300個以上 10%割引',   '10% off on 300+');   _bulkPct = '10%'; }
             else                  { _bulkRowLabel = '';                                                                              _bulkPct = ''; }
+        } else if (state.isBannerDiscountEligible) {
+            _bulkRowLabel = tr('같은 디자인 10장 이상 50% 할인', '同じデザイン10枚以上 50%割引', '10+ same design: 50% off');
+            _bulkPct = '50%';
         } else {
             _bulkRowLabel = tr('100개 이상 50% 할인', '100個以上 50%割引', '50% off on 100+');
             _bulkPct = '50%';
@@ -5824,13 +5830,17 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-12: 사용자 요청 — 허니콤보드 카테고리 외 전 제품 무료배송. 실사출력/광고인쇄 모두 0.
-        //   (이전 "10만원 미만 1만원" 룰 폐기)
+        // 2026-06-12: 사용자 요청 — 허니콤보드 카테고리 외 전 제품 무료배송.
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
             return 0;
         }
         if (state.isAdPrint) {
+            state._shipUpgradeReason = null;
+            return 0;
+        }
+        // 2026-06-12: 배너 family (거치대 포함/미포함 모두) — 무료배송
+        if (state.isBannerOutput) {
             state._shipUpgradeReason = null;
             return 0;
         }
@@ -6784,6 +6794,10 @@ html, body { background: #ffffff !important; }
         var areaM2 = (wCm / 100) * (hCm / 100);
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
+        // 2026-06-12: 배너 출력물 — DB 단가 그대로 사용 (면적 곱셈 X). 사이즈는 표시용.
+        if (state.isBannerOutput && state.product && state.product.price) {
+            calcPrice = state.product.price;
+        }
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
         //   사용자 피드백: "가격이 3만원에 고정되어 있어 사이즈나 재질이 변해도" — 30k 최소가 모든 차이를 가림.
         if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
@@ -8901,8 +8915,26 @@ html, body { background: #ffffff !important; }
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
         if (state.isBizCard) _soBizCardRender();
 
+        // 2026-06-12: 거치대 없는 배너 출력물 family 감지 (현수막/페트/매쉬/미니).
+        //   - DB 단가 그대로 사용 (면적 곱셈 X)
+        //   - 무료배송 강제
+        //   - 미니배너 가격 1,000원 override
+        //   - 현수막/패트/매쉬 3종은 같은 디자인 10장+ 50% 할인
+        var _pNm = (p && p.name || '');
+        var _isBannerWithStand = /거치대\s*포함|세트|set|with\s*stand|スタンド付/i.test(_pNm);
+        var _isBannerStandless = /거치대\s*미포함|stand\s*not\s*included|スタンドなし/i.test(_pNm)
+            || (/미니\s*배너|mini\s*banner/i.test(_pNm) && !_isBannerWithStand);
+        state.isBannerOutput = !!(p && p.code && (/^hb_bn/i.test(p.code) || /^bn_/i.test(p.code))) ||
+            (/배너|banner|バナー/i.test(_pNm));
+        state.isBannerStandless = state.isBannerOutput && _isBannerStandless;
+        state.isBannerDiscountEligible = state.isBannerStandless && /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard/i.test(_pNm);
+        // 미니 배너 단가 1,000원 override
+        if (state.isBannerOutput && /미니\s*배너|mini\s*banner/i.test(_pNm) && p) {
+            p.price = 1000;
+        }
         // 2026-06-01: 허니콤배너 (hb_bn_*) — 단순 흐름: 단면 55K / 양면 80K, 사이즈/할인/큐 UI 모두 비활성.
-        state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code));
+        //   (hb_bn 그 자체가 기본 배너인 경우만 — 거치대 없는 별도 배너 출력물은 위에서 따로 처리)
+        state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code)) && !state.isBannerStandless;
         if (state.isBanner) {
             // 가격 override (DB 값 무시) — 모든 배너 동일가
             // 2026-06-05: 단면 55K → 45K 조정
