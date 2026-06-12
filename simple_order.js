@@ -8915,19 +8915,21 @@ html, body { background: #ffffff !important; }
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
         if (state.isBizCard) _soBizCardRender();
 
-        // 2026-06-12: 거치대 없는 배너 출력물 family 감지 (현수막/페트/매쉬/미니).
+        // 2026-06-12: 배너 family 감지 — 거치대 포함/미포함 모두 (현수막/페트/패트/매쉬/메쉬/미니 + 세트류)
         //   - DB 단가 그대로 사용 (면적 곱셈 X)
-        //   - 무료배송 강제
+        //   - 무료배송 + 시공/배송 옵션 섹션 자체 숨김
         //   - 미니배너 가격 1,000원 override
-        //   - 현수막/패트/매쉬 3종은 같은 디자인 10장+ 50% 할인
+        //   - 현수막/패트/매쉬 3종 (거치대 없음) 은 같은 디자인 10장+ 50% 할인
         var _pNm = (p && p.name || '');
-        var _isBannerWithStand = /거치대\s*포함|세트|set|with\s*stand|スタンド付/i.test(_pNm);
-        var _isBannerStandless = /거치대\s*미포함|stand\s*not\s*included|スタンドなし/i.test(_pNm)
-            || (/미니\s*배너|mini\s*banner/i.test(_pNm) && !_isBannerWithStand);
+        var _bannerKw = /배너|banner|バナー|거치대|패트|페트|매쉬|메쉬|현수막|placard|hanging\s*sign/i;
         state.isBannerOutput = !!(p && p.code && (/^hb_bn/i.test(p.code) || /^bn_/i.test(p.code))) ||
-            (/배너|banner|バナー/i.test(_pNm));
-        state.isBannerStandless = state.isBannerOutput && _isBannerStandless;
-        state.isBannerDiscountEligible = state.isBannerStandless && /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard/i.test(_pNm);
+            _bannerKw.test(_pNm);
+        var _isBannerWithStand = state.isBannerOutput && (/거치대|세트|set|stand|スタンド/i.test(_pNm)
+            && !/거치대\s*미포함|stand\s*not/i.test(_pNm));
+        var _isBannerStandless = state.isBannerOutput && !_isBannerWithStand;
+        state.isBannerStandless = _isBannerStandless;
+        state.isBannerWithStand = _isBannerWithStand;
+        state.isBannerDiscountEligible = _isBannerStandless && /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard/i.test(_pNm);
         // 미니 배너 단가 1,000원 override
         if (state.isBannerOutput && /미니\s*배너|mini\s*banner/i.test(_pNm) && p) {
             p.price = 1000;
@@ -10336,7 +10338,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 허니콤 가벽 외 모든 허니콤 제품은 무료배송 — 시공/배송 섹션 자체 숨김 (사용자 요청)
         // 2026-06-09: 등신대/스카시도 시공 옵션 노출 — 가벽 없이 단독 시공 요청 가능. isInstallEligible 로 통합 판정.
         var _isHbFreeShip = state.isHoneycomb && !state.isInstallEligible;
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily
+        // 2026-06-12: 배너 family (거치대 포함/미포함 전부) — 시공/배송 옵션 섹션 자체 숨김. 무조건 무료.
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput
             && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
