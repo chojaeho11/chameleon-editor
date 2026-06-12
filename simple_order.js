@@ -1964,11 +1964,17 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-06-12: 배너 family 전용 — 사이즈 선택 자리에 노출되는 50% 할인 안내 (현수막/패트/매쉬, 거치대 미포함) -->
+        <!-- 2026-06-12: 배너 family 전용 — 사이즈 선택 자리에 노출되는 할인 안내 -->
+        <!--   (a) 현수막/패트/매쉬 거치대 미포함 — 10장 이상 50% 할인 -->
+        <!--   (b) 미니배너 — 100장 이상 30% 할인 -->
         <div class="so-section" id="soBannerDiscountNotice" style="display:none; padding:0;">
-          <button type="button" style="width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
+          <button type="button" id="soBannerDiscountBtn50" style="display:none; width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
             🎉 ${tr('같은 디자인 10장 이상 주문 시 50% 할인', '同じデザイン10枚以上で 50%割引', '50% off · 10+ same design')}
             <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 10개 이상 입력하면 자동 적용 · 별도 쿠폰 불필요', '10枚以上で自動適用', 'Auto-applied at qty 10+')}</div>
+          </button>
+          <button type="button" id="soBannerDiscountBtnMini" style="display:none; width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
+            🎉 ${tr('100장 이상 주문 시 30% 할인', '100枚以上で 30%割引', '30% off · 100+ pcs')}
+            <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 100개 이상 입력하면 자동 적용', '100枚以上で自動適用', 'Auto-applied at qty 100+')}</div>
           </button>
         </div>
 
@@ -3459,6 +3465,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 티셔츠는 상품 가격 고정, 인쇄비에서만 할인)
         // 2026-06-12: 종이매대 수량 티어 — 100=정가 / 300=10% / 500=20% / 1000=50%. 1개 샘플은 할인 없음.
         // 2026-06-12: 거치대 없는 배너 (현수막/패트/매쉬) — 같은 디자인 10장+ 50% 할인 이벤트
+        // 2026-06-12: 미니배너 — 100장+ 30% 할인
         let presetBulkDiscount = 0;
         if (state.isBestGoods && state.presetType !== 'tshirt' && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
@@ -3470,6 +3477,8 @@ html, body { background: #ffffff !important; }
             if (_pdPct > 0) presetBulkDiscount = Math.round(subtotal * _pdPct);
         } else if (state.isBannerDiscountEligible && qty >= 10) {
             presetBulkDiscount = Math.round(subtotal * 0.5);
+        } else if (state.isMiniBanner && qty >= 100) {
+            presetBulkDiscount = Math.round(subtotal * 0.3);
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
         //   3장 이상 주문 시 인쇄비만 50% 할인
@@ -3614,6 +3623,9 @@ html, body { background: #ffffff !important; }
         } else if (state.isBannerDiscountEligible) {
             _bulkRowLabel = tr('같은 디자인 10장 이상 50% 할인', '同じデザイン10枚以上 50%割引', '10+ same design: 50% off');
             _bulkPct = '50%';
+        } else if (state.isMiniBanner) {
+            _bulkRowLabel = tr('100장 이상 30% 할인', '100枚以上 30%割引', '100+ pcs: 30% off');
+            _bulkPct = '30%';
         } else {
             _bulkRowLabel = tr('100개 이상 50% 할인', '100個以上 50%割引', '50% off on 100+');
             _bulkPct = '50%';
@@ -8926,7 +8938,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 배너 family 감지 — 거치대 포함/미포함 모두 (현수막/페트/패트/매쉬/메쉬/미니 + 세트류)
         //   - DB 단가 그대로 사용 (면적 곱셈 X)
         //   - 무료배송 + 시공/배송 옵션 섹션 자체 숨김
-        //   - 미니배너 가격 1,000원 override
+        //   - 미니배너 가격 1,000원 override + 100장+ 30% 할인
         //   - 현수막/패트/매쉬 3종 (거치대 없음) 은 같은 디자인 10장+ 50% 할인
         var _pNm = (p && p.name || '');
         var _bannerKw = /배너|banner|バナー|거치대|패트|페트|매쉬|메쉬|현수막|placard|hanging\s*sign/i;
@@ -8937,9 +8949,10 @@ html, body { background: #ffffff !important; }
         var _isBannerStandless = state.isBannerOutput && !_isBannerWithStand;
         state.isBannerStandless = _isBannerStandless;
         state.isBannerWithStand = _isBannerWithStand;
+        state.isMiniBanner = state.isBannerOutput && /미니\s*배너|mini\s*banner/i.test(_pNm);
         state.isBannerDiscountEligible = _isBannerStandless && /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard/i.test(_pNm);
         // 미니 배너 단가 1,000원 override
-        if (state.isBannerOutput && /미니\s*배너|mini\s*banner/i.test(_pNm) && p) {
+        if (state.isMiniBanner && p) {
             p.price = 1000;
         }
         // 2026-06-01: 허니콤배너 (hb_bn_*) — 단순 흐름: 단면 55K / 양면 80K, 사이즈/할인/큐 UI 모두 비활성.
@@ -9798,11 +9811,16 @@ html, body { background: #ffffff !important; }
             if (_tshirtUpload2) _tshirtUpload2.style.display = 'none';
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
-        // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 50% 할인 안내 (eligible 면)
+        // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 할인 안내 (eligible 면)
         if (state.isBannerOutput) {
             if (custSec) custSec.style.display = 'none';
             var _bdNotice = document.getElementById('soBannerDiscountNotice');
-            if (_bdNotice) _bdNotice.style.display = state.isBannerDiscountEligible ? '' : 'none';
+            var _bdBtn50  = document.getElementById('soBannerDiscountBtn50');
+            var _bdBtnMini = document.getElementById('soBannerDiscountBtnMini');
+            var _showAnyNotice = !!(state.isBannerDiscountEligible || state.isMiniBanner);
+            if (_bdNotice)  _bdNotice.style.display = _showAnyNotice ? '' : 'none';
+            if (_bdBtn50)   _bdBtn50.style.display  = state.isBannerDiscountEligible ? '' : 'none';
+            if (_bdBtnMini) _bdBtnMini.style.display = state.isMiniBanner ? '' : 'none';
         } else {
             if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
             var _bdNotice2 = document.getElementById('soBannerDiscountNotice');
