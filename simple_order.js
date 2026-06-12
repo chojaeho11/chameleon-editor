@@ -11498,28 +11498,51 @@ html, body { background: #ffffff !important; }
             if (_noticeWrap && _noticeText) {
                 var _sub = (_cartCalc.taxBase || 0) + (_cartCalc.nonDiscountBase || 0);
                 var _shipFinal = _cartCalc.shipTotal || 0;
+                // 2026-06-12: 카트 안내 박스 — 항상 그린 박스로 통일.
+                //   "최소주문금액 3만원 / 허니콤보드 외 무료배송" 안내 + 부족 시 빨간 경고
+                var _sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
+                var _minKrw = 30000;
+                var _minLabel = (_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원');
                 if (_sub <= 0) {
                     _noticeWrap.style.display = 'none';
-                } else if (_shipFinal === 0) {
+                } else if (_sub < _minKrw) {
+                    // 최소주문금액 미달 — 빨간 박스 경고
+                    _noticeWrap.style.display = '';
+                    _noticeWrap.style.background = '#fef2f2';
+                    _noticeWrap.style.borderColor = '#fecaca';
+                    _noticeWrap.style.color = '#7f1d1d';
+                    _noticeText.innerHTML = tr(
+                        '⚠️ 최소 주문금액은 <b>' + _minLabel + '</b> 이상입니다. 현재 ' + fmtPrice(_sub) + ' — <b>' + fmtPrice(_minKrw - _sub) + '</b> 더 담아주세요.',
+                        '⚠️ 最低注文金額は <b>' + _minLabel + '</b> 以上です。現在 ' + fmtPrice(_sub) + ' — あと <b>' + fmtPrice(_minKrw - _sub) + '</b> 必要',
+                        '⚠️ Minimum order: <b>' + _minLabel + '</b>. Current ' + fmtPrice(_sub) + ' — add <b>' + fmtPrice(_minKrw - _sub) + '</b> more.'
+                    );
+                } else {
+                    // 정상 — 그린 박스로 안내
                     _noticeWrap.style.display = '';
                     _noticeWrap.style.background = '#dcfce7';
                     _noticeWrap.style.borderColor = '#86efac';
                     _noticeWrap.style.color = '#14532d';
-                    _noticeText.innerHTML = tr(
-                        '<b style="color:#15803d;">무료배송</b> 입니다. (묶음배송)',
-                        '<b style="color:#15803d;">送料無料</b> です。(まとめて配送)',
-                        '<b style="color:#15803d;">FREE shipping</b> (bundled).'
-                    );
-                } else {
-                    _noticeWrap.style.display = '';
-                    _noticeWrap.style.background = '#fef3c7';
-                    _noticeWrap.style.borderColor = '#fcd34d';
-                    _noticeWrap.style.color = '#78350f';
-                    _noticeText.innerHTML = tr(
-                        '주문 상품들은 <b>' + fmtPrice(_shipFinal) + '</b> 으로 <b>묶음배송</b> 됩니다. 무료배송 상품을 함께 담으면 모두 무료!',
-                        '商品は <b>' + fmtPrice(_shipFinal) + '</b> で <b>まとめて配送</b> されます。送料無料商品を一緒にどうぞ!',
-                        'Items ship together for <b>' + fmtPrice(_shipFinal) + '</b>. Add a free-shipping item to bundle for free!'
-                    );
+                    var _shipLine;
+                    if (_shipFinal === 0) {
+                        _shipLine = tr(
+                            '✅ <b>무료배송</b> — 허니콤보드 카테고리 외 전 제품 무료',
+                            '✅ <b>送料無料</b> — ハニカムボードカテゴリー以外 全商品無料',
+                            '✅ <b>FREE shipping</b> — All non-Honeycomb products free'
+                        );
+                    } else {
+                        _shipLine = tr(
+                            '주문 합계 <b>' + fmtPrice(_shipFinal) + '</b> 배송비 (허니콤보드 카테고리 시공/배송)',
+                            'ご注文合計 配送料 <b>' + fmtPrice(_shipFinal) + '</b> (ハニカムボード設置/配送)',
+                            'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
+                        );
+                    }
+                    _noticeText.innerHTML =
+                        '<div style="font-weight:800; margin-bottom:4px;">' +
+                            tr('💚 최소주문 ' + _minLabel + ' 이상 · 허니콤보드 외 전제품 무료배송',
+                               '💚 最低注文 ' + _minLabel + ' 以上 · ハニカムボード以外 全商品 送料無料',
+                               '💚 Min order ' + _minLabel + ' · Free shipping (non-Honeycomb)') +
+                        '</div>' +
+                        '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>';
                 }
             }
         } catch(e) {
@@ -12081,8 +12104,27 @@ html, body { background: #ffffff !important; }
     }
 
     // 2026-05-13: 카트 전체 합계 + 할인 계산 (구매금액 + 구독자 중복)
+    // 2026-06-12: 허니콤보드 카테고리 판정 (배송비 단일 규칙용)
+    function _soIsHoneycombCartItem(it) {
+        if (!it || !it.product) return false;
+        var c = String(it.product.code || '').toLowerCase();
+        var cat = String(it.product.category || '').toLowerCase();
+        var top = String(it.product.top_category_code || it.product.topCategoryCode || '').toLowerCase();
+        var n = String(it.product.name || '').toLowerCase();
+        if (/^hb_/.test(c)) return true;
+        if (cat.indexOf('honeycomb') >= 0 || cat.indexOf('허니콤') >= 0) return true;
+        if (top.indexOf('honeycomb') >= 0 || top.indexOf('허니콤') >= 0) return true;
+        if (/허니콤|honeycomb/.test(n)) return true;
+        // 가벽/등신대/박스/자유인쇄커팅 — 허니콤보드 family 로 간주
+        if (it.product.isWall || it.product.isBox || it.product.isStandee || it.product.isCutPrint) return true;
+        return false;
+    }
+    window._soIsHoneycombCartItem = _soIsHoneycombCartItem;
+
     function _soCalcCartTotal(cart) {
         if (!Array.isArray(cart)) cart = [];
+        // 2026-06-12: 허니콤보드 외 카테고리만 있으면 배송비 무조건 0 (사용자 요청 — 단일 규칙)
+        var _hasHcInCart = cart.some(_soIsHoneycombCartItem);
         var taxBase = 0;          // 할인 적용 대상 (일반 상품가 + 옵션)
         var nonDiscountBase = 0;  // 할인 비적용 (매니저 견적 — 이미 협의가)
         // 2026-06-01: 카트 합계 시 자동 묶음배송 — 모든 일반 항목의 개별 배송비 중 가장 큰 것 1건만 부과.
@@ -12214,8 +12256,14 @@ html, body { background: #ffffff !important; }
             if (_cat === 'manager_quote' || _type === 'manager_quote') return true;
             return false;
         });
-        if (!_hasAmountOrder && _allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
+        // 2026-06-12: 사용자 요청 — 카트에 허니콤보드 카테고리 없으면 무료배송.
+        //   기존 "<100K → +30K" 자동가산은 허니콤 family 가 카트에 있을 때만 적용.
+        if (_hasHcInCart && !_hasAmountOrder && _allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
             shipTotal += 30000;
+        }
+        // 비-허니콤만 있는 카트 → 배송비 강제 0 (베스트굿즈 3K, 패브릭 5K/10K, real-print +10K 등 모두 무시)
+        if (!_hasHcInCart) {
+            shipTotal = 0;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
