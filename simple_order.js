@@ -2198,8 +2198,8 @@ html, body { background: #ffffff !important; }
           <!-- 1) 등급: 일반 / 프리미엄 — 핑크/로즈 톤 (인쇄면 인디고와 구분) -->
           <div class="so-section-title">🏷️ ${tr('명함 등급', 'グレード', 'Grade')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #be185d; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span id="soBizTierPriceG" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(2500)} / ${tr('양면', '両面', 'D')} ${fmtPrice(4000)}</span></button>
-            <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(8000)} / ${tr('양면', '両面', 'D')} ${fmtPrice(10000)}</span></button>
+            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #be185d; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span id="soBizTierPriceG" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('발색좋은 스노우지', '発色の良いスノー紙', 'Vivid snow paper')}</span></button>
+            <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('10종의 최고급 수입지', '10種の最高級輸入紙', '10 premium imported papers')}</span></button>
           </div>
 
           <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
@@ -5795,19 +5795,15 @@ html, body { background: #ffffff !important; }
             }
             // 가벽과 동일한 옵션·가격 사용 (아래 일반 분기로 fall through)
         }
-        // 2026-06-03: 명함/리플렛 (pp_bc_*) — KR 3,000원 / JP 1,000엔 (rate 0.1) / 묶음배송 시 0
+        // 2026-06-12: 명함/리플렛 — 허니콤보드 외 전 제품 무료배송 정책 (사용자 요청)
         if (state.isBizCard) {
             state._shipUpgradeReason = null;
-            if (state.bundleShipping) return 0;
-            var _lngBc = getLang();
-            return (_lngBc === 'ja') ? 10000 : 3000;
+            return 0;
         }
-        // 2026-06-03: 스티커 (st_*, 0000241) — 명함과 동일 (KR 3K / JP 1K엔 / 묶음 0)
+        // 2026-06-12: 스티커도 무료배송
         if (state.isSticker) {
             state._shipUpgradeReason = null;
-            if (state.bundleShipping) return 0;
-            var _lngSt = getLang();
-            return (_lngSt === 'ja') ? 10000 : 3000;
+            return 0;
         }
         // 2026-05-29: 베스트굿즈 전체 — 정액 배송비
         //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
