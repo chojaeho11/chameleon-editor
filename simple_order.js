@@ -2198,15 +2198,15 @@ html, body { background: #ffffff !important; }
           <!-- 1) 등급: 일반 / 프리미엄 — 핑크/로즈 톤 (인쇄면 인디고와 구분) -->
           <div class="so-section-title">🏷️ ${tr('명함 등급', 'グレード', 'Grade')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #be185d; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span id="soBizTierPriceG" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(3000)} / ${tr('양면', '両面', 'D')} ${fmtPrice(5000)}</span></button>
+            <button type="button" id="soBizTierGeneral" onclick="window._soBizPickTier('general')" style="flex:1; padding:12px; border:2px solid #be185d; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('일반', '一般', 'Standard')} <span id="soBizTierPriceG" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(2500)} / ${tr('양면', '両面', 'D')} ${fmtPrice(4000)}</span></button>
             <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('단면', '片面', 'S')} ${fmtPrice(8000)} / ${tr('양면', '両面', 'D')} ${fmtPrice(10000)}</span></button>
           </div>
 
           <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
           <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(3000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
-            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(5000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
+            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2500)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
+            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(4000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
           </div>
           <!-- 2026-06-03: 명함 전용 — 인쇄면 바로 아래 파일 올리기 버튼 (좌측 soUpload 와 동기화) -->
           <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="margin-top:10px; width:100%; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -7750,8 +7750,9 @@ html, body { background: #ffffff !important; }
     // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
     function _bizPriceFor(side, tier) {
         var t = tier || state.bizTier || 'general';
+        // 2026-06-12: 일반 2500/4000 / 프리미엄 8000/10000 (단면/양면) — 사용자 요청
         if (t === 'premium') return (side === 'double') ? 10000 : 8000;
-        return (side === 'double') ? 5000 : 3000;
+        return (side === 'double') ? 4000 : 2500;
     }
     function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
         // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
@@ -9416,6 +9417,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 광고인쇄 (is_popular=true) — mm 단위 입력 + 사이즈 카드를 주문수량 위로 이동
         state.isAdPrint = !!p.is_popular;
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
+        // 2026-06-12: 명함/스티커는 광고인쇄 layout 대상 X — 자체 등급/면/사이즈 UI 사용
+        if (state.isBizCard) { state.isAdPrint = false; state.isCustomSize = false; }
+        if (state.isSticker) { state.isAdPrint = false; }
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
         //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
         state.isAcrylicFamily = !!(typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p));
