@@ -1964,6 +1964,14 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-12: 배너 family 전용 — 사이즈 선택 자리에 노출되는 50% 할인 안내 (현수막/패트/매쉬, 거치대 미포함) -->
+        <div class="so-section" id="soBannerDiscountNotice" style="display:none; padding:0;">
+          <button type="button" style="width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
+            🎉 ${tr('같은 디자인 10장 이상 주문 시 50% 할인', '同じデザイン10枚以上で 50%割引', '50% off · 10+ same design')}
+            <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 10개 이상 입력하면 자동 적용 · 별도 쿠폰 불필요', '10枚以上で自動適用', 'Auto-applied at qty 10+')}</div>
+          </button>
+        </div>
+
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
         <!-- 2026-05-29: 키링/코롯토 베스트굿즈는 pill UI 로 고정 사이즈 선택 -->
         <div class="so-section" id="soCustomSizeSection" style="display:none;">
@@ -9457,6 +9465,11 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 명함/스티커는 광고인쇄 layout 대상 X — 자체 등급/면/사이즈 UI 사용
         if (state.isBizCard) { state.isAdPrint = false; state.isCustomSize = false; }
         if (state.isSticker) { state.isAdPrint = false; }
+        // 2026-06-12: 배너 family — 사이즈 선택 불필요. DB 단가 그대로 사용. isCustomSize 비활성.
+        if (state.isBannerOutput) {
+            state.isAdPrint = false;
+            state.isCustomSize = false;
+        }
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
         //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
         state.isAcrylicFamily = !!(typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p));
@@ -9785,7 +9798,16 @@ html, body { background: #ffffff !important; }
             if (_tshirtUpload2) _tshirtUpload2.style.display = 'none';
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
-        if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
+        // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 50% 할인 안내 (eligible 면)
+        if (state.isBannerOutput) {
+            if (custSec) custSec.style.display = 'none';
+            var _bdNotice = document.getElementById('soBannerDiscountNotice');
+            if (_bdNotice) _bdNotice.style.display = state.isBannerDiscountEligible ? '' : 'none';
+        } else {
+            if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
+            var _bdNotice2 = document.getElementById('soBannerDiscountNotice');
+            if (_bdNotice2) _bdNotice2.style.display = 'none';
+        }
         var pillsBox = document.getElementById('soPresetSizePills');
         var pillsNote = document.getElementById('soPresetSizeNote');
         var dimsRow  = document.getElementById('soCustomDimsRow');
