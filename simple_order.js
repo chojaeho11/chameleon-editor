@@ -11823,6 +11823,23 @@ html, body { background: #ffffff !important; }
     }
 
     window._soGoCheckout = function () {
+        // 2026-06-12: 카트에서 결제로 넘어가기 전 최소 주문금액 강제 체크.
+        try {
+            var _gcCart = _soReadAllCart();
+            var _gcCalc = _soCalcCartTotal(_gcCart || []);
+            var _gcSub = (_gcCalc && (_gcCalc.taxBase + _gcCalc.nonDiscountBase)) || 0;
+            var _MIN = 30000;
+            if (_gcSub > 0 && _gcSub < _MIN) {
+                var _sc3 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
+                var _md = (_sc3 === 'JP') ? '¥3,000' : (_sc3 === 'US' ? '$30' : '30,000원');
+                alert(tr(
+                    '최소 주문금액은 ' + _md + ' 이상입니다.\n현재 ' + fmtPrice(_gcSub) + ' — ' + fmtPrice(_MIN - _gcSub) + ' 더 담아주세요.',
+                    '最低注文金額は ' + _md + ' 以上です。\n現在 ' + fmtPrice(_gcSub) + ' — あと ' + fmtPrice(_MIN - _gcSub) + ' 必要',
+                    'Minimum order: ' + _md + '.\nCurrent ' + fmtPrice(_gcSub) + ' — please add ' + fmtPrice(_MIN - _gcSub) + ' more.'
+                ));
+                return;
+            }
+        } catch(e){}
         // 2026-05-12: 패브릭처럼 빠른 결제 모달 띄우기 — cartPage 우회
         window._soToggleCart(false);
         window._soOpenCheckout();
@@ -12955,6 +12972,23 @@ html, body { background: #ffffff !important; }
 
         var cart = _soReadAllCart();
         if (cart.length === 0) return;
+
+        // 2026-06-12: 최소 주문금액 30,000원 (JP ¥3,000 / US $30) 강제 — 미달 시 결제 차단
+        try {
+            var _minCalc = _soCalcCartTotal(cart);
+            var _minSub = (_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase)) || 0;
+            var _MIN_KRW = 30000;
+            if (_minSub > 0 && _minSub < _MIN_KRW) {
+                var _sc2 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
+                var _minDisp = (_sc2 === 'JP') ? '¥3,000' : (_sc2 === 'US' ? '$30' : '30,000원');
+                alert(tr(
+                    '최소 주문금액은 ' + _minDisp + ' 이상입니다.\n현재 ' + fmtPrice(_minSub) + ' — ' + fmtPrice(_MIN_KRW - _minSub) + ' 더 담아주세요.',
+                    '最低注文金額は ' + _minDisp + ' 以上です。\n現在 ' + fmtPrice(_minSub) + ' — あと ' + fmtPrice(_MIN_KRW - _minSub) + ' 必要',
+                    'Minimum order: ' + _minDisp + '.\nCurrent ' + fmtPrice(_minSub) + ' — please add ' + fmtPrice(_MIN_KRW - _minSub) + ' more.'
+                ));
+                return;
+            }
+        } catch(e) { console.warn('[min-order check]', e); }
 
         var btn = document.getElementById('soCoSubmitBtn');
         btn.disabled = true;
