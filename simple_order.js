@@ -3648,13 +3648,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-04: 자유인쇄커팅도 항상 표시 (무료배송 안내)
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint || !!state.isCutPrint);
         if (state.isAdPrint) {
-            if (shipFee === 0) {
-                setText('soShipLabel', tr('배송비 · 10만원+ 무료 적용', '送料 · 10万+ 無料適用', 'Shipping · free over ₩100k'));
-                setText('soShipAmount', tr('무료', '無料', 'FREE'));
-            } else {
-                setText('soShipLabel', tr('배송비 · 10만원+ 무료 / 미만 1만원', '送料 · 10万+ 無料 / 未満 1万円', 'Shipping · free over ₩100k / under ₩10k'));
-                setText('soShipAmount', '+' + fmtPrice(shipFee));
-            }
+            // 2026-06-12: 광고인쇄 — 무료배송 (허니콤보드 외 카테고리 전 제품 무료)
+            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
+            setText('soShipAmount', tr('무료', '無料', 'FREE'));
         } else if (state.isBestGoods || state.isBizCard || state.isSticker) {
             // 2026-06-03: 명함/스티커도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
@@ -5825,32 +5821,15 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-08: 실사출력 family — 10만원 이하 1만원 / 10만원 이상 무료배송. 모달은 단일 상품 합계 기준 표시
-        //   (카트 합계 기준 batch 룰은 _soCalcCartTotal 에서 별도 계산).
+        // 2026-06-12: 사용자 요청 — 허니콤보드 카테고리 외 전 제품 무료배송. 실사출력/광고인쇄 모두 0.
+        //   (이전 "10만원 미만 1만원" 룰 폐기)
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
-            var _rpUnit = state.customUnitPrice || 0;  // recalc 가 최신값 set
-            var _rpQty = Math.max(1, state.qty || 1);
-            var _rpSub = _rpUnit * _rpQty;
-            if (_rpQty >= 30) _rpSub = Math.round(_rpSub * 0.7);
-            return _rpSub >= 100000 ? 0 : 10000;
+            return 0;
         }
-        // 2026-06-01: 광고인쇄 — 모달 내 현재 + 큐 라인 합계 기준. 10만원 이상 무료, 미만 1만원.
         if (state.isAdPrint) {
             state._shipUpgradeReason = null;
-            var adSub = (state.customUnitPrice || 0) * (state.qty || 1);
-            try {
-                Object.values(state.selectedAddons || {}).forEach(function(code){
-                    var addon = (window.ADDON_DB || {})[code];
-                    if (!addon) return;
-                    var aQty = (state.addonQuantities && state.addonQuantities[code]) || 1;
-                    adSub += (addon.price || 0) * aQty;
-                });
-            } catch(e) {}
-            (state._adLines || []).forEach(function(line){
-                adSub += (line.lineTotal || 0);
-            });
-            return adSub >= 100000 ? 0 : 10000;
+            return 0;
         }
         var method = state.shipMethod || 'self_pickup';
         // 2026-05-30: 원판 — 수도권 10장 이상 무료/미만 10만, 지방 100장 이상 무료/미만 20만
