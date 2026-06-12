@@ -3643,20 +3643,27 @@ html, body { background: #ffffff !important; }
             // _regularTier 는 _hideUpload 분기(rawBoard/amountOrder)가 제어 — 여기선 손대지 않음
         }
         // 배송/시공 (묶음배송이면 0원이어도 표시)
-        // 2026-05-29: 베스트굿즈 — "배송비" 라벨만 (시공·옵션명 없음)
-        // 2026-06-01: 광고인쇄 — 항상 배송 행 표시 (10만+ 무료 / 미만 3만)
-        // 2026-06-04: 자유인쇄커팅도 항상 표시 (무료배송 안내)
-        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint || !!state.isCutPrint);
+        // 2026-06-12: 허니콤보드 카테고리 family 판정 — 가벽/등신대/박스/자유인쇄커팅/원판/종이매대 외 전부 무료
+        var _isHcFamilyDetail = !!(state.isWall || state.isBox || state.isStandee || state.isCutPrint || state.isRawBoard || state.isHoneycomb || state.isPaperDisplay || state.isAcrylicFamily);
+        showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint || !!state.isCutPrint || !_isHcFamilyDetail);
         if (state.isAdPrint) {
             // 2026-06-12: 광고인쇄 — 무료배송 (허니콤보드 외 카테고리 전 제품 무료)
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
             setText('soShipAmount', tr('무료', '無料', 'FREE'));
-        } else if (state.isBestGoods || state.isBizCard || state.isSticker) {
-            // 2026-06-03: 명함/스티커도 단순 "배송비" 라벨만 (시공/배송방식 노출 X)
+        } else if (state.isBizCard || state.isSticker) {
+            // 2026-06-12: 명함/스티커 — 무료배송
+            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
+            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+        } else if (state.isBestGoods) {
+            // 베스트굿즈는 정액 3K 별도 (기존 유지)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else if (state.isCutPrint) {
-            // 2026-06-04: 자유인쇄커팅 — 무료배송 (사용자 요청)
+            // 자유인쇄커팅 — 무료
+            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
+            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+        } else if (!_isHcFamilyDetail) {
+            // 2026-06-12: 허니콤 family 아니면 무조건 무료 (페트배너/매쉬배너/현수막+거치대 세트 등)
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
             setText('soShipAmount', tr('무료', '無料', 'FREE'));
         } else {
@@ -11892,37 +11899,28 @@ html, body { background: #ffffff !important; }
         if (_isBannerItm) {
             unit = (it.wallSide === 'double') ? 80000 : 45000;
         }
-        // 2026-06-03: 스티커 — 비즈하우스 가격 mirror
+        // 2026-06-12: 스티커 — 비즈하우스 가격 mirror. 배송 무료.
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241'));
         if (_isStItm && it.sticker) {
-            var _stTotal = _stickerCalcPrice(it.sticker);
-            // 묶음배송 시 0, 아니면 3K KR / 1K JP equiv
-            if (!it.bundleShipping) {
-                var _stLng = (typeof getLang === 'function') ? getLang() : 'ko';
-                _stTotal += (_stLng === 'ja') ? 10000 : 3000;
-            }
-            return _stTotal;
+            return _stickerCalcPrice(it.sticker);
         }
 
-        // 2026-06-03: 명함 — 200매 단위, 단면 10K / 양면 15K + 박 + 후가공 + 정액배송
+        // 2026-06-12: 명함 — 200매 단위. 일반 2500/4000 / 프리미엄 8000/10000 (단면/양면) + 박 + 후가공. 배송 무료.
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
             var _bc = it.bizCard || {};
-            // qty 는 각 단위. 호환: 200 이상이면 매 단위 데이터로 보고 200으로 나눠 각 환산
             var _bcQty = qty || 1;
             if (_bcQty >= 200 && _bcQty % 200 === 0) _bcQty = _bcQty / 200;
             if (_bcQty < 1) _bcQty = 1;
             var _bcTier = _bc.tier || 'general';
             var _bcUnit = (_bcTier === 'premium')
                 ? ((_bc.side === 'double') ? 10000 : 8000)
-                : ((_bc.side === 'double') ? 5000  : 3000);
+                : ((_bc.side === 'double') ? 4000  : 2500);
             var _bcSub = _bcUnit * _bcQty;
-            // 박
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
                 if (_bcFoil) _bcSub += _bcFoil.price;
             }
-            // 후가공
             if (_bc.finishes) {
                 Object.keys(_bc.finishes).forEach(function(k){
                     if (!_bc.finishes[k]) return;
@@ -11930,11 +11928,7 @@ html, body { background: #ffffff !important; }
                     if (fo) _bcSub += fo.price;
                 });
             }
-            // 배송비 — 묶음이면 0, 아니면 3K KR / 10K (≈1000엔 ×rate) JP
-            if (!it.bundleShipping) {
-                var _lngBc2 = (typeof getLang === 'function') ? getLang() : 'ko';
-                _bcSub += (_lngBc2 === 'ja') ? 10000 : 3000;
-            }
+            // 배송 무료 (허니콤보드 외 전 제품)
             return _bcSub;
         }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
