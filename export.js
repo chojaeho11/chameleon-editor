@@ -2224,6 +2224,44 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if(y > 260) { doc.addPage(); y = 20; }
         });
 
+        // 2026-06-13: 디자인 의뢰비 — 견적서에 명시적인 별도 행으로 표시
+        if (item.designRequest && item.designRequest.total) {
+            var _dr = item.designRequest;
+            var _drUnit = _dr.unit_price || 0;
+            var _drQty = _dr.qty || 1;
+            var _drTotal = _dr.total || (_drUnit * _drQty);
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) {
+                _drUnit = Math.round(_drUnit * _cr.JP);
+                _drTotal = Math.round(_drTotal * _cr.JP);
+            } else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) {
+                _drUnit = Math.round(_drUnit * _cr.US * 100) / 100;
+                _drTotal = Math.round(_drTotal * _cr.US * 100) / 100;
+            }
+            totalAmt += _drTotal;
+            var _drNameLocalized = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')
+                ? 'デザイン依頼費'
+                : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en')
+                    ? 'Design request fee'
+                    : '디자인 의뢰비';
+            var _drSpecLocalized = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp')
+                ? ((_dr.product_label || 'デザイン') + ' · ' + _drQty + '件')
+                : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en')
+                    ? ((_dr.product_label || 'Design') + ' · ' + _drQty)
+                    : ((_dr.product_label || '디자인') + ' · ' + _drQty + '건');
+            var _drName = '└ ' + _drNameLocalized;
+            var _drSplit = doc.splitTextToSize(_drName, nameColWidth - 4);
+            var _drH = Math.max(8, 4 + (_drSplit.length * 5));
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], _drH, '', 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], _drH, _drSplit, 'left', 8); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], _drH, _drSpecLocalized, 'left', 8); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], _drH, String(_drQty), 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], _drH, formatCurrencyForPDF(_drUnit), 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], _drH, formatCurrencyForPDF(_drTotal), 'right');
+            y += _drH;
+            if (y > 260) { doc.addPage(); y = 20; }
+        }
+
         // 2026-06-11: ADDON_DB 누락 (예: b0001 보조받침) 보정 — 실제 카트 라인 합계와 비교해 차액 행 추가
         //   _soCalcItemPrice 는 cart UI 가 사용하는 정확한 라인 가격 계산 (가벽 size/side/addon/PRO 모두 반영)
         if (typeof window._soCalcItemPrice === 'function') {
