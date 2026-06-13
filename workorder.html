@@ -665,6 +665,15 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const _itemNote = (it.itemNote || it.item_note || '').trim();
             if (_itemNote) boxes.push(`<div class="opt-box opt-note"><div class="opt-head"><i class="fa-solid fa-message"></i> 고객요청사항</div><div class="opt-val">${esc(_itemNote)}</div></div>`);
 
+            // 2026-06-13: 디자인 의뢰 박스 — 작업지시서에서 디자이너 작업 트리거
+            if (it.designRequest && it.designRequest.total) {
+                const _dr = it.designRequest;
+                const _drHtml = `<div><b>${esc(_dr.product_label || '디자인')} 의뢰</b> · ${_dr.qty || 1}건 · <span style="color:#16a34a; font-weight:700;">+${fmt(_dr.total || 0)}원</span></div>
+                    <div style="font-size:11px; color:#475569; margin-top:4px;">의뢰 ID: ${esc(_dr.request_id || '')}</div>
+                    <div style="font-size:11px; color:#7c3aed; margin-top:2px;">→ 디자이너 보드 (/designer-board)에서 처리</div>`;
+                boxes.push(`<div class="opt-box" style="border-color:#a7f3d0; background:#f0fdf4;"><div class="opt-head" style="color:#15803d;"><i class="fa-solid fa-pen-ruler"></i> 디자인 의뢰</div><div class="opt-val">${_drHtml}</div></div>`);
+            }
+
             const optGrid = boxes.length > 0
                 ? `<div class="opt-grid">${boxes.join('')}</div>`
                 : `<div class="opt-grid"><div class="opt-empty" style="grid-column:1/-1;">기본 사양 — 추가 옵션 없음</div></div>`;

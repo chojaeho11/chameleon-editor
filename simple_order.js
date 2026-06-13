@@ -10985,6 +10985,14 @@ html, body { background: #ffffff !important; }
                   })()
                 : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.discount, final: calc.final },
+            // 2026-06-13: 디자인 의뢰 정보 (의뢰 후 카트 담은 경우 포함)
+            designRequest: state.designReqId ? {
+                request_id: state.designReqId,
+                product_label: state._drReqProduct || null,
+                unit_price: state.designReqFee || 0,
+                qty: state.designReqQty || 1,
+                total: state.designReqTotal || 0
+            } : null,
         };
     }
 
@@ -11616,6 +11624,15 @@ html, body { background: #ffffff !important; }
                 // 2026-06-05: 게이트 사이즈 표시 (담당자 시공)
                 if (item.isGate && item.gate) {
                     meta.push('🚪 ' + (item.gate.width_m || 3) + 'm × ' + (item.gate.height_m || 3) + 'm');
+                }
+                // 2026-06-13: 디자인 의뢰 표시
+                if (item.designRequest && item.designRequest.total) {
+                    var _dr = item.designRequest;
+                    meta.push('🎨 ' + tr(
+                        (_dr.product_label || '디자인') + ' 의뢰 ' + (_dr.qty || 1) + '건 (+' + (_dr.total).toLocaleString() + '원)',
+                        'デザイン依頼 ' + (_dr.qty || 1) + '件 (+' + (_dr.total).toLocaleString() + '円)',
+                        'Design req ' + (_dr.qty || 1) + ' (+₩' + (_dr.total).toLocaleString() + ')'
+                    ));
                 }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {
@@ -12298,6 +12315,10 @@ html, body { background: #ffffff !important; }
             base += 3000;
         } else if (it.shipping && it.shipping.fee) {
             base += (it.shipping.fee || 0);
+        }
+        // 2026-06-13: 디자인 의뢰비 포함
+        if (it.designRequest && it.designRequest.total) {
+            base += (it.designRequest.total || 0);
         }
         return base;
     }
@@ -13591,12 +13612,25 @@ html, body { background: #ffffff !important; }
             // 마일리지/예치금으로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
             var _fullyCovered = (_useMileage > 0 || _useDeposit > 0) && _finalTotal <= 0;
             var _walletPayLabel = _useDeposit > 0 ? '예치금' : '마일리지';
+            // 2026-06-13: 디자인 의뢰 정보 요약 (작업지시서/관리자가 한눈에 보도록)
+            var _dreqSummary = '';
+            try {
+                var _dreqLines = [];
+                items.forEach(function(it){
+                    if (it && it.designRequest && it.designRequest.total) {
+                        var dr = it.designRequest;
+                        _dreqLines.push('• ' + (dr.product_label || '디자인') + ' ' + (dr.qty || 1) + '건 = +' + (dr.total || 0).toLocaleString() + '원 (요청ID: ' + (dr.request_id || '-') + ')');
+                    }
+                });
+                if (_dreqLines.length > 0) _dreqSummary = '\n\n[디자인 의뢰]\n' + _dreqLines.join('\n');
+            } catch (e) {}
             var adminNote =
                 '[간편주문] 결제수단: ' + (payMethod === 'bank' ? '무통장입금' : '카드결제') +
                 '\n이메일: ' + (email || loggedInEmail || '없음') +
                 (memo ? '\n배송메모: ' + memo : '') +
                 (totalShippingFee > 0 ? '\n배송/시공비: ' + totalShippingFee.toLocaleString() + '원' : '') +
                 discountSummary +
+                _dreqSummary +
                 (itemSummaries.length ? '\n\n=== 상품별 옵션·요청 ===\n' + itemSummaries.join('\n\n') : '');
 
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
@@ -13660,6 +13694,27 @@ html, body { background: #ffffff !important; }
                 if (insertErr) throw insertErr;
                 newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
             }
+
+            // 2026-06-13: 디자인 의뢰 row 들에 order_id 태그 — 디자이너 보드 / 출금관리에서 결제 연결 추적
+            try {
+                var _drIds = [];
+                items.forEach(function(it){
+                    if (it && it.designRequest && it.designRequest.request_id) _drIds.push(it.designRequest.request_id);
+                });
+                if (_drIds.length > 0 && newOrderId) {
+                    for (var _di = 0; _di < _drIds.length; _di++) {
+                        var _rid = _drIds[_di];
+                        try {
+                            var _curRow = await sb.from('design_requests').select('description').eq('id', _rid).maybeSingle();
+                            var _curDesc = (_curRow && _curRow.data && _curRow.data.description) || '';
+                            if (_curDesc.indexOf('[ORDER_ID:') < 0) {
+                                _curDesc += '\n\n[ORDER_ID:' + newOrderId + ' PAID_AT:' + new Date().toISOString() + ']';
+                                await sb.from('design_requests').update({ description: _curDesc }).eq('id', _rid);
+                            }
+                        } catch (_dre) { console.warn('[design_req tag]', _dre); }
+                    }
+                }
+            } catch (e) { console.warn('[design_req link]', e); }
 
             // 2026-06-01: 선택된 할인 소스에 따라 차감 컬럼 분기.
             //   - source='event_coupon' → profiles.event_coupon 에서 차감
