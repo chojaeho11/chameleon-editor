@@ -780,7 +780,17 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 'pattern_spec','width_mm','height_mm','width_cm','height_cm','width','height','w','h',
                 'product_code','product_name','productName','title','price_jp','priceUsd',
                 '_isBizCard','_isSticker','_isBanner','__source','_simple','bundleShipping',
-                'discountPct','tierPct','discount'
+                'discountPct','tierPct','discount',
+                // 2026-06-13: 시스템 메타데이터 노이즈 추가 제외 (파일/이미지/제품 관련 내부 키)
+                'type','json','fileName','file_name','file_url','file_path','filePath','mimeType',
+                'artworkLater','artwork_later','artwork_filename','backFileUrl','backFileName','backFilePath',
+                'back_file_url','back_file_name','back_file_path','back_file_type','backFileType',
+                'cutlineUrl','_designBidId','_designRequestId','_designerId','_gigId',
+                'partner_id','partner_email','presetType','_presetType','_isBestGoods',
+                'isAcrylicFamily','isCustomSize','isBanner','isSticker','isBizCard','isWall','isCutPrint',
+                'isStandeeV2','isRawBoard','isHoneycomb','isAcrylicGoods','isPresetGoods','isAmountOrder',
+                'isAdPrint','isRealPrint','isGeneralPrint','isBannerOutput','isHbFreeShip','isInstaSmall',
+                'tshirtSize','tshirtColor','tshirtColorName','tshirtPrintFee'
             ]);
             const _extraFieldLines = [];
             try {
