@@ -5729,6 +5729,15 @@ function scrollHotdeal(gridId, dir) {
         .me-prop-btn { padding:4px 7px; background:#fff; border:1px solid #ddd6fe; border-radius:5px; font-size:11px; color:#5b21b6; cursor:pointer; font-family:inherit; font-weight:700; }
         .me-prop-btn:hover { background:#ede9fe; }
         .me-prop-btn.active { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; }
+        /* 우클릭 컨텍스트 메뉴 */
+        .me-ctx { position:fixed; z-index:100002; background:#fff; border:1px solid #ddd6fe; border-radius:10px; box-shadow:0 12px 32px rgba(15,23,42,0.25); padding:6px; min-width:170px; font-family:inherit; }
+        .me-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; background:transparent; border:none; border-radius:6px; font-size:12.5px; font-weight:700; color:#1e293b; cursor:pointer; text-align:left; font-family:inherit; }
+        .me-ctx button:hover { background:#ede9fe; color:#5b21b6; }
+        .me-ctx button.danger { color:#dc2626; }
+        .me-ctx button.danger:hover { background:#fee2e2; color:#dc2626; }
+        .me-ctx hr { border:none; border-top:1px solid #f1f5f9; margin:4px 0; }
+        .me-ctx i { width:14px; text-align:center; color:#7c3aed; }
+        .me-ctx button.danger i { color:#dc2626; }
     </style>
 
     <div id="aiNbWrap">
@@ -5962,9 +5971,16 @@ function scrollHotdeal(gridId, dir) {
 
     function _meBindDrag(it) {
         var dragging = false, sx = 0, sy = 0, sLeft = 0, sTop = 0;
+        it.el.addEventListener('contextmenu', function(ev){
+            ev.preventDefault();
+            ev.stopPropagation();
+            _meSelect(it);
+            _meShowCtxMenu(ev.clientX, ev.clientY, it);
+        });
         it.el.addEventListener('pointerdown', function(ev){
             if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
             if (it.el.getAttribute('contenteditable') === 'true') return;
+            if (ev.button === 2) return; // 우클릭은 contextmenu 핸들러가 처리
             dragging = true;
             it.el.setPointerCapture(ev.pointerId);
             sx = ev.clientX; sy = ev.clientY;
@@ -6128,7 +6144,114 @@ function scrollHotdeal(gridId, dir) {
         me.items.forEach(function(it){ it.el.remove(); });
         me.items = [];
         me.selected = null;
+        _meRenderProps(null);
     };
+
+    // ─── 레이어 순서 ───
+    function _meZ(it){ return parseInt(it.el.style.zIndex || '0', 10); }
+    function _meBringToFront(it) {
+        me.zCounter += 1;
+        it.el.style.zIndex = me.zCounter;
+    }
+    function _meSendToBack(it) {
+        // 모든 z-index 1씩 올리고 대상은 1로
+        var minZ = me.items.reduce(function(m, o){ return Math.min(m, _meZ(o)); }, Infinity);
+        if (!isFinite(minZ)) minZ = 10;
+        it.el.style.zIndex = (minZ - 1);
+    }
+    function _meBringForward(it) {
+        var myZ = _meZ(it);
+        var next = null;
+        me.items.forEach(function(o){
+            if (o === it) return;
+            var z = _meZ(o);
+            if (z > myZ && (!next || z < _meZ(next))) next = o;
+        });
+        if (!next) { _meBringToFront(it); return; }
+        var nz = _meZ(next);
+        next.el.style.zIndex = myZ;
+        it.el.style.zIndex = nz;
+    }
+    function _meSendBackward(it) {
+        var myZ = _meZ(it);
+        var prev = null;
+        me.items.forEach(function(o){
+            if (o === it) return;
+            var z = _meZ(o);
+            if (z < myZ && (!prev || z > _meZ(prev))) prev = o;
+        });
+        if (!prev) { _meSendToBack(it); return; }
+        var pz = _meZ(prev);
+        prev.el.style.zIndex = myZ;
+        it.el.style.zIndex = pz;
+    }
+
+    // ─── 컨텍스트 메뉴 ───
+    var _meCtxEl = null;
+    function _meHideCtxMenu() {
+        if (_meCtxEl) { _meCtxEl.remove(); _meCtxEl = null; }
+        document.removeEventListener('pointerdown', _meCtxOutside, true);
+    }
+    function _meCtxOutside(ev) {
+        if (_meCtxEl && !_meCtxEl.contains(ev.target)) _meHideCtxMenu();
+    }
+    function _meShowCtxMenu(x, y, it) {
+        _meHideCtxMenu();
+        var menu = document.createElement('div');
+        menu.className = 'me-ctx';
+        menu.innerHTML =
+            '<button data-act="front"><i class="fa-solid fa-angles-up"></i> 맨 앞으로</button>' +
+            '<button data-act="forward"><i class="fa-solid fa-angle-up"></i> 앞으로</button>' +
+            '<button data-act="backward"><i class="fa-solid fa-angle-down"></i> 뒤로</button>' +
+            '<button data-act="back"><i class="fa-solid fa-angles-down"></i> 맨 뒤로</button>' +
+            '<hr>' +
+            '<button data-act="dup"><i class="fa-solid fa-clone"></i> 복제</button>' +
+            '<button class="danger" data-act="del"><i class="fa-solid fa-trash"></i> 삭제 (Delete)</button>';
+        document.body.appendChild(menu);
+        // 화면 밖 보정
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var rect = menu.getBoundingClientRect();
+        if (x + rect.width > vw - 8) x = vw - rect.width - 8;
+        if (y + rect.height > vh - 8) y = vh - rect.height - 8;
+        menu.style.left = Math.max(8, x) + 'px';
+        menu.style.top = Math.max(8, y) + 'px';
+        _meCtxEl = menu;
+        setTimeout(function(){ document.addEventListener('pointerdown', _meCtxOutside, true); }, 0);
+        menu.querySelectorAll('button').forEach(function(b){
+            b.addEventListener('click', function(){
+                var act = b.dataset.act;
+                if (act === 'front') _meBringToFront(it);
+                else if (act === 'forward') _meBringForward(it);
+                else if (act === 'backward') _meSendBackward(it);
+                else if (act === 'back') _meSendToBack(it);
+                else if (act === 'dup') _meDuplicate(it);
+                else if (act === 'del') _meRemove(it);
+                _meHideCtxMenu();
+            });
+        });
+    }
+
+    function _meDuplicate(it) {
+        if (it.type === 'image') {
+            var clone = { el:null, type:'image', x: it.x + 20, y: it.y + 20, w: it.w, h: it.h, src: it.src };
+            var el = document.createElement('div'); el.className = 'me-item';
+            var img = document.createElement('img'); img.src = it.src; el.appendChild(img);
+            me.stage.appendChild(el); clone.el = el;
+            me.items.push(clone); _meSyncItemDisplay(clone); _meBindDrag(clone); _meSelect(clone);
+        } else if (it.type === 'text') {
+            var el2 = document.createElement('div'); el2.className = 'me-item text';
+            el2.textContent = it.el.textContent || it.text || '';
+            me.stage.appendChild(el2);
+            var c2 = Object.assign({}, it, { el: el2, x: it.x + 20, y: it.y + 20, text: el2.textContent });
+            me.items.push(c2); _meSyncItemDisplay(c2); _meBindDrag(c2); _meSelect(c2);
+        } else if (it.type === 'shape') {
+            var el3 = document.createElement('div');
+            el3.className = 'me-item shape' + (it.shape === 'circle' ? ' circle' : '');
+            me.stage.appendChild(el3);
+            var c3 = Object.assign({}, it, { el: el3, x: it.x + 20, y: it.y + 20 });
+            me.items.push(c3); _meSyncItemDisplay(c3); _meBindDrag(c3); _meSelect(c3);
+        }
+    }
 
     function _meDrawTextLineWithSpacing(ctx, line, x, y, letterSpacing) {
         if (!letterSpacing) { ctx.fillText(line, x, y); return; }
@@ -6233,9 +6356,25 @@ function scrollHotdeal(gridId, dir) {
                 _meSetSize(parseInt(b.dataset.w, 10), parseInt(b.dataset.h, 10), b.dataset.label);
             });
         });
-        // 스테이지 빈 영역 클릭 → 선택 해제
+        // 스테이지 빈 영역 클릭 → 선택 해제 + 컨텍스트 메뉴 닫기
         me.stage.addEventListener('pointerdown', function(ev){
             if (ev.target === me.stage) _meSelect(null);
+        });
+        me.stage.addEventListener('contextmenu', function(ev){
+            if (ev.target === me.stage) ev.preventDefault();
+        });
+        // Delete/Backspace 키 → 선택 항목 삭제 (텍스트 편집 중·input 포커스 중에는 무시)
+        document.addEventListener('keydown', function(ev){
+            if (ev.key !== 'Delete' && ev.key !== 'Backspace') return;
+            if (!me.selected) return;
+            var ae = document.activeElement;
+            if (ae) {
+                var tag = (ae.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+                if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return;
+            }
+            ev.preventDefault();
+            _meRemove(me.selected);
         });
         _meFitStage();
         window.addEventListener('resize', _meFitStage);
