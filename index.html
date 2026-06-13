@@ -5896,7 +5896,7 @@ function scrollHotdeal(gridId, dir) {
         me.selected = it;
         if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
-        it.el.style.zIndex = (++me.zCounter);
+        // 선택만으로는 레이어 순서를 바꾸지 않음 — 우클릭 메뉴에서 명시적으로 조절
         var h = document.createElement('div'); h.className = 'me-handle';
         it.el.appendChild(h);
         _meBindResize(h, it);
@@ -6052,6 +6052,7 @@ function scrollHotdeal(gridId, dir) {
     window._meAddShape = function(shape) {
         var el = document.createElement('div');
         el.className = 'me-item shape' + (shape === 'circle' ? ' circle' : '');
+        el.style.zIndex = (++me.zCounter);
         me.stage.appendChild(el);
         var w = me.natW * 0.3, h = (shape === 'circle' ? w : me.natH * 0.15);
         var it = {
@@ -6085,6 +6086,7 @@ function scrollHotdeal(gridId, dir) {
             if (h > me.natH * 0.6) { h = me.natH * 0.6; w = h / ratio; }
             var el = document.createElement('div');
             el.className = 'me-item';
+            el.style.zIndex = (++me.zCounter);
             var img = document.createElement('img'); img.src = src; el.appendChild(img);
             me.stage.appendChild(el);
             var it = { el: el, type: 'image', x: (me.natW - w) / 2, y: (me.natH - h) / 2, w: w, h: h, src: src };
@@ -6099,6 +6101,7 @@ function scrollHotdeal(gridId, dir) {
     window._meAddText = function() {
         var el = document.createElement('div');
         el.className = 'me-item text';
+        el.style.zIndex = (++me.zCounter);
         el.textContent = '클릭하여 글씨 입력';
         me.stage.appendChild(el);
         var it = {
@@ -6232,14 +6235,17 @@ function scrollHotdeal(gridId, dir) {
     }
 
     function _meDuplicate(it) {
+        var newZ = (++me.zCounter);
         if (it.type === 'image') {
             var clone = { el:null, type:'image', x: it.x + 20, y: it.y + 20, w: it.w, h: it.h, src: it.src };
             var el = document.createElement('div'); el.className = 'me-item';
+            el.style.zIndex = newZ;
             var img = document.createElement('img'); img.src = it.src; el.appendChild(img);
             me.stage.appendChild(el); clone.el = el;
             me.items.push(clone); _meSyncItemDisplay(clone); _meBindDrag(clone); _meSelect(clone);
         } else if (it.type === 'text') {
             var el2 = document.createElement('div'); el2.className = 'me-item text';
+            el2.style.zIndex = newZ;
             el2.textContent = it.el.textContent || it.text || '';
             me.stage.appendChild(el2);
             var c2 = Object.assign({}, it, { el: el2, x: it.x + 20, y: it.y + 20, text: el2.textContent });
@@ -6247,6 +6253,7 @@ function scrollHotdeal(gridId, dir) {
         } else if (it.type === 'shape') {
             var el3 = document.createElement('div');
             el3.className = 'me-item shape' + (it.shape === 'circle' ? ' circle' : '');
+            el3.style.zIndex = newZ;
             me.stage.appendChild(el3);
             var c3 = Object.assign({}, it, { el: el3, x: it.x + 20, y: it.y + 20 });
             me.items.push(c3); _meSyncItemDisplay(c3); _meBindDrag(c3); _meSelect(c3);
