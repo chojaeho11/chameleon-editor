@@ -11939,16 +11939,41 @@ html, body { background: #ffffff !important; }
                 if (item.customSize && typeof item.customSize.unit === 'number') _bdUnit = item.customSize.unit;
                 var _bdSub = _bdUnit * _bdQty;
                 _bd.push('<div style="display:flex; justify-content:space-between;"><span>단가 × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
-                // 옵션/받침대 합산
-                var _bdOpt = 0;
-                if (item.selectedAddons && window.ADDON_DB) {
+                // 옵션 (selectedAddons) — 이름 표시. ADDON_DB 미로드 시에도 이름 fallback.
+                var _bdAddonTotal = 0;
+                if (item.selectedAddons) {
                     Object.values(item.selectedAddons).forEach(function(code){
-                        var a = window.ADDON_DB[code]; if (!a) return;
+                        if (!code) return;
+                        var a = (window.ADDON_DB && window.ADDON_DB[code]) || null;
                         var aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
-                        _bdOpt += (a.price || 0) * aq;
+                        var aPrice = a ? (a.price || 0) : 0;
+                        var aName = a ? (a.display_name || a.name || code) : code;
+                        var aLine = aPrice * aq;
+                        _bdAddonTotal += aLine;
+                        if (aLine > 0) {
+                            _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(aName) + (aq > 1 ? ' × ' + aq : '') + '</span><b>+' + fmtPrice(aLine) + '</b></div>');
+                        }
                     });
                 }
-                if (_bdOpt > 0) _bd.push('<div style="display:flex; justify-content:space-between;"><span>옵션 (받침/형태)</span><b>+' + fmtPrice(_bdOpt) + '</b></div>');
+                // 받침대 (baseStands 배열 + legacy baseStand)
+                var _bdBsList = Array.isArray(item.baseStands) ? item.baseStands
+                              : (item.baseStand && Number(item.baseStand.fee) > 0 ? [item.baseStand] : []);
+                _bdBsList.forEach(function(bs){
+                    if (!bs || !Number(bs.fee)) return;
+                    var bsFee = Number(bs.fee) || 0;
+                    var bsQty = Number(bs.qty) || 1;
+                    // 자유인쇄커팅(cutPrint) 은 product qty 만큼 곱
+                    var bsMult = item.cutPrint ? (_bdQty || 1) : 1;
+                    var bsLine = bsFee * bsQty * bsMult;
+                    if (bsLine > 0) {
+                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ ' + escapeHtml(bs.label || '받침대') + (bsQty > 1 ? ' × ' + bsQty : '') + (bsMult > 1 ? ' (제품 ' + bsMult + '개)' : '') + '</span><b>+' + fmtPrice(bsLine) + '</b></div>');
+                    }
+                });
+                // 가벽 형태 (L자/U자) 코너 추가비
+                if (item.wallShapeFee && item.wallShapeFee > 0) {
+                    var _wsLbl = item.wallShape === 'L' ? 'L자' : (item.wallShape === 'U' ? 'U자/ㄷ자' : item.wallShape);
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ 가벽 형태 (' + escapeHtml(_wsLbl) + ') 코너</span><b>+' + fmtPrice(item.wallShapeFee) + '</b></div>');
+                }
                 // 배송 (첫 번째 일반 항목만 표시, 나머지는 묶음배송 0원)
                 var _bdShipFee = (item.shipping && item.shipping.fee) || 0;
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
