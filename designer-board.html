@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디자이너 보드 — 카멜레온프린팅</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <style>
+        :root {
+            --bg:#f5f5f7;
+            --card:#ffffff;
+            --border:rgba(0,0,0,0.08);
+            --text:#1d1d1f;
+            --muted:#86868b;
+            --blue:#007AFF;
+            --green:#34c759;
+            --orange:#ff9500;
+            --red:#ff3b30;
+            --gray-fill:rgba(120,120,128,0.10);
+            --gray-fill-h:rgba(120,120,128,0.18);
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        html, body { background:var(--bg); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.2px; min-height:100vh; }
+        a { color:inherit; text-decoration:none; }
+        button { font-family:inherit; cursor:pointer; }
+
+        /* 헤더 */
+        .db-head { background:rgba(255,255,255,0.84); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border-bottom:0.5px solid var(--border); position:sticky; top:0; z-index:50; }
+        .db-head-inner { max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:12px; }
+        .db-logo { font-size:18px; font-weight:700; letter-spacing:-0.5px; color:var(--text); }
+        .db-logo small { color:var(--muted); font-weight:500; margin-left:6px; font-size:13px; letter-spacing:-0.2px; }
+        .db-user { margin-left:auto; font-size:13px; color:var(--muted); font-weight:500; }
+        .db-btn-out { padding:7px 13px; background:var(--gray-fill); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:var(--text); transition:background .18s; }
+        .db-btn-out:hover { background:var(--gray-fill-h); }
+
+        /* 컨테이너 */
+        .db-wrap { max-width:1080px; margin:0 auto; padding:28px 20px 60px; }
+
+        /* 탭 */
+        .db-tabs { display:flex; gap:0; background:var(--gray-fill); border-radius:980px; padding:3px; margin-bottom:22px; max-width:520px; }
+        .db-tab { flex:1; padding:9px 14px; border:none; background:transparent; border-radius:980px; font-size:13.5px; font-weight:600; color:var(--text); transition:background .18s; }
+        .db-tab.active { background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.12); }
+        .db-tab .b { display:inline-block; padding:1px 7px; background:var(--red); color:#fff; font-size:11px; font-weight:700; border-radius:980px; margin-left:5px; min-width:18px; text-align:center; }
+        .db-tab.active .b { background:var(--blue); }
+
+        /* 빈 상태 */
+        .db-empty { padding:60px 20px; text-align:center; color:var(--muted); font-size:14px; font-weight:500; background:var(--card); border:0.5px solid var(--border); border-radius:18px; }
+        .db-empty .ic { font-size:36px; opacity:0.5; margin-bottom:10px; }
+        .db-loading { padding:60px 20px; text-align:center; color:var(--muted); font-size:14px; }
+
+        /* 카드 */
+        .db-card { background:var(--card); border:0.5px solid var(--border); border-radius:18px; box-shadow:0 1px 3px rgba(0,0,0,0.04); padding:18px 20px; margin-bottom:12px; }
+        .db-card-row { display:flex; align-items:flex-start; gap:14px; }
+        .db-card-main { flex:1; min-width:0; }
+        .db-card-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+        .db-cat { display:inline-flex; align-items:center; padding:3px 10px; border-radius:980px; font-size:11.5px; font-weight:700; background:rgba(0,122,255,0.10); color:var(--blue); letter-spacing:-0.2px; }
+        .db-status { display:inline-flex; align-items:center; padding:3px 10px; border-radius:980px; font-size:11.5px; font-weight:600; letter-spacing:-0.2px; }
+        .db-status.open { background:rgba(52,199,89,0.12); color:var(--green); }
+        .db-status.claimed { background:rgba(255,149,0,0.12); color:var(--orange); }
+        .db-status.completed { background:rgba(0,122,255,0.12); color:var(--blue); }
+        .db-status.settle_req { background:rgba(175,82,222,0.12); color:#af52de; }
+        .db-status.settled { background:rgba(120,120,128,0.16); color:var(--muted); }
+        .db-time { margin-left:auto; font-size:12px; color:var(--muted); }
+        .db-title { font-size:15.5px; font-weight:700; color:var(--text); margin-bottom:4px; letter-spacing:-0.3px; }
+        .db-desc { font-size:13px; color:var(--muted); line-height:1.6; white-space:pre-wrap; word-break:break-all; max-height:5em; overflow:hidden; position:relative; }
+        .db-desc.exp { max-height:none; }
+        .db-desc::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1.5em; background:linear-gradient(transparent, var(--card)); pointer-events:none; }
+        .db-desc.exp::after { display:none; }
+        .db-more { background:transparent; border:none; color:var(--blue); font-size:12px; font-weight:600; padding:6px 0 0; cursor:pointer; }
+        .db-payout-box { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:rgba(0,122,255,0.06); border-radius:12px; margin:10px 0; }
+        .db-payout-box .l { font-size:12.5px; color:var(--muted); font-weight:600; }
+        .db-payout-box .v { font-size:17px; color:var(--blue); font-weight:700; letter-spacing:-0.4px; }
+
+        /* 파일 */
+        .db-files { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .db-file { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--gray-fill); color:var(--text); border-radius:980px; font-size:12px; font-weight:500; }
+        .db-file img { width:18px; height:18px; object-fit:cover; border-radius:3px; }
+
+        /* 액션 버튼 */
+        .db-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+        .db-act { padding:10px 16px; border:none; border-radius:980px; font-size:13px; font-weight:600; letter-spacing:-0.2px; transition:background .18s; }
+        .db-act.primary { background:var(--blue); color:#fff; }
+        .db-act.primary:hover { background:#0a6dd5; }
+        .db-act.success { background:var(--green); color:#fff; }
+        .db-act.success:hover { background:#2ba84a; }
+        .db-act.ghost { background:var(--gray-fill); color:var(--text); }
+        .db-act.ghost:hover { background:var(--gray-fill-h); }
+        .db-act:disabled { opacity:0.5; cursor:not-allowed; }
+
+        /* 업로드 / 완료 모달 */
+        .db-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); z-index:200; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+        .db-modal-bg.show { display:flex; }
+        .db-modal { background:#fff; border-radius:18px; width:480px; max-width:100%; padding:24px; box-shadow:0 30px 80px rgba(0,0,0,0.35); position:relative; animation:dbIn .22s cubic-bezier(.4,0,.2,1); }
+        @keyframes dbIn { from { opacity:0; transform:translateY(10px) scale(0.98); } to { opacity:1; transform:none; } }
+        .db-modal h3 { font-size:18px; font-weight:700; margin-bottom:6px; letter-spacing:-0.4px; }
+        .db-modal p { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+        .db-modal .close { position:absolute; top:14px; right:14px; width:30px; height:30px; border:none; background:var(--gray-fill); border-radius:50%; color:var(--text); font-size:16px; display:flex; align-items:center; justify-content:center; }
+        .db-modal .field { margin-bottom:12px; }
+        .db-modal label { display:block; font-size:12px; font-weight:600; margin-bottom:6px; }
+        .db-modal textarea { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; resize:vertical; min-height:90px; outline:none; background:#fff; color:var(--text); }
+        .db-modal textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,122,255,0.15); }
+        .db-modal .drop { padding:18px; background:#fbfbfd; border:1.5px dashed rgba(0,0,0,0.18); border-radius:10px; text-align:center; cursor:pointer; font-size:13px; color:var(--muted); font-weight:500; }
+        .db-modal .drop:hover { border-color:var(--blue); color:var(--blue); }
+        .db-modal .file-list { margin-top:8px; font-size:12px; }
+        .db-modal .file-list div { padding:3px 0; }
+
+        /* 로그인 안내 */
+        .db-login { max-width:420px; margin:80px auto; background:var(--card); border:0.5px solid var(--border); border-radius:18px; padding:30px; text-align:center; }
+        .db-login h2 { font-size:20px; font-weight:700; margin-bottom:8px; letter-spacing:-0.5px; }
+        .db-login p { font-size:14px; color:var(--muted); margin-bottom:18px; line-height:1.5; }
+        .db-login .btn { display:inline-block; padding:11px 22px; background:var(--blue); color:#fff; border-radius:980px; font-size:14px; font-weight:600; border:none; }
+
+        @media (max-width:600px) {
+            .db-head-inner { padding:12px 16px; }
+            .db-wrap { padding:20px 14px 40px; }
+            .db-card { padding:16px; border-radius:14px; }
+            .db-tabs { max-width:100%; }
+            .db-tab { font-size:12.5px; padding:8px 10px; }
+            .db-modal { padding:20px; border-radius:14px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="db-head">
+        <div class="db-head-inner">
+            <a href="/" class="db-logo">디자이너 보드<small>· 카멜레온프린팅</small></a>
+            <div class="db-user" id="dbUserInfo"></div>
+            <button class="db-btn-out" onclick="dbLogout()">로그아웃</button>
+        </div>
+    </header>
+
+    <main class="db-wrap" id="dbMain">
+        <div class="db-loading">불러오는 중...</div>
+    </main>
+
+    <!-- 완료/업로드 모달 -->
+    <div id="dbCompleteModal" class="db-modal-bg" onclick="if(event.target===this) dbCloseModal()">
+        <div class="db-modal">
+            <button class="close" onclick="dbCloseModal()">×</button>
+            <h3>디자인 완료</h3>
+            <p>완성된 시안 파일을 첨부하고 메모를 입력하세요.</p>
+            <div class="field">
+                <label>시안 파일 (필수, 여러 개 가능)</label>
+                <div class="drop" onclick="document.getElementById('dbCompleteFiles').click()">
+                    클릭하여 PNG · PDF · AI · ZIP 등 첨부
+                    <div class="file-list" id="dbCompleteFileList"></div>
+                </div>
+                <input type="file" id="dbCompleteFiles" multiple style="display:none;" accept="image/*,application/pdf,application/zip,.ai,.psd,.eps">
+            </div>
+            <div class="field">
+                <label>고객에게 전할 메모 (선택)</label>
+                <textarea id="dbCompleteNote" placeholder="시안 설명, 수정 요청 안내, 사용 폰트 등"></textarea>
+            </div>
+            <button class="db-act primary" style="width:100%; padding:12px;" id="dbCompleteBtn" onclick="dbSubmitComplete()">완료 등록 + 정산 요청</button>
+        </div>
+    </div>
+
+<script>
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// 카테고리별 디자이너 정산금 (고객금액 - 마진)
+const PAYOUT = {
+    '명함': 10000,
+    '전단': 20000,
+    '배너': 20000,
+    '가벽': 30000,
+    '글씨포토존': 40000
+};
+
+let userId = null;
+let userEmail = null;
+let activeTab = 'open';
+let currentCompleteId = null;
+
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+    const ses = await sb.auth.getUser();
+    if (!ses.data || !ses.data.user) {
+        showLogin();
+        return;
+    }
+    userId = ses.data.user.id;
+    userEmail = ses.data.user.email;
+    document.getElementById('dbUserInfo').textContent = userEmail || '';
+    render();
+}
+
+function showLogin() {
+    document.getElementById('dbMain').innerHTML = `
+        <div class="db-login">
+            <h2>디자이너 로그인</h2>
+            <p>의뢰를 확인하려면 로그인해 주세요. 로그인 후 의뢰 목록에서 원하는 작업을 골라 진행할 수 있습니다.</p>
+            <button class="btn" onclick="location.href='/index.html'">메인에서 로그인</button>
+        </div>
+    `;
+}
+
+async function dbLogout() {
+    await sb.auth.signOut();
+    location.href = '/';
+}
+
+function payoutOf(cat) { return PAYOUT[cat] || 0; }
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function timeAgo(iso) {
+    if (!iso) return '';
+    const d = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (d < 60) return '방금 전';
+    if (d < 3600) return Math.floor(d/60) + '분 전';
+    if (d < 86400) return Math.floor(d/3600) + '시간 전';
+    if (d < 86400 * 30) return Math.floor(d/86400) + '일 전';
+    return new Date(iso).toLocaleDateString('ko-KR');
+}
+
+function parseMeta(desc) {
+    // description 에 저장한 메타 태그 파싱
+    desc = String(desc || '');
+    const m = {};
+    const claim = desc.match(/\[DESIGNER:([^\s\]]+)\s+CLAIMED:([^\]]+)\]/);
+    if (claim) { m.designerId = claim[1]; m.claimedAt = claim[2]; }
+    const done = desc.match(/\[COMPLETED:([^\]]+)\]/);
+    if (done) m.completedAt = done[1];
+    const settle = desc.match(/\[SETTLEMENT_REQUESTED:([^\]]+)\]/);
+    if (settle) m.settleAt = settle[1];
+    const settled = desc.match(/\[SETTLED:([^\]]+)\]/);
+    if (settled) m.settledAt = settled[1];
+    const finals = desc.match(/\[FINAL_FILES:([^\]]+)\]/);
+    if (finals) m.finalFiles = finals[1].split('|').filter(Boolean);
+    return m;
+}
+
+function stripMeta(desc) {
+    return String(desc || '')
+        .replace(/\[DESIGNER:[^\]]+\]/g, '')
+        .replace(/\[COMPLETED:[^\]]+\]/g, '')
+        .replace(/\[SETTLEMENT_REQUESTED:[^\]]+\]/g, '')
+        .replace(/\[SETTLED:[^\]]+\]/g, '')
+        .replace(/\[FINAL_FILES:[^\]]+\]/g, '')
+        .replace(/\[DESIGNER_NOTE:[^\]]+\]/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
+async function render() {
+    document.getElementById('dbMain').innerHTML = '<div class="db-loading">불러오는 중...</div>';
+
+    // 모든 의뢰 가져오기 — open + my-claimed
+    const { data: open, error: e1 } = await sb.from('design_requests')
+        .select('*')
+        .eq('status', 'open')
+        .eq('country', 'KR')
+        .order('created_at', { ascending: false });
+    if (e1) console.warn('[open]', e1);
+
+    const { data: mine, error: e2 } = await sb.from('design_requests')
+        .select('*')
+        .in('status', ['claimed', 'completed', 'settlement_requested', 'settled'])
+        .like('description', '%[DESIGNER:' + userId + '%')
+        .order('created_at', { ascending: false });
+    if (e2) console.warn('[mine]', e2);
+
+    const inprog = (mine || []).filter(r => ['claimed','completed'].includes(r.status));
+    const done = (mine || []).filter(r => ['settlement_requested','settled'].includes(r.status));
+
+    const cOpen = (open || []).length;
+    const cIn   = inprog.length;
+    const cDone = done.length;
+
+    let html = `
+        <div class="db-tabs">
+            <button class="db-tab ${activeTab==='open'?'active':''}" onclick="switchTab('open')">신규 의뢰${cOpen?'<span class="b">'+cOpen+'</span>':''}</button>
+            <button class="db-tab ${activeTab==='inprog'?'active':''}" onclick="switchTab('inprog')">진행중${cIn?'<span class="b">'+cIn+'</span>':''}</button>
+            <button class="db-tab ${activeTab==='done'?'active':''}" onclick="switchTab('done')">완료/정산${cDone?'<span class="b">'+cDone+'</span>':''}</button>
+        </div>
+    `;
+
+    let list = [];
+    if (activeTab === 'open') list = open || [];
+    else if (activeTab === 'inprog') list = inprog;
+    else list = done;
+
+    if (list.length === 0) {
+        const emptyText = activeTab === 'open' ? '신규 의뢰가 없습니다.\n새 의뢰가 들어오면 여기에 표시됩니다.'
+            : activeTab === 'inprog' ? '진행중인 의뢰가 없습니다.\n신규 의뢰 탭에서 의뢰를 받아 보세요.'
+            : '완료한 의뢰가 없습니다.';
+        html += `<div class="db-empty"><div class="ic">📭</div>${esc(emptyText).replace(/\n/g,'<br>')}</div>`;
+    } else {
+        html += list.map(r => renderCard(r)).join('');
+    }
+
+    document.getElementById('dbMain').innerHTML = html;
+}
+
+function switchTab(tab) {
+    activeTab = tab;
+    render();
+}
+
+function renderCard(r) {
+    const cat = r.category || '기타';
+    const payout = payoutOf(cat);
+    const meta = parseMeta(r.description);
+    const cleanDesc = stripMeta(r.description);
+    const statusLabel = {
+        'open':'대기중', 'claimed':'진행중', 'completed':'완료',
+        'settlement_requested':'정산 요청', 'settled':'정산 완료'
+    }[r.status] || r.status;
+    const statusCls = {
+        'open':'open', 'claimed':'claimed', 'completed':'completed',
+        'settlement_requested':'settle_req', 'settled':'settled'
+    }[r.status] || 'open';
+
+    const files = (r.files || []);
+    const filesHtml = files.length ? `
+        <div class="db-files">
+            ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
+                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
+                참고 파일
+            </a>`).join('')}
+        </div>
+    ` : '';
+
+    const finalFiles = meta.finalFiles || [];
+    const finalHtml = finalFiles.length ? `
+        <div style="margin-top:10px; padding:10px 12px; background:rgba(52,199,89,0.08); border-radius:10px;">
+            <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">완성 시안</div>
+            <div class="db-files">
+                ${finalFiles.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
+                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
+                    시안
+                </a>`).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    // 액션 버튼
+    let actions = '';
+    if (r.status === 'open') {
+        actions = `<button class="db-act primary" onclick="dbClaim('${r.id}')">의뢰 받기</button>`;
+    } else if (r.status === 'claimed') {
+        actions = `<button class="db-act success" onclick="dbOpenComplete('${r.id}')">완료 + 정산 요청</button>`;
+    } else if (r.status === 'completed') {
+        actions = `<button class="db-act primary" onclick="dbRequestSettle('${r.id}')">정산 요청</button>`;
+    } else if (r.status === 'settlement_requested') {
+        actions = `<button class="db-act ghost" disabled>본사 정산 대기 중</button>`;
+    } else if (r.status === 'settled') {
+        actions = `<button class="db-act ghost" disabled>정산 완료</button>`;
+    }
+
+    return `
+        <div class="db-card">
+            <div class="db-card-row">
+                <div class="db-card-main">
+                    <div class="db-card-head">
+                        <span class="db-cat">${esc(cat)}</span>
+                        <span class="db-status ${statusCls}">${statusLabel}</span>
+                        <span class="db-time">${timeAgo(r.created_at)}</span>
+                    </div>
+                    <div class="db-title">${esc(r.title)}</div>
+                    <div class="db-desc">${esc(cleanDesc)}</div>
+                    <button class="db-more" onclick="this.previousElementSibling.classList.toggle('exp');this.textContent=this.previousElementSibling.classList.contains('exp')?'접기':'더 보기'">더 보기</button>
+                    ${filesHtml}
+                    ${finalHtml}
+                    <div class="db-payout-box">
+                        <span class="l">디자이너 정산금</span>
+                        <span class="v">${payout.toLocaleString()}원</span>
+                    </div>
+                    <div class="db-actions">${actions}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function dbClaim(id) {
+    if (!confirm('이 의뢰를 맡으시겠습니까? 맡으신 후엔 완료까지 책임지셔야 합니다.')) return;
+    const { data: row } = await sb.from('design_requests').select('description, status').eq('id', id).single();
+    if (!row) { alert('의뢰를 찾을 수 없습니다'); return; }
+    if (row.status !== 'open') { alert('이미 다른 디자이너가 맡은 의뢰입니다.'); render(); return; }
+    const now = new Date().toISOString();
+    const newDesc = (row.description || '') + `\n\n[DESIGNER:${userId} CLAIMED:${now}]`;
+    const { error } = await sb.from('design_requests').update({
+        status: 'claimed',
+        description: newDesc
+    }).eq('id', id).eq('status', 'open');
+    if (error) { alert('실패: ' + error.message); return; }
+    activeTab = 'inprog';
+    render();
+}
+
+function dbOpenComplete(id) {
+    currentCompleteId = id;
+    document.getElementById('dbCompleteFiles').value = '';
+    document.getElementById('dbCompleteFileList').innerHTML = '';
+    document.getElementById('dbCompleteNote').value = '';
+    document.getElementById('dbCompleteModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function dbCloseModal() {
+    document.getElementById('dbCompleteModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const fi = document.getElementById('dbCompleteFiles');
+    if (fi) {
+        fi.addEventListener('change', () => {
+            const list = document.getElementById('dbCompleteFileList');
+            list.innerHTML = '';
+            Array.from(fi.files || []).forEach(f => {
+                const d = document.createElement('div');
+                d.textContent = '📎 ' + f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+                list.appendChild(d);
+            });
+        });
+    }
+});
+
+async function dbSubmitComplete() {
+    const id = currentCompleteId;
+    if (!id) return;
+    const fi = document.getElementById('dbCompleteFiles');
+    if (!fi.files || fi.files.length === 0) { alert('시안 파일을 한 개 이상 첨부해 주세요.'); return; }
+    const note = document.getElementById('dbCompleteNote').value.trim();
+    const btn = document.getElementById('dbCompleteBtn');
+    btn.disabled = true;
+    btn.textContent = '업로드 중...';
+    try {
+        const urls = [];
+        for (const f of fi.files) {
+            const ext = (f.name.split('.').pop() || 'bin').toLowerCase();
+            const name = `final-designs/${userId}/${id}/${Date.now()}_${Math.random().toString(36).substr(2,8)}.${ext}`;
+            const up = await sb.storage.from('design-market').upload(name, f, { upsert: false });
+            if (up.error) throw up.error;
+            const pub = sb.storage.from('design-market').getPublicUrl(name);
+            urls.push(pub.data.publicUrl);
+        }
+        const { data: row } = await sb.from('design_requests').select('description').eq('id', id).single();
+        const now = new Date().toISOString();
+        let newDesc = (row.description || '');
+        newDesc += `\n\n[COMPLETED:${now}][FINAL_FILES:${urls.join('|')}][SETTLEMENT_REQUESTED:${now}]`;
+        if (note) newDesc += `\n[DESIGNER_NOTE: ${note}]`;
+        const { error } = await sb.from('design_requests').update({
+            status: 'settlement_requested',
+            description: newDesc
+        }).eq('id', id);
+        if (error) throw error;
+        dbCloseModal();
+        activeTab = 'done';
+        render();
+        alert('완료 등록 + 정산 요청이 전달되었습니다.');
+    } catch (e) {
+        alert('실패: ' + (e.message || e));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '완료 등록 + 정산 요청';
+    }
+}
+
+async function dbRequestSettle(id) {
+    if (!confirm('정산을 요청하시겠습니까? 본사에서 확인 후 정산됩니다.')) return;
+    const { data: row } = await sb.from('design_requests').select('description').eq('id', id).single();
+    const now = new Date().toISOString();
+    const newDesc = (row.description || '') + `\n\n[SETTLEMENT_REQUESTED:${now}]`;
+    const { error } = await sb.from('design_requests').update({
+        status: 'settlement_requested',
+        description: newDesc
+    }).eq('id', id);
+    if (error) { alert('실패: ' + error.message); return; }
+    render();
+}
+</script>
+</body>
+</html>

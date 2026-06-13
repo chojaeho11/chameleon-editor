@@ -10921,7 +10921,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=367"></script>
+<script src="/simple_order.js?v=368"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -20673,11 +20673,11 @@ if (w >= 20 && h >= 20) {
             <!-- 본사의뢰: 상품 선택 -->
             <div id="dreqHqPanel">
                 <div class="dreq-prods" id="dreqProds">
-                    <button type="button" class="dreq-prod" data-prod="명함" data-price="10000"><div class="dpn">명함</div><div class="dpp">10,000원</div></button>
-                    <button type="button" class="dreq-prod" data-prod="전단" data-price="20000"><div class="dpn">전단</div><div class="dpp">20,000원</div></button>
-                    <button type="button" class="dreq-prod" data-prod="배너" data-price="20000"><div class="dpn">배너</div><div class="dpp">20,000원</div></button>
-                    <button type="button" class="dreq-prod" data-prod="가벽" data-price="30000"><div class="dpn">가벽</div><div class="dpp">30,000원</div></button>
-                    <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="40000"><div class="dpn">글씨포토존</div><div class="dpp">40,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="명함" data-price="15000"><div class="dpn">명함</div><div class="dpp">15,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="전단" data-price="30000"><div class="dpn">전단</div><div class="dpp">30,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="배너" data-price="30000"><div class="dpn">배너</div><div class="dpp">30,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="가벽" data-price="50000"><div class="dpn">가벽</div><div class="dpp">50,000원</div></button>
+                    <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="50000"><div class="dpn">글씨포토존</div><div class="dpp">50,000원</div></button>
                 </div>
                 <div id="dreqTotal" class="dreq-total" style="display:none;">
                     <span class="l"><span id="dreqTotalProd">-</span> 디자인비</span>
@@ -20719,6 +20719,9 @@ if (w >= 20 && h >= 20) {
                 </div>
                 <button type="button" class="dreq-submit" id="dreqSubmitBtn" onclick="window.submitDesignRequest()">의뢰 등록하기</button>
                 <div class="dreq-note">등록하시면 담당 매니저가 24시간 내 연락드립니다. 시안 1차는 영업일 기준 2~3일 소요됩니다.</div>
+                <div style="text-align:center; margin-top:14px; padding-top:14px; border-top:0.5px solid rgba(0,0,0,0.08);">
+                    <a href="/designer-board" style="font-size:12px; color:#86868b; font-weight:500; letter-spacing:-0.2px; text-decoration:none;">디자이너이신가요? <span style="color:#007AFF; font-weight:600;">디자이너 보드 열기 →</span></a>
+                </div>
             </div>
         </div>
     </div>

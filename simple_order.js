@@ -8978,11 +8978,11 @@ html, body { background: #ffffff !important; }
             var _drNm = (p && p.name || '').toLowerCase();
             var _siteIsKR = !window.SITE_CONFIG || (window.SITE_CONFIG.COUNTRY || 'KR').toUpperCase() === 'KR';
             if (_siteIsKR) {
-                if (state.isBizCard) { _drProd = '명함'; _drPrice = 10000; }
-                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 20000; }
-                else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 40000; }
-                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) { _drProd = '가벽'; _drPrice = 30000; }
-                else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 20000; }
+                if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
+                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
+                else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
+                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) { _drProd = '가벽'; _drPrice = 50000; }
+                else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
             }
             var _drBan = document.getElementById('soDesignReqBanner');
             if (_drBan) {
