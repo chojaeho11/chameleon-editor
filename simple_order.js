@@ -12638,6 +12638,12 @@ html, body { background: #ffffff !important; }
         if (it.designRequest && it.designRequest.total) {
             base += (it.designRequest.total || 0);
         }
+        // 2026-06-13: 칼선작업 비용 포함 (cutlineFee × 1, 라인 단위)
+        if (it.cutlineFee && it.cutlineFee > 0) {
+            base += (it.cutlineFee || 0);
+        } else if (it.cutlineWork && it.cutlineCharCount > 0) {
+            base += (it.cutlineCharCount * 10000);
+        }
         return base;
     }
 
