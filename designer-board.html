@@ -185,6 +185,9 @@ let currentCompleteRow = null;
 let myDesignerStatus = null;
 // 디자이너 프로필 캐시 (claimed/완료 카드에 표시할 이름/이메일)
 const designerProfileCache = {};
+// 관리자 이메일 — 일치 시 의뢰 삭제 권한 노출
+const ADMIN_EMAILS = ['korea900as@gmail.com'];
+function isAdmin() { return userEmail && ADMIN_EMAILS.indexOf(userEmail.toLowerCase()) >= 0; }
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -381,6 +384,21 @@ async function render() {
         </div>
     `;
 
+    // 관리자 전용 — 현재 탭 전체 삭제 버튼
+    if (isAdmin() && (board || mine)) {
+        let total = 0;
+        if (activeTab === 'open') total = (board || []).length;
+        else if (activeTab === 'inprog') total = inprog.length;
+        else total = done.length;
+        if (total > 0) {
+            html += `
+                <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+                    <button onclick="dbAdminPurgeTab()" style="padding:8px 14px; background:#ff3b30; color:#fff; border:none; border-radius:980px; font-size:12.5px; font-weight:600; cursor:pointer; letter-spacing:-0.2px;">🗑 현재 탭 ${total}개 전체 삭제 (관리자)</button>
+                </div>
+            `;
+        }
+    }
+
     let list = [];
     if (activeTab === 'open') list = board || [];
     else if (activeTab === 'inprog') list = inprog;
@@ -493,12 +511,64 @@ function renderCard(r) {
                         <span class="l">디자이너 정산금</span>
                         <span class="v">${payoutLabel(r)}</span>
                     </div>
-                    <div class="db-actions">${actions}</div>
+                    <div class="db-actions">${actions}${isAdmin() ? `<button class="db-act" onclick="dbAdminDelete('${r.id}')" style="background:rgba(255,59,48,0.10); color:#ff3b30; margin-left:auto;">🗑 의뢰 삭제 (관리자)</button>` : ''}</div>
                 </div>
             </div>
         </div>
     `;
 }
+
+// 관리자 — 단일 의뢰 삭제
+async function dbAdminDelete(id) {
+    if (!isAdmin()) return;
+    if (!confirm('이 의뢰를 삭제하시겠습니까? 복구 불가능합니다.')) return;
+    try {
+        const { error, count } = await sb.from('design_requests').delete({ count: 'exact' }).eq('id', id);
+        if (error) throw error;
+        if (count === 0) { alert('삭제되지 않았습니다 (RLS 권한 확인 필요). Supabase 정책이 적용되었는지 확인해주세요.'); return; }
+        render();
+    } catch (e) { alert('실패: ' + (e.message || e)); }
+}
+window.dbAdminDelete = dbAdminDelete;
+
+// 관리자 — 현재 탭 전체 삭제
+async function dbAdminPurgeTab() {
+    if (!isAdmin()) return;
+    let label, fetcher;
+    if (activeTab === 'open') {
+        label = '신규 의뢰';
+        fetcher = () => sb.from('design_requests').select('id').in('status', ['open','claimed']).eq('country', 'KR');
+    } else if (activeTab === 'inprog') {
+        label = '내가 진행중인 의뢰';
+        fetcher = () => sb.from('design_requests').select('id').in('status', ['claimed','completed']).like('description', '%[DESIGNER:' + userId + '%');
+    } else {
+        label = '내 완료/정산';
+        fetcher = () => sb.from('design_requests').select('id').in('status', ['settlement_requested','settled']).like('description', '%[DESIGNER:' + userId + '%');
+    }
+    if (!confirm(label + ' 탭의 모든 의뢰를 영구 삭제합니다. 진행하시겠습니까?')) return;
+    if (!confirm('정말 모두 삭제합니다. 복구 불가능합니다.')) return;
+    try {
+        const { data, error } = await fetcher();
+        if (error) throw error;
+        const ids = (data || []).map(r => r.id);
+        if (ids.length === 0) { alert('삭제할 의뢰가 없습니다.'); return; }
+        // 100개씩 청크
+        let total = 0;
+        for (let i = 0; i < ids.length; i += 100) {
+            const chunk = ids.slice(i, i + 100);
+            const { error: dErr, count } = await sb.from('design_requests').delete({ count: 'exact' }).in('id', chunk);
+            if (dErr) throw dErr;
+            if (count != null) total += count;
+        }
+        if (total === 0) {
+            alert('0건 삭제되었습니다 — RLS 권한이 적용되지 않은 듯합니다.\nSupabase SQL Editor 에서 admin policy 를 design_requests 에 추가해주세요.');
+        } else {
+            alert('✓ ' + total + '건 삭제 완료');
+        }
+        render();
+    } catch (e) { alert('실패: ' + (e.message || e)); }
+}
+window.dbAdminPurgeTab = dbAdminPurgeTab;
 
 async function dbClaim(id) {
     if (myDesignerStatus !== 'approved') {
