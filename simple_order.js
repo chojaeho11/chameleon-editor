@@ -3543,17 +3543,18 @@ html, body { background: #ffffff !important; }
         const _designUnit = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
         const _queueLines = (Array.isArray(state._adLines) ? state._adLines.length : 0);
         const _cartLineCount = Math.max(1, _queueLines + (state._adCurIsDraft ? 0 : (_queueLines > 0 ? 1 : 0)) || 1);
-        // 2026-06-13: 명함은 신규의뢰 15K + 문구수정 5K × (qty-1) — 같은 디자인 다른 이름·전화번호
+        // 2026-06-13: 명함 — 신규 15K + 문구수정 5K × (qty-1). 양면이면 모두 ×2.
         let designReqFee = 0;
         let designReqBreakdown = null;
         if (state.designReqId) {
             if (state.isBizCard) {
-                const NEW_DESIGN = 15000;
-                const TEXT_MOD = 5000;
+                const SIDE_MULT = (state.bizSide === 'double') ? 2 : 1;
+                const NEW_DESIGN = 15000 * SIDE_MULT;
+                const TEXT_MOD = 5000 * SIDE_MULT;
                 const numCards = Math.max(1, qty || 1);
                 const textModCount = Math.max(0, numCards - 1);
                 designReqFee = NEW_DESIGN + textModCount * TEXT_MOD;
-                designReqBreakdown = { newDesign: NEW_DESIGN, textMod: TEXT_MOD, textModCount: textModCount, total: designReqFee };
+                designReqBreakdown = { newDesign: NEW_DESIGN, textMod: TEXT_MOD, textModCount: textModCount, total: designReqFee, sideMult: SIDE_MULT };
             } else {
                 designReqFee = _designUnit * _cartLineCount;
             }
@@ -3764,17 +3765,30 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         }
-        // 2026-06-13: 디자인 의뢰비 라인 — 명함은 신규 의뢰 + 문구 수정 분리 표시
+        // 2026-06-13: 디자인 의뢰비 라인 — 명함은 신규 의뢰 + 문구 수정 분리 표시. 양면 ×2 명시.
         try {
             showRow('soDreqFeeRow', designReqFee > 0);
             if (designReqFee > 0) {
                 setText('soDreqFeeQty', state.designReqQty || 1);
-                if (designReqBreakdown && designReqBreakdown.textModCount > 0) {
-                    setText('soDreqFeeLabel', '디자인 신규 의뢰');
-                    setText('soDreqFeeAmt', '+' + fmtPrice(designReqBreakdown.newDesign));
-                    showRow('soDreqTextModRow', true);
-                    setText('soDreqTextModQty', designReqBreakdown.textModCount);
-                    setText('soDreqTextModAmt', '+' + fmtPrice(designReqBreakdown.textMod * designReqBreakdown.textModCount));
+                if (designReqBreakdown) {
+                    var _bdMult = designReqBreakdown.sideMult || 1;
+                    var _bdSideLbl = (_bdMult === 2) ? ' (양면 ×2)' : '';
+                    if (designReqBreakdown.textModCount > 0) {
+                        setText('soDreqFeeLabel', '디자인 신규 의뢰' + _bdSideLbl);
+                        setText('soDreqFeeAmt', '+' + fmtPrice(designReqBreakdown.newDesign));
+                        showRow('soDreqTextModRow', true);
+                        setText('soDreqTextModQty', designReqBreakdown.textModCount);
+                        setText('soDreqTextModAmt', '+' + fmtPrice(designReqBreakdown.textMod * designReqBreakdown.textModCount));
+                        // 문구수정 단가 표시 업데이트 (5K or 10K)
+                        try {
+                            var _txtModLbl = document.querySelector('#soDreqTextModRow span:first-child');
+                            if (_txtModLbl) _txtModLbl.innerHTML = '└ 문구 수정 × <span id="soDreqTextModQty">' + designReqBreakdown.textModCount + '</span>건 (' + fmtPrice(designReqBreakdown.textMod) + '/건)';
+                        } catch (e) {}
+                    } else {
+                        setText('soDreqFeeLabel', '디자인 신규 의뢰' + _bdSideLbl);
+                        setText('soDreqFeeAmt', '+' + fmtPrice(designReqFee));
+                        showRow('soDreqTextModRow', false);
+                    }
                 } else {
                     setText('soDreqFeeLabel', '디자인 의뢰비');
                     setText('soDreqFeeAmt', '+' + fmtPrice(designReqFee));
@@ -11027,7 +11041,11 @@ html, body { background: #ffffff !important; }
                 product_label: state._drReqProduct || null,
                 unit_price: state.designReqFee || 0,
                 qty: state.designReqQty || 1,
-                total: state.designReqTotal || 0
+                total: state.designReqTotal || 0,
+                // 명함 전용: 단면/양면 + qty (각 단위) — workorder / 디자이너보드 에서 작업 산정용
+                biz_side: state.isBizCard ? (state.bizSide || 'single') : null,
+                biz_tier: state.isBizCard ? (state.bizTier || 'general') : null,
+                biz_qty: state.isBizCard ? Math.max(1, state.qty || 1) : null
             } : null,
         };
     }
@@ -11408,7 +11426,24 @@ html, body { background: #ffffff !important; }
         var prod = state && state._drReqProduct;
         var presetDesc = '';
         try {
-            if (state && state.product && state.product.name) presetDesc = '상품: ' + state.product.name + '\n\n';
+            if (state && state.product && state.product.name) presetDesc = '상품: ' + state.product.name + '\n';
+            // 2026-06-13: 명함 — 단면/양면, 등급, 박, 후가공, 수량 모두 description 에 자동 기재
+            if (state && state.isBizCard) {
+                var _BC_TIER = { general: '일반', premium: '프리미엄' };
+                var _BC_SIDE = { single: '단면', double: '양면' };
+                var _BC_FOIL = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
+                var _BC_FIN = { round_corner: '귀도리(모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+                presetDesc += '\n[명함 옵션]\n';
+                presetDesc += '- 등급: ' + (_BC_TIER[state.bizTier] || '일반') + '\n';
+                presetDesc += '- 인쇄: ' + (_BC_SIDE[state.bizSide] || '단면') + '\n';
+                presetDesc += '- 수량: ' + (state.qty || 1) + '각 (' + ((state.qty || 1) * 200) + '매)\n';
+                if (state.bizFoil) presetDesc += '- 박: ✨ ' + (_BC_FOIL[state.bizFoil] || state.bizFoil) + '\n';
+                if (state.bizFinishes) {
+                    var _finList = Object.keys(state.bizFinishes).filter(function(k){ return state.bizFinishes[k]; }).map(function(k){ return _BC_FIN[k] || k; });
+                    if (_finList.length > 0) presetDesc += '- 후가공: 🛠️ ' + _finList.join(', ') + '\n';
+                }
+                presetDesc += '\n';
+            }
         } catch (e) {}
         if (typeof window.openDesignRequestPopup === 'function') {
             window.openDesignRequestPopup({
@@ -11661,19 +11696,24 @@ html, body { background: #ffffff !important; }
                 if (item.isGate && item.gate) {
                     meta.push('🚪 ' + (item.gate.width_m || 3) + 'm × ' + (item.gate.height_m || 3) + 'm');
                 }
-                // 2026-06-13: 디자인 의뢰 표시 — 명함은 신규 의뢰 + 문구수정 분리
+                // 2026-06-13: 디자인 의뢰 표시 — 명함은 신규 의뢰 + 문구수정 분리. 양면 ×2.
                 if (item.designRequest && item.designRequest.total) {
                     var _dr = item.designRequest;
                     if (item._isBizCard || (item.bizCard != null)) {
                         var _bcLineQty = item.qty || 1;
                         if (_bcLineQty >= 200 && _bcLineQty % 200 === 0) _bcLineQty = _bcLineQty / 200;
                         if (_bcLineQty < 1) _bcLineQty = 1;
+                        var _bcSideForMeta = (item.bizCard && item.bizCard.side === 'double') ? 'double' : 'single';
+                        var _bcMult = (_bcSideForMeta === 'double') ? 2 : 1;
+                        var _bcNewFee = 15000 * _bcMult;
+                        var _bcTextFee = 5000 * _bcMult;
                         var _textMods = Math.max(0, _bcLineQty - 1);
-                        var _drTotal = 15000 + _textMods * 5000;
+                        var _drTotal = _bcNewFee + _textMods * _bcTextFee;
+                        var _sideLbl = (_bcSideForMeta === 'double') ? '양면(×2) ' : '';
                         if (_textMods > 0) {
-                            meta.push('🎨 디자인 신규 의뢰 15,000원 + 문구 수정 × ' + _textMods + '건 (+' + _drTotal.toLocaleString() + '원)');
+                            meta.push('🎨 ' + _sideLbl + '디자인 신규 ' + _bcNewFee.toLocaleString() + '원 + 문구 수정 × ' + _textMods + '건 (+' + _drTotal.toLocaleString() + '원)');
                         } else {
-                            meta.push('🎨 디자인 신규 의뢰 (+15,000원)');
+                            meta.push('🎨 ' + _sideLbl + '디자인 신규 의뢰 (+' + _bcNewFee.toLocaleString() + '원)');
                         }
                     } else {
                         meta.push('🎨 ' + tr(
@@ -12213,10 +12253,11 @@ html, body { background: #ffffff !important; }
                     if (fo) _bcSub += fo.price * _bcQty;
                 });
             }
-            // 디자인 의뢰비 (명함 전용 tier — 신규 15K + 문구수정 5K × 추가건)
+            // 디자인 의뢰비 (명함 전용 tier — 신규 15K + 문구수정 5K × 추가건. 양면 ×2.)
             if (it.designRequest && it.designRequest.total) {
-                var _newDesign = 15000;
-                var _textMod = 5000;
+                var _bcSideMult = (_bc.side === 'double') ? 2 : 1;
+                var _newDesign = 15000 * _bcSideMult;
+                var _textMod = 5000 * _bcSideMult;
                 var _textModCount = Math.max(0, _bcQty - 1);
                 _bcSub += _newDesign + _textModCount * _textMod;
             }

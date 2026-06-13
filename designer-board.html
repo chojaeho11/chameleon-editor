@@ -176,6 +176,25 @@ const PAYOUT = {
     '글씨포토존': 40000
 };
 
+// 2026-06-13: 명함 — 단면 10K + 1K × (qty-1) 문구수정. 양면이면 ×2.
+function bizCardPayoutDetail(desc) {
+    var sideMatch = String(desc || '').match(/인쇄:\s*([단양]면|double|single)/i);
+    var qtyMatch = String(desc || '').match(/수량:\s*(\d+)\s*각/);
+    var side = 'single';
+    if (sideMatch) {
+        var s = sideMatch[1].toLowerCase();
+        if (/양면|double/i.test(s)) side = 'double';
+    }
+    var qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+    if (qty < 1) qty = 1;
+    var mult = (side === 'double') ? 2 : 1;
+    var NEW_PAYOUT = 10000 * mult;
+    var TEXT_MOD_PAYOUT = 1000 * mult;
+    var textMods = Math.max(0, qty - 1);
+    var total = NEW_PAYOUT + textMods * TEXT_MOD_PAYOUT;
+    return { side: side, qty: qty, mult: mult, newPayout: NEW_PAYOUT, textModPayout: TEXT_MOD_PAYOUT, textModCount: textMods, total: total };
+}
+
 let userId = null;
 let userEmail = null;
 let activeTab = 'open';
@@ -229,7 +248,22 @@ async function dbLogout() {
 
 function payoutOf(cat) { return PAYOUT[cat] || 0; }
 
+function payoutDetailFor(r) {
+    // 명함은 단면/양면 + 수량(각) 기반 tiered 계산
+    if (r && r.category === '명함') {
+        return bizCardPayoutDetail(r.description);
+    }
+    return null;
+}
+
 function payoutLabel(r) {
+    if (r && r.category === '명함') {
+        var d = bizCardPayoutDetail(r.description);
+        if (d.textModCount > 0) {
+            return d.total.toLocaleString() + '원 (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 × ' + d.textModCount + '건)';
+        }
+        return d.total.toLocaleString() + '원' + (d.mult === 2 ? ' (양면 ×2)' : '');
+    }
     var p = payoutOf(r.category);
     if (p > 0) return p.toLocaleString() + '원';
     // 자유의뢰: 메타에 합의 금액 있으면 표시, 없으면 협의
@@ -608,14 +642,26 @@ async function dbOpenComplete(id) {
     // 의뢰 정보 가져와서 정산금 표시 결정
     const { data: row } = await sb.from('design_requests').select('*').eq('id', id).single();
     currentCompleteRow = row;
-    const fixed = payoutOf(row && row.category);
+    // 명함은 단면/양면 + 수량 기반 tiered, 그 외는 카테고리 정찰가
+    let fixed = 0;
+    let fixedLabel = '';
+    if (row && row.category === '명함') {
+        const d = bizCardPayoutDetail(row.description);
+        fixed = d.total;
+        fixedLabel = d.total.toLocaleString() + '원';
+        if (d.textModCount > 0) fixedLabel += ' (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 ' + d.textModPayout.toLocaleString() + ' × ' + d.textModCount + '건)';
+        if (d.mult === 2) fixedLabel += ' [양면]';
+    } else {
+        fixed = payoutOf(row && row.category);
+        fixedLabel = fixed.toLocaleString() + '원';
+    }
     const fixedEl = document.getElementById('dbCompletePayoutFixed');
     const inpEl = document.getElementById('dbCompletePayoutInput');
     const hintEl = document.getElementById('dbCompletePayoutHint');
     if (fixed > 0) {
         fixedEl.style.display = '';
         inpEl.style.display = 'none';
-        fixedEl.textContent = fixed.toLocaleString() + '원';
+        fixedEl.textContent = fixedLabel;
         hintEl.textContent = '본사 정찰가 정산금이 자동으로 적용됩니다.';
     } else {
         fixedEl.style.display = 'none';
@@ -653,7 +699,12 @@ async function dbSubmitComplete() {
     if (!fi.files || fi.files.length === 0) { alert('시안 파일을 한 개 이상 첨부해 주세요.'); return; }
     const note = document.getElementById('dbCompleteNote').value.trim();
     const row = currentCompleteRow || {};
-    const fixedPayout = payoutOf(row.category);
+    let fixedPayout = 0;
+    if (row.category === '명함') {
+        fixedPayout = bizCardPayoutDetail(row.description).total;
+    } else {
+        fixedPayout = payoutOf(row.category);
+    }
     let payoutAmount = fixedPayout;
     if (fixedPayout <= 0) {
         const v = parseInt(document.getElementById('dbCompletePayoutInput').value, 10);

@@ -665,13 +665,55 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const _itemNote = (it.itemNote || it.item_note || '').trim();
             if (_itemNote) boxes.push(`<div class="opt-box opt-note"><div class="opt-head"><i class="fa-solid fa-message"></i> 고객요청사항</div><div class="opt-val">${esc(_itemNote)}</div></div>`);
 
+            // 2026-06-13: 명함 옵션 박스 — 등급/단면양면/박/후가공
+            if (it.bizCard || it._isBizCard) {
+                const _bc = it.bizCard || {};
+                const _bcLines = [];
+                const _BIZ_TIER_LBL = { general: '일반', premium: '프리미엄' };
+                const _BIZ_SIDE_LBL = { single: '단면', double: '양면' };
+                const _BIZ_PAPER_LBL = { snowpaper250: '스노우지 250g', nuvegi240: '누벅240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+                const _BIZ_FOIL_LBL = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
+                const _BIZ_FINISH_LBL = { round_corner: '귀도리 (모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+                if (_bc.tier) _bcLines.push('등급: <b>' + esc(_BIZ_TIER_LBL[_bc.tier] || _bc.tier) + '</b>');
+                if (_bc.side) _bcLines.push('인쇄: <b>' + esc(_BIZ_SIDE_LBL[_bc.side] || _bc.side) + '</b>');
+                if (_bc.paper) _bcLines.push('용지: <b>' + esc(_BIZ_PAPER_LBL[_bc.paper] || _bc.paper) + '</b>');
+                if (_bc.foil) _bcLines.push('박: <b style="color:#b45309;">✨ ' + esc(_BIZ_FOIL_LBL[_bc.foil] || _bc.foil) + '</b>');
+                const _bcFin = _bc.finishes || {};
+                const _bcFinList = Object.keys(_bcFin).filter(k => _bcFin[k]).map(k => _BIZ_FINISH_LBL[k] || k);
+                if (_bcFinList.length > 0) _bcLines.push('후가공: <b style="color:#0369a1;">🛠️ ' + _bcFinList.map(esc).join(', ') + '</b>');
+                if (_bcLines.length > 0) {
+                    boxes.push(`<div class="opt-box" style="border-color:#fde68a; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-id-card"></i> 명함 옵션</div><div class="opt-val" style="line-height:1.8;">${_bcLines.join('<br>')}</div></div>`);
+                }
+            }
+
             // 2026-06-13: 디자인 의뢰 박스 — 작업지시서에서 디자이너 작업 트리거
             if (it.designRequest && it.designRequest.total) {
                 const _dr = it.designRequest;
-                const _drHtml = `<div><b>${esc(_dr.product_label || '디자인')} 의뢰</b> · ${_dr.qty || 1}건 · <span style="color:#16a34a; font-weight:700;">+${fmt(_dr.total || 0)}원</span></div>
-                    <div style="font-size:11px; color:#475569; margin-top:4px;">의뢰 ID: ${esc(_dr.request_id || '')}</div>
-                    <div style="font-size:11px; color:#7c3aed; margin-top:2px;">→ 디자이너 보드 (/designer-board)에서 처리</div>`;
-                boxes.push(`<div class="opt-box" style="border-color:#a7f3d0; background:#f0fdf4;"><div class="opt-head" style="color:#15803d;"><i class="fa-solid fa-pen-ruler"></i> 디자인 의뢰</div><div class="opt-val">${_drHtml}</div></div>`);
+                // 명함은 신규 + 문구수정 분리. 양면 ×2.
+                let _drBody = '';
+                if (it.bizCard || it._isBizCard || _dr.biz_qty) {
+                    const _bcSide = _dr.biz_side || (it.bizCard && it.bizCard.side) || 'single';
+                    const _bcQ = _dr.biz_qty || ((it.qty >= 200 && it.qty % 200 === 0) ? it.qty/200 : (it.qty || 1));
+                    const _mult = (_bcSide === 'double') ? 2 : 1;
+                    const _newFee = 15000 * _mult;
+                    const _textFee = 5000 * _mult;
+                    const _textMods = Math.max(0, _bcQ - 1);
+                    const _ttl = _newFee + _textFee * _textMods;
+                    const _sideTxt = (_bcSide === 'double') ? ' (양면 ×2)' : '';
+                    _drBody = `<div><b>명함 디자인 의뢰${_sideTxt}</b></div>
+                        <div style="font-size:11.5px; color:#475569; margin-top:4px;">
+                            • 신규 디자인 1건: <b style="color:#16a34a;">+${fmt(_newFee)}원</b><br>
+                            ${_textMods > 0 ? `• 문구 수정 ${_textMods}건 (${fmt(_textFee)}원/건): <b style="color:#16a34a;">+${fmt(_textFee * _textMods)}원</b><br>` : ''}
+                            <span style="font-weight:700;">합계: <span style="color:#16a34a;">+${fmt(_ttl)}원</span></span>
+                        </div>
+                        <div style="font-size:11px; color:#7c3aed; margin-top:6px;">→ 디자이너 보드 (/designer-board)에서 처리</div>
+                        <div style="font-size:10.5px; color:#94a3b8; margin-top:2px;">의뢰 ID: ${esc(_dr.request_id || '')}</div>`;
+                } else {
+                    _drBody = `<div><b>${esc(_dr.product_label || '디자인')} 의뢰</b> · ${_dr.qty || 1}건 · <span style="color:#16a34a; font-weight:700;">+${fmt(_dr.total || 0)}원</span></div>
+                        <div style="font-size:11px; color:#475569; margin-top:4px;">의뢰 ID: ${esc(_dr.request_id || '')}</div>
+                        <div style="font-size:11px; color:#7c3aed; margin-top:2px;">→ 디자이너 보드 (/designer-board)에서 처리</div>`;
+                }
+                boxes.push(`<div class="opt-box" style="border-color:#a7f3d0; background:#f0fdf4;"><div class="opt-head" style="color:#15803d;"><i class="fa-solid fa-pen-ruler"></i> 디자인 의뢰</div><div class="opt-val">${_drBody}</div></div>`);
             }
 
             const optGrid = boxes.length > 0
