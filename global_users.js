@@ -553,6 +553,106 @@ window.viewMemberOrders = async (userId, name) => {
     });
 };
 
+// ───────────────────────────────────────────────
+// [디자이너 신청·승인 관리] — designer_profiles.is_active 기반
+// ───────────────────────────────────────────────
+window.loadDesignerApplications = async () => {
+    const grid = document.getElementById('designerAppListBody');
+    if (!grid) return;
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">로딩 중...</div>';
+    const filter = document.getElementById('dgnFilter')?.value || 'pending';
+    try {
+        let q = sb.from('designer_profiles')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(200);
+        if (filter === 'pending') q = q.eq('is_active', false);
+        else if (filter === 'active') q = q.eq('is_active', true);
+        const { data: rows, error } = await q;
+        if (error) throw error;
+        if (!rows || rows.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#94a3b8;">'+(filter==='pending'?'승인 대기 중인 신청이 없습니다.':'조건에 맞는 디자이너가 없습니다.')+'</div>';
+            return;
+        }
+        // 프로필 이메일 로드
+        const ids = rows.map(r => r.id).filter(Boolean);
+        const { data: profs } = await sb.from('profiles').select('id, email, username').in('id', ids);
+        const profMap = {};
+        (profs || []).forEach(p => profMap[p.id] = p);
+
+        grid.innerHTML = '';
+        rows.forEach(r => {
+            const p = profMap[r.id] || {};
+            const isActive = !!r.is_active;
+            const bio = (r.bio || '').slice(0, 240);
+            const portfolioUrl = (r.portfolio_urls && r.portfolio_urls[0]) || '';
+            const created = r.created_at ? new Date(r.created_at).toLocaleString('ko-KR') : '-';
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#fff;border:1px solid '+(isActive?'#a7f3d0':'#e9d5ff')+';border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);';
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;">${(r.display_name||'?')[0]}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:14.5px;font-weight:700;color:#1e293b;">${r.display_name || '(이름 없음)'}</div>
+                        <div style="font-size:11.5px;color:#64748b;word-break:break-all;">${p.email || ''}</div>
+                    </div>
+                    <span style="padding:3px 10px;border-radius:980px;font-size:11px;font-weight:700;${isActive?'background:#dcfce7;color:#166534;':'background:#fef3c7;color:#92400e;'}">${isActive?'✓ 승인됨':'⏳ 대기중'}</span>
+                </div>
+                <div style="font-size:12px;color:#475569;line-height:1.55;white-space:pre-wrap;max-height:7em;overflow:auto;padding:8px 10px;background:#f8fafc;border-radius:8px;margin-bottom:10px;">${(bio || '(자기소개 없음)')}</div>
+                ${portfolioUrl ? '<div style="font-size:11.5px;margin-bottom:10px;"><a href="'+portfolioUrl+'" target="_blank" style="color:#7c3aed;font-weight:600;text-decoration:none;">🔗 포트폴리오 보기</a></div>' : ''}
+                <div style="display:flex;gap:6px;justify-content:space-between;align-items:center;">
+                    <span style="font-size:10.5px;color:#94a3b8;">신청: ${created}</span>
+                    <div style="display:flex;gap:6px;">
+                        ${isActive
+                            ? `<button class="btn btn-outline btn-sm" onclick="rejectDesignerApplication('${r.id}')" style="padding:5px 10px;font-size:11.5px;color:#dc2626;border-color:#fecaca;">승인 취소</button>`
+                            : `<button class="btn btn-outline btn-sm" onclick="rejectDesignerApplication('${r.id}')" style="padding:5px 10px;font-size:11.5px;color:#64748b;">거절·삭제</button>
+                               <button class="btn btn-primary btn-sm" onclick="approveDesignerApplication('${r.id}','${(r.display_name||'').replace(/'/g,"\\'")}')" style="padding:5px 10px;font-size:11.5px;background:#16a34a;border-color:#15803d;color:#fff;">✓ 승인</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        console.error('[loadDesignerApplications]', e);
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#ef4444;">로드 실패: '+(e.message||e)+'</div>';
+    }
+};
+
+window.approveDesignerApplication = async (designerId, name) => {
+    if (!confirm('"'+ (name || '이 디자이너') +'"를 승인하시겠습니까?\n승인 후 의뢰 받기 권한이 부여됩니다.')) return;
+    try {
+        const { error } = await sb.from('designer_profiles').update({ is_active: true }).eq('id', designerId);
+        if (error) throw error;
+        // staff 테이블에도 자동 등록 (이미 있으면 스킵)
+        try {
+            const { data: prof } = await sb.from('profiles').select('email').eq('id', designerId).maybeSingle();
+            const staffName = (name || (prof && prof.email && prof.email.split('@')[0]) || '디자이너');
+            const { data: existing } = await sb.from('admin_staff').select('id').eq('name', staffName).eq('role', 'designer').maybeSingle();
+            if (!existing) {
+                await sb.from('admin_staff').insert({ name: staffName, role: 'designer', color: '#7c3aed' });
+            }
+        } catch (se) { console.warn('[staff sync]', se); }
+        alert('승인 완료');
+        loadDesignerApplications();
+        if (window.loadStaffList) loadStaffList();
+    } catch (e) {
+        alert('실패: ' + (e.message || e));
+    }
+};
+
+window.rejectDesignerApplication = async (designerId) => {
+    if (!confirm('이 신청을 거절·삭제하시겠습니까? 디자이너 프로필이 완전히 제거됩니다.')) return;
+    try {
+        const { error } = await sb.from('designer_profiles').delete().eq('id', designerId);
+        if (error) throw error;
+        alert('처리 완료');
+        loadDesignerApplications();
+    } catch (e) {
+        alert('실패: ' + (e.message || e));
+    }
+};
+
 // [스태프 관리]
 window.loadStaffList = async () => {
     const tbody = document.getElementById('staffListBody');
@@ -1140,33 +1240,67 @@ window.unmarkDesignSettled = async (bidId, btn) => {
     } catch (e) { alert('처리 실패: ' + (e.message || e)); if (btn) btn.disabled = false; }
 };
 
+// 디자이너 dropdown 채우기 (한 번만 실행)
+async function _populateDwDesignerDropdown(currentVal) {
+    const sel = document.getElementById('dwFilterDesigner');
+    if (!sel) return;
+    try {
+        const { data: dps } = await sb.from('designer_profiles')
+            .select('id, display_name, is_active')
+            .order('display_name', { ascending: true })
+            .limit(500);
+        const ids = (dps || []).map(d => d.id).filter(Boolean);
+        const { data: profs } = await sb.from('profiles').select('id, email').in('id', ids);
+        const eMap = {};
+        (profs || []).forEach(p => eMap[p.id] = p.email);
+        const prev = currentVal != null ? currentVal : sel.value;
+        sel.innerHTML = '<option value="">🎨 전체 디자이너</option>';
+        (dps || []).forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            const status = d.is_active ? '' : ' (대기)';
+            const em = eMap[d.id] ? ' · ' + eMap[d.id] : '';
+            opt.textContent = (d.display_name || '(이름 없음)') + status + em;
+            sel.appendChild(opt);
+        });
+        if (prev) sel.value = prev;
+    } catch (e) { console.warn('[populate designer dropdown]', e); }
+}
+
 window.loadDesignWithdrawals = async () => {
     const tbody = document.getElementById('designWithdrawalListBody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;">로딩 중...</td></tr>';
 
-    const statusFilter  = document.getElementById('dwFilterStatus')?.value || '';
-    const countryFilter = document.getElementById('dwFilterCountry')?.value || '';
-    const searchKw      = (document.getElementById('dwSearchDesigner')?.value || '').trim().toLowerCase();
+    // 최초 진입 시 dropdown 채우기
+    const ddSel = document.getElementById('dwFilterDesigner');
+    if (ddSel && ddSel.options.length <= 1) {
+        await _populateDwDesignerDropdown();
+    }
+
+    const statusFilter   = document.getElementById('dwFilterStatus')?.value || '';
+    const countryFilter  = document.getElementById('dwFilterCountry')?.value || '';
+    const designerFilter = document.getElementById('dwFilterDesigner')?.value || '';
 
     try {
         let q = sb.from('design_withdrawal_requests')
             .select('*')
             .order('requested_at', { ascending: false })
             .limit(200);
-        if (statusFilter)  q = q.eq('status', statusFilter);
-        if (countryFilter) q = q.eq('country', countryFilter);
+        if (statusFilter)   q = q.eq('status', statusFilter);
+        if (countryFilter)  q = q.eq('country', countryFilter);
+        if (designerFilter) q = q.eq('designer_id', designerFilter);
 
-        const { data: rawRows, error } = await q;
+        const { data: rows, error } = await q;
         if (error) throw error;
 
-        if (!rawRows || rawRows.length === 0) {
+        if (!rows || rows.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">조건에 맞는 출금 요청이 없습니다.</td></tr>';
             return;
         }
 
         // Fetch designer profiles (display_name + email)
-        const designerIds = [...new Set(rawRows.map(r => r.designer_id).filter(Boolean))];
+        const designerIds = [...new Set(rows.map(r => r.designer_id).filter(Boolean))];
         const { data: dps } = await sb.from('designer_profiles')
             .select('id, display_name, photo_url, country, is_demo')
             .in('id', designerIds);
@@ -1186,22 +1320,6 @@ window.loadDesignWithdrawals = async () => {
             .in('id', designerIds);
         const profMap = {};
         (profs || []).forEach(p => profMap[p.id] = p);
-
-        // Designer 이름·이메일 검색 적용 (legal_name / memo 도 함께 매칭)
-        const rows = searchKw ? rawRows.filter(r => {
-            const dp = dpMap[r.designer_id] || {};
-            const p = profMap[r.designer_id] || {};
-            const haystack = [
-                dp.display_name, p.email, p.username,
-                r.legal_name, r.memo, r.bank_holder
-            ].filter(Boolean).join(' ').toLowerCase();
-            return haystack.indexOf(searchKw) >= 0;
-        }) : rawRows;
-
-        if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">"' + searchKw + '" 검색 결과가 없습니다.</td></tr>';
-            return;
-        }
 
         tbody.innerHTML = '';
         rows.forEach(r => {

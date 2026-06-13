@@ -406,6 +406,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: '디자인 의뢰',
             dreq_sub: '원하는 디자인을 의뢰하면 전문 디자이너가 만들어드립니다',
             dreq_cta: '디자인 의뢰하기',
+            dapply_title: '디자이너 신청',
+            dapply_sub: '디자이너로 등록하고 의뢰를 받아 수익을 만들어 보세요',
+            dapply_cta: '디자이너 신청하기',
             pitch_only: '단',
             pitch_num: '5%',
             pitch_label: '업계 최저 수수료',
@@ -431,6 +434,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'デザイン依頼',
             dreq_sub: 'ご希望のデザインを依頼するとプロのデザイナーが制作します',
             dreq_cta: 'デザインを依頼する',
+            dapply_title: 'デザイナー応募',
+            dapply_sub: 'デザイナー登録して依頼を受け収益化しましょう',
+            dapply_cta: 'デザイナーに応募',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: '業界最安手数料',
@@ -454,6 +460,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'Design Request',
             dreq_sub: 'Describe what you need — our designers will create it for you',
             dreq_cta: 'Request a Design',
+            dapply_title: 'Designer Sign-up',
+            dapply_sub: 'Join as a designer, take requests and earn',
+            dapply_cta: 'Apply as Designer',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: 'INDUSTRY-LOWEST FEE',
@@ -477,6 +486,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: '设计委托',
             dreq_sub: '告诉我们您的需求，专业设计师为您创作',
             dreq_cta: '委托设计',
+            dapply_title: '设计师申请',
+            dapply_sub: '注册成为设计师，接单赚钱',
+            dapply_cta: '申请成为设计师',
             pitch_only: '仅',
             pitch_num: '5%',
             pitch_label: '业界最低手续费',
@@ -500,6 +512,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'طلب تصميم',
             dreq_sub: 'صف ما تحتاجه — مصممونا سينشئونه لك',
             dreq_cta: 'اطلب تصميمًا',
+            dapply_title: 'التقديم كمصمم',
+            dapply_sub: 'انضم كمصمم واستلم الطلبات',
+            dapply_cta: 'تقديم طلب مصمم',
             pitch_only: 'فقط',
             pitch_num: '5%',
             pitch_label: 'أدنى عمولة في الصناعة',
@@ -523,6 +538,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'Solicitar Diseño',
             dreq_sub: 'Describe lo que necesitas — nuestros diseñadores lo crearán',
             dreq_cta: 'Pedir Diseño',
+            dapply_title: 'Inscripción Diseñador',
+            dapply_sub: 'Únete como diseñador, toma encargos y gana',
+            dapply_cta: 'Inscribirse',
             pitch_only: 'SOLO',
             pitch_num: '5%',
             pitch_label: 'COMISIÓN MÁS BAJA',
@@ -546,6 +564,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'Design-Anfrage',
             dreq_sub: 'Beschreiben Sie Ihren Wunsch — unsere Designer setzen ihn um',
             dreq_cta: 'Design anfragen',
+            dapply_title: 'Designer-Bewerbung',
+            dapply_sub: 'Als Designer registrieren, Aufträge annehmen, verdienen',
+            dapply_cta: 'Jetzt bewerben',
             pitch_only: 'NUR',
             pitch_num: '5%',
             pitch_label: 'NIEDRIGSTE GEBÜHR DER BRANCHE',
@@ -569,6 +590,9 @@ export function renderShortcutButtons(containerId) {
             dreq_title: 'Demande de Design',
             dreq_sub: 'Décrivez votre besoin — nos designers le créeront pour vous',
             dreq_cta: 'Demander un Design',
+            dapply_title: 'Inscription Designer',
+            dapply_sub: 'Rejoignez en tant que designer, prenez des commandes',
+            dapply_cta: 'Postuler',
             pitch_only: 'SEULEMENT',
             pitch_num: '5%',
             pitch_label: 'COMMISSION LA PLUS BASSE',
@@ -642,21 +666,20 @@ export function renderShortcutButtons(containerId) {
                 </div>
                 <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> Design Editor</div>
             </div>
-            <a href="${location.origin}/design-market" class="cta3-card cta3-band" onclick="return (function(ev){
-                // PC (>= 768px) 에서는 팝업으로 진행, 모바일에서는 페이지 이동
-                if (window.innerWidth >= 768 && typeof window.openDesignRequestPopup === 'function') {
+            <a href="${location.origin}/designer-board" class="cta3-card cta3-band" onclick="return (function(ev){
+                if (window.innerWidth >= 768 && typeof window.openDesignerApplyPopup === 'function') {
                     ev.preventDefault();
-                    window.openDesignRequestPopup();
+                    window.openDesignerApplyPopup();
                     return false;
                 }
                 return true;
             })(event);">
-                <div class="cta3-word">REQUEST</div>
+                <div class="cta3-word">DESIGNER</div>
                 <div class="cta3-text">
-                    <div class="cta3-title">${t.dreq_title}</div>
-                    <div class="cta3-sub">${t.dreq_sub}</div>
+                    <div class="cta3-title">${t.dapply_title}</div>
+                    <div class="cta3-sub">${t.dapply_sub}</div>
                 </div>
-                <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> ${t.dreq_cta}</div>
+                <div class="cta3-btn"><i class="fa-solid fa-id-badge"></i> ${t.dapply_cta}</div>
             </a>
             <a href="${location.origin}/franchise" class="cta3-card cta3-with">
                 <div class="cta3-word">WITH</div>

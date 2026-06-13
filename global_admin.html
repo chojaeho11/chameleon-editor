@@ -633,7 +633,9 @@
                 <option value="MA">🇲🇦 모로코</option>
                 <option value="SG">🇸🇬 싱가포르</option>
             </select>
-            <input type="text" id="dwSearchDesigner" placeholder="🔍 디자이너 이름·이메일 검색" oninput="if(window._dwDeb)clearTimeout(window._dwDeb);window._dwDeb=setTimeout(loadDesignWithdrawals,250)" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;min-width:240px;">
+            <select id="dwFilterDesigner" onchange="loadDesignWithdrawals()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;min-width:240px;">
+                <option value="">🎨 전체 디자이너</option>
+            </select>
         </div>
         <div style="overflow-x:auto;">
             <table style="min-width:1400px;">
@@ -2378,11 +2380,28 @@
                     <div id="mgrVacationGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;"></div>
                 </div>
 
+                <!-- 🎨 디자이너 신청·승인 관리 -->
+                <div class="card" style="margin-bottom:16px; border:2px solid #c4b5fd; background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <h3 style="margin:0;color:#5b21b6;">🎨 디자이너 신청·승인 관리</h3>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <select id="dgnFilter" onchange="loadDesignerApplications()" style="padding:5px 10px;border-radius:6px;border:1px solid #c4b5fd;font-size:12px;background:#fff;">
+                                <option value="pending">⏳ 승인 대기</option>
+                                <option value="active">✓ 승인된 디자이너</option>
+                                <option value="all">전체</option>
+                            </select>
+                            <button class="btn btn-outline btn-sm" onclick="loadDesignerApplications()" style="font-size:12px;">🔄 새로고침</button>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:#5b21b6;margin-bottom:12px;">메인 페이지의 <b>DESIGNER 신청</b> 카드에서 신청한 디자이너 목록입니다. 승인된 디자이너만 <b>/designer-board</b> 에서 의뢰를 받을 수 있습니다.</div>
+                    <div id="designerAppListBody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;"><div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</div></div>
+                </div>
+
                 <div class="product-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0;">👤 스태프 등록</h3>
                         <div class="form-group"><label class="form-label">이름</label><input id="staffName" class="input-text"></div>
-                        <div class="form-group"><label class="form-label">역할</label><select id="staffRole" class="input-text"><option value="manager">담당 매니저</option><option value="driver">배송 기사</option></select></div>
+                        <div class="form-group"><label class="form-label">역할</label><select id="staffRole" class="input-text"><option value="manager">담당 매니저</option><option value="driver">배송 기사</option><option value="designer">디자이너</option></select></div>
                         <div class="form-group"><label class="form-label">색상</label><input id="staffColor" type="color" class="input-text" style="height:40px;" value="#6366f1"></div>
                         <button class="btn btn-primary" style="width:100%;" onclick="addStaffDB()">등록하기</button>
                     </div>
@@ -3155,7 +3174,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=273"></script>
+    <script type="module" src="global_admin.js?v=274"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">

@@ -9,7 +9,7 @@ import { checkAdminAccess } from "./global_common.js?v=435";
 // 나머지 기능 파일들 불러오기
 import "./global_orders.js?v=478";
 import "./global_products.js?v=307";
-import "./global_users.js?v=299";
+import "./global_users.js?v=300";
 import "./global_safetx.js?v=1";
 import "./global_assets.js?v=296";
 import "./global_stats.js?v=435";
@@ -116,6 +116,7 @@ window.showSection = (secId, navEl) => {
         case 'sec-staff':
             if(window.loadStaffList) window.loadStaffList();
             if(window.loadMgrVacation) window.loadMgrVacation();
+            if(window.loadDesignerApplications) window.loadDesignerApplications();
             break;
         case 'sec-withdrawals': if(window.loadWithdrawals) window.loadWithdrawals(); break;
         case 'sec-design-withdrawals': if(window.loadDesignWithdrawals) window.loadDesignWithdrawals(); break;
