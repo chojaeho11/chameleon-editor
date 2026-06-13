@@ -2534,20 +2534,31 @@ html, body { background: #ffffff !important; }
           <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
             ${tr('장바구니 보기', 'カートを見る', 'View cart')}
           </button>
+          <!-- 2026-06-13: 칼선작업 체크박스 (등신대/키링 등 누끼 가능 제품) — 담기 버튼 위에 배치 -->
+          <div id="soCutlineRow" style="display:none; padding:12px 14px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:12px; font-size:12.5px; color:#7c2d12; font-weight:600; line-height:1.55;">
+            <label for="soCutlineCheckbox" style="display:flex; align-items:flex-start; gap:9px; cursor:pointer;">
+              <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
+              <div style="flex:1;">
+                <div style="font-weight:800; color:#7c2d12; font-size:13.5px;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
+                <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>이미지 1개당 +10,000원</b> (누끼 + 칼선 + 받침)</div>
+              </div>
+            </label>
+            <!-- 누끼 작업 개수 — 같은 이미지면 1개, 캐릭터 여러 마리면 N개 -->
+            <div id="soCutlineCountWrap" style="display:none; margin-top:10px; padding:9px 11px; background:#fff; border-radius:8px; border:1px solid #fcd34d;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="font-size:11.5px; color:#92400e; font-weight:700;">누끼 작업할 이미지 개수<br><span style="font-size:10.5px; font-weight:500;">(예: 곰돌이·토끼 따로 = 2개)</span></span>
+                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                  <button type="button" onclick="window._soBumpCutlineCount(-1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">−</button>
+                  <input type="number" id="soCutlineCountInput" value="1" min="1" max="50" onchange="window._soSetCutlineCount(this.value)" style="width:50px; height:30px; text-align:center; font-size:14px; font-weight:900; color:#7c2d12; border:1.5px solid #f59e0b; border-radius:8px; padding:0; -moz-appearance:textfield;">
+                  <button type="button" onclick="window._soBumpCutlineCount(1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">+</button>
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12.5px; color:#7c2d12; font-weight:800;"><span id="soCutlineCountLabel">1</span>개 × 10,000원 = <span id="soCutlineTotalLabel" style="color:#dc2626; font-weight:900;">+10,000원</span></div>
+            </div>
+          </div>
           <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
             ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
           </button>
-          <!-- 2026-06-13: 칼선작업 체크박스 (등신대/키링 등 누끼 가능 제품) — 장바구니 담기 버튼 아래 배치 -->
-          <label id="soCutlineRow" for="soCutlineCheckbox" style="display:none; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:10px; font-size:12px; color:#7c2d12; font-weight:600; cursor:pointer; line-height:1.55;">
-            <div style="display:flex; align-items:flex-start; gap:8px;">
-              <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
-              <div>
-                <div style="font-weight:800; color:#7c2d12;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
-                <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>유닛 1개당 +10,000원</b>이 자동 추가됩니다.</div>
-                <div style="margin-top:3px; font-size:11px; color:#92400e;">현재 수량 <b id="soCutlineQtyLabel">1</b>개 × 10,000원 = <b id="soCutlineTotalLabel" style="color:#dc2626;">+10,000원</b></div>
-              </div>
-            </div>
-          </label>
           <button class="so-btn so-btn-buy" id="soBtnBuy" onclick="window._soBuyNow()" disabled>
             ${tr('바로 주문하기', '今すぐ注文', 'Order now')}
           </button>
@@ -3570,10 +3581,9 @@ html, body { background: #ffffff !important; }
                 designReqFee = _designUnit * _cartLineCount;
             }
         }
-        // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) — 체크박스 + 수량 자동 (캐릭터 수 = qty)
-        const _cutlineQ = state.cutlineWork ? Math.max(1, parseInt(state.qty, 10) || 1) : 0;
-        if (state.cutlineWork) state.cutlineCharCount = _cutlineQ;
-        const cutlineFee = _cutlineQ * 10000;
+        // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) — 체크박스 + 별도 누끼 이미지 개수 (qty 와 무관)
+        const _cutlineN = state.cutlineWork ? Math.max(1, parseInt(state.cutlineCharCount, 10) || 1) : 0;
+        const cutlineFee = _cutlineN * 10000;
         const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee + cutlineFee;
 
         // 렌더
@@ -8196,35 +8206,48 @@ html, body { background: #ffffff !important; }
         if (/등신대|standee|키링|keyring|원판|raw\s*board|cutout/i.test(name)) return true;
         return false;
     };
-    // 2026-06-13: 칼선작업 체크박스 토글 — 캐릭터 수는 자동으로 수량(qty) 따라감
+    // 2026-06-13: 칼선작업 체크박스 토글 — 누끼 이미지 개수는 qty 와 무관 (별도 입력)
     window._soToggleCutline = function(checked) {
         state.cutlineWork = !!checked;
+        if (checked && (!state.cutlineCharCount || state.cutlineCharCount < 1)) state.cutlineCharCount = 1;
+        var cw = document.getElementById('soCutlineCountWrap');
+        if (cw) cw.style.display = checked ? '' : 'none';
         window._soRefreshCutlineUI();
         if (typeof recalc === 'function') recalc();
+    };
+    window._soSetCutlineCount = function(v) {
+        var n = Math.max(1, Math.min(50, parseInt(v, 10) || 1));
+        state.cutlineCharCount = n;
+        window._soRefreshCutlineUI();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soBumpCutlineCount = function(delta) {
+        var cur = Math.max(1, parseInt(state.cutlineCharCount, 10) || 1);
+        window._soSetCutlineCount(cur + delta);
     };
     window._soRefreshCutlineUI = function() {
         var row = document.getElementById('soCutlineRow');
         var cb = document.getElementById('soCutlineCheckbox');
+        var cw = document.getElementById('soCutlineCountWrap');
         var eligible = !!state.cutlineEligible;
         if (row) row.style.display = eligible ? '' : 'none';
         if (!eligible) {
             state.cutlineWork = false;
             state.cutlineCharCount = 0;
             if (cb) cb.checked = false;
+            if (cw) cw.style.display = 'none';
             return;
         }
-        // 캐릭터 수 = 주문 수량 (자동). cutlineWork 가 true 면 cutlineCharCount 도 동기화
-        var q = Math.max(1, parseInt(state.qty, 10) || 1);
-        state.cutlineCharCount = state.cutlineWork ? q : 0;
-        var qLbl = document.getElementById('soCutlineQtyLabel');
-        if (qLbl) qLbl.textContent = q;
+        var n = Math.max(1, parseInt(state.cutlineCharCount, 10) || 1);
+        if (state.cutlineWork) state.cutlineCharCount = n;
+        var inputEl = document.getElementById('soCutlineCountInput');
+        if (inputEl && parseInt(inputEl.value, 10) !== n) inputEl.value = n;
+        var lblEl = document.getElementById('soCutlineCountLabel');
+        if (lblEl) lblEl.textContent = n;
         var totalEl = document.getElementById('soCutlineTotalLabel');
-        if (totalEl) totalEl.textContent = '+' + (q * 10000).toLocaleString() + '원';
+        if (totalEl) totalEl.textContent = '+' + (n * 10000).toLocaleString() + '원';
         if (cb && cb.checked !== state.cutlineWork) cb.checked = state.cutlineWork;
-    };
-    // qty 변경시에도 라벨 갱신 (recalc 가 호출하지 않으면 안전망)
-    window._soOnQtyChanged = function() {
-        if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
+        if (cw) cw.style.display = state.cutlineWork ? '' : 'none';
     };
 
     // 2026-06-13: 다면 디자인 가벽 — 1m당 5만원 (각 면 디자인 다름). 양면이면 ×2.
@@ -8628,8 +8651,6 @@ html, body { background: #ffffff !important; }
             if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
             if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
         }
-        // 2026-06-13: 칼선작업 라벨도 qty 따라 갱신
-        if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
     };
 
     // ─────────────────────────────────────────────
