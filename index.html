@@ -1645,7 +1645,8 @@ window._tcmFallbackClick = function(code) {
                 position:absolute;
                 left:0; top:0; bottom:0;
                 width:55%;
-                padding:48px 56px;
+                /* 2026-06-12: 우측으로 살짝 쏠려보이던 글씨를 좌측으로 조정 (우측 패딩 추가) */
+                padding:48px 80px 48px 40px;
                 color:var(--txt);
                 display:flex;
                 flex-direction:column;
@@ -1654,6 +1655,8 @@ window._tcmFallbackClick = function(code) {
                 text-align:center;
                 z-index:2;
             }
+            /* 2026-06-12: hero carousel "자세히 보기" CTA 버튼 전체 비활성 (해외몰 포함 — 사용자 요청) */
+            .hc-cta { display:none !important; }
             .hc-tag {
                 font-family:'Pretendard Variable', sans-serif;
                 font-size:11.5px;
@@ -1818,7 +1821,8 @@ window._tcmFallbackClick = function(code) {
                     position:absolute;
                     left:0; top:0; bottom:0;
                     width:62%;
-                    padding:22px 12px;
+                    /* 2026-06-12: 모바일 — 글씨가 우측으로 쏠려보이는 문제 해결. 우측 padding 키워서 전체 좌측 이동 */
+                    padding:22px 30px 22px 8px;
                     z-index:3;
                     justify-content:center;
                     align-items:center;
