@@ -1704,8 +1704,32 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-06-01: 멀티-라인 — 큐 chip 들 + 단일 담기/수정 버튼 + 전체 합계 카드 + 안내 -->
-        <div class="so-section" id="soAdMultiLineSection" style="display:none;">
+        <!-- 2026-06-13: 칼선작업 (배경제거 + 누끼 + 칼선 + 받침) 섹션 — 등신대/원판/키링 등 적용 가능 제품만 노출 -->
+        <div class="so-section" id="soCutlineSection" style="display:none;">
+          <div id="soCutlineRow" style="padding:14px 16px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:14px; font-size:12.5px; color:#7c2d12; font-weight:600; line-height:1.55;">
+            <label for="soCutlineCheckbox" style="display:flex; align-items:flex-start; gap:9px; cursor:pointer;">
+              <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
+              <div style="flex:1;">
+                <div style="font-weight:800; color:#7c2d12; font-size:13.5px;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
+                <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>이미지 1개당 +10,000원</b> (누끼 + 칼선 + 받침)</div>
+              </div>
+            </label>
+            <div id="soCutlineCountWrap" style="display:none; margin-top:10px; padding:9px 11px; background:#fff; border-radius:8px; border:1px solid #fcd34d;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="font-size:11.5px; color:#92400e; font-weight:700;">누끼 작업할 이미지 개수<br><span style="font-size:10.5px; font-weight:500;">(예: 곰돌이·토끼 따로 = 2개)</span></span>
+                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                  <button type="button" onclick="window._soBumpCutlineCount(-1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">−</button>
+                  <input type="number" id="soCutlineCountInput" value="1" min="1" max="50" onchange="window._soSetCutlineCount(this.value)" style="width:50px; height:30px; text-align:center; font-size:14px; font-weight:900; color:#7c2d12; border:1.5px solid #f59e0b; border-radius:8px; padding:0; -moz-appearance:textfield;">
+                  <button type="button" onclick="window._soBumpCutlineCount(1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">+</button>
+                </div>
+              </div>
+              <div style="margin-top:6px; text-align:right; font-size:12.5px; color:#7c2d12; font-weight:800;"><span id="soCutlineCountLabel">1</span>개 × 10,000원 = <span id="soCutlineTotalLabel" style="color:#dc2626; font-weight:900;">+10,000원</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2026-06-13: 멀티-라인 큐 섹션 영구 비표시 (사용자 요청 — 한 종류씩 장바구니 담기) -->
+        <div class="so-section" id="soAdMultiLineSection" style="display:none !important;">
           <div id="soAdExtraLines"></div>
           <!-- 담기 = 새 라인 큐 추가. 수정 모드 = 클릭한 라인 in-place 업데이트. 라벨 토글. -->
           <button type="button" id="soAdCartLineBtn" onclick="window._soAdSaveOrAdd()"
@@ -2534,28 +2558,6 @@ html, body { background: #ffffff !important; }
           <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
             ${tr('장바구니 보기', 'カートを見る', 'View cart')}
           </button>
-          <!-- 2026-06-13: 칼선작업 체크박스 (등신대/키링 등 누끼 가능 제품) — 담기 버튼 위에 배치 -->
-          <div id="soCutlineRow" style="display:none; padding:12px 14px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:12px; font-size:12.5px; color:#7c2d12; font-weight:600; line-height:1.55;">
-            <label for="soCutlineCheckbox" style="display:flex; align-items:flex-start; gap:9px; cursor:pointer;">
-              <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
-              <div style="flex:1;">
-                <div style="font-weight:800; color:#7c2d12; font-size:13.5px;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
-                <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>이미지 1개당 +10,000원</b> (누끼 + 칼선 + 받침)</div>
-              </div>
-            </label>
-            <!-- 누끼 작업 개수 — 같은 이미지면 1개, 캐릭터 여러 마리면 N개 -->
-            <div id="soCutlineCountWrap" style="display:none; margin-top:10px; padding:9px 11px; background:#fff; border-radius:8px; border:1px solid #fcd34d;">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <span style="font-size:11.5px; color:#92400e; font-weight:700;">누끼 작업할 이미지 개수<br><span style="font-size:10.5px; font-weight:500;">(예: 곰돌이·토끼 따로 = 2개)</span></span>
-                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
-                  <button type="button" onclick="window._soBumpCutlineCount(-1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">−</button>
-                  <input type="number" id="soCutlineCountInput" value="1" min="1" max="50" onchange="window._soSetCutlineCount(this.value)" style="width:50px; height:30px; text-align:center; font-size:14px; font-weight:900; color:#7c2d12; border:1.5px solid #f59e0b; border-radius:8px; padding:0; -moz-appearance:textfield;">
-                  <button type="button" onclick="window._soBumpCutlineCount(1)" style="width:30px; height:30px; border-radius:8px; border:1.5px solid #f59e0b; background:#fff; cursor:pointer; font-size:16px; font-weight:900; color:#92400e; padding:0; line-height:1;">+</button>
-                </div>
-              </div>
-              <div style="margin-top:6px; text-align:right; font-size:12.5px; color:#7c2d12; font-weight:800;"><span id="soCutlineCountLabel">1</span>개 × 10,000원 = <span id="soCutlineTotalLabel" style="color:#dc2626; font-weight:900;">+10,000원</span></div>
-            </div>
-          </div>
           <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
             ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
           </button>
@@ -8239,10 +8241,12 @@ html, body { background: #ffffff !important; }
         window._soSetCutlineCount(cur + delta);
     };
     window._soRefreshCutlineUI = function() {
+        var sec = document.getElementById('soCutlineSection');
         var row = document.getElementById('soCutlineRow');
         var cb = document.getElementById('soCutlineCheckbox');
         var cw = document.getElementById('soCutlineCountWrap');
         var eligible = !!state.cutlineEligible;
+        if (sec) sec.style.display = eligible ? '' : 'none';
         if (row) row.style.display = eligible ? '' : 'none';
         if (!eligible) {
             state.cutlineWork = false;
@@ -10406,7 +10410,8 @@ html, body { background: #ffffff !important; }
                     _inlineUploadCard.style.display = '';
                     _inlineUploadCard.style.order = '-220';  // 사이즈 카드(-200)보다 더 위로
                 }
-                if (_multiSec)   _multiSec.style.display   = '';
+                // 2026-06-13: 멀티-라인 큐 영구 비표시 (사용자 요청 — 한 종류씩 장바구니)
+                if (_multiSec)   _multiSec.style.display   = 'none';
                 // 2026-06-01: 광고인쇄 — 좌측 soUploadWrap 은 그대로 표시 (인라인 업로드 클릭 시 같은 #soFile 가 트리거되어
                 //   renderUploadDone 이 좌측 #soUpload 에 미리보기 표시). 사용자가 우측 인라인 + 좌측 프리뷰 동시 사용.
                 if (_leftUpload) _leftUpload.style.display = '';
@@ -10531,8 +10536,9 @@ html, body { background: #ffffff !important; }
             //   2026-06-01: 허니콤배너 (isBanner) 는 큐 UI 사용 안 함 — 단순 단/양면 + 파일 + 수량 + 담기.
             //   2026-06-04: 원판 (rawBoard / hexa-board) 도 큐/업로드 UI 사용 안 함 — 우측 카드 그리드에 수량만 입력해서 일괄 담기.
             if (state.isHoneycomb && !state.isAdPrint && !state.isBanner && !state.isRawBoard) {
+                // 2026-06-13: 멀티-라인 큐 영구 비표시 — 사용자 요청 (한 종류씩 장바구니에 담기)
                 if (_multiSec) {
-                    _multiSec.style.display = '';
+                    _multiSec.style.display = 'none';
                     _multiSec.style.order = '';
                 }
                 // 2026-06-01: 가벽 사이즈 → 가벽 형태 → 앞면 업로드 → (뒷면 업로드 양면시) → 수량 ... 순서로 강제.
