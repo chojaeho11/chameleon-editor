@@ -653,58 +653,55 @@ window.rejectDesignerApplication = async (designerId) => {
     }
 };
 
-// 2026-06-13: 전체 초기화 — 모든 디자인 의뢰 · 디자이너 프로필 · 출금신청 · 디자이너 스태프 일괄삭제
+// 2026-06-13: 전체 초기화 — FK 의존성 역순으로 삭제
 window.purgeAllDesignerData = async () => {
-    if (!confirm('⚠️ 정말 전체 초기화 하시겠습니까?\n\n다음 데이터가 모두 영구 삭제됩니다:\n• design_requests (신규 의뢰)\n• designer_profiles (디자이너 프로필 + 신청)\n• design_withdrawal_requests (출금 신청)\n• admin_staff role=designer (스태프 디자이너)\n\n복구 불가능합니다.')) return;
+    if (!confirm('⚠️ 정말 전체 초기화 하시겠습니까?\n\n모든 디자인 의뢰 · 디자이너 프로필 · 입찰 · 리뷰 · 출금 신청이 영구 삭제됩니다.\n\n복구 불가능합니다.')) return;
     if (!confirm('정말로 모든 디자이너 데이터를 삭제합니다.\n취소하시려면 [취소], 정말 실행하시려면 [확인].')) return;
     const txt = prompt('확인을 위해 "초기화" 라고 입력하세요:');
     if (txt !== '초기화') { alert('취소되었습니다.'); return; }
 
+    // FK 의존성 역순 — 자식 테이블 먼저, 부모 테이블 나중에
+    // (예: designer_profiles.id 가 design_bids.designer_id 의 FK target 이므로 design_bids 먼저 삭제)
+    const order = [
+        { tbl: 'design_reviews',              filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'design_bids',                 filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'designer_gigs',               filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'design_withdrawal_requests',  filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'designer_tax_profiles',       filterCol: 'designer_id',  filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'pattern_royalties',           filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'design_requests',             filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'designer_profiles',           filterCol: 'id',           filterVal: '00000000-0000-0000-0000-000000000000', op: 'neq' },
+        { tbl: 'admin_staff',                 filterCol: 'role',         filterVal: 'designer',                              op: 'eq' }
+    ];
+
     const results = [];
-    try {
-        // 1) design_requests — 전체 삭제 (Supabase 안전망 우회: created_at >= 1900-01-01)
+    for (const step of order) {
         try {
-            const { error, count } = await sb.from('design_requests').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
-            if (error) throw error;
-            results.push('• design_requests: ' + (count || 0) + '건 삭제');
-        } catch (e) { results.push('• design_requests 실패: ' + (e.message || e)); }
-
-        // 2) design_withdrawal_requests
-        try {
-            const { error, count } = await sb.from('design_withdrawal_requests').delete({ count: 'exact' }).gte('requested_at', '1900-01-01');
-            if (error) throw error;
-            results.push('• design_withdrawal_requests: ' + (count || 0) + '건 삭제');
-        } catch (e) { results.push('• design_withdrawal_requests 실패: ' + (e.message || e)); }
-
-        // 3) designer_tax_profiles
-        try {
-            const { error, count } = await sb.from('designer_tax_profiles').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
-            if (error) throw error;
-            results.push('• designer_tax_profiles: ' + (count || 0) + '건 삭제');
-        } catch (e) { results.push('• designer_tax_profiles 실패: ' + (e.message || e)); }
-
-        // 4) designer_profiles
-        try {
-            const { error, count } = await sb.from('designer_profiles').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
-            if (error) throw error;
-            results.push('• designer_profiles: ' + (count || 0) + '건 삭제');
-        } catch (e) { results.push('• designer_profiles 실패: ' + (e.message || e)); }
-
-        // 5) admin_staff role=designer
-        try {
-            const { error, count } = await sb.from('admin_staff').delete({ count: 'exact' }).eq('role', 'designer');
-            if (error) throw error;
-            results.push('• admin_staff (designer): ' + (count || 0) + '건 삭제');
-        } catch (e) { results.push('• admin_staff (designer) 실패: ' + (e.message || e)); }
-
-        alert('✓ 전체 초기화 완료\n\n' + results.join('\n') + '\n\n이제 새 디자이너 신청만 받게 됩니다.');
-        // UI 새로고침
-        if (window.loadDesignerApplications) loadDesignerApplications();
-        if (window.loadStaffList) loadStaffList();
-        if (window.loadDesignWithdrawals) loadDesignWithdrawals();
-    } catch (e) {
-        alert('초기화 중 오류:\n' + (e.message || e) + '\n\n부분 결과:\n' + results.join('\n'));
+            let q = sb.from(step.tbl).delete({ count: 'exact' });
+            if (step.op === 'eq')  q = q.eq(step.filterCol, step.filterVal);
+            else                   q = q.neq(step.filterCol, step.filterVal);
+            const { error, count } = await q;
+            if (error) {
+                // 테이블 미존재(42P01) 또는 컬럼 미존재(42703) 는 정상 — 스킵
+                if (/42P01|relation .* does not exist|42703|column .* does not exist/i.test(error.message || '')) {
+                    results.push('• ' + step.tbl + ': 미존재 (스킵)');
+                } else {
+                    results.push('• ' + step.tbl + ': ❌ ' + (error.message || error.code));
+                }
+            } else {
+                results.push('• ' + step.tbl + ': ✓ ' + (count != null ? count + '건' : '완료'));
+            }
+        } catch (e) {
+            results.push('• ' + step.tbl + ': ❌ ' + (e.message || e));
+        }
     }
+
+    alert('전체 초기화 결과:\n\n' + results.join('\n') + '\n\n실패가 있다면 콘솔 로그도 확인해 주세요.');
+    console.log('[purge result]', results);
+
+    if (window.loadDesignerApplications) loadDesignerApplications();
+    if (window.loadStaffList) loadStaffList();
+    if (window.loadDesignWithdrawals) loadDesignWithdrawals();
 };
 
 // [스태프 관리]
