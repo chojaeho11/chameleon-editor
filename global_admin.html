@@ -188,35 +188,16 @@
     <div class="sidebar">
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
+            <!-- 2026-06-13: 사이드바 정리 — 활성 메뉴만 상단 노출, 비활성 메뉴는 하단 '삭제된 관리' 섹션으로 이동 -->
             <div class="nav-label">Business</div>
-            <div class="nav-label">AI Chatbot</div>
-            <!-- 실시간 상담 비활성화 (챗봇 전환) -->
-            <!-- <li class="nav-item" onclick="showSection('sec-live-chat', this)"><i class="fa-solid fa-headset"></i> 💬 실시간 상담</li> -->
-            <!-- AI 챗봇 학습 moved to chatbot_learn_882.html -->
-            <!-- <li class="nav-item" onclick="showSection('sec-chatbot', this)"><i class="fa-solid fa-robot"></i> 🦎 AI 챗봇 학습</li> -->
-
             <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
             </li>
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 🛒 통합 주문 관리</li>
-            <li class="nav-item" onclick="showSection('sec-bankda', this)" style="display:none;"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
-            <li class="nav-item" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
-            <li class="nav-item" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 출금관리</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
-
-            <div class="nav-label">🌐 서비스 종합관리</div>
-            <li class="nav-item" onclick="showSection('sec-community-hub', this)"><i class="fa-solid fa-grip"></i> 서비스 대시보드</li>
-            <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자인 마켓</li>
-            <!-- 2026-05-16: '가맹 문의' → '가맹점 정산'(franchise-hq) 로 변경. 출력 파트너 메뉴 제거 -->
-            <li class="nav-item" onclick="window.open('/franchise-hq','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-handshake" style="color:#a78bfa;"></i> 🤝 가맹점 정산</li>
-            <!-- 2026-05-17: 공급사 모집 신청 접수함 (partners.html → franchise_inquiries) -->
-            <li class="nav-item" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();" style="color:#fcd34d;"><i class="fa-solid fa-industry" style="color:#fcd34d;"></i> 🏭 공급사 신청</li>
-            <!-- 2026-05-17: 제조사(출력·시공 파트너) 관리 복원 -->
-            <li class="nav-item" onclick="showSection('sec-production-partners', this); if(window.loadProductionPartners) loadProductionPartners();" style="color:#fcd34d;"><i class="fa-solid fa-print" style="color:#fcd34d;"></i> 🛠️ 제조사·출력 파트너</li>
-            <li class="nav-item" onclick="showSection('sec-cotton-patterns', this); if(window.loadCpPatterns) loadCpPatterns();" style="background:linear-gradient(90deg,#451a03 0%,#78350f 100%); color:#fde047;"><i class="fa-solid fa-shirt" style="color:#fde047;"></i> 🧵 Cotton Print 패턴 마켓</li>
 
             <div class="nav-label">Product & Stock</div>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
@@ -224,11 +205,21 @@
             <div class="nav-label">Management</div>
             <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
             <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
-            <!-- 2026-05-16: 미사용 메뉴 제거 — 마케팅 봇 / AI 리뷰 생성 / 쇼츠 영상 관리 / 안전거래 송금 / 출력 파트너 -->
 
             <div class="nav-label">Assets</div>
             <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
             <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트(서체) 관리</li>
+
+            <!-- 2026-06-13: 삭제된 관리 — 비활성/사용중지된 메뉴 보관 (필요 시 열어서 사용) -->
+            <div class="nav-label" style="margin-top:30px; cursor:pointer; color:#6b7280; user-select:none;" onclick="(function(el){var n=el.nextElementSibling;while(n&&!n.classList.contains('nav-label')){if(n.tagName==='LI'){n.style.display=(n.style.display==='none'?'':'none');}n=n.nextElementSibling;}var i=el.querySelector('i');if(i){i.classList.toggle('fa-chevron-right');i.classList.toggle('fa-chevron-down');}})(this)"><i class="fa-solid fa-chevron-right" style="font-size:10px; margin-right:4px;"></i>🗑️ 삭제된 관리</div>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-community-hub', this)"><i class="fa-solid fa-grip"></i> 서비스 대시보드</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="window.open('/franchise-hq','_blank')"><i class="fa-solid fa-handshake"></i> 🤝 가맹점 정산</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();"><i class="fa-solid fa-industry"></i> 🏭 공급사 신청</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-production-partners', this); if(window.loadProductionPartners) loadProductionPartners();"><i class="fa-solid fa-print"></i> 🛠️ 제조사·출력 파트너</li>
+            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-cotton-patterns', this); if(window.loadCpPatterns) loadCpPatterns();"><i class="fa-solid fa-shirt"></i> 🧵 Cotton Print 패턴 마켓</li>
         </ul>
         <div style="margin-top: auto; padding: 20px;">
             <button class="btn btn-danger" style="width: 100%;" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
