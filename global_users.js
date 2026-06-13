@@ -1601,8 +1601,10 @@ async function _populateDwDesignerDropdown(currentVal) {
     const sel = document.getElementById('dwFilterDesigner');
     if (!sel) return;
     try {
+        // 2026-06-13: is_active=true 디자이너만 노출 (승인된 활성 디자이너만)
         const { data: dps } = await sb.from('designer_profiles')
             .select('id, display_name, is_active')
+            .eq('is_active', true)
             .order('display_name', { ascending: true })
             .limit(500);
         const ids = (dps || []).map(d => d.id).filter(Boolean);
@@ -1610,17 +1612,204 @@ async function _populateDwDesignerDropdown(currentVal) {
         const eMap = {};
         (profs || []).forEach(p => eMap[p.id] = p.email);
         const prev = currentVal != null ? currentVal : sel.value;
-        sel.innerHTML = '<option value="">🎨 전체 디자이너</option>';
+        sel.innerHTML = '<option value="">🎨 활성 디자이너 전체</option>';
         (dps || []).forEach(d => {
             const opt = document.createElement('option');
             opt.value = d.id;
-            const status = d.is_active ? '' : ' (대기)';
             const em = eMap[d.id] ? ' · ' + eMap[d.id] : '';
-            opt.textContent = (d.display_name || '(이름 없음)') + status + em;
+            opt.textContent = (d.display_name || '(이름 없음)') + em;
             sel.appendChild(opt);
         });
         if (prev) sel.value = prev;
     } catch (e) { console.warn('[populate designer dropdown]', e); }
+}
+
+// 2026-06-13: 디자이너별 미지급 합산 + 일괄정산 패널
+window.loadDesignerSettlementPanel = async () => {
+    const panel = document.getElementById('dwSettlementPanel');
+    if (!panel) return;
+    const designerId = document.getElementById('dwFilterDesigner')?.value || '';
+    if (!designerId) { panel.style.display = 'none'; return; }
+    panel.style.display = '';
+    panel.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">불러오는 중...</div>';
+
+    try {
+        // 미지급 (pending + approved) 만 합산
+        const { data: pending, error } = await sb.from('design_withdrawal_requests')
+            .select('*')
+            .eq('designer_id', designerId)
+            .in('status', ['pending', 'approved'])
+            .order('requested_at', { ascending: false });
+        if (error) throw error;
+
+        // 누적 지급 합계 (paid)
+        const { data: paidRows } = await sb.from('design_withdrawal_requests')
+            .select('net_amount, gross_amount')
+            .eq('designer_id', designerId)
+            .eq('status', 'paid');
+        const paidTotal = (paidRows || []).reduce((s, r) => s + (r.net_amount || r.gross_amount || 0), 0);
+
+        // 디자이너 프로필
+        const { data: dp } = await sb.from('designer_profiles').select('display_name, country').eq('id', designerId).maybeSingle();
+        const { data: prof } = await sb.from('profiles').select('email').eq('id', designerId).maybeSingle();
+        const dName = (dp && dp.display_name) || '디자이너';
+        const dEmail = (prof && prof.email) || '';
+
+        if (!pending || pending.length === 0) {
+            panel.innerHTML = `
+                <div style="padding:18px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="font-size:28px;">✓</div>
+                        <div>
+                            <div style="font-size:15px;font-weight:700;color:#166534;">${esc(dName)} — 미지급 의뢰 없음</div>
+                            <div style="font-size:12px;color:#15803d;margin-top:3px;">${esc(dEmail)} · 누적 지급 ${paidTotal.toLocaleString()}원</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const totalGross = pending.reduce((s, r) => s + (r.gross_amount || 0), 0);
+        const totalNet   = pending.reduce((s, r) => s + (r.net_amount || r.gross_amount || 0), 0);
+        const ids        = pending.map(r => r.id);
+
+        // 은행 정보 (최신 row 기준)
+        const latest = pending[0];
+        const bankInfo = [
+            latest.bank_name ? `<b>${esc(latest.bank_name)}</b>` : '',
+            latest.bank_holder ? `(${esc(latest.bank_holder)})` : '',
+            latest.bank_account ? `<span style="font-family:monospace;">${esc(latest.bank_account)}</span>` : ''
+        ].filter(Boolean).join(' · ') || '<span style="color:#dc2626;">⚠ 은행 정보 미입력</span>';
+
+        panel.innerHTML = `
+            <div style="padding:18px 20px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fbbf24;border-radius:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:11px;color:#92400e;font-weight:700;margin-bottom:2px;">📊 미지급 합산</div>
+                        <div style="font-size:18px;font-weight:800;color:#1e293b;">${esc(dName)} <span style="font-size:12px;color:#64748b;font-weight:500;">${esc(dEmail)}</span></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px;color:#92400e;font-weight:600;">미지급 ${pending.length}건 · 누적 지급 ${paidTotal.toLocaleString()}원</div>
+                        <div style="font-size:24px;font-weight:900;color:#dc2626;margin-top:2px;">${totalNet.toLocaleString()}원</div>
+                        ${totalNet !== totalGross ? `<div style="font-size:10px;color:#94a3b8;">총액 ${totalGross.toLocaleString()}원 − 수수료 ${(totalGross-totalNet).toLocaleString()}원</div>` : ''}
+                    </div>
+                </div>
+                <div style="padding:10px 14px;background:#fff;border:1px solid #fde68a;border-radius:10px;margin-bottom:12px;font-size:13px;color:#1e293b;">
+                    🏦 ${bankInfo}
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-sm" onclick='window.downloadSettlementCsv("${designerId}")' style="background:#0284c7;color:#fff;border:none;font-weight:700;padding:8px 16px;">
+                        📥 정산서 다운로드 (CSV)
+                    </button>
+                    <button class="btn btn-sm" onclick='window.bulkSettleDesigner("${designerId}", ${totalNet}, ${pending.length})' style="background:#16a34a;color:#fff;border:none;font-weight:700;padding:8px 16px;">
+                        ✓ 일괄 지급 처리 (${pending.length}건 / ${totalNet.toLocaleString()}원)
+                    </button>
+                </div>
+            </div>
+        `;
+        // window 에 ids 보존 (일괄 지급에서 사용)
+        window._dwSettlePendingIds = ids;
+    } catch (e) {
+        panel.innerHTML = `<div style="padding:14px;color:#ef4444;">패널 로드 실패: ${(e.message || e)}</div>`;
+    }
+};
+
+window.downloadSettlementCsv = async (designerId) => {
+    try {
+        const { data: pending } = await sb.from('design_withdrawal_requests')
+            .select('*')
+            .eq('designer_id', designerId)
+            .in('status', ['pending', 'approved'])
+            .order('requested_at', { ascending: false });
+        if (!pending || pending.length === 0) { alert('미지급 의뢰가 없습니다.'); return; }
+
+        const { data: dp } = await sb.from('designer_profiles').select('display_name, country').eq('id', designerId).maybeSingle();
+        const { data: prof } = await sb.from('profiles').select('email').eq('id', designerId).maybeSingle();
+
+        const totalNet = pending.reduce((s, r) => s + (r.net_amount || r.gross_amount || 0), 0);
+
+        // CSV — Excel 한글 호환 위해 UTF-8 BOM 추가
+        const headers = ['신청일', '디자이너', '이메일', '국가', '요청액', '실수령', '은행', '예금주', '계좌번호', 'SWIFT/IBAN', '메모', '상태', '신청ID'];
+        const rows = pending.map(r => [
+            new Date(r.requested_at).toLocaleString('ko-KR'),
+            (dp && dp.display_name) || '',
+            (prof && prof.email) || '',
+            r.country || 'KR',
+            r.gross_amount || 0,
+            r.net_amount || r.gross_amount || 0,
+            r.bank_name || '',
+            r.bank_holder || '',
+            r.bank_account || '',
+            [r.swift_bic, r.iban, r.routing_number].filter(Boolean).join(' / '),
+            (r.memo || '').replace(/\n/g, ' '),
+            r.status,
+            r.id
+        ]);
+        // 요약 행 추가
+        rows.push([]);
+        rows.push(['합계', '', '', '', pending.reduce((s,r)=>s+(r.gross_amount||0),0), totalNet]);
+
+        const esc = v => {
+            const s = String(v == null ? '' : v);
+            if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        };
+        const csv = [headers, ...rows].map(row => row.map(esc).join(',')).join('\n');
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dName = ((dp && dp.display_name) || 'designer').replace(/[^\wㄱ-ㆎ가-힣]/g, '_');
+        a.href = url;
+        a.download = `정산서_${dName}_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    } catch (e) { alert('다운로드 실패: ' + (e.message || e)); }
+};
+
+window.bulkSettleDesigner = async (designerId, totalAmount, count) => {
+    if (!confirm(`총 ${count}건 · ${totalAmount.toLocaleString()}원을 일괄 지급 완료로 처리합니다.\n실제로 계좌이체를 완료하셨나요?`)) return;
+    if (!confirm('정말 일괄 지급 처리합니다. 되돌릴 수 없습니다.')) return;
+
+    const ids = window._dwSettlePendingIds || [];
+    if (ids.length === 0) { alert('처리할 ID 가 없습니다. 패널을 다시 열어주세요.'); return; }
+
+    try {
+        // 100개씩 청크 처리
+        function chunk(arr, n) { const r = []; for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i+n)); return r; }
+        const now = new Date().toISOString();
+        let total = 0;
+        for (const c of chunk(ids, 100)) {
+            const { error, count: cnt } = await sb.from('design_withdrawal_requests')
+                .update({ status: 'paid', processed_at: now }, { count: 'exact' })
+                .in('id', c)
+                .in('status', ['pending', 'approved']);
+            if (error) {
+                // processed_at 컬럼 없을 가능성 — fallback
+                if (/processed_at/i.test(error.message || '')) {
+                    const fb = await sb.from('design_withdrawal_requests').update({ status: 'paid' }, { count: 'exact' }).in('id', c).in('status', ['pending', 'approved']);
+                    if (fb.error) throw fb.error;
+                    if (fb.count != null) total += fb.count;
+                } else throw error;
+            } else {
+                if (cnt != null) total += cnt;
+            }
+        }
+
+        if (total === 0) {
+            alert('0건이 업데이트되었습니다 — RLS 권한 또는 정책 확인 필요\n(Supabase: CREATE POLICY ... ON design_withdrawal_requests)');
+        } else {
+            alert(`✓ ${total}건 지급 완료 처리됨`);
+        }
+        if (window.loadDesignerSettlementPanel) loadDesignerSettlementPanel();
+        if (window.loadDesignWithdrawals) loadDesignWithdrawals();
+    } catch (e) { alert('실패: ' + (e.message || e)); }
+};
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 window.loadDesignWithdrawals = async () => {

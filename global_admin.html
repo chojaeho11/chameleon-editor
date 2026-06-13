@@ -624,10 +624,13 @@
                 <option value="MA">🇲🇦 모로코</option>
                 <option value="SG">🇸🇬 싱가포르</option>
             </select>
-            <select id="dwFilterDesigner" onchange="loadDesignWithdrawals()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;min-width:240px;">
-                <option value="">🎨 전체 디자이너</option>
+            <select id="dwFilterDesigner" onchange="loadDesignWithdrawals(); if(window.loadDesignerSettlementPanel) loadDesignerSettlementPanel();" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;min-width:240px;">
+                <option value="">🎨 활성 디자이너 전체</option>
             </select>
         </div>
+        <!-- 2026-06-13: 디자이너 선택 시 미지급 합산 + 일괄정산 패널 -->
+        <div id="dwSettlementPanel" style="display:none; margin-bottom:16px;"></div>
+
         <div style="overflow-x:auto;">
             <table style="min-width:1400px;">
                 <thead>
@@ -3169,7 +3172,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=279"></script>
+    <script type="module" src="global_admin.js?v=280"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
