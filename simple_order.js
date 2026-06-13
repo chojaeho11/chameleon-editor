@@ -2485,7 +2485,9 @@ html, body { background: #ffffff !important; }
           <!-- 배송/시공 라인 -->
           <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
           <!-- 2026-06-13: 디자인 의뢰비 라인 — 의뢰 후 노출 -->
-          <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i>디자인 의뢰비</span><span id="soDreqFeeAmt">-</span><span id="soDreqFeeQty" style="display:none;">1</span></div>
+          <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i><span id="soDreqFeeLabel">디자인 의뢰비</span></span><span id="soDreqFeeAmt">-</span><span id="soDreqFeeQty" style="display:none;">1</span></div>
+          <!-- 2026-06-13: 명함 — 문구 수정 별도 라인 -->
+          <div class="so-price-row" id="soDreqTextModRow" style="display:none; color:#34c759; font-weight:600; padding-left:18px;"><span style="font-size:12.5px;">└ 문구 수정 × <span id="soDreqTextModQty">0</span>건 (5,000원/건)</span><span id="soDreqTextModAmt">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
           <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
           <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
@@ -3389,14 +3391,17 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 2026-06-03: 명함 (pp_bc_*) — 박 + 후가공 비용 합산 (모두 정액)
+        // 2026-06-03: 명함 (pp_bc_*) — 박 + 후가공 비용 (각=200매 단위마다 적용)
+        // 2026-06-13: qty(각) 만큼 곱셈 — 여러 디자인에 옵션이 모두 들어가야 하므로
         if (state.isBizCard) {
+            var _bcOptQty = Math.max(1, qty || 1);
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
-                    addonTotal += _bizFoilOpt.price;
+                    var _foilLine = _bizFoilOpt.price * _bcOptQty;
+                    addonTotal += _foilLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + '</span><span>+' + fmtPrice(_bizFoilOpt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + (_bcOptQty > 1 ? ' × ' + _bcOptQty : '') + '</span><span>+' + fmtPrice(_foilLine) + '</span></div>'
                     );
                 }
             }
@@ -3405,9 +3410,10 @@ html, body { background: #ffffff !important; }
                     if (!state.bizFinishes[k]) return;
                     var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (!fopt) return;
-                    addonTotal += fopt.price;
+                    var _finLine = fopt.price * _bcOptQty;
+                    addonTotal += _finLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + (_bcOptQty > 1 ? ' × ' + _bcOptQty : '') + '</span><span>+' + fmtPrice(_finLine) + '</span></div>'
                     );
                 });
             }
@@ -3533,12 +3539,25 @@ html, body { background: #ffffff !important; }
             }
         }
 
-        // 2026-06-13: 디자인 의뢰비 — 큐 라인 수 만큼 곱해서 표시 (담기 시 각 라인마다 designRequest 가 붙으므로 카트 총액과 일치)
+        // 2026-06-13: 디자인 의뢰비
         const _designUnit = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
         const _queueLines = (Array.isArray(state._adLines) ? state._adLines.length : 0);
-        // 현재 폼이 빈 초안이면 큐 라인 수만, 아니면 현재 라인 + 큐 라인 = 총 가벽/박스/등 cart 라인 수
         const _cartLineCount = Math.max(1, _queueLines + (state._adCurIsDraft ? 0 : (_queueLines > 0 ? 1 : 0)) || 1);
-        const designReqFee = _designUnit * _cartLineCount;
+        // 2026-06-13: 명함은 신규의뢰 15K + 문구수정 5K × (qty-1) — 같은 디자인 다른 이름·전화번호
+        let designReqFee = 0;
+        let designReqBreakdown = null;
+        if (state.designReqId) {
+            if (state.isBizCard) {
+                const NEW_DESIGN = 15000;
+                const TEXT_MOD = 5000;
+                const numCards = Math.max(1, qty || 1);
+                const textModCount = Math.max(0, numCards - 1);
+                designReqFee = NEW_DESIGN + textModCount * TEXT_MOD;
+                designReqBreakdown = { newDesign: NEW_DESIGN, textMod: TEXT_MOD, textModCount: textModCount, total: designReqFee };
+            } else {
+                designReqFee = _designUnit * _cartLineCount;
+            }
+        }
         const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee;
 
         // 렌더
@@ -3745,12 +3764,24 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         }
-        // 2026-06-13: 디자인 의뢰비 라인 표시 토글
+        // 2026-06-13: 디자인 의뢰비 라인 — 명함은 신규 의뢰 + 문구 수정 분리 표시
         try {
             showRow('soDreqFeeRow', designReqFee > 0);
             if (designReqFee > 0) {
                 setText('soDreqFeeQty', state.designReqQty || 1);
-                setText('soDreqFeeAmt', '+' + fmtPrice(designReqFee));
+                if (designReqBreakdown && designReqBreakdown.textModCount > 0) {
+                    setText('soDreqFeeLabel', '디자인 신규 의뢰');
+                    setText('soDreqFeeAmt', '+' + fmtPrice(designReqBreakdown.newDesign));
+                    showRow('soDreqTextModRow', true);
+                    setText('soDreqTextModQty', designReqBreakdown.textModCount);
+                    setText('soDreqTextModAmt', '+' + fmtPrice(designReqBreakdown.textMod * designReqBreakdown.textModCount));
+                } else {
+                    setText('soDreqFeeLabel', '디자인 의뢰비');
+                    setText('soDreqFeeAmt', '+' + fmtPrice(designReqFee));
+                    showRow('soDreqTextModRow', false);
+                }
+            } else {
+                showRow('soDreqTextModRow', false);
             }
         } catch (e) {}
         // 합계
@@ -11630,14 +11661,27 @@ html, body { background: #ffffff !important; }
                 if (item.isGate && item.gate) {
                     meta.push('🚪 ' + (item.gate.width_m || 3) + 'm × ' + (item.gate.height_m || 3) + 'm');
                 }
-                // 2026-06-13: 디자인 의뢰 표시
+                // 2026-06-13: 디자인 의뢰 표시 — 명함은 신규 의뢰 + 문구수정 분리
                 if (item.designRequest && item.designRequest.total) {
                     var _dr = item.designRequest;
-                    meta.push('🎨 ' + tr(
-                        (_dr.product_label || '디자인') + ' 의뢰비 (+' + (_dr.total).toLocaleString() + '원)',
-                        'デザイン依頼費 (+' + (_dr.total).toLocaleString() + '円)',
-                        'Design fee (+₩' + (_dr.total).toLocaleString() + ')'
-                    ));
+                    if (item._isBizCard || (item.bizCard != null)) {
+                        var _bcLineQty = item.qty || 1;
+                        if (_bcLineQty >= 200 && _bcLineQty % 200 === 0) _bcLineQty = _bcLineQty / 200;
+                        if (_bcLineQty < 1) _bcLineQty = 1;
+                        var _textMods = Math.max(0, _bcLineQty - 1);
+                        var _drTotal = 15000 + _textMods * 5000;
+                        if (_textMods > 0) {
+                            meta.push('🎨 디자인 신규 의뢰 15,000원 + 문구 수정 × ' + _textMods + '건 (+' + _drTotal.toLocaleString() + '원)');
+                        } else {
+                            meta.push('🎨 디자인 신규 의뢰 (+15,000원)');
+                        }
+                    } else {
+                        meta.push('🎨 ' + tr(
+                            (_dr.product_label || '디자인') + ' 의뢰비 (+' + (_dr.total).toLocaleString() + '원)',
+                            'デザイン依頼費 (+' + (_dr.total).toLocaleString() + '円)',
+                            'Design fee (+₩' + (_dr.total).toLocaleString() + ')'
+                        ));
+                    }
                 }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {
@@ -12146,6 +12190,7 @@ html, body { background: #ffffff !important; }
         }
 
         // 2026-06-12: 명함 — 200매 단위. 일반 2500/4000 / 프리미엄 8000/10000 (단면/양면) + 박 + 후가공. 배송 무료.
+        // 2026-06-13: 박·후가공 옵션은 각(qty) 만큼 곱셈. 디자인 의뢰비는 신규 15K + 문구수정 5K × (qty-1).
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
             var _bc = it.bizCard || {};
@@ -12159,16 +12204,23 @@ html, body { background: #ffffff !important; }
             var _bcSub = _bcUnit * _bcQty;
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
-                if (_bcFoil) _bcSub += _bcFoil.price;
+                if (_bcFoil) _bcSub += _bcFoil.price * _bcQty;
             }
             if (_bc.finishes) {
                 Object.keys(_bc.finishes).forEach(function(k){
                     if (!_bc.finishes[k]) return;
                     var fo = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                    if (fo) _bcSub += fo.price;
+                    if (fo) _bcSub += fo.price * _bcQty;
                 });
             }
-            // 배송 무료 (허니콤보드 외 전 제품)
+            // 디자인 의뢰비 (명함 전용 tier — 신규 15K + 문구수정 5K × 추가건)
+            if (it.designRequest && it.designRequest.total) {
+                var _newDesign = 15000;
+                var _textMod = 5000;
+                var _textModCount = Math.max(0, _bcQty - 1);
+                _bcSub += _newDesign + _textModCount * _textMod;
+            }
+            // 배송 무료
             return _bcSub;
         }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
