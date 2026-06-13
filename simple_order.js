@@ -2403,9 +2403,6 @@ html, body { background: #ffffff !important; }
             <button type="button" class="so-ship-btn" data-ship="self_pickup" onclick="window._soPickShip('self_pickup')">${tr('본사 방문 수령', '本社受取', 'HQ pickup')}</button>
             <button type="button" class="so-ship-btn so-ship-free-metro" data-ship="metro_install" onclick="window._soPickShip('metro_install')" style="grid-column:1/-1; background:linear-gradient(135deg,#03c75a,#00b04f); color:#fff; border-color:#00b04f; font-weight:900; font-size:14px; padding:14px; box-shadow:0 6px 18px -6px rgba(3,199,90,0.55); letter-spacing:0.2px;">
               ${tr('수도권 무료배송 · 무료설치', '首都圏 送料・設置 無料', 'Metro · FREE delivery & install')}
-              <div style="font-size:11px; font-weight:600; margin-top:4px; opacity:0.95; letter-spacing:0;">
-                ${tr('※ 10만원 이하 주문은 수도권이라도 배송비 3만원 부가됩니다', '※ 10万円未満は首都圏でも配送料3万ウォン追加', '※ Orders under ₩100K — ₩30K shipping even in metro area')}
-              </div>
             </button>
             <button type="button" class="so-ship-btn" data-ship="metro_weekend" onclick="window._soPickShip('metro_weekend')">${tr('수도권 야간/주말 설치', '首都圏夜間/週末', 'Metro night/wkd')}</button>
             <button type="button" class="so-ship-btn" data-ship="metro_install_removal" onclick="window._soPickShip('metro_install_removal')">${tr('수도권 철거', '首都圏撤去', 'Metro removal')}</button>
@@ -2415,9 +2412,6 @@ html, body { background: #ffffff !important; }
             <button type="button" class="so-ship-btn so-ship-free-metro" data-ship="metro_install_simple" onclick="window._soPickShip('metro_install_simple')"
               style="display:none; grid-column:1/-1; background:linear-gradient(135deg,#03c75a,#00b04f); color:#fff; border-color:#00b04f; font-weight:900; font-size:14px; padding:14px; box-shadow:0 6px 18px -6px rgba(3,199,90,0.55); letter-spacing:0.2px;">
               ${tr('수도권 무료배송', '首都圏 送料無料', 'Metro · FREE delivery')}
-              <div style="font-size:11px; font-weight:600; margin-top:4px; opacity:0.95; letter-spacing:0;">
-                ${tr('※ 10만원 이하 주문은 수도권이라도 배송비 3만원 부가됩니다', '※ 10万円未満は首都圏でも配送料3万ウォン追加', '※ Orders under ₩100K — ₩30K shipping even in metro area')}
-              </div>
             </button>
             <button type="button" class="so-ship-btn" data-ship="regional_compact_60_180" onclick="window._soPickShip('regional_compact_60_180')" style="display:none;">
               ${tr('60×180 이하 지방택배', '60×180以下 地方宅配', 'Regional parcel ≤60×180')}<br>
@@ -2513,13 +2507,8 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-13: 명함 — 문구 수정 별도 라인 -->
           <div class="so-price-row" id="soDreqTextModRow" style="display:none; color:#34c759; font-weight:600; padding-left:18px;"><span style="font-size:12.5px;">└ 문구 수정 × <span id="soDreqTextModQty">0</span>건 (5,000원/건)</span><span id="soDreqTextModAmt">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
-          <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
-          <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
-            <i class="fa-solid fa-truck" style="color:#7c3aed; margin-right:4px;"></i>
-            ${tr('허니콤보드 소량제작은 최소 제작비 <b>10만원</b>이 안 될 경우 <b>3만원</b> 포장배송비가 붙고, <b style="color:#16a34a;">10만원 이상이면 무료배송</b>됩니다.',
-                 'ハニカムボード少量製作は最低製作費 <b>100,000円</b> 未満の場合 <b>30,000円</b> の梱包配送料が加算され、<b style="color:#16a34a;">100,000円以上で送料無料</b>です。',
-                 'Honeycomb board small-batch: <b>$30</b> packaging fee under <b>$100</b> minimum, <b style="color:#16a34a;">FREE on orders over $100</b>.')}
-          </div>
+          <!-- 2026-06-13: 옛 "3만원 포장배송비" 안내 삭제 (자동 가산 정책 폐기, 최소주문 100K 강제로 변경됨) -->
+          <div id="soCutShipNotice" style="display:none;"></div>
         </div>
 
         <div id="soStatus" class="so-status"></div>
