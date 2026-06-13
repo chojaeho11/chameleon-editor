@@ -11527,42 +11527,8 @@ html, body { background: #ffffff !important; }
 
     window._soAddCart = async function() {
         if (_soInFlight) return;
-        // 2026-06-13: 칼선작업 체크되어 있으면 design_requests 행 자동 생성 후 카트 담기
-        if (state.cutlineWork && state.cutlineEligible) {
-            var n = Math.max(1, parseInt(state.qty, 10) || 1);
-            var fee = n * 10000;
-            try {
-                var sb2 = window.sb || window.supabaseClient;
-                if (sb2) {
-                    var u = await sb2.auth.getUser();
-                    var uid = (u && u.data && u.data.user && u.data.user.id) || null;
-                    var prodName = (state.product && (state.product.name_kr || state.product.name)) || '제품';
-                    var payload = {
-                        customer_id: uid,
-                        title: '[칼선작업] ' + prodName + ' · 유닛 ' + n + '개',
-                        description: '제품: ' + prodName + '\n칼선작업 (배경제거 + 칼선 + 받침) — 유닛 ' + n + '개\n금액: ' + fee.toLocaleString() + '원 (1개당 10,000원)\n\n[CUTLINE:{"charCount":' + n + ',"feePerChar":10000,"total":' + fee + '}]',
-                        category: '칼선작업',
-                        country: 'KR',
-                        budget_min: fee,
-                        budget_max: fee,
-                        files: [],
-                        status: 'open'
-                    };
-                    var ins = await sb2.from('design_requests').insert(payload).select().single();
-                    if (!ins.error && ins.data) {
-                        // 2026-06-13: 디자이너 보드 연결만 — designReqFee/Total 은 0 으로 둠 (cutlineFee 가 이미 가격 반영).
-                        //   designReqId 만 카트 라인에 저장돼 디자이너 보드와 연결됨. 가격은 cutlineFee = n×10K 한 번만 가산.
-                        state.designReqId = ins.data.id;
-                        state.designReqFee = 0;
-                        state.designReqQty = 0;
-                        state.designReqTotal = 0;
-                        state._drReqProduct = '칼선작업';
-                        state._drReqPrice = 0;
-                        state.cutlineCharCount = n;
-                    }
-                }
-            } catch (e) { console.warn('[cutline dreq insert]', e); }
-        }
+        // 2026-06-13: 칼선작업은 카트 아이템에만 저장. design_requests 행은 주문 완료 시점에 생성 (_soSubmitOrder)
+        //   이전엔 카트 담기에서 design_request 행을 생성해서 결제 안해도 디자이너 보드에 노출되던 버그.
         const ok = await doAddToCart();
         if (ok) {
             renderSoCart();
@@ -11571,10 +11537,6 @@ html, body { background: #ffffff !important; }
             state.cutlineWork = false;
             var cb2 = document.getElementById('soCutlineCheckbox');
             if (cb2) cb2.checked = false;
-            state.designReqId = null;
-            state.designReqFee = 0;
-            state.designReqQty = 0;
-            state.designReqTotal = 0;
             if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
         }
     };
@@ -14077,6 +14039,38 @@ html, body { background: #ffffff !important; }
                 if (insertErr) throw insertErr;
                 newOrderId = insertedOrder && (insertedOrder.id || insertedOrder.order_id);
             }
+
+            // 2026-06-13: 칼선작업 design_request 행 생성 — 주문 완료 시점에만 (이전엔 카트 담기 시 생성)
+            //   각 cart item 의 cutlineWork=true 면 해당 라인에 대한 design_request 1건 insert.
+            try {
+                var _cutSb = sb;
+                var _cutU = await _cutSb.auth.getUser();
+                var _cutUid = (_cutU && _cutU.data && _cutU.data.user && _cutU.data.user.id) || loggedInUid || null;
+                for (var _ci = 0; _ci < items.length; _ci++) {
+                    var _ci_it = items[_ci];
+                    if (!_ci_it || !_ci_it.cutlineWork) continue;
+                    var _ci_n = Math.max(1, parseInt(_ci_it.cutlineCharCount, 10) || 1);
+                    var _ci_fee = _ci_it.cutlineFee || (_ci_n * 10000);
+                    var _ci_prodName = (_ci_it.productName || (_ci_it.product && (_ci_it.product.name_kr || _ci_it.product.name)) || '제품');
+                    var _ci_payload = {
+                        customer_id: _cutUid,
+                        title: '[칼선작업] ' + _ci_prodName + ' · 유닛 ' + _ci_n + '개',
+                        description: '제품: ' + _ci_prodName + '\n칼선작업 (배경제거 + 칼선 + 받침) — 유닛 ' + _ci_n + '개\n금액: ' + _ci_fee.toLocaleString() + '원 (1개당 10,000원)\n주문번호: ' + (newOrderId || '-') + '\n\n[CUTLINE:{"charCount":' + _ci_n + ',"feePerChar":10000,"total":' + _ci_fee + '}]',
+                        category: '칼선작업',
+                        country: 'KR',
+                        budget_min: _ci_fee,
+                        budget_max: _ci_fee,
+                        files: [],
+                        status: 'open'
+                    };
+                    try {
+                        var _ci_ins = await _cutSb.from('design_requests').insert(_ci_payload).select().single();
+                        if (!_ci_ins.error && _ci_ins.data && _ci_it.designRequest) {
+                            _ci_it.designRequest.request_id = _ci_ins.data.id;
+                        }
+                    } catch (_cie) { console.warn('[cutline dreq insert on submit]', _cie); }
+                }
+            } catch (e) { console.warn('[cutline dreq batch]', e); }
 
             // 2026-06-13: 디자인 의뢰 row 들에 order_id 태그 — 디자이너 보드 / 출금관리에서 결제 연결 추적
             try {
