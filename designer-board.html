@@ -819,6 +819,21 @@ async function dbOpenComplete(id) {
         fixedLabel = d.total.toLocaleString() + '원';
         if (d.textModCount > 0) fixedLabel += ' (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 ' + d.textModPayout.toLocaleString() + ' × ' + d.textModCount + '건)';
         if (d.mult === 2) fixedLabel += ' [양면]';
+    } else if (row && row.category === '칼선작업') {
+        // 2026-06-13: 칼선작업 — 캐릭터 수 × 10,000원의 70% 가 디자이너 정산금
+        const cl = parseCutlineMeta(row.description);
+        const cust = cl ? (cl.total || 0) : Number(row.budget_max || row.budget_min || 0);
+        const n = cl ? (cl.charCount || 1) : 1;
+        fixed = Math.floor(cust * 0.7);
+        fixedLabel = fixed.toLocaleString() + '원 (캐릭터 ' + n + '개 × 10,000원의 70%)';
+    } else if (row && row.category === '자유의뢰') {
+        // 2026-06-13: 자유의뢰 — 의뢰금액의 70% 자동 정산금
+        const fr = parseFreeReqMeta(row.description);
+        const cust = fr ? (fr.customerPrice || 0) : Number(row.budget_max || row.budget_min || 0);
+        if (cust > 0) {
+            fixed = Math.floor(cust * 0.7);
+            fixedLabel = fixed.toLocaleString() + '원 (의뢰금액 ' + cust.toLocaleString() + '원의 70%)';
+        }
     } else {
         fixed = payoutOf(row && row.category);
         fixedLabel = fixed.toLocaleString() + '원';
@@ -870,6 +885,16 @@ async function dbSubmitComplete() {
     let fixedPayout = 0;
     if (row.category === '명함') {
         fixedPayout = bizCardPayoutDetail(row.description).total;
+    } else if (row.category === '칼선작업') {
+        // 2026-06-13: 칼선작업 — 캐릭터 수 × 10,000원의 70%
+        const cl2 = parseCutlineMeta(row.description);
+        const cust2 = cl2 ? (cl2.total || 0) : Number(row.budget_max || row.budget_min || 0);
+        fixedPayout = Math.floor(cust2 * 0.7);
+    } else if (row.category === '자유의뢰') {
+        // 2026-06-13: 자유의뢰 — 의뢰금액의 70%
+        const fr2 = parseFreeReqMeta(row.description);
+        const cust3 = fr2 ? (fr2.customerPrice || 0) : Number(row.budget_max || row.budget_min || 0);
+        if (cust3 > 0) fixedPayout = Math.floor(cust3 * 0.7);
     } else {
         fixedPayout = payoutOf(row.category);
     }
