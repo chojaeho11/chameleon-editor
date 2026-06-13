@@ -5666,321 +5666,228 @@ function scrollHotdeal(gridId, dir) {
 }
 </script>
 
-<!-- 2026-06-13: 옵션 C — 자체 미니 캔버스 미리보기 에디터 -->
-<div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 22px; position:relative; overflow:hidden; flex-shrink:0; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18);">
+<!-- 2026-06-13: 두 가지 간단 도구 — AI 디자인 + 누끼따기 (배경 제거) -->
+<!-- PC: 좌우 / 모바일: 위아래 -->
+<div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0;">
     <style>
-        #mceWrap { display:grid; grid-template-columns: 1fr; gap:12px; }
-        #mceHeader { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-        #mceHeader .mce-title { font-size:16px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px; }
-        #mceHeader .mce-sub { font-size:12px; color:#7c3aed; font-weight:600; }
-        #mceToolbar { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-        .mce-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; background:#fff; border:1.5px solid #c4b5fd; color:#5b21b6; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; transition:all .15s; }
-        .mce-btn:hover { background:#7c3aed; color:#fff; transform:translateY(-1px); }
-        .mce-btn.danger { color:#dc2626; border-color:#fca5a5; }
-        .mce-btn.danger:hover { background:#dc2626; color:#fff; }
-        .mce-btn.primary { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; }
-        .mce-btn.primary:hover { filter:brightness(1.1); }
-        #mceCanvasWrap { background:#fff; border-radius:12px; box-shadow:inset 0 0 0 1px #e9d5ff; overflow:hidden; position:relative; touch-action:none; }
-        #mceCanvas { width:100%; height:auto; display:block; cursor:crosshair; }
-        #mceHint { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#a78bfa; font-size:13px; font-weight:600; pointer-events:none; text-align:center; padding:20px; line-height:1.6; }
-        #mceHint.hidden { display:none; }
-        #mceFloatActions { position:absolute; top:8px; right:8px; display:none; gap:4px; }
-        #mceFloatActions.show { display:flex; }
-        .mce-fbtn { padding:6px 10px; background:rgba(255,255,255,0.95); border:1.5px solid #e0e7ff; color:#4338ca; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer; font-family:inherit; }
-        .mce-fbtn:hover { background:#4338ca; color:#fff; }
-        .mce-fbtn.del { color:#dc2626; border-color:#fca5a5; }
-        .mce-fbtn.del:hover { background:#dc2626; color:#fff; }
-        #mceColorPalette { display:none; gap:6px; padding:6px 10px; background:#fff; border-radius:9px; border:1.5px solid #c4b5fd; }
-        #mceColorPalette.show { display:inline-flex; }
-        .mce-swatch { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid #fff; box-shadow:0 0 0 1px #c4b5fd; }
-        @media (max-width:600px) {
-            #embeddedEditorPreview { padding:14px 12px 18px; }
-            .mce-btn { padding:7px 10px; font-size:11.5px; }
-            .mce-btn span { display:none; }
-            .mce-btn i { font-size:14px; }
-            #mceHeader .mce-sub { display:none; }
-        }
+        #aiNbWrap { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+        @media (max-width:768px) { #aiNbWrap { grid-template-columns: 1fr; gap:12px; } }
+        .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 20px; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18); display:flex; flex-direction:column; gap:12px; min-width:0; }
+        .aiNb-card.bg { background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border-color:#fcd34d; box-shadow:0 6px 24px -8px rgba(217,119,6,0.18); }
+        .aiNb-title { font-size:16px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px; }
+        .aiNb-card.bg .aiNb-title { color:#92400e; }
+        .aiNb-sub { font-size:11.5px; color:#7c3aed; font-weight:600; line-height:1.55; }
+        .aiNb-card.bg .aiNb-sub { color:#a16207; }
+        .aiNb-input { width:100%; padding:11px 12px; border:1.5px solid #c4b5fd; border-radius:10px; font-size:13.5px; font-family:inherit; background:#fff; outline:none; box-sizing:border-box; resize:vertical; min-height:42px; }
+        .aiNb-input:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.15); }
+        .aiNb-row { display:flex; gap:8px; align-items:center; }
+        .aiNb-size { flex:1; padding:9px 10px; border:1.5px solid #c4b5fd; border-radius:9px; background:#fff; font-size:12.5px; cursor:pointer; font-family:inherit; outline:none; }
+        .aiNb-btn { padding:11px 14px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:10px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 4px 14px -4px rgba(124,58,237,0.5); transition:all .15s; flex-shrink:0; }
+        .aiNb-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
+        .aiNb-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+        .aiNb-btn.amber { background:linear-gradient(135deg,#f59e0b,#b45309); box-shadow:0 4px 14px -4px rgba(217,119,6,0.5); }
+        .aiNb-btn.full { width:100%; justify-content:center; display:inline-flex; align-items:center; gap:6px; }
+        .aiNb-preview { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; min-height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px; }
+        .aiNb-card.bg .aiNb-preview { border-color:#fcd34d; background:repeating-conic-gradient(#f8fafc 0% 25%, #eef2ff 0% 50%) 50% / 16px 16px; }
+        .aiNb-preview img { max-width:100%; max-height:300px; object-fit:contain; border-radius:8px; display:block; }
+        .aiNb-empty { color:#a78bfa; font-size:12px; font-weight:600; text-align:center; padding:30px 16px; line-height:1.6; }
+        .aiNb-card.bg .aiNb-empty { color:#a16207; }
+        .aiNb-spinner { display:none; flex-direction:column; align-items:center; gap:10px; color:#7c3aed; font-size:12.5px; font-weight:700; padding:30px 16px; }
+        .aiNb-card.bg .aiNb-spinner { color:#92400e; }
+        .aiNb-spinner.show { display:flex; }
+        .aiNb-spinner i { font-size:28px; animation:aiNbSpin 1s linear infinite; }
+        @keyframes aiNbSpin { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+        .aiNb-upload { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; background:#fff; border:2px dashed #fcd34d; border-radius:10px; font-size:13px; font-weight:800; color:#92400e; cursor:pointer; transition:all .15s; }
+        .aiNb-upload:hover { background:#fef3c7; transform:translateY(-1px); }
+        .aiNb-dl { display:none; }
+        .aiNb-dl.show { display:inline-flex; }
+        .aiNb-error { font-size:12px; color:#dc2626; font-weight:700; margin-top:6px; }
     </style>
-    <div id="mceWrap">
-        <div id="mceHeader">
-            <div class="mce-title">🎨 <span>미리보기 에디터</span></div>
-            <div class="mce-sub">아래 템플릿을 클릭하면 캔버스에 자동 배치됩니다</div>
-        </div>
-        <div id="mceToolbar">
-            <button type="button" class="mce-btn" onclick="window._mceAddText()" title="텍스트 추가"><i class="fa-solid fa-font"></i><span>텍스트</span></button>
-            <button type="button" class="mce-btn" onclick="document.getElementById('mceImgInput').click()" title="이미지 업로드"><i class="fa-solid fa-image"></i><span>이미지</span></button>
-            <input type="file" id="mceImgInput" accept="image/*" style="display:none;" onchange="window._mceImgFromFile(this)">
-            <button type="button" class="mce-btn" onclick="document.getElementById('mceColorPalette').classList.toggle('show')" title="배경색"><i class="fa-solid fa-fill-drip"></i><span>배경</span></button>
-            <div id="mceColorPalette">
-                <span class="mce-swatch" style="background:#ffffff;" onclick="window._mceSetBg('#ffffff')"></span>
-                <span class="mce-swatch" style="background:#fef3c7;" onclick="window._mceSetBg('#fef3c7')"></span>
-                <span class="mce-swatch" style="background:#fce7f3;" onclick="window._mceSetBg('#fce7f3')"></span>
-                <span class="mce-swatch" style="background:#dbeafe;" onclick="window._mceSetBg('#dbeafe')"></span>
-                <span class="mce-swatch" style="background:#dcfce7;" onclick="window._mceSetBg('#dcfce7')"></span>
-                <span class="mce-swatch" style="background:#e9d5ff;" onclick="window._mceSetBg('#e9d5ff')"></span>
-                <span class="mce-swatch" style="background:#1f2937;" onclick="window._mceSetBg('#1f2937')"></span>
+
+    <div id="aiNbWrap">
+        <!-- 패널 1 — AI 디자인 -->
+        <div class="aiNb-card" id="aiNbAi">
+            <div class="aiNb-title">✨ <span>AI 디자인</span></div>
+            <div class="aiNb-sub">간단한 설명만 입력하면 AI가 디자인을 만들어드립니다 · 무료 · 약 1-2분 소요</div>
+            <textarea id="aiNbPrompt" class="aiNb-input" placeholder="예: 모던한 카페 오픈 포스터, 파스텔 톤 미니멀, 텍스트 'GRAND OPEN'"></textarea>
+            <div class="aiNb-row">
+                <select id="aiNbSize" class="aiNb-size">
+                    <option value="auto">사이즈 자동</option>
+                    <option value="1024x1024">정사각 1:1</option>
+                    <option value="1024x1536">세로 3:4</option>
+                    <option value="1536x1024">가로 4:3</option>
+                </select>
+                <button type="button" class="aiNb-btn" onclick="window._aiNbGenerate()" id="aiNbGenBtn">🎨 생성</button>
             </div>
-            <button type="button" class="mce-btn danger" onclick="window._mceClear()" title="전체 비우기"><i class="fa-solid fa-trash"></i><span>비우기</span></button>
-            <button type="button" class="mce-btn" onclick="window._mceDownload()" title="다운로드"><i class="fa-solid fa-download"></i><span>다운로드</span></button>
-            <button type="button" class="mce-btn primary" onclick="window._mceOpenFull()" title="전체 편집기 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>전체 편집기</span></button>
-        </div>
-        <div id="mceCanvasWrap">
-            <canvas id="mceCanvas" width="1000" height="600"></canvas>
-            <div id="mceHint">↑ 도구로 요소를 추가하거나, 아래 템플릿을 클릭해보세요</div>
-            <div id="mceFloatActions">
-                <button class="mce-fbtn" onclick="window._mceBringFront()" title="앞으로"><i class="fa-solid fa-up-long"></i></button>
-                <button class="mce-fbtn del" onclick="window._mceDelete()" title="삭제"><i class="fa-solid fa-trash"></i></button>
+            <div class="aiNb-preview" id="aiNbAiPreview">
+                <div class="aiNb-empty">프롬프트를 입력하고 [생성] 버튼을 누르세요</div>
+                <div class="aiNb-spinner" id="aiNbAiSpinner"><i class="fa-solid fa-circle-notch"></i><span>AI 디자인 생성중...</span></div>
             </div>
+            <a id="aiNbAiDl" class="aiNb-btn full aiNb-dl" download="ai-design.png"><i class="fa-solid fa-download"></i> 다운로드</a>
+            <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
+        </div>
+
+        <!-- 패널 2 — 누끼따기 (배경 제거) -->
+        <div class="aiNb-card bg" id="aiNbBg">
+            <div class="aiNb-title">✂️ <span>누끼따기 (배경 제거)</span></div>
+            <div class="aiNb-sub">이미지를 올리면 AI 가 배경을 자동으로 제거해드립니다 · 무료</div>
+            <label class="aiNb-upload" for="aiNbBgInput">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
+                <span>이미지 업로드 (PNG · JPG)</span>
+            </label>
+            <input type="file" id="aiNbBgInput" accept="image/*" style="display:none;" onchange="window._aiNbBgFromFile(this)">
+            <div class="aiNb-preview" id="aiNbBgPreview">
+                <div class="aiNb-empty">위의 영역을 클릭해 이미지를 업로드하세요</div>
+                <div class="aiNb-spinner" id="aiNbBgSpinner"><i class="fa-solid fa-circle-notch"></i><span>배경 제거중... (10-30초)</span></div>
+            </div>
+            <a id="aiNbBgDl" class="aiNb-btn amber full aiNb-dl" download="cutout.png"><i class="fa-solid fa-download"></i> 다운로드</a>
+            <div class="aiNb-error" id="aiNbBgErr" style="display:none;"></div>
         </div>
     </div>
 </div>
 
 <script>
-// 2026-06-13: 미니 캔버스 미리보기 에디터 — 자체 구현 (Canvas 2D)
-(function MiniCanvasEditor(){
+// 2026-06-13: AI 디자인 + 누끼따기 — 두 도구 통합 패널
+(function AiNbTools(){
     'use strict';
-    const cvs = document.getElementById('mceCanvas');
-    if (!cvs) return;
-    const ctx = cvs.getContext('2d');
-    const wrap = document.getElementById('mceCanvasWrap');
-    const hint = document.getElementById('mceHint');
-    const floatActs = document.getElementById('mceFloatActions');
+    const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 
-    const state = {
-        objects: [],   // { type:'image'|'text', x, y, w, h, img/text, color, size, _isBg }
-        selected: null,
-        dragOffset: null,
-        bgColor: '#ffffff'
+    function $(id){ return document.getElementById(id); }
+    function showSpinner(id, on) {
+        const sp = $(id);
+        if (sp) sp.classList.toggle('show', !!on);
+    }
+    function clearPreview(previewId, keepSpinner) {
+        const pv = $(previewId);
+        if (!pv) return;
+        Array.from(pv.children).forEach(c => {
+            if (keepSpinner && c.classList && c.classList.contains('aiNb-spinner')) return;
+            if (c.classList && (c.classList.contains('aiNb-spinner') || c.classList.contains('aiNb-empty'))) return;
+            pv.removeChild(c);
+        });
+    }
+    function showImgInPreview(previewId, src) {
+        const pv = $(previewId);
+        if (!pv) return;
+        // 기존 img/empty 제거
+        Array.from(pv.children).forEach(c => {
+            if (c.tagName === 'IMG' || (c.classList && c.classList.contains('aiNb-empty'))) pv.removeChild(c);
+        });
+        const im = document.createElement('img');
+        im.src = src;
+        pv.appendChild(im);
+    }
+    function setError(id, msg) {
+        const el = $(id);
+        if (!el) return;
+        if (!msg) { el.style.display = 'none'; el.textContent = ''; }
+        else { el.style.display = 'block'; el.textContent = msg; }
+    }
+
+    // ─── AI 디자인 생성 ───
+    window._aiNbGenerate = async function() {
+        const prompt = ($('aiNbPrompt').value || '').trim();
+        if (!prompt) { alert('프롬프트를 입력해주세요'); return; }
+        const sizeSel = $('aiNbSize').value;
+        const btn = $('aiNbGenBtn');
+        btn.disabled = true;
+        const origLabel = btn.innerHTML;
+        btn.innerHTML = '⏳ 생성중...';
+        setError('aiNbAiErr', '');
+        // 기존 결과 제거 + 스피너 표시
+        clearPreview('aiNbAiPreview', true);
+        showSpinner('aiNbAiSpinner', true);
+        const emptyEl = $('aiNbAiPreview').querySelector('.aiNb-empty');
+        if (emptyEl) emptyEl.style.display = 'none';
+        $('aiNbAiDl').classList.remove('show');
+        try {
+            const resp = await fetch(SB_URL + '/functions/v1/ai-design-gen', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + SB_KEY,
+                    'apikey': SB_KEY
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    size: sizeSel === 'auto' ? '1024x1024' : sizeSel,
+                    aspect: sizeSel
+                })
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
+            // 응답에서 이미지 URL 찾기 (다양한 응답 키 호환)
+            const imgUrl = data.image_url || data.url || (data.image_base64 ? ('data:image/png;base64,' + data.image_base64) : null);
+            if (!imgUrl) throw new Error('이미지 결과가 비어있습니다');
+            showSpinner('aiNbAiSpinner', false);
+            showImgInPreview('aiNbAiPreview', imgUrl);
+            const dl = $('aiNbAiDl');
+            dl.href = imgUrl;
+            dl.classList.add('show');
+        } catch (e) {
+            console.error('[aiNb] generate', e);
+            showSpinner('aiNbAiSpinner', false);
+            if (emptyEl) emptyEl.style.display = 'block';
+            setError('aiNbAiErr', '⚠️ ' + (e.message || '생성 실패. 잠시 후 다시 시도해주세요'));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origLabel;
+        }
     };
 
-    function dpr() { return Math.max(1, window.devicePixelRatio || 1); }
-
-    function resizeCanvas() {
-        const wrapW = wrap.clientWidth;
-        const targetW = wrapW;
-        const targetH = Math.round(wrapW * 0.6); // 5:3 aspect
-        cvs.style.width = targetW + 'px';
-        cvs.style.height = targetH + 'px';
-        cvs.width = targetW;
-        cvs.height = targetH;
-        draw();
-    }
-
-    function draw() {
-        ctx.fillStyle = state.bgColor;
-        ctx.fillRect(0, 0, cvs.width, cvs.height);
-        state.objects.forEach((obj, i) => {
-            if (obj.type === 'image' && obj.img && obj.img.complete) {
-                try { ctx.drawImage(obj.img, obj.x, obj.y, obj.w, obj.h); } catch(e){}
-            } else if (obj.type === 'text') {
-                ctx.fillStyle = obj.color || '#1f2937';
-                ctx.font = '700 ' + obj.size + 'px Pretendard, sans-serif';
-                ctx.textBaseline = 'top';
-                ctx.fillText(obj.text, obj.x, obj.y);
-            }
-            if (i === state.selected) {
-                ctx.strokeStyle = '#7c3aed';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 4]);
-                ctx.strokeRect(obj.x - 3, obj.y - 3, obj.w + 6, obj.h + 6);
-                ctx.setLineDash([]);
-            }
+    // ─── 누끼따기 ───
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = e => {
+                const dataUrl = e.target.result;
+                const base64 = dataUrl.split(',')[1];
+                resolve(base64);
+            };
+            r.onerror = reject;
+            r.readAsDataURL(file);
         });
-        // hint 표시 / 숨김
-        if (state.objects.length === 0) hint.classList.remove('hidden');
-        else hint.classList.add('hidden');
-        // float actions
-        if (state.selected !== null) {
-            const o = state.objects[state.selected];
-            floatActs.classList.add('show');
-            floatActs.style.right = Math.max(8, cvs.clientWidth - (o.x + o.w) + 8) + 'px';
-        } else {
-            floatActs.classList.remove('show');
-        }
     }
 
-    function measureText(text, size) {
-        ctx.font = '700 ' + size + 'px Pretendard, sans-serif';
-        const m = ctx.measureText(text);
-        return { w: Math.ceil(m.width), h: Math.ceil(size * 1.2) };
-    }
-
-    function hitTest(x, y) {
-        for (let i = state.objects.length - 1; i >= 0; i--) {
-            const o = state.objects[i];
-            if (x >= o.x && x <= o.x + o.w && y >= o.y && y <= o.y + o.h) return i;
-        }
-        return -1;
-    }
-
-    function evToCanvas(e) {
-        const r = cvs.getBoundingClientRect();
-        const x = (e.clientX - r.left) * (cvs.width / r.width);
-        const y = (e.clientY - r.top) * (cvs.height / r.height);
-        return { x, y };
-    }
-
-    cvs.addEventListener('pointerdown', e => {
-        cvs.setPointerCapture(e.pointerId);
-        const { x, y } = evToCanvas(e);
-        const idx = hitTest(x, y);
-        if (idx >= 0) {
-            state.selected = idx;
-            const o = state.objects[idx];
-            state.dragOffset = { dx: x - o.x, dy: y - o.y };
-        } else {
-            state.selected = null;
-            state.dragOffset = null;
-        }
-        draw();
-    });
-    cvs.addEventListener('pointermove', e => {
-        if (state.selected === null || !state.dragOffset) return;
-        const { x, y } = evToCanvas(e);
-        const o = state.objects[state.selected];
-        o.x = Math.max(-o.w/2, Math.min(cvs.width - o.w/2, x - state.dragOffset.dx));
-        o.y = Math.max(-o.h/2, Math.min(cvs.height - o.h/2, y - state.dragOffset.dy));
-        draw();
-    });
-    cvs.addEventListener('pointerup', e => {
-        try { cvs.releasePointerCapture(e.pointerId); } catch(_){}
-        state.dragOffset = null;
-    });
-
-    // Public API
-    window._mceAddText = function() {
-        const t = prompt('텍스트를 입력하세요:', 'Hello');
-        if (!t) return;
-        const size = 48;
-        const dim = measureText(t, size);
-        state.objects.push({
-            type:'text', text:t, color:'#1f2937', size,
-            x: (cvs.width - dim.w) / 2, y: (cvs.height - dim.h) / 2,
-            w: dim.w, h: dim.h
-        });
-        state.selected = state.objects.length - 1;
-        draw();
-    };
-
-    window._mceImgFromFile = function(input) {
+    window._aiNbBgFromFile = async function(input) {
         const f = input.files && input.files[0];
         if (!f) return;
-        const reader = new FileReader();
-        reader.onload = e => { _mceAddImageUrl(e.target.result); input.value = ''; };
-        reader.readAsDataURL(f);
-    };
-
-    function _mceAddImageUrl(url) {
-        const img = new Image();
-        img.onload = () => {
-            const maxW = cvs.width * 0.7;
-            const maxH = cvs.height * 0.85;
-            const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
-            const w = img.width * ratio, h = img.height * ratio;
-            state.objects.push({
-                type:'image', img,
-                x: (cvs.width - w) / 2, y: (cvs.height - h) / 2,
-                w, h
-            });
-            state.selected = state.objects.length - 1;
-            draw();
-        };
-        img.onerror = () => { console.warn('[mce] image load failed', url); };
-        img.src = url;
-    }
-
-    window._mceSetBg = function(color) {
-        state.bgColor = color;
-        document.getElementById('mceColorPalette').classList.remove('show');
-        draw();
-    };
-
-    window._mceClear = function() {
-        if (state.objects.length && !confirm('캔버스를 모두 비울까요?')) return;
-        state.objects = [];
-        state.selected = null;
-        draw();
-    };
-
-    window._mceDelete = function() {
-        if (state.selected === null) return;
-        state.objects.splice(state.selected, 1);
-        state.selected = null;
-        draw();
-    };
-
-    window._mceBringFront = function() {
-        if (state.selected === null) return;
-        const o = state.objects.splice(state.selected, 1)[0];
-        state.objects.push(o);
-        state.selected = state.objects.length - 1;
-        draw();
-    };
-
-    window._mceDownload = function() {
+        setError('aiNbBgErr', '');
+        clearPreview('aiNbBgPreview', true);
+        const emptyEl = $('aiNbBgPreview').querySelector('.aiNb-empty');
+        if (emptyEl) emptyEl.style.display = 'none';
+        showSpinner('aiNbBgSpinner', true);
+        $('aiNbBgDl').classList.remove('show');
         try {
-            const link = document.createElement('a');
-            link.download = 'chameleon-preview-' + Date.now() + '.png';
-            link.href = cvs.toDataURL('image/png');
-            link.click();
-        } catch(e) {
-            alert('다운로드 실패 — 외부 이미지 보안 제한일 수 있어요. 텍스트만 있는 경우엔 정상 동작합니다.');
+            const base64 = await fileToBase64(f);
+            const resp = await fetch(SB_URL + '/functions/v1/bg-remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + SB_KEY,
+                    'apikey': SB_KEY
+                },
+                body: JSON.stringify({ image_base64: base64 })
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
+            if (!data.image_base64) throw new Error('배경 제거 결과가 비어있습니다');
+            const url = 'data:image/png;base64,' + data.image_base64;
+            showSpinner('aiNbBgSpinner', false);
+            showImgInPreview('aiNbBgPreview', url);
+            const dl = $('aiNbBgDl');
+            dl.href = url;
+            dl.classList.add('show');
+        } catch (e) {
+            console.error('[aiNb] bgRemove', e);
+            showSpinner('aiNbBgSpinner', false);
+            if (emptyEl) emptyEl.style.display = 'block';
+            setError('aiNbBgErr', '⚠️ ' + (e.message || '배경 제거 실패. 잠시 후 다시 시도해주세요'));
+        } finally {
+            input.value = '';
         }
     };
-
-    window._mceOpenFull = function() {
-        // 메인 페이지 상단 디자인에디터로 스크롤 + 클릭 트리거
-        const editorBtn = document.querySelector('[onclick*="startEditor"], #startEditorBtn, .start-editor-btn');
-        if (editorBtn) { editorBtn.click(); return; }
-        // fallback — 페이지 상단으로
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    // 외부에서 템플릿 클릭 시 미니 캔버스로 추가하는 함수
-    window._mceAddTemplate = function(tpl) {
-        if (!tpl || !tpl.thumb_url) return;
-        _mceAddImageUrl(tpl.thumb_url);
-        // 캔버스로 스크롤
-        const slot = document.getElementById('embeddedEditorPreview');
-        if (slot) slot.scrollIntoView({ behavior:'smooth', block:'center' });
-    };
-
-    // 키보드 — Delete 키로 선택 객체 삭제
-    document.addEventListener('keydown', e => {
-        if ((e.key === 'Delete' || e.key === 'Backspace') && state.selected !== null) {
-            const a = document.activeElement;
-            if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
-            e.preventDefault();
-            window._mceDelete();
-        }
-    });
-
-    // 템플릿 클릭 인터셉트 — onTemplateClick 가 늦게 정의될 수도 있어 polling
-    function installInterceptor() {
-        const original = window.onTemplateClick;
-        window.onTemplateClick = function(tpl) {
-            const slot = document.getElementById('embeddedEditorPreview');
-            // 미리보기 에디터가 화면에 보이고, 사용자가 캔버스를 한 번이라도 사용했거나 항상 인터셉트
-            if (slot && slot.style.display !== 'none') {
-                window._mceAddTemplate(tpl);
-                return;
-            }
-            if (typeof original === 'function') original(tpl);
-        };
-    }
-    // 즉시 + 지연 양쪽 시도 — 다른 스크립트가 onTemplateClick 을 나중에 덮어쓸 수 있음
-    installInterceptor();
-    setTimeout(installInterceptor, 2000);
-    setTimeout(installInterceptor, 5000);
-
-    // 리사이즈
-    window.addEventListener('resize', () => { resizeCanvas(); });
-    // 초기 렌더 (DOM 완성 후)
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', resizeCanvas);
-    } else {
-        resizeCanvas();
-    }
 })();
 </script>
 
