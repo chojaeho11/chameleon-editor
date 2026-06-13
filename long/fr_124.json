@@ -1995,12 +1995,13 @@
   "me_ctx_back": "Reculer",
   "me_ctx_bottom": "Arrière-plan",
   "me_ctx_dup": "Dupliquer",
-  "me_ctx_del": "Supprimer (Suppr)",
+  "me_ctx_del": "Supprimer",
   "me_alert_cutout": "Veuillez retirer l'arrière-plan de l'image dans le panneau [Détourage] à droite",
   "me_clear_confirm": "Supprimer tous les éléments du canevas ?",
   "me_text_placeholder": "Cliquez pour saisir du texte",
   "me_sz_biz": "Carte",
   "me_sz_banner": "Bannière",
   "me_sz_landscape": "Paysage",
-  "me_sz_square": "Carré"
+  "me_sz_square": "Carré",
+  "me_img_upload": "Téléverser image"
 }

@@ -5673,11 +5673,12 @@ function scrollHotdeal(gridId, dir) {
         .aiNb-card.bg .aiNb-title { color:#92400e; }
         .aiNb-sub { font-size:11.5px; color:#7c3aed; font-weight:600; line-height:1.55; }
         .aiNb-card.bg .aiNb-sub { color:#a16207; }
-        .aiNb-btn { padding:9px 12px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 4px 14px -4px rgba(124,58,237,0.5); transition:all .15s; flex-shrink:0; display:inline-flex; align-items:center; gap:5px; }
-        .aiNb-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
-        .aiNb-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-        .aiNb-btn.amber { background:linear-gradient(135deg,#f59e0b,#b45309); box-shadow:0 4px 14px -4px rgba(217,119,6,0.5); }
-        .aiNb-btn.full { width:100%; justify-content:center; padding:11px 14px; font-size:13.5px; }
+        .aiNb-btn { padding:10px 14px; background:#007AFF; color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .18s; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; letter-spacing:-0.2px; }
+        .aiNb-btn:hover { background:#0a6dd5; }
+        .aiNb-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .aiNb-btn.amber { background:#FF9500; }
+        .aiNb-btn.amber:hover { background:#e08500; }
+        .aiNb-btn.full { width:100%; padding:12px 14px; font-size:14px; }
         .aiNb-preview { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; min-height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px; }
         .aiNb-card.bg .aiNb-preview { border-color:#fcd34d; background:repeating-conic-gradient(#f8fafc 0% 25%, #eef2ff 0% 50%) 50% / 16px 16px; flex:1 1 auto; min-height:420px; }
         .aiNb-preview img { max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; display:block; }
@@ -5694,80 +5695,83 @@ function scrollHotdeal(gridId, dir) {
         .aiNb-dl.show { display:inline-flex; }
         .aiNb-error { font-size:12px; color:#dc2626; font-weight:700; margin-top:6px; }
 
-        /* ─── 미니 에디터 ─── */
+        /* ─── 미니 에디터 (Apple style) ─── */
+        #aiNbAi { font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; background:#fbfbfd; border:0.5px solid rgba(0,0,0,0.08); box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+        #aiNbAi .aiNb-title { color:#1d1d1f; font-weight:700; font-size:17px; letter-spacing:-0.5px; }
+        #aiNbAi .aiNb-sub { color:#86868b; font-weight:500; font-size:12.5px; letter-spacing:-0.1px; }
         .me-sizes { display:flex; flex-wrap:wrap; gap:6px; }
-        .me-size-btn { padding:7px 10px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; font-family:inherit; transition:all .12s; }
-        .me-size-btn:hover { background:#ede9fe; }
-        .me-size-btn.active { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; box-shadow:0 3px 10px -3px rgba(124,58,237,0.5); }
-        .me-toolbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px; background:#fff; border:1.5px solid #ddd6fe; border-radius:10px; }
-        .me-tool-btn { padding:7px 10px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:4px; transition:all .12s; }
-        .me-tool-btn:hover { background:#ede9fe; transform:translateY(-1px); }
-        .me-tool-btn.danger { color:#dc2626; border-color:#fecaca; }
-        .me-color-wrap { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; }
-        .me-color-wrap input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; }
+        .me-size-btn { padding:7px 14px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; font-family:inherit; transition:background .18s, color .18s; letter-spacing:-0.2px; }
+        .me-size-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-size-btn.active { background:#1d1d1f; color:#fff; }
+        .me-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+        .me-tool-btn { padding:8px 14px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; font-family:inherit; transition:background .18s, color .18s; letter-spacing:-0.2px; }
+        .me-tool-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-tool-btn.accent { background:#FFCC00; color:#1d1d1f; }
+        .me-tool-btn.accent:hover { background:#ffd633; }
+        .me-color-wrap { display:inline-flex; align-items:center; gap:6px; padding:5px 10px 5px 12px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; letter-spacing:-0.2px; }
+        .me-color-wrap:hover { background:rgba(120,120,128,0.18); }
+        .me-color-wrap input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; border-radius:50%; }
         /* 대지 외 어두운 배경 */
-        .me-stage-wrap { background:linear-gradient(135deg,#1e1b2e 0%,#0f172a 100%); border:1.5px solid #1e1b2e; border-radius:12px; padding:18px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 4px 12px rgba(0,0,0,0.25); }
-        .me-stage { position:relative; background:#ffffff; box-shadow:0 8px 24px rgba(0,0,0,0.35); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; }
+        .me-stage-wrap { background:#1d1d1f; border:none; border-radius:18px; padding:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; border-radius:2px; }
         .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
-        .me-item.selected { outline:2px dashed #7c3aed; outline-offset:2px; }
+        .me-item.selected { outline:1.5px solid #007AFF; outline-offset:2px; }
         .me-item img { display:block; max-width:none; pointer-events:none; }
-        .me-item.text { padding:4px 6px; font-weight:700; line-height:1.2; word-break:keep-all; }
-        .me-item.text[contenteditable=true] { cursor:text; outline:2px solid #7c3aed; background:rgba(255,255,255,0.6); }
-        .me-item.shape { background:#7c3aed; }
+        .me-item.text { padding:4px 6px; line-height:1.2; word-break:keep-all; }
+        .me-item.text[contenteditable=true] { cursor:text; outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); }
+        .me-item.shape { background:#007AFF; }
         .me-item.shape.circle { border-radius:50%; }
-        .me-handle { position:absolute; right:-6px; bottom:-6px; width:14px; height:14px; background:#7c3aed; border:2px solid #fff; border-radius:50%; cursor:nwse-resize; box-shadow:0 2px 6px rgba(124,58,237,0.5); }
-        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#dc2626; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 2px 6px rgba(220,38,38,0.5); }
+        .me-handle { position:absolute; right:-6px; bottom:-6px; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; cursor:nwse-resize; box-shadow:0 1px 4px rgba(0,0,0,0.25); }
+        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; }
         /* 속성 패널 */
-        .me-props { display:none; flex-wrap:wrap; gap:6px; align-items:center; padding:7px 8px; background:#faf5ff; border:1.5px solid #ddd6fe; border-radius:10px; }
+        .me-props { display:none; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
         .me-props.show { display:flex; }
-        .me-prop-group { display:inline-flex; align-items:center; gap:3px; padding:3px 5px; background:#fff; border:1px solid #e9d5ff; border-radius:7px; font-size:11px; font-weight:700; color:#5b21b6; }
-        .me-prop-group label { color:#7c3aed; font-size:10.5px; font-weight:700; }
-        .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:1px solid #ddd6fe; border-radius:5px; font-size:11px; font-family:inherit; outline:none; background:#fff; color:#1e293b; }
-        .me-prop-group input[type=number] { width:46px; }
-        .me-prop-group input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; }
-        .me-prop-group select { min-width:90px; }
-        .me-prop-btn { padding:4px 7px; background:#fff; border:1px solid #ddd6fe; border-radius:5px; font-size:11px; color:#5b21b6; cursor:pointer; font-family:inherit; font-weight:700; }
-        .me-prop-btn:hover { background:#ede9fe; }
-        .me-prop-btn.active { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; }
+        .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
+        .me-prop-group label { color:#86868b; font-size:11px; font-weight:500; }
+        .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:none; background:transparent; border-radius:4px; font-size:12px; font-family:inherit; outline:none; color:#1d1d1f; font-weight:600; }
+        .me-prop-group input[type=number] { width:42px; -moz-appearance:textfield; }
+        .me-prop-group input[type=number]::-webkit-outer-spin-button, .me-prop-group input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+        .me-prop-group input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; border-radius:50%; }
+        .me-prop-group select { min-width:96px; -webkit-appearance:none; -moz-appearance:none; appearance:none; padding-right:14px; background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='%2386868b'%3e%3cpath d='M4 6L0 0h8z'/%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:right 2px center; background-size:7px 5px; }
+        .me-prop-btn { padding:5px 10px; background:transparent; border:none; border-radius:6px; font-size:12px; color:#1d1d1f; cursor:pointer; font-family:inherit; font-weight:600; min-width:26px; }
+        .me-prop-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-prop-btn.active { background:#007AFF; color:#fff; }
         /* 우클릭 컨텍스트 메뉴 */
-        .me-ctx { position:fixed; z-index:100002; background:#fff; border:1px solid #ddd6fe; border-radius:10px; box-shadow:0 12px 32px rgba(15,23,42,0.25); padding:6px; min-width:170px; font-family:inherit; }
-        .me-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; background:transparent; border:none; border-radius:6px; font-size:12.5px; font-weight:700; color:#1e293b; cursor:pointer; text-align:left; font-family:inherit; }
-        .me-ctx button:hover { background:#ede9fe; color:#5b21b6; }
-        .me-ctx button.danger { color:#dc2626; }
-        .me-ctx button.danger:hover { background:#fee2e2; color:#dc2626; }
-        .me-ctx hr { border:none; border-top:1px solid #f1f5f9; margin:4px 0; }
-        .me-ctx i { width:14px; text-align:center; color:#7c3aed; }
-        .me-ctx button.danger i { color:#dc2626; }
+        .me-ctx { position:fixed; z-index:100002; background:rgba(250,250,250,0.88); -webkit-backdrop-filter:saturate(180%) blur(22px); backdrop-filter:saturate(180%) blur(22px); border:0.5px solid rgba(0,0,0,0.10); border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,0.18); padding:5px; min-width:200px; font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; }
+        .me-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px; background:transparent; border:none; border-radius:6px; font-size:13px; font-weight:500; color:#1d1d1f; cursor:pointer; text-align:left; font-family:inherit; letter-spacing:-0.2px; }
+        .me-ctx button:hover { background:#007AFF; color:#fff; }
+        .me-ctx button.danger { color:#ff3b30; }
+        .me-ctx button.danger:hover { background:#ff3b30; color:#fff; }
+        .me-ctx hr { border:none; border-top:0.5px solid rgba(0,0,0,0.12); margin:4px 0; }
     </style>
 
     <div id="aiNbWrap">
         <!-- 패널 1 — 미니 에디터 -->
         <div class="aiNb-card" id="aiNbAi">
-            <div class="aiNb-title">✏️ <span data-i18n="me_title">미니 디자인 에디터</span></div>
+            <div class="aiNb-title"><span data-i18n="me_title">미니 디자인 에디터</span></div>
             <div class="aiNb-sub" data-i18n="me_sub">사이즈 선택 후 이미지·글씨·배경색을 자유롭게 배치하세요</div>
             <div class="me-sizes" id="meSizes">
-                <button type="button" class="me-size-btn active" data-w="595" data-h="842" data-label="A4">📄 A4</button>
-                <button type="button" class="me-size-btn" data-w="540" data-h="337" data-label="명함">💳 <span data-i18n="me_sz_biz">명함</span></button>
-                <button type="button" class="me-size-btn" data-w="600" data-h="1800" data-label="배너">🎯 <span data-i18n="me_sz_banner">배너</span></button>
-                <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형">🖼️ <span data-i18n="me_sz_landscape">가로형</span></button>
-                <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각">⬛ <span data-i18n="me_sz_square">정사각</span></button>
+                <button type="button" class="me-size-btn active" data-w="595" data-h="842" data-label="A4">A4</button>
+                <button type="button" class="me-size-btn" data-w="540" data-h="337" data-label="명함"><span data-i18n="me_sz_biz">명함</span></button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="1800" data-label="배너"><span data-i18n="me_sz_banner">배너</span></button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형"><span data-i18n="me_sz_landscape">가로형</span></button>
+                <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
             </div>
             <div class="me-toolbar">
-                <button type="button" class="me-tool-btn" onclick="document.getElementById('meImgInput').click()"><i class="fa-solid fa-image"></i><span data-i18n="me_img">이미지</span></button>
+                <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()"><span data-i18n="me_img_upload">이미지 업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
-                <button type="button" class="me-tool-btn" onclick="window._meAddText()"><i class="fa-solid fa-font"></i><span data-i18n="me_text">글씨</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape('rect')"><i class="fa-regular fa-square"></i><span data-i18n="me_rect">사각형</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape('circle')"><i class="fa-regular fa-circle"></i><span data-i18n="me_circle">원</span></button>
-                <label class="me-color-wrap" title="배경색"><i class="fa-solid fa-fill-drip"></i><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
-                <button type="button" class="me-tool-btn" onclick="window._meImportCutout()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="me_cutout">누끼 가져오기</span></button>
-                <button type="button" class="me-tool-btn danger" onclick="window._meClear()"><i class="fa-solid fa-trash"></i><span data-i18n="me_clear">전체 삭제</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddText()"><span data-i18n="me_text">글씨</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape('rect')"><span data-i18n="me_rect">사각형</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape('circle')"><span data-i18n="me_circle">원</span></button>
+                <label class="me-color-wrap" title="배경색"><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
+                <button type="button" class="me-tool-btn" onclick="window._meImportCutout()"><span data-i18n="me_cutout">누끼 가져오기</span></button>
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
             <div class="me-stage-wrap">
                 <div id="meStage" class="me-stage"></div>
             </div>
-            <a id="aiNbAiDl" class="aiNb-btn full" download="my-design.png" onclick="return window._meDownload(event)"><i class="fa-solid fa-download"></i> <span data-i18n="me_download">다운로드</span></a>
+            <a id="aiNbAiDl" class="aiNb-btn full" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
             <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
         </div>
 
@@ -6036,12 +6040,12 @@ function scrollHotdeal(gridId, dir) {
             if (im) { im.style.width = '100%'; im.style.height = '100%'; im.style.objectFit = 'contain'; }
         } else if (it.type === 'text') {
             it.el.style.fontSize = (it.fontSize * me.wScale) + 'px';
-            it.el.style.color = it.fill || '#1e293b';
+            it.el.style.color = it.fill || '#1d1d1f';
             it.el.style.fontFamily = it.fontFamily || 'sans-serif';
             it.el.style.letterSpacing = (it.letterSpacing || 0) + 'px';
             it.el.style.lineHeight = (it.lineHeight || 1.2);
             it.el.style.textAlign = it.textAlign || 'left';
-            it.el.style.fontWeight = it.bold ? '900' : '700';
+            it.el.style.fontWeight = '500';
             it.el.style.height = 'auto';
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
@@ -6101,11 +6105,14 @@ function scrollHotdeal(gridId, dir) {
             html += '<span class="me-prop-group"><label>' + T('me_prop_size','크기') + '</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_letter','자간') + '</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_line','행간') + '</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
+            var alignSvg = function(d){ return '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="' + d + '"/></svg>'; };
+            var svgL = alignSvg('M1 3h14v1.5H1zm0 3.25h10v1.5H1zm0 3.25h14V11H1zm0 3.25h10V14H1z');
+            var svgC = alignSvg('M1 3h14v1.5H1zm2 3.25h10v1.5H3zm-2 3.25h14V11H1zm2 3.25h10V14H3z');
+            var svgR = alignSvg('M1 3h14v1.5H1zm4 3.25h10v1.5H5zm-4 3.25h14V11H1zm4 3.25h10V14H5z');
             html += '<span class="me-prop-group">'
-                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'left' ? ' active' : '') + '" data-align="left"><i class="fa-solid fa-align-left"></i></button>'
-                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center"><i class="fa-solid fa-align-center"></i></button>'
-                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right"><i class="fa-solid fa-align-right"></i></button>'
-                + '<button type="button" class="me-prop-btn' + (it.bold ? ' active' : '') + '" data-toggle="bold"><b>B</b></button>'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'left' ? ' active' : '') + '" data-align="left">' + svgL + '</button>'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center">' + svgC + '</button>'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right">' + svgR + '</button>'
             + '</span>';
         } else if (it.type === 'shape') {
             html += '<span class="me-prop-group"><label>' + T('me_prop_fill','채움') + '</label><input type="color" value="' + (it.fill || '#7c3aed') + '" data-mp="fill"></span>';
@@ -6141,13 +6148,6 @@ function scrollHotdeal(gridId, dir) {
                 it.textAlign = btn.dataset.align;
                 panel.querySelectorAll('[data-align]').forEach(function(b){ b.classList.remove('active'); });
                 btn.classList.add('active');
-                _meSyncItemDisplay(it);
-            });
-        });
-        panel.querySelectorAll('[data-toggle="bold"]').forEach(function(btn){
-            btn.addEventListener('click', function(){
-                it.bold = !it.bold;
-                btn.classList.toggle('active', it.bold);
                 _meSyncItemDisplay(it);
             });
         });
@@ -6307,13 +6307,12 @@ function scrollHotdeal(gridId, dir) {
             x: me.natW * 0.2, y: me.natH * 0.4,
             w: me.natW * 0.6, h: 60,
             text: placeholder,
-            fill: '#1e293b',
+            fill: '#1d1d1f',
             fontSize: Math.max(20, me.natH * 0.06),
             fontFamily: defaultFam,
             letterSpacing: 0,
             lineHeight: 1.2,
-            textAlign: 'left',
-            bold: true
+            textAlign: 'left'
         };
         me.items.push(it);
         _meSyncItemDisplay(it);
@@ -6405,13 +6404,13 @@ function scrollHotdeal(gridId, dir) {
         var menu = document.createElement('div');
         menu.className = 'me-ctx';
         menu.innerHTML =
-            '<button data-act="front"><i class="fa-solid fa-angles-up"></i> ' + _meT('me_ctx_front','맨 앞으로') + '</button>' +
-            '<button data-act="forward"><i class="fa-solid fa-angle-up"></i> ' + _meT('me_ctx_fwd','앞으로') + '</button>' +
-            '<button data-act="backward"><i class="fa-solid fa-angle-down"></i> ' + _meT('me_ctx_back','뒤로') + '</button>' +
-            '<button data-act="back"><i class="fa-solid fa-angles-down"></i> ' + _meT('me_ctx_bottom','맨 뒤로') + '</button>' +
+            '<button data-act="front">' + _meT('me_ctx_front','맨 앞으로') + '</button>' +
+            '<button data-act="forward">' + _meT('me_ctx_fwd','앞으로') + '</button>' +
+            '<button data-act="backward">' + _meT('me_ctx_back','뒤로') + '</button>' +
+            '<button data-act="back">' + _meT('me_ctx_bottom','맨 뒤로') + '</button>' +
             '<hr>' +
-            '<button data-act="dup"><i class="fa-solid fa-clone"></i> ' + _meT('me_ctx_dup','복제') + '</button>' +
-            '<button class="danger" data-act="del"><i class="fa-solid fa-trash"></i> ' + _meT('me_ctx_del','삭제 (Delete)') + '</button>';
+            '<button data-act="dup">' + _meT('me_ctx_dup','복제') + '</button>' +
+            '<button class="danger" data-act="del">' + _meT('me_ctx_del','삭제') + '</button>';
         document.body.appendChild(menu);
         // 화면 밖 보정
         var vw = window.innerWidth, vh = window.innerHeight;
@@ -6506,9 +6505,8 @@ function scrollHotdeal(gridId, dir) {
                 };
                 im.src = it.src;
             } else if (it.type === 'text') {
-                var weight = it.bold ? '900' : '700';
-                ctx.fillStyle = it.fill || '#1e293b';
-                ctx.font = weight + ' ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
+                ctx.fillStyle = it.fill || '#1d1d1f';
+                ctx.font = '500 ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
                 ctx.textBaseline = 'top';
                 var align = it.textAlign || 'left';
                 var txt = it.el.textContent || it.text || '';

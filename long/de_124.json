@@ -1995,12 +1995,13 @@
   "me_ctx_back": "Eine Ebene zurück",
   "me_ctx_bottom": "In den Hintergrund",
   "me_ctx_dup": "Duplizieren",
-  "me_ctx_del": "Löschen (Entf)",
+  "me_ctx_del": "Löschen",
   "me_alert_cutout": "Bitte zuerst im rechten [Freisteller]-Panel den Bildhintergrund entfernen",
   "me_clear_confirm": "Alle Elemente auf der Leinwand löschen?",
   "me_text_placeholder": "Klicken zum Tippen",
   "me_sz_biz": "Visitenkarte",
   "me_sz_banner": "Banner",
   "me_sz_landscape": "Querformat",
-  "me_sz_square": "Quadrat"
+  "me_sz_square": "Quadrat",
+  "me_img_upload": "Bild hochladen"
 }

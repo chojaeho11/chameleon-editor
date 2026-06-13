@@ -1995,12 +1995,13 @@
   "me_ctx_back": "Atrás",
   "me_ctx_bottom": "Al fondo",
   "me_ctx_dup": "Duplicar",
-  "me_ctx_del": "Eliminar (Supr)",
+  "me_ctx_del": "Eliminar",
   "me_alert_cutout": "Primero quita el fondo de la imagen en el panel [Recorte] de la derecha",
   "me_clear_confirm": "¿Borrar todos los elementos del lienzo?",
   "me_text_placeholder": "Haz clic para escribir",
   "me_sz_biz": "Tarjeta",
   "me_sz_banner": "Pancarta",
   "me_sz_landscape": "Horizontal",
-  "me_sz_square": "Cuadrado"
+  "me_sz_square": "Cuadrado",
+  "me_img_upload": "Subir Imagen"
 }

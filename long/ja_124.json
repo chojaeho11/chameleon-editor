@@ -2024,12 +2024,13 @@
   "me_ctx_back": "背面へ",
   "me_ctx_bottom": "最背面へ",
   "me_ctx_dup": "複製",
-  "me_ctx_del": "削除 (Delete)",
+  "me_ctx_del": "削除",
   "me_alert_cutout": "まず右側の[切り抜き]パネルで画像の背景を除去してください",
   "me_clear_confirm": "キャンバスのすべての要素を削除しますか？",
   "me_text_placeholder": "クリックしてテキストを入力",
   "me_sz_biz": "名刺",
   "me_sz_banner": "バナー",
   "me_sz_landscape": "横長",
-  "me_sz_square": "正方形"
+  "me_sz_square": "正方形",
+  "me_img_upload": "画像アップロード"
 }

@@ -1630,12 +1630,13 @@
   "me_ctx_back": "뒤로",
   "me_ctx_bottom": "맨 뒤로",
   "me_ctx_dup": "복제",
-  "me_ctx_del": "삭제 (Delete)",
+  "me_ctx_del": "삭제",
   "me_alert_cutout": "먼저 오른쪽 [누끼따기] 패널에서 이미지의 배경을 제거해주세요",
   "me_clear_confirm": "캔버스의 모든 요소를 삭제할까요?",
   "me_text_placeholder": "클릭하여 글씨 입력",
   "me_sz_biz": "명함",
   "me_sz_banner": "배너",
   "me_sz_landscape": "가로형",
-  "me_sz_square": "정사각"
+  "me_sz_square": "정사각",
+  "me_img_upload": "이미지 업로드"
 }

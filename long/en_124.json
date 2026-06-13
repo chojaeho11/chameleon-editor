@@ -2027,12 +2027,13 @@
   "me_ctx_back": "Send Backward",
   "me_ctx_bottom": "Send to Back",
   "me_ctx_dup": "Duplicate",
-  "me_ctx_del": "Delete (Delete key)",
+  "me_ctx_del": "Delete",
   "me_alert_cutout": "Please remove the image background in the right [Cutout] panel first",
   "me_clear_confirm": "Delete all elements on the canvas?",
   "me_text_placeholder": "Click to type",
   "me_sz_biz": "Biz Card",
   "me_sz_banner": "Banner",
   "me_sz_landscape": "Landscape",
-  "me_sz_square": "Square"
+  "me_sz_square": "Square",
+  "me_img_upload": "Upload Image"
 }

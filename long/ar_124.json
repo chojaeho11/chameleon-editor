@@ -1996,12 +1996,13 @@
   "me_ctx_back": "للخلف",
   "me_ctx_bottom": "إلى الخلف",
   "me_ctx_dup": "تكرار",
-  "me_ctx_del": "حذف (Delete)",
+  "me_ctx_del": "حذف",
   "me_alert_cutout": "يرجى إزالة خلفية الصورة في لوحة [قص] على اليمين أولاً",
   "me_clear_confirm": "حذف جميع العناصر من اللوحة؟",
   "me_text_placeholder": "انقر للكتابة",
   "me_sz_biz": "بطاقة عمل",
   "me_sz_banner": "بانر",
   "me_sz_landscape": "عرضي",
-  "me_sz_square": "مربع"
+  "me_sz_square": "مربع",
+  "me_img_upload": "رفع صورة"
 }
