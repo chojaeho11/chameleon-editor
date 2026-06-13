@@ -666,13 +666,15 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             if (_itemNote) boxes.push(`<div class="opt-box opt-note"><div class="opt-head"><i class="fa-solid fa-message"></i> 고객요청사항</div><div class="opt-val">${esc(_itemNote)}</div></div>`);
 
             // 2026-06-13: 명함 옵션 박스 — 등급/단면양면/박/후가공
-            const _isBcCard = !!(it.bizCard || it._isBizCard || (it.product && it.product.code && /^pp_bc/i.test(it.product.code)));
+            const _bcProdCode = (it.product && it.product.code) || it.product_code || '';
+            const _bcProdName = (it.product && (it.product.name || it.product.name_kr)) || it.product_name || '';
+            const _isBcCard = !!(it.bizCard || it._isBizCard || /^pp_bc/i.test(_bcProdCode) || /명함/.test(_bcProdName));
             if (_isBcCard) {
                 const _bc = it.bizCard || {};
                 const _bcLines = [];
                 const _BIZ_TIER_LBL = { general: '일반', premium: '프리미엄' };
                 const _BIZ_SIDE_LBL = { single: '단면', double: '양면' };
-                const _BIZ_PAPER_LBL = { snowpaper250: '스노우지 250g', nuvegi240: '누벅240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+                const _BIZ_PAPER_LBL = { nuvegi240: '누브지 240g', whirale230: '휘라레리넨 230g', stardream240: '스타드림 240g', rendez240: '랑데뷰내추럴 240g', concept270: '컨셉 270g', popset250: '팝셋 250g', yupoblue250: '유포지블루 250g', scot220: '스코틀랜드 백색 220g', montblanc240: '몽블랑 백색 240g', arte310: '아르떼 울트라 화이트 310g' };
                 const _BIZ_FOIL_LBL = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
                 const _BIZ_FINISH_LBL = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
                 if (_bc.tier) _bcLines.push('등급: <b>' + esc(_BIZ_TIER_LBL[_bc.tier] || _bc.tier) + '</b>');

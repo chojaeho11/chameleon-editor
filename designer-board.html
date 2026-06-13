@@ -356,6 +356,10 @@ function stripMeta(desc) {
         .replace(/\[DESIGNER_NOTE:[^\]]+\]/g, '')
         .replace(/\[AGREED_PAYOUT:[^\]]+\]/g, '')
         .replace(/\[WITHDRAWAL_ID:[^\]]+\]/g, '')
+        // 2026-06-13: 구조화된 BIZ_META JSON 태그 — 패널에 한글로 표시되므로 본문에서는 숨김
+        .replace(/\[BIZ_META:[^\]]+\]/g, '')
+        // 2026-06-13: 명함 옵션 자유텍스트 블록 — bizCardHtml 패널에 한글로 표시되므로 본문에서는 숨김
+        .replace(/\[명함 옵션\][\s\S]*?(?=\n\s*\n|\n\s*\[|$)/g, '')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 }
@@ -513,7 +517,7 @@ function renderCard(r) {
         const bm = parseBizMeta(r.description);
         const _BC_TIER = { general: '일반', premium: '프리미엄' };
         const _BC_SIDE = { single: '단면', double: '양면' };
-        const _BC_PAPER = { snowpaper250: '스노우지 250g', nuvegi240: '누벅 240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+        const _BC_PAPER = { nuvegi240: '누브지 240g', whirale230: '휘라레리넨 230g', stardream240: '스타드림 240g', rendez240: '랑데뷰내추럴 240g', concept270: '컨셉 270g', popset250: '팝셋 250g', yupoblue250: '유포지블루 250g', scot220: '스코틀랜드 백색 220g', montblanc240: '몽블랑 백색 240g', arte310: '아르떼 울트라 화이트 310g' };
         const _BC_FOIL = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
         const _BC_FIN = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
         let lines = [];

@@ -252,7 +252,9 @@
       "Bash(bash \"/c/tmp/unify_versions2.sh\")",
       "Bash(awk '/<section|<\\\\/section|<!--.*섹션|class=\"adv|<div id=\"cp/' cotton_print.html)",
       "Bash(cd \"c:\\\\Users\\\\win 10\\\\Desktop\\\\작업\" && sed -i 's|jp-nanami-fab\\\\.js?v=1|jp-nanami-fab.js?v=2|g' *.html)",
-      "Bash(awk 'NR<=364 || NR>=579' \"c:/Users/win 10/Desktop/작업/jp_track.html\")"
+      "Bash(awk 'NR<=364 || NR>=579' \"c:/Users/win 10/Desktop/작업/jp_track.html\")",
+      "Bash(ls _redirects _worker.js)",
+      "Bash(grep -E \"design-market|designer\" _redirects)"
     ],
     "additionalDirectories": [
       "\\tmp",

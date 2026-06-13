@@ -11432,11 +11432,13 @@ html, body { background: #ffffff !important; }
             if (state && state.isBizCard) {
                 var _BC_TIER = { general: '일반', premium: '프리미엄' };
                 var _BC_SIDE = { single: '단면', double: '양면' };
+                var _BC_PAPER = { nuvegi240: '누브지 240g', whirale230: '휘라레리넨 230g', stardream240: '스타드림 240g', rendez240: '랑데뷰내추럴 240g', concept270: '컨셉 270g', popset250: '팝셋 250g', yupoblue250: '유포지블루 250g', scot220: '스코틀랜드 백색 220g', montblanc240: '몽블랑 백색 240g', arte310: '아르떼 울트라 화이트 310g' };
                 var _BC_FOIL = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
                 var _BC_FIN = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
                 presetDesc += '\n[명함 옵션]\n';
                 presetDesc += '- 등급: ' + (_BC_TIER[state.bizTier] || '일반') + '\n';
                 presetDesc += '- 인쇄: ' + (_BC_SIDE[state.bizSide] || '단면') + '\n';
+                if (state.bizPaper) presetDesc += '- 용지: ' + (_BC_PAPER[state.bizPaper] || state.bizPaper) + '\n';
                 presetDesc += '- 수량: ' + (state.qty || 1) + '각 (' + ((state.qty || 1) * 200) + '매)\n';
                 if (state.bizFoil) presetDesc += '- 박: ✨ ' + (_BC_FOIL[state.bizFoil] || state.bizFoil) + '\n';
                 var _finListArr = [];

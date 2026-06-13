@@ -1614,7 +1614,7 @@ function _imgToDataUrl(url) {
 // 2026-06-13: 명함 옵션 + 디자인 의뢰 — PDF 공통 라벨/계산 helper
 const _BIZ_TIER_LBL_PDF = { general: '일반', premium: '프리미엄' };
 const _BIZ_SIDE_LBL_PDF = { single: '단면', double: '양면' };
-const _BIZ_PAPER_LBL_PDF = { snowpaper250: '스노우지 250g', nuvegi240: '누벅 240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+const _BIZ_PAPER_LBL_PDF = { nuvegi240: '누브지 240g', whirale230: '휘라레리넨 230g', stardream240: '스타드림 240g', rendez240: '랑데뷰내추럴 240g', concept270: '컨셉 270g', popset250: '팝셋 250g', yupoblue250: '유포지블루 250g', scot220: '스코틀랜드 백색 220g', montblanc240: '몽블랑 백색 240g', arte310: '아르떼 울트라 화이트 310g' };
 const _BIZ_FOIL_LBL_PDF = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
 const _BIZ_FOIL_PRICE = { gold_matte: 10000, gold_gloss: 10000, silver_gloss: 10000, black_matte: 10000, red_foil: 10000, blue_foil: 10000, holo_foil: 10000 };
 const _BIZ_FIN_LBL_PDF = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
