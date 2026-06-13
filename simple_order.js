@@ -2485,7 +2485,7 @@ html, body { background: #ffffff !important; }
           <!-- 배송/시공 라인 -->
           <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
           <!-- 2026-06-13: 디자인 의뢰비 라인 — 의뢰 후 노출 -->
-          <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i>디자인 의뢰비 (<span id="soDreqFeeQty">1</span>건)</span><span id="soDreqFeeAmt">-</span></div>
+          <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i>디자인 의뢰비</span><span id="soDreqFeeAmt">-</span><span id="soDreqFeeQty" style="display:none;">1</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
           <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
           <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
@@ -2520,7 +2520,8 @@ html, body { background: #ffffff !important; }
             </div>
             <div style="flex:1; min-width:0;">
               <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">✓ 디자인 의뢰 완료</div>
-              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;"><span id="soDreqDoneProd">-</span> 디자인 <span id="soDreqDoneQty">1</span>건 · 합계 <span id="soDreqDoneAmt" style="color:#34c759; font-weight:700;">-</span></div>
+              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;"><span id="soDreqDoneProd">-</span> 디자인비 <span id="soDreqDoneAmt" style="color:#34c759; font-weight:700;">-</span></div>
+              <span id="soDreqDoneQty" style="display:none;">1</span>
             </div>
             <button type="button" id="soDreqCancelBtn" onclick="window._soCancelDesignRequest()" style="padding:7px 12px; background:rgba(255,59,48,0.10); color:#ff3b30; border:none; border-radius:980px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; flex-shrink:0;">의뢰 취소</button>
           </div>
@@ -11629,9 +11630,9 @@ html, body { background: #ffffff !important; }
                 if (item.designRequest && item.designRequest.total) {
                     var _dr = item.designRequest;
                     meta.push('🎨 ' + tr(
-                        (_dr.product_label || '디자인') + ' 의뢰 ' + (_dr.qty || 1) + '건 (+' + (_dr.total).toLocaleString() + '원)',
-                        'デザイン依頼 ' + (_dr.qty || 1) + '件 (+' + (_dr.total).toLocaleString() + '円)',
-                        'Design req ' + (_dr.qty || 1) + ' (+₩' + (_dr.total).toLocaleString() + ')'
+                        (_dr.product_label || '디자인') + ' 의뢰비 (+' + (_dr.total).toLocaleString() + '원)',
+                        'デザイン依頼費 (+' + (_dr.total).toLocaleString() + '円)',
+                        'Design fee (+₩' + (_dr.total).toLocaleString() + ')'
                     ));
                 }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)

@@ -10921,7 +10921,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=370"></script>
+<script src="/simple_order.js?v=371"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -20679,18 +20679,13 @@ if (w >= 20 && h >= 20) {
                     <button type="button" class="dreq-prod" data-prod="가벽" data-price="50000"><div class="dpn">가벽</div><div class="dpp">50,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="50000"><div class="dpn">글씨포토존</div><div class="dpp">50,000원</div></button>
                 </div>
-                <div id="dreqQtyRow" class="dreq-field" style="display:none; margin-bottom:12px;">
-                    <label>수량 <span style="color:#86868b; font-weight:500;">(디자인 건수)</span></label>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <button type="button" id="dreqQtyMinus" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(120,120,128,0.10); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;">−</button>
-                        <input type="number" id="dreqQty" value="1" min="1" max="999" style="width:90px; text-align:center; padding:8px 10px; border:1px solid rgba(0,0,0,0.12); border-radius:8px; font-size:14px; font-weight:700; outline:none; -webkit-appearance:textfield; -moz-appearance:textfield; appearance:textfield;">
-                        <button type="button" id="dreqQtyPlus" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(120,120,128,0.10); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;">+</button>
-                        <span id="dreqQtyHint" style="font-size:11.5px; color:#86868b; margin-left:6px;"></span>
-                    </div>
-                </div>
+                <!-- 2026-06-13: 수량 선택 제거 — 항상 1건 단위로 등록 (입력칸은 숨김 유지, 호환성 위해 hidden input) -->
+                <input type="hidden" id="dreqQty" value="1">
+                <div id="dreqQtyRow" style="display:none;"><span id="dreqQtyHint"></span><span id="dreqQtyMinus"></span><span id="dreqQtyPlus"></span></div>
                 <div id="dreqTotal" class="dreq-total" style="display:none;">
-                    <span class="l"><span id="dreqTotalProd">-</span> 디자인비 × <span id="dreqTotalQty">1</span>건</span>
+                    <span class="l"><span id="dreqTotalProd">-</span> 디자인비</span>
                     <span class="v" id="dreqTotalAmt">-</span>
+                    <span id="dreqTotalQty" style="display:none;">1</span>
                 </div>
             </div>
 
@@ -20782,9 +20777,7 @@ if (w >= 20 && h >= 20) {
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(b){
             b.classList.toggle('selected', b.dataset.prod === prod);
         });
-        $('dreqQtyRow').style.display = '';
         $('dreqQty').value = 1;
-        $('dreqQtyHint').textContent = DREQ_HINT[prod] || '';
         $('dreqTotal').style.display = 'flex';
         $('dreqTotalProd').textContent = prod;
         _updateTotal();
@@ -20794,7 +20787,6 @@ if (w >= 20 && h >= 20) {
     function _resetForm() {
         state.product = null; state.price = 0; state.preset = null; state.qty = 1; state.onSuccess = null;
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(b){ b.classList.remove('selected'); });
-        $('dreqQtyRow').style.display = 'none';
         $('dreqQty').value = 1;
         $('dreqTotal').style.display = 'none';
         $('dreqForm').style.display = 'none';
@@ -20835,19 +20827,7 @@ if (w >= 20 && h >= 20) {
             _selectProduct(b.dataset.prod, parseInt(b.dataset.price, 10));
         });
     });
-    // 수량 컨트롤
-    $('dreqQtyMinus').addEventListener('click', function(){
-        var q = Math.max(1, parseInt($('dreqQty').value, 10) - 1);
-        $('dreqQty').value = q; state.qty = q; _updateTotal();
-    });
-    $('dreqQtyPlus').addEventListener('click', function(){
-        var q = Math.min(999, parseInt($('dreqQty').value, 10) + 1);
-        $('dreqQty').value = q; state.qty = q; _updateTotal();
-    });
-    $('dreqQty').addEventListener('input', function(){
-        var q = Math.max(1, Math.min(999, parseInt(this.value, 10) || 1));
-        state.qty = q; _updateTotal();
-    });
+    // 2026-06-13: 수량 선택 제거 — 항상 1건 단위로 등록
     // 파일 목록 표시
     $('dreqFiles').addEventListener('change', function(){
         var list = $('dreqFileList');
