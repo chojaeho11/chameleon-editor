@@ -5705,15 +5705,30 @@ function scrollHotdeal(gridId, dir) {
         .me-tool-btn.danger { color:#dc2626; border-color:#fecaca; }
         .me-color-wrap { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; }
         .me-color-wrap input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; }
-        .me-stage-wrap { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-        .me-stage { position:relative; background:#ffffff; box-shadow:0 4px 12px rgba(15,23,42,0.08); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; }
-        .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; }
+        /* 대지 외 어두운 배경 */
+        .me-stage-wrap { background:linear-gradient(135deg,#1e1b2e 0%,#0f172a 100%); border:1.5px solid #1e1b2e; border-radius:12px; padding:18px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 4px 12px rgba(0,0,0,0.25); }
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 8px 24px rgba(0,0,0,0.35); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; }
+        .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
         .me-item.selected { outline:2px dashed #7c3aed; outline-offset:2px; }
         .me-item img { display:block; max-width:none; pointer-events:none; }
-        .me-item.text { padding:4px 6px; font-weight:700; white-space:nowrap; line-height:1.2; }
+        .me-item.text { padding:4px 6px; font-weight:700; line-height:1.2; word-break:keep-all; }
         .me-item.text[contenteditable=true] { cursor:text; outline:2px solid #7c3aed; background:rgba(255,255,255,0.6); }
+        .me-item.shape { background:#7c3aed; }
+        .me-item.shape.circle { border-radius:50%; }
         .me-handle { position:absolute; right:-6px; bottom:-6px; width:14px; height:14px; background:#7c3aed; border:2px solid #fff; border-radius:50%; cursor:nwse-resize; box-shadow:0 2px 6px rgba(124,58,237,0.5); }
         .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#dc2626; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 2px 6px rgba(220,38,38,0.5); }
+        /* 속성 패널 */
+        .me-props { display:none; flex-wrap:wrap; gap:6px; align-items:center; padding:7px 8px; background:#faf5ff; border:1.5px solid #ddd6fe; border-radius:10px; }
+        .me-props.show { display:flex; }
+        .me-prop-group { display:inline-flex; align-items:center; gap:3px; padding:3px 5px; background:#fff; border:1px solid #e9d5ff; border-radius:7px; font-size:11px; font-weight:700; color:#5b21b6; }
+        .me-prop-group label { color:#7c3aed; font-size:10.5px; font-weight:700; }
+        .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:1px solid #ddd6fe; border-radius:5px; font-size:11px; font-family:inherit; outline:none; background:#fff; color:#1e293b; }
+        .me-prop-group input[type=number] { width:46px; }
+        .me-prop-group input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; }
+        .me-prop-group select { min-width:90px; }
+        .me-prop-btn { padding:4px 7px; background:#fff; border:1px solid #ddd6fe; border-radius:5px; font-size:11px; color:#5b21b6; cursor:pointer; font-family:inherit; font-weight:700; }
+        .me-prop-btn:hover { background:#ede9fe; }
+        .me-prop-btn.active { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; }
     </style>
 
     <div id="aiNbWrap">
@@ -5732,10 +5747,14 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" onclick="document.getElementById('meImgInput').click()"><i class="fa-solid fa-image"></i><span data-i18n="me_img">이미지</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn" onclick="window._meAddText()"><i class="fa-solid fa-font"></i><span data-i18n="me_text">글씨</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape('rect')"><i class="fa-regular fa-square"></i><span data-i18n="me_rect">사각형</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape('circle')"><i class="fa-regular fa-circle"></i><span data-i18n="me_circle">원</span></button>
                 <label class="me-color-wrap" title="배경색"><i class="fa-solid fa-fill-drip"></i><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
                 <button type="button" class="me-tool-btn" onclick="window._meImportCutout()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="me_cutout">누끼 가져오기</span></button>
                 <button type="button" class="me-tool-btn danger" onclick="window._meClear()"><i class="fa-solid fa-trash"></i><span data-i18n="me_clear">전체 삭제</span></button>
             </div>
+            <!-- 선택 시 속성 패널 -->
+            <div class="me-props" id="meProps"></div>
             <div class="me-stage-wrap">
                 <div id="meStage" class="me-stage"></div>
             </div>
@@ -5816,6 +5835,21 @@ function scrollHotdeal(gridId, dir) {
         me.items.forEach(_meSyncItemDisplay);
     }
 
+    var ME_FONTS = [
+        { id:'sans-serif', label:'Sans (기본)' },
+        { id:'"Noto Sans KR", sans-serif', label:'Noto Sans KR' },
+        { id:'"Nanum Gothic", sans-serif', label:'나눔고딕' },
+        { id:'"Nanum Myeongjo", serif', label:'나눔명조' },
+        { id:'"Malgun Gothic", "맑은 고딕", sans-serif', label:'맑은 고딕' },
+        { id:'serif', label:'Serif (명조)' },
+        { id:'"Times New Roman", serif', label:'Times' },
+        { id:'Georgia, serif', label:'Georgia' },
+        { id:'"Courier New", monospace', label:'Courier' },
+        { id:'monospace', label:'Mono' },
+        { id:'Impact, sans-serif', label:'Impact' },
+        { id:'cursive', label:'Cursive' }
+    ];
+
     function _meSyncItemDisplay(it) {
         it.el.style.left = (it.x * me.wScale) + 'px';
         it.el.style.top = (it.y * me.wScale) + 'px';
@@ -5827,7 +5861,16 @@ function scrollHotdeal(gridId, dir) {
         } else if (it.type === 'text') {
             it.el.style.fontSize = (it.fontSize * me.wScale) + 'px';
             it.el.style.color = it.fill || '#1e293b';
+            it.el.style.fontFamily = it.fontFamily || 'sans-serif';
+            it.el.style.letterSpacing = (it.letterSpacing || 0) + 'px';
+            it.el.style.lineHeight = (it.lineHeight || 1.2);
+            it.el.style.textAlign = it.textAlign || 'left';
+            it.el.style.fontWeight = it.bold ? '900' : '700';
             it.el.style.height = 'auto';
+        } else if (it.type === 'shape') {
+            it.el.style.height = (it.h * me.wScale) + 'px';
+            it.el.style.background = it.fill || '#7c3aed';
+            it.el.style.border = (it.strokeWidth || 0) > 0 ? (it.strokeWidth + 'px solid ' + (it.stroke || '#000')) : 'none';
         }
     }
 
@@ -5842,22 +5885,79 @@ function scrollHotdeal(gridId, dir) {
         var existing = me.stage.querySelectorAll('.me-handle, .me-del');
         existing.forEach(function(n){ n.remove(); });
         me.selected = it;
-        if (!it) return;
+        if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
         it.el.style.zIndex = (++me.zCounter);
-        // resize handle
         var h = document.createElement('div'); h.className = 'me-handle';
         it.el.appendChild(h);
         _meBindResize(h, it);
         var d = document.createElement('div'); d.className = 'me-del'; d.textContent = '×';
         it.el.appendChild(d);
         d.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); ev.preventDefault(); _meRemove(it); });
+        _meRenderProps(it);
     }
 
     function _meRemove(it) {
         me.items = me.items.filter(function(o){ return o !== it; });
         it.el.remove();
-        if (me.selected === it) me.selected = null;
+        if (me.selected === it) { me.selected = null; _meRenderProps(null); }
+    }
+
+    // 속성 패널 렌더
+    function _meRenderProps(it) {
+        var panel = $('meProps');
+        if (!panel) return;
+        if (!it) { panel.classList.remove('show'); panel.innerHTML = ''; return; }
+        panel.classList.add('show');
+        var html = '';
+        if (it.type === 'text') {
+            var fontOpts = ME_FONTS.map(function(f){
+                var sel = (it.fontFamily === f.id) ? ' selected' : '';
+                return '<option value="' + f.id.replace(/"/g, '&quot;') + '"' + sel + '>' + f.label + '</option>';
+            }).join('');
+            html += '<span class="me-prop-group"><label>색상</label><input type="color" value="' + (it.fill || '#1e293b') + '" data-mp="fill"></span>';
+            html += '<span class="me-prop-group"><label>서체</label><select data-mp="fontFamily">' + fontOpts + '</select></span>';
+            html += '<span class="me-prop-group"><label>크기</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
+            html += '<span class="me-prop-group"><label>자간</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
+            html += '<span class="me-prop-group"><label>행간</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
+            html += '<span class="me-prop-group">'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'left' ? ' active' : '') + '" data-align="left"><i class="fa-solid fa-align-left"></i></button>'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center"><i class="fa-solid fa-align-center"></i></button>'
+                + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right"><i class="fa-solid fa-align-right"></i></button>'
+                + '<button type="button" class="me-prop-btn' + (it.bold ? ' active' : '') + '" data-toggle="bold"><b>B</b></button>'
+            + '</span>';
+        } else if (it.type === 'shape') {
+            html += '<span class="me-prop-group"><label>채움</label><input type="color" value="' + (it.fill || '#7c3aed') + '" data-mp="fill"></span>';
+            html += '<span class="me-prop-group"><label>테두리</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
+            html += '<span class="me-prop-group"><label>두께</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
+        } else if (it.type === 'image') {
+            html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">이미지 — 모서리 핸들로 크기 조절</span>';
+        }
+        panel.innerHTML = html;
+        panel.querySelectorAll('[data-mp]').forEach(function(inp){
+            inp.addEventListener('input', function(){
+                var key = inp.dataset.mp;
+                var val = (inp.type === 'number') ? parseFloat(inp.value) : inp.value;
+                if (key === 'fontSize') it.fontSize = val;
+                else it[key] = val;
+                _meSyncItemDisplay(it);
+            });
+        });
+        panel.querySelectorAll('[data-align]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                it.textAlign = btn.dataset.align;
+                panel.querySelectorAll('[data-align]').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                _meSyncItemDisplay(it);
+            });
+        });
+        panel.querySelectorAll('[data-toggle="bold"]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                it.bold = !it.bold;
+                btn.classList.toggle('active', it.bold);
+                _meSyncItemDisplay(it);
+            });
+        });
     }
 
     function _meBindDrag(it) {
@@ -5899,23 +5999,31 @@ function scrollHotdeal(gridId, dir) {
     }
 
     function _meBindResize(handle, it) {
-        var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0;
+        var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0, sFont = 0;
         handle.addEventListener('pointerdown', function(ev){
             ev.stopPropagation(); ev.preventDefault();
             resizing = true;
             handle.setPointerCapture(ev.pointerId);
             sx = ev.clientX; sy = ev.clientY;
-            sw = it.w; sh = it.h;
+            sw = it.w; sh = it.h; sFont = it.fontSize || 0;
         });
         handle.addEventListener('pointermove', function(ev){
             if (!resizing) return;
             var dx = (ev.clientX - sx) / me.wScale;
+            var dy = (ev.clientY - sy) / me.wScale;
             if (it.type === 'image') {
                 var ratio = sh / sw;
                 it.w = Math.max(20, sw + dx);
                 it.h = Math.max(20, it.w * ratio);
             } else if (it.type === 'text') {
-                it.fontSize = Math.max(8, (sh || it.fontSize) + dx * 0.3);
+                it.fontSize = Math.max(8, sFont + dx * 0.4);
+                it.w = Math.max(40, sw + dx);
+                // 속성 패널 fontSize 입력 동기화
+                var fInp = document.querySelector('#meProps [data-mp="fontSize"]');
+                if (fInp) fInp.value = Math.round(it.fontSize);
+            } else if (it.type === 'shape') {
+                it.w = Math.max(10, sw + dx);
+                it.h = Math.max(10, sh + dy);
             }
             _meSyncItemDisplay(it);
         });
@@ -5924,6 +6032,24 @@ function scrollHotdeal(gridId, dir) {
             try { handle.releasePointerCapture(ev.pointerId); } catch(e){}
         });
     }
+
+    window._meAddShape = function(shape) {
+        var el = document.createElement('div');
+        el.className = 'me-item shape' + (shape === 'circle' ? ' circle' : '');
+        me.stage.appendChild(el);
+        var w = me.natW * 0.3, h = (shape === 'circle' ? w : me.natH * 0.15);
+        var it = {
+            el: el, type: 'shape', shape: shape,
+            x: (me.natW - w) / 2, y: (me.natH - h) / 2,
+            w: w, h: h,
+            fill: shape === 'circle' ? '#7c3aed' : '#fbbf24',
+            stroke: '#000000', strokeWidth: 0
+        };
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);
+        _meSelect(it);
+    };
 
     window._meAddImageFromFile = function(input) {
         var f = input.files && input.files[0];
@@ -5959,12 +6085,23 @@ function scrollHotdeal(gridId, dir) {
         el.className = 'me-item text';
         el.textContent = '클릭하여 글씨 입력';
         me.stage.appendChild(el);
-        var it = { el: el, type: 'text', x: me.natW * 0.2, y: me.natH * 0.4, w: me.natW * 0.6, h: 60, text: '클릭하여 글씨 입력', fill: '#1e293b', fontSize: Math.max(20, me.natH * 0.06) };
+        var it = {
+            el: el, type: 'text',
+            x: me.natW * 0.2, y: me.natH * 0.4,
+            w: me.natW * 0.6, h: 60,
+            text: '클릭하여 글씨 입력',
+            fill: '#1e293b',
+            fontSize: Math.max(20, me.natH * 0.06),
+            fontFamily: 'sans-serif',
+            letterSpacing: 0,
+            lineHeight: 1.2,
+            textAlign: 'left',
+            bold: true
+        };
         me.items.push(it);
         _meSyncItemDisplay(it);
         _meBindDrag(it);
         _meSelect(it);
-        // 자동 편집 진입
         setTimeout(function(){
             el.setAttribute('contenteditable', 'true');
             el.focus();
@@ -5993,14 +6130,22 @@ function scrollHotdeal(gridId, dir) {
         me.selected = null;
     };
 
+    function _meDrawTextLineWithSpacing(ctx, line, x, y, letterSpacing) {
+        if (!letterSpacing) { ctx.fillText(line, x, y); return; }
+        var cur = x;
+        for (var i = 0; i < line.length; i++) {
+            var ch = line.charAt(i);
+            ctx.fillText(ch, cur, y);
+            cur += ctx.measureText(ch).width + letterSpacing;
+        }
+    }
+
     window._meDownload = function(ev) {
         if (ev) ev.preventDefault();
-        // 자연 사이즈로 캔버스 렌더
         var c = document.createElement('canvas');
         c.width = me.natW; c.height = me.natH;
         var ctx = c.getContext('2d');
         ctx.fillStyle = me.bg; ctx.fillRect(0, 0, c.width, c.height);
-        // z-order: items 순서가 곧 z-index. 단 selected가 위로 올라간 점 반영해 element zIndex 기준 정렬
         var sorted = me.items.slice().sort(function(a, b){
             var za = parseInt(a.el.style.zIndex || '0', 10);
             var zb = parseInt(b.el.style.zIndex || '0', 10);
@@ -6029,14 +6174,44 @@ function scrollHotdeal(gridId, dir) {
                 };
                 im.src = it.src;
             } else if (it.type === 'text') {
+                var weight = it.bold ? '900' : '700';
                 ctx.fillStyle = it.fill || '#1e293b';
-                ctx.font = '700 ' + Math.round(it.fontSize) + 'px sans-serif';
+                ctx.font = weight + ' ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
                 ctx.textBaseline = 'top';
+                var align = it.textAlign || 'left';
                 var txt = it.el.textContent || it.text || '';
                 var lines = txt.split(/\n/);
+                var lineH = (it.fontSize || 20) * (it.lineHeight || 1.2);
+                var ls = it.letterSpacing || 0;
                 lines.forEach(function(line, i){
-                    ctx.fillText(line, it.x, it.y + i * (it.fontSize * 1.2));
+                    var measured = ctx.measureText(line).width + (line.length > 0 ? (line.length - 1) * ls : 0);
+                    var drawX = it.x;
+                    if (align === 'center') drawX = it.x + (it.w - measured) / 2;
+                    else if (align === 'right') drawX = it.x + it.w - measured;
+                    _meDrawTextLineWithSpacing(ctx, line, drawX, it.y + i * lineH, ls);
                 });
+                if (--pending === 0) done();
+            } else if (it.type === 'shape') {
+                ctx.fillStyle = it.fill || '#7c3aed';
+                if (it.shape === 'circle') {
+                    var rx = it.w / 2, ry = it.h / 2;
+                    var cx = it.x + rx, cy = it.y + ry;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    if ((it.strokeWidth || 0) > 0) {
+                        ctx.lineWidth = it.strokeWidth;
+                        ctx.strokeStyle = it.stroke || '#000';
+                        ctx.stroke();
+                    }
+                } else {
+                    ctx.fillRect(it.x, it.y, it.w, it.h);
+                    if ((it.strokeWidth || 0) > 0) {
+                        ctx.lineWidth = it.strokeWidth;
+                        ctx.strokeStyle = it.stroke || '#000';
+                        ctx.strokeRect(it.x, it.y, it.w, it.h);
+                    }
+                }
                 if (--pending === 0) done();
             } else {
                 if (--pending === 0) done();
