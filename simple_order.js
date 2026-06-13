@@ -1537,10 +1537,33 @@ html, body { background: #ffffff !important; }
           <div id="soVinylVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
-        <!-- 2026-06-13: 낱장 인쇄 (pp_lf_*) 사이즈/규격 프리셋 선택 — 6종 -->
+        <!-- 2026-06-13: 낱장 인쇄 (pp_lf_*) — 사이즈(A4/A3/A2) + 단/양면 + 비규격 입력 + 용지/박/후가공 -->
         <div class="so-section" id="soLeafletPresetSec" style="display:none;">
-          <div class="so-section-title">${tr('인쇄물 규격 선택', '印刷物規格選択', 'Choose print format')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드 클릭', 'カードで選択', 'Click to select')}</span></div>
-          <div id="soLeafletPresetGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:6px;"></div>
+          <div class="so-section-title">${tr('규격 사이즈', '規格サイズ', 'Standard size')}</div>
+          <div id="soLeafletSizeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:6px;"></div>
+
+          <div class="so-section-title" style="margin-top:16px;">${tr('인쇄면', '印刷面', 'Print side')}</div>
+          <div style="display:flex; gap:8px; margin-top:6px;">
+            <button type="button" id="soLfSideSingle" onclick="window._soPickLeafletSide('single')" style="flex:1; padding:10px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')}</button>
+            <button type="button" id="soLfSideDouble" onclick="window._soPickLeafletSide('double')" style="flex:1; padding:10px; border:2px solid #e7e5e4; background:#fff; color:#475569; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')}</button>
+          </div>
+
+          <div class="so-section-title" style="margin-top:16px;">${tr('비규격 사이즈 (선택)', '非規格サイズ (任意)', 'Custom size (optional)')}</div>
+          <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+            <input type="number" id="soLfCustW" placeholder="${tr('가로 mm','横 mm','W mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+            <span style="color:#94a3b8;">×</span>
+            <input type="number" id="soLfCustH" placeholder="${tr('세로 mm','縦 mm','H mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+          </div>
+          <div id="soLfAutoSizeNotice" style="display:none; margin-top:6px; padding:7px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#92400e; font-weight:700;"></div>
+
+          <div class="so-section-title" style="margin-top:16px;">${tr('용지 선택', '用紙選択', 'Paper')}</div>
+          <div id="soLfPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
+
+          <div class="so-section-title" style="margin-top:16px;">${tr('박 (옵션)', '箔 (任意)', 'Foil (optional)')}</div>
+          <div id="soLfFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
+
+          <div class="so-section-title" style="margin-top:16px;">${tr('후가공 (옵션)', '後加工 (任意)', 'Finishing (optional)')}</div>
+          <div id="soLfFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
         </div>
 
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
@@ -3326,11 +3349,25 @@ html, body { background: #ffffff !important; }
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
                 subtotal = _bizUnit * qty;
-            } else if (state.isLeaflet && state.leafletPresetId) {
-                // 2026-06-13: 낱장 인쇄 — 사이즈 프리셋 정찰가 × qty (면적 계산 비활성)
+            } else if (state.isLeaflet) {
+                // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
                 qty = Math.max(1, qty || 1);
-                unit = state.leafletPresetPrice || 500;
-                subtotal = unit * qty;
+                var _lfSubtotal = _soLeafletPriceFor(state.leafletSize || 'A4', state.leafletSide || 'single', qty);
+                // 박 (10K, 수량/10 단위로 곱)
+                if (state.leafletFoil) {
+                    var _lfFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
+                    if (_lfFoilOpt) _lfSubtotal += _lfFoilOpt.price * Math.ceil(qty / 10);
+                }
+                // 후가공 (각 후가공 가격, 수량/10 단위로 곱)
+                if (state.leafletFinishes) {
+                    Object.keys(state.leafletFinishes).forEach(function(k){
+                        if (!state.leafletFinishes[k]) return;
+                        var _lfFn = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                        if (_lfFn) _lfSubtotal += _lfFn.price * Math.ceil(qty / 10);
+                    });
+                }
+                unit = Math.round(_lfSubtotal / qty);
+                subtotal = _lfSubtotal;
             } else if (state.isSticker) {
                 // 2026-06-03: 스티커 — 비즈하우스 가격 mirror. 카테고리/사이즈/용지/수량 조합 단가
                 var _stPrice = _stickerCalcPrice({
@@ -5048,16 +5085,45 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[so] switchSheet', e); }
     };
 
-    // 2026-06-13: 낱장 인쇄 (pp_lf_*) — 사이즈별 정찰가 (1매 단가).
-    //   index.html promoTemplateModal 의 6종 프리셋 그대로 이식.
-    var LEAFLET_PRESETS = [
-        { id:'flyer_single', label_kr:'A4 전단지', label_jp:'A4 チラシ', label_us:'A4 Flyer',  desc_kr:'단면 · 210×297mm', wMm:210, hMm:297, side:'single', price:500 },
-        { id:'flyer_double', label_kr:'A4 양면 전단지', label_jp:'A4 両面チラシ', label_us:'A4 Double-side Flyer', desc_kr:'양면 · 210×297mm', wMm:210, hMm:297, side:'double', price:800 },
-        { id:'postcard',     label_kr:'엽서',     label_jp:'ハガキ',     label_us:'Postcard',  desc_kr:'양면 · 100×148mm', wMm:100, hMm:148, side:'double', price:600 },
-        { id:'invitation',   label_kr:'초대장 · 청첩장', label_jp:'招待状', label_us:'Invitation', desc_kr:'반접지 · 190×130mm', wMm:190, hMm:130, side:'double', price:1200 },
-        { id:'a4_half',      label_kr:'A4 반접지', label_jp:'A4 二つ折り', label_us:'A4 Half-fold', desc_kr:'4면 · 297×210mm', wMm:297, hMm:210, side:'double', price:1000 },
-        { id:'tri_leaflet',  label_kr:'3단 리플릿', label_jp:'3つ折りリーフレット', label_us:'Tri-fold leaflet', desc_kr:'6면 · 297×210mm', wMm:297, hMm:210, side:'double', price:1000 }
+    // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 사이즈 × 단면/양면 정찰가 (10매 기준 base) + 수량별 할인.
+    //   비규격 사이즈는 가로/세로 입력 → 가장 작은 표준 사이즈로 자동 매핑.
+    //   용지/박/후가공은 명함 (BIZ_PAPERS/BIZ_FOILS/BIZ_FINISHES) 재사용.
+    var LEAFLET_SIZES = [
+        { id:'A4', label:'A4', wMm:210, hMm:297, base: { single: 3000, double: 4000 } },
+        { id:'A3', label:'A3', wMm:297, hMm:420, base: { single: 4000, double: 7000 } },
+        { id:'A2', label:'A2', wMm:420, hMm:594, base: { single: 9000, double: 15000 } }
     ];
+    // 수량 할인 multiplier — base (per 10매) × qty/10 × discount
+    //   참고: swadpia 디지털포스터 10/100/500/1000매 가격 곡선 모방
+    function _soLeafletQtyDisc(qty) {
+        if (qty <= 10) return 1.0;
+        if (qty <= 30) return 0.85;
+        if (qty <= 50) return 0.72;
+        if (qty <= 100) return 0.55;
+        if (qty <= 200) return 0.48;
+        if (qty <= 300) return 0.42;
+        if (qty <= 500) return 0.38;
+        if (qty <= 1000) return 0.34;
+        if (qty <= 2000) return 0.31;
+        return 0.28;
+    }
+    // 입력 사이즈 → 가장 작은 표준 사이즈로 매핑 (A4 ≤ A3 ≤ A2)
+    function _soLeafletAutoSize(wMm, hMm) {
+        var w = Math.max(parseInt(wMm, 10) || 0, parseInt(hMm, 10) || 0);
+        var h = Math.min(parseInt(wMm, 10) || 0, parseInt(hMm, 10) || 0);
+        // longer side: A4=297 / A3=420 / A2=594
+        if (w <= 297 && h <= 210) return 'A4';
+        if (w <= 420 && h <= 297) return 'A3';
+        return 'A2';
+    }
+    function _soLeafletPriceFor(sizeId, side, qty) {
+        var sz = LEAFLET_SIZES.find(function(s){ return s.id === sizeId; });
+        if (!sz) sz = LEAFLET_SIZES[0];
+        var base = sz.base[side === 'double' ? 'double' : 'single'];
+        var disc = _soLeafletQtyDisc(qty);
+        // 10매 기준 → qty/10 단위 × 할인
+        return Math.round(base * (qty / 10) * disc);
+    }
     function _soIsLeafletProduct(p) {
         if (!p) return false;
         var code = (p.code || '').toLowerCase();
@@ -5066,7 +5132,9 @@ html, body { background: #ffffff !important; }
         return /낱장\s*인쇄|leaflet|flyer/.test(name);
     }
     window._soIsLeafletProduct = _soIsLeafletProduct;
-    window.LEAFLET_PRESETS = LEAFLET_PRESETS;
+    window.LEAFLET_SIZES = LEAFLET_SIZES;
+    window._soLeafletAutoSize = _soLeafletAutoSize;
+    window._soLeafletPriceFor = _soLeafletPriceFor;
 
     // 2026-06-13: 시트지 family — 6종 통합 (관리자 표시 순서)
     //   이전엔 4종 (VINYL) + 2종 (SHEET) 로 별도 시스템 분리되어 있었음. 한 그리드에 6장 노출.
@@ -5131,39 +5199,121 @@ html, body { background: #ffffff !important; }
     window._soLoadVinylVariants = _soLoadVinylVariants;
     window._soIsVinylProduct = _soIsVinylProduct;
 
-    // 2026-06-13: 낱장 인쇄 프리셋 그리드 렌더 + 선택 핸들러
-    function _soRenderLeafletPresets() {
+    // 2026-06-13: 낱장 인쇄 렌더 — 사이즈/면/용지/박/후가공
+    function _soRenderLeafletAll() {
         var sec = document.getElementById('soLeafletPresetSec');
-        var grid = document.getElementById('soLeafletPresetGrid');
-        if (!sec || !grid) return;
-        var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
-        grid.innerHTML = LEAFLET_PRESETS.map(function(p){
-            var label = (lang === 'ja') ? (p.label_jp || p.label_kr) : (lang === 'en' ? (p.label_us || p.label_kr) : p.label_kr);
-            var sel = (state.leafletPresetId === p.id);
-            var borderColor = sel ? '#7c3aed' : '#e2e8f0';
-            var bg = sel ? '#faf5ff' : '#fff';
-            return '<div onclick="window._soPickLeafletPreset(\'' + p.id + '\')" style="cursor:pointer; padding:12px 8px; text-align:center; border:2px solid ' + borderColor + '; background:' + bg + '; border-radius:12px; transition:border-color .15s ease;">' +
-                '<div style="font-size:13px; font-weight:800; color:#1e293b;">' + label + '</div>' +
-                '<div style="font-size:10.5px; color:#94a3b8; margin-top:3px;">' + p.desc_kr + '</div>' +
-                '<div style="font-size:13px; font-weight:900; color:#6366f1; margin-top:5px;">' + fmtPrice(p.price) + tr('/장', '/枚', '/sheet') + '</div>' +
-            '</div>';
-        }).join('');
+        if (!sec) return;
+        // 사이즈 카드
+        var szGrid = document.getElementById('soLeafletSizeGrid');
+        if (szGrid) {
+            szGrid.innerHTML = LEAFLET_SIZES.map(function(sz){
+                var sel = (state.leafletSize === sz.id);
+                var bc = sel ? '#7c3aed' : '#e2e8f0';
+                var bg = sel ? '#faf5ff' : '#fff';
+                var p10 = sz.base[state.leafletSide === 'double' ? 'double' : 'single'];
+                return '<div onclick="window._soPickLeafletSize(\'' + sz.id + '\')" style="cursor:pointer; padding:12px 8px; text-align:center; border:2px solid ' + bc + '; background:' + bg + '; border-radius:12px;">' +
+                    '<div style="font-size:15px; font-weight:900; color:#1e293b;">' + sz.label + '</div>' +
+                    '<div style="font-size:10.5px; color:#94a3b8; margin-top:3px;">' + sz.wMm + '×' + sz.hMm + 'mm</div>' +
+                    '<div style="font-size:12px; font-weight:800; color:#6366f1; margin-top:5px;">' + fmtPrice(p10) + tr(' / 10매', ' / 10枚', ' / 10pcs') + '</div>' +
+                '</div>';
+            }).join('');
+        }
+        // 단/양면 버튼 — 활성 상태
+        var bs1 = document.getElementById('soLfSideSingle'), bs2 = document.getElementById('soLfSideDouble');
+        if (bs1 && bs2) {
+            var dbl = (state.leafletSide === 'double');
+            bs1.style.background = dbl ? '#fff' : 'linear-gradient(135deg,#6366f1,#4338ca)';
+            bs1.style.color = dbl ? '#475569' : '#fff';
+            bs1.style.borderColor = dbl ? '#e7e5e4' : '#4338ca';
+            bs2.style.background = dbl ? 'linear-gradient(135deg,#6366f1,#4338ca)' : '#fff';
+            bs2.style.color = dbl ? '#fff' : '#475569';
+            bs2.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
+        }
+        // 용지 (BIZ_PAPERS 재사용)
+        var ppGrid = document.getElementById('soLfPaperGrid');
+        if (ppGrid && typeof BIZ_PAPERS !== 'undefined') {
+            ppGrid.innerHTML = BIZ_PAPERS.map(function(o){
+                var nm = _bizI18n(o, 'name');
+                var sel = (state.leafletPaper === o.key);
+                var bc = sel ? '#7c3aed' : '#e2e8f0';
+                var bg = sel ? '#faf5ff' : '#fff';
+                return '<div onclick="window._soPickLeafletPaper(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + '</div>';
+            }).join('');
+        }
+        // 박 (BIZ_FOILS) — 클릭 토글
+        var foGrid = document.getElementById('soLfFoilGrid');
+        if (foGrid && typeof BIZ_FOILS !== 'undefined') {
+            foGrid.innerHTML = '<div onclick="window._soPickLeafletFoil(null)" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + (!state.leafletFoil ? '#7c3aed' : '#e2e8f0') + '; background:' + (!state.leafletFoil ? '#faf5ff' : '#fff') + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#475569;">' + tr('없음','なし','None') + '</div>' +
+                BIZ_FOILS.map(function(o){
+                    var nm = _bizI18n(o, 'name');
+                    var sel = (state.leafletFoil === o.key);
+                    var bc = sel ? '#7c3aed' : '#e2e8f0';
+                    var bg = sel ? '#faf5ff' : '#fff';
+                    return '<div onclick="window._soPickLeafletFoil(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + ' <span style="color:#dc2626;">+' + fmtPrice(o.price) + '</span></div>';
+                }).join('');
+        }
+        // 후가공 (BIZ_FINISHES) — 체크박스 다중 선택
+        var fnGrid = document.getElementById('soLfFinishGrid');
+        if (fnGrid && typeof BIZ_FINISHES !== 'undefined') {
+            fnGrid.innerHTML = BIZ_FINISHES.map(function(o){
+                var nm = _bizI18n(o, 'name');
+                var sel = !!(state.leafletFinishes && state.leafletFinishes[o.key]);
+                var bc = sel ? '#7c3aed' : '#e2e8f0';
+                var bg = sel ? '#faf5ff' : '#fff';
+                return '<div onclick="window._soToggleLeafletFinish(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + ' <span style="color:#dc2626;">+' + fmtPrice(o.price) + '</span></div>';
+            }).join('');
+        }
     }
-    window._soPickLeafletPreset = function(id) {
-        var p = LEAFLET_PRESETS.find(function(x){ return x.id === id; });
-        if (!p) return;
-        state.leafletPresetId = id;
-        state.leafletPresetPrice = p.price;
-        state.leafletPresetSide = p.side;
-        state.customW = p.wMm / 10;  // cm
-        state.customH = p.hMm / 10;
-        state.customUnitPrice = p.price;
-        var _cw = document.getElementById('soCustomW'); if (_cw) _cw.value = p.wMm;
-        var _ch = document.getElementById('soCustomH'); if (_ch) _ch.value = p.hMm;
-        _soRenderLeafletPresets();
+    window._soPickLeafletSize = function(id) {
+        state.leafletSize = id;
+        var sz = LEAFLET_SIZES.find(function(s){ return s.id === id; });
+        if (sz) { state.customW = sz.wMm / 10; state.customH = sz.hMm / 10; }
+        _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
     };
-    window._soRenderLeafletPresets = _soRenderLeafletPresets;
+    window._soPickLeafletSide = function(side) {
+        state.leafletSide = (side === 'double') ? 'double' : 'single';
+        _soRenderLeafletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soPickLeafletPaper = function(key) {
+        state.leafletPaper = key;
+        _soRenderLeafletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soPickLeafletFoil = function(key) {
+        state.leafletFoil = key;
+        _soRenderLeafletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soToggleLeafletFinish = function(key) {
+        if (!state.leafletFinishes) state.leafletFinishes = {};
+        state.leafletFinishes[key] = !state.leafletFinishes[key];
+        _soRenderLeafletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soLeafletCustomDims = function() {
+        var w = parseInt(document.getElementById('soLfCustW').value, 10) || 0;
+        var h = parseInt(document.getElementById('soLfCustH').value, 10) || 0;
+        var noticeEl = document.getElementById('soLfAutoSizeNotice');
+        if (w > 0 && h > 0) {
+            var autoId = _soLeafletAutoSize(w, h);
+            state.leafletSize = autoId;
+            state.leafletCustomW = w;
+            state.leafletCustomH = h;
+            if (noticeEl) {
+                noticeEl.style.display = '';
+                noticeEl.textContent = '✓ 입력 사이즈 ' + w + '×' + h + 'mm → ' + autoId + ' 사이즈 가격으로 계산됩니다.';
+            }
+            _soRenderLeafletAll();
+            if (typeof recalc === 'function') recalc();
+        } else {
+            state.leafletCustomW = null;
+            state.leafletCustomH = null;
+            if (noticeEl) noticeEl.style.display = 'none';
+        }
+    };
+    window._soRenderLeafletAll = _soRenderLeafletAll;
 
     window._soSwitchVinyl = function (code) {
         if (!code) return;
@@ -9611,28 +9761,26 @@ html, body { background: #ffffff !important; }
             var _vnSec = document.getElementById('soVinylVariantsSec');
             if (_vnSec) _vnSec.style.display = 'none';
         }
-        // 2026-06-13: 낱장 인쇄 (pp_lf_*) — 사이즈별 정찰가 6종 프리셋
+        // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 + 단/양면 + 용지/박/후가공
         state.isLeaflet = (typeof window._soIsLeafletProduct === 'function') ? window._soIsLeafletProduct(p) : false;
         var _lfSec = document.getElementById('soLeafletPresetSec');
         if (state.isLeaflet) {
-            // 기본값 — A4 단면
-            if (!state.leafletPresetId) {
-                state.leafletPresetId = 'flyer_single';
-                var _lp0 = LEAFLET_PRESETS[0];
-                state.leafletPresetPrice = _lp0.price;
-                state.leafletPresetSide = _lp0.side;
-                state.customW = _lp0.wMm / 10;
-                state.customH = _lp0.hMm / 10;
-                state.customUnitPrice = _lp0.price;
-            }
-            // 단가 = customUnitPrice (× qty), 면적 기반 계산 비활성
+            // 기본값 — A4 단면, 누벅 240g, 박/후가공 없음
+            if (!state.leafletSize) state.leafletSize = 'A4';
+            if (!state.leafletSide) state.leafletSide = 'single';
+            if (!state.leafletPaper) state.leafletPaper = 'nuvegi240';
+            if (state.leafletFoil === undefined) state.leafletFoil = null;
+            if (!state.leafletFinishes) state.leafletFinishes = {};
+            // 면적 기반 계산 비활성 (자체 가격 공식 사용)
             state.isCustomSize = false;
             state.isAdPrint = false;
+            // 기본 사이즈 → customW/H 반영 (사이즈 표시용)
+            var _szDef = LEAFLET_SIZES.find(function(s){ return s.id === state.leafletSize; }) || LEAFLET_SIZES[0];
+            state.customW = _szDef.wMm / 10;
+            state.customH = _szDef.hMm / 10;
             if (_lfSec) _lfSec.style.display = '';
-            try { _soRenderLeafletPresets(); } catch(e){}
+            try { _soRenderLeafletAll(); } catch(e){}
         } else {
-            state.leafletPresetId = null;
-            state.leafletPresetPrice = 0;
             if (_lfSec) _lfSec.style.display = 'none';
         }
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
@@ -10160,6 +10308,11 @@ html, body { background: #ffffff !important; }
             if (_bdNotice)  _bdNotice.style.display = _showAnyNotice ? '' : 'none';
             if (_bdBtn50)   _bdBtn50.style.display  = state.isBannerDiscountEligible ? '' : 'none';
             if (_bdBtnMini) _bdBtnMini.style.display = state.isMiniBanner ? '' : 'none';
+        } else if (state.isLeaflet) {
+            // 2026-06-13: 낱장 인쇄 — 상단 사이즈 입력 비표시 (자체 사이즈 카드 사용)
+            if (custSec) custSec.style.display = 'none';
+            var _bdNotice3 = document.getElementById('soBannerDiscountNotice');
+            if (_bdNotice3) _bdNotice3.style.display = 'none';
         } else {
             if (custSec) custSec.style.display = state.isCustomSize ? '' : 'none';
             var _bdNotice2 = document.getElementById('soBannerDiscountNotice');
@@ -11239,9 +11392,14 @@ html, body { background: #ffffff !important; }
                   })()
                 : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.discount, final: calc.final },
-            // 2026-06-13: 낱장 인쇄 프리셋 정보
-            leafletPresetId: state.isLeaflet ? (state.leafletPresetId || null) : null,
-            leafletPresetPrice: state.isLeaflet ? (state.leafletPresetPrice || 0) : 0,
+            // 2026-06-13: 낱장 인쇄 — 사이즈/면/용지/박/후가공 + 비규격 입력값
+            leafletSize: state.isLeaflet ? (state.leafletSize || 'A4') : null,
+            leafletSide: state.isLeaflet ? (state.leafletSide || 'single') : null,
+            leafletPaper: state.isLeaflet ? (state.leafletPaper || null) : null,
+            leafletFoil:  state.isLeaflet ? (state.leafletFoil  || null) : null,
+            leafletFinishes: state.isLeaflet ? Object.assign({}, state.leafletFinishes || {}) : null,
+            leafletCustomW: state.isLeaflet ? (state.leafletCustomW || null) : null,
+            leafletCustomH: state.isLeaflet ? (state.leafletCustomH || null) : null,
             _isLeaflet: !!state.isLeaflet,
             // 2026-06-13: 디자인 의뢰 정보 (의뢰 후 카트 담은 경우 포함)
             designRequest: state.designReqId ? {
@@ -12560,10 +12718,22 @@ html, body { background: #ffffff !important; }
             return _stickerCalcPrice(it.sticker);
         }
 
-        // 2026-06-13: 낱장 인쇄 (pp_lf_*) — 프리셋 정찰가 × qty
-        var _isLfItm = !!it._isLeaflet || !!it.leafletPresetId || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
-        if (_isLfItm && it.leafletPresetPrice) {
-            return (it.leafletPresetPrice || 0) * (qty || 1);
+        // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
+        var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
+        if (_isLfItm) {
+            var _lfSubItm = _soLeafletPriceFor(it.leafletSize || 'A4', it.leafletSide || 'single', qty || 1);
+            if (it.leafletFoil) {
+                var _lfFoilItm = BIZ_FOILS.find(function(o){ return o.key === it.leafletFoil; });
+                if (_lfFoilItm) _lfSubItm += _lfFoilItm.price * Math.ceil((qty || 1) / 10);
+            }
+            if (it.leafletFinishes) {
+                Object.keys(it.leafletFinishes).forEach(function(k){
+                    if (!it.leafletFinishes[k]) return;
+                    var _lfFnItm = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    if (_lfFnItm) _lfSubItm += _lfFnItm.price * Math.ceil((qty || 1) / 10);
+                });
+            }
+            return _lfSubItm;
         }
 
         // 2026-06-13: 명함 — 100매 단위. 일반 1250/2000 / 프리미엄 4000/5000 (단면/양면) + 박 + 후가공. 배송 무료.
