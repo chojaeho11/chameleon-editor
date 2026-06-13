@@ -188,27 +188,20 @@
     <div class="sidebar">
         <div class="sidebar-header"><i class="fa-solid fa-earth-americas"></i> Global Admin</div>
         <ul class="nav-menu">
-            <!-- 2026-06-13: 사이드바 정리 — 활성 메뉴만 상단 노출, 비활성 메뉴는 하단 '삭제된 관리' 섹션으로 이동 -->
-            <div class="nav-label">Business</div>
+            <!-- 2026-06-13: 사이드바 정리 — 섹션 라벨 제거, 메뉴 이름 단축 -->
             <li class="nav-item active" onclick="showSection('sec-vip', this)" style="background: linear-gradient(90deg, #312e81 0%, #1e1b4b 100%); border: 1px solid #4338ca;">
-                <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">VIP 대량 주문</span>
+                <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">대량주문</span>
             </li>
-            <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 🛒 통합 주문 관리</li>
-            <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출 & 통계</li>
-            <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 오늘 할일 (배송관리)</li>
-            <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 출금관리</li>
-            <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 📊 경리과 전용 (결산)</li>
-
-            <div class="nav-label">Product & Stock</div>
-            <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품 & 옵션</li>
-
-            <div class="nav-label">Management</div>
-            <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 스태프 관리</li>
-            <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 회원 관리</li>
-
-            <div class="nav-label">Assets</div>
-            <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 템플릿 & 로고</li>
-            <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트(서체) 관리</li>
+            <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 주문관리</li>
+            <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출통계</li>
+            <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 배송관리</li>
+            <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자이너출금</li>
+            <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 경리과</li>
+            <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품옵션</li>
+            <li class="nav-item" onclick="showSection('sec-staff', this)"><i class="fa-solid fa-id-card"></i> 직원관리</li>
+            <li class="nav-item" onclick="showSection('sec-members', this)"><i class="fa-solid fa-users"></i> 고객관리</li>
+            <li class="nav-item" onclick="showSection('sec-templates', this)"><i class="fa-solid fa-palette"></i> 탬플릿</li>
+            <li class="nav-item" onclick="showSection('sec-fonts', this)"><i class="fa-solid fa-font"></i> 폰트관리</li>
 
             <!-- 2026-06-13: 삭제된 관리 — 비활성/사용중지된 메뉴 보관 (필요 시 열어서 사용) -->
             <div class="nav-label" style="margin-top:30px; cursor:pointer; color:#6b7280; user-select:none;" onclick="(function(el){var n=el.nextElementSibling;while(n&&!n.classList.contains('nav-label')){if(n.tagName==='LI'){n.style.display=(n.style.display==='none'?'':'none');}n=n.nextElementSibling;}var i=el.querySelector('i');if(i){i.classList.toggle('fa-chevron-right');i.classList.toggle('fa-chevron-down');}})(this)"><i class="fa-solid fa-chevron-right" style="font-size:10px; margin-right:4px;"></i>🗑️ 삭제된 관리</div>
