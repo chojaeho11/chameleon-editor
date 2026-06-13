@@ -2506,6 +2506,8 @@ html, body { background: #ffffff !important; }
           <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i><span id="soDreqFeeLabel">디자인 의뢰비</span></span><span id="soDreqFeeAmt">-</span><span id="soDreqFeeQty" style="display:none;">1</span></div>
           <!-- 2026-06-13: 명함 — 문구 수정 별도 라인 -->
           <div class="so-price-row" id="soDreqTextModRow" style="display:none; color:#34c759; font-weight:600; padding-left:18px;"><span style="font-size:12.5px;">└ 문구 수정 × <span id="soDreqTextModQty">0</span>건 (5,000원/건)</span><span id="soDreqTextModAmt">-</span></div>
+          <!-- 2026-06-13: 칼선작업 (배경제거 + 누끼 + 받침) 비용 라인 -->
+          <div class="so-price-row" id="soCutlineFeeRow" style="display:none; color:#dc2626; font-weight:700;"><span><i class="fa-solid fa-scissors" style="margin-right:4px;"></i>칼선작업 (<span id="soCutlineFeeQty">1</span>개)</span><span id="soCutlineFeeAmt">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
           <!-- 2026-06-13: 옛 "3만원 포장배송비" 안내 삭제 (자동 가산 정책 폐기, 최소주문 100K 강제로 변경됨) -->
           <div id="soCutShipNotice" style="display:none;"></div>
@@ -3758,9 +3760,10 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else if (state.isCutPrint) {
-            // 자유인쇄커팅 — 무료
-            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
-            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+            // 2026-06-13: 자유인쇄커팅 — 실제 선택된 배송비 반영 (지방택배 등 유료 선택 가능)
+            var _shipNameCp = state.bundleShipping ? tr('다른 제품과 묶음배송', '合わせて配送', 'Bundled') : _soShipMethodLabel(state.shipMethod);
+            setText('soShipLabel', tr('배송', '配送', 'Shipping') + (_shipNameCp ? ' (' + _shipNameCp + ')' : ''));
+            setText('soShipAmount', shipFee > 0 ? ('+' + fmtPrice(shipFee)) : tr('무료', '無料', 'FREE'));
         } else if (!_isHcFamilyDetail) {
             // 2026-06-12: 허니콤 family 아니면 무조건 무료 (페트배너/매쉬배너/현수막+거치대 세트 등)
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
@@ -3812,6 +3815,12 @@ html, body { background: #ffffff !important; }
                 }
             } else {
                 showRow('soDreqTextModRow', false);
+            }
+            // 2026-06-13: 칼선작업 비용 라인 — cutlineFee > 0 일 때 표시
+            showRow('soCutlineFeeRow', cutlineFee > 0);
+            if (cutlineFee > 0) {
+                setText('soCutlineFeeQty', _cutlineN);
+                setText('soCutlineFeeAmt', '+' + fmtPrice(cutlineFee));
             }
         } catch (e) {}
         // 합계
@@ -11575,12 +11584,14 @@ html, body { background: #ffffff !important; }
                     };
                     var ins = await sb2.from('design_requests').insert(payload).select().single();
                     if (!ins.error && ins.data) {
+                        // 2026-06-13: 디자이너 보드 연결만 — designReqFee/Total 은 0 으로 둠 (cutlineFee 가 이미 가격 반영).
+                        //   designReqId 만 카트 라인에 저장돼 디자이너 보드와 연결됨. 가격은 cutlineFee = n×10K 한 번만 가산.
                         state.designReqId = ins.data.id;
-                        state.designReqFee = fee;
-                        state.designReqQty = n;
-                        state.designReqTotal = fee;
+                        state.designReqFee = 0;
+                        state.designReqQty = 0;
+                        state.designReqTotal = 0;
                         state._drReqProduct = '칼선작업';
-                        state._drReqPrice = 10000;
+                        state._drReqPrice = 0;
                         state.cutlineCharCount = n;
                     }
                 }
