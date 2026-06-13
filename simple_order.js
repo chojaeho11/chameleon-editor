@@ -2484,6 +2484,8 @@ html, body { background: #ffffff !important; }
           <div class="so-price-row discount" id="soProDiscRow" style="display:none;"><span>${tr('PRO 구독자 할인', 'PRO会員割引', 'PRO discount')} <span class="so-tier-tag" style="background:#7c3aed; color:#fff;">10%</span></span><span id="soProDisc">-0원</span></div>
           <!-- 배송/시공 라인 -->
           <div class="so-price-row" id="soShipRow" style="display:none;"><span id="soShipLabel">${tr('배송/시공', '配送', 'Shipping')}</span><span id="soShipAmount">-</span></div>
+          <!-- 2026-06-13: 디자인 의뢰비 라인 — 의뢰 후 노출 -->
+          <div class="so-price-row" id="soDreqFeeRow" style="display:none; color:#34c759; font-weight:700;"><span><i class="fa-solid fa-pen-ruler" style="margin-right:4px;"></i>디자인 의뢰비 (<span id="soDreqFeeQty">1</span>건)</span><span id="soDreqFeeAmt">-</span></div>
           <div class="so-price-row total"><span>${tr('합계', '合計', 'Total')}</span><span id="soTotal">-</span></div>
           <!-- 2026-06-04: 자유인쇄커팅 — 지방 배송 안내 (수도권은 전부 무료). cutPrint 일 때만 표시. -->
           <div id="soCutShipNotice" style="display:none; margin-top:10px; padding:9px 12px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; color:#475569; line-height:1.55; font-weight:600;">
@@ -2503,10 +2505,24 @@ html, body { background: #ffffff !important; }
               <i class="fa-solid fa-pen-ruler" style="color:#007AFF; font-size:18px;"></i>
             </div>
             <div style="flex:1; min-width:0;">
-              <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">디자인이 부담되시나요?</div>
-              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;"><span id="soDreqProdLabel">상품</span> 디자인을 <span id="soDreqPriceLabel" style="color:#007AFF; font-weight:700;">10,000원</span>에 의뢰하세요 · 영업일 2~3일</div>
+              <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">멋진 디자인을 저렴한 가격에 의뢰하세요</div>
+              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;" id="soDreqSubLine"><span id="soDreqProdLabel">상품</span> 디자인을 <span id="soDreqPriceLabel" style="color:#007AFF; font-weight:700;">10,000원</span>에 의뢰하세요 · 영업일 2~3일</div>
             </div>
             <i class="fa-solid fa-chevron-right" style="color:#c7c7cc; font-size:13px; flex-shrink:0;"></i>
+          </div>
+        </div>
+
+        <!-- 2026-06-13: 디자인 의뢰 완료 배너 — 의뢰 후 노출, 클릭 시 취소 -->
+        <div id="soDesignReqDone" style="display:none; margin:10px 0; padding:14px 16px; background:rgba(52,199,89,0.08); border:1px solid rgba(52,199,89,0.30); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,0.04); font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Pretendard', system-ui, sans-serif;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:rgba(52,199,89,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i class="fa-solid fa-check" style="color:#34c759; font-size:18px;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">✓ 디자인 의뢰 완료</div>
+              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;"><span id="soDreqDoneProd">-</span> 디자인 <span id="soDreqDoneQty">1</span>건 · 합계 <span id="soDreqDoneAmt" style="color:#34c759; font-weight:700;">-</span></div>
+            </div>
+            <button type="button" id="soDreqCancelBtn" onclick="window._soCancelDesignRequest()" style="padding:7px 12px; background:rgba(255,59,48,0.10); color:#ff3b30; border:none; border-radius:980px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; flex-shrink:0;">의뢰 취소</button>
           </div>
         </div>
 
@@ -3516,7 +3532,9 @@ html, body { background: #ffffff !important; }
             }
         }
 
-        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee;
+        // 2026-06-13: 디자인 의뢰비 (의뢰 완료 시 포함)
+        const designReqFee = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
+        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee;
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -3722,6 +3740,14 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송/시공', '配送', 'Ship') + (shipName ? ' (' + shipName + ')' : ''));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         }
+        // 2026-06-13: 디자인 의뢰비 라인 표시 토글
+        try {
+            showRow('soDreqFeeRow', designReqFee > 0);
+            if (designReqFee > 0) {
+                setText('soDreqFeeQty', state.designReqQty || 1);
+                setText('soDreqFeeAmt', '+' + fmtPrice(designReqFee));
+            }
+        } catch (e) {}
         // 합계
         setText('soTotal', fmtPrice(final));
 
@@ -8985,6 +9011,13 @@ html, body { background: #ffffff !important; }
                 else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
             }
             var _drBan = document.getElementById('soDesignReqBanner');
+            var _drDone = document.getElementById('soDesignReqDone');
+            // 상품이 바뀌면 완료 상태 초기화
+            state.designReqId = null;
+            state.designReqFee = 0;
+            state.designReqQty = 0;
+            state.designReqTotal = 0;
+            if (_drDone) _drDone.style.display = 'none';
             if (_drBan) {
                 if (_drProd) {
                     _drBan.style.display = '';
@@ -8992,10 +9025,21 @@ html, body { background: #ffffff !important; }
                     if (_drProdEl) _drProdEl.textContent = _drProd;
                     var _drPriceEl = document.getElementById('soDreqPriceLabel');
                     if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
+                    // 가벽 전용 — 화면 1건당 비용 설명
+                    var _subEl = document.getElementById('soDreqSubLine');
+                    if (_subEl) {
+                        if (_drProd === '가벽') {
+                            _subEl.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">50,000원</span> · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
+                        } else {
+                            _subEl.innerHTML = '<span id="soDreqProdLabel">' + _drProd + '</span> 디자인을 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>에 의뢰하세요 · 영업일 2~3일';
+                        }
+                    }
                     state._drReqProduct = _drProd;
+                    state._drReqPrice = _drPrice;
                 } else {
                     _drBan.style.display = 'none';
                     state._drReqProduct = null;
+                    state._drReqPrice = 0;
                 }
             }
         } catch (e) { console.warn('[soDesignReqBanner]', e); }
@@ -11323,10 +11367,52 @@ html, body { background: #ffffff !important; }
             if (state && state.product && state.product.name) presetDesc = '상품: ' + state.product.name + '\n\n';
         } catch (e) {}
         if (typeof window.openDesignRequestPopup === 'function') {
-            window.openDesignRequestPopup({ product: prod, presetDesc: presetDesc });
+            window.openDesignRequestPopup({
+                product: prod,
+                presetDesc: presetDesc,
+                onSuccess: function(res) {
+                    // 의뢰 등록 성공 시: 완료 배너 표시 + 합계에 디자인비 포함
+                    state.designReqId = res.requestId;
+                    state.designReqFee = res.unitPrice;
+                    state.designReqQty = res.qty;
+                    state.designReqTotal = res.total;
+                    var ban = document.getElementById('soDesignReqBanner');
+                    var done = document.getElementById('soDesignReqDone');
+                    if (ban) ban.style.display = 'none';
+                    if (done) done.style.display = '';
+                    var p = document.getElementById('soDreqDoneProd'); if (p) p.textContent = res.product;
+                    var q = document.getElementById('soDreqDoneQty'); if (q) q.textContent = res.qty;
+                    var a = document.getElementById('soDreqDoneAmt'); if (a) a.textContent = res.total.toLocaleString() + '원';
+                    // 합계 재계산
+                    try { if (typeof recalc === 'function') recalc(); else if (typeof window._soRecalc === 'function') window._soRecalc(); } catch (e) {}
+                    try { showToast('디자인 의뢰가 등록되었습니다. 합계에 디자인비가 포함됩니다.', 'success'); } catch (e) {}
+                }
+            });
         } else {
             location.href = '/design-market';
         }
+    };
+
+    // 2026-06-13: 의뢰 취소 — design_requests row 삭제 + 합계 원복
+    window._soCancelDesignRequest = async function() {
+        if (!state.designReqId) return;
+        if (!confirm('등록한 디자인 의뢰를 취소하시겠습니까? 합계에서 디자인비가 빠집니다.')) return;
+        try {
+            var sb = window.sb || window.supabaseClient;
+            if (sb) {
+                await sb.from('design_requests').delete().eq('id', state.designReqId);
+            }
+        } catch (e) { console.warn('[cancel dreq]', e); }
+        state.designReqId = null;
+        state.designReqFee = 0;
+        state.designReqQty = 0;
+        state.designReqTotal = 0;
+        var ban = document.getElementById('soDesignReqBanner');
+        var done = document.getElementById('soDesignReqDone');
+        if (ban && state._drReqProduct) ban.style.display = '';
+        if (done) done.style.display = 'none';
+        try { if (typeof recalc === 'function') recalc(); else if (typeof window._soRecalc === 'function') window._soRecalc(); } catch (e) {}
+        try { showToast('디자인 의뢰를 취소했습니다.', 'info'); } catch (e) {}
     };
 
     // ─────────────────────────────────────────────

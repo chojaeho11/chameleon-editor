@@ -10921,7 +10921,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=368"></script>
+<script src="/simple_order.js?v=369"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -20679,8 +20679,17 @@ if (w >= 20 && h >= 20) {
                     <button type="button" class="dreq-prod" data-prod="가벽" data-price="50000"><div class="dpn">가벽</div><div class="dpp">50,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="50000"><div class="dpn">글씨포토존</div><div class="dpp">50,000원</div></button>
                 </div>
+                <div id="dreqQtyRow" class="dreq-field" style="display:none; margin-bottom:12px;">
+                    <label>수량 <span style="color:#86868b; font-weight:500;">(디자인 건수)</span></label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" id="dreqQtyMinus" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(120,120,128,0.10); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;">−</button>
+                        <input type="number" id="dreqQty" value="1" min="1" max="999" style="width:90px; text-align:center; padding:8px 10px; border:1px solid rgba(0,0,0,0.12); border-radius:8px; font-size:14px; font-weight:700; outline:none; -webkit-appearance:textfield; -moz-appearance:textfield; appearance:textfield;">
+                        <button type="button" id="dreqQtyPlus" style="width:32px; height:32px; border-radius:50%; border:none; background:rgba(120,120,128,0.10); font-size:16px; font-weight:700; cursor:pointer; font-family:inherit;">+</button>
+                        <span id="dreqQtyHint" style="font-size:11.5px; color:#86868b; margin-left:6px;"></span>
+                    </div>
+                </div>
                 <div id="dreqTotal" class="dreq-total" style="display:none;">
-                    <span class="l"><span id="dreqTotalProd">-</span> 디자인비</span>
+                    <span class="l"><span id="dreqTotalProd">-</span> 디자인비 × <span id="dreqTotalQty">1</span>건</span>
                     <span class="v" id="dreqTotalAmt">-</span>
                 </div>
             </div>
@@ -20729,9 +20738,26 @@ if (w >= 20 && h >= 20) {
 <script>
 (function DesignReqPopup(){
     'use strict';
-    var state = { mode: 'hq', product: null, price: 0, preset: null };
+    var state = { mode: 'hq', product: null, price: 0, preset: null, qty: 1, onSuccess: null };
 
     function $(id){ return document.getElementById(id); }
+
+    // 상품별 '1건' 설명 힌트
+    var DREQ_HINT = {
+        '명함': '디자인 1종 = 1건',
+        '전단': '디자인 1면 = 1건 (앞·뒷면 별도면 2건)',
+        '배너': '디자인 1종 = 1건',
+        '가벽': '디자인 화면 1개 = 1건 (예: 3m×2m 가벽 1개 = 1건)',
+        '글씨포토존': '디자인 1세트 = 1건'
+    };
+
+    function _updateTotal() {
+        if (state.mode !== 'hq' || !state.product) return;
+        var qty = Math.max(1, parseInt(state.qty || 1, 10));
+        var amt = state.price * qty;
+        $('dreqTotalQty').textContent = qty;
+        $('dreqTotalAmt').textContent = amt.toLocaleString() + '원';
+    }
 
     function _setTab(tab) {
         state.mode = tab;
@@ -20752,18 +20778,24 @@ if (w >= 20 && h >= 20) {
     function _selectProduct(prod, price) {
         state.product = prod;
         state.price = price;
+        state.qty = 1;
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(b){
             b.classList.toggle('selected', b.dataset.prod === prod);
         });
+        $('dreqQtyRow').style.display = '';
+        $('dreqQty').value = 1;
+        $('dreqQtyHint').textContent = DREQ_HINT[prod] || '';
         $('dreqTotal').style.display = 'flex';
         $('dreqTotalProd').textContent = prod;
-        $('dreqTotalAmt').textContent = price.toLocaleString() + '원';
+        _updateTotal();
         $('dreqForm').style.display = '';
     }
 
     function _resetForm() {
-        state.product = null; state.price = 0; state.preset = null;
+        state.product = null; state.price = 0; state.preset = null; state.qty = 1; state.onSuccess = null;
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(b){ b.classList.remove('selected'); });
+        $('dreqQtyRow').style.display = 'none';
+        $('dreqQty').value = 1;
         $('dreqTotal').style.display = 'none';
         $('dreqForm').style.display = 'none';
         $('dreqCustTitle').value = '';
@@ -20778,8 +20810,8 @@ if (w >= 20 && h >= 20) {
     window.openDesignRequestPopup = function(opts) {
         opts = opts || {};
         _resetForm();
+        state.onSuccess = (typeof opts.onSuccess === 'function') ? opts.onSuccess : null;
         if (opts.product) {
-            // 미리 상품 선택 (상품 상세페이지에서 호출 시)
             var btn = document.querySelector('#dreqProds .dreq-prod[data-prod="' + opts.product + '"]');
             if (btn) _selectProduct(opts.product, parseInt(btn.dataset.price, 10));
             else if (opts.presetTitle) { _setTab('cust'); $('dreqCustTitle').value = opts.presetTitle; }
@@ -20802,6 +20834,19 @@ if (w >= 20 && h >= 20) {
         b.addEventListener('click', function(){
             _selectProduct(b.dataset.prod, parseInt(b.dataset.price, 10));
         });
+    });
+    // 수량 컨트롤
+    $('dreqQtyMinus').addEventListener('click', function(){
+        var q = Math.max(1, parseInt($('dreqQty').value, 10) - 1);
+        $('dreqQty').value = q; state.qty = q; _updateTotal();
+    });
+    $('dreqQtyPlus').addEventListener('click', function(){
+        var q = Math.min(999, parseInt($('dreqQty').value, 10) + 1);
+        $('dreqQty').value = q; state.qty = q; _updateTotal();
+    });
+    $('dreqQty').addEventListener('input', function(){
+        var q = Math.max(1, Math.min(999, parseInt(this.value, 10) || 1));
+        state.qty = q; _updateTotal();
     });
     // 파일 목록 표시
     $('dreqFiles').addEventListener('change', function(){
@@ -20849,12 +20894,14 @@ if (w >= 20 && h >= 20) {
 
         var title = '';
         var category = '';
-        var price = 0;
+        var unitPrice = 0;
+        var qty = 1;
         if (state.mode === 'hq') {
             if (!state.product) { alert('의뢰할 상품을 선택해 주세요'); return; }
-            title = '[본사의뢰] ' + state.product;
+            qty = Math.max(1, parseInt(state.qty || 1, 10));
+            title = '[본사의뢰] ' + state.product + (qty > 1 ? (' × ' + qty + '건') : '');
             category = state.product;
-            price = state.price;
+            unitPrice = state.price;
         } else {
             title = $('dreqCustTitle').value.trim();
             if (!title) { alert('제목을 입력해 주세요'); return; }
@@ -20864,6 +20911,8 @@ if (w >= 20 && h >= 20) {
         if (!name) { alert('성함을 입력해 주세요'); return; }
         if (!phone) { alert('연락처를 입력해 주세요'); return; }
 
+        var total = unitPrice * qty;
+
         btn.disabled = true;
         var origLabel = btn.textContent;
         btn.textContent = '등록 중...';
@@ -20871,22 +20920,29 @@ if (w >= 20 && h >= 20) {
             var u = await sb.auth.getUser();
             var uid = (u && u.data && u.data.user && u.data.user.id) || null;
             var files = await _uploadFiles(uid);
-            var finalDesc = '[' + name + ' · ' + phone + ']\n\n' + desc;
+            var qtyLine = (state.mode === 'hq' && qty > 1) ? ('수량: ' + qty + '건 · 단가: ' + unitPrice.toLocaleString() + '원 · 합계: ' + total.toLocaleString() + '원\n\n') : '';
+            var finalDesc = '[' + name + ' · ' + phone + ']\n' + qtyLine + desc;
             var payload = {
                 customer_id: uid,
                 title: title,
                 description: finalDesc,
                 category: category,
                 country: 'KR',
-                budget_min: price,
-                budget_max: price,
+                budget_min: total,
+                budget_max: total,
                 files: files,
                 status: 'open'
             };
-            var ins = await sb.from('design_requests').insert(payload);
+            var ins = await sb.from('design_requests').insert(payload).select().single();
             if (ins.error) throw ins.error;
-            alert('의뢰가 정상 등록되었습니다. 담당 매니저가 곧 연락드립니다.');
+            var requestId = ins.data && ins.data.id;
             window.closeDesignRequestPopup();
+            // onSuccess 콜백 호출 (상세 모달이 배너 상태 업데이트 + 합계 갱신)
+            if (state.onSuccess) {
+                try { state.onSuccess({ requestId: requestId, product: state.product || category, unitPrice: unitPrice, qty: qty, total: total }); } catch (e) { console.warn('[onSuccess cb]', e); }
+            } else {
+                alert('의뢰가 정상 등록되었습니다. 담당 매니저가 곧 연락드립니다.');
+            }
         } catch (e) {
             console.error('[submitDesignRequest]', e);
             alert('등록 실패: ' + (e && e.message ? e.message : '알 수 없는 오류'));
