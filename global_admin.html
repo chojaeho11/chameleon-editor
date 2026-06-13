@@ -2385,6 +2385,7 @@
                                 <option value="all">전체</option>
                             </select>
                             <button class="btn btn-outline btn-sm" onclick="loadDesignerApplications()" style="font-size:12px;">🔄 새로고침</button>
+                            <button class="btn btn-sm" onclick="window.bulkRejectPendingDesigners()" style="font-size:12px;background:#f59e0b;color:#fff;border-color:#d97706;font-weight:700;">🧹 승인 대기 일괄 거절·숨김</button>
                             <button class="btn btn-sm" onclick="window.activateOnlySix()" style="font-size:13px;background:#16a34a;color:#fff;border-color:#15803d;font-weight:800;">🎯 6명만 활성화 (의뢰받기 권한)</button>
                             <button class="btn btn-sm" onclick="window.purgeNonKrDesigners()" style="font-size:12px;background:#0284c7;color:#fff;border-color:#0369a1;font-weight:700;">🌍 해외 디자이너 삭제 시도</button>
                             <button class="btn btn-sm" onclick="window.keepSixDesigners()" style="font-size:12px;background:#7c3aed;color:#fff;border-color:#6d28d9;font-weight:700;">🎯 6명만 남기고 삭제 시도</button>
@@ -3172,7 +3173,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=280"></script>
+    <script type="module" src="global_admin.js?v=281"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">

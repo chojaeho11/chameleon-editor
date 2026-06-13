@@ -556,6 +556,9 @@ window.viewMemberOrders = async (userId, name) => {
 // ───────────────────────────────────────────────
 // [디자이너 신청·승인 관리] — designer_profiles.is_active 기반
 // ───────────────────────────────────────────────
+// 2026-06-13: 숨김 마커 — UPDATE 로 추가해서 목록에서 자동 제외
+const REJECTED_MARK = '[ADMIN_REJECTED]';
+
 window.loadDesignerApplications = async () => {
     const grid = document.getElementById('designerAppListBody');
     if (!grid) return;
@@ -565,9 +568,11 @@ window.loadDesignerApplications = async () => {
         let q = sb.from('designer_profiles')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(200);
+            .limit(500);
         if (filter === 'pending') q = q.eq('is_active', false);
         else if (filter === 'active') q = q.eq('is_active', true);
+        // 숨김 마커 있는 행은 항상 제외 (전체 탭에서도)
+        q = q.not('bio', 'ilike', '%' + REJECTED_MARK + '%');
         const { data: rows, error } = await q;
         if (error) throw error;
         if (!rows || rows.length === 0) {
@@ -642,15 +647,54 @@ window.approveDesignerApplication = async (designerId, name) => {
 };
 
 window.rejectDesignerApplication = async (designerId) => {
-    if (!confirm('이 신청을 거절·삭제하시겠습니까? 디자이너 프로필이 완전히 제거됩니다.')) return;
+    if (!confirm('이 신청을 거절·숨김 처리하시겠습니까?\n(목록에서 사라지고 의뢰도 받을 수 없게 됩니다)')) return;
     try {
-        const { error } = await sb.from('designer_profiles').delete().eq('id', designerId);
+        // 1) is_active=false + bio 에 숨김 마커 추가 (UPDATE 는 admin policy 로 통과)
+        const { data: cur } = await sb.from('designer_profiles').select('bio').eq('id', designerId).maybeSingle();
+        const newBio = (cur && cur.bio ? cur.bio + '\n\n' : '') + REJECTED_MARK + ' ' + new Date().toISOString();
+        const { error } = await sb.from('designer_profiles')
+            .update({ is_active: false, bio: newBio })
+            .eq('id', designerId);
         if (error) throw error;
-        alert('처리 완료');
+        alert('숨김 처리 완료');
         loadDesignerApplications();
     } catch (e) {
         alert('실패: ' + (e.message || e));
     }
+};
+
+// 2026-06-13: 승인 대기 일괄 거절·숨김
+window.bulkRejectPendingDesigners = async () => {
+    if (!confirm('승인 대기 중인 디자이너 신청을 모두 거절·숨김 처리합니다.\n(목록에서 사라지고 의뢰도 받을 수 없게 됩니다)\n진행할까요?')) return;
+    if (!confirm('정말 모두 일괄 거절합니다.')) return;
+
+    try {
+        // is_active=false 이면서 아직 숨김 마커 없는 행만 가져오기
+        const { data: targets, error: qErr } = await sb.from('designer_profiles')
+            .select('id, bio')
+            .eq('is_active', false)
+            .not('bio', 'ilike', '%' + REJECTED_MARK + '%')
+            .limit(2000);
+        if (qErr) throw qErr;
+        if (!targets || targets.length === 0) { alert('대기 중인 신청이 없습니다.'); return; }
+
+        const now = new Date().toISOString();
+        let okCount = 0, failCount = 0;
+        // 1건씩 UPDATE — bio 가 row 마다 다르므로 일괄 update 불가
+        for (const t of targets) {
+            try {
+                const newBio = (t.bio ? t.bio + '\n\n' : '') + REJECTED_MARK + ' ' + now;
+                const { error } = await sb.from('designer_profiles')
+                    .update({ bio: newBio })
+                    .eq('id', t.id);
+                if (error) { failCount++; console.warn('[bulk reject]', t.id, error); }
+                else okCount++;
+            } catch (e) { failCount++; }
+        }
+
+        alert(`✓ ${okCount}건 거절·숨김 처리 완료${failCount > 0 ? '\n❌ ' + failCount + '건 실패 (콘솔 확인)' : ''}`);
+        loadDesignerApplications();
+    } catch (e) { alert('실패: ' + (e.message || e)); }
 };
 
 // 2026-06-13: 6명만 활성, 나머지는 모두 is_active=false 로 비활성 처리.
