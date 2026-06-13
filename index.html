@@ -1021,7 +1021,7 @@ window._tcmFallbackClick = function(code) {
                         <span class="hc-tag" data-hc="tag-1">AD PRINT</span>
                         <h2 class="hc-title" data-hc="title-1">광고 기획사를 위한<br>도매쇼핑몰</h2>
                         <p class="hc-sub" data-hc="sub-1">국내 최대 규모 자동화 제작 · 직배송 시스템<br>가장 저렴하게 제품을 공급합니다<br>저희보다 품질좋고 저렴한곳은 세상에 없습니다</p>
-                        <a href="/?cat=ad" class="hc-cta hc-cta-show" data-hc="cta-lowest">🏆 최저가보장 <span>→</span></a>
+                        <span class="hc-cta hc-cta-show" data-hc="cta-lowest" style="cursor:default; pointer-events:none;">🏆 최저가보장</span>
                     </div>
                     <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="광고 인쇄" loading="lazy" decoding="async"></div>
                 </article>
@@ -1186,9 +1186,12 @@ window._tcmFallbackClick = function(code) {
             document.querySelectorAll('[data-hc]').forEach(function(el){
                 var key = el.getAttribute('data-hc');
                 if (dict[key] != null) {
-                    if (key === 'cta' || key === 'cta-lowest') {
-                        // CTA 는 텍스트 노드만 갈음, 화살표 유지
+                    if (key === 'cta') {
+                        // 일반 CTA 는 텍스트 + 화살표
                         el.innerHTML = dict[key] + ' <span>→</span>';
+                    } else if (key === 'cta-lowest') {
+                        // 2026-06-13: 최저가보장 버튼 — 화살표 없이 텍스트만 (사용자 요청)
+                        el.innerHTML = dict[key];
                     } else {
                         el.innerHTML = dict[key];
                     }
