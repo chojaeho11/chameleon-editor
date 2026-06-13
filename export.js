@@ -2262,6 +2262,53 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
             if (y > 260) { doc.addPage(); y = 20; }
         }
 
+        // 2026-06-13: 칼선작업 (배경제거 + 누끼 + 받침) — 별도 행
+        if (item.cutlineWork || (item.cutlineFee && item.cutlineFee > 0) || (item.cutlineCharCount && item.cutlineCharCount > 0)) {
+            var _clN = item.cutlineCharCount || 1;
+            var _clFee = item.cutlineFee || (_clN * 10000);
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _clFee = Math.round(_clFee * _cr.JP);
+            else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _clFee = Math.round(_clFee * _cr.US * 100) / 100;
+            var _clUnit = Math.round(_clFee / Math.max(1, _clN));
+            totalAmt += _clFee;
+            var _clNameLoc = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? '✂ カット作業 (背景除去 + 罫線 + 台座)'
+                : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? '✂ Cutline work (bg removal + cutline + base)'
+                : '✂ 칼선작업 (배경제거 + 누끼 + 받침)';
+            var _clSplit = doc.splitTextToSize('└ ' + _clNameLoc, nameColWidth - 4);
+            var _clH = Math.max(8, 4 + (_clSplit.length * 5));
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], _clH, '', 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], _clH, _clSplit, 'left', 8); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], _clH, TEXT.opt_add, 'left', 8); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], _clH, String(_clN), 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], _clH, formatCurrencyForPDF(_clUnit), 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], _clH, formatCurrencyForPDF(_clFee), 'right');
+            y += _clH;
+            if (y > 260) { doc.addPage(); y = 20; }
+        }
+
+        // 2026-06-13: 가벽 형태 (ㄱ자 / ㄷ자) 코너 추가비 — 별도 행
+        if (item.wallShape && item.wallShape !== 'straight' && item.wallShapeFee && item.wallShapeFee > 0) {
+            var _wsFee = item.wallShapeFee;
+            if ((CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') && _cr && _cr.JP) _wsFee = Math.round(_wsFee * _cr.JP);
+            else if ((CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') && _cr && _cr.US) _wsFee = Math.round(_wsFee * _cr.US * 100) / 100;
+            totalAmt += _wsFee;
+            var _wsLbl = item.wallShape === 'L' ? 'L자' : (item.wallShape === 'U' ? 'U자/ㄷ자' : item.wallShape);
+            var _wsNameLoc = (CURRENT_LANG_CODE === 'ja' || CURRENT_LANG_CODE === 'jp') ? ('壁面形状 (' + _wsLbl + ') コーナー追加費')
+                : (CURRENT_LANG_CODE === 'us' || CURRENT_LANG_CODE === 'en') ? ('Wall shape (' + _wsLbl + ') corner fee')
+                : ('가벽 형태 (' + _wsLbl + ') 코너 추가비');
+            var _wsSplit = doc.splitTextToSize('└ ' + _wsNameLoc, nameColWidth - 4);
+            var _wsH = Math.max(8, 4 + (_wsSplit.length * 5));
+            curX = 15;
+            drawCell(doc, curX, y, cols[0], _wsH, '', 'center'); curX += cols[0];
+            drawCell(doc, curX, y, cols[1], _wsH, _wsSplit, 'left', 8); curX += cols[1];
+            drawCell(doc, curX, y, cols[2], _wsH, TEXT.opt_add, 'left', 8); curX += cols[2];
+            drawCell(doc, curX, y, cols[3], _wsH, '1', 'center'); curX += cols[3];
+            drawCell(doc, curX, y, cols[4], _wsH, formatCurrencyForPDF(_wsFee), 'right'); curX += cols[4];
+            drawCell(doc, curX, y, cols[5], _wsH, formatCurrencyForPDF(_wsFee), 'right');
+            y += _wsH;
+            if (y > 260) { doc.addPage(); y = 20; }
+        }
+
         // 2026-06-11: ADDON_DB 누락 (예: b0001 보조받침) 보정 — 실제 카트 라인 합계와 비교해 차액 행 추가
         //   _soCalcItemPrice 는 cart UI 가 사용하는 정확한 라인 가격 계산 (가벽 size/side/addon/PRO 모두 반영)
         if (typeof window._soCalcItemPrice === 'function') {
