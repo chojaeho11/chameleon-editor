@@ -518,11 +518,15 @@ function renderCard(r) {
     `;
 }
 
-// 관리자 — 단일 의뢰 삭제
+// 관리자 — 단일 의뢰 삭제 (FK 자식 먼저 삭제 후 부모)
 async function dbAdminDelete(id) {
     if (!isAdmin()) return;
     if (!confirm('이 의뢰를 삭제하시겠습니까? 복구 불가능합니다.')) return;
     try {
+        // FK 자식 테이블부터 정리
+        await sb.from('design_reviews').delete().eq('request_id', id);
+        await sb.from('design_bids').delete().eq('request_id', id);
+        // 부모
         const { error, count } = await sb.from('design_requests').delete({ count: 'exact' }).eq('id', id);
         if (error) throw error;
         if (count === 0) { alert('삭제되지 않았습니다 (RLS 권한 확인 필요). Supabase 정책이 적용되었는지 확인해주세요.'); return; }
@@ -552,10 +556,14 @@ async function dbAdminPurgeTab() {
         if (error) throw error;
         const ids = (data || []).map(r => r.id);
         if (ids.length === 0) { alert('삭제할 의뢰가 없습니다.'); return; }
-        // 100개씩 청크
+        // 100개씩 청크 — 각 청크마다 자식 → 부모 순서
         let total = 0;
         for (let i = 0; i < ids.length; i += 100) {
             const chunk = ids.slice(i, i + 100);
+            // FK 자식 먼저
+            await sb.from('design_reviews').delete().in('request_id', chunk);
+            await sb.from('design_bids').delete().in('request_id', chunk);
+            // 부모
             const { error: dErr, count } = await sb.from('design_requests').delete({ count: 'exact' }).in('id', chunk);
             if (dErr) throw dErr;
             if (count != null) total += count;
