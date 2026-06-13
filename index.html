@@ -11312,6 +11312,17 @@ window.filterFxCards = function(cat, btn) {
         } catch (e) { return null; }
     };
 
+    // 2026-06-13: stale 캐시도 반환 (만료 무시) — SWR 용
+    window.cacheGetStale = function(key) {
+        try {
+            const raw = localStorage.getItem('cache:' + CACHE_VERSION + ':' + key);
+            if (!raw) return null;
+            const obj = JSON.parse(raw);
+            if (!obj || typeof obj.t !== 'number') return null;
+            return obj.d;
+        } catch (e) { return null; }
+    };
+
     /**
      * Save a payload under a cache key with current timestamp.
      * Silently ignores quota errors (private mode, full storage).
@@ -11346,6 +11357,47 @@ window.filterFxCards = function(cat, btn) {
             return res;
         } catch (e) {
             console.warn('[cachedFetch] fetch failed for', key, e);
+            return null;
+        }
+    };
+
+    /**
+     * 2026-06-13: Stale-While-Revalidate fetch — 즉시 응답 + 백그라운드 갱신.
+     *   1) stale 캐시 있으면 즉시 리턴 (만료 무시).
+     *   2) 동시에 백그라운드에서 fetcher 실행해 최신 데이터로 캐시 갱신.
+     *   3) 캐시 없으면 일반 fetch (네트워크 대기).
+     * 모바일 초기 로딩 체감 속도 대폭 개선.
+     */
+    window.cachedFetchSWR = async function(key, fetcher) {
+        const stale = window.cacheGetStale(key);
+        const refresh = async () => {
+            try {
+                const res = await fetcher();
+                if (res && typeof res === 'object' && 'data' in res) {
+                    if (res.error) return;
+                    if (res.data != null) window.cacheSet(key, res.data);
+                } else if (res != null) {
+                    window.cacheSet(key, res);
+                }
+            } catch (e) { /* silent */ }
+        };
+        if (stale !== null) {
+            // 백그라운드 refresh — 응답 기다리지 않음
+            refresh();
+            return stale;
+        }
+        // 캐시 없으면 정상 대기
+        try {
+            const res = await fetcher();
+            if (res && typeof res === 'object' && 'data' in res) {
+                if (res.error) throw res.error;
+                if (res.data != null) window.cacheSet(key, res.data);
+                return res.data;
+            }
+            if (res != null) window.cacheSet(key, res);
+            return res;
+        } catch (e) {
+            console.warn('[cachedFetchSWR] fetch failed', key, e);
             return null;
         }
     };
@@ -12592,22 +12644,21 @@ async function renderQuickMenu() {
     itemContainer.innerHTML = '<div style="text-align:center; padding:50px; grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
 
     try {
-        // 2026-06-01: 대분류·소분류·상품 DB fetch에 8초 타임아웃 — Supabase 응답이 멈췄을 때 페이지가 영영 메뉴 없는 상태로 남는 문제 방지.
-        //   타임아웃 발생시 null 로 떨어져 아래 로직이 부분 렌더하거나 정적 fallback 유지.
+        // 2026-06-13: SWR 패턴 — stale 캐시는 즉시 리턴 + 백그라운드 갱신.
+        //   첫 로드만 네트워크 대기 (최대 5s — 모바일 이탈 방지). 두 번째부터 즉시.
         function _withTimeout(p, ms, label) {
             return Promise.race([
                 p,
                 new Promise(function(resolve){ setTimeout(function(){ console.warn('[renderQuickMenu] ' + label + ' timeout ' + ms + 'ms'); resolve(null); }, ms); })
             ]);
         }
-        // 대분류, 중분류, 검색용 상품 정보를 동시에 가져옴 (180분 캐시)
         const [topCats, subCats, allProds] = await Promise.all([
-            _withTimeout(window.cachedFetch('top_cats', 3, () =>
-                sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })), 8000, 'top_cats'),
-            _withTimeout(window.cachedFetch('subcats', 3, () =>
-                sb.from('admin_categories').select('*').order('sort_order', { ascending: true })), 8000, 'subcats'),
-            _withTimeout(window.cachedFetch('all_prods_lite', 5, () =>
-                sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true })), 8000, 'all_prods_lite')
+            _withTimeout(window.cachedFetchSWR('top_cats', () =>
+                sb.from('admin_top_categories').select('*').order('sort_order', { ascending: true })), 5000, 'top_cats'),
+            _withTimeout(window.cachedFetchSWR('subcats', () =>
+                sb.from('admin_categories').select('*').order('sort_order', { ascending: true })), 5000, 'subcats'),
+            _withTimeout(window.cachedFetchSWR('all_prods_lite', () =>
+                sb.from('admin_products').select('code, name, category, img_url, price, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr').or('partner_id.is.null,partner_status.eq.approved').not('code', 'like', 'ua_%').order('sort_order', { ascending: true })), 5000, 'all_prods_lite')
         ]);
 
         // 전역 변수 초기화 (검색 오류 방지 핵심)
