@@ -653,6 +653,123 @@ window.rejectDesignerApplication = async (designerId) => {
     }
 };
 
+// 2026-06-13: 화이트리스트 6명만 남기고 모두 삭제 (이름 부분일치 기준)
+window.keepSixDesigners = async () => {
+    // 기본 화이트리스트 (이름이 정확히 일치하지 않아도 부분일치)
+    const defaultKeep = ['디자이너 J', '그래픽한', '연두', '디자이너 joy', '우디', '디자인바로'];
+    const input = prompt(
+        '남길 디자이너 이름을 콤마(,)로 구분해 입력하세요 (대소문자/공백 무시, 부분일치).\n예: 디자이너 J,그래픽한,연두,디자이너 joy,우디,디자인바로',
+        defaultKeep.join(',')
+    );
+    if (input === null) return;
+    const keepRaw = input.split(',').map(s => s.trim()).filter(Boolean);
+    if (keepRaw.length === 0) { alert('남길 디자이너 이름을 한 명 이상 입력해 주세요.'); return; }
+    const keepLower = keepRaw.map(s => s.toLowerCase().replace(/\s+/g, ''));
+
+    // 1) 전체 디자이너 + 이름 가져오기 → 화이트리스트 매칭 분리
+    let all = [];
+    try {
+        const { data, error } = await sb.from('designer_profiles').select('id, display_name, country').limit(2000);
+        if (error) throw error;
+        all = data || [];
+    } catch (e) { alert('대상 조회 실패: ' + (e.message || e)); return; }
+
+    const norm = s => String(s || '').toLowerCase().replace(/\s+/g, '');
+    const keepIds = [];
+    const removeIds = [];
+    const removeNames = [];
+    all.forEach(d => {
+        const n = norm(d.display_name);
+        const isKeep = keepLower.some(k => n.indexOf(k) >= 0 || k.indexOf(n) >= 0);
+        if (isKeep) keepIds.push(d.id);
+        else { removeIds.push(d.id); removeNames.push(d.display_name + ' [' + (d.country || 'NULL') + ']'); }
+    });
+
+    if (removeIds.length === 0) { alert('삭제할 디자이너가 없습니다.'); return; }
+
+    if (!confirm(
+        '✅ 유지 ' + keepIds.length + '명 / ❌ 삭제 ' + removeIds.length + '명\n\n' +
+        '유지: ' + keepRaw.join(', ') + '\n\n' +
+        '삭제 미리보기 (최대 10명):\n' + removeNames.slice(0, 10).join('\n') +
+        '\n\n진행하시겠습니까?'
+    )) return;
+    if (!confirm('정말 ' + removeIds.length + '명을 삭제합니다. 복구 불가능합니다.')) return;
+
+    // 2) FK 자식 → 부모 순서로 삭제
+    function chunk(arr, n) { const r = []; for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i+n)); return r; }
+    const idChunks = chunk(removeIds, 100);
+    const results = [];
+    const beforeCount = all.length;
+
+    const childTables = [
+        { tbl: 'design_reviews',              col: 'designer_id' },
+        { tbl: 'design_bids',                 col: 'designer_id' },
+        { tbl: 'designer_gigs',               col: 'designer_id' },
+        { tbl: 'design_withdrawal_requests',  col: 'designer_id' },
+        { tbl: 'designer_tax_profiles',       col: 'designer_id' },
+        { tbl: 'pattern_royalties',           col: 'designer_id' }
+    ];
+
+    for (const step of childTables) {
+        let total = 0;
+        let err = null;
+        for (const c of idChunks) {
+            try {
+                const { error, count } = await sb.from(step.tbl).delete({ count: 'exact' }).in(step.col, c);
+                if (error) {
+                    if (/42P01|relation .* does not exist|42703|column .* does not exist/i.test(error.message || '')) { err = '미존재 (스킵)'; break; }
+                    err = error.message || error.code; break;
+                }
+                if (count != null) total += count;
+            } catch (e) { err = e.message || e; break; }
+        }
+        results.push('• ' + step.tbl + ': ' + (err ? ('❌ ' + err) : ('✓ ' + total + '건')));
+    }
+
+    // 3) designer_profiles 삭제
+    let dpTotal = 0; let dpErr = null;
+    for (const c of idChunks) {
+        try {
+            const { error, count } = await sb.from('designer_profiles').delete({ count: 'exact' }).in('id', c);
+            if (error) { dpErr = error.message || error.code; break; }
+            if (count != null) dpTotal += count;
+        } catch (e) { dpErr = e.message || e; break; }
+    }
+    results.push('• designer_profiles: ' + (dpErr ? ('❌ ' + dpErr) : ('✓ ' + dpTotal + '건')));
+
+    // 4) admin_staff 정리
+    try {
+        const keepNamesSet = new Set(keepRaw.map(s => s));
+        const { data: staffDes } = await sb.from('admin_staff').select('id, name').eq('role', 'designer');
+        const sRemove = (staffDes || []).filter(s => !Array.from(keepNamesSet).some(k => norm(s.name).indexOf(norm(k)) >= 0)).map(s => s.id);
+        if (sRemove.length > 0) {
+            const { error: sErr, count: sCount } = await sb.from('admin_staff').delete({ count: 'exact' }).in('id', sRemove);
+            if (sErr) results.push('• admin_staff: ❌ ' + sErr.message);
+            else results.push('• admin_staff: ✓ ' + (sCount || sRemove.length) + '건');
+        }
+    } catch (e) { results.push('• admin_staff 실패: ' + (e.message || e)); }
+
+    // 5) 검증 — 다시 조회해서 실제 남은 디자이너 수 확인
+    let afterCount = -1;
+    try {
+        const { data: af, error: aErr } = await sb.from('designer_profiles').select('id', { count: 'exact', head: true });
+        if (!aErr) afterCount = af === null ? -1 : 0;  // head:true → count 만 반환
+        const { count } = await sb.from('designer_profiles').select('id', { count: 'exact', head: true });
+        if (count != null) afterCount = count;
+    } catch (e) {}
+
+    const verify = (afterCount >= 0)
+        ? '\n\n📊 검증:\n  • 시작: ' + beforeCount + '명\n  • 삭제 대상: ' + removeIds.length + '명\n  • 현재 남은 수: ' + afterCount + '명' +
+          (afterCount === keepIds.length ? ' ✓ 일치!' : ' ⚠️ 예상(' + keepIds.length + ')과 다름 — RLS 권한 문제 가능')
+        : '';
+
+    alert('삭제 결과:\n\n' + results.join('\n') + verify);
+    console.log('[keepSix]', { results, beforeCount, afterCount, expected: keepIds.length });
+
+    if (window.loadDesignerApplications) loadDesignerApplications();
+    if (window.loadStaffList) loadStaffList();
+};
+
 // 2026-06-13: 해외 디자이너만 삭제 — country != 'KR' 인 designer_profiles + 관련 행 일괄 정리
 window.purgeNonKrDesigners = async () => {
     // 1) 미리 대상 디자이너 카운트 + 미리보기
