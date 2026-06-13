@@ -3533,8 +3533,12 @@ html, body { background: #ffffff !important; }
             }
         }
 
-        // 2026-06-13: 디자인 의뢰비 (의뢰 완료 시 포함)
-        const designReqFee = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
+        // 2026-06-13: 디자인 의뢰비 — 큐 라인 수 만큼 곱해서 표시 (담기 시 각 라인마다 designRequest 가 붙으므로 카트 총액과 일치)
+        const _designUnit = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
+        const _queueLines = (Array.isArray(state._adLines) ? state._adLines.length : 0);
+        // 현재 폼이 빈 초안이면 큐 라인 수만, 아니면 현재 라인 + 큐 라인 = 총 가벽/박스/등 cart 라인 수
+        const _cartLineCount = Math.max(1, _queueLines + (state._adCurIsDraft ? 0 : (_queueLines > 0 ? 1 : 0)) || 1);
+        const designReqFee = _designUnit * _cartLineCount;
         const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee;
 
         // 렌더
