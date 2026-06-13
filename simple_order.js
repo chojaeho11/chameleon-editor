@@ -4972,13 +4972,10 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-06-06: 투명시트 family — 2종 (점착/비점착)
-    var SHEET_CODES_ORDERED = [
-        '78965',         // 1. 투명시트지 점착
-        '234234243545'   // 2. 투명시트 비점착
-    ];
+    // 2026-06-13: SHEET 시스템 통합 — VINYL_CODES_ORDERED 에 흡수됨. 별도 SHEET 섹션은 노출 안 함.
+    var SHEET_CODES_ORDERED = [];
     function _soIsSheetProduct(p) {
-        if (!p) return false;
-        return SHEET_CODES_ORDERED.indexOf(p.code) >= 0;
+        return false;  // SHEET 섹션 비활성 — vinyl 6종 그리드에서 통합 처리
     }
     var _soSheetCache = null;
     async function _soLoadSheetVariants(currentCode) {
@@ -5040,12 +5037,15 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[so] switchSheet', e); }
     };
 
-    // 2026-06-06: 시트지 family — 4종 (관리자 표시 순서)
+    // 2026-06-13: 시트지 family — 6종 통합 (관리자 표시 순서)
+    //   이전엔 4종 (VINYL) + 2종 (SHEET) 로 별도 시스템 분리되어 있었음. 한 그리드에 6장 노출.
     var VINYL_CODES_ORDERED = [
         '96587-2',         // 1. 떼었다 붙이는 시트지
         '78963',           // 2. 안개시트지
         '456456546546',    // 3. 차량 랩핑시트 라텍스인쇄
-        '96587'            // 4. 글씨 커팅시트
+        '96587',           // 4. 글씨 커팅시트
+        '78965',           // 5. 투명시트지 점착
+        '234234243545'     // 6. 투명시트 비점착
     ];
     function _soIsVinylProduct(p) {
         if (!p) return false;
