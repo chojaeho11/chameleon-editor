@@ -611,7 +611,7 @@
     <div class="card" style="margin-bottom:20px;border-left:5px solid #7c3aed;">
         <h3 style="margin-top:0;color:#7c3aed;">🎨 디자인마켓 출금 신청</h3>
         <p style="font-size:12px;color:#64748b;margin:0 0 10px 0;">디자이너의 지갑 출금 요청 목록입니다. 프로필 미검증 상태이면 반드시 세금·은행 정보를 확인하고 ✓ 프로필 검증 후 승인하세요.</p>
-        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
             <button class="btn btn-outline btn-sm" onclick="loadDesignWithdrawals()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
             <select id="dwFilterStatus" onchange="loadDesignWithdrawals()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
                 <option value="">전체 상태</option>
@@ -633,6 +633,7 @@
                 <option value="MA">🇲🇦 모로코</option>
                 <option value="SG">🇸🇬 싱가포르</option>
             </select>
+            <input type="text" id="dwSearchDesigner" placeholder="🔍 디자이너 이름·이메일 검색" oninput="if(window._dwDeb)clearTimeout(window._dwDeb);window._dwDeb=setTimeout(loadDesignWithdrawals,250)" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;min-width:240px;">
         </div>
         <div style="overflow-x:auto;">
             <table style="min-width:1400px;">
@@ -3154,7 +3155,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=272"></script>
+    <script type="module" src="global_admin.js?v=273"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">

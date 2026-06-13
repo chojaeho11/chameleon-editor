@@ -1147,25 +1147,26 @@ window.loadDesignWithdrawals = async () => {
 
     const statusFilter  = document.getElementById('dwFilterStatus')?.value || '';
     const countryFilter = document.getElementById('dwFilterCountry')?.value || '';
+    const searchKw      = (document.getElementById('dwSearchDesigner')?.value || '').trim().toLowerCase();
 
     try {
         let q = sb.from('design_withdrawal_requests')
             .select('*')
             .order('requested_at', { ascending: false })
-            .limit(100);
+            .limit(200);
         if (statusFilter)  q = q.eq('status', statusFilter);
         if (countryFilter) q = q.eq('country', countryFilter);
 
-        const { data: rows, error } = await q;
+        const { data: rawRows, error } = await q;
         if (error) throw error;
 
-        if (!rows || rows.length === 0) {
+        if (!rawRows || rawRows.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">조건에 맞는 출금 요청이 없습니다.</td></tr>';
             return;
         }
 
         // Fetch designer profiles (display_name + email)
-        const designerIds = [...new Set(rows.map(r => r.designer_id).filter(Boolean))];
+        const designerIds = [...new Set(rawRows.map(r => r.designer_id).filter(Boolean))];
         const { data: dps } = await sb.from('designer_profiles')
             .select('id, display_name, photo_url, country, is_demo')
             .in('id', designerIds);
@@ -1185,6 +1186,22 @@ window.loadDesignWithdrawals = async () => {
             .in('id', designerIds);
         const profMap = {};
         (profs || []).forEach(p => profMap[p.id] = p);
+
+        // Designer 이름·이메일 검색 적용 (legal_name / memo 도 함께 매칭)
+        const rows = searchKw ? rawRows.filter(r => {
+            const dp = dpMap[r.designer_id] || {};
+            const p = profMap[r.designer_id] || {};
+            const haystack = [
+                dp.display_name, p.email, p.username,
+                r.legal_name, r.memo, r.bank_holder
+            ].filter(Boolean).join(' ').toLowerCase();
+            return haystack.indexOf(searchKw) >= 0;
+        }) : rawRows;
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8;">"' + searchKw + '" 검색 결과가 없습니다.</td></tr>';
+            return;
+        }
 
         tbody.innerHTML = '';
         rows.forEach(r => {
