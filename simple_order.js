@@ -2458,8 +2458,8 @@ html, body { background: #ffffff !important; }
                 </select>
               </div>
             </div>
-            <!-- 가격 breakdown 자동 표시 -->
-            <div id="soShipBreakdown" style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:10px 12px; font-size:12px; color:#3730a3; line-height:1.7;"></div>
+            <!-- 가격 breakdown 자동 표시 (비어있을 땐 숨김 — :empty CSS 로 자동 처리하기 어려워 inline display:none 시작) -->
+            <div id="soShipBreakdown" style="display:none; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; padding:10px 12px; font-size:12px; color:#3730a3; line-height:1.7;"></div>
           </div>
         </div>
 
@@ -6082,9 +6082,14 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-05-13: 가격 breakdown 박스 갱신 (시간 변경 등에서 호출)
+    // 2026-06-13: setHtml 헬퍼로 innerHTML 설정과 display 토글을 묶어 — early return 도 빈 박스 안 보임
     window._soUpdateShipBreakdown = function () {
         var box = document.getElementById('soShipBreakdown');
         if (!box) return;
+        var setHtml = function(html){
+            box.innerHTML = html || '';
+            box.style.display = (html && html.trim()) ? '' : 'none';
+        };
         // 2026-05-15: 원판 — 별도 안내 박스 (수도권 무료 기준 / 지방 착불)
         if (state.isRawBoard) {
             if (state.shipMethod === 'metro_delivery') {
@@ -6113,6 +6118,7 @@ html, body { background: #ffffff !important; }
             } else {
                 box.innerHTML = '';
             }
+            box.style.display = box.innerHTML.trim() ? '' : 'none';
             recalc();
             return;
         }
@@ -6161,11 +6167,12 @@ html, body { background: #ffffff !important; }
             } else {
                 box.innerHTML = '';
             }
+            box.style.display = box.innerHTML.trim() ? '' : 'none';
             recalc();
             return;
         }
         var opt = SHIP_OPTS[state.shipMethod];
-        if (!opt || !opt.parts || !opt.parts.length) { box.innerHTML = ''; recalc(); return; }
+        if (!opt || !opt.parts || !opt.parts.length) { box.innerHTML = ''; box.style.display = 'none'; recalc(); return; }
         var sd = document.getElementById('soScheduleDate');
         var st = document.getElementById('soScheduleTime');
         var rd = document.getElementById('soRemovalDate');
@@ -6194,6 +6201,8 @@ html, body { background: #ffffff !important; }
             lines.push('<div style="font-size:11px;">' + tr('철거', '撤去', 'Removal') + ': ' + rd.value + (rTimeLabel ? ' / ' + rTimeLabel : '') + '</div>');
         }
         box.innerHTML = lines.join('');
+        // 2026-06-13: 빈 박스 숨김 (하늘색 빈 막대 노출 방지)
+        box.style.display = box.innerHTML.trim() ? '' : 'none';
         // 가격 박스도 재계산 (배송비 반영)
         recalc();
     };
@@ -10700,7 +10709,7 @@ html, body { background: #ffffff !important; }
         });
         var dateWrap = document.getElementById('soScheduleDateWrap'); if (dateWrap) dateWrap.style.display = 'none';
         var remWrap = document.getElementById('soRemovalWrap'); if (remWrap) remWrap.style.display = 'none';
-        var bdBox = document.getElementById('soShipBreakdown'); if (bdBox) bdBox.innerHTML = '';
+        var bdBox = document.getElementById('soShipBreakdown'); if (bdBox) { bdBox.innerHTML = ''; bdBox.style.display = 'none'; }
         // 2026-06-01: 기본 ship 의 부수 효과 (날짜 입력 펼침, 가격 재계산, breakdown) 실행 — 위 reset 뒤에 와야 함.
         //   사용자가 ship 버튼을 다시 클릭하지 않아도 schedule 영역이 열려있게.
         if (anyShipScope && typeof window._soPickShip === 'function') {
