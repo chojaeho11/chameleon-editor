@@ -1611,6 +1611,68 @@ function _imgToDataUrl(url) {
 }
 
 // ============ 공통 문서 생성 (견적서/영수증/거래명세서) ============
+// 2026-06-13: 명함 옵션 + 디자인 의뢰 — PDF 공통 라벨/계산 helper
+const _BIZ_TIER_LBL_PDF = { general: '일반', premium: '프리미엄' };
+const _BIZ_SIDE_LBL_PDF = { single: '단면', double: '양면' };
+const _BIZ_PAPER_LBL_PDF = { snowpaper250: '스노우지 250g', nuvegi240: '누벅 240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+const _BIZ_FOIL_LBL_PDF = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
+const _BIZ_FOIL_PRICE = { matte_gold: 10000, glossy_gold: 10000, matte_silver: 8000, glossy_silver: 8000, rose_gold: 12000, laser: 15000 };
+const _BIZ_FIN_LBL_PDF = { round_corner: '귀도리(모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+const _BIZ_FIN_PRICE = { round_corner: 3000, circle_hole: 3000, press: 5000, emboss: 5000, spot_uv: 8000 };
+
+function _bizCardOptionLines(item) {
+    if (!item) return [];
+    const bc = item.bizCard || null;
+    const isBc = !!(bc || item._isBizCard || (item.product && item.product.code && /^pp_bc/i.test(item.product.code)));
+    if (!isBc) return [];
+    const lines = [];
+    if (bc) {
+        if (bc.tier) lines.push({ label: '등급: ' + (_BIZ_TIER_LBL_PDF[bc.tier] || bc.tier), unitPrice: 0, qty: 1, total: 0 });
+        if (bc.side) lines.push({ label: '인쇄: ' + (_BIZ_SIDE_LBL_PDF[bc.side] || bc.side), unitPrice: 0, qty: 1, total: 0 });
+        if (bc.paper) lines.push({ label: '용지: ' + (_BIZ_PAPER_LBL_PDF[bc.paper] || bc.paper), unitPrice: 0, qty: 1, total: 0 });
+        // 각 단위 환산
+        let bcQ = item.qty || 1;
+        if (bcQ >= 200 && bcQ % 200 === 0) bcQ = bcQ / 200;
+        if (bcQ < 1) bcQ = 1;
+        if (bc.foil) {
+            const fp = _BIZ_FOIL_PRICE[bc.foil] || 0;
+            lines.push({ label: '✨ 박: ' + (_BIZ_FOIL_LBL_PDF[bc.foil] || bc.foil), unitPrice: fp, qty: bcQ, total: fp * bcQ });
+        }
+        if (bc.finishes) {
+            Object.keys(bc.finishes).forEach(k => {
+                if (!bc.finishes[k]) return;
+                const fp = _BIZ_FIN_PRICE[k] || 0;
+                lines.push({ label: '🛠️ 후가공: ' + (_BIZ_FIN_LBL_PDF[k] || k), unitPrice: fp, qty: bcQ, total: fp * bcQ });
+            });
+        }
+    }
+    return lines;
+}
+
+function _designRequestLines(item) {
+    if (!item || !item.designRequest || !item.designRequest.total) return [];
+    const dr = item.designRequest;
+    const isBc = !!(item.bizCard || item._isBizCard || (item.product && item.product.code && /^pp_bc/i.test(item.product.code)));
+    if (isBc) {
+        const side = (dr.biz_side) || (item.bizCard && item.bizCard.side) || 'single';
+        const mult = (side === 'double') ? 2 : 1;
+        let bcQ = item.qty || 1;
+        if (bcQ >= 200 && bcQ % 200 === 0) bcQ = bcQ / 200;
+        if (bcQ < 1) bcQ = 1;
+        const newFee = 15000 * mult;
+        const textFee = 5000 * mult;
+        const textMods = Math.max(0, bcQ - 1);
+        const lines = [];
+        const sideTxt = (mult === 2) ? ' (양면 ×2)' : '';
+        lines.push({ label: '✏️ 디자인 신규 의뢰' + sideTxt, unitPrice: newFee, qty: 1, total: newFee });
+        if (textMods > 0) {
+            lines.push({ label: '✏️ 문구 수정 (같은 디자인 다른 이름·전화번호)', unitPrice: textFee, qty: textMods, total: textFee * textMods });
+        }
+        return lines;
+    }
+    return [{ label: '✏️ 디자인 의뢰비', unitPrice: dr.unit_price || dr.total, qty: dr.qty || 1, total: dr.total }];
+}
+
 async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, usedMileage, paidTotalAmount = 0) {
     doc.setFontSize(26);
     _dt(doc, title, 105, 22, { align: 'center', weight: 'bold' });
@@ -1706,6 +1768,26 @@ async function _genCommonDoc(doc, title, orderInfo, cartItems, discountAmt, used
                 if (y > 260) { doc.addPage(); y = 20; }
             });
         }
+
+        // 2026-06-13: 명함 옵션 + 디자인 의뢰 sub-rows
+        const _bcLines = _bizCardOptionLines(item);
+        const _drLines = _designRequestLines(item);
+        const _extras = _bcLines.concat(_drLines);
+        _extras.forEach(opt => {
+            // 가격 0 인 정보성 라인 (등급/인쇄/용지) 도 포함 — 옵션 컬럼에 표시
+            if (opt.total > 0) totalAmt += opt.total;
+            const splitOpt = doc.splitTextToSize("└ " + opt.label, cols[1] - 4);
+            const oH = Math.max(8, 4 + (splitOpt.length * 5));
+            curX = 15;
+            _dc(doc, curX, y, cols[0], oH, "", 'center'); curX += cols[0];
+            _dc(doc, curX, y, cols[1], oH, splitOpt, 'left', 8); curX += cols[1];
+            _dc(doc, curX, y, cols[2], oH, opt.total > 0 ? '추가' : '옵션 정보', 'left', 8); curX += cols[2];
+            _dc(doc, curX, y, cols[3], oH, opt.qty > 0 ? String(opt.qty) : '-', 'center'); curX += cols[3];
+            _dc(doc, curX, y, cols[4], oH, opt.unitPrice > 0 ? _fmtPdf(opt.unitPrice) : '-', 'right'); curX += cols[4];
+            _dc(doc, curX, y, cols[5], oH, opt.total > 0 ? _fmtPdf(opt.total) : '-', 'right');
+            y += oH;
+            if (y > 260) { doc.addPage(); y = 20; }
+        });
     });
 
     y += 5;
@@ -1799,14 +1881,34 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
 
         doc.setFontSize(11); let optY = infoY + 8;
         const ADDON = window.ADDON_DB || {};
+        // 2026-06-13: 명함 옵션 + 디자인 의뢰 → 한국어로 풀 리스트
+        const _bcOptLines = _bizCardOptionLines(item);
+        const _drOptLines = _designRequestLines(item);
+        let _hasAnyOpt = false;
+        _bcOptLines.forEach(opt => {
+            const txt = opt.total > 0 ? `• ${opt.label} — ${opt.total.toLocaleString()}원` : `• ${opt.label}`;
+            _dt(doc, txt, 25, optY); optY += 6;
+            _hasAnyOpt = true;
+        });
         if (item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             Object.values(item.selectedAddons).forEach(code => {
                 const add = ADDON[code]; if (!add) return;
                 const qty = (item.addonQuantities && item.addonQuantities[code]) || 1;
                 _dt(doc, `• ${add.display_name || add.name || code} (x${qty})`, 25, optY); optY += 6;
+                _hasAnyOpt = true;
             });
-        } else {
+        }
+        _drOptLines.forEach(opt => {
+            _dt(doc, `• ${opt.label} ${opt.qty > 1 ? '× ' + opt.qty + '건 ' : ''}— ${opt.total.toLocaleString()}원`, 25, optY, { weight: 'bold' }, '#15803d'); optY += 6;
+            _hasAnyOpt = true;
+        });
+        if (!_hasAnyOpt) {
             _dt(doc, "• " + PTXT.opt_default, 25, optY); optY += 6;
+        }
+        // 고객 요청사항 (itemNote) 자체 라인
+        if (item.itemNote && item.itemNote.trim()) {
+            optY += 2;
+            _dt(doc, '📝 고객 요청: ' + item.itemNote, 25, optY, { maxWidth: 165 }, '#7c3aed'); optY += 10;
         }
 
         // 이미지 영역 (썸네일 사용)
