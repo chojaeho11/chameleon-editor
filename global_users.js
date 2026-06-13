@@ -653,6 +653,104 @@ window.rejectDesignerApplication = async (designerId) => {
     }
 };
 
+// 2026-06-13: 6명만 활성, 나머지는 모두 is_active=false 로 비활성 처리.
+//   DELETE 는 Supabase RLS 로 막혀있는 경우가 많아 실패하지만 UPDATE 는 admin 권한으로 통과됨.
+//   /designer-board 가 is_active=true 디자이너만 의뢰 받을 수 있도록 게이팅하고 있음 → 결과적으로 동일한 효과.
+//   또 신규 신청자는 is_active=false 로 들어오니 admin 이 승인할 때까지 의뢰 받지 못함.
+window.activateOnlySix = async () => {
+    const defaultKeep = ['디자이너 J', '그래픽한', '연두', '디자이너 joy', '우디', '디자인바로'];
+    const input = prompt(
+        '의뢰 받을 권한을 줄 디자이너 이름을 콤마(,)로 구분해 입력하세요.\n' +
+        '(대소문자/공백 무시, 부분일치)\n\n' +
+        '입력한 이름과 매칭되는 디자이너만 is_active=true 로 유지되고,\n' +
+        '나머지는 is_active=false 로 변경되어 /designer-board 에서 의뢰를 받을 수 없게 됩니다.\n' +
+        '(데이터 자체는 보존됨 — DELETE 가 RLS 로 막혀 있어 활성/비활성 방식 사용)',
+        defaultKeep.join(',')
+    );
+    if (input === null) return;
+    const keepRaw = input.split(',').map(s => s.trim()).filter(Boolean);
+    if (keepRaw.length === 0) { alert('이름을 한 명 이상 입력해 주세요.'); return; }
+    const keepLower = keepRaw.map(s => s.toLowerCase().replace(/\s+/g, ''));
+
+    let all = [];
+    try {
+        const { data, error } = await sb.from('designer_profiles').select('id, display_name, country, is_active').limit(2000);
+        if (error) throw error;
+        all = data || [];
+    } catch (e) { alert('조회 실패: ' + (e.message || e)); return; }
+
+    const norm = s => String(s || '').toLowerCase().replace(/\s+/g, '');
+    const keepIds = [], deactivateIds = [], keepPreview = [], deactivatePreview = [];
+    all.forEach(d => {
+        const n = norm(d.display_name);
+        const isKeep = keepLower.some(k => n.indexOf(k) >= 0 || k.indexOf(n) >= 0);
+        if (isKeep) {
+            keepIds.push(d.id);
+            keepPreview.push((d.display_name || '(이름없음)') + ' [' + (d.country || 'NULL') + '] ' + (d.is_active ? '✓활성' : '✗비활성'));
+        } else {
+            deactivateIds.push(d.id);
+            if (d.is_active) deactivatePreview.push((d.display_name || '(이름없음)') + ' [' + (d.country || 'NULL') + ']');
+        }
+    });
+
+    if (deactivateIds.length === 0) { alert('이미 모두 정리되어 있습니다.'); return; }
+
+    if (!confirm(
+        '✅ 활성 유지: ' + keepIds.length + '명\n' +
+        '🚫 비활성 처리: ' + deactivateIds.length + '명 (현재 활성: ' + deactivatePreview.length + ')\n\n' +
+        '유지될 디자이너:\n' + keepPreview.slice(0, 10).join('\n') +
+        '\n\n비활성될 활성 디자이너 미리보기 (최대 10명):\n' + deactivatePreview.slice(0, 10).join('\n') +
+        '\n\n진행하시겠습니까?'
+    )) return;
+
+    // 1) 유지 대상은 is_active=true 강제 (혹시 false 였으면 활성화)
+    let activatedKeep = 0;
+    try {
+        if (keepIds.length > 0) {
+            function chunk(arr, n) { const r = []; for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i+n)); return r; }
+            for (const c of chunk(keepIds, 100)) {
+                const { error, count } = await sb.from('designer_profiles').update({ is_active: true }, { count: 'exact' }).in('id', c);
+                if (error) throw error;
+                if (count != null) activatedKeep += count;
+            }
+        }
+    } catch (e) { alert('유지 대상 활성화 실패: ' + (e.message || e)); return; }
+
+    // 2) 나머지는 is_active=false
+    let deactivated = 0;
+    let updateErr = null;
+    try {
+        function chunk(arr, n) { const r = []; for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i+n)); return r; }
+        for (const c of chunk(deactivateIds, 100)) {
+            const { error, count } = await sb.from('designer_profiles').update({ is_active: false }, { count: 'exact' }).in('id', c);
+            if (error) { updateErr = error.message; break; }
+            if (count != null) deactivated += count;
+        }
+    } catch (e) { updateErr = e.message || e; }
+
+    // 3) 검증
+    let afterActive = -1;
+    try {
+        const { count } = await sb.from('designer_profiles').select('id', { count: 'exact', head: true }).eq('is_active', true);
+        if (count != null) afterActive = count;
+    } catch (e) {}
+
+    const verify = (afterActive >= 0)
+        ? '\n\n📊 검증:\n  • 활성으로 만든 수: ' + activatedKeep + '명\n  • 비활성으로 만든 수: ' + deactivated + '명' +
+          '\n  • 현재 활성 디자이너: ' + afterActive + '명' +
+          (afterActive === keepIds.length ? ' ✓ 정확히 일치!' : ' ⚠️ 예상(' + keepIds.length + ')과 다름')
+        : '';
+
+    alert(
+        (updateErr ? '⚠️ 비활성 처리 중 오류: ' + updateErr + '\n\n' : '✓ 처리 완료\n\n') +
+        verify +
+        '\n\n앞으로:\n• /designer-board 에서는 활성 디자이너만 "의뢰 받기" 버튼 사용 가능\n• 신규 신청자는 admin 이 승인할 때까지 자동 비활성 상태'
+    );
+    console.log('[activateOnlySix]', { keepIds: keepIds.length, deactivated, afterActive });
+
+    if (window.loadDesignerApplications) loadDesignerApplications();
+};
+
 // 2026-06-13: 화이트리스트 6명만 남기고 모두 삭제 (이름 부분일치 기준)
 window.keepSixDesigners = async () => {
     // 기본 화이트리스트 (이름이 정확히 일치하지 않아도 부분일치)
