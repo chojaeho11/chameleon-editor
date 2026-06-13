@@ -653,6 +653,96 @@ window.rejectDesignerApplication = async (designerId) => {
     }
 };
 
+// 2026-06-13: 해외 디자이너만 삭제 — country != 'KR' 인 designer_profiles + 관련 행 일괄 정리
+window.purgeNonKrDesigners = async () => {
+    // 1) 미리 대상 디자이너 카운트 + 미리보기
+    let preview;
+    try {
+        const { data: kr,  error: e1 } = await sb.from('designer_profiles').select('id', { count: 'exact' }).eq('country', 'KR');
+        const { data: all, error: e2 } = await sb.from('designer_profiles').select('id, display_name, country', { count: 'exact' }).neq('country', 'KR');
+        if (e1 || e2) throw (e1 || e2);
+        const targetCount = (all || []).length;
+        const keepCount = (kr || []).length;
+        if (targetCount === 0) { alert('삭제할 해외 디자이너가 없습니다. (모두 한국 디자이너)'); return; }
+        const sample = (all || []).slice(0, 8).map(d => '• ' + (d.display_name || '(이름 없음)') + ' [' + (d.country || 'NULL') + ']').join('\n');
+        preview = { ids: (all || []).map(d => d.id), targetCount, keepCount, sample };
+    } catch (e) {
+        alert('대상 조회 실패: ' + (e.message || e));
+        return;
+    }
+
+    if (!confirm('해외 디자이너 ' + preview.targetCount + '명을 삭제합니다.\n한국(KR) 디자이너 ' + preview.keepCount + '명은 유지됩니다.\n\n삭제 미리보기 (최대 8명):\n' + preview.sample + '\n\n진행하시겠습니까?')) return;
+    if (!confirm('정말 해외 디자이너 ' + preview.targetCount + '명을 삭제합니다.\n복구 불가능합니다.')) return;
+
+    // FK 자식 → 부모 순서로 삭제 — designer_id 가 대상 IDs 인 행만
+    const ids = preview.ids;
+    const results = [];
+    const childTables = [
+        { tbl: 'design_reviews',              col: 'designer_id' },
+        { tbl: 'design_bids',                 col: 'designer_id' },
+        { tbl: 'designer_gigs',               col: 'designer_id' },
+        { tbl: 'design_withdrawal_requests',  col: 'designer_id' },
+        { tbl: 'designer_tax_profiles',       col: 'designer_id' },
+        { tbl: 'pattern_royalties',           col: 'designer_id' }
+    ];
+
+    // .in() 은 한 번에 너무 많으면 URL 길이 초과 — 100개씩 청크
+    function chunk(arr, n) { const r = []; for (let i = 0; i < arr.length; i += n) r.push(arr.slice(i, i+n)); return r; }
+    const idChunks = chunk(ids, 100);
+
+    for (const step of childTables) {
+        let total = 0;
+        let err = null;
+        for (const c of idChunks) {
+            try {
+                const { error, count } = await sb.from(step.tbl).delete({ count: 'exact' }).in(step.col, c);
+                if (error) {
+                    if (/42P01|relation .* does not exist|42703|column .* does not exist/i.test(error.message || '')) {
+                        err = '미존재 (스킵)';
+                        break;
+                    }
+                    err = error.message || error.code;
+                    break;
+                }
+                if (count != null) total += count;
+            } catch (e) { err = e.message || e; break; }
+        }
+        results.push('• ' + step.tbl + ': ' + (err ? ('❌ ' + err) : ('✓ ' + total + '건')));
+    }
+
+    // 마지막: designer_profiles 의 비-KR 행 삭제
+    let dpTotal = 0;
+    let dpErr = null;
+    for (const c of idChunks) {
+        try {
+            const { error, count } = await sb.from('designer_profiles').delete({ count: 'exact' }).in('id', c);
+            if (error) { dpErr = error.message || error.code; break; }
+            if (count != null) dpTotal += count;
+        } catch (e) { dpErr = e.message || e; break; }
+    }
+    results.push('• designer_profiles (비-KR): ' + (dpErr ? ('❌ ' + dpErr) : ('✓ ' + dpTotal + '건')));
+
+    // admin_staff 디자이너 행도 정리 — 한국 designer_profiles 이름만 남기기
+    try {
+        const { data: krDp } = await sb.from('designer_profiles').select('display_name').eq('country', 'KR');
+        const krNames = new Set((krDp || []).map(d => d.display_name).filter(Boolean));
+        const { data: staffDes } = await sb.from('admin_staff').select('id, name').eq('role', 'designer');
+        const removeIds = (staffDes || []).filter(s => !krNames.has(s.name)).map(s => s.id);
+        if (removeIds.length > 0) {
+            const { error: sErr, count: sCount } = await sb.from('admin_staff').delete({ count: 'exact' }).in('id', removeIds);
+            if (sErr) results.push('• admin_staff (비-KR designer): ❌ ' + sErr.message);
+            else results.push('• admin_staff (비-KR designer): ✓ ' + (sCount || removeIds.length) + '건');
+        }
+    } catch (e) { results.push('• admin_staff 정리 실패: ' + (e.message || e)); }
+
+    alert('해외 디자이너 삭제 결과:\n\n' + results.join('\n'));
+    console.log('[purge non-KR]', results);
+
+    if (window.loadDesignerApplications) loadDesignerApplications();
+    if (window.loadStaffList) loadStaffList();
+    if (window.loadDesignWithdrawals) loadDesignWithdrawals();
+};
+
 // 2026-06-13: 전체 초기화 — FK 의존성 역순으로 삭제
 window.purgeAllDesignerData = async () => {
     if (!confirm('⚠️ 정말 전체 초기화 하시겠습니까?\n\n모든 디자인 의뢰 · 디자이너 프로필 · 입찰 · 리뷰 · 출금 신청이 영구 삭제됩니다.\n\n복구 불가능합니다.')) return;

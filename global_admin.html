@@ -2382,6 +2382,7 @@
                                 <option value="all">전체</option>
                             </select>
                             <button class="btn btn-outline btn-sm" onclick="loadDesignerApplications()" style="font-size:12px;">🔄 새로고침</button>
+                            <button class="btn btn-sm" onclick="window.purgeNonKrDesigners()" style="font-size:12px;background:#0284c7;color:#fff;border-color:#0369a1;font-weight:700;">🌍 해외 디자이너 삭제 (한국만 유지)</button>
                             <button class="btn btn-sm" onclick="window.purgeAllDesignerData()" style="font-size:12px;background:#dc2626;color:#fff;border-color:#b91c1c;font-weight:700;">🧹 전체 초기화 (의뢰+디자이너 일괄삭제)</button>
                         </div>
                     </div>
@@ -3166,7 +3167,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=276"></script>
+    <script type="module" src="global_admin.js?v=277"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
