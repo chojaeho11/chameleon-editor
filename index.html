@@ -4920,7 +4920,15 @@ window.addEventListener('load', function() {
 
     <!-- 온라인/디지털 카드 -->
     <div id="dsmInlinePanel" style="max-width:1100px; margin:0 auto 15px auto; padding:0 10px;">
-        <div class="dsm-section-box">
+        <!-- 2026-06-13: 온라인·디지털 6버튼 숨김 → 디자인에디터 진입 버튼으로 대체 -->
+        <div class="dsm-section-box" style="text-align:center; padding:18px 16px;">
+            <button onclick="window.openDesignStartModal && window.openDesignStartModal()" style="display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:16px 32px; background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 6px 20px rgba(99,102,241,0.35); transition:transform 0.2s; letter-spacing:-0.3px;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-palette" style="font-size:18px;"></i>
+                <span data-i18n="btn_design_editor_open">디자인 에디터 열기</span>
+            </button>
+            <div style="margin-top:8px; font-size:12px; color:#94a3b8;" data-i18n="design_editor_open_sub">A4 · 명함 · 배너 · 정사각 · 커스텀 사이즈 선택 후 디자인 시작</div>
+        </div>
+        <div class="dsm-section-box" style="display:none;"><!-- 온라인·디지털 (숨김) -->
         <h4 class="dsm-section-title"><i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span></h4>
         <div class="dsm-grid-home" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
             <div class="dsm-card" onclick="window.dsmOpenEditor(508, 286, '영상')" style="">
@@ -5666,27 +5674,22 @@ function scrollHotdeal(gridId, dir) {
 }
 </script>
 
-<!-- 2026-06-13: 두 가지 간단 도구 — AI 디자인 + 누끼따기 (배경 제거) -->
-<!-- PC: 좌우 / 모바일: 위아래 -->
+<!-- 2026-06-13: 미니에디터 + 누끼따기 (배경 제거) — PC: 좌우 / 모바일: 위아래 -->
 <div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0;">
     <style>
         #aiNbWrap { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
         @media (max-width:768px) { #aiNbWrap { grid-template-columns: 1fr; gap:12px; } }
-        .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 20px; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18); display:flex; flex-direction:column; gap:12px; min-width:0; }
+        .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 20px; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18); display:flex; flex-direction:column; gap:10px; min-width:0; }
         .aiNb-card.bg { background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border-color:#fcd34d; box-shadow:0 6px 24px -8px rgba(217,119,6,0.18); }
         .aiNb-title { font-size:16px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px; }
         .aiNb-card.bg .aiNb-title { color:#92400e; }
         .aiNb-sub { font-size:11.5px; color:#7c3aed; font-weight:600; line-height:1.55; }
         .aiNb-card.bg .aiNb-sub { color:#a16207; }
-        .aiNb-input { width:100%; padding:11px 12px; border:1.5px solid #c4b5fd; border-radius:10px; font-size:13.5px; font-family:inherit; background:#fff; outline:none; box-sizing:border-box; resize:vertical; min-height:42px; }
-        .aiNb-input:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.15); }
-        .aiNb-row { display:flex; gap:8px; align-items:center; }
-        .aiNb-size { flex:1; padding:9px 10px; border:1.5px solid #c4b5fd; border-radius:9px; background:#fff; font-size:12.5px; cursor:pointer; font-family:inherit; outline:none; }
-        .aiNb-btn { padding:11px 14px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:10px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 4px 14px -4px rgba(124,58,237,0.5); transition:all .15s; flex-shrink:0; }
+        .aiNb-btn { padding:9px 12px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 4px 14px -4px rgba(124,58,237,0.5); transition:all .15s; flex-shrink:0; display:inline-flex; align-items:center; gap:5px; }
         .aiNb-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
         .aiNb-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
         .aiNb-btn.amber { background:linear-gradient(135deg,#f59e0b,#b45309); box-shadow:0 4px 14px -4px rgba(217,119,6,0.5); }
-        .aiNb-btn.full { width:100%; justify-content:center; display:inline-flex; align-items:center; gap:6px; }
+        .aiNb-btn.full { width:100%; justify-content:center; padding:11px 14px; font-size:13.5px; }
         .aiNb-preview { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; min-height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px; }
         .aiNb-card.bg .aiNb-preview { border-color:#fcd34d; background:repeating-conic-gradient(#f8fafc 0% 25%, #eef2ff 0% 50%) 50% / 16px 16px; }
         .aiNb-preview img { max-width:100%; max-height:300px; object-fit:contain; border-radius:8px; display:block; }
@@ -5702,28 +5705,53 @@ function scrollHotdeal(gridId, dir) {
         .aiNb-dl { display:none; }
         .aiNb-dl.show { display:inline-flex; }
         .aiNb-error { font-size:12px; color:#dc2626; font-weight:700; margin-top:6px; }
+
+        /* ─── 미니 에디터 ─── */
+        .me-sizes { display:flex; flex-wrap:wrap; gap:6px; }
+        .me-size-btn { padding:7px 10px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; font-family:inherit; transition:all .12s; }
+        .me-size-btn:hover { background:#ede9fe; }
+        .me-size-btn.active { background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; box-shadow:0 3px 10px -3px rgba(124,58,237,0.5); }
+        .me-toolbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px; background:#fff; border:1.5px solid #ddd6fe; border-radius:10px; }
+        .me-tool-btn { padding:7px 10px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:4px; transition:all .12s; }
+        .me-tool-btn:hover { background:#ede9fe; transform:translateY(-1px); }
+        .me-tool-btn.danger { color:#dc2626; border-color:#fecaca; }
+        .me-color-wrap { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#fff; border:1.5px solid #c4b5fd; border-radius:8px; font-size:11.5px; font-weight:700; color:#5b21b6; cursor:pointer; }
+        .me-color-wrap input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; }
+        .me-stage-wrap { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 4px 12px rgba(15,23,42,0.08); overflow:hidden; max-width:100%; max-height:340px; touch-action:none; user-select:none; }
+        .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; }
+        .me-item.selected { outline:2px dashed #7c3aed; outline-offset:2px; }
+        .me-item img { display:block; max-width:none; pointer-events:none; }
+        .me-item.text { padding:4px 6px; font-weight:700; white-space:nowrap; line-height:1.2; }
+        .me-item.text[contenteditable=true] { cursor:text; outline:2px solid #7c3aed; background:rgba(255,255,255,0.6); }
+        .me-handle { position:absolute; right:-6px; bottom:-6px; width:14px; height:14px; background:#7c3aed; border:2px solid #fff; border-radius:50%; cursor:nwse-resize; box-shadow:0 2px 6px rgba(124,58,237,0.5); }
+        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#dc2626; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 2px 6px rgba(220,38,38,0.5); }
     </style>
 
     <div id="aiNbWrap">
-        <!-- 패널 1 — AI 디자인 -->
+        <!-- 패널 1 — 미니 에디터 -->
         <div class="aiNb-card" id="aiNbAi">
-            <div class="aiNb-title">✨ <span>AI 디자인</span></div>
-            <div class="aiNb-sub">간단한 설명만 입력하면 AI가 디자인을 만들어드립니다 · 무료 · 약 1-2분 소요</div>
-            <textarea id="aiNbPrompt" class="aiNb-input" placeholder="예: 모던한 카페 오픈 포스터, 파스텔 톤 미니멀, 텍스트 'GRAND OPEN'"></textarea>
-            <div class="aiNb-row">
-                <select id="aiNbSize" class="aiNb-size">
-                    <option value="auto">사이즈 자동</option>
-                    <option value="1024x1024">정사각 1:1</option>
-                    <option value="1024x1536">세로 3:4</option>
-                    <option value="1536x1024">가로 4:3</option>
-                </select>
-                <button type="button" class="aiNb-btn" onclick="window._aiNbGenerate()" id="aiNbGenBtn">🎨 생성</button>
+            <div class="aiNb-title">✏️ <span data-i18n="me_title">미니 디자인 에디터</span></div>
+            <div class="aiNb-sub" data-i18n="me_sub">사이즈 선택 후 이미지·글씨·배경색을 자유롭게 배치하세요</div>
+            <div class="me-sizes" id="meSizes">
+                <button type="button" class="me-size-btn active" data-w="595" data-h="842" data-label="A4">📄 A4</button>
+                <button type="button" class="me-size-btn" data-w="540" data-h="337" data-label="명함">💳 명함</button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="180" data-label="배너">🎯 배너</button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형">🖼️ 가로형</button>
+                <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각">⬛ 정사각</button>
             </div>
-            <div class="aiNb-preview" id="aiNbAiPreview">
-                <div class="aiNb-empty">프롬프트를 입력하고 [생성] 버튼을 누르세요</div>
-                <div class="aiNb-spinner" id="aiNbAiSpinner"><i class="fa-solid fa-circle-notch"></i><span>AI 디자인 생성중...</span></div>
+            <div class="me-toolbar">
+                <button type="button" class="me-tool-btn" onclick="document.getElementById('meImgInput').click()"><i class="fa-solid fa-image"></i><span data-i18n="me_img">이미지</span></button>
+                <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
+                <button type="button" class="me-tool-btn" onclick="window._meAddText()"><i class="fa-solid fa-font"></i><span data-i18n="me_text">글씨</span></button>
+                <label class="me-color-wrap" title="배경색"><i class="fa-solid fa-fill-drip"></i><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
+                <button type="button" class="me-tool-btn" onclick="window._meImportCutout()"><i class="fa-solid fa-arrow-right-arrow-left"></i><span data-i18n="me_cutout">누끼 가져오기</span></button>
+                <button type="button" class="me-tool-btn danger" onclick="window._meClear()"><i class="fa-solid fa-trash"></i><span data-i18n="me_clear">전체 삭제</span></button>
             </div>
-            <a id="aiNbAiDl" class="aiNb-btn full aiNb-dl" download="ai-design.png"><i class="fa-solid fa-download"></i> 다운로드</a>
+            <div class="me-stage-wrap">
+                <div id="meStage" class="me-stage"></div>
+            </div>
+            <a id="aiNbAiDl" class="aiNb-btn full" download="my-design.png" onclick="return window._meDownload(event)"><i class="fa-solid fa-download"></i> <span data-i18n="me_download">다운로드</span></a>
             <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
         </div>
 
@@ -5747,7 +5775,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script>
-// 2026-06-13: AI 디자인 + 누끼따기 — 두 도구 통합 패널
+// 2026-06-13: 미니 에디터 + 누끼따기 — 두 도구 통합 패널
 (function AiNbTools(){
     'use strict';
     const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
@@ -5758,19 +5786,9 @@ function scrollHotdeal(gridId, dir) {
         const sp = $(id);
         if (sp) sp.classList.toggle('show', !!on);
     }
-    function clearPreview(previewId, keepSpinner) {
-        const pv = $(previewId);
-        if (!pv) return;
-        Array.from(pv.children).forEach(c => {
-            if (keepSpinner && c.classList && c.classList.contains('aiNb-spinner')) return;
-            if (c.classList && (c.classList.contains('aiNb-spinner') || c.classList.contains('aiNb-empty'))) return;
-            pv.removeChild(c);
-        });
-    }
     function showImgInPreview(previewId, src) {
         const pv = $(previewId);
         if (!pv) return;
-        // 기존 img/empty 제거
         Array.from(pv.children).forEach(c => {
             if (c.tagName === 'IMG' || (c.classList && c.classList.contains('aiNb-empty'))) pv.removeChild(c);
         });
@@ -5785,58 +5803,285 @@ function scrollHotdeal(gridId, dir) {
         else { el.style.display = 'block'; el.textContent = msg; }
     }
 
-    // ─── AI 디자인 생성 ───
-    window._aiNbGenerate = async function() {
-        const prompt = ($('aiNbPrompt').value || '').trim();
-        if (!prompt) { alert('프롬프트를 입력해주세요'); return; }
-        const sizeSel = $('aiNbSize').value;
-        const btn = $('aiNbGenBtn');
-        btn.disabled = true;
-        const origLabel = btn.innerHTML;
-        btn.innerHTML = '⏳ 생성중...';
-        setError('aiNbAiErr', '');
-        // 기존 결과 제거 + 스피너 표시
-        clearPreview('aiNbAiPreview', true);
-        showSpinner('aiNbAiSpinner', true);
-        const emptyEl = $('aiNbAiPreview').querySelector('.aiNb-empty');
-        if (emptyEl) emptyEl.style.display = 'none';
-        $('aiNbAiDl').classList.remove('show');
-        try {
-            const resp = await fetch(SB_URL + '/functions/v1/ai-design-gen', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + SB_KEY,
-                    'apikey': SB_KEY
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    size: sizeSel === 'auto' ? '1024x1024' : sizeSel,
-                    aspect: sizeSel
-                })
-            });
-            const data = await resp.json();
-            if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
-            // 응답에서 이미지 URL 찾기 (다양한 응답 키 호환)
-            const imgUrl = data.image_url || data.url || (data.image_base64 ? ('data:image/png;base64,' + data.image_base64) : null);
-            if (!imgUrl) throw new Error('이미지 결과가 비어있습니다');
-            showSpinner('aiNbAiSpinner', false);
-            showImgInPreview('aiNbAiPreview', imgUrl);
-            const dl = $('aiNbAiDl');
-            dl.href = imgUrl;
-            dl.classList.add('show');
-        } catch (e) {
-            console.error('[aiNb] generate', e);
-            showSpinner('aiNbAiSpinner', false);
-            if (emptyEl) emptyEl.style.display = 'block';
-            setError('aiNbAiErr', '⚠️ ' + (e.message || '생성 실패. 잠시 후 다시 시도해주세요'));
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = origLabel;
-        }
+    // ─────────────────────── 미니 에디터 ───────────────────────
+    var me = {
+        stage: null,
+        wScale: 1,                   // 화면 표시 배율 (자연 w → 표시 w)
+        natW: 595, natH: 842,        // 자연 (다운로드) 사이즈
+        bg: '#ffffff',
+        items: [],                   // {el, type, x, y, w, h, src?, text?, fill?, fontSize?}
+        selected: null,
+        zCounter: 10
     };
 
-    // ─── 누끼따기 ───
+    function _meFitStage() {
+        var stage = $('meStage');
+        if (!stage) return;
+        var wrap = stage.parentElement; // me-stage-wrap
+        var maxW = Math.max(200, wrap.clientWidth - 24);
+        var maxH = 340;
+        var sw = maxW, sh = sw * (me.natH / me.natW);
+        if (sh > maxH) { sh = maxH; sw = sh * (me.natW / me.natH); }
+        me.wScale = sw / me.natW;
+        stage.style.width = Math.round(sw) + 'px';
+        stage.style.height = Math.round(sh) + 'px';
+        // 모든 아이템 위치/크기 재계산
+        me.items.forEach(_meSyncItemDisplay);
+    }
+
+    function _meSyncItemDisplay(it) {
+        it.el.style.left = (it.x * me.wScale) + 'px';
+        it.el.style.top = (it.y * me.wScale) + 'px';
+        it.el.style.width = (it.w * me.wScale) + 'px';
+        if (it.type === 'image') {
+            it.el.style.height = (it.h * me.wScale) + 'px';
+            var im = it.el.querySelector('img');
+            if (im) { im.style.width = '100%'; im.style.height = '100%'; im.style.objectFit = 'contain'; }
+        } else if (it.type === 'text') {
+            it.el.style.fontSize = (it.fontSize * me.wScale) + 'px';
+            it.el.style.color = it.fill || '#1e293b';
+            it.el.style.height = 'auto';
+        }
+    }
+
+    function _meSetSize(w, h, label) {
+        me.natW = w; me.natH = h;
+        $('meStage').style.background = me.bg;
+        _meFitStage();
+    }
+
+    function _meSelect(it) {
+        me.items.forEach(function(o){ o.el.classList.remove('selected'); });
+        var existing = me.stage.querySelectorAll('.me-handle, .me-del');
+        existing.forEach(function(n){ n.remove(); });
+        me.selected = it;
+        if (!it) return;
+        it.el.classList.add('selected');
+        it.el.style.zIndex = (++me.zCounter);
+        // resize handle
+        var h = document.createElement('div'); h.className = 'me-handle';
+        it.el.appendChild(h);
+        _meBindResize(h, it);
+        var d = document.createElement('div'); d.className = 'me-del'; d.textContent = '×';
+        it.el.appendChild(d);
+        d.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); ev.preventDefault(); _meRemove(it); });
+    }
+
+    function _meRemove(it) {
+        me.items = me.items.filter(function(o){ return o !== it; });
+        it.el.remove();
+        if (me.selected === it) me.selected = null;
+    }
+
+    function _meBindDrag(it) {
+        var dragging = false, sx = 0, sy = 0, sLeft = 0, sTop = 0;
+        it.el.addEventListener('pointerdown', function(ev){
+            if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
+            if (it.el.getAttribute('contenteditable') === 'true') return;
+            dragging = true;
+            it.el.setPointerCapture(ev.pointerId);
+            sx = ev.clientX; sy = ev.clientY;
+            sLeft = it.x; sTop = it.y;
+            _meSelect(it);
+            ev.preventDefault();
+        });
+        it.el.addEventListener('pointermove', function(ev){
+            if (!dragging) return;
+            var dx = (ev.clientX - sx) / me.wScale;
+            var dy = (ev.clientY - sy) / me.wScale;
+            it.x = sLeft + dx;
+            it.y = sTop + dy;
+            _meSyncItemDisplay(it);
+        });
+        it.el.addEventListener('pointerup', function(ev){
+            dragging = false;
+            try { it.el.releasePointerCapture(ev.pointerId); } catch(e){}
+        });
+        it.el.addEventListener('pointercancel', function(){ dragging = false; });
+        if (it.type === 'text') {
+            it.el.addEventListener('dblclick', function(){
+                it.el.setAttribute('contenteditable', 'true');
+                it.el.focus();
+                document.execCommand && document.execCommand('selectAll', false, null);
+            });
+            it.el.addEventListener('blur', function(){
+                it.el.removeAttribute('contenteditable');
+                it.text = it.el.textContent || '';
+            });
+        }
+    }
+
+    function _meBindResize(handle, it) {
+        var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0;
+        handle.addEventListener('pointerdown', function(ev){
+            ev.stopPropagation(); ev.preventDefault();
+            resizing = true;
+            handle.setPointerCapture(ev.pointerId);
+            sx = ev.clientX; sy = ev.clientY;
+            sw = it.w; sh = it.h;
+        });
+        handle.addEventListener('pointermove', function(ev){
+            if (!resizing) return;
+            var dx = (ev.clientX - sx) / me.wScale;
+            if (it.type === 'image') {
+                var ratio = sh / sw;
+                it.w = Math.max(20, sw + dx);
+                it.h = Math.max(20, it.w * ratio);
+            } else if (it.type === 'text') {
+                it.fontSize = Math.max(8, (sh || it.fontSize) + dx * 0.3);
+            }
+            _meSyncItemDisplay(it);
+        });
+        handle.addEventListener('pointerup', function(ev){
+            resizing = false;
+            try { handle.releasePointerCapture(ev.pointerId); } catch(e){}
+        });
+    }
+
+    window._meAddImageFromFile = function(input) {
+        var f = input.files && input.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function(e){ window._meAddImage(e.target.result); };
+        r.readAsDataURL(f);
+        input.value = '';
+    };
+
+    window._meAddImage = function(src) {
+        var im = new Image();
+        im.onload = function(){
+            var ratio = im.naturalHeight / im.naturalWidth;
+            var w = Math.min(me.natW * 0.5, im.naturalWidth);
+            var h = w * ratio;
+            if (h > me.natH * 0.6) { h = me.natH * 0.6; w = h / ratio; }
+            var el = document.createElement('div');
+            el.className = 'me-item';
+            var img = document.createElement('img'); img.src = src; el.appendChild(img);
+            me.stage.appendChild(el);
+            var it = { el: el, type: 'image', x: (me.natW - w) / 2, y: (me.natH - h) / 2, w: w, h: h, src: src };
+            me.items.push(it);
+            _meSyncItemDisplay(it);
+            _meBindDrag(it);
+            _meSelect(it);
+        };
+        im.src = src;
+    };
+
+    window._meAddText = function() {
+        var el = document.createElement('div');
+        el.className = 'me-item text';
+        el.textContent = '클릭하여 글씨 입력';
+        me.stage.appendChild(el);
+        var it = { el: el, type: 'text', x: me.natW * 0.2, y: me.natH * 0.4, w: me.natW * 0.6, h: 60, text: '클릭하여 글씨 입력', fill: '#1e293b', fontSize: Math.max(20, me.natH * 0.06) };
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);
+        _meSelect(it);
+        // 자동 편집 진입
+        setTimeout(function(){
+            el.setAttribute('contenteditable', 'true');
+            el.focus();
+            document.execCommand && document.execCommand('selectAll', false, null);
+        }, 50);
+    };
+
+    window._meSetBg = function(color) {
+        me.bg = color;
+        $('meStage').style.background = color;
+    };
+
+    window._meImportCutout = function() {
+        var dl = $('aiNbBgDl');
+        if (!dl || !dl.href || dl.classList.contains('show') === false) {
+            alert('먼저 오른쪽 [누끼따기] 패널에서 이미지의 배경을 제거해주세요');
+            return;
+        }
+        window._meAddImage(dl.href);
+    };
+
+    window._meClear = function() {
+        if (!confirm('캔버스의 모든 요소를 삭제할까요?')) return;
+        me.items.forEach(function(it){ it.el.remove(); });
+        me.items = [];
+        me.selected = null;
+    };
+
+    window._meDownload = function(ev) {
+        if (ev) ev.preventDefault();
+        // 자연 사이즈로 캔버스 렌더
+        var c = document.createElement('canvas');
+        c.width = me.natW; c.height = me.natH;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = me.bg; ctx.fillRect(0, 0, c.width, c.height);
+        // z-order: items 순서가 곧 z-index. 단 selected가 위로 올라간 점 반영해 element zIndex 기준 정렬
+        var sorted = me.items.slice().sort(function(a, b){
+            var za = parseInt(a.el.style.zIndex || '0', 10);
+            var zb = parseInt(b.el.style.zIndex || '0', 10);
+            return za - zb;
+        });
+        var pending = sorted.length;
+        function done() {
+            try {
+                var url = c.toDataURL('image/png');
+                var a = document.createElement('a');
+                a.href = url; a.download = 'my-design.png';
+                document.body.appendChild(a); a.click(); a.remove();
+            } catch (e) { alert('다운로드 실패: ' + (e.message || e)); }
+        }
+        if (pending === 0) { done(); return false; }
+        sorted.forEach(function(it){
+            if (it.type === 'image') {
+                var im = new Image();
+                im.crossOrigin = 'anonymous';
+                im.onload = function(){
+                    ctx.drawImage(im, it.x, it.y, it.w, it.h);
+                    if (--pending === 0) done();
+                };
+                im.onerror = function(){
+                    if (--pending === 0) done();
+                };
+                im.src = it.src;
+            } else if (it.type === 'text') {
+                ctx.fillStyle = it.fill || '#1e293b';
+                ctx.font = '700 ' + Math.round(it.fontSize) + 'px sans-serif';
+                ctx.textBaseline = 'top';
+                var txt = it.el.textContent || it.text || '';
+                var lines = txt.split(/\n/);
+                lines.forEach(function(line, i){
+                    ctx.fillText(line, it.x, it.y + i * (it.fontSize * 1.2));
+                });
+                if (--pending === 0) done();
+            } else {
+                if (--pending === 0) done();
+            }
+        });
+        return false;
+    };
+
+    function _meInit() {
+        me.stage = $('meStage');
+        if (!me.stage) return;
+        $('meStage').style.background = me.bg;
+        // 사이즈 버튼
+        var btns = document.querySelectorAll('#meSizes .me-size-btn');
+        btns.forEach(function(b){
+            b.addEventListener('click', function(){
+                btns.forEach(function(o){ o.classList.remove('active'); });
+                b.classList.add('active');
+                _meSetSize(parseInt(b.dataset.w, 10), parseInt(b.dataset.h, 10), b.dataset.label);
+            });
+        });
+        // 스테이지 빈 영역 클릭 → 선택 해제
+        me.stage.addEventListener('pointerdown', function(ev){
+            if (ev.target === me.stage) _meSelect(null);
+        });
+        _meFitStage();
+        window.addEventListener('resize', _meFitStage);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _meInit);
+    else _meInit();
+
+    // ─────────────────────── 누끼따기 ───────────────────────
     function fileToBase64(file) {
         return new Promise((resolve, reject) => {
             const r = new FileReader();
@@ -5854,9 +6099,12 @@ function scrollHotdeal(gridId, dir) {
         const f = input.files && input.files[0];
         if (!f) return;
         setError('aiNbBgErr', '');
-        clearPreview('aiNbBgPreview', true);
         const emptyEl = $('aiNbBgPreview').querySelector('.aiNb-empty');
         if (emptyEl) emptyEl.style.display = 'none';
+        // 기존 이미지 제거
+        Array.from($('aiNbBgPreview').children).forEach(c => {
+            if (c.tagName === 'IMG') c.remove();
+        });
         showSpinner('aiNbBgSpinner', true);
         $('aiNbBgDl').classList.remove('show');
         try {
