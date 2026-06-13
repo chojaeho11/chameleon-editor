@@ -3778,7 +3778,11 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         const itemFinalTotal = productTotal + optionTotal;
         const compatibleUnitPrice = Math.floor(itemFinalTotal / qty);
 
+        // 2026-06-13: spread item 으로 모든 옵션 보존 (bizCard/sticker/customSize/wallSize/shipping/
+        //   designRequest/instaTitle/scarciTitle/cutBoardMaterial/baseStands etc.)
+        //   기존엔 명시적으로 나열한 필드만 저장돼서 작업지시서/디자이너보드가 옵션을 못 봄.
         return {
+            ...item,
             product: {
                 name: localName(item.product),
                 price: item.product.price,
@@ -3807,8 +3811,6 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
             originalUrl: item.originalUrl || '',
             uploadedFiles: item.uploadedFiles || null,
             cutlineUrl: item.cutlineUrl || '',
-            // Phase 3a: design-market bid linkage (for DB trigger that marks
-            // design_bids.payment_status='paid' when this order is marked completed)
             _designBidId: item._designBidId || null,
             _designRequestId: item._designRequestId || null,
             _designerId: item._designerId || null,
@@ -4063,14 +4065,15 @@ async function processFinalPayment() {
                     });
                  }
                  let compatible = Math.floor((unitPrice*qty + optTotal)/qty);
+                 // 2026-06-13: spread item 으로 모든 옵션 보존 — 작업지시서/디자이너보드에서 명함/스티커/가벽/배송/디자인의뢰 등 표시
                  return {
+                    ...item,
                     productName: localName(item.product),
                     qty: qty,
                     price: compatible,
                     product: { name: localName(item.product), price: item.product.price, code: item.product.code||item.product.key, img: item.product.img },
                     selectedAddons: item.selectedAddons,
                     addonQuantities: item.addonQuantities,
-                    // Phase 3a: design-market bid linkage
                     _designBidId: item._designBidId || null,
                     _designRequestId: item._designRequestId || null,
                     _designerId: item._designerId || null,
