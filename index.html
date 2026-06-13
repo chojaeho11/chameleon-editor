@@ -625,7 +625,7 @@ window.loadEditorLibraries = function() {
     })();
 
     // 1. 프로젝트 버전
-    const PROJECT_VERSION = '123';
+    const PROJECT_VERSION = '124';
     const DATA_PATH = './long/';
 
     // ★ Library data_url 헬퍼: URL이면 fetch, JSON이면 그대로 반환
@@ -5747,10 +5747,10 @@ function scrollHotdeal(gridId, dir) {
             <div class="aiNb-sub" data-i18n="me_sub">사이즈 선택 후 이미지·글씨·배경색을 자유롭게 배치하세요</div>
             <div class="me-sizes" id="meSizes">
                 <button type="button" class="me-size-btn active" data-w="595" data-h="842" data-label="A4">📄 A4</button>
-                <button type="button" class="me-size-btn" data-w="540" data-h="337" data-label="명함">💳 명함</button>
-                <button type="button" class="me-size-btn" data-w="600" data-h="1800" data-label="배너">🎯 배너</button>
-                <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형">🖼️ 가로형</button>
-                <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각">⬛ 정사각</button>
+                <button type="button" class="me-size-btn" data-w="540" data-h="337" data-label="명함">💳 <span data-i18n="me_sz_biz">명함</span></button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="1800" data-label="배너">🎯 <span data-i18n="me_sz_banner">배너</span></button>
+                <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형">🖼️ <span data-i18n="me_sz_landscape">가로형</span></button>
+                <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각">⬛ <span data-i18n="me_sz_square">정사각</span></button>
             </div>
             <div class="me-toolbar">
                 <button type="button" class="me-tool-btn" onclick="document.getElementById('meImgInput').click()"><i class="fa-solid fa-image"></i><span data-i18n="me_img">이미지</span></button>
@@ -5844,20 +5844,187 @@ function scrollHotdeal(gridId, dir) {
         me.items.forEach(_meSyncItemDisplay);
     }
 
-    var ME_FONTS = [
-        { id:'sans-serif', label:'Sans (기본)' },
-        { id:'"Noto Sans KR", sans-serif', label:'Noto Sans KR' },
-        { id:'"Nanum Gothic", sans-serif', label:'나눔고딕' },
-        { id:'"Nanum Myeongjo", serif', label:'나눔명조' },
-        { id:'"Malgun Gothic", "맑은 고딕", sans-serif', label:'맑은 고딕' },
-        { id:'serif', label:'Serif (명조)' },
-        { id:'"Times New Roman", serif', label:'Times' },
-        { id:'Georgia, serif', label:'Georgia' },
-        { id:'"Courier New", monospace', label:'Courier' },
-        { id:'monospace', label:'Mono' },
-        { id:'Impact, sans-serif', label:'Impact' },
-        { id:'cursive', label:'Cursive' }
-    ];
+    // 사이트 언어 → 폰트 카테고리 매핑 (canvas-objects.js 와 동일)
+    function _meFontLang() {
+        var cfg = window.SITE_CONFIG || {};
+        var c = (cfg.COUNTRY || 'KR').toUpperCase();
+        var map = { 'JP':'JA', 'US':'EN', 'CN':'ZH' };
+        return map[c] || c;
+    }
+
+    // DB와 동일한 Google Fonts 큐레이션 (canvas-objects.js GOOGLE_FONTS 미러)
+    var ME_GOOGLE_FONTS = {
+        'KR': [
+            { font_name:'기본 (Sans)', font_family:'sans-serif', weights:null },
+            { font_name:'노토 산스', font_family:'Noto Sans KR', weights:'400;700;900' },
+            { font_name:'나눔고딕', font_family:'Nanum Gothic', weights:'400;700;800' },
+            { font_name:'나눔명조', font_family:'Nanum Myeongjo', weights:'400;700' },
+            { font_name:'검은고딕', font_family:'Black Han Sans', weights:'400' },
+            { font_name:'나눔펜스크립트', font_family:'Nanum Pen Script', weights:'400' },
+            { font_name:'도현', font_family:'Do Hyeon', weights:'400' },
+            { font_name:'주아', font_family:'Jua', weights:'400' },
+            { font_name:'싱글데이', font_family:'Single Day', weights:'400' },
+            { font_name:'고틱 A1', font_family:'Gothic A1', weights:'400;700;900' },
+            { font_name:'하이멜로디', font_family:'Hi Melody', weights:'400' },
+            { font_name:'감자꽃', font_family:'Gamja Flower', weights:'400' },
+            { font_name:'귀여운글씨', font_family:'Cute Font', weights:'400' },
+            { font_name:'동해독도', font_family:'East Sea Dokdo', weights:'400' },
+            { font_name:'개구쟁이', font_family:'Gaegu', weights:'400;700' },
+            { font_name:'블랙앤화이트', font_family:'Black And White Picture', weights:'400' },
+            { font_name:'송명체', font_family:'Song Myung', weights:'400' },
+            { font_name:'스타일리쉬', font_family:'Stylish', weights:'400' },
+            { font_name:'시적인', font_family:'Poor Story', weights:'400' },
+            { font_name:'연성', font_family:'Yeon Sung', weights:'400' },
+            { font_name:'고운돋움', font_family:'Gowun Dodum', weights:'400' },
+            { font_name:'고운바탕', font_family:'Gowun Batang', weights:'400;700' },
+            { font_name:'나눔브러쉬', font_family:'Nanum Brush Script', weights:'400' },
+            { font_name:'IBM 플렉스 산스', font_family:'IBM Plex Sans KR', weights:'400;700' },
+            { font_name:'노토 세리프', font_family:'Noto Serif KR', weights:'400;700;900' },
+            { font_name:'해바라기', font_family:'Sunflower', weights:'500;700' },
+            { font_name:'동글', font_family:'Dongle', weights:'400;700' },
+            { font_name:'함렛', font_family:'Hahmlet', weights:'400;700;900' },
+            { font_name:'구기', font_family:'Gugi', weights:'400' },
+            { font_name:'독도', font_family:'Dokdo', weights:'400' },
+            { font_name:'기랑해랑', font_family:'Kirang Haerang', weights:'400' },
+            { font_name:'거석체', font_family:'Gasoek One', weights:'400' },
+            { font_name:'베이글팻원', font_family:'Bagel Fat One', weights:'400' },
+            { font_name:'오르빗', font_family:'Orbit', weights:'400' },
+            { font_name:'제주명조', font_family:'Jeju Myeongjo', weights:'400' },
+            { font_name:'제주고딕', font_family:'Jeju Gothic', weights:'400' },
+            { font_name:'제주한라산', font_family:'Jeju Hallasan', weights:'400' }
+        ],
+        'JA': [
+            { font_name:'デフォルト (Sans)', font_family:'sans-serif', weights:null },
+            { font_name:'Noto Sans JP', font_family:'Noto Sans JP', weights:'400;500;700;900' },
+            { font_name:'Noto Serif JP', font_family:'Noto Serif JP', weights:'400;700' },
+            { font_name:'M PLUS Rounded 1c', font_family:'M PLUS Rounded 1c', weights:'400;700;900' },
+            { font_name:'Zen Maru Gothic', font_family:'Zen Maru Gothic', weights:'400;500;700' },
+            { font_name:'Sawarabi Mincho', font_family:'Sawarabi Mincho', weights:'400' },
+            { font_name:'Sawarabi Gothic', font_family:'Sawarabi Gothic', weights:'400' },
+            { font_name:'Kosugi Maru', font_family:'Kosugi Maru', weights:'400' },
+            { font_name:'Shippori Mincho', font_family:'Shippori Mincho', weights:'400;700' },
+            { font_name:'Klee One', font_family:'Klee One', weights:'400;600' },
+            { font_name:'Zen Kaku Gothic New', font_family:'Zen Kaku Gothic New', weights:'400;500;700' },
+            { font_name:'Hachi Maru Pop', font_family:'Hachi Maru Pop', weights:'400' },
+            { font_name:'Kaisei Opti', font_family:'Kaisei Opti', weights:'400;700' },
+            { font_name:'Kaisei Decol', font_family:'Kaisei Decol', weights:'400;700' },
+            { font_name:'Zen Antique', font_family:'Zen Antique', weights:'400' },
+            { font_name:'Reggae One', font_family:'Reggae One', weights:'400' },
+            { font_name:'RocknRoll One', font_family:'RocknRoll One', weights:'400' },
+            { font_name:'Stick', font_family:'Stick', weights:'400' },
+            { font_name:'Yomogi', font_family:'Yomogi', weights:'400' },
+            { font_name:'Yusei Magic', font_family:'Yusei Magic', weights:'400' },
+            { font_name:'DotGothic16', font_family:'DotGothic16', weights:'400' },
+            { font_name:'Dela Gothic One', font_family:'Dela Gothic One', weights:'400' },
+            { font_name:'Train One', font_family:'Train One', weights:'400' },
+            { font_name:'M PLUS 1p', font_family:'M PLUS 1p', weights:'400;700;900' },
+            { font_name:'Zen Old Mincho', font_family:'Zen Old Mincho', weights:'400;700;900' },
+            { font_name:'Rampart One', font_family:'Rampart One', weights:'400' },
+            { font_name:'Potta One', font_family:'Potta One', weights:'400' },
+            { font_name:'Kosugi', font_family:'Kosugi', weights:'400' },
+            { font_name:'New Tegomin', font_family:'New Tegomin', weights:'400' },
+            { font_name:'Hina Mincho', font_family:'Hina Mincho', weights:'400' },
+            { font_name:'Kiwi Maru', font_family:'Kiwi Maru', weights:'400;500' },
+            { font_name:'BIZ UDPGothic', font_family:'BIZ UDPGothic', weights:'400;700' },
+            { font_name:'BIZ UDPMincho', font_family:'BIZ UDPMincho', weights:'400' },
+            { font_name:'Mochiy Pop One', font_family:'Mochiy Pop One', weights:'400' }
+        ],
+        'EN': [
+            { font_name:'Default (Sans)', font_family:'sans-serif', weights:null },
+            { font_name:'Inter', font_family:'Inter', weights:'400;500;700;900' },
+            { font_name:'Poppins', font_family:'Poppins', weights:'400;500;700;900' },
+            { font_name:'Roboto', font_family:'Roboto', weights:'400;500;700;900' },
+            { font_name:'Montserrat', font_family:'Montserrat', weights:'400;600;700;900' },
+            { font_name:'Open Sans', font_family:'Open Sans', weights:'400;600;700' },
+            { font_name:'Lato', font_family:'Lato', weights:'400;700;900' },
+            { font_name:'Oswald', font_family:'Oswald', weights:'400;600;700' },
+            { font_name:'Raleway', font_family:'Raleway', weights:'400;600;700;900' },
+            { font_name:'Playfair Display', font_family:'Playfair Display', weights:'400;700;900' },
+            { font_name:'Merriweather', font_family:'Merriweather', weights:'400;700;900' },
+            { font_name:'Nunito', font_family:'Nunito', weights:'400;600;700;900' },
+            { font_name:'Quicksand', font_family:'Quicksand', weights:'400;500;700' },
+            { font_name:'DM Sans', font_family:'DM Sans', weights:'400;500;700' },
+            { font_name:'Bebas Neue', font_family:'Bebas Neue', weights:'400' },
+            { font_name:'Lobster', font_family:'Lobster', weights:'400' },
+            { font_name:'Pacifico', font_family:'Pacifico', weights:'400' },
+            { font_name:'Dancing Script', font_family:'Dancing Script', weights:'400;700' },
+            { font_name:'Caveat', font_family:'Caveat', weights:'400;700' },
+            { font_name:'Great Vibes', font_family:'Great Vibes', weights:'400' },
+            { font_name:'Satisfy', font_family:'Satisfy', weights:'400' },
+            { font_name:'Abril Fatface', font_family:'Abril Fatface', weights:'400' },
+            { font_name:'Permanent Marker', font_family:'Permanent Marker', weights:'400' },
+            { font_name:'Josefin Sans', font_family:'Josefin Sans', weights:'400;700' },
+            { font_name:'Archivo Black', font_family:'Archivo Black', weights:'400' },
+            { font_name:'Righteous', font_family:'Righteous', weights:'400' },
+            { font_name:'Russo One', font_family:'Russo One', weights:'400' },
+            { font_name:'Cinzel', font_family:'Cinzel', weights:'400;700;900' },
+            { font_name:'Fredoka', font_family:'Fredoka', weights:'400;600;700' },
+            { font_name:'Comfortaa', font_family:'Comfortaa', weights:'400;700' },
+            { font_name:'Bitter', font_family:'Bitter', weights:'400;700;900' },
+            { font_name:'Space Grotesk', font_family:'Space Grotesk', weights:'400;500;700' },
+            { font_name:'Sora', font_family:'Sora', weights:'400;500;700' },
+            { font_name:'Outfit', font_family:'Outfit', weights:'400;500;700' },
+            { font_name:'Plus Jakarta Sans', font_family:'Plus Jakarta Sans', weights:'400;500;700' },
+            { font_name:'Work Sans', font_family:'Work Sans', weights:'400;500;700' },
+            { font_name:'Manrope', font_family:'Manrope', weights:'400;500;700' },
+            { font_name:'Red Hat Display', font_family:'Red Hat Display', weights:'400;500;700;900' }
+        ],
+        'ZH': [
+            { font_name:'默认 (Sans)', font_family:'sans-serif', weights:null },
+            { font_name:'思源黑体', font_family:'Noto Sans SC', weights:'400;500;700;900' },
+            { font_name:'思源宋体', font_family:'Noto Serif SC', weights:'400;700;900' },
+            { font_name:'ZCOOL 小薇', font_family:'ZCOOL XiaoWei', weights:'400' },
+            { font_name:'ZCOOL 庆科黄油', font_family:'ZCOOL QingKe HuangYou', weights:'400' },
+            { font_name:'ZCOOL 快乐体', font_family:'ZCOOL KuaiLe', weights:'400' },
+            { font_name:'马善政楷', font_family:'Ma Shan Zheng', weights:'400' },
+            { font_name:'龙藏体', font_family:'Long Cang', weights:'400' },
+            { font_name:'刘建毛草', font_family:'Liu Jian Mao Cao', weights:'400' },
+            { font_name:'志莽行书', font_family:'Zhi Mang Xing', weights:'400' }
+        ],
+        'AR': [
+            { font_name:'افتراضي (Sans)', font_family:'sans-serif', weights:null },
+            { font_name:'Noto Sans Arabic', font_family:'Noto Sans Arabic', weights:'400;500;700;900' },
+            { font_name:'Noto Kufi Arabic', font_family:'Noto Kufi Arabic', weights:'400;700' },
+            { font_name:'Noto Naskh Arabic', font_family:'Noto Naskh Arabic', weights:'400;700' },
+            { font_name:'Amiri', font_family:'Amiri', weights:'400;700' },
+            { font_name:'Cairo', font_family:'Cairo', weights:'400;700;900' },
+            { font_name:'Tajawal', font_family:'Tajawal', weights:'400;500;700;900' },
+            { font_name:'El Messiri', font_family:'El Messiri', weights:'400;600;700' },
+            { font_name:'Lemonada', font_family:'Lemonada', weights:'400;700' },
+            { font_name:'Scheherazade New', font_family:'Scheherazade New', weights:'400;700' },
+            { font_name:'Readex Pro', font_family:'Readex Pro', weights:'400;600;700' },
+            { font_name:'IBM Plex Sans Arabic', font_family:'IBM Plex Sans Arabic', weights:'400;500;700' },
+            { font_name:'Almarai', font_family:'Almarai', weights:'400;700;800' },
+            { font_name:'Changa', font_family:'Changa', weights:'400;600;700' },
+            { font_name:'Reem Kufi', font_family:'Reem Kufi', weights:'400;600;700' },
+            { font_name:'Mada', font_family:'Mada', weights:'400;500;700;900' },
+            { font_name:'Aref Ruqaa', font_family:'Aref Ruqaa', weights:'400;700' }
+        ]
+    };
+    // ES/DE/FR 은 EN 과 동일한 라틴 폰트 사용
+    ME_GOOGLE_FONTS['ES'] = ME_GOOGLE_FONTS['EN'];
+    ME_GOOGLE_FONTS['DE'] = ME_GOOGLE_FONTS['EN'];
+    ME_GOOGLE_FONTS['FR'] = ME_GOOGLE_FONTS['EN'];
+
+    function _meCurrentFonts() {
+        return ME_GOOGLE_FONTS[_meFontLang()] || ME_GOOGLE_FONTS['KR'];
+    }
+
+    // 폰트 lazy 로드 — 처음 선택될 때 Google Fonts <link> 주입
+    var _meLoadedFonts = {};
+    function _meLoadFont(fam, weights) {
+        if (!fam || fam === 'sans-serif' || fam === 'serif' || fam === 'monospace' || fam === 'cursive') return;
+        if (_meLoadedFonts[fam]) return;
+        _meLoadedFonts[fam] = true;
+        var famUrl = fam.replace(/ /g, '+');
+        var url = 'https://fonts.googleapis.com/css2?family=' + famUrl;
+        if (weights) url += ':wght@' + weights;
+        url += '&display=swap';
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = url;
+        document.head.appendChild(link);
+    }
 
     function _meSyncItemDisplay(it) {
         it.el.style.left = (it.x * me.wScale) + 'px';
@@ -5919,16 +6086,21 @@ function scrollHotdeal(gridId, dir) {
         if (!it) { panel.classList.remove('show'); panel.innerHTML = ''; return; }
         panel.classList.add('show');
         var html = '';
+        var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
         if (it.type === 'text') {
-            var fontOpts = ME_FONTS.map(function(f){
-                var sel = (it.fontFamily === f.id) ? ' selected' : '';
-                return '<option value="' + f.id.replace(/"/g, '&quot;') + '"' + sel + '>' + f.label + '</option>';
+            var fonts = _meCurrentFonts();
+            var fontOpts = fonts.map(function(f){
+                var fam = (f.font_family === 'sans-serif' || f.font_family === 'serif' || f.font_family === 'monospace' || f.font_family === 'cursive')
+                    ? f.font_family : ('"' + f.font_family + '"');
+                var sel = (it.fontFamily === fam) ? ' selected' : '';
+                var preview = (f.font_family === 'sans-serif') ? '' : ' style="font-family:' + fam.replace(/"/g, '&quot;') + ';"';
+                return '<option value="' + fam.replace(/"/g, '&quot;') + '" data-fam="' + f.font_family.replace(/"/g, '&quot;') + '" data-w="' + (f.weights || '') + '"' + sel + preview + '>' + f.font_name + '</option>';
             }).join('');
-            html += '<span class="me-prop-group"><label>색상</label><input type="color" value="' + (it.fill || '#1e293b') + '" data-mp="fill"></span>';
-            html += '<span class="me-prop-group"><label>서체</label><select data-mp="fontFamily">' + fontOpts + '</select></span>';
-            html += '<span class="me-prop-group"><label>크기</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
-            html += '<span class="me-prop-group"><label>자간</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
-            html += '<span class="me-prop-group"><label>행간</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_color','색상') + '</label><input type="color" value="' + (it.fill || '#1e293b') + '" data-mp="fill"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_font','서체') + '</label><select data-mp="fontFamily" data-font-select>' + fontOpts + '</select></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_size','크기') + '</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_letter','자간') + '</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_line','행간') + '</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
             html += '<span class="me-prop-group">'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'left' ? ' active' : '') + '" data-align="left"><i class="fa-solid fa-align-left"></i></button>'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center"><i class="fa-solid fa-align-center"></i></button>'
@@ -5936,19 +6108,31 @@ function scrollHotdeal(gridId, dir) {
                 + '<button type="button" class="me-prop-btn' + (it.bold ? ' active' : '') + '" data-toggle="bold"><b>B</b></button>'
             + '</span>';
         } else if (it.type === 'shape') {
-            html += '<span class="me-prop-group"><label>채움</label><input type="color" value="' + (it.fill || '#7c3aed') + '" data-mp="fill"></span>';
-            html += '<span class="me-prop-group"><label>테두리</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
-            html += '<span class="me-prop-group"><label>두께</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_fill','채움') + '</label><input type="color" value="' + (it.fill || '#7c3aed') + '" data-mp="fill"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_stroke','테두리') + '</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
+            html += '<span class="me-prop-group"><label>' + T('me_prop_strokew','두께') + '</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
         } else if (it.type === 'image') {
-            html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">이미지 — 모서리 핸들로 크기 조절</span>';
+            html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">' + T('me_prop_img_hint','이미지 — 모서리 핸들로 크기 조절') + '</span>';
         }
         panel.innerHTML = html;
+        // 폰트 드롭다운 옵션 각각의 미리보기용 폰트 사전 로드 (사용자가 펼치기 전에 일부 가시 폰트 로드)
+        // — 성능 위해 selected 폰트만 즉시 로드, 나머지는 onchange 때 로드
+        var sel = panel.querySelector('select[data-font-select]');
+        if (sel) {
+            var selOpt = sel.options[sel.selectedIndex];
+            if (selOpt) _meLoadFont(selOpt.dataset.fam, selOpt.dataset.w);
+        }
         panel.querySelectorAll('[data-mp]').forEach(function(inp){
             inp.addEventListener('input', function(){
                 var key = inp.dataset.mp;
                 var val = (inp.type === 'number') ? parseFloat(inp.value) : inp.value;
                 if (key === 'fontSize') it.fontSize = val;
                 else it[key] = val;
+                // 폰트 선택 시 lazy load
+                if (key === 'fontFamily' && inp.tagName === 'SELECT') {
+                    var opt = inp.options[inp.selectedIndex];
+                    if (opt) _meLoadFont(opt.dataset.fam, opt.dataset.w);
+                }
                 _meSyncItemDisplay(it);
             });
         });
@@ -6099,19 +6283,33 @@ function scrollHotdeal(gridId, dir) {
     };
 
     window._meAddText = function() {
+        var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
+        var placeholder = T('me_text_placeholder', '클릭하여 글씨 입력');
+        // 사이트 언어의 주요 폰트 (Sans 제외 첫 번째) 를 디폴트로
+        var fonts = _meCurrentFonts();
+        var defaultFam = 'sans-serif';
+        var defaultWeights = null;
+        for (var i = 0; i < fonts.length; i++) {
+            if (fonts[i].font_family !== 'sans-serif') {
+                defaultFam = '"' + fonts[i].font_family + '"';
+                defaultWeights = fonts[i].weights;
+                _meLoadFont(fonts[i].font_family, fonts[i].weights);
+                break;
+            }
+        }
         var el = document.createElement('div');
         el.className = 'me-item text';
         el.style.zIndex = (++me.zCounter);
-        el.textContent = '클릭하여 글씨 입력';
+        el.textContent = placeholder;
         me.stage.appendChild(el);
         var it = {
             el: el, type: 'text',
             x: me.natW * 0.2, y: me.natH * 0.4,
             w: me.natW * 0.6, h: 60,
-            text: '클릭하여 글씨 입력',
+            text: placeholder,
             fill: '#1e293b',
             fontSize: Math.max(20, me.natH * 0.06),
-            fontFamily: 'sans-serif',
+            fontFamily: defaultFam,
             letterSpacing: 0,
             lineHeight: 1.2,
             textAlign: 'left',
@@ -6133,17 +6331,21 @@ function scrollHotdeal(gridId, dir) {
         $('meStage').style.background = color;
     };
 
+    function _meT(k, fb) {
+        return (typeof window.t === 'function') ? window.t(k, fb) : (fb || k);
+    }
+
     window._meImportCutout = function() {
         var dl = $('aiNbBgDl');
         if (!dl || !dl.href || dl.classList.contains('show') === false) {
-            alert('먼저 오른쪽 [누끼따기] 패널에서 이미지의 배경을 제거해주세요');
+            alert(_meT('me_alert_cutout','먼저 오른쪽 [누끼따기] 패널에서 이미지의 배경을 제거해주세요'));
             return;
         }
         window._meAddImage(dl.href);
     };
 
     window._meClear = function() {
-        if (!confirm('캔버스의 모든 요소를 삭제할까요?')) return;
+        if (!confirm(_meT('me_clear_confirm','캔버스의 모든 요소를 삭제할까요?'))) return;
         me.items.forEach(function(it){ it.el.remove(); });
         me.items = [];
         me.selected = null;
@@ -6203,13 +6405,13 @@ function scrollHotdeal(gridId, dir) {
         var menu = document.createElement('div');
         menu.className = 'me-ctx';
         menu.innerHTML =
-            '<button data-act="front"><i class="fa-solid fa-angles-up"></i> 맨 앞으로</button>' +
-            '<button data-act="forward"><i class="fa-solid fa-angle-up"></i> 앞으로</button>' +
-            '<button data-act="backward"><i class="fa-solid fa-angle-down"></i> 뒤로</button>' +
-            '<button data-act="back"><i class="fa-solid fa-angles-down"></i> 맨 뒤로</button>' +
+            '<button data-act="front"><i class="fa-solid fa-angles-up"></i> ' + _meT('me_ctx_front','맨 앞으로') + '</button>' +
+            '<button data-act="forward"><i class="fa-solid fa-angle-up"></i> ' + _meT('me_ctx_fwd','앞으로') + '</button>' +
+            '<button data-act="backward"><i class="fa-solid fa-angle-down"></i> ' + _meT('me_ctx_back','뒤로') + '</button>' +
+            '<button data-act="back"><i class="fa-solid fa-angles-down"></i> ' + _meT('me_ctx_bottom','맨 뒤로') + '</button>' +
             '<hr>' +
-            '<button data-act="dup"><i class="fa-solid fa-clone"></i> 복제</button>' +
-            '<button class="danger" data-act="del"><i class="fa-solid fa-trash"></i> 삭제 (Delete)</button>';
+            '<button data-act="dup"><i class="fa-solid fa-clone"></i> ' + _meT('me_ctx_dup','복제') + '</button>' +
+            '<button class="danger" data-act="del"><i class="fa-solid fa-trash"></i> ' + _meT('me_ctx_del','삭제 (Delete)') + '</button>';
         document.body.appendChild(menu);
         // 화면 밖 보정
         var vw = window.innerWidth, vh = window.innerHeight;
