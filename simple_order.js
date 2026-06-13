@@ -8185,6 +8185,18 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 사이드바 인라인 뒷면 업로드 카드 — 양면일 때만 표시 (배너 제외)
         var _backCard = document.getElementById('soBackInlineUploadCard');
         if (_backCard) _backCard.style.display = _showBack ? '' : 'none';
+        // 2026-06-13: 가벽 디자인비 ×2 — 단/양면 토글 시 배너 가격 실시간 갱신
+        if (state._drReqProduct === '가벽') {
+            var _wDbl2 = !!state.isReinforcedWall || (state.wallSide === 'double');
+            state._drReqPrice = _wDbl2 ? 100000 : 50000;
+            var _subEl2 = document.getElementById('soDreqSubLine');
+            if (_subEl2) {
+                var _wReason2 = state.isReinforcedWall ? ' (양면 ×2 — 강화 골판지는 기본 양면)' : (_wDbl2 ? ' (양면 ×2)' : '');
+                _subEl2.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">' + state._drReqPrice.toLocaleString() + '원</span>' + _wReason2 + ' · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
+            }
+            var _priceEl2 = document.getElementById('soDreqPriceLabel');
+            if (_priceEl2) _priceEl2.textContent = state._drReqPrice.toLocaleString() + '원';
+        }
         recalc();
         updateButtons();
     };
@@ -9066,7 +9078,12 @@ html, body { background: #ffffff !important; }
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
                 else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
                 else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
-                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) { _drProd = '가벽'; _drPrice = 50000; }
+                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) {
+                    _drProd = '가벽';
+                    // 2026-06-13: 가벽 양면이면 디자인비 ×2. 강화 골판지(isReinforcedWall) 는 기본 양면이므로 자동 ×2.
+                    var _wallDoubleSide = !!state.isReinforcedWall || (state.wallSide === 'double');
+                    _drPrice = _wallDoubleSide ? 100000 : 50000;
+                }
                 else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
             }
             var _drBan = document.getElementById('soDesignReqBanner');
@@ -9084,11 +9101,13 @@ html, body { background: #ffffff !important; }
                     if (_drProdEl) _drProdEl.textContent = _drProd;
                     var _drPriceEl = document.getElementById('soDreqPriceLabel');
                     if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
-                    // 가벽 전용 — 화면 1건당 비용 설명
+                    // 가벽 전용 — 화면 1건당 비용 설명 (양면이면 ×2 자동 반영)
                     var _subEl = document.getElementById('soDreqSubLine');
                     if (_subEl) {
                         if (_drProd === '가벽') {
-                            _subEl.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">50,000원</span> · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
+                            var _wDbl = !!state.isReinforcedWall || (state.wallSide === 'double');
+                            var _wReason = state.isReinforcedWall ? ' (양면 ×2 — 강화 골판지는 기본 양면)' : (_wDbl ? ' (양면 ×2)' : '');
+                            _subEl.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>' + _wReason + ' · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
                         } else {
                             _subEl.innerHTML = '<span id="soDreqProdLabel">' + _drProd + '</span> 디자인을 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>에 의뢰하세요 · 영업일 2~3일';
                         }
@@ -11470,6 +11489,7 @@ html, body { background: #ffffff !important; }
         if (typeof window.openDesignRequestPopup === 'function') {
             window.openDesignRequestPopup({
                 product: prod,
+                priceOverride: state._drReqPrice || 0,  // 2026-06-13: 가벽 양면 ×2 등 동적 가격 전달
                 presetDesc: presetDesc,
                 bizMeta: bizMeta,
                 onSuccess: function(res) {

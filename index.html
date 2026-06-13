@@ -10921,7 +10921,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=379"></script>
+<script src="/simple_order.js?v=380"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -20817,7 +20817,17 @@ if (w >= 20 && h >= 20) {
         state.bizMeta = opts.bizMeta || null;
         if (opts.product) {
             var btn = document.querySelector('#dreqProds .dreq-prod[data-prod="' + opts.product + '"]');
-            if (btn) _selectProduct(opts.product, parseInt(btn.dataset.price, 10));
+            if (btn) {
+                // 2026-06-13: priceOverride 우선 (가벽 양면 ×2 등). 0 이면 button 기본가 사용.
+                var _useP = (opts.priceOverride && opts.priceOverride > 0) ? parseInt(opts.priceOverride, 10) : parseInt(btn.dataset.price, 10);
+                _selectProduct(opts.product, _useP);
+                // 버튼 라벨에도 override 가격 반영 (시각 일치)
+                var _ppEl = btn.querySelector('.dpp');
+                if (_ppEl && opts.priceOverride && opts.priceOverride !== parseInt(btn.dataset.price, 10)) {
+                    _ppEl.textContent = _useP.toLocaleString() + '원';
+                    _ppEl.style.color = '#007AFF';
+                }
+            }
             else if (opts.presetTitle) { _setTab('cust'); $('dreqCustTitle').value = opts.presetTitle; }
         }
         if (opts.presetDesc) $('dreqDesc').value = opts.presetDesc;
