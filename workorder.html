@@ -682,11 +682,58 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 if (_bc.paper) _bcLines.push('용지: <b>' + esc(_BIZ_PAPER_LBL[_bc.paper] || _bc.paper) + '</b>');
                 if (_bc.foil) _bcLines.push('박: <b style="color:#b45309;">✨ ' + esc(_BIZ_FOIL_LBL[_bc.foil] || _bc.foil) + '</b>');
                 const _bcFin = _bc.finishes || {};
-                const _bcFinList = Object.keys(_bcFin).filter(k => _bcFin[k]).map(k => _BIZ_FINISH_LBL[k] || k);
+                // finishes 는 객체 {oshi:true} 또는 배열 ['oshi'] 둘 다 지원
+                const _bcFinList = Array.isArray(_bcFin)
+                    ? _bcFin.map(k => _BIZ_FINISH_LBL[k] || k)
+                    : Object.keys(_bcFin).filter(k => _bcFin[k]).map(k => _BIZ_FINISH_LBL[k] || k);
                 if (_bcFinList.length > 0) _bcLines.push('후가공: <b style="color:#0369a1;">🛠️ ' + _bcFinList.map(esc).join(', ') + '</b>');
-                if (_bcLines.length > 0) {
-                    boxes.push(`<div class="opt-box" style="border-color:#fde68a; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-id-card"></i> 명함 옵션</div><div class="opt-val" style="line-height:1.8;">${_bcLines.join('<br>')}</div></div>`);
+                // 옵션이 비어있어도 명함 주문임을 명시
+                if (_bcLines.length === 0) _bcLines.push('<span style="color:#9ca3af;">(옵션 정보 없음 — 주문 데이터에 명함 옵션이 저장되지 않음)</span>');
+                boxes.push(`<div class="opt-box" style="border-color:#fde68a; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-id-card"></i> 명함 옵션</div><div class="opt-val" style="line-height:1.8;">${_bcLines.join('<br>')}</div></div>`);
+            }
+
+            // 2026-06-13: 스티커 옵션 박스
+            const _isSticker = !!(it.sticker || it._isSticker || /^pp_sticker|^sticker_/i.test(_bcProdCode) || /스티커/.test(_bcProdName));
+            if (_isSticker) {
+                const _st = it.sticker || {};
+                const _STK_CAT = { glossy: '유광', matte: '무광', removable: '리무벌', kraft: '크라프트지', transparent: '투명', holo: '홀로그램', metallic: '메탈릭' };
+                const _STK_SHAPE = { square: '사각', circle: '원형', oval: '타원', freeform: '자유형(도무송)', heart: '하트', star: '별' };
+                const _stLines = [];
+                if (_st.category) _stLines.push('카테고리: <b>' + esc(_STK_CAT[_st.category] || _st.category) + '</b>');
+                if (_st.shape)    _stLines.push('모양: <b>' + esc(_STK_SHAPE[_st.shape] || _st.shape) + '</b>');
+                if (_st.size)     _stLines.push('사이즈: <b>' + esc(_st.size) + '</b>');
+                if (_st.paper)    _stLines.push('용지: <b>' + esc(_st.paper) + '</b>');
+                if (_st.qtyKey)   _stLines.push('수량: <b>' + esc(_st.qtyKey) + '</b>');
+                if (_stLines.length > 0) {
+                    boxes.push(`<div class="opt-box" style="border-color:#fbcfe8; background:#fdf2f8;"><div class="opt-head" style="color:#9d174d;"><i class="fa-solid fa-shapes"></i> 스티커 옵션</div><div class="opt-val" style="line-height:1.8;">${_stLines.join('<br>')}</div></div>`);
                 }
+            }
+
+            // 2026-06-13: 인스타판넬 디자인 문구 박스 (담당자 무료디자인 작업용)
+            if (it.isInstaPanel || it.instaTitle || it.instaSub || it.instaHashtag || it.instaLogo) {
+                const _ipLines = [];
+                if (it.instaTitle)    _ipLines.push('타이틀: <b>' + esc(it.instaTitle) + '</b>');
+                if (it.instaSub)      _ipLines.push('서브: <b>' + esc(it.instaSub) + '</b>');
+                if (it.instaHashtag)  _ipLines.push('해시태그: <b>' + esc(it.instaHashtag) + '</b>');
+                if (it.instaLogo)     _ipLines.push('로고/상호: <b>' + esc(it.instaLogo) + '</b>');
+                if (it.instaSmall)    _ipLines.push('<span style="color:#16a34a; font-weight:700;">📦 소형 — 지방 무료택배 가능</span>');
+                if (_ipLines.length > 0) {
+                    boxes.push(`<div class="opt-box" style="border-color:#fcd34d; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-square"></i> 인스타판넬 디자인 문구</div><div class="opt-val" style="line-height:1.8;">${_ipLines.join('<br>')}</div></div>`);
+                }
+            }
+
+            // 2026-06-13: 게이트 사이즈 박스
+            if (it.isGate || it.gate) {
+                const _g = it.gate || {};
+                if (_g.width_m || _g.height_m) {
+                    boxes.push(`<div class="opt-box" style="border-color:#a5b4fc; background:#eef2ff;"><div class="opt-head" style="color:#4338ca;"><i class="fa-solid fa-door-open"></i> 게이트 사이즈</div><div class="opt-val" style="line-height:1.8;">가로 × 세로: <b>${esc(_g.width_m || '-')}m × ${esc(_g.height_m || '-')}m</b></div></div>`);
+                }
+            }
+
+            // 2026-06-13: 가벽 형태 (straight/L/U) — 가벽 박스가 따로 떴을 때 추가
+            if (it.wallShape && it.wallShape !== 'straight') {
+                const _WSHAPE = { L: 'L자형', U: 'U자형', straight: '일자형' };
+                boxes.push(`<div class="opt-box" style="border-color:#fde047; background:#fefce8;"><div class="opt-head" style="color:#854d0e;"><i class="fa-solid fa-shapes"></i> 가벽 형태</div><div class="opt-val" style="line-height:1.8;">형태: <b>${esc(_WSHAPE[it.wallShape] || it.wallShape)}</b>${it.wallShapeFee ? ' (+' + fmt(it.wallShapeFee) + '원)' : ''}</div></div>`);
             }
 
             // 2026-06-13: 디자인 의뢰 박스 — 작업지시서에서 디자이너 작업 트리거
@@ -717,6 +764,46 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         <div style="font-size:11px; color:#7c3aed; margin-top:2px;">→ 디자이너 보드 (/designer-board)에서 처리</div>`;
                 }
                 boxes.push(`<div class="opt-box" style="border-color:#a7f3d0; background:#f0fdf4;"><div class="opt-head" style="color:#15803d;"><i class="fa-solid fa-pen-ruler"></i> 디자인 의뢰</div><div class="opt-val">${_drBody}</div></div>`);
+            }
+
+            // 2026-06-13: 기타 사양 catch-all — 위 박스에 안 잡힌 의미있는 필드들을 마지막에 표시
+            // 시스템 메타/UI/이미지 키는 제외하고 사용자에게 의미있는 값만 추출
+            const _SYS_KEYS = new Set([
+                'uid','product','qty','price','unit_price','thumb','thumbDataUrl','originalUrl','imgDataUrl',
+                'artwork_url','cartImageUrl','designerOriginalUrl','uploadedFiles','attachments','customerFiles',
+                'shipping','itemNote','item_note','mgr_size_w','mgr_size_h','mgr_size','mgr_memo',
+                'selectedAddons','addonQuantities','addons','customSize','boxSize','cutPrint','cutBoardMaterial',
+                'standeeMaterial','baseStands','baseStand','wallSize','wall_size','wallSide','wall_side',
+                'wallCount','wallShape','wallShapeFee','rawBoardDouble','scarciTitle','scarciSub',
+                'bizCard','sticker','isInstaPanel','instaTitle','instaSub','instaHashtag','instaLogo','instaSmall',
+                'isGate','gate','designRequest','source','fabricType','fabricColor','fabricCode','fabricName',
+                'pattern_spec','width_mm','height_mm','width_cm','height_cm','width','height','w','h',
+                'product_code','product_name','productName','title','price_jp','priceUsd',
+                '_isBizCard','_isSticker','_isBanner','__source','_simple','bundleShipping',
+                'discountPct','tierPct','discount'
+            ]);
+            const _extraFieldLines = [];
+            try {
+                Object.keys(it || {}).forEach(function(k){
+                    if (_SYS_KEYS.has(k) || k.startsWith('_')) return;
+                    var v = it[k];
+                    if (v == null || v === '' || v === false) return;
+                    if (typeof v === 'object' && Object.keys(v).length === 0) return;
+                    var disp;
+                    if (typeof v === 'object') {
+                        try { disp = JSON.stringify(v); } catch (e) { disp = '[object]'; }
+                        if (disp.length > 180) disp = disp.slice(0,180) + '…';
+                    } else if (typeof v === 'boolean') {
+                        disp = v ? '예' : '아니오';
+                    } else {
+                        disp = String(v);
+                        if (disp.length > 180) disp = disp.slice(0,180) + '…';
+                    }
+                    _extraFieldLines.push('<div style="font-size:11.5px;"><span style="color:#64748b;">' + esc(k) + ':</span> <b>' + esc(disp) + '</b></div>');
+                });
+            } catch (e) {}
+            if (_extraFieldLines.length > 0) {
+                boxes.push('<div class="opt-box" style="border-color:#e5e7eb; background:#f9fafb;"><div class="opt-head" style="color:#374151;"><i class="fa-solid fa-circle-info"></i> 기타 사양</div><div class="opt-val" style="line-height:1.7;">' + _extraFieldLines.join('') + '</div></div>');
             }
 
             const optGrid = boxes.length > 0
