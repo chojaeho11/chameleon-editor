@@ -1700,7 +1700,7 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-06-03: 명함 전용 안내 (tier 자리에 대체) -->
           <div id="soBizCardOrderInfo" style="display:none; margin-top:8px; padding:8px 12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; text-align:center; font-size:12px; font-weight:700; color:#7f1d1d; line-height:1.5;">
-            ${tr('200매 단위로 주문됩니다 · 1각 = 200매', '200枚単位でご注文 · 1ロット = 200枚', 'Orders are in batches of 200 · 1 set = 200 sheets')}
+            ${tr('100매 단위로 주문됩니다 · 1각 = 100매', '100枚単位でご注文 · 1ロット = 100枚', 'Orders are in batches of 100 · 1 set = 100 sheets')}
           </div>
         </div>
 
@@ -2222,8 +2222,8 @@ html, body { background: #ffffff !important; }
           <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
           <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2500)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
-            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(4000)}${tr(' / 200매', ' / 200枚', ' / 200pcs')}</span></button>
+            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(1250)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
+            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2000)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
           </div>
           <!-- 2026-06-03: 명함 전용 — 인쇄면 바로 아래 파일 올리기 버튼 (좌측 soUpload 와 동기화) -->
           <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="margin-top:10px; width:100%; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -3315,7 +3315,7 @@ html, body { background: #ffffff !important; }
             if (state.isBanner) {
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
             } else if (state.isBizCard) {
-                // 2026-06-03: 명함 — qty = 각 (1각 = 200매). 등급별 단가 (일반 단면3K/양면5K, 프리미엄 단면8K/양면10K)
+                // 2026-06-13: 명함 — qty = 각 (1각 = 100매). 가격은 _bizPriceFor 에서 계산
                 qty = Math.max(1, qty || 1);
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
@@ -3428,7 +3428,7 @@ html, body { background: #ffffff !important; }
                 : tr('일반', '一般', 'Standard');
             var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _qtyLbl  = qty.toLocaleString() + tr('각','ロット','set') + ' (' + (qty * 200).toLocaleString() + tr('매','枚','pcs') + ')';
+            var _qtyLbl  = qty.toLocaleString() + tr('각','ロット','set') + ' (' + (qty * 100).toLocaleString() + tr('매','枚','pcs') + ')';
             var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
@@ -7914,9 +7914,10 @@ html, body { background: #ffffff !important; }
     // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
     function _bizPriceFor(side, tier) {
         var t = tier || state.bizTier || 'general';
-        // 2026-06-12: 일반 2500/4000 / 프리미엄 8000/10000 (단면/양면) — 사용자 요청
-        if (t === 'premium') return (side === 'double') ? 10000 : 8000;
-        return (side === 'double') ? 4000 : 2500;
+        // 2026-06-13: 100매 단위로 변경 — 가격 절반 (1각 = 100매)
+        //   일반 1250/2000 / 프리미엄 4000/5000 (단면/양면)
+        if (t === 'premium') return (side === 'double') ? 5000 : 4000;
+        return (side === 'double') ? 2000 : 1250;
     }
     function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
         // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
@@ -7972,7 +7973,7 @@ html, body { background: #ffffff !important; }
             bd.style.color = dbl ? '#fff' : '#451a03';
             bd.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
-        var _per200 = tr(' / 200매', ' / 200枚', ' / 200pcs');
+        var _per200 = tr(' / 100매', ' / 100枚', ' / 100pcs');
         if (ps) ps.textContent = fmtPrice(_bizPriceFor('single')) + _per200;
         if (pd) pd.textContent = fmtPrice(_bizPriceFor('double')) + _per200;
         // 용지: 프리미엄일 때만 표시
@@ -9142,10 +9143,10 @@ html, body { background: #ffffff !important; }
             state.bizSide = state.bizSide || 'single';
             state.bizFoil = (state.bizFoil === undefined) ? null : state.bizFoil;
             state.bizFinishes = state.bizFinishes || {};
-            // 2026-06-03: 명함 qty = 각 단위 (1각 = 200매), step 1, min 1. 가격 단가 = 1각 기준
-            // 기존 매 단위 데이터 호환: 200 이상이면 200으로 나눠서 각 환산
+            // 2026-06-13: 명함 qty = 각 단위 (1각 = 100매), step 1, min 1. 가격 단가 = 1각 기준
+            // 기존 매 단위 데이터 호환: 100 이상이면 100으로 나눠서 각 환산
             if (state.qty == null) state.qty = 1;
-            else if (state.qty >= 200 && state.qty % 200 === 0) state.qty = state.qty / 200;
+            else if (state.qty >= 100 && state.qty % 100 === 0) state.qty = state.qty / 100;
             else if (state.qty < 1) state.qty = 1;
             var _qiBc = document.getElementById('soQty');
             if (_qiBc) {
@@ -11568,7 +11569,7 @@ html, body { background: #ffffff !important; }
                 presetDesc += '- 등급: ' + (_BC_TIER[state.bizTier] || '일반') + '\n';
                 presetDesc += '- 인쇄: ' + (_BC_SIDE[state.bizSide] || '단면') + '\n';
                 if (state.bizPaper) presetDesc += '- 용지: ' + (_BC_PAPER[state.bizPaper] || state.bizPaper) + '\n';
-                presetDesc += '- 수량: ' + (state.qty || 1) + '각 (' + ((state.qty || 1) * 200) + '매)\n';
+                presetDesc += '- 수량: ' + (state.qty || 1) + '각 (' + ((state.qty || 1) * 100) + '매)\n';
                 if (state.bizFoil) presetDesc += '- 박: ✨ ' + (_BC_FOIL[state.bizFoil] || state.bizFoil) + '\n';
                 var _finListArr = [];
                 if (state.bizFinishes) {
@@ -11855,7 +11856,7 @@ html, body { background: #ffffff !important; }
                     var _dr = item.designRequest;
                     if (item._isBizCard || (item.bizCard != null)) {
                         var _bcLineQty = item.qty || 1;
-                        if (_bcLineQty >= 200 && _bcLineQty % 200 === 0) _bcLineQty = _bcLineQty / 200;
+                        if (_bcLineQty >= 100 && _bcLineQty % 100 === 0) _bcLineQty = _bcLineQty / 100;
                         if (_bcLineQty < 1) _bcLineQty = 1;
                         var _bcSideForMeta = (item.bizCard && item.bizCard.side === 'double') ? 'double' : 'single';
                         var _bcMult = (_bcSideForMeta === 'double') ? 2 : 1;
@@ -12466,18 +12467,18 @@ html, body { background: #ffffff !important; }
             return _stickerCalcPrice(it.sticker);
         }
 
-        // 2026-06-12: 명함 — 200매 단위. 일반 2500/4000 / 프리미엄 8000/10000 (단면/양면) + 박 + 후가공. 배송 무료.
-        // 2026-06-13: 박·후가공 옵션은 각(qty) 만큼 곱셈. 디자인 의뢰비는 신규 15K + 문구수정 5K × (qty-1).
+        // 2026-06-13: 명함 — 100매 단위. 일반 1250/2000 / 프리미엄 4000/5000 (단면/양면) + 박 + 후가공. 배송 무료.
+        // 박·후가공 옵션은 각(qty) 만큼 곱셈. 디자인 의뢰비는 신규 15K + 문구수정 5K × (qty-1).
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
             var _bc = it.bizCard || {};
             var _bcQty = qty || 1;
-            if (_bcQty >= 200 && _bcQty % 200 === 0) _bcQty = _bcQty / 200;
+            if (_bcQty >= 100 && _bcQty % 100 === 0) _bcQty = _bcQty / 100;
             if (_bcQty < 1) _bcQty = 1;
             var _bcTier = _bc.tier || 'general';
             var _bcUnit = (_bcTier === 'premium')
-                ? ((_bc.side === 'double') ? 10000 : 8000)
-                : ((_bc.side === 'double') ? 4000  : 2500);
+                ? ((_bc.side === 'double') ? 5000 : 4000)
+                : ((_bc.side === 'double') ? 2000 : 1250);
             var _bcSub = _bcUnit * _bcQty;
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
