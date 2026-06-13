@@ -653,6 +653,60 @@ window.rejectDesignerApplication = async (designerId) => {
     }
 };
 
+// 2026-06-13: 전체 초기화 — 모든 디자인 의뢰 · 디자이너 프로필 · 출금신청 · 디자이너 스태프 일괄삭제
+window.purgeAllDesignerData = async () => {
+    if (!confirm('⚠️ 정말 전체 초기화 하시겠습니까?\n\n다음 데이터가 모두 영구 삭제됩니다:\n• design_requests (신규 의뢰)\n• designer_profiles (디자이너 프로필 + 신청)\n• design_withdrawal_requests (출금 신청)\n• admin_staff role=designer (스태프 디자이너)\n\n복구 불가능합니다.')) return;
+    if (!confirm('정말로 모든 디자이너 데이터를 삭제합니다.\n취소하시려면 [취소], 정말 실행하시려면 [확인].')) return;
+    const txt = prompt('확인을 위해 "초기화" 라고 입력하세요:');
+    if (txt !== '초기화') { alert('취소되었습니다.'); return; }
+
+    const results = [];
+    try {
+        // 1) design_requests — 전체 삭제 (Supabase 안전망 우회: created_at >= 1900-01-01)
+        try {
+            const { error, count } = await sb.from('design_requests').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
+            if (error) throw error;
+            results.push('• design_requests: ' + (count || 0) + '건 삭제');
+        } catch (e) { results.push('• design_requests 실패: ' + (e.message || e)); }
+
+        // 2) design_withdrawal_requests
+        try {
+            const { error, count } = await sb.from('design_withdrawal_requests').delete({ count: 'exact' }).gte('requested_at', '1900-01-01');
+            if (error) throw error;
+            results.push('• design_withdrawal_requests: ' + (count || 0) + '건 삭제');
+        } catch (e) { results.push('• design_withdrawal_requests 실패: ' + (e.message || e)); }
+
+        // 3) designer_tax_profiles
+        try {
+            const { error, count } = await sb.from('designer_tax_profiles').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
+            if (error) throw error;
+            results.push('• designer_tax_profiles: ' + (count || 0) + '건 삭제');
+        } catch (e) { results.push('• designer_tax_profiles 실패: ' + (e.message || e)); }
+
+        // 4) designer_profiles
+        try {
+            const { error, count } = await sb.from('designer_profiles').delete({ count: 'exact' }).gte('created_at', '1900-01-01');
+            if (error) throw error;
+            results.push('• designer_profiles: ' + (count || 0) + '건 삭제');
+        } catch (e) { results.push('• designer_profiles 실패: ' + (e.message || e)); }
+
+        // 5) admin_staff role=designer
+        try {
+            const { error, count } = await sb.from('admin_staff').delete({ count: 'exact' }).eq('role', 'designer');
+            if (error) throw error;
+            results.push('• admin_staff (designer): ' + (count || 0) + '건 삭제');
+        } catch (e) { results.push('• admin_staff (designer) 실패: ' + (e.message || e)); }
+
+        alert('✓ 전체 초기화 완료\n\n' + results.join('\n') + '\n\n이제 새 디자이너 신청만 받게 됩니다.');
+        // UI 새로고침
+        if (window.loadDesignerApplications) loadDesignerApplications();
+        if (window.loadStaffList) loadStaffList();
+        if (window.loadDesignWithdrawals) loadDesignWithdrawals();
+    } catch (e) {
+        alert('초기화 중 오류:\n' + (e.message || e) + '\n\n부분 결과:\n' + results.join('\n'));
+    }
+};
+
 // [스태프 관리]
 window.loadStaffList = async () => {
     const tbody = document.getElementById('staffListBody');

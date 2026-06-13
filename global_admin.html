@@ -2382,18 +2382,19 @@
 
                 <!-- 🎨 디자이너 신청·승인 관리 -->
                 <div class="card" style="margin-bottom:16px; border:2px solid #c4b5fd; background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
                         <h3 style="margin:0;color:#5b21b6;">🎨 디자이너 신청·승인 관리</h3>
-                        <div style="display:flex;gap:8px;align-items:center;">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                             <select id="dgnFilter" onchange="loadDesignerApplications()" style="padding:5px 10px;border-radius:6px;border:1px solid #c4b5fd;font-size:12px;background:#fff;">
                                 <option value="pending">⏳ 승인 대기</option>
                                 <option value="active">✓ 승인된 디자이너</option>
                                 <option value="all">전체</option>
                             </select>
                             <button class="btn btn-outline btn-sm" onclick="loadDesignerApplications()" style="font-size:12px;">🔄 새로고침</button>
+                            <button class="btn btn-sm" onclick="window.purgeAllDesignerData()" style="font-size:12px;background:#dc2626;color:#fff;border-color:#b91c1c;font-weight:700;">🧹 전체 초기화 (의뢰+디자이너 일괄삭제)</button>
                         </div>
                     </div>
-                    <div style="font-size:12px;color:#5b21b6;margin-bottom:12px;">메인 페이지의 <b>DESIGNER 신청</b> 카드에서 신청한 디자이너 목록입니다. 승인된 디자이너만 <b>/designer-board</b> 에서 의뢰를 받을 수 있습니다.</div>
+                    <div style="font-size:12px;color:#5b21b6;margin-bottom:12px;">메인 페이지의 <b>DESIGNER 신청</b> 카드에서 신청한 디자이너 목록입니다. 승인된 디자이너만 <b>/designer-board</b> 에서 의뢰를 받을 수 있습니다.<br><b style="color:#dc2626;">⚠️ 전체 초기화</b>는 모든 신규 의뢰·디자이너 프로필·출금 신청·디자이너 스태프 기록을 삭제합니다. 새로 시작할 때만 사용하세요.</div>
                     <div id="designerAppListBody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;"><div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</div></div>
                 </div>
 
@@ -3174,7 +3175,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=274"></script>
+    <script type="module" src="global_admin.js?v=275"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
