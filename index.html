@@ -4920,14 +4920,8 @@ window.addEventListener('load', function() {
 
     <!-- 온라인/디지털 카드 -->
     <div id="dsmInlinePanel" style="max-width:1100px; margin:0 auto 15px auto; padding:0 10px;">
-        <!-- 2026-06-13: 온라인·디지털 6버튼 숨김 → 디자인에디터 진입 버튼으로 대체 -->
-        <div class="dsm-section-box" style="text-align:center; padding:18px 16px;">
-            <button onclick="window.openDesignStartModal && window.openDesignStartModal()" style="display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:16px 32px; background:linear-gradient(135deg,#6366f1,#8b5cf6,#a855f7); color:#fff; border:none; border-radius:50px; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 6px 20px rgba(99,102,241,0.35); transition:transform 0.2s; letter-spacing:-0.3px;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fa-solid fa-palette" style="font-size:18px;"></i>
-                <span data-i18n="btn_design_editor_open">디자인 에디터 열기</span>
-            </button>
-            <div style="margin-top:8px; font-size:12px; color:#94a3b8;" data-i18n="design_editor_open_sub">A4 · 명함 · 배너 · 정사각 · 커스텀 사이즈 선택 후 디자인 시작</div>
-        </div>
+        <!-- 2026-06-13: 온라인·디지털 6버튼 숨김 → EDITOR/BAND/WITH 3바로가기 컨테이너를 이 위치로 이동 -->
+        <div id="advShortcutBtns" style="width:100%; max-width:1100px; margin:8px auto 12px; padding:0; box-sizing:border-box;"></div>
         <div class="dsm-section-box" style="display:none;"><!-- 온라인·디지털 (숨김) -->
         <h4 class="dsm-section-title"><i class="fa-solid fa-globe"></i> <span data-i18n="dsm_digital">온라인 · 디지털</span></h4>
         <div class="dsm-grid-home" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;">
@@ -7266,8 +7260,7 @@ async function handleSubReturn() {
     </div>
 </div>
 
-    <!-- 2026-06-04: EDITOR / BAND / WITH 3 바로가기 — 푸터 바로 위로 이동 -->
-    <div id="advShortcutBtns" style="width:100%; max-width:1280px; margin:40px auto 24px; padding:0 20px; box-sizing:border-box;"></div>
+    <!-- 2026-06-13: EDITOR / BAND / WITH 3 바로가기 — 미니에디터 위 dsmInlinePanel로 이동됨 (id 중복 방지) -->
 
     <div class="footer-wrap">
     <div class="footer-inner">
@@ -12391,7 +12384,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=452').then(m => {
+        import('./advisor-panel.js?v=453').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시

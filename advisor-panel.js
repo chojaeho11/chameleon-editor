@@ -402,6 +402,10 @@ export function renderShortcutButtons(containerId) {
             hub_title: '세상에 모든 서비스를 밴드하다',
             hub_sub: '디자인 · 인력 · 모임 · 중고장터',
             hub_cta: '모든 서비스 보기',
+            // ── Design Request (replaces BAND) ──
+            dreq_title: '디자인 의뢰',
+            dreq_sub: '원하는 디자인을 의뢰하면 전문 디자이너가 만들어드립니다',
+            dreq_cta: '디자인 의뢰하기',
             pitch_only: '단',
             pitch_num: '5%',
             pitch_label: '업계 최저 수수료',
@@ -424,6 +428,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: '世界中のサービスをバンドする',
             hub_sub: 'デザイン · 人材 · コミュニティ · 中古マーケット',
             hub_cta: 'すべてのサービスを見る',
+            dreq_title: 'デザイン依頼',
+            dreq_sub: 'ご希望のデザインを依頼するとプロのデザイナーが制作します',
+            dreq_cta: 'デザインを依頼する',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: '業界最安手数料',
@@ -444,6 +451,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: 'Band every service in the world',
             hub_sub: 'Design · Talent · Community · Marketplace',
             hub_cta: 'View All Services',
+            dreq_title: 'Design Request',
+            dreq_sub: 'Describe what you need — our designers will create it for you',
+            dreq_cta: 'Request a Design',
             pitch_only: 'ONLY',
             pitch_num: '5%',
             pitch_label: 'INDUSTRY-LOWEST FEE',
@@ -464,6 +474,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: '联结世界上所有的服务',
             hub_sub: '设计 · 人才 · 社群 · 二手市场',
             hub_cta: '查看所有服务',
+            dreq_title: '设计委托',
+            dreq_sub: '告诉我们您的需求，专业设计师为您创作',
+            dreq_cta: '委托设计',
             pitch_only: '仅',
             pitch_num: '5%',
             pitch_label: '业界最低手续费',
@@ -484,6 +497,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: 'اجمع كل خدمات العالم معاً',
             hub_sub: 'التصميم · المواهب · المجتمع · السوق المستعمل',
             hub_cta: 'عرض جميع الخدمات',
+            dreq_title: 'طلب تصميم',
+            dreq_sub: 'صف ما تحتاجه — مصممونا سينشئونه لك',
+            dreq_cta: 'اطلب تصميمًا',
             pitch_only: 'فقط',
             pitch_num: '5%',
             pitch_label: 'أدنى عمولة في الصناعة',
@@ -504,6 +520,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: 'Conecta todos los servicios del mundo',
             hub_sub: 'Diseño · Talento · Comunidad · Mercado',
             hub_cta: 'Ver todos los servicios',
+            dreq_title: 'Solicitar Diseño',
+            dreq_sub: 'Describe lo que necesitas — nuestros diseñadores lo crearán',
+            dreq_cta: 'Pedir Diseño',
             pitch_only: 'SOLO',
             pitch_num: '5%',
             pitch_label: 'COMISIÓN MÁS BAJA',
@@ -524,6 +543,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: 'Alle Dienste der Welt verbinden',
             hub_sub: 'Design · Talente · Community · Secondhand',
             hub_cta: 'Alle Dienste ansehen',
+            dreq_title: 'Design-Anfrage',
+            dreq_sub: 'Beschreiben Sie Ihren Wunsch — unsere Designer setzen ihn um',
+            dreq_cta: 'Design anfragen',
             pitch_only: 'NUR',
             pitch_num: '5%',
             pitch_label: 'NIEDRIGSTE GEBÜHR DER BRANCHE',
@@ -544,6 +566,9 @@ export function renderShortcutButtons(containerId) {
             hub_title: 'Relier tous les services du monde',
             hub_sub: 'Design · Talents · Communauté · Marché',
             hub_cta: 'Voir tous les services',
+            dreq_title: 'Demande de Design',
+            dreq_sub: 'Décrivez votre besoin — nos designers le créeront pour vous',
+            dreq_cta: 'Demander un Design',
             pitch_only: 'SEULEMENT',
             pitch_num: '5%',
             pitch_label: 'COMMISSION LA PLUS BASSE',
@@ -617,13 +642,13 @@ export function renderShortcutButtons(containerId) {
                 </div>
                 <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> Design Editor</div>
             </div>
-            <a href="${location.origin}/services" target="_blank" class="cta3-card cta3-band">
-                <div class="cta3-word">BAND</div>
+            <a href="${location.origin}/design-market" class="cta3-card cta3-band">
+                <div class="cta3-word">REQUEST</div>
                 <div class="cta3-text">
-                    <div class="cta3-title">${t.hub_title}</div>
-                    <div class="cta3-sub">${t.hub_sub}</div>
+                    <div class="cta3-title">${t.dreq_title}</div>
+                    <div class="cta3-sub">${t.dreq_sub}</div>
                 </div>
-                <div class="cta3-btn">${t.hub_cta} <i class="fa-solid fa-arrow-right"></i></div>
+                <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> ${t.dreq_cta}</div>
             </a>
             <a href="${location.origin}/franchise" class="cta3-card cta3-with">
                 <div class="cta3-word">WITH</div>
