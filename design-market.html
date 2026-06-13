@@ -3564,12 +3564,13 @@ async function registerAsDesigner() {
     const bio = document.getElementById('regDesignerBio').value.trim();
     const country = document.getElementById('regDesignerCountry').value || detectDefaultCountry() || 'KR';
 
+    // 2026-06-13: 신규 디자이너 신청 — is_active=false 로 등록, 본사 승인 후 활성화 (이전엔 true 라 자동 활성)
     const { error } = await sb.from('designer_profiles').insert({
         id: userId,
         display_name: name,
         bio: bio,
         country,
-        is_active: true,
+        is_active: false,
         avg_rating: 0,
         total_reviews: 0,
         total_earnings: 0,
