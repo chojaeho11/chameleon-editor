@@ -1789,7 +1789,7 @@ html, body { background: #ffffff !important; }
           <div class="so-section-title">${tr('가벽 사이즈', '壁面サイズ', 'Wall size')}</div>
           <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
             <label style="flex:1; font-size:12px; color:#451a03; font-weight:700;">${tr('가로', '横', 'Width')}</label>
-            <select id="soWallWidth" class="so-input" onchange="window._soUpdateAddonQty(); window._soUpdatePrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+            <select id="soWallWidth" class="so-input" onchange="window._soUpdateAddonQty(); window._soUpdatePrice(); window._soComputeDesignReqPrice && window._soComputeDesignReqPrice();" style="flex:1; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
               <option value="1">1 m</option>
               <option value="2">2 m</option>
               <option value="3" selected>3 m</option>
@@ -8165,6 +8165,70 @@ html, body { background: #ffffff !important; }
     window._soStickerPickPaper = function(k) { state.stickerPaper = k; _soStickerRender(); recalc(); };
     window._soStickerPickQty   = function(k) { state.stickerQtyKey= k; _soStickerRender(); recalc(); };
 
+    // 2026-06-13: 다면 디자인 가벽 — 1m당 5만원 (각 면 디자인 다름). 양면이면 ×2.
+    //   확장: 새 다면 가벽 추가 시 product code 또는 name 패턴 추가만 하면 됨.
+    var _MULTI_PANEL_WALL_CODES = ['hb_dw_31'];
+    function _isMultiPanelWall(p) {
+        if (!p) return false;
+        if (p.code && _MULTI_PANEL_WALL_CODES.indexOf(p.code) >= 0) return true;
+        var nm = (p.name_kr || p.name || '').toLowerCase();
+        // 침찬/포스트/다면 가벽 패턴 (Honeycomb post wall)
+        return /post\s*wall|다면\s*가벽|침찬\s*post|침찬\s*deli/i.test(nm);
+    }
+
+    // 2026-06-13: 디자인 의뢰 배너 가격/문구 단일 갱신 헬퍼 — 상품 변경/면 토글/너비 변경 시 호출
+    window._soComputeDesignReqPrice = function (p) {
+        try {
+            p = p || (state && state.product);
+            var _drProd = null;
+            var _drPrice = 0;
+            var _drSub = '';
+            var _drNm = (p && p.name || '').toLowerCase();
+            var _siteIsKR = !window.SITE_CONFIG || (window.SITE_CONFIG.COUNTRY || 'KR').toUpperCase() === 'KR';
+            if (_siteIsKR) {
+                if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
+                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
+                else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
+                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) {
+                    _drProd = '가벽';
+                    var _wDbl = !!state.isReinforcedWall || (state.wallSide === 'double');
+                    var _sideMult = _wDbl ? 2 : 1;
+                    if (_isMultiPanelWall(p)) {
+                        // 다면 디자인 가벽 — 1m당 5만원 × 미터수 × 면배수
+                        var _wM = Math.max(1, Math.ceil(parseFloat(state.wallWidth) || 1));
+                        _drPrice = 50000 * _wM * _sideMult;
+                        _drSub = '다면 디자인 가벽 — 1m당 <span style="color:#007AFF; font-weight:700;">50,000원</span> · ' + _wM + 'm × ' + (50000).toLocaleString() + '원' + (_sideMult === 2 ? ' × 2면' : '') + ' = <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span> · 영업일 2~3일';
+                    } else {
+                        _drPrice = 50000 * _sideMult;
+                        var _wReason = state.isReinforcedWall ? ' (양면 ×2 — 강화 골판지는 기본 양면)' : (_wDbl ? ' (양면 ×2)' : '');
+                        _drSub = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>' + _wReason + ' · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
+                    }
+                }
+                else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
+            }
+            var _drBan = document.getElementById('soDesignReqBanner');
+            if (!_drBan) return;
+            if (!_drProd) {
+                _drBan.style.display = 'none';
+                state._drReqProduct = null;
+                state._drReqPrice = 0;
+                return;
+            }
+            _drBan.style.display = '';
+            var _drProdEl = document.getElementById('soDreqProdLabel');
+            if (_drProdEl) _drProdEl.textContent = _drProd;
+            var _drPriceEl = document.getElementById('soDreqPriceLabel');
+            if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
+            var _subEl = document.getElementById('soDreqSubLine');
+            if (_subEl) {
+                if (_drSub) _subEl.innerHTML = _drSub;
+                else _subEl.innerHTML = '<span id="soDreqProdLabel">' + _drProd + '</span> 디자인을 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>에 의뢰하세요 · 영업일 2~3일';
+            }
+            state._drReqProduct = _drProd;
+            state._drReqPrice = _drPrice;
+        } catch (e) { console.warn('[_soComputeDesignReqPrice]', e); }
+    };
+
     window._soPickSide = function (side) {
         state.wallSide = (side === 'double') ? 'double' : 'single';
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
@@ -8185,18 +8249,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 사이드바 인라인 뒷면 업로드 카드 — 양면일 때만 표시 (배너 제외)
         var _backCard = document.getElementById('soBackInlineUploadCard');
         if (_backCard) _backCard.style.display = _showBack ? '' : 'none';
-        // 2026-06-13: 가벽 디자인비 ×2 — 단/양면 토글 시 배너 가격 실시간 갱신
-        if (state._drReqProduct === '가벽') {
-            var _wDbl2 = !!state.isReinforcedWall || (state.wallSide === 'double');
-            state._drReqPrice = _wDbl2 ? 100000 : 50000;
-            var _subEl2 = document.getElementById('soDreqSubLine');
-            if (_subEl2) {
-                var _wReason2 = state.isReinforcedWall ? ' (양면 ×2 — 강화 골판지는 기본 양면)' : (_wDbl2 ? ' (양면 ×2)' : '');
-                _subEl2.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">' + state._drReqPrice.toLocaleString() + '원</span>' + _wReason2 + ' · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
-            }
-            var _priceEl2 = document.getElementById('soDreqPriceLabel');
-            if (_priceEl2) _priceEl2.textContent = state._drReqPrice.toLocaleString() + '원';
-        }
+        // 2026-06-13: 가벽 디자인비 갱신 (단/양면 ×2, 다면 가벽 × 미터수)
+        if (typeof window._soComputeDesignReqPrice === 'function') window._soComputeDesignReqPrice();
         recalc();
         updateButtons();
     };
@@ -9070,56 +9124,14 @@ html, body { background: #ffffff !important; }
         //   (hb_bn 그 자체가 기본 배너인 경우만 — 거치대 없는 별도 배너 출력물은 위에서 따로 처리)
         // 2026-06-13: 디자인 의뢰 배너 — 명함/전단/배너/가벽/글씨포토존만 KR 사이트에 노출
         try {
-            var _drProd = null;
-            var _drPrice = 0;
-            var _drNm = (p && p.name || '').toLowerCase();
-            var _siteIsKR = !window.SITE_CONFIG || (window.SITE_CONFIG.COUNTRY || 'KR').toUpperCase() === 'KR';
-            if (_siteIsKR) {
-                if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
-                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
-                else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
-                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) {
-                    _drProd = '가벽';
-                    // 2026-06-13: 가벽 양면이면 디자인비 ×2. 강화 골판지(isReinforcedWall) 는 기본 양면이므로 자동 ×2.
-                    var _wallDoubleSide = !!state.isReinforcedWall || (state.wallSide === 'double');
-                    _drPrice = _wallDoubleSide ? 100000 : 50000;
-                }
-                else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
-            }
-            var _drBan = document.getElementById('soDesignReqBanner');
-            var _drDone = document.getElementById('soDesignReqDone');
+            window._soComputeDesignReqPrice(p);  // 배너 가격/문구 갱신 (양면 ×2, 다면 가벽 × 미터수)
             // 상품이 바뀌면 완료 상태 초기화
             state.designReqId = null;
             state.designReqFee = 0;
             state.designReqQty = 0;
             state.designReqTotal = 0;
+            var _drDone = document.getElementById('soDesignReqDone');
             if (_drDone) _drDone.style.display = 'none';
-            if (_drBan) {
-                if (_drProd) {
-                    _drBan.style.display = '';
-                    var _drProdEl = document.getElementById('soDreqProdLabel');
-                    if (_drProdEl) _drProdEl.textContent = _drProd;
-                    var _drPriceEl = document.getElementById('soDreqPriceLabel');
-                    if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
-                    // 가벽 전용 — 화면 1건당 비용 설명 (양면이면 ×2 자동 반영)
-                    var _subEl = document.getElementById('soDreqSubLine');
-                    if (_subEl) {
-                        if (_drProd === '가벽') {
-                            var _wDbl = !!state.isReinforcedWall || (state.wallSide === 'double');
-                            var _wReason = state.isReinforcedWall ? ' (양면 ×2 — 강화 골판지는 기본 양면)' : (_wDbl ? ' (양면 ×2)' : '');
-                            _subEl.innerHTML = '가벽 디자인 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>' + _wReason + ' · 화면 1건당 비용 (예: 3m×2m 가벽 1개 = 1건) · 영업일 2~3일';
-                        } else {
-                            _subEl.innerHTML = '<span id="soDreqProdLabel">' + _drProd + '</span> 디자인을 <span style="color:#007AFF; font-weight:700;">' + _drPrice.toLocaleString() + '원</span>에 의뢰하세요 · 영업일 2~3일';
-                        }
-                    }
-                    state._drReqProduct = _drProd;
-                    state._drReqPrice = _drPrice;
-                } else {
-                    _drBan.style.display = 'none';
-                    state._drReqProduct = null;
-                    state._drReqPrice = 0;
-                }
-            }
         } catch (e) { console.warn('[soDesignReqBanner]', e); }
 
         state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code)) && !state.isBannerStandless;
