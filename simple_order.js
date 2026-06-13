@@ -7086,10 +7086,17 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-01: 가벽 형태비 (ㄱ자/ㄷ자) 도 lineTotal 에 포함
         var _wallShapeFee = (state.isWall && state.wallShapeFee) ? state.wallShapeFee : 0;
-        var lineTotal = subtotal + addonsTotal + _wallShapeFee;
+        // 2026-06-13: 칼선작업 비용도 라인 합계에 포함 (라인별 누끼 작업 비용)
+        var _lineCutlineN = state.cutlineWork ? Math.max(1, parseInt(state.cutlineCharCount, 10) || 1) : 0;
+        var _lineCutlineFee = _lineCutlineN * 10000;
+        var lineTotal = subtotal + addonsTotal + _wallShapeFee + _lineCutlineFee;
 
         // 스냅샷 — 모든 모드 공통 + 모드별 추가 필드
         var snapshot = {
+            // 2026-06-13: 칼선작업 — 라인별 보존 (각 라인이 독립적으로 누끼 작업 가짐)
+            cutlineWork: !!state.cutlineWork,
+            cutlineCharCount: _lineCutlineN,
+            cutlineFee: _lineCutlineFee,
             id: 'q_' + state._adLines.length + '_' + Math.floor((state._adLines.length + 1) * 1000),
             // ad-print 사이즈 (cm 기준 → 표시는 mm)
             wMm: Math.round((state.customW || 0) * 10),
@@ -7235,6 +7242,12 @@ html, body { background: #ffffff !important; }
         }
         document.querySelectorAll('#soAddonList input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
         document.querySelectorAll('#soAddonList input[data-addon-qty-code]').forEach(function(qi){ qi.value = 1; });
+        // 2026-06-13: 칼선작업 리셋 — 새 라인은 기본 OFF (다음 라인 입력 시 다시 체크 필요)
+        state.cutlineWork = false;
+        state.cutlineCharCount = 1;
+        var _cbReset = document.getElementById('soCutlineCheckbox');
+        if (_cbReset) _cbReset.checked = false;
+        if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
         // 큐 카드 + 좌측 프리뷰 그리기 + 가벽추가 버튼 토글 + 현재 라인 가격 갱신
         window._soAdRenderQueue();
         window._soAdRenderLinePreviews();
@@ -11415,7 +11428,8 @@ html, body { background: #ffffff !important; }
                     wallW: state.wallWidth, wallH: state.wallHeight, wallSide: state.wallSide,
                     boxW: state.boxW, boxH: state.boxH, boxD: state.boxD, boxUnit: state.boxUnitPrice,
                     cutSize: state.cutSize,
-                    baseStands: state.baseStands
+                    baseStands: state.baseStands,
+                    cutlineWork: state.cutlineWork, cutlineCharCount: state.cutlineCharCount
                 };
                 for (var _li = 0; _li < state._adLines.length; _li++) {
                     var _ln = state._adLines[_li];
@@ -11468,6 +11482,9 @@ html, body { background: #ffffff !important; }
                     if (_ln.isStandee) {
                         state.standeeMaterial = _ln.standeeMaterial || 'honeycomb_16mm';
                     }
+                    // 2026-06-13: 칼선작업 — 라인별 보존 값으로 임시 복원 (buildCartItem 이 정확히 저장)
+                    state.cutlineWork = !!_ln.cutlineWork;
+                    state.cutlineCharCount = _ln.cutlineCharCount || 0;
                     var _lnItem = buildCartItem(_lnUrl, _lnPath);
                     _lnItem.uid = Date.now() + _li + 1;
                     cart.push(_lnItem);
@@ -11482,6 +11499,7 @@ html, body { background: #ffffff !important; }
                 state.boxW = _sav.boxW; state.boxH = _sav.boxH; state.boxD = _sav.boxD; state.boxUnitPrice = _sav.boxUnit;
                 state.cutSize = _sav.cutSize;
                 state.baseStands = _sav.baseStands;
+                state.cutlineWork = _sav.cutlineWork; state.cutlineCharCount = _sav.cutlineCharCount;
             }
             writeCart(cart);
             // 2026-05-12: 중복 push 방지 — writeCart 후 localStorage 가 cart_sync 의 tagItem 으로
