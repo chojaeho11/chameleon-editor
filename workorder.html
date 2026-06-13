@@ -673,8 +673,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _BIZ_TIER_LBL = { general: '일반', premium: '프리미엄' };
                 const _BIZ_SIDE_LBL = { single: '단면', double: '양면' };
                 const _BIZ_PAPER_LBL = { snowpaper250: '스노우지 250g', nuvegi240: '누벅240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
-                const _BIZ_FOIL_LBL = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
-                const _BIZ_FINISH_LBL = { round_corner: '귀도리 (모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+                const _BIZ_FOIL_LBL = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
+                const _BIZ_FINISH_LBL = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
                 if (_bc.tier) _bcLines.push('등급: <b>' + esc(_BIZ_TIER_LBL[_bc.tier] || _bc.tier) + '</b>');
                 if (_bc.side) _bcLines.push('인쇄: <b>' + esc(_BIZ_SIDE_LBL[_bc.side] || _bc.side) + '</b>');
                 if (_bc.paper) _bcLines.push('용지: <b>' + esc(_BIZ_PAPER_LBL[_bc.paper] || _bc.paper) + '</b>');

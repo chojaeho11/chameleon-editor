@@ -11432,8 +11432,8 @@ html, body { background: #ffffff !important; }
             if (state && state.isBizCard) {
                 var _BC_TIER = { general: '일반', premium: '프리미엄' };
                 var _BC_SIDE = { single: '단면', double: '양면' };
-                var _BC_FOIL = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
-                var _BC_FIN = { round_corner: '귀도리(모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+                var _BC_FOIL = { gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박', red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박' };
+                var _BC_FIN = { hyungap: '형압', embossing: '엠보싱', mising: '미싱', oshi: '오시', taegong: '타공', gwidori: '귀도리(모서리 둥글게)' };
                 presetDesc += '\n[명함 옵션]\n';
                 presetDesc += '- 등급: ' + (_BC_TIER[state.bizTier] || '일반') + '\n';
                 presetDesc += '- 인쇄: ' + (_BC_SIDE[state.bizSide] || '단면') + '\n';
