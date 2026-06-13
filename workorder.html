@@ -1091,7 +1091,8 @@ window._woUploadMgrQuote = async function(input) {
         const { data: cur, error: rdErr } = await sb.from('orders').select('files').eq('id', window._woOrderId).single();
         if (rdErr) throw rdErr;
         const files = Array.isArray(cur.files) ? cur.files : [];
-        files.push({ name: file.name, url: url, type: 'manager_quote', _uploaded_at: new Date().toISOString() });
+        // 2026-06-13: type 통일 — global_orders.js / 자동다운로드 / ZIP 패키지가 모두 'quotation' 으로 분류
+        files.push({ name: file.name, url: url, type: 'quotation', _uploaded_at: new Date().toISOString() });
         const { error: upErr } = await sb.from('orders').update({ files: files }).eq('id', window._woOrderId);
         if (upErr) throw upErr;
         alert('견적서가 업로드되었습니다.');

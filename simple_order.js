@@ -13470,7 +13470,9 @@ html, body { background: #ffffff !important; }
                         height_mm: Math.round((it.wallSize.h_m || 0) * 1000)
                     };
                 }
-                return {
+                // 2026-06-13: spread it 으로 명함옵션/스티커/디자인의뢰/커스텀사이즈 등 모든 cart 필드 보존
+                //   기존엔 명시 필드만 골라 저장 → 작업지시서/디자이너보드 옵션 누락. product 객체와 호환 키 둘 다 유지.
+                return Object.assign({}, it, {
                     product_code: (it.product && it.product.code) || '',
                     product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
                     qty: it.qty || 1,
@@ -13480,20 +13482,20 @@ html, body { background: #ffffff !important; }
                     price: _soCalcItemPrice(it),
                     source: 'cafe2626',
                     addons: addons,
-                    wall_size: it.wallSize || null,           // 가벽 사이즈 (m 단위)
-                    wall_side: it.wallSide || null,           // single / double (양면이면 가격 2배)
-                    artwork_later: !!it.artworkLater,         // 2026-05-22: 이미지 추후 전달(파일 미첨부) 주문
-                    item_note: it.itemNote || '',             // 전달사항 (제작 요청)
-                    shipping: it.shipping || null,            // 시공/배송 일정 + 철거
+                    wall_size: it.wallSize || null,
+                    wall_side: it.wallSide || null,
+                    artwork_later: !!it.artworkLater,
+                    item_note: it.itemNote || '',
+                    shipping: it.shipping || null,
                     file_url: fileUrl,
                     file_name: fileName,
                     file_path: it.filePath || null,
-                    back_file_url: it.backFileUrl || null,   // 뒷면 (양면 가벽만)
+                    back_file_url: it.backFileUrl || null,
                     back_file_name: it.backFileName || null,
                     back_file_path: it.backFilePath || null,
                     artwork_url: fileUrl,
                     artwork_filename: fileName
-                };
+                });
             });
 
             var fullAddr = (zip ? '[' + zip + '] ' : '') + addr1 + ' ' + addr2;

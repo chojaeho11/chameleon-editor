@@ -180,11 +180,40 @@ const PAYOUT = {
 // 구조화된 [BIZ_META:{json}] 태그 우선, 없으면 자유 텍스트 파싱 fallback.
 function parseBizMeta(desc) {
     var s = String(desc || '');
-    var m = s.match(/\[BIZ_META:(\{[^\]]+\})\]/);
-    if (m) {
-        try { return JSON.parse(m[1]); } catch (e) { return null; }
+    // 2026-06-13: JSON 내부에 ] 포함 가능 (finishes: ["oshi","gwidori"]) — 중괄호 균형 파싱
+    var startIdx = s.indexOf('[BIZ_META:');
+    if (startIdx < 0) return null;
+    var jsonStart = startIdx + '[BIZ_META:'.length;
+    var depth = 0, i = jsonStart, jsonEnd = -1;
+    for (; i < s.length; i++) {
+        var ch = s[i];
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
     }
-    return null;
+    if (jsonEnd < 0) return null;
+    try { return JSON.parse(s.substring(jsonStart, jsonEnd)); } catch (e) { return null; }
+}
+
+function stripBizMetaTag(desc) {
+    var s = String(desc || '');
+    var startIdx = s.indexOf('[BIZ_META:');
+    if (startIdx < 0) return s;
+    var jsonStart = startIdx + '[BIZ_META:'.length;
+    var depth = 0, jsonEnd = -1;
+    for (var i = jsonStart; i < s.length; i++) {
+        if (s[i] === '{') depth++;
+        else if (s[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
+    }
+    if (jsonEnd < 0) return s;
+    // [BIZ_META:{json}] — closing ] right after the JSON
+    var tagEnd = (s[jsonEnd] === ']') ? jsonEnd + 1 : jsonEnd;
+    return s.substring(0, startIdx) + s.substring(tagEnd);
 }
 
 function bizCardPayoutDetail(desc) {
@@ -347,7 +376,9 @@ function parseMeta(desc) {
 }
 
 function stripMeta(desc) {
-    return String(desc || '')
+    // 2026-06-13: BIZ_META JSON 은 균형 파싱으로 제거 (내부 ] 포함 가능)
+    var s = stripBizMetaTag(String(desc || ''));
+    return s
         .replace(/\[DESIGNER:[^\]]+\]/g, '')
         .replace(/\[COMPLETED:[^\]]+\]/g, '')
         .replace(/\[SETTLEMENT_REQUESTED:[^\]]+\]/g, '')
@@ -356,8 +387,6 @@ function stripMeta(desc) {
         .replace(/\[DESIGNER_NOTE:[^\]]+\]/g, '')
         .replace(/\[AGREED_PAYOUT:[^\]]+\]/g, '')
         .replace(/\[WITHDRAWAL_ID:[^\]]+\]/g, '')
-        // 2026-06-13: 구조화된 BIZ_META JSON 태그 — 패널에 한글로 표시되므로 본문에서는 숨김
-        .replace(/\[BIZ_META:[^\]]+\]/g, '')
         // 2026-06-13: 명함 옵션 자유텍스트 블록 — bizCardHtml 패널에 한글로 표시되므로 본문에서는 숨김
         .replace(/\[명함 옵션\][\s\S]*?(?=\n\s*\n|\n\s*\[|$)/g, '')
         .replace(/\n{3,}/g, '\n\n')
