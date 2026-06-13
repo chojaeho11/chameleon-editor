@@ -12044,8 +12044,10 @@ html, body { background: #ffffff !important; }
             var _noticeWrap = document.getElementById('soCartShipNotice');
             var _noticeText = document.getElementById('soCartShipNoticeText');
             if (_noticeWrap && _noticeText) {
-                var _sub = (_cartCalc.taxBase || 0) + (_cartCalc.nonDiscountBase || 0);
+                // 2026-06-13: 최소 주문금액 체크 — 배송비 포함한 grandTotal 기준 (사용자 요청)
+                //   이전엔 taxBase+nonDiscountBase (배송제외) 라 218K 결제해도 18K 로 인식돼 "82K 더" 경고
                 var _shipFinal = _cartCalc.shipTotal || 0;
+                var _sub = (_cartCalc.grandTotal != null) ? _cartCalc.grandTotal : ((_cartCalc.taxBase || 0) + (_cartCalc.nonDiscountBase || 0) + _shipFinal);
                 // 2026-06-12: 카트 안내 박스 — 항상 그린 박스로 통일.
                 //   "최소주문금액 3만원 / 허니콤보드 외 무료배송" 안내 + 부족 시 빨간 경고
                 var _sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
@@ -12397,14 +12399,20 @@ html, body { background: #ffffff !important; }
 
     window._soGoCheckout = function () {
         // 2026-06-12: 카트에서 결제로 넘어가기 전 최소 주문금액 강제 체크.
+        // 2026-06-13: 허니콤 family 100K / 그 외 30K + 배송비 포함 grandTotal 기준.
         try {
             var _gcCart = _soReadAllCart();
             var _gcCalc = _soCalcCartTotal(_gcCart || []);
-            var _gcSub = (_gcCalc && (_gcCalc.taxBase + _gcCalc.nonDiscountBase)) || 0;
-            var _MIN = 30000;
+            // 배송비 포함 합계 기준
+            var _gcSub = (_gcCalc && _gcCalc.grandTotal != null) ? _gcCalc.grandTotal : ((_gcCalc && (_gcCalc.taxBase + _gcCalc.nonDiscountBase + (_gcCalc.shipTotal || 0))) || 0);
+            // 허니콤 family 가 카트에 있으면 100K, 그 외 30K
+            var _gcHasHc = (_gcCart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
+            var _MIN = _gcHasHc ? 100000 : 30000;
             if (_gcSub > 0 && _gcSub < _MIN) {
                 var _sc3 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-                var _md = (_sc3 === 'JP') ? '¥3,000' : (_sc3 === 'US' ? '$30' : '30,000원');
+                var _md = _gcHasHc
+                    ? ((_sc3 === 'JP') ? '¥10,000' : (_sc3 === 'US' ? '$100' : '100,000원'))
+                    : ((_sc3 === 'JP') ? '¥3,000' : (_sc3 === 'US' ? '$30' : '30,000원'));
                 alert(tr(
                     '최소 주문금액은 ' + _md + ' 이상입니다.\n현재 ' + fmtPrice(_gcSub) + ' — ' + fmtPrice(_MIN - _gcSub) + ' 더 담아주세요.',
                     '最低注文金額は ' + _md + ' 以上です。\n現在 ' + fmtPrice(_gcSub) + ' — あと ' + fmtPrice(_MIN - _gcSub) + ' 必要',
@@ -13551,13 +13559,17 @@ html, body { background: #ffffff !important; }
         if (cart.length === 0) return;
 
         // 2026-06-12: 최소 주문금액 30,000원 (JP ¥3,000 / US $30) 강제 — 미달 시 결제 차단
+        // 2026-06-13: 허니콤 family 100K / 그 외 30K + 배송비 포함 grandTotal 기준
         try {
             var _minCalc = _soCalcCartTotal(cart);
-            var _minSub = (_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase)) || 0;
-            var _MIN_KRW = 30000;
+            var _minSub = (_minCalc && _minCalc.grandTotal != null) ? _minCalc.grandTotal : ((_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase + (_minCalc.shipTotal || 0))) || 0);
+            var _minHasHc = (cart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
+            var _MIN_KRW = _minHasHc ? 100000 : 30000;
             if (_minSub > 0 && _minSub < _MIN_KRW) {
                 var _sc2 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-                var _minDisp = (_sc2 === 'JP') ? '¥3,000' : (_sc2 === 'US' ? '$30' : '30,000원');
+                var _minDisp = _minHasHc
+                    ? ((_sc2 === 'JP') ? '¥10,000' : (_sc2 === 'US' ? '$100' : '100,000원'))
+                    : ((_sc2 === 'JP') ? '¥3,000' : (_sc2 === 'US' ? '$30' : '30,000원'));
                 alert(tr(
                     '최소 주문금액은 ' + _minDisp + ' 이상입니다.\n현재 ' + fmtPrice(_minSub) + ' — ' + fmtPrice(_MIN_KRW - _minSub) + ' 더 담아주세요.',
                     '最低注文金額は ' + _minDisp + ' 以上です。\n現在 ' + fmtPrice(_minSub) + ' — あと ' + fmtPrice(_MIN_KRW - _minSub) + ' 必要',
