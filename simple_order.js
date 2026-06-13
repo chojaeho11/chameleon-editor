@@ -11861,6 +11861,16 @@ html, body { background: #ffffff !important; }
 
         let totalAmt = 0;
         const sections = [];
+        // 2026-06-13: 묶음배송 — 카트 전체에서 가장 큰 배송비를 가진 1건만 fee 표시, 나머지는 묶음 무료
+        try {
+            var _topShipFee = 0; var _topShipUid = null;
+            allItems.forEach(function(_it){
+                if (!_it || !_it.shipping) return;
+                var _f = (_it.shipping && _it.shipping.fee) || 0;
+                if (_f > _topShipFee) { _topShipFee = _f; _topShipUid = _it.uid; }
+            });
+            window._soCartFirstShipUid = _topShipUid;
+        } catch (e) { window._soCartFirstShipUid = null; }
         // 2026-05-22: 장바구니 썸네일 — 업로드 디자인(originalUrl 등, 이미지 형식만) 우선. 박스 대신 실제 이미지.
         const _imgLike = function (u) { return !!u && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(u); };
         const _catalogImg = function (item) {
@@ -11952,6 +11962,47 @@ html, body { background: #ffffff !important; }
                     var _cbLbl = _cbMap[item.cutBoardMaterial] || item.cutBoardMaterial;
                     meta.push('🧱 ' + _cbLbl);
                 }
+                // 2026-06-13: 카트 항목별 비용 breakdown — 단가/받침대/옵션/배송/칼선작업/합계
+                //   여러 상품이 있으면 첫 번째 (가장 큰 배송비) 만 배송비 표시, 나머지는 묶음배송 표시
+                var _bd = [];
+                var _bdQty = item.qty || 1;
+                var _bdUnit = (calc.unit != null ? calc.unit : ((item.product && item.product.price) || 0));
+                var _bdSub = _bdUnit * _bdQty;
+                _bd.push('<div style="display:flex; justify-content:space-between;"><span>단가 × ' + _bdQty + '</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                // 옵션/받침대 합산
+                var _bdOpt = 0;
+                if (item.selectedAddons && window.ADDON_DB) {
+                    Object.values(item.selectedAddons).forEach(function(code){
+                        var a = window.ADDON_DB[code]; if (!a) return;
+                        var aq = (item.addonQuantities && item.addonQuantities[code]) || 1;
+                        _bdOpt += (a.price || 0) * aq;
+                    });
+                }
+                if (_bdOpt > 0) _bd.push('<div style="display:flex; justify-content:space-between;"><span>옵션 (받침/형태)</span><b>+' + fmtPrice(_bdOpt) + '</b></div>');
+                // 배송 (첫 번째 일반 항목만 표시, 나머지는 묶음배송 0원)
+                var _bdShipFee = (item.shipping && item.shipping.fee) || 0;
+                var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
+                if (_bdShipFee > 0 && _bdIsFirstShip) {
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>배송</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
+                } else if (_bdShipFee > 0 && !_bdIsFirstShip) {
+                    _bd.push('<div style="display:flex; justify-content:space-between; color:#16a34a;"><span>배송 (묶음)</span><b>무료</b></div>');
+                }
+                // 칼선작업
+                if (item.cutlineWork || (item.cutlineCharCount && item.cutlineCharCount > 0)) {
+                    var _bdClN = item.cutlineCharCount || 1;
+                    var _bdClFee = item.cutlineFee || (_bdClN * 10000);
+                    _bd.push('<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>✂️ 칼선작업 (' + _bdClN + '개)</span><b>+' + fmtPrice(_bdClFee) + '</b></div>');
+                }
+                // 디자인 의뢰비 (별도)
+                if (item.designRequest && item.designRequest.total && item.designRequest.product_label !== '칼선작업') {
+                    _bd.push('<div style="display:flex; justify-content:space-between; color:#0369a1;"><span>🎨 ' + (item.designRequest.product_label || '디자인') + ' 의뢰비</span><b>+' + fmtPrice(item.designRequest.total) + '</b></div>');
+                }
+                // 합계 (해당 라인 — 묶음배송이면 shipping 빼고)
+                var _bdLineTotal = calc.final;
+                if (!_bdIsFirstShip && _bdShipFee > 0) _bdLineTotal -= _bdShipFee;
+                _bd.push('<div style="display:flex; justify-content:space-between; border-top:1px dashed #d1d5db; margin-top:4px; padding-top:4px; font-weight:900;"><span>합계</span><b style="color:#dc2626;">' + fmtPrice(_bdLineTotal) + '</b></div>');
+                var _bdHtml = '<div style="margin:6px 0 8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; font-size:11.5px; color:#374151; line-height:1.7;">' + _bd.join('') + '</div>';
+
                 return `
                 <div class="so-cart-item">
                     ${thumb
@@ -11960,6 +12011,7 @@ html, body { background: #ffffff !important; }
                     <div class="so-cart-item-info">
                         <div class="so-cart-item-name">${escapeHtml(fmtCartName(item))}</div>
                         <div class="so-cart-item-meta">${meta.join(' · ')}</div>
+                        ${_bdHtml}
                         <div class="so-cart-item-bottom">
                             <div class="so-cart-qty-controls">
                                 <button class="so-cart-qty-btn" onclick="window._soCartQtyChg('${item.uid || ''}', -1)">−</button>
@@ -11969,7 +12021,7 @@ html, body { background: #ffffff !important; }
                                 <button class="so-cart-qty-btn" onclick="window._soCartQtyChg('${item.uid || ''}', 1)">+</button>
                             </div>
                             <div style="display:flex; align-items:center; gap:6px;">
-                                <span class="so-cart-item-price">${fmtPrice(calc.lineDisplay != null ? calc.lineDisplay : calc.final)}</span>
+                                <span class="so-cart-item-price">${fmtPrice(_bdLineTotal)}</span>
                                 <button class="so-cart-item-edit" onclick="window._soCartEditItem('${item.uid || ''}')" title="${tr('내용변경','内容変更','Edit')}" style="background:#eef2ff; color:#1e40af; border:1px solid #c7d2fe; border-radius:6px; font-size:11px; font-weight:700; padding:4px 8px; cursor:pointer;">${tr('내용변경','変更','Edit')}</button>
                                 <button class="so-cart-item-remove" onclick="window._soCartRemove('${item.uid || ''}')" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
                             </div>
@@ -12704,11 +12756,12 @@ html, body { background: #ffffff !important; }
             } else {
                 taxBase += (subPrice - shipFee);
             }
-            // 베스트굿즈·광고인쇄·자유인쇄커팅·실사출력은 별도 규칙 — max 룰 제외
+            // 베스트굿즈·광고인쇄·실사출력은 별도 규칙 — max 룰 제외
+            // 2026-06-13: 자유인쇄커팅 (cutPrint) 도 묶음배송 max 룰에 포함 (사용자 요청)
             //   실사출력은 batch 룰 (real-print 합계 < 100K → 10K, ≥ 100K → 0) 별도 가산.
             var _itIsRealPrintCk = !!it._isRealPrint || (it.product && it.product.code &&
                 ['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(it.product.code) >= 0);
-            if (!it._isBestGoods && !it._isAdPrint && !it.cutPrint && !_itIsRealPrintCk) itemShipFees.push(shipFee);
+            if (!it._isBestGoods && !it._isAdPrint && !_itIsRealPrintCk) itemShipFees.push(shipFee);
         });
         // 일반 항목 배송비 = 가장 큰 1건만 (자동 묶음배송).
         // 2026-06-06: 가벽 우선 룰 — 가벽이 카트에 있으면 가벽 자체 시공/철거비 (100K/200K/700K 등) 만 부과,
