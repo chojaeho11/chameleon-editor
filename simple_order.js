@@ -2496,6 +2496,20 @@ html, body { background: #ffffff !important; }
 
         <div id="soStatus" class="so-status"></div>
 
+        <!-- 2026-06-13: 디자인 의뢰 배너 — 명함/전단/배너/가벽/글씨포토존만 노출. KR 전용 -->
+        <div id="soDesignReqBanner" style="display:none; margin:10px 0; padding:14px 16px; background:#fbfbfd; border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,0.04); cursor:pointer; transition:background 0.18s; font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Pretendard', system-ui, sans-serif;" onclick="window._soOpenDesignRequest()" onmouseover="this.style.background='#f5f5f7'" onmouseout="this.style.background='#fbfbfd'">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="width:44px; height:44px; border-radius:50%; background:rgba(0,122,255,0.10); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i class="fa-solid fa-pen-ruler" style="color:#007AFF; font-size:18px;"></i>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:14px; font-weight:700; color:#1d1d1f; letter-spacing:-0.3px;">디자인이 부담되시나요?</div>
+              <div style="font-size:12.5px; color:#86868b; margin-top:2px; letter-spacing:-0.2px;"><span id="soDreqProdLabel">상품</span> 디자인을 <span id="soDreqPriceLabel" style="color:#007AFF; font-weight:700;">10,000원</span>에 의뢰하세요 · 영업일 2~3일</div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="color:#c7c7cc; font-size:13px; flex-shrink:0;"></i>
+          </div>
+        </div>
+
         <div class="so-actions">
           <!-- 2026-05-12: 장바구니 보기 버튼 — 담지 않고 현재 카트만 열어보기 -->
           <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
@@ -8957,6 +8971,35 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-01: 허니콤배너 (hb_bn_*) — 단순 흐름: 단면 55K / 양면 80K, 사이즈/할인/큐 UI 모두 비활성.
         //   (hb_bn 그 자체가 기본 배너인 경우만 — 거치대 없는 별도 배너 출력물은 위에서 따로 처리)
+        // 2026-06-13: 디자인 의뢰 배너 — 명함/전단/배너/가벽/글씨포토존만 KR 사이트에 노출
+        try {
+            var _drProd = null;
+            var _drPrice = 0;
+            var _drNm = (p && p.name || '').toLowerCase();
+            var _siteIsKR = !window.SITE_CONFIG || (window.SITE_CONFIG.COUNTRY || 'KR').toUpperCase() === 'KR';
+            if (_siteIsKR) {
+                if (state.isBizCard) { _drProd = '명함'; _drPrice = 10000; }
+                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 20000; }
+                else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 40000; }
+                else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) { _drProd = '가벽'; _drPrice = 30000; }
+                else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 20000; }
+            }
+            var _drBan = document.getElementById('soDesignReqBanner');
+            if (_drBan) {
+                if (_drProd) {
+                    _drBan.style.display = '';
+                    var _drProdEl = document.getElementById('soDreqProdLabel');
+                    if (_drProdEl) _drProdEl.textContent = _drProd;
+                    var _drPriceEl = document.getElementById('soDreqPriceLabel');
+                    if (_drPriceEl) _drPriceEl.textContent = _drPrice.toLocaleString() + '원';
+                    state._drReqProduct = _drProd;
+                } else {
+                    _drBan.style.display = 'none';
+                    state._drReqProduct = null;
+                }
+            }
+        } catch (e) { console.warn('[soDesignReqBanner]', e); }
+
         state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code)) && !state.isBannerStandless;
         if (state.isBanner) {
             // 가격 override (DB 값 무시) — 모든 배너 동일가
@@ -11270,6 +11313,20 @@ html, body { background: #ffffff !important; }
         // 카트 드로어 슬라이드 + 자동 체크아웃 진행
         renderSoCart();
         window._soToggleCart(true);
+    };
+
+    // 2026-06-13: 디자인 의뢰 배너 클릭 → 팝업 열기 (현재 상품 자동 선택)
+    window._soOpenDesignRequest = function() {
+        var prod = state && state._drReqProduct;
+        var presetDesc = '';
+        try {
+            if (state && state.product && state.product.name) presetDesc = '상품: ' + state.product.name + '\n\n';
+        } catch (e) {}
+        if (typeof window.openDesignRequestPopup === 'function') {
+            window.openDesignRequestPopup({ product: prod, presetDesc: presetDesc });
+        } else {
+            location.href = '/design-market';
+        }
     };
 
     // ─────────────────────────────────────────────
