@@ -2534,27 +2534,20 @@ html, body { background: #ffffff !important; }
           <button class="so-btn" id="soBtnViewCart" onclick="window._soToggleCart(true)" style="background:#fff; color:#92400e; border:2px solid #f59e0b; font-weight:700;">
             ${tr('장바구니 보기', 'カートを見る', 'View cart')}
           </button>
-          <!-- 2026-06-13: 칼선작업 캐릭터 수 카운터 (등신대/키링 등 누끼 가능 제품) — 우측 버튼 위에 배치 -->
-          <div id="soCutlineCharRow" style="display:none; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:10px; font-size:12px; color:#7c2d12; font-weight:700;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-              <span>✂️ 칼선작업 캐릭터 수</span>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <button type="button" onclick="window._soBumpCutlineChar(-1)" style="width:28px; height:28px; border-radius:6px; border:1px solid #f59e0b; background:#fff; cursor:pointer; font-size:14px; font-weight:900; color:#92400e;">−</button>
-                <span id="soCutlineCharNum" style="min-width:30px; text-align:center; font-size:15px; font-weight:900; color:#7c2d12;">1</span>
-                <button type="button" onclick="window._soBumpCutlineChar(1)" style="width:28px; height:28px; border-radius:6px; border:1px solid #f59e0b; background:#fff; cursor:pointer; font-size:14px; font-weight:900; color:#92400e;">+</button>
+          <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
+            ${tr('장바구니에 담기', 'カートに追加', 'Add to cart')}
+          </button>
+          <!-- 2026-06-13: 칼선작업 체크박스 (등신대/키링 등 누끼 가능 제품) — 장바구니 담기 버튼 아래 배치 -->
+          <label id="soCutlineRow" for="soCutlineCheckbox" style="display:none; padding:10px 12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:10px; font-size:12px; color:#7c2d12; font-weight:600; cursor:pointer; line-height:1.55;">
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
+              <div>
+                <div style="font-weight:800; color:#7c2d12;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
+                <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>유닛 1개당 +10,000원</b>이 자동 추가됩니다.</div>
+                <div style="margin-top:3px; font-size:11px; color:#92400e;">현재 수량 <b id="soCutlineQtyLabel">1</b>개 × 10,000원 = <b id="soCutlineTotalLabel" style="color:#dc2626;">+10,000원</b></div>
               </div>
             </div>
-            <div style="margin-top:6px; font-size:11px; color:#92400e; font-weight:600; line-height:1.5;">캐릭터 1개당 +10,000원 · 누끼따기 + 칼선 + 받침 작업 모두 포함</div>
-            <div style="margin-top:4px; font-size:13px; color:#7c2d12; font-weight:900; text-align:right;">추가비용: <span id="soCutlineTotalLabel">+10,000원</span></div>
-          </div>
-          <button class="so-btn so-btn-cart" id="soBtnCart" onclick="window._soAddCart()" disabled>
-            ${tr('완성파일접수 (장바구니 담기)', 'カートに追加', 'Add to cart')}
-          </button>
-          <!-- 2026-06-13: 칼선작업 (디자이너) 버튼 — 등신대/키링 등 누끼 가능 제품 -->
-          <button class="so-btn so-btn-cutline" id="soBtnCartCutline" onclick="window._soAddCartCutline()" disabled style="display:none; background:linear-gradient(135deg,#f59e0b 0%,#dc2626 100%); color:#fff; border:none; font-weight:800; padding:12px; flex-direction:column; gap:2px; line-height:1.4;">
-            <div style="font-size:14px; font-weight:900;">✂️ 칼선작업 — 디자이너 의뢰</div>
-            <div style="font-size:11px; opacity:0.95;">누끼·칼선·받침 작업 (<span id="soCutlineBtnExtra">+10,000원</span>)</div>
-          </button>
+          </label>
           <button class="so-btn so-btn-buy" id="soBtnBuy" onclick="window._soBuyNow()" disabled>
             ${tr('바로 주문하기', '今すぐ注文', 'Order now')}
           </button>
@@ -3577,8 +3570,10 @@ html, body { background: #ffffff !important; }
                 designReqFee = _designUnit * _cartLineCount;
             }
         }
-        // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) — 캐릭터 수 × 10,000원, cutlineWork 선택된 경우만 적용
-        const cutlineFee = (state.cutlineWork && state.cutlineCharCount > 0) ? (state.cutlineCharCount * 10000) : 0;
+        // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) — 체크박스 + 수량 자동 (캐릭터 수 = qty)
+        const _cutlineQ = state.cutlineWork ? Math.max(1, parseInt(state.qty, 10) || 1) : 0;
+        if (state.cutlineWork) state.cutlineCharCount = _cutlineQ;
+        const cutlineFee = _cutlineQ * 10000;
         const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee + cutlineFee;
 
         // 렌더
@@ -8201,33 +8196,35 @@ html, body { background: #ffffff !important; }
         if (/등신대|standee|키링|keyring|원판|raw\s*board|cutout/i.test(name)) return true;
         return false;
     };
-    window._soBumpCutlineChar = function(delta) {
-        var n = Math.max(1, Math.min(50, (state.cutlineCharCount || 1) + delta));
-        state.cutlineCharCount = n;
-        var numEl = document.getElementById('soCutlineCharNum');
-        if (numEl) numEl.textContent = n;
-        var totalEl = document.getElementById('soCutlineTotalLabel');
-        if (totalEl) totalEl.textContent = '+' + (n * 10000).toLocaleString() + '원';
-        var btnExtraEl = document.getElementById('soCutlineBtnExtra');
-        if (btnExtraEl) btnExtraEl.textContent = '+' + (n * 10000).toLocaleString() + '원';
+    // 2026-06-13: 칼선작업 체크박스 토글 — 캐릭터 수는 자동으로 수량(qty) 따라감
+    window._soToggleCutline = function(checked) {
+        state.cutlineWork = !!checked;
+        window._soRefreshCutlineUI();
         if (typeof recalc === 'function') recalc();
     };
     window._soRefreshCutlineUI = function() {
-        var row = document.getElementById('soCutlineCharRow');
-        var btn = document.getElementById('soBtnCartCutline');
+        var row = document.getElementById('soCutlineRow');
+        var cb = document.getElementById('soCutlineCheckbox');
         var eligible = !!state.cutlineEligible;
         if (row) row.style.display = eligible ? '' : 'none';
-        if (btn) {
-            btn.style.display = eligible ? '' : 'none';
-            btn.disabled = !eligible;
-        }
-        if (eligible) {
-            if (state.cutlineCharCount == null) state.cutlineCharCount = 1;
-            window._soBumpCutlineChar(0);
-        } else {
+        if (!eligible) {
             state.cutlineWork = false;
-            state.cutlineCharCount = 1;
+            state.cutlineCharCount = 0;
+            if (cb) cb.checked = false;
+            return;
         }
+        // 캐릭터 수 = 주문 수량 (자동). cutlineWork 가 true 면 cutlineCharCount 도 동기화
+        var q = Math.max(1, parseInt(state.qty, 10) || 1);
+        state.cutlineCharCount = state.cutlineWork ? q : 0;
+        var qLbl = document.getElementById('soCutlineQtyLabel');
+        if (qLbl) qLbl.textContent = q;
+        var totalEl = document.getElementById('soCutlineTotalLabel');
+        if (totalEl) totalEl.textContent = '+' + (q * 10000).toLocaleString() + '원';
+        if (cb && cb.checked !== state.cutlineWork) cb.checked = state.cutlineWork;
+    };
+    // qty 변경시에도 라벨 갱신 (recalc 가 호출하지 않으면 안전망)
+    window._soOnQtyChanged = function() {
+        if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
     };
 
     // 2026-06-13: 다면 디자인 가벽 — 1m당 5만원 (각 면 디자인 다름). 양면이면 ×2.
@@ -8631,6 +8628,8 @@ html, body { background: #ffffff !important; }
             if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
             if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
         }
+        // 2026-06-13: 칼선작업 라벨도 qty 따라 갱신
+        if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
     };
 
     // ─────────────────────────────────────────────
@@ -11519,65 +11518,54 @@ html, body { background: #ffffff !important; }
 
     window._soAddCart = async function() {
         if (_soInFlight) return;
-        // 2026-06-13: 일반 담기 — 칼선작업 옵션 해제
-        state.cutlineWork = false;
-        const ok = await doAddToCart();
-        if (ok) {
-            // 카트 드로어를 우측에서 슬라이드해서 보여줌 (모달은 그대로 유지)
-            renderSoCart();
-            setTimeout(() => window._soToggleCart(true), 200);
-        }
-    };
-
-    // 2026-06-13: 칼선작업 (디자이너) 옵션과 함께 카트 담기 — design_requests 행도 자동 생성
-    window._soAddCartCutline = async function() {
-        if (_soInFlight) return;
-        if (!state.cutlineEligible) { alert('이 제품은 칼선작업 옵션을 지원하지 않습니다.'); return; }
-        var n = Math.max(1, state.cutlineCharCount || 1);
-        var fee = n * 10000;
-        if (!confirm('캐릭터 ' + n + '개의 칼선작업 (누끼·칼선·받침) 을\n디자이너에게 의뢰합니다.\n\n추가 금액: +' + fee.toLocaleString() + '원\n\n진행하시겠습니까?')) return;
-        state.cutlineWork = true;
-        state.cutlineCharCount = n;
-        // design_requests 행 생성 (디자이너 보드에 등록)
-        try {
-            var sb2 = window.sb || window.supabaseClient;
-            if (sb2) {
-                var u = await sb2.auth.getUser();
-                var uid = (u && u.data && u.data.user && u.data.user.id) || null;
-                var prodName = (state.product && (state.product.name_kr || state.product.name)) || '제품';
-                var payload = {
-                    customer_id: uid,
-                    title: '[칼선작업] ' + prodName + ' · 캐릭터 ' + n + '개',
-                    description: '제품: ' + prodName + '\n칼선작업 (누끼·칼선·받침) — 캐릭터 ' + n + '개\n금액: ' + fee.toLocaleString() + '원 (1개당 10,000원)\n\n[CUTLINE:{"charCount":' + n + ',"feePerChar":10000,"total":' + fee + '}]',
-                    category: '칼선작업',
-                    country: 'KR',
-                    budget_min: fee,
-                    budget_max: fee,
-                    files: [],
-                    status: 'open'
-                };
-                var ins = await sb2.from('design_requests').insert(payload).select().single();
-                if (!ins.error && ins.data) {
-                    state.designReqId = ins.data.id;
-                    state.designReqFee = fee;
-                    state.designReqQty = n;
-                    state.designReqTotal = fee;
-                    state._drReqProduct = '칼선작업';
-                    state._drReqPrice = 10000;
+        // 2026-06-13: 칼선작업 체크되어 있으면 design_requests 행 자동 생성 후 카트 담기
+        if (state.cutlineWork && state.cutlineEligible) {
+            var n = Math.max(1, parseInt(state.qty, 10) || 1);
+            var fee = n * 10000;
+            try {
+                var sb2 = window.sb || window.supabaseClient;
+                if (sb2) {
+                    var u = await sb2.auth.getUser();
+                    var uid = (u && u.data && u.data.user && u.data.user.id) || null;
+                    var prodName = (state.product && (state.product.name_kr || state.product.name)) || '제품';
+                    var payload = {
+                        customer_id: uid,
+                        title: '[칼선작업] ' + prodName + ' · 유닛 ' + n + '개',
+                        description: '제품: ' + prodName + '\n칼선작업 (배경제거 + 칼선 + 받침) — 유닛 ' + n + '개\n금액: ' + fee.toLocaleString() + '원 (1개당 10,000원)\n\n[CUTLINE:{"charCount":' + n + ',"feePerChar":10000,"total":' + fee + '}]',
+                        category: '칼선작업',
+                        country: 'KR',
+                        budget_min: fee,
+                        budget_max: fee,
+                        files: [],
+                        status: 'open'
+                    };
+                    var ins = await sb2.from('design_requests').insert(payload).select().single();
+                    if (!ins.error && ins.data) {
+                        state.designReqId = ins.data.id;
+                        state.designReqFee = fee;
+                        state.designReqQty = n;
+                        state.designReqTotal = fee;
+                        state._drReqProduct = '칼선작업';
+                        state._drReqPrice = 10000;
+                        state.cutlineCharCount = n;
+                    }
                 }
-            }
-        } catch (e) { console.warn('[cutline dreq insert]', e); }
+            } catch (e) { console.warn('[cutline dreq insert]', e); }
+        }
         const ok = await doAddToCart();
         if (ok) {
             renderSoCart();
             setTimeout(() => window._soToggleCart(true), 200);
+            // 다음 라인을 위한 상태 초기화
+            state.cutlineWork = false;
+            var cb2 = document.getElementById('soCutlineCheckbox');
+            if (cb2) cb2.checked = false;
+            state.designReqId = null;
+            state.designReqFee = 0;
+            state.designReqQty = 0;
+            state.designReqTotal = 0;
+            if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
         }
-        // 상태 초기화 (다음 라인은 cutline 없이 시작)
-        state.cutlineWork = false;
-        state.designReqId = null;
-        state.designReqFee = 0;
-        state.designReqQty = 0;
-        state.designReqTotal = 0;
     };
 
     window._soBuyNow = async function() {
@@ -11994,8 +11982,12 @@ html, body { background: #ffffff !important; }
                 // 2026-06-12: 카트 안내 박스 — 항상 그린 박스로 통일.
                 //   "최소주문금액 3만원 / 허니콤보드 외 무료배송" 안내 + 부족 시 빨간 경고
                 var _sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-                var _minKrw = 30000;
-                var _minLabel = (_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원');
+                // 2026-06-13: 허니콤보드 family 카트 → 최소 100K. 그 외 30K.
+                var _hasHcInCart2 = allItems.some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
+                var _minKrw = _hasHcInCart2 ? 100000 : 30000;
+                var _minLabel = _hasHcInCart2
+                    ? ((_sc === 'JP') ? '¥10,000' : (_sc === 'US' ? '$100' : '100,000원'))
+                    : ((_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원'));
                 if (_sub <= 0) {
                     _noticeWrap.style.display = 'none';
                 } else if (_sub < _minKrw) {
@@ -12766,11 +12758,8 @@ html, body { background: #ffffff !important; }
             if (_cat === 'manager_quote' || _type === 'manager_quote') return true;
             return false;
         });
-        // 2026-06-12: 사용자 요청 — 카트에 허니콤보드 카테고리 없으면 무료배송.
-        //   기존 "<100K → +30K" 자동가산은 허니콤 family 가 카트에 있을 때만 적용.
-        if (_hasHcInCart && !_hasAmountOrder && _allProductSub > 0 && _allProductSub < 100000 && shipTotal === 0) {
-            shipTotal += 30000;
-        }
+        // 2026-06-13: 사용자 요청 — 자동 +30K 포장배송비 제거.
+        //   대신 허니콤보드 family 는 최소주문 100K, 그 외 30K 로 강제 차단 (renderSoCart 에서 경고 + 버튼 비활성화).
         // 비-허니콤만 있는 카트 → 배송비 강제 0 (베스트굿즈 3K, 패브릭 5K/10K, real-print +10K 등 모두 무시)
         if (!_hasHcInCart) {
             shipTotal = 0;
