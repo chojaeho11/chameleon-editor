@@ -642,7 +642,15 @@ export function renderShortcutButtons(containerId) {
                 </div>
                 <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> Design Editor</div>
             </div>
-            <a href="${location.origin}/design-market" class="cta3-card cta3-band">
+            <a href="${location.origin}/design-market" class="cta3-card cta3-band" onclick="return (function(ev){
+                // PC (>= 768px) 에서는 팝업으로 진행, 모바일에서는 페이지 이동
+                if (window.innerWidth >= 768 && typeof window.openDesignRequestPopup === 'function') {
+                    ev.preventDefault();
+                    window.openDesignRequestPopup();
+                    return false;
+                }
+                return true;
+            })(event);">
                 <div class="cta3-word">REQUEST</div>
                 <div class="cta3-text">
                     <div class="cta3-title">${t.dreq_title}</div>
