@@ -11425,9 +11425,10 @@ html, body { background: #ffffff !important; }
     window._soOpenDesignRequest = function() {
         var prod = state && state._drReqProduct;
         var presetDesc = '';
+        var bizMeta = null;
         try {
             if (state && state.product && state.product.name) presetDesc = '상품: ' + state.product.name + '\n';
-            // 2026-06-13: 명함 — 단면/양면, 등급, 박, 후가공, 수량 모두 description 에 자동 기재
+            // 2026-06-13: 명함 — 단면/양면, 등급, 박, 후가공, 수량 모두 자동 기재 + structured meta
             if (state && state.isBizCard) {
                 var _BC_TIER = { general: '일반', premium: '프리미엄' };
                 var _BC_SIDE = { single: '단면', double: '양면' };
@@ -11438,17 +11439,28 @@ html, body { background: #ffffff !important; }
                 presetDesc += '- 인쇄: ' + (_BC_SIDE[state.bizSide] || '단면') + '\n';
                 presetDesc += '- 수량: ' + (state.qty || 1) + '각 (' + ((state.qty || 1) * 200) + '매)\n';
                 if (state.bizFoil) presetDesc += '- 박: ✨ ' + (_BC_FOIL[state.bizFoil] || state.bizFoil) + '\n';
+                var _finListArr = [];
                 if (state.bizFinishes) {
-                    var _finList = Object.keys(state.bizFinishes).filter(function(k){ return state.bizFinishes[k]; }).map(function(k){ return _BC_FIN[k] || k; });
-                    if (_finList.length > 0) presetDesc += '- 후가공: 🛠️ ' + _finList.join(', ') + '\n';
+                    Object.keys(state.bizFinishes).filter(function(k){ return state.bizFinishes[k]; }).forEach(function(k){ _finListArr.push(k); });
+                    var _finLabels = _finListArr.map(function(k){ return _BC_FIN[k] || k; });
+                    if (_finLabels.length > 0) presetDesc += '- 후가공: 🛠️ ' + _finLabels.join(', ') + '\n';
                 }
                 presetDesc += '\n';
+                bizMeta = {
+                    tier: state.bizTier || 'general',
+                    side: state.bizSide || 'single',
+                    paper: state.bizPaper || null,
+                    qty: state.qty || 1,
+                    foil: state.bizFoil || null,
+                    finishes: _finListArr
+                };
             }
         } catch (e) {}
         if (typeof window.openDesignRequestPopup === 'function') {
             window.openDesignRequestPopup({
                 product: prod,
                 presetDesc: presetDesc,
+                bizMeta: bizMeta,
                 onSuccess: function(res) {
                     // 의뢰 등록 성공 시: 완료 배너 표시 + 합계에 디자인비 포함
                     state.designReqId = res.requestId;

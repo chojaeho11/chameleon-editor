@@ -177,22 +177,35 @@ const PAYOUT = {
 };
 
 // 2026-06-13: 명함 — 단면 10K + 1K × (qty-1) 문구수정. 양면이면 ×2.
-function bizCardPayoutDetail(desc) {
-    var sideMatch = String(desc || '').match(/인쇄:\s*([단양]면|double|single)/i);
-    var qtyMatch = String(desc || '').match(/수량:\s*(\d+)\s*각/);
-    var side = 'single';
-    if (sideMatch) {
-        var s = sideMatch[1].toLowerCase();
-        if (/양면|double/i.test(s)) side = 'double';
+// 구조화된 [BIZ_META:{json}] 태그 우선, 없으면 자유 텍스트 파싱 fallback.
+function parseBizMeta(desc) {
+    var s = String(desc || '');
+    var m = s.match(/\[BIZ_META:(\{[^\]]+\})\]/);
+    if (m) {
+        try { return JSON.parse(m[1]); } catch (e) { return null; }
     }
-    var qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
-    if (qty < 1) qty = 1;
+    return null;
+}
+
+function bizCardPayoutDetail(desc) {
+    var meta = parseBizMeta(desc);
+    var side = 'single', qty = 1;
+    if (meta) {
+        side = (meta.side === 'double') ? 'double' : 'single';
+        qty = Math.max(1, parseInt(meta.qty || 1, 10));
+    } else {
+        // fallback — 자유 텍스트 파싱
+        var sideMatch = String(desc || '').match(/인쇄:\s*([단양]면|double|single)/i);
+        var qtyMatch = String(desc || '').match(/수량:\s*(\d+)\s*각/);
+        if (sideMatch && /양면|double/i.test(sideMatch[1])) side = 'double';
+        if (qtyMatch) qty = Math.max(1, parseInt(qtyMatch[1], 10));
+    }
     var mult = (side === 'double') ? 2 : 1;
     var NEW_PAYOUT = 10000 * mult;
     var TEXT_MOD_PAYOUT = 1000 * mult;
     var textMods = Math.max(0, qty - 1);
     var total = NEW_PAYOUT + textMods * TEXT_MOD_PAYOUT;
-    return { side: side, qty: qty, mult: mult, newPayout: NEW_PAYOUT, textModPayout: TEXT_MOD_PAYOUT, textModCount: textMods, total: total };
+    return { side: side, qty: qty, mult: mult, newPayout: NEW_PAYOUT, textModPayout: TEXT_MOD_PAYOUT, textModCount: textMods, total: total, meta: meta };
 }
 
 let userId = null;
@@ -494,6 +507,36 @@ function renderCard(r) {
         </div>
     ` : '';
 
+    // 명함 옵션 박스 (단면/양면, 등급, 박, 후가공, 수량)
+    let bizCardHtml = '';
+    if (r.category === '명함') {
+        const bm = parseBizMeta(r.description);
+        const _BC_TIER = { general: '일반', premium: '프리미엄' };
+        const _BC_SIDE = { single: '단면', double: '양면' };
+        const _BC_PAPER = { snowpaper250: '스노우지 250g', nuvegi240: '누벅 240g', concept270: '컨셉 270g', renoir230: '르노아 230g', mosamoja250: '모사모자 250g' };
+        const _BC_FOIL = { matte_gold: '무광 금박', glossy_gold: '유광 금박', matte_silver: '무광 은박', glossy_silver: '유광 은박', rose_gold: '로즈골드', laser: '레이저 홀로그램' };
+        const _BC_FIN = { round_corner: '귀도리(모서리 둥글게)', circle_hole: '타공', press: '엠보싱', emboss: '음각', spot_uv: '에폭시' };
+        let lines = [];
+        if (bm) {
+            if (bm.tier) lines.push('등급: <b>' + esc(_BC_TIER[bm.tier] || bm.tier) + '</b>');
+            if (bm.side) lines.push('인쇄: <b>' + esc(_BC_SIDE[bm.side] || bm.side) + '</b>');
+            if (bm.paper) lines.push('용지: <b>' + esc(_BC_PAPER[bm.paper] || bm.paper) + '</b>');
+            if (bm.qty)   lines.push('수량: <b>' + bm.qty + '각 (' + (bm.qty * 200) + '매)</b>');
+            if (bm.foil)  lines.push('박: <b style="color:#b45309;">✨ ' + esc(_BC_FOIL[bm.foil] || bm.foil) + '</b>');
+            if (bm.finishes && bm.finishes.length > 0) {
+                lines.push('후가공: <b style="color:#007AFF;">🛠️ ' + bm.finishes.map(k => esc(_BC_FIN[k] || k)).join(', ') + '</b>');
+            }
+        }
+        if (lines.length > 0) {
+            bizCardHtml = `
+                <div style="margin-top:10px; padding:12px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px;">
+                    <div style="font-size:11.5px; font-weight:700; color:#92400e; margin-bottom:6px;">📇 명함 옵션</div>
+                    <div style="font-size:12.5px; color:#1d1d1f; line-height:1.85;">${lines.join('<br>')}</div>
+                </div>
+            `;
+        }
+    }
+
     // 작업중인 디자이너 정보 (다른 디자이너에게도 보이게)
     const claimedByHtml = (meta.designerId && r.status !== 'open') ? `
         <div style="margin-top:8px; padding:8px 12px; background:${isMine?'rgba(52,199,89,0.10)':'rgba(255,149,0,0.10)'}; border-radius:10px; font-size:12.5px; font-weight:600; color:${isMine?'var(--green)':'var(--orange)'}; display:flex; align-items:center; gap:6px;">
@@ -540,6 +583,7 @@ function renderCard(r) {
                     <button class="db-more" onclick="this.previousElementSibling.classList.toggle('exp');this.textContent=this.previousElementSibling.classList.contains('exp')?'접기':'더 보기'">더 보기</button>
                     ${filesHtml}
                     ${finalHtml}
+                    ${bizCardHtml}
                     ${claimedByHtml}
                     <div class="db-payout-box">
                         <span class="l">디자이너 정산금</span>

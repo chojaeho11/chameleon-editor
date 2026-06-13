@@ -666,7 +666,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             if (_itemNote) boxes.push(`<div class="opt-box opt-note"><div class="opt-head"><i class="fa-solid fa-message"></i> 고객요청사항</div><div class="opt-val">${esc(_itemNote)}</div></div>`);
 
             // 2026-06-13: 명함 옵션 박스 — 등급/단면양면/박/후가공
-            if (it.bizCard || it._isBizCard) {
+            const _isBcCard = !!(it.bizCard || it._isBizCard || (it.product && it.product.code && /^pp_bc/i.test(it.product.code)));
+            if (_isBcCard) {
                 const _bc = it.bizCard || {};
                 const _bcLines = [];
                 const _BIZ_TIER_LBL = { general: '일반', premium: '프리미엄' };
@@ -691,7 +692,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _dr = it.designRequest;
                 // 명함은 신규 + 문구수정 분리. 양면 ×2.
                 let _drBody = '';
-                if (it.bizCard || it._isBizCard || _dr.biz_qty) {
+                if (_isBcCard || _dr.biz_qty) {
                     const _bcSide = _dr.biz_side || (it.bizCard && it.bizCard.side) || 'single';
                     const _bcQ = _dr.biz_qty || ((it.qty >= 200 && it.qty % 200 === 0) ? it.qty/200 : (it.qty || 1));
                     const _mult = (_bcSide === 'double') ? 2 : 1;

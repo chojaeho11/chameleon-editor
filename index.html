@@ -10921,7 +10921,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=374"></script>
+<script src="/simple_order.js?v=375"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -20733,7 +20733,7 @@ if (w >= 20 && h >= 20) {
 <script>
 (function DesignReqPopup(){
     'use strict';
-    var state = { mode: 'hq', product: null, price: 0, preset: null, qty: 1, onSuccess: null };
+    var state = { mode: 'hq', product: null, price: 0, preset: null, qty: 1, onSuccess: null, bizMeta: null };
 
     function $(id){ return document.getElementById(id); }
 
@@ -20785,7 +20785,7 @@ if (w >= 20 && h >= 20) {
     }
 
     function _resetForm() {
-        state.product = null; state.price = 0; state.preset = null; state.qty = 1; state.onSuccess = null;
+        state.product = null; state.price = 0; state.preset = null; state.qty = 1; state.onSuccess = null; state.bizMeta = null;
         document.querySelectorAll('#dreqProds .dreq-prod').forEach(function(b){ b.classList.remove('selected'); });
         $('dreqQty').value = 1;
         $('dreqTotal').style.display = 'none';
@@ -20803,6 +20803,7 @@ if (w >= 20 && h >= 20) {
         opts = opts || {};
         _resetForm();
         state.onSuccess = (typeof opts.onSuccess === 'function') ? opts.onSuccess : null;
+        state.bizMeta = opts.bizMeta || null;
         if (opts.product) {
             var btn = document.querySelector('#dreqProds .dreq-prod[data-prod="' + opts.product + '"]');
             if (btn) _selectProduct(opts.product, parseInt(btn.dataset.price, 10));
@@ -20902,6 +20903,12 @@ if (w >= 20 && h >= 20) {
             var files = await _uploadFiles(uid);
             var qtyLine = (state.mode === 'hq' && qty > 1) ? ('수량: ' + qty + '건 · 단가: ' + unitPrice.toLocaleString() + '원 · 합계: ' + total.toLocaleString() + '원\n\n') : '';
             var finalDesc = '[' + name + ' · ' + phone + ']\n' + qtyLine + desc;
+            // 2026-06-13: 명함 — 구조화된 메타 태그 추가 (designer-board 가 파싱)
+            if (state.bizMeta) {
+                try {
+                    finalDesc += '\n\n[BIZ_META:' + JSON.stringify(state.bizMeta) + ']';
+                } catch (e) {}
+            }
             var payload = {
                 customer_id: uid,
                 title: title,
