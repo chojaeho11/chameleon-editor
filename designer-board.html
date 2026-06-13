@@ -298,6 +298,24 @@ function payoutDetailFor(r) {
     return null;
 }
 
+// 2026-06-13: 자유의뢰 — [FREE_REQ:{customerPrice,designerPayout}] 태그 파싱
+function parseFreeReqMeta(desc) {
+    var s = String(desc || '');
+    var startIdx = s.indexOf('[FREE_REQ:');
+    if (startIdx < 0) return null;
+    var jsonStart = startIdx + '[FREE_REQ:'.length;
+    var depth = 0, jsonEnd = -1;
+    for (var i = jsonStart; i < s.length; i++) {
+        if (s[i] === '{') depth++;
+        else if (s[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
+    }
+    if (jsonEnd < 0) return null;
+    try { return JSON.parse(s.substring(jsonStart, jsonEnd)); } catch (e) { return null; }
+}
+
 function payoutLabel(r) {
     if (r && r.category === '명함') {
         var d = bizCardPayoutDetail(r.description);
@@ -308,7 +326,16 @@ function payoutLabel(r) {
     }
     var p = payoutOf(r.category);
     if (p > 0) return p.toLocaleString() + '원';
-    // 자유의뢰: 메타에 합의 금액 있으면 표시, 없으면 협의
+    // 자유의뢰: FREE_REQ 메타 → 70% 자동, 없으면 합의 금액, 그것도 없으면 협의
+    var fr = parseFreeReqMeta(r.description);
+    if (fr && fr.designerPayout) {
+        return fr.designerPayout.toLocaleString() + '원 (의뢰금액 ' + Number(fr.customerPrice || 0).toLocaleString() + '원의 70%)';
+    }
+    if (r && (r.budget_max || r.budget_min)) {
+        var custP = Number(r.budget_max || r.budget_min);
+        var pay = Math.floor(custP * 0.7);
+        return pay.toLocaleString() + '원 (의뢰금액 ' + custP.toLocaleString() + '원의 70%)';
+    }
     var m = parseMeta(r.description);
     if (m.agreedPayout) return Number(m.agreedPayout).toLocaleString() + '원';
     return '협의 (완료 시 입력)';
@@ -375,9 +402,28 @@ function parseMeta(desc) {
     return m;
 }
 
+// 2026-06-13: FREE_REQ JSON 균형 파서로 본문에서 제거
+function stripFreeReqTag(desc) {
+    var s = String(desc || '');
+    var startIdx = s.indexOf('[FREE_REQ:');
+    if (startIdx < 0) return s;
+    var jsonStart = startIdx + '[FREE_REQ:'.length;
+    var depth = 0, jsonEnd = -1;
+    for (var i = jsonStart; i < s.length; i++) {
+        if (s[i] === '{') depth++;
+        else if (s[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
+    }
+    if (jsonEnd < 0) return s;
+    var tagEnd = (s[jsonEnd] === ']') ? jsonEnd + 1 : jsonEnd;
+    return s.substring(0, startIdx) + s.substring(tagEnd);
+}
+
 function stripMeta(desc) {
-    // 2026-06-13: BIZ_META JSON 은 균형 파싱으로 제거 (내부 ] 포함 가능)
-    var s = stripBizMetaTag(String(desc || ''));
+    // 2026-06-13: BIZ_META / FREE_REQ JSON 은 균형 파싱으로 제거 (내부 ] 포함 가능)
+    var s = stripFreeReqTag(stripBizMetaTag(String(desc || '')));
     return s
         .replace(/\[DESIGNER:[^\]]+\]/g, '')
         .replace(/\[COMPLETED:[^\]]+\]/g, '')
