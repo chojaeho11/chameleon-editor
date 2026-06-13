@@ -736,6 +736,18 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 boxes.push(`<div class="opt-box" style="border-color:#fde047; background:#fefce8;"><div class="opt-head" style="color:#854d0e;"><i class="fa-solid fa-shapes"></i> 가벽 형태</div><div class="opt-val" style="line-height:1.8;">형태: <b>${esc(_WSHAPE[it.wallShape] || it.wallShape)}</b>${it.wallShapeFee ? ' (+' + fmt(it.wallShapeFee) + '원)' : ''}</div></div>`);
             }
 
+            // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) 박스
+            if (it.cutlineWork || (it.cutlineCharCount && it.cutlineCharCount > 0)) {
+                var _clChars = it.cutlineCharCount || 1;
+                var _clFee = it.cutlineFee || (_clChars * 10000);
+                boxes.push('<div class="opt-box" style="border-color:#f59e0b; background:linear-gradient(135deg,#fef3c7,#fde68a);"><div class="opt-head" style="color:#7c2d12;"><i class="fa-solid fa-scissors"></i> 칼선작업 (디자이너 의뢰)</div><div class="opt-val" style="line-height:1.85; color:#7c2d12; font-weight:600;">'
+                    + '<div>캐릭터 수: <b>' + _clChars + '개</b></div>'
+                    + '<div>작업 내역: <b>누끼따기 + 칼선 + 받침</b></div>'
+                    + '<div>비용: <b style="color:#16a34a;">+' + fmt(_clFee) + '원</b> (개당 10,000원)</div>'
+                    + '<div style="margin-top:4px; font-size:11px; color:#92400e;">→ 디자이너 보드 (/designer-board) 에서 처리</div>'
+                    + '</div></div>');
+            }
+
             // 2026-06-13: 디자인 의뢰 박스 — 작업지시서에서 디자이너 작업 트리거
             if (it.designRequest && it.designRequest.total) {
                 const _dr = it.designRequest;
@@ -790,7 +802,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 'isAcrylicFamily','isCustomSize','isBanner','isSticker','isBizCard','isWall','isCutPrint',
                 'isStandeeV2','isRawBoard','isHoneycomb','isAcrylicGoods','isPresetGoods','isAmountOrder',
                 'isAdPrint','isRealPrint','isGeneralPrint','isBannerOutput','isHbFreeShip','isInstaSmall',
-                'tshirtSize','tshirtColor','tshirtColorName','tshirtPrintFee'
+                'tshirtSize','tshirtColor','tshirtColorName','tshirtPrintFee',
+                // 2026-06-13: 칼선작업 — 전용 박스에서 표시 중
+                'cutlineWork','cutlineCharCount','cutlineFee','cutlineEligible'
             ]);
             const _extraFieldLines = [];
             try {

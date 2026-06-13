@@ -316,6 +316,24 @@ function parseFreeReqMeta(desc) {
     try { return JSON.parse(s.substring(jsonStart, jsonEnd)); } catch (e) { return null; }
 }
 
+// 2026-06-13: 칼선작업 메타 파싱 (균형 파서)
+function parseCutlineMeta(desc) {
+    var s = String(desc || '');
+    var startIdx = s.indexOf('[CUTLINE:');
+    if (startIdx < 0) return null;
+    var jsonStart = startIdx + '[CUTLINE:'.length;
+    var depth = 0, jsonEnd = -1;
+    for (var i = jsonStart; i < s.length; i++) {
+        if (s[i] === '{') depth++;
+        else if (s[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
+    }
+    if (jsonEnd < 0) return null;
+    try { return JSON.parse(s.substring(jsonStart, jsonEnd)); } catch (e) { return null; }
+}
+
 function payoutLabel(r) {
     if (r && r.category === '명함') {
         var d = bizCardPayoutDetail(r.description);
@@ -323,6 +341,14 @@ function payoutLabel(r) {
             return d.total.toLocaleString() + '원 (신규 ' + d.newPayout.toLocaleString() + ' + 문구수정 × ' + d.textModCount + '건)';
         }
         return d.total.toLocaleString() + '원' + (d.mult === 2 ? ' (양면 ×2)' : '');
+    }
+    // 칼선작업 — 캐릭터 수 × 10,000원의 70% (디자이너 지급)
+    if (r && r.category === '칼선작업') {
+        var cl = parseCutlineMeta(r.description);
+        var cust = cl ? (cl.total || 0) : Number(r.budget_max || r.budget_min || 0);
+        var n = cl ? (cl.charCount || 1) : 1;
+        var pay = Math.floor(cust * 0.7);
+        return pay.toLocaleString() + '원 (캐릭터 ' + n + '개 × 10,000원의 70%)';
     }
     var p = payoutOf(r.category);
     if (p > 0) return p.toLocaleString() + '원';
@@ -421,9 +447,28 @@ function stripFreeReqTag(desc) {
     return s.substring(0, startIdx) + s.substring(tagEnd);
 }
 
+// 2026-06-13: CUTLINE JSON 균형 파서로 본문에서 제거
+function stripCutlineTag(desc) {
+    var s = String(desc || '');
+    var startIdx = s.indexOf('[CUTLINE:');
+    if (startIdx < 0) return s;
+    var jsonStart = startIdx + '[CUTLINE:'.length;
+    var depth = 0, jsonEnd = -1;
+    for (var i = jsonStart; i < s.length; i++) {
+        if (s[i] === '{') depth++;
+        else if (s[i] === '}') {
+            depth--;
+            if (depth === 0) { jsonEnd = i + 1; break; }
+        }
+    }
+    if (jsonEnd < 0) return s;
+    var tagEnd = (s[jsonEnd] === ']') ? jsonEnd + 1 : jsonEnd;
+    return s.substring(0, startIdx) + s.substring(tagEnd);
+}
+
 function stripMeta(desc) {
-    // 2026-06-13: BIZ_META / FREE_REQ JSON 은 균형 파싱으로 제거 (내부 ] 포함 가능)
-    var s = stripFreeReqTag(stripBizMetaTag(String(desc || '')));
+    // 2026-06-13: BIZ_META / FREE_REQ / CUTLINE JSON 은 균형 파싱으로 제거 (내부 ] 포함 가능)
+    var s = stripCutlineTag(stripFreeReqTag(stripBizMetaTag(String(desc || ''))));
     return s
         .replace(/\[DESIGNER:[^\]]+\]/g, '')
         .replace(/\[COMPLETED:[^\]]+\]/g, '')
