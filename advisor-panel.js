@@ -622,9 +622,9 @@ export function renderShortcutButtons(containerId) {
     };
     var edt = EDT[lang] || EDT.en;
 
-    // 2026-06-14: 디자인 의뢰 + 디자이너 신청 2분할 배너 — 허니콤보드 위 #designRequestPair 로 분리.
+    // 2026-06-14: 디자인 의뢰 + 디자이너 신청 2분할 배너 → 7번째 매니저 버튼으로 통합되어 더 이상 렌더 안 함.
     var pairContainer = document.getElementById('designRequestPair');
-    if (pairContainer) {
+    if (false && pairContainer) {
         pairContainer.innerHTML = `
             <style>
                 .cta2-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;box-sizing:border-box;}
