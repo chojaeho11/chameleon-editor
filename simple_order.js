@@ -1557,18 +1557,20 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-14: "현재 상품 사이즈로 대지 맞추기" 버튼 제거 — 모달 진입 시 자동 적용되므로 불필요. -->
           <!-- 2026-06-15: 라이브러리는 좌측 사이드바로 이동 — 상단 row 제거. -->
           <style>
-            #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 180px 1fr; gap:12px; margin-top:10px; align-items:stretch; }
+            /* 2026-06-15: rail 폭 좁힘 (180→120), 썸네일 1열×6 정사각 꽉차게 (object-fit:cover). */
+            #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:10px; align-items:stretch; }
             @media (max-width:768px) { #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; } }
-            #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px; min-height:200px; }
-            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
-            #soQuickDesignSec .qd-rail-tab { padding:6px 0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
+            #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:200px; }
+            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+            #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; flex:1; align-content:start; }
-            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:4px; }
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:1fr; gap:5px; flex:1; align-content:start; }
+            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
-            #soQuickDesignSec .qd-rail-thumb img, #soQuickDesignSec .qd-rail-thumb svg { max-width:100%; max-height:100%; object-fit:contain; }
+            #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+            #soQuickDesignSec .qd-rail-thumb svg { width:80%; height:80%; }
             #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:10px; }
-            #soQuickDesignSec .qd-rail-more { padding:8px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
+            #soQuickDesignSec .qd-rail-more { padding:7px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
             #soQuickDesignSec .qd-rail-more:hover { background:#f1f5f9; }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
@@ -1589,6 +1591,8 @@ html, body { background: #ffffff !important; }
                 <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')">${tr('장식','装飾','Deco')}</button>
               </div>
               <div class="qd-rail-thumbs" id="soQdRailThumbs">
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
@@ -11835,17 +11839,15 @@ html, body { background: #ffffff !important; }
         async function _soQdRailLoad() {
             var grid = document.getElementById('soQdRailThumbs');
             if (!grid) return;
-            grid.innerHTML = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
-                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
-                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
-                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
+            var _loadStr = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
+            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr + _loadStr + _loadStr;
             // 장식 탭은 canvas-icons.js lazy load
             if (_railTab === 'decoration' && !window.ORNAMENTS) {
                 try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }
             }
             try {
                 var items = await _fetchLib(_railTab, '');
-                var top = items.slice(0, 4);
+                var top = items.slice(0, 6);
                 if (top.length === 0) {
                     grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('항목 없음','空','None') + '</div>';
                     return;
