@@ -8,6 +8,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- 2026-06-15: PDF.js — PDF 썸네일을 1페이지 이미지로 렌더 (인쇄 시 빈 박스 방지) -->
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+    if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+</script>
 <style>
 /* 2026-05-14: cotton_workorder.html 의 스타일을 차용 — 일반 주문용 작업지시서.
    사용자 요청: "패브릭 작업지시서의 인터페이스로 만들어줘" */
@@ -112,14 +119,16 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         page-break-inside: avoid;
         break-inside: avoid;
     }
-    /* 2026-06-15: 인쇄 시 빈 트레일링 페이지 방지 — 입력 전용 editor + 발행일 footer 숨김.
-       관리자 메모 (저장된 값) 은 위쪽 .note (#woAdminNote) 로 이미 보임. */
-    #woAdminNoteEditor, .foot { display: none !important; }
+    /* 2026-06-15: 인쇄 시 빈 트레일링 페이지 방지 — 발행일 footer 숨김.
+       (관리자 메모 editor 는 아래 @media 외부 규칙으로 화면+인쇄 모두 숨김 처리) */
+    .foot { display: none !important; }
     /* 2026-06-15: PDF embed 는 인쇄 미리보기에서 빈 박스로 나옴 → fallback 텍스트로 대체. */
     .item-thumb embed[type="application/pdf"] { display: none !important; }
     .pdf-print-fallback { display: flex !important; }
 }
 .pdf-print-fallback { display: none; }
+/* 2026-06-15: 작업지시서에서 관리자 메모 editor 는 화면+인쇄 모두 숨김 — 고객 요청사항으로 대체. */
+#woAdminNoteEditor { display: none !important; }
 /* 2026-06-15: 화면에서도 인쇄와 같은 시트별 분리 시각화 — 회색 배경 + 각 페이지가 A4 카드. */
 @media screen {
     body.wo-paged { background:#d6d3d1; padding:30px 0; }
@@ -393,11 +402,47 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         window._woCurrentComplete = _currentComplete;
 
         // 기존 시스템 헤더 (간편주문 결제수단/이메일/배송메모) — 매니저가 손대지 않는 자동 정보
-        const _headerForDisplay = _headerPart
+        let _headerForDisplay = _headerPart
             .replace(/\[제품종류\][^\n]*\n?/g, '')
             .replace(/\[직원메모\][\s\S]*?(?=\n\[|$)/g, '')
             .replace(/\[작업지시완료\][^\n]*\n?/g, '')
             .trim();
+
+        // 2026-06-15: 배송/시공비 라인을 항목별 상세 (가장 큰 배송비 = 메인 라인) 로 교체.
+        //   기존 "배송/시공비: 100,000원" → "배송/시공: 수도권 설치+철거 (100,000원)" + 나머지 묶음 N건.
+        try {
+            const _itemsForShip = Array.isArray(order.items) ? order.items : [];
+            const _SHIP_LABEL_TOP = {
+                self_pickup: '본사 방문 수령', metro_install: '수도권 설치', metro_weekend: '수도권 야간/주말 설치',
+                metro_install_removal: '수도권 설치+철거', regional_truck: '지방 용차배송', regional_install: '지방 설치배송',
+                metro_delivery: '수도권 배송', regional_delivery: '지방 배송', parcel_shipping: '택배배송',
+                large_parcel: '대형택배', small_parcel: '소형택배', compact_parcel: '묶음 소형택배',
+                pd_bulk_free: '종이매대 무료배송', pd_parcel_1: '종이매대 1박스 택배', pd_parcel_2: '종이매대 2박스 택배',
+                bundle_shipping: '묶음배송', preset_goods_flat: '굿즈 정액배송 (3,000원)'
+            };
+            let _mainShip = null;
+            let _maxFee = -1;
+            let _bundledCount = 0;
+            _itemsForShip.forEach((it, idx) => {
+                if (!it || !it.shipping) return;
+                const _fee = Number(it.shipping.fee) || 0;
+                if (_fee > _maxFee) { _maxFee = _fee; _mainShip = { idx, ship: it.shipping }; }
+                if (_fee === 0 || it.shipping.method === 'bundle_shipping') _bundledCount++;
+            });
+            if (_mainShip) {
+                const _m = _mainShip.ship.method;
+                const _lbl = _SHIP_LABEL_TOP[_m] || _m || '-';
+                let _line = '배송/시공: ' + _lbl + ' (' + fmt(_mainShip.ship.fee || 0) + '원)';
+                if (_bundledCount > 0 && _itemsForShip.length > 1) {
+                    _line += ' + 묶음배송 ' + _bundledCount + '건 (무료)';
+                }
+                // 기존 "배송/시공비: ..." 줄 제거 후 새 줄 추가
+                _headerForDisplay = _headerForDisplay
+                    .replace(/^\s*배송[\/·]?\s*시공비?:[^\n]*\n?/gm, '')
+                    .trim();
+                _headerForDisplay = (_headerForDisplay ? _headerForDisplay + '\n' : '') + _line;
+            }
+        } catch (e) { console.warn('[wo ship summary]', e); }
 
         if (_headerForDisplay) {
             const note = document.getElementById('woAdminNote');
@@ -465,13 +510,12 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         }
 
         // 2026-06-03: 고객 요청사항 (배송 메모 = order.request_note) 표시
+        // 2026-06-15: 항상 표시 (없으면 "없음" 안내)
         const _custReqClean = (order.request_note || '').replace(/\n?##REF:[^#]+##/g, '').trim();
-        if (_custReqClean) {
-            const _crBox = document.getElementById('woCustomerReqBox');
-            const _crTxt = document.getElementById('woCustomerReqText');
-            if (_crBox) _crBox.style.display = '';
-            if (_crTxt) _crTxt.textContent = _custReqClean;
-        }
+        const _crBox = document.getElementById('woCustomerReqBox');
+        const _crTxt = document.getElementById('woCustomerReqText');
+        if (_crBox) _crBox.style.display = '';
+        if (_crTxt) _crTxt.textContent = _custReqClean || '없음';
 
         // 옵션 라벨 헬퍼
         function addonLabel(code, qty) {
@@ -1075,6 +1119,10 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             </div>`;
         }).join('');
 
+        // 2026-06-15: PDF 썸네일을 PDF.js 로 1페이지 이미지 렌더 (인쇄에 안전).
+        //   await 로 모두 끝낸 후 페이지 분할 → embed → img 교체된 상태에서 레이아웃 적용.
+        try { await _woRenderPdfThumbs(); } catch (e) { console.warn('[wo pdf render]', e); }
+
         // 2026-06-15: 화면 페이지 분할 — 헤더 1장, 항목별 1장, 푸터 1장 (인쇄 결과와 동일).
         try { _woApplyPaged(); } catch (e) { console.warn('[wo paged]', e); }
 
@@ -1083,6 +1131,45 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+ esc(e.message) + '</div>';
     }
 })();
+
+// 2026-06-15: PDF 썸네일 (embed[type='application/pdf']) 을 PDF.js 로 첫 페이지 이미지로 변환.
+//   embed 는 화면 미리보기에서 우측 스크롤바가 보이고, Chrome 인쇄 파이프라인에서는 빈 박스로 출력됨.
+//   이 함수는 모든 embed 를 <img src="dataURL"> 로 교체해 화면+인쇄 모두 안전하게 렌더.
+async function _woRenderPdfThumbs() {
+    if (!window.pdfjsLib) return;
+    const embeds = Array.from(document.querySelectorAll('.item-thumb embed[type="application/pdf"]'));
+    for (const emb of embeds) {
+        const raw = emb.getAttribute('src') || '';
+        const url = raw.split('#')[0];
+        if (!url) continue;
+        try {
+            const task = window.pdfjsLib.getDocument({ url: url, withCredentials: false });
+            const pdf = await task.promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+            const dataUrl = canvas.toDataURL('image/png');
+            // embed 교체
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.alt = 'PDF page 1';
+            img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;background:#fff;';
+            emb.replaceWith(img);
+            // 같은 컨테이너의 .pdf-print-fallback 도 더 이상 필요 없음 (이미지가 인쇄에도 잘 나옴)
+            const wrap = img.parentNode;
+            if (wrap) {
+                const fb = wrap.querySelector('.pdf-print-fallback');
+                if (fb) fb.remove();
+            }
+        } catch (e) {
+            console.warn('[wo pdf render] failed for', url, e);
+            // 실패 시 embed 그대로 남기고 fallback 표시되도록 둠
+        }
+    }
+}
 
 // 2026-06-15: .sheet 의 자식들을 페이지 단위로 재구성.
 //   헤더(주문자 정보 + 합계 + 주문 정보 + 관리자 메모 + 발행일) 한 장 + 항목별 한 장.
