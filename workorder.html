@@ -532,7 +532,16 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const uf = it.uploadedFiles[0];
                 thumbUrl = uf.thumb || uf.originalUrl || uf.url || '';
             }
-            if (!thumbUrl && customerFiles[i]) thumbUrl = customerFiles[i].url;
+            // 2026-06-14: customerFiles fallback — _item_idx 가 명시된 file 만 그 행에 매칭 (cross-row 오염 방지).
+            //   레거시 (구 카트에서 만들어져 _item_idx 가 없는 file) 은 첫 행에만 매칭.
+            if (!thumbUrl) {
+                const _strictMine = customerFiles.find(f => f && Number(f._item_idx) === i);
+                if (_strictMine) thumbUrl = _strictMine.url;
+                else if (i === 0) {
+                    const _legacy = customerFiles.find(f => f && (f._item_idx == null));
+                    if (_legacy) thumbUrl = _legacy.url;
+                }
+            }
 
             // 가벽 정보
             let wallHtml = '';
@@ -908,9 +917,12 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             //   각 아이템은 customerFiles[i] 를 자기 썸네일로 이미 사용하므로 그 외 잉여만 노출.
             //   2026-05-14: 이전 로직이 customerFiles.slice(1) 로 무조건 두번째부터 노출하면서
             //               아이템2의 썸네일이 동시에 아이템1의 "추가파일"로 중복 표시되는 버그 수정.
+            //   2026-06-15: _item_idx 가 명시된 file (관리자가 특정 행에 첨부한 파일) 은 그 행의 itemAttachHtml 로만 표시.
+            //               extras 에서는 _item_idx 가 없는 (= 고객 cart 단계의 잉여 업로드) file 만 노출.
             const extraStart = items.length;
-            const extraFilesArr = (i === 0 && customerFiles.length > extraStart)
-                ? customerFiles.slice(extraStart)
+            const _legacyExtraPool = customerFiles.filter(f => f && f._item_idx == null);
+            const extraFilesArr = (i === 0 && _legacyExtraPool.length > extraStart)
+                ? _legacyExtraPool.slice(extraStart)
                 : [];
             const extraFiles = extraFilesArr.map(f => `<div>
                 <div class="ef-thumb"><img src="${esc(f.url)}" alt="${esc(f.name || '')}"></div>
