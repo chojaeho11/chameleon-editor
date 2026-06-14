@@ -7149,7 +7149,9 @@ html, body { background: #ffffff !important; }
         var raw = areaM2 * perSqm;
         var calcPrice = Math.round(raw / 10) * 10;
         // 2026-06-12: 배너 출력물 — DB 단가 그대로 사용 (면적 곱셈 X). 사이즈는 표시용.
-        if (state.isBannerOutput && state.product && state.product.price) {
+        // 2026-06-14 fix: 현수막 9종 (placard) 은 m² 기반 — 면적 곱셈 유지. 어깨띠는 flat 1000원이라 isCustomSize=false 이므로 여기 안 들어옴.
+        var _isPlacardKeepCalc = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(state.product);
+        if (state.isBannerOutput && !_isPlacardKeepCalc && state.product && state.product.price) {
             calcPrice = state.product.price;
         }
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
