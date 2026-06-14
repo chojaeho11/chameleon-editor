@@ -10301,7 +10301,9 @@ html, body { background: #ffffff !important; }
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 할인 안내 (eligible 면)
-        if (state.isBannerOutput) {
+        // 2026-06-14 fix: 현수막 9종 (placard family) 은 m² 가격이라 W×H 입력 유지.
+        var _isPlacardForCustom = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
+        if (state.isBannerOutput && !_isPlacardForCustom) {
             if (custSec) custSec.style.display = 'none';
             var _bdNotice = document.getElementById('soBannerDiscountNotice');
             var _bdBtn50  = document.getElementById('soBannerDiscountBtn50');
