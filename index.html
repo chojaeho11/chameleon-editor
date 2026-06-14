@@ -1414,12 +1414,18 @@ window._tcmFallbackClick = function(code) {
             }
             /* ★ 6버튼 grid — PC: 3열 2행 / 모바일: 2열 3행 */
             #mgrActionsGrid {
-                display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;
+                display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;
                 margin-bottom:4px;
             }
             @media (max-width: 600px) {
-                #mgrActionsGrid { grid-template-columns:repeat(4, 1fr); gap:6px; }
+                #mgrActionsGrid { grid-template-columns:repeat(2, 1fr); gap:9px; }
             }
+            /* 2026-06-14: 디자이너 신청 — 검정 배경 + 흰 아이콘 (사용자 요청) */
+            .mgr-action.mgr-dapply { background:#000 !important; border-color:rgba(255,255,255,0.18) !important; }
+            .mgr-action.mgr-dapply .mgr-action-icon-wrap,
+            .mgr-action.mgr-dapply .mgr-action-icon-wrap i { background:transparent !important; color:#fff !important; }
+            .mgr-action.mgr-dapply .mgr-action-label { color:#fff !important; }
+            .mgr-action.mgr-dapply:hover { background:#1a1a1a !important; }
             .mgr-action {
                 position:relative; overflow:hidden;
                 display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -1899,10 +1905,10 @@ window._tcmFallbackClick = function(code) {
                 -webkit-backdrop-filter:none !important;
             }
             #mgrQuoteHero #mgrQuoteTitle, #mgrQuoteHero #mgrQuoteDesc { display:none !important; }
-            /* 2026-06-14: 7 버튼 — PC: 1줄 7개 (디자이너신청 추가). gap 도 약간 축소. */
+            /* 6 버튼 — PC: 1줄 6개, 텍스트 라벨 아래 (디자이너신청은 챗봇상담 자리 차지) */
             #mgrActionsGrid {
-                grid-template-columns:repeat(7, 1fr) !important;
-                gap:10px !important;
+                grid-template-columns:repeat(6, 1fr) !important;
+                gap:16px !important;
                 padding:0 !important;
             }
             /* 버튼 — 테두리/그림자 없이 깔끔, 아이콘 칩 + 라벨만 */
@@ -2044,21 +2050,11 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-phone-volume"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_mgr_phones">매니저 전화안내</span>
                 </button>
-                <button type="button" class="mgr-action mgr-chat" onclick="if(window.__SITE_CODE==='JP'){if(window._cpOpenOrderLookup){window._cpOpenOrderLookup();}else{location.href='/jp-track';}return;} if(window.openAdvisorPanel){window.openAdvisorPanel();}else if(window.toggleAdvisorPanel){window.toggleAdvisorPanel();}">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots" id="mgrChatBtnIcon"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_mgr_chat">챗봇 상담</span>
+                <!-- 2026-06-14: 챗봇상담 제거 → 디자이너 신청으로 교체. 검정 배경 + 흰 아이콘. 챗봇은 우측 하단 FAB 로 접근. -->
+                <button type="button" class="mgr-action mgr-dapply" onclick="if(window.innerWidth>=768 && window.openDesignerApplyPopup){window.openDesignerApplyPopup();}else{location.href='/designer-board';}">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-id-badge"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_designer_apply">디자이너 신청</span>
                 </button>
-                <script>
-                // 2026-06-12: JP 사이트는 챗봇상담 → 주문조회로 동작 변경. 아이콘도 돋보기로 스왑.
-                (function(){
-                    var h=(location.hostname||'').toLowerCase();
-                    var isJp = (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0 || window.__SITE_CODE==='JP');
-                    if (isJp) {
-                        var ic = document.getElementById('mgrChatBtnIcon');
-                        if (ic) { ic.classList.remove('fa-comment-dots'); ic.classList.add('fa-magnifying-glass'); }
-                    }
-                })();
-                </script>
                 <button type="button" id="mgrVipPayBtn" class="mgr-action mgr-vip" onclick="window._openPersonalPayModal && window._openPersonalPayModal()">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-crown"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_vip_pay">VIP 개인결제</span>
@@ -2074,11 +2070,6 @@ window._tcmFallbackClick = function(code) {
                 <button type="button" class="mgr-action mgr-coupon" onclick="window._openCouponShareModal && window._openCouponShareModal()">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-gift"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_event_coupon">이벤트 쿠폰</span>
-                </button>
-                <!-- 2026-06-14: 7번째 버튼 — 디자이너 신청 (제일 우측). 디자인의뢰는 위에 이미 있음. -->
-                <button type="button" class="mgr-action mgr-dapply" onclick="if(window.innerWidth>=768 && window.openDesignerApplyPopup){window.openDesignerApplyPopup();}else{location.href='/designer-board';}">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-id-badge"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_designer_apply">디자이너 신청</span>
                 </button>
             </div>
 
