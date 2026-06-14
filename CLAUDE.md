@@ -2,8 +2,12 @@
 
 ## 1. simple_order.js — `state.is*` 플래그는 다중 override 함정
 
-`state.isCustomSize` / `state.isBannerOutput` / `state.isRealPrint` / `state.isAdPrint` 등은
-**한 번 set 한 뒤 5~10곳에서 다시 덮어쓰임**. 한 군데만 고치면 다른 분기가 그대로 끄고 끝남.
+`state.isCustomSize` / `state.isBannerOutput` / `state.isRealPrint` / `state.isAdPrint` /
+`state.shipMethod` / `calcPrice` 등은 **한 번 set 한 뒤 5~10곳에서 다시 덮어쓰임**.
+한 군데만 고치면 다른 분기가 그대로 끄고 끝남.
+
+특히 `state.shipMethod` 는 product-load 마지막에 `state.shipMethod = defaultShip` 으로
+무조건 재설정됨 → family-specific 무료배송은 그 줄 *직후* 에 최종 override 필요.
 
 **수정 절차 (필수)**:
 1. 먼저 `Grep` 으로 `state\.<플래그명>\s*=` 와 `state\.<플래그명>\b` 둘 다 검색 — 모든 set / 사용 위치 확인
