@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- cotton-printer.com (Japan ファブリック印刷専門サイト) Sitemap
+     2026-06-14 신규 — Google が JP ファブリック ページを検出可能になる -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ===== Home ===== -->
+  <url>
+    <loc>https://www.cotton-printer.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.cotton-printer.com/"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.cotton-print.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.cotton-print.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.cotton-printer.com/"/>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- ===== カテゴリー / 用途別 ランディング ===== -->
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=fabric-poster</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=tapestry</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=backwall</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=photo-zone</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=banner</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?cat=noren</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ===== 素材別 ランディング ===== -->
+  <url>
+    <loc>https://www.cotton-printer.com/?material=oxford</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?material=chiffon</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?material=cotton</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cotton-printer.com/?material=polyester</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ===== サポート ページ ===== -->
+  <url>
+    <loc>https://www.cotton-printer.com/tokushoho</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+</urlset>

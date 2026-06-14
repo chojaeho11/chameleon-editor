@@ -7,10 +7,22 @@
     <lastmod>2026-04-01</lastmod>
   </sitemap>
 
-  <!-- cafe0101.com (Japan - JP) -->
+  <!-- cafe0101.com (Japan - JP, 印刷総合) -->
   <sitemap>
     <loc>https://www.cafe0101.com/sitemap.xml</loc>
-    <lastmod>2026-04-01</lastmod>
+    <lastmod>2026-06-14</lastmod>
+  </sitemap>
+
+  <!-- cotton-printer.com (Japan - JP, ファブリック印刷専門) [2026-06-14] -->
+  <sitemap>
+    <loc>https://www.cotton-printer.com/sitemap.xml</loc>
+    <lastmod>2026-06-14</lastmod>
+  </sitemap>
+
+  <!-- hexa-board.com (Hexalite ハニカムボード原板, JP主軸) [2026-06-14] -->
+  <sitemap>
+    <loc>https://www.hexa-board.com/sitemap.xml</loc>
+    <lastmod>2026-06-14</lastmod>
   </sitemap>
 
   <!-- cafe3355.com (US/Global - EN) -->

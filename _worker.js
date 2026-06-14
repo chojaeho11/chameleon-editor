@@ -158,14 +158,32 @@ const CATEGORY_SEO = {
 };
 
 // OG data for social crawlers (existing logic)
+// 2026-06-14: 日本市場 SEO 最適化 — title 50-60字、本文に主要キーワード自然な反復、
+//   ブランド名は末尾配置で「商品+利点+ブランド」順、検索意図ベース。
 const OG_DATA = {
     'cafe0101.com': {
         lang: 'ja',
         siteName: 'カメレオンプリンティング',
-        title: 'カメレオンプリンティング - エコ展示・ポップアップストア印刷 & 無料デザインエディター',
-        description: 'ハニカムボード、ファブリック印刷、アクリルグッズ、バナー、看板、パッケージまで。無料エディターでデザインから印刷まで一括対応。出店も可能なグローバル印刷プラットフォーム。',
-        keywords: 'カメレオンプリンティング,ハニカムボード,ファブリック印刷,ポップアップストア,等身大パネル,展示ブース,エコ印刷,バックウォール,アクリル印刷,バナースタンド,無料エディター,オンライン印刷',
+        title: 'ハニカムボード印刷・ファブリック印刷・展示ブース制作 | カメレオンプリンティング',
+        description: 'ハニカムボード、ファブリック（生地）印刷、アクリルグッズ、バナー、看板、ポップアップストア用パネルまで一括対応。無料オンラインデザインエディター搭載、低価格・短納期・日本全国配送。少量から大量まで法人・個人OK。',
+        keywords: 'ハニカムボード,ハニカムボード印刷,ハニカムパネル,ファブリック印刷,生地印刷,布印刷,ポップアップストア,展示ブース,等身大パネル,バックウォール,アクリル印刷,バナースタンド,看板印刷,オンライン印刷,無料デザインエディター,カメレオンプリンティング,印刷通販,激安印刷,法人印刷,展示会装飾,イベント装飾,什器制作,エコ印刷',
         url: 'https://www.cafe0101.com/',
+    },
+    'cotton-printer.com': {
+        lang: 'ja',
+        siteName: 'コットンプリント',
+        title: 'ファブリック印刷・生地プリント専門 タペストリー/バックウォール/横断幕 | Cotton Print',
+        description: '高画質ファブリック（生地・布）カスタム印刷の専門サイト。バックウォール、タペストリー、フォトゾーン、横断幕、のれん、店舗装飾用ファブリックを最短即日出荷。綿・オックス・シフォン・ポリエステル多種、無料デザインエディター付属。日本全国送料無料の商品多数。',
+        keywords: 'ファブリック印刷,生地印刷,布印刷,布プリント,生地プリント,タペストリー印刷,バックウォール,フォトゾーン,フォトスポット,横断幕,のれん,店舗装飾,イベント装飾,展示会装飾,オックスフォード印刷,シフォン印刷,綿布印刷,ポリエステル印刷,カスタム生地,オーダープリント,コットンプリント,布バナー,フラッグ印刷,無料デザインエディター',
+        url: 'https://www.cotton-printer.com/',
+    },
+    'hexa-board.com': {
+        lang: 'ja',
+        siteName: 'Hexalite ヘキサライト',
+        title: 'ハニカムボード原板 卸売 | Hexalite 韓国工場直送・全世界無料配送',
+        description: 'ハニカムボード（紙ハニカム）原板の卸売専門。展示ブース、ポップアップストア、商業ディスプレイ、軽量パッケージ用に最適。厚さ8〜100mm、サイズオーダー可、韓国工場直送で全世界無料配送。代理店・法人取引募集中。100%紙製エコ素材。',
+        keywords: 'ハニカムボード,ハニカムボード原板,ハニカム原板,ハニカムパネル,ハニカム構造ボード,紙ハニカム,ペーパーハニカム,軽量パネル,エコ素材,展示用パーティション,展示ブース,ポップアップストア,什器,ヘキサライト,Hexalite,卸売,韓国工場,直送,無料配送,代理店募集,法人取引,軽量ボード,環境配慮素材,紙製パネル,ハニカムサンドイッチパネル',
+        url: 'https://www.hexa-board.com/',
     },
     'cafe3355.com': {
         lang: 'en',
@@ -194,6 +212,8 @@ function getSiteData(hostname) {
 
 function getCountry(hostname, request) {
     if (hostname.includes('cafe0101')) return 'JP';
+    if (hostname.includes('cotton-printer.com')) return 'JP';
+    if (hostname.includes('hexa-board.com')) return 'JP';  // 主要市場は日本
     if (hostname.includes('cafe3355')) return 'US';
     if (hostname.includes('chameleon.design')) {
         // Auto-detect country from Cloudflare geo
@@ -386,14 +406,22 @@ export default {
         //   새로 구입한 hexa-board.com 전체를 raw_board.html(원판 랜딩) 전용으로 서빙. URL 은 그대로 유지.
         //   언어는 URL ?lang= 따름 (기본 한국어 — raw_board.html 의 hostLang 처리). cafe3355 블록과 동일 패턴.
         if (url.hostname.includes('hexa-board.com')) {
-            // robots.txt — 전용 (Sitemap 지시문 포함, 공유 robots 대신)
+            // robots.txt — 전용 (Sitemap 지시문 + JP主軸의 우선クロール)
             if (path === 'robots.txt') {
-                const robotsBody = 'User-agent: *\nAllow: /\n\nSitemap: https://www.hexa-board.com/sitemap.xml\n';
+                const robotsBody = 'User-agent: *\nAllow: /\n\nUser-agent: Googlebot\nAllow: /\nCrawl-delay: 0\n\nSitemap: https://www.hexa-board.com/sitemap.xml\n';
                 return new Response(robotsBody, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
             }
-            // sitemap.xml — 전용 (홈 1개 + 언어별 hreflang). 검색엔진 색인 가속 + Search Console/네이버 제출용.
+            // sitemap.xml — 2026-06-14: 정적 파일(/sitemap-hexa-board.xml) 사용. JP/EN 등 다양한 URL 포함.
             if (path === 'sitemap.xml') {
-                const langs = [['ko','/'],['ja','/ja'],['en','/en'],['zh','/zh'],['es','/es'],['de','/de'],['fr','/fr'],['ar','/ar']];
+                try {
+                    const smUrl = new URL('/sitemap-hexa-board.xml', url.origin);
+                    const smResp = await env.ASSETS.fetch(new Request(smUrl.toString(), request));
+                    if (smResp.ok) {
+                        return new Response(smResp.body, { status: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+                    }
+                } catch(e) {}
+                // 폴백: 인라인 생성
+                const langs = [['ja','/ja'],['ko','/'],['en','/en'],['zh','/zh'],['es','/es'],['de','/de'],['fr','/fr'],['ar','/ar']];
                 const today = new Date().toISOString().slice(0,10);
                 const altLinks = langs.map(([l,p]) => `    <xhtml:link rel="alternate" hreflang="${l}" href="https://www.hexa-board.com${p}"/>`).join('\n')
                     + `\n    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.hexa-board.com/"/>`;
@@ -518,6 +546,27 @@ export default {
         // 자연스럽게 공유되어 "한 번 로그인 → 모든 곳에서 사용" 이 실현됨.
         // 2026-05-15: cotton-printer.com — 일본 cotton-print 전용 도메인. 같은 라우팅 + JP 강제.
         const _isCottonPrinter = url.hostname.includes('cotton-printer.com');
+
+        // 2026-06-14: cotton-printer.com 전용 robots.txt + sitemap.xml — Search Console / Bing / Naver 의 JP 색인을 가속.
+        if (_isCottonPrinter) {
+            if (path === 'robots.txt') {
+                const cpRobots = 'User-agent: *\nAllow: /\nDisallow: /global_admin\nDisallow: /admin_m_secret_882\n\nUser-agent: Googlebot\nAllow: /\nCrawl-delay: 0\n\nSitemap: https://www.cotton-printer.com/sitemap.xml\n';
+                return new Response(cpRobots, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+            }
+            if (path === 'sitemap.xml') {
+                try {
+                    const smUrl = new URL('/sitemap-cotton-printer.xml', url.origin);
+                    const smResp = await env.ASSETS.fetch(new Request(smUrl.toString(), request));
+                    if (smResp.ok) {
+                        return new Response(smResp.body, { status: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+                    }
+                } catch(e) {}
+                const today = new Date().toISOString().slice(0,10);
+                const fbBody = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://www.cotton-printer.com/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n</urlset>\n`;
+                return new Response(fbBody, { status: 200, headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+            }
+        }
+
         if (url.hostname.includes('cotton-print.com') || _isCottonPrinter) {
             // 언어 결정: cotton-printer.com 은 무조건 JP. cotton-print.com 은 ?lang= URL 파라미터 만 인정 (기본 KR).
             // 2026-05-14: Accept-Language 기반 자동 라우팅 제거 — 모바일 브라우저가 'en-US,ko;q=0.9'
@@ -1202,7 +1251,10 @@ ${hreflangTags('/editor')}
             .on('meta[property="og:url"]', { element(el) { el.setAttribute('content', pageUrl); } })
             .on('meta[property="og:locale"]', { element(el) {
                 const localeMap = {KR:'ko_KR',JP:'ja_JP',US:'en_US',CN:'zh_CN',AR:'ar_AR',ES:'es_ES',DE:'de_DE',FR:'fr_FR'};
-                const cc2 = isChameleonDesign ? (chameleonCountry || 'US') : (url.hostname.includes('cafe0101') ? 'JP' : 'US');
+                const _h = url.hostname;
+                const cc2 = isChameleonDesign ? (chameleonCountry || 'US')
+                    : (_h.includes('cafe0101') || _h.includes('cotton-printer.com') || _h.includes('hexa-board.com')) ? 'JP'
+                    : 'US';
                 el.setAttribute('content', localeMap[cc2] || 'en_US');
             } })
             .on('meta[name="twitter:title"]', { element(el) { el.setAttribute('content', siteData.title); } })

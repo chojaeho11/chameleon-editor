@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- hexa-board.com (Hexalite ハニカムボード原板) Sitemap
+     2026-06-14 신규 — JP主軸でハニカムボード原板の卸売 — Google が JP/KR/EN すべてのバリアントを検出可能 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ===== Home (multi-lang) ===== -->
+  <url>
+    <loc>https://www.hexa-board.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.hexa-board.com/ja"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.hexa-board.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.hexa-board.com/en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.hexa-board.com/zh"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.hexa-board.com/es"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://www.hexa-board.com/de"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.hexa-board.com/fr"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://www.hexa-board.com/ar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.hexa-board.com/"/>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 日本市場 — 主軸 -->
+  <url>
+    <loc>https://www.hexa-board.com/ja</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.hexa-board.com/ja"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.hexa-board.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.hexa-board.com/en"/>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 英語版 -->
+  <url>
+    <loc>https://www.hexa-board.com/en</loc>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://www.hexa-board.com/ja"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://www.hexa-board.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.hexa-board.com/en"/>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 他言語 -->
+  <url>
+    <loc>https://www.hexa-board.com/zh</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.hexa-board.com/es</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.hexa-board.com/de</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.hexa-board.com/fr</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.hexa-board.com/ar</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 代理店募集 -->
+  <url>
+    <loc>https://www.hexa-board.com/distributors</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

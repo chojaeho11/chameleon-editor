@@ -50,10 +50,16 @@ Sitemap: https://www.cafe2626.com/sitemap-blog.xml
 # cotton-print.com (KR 패브릭 인쇄 전문 서브사이트)
 Sitemap: https://www.cotton-print.com/sitemap.xml
 
-# cafe0101.com (Japan)
+# cafe0101.com (Japan 日本印刷総合サイト)
 Sitemap: https://www.cafe0101.com/sitemap.xml
 Sitemap: https://www.cafe0101.com/sitemap-products.xml
 Sitemap: https://www.cafe0101.com/sitemap-blog.xml
+
+# cotton-printer.com (Japan 日本ファブリック印刷専門)  [2026-06-14 추가]
+Sitemap: https://www.cotton-printer.com/sitemap.xml
+
+# hexa-board.com (Hexalite ハニカムボード原板 — JP主力市場)  [2026-06-14 추가]
+Sitemap: https://www.hexa-board.com/sitemap.xml
 
 # cafe3355.com (US/Global)
 Sitemap: https://www.cafe3355.com/sitemap.xml
