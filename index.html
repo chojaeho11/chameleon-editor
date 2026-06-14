@@ -5663,7 +5663,8 @@ function scrollHotdeal(gridId, dir) {
 </script>
 
 <!-- 2026-06-13: 미니에디터 + 누끼따기 (배경 제거) — PC: 좌우 / 모바일: 위아래 -->
-<div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0;">
+<!-- 2026-06-14: 메인 화면에선 숨김 — simple_order 모달 진입 시 portal 로 이동해 사용. simple_order.js 의 _mountEditor 가 display 복구. -->
+<div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0; display:none;">
     <style>
         #aiNbWrap { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
         @media (max-width:768px) { #aiNbWrap { grid-template-columns: 1fr; gap:12px; } }
@@ -11697,7 +11698,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=435"></script>
+<script src="/simple_order.js?v=436"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -13705,7 +13706,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=461').then(m => {
+        import('./advisor-panel.js?v=462').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시

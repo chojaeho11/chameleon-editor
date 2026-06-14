@@ -11426,8 +11426,9 @@ html, body { background: #ffffff !important; }
             var src = document.getElementById('embeddedEditorPreview');
             var dst = document.getElementById('soEmbeddedEditorMount');
             if (!src || !dst) return false;
-            // 2026-06-14: simple_order 안에서는 대지 maxH 700px (메인 페이지는 540 기본)
             window._meStageMaxH = 700;
+            // 2026-06-14: 메인 페이지에선 display:none → simple_order 안에선 보이게 복구
+            src.style.display = '';
             if (dst.contains(src)) return true;
             _origParent = src.parentNode;
             _origNextSibling = src.nextSibling;
@@ -11436,7 +11437,6 @@ html, body { background: #ffffff !important; }
         }
 
         function _unmountEditor() {
-            // 메인 페이지로 복귀할 때 maxH 원복
             window._meStageMaxH = 540;
             var src = document.getElementById('embeddedEditorPreview');
             if (!src || !_origParent) return;
@@ -11445,8 +11445,8 @@ html, body { background: #ffffff !important; }
             } else {
                 _origParent.appendChild(src);
             }
-            // 원위치 복귀 후 메인 페이지에서 fitStage 재호출
-            setTimeout(function(){ if (typeof window._meFitStage === 'function') window._meFitStage(); }, 50);
+            // 메인 페이지로 복귀하면 다시 숨김 (2026-06-14 사용자 요청 — 홈에선 안 보이게)
+            src.style.display = 'none';
         }
 
         // 명함(pp_bc_*) 자동 텍스트 item refs — 입력 시 같은 item 을 update.

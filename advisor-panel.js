@@ -657,16 +657,40 @@ export function renderShortcutButtons(containerId) {
             .cta3-btn{min-width:0;padding:11px 13px;font-size:12px;}
         }
         </style>
-        <div class="adv-ext-wrap">
-            <div class="cta3-card cta3-editor" onclick="window._advOpenEditor&&window._advOpenEditor()">
-                <div class="cta3-word">EDITOR</div>
-                <div class="cta3-text">
-                    <div class="cta3-title">${edt.title}</div>
-                    <div class="cta3-sub">${edt.sub}</div>
+        <style>
+            /* 2026-06-14: 디자인 의뢰 + 디자이너 신청 2분할 배너 */
+            .cta2-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1100px;margin:0 auto 12px;padding:0 4px;width:100%;box-sizing:border-box;}
+            @media(max-width:768px){.cta2-row{gap:8px;}}
+            .cta2-card{position:relative;display:flex;align-items:center;gap:14px;border-radius:16px;padding:18px 20px;text-decoration:none;cursor:pointer;box-sizing:border-box;box-shadow:0 8px 24px rgba(0,0,0,0.15);transition:transform .2s,box-shadow .2s;border:1.5px solid rgba(255,255,255,0.16);overflow:hidden;}
+            .cta2-card:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(0,0,0,0.25);}
+            .cta2-text{flex:1;min-width:0;}
+            .cta2-title{font-size:15px;font-weight:900;letter-spacing:-0.3px;line-height:1.2;margin-bottom:3px;}
+            .cta2-sub{font-size:11.5px;font-weight:600;line-height:1.4;opacity:0.92;}
+            .cta2-icon{flex-shrink:0;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+            .cta2-dreq{background:linear-gradient(135deg,#fef3c7 0%,#fde68a 50%,#fcd34d 100%);}
+            .cta2-dreq .cta2-icon{background:#fff;color:#b45309;}
+            .cta2-dreq .cta2-title{color:#78350f;}
+            .cta2-dreq .cta2-sub{color:#92400e;}
+            .cta2-dapply{background:linear-gradient(135deg,#ddd6fe 0%,#c4b5fd 50%,#a78bfa 100%);}
+            .cta2-dapply .cta2-icon{background:#fff;color:#6d28d9;}
+            .cta2-dapply .cta2-title{color:#4c1d95;}
+            .cta2-dapply .cta2-sub{color:#5b21b6;}
+            @media(max-width:480px){
+                .cta2-card{padding:14px;gap:10px;border-radius:14px;}
+                .cta2-icon{width:38px;height:38px;font-size:18px;border-radius:10px;}
+                .cta2-title{font-size:13px;}
+                .cta2-sub{font-size:10.5px;}
+            }
+        </style>
+        <div class="cta2-row">
+            <a href="javascript:void(0)" class="cta2-card cta2-dreq" onclick="if(window.openDesignRequestPopup)window.openDesignRequestPopup();return false;">
+                <div class="cta2-icon"><i class="fa-solid fa-palette"></i></div>
+                <div class="cta2-text">
+                    <div class="cta2-title">${t.dreq_title}</div>
+                    <div class="cta2-sub">${t.dreq_sub}</div>
                 </div>
-                <div class="cta3-btn"><i class="fa-solid fa-pen-ruler"></i> Design Editor</div>
-            </div>
-            <a href="${location.origin}/designer-board" class="cta3-card cta3-band" onclick="return (function(ev){
+            </a>
+            <a href="${location.origin}/designer-board" class="cta2-card cta2-dapply" onclick="return (function(ev){
                 if (window.innerWidth >= 768 && typeof window.openDesignerApplyPopup === 'function') {
                     ev.preventDefault();
                     window.openDesignerApplyPopup();
@@ -674,13 +698,15 @@ export function renderShortcutButtons(containerId) {
                 }
                 return true;
             })(event);">
-                <div class="cta3-word">DESIGNER</div>
-                <div class="cta3-text">
-                    <div class="cta3-title">${t.dapply_title}</div>
-                    <div class="cta3-sub">${t.dapply_sub}</div>
+                <div class="cta2-icon"><i class="fa-solid fa-id-badge"></i></div>
+                <div class="cta2-text">
+                    <div class="cta2-title">${t.dapply_title}</div>
+                    <div class="cta2-sub">${t.dapply_sub}</div>
                 </div>
-                <div class="cta3-btn"><i class="fa-solid fa-id-badge"></i> ${t.dapply_cta}</div>
             </a>
+        </div>
+        <!-- 2026-06-14: EDITOR 카드 삭제 + WITH(쇼핑몰) 카드 유지 -->
+        <div class="adv-ext-wrap">
             <a href="${location.origin}/franchise" class="cta3-card cta3-with">
                 <div class="cta3-word">WITH</div>
                 <div class="cta3-text">
