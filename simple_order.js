@@ -569,6 +569,33 @@ html, body { background: #ffffff !important; }
 #soQuickDesignSec .qd-field input:focus {
     border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12);
 }
+#soQuickDesignSec .qd-field-textarea { align-items:flex-start; }
+#soQuickDesignSec .qd-field-textarea .qd-field-label { padding-top:10px; }
+#soQuickDesignSec .qd-field textarea {
+    flex:1; min-width:0; padding:10px 12px; resize:vertical;
+    border:1px solid #d1d5db; border-radius:8px; background:#fff;
+    font-size:12.5px; font-family:inherit; outline:none;
+    color:#0f172a; line-height:1.5; min-height:48px;
+    transition:border-color .15s, box-shadow .15s;
+}
+#soQuickDesignSec .qd-field textarea:focus {
+    border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12);
+}
+/* 요소·도형 그리드 */
+#soQuickDesignSec .qd-shape-grid {
+    display:grid !important; grid-template-columns:repeat(7, 1fr); gap:6px;
+}
+#soQuickDesignSec .qd-shape-btn {
+    aspect-ratio:1/1; border:1.5px solid #e2e8f0; background:#fff;
+    border-radius:8px; cursor:pointer; transition:all .15s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; color:#64748b; font-family:inherit;
+}
+#soQuickDesignSec .qd-shape-btn:hover {
+    border-color:#6366f1; color:#4338ca; background:#eef2ff; transform:translateY(-1px);
+}
+#soQuickDesignSec .qd-shape-clear { color:#dc2626; }
+#soQuickDesignSec .qd-shape-clear:hover { border-color:#dc2626; background:#fef2f2; color:#991b1b; }
 #soQuickDesignSec .qd-section-label {
     font-size:11.5px; font-weight:800; color:#475569;
     margin:14px 0 6px; text-transform:uppercase; letter-spacing:0.04em;
@@ -1507,11 +1534,15 @@ html, body { background: #ffffff !important; }
             </div>
           </div>
 
-          <!-- 다른 상품용 일반 라벨 (간단 메모) -->
+          <!-- 다른 상품용 — 제목 + 상세내용 (중앙정렬 렌더) -->
           <div id="soQdGenericFields" class="qd-fields" style="display:none;">
             <div class="qd-field">
               <span class="qd-field-label">${tr('제목', 'タイトル', 'Title')}</span>
-              <input type="text" id="soQdTitle" maxlength="60" placeholder="${tr('주제 / 제목','タイトル','Title')}" oninput="window._soQdRender && window._soQdRender()">
+              <input type="text" id="soQdTitle" maxlength="60" placeholder="${tr('큰 제목','大タイトル','Main title')}" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+            <div class="qd-field qd-field-textarea">
+              <span class="qd-field-label">${tr('상세', '詳細', 'Details')}</span>
+              <textarea id="soQdSubtitle" maxlength="200" rows="2" placeholder="${tr('작은 글씨로 들어갈 상세 내용','詳細内容（小さい文字）','Details (smaller text)')}" oninput="window._soQdRender && window._soQdRender()"></textarea>
             </div>
           </div>
 
@@ -1522,6 +1553,18 @@ html, body { background: #ffffff !important; }
             <div class="qd-template-card" data-tpl="2" onclick="window._soQdPickTpl && window._soQdPickTpl(2)">${tr('모던','モダン','Modern')}</div>
             <div class="qd-template-card" data-tpl="3" onclick="window._soQdPickTpl && window._soQdPickTpl(3)">${tr('클래식','クラシック','Classic')}</div>
             <div class="qd-template-card" data-tpl="4" onclick="window._soQdPickTpl && window._soQdPickTpl(4)">${tr('볼드','ボールド','Bold')}</div>
+          </div>
+
+          <!-- 요소 / 도형 패널 — 클릭하면 캔버스 중앙 부근에 추가 -->
+          <div class="qd-section-label">${tr('요소 · 도형', '要素・図形', 'Elements & shapes')}</div>
+          <div class="qd-shape-grid" id="soQdShapeGrid">
+            <button type="button" class="qd-shape-btn" data-shape="rect" onclick="window._soQdAddShape && window._soQdAddShape('rect')" title="${tr('사각형','四角','Rect')}"><i class="fa-solid fa-square"></i></button>
+            <button type="button" class="qd-shape-btn" data-shape="circle" onclick="window._soQdAddShape && window._soQdAddShape('circle')" title="${tr('원','円','Circle')}"><i class="fa-solid fa-circle"></i></button>
+            <button type="button" class="qd-shape-btn" data-shape="triangle" onclick="window._soQdAddShape && window._soQdAddShape('triangle')" title="${tr('삼각형','三角','Triangle')}"><i class="fa-solid fa-play"></i></button>
+            <button type="button" class="qd-shape-btn" data-shape="star" onclick="window._soQdAddShape && window._soQdAddShape('star')" title="${tr('별','星','Star')}"><i class="fa-solid fa-star"></i></button>
+            <button type="button" class="qd-shape-btn" data-shape="line" onclick="window._soQdAddShape && window._soQdAddShape('line')" title="${tr('직선','直線','Line')}"><i class="fa-solid fa-minus"></i></button>
+            <button type="button" class="qd-shape-btn" data-shape="heart" onclick="window._soQdAddShape && window._soQdAddShape('heart')" title="${tr('하트','ハート','Heart')}"><i class="fa-solid fa-heart"></i></button>
+            <button type="button" class="qd-shape-btn qd-shape-clear" onclick="window._soQdClearShapes && window._soQdClearShapes()" title="${tr('모두 지우기','すべて削除','Clear all')}"><i class="fa-solid fa-eraser"></i></button>
           </div>
 
           <!-- 라이브 미리보기 캔버스 -->
@@ -7350,6 +7393,8 @@ html, body { background: #ffffff !important; }
         }
         state.customUnitPrice = calcPrice;
         state.customAreaM2 = areaM2;
+        // 2026-06-14 Phase 1: Quick Design 캔버스에 사이즈 변경 반영
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_qe){}
         // 2026-05-22: 포맥스·폼보드 — 사이즈(가로+세로)에 따라 배송수단 자동 변경
         if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
             window._soFoamApplyAutoShip();
@@ -11341,9 +11386,18 @@ html, body { background: #ffffff !important; }
             tpl: 1,
             product: null,
             isBc: false,
-            size: { w:90, h:50, bw:92, bh:52 }
+            size: { w:90, h:50, bw:92, bh:52 },
+            shapes: []  // [{type:'rect'|'circle'|...|'triangle'|'star'|'line'|'heart', nxRel:0~1, nyRel:0~1, sizeRel:0~1}]
         };
         window._soQdState = qd;
+
+        // 캔버스 표시 사이즈 결정 — 너비 max 380px, 높이 max 280px 유지하면서 상품 종횡비 보존
+        function _qdCalcCanvasPx() {
+            var aw = qd.size.bw, ah = qd.size.bh;
+            var maxW = 380, maxH = 280;
+            var s = Math.min(maxW / aw, maxH / ah);
+            return { w: Math.round(aw * s), h: Math.round(ah * s), scale: s };
+        }
 
         // 셋업 — openSimpleOrderModal 끝부분에서 호출
         window._soQdSetup = function() {
@@ -11353,6 +11407,7 @@ html, body { background: #ffffff !important; }
             qd.product = p;
             qd.size = _resolveSize(p);
             qd.isBc = _isBcCode(p && p.code);
+            qd.shapes = [];
 
             // 사이즈 배지
             var badge = document.getElementById('soQdSizeBadge');
@@ -11364,27 +11419,22 @@ html, body { background: #ffffff !important; }
             if (bcF) bcF.style.display = qd.isBc ? '' : 'none';
             if (gnF) gnF.style.display = qd.isBc ? 'none' : '';
 
-            // 명함이 아니면 인라인 폼 + 미리보기 + 적용 버튼 모두 숨기고 "고급 편집" 카드처럼만 노출.
-            //   Phase 1 은 명함 미리보기만 지원. 다른 상품은 풀에디터로 진입.
-            // 그래도 섹션 자체는 show — 사용자가 진입점으로 사용.
             sec.style.display = '';
 
-            // 명함이면 미리보기 영역 + 적용 버튼 show, 아니면 숨김
+            // 미리보기/적용 버튼은 모든 상품에서 표시 (이전 BC 한정 제한 제거)
             var prev = sec.querySelector('.qd-preview-wrap');
             var ctaApply = sec.querySelector('.qd-cta-apply');
-            if (prev) prev.style.display = qd.isBc ? '' : 'none';
-            if (ctaApply) ctaApply.style.display = qd.isBc ? '' : 'none';
+            if (prev) prev.style.display = '';
+            if (ctaApply) ctaApply.style.display = '';
 
-            // 캔버스 사이즈 = bleed 사이즈에 맞춰 표시 (4배 확대 — 미리보기용)
+            // 캔버스 사이즈 = 종횡비 보존 + max 380×280
             var c = document.getElementById('soQdPreviewCanvas');
-            if (c && qd.isBc) {
-                var scale = 4; // 92mm × 4 ≈ 368px
-                c.width = Math.round(qd.size.bw * scale);
-                c.height = Math.round(qd.size.bh * scale);
+            if (c) {
+                var px = _qdCalcCanvasPx();
+                c.width = px.w; c.height = px.h;
                 c.style.maxWidth = '100%';
             }
-            // 초기 렌더
-            if (qd.isBc) window._soQdRender();
+            window._soQdRender();
         };
 
         // 템플릿 선택
@@ -11393,61 +11443,160 @@ html, body { background: #ffffff !important; }
             document.querySelectorAll('#soQdTemplateGrid .qd-template-card').forEach(function(el){
                 el.classList.toggle('qd-tpl-active', String(el.dataset.tpl) === String(qd.tpl));
             });
-            if (qd.isBc) window._soQdRender();
+            window._soQdRender();
         };
+
+        // 도형 추가 — 캔버스 중앙 부근에 staggered position 으로 추가 (드래그는 Phase 2)
+        window._soQdAddShape = function(type) {
+            var n = qd.shapes.length;
+            var offset = (n % 5) * 0.05 - 0.1;  // -0.1 ~ +0.1 staggered
+            qd.shapes.push({
+                type: type,
+                nxRel: 0.5 + offset,
+                nyRel: 0.5 + offset,
+                sizeRel: 0.12  // 캔버스의 12% 크기
+            });
+            window._soQdRender();
+        };
+
+        // 도형 모두 지우기
+        window._soQdClearShapes = function() {
+            qd.shapes = [];
+            window._soQdRender();
+        };
+
+        // 도형 한 개 그리기 (정규화 좌표 nxRel/nyRel + 크기비율 sizeRel)
+        function _drawShape(ctx, W, H, sh, tpl) {
+            var cx = sh.nxRel * W, cy = sh.nyRel * H;
+            var sz = sh.sizeRel * Math.min(W, H);
+            ctx.fillStyle = tpl.accent;
+            ctx.strokeStyle = tpl.accent;
+            ctx.lineWidth = Math.max(2, sz * 0.08);
+            switch (sh.type) {
+                case 'rect':
+                    ctx.fillRect(cx - sz/2, cy - sz/2, sz, sz);
+                    break;
+                case 'circle':
+                    ctx.beginPath(); ctx.arc(cx, cy, sz/2, 0, Math.PI*2); ctx.fill();
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - sz/2);
+                    ctx.lineTo(cx + sz/2, cy + sz/2);
+                    ctx.lineTo(cx - sz/2, cy + sz/2);
+                    ctx.closePath(); ctx.fill();
+                    break;
+                case 'star':
+                    var spikes = 5, outer = sz/2, inner = sz/4;
+                    ctx.beginPath();
+                    for (var i = 0; i < spikes * 2; i++) {
+                        var r = (i % 2 === 0) ? outer : inner;
+                        var a = (Math.PI / spikes) * i - Math.PI/2;
+                        var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+                        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath(); ctx.fill();
+                    break;
+                case 'line':
+                    ctx.beginPath(); ctx.moveTo(cx - sz/2, cy); ctx.lineTo(cx + sz/2, cy); ctx.stroke();
+                    break;
+                case 'heart':
+                    var hs = sz * 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy + hs * 0.7);
+                    ctx.bezierCurveTo(cx + hs * 1.2, cy - hs * 0.2, cx + hs * 0.6, cy - hs * 1.0, cx, cy - hs * 0.3);
+                    ctx.bezierCurveTo(cx - hs * 0.6, cy - hs * 1.0, cx - hs * 1.2, cy - hs * 0.2, cx, cy + hs * 0.7);
+                    ctx.closePath(); ctx.fill();
+                    break;
+            }
+        }
 
         // 라이브 미리보기 렌더
         window._soQdRender = function() {
-            if (!qd.isBc) return;
             var c = document.getElementById('soQdPreviewCanvas');
             if (!c) return;
             var ctx = c.getContext('2d');
             var W = c.width, H = c.height;
             var tpl = BC_TEMPLATES[qd.tpl] || BC_TEMPLATES[1];
 
-            // 입력값
-            var company = (document.getElementById('soQdCompany') || {}).value || '';
-            var name = (document.getElementById('soQdName') || {}).value || '';
-            var email = (document.getElementById('soQdEmail') || {}).value || '';
-            var phone = (document.getElementById('soQdPhone') || {}).value || '';
-            if (!company && !name && !email && !phone) {
-                company = '카멜레온 프린팅'; name = '홍길동'; email = 'hello@example.com'; phone = '010-0000-0000';
-            }
-
             // bleed 영역 (전체) 칠하기
             ctx.fillStyle = tpl.bg;
             ctx.fillRect(0, 0, W, H);
 
-            // content margin = bleed 여백 (좌우상하 각 1mm) → 픽셀
-            var marginPx = Math.round(((qd.size.bw - qd.size.w) / 2) * 4);
-            var cx = marginPx, cy = marginPx;
-            var cw = W - marginPx * 2, ch = H - marginPx * 2;
+            // bleed → content margin (mm 단위 비율로 픽셀 계산)
+            var marginRatio = (qd.size.bw - qd.size.w) / qd.size.bw / 2;  // 좌우 각 50%
+            var marginPxX = Math.round(W * marginRatio);
+            var marginPxY = Math.round(H * marginRatio);
+            var cx = marginPxX, cy = marginPxY;
+            var cw = W - marginPxX * 2, ch = H - marginPxY * 2;
 
-            // accent bar
-            ctx.fillStyle = tpl.accent;
-            if (tpl.accentBar === 'left') ctx.fillRect(cx, cy, 8, ch);
-            else if (tpl.accentBar === 'right') ctx.fillRect(cx + cw - 8, cy, 8, ch);
-            else if (tpl.accentBar === 'top') ctx.fillRect(cx, cy, cw, 8);
+            if (qd.isBc) {
+                // ── 명함 모드 — 4필드 + accent bar (기존 BC 디자인) ──────
+                var company = (document.getElementById('soQdCompany') || {}).value || '';
+                var name = (document.getElementById('soQdName') || {}).value || '';
+                var email = (document.getElementById('soQdEmail') || {}).value || '';
+                var phone = (document.getElementById('soQdPhone') || {}).value || '';
+                if (!company && !name && !email && !phone) {
+                    company = '카멜레온 프린팅'; name = '홍길동'; email = 'hello@example.com'; phone = '010-0000-0000';
+                }
+                ctx.fillStyle = tpl.accent;
+                if (tpl.accentBar === 'left') ctx.fillRect(cx, cy, 8, ch);
+                else if (tpl.accentBar === 'right') ctx.fillRect(cx + cw - 8, cy, 8, ch);
+                else if (tpl.accentBar === 'top') ctx.fillRect(cx, cy, cw, 8);
+                var tx = cx + 20;
+                if (tpl.accentBar === 'right') tx = cx + 16;
+                var ty = cy + 28;
+                if (tpl.accentBar === 'top') ty = cy + 28 + 8;
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = tpl.companyColor; ctx.font = tpl.companyFont;
+                ctx.fillText(company, tx, ty);
+                ctx.fillStyle = tpl.nameColor; ctx.font = tpl.nameFont;
+                ctx.fillText(name, tx, ty + 28);
+                ctx.fillStyle = tpl.metaColor; ctx.font = tpl.metaFont;
+                ctx.fillText(email, tx, H - cy - 36);
+                ctx.fillText(phone, tx, H - cy - 22);
+            } else {
+                // ── 일반 상품 모드 — 제목 중앙정렬 + 상세 작은글씨 + 도형 ──
+                // 도형 먼저 (배경 위, 텍스트 뒤)
+                qd.shapes.forEach(function(sh) { _drawShape(ctx, W, H, sh, tpl); });
 
-            // 텍스트 위치 — accent bar offset
-            var tx = cx + 20;
-            if (tpl.accentBar === 'right') tx = cx + 16;
-            var ty = cy + 28;
-            if (tpl.accentBar === 'top') ty = cy + 28 + 8;
+                // 제목 (중앙)
+                var title = (document.getElementById('soQdTitle') || {}).value || '';
+                var subtitle = (document.getElementById('soQdSubtitle') || {}).value || '';
+                if (!title && !subtitle) {
+                    title = tr('제목을 입력하세요','タイトルを入力','Enter title');
+                    subtitle = tr('상세 내용은 작은 글씨로 표시됩니다','詳細は小さい文字で表示','Details shown in small text');
+                }
+                // 폰트 사이즈 = 캔버스 짧은 변의 비율 — 큰 캔버스에선 더 크게
+                var minDim = Math.min(W, H);
+                var titlePx = Math.max(18, Math.round(minDim * 0.10));
+                var subPx = Math.max(10, Math.round(minDim * 0.045));
 
-            ctx.textBaseline = 'top';
-            // company
-            ctx.fillStyle = tpl.companyColor; ctx.font = tpl.companyFont;
-            ctx.fillText(company, tx, ty);
-            // name (살짝 아래)
-            ctx.fillStyle = tpl.nameColor; ctx.font = tpl.nameFont;
-            ctx.fillText(name, tx, ty + 28);
-            // meta (이메일·전화)
-            ctx.fillStyle = tpl.metaColor; ctx.font = tpl.metaFont;
-            ctx.fillText(email, tx, H - cy - 36);
-            ctx.fillText(phone, tx, H - cy - 22);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // 텍스트 가독성 — 배경이 어두우면 흰글씨, 밝으면 진한글씨
+                var titleColor = tpl.companyColor || '#0f172a';
+                var subColor = tpl.metaColor || '#64748b';
+                // 제목
+                ctx.fillStyle = titleColor;
+                ctx.font = '900 ' + titlePx + 'px sans-serif';
+                var tcx = W / 2, tcy = H / 2 - (subtitle ? titlePx * 0.4 : 0);
+                ctx.fillText(_truncate(ctx, title, W - marginPxX * 2 - 12), tcx, tcy);
+                // 상세 (멀티라인)
+                if (subtitle) {
+                    ctx.fillStyle = subColor;
+                    ctx.font = subPx + 'px sans-serif';
+                    var lines = subtitle.split(/\n/);
+                    var startY = tcy + titlePx * 0.8;
+                    lines.forEach(function(ln, i) {
+                        ctx.fillText(_truncate(ctx, ln, W - marginPxX * 2 - 12), tcx, startY + i * subPx * 1.3);
+                    });
+                }
+                ctx.textAlign = 'start';
+                ctx.textBaseline = 'alphabetic';
+            }
 
-            // bleed 가이드 (재단선 — 옅은 점선) — content 박스 둘레
+            // bleed 가이드 (재단선)
             ctx.strokeStyle = 'rgba(0,0,0,0.18)';
             ctx.setLineDash([4, 4]);
             ctx.lineWidth = 1;
@@ -11455,37 +11604,70 @@ html, body { background: #ffffff !important; }
             ctx.setLineDash([]);
         };
 
-        // "디자인 완료 · 적용" — 캔버스 PNG → state.file (업로드 대체)
-        window._soQdApplyDesign = function() {
-            if (!qd.isBc) {
-                if (typeof showToast === 'function') showToast(tr('명함 상품만 빠른 적용 가능합니다','名刺商品のみクイック適用可能です','Quick apply only for business cards'), 'info');
-                return;
+        // 텍스트 maxW 초과 시 ellipsis
+        function _truncate(ctx, text, maxW) {
+            if (!text) return '';
+            if (ctx.measureText(text).width <= maxW) return text;
+            var ell = '…';
+            var lo = 0, hi = text.length;
+            while (lo < hi) {
+                var mid = (lo + hi + 1) >> 1;
+                if (ctx.measureText(text.slice(0, mid) + ell).width <= maxW) lo = mid;
+                else hi = mid - 1;
             }
+            return text.slice(0, lo) + ell;
+        }
+
+        // W/H 입력 변경 시 캔버스 사이즈 + 렌더 다시 — _soOnCustomDimsChange 후속 hook
+        window._soQdSyncFromCustomDims = function() {
+            if (!state || !qd.product) return;
+            var wCm = state.customW || qd.size.w / 10;
+            var hCm = state.customH || qd.size.h / 10;
+            // cm → mm
+            var wMm = wCm * 10, hMm = hCm * 10;
+            qd.size = { w: wMm, h: hMm, bw: wMm + 4, bh: hMm + 4 };  // bleed 2mm 좌우상하
+            var c = document.getElementById('soQdPreviewCanvas');
+            if (c) {
+                var px = _qdCalcCanvasPx();
+                c.width = px.w; c.height = px.h;
+            }
+            var badge = document.getElementById('soQdSizeBadge');
+            if (badge) badge.textContent = Math.round(wMm) + '×' + Math.round(hMm) + 'mm';
+            window._soQdRender();
+        };
+
+        // "디자인 완료 · 적용" — 캔버스 PNG → state.file
+        window._soQdApplyDesign = function() {
             var c = document.getElementById('soQdPreviewCanvas');
             if (!c) return;
-            // 입력값 비어있으면 경고
-            var company = (document.getElementById('soQdCompany') || {}).value || '';
-            var name = (document.getElementById('soQdName') || {}).value || '';
-            if (!company.trim() && !name.trim()) {
-                if (typeof showToast === 'function') showToast(tr('상호 또는 이름을 입력해주세요','商号またはお名前を入力してください','Please enter company or name'), 'warn');
-                return;
+            var hasContent = false;
+            if (qd.isBc) {
+                var company = (document.getElementById('soQdCompany') || {}).value || '';
+                var name = (document.getElementById('soQdName') || {}).value || '';
+                hasContent = !!(company.trim() || name.trim());
+                if (!hasContent) {
+                    if (typeof showToast === 'function') showToast(tr('상호 또는 이름을 입력해주세요','商号またはお名前を入力してください','Please enter company or name'), 'warn');
+                    return;
+                }
+            } else {
+                var title = (document.getElementById('soQdTitle') || {}).value || '';
+                hasContent = !!(title.trim() || qd.shapes.length > 0);
+                if (!hasContent) {
+                    if (typeof showToast === 'function') showToast(tr('제목을 입력하거나 도형을 추가해주세요','タイトルまたは図形を追加してください','Please enter a title or add shapes'), 'warn');
+                    return;
+                }
             }
-            // 마지막 렌더
             window._soQdRender();
-            // PNG dataURL 추출
             try {
                 c.toBlob(function(blob){
                     if (!blob) return;
                     var fname = 'quick-design-' + Date.now() + '.png';
                     var file = new File([blob], fname, { type: 'image/png' });
-                    // state.file 에 주입 — 기존 업로드 흐름과 동일하게 처리
                     state.file = file;
                     state._cartThumb = c.toDataURL('image/png');
-                    // 업로드 UI 갱신
                     if (typeof window.renderUploadDone === 'function') {
                         try { window.renderUploadDone(fname); } catch(_re){}
                     }
-                    // recalc 트리거 (장바구니 담기 버튼 enable 등)
                     if (typeof recalc === 'function') recalc();
                     if (typeof showToast === 'function') showToast(tr('디자인이 적용되었습니다','デザインが適用されました','Design applied'), 'success');
                 }, 'image/png');
