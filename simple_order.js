@@ -13056,6 +13056,32 @@ html, body { background: #ffffff !important; }
                 const meta = [];
                 if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
                 if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
+                // 2026-06-14: 모든 제작물 사이즈 표시 — leaflet 제외 (별도 분기) / gate 제외 (별도 분기 already).
+                //   customSize/wallSize/boxSize 우선, 없으면 product.w_mm × h_mm (DB).
+                try {
+                    var _hasSizeShown = false;
+                    var _isLfMeta = !!item._isLeaflet || !!item.leafletSize || (item.product && item.product.code && /^pp_lf/i.test(item.product.code));
+                    var _hasGateMeta = !!(item.isGate && item.gate);
+                    if (!_isLfMeta && !_hasGateMeta) {
+                        if (item.boxSize && (item.boxSize.w || item.boxSize.h || item.boxSize.d)) {
+                            meta.push('📐 ' + (item.boxSize.w || 0) + '×' + (item.boxSize.h || 0) + '×' + (item.boxSize.d || 0) + 'mm');
+                            _hasSizeShown = true;
+                        } else if (item.wallSize && (item.wallSize.w_m || item.wallSize.h_m)) {
+                            meta.push('📐 ' + (item.wallSize.w_m || 0) + '×' + (item.wallSize.h_m || 0) + 'm');
+                            _hasSizeShown = true;
+                        } else if (item.customSize && (item.customSize.w_cm || item.customSize.h_cm)) {
+                            // mm 단위로 표시 (광고인쇄/등신대 등 mm 입력 제품과 일관성)
+                            var _csW = Math.round((item.customSize.w_cm || 0) * 10);
+                            var _csH = Math.round((item.customSize.h_cm || 0) * 10);
+                            meta.push('📐 ' + _csW + '×' + _csH + 'mm');
+                            _hasSizeShown = true;
+                        } else if (item.product && (item.product.w_mm || item.product.h_mm)) {
+                            // DB 고정 사이즈 (명함 등)
+                            meta.push('📐 ' + (item.product.w_mm || 0) + '×' + (item.product.h_mm || 0) + 'mm');
+                            _hasSizeShown = true;
+                        }
+                    }
+                } catch (e) {}
                 // 2026-06-04: 등신대 재질 표시 (허니콤보드 16mm / 포맥스 3mm)
                 if (item.standeeMaterial) {
                     var _matLbl = item.standeeMaterial === 'foamex_3mm'

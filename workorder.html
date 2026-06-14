@@ -460,15 +460,26 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 }
             }
             // 사이즈 — 패브릭은 width_mm/height_mm 또는 width_cm/height_cm. 현수막·광고인쇄는 customSize.w_cm/h_cm.
+            // 2026-06-14: leafletSize (A4/A3/A2) + wallSize (m → mm) + boxSize fallback 추가.
             const _cs = it.customSize || {};
+            const _LF_WH = { A4:[210,297], A3:[297,420], A2:[420,594] };
+            const _lfWH = (it.leafletSize && _LF_WH[it.leafletSize]) ? _LF_WH[it.leafletSize] : null;
+            const _ws = it.wallSize || {};
+            const _bs = it.boxSize || {};
             const wMm = product.w_mm || product.width_mm || it.width_mm || it.width
                      || (it.width_cm ? Math.round(it.width_cm * 10) : 0)
                      || (_cs.w_cm ? Math.round(_cs.w_cm * 10) : 0)
-                     || _cs.w || 0;
+                     || _cs.w
+                     || (_lfWH ? _lfWH[0] : 0)
+                     || (_ws.w_m ? Math.round(_ws.w_m * 1000) : 0)
+                     || _bs.w || 0;
             const hMm = product.h_mm || product.height_mm || it.height_mm || it.height
                      || (it.height_cm ? Math.round(it.height_cm * 10) : 0)
                      || (_cs.h_cm ? Math.round(_cs.h_cm * 10) : 0)
-                     || _cs.h || 0;
+                     || _cs.h
+                     || (_lfWH ? _lfWH[1] : 0)
+                     || (_ws.h_m ? Math.round(_ws.h_m * 1000) : 0)
+                     || _bs.h || 0;
             const qty = it.qty || 1;
             // 2026-06-11: 단가 (unit) 우선순위 — customSize.unit (회베) > boxSize.unit > cutPrint flat > product.price
             //   회베계산기로 산출된 단가가 있으면 그걸 표시해야 1회배 기본가가 노출되지 않음.
