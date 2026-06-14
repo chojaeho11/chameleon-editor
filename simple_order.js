@@ -12160,6 +12160,40 @@ html, body { background: #ffffff !important; }
         if (state.isRealPrint) {
             if (!state.qty || state.qty < 1) state.qty = 1;
         }
+        // 2026-06-14: 미니에디터에 디자인 요소가 있고 state.file 미설정이면 자동으로 PNG export → state.file 주입.
+        //   사용자가 "디자인 완료 · 적용" 안 누르고 바로 장바구니 담아도 디자인이 함께 저장되도록.
+        try {
+            var _meS = window._soQdState; // 호환 (현재 미사용이지만 안전 확인)
+            var _meRef = window.me || _meS;
+            // me 는 index.html 내부 closure — window.me 가 노출 안 되어있을 수 있음. _meExportPNG 의 결과만 확인.
+            if (!state.file && typeof window._meExportPNG === 'function') {
+                var _autoPng = await window._meExportPNG();
+                if (_autoPng && _autoPng.length > 200) {  // 빈 캔버스가 아닌 경우 (200자 = base64 헤더 이상)
+                    // 빈 캔버스(흰색만)인지 판별 — 작은 base64 사이즈로 어림. 추가 검증: items 가 있어야 함.
+                    // me.items 가 비어 있으면 _meExportPNG 도 흰 배경만 반환 → 그래도 사이즈가 200자 이상은 됨.
+                    // 따라서 items 직접 확인.
+                    var _hasContent = false;
+                    try {
+                        // me 가 closure 내부지만 me.stage 가 #meStage 이므로 자식 .me-item 으로 판별
+                        var _stage = document.getElementById('meStage');
+                        if (_stage && _stage.querySelectorAll('.me-item').length > 0) _hasContent = true;
+                    } catch(_he){}
+                    if (_hasContent) {
+                        var _binAuto = atob(_autoPng.split(',')[1]);
+                        var _arrAuto = new Uint8Array(_binAuto.length);
+                        for (var _i = 0; _i < _binAuto.length; _i++) _arrAuto[_i] = _binAuto.charCodeAt(_i);
+                        var _blobAuto = new Blob([_arrAuto], { type: 'image/png' });
+                        var _fnameAuto = 'inline-design-' + Date.now() + '.png';
+                        state.file = new File([_blobAuto], _fnameAuto, { type: 'image/png' });
+                        state._cartThumb = _autoPng;
+                        if (typeof window.renderUploadDone === 'function') {
+                            try { window.renderUploadDone(_fnameAuto); } catch(_re){}
+                        }
+                        console.log('[simple_order] 미니에디터 디자인 자동 적용:', _fnameAuto);
+                    }
+                }
+            }
+        } catch(_aute) { console.warn('[simple_order auto-design]', _aute); }
         // 2026-05-22: 디자인 파일은 선택사항 — 패브릭과 동일하게 파일 없이도 주문 가능 (이미지 추후 전달).
         //   원판·금액주문은 원래 파일 불필요. 그 외 상품은 파일 미첨부 시 확인창만 띄우고 진행.
         state.artworkLater = false;
