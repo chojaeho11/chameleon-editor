@@ -584,6 +584,25 @@ html, body { background: #ffffff !important; }
 #soEmbeddedEditorMount .aiNb-preview { min-height: 200px !important; }
 #soEmbeddedEditorMount .me-stage-wrap { padding: 12px !important; }
 #soEmbeddedEditorMount .me-stage { max-height: 420px !important; }
+/* 2026-06-14: A4/명함/배너/가로형/정사각 preset 버튼 — simple_order 안에서는 숨김 (사용자 요청). 메인 페이지에선 그대로 보임. */
+#soEmbeddedEditorMount #meSizes { display: none !important; }
+
+/* 라이브러리 진입 버튼 그리드 — 템플릿/요소/장식 */
+#soQuickDesignSec .qd-library-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px;
+}
+#soQuickDesignSec .qd-library-btn {
+    padding: 10px 8px; background: #fff; border: 1.5px solid #c7d2fe;
+    color: #4338ca; border-radius: 10px; cursor: pointer; font-family: inherit;
+    font-size: 12.5px; font-weight: 800;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: all .15s;
+}
+#soQuickDesignSec .qd-library-btn i { font-size: 16px; color: #6366f1; }
+#soQuickDesignSec .qd-library-btn:hover {
+    background: #6366f1; color: #fff; border-color: #6366f1;
+}
+#soQuickDesignSec .qd-library-btn:hover i { color: #fff; }
 
 @media (max-width: 768px) {
     .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
@@ -1459,6 +1478,18 @@ html, body { background: #ffffff !important; }
           <button type="button" class="qd-product-size-btn" onclick="window._soQdApplyProductSize && window._soQdApplyProductSize()">
             <i class="fa-solid fa-ruler-combined" style="margin-right:6px;"></i>${tr('현재 상품 사이즈로 대지 맞추기', '商品サイズで適用', 'Use product size')}
           </button>
+          <!-- 2026-06-14: 라이브러리 진입 — 풀에디터(mainEditor) 의 해당 sub-panel 로 이동. 작업 후 "디자인 완료 → 주문 계속" 버튼으로 복귀. -->
+          <div class="qd-library-row">
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-template')">
+              <i class="fa-solid fa-swatchbook"></i><span>${tr('템플릿보기', 'テンプレート', 'Templates')}</span>
+            </button>
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-element')">
+              <i class="fa-solid fa-shapes"></i><span>${tr('요소보기', '要素', 'Elements')}</span>
+            </button>
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-icon')">
+              <i class="fa-solid fa-star"></i><span>${tr('장식보기', '装飾', 'Decorations')}</span>
+            </button>
+          </div>
           <!-- 미니에디터 (메인 페이지 #embeddedEditorPreview 가 여기로 portal 됨) -->
           <div id="soEmbeddedEditorMount" style="margin-top:10px;"></div>
           <!-- 디자인 완료 · 적용 (큰 녹색 버튼) -->
@@ -6744,10 +6775,14 @@ html, body { background: #ffffff !important; }
             }
         });
         recalc();
+        // 2026-06-14: 가벽 사이즈 변경 시 미니에디터 대지도 갱신
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_qe){}
     };
     window._soUpdatePrice = function () {
         state.wallHeight = parseFloat(document.getElementById('soWallHeight') && document.getElementById('soWallHeight').value) || 2.4;
         recalc();
+        // 2026-06-14: 가벽 높이 변경 시 미니에디터 대지도 갱신
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_qe){}
     };
 
     // 2026-05-13: 사용자 정의 사이즈 변경 → 면적 × 단가 (현수막·실사출력 등)
@@ -11243,7 +11278,11 @@ html, body { background: #ffffff !important; }
 
         function _resolveSize(p) {
             var wMm = 0, hMm = 0;
-            if (state && state.customW && state.customH) {
+            // 우선순위: 가벽(state.wallWidth/Height m) > state.customW/H cm > p.width_mm/height_mm > fallback
+            if (state && state.isWall && state.wallWidth) {
+                wMm = state.wallWidth * 1000;
+                hMm = (state.wallHeight || 2.4) * 1000;
+            } else if (state && state.customW && state.customH) {
                 wMm = state.customW * 10;
                 hMm = state.customH * 10;
             } else if (p && (p.width_mm || p.height_mm)) {
@@ -11327,15 +11366,14 @@ html, body { background: #ffffff !important; }
             } catch(_e){}
         };
 
-        // 우측 W/H 입력 변경 시 사이즈 + 대지 동기화
+        // 우측 W/H 입력 변경 시 사이즈 + 대지 동기화 (가벽/일반 모두)
         window._soQdSyncFromCustomDims = function() {
             if (!state || !state.product) return;
-            var wMm = Math.round((state.customW || 9) * 10);
-            var hMm = Math.round((state.customH || 5) * 10);
-            _updateSizeBadge(wMm, hMm);
+            var sz = _resolveSize(state.product);
+            _updateSizeBadge(sz.wMm, sz.hMm);
             try {
                 if (typeof window._meSetSize === 'function') {
-                    window._meSetSize(_mmToPx(wMm), _mmToPx(hMm), state.product.code);
+                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), state.product.code);
                 }
             } catch(_e){}
         };
@@ -11377,6 +11415,32 @@ html, body { background: #ffffff !important; }
         // closeSimpleOrderModal 에서 호출
         window._soQdUnmount = function() {
             try { _unmountEditor(); } catch(_e){}
+        };
+
+        // "템플릿보기 / 요소보기 / 장식보기" — 풀에디터(mainEditor) 진입 + 해당 sub-panel 활성.
+        //   작업 후 우측 상단 녹색 "디자인 완료 → 주문 계속" 버튼으로 복귀 (캔버스 PNG 가 state.file 에 주입됨).
+        window._soQdOpenLib = function(subPanelId) {
+            var p = state && state.product;
+            if (!p || !p.code) return;
+            // 복귀 flag — mainEditor 의 editorReturnToOrderBtn 이 표시됨
+            try { sessionStorage.setItem('qd_return_to_product', p.code); } catch(_e){}
+            // 미니에디터를 메인 페이지로 복귀 (mainEditor 진입 전)
+            try { _unmountEditor(); } catch(_e){}
+            // mainEditor 진입
+            try {
+                if (typeof window._soOpenEditor === 'function') {
+                    window._soOpenEditor();
+                } else if (typeof window.startEditorDirect === 'function') {
+                    window.startEditorDirect(p.code);
+                }
+                // 약간의 지연 후 해당 sub-panel 클릭
+                setTimeout(function(){
+                    try {
+                        var icon = document.querySelector('.icon-item[data-panel="' + subPanelId + '"]');
+                        if (icon) icon.click();
+                    } catch(_te) { console.warn('[qd lib click]', _te); }
+                }, 400);
+            } catch(_oe) { console.warn('[qd lib open]', _oe); }
         };
     })();
 
