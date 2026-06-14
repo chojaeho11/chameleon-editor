@@ -582,8 +582,13 @@ html, body { background: #ffffff !important; }
 #soEmbeddedEditorMount #embeddedEditorPreview { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
 #soEmbeddedEditorMount #aiNbWrap { grid-template-columns: 1fr !important; gap: 12px !important; }
 #soEmbeddedEditorMount .aiNb-preview { min-height: 200px !important; }
-#soEmbeddedEditorMount .me-stage-wrap { padding: 12px !important; }
-#soEmbeddedEditorMount .me-stage { max-height: 420px !important; }
+#soEmbeddedEditorMount .me-stage-wrap {
+    padding: 14px !important;
+    min-height: 520px;            /* 충분한 높이 확보 — JS 의 maxH 와 일치 */
+    align-items: center;
+}
+/* 2026-06-14: 대지 비율 유지하면서 가능한 한 크게 표시 — JS _meFitStage 가 size 계산. max-height override 제거 */
+#soEmbeddedEditorMount .me-stage { max-width: 100% !important; max-height: none !important; }
 /* 2026-06-14: A4/명함/배너/가로형/정사각 preset 버튼 — simple_order 안에서는 숨김 (사용자 요청). 메인 페이지에선 그대로 보임. */
 #soEmbeddedEditorMount #meSizes { display: none !important; }
 
@@ -11383,6 +11388,8 @@ html, body { background: #ffffff !important; }
             var src = document.getElementById('embeddedEditorPreview');
             var dst = document.getElementById('soEmbeddedEditorMount');
             if (!src || !dst) return false;
+            // 2026-06-14: simple_order 안에서는 대지 maxH 700px (메인 페이지는 540 기본)
+            window._meStageMaxH = 700;
             if (dst.contains(src)) return true;
             _origParent = src.parentNode;
             _origNextSibling = src.nextSibling;
@@ -11391,6 +11398,8 @@ html, body { background: #ffffff !important; }
         }
 
         function _unmountEditor() {
+            // 메인 페이지로 복귀할 때 maxH 원복
+            window._meStageMaxH = 540;
             var src = document.getElementById('embeddedEditorPreview');
             if (!src || !_origParent) return;
             if (_origNextSibling && _origParent.contains(_origNextSibling)) {
@@ -11398,6 +11407,8 @@ html, body { background: #ffffff !important; }
             } else {
                 _origParent.appendChild(src);
             }
+            // 원위치 복귀 후 메인 페이지에서 fitStage 재호출
+            setTimeout(function(){ if (typeof window._meFitStage === 'function') window._meFitStage(); }, 50);
         }
 
         // 셋업 — openSimpleOrderModal 끝부분에서 호출
@@ -11411,16 +11422,27 @@ html, body { background: #ffffff !important; }
 
             var sz = _resolveSize(p);
             _updateSizeBadge(sz.wMm, sz.hMm);
-            try {
-                if (typeof window._meSetSize === 'function') {
-                    var _spx = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spx.w, _spx.h, p.code);
-                    document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
-                        b.classList.remove('active');
-                    });
-                }
-            } catch(_se) { console.warn('[qd setSize]', _se); }
-
             sec.style.display = '';
+
+            // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
+            //   섹션 visible 한 다음 프레임에서 _meSetSize 호출 → _meFitStage 가 올바른 wrap width 로 계산.
+            //   추가 200ms 후 한번 더 fit (모달 transition 완료 후 보장).
+            var _doFit = function() {
+                try {
+                    if (typeof window._meSetSize === 'function') {
+                        var _spx = _mmPairToPx(sz.wMm, sz.hMm);
+                        window._meSetSize(_spx.w, _spx.h, p.code);
+                        document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
+                            b.classList.remove('active');
+                        });
+                    }
+                    if (typeof window._meFitStage === 'function') window._meFitStage();
+                } catch(_se) { console.warn('[qd setSize]', _se); }
+            };
+            requestAnimationFrame(function(){
+                _doFit();
+                setTimeout(_doFit, 200);
+            });
         };
 
         // "현재 상품 사이즈로 대지 맞추기" 버튼

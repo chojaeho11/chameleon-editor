@@ -5839,7 +5839,8 @@ function scrollHotdeal(gridId, dir) {
         if (!stage) return;
         var wrap = stage.parentElement; // me-stage-wrap
         var maxW = Math.max(200, wrap.clientWidth - 24);
-        var maxH = 540;
+        // 2026-06-14: window._meStageMaxH override (simple_order portal 시 더 큰 값 사용)
+        var maxH = window._meStageMaxH || 540;
         var sw = maxW, sh = sw * (me.natH / me.natW);
         if (sh > maxH) { sh = maxH; sw = sh * (me.natW / me.natH); }
         me.wScale = sw / me.natW;
@@ -5847,6 +5848,7 @@ function scrollHotdeal(gridId, dir) {
         stage.style.height = Math.round(sh) + 'px';
         me.items.forEach(_meSyncItemDisplay);
     }
+    window._meFitStage = _meFitStage;
 
     // 사이트 언어 → 폰트 카테고리 매핑 (canvas-objects.js 와 동일)
     function _meFontLang() {
@@ -11077,7 +11079,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=413"></script>
+<script src="/simple_order.js?v=414"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
