@@ -9966,9 +9966,11 @@ html, body { background: #ffffff !important; }
         if (state.isBizCard) { state.isAdPrint = false; state.isCustomSize = false; }
         if (state.isSticker) { state.isAdPrint = false; }
         // 2026-06-12: 배너 family — 사이즈 선택 불필요. DB 단가 그대로 사용. isCustomSize 비활성.
+        // 2026-06-14 fix: 현수막 9종 (placard family) 는 m² 기반 가격이라 사이즈 입력 필요 — 예외 처리.
         if (state.isBannerOutput) {
             state.isAdPrint = false;
-            state.isCustomSize = false;
+            var _isPlacardKeep = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
+            state.isCustomSize = _isPlacardKeep ? true : false;
         }
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
         //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
