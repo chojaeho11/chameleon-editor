@@ -682,51 +682,73 @@ async function _cwComposeItemCanvas(item, dpi) {
     // 레이아웃 분기.
     // 2026-06-15: DB 가 저장하는 키 — centered / basic / halfdrop / halfbrick / mirror.
     //   레거시 (구 Python) 명칭 (brick, half_drop) 도 호환 매칭.
+    // 2026-06-15: 패턴 모드 (centered 아님) — 세로 이음새 정렬.
+    //   output_h 가 vertical period 의 정수배가 아니면 위/아래 partial 을 대칭 분배 →
+    //   두 장을 이어 인쇄 시 seam 양쪽이 합쳐져 완전한 셀이 됨.
+    //   기본/halfdrop/halfbrick: period = cellHpx
+    //   mirror: period = 2 × cellHpx (flip 패턴은 2행마다 반복)
+    let yShift = 0;
+    if (!isPoster) {
+        const period = (layout === 'mirror') ? (2 * cellHpx) : cellHpx;
+        const remainder = ((outHpx % period) + period) % period;
+        if (remainder !== 0) {
+            // 위 partial = remainder/2 (셀의 아래 부분이 화면 위로 노출)
+            // → 첫 셀 y_start = -(period - remainder/2)
+            yShift = (remainder / 2) - period;
+        }
+    }
     if (layout === 'centered') {
         const x = Math.floor((outWpx - cellWpx) / 2);
         const y = Math.floor((outHpx - cellHpx) / 2);
         paste(x, y, false, false);
     } else if (layout === 'halfbrick' || layout === 'brick' || layout === 'brick_horizontal' || layout === 'half_drop_horizontal') {
         // 가로로 반칸 어긋난 벽돌 (행마다 X 오프셋)
-        const rows = Math.ceil(outHpx / cellHpx) + 1;
+        const rows = Math.ceil((outHpx - yShift) / cellHpx) + 1;
         const cols = Math.ceil(outWpx / cellWpx) + 2;
         for (let r = 0; r < rows; r++) {
             const offset = (r % 2) ? -Math.floor(cellWpx / 2) : 0;
             for (let c = 0; c < cols; c++) {
                 const x = c * cellWpx + offset;
-                const y = r * cellHpx;
-                if (x >= outWpx || y >= outHpx) continue;
+                const y = yShift + r * cellHpx;
+                if (x >= outWpx || y >= outHpx || y + cellHpx <= 0) continue;
                 paste(x, y, false, false);
             }
         }
     } else if (layout === 'halfdrop' || layout === 'half_drop' || layout === 'half_drop_vertical' || layout === 'half-drop') {
         // 세로로 반칸 어긋난 패턴 (열마다 Y 오프셋)
-        const rows = Math.ceil(outHpx / cellHpx) + 2;
+        const rows = Math.ceil((outHpx - yShift) / cellHpx) + 2;
         const cols = Math.ceil(outWpx / cellWpx) + 1;
         for (let c = 0; c < cols; c++) {
-            const offset = (c % 2) ? -Math.floor(cellHpx / 2) : 0;
+            const colOffset = (c % 2) ? -Math.floor(cellHpx / 2) : 0;
             for (let r = 0; r < rows; r++) {
                 const x = c * cellWpx;
-                const y = r * cellHpx + offset;
-                if (x >= outWpx || y >= outHpx) continue;
+                const y = yShift + r * cellHpx + colOffset;
+                if (x >= outWpx || y >= outHpx || y + cellHpx <= 0) continue;
                 paste(x, y, false, false);
             }
         }
     } else if (layout === 'mirror') {
-        const rows = Math.ceil(outHpx / cellHpx);
+        // 미러 (좌우 + 상하 flip 교차). vertical period = 2 × cell_h.
+        const rows = Math.ceil((outHpx - yShift) / cellHpx) + 1;
         const cols = Math.ceil(outWpx / cellWpx);
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                paste(c * cellWpx, r * cellHpx, (c % 2) === 1, (r % 2) === 1);
+                const x = c * cellWpx;
+                const y = yShift + r * cellHpx;
+                if (y >= outHpx || y + cellHpx <= 0) continue;
+                paste(x, y, (c % 2) === 1, (r % 2) === 1);
             }
         }
     } else {
         // basic / repeat / tile
-        const rows = Math.ceil(outHpx / cellHpx);
+        const rows = Math.ceil((outHpx - yShift) / cellHpx) + 1;
         const cols = Math.ceil(outWpx / cellWpx);
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                paste(c * cellWpx, r * cellHpx, false, false);
+                const x = c * cellWpx;
+                const y = yShift + r * cellHpx;
+                if (y >= outHpx || y + cellHpx <= 0) continue;
+                paste(x, y, false, false);
             }
         }
     }
