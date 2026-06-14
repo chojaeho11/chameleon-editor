@@ -6528,6 +6528,21 @@ function scrollHotdeal(gridId, dir) {
             }).join('');
             html += '<span class="me-prop-group"><label>' + T('me_prop_color','색상') + '</label><input type="color" value="' + (it.fill || '#1e293b') + '" data-mp="fill"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_font','서체') + '</label><select data-mp="fontFamily" data-font-select>' + fontOpts + '</select></span>';
+            // 2026-06-14: 두께 셀렉터 — 현재 폰트의 지원 weights 만 옵션으로 표시
+            (function(){
+                var clean = String(it.fontFamily || '').replace(/["']/g, '').trim();
+                var allFonts = []; Object.keys(ME_GOOGLE_FONTS).forEach(function(k){ (ME_GOOGLE_FONTS[k]||[]).forEach(function(f){ allFonts.push(f); }); });
+                var matchF = allFonts.find(function(f){ return f.font_family === clean; });
+                var supported = (matchF && matchF.weights) ? String(matchF.weights).split(';').map(function(w){ return parseInt(w,10); }).filter(function(w){ return !isNaN(w); }) : [400, 700];
+                if (supported.length < 2) return;  // 한 가지 weight 만 있으면 셀렉터 숨김 (검은고딕 등)
+                var WLABEL = { 100:T('me_w_thin','얇게'), 200:T('me_w_xlight','매우 가늘게'), 300:T('me_w_light','가늘게'), 400:T('me_w_normal','보통'), 500:T('me_w_medium','중간'), 600:T('me_w_semi','조금 굵게'), 700:T('me_w_bold','굵게'), 800:T('me_w_xbold','매우 굵게'), 900:T('me_w_black','아주 굵게') };
+                var current = parseInt(it.fontWeight || 400, 10);
+                var weightOpts = supported.map(function(w){
+                    var s = (w === current) ? ' selected' : '';
+                    return '<option value="' + w + '"' + s + '>' + (WLABEL[w] || w) + '</option>';
+                }).join('');
+                html += '<span class="me-prop-group"><label>' + T('me_prop_weight','두께') + '</label><select data-mp="fontWeight" data-mp-num="1">' + weightOpts + '</select></span>';
+            })();
             html += '<span class="me-prop-group"><label>' + T('me_prop_size','크기') + '</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_letter','자간') + '</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_line','행간') + '</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
@@ -6564,15 +6579,23 @@ function scrollHotdeal(gridId, dir) {
             if (selOpt) _meLoadFont(selOpt.dataset.fam, selOpt.dataset.w);
         }
         panel.querySelectorAll('[data-mp]').forEach(function(inp){
-            inp.addEventListener('input', function(){
+            // change for SELECT (input on every keystroke makes typing weird), input for the rest
+            var evName = (inp.tagName === 'SELECT') ? 'change' : 'input';
+            inp.addEventListener(evName, function(){
                 var key = inp.dataset.mp;
-                var val = (inp.type === 'number') ? parseFloat(inp.value) : inp.value;
+                var isNum = (inp.type === 'number') || (inp.dataset.mpNum === '1');
+                var val = isNum ? parseFloat(inp.value) : inp.value;
                 if (key === 'fontSize') it.fontSize = val;
+                else if (key === 'fontWeight') it.fontWeight = parseInt(val, 10);
                 else it[key] = val;
-                // 폰트 선택 시 lazy load
+                // 폰트 선택 시 lazy load + 두께 셀렉터 재구성 (지원 weight 변경됨)
                 if (key === 'fontFamily' && inp.tagName === 'SELECT') {
                     var opt = inp.options[inp.selectedIndex];
                     if (opt) _meLoadFont(opt.dataset.fam, opt.dataset.w);
+                    _meSyncItemDisplay(it);
+                    // 두께 옵션 재구성
+                    _meRenderProps(it);
+                    return;
                 }
                 _meSyncItemDisplay(it);
             });
@@ -11674,7 +11697,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=434"></script>
+<script src="/simple_order.js?v=435"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
