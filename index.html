@@ -21914,6 +21914,14 @@ if (w >= 20 && h >= 20) {
         #designerApplyPopup .dap-state.approved { background:rgba(52,199,89,0.10); }
         #designerApplyPopup .dap-state h4 { font-size:15px; font-weight:700; margin-bottom:4px; color:#1d1d1f; letter-spacing:-0.3px; }
         #designerApplyPopup .dap-state p { font-size:12.5px; color:#86868b; line-height:1.5; letter-spacing:-0.2px; }
+        /* 2026-06-14: 포트폴리오 이미지 슬롯 */
+        #designerApplyPopup .dap-img-slot { position:relative; aspect-ratio:1/1; background:rgba(120,120,128,0.10); border:1.5px dashed rgba(0,0,0,0.18); border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; transition:border-color .15s; }
+        #designerApplyPopup .dap-img-slot:hover { border-color:#007AFF; }
+        #designerApplyPopup .dap-img-slot.filled { border-style:solid; border-color:#34c759; cursor:default; }
+        #designerApplyPopup .dap-img-slot img { width:100%; height:100%; object-fit:cover; pointer-events:none; }
+        #designerApplyPopup .dap-img-slot .dap-img-add { font-size:22px; color:#86868b; }
+        #designerApplyPopup .dap-img-slot .dap-img-del { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(255,59,48,0.95); color:#fff; border:none; border-radius:50%; font-size:14px; line-height:22px; padding:0; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.25); }
+        @media (max-width: 480px) { #designerApplyPopup #dapImgGrid { grid-template-columns:repeat(3, 1fr) !important; } }
     </style>
     <div class="dap-card" onclick="event.stopPropagation()">
         <div class="dap-head">
@@ -21924,7 +21932,6 @@ if (w >= 20 && h >= 20) {
         <div class="dap-body" id="dapBody">
             <div class="dap-info">
                 ✓ 본사 승인 후 <b>의뢰 받기 권한</b>이 부여됩니다<br>
-                ✓ 본사 정찰가 (명함 10K · 전단·배너 20K · 가벽 30K · 글씨포토존 40K) 또는 자유 합의 금액<br>
                 ✓ 작업 완료 후 <b>본사가 정산금을 지급</b>합니다
             </div>
             <div id="dapNeedLogin" style="display:none;" class="dap-state">
@@ -21943,29 +21950,41 @@ if (w >= 20 && h >= 20) {
             </div>
             <div id="dapForm">
                 <div class="dap-field">
-                    <label>활동명 (이름 또는 닉네임)</label>
-                    <input type="text" id="dapName" placeholder="예: 카멜레온 디자인 / 홍길동">
+                    <label id="dapLblName">활동명 (실명 필수)</label>
+                    <input type="text" id="dapName" placeholder="예: 홍길동">
+                </div>
+                <div class="dap-field">
+                    <label id="dapLblPhone">연락처</label>
+                    <input type="tel" id="dapPhone" placeholder="010-0000-0000">
                 </div>
                 <div class="dap-field dap-grid2">
                     <div>
-                        <label>연락처</label>
-                        <input type="tel" id="dapPhone" placeholder="010-0000-0000">
+                        <label id="dapLblBank">정산 계좌번호</label>
+                        <input type="text" id="dapAccount" placeholder="국민은행 123-456-789012 / 예금주 홍길동">
                     </div>
                     <div>
-                        <label>이메일 (정산용)</label>
-                        <input type="email" id="dapEmail" placeholder="design@example.com">
+                        <label id="dapLblId">주민등록번호</label>
+                        <input type="text" id="dapIdNumber" placeholder="000000-0000000">
                     </div>
                 </div>
                 <div class="dap-field">
-                    <label>자기소개 / 작업 경력</label>
-                    <textarea id="dapBio" placeholder="예: 명함·전단·포스터 5년 경력. 인쇄 출고용 PDF 작업 가능. 작업 가능 시간대 등도 자유롭게 작성해 주세요."></textarea>
+                    <label id="dapLblBio">자기소개 / 작업 경력</label>
+                    <textarea id="dapBio" placeholder="예: 명함·전단·포스터 5년 경력. 인쇄 출고용 PDF 작업 가능."></textarea>
                 </div>
+                <!-- 2026-06-14: 포트폴리오 이미지 업로드 5장 (각 ≤5MB). -->
                 <div class="dap-field">
-                    <label>포트폴리오 링크 (선택)</label>
-                    <input type="text" id="dapPortfolio" placeholder="Behance · Pinterest · 인스타그램 URL 등">
+                    <label id="dapLblImgs">포트폴리오 이미지 (최대 5장, 각 5MB 이하)</label>
+                    <div id="dapImgGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;">
+                        <!-- 5 슬롯 JS 로 채움 -->
+                    </div>
+                    <input type="file" id="dapImgInput" accept="image/png,image/jpeg,image/webp,image/jpg" multiple style="display:none;">
+                    <div id="dapImgErr" style="display:none; margin-top:6px; color:#ff3b30; font-size:12px;"></div>
                 </div>
-                <button class="dap-submit" id="dapSubmitBtn" onclick="window.submitDesignerApply()">신청 등록하기</button>
-                <div class="dap-note">신청서는 본사 관리자가 검토 후 보통 1~2일 내에 처리됩니다.</div>
+                <div class="dap-actions" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <button class="dap-submit" id="dapSubmitBtn" onclick="window.submitDesignerApply()">신청 등록하기</button>
+                    <button class="dap-submit dap-board" id="dapBoardBtn" onclick="location.href='/designer-board'" style="background:#34c759;">디자인의뢰 보기</button>
+                </div>
+                <div class="dap-note" id="dapNoteEl">신청서는 본사 관리자가 검토 후 보통 1~2일 내에 처리됩니다. <b>실명·실제 계좌·실제 주민등록번호</b>를 입력해야 정산이 가능합니다.</div>
             </div>
         </div>
     </div>
@@ -22003,93 +22022,109 @@ if (w >= 20 && h >= 20) {
     }
     var DAP_I18N = {
         kr: { title:'디자이너 신청', sub:'간단한 정보를 입력하시면 본사 검토 후 디자이너로 활동하실 수 있습니다',
-            info1:'본사 승인 후 <b>의뢰 받기 권한</b>이 부여됩니다', info2:'본사 정찰가 (명함 10K · 전단·배너 20K · 가벽 30K · 글씨포토존 40K) 또는 자유 합의 금액', info3:'작업 완료 후 <b>본사가 정산금을 지급</b>합니다',
+            info1:'본사 승인 후 <b>의뢰 받기 권한</b>이 부여됩니다', info3:'작업 완료 후 <b>본사가 정산금을 지급</b>합니다',
             need_login_h:'🔐 로그인이 필요합니다', need_login_p:'디자이너 신청을 위해 먼저 회원가입·로그인을 진행해 주세요.', need_login_btn:'로그인 / 회원가입',
             pending_h:'⏳ 신청 검토중', pending_p:'이미 신청하신 내역이 있습니다. 본사 검토가 완료되면 알림드립니다.<br>승인 후 <b>/designer-board</b> 에서 의뢰를 받을 수 있어요.',
             approved_h:'✅ 이미 승인된 디자이너입니다', approved_p:'디자이너 보드에서 신규 의뢰를 받아 보세요.', approved_btn:'디자이너 보드 열기',
-            label_name:'활동명 (이름 또는 닉네임)', ph_name:'예: 카멜레온 디자인 / 홍길동',
+            label_name:'활동명 (실명 필수)', ph_name:'예: 홍길동',
             label_phone:'연락처', ph_phone:'010-0000-0000',
-            label_email:'이메일 (정산용)', ph_email:'design@example.com',
-            label_bio:'자기소개 / 작업 경력', ph_bio:'예: 명함·전단·포스터 5년 경력. 인쇄 출고용 PDF 작업 가능. 작업 가능 시간대 등도 자유롭게 작성해 주세요.',
-            label_port:'포트폴리오 링크 (선택)', ph_port:'Behance · Pinterest · 인스타그램 URL 등',
-            submit:'신청 등록하기', note:'신청서는 본사 관리자가 검토 후 보통 1~2일 내에 처리됩니다.' },
+            label_bank:'정산 계좌번호', ph_bank:'국민은행 123-456-789012 / 예금주 홍길동',
+            label_id:'주민등록번호', ph_id:'000000-0000000',
+            label_bio:'자기소개 / 작업 경력', ph_bio:'예: 명함·전단·포스터 5년 경력. 인쇄 출고용 PDF 작업 가능.',
+            label_imgs:'포트폴리오 이미지 (최대 5장, 각 5MB 이하)',
+            submit:'신청 등록하기', board:'디자인의뢰 보기',
+            note:'신청서는 본사 관리자가 검토 후 보통 1~2일 내에 처리됩니다. <b>실명·실제 계좌·실제 주민등록번호</b>를 입력해야 정산이 가능합니다.' },
         ja: { title:'デザイナー応募', sub:'簡単な情報をご入力いただくと、本社審査の後デザイナーとして活動できます',
-            info1:'本社承認後 <b>依頼受付権限</b> が付与されます', info2:'本社規定価格（名刺10K・チラシ/バナー20K・パーティション30K・文字フォトゾーン40K）または自由合意の金額', info3:'作業完了後 <b>本社が報酬を支払い</b> ます',
+            info1:'本社承認後 <b>依頼受付権限</b> が付与されます', info3:'作業完了後 <b>本社が報酬を支払い</b> ます',
             need_login_h:'🔐 ログインが必要です', need_login_p:'デザイナー応募には会員登録・ログインが必要です。', need_login_btn:'ログイン / 会員登録',
             pending_h:'⏳ 申請審査中', pending_p:'すでに申請済みです。審査が完了次第ご連絡します。<br>承認後 <b>/designer-board</b> から依頼を受け付けられます。',
             approved_h:'✅ 承認済みのデザイナーです', approved_p:'デザイナーボードで新しい依頼を受けられます。', approved_btn:'デザイナーボードを開く',
-            label_name:'活動名（本名またはニックネーム）', ph_name:'例: カメレオンデザイン / 山田太郎',
-            label_phone:'連絡先', ph_phone:'090-0000-0000',
-            label_email:'メール（決済用）', ph_email:'design@example.com',
-            label_bio:'自己紹介 / 経歴', ph_bio:'例: 名刺・チラシ・ポスター5年経歴。印刷入稿用PDF対応可。対応可能時間帯もお気軽に。',
-            label_port:'ポートフォリオリンク（任意）', ph_port:'Behance · Pinterest · Instagram URL等',
-            submit:'申請を登録', note:'申請書は本社管理者が確認後、通常1〜2日以内に処理されます。' },
+            label_name:'氏名（本名必須）', ph_name:'例: 山田太郎',
+            label_phone:'電話番号', ph_phone:'090-0000-0000',
+            label_bank:'振込口座', ph_bank:'三井住友銀行 1234567 / 口座名 山田太郎',
+            label_id:'身分証番号 (マイナンバー等)', ph_id:'身分証番号',
+            label_bio:'自己紹介 / 経歴', ph_bio:'例: 名刺・チラシ・ポスター5年経歴。印刷入稿用PDF対応可。',
+            label_imgs:'ポートフォリオ画像（最大5枚 / 各5MB以下）',
+            submit:'申請を登録', board:'デザイン依頼を見る',
+            note:'申請は本社で確認後、通常1〜2日以内に処理されます。<b>本名・実際の口座・実際の身分証番号</b>でなければ報酬を振り込めません。' },
         en: { title:'Apply as Designer', sub:'Submit a short profile — our team will review and activate your designer account',
-            info1:'<b>Receive design requests</b> after approval', info2:'Standard rates (business card 10K · flyer/banner 20K · wall 30K · text photo-zone 40K) or freely negotiated amount', info3:'Payouts are <b>issued by HQ after delivery</b>',
+            info1:'<b>Receive design requests</b> after approval', info3:'Payouts are <b>issued by HQ after delivery</b>',
             need_login_h:'🔐 Sign in required', need_login_p:'Please sign up or log in to apply as a designer.', need_login_btn:'Log in / Sign up',
             pending_h:'⏳ Application under review', pending_p:'Your application is already submitted. We will notify you once it is reviewed.<br>After approval visit <b>/designer-board</b> to receive requests.',
             approved_h:'✅ You are already an approved designer', approved_p:'Open the designer board to pick up new requests.', approved_btn:'Open Designer Board',
-            label_name:'Display name (real name or handle)', ph_name:'e.g. Chameleon Design / John Doe',
+            label_name:'Legal name (real name required)', ph_name:'e.g. John Doe',
             label_phone:'Phone', ph_phone:'+1 555 000 0000',
-            label_email:'Email (for payouts)', ph_email:'design@example.com',
-            label_bio:'Bio / Experience', ph_bio:'e.g. 5 years on business cards, flyers, posters. Print-ready PDF. Note your availability too.',
-            label_port:'Portfolio link (optional)', ph_port:'Behance · Pinterest · Instagram URL etc.',
-            submit:'Submit application', note:'Applications are reviewed by HQ within ~1–2 business days.' },
+            label_bank:'Payout bank account', ph_bank:'Bank · account number · holder name',
+            label_id:'Government ID number (passport / national ID)', ph_id:'ID / passport number',
+            label_bio:'Bio / Experience', ph_bio:'e.g. 5 years on business cards, flyers, posters. Print-ready PDF.',
+            label_imgs:'Portfolio images (max 5, ≤5MB each)',
+            submit:'Submit application', board:'View design requests',
+            note:'Applications are reviewed within ~1–2 business days. <b>Real name, bank account and ID</b> are required for payouts.' },
         zh: { title:'设计师申请', sub:'填写简单信息，经总部审核后即可以设计师身份接单',
-            info1:'通过审核后获得 <b>接单权限</b>', info2:'总部统一价（名片10K·传单/横幅20K·背景墙30K·文字摄影区40K）或双方协商金额', info3:'完成作品后 <b>由总部支付报酬</b>',
+            info1:'通过审核后获得 <b>接单权限</b>', info3:'完成作品后 <b>由总部支付报酬</b>',
             need_login_h:'🔐 需要登录', need_login_p:'请先注册或登录后再申请。', need_login_btn:'登录 / 注册',
             pending_h:'⏳ 审核中', pending_p:'您的申请已提交。审核完成后会通知您。<br>通过后可在 <b>/designer-board</b> 接受委托。',
             approved_h:'✅ 已是认证设计师', approved_p:'前往设计师板块接受新委托。', approved_btn:'打开设计师板块',
-            label_name:'活动名（真名或昵称）', ph_name:'例如：变色龙设计 / 张三',
+            label_name:'实名（必须真名）', ph_name:'例如：张三',
             label_phone:'联系电话', ph_phone:'+86 138 0000 0000',
-            label_email:'邮箱（结算用）', ph_email:'design@example.com',
-            label_bio:'自我介绍 / 工作经历', ph_bio:'例如：5年名片·传单·海报经验。可处理印刷PDF。可写明可工作时间段。',
-            label_port:'作品集链接（选填）', ph_port:'Behance · Pinterest · 微博等',
-            submit:'提交申请', note:'申请将由总部管理员审核，通常1~2日内处理。' },
+            label_bank:'结算银行账户', ph_bank:'银行 · 账号 · 户名',
+            label_id:'身份证号 / 护照号', ph_id:'身份证 / 护照号码',
+            label_bio:'自我介绍 / 工作经历', ph_bio:'例如：5年名片·传单·海报经验。可处理印刷PDF。',
+            label_imgs:'作品集图片（最多5张，每张≤5MB）',
+            submit:'提交申请', board:'查看设计委托',
+            note:'申请将由总部审核，通常1~2日内处理。<b>必须使用真实姓名、真实账户、真实证件号</b> 才能转账。' },
         ar: { title:'طلب الانضمام كمصمم', sub:'املأ معلومات بسيطة وبعد مراجعة المقر يمكنك العمل كمصمم',
-            info1:'الحصول على <b>إذن استلام الطلبات</b> بعد الموافقة', info2:'الأسعار القياسية أو مبلغ بالاتفاق', info3:'يتم <b>دفع المستحقات من المقر</b> بعد إتمام العمل',
+            info1:'الحصول على <b>إذن استلام الطلبات</b> بعد الموافقة', info3:'يتم <b>دفع المستحقات من المقر</b> بعد إتمام العمل',
             need_login_h:'🔐 تسجيل الدخول مطلوب', need_login_p:'يرجى تسجيل الدخول أو إنشاء حساب أولاً.', need_login_btn:'تسجيل الدخول / حساب جديد',
             pending_h:'⏳ قيد المراجعة', pending_p:'تم تقديم طلبك بالفعل. سنخطرك عند الانتهاء.<br>بعد الموافقة يمكنك استلام الطلبات في <b>/designer-board</b>.',
             approved_h:'✅ أنت مصمم معتمد', approved_p:'افتح لوحة المصمم لاستلام الطلبات الجديدة.', approved_btn:'فتح لوحة المصمم',
-            label_name:'الاسم (الحقيقي أو الكنية)', ph_name:'مثال: Chameleon Design / محمد',
+            label_name:'الاسم الكامل (مطلوب الاسم الحقيقي)', ph_name:'مثال: محمد أحمد',
             label_phone:'الهاتف', ph_phone:'+966 5x xxx xxxx',
-            label_email:'البريد (للدفع)', ph_email:'design@example.com',
-            label_bio:'نبذة / الخبرة', ph_bio:'مثال: خبرة 5 سنوات في الطباعة. يمكنك ذكر أوقات التوفر أيضًا.',
-            label_port:'رابط ملف الأعمال (اختياري)', ph_port:'Behance · Pinterest · Instagram إلخ',
-            submit:'تقديم الطلب', note:'تتم المراجعة عادةً خلال 1-2 يوم عمل.' },
+            label_bank:'حساب الدفع', ph_bank:'البنك · رقم الحساب · اسم صاحب الحساب',
+            label_id:'رقم الهوية / جواز السفر', ph_id:'رقم الهوية أو جواز السفر',
+            label_bio:'نبذة / الخبرة', ph_bio:'مثال: خبرة 5 سنوات في الطباعة.',
+            label_imgs:'صور أعمالك (حتى 5 صور، كل واحدة ≤5MB)',
+            submit:'تقديم الطلب', board:'عرض الطلبات',
+            note:'المراجعة عادةً خلال 1-2 يوم عمل. <b>يجب استخدام الاسم الحقيقي والحساب البنكي والهوية الحقيقية</b> ليتم الدفع.' },
         es: { title:'Solicitud de Diseñador', sub:'Rellena un perfil breve. Tras la revisión podrás trabajar como diseñador',
-            info1:'Tras la aprobación recibirás <b>permisos para aceptar encargos</b>', info2:'Tarifas estándar o importe acordado libremente', info3:'<b>HQ paga</b> al finalizar el trabajo',
+            info1:'Tras la aprobación recibirás <b>permisos para aceptar encargos</b>', info3:'<b>HQ paga</b> al finalizar el trabajo',
             need_login_h:'🔐 Inicio de sesión requerido', need_login_p:'Inicia sesión o regístrate para postularte.', need_login_btn:'Iniciar / Registrarse',
             pending_h:'⏳ Solicitud en revisión', pending_p:'Tu solicitud ya fue enviada. Te avisaremos al revisarla.<br>Tras la aprobación accede a <b>/designer-board</b>.',
             approved_h:'✅ Ya eres diseñador aprobado', approved_p:'Abre el panel de diseñador para recibir encargos.', approved_btn:'Abrir Panel de Diseñador',
-            label_name:'Nombre (real o alias)', ph_name:'ej. Chameleon Design / Juan',
+            label_name:'Nombre legal (real)', ph_name:'ej. Juan García',
             label_phone:'Teléfono', ph_phone:'+34 600 000 000',
-            label_email:'Correo (para pagos)', ph_email:'design@example.com',
-            label_bio:'Bio / Experiencia', ph_bio:'ej. 5 años en tarjetas, flyers, pósters. Indica también tu disponibilidad.',
-            label_port:'Enlace de portafolio (opcional)', ph_port:'Behance · Pinterest · Instagram URL',
-            submit:'Enviar solicitud', note:'La revisión normalmente tarda 1-2 días hábiles.' },
+            label_bank:'Cuenta bancaria para pagos', ph_bank:'Banco · número de cuenta · titular',
+            label_id:'Documento de identidad (DNI / pasaporte)', ph_id:'Número de DNI o pasaporte',
+            label_bio:'Bio / Experiencia', ph_bio:'ej. 5 años en tarjetas, flyers, pósters.',
+            label_imgs:'Imágenes del portafolio (máx 5, ≤5MB c/u)',
+            submit:'Enviar solicitud', board:'Ver encargos',
+            note:'La revisión tarda 1-2 días hábiles. <b>Nombre real, cuenta bancaria real y documento real</b> son necesarios para el pago.' },
         de: { title:'Designer-Bewerbung', sub:'Sende ein kurzes Profil. Nach der Prüfung kannst du als Designer arbeiten',
-            info1:'Nach Freigabe erhältst du <b>Auftragsannahme-Rechte</b>', info2:'Standardpreise oder frei verhandelter Betrag', info3:'<b>Auszahlung durch HQ</b> nach Lieferung',
+            info1:'Nach Freigabe erhältst du <b>Auftragsannahme-Rechte</b>', info3:'<b>Auszahlung durch HQ</b> nach Lieferung',
             need_login_h:'🔐 Anmeldung erforderlich', need_login_p:'Bitte registriere dich oder melde dich an.', need_login_btn:'Anmelden / Registrieren',
             pending_h:'⏳ Bewerbung in Prüfung', pending_p:'Deine Bewerbung ist eingereicht. Wir informieren dich nach der Prüfung.<br>Nach Freigabe siehe <b>/designer-board</b>.',
             approved_h:'✅ Bereits freigegebener Designer', approved_p:'Öffne das Designer-Board für neue Aufträge.', approved_btn:'Designer-Board öffnen',
-            label_name:'Name (real oder Künstlername)', ph_name:'z.B. Chameleon Design / Max',
+            label_name:'Voller Name (echter Name erforderlich)', ph_name:'z.B. Max Mustermann',
             label_phone:'Telefon', ph_phone:'+49 151 0000000',
-            label_email:'E-Mail (für Auszahlung)', ph_email:'design@example.com',
-            label_bio:'Bio / Erfahrung', ph_bio:'z.B. 5 Jahre Erfahrung. Verfügbarkeit gerne angeben.',
-            label_port:'Portfolio-Link (optional)', ph_port:'Behance · Pinterest · Instagram URL',
-            submit:'Bewerbung absenden', note:'Prüfung erfolgt in der Regel innerhalb von 1–2 Werktagen.' },
+            label_bank:'Bankkonto für Auszahlung', ph_bank:'Bank · IBAN · Kontoinhaber',
+            label_id:'Ausweisnummer (Personalausweis / Reisepass)', ph_id:'Ausweis-/Passnummer',
+            label_bio:'Bio / Erfahrung', ph_bio:'z.B. 5 Jahre Erfahrung.',
+            label_imgs:'Portfolio-Bilder (max 5, je ≤5MB)',
+            submit:'Bewerbung absenden', board:'Aufträge ansehen',
+            note:'Prüfung dauert in der Regel 1–2 Werktage. <b>Echter Name, echtes Bankkonto und echte Ausweisnummer</b> sind für die Auszahlung erforderlich.' },
         fr: { title:'Candidature Designer', sub:'Remplissez un profil court. Après vérification, vous pourrez travailler en tant que designer',
-            info1:'Après validation, vous obtenez <b>l\'autorisation de recevoir des missions</b>', info2:'Tarifs standards ou montant librement convenu', info3:'<b>Paiement par le siège</b> après livraison',
+            info1:'Après validation, vous obtenez <b>l\'autorisation de recevoir des missions</b>', info3:'<b>Paiement par le siège</b> après livraison',
             need_login_h:'🔐 Connexion requise', need_login_p:'Inscrivez-vous ou connectez-vous d\'abord.', need_login_btn:'Connexion / Inscription',
             pending_h:'⏳ Candidature en cours d\'examen', pending_p:'Votre candidature est déjà soumise. Nous vous préviendrons.<br>Après validation rendez-vous sur <b>/designer-board</b>.',
             approved_h:'✅ Designer déjà validé', approved_p:'Ouvrez le tableau designer pour de nouvelles missions.', approved_btn:'Ouvrir le tableau designer',
-            label_name:'Nom (réel ou pseudo)', ph_name:'ex. Chameleon Design / Jean',
+            label_name:'Nom complet (nom réel requis)', ph_name:'ex. Jean Dupont',
             label_phone:'Téléphone', ph_phone:'+33 6 00 00 00 00',
-            label_email:'Email (pour paiement)', ph_email:'design@example.com',
-            label_bio:'Bio / Expérience', ph_bio:'ex. 5 ans d\'expérience. Indiquez votre disponibilité.',
-            label_port:'Lien de portfolio (facultatif)', ph_port:'Behance · Pinterest · Instagram URL',
-            submit:'Envoyer la candidature', note:'L\'examen prend généralement 1 à 2 jours ouvrés.' }
+            label_bank:'Compte bancaire pour paiement', ph_bank:'Banque · IBAN · titulaire',
+            label_id:'Numéro de pièce d\'identité (CNI / passeport)', ph_id:'Numéro CNI ou passeport',
+            label_bio:'Bio / Expérience', ph_bio:'ex. 5 ans d\'expérience.',
+            label_imgs:'Images de portfolio (max 5, ≤5MB chacune)',
+            submit:'Envoyer la candidature', board:'Voir les missions',
+            note:'L\'examen prend généralement 1 à 2 jours ouvrés. <b>Nom réel, compte bancaire réel et pièce d\'identité réelle</b> sont nécessaires pour le paiement.' }
     };
     function _dapApplyI18n() {
         var lang = _dapDetectLang();
@@ -22104,7 +22139,7 @@ if (w >= 20 && h >= 20) {
         }
         set('.dap-h-title', t.title);
         set('.dap-h-sub', t.sub);
-        set('.dap-info', '✓ ' + t.info1 + '<br>✓ ' + t.info2 + '<br>✓ ' + t.info3);
+        set('.dap-info', '✓ ' + t.info1 + '<br>✓ ' + t.info3);
         set('#dapNeedLogin h4', t.need_login_h);
         set('#dapNeedLogin p', t.need_login_p);
         set('#dapNeedLogin button', t.need_login_btn);
@@ -22113,16 +22148,66 @@ if (w >= 20 && h >= 20) {
         set('#dapApproved h4', t.approved_h);
         set('#dapApproved p', t.approved_p);
         set('#dapApproved button', t.approved_btn);
-        // 폼 라벨
-        var labels = root.querySelectorAll('#dapForm .dap-field > label, #dapForm .dap-field > div > label');
-        var labelKeys = ['label_name','label_phone','label_email','label_bio','label_port'];
-        labels.forEach(function(el, i){ if (labelKeys[i]) el.textContent = t[labelKeys[i]]; });
+        // 라벨 (id 직접 지정)
+        set('#dapLblName', t.label_name);
+        set('#dapLblPhone', t.label_phone);
+        set('#dapLblBank', t.label_bank);
+        set('#dapLblId', t.label_id);
+        set('#dapLblBio', t.label_bio);
+        set('#dapLblImgs', t.label_imgs);
         // placeholders
-        var phs = [['#dapName','ph_name'],['#dapPhone','ph_phone'],['#dapEmail','ph_email'],['#dapBio','ph_bio'],['#dapPortfolio','ph_port']];
+        var phs = [['#dapName','ph_name'],['#dapPhone','ph_phone'],['#dapAccount','ph_bank'],['#dapIdNumber','ph_id'],['#dapBio','ph_bio']];
         phs.forEach(function(p){ var el = root.querySelector(p[0]); if (el) el.setAttribute('placeholder', t[p[1]]); });
         set('#dapSubmitBtn', t.submit);
-        set('.dap-note', t.note);
+        set('#dapBoardBtn', t.board);
+        set('#dapNoteEl', t.note);
     }
+
+    // 2026-06-14: 5개 이미지 슬롯 관리 (in-memory). 각 ≤5MB.
+    var _dapImgs = [];  // [{ file, dataUrl }]
+    var DAP_MAX_IMGS = 5, DAP_MAX_BYTES = 5 * 1024 * 1024;
+    function _dapRenderImgs() {
+        var grid = document.getElementById('dapImgGrid');
+        if (!grid) return;
+        var html = '';
+        for (var i = 0; i < DAP_MAX_IMGS; i++) {
+            var img = _dapImgs[i];
+            if (img) {
+                html += '<div class="dap-img-slot filled" data-idx="' + i + '">' +
+                    '<img src="' + img.dataUrl + '">' +
+                    '<button type="button" class="dap-img-del" onclick="window._dapRemoveImg(' + i + ')">×</button>' +
+                '</div>';
+            } else {
+                html += '<div class="dap-img-slot" onclick="document.getElementById(\'dapImgInput\').click()"><span class="dap-img-add">+</span></div>';
+            }
+        }
+        grid.innerHTML = html;
+    }
+    window._dapRemoveImg = function(idx){ _dapImgs.splice(idx, 1); _dapRenderImgs(); };
+    document.getElementById('dapImgInput').addEventListener('change', function(ev){
+        var errEl = document.getElementById('dapImgErr');
+        if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+        var files = Array.from(ev.target.files || []);
+        for (var i = 0; i < files.length; i++) {
+            if (_dapImgs.length >= DAP_MAX_IMGS) break;
+            var f = files[i];
+            if (f.size > DAP_MAX_BYTES) {
+                if (errEl) { errEl.style.display = 'block'; errEl.textContent = f.name + ' — 5MB 초과'; }
+                continue;
+            }
+            if (!/^image\//.test(f.type)) continue;
+            (function(file){
+                var reader = new FileReader();
+                reader.onload = function(e){
+                    _dapImgs.push({ file: file, dataUrl: e.target.result });
+                    _dapRenderImgs();
+                };
+                reader.readAsDataURL(file);
+            })(f);
+        }
+        ev.target.value = '';
+    });
+    _dapRenderImgs();  // 초기 렌더
     window.openDesignerApplyPopup = async function() {
         _dapApplyI18n();
         // 상태 초기화
@@ -22168,12 +22253,13 @@ if (w >= 20 && h >= 20) {
         if (!sb) { alert('연결 오류 — 잠시 후 다시 시도해주세요'); return; }
         var name = $('dapName').value.trim();
         var phone = $('dapPhone').value.trim();
-        var email = $('dapEmail').value.trim();
+        var account = $('dapAccount').value.trim();
+        var idnum = $('dapIdNumber').value.trim();
         var bio = $('dapBio').value.trim();
-        var portfolio = $('dapPortfolio').value.trim();
-        if (!name) { alert('활동명을 입력해 주세요'); return; }
+        if (!name) { alert('실명을 입력해 주세요'); return; }
         if (!phone) { alert('연락처를 입력해 주세요'); return; }
-        if (!email) { alert('이메일을 입력해 주세요'); return; }
+        if (!account) { alert('정산 계좌번호를 입력해 주세요 (실제 계좌)'); return; }
+        if (!idnum) { alert('주민등록번호 / 신분증 번호를 입력해 주세요 (실제 번호)'); return; }
         if (!bio) { alert('자기소개를 입력해 주세요'); return; }
 
         var btn = $('dapSubmitBtn');
@@ -22184,21 +22270,37 @@ if (w >= 20 && h >= 20) {
             var u = await sb.auth.getUser();
             var uid = u && u.data && u.data.user && u.data.user.id;
             if (!uid) { alert('로그인이 필요합니다'); btn.disabled = false; btn.textContent = origLabel; return; }
-            // 메타데이터를 bio 에 임베드 (별도 컬럼 없이도 admin 이 검토 가능)
-            var enrichedBio = bio + '\n\n--- 신청 정보 ---\n연락처: ' + phone + '\n이메일: ' + email + (portfolio ? ('\n포트폴리오: ' + portfolio) : '');
+
+            // 2026-06-14: 포트폴리오 이미지 5장을 supabase storage 'design' 버킷에 업로드 → public URL 들 모으기
+            var uploadedUrls = [];
+            for (var i = 0; i < _dapImgs.length; i++) {
+                var f = _dapImgs[i].file;
+                var ext = (f.name.split('.').pop() || 'png').toLowerCase();
+                var path = 'designer-portfolios/' + uid + '/' + Date.now() + '-' + i + '.' + ext;
+                btn.textContent = '이미지 업로드 ' + (i + 1) + '/' + _dapImgs.length + '...';
+                var up = await sb.storage.from('design').upload(path, f, { upsert: true, contentType: f.type });
+                if (up.error) { console.warn('[dap img upload]', up.error); continue; }
+                var pub = sb.storage.from('design').getPublicUrl(path);
+                if (pub && pub.data && pub.data.publicUrl) uploadedUrls.push(pub.data.publicUrl);
+            }
+            btn.textContent = '등록 중...';
+
+            // 정산 정보 (계좌/주민번호) 를 bio 안에 마커로 묶어 저장 — admin 이 검토 가능.
+            //   ⚠️ 운영시엔 별도 암호화 컬럼으로 이관 권장.
+            var enrichedBio = bio + '\n\n--- 신청 정보 (본사 검토용) ---\n실명: ' + name + '\n연락처: ' + phone + '\n계좌: ' + account + '\n주민/신분증: ' + idnum;
+
             var payload = {
                 id: uid,
                 display_name: name,
                 bio: enrichedBio,
-                country: 'KR',
-                is_active: false,  // 본사 승인 필요
+                country: (_dapDetectLang() === 'kr' ? 'KR' : _dapDetectLang().toUpperCase()),
+                is_active: false,
                 avg_rating: 0,
                 total_reviews: 0,
                 total_earnings: 0,
-                portfolio_urls: portfolio ? [portfolio] : [],
+                portfolio_urls: uploadedUrls,
                 specialties: []
             };
-            // 이미 신청한 경우 update, 신규는 insert
             var existing = await sb.from('designer_profiles').select('id').eq('id', uid).maybeSingle();
             var res;
             if (existing && existing.data) {
