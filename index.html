@@ -6894,11 +6894,12 @@ function scrollHotdeal(gridId, dir) {
                 x = (me.natW - w) / 2;
                 y = (me.natH - h) / 2;
             } else {
-                // 2026-06-15: 요소(rail/popup) 추가 시 기본 크기 50→35% 로 축소 (사용자 요청: 너무 크게 들어오지 않게).
-                w = Math.min(me.natW * 0.35, natW);
-                if (w < 50) w = me.natW * 0.35;  // SVG fallback
+                // 2026-06-15: 요소(rail/popup) 추가 시 기본 크기 — 사용자 피드백 따라 더 작게.
+                //   50% → 35% → 22% 로 축소. 사용자는 핸들로 키울 수 있으므로 작게 시작이 안전.
+                w = Math.min(me.natW * 0.22, natW);
+                if (w < 50) w = me.natW * 0.22;  // SVG fallback
                 h = w * ratio;
-                if (h > me.natH * 0.45) { h = me.natH * 0.45; w = h / ratio; }
+                if (h > me.natH * 0.3) { h = me.natH * 0.3; w = h / ratio; }
                 x = (me.natW - w) / 2;
                 y = (me.natH - h) / 2;
             }
