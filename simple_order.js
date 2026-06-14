@@ -11647,21 +11647,35 @@ html, body { background: #ffffff !important; }
             var totalPages = Math.ceil(_libCurrentItems.length / _LIB_PER_PAGE);
             var start = _libCurrentPage * _LIB_PER_PAGE;
             var pageItems = _libCurrentItems.slice(start, start + _LIB_PER_PAGE);
+            // 2026-06-14: data-url 에 URL 을 안전하게 저장 (HTML 속성 이스케이프). onclick inline 은 따옴표/괄호/& 등 깨짐.
+            function _attrEsc(s) {
+                return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
             grid.innerHTML = pageItems.map(function(it, i){
+                var globalIdx = start + i;
                 if (it.__ornament) {
-                    // 장식 SVG 인라인 표시 — currentColor 를 검정으로 치환
                     var svgInline = it.color ? it.svg : it.svg.replace(/currentColor/g, '#000');
-                    return '<div class="qd-lib-thumb qd-lib-ornament" data-idx="' + (start + i) + '" onclick="window._soQdLibPickOrnament(' + (start + i) + ')" style="padding:10px;">' +
+                    return '<div class="qd-lib-thumb qd-lib-ornament" data-ornament-idx="' + globalIdx + '" style="padding:10px;">' +
                            '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">' + svgInline + '</div>' +
                            '</div>';
                 }
-                // 일반 라이브러리 — 그리드는 썸네일, 클릭 시엔 data_url (고해상도) 사용
-                var thumb = (it.thumb_url || it.data_url || '').replace(/"/g, '&quot;');
-                var full = (it.data_url || it.thumb_url || '').replace(/"/g, '&quot;');
-                return '<div class="qd-lib-thumb" onclick="window._soQdLibPick(&quot;' + full + '&quot;)">' +
+                var thumb = _attrEsc(it.thumb_url || it.data_url || '');
+                var full = _attrEsc(it.data_url || it.thumb_url || '');
+                return '<div class="qd-lib-thumb" data-url="' + full + '">' +
                        '<img src="' + thumb + '" loading="lazy" onerror="this.style.opacity=0.3">' +
                        '</div>';
             }).join('');
+            // 클릭 핸들러를 안전하게 바인딩 (인라인 onclick 사용 X)
+            grid.querySelectorAll('.qd-lib-thumb[data-url]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    window._soQdLibPick(el.getAttribute('data-url'));
+                });
+            });
+            grid.querySelectorAll('.qd-lib-thumb[data-ornament-idx]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    window._soQdLibPickOrnament(parseInt(el.getAttribute('data-ornament-idx'), 10));
+                });
+            });
             // 인라인 SVG 사이즈 보정
             grid.querySelectorAll('.qd-lib-ornament svg').forEach(function(svg){
                 svg.style.width = '100%'; svg.style.height = '100%'; svg.style.maxWidth = '100%'; svg.style.maxHeight = '100%';
