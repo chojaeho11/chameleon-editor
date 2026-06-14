@@ -536,6 +536,83 @@ html, body { background: #ffffff !important; }
 .so-co-submit-btn:hover { background: #78350f; }
 .so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ════════════════════════════════════════════════════════════════════
+   2026-06-14: Quick Design (Phase 1) — 전역 (데스크톱+모바일 공통)
+   ════════════════════════════════════════════════════════════════════ */
+#soQuickDesignSec {
+    background: #ffffff;
+    border: 1.5px solid #6366f1;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    color: #0f172a;
+}
+#soQuickDesignSec .qd-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+#soQuickDesignSec .qd-head-icon { color:#6366f1; font-size:16px; }
+#soQuickDesignSec .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; letter-spacing:-0.01em; }
+#soQuickDesignSec .qd-size-badge {
+    font-size:11px; color:#4338ca; font-weight:800; background:#eef2ff;
+    padding:4px 10px; border-radius:999px; margin-left:auto;
+}
+#soQuickDesignSec .qd-fields { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+#soQuickDesignSec .qd-field { display:flex; align-items:center; gap:10px; }
+#soQuickDesignSec .qd-field-label {
+    font-size:11.5px; font-weight:800; color:#475569;
+    width:54px; flex-shrink:0; text-align:right;
+}
+#soQuickDesignSec .qd-field input {
+    flex:1; min-width:0; padding:10px 12px;
+    border:1px solid #d1d5db; border-radius:8px; background:#fff;
+    font-size:13px; font-family:inherit; outline:none;
+    color:#0f172a; transition:border-color .15s, box-shadow .15s;
+}
+#soQuickDesignSec .qd-field input:focus {
+    border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12);
+}
+#soQuickDesignSec .qd-section-label {
+    font-size:11.5px; font-weight:800; color:#475569;
+    margin:14px 0 6px; text-transform:uppercase; letter-spacing:0.04em;
+}
+#soQuickDesignSec .qd-template-grid {
+    display:grid !important; grid-template-columns:repeat(4, 1fr); gap:6px;
+}
+#soQuickDesignSec .qd-template-card {
+    position:relative; aspect-ratio:9/5;
+    background:#f1f5f9; border:1.5px solid #e2e8f0; border-radius:8px;
+    cursor:pointer; overflow:hidden; transition:all .15s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; color:#64748b; font-weight:700; user-select:none;
+}
+#soQuickDesignSec .qd-template-card:hover { border-color:#6366f1; transform:translateY(-1px); }
+#soQuickDesignSec .qd-template-card.qd-tpl-active {
+    border-color:#6366f1; background:#eef2ff; color:#4338ca;
+    box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+}
+#soQuickDesignSec .qd-preview-wrap {
+    margin-top:14px; padding:14px;
+    background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+}
+#soQuickDesignSec #soQdPreviewCanvas {
+    max-width:100%; height:auto;
+    border:1px dashed #cbd5e1; background:#fff; display:block;
+}
+#soQuickDesignSec .qd-cta-row { display:flex; gap:8px; margin-top:14px; }
+#soQuickDesignSec .qd-cta-row > button {
+    flex:1; padding:12px 14px; border-radius:10px;
+    font-weight:800; font-size:13px; cursor:pointer;
+    font-family:inherit; border:none; transition:all .15s;
+}
+#soQuickDesignSec .qd-cta-apply {
+    background:#03c75a; color:#fff;
+    box-shadow:0 6px 18px -6px rgba(3,199,90,0.45);
+}
+#soQuickDesignSec .qd-cta-apply:hover { background:#02b34f; }
+#soQuickDesignSec .qd-cta-advanced {
+    background:#fff; color:#4338ca; border:1.5px solid #4338ca !important;
+}
+#soQuickDesignSec .qd-cta-advanced:hover { background:#4338ca; color:#fff; }
+
 @media (max-width: 768px) {
     .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
     .so-co-card { flex-direction: column; max-height: none; margin: 0 auto; border-radius: 16px; }
@@ -814,49 +891,12 @@ html, body { background: #ffffff !important; }
         margin-bottom: 10px !important;
     }
 
-    /* 2026-06-14: Quick Design (Phase 1) — 인라인 미니 폼 + 템플릿 그리드 + 미리보기 + 고급편집 진입 */
+    /* Quick Design 모바일 미세 조정 (전역 규칙은 @media 밖에 정의됨) */
     .so-body > .so-left #soQuickDesignSec {
-        background: #ffffff !important;
-        border: 1.5px solid #6366f1 !important;
-        border-radius: 12px !important;
-        padding: 14px !important;
+        padding: 12px !important;
         margin-bottom: 10px !important;
     }
-    .qd-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
-    .qd-head-icon { color:#6366f1; font-size:16px; }
-    .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; }
-    .qd-size-badge { font-size:11px; color:#475569; font-weight:800; background:#eef2ff; padding:3px 8px; border-radius:999px; margin-left:auto; }
-    .qd-fields { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
-    .qd-field { display:flex; align-items:center; gap:8px; }
-    .qd-field-label { font-size:11px; font-weight:800; color:#64748b; width:54px; flex-shrink:0; }
-    .qd-field input {
-        flex:1; min-width:0; padding:9px 11px; border:1px solid #d1d5db; border-radius:8px;
-        font-size:13px; font-family:inherit; outline:none; transition:border-color .15s;
-    }
-    .qd-field input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
-    .qd-section-label { font-size:11.5px; font-weight:800; color:#475569; margin:10px 0 6px; }
-    .qd-template-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
-    .qd-template-card {
-        position:relative; aspect-ratio:9/5; background:#f1f5f9; border:1.5px solid #e2e8f0; border-radius:8px;
-        cursor:pointer; overflow:hidden; transition:all .15s; display:flex; align-items:center; justify-content:center;
-        font-size:10px; color:#94a3b8; font-weight:700;
-    }
-    .qd-template-card:hover { border-color:#6366f1; transform:translateY(-1px); }
-    .qd-template-card.qd-tpl-active { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
-    .qd-preview-wrap {
-        margin-top:12px; padding:12px; background:#f8fafc; border-radius:10px;
-        display:flex; align-items:center; justify-content:center;
-    }
-    #soQdPreviewCanvas { max-width:100%; height:auto; border:1px dashed #cbd5e1; background:#fff; display:block; }
-    .qd-cta-row { display:flex; gap:8px; margin-top:12px; }
-    .qd-cta-row > button {
-        flex:1; padding:11px 12px; border-radius:9px; font-weight:800; font-size:13px;
-        cursor:pointer; font-family:inherit; border:none; transition:all .15s;
-    }
-    .qd-cta-apply { background:#03c75a; color:#fff; box-shadow:0 6px 18px -6px rgba(3,199,90,0.45); }
-    .qd-cta-apply:hover { background:#02b34f; }
-    .qd-cta-advanced { background:#fff; color:#4338ca; border:1.5px solid #4338ca !important; }
-    .qd-cta-advanced:hover { background:#4338ca; color:#fff; }
+    .so-body > .so-left #soQuickDesignSec .qd-field-label { width:46px; font-size:10.5px; }
 
     /* 4. 상품 상세정보 + 고객 리뷰 — 검정 보더 카드 통일 */
     .so-body > .so-left .so-prod-detail {
