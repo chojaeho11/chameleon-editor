@@ -89,14 +89,20 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
 @media print {
     body { background:#fff; padding:0; }
     .toolbar { display:none !important; }
-    .sheet { box-shadow:none; width:100%; min-height:auto; padding:20mm; }
+    .sheet { box-shadow:none; width:100%; min-height:auto; padding:20mm; background:transparent; }
     /* 2026-06-15: 인쇄 페이지 분할 — 시작부분(주문자 정보) 1장, 제작 항목 1건당 1장, 끝부분(합계/메모) 1장. */
-    .item {
+    .item, .screen-page {
         page-break-before: always;
         break-before: page;
         page-break-inside: avoid;
         break-inside: avoid;
+        box-shadow:none !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:transparent !important;
     }
+    /* 첫 화면 페이지는 새 페이지로 강제하지 않음 — 인쇄 첫 장이 빈 칸으로 시작되지 않도록. */
+    .screen-page:first-child { page-break-before: avoid; break-before: avoid; }
     .summary {
         page-break-before: always;
         break-before: page;
@@ -109,8 +115,41 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         page-break-inside: avoid;
         break-inside: avoid;
     }
-    /* PDF embed 는 인쇄 시 미지원/깨짐 — 같은 컨테이너에 fallback img 가 옆에 있으면 그것만 보이도록.
-       (현재는 embed 만 있어서 그대로 출력. 추후 fallback 가시화는 별도 처리.) */
+}
+/* 2026-06-15: 화면에서도 인쇄와 같은 시트별 분리 시각화 — 회색 배경 + 각 페이지가 A4 카드. */
+@media screen {
+    body.wo-paged { background:#d6d3d1; padding:30px 0; }
+    body.wo-paged .sheet {
+        background:transparent !important;
+        box-shadow:none !important;
+        padding:0 !important;
+        width:794px;
+        min-height:auto;
+    }
+    body.wo-paged .screen-page {
+        background:#fff;
+        width:794px;
+        min-height:1123px;
+        padding:30px 38px;
+        margin:0 auto 24px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.12);
+        box-sizing:border-box;
+        position:relative;
+    }
+    body.wo-paged .screen-page::after {
+        content:attr(data-page-label);
+        position:absolute;
+        top:-22px;
+        right:0;
+        font-size:11px;
+        font-weight:700;
+        color:#6b7280;
+        letter-spacing:0.5px;
+    }
+    body.wo-paged .item {
+        border:1px solid #d1d5db;
+        margin-bottom:0;
+    }
 }
 @media (max-width:820px) {
     .sheet { width:100%; padding:20px; }
@@ -266,7 +305,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         // 주문 + 옵션 카탈로그 병렬 로드
         const [orderResult, addonResult] = await Promise.all([
             sb.from('orders').select('*').eq('id', orderId).single(),
-            sb.from('admin_addons').select('code, name_kr, name, price_kr, price, type')
+            sb.from('admin_addons').select('code, name, display_name, price, type')
         ]);
         const { data: order, error } = orderResult;
         if (error || !order) {
@@ -1021,11 +1060,63 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             </div>`;
         }).join('');
 
+        // 2026-06-15: 화면 페이지 분할 — 헤더 1장, 항목별 1장, 푸터 1장 (인쇄 결과와 동일).
+        try { _woApplyPaged(); } catch (e) { console.warn('[wo paged]', e); }
+
     } catch (e) {
         console.error('[workorder]', e);
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+ esc(e.message) + '</div>';
     }
 })();
+
+// 2026-06-15: .sheet 의 자식들을 페이지 단위로 재구성. 헤더(주문자 정보 등) 한 장, 항목별 한 장, 푸터 한 장.
+function _woApplyPaged() {
+    const sheet = document.getElementById('sheet');
+    if (!sheet || document.body.classList.contains('wo-paged')) return;
+    const itemList = sheet.querySelector('#woItemList');
+    if (!itemList) return;
+    const itemSection = itemList.closest('.section');
+    if (!itemSection) return;
+
+    const allChildren = Array.from(sheet.children);
+    const itemSectionIdx = allChildren.indexOf(itemSection);
+    const headerEls = allChildren.slice(0, itemSectionIdx);
+    const footerEls = allChildren.slice(itemSectionIdx + 1);
+    const items = Array.from(itemList.children);
+    const total = 1 + items.length + 1;
+
+    // 헤더 페이지: 기존 헤더 sibling 들 + 제작 항목 타이틀
+    const headerPage = document.createElement('div');
+    headerPage.className = 'screen-page';
+    headerPage.dataset.pageLabel = `Page 1 / ${total}`;
+    headerEls.forEach(el => headerPage.appendChild(el));
+    // 제작 항목 타이틀 (.section-title) 만 헤더에 추가
+    const titleEl = itemSection.querySelector('.section-title');
+    if (titleEl) headerPage.appendChild(titleEl);
+
+    // 각 항목 페이지
+    const itemPages = items.map((item, i) => {
+        const p = document.createElement('div');
+        p.className = 'screen-page';
+        p.dataset.pageLabel = `Page ${i + 2} / ${total} · 제작 항목 ${i + 1}`;
+        p.appendChild(item);
+        return p;
+    });
+
+    // 푸터 페이지
+    const footerPage = document.createElement('div');
+    footerPage.className = 'screen-page';
+    footerPage.dataset.pageLabel = `Page ${total} / ${total}`;
+    footerEls.forEach(el => footerPage.appendChild(el));
+
+    // 시트 재구성
+    sheet.innerHTML = '';
+    sheet.appendChild(headerPage);
+    itemPages.forEach(p => sheet.appendChild(p));
+    sheet.appendChild(footerPage);
+
+    document.body.classList.add('wo-paged');
+}
 
 // 2026-06-03: admin_note 헤더 부분(자동 시스템 + [제품종류] + [직원메모] + [작업지시완료]) 합쳐서 다시 저장
 async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote, newComplete) {
