@@ -6606,34 +6606,57 @@ function scrollHotdeal(gridId, dir) {
             _meSelect(it);
             _meShowCtxMenu(ev.clientX, ev.clientY, it);
         });
+        // 2026-06-14: 편집 모드 중에도 드래그 가능 — 손가락 10px 이상 움직이면 편집 종료 + 드래그 전환
+        var _pendingDrag = false;  // 편집 중 pointerdown — drag 후보 상태
         it.el.addEventListener('pointerdown', function(ev){
             if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
-            if (it.el.getAttribute('contenteditable') === 'true') return;
-            if (ev.button === 2) return; // 우클릭은 contextmenu 핸들러가 처리
-            _meSnapshot();  // 드래그 직전 상태 저장
-            dragging = true;
-            it.el.setPointerCapture(ev.pointerId);
+            if (ev.button === 2) return;
+            var isEditing = it.el.getAttribute('contenteditable') === 'true';
             sx = ev.clientX; sy = ev.clientY;
             sLeft = it.x; sTop = it.y;
+            if (isEditing) {
+                // 편집 모드 — 즉시 drag 시작하지 않음. pointermove 에서 임계값 넘으면 편집 종료 후 drag 시작.
+                _pendingDrag = true;
+                return;
+            }
+            _meSnapshot();
+            dragging = true;
+            it.el.setPointerCapture(ev.pointerId);
             _meSelect(it);
             ev.preventDefault();
         });
         it.el.addEventListener('pointermove', function(ev){
+            // 편집 중 드래그 전환 임계값 검사 (10px)
+            if (_pendingDrag && !dragging) {
+                var pdx = ev.clientX - sx, pdy = ev.clientY - sy;
+                if (Math.sqrt(pdx*pdx + pdy*pdy) > 10) {
+                    // 편집 종료 → 드래그 시작
+                    it.el.blur();  // contenteditable=false + it.text sync
+                    _meSnapshot();
+                    dragging = true;
+                    _pendingDrag = false;
+                    try { it.el.setPointerCapture(ev.pointerId); } catch(_e){}
+                    _meSelect(it);
+                    ev.preventDefault();
+                }
+            }
             if (!dragging) return;
             var dx = (ev.clientX - sx) / me.wScale;
             var dy = (ev.clientY - sy) / me.wScale;
             it.x = sLeft + dx;
             it.y = sTop + dy;
-            // 2026-06-14: Smart guide — 캔버스 중앙 (가로/세로) 에 6px 이내면 snap + 가이드 라인 표시
             _meDragSnap(it);
             _meSyncItemDisplay(it);
         });
         it.el.addEventListener('pointerup', function(ev){
+            _pendingDrag = false;
             dragging = false;
             _meHideGuides();
             try { it.el.releasePointerCapture(ev.pointerId); } catch(e){}
         });
-        it.el.addEventListener('pointercancel', function(){ dragging = false; _meHideGuides(); });
+        it.el.addEventListener('pointercancel', function(){
+            _pendingDrag = false; dragging = false; _meHideGuides();
+        });
         if (it.type === 'text') {
             // 2026-06-14: 텍스트 편집 UX 개선 — 이미 선택된 상태에서 click 또는 dblclick 으로 즉시 편집 모드.
             //   더블클릭은 항상 동작 (기존 호환), 단일클릭은 이미 선택돼 있고 contenteditable 아닐 때만.
@@ -11651,7 +11674,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=433"></script>
+<script src="/simple_order.js?v=434"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
