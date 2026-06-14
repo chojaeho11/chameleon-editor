@@ -145,10 +145,26 @@ const state = {
     rollYards: 1
 };
 const ROLL_PRICE_PER_YARD = { wide: 13000, narrow: 10000, supplied: 3000 };
+// 2026-06-15: 롤폭별 출력 가로 사이즈 (cm). 패턴 모드에서 자동 적용.
+//   wide(대폭)=130cm, narrow(소폭)=100cm. supplied(고객 공급)은 기존 값 유지.
+const ROLL_OUTPUT_WIDTH_CM = { wide: 130, narrow: 100 };
 window._cdPickRollWidth = function(w) {
     if (!ROLL_PRICE_PER_YARD[w]) return;
     state.rollWidth = w;
     document.querySelectorAll('.roll-w-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.roll === w); });
+    // 2026-06-15: 패턴 모드면 출력 가로를 롤 폭에 맞춰 자동 갱신 + 캔버스 재렌더.
+    //   세로는 사용자 입력값 유지 (rollYards × 100cm 로 별도 계산되므로 here 에서는 건드리지 않음).
+    var isPosterMode = (state.layout === 'centered');
+    if (!isPosterMode && ROLL_OUTPUT_WIDTH_CM[w]) {
+        state.orderWcm = ROLL_OUTPUT_WIDTH_CM[w];
+        var oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
+        if (typeof window._cdCalcHoebae === 'function') {
+            try { window._cdCalcHoebae(); } catch (e) {}
+        }
+        if (typeof window._cdRender === 'function') {
+            try { window._cdRender(); } catch (e) {}
+        }
+    }
     if (typeof updatePrice === 'function') updatePrice();
 };
 window._cdOnRollYardsInput = function() {
