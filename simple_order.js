@@ -11852,17 +11852,35 @@ html, body { background: #ffffff !important; }
                     grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('항목 없음','空','None') + '</div>';
                     return;
                 }
+                // 2026-06-15: 클릭 시 고해상도 URL 로 캔버스에 추가 — popup 의 _resolveImgUrl 과 동일 로직.
+                //   썸네일 표시는 thumb_url (작고 빠름) / 캔버스 추가는 data_url (고해상도, Fabric JSON 이면 첫 image src 추출).
+                function _railResolveImgUrl(it) {
+                    var data = String(it && it.data_url || '').trim();
+                    if (!data) return (it && it.thumb_url) || '';
+                    var first = data.charAt(0);
+                    if (first === '{' || first === '[') {
+                        try {
+                            var parsed = JSON.parse(data);
+                            var objs = parsed.objects || (Array.isArray(parsed) ? parsed : []);
+                            for (var i = 0; i < objs.length; i++) {
+                                if (objs[i] && objs[i].type === 'image' && objs[i].src) return objs[i].src;
+                            }
+                        } catch (e) { console.warn('[rail resolveImg] JSON parse fail'); }
+                        return (it && it.thumb_url) || '';
+                    }
+                    return data;
+                }
                 grid.innerHTML = top.map(function(it){
                     if (it && it.__ornament) {
                         var sv = String(it.svg || '');
-                        // 색상 치환 (canvas-icons.js 처럼)
                         if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
                             sv = sv.replace(/fill="currentColor"/g, 'fill="' + it.color + '"');
                         }
                         return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
                     }
-                    var url = it.thumb_url || it.data_url || '';
-                    return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(url) + '"><img src="' + url + '" alt=""></div>';
+                    var thumbUrl = it.thumb_url || it.data_url || '';   // 표시용 (작음/빠름)
+                    var fullUrl = _railResolveImgUrl(it);               // 클릭 시 캔버스용 (고해상도)
+                    return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(fullUrl) + '"><img src="' + thumbUrl + '" alt=""></div>';
                 }).join('');
                 grid.querySelectorAll('[data-rail-url]').forEach(function(el){
                     el.addEventListener('click', function(){
