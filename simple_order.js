@@ -11521,6 +11521,8 @@ html, body { background: #ffffff !important; }
         var _libCurrentItems = [];   // 현재 탭/검색의 전체 items
         var _libCurrentPage = 0;     // 0-based
         var _LIB_PER_PAGE = 10;
+        var _LIB_FETCH_MAX = 50;     // 한 번에 가져올 행 수 (5페이지 분)
+        var _libCache = {};          // key = tab + '|' + search, value = items[]
 
         // 탭별 카테고리 매핑 (mainEditor loadSideBarTemplates 와 일치)
         var _LIB_CATEGORIES = {
@@ -11539,8 +11541,8 @@ html, body { background: #ffffff !important; }
             window._soQdLibSwitch(tab);
         };
 
-        // 탭 전환
-        window._soQdLibSwitch = function(tab) {
+        // 탭 전환 (장식 탭은 canvas-icons.js 의 ORNAMENTS 가 필요 → lazy import)
+        window._soQdLibSwitch = async function(tab) {
             _libActiveTab = tab;
             ['template','element','decoration'].forEach(function(t){
                 var btn = document.getElementById('soQdLibTab' + (t==='template'?'Tpl':t==='element'?'El':'Dc'));
@@ -11548,10 +11550,16 @@ html, body { background: #ffffff !important; }
             });
             var title = document.getElementById('soQdLibTitle');
             if (title) title.textContent = (tab==='template' ? tr('템플릿','テンプレート','Templates')
-                                            : tab==='element' ? tr('요소','要素','Elements')
+                                            : tab==='element' ? tr('要素','要素','Elements')
                                             : tr('장식','装飾','Decorations'));
             var search = document.getElementById('soQdLibSearch');
             if (search) search.value = '';
+            // 2026-06-14: 장식 탭 첫 진입 시 canvas-icons.js lazy load (메인 에디터를 안 거쳐도 동작)
+            if (tab === 'decoration' && !window.ORNAMENTS) {
+                var grid = document.getElementById('soQdLibGrid');
+                if (grid) grid.innerHTML = '<div class="qd-lib-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('장식 라이브러리 로드중...','装飾を読み込み中...','Loading decorations...') + '</div>';
+                try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[qd-icons import]', e); }
+            }
             _loadLibItems('');
         };
 
@@ -11572,6 +11580,9 @@ html, body { background: #ffffff !important; }
         };
 
         async function _fetchLib(tab, search) {
+            var cacheKey = tab + '|' + (search || '').trim();
+            if (_libCache[cacheKey]) return _libCache[cacheKey];
+
             // 장식 (decoration) — Supabase 아닌 ORNAMENTS SVG 배열 사용
             if (tab === 'decoration') {
                 var ornaments = window.ORNAMENTS || [];
@@ -11582,9 +11593,11 @@ html, body { background: #ffffff !important; }
                                (o.tags || []).join(' ').toLowerCase().indexOf(q) >= 0;
                     });
                 }
-                return ornaments.map(function(o, idx){
+                var mapped = ornaments.map(function(o, idx){
                     return { __ornament: true, idx: idx, svg: o.svg, color: o.color, cat: o.cat };
                 });
+                _libCache[cacheKey] = mapped;
+                return mapped;
             }
 
             var sb = window.sb;
@@ -11593,17 +11606,19 @@ html, body { background: #ffffff !important; }
             if (!cats) return [];
             try {
                 // mainEditor loadSideBarTemplates 와 동일 — status=approved + is_featured 우선
-                var q = sb.from('library')
+                var q2 = sb.from('library')
                     .select('id, thumb_url, data_url, title, category, product_key, tags, is_featured')
                     .eq('status', 'approved')
                     .in('category', cats)
                     .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
                     .order('is_featured', { ascending: false, nullsFirst: false })
                     .order('created_at', { ascending: false })
-                    .limit(200);
-                if (search && search.trim()) q = q.ilike('tags', '%' + search.trim() + '%');
-                var r = await q;
-                return (r && r.data) || [];
+                    .limit(_LIB_FETCH_MAX);
+                if (search && search.trim()) q2 = q2.ilike('tags', '%' + search.trim() + '%');
+                var r = await q2;
+                var data = (r && r.data) || [];
+                _libCache[cacheKey] = data;
+                return data;
             } catch(e) { console.warn('[qd lib fetch]', e); return []; }
         }
 
