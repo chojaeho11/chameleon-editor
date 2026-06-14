@@ -11693,15 +11693,19 @@ html, body { background: #ffffff !important; }
             }
         }
 
-        // 일반 썸네일 클릭 → 미니에디터에 고해상도 이미지 추가
+        // 일반 썸네일 클릭 → 미니에디터에 고해상도 이미지 추가.
+        //   템플릿: 대지 꽉 채우기 + 제일 뒤. 요소: 일반 중앙 배치 (드래그/리사이즈 가능)
         window._soQdLibPick = function(url) {
             if (!url) return;
             try {
                 if (typeof window._meAddImage === 'function') {
-                    window._meAddImage(url);
+                    var opts = (_libActiveTab === 'template') ? { fillCanvas: true, toBack: true } : {};
+                    window._meAddImage(url, opts);
                     if (typeof showToast === 'function') {
                         showToast(tr('대지에 추가되었습니다','キャンバスに追加','Added to canvas'), 'success');
                     }
+                } else {
+                    console.warn('[qd lib pick] _meAddImage not loaded yet');
                 }
             } catch(e) { console.warn('[qd lib pick]', e); }
             var popup = document.getElementById('soQdLibPopup');
@@ -11714,13 +11718,17 @@ html, body { background: #ffffff !important; }
                 var item = _libCurrentItems[idx];
                 if (!item || !item.svg) return;
                 var svgStr = item.color ? item.svg : item.svg.replace(/currentColor/g, '#000');
-                // SVG 에 width/height 명시 없으면 보강
+                // SVG 에 width/height 명시 — naturalWidth 0 방지
                 if (!/<svg[^>]*\swidth=/.test(svgStr)) {
-                    svgStr = svgStr.replace(/<svg/, '<svg width="200" height="200"');
+                    svgStr = svgStr.replace(/<svg/, '<svg width="400" height="400"');
+                }
+                // xmlns 보강 (없으면 일부 브라우저가 로드 실패)
+                if (!/xmlns=/.test(svgStr)) {
+                    svgStr = svgStr.replace(/<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
                 }
                 var dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgStr);
                 if (typeof window._meAddImage === 'function') {
-                    window._meAddImage(dataUrl);
+                    window._meAddImage(dataUrl, {});  // 장식은 일반 모드 (중앙, 드래그 가능)
                     if (typeof showToast === 'function') {
                         showToast(tr('장식이 추가되었습니다','装飾を追加しました','Decoration added'), 'success');
                     }

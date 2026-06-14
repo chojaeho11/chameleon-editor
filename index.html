@@ -6333,25 +6333,76 @@ function scrollHotdeal(gridId, dir) {
         input.value = '';
     };
 
-    window._meAddImage = function(src) {
+    window._meAddImage = function(src, opts) {
+        opts = opts || {};
+        if (!src) { console.warn('[_meAddImage] empty src'); return; }
         var im = new Image();
-        im.onload = function(){
-            var ratio = im.naturalHeight / im.naturalWidth;
-            var w = Math.min(me.natW * 0.5, im.naturalWidth);
-            var h = w * ratio;
-            if (h > me.natH * 0.6) { h = me.natH * 0.6; w = h / ratio; }
+        im.crossOrigin = 'anonymous';
+        im.onerror = function() {
+            console.warn('[_meAddImage] load failed:', src);
+            // CORS fallback — try without crossOrigin
+            var im2 = new Image();
+            im2.onload = function(){ _placeImageOnStage(im2, src, opts); };
+            im2.onerror = function(){
+                if (typeof window.showToast === 'function') window.showToast('이미지 로드 실패', 'error');
+            };
+            im2.src = src;
+        };
+        im.onload = function() { _placeImageOnStage(im, src, opts); };
+        im.src = src;
+
+        function _placeImageOnStage(image, srcUrl, options) {
+            if (!me || !me.stage) { console.warn('[_meAddImage] me.stage null'); return; }
+            // 0 naturalWidth (예: SVG without explicit width) → fallback 800x600
+            var natW = image.naturalWidth || 800;
+            var natH = image.naturalHeight || 600;
+            var ratio = natH / natW;
+            var w, h, x, y;
+            if (options.fillCanvas) {
+                // 대지 꽉 채우기 (cover 처럼): 대지 비율에 맞춰 한 변을 100% 로
+                var stageRatio = me.natH / me.natW;
+                if (ratio > stageRatio) {
+                    w = me.natW; h = w * ratio;
+                } else {
+                    h = me.natH; w = h / ratio;
+                }
+                x = (me.natW - w) / 2;
+                y = (me.natH - h) / 2;
+            } else {
+                w = Math.min(me.natW * 0.5, natW);
+                if (w < 50) w = me.natW * 0.5;  // SVG fallback
+                h = w * ratio;
+                if (h > me.natH * 0.6) { h = me.natH * 0.6; w = h / ratio; }
+                x = (me.natW - w) / 2;
+                y = (me.natH - h) / 2;
+            }
             var el = document.createElement('div');
             el.className = 'me-item';
-            el.style.zIndex = (++me.zCounter);
-            var img = document.createElement('img'); img.src = src; el.appendChild(img);
+            // 제일 뒤로 보내기 (z-index 0) — 템플릿용
+            if (options.toBack) {
+                el.style.zIndex = '0';
+            } else {
+                el.style.zIndex = (++me.zCounter);
+            }
+            var img = document.createElement('img');
+            img.src = srcUrl;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = options.fillCanvas ? 'cover' : 'contain';
+            el.appendChild(img);
             me.stage.appendChild(el);
-            var it = { el: el, type: 'image', x: (me.natW - w) / 2, y: (me.natH - h) / 2, w: w, h: h, src: src };
-            me.items.push(it);
+            var it = { el: el, type: 'image', x: x, y: y, w: w, h: h, src: srcUrl };
+            // 제일 뒤로: items 배열의 맨 앞에 삽입 (export 시 먼저 그림 → 아래 쌓임)
+            if (options.toBack) {
+                me.items.unshift(it);
+            } else {
+                me.items.push(it);
+            }
             _meSyncItemDisplay(it);
             _meBindDrag(it);
-            _meSelect(it);
-        };
-        im.src = src;
+            // toBack 일 땐 자동 선택 X (선택 핸들이 백그라운드 위에 떠서 거슬림)
+            if (!options.toBack) _meSelect(it);
+        }
     };
 
     window._meAddText = function() {
@@ -11079,7 +11130,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=417"></script>
+<script src="/simple_order.js?v=418"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
