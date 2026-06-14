@@ -718,6 +718,49 @@ export function initAdvisorPanel() {
         }, 400);
     };
     // 2026-06-14: 모바일 풀스크린 챗봇 — iframe 래퍼 (cotton-printer.com 의 kapuChatWrap 과 동일 패턴)
+    //   v=461: topbar/header 위로 보장 — body.advisor-fullscreen-mobile 클래스로 topbar 강제 숨김.
+    window._installAdvisorFullStyle = function() {
+        if (document.getElementById('advisorFullStyle')) return;
+        var st = document.createElement('style');
+        st.id = 'advisorFullStyle';
+        st.textContent = [
+            'body.advisor-fullscreen-mobile .topbar,',
+            'body.advisor-fullscreen-mobile #topbar,',
+            'body.advisor-fullscreen-mobile .topnav,',
+            'body.advisor-fullscreen-mobile #topNav,',
+            'body.advisor-fullscreen-mobile header.fixed-top,',
+            'body.advisor-fullscreen-mobile nav.fixed-top,',
+            'body.advisor-fullscreen-mobile #navTop,',
+            'body.advisor-fullscreen-mobile #mainNav,',
+            'body.advisor-fullscreen-mobile #cham-bot-trigger,',
+            'body.advisor-fullscreen-mobile #cham-bot-window { display: none !important; visibility: hidden !important; }',
+            'body.advisor-fullscreen-mobile { padding-top: 0 !important; overflow: hidden !important; }',
+            'body.advisor-fullscreen-mobile #advisorMobileFullWrap,',
+            'body.advisor-fullscreen-mobile #advisorPanel,',
+            'body.advisor-fullscreen-mobile #chatIframeWrap,',
+            'body.advisor-fullscreen-mobile #kapuChatWrap,',
+            'body.advisor-fullscreen-mobile #chatIframeMobileWrap {',
+            '  position: fixed !important; inset: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;',
+            '  width: 100vw !important; height: 100vh !important; height: 100dvh !important;',
+            '  max-width: 100vw !important; max-height: 100vh !important;',
+            '  margin: 0 !important; border-radius: 0 !important;',
+            '  z-index: 2147483647 !important; background: #1e1e2e !important;',
+            '}'
+        ].join('\n');
+        (document.head || document.documentElement).appendChild(st);
+    };
+    window._setAdvisorFullActive = function(on) {
+        try {
+            window._installAdvisorFullStyle();
+            if (on) {
+                document.body.classList.add('advisor-fullscreen-mobile');
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.classList.remove('advisor-fullscreen-mobile');
+                document.body.style.overflow = '';
+            }
+        } catch(_e){}
+    };
     window._openAdvisorMobileFull = function() {
         var sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toUpperCase();
         var langMap = { KR: 'kr', JP: 'ja', US: 'en', CN: 'cn', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
@@ -727,7 +770,7 @@ export function initAdvisorPanel() {
             // 토글
             var visible = (wrap.style.display !== 'none');
             wrap.style.display = visible ? 'none' : 'block';
-            document.body.style.overflow = visible ? '' : 'hidden';
+            window._setAdvisorFullActive(!visible);
             return;
         }
         wrap = document.createElement('div');
@@ -735,9 +778,9 @@ export function initAdvisorPanel() {
         // chatIframeWrap / kapuChatWrap alias 도 등록 (chameleon-chatbot.html 의 X 닫기가 이 ID 들을 찾음)
         wrap.setAttribute('data-alias', 'chatIframeWrap kapuChatWrap chatIframeMobileWrap');
         wrap.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; z-index:2147483647; background:#fff; border:0;';
-        wrap.innerHTML = '<iframe src="/chameleon-chatbot.html?lang=' + lang + '&from=advisor&chat=1&v=460" style="width:100%; height:100%; border:none; display:block;"></iframe>';
+        wrap.innerHTML = '<iframe src="/chameleon-chatbot.html?lang=' + lang + '&from=advisor&chat=1&v=461" style="width:100%; height:100%; border:none; display:block;"></iframe>';
         document.body.appendChild(wrap);
-        document.body.style.overflow = 'hidden';
+        window._setAdvisorFullActive(true);
         // chatIframeWrap / kapuChatWrap getElementById alias — iframe 안 X 가 어느 ID 로 찾든 동일 wrap 닫음
         if (!document._advAliasInstalled) {
             var origGet = document.getElementById.bind(document);
@@ -754,7 +797,8 @@ export function initAdvisorPanel() {
             window.addEventListener('message', function(e){
                 if (e.data === 'closeKapuChat' || (e.data && e.data.type === 'closeKapuChat')) {
                     var w = document.getElementById('advisorMobileFullWrap');
-                    if (w) { w.style.display = 'none'; try { document.body.style.overflow = ''; } catch(_e){} }
+                    if (w) { w.style.display = 'none'; }
+                    if (typeof window._setAdvisorFullActive === 'function') window._setAdvisorFullActive(false);
                 }
             });
             window._advCloseMsgInstalled = true;
@@ -773,7 +817,8 @@ export function initAdvisorPanel() {
         const fab = document.getElementById('floatingChatBtn');
         if (panelEl.style.display === 'flex') {
             panelEl.style.display = 'none';
-            try { document.body.style.overflow = ''; } catch(e) {}
+            if (typeof window._setAdvisorFullActive === 'function') window._setAdvisorFullActive(false);
+            else { try { document.body.style.overflow = ''; } catch(e) {} }
             if (fab) fab.innerHTML = '<i class="fa-solid fa-comments"></i>';
         } else {
             openPanel();
@@ -791,6 +836,35 @@ export function initAdvisorPanel() {
             btn.addEventListener('click', () => { window.toggleAdvisorPanel(); });
         }
     });
+
+    // 2026-06-14 v=461: 챗봇 진입점 보강 — 우측 하단에 항상 보이는 둥근 채팅 버튼 주입.
+    //   chameleon.design / cafe3355 / cafe0101 / cafe2626 모두 동일. iframe 안에서는 주입 안 함.
+    try {
+        var _inIframe3 = (window.parent && window.parent !== window);
+        if (!_inIframe3 && !document.getElementById('advFloatingFab')) {
+            var fab = document.createElement('button');
+            fab.id = 'advFloatingFab';
+            fab.type = 'button';
+            fab.setAttribute('aria-label', 'Open chat');
+            fab.title = T[getLang()] && T[getLang()].title || 'Chat';
+            fab.innerHTML = '<i class="fa-solid fa-comments" style="font-size:24px;color:#fff;"></i>';
+            fab.style.cssText = [
+                'position:fixed','right:16px','bottom:20px','width:56px','height:56px',
+                'border-radius:50%','border:none','cursor:pointer',
+                'background:linear-gradient(135deg,#6366f1,#8b5cf6)',
+                'box-shadow:0 6px 24px rgba(99,102,241,0.45)',
+                'display:flex','align-items:center','justify-content:center',
+                'z-index:999998','transition:transform 0.2s'
+            ].join(';');
+            fab.addEventListener('mouseenter', function(){ fab.style.transform = 'scale(1.08)'; });
+            fab.addEventListener('mouseleave', function(){ fab.style.transform = 'scale(1)'; });
+            fab.addEventListener('click', function(){
+                if (typeof window.openAdvisorPanel === 'function') window.openAdvisorPanel();
+                else if (typeof window.toggleAdvisorPanel === 'function') window.toggleAdvisorPanel();
+            });
+            (document.body || document.documentElement).appendChild(fab);
+        }
+    } catch(_e){}
 
     // 홈 진입 시 자동 열기 비활성화 (플로팅 버튼으로 열기)
     // (자동 열림 제거됨)
@@ -841,8 +915,10 @@ function openPanel() {
             ps.setProperty('border-radius', '0', 'important');
             ps.setProperty('margin', '0', 'important');
             ps.setProperty('z-index', '2147483647', 'important');  // max int z-index
-            document.body.style.overflow = 'hidden';
             panelEl.classList.add('adv-mobile-full');
+            // v=461: topbar 강제 숨김 — body 클래스로 일관성 보장
+            if (typeof window._setAdvisorFullActive === 'function') window._setAdvisorFullActive(true);
+            else document.body.style.overflow = 'hidden';
         }
     } catch(e) {}
     buildPanelUI();
