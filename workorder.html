@@ -112,7 +112,14 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         page-break-inside: avoid;
         break-inside: avoid;
     }
+    /* 2026-06-15: 인쇄 시 빈 트레일링 페이지 방지 — 입력 전용 editor + 발행일 footer 숨김.
+       관리자 메모 (저장된 값) 은 위쪽 .note (#woAdminNote) 로 이미 보임. */
+    #woAdminNoteEditor, .foot { display: none !important; }
+    /* 2026-06-15: PDF embed 는 인쇄 미리보기에서 빈 박스로 나옴 → fallback 텍스트로 대체. */
+    .item-thumb embed[type="application/pdf"] { display: none !important; }
+    .pdf-print-fallback { display: flex !important; }
 }
+.pdf-print-fallback { display: none; }
 /* 2026-06-15: 화면에서도 인쇄와 같은 시트별 분리 시각화 — 회색 배경 + 각 페이지가 A4 카드. */
 @media screen {
     body.wo-paged { background:#d6d3d1; padding:30px 0; }
@@ -146,6 +153,17 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
     body.wo-paged .item {
         border:1px solid #d1d5db;
         margin-bottom:0;
+    }
+    /* 2026-06-15: 미리보기에서도 인쇄와 동일한 단일-컬럼 (썸네일 큰 사이즈) 레이아웃. */
+    body.wo-paged .item-body {
+        grid-template-columns: 1fr !important;
+    }
+    body.wo-paged .item-thumb {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 1/1 !important;
+        max-width: 420px !important;
+        margin: 0 auto !important;
     }
 }
 @media (max-width:820px) {
@@ -1018,7 +1036,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         <div class="item-thumb">
                             ${thumbUrl
                                 ? (/\.pdf(?:\?|#|$)/i.test(thumbUrl)
-                                    ? `<embed src="${esc(thumbUrl)}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />`
+                                    ? `<embed src="${esc(thumbUrl)}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" /><div class="pdf-print-fallback" style="width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#fff;padding:16px;text-align:center;"><i class="fa-solid fa-file-pdf" style="font-size:56px;color:#dc2626;"></i><div style="font-size:13px;font-weight:800;color:#7f1d1d;">PDF 첨부</div><div style="font-size:11px;color:#4b5563;word-break:break-all;">${esc(thumbUrl.split('/').pop() || 'document.pdf')}</div></div>`
                                     : `<img src="${esc(thumbUrl)}" alt="design ${i+1}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'font-size:32px; color:#d1d5db;\\'></i>';">`)
                                 : (it.artwork_later ? '<div style="text-align:center; color:#b45309; font-size:12px; font-weight:700; padding:8px;"><i class="fa-solid fa-envelope" style="font-size:26px; display:block; margin-bottom:6px;"></i>이미지<br>추후 전달</div>' : '<i class="fa-solid fa-image" style="font-size:32px; color:#d1d5db;"></i>')}
                         </div>
