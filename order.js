@@ -2515,11 +2515,15 @@ function renderCart() {
     if(!listArea) return;
 
     // 디자인비 전용 장바구니: 배송 정보 UI + 최소 주문 안내 숨김
+    // 2026-06-14: 업로드 박스/작업가이드/구글드라이브/디자인의뢰 CTA 도 함께 숨겨서
+    //   디자인 의뢰 결제 화면이 간단하게 (카트 아이템 + 결제 정보 + 결제 버튼만) 보이도록.
     const _designOnly = _isDesignFeeOnlyCart();
     const _delivWrap = document.getElementById('cartDeliveryInfoWrap');
     if (_delivWrap) _delivWrap.style.display = _designOnly ? 'none' : '';
     const _minNotice = document.getElementById('minOrderNotice');
     if (_minNotice) _minNotice.style.display = _designOnly ? 'none' : '';
+    const _bulkZone = document.getElementById('bulkUploadZone');
+    if (_bulkZone) _bulkZone.style.display = _designOnly ? 'none' : '';
 
     // ★ renderCart 진입 시 cartData 를 localStorage 기준으로 통째 재구성 (모듈 버전 불일치 방어)
     // 2026-05-16: 기존 merge-add(추가만) 방식 → phantom 항목 부활 버그.
@@ -2646,6 +2650,7 @@ function renderCart() {
             || _pTopCat === 'honeycomb_board'
             || _pTopCat === '123456789'
             || _pCat === 'hb_display_wall' || _pCode.startsWith('hb_dw')
+            || _pCat === 'design_fee' || _pCode.indexOf('design_fee_') === 0
             || item.product._calculated_price;
         let _qtyDiscountRate = 0;
         if (!_noDiscount && item.qty >= 3) {
