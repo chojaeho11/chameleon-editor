@@ -6116,16 +6116,33 @@ function scrollHotdeal(gridId, dir) {
                         ctx.fillText(ln, tx, it.y + idx * lh);
                     });
                 } else if (it.type === 'image' && it.src) {
-                    // 이미지를 동기적으로 그릴 수 있도록 promise 로 처리
+                    // 이미지를 동기적으로 그릴 수 있도록 promise 로 처리.
+                    //   2026-06-14: HTTP URL 은 crossOrigin='anonymous' 로 fetch (canvas taint 방지).
+                    //   Supabase storage 는 public 버킷에 Access-Control-Allow-Origin: * 응답함.
+                    //   data: URL 은 crossOrigin 불필요.
                     await new Promise(function(resolve){
                         var im = new Image();
-                        im.onload = function(){ ctx.drawImage(im, it.x, it.y, it.w, it.h); resolve(); };
-                        im.onerror = function(){ resolve(); };
+                        if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
+                        im.onload = function(){
+                            try { ctx.drawImage(im, it.x, it.y, it.w, it.h); } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
+                            resolve();
+                        };
+                        im.onerror = function(){
+                            // crossOrigin 으로 실패 시 → no-CORS 로 재시도. 단 그리면 canvas tainted → toDataURL 실패.
+                            //   이 경우 export 자체를 포기하는 게 낫지만, 우선 silent skip.
+                            console.warn('[_meExportPNG] image load failed (will be missing from export)');
+                            resolve();
+                        };
                         im.src = it.src;
                     });
                 }
             }
-            return c.toDataURL('image/png');
+            try {
+                return c.toDataURL('image/png');
+            } catch(_te) {
+                console.warn('[_meExportPNG] canvas tainted, cannot export PNG', _te);
+                return null;
+            }
         } catch(e) {
             console.warn('[_meExportPNG]', e);
             return null;
@@ -11126,7 +11143,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=422"></script>
+<script src="/simple_order.js?v=423"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
