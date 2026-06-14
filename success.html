@@ -262,6 +262,63 @@
                     console.error('[design-market] pending bids processing error:', dmOuterErr);
                 }
 
+                // 2026-06-14: 디자인 의뢰 — payment_pending → open 으로 flip
+                //   submitDesignRequest 가 stash 한 request id 들을 REST PATCH 로 상태 변경.
+                //   designer-board.html 은 status IN ('open','claimed') 만 노출하므로
+                //   결제 전에는 보드에 노출되지 않고, 결제 완료 시점에만 등장한다.
+                try {
+                    const pendReq = JSON.parse(localStorage.getItem('dm_pending_design_requests') || '[]');
+                    if (pendReq && pendReq.length > 0) {
+                        // accessToken 은 위 design_bids 블록에서 확보된 값을 재사용
+                        let _accessToken2 = SUPABASE_KEY;
+                        try {
+                            const _cands = ['sb-qinvtnhiidtmrzosyvys-auth-token','supabase.auth.token'];
+                            for (const k of _cands) {
+                                const raw = localStorage.getItem(k);
+                                if (!raw) continue;
+                                try {
+                                    const parsed = JSON.parse(raw);
+                                    const tok = parsed?.access_token || parsed?.currentSession?.access_token;
+                                    if (tok) { _accessToken2 = tok; break; }
+                                } catch(_) {}
+                            }
+                        } catch(_) {}
+                        const stillPendReq = [];
+                        for (const p of pendReq) {
+                            let succeeded = false;
+                            try {
+                                const resp = await fetch(`${SUPABASE_URL}/rest/v1/design_requests?id=eq.${encodeURIComponent(p.requestId)}`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${_accessToken2}`,
+                                        'apikey': SUPABASE_KEY,
+                                        'Prefer': 'return=minimal'
+                                    },
+                                    body: JSON.stringify({ status: 'open' })
+                                });
+                                if (resp.ok) {
+                                    succeeded = true;
+                                    console.log('[design-req] flipped to open:', p.requestId);
+                                } else {
+                                    const txt = await resp.text();
+                                    console.error('[design-req] PATCH HTTP', resp.status, txt);
+                                }
+                            } catch (drErr) {
+                                console.error('[design-req] PATCH fetch failed:', drErr);
+                            }
+                            if (!succeeded) stillPendReq.push(p);
+                        }
+                        if (stillPendReq.length === 0) {
+                            localStorage.removeItem('dm_pending_design_requests');
+                        } else {
+                            localStorage.setItem('dm_pending_design_requests', JSON.stringify(stillPendReq));
+                        }
+                    }
+                } catch (drOuterErr) {
+                    console.error('[design-req] pending requests processing error:', drOuterErr);
+                }
+
                 // 결제 성공 처리
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('title').innerText = "Payment Successful!";

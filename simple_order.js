@@ -12803,6 +12803,7 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-06-13: 의뢰 취소 — design_requests row 삭제 + 합계 원복
+    // 2026-06-14: payment_pending stash 도 함께 정리 — 결제 시 stale id 가 flip 되지 않도록.
     window._soCancelDesignRequest = async function() {
         if (!state.designReqId) return;
         if (!confirm('등록한 디자인 의뢰를 취소하시겠습니까? 합계에서 디자인비가 빠집니다.')) return;
@@ -12812,6 +12813,13 @@ html, body { background: #ffffff !important; }
                 await sb.from('design_requests').delete().eq('id', state.designReqId);
             }
         } catch (e) { console.warn('[cancel dreq]', e); }
+        try {
+            var _pk = 'dm_pending_design_requests';
+            var _pl = JSON.parse(localStorage.getItem(_pk) || '[]');
+            _pl = _pl.filter(function(x){ return x && x.requestId !== state.designReqId; });
+            if (_pl.length === 0) localStorage.removeItem(_pk);
+            else localStorage.setItem(_pk, JSON.stringify(_pl));
+        } catch (e) { /* ignore */ }
         state.designReqId = null;
         state.designReqFee = 0;
         state.designReqQty = 0;
