@@ -1555,12 +1555,22 @@ html, body { background: #ffffff !important; }
             </button>
           </div>
           <!-- 2026-06-14: "현재 상품 사이즈로 대지 맞추기" 버튼 제거 — 모달 진입 시 자동 적용되므로 불필요. -->
-          <!-- 2026-06-14: 라이브러리 진입 (픽토그램 제거 — 텍스트만). 팝업 모달로 띄움. -->
-          <div class="qd-library-row">
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-template')">${tr('템플릿보기', 'テンプレート', 'Templates')}</button>
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-element')">${tr('요소보기', '要素', 'Elements')}</button>
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-icon')">${tr('장식보기', '装飾', 'Decorations')}</button>
-          </div>
+          <!-- 2026-06-15: 라이브러리는 좌측 사이드바로 이동 — 상단 row 제거. -->
+          <style>
+            #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 180px 1fr; gap:12px; margin-top:10px; align-items:stretch; }
+            @media (max-width:768px) { #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; } }
+            #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px; min-height:200px; }
+            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+            #soQuickDesignSec .qd-rail-tab { padding:6px 0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
+            #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; flex:1; align-content:start; }
+            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:4px; }
+            #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
+            #soQuickDesignSec .qd-rail-thumb img, #soQuickDesignSec .qd-rail-thumb svg { max-width:100%; max-height:100%; object-fit:contain; }
+            #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:10px; }
+            #soQuickDesignSec .qd-rail-more { padding:8px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:11px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
+            #soQuickDesignSec .qd-rail-more:hover { background:#f1f5f9; }
+          </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
           <div id="soQdBcForm" style="display:none; margin-top:10px; padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
             <div style="font-size:12.5px; font-weight:800; color:#475569; margin-bottom:10px; letter-spacing:0.02em;">${tr('🪪 명함 자동 디자인', '🪪 名刺自動デザイン', '🪪 Business card auto-design')}</div>
@@ -1570,8 +1580,24 @@ html, body { background: #ffffff !important; }
             <div class="qd-bc-field"><label>${tr('전화','電話','Phone')}</label><input type="text" id="soQdBcPhone" maxlength="20" placeholder="010-0000-0000" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
             <div class="qd-bc-field"><label>${tr('이메일','メール','Email')}</label><input type="email" id="soQdBcEmail" maxlength="60" placeholder="hello@example.com" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
           </div>
-          <!-- 미니에디터 (메인 페이지 #embeddedEditorPreview 가 여기로 portal 됨) -->
-          <div id="soEmbeddedEditorMount" style="margin-top:10px;"></div>
+          <!-- 미니에디터 + 좌측 라이브러리 사이드바 (2026-06-15) -->
+          <div class="qd-edit-grid">
+            <aside class="qd-rail">
+              <div class="qd-rail-tabs">
+                <button type="button" class="qd-rail-tab active" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')">${tr('템플릿','テンプレ','Tmpl')}</button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')">${tr('요소','要素','Elem')}</button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')">${tr('장식','装飾','Deco')}</button>
+              </div>
+              <div class="qd-rail-thumbs" id="soQdRailThumbs">
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+              </div>
+              <button type="button" class="qd-rail-more" onclick="window._soQdRailMore && window._soQdRailMore()">${tr('전체보기 →','すべて見る →','See all →')}</button>
+            </aside>
+            <div id="soEmbeddedEditorMount"></div>
+          </div>
           <!-- 2026-06-15: '디자인 완료 · 적용' 버튼 제거 — 카트 담기 시 자동 export 됨.
                           'or 아래에서 직접 이미지 업로드' 가이드도 제거 — 우측 파일 업로드 카드 사용. -->
         </div>
@@ -11498,6 +11524,8 @@ html, body { background: #ffffff !important; }
             var sz = _resolveSize(p);
             _updateSizeBadge(sz.wMm, sz.hMm);
             sec.style.display = '';
+            // 2026-06-15: 좌측 라이브러리 사이드바 초기 로드 (4 썸네일).
+            try { if (typeof window._soQdRailInit === 'function') window._soQdRailInit(); } catch (e) {}
             // 명함 폼 토글 + BC item refs 초기화 (새 상품 진입마다)
             var bcForm = document.getElementById('soQdBcForm');
             if (bcForm) bcForm.style.display = _isBizCard() ? '' : 'none';
@@ -11790,6 +11818,69 @@ html, body { background: #ffffff !important; }
             popup.style.display = 'flex';
             window._soQdLibSwitch(tab);
         };
+
+        // 2026-06-15: 좌측 사이드바 (qd-rail) — 4개 썸네일 + 탭. 전체보기는 기존 팝업 재사용.
+        var _railTab = 'template';
+        window._soQdRailSwitch = async function(tab) {
+            _railTab = tab;
+            document.querySelectorAll('#soQuickDesignSec .qd-rail-tab').forEach(function(b){
+                b.classList.toggle('active', b.getAttribute('data-rail-tab') === tab);
+            });
+            await _soQdRailLoad();
+        };
+        window._soQdRailMore = function() {
+            var mp = { template:'sub-template', element:'sub-element', decoration:'sub-icon' };
+            window._soQdOpenLib && window._soQdOpenLib(mp[_railTab] || 'sub-template');
+        };
+        async function _soQdRailLoad() {
+            var grid = document.getElementById('soQdRailThumbs');
+            if (!grid) return;
+            grid.innerHTML = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
+                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
+                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>'
+                           + '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
+            // 장식 탭은 canvas-icons.js lazy load
+            if (_railTab === 'decoration' && !window.ORNAMENTS) {
+                try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }
+            }
+            try {
+                var items = await _fetchLib(_railTab, '');
+                var top = items.slice(0, 4);
+                if (top.length === 0) {
+                    grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('항목 없음','空','None') + '</div>';
+                    return;
+                }
+                grid.innerHTML = top.map(function(it){
+                    if (it && it.__ornament) {
+                        var sv = String(it.svg || '');
+                        // 색상 치환 (canvas-icons.js 처럼)
+                        if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
+                            sv = sv.replace(/fill="currentColor"/g, 'fill="' + it.color + '"');
+                        }
+                        return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
+                    }
+                    var url = it.thumb_url || it.data_url || '';
+                    return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(url) + '"><img src="' + url + '" alt=""></div>';
+                }).join('');
+                grid.querySelectorAll('[data-rail-url]').forEach(function(el){
+                    el.addEventListener('click', function(){
+                        var u = decodeURI(el.getAttribute('data-rail-url') || '');
+                        if (u && window._soQdLibPick) window._soQdLibPick(u);
+                    });
+                });
+                grid.querySelectorAll('[data-rail-orn]').forEach(function(el){
+                    el.addEventListener('click', function(){
+                        var idx = parseInt(el.getAttribute('data-rail-orn'), 10);
+                        if (!isNaN(idx) && window._soQdLibPickOrnament) window._soQdLibPickOrnament(idx);
+                    });
+                });
+            } catch (e) {
+                console.warn('[qd rail load]', e);
+                grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('로드 실패','失敗','Failed') + '</div>';
+            }
+        }
+        // 모달 열릴 때 초기 로드 — _soQdSetup 같은 곳에서 호출되도록 노출.
+        window._soQdRailInit = function() { _soQdRailLoad(); };
 
         // 탭 전환 (장식 탭은 canvas-icons.js 의 ORNAMENTS 가 필요 → lazy import)
         window._soQdLibSwitch = async function(tab) {

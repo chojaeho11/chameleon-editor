@@ -5774,8 +5774,11 @@ function scrollHotdeal(gridId, dir) {
             box-shadow: 0 0 0 1.5px #007AFF;
         }
         /* 속성 패널 */
-        .me-props { display:none; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+        /* 2026-06-15: props bar 항상 표시 (선택 없을 때도 stub) */
+        .me-props { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
         .me-props.show { display:flex; }
+        .me-props.me-props-stub { opacity:0.55; pointer-events:none; }
+        .me-props.me-props-stub * { user-select:none; }
         .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
         .me-prop-group label { color:#86868b; font-size:11px; font-weight:500; }
         .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:none; background:transparent; border-radius:4px; font-size:12px; font-family:inherit; outline:none; color:#1d1d1f; font-weight:600; }
@@ -6506,10 +6509,16 @@ function scrollHotdeal(gridId, dir) {
     function _meRenderProps(it) {
         var panel = $('meProps');
         if (!panel) return;
-        if (!it) { panel.classList.remove('show'); panel.innerHTML = ''; return; }
+        // 2026-06-15: 선택 없거나 이미지 선택 시도 props bar 항상 표시 — 텍스트 모드 stub 렌더.
+        //   stub 상태에선 opacity 낮춰 비활성 표시 (.me-props-stub), 컨트롤은 보이지만 입력은 no-op.
         panel.classList.add('show');
+        panel.classList.toggle('me-props-stub', !it || it.type !== 'text');
         var html = '';
         var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
+        // 2026-06-15: 선택이 없으면 stub 용 가짜 item 만들어서 text 분기로 흘려보냄 → 동일 UI 항상 노출.
+        if (!it) {
+            it = { type:'text', fill:'#1e293b', fontFamily:'sans-serif', fontWeight:400, fontSize:24, letterSpacing:0, lineHeight:1.2, textAlign:'left' };
+        }
         if (it.type === 'text') {
             var fonts = _meCurrentFonts();
             var fontOpts = fonts.map(function(f){
@@ -11747,7 +11756,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=446"></script>
+<script src="/simple_order.js?v=447"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
