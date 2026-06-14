@@ -1,0 +1,59 @@
+# 카멜레온 프린트 — 작업 지침
+
+## 1. simple_order.js — `state.is*` 플래그는 다중 override 함정
+
+`state.isCustomSize` / `state.isBannerOutput` / `state.isRealPrint` / `state.isAdPrint` 등은
+**한 번 set 한 뒤 5~10곳에서 다시 덮어쓰임**. 한 군데만 고치면 다른 분기가 그대로 끄고 끝남.
+
+**수정 절차 (필수)**:
+1. 먼저 `Grep` 으로 `state\.<플래그명>\s*=` 와 `state\.<플래그명>\b` 둘 다 검색 — 모든 set / 사용 위치 확인
+2. 분기마다 어떤 조건일 때 무엇으로 덮는지 정리
+3. UI 표시 (`custSec.style.display = ...`) 분기도 같은 플래그를 따로 보는지 확인
+   (`state.isCustomSize` 와 `state.isBannerOutput` 가 각각 별도 display 분기 있음 — 둘 다 패치 필요)
+4. 모든 분기를 일관되게 패치 후 한 번에 커밋
+
+**실제 사례 (2026-06-14)**: 현수막(placard 9종) 사이즈 입력 복구
+- 9968줄 `state.isCustomSize` 만 고쳤지만 10304줄 `if (state.isBannerOutput) custSec.display='none'` 가 덮어써서 v=399 효과 없음 → v=400 에서 둘 다 패치.
+
+## 2. Banner family 정규식이 placard 도 잡음
+
+[simple_order.js:9397](simple_order.js#L9397) `_bannerKw = /배너|...|현수막|.../` 가 "현수막" 도 매치 →
+`state.isBannerOutput = true` 됨.
+
+- **배너 family** (X배너/거치대 세트): 고정 사이즈, DB flat price → `isCustomSize = false`
+- **현수막 family** (PLACARD_CODES_ORDERED 9종, 44578 등): m² 가격 → `isCustomSize = true` 필수
+- **실사출력 family** (REAL_PRINT_CODES_ORDERED 9종): m 단위 판매 → 폭/코팅 UI 사용, `isCustomSize = false`
+
+세 family 가 모두 "현수막/배너/실사" 키워드를 공유하므로 **이름 정규식만 믿지 말고 코드 화이트리스트(_soIsPlacardProduct / _soIsRealPrintProduct) 도 같이 확인**.
+
+## 3. 버전 번프 — JS 수정 시 index.html `?v=` 동시 변경 필수
+
+- `simple_order.js` 수정 → `index.html` 의 `simple_order.js?v=NNN` 동반 bump
+- `advisor-panel.js` 수정 → `index.html` + `chameleon-chatbot.html` + `cotton_print.html` 의 `?v=NNN` 동시 bump
+- `_headers` 는 v171 이후 JS/CSS 를 no-cache 로 설정했지만 버전 번프는 CDN 캐시 무효화 + 브라우저 강제 재요청 보장용으로 계속 필요
+
+## 4. 배포 절차
+
+```bash
+git push origin main
+npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message="ASCII only"
+```
+
+- **커밋 메시지는 반드시 ASCII** — 한국어 포함 시 "Invalid commit message" 에러
+- Cloudflare Pages 가 7개 도메인 (cafe2626 / cafe0101 / cafe3355 / chameleon.design / cotton-print / cotton-printer / hexa-board) 동시 배포
+
+## 5. 사이트 감지 (3중 layer)
+
+순서: `window.__SITE_CODE` (HTML inline) → `site-config.js` `SITE_CONFIG.COUNTRY` → hostname fallback.
+이 중 하나라도 잘못되면 가격/언어/PG 가 어긋남. 추가 도메인 시 `_worker.js` 의 `getCountry()` + `OG_DATA` + `getSiteData()` 모두 같이 업데이트.
+
+## 6. 통화 변환
+
+DB 는 KRW 만 저장. 프론트엔드에서 `CURRENCY_RATE` (KR=1, JP=0.1, US=0.001) 로 환산.
+`admin_addons` 만 `price_kr/jp/us` 별도 컬럼 있지만 일관성을 위해 KRW×rate 로 계산.
+
+## 7. 작업 전 확인 사항
+
+- 코드 수정 전: **메모리(`MEMORY.md`) 와 `auto memory` 폴더의 관련 파일 확인**
+- 비자명한 수정(2개 이상 파일 변경): **EnterPlanMode 로 계획 먼저 제시** 후 사용자 승인
+- `state.is*` / 정규식 family 감지 / 배포 / 통화·도메인 라우팅 관련 수정 시: 영향 범위를 grep 으로 전체 확인 후 진행
