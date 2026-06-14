@@ -21591,6 +21591,11 @@ if (w >= 20 && h >= 20) {
         submitBtn:   { ko:'결제 후 의뢰 등록하기', ja:'決済後に依頼を登録する',    en:'Submit after payment' },
         submitNote:  { ko:'결제 완료 후 담당 매니저가 24시간 내 연락드립니다. 시안 1차는 영업일 기준 2~3일 소요됩니다.', ja:'決済完了後、担当マネージャーが24時間以内にご連絡いたします。1次案は営業日基準で2~3日かかります。', en:'After payment, your manager will contact you within 24h. First draft takes 2-3 business days.' },
         payNotice:   { ko:'디자인의뢰는 결제 후에만 등록됩니다.',                 ja:'ご依頼は決済後にのみ登録されます。',                              en:'Requests are registered only after payment.' },
+        govBtn:      { ko:'🏛️ 관공서 후불 의뢰 (결제 없이 등록)', ja:'🏛️ 官公庁 後払い依頼 (決済なしで登録)',                                  en:'🏛️ Government / B2B Postpaid (Register without payment)' },
+        govNote:     { ko:'관공서·기업 후불 계약 건은 결제 없이 등록됩니다. (사업자등록증 확인 후 진행)', ja:'官公庁・企業の後払い契約は決済なしで登録できます。(事業者登録証の確認後に進行)', en:'Government / corporate post-paid contracts can be registered without payment (we will verify your business registration first).' },
+        govDone:     { ko:'관공서 후불 의뢰가 등록되었습니다.\n담당 매니저가 사업자등록증 확인 후 연락드립니다.', ja:'官公庁 後払い依頼が登録されました。\n担当マネージャーが事業者登録証確認後にご連絡いたします。',     en:'Government postpaid request registered.\nYour manager will contact you after verifying your business registration.' },
+        loginNeed:   { ko:'의뢰 등록은 로그인 후 가능합니다. 로그인 창이 열립니다.', ja:'依頼の登録はログイン後に可能です。ログイン画面を開きます。',                  en:'Please sign in to submit a request. Opening the login window.' },
+        pgFail:      { ko:'결제 화면 이동 실패: ',                                ja:'決済画面への移動に失敗: ',                                       en:'Failed to open the payment screen: ' },
         designerLink:{ ko:'디자이너이신가요?',   ja:'デザイナーの方ですか？',  en:'Are you a designer?' },
         designerCta: { ko:'디자이너 보드 열기 →', ja:'デザイナーボードを開く →', en:'Open Designer Board →' }
     };
@@ -21644,6 +21649,9 @@ if (w >= 20 && h >= 20) {
         // 2026-06-14: payNotice (결제 안내) + submitNote 분리 — 특정 ID 로 매핑
         var payNoticeEl = $('dreqPayNotice'); if (payNoticeEl) payNoticeEl.textContent = _T('payNotice');
         var submitNoteEl = $('dreqSubmitNote'); if (submitNoteEl) submitNoteEl.textContent = _T('submitNote');
+        // 2026-06-14: 관공서 후불 버튼 + 안내 (KR/JP/EN)
+        var govBtnEl = $('dreqSubmitGovBtn'); if (govBtnEl) govBtnEl.textContent = _T('govBtn');
+        var govNoteEl = $('dreqGovNote'); if (govNoteEl) govNoteEl.textContent = _T('govNote');
         var designerA = document.querySelector('#dreqForm a[href="/designer-board"]');
         if (designerA) designerA.innerHTML = _T('designerLink') + ' <span style="color:#007AFF; font-weight:600;">' + _T('designerCta') + '</span>';
     }
@@ -21819,7 +21827,7 @@ if (w >= 20 && h >= 20) {
         try {
             var _ses = await sb.auth.getSession();
             if (!_ses || !_ses.data || !_ses.data.session || !_ses.data.session.user) {
-                alert('의뢰 등록은 로그인 후 가능합니다. 로그인 창이 열립니다.');
+                alert(_T('loginNeed'));
                 try {
                     window.closeDesignRequestPopup();
                     var _lm = document.getElementById('loginModal');
@@ -21910,7 +21918,7 @@ if (w >= 20 && h >= 20) {
             window.closeDesignRequestPopup();
             // 관공서 후불 — 결제 없이 즉시 등록 완료 안내
             if (_isGovPostpaid) {
-                alert('관공서 후불 의뢰가 등록되었습니다.\n담당 매니저가 사업자등록증 확인 후 연락드립니다.');
+                alert(_T('govDone'));
                 return;
             }
             // onSuccess 콜백 호출 (상세 모달이 배너 상태 업데이트 + 합계 갱신)
@@ -21956,7 +21964,7 @@ if (w >= 20 && h >= 20) {
                     }
                 } catch (ePg) {
                     console.error('[design-req PG redirect]', ePg);
-                    alert('결제 화면 이동 실패: ' + (ePg && ePg.message ? ePg.message : '알 수 없는 오류') + '\n다시 시도해주세요.');
+                    alert(_T('pgFail') + (ePg && ePg.message ? ePg.message : ''));
                 }
             }
         } catch (e) {
