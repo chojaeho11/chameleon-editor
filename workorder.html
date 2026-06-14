@@ -103,10 +103,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
     }
     /* 첫 화면 페이지는 새 페이지로 강제하지 않음 — 인쇄 첫 장이 빈 칸으로 시작되지 않도록. */
     .screen-page:first-child { page-break-before: avoid; break-before: avoid; }
-    .summary {
-        page-break-before: always;
-        break-before: page;
-    }
+    /* 2026-06-15: 합계금액은 헤더 페이지 안으로 이동됨 — page-break-before 제거. */
     .summary,
     #woCustomerReqBox,
     #woAdminNote,
@@ -1069,7 +1066,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
     }
 })();
 
-// 2026-06-15: .sheet 의 자식들을 페이지 단위로 재구성. 헤더(주문자 정보 등) 한 장, 항목별 한 장, 푸터 한 장.
+// 2026-06-15: .sheet 의 자식들을 페이지 단위로 재구성. 헤더(주문자 정보 + 합계금액) 한 장, 항목별 한 장, 푸터 한 장.
 function _woApplyPaged() {
     const sheet = document.getElementById('sheet');
     if (!sheet || document.body.classList.contains('wo-paged')) return;
@@ -1081,18 +1078,20 @@ function _woApplyPaged() {
     const allChildren = Array.from(sheet.children);
     const itemSectionIdx = allChildren.indexOf(itemSection);
     const headerEls = allChildren.slice(0, itemSectionIdx);
-    const footerEls = allChildren.slice(itemSectionIdx + 1);
+    // 2026-06-15: 합계금액(.summary)을 헤더 페이지로 이동 — 푸터에는 주문정보/관리자메모/발행일만 남김.
+    const summaryEl = sheet.querySelector('.summary');
+    const footerEls = allChildren.slice(itemSectionIdx + 1).filter(el => el !== summaryEl);
     const items = Array.from(itemList.children);
     const total = 1 + items.length + 1;
 
-    // 헤더 페이지: 기존 헤더 sibling 들 + 제작 항목 타이틀
+    // 헤더 페이지: 기존 헤더 sibling 들 + 제작 항목 타이틀 + 합계금액
     const headerPage = document.createElement('div');
     headerPage.className = 'screen-page';
     headerPage.dataset.pageLabel = `Page 1 / ${total}`;
     headerEls.forEach(el => headerPage.appendChild(el));
-    // 제작 항목 타이틀 (.section-title) 만 헤더에 추가
     const titleEl = itemSection.querySelector('.section-title');
     if (titleEl) headerPage.appendChild(titleEl);
+    if (summaryEl) headerPage.appendChild(summaryEl);
 
     // 각 항목 페이지
     const itemPages = items.map((item, i) => {
