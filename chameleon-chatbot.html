@@ -70,7 +70,7 @@
 </script>
 
 <script type="module">
-import { initAdvisorPanel } from './advisor-panel.js?v=452';
+import { initAdvisorPanel } from './advisor-panel.js?v=456';
 initAdvisorPanel();
 
 // 커스텀 닫기 버튼 삽입
@@ -80,14 +80,40 @@ setTimeout(() => {
         const closeBtn = document.createElement('button');
         closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         closeBtn.style.cssText = 'background:rgba(255,255,255,0.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:4px;';
+        // 2026-06-14: 닫기 폴백 체인 — postMessage(가장 안전) → DOM 직접 조작 → toggleAdvisorPanel → window.close
         closeBtn.onclick = () => {
             try {
+                // 1) iframe 안에서 호출되는 경우 — postMessage + 부모창 DOM 양쪽 시도
                 if (window.parent && window.parent !== window) {
-                    const wrap = window.parent.document.getElementById('chatIframeWrap');
-                    if (wrap) { wrap.style.display = 'none'; window.parent._chatIframeOpen = false; return; }
+                    var p = window.parent;
+                    // postMessage 우선 — cross-origin/iframe 안전성 최고. cotton_print/cotton_designer 가 받아 처리.
+                    try { p.postMessage('closeKapuChat', '*'); } catch(_pme) {}
+                    try { p.postMessage({ type: 'closeKapuChat' }, '*'); } catch(_pme2) {}
+                    // 동시에 DOM 직접 조작도 (same-origin 일 때 즉시 닫힘)
+                    try {
+                        var mWrap = p.document.getElementById('chatIframeMobileWrap');
+                        if (mWrap) { mWrap.style.display = 'none'; try { p.document.body.style.overflow = ''; } catch(e){} if ('_chatIframeOpen' in p) p._chatIframeOpen = false; }
+                        var dWrap = p.document.getElementById('chatIframeWrap');
+                        if (dWrap) { dWrap.style.display = 'none'; if ('_chatIframeOpen' in p) p._chatIframeOpen = false; }
+                        var kWrap = p.document.getElementById('kapuChatWrap');
+                        if (kWrap) { kWrap.style.display = 'none'; try { p.document.body.style.overflow = ''; } catch(e){} var kF = p.document.getElementById('kapuFab'); if (kF) { kF.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>'; kF.style.display = ''; } }
+                        if (typeof p.toggleAdvisorPanel === 'function' && !mWrap && !dWrap && !kWrap) p.toggleAdvisorPanel();
+                        else {
+                            var advP = p.document.getElementById('advisorPanel');
+                            if (advP && !mWrap && !dWrap && !kWrap) { advP.style.display = 'none'; try { p.document.body.style.overflow = ''; } catch(e){} }
+                        }
+                    } catch(_dome) {}
+                    return;
                 }
+                // 2) 현재 창 (advisor-panel 직접 노출)
+                if (typeof window.toggleAdvisorPanel === 'function') { window.toggleAdvisorPanel(); return; }
+                var advSelf = document.getElementById('advisorPanel');
+                if (advSelf) { advSelf.style.display = 'none'; try { document.body.style.overflow = ''; } catch(e){} return; }
+                // 3) 마지막 fallback
                 window.close();
-            } catch(err) { window.close(); }
+            } catch(err) {
+                try { window.close(); } catch(e2) {}
+            }
         };
         // 버튼 그룹 끝에 추가
         const btnGroup = header.querySelector('div[style*="display:flex"]') || header;

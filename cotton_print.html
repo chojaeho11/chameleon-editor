@@ -2989,7 +2989,17 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
 </section>
 
 <!-- 카푸 AI 챗봇 (페이지 내 오버레이 iframe)
-     id="chatIframeWrap"으로도 참조 — chameleon-chatbot.html의 닫기 버튼이 이 ID를 찾음 -->
+     id="chatIframeWrap"으로도 참조 — chameleon-chatbot.html의 닫기 버튼이 이 ID를 찾음
+     2026-06-14: 모바일은 풀스크린 (CSS media query) -->
+<style>
+    @media (max-width: 768px) {
+        #kapuChatWrap {
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: 100vw !important; height: 100vh !important; max-width: 100vw !important; max-height: 100vh !important;
+            border-radius: 0 !important; box-shadow: none !important;
+        }
+    }
+</style>
 <div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:400px; height:620px; z-index:9999; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25); background:#374151;">
     <iframe id="kapuChatFrame" src="" style="width:100%;height:100%;border:none;border-radius:16px;display:block;"></iframe>
 </div>
@@ -3031,15 +3041,18 @@ function toggleKapuChat() {
     var fab = document.getElementById('kapuFab');
     if (wrap.style.display === 'none' || !wrap.style.display) {
         if (!frame.src || frame.src === '' || frame.src === location.href) {
-            // Same-origin + chat=1 — initAdvisorPanel()이 이 파라미터를 보고 패널을 자동으로 열어줌
             var langParam = (window._kapuLang || 'kr');
             frame.src = '/chameleon-chatbot.html?lang=' + langParam + '&from=cotton-print&chat=1';
         }
         wrap.style.display = 'block';
         fab.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        // 2026-06-14: 모바일 — 배경 스크롤 잠금 + FAB 숨김 (풀스크린 챗봇 위에 떠있지 않도록)
+        if (window.innerWidth <= 768) { document.body.style.overflow = 'hidden'; fab.style.display = 'none'; }
     } else {
         wrap.style.display = 'none';
         fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        try { document.body.style.overflow = ''; } catch(e) {}
+        fab.style.display = '';
     }
 }
 // iframe 안에서 닫기 버튼 누르면 부모창에 메시지 보냄
@@ -3048,15 +3061,12 @@ window.addEventListener('message', function(e){
         var wrap = document.getElementById('kapuChatWrap');
         var fab = document.getElementById('kapuFab');
         if (wrap) wrap.style.display = 'none';
-        if (fab) fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+        if (fab) { fab.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>'; fab.style.display = ''; }
+        try { document.body.style.overflow = ''; } catch(_e) {}
     }
 });
 </script>
-<style>
-@media (max-width: 480px) {
-    #kapuChatWrap { width: calc(100vw - 16px) !important; height: calc(100vh - 100px) !important; right: 8px !important; bottom: 76px !important; }
-}
-</style>
+<!-- 2026-06-14: 옛 모바일 부분-오버레이 룰 제거 — 위 풀스크린 룰 (≤768px) 이 우선 적용됨 -->
 
 <!-- 쇼츠 영상 섹션 -->
 <section class="section" id="psShortsSection" style="display:none; background:#fff;">
