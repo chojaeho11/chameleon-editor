@@ -638,18 +638,37 @@ async function _cwComposeItemCanvas(item, dpi) {
     const canvas = document.createElement('canvas');
     canvas.width = outWpx; canvas.height = outHpx;
     const ctx = canvas.getContext('2d', { alpha: bgHex === 'transparent' });
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     // 배경
     const rgb = _cwHexToRgb(bgHex);
     if (rgb) { ctx.fillStyle = 'rgb('+rgb.join(',')+')'; ctx.fillRect(0,0,outWpx,outHpx); }
     else { ctx.clearRect(0,0,outWpx,outHpx); }
 
-    // 아트워크 → cell 크기로 미리 리사이즈
+    // 아트워크 → 두 단계 다운샘플 후 cell 크기로 리사이즈.
+    //   Python compose_fabric.py 와 동일 전략 — 원본이 셀의 3배 이상이면 먼저 2× 중간 크기로 줄이고 최종 리사이즈.
+    //   캔버스는 LANCZOS 가 없어 bicubic 기반 imageSmoothingQuality='high' 사용, 다단계 다운샘플로 aliasing 최소화.
     const art = await _cwLoadImage(artUrl);
+    let src = art;
+    const srcW = art.naturalWidth || art.width;
+    const srcH = art.naturalHeight || art.height;
+    if (srcW > cellWpx * 3 || srcH > cellHpx * 3) {
+        const midW = Math.max(cellWpx * 2, 1);
+        const midH = Math.max(cellHpx * 2, 1);
+        const mid = document.createElement('canvas');
+        mid.width = midW; mid.height = midH;
+        const midCtx = mid.getContext('2d');
+        midCtx.imageSmoothingEnabled = true;
+        midCtx.imageSmoothingQuality = 'high';
+        midCtx.drawImage(art, 0, 0, midW, midH);
+        src = mid;
+    }
     const cellCanvas = document.createElement('canvas');
     cellCanvas.width = cellWpx; cellCanvas.height = cellHpx;
     const cellCtx = cellCanvas.getContext('2d');
+    cellCtx.imageSmoothingEnabled = true;
     cellCtx.imageSmoothingQuality = 'high';
-    cellCtx.drawImage(art, 0, 0, cellWpx, cellHpx);
+    cellCtx.drawImage(src, 0, 0, cellWpx, cellHpx);
 
     function paste(x, y, flipH, flipV) {
         if (!flipH && !flipV) { ctx.drawImage(cellCanvas, x, y); return; }
@@ -797,7 +816,9 @@ window._cwComposeOne = async function(idx, btn) {
     }
 };
 
-// 2026-06-15: 항목별 미리보기 (저해상도) 자동 생성 — 페이지 로드 시 호출.
+// 2026-06-15: 항목별 미리보기 자동 생성 — 페이지 로드 시 호출.
+//   DPI 72 (web standard) — 100cm 세로 = 2835px / 19.5cm 가로 = 553px → 캔버스 ~1.5MP. 충분히 선명.
+const _CW_PREVIEW_DPI = 72;
 async function _cwAutoPreviewAll() {
     const items = window._woItems || [];
     for (let i = 0; i < items.length; i++) {
@@ -806,9 +827,9 @@ async function _cwAutoPreviewAll() {
         if (!box) continue;
         if (!(it && (it.artwork_url || (it.pattern_spec && it.pattern_spec.artwork_url)))) continue;
         try {
-            const info = await _cwComposeItemCanvas(it, 30); // 30 DPI 미리보기
+            const info = await _cwComposeItemCanvas(it, _CW_PREVIEW_DPI);
             const dataUrl = info.canvas.toDataURL('image/png');
-            box.innerHTML = '<img src="'+dataUrl+'" alt="preview '+(i+1)+'">';
+            box.innerHTML = '<img src="'+dataUrl+'" alt="preview '+(i+1)+'" style="image-rendering:auto;">';
         } catch (e) {
             console.warn('[cw preview]', i, e);
             box.innerHTML = '<div class="cw-preview-empty">미리보기 생성 실패: '+(e.message||e)+'</div>';
@@ -826,8 +847,8 @@ window._cwRegenPreview = async function(idx, btn) {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중…'; }
     box.innerHTML = '<div class="cw-preview-loading"><i class="fa-solid fa-spinner fa-spin"></i> 미리보기 재생성…</div>';
     try {
-        const info = await _cwComposeItemCanvas(it, 30);
-        box.innerHTML = '<img src="'+info.canvas.toDataURL('image/png')+'" alt="preview '+(idx+1)+'">';
+        const info = await _cwComposeItemCanvas(it, _CW_PREVIEW_DPI);
+        box.innerHTML = '<img src="'+info.canvas.toDataURL('image/png')+'" alt="preview '+(idx+1)+'" style="image-rendering:auto;">';
     } catch (e) {
         box.innerHTML = '<div class="cw-preview-empty">실패: '+(e.message||e)+'</div>';
     } finally {
