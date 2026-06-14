@@ -716,6 +716,8 @@ export function initAdvisorPanel() {
         const fab = document.getElementById('floatingChatBtn');
         if (panelEl.style.display === 'flex') {
             panelEl.style.display = 'none';
+            // 2026-06-14: 모바일 풀스크린 시 잠금해뒀던 body 스크롤 복원
+            try { document.body.style.overflow = ''; } catch(e) {}
             if (fab) fab.innerHTML = '<i class="fa-solid fa-comments"></i>';
         } else {
             openPanel();
@@ -757,8 +759,20 @@ function openPanel() {
     if (!panelEl) return;
     if (panelEl.style.display === 'flex') return;
     panelEl.style.display = 'flex';
+    // 2026-06-14: 모바일은 풀스크린 인라인 강제 (CSS @media 가 외부 스타일에 override 당하던 케이스 대응)
+    try {
+        if (window.innerWidth <= 768) {
+            panelEl.style.cssText += ';position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;width:100% !important;height:100% !important;max-height:100vh !important;max-width:100vw !important;border-radius:0 !important;margin:0 !important;z-index:1000000 !important;';
+            document.body.style.overflow = 'hidden';
+        }
+    } catch(e) {}
     buildPanelUI();
 }
+// ─── 패널 닫기 (다른 곳에서 직접 호출 가능) ───
+function _restoreScrollOnClose() {
+    try { document.body.style.overflow = ''; } catch(e) {}
+}
+try { window._advRestoreScrollOnClose = _restoreScrollOnClose; } catch(e){}
 
 // ─── 헤더 전화/이메일 링크 ───
 function _getContactLinks() {
