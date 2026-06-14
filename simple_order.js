@@ -13119,8 +13119,44 @@ html, body { background: #ffffff !important; }
                 // 가벽 양면 / 박스/커스텀 사이즈는 별도 unit 필드
                 if (item.boxSize && typeof item.boxSize.unit === 'number') _bdUnit = item.boxSize.unit;
                 if (item.customSize && typeof item.customSize.unit === 'number') _bdUnit = item.customSize.unit;
+                // 2026-06-14: 낱장 인쇄 — DB price (=50) 대신 perSheet × 할인 으로 단가 산출, 사이즈/면 메타 + 박/후가공 breakdown.
+                var _isLfRow = !!item._isLeaflet || !!item.leafletSize || (item.product && item.product.code && /^pp_lf/i.test(item.product.code));
+                if (_isLfRow && typeof window._soLeafletPriceFor === 'function') {
+                    var _lfSizeId = item.leafletSize || 'A4';
+                    var _lfSideId = item.leafletSide || 'single';
+                    var _lfSubPrint = window._soLeafletPriceFor(_lfSizeId, _lfSideId, _bdQty);
+                    _bdUnit = (_bdQty > 0) ? Math.round(_lfSubPrint / _bdQty) : _lfSubPrint;
+                    // 사이즈/면 메타 라인
+                    var _lfSizeObj = (window.LEAFLET_SIZES || []).find(function(s){ return s.id === _lfSizeId; }) || { wMm:0, hMm:0 };
+                    var _lfSideLbl = (_lfSideId === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
+                    meta.push('📐 ' + _lfSizeId + ' (' + _lfSizeObj.wMm + '×' + _lfSizeObj.hMm + 'mm) · ' + _lfSideLbl);
+                }
                 var _bdSub = _bdUnit * _bdQty;
                 _bd.push('<div style="display:flex; justify-content:space-between;"><span>단가 × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                // 2026-06-14: 낱장 인쇄 — 박/후가공 breakdown (multiplier 적용된 옵션비)
+                if (_isLfRow && typeof window._soLeafletOptMult === 'function') {
+                    var _lfMult = window._soLeafletOptMult(_bdQty);
+                    if (item.leafletFoil && typeof BIZ_FOILS !== 'undefined') {
+                        var _lfFoilRow = BIZ_FOILS.find(function(o){ return o.key === item.leafletFoil; });
+                        if (_lfFoilRow) {
+                            var _foilLine = _lfFoilRow.price * _lfMult;
+                            _bdSub += _foilLine;
+                            var _foilNm = (typeof _bizI18n === 'function') ? _bizI18n(_lfFoilRow, 'name') : (_lfFoilRow.name_kr || '박');
+                            _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(_foilNm) + (_lfMult > 1 ? ' × ' + _lfMult : '') + '</span><b>+' + fmtPrice(_foilLine) + '</b></div>');
+                        }
+                    }
+                    if (item.leafletFinishes && typeof BIZ_FINISHES !== 'undefined') {
+                        Object.keys(item.leafletFinishes).forEach(function(k){
+                            if (!item.leafletFinishes[k]) return;
+                            var _lfFnRow = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                            if (!_lfFnRow) return;
+                            var _fnLine = _lfFnRow.price * _lfMult;
+                            _bdSub += _fnLine;
+                            var _fnNm = (typeof _bizI18n === 'function') ? _bizI18n(_lfFnRow, 'name') : (_lfFnRow.name_kr || '후가공');
+                            _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(_fnNm) + (_lfMult > 1 ? ' × ' + _lfMult : '') + '</span><b>+' + fmtPrice(_fnLine) + '</b></div>');
+                        });
+                    }
+                }
                 // 옵션 (selectedAddons) — 이름 표시. ADDON_DB 미로드 시에도 이름 fallback.
                 var _bdAddonTotal = 0;
                 if (item.selectedAddons) {
@@ -13687,18 +13723,21 @@ html, body { background: #ffffff !important; }
         }
 
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
+        // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4 (Math.ceil(qty/10) 폐기)
         var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
         if (_isLfItm) {
-            var _lfSubItm = _soLeafletPriceFor(it.leafletSize || 'A4', it.leafletSide || 'single', qty || 1);
+            var _lfQ = qty || 1;
+            var _lfSubItm = _soLeafletPriceFor(it.leafletSize || 'A4', it.leafletSide || 'single', _lfQ);
+            var _lfOptMultItm = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(_lfQ) : 1;
             if (it.leafletFoil) {
                 var _lfFoilItm = BIZ_FOILS.find(function(o){ return o.key === it.leafletFoil; });
-                if (_lfFoilItm) _lfSubItm += _lfFoilItm.price * Math.ceil((qty || 1) / 10);
+                if (_lfFoilItm) _lfSubItm += _lfFoilItm.price * _lfOptMultItm;
             }
             if (it.leafletFinishes) {
                 Object.keys(it.leafletFinishes).forEach(function(k){
                     if (!it.leafletFinishes[k]) return;
                     var _lfFnItm = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                    if (_lfFnItm) _lfSubItm += _lfFnItm.price * Math.ceil((qty || 1) / 10);
+                    if (_lfFnItm) _lfSubItm += _lfFnItm.price * _lfOptMultItm;
                 });
             }
             return _lfSubItm;
