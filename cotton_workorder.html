@@ -597,15 +597,29 @@ function _cwLoadImage(url) {
 }
 
 // compose_fabric_print() 의 JS 포트.
+// 2026-06-15: layout 키는 DB 가 저장하는 값과 동일 — basic / halfdrop / halfbrick / mirror / centered.
+// 2026-06-15: 패턴 원단 (centered 가 아닌 모든 layout) 은 출력 폭 = 원단 폭, 높이 = 100cm 자동.
+//   패브릭포스터 (centered) 는 사용자가 지정한 width_cm × height_cm 그대로.
 async function _cwComposeItemCanvas(item, dpi) {
     const spec = item.pattern_spec || {};
     const cell = spec.cell_cm || {};
     const cellWcm = Number(cell.w) || 10;
     const cellHcm = Number(cell.h) || 10;
-    const outWcm = Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 130);
-    const outHcm = Number(item.height_cm) || (item.height_mm ? item.height_mm/10 : 100);
     const scale = (spec.image_scale != null ? Number(spec.image_scale) : 1.0);
     const layout = String(spec.layout || 'basic').toLowerCase().trim();
+    const isPoster = (layout === 'centered');
+    const fabricRollWcm = Number(spec.fabric_cm && spec.fabric_cm.w) || 0;
+    let outWcm, outHcm;
+    if (isPoster) {
+        // 패브릭포스터 — 사용자 지정 사이즈
+        outWcm = Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 130);
+        outHcm = Number(item.height_cm) || (item.height_mm ? item.height_mm/10 : 100);
+    } else {
+        // 패턴 원단 — 폭 = fabric_cm.w (대폭/소폭) / 세로 = 1m 고정
+        outWcm = fabricRollWcm > 0 ? fabricRollWcm
+               : (Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 110));
+        outHcm = 100;
+    }
     const bgHex = spec.bg_color || '#ffffff';
     const artUrl = item.artwork_url || (spec.artwork_url) || '';
     if (!artUrl) throw new Error('아트워크가 첨부되지 않았습니다');
@@ -646,12 +660,15 @@ async function _cwComposeItemCanvas(item, dpi) {
         ctx.restore();
     }
 
-    // 레이아웃 분기 — Python compose_fabric_print 와 동일.
+    // 레이아웃 분기.
+    // 2026-06-15: DB 가 저장하는 키 — centered / basic / halfdrop / halfbrick / mirror.
+    //   레거시 (구 Python) 명칭 (brick, half_drop) 도 호환 매칭.
     if (layout === 'centered') {
         const x = Math.floor((outWpx - cellWpx) / 2);
         const y = Math.floor((outHpx - cellHpx) / 2);
         paste(x, y, false, false);
-    } else if (layout === 'brick' || layout === 'brick_horizontal' || layout === 'half_drop_horizontal') {
+    } else if (layout === 'halfbrick' || layout === 'brick' || layout === 'brick_horizontal' || layout === 'half_drop_horizontal') {
+        // 가로로 반칸 어긋난 벽돌 (행마다 X 오프셋)
         const rows = Math.ceil(outHpx / cellHpx) + 1;
         const cols = Math.ceil(outWpx / cellWpx) + 2;
         for (let r = 0; r < rows; r++) {
@@ -663,7 +680,8 @@ async function _cwComposeItemCanvas(item, dpi) {
                 paste(x, y, false, false);
             }
         }
-    } else if (layout === 'half_drop' || layout === 'half_drop_vertical' || layout === 'half-drop') {
+    } else if (layout === 'halfdrop' || layout === 'half_drop' || layout === 'half_drop_vertical' || layout === 'half-drop') {
+        // 세로로 반칸 어긋난 패턴 (열마다 Y 오프셋)
         const rows = Math.ceil(outHpx / cellHpx) + 2;
         const cols = Math.ceil(outWpx / cellWpx) + 1;
         for (let c = 0; c < cols; c++) {
