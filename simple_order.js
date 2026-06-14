@@ -537,51 +537,53 @@ html, body { background: #ffffff !important; }
 .so-co-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ════════════════════════════════════════════════════════════════════
-   2026-06-14 v2: Quick Design — 디자인 에디터 진입 CTA 카드
+   2026-06-14 v3: Quick Design — 메인 페이지 미니에디터 portal + 사이즈 동기화 + 적용 버튼
    ════════════════════════════════════════════════════════════════════ */
-#soQuickDesignSec { margin-bottom: 14px; }
-#soQuickDesignSec .qd-launch-card {
-    width: 100%; padding: 18px;
-    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c7d2fe 100%);
-    border: 1.5px solid #6366f1; border-radius: 14px;
-    cursor: pointer; transition: all .2s;
-    display: flex; align-items: center; gap: 14px;
-    font-family: inherit; text-align: left;
-    box-shadow: 0 6px 18px -8px rgba(99,102,241,0.35);
+#soQuickDesignSec {
+    margin-bottom: 14px;
+    padding: 14px;
+    background: #fff;
+    border: 1.5px solid #6366f1;
+    border-radius: 14px;
 }
-#soQuickDesignSec .qd-launch-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 24px -8px rgba(99,102,241,0.55);
-    background: linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 50%, #a5b4fc 100%);
+#soQuickDesignSec .qd-head-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+#soQuickDesignSec .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; letter-spacing:-0.01em; }
+#soQuickDesignSec .qd-size-badge {
+    font-size: 11px; color: #fff; font-weight: 800;
+    background: #6366f1; padding: 4px 10px; border-radius: 999px;
+    margin-left: auto;
 }
-#soQuickDesignSec .qd-launch-icon-wrap {
-    flex-shrink: 0; width: 52px; height: 52px;
-    background: #fff; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px -2px rgba(99,102,241,0.3);
+#soQuickDesignSec .qd-product-size-btn {
+    width: 100%; padding: 10px 12px;
+    background: #eef2ff; border: 1.5px solid #c7d2fe; color: #4338ca;
+    border-radius: 10px; font-weight: 800; font-size: 12.5px;
+    cursor: pointer; font-family: inherit; transition: all .15s;
 }
-#soQuickDesignSec .qd-launch-icon { color: #6366f1; font-size: 24px; }
-#soQuickDesignSec .qd-launch-body { flex: 1; min-width: 0; }
-#soQuickDesignSec .qd-launch-title {
-    font-size: 15px; font-weight: 900; color: #1e1b4b;
-    letter-spacing: -0.01em; margin-bottom: 4px;
+#soQuickDesignSec .qd-product-size-btn:hover {
+    background: #6366f1; color: #fff; border-color: #6366f1;
 }
-#soQuickDesignSec .qd-launch-sub {
-    font-size: 11.5px; color: #4338ca; font-weight: 600; line-height: 1.45;
-    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+#soQuickDesignSec .qd-apply-btn {
+    width: 100%; padding: 14px; margin-top: 12px;
+    background: #03c75a; color: #fff; border: none; border-radius: 12px;
+    font-weight: 900; font-size: 14.5px; cursor: pointer;
+    font-family: inherit; transition: all .15s;
+    box-shadow: 0 6px 18px -6px rgba(3,199,90,0.45);
+    letter-spacing: -0.01em;
 }
-#soQuickDesignSec .qd-launch-size-badge {
-    font-size: 10.5px; color: #fff; font-weight: 800;
-    background: #6366f1; padding: 2px 8px; border-radius: 999px;
-}
-#soQuickDesignSec .qd-launch-arrow {
-    font-size: 12px; font-weight: 900; color: #4338ca;
-    margin-top: 5px; letter-spacing: 0.02em;
+#soQuickDesignSec .qd-apply-btn:hover { background: #02b34f; transform: translateY(-1px); }
+#soQuickDesignSec .qd-apply-btn:disabled {
+    background: #cbd5e1; cursor: not-allowed; box-shadow: none; transform: none;
 }
 #soQuickDesignSec .qd-launch-or {
     font-size: 11.5px; color: #94a3b8; text-align: center;
-    margin-top: 10px; font-weight: 600;
+    margin-top: 12px; font-weight: 600;
 }
+/* portal 된 미니에디터 — simple_order 안에서 폭 자동 맞춤. 모바일 single-column 강제 */
+#soEmbeddedEditorMount #embeddedEditorPreview { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+#soEmbeddedEditorMount #aiNbWrap { grid-template-columns: 1fr !important; gap: 12px !important; }
+#soEmbeddedEditorMount .aiNb-preview { min-height: 200px !important; }
+#soEmbeddedEditorMount .me-stage-wrap { padding: 12px !important; }
+#soEmbeddedEditorMount .me-stage { max-height: 420px !important; }
 
 @media (max-width: 768px) {
     .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
@@ -861,11 +863,10 @@ html, body { background: #ffffff !important; }
         margin-bottom: 10px !important;
     }
 
-    /* Quick Design 모바일 — 카드 padding 축소 */
-    .so-body > .so-left #soQuickDesignSec .qd-launch-card { padding: 14px !important; gap: 10px !important; }
-    .so-body > .so-left #soQuickDesignSec .qd-launch-icon-wrap { width: 44px !important; height: 44px !important; }
-    .so-body > .so-left #soQuickDesignSec .qd-launch-icon { font-size: 20px !important; }
-    .so-body > .so-left #soQuickDesignSec .qd-launch-title { font-size: 14px !important; }
+    /* Quick Design 모바일 — section padding 축소 */
+    .so-body > .so-left #soQuickDesignSec { padding: 12px !important; }
+    .so-body > .so-left #soQuickDesignSec .qd-head-title { font-size: 13px !important; }
+    .so-body > .so-left #soQuickDesignSec .qd-apply-btn { font-size: 13.5px !important; padding: 12px !important; }
 
     /* 4. 상품 상세정보 + 고객 리뷰 — 검정 보더 카드 통일 */
     .so-body > .so-left .so-prod-detail {
@@ -1446,23 +1447,25 @@ html, body { background: #ffffff !important; }
           <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
         </div>
 
-        <!-- 2026-06-14: 디자인 에디터 진입 CTA — mainEditor (13 패널: 템플릿/요소/장식/텍스트/업로드/보정/AI/누끼/테마/저장/사이즈/정렬/PAGE) 풀화면 진입.
-             완료 시 자동으로 simple_order 로 복귀하여 옵션 선택 + 장바구니 담기 가능. -->
+        <!-- 2026-06-14 v3: 메인 페이지의 미니 디자인 에디터 + 누끼따기 패널을 simple_order 안으로 이식 (DOM portal).
+             상품 사이즈 자동 적용 + 우측 사이즈 입력과 라이브 동기화 + "디자인 완료 · 적용" 버튼. -->
         <div id="soQuickDesignSec" style="display:none;">
-          <button type="button" id="soQdLaunchEditorBtn" onclick="window._soOpenEditorWithReturn && window._soOpenEditorWithReturn()" class="qd-launch-card">
-            <div class="qd-launch-icon-wrap">
-              <i class="fa-solid fa-palette qd-launch-icon"></i>
+          <div class="qd-head-row">
+            <div class="qd-head-title">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1; margin-right:6px;"></i>${tr('인라인 디자인 에디터', 'インラインデザインエディタ', 'Inline Design Editor')}
             </div>
-            <div class="qd-launch-body">
-              <div class="qd-launch-title">${tr('디자인 에디터에서 제작', 'デザインエディタで制作', 'Design in editor')}</div>
-              <div class="qd-launch-sub">
-                <span class="qd-launch-size-badge" id="soQdSizeBadge">90×50mm</span>
-                ${tr('템플릿 · 요소 · 장식 · 텍스트 · AI · 이미지 모두 사용', 'テンプレート・要素・装飾・テキスト・AI・画像', 'Templates · elements · text · AI · images')}
-              </div>
-              <div class="qd-launch-arrow">${tr('시작하기','開始','Start →')}</div>
-            </div>
+            <span class="qd-size-badge" id="soQdSizeBadge">90×50mm</span>
+          </div>
+          <button type="button" class="qd-product-size-btn" onclick="window._soQdApplyProductSize && window._soQdApplyProductSize()">
+            <i class="fa-solid fa-ruler-combined" style="margin-right:6px;"></i>${tr('현재 상품 사이즈로 대지 맞추기', '商品サイズで適用', 'Use product size')}
           </button>
-          <div class="qd-launch-or">${tr('또는 직접 이미지 파일 업로드', 'または画像ファイルを直接アップロード', 'Or upload image directly below')}</div>
+          <!-- 미니에디터 (메인 페이지 #embeddedEditorPreview 가 여기로 portal 됨) -->
+          <div id="soEmbeddedEditorMount" style="margin-top:10px;"></div>
+          <!-- 디자인 완료 · 적용 (큰 녹색 버튼) -->
+          <button type="button" id="soQdApplyBtn" class="qd-apply-btn" onclick="window._soQdApplyDesign && window._soQdApplyDesign()">
+            <i class="fa-solid fa-check-circle" style="margin-right:6px;"></i>${tr('디자인 완료 · 주문에 적용', 'デザイン完了・注文に適用', 'Use this design')}
+          </button>
+          <div class="qd-launch-or">${tr('또는 아래에서 직접 이미지 파일 업로드', '下から直接画像をアップロード', 'Or upload image file below')}</div>
         </div>
 
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
@@ -11219,86 +11222,169 @@ html, body { background: #ffffff !important; }
     };
 
     // ════════════════════════════════════════════════════════════════════════
-    // 2026-06-14 v2: Quick Design — 깨끗한 CTA + return-flow (Phase 1 의 인라인 위젯 제거)
-    //   - 큰 카드 한 개: "디자인 에디터에서 제작" → mainEditor 진입
-    //   - mainEditor 에서 "디자인 완료 → 주문 계속" 누르면 PNG export 후 simple_order 재오픈
-    //   - simple_order 가 sessionStorage 에서 PNG 픽업 → state.file 자동 주입
+    // 2026-06-14 v3: Quick Design — 메인 페이지 미니에디터 portal 이식 + 사이즈 동기화 + 적용 버튼
+    //   - openSimpleOrderModal 시 #embeddedEditorPreview 를 #soEmbeddedEditorMount 로 이동
+    //   - 상품 사이즈 (product.width_mm/height_mm or state.customW/customH) 를 _meSetSize 로 자동 적용
+    //   - 우측 사이즈 입력 변경 시 라이브 sync
+    //   - "디자인 완료 · 적용" → _meExportPNG → state.file → renderUploadDone
+    //   - closeSimpleOrderModal 시 원위치 복귀 (메인 페이지에서 계속 사용)
     // ════════════════════════════════════════════════════════════════════════
     (function _qdInit(){
-        var SS_KEY_DESIGN = 'qd_design_v1';  // sessionStorage key: { code, png, w, h, ts }
+        var _origParent = null;
+        var _origNextSibling = null;
+
+        // mm → 미니에디터 픽셀 (96dpi 기준 ≈ 3.78). cap [100, 1200]
+        function _mmToPx(mm) {
+            var px = Math.round(mm * 3.78);
+            if (px < 100) px = 100;
+            if (px > 1200) px = 1200;
+            return px;
+        }
 
         function _resolveSize(p) {
-            if (!p) return { w:100, h:60 };
-            // pp_bc_* 명함은 hardcode 90×50
-            if (/^pp_bc/i.test(String(p.code || ''))) return { w:90, h:50 };
-            var w = parseFloat(p.width_mm) || (state && state.customW ? state.customW * 10 : 100);
-            var h = parseFloat(p.height_mm) || (state && state.customH ? state.customH * 10 : 60);
-            return { w: Math.round(w), h: Math.round(h) };
+            var wMm = 0, hMm = 0;
+            if (state && state.customW && state.customH) {
+                wMm = state.customW * 10;
+                hMm = state.customH * 10;
+            } else if (p && (p.width_mm || p.height_mm)) {
+                wMm = parseFloat(p.width_mm) || 100;
+                hMm = parseFloat(p.height_mm) || 60;
+            } else {
+                wMm = 100; hMm = 60;
+            }
+            if (p && /^pp_bc/i.test(String(p.code || ''))) {
+                wMm = 90; hMm = 50;
+            }
+            return { wMm: Math.round(wMm), hMm: Math.round(hMm) };
+        }
+
+        function _updateSizeBadge(wMm, hMm) {
+            var badge = document.getElementById('soQdSizeBadge');
+            if (badge) badge.textContent = wMm + '×' + hMm + 'mm';
+        }
+
+        // 메인 페이지 #embeddedEditorPreview → simple_order #soEmbeddedEditorMount 이식
+        function _mountEditor() {
+            var src = document.getElementById('embeddedEditorPreview');
+            var dst = document.getElementById('soEmbeddedEditorMount');
+            if (!src || !dst) return false;
+            if (dst.contains(src)) return true;
+            _origParent = src.parentNode;
+            _origNextSibling = src.nextSibling;
+            dst.appendChild(src);
+            return true;
+        }
+
+        function _unmountEditor() {
+            var src = document.getElementById('embeddedEditorPreview');
+            if (!src || !_origParent) return;
+            if (_origNextSibling && _origParent.contains(_origNextSibling)) {
+                _origParent.insertBefore(src, _origNextSibling);
+            } else {
+                _origParent.appendChild(src);
+            }
         }
 
         // 셋업 — openSimpleOrderModal 끝부분에서 호출
         window._soQdSetup = function() {
             var sec = document.getElementById('soQuickDesignSec');
             if (!sec) return;
-            var p = state.product;
-            var size = _resolveSize(p);
-            var badge = document.getElementById('soQdSizeBadge');
-            if (badge) badge.textContent = size.w + '×' + size.h + 'mm';
-            sec.style.display = '';
+            var p = state && state.product;
+            if (!p) return;
 
-            // 에디터에서 돌아왔는지 확인 — sessionStorage 에 PNG 있으면 state.file 에 주입
+            _mountEditor();
+
+            var sz = _resolveSize(p);
+            _updateSizeBadge(sz.wMm, sz.hMm);
             try {
-                var savedRaw = sessionStorage.getItem(SS_KEY_DESIGN);
-                if (savedRaw) {
-                    var saved = JSON.parse(savedRaw);
-                    if (saved && saved.code === p.code && saved.png) {
-                        var bin = atob(saved.png.split(',')[1] || saved.png);
-                        var arr = new Uint8Array(bin.length);
-                        for (var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
-                        var blob = new Blob([arr], { type:'image/png' });
-                        var fname = 'editor-design-' + (saved.ts || Date.now()) + '.png';
-                        var file = new File([blob], fname, { type:'image/png' });
-                        state.file = file;
-                        state._cartThumb = saved.png;
-                        if (typeof window.renderUploadDone === 'function') {
-                            try { window.renderUploadDone(fname); } catch(_re){}
-                        }
-                        sessionStorage.removeItem(SS_KEY_DESIGN);
-                        if (typeof recalc === 'function') recalc();
-                        if (typeof showToast === 'function') {
-                            showToast(tr('에디터에서 만든 디자인이 적용되었습니다','エディタのデザインが適用されました','Editor design applied'), 'success');
-                        }
+                if (typeof window._meSetSize === 'function') {
+                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), p.code);
+                    document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
+                        b.classList.remove('active');
+                    });
+                }
+            } catch(_se) { console.warn('[qd setSize]', _se); }
+
+            sec.style.display = '';
+        };
+
+        // "현재 상품 사이즈로 대지 맞추기" 버튼
+        window._soQdApplyProductSize = function() {
+            var p = state && state.product;
+            if (!p) return;
+            var sz = _resolveSize(p);
+            _updateSizeBadge(sz.wMm, sz.hMm);
+            try {
+                if (typeof window._meSetSize === 'function') {
+                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), p.code);
+                    document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
+                        b.classList.remove('active');
+                    });
+                    if (typeof showToast === 'function') {
+                        showToast(tr('상품 사이즈로 대지가 변경되었습니다','商品サイズに変更しました','Canvas resized to product'), 'success');
                     }
                 }
-            } catch (_re) { console.warn('[qd return]', _re); }
+            } catch(_e){}
         };
 
-        // W/H 입력 변경 시 사이즈 배지 갱신 (캔버스는 mainEditor 안에서 관리)
+        // 우측 W/H 입력 변경 시 사이즈 + 대지 동기화
         window._soQdSyncFromCustomDims = function() {
             if (!state || !state.product) return;
-            var badge = document.getElementById('soQdSizeBadge');
-            if (!badge) return;
-            var wCm = state.customW || 9;
-            var hCm = state.customH || 5;
-            badge.textContent = Math.round(wCm * 10) + '×' + Math.round(hCm * 10) + 'mm';
+            var wMm = Math.round((state.customW || 9) * 10);
+            var hMm = Math.round((state.customH || 5) * 10);
+            _updateSizeBadge(wMm, hMm);
+            try {
+                if (typeof window._meSetSize === 'function') {
+                    window._meSetSize(_mmToPx(wMm), _mmToPx(hMm), state.product.code);
+                }
+            } catch(_e){}
         };
 
-        // "디자인 에디터에서 제작" 버튼 클릭 — return-flow flag 세팅 후 mainEditor 진입
-        window._soOpenEditorWithReturn = function() {
-            var p = state && state.product;
-            if (!p || !p.code) return;
-            // 복귀 flag — mainEditor 가 "디자인 완료 → 주문 계속" 버튼을 띄우는 트리거
+        // "디자인 완료 · 적용" — stage → PNG → state.file
+        window._soQdApplyDesign = async function() {
+            var btn = document.getElementById('soQdApplyBtn');
             try {
-                sessionStorage.setItem('qd_return_to_product', p.code);
-            } catch(_e){}
-            // 기존 _soOpenEditor 사용 (이미 동작하는 진입 경로)
-            if (typeof window._soOpenEditor === 'function') window._soOpenEditor();
+                if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px;"></i>' + tr('처리 중...','処理中...','Processing...'); }
+                var dataUrl = null;
+                if (typeof window._meExportPNG === 'function') {
+                    dataUrl = await window._meExportPNG();
+                }
+                if (!dataUrl) {
+                    if (typeof showToast === 'function') showToast(tr('대지에 디자인 요소를 추가해주세요','デザイン要素を追加してください','Add design elements first'), 'warn');
+                    return;
+                }
+                var bin = atob(dataUrl.split(',')[1]);
+                var arr = new Uint8Array(bin.length);
+                for (var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+                var blob = new Blob([arr], { type:'image/png' });
+                var fname = 'inline-design-' + Date.now() + '.png';
+                var file = new File([blob], fname, { type:'image/png' });
+                state.file = file;
+                state._cartThumb = dataUrl;
+                if (typeof window.renderUploadDone === 'function') {
+                    try { window.renderUploadDone(fname); } catch(_re){}
+                }
+                if (typeof recalc === 'function') recalc();
+                if (typeof showToast === 'function') showToast(tr('디자인이 주문에 적용되었습니다','デザインが注文に適用されました','Design applied to order'), 'success');
+            } catch(e) {
+                console.error('[qd apply]', e);
+                if (typeof showToast === 'function') showToast(tr('적용 중 오류 발생','エラーが発生しました','Error applying design'), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle" style="margin-right:6px;"></i>' + tr('디자인 완료 · 주문에 적용', 'デザイン完了・注文に適用', 'Use this design'); }
+            }
+        };
+
+        // closeSimpleOrderModal 에서 호출
+        window._soQdUnmount = function() {
+            try { _unmountEditor(); } catch(_e){}
         };
     })();
 
     window.closeSimpleOrderModal = function() {
         const m = document.getElementById('simpleOrderModal');
         if (m) m.classList.remove('open');
+        // 2026-06-14: 미니에디터를 메인 페이지로 복귀
+        try { if (typeof window._soQdUnmount === 'function') window._soQdUnmount(); } catch(_que){}
         // 2026-05-30: 리뷰 섹션 ID 정리 — 닫은 후 다른 흐름(loadProductDetailAndOpen)에서 #reviewList 등 중복 충돌 방지
         var rvBody = document.getElementById('soReviewBody');
         if (rvBody) rvBody.innerHTML = '';
