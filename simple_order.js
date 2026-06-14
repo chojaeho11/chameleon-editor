@@ -13724,6 +13724,7 @@ html, body { background: #ffffff !important; }
 
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
         // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4 (Math.ceil(qty/10) 폐기)
+        //             + 디자인 의뢰비 (it.designRequest.total) 포함 — early-return 이라 outer base+= 분기 안 탐.
         var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
         if (_isLfItm) {
             var _lfQ = qty || 1;
@@ -13739,6 +13740,9 @@ html, body { background: #ffffff !important; }
                     var _lfFnItm = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (_lfFnItm) _lfSubItm += _lfFnItm.price * _lfOptMultItm;
                 });
+            }
+            if (it.designRequest && it.designRequest.total) {
+                _lfSubItm += (it.designRequest.total || 0);
             }
             return _lfSubItm;
         }
