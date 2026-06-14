@@ -622,6 +622,24 @@ html, body { background: #ffffff !important; }
 #soQdLibPopup .qd-lib-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
 #soQdLibPopup .qd-lib-loading { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6366f1; font-size: 14px; font-weight: 700; }
 #soQdLibPopup .qd-lib-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 13px; }
+/* 5 cols PC × 2 rows = 10 / 2 cols mobile × 5 rows = 10 */
+#soQdLibPopup #soQdLibGrid { grid-template-columns: repeat(5, 1fr) !important; }
+@media (max-width: 768px) {
+    #soQdLibPopup #soQdLibGrid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+/* 페이지네이션 버튼 */
+#soQdLibPopup #soQdLibPager { display: flex !important; }
+#soQdLibPopup #soQdLibPager.hidden { display: none !important; }
+#soQdLibPopup .qd-lib-pager-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #f1f5f9; border: 1.5px solid #e2e8f0; color: #475569;
+    cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-family: inherit;
+}
+#soQdLibPopup .qd-lib-pager-btn:hover:not(:disabled) {
+    background: #6366f1; color: #fff; border-color: #6366f1;
+}
+#soQdLibPopup .qd-lib-pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 @media (max-width: 768px) {
     .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
@@ -2735,9 +2753,15 @@ html, body { background: #ffffff !important; }
       <button type="button" id="soQdLibTabDc" class="qd-lib-tab" onclick="window._soQdLibSwitch('decoration')"><i class="fa-solid fa-star"></i> ${tr('장식','装飾','Decorations')}</button>
       <input type="search" id="soQdLibSearch" placeholder="${tr('검색','検索','Search')}" oninput="window._soQdLibSearch && window._soQdLibSearch(this.value)" style="flex:1; min-width:140px; margin-left:auto; padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
     </div>
-    <!-- 그리드 -->
-    <div id="soQdLibGrid" style="flex:1; overflow-y:auto; padding:16px 24px; display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; align-content:start;">
+    <!-- 그리드 (PC 5열 × 2행 = 10장, 모바일 2열 × 5행 = 10장) -->
+    <div id="soQdLibGrid" style="flex:1; overflow-y:auto; padding:16px 24px; display:grid; gap:10px; align-content:start;">
       <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8; font-size:13px;">${tr('탭을 선택해주세요','タブを選択','Select a tab')}</div>
+    </div>
+    <!-- 페이지네이션 -->
+    <div id="soQdLibPager" style="display:none; padding:12px 24px; border-top:1px solid #f1f5f9; align-items:center; justify-content:center; gap:14px;">
+      <button type="button" id="soQdLibPrev" class="qd-lib-pager-btn" onclick="window._soQdLibPage && window._soQdLibPage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+      <span id="soQdLibPageInfo" style="font-size:13px; font-weight:800; color:#475569; min-width:60px; text-align:center;">1 / 1</span>
+      <button type="button" id="soQdLibNext" class="qd-lib-pager-btn" onclick="window._soQdLibPage && window._soQdLibPage(1)"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
   </div>
 </div>
@@ -11470,9 +11494,11 @@ html, body { background: #ffffff !important; }
         };
 
         // 라이브러리 팝업 — Supabase 의 library 테이블에서 fetch (mainEditor 와 동일 소스)
-        var _libCache = { template: null, element: null, decoration: null };
         var _libActiveTab = 'template';
         var _libSearchDebounce = null;
+        var _libCurrentItems = [];   // 현재 탭/검색의 전체 items
+        var _libCurrentPage = 0;     // 0-based
+        var _LIB_PER_PAGE = 10;
 
         // 탭별 카테고리 매핑 (mainEditor filterTpl 과 동일)
         var _LIB_CATEGORIES = {
@@ -11504,13 +11530,23 @@ html, body { background: #ffffff !important; }
                                             : tr('장식','装飾','Decorations'));
             var search = document.getElementById('soQdLibSearch');
             if (search) search.value = '';
-            _renderLibGrid('');
+            _loadLibItems('');
         };
 
         // 검색 (디바운스)
         window._soQdLibSearch = function(q) {
             if (_libSearchDebounce) clearTimeout(_libSearchDebounce);
-            _libSearchDebounce = setTimeout(function(){ _renderLibGrid(q || ''); }, 250);
+            _libSearchDebounce = setTimeout(function(){ _loadLibItems(q || ''); }, 250);
+        };
+
+        // 페이지 변경 (-1 prev / +1 next)
+        window._soQdLibPage = function(delta) {
+            var maxPage = Math.max(0, Math.ceil(_libCurrentItems.length / _LIB_PER_PAGE) - 1);
+            var p = _libCurrentPage + (delta || 0);
+            if (p < 0) p = 0;
+            if (p > maxPage) p = maxPage;
+            _libCurrentPage = p;
+            _renderCurrentPage();
         };
 
         async function _fetchLib(tab, search) {
@@ -11522,28 +11558,55 @@ html, body { background: #ffffff !important; }
                     .select('id, thumb_url, category, tags')
                     .in('category', cats)
                     .order('created_at', { ascending: false })
-                    .limit(80);
+                    .limit(200);
                 if (search && search.trim()) q = q.ilike('tags', '%' + search.trim() + '%');
                 var r = await q;
                 return (r && r.data) || [];
             } catch(e) { console.warn('[qd lib fetch]', e); return []; }
         }
 
-        async function _renderLibGrid(search) {
+        async function _loadLibItems(search) {
             var grid = document.getElementById('soQdLibGrid');
+            var pager = document.getElementById('soQdLibPager');
+            if (grid) grid.innerHTML = '<div class="qd-lib-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('불러오는 중...','読み込み中...','Loading...') + '</div>';
+            if (pager) pager.classList.add('hidden');
+            _libCurrentItems = await _fetchLib(_libActiveTab, search);
+            _libCurrentPage = 0;
+            _renderCurrentPage();
+        }
+
+        function _renderCurrentPage() {
+            var grid = document.getElementById('soQdLibGrid');
+            var pager = document.getElementById('soQdLibPager');
+            var pageInfo = document.getElementById('soQdLibPageInfo');
+            var prevBtn = document.getElementById('soQdLibPrev');
+            var nextBtn = document.getElementById('soQdLibNext');
             if (!grid) return;
-            grid.innerHTML = '<div class="qd-lib-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('불러오는 중...','読み込み中...','Loading...') + '</div>';
-            var items = await _fetchLib(_libActiveTab, search);
-            if (!items.length) {
+            if (!_libCurrentItems.length) {
                 grid.innerHTML = '<div class="qd-lib-empty">' + tr('결과가 없습니다','見つかりませんでした','No results') + '</div>';
+                if (pager) pager.classList.add('hidden');
                 return;
             }
-            grid.innerHTML = items.map(function(it){
+            var totalPages = Math.ceil(_libCurrentItems.length / _LIB_PER_PAGE);
+            var start = _libCurrentPage * _LIB_PER_PAGE;
+            var pageItems = _libCurrentItems.slice(start, start + _LIB_PER_PAGE);
+            grid.innerHTML = pageItems.map(function(it){
                 var url = (it.thumb_url || '').replace(/"/g, '&quot;');
                 return '<div class="qd-lib-thumb" onclick="window._soQdLibPick(&quot;' + url + '&quot;)">' +
                        '<img src="' + url + '" loading="lazy" onerror="this.style.opacity=0.3">' +
                        '</div>';
             }).join('');
+            // 페이지네이션 표시
+            if (pager) {
+                if (totalPages > 1) {
+                    pager.classList.remove('hidden');
+                    if (pageInfo) pageInfo.textContent = (_libCurrentPage + 1) + ' / ' + totalPages;
+                    if (prevBtn) prevBtn.disabled = (_libCurrentPage === 0);
+                    if (nextBtn) nextBtn.disabled = (_libCurrentPage >= totalPages - 1);
+                } else {
+                    pager.classList.add('hidden');
+                }
+            }
         }
 
         // 썸네일 클릭 → 미니에디터 캔버스에 추가 + 팝업 닫기
