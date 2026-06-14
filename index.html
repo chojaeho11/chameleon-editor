@@ -21815,6 +21815,19 @@ if (w >= 20 && h >= 20) {
         var _isGovPostpaid = !!opts.govPostpaid;
         var sb = window.sb || window.supabaseClient;
         if (!sb) { alert('연결 오류 — 잠시 후 다시 시도해주세요'); return; }
+        // 2026-06-14: design_requests RLS 가 auth.uid()=customer_id 를 요구 — 비로그인 상태면 로그인 모달 띄우고 중단.
+        try {
+            var _ses = await sb.auth.getSession();
+            if (!_ses || !_ses.data || !_ses.data.session || !_ses.data.session.user) {
+                alert('의뢰 등록은 로그인 후 가능합니다. 로그인 창이 열립니다.');
+                try {
+                    window.closeDesignRequestPopup();
+                    var _lm = document.getElementById('loginModal');
+                    if (_lm) _lm.style.display = 'flex';
+                } catch (e) {}
+                return;
+            }
+        } catch (e) { console.warn('[design-req auth check]', e); }
         var btn = _isGovPostpaid ? $('dreqSubmitGovBtn') : $('dreqSubmitBtn');
         var desc = $('dreqDesc').value.trim();
         var name = $('dreqName').value.trim();
