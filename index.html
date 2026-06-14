@@ -6734,17 +6734,41 @@ function scrollHotdeal(gridId, dir) {
             if (ev.target === me.stage) ev.preventDefault();
         });
         // Delete/Backspace 키 → 선택 항목 삭제 (텍스트 편집 중·input 포커스 중에는 무시)
+        // 2026-06-14: 방향키 → 선택 항목 미세 이동 (1px / Shift 10px)
         document.addEventListener('keydown', function(ev){
-            if (ev.key !== 'Delete' && ev.key !== 'Backspace') return;
-            if (!me.selected) return;
+            // 입력 중에는 모든 단축키 무시
             var ae = document.activeElement;
             if (ae) {
                 var tag = (ae.tagName || '').toLowerCase();
                 if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
                 if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return;
             }
+            if (!me.selected) return;
+            // 삭제
+            if (ev.key === 'Delete' || ev.key === 'Backspace') {
+                ev.preventDefault();
+                _meRemove(me.selected);
+                return;
+            }
+            // 방향키 — 미세 이동. Shift 시 10px. 자연 좌표계(natW/natH)에서 이동.
+            var isArrow = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(ev.key) >= 0;
+            if (!isArrow) return;
             ev.preventDefault();
-            _meRemove(me.selected);
+            var step = ev.shiftKey ? 10 : 1;
+            // me.wScale 가 display→natural 변환이므로 자연 단위는 step 그대로 적용 OK.
+            //   step 은 display px 기준 — natural px 로 환산해 저장.
+            var stepNat = step / (me.wScale || 1);
+            var it = me.selected;
+            switch (ev.key) {
+                case 'ArrowUp':    it.y -= stepNat; break;
+                case 'ArrowDown':  it.y += stepNat; break;
+                case 'ArrowLeft':  it.x -= stepNat; break;
+                case 'ArrowRight': it.x += stepNat; break;
+            }
+            // 캔버스 밖으로 나가지 않게 clamp (절반은 밖 허용 — 의도적 배치 가능)
+            it.x = Math.max(-it.w * 0.5, Math.min(me.natW - it.w * 0.5, it.x));
+            it.y = Math.max(-it.h * 0.5, Math.min(me.natH - it.h * 0.5, it.y));
+            _meSyncItemDisplay(it);
         });
         _meFitStage();
         window.addEventListener('resize', _meFitStage);
@@ -11170,7 +11194,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=426"></script>
+<script src="/simple_order.js?v=427"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
