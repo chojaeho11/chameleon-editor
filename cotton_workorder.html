@@ -78,11 +78,124 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
 @media print {
     body { background:#fff; padding:0; }
     .toolbar { display:none !important; }
-    .sheet { box-shadow:none; width:100%; min-height:auto; padding:20mm; }
+    .sheet { box-shadow:none; width:100%; min-height:auto; padding:20mm; background:transparent; }
+    /* 2026-06-15: 헤더 1장 + 항목 1건당 1장. workorder.html 과 동일 패턴. */
+    .item, .screen-page {
+        page-break-before: always;
+        break-before: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow:none !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:transparent !important;
+    }
+    .screen-page:first-child { page-break-before: avoid; break-before: avoid; }
+    .summary,
+    #woAdminNote,
+    .foot {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    .foot { display: none !important; }
+    /* 인쇄 데이터 다운로드 모달은 인쇄 결과에 안 나오게 */
+    #cwComposeModal { display: none !important; }
+}
+/* 2026-06-15: 화면에서도 인쇄와 같은 시트별 분리 시각화 */
+@media screen {
+    body.wo-paged { background:#d6d3d1; padding:30px 0; }
+    body.wo-paged .sheet {
+        background:transparent !important;
+        box-shadow:none !important;
+        padding:0 !important;
+        width:794px;
+        min-height:auto;
+    }
+    body.wo-paged .screen-page {
+        background:#fff;
+        width:794px;
+        min-height:1123px;
+        padding:30px 38px;
+        margin:0 auto 24px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.12);
+        box-sizing:border-box;
+        position:relative;
+    }
+    body.wo-paged .screen-page::after {
+        content:attr(data-page-label);
+        position:absolute;
+        top:-22px;
+        right:0;
+        font-size:11px;
+        font-weight:700;
+        color:#6b7280;
+        letter-spacing:0.5px;
+    }
+    body.wo-paged .item {
+        border:1px solid #d1d5db;
+        margin-bottom:0;
+    }
+    body.wo-paged .item-body {
+        grid-template-columns: 1fr !important;
+    }
+    body.wo-paged .item-thumb {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 1/1 !important;
+        max-width: 420px !important;
+        margin: 0 auto !important;
+    }
 }
 @media (max-width:820px) {
     .sheet { width:100%; padding:20px; }
 }
+/* 2026-06-15: 인쇄 데이터 미리보기 + 다운로드 버튼 (항목별) */
+.cw-item-actions {
+    grid-column:1/-1;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed #d1d5db;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+}
+.cw-preview-box {
+    width:100%;
+    max-width:520px;
+    aspect-ratio:1.3/1;
+    background:repeating-conic-gradient(#f3f4f6 0% 25%, #fff 0% 50%) 0 0/12px 12px;
+    border:1.5px solid #d1d5db;
+    border-radius:8px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    min-height:160px;
+}
+.cw-preview-box img { width:100%; height:100%; object-fit:contain; background:#fff; }
+.cw-preview-box .cw-preview-empty { color:#9ca3af; font-size:12px; font-weight:600; text-align:center; padding:14px; }
+.cw-preview-box .cw-preview-loading { color:#7c3aed; font-size:12px; font-weight:700; }
+.cw-action-btns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.cw-action-btns button {
+    padding:8px 16px;
+    background:linear-gradient(135deg,#7c3aed,#5b21b6);
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    font-family:inherit;
+    box-shadow:0 2px 6px -2px rgba(124,58,237,0.55);
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+.cw-action-btns button[disabled] { background:#e5e7eb; color:#9ca3af; cursor:not-allowed; box-shadow:none; }
+.cw-action-btns button.cw-btn-secondary { background:#fff; color:#7c3aed; border:1.5px solid #c4b5fd; box-shadow:none; }
+@media print { .cw-item-actions .cw-action-btns { display:none !important; } }
 </style>
 </head>
 <body>
@@ -407,6 +520,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const opts = addonGroupHtml(it.addons);
             const pinfo = patternSpecHtml(it.pattern_spec);
             const oversize = (it.width_cm && it.width_cm > 130) ? '<div class="warn-strip"><i class="fa-solid fa-triangle-exclamation"></i> 대폭 130cm 초과 — 이어박기 필수</div>' : '';
+            const hasArt = !!(it.artwork_url || (it.pattern_spec && it.pattern_spec.artwork_url));
             return `<div class="item">
                 <div class="item-head">
                     <div class="name">${i+1}. ${it.product_name || it.fabric || '제작 항목'}</div>
@@ -430,9 +544,29 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     ${oversize}
                     ${pinfo}
                     <div class="opt-grid">${opts || '<div class="opt-empty" style="grid-column:1/-1;">옵션 정보 없음</div>'}</div>
+                    <div class="cw-item-actions">
+                        <div class="cw-preview-box" data-cw-idx="${i}">
+                            ${hasArt
+                                ? '<div class="cw-preview-loading"><i class="fa-solid fa-spinner fa-spin"></i> 미리보기 생성 중…</div>'
+                                : '<div class="cw-preview-empty">아트워크 미첨부 — 위 썸네일에서 파일 첨부</div>'}
+                        </div>
+                        <div class="cw-action-btns">
+                            <button type="button" onclick="window._cwComposeOne(${i}, this)" ${hasArt ? '' : 'disabled'}>
+                                <i class="fa-solid fa-download"></i> 인쇄 데이터 다운로드 (고화질)
+                            </button>
+                            <button type="button" class="cw-btn-secondary" onclick="window._cwRegenPreview(${i}, this)" ${hasArt ? '' : 'disabled'}>
+                                <i class="fa-solid fa-rotate"></i> 미리보기 새로고침
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>`;
         }).join('');
+
+        // 2026-06-15: 항목별 미리보기 자동 생성 (저해상도). 끝나고 페이지 분할 적용.
+        try { await _cwAutoPreviewAll(); } catch (e) { console.warn('[cw preview]', e); }
+        // 2026-06-15: 헤더 1장 + 항목별 1장 페이지 분할 (workorder.html 와 동일)
+        try { _woApplyPaged(); } catch (e) { console.warn('[cw paged]', e); }
 
     } catch (e) {
         document.getElementById('loading').innerHTML = '<div style="color:#dc2626;">오류: '+e.message+'</div>';
@@ -644,6 +778,82 @@ window._cwComposeOne = async function(idx, btn) {
         if (btn) { btn.disabled = false; btn.textContent = oldText; btn.style.opacity = '1'; }
     }
 };
+
+// 2026-06-15: 항목별 미리보기 (저해상도) 자동 생성 — 페이지 로드 시 호출.
+async function _cwAutoPreviewAll() {
+    const items = window._woItems || [];
+    for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const box = document.querySelector('.cw-preview-box[data-cw-idx="'+i+'"]');
+        if (!box) continue;
+        if (!(it && (it.artwork_url || (it.pattern_spec && it.pattern_spec.artwork_url)))) continue;
+        try {
+            const info = await _cwComposeItemCanvas(it, 30); // 30 DPI 미리보기
+            const dataUrl = info.canvas.toDataURL('image/png');
+            box.innerHTML = '<img src="'+dataUrl+'" alt="preview '+(i+1)+'">';
+        } catch (e) {
+            console.warn('[cw preview]', i, e);
+            box.innerHTML = '<div class="cw-preview-empty">미리보기 생성 실패: '+(e.message||e)+'</div>';
+        }
+    }
+}
+
+window._cwRegenPreview = async function(idx, btn) {
+    const items = window._woItems || [];
+    const it = items[idx];
+    if (!it) return;
+    const box = document.querySelector('.cw-preview-box[data-cw-idx="'+idx+'"]');
+    if (!box) return;
+    const old = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 생성 중…'; }
+    box.innerHTML = '<div class="cw-preview-loading"><i class="fa-solid fa-spinner fa-spin"></i> 미리보기 재생성…</div>';
+    try {
+        const info = await _cwComposeItemCanvas(it, 30);
+        box.innerHTML = '<img src="'+info.canvas.toDataURL('image/png')+'" alt="preview '+(idx+1)+'">';
+    } catch (e) {
+        box.innerHTML = '<div class="cw-preview-empty">실패: '+(e.message||e)+'</div>';
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = old; }
+    }
+};
+
+// 2026-06-15: workorder.html 와 동일 — .sheet 자식들을 페이지 단위로 재구성.
+function _woApplyPaged() {
+    const sheet = document.getElementById('sheet');
+    if (!sheet || document.body.classList.contains('wo-paged')) return;
+    const itemList = document.getElementById('woItemList');
+    if (!itemList) return;
+    const itemSection = itemList.closest('.section');
+    if (!itemSection) return;
+
+    const allChildren = Array.from(sheet.children);
+    const itemSectionIdx = allChildren.indexOf(itemSection);
+    const headerEls = allChildren.slice(0, itemSectionIdx);
+    const trailingEls = allChildren.slice(itemSectionIdx + 1);
+    const items = Array.from(itemList.children);
+    const total = 1 + items.length;
+
+    const headerPage = document.createElement('div');
+    headerPage.className = 'screen-page';
+    headerPage.dataset.pageLabel = 'Page 1 / ' + total;
+    headerEls.forEach(el => headerPage.appendChild(el));
+    const titleEl = itemSection.querySelector('.section-title');
+    if (titleEl) headerPage.appendChild(titleEl);
+    trailingEls.forEach(el => headerPage.appendChild(el));
+
+    const itemPages = items.map(function(item, i){
+        const p = document.createElement('div');
+        p.className = 'screen-page';
+        p.dataset.pageLabel = 'Page ' + (i + 2) + ' / ' + total + ' · 제작 항목 ' + (i + 1);
+        p.appendChild(item);
+        return p;
+    });
+
+    sheet.innerHTML = '';
+    sheet.appendChild(headerPage);
+    itemPages.forEach(p => sheet.appendChild(p));
+    document.body.classList.add('wo-paged');
+}
 
 window._cwComposeAll = async function() {
     const items = window._woItems || [];
