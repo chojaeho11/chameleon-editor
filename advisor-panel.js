@@ -759,11 +759,34 @@ function openPanel() {
     if (!panelEl) return;
     if (panelEl.style.display === 'flex') return;
     panelEl.style.display = 'flex';
-    // 2026-06-14: 모바일은 풀스크린 인라인 강제 (CSS @media 가 외부 스타일에 override 당하던 케이스 대응)
+    // 2026-06-14: 모바일은 풀스크린 강제 — setProperty 로 각 속성 !important 명시.
+    //   CSS .advisor-panel 의 bottom:90px / right:20px / width:420px 가 inline cssText 합산 시
+    //   브라우저 파싱에 따라 override 안 되는 케이스 보호.
     try {
         if (window.innerWidth <= 768) {
-            panelEl.style.cssText += ';position:fixed !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;width:100% !important;height:100% !important;max-height:100vh !important;max-width:100vw !important;border-radius:0 !important;margin:0 !important;z-index:1000000 !important;';
+            // body 직속이 아니면 body 로 이동 (ancestor transform/contain 영향 차단)
+            if (panelEl.parentNode !== document.body) {
+                try { document.body.appendChild(panelEl); } catch(_e){}
+            }
+            // 모든 위치/크기 inline 제거 후 풀스크린 재설정
+            var ps = panelEl.style;
+            ['top','left','right','bottom','width','height','max-width','max-height','border-radius','margin','transform'].forEach(function(prop){
+                try { ps.removeProperty(prop); } catch(_e){}
+            });
+            ps.setProperty('position', 'fixed', 'important');
+            ps.setProperty('top', '0', 'important');
+            ps.setProperty('left', '0', 'important');
+            ps.setProperty('right', '0', 'important');
+            ps.setProperty('bottom', '0', 'important');
+            ps.setProperty('width', '100vw', 'important');
+            ps.setProperty('height', '100vh', 'important');
+            ps.setProperty('max-width', '100vw', 'important');
+            ps.setProperty('max-height', '100vh', 'important');
+            ps.setProperty('border-radius', '0', 'important');
+            ps.setProperty('margin', '0', 'important');
+            ps.setProperty('z-index', '2147483647', 'important');  // max int z-index
             document.body.style.overflow = 'hidden';
+            panelEl.classList.add('adv-mobile-full');
         }
     } catch(e) {}
     buildPanelUI();
