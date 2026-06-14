@@ -21904,38 +21904,47 @@ if (w >= 20 && h >= 20) {
             if (state.onSuccess) {
                 try { state.onSuccess({ requestId: requestId, product: state.product || category, unitPrice: unitPrice, qty: qty, total: total }); } catch (e) { console.warn('[onSuccess cb]', e); }
             } else {
-                // 단독 팝업: 디자인비를 카트에 추가하고 카트(결제) 화면으로 이동.
-                //   /design-market 의 gig purchase 가 쓰는 동일 패턴 (category:'design_fee', _designRequestId).
+                // 2026-06-14: 단독 팝업 — 카트 우회. orders 행 즉시 생성 → KR 은 Toss, JP/US 는 Stripe 결제 화면으로 직행.
+                //   결제 성공 시 success.html 의 dm_pending_design_requests 처리기가 design_requests.status 를 'open' 으로 flip.
                 try {
-                    var _cartKey = 'chameleon_cart_current';
-                    var _cart = JSON.parse(localStorage.getItem(_cartKey) || '[]');
-                    var _shortId = String(requestId || Date.now()).replace(/-/g, '').substring(0, 12);
-                    _cart.push({
-                        uid: Date.now(),
-                        product: {
-                            code: 'design_fee_req_' + _shortId,
+                    var _site = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toString().toUpperCase();
+                    var _siteCode = (_site === 'JP') ? 'JP' : (_site === 'US' ? 'US' : 'KR');
+                    var _orderRow = {
+                        order_date: new Date().toISOString(),
+                        manager_name: name,
+                        phone: phone,
+                        address: '디자인의뢰 - 배송불필요',
+                        request_note: '[디자인의뢰 #' + requestId + '] ' + category + ' / ' + name + ' / ' + phone,
+                        status: '임시작성',
+                        payment_status: '미결제',
+                        payment_method: '카드',
+                        total_amount: total,
+                        discount_amount: 0,
+                        items: [{
                             name: '[디자인의뢰] ' + title,
-                            name_jp: '[Design Request] ' + title,
-                            name_us: '[Design Request] ' + title,
                             price: total,
-                            price_jp: Math.round(total * 0.1),
-                            price_us: Math.round(total * 0.001 * 100) / 100,
-                            img: '',
+                            qty: 1,
                             category: 'design_fee',
-                            addons: [],
-                            w: 0, h: 0, w_mm: 0, h_mm: 0
-                        },
-                        type: 'product_only',
-                        fileName: '', thumb: '', json: null,
-                        width: 0, height: 0, isOpen: false,
-                        qty: 1,
-                        selectedAddons: {},
-                        addonQuantities: {},
-                        _designRequestId: requestId
-                    });
-                    localStorage.setItem(_cartKey, JSON.stringify(_cart));
-                } catch (eC) { console.warn('[design-req cart push]', eC); }
-                location.href = '/?open_cart=1';
+                            design_request_id: requestId,
+                            _designRequestId: requestId
+                        }],
+                        site_code: _siteCode
+                    };
+                    var _ordIns = await sb.from('orders').insert(_orderRow).select('id').single();
+                    if (_ordIns.error) throw _ordIns.error;
+                    var _orderId = _ordIns.data && _ordIns.data.id;
+                    // PG 다이렉트 — design-pay.html / cotton_checkout 동일 패턴
+                    if (_siteCode === 'JP') {
+                        location.href = '/cotton_stripe_checkout.html?order_id=' + _orderId + '&lang=ja';
+                    } else if (_siteCode === 'US') {
+                        location.href = '/cotton_stripe_checkout.html?order_id=' + _orderId + '&lang=en';
+                    } else {
+                        location.href = '/cotton_checkout.html?order_id=' + _orderId;
+                    }
+                } catch (ePg) {
+                    console.error('[design-req PG redirect]', ePg);
+                    alert('결제 화면 이동 실패: ' + (ePg && ePg.message ? ePg.message : '알 수 없는 오류') + '\n다시 시도해주세요.');
+                }
             }
         } catch (e) {
             console.error('[submitDesignRequest]', e);
