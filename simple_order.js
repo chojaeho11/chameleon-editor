@@ -2008,6 +2008,11 @@ html, body { background: #ffffff !important; }
             🎉 ${tr('100장 이상 주문 시 30% 할인', '100枚以上で 30%割引', '30% off · 100+ pcs')}
             <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 100개 이상 입력하면 자동 적용', '100枚以上で自動適用', 'Auto-applied at qty 100+')}</div>
           </button>
+          <!-- 2026-06-14: 어깨띠 전용 안내 — flat 1000원/개, 고정 사이즈, 무료배송 -->
+          <div id="soShoulderSashNotice" style="display:none; width:100%; padding:14px 16px; background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; border-radius:14px; font-size:14px; font-weight:900; line-height:1.5; box-shadow:0 8px 20px -8px rgba(99,102,241,0.5);">
+            ${tr('✨ 어깨띠 — 12 × 180cm 고정', '✨ タスキ — 12 × 180cm 固定', '✨ Shoulder sash — 12 × 180cm fixed')}
+            <div style="font-size:12.5px; font-weight:700; margin-top:5px; opacity:0.95;">${tr('1,000원 / 개 · 무료배송', '1,000원 / 個 · 送料無料', '1,000 KRW / pc · Free shipping')}</div>
+          </div>
         </div>
 
         <!-- 2026-05-13: 사이즈 입력 → 면적 × 단가 자동계산 (현수막·실사출력 등) -->
@@ -9408,6 +9413,13 @@ html, body { background: #ffffff !important; }
         if (state.isMiniBanner && p) {
             p.price = 1000;
         }
+        // 2026-06-14: 어깨띠 (45645656) — flat 1,000원/개, 사이즈 고정 12×180cm, 무료배송.
+        state.isShoulderSash = (p && p.code === '45645656');
+        if (state.isShoulderSash && p) {
+            p.price = 1000;
+            state.customW = 12;
+            state.customH = 180;
+        }
         // 2026-06-01: 허니콤배너 (hb_bn_*) — 단순 흐름: 단면 55K / 양면 80K, 사이즈/할인/큐 UI 모두 비활성.
         //   (hb_bn 그 자체가 기본 배너인 경우만 — 거치대 없는 별도 배너 출력물은 위에서 따로 처리)
         // 2026-06-13: 디자인 의뢰 배너 — 명함/전단/배너/가벽/글씨포토존만 KR 사이트에 노출
@@ -9972,6 +9984,11 @@ html, body { background: #ffffff !important; }
             var _isPlacardKeep = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
             state.isCustomSize = _isPlacardKeep ? true : false;
         }
+        // 2026-06-14: 어깨띠는 placard family 지만 flat 1000원/개 — 면적 계산 X.
+        if (state.isShoulderSash) {
+            state.isCustomSize = false;
+            state.isAdPrint = false;
+        }
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
         //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
         state.isAcrylicFamily = !!(typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p));
@@ -10302,8 +10319,21 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 할인 안내 (eligible 면)
         // 2026-06-14 fix: 현수막 9종 (placard family) 은 m² 가격이라 W×H 입력 유지.
+        // 2026-06-14: 어깨띠 전용 notice 매 호출마다 reset (다른 상품 진입 시 leak 방지)
+        var _shoulderNoticeEl = document.getElementById('soShoulderSashNotice');
+        if (_shoulderNoticeEl) _shoulderNoticeEl.style.display = 'none';
         var _isPlacardForCustom = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
-        if (state.isBannerOutput && !_isPlacardForCustom) {
+        if (state.isShoulderSash) {
+            // 어깨띠 — custSec 숨김, 보라색 notice 표시
+            if (custSec) custSec.style.display = 'none';
+            var _bdNoticeSS = document.getElementById('soBannerDiscountNotice');
+            var _bdBtn50SS  = document.getElementById('soBannerDiscountBtn50');
+            var _bdBtnMiniSS = document.getElementById('soBannerDiscountBtnMini');
+            if (_bdNoticeSS)  _bdNoticeSS.style.display = '';
+            if (_bdBtn50SS)   _bdBtn50SS.style.display = 'none';
+            if (_bdBtnMiniSS) _bdBtnMiniSS.style.display = 'none';
+            if (_shoulderNoticeEl) _shoulderNoticeEl.style.display = '';
+        } else if (state.isBannerOutput && !_isPlacardForCustom) {
             if (custSec) custSec.style.display = 'none';
             var _bdNotice = document.getElementById('soBannerDiscountNotice');
             var _bdBtn50  = document.getElementById('soBannerDiscountBtn50');
@@ -10877,12 +10907,17 @@ html, body { background: #ffffff !important; }
         // 2026-06-09: 등신대/스카시도 시공 옵션 노출 — 가벽 없이 단독 시공 요청 가능. isInstallEligible 로 통합 판정.
         var _isHbFreeShip = state.isHoneycomb && !state.isInstallEligible;
         // 2026-06-12: 배너 family (거치대 포함/미포함 전부) — 시공/배송 옵션 섹션 자체 숨김. 무조건 무료.
-        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput
+        var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput && !state.isShoulderSash
             && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
         if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
             state.shipMethod = 'preset_goods_flat';
+            state.bundleShipping = false;
+        }
+        // 2026-06-14: 어깨띠 무료배송 — shipMethod=self_pickup (fee 0) 강제
+        if (state.isShoulderSash) {
+            state.shipMethod = 'self_pickup';
             state.bundleShipping = false;
         }
         // 2026-05-13: 카테고리별 ship 버튼 화이트리스트
