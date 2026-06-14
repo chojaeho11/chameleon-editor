@@ -6336,17 +6336,13 @@ function scrollHotdeal(gridId, dir) {
     window._meAddImage = function(src, opts) {
         opts = opts || {};
         if (!src) { console.warn('[_meAddImage] empty src'); return; }
+        // src 가 거대한 dataURL 일 수 있어 로그는 짧게 (80자 + 길이)
+        var _logSrc = (src.length > 200) ? src.slice(0, 80) + '... [' + src.length + ' chars]' : src;
         var im = new Image();
-        im.crossOrigin = 'anonymous';
+        // 2026-06-14: crossOrigin 제거 — Supabase 가 anonymous CORS 응답 없어서 silent fail.
+        //   export 시 tainted canvas 가능성 있지만 display 우선.
         im.onerror = function() {
-            console.warn('[_meAddImage] load failed:', src);
-            // CORS fallback — try without crossOrigin
-            var im2 = new Image();
-            im2.onload = function(){ _placeImageOnStage(im2, src, opts); };
-            im2.onerror = function(){
-                if (typeof window.showToast === 'function') window.showToast('이미지 로드 실패', 'error');
-            };
-            im2.src = src;
+            console.warn('[_meAddImage] load failed:', _logSrc);
         };
         im.onload = function() { _placeImageOnStage(im, src, opts); };
         im.src = src;
@@ -11130,7 +11126,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=418"></script>
+<script src="/simple_order.js?v=419"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
