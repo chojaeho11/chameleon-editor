@@ -10988,6 +10988,8 @@ html, body { background: #ffffff !important; }
             }
         }
         state.shipMethod = defaultShip;
+        // 2026-06-14: 어깨띠 무료배송 — defaultShip 계산이 small_parcel 로 덮는 것 차단 (최종 override).
+        if (state.isShoulderSash) state.shipMethod = 'self_pickup';
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
             b.style.display = (allowed.indexOf(k) >= 0) ? '' : 'none';
