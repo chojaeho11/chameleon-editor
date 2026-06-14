@@ -1140,26 +1140,33 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         ${_woIsAdmin ? `
                         <div>
                             <div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모 (상세) — 위 한 줄 메모와 동기화</div>
-                            <textarea id="woItemMemoBig_${i}" placeholder="제품 관련 자세한 작업 지시사항·주의점 등을 자유롭게 적어주세요" oninput="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value;}})()" onblur="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value; t.dispatchEvent(new Event('blur'));}})()" style="width:100%; min-height:180px; max-height:240px; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-family:inherit; line-height:1.55; background:#fffbeb; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
+                            <textarea id="woItemMemoBig_${i}" placeholder="제품 관련 자세한 작업 지시사항·주의점 등을 자유롭게 적어주세요" oninput="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value;}})()" onblur="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value; t.dispatchEvent(new Event('blur'));}})()" style="width:100%; min-height:200px; max-height:280px; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-family:inherit; line-height:1.55; background:#fffbeb; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
                         </div>
-                        <div>
+                        <div style="display:flex; flex-direction:column; min-height:200px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px; flex-wrap:wrap;">
-                                <div style="font-size:11px; font-weight:800; color:#5b21b6;">🖼️ 참고 이미지 — 작업 참조용</div>
-                                <label style="font-size:11px; font-weight:700; color:#7c3aed; border:1.5px solid #c4b5fd; border-radius:6px; padding:4px 10px; cursor:pointer; background:#faf5ff; white-space:nowrap;">📎 추가<input type="file" multiple accept="image/*" style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
+                                <div style="font-size:11px; font-weight:800; color:#5b21b6;">🖼️ 참고 자료 (이미지 · PDF) — 작업 참조용</div>
+                                <label style="font-size:11px; font-weight:700; color:#7c3aed; border:1.5px solid #c4b5fd; border-radius:6px; padding:4px 10px; cursor:pointer; background:#faf5ff; white-space:nowrap;">📎 추가<input type="file" multiple accept="image/*,application/pdf,.pdf" style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
                             </div>
                             ${(function(){
-                                var imgFiles = _liveAttachments.filter(function(x){
+                                var refFiles = _liveAttachments.filter(function(x){
                                     var t = (x.f.type || '').toLowerCase();
                                     var ex = (x.f.name || '').toLowerCase().split('.').pop();
-                                    return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
+                                    return t.indexOf('image/') === 0 || t.indexOf('pdf') >= 0 ||
+                                           ['png','jpg','jpeg','gif','webp','bmp','pdf'].indexOf(ex) >= 0;
                                 });
-                                if (!imgFiles.length) return '<div style="font-size:11px; color:#9ca3af; padding:14px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:6px; text-align:center; min-height:180px; display:flex; align-items:center; justify-content:center;">참고 이미지가 첨부되면<br>여기에 표시됩니다</div>';
-                                return '<div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
+                                if (!refFiles.length) return '<div style="font-size:11px; color:#9ca3af; padding:14px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:6px; text-align:center; flex:1; display:flex; align-items:center; justify-content:center;">참고 이미지·PDF가 첨부되면<br>여기에 표시됩니다</div>';
+                                return '<div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden; flex:1; align-content:start;">' + refFiles.map(function(x){
+                                    var nm = (x.f.name || '').toLowerCase();
+                                    var tp = (x.f.type || '').toLowerCase();
+                                    var _isPdf = tp.indexOf('pdf') >= 0 || /\.pdf$/.test(nm);
+                                    var _previewHtml = _isPdf
+                                        ? '<embed src="'+esc(x.f.url)+'#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />'
+                                        : '<img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:100%; object-fit:contain; background:#fafafa; display:block;">';
                                     return '<div style="position:relative; background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:3px; display:flex; flex-direction:column; gap:2px; max-height:240px; overflow:hidden;">' +
-                                        '<a href="'+esc(x.f.url)+'" target="_blank" style="display:block; width:100%; height:140px; overflow:hidden; border-radius:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:100%; object-fit:contain; background:#fafafa; display:block;"></a>' +
-                                        '<div style="font-size:9.5px; color:#5b21b6; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+esc(x.f.name||'')+'</div>' +
+                                        '<a href="'+esc(x.f.url)+'" target="_blank" style="display:block; width:100%; height:140px; overflow:hidden; border-radius:4px;">'+_previewHtml+'</a>' +
+                                        '<div style="font-size:9.5px; color:#5b21b6; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+(_isPdf?'📕 ':'')+esc(x.f.name||'')+'</div>' +
                                         '<div style="display:flex; gap:3px; justify-content:center;">' +
-                                            '<label title="교체" style="font-size:9px; font-weight:700; color:#7c3aed; border:1px solid #c4b5fd; border-radius:4px; padding:1px 5px; cursor:pointer; background:#faf5ff;">🔄 교체<input type="file" accept="image/*" style="display:none;" onchange="window._woReplaceItemAttachment('+i+', '+x.fi+', this)"></label>' +
+                                            '<label title="교체" style="font-size:9px; font-weight:700; color:#7c3aed; border:1px solid #c4b5fd; border-radius:4px; padding:1px 5px; cursor:pointer; background:#faf5ff;">🔄 교체<input type="file" accept="image/*,application/pdf,.pdf" style="display:none;" onchange="window._woReplaceItemAttachment('+i+', '+x.fi+', this)"></label>' +
                                             '<button type="button" onclick="window._woDeleteItemAttachment('+i+', '+x.fi+')" title="삭제 (휴지통)" style="font-size:9px; font-weight:700; color:#dc2626; border:1px solid #fca5a5; border-radius:4px; padding:1px 5px; cursor:pointer; background:#fef2f2;">🗑 삭제</button>' +
                                         '</div>' +
                                     '</div>';
@@ -1169,14 +1176,21 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         ` : (_mgrMemoCurrent || _liveAttachments.length > 0 ? `
                         ${_mgrMemoCurrent ? `<div><div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모</div><div style="font-size:12px; color:#451a03; line-height:1.6; white-space:pre-wrap; background:#fffbeb; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px;">${esc(_mgrMemoCurrent)}</div></div>` : '<div></div>'}
                         ${(function(){
-                            var imgFiles = _liveAttachments.filter(function(x){
+                            var refFiles = _liveAttachments.filter(function(x){
                                 var t = (x.f.type || '').toLowerCase();
                                 var ex = (x.f.name || '').toLowerCase().split('.').pop();
-                                return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
+                                return t.indexOf('image/') === 0 || t.indexOf('pdf') >= 0 ||
+                                       ['png','jpg','jpeg','gif','webp','bmp','pdf'].indexOf(ex) >= 0;
                             });
-                            if (!imgFiles.length) return '<div></div>';
-                            return '<div><div style="font-size:11px; font-weight:800; color:#5b21b6; margin-bottom:4px;">🖼️ 참고 이미지</div><div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
-                                return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:3px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:140px; object-fit:contain; background:#fafafa; display:block; border-radius:4px;"></div>';
+                            if (!refFiles.length) return '<div></div>';
+                            return '<div><div style="font-size:11px; font-weight:800; color:#5b21b6; margin-bottom:4px;">🖼️ 참고 자료</div><div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden;">' + refFiles.map(function(x){
+                                var nm = (x.f.name || '').toLowerCase();
+                                var tp = (x.f.type || '').toLowerCase();
+                                var _isPdf = tp.indexOf('pdf') >= 0 || /\.pdf$/.test(nm);
+                                var _previewHtml = _isPdf
+                                    ? '<embed src="'+esc(x.f.url)+'#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:140px;border:none;pointer-events:none;background:#fff;border-radius:4px;" />'
+                                    : '<img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:140px; object-fit:contain; background:#fafafa; display:block; border-radius:4px;">';
+                                return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:3px;">'+_previewHtml+'</div>';
                             }).join('') + '</div></div>';
                         })()}
                         ` : '')}
