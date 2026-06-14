@@ -155,48 +155,45 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
                 <span style="font-size:10px; color:#7f1d1d; font-weight:700;">제품종류 · 견적서 · 완료</span>
             </div>
         </div>
-        <!-- 2026-06-10: 인쇄 데이터 생성 도우미 (Python compose_fabric.py) — 매니저용 -->
+        <!-- 2026-06-10: 인쇄 데이터 생성 도우미. 2026-06-15: Python 폐기 → 브라우저 내 canvas 합성. -->
         <div style="margin-top:12px; padding-top:12px; border-top:1px dashed rgba(220,38,38,0.4); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <button type="button" onclick="window._cwShowComposeCmd()"
                 style="font-size:12px; font-weight:800; color:#fff; background:linear-gradient(135deg,#7c3aed,#5b21b6); border:none; border-radius:7px; padding:8px 16px; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(124,58,237,0.55); display:flex; align-items:center; gap:6px;">
-                🖨️ 인쇄 데이터 생성 명령
+                🖨️ 인쇄 데이터 다운로드
             </button>
             <span style="font-size:11px; color:#6b7280; line-height:1.5;">
-                pattern_spec(셀/레이아웃/배경) + 아트워크 → 출력 사이즈 인쇄 파일 자동 합성 (Python)
+                pattern_spec(셀/레이아웃/배경) + 아트워크 → 출력 사이즈 PNG 자동 생성 (브라우저)
             </span>
         </div>
     </div>
 
-    <!-- 인쇄 데이터 생성 명령 모달 -->
+    <!-- 인쇄 데이터 다운로드 모달 (2026-06-15: Python 폐기, 브라우저 내 canvas 합성) -->
     <div id="cwComposeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:#fff; border-radius:14px; max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <div style="background:#fff; border-radius:14px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
             <div style="padding:18px 22px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:15px; font-weight:900; color:#451a03;">🖨️ 인쇄 데이터 생성 명령 (Python)</div>
+                <div style="font-size:15px; font-weight:900; color:#451a03;">🖨️ 인쇄 데이터 다운로드</div>
                 <button onclick="document.getElementById('cwComposeModal').style.display='none'" style="background:none; border:none; font-size:22px; color:#9ca3af; cursor:pointer;">&times;</button>
             </div>
             <div style="padding:20px 22px;">
-                <div style="font-size:12px; color:#475569; line-height:1.7; margin-bottom:14px;">
-                    아래 명령을 터미널에서 실행하면 작업지시서의 셀 크기·레이아웃·배경색을 적용한 <b>출력 사이즈 인쇄 파일</b>이 자동 생성됩니다.<br>
-                    저장 위치: <code style="background:#fef3c7; padding:2px 6px; border-radius:4px;">tools/cotton_print_compose/output/</code>
+                <div style="font-size:12.5px; color:#475569; line-height:1.7; margin-bottom:14px;">
+                    셀 크기·레이아웃·배경색을 적용한 <b>출력 사이즈 PNG</b> 를 바로 다운로드합니다. 파이썬·설치 필요 없음.
                 </div>
-                <div style="font-size:11px; font-weight:800; color:#451a03; margin-bottom:6px;">📋 1단계 — 최초 1회 (설치)</div>
-                <div style="background:#1e293b; color:#bef264; padding:12px 14px; border-radius:8px; font-family:'SF Mono','Roboto Mono',monospace; font-size:12px; margin-bottom:14px; position:relative;">
-                    <pre style="margin:0; white-space:pre-wrap; overflow-wrap:break-word;">cd tools/cotton_print_compose
-pip install -r requirements.txt</pre>
-                    <button onclick="window._cwCopyCmd('install')" style="position:absolute; top:8px; right:8px; padding:4px 10px; background:#475569; color:#fff; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer;">복사</button>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+                    <label style="font-size:11.5px; color:#451a03; font-weight:700;">해상도(DPI)</label>
+                    <select id="cwComposeDpi" style="padding:5px 10px; border:1.5px solid #c4b5fd; border-radius:6px; font-size:12px; font-weight:700; background:#fff; font-family:inherit;">
+                        <option value="100">100 DPI (빠름·작음)</option>
+                        <option value="150" selected>150 DPI (표준)</option>
+                        <option value="200">200 DPI (고화질)</option>
+                        <option value="300">300 DPI (최고화질·매우 큰 파일)</option>
+                    </select>
+                    <button type="button" onclick="window._cwComposeAll()" style="margin-left:auto; padding:7px 14px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px;">⬇ 전체 다운로드</button>
                 </div>
-                <div style="font-size:11px; font-weight:800; color:#451a03; margin-bottom:6px;">📋 2단계 — 이 주문 인쇄 데이터 생성</div>
-                <div style="background:#1e293b; color:#bef264; padding:12px 14px; border-radius:8px; font-family:'SF Mono','Roboto Mono',monospace; font-size:13px; position:relative;">
-                    <pre id="cwComposeCmdText" style="margin:0; white-space:pre-wrap; overflow-wrap:break-word; font-weight:700;">python compose_fabric.py --order-id <span id="cwComposeOrderId">?</span></pre>
-                    <button onclick="window._cwCopyCmd('main')" style="position:absolute; top:8px; right:8px; padding:4px 10px; background:#7c3aed; color:#fff; border:none; border-radius:5px; font-size:10px; font-weight:700; cursor:pointer;">복사</button>
+                <div id="cwComposeStatus" style="font-size:11.5px; color:#6b7280; min-height:20px; margin-bottom:10px;"></div>
+                <div id="cwComposeItems" style="margin-top:6px; padding-top:14px; border-top:1px solid #e5e7eb; font-size:11.5px;"></div>
+                <div style="font-size:11px; color:#9ca3af; margin-top:14px; line-height:1.6; padding-top:10px; border-top:1px dashed #e5e7eb;">
+                    💡 300 DPI 는 100×130cm 기준 약 50MP — 브라우저가 잠시 멈출 수 있음. 일반적으론 150 DPI 권장.<br>
+                    💡 아트워크가 첨부 안 된 항목은 비활성화됨 — 위 작업지시서에서 먼저 파일 첨부.
                 </div>
-                <div style="font-size:11px; color:#6b7280; margin-top:8px; line-height:1.6;">
-                    💡 특정 항목만: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--item-idx 0</code> 추가<br>
-                    💡 JPG 출력: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--format jpg</code> 추가<br>
-                    💡 고해상도: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">--dpi 300</code> (파일 4배 커짐)<br>
-                    💡 자세한 옵션: <code style="background:#fef3c7; padding:1px 4px; border-radius:3px;">python compose_fabric.py --help</code>
-                </div>
-                <div id="cwComposeItems" style="margin-top:16px; padding-top:14px; border-top:1px solid #e5e7eb; font-size:11.5px;"></div>
             </div>
         </div>
     </div>
@@ -442,32 +439,182 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
     }
 })();
 
-// 2026-06-10: 인쇄 데이터 생성 명령 모달 (Python compose_fabric.py 도우미)
+// 2026-06-10: 인쇄 데이터 생성 모달.
+// 2026-06-15: Python compose_fabric.py 폐기 → 브라우저 내 canvas 합성으로 대체.
+//   직원이 파이썬 설치 없이 클릭 한 번으로 출력 사이즈 PNG 받게 함.
+
+function _cwCmToPx(cm, dpi) { return Math.max(1, Math.round((Number(cm)||0) * (Number(dpi)||150) / 2.54)); }
+function _cwHexToRgb(hex) {
+    if (!hex || hex === 'transparent') return null;
+    const m = String(hex).trim().match(/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i);
+    if (!m) return null;
+    let h = m[1];
+    if (h.length === 3) h = h.split('').map(c => c+c).join('');
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function _cwLoadImage(url) {
+    return new Promise(function(resolve, reject){
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function(){ resolve(img); };
+        img.onerror = function(e){ reject(new Error('이미지 로드 실패: '+url)); };
+        img.src = url;
+    });
+}
+
+// compose_fabric_print() 의 JS 포트.
+async function _cwComposeItemCanvas(item, dpi) {
+    const spec = item.pattern_spec || {};
+    const cell = spec.cell_cm || {};
+    const cellWcm = Number(cell.w) || 10;
+    const cellHcm = Number(cell.h) || 10;
+    const outWcm = Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 130);
+    const outHcm = Number(item.height_cm) || (item.height_mm ? item.height_mm/10 : 100);
+    const scale = (spec.image_scale != null ? Number(spec.image_scale) : 1.0);
+    const layout = String(spec.layout || 'basic').toLowerCase().trim();
+    const bgHex = spec.bg_color || '#ffffff';
+    const artUrl = item.artwork_url || (spec.artwork_url) || '';
+    if (!artUrl) throw new Error('아트워크가 첨부되지 않았습니다');
+
+    const outWpx = _cwCmToPx(outWcm, dpi);
+    const outHpx = _cwCmToPx(outHcm, dpi);
+    const cellWpx = Math.max(1, Math.round(_cwCmToPx(cellWcm, dpi) * scale));
+    const cellHpx = Math.max(1, Math.round(_cwCmToPx(cellHcm, dpi) * scale));
+
+    // Chrome canvas max ~16384. 한도 초과 시 즉시 거부.
+    if (outWpx > 16384 || outHpx > 16384) {
+        throw new Error('출력 사이즈가 너무 큼 (DPI 를 낮추세요): ' + outWpx + '×' + outHpx);
+    }
+
+    // 출력 캔버스
+    const canvas = document.createElement('canvas');
+    canvas.width = outWpx; canvas.height = outHpx;
+    const ctx = canvas.getContext('2d', { alpha: bgHex === 'transparent' });
+    // 배경
+    const rgb = _cwHexToRgb(bgHex);
+    if (rgb) { ctx.fillStyle = 'rgb('+rgb.join(',')+')'; ctx.fillRect(0,0,outWpx,outHpx); }
+    else { ctx.clearRect(0,0,outWpx,outHpx); }
+
+    // 아트워크 → cell 크기로 미리 리사이즈
+    const art = await _cwLoadImage(artUrl);
+    const cellCanvas = document.createElement('canvas');
+    cellCanvas.width = cellWpx; cellCanvas.height = cellHpx;
+    const cellCtx = cellCanvas.getContext('2d');
+    cellCtx.imageSmoothingQuality = 'high';
+    cellCtx.drawImage(art, 0, 0, cellWpx, cellHpx);
+
+    function paste(x, y, flipH, flipV) {
+        if (!flipH && !flipV) { ctx.drawImage(cellCanvas, x, y); return; }
+        ctx.save();
+        ctx.translate(x + (flipH ? cellWpx : 0), y + (flipV ? cellHpx : 0));
+        ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+        ctx.drawImage(cellCanvas, 0, 0);
+        ctx.restore();
+    }
+
+    // 레이아웃 분기 — Python compose_fabric_print 와 동일.
+    if (layout === 'centered') {
+        const x = Math.floor((outWpx - cellWpx) / 2);
+        const y = Math.floor((outHpx - cellHpx) / 2);
+        paste(x, y, false, false);
+    } else if (layout === 'brick' || layout === 'brick_horizontal' || layout === 'half_drop_horizontal') {
+        const rows = Math.ceil(outHpx / cellHpx) + 1;
+        const cols = Math.ceil(outWpx / cellWpx) + 2;
+        for (let r = 0; r < rows; r++) {
+            const offset = (r % 2) ? -Math.floor(cellWpx / 2) : 0;
+            for (let c = 0; c < cols; c++) {
+                const x = c * cellWpx + offset;
+                const y = r * cellHpx;
+                if (x >= outWpx || y >= outHpx) continue;
+                paste(x, y, false, false);
+            }
+        }
+    } else if (layout === 'half_drop' || layout === 'half_drop_vertical' || layout === 'half-drop') {
+        const rows = Math.ceil(outHpx / cellHpx) + 2;
+        const cols = Math.ceil(outWpx / cellWpx) + 1;
+        for (let c = 0; c < cols; c++) {
+            const offset = (c % 2) ? -Math.floor(cellHpx / 2) : 0;
+            for (let r = 0; r < rows; r++) {
+                const x = c * cellWpx;
+                const y = r * cellHpx + offset;
+                if (x >= outWpx || y >= outHpx) continue;
+                paste(x, y, false, false);
+            }
+        }
+    } else if (layout === 'mirror') {
+        const rows = Math.ceil(outHpx / cellHpx);
+        const cols = Math.ceil(outWpx / cellWpx);
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                paste(c * cellWpx, r * cellHpx, (c % 2) === 1, (r % 2) === 1);
+            }
+        }
+    } else {
+        // basic / repeat / tile
+        const rows = Math.ceil(outHpx / cellHpx);
+        const cols = Math.ceil(outWpx / cellWpx);
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                paste(c * cellWpx, r * cellHpx, false, false);
+            }
+        }
+    }
+
+    return { canvas, outWcm, outHcm, layout, bgHex };
+}
+
+function _cwBuildFilename(item, idx, info, oid) {
+    const safe = (s) => String(s||'').replace(/[\\\/:*?"<>|\s]+/g, '_').slice(0, 30);
+    const prod = safe(item.product_name || item.fabric || '항목');
+    const w = Math.round(info.outWcm), h = Math.round(info.outHcm);
+    return `cotton_${oid}_${idx+1}_${prod}_${w}x${h}cm_${info.layout}.png`;
+}
+
+async function _cwDownloadCanvas(canvas, filename) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (!blob) { reject(new Error('blob 생성 실패')); return; }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); resolve(); }, 300);
+        }, 'image/png');
+    });
+}
+
 window._cwShowComposeCmd = function() {
-    const oid = window._woOrderId || '?';
-    document.getElementById('cwComposeOrderId').textContent = oid;
-    // 항목 사양 미리보기 (작업지시서에 있는 정보 그대로)
     const items = window._woItems || [];
     const itemsBox = document.getElementById('cwComposeItems');
+    const status = document.getElementById('cwComposeStatus');
+    if (status) status.textContent = '';
     if (itemsBox) {
         if (!items.length) {
             itemsBox.innerHTML = '<div style="color:#9ca3af;">항목 정보 없음</div>';
         } else {
-            let html = '<div style="font-weight:800; color:#451a03; margin-bottom:8px;">📦 합성 사양 미리보기</div>';
+            let html = '<div style="font-weight:800; color:#451a03; margin-bottom:8px;">📦 합성 사양 + 항목별 다운로드</div>';
             items.forEach(function(it, i){
                 const spec = it.pattern_spec || {};
                 const cell = spec.cell_cm || {};
                 const wCm = it.width_cm || (it.width_mm ? it.width_mm/10 : '?');
                 const hCm = it.height_cm || (it.height_mm ? it.height_mm/10 : '?');
                 const sc = Math.round((spec.image_scale != null ? spec.image_scale : 1) * 100);
-                const art = it.artwork_url ? '✅' : '❌ (먼저 파일 첨부)';
-                html += '<div style="padding:8px 10px; background:#f9fafb; border-left:3px solid #7c3aed; border-radius:5px; margin-bottom:6px;">'
-                     + '<b>['+(i+1)+'] '+(it.product_name||it.fabric||'항목')+'</b>'
-                     + '<div style="color:#475569; margin-top:3px; font-family:monospace; font-size:10.5px;">'
-                     +   '출력 '+wCm+'×'+hCm+'cm  ·  셀 '+(cell.w||'?')+'×'+(cell.h||'?')+'cm  ·  '
-                     +   (spec.layout||'basic')+'  ·  '+(spec.bg_color||'#ffffff')+'  ·  '+sc+'%  ·  '
-                     +   '아트워크 '+art
-                     + '</div></div>';
+                const hasArt = !!(it.artwork_url || (spec.artwork_url));
+                const art = hasArt ? '✅ 첨부됨' : '❌ 미첨부';
+                html += '<div style="display:flex; gap:10px; align-items:center; padding:8px 10px; background:#f9fafb; border-left:3px solid '+(hasArt?'#7c3aed':'#dc2626')+'; border-radius:5px; margin-bottom:6px;">'
+                     + '<div style="flex:1;">'
+                     +   '<b>['+(i+1)+'] '+(it.product_name||it.fabric||'항목')+'</b>'
+                     +   '<div style="color:#475569; margin-top:3px; font-family:monospace; font-size:10.5px;">'
+                     +     '출력 '+wCm+'×'+hCm+'cm  ·  셀 '+(cell.w||'?')+'×'+(cell.h||'?')+'cm  ·  '
+                     +     (spec.layout||'basic')+'  ·  '+(spec.bg_color||'#ffffff')+'  ·  '+sc+'%  ·  '
+                     +     '아트워크 '+art
+                     +   '</div>'
+                     + '</div>'
+                     + (hasArt
+                         ? '<button onclick="window._cwComposeOne('+i+', this)" style="padding:6px 12px; background:#7c3aed; color:#fff; border:none; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">⬇ 다운로드</button>'
+                         : '<button disabled style="padding:6px 12px; background:#e5e7eb; color:#9ca3af; border:none; border-radius:6px; font-size:11px; font-weight:700; font-family:inherit; white-space:nowrap; cursor:not-allowed;">파일 필요</button>')
+                     + '</div>';
             });
             itemsBox.innerHTML = html;
         }
@@ -475,25 +622,50 @@ window._cwShowComposeCmd = function() {
     document.getElementById('cwComposeModal').style.display = 'flex';
 };
 
-window._cwCopyCmd = function(which) {
-    const oid = window._woOrderId || '?';
-    let txt = '';
-    if (which === 'install') {
-        txt = 'cd tools/cotton_print_compose\npip install -r requirements.txt';
-    } else {
-        txt = 'python compose_fabric.py --order-id ' + oid;
-    }
+window._cwComposeOne = async function(idx, btn) {
+    const items = window._woItems || [];
+    const it = items[idx];
+    if (!it) return;
+    const dpi = parseInt(document.getElementById('cwComposeDpi').value, 10) || 150;
+    const status = document.getElementById('cwComposeStatus');
+    const oldText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '합성 중…'; btn.style.opacity = '0.7'; }
+    if (status) status.textContent = '[' + (idx+1) + '] 합성 중 — 잠시만요…';
     try {
-        navigator.clipboard.writeText(txt).then(function(){
-            alert('✅ 복사됨!\n' + txt);
-        }).catch(function(){
-            // fallback
-            const ta = document.createElement('textarea');
-            ta.value = txt; document.body.appendChild(ta); ta.select();
-            try { document.execCommand('copy'); alert('✅ 복사됨'); } catch(e) { alert(txt); }
-            document.body.removeChild(ta);
-        });
-    } catch(e) { prompt('복사하세요:', txt); }
+        const info = await _cwComposeItemCanvas(it, dpi);
+        const filename = _cwBuildFilename(it, idx, info, window._woOrderId || '0');
+        await _cwDownloadCanvas(info.canvas, filename);
+        if (status) status.textContent = '✅ [' + (idx+1) + '] ' + filename + ' 다운로드 완료';
+    } catch (e) {
+        console.error('[cw compose]', e);
+        if (status) status.textContent = '❌ [' + (idx+1) + '] 실패: ' + (e.message || e);
+        alert('합성 실패: ' + (e.message || e));
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = oldText; btn.style.opacity = '1'; }
+    }
+};
+
+window._cwComposeAll = async function() {
+    const items = window._woItems || [];
+    const status = document.getElementById('cwComposeStatus');
+    const dpi = parseInt(document.getElementById('cwComposeDpi').value, 10) || 150;
+    if (!items.length) { alert('항목이 없습니다'); return; }
+    let ok = 0, fail = 0;
+    for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        if (!(it && (it.artwork_url || (it.pattern_spec && it.pattern_spec.artwork_url)))) { fail++; continue; }
+        if (status) status.textContent = '[' + (i+1) + '/' + items.length + '] 합성 중…';
+        try {
+            const info = await _cwComposeItemCanvas(it, dpi);
+            const filename = _cwBuildFilename(it, i, info, window._woOrderId || '0');
+            await _cwDownloadCanvas(info.canvas, filename);
+            ok++;
+        } catch (e) {
+            console.error('[cw compose all] item', i, e);
+            fail++;
+        }
+    }
+    if (status) status.textContent = '✅ ' + ok + '건 다운로드 완료' + (fail > 0 ? ' · ❌ ' + fail + '건 실패 (아트워크 미첨부 등)' : '');
 };
 
 // 2026-06-10: admin_note 헤더 재구성 — [제품종류] + [작업지시완료] 마커 갱신
