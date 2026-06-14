@@ -126,6 +126,9 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
     .wo-item-mgr-zone .wo-ref-thumbs { max-height: 220px !important; overflow: hidden !important; }
     .wo-item-mgr-zone .wo-ref-thumbs img { max-height: 180px !important; }
     .wo-item-mgr-zone textarea { max-height: 100px !important; overflow: hidden !important; }
+    /* 인쇄 시 다운로드/삭제/교체 버튼 숨김 — 종이 정보만 남김 */
+    .wo-item-mgr-zone .wo-ref-thumbs label, .wo-item-mgr-zone .wo-ref-thumbs button { display: none !important; }
+    .extra-files button, .extra-files a[download] { display: none !important; }
     /* 2026-06-15: PDF embed 는 인쇄 미리보기에서 빈 박스로 나옴 → fallback 텍스트로 대체. */
     .item-thumb embed[type="application/pdf"] { display: none !important; }
     .pdf-print-fallback { display: flex !important; }
@@ -1047,12 +1050,25 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const extraFilesArr = (i === 0 && _legacyExtraPool.length > extraStart)
                 ? _legacyExtraPool.slice(extraStart)
                 : [];
-            const extraFiles = extraFilesArr.map(f => `<div>
-                <div class="ef-thumb">${/\.pdf(?:\?|#|$)/i.test(f.url || '')
-                    ? `<embed src="${esc(f.url)}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />`
-                    : `<img src="${esc(f.url)}" alt="${esc(f.name || '')}">`}</div>
-                <div class="ef-name">${esc(f.name || '')}</div>
-            </div>`).join('');
+            // 2026-06-15: 각 extra file 에 다운로드 / 삭제 버튼 (관리자만 삭제).
+            const extraFiles = extraFilesArr.map(f => {
+                const _safeUrl = esc(f.url);
+                const _safeName = esc(f.name || '');
+                const _isPdf = /\.pdf(?:\?|#|$)/i.test(f.url || '');
+                const _dlBtn = '<a href="' + _safeUrl + '" download="' + _safeName + '" target="_blank" title="다운로드" style="font-size:9px; font-weight:700; color:#0369a1; border:1px solid #7dd3fc; border-radius:4px; padding:1px 5px; cursor:pointer; background:#f0f9ff; text-decoration:none;">⬇ 다운로드</a>';
+                const _delBtn = _woIsAdmin
+                    ? '<button type="button" onclick="window._woDeleteExtraFile(\'' + (f.url || '').replace(/'/g, "\\'") + '\')" title="삭제 (휴지통)" style="font-size:9px; font-weight:700; color:#dc2626; border:1px solid #fca5a5; border-radius:4px; padding:1px 5px; cursor:pointer; background:#fef2f2;">🗑 삭제</button>'
+                    : '';
+                return '<div>'
+                    + '<a href="' + _safeUrl + '" target="_blank" style="display:block;">'
+                    +   '<div class="ef-thumb">' + (_isPdf
+                        ? '<embed src="' + _safeUrl + '#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />'
+                        : '<img src="' + _safeUrl + '" alt="' + _safeName + '">') + '</div>'
+                    + '</a>'
+                    + '<div class="ef-name">' + _safeName + '</div>'
+                    + '<div style="display:flex; gap:3px; justify-content:center; margin-top:3px;">' + _dlBtn + _delBtn + '</div>'
+                + '</div>';
+            }).join('');
             const extraFilesHtml = extraFiles ? `<div class="extra-files">
                 <div class="ef-head"><i class="fa-solid fa-images"></i> 추가 첨부 파일 (${extraFilesArr.length}건)</div>
                 <div class="ef-list">${extraFiles}</div>
@@ -1498,6 +1514,27 @@ window._woDeleteItemAttachment = async function(itemIdx, attachIdx) {
         location.reload();
     } catch (e) {
         console.error('[wo del attach]', e);
+        alert('삭제 실패: ' + (e.message || e));
+    }
+};
+
+// 2026-06-15: 추가 첨부 파일 (extras) 삭제 — order.files 의 해당 URL 항목에 _deleted_at 마킹 (soft-delete).
+window._woDeleteExtraFile = async function(url) {
+    if (!window._woOrderId || !url) return;
+    if (!confirm('이 추가 첨부 파일을 휴지통으로 이동하시겠습니까? (복구 가능)')) return;
+    try {
+        const { data: cur, error: rdErr } = await sb.from('orders').select('files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        const now = new Date().toISOString();
+        let touched = 0;
+        orderFiles.forEach(f => { if (f && f.url === url) { f._deleted_at = now; touched++; } });
+        if (touched === 0) { alert('해당 파일을 찾지 못했습니다.'); return; }
+        const { error: upErr } = await sb.from('orders').update({ files: orderFiles }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        location.reload();
+    } catch (e) {
+        console.error('[wo del extra]', e);
         alert('삭제 실패: ' + (e.message || e));
     }
 };
