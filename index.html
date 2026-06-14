@@ -5731,7 +5731,25 @@ function scrollHotdeal(gridId, dir) {
         .me-handle-rot::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:18px; background:#10b981; transform:translateX(-50%); }
         .me-item.text { cursor: move; }
         .me-item.text.selected { cursor: text; }
-        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; }
+        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; touch-action:none; }
+        /* 2026-06-14: Smart guide — 드래그 중 캔버스 중앙 라인 */
+        .me-guide { position:absolute; background:#ec4899; pointer-events:none; z-index:100; }
+        .me-guide-v { width:1px; top:0; bottom:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
+        .me-guide-h { height:1px; left:0; right:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
+        /* 2026-06-14: 모바일 — 핸들·삭제버튼 터치 친화적 크기 */
+        @media (max-width: 768px) {
+            .me-handle { width:20px; height:20px; border-width:2.5px; }
+            .me-handle-nw { left:-10px; top:-10px; }
+            .me-handle-ne { right:-10px; top:-10px; }
+            .me-handle-sw { left:-10px; bottom:-10px; }
+            .me-handle-se { right:-10px; bottom:-10px; }
+            .me-handle-rot { top:-44px; margin-left:-10px; }
+            .me-handle-rot::before { top:20px; height:24px; }
+            .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
+            .me-tool-btn { padding:10px 14px !important; font-size:13px !important; }
+            .me-props { padding:8px !important; gap:6px !important; }
+            .me-prop-group { padding:6px 10px !important; font-size:12px !important; }
+        }
         /* 속성 패널 */
         .me-props { display:none; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
         .me-props.show { display:flex; }
@@ -6049,9 +6067,14 @@ function scrollHotdeal(gridId, dir) {
         it.el.style.left = (it.x * me.wScale) + 'px';
         it.el.style.top = (it.y * me.wScale) + 'px';
         it.el.style.width = (it.w * me.wScale) + 'px';
-        // 2026-06-14: 회전 적용 (CSS transform). 모서리 회전축 = 중앙.
+        // 2026-06-14: 회전 + 반전 결합 (CSS transform). 회전축 = 중앙.
         var rot = it.rotation || 0;
-        it.el.style.transform = rot ? ('rotate(' + rot + 'deg)') : '';
+        var sx = it.flipX ? -1 : 1;
+        var sy = it.flipY ? -1 : 1;
+        var trans = '';
+        if (rot) trans += 'rotate(' + rot + 'deg)';
+        if (sx !== 1 || sy !== 1) trans += ' scale(' + sx + ',' + sy + ')';
+        it.el.style.transform = trans;
         it.el.style.transformOrigin = 'center center';
         if (it.type === 'image') {
             it.el.style.height = (it.h * me.wScale) + 'px';
@@ -6148,6 +6171,119 @@ function scrollHotdeal(gridId, dir) {
         _meUpdateUndoBtn();
     };
     window._meSnapshot = _meSnapshot;
+
+    // 2026-06-14: Smart guide — 드래그 중 캔버스 중앙(가로·세로)에 6px 이내면 snap.
+    var _snapTol = 6;
+    function _meDragSnap(it) {
+        var cx = it.x + it.w / 2;
+        var cy = it.y + it.h / 2;
+        var canvasCx = me.natW / 2;
+        var canvasCy = me.natH / 2;
+        var tol = _snapTol / (me.wScale || 1);
+        var showV = false, showH = false;
+        if (Math.abs(cx - canvasCx) < tol) {
+            it.x = canvasCx - it.w / 2;
+            showV = true;
+        }
+        if (Math.abs(cy - canvasCy) < tol) {
+            it.y = canvasCy - it.h / 2;
+            showH = true;
+        }
+        _meShowGuides(showV, showH);
+    }
+    function _meShowGuides(v, h) {
+        if (!me.stage) return;
+        var vg = me.stage.querySelector('.me-guide-v');
+        var hg = me.stage.querySelector('.me-guide-h');
+        if (v) {
+            if (!vg) {
+                vg = document.createElement('div');
+                vg.className = 'me-guide me-guide-v';
+                me.stage.appendChild(vg);
+            }
+            vg.style.left = (me.natW / 2 * me.wScale) + 'px';
+            vg.style.display = '';
+        } else if (vg) vg.style.display = 'none';
+        if (h) {
+            if (!hg) {
+                hg = document.createElement('div');
+                hg.className = 'me-guide me-guide-h';
+                me.stage.appendChild(hg);
+            }
+            hg.style.top = (me.natH / 2 * me.wScale) + 'px';
+            hg.style.display = '';
+        } else if (hg) hg.style.display = 'none';
+    }
+    function _meHideGuides() {
+        if (!me.stage) return;
+        me.stage.querySelectorAll('.me-guide').forEach(function(g){ g.style.display = 'none'; });
+    }
+
+    // 2026-06-14: 선택된 item 복제 (Ctrl+D / 컨텍스트 메뉴)
+    window._meDuplicate = function(target) {
+        var it = target || me.selected;
+        if (!it) return;
+        _meSnapshot();
+        var clone = {};
+        Object.keys(it).forEach(function(k){ if (k !== 'el') clone[k] = it[k]; });
+        // 약간 오프셋
+        clone.x = it.x + 20 / (me.wScale || 1);
+        clone.y = it.y + 20 / (me.wScale || 1);
+        var el = document.createElement('div');
+        var cls = 'me-item';
+        if (clone.type === 'text') cls += ' text';
+        if (clone.type === 'shape') cls += ' shape' + (clone.shape === 'circle' ? ' circle' : '');
+        el.className = cls;
+        el.style.zIndex = (++me.zCounter);
+        if (clone.type === 'image') {
+            var img = document.createElement('img'); img.src = clone.src; el.appendChild(img);
+        } else if (clone.type === 'text') {
+            el.textContent = clone.text || '';
+        }
+        me.stage.appendChild(el);
+        var newIt = Object.assign({ el: el }, clone);
+        me.items.push(newIt);
+        _meSyncItemDisplay(newIt);
+        _meBindDrag(newIt);
+        _meSelect(newIt);
+    };
+
+    // 2026-06-14: 좌우/상하 반전 (flipX/flipY 토글)
+    window._meFlip = function(target, axis) {
+        var it = target || me.selected;
+        if (!it) return;
+        _meSnapshot();
+        if (axis === 'x') it.flipX = !it.flipX;
+        else if (axis === 'y') it.flipY = !it.flipY;
+        _meSyncItemDisplay(it);
+    };
+
+    // 2026-06-14: 레이어 순서 — items 배열 + z-index 동시 조정
+    window._meBringForward = function(target) {
+        var it = target || me.selected;
+        if (!it) return;
+        var idx = me.items.indexOf(it);
+        if (idx < 0 || idx >= me.items.length - 1) return;
+        _meSnapshot();
+        var nxt = me.items[idx + 1];
+        me.items[idx + 1] = it;
+        me.items[idx] = nxt;
+        // z-index 스왑
+        var z = it.el.style.zIndex, nz = nxt.el.style.zIndex;
+        it.el.style.zIndex = nz; nxt.el.style.zIndex = z;
+    };
+    window._meSendBackward = function(target) {
+        var it = target || me.selected;
+        if (!it) return;
+        var idx = me.items.indexOf(it);
+        if (idx <= 0) return;
+        _meSnapshot();
+        var prv = me.items[idx - 1];
+        me.items[idx - 1] = it;
+        me.items[idx] = prv;
+        var z = it.el.style.zIndex, pz = prv.el.style.zIndex;
+        it.el.style.zIndex = pz; prv.el.style.zIndex = z;
+    };
     // 2026-06-14: 미니 에디터의 me.stage 를 PNG dataURL 로 변환 — simple_order "디자인 완료 · 적용" 에서 사용
     window._meExportPNG = async function() {
         try {
@@ -6242,17 +6378,21 @@ function scrollHotdeal(gridId, dir) {
                     ctx.restore();
                 } else if (it.type === 'image' && it.src) {
                     var rotI = it.rotation || 0;
+                    var fxI = it.flipX ? -1 : 1;
+                    var fyI = it.flipY ? -1 : 1;
                     var ixx = it.x, iyy = it.y, iww = it.w, ihh = it.h;
                     await new Promise(function(resolve){
                         var im = new Image();
                         if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
                         im.onload = function(){
                             try {
-                                if (rotI) {
+                                var needTransform = rotI || fxI !== 1 || fyI !== 1;
+                                if (needTransform) {
                                     ctx.save();
                                     var iccx = ixx + iww/2, iccy = iyy + ihh/2;
                                     ctx.translate(iccx, iccy);
-                                    ctx.rotate(rotI * Math.PI / 180);
+                                    if (rotI) ctx.rotate(rotI * Math.PI / 180);
+                                    if (fxI !== 1 || fyI !== 1) ctx.scale(fxI, fyI);
                                     ctx.drawImage(im, -iww/2, -ihh/2, iww, ihh);
                                     ctx.restore();
                                 } else {
@@ -6352,6 +6492,14 @@ function scrollHotdeal(gridId, dir) {
         } else if (it.type === 'image') {
             html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">' + T('me_prop_img_hint','이미지 — 모서리 핸들로 크기 조절') + '</span>';
         }
+        // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
+        html += '<span class="me-prop-group" style="gap:4px;">';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_dup','복제 (Ctrl+D)') + '" data-action="dup"><i class="fa-solid fa-clone"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_flip_x','좌우반전') + '" data-action="flipx"><i class="fa-solid fa-arrows-left-right"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_flip_y','상하반전') + '" data-action="flipy"><i class="fa-solid fa-arrows-up-down"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_up','앞으로') + '" data-action="up"><i class="fa-solid fa-arrow-up"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
+        html += '</span>';
         panel.innerHTML = html;
         // 폰트 드롭다운 옵션 각각의 미리보기용 폰트 사전 로드 (사용자가 펼치기 전에 일부 가시 폰트 로드)
         // — 성능 위해 selected 폰트만 즉시 로드, 나머지는 onchange 때 로드
@@ -6382,6 +6530,17 @@ function scrollHotdeal(gridId, dir) {
                 _meSyncItemDisplay(it);
             });
         });
+        // 2026-06-14: 공통 액션 핸들러
+        panel.querySelectorAll('[data-action]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var act = btn.dataset.action;
+                if (act === 'dup' && window._meDuplicate) window._meDuplicate(it);
+                else if (act === 'flipx' && window._meFlip) window._meFlip(it, 'x');
+                else if (act === 'flipy' && window._meFlip) window._meFlip(it, 'y');
+                else if (act === 'up' && window._meBringForward) window._meBringForward(it);
+                else if (act === 'down' && window._meSendBackward) window._meSendBackward(it);
+            });
+        });
     }
 
     function _meBindDrag(it) {
@@ -6410,13 +6569,16 @@ function scrollHotdeal(gridId, dir) {
             var dy = (ev.clientY - sy) / me.wScale;
             it.x = sLeft + dx;
             it.y = sTop + dy;
+            // 2026-06-14: Smart guide — 캔버스 중앙 (가로/세로) 에 6px 이내면 snap + 가이드 라인 표시
+            _meDragSnap(it);
             _meSyncItemDisplay(it);
         });
         it.el.addEventListener('pointerup', function(ev){
             dragging = false;
+            _meHideGuides();
             try { it.el.releasePointerCapture(ev.pointerId); } catch(e){}
         });
-        it.el.addEventListener('pointercancel', function(){ dragging = false; });
+        it.el.addEventListener('pointercancel', function(){ dragging = false; _meHideGuides(); });
         if (it.type === 'text') {
             // 2026-06-14: 텍스트 편집 UX 개선 — 이미 선택된 상태에서 click 또는 dblclick 으로 즉시 편집 모드.
             //   더블클릭은 항상 동작 (기존 호환), 단일클릭은 이미 선택돼 있고 contenteditable 아닐 때만.
@@ -6944,6 +7106,15 @@ function scrollHotdeal(gridId, dir) {
                 if (!stageVisible) return;
                 ev.preventDefault();
                 if (typeof window._meUndo === 'function') window._meUndo();
+                return;
+            }
+            // 2026-06-14: Ctrl+D 복제
+            if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'd' || ev.key === 'D')) {
+                if (!me.selected) return;
+                var stageVis2 = me.stage && me.stage.offsetParent !== null;
+                if (!stageVis2) return;
+                ev.preventDefault();
+                if (typeof window._meDuplicate === 'function') window._meDuplicate();
                 return;
             }
             if (!me.selected) return;
@@ -11397,7 +11568,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=430"></script>
+<script src="/simple_order.js?v=431"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

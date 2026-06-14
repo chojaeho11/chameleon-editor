@@ -652,6 +652,15 @@ html, body { background: #ffffff !important; }
 #soQdLibPopup .qd-lib-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
 #soQdLibPopup .qd-lib-loading { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6366f1; font-size: 14px; font-weight: 700; }
 #soQdLibPopup .qd-lib-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 13px; }
+/* 모바일: 라이브러리 팝업 풀스크린 */
+@media (max-width: 768px) {
+    #soQdLibPopup { padding: 0 !important; }
+    #soQdLibPopup > div { max-width: 100% !important; max-height: 100vh !important; height: 100vh !important; border-radius: 0 !important; }
+    #soQdLibPopup .qd-lib-tab { padding: 8px 11px; font-size: 12px; }
+    #soQdLibPopup .qd-lib-thumb { aspect-ratio: 1/1; }
+    #soQdLibPopup #soQdLibPager { padding: 14px 16px !important; }
+    #soQdLibPopup .qd-lib-pager-btn { width: 40px; height: 40px; }
+}
 /* 5 cols PC × 2 rows = 10 / 2 cols mobile × 5 rows = 10 */
 #soQdLibPopup #soQdLibGrid { grid-template-columns: repeat(5, 1fr) !important; }
 @media (max-width: 768px) {
