@@ -1655,7 +1655,7 @@ html, body { background: #ffffff !important; }
           <span class="so-editor-icon"></span>
           <div style="flex:1; min-width:0;">
             <div class="so-editor-title">${tr('디자인에디터', 'デザインエディタ', 'Design Editor')}</div>
-            <div class="so-editor-sub">${tr('디테일한 디자인을 하고 싶다면 GO GO 🚀', '本格的なデザインに進む 🚀', 'For detailed design — let\\'s GO 🚀')}</div>
+            <div class="so-editor-sub">${tr('디테일한 디자인을 하고 싶다면 GO GO 🚀', '本格的なデザインに進む 🚀', 'For detailed design — GO GO 🚀')}</div>
           </div>
           <span class="so-editor-arrow">→</span>
         </button>
