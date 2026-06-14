@@ -2879,13 +2879,13 @@ html, body { background: #ffffff !important; }
           <input id="soCoEmail" class="so-co-input" type="email" placeholder="${tr('이메일 (선택)', 'メール (任意)', 'Email (optional)')}">
         </div>
       </div>
-      <div class="so-co-section">
+      <div class="so-co-section" id="soCoShippingBox">
         <span class="so-co-label">${tr('배송지', 'お届け先', 'Shipping address')} <span style="color:#dc2626;">*</span></span>
         <input id="soCoZip" class="so-co-input" placeholder="${tr('우편번호', '郵便番号', 'ZIP')}" style="width:160px; margin-bottom:6px;">
         <input id="soCoAddr1" class="so-co-input" placeholder="${tr('기본 주소', '住所', 'Address line 1')}" style="margin-bottom:6px;">
         <input id="soCoAddr2" class="so-co-input" placeholder="${tr('상세 주소 (동/호수)', '建物名・部屋番号', 'Address line 2')}">
       </div>
-      <div class="so-co-section">
+      <div class="so-co-section" id="soCoMemoBox">
         <span class="so-co-label">${tr('배송 메모 (선택)', '配送メモ (任意)', 'Delivery note (optional)')}</span>
         <input id="soCoMemo" class="so-co-input" placeholder="${tr('예: 부재 시 경비실에 맡겨주세요', '例: 不在時は管理人室へ', 'e.g. Leave at front desk if absent')}">
       </div>
@@ -2955,6 +2955,7 @@ html, body { background: #ffffff !important; }
       </div>
 
       <!-- 2026-05-14: 무통장 입금 — 증빙 서류 선택 (KR 전용, 세금계산서/현금영수증) -->
+      <!-- 2026-06-14: id="soCoReceiptBox" (이미 있던 ID 유지) — design-fee-only 카트일 때 숨김 -->
       <div class="so-co-section" id="soCoReceiptBox">
         <span class="so-co-label">📄 ${tr('증빙 서류 선택 (선택)', '証憑書類選択 (任意)', 'Tax document (optional)')}</span>
         <div style="display:flex; flex-direction:column; gap:6px; font-size:13px;">
@@ -2985,7 +2986,7 @@ html, body { background: #ffffff !important; }
       </div>
 
       <!-- 2026-05-14: 견적서 다운로드 (결제 전 미리보기) -->
-      <div class="so-co-section">
+      <div class="so-co-section" id="soCoQuoteBtnBox">
         <button type="button" onclick="window._soDownloadQuotePreview(this)"
           style="width:100%; padding:12px 16px; background:#fff; color:#78350f; border:2px solid #fbbf24; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit;">
           <i class="fa-solid fa-file-invoice"></i> ${tr('견적서 미리 다운받기', '見積書ダウンロード', 'Download quotation preview')}
@@ -14273,6 +14274,22 @@ html, body { background: #ffffff !important; }
     window._soOnWalletChange = function () { _soApplyWalletToTotal(); };
     window._soFillMaxMileage = function () { /* deprecated — radio UI */ };
 
+    // 2026-06-14: 카트가 디자인비 (category:'design_fee' 또는 code prefix 'design_fee_') 만으로 구성됐는지 판별.
+    //   true 면 배송지/메모/할인/증빙/견적서 등 무관한 섹션을 모두 숨겨 결제만 클릭하도록 단순화.
+    function _soIsDesignFeeOnlyCart() {
+        try {
+            var cart = _soReadAllCart();
+            if (!cart || cart.length === 0) return false;
+            return cart.every(function (it) {
+                var p = it && it.product ? it.product : {};
+                var code = String(p.code || p.product_key || p.id || '');
+                var cat  = String(p.category || it.category || '');
+                return cat === 'design_fee' || code.indexOf('design_fee_') === 0;
+            });
+        } catch (e) { return false; }
+    }
+    window._soIsDesignFeeOnlyCart = _soIsDesignFeeOnlyCart;
+
     window._soOpenCheckout = function () {
         var cart = _soReadAllCart();
         if (cart.length === 0) {
@@ -14286,6 +14303,21 @@ html, body { background: #ffffff !important; }
         if (typeof window._soInitWallet === 'function') window._soInitWallet();
         // 2026-05-14: 결제수단 초기상태 동기화 (해외 사이트는 증빙 박스 숨김, 한국은 표시)
         if (typeof window._soOnPayMethodChange === 'function') window._soOnPayMethodChange();
+        // 2026-06-14: 디자인비 전용 카트면 배송지/메모/할인/증빙/견적서 섹션 모두 숨김 → 결제 정보만 남김.
+        try {
+            var _df = _soIsDesignFeeOnlyCart();
+            var _toggleIds = ['soCoShippingBox', 'soCoMemoBox', 'soCoWalletBox', 'soCoReceiptBox', 'soCoQuoteBtnBox'];
+            _toggleIds.forEach(function (_id) {
+                var _el = document.getElementById(_id);
+                if (_el) _el.style.display = _df ? 'none' : '';
+            });
+            // 배송지/이메일은 필수 검증 → 디자인비 전용 시 가짜 값 채워 검증 우회 (Supabase 측은 NOT NULL 아님)
+            if (_df) {
+                var _z = document.getElementById('soCoZip');     if (_z && !_z.value) _z.value = '00000';
+                var _a1 = document.getElementById('soCoAddr1');  if (_a1 && !_a1.value) _a1.value = '디자인의뢰 - 배송불필요';
+                var _a2 = document.getElementById('soCoAddr2');  if (_a2 && !_a2.value) _a2.value = '-';
+            }
+        } catch (eDf) { console.warn('[design-fee checkout toggle]', eDf); }
         // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출
         try {
             var isAdm = !!window.isAdmin;
@@ -14433,7 +14465,9 @@ html, body { background: #ffffff !important; }
         var box = document.getElementById('soCoReceiptBox');
         // 한국만 노출 (해외는 카드 결제만 사용 → 증빙 메뉴 자체 숨김)
         var isKR = (window.__SITE_CODE || 'KR') === 'KR';
-        if (box) box.style.display = (pay === 'bank' && isKR) ? '' : 'none';
+        // 2026-06-14: 디자인비 전용 카트면 증빙 박스 자체를 숨겨야 함 (pay 토글로 다시 노출 금지)
+        var _designFeeOnly = (typeof window._soIsDesignFeeOnlyCart === 'function') && window._soIsDesignFeeOnlyCart();
+        if (box) box.style.display = (!_designFeeOnly && pay === 'bank' && isKR) ? '' : 'none';
         // 입금자 이름 — 무통장 입금이면 표시 (가맹점 해외 계좌이체 포함)
         var depBox = document.getElementById('soCoDepositorBox');
         if (depBox) depBox.style.display = (pay === 'bank') ? '' : 'none';
