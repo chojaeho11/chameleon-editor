@@ -5736,7 +5736,7 @@ function scrollHotdeal(gridId, dir) {
         .me-guide { position:absolute; background:#ec4899; pointer-events:none; z-index:100; }
         .me-guide-v { width:1px; top:0; bottom:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
         .me-guide-h { height:1px; left:0; right:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
-        /* 2026-06-14: 모바일 — 핸들·삭제버튼 터치 친화적 크기 */
+        /* 2026-06-14: 모바일 — 핸들·삭제버튼 터치 친화적 크기 + 텍스트 편집 UX */
         @media (max-width: 768px) {
             .me-handle { width:20px; height:20px; border-width:2.5px; }
             .me-handle-nw { left:-10px; top:-10px; }
@@ -5749,6 +5749,19 @@ function scrollHotdeal(gridId, dir) {
             .me-tool-btn { padding:10px 14px !important; font-size:13px !important; }
             .me-props { padding:8px !important; gap:6px !important; }
             .me-prop-group { padding:6px 10px !important; font-size:12px !important; }
+            /* 텍스트 — 선택 시 padding 확장 (탭 영역 보장) + 편집 중 배경 강조 */
+            .me-item.text { padding: 6px 8px !important; min-height: 28px; }
+            .me-item.text.selected { background: rgba(0,122,255,0.06); border-radius:4px; }
+            .me-item.text[contenteditable="true"] {
+                background: rgba(255,255,255,0.95) !important;
+                box-shadow: 0 0 0 2px #007AFF, 0 4px 16px rgba(0,0,0,0.2);
+                -webkit-user-select: text; user-select: text;
+            }
+        }
+        /* 데스크톱도 편집 중 강조 */
+        .me-item.text[contenteditable="true"] {
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 0 0 1.5px #007AFF;
         }
         /* 속성 패널 */
         .me-props { display:none; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
@@ -6582,34 +6595,57 @@ function scrollHotdeal(gridId, dir) {
         if (it.type === 'text') {
             // 2026-06-14: 텍스트 편집 UX 개선 — 이미 선택된 상태에서 click 또는 dblclick 으로 즉시 편집 모드.
             //   더블클릭은 항상 동작 (기존 호환), 단일클릭은 이미 선택돼 있고 contenteditable 아닐 때만.
+            // 2026-06-14: 텍스트 편집 UX — 캔바 스타일.
+            //   1번째 탭: select. 2번째 탭(같은 텍스트): 즉시 편집 모드 (모바일은 50ms 지연 / 데스크톱은 150ms).
+            //   pointer 위치 + 시간으로 "탭" 판별 (드래그와 구분).
             var _lastClickTime = 0;
-            it.el.addEventListener('click', function(ev){
+            var _tapStart = null;
+            it.el.addEventListener('pointerdown', function(ev){
                 if (it.el.getAttribute('contenteditable') === 'true') return;
-                var now = Date.now();
-                var isAlreadySelected = (me.selected === it);
-                _lastClickTime = now;
-                // 이미 선택된 텍스트 — 클릭으로 편집 진입 (드래그 100ms 후 분간)
-                if (isAlreadySelected) {
+                _tapStart = { x: ev.clientX, y: ev.clientY, t: Date.now() };
+            }, true);
+            it.el.addEventListener('pointerup', function(ev){
+                if (it.el.getAttribute('contenteditable') === 'true') return;
+                if (!_tapStart) return;
+                var dx = ev.clientX - _tapStart.x, dy = ev.clientY - _tapStart.y;
+                var dist = Math.sqrt(dx*dx + dy*dy);
+                var dt = Date.now() - _tapStart.t;
+                _tapStart = null;
+                // 탭 판별 — 8px 이내 + 500ms 이내 (모바일 wobble 허용)
+                if (dist > 8 || dt > 500) return;
+                // 이미 선택된 텍스트면 즉시 편집 모드
+                if (me.selected === it) {
+                    var isMobile = window.innerWidth <= 768;
+                    var delay = isMobile ? 30 : 150;
+                    var now = Date.now();
+                    _lastClickTime = now;
                     setTimeout(function(){
-                        // 그 사이 다시 누르지 않았으면 (= 드래그 아님) 편집 진입
                         if (_lastClickTime === now && it.el.getAttribute('contenteditable') !== 'true') {
                             it.el.setAttribute('contenteditable', 'true');
+                            it.el.setAttribute('inputmode', 'text');
                             it.el.focus();
-                            document.execCommand && document.execCommand('selectAll', false, null);
+                            try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
+                            // 모바일: 편집 영역을 화면 가운데로 — 키보드에 가려지지 않게
+                            if (isMobile) {
+                                setTimeout(function(){
+                                    try { it.el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_se){}
+                                }, 300);
+                            }
                         }
-                    }, 180);
+                    }, delay);
                 }
-            });
+            }, true);
             it.el.addEventListener('dblclick', function(){
                 it.el.setAttribute('contenteditable', 'true');
                 it.el.focus();
-                document.execCommand && document.execCommand('selectAll', false, null);
+                try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
             });
             it.el.addEventListener('blur', function(){
                 it.el.removeAttribute('contenteditable');
+                it.el.removeAttribute('inputmode');
                 it.text = (it.el.innerText !== undefined) ? it.el.innerText : (it.el.textContent || '');
             });
-            // 편집 중 Enter 줄바꿈, Escape 로 편집 종료
+            // 편집 중 Escape 로 편집 종료
             it.el.addEventListener('keydown', function(ev){
                 if (it.el.getAttribute('contenteditable') !== 'true') return;
                 if (ev.key === 'Escape') {
@@ -7081,9 +7117,14 @@ function scrollHotdeal(gridId, dir) {
                 _meSetSize(parseInt(b.dataset.w, 10), parseInt(b.dataset.h, 10), b.dataset.label);
             });
         });
-        // 스테이지 빈 영역 클릭 → 선택 해제 + 컨텍스트 메뉴 닫기
+        // 스테이지 빈 영역 클릭 → 편집 중인 텍스트 commit + 선택 해제
         me.stage.addEventListener('pointerdown', function(ev){
-            if (ev.target === me.stage) _meSelect(null);
+            if (ev.target === me.stage) {
+                // 2026-06-14: 편집 중인 contenteditable 먼저 blur (텍스트 저장)
+                var ce = me.stage.querySelector('[contenteditable="true"]');
+                if (ce) ce.blur();
+                _meSelect(null);
+            }
         });
         me.stage.addEventListener('contextmenu', function(ev){
             if (ev.target === me.stage) ev.preventDefault();
@@ -11568,7 +11609,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=431"></script>
+<script src="/simple_order.js?v=432"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
