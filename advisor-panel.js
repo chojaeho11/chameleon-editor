@@ -711,12 +711,60 @@ export function initAdvisorPanel() {
             if (inp) inp.focus();
         }, 400);
     };
+    // 2026-06-14: 모바일 풀스크린 챗봇 — iframe 래퍼 (cotton-printer.com 의 kapuChatWrap 과 동일 패턴)
+    window._openAdvisorMobileFull = function() {
+        var sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toUpperCase();
+        var langMap = { KR: 'kr', JP: 'ja', US: 'en', CN: 'cn', AR: 'ar', ES: 'es', DE: 'de', FR: 'fr' };
+        var lang = langMap[sc] || 'kr';
+        var wrap = document.getElementById('advisorMobileFullWrap');
+        if (wrap) {
+            // 토글
+            var visible = (wrap.style.display !== 'none');
+            wrap.style.display = visible ? 'none' : 'block';
+            document.body.style.overflow = visible ? '' : 'hidden';
+            return;
+        }
+        wrap = document.createElement('div');
+        wrap.id = 'advisorMobileFullWrap';
+        // chatIframeWrap / kapuChatWrap alias 도 등록 (chameleon-chatbot.html 의 X 닫기가 이 ID 들을 찾음)
+        wrap.setAttribute('data-alias', 'chatIframeWrap kapuChatWrap chatIframeMobileWrap');
+        wrap.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; z-index:2147483647; background:#fff; border:0;';
+        wrap.innerHTML = '<iframe src="/chameleon-chatbot.html?lang=' + lang + '&from=advisor&chat=1&v=459" style="width:100%; height:100%; border:none; display:block;"></iframe>';
+        document.body.appendChild(wrap);
+        document.body.style.overflow = 'hidden';
+        // chatIframeWrap / kapuChatWrap getElementById alias — iframe 안 X 가 어느 ID 로 찾든 동일 wrap 닫음
+        if (!document._advAliasInstalled) {
+            var origGet = document.getElementById.bind(document);
+            document.getElementById = function(id) {
+                if (id === 'chatIframeWrap' || id === 'kapuChatWrap' || id === 'chatIframeMobileWrap') {
+                    return origGet('advisorMobileFullWrap') || origGet(id);
+                }
+                return origGet(id);
+            };
+            document._advAliasInstalled = true;
+        }
+        // postMessage 닫기 이벤트 받기
+        if (!window._advCloseMsgInstalled) {
+            window.addEventListener('message', function(e){
+                if (e.data === 'closeKapuChat' || (e.data && e.data.type === 'closeKapuChat')) {
+                    var w = document.getElementById('advisorMobileFullWrap');
+                    if (w) { w.style.display = 'none'; try { document.body.style.overflow = ''; } catch(_e){} }
+                }
+            });
+            window._advCloseMsgInstalled = true;
+        }
+    };
+
     window.toggleAdvisorPanel = function() {
+        // 2026-06-14: 모바일은 iframe 래퍼 모드로 전환 — cotton-printer.com 패턴과 일치.
+        //   iframe 안의 chameleon-chatbot.html 이 자체 advisor-panel 을 띄움. 부모 페이지 헤더 위에 100% 덮음.
+        if (window.innerWidth <= 768) {
+            return window._openAdvisorMobileFull();
+        }
         if (!panelEl) return;
         const fab = document.getElementById('floatingChatBtn');
         if (panelEl.style.display === 'flex') {
             panelEl.style.display = 'none';
-            // 2026-06-14: 모바일 풀스크린 시 잠금해뒀던 body 스크롤 복원
             try { document.body.style.overflow = ''; } catch(e) {}
             if (fab) fab.innerHTML = '<i class="fa-solid fa-comments"></i>';
         } else {
