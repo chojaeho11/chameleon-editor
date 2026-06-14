@@ -1572,23 +1572,17 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 미니에디터 (메인 페이지 #embeddedEditorPreview 가 여기로 portal 됨) -->
           <div id="soEmbeddedEditorMount" style="margin-top:10px;"></div>
-          <!-- 디자인 완료 · 적용 (큰 녹색 버튼) -->
-          <button type="button" id="soQdApplyBtn" class="qd-apply-btn" onclick="window._soQdApplyDesign && window._soQdApplyDesign()">
-            <i class="fa-solid fa-check-circle" style="margin-right:6px;"></i>${tr('디자인 완료 · 주문에 적용', 'デザイン完了・注文に適用', 'Use this design')}
-          </button>
-          <div class="qd-launch-or">${tr('또는 아래에서 직접 이미지 파일 업로드', '下から直接画像をアップロード', 'Or upload image file below')}</div>
+          <!-- 2026-06-15: '디자인 완료 · 적용' 버튼 제거 — 카트 담기 시 자동 export 됨.
+                          'or 아래에서 직접 이미지 업로드' 가이드도 제거 — 우측 파일 업로드 카드 사용. -->
         </div>
 
-        <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
-        <div id="soUploadWrap">
-        <div class="so-upload-section-label" id="soUploadLabel">${tr('앞면 업로드', '表面アップロード', 'Front Upload')}</div>
-        <div id="soUpload" class="so-upload" onclick="document.getElementById('soFile').click()">
+        <!-- 2026-06-15: '앞면 업로드' 섹션 제거 — 우측 사이드바의 파일업로드 카드로 통일.
+                        soFile input 만 보존 (다른 분기들이 doc.getElementById('soFile') 로 참조). -->
+        <div id="soUploadWrap" style="display:none;">
           <input type="file" id="soFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none" />
-          <div class="so-upload-icon"></div>
-          <div class="so-upload-title" id="soUploadTitle">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
-          <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-          <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
-        </div>
+          <div id="soUpload" style="display:none;"></div>
+          <div class="so-upload-section-label" id="soUploadLabel" style="display:none;">${tr('앞면 업로드', '表面アップロード', 'Front Upload')}</div>
+          <div id="soUploadTitle" style="display:none;"></div>
         </div>
         <!-- 2026-05-30: '원판 그대로 발송' 안내 및 좌측 '다른 원판 제품' 그리드는 제거.
              원판 안내문은 더 이상 표시하지 않고, 다른 원판 제품 그리드는 우측 컬럼의 soRawBoardMoreRight 으로 이동. -->

@@ -5663,8 +5663,8 @@ function scrollHotdeal(gridId, dir) {
 <!-- 2026-06-14: 메인 화면에선 숨김 — simple_order 모달 진입 시 portal 로 이동해 사용. simple_order.js 의 _mountEditor 가 display 복구. -->
 <div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0; display:none;">
     <style>
-        #aiNbWrap { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
-        @media (max-width:768px) { #aiNbWrap { grid-template-columns: 1fr; gap:12px; } }
+        /* 2026-06-15: 누끼따기 패널 통합 → 에디터 단독 1열. */
+        #aiNbWrap { display:grid; grid-template-columns: 1fr; gap:16px; }
         .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 20px; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18); display:flex; flex-direction:column; gap:10px; min-width:0; }
         .aiNb-card.bg { background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border-color:#fcd34d; box-shadow:0 6px 24px -8px rgba(217,119,6,0.18); }
         .aiNb-title { font-size:16px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px; }
@@ -5815,7 +5815,7 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" onclick="window._meAddShape('rect')"><span data-i18n="me_rect">사각형</span></button>
                 <button type="button" class="me-tool-btn" onclick="window._meAddShape('circle')"><span data-i18n="me_circle">원</span></button>
                 <label class="me-color-wrap" title="배경색"><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
-                <button type="button" class="me-tool-btn" onclick="window._meImportCutout()"><span data-i18n="me_cutout">누끼 가져오기</span></button>
+                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed;" title="이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors" style="font-size:11px; margin-right:4px;"></i><span data-i18n="me_cutout">누끼따기</span></button>
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
@@ -5826,22 +5826,7 @@ function scrollHotdeal(gridId, dir) {
             <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
         </div>
 
-        <!-- 패널 2 — 누끼따기 (배경 제거) -->
-        <div class="aiNb-card bg" id="aiNbBg">
-            <div class="aiNb-title">✂️ <span>누끼따기 (배경 제거)</span></div>
-            <div class="aiNb-sub">이미지를 올리면 AI 가 배경을 자동으로 제거해드립니다 · 무료</div>
-            <label class="aiNb-upload" for="aiNbBgInput">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
-                <span>이미지 업로드 (PNG · JPG)</span>
-            </label>
-            <input type="file" id="aiNbBgInput" accept="image/*" style="display:none;" onchange="window._aiNbBgFromFile(this)">
-            <div class="aiNb-preview" id="aiNbBgPreview">
-                <div class="aiNb-empty">위의 영역을 클릭해 이미지를 업로드하세요</div>
-                <div class="aiNb-spinner" id="aiNbBgSpinner"><i class="fa-solid fa-circle-notch"></i><span>배경 제거중... (10-30초)</span></div>
-            </div>
-            <a id="aiNbBgDl" class="aiNb-btn amber full aiNb-dl" download="cutout.png"><i class="fa-solid fa-download"></i> 다운로드</a>
-            <div class="aiNb-error" id="aiNbBgErr" style="display:none;"></div>
-        </div>
+        <!-- 2026-06-15: 별도 누끼따기 패널 제거 — 에디터 툴바의 [누끼따기] 버튼이 선택 이미지에 직접 적용. -->
     </div>
 </div>
 
@@ -6479,6 +6464,16 @@ function scrollHotdeal(gridId, dir) {
         var existing = me.stage.querySelectorAll('.me-handle, .me-del');
         existing.forEach(function(n){ n.remove(); });
         me.selected = it;
+        // 2026-06-15: 선택이 이미지면 누끼따기 버튼 활성화.
+        try {
+            var _bgBtn = $('meBgRemoveBtn');
+            if (_bgBtn) {
+                var _on = !!(it && it.type === 'image');
+                _bgBtn.disabled = !_on;
+                _bgBtn.style.opacity = _on ? '1' : '0.45';
+                _bgBtn.style.cursor = _on ? 'pointer' : 'not-allowed';
+            }
+        } catch (e) {}
         if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
         // 2026-06-14: 4 모서리 핸들 (정비율 리사이즈) + 회전 핸들
@@ -6974,14 +6969,71 @@ function scrollHotdeal(gridId, dir) {
         return (typeof window.t === 'function') ? window.t(k, fb) : (fb || k);
     }
 
-    window._meImportCutout = function() {
-        var dl = $('aiNbBgDl');
-        if (!dl || !dl.href || dl.classList.contains('show') === false) {
-            alert(_meT('me_alert_cutout','먼저 오른쪽 [누끼따기] 패널에서 이미지의 배경을 제거해주세요'));
+    // 2026-06-15: 별도 패널 폐기 — 에디터에서 선택된 이미지에 직접 누끼따기 적용.
+    //   기존 _meImportCutout 은 외부 panel 의 결과를 가져오는 방식이라 폐기.
+    window._meBgRemoveSelected = async function() {
+        var sel = me && me.selected;
+        if (!sel || sel.type !== 'image' || !sel.src) {
+            alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
             return;
         }
-        window._meAddImage(dl.href);
+        var btn = $('meBgRemoveBtn');
+        var origHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="font-size:11px; margin-right:4px;"></i>누끼 따는 중…';
+        }
+        try {
+            // src 가 dataURL 이면 base64 추출, 외부 URL 이면 fetch 후 base64 변환.
+            var base64;
+            if (/^data:image\/[a-z]+;base64,/i.test(sel.src)) {
+                base64 = sel.src.split(',')[1];
+            } else {
+                var res = await fetch(sel.src, { mode:'cors' });
+                if (!res.ok) throw new Error('이미지 fetch 실패 (HTTP ' + res.status + ')');
+                var blob = await res.blob();
+                base64 = await new Promise(function(resolve, reject){
+                    var r = new FileReader();
+                    r.onload = function(){ resolve(String(r.result).split(',')[1]); };
+                    r.onerror = function(){ reject(new Error('이미지 base64 변환 실패')); };
+                    r.readAsDataURL(blob);
+                });
+            }
+            var resp = await fetch(SB_URL + '/functions/v1/bg-remove', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+SB_KEY, 'apikey':SB_KEY },
+                body: JSON.stringify({ image_base64: base64 })
+            });
+            var data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || ('HTTP ' + resp.status));
+            if (!data.image_base64) throw new Error('배경 제거 결과가 비어있습니다');
+            var newSrc = 'data:image/png;base64,' + data.image_base64;
+            // 선택된 이미지의 src 교체 — el 의 <img> 와 sel.src 동시 갱신.
+            sel.src = newSrc;
+            if (sel.el) {
+                var imgChild = sel.el.querySelector('img');
+                if (imgChild) imgChild.src = newSrc;
+                else sel.el.style.backgroundImage = 'url("' + newSrc + '")';
+            }
+            // history 갱신 (Ctrl+Z 로 원본 복귀)
+            if (typeof _meSnapshot === 'function') { try { _meSnapshot(); } catch(e){} }
+        } catch (e) {
+            console.error('[me bgRemove]', e);
+            alert('⚠️ ' + (e.message || '배경 제거 실패. 잠시 후 다시 시도해주세요'));
+        } finally {
+            if (btn) {
+                btn.innerHTML = origHtml;
+                // 선택 상태에 맞춰 활성/비활성
+                var stillSelected = (me && me.selected && me.selected.type === 'image');
+                btn.disabled = !stillSelected;
+                btn.style.opacity = stillSelected ? '1' : '0.45';
+                btn.style.cursor = stillSelected ? 'pointer' : 'not-allowed';
+            }
+        }
     };
+    // 레거시 호환 — 다른 곳에서 호출 시 위로 위임.
+    window._meImportCutout = window._meBgRemoveSelected;
 
     window._meClear = function() {
         if (!confirm(_meT('me_clear_confirm','캔버스의 모든 요소를 삭제할까요?'))) return;
@@ -11695,7 +11747,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=445"></script>
+<script src="/simple_order.js?v=446"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
