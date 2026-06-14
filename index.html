@@ -6069,6 +6069,22 @@ function scrollHotdeal(gridId, dir) {
             if (!me || !me.stage || !me.natW || !me.natH) return null;
             // 선택 핸들/del 버튼 임시 제거 (export 에 포함되지 않도록)
             _meSelect(null);
+            // 2026-06-14: 텍스트 동기화 — 사용자가 typing 중(blur 안 함)이면 it.text 미반영. textContent 로 강제 sync.
+            //   또한 활성 contenteditable 강제 blur (caret 숨김 + sync 트리거).
+            try {
+                if (document.activeElement && document.activeElement.blur) {
+                    document.activeElement.blur();
+                }
+                me.items.forEach(function(it){
+                    if (it && it.type === 'text' && it.el) {
+                        // <br> 등을 \n 으로 보존
+                        var raw = (it.el.innerText !== undefined) ? it.el.innerText : (it.el.textContent || '');
+                        it.text = raw;
+                    }
+                });
+            } catch(_se){}
+            // 2026-06-14: 폰트가 아직 로드 중이면 대기 (Korean fonts 보장)
+            try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(_fe){}
             // canvas 에 그리기
             var c = document.createElement('canvas');
             c.width = me.natW; c.height = me.natH;
@@ -6102,18 +6118,27 @@ function scrollHotdeal(gridId, dir) {
                 } else if (it.type === 'text') {
                     ctx.fillStyle = it.fill || '#1d1d1f';
                     var fs = it.fontSize || 24;
-                    var ff = (it.fontFamily || 'sans-serif').replace(/"/g,'');
+                    // 2026-06-14: 폰트명 공백 처리 — "Noto Sans KR" 같은 다중단어 폰트는 따옴표 유지 필수
+                    var ffRaw = it.fontFamily || 'sans-serif';
+                    var ff = ffRaw;
+                    // 따옴표 없고 공백 있으면 따옴표 추가
+                    if (!/["']/.test(ff) && /\s/.test(ff)) ff = '"' + ff + '"';
                     ctx.font = fs + 'px ' + ff;
                     ctx.textBaseline = 'top';
                     ctx.textAlign = it.textAlign || 'left';
-                    var tx = it.x;
+                    // DOM 의 padding 4px 6px 보정 — 텍스트가 실제 위치와 거의 일치하도록.
+                    //   me.wScale 로 역변환 (display px → natural px)
+                    var padX = 6 / (me.wScale || 1);
+                    var padY = 4 / (me.wScale || 1);
+                    var tx = it.x + padX;
                     if (ctx.textAlign === 'center') tx = it.x + it.w/2;
-                    else if (ctx.textAlign === 'right') tx = it.x + it.w;
+                    else if (ctx.textAlign === 'right') tx = it.x + it.w - padX;
+                    var ty = it.y + padY;
                     // 멀티라인
                     var lines = (it.text || '').split(/\n/);
                     var lh = fs * (it.lineHeight || 1.2);
                     lines.forEach(function(ln, idx) {
-                        ctx.fillText(ln, tx, it.y + idx * lh);
+                        ctx.fillText(ln, tx, ty + idx * lh);
                     });
                 } else if (it.type === 'image' && it.src) {
                     // 이미지를 동기적으로 그릴 수 있도록 promise 로 처리.
@@ -11143,7 +11168,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=423"></script>
+<script src="/simple_order.js?v=424"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
