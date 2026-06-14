@@ -5729,8 +5729,20 @@ function scrollHotdeal(gridId, dir) {
         .me-handle-se { right:-6px; bottom:-6px; cursor:nwse-resize; }
         .me-handle-rot { left:50%; top:-32px; margin-left:-6px; background:#10b981; cursor:grab; }
         .me-handle-rot::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:18px; background:#10b981; transform:translateX(-50%); }
-        .me-item.text { cursor: move; }
+        .me-item.text {
+            cursor: move;
+            /* 2026-06-14: 폰트 렌더링 품질 — faux-bold 합성 차단 + antialiasing */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-synthesis: none;  /* 폰트가 weight 없을 때 가짜 bold 합성 방지 (검은고딕 등) */
+            -webkit-font-synthesis: none;
+        }
         .me-item.text.selected { cursor: text; }
+        .me-stage {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
         .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; touch-action:none; }
         /* 2026-06-14: Smart guide — 드래그 중 캔버스 중앙 라인 */
         .me-guide { position:absolute; background:#ec4899; pointer-events:none; z-index:100; }
@@ -6076,6 +6088,26 @@ function scrollHotdeal(gridId, dir) {
         document.head.appendChild(link);
     }
 
+    // 2026-06-14: 폰트가 지원하는 weight 중 가장 가까운 값 반환 — canvas faux-bold 합성 방지
+    function _meResolveWeight(family, wanted) {
+        var clean = String(family || '').replace(/["']/g, '').trim();
+        // 모든 언어의 폰트 리스트에서 찾기
+        var allFonts = [];
+        Object.keys(ME_GOOGLE_FONTS).forEach(function(k){
+            (ME_GOOGLE_FONTS[k] || []).forEach(function(f){ allFonts.push(f); });
+        });
+        var match = allFonts.find(function(f){ return f.font_family === clean; });
+        if (!match || !match.weights) return wanted;  // 정보 없으면 그대로
+        var available = String(match.weights).split(';').map(function(w){ return parseInt(w, 10); }).filter(function(w){ return !isNaN(w); });
+        if (available.length === 0) return wanted;
+        if (available.indexOf(wanted) >= 0) return wanted;
+        // 가까운 weight 반환
+        return available.reduce(function(prev, curr){
+            return Math.abs(curr - wanted) < Math.abs(prev - wanted) ? curr : prev;
+        });
+    }
+    window._meResolveWeight = _meResolveWeight;
+
     function _meSyncItemDisplay(it) {
         it.el.style.left = (it.x * me.wScale) + 'px';
         it.el.style.top = (it.y * me.wScale) + 'px';
@@ -6100,8 +6132,10 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.letterSpacing = (it.letterSpacing || 0) + 'px';
             it.el.style.lineHeight = (it.lineHeight || 1.2);
             it.el.style.textAlign = it.textAlign || 'left';
-            // 2026-06-14: fontWeight 하드코딩 제거 — it.fontWeight 사용. export 와 일치.
-            it.el.style.fontWeight = String(it.fontWeight || 400);
+            // 2026-06-14: fontWeight 를 폰트가 지원하는 값으로 보정 — faux-bold 자글거림 방지
+            var fwReq = it.fontWeight || 400;
+            var fwResolved = (typeof _meResolveWeight === 'function') ? _meResolveWeight(it.fontFamily, fwReq) : fwReq;
+            it.el.style.fontWeight = String(fwResolved);
             it.el.style.height = 'auto';
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
@@ -6319,13 +6353,19 @@ function scrollHotdeal(gridId, dir) {
             } catch(_se){}
             // 2026-06-14: 폰트가 아직 로드 중이면 대기 (Korean fonts 보장)
             try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(_fe){}
-            // canvas 에 그리기
+            // 2026-06-14: 텍스트 품질 위해 2배 해상도로 그리고 ctx.scale(2) — 자글거림 감소.
+            var EXPORT_DPR = 2;
             var c = document.createElement('canvas');
-            c.width = me.natW; c.height = me.natH;
+            c.width = me.natW * EXPORT_DPR;
+            c.height = me.natH * EXPORT_DPR;
             var ctx = c.getContext('2d');
+            ctx.scale(EXPORT_DPR, EXPORT_DPR);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            try { ctx.textRendering = 'geometricPrecision'; } catch(_tr){}
             // 배경
             ctx.fillStyle = me.bg || '#ffffff';
-            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.fillRect(0, 0, me.natW, me.natH);
             // items 순서대로 (zCounter 무관, items 배열 순서) 그리기
             for (var i = 0; i < me.items.length; i++) {
                 var it = me.items[i];
@@ -6351,23 +6391,25 @@ function scrollHotdeal(gridId, dir) {
                     }
                 } else if (it.type === 'text') {
                     ctx.save();
-                    // 회전 — item 중심 기준
                     var rotT = it.rotation || 0;
-                    if (rotT) {
+                    var fxT = it.flipX ? -1 : 1, fyT = it.flipY ? -1 : 1;
+                    if (rotT || fxT !== 1 || fyT !== 1) {
                         var ccx = it.x + it.w/2;
                         var ccy = it.y + it.h/2;
                         ctx.translate(ccx, ccy);
-                        ctx.rotate(rotT * Math.PI / 180);
+                        if (rotT) ctx.rotate(rotT * Math.PI / 180);
+                        if (fxT !== 1 || fyT !== 1) ctx.scale(fxT, fyT);
                         ctx.translate(-ccx, -ccy);
                     }
                     ctx.fillStyle = it.fill || '#1d1d1f';
                     var fs = it.fontSize || 24;
-                    // 폰트명 공백 처리 — "Noto Sans KR" 등 다중단어 폰트는 따옴표 유지
                     var ffRaw = it.fontFamily || 'sans-serif';
                     var ff = ffRaw;
                     if (!/["']/.test(ff) && /\s/.test(ff)) ff = '"' + ff + '"';
-                    // 2026-06-14: fontWeight 동기화 — DOM 의 weight 와 일치 (이전엔 export 가 400 으로 그려서 굵기 차이 발생)
-                    var fw = it.fontWeight || 400;
+                    // 2026-06-14: 폰트 weight 를 실제 폰트가 지원하는 값으로 보정 (faux-bold 합성 방지)
+                    //   _meResolveWeight 가 가까운 지원 weight 반환
+                    var fwRaw = it.fontWeight || 400;
+                    var fw = (typeof _meResolveWeight === 'function') ? _meResolveWeight(ffRaw, fwRaw) : fwRaw;
                     ctx.font = fw + ' ' + fs + 'px ' + ff;
                     // letterSpacing — 브라우저 지원 시 적용 (Canvas 2D, Chrome 99+)
                     try {
@@ -11609,7 +11651,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=432"></script>
+<script src="/simple_order.js?v=433"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
