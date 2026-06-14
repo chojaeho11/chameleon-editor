@@ -925,7 +925,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 ? _legacyExtraPool.slice(extraStart)
                 : [];
             const extraFiles = extraFilesArr.map(f => `<div>
-                <div class="ef-thumb"><img src="${esc(f.url)}" alt="${esc(f.name || '')}"></div>
+                <div class="ef-thumb">${/\.pdf(?:\?|#|$)/i.test(f.url || '')
+                    ? `<embed src="${esc(f.url)}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />`
+                    : `<img src="${esc(f.url)}" alt="${esc(f.name || '')}">`}</div>
                 <div class="ef-name">${esc(f.name || '')}</div>
             </div>`).join('');
             const extraFilesHtml = extraFiles ? `<div class="extra-files">
@@ -957,7 +959,11 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 <div class="item-body">
                     <div class="item-thumb-wrap" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
                         <div class="item-thumb">
-                            ${thumbUrl ? `<img src="${esc(thumbUrl)}" alt="design ${i+1}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'font-size:32px; color:#d1d5db;\\'></i>';">` : (it.artwork_later ? '<div style="text-align:center; color:#b45309; font-size:12px; font-weight:700; padding:8px;"><i class="fa-solid fa-envelope" style="font-size:26px; display:block; margin-bottom:6px;"></i>이미지<br>추후 전달</div>' : '<i class="fa-solid fa-image" style="font-size:32px; color:#d1d5db;"></i>')}
+                            ${thumbUrl
+                                ? (/\.pdf(?:\?|#|$)/i.test(thumbUrl)
+                                    ? `<embed src="${esc(thumbUrl)}#toolbar=0&navpanes=0&scrollbar=0&view=Fit" type="application/pdf" style="width:100%;height:100%;border:none;pointer-events:none;background:#fff;" />`
+                                    : `<img src="${esc(thumbUrl)}" alt="design ${i+1}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'font-size:32px; color:#d1d5db;\\'></i>';">`)
+                                : (it.artwork_later ? '<div style="text-align:center; color:#b45309; font-size:12px; font-weight:700; padding:8px;"><i class="fa-solid fa-envelope" style="font-size:26px; display:block; margin-bottom:6px;"></i>이미지<br>추후 전달</div>' : '<i class="fa-solid fa-image" style="font-size:32px; color:#d1d5db;"></i>')}
                         </div>
                         ${_woIsAdmin ? `<label class="wo-attach-btn" style="font-size:11px;font-weight:700;color:#7c3aed;border:1.5px solid #c4b5fd;border-radius:7px;padding:5px 10px;cursor:pointer;background:#faf5ff;white-space:nowrap;">📎 파일 첨부<input type="file" multiple style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>` : ''}
                     </div>
