@@ -1119,17 +1119,17 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     </div>
                     ${optGrid}
                     ${extraFilesHtml}
-                    <!-- 2026-06-15: 항목 하단 매니저 메모 & 참고 이미지 영역 — grid-column 1/-1 로 카드 폭 전체 사용. -->
-                    <div class="wo-item-mgr-zone" style="grid-column:1/-1; margin-top:14px; padding-top:12px; border-top:1px dashed #d1d5db; display:flex; flex-direction:column; gap:10px;">
+                    <!-- 2026-06-15: 항목 하단 매니저 메모(좌) + 참고 이미지(우) 2단 레이아웃. -->
+                    <div class="wo-item-mgr-zone" style="grid-column:1/-1; margin-top:14px; padding-top:12px; border-top:1px dashed #d1d5db; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                         ${_woIsAdmin ? `
                         <div>
                             <div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모 (상세) — 위 한 줄 메모와 동기화</div>
-                            <textarea id="woItemMemoBig_${i}" placeholder="제품 관련 자세한 작업 지시사항·주의점 등을 자유롭게 적어주세요" oninput="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value;}})()" onblur="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value; t.dispatchEvent(new Event('blur'));}})()" style="width:100%; min-height:60px; max-height:120px; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-family:inherit; line-height:1.55; background:#fffbeb; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
+                            <textarea id="woItemMemoBig_${i}" placeholder="제품 관련 자세한 작업 지시사항·주의점 등을 자유롭게 적어주세요" oninput="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value;}})()" onblur="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value; t.dispatchEvent(new Event('blur'));}})()" style="width:100%; min-height:180px; max-height:240px; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-family:inherit; line-height:1.55; background:#fffbeb; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
                         </div>
                         <div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <div style="font-size:11px; font-weight:800; color:#5b21b6;">🖼️ 참고 이미지 첨부 — 작업 참조용</div>
-                                <label style="font-size:11px; font-weight:700; color:#7c3aed; border:1.5px solid #c4b5fd; border-radius:6px; padding:4px 10px; cursor:pointer; background:#faf5ff; white-space:nowrap;">📎 참고 이미지 추가<input type="file" multiple accept="image/*" style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px; flex-wrap:wrap;">
+                                <div style="font-size:11px; font-weight:800; color:#5b21b6;">🖼️ 참고 이미지 — 작업 참조용</div>
+                                <label style="font-size:11px; font-weight:700; color:#7c3aed; border:1.5px solid #c4b5fd; border-radius:6px; padding:4px 10px; cursor:pointer; background:#faf5ff; white-space:nowrap;">📎 추가<input type="file" multiple accept="image/*" style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
                             </div>
                             ${(function(){
                                 var imgFiles = _liveAttachments.filter(function(x){
@@ -1137,23 +1137,30 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                                     var ex = (x.f.name || '').toLowerCase().split('.').pop();
                                     return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
                                 });
-                                if (!imgFiles.length) return '<div style="font-size:11px; color:#9ca3af; padding:10px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:6px; text-align:center;">참고 이미지가 첨부되면 여기에 표시됩니다</div>';
-                                return '<div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:8px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
-                                    return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:4px; display:flex; flex-direction:column; gap:3px; max-height:240px; overflow:hidden;"><a href="'+esc(x.f.url)+'" target="_blank" style="display:block; width:100%; height:180px; overflow:hidden; border-radius:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:100%; object-fit:contain; background:#fafafa; display:block;"></a><div style="font-size:10px; color:#5b21b6; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+esc(x.f.name||'')+'</div></div>';
+                                if (!imgFiles.length) return '<div style="font-size:11px; color:#9ca3af; padding:14px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:6px; text-align:center; min-height:180px; display:flex; align-items:center; justify-content:center;">참고 이미지가 첨부되면<br>여기에 표시됩니다</div>';
+                                return '<div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
+                                    return '<div style="position:relative; background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:3px; display:flex; flex-direction:column; gap:2px; max-height:240px; overflow:hidden;">' +
+                                        '<a href="'+esc(x.f.url)+'" target="_blank" style="display:block; width:100%; height:140px; overflow:hidden; border-radius:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:100%; object-fit:contain; background:#fafafa; display:block;"></a>' +
+                                        '<div style="font-size:9.5px; color:#5b21b6; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+esc(x.f.name||'')+'</div>' +
+                                        '<div style="display:flex; gap:3px; justify-content:center;">' +
+                                            '<label title="교체" style="font-size:9px; font-weight:700; color:#7c3aed; border:1px solid #c4b5fd; border-radius:4px; padding:1px 5px; cursor:pointer; background:#faf5ff;">🔄 교체<input type="file" accept="image/*" style="display:none;" onchange="window._woReplaceItemAttachment('+i+', '+x.fi+', this)"></label>' +
+                                            '<button type="button" onclick="window._woDeleteItemAttachment('+i+', '+x.fi+')" title="삭제 (휴지통)" style="font-size:9px; font-weight:700; color:#dc2626; border:1px solid #fca5a5; border-radius:4px; padding:1px 5px; cursor:pointer; background:#fef2f2;">🗑 삭제</button>' +
+                                        '</div>' +
+                                    '</div>';
                                 }).join('') + '</div>';
                             })()}
                         </div>
                         ` : (_mgrMemoCurrent || _liveAttachments.length > 0 ? `
-                        ${_mgrMemoCurrent ? `<div><div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모</div><div style="font-size:12px; color:#451a03; line-height:1.6; white-space:pre-wrap; background:#fffbeb; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px;">${esc(_mgrMemoCurrent)}</div></div>` : ''}
+                        ${_mgrMemoCurrent ? `<div><div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모</div><div style="font-size:12px; color:#451a03; line-height:1.6; white-space:pre-wrap; background:#fffbeb; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px;">${esc(_mgrMemoCurrent)}</div></div>` : '<div></div>'}
                         ${(function(){
                             var imgFiles = _liveAttachments.filter(function(x){
                                 var t = (x.f.type || '').toLowerCase();
                                 var ex = (x.f.name || '').toLowerCase().split('.').pop();
                                 return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
                             });
-                            if (!imgFiles.length) return '';
-                            return '<div><div style="font-size:11px; font-weight:800; color:#5b21b6; margin-bottom:4px;">🖼️ 참고 이미지</div><div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:8px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
-                                return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:180px; object-fit:contain; background:#fafafa; display:block; border-radius:4px;"></div>';
+                            if (!imgFiles.length) return '<div></div>';
+                            return '<div><div style="font-size:11px; font-weight:800; color:#5b21b6; margin-bottom:4px;">🖼️ 참고 이미지</div><div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:6px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
+                                return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:3px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:140px; object-fit:contain; background:#fafafa; display:block; border-radius:4px;"></div>';
                             }).join('') + '</div></div>';
                         })()}
                         ` : '')}
@@ -1492,6 +1499,57 @@ window._woDeleteItemAttachment = async function(itemIdx, attachIdx) {
     } catch (e) {
         console.error('[wo del attach]', e);
         alert('삭제 실패: ' + (e.message || e));
+    }
+};
+
+// 2026-06-15: 참고 이미지 교체 — 기존을 휴지통으로 + 새 파일 업로드.
+window._woReplaceItemAttachment = async function(itemIdx, attachIdx, input) {
+    if (!window._woOrderId) return;
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { alert('50MB 초과 파일은 업로드 안 됩니다.'); input.value = ''; return; }
+    const lbl = input.parentNode;
+    const origText = lbl ? lbl.firstChild.textContent : '';
+    if (lbl) lbl.firstChild.textContent = '교체 중…';
+    try {
+        // 새 파일 업로드
+        const ext = (file.name.split('.').pop() || 'bin').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'bin';
+        const path = 'orders/manual_attach/' + window._woOrderId + '_' + itemIdx + '_replace_' + Date.now() + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
+        const up = await sb.storage.from('orders').upload(path, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+        if (up.error) throw up.error;
+        const pub = sb.storage.from('orders').getPublicUrl(path);
+        const url = pub && pub.data && pub.data.publicUrl;
+        if (!url) throw new Error('URL 생성 실패');
+        const newAttach = { name: file.name, url: url, type: file.type || ('application/' + ext), _uploaded_at: new Date().toISOString() };
+
+        // DB 갱신: 기존 항목 _deleted_at, 새 항목 push.
+        const { data: cur, error: rdErr } = await sb.from('orders').select('items, files').eq('id', window._woOrderId).single();
+        if (rdErr) throw rdErr;
+        const items = Array.isArray(cur.items) ? cur.items : [];
+        if (!items[itemIdx]) throw new Error('항목 인덱스 오류');
+        if (!Array.isArray(items[itemIdx].attachments)) items[itemIdx].attachments = [];
+        const target = items[itemIdx].attachments[attachIdx];
+        if (target) target._deleted_at = new Date().toISOString();
+        items[itemIdx].attachments.push(newAttach);
+        // 썸네일도 새 이미지로 갱신 (image 인 경우)
+        if ((newAttach.type || '').indexOf('image/') === 0) {
+            items[itemIdx].artwork_url = url;
+            items[itemIdx].artwork_filename = file.name;
+            if (items[itemIdx].pattern_spec) items[itemIdx].pattern_spec.artwork_url = url;
+        }
+        const orderFiles = Array.isArray(cur.files) ? cur.files : [];
+        if (target) orderFiles.forEach(f => { if (f.url === target.url) f._deleted_at = target._deleted_at; });
+        orderFiles.push({ name: file.name, url: url, type: newAttach.type, _manual: true, _item_idx: itemIdx });
+        const { error: upErr } = await sb.from('orders').update({ items: items, files: orderFiles }).eq('id', window._woOrderId);
+        if (upErr) throw upErr;
+        alert('파일이 교체되었습니다.');
+        location.reload();
+    } catch (e) {
+        console.error('[wo replace attach]', e);
+        alert('교체 실패: ' + (e.message || e));
+        if (lbl) lbl.firstChild.textContent = origText;
+    } finally {
+        try { input.value = ''; } catch (_e) {}
     }
 };
 
