@@ -11561,6 +11561,8 @@ html, body { background: #ffffff !important; }
         window._soQdRotateCanvas = function() {
             var meRef = window.me;
             if (!meRef || !meRef.natW || !meRef.natH) return;
+            // 되돌리기 스냅샷 — 회전 직전 상태 보존
+            if (typeof window._meSnapshot === 'function') window._meSnapshot();
             var oldW = meRef.natW;
             var oldH = meRef.natH;
             meRef.natW = oldH;

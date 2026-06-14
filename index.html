@@ -5767,6 +5767,7 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
             </div>
             <div class="me-toolbar">
+                <button type="button" class="me-tool-btn" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="Ctrl+Z" style="display:inline-flex; align-items:center; gap:5px; opacity:0.35;" disabled><i class="fa-solid fa-rotate-left" style="font-size:11px;"></i><span data-i18n="me_undo">되돌리기</span></button>
                 <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()"><span data-i18n="me_img_upload">이미지 업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn" onclick="window._meAddText()"><span data-i18n="me_text">글씨</span></button>
@@ -5839,6 +5840,7 @@ function scrollHotdeal(gridId, dir) {
         natW: 595, natH: 842,        // 자연 (다운로드) 사이즈
         bg: '#ffffff',
         items: [],                   // {el, type, x, y, w, h, src?, text?, fill?, fontSize?}
+        history: [],                 // 2026-06-14: undo 스택 (max 50)
         selected: null,
         zCounter: 10
     };
@@ -6080,6 +6082,72 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-14: simple_order 모달에서 호출하기 위해 window 노출
     window._meSetSize = _meSetSize;
     window._meSyncItemDisplay = _meSyncItemDisplay;
+
+    // ─────────────────────── Undo 스택 ───────────────────────
+    // 2026-06-14: Ctrl+Z 되돌리기 — 각 mutation 직전 snapshot 저장 → pop 시 restore.
+    var MAX_HISTORY = 50;
+    function _meSnapshot() {
+        if (!me) return;
+        var snap = {
+            natW: me.natW, natH: me.natH, bg: me.bg,
+            items: me.items.map(function(it){
+                var clone = {};
+                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth'].forEach(function(k){
+                    if (it[k] !== undefined) clone[k] = it[k];
+                });
+                return clone;
+            })
+        };
+        me.history.push(snap);
+        if (me.history.length > MAX_HISTORY) me.history.shift();
+        _meUpdateUndoBtn();
+    }
+    function _meUpdateUndoBtn() {
+        var b = document.getElementById('meUndoBtn');
+        if (b) {
+            b.disabled = !me.history || me.history.length === 0;
+            b.style.opacity = b.disabled ? '0.35' : '';
+        }
+    }
+    function _meRestore(snap) {
+        if (!snap) return;
+        // 기존 item DOM 제거
+        me.items.forEach(function(o){ try { o.el.remove(); } catch(_e){} });
+        me.items = [];
+        _meSelect(null);
+        // 캔버스 사이즈/배경 복원
+        me.natW = snap.natW; me.natH = snap.natH; me.bg = snap.bg;
+        me.stage.style.background = me.bg;
+        var meBgPick = document.getElementById('meBgColor');
+        if (meBgPick) meBgPick.value = me.bg;
+        // item 재생성
+        (snap.items || []).forEach(function(s){
+            var el = document.createElement('div');
+            var cls = 'me-item';
+            if (s.type === 'text') cls += ' text';
+            if (s.type === 'shape') cls += ' shape' + (s.shape === 'circle' ? ' circle' : '');
+            el.className = cls;
+            el.style.zIndex = (++me.zCounter);
+            if (s.type === 'image') {
+                var img = document.createElement('img'); img.src = s.src; el.appendChild(img);
+            } else if (s.type === 'text') {
+                el.textContent = s.text || '';
+            }
+            me.stage.appendChild(el);
+            var it = Object.assign({ el: el }, s);
+            me.items.push(it);
+            _meSyncItemDisplay(it);
+            _meBindDrag(it);
+        });
+        _meFitStage();
+    }
+    window._meUndo = function() {
+        if (!me.history || me.history.length === 0) return;
+        var snap = me.history.pop();
+        _meRestore(snap);
+        _meUpdateUndoBtn();
+    };
+    window._meSnapshot = _meSnapshot;
     // 2026-06-14: 미니 에디터의 me.stage 를 PNG dataURL 로 변환 — simple_order "디자인 완료 · 적용" 에서 사용
     window._meExportPNG = async function() {
         try {
@@ -6240,6 +6308,7 @@ function scrollHotdeal(gridId, dir) {
     }
 
     function _meRemove(it) {
+        _meSnapshot();
         me.items = me.items.filter(function(o){ return o !== it; });
         it.el.remove();
         if (me.selected === it) { me.selected = null; _meRenderProps(null); }
@@ -6327,6 +6396,7 @@ function scrollHotdeal(gridId, dir) {
             if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
             if (it.el.getAttribute('contenteditable') === 'true') return;
             if (ev.button === 2) return; // 우클릭은 contextmenu 핸들러가 처리
+            _meSnapshot();  // 드래그 직전 상태 저장
             dragging = true;
             it.el.setPointerCapture(ev.pointerId);
             sx = ev.clientX; sy = ev.clientY;
@@ -6394,6 +6464,7 @@ function scrollHotdeal(gridId, dir) {
         var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0, sX = 0, sY = 0, sFont = 0, sRatio = 1;
         handle.addEventListener('pointerdown', function(ev){
             ev.stopPropagation(); ev.preventDefault();
+            _meSnapshot();
             resizing = true;
             handle.setPointerCapture(ev.pointerId);
             sx = ev.clientX; sy = ev.clientY;
@@ -6436,6 +6507,7 @@ function scrollHotdeal(gridId, dir) {
         var rotating = false, cx = 0, cy = 0, startAngle = 0, startRot = 0;
         handle.addEventListener('pointerdown', function(ev){
             ev.stopPropagation(); ev.preventDefault();
+            _meSnapshot();
             rotating = true;
             handle.setPointerCapture(ev.pointerId);
             // 화면상 item 중심 좌표
@@ -6467,6 +6539,7 @@ function scrollHotdeal(gridId, dir) {
     }
 
     window._meAddShape = function(shape) {
+        _meSnapshot();
         var el = document.createElement('div');
         el.className = 'me-item shape' + (shape === 'circle' ? ' circle' : '');
         el.style.zIndex = (++me.zCounter);
@@ -6497,6 +6570,7 @@ function scrollHotdeal(gridId, dir) {
     window._meAddImage = function(src, opts) {
         opts = opts || {};
         if (!src) { console.warn('[_meAddImage] empty src'); return; }
+        _meSnapshot();
         // src 가 거대한 dataURL 일 수 있어 로그는 짧게 (80자 + 길이)
         var _logSrc = (src.length > 200) ? src.slice(0, 80) + '... [' + src.length + ' chars]' : src;
         var im = new Image();
@@ -6563,6 +6637,7 @@ function scrollHotdeal(gridId, dir) {
     };
 
     window._meAddText = function() {
+        _meSnapshot();
         var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
         var placeholder = T('me_text_placeholder', '클릭하여 글씨 입력');
         // 사이트 언어의 주요 폰트 (Sans 제외 첫 번째) 를 디폴트로
@@ -6606,6 +6681,7 @@ function scrollHotdeal(gridId, dir) {
     };
 
     window._meSetBg = function(color) {
+        _meSnapshot();
         me.bg = color;
         $('meStage').style.background = color;
     };
@@ -6852,13 +6928,23 @@ function scrollHotdeal(gridId, dir) {
         });
         // Delete/Backspace 키 → 선택 항목 삭제 (텍스트 편집 중·input 포커스 중에는 무시)
         // 2026-06-14: 방향키 → 선택 항목 미세 이동 (1px / Shift 10px)
+        // 2026-06-14: Ctrl/Cmd + Z → 되돌리기 (선택 없어도 동작)
         document.addEventListener('keydown', function(ev){
-            // 입력 중에는 모든 단축키 무시
+            // 입력 중에는 모든 단축키 무시 (Ctrl+Z 도 텍스트 편집 본연의 undo 가 우선)
             var ae = document.activeElement;
             if (ae) {
                 var tag = (ae.tagName || '').toLowerCase();
                 if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
                 if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return;
+            }
+            // Ctrl+Z / Cmd+Z → undo (me.selected 없어도 동작)
+            if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'z' || ev.key === 'Z') && !ev.shiftKey) {
+                // 미니에디터가 켜져 있을 때만 (meStage 존재 + 화면에 표시 중)
+                var stageVisible = me.stage && me.stage.offsetParent !== null;
+                if (!stageVisible) return;
+                ev.preventDefault();
+                if (typeof window._meUndo === 'function') window._meUndo();
+                return;
             }
             if (!me.selected) return;
             // 삭제
@@ -11311,7 +11397,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=429"></script>
+<script src="/simple_order.js?v=430"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
