@@ -70,8 +70,56 @@
 </script>
 
 <script type="module">
-import { initAdvisorPanel } from './advisor-panel.js?v=457';
+import { initAdvisorPanel } from './advisor-panel.js?v=458';
 initAdvisorPanel();
+
+// 2026-06-14: iframe 내부의 닫기 버튼이 advisor-panel 의 toggleAdvisorPanel 을 호출하므로,
+//   그것을 OVERRIDE 해서 부모 wrapper 까지 닫도록 한다 (X 가 여러 개여도 모두 동작).
+function _closeAllParentChatWrappers() {
+    if (!window.parent || window.parent === window) return false;
+    var p = window.parent;
+    var closed = false;
+    try { p.postMessage('closeKapuChat', '*'); closed = true; } catch(_e) {}
+    try { p.postMessage({ type: 'closeKapuChat' }, '*'); } catch(_e) {}
+    try {
+        var ids = ['chatIframeMobileWrap', 'chatIframeWrap', 'kapuChatWrap'];
+        ids.forEach(function(id){
+            var w = p.document.getElementById(id);
+            if (w) { w.style.display = 'none'; closed = true; }
+        });
+        try { p.document.body.style.overflow = ''; } catch(_e) {}
+        if ('_chatIframeOpen' in p) p._chatIframeOpen = false;
+        var kF = p.document.getElementById('kapuFab');
+        if (kF) { kF.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>'; kF.style.display = ''; }
+    } catch(_e) {}
+    return closed;
+}
+// 첫 호출 시점 (initAdvisorPanel 이 window.toggleAdvisorPanel 을 정의한 후) 에 override
+var _origToggle = null;
+function _installToggleOverride() {
+    if (typeof window.toggleAdvisorPanel !== 'function') return false;
+    if (window.toggleAdvisorPanel.__cpOverridden) return true;
+    _origToggle = window.toggleAdvisorPanel;
+    window.toggleAdvisorPanel = function() {
+        // iframe 내부에서 호출 — 부모 wrapper 도 닫고, 그 후 원본도 실행해 advisor-panel 자체 상태 정리
+        if (_closeAllParentChatWrappers()) {
+            try { _origToggle.apply(window, arguments); } catch(_e) {}
+            return;
+        }
+        // 부모 없음 (standalone) — 원본 실행
+        return _origToggle.apply(window, arguments);
+    };
+    window.toggleAdvisorPanel.__cpOverridden = true;
+    return true;
+}
+// advisor-panel 이 비동기로 정의할 수 있으므로 polling
+(function(){
+    var tries = 0;
+    var iv = setInterval(function(){
+        tries++;
+        if (_installToggleOverride() || tries > 40) clearInterval(iv);
+    }, 100);
+})();
 
 // 커스텀 닫기 버튼 삽입
 setTimeout(() => {
