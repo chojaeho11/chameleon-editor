@@ -5721,7 +5721,16 @@ function scrollHotdeal(gridId, dir) {
         .me-item.text[contenteditable=true] { cursor:text; outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); }
         .me-item.shape { background:#007AFF; }
         .me-item.shape.circle { border-radius:50%; }
-        .me-handle { position:absolute; right:-6px; bottom:-6px; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; cursor:nwse-resize; box-shadow:0 1px 4px rgba(0,0,0,0.25); }
+        /* 2026-06-14: 4 모서리 핸들 + 회전 핸들 (Photoshop/Figma 스타일) */
+        .me-handle { position:absolute; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.25); z-index:5; }
+        .me-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
+        .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
+        .me-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
+        .me-handle-se { right:-6px; bottom:-6px; cursor:nwse-resize; }
+        .me-handle-rot { left:50%; top:-32px; margin-left:-6px; background:#10b981; cursor:grab; }
+        .me-handle-rot::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:18px; background:#10b981; transform:translateX(-50%); }
+        .me-item.text { cursor: move; }
+        .me-item.text.selected { cursor: text; }
         .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; }
         /* 속성 패널 */
         .me-props { display:none; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
@@ -6038,6 +6047,10 @@ function scrollHotdeal(gridId, dir) {
         it.el.style.left = (it.x * me.wScale) + 'px';
         it.el.style.top = (it.y * me.wScale) + 'px';
         it.el.style.width = (it.w * me.wScale) + 'px';
+        // 2026-06-14: 회전 적용 (CSS transform). 모서리 회전축 = 중앙.
+        var rot = it.rotation || 0;
+        it.el.style.transform = rot ? ('rotate(' + rot + 'deg)') : '';
+        it.el.style.transformOrigin = 'center center';
         if (it.type === 'image') {
             it.el.style.height = (it.h * me.wScale) + 'px';
             var im = it.el.querySelector('img');
@@ -6049,7 +6062,8 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.letterSpacing = (it.letterSpacing || 0) + 'px';
             it.el.style.lineHeight = (it.lineHeight || 1.2);
             it.el.style.textAlign = it.textAlign || 'left';
-            it.el.style.fontWeight = '500';
+            // 2026-06-14: fontWeight 하드코딩 제거 — it.fontWeight 사용. export 와 일치.
+            it.el.style.fontWeight = String(it.fontWeight || 400);
             it.el.style.height = 'auto';
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
@@ -6118,45 +6132,67 @@ function scrollHotdeal(gridId, dir) {
                         }
                     }
                 } else if (it.type === 'text') {
+                    ctx.save();
+                    // 회전 — item 중심 기준
+                    var rotT = it.rotation || 0;
+                    if (rotT) {
+                        var ccx = it.x + it.w/2;
+                        var ccy = it.y + it.h/2;
+                        ctx.translate(ccx, ccy);
+                        ctx.rotate(rotT * Math.PI / 180);
+                        ctx.translate(-ccx, -ccy);
+                    }
                     ctx.fillStyle = it.fill || '#1d1d1f';
                     var fs = it.fontSize || 24;
-                    // 2026-06-14: 폰트명 공백 처리 — "Noto Sans KR" 같은 다중단어 폰트는 따옴표 유지 필수
+                    // 폰트명 공백 처리 — "Noto Sans KR" 등 다중단어 폰트는 따옴표 유지
                     var ffRaw = it.fontFamily || 'sans-serif';
                     var ff = ffRaw;
-                    // 따옴표 없고 공백 있으면 따옴표 추가
                     if (!/["']/.test(ff) && /\s/.test(ff)) ff = '"' + ff + '"';
-                    ctx.font = fs + 'px ' + ff;
+                    // 2026-06-14: fontWeight 동기화 — DOM 의 weight 와 일치 (이전엔 export 가 400 으로 그려서 굵기 차이 발생)
+                    var fw = it.fontWeight || 400;
+                    ctx.font = fw + ' ' + fs + 'px ' + ff;
+                    // letterSpacing — 브라우저 지원 시 적용 (Canvas 2D, Chrome 99+)
+                    try {
+                        var ls = (it.letterSpacing || 0) + 'px';
+                        ctx.letterSpacing = ls;
+                    } catch(_le){}
                     ctx.textBaseline = 'top';
                     ctx.textAlign = it.textAlign || 'left';
-                    // DOM 의 padding 4px 6px 보정 — 텍스트가 실제 위치와 거의 일치하도록.
-                    //   me.wScale 로 역변환 (display px → natural px)
+                    // DOM padding 4px 6px 보정 (display px → natural px 역변환)
                     var padX = 6 / (me.wScale || 1);
                     var padY = 4 / (me.wScale || 1);
                     var tx = it.x + padX;
                     if (ctx.textAlign === 'center') tx = it.x + it.w/2;
                     else if (ctx.textAlign === 'right') tx = it.x + it.w - padX;
                     var ty = it.y + padY;
-                    // 멀티라인
                     var lines = (it.text || '').split(/\n/);
                     var lh = fs * (it.lineHeight || 1.2);
                     lines.forEach(function(ln, idx) {
                         ctx.fillText(ln, tx, ty + idx * lh);
                     });
+                    ctx.restore();
                 } else if (it.type === 'image' && it.src) {
-                    // 이미지를 동기적으로 그릴 수 있도록 promise 로 처리.
-                    //   2026-06-14: HTTP URL 은 crossOrigin='anonymous' 로 fetch (canvas taint 방지).
-                    //   Supabase storage 는 public 버킷에 Access-Control-Allow-Origin: * 응답함.
-                    //   data: URL 은 crossOrigin 불필요.
+                    var rotI = it.rotation || 0;
+                    var ixx = it.x, iyy = it.y, iww = it.w, ihh = it.h;
                     await new Promise(function(resolve){
                         var im = new Image();
                         if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
                         im.onload = function(){
-                            try { ctx.drawImage(im, it.x, it.y, it.w, it.h); } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
+                            try {
+                                if (rotI) {
+                                    ctx.save();
+                                    var iccx = ixx + iww/2, iccy = iyy + ihh/2;
+                                    ctx.translate(iccx, iccy);
+                                    ctx.rotate(rotI * Math.PI / 180);
+                                    ctx.drawImage(im, -iww/2, -ihh/2, iww, ihh);
+                                    ctx.restore();
+                                } else {
+                                    ctx.drawImage(im, ixx, iyy, iww, ihh);
+                                }
+                            } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
                             resolve();
                         };
                         im.onerror = function(){
-                            // crossOrigin 으로 실패 시 → no-CORS 로 재시도. 단 그리면 canvas tainted → toDataURL 실패.
-                            //   이 경우 export 자체를 포기하는 게 낫지만, 우선 silent skip.
                             console.warn('[_meExportPNG] image load failed (will be missing from export)');
                             resolve();
                         };
@@ -6183,10 +6219,19 @@ function scrollHotdeal(gridId, dir) {
         me.selected = it;
         if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
-        // 선택만으로는 레이어 순서를 바꾸지 않음 — 우클릭 메뉴에서 명시적으로 조절
-        var h = document.createElement('div'); h.className = 'me-handle';
-        it.el.appendChild(h);
-        _meBindResize(h, it);
+        // 2026-06-14: 4 모서리 핸들 (정비율 리사이즈) + 회전 핸들
+        ['nw','ne','sw','se'].forEach(function(corner){
+            var h = document.createElement('div');
+            h.className = 'me-handle me-handle-' + corner;
+            it.el.appendChild(h);
+            _meBindResize(h, it, corner);
+        });
+        // 회전 핸들 (상단 위, 녹색)
+        var rh = document.createElement('div');
+        rh.className = 'me-handle me-handle-rot';
+        it.el.appendChild(rh);
+        _meBindRotate(rh, it);
+        // 삭제 버튼 (우상단, 회전 핸들과 겹치지 않게 right:-6px;top:-22px 으로)
         var d = document.createElement('div'); d.className = 'me-del'; d.textContent = '×';
         it.el.appendChild(d);
         d.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); ev.preventDefault(); _meRemove(it); });
@@ -6302,6 +6347,26 @@ function scrollHotdeal(gridId, dir) {
         });
         it.el.addEventListener('pointercancel', function(){ dragging = false; });
         if (it.type === 'text') {
+            // 2026-06-14: 텍스트 편집 UX 개선 — 이미 선택된 상태에서 click 또는 dblclick 으로 즉시 편집 모드.
+            //   더블클릭은 항상 동작 (기존 호환), 단일클릭은 이미 선택돼 있고 contenteditable 아닐 때만.
+            var _lastClickTime = 0;
+            it.el.addEventListener('click', function(ev){
+                if (it.el.getAttribute('contenteditable') === 'true') return;
+                var now = Date.now();
+                var isAlreadySelected = (me.selected === it);
+                _lastClickTime = now;
+                // 이미 선택된 텍스트 — 클릭으로 편집 진입 (드래그 100ms 후 분간)
+                if (isAlreadySelected) {
+                    setTimeout(function(){
+                        // 그 사이 다시 누르지 않았으면 (= 드래그 아님) 편집 진입
+                        if (_lastClickTime === now && it.el.getAttribute('contenteditable') !== 'true') {
+                            it.el.setAttribute('contenteditable', 'true');
+                            it.el.focus();
+                            document.execCommand && document.execCommand('selectAll', false, null);
+                        }
+                    }, 180);
+                }
+            });
             it.el.addEventListener('dblclick', function(){
                 it.el.setAttribute('contenteditable', 'true');
                 it.el.focus();
@@ -6309,42 +6374,93 @@ function scrollHotdeal(gridId, dir) {
             });
             it.el.addEventListener('blur', function(){
                 it.el.removeAttribute('contenteditable');
-                it.text = it.el.textContent || '';
+                it.text = (it.el.innerText !== undefined) ? it.el.innerText : (it.el.textContent || '');
+            });
+            // 편집 중 Enter 줄바꿈, Escape 로 편집 종료
+            it.el.addEventListener('keydown', function(ev){
+                if (it.el.getAttribute('contenteditable') !== 'true') return;
+                if (ev.key === 'Escape') {
+                    ev.preventDefault();
+                    it.el.blur();
+                }
             });
         }
     }
 
-    function _meBindResize(handle, it) {
-        var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0, sFont = 0;
+    // 2026-06-14: 4 모서리 정비율 리사이즈. corner = 'nw'|'ne'|'sw'|'se'
+    function _meBindResize(handle, it, corner) {
+        corner = corner || 'se';
+        var resizing = false, sx = 0, sy = 0, sw = 0, sh = 0, sX = 0, sY = 0, sFont = 0, sRatio = 1;
         handle.addEventListener('pointerdown', function(ev){
             ev.stopPropagation(); ev.preventDefault();
             resizing = true;
             handle.setPointerCapture(ev.pointerId);
             sx = ev.clientX; sy = ev.clientY;
-            sw = it.w; sh = it.h; sFont = it.fontSize || 0;
+            sw = it.w; sh = it.h; sX = it.x; sY = it.y; sFont = it.fontSize || 0;
+            sRatio = (sh > 0) ? (sh / sw) : 1;
         });
         handle.addEventListener('pointermove', function(ev){
             if (!resizing) return;
             var dx = (ev.clientX - sx) / me.wScale;
             var dy = (ev.clientY - sy) / me.wScale;
-            if (it.type === 'image') {
-                var ratio = sh / sw;
-                it.w = Math.max(20, sw + dx);
-                it.h = Math.max(20, it.w * ratio);
-            } else if (it.type === 'text') {
-                it.fontSize = Math.max(8, sFont + dx * 0.4);
-                it.w = Math.max(40, sw + dx);
-                // 속성 패널 fontSize 입력 동기화
+            // 정비율 — 모서리 별 delta 부호 결정
+            //   nw: 좌상단 — dx,dy 감소시 커짐. 신규 w = sw - dx, h = sh - dy → ratio 맞추기.
+            //   se: 우하단 — dx,dy 증가시 커짐. 신규 w = sw + dx.
+            //   ne: 우상단. sw: 좌하단.
+            // 큰 변의 변화량으로 정비율 결정
+            var signX = (corner === 'nw' || corner === 'sw') ? -1 : 1;
+            var signY = (corner === 'nw' || corner === 'ne') ? -1 : 1;
+            var newW = Math.max(20, sw + dx * signX);
+            var newH = Math.max(20, newW * sRatio);  // 정비율
+            // 앵커(반대 모서리) 고정
+            if (signX < 0) it.x = sX + (sw - newW);
+            if (signY < 0) it.y = sY + (sh - newH);
+            it.w = newW; it.h = newH;
+            // 텍스트는 fontSize 도 비례
+            if (it.type === 'text' && sw > 0) {
+                it.fontSize = Math.max(6, sFont * (newW / sw));
                 var fInp = document.querySelector('#meProps [data-mp="fontSize"]');
                 if (fInp) fInp.value = Math.round(it.fontSize);
-            } else if (it.type === 'shape') {
-                it.w = Math.max(10, sw + dx);
-                it.h = Math.max(10, sh + dy);
             }
             _meSyncItemDisplay(it);
         });
         handle.addEventListener('pointerup', function(ev){
             resizing = false;
+            try { handle.releasePointerCapture(ev.pointerId); } catch(e){}
+        });
+    }
+
+    // 2026-06-14: 회전 핸들 — item 중앙 기준 mouse angle 계산
+    function _meBindRotate(handle, it) {
+        var rotating = false, cx = 0, cy = 0, startAngle = 0, startRot = 0;
+        handle.addEventListener('pointerdown', function(ev){
+            ev.stopPropagation(); ev.preventDefault();
+            rotating = true;
+            handle.setPointerCapture(ev.pointerId);
+            // 화면상 item 중심 좌표
+            var rect = it.el.getBoundingClientRect();
+            cx = rect.left + rect.width / 2;
+            cy = rect.top + rect.height / 2;
+            startAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+            startRot = it.rotation || 0;
+            handle.style.cursor = 'grabbing';
+        });
+        handle.addEventListener('pointermove', function(ev){
+            if (!rotating) return;
+            var ang = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+            var delta = ang - startAngle;
+            var newRot = startRot + delta;
+            // Shift 시 15° 스냅
+            if (ev.shiftKey) newRot = Math.round(newRot / 15) * 15;
+            // -180 ~ 180 정규화
+            while (newRot > 180) newRot -= 360;
+            while (newRot < -180) newRot += 360;
+            it.rotation = newRot;
+            _meSyncItemDisplay(it);
+        });
+        handle.addEventListener('pointerup', function(ev){
+            rotating = false;
+            handle.style.cursor = 'grab';
             try { handle.releasePointerCapture(ev.pointerId); } catch(e){}
         });
     }
@@ -11194,7 +11310,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=427"></script>
+<script src="/simple_order.js?v=428"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
