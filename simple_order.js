@@ -11651,15 +11651,28 @@ html, body { background: #ffffff !important; }
             function _attrEsc(s) {
                 return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             }
-            // data_url 이 Fabric JSON ({"version":..., "objects":[...]}) 인 경우 (템플릿)
-            //   → Image.src 로 못 불러오므로 thumb_url 로 폴백.
+            // data_url 처리:
+            //   - 일반 이미지 URL → 그대로 사용 (고해상도)
+            //   - Fabric JSON 인 경우 → objects 배열에서 첫 image 의 src 추출 (메인 배경, 고해상도)
+            //   - 추출 실패하면 thumb_url 로 폴백 (저해상도지만 동작 보장)
             function _resolveImgUrl(it) {
                 var data = (it.data_url || '').trim();
+                if (!data) return it.thumb_url || '';
                 var first = data.charAt(0);
                 if (first === '{' || first === '[') {
+                    // Fabric JSON — 첫 image object 의 src 추출
+                    try {
+                        var parsed = JSON.parse(data);
+                        var objs = parsed.objects || (Array.isArray(parsed) ? parsed : []);
+                        for (var i = 0; i < objs.length; i++) {
+                            if (objs[i] && objs[i].type === 'image' && objs[i].src) {
+                                return objs[i].src;
+                            }
+                        }
+                    } catch(_pe) { console.warn('[qd resolveImg] JSON parse failed'); }
                     return it.thumb_url || '';
                 }
-                return it.data_url || it.thumb_url || '';
+                return data;  // 일반 URL
             }
             grid.innerHTML = pageItems.map(function(it, i){
                 var globalIdx = start + i;
