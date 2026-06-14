@@ -122,6 +122,10 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
     /* 2026-06-15: 인쇄 시 빈 트레일링 페이지 방지 — 발행일 footer 숨김.
        (관리자 메모 editor 는 아래 @media 외부 규칙으로 화면+인쇄 모두 숨김 처리) */
     .foot { display: none !important; }
+    /* 2026-06-15: 참고 이미지 — 카드 안에서 넘치지 않게 강제. */
+    .wo-item-mgr-zone .wo-ref-thumbs { max-height: 220px !important; overflow: hidden !important; }
+    .wo-item-mgr-zone .wo-ref-thumbs img { max-height: 180px !important; }
+    .wo-item-mgr-zone textarea { max-height: 100px !important; overflow: hidden !important; }
     /* 2026-06-15: PDF embed 는 인쇄 미리보기에서 빈 박스로 나옴 → fallback 텍스트로 대체. */
     .item-thumb embed[type="application/pdf"] { display: none !important; }
     .pdf-print-fallback { display: flex !important; }
@@ -1115,6 +1119,45 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     </div>
                     ${optGrid}
                     ${extraFilesHtml}
+                    <!-- 2026-06-15: 항목 하단 매니저 메모 & 참고 이미지 영역 — grid-column 1/-1 로 카드 폭 전체 사용. -->
+                    <div class="wo-item-mgr-zone" style="grid-column:1/-1; margin-top:14px; padding-top:12px; border-top:1px dashed #d1d5db; display:flex; flex-direction:column; gap:10px;">
+                        ${_woIsAdmin ? `
+                        <div>
+                            <div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모 (상세) — 위 한 줄 메모와 동기화</div>
+                            <textarea id="woItemMemoBig_${i}" placeholder="제품 관련 자세한 작업 지시사항·주의점 등을 자유롭게 적어주세요" oninput="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value;}})()" onblur="(function(){var t=document.getElementById('woItemMemo_${i}'); if(t){t.value=document.getElementById('woItemMemoBig_${i}').value; t.dispatchEvent(new Event('blur'));}})()" style="width:100%; min-height:60px; max-height:120px; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px; font-size:12px; font-family:inherit; line-height:1.55; background:#fffbeb; resize:vertical; box-sizing:border-box;">${esc(_mgrMemoCurrent)}</textarea>
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <div style="font-size:11px; font-weight:800; color:#5b21b6;">🖼️ 참고 이미지 첨부 — 작업 참조용</div>
+                                <label style="font-size:11px; font-weight:700; color:#7c3aed; border:1.5px solid #c4b5fd; border-radius:6px; padding:4px 10px; cursor:pointer; background:#faf5ff; white-space:nowrap;">📎 참고 이미지 추가<input type="file" multiple accept="image/*" style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
+                            </div>
+                            ${(function(){
+                                var imgFiles = _liveAttachments.filter(function(x){
+                                    var t = (x.f.type || '').toLowerCase();
+                                    var ex = (x.f.name || '').toLowerCase().split('.').pop();
+                                    return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
+                                });
+                                if (!imgFiles.length) return '<div style="font-size:11px; color:#9ca3af; padding:10px; background:#f9fafb; border:1px dashed #d1d5db; border-radius:6px; text-align:center;">참고 이미지가 첨부되면 여기에 표시됩니다</div>';
+                                return '<div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:8px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
+                                    return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:4px; display:flex; flex-direction:column; gap:3px; max-height:240px; overflow:hidden;"><a href="'+esc(x.f.url)+'" target="_blank" style="display:block; width:100%; height:180px; overflow:hidden; border-radius:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:100%; object-fit:contain; background:#fafafa; display:block;"></a><div style="font-size:10px; color:#5b21b6; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">'+esc(x.f.name||'')+'</div></div>';
+                                }).join('') + '</div>';
+                            })()}
+                        </div>
+                        ` : (_mgrMemoCurrent || _liveAttachments.length > 0 ? `
+                        ${_mgrMemoCurrent ? `<div><div style="font-size:11px; font-weight:800; color:#78350f; margin-bottom:4px;">📝 매니저 메모</div><div style="font-size:12px; color:#451a03; line-height:1.6; white-space:pre-wrap; background:#fffbeb; padding:8px 10px; border:1px solid #fbbf24; border-radius:6px;">${esc(_mgrMemoCurrent)}</div></div>` : ''}
+                        ${(function(){
+                            var imgFiles = _liveAttachments.filter(function(x){
+                                var t = (x.f.type || '').toLowerCase();
+                                var ex = (x.f.name || '').toLowerCase().split('.').pop();
+                                return t.indexOf('image/') === 0 || ['png','jpg','jpeg','gif','webp','bmp'].indexOf(ex) >= 0;
+                            });
+                            if (!imgFiles.length) return '';
+                            return '<div><div style="font-size:11px; font-weight:800; color:#5b21b6; margin-bottom:4px;">🖼️ 참고 이미지</div><div class="wo-ref-thumbs" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:8px; max-height:240px; overflow:hidden;">' + imgFiles.map(function(x){
+                                return '<div style="background:#fff; border:1px solid #e9d5ff; border-radius:6px; padding:4px;"><img src="'+esc(x.f.url)+'" alt="'+esc(x.f.name||'')+'" style="width:100%; height:180px; object-fit:contain; background:#fafafa; display:block; border-radius:4px;"></div>';
+                            }).join('') + '</div></div>';
+                        })()}
+                        ` : '')}
+                    </div>
                 </div>
             </div>`;
         }).join('');
