@@ -11590,15 +11590,30 @@ html, body { background: #ffffff !important; }
             var sw = stage.clientWidth, sh = stage.clientHeight;
             // 레이아웃 (display px). natural px → display 비율 wScale 은 이미 me 가 관리.
             //   여기선 display px 직접 사용 (.me-item.style.left 는 display px 임).
-            var pad = Math.max(8, sw * 0.06);
+            // 2026-06-14 v426: 글씨 축소(약 50%) + 중앙정렬. 전체 5개 텍스트 묶음을 캔버스 세로 중앙에 배치.
+            //   기본 단위 = 캔버스 짧은 변(sh) 비율. 명함은 가로가 더 길어 sh 가 짧음.
+            var company_f = Math.round(sh * 0.105);
+            var name_f    = Math.round(sh * 0.075);
+            var meta_f    = Math.round(sh * 0.045);
+            // 줄간 간격
+            var gap_after_company = Math.round(company_f * 0.35);
+            var gap_after_name    = Math.round(name_f * 1.10);
+            var meta_lh           = Math.round(meta_f * 1.40);
+            // 5줄 묶음 전체 높이
+            var totalH = company_f + gap_after_company + name_f + gap_after_name + (meta_lh * 3);
+            // 묶음을 캔버스 세로 중앙에 배치
+            var startY = Math.max(0, (sh - totalH) / 2);
+            // 전체 폭 사용 (양옆 약간만 여백)
+            var pad = Math.max(4, sw * 0.04);
+            var fullW = sw - pad * 2;
             var layout = {
-                company: { x: pad, y: pad, w: sw - pad*2, font: Math.round(sh * 0.18), weight:900, color:'#0f172a' },
-                name:    { x: pad, y: pad + sh * 0.22, w: sw - pad*2, font: Math.round(sh * 0.12), weight:700, color:'#1e293b' },
-                addr:    { x: pad, y: sh - pad - sh * 0.20, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' },
-                phone:   { x: pad, y: sh - pad - sh * 0.135, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' },
-                email:   { x: pad, y: sh - pad - sh * 0.07, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' }
+                company: { x: pad, y: startY, w: fullW, font: company_f, weight:900, color:'#0f172a' },
+                name:    { x: pad, y: startY + company_f + gap_after_company, w: fullW, font: name_f, weight:700, color:'#1e293b' },
+                addr:    { x: pad, y: startY + company_f + gap_after_company + name_f + gap_after_name, w: fullW, font: meta_f, weight:500, color:'#64748b' },
+                phone:   { x: pad, y: startY + company_f + gap_after_company + name_f + gap_after_name + meta_lh, w: fullW, font: meta_f, weight:500, color:'#64748b' },
+                email:   { x: pad, y: startY + company_f + gap_after_company + name_f + gap_after_name + meta_lh*2, w: fullW, font: meta_f, weight:500, color:'#64748b' }
             };
-            // 각 필드 갱신
+            // 각 필드 갱신 — 중앙정렬
             Object.keys(vals).forEach(function(k){
                 var el = _bcItems[k];
                 if (!el) return;
@@ -11611,11 +11626,11 @@ html, body { background: #ffffff !important; }
                 el.style.fontSize = l.font + 'px';
                 el.style.fontWeight = String(l.weight);
                 el.style.color = l.color;
-                el.style.textAlign = 'left';
+                el.style.textAlign = 'center';
                 el.style.lineHeight = '1.2';
                 el.style.padding = '0';
                 el.style.display = vals[k] ? '' : 'none';
-                // me.items 의 대응 객체도 sync — export 시 정확한 좌표/폰트 사용
+                // me.items sync — export 시 동일 layout
                 try {
                     if (window.me && window.me.items) {
                         var iter = window.me.items.find(function(o){ return o.el === el; });
@@ -11627,6 +11642,7 @@ html, body { background: #ffffff !important; }
                             iter.h = (l.font * 1.4) / (window.me.wScale || 1);
                             iter.fontSize = l.font / (window.me.wScale || 1);
                             iter.fill = l.color;
+                            iter.textAlign = 'center';
                         }
                     }
                 } catch(_se){}
