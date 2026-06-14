@@ -11647,9 +11647,19 @@ html, body { background: #ffffff !important; }
             var totalPages = Math.ceil(_libCurrentItems.length / _LIB_PER_PAGE);
             var start = _libCurrentPage * _LIB_PER_PAGE;
             var pageItems = _libCurrentItems.slice(start, start + _LIB_PER_PAGE);
-            // 2026-06-14: data-url 에 URL 을 안전하게 저장 (HTML 속성 이스케이프). onclick inline 은 따옴표/괄호/& 등 깨짐.
+            // 2026-06-14: data-url 에 URL 을 안전하게 저장 (HTML 속성 이스케이프).
             function _attrEsc(s) {
                 return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+            // data_url 이 Fabric JSON ({"version":..., "objects":[...]}) 인 경우 (템플릿)
+            //   → Image.src 로 못 불러오므로 thumb_url 로 폴백.
+            function _resolveImgUrl(it) {
+                var data = (it.data_url || '').trim();
+                var first = data.charAt(0);
+                if (first === '{' || first === '[') {
+                    return it.thumb_url || '';
+                }
+                return it.data_url || it.thumb_url || '';
             }
             grid.innerHTML = pageItems.map(function(it, i){
                 var globalIdx = start + i;
@@ -11660,7 +11670,7 @@ html, body { background: #ffffff !important; }
                            '</div>';
                 }
                 var thumb = _attrEsc(it.thumb_url || it.data_url || '');
-                var full = _attrEsc(it.data_url || it.thumb_url || '');
+                var full = _attrEsc(_resolveImgUrl(it));
                 return '<div class="qd-lib-thumb" data-url="' + full + '">' +
                        '<img src="' + thumb + '" loading="lazy" onerror="this.style.opacity=0.3">' +
                        '</div>';
