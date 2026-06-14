@@ -12561,51 +12561,11 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 큐에 라인이 있는데 현재 폼이 빈 초안 = 사용자가 "가벽 추가" 만 누르고 새 가벽 설정 안 함.
             //   이 경우 현재 라인 push 하지 않고 큐 라인들만 push. (recalc 에서 _adCurIsDraft 산출)
             var _skipCurrent = !!state._adCurIsDraft;
-            // 2026-06-12: 쿠팡/네이버 스마트스토어식 dedup — 동일 상품 + 동일 옵션이면 새 라인 생성 대신 수량 합산.
-            //   대상: 종이매대(isPaperDisplay), 굿즈(isBestGoods), 일반 인쇄(file 없는 단순 상품), 원판(isRawBoard).
-            //   비대상: 가벽/박스/자유인쇄커팅/등신대 (각자 고유 사이즈가 있어 fingerprint 가 달라짐 → 자연스럽게 별도 라인).
-            function _soSameItemFingerprint(a, b) {
-                if (!a || !b) return false;
-                var aCode = (a.product && a.product.code) || a.code;
-                var bCode = (b.product && b.product.code) || b.code;
-                if (!aCode || aCode !== bCode) return false;
-                // 사이즈 다르면 별도 라인
-                if (Number(a.customW || 0) !== Number(b.customW || 0)) return false;
-                if (Number(a.customH || 0) !== Number(b.customH || 0)) return false;
-                // 파일 있으면 무조건 새 라인 (디자인 다른 주문이므로 합치면 안됨)
-                if (a.fileUrl || b.fileUrl) return false;
-                if (a.file_url || b.file_url) return false;
-                // 패브릭 (원단/색상/마감 다르면 별도)
-                if ((a.fabricCode || '') !== (b.fabricCode || '')) return false;
-                if ((a.fabricColor || '') !== (b.fabricColor || '')) return false;
-                // 옵션(addon) 다르면 별도 라인
-                var aAdd = JSON.stringify(a.selectedAddons || {});
-                var bAdd = JSON.stringify(b.selectedAddons || {});
-                if (aAdd !== bAdd) return false;
-                return true;
-            }
+            // 2026-06-14: dedup 완전 폐기 — 모든 장바구니 push 는 신규 라인.
+            //   사용자 요청: 등신대처럼 사이즈/디자인이 매번 다를 수 있는 제품들은 동일 코드여도 별도 항목.
+            //   수량 합산이 필요하면 사용자가 직접 카트의 +/- 버튼으로 조절.
             if (!_skipCurrent) {
-                var _dupIdx = -1;
-                for (var _ci = 0; _ci < cart.length; _ci++) {
-                    if (_soSameItemFingerprint(cart[_ci], item)) { _dupIdx = _ci; break; }
-                }
-                if (_dupIdx >= 0) {
-                    // 동일 상품 — 수량 합산 + 가격 재계산 (price 는 qty 에 비례한다고 가정)
-                    var _existing = cart[_dupIdx];
-                    var _oldQty = Number(_existing.qty) || 1;
-                    var _addQty = Number(item.qty) || 1;
-                    var _newQty = _oldQty + _addQty;
-                    _existing.qty = _newQty;
-                    // price 비례 갱신: 새 item 의 단가 기준으로 _newQty 적용
-                    if (item.qty && item.price) {
-                        var _unit = Number(item.price) / Number(item.qty);
-                        _existing.price = Math.round(_unit * _newQty);
-                    }
-                    cart[_dupIdx] = _existing;
-                    console.log('[cart] dedup merge — same product code', _existing.product && _existing.product.code, 'qty', _oldQty, '+', _addQty, '=', _newQty);
-                } else {
-                    cart.push(item);
-                }
+                cart.push(item);
             }
             // 2026-06-01: 멀티-라인 큐 — 광고인쇄 + 허니콤보드 (가벽/박스/자유인쇄커팅/등신대) 공용.
             //   각 큐 라인을 별도 cart item 으로 push. 큐 라인은 bundleShipping=true → 배송 fee=0.
