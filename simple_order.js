@@ -3535,6 +3535,26 @@ html, body { background: #ffffff !important; }
             qty = state.qty || 1;
             subtotal = unit * qty;
             state.wallHeightExtra = 0;
+        } else if (state.isLeaflet) {
+            // 2026-06-14: 낱장 인쇄는 leaflet 자체 가격 함수 사용 — isCustomSize 분기보다 우선.
+            //   leaflet UI 가 비규격(custom) 입력을 허용해도 가격은 perSheet 기반이어야 함.
+            qty = Math.max(1, state.qty || 1);
+            var _lfSubTop = _soLeafletPriceFor(state.leafletSize || 'A4', state.leafletSide || 'single', qty);
+            var _lfOptMultTop = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
+            if (state.leafletFoil) {
+                var _lfFoilTop = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
+                if (_lfFoilTop) _lfSubTop += _lfFoilTop.price * _lfOptMultTop;
+            }
+            if (state.leafletFinishes) {
+                Object.keys(state.leafletFinishes).forEach(function(k){
+                    if (!state.leafletFinishes[k]) return;
+                    var _lfFnTop = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    if (_lfFnTop) _lfSubTop += _lfFnTop.price * _lfOptMultTop;
+                });
+            }
+            unit = Math.round(_lfSubTop / qty);
+            subtotal = _lfSubTop;
+            state.wallHeightExtra = 0;
         } else if (state.isCustomSize) {
             // 현수막·실사출력 등 면적 기반: 계산된 단가 × 수량
             unit = state.customUnitPrice || 0;
@@ -5325,10 +5345,11 @@ html, body { background: #ffffff !important; }
     //   A4=500원/매, A3=1000원/매, A2=2000원/매. 양면=단면×1.5.
     //   100매+ 20% / 500매+ 30% / 1000매+ 50%.
     //   박/후가공 옵션은 (100매+ ×2 / 500매+ ×3 / 1000매+ ×4) multiplier.
+    // 2026-06-14: 양면 = 단면 × 1.2 (사용자 지정: A4 양면 600원).
     var LEAFLET_SIZES = [
-        { id:'A4', label:'A4', wMm:210, hMm:297, perSheet: { single: 500,  double: 750  } },
-        { id:'A3', label:'A3', wMm:297, hMm:420, perSheet: { single: 1000, double: 1500 } },
-        { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 3000 } }
+        { id:'A4', label:'A4', wMm:210, hMm:297, perSheet: { single: 500,  double: 600  } },
+        { id:'A3', label:'A3', wMm:297, hMm:420, perSheet: { single: 1000, double: 1200 } },
+        { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 2400 } }
     ];
     function _soLeafletQtyDisc(qty) {
         if (qty >= 1000) return 0.50;  // 50% 할인
