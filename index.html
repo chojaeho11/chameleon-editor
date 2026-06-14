@@ -1420,22 +1420,6 @@ window._tcmFallbackClick = function(code) {
             @media (max-width: 600px) {
                 #mgrActionsGrid { grid-template-columns:repeat(2, 1fr); gap:9px; }
             }
-            /* 2026-06-14: 디자이너 — 진회색 배경 + 흰 아이콘. PC override 가 #mgrActionsGrid 로 specificity 높아서 동일 prefix 필요. */
-            #mgrActionsGrid .mgr-action.mgr-dapply,
-            .mgr-action.mgr-dapply {
-                background:#374151 !important; border-color:rgba(255,255,255,0.18) !important;
-            }
-            #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap,
-            .mgr-action.mgr-dapply .mgr-action-icon-wrap {
-                background:linear-gradient(145deg, #4b5563, #1f2937) !important;
-                box-shadow:0 8px 20px -8px rgba(0,0,0,0.4) !important;
-            }
-            #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i,
-            .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#fff !important; }
-            #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-label,
-            .mgr-action.mgr-dapply .mgr-action-label { color:#fff !important; }
-            #mgrActionsGrid .mgr-action.mgr-dapply:hover,
-            .mgr-action.mgr-dapply:hover { background:#4b5563 !important; }
             .mgr-action {
                 position:relative; overflow:hidden;
                 display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -1990,6 +1974,11 @@ window._tcmFallbackClick = function(code) {
             #mgrActionsGrid .mgr-action.mgr-coupon .mgr-action-icon-wrap {
                 background:linear-gradient(135deg, #fce7f3, #f472b6) !important; color:#831843 !important;
             }
+            /* 2026-06-14: 디자이너 — 진회색 칩 + 흰 아이콘 (per-button block 안에서 다른 버튼과 동일 패턴 유지). */
+            #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap {
+                background:linear-gradient(135deg, #4b5563, #1f2937) !important; color:#ffffff !important;
+            }
+            #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
                 /* 2026-06-11: 모바일에서도 6 버튼 1줄로 배치 + 6 버튼 영역 최소 높이 보장 */
                 #mgrQuoteHero { margin:8px auto 20px !important; padding:0 10px !important; min-height:80px !important; }
