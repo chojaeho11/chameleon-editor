@@ -553,6 +553,16 @@ html, body { background: #ffffff !important; }
     background: #6366f1; padding: 4px 10px; border-radius: 999px;
     margin-left: auto;
 }
+#soQuickDesignSec .qd-rotate-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #fff; border: 1.5px solid #c7d2fe; color: #4338ca;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .15s; font-family: inherit;
+}
+#soQuickDesignSec .qd-rotate-btn:hover {
+    background: #6366f1; color: #fff; border-color: #6366f1; transform: rotate(45deg);
+}
+#soQuickDesignSec .qd-rotate-btn i { font-size: 13px; }
 #soQuickDesignSec .qd-product-size-btn {
     width: 100%; padding: 10px 12px;
     background: #eef2ff; border: 1.5px solid #c7d2fe; color: #4338ca;
@@ -1531,6 +1541,9 @@ html, body { background: #ffffff !important; }
               <i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1; margin-right:6px;"></i>${tr('인라인 디자인 에디터', 'インラインデザインエディタ', 'Inline Design Editor')}
             </div>
             <span class="qd-size-badge" id="soQdSizeBadge">90×50mm</span>
+            <button type="button" class="qd-rotate-btn" onclick="window._soQdRotateCanvas && window._soQdRotateCanvas()" title="${tr('대지 90° 회전','キャンバス回転','Rotate canvas')}">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
           </div>
           <!-- 2026-06-14: "현재 상품 사이즈로 대지 맞추기" 버튼 제거 — 모달 진입 시 자동 적용되므로 불필요. -->
           <!-- 2026-06-14: 라이브러리 진입 (픽토그램 제거 — 텍스트만). 팝업 모달로 띄움. -->
@@ -11542,6 +11555,69 @@ html, body { background: #ffffff !important; }
         window._soQdUnmount = function() {
             try { _unmountEditor(); } catch(_e){}
         };
+
+        // 2026-06-14: 대지 90° CW 회전 — natW/natH 스왑 + 모든 item 좌표/회전 변환.
+        //   캔버스가 90° 돌면 안에 있는 디자인도 같이 따라 돔 (Photoshop "Rotate Canvas" 동작).
+        window._soQdRotateCanvas = function() {
+            var meRef = window.me;
+            if (!meRef || !meRef.natW || !meRef.natH) return;
+            var oldW = meRef.natW;
+            var oldH = meRef.natH;
+            meRef.natW = oldH;
+            meRef.natH = oldW;
+            // 모든 item: 중심 (cx, cy) 를 90° CW 회전. (cx, cy) → (oldH - cy, cx)
+            //   w/h 도 스왑. rotation 은 +90°.
+            (meRef.items || []).forEach(function(it){
+                var ocx = it.x + it.w / 2;
+                var ocy = it.y + it.h / 2;
+                var ncx = oldH - ocy;
+                var ncy = ocx;
+                var nw = it.h;
+                var nh = it.w;
+                it.w = nw;
+                it.h = nh;
+                it.x = ncx - nw / 2;
+                it.y = ncy - nh / 2;
+                it.rotation = ((it.rotation || 0) + 90) % 360;
+                if (it.rotation > 180) it.rotation -= 360;
+                if (typeof window._meSyncItemDisplay === 'function') window._meSyncItemDisplay(it);
+            });
+            // 캔버스 표시 재 fit
+            if (typeof window._meFitStage === 'function') window._meFitStage();
+            // 사이즈 배지 갱신 (display W×H 가 swap 됨)
+            _updateSizeBadge(Math.round(meRef.natW), Math.round(meRef.natH));
+            // state.customW/H 도 스왑 (주문 사이즈에 반영)
+            if (state) {
+                var tmpW = state.customW;
+                state.customW = state.customH;
+                state.customH = tmpW;
+                // 우측 패널의 W/H input 도 갱신
+                var wIn = document.getElementById('soCustomW');
+                var hIn = document.getElementById('soCustomH');
+                if (wIn) wIn.value = state.customW;
+                if (hIn) hIn.value = state.customH;
+            }
+            // 명함이면 BC 자동 배치도 새 사이즈로 갱신
+            if (_isBizCard() && typeof window._soQdBcSync === 'function') {
+                // _bcItems 비우고 재배치 — rotation 누적 방지
+                _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
+                // 기존 BC item 들 제거
+                if (meRef.items) {
+                    var bcEls = [];
+                    meRef.items = meRef.items.filter(function(it){
+                        // BC item 은 _bcItems 에서 ref 가 풀려서 자동 탐지 못 함. 다시 생성하므로 모두 제거.
+                        return true;  // 그대로 두기 — 새 _meAddText 가 새 item 을 push 함
+                    });
+                }
+                window._soQdBcSync();
+            }
+            if (typeof showToast === 'function') {
+                showToast(tr('대지를 90° 회전했습니다','キャンバスを90°回転','Canvas rotated 90°'), 'success');
+            }
+        };
+
+        // _meSyncItemDisplay 도 window 로 노출이 필요. 만약 미노출이면 index.html 에서 추가.
+        // (canvas-icons.js 가 lazy-load 일 수도 있어 안전성 fallback)
 
         // 명함 자동 디자인 — 5필드 입력 → 미니에디터에 텍스트 item 5개 자동 배치/스타일.
         //   재호출 시 기존 item 의 텍스트만 update (위치/폰트 유지). 새 item 은 create.

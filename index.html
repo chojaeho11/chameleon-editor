@@ -6079,6 +6079,7 @@ function scrollHotdeal(gridId, dir) {
     }
     // 2026-06-14: simple_order 모달에서 호출하기 위해 window 노출
     window._meSetSize = _meSetSize;
+    window._meSyncItemDisplay = _meSyncItemDisplay;
     // 2026-06-14: 미니 에디터의 me.stage 를 PNG dataURL 로 변환 — simple_order "디자인 완료 · 적용" 에서 사용
     window._meExportPNG = async function() {
         try {
@@ -11310,7 +11311,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=428"></script>
+<script src="/simple_order.js?v=429"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
