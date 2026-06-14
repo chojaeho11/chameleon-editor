@@ -594,20 +594,35 @@ html, body { background: #ffffff !important; }
 
 /* 라이브러리 진입 버튼 그리드 — 템플릿/요소/장식 */
 #soQuickDesignSec .qd-library-row {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
 }
 #soQuickDesignSec .qd-library-btn {
-    padding: 10px 8px; background: #fff; border: 1.5px solid #c7d2fe;
+    padding: 11px 8px; background: #fff; border: 1.5px solid #c7d2fe;
     color: #4338ca; border-radius: 10px; cursor: pointer; font-family: inherit;
-    font-size: 12.5px; font-weight: 800;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 800; text-align: center;
     transition: all .15s;
 }
-#soQuickDesignSec .qd-library-btn i { font-size: 16px; color: #6366f1; }
 #soQuickDesignSec .qd-library-btn:hover {
     background: #6366f1; color: #fff; border-color: #6366f1;
 }
-#soQuickDesignSec .qd-library-btn:hover i { color: #fff; }
+/* 명함 자동 디자인 폼 */
+#soQuickDesignSec #soQdBcForm .qd-bc-field {
+    display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center;
+    margin-bottom: 7px;
+}
+#soQuickDesignSec #soQdBcForm .qd-bc-field:last-child { margin-bottom: 0; }
+#soQuickDesignSec #soQdBcForm label {
+    font-size: 11.5px; font-weight: 800; color: #475569; text-align: right;
+}
+#soQuickDesignSec #soQdBcForm input {
+    width: 100%; padding: 8px 11px;
+    border: 1px solid #d1d5db; border-radius: 7px; background: #fff;
+    font-size: 12.5px; font-family: inherit; outline: none;
+    color: #0f172a; transition: border-color .15s, box-shadow .15s;
+}
+#soQuickDesignSec #soQdBcForm input:focus {
+    border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
 /* 라이브러리 팝업 — 탭 + 썸네일 */
 #soQdLibPopup[style*="display: flex"], #soQdLibPopup[style*="display:flex"] { display: flex !important; }
 #soQdLibPopup .qd-lib-tab {
@@ -1517,20 +1532,21 @@ html, body { background: #ffffff !important; }
             </div>
             <span class="qd-size-badge" id="soQdSizeBadge">90×50mm</span>
           </div>
-          <button type="button" class="qd-product-size-btn" onclick="window._soQdApplyProductSize && window._soQdApplyProductSize()">
-            <i class="fa-solid fa-ruler-combined" style="margin-right:6px;"></i>${tr('현재 상품 사이즈로 대지 맞추기', '商品サイズで適用', 'Use product size')}
-          </button>
-          <!-- 2026-06-14: 라이브러리 진입 — 풀에디터(mainEditor) 의 해당 sub-panel 로 이동. 작업 후 "디자인 완료 → 주문 계속" 버튼으로 복귀. -->
+          <!-- 2026-06-14: "현재 상품 사이즈로 대지 맞추기" 버튼 제거 — 모달 진입 시 자동 적용되므로 불필요. -->
+          <!-- 2026-06-14: 라이브러리 진입 (픽토그램 제거 — 텍스트만). 팝업 모달로 띄움. -->
           <div class="qd-library-row">
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-template')">
-              <i class="fa-solid fa-swatchbook"></i><span>${tr('템플릿보기', 'テンプレート', 'Templates')}</span>
-            </button>
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-element')">
-              <i class="fa-solid fa-shapes"></i><span>${tr('요소보기', '要素', 'Elements')}</span>
-            </button>
-            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-icon')">
-              <i class="fa-solid fa-star"></i><span>${tr('장식보기', '装飾', 'Decorations')}</span>
-            </button>
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-template')">${tr('템플릿보기', 'テンプレート', 'Templates')}</button>
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-element')">${tr('요소보기', '要素', 'Elements')}</button>
+            <button type="button" class="qd-library-btn" onclick="window._soQdOpenLib && window._soQdOpenLib('sub-icon')">${tr('장식보기', '装飾', 'Decorations')}</button>
+          </div>
+          <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
+          <div id="soQdBcForm" style="display:none; margin-top:10px; padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+            <div style="font-size:12.5px; font-weight:800; color:#475569; margin-bottom:10px; letter-spacing:0.02em;">${tr('🪪 명함 자동 디자인', '🪪 名刺自動デザイン', '🪪 Business card auto-design')}</div>
+            <div class="qd-bc-field"><label>${tr('상호','商号','Company')}</label><input type="text" id="soQdBcCompany" maxlength="40" placeholder="${tr('카멜레온 프린팅','カメレオン','Chameleon Printing')}" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
+            <div class="qd-bc-field"><label>${tr('이름','氏名','Name')}</label><input type="text" id="soQdBcName" maxlength="30" placeholder="${tr('홍길동','山田太郎','John Doe')}" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
+            <div class="qd-bc-field"><label>${tr('주소','住所','Address')}</label><input type="text" id="soQdBcAddr" maxlength="80" placeholder="${tr('서울시 강남구','東京都港区','123 Main St')}" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
+            <div class="qd-bc-field"><label>${tr('전화','電話','Phone')}</label><input type="text" id="soQdBcPhone" maxlength="20" placeholder="010-0000-0000" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
+            <div class="qd-bc-field"><label>${tr('이메일','メール','Email')}</label><input type="email" id="soQdBcEmail" maxlength="60" placeholder="hello@example.com" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
           </div>
           <!-- 미니에디터 (메인 페이지 #embeddedEditorPreview 가 여기로 portal 됨) -->
           <div id="soEmbeddedEditorMount" style="margin-top:10px;"></div>
@@ -11411,6 +11427,14 @@ html, body { background: #ffffff !important; }
             setTimeout(function(){ if (typeof window._meFitStage === 'function') window._meFitStage(); }, 50);
         }
 
+        // 명함(pp_bc_*) 자동 텍스트 item refs — 입력 시 같은 item 을 update.
+        var _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
+
+        function _isBizCard() {
+            var p = state && state.product;
+            return p && /^pp_bc/i.test(String(p.code || ''));
+        }
+
         // 셋업 — openSimpleOrderModal 끝부분에서 호출
         window._soQdSetup = function() {
             var sec = document.getElementById('soQuickDesignSec');
@@ -11423,6 +11447,10 @@ html, body { background: #ffffff !important; }
             var sz = _resolveSize(p);
             _updateSizeBadge(sz.wMm, sz.hMm);
             sec.style.display = '';
+            // 명함 폼 토글 + BC item refs 초기화 (새 상품 진입마다)
+            var bcForm = document.getElementById('soQdBcForm');
+            if (bcForm) bcForm.style.display = _isBizCard() ? '' : 'none';
+            _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
 
             // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
             //   섹션 visible 한 다음 프레임에서 _meSetSize 호출 → _meFitStage 가 올바른 wrap width 로 계산.
@@ -11513,6 +11541,96 @@ html, body { background: #ffffff !important; }
         // closeSimpleOrderModal 에서 호출
         window._soQdUnmount = function() {
             try { _unmountEditor(); } catch(_e){}
+        };
+
+        // 명함 자동 디자인 — 5필드 입력 → 미니에디터에 텍스트 item 5개 자동 배치/스타일.
+        //   재호출 시 기존 item 의 텍스트만 update (위치/폰트 유지). 새 item 은 create.
+        //   레이아웃 (90×50mm 명함 기준):
+        //     상호 — 상단 좌측, 크고 굵게 (24% 높이)
+        //     이름 — 상호 아래, 중간 (16% 높이)
+        //     주소/전화/이메일 — 하단 좌측, 작은 글씨 (10% 높이씩)
+        window._soQdBcSync = function() {
+            if (!_isBizCard()) return;
+            var me = window.me || (function(){ try { return Function('return me')(); } catch(_e){ return null; } })();
+            if (!me || !me.stage || !me.natW || !me.natH) {
+                // 미니에디터가 아직 init 안 됐을 수 있음 — me 가 closure 내부라 접근 불가.
+                //   fallback: 직접 #meStage 의 .me-item.text 를 찾아 update / create 어렵다 → 다른 접근.
+                //   대신 window._meAddText 후 즉시 textContent 변경 + 위치 조정.
+                if (typeof window._meSetSize !== 'function') return;
+            }
+            // me 가 closure 라 직접 접근 못 함 → window 로 노출된 헬퍼 사용.
+            //   _meAddText 를 호출하면 새 item 이 추가됨. 이미 추가된 item 의 ref 를 유지하기 위해
+            //   첫 호출 시에만 5개 추가. 그 다음부터는 textContent + 스타일만 update.
+            if (!_bcItems.company) {
+                // 첫 진입 — 5개 item 추가
+                ['company','name','addr','phone','email'].forEach(function(k){
+                    if (typeof window._meAddText === 'function') window._meAddText();
+                    // 직전 추가된 me-item.text 가 우리 item
+                    var allTexts = document.querySelectorAll('#meStage .me-item.text');
+                    var lastEl = allTexts[allTexts.length - 1];
+                    if (lastEl) _bcItems[k] = lastEl;
+                    // contenteditable 해제 + 자동 포커스 cancel
+                    if (lastEl) {
+                        lastEl.removeAttribute('contenteditable');
+                        lastEl.blur();
+                    }
+                });
+            }
+            // 입력값
+            var vals = {
+                company: (document.getElementById('soQdBcCompany') || {}).value || '',
+                name:    (document.getElementById('soQdBcName') || {}).value || '',
+                addr:    (document.getElementById('soQdBcAddr') || {}).value || '',
+                phone:   (document.getElementById('soQdBcPhone') || {}).value || '',
+                email:   (document.getElementById('soQdBcEmail') || {}).value || ''
+            };
+            // 캔버스 크기 (display px) — me-stage 의 실제 크기
+            var stage = document.getElementById('meStage');
+            if (!stage) return;
+            var sw = stage.clientWidth, sh = stage.clientHeight;
+            // 레이아웃 (display px). natural px → display 비율 wScale 은 이미 me 가 관리.
+            //   여기선 display px 직접 사용 (.me-item.style.left 는 display px 임).
+            var pad = Math.max(8, sw * 0.06);
+            var layout = {
+                company: { x: pad, y: pad, w: sw - pad*2, font: Math.round(sh * 0.18), weight:900, color:'#0f172a' },
+                name:    { x: pad, y: pad + sh * 0.22, w: sw - pad*2, font: Math.round(sh * 0.12), weight:700, color:'#1e293b' },
+                addr:    { x: pad, y: sh - pad - sh * 0.20, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' },
+                phone:   { x: pad, y: sh - pad - sh * 0.135, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' },
+                email:   { x: pad, y: sh - pad - sh * 0.07, w: sw - pad*2, font: Math.round(sh * 0.062), weight:500, color:'#64748b' }
+            };
+            // 각 필드 갱신
+            Object.keys(vals).forEach(function(k){
+                var el = _bcItems[k];
+                if (!el) return;
+                el.textContent = vals[k] || '';
+                var l = layout[k];
+                el.style.left = l.x + 'px';
+                el.style.top = l.y + 'px';
+                el.style.width = l.w + 'px';
+                el.style.height = (l.font * 1.4) + 'px';
+                el.style.fontSize = l.font + 'px';
+                el.style.fontWeight = String(l.weight);
+                el.style.color = l.color;
+                el.style.textAlign = 'left';
+                el.style.lineHeight = '1.2';
+                el.style.padding = '0';
+                el.style.display = vals[k] ? '' : 'none';
+                // me.items 의 대응 객체도 sync — export 시 정확한 좌표/폰트 사용
+                try {
+                    if (window.me && window.me.items) {
+                        var iter = window.me.items.find(function(o){ return o.el === el; });
+                        if (iter) {
+                            iter.text = vals[k] || '';
+                            iter.x = l.x / (window.me.wScale || 1);
+                            iter.y = l.y / (window.me.wScale || 1);
+                            iter.w = l.w / (window.me.wScale || 1);
+                            iter.h = (l.font * 1.4) / (window.me.wScale || 1);
+                            iter.fontSize = l.font / (window.me.wScale || 1);
+                            iter.fill = l.color;
+                        }
+                    }
+                } catch(_se){}
+            });
         };
 
         // 라이브러리 팝업 — Supabase 의 library 테이블에서 fetch (mainEditor 와 동일 소스)
