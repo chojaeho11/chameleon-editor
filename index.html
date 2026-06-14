@@ -2077,9 +2077,10 @@ window._tcmFallbackClick = function(code) {
                 </button>
             </div>
 
-            <!-- 2026-06-14: 디자인 의뢰 + 디자이너 신청 2분할 — 6버튼 바로 아래 (허니콤보드 위). 모바일에선 6버튼과 겹쳐서 숨김. -->
+            <!-- 2026-06-14: 디자인 의뢰 + 디자이너 신청 2분할 — 6버튼 바로 아래 (허니콤보드 위). 모바일에선 6버튼과 겹쳐서 숨김.
+                 margin-bottom 40px → 아래 카테고리 (허니콤보드) 헤더와 겹치지 않게 여백 확보. -->
             <style>@media (max-width: 768px) { #designRequestPair { display:none !important; } }</style>
-            <div id="designRequestPair" style="max-width:1100px; margin:14px auto 0; padding:0 12px;"></div>
+            <div id="designRequestPair" style="max-width:1100px; margin:14px auto 40px; padding:0 12px;"></div>
 
             <!-- 전화번호 그리드: 모달 안으로 이동 (display:none 컨테이너) -->
             <div id="mgrPhoneListHidden" style="display:none;">
