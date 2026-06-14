@@ -603,6 +603,25 @@ html, body { background: #ffffff !important; }
     background: #6366f1; color: #fff; border-color: #6366f1;
 }
 #soQuickDesignSec .qd-library-btn:hover i { color: #fff; }
+/* 라이브러리 팝업 — 탭 + 썸네일 */
+#soQdLibPopup[style*="display: flex"], #soQdLibPopup[style*="display:flex"] { display: flex !important; }
+#soQdLibPopup .qd-lib-tab {
+    padding: 8px 14px; background: #f8fafc; border: 1.5px solid #e2e8f0;
+    color: #475569; border-radius: 999px; cursor: pointer; font-family: inherit;
+    font-size: 12.5px; font-weight: 800; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+#soQdLibPopup .qd-lib-tab:hover { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+#soQdLibPopup .qd-lib-tab.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+#soQdLibPopup .qd-lib-thumb {
+    aspect-ratio: 1/1; background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; overflow: hidden; cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center; padding: 4px;
+}
+#soQdLibPopup .qd-lib-thumb:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 6px 14px -4px rgba(99,102,241,0.3); }
+#soQdLibPopup .qd-lib-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
+#soQdLibPopup .qd-lib-loading { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6366f1; font-size: 14px; font-weight: 700; }
+#soQdLibPopup .qd-lib-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 13px; }
 
 @media (max-width: 768px) {
     .so-co-overlay { padding: 70px 12px 30px; }   /* 모바일은 좌우만 좁게, 상단 더 여유 */
@@ -2698,6 +2717,28 @@ html, body { background: #ffffff !important; }
     </div>
 
     <!-- 2026-05-13: 카트 드로어를 simpleOrderModal 외부로 분리 — stacking context 문제 해결 -->
+  </div>
+</div>
+
+<!-- 2026-06-14: 라이브러리 팝업 — 템플릿/요소/장식. 클릭하면 미니에디터 캔버스에 추가. -->
+<div id="soQdLibPopup" class="so-overlay" style="display:none; position:fixed; inset:0; z-index:200000; background:rgba(0,0,0,0.65); align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:16px; width:100%; max-width:880px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px -16px rgba(0,0,0,0.5);">
+    <!-- 헤더 -->
+    <div style="padding:18px 24px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:14px;">
+      <div style="font-size:17px; font-weight:900; color:#0f172a;" id="soQdLibTitle">${tr('라이브러리', 'ライブラリ', 'Library')}</div>
+      <button onclick="document.getElementById('soQdLibPopup').style.display='none'" style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:24px; color:#64748b; padding:4px 10px;">×</button>
+    </div>
+    <!-- 탭 -->
+    <div style="display:flex; gap:6px; padding:12px 24px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap;">
+      <button type="button" id="soQdLibTabTpl" class="qd-lib-tab active" onclick="window._soQdLibSwitch('template')"><i class="fa-solid fa-swatchbook"></i> ${tr('템플릿','テンプレート','Templates')}</button>
+      <button type="button" id="soQdLibTabEl" class="qd-lib-tab" onclick="window._soQdLibSwitch('element')"><i class="fa-solid fa-shapes"></i> ${tr('요소','要素','Elements')}</button>
+      <button type="button" id="soQdLibTabDc" class="qd-lib-tab" onclick="window._soQdLibSwitch('decoration')"><i class="fa-solid fa-star"></i> ${tr('장식','装飾','Decorations')}</button>
+      <input type="search" id="soQdLibSearch" placeholder="${tr('검색','検索','Search')}" oninput="window._soQdLibSearch && window._soQdLibSearch(this.value)" style="flex:1; min-width:140px; margin-left:auto; padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+    </div>
+    <!-- 그리드 -->
+    <div id="soQdLibGrid" style="flex:1; overflow-y:auto; padding:16px 24px; display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:10px; align-content:start;">
+      <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8; font-size:13px;">${tr('탭을 선택해주세요','タブを選択','Select a tab')}</div>
+    </div>
   </div>
 </div>
 
@@ -11268,12 +11309,23 @@ html, body { background: #ffffff !important; }
         var _origParent = null;
         var _origNextSibling = null;
 
-        // mm → 미니에디터 픽셀 (96dpi 기준 ≈ 3.78). cap [100, 1200]
-        function _mmToPx(mm) {
-            var px = Math.round(mm * 3.78);
-            if (px < 100) px = 100;
-            if (px > 1200) px = 1200;
-            return px;
+        // mm pair → 미니에디터 픽셀 (종횡비 보존). 한 변이 1200px 초과면 비례 축소, 작은 변이 100px 미만이면 비례 확대.
+        //   v411 버그: 각 변을 개별 cap 하여 1000×2400 → 1200×1200 정사각이 되었음. v412 비례 처리로 수정.
+        function _mmPairToPx(wMm, hMm) {
+            var BASE = 3.78;  // 96dpi
+            var MAX = 1200, MIN = 100;
+            var wPx = wMm * BASE, hPx = hMm * BASE;
+            var maxPx = Math.max(wPx, hPx);
+            if (maxPx > MAX) {
+                var s = MAX / maxPx;
+                wPx *= s; hPx *= s;
+            }
+            var minPx = Math.min(wPx, hPx);
+            if (minPx < MIN) {
+                var s2 = MIN / minPx;
+                wPx *= s2; hPx *= s2;
+            }
+            return { w: Math.round(wPx), h: Math.round(hPx) };
         }
 
         function _resolveSize(p) {
@@ -11337,7 +11389,7 @@ html, body { background: #ffffff !important; }
             _updateSizeBadge(sz.wMm, sz.hMm);
             try {
                 if (typeof window._meSetSize === 'function') {
-                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), p.code);
+                    var _spx = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spx.w, _spx.h, p.code);
                     document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
                         b.classList.remove('active');
                     });
@@ -11355,7 +11407,7 @@ html, body { background: #ffffff !important; }
             _updateSizeBadge(sz.wMm, sz.hMm);
             try {
                 if (typeof window._meSetSize === 'function') {
-                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), p.code);
+                    var _spx = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spx.w, _spx.h, p.code);
                     document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
                         b.classList.remove('active');
                     });
@@ -11373,7 +11425,7 @@ html, body { background: #ffffff !important; }
             _updateSizeBadge(sz.wMm, sz.hMm);
             try {
                 if (typeof window._meSetSize === 'function') {
-                    window._meSetSize(_mmToPx(sz.wMm), _mmToPx(sz.hMm), state.product.code);
+                    var _spxs = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spxs.w, _spxs.h, state.product.code);
                 }
             } catch(_e){}
         };
@@ -11417,30 +11469,96 @@ html, body { background: #ffffff !important; }
             try { _unmountEditor(); } catch(_e){}
         };
 
-        // "템플릿보기 / 요소보기 / 장식보기" — 풀에디터(mainEditor) 진입 + 해당 sub-panel 활성.
-        //   작업 후 우측 상단 녹색 "디자인 완료 → 주문 계속" 버튼으로 복귀 (캔버스 PNG 가 state.file 에 주입됨).
+        // 라이브러리 팝업 — Supabase 의 library 테이블에서 fetch (mainEditor 와 동일 소스)
+        var _libCache = { template: null, element: null, decoration: null };
+        var _libActiveTab = 'template';
+        var _libSearchDebounce = null;
+
+        // 탭별 카테고리 매핑 (mainEditor filterTpl 과 동일)
+        var _LIB_CATEGORIES = {
+            template:   ['user_image', 'photo-bg', 'text'],
+            element:    ['vector', 'user_vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'],
+            decoration: ['vector']  // 장식은 vector 만 (꽃/선/엠블럼 등)
+        };
+
+        // "템플릿보기 / 요소보기 / 장식보기" — 팝업 모달 오픈
         window._soQdOpenLib = function(subPanelId) {
-            var p = state && state.product;
-            if (!p || !p.code) return;
-            // 복귀 flag — mainEditor 의 editorReturnToOrderBtn 이 표시됨
-            try { sessionStorage.setItem('qd_return_to_product', p.code); } catch(_e){}
-            // 미니에디터를 메인 페이지로 복귀 (mainEditor 진입 전)
-            try { _unmountEditor(); } catch(_e){}
-            // mainEditor 진입
+            var tabMap = { 'sub-template':'template', 'sub-element':'element', 'sub-icon':'decoration' };
+            var tab = tabMap[subPanelId] || 'template';
+            var popup = document.getElementById('soQdLibPopup');
+            if (!popup) return;
+            popup.style.display = 'flex';
+            window._soQdLibSwitch(tab);
+        };
+
+        // 탭 전환
+        window._soQdLibSwitch = function(tab) {
+            _libActiveTab = tab;
+            ['template','element','decoration'].forEach(function(t){
+                var btn = document.getElementById('soQdLibTab' + (t==='template'?'Tpl':t==='element'?'El':'Dc'));
+                if (btn) btn.classList.toggle('active', t === tab);
+            });
+            var title = document.getElementById('soQdLibTitle');
+            if (title) title.textContent = (tab==='template' ? tr('템플릿','テンプレート','Templates')
+                                            : tab==='element' ? tr('요소','要素','Elements')
+                                            : tr('장식','装飾','Decorations'));
+            var search = document.getElementById('soQdLibSearch');
+            if (search) search.value = '';
+            _renderLibGrid('');
+        };
+
+        // 검색 (디바운스)
+        window._soQdLibSearch = function(q) {
+            if (_libSearchDebounce) clearTimeout(_libSearchDebounce);
+            _libSearchDebounce = setTimeout(function(){ _renderLibGrid(q || ''); }, 250);
+        };
+
+        async function _fetchLib(tab, search) {
+            var sb = window.sb;
+            if (!sb) return [];
+            var cats = _LIB_CATEGORIES[tab] || _LIB_CATEGORIES.template;
             try {
-                if (typeof window._soOpenEditor === 'function') {
-                    window._soOpenEditor();
-                } else if (typeof window.startEditorDirect === 'function') {
-                    window.startEditorDirect(p.code);
+                var q = sb.from('library')
+                    .select('id, thumb_url, category, tags')
+                    .in('category', cats)
+                    .order('created_at', { ascending: false })
+                    .limit(80);
+                if (search && search.trim()) q = q.ilike('tags', '%' + search.trim() + '%');
+                var r = await q;
+                return (r && r.data) || [];
+            } catch(e) { console.warn('[qd lib fetch]', e); return []; }
+        }
+
+        async function _renderLibGrid(search) {
+            var grid = document.getElementById('soQdLibGrid');
+            if (!grid) return;
+            grid.innerHTML = '<div class="qd-lib-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('불러오는 중...','読み込み中...','Loading...') + '</div>';
+            var items = await _fetchLib(_libActiveTab, search);
+            if (!items.length) {
+                grid.innerHTML = '<div class="qd-lib-empty">' + tr('결과가 없습니다','見つかりませんでした','No results') + '</div>';
+                return;
+            }
+            grid.innerHTML = items.map(function(it){
+                var url = (it.thumb_url || '').replace(/"/g, '&quot;');
+                return '<div class="qd-lib-thumb" onclick="window._soQdLibPick(&quot;' + url + '&quot;)">' +
+                       '<img src="' + url + '" loading="lazy" onerror="this.style.opacity=0.3">' +
+                       '</div>';
+            }).join('');
+        }
+
+        // 썸네일 클릭 → 미니에디터 캔버스에 추가 + 팝업 닫기
+        window._soQdLibPick = function(url) {
+            if (!url) return;
+            try {
+                if (typeof window._meAddImage === 'function') {
+                    window._meAddImage(url);
+                    if (typeof showToast === 'function') {
+                        showToast(tr('대지에 추가되었습니다','キャンバスに追加','Added to canvas'), 'success');
+                    }
                 }
-                // 약간의 지연 후 해당 sub-panel 클릭
-                setTimeout(function(){
-                    try {
-                        var icon = document.querySelector('.icon-item[data-panel="' + subPanelId + '"]');
-                        if (icon) icon.click();
-                    } catch(_te) { console.warn('[qd lib click]', _te); }
-                }, 400);
-            } catch(_oe) { console.warn('[qd lib open]', _oe); }
+            } catch(e) { console.warn('[qd lib pick]', e); }
+            var popup = document.getElementById('soQdLibPopup');
+            if (popup) popup.style.display = 'none';
         };
     })();
 
