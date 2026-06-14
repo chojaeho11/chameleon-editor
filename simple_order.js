@@ -814,6 +814,50 @@ html, body { background: #ffffff !important; }
         margin-bottom: 10px !important;
     }
 
+    /* 2026-06-14: Quick Design (Phase 1) — 인라인 미니 폼 + 템플릿 그리드 + 미리보기 + 고급편집 진입 */
+    .so-body > .so-left #soQuickDesignSec {
+        background: #ffffff !important;
+        border: 1.5px solid #6366f1 !important;
+        border-radius: 12px !important;
+        padding: 14px !important;
+        margin-bottom: 10px !important;
+    }
+    .qd-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .qd-head-icon { color:#6366f1; font-size:16px; }
+    .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; }
+    .qd-size-badge { font-size:11px; color:#475569; font-weight:800; background:#eef2ff; padding:3px 8px; border-radius:999px; margin-left:auto; }
+    .qd-fields { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+    .qd-field { display:flex; align-items:center; gap:8px; }
+    .qd-field-label { font-size:11px; font-weight:800; color:#64748b; width:54px; flex-shrink:0; }
+    .qd-field input {
+        flex:1; min-width:0; padding:9px 11px; border:1px solid #d1d5db; border-radius:8px;
+        font-size:13px; font-family:inherit; outline:none; transition:border-color .15s;
+    }
+    .qd-field input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
+    .qd-section-label { font-size:11.5px; font-weight:800; color:#475569; margin:10px 0 6px; }
+    .qd-template-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+    .qd-template-card {
+        position:relative; aspect-ratio:9/5; background:#f1f5f9; border:1.5px solid #e2e8f0; border-radius:8px;
+        cursor:pointer; overflow:hidden; transition:all .15s; display:flex; align-items:center; justify-content:center;
+        font-size:10px; color:#94a3b8; font-weight:700;
+    }
+    .qd-template-card:hover { border-color:#6366f1; transform:translateY(-1px); }
+    .qd-template-card.qd-tpl-active { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+    .qd-preview-wrap {
+        margin-top:12px; padding:12px; background:#f8fafc; border-radius:10px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    #soQdPreviewCanvas { max-width:100%; height:auto; border:1px dashed #cbd5e1; background:#fff; display:block; }
+    .qd-cta-row { display:flex; gap:8px; margin-top:12px; }
+    .qd-cta-row > button {
+        flex:1; padding:11px 12px; border-radius:9px; font-weight:800; font-size:13px;
+        cursor:pointer; font-family:inherit; border:none; transition:all .15s;
+    }
+    .qd-cta-apply { background:#03c75a; color:#fff; box-shadow:0 6px 18px -6px rgba(3,199,90,0.45); }
+    .qd-cta-apply:hover { background:#02b34f; }
+    .qd-cta-advanced { background:#fff; color:#4338ca; border:1.5px solid #4338ca !important; }
+    .qd-cta-advanced:hover { background:#4338ca; color:#fff; }
+
     /* 4. 상품 상세정보 + 고객 리뷰 — 검정 보더 카드 통일 */
     .so-body > .so-left .so-prod-detail {
         background: #ffffff !important;
@@ -1391,6 +1435,65 @@ html, body { background: #ffffff !important; }
           <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
           <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
           <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
+        </div>
+
+        <!-- 2026-06-14 Phase 1: 빠른 디자인 (인라인 폼 + 템플릿 + 미리보기 + 고급편집 진입).
+             상품 코드/이름으로 fieldset 결정. 명함(pp_bc_*) = 상호/이름/이메일/전화 4필드 prefill + 라이브 미리보기.
+             다른 상품은 일반 라벨 + 템플릿 그리드 + "고급 편집" 버튼만. -->
+        <div id="soQuickDesignSec" style="display:none;">
+          <div class="qd-head">
+            <i class="fa-solid fa-wand-magic-sparkles qd-head-icon"></i>
+            <div class="qd-head-title">${tr('빠른 디자인', 'クイックデザイン', 'Quick Design')}</div>
+            <span class="qd-size-badge" id="soQdSizeBadge">90×50mm</span>
+          </div>
+
+          <!-- 명함 4필드 (pp_bc_* 만 노출) -->
+          <div id="soQdBcFields" class="qd-fields" style="display:none;">
+            <div class="qd-field">
+              <span class="qd-field-label">${tr('상호', '商号', 'Company')}</span>
+              <input type="text" id="soQdCompany" maxlength="40" placeholder="${tr('카멜레온 프린팅','カメレオン印刷','Chameleon Printing')}" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+            <div class="qd-field">
+              <span class="qd-field-label">${tr('이름', '氏名', 'Name')}</span>
+              <input type="text" id="soQdName" maxlength="30" placeholder="${tr('홍길동','山田太郎','John Doe')}" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+            <div class="qd-field">
+              <span class="qd-field-label">${tr('이메일', 'メール', 'Email')}</span>
+              <input type="email" id="soQdEmail" maxlength="50" placeholder="email@example.com" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+            <div class="qd-field">
+              <span class="qd-field-label">${tr('전화', '電話', 'Phone')}</span>
+              <input type="text" id="soQdPhone" maxlength="20" placeholder="010-0000-0000" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+          </div>
+
+          <!-- 다른 상품용 일반 라벨 (간단 메모) -->
+          <div id="soQdGenericFields" class="qd-fields" style="display:none;">
+            <div class="qd-field">
+              <span class="qd-field-label">${tr('제목', 'タイトル', 'Title')}</span>
+              <input type="text" id="soQdTitle" maxlength="60" placeholder="${tr('주제 / 제목','タイトル','Title')}" oninput="window._soQdRender && window._soQdRender()">
+            </div>
+          </div>
+
+          <!-- 템플릿 미리보기 그리드 (Phase 1: placeholder 4개. Phase 2 에서 Supabase fetch) -->
+          <div class="qd-section-label">${tr('디자인 템플릿', 'デザインテンプレート', 'Design templates')}</div>
+          <div class="qd-template-grid" id="soQdTemplateGrid">
+            <div class="qd-template-card qd-tpl-active" data-tpl="1" onclick="window._soQdPickTpl && window._soQdPickTpl(1)">${tr('심플','シンプル','Simple')}</div>
+            <div class="qd-template-card" data-tpl="2" onclick="window._soQdPickTpl && window._soQdPickTpl(2)">${tr('모던','モダン','Modern')}</div>
+            <div class="qd-template-card" data-tpl="3" onclick="window._soQdPickTpl && window._soQdPickTpl(3)">${tr('클래식','クラシック','Classic')}</div>
+            <div class="qd-template-card" data-tpl="4" onclick="window._soQdPickTpl && window._soQdPickTpl(4)">${tr('볼드','ボールド','Bold')}</div>
+          </div>
+
+          <!-- 라이브 미리보기 캔버스 -->
+          <div class="qd-preview-wrap">
+            <canvas id="soQdPreviewCanvas" width="368" height="208"></canvas>
+          </div>
+
+          <!-- CTA: 적용(빠른) + 고급편집(풀에디터) -->
+          <div class="qd-cta-row">
+            <button type="button" class="qd-cta-apply" onclick="window._soQdApplyDesign && window._soQdApplyDesign()">${tr('디자인 완료 · 적용','デザイン完了・適用','Use this design')}</button>
+            <button type="button" class="qd-cta-advanced" onclick="window._soOpenEditor && window._soOpenEditor()">${tr('고급 편집 →','詳細編集 →','Advanced →')}</button>
+          </div>
         </div>
 
         <!-- 2026-05-15: 원판 상품은 인쇄 없이 제품만 발송 — soUploadWrap 으로 전체 영역 숨김 가능 -->
@@ -11137,9 +11240,221 @@ html, body { background: #ffffff !important; }
             const cc = document.getElementById('soCartCount'); if (cc) cc.textContent = c;
         } catch (e) {}
 
+        // 2026-06-14 Phase 1: 빠른 디자인 (인라인 폼 + 미리보기 + 고급편집 진입) 셋업
+        try { if (typeof window._soQdSetup === 'function') window._soQdSetup(); } catch(_qde) { console.warn('[so qd setup]', _qde); }
+
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
     };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 2026-06-14 Phase 1: Quick Design (인라인 미니 디자인 폼)
+    //   - 상품 코드/이름으로 fieldset 결정 (명함 pp_bc_* = 4필드)
+    //   - product DB width_mm/height_mm 로 캔버스 사이즈 자동 설정
+    //   - 라이브 미리보기 + 4 템플릿 (Phase 2 에서 Supabase fetch)
+    //   - "디자인 완료 · 적용" → canvas PNG → state.file (업로드 대체)
+    //   - "고급 편집" → 기존 _soOpenEditor() 풀에디터 진입
+    // ════════════════════════════════════════════════════════════════════════
+    (function _qdInit(){
+        // 상품별 캔버스 사이즈 매핑 (mm 단위, [content_w, content_h, bleed_w, bleed_h])
+        //   bleed = 외부 여백 포함 사이즈 (재단 안전선). 명함 90×50 / bleed 92×52.
+        //   매핑 없는 상품은 product.width_mm/height_mm 사용. 둘 다 없으면 100×60 fallback.
+        var QD_SIZE_MAP = {
+            // 명함 (pp_bc_*)
+            'pp_bc_1': [90, 50, 92, 52],
+            'pp_bc_2': [90, 50, 92, 52],
+            'pp_bc_3': [90, 50, 92, 52],
+            'pp_bc_4': [90, 50, 92, 52],
+            'pp_bc_5': [90, 50, 92, 52]
+        };
+
+        function _isBcCode(code) {
+            return /^pp_bc/i.test(String(code || ''));
+        }
+
+        function _resolveSize(p) {
+            if (!p) return { w:100, h:60, bw:102, bh:62 };
+            var mapped = QD_SIZE_MAP[p.code];
+            if (mapped) return { w:mapped[0], h:mapped[1], bw:mapped[2], bh:mapped[3] };
+            var w = parseFloat(p.width_mm) || 100;
+            var h = parseFloat(p.height_mm) || 60;
+            return { w:w, h:h, bw:w+2, bh:h+2 };
+        }
+
+        // 명함 템플릿 4종 (Phase 1: 로컬 정의. Phase 2: Supabase fetch)
+        var BC_TEMPLATES = {
+            1: { // 심플
+                bg:'#ffffff', accent:'#0f172a', accentBar:'left', companyColor:'#0f172a', companyFont:'bold 11pt sans-serif', nameColor:'#475569', nameFont:'10pt sans-serif', metaColor:'#64748b', metaFont:'7.5pt sans-serif'
+            },
+            2: { // 모던
+                bg:'#0f172a', accent:'#6366f1', accentBar:'top', companyColor:'#fff', companyFont:'900 11pt sans-serif', nameColor:'#cbd5e1', nameFont:'10pt sans-serif', metaColor:'#94a3b8', metaFont:'7.5pt sans-serif'
+            },
+            3: { // 클래식
+                bg:'#faf6f5', accent:'#78350f', accentBar:'left', companyColor:'#78350f', companyFont:'italic bold 12pt serif', nameColor:'#451a03', nameFont:'10pt serif', metaColor:'#92400e', metaFont:'7.5pt serif'
+            },
+            4: { // 볼드
+                bg:'#dc2626', accent:'#fde047', accentBar:'right', companyColor:'#fff', companyFont:'900 12pt sans-serif', nameColor:'#fef3c7', nameFont:'bold 10pt sans-serif', metaColor:'#fde68a', metaFont:'7.5pt sans-serif'
+            }
+        };
+
+        var qd = {
+            tpl: 1,
+            product: null,
+            isBc: false,
+            size: { w:90, h:50, bw:92, bh:52 }
+        };
+        window._soQdState = qd;
+
+        // 셋업 — openSimpleOrderModal 끝부분에서 호출
+        window._soQdSetup = function() {
+            var sec = document.getElementById('soQuickDesignSec');
+            if (!sec) return;
+            var p = state.product;
+            qd.product = p;
+            qd.size = _resolveSize(p);
+            qd.isBc = _isBcCode(p && p.code);
+
+            // 사이즈 배지
+            var badge = document.getElementById('soQdSizeBadge');
+            if (badge) badge.textContent = qd.size.w + '×' + qd.size.h + 'mm';
+
+            // 필드셋 토글
+            var bcF = document.getElementById('soQdBcFields');
+            var gnF = document.getElementById('soQdGenericFields');
+            if (bcF) bcF.style.display = qd.isBc ? '' : 'none';
+            if (gnF) gnF.style.display = qd.isBc ? 'none' : '';
+
+            // 명함이 아니면 인라인 폼 + 미리보기 + 적용 버튼 모두 숨기고 "고급 편집" 카드처럼만 노출.
+            //   Phase 1 은 명함 미리보기만 지원. 다른 상품은 풀에디터로 진입.
+            // 그래도 섹션 자체는 show — 사용자가 진입점으로 사용.
+            sec.style.display = '';
+
+            // 명함이면 미리보기 영역 + 적용 버튼 show, 아니면 숨김
+            var prev = sec.querySelector('.qd-preview-wrap');
+            var ctaApply = sec.querySelector('.qd-cta-apply');
+            if (prev) prev.style.display = qd.isBc ? '' : 'none';
+            if (ctaApply) ctaApply.style.display = qd.isBc ? '' : 'none';
+
+            // 캔버스 사이즈 = bleed 사이즈에 맞춰 표시 (4배 확대 — 미리보기용)
+            var c = document.getElementById('soQdPreviewCanvas');
+            if (c && qd.isBc) {
+                var scale = 4; // 92mm × 4 ≈ 368px
+                c.width = Math.round(qd.size.bw * scale);
+                c.height = Math.round(qd.size.bh * scale);
+                c.style.maxWidth = '100%';
+            }
+            // 초기 렌더
+            if (qd.isBc) window._soQdRender();
+        };
+
+        // 템플릿 선택
+        window._soQdPickTpl = function(n) {
+            qd.tpl = parseInt(n, 10) || 1;
+            document.querySelectorAll('#soQdTemplateGrid .qd-template-card').forEach(function(el){
+                el.classList.toggle('qd-tpl-active', String(el.dataset.tpl) === String(qd.tpl));
+            });
+            if (qd.isBc) window._soQdRender();
+        };
+
+        // 라이브 미리보기 렌더
+        window._soQdRender = function() {
+            if (!qd.isBc) return;
+            var c = document.getElementById('soQdPreviewCanvas');
+            if (!c) return;
+            var ctx = c.getContext('2d');
+            var W = c.width, H = c.height;
+            var tpl = BC_TEMPLATES[qd.tpl] || BC_TEMPLATES[1];
+
+            // 입력값
+            var company = (document.getElementById('soQdCompany') || {}).value || '';
+            var name = (document.getElementById('soQdName') || {}).value || '';
+            var email = (document.getElementById('soQdEmail') || {}).value || '';
+            var phone = (document.getElementById('soQdPhone') || {}).value || '';
+            if (!company && !name && !email && !phone) {
+                company = '카멜레온 프린팅'; name = '홍길동'; email = 'hello@example.com'; phone = '010-0000-0000';
+            }
+
+            // bleed 영역 (전체) 칠하기
+            ctx.fillStyle = tpl.bg;
+            ctx.fillRect(0, 0, W, H);
+
+            // content margin = bleed 여백 (좌우상하 각 1mm) → 픽셀
+            var marginPx = Math.round(((qd.size.bw - qd.size.w) / 2) * 4);
+            var cx = marginPx, cy = marginPx;
+            var cw = W - marginPx * 2, ch = H - marginPx * 2;
+
+            // accent bar
+            ctx.fillStyle = tpl.accent;
+            if (tpl.accentBar === 'left') ctx.fillRect(cx, cy, 8, ch);
+            else if (tpl.accentBar === 'right') ctx.fillRect(cx + cw - 8, cy, 8, ch);
+            else if (tpl.accentBar === 'top') ctx.fillRect(cx, cy, cw, 8);
+
+            // 텍스트 위치 — accent bar offset
+            var tx = cx + 20;
+            if (tpl.accentBar === 'right') tx = cx + 16;
+            var ty = cy + 28;
+            if (tpl.accentBar === 'top') ty = cy + 28 + 8;
+
+            ctx.textBaseline = 'top';
+            // company
+            ctx.fillStyle = tpl.companyColor; ctx.font = tpl.companyFont;
+            ctx.fillText(company, tx, ty);
+            // name (살짝 아래)
+            ctx.fillStyle = tpl.nameColor; ctx.font = tpl.nameFont;
+            ctx.fillText(name, tx, ty + 28);
+            // meta (이메일·전화)
+            ctx.fillStyle = tpl.metaColor; ctx.font = tpl.metaFont;
+            ctx.fillText(email, tx, H - cy - 36);
+            ctx.fillText(phone, tx, H - cy - 22);
+
+            // bleed 가이드 (재단선 — 옅은 점선) — content 박스 둘레
+            ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cx + 0.5, cy + 0.5, cw, ch);
+            ctx.setLineDash([]);
+        };
+
+        // "디자인 완료 · 적용" — 캔버스 PNG → state.file (업로드 대체)
+        window._soQdApplyDesign = function() {
+            if (!qd.isBc) {
+                if (typeof showToast === 'function') showToast(tr('명함 상품만 빠른 적용 가능합니다','名刺商品のみクイック適用可能です','Quick apply only for business cards'), 'info');
+                return;
+            }
+            var c = document.getElementById('soQdPreviewCanvas');
+            if (!c) return;
+            // 입력값 비어있으면 경고
+            var company = (document.getElementById('soQdCompany') || {}).value || '';
+            var name = (document.getElementById('soQdName') || {}).value || '';
+            if (!company.trim() && !name.trim()) {
+                if (typeof showToast === 'function') showToast(tr('상호 또는 이름을 입력해주세요','商号またはお名前を入力してください','Please enter company or name'), 'warn');
+                return;
+            }
+            // 마지막 렌더
+            window._soQdRender();
+            // PNG dataURL 추출
+            try {
+                c.toBlob(function(blob){
+                    if (!blob) return;
+                    var fname = 'quick-design-' + Date.now() + '.png';
+                    var file = new File([blob], fname, { type: 'image/png' });
+                    // state.file 에 주입 — 기존 업로드 흐름과 동일하게 처리
+                    state.file = file;
+                    state._cartThumb = c.toDataURL('image/png');
+                    // 업로드 UI 갱신
+                    if (typeof window.renderUploadDone === 'function') {
+                        try { window.renderUploadDone(fname); } catch(_re){}
+                    }
+                    // recalc 트리거 (장바구니 담기 버튼 enable 등)
+                    if (typeof recalc === 'function') recalc();
+                    if (typeof showToast === 'function') showToast(tr('디자인이 적용되었습니다','デザインが適用されました','Design applied'), 'success');
+                }, 'image/png');
+            } catch(e) {
+                console.error('[qd apply]', e);
+                if (typeof showToast === 'function') showToast(tr('적용 중 오류 발생','エラーが発生しました','Error applying design'), 'error');
+            }
+        };
+    })();
 
     window.closeSimpleOrderModal = function() {
         const m = document.getElementById('simpleOrderModal');
