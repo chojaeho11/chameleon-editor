@@ -7411,6 +7411,15 @@ html, body { background: #ffffff !important; }
         if (state.isBannerOutput && !_isPlacardKeepCalc && state.product && state.product.price) {
             calcPrice = state.product.price;
         }
+        // 2026-06-14: 전단지 N천매 / N만매 번들 상품 — 사이즈 무관 flat DB 가격. 이름 패턴 매칭.
+        //   예: "전단지 4천매" → 50,000원 (4000장 묶음). 면적 계산 결과 무시.
+        try {
+            var _pNm = (state.product && (state.product.name_kr || state.product.name || '')) || '';
+            var _isFlyerBundle = /전단지.*(\d+(천|만)매|매)/.test(_pNm);
+            if (_isFlyerBundle && state.product && state.product.price) {
+                calcPrice = state.product.price;
+            }
+        } catch (e) {}
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
         //   사용자 피드백: "가격이 3만원에 고정되어 있어 사이즈나 재질이 변해도" — 30k 최소가 모든 차이를 가림.
         if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
