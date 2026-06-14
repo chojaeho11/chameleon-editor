@@ -7864,6 +7864,92 @@ async function handleSubReturn() {
 
 <div id="mainEditor" style="display:none;">
 
+<!-- 2026-06-14: simple_order 에서 진입했을 때만 표시되는 "디자인 완료 → 주문 계속" 플로팅 버튼 -->
+<button id="editorReturnToOrderBtn" type="button" style="display:none; position:fixed; top:80px; right:24px; z-index:10008; padding:14px 22px; background:linear-gradient(135deg,#03c75a,#02b34f); color:#fff; border:none; border-radius:14px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 8px 24px -6px rgba(3,199,90,0.5); font-family:inherit; letter-spacing:-0.01em; transition:all .15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 12px 28px -6px rgba(3,199,90,0.65)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 24px -6px rgba(3,199,90,0.5)'">
+    <i class="fa-solid fa-check-circle" style="margin-right:6px;"></i><span data-i18n="btn_finish_design_return">디자인 완료 → 주문 계속</span>
+</button>
+<script>
+// 2026-06-14: simple_order → editor → simple_order 복귀 플로우.
+//   sessionStorage 'qd_return_to_product' 에 product code 있으면 진입 트리거 → 버튼 표시.
+//   클릭 시 캔버스 PNG export → sessionStorage 'qd_design_v1' 저장 → editor 닫고 simple_order 재진입.
+(function _editorReturnFlow(){
+    function _checkAndToggle() {
+        var btn = document.getElementById('editorReturnToOrderBtn');
+        if (!btn) return;
+        try {
+            var code = sessionStorage.getItem('qd_return_to_product');
+            var editorActive = document.body.classList.contains('editor-active');
+            btn.style.display = (code && editorActive) ? '' : 'none';
+        } catch(_e){}
+    }
+    // 주기적 확인 — editor-active 클래스 변화 감지
+    if (typeof MutationObserver === 'function') {
+        var mo = new MutationObserver(_checkAndToggle);
+        mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    }
+    // 초기 확인
+    setTimeout(_checkAndToggle, 500);
+
+    document.addEventListener('DOMContentLoaded', function(){
+        var btn = document.getElementById('editorReturnToOrderBtn');
+        if (!btn) return;
+        btn.addEventListener('click', async function(){
+            try {
+                var code = sessionStorage.getItem('qd_return_to_product');
+                if (!code) return;
+                btn.disabled = true;
+                var origLabel = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px;"></i>처리 중...';
+
+                // 캔버스 export — window.canvas (Fabric) 의 toDataURL
+                var pngDataUrl = null;
+                if (window.canvas && typeof window.canvas.toDataURL === 'function') {
+                    pngDataUrl = window.canvas.toDataURL({ format:'png', multiplier: 2 });
+                } else {
+                    // fallback: 첫 번째 canvas element
+                    var firstCanvas = document.querySelector('#mainEditor canvas');
+                    if (firstCanvas && firstCanvas.toDataURL) {
+                        pngDataUrl = firstCanvas.toDataURL('image/png');
+                    }
+                }
+                if (!pngDataUrl) {
+                    btn.disabled = false;
+                    btn.innerHTML = origLabel;
+                    alert('캔버스를 가져올 수 없습니다. 다시 시도해주세요.');
+                    return;
+                }
+
+                // sessionStorage 저장
+                sessionStorage.setItem('qd_design_v1', JSON.stringify({
+                    code: code,
+                    png: pngDataUrl,
+                    ts: Date.now()
+                }));
+                sessionStorage.removeItem('qd_return_to_product');
+
+                // editor 닫고 simple_order 재진입
+                document.body.classList.remove('editor-active');
+                var me = document.getElementById('mainEditor');
+                if (me) me.style.display = 'none';
+
+                // 약간의 지연 후 simple_order 열기
+                setTimeout(function(){
+                    if (typeof window.openSimpleOrderModal === 'function') {
+                        window.openSimpleOrderModal(code);
+                    } else {
+                        location.href = '/?product=' + encodeURIComponent(code);
+                    }
+                }, 100);
+            } catch(e) {
+                console.error('[editor return]', e);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-circle" style="margin-right:6px;"></i>디자인 완료 → 주문 계속';
+            }
+        });
+    });
+})();
+</script>
+
 <!-- 모바일 선택 액션바 (삭제 + 텍스트 편집) -->
 <div id="mobileActionBar" style="display:none; position:fixed; bottom:130px; left:50%; transform:translateX(-50%); z-index:10002; gap:8px; background:#fff; padding:6px 12px; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.15); border:1px solid #e2e8f0;">
     <button id="mobileEditBtn" style="display:none; padding:8px 14px; border:1px solid #6366f1; background:#6366f1; color:#fff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
@@ -10921,7 +11007,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=408"></script>
+<script src="/simple_order.js?v=409"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
