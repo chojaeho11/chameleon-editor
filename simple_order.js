@@ -745,14 +745,16 @@ html, body { background: #ffffff !important; }
     .so-body > .so-right #soBtnViewCart:hover {
         background: #faf6f5 !important;
     }
-    /* 2. 장바구니 담기 — secondary outline (딥레드 보더) */
+    /* 2. 장바구니 담기 — 네이버 녹색 솔리드 + 흰 글씨 (2026-06-14 사용자 요청) */
     .so-body > .so-right .so-btn-cart {
-        background: #ffffff !important;
-        color: #4338ca !important;
-        border: 1.5px solid #4338ca !important;
+        background: #03c75a !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: 800 !important;
+        box-shadow: 0 6px 18px -6px rgba(3,199,90,0.45);
     }
-    .so-body > .so-right .so-btn-cart:hover {
-        background: #4338ca !important; color: #ffffff !important;
+    .so-body > .so-right .so-btn-cart:hover:not(:disabled) {
+        background: #02b34f !important;
     }
     /* 3. 바로 주문 — primary CTA (솔리드 딥레드) */
     .so-body > .so-right .so-btn-buy {
@@ -938,9 +940,10 @@ html, body { background: #ffffff !important; }
 }
 .so-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .so-btn-cart {
-    background: #fff; border: 1.5px solid #451a03; color: #451a03;
+    background: #03c75a; border: none; color: #ffffff;
+    box-shadow: 0 6px 18px -6px rgba(3,199,90,0.45);
 }
-.so-btn-cart:hover:not(:disabled) { background: #fef7e6; }
+.so-btn-cart:hover:not(:disabled) { background: #02b34f; }
 .so-btn-buy {
     background: linear-gradient(135deg, #451a03, #78350f); color: #fde047;
 }

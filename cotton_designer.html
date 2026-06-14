@@ -922,13 +922,14 @@ a { text-decoration: none; color: inherit; }
 .price-row.total { font-size: 16px; font-weight: 900; opacity: 1; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); }
 .price-row.total span:last-child { color: #fde047; font-size: 18px; }
 
+/* 2026-06-14: 장바구니 담기 = 네이버 녹색 + 흰글씨 (사용자 요청). viewCartBtn 은 inline #fff override 로 그대로. */
 .order-btn {
     width: 100%; padding: 16px; border: none; border-radius: 50px;
-    background: var(--brown-dark); color: #fff; font-size: 15px; font-weight: 900;
+    background: #03c75a; color: #fff; font-size: 15px; font-weight: 900;
     cursor: pointer; transition: all 0.2s; font-family: inherit;
-    box-shadow: 0 4px 12px rgba(69,26,3,0.2);
+    box-shadow: 0 6px 18px -6px rgba(3,199,90,0.45);
 }
-.order-btn:hover { background: var(--accent); transform: translateY(-1px); }
+.order-btn:hover { background: #02b34f; transform: translateY(-1px); }
 .order-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .help-link {
