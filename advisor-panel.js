@@ -705,6 +705,12 @@ export function initAdvisorPanel() {
 
     // 전역 함수: 어디서든 카프 패널 열기/닫기
     window.openAdvisorPanel = function() {
+        // 2026-06-14: 모바일은 iframe 래퍼 모드 (cotton-printer.com 패턴) — 풀스크린 보장.
+        //   단 iframe 안에서는 재귀 방지 — 직접 openPanel.
+        var _inIframe = (window.parent && window.parent !== window);
+        if (!_inIframe && window.innerWidth <= 768 && typeof window._openAdvisorMobileFull === 'function') {
+            return window._openAdvisorMobileFull();
+        }
         openPanel();
         setTimeout(() => {
             const inp = document.getElementById('advInput');
@@ -729,7 +735,7 @@ export function initAdvisorPanel() {
         // chatIframeWrap / kapuChatWrap alias 도 등록 (chameleon-chatbot.html 의 X 닫기가 이 ID 들을 찾음)
         wrap.setAttribute('data-alias', 'chatIframeWrap kapuChatWrap chatIframeMobileWrap');
         wrap.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; z-index:2147483647; background:#fff; border:0;';
-        wrap.innerHTML = '<iframe src="/chameleon-chatbot.html?lang=' + lang + '&from=advisor&chat=1&v=459" style="width:100%; height:100%; border:none; display:block;"></iframe>';
+        wrap.innerHTML = '<iframe src="/chameleon-chatbot.html?lang=' + lang + '&from=advisor&chat=1&v=460" style="width:100%; height:100%; border:none; display:block;"></iframe>';
         document.body.appendChild(wrap);
         document.body.style.overflow = 'hidden';
         // chatIframeWrap / kapuChatWrap getElementById alias — iframe 안 X 가 어느 ID 로 찾든 동일 wrap 닫음
@@ -758,7 +764,9 @@ export function initAdvisorPanel() {
     window.toggleAdvisorPanel = function() {
         // 2026-06-14: 모바일은 iframe 래퍼 모드로 전환 — cotton-printer.com 패턴과 일치.
         //   iframe 안의 chameleon-chatbot.html 이 자체 advisor-panel 을 띄움. 부모 페이지 헤더 위에 100% 덮음.
-        if (window.innerWidth <= 768) {
+        //   단 iframe 안에서는 재귀 방지 — 기존 advisor-panel 토글.
+        var _inIframe2 = (window.parent && window.parent !== window);
+        if (!_inIframe2 && window.innerWidth <= 768) {
             return window._openAdvisorMobileFull();
         }
         if (!panelEl) return;
