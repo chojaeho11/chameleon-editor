@@ -5815,8 +5815,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()"><span data-i18n="me_img_upload">이미지 업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn" onclick="window._meAddText()"><span data-i18n="me_text">글씨</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape('rect')"><span data-i18n="me_rect">사각형</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape('circle')"><span data-i18n="me_circle">원</span></button>
+                <!-- 2026-06-15: 사각형/원 통합 → '도형' 단일 버튼. 클릭마다 사각/원 토글. -->
+                <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()"><span data-i18n="me_shape">도형</span></button>
                 <label class="me-color-wrap" title="배경색"><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed;" title="이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors" style="font-size:11px; margin-right:4px;"></i><span data-i18n="me_cutout">누끼따기</span></button>
             </div>
@@ -6845,6 +6845,12 @@ function scrollHotdeal(gridId, dir) {
         _meBindDrag(it);
         _meSelect(it);
     };
+    // 2026-06-15: 도형 단일 버튼 — 클릭마다 rect / circle 토글 (사각형↔원).
+    var _meShapeCycle = 'rect';
+    window._meAddShapeCycle = function() {
+        window._meAddShape(_meShapeCycle);
+        _meShapeCycle = (_meShapeCycle === 'rect') ? 'circle' : 'rect';
+    };
 
     window._meAddImageFromFile = function(input) {
         var f = input.files && input.files[0];
@@ -7256,6 +7262,8 @@ function scrollHotdeal(gridId, dir) {
         me.stage = $('meStage');
         if (!me.stage) return;
         $('meStage').style.background = me.bg;
+        // 2026-06-15: 초기 상태에도 props bar stub 표시 — 사용자가 컨트롤을 항상 볼 수 있게.
+        try { _meRenderProps(null); } catch (e) {}
         // 사이즈 버튼
         var btns = document.querySelectorAll('#meSizes .me-size-btn');
         btns.forEach(function(b){
@@ -11757,7 +11765,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=450"></script>
+<script src="/simple_order.js?v=451"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

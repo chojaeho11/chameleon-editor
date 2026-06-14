@@ -1655,7 +1655,7 @@ html, body { background: #ffffff !important; }
           <span class="so-editor-icon"></span>
           <div style="flex:1; min-width:0;">
             <div class="so-editor-title">${tr('디자인에디터', 'デザインエディタ', 'Design Editor')}</div>
-            <div class="so-editor-sub">${tr('쉬운 디자인 — 클릭 한 번으로 시작', 'カンタン操作 — ワンクリックで開始', 'Easy design — start with one click')}</div>
+            <div class="so-editor-sub">${tr('디테일한 디자인을 하고 싶다면 GO GO 🚀', '本格的なデザインに進む 🚀', 'For detailed design — let\\'s GO 🚀')}</div>
           </div>
           <span class="so-editor-arrow">→</span>
         </button>
@@ -11001,8 +11001,13 @@ html, body { background: #ffffff !important; }
                     _inlineUploadCard.style.order = '';
                 }
                 // multiSec / 큐 프리뷰는 아래 honeycomb 분기에서 따로 처리 (ad-print 외에 허니콤도 노출)
-                if (_leftUpload && !(state.isRawBoard || state.isAmountOrder)) _leftUpload.style.display = '';
-                if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder)) _leftUploadLabel.style.display = '';
+                // 2026-06-15: 낱장 인쇄 (pp_lf_*) — 좌측 '앞면 업로드' 영구 숨김. 인라인 에디터로 충분.
+                if (_leftUpload && !(state.isRawBoard || state.isAmountOrder || state.isLeaflet)) _leftUpload.style.display = '';
+                if (_leftUploadLabel && !(state.isRawBoard || state.isAmountOrder || state.isLeaflet)) _leftUploadLabel.style.display = '';
+                if (state.isLeaflet) {
+                    if (_leftUpload) _leftUpload.style.display = 'none';
+                    if (_leftUploadLabel) _leftUploadLabel.style.display = 'none';
+                }
                 // flex order 환원
                 _custSec.style.order = '';
                 if (qtySec) qtySec.style.order = '';
