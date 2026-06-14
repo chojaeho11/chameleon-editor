@@ -594,13 +594,17 @@ html, body { background: #ffffff !important; }
 #soEmbeddedEditorMount .aiNb-preview { min-height: 200px !important; }
 #soEmbeddedEditorMount .me-stage-wrap {
     padding: 14px !important;
-    min-height: 520px;            /* 충분한 높이 확보 — JS 의 maxH 와 일치 */
+    min-height: 360px;            /* 2026-06-15: rail (6thumbs) 안쪽으로 제한 */
+    max-height: 520px;            /* 캔버스가 rail 아래로 빠져나가지 않도록 cap */
     align-items: center;
 }
 /* 2026-06-14: 대지 비율 유지하면서 가능한 한 크게 표시 — JS _meFitStage 가 size 계산. max-height override 제거 */
 #soEmbeddedEditorMount .me-stage { max-width: 100% !important; max-height: none !important; }
-/* 2026-06-14: A4/명함/배너/가로형/정사각 preset 버튼 — simple_order 안에서는 숨김 (사용자 요청). 메인 페이지에선 그대로 보임. */
+/* 2026-06-14: A4/명함/배너/가로형/정사각 preset 버튼 — simple_order 안에서는 숨김. */
 #soEmbeddedEditorMount #meSizes { display: none !important; }
+/* 2026-06-15: 미니에디터 제목/서브 — simple_order 안에서는 숨김 (좌측 사이드바 + 도구바로 충분). */
+#soEmbeddedEditorMount .aiNb-title,
+#soEmbeddedEditorMount .aiNb-sub { display: none !important; }
 
 /* 라이브러리 진입 버튼 그리드 — 템플릿/요소/장식 */
 #soQuickDesignSec .qd-library-row {
@@ -11485,7 +11489,9 @@ html, body { background: #ffffff !important; }
             var src = document.getElementById('embeddedEditorPreview');
             var dst = document.getElementById('soEmbeddedEditorMount');
             if (!src || !dst) return false;
-            window._meStageMaxH = 700;
+            // 2026-06-15: 대지 max-height 를 좌측 rail 의 대략적인 콘텐츠 높이 (6 thumbs × ~104px) 안쪽으로 제한.
+            //   rail 보다 캔버스가 더 길어지지 않도록 540 → 480 으로 낮춤.
+            window._meStageMaxH = 480;
             // 2026-06-14: 메인 페이지에선 display:none → simple_order 안에선 보이게 복구
             src.style.display = '';
             if (dst.contains(src)) return true;
