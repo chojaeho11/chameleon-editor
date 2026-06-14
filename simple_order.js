@@ -11838,6 +11838,9 @@ html, body { background: #ffffff !important; }
         var _railTab = 'template';
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
+            // 2026-06-15: rail 탭 변경 시 popup 의 활성 탭 변수도 동기화 →
+            //   _soQdLibPick 가 'template' 일 때만 fillCanvas=true, 요소/장식은 작게 중앙 배치되도록.
+            _libActiveTab = tab;
             document.querySelectorAll('#soQuickDesignSec .qd-rail-tab').forEach(function(b){
                 b.classList.toggle('active', b.getAttribute('data-rail-tab') === tab);
             });
@@ -11911,7 +11914,11 @@ html, body { background: #ffffff !important; }
             }
         }
         // 모달 열릴 때 초기 로드 — _soQdSetup 같은 곳에서 호출되도록 노출.
-        window._soQdRailInit = function() { _soQdRailLoad(); };
+        window._soQdRailInit = function() {
+            // 2026-06-15: 진입 시 _libActiveTab 도 rail 초기 탭 ('template') 으로 동기화 → fillCanvas 분기 일관.
+            _libActiveTab = _railTab;
+            _soQdRailLoad();
+        };
 
         // 탭 전환 (장식 탭은 canvas-icons.js 의 ORNAMENTS 가 필요 → lazy import)
         window._soQdLibSwitch = async function(tab) {
