@@ -2009,9 +2009,14 @@ html, body { background: #ffffff !important; }
             <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 100개 이상 입력하면 자동 적용', '100枚以上で自動適用', 'Auto-applied at qty 100+')}</div>
           </button>
           <!-- 2026-06-14: 어깨띠 전용 안내 — flat 1000원/개, 고정 사이즈, 무료배송 -->
-          <div id="soShoulderSashNotice" style="display:none; width:100%; padding:14px 16px; background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; border-radius:14px; font-size:14px; font-weight:900; line-height:1.5; box-shadow:0 8px 20px -8px rgba(99,102,241,0.5);">
-            ${tr('✨ 어깨띠 — 12 × 180cm 고정', '✨ タスキ — 12 × 180cm 固定', '✨ Shoulder sash — 12 × 180cm fixed')}
-            <div style="font-size:12.5px; font-weight:700; margin-top:5px; opacity:0.95;">${tr('1,000원 / 개 · 무료배송', '1,000원 / 個 · 送料無料', '1,000 KRW / pc · Free shipping')}</div>
+          <div id="soShoulderSashNotice" style="display:none; width:100%; padding:12px 14px; background:#fff; border:1.5px solid #e2e8f0; border-left:4px solid #6366f1; border-radius:10px; line-height:1.45;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:900; color:#0f172a;">${tr('어깨띠 · 12 × 180cm 고정', 'タスキ · 12 × 180cm 固定', 'Shoulder sash · 12 × 180cm fixed')}</div>
+                <div style="font-size:11.5px; color:#64748b; font-weight:600; margin-top:3px;">${tr('무료배송', '送料無料', 'Free shipping')}</div>
+              </div>
+              <div style="font-size:15px; font-weight:900; color:#4f46e5; white-space:nowrap;">${tr('1,000원 / 개', '1,000원 / 個', '1,000 KRW / pc')}</div>
+            </div>
           </div>
         </div>
 
@@ -4899,6 +4904,11 @@ html, body { background: #ffffff !important; }
                 var priceVal = p.price || 0;
                 if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
                 else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                // 2026-06-14: 어깨띠 — flat 1,000원/개 표시 (DB 2000원/m² 무시)
+                var _isShoulderCard = (p.code === '45645656');
+                var _priceLabel = _isShoulderCard
+                    ? (fmtPrice(1000) + tr('/개','/個','/pc'))
+                    : (fmtPrice(priceVal) + tr('/m²','/m²','/m²'));
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -4910,7 +4920,7 @@ html, body { background: #ffffff !important; }
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
                         '<div style="font-size:10.5px; font-weight:700; color:#1e293b; line-height:1.3; height:26px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
-                        '<div style="font-size:10.5px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + tr('/m²','/m²','/m²') + '</div>' +
+                        '<div style="font-size:10.5px; font-weight:800; color:#dc2626; margin-top:2px;">' + _priceLabel + '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
