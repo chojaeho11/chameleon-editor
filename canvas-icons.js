@@ -749,6 +749,13 @@ function addOrnamentToCanvas(item) {
     }
 }
 
+// 2026-06-14: simple_order 미니에디터에서 사용할 수 있도록 노출
+window.ORNAMENTS = ORNAMENTS;
+window.ORNAMENT_TAGS = ORNAMENT_TAGS;
+window.renderOrnamentGridInto = function(grid, category) {
+    return renderOrnamentGrid(grid, category || 'all');
+};
+
 // --- HTML helpers ---
 function loadingHtml() {
     return '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:20px;">' +

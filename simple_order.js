@@ -11522,11 +11522,11 @@ html, body { background: #ffffff !important; }
         var _libCurrentPage = 0;     // 0-based
         var _LIB_PER_PAGE = 10;
 
-        // 탭별 카테고리 매핑 (mainEditor filterTpl 과 동일)
+        // 탭별 카테고리 매핑 (mainEditor loadSideBarTemplates 와 일치)
         var _LIB_CATEGORIES = {
-            template:   ['user_image', 'photo-bg', 'text'],
-            element:    ['vector', 'user_vector', 'graphic', 'transparent-graphic', 'pattern', 'logo'],
-            decoration: ['vector']  // 장식은 vector 만 (꽃/선/엠블럼 등)
+            template:   ['user_vector', 'user_image', 'photo-bg'],
+            element:    ['vector', 'graphic', 'transparent-graphic', 'pattern'],
+            decoration: null  // ORNAMENTS 배열 사용 (canvas-icons.js)
         };
 
         // "템플릿보기 / 요소보기 / 장식보기" — 팝업 모달 오픈
@@ -11572,13 +11572,33 @@ html, body { background: #ffffff !important; }
         };
 
         async function _fetchLib(tab, search) {
+            // 장식 (decoration) — Supabase 아닌 ORNAMENTS SVG 배열 사용
+            if (tab === 'decoration') {
+                var ornaments = window.ORNAMENTS || [];
+                if (search && search.trim()) {
+                    var q = search.trim().toLowerCase();
+                    ornaments = ornaments.filter(function(o){
+                        return (o.cat || '').toLowerCase().indexOf(q) >= 0 ||
+                               (o.tags || []).join(' ').toLowerCase().indexOf(q) >= 0;
+                    });
+                }
+                return ornaments.map(function(o, idx){
+                    return { __ornament: true, idx: idx, svg: o.svg, color: o.color, cat: o.cat };
+                });
+            }
+
             var sb = window.sb;
             if (!sb) return [];
-            var cats = _LIB_CATEGORIES[tab] || _LIB_CATEGORIES.template;
+            var cats = _LIB_CATEGORIES[tab];
+            if (!cats) return [];
             try {
+                // mainEditor loadSideBarTemplates 와 동일 — status=approved + is_featured 우선
                 var q = sb.from('library')
-                    .select('id, thumb_url, category, tags')
+                    .select('id, thumb_url, data_url, title, category, product_key, tags, is_featured')
+                    .eq('status', 'approved')
                     .in('category', cats)
+                    .or('product_key.eq.custom,product_key.is.null,product_key.eq.""')
+                    .order('is_featured', { ascending: false, nullsFirst: false })
                     .order('created_at', { ascending: false })
                     .limit(200);
                 if (search && search.trim()) q = q.ilike('tags', '%' + search.trim() + '%');
@@ -11612,12 +11632,25 @@ html, body { background: #ffffff !important; }
             var totalPages = Math.ceil(_libCurrentItems.length / _LIB_PER_PAGE);
             var start = _libCurrentPage * _LIB_PER_PAGE;
             var pageItems = _libCurrentItems.slice(start, start + _LIB_PER_PAGE);
-            grid.innerHTML = pageItems.map(function(it){
-                var url = (it.thumb_url || '').replace(/"/g, '&quot;');
-                return '<div class="qd-lib-thumb" onclick="window._soQdLibPick(&quot;' + url + '&quot;)">' +
-                       '<img src="' + url + '" loading="lazy" onerror="this.style.opacity=0.3">' +
+            grid.innerHTML = pageItems.map(function(it, i){
+                if (it.__ornament) {
+                    // 장식 SVG 인라인 표시 — currentColor 를 검정으로 치환
+                    var svgInline = it.color ? it.svg : it.svg.replace(/currentColor/g, '#000');
+                    return '<div class="qd-lib-thumb qd-lib-ornament" data-idx="' + (start + i) + '" onclick="window._soQdLibPickOrnament(' + (start + i) + ')" style="padding:10px;">' +
+                           '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">' + svgInline + '</div>' +
+                           '</div>';
+                }
+                // 일반 라이브러리 — 그리드는 썸네일, 클릭 시엔 data_url (고해상도) 사용
+                var thumb = (it.thumb_url || it.data_url || '').replace(/"/g, '&quot;');
+                var full = (it.data_url || it.thumb_url || '').replace(/"/g, '&quot;');
+                return '<div class="qd-lib-thumb" onclick="window._soQdLibPick(&quot;' + full + '&quot;)">' +
+                       '<img src="' + thumb + '" loading="lazy" onerror="this.style.opacity=0.3">' +
                        '</div>';
             }).join('');
+            // 인라인 SVG 사이즈 보정
+            grid.querySelectorAll('.qd-lib-ornament svg').forEach(function(svg){
+                svg.style.width = '100%'; svg.style.height = '100%'; svg.style.maxWidth = '100%'; svg.style.maxHeight = '100%';
+            });
             // 페이지네이션 표시
             if (pager) {
                 if (totalPages > 1) {
@@ -11631,7 +11664,7 @@ html, body { background: #ffffff !important; }
             }
         }
 
-        // 썸네일 클릭 → 미니에디터 캔버스에 추가 + 팝업 닫기
+        // 일반 썸네일 클릭 → 미니에디터에 고해상도 이미지 추가
         window._soQdLibPick = function(url) {
             if (!url) return;
             try {
@@ -11642,6 +11675,28 @@ html, body { background: #ffffff !important; }
                     }
                 }
             } catch(e) { console.warn('[qd lib pick]', e); }
+            var popup = document.getElementById('soQdLibPopup');
+            if (popup) popup.style.display = 'none';
+        };
+
+        // 장식 SVG 클릭 → data URL 로 변환해 미니에디터에 추가
+        window._soQdLibPickOrnament = function(idx) {
+            try {
+                var item = _libCurrentItems[idx];
+                if (!item || !item.svg) return;
+                var svgStr = item.color ? item.svg : item.svg.replace(/currentColor/g, '#000');
+                // SVG 에 width/height 명시 없으면 보강
+                if (!/<svg[^>]*\swidth=/.test(svgStr)) {
+                    svgStr = svgStr.replace(/<svg/, '<svg width="200" height="200"');
+                }
+                var dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgStr);
+                if (typeof window._meAddImage === 'function') {
+                    window._meAddImage(dataUrl);
+                    if (typeof showToast === 'function') {
+                        showToast(tr('장식이 추가되었습니다','装飾を追加しました','Decoration added'), 'success');
+                    }
+                }
+            } catch(e) { console.warn('[qd lib ornament]', e); }
             var popup = document.getElementById('soQdLibPopup');
             if (popup) popup.style.display = 'none';
         };
