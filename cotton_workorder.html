@@ -615,10 +615,20 @@ async function _cwComposeItemCanvas(item, dpi) {
         outWcm = Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 130);
         outHcm = Number(item.height_cm) || (item.height_mm ? item.height_mm/10 : 100);
     } else {
-        // 패턴 원단 — 폭 = fabric_cm.w (대폭/소폭) / 세로 = 1m 고정
+        // 패턴 원단 — 폭 = fabric_cm.w (대폭/소폭) / 세로 = 1m 목표 (실제로는 셀 정수배로 스냅).
         outWcm = fabricRollWcm > 0 ? fabricRollWcm
                : (Number(item.width_cm) || (item.width_mm ? item.width_mm/10 : 110));
-        outHcm = 100;
+        // 2026-06-15: 100cm 그대로 쓰면 셀 정수배가 아니라 이음새가 깨짐 (1번 인쇄 끝 + 2번 인쇄 시작 사이 빈 구간).
+        //   → 100cm 에 가장 가까운 "셀(또는 mirror 의 2셀) 정수배" 로 자동 스냅.
+        //   결과는 보통 99-101cm 범위 — 사용자 목표 1m 와 거의 동일하면서 연속 인쇄 완전 seamless.
+        const _periodCm = (layout === 'mirror') ? (cellHcm * 2) : cellHcm;
+        const _targetCm = 100;
+        if (_periodCm > 0) {
+            const _n = Math.max(1, Math.round(_targetCm / _periodCm));
+            outHcm = _n * _periodCm;
+        } else {
+            outHcm = _targetCm;
+        }
     }
     const bgHex = spec.bg_color || '#ffffff';
     const artUrl = item.artwork_url || (spec.artwork_url) || '';
@@ -682,21 +692,10 @@ async function _cwComposeItemCanvas(item, dpi) {
     // 레이아웃 분기.
     // 2026-06-15: DB 가 저장하는 키 — centered / basic / halfdrop / halfbrick / mirror.
     //   레거시 (구 Python) 명칭 (brick, half_drop) 도 호환 매칭.
-    // 2026-06-15: 패턴 모드 (centered 아님) — 세로 이음새 정렬.
-    //   output_h 가 vertical period 의 정수배가 아니면 위/아래 partial 을 대칭 분배 →
-    //   두 장을 이어 인쇄 시 seam 양쪽이 합쳐져 완전한 셀이 됨.
-    //   기본/halfdrop/halfbrick: period = cellHpx
-    //   mirror: period = 2 × cellHpx (flip 패턴은 2행마다 반복)
+    // 2026-06-15: 패턴 모드에선 outHcm 가 이미 셀 정수배로 스냅되어 있어 yShift=0 — seam 완벽 일치.
+    //   (이전 시도: yShift 로 대칭 partial 분배. 문제: 셀이 모두 동일한 아트워크라 두 장 이어붙여도
+    //    "top10 + bottom10" 사이 cell 중간 부분이 빠져 seam 이 보임. outH 를 period 배수로 만드는 게 유일한 해.)
     let yShift = 0;
-    if (!isPoster) {
-        const period = (layout === 'mirror') ? (2 * cellHpx) : cellHpx;
-        const remainder = ((outHpx % period) + period) % period;
-        if (remainder !== 0) {
-            // 위 partial = remainder/2 (셀의 아래 부분이 화면 위로 노출)
-            // → 첫 셀 y_start = -(period - remainder/2)
-            yShift = (remainder / 2) - period;
-        }
-    }
     if (layout === 'centered') {
         const x = Math.floor((outWpx - cellWpx) / 2);
         const y = Math.floor((outHpx - cellHpx) / 2);
