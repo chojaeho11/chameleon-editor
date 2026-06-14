@@ -12094,7 +12094,24 @@ window.filterFxCards = function(cat, btn) {
         const isMobile = window.innerWidth <= 768;
 
         if (isMobile) {
-            window.open('chameleon-chatbot.html?lang=' + lang, '_blank');
+            // 2026-06-14: 모바일 — 새 탭 대신 풀스크린 오버레이로 표시 (사용자 요청: 해외 사이트에서 전체 화면).
+            //   외부 탭 전환 없이 같은 페이지에서 닫기(×) 가능 → 모바일 UX 개선.
+            let mWrap = document.getElementById('chatIframeMobileWrap');
+            if (mWrap) {
+                _chatIframeOpen = !_chatIframeOpen;
+                mWrap.style.display = _chatIframeOpen ? 'block' : 'none';
+                document.body.style.overflow = _chatIframeOpen ? 'hidden' : '';
+                return;
+            }
+            mWrap = document.createElement('div');
+            mWrap.id = 'chatIframeMobileWrap';
+            mWrap.style.cssText = 'position:fixed; inset:0; z-index:1000000; background:#fff;';
+            mWrap.innerHTML =
+                '<button onclick="window._soCloseChatMobile()" aria-label="close" style="position:absolute; top:max(12px, env(safe-area-inset-top)); right:14px; z-index:2; width:38px; height:38px; border-radius:50%; border:none; background:rgba(0,0,0,0.55); color:#fff; font-size:22px; font-weight:900; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;">×</button>' +
+                '<iframe src="chameleon-chatbot.html?lang=' + lang + '" style="width:100%; height:100%; border:none;"></iframe>';
+            document.body.appendChild(mWrap);
+            document.body.style.overflow = 'hidden';
+            _chatIframeOpen = true;
             return;
         }
 
@@ -12113,6 +12130,13 @@ window.filterFxCards = function(cat, btn) {
         _chatIframeOpen = true;
     }
     window.openChannelTalk = openChannelTalk;
+    // 모바일 풀스크린 챗봇 닫기 — 오버레이 안 × 버튼이 호출
+    window._soCloseChatMobile = function() {
+        var mWrap = document.getElementById('chatIframeMobileWrap');
+        if (mWrap) mWrap.style.display = 'none';
+        document.body.style.overflow = '';
+        _chatIframeOpen = false;
+    };
 
     function showBankAccountPopup() {
         const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
