@@ -3579,19 +3579,19 @@ html, body { background: #ffffff !important; }
                 subtotal = _bizUnit * qty;
             } else if (state.isLeaflet) {
                 // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
+                // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4
                 qty = Math.max(1, qty || 1);
                 var _lfSubtotal = _soLeafletPriceFor(state.leafletSize || 'A4', state.leafletSide || 'single', qty);
-                // 박 (10K, 수량/10 단위로 곱)
+                var _lfOptMult = (typeof _soLeafletOptMult === 'function') ? _soLeafletOptMult(qty) : 1;
                 if (state.leafletFoil) {
                     var _lfFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
-                    if (_lfFoilOpt) _lfSubtotal += _lfFoilOpt.price * Math.ceil(qty / 10);
+                    if (_lfFoilOpt) _lfSubtotal += _lfFoilOpt.price * _lfOptMult;
                 }
-                // 후가공 (각 후가공 가격, 수량/10 단위로 곱)
                 if (state.leafletFinishes) {
                     Object.keys(state.leafletFinishes).forEach(function(k){
                         if (!state.leafletFinishes[k]) return;
                         var _lfFn = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                        if (_lfFn) _lfSubtotal += _lfFn.price * Math.ceil(qty / 10);
+                        if (_lfFn) _lfSubtotal += _lfFn.price * _lfOptMult;
                     });
                 }
                 unit = Math.round(_lfSubtotal / qty);
@@ -5318,27 +5318,30 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[so] switchSheet', e); }
     };
 
-    // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 사이즈 × 단면/양면 정찰가 (10매 기준 base) + 수량별 할인.
+    // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 사이즈 × 단면/양면 정찰가 (1매 기준 perSheet) + 수량별 할인.
     //   비규격 사이즈는 가로/세로 입력 → 가장 작은 표준 사이즈로 자동 매핑.
     //   용지/박/후가공은 명함 (BIZ_PAPERS/BIZ_FOILS/BIZ_FINISHES) 재사용.
+    // 2026-06-14: per-sheet 가격 + 단순 3-tier 할인으로 재작성.
+    //   A4=500원/매, A3=1000원/매, A2=2000원/매. 양면=단면×1.5.
+    //   100매+ 20% / 500매+ 30% / 1000매+ 50%.
+    //   박/후가공 옵션은 (100매+ ×2 / 500매+ ×3 / 1000매+ ×4) multiplier.
     var LEAFLET_SIZES = [
-        { id:'A4', label:'A4', wMm:210, hMm:297, base: { single: 3000, double: 4000 } },
-        { id:'A3', label:'A3', wMm:297, hMm:420, base: { single: 4000, double: 7000 } },
-        { id:'A2', label:'A2', wMm:420, hMm:594, base: { single: 9000, double: 15000 } }
+        { id:'A4', label:'A4', wMm:210, hMm:297, perSheet: { single: 500,  double: 750  } },
+        { id:'A3', label:'A3', wMm:297, hMm:420, perSheet: { single: 1000, double: 1500 } },
+        { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 3000 } }
     ];
-    // 수량 할인 multiplier — base (per 10매) × qty/10 × discount
-    //   참고: swadpia 디지털포스터 10/100/500/1000매 가격 곡선 모방
     function _soLeafletQtyDisc(qty) {
-        if (qty <= 10) return 1.0;
-        if (qty <= 30) return 0.85;
-        if (qty <= 50) return 0.72;
-        if (qty <= 100) return 0.55;
-        if (qty <= 200) return 0.48;
-        if (qty <= 300) return 0.42;
-        if (qty <= 500) return 0.38;
-        if (qty <= 1000) return 0.34;
-        if (qty <= 2000) return 0.31;
-        return 0.28;
+        if (qty >= 1000) return 0.50;  // 50% 할인
+        if (qty >= 500)  return 0.70;  // 30% 할인
+        if (qty >= 100)  return 0.80;  // 20% 할인
+        return 1.00;
+    }
+    // 박/후가공 옵션 multiplier — 수량 구간별로 base option price 배수
+    function _soLeafletOptMult(qty) {
+        if (qty >= 1000) return 4;
+        if (qty >= 500)  return 3;
+        if (qty >= 100)  return 2;
+        return 1;
     }
     // 입력 사이즈 → 가장 작은 표준 사이즈로 매핑 (A4 ≤ A3 ≤ A2)
     function _soLeafletAutoSize(wMm, hMm) {
@@ -5352,11 +5355,11 @@ html, body { background: #ffffff !important; }
     function _soLeafletPriceFor(sizeId, side, qty) {
         var sz = LEAFLET_SIZES.find(function(s){ return s.id === sizeId; });
         if (!sz) sz = LEAFLET_SIZES[0];
-        var base = sz.base[side === 'double' ? 'double' : 'single'];
+        var per = sz.perSheet[side === 'double' ? 'double' : 'single'];
         var disc = _soLeafletQtyDisc(qty);
-        // 10매 기준 → qty/10 단위 × 할인
-        return Math.round(base * (qty / 10) * disc);
+        return Math.round(per * qty * disc);
     }
+    window._soLeafletOptMult = _soLeafletOptMult;
     function _soIsLeafletProduct(p) {
         if (!p) return false;
         var code = (p.code || '').toLowerCase();
@@ -5443,11 +5446,12 @@ html, body { background: #ffffff !important; }
                 var sel = (state.leafletSize === sz.id);
                 var bc = sel ? '#7c3aed' : '#e2e8f0';
                 var bg = sel ? '#faf5ff' : '#fff';
-                var p10 = sz.base[state.leafletSide === 'double' ? 'double' : 'single'];
+                // 2026-06-14: 1매 기준가 (perSheet) 표시. 양면 선택 시 양면가로 갱신.
+                var p1 = sz.perSheet[state.leafletSide === 'double' ? 'double' : 'single'];
                 return '<div onclick="window._soPickLeafletSize(\'' + sz.id + '\')" style="cursor:pointer; padding:12px 8px; text-align:center; border:2px solid ' + bc + '; background:' + bg + '; border-radius:12px;">' +
                     '<div style="font-size:15px; font-weight:900; color:#1e293b;">' + sz.label + '</div>' +
                     '<div style="font-size:10.5px; color:#94a3b8; margin-top:3px;">' + sz.wMm + '×' + sz.hMm + 'mm</div>' +
-                    '<div style="font-size:12px; font-weight:800; color:#6366f1; margin-top:5px;">' + fmtPrice(p10) + tr(' / 10매', ' / 10枚', ' / 10pcs') + '</div>' +
+                    '<div style="font-size:12px; font-weight:800; color:#6366f1; margin-top:5px;">' + fmtPrice(p1) + tr(' / 매', ' / 枚', ' / pc') + '</div>' +
                 '</div>';
             }).join('');
         }
