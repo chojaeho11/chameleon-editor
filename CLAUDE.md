@@ -12,8 +12,13 @@
    (`state.isCustomSize` 와 `state.isBannerOutput` 가 각각 별도 display 분기 있음 — 둘 다 패치 필요)
 4. 모든 분기를 일관되게 패치 후 한 번에 커밋
 
-**실제 사례 (2026-06-14)**: 현수막(placard 9종) 사이즈 입력 복구
-- 9968줄 `state.isCustomSize` 만 고쳤지만 10304줄 `if (state.isBannerOutput) custSec.display='none'` 가 덮어써서 v=399 효과 없음 → v=400 에서 둘 다 패치.
+**실제 사례 (2026-06-14)**: 현수막(placard 9종) 사이즈 입력 복구 — 4번 패치 (v=399~402)
+- v399: `if (state.isBannerOutput) state.isCustomSize=false` 차단
+- v400: `if (state.isBannerOutput) custSec.display='none'` 차단
+- v401: 어깨띠 별도 분기 (flat 1000원 + 무료배송)
+- v402: `_soOnCustomDimsChange` 의 `calcPrice = product.price` 덮어쓰기 차단
+
+**핵심 교훈**: `isBannerOutput` 처럼 정규식으로 set 되는 family 플래그는 단순 `state.is* = ...` 만 보지 말고 **`calcPrice = ...`, `unit = ...`, `subtotal = ...`, `*.style.display = ...`** 까지 모든 형태의 영향 분기를 grep 으로 찾아야 함. 한 곳만 고치고 배포하면 다음 분기가 다시 덮어서 회귀.
 
 ## 2. Banner family 정규식이 placard 도 잡음
 
