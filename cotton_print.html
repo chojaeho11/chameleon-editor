@@ -3269,13 +3269,22 @@ async function submitRollFabricRequest() {
 @media (max-width:768px){ .fp-cut-lbl, .fp-text-lbl { display:none; } }
 
 /* 정렬 + 레이어 바 — 미니멀 톤 */
-#fpAlignBar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:6px 8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; transition:opacity .2s; }
+#fpAlignBar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:6px 8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; transition:opacity .2s; }
 #fpAlignBar.fp-bar-dim { opacity:0.45; }
 .fp-align-group { display:inline-flex; gap:2px; padding:2px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; }
+/* 2026-06-16: 서체 정렬 그룹을 우측 끝으로 밀어 빈 공간에 자리잡게. */
+.fp-text-align-group { margin-left:auto; }
 .fp-align-btn { width:28px; height:28px; background:transparent; border:none; border-radius:6px; color:#475569; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; padding:0; }
 .fp-align-btn svg { width:16px; height:16px; }
 .fp-align-btn:hover { background:#eef2ff; color:#4338ca; }
 .fp-align-btn:active { background:#e0e7ff; }
+/* 모바일에서도 가능한 한 단일 행에 — 버튼 살짝 작게. */
+@media (max-width:600px){
+    #fpAlignBar { gap:4px; padding:5px 6px; }
+    .fp-align-group { padding:1px; }
+    .fp-align-btn { width:25px; height:25px; }
+    .fp-align-btn svg { width:14px; height:14px; }
+}
 /* 텍스트 props bar dim 상태 */
 #fpTextProps.fp-bar-dim { opacity:0.45; }
 /* 컨텍스트 메뉴 */
