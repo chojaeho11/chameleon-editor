@@ -695,58 +695,7 @@ html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
     <div style="color:#fff;font-size:28px;font-weight:800;letter-spacing:2px;text-shadow:0 2px 10px rgba(0,0,0,0.2);">Chameleon</div>
     <div style="margin-top:24px;width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
 </div>
-<script>
-// 2026-06-15: ?embed=editor 모드 — cotton-print.com 등 다른 페이지가 iframe 으로 미니에디터만 불러올 때.
-//   body 의 모든 직계 자식을 숨기고 #embeddedEditorPreview 만 노출. 메인 페이지 로직(nav, carousel, cart sync 등)은
-//   DOM 에 그대로 존재(getElementById 호환)하지만 화면에 안 보여 일반 사용자는 에디터만 보게 됨.
-(function(){
-    try {
-        var _qs = new URLSearchParams(location.search);
-        if (_qs.get('embed') !== 'editor') return;
-        document.documentElement.setAttribute('data-embed', 'editor');
-        var st = document.createElement('style');
-        st.textContent = ''
-            + 'html[data-embed="editor"] body { background:#fff !important; overflow-x:hidden; }'
-            + 'html[data-embed="editor"] body > *:not(#embeddedEditorPreview):not(#simpleOrderModal):not(script):not(style) { display:none !important; }'
-            + 'html[data-embed="editor"] #embeddedEditorPreview { display:block !important; margin:14px auto !important; width:96% !important; max-width:780px !important; padding:0 !important; }'
-            + 'html[data-embed="editor"] #embeddedEditorPreview .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:none; box-shadow:0 8px 24px -10px rgba(124,58,237,0.18); }';
-        (document.head || document.documentElement).appendChild(st);
-        // 스플래시 즉시 제거 — embed 모드에서는 거추장스러움.
-        setTimeout(function(){ var sp = document.getElementById('splash'); if (sp) sp.remove(); }, 30);
-        // 에디터 자동 노출 + 사이즈 재계산. _meFitStage 가 부모 폭을 못 잡으면 stage 가 0×0 으로 그려져
-        //   하얗게만 보임. DOMContentLoaded 후 노출 → 다음 tick 에서 fit 강제 호출.
-        function _embedShowEditor(){
-            var ep = document.getElementById('embeddedEditorPreview');
-            if (ep) {
-                ep.style.display = 'block';
-                ep.style.visibility = 'visible';
-            }
-            // 다음 frame 에서 사이즈 재계산 (CSS 적용 + 레이아웃 후).
-            requestAnimationFrame(function(){
-                requestAnimationFrame(function(){
-                    try { if (typeof window._meFitStage === 'function') window._meFitStage(); } catch(_) {}
-                    try {
-                        // 메인 에디터 라이브러리 (요소/장식/탭) 도 임베드시 보이게 — 페이지 모달이 아닌 inline mount.
-                        var aiNbAi = document.getElementById('aiNbAi');
-                        if (aiNbAi) aiNbAi.style.display = '';
-                    } catch(_) {}
-                });
-            });
-        }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', _embedShowEditor);
-        } else {
-            _embedShowEditor();
-        }
-        // 리소스(폰트/이미지) 로드 끝나면 한 번 더 fit (간헐적으로 첫 fit 이 0 인 경우 안전망).
-        window.addEventListener('load', function(){
-            requestAnimationFrame(function(){
-                try { if (typeof window._meFitStage === 'function') window._meFitStage(); } catch(_) {}
-            });
-        });
-    } catch(e){ console.warn('[embed editor]', e); }
-})();
-</script>
+<!-- 2026-06-15: embed=editor 모드는 폐기됨 — cotton-print.html 가 자체 인라인 에디터(fpEditorSection) 사용. -->
 <script>
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);

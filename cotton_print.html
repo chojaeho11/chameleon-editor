@@ -1927,24 +1927,392 @@ async function submitRollFabricRequest() {
 })();
 </script>
 
-<!-- 2026-06-15: 미니에디터 임베드 — index.html?embed=editor 를 iframe 으로 호출. 패브릭 인쇄 메인에서 바로 디자인 가능. -->
-<section id="koEditorSection" style="display:none; max-width:1100px; margin:50px auto 0; padding:0 24px;">
+<!-- 2026-06-15: 패브릭 전용 인라인 에디터 (iframe 대체) — 모든 언어 노출. 이미지 업로드 + 텍스트 + AI 생성 + 다운로드. -->
+<section id="fpEditorSection" style="max-width:1100px; margin:50px auto 0; padding:0 24px;">
     <div style="text-align:center; margin-bottom:18px;">
-        <h3 style="font-size:20px; font-weight:900; color:var(--brown-dark); margin:0 0 6px; letter-spacing:-0.5px;">간단한 디자인 바로바로</h3>
-        <p style="font-size:13px; color:#1f2937; margin:0; font-weight:300; letter-spacing:-0.1px;">사진 배경 지우기 · 내 사진에 간단한 텍스트를 넣어서 꾸며봐요</p>
+        <h3 id="fpEditorTitle" style="font-size:20px; font-weight:900; color:var(--brown-dark); margin:0 0 6px; letter-spacing:-0.5px;"></h3>
+        <p id="fpEditorSub" style="font-size:13px; color:#1f2937; margin:0; font-weight:300; letter-spacing:-0.1px;"></p>
     </div>
-    <div style="border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(69,26,3,0.25); background:#fff; position:relative;">
-        <iframe src="https://www.cafe2626.com/?embed=editor" style="width:100%; height:780px; border:none; display:block;" loading="lazy" title="간단한 디자인 바로바로" allow="clipboard-write"></iframe>
+    <div style="border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(69,26,3,0.18); background:#fff; padding:18px;">
+        <!-- 사이즈 + 도구 바 -->
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:12px;">
+            <select id="fpSizeSel" style="padding:8px 28px 8px 12px; border:1px solid #cbd5e1; border-radius:980px; background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:#0f172a; cursor:pointer; flex-shrink:0;">
+                <option value="600,900">60×90cm</option>
+                <option value="900,1200" selected>90×120cm</option>
+                <option value="1300,2000">130×200cm</option>
+                <option value="1000,1000">100×100cm</option>
+            </select>
+            <button type="button" id="fpUploadBtn" style="padding:8px 14px; background:#FFCC00; color:#1d1d1f; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-image"></i><span id="fpUploadLbl"></span></button>
+            <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
+            <button type="button" id="fpTextBtn" style="padding:8px 12px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:13px; font-weight:700; color:#1d1d1f; cursor:pointer; font-family:inherit;" title="텍스트"><i class="fa-solid fa-font"></i></button>
+            <button type="button" id="fpAiBtn" style="padding:8px 12px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
+            <label style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(120,120,128,0.10); border-radius:980px; cursor:pointer;" title="배경색">
+                <input type="color" id="fpBgColor" value="#ffffff" style="-webkit-appearance:none; appearance:none; width:22px; height:22px; padding:0; border:1.5px solid #fff; border-radius:50%; background:conic-gradient(from 180deg,#ff0080,#ff8c00,#ffd900,#2ecc71,#00d1ff,#6c5ce7,#ff0080); box-shadow:0 0 0 1px rgba(0,0,0,0.18); cursor:pointer;">
+            </label>
+            <button type="button" id="fpDelBtn" disabled style="padding:8px 12px; background:rgba(255,59,48,0.10); color:#ff3b30; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; opacity:0.45;" title="삭제"><i class="fa-solid fa-trash"></i></button>
+            <button type="button" id="fpDownloadBtn" style="margin-left:auto; padding:9px 18px; background:#007AFF; color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
+        </div>
+        <!-- 캔버스 영역 -->
+        <div id="fpStageWrap" style="position:relative; width:100%; padding:10px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center; min-height:340px;">
+            <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.4); overflow:hidden; touch-action:none;"></div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:11.5px; color:#64748b; font-weight:600;">
+            <span id="fpHint"></span>
+        </div>
     </div>
 </section>
+
+<!-- AI 프롬프트 모달 -->
+<div id="fpAiModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#fff; border-radius:16px; max-width:480px; width:100%; padding:24px; box-shadow:0 24px 60px -16px rgba(0,0,0,0.5);">
+        <div style="display:flex; align-items:center; gap:8px; font-size:17px; font-weight:900; color:#0f172a; margin-bottom:8px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color:#a855f7;"></i><span id="fpAiModalTitle"></span>
+        </div>
+        <p id="fpAiModalSub" style="font-size:12.5px; color:#64748b; margin:0 0 14px; line-height:1.5;"></p>
+        <textarea id="fpAiPrompt" rows="3" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:10px; font-family:inherit; font-size:13.5px; resize:vertical; outline:none; box-sizing:border-box;" placeholder=""></textarea>
+        <div style="display:flex; gap:8px; margin-top:14px;">
+            <button type="button" id="fpAiCancel" style="flex:1; padding:10px; background:#f1f5f9; color:#0f172a; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-family:inherit;"></button>
+            <button type="button" id="fpAiGenerate" style="flex:1; padding:10px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:10px; font-weight:700; cursor:pointer; font-family:inherit;"></button>
+        </div>
+        <div id="fpAiStatus" style="display:none; margin-top:10px; padding:10px; background:#f8fafc; border-radius:8px; font-size:12px; color:#64748b; text-align:center;"></div>
+    </div>
+</div>
+
 <script>
 (function(){
-    if ((window.__PS_LANG || 'ko') === 'ko') {
-        var el = document.getElementById('koEditorSection');
-        if (el) el.style.display = '';
+    var LANG_RAW = (window.__PS_LANG || 'ko').toLowerCase();
+    var LANG = (LANG_RAW === 'ja' || LANG_RAW === 'jp') ? 'ja' : (LANG_RAW === 'ko' || LANG_RAW === 'kr') ? 'ko' : 'en';
+    var T = {
+        ko: { title:'간단한 디자인 바로바로', sub:'사진 배경 지우기 · 내 사진에 간단한 텍스트를 넣어서 꾸며봐요',
+              upload:'이미지', text:'텍스트', ai:'AI 이미지', download:'다운로드', hint:'대지를 클릭해 텍스트 추가 · 모서리로 크기 조절 · 드래그로 이동',
+              aiTitle:'AI 이미지 생성', aiSub:'원하는 이미지를 한글로 설명해 주세요. (예: 따뜻한 햇살이 비치는 카페 창가의 커피잔)',
+              aiPlaceholder:'예: 노을 지는 바다 위의 흰 갈매기, 수채화 스타일', aiGen:'생성하기', aiCancel:'취소',
+              aiLoading:'AI 가 이미지를 생성 중입니다... 약 10~20초 소요',
+              aiOff:'AI 이미지 기능은 곧 출시됩니다. 현재는 이미지 업로드만 가능합니다.',
+              newText:'텍스트를 입력하세요' },
+        ja: { title:'カンタン デザイン サクッと', sub:'写真の背景削除 · お気に入りの写真にテキストを加えて飾りましょう',
+              upload:'画像', text:'テキスト', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動',
+              aiTitle:'AI 画像生成', aiSub:'欲しい画像を日本語で説明してください。(例: 暖かい日差しの差し込むカフェの窓辺のコーヒー)',
+              aiPlaceholder:'例: 夕焼けの海と白いカモメ、水彩画スタイル', aiGen:'生成', aiCancel:'キャンセル',
+              aiLoading:'AI が画像を生成中です... 約10〜20秒かかります',
+              aiOff:'AI 画像生成は近日公開予定です。現在は画像アップロードのみ可能です。',
+              newText:'テキストを入力' },
+        en: { title:'Easy Design, Right Away', sub:'Background removal · Decorate your photo with simple text',
+              upload:'Image', text:'Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move',
+              aiTitle:'Generate AI Image', aiSub:'Describe the image you want. (e.g., A coffee cup by a cafe window in warm sunlight)',
+              aiPlaceholder:'e.g., A white seagull over a sunset sea, watercolor style', aiGen:'Generate', aiCancel:'Cancel',
+              aiLoading:'AI is generating your image... about 10-20 seconds',
+              aiOff:'AI image generation coming soon. Image upload is available now.',
+              newText:'Type your text' }
+    };
+    var t = T[LANG] || T.en;
+    function $(id){ return document.getElementById(id); }
+    $('fpEditorTitle').textContent = t.title;
+    $('fpEditorSub').textContent = t.sub;
+    $('fpUploadLbl').textContent = t.upload;
+    $('fpAiLbl').textContent = t.ai;
+    $('fpDownloadLbl').textContent = t.download;
+    $('fpHint').textContent = t.hint;
+    $('fpAiModalTitle').textContent = t.aiTitle;
+    $('fpAiModalSub').textContent = t.aiSub;
+    $('fpAiPrompt').placeholder = t.aiPlaceholder;
+    $('fpAiCancel').textContent = t.aiCancel;
+    $('fpAiGenerate').textContent = t.aiGen;
+
+    var state = { natW: 900, natH: 1200, items: [], selected: null, zCounter: 10 };
+    var stage = $('fpStage');
+    var wrap = $('fpStageWrap');
+
+    function fitStage(){
+        var maxW = Math.max(200, wrap.clientWidth - 20);
+        var maxH = 540;
+        var scaleW = maxW / state.natW;
+        var scaleH = maxH / state.natH;
+        var sc = Math.min(scaleW, scaleH, 1.0);
+        var dispW = Math.floor(state.natW * sc);
+        var dispH = Math.floor(state.natH * sc);
+        stage.style.width = dispW + 'px';
+        stage.style.height = dispH + 'px';
+        state.wScale = sc;
+        // 모든 item 위치 재계산
+        state.items.forEach(syncItem);
     }
+    function setSize(w, h){ state.natW = w; state.natH = h; fitStage(); }
+    setSize(900, 1200);
+    window.addEventListener('resize', fitStage);
+
+    $('fpSizeSel').addEventListener('change', function(){
+        var v = this.value.split(',');
+        setSize(parseInt(v[0], 10), parseInt(v[1], 10));
+    });
+
+    $('fpBgColor').addEventListener('input', function(){
+        if (state.selected && state.selected.type === 'text') {
+            state.selected.fill = this.value;
+            syncItem(state.selected);
+        } else {
+            state.bg = this.value;
+            stage.style.background = this.value;
+        }
+    });
+
+    function snapItem(it){
+        // clamp 위치 (반은 밖 허용)
+        it.x = Math.max(-it.w*0.5, Math.min(state.natW - it.w*0.5, it.x));
+        it.y = Math.max(-it.h*0.5, Math.min(state.natH - it.h*0.5, it.y));
+    }
+
+    function syncItem(it){
+        var sc = state.wScale || 1;
+        it.el.style.left = (it.x * sc) + 'px';
+        it.el.style.top = (it.y * sc) + 'px';
+        if (it.type === 'text') {
+            it.el.style.fontSize = (it.fontSize * sc) + 'px';
+            it.el.style.color = it.fill;
+            it.el.style.fontFamily = it.fontFamily || 'inherit';
+            it.el.style.fontWeight = it.fontWeight || '700';
+            it.el.style.width = 'max-content';
+            it.el.style.maxWidth = ((state.natW - it.x) * sc) + 'px';
+            it.el.style.textAlign = 'center';
+        } else {
+            it.el.style.width = (it.w * sc) + 'px';
+            it.el.style.height = (it.h * sc) + 'px';
+        }
+    }
+
+    function selectItem(it){
+        state.items.forEach(function(o){ if (o.el) o.el.classList.remove('fp-selected'); });
+        state.selected = it;
+        if (it) it.el.classList.add('fp-selected');
+        $('fpDelBtn').disabled = !it;
+        $('fpDelBtn').style.opacity = it ? '1' : '0.45';
+        if (it && it.type === 'text') {
+            $('fpBgColor').value = it.fill || '#000000';
+        } else {
+            $('fpBgColor').value = state.bg || '#ffffff';
+        }
+    }
+
+    $('fpDelBtn').addEventListener('click', function(){
+        if (!state.selected) return;
+        var idx = state.items.indexOf(state.selected);
+        if (idx >= 0) {
+            state.items[idx].el.remove();
+            state.items.splice(idx, 1);
+        }
+        selectItem(null);
+    });
+
+    function bindDrag(it){
+        var el = it.el;
+        var dragging = false, sx, sy, sX, sY;
+        el.addEventListener('pointerdown', function(ev){
+            if (ev.target.classList && ev.target.classList.contains('fp-handle')) return;
+            ev.stopPropagation();
+            selectItem(it);
+            if (it.type === 'text' && el.getAttribute('contenteditable') === 'true') return;
+            dragging = true;
+            sx = ev.clientX; sy = ev.clientY;
+            sX = it.x; sY = it.y;
+            el.setPointerCapture(ev.pointerId);
+        });
+        el.addEventListener('pointermove', function(ev){
+            if (!dragging) return;
+            var sc = state.wScale || 1;
+            it.x = sX + (ev.clientX - sx) / sc;
+            it.y = sY + (ev.clientY - sy) / sc;
+            snapItem(it);
+            syncItem(it);
+        });
+        el.addEventListener('pointerup', function(){ dragging = false; });
+        el.addEventListener('dblclick', function(){
+            if (it.type === 'text') { el.setAttribute('contenteditable','true'); el.focus(); document.execCommand && document.execCommand('selectAll', false, null); }
+        });
+        el.addEventListener('blur', function(){
+            if (it.type === 'text') { el.removeAttribute('contenteditable'); it.text = el.innerText; }
+        });
+    }
+
+    function addText(text){
+        var el = document.createElement('div');
+        el.className = 'fp-item fp-text';
+        el.style.position = 'absolute';
+        el.style.cursor = 'move';
+        el.style.padding = '4px 8px';
+        el.style.lineHeight = '1.2';
+        el.style.userSelect = 'none';
+        el.style.touchAction = 'none';
+        el.style.zIndex = (++state.zCounter);
+        el.textContent = text || t.newText;
+        stage.appendChild(el);
+        var it = { el:el, type:'text', x: state.natW*0.2, y: state.natH*0.4, w: state.natW*0.6, h: 80,
+                   text: el.textContent, fill:'#1d1d1f', fontSize: Math.max(36, state.natH*0.05),
+                   fontFamily:'inherit', fontWeight:'800' };
+        state.items.push(it);
+        syncItem(it);
+        bindDrag(it);
+        selectItem(it);
+        // 자동 편집 모드 진입
+        setTimeout(function(){ el.setAttribute('contenteditable','true'); el.focus(); document.execCommand && document.execCommand('selectAll', false, null); }, 50);
+        return it;
+    }
+    $('fpTextBtn').addEventListener('click', function(){ addText(''); });
+
+    function addImageFromUrl(url){
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function(){
+            var el = document.createElement('div');
+            el.className = 'fp-item fp-image';
+            el.style.position = 'absolute';
+            el.style.cursor = 'move';
+            el.style.touchAction = 'none';
+            el.style.zIndex = (++state.zCounter);
+            var inner = document.createElement('img');
+            inner.src = url;
+            inner.crossOrigin = 'anonymous';
+            inner.style.width = '100%';
+            inner.style.height = '100%';
+            inner.style.objectFit = 'contain';
+            inner.style.pointerEvents = 'none';
+            el.appendChild(inner);
+            // 핸들
+            ['nw','ne','sw','se'].forEach(function(d){
+                var h = document.createElement('div'); h.className = 'fp-handle fp-handle-'+d;
+                el.appendChild(h);
+            });
+            stage.appendChild(el);
+            var ratio = img.width / img.height;
+            var maxW = state.natW * 0.6;
+            var w = maxW;
+            var h = w / ratio;
+            if (h > state.natH * 0.6) { h = state.natH * 0.6; w = h * ratio; }
+            var it = { el:el, type:'image', src:url,
+                       x:(state.natW - w)/2, y:(state.natH - h)/2, w:w, h:h };
+            state.items.push(it);
+            syncItem(it);
+            bindDrag(it);
+            // 핸들 — se 만 활성 (간단버전)
+            el.querySelectorAll('.fp-handle-se').forEach(function(handle){
+                handle.addEventListener('pointerdown', function(ev){
+                    ev.stopPropagation();
+                    var sx = ev.clientX, sy = ev.clientY, sW = it.w, sH = it.h;
+                    function move(ev2){
+                        var sc = state.wScale || 1;
+                        var dx = (ev2.clientX - sx) / sc;
+                        it.w = Math.max(30, sW + dx);
+                        it.h = it.w / ratio;
+                        syncItem(it);
+                    }
+                    function up(){ document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); }
+                    document.addEventListener('pointermove', move);
+                    document.addEventListener('pointerup', up);
+                });
+            });
+            selectItem(it);
+        };
+        img.onerror = function(){ alert('이미지 로드 실패'); };
+        img.src = url;
+    }
+    $('fpUploadBtn').addEventListener('click', function(){ $('fpFileInput').click(); });
+    $('fpFileInput').addEventListener('change', function(){
+        var f = this.files && this.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function(e){ addImageFromUrl(e.target.result); };
+        r.readAsDataURL(f);
+        this.value = '';
+    });
+
+    // AI 모달
+    $('fpAiBtn').addEventListener('click', function(){ $('fpAiModal').style.display = 'flex'; $('fpAiStatus').style.display = 'none'; $('fpAiPrompt').focus(); });
+    $('fpAiCancel').addEventListener('click', function(){ $('fpAiModal').style.display = 'none'; });
+    $('fpAiGenerate').addEventListener('click', async function(){
+        var prompt = ($('fpAiPrompt').value || '').trim();
+        if (!prompt) return;
+        $('fpAiStatus').style.display = 'block';
+        $('fpAiStatus').style.color = '#6366f1';
+        $('fpAiStatus').textContent = t.aiLoading;
+        $('fpAiGenerate').disabled = true;
+        try {
+            // Supabase edge function 'ai-image-gen' 호출 — 미배포 시 503 으로 떨어져 placeholder 안내 표시.
+            var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+            var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+            var res = await fetch(SUPABASE_URL + '/functions/v1/ai-image-gen', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY, 'apikey':SUPABASE_KEY },
+                body: JSON.stringify({ prompt: prompt, size: '1024x1024' })
+            });
+            if (!res.ok) throw new Error('Status ' + res.status);
+            var data = await res.json();
+            if (data && data.url) {
+                addImageFromUrl(data.url);
+                $('fpAiModal').style.display = 'none';
+            } else { throw new Error('No URL returned'); }
+        } catch(e) {
+            console.warn('[fp ai]', e);
+            $('fpAiStatus').style.color = '#dc2626';
+            $('fpAiStatus').textContent = t.aiOff;
+        } finally {
+            $('fpAiGenerate').disabled = false;
+        }
+    });
+
+    // 스테이지 빈 영역 클릭 → deselect
+    stage.addEventListener('pointerdown', function(ev){ if (ev.target === stage) selectItem(null); });
+
+    // 다운로드 — Canvas 로 모든 item 렌더 후 PNG 다운로드.
+    $('fpDownloadBtn').addEventListener('click', async function(){
+        var c = document.createElement('canvas');
+        c.width = state.natW; c.height = state.natH;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = state.bg || '#ffffff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        // z-index 순 정렬
+        var sorted = state.items.slice().sort(function(a,b){ return parseInt(a.el.style.zIndex||0) - parseInt(b.el.style.zIndex||0); });
+        for (var i = 0; i < sorted.length; i++) {
+            var it = sorted[i];
+            if (it.type === 'image') {
+                await new Promise(function(resolve){
+                    var im = new Image(); im.crossOrigin = 'anonymous';
+                    im.onload = function(){ try { ctx.drawImage(im, it.x, it.y, it.w, it.h); } catch(_){} resolve(); };
+                    im.onerror = resolve;
+                    im.src = it.src;
+                });
+            } else if (it.type === 'text') {
+                ctx.fillStyle = it.fill || '#000';
+                ctx.font = (it.fontWeight||'700') + ' ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
+                ctx.textBaseline = 'top';
+                ctx.textAlign = 'center';
+                // 박스 중심 = it.x + getBoundingClientRect.width/scale/2 → 실제 렌더된 폭 사용
+                var rect = it.el.getBoundingClientRect();
+                var actualW = rect.width / (state.wScale || 1);
+                var lines = (it.text || it.el.innerText || '').split(/\n/);
+                var lh = it.fontSize * 1.2;
+                var tx = it.x + actualW/2;
+                lines.forEach(function(ln, idx){ ctx.fillText(ln, tx, it.y + 4 + idx*lh); });
+            }
+        }
+        var url = c.toDataURL('image/png');
+        var a = document.createElement('a');
+        a.href = url; a.download = 'cotton-print-design.png';
+        document.body.appendChild(a); a.click(); a.remove();
+    });
 })();
 </script>
+<style>
+#fpStage .fp-item { box-sizing:border-box; }
+#fpStage .fp-item.fp-selected { outline:1.5px dashed #007AFF; outline-offset:2px; }
+#fpStage .fp-handle { position:absolute; width:14px; height:14px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.25); }
+#fpStage .fp-handle-se { right:-7px; bottom:-7px; cursor:nwse-resize; }
+#fpStage .fp-handle-sw, #fpStage .fp-handle-nw, #fpStage .fp-handle-ne { display:none; }
+#fpStage .fp-text { font-weight:800; word-break:keep-all; }
+#fpStage .fp-text[contenteditable=true] { outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); cursor:text; }
+@media (max-width:700px){
+    #fpEditorSection .fp-handle { width:18px; height:18px; }
+    #fpEditorSection select, #fpEditorSection button { font-size:12.5px; }
+}
+</style>
 
 <!-- 2026-05-27: 한국어 사이트 전용 — 유튜브 브랜드 영상 -->
 <section id="koYoutubeSection" style="display:none; max-width:1100px; margin:60px auto 0; padding:0 24px;">
