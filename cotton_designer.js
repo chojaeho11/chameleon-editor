@@ -1148,8 +1148,15 @@ window._cdRender = function() {
     const layout = state.layout;
 
     if (layout === 'centered') {
-        const x = (cw - tileW) / 2, y = (ch - tileH) / 2;
-        ctx.drawImage(state.img, x + padX, y + padY, drawW, drawH);
+        // 2026-06-15: 패브릭포스터 = 이미지가 대지에 꽉차게. imgWcm/Hcm 무시하고 캔버스 자체를 사용.
+        //   (imgWcm input 의 max=1300 제약 때문에 1702mm 같은 큰 세로값이 기본값으로 리셋되어
+        //    tileW/H 가 10cm 로 잡혀 이미지가 100×100 box 로 작게 그려지던 버그.)
+        //   imgScale (축소 %) 은 그대로 적용 — 사용자가 80% 등으로 줄이면 그만큼 작게.
+        const drawW2 = cw * sc;
+        const drawH2 = ch * sc;
+        const x = (cw - drawW2) / 2;
+        const y = (ch - drawH2) / 2;
+        ctx.drawImage(state.img, x, y, drawW2, drawH2);
     }
     else if (layout === 'basic') {
         for (let y = 0; y < ch; y += tileH) {
