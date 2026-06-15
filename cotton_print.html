@@ -2471,18 +2471,37 @@ async function submitRollFabricRequest() {
     var _libSearchDebounce = null;
     var SB_URL_LIB = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     var SB_KEY_LIB = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    // 2026-06-15: 미니에디터(simple_order.js) 의 _LIB_CATEGORIES 와 동일 매핑.
     var _LIB_CATS = {
-        template:   ['template','Templates','템플릿'],
-        element:    ['element','Elements','요소','일러스트'],
-        decoration: ['decoration','Decorations','장식','아이콘']
+        template:   ['user_vector', 'user_image', 'photo-bg'],
+        element:    ['vector', 'graphic', 'transparent-graphic', 'pattern'],
+        decoration: null   // canvas-icons.js 의 ORNAMENTS 사용
     };
     async function fetchLib(tab, search){
         var key = tab + '|' + (search||'');
         if (_libCache[key]) return _libCache[key];
+        // 장식 탭 — Supabase 아닌 ORNAMENTS SVG 배열.
+        if (tab === 'decoration') {
+            if (!window.ORNAMENTS) {
+                // canvas-icons.js 는 같은 Cloudflare Pages 자산 — 호스트 무관하게 동일 파일 제공.
+                try { await import('/canvas-icons.js?v=435'); } catch(e) { console.warn('[fp ornaments load]', e); }
+            }
+            var orns = window.ORNAMENTS || [];
+            if (search && search.trim()) {
+                var q = search.trim().toLowerCase();
+                orns = orns.filter(function(o){
+                    return ((o.cat||'').toLowerCase().indexOf(q) >= 0) ||
+                           ((o.tags||[]).join(' ').toLowerCase().indexOf(q) >= 0);
+                });
+            }
+            var mapped = orns.map(function(o, idx){ return { __ornament:true, idx:idx, svg:o.svg, color:o.color, cat:o.cat }; });
+            _libCache[key] = mapped;
+            return mapped;
+        }
         try {
             var cats = _LIB_CATS[tab] || [];
             var url = SB_URL_LIB + '/rest/v1/library?select=id,thumb_url,data_url,title,tags,is_featured&status=eq.approved'
-                + '&category=in.(' + cats.map(function(c){return '"'+encodeURIComponent(c)+'"';}).join(',') + ')'
+                + '&category=in.(' + cats.map(function(c){return encodeURIComponent(c);}).join(',') + ')'
                 + '&or=(product_key.eq.custom,product_key.is.null,product_key.eq.%22%22)'
                 + '&order=is_featured.desc.nullslast,created_at.desc&limit=40';
             if (search) url += '&tags=ilike.%25' + encodeURIComponent(search) + '%25';
@@ -2516,6 +2535,14 @@ async function submitRollFabricRequest() {
             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:18px 0; font-size:11.5px; color:#94a3b8;">' + t.libEmpty + '</div>';
         } else {
             grid.innerHTML = pageItems.map(function(it){
+                if (it && it.__ornament) {
+                    // 장식: SVG 직접 인라인
+                    var sv = String(it.svg || '');
+                    if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
+                        sv = sv.replace(/fill="currentColor"/g, 'fill="' + it.color + '"');
+                    }
+                    return '<div class="fp-lib-thumb" data-orn="' + it.idx + '">' + sv + '</div>';
+                }
                 var thumb = it.thumb_url || it.data_url || '';
                 var full = resolveLibImg(it);
                 return '<div class="fp-lib-thumb" data-url="' + encodeURI(full) + '"><img src="' + thumb.replace(/"/g,'&quot;') + '" alt=""></div>';
@@ -2524,6 +2551,20 @@ async function submitRollFabricRequest() {
                 el.addEventListener('click', function(){
                     var u = decodeURI(el.getAttribute('data-url') || '');
                     if (u) addImageFromUrl(u);
+                });
+            });
+            grid.querySelectorAll('[data-orn]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    var idx = parseInt(el.getAttribute('data-orn'), 10);
+                    var orn = (window.ORNAMENTS || [])[idx];
+                    if (!orn || !orn.svg) return;
+                    // SVG → dataURL
+                    var sv = String(orn.svg || '');
+                    if (orn.color) sv = sv.replace(/currentColor/g, orn.color);
+                    if (!/<svg[^>]*\swidth=/.test(sv)) sv = sv.replace(/<svg/, '<svg width="400" height="400"');
+                    if (!/xmlns=/.test(sv)) sv = sv.replace(/<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                    var dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(sv);
+                    addImageFromUrl(dataUrl);
                 });
             });
         }
