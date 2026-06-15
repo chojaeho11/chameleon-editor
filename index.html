@@ -12936,8 +12936,8 @@ window.filterFxCards = function(cat, btn) {
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>' +
                 '<a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>' +
-                '<a href="tel:010-3490-3328" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
-                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-3490-3328</a>' +
+                '<a href="tel:010-4994-5950" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
+                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-4994-5950</a>' +
                 '<a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">' +
                     '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 연두 매니저 010-2525-9943</a>' +
             '</div>' +
@@ -13791,7 +13791,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=464').then(m => {
+        import('./advisor-panel.js?v=465').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
@@ -25185,7 +25185,7 @@ window.dsmRenderProducts = async function(keyword) {
     };
     var _ml = _mgrLabels[_lang2] || _mgrLabels['en'];
     var DEFAULT_MANAGERS = _lang2 === 'kr'
-        ? [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-3490-3328'}, {name:'연두', phone:'010-2525-9943'}]
+        ? [{name:'지숙', phone:'010-3455-1946'}, {name:'은미', phone:'010-7793-5393'}, {name:'성희', phone:'010-4994-5950'}, {name:'연두', phone:'010-2525-9943'}]
         : [{name:_ml[0]}, {name:_ml[1]}, {name:_ml[2]}, {name:_ml[3]}];
 
     // ── 매니저 선택 UI 표시 ──
