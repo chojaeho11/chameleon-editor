@@ -1,17 +1,150 @@
 <!DOCTYPE html>
 <html>
-<head><title>Payment Failed</title></head>
+<head>
+    <meta charset="utf-8">
+    <title>Payment Failed</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px 20px; max-width: 520px; margin: 0 auto; color: #1d1d1f; }
+        h2 { font-size: 22px; margin-bottom: 10px; }
+        p { font-size: 14px; line-height: 1.6; color: #555; }
+        .actions { margin-top: 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 10px 18px; border-radius: 980px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-block; cursor: pointer; border: none; font-family: inherit; }
+        .btn-primary { background: #007AFF; color: #fff; }
+        .btn-ghost { background: #f1f3f5; color: #1d1d1f; }
+        .status { margin-top: 16px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.6; display: none; }
+        .status.info { background: rgba(0,122,255,0.08); color: #007AFF; display: block; }
+        .status.done { background: rgba(52,199,89,0.10); color: #2ba84a; display: block; }
+        .status.warn { background: rgba(255,149,0,0.10); color: #ff9500; display: block; }
+    </style>
+</head>
 <body>
-<h2 data-i18n="msg_payment_failed">Payment Failed</h2>
-<p data-i18n="msg_payment_error_desc">The payment was cancelled or an error occurred.</p>
+<h2 id="title">Payment Failed</h2>
+<p id="desc">The payment was cancelled or an error occurred.</p>
+<div id="cleanupStatus" class="status"></div>
+<div class="actions">
+    <a id="btnHome" class="btn btn-primary" href="/">Home</a>
+    <a id="btnMypage" class="btn btn-ghost" href="/mypage.html">My page</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // 간단한 다국어 처리 스크립트 추가
-    const urlParams = new URLSearchParams(window.location.search);
-    const lang = urlParams.get('lang') || 'kr';
-    if(lang === 'kr') {
-        document.querySelector('h2').innerText = "결제 실패";
-        document.querySelector('p').innerText = "결제가 취소되었거나 오류가 발생했습니다.";
+(async function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var lang = (urlParams.get('lang') || 'kr').toLowerCase();
+    var dbId = urlParams.get('db_id') || urlParams.get('order_id');
+
+    // i18n
+    var L = {
+        kr: { title: '결제 실패', desc: '결제가 취소되었거나 오류가 발생했습니다.', home: '홈으로', mypage: '마이페이지',
+              cleaning: '주문 정리 중...', cleaned: '✅ 주문이 정리되었습니다 (의뢰 {n}건 회수).', kept: '⚠️ 이미 디자이너가 작업을 시작한 의뢰는 보존했습니다 ({k}건).' },
+        ja: { title: '決済失敗', desc: '決済がキャンセルされたか、エラーが発生しました。', home: 'ホーム', mypage: 'マイページ',
+              cleaning: '注文を整理中...', cleaned: '✅ 注文を整理しました (依頼{n}件回収)。', kept: '⚠️ 既にデザイナーが作業中の依頼は保存しました ({k}件)。' },
+        en: { title: 'Payment Failed', desc: 'The payment was cancelled or an error occurred.', home: 'Home', mypage: 'My page',
+              cleaning: 'Cleaning up order...', cleaned: '✅ Order cleaned up ({n} request(s) recovered).', kept: '⚠️ Kept {k} request(s) already in progress by a designer.' }
+    };
+    var t = L[lang] || L.kr;
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('desc').textContent = t.desc;
+    document.getElementById('btnHome').textContent = t.home;
+    document.getElementById('btnMypage').textContent = t.mypage;
+
+    if (!dbId) return;
+
+    // 2026-06-15: PG 결제 실패 시 고아 design_requests 정리.
+    //   미결제/임시작성 상태의 주문이면 — 연결된 design_requests (status='open' 또는 'payment_pending') 를 삭제.
+    //   디자이너가 이미 'claimed' 한 경우는 보존 (이력 보존 + 분쟁 방지).
+    var SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    var sb;
+    try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } }); }
+    catch (e) { console.warn('[fail] sb init', e); return; }
+
+    var statusEl = document.getElementById('cleanupStatus');
+    statusEl.className = 'status info';
+    statusEl.textContent = t.cleaning;
+
+    try {
+        var ord = await sb.from('orders').select('id, status, payment_status, items, user_id').eq('id', dbId).maybeSingle();
+        var order = ord && ord.data;
+        if (!order) { statusEl.style.display = 'none'; return; }
+
+        // 이미 결제완료/접수된 주문은 건드리지 않음 — 사용자가 fail.html 을 잘못 열었거나 race condition.
+        var paidStatuses = ['결제완료','입금확인','카드결제완료','입금확인됨','paid'];
+        if (paidStatuses.indexOf(order.payment_status) >= 0) {
+            statusEl.style.display = 'none';
+            return;
+        }
+
+        var dreqIds = new Set();
+
+        // 1) 주문 items 에 명시된 design_request_id (디자인의뢰 직접 결제 흐름)
+        try {
+            var items = order.items;
+            if (typeof items === 'string') items = JSON.parse(items);
+            (items || []).forEach(function(it){
+                var rid = it && (it.design_request_id || it._designRequestId);
+                if (rid) dreqIds.add(rid);
+            });
+        } catch (e) { console.warn('[fail] parse items', e); }
+
+        // 2) description 에 [ORDER_ID:<id> 태그가 있는 design_requests (칼선작업 흐름)
+        try {
+            var byTag = await sb.from('design_requests')
+                .select('id, status')
+                .ilike('description', '%[ORDER_ID:' + dbId + ' %');
+            (byTag.data || []).forEach(function(r){ dreqIds.add(r.id); });
+        } catch (e) { console.warn('[fail] dreq by tag', e); }
+
+        if (dreqIds.size === 0) {
+            // 정리할 의뢰 없음 — 주문만 취소 표기.
+            try { await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', dbId).in('payment_status', ['미결제','입금대기']); } catch(e){}
+            statusEl.style.display = 'none';
+            return;
+        }
+
+        // 안전성 — 'open' 이나 'payment_pending' 인 것만 삭제. 'claimed' 이상이면 보존.
+        var rowsCheck = await sb.from('design_requests')
+            .select('id, status')
+            .in('id', Array.from(dreqIds));
+        var deletable = [];
+        var kept = 0;
+        (rowsCheck.data || []).forEach(function(r){
+            if (r.status === 'open' || r.status === 'payment_pending') deletable.push(r.id);
+            else kept++;
+        });
+
+        if (deletable.length > 0) {
+            // FK 자식 (design_bids, design_reviews) 먼저 정리
+            try { await sb.from('design_bids').delete().in('request_id', deletable); } catch(e){}
+            try { await sb.from('design_reviews').delete().in('request_id', deletable); } catch(e){}
+            try { await sb.from('design_requests').delete().in('id', deletable); } catch(e){}
+        }
+
+        // 주문 자체도 '취소됨' / '주문취소' 로 표기 (감사 추적 유지 — DELETE 안 함).
+        try { await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', dbId).in('payment_status', ['미결제','입금대기']); } catch(e){}
+
+        // localStorage 디자인의뢰 pending stash 정리
+        try {
+            var pendKey = 'dm_pending_design_requests';
+            var pend = JSON.parse(localStorage.getItem(pendKey) || '[]');
+            var remain = pend.filter(function(p){ return !dreqIds.has(p.requestId); });
+            localStorage.setItem(pendKey, JSON.stringify(remain));
+        } catch (e) {}
+
+        statusEl.className = 'status done';
+        statusEl.textContent = t.cleaned.replace('{n}', String(deletable.length));
+        if (kept > 0) {
+            var warnEl = document.createElement('div');
+            warnEl.className = 'status warn';
+            warnEl.style.marginTop = '8px';
+            warnEl.textContent = t.kept.replace('{k}', String(kept));
+            statusEl.parentNode.insertBefore(warnEl, statusEl.nextSibling);
+        }
+    } catch (e) {
+        console.warn('[fail] cleanup error', e);
+        statusEl.style.display = 'none';
     }
+})();
 </script>
 </body>
 </html>

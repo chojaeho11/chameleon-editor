@@ -749,6 +749,32 @@ async function cancelOrder(orderId) {
             if (!confirm(window.t('confirm_cancel_unpaid', "주문을 취소하시겠습니까?"))) return;
             const { error } = await sb.from('orders').update({ status: '취소됨', payment_status: '주문취소' }).eq('id', orderId);
             if (error) throw error;
+            // 2026-06-15: 미결제 취소 시 연결된 design_requests 도 같이 정리 (디자이너 보드 고아 의뢰 방지).
+            //   - items[].design_request_id (디자인의뢰 결제 흐름)
+            //   - description 의 [ORDER_ID:<id> 태그 (칼선작업 흐름)
+            //   디자이너가 이미 'claimed' 한 의뢰는 보존 — open / payment_pending 만 삭제.
+            try {
+                const dreqIds = new Set();
+                let items = order && order.items;
+                if (typeof items === 'string') { try { items = JSON.parse(items); } catch(_){} }
+                (items || []).forEach(it => {
+                    const rid = it && (it.design_request_id || it._designRequestId);
+                    if (rid) dreqIds.add(rid);
+                });
+                try {
+                    const byTag = await sb.from('design_requests').select('id').ilike('description', '%[ORDER_ID:' + orderId + ' %');
+                    (byTag.data || []).forEach(r => dreqIds.add(r.id));
+                } catch (_) {}
+                if (dreqIds.size > 0) {
+                    const rowsCheck = await sb.from('design_requests').select('id, status').in('id', Array.from(dreqIds));
+                    const deletable = (rowsCheck.data || []).filter(r => r.status === 'open' || r.status === 'payment_pending').map(r => r.id);
+                    if (deletable.length > 0) {
+                        try { await sb.from('design_bids').delete().in('request_id', deletable); } catch(_) {}
+                        try { await sb.from('design_reviews').delete().in('request_id', deletable); } catch(_) {}
+                        try { await sb.from('design_requests').delete().in('id', deletable); } catch(_) {}
+                    }
+                }
+            } catch (eDR) { console.warn('[cancelOrder design_requests cleanup]', eDR); }
             showToast(window.t('msg_cancel_done', '주문이 취소되었습니다.'), 'success');
         }
     } catch (e) {
