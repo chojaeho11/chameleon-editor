@@ -688,6 +688,42 @@ html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
         }, 2000);
     }
 </script>
+<!-- 2026-06-15: ?embed_editor=1 — iframe 임베드 모드. 에디터만 노출하고 외부 페이지 (cotton_designer) 가 postMessage 로 export 받을 수 있도록 한다. -->
+<style id="embedEditorModeStyle">
+    body.embed-editor-mode { background:#fff !important; padding:0 !important; margin:0 !important; }
+    body.embed-editor-mode > *:not(#embeddedEditorPreview):not(script):not(style) { display:none !important; }
+    body.embed-editor-mode #embeddedEditorPreview { display:block !important; width:100% !important; max-width:none !important; margin:0 !important; padding:8px !important; position:static !important; }
+    body.embed-editor-mode #splash { display:none !important; }
+</style>
+<script>
+(function _embedEditorBoot(){
+    try {
+        var p = new URLSearchParams(location.search);
+        if (p.get('embed_editor') !== '1') return;
+        // body 가 만들어진 시점에 class 부여 — DOMContentLoaded 까지 기다리지 않고 가능한 빨리.
+        var apply = function(){ document.body.classList.add('embed-editor-mode'); };
+        if (document.body) apply();
+        else document.addEventListener('DOMContentLoaded', apply);
+        // postMessage 프로토콜 — 부모가 'export' 요청하면 _meExportPNG 호출 후 dataUrl 회신.
+        window.addEventListener('message', async function(ev){
+            try {
+                var msg = ev.data || {};
+                if (msg.type === 'mini-editor:export') {
+                    var url = (typeof window._meExportPNG === 'function') ? await window._meExportPNG() : null;
+                    (ev.source || window.parent).postMessage({ type:'mini-editor:exported', dataUrl: url, ts: msg.ts || 0 }, '*');
+                }
+            } catch (e) { console.warn('[embed editor msg]', e); }
+        });
+        // 에디터가 준비되는 즉시 부모에게 알림 — cotton_designer 가 후크 걸기 좋게.
+        var readyTimer = setInterval(function(){
+            if (typeof window._meExportPNG === 'function' && window.me && window.me.stage) {
+                clearInterval(readyTimer);
+                try { window.parent.postMessage({ type:'mini-editor:ready' }, '*'); } catch (e) {}
+            }
+        }, 250);
+    } catch (e) { console.warn('[embed editor boot]', e); }
+})();
+</script>
 </head>
 <body>
 <!-- ★ 스플래시 스크린 (즉시 표시, 번역 완료 후 페이드아웃) -->

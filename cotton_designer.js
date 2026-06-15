@@ -265,6 +265,54 @@ function calcHoebae() {
 }
 
 // ────────────────────────────────────────────────
+// 2026-06-15: 임베드된 미니에디터 → cotton_designer 패턴 적용.
+//   iframe (?embed_editor=1) 에 export 요청 → PNG dataUrl 받음 → File 객체로 변환 → _cdUploadImage 동일 경로.
+window._cdApplyInlineDesign = function() {
+    var frame = document.getElementById('cdInlineEditorFrame');
+    var btn = document.getElementById('cdInlineApplyBtn');
+    if (!frame || !frame.contentWindow) {
+        try { showToast('에디터가 로드되지 않았습니다. 잠시 후 다시 시도해주세요.'); } catch(e){}
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; var _oldH = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 적용 중…'; btn.dataset._oldH = _oldH; }
+    var ts = Date.now();
+    var done = false;
+    function _restore() { if (btn && !done) { done = true; btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = btn.dataset._oldH || '<i class="fa-solid fa-check-circle"></i> 디자인 적용'; } }
+    function _onMsg(ev) {
+        var msg = ev.data || {};
+        if (msg.type !== 'mini-editor:exported' || msg.ts !== ts) return;
+        window.removeEventListener('message', _onMsg);
+        if (!msg.dataUrl) {
+            try { showToast('디자인 export 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단일 수 있습니다.'); } catch(e){}
+            _restore();
+            return;
+        }
+        // dataUrl → File → _cdUploadImage
+        try {
+            var arr = msg.dataUrl.split(',');
+            var mime = (arr[0].match(/:(.*?);/) || [,'image/png'])[1];
+            var bstr = atob(arr[1]);
+            var u8 = new Uint8Array(bstr.length);
+            for (var i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+            var blob = new Blob([u8], { type: mime });
+            var file = new File([blob], 'inline_design_' + ts + '.png', { type: mime });
+            window._cdUploadImage([file]).then(_restore, _restore);
+        } catch (e) {
+            console.warn('[_cdApplyInlineDesign convert]', e);
+            try { showToast('이미지 변환 실패: ' + (e.message || e)); } catch(_) {}
+            _restore();
+        }
+    }
+    window.addEventListener('message', _onMsg);
+    try { frame.contentWindow.postMessage({ type:'mini-editor:export', ts: ts }, '*'); } catch (e) {
+        console.warn('[_cdApplyInlineDesign post]', e);
+        window.removeEventListener('message', _onMsg);
+        _restore();
+    }
+    // 타임아웃 — 5초 안에 응답 없으면 복원
+    setTimeout(function(){ if (!done) { window.removeEventListener('message', _onMsg); _restore(); } }, 7000);
+};
+
 // 이미지 업로드 — PDF/AI(PDF 호환)/PSD 자동 변환 지원 (2026-05-11)
 // ────────────────────────────────────────────────
 window._cdUploadImage = async function(files) {
