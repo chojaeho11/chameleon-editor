@@ -710,6 +710,28 @@ html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
             // splash 강제 제거 — body 직속 자식 중 첫 element
             var sp = document.getElementById('splash');
             if (sp) sp.style.display = 'none';
+            // "디자인 적용 → 부모 창" 버튼 — 팝업 창에서 cotton_designer 로 PNG 전송.
+            if (window.opener && !document.getElementById('embedApplyBtn')) {
+                var btn = document.createElement('button');
+                btn.id = 'embedApplyBtn';
+                btn.type = 'button';
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> 디자인 적용 (부모 창으로 전송)';
+                btn.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:99999; padding:14px 22px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer; font-family:inherit; box-shadow:0 8px 24px -8px rgba(124,58,237,0.55); display:flex; align-items:center; gap:8px;';
+                btn.onclick = async function(){
+                    try {
+                        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 전송 중…';
+                        var url = (typeof window._meExportPNG === 'function') ? await window._meExportPNG() : null;
+                        if (!url) { alert('디자인 export 실패'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> 디자인 적용 (부모 창으로 전송)'; return; }
+                        try { window.opener.postMessage({ type:'mini-editor:apply', dataUrl: url }, '*'); } catch (pe) { console.warn(pe); }
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> 전송 완료 — 부모 창 확인';
+                        setTimeout(function(){ try { window.close(); } catch(_){} }, 1200);
+                    } catch (e) {
+                        alert('적용 실패: ' + (e.message || e));
+                        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> 디자인 적용 (부모 창으로 전송)';
+                    }
+                };
+                document.body.appendChild(btn);
+            }
         };
         if (document.body) apply();
         else document.addEventListener('DOMContentLoaded', apply);

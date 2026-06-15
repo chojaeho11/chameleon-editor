@@ -265,53 +265,49 @@ function calcHoebae() {
 }
 
 // ────────────────────────────────────────────────
-// 2026-06-15: 임베드된 미니에디터 → cotton_designer 패턴 적용.
-//   iframe (?embed_editor=1) 에 export 요청 → PNG dataUrl 받음 → File 객체로 변환 → _cdUploadImage 동일 경로.
-window._cdApplyInlineDesign = function() {
-    var frame = document.getElementById('cdInlineEditorFrame');
-    var btn = document.getElementById('cdInlineApplyBtn');
-    if (!frame || !frame.contentWindow) {
-        try { showToast('에디터가 로드되지 않았습니다. 잠시 후 다시 시도해주세요.'); } catch(e){}
-        return;
-    }
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; var _oldH = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 적용 중…'; btn.dataset._oldH = _oldH; }
-    var ts = Date.now();
-    var done = false;
-    function _restore() { if (btn && !done) { done = true; btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = btn.dataset._oldH || '<i class="fa-solid fa-check-circle"></i> 디자인 적용'; } }
-    function _onMsg(ev) {
-        var msg = ev.data || {};
-        if (msg.type !== 'mini-editor:exported' || msg.ts !== ts) return;
-        window.removeEventListener('message', _onMsg);
-        if (!msg.dataUrl) {
-            try { showToast('디자인 export 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단일 수 있습니다.'); } catch(e){}
-            _restore();
+// 2026-06-15: 미니 에디터 팝업 창 열기.
+//   index.html?embed_editor=1 을 새 창으로 열고, 디자인 완료 시 postMessage 로 dataUrl 받아 _cdUploadImage 호출.
+//   iframe 임베드 대신 별창 — heavy script 충돌 없음 / 브라우저 차단 적음.
+var _cdMiniEditorWin = null;
+window._cdOpenMiniEditor = function() {
+    try {
+        if (_cdMiniEditorWin && !_cdMiniEditorWin.closed) {
+            _cdMiniEditorWin.focus();
             return;
         }
-        // dataUrl → File → _cdUploadImage
-        try {
-            var arr = msg.dataUrl.split(',');
-            var mime = (arr[0].match(/:(.*?);/) || [,'image/png'])[1];
-            var bstr = atob(arr[1]);
-            var u8 = new Uint8Array(bstr.length);
-            for (var i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
-            var blob = new Blob([u8], { type: mime });
-            var file = new File([blob], 'inline_design_' + ts + '.png', { type: mime });
-            window._cdUploadImage([file]).then(_restore, _restore);
-        } catch (e) {
-            console.warn('[_cdApplyInlineDesign convert]', e);
-            try { showToast('이미지 변환 실패: ' + (e.message || e)); } catch(_) {}
-            _restore();
+        var w = window.open('/?embed_editor=1', 'chameleon_mini_editor',
+            'width=1100,height=820,resizable=yes,scrollbars=yes,location=no,menubar=no,toolbar=no,status=no');
+        if (!w) {
+            alert('팝업 차단이 활성화되어 있습니다.\n주소창 우측 차단 아이콘 → 항상 허용 으로 설정 후 다시 시도해주세요.');
+            return;
         }
+        _cdMiniEditorWin = w;
+        try { showToast('미니 에디터가 새 창에서 열립니다. 디자인 후 "디자인 적용" 버튼을 눌러주세요.'); } catch (e) {}
+    } catch (e) {
+        console.warn('[_cdOpenMiniEditor]', e);
+        alert('미니 에디터 열기 실패: ' + (e.message || e));
     }
-    window.addEventListener('message', _onMsg);
-    try { frame.contentWindow.postMessage({ type:'mini-editor:export', ts: ts }, '*'); } catch (e) {
-        console.warn('[_cdApplyInlineDesign post]', e);
-        window.removeEventListener('message', _onMsg);
-        _restore();
-    }
-    // 타임아웃 — 5초 안에 응답 없으면 복원
-    setTimeout(function(){ if (!done) { window.removeEventListener('message', _onMsg); _restore(); } }, 7000);
 };
+// 미니 에디터 창 → cotton_designer 로 PNG 전송 받기.
+window.addEventListener('message', function(ev){
+    try {
+        var msg = ev.data || {};
+        if (msg.type !== 'mini-editor:apply') return;
+        if (!msg.dataUrl) { try { showToast('디자인 데이터 없음'); } catch(e){} return; }
+        var arr = msg.dataUrl.split(',');
+        var mime = (arr[0].match(/:(.*?);/) || [,'image/png'])[1];
+        var bstr = atob(arr[1]);
+        var u8 = new Uint8Array(bstr.length);
+        for (var i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+        var blob = new Blob([u8], { type: mime });
+        var file = new File([blob], 'inline_design_' + Date.now() + '.png', { type: mime });
+        window._cdUploadImage([file]);
+        try { showToast('디자인이 적용되었습니다.'); } catch (e) {}
+        try { if (_cdMiniEditorWin && !_cdMiniEditorWin.closed) _cdMiniEditorWin.focus(); } catch (e) {}
+    } catch (e) {
+        console.warn('[mini-editor apply]', e);
+    }
+});
 
 // 이미지 업로드 — PDF/AI(PDF 호환)/PSD 자동 변환 지원 (2026-05-11)
 // ────────────────────────────────────────────────
