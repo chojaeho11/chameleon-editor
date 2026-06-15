@@ -1933,7 +1933,7 @@ async function submitRollFabricRequest() {
         <h3 id="fpEditorTitle" style="font-size:20px; font-weight:900; color:var(--brown-dark); margin:0 0 6px; letter-spacing:-0.5px;"></h3>
         <p id="fpEditorSub" style="font-size:13px; color:#1f2937; margin:0; font-weight:300; letter-spacing:-0.1px;"></p>
     </div>
-    <div style="border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(69,26,3,0.18); background:#fff; padding:18px;">
+    <div style="border-radius:18px; box-shadow:0 8px 30px -12px rgba(15,23,42,0.12); background:#fafafa; border:1px solid #e5e7eb; padding:12px;">
         <!-- 사이즈 + 도구 바 -->
         <div class="fp-toolbar">
             <div class="fp-size-group">
@@ -1946,15 +1946,15 @@ async function submitRollFabricRequest() {
             <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
             <button type="button" id="fpTextBtn" class="fp-tool-btn" title="텍스트"><i class="fa-solid fa-font"></i></button>
             <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
-            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled title="누끼따기 (배경 제거)"><i class="fa-solid fa-scissors"></i></button>
+            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled title="배경제거"><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl">배경제거</span></button>
             <label class="fp-tool-btn fp-tool-color" title="색상">
                 <input type="color" id="fpBgColor" value="#ffffff">
             </label>
             <button type="button" id="fpDelBtn" class="fp-tool-btn fp-tool-danger" disabled title="삭제 (Delete)"><i class="fa-solid fa-trash"></i></button>
             <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
         </div>
-        <!-- 정렬 + 레이어 바 (아이템 선택 시만 표시). 정렬 아이콘은 인라인 SVG (FA Free 미지원 회피) -->
-        <div id="fpAlignBar" style="display:none;">
+        <!-- 정렬 + 레이어 바 (항상 표시, 미선택 시 dim) -->
+        <div id="fpAlignBar">
             <div class="fp-align-group">
                 <button type="button" class="fp-align-btn" data-align-x="left"   title="왼쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="2" y2="18"/><rect x="4" y="6" width="10" height="3" fill="currentColor"/><rect x="4" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
                 <button type="button" class="fp-align-btn" data-align-x="center" title="가로 가운데"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="2" x2="10" y2="18"/><rect x="5" y="6" width="10" height="3" fill="currentColor"/><rect x="7" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
@@ -1971,9 +1971,9 @@ async function submitRollFabricRequest() {
                 <button type="button" class="fp-align-btn" data-layer="dup"  title="복제 (Ctrl+D)"><i class="fa-solid fa-clone"></i></button>
             </div>
         </div>
-        <!-- 텍스트 속성 바 (텍스트 선택 시만 표시) -->
-        <div id="fpTextProps" style="display:none; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; margin-bottom:10px;">
-            <select id="fpFontSel" style="padding:5px 22px 5px 9px; border:1px solid #d4a52a; background:#fff; border-radius:980px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; max-width:140px;"></select>
+        <!-- 텍스트 속성 바 (항상 표시, 텍스트 미선택 시 dim) -->
+        <div id="fpTextProps" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fafafa; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
+            <select id="fpFontSel"></select>
             <div style="display:inline-flex; gap:2px;">
                 <button type="button" data-weight="400" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:400; font-size:12px;">S</button>
                 <button type="button" data-weight="700" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:800; font-size:12px;">B</button>
@@ -2006,13 +2006,11 @@ async function submitRollFabricRequest() {
                     <button type="button" id="fpLibNext" class="fp-lib-pager-btn"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-            <!-- 캔버스 -->
+            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채움. 힌트도 다크 영역 안. -->
             <div class="fp-canvas-col">
-                <div id="fpStageWrap" style="position:relative; width:100%; padding:10px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center; min-height:340px;">
-                    <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.4); overflow:hidden; touch-action:none;"></div>
-                </div>
-                <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:11.5px; color:#64748b; font-weight:600;">
-                    <span id="fpHint"></span>
+                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+                    <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
+                    <span id="fpHint" class="fp-hint"></span>
                 </div>
             </div>
         </div>
@@ -2165,17 +2163,18 @@ async function submitRollFabricRequest() {
         if (it) it.el.classList.add('fp-selected');
         $('fpDelBtn').disabled = !it;
         $('fpDelBtn').classList.toggle('fp-active', !!it);
-        // 2026-06-15: 정렬 + 레이어 바 — 아이템 선택 시만 노출.
-        $('fpAlignBar').style.display = it ? 'flex' : 'none';
+        // 2026-06-15: 정렬/레이어 바, 텍스트 props 바 모두 항상 표시. 미선택 시 dim 으로만 표시.
+        $('fpAlignBar').classList.toggle('fp-bar-dim', !it);
         // 누끼따기 — 이미지 선택 시만 활성.
         var isImg = !!(it && it.type === 'image');
         var cb = $('fpCutoutBtn');
         cb.disabled = !isImg;
         cb.classList.toggle('fp-active', isImg);
-        // 텍스트 props 패널 — 텍스트 선택 시만 표시.
+        // 텍스트 props 패널 — 텍스트 선택 시 활성, 그 외 dim.
         var tp = $('fpTextProps');
-        if (it && it.type === 'text') {
-            tp.style.display = 'flex';
+        var isTxt = !!(it && it.type === 'text');
+        tp.classList.toggle('fp-bar-dim', !isTxt);
+        if (isTxt) {
             $('fpBgColor').value = it.fill || '#000000';
             // SMB 활성화
             tp.querySelectorAll('[data-weight]').forEach(function(b){
@@ -2187,7 +2186,6 @@ async function submitRollFabricRequest() {
                 b.classList.toggle('active', b.getAttribute('data-align') === (it.textAlign || 'center'));
             });
         } else {
-            tp.style.display = 'none';
             $('fpBgColor').value = state.bg || '#ffffff';
         }
     }
@@ -2409,8 +2407,14 @@ async function submitRollFabricRequest() {
         }
     });
 
-    // 스테이지 빈 영역 클릭 → deselect
-    stage.addEventListener('pointerdown', function(ev){ if (ev.target === stage) selectItem(null); });
+    // 스테이지 빈 영역 클릭 → 편집 중 텍스트 blur + 선택 해제
+    stage.addEventListener('pointerdown', function(ev){
+        if (ev.target === stage) {
+            var ed = stage.querySelector('[contenteditable="true"]');
+            if (ed) ed.blur();
+            selectItem(null);
+        }
+    });
 
     // 다운로드 — Canvas 로 모든 item 렌더 후 PNG 다운로드.
     $('fpDownloadBtn').addEventListener('click', async function(){
@@ -2993,38 +2997,48 @@ async function submitRollFabricRequest() {
 })();
 </script>
 <style>
-/* ========== 툴바 폴리시 ========== */
-.fp-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 14px; background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%); border:1px solid #e2e8f0; border-radius:14px; margin-bottom:10px; box-shadow:0 1px 0 rgba(15,23,42,0.04), 0 6px 16px -10px rgba(15,23,42,0.12); }
-.fp-size-group { display:inline-flex; align-items:center; gap:4px; padding:2px 10px 2px 4px; background:#fff; border:1px solid #cbd5e1; border-radius:980px; }
-.fp-size-input { width:54px; padding:6px 4px; border:none; outline:none; background:transparent; font-family:inherit; font-size:13px; font-weight:800; color:#0f172a; text-align:center; -moz-appearance:textfield; }
+/* ========== 디자인 시스템 — 슬레이트 + 인디고, 미니멀 ========== */
+#fpEditorSection .fp-card { background:#fafafa !important; border:1px solid #e5e7eb !important; box-shadow:0 1px 2px rgba(15,23,42,0.04) !important; padding:14px !important; }
+/* 툴바 */
+.fp-toolbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:8px; }
+.fp-size-group { display:inline-flex; align-items:center; gap:3px; padding:2px 8px 2px 4px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
+.fp-size-input { width:50px; padding:6px 4px; border:none; outline:none; background:transparent; font-family:inherit; font-size:13px; font-weight:700; color:#0f172a; text-align:center; -moz-appearance:textfield; }
 .fp-size-input::-webkit-outer-spin-button, .fp-size-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-.fp-size-input:focus { background:#eef2ff; border-radius:6px; }
-.fp-size-x { color:#94a3b8; font-weight:800; font-size:13px; }
-.fp-size-unit { color:#64748b; font-weight:700; font-size:12px; margin-left:2px; }
-.fp-tool-btn { padding:9px 14px; background:#fff; color:#0f172a; border:1px solid #e2e8f0; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition:all .15s; min-height:36px; box-shadow:0 1px 0 rgba(15,23,42,0.03); }
-.fp-tool-btn:hover:not(:disabled) { background:#f1f5f9; border-color:#cbd5e1; transform:translateY(-1px); box-shadow:0 4px 10px -4px rgba(15,23,42,0.18); }
-.fp-tool-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
-.fp-tool-primary { background:#FFCC00; border-color:#e8b800; color:#1d1d1f; }
-.fp-tool-primary:hover:not(:disabled) { background:#ffd633; border-color:#d6a900; }
-.fp-tool-ai { background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%); border-color:#7c3aed; color:#fff; }
-.fp-tool-ai:hover:not(:disabled) { background:linear-gradient(135deg,#4f46e5 0%,#9333ea 100%); border-color:#6d28d9; color:#fff; }
+.fp-size-input:focus { background:#f5f3ff; border-radius:6px; color:#4f46e5; }
+.fp-size-x { color:#cbd5e1; font-weight:600; font-size:13px; }
+.fp-size-unit { color:#94a3b8; font-weight:600; font-size:11.5px; margin-left:2px; letter-spacing:0.02em; }
+.fp-tool-btn { padding:7px 12px; background:#ffffff; color:#0f172a; border:1px solid #e5e7eb; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:all .15s; min-height:32px; letter-spacing:-0.1px; }
+.fp-tool-btn:hover:not(:disabled) { background:#f8fafc; border-color:#cbd5e1; color:#0f172a; }
+.fp-tool-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.fp-tool-primary { background:#0f172a; border-color:#0f172a; color:#fff; }
+.fp-tool-primary:hover:not(:disabled) { background:#1e293b; border-color:#1e293b; color:#fff; }
+.fp-tool-ai { background:#fff; border-color:#c4b5fd; color:#6d28d9; }
+.fp-tool-ai:hover:not(:disabled) { background:#f5f3ff; border-color:#a78bfa; color:#5b21b6; }
+.fp-tool-ai i { color:#7c3aed; }
 .fp-tool-danger { background:#fff; border-color:#fecaca; color:#dc2626; }
-.fp-tool-danger:hover:not(:disabled) { background:#fee2e2; border-color:#fca5a5; }
-.fp-tool-color { padding:6px 10px; cursor:pointer; }
-.fp-tool-color input[type=color] { -webkit-appearance:none; appearance:none; width:22px; height:22px; padding:0; border:1.5px solid #fff; border-radius:50%; background:conic-gradient(from 180deg,#ff0080,#ff8c00,#ffd900,#2ecc71,#00d1ff,#6c5ce7,#ff0080); box-shadow:0 0 0 1px rgba(0,0,0,0.18); cursor:pointer; }
+.fp-tool-danger:hover:not(:disabled) { background:#fef2f2; border-color:#fca5a5; }
+.fp-tool-color { padding:6px 8px; cursor:pointer; }
+.fp-tool-color input[type=color] { -webkit-appearance:none; appearance:none; width:20px; height:20px; padding:0; border:1.5px solid #fff; border-radius:50%; background:conic-gradient(from 180deg,#ff0080,#ff8c00,#ffd900,#2ecc71,#00d1ff,#6c5ce7,#ff0080); box-shadow:0 0 0 1px rgba(0,0,0,0.15); cursor:pointer; }
 .fp-tool-color input[type=color]::-webkit-color-swatch-wrapper { padding:0; }
 .fp-tool-color input[type=color]::-webkit-color-swatch { visibility:hidden; border:none; }
 .fp-tool-color input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
-.fp-tool-download { margin-left:auto; background:linear-gradient(135deg,#0ea5e9 0%,#007AFF 100%); border-color:#0284c7; color:#fff; padding:10px 20px; }
-.fp-tool-download:hover:not(:disabled) { background:linear-gradient(135deg,#0284c7 0%,#0562d4 100%); border-color:#0369a1; color:#fff; }
-.fp-tool-btn.fp-active { background:#eef2ff; border-color:#a5b4fc; color:#4338ca; }
-/* 정렬 + 레이어 바 */
-#fpAlignBar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:10px; }
-.fp-align-group { display:inline-flex; gap:2px; padding:2px; background:#fff; border:1px solid #c7d2fe; border-radius:8px; }
-.fp-align-btn { width:32px; height:32px; background:transparent; border:none; border-radius:6px; color:#4338ca; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; padding:0; }
-.fp-align-btn svg { width:18px; height:18px; }
-.fp-align-btn:hover { background:#c7d2fe; }
-.fp-align-btn:active { background:#a5b4fc; }
+.fp-tool-download { margin-left:auto; background:#4f46e5; border-color:#4f46e5; color:#fff; padding:8px 16px; }
+.fp-tool-download:hover:not(:disabled) { background:#4338ca; border-color:#4338ca; color:#fff; }
+.fp-tool-btn.fp-active { background:#f5f3ff; border-color:#c4b5fd; color:#6d28d9; }
+/* 배경제거 라벨 — PC 만 표시 */
+.fp-cut-lbl { font-weight:600; }
+@media (max-width:768px){ .fp-cut-lbl { display:none; } }
+
+/* 정렬 + 레이어 바 — 미니멀 톤 */
+#fpAlignBar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:6px 8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; transition:opacity .2s; }
+#fpAlignBar.fp-bar-dim { opacity:0.45; }
+.fp-align-group { display:inline-flex; gap:2px; padding:2px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; }
+.fp-align-btn { width:28px; height:28px; background:transparent; border:none; border-radius:6px; color:#475569; cursor:pointer; font-size:12px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; padding:0; }
+.fp-align-btn svg { width:16px; height:16px; }
+.fp-align-btn:hover { background:#eef2ff; color:#4338ca; }
+.fp-align-btn:active { background:#e0e7ff; }
+/* 텍스트 props bar dim 상태 */
+#fpTextProps.fp-bar-dim { opacity:0.45; }
 /* 컨텍스트 메뉴 */
 .fp-ctx-item { display:flex; align-items:center; gap:10px; width:100%; padding:8px 12px; border:none; background:transparent; cursor:pointer; font-family:inherit; font-size:13px; color:#0f172a; border-radius:6px; text-align:left; }
 .fp-ctx-item:hover { background:#eef2ff; color:#4338ca; }
@@ -3042,13 +3056,18 @@ async function submitRollFabricRequest() {
 #fpStage .fp-text[contenteditable=true] { outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); cursor:text; user-select:text; }
 /* 텍스트 편집 모드에선 핸들 숨김 (텍스트 선택과 충돌 방지) */
 #fpStage .fp-text[contenteditable=true] .fp-handle { display:none !important; }
-/* 텍스트 props 버튼 */
-#fpTextProps .fp-prop-btn { padding:5px 9px; background:#fff; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#92400e; cursor:pointer; font-family:inherit; min-width:28px; font-weight:700; }
-#fpTextProps .fp-prop-btn.active { background:#92400e; color:#fff; border-color:#92400e; }
-#fpTextProps .fp-prop-btn:hover:not(.active) { background:#fef3c7; }
-/* 캔버스 + 라이브러리 그리드 (PC 좌측 사이드바) — cafe2626 qd-rail 과 동일 폭 */
-.fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:12px; align-items:start; }
-.fp-canvas-col { min-width:0; }
+/* 텍스트 props 버튼 — 슬레이트/인디고 톤 */
+#fpTextProps .fp-prop-btn { padding:5px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; color:#475569; cursor:pointer; font-family:inherit; min-width:28px; font-weight:600; transition:all .12s; }
+#fpTextProps .fp-prop-btn.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+#fpTextProps .fp-prop-btn:hover:not(.active) { background:#f1f5f9; border-color:#cbd5e1; color:#0f172a; }
+#fpTextProps select { padding:5px 22px 5px 10px; border:1px solid #e5e7eb; background:#fff; border-radius:6px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; max-width:150px; color:#0f172a; }
+#fpTextProps select:focus { outline:none; border-color:#a5b4fc; }
+/* 캔버스 + 라이브러리 그리드 — PC 좌측 사이드바, align-items:stretch 로 캔버스 컬럼이 사이드바 높이만큼 늘어남. */
+.fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:stretch; }
+.fp-canvas-col { min-width:0; display:flex; flex-direction:column; }
+#fpStageWrap { flex:1; min-height:480px; }
+/* 힌트 텍스트는 이제 어두운 영역 위 — 밝은 글씨 */
+.fp-canvas-col .fp-hint { color:#94a3b8 !important; font-size:11px; padding:8px 0 4px; text-align:center; }
 .fp-lib-sec { padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
 .fp-lib-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-bottom:8px; }
 .fp-lib-tab { padding:7px 4px; background:#fff; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
