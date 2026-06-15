@@ -1954,7 +1954,7 @@ async function submitRollFabricRequest() {
             <button type="button" id="fpDelBtn" class="fp-tool-btn fp-tool-danger" disabled title="삭제 (Delete)"><i class="fa-solid fa-trash"></i></button>
             <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
         </div>
-        <!-- 정렬 + 레이어 바 (항상 표시, 미선택 시 dim) -->
+        <!-- 정렬 + 레이어 바 (항상 표시, 미선택 시 dim) — 우측에 서체 정렬도 포함 -->
         <div id="fpAlignBar">
             <div class="fp-align-group">
                 <button type="button" class="fp-align-btn" data-align-x="left"   title="왼쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="2" y2="18"/><rect x="4" y="6" width="10" height="3" fill="currentColor"/><rect x="4" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
@@ -1971,6 +1971,12 @@ async function submitRollFabricRequest() {
                 <button type="button" class="fp-align-btn" data-layer="down" title="뒤로 (Ctrl+[)"><i class="fa-solid fa-arrow-down"></i></button>
                 <button type="button" class="fp-align-btn" data-layer="dup"  title="복제 (Ctrl+D)"><i class="fa-solid fa-clone"></i></button>
             </div>
+            <!-- 2026-06-16: 서체 정렬 (텍스트 내부 정렬) — 우측 빈 공간으로 이동. 텍스트 선택 시에만 활성. -->
+            <div class="fp-align-group fp-text-align-group">
+                <button type="button" class="fp-align-btn" data-text-align="left"   title="텍스트 왼쪽"><i class="fa-solid fa-align-left"></i></button>
+                <button type="button" class="fp-align-btn" data-text-align="center" title="텍스트 가운데"><i class="fa-solid fa-align-center"></i></button>
+                <button type="button" class="fp-align-btn" data-text-align="right"  title="텍스트 오른쪽"><i class="fa-solid fa-align-right"></i></button>
+            </div>
         </div>
         <!-- 텍스트 속성 바 (항상 표시, 텍스트 미선택 시 dim) -->
         <div id="fpTextProps" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fafafa; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
@@ -1980,11 +1986,7 @@ async function submitRollFabricRequest() {
                 <button type="button" data-weight="400" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:400; font-size:12px;">S</button>
                 <button type="button" data-weight="700" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:800; font-size:12px;">B</button>
             </div>
-            <div style="display:inline-flex; gap:2px;">
-                <button type="button" data-align="left"   class="fp-prop-btn" title="왼쪽 정렬"><i class="fa-solid fa-align-left"></i></button>
-                <button type="button" data-align="center" class="fp-prop-btn active" title="가운데 정렬"><i class="fa-solid fa-align-center"></i></button>
-                <button type="button" data-align="right"  class="fp-prop-btn" title="오른쪽 정렬"><i class="fa-solid fa-align-right"></i></button>
-            </div>
+            <!-- 2026-06-16: 텍스트 정렬은 위 fpAlignBar 우측으로 이동. -->
         </div>
         <!-- 캔버스 + 라이브러리 그리드 — PC: 좌측 사이드바, 모바일: 캔버스 위 라이브러리 아래 -->
         <div class="fp-stage-lib-grid">
@@ -2202,9 +2204,10 @@ async function submitRollFabricRequest() {
                 var w = parseInt(b.getAttribute('data-weight'), 10);
                 b.classList.toggle('active', parseInt(it.fontWeight || 400, 10) === w);
             });
-            // 정렬 활성화
-            tp.querySelectorAll('[data-align]').forEach(function(b){
-                b.classList.toggle('active', b.getAttribute('data-align') === (it.textAlign || 'center'));
+            // 2026-06-16: 텍스트 정렬은 fpAlignBar 우측으로 이동. 거기서 active 토글.
+            var curTA = it.textAlign || 'center';
+            $('fpAlignBar').querySelectorAll('[data-text-align]').forEach(function(b){
+                b.classList.toggle('active', b.getAttribute('data-text-align') === curTA);
             });
             // 폰트 드롭다운 값 동기화 — 현재 fontFamily 가 일반/멋진영문 중 어디 있는지 찾아서 선택.
             var curFam = String(it.fontFamily || '').replace(/["']/g, '').trim();
@@ -2224,6 +2227,8 @@ async function submitRollFabricRequest() {
             }
         } else {
             $('fpBgColor').value = state.bg || '#ffffff';
+            // 비-텍스트 선택 → 텍스트 정렬 active 해제.
+            $('fpAlignBar').querySelectorAll('[data-text-align]').forEach(function(b){ b.classList.remove('active'); });
         }
     }
     // 텍스트 props 핸들러
@@ -3089,7 +3094,7 @@ async function submitRollFabricRequest() {
         if (state.selected === it) selectItem(null);
     }
     $('fpAlignBar').addEventListener('click', function(ev){
-        var btn = ev.target.closest('[data-align-x], [data-align-y], [data-layer]');
+        var btn = ev.target.closest('[data-align-x], [data-align-y], [data-layer], [data-text-align]');
         if (!btn) return;
         var it = state.selected; if (!it) return;
         if (btn.hasAttribute('data-align-x')) alignItem(it, 'x', btn.getAttribute('data-align-x'));
@@ -3099,6 +3104,14 @@ async function submitRollFabricRequest() {
             if (k === 'up') layerUp(it);
             else if (k === 'down') layerDown(it);
             else if (k === 'dup') duplicateItem(it);
+        } else if (btn.hasAttribute('data-text-align')) {
+            // 텍스트 선택 시만 적용. 이미지/기타는 무시.
+            if (it.type !== 'text') return;
+            it.textAlign = btn.getAttribute('data-text-align');
+            // active 상태 토글
+            $('fpAlignBar').querySelectorAll('[data-text-align]').forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            syncItem(it);
         }
     });
 
@@ -3321,6 +3334,12 @@ async function submitRollFabricRequest() {
     .fp-lib-grid { grid-template-columns:repeat(4,1fr); gap:5px; }
     #fpEditorSection .fp-handle { width:18px; height:18px; }
     #fpEditorSection select, #fpEditorSection button { font-size:12.5px; }
+    /* 2026-06-16: 모바일 툴바 — 2줄 안에 다운로드까지 들어가게 컴팩트. margin-left:auto 해제. */
+    .fp-toolbar { gap:5px; padding:6px; }
+    .fp-toolbar .fp-tool-btn { padding:6px 9px; min-height:30px; font-size:12px; }
+    .fp-toolbar .fp-tool-download { margin-left:0 !important; padding:7px 12px; font-size:12.5px; }
+    .fp-size-input { width:42px; font-size:12px; }
+    .fp-size-group { padding:1px 6px 1px 3px; }
 }
 </style>
 
