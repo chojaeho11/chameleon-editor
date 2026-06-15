@@ -1987,14 +1987,19 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-15: 배너 family (단일/연결형/양면) 변형 카드 그리드 — soBannerSection 밖으로 추출.
+             hb_bn_2(연결형) 등 isBanner=false 인 코드에서도 한 페이지에서 종류 전환 가능하도록. -->
+        <div class="so-section" id="soBannerVariantsHostSec" style="display:none;">
+          <div class="so-section-title">${tr('배너 종류 선택', 'バナー種類選択', 'Banner type')}</div>
+          <div id="soBannerVariantsSec" style="margin-bottom:0;">
+            <div style="font-size:11px; font-weight:600; color:#94a3b8; margin-bottom:8px;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</div>
+            <div id="soBannerVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-06-01: 허니콤배너 전용 섹션 — 안내문 + 파일 업로드 + 단면/양면. 사이즈는 60×180cm 고정. -->
         <div class="so-section" id="soBannerSection" style="display:none;">
           <div class="so-section-title">${tr('배너', 'バナー', 'Banner')}</div>
-          <!-- 2026-06-05: 배너 family (단일/연결형) 변형 카드 그리드 — 글씨 스카시와 동일 패턴 -->
-          <div id="soBannerVariantsSec" style="display:none; margin-bottom:14px;">
-            <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px;">${tr('배너 종류 선택', 'バナー種類選択', 'Banner type')} <span style="font-size:11px; font-weight:600; color:#94a3b8;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
-            <div id="soBannerVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
-          </div>
           <div style="text-align:center; font-size:12.5px; color:#475569; line-height:1.7; margin-bottom:14px;">
             ${tr('배너는 <b style="color:#1e293b;">60 × 180cm 사이즈 고정</b>입니다.<br>한 파일에 모든 배너를 올리고 수량을 입력해 주세요.<br><b style="color:#16a34a;">배너는 무료배송 됩니다.</b>',
                  'バナーは <b style="color:#1e293b;">60 × 180cm 固定サイズ</b>です。<br>1ファイルに全バナーをまとめてアップロードし、数量をご入力ください。<br><b style="color:#16a34a;">バナーは送料無料です。</b>',
@@ -4661,6 +4666,8 @@ html, body { background: #ffffff !important; }
     async function _soLoadBannerVariants(currentCode) {
         var sec = document.getElementById('soBannerVariantsSec');
         var grid = document.getElementById('soBannerVariants');
+        // 2026-06-15: 외부 host 섹션 (so-section 래퍼) — show/hide 토글 대상.
+        var host = document.getElementById('soBannerVariantsHostSec');
         if (!sec || !grid) return;
         try {
             if (!_soBannerCache) {
@@ -4675,7 +4682,7 @@ html, body { background: #ffffff !important; }
                 _soBannerCache = Object.values(_byCode).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
                 console.log('[so] banner variants loaded:', _soBannerCache.length);
             }
-            if (_soBannerCache.length < 2) { sec.style.display = 'none'; return; }
+            if (_soBannerCache.length < 2) { sec.style.display = 'none'; if (host) host.style.display = 'none'; return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             grid.innerHTML = _soBannerCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
@@ -4704,7 +4711,8 @@ html, body { background: #ffffff !important; }
                 '</div>';
             }).join('');
             sec.style.display = '';
-        } catch (e) { console.warn('[so] bannerVariants render', e); sec.style.display = 'none'; }
+            if (host) host.style.display = '';
+        } catch (e) { console.warn('[so] bannerVariants render', e); sec.style.display = 'none'; if (host) host.style.display = 'none'; }
     }
     window._soLoadBannerVariants = _soLoadBannerVariants;
 
@@ -9736,20 +9744,23 @@ html, body { background: #ffffff !important; }
 
         state.isBanner = !!(p && p.code && /^hb_bn/i.test(p.code)) && !state.isBannerStandless;
         if (state.isBanner) {
-            // 가격 override (DB 값 무시) — 모든 배너 동일가
-            // 2026-06-05: 단면 55K → 45K 조정
-            p.price = 45000;
-            state._bannerSinglePrice = 45000;
+            // 2026-06-15: DB 가격 신뢰 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K). DB 없을 때만 폴백 45K.
+            if (!(Number(p.price) > 0)) p.price = 45000;
+            state._bannerSinglePrice = Number(p.price) || 45000;
             state._bannerDoublePrice = 80000;
             state.wallSide = 'single';
             // isHoneycomb 인 채로 두지만 wall/queue 흐름 차단용 플래그
             state.isWall = false;
             state.isPhotozone = false;
-            // 2026-06-05: 배너 family (단일/연결형) 변형 카드 그리드 로드
+        }
+        // 2026-06-15: 배너 family (hb_bn_*) 모든 코드에서 variant 그리드 로드 — 한 페이지에서 단일/연결형/양면 전환.
+        //   isBanner=false 인 hb_bn_2(연결형) 같은 코드에서도 종류 카드가 보이도록 isBanner 조건 밖으로 이동.
+        if (p && p.code && /^hb_bn/i.test(p.code)) {
             try { window._soLoadBannerVariants(p.code); } catch(e){}
         } else {
-            // 배너가 아니면 variants 그리드 숨김
             try {
+                var _bvHost = document.getElementById('soBannerVariantsHostSec');
+                if (_bvHost) _bvHost.style.display = 'none';
                 var _bvSec = document.getElementById('soBannerVariantsSec');
                 if (_bvSec) _bvSec.style.display = 'none';
             } catch(e){}
