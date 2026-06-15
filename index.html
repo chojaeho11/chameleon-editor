@@ -700,10 +700,21 @@ html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
     try {
         var p = new URLSearchParams(location.search);
         if (p.get('embed_editor') !== '1') return;
-        // body 가 만들어진 시점에 class 부여 — DOMContentLoaded 까지 기다리지 않고 가능한 빨리.
-        var apply = function(){ document.body.classList.add('embed-editor-mode'); };
+        // body 가 만들어진 시점에 class 부여 + 에디터 강제 표시 (inline display:none 도 덮어씀).
+        var apply = function(){
+            document.body.classList.add('embed-editor-mode');
+            var e = document.getElementById('embeddedEditorPreview');
+            if (e) {
+                e.style.cssText = 'display:block !important; width:100% !important; max-width:none !important; margin:0 !important; padding:8px !important; position:static !important; visibility:visible !important; opacity:1 !important;';
+            }
+            // splash 강제 제거 — body 직속 자식 중 첫 element
+            var sp = document.getElementById('splash');
+            if (sp) sp.style.display = 'none';
+        };
         if (document.body) apply();
         else document.addEventListener('DOMContentLoaded', apply);
+        // 추가 보강 — load 이벤트 후에도 한 번 더 (다른 스크립트가 다시 숨길 가능성 대비)
+        window.addEventListener('load', function(){ setTimeout(apply, 100); setTimeout(apply, 500); });
         // postMessage 프로토콜 — 부모가 'export' 요청하면 _meExportPNG 호출 후 dataUrl 회신.
         window.addEventListener('message', async function(ev){
             try {

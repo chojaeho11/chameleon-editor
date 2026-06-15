@@ -1157,20 +1157,6 @@ a { text-decoration: none; color: inherit; }
             </div>
         </div>
 
-        <!-- 2026-06-15: 인라인 디자인 에디터 — index.html 의 미니에디터를 iframe 으로 임베드.
-             '디자인 적용' 클릭 시 postMessage 로 PNG export 받아 _cdUploadImage 와 동일 경로로 패턴에 반영. -->
-        <div id="cdInlineEditorWrap" style="margin-bottom:14px; background:#fff; border:2px solid #c4b5fd; border-radius:14px; overflow:hidden; box-shadow:0 6px 18px -8px rgba(124,58,237,0.18);">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:linear-gradient(135deg,#f5f3ff,#ede9fe); border-bottom:1px solid #c4b5fd;">
-                <div style="font-size:13px; font-weight:800; color:#5b21b6; display:flex; align-items:center; gap:6px;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> 미니 디자인 에디터 — 디자인하고 적용하면 패턴에 자동 반영
-                </div>
-                <button type="button" id="cdInlineApplyBtn" onclick="window._cdApplyInlineDesign && window._cdApplyInlineDesign()" style="padding:8px 14px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(124,58,237,0.5); display:flex; align-items:center; gap:5px;">
-                    <i class="fa-solid fa-check-circle"></i> 디자인 적용
-                </button>
-            </div>
-            <iframe id="cdInlineEditorFrame" src="/?embed_editor=1" style="width:100%; height:560px; border:none; display:block; background:#fff;"></iframe>
-        </div>
-
         <!-- 업로드 영역 (이미지 업로드 전) -->
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('btnUpload').click()">
             <div class="upload-icon">
@@ -1199,6 +1185,19 @@ a { text-decoration: none; color: inherit; }
                 <span data-cdi18n="canvas_dim">가로 × 세로</span> : <b id="dimW">1300</b> mm × <b id="dimH">1000</b> mm
             </div>
             <div class="preview-meta" id="previewMeta" data-cdi18n="preview_meta">대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.</div>
+        </div>
+
+        <!-- 2026-06-15: 인라인 디자인 에디터 — 패브릭 미리보기 아래에 위치. iframe (index.html?embed_editor=1) 임베드. -->
+        <div id="cdInlineEditorWrap" style="margin-top:18px; background:#fff; border:2px solid #c4b5fd; border-radius:14px; overflow:hidden; box-shadow:0 6px 18px -8px rgba(124,58,237,0.18);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:linear-gradient(135deg,#f5f3ff,#ede9fe); border-bottom:1px solid #c4b5fd; flex-wrap:wrap; gap:8px;">
+                <div style="font-size:13px; font-weight:800; color:#5b21b6; display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 미니 디자인 에디터 — 디자인하고 적용하면 위 패턴에 자동 반영
+                </div>
+                <button type="button" id="cdInlineApplyBtn" onclick="window._cdApplyInlineDesign && window._cdApplyInlineDesign()" style="padding:8px 14px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit; box-shadow:0 2px 6px -2px rgba(124,58,237,0.5); display:flex; align-items:center; gap:5px;">
+                    <i class="fa-solid fa-check-circle"></i> 디자인 적용
+                </button>
+            </div>
+            <iframe id="cdInlineEditorFrame" src="/?embed_editor=1" style="width:100%; height:680px; border:none; display:block; background:#fff;" loading="lazy"></iframe>
         </div>
 
         <input type="file" id="btnUpload" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none;" onchange="window._cdUploadImage(this.files)">
