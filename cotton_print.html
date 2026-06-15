@@ -1953,17 +1953,17 @@ async function submitRollFabricRequest() {
             <button type="button" id="fpDelBtn" class="fp-tool-btn fp-tool-danger" disabled title="삭제 (Delete)"><i class="fa-solid fa-trash"></i></button>
             <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
         </div>
-        <!-- 정렬 + 레이어 바 (아이템 선택 시만 표시) -->
+        <!-- 정렬 + 레이어 바 (아이템 선택 시만 표시). 정렬 아이콘은 인라인 SVG (FA Free 미지원 회피) -->
         <div id="fpAlignBar" style="display:none;">
             <div class="fp-align-group">
-                <button type="button" class="fp-align-btn" data-align-x="left"   title="왼쪽 정렬"><i class="fa-solid fa-objects-align-left"></i></button>
-                <button type="button" class="fp-align-btn" data-align-x="center" title="가로 가운데"><i class="fa-solid fa-objects-align-center-horizontal"></i></button>
-                <button type="button" class="fp-align-btn" data-align-x="right"  title="오른쪽 정렬"><i class="fa-solid fa-objects-align-right"></i></button>
+                <button type="button" class="fp-align-btn" data-align-x="left"   title="왼쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="2" y2="18"/><rect x="4" y="6" width="10" height="3" fill="currentColor"/><rect x="4" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
+                <button type="button" class="fp-align-btn" data-align-x="center" title="가로 가운데"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="2" x2="10" y2="18"/><rect x="5" y="6" width="10" height="3" fill="currentColor"/><rect x="7" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
+                <button type="button" class="fp-align-btn" data-align-x="right"  title="오른쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="2" x2="18" y2="18"/><rect x="6"  y="6" width="10" height="3" fill="currentColor"/><rect x="10" y="11" width="6"  height="3" fill="currentColor"/></svg></button>
             </div>
             <div class="fp-align-group">
-                <button type="button" class="fp-align-btn" data-align-y="top"    title="위쪽 정렬"><i class="fa-solid fa-objects-align-top"></i></button>
-                <button type="button" class="fp-align-btn" data-align-y="middle" title="세로 가운데"><i class="fa-solid fa-objects-align-center-vertical"></i></button>
-                <button type="button" class="fp-align-btn" data-align-y="bottom" title="아래쪽 정렬"><i class="fa-solid fa-objects-align-bottom"></i></button>
+                <button type="button" class="fp-align-btn" data-align-y="top"    title="위쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="18" y2="2"/><rect x="5" y="4" width="3" height="10" fill="currentColor"/><rect x="11" y="4" width="3" height="6"  fill="currentColor"/></svg></button>
+                <button type="button" class="fp-align-btn" data-align-y="middle" title="세로 가운데"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="10" x2="18" y2="10"/><rect x="5" y="5" width="3" height="10" fill="currentColor"/><rect x="11" y="7" width="3" height="6" fill="currentColor"/></svg></button>
+                <button type="button" class="fp-align-btn" data-align-y="bottom" title="아래쪽 정렬"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="18" x2="18" y2="18"/><rect x="5" y="6"  width="3" height="10" fill="currentColor"/><rect x="11" y="10" width="3" height="6" fill="currentColor"/></svg></button>
             </div>
             <div class="fp-align-group">
                 <button type="button" class="fp-align-btn" data-layer="up"   title="앞으로 (Ctrl+])"><i class="fa-solid fa-arrow-up"></i></button>
@@ -2266,13 +2266,42 @@ async function submitRollFabricRequest() {
         el.style.touchAction = 'none';
         el.style.zIndex = (++state.zCounter);
         el.textContent = text || t.newText;
+        // 2026-06-15: 텍스트 크기조절 핸들 (SE 모서리) — 드래그하면 fontSize 비례 조절.
+        var hSe = document.createElement('div');
+        hSe.className = 'fp-handle fp-handle-se';
+        el.appendChild(hSe);
         stage.appendChild(el);
         var it = { el:el, type:'text', x: state.natW*0.2, y: state.natH*0.4, w: state.natW*0.6, h: 80,
-                   text: el.textContent, fill:'#1d1d1f', fontSize: Math.max(36, state.natH*0.05),
+                   text: text || t.newText, fill:'#1d1d1f', fontSize: Math.max(36, state.natH*0.05),
                    fontFamily:'inherit', fontWeight:'800' };
         state.items.push(it);
         syncItem(it);
         bindDrag(it);
+        // 텍스트 SE 핸들 — 글자 크기 조절. 드래그 거리에 비례해 fontSize 스케일.
+        hSe.addEventListener('pointerdown', function(ev){
+            ev.stopPropagation();
+            ev.preventDefault();
+            selectItem(it);
+            // 편집 모드 종료 (드래그 중에 텍스트 선택 방지)
+            if (el.getAttribute('contenteditable') === 'true') el.blur();
+            var rect = el.getBoundingClientRect();
+            var sX = ev.clientX, sY = ev.clientY;
+            var sFs = it.fontSize;
+            var sW = rect.width;
+            var sH = rect.height;
+            // 가로/세로 중 큰 비율을 적용 (대각선 드래그)
+            function move(ev2){
+                var dx = ev2.clientX - sX;
+                var dy = ev2.clientY - sY;
+                var ratio = Math.max((sW + dx) / sW, (sH + dy) / sH);
+                ratio = Math.max(0.1, ratio);
+                it.fontSize = Math.max(8, Math.min(400, sFs * ratio));
+                syncItem(it);
+            }
+            function up(){ document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); }
+            document.addEventListener('pointermove', move);
+            document.addEventListener('pointerup', up);
+        });
         selectItem(it);
         // 자동 편집 모드 진입
         setTimeout(function(){ el.setAttribute('contenteditable','true'); el.focus(); document.execCommand && document.execCommand('selectAll', false, null); }, 50);
@@ -2992,7 +3021,8 @@ async function submitRollFabricRequest() {
 /* 정렬 + 레이어 바 */
 #fpAlignBar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:10px; }
 .fp-align-group { display:inline-flex; gap:2px; padding:2px; background:#fff; border:1px solid #c7d2fe; border-radius:8px; }
-.fp-align-btn { width:32px; height:32px; background:transparent; border:none; border-radius:6px; color:#4338ca; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; }
+.fp-align-btn { width:32px; height:32px; background:transparent; border:none; border-radius:6px; color:#4338ca; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; padding:0; }
+.fp-align-btn svg { width:18px; height:18px; }
 .fp-align-btn:hover { background:#c7d2fe; }
 .fp-align-btn:active { background:#a5b4fc; }
 /* 컨텍스트 메뉴 */
@@ -3004,11 +3034,14 @@ async function submitRollFabricRequest() {
 /* 스테이지 + 아이템 */
 #fpStage .fp-item { box-sizing:border-box; }
 #fpStage .fp-item.fp-selected { outline:1.5px dashed #007AFF; outline-offset:2px; }
-#fpStage .fp-handle { position:absolute; width:14px; height:14px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.25); }
+#fpStage .fp-handle { position:absolute; width:14px; height:14px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.25); display:none; z-index:5; }
 #fpStage .fp-handle-se { right:-7px; bottom:-7px; cursor:nwse-resize; }
+#fpStage .fp-item.fp-selected .fp-handle-se { display:block; }
 #fpStage .fp-handle-sw, #fpStage .fp-handle-nw, #fpStage .fp-handle-ne { display:none; }
 #fpStage .fp-text { font-weight:800; word-break:keep-all; padding:4px 8px; line-height:1.2; user-select:none; touch-action:none; }
 #fpStage .fp-text[contenteditable=true] { outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); cursor:text; user-select:text; }
+/* 텍스트 편집 모드에선 핸들 숨김 (텍스트 선택과 충돌 방지) */
+#fpStage .fp-text[contenteditable=true] .fp-handle { display:none !important; }
 /* 텍스트 props 버튼 */
 #fpTextProps .fp-prop-btn { padding:5px 9px; background:#fff; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#92400e; cursor:pointer; font-family:inherit; min-width:28px; font-weight:700; }
 #fpTextProps .fp-prop-btn.active { background:#92400e; color:#fff; border-color:#92400e; }
