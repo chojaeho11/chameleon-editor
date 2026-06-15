@@ -6411,9 +6411,17 @@ function scrollHotdeal(gridId, dir) {
                     if (ctx.textAlign === 'center') tx = it.x + it.w/2;
                     else if (ctx.textAlign === 'right') tx = it.x + it.w - padX;
                     var ty = it.y + padY;
-                    var lines = (it.text || '').split(/\n/);
+                    // 2026-06-15: 박스 폭 초과 시 자동 줄바꿈 (DOM 의 word-wrap 미러링).
+                    //   innerText 는 시각적 wrap 을 \n 으로 안 변환하므로, 캔버스에서 직접 maxW 기준으로 wrap.
                     var lh = fs * (it.lineHeight || 1.2);
-                    lines.forEach(function(ln, idx) {
+                    var maxW = Math.max(1, it.w - 2 * padX);
+                    var rawLines = (it.text || '').split(/\n/);
+                    var allLines = [];
+                    rawLines.forEach(function(rl){
+                        var wrapped = _meWrapText(ctx, rl, maxW);
+                        wrapped.forEach(function(w){ allLines.push(w); });
+                    });
+                    allLines.forEach(function(ln, idx) {
                         ctx.fillText(ln, tx, ty + idx * lh);
                     });
                     ctx.restore();
@@ -7168,6 +7176,38 @@ function scrollHotdeal(gridId, dir) {
             var c3 = Object.assign({}, it, { el: el3, x: it.x + 20, y: it.y + 20 });
             me.items.push(c3); _meSyncItemDisplay(c3); _meBindDrag(c3); _meSelect(c3);
         }
+    }
+
+    // 2026-06-15: 캔버스 word-wrap — DOM 의 자동 wrap 을 PNG export 에서 재현.
+    //   영문/숫자가 이어진 토큰은 단어 단위 wrap, 한글/CJK 는 글자 단위 wrap (DOM word-break: break-word 와 유사).
+    function _meWrapText(ctx, text, maxW) {
+        if (!text) return [''];
+        var out = [];
+        var cur = '';
+        function widthOf(s) { return ctx.measureText(s).width; }
+        for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+            var test = cur + ch;
+            if (widthOf(test) <= maxW || !cur) {
+                cur = test;
+                continue;
+            }
+            // 오버플로우 — 영문/숫자/하이픈 이어쓰기 중이면 마지막 공백에서 단어 단위로 끊기.
+            var isLatin = /[A-Za-z0-9'\-]/.test(ch);
+            var lastSpace = cur.lastIndexOf(' ');
+            if (isLatin && lastSpace > 0 && /[A-Za-z0-9'\-]/.test(cur[lastSpace - 1] || '') === false) {
+                // 별 의미 없음 — 그냥 공백 기준 자르기
+            }
+            if (isLatin && lastSpace > 0) {
+                out.push(cur.slice(0, lastSpace));
+                cur = cur.slice(lastSpace + 1) + ch;
+            } else {
+                out.push(cur);
+                cur = ch;
+            }
+        }
+        if (cur) out.push(cur);
+        return out.length ? out : [''];
     }
 
     function _meDrawTextLineWithSpacing(ctx, line, x, y, letterSpacing) {
