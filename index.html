@@ -5817,6 +5817,13 @@ function scrollHotdeal(gridId, dir) {
         .me-prop-btn { padding:5px 10px; background:transparent; border:none; border-radius:6px; font-size:12px; color:#1d1d1f; cursor:pointer; font-family:inherit; font-weight:600; min-width:26px; }
         .me-prop-btn:hover { background:rgba(120,120,128,0.18); }
         .me-prop-btn.active { background:#007AFF; color:#fff; }
+        /* 2026-06-15: 두께 S/M/B 토글 — 가독성 위해 단색 배경. S=얇게, M=보통, B=굵게. */
+        .me-prop-btn.smb { padding:4px 9px; font-size:11.5px; font-weight:800; min-width:24px; letter-spacing:0.5px; }
+        .me-prop-btn.smb[data-weight]:not(.active) { background:rgba(120,120,128,0.10); }
+        .me-prop-btn.smb[data-weight="300"]:not(.active) { font-weight:300; }
+        .me-prop-btn.smb[data-weight="700"]:not(.active),
+        .me-prop-btn.smb[data-weight="800"]:not(.active),
+        .me-prop-btn.smb[data-weight="900"]:not(.active) { font-weight:800; }
         /* 우클릭 컨텍스트 메뉴 */
         .me-ctx { position:fixed; z-index:100002; background:rgba(250,250,250,0.88); -webkit-backdrop-filter:saturate(180%) blur(22px); backdrop-filter:saturate(180%) blur(22px); border:0.5px solid rgba(0,0,0,0.10); border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,0.18); padding:5px; min-width:200px; font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; }
         .me-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px; background:transparent; border:none; border-radius:6px; font-size:13px; font-weight:500; color:#1d1d1f; cursor:pointer; text-align:left; font-family:inherit; letter-spacing:-0.2px; }
@@ -6564,37 +6571,43 @@ function scrollHotdeal(gridId, dir) {
                 var preview = (f.font_family === 'sans-serif') ? '' : ' style="font-family:' + fam.replace(/"/g, '&quot;') + ';"';
                 return '<option value="' + fam.replace(/"/g, '&quot;') + '" data-fam="' + f.font_family.replace(/"/g, '&quot;') + '" data-w="' + (f.weights || '') + '"' + sel + preview + '>' + f.font_name + '</option>';
             }).join('');
-            html += '<span class="me-prop-group"><label>' + T('me_prop_color','색상') + '</label><input type="color" value="' + (it.fill || '#1e293b') + '" data-mp="fill"></span>';
+            // 2026-06-15: 색상은 상단 툴바 chip 으로 통합 — props 패널에선 제거. 자간/행간도 제거.
             html += '<span class="me-prop-group"><label>' + T('me_prop_font','서체') + '</label><select data-mp="fontFamily" data-font-select>' + fontOpts + '</select></span>';
-            // 2026-06-14: 두께 셀렉터 — 현재 폰트의 지원 weights 만 옵션으로 표시
+            // 2026-06-15: 두께 셀렉터 → S/M/B 토글 3개. 현재 폰트의 지원 weight 중에 300/400/700 에 가장 가까운 값으로 매핑.
             (function(){
                 var clean = String(it.fontFamily || '').replace(/["']/g, '').trim();
                 var allFonts = []; Object.keys(ME_GOOGLE_FONTS).forEach(function(k){ (ME_GOOGLE_FONTS[k]||[]).forEach(function(f){ allFonts.push(f); }); });
                 var matchF = allFonts.find(function(f){ return f.font_family === clean; });
                 var supported = (matchF && matchF.weights) ? String(matchF.weights).split(';').map(function(w){ return parseInt(w,10); }).filter(function(w){ return !isNaN(w); }) : [400, 700];
-                if (supported.length < 2) return;  // 한 가지 weight 만 있으면 셀렉터 숨김 (검은고딕 등)
-                var WLABEL = { 100:T('me_w_thin','얇게'), 200:T('me_w_xlight','매우 가늘게'), 300:T('me_w_light','가늘게'), 400:T('me_w_normal','보통'), 500:T('me_w_medium','중간'), 600:T('me_w_semi','조금 굵게'), 700:T('me_w_bold','굵게'), 800:T('me_w_xbold','매우 굵게'), 900:T('me_w_black','아주 굵게') };
-                var current = parseInt(it.fontWeight || 400, 10);
-                var weightOpts = supported.map(function(w){
-                    var s = (w === current) ? ' selected' : '';
-                    return '<option value="' + w + '"' + s + '>' + (WLABEL[w] || w) + '</option>';
-                }).join('');
-                html += '<span class="me-prop-group"><label>' + T('me_prop_weight','두께') + '</label><select data-mp="fontWeight" data-mp-num="1">' + weightOpts + '</select></span>';
+                if (supported.length < 2) return;  // 한 가지 weight 만 있으면 토글 숨김 (검은고딕 등)
+                function _closest(target){
+                    var best = supported[0], bd = Math.abs(supported[0]-target);
+                    supported.forEach(function(w){ var d = Math.abs(w-target); if (d<bd){bd=d;best=w;}});
+                    return best;
+                }
+                var sW = _closest(300), mW = _closest(400), bW = _closest(700);
+                var cur = parseInt(it.fontWeight || 400, 10);
+                var smbHtml = '<span class="me-prop-group" style="gap:3px;">';
+                [['S',sW,'얇게'],['M',mW,'보통'],['B',bW,'굵게']].forEach(function(p){
+                    var on = (cur === p[1]);
+                    smbHtml += '<button type="button" class="me-prop-btn smb' + (on?' active':'') + '" data-weight="' + p[1] + '" title="' + p[2] + '">' + p[0] + '</button>';
+                });
+                smbHtml += '</span>';
+                html += smbHtml;
             })();
             html += '<span class="me-prop-group"><label>' + T('me_prop_size','크기') + '</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
-            html += '<span class="me-prop-group"><label>' + T('me_prop_letter','자간') + '</label><input type="number" min="-10" max="40" step="0.5" value="' + (it.letterSpacing || 0) + '" data-mp="letterSpacing"></span>';
-            html += '<span class="me-prop-group"><label>' + T('me_prop_line','행간') + '</label><input type="number" min="0.8" max="3" step="0.05" value="' + (it.lineHeight || 1.2) + '" data-mp="lineHeight"></span>';
             var alignSvg = function(d){ return '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="' + d + '"/></svg>'; };
             var svgL = alignSvg('M1 3h14v1.5H1zm0 3.25h10v1.5H1zm0 3.25h14V11H1zm0 3.25h10V14H1z');
             var svgC = alignSvg('M1 3h14v1.5H1zm2 3.25h10v1.5H3zm-2 3.25h14V11H1zm2 3.25h10V14H3z');
             var svgR = alignSvg('M1 3h14v1.5H1zm4 3.25h10v1.5H5zm-4 3.25h14V11H1zm4 3.25h10V14H5z');
-            html += '<span class="me-prop-group">'
+            // 2026-06-15: 정렬 — props 첫 줄로 이동 (사용자 요청 — 자간/행간 제거 후 한 줄에 다 들어감).
+            html += '<span class="me-prop-group" style="gap:2px;">'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'left' ? ' active' : '') + '" data-align="left">' + svgL + '</button>'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center">' + svgC + '</button>'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right">' + svgR + '</button>'
             + '</span>';
         } else if (it.type === 'shape') {
-            html += '<span class="me-prop-group"><label>' + T('me_prop_fill','채움') + '</label><input type="color" value="' + (it.fill || '#7c3aed') + '" data-mp="fill"></span>';
+            // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
             html += '<span class="me-prop-group"><label>' + T('me_prop_stroke','테두리') + '</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_strokew','두께') + '</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
         } else if (it.type === 'image') {
@@ -6646,6 +6659,17 @@ function scrollHotdeal(gridId, dir) {
                 _meSyncItemDisplay(it);
             });
         });
+        // 2026-06-15: SMB 두께 토글
+        panel.querySelectorAll('[data-weight]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var w = parseInt(btn.getAttribute('data-weight'), 10);
+                if (isNaN(w)) return;
+                it.fontWeight = w;
+                panel.querySelectorAll('[data-weight]').forEach(function(b){ b.classList.remove('active'); });
+                btn.classList.add('active');
+                _meSyncItemDisplay(it);
+            });
+        });
         // 2026-06-14: 공통 액션 핸들러
         panel.querySelectorAll('[data-action]').forEach(function(btn){
             btn.addEventListener('click', function(){
@@ -6657,6 +6681,8 @@ function scrollHotdeal(gridId, dir) {
                 else if (act === 'down' && window._meSendBackward) window._meSendBackward(it);
             });
         });
+        // 2026-06-15: 상단 chip 의 value/tooltip 을 현재 선택에 동기화.
+        try { if (typeof window._meSyncBgChip === 'function') window._meSyncBgChip(); } catch(_) {}
     }
 
     function _meBindDrag(it) {
@@ -7012,10 +7038,39 @@ function scrollHotdeal(gridId, dir) {
         }, 50);
     };
 
+    // 2026-06-15: 상단 색상 chip 통합 — 선택 상태에 따라 글씨/도형 색 vs 배경에 적용.
+    //   - text 선택 → fill 변경 (글씨 색)
+    //   - shape 선택 → fill 변경 (도형 채움)
+    //   - 그 외 (이미지/none) → 캔버스 배경
     window._meSetBg = function(color) {
         _meSnapshot();
-        me.bg = color;
-        $('meStage').style.background = color;
+        var sel = me && me.selected;
+        if (sel && sel.type === 'text') {
+            sel.fill = color;
+            _meSyncItemDisplay(sel);
+        } else if (sel && sel.type === 'shape') {
+            sel.fill = color;
+            _meSyncItemDisplay(sel);
+        } else {
+            me.bg = color;
+            $('meStage').style.background = color;
+        }
+    };
+    // chip 의 value 를 현재 컨텍스트에 동기화 (선택 변경 시 호출 — _meRenderProps 끝/_meSelect 에서 호출).
+    window._meSyncBgChip = function() {
+        var input = document.getElementById('meBgColor');
+        if (!input) return;
+        var sel = me && me.selected;
+        var tooltip;
+        if (sel && (sel.type === 'text' || sel.type === 'shape')) {
+            input.value = sel.fill || '#1e293b';
+            tooltip = (sel.type === 'text') ? '글씨 색상' : '도형 색상';
+        } else {
+            input.value = me.bg || '#ffffff';
+            tooltip = '배경색';
+        }
+        var lbl = input.closest('.me-color-wrap');
+        if (lbl) lbl.title = tooltip;
     };
 
     function _meT(k, fb) {
