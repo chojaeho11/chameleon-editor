@@ -2006,9 +2006,9 @@ async function submitRollFabricRequest() {
                     <button type="button" id="fpLibNext" class="fp-lib-pager-btn"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채움. 힌트도 다크 영역 안. -->
+            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채우고 대지가 그 안을 가득 채움. 힌트는 하단 절대 위치. -->
             <div class="fp-canvas-col">
-                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center;">
                     <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
                     <span id="fpHint" class="fp-hint"></span>
                 </div>
@@ -2092,11 +2092,13 @@ async function submitRollFabricRequest() {
     var wrap = $('fpStageWrap');
 
     function fitStage(){
-        var maxW = Math.max(200, wrap.clientWidth - 20);
-        var maxH = 540;
+        // 2026-06-15: 다크 wrap 의 실제 가용 영역(패딩 제외)에 최대한 맞춤. 1.0 캡 제거 — 작은 사이즈는 확대.
+        var rect = wrap.getBoundingClientRect();
+        var maxW = Math.max(200, rect.width - 28);   // 14px padding × 2
+        var maxH = Math.max(220, rect.height - 56);  // padding + 힌트 여유 (~28px)
         var scaleW = maxW / state.natW;
         var scaleH = maxH / state.natH;
-        var sc = Math.min(scaleW, scaleH, 1.0);
+        var sc = Math.min(scaleW, scaleH);  // 캡 없음 — 짧은 가로/세로면 확대해서 영역 가득
         var dispW = Math.floor(state.natW * sc);
         var dispH = Math.floor(state.natH * sc);
         stage.style.width = dispW + 'px';
@@ -3066,8 +3068,8 @@ async function submitRollFabricRequest() {
 .fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:stretch; }
 .fp-canvas-col { min-width:0; display:flex; flex-direction:column; }
 #fpStageWrap { flex:1; min-height:480px; }
-/* 힌트 텍스트는 이제 어두운 영역 위 — 밝은 글씨 */
-.fp-canvas-col .fp-hint { color:#94a3b8 !important; font-size:11px; padding:8px 0 4px; text-align:center; }
+/* 힌트 텍스트는 다크 영역 하단에 절대 위치 — 캔버스 면적 침범 X */
+.fp-canvas-col .fp-hint { position:absolute; left:0; right:0; bottom:6px; color:#94a3b8 !important; font-size:10.5px; text-align:center; pointer-events:none; letter-spacing:0.01em; opacity:0.7; }
 .fp-lib-sec { padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
 .fp-lib-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-bottom:8px; }
 .fp-lib-tab { padding:7px 4px; background:#fff; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
