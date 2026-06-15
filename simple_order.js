@@ -1563,7 +1563,6 @@ html, body { background: #ffffff !important; }
           <style>
             /* 2026-06-15: rail 폭 좁힘 (180→120), 썸네일 1열×6 정사각 꽉차게 (object-fit:cover). */
             #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:10px; align-items:stretch; }
-            @media (max-width:768px) { #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; } }
             #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:200px; }
             #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
             #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
@@ -1576,6 +1575,16 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:10px; }
             #soQuickDesignSec .qd-rail-more { padding:7px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
             #soQuickDesignSec .qd-rail-more:hover { background:#f1f5f9; }
+            /* 2026-06-15: 모바일 — 대지(에디터) 먼저, 그 아래 [템플릿/요소/장식] 버튼 3개 + 미리보기 4열 그리드. */
+            @media (max-width:768px) {
+                #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; gap:8px; }
+                #soQuickDesignSec .qd-edit-grid > #soEmbeddedEditorMount { order:1; }
+                #soQuickDesignSec .qd-edit-grid > .qd-rail { order:2; min-height:0; }
+                #soQuickDesignSec .qd-rail-tabs { gap:6px; }
+                #soQuickDesignSec .qd-rail-tab { padding:9px 0; font-size:12.5px; }
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(4,1fr); gap:6px; }
+                #soQuickDesignSec .qd-rail-more { margin-top:4px; padding:9px; font-size:12px; }
+            }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
           <div id="soQdBcForm" style="display:none; margin-top:10px; padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
