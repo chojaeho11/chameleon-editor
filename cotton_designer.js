@@ -332,12 +332,14 @@ window._cdUploadImage = async function(files) {
             //   96 DPI 기준으로 cm 환산, 원단폭 130cm 초과하면 비율 유지하며 축소.
             //   그리고 출력 사이즈(orderWcm/Hcm) 도 이미지 사이즈와 동일하게 맞춰서 "꽉차게" 표시.
             if (state.layout === 'centered') {
-                const PX_PER_CM = 96 / 2.54;   // 브라우저 표준 96 DPI
-                let wCm = img.width / PX_PER_CM;
-                let hCm = img.height / PX_PER_CM;
-                if (wCm > 130) { hCm = hCm * (130 / wCm); wCm = 130; }
-                state.imgWcm = Math.round(wCm * 10) / 10;
-                state.imgHcm = Math.round(hCm * 10) / 10;
+                // 2026-06-15: 포스터 모드 — 이미지를 롤 폭 (대폭 130 / 소폭 100cm) 에 맞춰 자동 확대/축소.
+                //   사용자 피드백: 96 DPI 변환 기반의 작은 크기 (예 318×450mm) 대신 롤 폭 가득.
+                //   세로는 이미지 비율 유지로 자동 계산.
+                const rollW = (ROLL_OUTPUT_WIDTH_CM && ROLL_OUTPUT_WIDTH_CM[state.rollWidth]) || 130;
+                const wCmP = rollW;
+                const hCmP = (state.imgAspect && state.imgAspect > 0) ? (wCmP / state.imgAspect) : (img.height / (96/2.54));
+                state.imgWcm = Math.round(wCmP * 10) / 10;
+                state.imgHcm = Math.round(hCmP * 10) / 10;
                 state.orderWcm = state.imgWcm;
                 state.orderHcm = state.imgHcm;
                 const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
