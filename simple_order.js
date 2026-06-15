@@ -547,7 +547,10 @@ html, body { background: #ffffff !important; }
     border-radius: 14px;
 }
 #soQuickDesignSec .qd-head-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-#soQuickDesignSec .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; letter-spacing:-0.01em; }
+#soQuickDesignSec .qd-head-title { font-size:14px; font-weight:900; color:#0f172a; letter-spacing:-0.01em; display:flex; flex-direction:column; line-height:1.25; min-width:0; flex:1; }
+#soQuickDesignSec .qd-head-title .qd-title-main { display:inline-flex; align-items:center; gap:6px; }
+#soQuickDesignSec .qd-head-title .qd-title-sub { font-size:11px; font-weight:600; color:#64748b; margin-top:2px; letter-spacing:0; }
+@media (max-width:480px) { #soQuickDesignSec .qd-head-title { font-size:13px; } #soQuickDesignSec .qd-head-title .qd-title-sub { font-size:10.5px; } }
 #soQuickDesignSec .qd-size-badge {
     font-size: 11px; color: #fff; font-weight: 800;
     background: #6366f1; padding: 4px 10px; border-radius: 999px;
@@ -1551,7 +1554,8 @@ html, body { background: #ffffff !important; }
         <div id="soQuickDesignSec" style="display:none;">
           <div class="qd-head-row">
             <div class="qd-head-title">
-              <i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1; margin-right:6px;"></i>${tr('인라인 디자인 에디터', 'インラインデザインエディタ', 'Inline Design Editor')}
+              <span class="qd-title-main"><i class="fa-solid fa-wand-magic-sparkles" style="color:#6366f1;"></i>${tr('간단한 디자인 쉬운 에디터', 'カンタン デザイン エディタ', 'Easy Design Editor')}</span>
+              <span class="qd-title-sub">${tr('주문 사이즈와 자동 연동 · 디자인하고 바로 주문', '注文サイズと自動連動 · デザインしてすぐ注文', 'Auto-synced to order size · design and order directly')}</span>
             </div>
             <span class="qd-size-badge" id="soQdSizeBadge">90×50mm</span>
             <button type="button" class="qd-rotate-btn" onclick="window._soQdRotateCanvas && window._soQdRotateCanvas()" title="${tr('대지 90° 회전','キャンバス回転','Rotate canvas')}">
