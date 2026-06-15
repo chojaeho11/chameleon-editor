@@ -2006,10 +2006,14 @@ async function submitRollFabricRequest() {
                     <button type="button" id="fpLibNext" class="fp-lib-pager-btn"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채우고 대지가 그 안을 가득 채움. 힌트는 하단 절대 위치. -->
+            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채우고 대지가 그 안을 가득 채움. 줄자(SVG)는 stage 외곽에 부착. -->
             <div class="fp-canvas-col">
-                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center;">
-                    <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
+                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px 14px 28px 28px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center;">
+                    <div class="fp-stage-box">
+                        <svg id="fpRulerTop"  class="fp-ruler fp-ruler-top"  preserveAspectRatio="none"></svg>
+                        <svg id="fpRulerLeft" class="fp-ruler fp-ruler-left" preserveAspectRatio="none"></svg>
+                        <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
+                    </div>
                     <span id="fpHint" class="fp-hint"></span>
                 </div>
             </div>
@@ -2092,25 +2096,74 @@ async function submitRollFabricRequest() {
     var wrap = $('fpStageWrap');
 
     function fitStage(){
-        // 2026-06-15: 다크 wrap 의 실제 가용 영역(패딩 제외)에 최대한 맞춤. 1.0 캡 제거 — 작은 사이즈는 확대.
+        // 2026-06-15: 다크 wrap 의 실제 가용 영역(패딩 + 줄자 폭 제외)에 최대한 맞춤. 1.0 캡 제거.
         var rect = wrap.getBoundingClientRect();
-        var maxW = Math.max(200, rect.width - 28);   // 14px padding × 2
-        var maxH = Math.max(220, rect.height - 56);  // padding + 힌트 여유 (~28px)
+        // 줄자 영역(상단 14px + 좌측 14px) + 힌트 여유 만큼 빼고 계산.
+        var maxW = Math.max(200, rect.width - 60);
+        var maxH = Math.max(220, rect.height - 70);
         var scaleW = maxW / state.natW;
         var scaleH = maxH / state.natH;
-        var sc = Math.min(scaleW, scaleH);  // 캡 없음 — 짧은 가로/세로면 확대해서 영역 가득
+        var sc = Math.min(scaleW, scaleH);
         var dispW = Math.floor(state.natW * sc);
         var dispH = Math.floor(state.natH * sc);
         stage.style.width = dispW + 'px';
         stage.style.height = dispH + 'px';
         state.wScale = sc;
+        // 줄자 갱신
+        try { drawRulers(dispW, dispH); } catch(_) {}
         // 모든 item 위치 재계산
         state.items.forEach(syncItem);
+    }
+    function drawRulers(dispW, dispH){
+        var rTop = $('fpRulerTop'), rLeft = $('fpRulerLeft');
+        if (!rTop || !rLeft) return;
+        var sc = state.wScale || 1;
+        var natW = state.natW, natH = state.natH;
+        // 100mm 마다 라벨, 50mm 마다 중간 tick, 10mm 마다 작은 tick.
+        function tickStep(){ return natW > 1000 ? 20 : 10; }
+        var step = tickStep();
+        // Top ruler
+        rTop.setAttribute('viewBox', '0 0 ' + dispW + ' 14');
+        rTop.setAttribute('width', dispW); rTop.setAttribute('height', 14);
+        var topMarks = '<rect width="' + dispW + '" height="14" fill="#fafafa" rx="2" />';
+        for (var x = 0; x <= natW; x += step) {
+            var px = x * sc;
+            var isMajor = (x % 100 === 0);
+            var isMid = (x % 50 === 0);
+            var len = isMajor ? 7 : (isMid ? 5 : 3);
+            topMarks += '<line x1="' + px + '" y1="' + (14 - len) + '" x2="' + px + '" y2="14" stroke="#475569" stroke-width="' + (isMajor ? 0.9 : 0.6) + '" />';
+            if (isMajor && x > 0 && x < natW) {
+                topMarks += '<text x="' + (px + 2) + '" y="7" font-size="7" fill="#334155" font-family="-apple-system,system-ui,sans-serif" font-weight="600">' + x + '</text>';
+            }
+        }
+        rTop.innerHTML = topMarks;
+        // Left ruler
+        rLeft.setAttribute('viewBox', '0 0 14 ' + dispH);
+        rLeft.setAttribute('width', 14); rLeft.setAttribute('height', dispH);
+        var leftMarks = '<rect width="14" height="' + dispH + '" fill="#fafafa" rx="2" />';
+        var stepY = tickStep();
+        for (var y = 0; y <= natH; y += stepY) {
+            var py = y * sc;
+            var isMajorY = (y % 100 === 0);
+            var isMidY = (y % 50 === 0);
+            var lenY = isMajorY ? 7 : (isMidY ? 5 : 3);
+            leftMarks += '<line x1="' + (14 - lenY) + '" y1="' + py + '" x2="14" y2="' + py + '" stroke="#475569" stroke-width="' + (isMajorY ? 0.9 : 0.6) + '" />';
+            if (isMajorY && y > 0 && y < natH) {
+                leftMarks += '<text x="6" y="' + (py - 1) + '" font-size="7" fill="#334155" font-family="-apple-system,system-ui,sans-serif" font-weight="600" text-anchor="middle" transform="rotate(-90 6,' + py + ')">' + y + '</text>';
+            }
+        }
+        rLeft.innerHTML = leftMarks;
     }
     function setSize(w, h){ state.natW = w; state.natH = h; fitStage(); }
     // 2026-06-15: 기본 사이즈 400×300mm (사용자 요청)
     setSize(400, 300);
     window.addEventListener('resize', fitStage);
+    // 2026-06-15: 다크 wrap 의 실제 크기는 사이드바 로딩 / 폰트 로딩 등에 따라 변하므로 ResizeObserver 로 추적.
+    if (typeof ResizeObserver !== 'undefined') {
+        try { new ResizeObserver(function(){ fitStage(); }).observe(wrap); } catch(_) {}
+    }
+    // 폰트/이미지 로드 후 한 번 더
+    window.addEventListener('load', function(){ requestAnimationFrame(fitStage); });
 
     // 가로/세로 입력 — 변경 시 즉시 반영, 300ms 디바운스로 fitStage 폭주 방지.
     var _sizeDebounce = null;
@@ -2491,7 +2544,21 @@ async function submitRollFabricRequest() {
             { name:'베이글팻원', fam:'Bagel Fat One', w:'400' },
             { name:'제주명조', fam:'Jeju Myeongjo', w:'400' },
             { name:'제주고딕', fam:'Jeju Gothic', w:'400' },
-            { name:'제주한라산', fam:'Jeju Hallasan', w:'400' }
+            { name:'제주한라산', fam:'Jeju Hallasan', w:'400' },
+            // 2026-06-15: 영문 청첩장/웨딩 스크립트 — 한글 사이트에서도 영문 텍스트용으로 자주 씀.
+            { name:'Great Vibes (영문)', fam:'Great Vibes', w:'400' },
+            { name:'Allura (영문)', fam:'Allura', w:'400' },
+            { name:'Italianno (영문)', fam:'Italianno', w:'400' },
+            { name:'Pinyon Script (영문)', fam:'Pinyon Script', w:'400' },
+            { name:'Petit Formal Script (영문)', fam:'Petit Formal Script', w:'400' },
+            { name:'Alex Brush (영문)', fam:'Alex Brush', w:'400' },
+            { name:'Parisienne (영문)', fam:'Parisienne', w:'400' },
+            { name:'Sacramento (영문)', fam:'Sacramento', w:'400' },
+            { name:'Yellowtail (영문)', fam:'Yellowtail', w:'400' },
+            { name:'Tangerine (영문)', fam:'Tangerine', w:'400;700' },
+            { name:'Mrs Saint Delafield (영문)', fam:'Mrs Saint Delafield', w:'400' },
+            { name:'Pacifico (영문)', fam:'Pacifico', w:'400' },
+            { name:'Dancing Script (영문)', fam:'Dancing Script', w:'400;700' }
         ],
         'ja': [
             { name:'デフォルト (Sans)', fam:'sans-serif', w:null },
@@ -2544,7 +2611,21 @@ async function submitRollFabricRequest() {
             { name:'Pacifico', fam:'Pacifico', w:'400' },
             { name:'Dancing Script', fam:'Dancing Script', w:'400;700' },
             { name:'Caveat', fam:'Caveat', w:'400;700' },
+            // 2026-06-15: 청첩장 / 웨딩 스타일 진한 이탤릭/스크립트 폰트 — Our Wedding Day 류.
             { name:'Great Vibes', fam:'Great Vibes', w:'400' },
+            { name:'Allura', fam:'Allura', w:'400' },
+            { name:'Italianno', fam:'Italianno', w:'400' },
+            { name:'Pinyon Script', fam:'Pinyon Script', w:'400' },
+            { name:'Petit Formal Script', fam:'Petit Formal Script', w:'400' },
+            { name:'Alex Brush', fam:'Alex Brush', w:'400' },
+            { name:'Parisienne', fam:'Parisienne', w:'400' },
+            { name:'Sacramento', fam:'Sacramento', w:'400' },
+            { name:'Yellowtail', fam:'Yellowtail', w:'400' },
+            { name:'Tangerine', fam:'Tangerine', w:'400;700' },
+            { name:'Mrs Saint Delafield', fam:'Mrs Saint Delafield', w:'400' },
+            { name:'Style Script', fam:'Style Script', w:'400' },
+            { name:'Niconne', fam:'Niconne', w:'400' },
+            { name:'Cookie', fam:'Cookie', w:'400' },
             { name:'Satisfy', fam:'Satisfy', w:'400' },
             { name:'Abril Fatface', fam:'Abril Fatface', w:'400' },
             { name:'Permanent Marker', fam:'Permanent Marker', w:'400' },
@@ -3067,7 +3148,12 @@ async function submitRollFabricRequest() {
 /* 캔버스 + 라이브러리 그리드 — PC 좌측 사이드바, align-items:stretch 로 캔버스 컬럼이 사이드바 높이만큼 늘어남. */
 .fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:stretch; }
 .fp-canvas-col { min-width:0; display:flex; flex-direction:column; }
-#fpStageWrap { flex:1; min-height:480px; }
+#fpStageWrap { flex:1; min-height:520px; }
+/* 줄자 (mm) — stage 외곽에 SVG 로 부착. 상단 14px / 좌측 14px. */
+.fp-stage-box { position:relative; padding-top:14px; padding-left:14px; }
+.fp-ruler { position:absolute; display:block; pointer-events:none; }
+.fp-ruler-top  { top:0;  left:14px; height:14px; }
+.fp-ruler-left { left:0; top:14px;  width:14px;  }
 /* 힌트 텍스트는 다크 영역 하단에 절대 위치 — 캔버스 면적 침범 X */
 .fp-canvas-col .fp-hint { position:absolute; left:0; right:0; bottom:6px; color:#94a3b8 !important; font-size:10.5px; text-align:center; pointer-events:none; letter-spacing:0.01em; opacity:0.7; }
 .fp-lib-sec { padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
