@@ -6370,6 +6370,15 @@ function scrollHotdeal(gridId, dir) {
                 }
                 me.items.forEach(function(it){
                     if (it && it.type === 'text' && it.el) {
+                        // 2026-06-15: width:max-content 로 글씨 박스가 줄어든 경우 — 실제 렌더된 폭을 it.w 에 반영.
+                        //   안 하면 export 의 textAlign:center 계산이 it.w(원래 max-cap)를 기준 잡아서 DOM 보다 오른쪽으로 밀림.
+                        try {
+                            var _rect = it.el.getBoundingClientRect();
+                            var _scale = me.wScale || 1;
+                            if (_rect && _rect.width > 0 && _scale > 0) {
+                                it.w = _rect.width / _scale;
+                            }
+                        } catch(_we) {}
                         // <br> 등을 \n 으로 보존
                         var raw = (it.el.innerText !== undefined) ? it.el.innerText : (it.el.textContent || '');
                         it.text = raw;
