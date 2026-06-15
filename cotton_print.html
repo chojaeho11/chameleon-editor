@@ -2421,34 +2421,136 @@ async function submitRollFabricRequest() {
         document.body.appendChild(a); a.click(); a.remove();
     });
 
-    // ───────── 폰트 드롭다운 ─────────
-    var FONTS = [
-        { fam:'inherit',          label:'기본 (Sans)' },
-        { fam:'"Noto Sans KR"',   label:'노토 산스' },
-        { fam:'"Nanum Gothic"',   label:'나눔 고딕' },
-        { fam:'"Nanum Myeongjo"', label:'나눔 명조' },
-        { fam:'"Gowun Dodum"',    label:'고운 도담' },
-        { fam:'"Black Han Sans"', label:'검은 고딕' },
-        { fam:'"Jua"',            label:'주아' },
-        { fam:'"Single Day"',     label:'한붓글씨' },
-        { fam:'"Gaegu"',          label:'개구' },
-        { fam:'serif',            label:'세리프' },
-        { fam:'monospace',        label:'고정폭' }
-    ];
-    var fpFontSel = $('fpFontSel');
-    if (fpFontSel) {
-        fpFontSel.innerHTML = FONTS.map(function(f){ return '<option value="' + f.fam.replace(/"/g,'&quot;') + '">' + f.label + '</option>'; }).join('');
-    }
-    // Google Fonts lazy load — props 패널 열릴 때 한 번만.
-    var _fontsLoaded = false;
-    function loadGoogleFonts(){
-        if (_fontsLoaded) return; _fontsLoaded = true;
+    // ───────── 폰트 드롭다운 (cafe2626 미니에디터의 ME_GOOGLE_FONTS 와 동일) ─────────
+    var FP_FONTS = {
+        'ko': [
+            { name:'기본 (Sans)', fam:'sans-serif', w:null },
+            { name:'노토 산스', fam:'Noto Sans KR', w:'400;700;900' },
+            { name:'나눔고딕', fam:'Nanum Gothic', w:'400;700;800' },
+            { name:'나눔명조', fam:'Nanum Myeongjo', w:'400;700' },
+            { name:'검은고딕', fam:'Black Han Sans', w:'400' },
+            { name:'나눔펜스크립트', fam:'Nanum Pen Script', w:'400' },
+            { name:'도현', fam:'Do Hyeon', w:'400' },
+            { name:'주아', fam:'Jua', w:'400' },
+            { name:'싱글데이', fam:'Single Day', w:'400' },
+            { name:'고틱 A1', fam:'Gothic A1', w:'400;700;900' },
+            { name:'하이멜로디', fam:'Hi Melody', w:'400' },
+            { name:'감자꽃', fam:'Gamja Flower', w:'400' },
+            { name:'귀여운글씨', fam:'Cute Font', w:'400' },
+            { name:'동해독도', fam:'East Sea Dokdo', w:'400' },
+            { name:'개구쟁이', fam:'Gaegu', w:'400;700' },
+            { name:'송명체', fam:'Song Myung', w:'400' },
+            { name:'스타일리쉬', fam:'Stylish', w:'400' },
+            { name:'시적인', fam:'Poor Story', w:'400' },
+            { name:'연성', fam:'Yeon Sung', w:'400' },
+            { name:'고운돋움', fam:'Gowun Dodum', w:'400' },
+            { name:'고운바탕', fam:'Gowun Batang', w:'400;700' },
+            { name:'나눔브러쉬', fam:'Nanum Brush Script', w:'400' },
+            { name:'노토 세리프', fam:'Noto Serif KR', w:'400;700;900' },
+            { name:'해바라기', fam:'Sunflower', w:'500;700' },
+            { name:'동글', fam:'Dongle', w:'400;700' },
+            { name:'함렛', fam:'Hahmlet', w:'400;700;900' },
+            { name:'구기', fam:'Gugi', w:'400' },
+            { name:'독도', fam:'Dokdo', w:'400' },
+            { name:'기랑해랑', fam:'Kirang Haerang', w:'400' },
+            { name:'베이글팻원', fam:'Bagel Fat One', w:'400' },
+            { name:'제주명조', fam:'Jeju Myeongjo', w:'400' },
+            { name:'제주고딕', fam:'Jeju Gothic', w:'400' },
+            { name:'제주한라산', fam:'Jeju Hallasan', w:'400' }
+        ],
+        'ja': [
+            { name:'デフォルト (Sans)', fam:'sans-serif', w:null },
+            { name:'Noto Sans JP', fam:'Noto Sans JP', w:'400;500;700;900' },
+            { name:'Noto Serif JP', fam:'Noto Serif JP', w:'400;700' },
+            { name:'M PLUS Rounded 1c', fam:'M PLUS Rounded 1c', w:'400;700;900' },
+            { name:'Zen Maru Gothic', fam:'Zen Maru Gothic', w:'400;500;700' },
+            { name:'Sawarabi Mincho', fam:'Sawarabi Mincho', w:'400' },
+            { name:'Sawarabi Gothic', fam:'Sawarabi Gothic', w:'400' },
+            { name:'Kosugi Maru', fam:'Kosugi Maru', w:'400' },
+            { name:'Shippori Mincho', fam:'Shippori Mincho', w:'400;700' },
+            { name:'Klee One', fam:'Klee One', w:'400;600' },
+            { name:'Zen Kaku Gothic New', fam:'Zen Kaku Gothic New', w:'400;500;700' },
+            { name:'Hachi Maru Pop', fam:'Hachi Maru Pop', w:'400' },
+            { name:'Kaisei Opti', fam:'Kaisei Opti', w:'400;700' },
+            { name:'Kaisei Decol', fam:'Kaisei Decol', w:'400;700' },
+            { name:'Zen Antique', fam:'Zen Antique', w:'400' },
+            { name:'Reggae One', fam:'Reggae One', w:'400' },
+            { name:'RocknRoll One', fam:'RocknRoll One', w:'400' },
+            { name:'Stick', fam:'Stick', w:'400' },
+            { name:'Yomogi', fam:'Yomogi', w:'400' },
+            { name:'Yusei Magic', fam:'Yusei Magic', w:'400' },
+            { name:'DotGothic16', fam:'DotGothic16', w:'400' },
+            { name:'Dela Gothic One', fam:'Dela Gothic One', w:'400' },
+            { name:'Train One', fam:'Train One', w:'400' },
+            { name:'Zen Old Mincho', fam:'Zen Old Mincho', w:'400;700;900' },
+            { name:'Rampart One', fam:'Rampart One', w:'400' },
+            { name:'Potta One', fam:'Potta One', w:'400' },
+            { name:'New Tegomin', fam:'New Tegomin', w:'400' },
+            { name:'Hina Mincho', fam:'Hina Mincho', w:'400' },
+            { name:'Kiwi Maru', fam:'Kiwi Maru', w:'400;500' },
+            { name:'Mochiy Pop One', fam:'Mochiy Pop One', w:'400' }
+        ],
+        'en': [
+            { name:'Default (Sans)', fam:'sans-serif', w:null },
+            { name:'Inter', fam:'Inter', w:'400;500;700;900' },
+            { name:'Poppins', fam:'Poppins', w:'400;500;700;900' },
+            { name:'Roboto', fam:'Roboto', w:'400;500;700;900' },
+            { name:'Montserrat', fam:'Montserrat', w:'400;600;700;900' },
+            { name:'Open Sans', fam:'Open Sans', w:'400;600;700' },
+            { name:'Lato', fam:'Lato', w:'400;700;900' },
+            { name:'Oswald', fam:'Oswald', w:'400;600;700' },
+            { name:'Raleway', fam:'Raleway', w:'400;600;700;900' },
+            { name:'Playfair Display', fam:'Playfair Display', w:'400;700;900' },
+            { name:'Merriweather', fam:'Merriweather', w:'400;700;900' },
+            { name:'Nunito', fam:'Nunito', w:'400;600;700;900' },
+            { name:'DM Sans', fam:'DM Sans', w:'400;500;700' },
+            { name:'Bebas Neue', fam:'Bebas Neue', w:'400' },
+            { name:'Lobster', fam:'Lobster', w:'400' },
+            { name:'Pacifico', fam:'Pacifico', w:'400' },
+            { name:'Dancing Script', fam:'Dancing Script', w:'400;700' },
+            { name:'Caveat', fam:'Caveat', w:'400;700' },
+            { name:'Great Vibes', fam:'Great Vibes', w:'400' },
+            { name:'Satisfy', fam:'Satisfy', w:'400' },
+            { name:'Abril Fatface', fam:'Abril Fatface', w:'400' },
+            { name:'Permanent Marker', fam:'Permanent Marker', w:'400' },
+            { name:'Archivo Black', fam:'Archivo Black', w:'400' },
+            { name:'Righteous', fam:'Righteous', w:'400' },
+            { name:'Cinzel', fam:'Cinzel', w:'400;700;900' },
+            { name:'Bitter', fam:'Bitter', w:'400;700;900' }
+        ]
+    };
+    var _fpFontList = FP_FONTS[LANG] || FP_FONTS['en'];
+    var _fpLoadedFonts = {};
+    function loadOneFont(fam, weights) {
+        if (!fam || fam === 'sans-serif' || fam === 'serif' || fam === 'monospace' || fam === 'cursive') return;
+        if (_fpLoadedFonts[fam]) return;
+        _fpLoadedFonts[fam] = true;
+        var url = 'https://fonts.googleapis.com/css2?family=' + fam.replace(/ /g, '+');
+        if (weights) url += ':wght@' + weights;
+        url += '&display=swap';
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu&family=Gowun+Dodum&family=Jua&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&family=Single+Day&display=swap';
+        link.href = url;
         document.head.appendChild(link);
     }
-    $('fpTextBtn').addEventListener('click', loadGoogleFonts);
+    var fpFontSel = $('fpFontSel');
+    if (fpFontSel) {
+        fpFontSel.innerHTML = _fpFontList.map(function(f){
+            var famVal = (f.fam === 'sans-serif' || f.fam === 'serif' || f.fam === 'monospace') ? f.fam : ('"' + f.fam + '"');
+            var preview = (f.fam === 'sans-serif' || f.fam === 'serif' || f.fam === 'monospace') ? '' : ' style="font-family:&quot;' + f.fam.replace(/"/g,'&quot;') + '&quot;"';
+            return '<option value="' + famVal.replace(/"/g,'&quot;') + '" data-fam="' + f.fam.replace(/"/g,'&quot;') + '" data-w="' + (f.w || '') + '"' + preview + '>' + f.name + '</option>';
+        }).join('');
+        fpFontSel.addEventListener('change', function(){
+            var opt = this.options[this.selectedIndex];
+            if (opt) loadOneFont(opt.dataset.fam, opt.dataset.w);
+        });
+    }
+    // 텍스트 추가 시 — 선택된 옵션 폰트 lazy 로드.
+    $('fpTextBtn').addEventListener('click', function(){
+        if (!fpFontSel) return;
+        var opt = fpFontSel.options[fpFontSel.selectedIndex];
+        if (opt) loadOneFont(opt.dataset.fam, opt.dataset.w);
+    });
 
     // ───────── 누끼따기 (bg-remove edge function) ─────────
     $('fpCutoutBtn').addEventListener('click', async function(){
@@ -2911,8 +3013,8 @@ async function submitRollFabricRequest() {
 #fpTextProps .fp-prop-btn { padding:5px 9px; background:#fff; border:1px solid #fde68a; border-radius:6px; font-size:12px; color:#92400e; cursor:pointer; font-family:inherit; min-width:28px; font-weight:700; }
 #fpTextProps .fp-prop-btn.active { background:#92400e; color:#fff; border-color:#92400e; }
 #fpTextProps .fp-prop-btn:hover:not(.active) { background:#fef3c7; }
-/* 캔버스 + 라이브러리 그리드 (PC 좌측 사이드바) */
-.fp-stage-lib-grid { display:grid; grid-template-columns:220px 1fr; gap:14px; align-items:start; }
+/* 캔버스 + 라이브러리 그리드 (PC 좌측 사이드바) — cafe2626 qd-rail 과 동일 폭 */
+.fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:12px; align-items:start; }
 .fp-canvas-col { min-width:0; }
 .fp-lib-sec { padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
 .fp-lib-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-bottom:8px; }
@@ -2921,8 +3023,8 @@ async function submitRollFabricRequest() {
 .fp-lib-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
 .fp-lib-search { width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; font-family:inherit; outline:none; box-sizing:border-box; margin-bottom:8px; }
 .fp-lib-search:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.18); }
-/* 사이드바 모드 — 2열 그리드 */
-.fp-lib-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+/* 사이드바 모드 — 1열 그리드 (cafe2626 미니에디터 qd-rail 과 동일) */
+.fp-lib-grid { display:grid; grid-template-columns:1fr; gap:6px; }
 .fp-lib-grid .fp-lib-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:transform .15s, border-color .15s; display:flex; align-items:center; justify-content:center; padding:4px; }
 .fp-lib-grid .fp-lib-thumb:hover { border-color:#6366f1; transform:translateY(-1px); }
 .fp-lib-grid .fp-lib-thumb img { width:100%; height:100%; object-fit:cover; pointer-events:none; }
