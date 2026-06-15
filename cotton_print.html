@@ -1927,6 +1927,26 @@ async function submitRollFabricRequest() {
 })();
 </script>
 
+<!-- 2026-06-15: 미니에디터 임베드 — index.html?embed=editor 를 iframe 으로 호출. 패브릭 인쇄 메인에서 바로 디자인 가능. -->
+<section id="koEditorSection" style="display:none; max-width:1100px; margin:60px auto 0; padding:0 24px;">
+    <div style="text-align:center; margin-bottom:22px;">
+        <div style="font-size:11px; letter-spacing:5px; color:var(--accent); font-weight:700; margin-bottom:8px;">— EASY EDITOR —</div>
+        <h3 style="font-size:26px; font-weight:900; color:var(--brown-dark); margin:0 0 6px; letter-spacing:-0.6px;">바로 디자인해 보세요</h3>
+        <p style="font-size:13.5px; color:#9a8a76; margin:0; font-weight:600;">간단한 디자인 쉬운 에디터 · 주문 사이즈와 자동 연동 · 디자인하고 바로 주문</p>
+    </div>
+    <div style="border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(69,26,3,0.25); background:#fff; position:relative;">
+        <iframe src="https://www.cafe2626.com/?embed=editor" style="width:100%; height:780px; border:none; display:block;" loading="lazy" title="간단한 디자인 쉬운 에디터" allow="clipboard-write"></iframe>
+    </div>
+</section>
+<script>
+(function(){
+    if ((window.__PS_LANG || 'ko') === 'ko') {
+        var el = document.getElementById('koEditorSection');
+        if (el) el.style.display = '';
+    }
+})();
+</script>
+
 <!-- 2026-05-27: 한국어 사이트 전용 — 유튜브 브랜드 영상 -->
 <section id="koYoutubeSection" style="display:none; max-width:1100px; margin:60px auto 0; padding:0 24px;">
     <div style="text-align:center; margin-bottom:22px;">

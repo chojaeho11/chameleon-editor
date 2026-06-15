@@ -696,6 +696,32 @@ html.hexa-mode, html.hexa-mode body { background:#faf6ed !important; }
     <div style="margin-top:24px;width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top:3px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
 </div>
 <script>
+// 2026-06-15: ?embed=editor 모드 — cotton-print.com 등 다른 페이지가 iframe 으로 미니에디터만 불러올 때.
+//   body 의 모든 직계 자식을 숨기고 #embeddedEditorPreview 만 노출. 메인 페이지 로직(nav, carousel, cart sync 등)은
+//   DOM 에 그대로 존재(getElementById 호환)하지만 화면에 안 보여 일반 사용자는 에디터만 보게 됨.
+(function(){
+    try {
+        var _qs = new URLSearchParams(location.search);
+        if (_qs.get('embed') !== 'editor') return;
+        document.documentElement.setAttribute('data-embed', 'editor');
+        var st = document.createElement('style');
+        st.textContent = ''
+            + 'html[data-embed="editor"] body { background:#fff !important; overflow-x:hidden; }'
+            + 'html[data-embed="editor"] body > *:not(#embeddedEditorPreview):not(#simpleOrderModal):not(script):not(style) { display:none !important; }'
+            + 'html[data-embed="editor"] #embeddedEditorPreview { display:block !important; margin:14px auto !important; width:96% !important; max-width:780px !important; padding:0 !important; }'
+            + 'html[data-embed="editor"] #embeddedEditorPreview .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:none; box-shadow:0 8px 24px -10px rgba(124,58,237,0.18); }';
+        (document.head || document.documentElement).appendChild(st);
+        // 스플래시 즉시 제거 — embed 모드에서는 거추장스러움.
+        setTimeout(function(){ var sp = document.getElementById('splash'); if (sp) sp.remove(); }, 30);
+        // 에디터 자동 노출 — _meEnsureMounted/_mountEditor 가 모달에 마운트하기 전이라면 그대로 inline 노출됨.
+        document.addEventListener('DOMContentLoaded', function(){
+            var ep = document.getElementById('embeddedEditorPreview');
+            if (ep) ep.style.display = 'block';
+        });
+    } catch(e){ console.warn('[embed editor]', e); }
+})();
+</script>
+<script>
 // 스플래시 안전장치: 2초 후 강제 제거
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove();},500);}},2000);
 </script>
