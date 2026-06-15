@@ -795,11 +795,18 @@ async function dbClaim(id) {
     if (row.status !== 'open') { alert('이미 다른 디자이너가 맡은 의뢰입니다.'); render(); return; }
     const now = new Date().toISOString();
     const newDesc = (row.description || '') + `\n\n[DESIGNER:${userId} CLAIMED:${now}]`;
-    const { error } = await sb.from('design_requests').update({
+    // 2026-06-15: count: 'exact' 로 실제 업데이트된 row 수 확인 — RLS silent reject 감지.
+    //   디자이너용 UPDATE 정책이 없으면 success 응답에 count=0 → 사용자에게 명확한 에러 표시.
+    const { error, count } = await sb.from('design_requests').update({
         status: 'claimed',
         description: newDesc
-    }).eq('id', id).eq('status', 'open');
+    }, { count: 'exact' }).eq('id', id).eq('status', 'open');
     if (error) { alert('실패: ' + error.message); return; }
+    if (count === 0) {
+        alert('의뢰 받기에 실패했습니다.\n\n원인 후보:\n1) 다른 디자이너가 먼저 받음 → 새로고침 후 다시 확인\n2) 데이터베이스 권한(RLS) 미설정 → 관리자에게 문의\n   (Supabase: design_requests 에 Approved designers UPDATE 정책 필요)');
+        render();
+        return;
+    }
     activeTab = 'inprog';
     render();
 }
@@ -821,11 +828,15 @@ async function dbUnclaim(id) {
         // 내 DESIGNER 마커만 제거 — 다른 사람 마커는 건드리지 않음 (claimed 면 한 명만 있어야 정상).
         const claimRe = new RegExp('\\n*\\[DESIGNER:' + (meta.designerId || userId) + '\\s+CLAIMED:[^\\]]+\\]', 'g');
         const newDesc = (row.description || '').replace(claimRe, '').replace(/\s+$/, '');
-        const { error } = await sb.from('design_requests').update({
+        const { error, count } = await sb.from('design_requests').update({
             status: 'open',
             description: newDesc
-        }).eq('id', id).eq('status', 'claimed');
+        }, { count: 'exact' }).eq('id', id).eq('status', 'claimed');
         if (error) throw error;
+        if (count === 0) {
+            alert('받기 취소에 실패했습니다.\n데이터베이스 권한(RLS) 미설정일 수 있습니다 — 관리자에게 문의해주세요.');
+            return;
+        }
         activeTab = 'open';
         render();
     } catch (e) { alert('실패: ' + (e.message || e)); }
