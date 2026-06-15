@@ -2500,16 +2500,35 @@ async function submitRollFabricRequest() {
                     im.src = it.src;
                 });
             } else if (it.type === 'text') {
-                ctx.fillStyle = it.fill || '#000';
-                ctx.font = (it.fontWeight||'700') + ' ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
+                // 2026-06-15: DOM 의 computed style 을 그대로 가져와 PNG 에 적용.
+                //   기존 it.fontFamily='inherit' 은 Canvas font 가 인식 못 해 fallback (sans-serif) 으로 떨어지고,
+                //   fontWeight 800 도 폴백 폰트가 지원 안 하면 regular 로 렌더 → 화면과 전혀 다른 결과.
+                var cs = window.getComputedStyle(it.el);
+                var scN = state.wScale || 1;
+                var fontSizeNat = parseFloat(cs.fontSize) / scN;
+                var fontWeightVal = cs.fontWeight || '400';
+                var fontFamVal = cs.fontFamily || 'sans-serif';
+                var fontStyleVal = cs.fontStyle || 'normal';
+                var padTopNat = parseFloat(cs.paddingTop) / scN || 0;
+                var padLeftNat = parseFloat(cs.paddingLeft) / scN || 0;
+                var lineHeightPx = parseFloat(cs.lineHeight);
+                var lhFactor = (isNaN(lineHeightPx) || !lineHeightPx) ? 1.2 : (lineHeightPx / parseFloat(cs.fontSize));
+                ctx.fillStyle = it.fill || cs.color || '#000';
+                ctx.font = fontStyleVal + ' ' + fontWeightVal + ' ' + fontSizeNat + 'px ' + fontFamVal;
                 ctx.textBaseline = 'top';
-                ctx.textAlign = 'center';
+                var alignVal = cs.textAlign || it.textAlign || 'center';
+                if (alignVal === 'start') alignVal = 'left';
+                if (alignVal === 'end') alignVal = 'right';
+                ctx.textAlign = alignVal;
                 var rect = it.el.getBoundingClientRect();
-                var actualW = rect.width / (state.wScale || 1);
+                var actualW = rect.width / scN;
                 var lines = (it.text || it.el.innerText || '').split(/\n/);
-                var lh = it.fontSize * 1.2;
-                var tx = it.x + actualW/2;
-                lines.forEach(function(ln, idx){ ctx.fillText(ln, tx, it.y + 4 + idx*lh); });
+                var lh = fontSizeNat * lhFactor;
+                var tx;
+                if (alignVal === 'center') tx = it.x + actualW / 2;
+                else if (alignVal === 'right') tx = it.x + actualW - padLeftNat;
+                else tx = it.x + padLeftNat;
+                lines.forEach(function(ln, idx){ ctx.fillText(ln, tx, it.y + padTopNat + idx * lh); });
             }
         }
         var url = c.toDataURL('image/png');
