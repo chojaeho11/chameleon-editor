@@ -328,6 +328,12 @@ window._cdUploadImage = async function(files) {
         img.onload = function() {
             state.img = img;
             state.imgAspect = img.width / img.height;
+            // 2026-06-15: 업로드 직전, 시각적 active 상태를 신뢰 — posterBtn 이 active 면 무조건 centered 로 보정.
+            //   사용자가 패턴 토글을 누른 적이 있더라도, 현재 화면이 패브릭포스터로 보이면 그것이 의도.
+            try {
+                var _pbA = document.getElementById('posterBtn');
+                if (_pbA && _pbA.classList && _pbA.classList.contains('active')) state.layout = 'centered';
+            } catch(e) {}
             // 2026-05-14: layout=='centered' (패브릭포스터) 일 때 — 실제 파일 픽셀 사이즈를
             //   96 DPI 기준으로 cm 환산, 원단폭 130cm 초과하면 비율 유지하며 축소.
             //   그리고 출력 사이즈(orderWcm/Hcm) 도 이미지 사이즈와 동일하게 맞춰서 "꽉차게" 표시.
