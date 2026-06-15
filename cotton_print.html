@@ -1935,23 +1935,41 @@ async function submitRollFabricRequest() {
     </div>
     <div style="border-radius:20px; overflow:hidden; box-shadow:0 22px 50px -20px rgba(69,26,3,0.18); background:#fff; padding:18px;">
         <!-- 사이즈 + 도구 바 -->
-        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:12px;">
-            <select id="fpSizeSel" style="padding:8px 28px 8px 12px; border:1px solid #cbd5e1; border-radius:980px; background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:#0f172a; cursor:pointer; flex-shrink:0;">
-                <option value="600,900">60×90cm</option>
-                <option value="900,1200" selected>90×120cm</option>
-                <option value="1300,2000">130×200cm</option>
-                <option value="1000,1000">100×100cm</option>
-            </select>
-            <button type="button" id="fpUploadBtn" style="padding:8px 14px; background:#FFCC00; color:#1d1d1f; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-image"></i><span id="fpUploadLbl"></span></button>
+        <div class="fp-toolbar">
+            <div class="fp-size-group">
+                <input type="number" id="fpSizeW" value="400" min="50" max="3000" step="10" class="fp-size-input" title="가로 (mm)">
+                <span class="fp-size-x">×</span>
+                <input type="number" id="fpSizeH" value="300" min="50" max="3000" step="10" class="fp-size-input" title="세로 (mm)">
+                <span class="fp-size-unit">mm</span>
+            </div>
+            <button type="button" id="fpUploadBtn" class="fp-tool-btn fp-tool-primary" title="이미지 업로드"><i class="fa-solid fa-image"></i><span id="fpUploadLbl"></span></button>
             <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
-            <button type="button" id="fpTextBtn" style="padding:8px 12px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:13px; font-weight:700; color:#1d1d1f; cursor:pointer; font-family:inherit;" title="텍스트"><i class="fa-solid fa-font"></i></button>
-            <button type="button" id="fpAiBtn" style="padding:8px 12px; background:linear-gradient(135deg,#6366f1,#a855f7); color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
-            <button type="button" id="fpCutoutBtn" disabled style="padding:8px 12px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:13px; font-weight:700; color:#1d1d1f; cursor:pointer; font-family:inherit; opacity:0.45;" title="누끼따기 (배경 제거)"><i class="fa-solid fa-scissors"></i></button>
-            <label style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:rgba(120,120,128,0.10); border-radius:980px; cursor:pointer;" title="배경색">
-                <input type="color" id="fpBgColor" value="#ffffff" style="-webkit-appearance:none; appearance:none; width:22px; height:22px; padding:0; border:1.5px solid #fff; border-radius:50%; background:conic-gradient(from 180deg,#ff0080,#ff8c00,#ffd900,#2ecc71,#00d1ff,#6c5ce7,#ff0080); box-shadow:0 0 0 1px rgba(0,0,0,0.18); cursor:pointer;">
+            <button type="button" id="fpTextBtn" class="fp-tool-btn" title="텍스트"><i class="fa-solid fa-font"></i></button>
+            <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
+            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled title="누끼따기 (배경 제거)"><i class="fa-solid fa-scissors"></i></button>
+            <label class="fp-tool-btn fp-tool-color" title="색상">
+                <input type="color" id="fpBgColor" value="#ffffff">
             </label>
-            <button type="button" id="fpDelBtn" disabled style="padding:8px 12px; background:rgba(255,59,48,0.10); color:#ff3b30; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; opacity:0.45;" title="삭제"><i class="fa-solid fa-trash"></i></button>
-            <button type="button" id="fpDownloadBtn" style="margin-left:auto; padding:9px 18px; background:#007AFF; color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; gap:6px; align-items:center;"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
+            <button type="button" id="fpDelBtn" class="fp-tool-btn fp-tool-danger" disabled title="삭제 (Delete)"><i class="fa-solid fa-trash"></i></button>
+            <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
+        </div>
+        <!-- 정렬 + 레이어 바 (아이템 선택 시만 표시) -->
+        <div id="fpAlignBar" style="display:none;">
+            <div class="fp-align-group">
+                <button type="button" class="fp-align-btn" data-align-x="left"   title="왼쪽 정렬"><i class="fa-solid fa-objects-align-left"></i></button>
+                <button type="button" class="fp-align-btn" data-align-x="center" title="가로 가운데"><i class="fa-solid fa-objects-align-center-horizontal"></i></button>
+                <button type="button" class="fp-align-btn" data-align-x="right"  title="오른쪽 정렬"><i class="fa-solid fa-objects-align-right"></i></button>
+            </div>
+            <div class="fp-align-group">
+                <button type="button" class="fp-align-btn" data-align-y="top"    title="위쪽 정렬"><i class="fa-solid fa-objects-align-top"></i></button>
+                <button type="button" class="fp-align-btn" data-align-y="middle" title="세로 가운데"><i class="fa-solid fa-objects-align-center-vertical"></i></button>
+                <button type="button" class="fp-align-btn" data-align-y="bottom" title="아래쪽 정렬"><i class="fa-solid fa-objects-align-bottom"></i></button>
+            </div>
+            <div class="fp-align-group">
+                <button type="button" class="fp-align-btn" data-layer="up"   title="앞으로 (Ctrl+])"><i class="fa-solid fa-arrow-up"></i></button>
+                <button type="button" class="fp-align-btn" data-layer="down" title="뒤로 (Ctrl+[)"><i class="fa-solid fa-arrow-down"></i></button>
+                <button type="button" class="fp-align-btn" data-layer="dup"  title="복제 (Ctrl+D)"><i class="fa-solid fa-clone"></i></button>
+            </div>
         </div>
         <!-- 텍스트 속성 바 (텍스트 선택 시만 표시) -->
         <div id="fpTextProps" style="display:none; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; margin-bottom:10px;">
@@ -2085,13 +2103,22 @@ async function submitRollFabricRequest() {
         state.items.forEach(syncItem);
     }
     function setSize(w, h){ state.natW = w; state.natH = h; fitStage(); }
-    setSize(900, 1200);
+    // 2026-06-15: 기본 사이즈 400×300mm (사용자 요청)
+    setSize(400, 300);
     window.addEventListener('resize', fitStage);
 
-    $('fpSizeSel').addEventListener('change', function(){
-        var v = this.value.split(',');
-        setSize(parseInt(v[0], 10), parseInt(v[1], 10));
-    });
+    // 가로/세로 입력 — 변경 시 즉시 반영, 300ms 디바운스로 fitStage 폭주 방지.
+    var _sizeDebounce = null;
+    function _onSizeInput(){
+        if (_sizeDebounce) clearTimeout(_sizeDebounce);
+        _sizeDebounce = setTimeout(function(){
+            var w = Math.max(50, Math.min(3000, parseInt($('fpSizeW').value, 10) || 400));
+            var h = Math.max(50, Math.min(3000, parseInt($('fpSizeH').value, 10) || 300));
+            setSize(w, h);
+        }, 200);
+    }
+    $('fpSizeW').addEventListener('input', _onSizeInput);
+    $('fpSizeH').addEventListener('input', _onSizeInput);
 
     $('fpBgColor').addEventListener('input', function(){
         if (state.selected && state.selected.type === 'text') {
@@ -2132,12 +2159,14 @@ async function submitRollFabricRequest() {
         state.selected = it;
         if (it) it.el.classList.add('fp-selected');
         $('fpDelBtn').disabled = !it;
-        $('fpDelBtn').style.opacity = it ? '1' : '0.45';
+        $('fpDelBtn').classList.toggle('fp-active', !!it);
+        // 2026-06-15: 정렬 + 레이어 바 — 아이템 선택 시만 노출.
+        $('fpAlignBar').style.display = it ? 'flex' : 'none';
         // 누끼따기 — 이미지 선택 시만 활성.
         var isImg = !!(it && it.type === 'image');
         var cb = $('fpCutoutBtn');
         cb.disabled = !isImg;
-        cb.style.opacity = isImg ? '1' : '0.45';
+        cb.classList.toggle('fp-active', isImg);
         // 텍스트 props 패널 — 텍스트 선택 시만 표시.
         var tp = $('fpTextProps');
         if (it && it.type === 'text') {
@@ -2615,9 +2644,257 @@ async function submitRollFabricRequest() {
     });
     // 초기 로드
     loadLib();
+
+    // ───────── 정렬 + 레이어 ─────────
+    function alignItem(it, axis, side){
+        if (!it) return;
+        var w = it.w, h = it.h;
+        // 텍스트는 실제 렌더된 박스 폭 사용
+        if (it.type === 'text') {
+            var rect = it.el.getBoundingClientRect();
+            w = rect.width / (state.wScale || 1);
+            h = rect.height / (state.wScale || 1);
+        }
+        if (axis === 'x') {
+            if (side === 'left')   it.x = 0;
+            else if (side === 'center') it.x = (state.natW - w) / 2;
+            else if (side === 'right')  it.x = state.natW - w;
+        } else {
+            if (side === 'top')    it.y = 0;
+            else if (side === 'middle') it.y = (state.natH - h) / 2;
+            else if (side === 'bottom') it.y = state.natH - h;
+        }
+        syncItem(it);
+    }
+    function layerUp(it){
+        if (!it) return;
+        var idx = state.items.indexOf(it);
+        if (idx < 0 || idx === state.items.length - 1) return;
+        state.items.splice(idx, 1);
+        state.items.splice(idx + 1, 0, it);
+        // z-index 갱신
+        state.items.forEach(function(o, i){ if (o.el) o.el.style.zIndex = 10 + i; });
+    }
+    function layerDown(it){
+        if (!it) return;
+        var idx = state.items.indexOf(it);
+        if (idx <= 0) return;
+        state.items.splice(idx, 1);
+        state.items.splice(idx - 1, 0, it);
+        state.items.forEach(function(o, i){ if (o.el) o.el.style.zIndex = 10 + i; });
+    }
+    function layerToFront(it){
+        if (!it) return;
+        var idx = state.items.indexOf(it);
+        if (idx < 0) return;
+        state.items.splice(idx, 1);
+        state.items.push(it);
+        state.items.forEach(function(o, i){ if (o.el) o.el.style.zIndex = 10 + i; });
+    }
+    function layerToBack(it){
+        if (!it) return;
+        var idx = state.items.indexOf(it);
+        if (idx < 0) return;
+        state.items.splice(idx, 1);
+        state.items.unshift(it);
+        state.items.forEach(function(o, i){ if (o.el) o.el.style.zIndex = 10 + i; });
+    }
+    function duplicateItem(it){
+        if (!it) return null;
+        if (it.type === 'image') {
+            addImageFromUrl(it.src);
+            // 새 아이템은 selected — 위치 offset
+            if (state.selected) { state.selected.x = it.x + 20; state.selected.y = it.y + 20; syncItem(state.selected); }
+            return state.selected;
+        } else if (it.type === 'text') {
+            var nu = addText(it.text || '');
+            nu.fill = it.fill; nu.fontSize = it.fontSize; nu.fontFamily = it.fontFamily;
+            nu.fontWeight = it.fontWeight; nu.textAlign = it.textAlign || 'center';
+            nu.x = it.x + 20; nu.y = it.y + 20;
+            syncItem(nu);
+            return nu;
+        }
+        return null;
+    }
+    function removeItem(it){
+        if (!it) return;
+        var idx = state.items.indexOf(it);
+        if (idx >= 0) { it.el.remove(); state.items.splice(idx, 1); }
+        if (state.selected === it) selectItem(null);
+    }
+    $('fpAlignBar').addEventListener('click', function(ev){
+        var btn = ev.target.closest('[data-align-x], [data-align-y], [data-layer]');
+        if (!btn) return;
+        var it = state.selected; if (!it) return;
+        if (btn.hasAttribute('data-align-x')) alignItem(it, 'x', btn.getAttribute('data-align-x'));
+        else if (btn.hasAttribute('data-align-y')) alignItem(it, 'y', btn.getAttribute('data-align-y'));
+        else if (btn.hasAttribute('data-layer')) {
+            var k = btn.getAttribute('data-layer');
+            if (k === 'up') layerUp(it);
+            else if (k === 'down') layerDown(it);
+            else if (k === 'dup') duplicateItem(it);
+        }
+    });
+
+    // ───────── 우클릭 컨텍스트 메뉴 ─────────
+    var _ctxMenu = null;
+    function _hideCtx(){ if (_ctxMenu) { _ctxMenu.style.display = 'none'; } }
+    document.addEventListener('click', _hideCtx);
+    document.addEventListener('scroll', _hideCtx, true);
+    function _ensureCtxMenu(){
+        if (_ctxMenu) return _ctxMenu;
+        var m = document.createElement('div');
+        m.id = 'fpCtxMenu';
+        m.style.cssText = 'position:fixed; z-index:100001; background:#fff; border:1px solid #e2e8f0; border-radius:10px; box-shadow:0 12px 32px -8px rgba(0,0,0,0.25); padding:6px; min-width:180px; display:none; font-family:inherit;';
+        m.innerHTML = ''
+            + '<button data-ctx="front"   class="fp-ctx-item"><i class="fa-solid fa-angles-up"></i>맨 앞으로</button>'
+            + '<button data-ctx="up"      class="fp-ctx-item"><i class="fa-solid fa-arrow-up"></i>앞으로 (Ctrl+])</button>'
+            + '<button data-ctx="down"    class="fp-ctx-item"><i class="fa-solid fa-arrow-down"></i>뒤로 (Ctrl+[)</button>'
+            + '<button data-ctx="back"    class="fp-ctx-item"><i class="fa-solid fa-angles-down"></i>맨 뒤로</button>'
+            + '<div style="height:1px; background:#e2e8f0; margin:4px 0;"></div>'
+            + '<button data-ctx="dup"     class="fp-ctx-item"><i class="fa-solid fa-clone"></i>복제 (Ctrl+D)</button>'
+            + '<button data-ctx="del"     class="fp-ctx-item fp-ctx-danger"><i class="fa-solid fa-trash"></i>삭제 (Delete)</button>';
+        document.body.appendChild(m);
+        m.addEventListener('click', function(ev){
+            var b = ev.target.closest('[data-ctx]');
+            if (!b) return;
+            var k = b.getAttribute('data-ctx');
+            var it = state.selected; if (!it) return;
+            if      (k === 'front') layerToFront(it);
+            else if (k === 'back')  layerToBack(it);
+            else if (k === 'up')    layerUp(it);
+            else if (k === 'down')  layerDown(it);
+            else if (k === 'dup')   duplicateItem(it);
+            else if (k === 'del')   removeItem(it);
+            _hideCtx();
+        });
+        _ctxMenu = m;
+        return m;
+    }
+    stage.addEventListener('contextmenu', function(ev){
+        // 스테이지 위 클릭 — 가장 가까운 아이템 선택 (이미 hover 중)
+        var el = ev.target.closest('.fp-item');
+        if (!el) return; // 빈 영역은 기본 메뉴 막지 않음
+        ev.preventDefault();
+        var it = state.items.find(function(o){ return o.el === el; });
+        if (it) selectItem(it);
+        var m = _ensureCtxMenu();
+        m.style.left = ev.clientX + 'px';
+        m.style.top = ev.clientY + 'px';
+        m.style.display = 'block';
+    });
+
+    // ───────── 키보드 단축키 + 클립보드 ─────────
+    var _clipboard = null;
+    function _editingText(){
+        var ae = document.activeElement;
+        if (!ae) return false;
+        var tag = (ae.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+        if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return true;
+        return false;
+    }
+    document.addEventListener('keydown', function(ev){
+        // 에디터가 화면에 보일 때만 단축키 활성 (다른 페이지 컴포넌트와 충돌 방지)
+        var sec = $('fpEditorSection');
+        if (!sec || sec.offsetParent === null) return;
+        if (_editingText()) return;
+        var it = state.selected;
+        var ctrl = ev.ctrlKey || ev.metaKey;
+        // Delete / Backspace → 삭제
+        if (!ctrl && (ev.key === 'Delete' || ev.key === 'Backspace')) {
+            if (!it) return;
+            ev.preventDefault(); removeItem(it); return;
+        }
+        // Ctrl+D → 복제
+        if (ctrl && (ev.key === 'd' || ev.key === 'D')) {
+            if (!it) return;
+            ev.preventDefault(); duplicateItem(it); return;
+        }
+        // Ctrl+C → 클립보드 저장
+        if (ctrl && (ev.key === 'c' || ev.key === 'C')) {
+            if (!it) return;
+            // 얕은 복사 (el 제외)
+            _clipboard = JSON.parse(JSON.stringify({ type:it.type, x:it.x, y:it.y, w:it.w, h:it.h,
+                src:it.src, text:it.text, fill:it.fill, fontSize:it.fontSize, fontFamily:it.fontFamily,
+                fontWeight:it.fontWeight, textAlign:it.textAlign }));
+            ev.preventDefault(); return;
+        }
+        // Ctrl+V → 붙여넣기
+        if (ctrl && (ev.key === 'v' || ev.key === 'V')) {
+            if (!_clipboard) return;
+            ev.preventDefault();
+            var c = _clipboard;
+            if (c.type === 'image' && c.src) {
+                addImageFromUrl(c.src);
+                if (state.selected) { state.selected.x = c.x + 20; state.selected.y = c.y + 20; syncItem(state.selected); }
+            } else if (c.type === 'text') {
+                var nu = addText(c.text || '');
+                nu.fill = c.fill; nu.fontSize = c.fontSize; nu.fontFamily = c.fontFamily;
+                nu.fontWeight = c.fontWeight; nu.textAlign = c.textAlign || 'center';
+                nu.x = c.x + 20; nu.y = c.y + 20;
+                syncItem(nu);
+            }
+            return;
+        }
+        // 레이어 단축키
+        if (ctrl && (ev.key === ']' || ev.code === 'BracketRight')) { if (!it) return; ev.preventDefault(); layerUp(it); return; }
+        if (ctrl && (ev.key === '[' || ev.code === 'BracketLeft'))  { if (!it) return; ev.preventDefault(); layerDown(it); return; }
+        // 방향키 — 1px (Shift+10px) 이동
+        var arrow = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].indexOf(ev.key) >= 0;
+        if (arrow && it) {
+            ev.preventDefault();
+            var step = ev.shiftKey ? 10 : 1;
+            switch (ev.key) {
+                case 'ArrowUp': it.y -= step; break;
+                case 'ArrowDown': it.y += step; break;
+                case 'ArrowLeft': it.x -= step; break;
+                case 'ArrowRight': it.x += step; break;
+            }
+            snapItem(it); syncItem(it);
+        }
+    });
 })();
 </script>
 <style>
+/* ========== 툴바 폴리시 ========== */
+.fp-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 14px; background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%); border:1px solid #e2e8f0; border-radius:14px; margin-bottom:10px; box-shadow:0 1px 0 rgba(15,23,42,0.04), 0 6px 16px -10px rgba(15,23,42,0.12); }
+.fp-size-group { display:inline-flex; align-items:center; gap:4px; padding:2px 10px 2px 4px; background:#fff; border:1px solid #cbd5e1; border-radius:980px; }
+.fp-size-input { width:54px; padding:6px 4px; border:none; outline:none; background:transparent; font-family:inherit; font-size:13px; font-weight:800; color:#0f172a; text-align:center; -moz-appearance:textfield; }
+.fp-size-input::-webkit-outer-spin-button, .fp-size-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.fp-size-input:focus { background:#eef2ff; border-radius:6px; }
+.fp-size-x { color:#94a3b8; font-weight:800; font-size:13px; }
+.fp-size-unit { color:#64748b; font-weight:700; font-size:12px; margin-left:2px; }
+.fp-tool-btn { padding:9px 14px; background:#fff; color:#0f172a; border:1px solid #e2e8f0; border-radius:980px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; gap:7px; transition:all .15s; min-height:36px; box-shadow:0 1px 0 rgba(15,23,42,0.03); }
+.fp-tool-btn:hover:not(:disabled) { background:#f1f5f9; border-color:#cbd5e1; transform:translateY(-1px); box-shadow:0 4px 10px -4px rgba(15,23,42,0.18); }
+.fp-tool-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.fp-tool-primary { background:#FFCC00; border-color:#e8b800; color:#1d1d1f; }
+.fp-tool-primary:hover:not(:disabled) { background:#ffd633; border-color:#d6a900; }
+.fp-tool-ai { background:linear-gradient(135deg,#6366f1 0%,#a855f7 100%); border-color:#7c3aed; color:#fff; }
+.fp-tool-ai:hover:not(:disabled) { background:linear-gradient(135deg,#4f46e5 0%,#9333ea 100%); border-color:#6d28d9; color:#fff; }
+.fp-tool-danger { background:#fff; border-color:#fecaca; color:#dc2626; }
+.fp-tool-danger:hover:not(:disabled) { background:#fee2e2; border-color:#fca5a5; }
+.fp-tool-color { padding:6px 10px; cursor:pointer; }
+.fp-tool-color input[type=color] { -webkit-appearance:none; appearance:none; width:22px; height:22px; padding:0; border:1.5px solid #fff; border-radius:50%; background:conic-gradient(from 180deg,#ff0080,#ff8c00,#ffd900,#2ecc71,#00d1ff,#6c5ce7,#ff0080); box-shadow:0 0 0 1px rgba(0,0,0,0.18); cursor:pointer; }
+.fp-tool-color input[type=color]::-webkit-color-swatch-wrapper { padding:0; }
+.fp-tool-color input[type=color]::-webkit-color-swatch { visibility:hidden; border:none; }
+.fp-tool-color input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
+.fp-tool-download { margin-left:auto; background:linear-gradient(135deg,#0ea5e9 0%,#007AFF 100%); border-color:#0284c7; color:#fff; padding:10px 20px; }
+.fp-tool-download:hover:not(:disabled) { background:linear-gradient(135deg,#0284c7 0%,#0562d4 100%); border-color:#0369a1; color:#fff; }
+.fp-tool-btn.fp-active { background:#eef2ff; border-color:#a5b4fc; color:#4338ca; }
+/* 정렬 + 레이어 바 */
+#fpAlignBar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:8px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:10px; }
+.fp-align-group { display:inline-flex; gap:2px; padding:2px; background:#fff; border:1px solid #c7d2fe; border-radius:8px; }
+.fp-align-btn { width:32px; height:32px; background:transparent; border:none; border-radius:6px; color:#4338ca; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; justify-content:center; transition:all .12s; }
+.fp-align-btn:hover { background:#c7d2fe; }
+.fp-align-btn:active { background:#a5b4fc; }
+/* 컨텍스트 메뉴 */
+.fp-ctx-item { display:flex; align-items:center; gap:10px; width:100%; padding:8px 12px; border:none; background:transparent; cursor:pointer; font-family:inherit; font-size:13px; color:#0f172a; border-radius:6px; text-align:left; }
+.fp-ctx-item:hover { background:#eef2ff; color:#4338ca; }
+.fp-ctx-item.fp-ctx-danger { color:#dc2626; }
+.fp-ctx-item.fp-ctx-danger:hover { background:#fee2e2; color:#b91c1c; }
+.fp-ctx-item i { width:14px; text-align:center; }
+/* 스테이지 + 아이템 */
 #fpStage .fp-item { box-sizing:border-box; }
 #fpStage .fp-item.fp-selected { outline:1.5px dashed #007AFF; outline-offset:2px; }
 #fpStage .fp-handle { position:absolute; width:14px; height:14px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.25); }
