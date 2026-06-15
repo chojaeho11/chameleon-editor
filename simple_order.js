@@ -15570,14 +15570,19 @@ html, body { background: #ffffff !important; }
                     var _ci_n = Math.max(1, parseInt(_ci_it.cutlineCharCount, 10) || 1);
                     var _ci_fee = _ci_it.cutlineFee || (_ci_n * 10000);
                     var _ci_prodName = (_ci_it.productName || (_ci_it.product && (_ci_it.product.name_kr || _ci_it.product.name)) || '제품');
+                    // 2026-06-15: 디자이너가 고객 연락 가능하도록 phone + 설명에 고객명/연락처 포함.
+                    //   기존엔 design_requests.phone 이 비어 디자이너가 고객 정보를 찾을 길이 없었음 (보드 카드의 주문번호로 조회 시 데이터 없음).
+                    var _ci_custName = (typeof name !== 'undefined' && name) ? name : '';
+                    var _ci_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
                     var _ci_payload = {
                         customer_id: _cutUid,
                         title: '[칼선작업] ' + _ci_prodName + ' · 유닛 ' + _ci_n + '개',
-                        description: '제품: ' + _ci_prodName + '\n칼선작업 (배경제거 + 칼선 + 받침) — 유닛 ' + _ci_n + '개\n금액: ' + _ci_fee.toLocaleString() + '원 (1개당 10,000원)\n주문번호: ' + (newOrderId || '-') + '\n\n[CUTLINE:{"charCount":' + _ci_n + ',"feePerChar":10000,"total":' + _ci_fee + '}]',
+                        description: '제품: ' + _ci_prodName + '\n칼선작업 (배경제거 + 칼선 + 받침) — 유닛 ' + _ci_n + '개\n금액: ' + _ci_fee.toLocaleString() + '원 (1개당 10,000원)\n주문번호: ' + (newOrderId || '-') + (_ci_custName ? '\n고객명: ' + _ci_custName : '') + (_ci_custPhone ? '\n연락처: ' + _ci_custPhone : '') + '\n\n[CUTLINE:{"charCount":' + _ci_n + ',"feePerChar":10000,"total":' + _ci_fee + '}]',
                         category: '칼선작업',
                         country: 'KR',
                         budget_min: _ci_fee,
                         budget_max: _ci_fee,
+                        phone: _ci_custPhone || null,
                         files: [],
                         status: 'open'
                     };
