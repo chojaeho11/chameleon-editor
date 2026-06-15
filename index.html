@@ -7216,7 +7216,24 @@ function scrollHotdeal(gridId, dir) {
         }
     }
 
-    window._meDownload = function(ev) {
+    // 2026-06-15: 기존 _meDownload 는 이미지(async onload) 와 텍스트(sync) 가 섞일 때
+    //   이미지 onload 가 텍스트 뒤에 fire 되면서 텍스트를 덮어쓰는 z-order 버그가 있었음.
+    //   _meExportPNG 는 await new Promise() 로 이미지 로드까지 순서대로 처리하므로 안전 — 그것 재사용.
+    window._meDownload = async function(ev) {
+        if (ev) ev.preventDefault();
+        try {
+            var url = await window._meExportPNG();
+            if (!url) { alert('다운로드 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단'); return false; }
+            var a = document.createElement('a');
+            a.href = url; a.download = 'my-design.png';
+            document.body.appendChild(a); a.click(); a.remove();
+        } catch (e) {
+            alert('다운로드 실패: ' + (e.message || e));
+        }
+        return false;
+    };
+    // 기존 동기 _meDownloadLegacy 는 시그니처 호환 위해 보존 (다른 곳 호출 없음, 안전 fallback).
+    window._meDownloadLegacy = function(ev) {
         if (ev) ev.preventDefault();
         var c = document.createElement('canvas');
         c.width = me.natW; c.height = me.natH;
