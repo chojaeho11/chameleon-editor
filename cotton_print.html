@@ -2049,7 +2049,8 @@ async function submitRollFabricRequest() {
               newText:'텍스트를 입력하세요',
               libTpl:'템플릿', libEl:'요소', libDc:'장식', libSearch:'검색', libEmpty:'항목이 없습니다',
               cutLoading:'배경 제거 중…', cutFail:'배경 제거 실패. 잠시 후 다시 시도해주세요',
-              cutOff:'누끼따기를 사용하려면 이미지를 먼저 선택해주세요' },
+              cutOff:'누끼따기를 사용하려면 이미지를 먼저 선택해주세요',
+              fontTitle:'서체', scriptTitle:'멋진 영문 서체 (웨딩/캘리)', scriptPh:'멋진영문 / Wedding…' },
         ja: { title:'カンタン デザイン サクッと', sub:'写真の背景削除 · お気に入りの写真にテキストを加えて飾りましょう',
               upload:'読み込み', text:'テキスト', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動', cutout:'背景削除', undo:'元に戻す',
               aiTitle:'AI 画像生成', aiSub:'欲しい画像を日本語で説明してください。(例: 暖かい日差しの差し込むカフェの窓辺のコーヒー)',
@@ -2059,7 +2060,8 @@ async function submitRollFabricRequest() {
               newText:'テキストを入力',
               libTpl:'テンプレ', libEl:'要素', libDc:'装飾', libSearch:'検索', libEmpty:'項目なし',
               cutLoading:'背景削除中…', cutFail:'背景削除失敗。後でもう一度お試しください',
-              cutOff:'背景削除には先に画像を選択してください' },
+              cutOff:'背景削除には先に画像を選択してください',
+              fontTitle:'フォント', scriptTitle:'英文スクリプト (ウェディング)', scriptPh:'英文スクリプト…' },
         en: { title:'Easy Design, Right Away', sub:'Background removal · Decorate your photo with simple text',
               upload:'Import', text:'Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move', cutout:'Remove BG', undo:'Undo',
               aiTitle:'Generate AI Image', aiSub:'Describe the image you want. (e.g., A coffee cup by a cafe window in warm sunlight)',
@@ -2069,7 +2071,8 @@ async function submitRollFabricRequest() {
               newText:'Type your text',
               libTpl:'Tmpl', libEl:'Elem', libDc:'Deco', libSearch:'Search', libEmpty:'No items',
               cutLoading:'Removing background…', cutFail:'Background removal failed. Try again shortly',
-              cutOff:'Select an image first to use background removal' }
+              cutOff:'Select an image first to use background removal',
+              fontTitle:'Font', scriptTitle:'Script font (Wedding/Calligraphy)', scriptPh:'Script / Wedding…' }
     };
     var t = T[LANG] || T.en;
     function $(id){ return document.getElementById(id); }
@@ -2088,10 +2091,12 @@ async function submitRollFabricRequest() {
     $('fpLibElLbl').textContent = t.libEl;
     $('fpLibDcLbl').textContent = t.libDc;
     $('fpLibSearch').placeholder = t.libSearch;
-    // 2026-06-15: 배경제거 라벨 + 되돌리기 툴팁 — 언어별 번역.
+    // 2026-06-15: 배경제거 라벨 + 되돌리기 툴팁 + 폰트 드롭다운 title — 언어별 번역.
     var cutLbl = $('fpCutLbl'); if (cutLbl) cutLbl.textContent = t.cutout;
     var cutBtn = $('fpCutoutBtn'); if (cutBtn) cutBtn.title = t.cutout;
     var undoBtn = $('fpUndoBtn'); if (undoBtn) undoBtn.title = t.undo + ' (Ctrl+Z)';
+    var fSel0 = $('fpFontSel'); if (fSel0) fSel0.title = t.fontTitle;
+    var sSel0 = $('fpScriptSel'); if (sSel0) sSel0.title = t.scriptTitle;
 
     var state = { natW: 900, natH: 1200, items: [], selected: null, zCounter: 10 };
     var stage = $('fpStage');
@@ -2466,11 +2471,23 @@ async function submitRollFabricRequest() {
 
     // 다운로드 — Canvas 로 모든 item 렌더 후 PNG 다운로드.
     $('fpDownloadBtn').addEventListener('click', async function(){
+        // 2026-06-15: 고해상도 PNG 출력 — 자연 사이즈 × DPR. 인쇄용 해상도 확보.
+        //   DPR 기본 8 (300DPI 근접). 단, Canvas 최대 픽셀 한계(브라우저별 4096~16384) 대비 maxSide 캡.
+        var DPR = 8;
+        var MAX_SIDE = 8192;
+        var natMax = Math.max(state.natW, state.natH);
+        if (natMax * DPR > MAX_SIDE) DPR = Math.max(2, Math.floor(MAX_SIDE / natMax));
         var c = document.createElement('canvas');
-        c.width = state.natW; c.height = state.natH;
+        c.width = state.natW * DPR;
+        c.height = state.natH * DPR;
         var ctx = c.getContext('2d');
+        ctx.scale(DPR, DPR);  // 이후 그리기는 자연 좌표 그대로 사용 — 자동으로 고해상도 렌더.
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        // 폰트가 아직 로딩 중이면 대기 (한글/일본어 폰트 lazy load 후 적용 보장).
+        try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(_) {}
         ctx.fillStyle = state.bg || '#ffffff';
-        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.fillRect(0, 0, state.natW, state.natH);
         // z-index 순 정렬
         var sorted = state.items.slice().sort(function(a,b){ return parseInt(a.el.style.zIndex||0) - parseInt(b.el.style.zIndex||0); });
         for (var i = 0; i < sorted.length; i++) {
@@ -2487,7 +2504,6 @@ async function submitRollFabricRequest() {
                 ctx.font = (it.fontWeight||'700') + ' ' + Math.round(it.fontSize) + 'px ' + (it.fontFamily || 'sans-serif');
                 ctx.textBaseline = 'top';
                 ctx.textAlign = 'center';
-                // 박스 중심 = it.x + getBoundingClientRect.width/scale/2 → 실제 렌더된 폭 사용
                 var rect = it.el.getBoundingClientRect();
                 var actualW = rect.width / (state.wScale || 1);
                 var lines = (it.text || it.el.innerText || '').split(/\n/);
@@ -2602,7 +2618,7 @@ async function submitRollFabricRequest() {
     // 2026-06-15: 멋진 영문 서체 (웨딩/캘리그라피) — 모든 언어 사이트에서 공통 노출.
     //   일반 서체 드롭다운 옆에 별도 칸으로 표시. JP 사이트에서도 이 폰트들에 접근 가능.
     var FP_SCRIPTS = [
-        { name:'멋진영문 / Wedding…', fam:'', w:null },
+        { name:t.scriptPh, fam:'', w:null },
         { name:'Great Vibes', fam:'Great Vibes', w:'400' },
         { name:'Allura', fam:'Allura', w:'400' },
         { name:'Italianno', fam:'Italianno', w:'400' },
