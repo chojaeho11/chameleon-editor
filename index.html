@@ -6158,6 +6158,10 @@ function scrollHotdeal(gridId, dir) {
             var fwResolved = (typeof _meResolveWeight === 'function') ? _meResolveWeight(it.fontFamily, fwReq) : fwReq;
             it.el.style.fontWeight = String(fwResolved);
             it.el.style.height = 'auto';
+            // 2026-06-15: 텍스트 박스는 글자에 맞춰 줄어들도록 width:max-content, 최대폭은 it.w 로 캡.
+            //   결과: 선택 핸들이 글자 끝에 붙음 (우측으로 빈 공간 없음). 글자가 길어지면 it.w 까지 늘다가 그 이후엔 wrap.
+            it.el.style.width = 'max-content';
+            it.el.style.maxWidth = (it.w * me.wScale) + 'px';
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
             it.el.style.background = it.fill || '#7c3aed';
@@ -6585,17 +6589,19 @@ function scrollHotdeal(gridId, dir) {
                     supported.forEach(function(w){ var d = Math.abs(w-target); if (d<bd){bd=d;best=w;}});
                     return best;
                 }
-                var sW = _closest(300), mW = _closest(400), bW = _closest(700);
+                // 2026-06-15: S=일반(400) / B=굵게(700) — 한글 폰트는 light(300)와 regular(400)이 동일하게 보여 의미 없으므로
+                //   light 토글 폐기, 일반 vs 굵게 이진 토글만 유지. 기본 새 글씨(400)는 S 활성 상태.
+                var sW = _closest(400), bW = _closest(700);
                 var cur = parseInt(it.fontWeight || 400, 10);
                 var smbHtml = '<span class="me-prop-group" style="gap:3px;">';
-                [['S',sW,'얇게'],['M',mW,'보통'],['B',bW,'굵게']].forEach(function(p){
+                [['S',sW,'일반'],['B',bW,'굵게']].forEach(function(p){
                     var on = (cur === p[1]);
                     smbHtml += '<button type="button" class="me-prop-btn smb' + (on?' active':'') + '" data-weight="' + p[1] + '" title="' + p[2] + '">' + p[0] + '</button>';
                 });
                 smbHtml += '</span>';
                 html += smbHtml;
             })();
-            html += '<span class="me-prop-group"><label>' + T('me_prop_size','크기') + '</label><input type="number" min="8" max="400" value="' + Math.round(it.fontSize) + '" data-mp="fontSize"></span>';
+            // 2026-06-15: 크기 입력 제거 — 핸들 드래그로 크기 조절 (사용자 요청).
             var alignSvg = function(d){ return '<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="' + d + '"/></svg>'; };
             var svgL = alignSvg('M1 3h14v1.5H1zm0 3.25h10v1.5H1zm0 3.25h14V11H1zm0 3.25h10V14H1z');
             var svgC = alignSvg('M1 3h14v1.5H1zm2 3.25h10v1.5H3zm-2 3.25h14V11H1zm2 3.25h10V14H3z');
@@ -7025,7 +7031,8 @@ function scrollHotdeal(gridId, dir) {
             fontFamily: defaultFam,
             letterSpacing: 0,
             lineHeight: 1.2,
-            textAlign: 'left'
+            // 2026-06-15: 새 글씨 기본 정렬 가운데 (사용자 요청).
+            textAlign: 'center'
         };
         me.items.push(it);
         _meSyncItemDisplay(it);
