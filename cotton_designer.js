@@ -347,6 +347,15 @@ window._cdUploadImage = async function(files) {
             } else {
                 state.imgWcm = 10;
                 state.imgHcm = Math.round(10 / state.imgAspect * 10) / 10;
+                // 2026-06-15: 패턴 모드 — 출력 사이즈를 현재 롤 폭 (대폭 130 / 소폭 100) 으로 자동 스냅 + 세로 100cm.
+                //   사용자 피드백: 패턴 원단 크기가 1300 또는 1000 으로 안 맞춰지던 문제.
+                if (ROLL_OUTPUT_WIDTH_CM && ROLL_OUTPUT_WIDTH_CM[state.rollWidth]) {
+                    state.orderWcm = ROLL_OUTPUT_WIDTH_CM[state.rollWidth];
+                    state.orderHcm = 100;
+                    var _oW = document.getElementById('orderWcm'); if (_oW) _oW.value = _cdMm(state.orderWcm);
+                    var _oH = document.getElementById('orderHcm'); if (_oH) _oH.value = _cdMm(state.orderHcm);
+                    try { if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae(); } catch(e) {}
+                }
             }
             document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
             document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
@@ -746,6 +755,14 @@ window._cdSelectLayout = function(name) {
         state.orderHcm = state.imgHcm;
         const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
         const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
+        if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
+    }
+    // 2026-06-15: centered → 패턴 모드 전환 시 출력 사이즈를 롤 폭 (130 또는 100cm) × 100cm 로 자동 스냅.
+    if (name !== 'centered' && prev === 'centered' && ROLL_OUTPUT_WIDTH_CM && ROLL_OUTPUT_WIDTH_CM[state.rollWidth]) {
+        state.orderWcm = ROLL_OUTPUT_WIDTH_CM[state.rollWidth];
+        state.orderHcm = 100;
+        const oWp = document.getElementById('orderWcm'); if (oWp) oWp.value = _cdMm(state.orderWcm);
+        const oHp = document.getElementById('orderHcm'); if (oHp) oHp.value = _cdMm(state.orderHcm);
         if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
     window._cdRender();
