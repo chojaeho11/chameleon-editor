@@ -1412,9 +1412,10 @@ function _cdGenItemPrice(it) {
     if (!it) return 0;
     var qty = it.qty || 1;
     var unit = (it.product && it.product.price) || 0;
-    // 배너 (hb_bn_*) — 단면 45K / 양면 80K
+    // 배너 (hb_bn_*) — 2026-06-15: 코드별 DB 가격 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K). 폴백만 레거시.
     if (it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code))) {
-        unit = (it.wallSide === 'double') ? 80000 : 45000;
+        var _bnDb2 = (it.product && Number(it.product.price)) || 0;
+        unit = _bnDb2 > 0 ? _bnDb2 : ((it.wallSide === 'double') ? 80000 : 45000);
     }
     // 자유인쇄커팅
     if (it.cutPrint) unit = (it.cutPrint.size === 'half') ? 55000 : 99000;

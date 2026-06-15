@@ -4682,10 +4682,12 @@ html, body { background: #ffffff !important; }
                 var img = p.img_url || 'https://placehold.co/200?text=Banner';
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
-                // 배너는 가격이 단면 45K / 양면 80K 고정 — DB 가격 무시하고 표시도 동일
-                var priceVal = 45000;
-                if (lang === 'ja') priceVal = 4500;
-                else if (lang === 'en' || window.__SITE_CODE === 'US') priceVal = 45;
+                // 2026-06-15: 배너 variant 별 DB 가격 표시 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K).
+                //   기존 45K 하드코딩은 hb_bn_2(연결형) 가 33K 임에도 45K 로 보여 카트 합계와 불일치하던 버그.
+                var priceVal;
+                if (lang === 'ja') priceVal = Number(p.price_jp) || Math.round((Number(p.price) || 45000) * 0.1);
+                else if (lang === 'en' || window.__SITE_CODE === 'US') priceVal = Number(p.price_us) || ((Number(p.price) || 45000) * 0.001);
+                else priceVal = Number(p.price) || 45000;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -13829,10 +13831,13 @@ html, body { background: #ffffff !important; }
         if (it && it.__pendingQuoteId && Number(it.price) > 0) return Number(it.price);
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
-        // 2026-06-02: 허니콤 배너 (hb_bn_*) — 단면 45K / 양면 80K (별도가, ×2 아님)
+        // 2026-06-02: 허니콤 배너 family — 코드별 별도 단가 (hb_bn_1=45K 단면, hb_bn_2=33K 연결형, hb_bn_3=80K 양면).
+        // 2026-06-15: 각 variant 가 별도 admin_products row 로 분리되었으므로 DB 가격(product.price) 신뢰.
+        //   레거시 wallSide 분기는 DB 가격이 없을 때만 폴백.
         var _isBannerItm = !!it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code));
         if (_isBannerItm) {
-            unit = (it.wallSide === 'double') ? 80000 : 45000;
+            var _bnDb = (it.product && Number(it.product.price)) || 0;
+            unit = _bnDb > 0 ? _bnDb : ((it.wallSide === 'double') ? 80000 : 45000);
         }
         // 2026-06-12: 스티커 — 비즈하우스 가격 mirror. 배송 무료.
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241'));
