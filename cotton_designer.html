@@ -1187,26 +1187,6 @@ a { text-decoration: none; color: inherit; }
             <div class="preview-meta" id="previewMeta" data-cdi18n="preview_meta">대폭 1300mm 롤 원단에 디자인이 인쇄됩니다. 길이는 무제한입니다.</div>
         </div>
 
-        <!-- 2026-06-15: 미니 에디터 (팝업 창) + 메인 에디터 (큰 캔버스) 진입 카드. -->
-        <div id="cdEditorAccess" style="margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            <button type="button" onclick="window._cdOpenMiniEditor && window._cdOpenMiniEditor()" style="padding:18px 16px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:14px; font-family:inherit; cursor:pointer; box-shadow:0 6px 18px -6px rgba(124,58,237,0.5); display:flex; align-items:center; gap:14px; text-align:left;">
-                <div style="font-size:28px;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:15px; font-weight:900; letter-spacing:-0.3px;">미니 디자인 에디터</div>
-                    <div style="font-size:11px; font-weight:600; opacity:0.92; margin-top:2px; line-height:1.4;">새 창에서 빠르게 디자인 → 자동으로 여기에 반영</div>
-                </div>
-                <div style="font-size:18px;">→</div>
-            </button>
-            <a href="/?embed_editor_full=1" target="_blank" rel="noopener" style="padding:18px 16px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; border-radius:14px; font-family:inherit; cursor:pointer; box-shadow:0 6px 18px -6px rgba(14,165,233,0.5); display:flex; align-items:center; gap:14px; text-align:left; text-decoration:none;">
-                <div style="font-size:28px;"><i class="fa-solid fa-pen-ruler"></i></div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:15px; font-weight:900; letter-spacing:-0.3px;">메인 디자인 에디터</div>
-                    <div style="font-size:11px; font-weight:600; opacity:0.92; margin-top:2px; line-height:1.4;">전문 도구 · 템플릿 라이브러리 · 큰 캔버스</div>
-                </div>
-                <div style="font-size:18px;">↗</div>
-            </a>
-        </div>
-
         <input type="file" id="btnUpload" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" style="display:none;" onchange="window._cdUploadImage(this.files)">
 
         <!-- 2026-05-30: 패브릭 상세 + 리뷰 — 업로드 영역 아래 동일 좌측 컬럼에서 연속 흐름. -->

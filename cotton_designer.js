@@ -265,50 +265,6 @@ function calcHoebae() {
 }
 
 // ────────────────────────────────────────────────
-// 2026-06-15: 미니 에디터 팝업 창 열기.
-//   index.html?embed_editor=1 을 새 창으로 열고, 디자인 완료 시 postMessage 로 dataUrl 받아 _cdUploadImage 호출.
-//   iframe 임베드 대신 별창 — heavy script 충돌 없음 / 브라우저 차단 적음.
-var _cdMiniEditorWin = null;
-window._cdOpenMiniEditor = function() {
-    try {
-        if (_cdMiniEditorWin && !_cdMiniEditorWin.closed) {
-            _cdMiniEditorWin.focus();
-            return;
-        }
-        var w = window.open('/?embed_editor=1', 'chameleon_mini_editor',
-            'width=1100,height=820,resizable=yes,scrollbars=yes,location=no,menubar=no,toolbar=no,status=no');
-        if (!w) {
-            alert('팝업 차단이 활성화되어 있습니다.\n주소창 우측 차단 아이콘 → 항상 허용 으로 설정 후 다시 시도해주세요.');
-            return;
-        }
-        _cdMiniEditorWin = w;
-        try { showToast('미니 에디터가 새 창에서 열립니다. 디자인 후 "디자인 적용" 버튼을 눌러주세요.'); } catch (e) {}
-    } catch (e) {
-        console.warn('[_cdOpenMiniEditor]', e);
-        alert('미니 에디터 열기 실패: ' + (e.message || e));
-    }
-};
-// 미니 에디터 창 → cotton_designer 로 PNG 전송 받기.
-window.addEventListener('message', function(ev){
-    try {
-        var msg = ev.data || {};
-        if (msg.type !== 'mini-editor:apply') return;
-        if (!msg.dataUrl) { try { showToast('디자인 데이터 없음'); } catch(e){} return; }
-        var arr = msg.dataUrl.split(',');
-        var mime = (arr[0].match(/:(.*?);/) || [,'image/png'])[1];
-        var bstr = atob(arr[1]);
-        var u8 = new Uint8Array(bstr.length);
-        for (var i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
-        var blob = new Blob([u8], { type: mime });
-        var file = new File([blob], 'inline_design_' + Date.now() + '.png', { type: mime });
-        window._cdUploadImage([file]);
-        try { showToast('디자인이 적용되었습니다.'); } catch (e) {}
-        try { if (_cdMiniEditorWin && !_cdMiniEditorWin.closed) _cdMiniEditorWin.focus(); } catch (e) {}
-    } catch (e) {
-        console.warn('[mini-editor apply]', e);
-    }
-});
-
 // 이미지 업로드 — PDF/AI(PDF 호환)/PSD 자동 변환 지원 (2026-05-11)
 // ────────────────────────────────────────────────
 window._cdUploadImage = async function(files) {
