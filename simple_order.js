@@ -1575,6 +1575,14 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:10px; }
             #soQuickDesignSec .qd-rail-more { padding:7px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
             #soQuickDesignSec .qd-rail-more:hover { background:#f1f5f9; }
+            /* 2026-06-15: rail 검색 + 페이지네이션 (이전/다음). 모바일에서 4개 페이지 단위로 넘김. */
+            #soQuickDesignSec .qd-rail-search { padding:6px 9px; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-family:inherit; outline:none; background:#fff; color:#0f172a; width:100%; box-sizing:border-box; }
+            #soQuickDesignSec .qd-rail-search:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.18); }
+            #soQuickDesignSec .qd-rail-pager { display:flex; align-items:center; justify-content:center; gap:8px; padding:2px 0; }
+            #soQuickDesignSec .qd-rail-pager-btn { width:28px; height:28px; border-radius:50%; background:#fff; border:1px solid #cbd5e1; color:#475569; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:all .15s; }
+            #soQuickDesignSec .qd-rail-pager-btn:hover:not(:disabled) { background:#eef2ff; border-color:#6366f1; color:#4338ca; }
+            #soQuickDesignSec .qd-rail-pager-btn:disabled { opacity:0.35; cursor:not-allowed; }
+            #soQuickDesignSec .qd-rail-pager-info { font-size:11px; font-weight:700; color:#475569; min-width:42px; text-align:center; }
             /* 2026-06-15: 모바일 — 대지(에디터) 먼저, 그 아래 [템플릿/요소/장식] 버튼 3개 + 미리보기 4열 그리드. */
             @media (max-width:768px) {
                 #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; gap:8px; }
@@ -1603,13 +1611,17 @@ html, body { background: #ffffff !important; }
                 <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')">${tr('요소','要素','Elem')}</button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')">${tr('장식','装飾','Deco')}</button>
               </div>
+              <input type="search" id="soQdRailSearch" placeholder="${tr('검색','検索','Search')}" oninput="window._soQdRailSearch && window._soQdRailSearch(this.value)" class="qd-rail-search">
               <div class="qd-rail-thumbs" id="soQdRailThumbs">
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
-                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
-                <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
+              </div>
+              <div class="qd-rail-pager" id="soQdRailPager">
+                <button type="button" class="qd-rail-pager-btn" id="soQdRailPrev" onclick="window._soQdRailPage && window._soQdRailPage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <span class="qd-rail-pager-info" id="soQdRailPageInfo">1 / 1</span>
+                <button type="button" class="qd-rail-pager-btn" id="soQdRailNext" onclick="window._soQdRailPage && window._soQdRailPage(1)"><i class="fa-solid fa-chevron-right"></i></button>
               </div>
               <button type="button" class="qd-rail-more" onclick="window._soQdRailMore && window._soQdRailMore()">${tr('전체보기 →','すべて見る →','See all →')}</button>
             </aside>
@@ -2843,8 +2855,9 @@ html, body { background: #ffffff !important; }
   <div style="background:#fff; border-radius:16px; width:100%; max-width:880px; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 60px -16px rgba(0,0,0,0.5);">
     <!-- 헤더 -->
     <div style="padding:18px 24px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:14px;">
-      <div style="font-size:17px; font-weight:900; color:#0f172a;" id="soQdLibTitle">${tr('라이브러리', 'ライブラリ', 'Library')}</div>
-      <button onclick="document.getElementById('soQdLibPopup').style.display='none'" style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:24px; color:#64748b; padding:4px 10px;">×</button>
+      <div style="font-size:17px; font-weight:900; color:#0f172a; flex:1; min-width:0;" id="soQdLibTitle">${tr('라이브러리', 'ライブラリ', 'Library')}</div>
+      <!-- 2026-06-15: 닫기 X 더 눈에 띄게 — 원형 보더 + 살짝 큰 폰트. 모바일에서 잘 잡히도록 hit area 44×44. -->
+      <button onclick="document.getElementById('soQdLibPopup').style.display='none'" aria-label="${tr('닫기','閉じる','Close')}" style="flex-shrink:0; width:44px; height:44px; border-radius:50%; background:#f1f5f9; border:1.5px solid #cbd5e1; cursor:pointer; font-size:22px; line-height:1; color:#0f172a; font-weight:700; display:flex; align-items:center; justify-content:center;">×</button>
     </div>
     <!-- 탭 -->
     <div style="display:flex; gap:6px; padding:12px 24px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap;">
@@ -11897,7 +11910,7 @@ html, body { background: #ffffff !important; }
         var _libSearchDebounce = null;
         var _libCurrentItems = [];   // 현재 탭/검색의 전체 items
         var _libCurrentPage = 0;     // 0-based
-        var _LIB_PER_PAGE = 10;
+        var _LIB_PER_PAGE = 6;
         var _LIB_FETCH_MAX = 50;     // 한 번에 가져올 행 수 (5페이지 분)
         var _libCache = {};          // key = tab + '|' + search, value = items[]
 
@@ -11918,10 +11931,20 @@ html, body { background: #ffffff !important; }
             window._soQdLibSwitch(tab);
         };
 
-        // 2026-06-15: 좌측 사이드바 (qd-rail) — 4개 썸네일 + 탭. 전체보기는 기존 팝업 재사용.
+        // 2026-06-15: 좌측 사이드바 (qd-rail) — 4개 페이지 + 탭 + 검색 + 이전/다음. 전체보기는 기존 팝업 재사용.
         var _railTab = 'template';
+        var _railSearch = '';
+        var _railSearchDebounce = null;
+        var _railAllItems = [];
+        var _railPage = 0;
+        var _RAIL_PER_PAGE = 4;
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
+            _railPage = 0;
+            // 탭 전환 시 검색어 초기화
+            var sIn = document.getElementById('soQdRailSearch');
+            if (sIn) sIn.value = '';
+            _railSearch = '';
             // 2026-06-15: rail 탭 변경 시 popup 의 활성 탭 변수도 동기화 →
             //   _soQdLibPick 가 'template' 일 때만 fillCanvas=true, 요소/장식은 작게 중앙 배치되도록.
             _libActiveTab = tab;
@@ -11929,6 +11952,22 @@ html, body { background: #ffffff !important; }
                 b.classList.toggle('active', b.getAttribute('data-rail-tab') === tab);
             });
             await _soQdRailLoad();
+        };
+        window._soQdRailSearch = function(q) {
+            if (_railSearchDebounce) clearTimeout(_railSearchDebounce);
+            _railSearchDebounce = setTimeout(async function(){
+                _railSearch = q || '';
+                _railPage = 0;
+                await _soQdRailLoad();
+            }, 250);
+        };
+        window._soQdRailPage = function(delta) {
+            var maxPage = Math.max(0, Math.ceil(_railAllItems.length / _RAIL_PER_PAGE) - 1);
+            var p = _railPage + (delta || 0);
+            if (p < 0) p = 0;
+            if (p > maxPage) p = maxPage;
+            _railPage = p;
+            _renderRailPage();
         };
         window._soQdRailMore = function() {
             var mp = { template:'sub-template', element:'sub-element', decoration:'sub-icon' };
@@ -11938,64 +11977,90 @@ html, body { background: #ffffff !important; }
             var grid = document.getElementById('soQdRailThumbs');
             if (!grid) return;
             var _loadStr = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
-            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr + _loadStr + _loadStr;
+            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr;
             // 장식 탭은 canvas-icons.js lazy load
             if (_railTab === 'decoration' && !window.ORNAMENTS) {
                 try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }
             }
             try {
-                var items = await _fetchLib(_railTab, '');
-                var top = items.slice(0, 6);
-                if (top.length === 0) {
+                _railAllItems = await _fetchLib(_railTab, _railSearch);
+                if (_railAllItems.length === 0) {
                     grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('항목 없음','空','None') + '</div>';
+                    _updateRailPager();
                     return;
                 }
-                // 2026-06-15: 클릭 시 고해상도 URL 로 캔버스에 추가 — popup 의 _resolveImgUrl 과 동일 로직.
-                //   썸네일 표시는 thumb_url (작고 빠름) / 캔버스 추가는 data_url (고해상도, Fabric JSON 이면 첫 image src 추출).
-                function _railResolveImgUrl(it) {
-                    var data = String(it && it.data_url || '').trim();
-                    if (!data) return (it && it.thumb_url) || '';
-                    var first = data.charAt(0);
-                    if (first === '{' || first === '[') {
-                        try {
-                            var parsed = JSON.parse(data);
-                            var objs = parsed.objects || (Array.isArray(parsed) ? parsed : []);
-                            for (var i = 0; i < objs.length; i++) {
-                                if (objs[i] && objs[i].type === 'image' && objs[i].src) return objs[i].src;
-                            }
-                        } catch (e) { console.warn('[rail resolveImg] JSON parse fail'); }
-                        return (it && it.thumb_url) || '';
-                    }
-                    return data;
-                }
-                grid.innerHTML = top.map(function(it){
-                    if (it && it.__ornament) {
-                        var sv = String(it.svg || '');
-                        if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
-                            sv = sv.replace(/fill="currentColor"/g, 'fill="' + it.color + '"');
-                        }
-                        return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
-                    }
-                    var thumbUrl = it.thumb_url || it.data_url || '';   // 표시용 (작음/빠름)
-                    var fullUrl = _railResolveImgUrl(it);               // 클릭 시 캔버스용 (고해상도)
-                    return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(fullUrl) + '"><img src="' + thumbUrl + '" alt=""></div>';
-                }).join('');
-                grid.querySelectorAll('[data-rail-url]').forEach(function(el){
-                    el.addEventListener('click', function(){
-                        var u = decodeURI(el.getAttribute('data-rail-url') || '');
-                        if (u && window._soQdLibPick) window._soQdLibPick(u);
-                    });
-                });
-                grid.querySelectorAll('[data-rail-orn]').forEach(function(el){
-                    el.addEventListener('click', function(){
-                        var idx = parseInt(el.getAttribute('data-rail-orn'), 10);
-                        if (!isNaN(idx) && window._soQdLibPickOrnament) window._soQdLibPickOrnament(idx);
-                    });
-                });
+                _renderRailPage();
+                return;
             } catch (e) {
                 console.warn('[qd rail load]', e);
                 grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('로드 실패','失敗','Failed') + '</div>';
+                _updateRailPager();
             }
+        }
+        function _updateRailPager() {
+            var pager = document.getElementById('soQdRailPager');
+            var info = document.getElementById('soQdRailPageInfo');
+            var prev = document.getElementById('soQdRailPrev');
+            var next = document.getElementById('soQdRailNext');
+            var totalPages = Math.max(1, Math.ceil(_railAllItems.length / _RAIL_PER_PAGE));
+            if (info) info.textContent = (_railPage + 1) + ' / ' + totalPages;
+            if (prev) prev.disabled = (_railPage <= 0);
+            if (next) next.disabled = (_railPage >= totalPages - 1);
+            if (pager) pager.style.display = (totalPages > 1) ? 'flex' : 'none';
+        }
+        function _renderRailPage() {
+            var grid = document.getElementById('soQdRailThumbs');
+            if (!grid) return;
+            var start = _railPage * _RAIL_PER_PAGE;
+            var top = _railAllItems.slice(start, start + _RAIL_PER_PAGE);
+            if (top.length === 0) {
+                grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('항목 없음','空','None') + '</div>';
+                _updateRailPager();
+                return;
+            }
+            // 2026-06-15: 클릭 시 고해상도 URL 로 캔버스에 추가 — popup 의 _resolveImgUrl 과 동일 로직.
+            //   썸네일 표시는 thumb_url (작고 빠름) / 캔버스 추가는 data_url (고해상도, Fabric JSON 이면 첫 image src 추출).
+            function _railResolveImgUrl(it) {
+                var data = String(it && it.data_url || '').trim();
+                if (!data) return (it && it.thumb_url) || '';
+                var first = data.charAt(0);
+                if (first === '{' || first === '[') {
+                    try {
+                        var parsed = JSON.parse(data);
+                        var objs = parsed.objects || (Array.isArray(parsed) ? parsed : []);
+                        for (var i = 0; i < objs.length; i++) {
+                            if (objs[i] && objs[i].type === 'image' && objs[i].src) return objs[i].src;
+                        }
+                    } catch (e) { console.warn('[rail resolveImg] JSON parse fail'); }
+                    return (it && it.thumb_url) || '';
+                }
+                return data;
+            }
+            grid.innerHTML = top.map(function(it){
+                if (it && it.__ornament) {
+                    var sv = String(it.svg || '');
+                    if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
+                        sv = sv.replace(/fill="currentColor"/g, 'fill="' + it.color + '"');
+                    }
+                    return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
+                }
+                var thumbUrl = it.thumb_url || it.data_url || '';   // 표시용 (작음/빠름)
+                var fullUrl = _railResolveImgUrl(it);               // 클릭 시 캔버스용 (고해상도)
+                return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(fullUrl) + '"><img src="' + thumbUrl + '" alt=""></div>';
+            }).join('');
+            grid.querySelectorAll('[data-rail-url]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    var u = decodeURI(el.getAttribute('data-rail-url') || '');
+                    if (u && window._soQdLibPick) window._soQdLibPick(u);
+                });
+            });
+            grid.querySelectorAll('[data-rail-orn]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    var idx = parseInt(el.getAttribute('data-rail-orn'), 10);
+                    if (!isNaN(idx) && window._soQdLibPickOrnament) window._soQdLibPickOrnament(idx);
+                });
+            });
+            _updateRailPager();
         }
         // 모달 열릴 때 초기 로드 — _soQdSetup 같은 곳에서 호출되도록 노출.
         window._soQdRailInit = function() {
