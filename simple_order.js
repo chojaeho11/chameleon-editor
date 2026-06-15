@@ -1997,6 +1997,21 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-15: 인쇄면 (단면/양면) 선택 — 모든 hb_bn_* 코드에서 사용. soBannerSection 밖. -->
+        <div class="so-section" id="soBannerSideSec" style="display:none;">
+          <div class="so-section-title">${tr('인쇄면 선택', '印刷面選択', 'Print side')}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <button type="button" class="so-side-btn active" data-side="single" onclick="window._soPickSide('single')"
+              style="padding:12px 10px; border:1.5px solid transparent; background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%); color:#fff; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; box-shadow:0 4px 12px -4px rgba(79,70,229,0.45); line-height:1.3;">
+              ${tr('단면', '片面', 'Single')}<br><span id="soBannerSinglePriceLabel" style="font-size:11px; font-weight:600; color:#fff;">${fmtPrice(45000)}</span>
+            </button>
+            <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickSide('double')"
+              style="padding:12px 10px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:10px; cursor:pointer; font-size:13px; font-weight:800; font-family:inherit; line-height:1.3;">
+              ${tr('양면', '両面', 'Double')}<br><span id="soBannerDoublePriceLabel" style="font-size:11px; font-weight:600; color:#475569;">${fmtPrice(80000)}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 2026-06-01: 허니콤배너 전용 섹션 — 안내문 + 파일 업로드 + 단면/양면. 사이즈는 60×180cm 고정. -->
         <div class="so-section" id="soBannerSection" style="display:none;">
           <div class="so-section-title">${tr('배너', 'バナー', 'Banner')}</div>
@@ -4662,6 +4677,40 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-06-05: 허니콤 배너 family (hb_bn_*) — 단일 배너 / 연결형 배너 등 한 페이지에서 선택
+    // 2026-06-15: 코드별 단면/양면 가격 매핑 (한 곳에서 관리).
+    //   hb_bn_1 (허니콤배너 단면): 단면 45K / 양면 80K
+    //   hb_bn_2 (연결형 배너):     단면 33K / 양면 70K
+    //   hb_bn_3 (legacy 양면):     단면 80K / 양면 80K — 사실상 양면 only
+    var _BANNER_PRICES = {
+        'hb_bn_1': { single: 45000, double: 80000 },
+        'hb_bn_2': { single: 33000, double: 70000 },
+        'hb_bn_3': { single: 80000, double: 80000 }
+    };
+    function _soBannerPriceFor(code, side) {
+        var m = _BANNER_PRICES[(code || '').toLowerCase()];
+        if (!m) return null;
+        return (side === 'double') ? m.double : m.single;
+    }
+    function _soApplyBannerSidePrice(p, side) {
+        // p.price 를 현재 선택된 면(단/양)의 가격으로 갱신 — 우측 단가 표시 + 카트 라인 모두에 영향.
+        if (!p || !p.code) return;
+        var v = _soBannerPriceFor(p.code, side);
+        if (v != null) p.price = v;
+    }
+    function _soUpdateBannerSideLabels(p) {
+        // 단면/양면 버튼 안의 가격 라벨 동기화 — 현재 variant 의 단/양 가격을 보여줌.
+        var m = (p && p.code) ? _BANNER_PRICES[p.code.toLowerCase()] : null;
+        var sec = document.getElementById('soBannerSideSec');
+        if (!m) { if (sec) sec.style.display = 'none'; return; }
+        var s = document.getElementById('soBannerSinglePriceLabel');
+        var d = document.getElementById('soBannerDoublePriceLabel');
+        if (s) s.textContent = fmtPrice(m.single);
+        if (d) d.textContent = fmtPrice(m.double);
+        if (sec) sec.style.display = '';
+    }
+    window._soApplyBannerSidePrice = _soApplyBannerSidePrice;
+    window._soBannerPriceFor = _soBannerPriceFor;
+
     var _soBannerCache = null;
     async function _soLoadBannerVariants(currentCode) {
         var sec = document.getElementById('soBannerVariantsSec');
@@ -8826,6 +8875,10 @@ html, body { background: #ffffff !important; }
 
     window._soPickSide = function (side) {
         state.wallSide = (side === 'double') ? 'double' : 'single';
+        // 2026-06-15: 배너 family — 단/양 토글에 따라 product.price 갱신 (우측 단가 + 카트 라인 모두 반영).
+        if (state.isBannerFamily && state.product) {
+            try { _soApplyBannerSidePrice(state.product, state.wallSide); } catch(e){}
+        }
         document.querySelectorAll('.so-side-btn').forEach(function (b) {
             var on = b.dataset.side === state.wallSide;
             b.classList.toggle('active', on);
@@ -9755,14 +9808,23 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-15: 배너 family (hb_bn_*) 모든 코드에서 variant 그리드 로드 — 한 페이지에서 단일/연결형/양면 전환.
         //   isBanner=false 인 hb_bn_2(연결형) 같은 코드에서도 종류 카드가 보이도록 isBanner 조건 밖으로 이동.
-        if (p && p.code && /^hb_bn/i.test(p.code)) {
+        state.isBannerFamily = !!(p && p.code && /^hb_bn/i.test(p.code));
+        if (state.isBannerFamily) {
             try { window._soLoadBannerVariants(p.code); } catch(e){}
+            // 2026-06-15: 단면/양면 토글 활성화 — 코드별 단/양 가격을 라벨에 표시 + 버튼 active 동기화.
+            try { _soUpdateBannerSideLabels(p); } catch(e){}
+            state.wallSide = state.wallSide || 'single';
+            _soApplyBannerSidePrice(p, state.wallSide);
+            // 버튼 active 클래스 + 색상 동기화 (variant 전환 후 양면 유지 케이스).
+            try { if (typeof window._soPickSide === 'function') window._soPickSide(state.wallSide); } catch(e){}
         } else {
             try {
                 var _bvHost = document.getElementById('soBannerVariantsHostSec');
                 if (_bvHost) _bvHost.style.display = 'none';
                 var _bvSec = document.getElementById('soBannerVariantsSec');
                 if (_bvSec) _bvSec.style.display = 'none';
+                var _bsdSec = document.getElementById('soBannerSideSec');
+                if (_bsdSec) _bsdSec.style.display = 'none';
             } catch(e){}
         }
         // 2026-05-13: 허니콤 자유인쇄커팅 감지 (hb_pt_*)
@@ -12340,8 +12402,9 @@ html, body { background: #ffffff !important; }
             wallSize: state.isWall ? { w_m: state.wallWidth, h_m: state.wallHeight } : null,
             // 2026-05-13: 단면/양면 (가벽) — 2026-05-22: 재단인쇄(자유인쇄커팅)도 포함 (양면 ×2)
             // 2026-06-02: 허니콤 배너 (isBanner) — 단면 55K / 양면 80K (×2 가 아닌 별도가) 양면 정보 보존 필요
-            wallSide: (state.isWall || state.isCutPrint || state.isBanner) ? (state.wallSide || 'single') : null,
-            _isBanner: !!state.isBanner,
+            // 2026-06-15: 배너 family 전체 (hb_bn_*) — hb_bn_2(연결형) 등 isBanner=false 인 코드도 wallSide 보존.
+            wallSide: (state.isWall || state.isCutPrint || state.isBanner || state.isBannerFamily) ? (state.wallSide || 'single') : null,
+            _isBanner: !!(state.isBanner || state.isBannerFamily),
             // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
             wallShape: state.isWall ? (state.wallShape || 'straight') : null,
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
@@ -13842,13 +13905,20 @@ html, body { background: #ffffff !important; }
         if (it && it.__pendingQuoteId && Number(it.price) > 0) return Number(it.price);
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
-        // 2026-06-02: 허니콤 배너 family — 코드별 별도 단가 (hb_bn_1=45K 단면, hb_bn_2=33K 연결형, hb_bn_3=80K 양면).
-        // 2026-06-15: 각 variant 가 별도 admin_products row 로 분리되었으므로 DB 가격(product.price) 신뢰.
-        //   레거시 wallSide 분기는 DB 가격이 없을 때만 폴백.
+        // 2026-06-15: 허니콤 배너 family — 코드 × 단/양 매핑 (_BANNER_PRICES 한 곳에서 관리).
+        //   hb_bn_1: 단면 45K / 양면 80K, hb_bn_2(연결형): 단면 33K / 양면 70K, hb_bn_3: 80K.
+        //   매핑 없으면 DB price → 레거시 폴백.
         var _isBannerItm = !!it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code));
         if (_isBannerItm) {
-            var _bnDb = (it.product && Number(it.product.price)) || 0;
-            unit = _bnDb > 0 ? _bnDb : ((it.wallSide === 'double') ? 80000 : 45000);
+            var _bnCode = (it.product && it.product.code) || '';
+            var _bnSide = (it.wallSide === 'double') ? 'double' : 'single';
+            var _bnLookup = _soBannerPriceFor(_bnCode, _bnSide);
+            if (_bnLookup != null) {
+                unit = _bnLookup;
+            } else {
+                var _bnDb = (it.product && Number(it.product.price)) || 0;
+                unit = _bnDb > 0 ? _bnDb : ((it.wallSide === 'double') ? 80000 : 45000);
+            }
         }
         // 2026-06-12: 스티커 — 비즈하우스 가격 mirror. 배송 무료.
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241'));

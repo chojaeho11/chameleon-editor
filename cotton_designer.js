@@ -1412,10 +1412,17 @@ function _cdGenItemPrice(it) {
     if (!it) return 0;
     var qty = it.qty || 1;
     var unit = (it.product && it.product.price) || 0;
-    // 배너 (hb_bn_*) — 2026-06-15: 코드별 DB 가격 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K). 폴백만 레거시.
+    // 배너 (hb_bn_*) — 2026-06-15: 코드 × 단/양 매핑 (simple_order.js 의 _BANNER_PRICES 미러).
+    //   hb_bn_1: 단/양 = 45K/80K, hb_bn_2(연결형): 33K/70K, hb_bn_3: 80K/80K.
     if (it._isBanner || (it.product && it.product.code && /^hb_bn/i.test(it.product.code))) {
-        var _bnDb2 = (it.product && Number(it.product.price)) || 0;
-        unit = _bnDb2 > 0 ? _bnDb2 : ((it.wallSide === 'double') ? 80000 : 45000);
+        var _BPF = { 'hb_bn_1': { single: 45000, double: 80000 }, 'hb_bn_2': { single: 33000, double: 70000 }, 'hb_bn_3': { single: 80000, double: 80000 } };
+        var _bnPm = _BPF[(it.product && (it.product.code || '').toLowerCase()) || ''];
+        if (_bnPm) {
+            unit = (it.wallSide === 'double') ? _bnPm.double : _bnPm.single;
+        } else {
+            var _bnDb2 = (it.product && Number(it.product.price)) || 0;
+            unit = _bnDb2 > 0 ? _bnDb2 : ((it.wallSide === 'double') ? 80000 : 45000);
+        }
     }
     // 자유인쇄커팅
     if (it.cutPrint) unit = (it.cutPrint.size === 'half') ? 55000 : 99000;
