@@ -1944,7 +1944,7 @@ async function submitRollFabricRequest() {
             </div>
             <button type="button" id="fpUploadBtn" class="fp-tool-btn fp-tool-primary" title="이미지 업로드"><i class="fa-solid fa-image"></i><span id="fpUploadLbl"></span></button>
             <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
-            <button type="button" id="fpTextBtn" class="fp-tool-btn" title="텍스트"><i class="fa-solid fa-font"></i></button>
+            <button type="button" id="fpTextBtn" class="fp-tool-btn"><i class="fa-solid fa-font"></i><span class="fp-text-lbl" id="fpTextLbl">텍스트</span></button>
             <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
             <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl" id="fpCutLbl">배경제거</span></button>
             <button type="button" id="fpUndoBtn" class="fp-tool-btn" disabled title="되돌리기 (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
@@ -2091,9 +2091,11 @@ async function submitRollFabricRequest() {
     $('fpLibElLbl').textContent = t.libEl;
     $('fpLibDcLbl').textContent = t.libDc;
     $('fpLibSearch').placeholder = t.libSearch;
-    // 2026-06-15: 배경제거 라벨 + 되돌리기 툴팁 + 폰트 드롭다운 title — 언어별 번역.
+    // 2026-06-15: 배경제거 / 텍스트 라벨 + 되돌리기 툴팁 + 폰트 드롭다운 title — 언어별 번역.
     var cutLbl = $('fpCutLbl'); if (cutLbl) cutLbl.textContent = t.cutout;
     var cutBtn = $('fpCutoutBtn'); if (cutBtn) cutBtn.title = t.cutout;
+    var txtLbl = $('fpTextLbl'); if (txtLbl) txtLbl.textContent = t.text;
+    var txtBtn = $('fpTextBtn'); if (txtBtn) txtBtn.title = t.text;
     var undoBtn = $('fpUndoBtn'); if (undoBtn) undoBtn.title = t.undo + ' (Ctrl+Z)';
     var fSel0 = $('fpFontSel'); if (fSel0) fSel0.title = t.fontTitle;
     var sSel0 = $('fpScriptSel'); if (sSel0) sSel0.title = t.scriptTitle;
@@ -3249,9 +3251,9 @@ async function submitRollFabricRequest() {
 .fp-tool-download { margin-left:auto; background:#4f46e5; border-color:#4f46e5; color:#fff; padding:8px 16px; }
 .fp-tool-download:hover:not(:disabled) { background:#4338ca; border-color:#4338ca; color:#fff; }
 .fp-tool-btn.fp-active { background:#f5f3ff; border-color:#c4b5fd; color:#6d28d9; }
-/* 배경제거 라벨 — PC 만 표시 */
-.fp-cut-lbl { font-weight:600; }
-@media (max-width:768px){ .fp-cut-lbl { display:none; } }
+/* 배경제거 / 텍스트 라벨 — PC 만 표시 */
+.fp-cut-lbl, .fp-text-lbl { font-weight:600; }
+@media (max-width:768px){ .fp-cut-lbl, .fp-text-lbl { display:none; } }
 
 /* 정렬 + 레이어 바 — 미니멀 톤 */
 #fpAlignBar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:6px 8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; transition:opacity .2s; }
