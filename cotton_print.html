@@ -1946,7 +1946,8 @@ async function submitRollFabricRequest() {
             <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
             <button type="button" id="fpTextBtn" class="fp-tool-btn" title="텍스트"><i class="fa-solid fa-font"></i></button>
             <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
-            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled title="배경제거"><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl">배경제거</span></button>
+            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl" id="fpCutLbl">배경제거</span></button>
+            <button type="button" id="fpUndoBtn" class="fp-tool-btn" disabled title="되돌리기 (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
             <label class="fp-tool-btn fp-tool-color" title="색상">
                 <input type="color" id="fpBgColor" value="#ffffff">
             </label>
@@ -1973,7 +1974,8 @@ async function submitRollFabricRequest() {
         </div>
         <!-- 텍스트 속성 바 (항상 표시, 텍스트 미선택 시 dim) -->
         <div id="fpTextProps" style="display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px; background:#fafafa; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
-            <select id="fpFontSel"></select>
+            <select id="fpFontSel" title="일반 서체"></select>
+            <select id="fpScriptSel" title="멋진 영문 서체 (웨딩/캘리)"><option value="">멋진영문…</option></select>
             <div style="display:inline-flex; gap:2px;">
                 <button type="button" data-weight="400" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:400; font-size:12px;">S</button>
                 <button type="button" data-weight="700" class="fp-prop-btn fp-smb" style="padding:5px 10px; font-weight:800; font-size:12px;">B</button>
@@ -2006,14 +2008,10 @@ async function submitRollFabricRequest() {
                     <button type="button" id="fpLibNext" class="fp-lib-pager-btn"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채우고 대지가 그 안을 가득 채움. 줄자(SVG)는 stage 외곽에 부착. -->
+            <!-- 캔버스 — 다크 영역이 컬럼 전체 높이를 채우고 대지가 그 안을 가득 채움. -->
             <div class="fp-canvas-col">
-                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px 14px 28px 28px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center;">
-                    <div class="fp-stage-box">
-                        <svg id="fpRulerTop"  class="fp-ruler fp-ruler-top"  preserveAspectRatio="none"></svg>
-                        <svg id="fpRulerLeft" class="fp-ruler fp-ruler-left" preserveAspectRatio="none"></svg>
-                        <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
-                    </div>
+                <div id="fpStageWrap" style="position:relative; width:100%; padding:14px; background:linear-gradient(135deg,#1f2937 0%,#111827 100%); border-radius:14px; display:flex; align-items:center; justify-content:center;">
+                    <div id="fpStage" style="position:relative; background:#fff; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5); overflow:hidden; touch-action:none;"></div>
                     <span id="fpHint" class="fp-hint"></span>
                 </div>
             </div>
@@ -2043,7 +2041,7 @@ async function submitRollFabricRequest() {
     var LANG = (LANG_RAW === 'ja' || LANG_RAW === 'jp') ? 'ja' : (LANG_RAW === 'ko' || LANG_RAW === 'kr') ? 'ko' : 'en';
     var T = {
         ko: { title:'간단한 디자인 바로바로', sub:'사진 배경 지우기 · 내 사진에 간단한 텍스트를 넣어서 꾸며봐요',
-              upload:'이미지', text:'텍스트', ai:'AI 이미지', download:'다운로드', hint:'대지를 클릭해 텍스트 추가 · 모서리로 크기 조절 · 드래그로 이동',
+              upload:'불러오기', text:'텍스트', ai:'AI 이미지', download:'다운로드', hint:'대지를 클릭해 텍스트 추가 · 모서리로 크기 조절 · 드래그로 이동', cutout:'배경제거', undo:'되돌리기',
               aiTitle:'AI 이미지 생성', aiSub:'원하는 이미지를 한글로 설명해 주세요. (예: 따뜻한 햇살이 비치는 카페 창가의 커피잔)',
               aiPlaceholder:'예: 노을 지는 바다 위의 흰 갈매기, 수채화 스타일', aiGen:'생성하기', aiCancel:'취소',
               aiLoading:'AI 가 이미지를 생성 중입니다... 약 10~20초 소요',
@@ -2053,7 +2051,7 @@ async function submitRollFabricRequest() {
               cutLoading:'배경 제거 중…', cutFail:'배경 제거 실패. 잠시 후 다시 시도해주세요',
               cutOff:'누끼따기를 사용하려면 이미지를 먼저 선택해주세요' },
         ja: { title:'カンタン デザイン サクッと', sub:'写真の背景削除 · お気に入りの写真にテキストを加えて飾りましょう',
-              upload:'画像', text:'テキスト', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動',
+              upload:'読み込み', text:'テキスト', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動', cutout:'背景削除', undo:'元に戻す',
               aiTitle:'AI 画像生成', aiSub:'欲しい画像を日本語で説明してください。(例: 暖かい日差しの差し込むカフェの窓辺のコーヒー)',
               aiPlaceholder:'例: 夕焼けの海と白いカモメ、水彩画スタイル', aiGen:'生成', aiCancel:'キャンセル',
               aiLoading:'AI が画像を生成中です... 約10〜20秒かかります',
@@ -2063,7 +2061,7 @@ async function submitRollFabricRequest() {
               cutLoading:'背景削除中…', cutFail:'背景削除失敗。後でもう一度お試しください',
               cutOff:'背景削除には先に画像を選択してください' },
         en: { title:'Easy Design, Right Away', sub:'Background removal · Decorate your photo with simple text',
-              upload:'Image', text:'Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move',
+              upload:'Import', text:'Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move', cutout:'Remove BG', undo:'Undo',
               aiTitle:'Generate AI Image', aiSub:'Describe the image you want. (e.g., A coffee cup by a cafe window in warm sunlight)',
               aiPlaceholder:'e.g., A white seagull over a sunset sea, watercolor style', aiGen:'Generate', aiCancel:'Cancel',
               aiLoading:'AI is generating your image... about 10-20 seconds',
@@ -2090,17 +2088,20 @@ async function submitRollFabricRequest() {
     $('fpLibElLbl').textContent = t.libEl;
     $('fpLibDcLbl').textContent = t.libDc;
     $('fpLibSearch').placeholder = t.libSearch;
+    // 2026-06-15: 배경제거 라벨 + 되돌리기 툴팁 — 언어별 번역.
+    var cutLbl = $('fpCutLbl'); if (cutLbl) cutLbl.textContent = t.cutout;
+    var cutBtn = $('fpCutoutBtn'); if (cutBtn) cutBtn.title = t.cutout;
+    var undoBtn = $('fpUndoBtn'); if (undoBtn) undoBtn.title = t.undo + ' (Ctrl+Z)';
 
     var state = { natW: 900, natH: 1200, items: [], selected: null, zCounter: 10 };
     var stage = $('fpStage');
     var wrap = $('fpStageWrap');
 
     function fitStage(){
-        // 2026-06-15: 다크 wrap 의 실제 가용 영역(패딩 + 줄자 폭 제외)에 최대한 맞춤. 1.0 캡 제거.
+        // 2026-06-15: 다크 wrap 의 실제 가용 영역(패딩 제외)에 최대한 맞춤. 1.0 캡 제거.
         var rect = wrap.getBoundingClientRect();
-        // 줄자 영역(상단 14px + 좌측 14px) + 힌트 여유 만큼 빼고 계산.
-        var maxW = Math.max(200, rect.width - 60);
-        var maxH = Math.max(220, rect.height - 70);
+        var maxW = Math.max(200, rect.width - 28);
+        var maxH = Math.max(220, rect.height - 56);
         var scaleW = maxW / state.natW;
         var scaleH = maxH / state.natH;
         var sc = Math.min(scaleW, scaleH);
@@ -2109,50 +2110,8 @@ async function submitRollFabricRequest() {
         stage.style.width = dispW + 'px';
         stage.style.height = dispH + 'px';
         state.wScale = sc;
-        // 줄자 갱신
-        try { drawRulers(dispW, dispH); } catch(_) {}
         // 모든 item 위치 재계산
         state.items.forEach(syncItem);
-    }
-    function drawRulers(dispW, dispH){
-        var rTop = $('fpRulerTop'), rLeft = $('fpRulerLeft');
-        if (!rTop || !rLeft) return;
-        var sc = state.wScale || 1;
-        var natW = state.natW, natH = state.natH;
-        // 100mm 마다 라벨, 50mm 마다 중간 tick, 10mm 마다 작은 tick.
-        function tickStep(){ return natW > 1000 ? 20 : 10; }
-        var step = tickStep();
-        // Top ruler
-        rTop.setAttribute('viewBox', '0 0 ' + dispW + ' 14');
-        rTop.setAttribute('width', dispW); rTop.setAttribute('height', 14);
-        var topMarks = '<rect width="' + dispW + '" height="14" fill="#fafafa" rx="2" />';
-        for (var x = 0; x <= natW; x += step) {
-            var px = x * sc;
-            var isMajor = (x % 100 === 0);
-            var isMid = (x % 50 === 0);
-            var len = isMajor ? 7 : (isMid ? 5 : 3);
-            topMarks += '<line x1="' + px + '" y1="' + (14 - len) + '" x2="' + px + '" y2="14" stroke="#475569" stroke-width="' + (isMajor ? 0.9 : 0.6) + '" />';
-            if (isMajor && x > 0 && x < natW) {
-                topMarks += '<text x="' + (px + 2) + '" y="7" font-size="7" fill="#334155" font-family="-apple-system,system-ui,sans-serif" font-weight="600">' + x + '</text>';
-            }
-        }
-        rTop.innerHTML = topMarks;
-        // Left ruler
-        rLeft.setAttribute('viewBox', '0 0 14 ' + dispH);
-        rLeft.setAttribute('width', 14); rLeft.setAttribute('height', dispH);
-        var leftMarks = '<rect width="14" height="' + dispH + '" fill="#fafafa" rx="2" />';
-        var stepY = tickStep();
-        for (var y = 0; y <= natH; y += stepY) {
-            var py = y * sc;
-            var isMajorY = (y % 100 === 0);
-            var isMidY = (y % 50 === 0);
-            var lenY = isMajorY ? 7 : (isMidY ? 5 : 3);
-            leftMarks += '<line x1="' + (14 - lenY) + '" y1="' + py + '" x2="14" y2="' + py + '" stroke="#475569" stroke-width="' + (isMajorY ? 0.9 : 0.6) + '" />';
-            if (isMajorY && y > 0 && y < natH) {
-                leftMarks += '<text x="6" y="' + (py - 1) + '" font-size="7" fill="#334155" font-family="-apple-system,system-ui,sans-serif" font-weight="600" text-anchor="middle" transform="rotate(-90 6,' + py + ')">' + y + '</text>';
-            }
-        }
-        rLeft.innerHTML = leftMarks;
     }
     function setSize(w, h){ state.natW = w; state.natH = h; fitStage(); }
     // 2026-06-15: 기본 사이즈 400×300mm (사용자 요청)
@@ -2240,6 +2199,22 @@ async function submitRollFabricRequest() {
             tp.querySelectorAll('[data-align]').forEach(function(b){
                 b.classList.toggle('active', b.getAttribute('data-align') === (it.textAlign || 'center'));
             });
+            // 폰트 드롭다운 값 동기화 — 현재 fontFamily 가 일반/멋진영문 중 어디 있는지 찾아서 선택.
+            var curFam = String(it.fontFamily || '').replace(/["']/g, '').trim();
+            var ss = $('fpScriptSel');
+            if (ss) {
+                var sIdx = 0;
+                for (var i = 0; i < ss.options.length; i++) {
+                    if (ss.options[i].dataset.fam === curFam) { sIdx = i; break; }
+                }
+                ss.selectedIndex = sIdx;
+            }
+            var fs = $('fpFontSel');
+            if (fs) {
+                for (var j = 0; j < fs.options.length; j++) {
+                    if (fs.options[j].dataset.fam === curFam) { fs.selectedIndex = j; break; }
+                }
+            }
         } else {
             $('fpBgColor').value = state.bg || '#ffffff';
         }
@@ -2308,7 +2283,9 @@ async function submitRollFabricRequest() {
         });
     }
 
-    function addText(text){
+    function addText(text, opts){
+        opts = opts || {};
+        _snap();
         var el = document.createElement('div');
         el.className = 'fp-item fp-text';
         el.style.position = 'absolute';
@@ -2356,13 +2333,17 @@ async function submitRollFabricRequest() {
             document.addEventListener('pointerup', up);
         });
         selectItem(it);
-        // 자동 편집 모드 진입
-        setTimeout(function(){ el.setAttribute('contenteditable','true'); el.focus(); document.execCommand && document.execCommand('selectAll', false, null); }, 50);
+        // 자동 편집 모드 진입 — undo 복원 중에는 skip.
+        if (!opts.skipAutoEdit) {
+            setTimeout(function(){ if (_restoringUndo) return; el.setAttribute('contenteditable','true'); el.focus(); document.execCommand && document.execCommand('selectAll', false, null); }, 50);
+        }
         return it;
     }
     $('fpTextBtn').addEventListener('click', function(){ addText(''); });
 
-    function addImageFromUrl(url){
+    function addImageFromUrl(url, opts){
+        opts = opts || {};
+        if (!opts._restoring) _snap();
         var img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = function(){
@@ -2377,7 +2358,7 @@ async function submitRollFabricRequest() {
             inner.crossOrigin = 'anonymous';
             inner.style.width = '100%';
             inner.style.height = '100%';
-            inner.style.objectFit = 'contain';
+            inner.style.objectFit = opts.fillCanvas ? 'cover' : 'contain';
             inner.style.pointerEvents = 'none';
             el.appendChild(inner);
             // 핸들
@@ -2387,10 +2368,22 @@ async function submitRollFabricRequest() {
             });
             stage.appendChild(el);
             var ratio = img.width / img.height;
-            var maxW = state.natW * 0.6;
-            var w = maxW;
-            var h = w / ratio;
-            if (h > state.natH * 0.6) { h = state.natH * 0.6; w = h * ratio; }
+            var w, h;
+            if (opts.fillCanvas) {
+                // 2026-06-15: 템플릿 — 대지 가득 (cover). 한 축은 정확히 맞고 다른 축은 살짝 잘림.
+                var canvasRatio = state.natW / state.natH;
+                if (ratio > canvasRatio) {
+                    // 이미지가 더 가로로 길다 → 세로를 맞추고 가로 잘림.
+                    h = state.natH; w = h * ratio;
+                } else {
+                    w = state.natW; h = w / ratio;
+                }
+            } else {
+                var maxW = state.natW * 0.6;
+                w = maxW;
+                h = w / ratio;
+                if (h > state.natH * 0.6) { h = state.natH * 0.6; w = h * ratio; }
+            }
             var it = { el:el, type:'image', src:url,
                        x:(state.natW - w)/2, y:(state.natH - h)/2, w:w, h:h };
             state.items.push(it);
@@ -2544,21 +2537,7 @@ async function submitRollFabricRequest() {
             { name:'베이글팻원', fam:'Bagel Fat One', w:'400' },
             { name:'제주명조', fam:'Jeju Myeongjo', w:'400' },
             { name:'제주고딕', fam:'Jeju Gothic', w:'400' },
-            { name:'제주한라산', fam:'Jeju Hallasan', w:'400' },
-            // 2026-06-15: 영문 청첩장/웨딩 스크립트 — 한글 사이트에서도 영문 텍스트용으로 자주 씀.
-            { name:'Great Vibes (영문)', fam:'Great Vibes', w:'400' },
-            { name:'Allura (영문)', fam:'Allura', w:'400' },
-            { name:'Italianno (영문)', fam:'Italianno', w:'400' },
-            { name:'Pinyon Script (영문)', fam:'Pinyon Script', w:'400' },
-            { name:'Petit Formal Script (영문)', fam:'Petit Formal Script', w:'400' },
-            { name:'Alex Brush (영문)', fam:'Alex Brush', w:'400' },
-            { name:'Parisienne (영문)', fam:'Parisienne', w:'400' },
-            { name:'Sacramento (영문)', fam:'Sacramento', w:'400' },
-            { name:'Yellowtail (영문)', fam:'Yellowtail', w:'400' },
-            { name:'Tangerine (영문)', fam:'Tangerine', w:'400;700' },
-            { name:'Mrs Saint Delafield (영문)', fam:'Mrs Saint Delafield', w:'400' },
-            { name:'Pacifico (영문)', fam:'Pacifico', w:'400' },
-            { name:'Dancing Script (영문)', fam:'Dancing Script', w:'400;700' }
+            { name:'제주한라산', fam:'Jeju Hallasan', w:'400' }
         ],
         'ja': [
             { name:'デフォルト (Sans)', fam:'sans-serif', w:null },
@@ -2611,21 +2590,6 @@ async function submitRollFabricRequest() {
             { name:'Pacifico', fam:'Pacifico', w:'400' },
             { name:'Dancing Script', fam:'Dancing Script', w:'400;700' },
             { name:'Caveat', fam:'Caveat', w:'400;700' },
-            // 2026-06-15: 청첩장 / 웨딩 스타일 진한 이탤릭/스크립트 폰트 — Our Wedding Day 류.
-            { name:'Great Vibes', fam:'Great Vibes', w:'400' },
-            { name:'Allura', fam:'Allura', w:'400' },
-            { name:'Italianno', fam:'Italianno', w:'400' },
-            { name:'Pinyon Script', fam:'Pinyon Script', w:'400' },
-            { name:'Petit Formal Script', fam:'Petit Formal Script', w:'400' },
-            { name:'Alex Brush', fam:'Alex Brush', w:'400' },
-            { name:'Parisienne', fam:'Parisienne', w:'400' },
-            { name:'Sacramento', fam:'Sacramento', w:'400' },
-            { name:'Yellowtail', fam:'Yellowtail', w:'400' },
-            { name:'Tangerine', fam:'Tangerine', w:'400;700' },
-            { name:'Mrs Saint Delafield', fam:'Mrs Saint Delafield', w:'400' },
-            { name:'Style Script', fam:'Style Script', w:'400' },
-            { name:'Niconne', fam:'Niconne', w:'400' },
-            { name:'Cookie', fam:'Cookie', w:'400' },
             { name:'Satisfy', fam:'Satisfy', w:'400' },
             { name:'Abril Fatface', fam:'Abril Fatface', w:'400' },
             { name:'Permanent Marker', fam:'Permanent Marker', w:'400' },
@@ -2635,6 +2599,27 @@ async function submitRollFabricRequest() {
             { name:'Bitter', fam:'Bitter', w:'400;700;900' }
         ]
     };
+    // 2026-06-15: 멋진 영문 서체 (웨딩/캘리그라피) — 모든 언어 사이트에서 공통 노출.
+    //   일반 서체 드롭다운 옆에 별도 칸으로 표시. JP 사이트에서도 이 폰트들에 접근 가능.
+    var FP_SCRIPTS = [
+        { name:'멋진영문 / Wedding…', fam:'', w:null },
+        { name:'Great Vibes', fam:'Great Vibes', w:'400' },
+        { name:'Allura', fam:'Allura', w:'400' },
+        { name:'Italianno', fam:'Italianno', w:'400' },
+        { name:'Pinyon Script', fam:'Pinyon Script', w:'400' },
+        { name:'Petit Formal Script', fam:'Petit Formal Script', w:'400' },
+        { name:'Alex Brush', fam:'Alex Brush', w:'400' },
+        { name:'Parisienne', fam:'Parisienne', w:'400' },
+        { name:'Sacramento', fam:'Sacramento', w:'400' },
+        { name:'Yellowtail', fam:'Yellowtail', w:'400' },
+        { name:'Tangerine', fam:'Tangerine', w:'400;700' },
+        { name:'Mrs Saint Delafield', fam:'Mrs Saint Delafield', w:'400' },
+        { name:'Style Script', fam:'Style Script', w:'400' },
+        { name:'Niconne', fam:'Niconne', w:'400' },
+        { name:'Cookie', fam:'Cookie', w:'400' },
+        { name:'Pacifico', fam:'Pacifico', w:'400' },
+        { name:'Dancing Script', fam:'Dancing Script', w:'400;700' }
+    ];
     var _fpFontList = FP_FONTS[LANG] || FP_FONTS['en'];
     var _fpLoadedFonts = {};
     function loadOneFont(fam, weights) {
@@ -2661,6 +2646,29 @@ async function submitRollFabricRequest() {
             if (opt) loadOneFont(opt.dataset.fam, opt.dataset.w);
         });
     }
+    // 2026-06-15: 멋진영문 서체 두 번째 드롭다운 — 선택 시 텍스트 아이템의 fontFamily 를 그 폰트로 변경.
+    var fpScriptSel = $('fpScriptSel');
+    if (fpScriptSel) {
+        fpScriptSel.innerHTML = FP_SCRIPTS.map(function(f, idx){
+            if (!f.fam) return '<option value="">' + f.name + '</option>';
+            var preview = ' style="font-family:&quot;' + f.fam.replace(/"/g,'&quot;') + '&quot;; font-size:14px;"';
+            return '<option value="&quot;' + f.fam.replace(/"/g,'&quot;') + '&quot;" data-fam="' + f.fam.replace(/"/g,'&quot;') + '" data-w="' + (f.w || '') + '"' + preview + '>' + f.name + '</option>';
+        }).join('');
+        fpScriptSel.addEventListener('change', function(){
+            var opt = this.options[this.selectedIndex];
+            if (!opt || !opt.dataset.fam) return;
+            loadOneFont(opt.dataset.fam, opt.dataset.w);
+            // 텍스트가 선택돼 있으면 그 텍스트에 적용. 없으면 다음 텍스트의 기본값.
+            var it = state.selected;
+            if (it && it.type === 'text') {
+                it.fontFamily = '"' + opt.dataset.fam + '"';
+                syncItem(it);
+            }
+            _scriptDefaultFam = '"' + opt.dataset.fam + '"';
+            _scriptDefaultW = opt.dataset.w || '';
+        });
+    }
+    var _scriptDefaultFam = null, _scriptDefaultW = null;
     // 텍스트 추가 시 — 선택된 옵션 폰트 lazy 로드.
     $('fpTextBtn').addEventListener('click', function(){
         if (!fpFontSel) return;
@@ -2802,7 +2810,9 @@ async function submitRollFabricRequest() {
             grid.querySelectorAll('[data-url]').forEach(function(el){
                 el.addEventListener('click', function(){
                     var u = decodeURI(el.getAttribute('data-url') || '');
-                    if (u) addImageFromUrl(u);
+                    if (!u) return;
+                    // 2026-06-15: 템플릿 탭 → 대지 가득 (cover). 요소/장식은 기본 60% 비율.
+                    addImageFromUrl(u, { fillCanvas: _libTab === 'template' });
                 });
             });
             grid.querySelectorAll('[data-orn]').forEach(function(el){
@@ -2865,6 +2875,101 @@ async function submitRollFabricRequest() {
         var maxP = Math.max(0, Math.ceil(_libItems.length / _LIB_PER_PAGE) - 1);
         if (_libPage < maxP) { _libPage++; renderLibPage(); }
     });
+    // ───────── 되돌리기 (Ctrl+Z) ─────────
+    var _hist = [];
+    var _MAX_HIST = 30;
+    var _restoringUndo = false;
+    function _snap(){
+        if (_restoringUndo) return;
+        // 텍스트는 DOM 의 innerText 를 모델에 sync.
+        state.items.forEach(function(it){
+            if (it.type === 'text' && it.el) it.text = it.el.innerText || it.text;
+        });
+        var snap = {
+            bg: state.bg, natW: state.natW, natH: state.natH,
+            items: state.items.map(function(it){
+                var c = { type: it.type, x: it.x, y: it.y, w: it.w, h: it.h };
+                if (it.type === 'image') c.src = it.src;
+                else if (it.type === 'text') {
+                    c.text = it.text || '';
+                    c.fill = it.fill;
+                    c.fontSize = it.fontSize;
+                    c.fontFamily = it.fontFamily;
+                    c.fontWeight = it.fontWeight;
+                    c.textAlign = it.textAlign || 'center';
+                }
+                return c;
+            })
+        };
+        _hist.push(snap);
+        if (_hist.length > _MAX_HIST) _hist.shift();
+        _updateUndoBtn();
+    }
+    function _updateUndoBtn(){
+        var b = $('fpUndoBtn');
+        if (b) { b.disabled = (_hist.length === 0); b.style.opacity = _hist.length === 0 ? '0.4' : '1'; }
+    }
+    async function _undo(){
+        if (_hist.length === 0) return;
+        var snap = _hist.pop();
+        _restoringUndo = true;
+        try {
+            // 현재 아이템 다 제거
+            state.items.slice().forEach(function(it){ if (it.el) it.el.remove(); });
+            state.items = [];
+            state.selected = null;
+            state.bg = snap.bg || '#ffffff';
+            stage.style.background = state.bg;
+            if (snap.natW !== state.natW || snap.natH !== state.natH) {
+                $('fpSizeW').value = snap.natW;
+                $('fpSizeH').value = snap.natH;
+                setSize(snap.natW, snap.natH);
+            }
+            // 텍스트는 즉시 복원, 이미지는 onload 대기.
+            var pending = 0;
+            function done(){ if (pending === 0) { _restoringUndo = false; selectItem(null); _updateUndoBtn(); } }
+            snap.items.forEach(function(s){
+                if (s.type === 'text') {
+                    var it = addText(s.text, { skipAutoEdit: true });
+                    it.fill = s.fill; it.fontSize = s.fontSize; it.fontFamily = s.fontFamily;
+                    it.fontWeight = s.fontWeight; it.textAlign = s.textAlign || 'center';
+                    it.x = s.x; it.y = s.y;
+                    it.el.textContent = s.text || '';
+                    syncItem(it);
+                } else if (s.type === 'image' && s.src) {
+                    pending++;
+                    addImageFromUrl(s.src, { _restoring: true });
+                    var checkAdded = setInterval(function(){
+                        var last = state.items[state.items.length - 1];
+                        if (last && last.type === 'image' && last.src === s.src) {
+                            clearInterval(checkAdded);
+                            last.x = s.x; last.y = s.y; last.w = s.w; last.h = s.h;
+                            syncItem(last);
+                            pending--;
+                            done();
+                        }
+                    }, 30);
+                }
+            });
+            done();
+        } catch(e) { _restoringUndo = false; console.warn('[fp undo]', e); }
+    }
+    window._fpUndo = _undo;
+    $('fpUndoBtn').addEventListener('click', _undo);
+    document.addEventListener('keydown', function(ev){
+        var sec = $('fpEditorSection');
+        if (!sec || sec.offsetParent === null) return;
+        var ae = document.activeElement;
+        if (ae) {
+            var tag = (ae.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+            if (ae.getAttribute && ae.getAttribute('contenteditable') === 'true') return;
+        }
+        if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'z' || ev.key === 'Z') && !ev.shiftKey) {
+            ev.preventDefault(); _undo();
+        }
+    });
+
     // 초기 로드
     loadLib();
 
@@ -2941,6 +3046,7 @@ async function submitRollFabricRequest() {
     }
     function removeItem(it){
         if (!it) return;
+        _snap();
         var idx = state.items.indexOf(it);
         if (idx >= 0) { it.el.remove(); state.items.splice(idx, 1); }
         if (state.selected === it) selectItem(null);
@@ -3149,11 +3255,6 @@ async function submitRollFabricRequest() {
 .fp-stage-lib-grid { display:grid; grid-template-columns:140px 1fr; gap:10px; align-items:stretch; }
 .fp-canvas-col { min-width:0; display:flex; flex-direction:column; }
 #fpStageWrap { flex:1; min-height:520px; }
-/* 줄자 (mm) — stage 외곽에 SVG 로 부착. 상단 14px / 좌측 14px. */
-.fp-stage-box { position:relative; padding-top:14px; padding-left:14px; }
-.fp-ruler { position:absolute; display:block; pointer-events:none; }
-.fp-ruler-top  { top:0;  left:14px; height:14px; }
-.fp-ruler-left { left:0; top:14px;  width:14px;  }
 /* 힌트 텍스트는 다크 영역 하단에 절대 위치 — 캔버스 면적 침범 X */
 .fp-canvas-col .fp-hint { position:absolute; left:0; right:0; bottom:6px; color:#94a3b8 !important; font-size:10.5px; text-align:center; pointer-events:none; letter-spacing:0.01em; opacity:0.7; }
 .fp-lib-sec { padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
