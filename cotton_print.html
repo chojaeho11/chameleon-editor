@@ -1944,15 +1944,18 @@ async function submitRollFabricRequest() {
             </div>
             <button type="button" id="fpUploadBtn" class="fp-tool-btn fp-tool-primary" title="이미지 업로드"><i class="fa-solid fa-image"></i><span id="fpUploadLbl"></span></button>
             <input type="file" id="fpFileInput" accept="image/*" style="display:none;">
-            <button type="button" id="fpTextBtn" class="fp-tool-btn"><i class="fa-solid fa-font"></i><span class="fp-text-lbl" id="fpTextLbl">텍스트</span></button>
-            <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
-            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl" id="fpCutLbl">배경제거</span></button>
+            <button type="button" id="fpTextBtn" class="fp-tool-btn"><i class="fa-solid fa-font"></i><span class="fp-text-lbl" id="fpTextLbl">텍스트 추가</span></button>
+            <button type="button" id="fpCutoutBtn" class="fp-tool-btn" disabled><i class="fa-solid fa-scissors"></i><span class="fp-cut-lbl fp-cut-lbl-pc" id="fpCutLbl">배경제거</span><span class="fp-cut-lbl fp-cut-lbl-mo" id="fpCutLblMo">누끼</span></button>
             <button type="button" id="fpUndoBtn" class="fp-tool-btn" disabled title="되돌리기 (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
             <label class="fp-tool-btn fp-tool-color" title="색상">
                 <input type="color" id="fpBgColor" value="#ffffff">
             </label>
             <button type="button" id="fpDelBtn" class="fp-tool-btn fp-tool-danger" disabled title="삭제 (Delete)"><i class="fa-solid fa-trash"></i></button>
-            <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
+            <!-- 2026-06-16: AI + Download 묶음 — 같이 우측 끝으로. AI 가 다운로드 옆에 붙음. -->
+            <div class="fp-action-end">
+                <button type="button" id="fpAiBtn" class="fp-tool-btn fp-tool-ai" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles"></i><span id="fpAiLbl"></span></button>
+                <button type="button" id="fpDownloadBtn" class="fp-tool-btn fp-tool-download" title="다운로드"><i class="fa-solid fa-download"></i><span id="fpDownloadLbl"></span></button>
+            </div>
         </div>
         <!-- 정렬 + 레이어 바 (항상 표시, 미선택 시 dim) — 우측에 서체 정렬도 포함 -->
         <div id="fpAlignBar">
@@ -2043,7 +2046,7 @@ async function submitRollFabricRequest() {
     var LANG = (LANG_RAW === 'ja' || LANG_RAW === 'jp') ? 'ja' : (LANG_RAW === 'ko' || LANG_RAW === 'kr') ? 'ko' : 'en';
     var T = {
         ko: { title:'간단한 디자인 바로바로', sub:'사진 배경 지우기 · 내 사진에 간단한 텍스트를 넣어서 꾸며봐요',
-              upload:'불러오기', text:'텍스트', ai:'AI 이미지', download:'다운로드', hint:'대지를 클릭해 텍스트 추가 · 모서리로 크기 조절 · 드래그로 이동', cutout:'배경제거', undo:'되돌리기',
+              upload:'불러오기', text:'텍스트 추가', ai:'AI 이미지', download:'다운로드', hint:'대지를 클릭해 텍스트 추가 · 모서리로 크기 조절 · 드래그로 이동', cutout:'배경제거', cutoutMo:'누끼', undo:'되돌리기',
               aiTitle:'AI 이미지 생성', aiSub:'원하는 이미지를 한글로 설명해 주세요. (예: 따뜻한 햇살이 비치는 카페 창가의 커피잔)',
               aiPlaceholder:'예: 노을 지는 바다 위의 흰 갈매기, 수채화 스타일', aiGen:'생성하기', aiCancel:'취소',
               aiLoading:'AI 가 이미지를 생성 중입니다... 약 10~20초 소요',
@@ -2054,7 +2057,7 @@ async function submitRollFabricRequest() {
               cutOff:'누끼따기를 사용하려면 이미지를 먼저 선택해주세요',
               fontTitle:'서체', scriptTitle:'멋진 영문 서체 (웨딩/캘리)', scriptPh:'멋진영문 / Wedding…' },
         ja: { title:'カンタン デザイン サクッと', sub:'写真の背景削除 · お気に入りの写真にテキストを加えて飾りましょう',
-              upload:'読み込み', text:'テキスト', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動', cutout:'背景削除', undo:'元に戻す',
+              upload:'読み込み', text:'テキスト追加', ai:'AI画像', download:'ダウンロード', hint:'キャンバスをクリックしてテキスト追加 · 角でサイズ調整 · ドラッグで移動', cutout:'背景削除', cutoutMo:'背景削除', undo:'元に戻す',
               aiTitle:'AI 画像生成', aiSub:'欲しい画像を日本語で説明してください。(例: 暖かい日差しの差し込むカフェの窓辺のコーヒー)',
               aiPlaceholder:'例: 夕焼けの海と白いカモメ、水彩画スタイル', aiGen:'生成', aiCancel:'キャンセル',
               aiLoading:'AI が画像を生成中です... 約10〜20秒かかります',
@@ -2065,7 +2068,7 @@ async function submitRollFabricRequest() {
               cutOff:'背景削除には先に画像を選択してください',
               fontTitle:'フォント', scriptTitle:'英文スクリプト (ウェディング)', scriptPh:'英文スクリプト…' },
         en: { title:'Easy Design, Right Away', sub:'Background removal · Decorate your photo with simple text',
-              upload:'Import', text:'Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move', cutout:'Remove BG', undo:'Undo',
+              upload:'Import', text:'Add Text', ai:'AI Image', download:'Download', hint:'Tap the canvas to add text · Corner to resize · Drag to move', cutout:'Remove BG', cutoutMo:'Cut BG', undo:'Undo',
               aiTitle:'Generate AI Image', aiSub:'Describe the image you want. (e.g., A coffee cup by a cafe window in warm sunlight)',
               aiPlaceholder:'e.g., A white seagull over a sunset sea, watercolor style', aiGen:'Generate', aiCancel:'Cancel',
               aiLoading:'AI is generating your image... about 10-20 seconds',
@@ -2095,6 +2098,7 @@ async function submitRollFabricRequest() {
     $('fpLibSearch').placeholder = t.libSearch;
     // 2026-06-15: 배경제거 / 텍스트 라벨 + 되돌리기 툴팁 + 폰트 드롭다운 title — 언어별 번역.
     var cutLbl = $('fpCutLbl'); if (cutLbl) cutLbl.textContent = t.cutout;
+    var cutLblMo = $('fpCutLblMo'); if (cutLblMo) cutLblMo.textContent = t.cutoutMo || t.cutout;
     var cutBtn = $('fpCutoutBtn'); if (cutBtn) cutBtn.title = t.cutout;
     var txtLbl = $('fpTextLbl'); if (txtLbl) txtLbl.textContent = t.text;
     var txtBtn = $('fpTextBtn'); if (txtBtn) txtBtn.title = t.text;
@@ -3261,12 +3265,19 @@ async function submitRollFabricRequest() {
 .fp-tool-color input[type=color]::-webkit-color-swatch-wrapper { padding:0; }
 .fp-tool-color input[type=color]::-webkit-color-swatch { visibility:hidden; border:none; }
 .fp-tool-color input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
-.fp-tool-download { margin-left:auto; background:#4f46e5; border-color:#4f46e5; color:#fff; padding:8px 16px; }
+.fp-tool-download { background:#4f46e5; border-color:#4f46e5; color:#fff; padding:8px 16px; }
 .fp-tool-download:hover:not(:disabled) { background:#4338ca; border-color:#4338ca; color:#fff; }
 .fp-tool-btn.fp-active { background:#f5f3ff; border-color:#c4b5fd; color:#6d28d9; }
-/* 배경제거 / 텍스트 라벨 — PC 만 표시 */
+/* 배경제거 / 텍스트 라벨 — PC + 모바일 모두 표시. PC 는 긴 라벨, 모바일은 짧은 라벨. */
 .fp-cut-lbl, .fp-text-lbl { font-weight:600; }
-@media (max-width:768px){ .fp-cut-lbl, .fp-text-lbl { display:none; } }
+.fp-cut-lbl-mo { display:none; }
+@media (max-width:768px){
+    .fp-cut-lbl-pc { display:none; }
+    .fp-cut-lbl-mo { display:inline; }
+}
+/* AI + 다운로드 묶음 — 우측 끝으로 같이 이동. 모바일에선 자연스럽게 마지막 줄 형성. */
+.fp-action-end { display:inline-flex; gap:6px; margin-left:auto; }
+@media (max-width:768px){ .fp-action-end { margin-left:auto; gap:5px; } }
 
 /* 정렬 + 레이어 바 — 미니멀 톤 */
 #fpAlignBar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:6px 8px; background:#ffffff; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; transition:opacity .2s; }
