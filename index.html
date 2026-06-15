@@ -5756,9 +5756,22 @@ function scrollHotdeal(gridId, dir) {
             .me-handle-rot { top:-44px; margin-left:-10px; }
             .me-handle-rot::before { top:20px; height:24px; }
             .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
-            .me-tool-btn { padding:10px 14px !important; font-size:13px !important; }
-            .me-props { padding:8px !important; gap:6px !important; }
-            .me-prop-group { padding:6px 10px !important; font-size:12px !important; }
+            /* 2026-06-15: 모바일 툴바 — 글씨 숨기고 아이콘만. 1줄 가로 스크롤 없이 가지런히. */
+            .me-toolbar { gap:5px !important; padding:8px 8px !important; flex-wrap:nowrap !important; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+            .me-toolbar::-webkit-scrollbar { display:none; }
+            .me-tool-btn { padding:9px 11px !important; font-size:13px !important; flex:0 0 auto; min-width:38px; min-height:36px; display:inline-flex !important; align-items:center; justify-content:center; }
+            .me-tool-btn .me-tb-lbl, .me-color-wrap .me-tb-lbl { display:none !important; }
+            .me-tool-btn .me-tb-ic, .me-color-wrap .me-tb-ic { font-size:14px !important; margin:0 !important; }
+            .me-color-wrap { padding:9px 9px !important; min-height:36px; display:inline-flex; align-items:center; gap:5px; }
+            .me-color-wrap input[type=color] { width:20px !important; height:20px !important; }
+            /* 2026-06-15: 모바일 props 패널 — 라벨 숨기고 컴팩트, 2줄 정도로 끝나게 wrap. */
+            .me-props { padding:6px 6px !important; gap:5px !important; flex-wrap:wrap !important; }
+            .me-prop-group { padding:5px 8px !important; font-size:12px !important; gap:4px !important; }
+            .me-prop-group label { display:none !important; }
+            .me-prop-group input[type=number] { width:38px !important; font-size:12px !important; }
+            .me-prop-group select { min-width:80px !important; max-width:110px !important; font-size:12px !important; padding:2px 12px 2px 2px !important; }
+            .me-prop-group input[type=color] { width:20px !important; height:20px !important; }
+            .me-prop-btn { padding:5px 8px !important; min-width:28px !important; }
             /* 텍스트 — 선택 시 padding 확장 (탭 영역 보장) + 편집 중 배경 강조 */
             .me-item.text { padding: 6px 8px !important; min-height: 28px; }
             .me-item.text.selected { background: rgba(0,122,255,0.06); border-radius:4px; }
@@ -5811,14 +5824,14 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
             </div>
             <div class="me-toolbar">
-                <button type="button" class="me-tool-btn" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="Ctrl+Z" style="display:inline-flex; align-items:center; gap:5px; opacity:0.35;" disabled><i class="fa-solid fa-rotate-left" style="font-size:11px;"></i><span data-i18n="me_undo">되돌리기</span></button>
-                <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()"><span data-i18n="me_img_upload">이미지 업로드</span></button>
+                <button type="button" class="me-tool-btn" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 (Ctrl+Z)" style="display:inline-flex; align-items:center; gap:5px; opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i><span data-i18n="me_undo" class="me-tb-lbl">되돌리기</span></button>
+                <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()" title="이미지 업로드"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">이미지 업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
-                <button type="button" class="me-tool-btn" onclick="window._meAddText()"><span data-i18n="me_text">글씨</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
                 <!-- 2026-06-15: 사각형/원 통합 → '도형' 단일 버튼. 클릭마다 사각/원 토글. -->
-                <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()"><span data-i18n="me_shape">도형</span></button>
-                <label class="me-color-wrap" title="배경색"><span data-i18n="me_bg">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
-                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed;" title="이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors" style="font-size:11px; margin-right:4px;"></i><span data-i18n="me_cutout">누끼따기</span></button>
+                <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()" title="도형"><i class="fa-solid fa-shapes me-tb-ic"></i><span data-i18n="me_shape" class="me-tb-lbl">도형</span></button>
+                <label class="me-color-wrap" title="배경색"><i class="fa-solid fa-fill-drip me-tb-ic"></i><span data-i18n="me_bg" class="me-tb-lbl">배경</span><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"></label>
+                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed;" title="누끼따기 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼따기</span></button>
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
@@ -11823,7 +11836,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=458"></script>
+<script src="/simple_order.js?v=459"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

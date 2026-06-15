@@ -12057,7 +12057,12 @@ html, body { background: #ffffff !important; }
             grid.querySelectorAll('[data-rail-orn]').forEach(function(el){
                 el.addEventListener('click', function(){
                     var idx = parseInt(el.getAttribute('data-rail-orn'), 10);
-                    if (!isNaN(idx) && window._soQdLibPickOrnament) window._soQdLibPickOrnament(idx);
+                    if (isNaN(idx)) return;
+                    // 2026-06-15 fix: _soQdLibPickOrnament resolves the SVG via _libCurrentItems[idx],
+                    //   but the rail uses _railAllItems. Sync the popup's array so the shared pick logic
+                    //   finds the right item. Popup's own _loadLibItems resets _libCurrentItems on open.
+                    _libCurrentItems = _railAllItems;
+                    if (window._soQdLibPickOrnament) window._soQdLibPickOrnament(idx);
                 });
             });
             _updateRailPager();
