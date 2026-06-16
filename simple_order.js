@@ -12535,6 +12535,24 @@ html, body { background: #ffffff !important; }
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path, url: pub };
     }
+    // 2026-06-16: 칼선 SVG 업로드 — design 버킷의 cutlines/ 폴더에 standalone SVG 저장.
+    //   스티커뿐 아니라 등신대·키링 등 cutline 이 필요한 모든 상품에 재사용 가능 (제품 코드만 hint 로 받음).
+    //   결과 URL 을 cart item.cutlineUrl 로 부착 → order.js uploadOrderFiles 가 orders.files[]
+    //   에 {type:'cutline'} 으로 자동 등록 → admin 의 ✂️ 칼선 배지 + 다운로드 UI 가 그대로 노출.
+    async function _soUploadCutlineSvg(svgString, productCode) {
+        const sb = getSb();
+        if (!sb) throw new Error('Supabase not available');
+        if (!svgString || svgString.length < 50) throw new Error('Invalid cutline SVG');
+        const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
+        const safeCode = String(productCode || 'item').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 32);
+        const path = 'cutlines/' + safeCode + '_' + ts + '.svg';
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const { error } = await sb.storage.from('design').upload(path, blob, { contentType: 'image/svg+xml', upsert: false });
+        if (error) throw error;
+        const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+        return { path: path, url: pub };
+    }
+    window._soUploadCutlineSvg = _soUploadCutlineSvg;
 
     function calcFinal() {
         const unit = pickPrice(state.product);
@@ -12691,6 +12709,11 @@ html, body { background: #ffffff !important; }
                 isFancy: !!(_stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode && _stickerIsFancy(x); }))
             } : null,
             _isSticker: !!state.isSticker,
+            // 2026-06-16: 칼선 SVG — Storage 업로드된 URL. order.js uploadOrderFiles 가 orders.files[]
+            //   에 {type:'cutline'} 으로 자동 등록 → 관리자 페이지에 ✂️ 다운로드 노출.
+            //   스티커/등신대/키링 모두 같은 필드 사용 (제품 타입과 무관한 generic field).
+            cutlineUrl: state._cartCutlineUrl || null,
+            cutlinePath: state._cartCutlinePath || null,
             bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
@@ -12958,6 +12981,21 @@ html, body { background: #ffffff !important; }
                 backUrl = backResult.url;
                 backPath = backResult.path;
             }
+            // 2026-06-16: 칼선 SVG 업로드 — 미니에디터에 칼선이 그려진 경우.
+            //   스티커/등신대/키링 등 모든 cutline 상품에 공통 적용. 실패해도 주문은 진행.
+            state._cartCutlineUrl = null;
+            state._cartCutlinePath = null;
+            try {
+                var _cutSvg = window._meCutlineSvg;
+                if (_cutSvg && typeof _cutSvg === 'string' && _cutSvg.length > 50) {
+                    updateUploadStep(tr('칼선 SVG 업로드 중...', 'カットラインSVGアップロード中...', 'Uploading cutline SVG...'));
+                    var _pcode = (state.product && state.product.code) || 'item';
+                    var _cutRes = await _soUploadCutlineSvg(_cutSvg, _pcode);
+                    state._cartCutlineUrl = _cutRes.url;
+                    state._cartCutlinePath = _cutRes.path;
+                    console.log('[cutline] uploaded:', _cutRes.url);
+                }
+            } catch (_cue) { console.warn('[cutline upload]', _cue); }
             updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
             // 2026-05-15: 카트 저장 전 썸네일 축소 — localStorage quota 초과로 카트가 silently 사라지던 버그 fix
             state._cartThumb = await _soShrinkThumb(state.thumbDataUrl, 220);
@@ -13168,6 +13206,12 @@ html, body { background: #ffffff !important; }
             var cb2 = document.getElementById('soCutlineCheckbox');
             if (cb2) cb2.checked = false;
             if (typeof window._soRefreshCutlineUI === 'function') window._soRefreshCutlineUI();
+            // 2026-06-16: 칼선 SVG 도 초기화 — 다음 상품에 stale cutline 잔류 방지.
+            state._cartCutlineUrl = null;
+            state._cartCutlinePath = null;
+            try {
+                if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
+            } catch (_e) {}
         }
     };
 
