@@ -14079,18 +14079,33 @@ window._loadGoodsCuratedQuery = async function() {
     return keyrings.concat(tshirts);
 };
 
-// 2026-06-16: 광고인쇄 섹션 = 상업인쇄물(is_print_service) 5 + 광고인쇄(is_popular) 5 통합.
-//   각자 관리자 페이지 sort_order 순서. 위 줄(0~4) = 상업, 아래 줄(5~9) = 광고.
-//   _orderKey 를 명시해 loadSpecialProducts 의 카테고리 재정렬을 우회.
+// 2026-06-16: 광고인쇄 섹션 = is_popular=true 아이템들을 카테고리 접두사로 2분할.
+//   - 카테고리 코드가 pp_ 로 시작 → 상업인쇄물 (명함/스티커/홍보물 등) → 상단 5개
+//   - 그 외 → 광고인쇄 (현수막/실사/아크릴/시트지 등) → 하단 5개
+//   각 그룹 내 정렬은 admin_categories.sort_order ASC 그 다음 admin_products.sort_order ASC.
+//   is_print_service 플래그는 DB 에 비어 있어서 못 쓰고, 관리자 페이지의 카테고리 순서를 그대로 따라감.
 window._loadAdPrintMergedQuery = async function() {
     const SELECT_COLS = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size';
-    const [printRes, popRes] = await Promise.all([
-        sb.from('admin_products').select(SELECT_COLS).eq('is_print_service', true).order('sort_order', { ascending: true }).limit(5),
-        sb.from('admin_products').select(SELECT_COLS).eq('is_popular', true).order('sort_order', { ascending: true }).limit(5)
+    const [popRes, catRes] = await Promise.all([
+        sb.from('admin_products').select(SELECT_COLS).eq('is_popular', true),
+        sb.from('admin_categories').select('code, sort_order')
     ]);
-    const prints = (printRes.data || []).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: i }));
-    const pops   = (popRes.data   || []).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: 100 + i }));
-    return prints.concat(pops);
+    const _catOrd = {};
+    (catRes.data || []).forEach(c => { _catOrd[c.code] = c.sort_order ?? 9999; });
+    function _sortByAdmin(arr) {
+        return arr.slice().sort((a, b) => {
+            const ca = _catOrd[a.category] ?? 9999;
+            const cb = _catOrd[b.category] ?? 9999;
+            if (ca !== cb) return ca - cb;
+            return (a.sort_order ?? 9999) - (b.sort_order ?? 9999);
+        });
+    }
+    const all = popRes.data || [];
+    const commercial = all.filter(p => (p.category || '').startsWith('pp_'));
+    const adPrint    = all.filter(p => !(p.category || '').startsWith('pp_'));
+    const commTop = _sortByAdmin(commercial).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: i }));
+    const adTop   = _sortByAdmin(adPrint).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: 100 + i }));
+    return commTop.concat(adTop);
 };
 
 async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6, customQueryFn = null) {
