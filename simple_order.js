@@ -8787,6 +8787,8 @@ html, body { background: #ffffff !important; }
             }
         } catch (_) {}
         _soStickerRender();
+        // 2026-06-16: 변형 전환 시 디자인 대지도 sync (재단 변형 간 사이즈 유지/팬시면 정사각 100×100).
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
     };
     window._soStickerSizeInput = function() {
@@ -8794,6 +8796,8 @@ html, body { background: #ffffff !important; }
         var h = parseInt(document.getElementById('soStickerH').value, 10) || 100;
         state.stickerW = Math.max(10, Math.min(1000, w));
         state.stickerH = Math.max(10, Math.min(1000, h));
+        // 2026-06-16: 디자인 에디터 대지도 같이 sync.
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
     };
     window._soStickerQtyInput = function() {
@@ -11611,7 +11615,19 @@ html, body { background: #ffffff !important; }
 
         function _resolveSize(p) {
             var wMm = 0, hMm = 0;
-            // 우선순위: 가벽(state.wallWidth/Height m) > state.customW/H cm > p.width_mm/height_mm > fallback
+            // 우선순위: 스티커(mm) > 가벽(m) > state.customW/H cm > p.width_mm/height_mm > fallback
+            // 2026-06-16: 스티커는 자체 W/H (mm) 사용 — 재단 스티커만 적용, 팬시는 size 의미 없음.
+            if (state && state.isSticker && state.stickerW && state.stickerH) {
+                var _stPicked = (typeof _stickerVariantsCache !== 'undefined' && _stickerVariantsCache)
+                    ? _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode; })
+                    : null;
+                var _stFancy = !!(_stPicked && typeof _stickerIsFancy === 'function' && _stickerIsFancy(_stPicked));
+                if (!_stFancy) {
+                    wMm = state.stickerW;
+                    hMm = state.stickerH;
+                    return { wMm: Math.round(wMm), hMm: Math.round(hMm) };
+                }
+            }
             if (state && state.isWall && state.wallWidth) {
                 wMm = state.wallWidth * 1000;
                 hMm = (state.wallHeight || 2.4) * 1000;
