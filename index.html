@@ -6929,6 +6929,28 @@ function scrollHotdeal(gridId, dir) {
         window._meAddShape(_meShapeCycle);
         _meShapeCycle = (_meShapeCycle === 'rect') ? 'circle' : 'rect';
     };
+    // 2026-06-16: 외부 (simple_order 의 배경 프리셋) 에서 분할 배경(2색) 추가.
+    //   light 색이 캔버스 전체, dark 색이 하단 1/3 strip. 둘 다 드래그/리사이즈 가능.
+    window._meAddSplitBg = function(light, dark) {
+        _meSnapshot();
+        function _mk(fill, x, y, w, h) {
+            var el = document.createElement('div');
+            el.className = 'me-item shape';
+            el.style.zIndex = (++me.zCounter);
+            me.stage.appendChild(el);
+            var it = { el: el, type: 'shape', shape: 'rect',
+                x: x, y: y, w: w, h: h,
+                fill: fill, stroke: '#000000', strokeWidth: 0 };
+            me.items.push(it);
+            _meSyncItemDisplay(it);
+            _meBindDrag(it);
+            return it;
+        }
+        var lightIt = _mk(light || '#fef3c7', 0, 0, me.natW, me.natH);
+        var darkIt  = _mk(dark  || '#92400e', 0, Math.round(me.natH * 2/3), me.natW, Math.round(me.natH / 3));
+        // 어두운 strip 을 위로 (z 가 더 큼). select 시 사용자 편의로 dark 선택.
+        if (typeof _meSelect === 'function') _meSelect(darkIt);
+    };
 
     window._meAddImageFromFile = function(input) {
         var f = input.files && input.files[0];
@@ -11930,7 +11952,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=467"></script>
+<script src="/simple_order.js?v=468"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

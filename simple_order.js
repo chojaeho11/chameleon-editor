@@ -1568,7 +1568,7 @@ html, body { background: #ffffff !important; }
             /* 2026-06-15: rail 폭 좁힘 (180→120), 썸네일 1열×6 정사각 꽉차게 (object-fit:cover). */
             #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:10px; align-items:stretch; }
             #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:200px; }
-            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; }
+            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
             #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
             #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:1fr; gap:5px; flex:1; align-content:start; }
@@ -1611,7 +1611,8 @@ html, body { background: #ffffff !important; }
           <div class="qd-edit-grid">
             <aside class="qd-rail">
               <div class="qd-rail-tabs">
-                <button type="button" class="qd-rail-tab active" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')">${tr('템플릿','テンプレ','Tmpl')}</button>
+                <button type="button" class="qd-rail-tab active" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')">${tr('사진','写真','Photo')}</button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="background" onclick="window._soQdRailSwitch && window._soQdRailSwitch('background')">${tr('배경','背景','BG')}</button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')">${tr('요소','要素','Elem')}</button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')">${tr('장식','装飾','Deco')}</button>
               </div>
@@ -12038,9 +12039,39 @@ html, body { background: #ffffff !important; }
             var mp = { template:'sub-template', element:'sub-element', decoration:'sub-icon' };
             window._soQdOpenLib && window._soQdOpenLib(mp[_railTab] || 'sub-template');
         };
+        // 2026-06-16: 배경 탭 — 2가지 색상 조합 (light 2/3 + dark 1/3) 프리셋 4개.
+        //   클릭 시 두 개의 사각형이 캔버스에 추가되고, 각각 드래그/리사이즈 가능 (위치·크기 조절).
+        var _BG_PRESETS = [
+            { light:'#fef3c7', dark:'#92400e', name:'cream-brown' },
+            { light:'#dbeafe', dark:'#1e3a8a', name:'mint-navy'   },
+            { light:'#fce7f3', dark:'#831843', name:'pink-plum'   },
+            { light:'#dcfce7', dark:'#064e3b', name:'beige-forest'}
+        ];
+        window._soQdAddSplitBg = function(idx) {
+            var p = _BG_PRESETS[idx];
+            if (!p) return;
+            if (typeof window._meAddSplitBg === 'function') window._meAddSplitBg(p.light, p.dark);
+        };
         async function _soQdRailLoad() {
             var grid = document.getElementById('soQdRailThumbs');
             if (!grid) return;
+            // 배경 탭은 동기 — 즉시 렌더.
+            if (_railTab === 'background') {
+                grid.innerHTML = _BG_PRESETS.map(function(p, i){
+                    return '<div class="qd-rail-thumb" data-bg-preset="' + i + '" style="background:' + p.light + '; position:relative; overflow:hidden;">'
+                        + '<div style="position:absolute; left:0; right:0; bottom:0; height:33%; background:' + p.dark + ';"></div>'
+                        + '</div>';
+                }).join('');
+                grid.querySelectorAll('[data-bg-preset]').forEach(function(el){
+                    el.addEventListener('click', function(){
+                        var i = parseInt(el.getAttribute('data-bg-preset'), 10);
+                        if (!isNaN(i) && typeof window._soQdAddSplitBg === 'function') window._soQdAddSplitBg(i);
+                    });
+                });
+                _railAllItems = [];
+                _updateRailPager();
+                return;
+            }
             var _loadStr = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
             grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr;
             // 장식 탭은 canvas-icons.js lazy load
