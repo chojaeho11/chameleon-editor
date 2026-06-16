@@ -11903,6 +11903,8 @@ html, body { background: #ffffff !important; }
                     if (typeof window._meSetSize === 'function') {
                         var _spx = _mmPairToPx(sz.wMm, sz.hMm);
                         window._meSetSize(_spx.w, _spx.h, p.code);
+                        // 2026-06-16 v13: 실제 mm 도 저장 → ruler/cutline PDF 가 정확한 값 사용.
+                        if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
                         document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
                             b.classList.remove('active');
                         });
@@ -11943,6 +11945,8 @@ html, body { background: #ffffff !important; }
             try {
                 if (typeof window._meSetSize === 'function') {
                     var _spxs = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spxs.w, _spxs.h, state.product.code);
+                    // 2026-06-16 v13: 실제 mm 동기화.
+                    if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
                 }
             } catch(_e){}
         };

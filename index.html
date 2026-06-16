@@ -5947,6 +5947,7 @@ function scrollHotdeal(gridId, dir) {
     }
     window._meFitStage = _meFitStage;
     // 2026-06-16 v9: 세로 mm 줄자 렌더 — stage 높이에 맞춰 10mm tick (5mm 짧은 sub-tick) + 라벨.
+    //   v13: me.natHMm 이 있으면 그걸 우선 사용 (가벽 등 capped pixel canvas 에서 mm 정확).
     function _meDrawRuler() {
         var r = $('meRulerV');
         var stage = $('meStage');
@@ -5954,17 +5955,23 @@ function scrollHotdeal(gridId, dir) {
         var heightPx = parseFloat(stage.style.height) || stage.clientHeight || 0;
         if (!heightPx) { r.innerHTML = ''; return; }
         r.style.height = heightPx + 'px';
-        var heightMm = me.natH / 3.7795;
+        var heightMm = me.natHMm || (me.natH / 3.7795);
         var pxPerMm = heightPx / heightMm;
+        // 2026-06-16 v13: 적응형 tick — 가벽처럼 큰 사이즈에선 100/250/500mm 단위로 표시.
+        var majorStep, minorStep, unit;
+        if (heightMm <= 200)       { majorStep = 10;   minorStep = 5;   unit = 'mm'; }
+        else if (heightMm <= 500)  { majorStep = 25;   minorStep = 5;   unit = 'mm'; }
+        else if (heightMm <= 1500) { majorStep = 100;  minorStep = 50;  unit = 'mm'; }
+        else if (heightMm <= 5000) { majorStep = 250;  minorStep = 100; unit = 'mm'; }
+        else                       { majorStep = 500;  minorStep = 250; unit = 'mm'; }
         var ticksHtml = '';
-        // 10mm major tick + label
-        for (var mm = 0; mm <= Math.floor(heightMm); mm += 10) {
+        for (var mm = 0; mm <= Math.floor(heightMm); mm += majorStep) {
             var top = mm * pxPerMm;
             ticksHtml += '<div style="position:absolute; right:0; top:' + top.toFixed(1) + 'px; width:10px; height:1px; background:rgba(255,255,255,0.55);"></div>'
                        + '<div style="position:absolute; right:12px; top:' + (top - 6).toFixed(1) + 'px; font-size:9px; font-weight:700; color:rgba(255,255,255,0.7); font-family:inherit; letter-spacing:-0.3px;">' + mm + '</div>';
         }
-        // 5mm minor tick
-        for (var mm2 = 5; mm2 <= heightMm; mm2 += 10) {
+        for (var mm2 = minorStep; mm2 <= heightMm; mm2 += minorStep) {
+            if (mm2 % majorStep === 0) continue;  // major 와 겹치는 건 skip
             var top2 = mm2 * pxPerMm;
             ticksHtml += '<div style="position:absolute; right:0; top:' + top2.toFixed(1) + 'px; width:5px; height:1px; background:rgba(255,255,255,0.32);"></div>';
         }
@@ -6260,6 +6267,13 @@ function scrollHotdeal(gridId, dir) {
     }
     // 2026-06-14: simple_order 모달에서 호출하기 위해 window 노출
     window._meSetSize = _meSetSize;
+    // 2026-06-16 v13: 실제 mm 사이즈 별도 저장 — natW/H 는 _mmPairToPx 가 1200 으로 capped 한 픽셀이라
+    //   가벽/큰 상품에선 mm 변환 시 잘못된 값 (예: 2400mm wall → natH=960 → ruler 254mm 표시).
+    //   _meSetMmSize(wMm, hMm) 로 mm 직접 저장 → 줄자/칼선 PDF 가 이 값을 우선 사용.
+    window._meSetMmSize = function(wMm, hMm) {
+        me.natWMm = wMm; me.natHMm = hMm;
+        try { _meDrawRuler(); } catch(_) {}
+    };
     window._meSyncItemDisplay = _meSyncItemDisplay;
 
     // ─────────────────────── Undo 스택 ───────────────────────
@@ -7296,8 +7310,9 @@ function scrollHotdeal(gridId, dir) {
         var jsPDF = window.jspdf && window.jspdf.jsPDF;
         if (!jsPDF) return null;
         var PX_PER_MM = 3.7795;
-        var widthMm  = Math.max(10, opts.widthMm  || (me.natW / PX_PER_MM));
-        var heightMm = Math.max(10, opts.heightMm || (me.natH / PX_PER_MM));
+        // 2026-06-16 v13: me.natWMm/HMm 가 있으면 우선 — 가벽 등 capped pixel canvas 에서 정확한 mm.
+        var widthMm  = Math.max(10, opts.widthMm  || me.natWMm || (me.natW / PX_PER_MM));
+        var heightMm = Math.max(10, opts.heightMm || me.natHMm || (me.natH / PX_PER_MM));
         var doc = new jsPDF({
             orientation: widthMm > heightMm ? 'l' : 'p',
             unit: 'mm',
@@ -12604,7 +12619,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=493"></script>
+<script src="/simple_order.js?v=494"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
