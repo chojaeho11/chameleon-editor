@@ -15512,6 +15512,17 @@ html, body { background: #ffffff !important; }
                 if (it.backFileUrl) {
                     orderFiles.push({ name: '[뒷면] ' + (it.backFileName || 'back.png'), url: it.backFileUrl, type: it.backFileType || 'image/png' });
                 }
+                // 2026-06-16: 칼선 파일 (PDF/SVG) — 관리자 파일관리 + 작업지시서 embed 노출용. type:'cutline' 키워드로 admin UI 가 ✂️ 배지 추가.
+                if (it.cutlineUrl) {
+                    var _cutExt = String(it.cutlineUrl).match(/\.(svg|pdf)(\?|$)/i);
+                    var _cutExtStr = _cutExt ? _cutExt[1].toLowerCase() : 'pdf';
+                    var _cutPCode = (it.product && it.product.code) || 'item';
+                    orderFiles.push({
+                        name: '[칼선] cutline_' + _cutPCode + '.' + _cutExtStr,
+                        url: it.cutlineUrl,
+                        type: 'cutline'
+                    });
+                }
                 var wallSizeMm = null;
                 if (it.wallSize) {
                     wallSizeMm = {
