@@ -1473,7 +1473,9 @@ window.loadDesignOrders = async () => {
         }
         const reqIds = [...new Set(bids.map(b => b.request_id).filter(Boolean))];
         const desIds = [...new Set(bids.map(b => b.designer_id).filter(Boolean))];
-        const { data: reqs } = await sb.from('design_requests').select('id, title, customer_id, phone').in('id', reqIds);
+        // 2026-06-16: 경리 요청 — description / category / files 도 load 해서 상세를 표 상단에 노출.
+        //   category 가 '본사-' 로 시작하면 후불(관공서) 의뢰, 아니면 카드결제 건.
+        const { data: reqs } = await sb.from('design_requests').select('id, title, customer_id, phone, description, category, files').in('id', reqIds);
         const reqMap = {}; (reqs || []).forEach(r => reqMap[r.id] = r);
         const custIds = [...new Set((reqs || []).map(r => r.customer_id).filter(Boolean))];
         const { data: dps } = await sb.from('designer_profiles').select('id, display_name').in('id', desIds);
@@ -1492,6 +1494,11 @@ window.loadDesignOrders = async () => {
             b._custPhone = req.phone || '-';
             b._desName = des.display_name || des.username || '-';
             b._settled = settled.has(String(b.id));
+            // 2026-06-16: 상세 + 결제유형
+            b._desc = (req.description || '').trim();
+            b._category = req.category || '';
+            b._files = Array.isArray(req.files) ? req.files : [];
+            b._isHq = /^본사-/.test(b._category);   // 본사·관공서 후불 의뢰
         });
 
         if (_doView === 'unsettled') _doRenderUnsettled(area, bids);
@@ -1521,27 +1528,56 @@ function _doRenderAll(area, bids){
             : _doPill('#fee2e2', '#b91c1c', '🔴 작업완료 · 미정산');
         else badge = _doPill('#f1f5f9', '#475569', _doEsc(ps));
         const sub = hasFiles ? `<div style="font-size:10px;color:#7c3aed;margin-top:3px;">📎 디자이너 시안 ${b.final_design_urls.length}개 업로드됨</div>` : '';
+        // 2026-06-16: 결제유형 (카드결제 vs 본사-후불)
+        let payTypePill;
+        if (b._isHq) {
+            const _paid = (ps === 'paid' || ps === 'completed_pending_files' || ps === 'released');
+            payTypePill = _paid
+                ? _doPill('#dcfce7', '#15803d', '🏢 본사후불 · 결제완료')
+                : _doPill('#fef3c7', '#92400e', '🏢 본사후불 · 미결제');
+        } else {
+            const _paidCard = (ps === 'paid' || ps === 'completed_pending_files' || ps === 'released');
+            payTypePill = _paidCard
+                ? _doPill('#dbeafe', '#1e40af', '💳 카드 · 결제완료')
+                : ps === 'bank_pending'
+                ? _doPill('#fef3c7', '#92400e', '🏦 무통장 · 미결제')
+                : _doPill('#fee2e2', '#b91c1c', '💳 카드 · 미결제');
+        }
+        // 2026-06-16: 상세 (description) 를 상단에 노출 — 줄바꿈 보존, 긴 글은 클램프.
+        const fileLinks = (b._files || []).map((u, i) =>
+            `<a href="${u}" target="_blank" style="display:inline-block;margin-right:6px;font-size:11px;color:#7c3aed;">📎 첨부${i+1}</a>`
+        ).join('');
+        const descBlock = (b._desc || fileLinks) ? `
+            <div style="margin-top:6px;padding:8px 10px;background:#f8fafc;border-left:3px solid #c4b5fd;border-radius:6px;font-size:11.5px;color:#334155;white-space:pre-wrap;line-height:1.45;max-height:120px;overflow:auto;">
+                ${_doEsc(b._desc || '(설명 없음)')}
+                ${fileLinks ? `<div style="margin-top:6px;">${fileLinks}</div>` : ''}
+            </div>` : '';
         let action = '<span style="color:#cbd5e1;">-</span>';
         if (ps === 'bank_pending') action = `<button class="btn btn-sm" style="background:#16a34a;color:#fff;border:none;" onclick="confirmDesignBankPayment('${b.id}', this)"><i class="fa-solid fa-check"></i> 입금확인</button>`;
         else if (ps === 'released' && !b._settled) action = `<button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:none;" onclick="markDesignSettled('${b.id}', this)"><i class="fa-solid fa-coins"></i> 정산완료</button>`;
         else if (ps === 'released' && b._settled) action = `<button class="btn btn-sm" style="background:#fff;color:#7c3aed;border:1px solid #c4b5fd;" onclick="unmarkDesignSettled('${b.id}', this)">정산취소</button>`;
         const dt = b.created_at ? new Date(b.created_at).toLocaleDateString('ko-KR') : '-';
         rows += `<tr>
-            <td style="font-size:11px;">${dt}</td>
-            <td style="font-size:12px;">${_doEsc(b._title)}</td>
-            <td style="font-size:12px;">${_doEsc(b._custName)}</td>
-            <td style="font-size:12px;font-family:monospace;">${_doEsc(b._custPhone)}</td>
-            <td style="font-size:12px;">${_doEsc(b._desName)}</td>
-            <td style="text-align:right;font-size:12px;font-weight:800;">${_doMoney(b.price)}</td>
-            <td>${badge}${sub}</td>
-            <td style="text-align:center;">${action}</td>
+            <td style="font-size:11px;vertical-align:top;">${dt}</td>
+            <td style="font-size:12px;vertical-align:top;">
+                <div style="font-weight:700;">${_doEsc(b._title)}</div>
+                ${descBlock}
+            </td>
+            <td style="font-size:12px;vertical-align:top;">${_doEsc(b._custName)}</td>
+            <td style="font-size:12px;font-family:monospace;vertical-align:top;">${_doEsc(b._custPhone)}</td>
+            <td style="font-size:12px;vertical-align:top;">${_doEsc(b._desName)}</td>
+            <td style="text-align:right;font-size:12px;font-weight:800;vertical-align:top;">${_doMoney(b.price)}</td>
+            <td style="vertical-align:top;">${payTypePill}</td>
+            <td style="vertical-align:top;">${badge}${sub}</td>
+            <td style="text-align:center;vertical-align:top;">${action}</td>
         </tr>`;
     });
-    area.innerHTML = `<div style="overflow-x:auto;"><table style="min-width:1180px;">
+    area.innerHTML = `<div style="overflow-x:auto;"><table style="min-width:1400px;">
         <thead><tr style="background:#faf5ff;">
-            <th width="90">일자</th><th>의뢰명</th><th width="120">고객</th><th width="130">연락처</th>
-            <th width="140">디자이너</th><th width="100" style="text-align:right;">금액</th>
-            <th width="210">진행 상태</th><th width="130" style="text-align:center;">처리</th>
+            <th width="80">일자</th><th>의뢰명 · 상세</th><th width="110">고객</th><th width="120">연락처</th>
+            <th width="120">디자이너</th><th width="90" style="text-align:right;">금액</th>
+            <th width="170">결제유형</th>
+            <th width="200">진행 상태</th><th width="120" style="text-align:center;">처리</th>
         </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 

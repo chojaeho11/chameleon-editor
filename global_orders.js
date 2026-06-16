@@ -2379,7 +2379,8 @@ window.completeCashRefundSelected = async () => {
     for (const id of ids) {
         try {
             // 마일리지 복원만 처리 (PG 환불 없음)
-            const { data: order } = await sb.from('orders').select('discount_amount, user_id').eq('id', id).single();
+            // 2026-06-16: admin_note 도 select — 기존 메모(환불사유·계좌 등) 보존하고 [환불완료] 타임스탬프만 append.
+            const { data: order } = await sb.from('orders').select('discount_amount, user_id, admin_note').eq('id', id).single();
             if (order && order.discount_amount > 0 && order.user_id) {
                 const { data: pf } = await sb.from('profiles').select('mileage').eq('id', order.user_id).single();
                 if (pf) {
@@ -2392,7 +2393,8 @@ window.completeCashRefundSelected = async () => {
                 }
             }
             const _refundTime1 = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
-            await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료', admin_note: (order.admin_note ? order.admin_note + '\n' : '') + '[환불완료] ' + _refundTime1 }).eq('id', id);
+            const _prevNote1 = (order && order.admin_note) ? order.admin_note : '';
+            await sb.from('orders').update({ status: '취소됨', payment_status: '환불완료', admin_note: (_prevNote1 ? _prevNote1 + '\n' : '') + '[환불완료] ' + _refundTime1 }).eq('id', id);
             successCount++;
         } catch (e) {
             console.error(`Order ${id} cash refund error:`, e);
@@ -2509,8 +2511,9 @@ window.completeRefundSelected = async () => {
     let successCount = 0, failCount = 0;
     for (const id of ids) {
         try {
+            // 2026-06-16: admin_note 도 select — 기존 메모(환불사유·계좌·관리자 비고 등) 보존하고 [환불완료] 타임스탬프만 append.
             const { data: order } = await sb.from('orders')
-                .select('payment_status, discount_amount, user_id')
+                .select('payment_status, discount_amount, user_id, admin_note')
                 .eq('id', id).single();
             if (!order || order.payment_status !== '본사승인') {
                 showToast(`주문 ${id}: 본사승인 상태가 아닙니다.`, 'warn');
@@ -2531,7 +2534,8 @@ window.completeRefundSelected = async () => {
             }
 
             const _refundTime3 = new Date().toLocaleString('ko-KR', {timeZone:'Asia/Seoul'});
-            await sb.from('orders').update({ payment_status: '환불완료', admin_note: (order.admin_note ? order.admin_note + '\n' : '') + '[환불완료] ' + _refundTime3 }).eq('id', id);
+            const _prevNote3 = order.admin_note || '';
+            await sb.from('orders').update({ payment_status: '환불완료', admin_note: (_prevNote3 ? _prevNote3 + '\n' : '') + '[환불완료] ' + _refundTime3 }).eq('id', id);
             successCount++;
         } catch (e) {
             console.error(`Order ${id} complete refund error:`, e);

@@ -2540,6 +2540,27 @@ window._hqSubmitRequest = async function() {
         const country = detectDefaultCountry() || 'KR';
         // description prefix 에 매니저 이름 (스키마에 manager_name 컬럼 없을 가능성 대비)
         const finalDesc = `[의뢰 매니저: ${mgrName}]\n\n${desc}`;
+        // 2026-06-16: 관공서 후불 의뢰는 같은 ID 로 중복 등록되는 경우가 잦음 (디자인비 후불청구).
+        //   동일 customer_id 의 미완료(본사-*) 의뢰가 이미 있으면 안내 후 이전 건 삭제 (사용자 confirm 필수).
+        try {
+            const { data: _prevOpen } = await sb.from('design_requests')
+                .select('id, title, created_at')
+                .eq('customer_id', uid)
+                .like('category', '본사-%')
+                .neq('status', 'completed')
+                .order('created_at', { ascending: false });
+            if (_prevOpen && _prevOpen.length > 0) {
+                const _titles = _prevOpen.map(r => '• ' + (r.title || '(제목 없음)')).join('\n');
+                const _msg = `이 계정으로 등록된 미완료 본사의뢰가 ${_prevOpen.length}건 있습니다:\n\n${_titles}\n\n새 의뢰를 등록하면 위 이전 의뢰는 모두 삭제됩니다.\n계속하시겠습니까?`;
+                if (!confirm(_msg)) {
+                    btn.disabled = false;
+                    btn.textContent = '등록';
+                    return;
+                }
+                const _delIds = _prevOpen.map(r => r.id);
+                await sb.from('design_requests').delete().in('id', _delIds);
+            }
+        } catch (_dupe) { console.warn('[hq dedup]', _dupe); }
         const payload = {
             customer_id: uid,
             title: title,
