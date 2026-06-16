@@ -13920,7 +13920,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
-            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
+            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
         }
         // ★ 허니콤보드 원판 (카테고리 기반 로드)
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
@@ -14079,6 +14079,20 @@ window._loadGoodsCuratedQuery = async function() {
     return keyrings.concat(tshirts);
 };
 
+// 2026-06-16: 광고인쇄 섹션 = 상업인쇄물(is_print_service) 5 + 광고인쇄(is_popular) 5 통합.
+//   각자 관리자 페이지 sort_order 순서. 위 줄(0~4) = 상업, 아래 줄(5~9) = 광고.
+//   _orderKey 를 명시해 loadSpecialProducts 의 카테고리 재정렬을 우회.
+window._loadAdPrintMergedQuery = async function() {
+    const SELECT_COLS = 'code, name, name_jp, name_us, name_cn, name_ar, name_es, name_de, name_fr, price, price_jp, price_us, width_mm, height_mm, img_url, addons, category, sort_order, is_custom_size';
+    const [printRes, popRes] = await Promise.all([
+        sb.from('admin_products').select(SELECT_COLS).eq('is_print_service', true).order('sort_order', { ascending: true }).limit(5),
+        sb.from('admin_products').select(SELECT_COLS).eq('is_popular', true).order('sort_order', { ascending: true }).limit(5)
+    ]);
+    const prints = (printRes.data || []).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: i }));
+    const pops   = (popRes.data   || []).slice(0, 5).map((p, i) => Object.assign({}, p, { _orderKey: 100 + i }));
+    return prints.concat(pops);
+};
+
 async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6, customQueryFn = null) {
     const section = document.getElementById(sectionId);
     const grid = document.getElementById(gridId);
@@ -14109,6 +14123,10 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
         const _catOrder = {};
         (subCats || []).forEach((c, i) => { _catOrder[c.code] = c.sort_order ?? i; });
         const products = [...productsRaw].sort((a, b) => {
+            // 2026-06-16: customQueryFn 이 _orderKey 를 지정했으면 그 순서를 그대로 유지 — 카테고리 재정렬 우회.
+            if (a._orderKey != null || b._orderKey != null) {
+                return (a._orderKey ?? 9999) - (b._orderKey ?? 9999);
+            }
             const ca = _catOrder[a.category] ?? 9999;
             const cb = _catOrder[b.category] ?? 9999;
             if (ca !== cb) return ca - cb;
@@ -20428,7 +20446,7 @@ if (w >= 20 && h >= 20) {
             loadSpecialProducts('printServiceSection', 'printServiceGrid', 'is_print_service', 15);
             loadSpecialProducts('goodsSection', 'goodsGrid', 'is_goods', 10, window._loadGoodsCuratedQuery);
             loadSpecialProducts('paperDisplaySection', 'paperDisplayGrid', 'is_paper_display', 15);
-            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 15);
+            loadSpecialProducts('popularSection', 'popularGrid', 'is_popular', 10, window._loadAdPrintMergedQuery);
         }
         if (typeof loadProductsByCategory === 'function') loadProductsByCategory('wholesaleBoardSection', 'wholesaleBoardGrid', 'Wholesale Board Prices', 10);
         if (typeof loadScrollBanner === 'function') loadScrollBanner();
