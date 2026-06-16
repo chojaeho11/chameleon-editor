@@ -6210,9 +6210,9 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.background = it.fill || '#7c3aed';
             it.el.style.border = (it.strokeWidth || 0) > 0 ? (it.strokeWidth + 'px solid ' + (it.stroke || '#000')) : 'none';
         }
-        // 2026-06-16: 칼선이 이 item 에 연결돼 있으면 같이 따라 움직임/크기조절.
-        if (me._cutlineSource === it && me._cutlineRelPts) {
-            try { _meCutlineResync(); } catch(_ce) {}
+        // 2026-06-16 v3: 이 item 에 칼선이 있으면 같이 따라 움직임/크기조절 — 전체 재그리기.
+        if (it && it._cutlineRelPts) {
+            try { _meCutlineRenderAll(); } catch(_ce) {}
         }
     }
 
@@ -6604,11 +6604,13 @@ function scrollHotdeal(gridId, dir) {
 
     function _meRemove(it) {
         _meSnapshot();
-        // 2026-06-16: 칼선의 source item 이 삭제되면 칼선도 같이 클리어.
-        if (me._cutlineSource === it) { try { window._meCutlineClear(); } catch(_re) {} }
+        // 2026-06-16 v3: item 삭제 시 그 item 에 연결된 칼선만 사라지고 (per-item 저장) 나머지는 유지.
+        //   per-item _cutlineRelPts 는 item 객체와 함께 GC, _meCutlineRenderAll 에서 자동 제외됨.
         me.items = me.items.filter(function(o){ return o !== it; });
         it.el.remove();
         if (me.selected === it) { me.selected = null; _meRenderProps(null); }
+        // 2026-06-16 v3: 칼선 overlay 도 다시 그림 (삭제된 item 의 path 제거).
+        try { if (typeof _meCutlineRenderAll === 'function') _meCutlineRenderAll(); } catch(_re) {}
     }
 
     // 속성 패널 렌더
@@ -7056,14 +7058,38 @@ function scrollHotdeal(gridId, dir) {
         }
         return s;
     }
-    function _meCutlineRender(pathD) {
+    // 2026-06-16 v3: 다중 칼선 지원 — 각 item 마다 it._cutlineRelPts 저장.
+    //   추가로 me._canvasCutlinePathD = 캔버스 fill simple shape (item 무관).
+    //   _meCutlineRenderAll() 이 모든 source 합쳐 하나의 SVG overlay 에 그림.
+    function _meCutlineBuildItemPathD(it) {
+        if (!it || !it._cutlineRelPts || it._cutlineRelPts.length < 3) return '';
+        var pts = it._cutlineRelPts.map(function(p){ return [it.x + p[0]*it.w, it.y + p[1]*it.h]; });
+        return _meSmoothClosedPath(pts);
+    }
+    function _meCutlineRenderAll() {
         var svg = _meCutlineSvgEl();
         svg.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
-        // 2026-06-16: 얇고 정교한 칼선 — stroke-width=1.2 + 짧은 dash + linejoin:round.
-        svg.innerHTML = '<path d="' + pathD + '" fill="none" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>';
+        var paths = [];
+        // 각 item 의 칼선
+        (me.items || []).forEach(function(it){
+            var d = _meCutlineBuildItemPathD(it);
+            if (d) paths.push(d);
+        });
+        // 캔버스-fill simple shape
+        if (me._canvasCutlinePathD) paths.push(me._canvasCutlinePathD);
+        if (!paths.length) { svg.innerHTML = ''; window._meCutlineSvg = null; return; }
+        svg.innerHTML = paths.map(function(d){
+            return '<path d="' + d + '" fill="none" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>';
+        }).join('');
+        window._meCutlineSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + me.natW + ' ' + me.natH + '">'
+            + paths.map(function(d){ return '<path d="' + d + '" fill="none" stroke="#FF0000" stroke-width="0.3"/>'; }).join('')
+            + '</svg>';
+    }
+    // legacy shim — 기존 호출자 (simple shape 등) 는 d 를 _canvasCutlinePathD 로 저장 후 render all
+    function _meCutlineRender(pathD) {
+        me._canvasCutlinePathD = pathD;
         me._cutlinePathD = pathD;
-        // export 용 — 자연 좌표 기준 standalone SVG (제작용은 더 얇은 0.3)
-        window._meCutlineSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + me.natW + ' ' + me.natH + '"><path d="' + pathD + '" fill="none" stroke="#FF0000" stroke-width="0.3"/></svg>';
+        _meCutlineRenderAll();
     }
     // 2026-06-16: 부드러운 path — quadratic Bézier midpoint smoothing.
     //   각 sample 정점을 control point 로, 두 정점의 중점을 곡선 통과 anchor 로 사용 → 코너가 곡선화.
@@ -7087,22 +7113,16 @@ function scrollHotdeal(gridId, dir) {
         return d;
     }
     window._meCutlineClear = function() {
+        // 전체 클리어 — 모든 item 의 칼선 + 캔버스 fill
+        (me.items || []).forEach(function(it){ it._cutlineRelPts = null; it._cutlineMode = null; });
+        me._canvasCutlinePathD = null;
+        me._cutlinePathD = null;
         var s = document.getElementById('meCutlineOverlay');
         if (s) s.remove();
-        me._cutlinePathD = null;
-        me._cutlineSource = null;     // 추적 대상 item 참조 — null 이면 simple shape (캔버스 고정)
-        me._cutlineRelPts = null;     // [0,1]x[0,1] 정규화 좌표 — source item bounds 변할 때 재계산용
         window._meCutlineSvg = null;
     };
-    // 2026-06-16: source item 의 bounds 가 변하면 (resize/drag) 칼선을 그 비율로 다시 그림.
-    function _meCutlineResync() {
-        if (!me._cutlineSource || !me._cutlineRelPts) return;
-        var it = me._cutlineSource;
-        if (me.items.indexOf(it) < 0) { window._meCutlineClear(); return; }
-        var sxr = it.x, syr = it.y, swr = it.w, shr = it.h;
-        var pts = me._cutlineRelPts.map(function(p){ return [sxr + p[0]*swr, syr + p[1]*shr]; });
-        _meCutlineRender(_meSmoothClosedPath(pts));
-    }
+    // 2026-06-16 v3: 어느 item 이 변하든 전체 다시 그리면 됨 (각 path 가 item 기준 정규좌표라서).
+    function _meCutlineResync() { _meCutlineRenderAll(); }
     window._meCutlineResync = _meCutlineResync;
     function _meCutlineSimple(shape) {
         var w = me.natW, h = me.natH;
@@ -7141,9 +7161,9 @@ function scrollHotdeal(gridId, dir) {
         }
         _meCutlineRender(d);
     }
-    // 2026-06-16 v2: 복잡/팬시 — centroid 기준 360° ray-cast 로 단일 closed contour 추출.
-    //   이전 4방향 boundary 방식은 path 가 교차해서 엉성했음. ray-cast 는 1개 연결 도형에 깔끔한 outline 생성.
-    //   mode: 'outer' (외곽 +2mm — 반칼/완칼 스티커용) / 'inner' (내부 -2mm — 무테 스티커용)
+    // 2026-06-16 v3: 복잡/팬시 — bounding-box 중심 기준 360° ray-cast.
+    //   centroid (alpha 평균) 대신 bounding-box 중심 사용 → 위치 정확도 향상 (가벼운 sparkle 등이 무게중심을 끌어당기던 문제 fix).
+    //   기존 me._cutlineSource 단일 참조 → 각 item 의 it._cutlineRelPts 로 분산 저장 → 여러 칼선 동시 보존.
     async function _meCutlineTrace(mode) {
         mode = mode || 'outer';
         var sel = me.selected;
@@ -7165,15 +7185,18 @@ function scrollHotdeal(gridId, dir) {
         try { data = ctx.getImageData(0, 0, W, H).data; }
         catch(e){ alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.'); return; }
         var THR = 20;
-        // 1) centroid — alpha>THR 픽셀의 평균 좌표
-        var sumX = 0, sumY = 0, cnt = 0;
+        // 1) bounding-box of alpha>THR 픽셀 — 무게중심보다 위치 보정에 유리.
+        var minX = W, minY = H, maxX = -1, maxY = -1;
         for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
-            if (data[(y*W+x)*4 + 3] > THR) { sumX += x; sumY += y; cnt++; }
+            if (data[(y*W+x)*4 + 3] > THR) {
+                if (x < minX) minX = x; if (x > maxX) maxX = x;
+                if (y < minY) minY = y; if (y > maxY) maxY = y;
+            }
         }
-        if (!cnt) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
-        var cx = sumX / cnt, cy = sumY / cnt;
-        // 2) 360° ray-cast — 각 방향에서 가장 먼 alpha>THR 픽셀까지의 거리 측정
-        var N = 240;  // 1.5° 간격 — 부드러우면서 충분히 디테일 보존
+        if (maxX < 0) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
+        var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+        // 2) 360° ray-cast
+        var N = 240;
         var rays = [];
         var maxR = Math.hypot(W, H);
         for (var k = 0; k < N; k++) {
@@ -7189,43 +7212,94 @@ function scrollHotdeal(gridId, dir) {
             if (lastR > 0) rays.push([cx + dxr * lastR, cy + dyr * lastR]);
         }
         if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
-        // 3) 마진 — 이미지 크기의 2% (≈ 100×100mm 스티커에서 ±2mm).
-        //    outer: 중심에서 바깥으로 +2mm.  inner: 중심 쪽으로 -2mm (무테용 안쪽 칼).
-        var marginPx = W * 0.02 * (mode === 'inner' ? -1 : 1);
-        var sx = sel.x, sy = sel.y, sw = sel.w, sh = sel.h;
-        // 2026-06-16: source item 정규화 좌표 [0,1]x[0,1] 도 같이 저장 — 이후 resize/drag 시 재계산용.
-        var relPts = [];
-        var transformed = rays.map(function(p){
+        // 3) 마진 — 외곽 +3mm (3%), 내부 -2mm (2%). 외곽이 더 큼 → 반칼/완칼 작업 여유.
+        var marginPx = (mode === 'inner') ? -W * 0.02 : W * 0.03;
+        var relPts = rays.map(function(p){
             var vx = p[0] - cx, vy = p[1] - cy;
             var dist = Math.hypot(vx, vy);
-            var nx, ny;
-            if (dist < 0.5) { nx = p[0]; ny = p[1]; }
-            else {
-                var newDist = Math.max(dist * 0.4, dist + marginPx);
-                nx = cx + (vx / dist) * newDist;
-                ny = cy + (vy / dist) * newDist;
-            }
-            relPts.push([nx / W, ny / H]);   // [0,1] 정규화 (이미지 픽셀 → 비율)
-            return [sx + (nx / W) * sw, sy + (ny / H) * sh];
+            if (dist < 0.5) return [p[0]/W, p[1]/H];
+            var newDist = Math.max(dist * 0.4, dist + marginPx);
+            var nx = cx + (vx / dist) * newDist;
+            var ny = cy + (vy / dist) * newDist;
+            return [nx / W, ny / H];   // [0,1] 정규화
         });
-        me._cutlineSource = sel;
-        me._cutlineRelPts = relPts;
-        _meCutlineRender(_meSmoothClosedPath(transformed));
+        // item 에 저장 (다중 칼선 — 다른 item 의 칼선과 공존)
+        sel._cutlineRelPts = relPts;
+        sel._cutlineMode = mode;
+        _meCutlineRenderAll();
     }
+    // 2026-06-16 v3: 지우개 모드 — 활성화 시 stage 위에 capture overlay 추가,
+    //   click/drag 한 좌표 근처 (반경 R) 의 모든 it._cutlineRelPts 점 제거 → 부드럽게 재렌더.
+    me._cutlineEraserMode = false;
+    window._meCutlineEraserToggle = function() {
+        me._cutlineEraserMode = !me._cutlineEraserMode;
+        var ex = document.getElementById('meCutlineEraserOverlay');
+        if (ex) ex.remove();
+        if (!me._cutlineEraserMode) return;
+        if (!me.stage) return;
+        var ov = document.createElement('div');
+        ov.id = 'meCutlineEraserOverlay';
+        ov.style.cssText = 'position:absolute; inset:0; z-index:1500; cursor:crosshair; background:rgba(254,202,202,0.08);';
+        me.stage.appendChild(ov);
+        // 안내 tip
+        var tip = document.createElement('div');
+        tip.style.cssText = 'position:absolute; left:50%; top:8px; transform:translateX(-50%); background:#dc2626; color:#fff; padding:6px 12px; border-radius:14px; font-size:11px; font-weight:800; box-shadow:0 4px 12px rgba(220,38,38,0.35); pointer-events:none; font-family:inherit;';
+        tip.textContent = '🧽 칼선 지우개 모드 — 드래그해서 지우기. ESC 또는 다시 클릭하면 종료.';
+        ov.appendChild(tip);
+        var dragging = false;
+        var ERASE_R = 18;   // 자연 좌표 기준 반경 (px)
+        function eraseAt(clientX, clientY) {
+            var rect = me.stage.getBoundingClientRect();
+            var sx = (clientX - rect.left) / me.wScale;
+            var sy = (clientY - rect.top) / me.wScale;
+            var changed = false;
+            (me.items || []).forEach(function(it){
+                if (!it._cutlineRelPts) return;
+                var kept = it._cutlineRelPts.filter(function(p){
+                    var ax = it.x + p[0]*it.w, ay = it.y + p[1]*it.h;
+                    return Math.hypot(ax-sx, ay-sy) > ERASE_R;
+                });
+                if (kept.length !== it._cutlineRelPts.length) {
+                    it._cutlineRelPts = kept.length >= 3 ? kept : null;
+                    if (!kept.length) it._cutlineMode = null;
+                    changed = true;
+                }
+            });
+            if (changed) _meCutlineRenderAll();
+        }
+        ov.addEventListener('pointerdown', function(ev){
+            ev.preventDefault();
+            dragging = true;
+            ov.setPointerCapture(ev.pointerId);
+            eraseAt(ev.clientX, ev.clientY);
+        });
+        ov.addEventListener('pointermove', function(ev){ if (dragging) eraseAt(ev.clientX, ev.clientY); });
+        ov.addEventListener('pointerup', function(ev){ dragging = false; try { ov.releasePointerCapture(ev.pointerId); } catch(_e){} });
+        // ESC 로 종료
+        function escHandler(ev){
+            if (ev.key === 'Escape') {
+                document.removeEventListener('keydown', escHandler);
+                me._cutlineEraserMode = false;
+                var o2 = document.getElementById('meCutlineEraserOverlay');
+                if (o2) o2.remove();
+            }
+        }
+        document.addEventListener('keydown', escHandler);
+    };
     window._meCutlineOpen = function() {
         // 기존 popup 제거
         var ex = document.getElementById('meCutlinePopup');
         if (ex) ex.remove();
         var pop = document.createElement('div');
         pop.id = 'meCutlinePopup';
-        pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:340px; font-family:inherit;';
+        pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:360px; font-family:inherit; max-height:90vh; overflow-y:auto;';
         pop.innerHTML =
             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
           +   '<div style="font-weight:900; font-size:15px; color:#b91c1c;">✂️ 칼선 모양 선택</div>'
           +   '<button type="button" id="meCutlineClose" style="border:0; background:transparent; font-size:20px; cursor:pointer; color:#94a3b8;">×</button>'
           + '</div>'
           + '<img src="/cut_st.jpg" alt="칼선 종류 예시" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:10px; border:1px solid #fecaca;" loading="lazy">'
-          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적 — 이미지 크기 조절 시 칼선도 같이 변경됩니다.</div>'
+          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적 — 이미지 여러 개 가능, 크기조절 시 같이 변경.</div>'
           + '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">'
           +   '<button type="button" data-shape="circle"       style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">⭕ 동그라미</button>'
           +   '<button type="button" data-shape="pill"         style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">💊 알약</button>'
@@ -7235,12 +7309,13 @@ function scrollHotdeal(gridId, dir) {
           + '<div style="margin-top:14px; padding-top:12px; border-top:1px dashed #fecaca;">'
           +   '<div style="font-weight:800; font-size:12px; color:#b91c1c; margin-bottom:8px;">🖼️ 선택 이미지 윤곽선 따기 (복잡/팬시)</div>'
           +   '<div style="display:grid; grid-template-columns:1fr; gap:6px;">'
-          +     '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;">반칼·완칼 스티커용 — 외곽 <b style="background:rgba(255,255,255,0.2); padding:1px 6px; border-radius:4px;">+2mm</b> 여백 칼선</button>'
-          +     '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:2px solid #dc2626; background:#fff; color:#b91c1c; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;">무테 스티커용 — 내부 <b style="background:#fee2e2; padding:1px 6px; border-radius:4px;">-2mm</b> 칼선</button>'
+          +     '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;"><div style="font-size:14px;">TYPE A</div><div style="font-size:11px; font-weight:700; opacity:0.95; margin-top:2px;">Margins +2mm Die-Cut (반칼·완칼 스티커)</div></button>'
+          +     '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:2px solid #dc2626; background:#fff; color:#b91c1c; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;"><div style="font-size:14px;">TYPE B</div><div style="font-size:11px; font-weight:700; opacity:0.85; margin-top:2px;">Border -2mm Wancut (무테 스티커)</div></button>'
           +   '</div>'
           + '</div>'
-          + '<div style="margin-top:10px; display:grid; grid-template-columns:1fr; gap:8px;">'
-          +   '<button type="button" data-shape="clear" style="padding:9px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">칼선 삭제</button>'
+          + '<div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">'
+          +   '<button type="button" data-shape="eraser" style="padding:10px 8px; border:1.5px solid #fbbf24; background:#fffbeb; color:#92400e; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">🧽 칼선 지우개</button>'
+          +   '<button type="button" data-shape="clear" style="padding:10px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">전체 삭제</button>'
           + '</div>';
         document.body.appendChild(pop);
         function close(){ pop.remove(); }
@@ -7251,6 +7326,7 @@ function scrollHotdeal(gridId, dir) {
                 if (s === 'trace-outer') { _meCutlineTrace('outer'); close(); }
                 else if (s === 'trace-inner') { _meCutlineTrace('inner'); close(); }
                 else if (s === 'clear') { window._meCutlineClear(); close(); }
+                else if (s === 'eraser') { window._meCutlineEraserToggle(); close(); }
                 else { _meCutlineSimple(s); close(); }
             };
         });
@@ -12256,7 +12332,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=477"></script>
+<script src="/simple_order.js?v=478"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
