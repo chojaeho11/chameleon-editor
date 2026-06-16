@@ -3316,17 +3316,58 @@ html, body { background: #ffffff !important; }
                 }
             }
         }
-        // 2026-06-16 v10: cutline-eligible 상품 (스티커/등신대/자유인쇄커팅/키링) — 업로드 시 좌측 mini 에디터 캔버스에도
-        //   이미지 추가 → 사용자가 그 위에 칼선 trace 가능.
+        // 2026-06-16 v12: 모든 상품 — 업로드 시 좌측 미니에디터 자동 로드 + 사이즈 자동 인식.
+        //   PDF 는 첫 페이지 mm 크기, 이미지는 px@300dpi 환산 mm 로 stickerW/H 또는 customW/H 갱신
+        //   → 우측 사이즈 박스·캔버스·가격 모두 자동 sync. PDF 는 state.file 로 그대로 보존되어 주문에 PDF 형식 유지.
         try {
-            var _cutEligibleUL = !!(state && (
-                state.isSticker || state.isStandee || state.isCutPrint ||
-                (state.isPresetGoods && state.presetType === 'keyring')
-            ));
-            if (_cutEligibleUL && state.thumbDataUrl && typeof window._meAddImage === 'function') {
-                window._meAddImage(state.thumbDataUrl);
+            if (state.thumbDataUrl && typeof window._meAddImage === 'function' && window.me) {
+                var _fwMm = state.fileWidthMm, _fhMm = state.fileHeightMm;
+                // 1) 사이즈 자동 인식 (인식된 경우만)
+                if (_fwMm && _fhMm) {
+                    if (state.isSticker) {
+                        state.stickerW = Math.max(10, Math.min(1000, _fwMm));
+                        state.stickerH = Math.max(10, Math.min(1000, _fhMm));
+                    } else if (state.isCustomSize && !state.isWall && !state.isBox && !state.isRealPrint) {
+                        // customSize 는 cm 단위 — mm → cm.
+                        state.customW = Math.round(_fwMm) / 10;
+                        state.customH = Math.round(_fhMm) / 10;
+                    }
+                    // DOM 입력 동기화 (있는 필드만, 포커스 중인 input 은 건드리지 않음)
+                    var _domSyncs = [
+                        { id: 'soStickerW', val: state.isSticker ? state.stickerW : null },
+                        { id: 'soStickerH', val: state.isSticker ? state.stickerH : null },
+                        { id: 'soCustomW',  val: state.isCustomSize ? state.customW : null },
+                        { id: 'soCustomH',  val: state.isCustomSize ? state.customH : null }
+                    ];
+                    _domSyncs.forEach(function(d){
+                        if (d.val == null) return;
+                        var el = document.getElementById(d.id);
+                        if (el && document.activeElement !== el) el.value = d.val;
+                    });
+                    // 사이즈/캔버스/가격 sync — 상품별 핸들러 호출 후 공통 sync.
+                    try {
+                        if (state.isSticker && typeof window._soStickerSizeInput === 'function') window._soStickerSizeInput();
+                        else if (state.isCustomSize && typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+                        if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims();
+                    } catch (_ssyne) { console.warn('[size sync]', _ssyne); }
+                }
+                // 2) 캔버스 교체 — 기존 items 비우고 새 파일로.
+                try {
+                    var meRef = window.me;
+                    if (meRef && Array.isArray(meRef.items)) {
+                        meRef.items.slice().forEach(function(_it){ try { _it.el.remove(); } catch(_) {} });
+                        meRef.items = [];
+                        meRef.selected = null;
+                    }
+                } catch(_) {}
+                // 3) requestAnimationFrame 으로 한 프레임 뒤에 add — 캔버스 resize 완료 후 fillCanvas 가 정확.
+                requestAnimationFrame(function(){
+                    try { window._meAddImage(state.thumbDataUrl, { fillCanvas: true }); } catch(_ae){}
+                });
+                // 4) 칼선 클리어
+                try { if (typeof window._meCutlineClear === 'function') window._meCutlineClear(); } catch(_){}
             }
-        } catch (_e) { console.warn('[cutline upload→editor]', _e); }
+        } catch (_e) { console.warn('[upload→editor universal]', _e); }
         renderUploadDone();
     }
 
