@@ -12980,22 +12980,36 @@ html, body { background: #ffffff !important; }
                 backUrl = backResult.url;
                 backPath = backResult.path;
             }
-            // 2026-06-16: 칼선 PDF 업로드 — 미니에디터에 칼선이 있으면 vector PDF 로 변환 후 Storage 업로드.
-            //   SVG 대신 PDF 사용 이유: (1) 작업지시서에 embed 잘 됨 (2) Illustrator/Roland VersaWorks 호환
-            //   (3) 라이브 vector — 확대해도 선명. 스티커/등신대/키링 모든 cutline 상품에 공통.
+            // 2026-06-16 v7: 칼선 PDF — 이미지 + vector cutline 단일 파일 (인쇄소가 한 파일로 처리).
+            //   페이지 size = 실제 스티커 mm. 칼선 anchor 점 RDP 단순화로 일러스트레이터/커팅머신 친화적.
             state._cartCutlineUrl = null;
             state._cartCutlinePath = null;
             try {
                 var _cutSvg = window._meCutlineSvg;
                 if (_cutSvg && typeof _cutSvg === 'string' && _cutSvg.length > 50 && typeof window._meCutlineAsPdfBlob === 'function') {
                     updateUploadStep(tr('칼선 PDF 변환·업로드 중...', 'カットラインPDF変換·アップロード中...', 'Converting cutline PDF...'));
-                    var _cutPdfBlob = await window._meCutlineAsPdfBlob();
+                    // 실제 스티커 mm 사이즈 — 우선순위: stickerW/H > customW/H × 10 > fallback 96dpi 환산
+                    var _wMm = state.stickerW || (state.customW ? state.customW * 10 : null);
+                    var _hMm = state.stickerH || (state.customH ? state.customH * 10 : null);
+                    // 디자인 이미지 dataURL — _meExportPNG 가 미니에디터 전체 (배경 + 이미지 + 텍스트) 를 합쳐서 PNG dataURL 반환.
+                    //   (cutline overlay 는 svg 라 PNG export 에 포함 안 됨 — 깔끔)
+                    var _imgDataUrl = null;
+                    try {
+                        if (typeof window._meExportPNG === 'function') _imgDataUrl = await window._meExportPNG();
+                    } catch (_pe) { console.warn('[cutline pdf] _meExportPNG fail', _pe); }
+                    // fallback — 업로드 썸네일
+                    if (!_imgDataUrl && state.thumbDataUrl) _imgDataUrl = state.thumbDataUrl;
+                    var _cutPdfBlob = await window._meCutlineAsPdfBlob({
+                        widthMm: _wMm,
+                        heightMm: _hMm,
+                        imageDataUrl: _imgDataUrl
+                    });
                     if (_cutPdfBlob && _cutPdfBlob.size > 200) {
                         var _pcode = (state.product && state.product.code) || 'item';
                         var _cutRes = await _soUploadCutlinePdf(_cutPdfBlob, _pcode);
                         state._cartCutlineUrl = _cutRes.url;
                         state._cartCutlinePath = _cutRes.path;
-                        console.log('[cutline pdf] uploaded:', _cutRes.url);
+                        console.log('[cutline pdf] uploaded:', _cutRes.url, 'size:', _wMm + 'x' + _hMm + 'mm');
                     } else {
                         console.warn('[cutline pdf] empty blob, skip upload');
                     }
