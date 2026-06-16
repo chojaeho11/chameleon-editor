@@ -8755,19 +8755,37 @@ html, body { background: #ffffff !important; }
         if (notice) notice.style.display = '';
     }
     window._soStickerPickVariant = function(code) {
+        var prevCode = state.stickerProductCode;
         state.stickerProductCode = code;
         // 팬시면 size 의미 없음 — qty 4 단위. 그 외 1000 단위.
-        var picked = (_stickerVariantsCache || []).find(function(x){ return x.code === code; });
-        var isFancy = !!(picked && _stickerIsFancy(picked));
-        if (isFancy) {
-            if (!state.stickerQty || state.stickerQty % 4 !== 0) state.stickerQty = 4;
-        } else {
-            if (!state.stickerW)   state.stickerW   = 100;
-            if (!state.stickerH)   state.stickerH   = 100;
-            if (!state.stickerQty || state.stickerQty % 1000 !== 0) state.stickerQty = 1000;
+        var picked   = (_stickerVariantsCache || []).find(function(x){ return x.code === code; });
+        var prev     = (_stickerVariantsCache || []).find(function(x){ return x.code === prevCode; });
+        var isFancy  = !!(picked && _stickerIsFancy(picked));
+        var wasFancy = !!(prev   && _stickerIsFancy(prev));
+        // 2026-06-16: 변형 타입 전환 시 (재단↔팬시) 수량 기본값으로 강제 리셋.
+        //   1000 % 4 === 0 이라 단순 '%4' 체크로는 재단→팬시 전환 못 잡음.
+        if (isFancy && (!state.stickerQty || wasFancy === false || state.stickerQty > 200)) {
+            state.stickerQty = 4;
+        } else if (!isFancy && (!state.stickerQty || wasFancy === true || state.stickerQty < 1000)) {
+            state.stickerQty = 1000;
         }
+        if (!state.stickerW) state.stickerW = 100;
+        if (!state.stickerH) state.stickerH = 100;
         if (!state.stickerCoating) state.stickerCoating = 'matte';
         if (!state.stickerFoils)   state.stickerFoils   = [];
+        // 2026-06-16: 변형 선택 시 상단 상품 헤더 (이름·설명·이미지) 도 같이 스왑.
+        try {
+            if (picked) {
+                var nameEl = document.getElementById('soName');
+                var descEl = document.getElementById('soDesc');
+                var imgEl  = document.getElementById('soImg');
+                if (nameEl) nameEl.textContent = (typeof pickName === 'function') ? pickName(picked) : (picked.name_kr || picked.name || '');
+                if (descEl) descEl.textContent = (typeof pickDescPlain === 'function') ? pickDescPlain(picked, 150) : (picked.description_kr || picked.description || '');
+                if (imgEl && picked.img_url) imgEl.src = picked.img_url;
+                // state.product 도 교체 — 가격/공유 등 다른 분기에서 product.code 를 참조하므로.
+                state.product = picked;
+            }
+        } catch (_) {}
         _soStickerRender();
         recalc();
     };
