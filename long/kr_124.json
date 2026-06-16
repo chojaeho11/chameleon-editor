@@ -1613,7 +1613,7 @@
   "me_rect": "사각형",
   "me_circle": "원",
   "me_bg": "배경",
-  "me_cutout": "누끼따기",
+  "me_cutout": "배경제거",
   "me_shape": "도형",
   "me_clear": "전체 삭제",
   "me_download": "다운로드",

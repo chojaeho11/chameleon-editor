@@ -5854,7 +5854,7 @@ function scrollHotdeal(gridId, dir) {
                 <!-- 2026-06-15: 사각형/원 통합 → '도형' 단일 버튼. 클릭마다 사각/원 토글. -->
                 <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()" title="도형"><i class="fa-solid fa-shapes me-tb-ic"></i><span data-i18n="me_shape" class="me-tb-lbl">도형</span></button>
                 <label class="me-color-wrap" title="배경색"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
-                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed;" title="누끼따기 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼따기</span></button>
+                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
@@ -7439,6 +7439,13 @@ function scrollHotdeal(gridId, dir) {
                 if (ce) ce.blur();
                 _meSelect(null);
             }
+        });
+        // 2026-06-16: 빈 대지 클릭 → 이미지 업로드 창 자동 오픈. (요소가 이미 있으면 무시.)
+        me.stage.addEventListener('click', function(ev){
+            if (ev.target !== me.stage) return;
+            if (me.items && me.items.length > 0) return;
+            var inp = document.getElementById('meImgInput');
+            if (inp) inp.click();
         });
         me.stage.addEventListener('contextmenu', function(ev){
             if (ev.target === me.stage) ev.preventDefault();
@@ -11923,7 +11930,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=466"></script>
+<script src="/simple_order.js?v=467"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

@@ -276,7 +276,9 @@
       "Bash(sed -i 's/\"me_cutout\": \"Importer Détourage\"/\"me_cutout\": \"Détourer\"/g' fr_124.json)",
       "Bash(sed -i 's/\"me_cutout\": \"切り抜き取込\"/\"me_cutout\": \"切り抜き\"/g' ja_124.json)",
       "Bash(sed -i 's/\"me_cutout\": \"导入抠图\"/\"me_cutout\": \"抠图\"/g' zh_124.json)",
-      "Bash(awk 'NR>=5660 && NR<=5700' \"c:/Users/win 10/Desktop/작업/index.html\")"
+      "Bash(awk 'NR>=5660 && NR<=5700' \"c:/Users/win 10/Desktop/작업/index.html\")",
+      "Bash(sed -i 's/\"me_cutout\": \"누끼따기\"/\"me_cutout\": \"배경제거\"/' \"c:/Users/win 10/Desktop/작업/long/kr_124.json\")",
+      "Bash(sed -i 's/\"me_cutout\": \"切り抜き\"/\"me_cutout\": \"背景削除\"/' \"c:/Users/win 10/Desktop/작업/long/ja_124.json\")"
     ],
     "additionalDirectories": [
       "\\tmp",

@@ -2007,7 +2007,7 @@
   "me_rect": "四角",
   "me_circle": "円",
   "me_bg": "背景",
-  "me_cutout": "切り抜き",
+  "me_cutout": "背景削除",
   "me_shape": "図形",
   "me_clear": "全削除",
   "me_download": "ダウンロード",
