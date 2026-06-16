@@ -195,6 +195,7 @@
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 주문관리</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 배송관리</li>
+            <li class="nav-item" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
             <li class="nav-item" onclick="showSection('sec-design-withdrawals', this)"><i class="fa-solid fa-palette"></i> 디자이너출금</li>
             <li class="nav-item" onclick="showSection('sec-accounting', this)"><i class="fa-solid fa-calculator"></i> 경리과</li>
             <li class="nav-item" onclick="showSection('sec-products', this); if(window.pfLoadFooter) pfLoadFooter('kr');"><i class="fa-solid fa-tags"></i> 상품옵션</li>
@@ -207,7 +208,6 @@
             <div class="nav-label" style="margin-top:30px; cursor:pointer; color:#6b7280; user-select:none;" onclick="(function(el){var n=el.nextElementSibling;while(n&&!n.classList.contains('nav-label')){if(n.tagName==='LI'){n.style.display=(n.style.display==='none'?'':'none');}n=n.nextElementSibling;}var i=el.querySelector('i');if(i){i.classList.toggle('fa-chevron-right');i.classList.toggle('fa-chevron-down');}})(this)"><i class="fa-solid fa-chevron-right" style="font-size:10px; margin-right:4px;"></i>🗑️ 삭제된 관리</div>
             <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-bankda', this)"><i class="fa-solid fa-won-sign"></i> 💰 뱅크다 입금내역</li>
             <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-withdrawals', this)"><i class="fa-solid fa-hand-holding-dollar"></i> 출금 요청 관리</li>
-            <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
             <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-community-hub', this)"><i class="fa-solid fa-grip"></i> 서비스 대시보드</li>
             <li class="nav-item" style="display:none; opacity:0.65;" onclick="window.open('/franchise-hq','_blank')"><i class="fa-solid fa-handshake"></i> 🤝 가맹점 정산</li>
             <li class="nav-item" style="display:none; opacity:0.65;" onclick="showSection('sec-franchise-inquiries', this); if(window.loadFranchiseInquiries) loadFranchiseInquiries();"><i class="fa-solid fa-industry"></i> 🏭 공급사 신청</li>
@@ -3161,7 +3161,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=282"></script>
+    <script type="module" src="global_admin.js?v=283"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
