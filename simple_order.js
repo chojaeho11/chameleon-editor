@@ -12988,9 +12988,12 @@ html, body { background: #ffffff !important; }
                 var _cutSvg = window._meCutlineSvg;
                 if (_cutSvg && typeof _cutSvg === 'string' && _cutSvg.length > 50 && typeof window._meCutlineAsPdfBlob === 'function') {
                     updateUploadStep(tr('칼선 PDF 변환·업로드 중...', 'カットラインPDF変換·アップロード中...', 'Converting cutline PDF...'));
-                    // 실제 스티커 mm 사이즈 — 우선순위: stickerW/H > customW/H × 10 > fallback 96dpi 환산
-                    var _wMm = state.stickerW || (state.customW ? state.customW * 10 : null);
-                    var _hMm = state.stickerH || (state.customH ? state.customH * 10 : null);
+                    // 2026-06-16 v9: 캔버스 비율 그대로 mm 변환 — 팬시 (세로 비율) 도 정확히 portrait PDF 생성.
+                    //   me.natW/H 는 _mmPairToPx 로 사이즈 산정된 픽셀 — / 3.7795 (96dpi) 하면 mm.
+                    //   non-fancy 스티커(stickerW/H 입력) 도 _meSetSize 가 동기화해서 natW/H 와 일치.
+                    var _meRef = window.me;
+                    var _wMm = _meRef ? (_meRef.natW / 3.7795) : (state.stickerW || (state.customW ? state.customW * 10 : 100));
+                    var _hMm = _meRef ? (_meRef.natH / 3.7795) : (state.stickerH || (state.customH ? state.customH * 10 : 100));
                     // 디자인 이미지 dataURL — _meExportPNG 가 미니에디터 전체 (배경 + 이미지 + 텍스트) 를 합쳐서 PNG dataURL 반환.
                     //   (cutline overlay 는 svg 라 PNG export 에 포함 안 됨 — 깔끔)
                     var _imgDataUrl = null;
