@@ -7123,8 +7123,11 @@ function scrollHotdeal(gridId, dir) {
         }
         _meCutlineRender(d);
     }
-    // 복잡/팬시 — 선택된 이미지의 alpha 윤곽선 추적
-    async function _meCutlineTrace() {
+    // 2026-06-16 v2: 복잡/팬시 — centroid 기준 360° ray-cast 로 단일 closed contour 추출.
+    //   이전 4방향 boundary 방식은 path 가 교차해서 엉성했음. ray-cast 는 1개 연결 도형에 깔끔한 outline 생성.
+    //   mode: 'outer' (외곽 +2mm — 반칼/완칼 스티커용) / 'inner' (내부 -2mm — 무테 스티커용)
+    async function _meCutlineTrace(mode) {
+        mode = mode || 'outer';
         var sel = me.selected;
         if (!sel || sel.type !== 'image') {
             alert('이미지 요소를 먼저 선택해주세요. (복잡모양/팬시 스티커는 업로드한 이미지의 윤곽선을 따라 칼선이 생성됩니다.)');
@@ -7132,9 +7135,8 @@ function scrollHotdeal(gridId, dir) {
         }
         var img = sel.el.querySelector('img');
         if (!img) return;
-        // offscreen canvas 에 이미지 그리고 alpha mask 생성
-        var W = Math.max(64, Math.min(512, Math.round(sel.w)));
-        var H = Math.max(64, Math.min(512, Math.round(sel.h)));
+        var W = Math.max(128, Math.min(600, Math.round(sel.w)));
+        var H = Math.max(128, Math.min(600, Math.round(sel.h)));
         var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
         var ctx = cv.getContext('2d');
         try {
@@ -7142,54 +7144,45 @@ function scrollHotdeal(gridId, dir) {
             ctx.drawImage(img, 0, 0, W, H);
         } catch(e){ console.warn('[cutline trace draw]', e); }
         var data;
-        try { data = ctx.getImageData(0, 0, W, H).data; } catch(e){
-            alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다. 다시 업로드해보세요.');
-            return;
-        }
-        // 외곽 경계 — 각 행에서 최좌·최우 alpha>20 픽셀. THR 낮춰 가장자리 반투명 픽셀도 잡음.
+        try { data = ctx.getImageData(0, 0, W, H).data; }
+        catch(e){ alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.'); return; }
         var THR = 20;
-        var left = [], right = [];
-        for (var y = 0; y < H; y++) {
-            var l = -1, r = -1;
-            for (var x = 0; x < W; x++) {
-                var a = data[(y*W + x) * 4 + 3];
-                if (a > THR) { if (l < 0) l = x; r = x; }
+        // 1) centroid — alpha>THR 픽셀의 평균 좌표
+        var sumX = 0, sumY = 0, cnt = 0;
+        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+            if (data[(y*W+x)*4 + 3] > THR) { sumX += x; sumY += y; cnt++; }
+        }
+        if (!cnt) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
+        var cx = sumX / cnt, cy = sumY / cnt;
+        // 2) 360° ray-cast — 각 방향에서 가장 먼 alpha>THR 픽셀까지의 거리 측정
+        var N = 240;  // 1.5° 간격 — 부드러우면서 충분히 디테일 보존
+        var rays = [];
+        var maxR = Math.hypot(W, H);
+        for (var k = 0; k < N; k++) {
+            var ang = (k / N) * Math.PI * 2;
+            var dxr = Math.cos(ang), dyr = Math.sin(ang);
+            var lastR = -1;
+            for (var r = 0; r < maxR; r += 1) {
+                var px = Math.round(cx + dxr * r);
+                var py = Math.round(cy + dyr * r);
+                if (px < 0 || py < 0 || px >= W || py >= H) break;
+                if (data[(py*W + px)*4 + 3] > THR) lastR = r;
             }
-            left[y] = l; right[y] = r;
+            if (lastR > 0) rays.push([cx + dxr * lastR, cy + dyr * lastR]);
         }
-        // 2026-06-16: column-scan 도 같이 — 좌/우 boundary 만 쓰면 위·아래가 평평한 잎 같은 모양에 부적합.
-        //   각 column 의 최상·최하 alpha 픽셀로 top/bottom boundary 도 만들어 4방향 모두 정교하게.
-        var top = [], bot = [];
-        for (var xx = 0; xx < W; xx++) {
-            var t = -1, b = -1;
-            for (var yy = 0; yy < H; yy++) {
-                var aa = data[(yy*W + xx) * 4 + 3];
-                if (aa > THR) { if (t < 0) t = yy; b = yy; }
-            }
-            top[xx] = t; bot[xx] = b;
-        }
-        // 시계방향 outline: 위쪽 (좌→우), 우측 (위→아래), 아래쪽 (우→좌), 좌측 (아래→위).
-        var pts = [];
-        for (var x1 = 0; x1 < W; x1++) if (top[x1] >= 0) pts.push([x1, top[x1]]);
-        for (var y1 = 0; y1 < H; y1++) if (right[y1] >= 0) pts.push([right[y1], y1]);
-        for (var x2 = W-1; x2 >= 0; x2--) if (bot[x2] >= 0) pts.push([x2, bot[x2]]);
-        for (var y2 = H-1; y2 >= 0; y2--) if (left[y2] >= 0) pts.push([left[y2], y2]);
-        if (pts.length < 6) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
-        // 2026-06-16: 더 촘촘하게 sample — 2px 간격. (정교한 칼선 위해.)
-        var sampled = []; for (var i = 0; i < pts.length; i += 2) sampled.push(pts[i]);
-        // 인접 중복 제거 (같은 점 연속)
-        var dedup = []; for (var j = 0; j < sampled.length; j++) {
-            var pj = sampled[j];
-            if (j === 0 || Math.abs(pj[0]-dedup[dedup.length-1][0]) > 0.5 || Math.abs(pj[1]-dedup[dedup.length-1][1]) > 0.5) dedup.push(pj);
-        }
-        // sel 의 stage 좌표로 변환 + margin offset (외곽으로 약간만 — 2%).
+        if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
+        // 3) 마진 — 이미지 크기의 2% (≈ 100×100mm 스티커에서 ±2mm).
+        //    outer: 중심에서 바깥으로 +2mm.  inner: 중심 쪽으로 -2mm (무테용 안쪽 칼).
+        var marginPx = W * 0.02 * (mode === 'inner' ? -1 : 1);
         var sx = sel.x, sy = sel.y, sw = sel.w, sh = sel.h;
-        var cx = sx + sw/2, cy = sy + sh/2;
-        var margin = 1.02;
-        var transformed = dedup.map(function(p){
-            var px = sx + (p[0] / W) * sw;
-            var py = sy + (p[1] / H) * sh;
-            return [cx + (px - cx) * margin, cy + (py - cy) * margin];
+        var transformed = rays.map(function(p){
+            var vx = p[0] - cx, vy = p[1] - cy;
+            var dist = Math.hypot(vx, vy);
+            if (dist < 0.5) return [sx + (p[0]/W)*sw, sy + (p[1]/H)*sh];
+            var newDist = Math.max(dist * 0.4, dist + marginPx);  // inner 모드에서 너무 작아지지 않게 clamp
+            var nx = cx + (vx / dist) * newDist;
+            var ny = cy + (vy / dist) * newDist;
+            return [sx + (nx / W) * sw, sy + (ny / H) * sh];
         });
         _meCutlineRender(_meSmoothClosedPath(transformed));
     }
@@ -7212,8 +7205,14 @@ function scrollHotdeal(gridId, dir) {
           +   '<button type="button" data-shape="roundedRect"  style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">▢ 라운드 사각</button>'
           +   '<button type="button" data-shape="roundedCorner"style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">◣ 한 모서리</button>'
           + '</div>'
+          + '<div style="margin-top:14px; padding-top:12px; border-top:1px dashed #fecaca;">'
+          +   '<div style="font-weight:800; font-size:12px; color:#b91c1c; margin-bottom:8px;">🖼️ 선택 이미지 윤곽선 따기 (복잡/팬시)</div>'
+          +   '<div style="display:grid; grid-template-columns:1fr; gap:6px;">'
+          +     '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;">반칼·완칼 스티커용 — 외곽 <b style="background:rgba(255,255,255,0.2); padding:1px 6px; border-radius:4px;">+2mm</b> 여백 칼선</button>'
+          +     '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:2px solid #dc2626; background:#fff; color:#b91c1c; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;">무테 스티커용 — 내부 <b style="background:#fee2e2; padding:1px 6px; border-radius:4px;">-2mm</b> 칼선</button>'
+          +   '</div>'
+          + '</div>'
           + '<div style="margin-top:10px; display:grid; grid-template-columns:1fr; gap:8px;">'
-          +   '<button type="button" data-shape="trace" style="padding:14px 8px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit;">🖼️ 선택 이미지 윤곽선 따기 (복잡/팬시)</button>'
           +   '<button type="button" data-shape="clear" style="padding:9px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">칼선 삭제</button>'
           + '</div>';
         document.body.appendChild(pop);
@@ -7222,7 +7221,8 @@ function scrollHotdeal(gridId, dir) {
         pop.querySelectorAll('[data-shape]').forEach(function(b){
             b.onclick = function(){
                 var s = b.getAttribute('data-shape');
-                if (s === 'trace') { _meCutlineTrace(); close(); }
+                if (s === 'trace-outer') { _meCutlineTrace('outer'); close(); }
+                else if (s === 'trace-inner') { _meCutlineTrace('inner'); close(); }
                 else if (s === 'clear') { window._meCutlineClear(); close(); }
                 else { _meCutlineSimple(s); close(); }
             };
@@ -12229,7 +12229,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=475"></script>
+<script src="/simple_order.js?v=476"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
