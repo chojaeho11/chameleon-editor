@@ -8903,7 +8903,8 @@ html, body { background: #ffffff !important; }
                     meRef.selected = null;
                 }
                 if (typeof window._meAddImage === 'function' && thumbDataUrl) {
-                    window._meAddImage(thumbDataUrl);
+                    // 2026-06-16: 완성파일 → 캔버스 꽉 채우기. 캔버스가 파일 비율로 이미 설정됐으니 완벽히 fit.
+                    window._meAddImage(thumbDataUrl, { fillCanvas: true });
                 }
                 // 칼선도 클리어 (새 파일 → 새 칼선)
                 if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
