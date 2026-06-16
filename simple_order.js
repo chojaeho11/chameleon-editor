@@ -1571,7 +1571,7 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
             #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(2,1fr); gap:5px; flex:1; align-content:start; }
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:1fr; gap:5px; flex:1; align-content:start; }
             #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
             #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
