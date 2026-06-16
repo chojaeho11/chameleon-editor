@@ -6686,6 +6686,19 @@ function scrollHotdeal(gridId, dir) {
             html += '<span class="me-prop-group"><label>' + T('me_prop_strokew','두께') + '</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
         } else if (it.type === 'image') {
             html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">' + T('me_prop_img_hint','이미지 — 모서리 핸들로 크기 조절') + '</span>';
+            // 2026-06-16 v8: 칼선이 있는 이미지 → 마진 % 슬라이더 (0.5%~12% 가변).
+            //   모드 (outer/inner) 는 trace 시 결정된 it._cutlineMode 그대로 사용 — 슬라이더는 절대값만 조절.
+            //   horn/뾰족한 곳 칼선이 좁아 보일 때 사용자가 직접 늘릴 수 있도록.
+            if (it._cutlineRays && it._cutlineRays.length > 10) {
+                var _curPct = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
+                var _curPctDisp = (_curPct * 100).toFixed(1);
+                var _modeLbl = (it._cutlineMode === 'inner') ? 'inner −' : 'outer +';
+                html += '<span class="me-prop-group" style="gap:6px; min-width:200px;">'
+                     +   '<label style="color:#b91c1c; font-weight:800;">✂️ 칼선 간격</label>'
+                     +   '<input type="range" min="5" max="120" step="1" value="' + Math.round(_curPct * 1000) + '" data-cutline-margin style="flex:1; min-width:90px; accent-color:#ef4444;">'
+                     +   '<span data-cutline-margin-val style="font-size:11px; font-weight:800; color:#b91c1c; min-width:48px; text-align:right;">' + _modeLbl + _curPctDisp + '%</span>'
+                     + '</span>';
+            }
         }
         // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
         html += '<span class="me-prop-group" style="gap:4px;">';
@@ -6743,6 +6756,19 @@ function scrollHotdeal(gridId, dir) {
                 panel.querySelectorAll('[data-weight]').forEach(function(b){ b.classList.remove('active'); });
                 btn.classList.add('active');
                 _meSyncItemDisplay(it);
+            });
+        });
+        // 2026-06-16 v8: 칼선 간격 슬라이더 — drag 시 즉시 offset 재계산 + 재렌더.
+        panel.querySelectorAll('[data-cutline-margin]').forEach(function(sl){
+            sl.addEventListener('input', function(){
+                var pct = parseInt(sl.value, 10) / 1000;   // value 5~120 → 0.005~0.12 (0.5%~12%)
+                if (!isFinite(pct) || pct <= 0) pct = 0.01;
+                if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, pct);
+                var disp = panel.querySelector('[data-cutline-margin-val]');
+                if (disp) {
+                    var modeLbl = (it._cutlineMode === 'inner') ? 'inner −' : 'outer +';
+                    disp.textContent = modeLbl + (pct * 100).toFixed(1) + '%';
+                }
             });
         });
         // 2026-06-14: 공통 액션 핸들러
@@ -7388,13 +7414,27 @@ function scrollHotdeal(gridId, dir) {
             if (lastR > 0) rays.push([cx + dxr * lastR, cy + dyr * lastR]);
         }
         if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
-        // 2026-06-16 v6: 다단계 smoothing — silhouette 자체 → offset → 최종 단계마다 노이즈 제거.
-        //   v5 의 Chaikin 만으론 픽셀 단위 들쭉날쭉이 그대로 → box low-pass (radius 5) 로 평균화 추가.
-        var smoothRays = _meBoxSmooth(rays, 5);        // 11점 평균 — silhouette 픽셀 노이즈 거의 제거
-        smoothRays = _meChaikin(smoothRays, 1);        // Chaikin 1회 — corner 둥글게 (240→480)
-        // 3) 균일 offset — 각 점을 LOCAL NORMAL 방향으로 정확히 marginPx 이동. (radial 이 아닌 perpendicular)
-        //    tangent 윈도우 ±3 → 7점 평균 — normal 방향 안정화로 high-curvature kink 감소.
-        var marginPx = (mode === 'inner') ? -W * 0.02 : W * 0.03;
+        // 2026-06-16 v8: ray-cast 결과를 item 에 캐시 — 슬라이더로 마진 재계산 시 다시 ray-cast 안 함 (즉시 반응).
+        sel._cutlineRays = rays;
+        sel._cutlineRayW = W;
+        sel._cutlineRayH = H;
+        sel._cutlineMode = mode;
+        // 기본 마진: outer 3% / inner 2%
+        var defaultPct = (mode === 'inner') ? 0.02 : 0.03;
+        _meCutlineApplyOffsetFromCache(sel, defaultPct);
+    }
+    // 2026-06-16 v8: 캐시된 ray-cast 결과 + 마진 % 로 offset 다시 계산 → 슬라이더 실시간 반응.
+    //   marginPct: outer 모드에선 양수 (+3% 등), inner 는 음수 (-2% 등). UI 에선 모드는 it._cutlineMode 로 결정.
+    function _meCutlineApplyOffsetFromCache(it, marginPct) {
+        var rays = it && it._cutlineRays;
+        if (!rays || rays.length < 10) return;
+        var W = it._cutlineRayW, H = it._cutlineRayH;
+        // 부호: inner 면 음수, outer 면 양수. marginPct 자체는 양수 input — 모드별로 sign 결정.
+        var sign = (it._cutlineMode === 'inner') ? -1 : 1;
+        var marginPx = W * marginPct * sign;
+        // smoothing pipeline 동일 (변경 X)
+        var smoothRays = _meBoxSmooth(rays, 5);
+        smoothRays = _meChaikin(smoothRays, 1);
         var n = smoothRays.length;
         var offsetPts = [];
         for (var i = 0; i < n; i++) {
@@ -7410,15 +7450,16 @@ function scrollHotdeal(gridId, dir) {
             }
             offsetPts.push([nx, ny]);
         }
-        // 4) offset 후 box smooth (radius 3) + Chaikin 2회 → 최종 결과 매우 부드럽게.
         var finalPts = _meBoxSmooth(offsetPts, 3);
         finalPts = _meChaikin(finalPts, 2);
-        var relPts = finalPts.map(function(p){ return [p[0]/W, p[1]/H]; });
-        // item 에 저장 (다중 칼선 — 다른 item 의 칼선과 공존)
-        sel._cutlineRelPts = relPts;
-        sel._cutlineMode = mode;
+        it._cutlineRelPts = finalPts.map(function(p){ return [p[0]/W, p[1]/H]; });
+        it._cutlineMarginPct = marginPct;
         _meCutlineRenderAll();
     }
+    // 전역 노출 — props 패널 슬라이더에서 호출.
+    window._meCutlineSetMargin = function(it, marginPct) {
+        _meCutlineApplyOffsetFromCache(it, marginPct);
+    };
     // 2026-06-16 v3: 지우개 모드 — 활성화 시 stage 위에 capture overlay 추가,
     //   click/drag 한 좌표 근처 (반경 R) 의 모든 it._cutlineRelPts 점 제거 → 부드럽게 재렌더.
     me._cutlineEraserMode = false;
@@ -12523,7 +12564,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=485"></script>
+<script src="/simple_order.js?v=486"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
