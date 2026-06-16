@@ -3368,7 +3368,200 @@ html, body { background: #ffffff !important; }
                 try { if (typeof window._meCutlineClear === 'function') window._meCutlineClear(); } catch(_){}
             }
         } catch (_e) { console.warn('[upload→editor universal]', _e); }
+        // 2026-06-16 v14: 가벽 파일 업로드 → 사이즈 검증 + 안내 팝업 (날개 포함/미포함/사이즈 오류/특이세로).
+        try {
+            if (state.isWall && state.fileWidthMm && state.fileHeightMm) {
+                setTimeout(function(){ _soValidateWallFileSize(); }, 100);
+            }
+        } catch (_we) { console.warn('[wall validate]', _we); }
         renderUploadDone();
+    }
+    // 2026-06-16 v14: 가벽 파일 사이즈 검증 + 4가지 사례별 팝업.
+    //   가로: N미터 단위 (1m, 2m, 3m, 4m, 5m...). 날개 포함이면 +300mm.
+    //   세로: 2000 / 2200 / 2400 / 3000mm 중 하나. 그 외엔 +50,000 추가 설계비 confirm.
+    //   1:10 축소 샘플(예: 330×240mm = 3300×2400 원본) 도 자동 감지.
+    function _soValidateWallFileSize() {
+        var fwMm = state.fileWidthMm, fhMm = state.fileHeightMm;
+        if (!fwMm || !fhMm) return;
+        // 1) Scale 감지 — 1:10 축소본인지 1:1 실제 사이즈인지.
+        //    1:10 범위: width 60~700, height 180~320mm
+        //    1:1 범위: width 800+, height 1800+
+        var scale = 1;
+        if (fwMm >= 60 && fwMm <= 700 && fhMm >= 180 && fhMm <= 320) scale = 10;
+        var actualW = fwMm * scale;
+        var actualH = fhMm * scale;
+        var TOL_W = 10 * scale;   // 1cm tolerance × scale
+        var TOL_H = 10 * scale;
+        // 2) 가로 검증 — N미터 단위 (날개 미포함) 또는 N미터+300mm (날개 포함).
+        var widthM = Math.round(actualW / 1000);
+        var hasWings = null, widthOk = false;
+        if (widthM >= 1 && widthM <= 10) {
+            var exactNoWings = widthM * 1000;
+            var exactWithWings = widthM * 1000 + 300;
+            if (Math.abs(actualW - exactNoWings) <= TOL_W) { widthOk = true; hasWings = false; }
+            else if (Math.abs(actualW - exactWithWings) <= TOL_W) { widthOk = true; hasWings = true; }
+            // 양쪽 다 안 맞으면 가까운 쪽으로 추정 (어떤 사이즈를 의도했는지 안내용)
+            else {
+                hasWings = (Math.abs(actualW - exactWithWings) < Math.abs(actualW - exactNoWings));
+            }
+        }
+        // 3) 세로 검증 — 2000/2200/2400/3000 mm 중 하나.
+        var validHeights = [2000, 2200, 2400, 3000];
+        var heightOk = false, matchedH = null;
+        for (var i = 0; i < validHeights.length; i++) {
+            if (Math.abs(actualH - validHeights[i]) <= TOL_H) { heightOk = true; matchedH = validHeights[i]; break; }
+        }
+        // 4) 결과 분기 + 팝업.
+        var scaleNote = (scale === 10) ? ' (1:10 축소본)' : '';
+        if (!widthOk) {
+            // 가로 사이즈 오류 — 접수 불가.
+            _soWallPopup({
+                kind: 'error',
+                title: '⚠️ 가로 사이즈 오류',
+                lines: [
+                    '업로드한 파일 가로: <b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
+                    '',
+                    '가벽 가로는 <b>1미터 단위</b>로만 주문 가능합니다.',
+                    '<span style="color:#475569;">예: 1000 / 2000 / 3000 / 4000 / 5000mm (날개 미포함)</span>',
+                    '<span style="color:#475569;">또는 1300 / 2300 / 3300 / 4300 / 5300mm (날개 포함, 좌우 +150mm)</span>',
+                    '',
+                    '<span style="color:#b91c1c; font-weight:800;">현재 사이즈로는 접수가 불가합니다.</span>',
+                    '파일을 다시 확인 후 업로드해주세요.'
+                ],
+                buttons: [{ label: '확인', primary: true, action: function(){ /* nothing — user must re-upload */ } }]
+            });
+            return;
+        }
+        if (!heightOk) {
+            // 세로 특이 사이즈 — 5만원 추가 confirm.
+            _soWallPopup({
+                kind: 'warn',
+                title: '📐 세로 특이 사이즈 — 추가 설계비 안내',
+                lines: [
+                    '업로드한 파일 사이즈: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    '',
+                    '기본 세로 사이즈: <b>2000 / 2200 / 2400 / 3000mm</b>',
+                    '<span style="color:#475569;">위 사이즈는 추가 비용 없이 진행됩니다.</span>',
+                    '',
+                    '<span style="color:#b45309; font-weight:800;">현재 세로 ' + actualH.toLocaleString() + 'mm 는 특이 사이즈입니다.</span>',
+                    '추가 설계비 <b style="color:#b91c1c;">+50,000원</b> 이 발생합니다.',
+                    '',
+                    '5만원 추가하고 진행하시겠습니까?'
+                ],
+                buttons: [
+                    { label: '취소 (파일 다시 올리기)', action: function(){
+                        // 파일 클리어 — 사용자가 사이즈 맞춰서 재업로드 유도.
+                        state.file = null; state.thumbDataUrl = null;
+                        state.fileWidthMm = null; state.fileHeightMm = null;
+                        try { if (window.me && Array.isArray(window.me.items)) { window.me.items.slice().forEach(function(it){ try { it.el.remove(); } catch(_){} }); window.me.items = []; } } catch(_){}
+                        var _b = document.getElementById('soAdInlineUploadWrap'); var _d = document.getElementById('soAdInlineDone');
+                        if (_b) _b.style.display = ''; if (_d) _d.style.display = 'none';
+                    }},
+                    { label: '5만원 추가하고 진행', primary: true, action: function(){
+                        state.wallExtraDesignFee = 50000;
+                        state.wallExtraDesignReason = '특이 세로 사이즈 ' + actualH + 'mm';
+                        try { recalc(); } catch(_){}
+                        // 가벽 사이즈 dropdown 도 가까운 값으로 업데이트 (시각 일관성).
+                        var _wm = widthM;
+                        if (state.wallWidth !== _wm) {
+                            state.wallWidth = _wm;
+                            var ww = document.getElementById('soWallWidth'); if (ww) ww.value = String(_wm);
+                        }
+                    }}
+                ]
+            });
+            return;
+        }
+        // 5) 정상 — 날개 포함/미포함 안내.
+        // 5만원 추가 플래그가 이전 업로드에서 남아있을 수 있으니 정상 사이즈면 클리어.
+        state.wallExtraDesignFee = 0; state.wallExtraDesignReason = null;
+        // 가벽 dropdown 도 파일 가로에 맞춰 자동 갱신 (사용자가 선택한 값 ≠ 파일 가로면 안내).
+        var dropdownChangedNote = '';
+        if (widthM && state.wallWidth !== widthM) {
+            dropdownChangedNote = '<span style="color:#475569;">가벽 가로를 ' + widthM + 'm 로 자동 설정했습니다.</span>';
+            state.wallWidth = widthM;
+            var ww2 = document.getElementById('soWallWidth'); if (ww2) ww2.value = String(widthM);
+        }
+        var heightM = matchedH / 1000;
+        if (state.wallHeight !== heightM) {
+            state.wallHeight = heightM;
+            var wh2 = document.getElementById('soWallHeight'); if (wh2) wh2.value = String(heightM);
+        }
+        try { recalc(); } catch(_){}
+        try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_){}
+        if (hasWings) {
+            _soWallPopup({
+                kind: 'ok',
+                title: '🎯 전문가시네요!',
+                lines: [
+                    '업로드한 파일: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    '',
+                    '✓ 가로 ' + widthM + '미터 + 양쪽 날개 150mm씩 (300mm) 정확하게 포함',
+                    '✓ 세로 ' + matchedH + 'mm 정상',
+                    dropdownChangedNote,
+                    '',
+                    '<b style="color:#15803d;">옆면까지 잘 만들어주셨네요. 이대로 접수합니다.</b>'
+                ],
+                buttons: [{ label: '확인', primary: true, action: function(){} }]
+            });
+        } else {
+            _soWallPopup({
+                kind: 'info',
+                title: '📝 옆면 흰색 인쇄 안내',
+                lines: [
+                    '업로드한 파일: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    '',
+                    '✓ 가로 ' + widthM + '미터 정상',
+                    '✓ 세로 ' + matchedH + 'mm 정상',
+                    dropdownChangedNote,
+                    '',
+                    '<b style="color:#1e40af;">옆면이 없이 디자인하셨네요.</b>',
+                    '<span style="color:#475569;">옆면(좌우 150mm씩)은 <b>흰색으로 인쇄</b>됩니다.</span>',
+                    '',
+                    '그대로 진행하시면 됩니다.'
+                ],
+                buttons: [{ label: '확인', primary: true, action: function(){} }]
+            });
+        }
+    }
+    function _soWallPopup(opts) {
+        opts = opts || {};
+        var oldEl = document.getElementById('soWallValidatePopup');
+        if (oldEl) oldEl.remove();
+        var colors = {
+            ok:    { border:'#16a34a', bg:'#f0fdf4', icon:'✅' },
+            info:  { border:'#2563eb', bg:'#eff6ff', icon:'ℹ️' },
+            warn:  { border:'#f59e0b', bg:'#fffbeb', icon:'⚠️' },
+            error: { border:'#dc2626', bg:'#fef2f2', icon:'❌' }
+        };
+        var c = colors[opts.kind || 'info'];
+        var overlay = document.createElement('div');
+        overlay.id = 'soWallValidatePopup';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:99998; display:flex; align-items:center; justify-content:center; padding:20px; font-family:inherit;';
+        var btnHtml = (opts.buttons || []).map(function(b, i){
+            var pri = b.primary;
+            var style = pri
+                ? 'padding:11px 22px; background:' + c.border + '; color:#fff; border:none; border-radius:10px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit;'
+                : 'padding:11px 22px; background:#fff; color:#475569; border:1.5px solid #cbd5e1; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;';
+            return '<button type="button" data-btn-i="' + i + '" style="' + style + '">' + b.label + '</button>';
+        }).join('');
+        overlay.innerHTML =
+            '<div style="background:#fff; max-width:500px; width:100%; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.35); overflow:hidden; border-top:5px solid ' + c.border + ';">'
+          +   '<div style="padding:18px 22px 12px; background:' + c.bg + '; border-bottom:1px solid ' + c.border + '33;">'
+          +     '<div style="font-weight:900; font-size:16px; color:' + c.border + ';">' + (opts.title || '') + '</div>'
+          +   '</div>'
+          +   '<div style="padding:18px 22px 16px; font-size:13px; color:#0f172a; line-height:1.7;">' + (opts.lines || []).join('<br>') + '</div>'
+          +   '<div style="padding:14px 22px 18px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">' + btnHtml + '</div>'
+          + '</div>';
+        document.body.appendChild(overlay);
+        overlay.querySelectorAll('[data-btn-i]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var i = parseInt(btn.getAttribute('data-btn-i'), 10);
+                var b = (opts.buttons || [])[i];
+                overlay.remove();
+                if (b && typeof b.action === 'function') { try { b.action(); } catch(_){} }
+            });
+        });
     }
 
     function renderUploadDone() {
@@ -4029,7 +4222,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-13: 칼선작업 (디자이너 누끼·칼선·받침) — 체크박스 + 별도 누끼 이미지 개수 (qty 와 무관)
         const _cutlineN = state.cutlineWork ? Math.max(1, parseInt(state.cutlineCharCount, 10) || 1) : 0;
         const cutlineFee = _cutlineN * 10000;
-        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee + cutlineFee;
+        // 2026-06-16: 가벽 특이 사이즈 추가 설계비 (세로 2000/2200/2400/3000 외) — 사용자가 confirm 한 경우만.
+        const wallExtraFee = (state.isWall && state.wallExtraDesignFee) ? state.wallExtraDesignFee : 0;
+        const final = taxBase - amountDiscount - proDiscount - presetBulkDiscount + presetWrapFee + tshirtPrintFee + shipFee + designReqFee + cutlineFee + wallExtraFee;
 
         // 렌더
         const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
