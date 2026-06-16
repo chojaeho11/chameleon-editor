@@ -3290,12 +3290,17 @@ html, body { background: #ffffff !important; }
                 }
             }
         }
-        // 2026-06-16: 스티커 — 업로드 시 좌측 mini 에디터 캔버스에도 이미지 추가 (디자인 미리보기 + 칼선 트레이스 대상).
+        // 2026-06-16 v10: cutline-eligible 상품 (스티커/등신대/자유인쇄커팅/키링) — 업로드 시 좌측 mini 에디터 캔버스에도
+        //   이미지 추가 → 사용자가 그 위에 칼선 trace 가능.
         try {
-            if (state.isSticker && state.thumbDataUrl && typeof window._meAddImage === 'function') {
+            var _cutEligibleUL = !!(state && (
+                state.isSticker || state.isStandee || state.isCutPrint ||
+                (state.isPresetGoods && state.presetType === 'keyring')
+            ));
+            if (_cutEligibleUL && state.thumbDataUrl && typeof window._meAddImage === 'function') {
                 window._meAddImage(state.thumbDataUrl);
             }
-        } catch (_e) { console.warn('[sticker upload→editor]', _e); }
+        } catch (_e) { console.warn('[cutline upload→editor]', _e); }
         renderUploadDone();
     }
 
@@ -11722,10 +11727,17 @@ html, body { background: #ffffff !important; }
             var bcForm = document.getElementById('soQdBcForm');
             if (bcForm) bcForm.style.display = _isBizCard() ? '' : 'none';
             _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
-            // 2026-06-16: 칼선 버튼 — 스티커 상품일 때만 노출. 새 진입 시 기존 칼선 overlay 클리어.
+            // 2026-06-16 v10: 칼선 버튼 — 스티커 + 등신대 family (스카시/일반 등신대) + 자유인쇄커팅 + 키링 prefix 상품.
+            //   모두 die-cut 이 필요한 상품군 (실루엣 따라 잘라야 함).
             try {
                 var _cbBtn = document.getElementById('meCutlineBtn');
-                if (_cbBtn) _cbBtn.style.display = (state && state.isSticker) ? '' : 'none';
+                var _cutlineEligible = !!(state && (
+                    state.isSticker ||
+                    state.isStandee ||      // 등신대 (hb_ss_*, hb_pi_5 등)
+                    state.isCutPrint ||     // 허니콤보드 자유인쇄커팅 (hb_pt_*)
+                    (state.isPresetGoods && state.presetType === 'keyring')  // 키링 family
+                ));
+                if (_cbBtn) _cbBtn.style.display = _cutlineEligible ? '' : 'none';
                 if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
             } catch(_e){}
 
