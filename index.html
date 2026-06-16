@@ -6167,14 +6167,21 @@ function scrollHotdeal(gridId, dir) {
             var fwReq = it.fontWeight || 400;
             var fwResolved = (typeof _meResolveWeight === 'function') ? _meResolveWeight(it.fontFamily, fwReq) : fwReq;
             it.el.style.fontWeight = String(fwResolved);
-            it.el.style.height = 'auto';
             // 2026-06-15: 텍스트 박스는 글자에 맞춰 줄어들도록 width:max-content, 최대폭은 it.w 로 캡.
             //   결과: 선택 핸들이 글자 끝에 붙음 (우측으로 빈 공간 없음). 글자가 길어지면 it.w 까지 늘다가 그 이후엔 wrap.
-            it.el.style.width = 'max-content';
-            it.el.style.maxWidth = (it.w * me.wScale) + 'px';
-            // 2026-06-16: n/s edge 핸들로 세로 늘리기 — it.h 가 변하면 minHeight 로 박스 높이 확보.
-            //   (text 는 height:auto 로 글자에 맞춰지지만 minHeight 가 있으면 그 이상 줄지 않음.)
-            it.el.style.minHeight = (it.h * me.wScale) + 'px';
+            // 2026-06-16: 사용자가 edge 핸들(n/s/e/w)로 명시적 리사이즈 한 경우 — 고정 width/height 사용.
+            //   (auto-shrink 가 다시 끼어들어 사용자가 늘린 폭을 무시하던 버그 차단.)
+            if (it._edgeResized) {
+                it.el.style.width = (it.w * me.wScale) + 'px';
+                it.el.style.maxWidth = 'none';
+                it.el.style.height = (it.h * me.wScale) + 'px';
+                it.el.style.minHeight = '';
+            } else {
+                it.el.style.height = 'auto';
+                it.el.style.width = 'max-content';
+                it.el.style.maxWidth = (it.w * me.wScale) + 'px';
+                it.el.style.minHeight = '';
+            }
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
             it.el.style.background = it.fill || '#7c3aed';
@@ -6200,7 +6207,7 @@ function scrollHotdeal(gridId, dir) {
             natW: me.natW, natH: me.natH, bg: me.bg,
             items: me.items.map(function(it){
                 var clone = {};
-                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth'].forEach(function(k){
+                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized'].forEach(function(k){
                     if (it[k] !== undefined) clone[k] = it[k];
                 });
                 return clone;
@@ -6868,6 +6875,8 @@ function scrollHotdeal(gridId, dir) {
                 if (corner === 's') newH2 = Math.max(20, sh + dy);
                 if (corner === 'n') { newH2 = Math.max(20, sh - dy); it.y = sY + (sh - newH2); }
                 it.w = newW2; it.h = newH2;
+                // 2026-06-16: edge 리사이즈 후엔 width:max-content auto-shrink 끄고 고정 폭 유지.
+                if (it.type === 'text') it._edgeResized = true;
                 _meSyncItemDisplay(it);
                 return;
             }
@@ -11997,7 +12006,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=470"></script>
+<script src="/simple_order.js?v=471"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
