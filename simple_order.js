@@ -2595,6 +2595,32 @@ html, body { background: #ffffff !important; }
             <div style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 100×100mm — 가격은 면적 비례로 계산됩니다.', '基本100×100mm — 価格は面積比例。', 'Default 100×100mm — price scales by area.')}</div>
           </div>
 
+          <!-- 2026-06-16: 완성파일 업로드 — 직접 디자인한 PDF/이미지 올리면 사이즈 자동 인식 + 캔버스 교체. -->
+          <div id="soStickerFinalFileWrap" style="display:none; margin-top:14px;">
+            <div class="so-section-title">📄 ${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload Final File')}</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.5;">${tr('PDF·PNG·JPG 파일을 직접 올리면 페이지 사이즈를 자동 인식해 캔버스·가격에 반영됩니다.', 'PDF·PNG·JPGをアップロードするとサイズを自動認識して反映します。', 'Upload PDF/PNG/JPG — page size auto-detected & applied to canvas & price.')}</div>
+            <div id="soStickerFinalFileBefore">
+              <button type="button" onclick="document.getElementById('soStickerFinalFile').click()" style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size:17px;"></i>
+                <span>${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択', 'Choose final file')}</span>
+              </button>
+              <input type="file" id="soStickerFinalFile" accept="application/pdf,image/png,image/jpeg" style="display:none;" onchange="window._soStickerFinalFileUpload(this)">
+            </div>
+            <div id="soStickerFinalFileAfter" style="display:none;">
+              <div style="padding:14px 16px; background:linear-gradient(135deg,#059669,#047857); border-radius:14px; color:#fff; box-shadow:0 6px 18px -6px rgba(5,150,105,0.45);">
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:900;">
+                  <i class="fa-solid fa-circle-check" style="font-size:17px;"></i>
+                  <span>${tr('완성 파일 업로드 완료', '完成ファイルアップロード完了', 'Final file uploaded')}</span>
+                </div>
+                <div id="soStickerFinalFileInfo" style="margin-top:6px; font-size:11.5px; font-weight:700; opacity:0.95; line-height:1.55;"></div>
+              </div>
+              <button type="button" onclick="document.getElementById('soStickerFinalFile').click()" style="width:100%; margin-top:8px; padding:10px; border:1.5px solid #cbd5e1; background:#fff; color:#475569; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <i class="fa-solid fa-arrows-rotate" style="font-size:12px;"></i>
+                <span>${tr('파일 변경', 'ファイル変更', 'Change file')}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- 3) 수량 — 프리셋 버튼 + 직접 입력 -->
           <div id="soStickerQtyWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">🧮 ${tr('수량 (매)', '数量 (枚)', 'Quantity (pcs)')}</div>
@@ -8699,14 +8725,17 @@ html, body { background: #ffffff !important; }
         var coatW = document.getElementById('soStickerCoatingWrap');
         var foilW = document.getElementById('soStickerFoilWrap');
         var notice= document.getElementById('soStickerNotice');
+        var finalFileW = document.getElementById('soStickerFinalFileWrap');
         if (!state.stickerProductCode) {
-            [sizeW, qtyW, coatW, foilW, notice].forEach(function(el){ if (el) el.style.display='none'; });
+            [sizeW, qtyW, coatW, foilW, notice, finalFileW].forEach(function(el){ if (el) el.style.display='none'; });
             return;
         }
         var picked = variants.find(function(x){ return x.code === state.stickerProductCode; });
         var isFancy = !!(picked && _stickerIsFancy(picked));
         // 사이즈: 팬시면 숨김.
         if (sizeW) sizeW.style.display = isFancy ? 'none' : '';
+        // 2026-06-16: 완성파일 업로드 — 팬시는 사이즈 의미 없어 숨김, 재단 스티커는 항상 노출.
+        if (finalFileW) finalFileW.style.display = isFancy ? 'none' : '';
         var wEl = document.getElementById('soStickerW'); if (wEl && document.activeElement !== wEl) wEl.value = state.stickerW || 100;
         var hEl = document.getElementById('soStickerH'); if (hEl && document.activeElement !== hEl) hEl.value = state.stickerH || 100;
         // 수량: 팬시면 4매 단위 (4/8/12/20/40), 그 외 1000매 단위 (1000/2000/3000/5000/10000).
@@ -8811,6 +8840,89 @@ html, body { background: #ffffff !important; }
         // 2026-06-16: 디자인 에디터 대지도 같이 sync.
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
+    };
+    // 2026-06-16: 완성파일 업로드 — PDF 페이지 사이즈/이미지 해상도 자동 인식 → 캔버스 + stickerW/H + 가격 동시 반영.
+    //   업로드한 파일은 state.file 로 보관 → 주문 시 그대로 인쇄소로 전달 (에디터 export 무시).
+    window._soStickerFinalFileUpload = async function(input) {
+        try {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            var isPdf = (file.type === 'application/pdf') || /\.pdf$/i.test(file.name);
+            var isImg = /^image\//i.test(file.type);
+            var widthMm = null, heightMm = null, thumbDataUrl = null;
+            if (isPdf) {
+                showStatus(tr('PDF 페이지 사이즈 분석 중...', 'PDFサイズ解析中...', 'Analyzing PDF size...'), 'ok');
+                var r = await pdfFirstPageToDataUrl(file);
+                widthMm = r.widthMm; heightMm = r.heightMm; thumbDataUrl = r.dataUrl;
+            } else if (isImg) {
+                var r2 = await imageDataUrlWithDims(file);
+                // 이미지는 300dpi 기준 mm 환산
+                widthMm = Math.round(r2.widthPx / 300 * 25.4);
+                heightMm = Math.round(r2.heightPx / 300 * 25.4);
+                thumbDataUrl = r2.dataUrl;
+            } else {
+                alert('지원하지 않는 파일 형식입니다. PDF·PNG·JPG 만 가능합니다.');
+                return;
+            }
+            hideStatus();
+            if (!widthMm || !heightMm || widthMm < 5 || heightMm < 5) {
+                alert('파일 사이즈를 인식하지 못했습니다.');
+                return;
+            }
+            // state 갱신 — 카트 담을 때 그대로 인쇄소 전달.
+            state.file = file;
+            state.thumbDataUrl = thumbDataUrl;
+            state.fileWidthMm = widthMm;
+            state.fileHeightMm = heightMm;
+            state.fileKind = isPdf ? 'pdf' : (file.type === 'image/png' ? 'png' : 'jpg');
+            state.stickerW = Math.max(10, Math.min(1000, widthMm));
+            state.stickerH = Math.max(10, Math.min(1000, heightMm));
+            // DOM 입력 동기화
+            var wEl = document.getElementById('soStickerW'); if (wEl) wEl.value = state.stickerW;
+            var hEl = document.getElementById('soStickerH'); if (hEl) hEl.value = state.stickerH;
+            // 완료 UI 표시
+            var beforeEl = document.getElementById('soStickerFinalFileBefore');
+            var afterEl  = document.getElementById('soStickerFinalFileAfter');
+            var infoEl   = document.getElementById('soStickerFinalFileInfo');
+            if (beforeEl) beforeEl.style.display = 'none';
+            if (afterEl) afterEl.style.display = '';
+            if (infoEl) {
+                var sizeMB = (file.size/1024/1024).toFixed(1);
+                infoEl.innerHTML = '📎 <b>' + escapeHtml(file.name) + '</b> · ' + sizeMB + 'MB<br>'
+                                 + '📐 자동인식 사이즈: <b>' + state.stickerW + ' × ' + state.stickerH + ' mm</b>';
+            }
+            // 캔버스 사이즈 + 가격 재계산
+            try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch (_) {}
+            try { recalc(); } catch (_) {}
+            // 좌측 mini editor — 기존 items 다 비우고 새 파일 이미지로 교체.
+            try {
+                if (window.me && Array.isArray(window.me.items)) {
+                    var meRef = window.me;
+                    meRef.items.slice().forEach(function(it){ try { it.el.remove(); } catch(_) {} });
+                    meRef.items = [];
+                    meRef.selected = null;
+                }
+                if (typeof window._meAddImage === 'function' && thumbDataUrl) {
+                    window._meAddImage(thumbDataUrl);
+                }
+                // 칼선도 클리어 (새 파일 → 새 칼선)
+                if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
+            } catch (_e) { console.warn('[final file → editor]', _e); }
+            // 우측 사이드바의 일반 업로드 카드도 완료 상태로 sync (한 파일 = 한 주문 의미 일관)
+            try {
+                var _adInlineDone = document.getElementById('soAdInlineDone');
+                var _adInlineWrap = document.getElementById('soAdInlineUploadWrap');
+                if (_adInlineWrap) _adInlineWrap.style.display = 'none';
+                if (_adInlineDone) _adInlineDone.style.display = 'block';
+                var _adInfo = document.getElementById('soAdInlineFileInfo');
+                if (_adInfo) { _adInfo.textContent = '📎 ' + file.name + ' · ' + (file.size/1024/1024).toFixed(1) + 'MB'; }
+            } catch (_) {}
+            renderUploadDone();
+        } catch (e) {
+            console.error('[final file upload]', e);
+            hideStatus();
+            alert('파일 업로드 처리 실패: ' + (e && e.message ? e.message : e));
+        }
     };
     window._soStickerQtyInput = function() {
         var qty = parseInt(document.getElementById('soStickerQty').value, 10) || 0;
