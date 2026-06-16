@@ -6210,6 +6210,10 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.background = it.fill || '#7c3aed';
             it.el.style.border = (it.strokeWidth || 0) > 0 ? (it.strokeWidth + 'px solid ' + (it.stroke || '#000')) : 'none';
         }
+        // 2026-06-16: 칼선이 이 item 에 연결돼 있으면 같이 따라 움직임/크기조절.
+        if (me._cutlineSource === it && me._cutlineRelPts) {
+            try { _meCutlineResync(); } catch(_ce) {}
+        }
     }
 
     function _meSetSize(w, h, label) {
@@ -6600,6 +6604,8 @@ function scrollHotdeal(gridId, dir) {
 
     function _meRemove(it) {
         _meSnapshot();
+        // 2026-06-16: 칼선의 source item 이 삭제되면 칼선도 같이 클리어.
+        if (me._cutlineSource === it) { try { window._meCutlineClear(); } catch(_re) {} }
         me.items = me.items.filter(function(o){ return o !== it; });
         it.el.remove();
         if (me.selected === it) { me.selected = null; _meRenderProps(null); }
@@ -7084,8 +7090,20 @@ function scrollHotdeal(gridId, dir) {
         var s = document.getElementById('meCutlineOverlay');
         if (s) s.remove();
         me._cutlinePathD = null;
+        me._cutlineSource = null;     // 추적 대상 item 참조 — null 이면 simple shape (캔버스 고정)
+        me._cutlineRelPts = null;     // [0,1]x[0,1] 정규화 좌표 — source item bounds 변할 때 재계산용
         window._meCutlineSvg = null;
     };
+    // 2026-06-16: source item 의 bounds 가 변하면 (resize/drag) 칼선을 그 비율로 다시 그림.
+    function _meCutlineResync() {
+        if (!me._cutlineSource || !me._cutlineRelPts) return;
+        var it = me._cutlineSource;
+        if (me.items.indexOf(it) < 0) { window._meCutlineClear(); return; }
+        var sxr = it.x, syr = it.y, swr = it.w, shr = it.h;
+        var pts = me._cutlineRelPts.map(function(p){ return [sxr + p[0]*swr, syr + p[1]*shr]; });
+        _meCutlineRender(_meSmoothClosedPath(pts));
+    }
+    window._meCutlineResync = _meCutlineResync;
     function _meCutlineSimple(shape) {
         var w = me.natW, h = me.natH;
         var inset = Math.min(w, h) * 0.04;     // 4% 안쪽 — 재단 안전여백
@@ -7175,15 +7193,23 @@ function scrollHotdeal(gridId, dir) {
         //    outer: 중심에서 바깥으로 +2mm.  inner: 중심 쪽으로 -2mm (무테용 안쪽 칼).
         var marginPx = W * 0.02 * (mode === 'inner' ? -1 : 1);
         var sx = sel.x, sy = sel.y, sw = sel.w, sh = sel.h;
+        // 2026-06-16: source item 정규화 좌표 [0,1]x[0,1] 도 같이 저장 — 이후 resize/drag 시 재계산용.
+        var relPts = [];
         var transformed = rays.map(function(p){
             var vx = p[0] - cx, vy = p[1] - cy;
             var dist = Math.hypot(vx, vy);
-            if (dist < 0.5) return [sx + (p[0]/W)*sw, sy + (p[1]/H)*sh];
-            var newDist = Math.max(dist * 0.4, dist + marginPx);  // inner 모드에서 너무 작아지지 않게 clamp
-            var nx = cx + (vx / dist) * newDist;
-            var ny = cy + (vy / dist) * newDist;
+            var nx, ny;
+            if (dist < 0.5) { nx = p[0]; ny = p[1]; }
+            else {
+                var newDist = Math.max(dist * 0.4, dist + marginPx);
+                nx = cx + (vx / dist) * newDist;
+                ny = cy + (vy / dist) * newDist;
+            }
+            relPts.push([nx / W, ny / H]);   // [0,1] 정규화 (이미지 픽셀 → 비율)
             return [sx + (nx / W) * sw, sy + (ny / H) * sh];
         });
+        me._cutlineSource = sel;
+        me._cutlineRelPts = relPts;
         _meCutlineRender(_meSmoothClosedPath(transformed));
     }
     window._meCutlineOpen = function() {
@@ -7194,11 +7220,12 @@ function scrollHotdeal(gridId, dir) {
         pop.id = 'meCutlinePopup';
         pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:340px; font-family:inherit;';
         pop.innerHTML =
-            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
           +   '<div style="font-weight:900; font-size:15px; color:#b91c1c;">✂️ 칼선 모양 선택</div>'
           +   '<button type="button" id="meCutlineClose" style="border:0; background:transparent; font-size:20px; cursor:pointer; color:#94a3b8;">×</button>'
           + '</div>'
-          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 중 선택 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적.</div>'
+          + '<img src="/cut_st.jpg" alt="칼선 종류 예시" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:10px; border:1px solid #fecaca;" loading="lazy">'
+          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적 — 이미지 크기 조절 시 칼선도 같이 변경됩니다.</div>'
           + '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">'
           +   '<button type="button" data-shape="circle"       style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">⭕ 동그라미</button>'
           +   '<button type="button" data-shape="pill"         style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">💊 알약</button>'
@@ -12229,7 +12256,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=476"></script>
+<script src="/simple_order.js?v=477"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
