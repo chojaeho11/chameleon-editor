@@ -7116,6 +7116,22 @@ function scrollHotdeal(gridId, dir) {
         }
         return cur;
     }
+    // 2026-06-16 v6: Box (moving-average) low-pass — radius=k 이면 2k+1 점 평균.
+    //   silhouette 픽셀 노이즈 (찌글거림) 를 평균화로 거의 완전히 제거. Chaikin 만으로 부족할 때 보강.
+    function _meBoxSmooth(pts, radius) {
+        radius = radius || 3;
+        var n = pts.length;
+        var out = [];
+        for (var i = 0; i < n; i++) {
+            var sx = 0, sy = 0, c = 0;
+            for (var k = -radius; k <= radius; k++) {
+                var idx = ((i + k) % n + n) % n;
+                sx += pts[idx][0]; sy += pts[idx][1]; c++;
+            }
+            out.push([sx/c, sy/c]);
+        }
+        return out;
+    }
     // 2026-06-16: 부드러운 path — quadratic Bézier midpoint smoothing.
     //   각 sample 정점을 control point 로, 두 정점의 중점을 곡선 통과 anchor 로 사용 → 코너가 곡선화.
     function _meSmoothClosedPath(pts) {
@@ -7237,30 +7253,31 @@ function scrollHotdeal(gridId, dir) {
             if (lastR > 0) rays.push([cx + dxr * lastR, cy + dyr * lastR]);
         }
         if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
-        // 2026-06-16 v5: raw silhouette 자체에 Chaikin 1회 → 들쭉날쭉한 픽셀 노이즈 완화 → offset 시 kink 감소.
-        var smoothRays = _meChaikin(rays, 1);
+        // 2026-06-16 v6: 다단계 smoothing — silhouette 자체 → offset → 최종 단계마다 노이즈 제거.
+        //   v5 의 Chaikin 만으론 픽셀 단위 들쭉날쭉이 그대로 → box low-pass (radius 5) 로 평균화 추가.
+        var smoothRays = _meBoxSmooth(rays, 5);        // 11점 평균 — silhouette 픽셀 노이즈 거의 제거
+        smoothRays = _meChaikin(smoothRays, 1);        // Chaikin 1회 — corner 둥글게 (240→480)
         // 3) 균일 offset — 각 점을 LOCAL NORMAL 방향으로 정확히 marginPx 이동. (radial 이 아닌 perpendicular)
-        //    추가로 normal 을 더 넓은 윈도우(이웃의 이웃까지)로 평균내어 high-curvature 지점의 kink 추가 완화.
+        //    tangent 윈도우 ±3 → 7점 평균 — normal 방향 안정화로 high-curvature kink 감소.
         var marginPx = (mode === 'inner') ? -W * 0.02 : W * 0.03;
         var n = smoothRays.length;
         var offsetPts = [];
         for (var i = 0; i < n; i++) {
-            // 윈도우 ±2 → 5점 평균 tangent 로 노이즈 둔감화
-            var p1 = smoothRays[(i + n - 2) % n], p2 = smoothRays[(i + n + 2) % n];
+            var p1 = smoothRays[(i + n - 3) % n], p2 = smoothRays[(i + n + 3) % n];
             var tx = p2[0] - p1[0], ty = p2[1] - p1[1];
             var tLen = Math.hypot(tx, ty);
             var nx, ny;
             if (tLen < 0.001) { nx = smoothRays[i][0]; ny = smoothRays[i][1]; }
             else {
-                // CW (screen, cos/sin Y-down) — 외향 normal = (ty/len, -tx/len)
                 var ox = ty / tLen, oy = -tx / tLen;
                 nx = smoothRays[i][0] + ox * marginPx;
                 ny = smoothRays[i][1] + oy * marginPx;
             }
             offsetPts.push([nx, ny]);
         }
-        // 4) offset 결과에 Chaikin 1회 더 → 최종 부드럽게.
-        var finalPts = _meChaikin(offsetPts, 1);
+        // 4) offset 후 box smooth (radius 3) + Chaikin 2회 → 최종 결과 매우 부드럽게.
+        var finalPts = _meBoxSmooth(offsetPts, 3);
+        finalPts = _meChaikin(finalPts, 2);
         var relPts = finalPts.map(function(p){ return [p[0]/W, p[1]/H]; });
         // item 에 저장 (다중 칼선 — 다른 item 의 칼선과 공존)
         sel._cutlineRelPts = relPts;
@@ -12371,7 +12388,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=480"></script>
+<script src="/simple_order.js?v=481"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
