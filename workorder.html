@@ -839,12 +839,27 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             }
 
             // 2026-06-13: 스티커 옵션 박스
+            // 2026-06-16: 신규 sticker schema 반영 — { productCode, w, h, qty, coating, foils, isFancy }.
+            //   기존 legacy keys (category/shape/size/paper/qtyKey) 도 fallback 유지.
             const _isSticker = !!(it.sticker || it._isSticker || /^pp_sticker|^sticker_/i.test(_bcProdCode) || /스티커/.test(_bcProdName));
             if (_isSticker) {
                 const _st = it.sticker || {};
+                const _STK_COAT = { matte: '무광코팅 (기본)', gloss: '유광코팅', none: '무코팅', transparent: '투명용지 (×2)' };
+                const _STK_FOIL = { gold: '금별색 (+50,000)', silver: '은별색 (+50,000)' };
                 const _STK_CAT = { glossy: '유광', matte: '무광', removable: '리무벌', kraft: '크라프트지', transparent: '투명', holo: '홀로그램', metallic: '메탈릭' };
                 const _STK_SHAPE = { square: '사각', circle: '원형', oval: '타원', freeform: '자유형(도무송)', heart: '하트', star: '별' };
                 const _stLines = [];
+                // 새 schema
+                if (_st.productCode) _stLines.push('변형 코드: <b>' + esc(_st.productCode) + '</b>');
+                if (_st.isFancy)     _stLines.push('<span style="background:#fce7f3; color:#831843; padding:2px 8px; border-radius:5px; font-weight:800;">팬시 스티커 (4매 1셋)</span>');
+                if (_st.w && _st.h)  _stLines.push('사이즈: <b>' + esc(_st.w) + ' × ' + esc(_st.h) + ' mm</b>');
+                if (_st.qty)         _stLines.push('수량: <b>' + Number(_st.qty).toLocaleString() + '매</b>');
+                if (_st.coating)     _stLines.push('코팅: <b>' + esc(_STK_COAT[_st.coating] || _st.coating) + '</b>');
+                if (Array.isArray(_st.foils) && _st.foils.length > 0) {
+                    const _foilLabels = _st.foils.map(f => _STK_FOIL[f] || f).join(', ');
+                    _stLines.push('별색 박: <b style="color:#b45309;">✨ ' + esc(_foilLabels) + '</b>');
+                }
+                // legacy fallback
                 if (_st.category) _stLines.push('카테고리: <b>' + esc(_STK_CAT[_st.category] || _st.category) + '</b>');
                 if (_st.shape)    _stLines.push('모양: <b>' + esc(_STK_SHAPE[_st.shape] || _st.shape) + '</b>');
                 if (_st.size)     _stLines.push('사이즈: <b>' + esc(_st.size) + '</b>');

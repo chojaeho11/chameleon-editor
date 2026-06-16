@@ -15674,12 +15674,17 @@ html, body { background: #ffffff !important; }
                 }
                 // 2026-06-13: spread it 으로 명함옵션/스티커/디자인의뢰/커스텀사이즈 등 모든 cart 필드 보존
                 //   기존엔 명시 필드만 골라 저장 → 작업지시서/디자이너보드 옵션 누락. product 객체와 호환 키 둘 다 유지.
+                // 2026-06-16: 스티커 사이즈 (it.sticker.w / .h) 도 width_mm/height_mm 상위 키에 노출 → 작업지시서 가로/세로 입력에 표시.
+                //   스티커 수량 (it.sticker.qty) 도 it.qty 로 끌어올림 — 워크오더 수량 박스가 그것을 읽음.
+                var _stkW = (it.sticker && it.sticker.w) ? it.sticker.w : null;
+                var _stkH = (it.sticker && it.sticker.h) ? it.sticker.h : null;
+                var _stkQty = (it.sticker && it.sticker.qty) ? it.sticker.qty : null;
                 return Object.assign({}, it, {
                     product_code: (it.product && it.product.code) || '',
                     product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
-                    qty: it.qty || 1,
-                    width_mm: (wallSizeMm && wallSizeMm.width_mm) || it.width || (it.product && it.product.w_mm) || null,
-                    height_mm: (wallSizeMm && wallSizeMm.height_mm) || it.height || (it.product && it.product.h_mm) || null,
+                    qty: _stkQty || it.qty || 1,
+                    width_mm: (wallSizeMm && wallSizeMm.width_mm) || _stkW || it.width || (it.product && it.product.w_mm) || null,
+                    height_mm: (wallSizeMm && wallSizeMm.height_mm) || _stkH || it.height || (it.product && it.product.h_mm) || null,
                     unit_price: (it.product && it.product.price) || 0,
                     price: _soCalcItemPrice(it),
                     source: 'cafe2626',
