@@ -3518,7 +3518,8 @@ html, body { background: #ffffff !important; }
                     '<b style="color:#1e40af;">옆면이 없이 디자인하셨네요.</b>',
                     '<span style="color:#475569;">옆면(좌우 150mm씩)은 <b>흰색으로 인쇄</b>됩니다.</span>',
                     '',
-                    '그대로 진행하시면 됩니다.'
+                    '옆면이 흰색이어도 괜찮다면 <b>그대로 진행</b>해도 됩니다.',
+                    '<span style="color:#475569;">옆면까지 색상을 넣고 싶으시다면 좌우 <b>150mm씩 늘려서</b> 디자인 후 올려주세요.</span>'
                 ],
                 buttons: [{ label: '확인', primary: true, action: function(){} }]
             });
