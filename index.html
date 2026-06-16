@@ -6657,7 +6657,10 @@ function scrollHotdeal(gridId, dir) {
         // 2026-06-15: 선택 없거나 이미지 선택 시도 props bar 항상 표시 — 텍스트 모드 stub 렌더.
         //   stub 상태에선 opacity 낮춰 비활성 표시 (.me-props-stub), 컨트롤은 보이지만 입력은 no-op.
         panel.classList.add('show');
-        panel.classList.toggle('me-props-stub', !it || it.type !== 'text');
+        // 2026-06-16 v11: 칼선이 있는 이미지도 stub 해제 — 슬라이더 interactive 하도록.
+        //   이전엔 image type 이면 무조건 stub 처리되어 .me-props-stub의 pointer-events:none 때문에 슬라이더 비활성.
+        var _hasCutlineActive = !!(it && it._cutlineRays && it._cutlineRays.length > 10);
+        panel.classList.toggle('me-props-stub', !it || (it.type !== 'text' && !_hasCutlineActive));
         var html = '';
         var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
         // 2026-06-15: 선택이 없으면 stub 용 가짜 item 만들어서 text 분기로 흘려보냄 → 동일 UI 항상 노출.
@@ -12601,7 +12604,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=488"></script>
+<script src="/simple_order.js?v=489"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
