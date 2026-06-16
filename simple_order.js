@@ -9727,14 +9727,27 @@ html, body { background: #ffffff !important; }
         if (stickerSec) stickerSec.style.display = state.isSticker ? '' : 'none';
         if (state.isSticker) {
             // 2026-06-16: 신규 스티커 상태 — admin 변형 코드 + 사이즈/수량/코팅/별색.
-            state.stickerProductCode = state.stickerProductCode || null;
+            //   사용자가 변형 페이지로 직접 진입한 경우 (p.code 가 sticker 코드면) 그걸 기본 선택.
+            //   팬시면 qty 4 / 기타 1000 자동.
+            if (!state.stickerProductCode && p && p.code) {
+                state.stickerProductCode = p.code;
+            }
             state.stickerW           = state.stickerW || 100;
             state.stickerH           = state.stickerH || 100;
-            state.stickerQty         = state.stickerQty || 1000;
             state.stickerCoating     = state.stickerCoating || 'matte';
             state.stickerFoils       = state.stickerFoils || [];
-            // 변형 캐시 미리 채움 + 첫 렌더.
-            try { _soLoadStickerVariants().then(function(){ _soStickerRender(); }); } catch(_) {}
+            // 변형 캐시 미리 채움 + 첫 렌더. 팬시 감지 후 qty 기본값 결정.
+            try {
+                _soLoadStickerVariants().then(function(vs){
+                    var picked = (vs || []).find(function(x){ return x.code === state.stickerProductCode; });
+                    var isFancy = !!(picked && _stickerIsFancy(picked));
+                    if (!state.stickerQty || (isFancy && state.stickerQty % 4 !== 0) || (!isFancy && state.stickerQty % 1000 !== 0)) {
+                        state.stickerQty = isFancy ? 4 : 1000;
+                    }
+                    _soStickerRender();
+                    try { recalc(); } catch(_) {}
+                });
+            } catch(_) {}
             // 스티커는 자체 수량 단위 (수량 옵션 그리드 사용) → 우측 수량 섹션 숨김
             var _qtySec2 = document.getElementById('soQtySection');
             if (_qtySec2) _qtySec2.style.display = 'none';
@@ -10387,7 +10400,9 @@ html, body { background: #ffffff !important; }
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
         // 2026-06-12: 명함/스티커는 광고인쇄 layout 대상 X — 자체 등급/면/사이즈 UI 사용
         if (state.isBizCard) { state.isAdPrint = false; state.isCustomSize = false; }
-        if (state.isSticker) { state.isAdPrint = false; }
+        // 2026-06-16: 스티커는 자체 사이즈 UI 를 쓰므로 isCustomSize 도 같이 끔
+        //   (위에서 is_popular=true → isAdPrint=true → isCustomSize=true 로 재설정된 것을 되돌림)
+        if (state.isSticker) { state.isAdPrint = false; state.isCustomSize = false; }
         // 2026-06-12: 배너 family — 사이즈 선택 불필요. DB 단가 그대로 사용. isCustomSize 비활성.
         // 2026-06-14 fix: 현수막 9종 (placard family) 는 m² 기반 가격이라 사이즈 입력 필요 — 예외 처리.
         if (state.isBannerOutput) {
