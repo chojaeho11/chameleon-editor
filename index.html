@@ -5739,6 +5739,11 @@ function scrollHotdeal(gridId, dir) {
         .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
         .me-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
         .me-handle-se { right:-6px; bottom:-6px; cursor:nwse-resize; }
+        /* 2026-06-16: 변(edge) 핸들 — 가로/세로 단독 리사이즈 (text 박스 너비/높이 독립 조절) */
+        .me-handle-n  { left:50%; top:-6px; transform:translateX(-50%); cursor:ns-resize; }
+        .me-handle-s  { left:50%; bottom:-6px; transform:translateX(-50%); cursor:ns-resize; }
+        .me-handle-e  { right:-6px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
+        .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
         .me-handle-rot { left:50%; top:-32px; margin-left:-6px; background:#10b981; cursor:grab; }
         .me-handle-rot::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:18px; background:#10b981; transform:translateX(-50%); }
         .me-item.text {
@@ -5767,6 +5772,10 @@ function scrollHotdeal(gridId, dir) {
             .me-handle-ne { right:-10px; top:-10px; }
             .me-handle-sw { left:-10px; bottom:-10px; }
             .me-handle-se { right:-10px; bottom:-10px; }
+            .me-handle-n  { top:-10px; }
+            .me-handle-s  { bottom:-10px; }
+            .me-handle-e  { right:-10px; }
+            .me-handle-w  { left:-10px; }
             .me-handle-rot { top:-44px; margin-left:-10px; }
             .me-handle-rot::before { top:20px; height:24px; }
             .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
@@ -6163,6 +6172,9 @@ function scrollHotdeal(gridId, dir) {
             //   결과: 선택 핸들이 글자 끝에 붙음 (우측으로 빈 공간 없음). 글자가 길어지면 it.w 까지 늘다가 그 이후엔 wrap.
             it.el.style.width = 'max-content';
             it.el.style.maxWidth = (it.w * me.wScale) + 'px';
+            // 2026-06-16: n/s edge 핸들로 세로 늘리기 — it.h 가 변하면 minHeight 로 박스 높이 확보.
+            //   (text 는 height:auto 로 글자에 맞춰지지만 minHeight 가 있으면 그 이상 줄지 않음.)
+            it.el.style.minHeight = (it.h * me.wScale) + 'px';
         } else if (it.type === 'shape') {
             it.el.style.height = (it.h * me.wScale) + 'px';
             it.el.style.background = it.fill || '#7c3aed';
@@ -6537,7 +6549,8 @@ function scrollHotdeal(gridId, dir) {
         if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
         // 2026-06-14: 4 모서리 핸들 (정비율 리사이즈) + 회전 핸들
-        ['nw','ne','sw','se'].forEach(function(corner){
+        // 2026-06-16: + 4 변 핸들 (n/s/e/w) — 가로/세로 단독 리사이즈 (text 박스 너비/높이 독립 조절).
+        ['nw','ne','sw','se','n','s','e','w'].forEach(function(corner){
             var h = document.createElement('div');
             h.className = 'me-handle me-handle-' + corner;
             it.el.appendChild(h);
@@ -6599,12 +6612,15 @@ function scrollHotdeal(gridId, dir) {
                     supported.forEach(function(w){ var d = Math.abs(w-target); if (d<bd){bd=d;best=w;}});
                     return best;
                 }
-                // 2026-06-15: S=일반(400) / B=굵게(700) — 한글 폰트는 light(300)와 regular(400)이 동일하게 보여 의미 없으므로
-                //   light 토글 폐기, 일반 vs 굵게 이진 토글만 유지. 기본 새 글씨(400)는 S 활성 상태.
-                var sW = _closest(400), bW = _closest(700);
+                // 2026-06-15: S=일반(400) / B=굵게(700) / EB=두껍게(900) — 한글 폰트는 light(300)와 regular(400)이
+                //   동일하게 보여 의미 없으므로 light 토글 폐기, 3단계만 유지.
+                // 2026-06-16: 더 두꺼운 EB(extra-bold) 추가. 폰트가 900 을 지원 안 하면 (closest 가 B 와 동일) 버튼 숨김.
+                var sW = _closest(400), bW = _closest(700), eW = _closest(900);
                 var cur = parseInt(it.fontWeight || 400, 10);
+                var stages = [['S',sW,'일반'],['B',bW,'굵게']];
+                if (eW !== bW) stages.push(['EB', eW, '두껍게']);
                 var smbHtml = '<span class="me-prop-group" style="gap:3px;">';
-                [['S',sW,'일반'],['B',bW,'굵게']].forEach(function(p){
+                stages.forEach(function(p){
                     var on = (cur === p[1]);
                     smbHtml += '<button type="button" class="me-prop-btn smb' + (on?' active':'') + '" data-weight="' + p[1] + '" title="' + p[2] + '">' + p[0] + '</button>';
                 });
@@ -6841,6 +6857,20 @@ function scrollHotdeal(gridId, dir) {
             if (!resizing) return;
             var dx = (ev.clientX - sx) / me.wScale;
             var dy = (ev.clientY - sy) / me.wScale;
+            // 2026-06-16: 변(edge) 핸들 — 단일 축 자유 리사이즈 (정비율 X, fontSize 유지)
+            //   e: dx 만 적용 (우측 늘리기).  w: dx 반전 + x 앵커 이동.
+            //   n: dy 반전 + y 앵커 이동.    s: dy 만 적용.
+            var isEdge = (corner === 'n' || corner === 's' || corner === 'e' || corner === 'w');
+            if (isEdge) {
+                var newW2 = sw, newH2 = sh;
+                if (corner === 'e') newW2 = Math.max(20, sw + dx);
+                if (corner === 'w') { newW2 = Math.max(20, sw - dx); it.x = sX + (sw - newW2); }
+                if (corner === 's') newH2 = Math.max(20, sh + dy);
+                if (corner === 'n') { newH2 = Math.max(20, sh - dy); it.y = sY + (sh - newH2); }
+                it.w = newW2; it.h = newH2;
+                _meSyncItemDisplay(it);
+                return;
+            }
             // 정비율 — 모서리 별 delta 부호 결정
             //   nw: 좌상단 — dx,dy 감소시 커짐. 신규 w = sw - dx, h = sh - dy → ratio 맞추기.
             //   se: 우하단 — dx,dy 증가시 커짐. 신규 w = sw + dx.
@@ -11967,7 +11997,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=469"></script>
+<script src="/simple_order.js?v=470"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
