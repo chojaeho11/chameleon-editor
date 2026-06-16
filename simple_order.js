@@ -1571,7 +1571,7 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
             #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:1fr; gap:5px; flex:1; align-content:start; }
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(2,1fr); gap:5px; flex:1; align-content:start; }
             #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
             #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -1594,7 +1594,7 @@ html, body { background: #ffffff !important; }
                 #soQuickDesignSec .qd-edit-grid > .qd-rail { order:2; min-height:0; }
                 #soQuickDesignSec .qd-rail-tabs { gap:6px; }
                 #soQuickDesignSec .qd-rail-tab { padding:9px 0; font-size:12.5px; }
-                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(4,1fr); gap:6px; }
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(3,1fr); gap:6px; }
                 #soQuickDesignSec .qd-rail-more { margin-top:4px; padding:9px; font-size:12px; }
             }
           </style>
@@ -12003,7 +12003,7 @@ html, body { background: #ffffff !important; }
         var _railSearchDebounce = null;
         var _railAllItems = [];
         var _railPage = 0;
-        var _RAIL_PER_PAGE = 4;
+        var _RAIL_PER_PAGE = 6;
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
             _railPage = 0;
@@ -12033,47 +12033,101 @@ html, body { background: #ffffff !important; }
             if (p < 0) p = 0;
             if (p > maxPage) p = maxPage;
             _railPage = p;
-            _renderRailPage();
+            if (_railTab === 'background') { _renderBgPage(); _updateRailPager(); }
+            else { _renderRailPage(); }
         };
         window._soQdRailMore = function() {
             var mp = { template:'sub-template', element:'sub-element', decoration:'sub-icon' };
             window._soQdOpenLib && window._soQdOpenLib(mp[_railTab] || 'sub-template');
         };
-        // 2026-06-16: 배경 탭 — 2가지 색상 조합 (light 2/3 + dark 1/3) 프리셋 4개.
-        //   클릭 시 두 개의 사각형이 캔버스에 추가되고, 각각 드래그/리사이즈 가능 (위치·크기 조절).
+        // 2026-06-16: 배경 탭 — 30개 색상 조합 프리셋.
+        //   kind: 'tb' (위 2/3 light + 아래 1/3 dark), 'lr' (좌 2/3 + 우 1/3), '3' (3등분 세로 strip).
+        //   분포: tb 18 / lr 6 / 3 6 (각 20% 확률 컨셉).
+        //   클릭 → 사각형 2~3개가 캔버스에 추가, 각각 드래그·리사이즈 가능.
         var _BG_PRESETS = [
-            { light:'#fef3c7', dark:'#92400e', name:'cream-brown' },
-            { light:'#dbeafe', dark:'#1e3a8a', name:'mint-navy'   },
-            { light:'#fce7f3', dark:'#831843', name:'pink-plum'   },
-            { light:'#dcfce7', dark:'#064e3b', name:'beige-forest'}
+            { kind:'tb', colors:['#fef3c7','#92400e'] },
+            { kind:'tb', colors:['#dbeafe','#1e3a8a'] },
+            { kind:'tb', colors:['#fce7f3','#831843'] },
+            { kind:'tb', colors:['#dcfce7','#064e3b'] },
+            { kind:'tb', colors:['#ede9fe','#4c1d95'] },
+            { kind:'lr', colors:['#fee2e2','#7f1d1d'] },
+            { kind:'tb', colors:['#fff7ed','#9a3412'] },
+            { kind:'3',  colors:['#fef3c7','#fb923c','#92400e'] },
+            { kind:'tb', colors:['#fef9c3','#854d0e'] },
+            { kind:'tb', colors:['#e0f2fe','#1e40af'] },
+            { kind:'lr', colors:['#fce7f3','#9f1239'] },
+            { kind:'tb', colors:['#ecfccb','#365314'] },
+            { kind:'3',  colors:['#dbeafe','#60a5fa','#1e3a8a'] },
+            { kind:'tb', colors:['#f5f5f4','#1c1917'] },
+            { kind:'tb', colors:['#fae8ff','#86198f'] },
+            { kind:'lr', colors:['#fef9c3','#78350f'] },
+            { kind:'tb', colors:['#f5f3ff','#6d28d9'] },
+            { kind:'3',  colors:['#fce7f3','#f472b6','#831843'] },
+            { kind:'tb', colors:['#ffedd5','#9a3412'] },
+            { kind:'tb', colors:['#f1f5f9','#334155'] },
+            { kind:'lr', colors:['#fef3c7','#78350f'] },
+            { kind:'tb', colors:['#ecfeff','#155e75'] },
+            { kind:'tb', colors:['#fafaf9','#44403c'] },
+            { kind:'3',  colors:['#dcfce7','#4ade80','#064e3b'] },
+            { kind:'tb', colors:['#fafaf9','#57534e'] },
+            { kind:'lr', colors:['#f0fdf4','#14532d'] },
+            { kind:'tb', colors:['#f0f9ff','#0c4a6e'] },
+            { kind:'3',  colors:['#fef9c3','#fb923c','#991b1b'] },
+            { kind:'tb', colors:['#fffbeb','#b45309'] },
+            { kind:'3',  colors:['#ede9fe','#a78bfa','#4c1d95'] }
         ];
+        function _bgThumbHtml(p, idx) {
+            var c = p.colors || [];
+            var inner = '';
+            if (p.kind === 'tb') {
+                inner = '<div style="position:absolute; left:0; right:0; top:0; bottom:33%; background:' + c[0] + ';"></div>'
+                      + '<div style="position:absolute; left:0; right:0; top:67%; bottom:0; background:' + c[1] + ';"></div>';
+            } else if (p.kind === 'lr') {
+                inner = '<div style="position:absolute; top:0; bottom:0; left:0; right:33%; background:' + c[0] + ';"></div>'
+                      + '<div style="position:absolute; top:0; bottom:0; left:67%; right:0; background:' + c[1] + ';"></div>';
+            } else {
+                inner = '<div style="position:absolute; top:0; bottom:0; left:0; width:33.33%; background:' + c[0] + ';"></div>'
+                      + '<div style="position:absolute; top:0; bottom:0; left:33.33%; width:33.34%; background:' + c[1] + ';"></div>'
+                      + '<div style="position:absolute; top:0; bottom:0; left:66.67%; width:33.33%; background:' + c[2] + ';"></div>';
+            }
+            return '<div class="qd-rail-thumb" data-bg-preset="' + idx + '" style="position:relative; overflow:hidden;">' + inner + '</div>';
+        }
+        function _renderBgPage() {
+            var grid = document.getElementById('soQdRailThumbs');
+            if (!grid) return;
+            var start = _railPage * _RAIL_PER_PAGE;
+            var page = _BG_PRESETS.slice(start, start + _RAIL_PER_PAGE);
+            grid.innerHTML = page.map(function(p, i){ return _bgThumbHtml(p, start + i); }).join('');
+            grid.querySelectorAll('[data-bg-preset]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    var i = parseInt(el.getAttribute('data-bg-preset'), 10);
+                    if (!isNaN(i) && typeof window._soQdAddSplitBg === 'function') window._soQdAddSplitBg(i);
+                });
+            });
+        }
         window._soQdAddSplitBg = function(idx) {
             var p = _BG_PRESETS[idx];
             if (!p) return;
-            if (typeof window._meAddSplitBg === 'function') window._meAddSplitBg(p.light, p.dark);
+            if (typeof window._meAddSplitBg === 'function') window._meAddSplitBg({ kind:p.kind, colors:p.colors });
         };
         async function _soQdRailLoad() {
             var grid = document.getElementById('soQdRailThumbs');
             if (!grid) return;
-            // 배경 탭은 동기 — 즉시 렌더.
+            // 배경 탭은 동기 — 즉시 페이지 렌더. pager 는 _BG_PRESETS 전체 길이로 계산.
             if (_railTab === 'background') {
-                grid.innerHTML = _BG_PRESETS.map(function(p, i){
-                    return '<div class="qd-rail-thumb" data-bg-preset="' + i + '" style="background:' + p.light + '; position:relative; overflow:hidden;">'
-                        + '<div style="position:absolute; left:0; right:0; bottom:0; height:33%; background:' + p.dark + ';"></div>'
-                        + '</div>';
-                }).join('');
-                grid.querySelectorAll('[data-bg-preset]').forEach(function(el){
-                    el.addEventListener('click', function(){
-                        var i = parseInt(el.getAttribute('data-bg-preset'), 10);
-                        if (!isNaN(i) && typeof window._soQdAddSplitBg === 'function') window._soQdAddSplitBg(i);
-                    });
-                });
-                _railAllItems = [];
+                _railAllItems = _BG_PRESETS;  // pager 가 길이 참조
+                _renderBgPage();
                 _updateRailPager();
+                // 배경 탭은 전체보기 버튼 비활성 — 30개 전부 페이저로 탐색.
+                var moreBtn = document.querySelector('#soQuickDesignSec .qd-rail-more');
+                if (moreBtn) moreBtn.style.display = 'none';
                 return;
+            } else {
+                var moreBtn2 = document.querySelector('#soQuickDesignSec .qd-rail-more');
+                if (moreBtn2) moreBtn2.style.display = '';
             }
             var _loadStr = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
-            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr;
+            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr + _loadStr + _loadStr;
             // 장식 탭은 canvas-icons.js lazy load
             if (_railTab === 'decoration' && !window.ORNAMENTS) {
                 try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }

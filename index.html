@@ -6929,9 +6929,14 @@ function scrollHotdeal(gridId, dir) {
         window._meAddShape(_meShapeCycle);
         _meShapeCycle = (_meShapeCycle === 'rect') ? 'circle' : 'rect';
     };
-    // 2026-06-16: 외부 (simple_order 의 배경 프리셋) 에서 분할 배경(2색) 추가.
-    //   light 색이 캔버스 전체, dark 색이 하단 1/3 strip. 둘 다 드래그/리사이즈 가능.
-    window._meAddSplitBg = function(light, dark) {
+    // 2026-06-16: 외부 (simple_order 의 배경 프리셋) 에서 분할 배경 추가.
+    //   opts: { kind:'tb'|'lr'|'3', colors:['#a','#b'] or ['#a','#b','#c'] }
+    //   tb: 위 2/3 light + 아래 1/3 dark.   lr: 좌 2/3 + 우 1/3.   3: 좌·중·우 3등분.
+    //   각 사각형은 개별 드래그/리사이즈 가능.
+    window._meAddSplitBg = function(opts) {
+        opts = opts || {};
+        var kind = opts.kind || 'tb';
+        var colors = opts.colors || ['#fef3c7', '#92400e'];
         _meSnapshot();
         function _mk(fill, x, y, w, h) {
             var el = document.createElement('div');
@@ -6946,10 +6951,20 @@ function scrollHotdeal(gridId, dir) {
             _meBindDrag(it);
             return it;
         }
-        var lightIt = _mk(light || '#fef3c7', 0, 0, me.natW, me.natH);
-        var darkIt  = _mk(dark  || '#92400e', 0, Math.round(me.natH * 2/3), me.natW, Math.round(me.natH / 3));
-        // 어두운 strip 을 위로 (z 가 더 큼). select 시 사용자 편의로 dark 선택.
-        if (typeof _meSelect === 'function') _meSelect(darkIt);
+        var lastIt = null;
+        if (kind === 'tb') {
+            _mk(colors[0], 0, 0, me.natW, me.natH);
+            lastIt = _mk(colors[1], 0, Math.round(me.natH * 2/3), me.natW, Math.round(me.natH / 3));
+        } else if (kind === 'lr') {
+            _mk(colors[0], 0, 0, me.natW, me.natH);
+            lastIt = _mk(colors[1], Math.round(me.natW * 2/3), 0, Math.round(me.natW / 3), me.natH);
+        } else if (kind === '3') {
+            var w3 = Math.round(me.natW / 3);
+            _mk(colors[0], 0,       0, w3, me.natH);
+            _mk(colors[1], w3,      0, w3, me.natH);
+            lastIt = _mk(colors[2], w3 * 2, 0, me.natW - w3 * 2, me.natH);
+        }
+        if (lastIt && typeof _meSelect === 'function') _meSelect(lastIt);
     };
 
     window._meAddImageFromFile = function(input) {
@@ -11952,7 +11967,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=468"></script>
+<script src="/simple_order.js?v=469"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
