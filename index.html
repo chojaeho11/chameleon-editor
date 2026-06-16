@@ -6098,6 +6098,26 @@ function scrollHotdeal(gridId, dir) {
     ME_GOOGLE_FONTS['ES'] = ME_GOOGLE_FONTS['EN'];
     ME_GOOGLE_FONTS['DE'] = ME_GOOGLE_FONTS['EN'];
     ME_GOOGLE_FONTS['FR'] = ME_GOOGLE_FONTS['EN'];
+    // 2026-06-16: 멋진 영문 (script/calligraphy) — 언어 무관 공통 노출.
+    //   드롭다운 하단에 별도 optgroup 으로 추가. cotton_print 의 FP_SCRIPTS 와 동일 목록.
+    var ME_SCRIPT_FONTS = [
+        { font_name:'Great Vibes',        font_family:'Great Vibes',        weights:'400' },
+        { font_name:'Allura',             font_family:'Allura',             weights:'400' },
+        { font_name:'Italianno',          font_family:'Italianno',          weights:'400' },
+        { font_name:'Pinyon Script',      font_family:'Pinyon Script',      weights:'400' },
+        { font_name:'Petit Formal Script',font_family:'Petit Formal Script',weights:'400' },
+        { font_name:'Alex Brush',         font_family:'Alex Brush',         weights:'400' },
+        { font_name:'Parisienne',         font_family:'Parisienne',         weights:'400' },
+        { font_name:'Sacramento',         font_family:'Sacramento',         weights:'400' },
+        { font_name:'Yellowtail',         font_family:'Yellowtail',         weights:'400' },
+        { font_name:'Tangerine',          font_family:'Tangerine',          weights:'400;700' },
+        { font_name:'Mrs Saint Delafield',font_family:'Mrs Saint Delafield',weights:'400' },
+        { font_name:'Style Script',       font_family:'Style Script',       weights:'400' },
+        { font_name:'Niconne',            font_family:'Niconne',            weights:'400' },
+        { font_name:'Cookie',             font_family:'Cookie',             weights:'400' },
+        { font_name:'Pacifico',           font_family:'Pacifico',           weights:'400' },
+        { font_name:'Dancing Script',     font_family:'Dancing Script',     weights:'400;700' }
+    ];
 
     function _meCurrentFonts() {
         return ME_GOOGLE_FONTS[_meFontLang()] || ME_GOOGLE_FONTS['KR'];
@@ -6122,11 +6142,12 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-14: 폰트가 지원하는 weight 중 가장 가까운 값 반환 — canvas faux-bold 합성 방지
     function _meResolveWeight(family, wanted) {
         var clean = String(family || '').replace(/["']/g, '').trim();
-        // 모든 언어의 폰트 리스트에서 찾기
+        // 모든 언어의 폰트 리스트 + script 공통 리스트에서 찾기
         var allFonts = [];
         Object.keys(ME_GOOGLE_FONTS).forEach(function(k){
             (ME_GOOGLE_FONTS[k] || []).forEach(function(f){ allFonts.push(f); });
         });
+        ME_SCRIPT_FONTS.forEach(function(f){ allFonts.push(f); });
         var match = allFonts.find(function(f){ return f.font_family === clean; });
         if (!match || !match.weights) return wanted;  // 정보 없으면 그대로
         var available = String(match.weights).split(';').map(function(w){ return parseInt(w, 10); }).filter(function(w){ return !isNaN(w); });
@@ -6598,13 +6619,17 @@ function scrollHotdeal(gridId, dir) {
         }
         if (it.type === 'text') {
             var fonts = _meCurrentFonts();
-            var fontOpts = fonts.map(function(f){
+            function _meFontOptionHtml(f) {
                 var fam = (f.font_family === 'sans-serif' || f.font_family === 'serif' || f.font_family === 'monospace' || f.font_family === 'cursive')
                     ? f.font_family : ('"' + f.font_family + '"');
                 var sel = (it.fontFamily === fam) ? ' selected' : '';
                 var preview = (f.font_family === 'sans-serif') ? '' : ' style="font-family:' + fam.replace(/"/g, '&quot;') + ';"';
                 return '<option value="' + fam.replace(/"/g, '&quot;') + '" data-fam="' + f.font_family.replace(/"/g, '&quot;') + '" data-w="' + (f.weights || '') + '"' + sel + preview + '>' + f.font_name + '</option>';
-            }).join('');
+            }
+            var fontOpts = fonts.map(_meFontOptionHtml).join('');
+            // 2026-06-16: 멋진 영문 — 모든 언어 사이트 공통으로 노출 (optgroup 으로 분리).
+            var scriptOpts = ME_SCRIPT_FONTS.map(_meFontOptionHtml).join('');
+            fontOpts += '<optgroup label="✨ ' + T('me_script_fonts','멋진 영문') + '">' + scriptOpts + '</optgroup>';
             // 2026-06-15: 색상은 상단 툴바 chip 으로 통합 — props 패널에선 제거. 자간/행간도 제거.
             html += '<span class="me-prop-group"><label>' + T('me_prop_font','서체') + '</label><select data-mp="fontFamily" data-font-select>' + fontOpts + '</select></span>';
             // 2026-06-15: 두께 셀렉터 → S/M/B 토글 3개. 현재 폰트의 지원 weight 중에 300/400/700 에 가장 가까운 값으로 매핑.
@@ -6661,12 +6686,13 @@ function scrollHotdeal(gridId, dir) {
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
         html += '</span>';
         panel.innerHTML = html;
-        // 폰트 드롭다운 옵션 각각의 미리보기용 폰트 사전 로드 (사용자가 펼치기 전에 일부 가시 폰트 로드)
-        // — 성능 위해 selected 폰트만 즉시 로드, 나머지는 onchange 때 로드
+        // 2026-06-16: 드롭다운 모든 옵션의 폰트를 미리 로드 — 펼치기 전엔 preview 가 안 나오던 문제 해결.
+        //   Google Fonts CSS 는 가벼우므로 35+개 link 주입해도 부담 적음. 실제 글자 파일은 사용 시에만 다운로드.
         var sel = panel.querySelector('select[data-font-select]');
         if (sel) {
-            var selOpt = sel.options[sel.selectedIndex];
-            if (selOpt) _meLoadFont(selOpt.dataset.fam, selOpt.dataset.w);
+            sel.querySelectorAll('option').forEach(function(o){
+                if (o.dataset && o.dataset.fam) _meLoadFont(o.dataset.fam, o.dataset.w);
+            });
         }
         panel.querySelectorAll('[data-mp]').forEach(function(inp){
             // change for SELECT (input on every keystroke makes typing weird), input for the rest
@@ -12006,7 +12032,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=472"></script>
+<script src="/simple_order.js?v=473"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
