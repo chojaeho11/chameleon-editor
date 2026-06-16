@@ -7162,6 +7162,104 @@ function scrollHotdeal(gridId, dir) {
         if (s) s.remove();
         window._meCutlineSvg = null;
     };
+    // 2026-06-16: 칼선 SVG → 진짜 vector PDF Blob 생성.
+    //   jsPDF 의 lines() API 로 M/L/Q/Z path 를 cubic Bézier 로 변환해 다시 그림 → 인쇄소 Illustrator/Roland 에서
+    //   "select object" 로 칼선 라인만 골라낼 수 있음. raster 가 아닌 진짜 vector 라 확대해도 자글거림 X.
+    //   페이지 size = mm (캔버스 natW/H 를 96dpi 환산 = 자연 크기). stroke = red, 0.15mm (die-cut 표준).
+    window._meCutlineAsPdfBlob = async function() {
+        if (!window._meCutlineSvg) return null;
+        // jsPDF 로드 보장
+        if (!window.jspdf) {
+            try {
+                if (typeof window.loadEditorLibraries === 'function') await window.loadEditorLibraries();
+            } catch (e) {}
+        }
+        if (!window.jspdf) {
+            try {
+                await new Promise(function(res, rej){
+                    var s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    s.onload = res; s.onerror = function(){ rej(new Error('jsPDF load fail')); };
+                    document.head.appendChild(s);
+                });
+            } catch (e) { console.warn('[cutline pdf] jsPDF load failed', e); return null; }
+        }
+        var jsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!jsPDF) return null;
+        // px → mm (96dpi 기준)
+        var PX_PER_MM = 3.7795;
+        var widthMm = me.natW / PX_PER_MM;
+        var heightMm = me.natH / PX_PER_MM;
+        var doc = new jsPDF({
+            orientation: widthMm > heightMm ? 'l' : 'p',
+            unit: 'mm',
+            format: [widthMm, heightMm],
+            compress: true
+        });
+        doc.setDrawColor(255, 0, 0);
+        doc.setLineWidth(0.15);
+        // SVG path d 파싱 → jsPDF lines(). M·L·Q·Z 만 처리 (smoothing 결과는 이 4종만 씀).
+        function _drawPathInPdf(d) {
+            var tokens = d.match(/[MLQZmlqz]|-?\d*\.?\d+/g) || [];
+            var i = 0, curX = 0, curY = 0, startX = 0, startY = 0;
+            var lines = [];
+            function px(v) { return v / PX_PER_MM; }
+            function flush() {
+                if (!lines.length) return;
+                try { doc.lines(lines, px(startX), px(startY), [1, 1], 'S', false); } catch(_) {}
+                lines = [];
+            }
+            while (i < tokens.length) {
+                var cmd = tokens[i];
+                if (cmd === 'M' || cmd === 'm') {
+                    flush();
+                    var x = parseFloat(tokens[i+1]), y = parseFloat(tokens[i+2]);
+                    startX = curX = x; startY = curY = y;
+                    i += 3;
+                } else if (cmd === 'L' || cmd === 'l') {
+                    var lx = parseFloat(tokens[i+1]), ly = parseFloat(tokens[i+2]);
+                    lines.push([px(lx - curX), px(ly - curY)]);
+                    curX = lx; curY = ly;
+                    i += 3;
+                } else if (cmd === 'Q' || cmd === 'q') {
+                    var cx = parseFloat(tokens[i+1]), cy = parseFloat(tokens[i+2]);
+                    var ex = parseFloat(tokens[i+3]), ey = parseFloat(tokens[i+4]);
+                    // Quadratic → Cubic Bézier 변환 (jsPDF lines() 는 cubic 만 지원)
+                    var c1x = curX + (2/3)*(cx - curX), c1y = curY + (2/3)*(cy - curY);
+                    var c2x = ex   + (2/3)*(cx - ex),   c2y = ey   + (2/3)*(cy - ey);
+                    lines.push([px(c1x - curX), px(c1y - curY), px(c2x - curX), px(c2y - curY), px(ex - curX), px(ey - curY)]);
+                    curX = ex; curY = ey;
+                    i += 5;
+                } else if (cmd === 'A' || cmd === 'a') {
+                    // 간단모양(circle/pill/roundedRect) 의 A (arc). 정확 호 그리기 어려우니 끝점으로 직선 fallback.
+                    // 형식: A rx ry rot largeArc sweep ex ey
+                    var ex2 = parseFloat(tokens[i+6]), ey2 = parseFloat(tokens[i+7]);
+                    lines.push([px(ex2 - curX), px(ey2 - curY)]);
+                    curX = ex2; curY = ey2;
+                    i += 8;
+                } else if (cmd === 'Z' || cmd === 'z') {
+                    lines.push([px(startX - curX), px(startY - curY)]);
+                    flush();
+                    curX = startX; curY = startY;
+                    i++;
+                } else {
+                    i++;
+                }
+            }
+            flush();
+        }
+        // SVG 안의 모든 <path> 에 대해 draw
+        try {
+            var parser = new DOMParser();
+            var svgDoc = parser.parseFromString(window._meCutlineSvg, 'image/svg+xml');
+            var paths = svgDoc.querySelectorAll('path');
+            paths.forEach(function(pEl){
+                var d = pEl.getAttribute('d');
+                if (d) _drawPathInPdf(d);
+            });
+        } catch (e) { console.warn('[cutline pdf] path parse', e); }
+        return doc.output('blob');
+    };
     // 2026-06-16 v3: 어느 item 이 변하든 전체 다시 그리면 됨 (각 path 가 item 기준 정규좌표라서).
     function _meCutlineResync() { _meCutlineRenderAll(); }
     window._meCutlineResync = _meCutlineResync;
@@ -12388,7 +12486,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=482"></script>
+<script src="/simple_order.js?v=483"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

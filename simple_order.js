@@ -12535,24 +12535,23 @@ html, body { background: #ffffff !important; }
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path, url: pub };
     }
-    // 2026-06-16: 칼선 SVG 업로드 — design 버킷의 cutlines/ 폴더에 standalone SVG 저장.
-    //   스티커뿐 아니라 등신대·키링 등 cutline 이 필요한 모든 상품에 재사용 가능 (제품 코드만 hint 로 받음).
-    //   결과 URL 을 cart item.cutlineUrl 로 부착 → order.js uploadOrderFiles 가 orders.files[]
-    //   에 {type:'cutline'} 으로 자동 등록 → admin 의 ✂️ 칼선 배지 + 다운로드 UI 가 그대로 노출.
-    async function _soUploadCutlineSvg(svgString, productCode) {
+    // 2026-06-16: 칼선 PDF 업로드 — design 버킷의 cutlines/ 폴더에 진짜 vector PDF 저장.
+    //   브라우저에서 jsPDF 로 SVG 의 M/Q/Z path 를 cubic Bézier 로 변환해 그림 → Acrobat/Illustrator/Roland
+    //   에서 "select object" 가능. raster 가 아닌 살아있는 vector 칼선.
+    //   스티커뿐 아니라 등신대·키링 등 cutline 이 필요한 모든 상품에 재사용 가능.
+    async function _soUploadCutlinePdf(pdfBlob, productCode) {
         const sb = getSb();
         if (!sb) throw new Error('Supabase not available');
-        if (!svgString || svgString.length < 50) throw new Error('Invalid cutline SVG');
+        if (!pdfBlob || !(pdfBlob instanceof Blob) || pdfBlob.size < 200) throw new Error('Invalid cutline PDF');
         const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
         const safeCode = String(productCode || 'item').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 32);
-        const path = 'cutlines/' + safeCode + '_' + ts + '.svg';
-        const blob = new Blob([svgString], { type: 'image/svg+xml' });
-        const { error } = await sb.storage.from('design').upload(path, blob, { contentType: 'image/svg+xml', upsert: false });
+        const path = 'cutlines/' + safeCode + '_' + ts + '.pdf';
+        const { error } = await sb.storage.from('design').upload(path, pdfBlob, { contentType: 'application/pdf', upsert: false });
         if (error) throw error;
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
         return { path: path, url: pub };
     }
-    window._soUploadCutlineSvg = _soUploadCutlineSvg;
+    window._soUploadCutlinePdf = _soUploadCutlinePdf;
 
     function calcFinal() {
         const unit = pickPrice(state.product);
@@ -12981,21 +12980,27 @@ html, body { background: #ffffff !important; }
                 backUrl = backResult.url;
                 backPath = backResult.path;
             }
-            // 2026-06-16: 칼선 SVG 업로드 — 미니에디터에 칼선이 그려진 경우.
-            //   스티커/등신대/키링 등 모든 cutline 상품에 공통 적용. 실패해도 주문은 진행.
+            // 2026-06-16: 칼선 PDF 업로드 — 미니에디터에 칼선이 있으면 vector PDF 로 변환 후 Storage 업로드.
+            //   SVG 대신 PDF 사용 이유: (1) 작업지시서에 embed 잘 됨 (2) Illustrator/Roland VersaWorks 호환
+            //   (3) 라이브 vector — 확대해도 선명. 스티커/등신대/키링 모든 cutline 상품에 공통.
             state._cartCutlineUrl = null;
             state._cartCutlinePath = null;
             try {
                 var _cutSvg = window._meCutlineSvg;
-                if (_cutSvg && typeof _cutSvg === 'string' && _cutSvg.length > 50) {
-                    updateUploadStep(tr('칼선 SVG 업로드 중...', 'カットラインSVGアップロード中...', 'Uploading cutline SVG...'));
-                    var _pcode = (state.product && state.product.code) || 'item';
-                    var _cutRes = await _soUploadCutlineSvg(_cutSvg, _pcode);
-                    state._cartCutlineUrl = _cutRes.url;
-                    state._cartCutlinePath = _cutRes.path;
-                    console.log('[cutline] uploaded:', _cutRes.url);
+                if (_cutSvg && typeof _cutSvg === 'string' && _cutSvg.length > 50 && typeof window._meCutlineAsPdfBlob === 'function') {
+                    updateUploadStep(tr('칼선 PDF 변환·업로드 중...', 'カットラインPDF変換·アップロード中...', 'Converting cutline PDF...'));
+                    var _cutPdfBlob = await window._meCutlineAsPdfBlob();
+                    if (_cutPdfBlob && _cutPdfBlob.size > 200) {
+                        var _pcode = (state.product && state.product.code) || 'item';
+                        var _cutRes = await _soUploadCutlinePdf(_cutPdfBlob, _pcode);
+                        state._cartCutlineUrl = _cutRes.url;
+                        state._cartCutlinePath = _cutRes.path;
+                        console.log('[cutline pdf] uploaded:', _cutRes.url);
+                    } else {
+                        console.warn('[cutline pdf] empty blob, skip upload');
+                    }
                 }
-            } catch (_cue) { console.warn('[cutline upload]', _cue); }
+            } catch (_cue) { console.warn('[cutline pdf upload]', _cue); }
             updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
             // 2026-05-15: 카트 저장 전 썸네일 축소 — localStorage quota 초과로 카트가 silently 사라지던 버그 fix
             state._cartThumb = await _soShrinkThumb(state.thumbDataUrl, 220);
