@@ -2594,11 +2594,15 @@ html, body { background: #ffffff !important; }
             <div style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 100×100mm — 가격은 면적 비례로 계산됩니다.', '基本100×100mm — 価格は面積比例。', 'Default 100×100mm — price scales by area.')}</div>
           </div>
 
-          <!-- 3) 수량 -->
+          <!-- 3) 수량 — 프리셋 버튼 + 직접 입력 -->
           <div id="soStickerQtyWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">🧮 ${tr('수량 (매)', '数量 (枚)', 'Quantity (pcs)')}</div>
-            <input type="number" id="soStickerQty" value="1000" min="1000" step="1000" oninput="window._soStickerQtyInput()" style="width:100%; padding:11px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:14px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
-            <div id="soStickerQtyHint" style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 1,000매 · 1,000매 단위로 주문 가능', '基本1,000枚 · 1,000枚単位', 'Default 1,000 pcs · 1,000-step orders')}</div>
+            <div id="soStickerQtyGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px;"></div>
+            <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <span style="font-size:11.5px; color:#64748b; flex-shrink:0;">${tr('직접 입력','直接入力','Custom')}</span>
+              <input type="number" id="soStickerQty" value="1000" min="1000" step="1000" oninput="window._soStickerQtyInput()" style="flex:1; padding:9px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
+            </div>
+            <div id="soStickerQtyHint" style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인', '基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引', 'Default 1,000 pcs · 1,000-step · 30% off at 10,000+')}</div>
           </div>
 
           <!-- 4) 코팅 -->
@@ -6197,9 +6201,10 @@ html, body { background: #ffffff !important; }
     // 가격 계산: anchor 5,200원 (3.5cm 원형 100매 무코팅아트지) 기준
     // category.base = 1매 기준 anchor price (원) — 일부는 sheet 단위
     // 2026-06-16: 신규 스티커 가격 산식 — admin price 기반.
-    //   재단(네모/원형/모양): basePrice × (W × H / 10000) × qty × coatingMult + foilTotal
-    //   팬시: basePrice × (qty / 4) × coatingMult + foilTotal
+    //   재단(네모/원형/모양): basePrice × (W × H / 10000) × qty × coatingMult × bulkDisc + foilTotal
+    //   팬시: basePrice × (qty / 4) × coatingMult + foilTotal  (벌크 할인 없음)
     //   stState 는 { productCode, w, h, qty, coating, foils, isFancy } 형태.
+    //   1만매 이상 30% 할인 (재단 스티커만, 팬시는 셋 단위라 제외).
     function _stickerCalcPrice(stState) {
         if (!stState) return 0;
         // variant 캐시에서 찾음 — 모달 진입 시 _soLoadStickerVariants 가 미리 채워둠.
@@ -6216,6 +6221,8 @@ html, body { background: #ffffff !important; }
             var h = Math.max(10, Number(stState.h) || 100);
             var areaMult = (w * h) / 10000;
             subtotal = basePrice * areaMult * qty;
+            // 1만매 이상 30% 할인
+            if (qty >= 10000) subtotal *= 0.7;
         }
         // 코팅 배수 (투명용지만 2x)
         var coat = STICKER_COATINGS.find(function(c){ return c.key === (stState.coating || 'matte'); });
@@ -8690,19 +8697,35 @@ html, body { background: #ffffff !important; }
         if (sizeW) sizeW.style.display = isFancy ? 'none' : '';
         var wEl = document.getElementById('soStickerW'); if (wEl && document.activeElement !== wEl) wEl.value = state.stickerW || 100;
         var hEl = document.getElementById('soStickerH'); if (hEl && document.activeElement !== hEl) hEl.value = state.stickerH || 100;
-        // 수량: 팬시면 4매 단위, 그 외 1000매 단위.
+        // 수량: 팬시면 4매 단위 (4/8/12/20/40), 그 외 1000매 단위 (1000/2000/3000/5000/10000).
         if (qtyW) qtyW.style.display = '';
         var qtyEl = document.getElementById('soStickerQty');
         var hintEl = document.getElementById('soStickerQtyHint');
+        var qtyGrid = document.getElementById('soStickerQtyGrid');
+        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : [1000, 2000, 3000, 5000, 10000];
+        var curQty = state.stickerQty || (isFancy ? 4 : 1000);
+        if (qtyGrid) {
+            qtyGrid.innerHTML = qtyPresets.map(function(q){
+                var sel = (curQty === q);
+                var bgStyle = sel ? 'linear-gradient(135deg,#6366f1,#4338ca)' : '#fff';
+                var color = sel ? '#fff' : '#1f2937';
+                var border = sel ? '#4338ca' : '#e7e5e4';
+                var badge = (!isFancy && q === 10000) ? '<span style="display:block; font-size:9px; font-weight:800; color:' + (sel?'#fef3c7':'#dc2626') + '; margin-top:2px;">30%↓</span>' : '';
+                return '<button type="button" onclick="window._soStickerPickQty(' + q + ')" '
+                    + 'style="padding:8px 4px; border:2px solid ' + border + '; background:' + bgStyle + '; color:' + color + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center;">'
+                    + q.toLocaleString() + tr('매','枚','pcs') + badge
+                    + '</button>';
+            }).join('');
+        }
         if (qtyEl) {
             qtyEl.min = isFancy ? 4 : 1000;
             qtyEl.step = isFancy ? 4 : 1000;
-            if (document.activeElement !== qtyEl) qtyEl.value = state.stickerQty || (isFancy ? 4 : 1000);
+            if (document.activeElement !== qtyEl) qtyEl.value = curQty;
         }
         if (hintEl) {
             hintEl.textContent = isFancy
                 ? tr('기본 4매 · 4매 단위로 주문 가능','基本4枚 · 4枚単位','Default 4 pcs · 4-step orders')
-                : tr('기본 1,000매 · 1,000매 단위로 주문 가능','基本1,000枚 · 1,000枚単位','Default 1,000 pcs · 1,000-step orders');
+                : tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인','基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引','Default 1,000 pcs · 1,000-step · 30% off at 10,000+');
         }
         // 코팅
         if (coatW) coatW.style.display = '';
@@ -8762,6 +8785,14 @@ html, body { background: #ffffff !important; }
         if (qty < step) qty = step;
         // step 으로 정렬 (입력값이 step 의 배수가 아니면 가장 가까운 step 으로 반올림은 안 하고 그대로 둠 — blur 시 처리).
         state.stickerQty = qty;
+        _soStickerRender();
+        recalc();
+    };
+    window._soStickerPickQty = function(q) {
+        var n = parseInt(q, 10) || 0;
+        if (n <= 0) return;
+        state.stickerQty = n;
+        _soStickerRender();
         recalc();
     };
     window._soStickerPickCoating = function(k) { state.stickerCoating = k; _soStickerRender(); recalc(); };
@@ -10980,7 +11011,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 원판도 숨김 — 우측 6개 카드 각각의 수량 input 으로 대체.
         // 2026-06-05: cutPrint 도 숨김 — 큐 라인별 인라인 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
-        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || state.isCutPrint) ? 'none' : '';
+        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || state.isCutPrint || state.isSticker) ? 'none' : '';
 
         // 2026-06-01: 광고인쇄 — 사이즈 카드 → qty 위 / 추가옵션 / 배송 순서 + 단위 mm + 인라인 업로드 + 멀티-라인
         (function _soApplyAdPrintLayout(){
