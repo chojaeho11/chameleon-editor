@@ -5864,6 +5864,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()" title="도형"><i class="fa-solid fa-shapes me-tb-ic"></i><span data-i18n="me_shape" class="me-tb-lbl">도형</span></button>
                 <label class="me-color-wrap" title="배경색"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
+                <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
+                <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
@@ -7030,6 +7032,167 @@ function scrollHotdeal(gridId, dir) {
             lastIt = _mk(colors[2], w3 * 2, 0, me.natW - w3 * 2, me.natH);
         }
         if (lastIt && typeof _meSelect === 'function') _meSelect(lastIt);
+    };
+
+    // ─────────────────────── 2026-06-16: 칼선 (die-cut line) ───────────────────────
+    //   스티커 전용. 모양 선택 popup → SVG path 생성 → stage 위에 빨강 점선 overlay 로 표시.
+    //   간단모양: circle / pill / roundedRect / roundedCorner — 캔버스 꽉 채움.
+    //   복잡/팬시: 선택된 이미지의 alpha 윤곽선 추적 (marching-squares) + margin offset → 실제 vector path.
+    //   결과는 window._meCutlineSvg = '<svg>…</svg>' 로 저장 → simple_order 가 cart item 에 포함.
+    function _meCutlineSvgEl() {
+        var s = document.getElementById('meCutlineOverlay');
+        if (!s) {
+            s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.id = 'meCutlineOverlay';
+            s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            s.style.cssText = 'position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:1000;';
+            if (me.stage) me.stage.appendChild(s);
+        }
+        return s;
+    }
+    function _meCutlineRender(pathD) {
+        var svg = _meCutlineSvgEl();
+        svg.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
+        svg.innerHTML = '<path d="' + pathD + '" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="14 10" stroke-linecap="round" stroke-linejoin="round"/>';
+        me._cutlinePathD = pathD;
+        // export 용 — 자연 좌표 기준 standalone SVG
+        window._meCutlineSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + me.natW + ' ' + me.natH + '"><path d="' + pathD + '" fill="none" stroke="#FF0000" stroke-width="0.5"/></svg>';
+    }
+    window._meCutlineClear = function() {
+        var s = document.getElementById('meCutlineOverlay');
+        if (s) s.remove();
+        me._cutlinePathD = null;
+        window._meCutlineSvg = null;
+    };
+    function _meCutlineSimple(shape) {
+        var w = me.natW, h = me.natH;
+        var inset = Math.min(w, h) * 0.04;     // 4% 안쪽 — 재단 안전여백
+        var x = inset, y = inset, ww = w - inset*2, hh = h - inset*2;
+        var d = '';
+        if (shape === 'circle') {
+            var cx = w/2, cy = h/2, r = Math.min(ww, hh)/2;
+            d = 'M ' + (cx-r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 1 0 ' + (cx+r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 1 0 ' + (cx-r) + ' ' + cy + ' Z';
+        } else if (shape === 'pill') {
+            var r2 = hh / 2;
+            d = 'M ' + (x+r2) + ' ' + y
+              + ' L ' + (x+ww-r2) + ' ' + y
+              + ' A ' + r2 + ' ' + r2 + ' 0 0 1 ' + (x+ww-r2) + ' ' + (y+hh)
+              + ' L ' + (x+r2) + ' ' + (y+hh)
+              + ' A ' + r2 + ' ' + r2 + ' 0 0 1 ' + (x+r2) + ' ' + y + ' Z';
+        } else if (shape === 'roundedRect') {
+            var r3 = Math.min(ww, hh) * 0.12;
+            d = 'M ' + (x+r3) + ' ' + y
+              + ' L ' + (x+ww-r3) + ' ' + y
+              + ' A ' + r3 + ' ' + r3 + ' 0 0 1 ' + (x+ww) + ' ' + (y+r3)
+              + ' L ' + (x+ww) + ' ' + (y+hh-r3)
+              + ' A ' + r3 + ' ' + r3 + ' 0 0 1 ' + (x+ww-r3) + ' ' + (y+hh)
+              + ' L ' + (x+r3) + ' ' + (y+hh)
+              + ' A ' + r3 + ' ' + r3 + ' 0 0 1 ' + x + ' ' + (y+hh-r3)
+              + ' L ' + x + ' ' + (y+r3)
+              + ' A ' + r3 + ' ' + r3 + ' 0 0 1 ' + (x+r3) + ' ' + y + ' Z';
+        } else {  // roundedCorner — 모서리 한 곳만 크게 라운드
+            var r4 = Math.min(ww, hh) * 0.35;
+            d = 'M ' + x + ' ' + y
+              + ' L ' + (x+ww) + ' ' + y
+              + ' L ' + (x+ww) + ' ' + (y+hh-r4)
+              + ' A ' + r4 + ' ' + r4 + ' 0 0 1 ' + (x+ww-r4) + ' ' + (y+hh)
+              + ' L ' + x + ' ' + (y+hh)
+              + ' Z';
+        }
+        _meCutlineRender(d);
+    }
+    // 복잡/팬시 — 선택된 이미지의 alpha 윤곽선 추적
+    async function _meCutlineTrace() {
+        var sel = me.selected;
+        if (!sel || sel.type !== 'image') {
+            alert('이미지 요소를 먼저 선택해주세요. (복잡모양/팬시 스티커는 업로드한 이미지의 윤곽선을 따라 칼선이 생성됩니다.)');
+            return;
+        }
+        var img = sel.el.querySelector('img');
+        if (!img) return;
+        // offscreen canvas 에 이미지 그리고 alpha mask 생성
+        var W = Math.max(64, Math.min(512, Math.round(sel.w)));
+        var H = Math.max(64, Math.min(512, Math.round(sel.h)));
+        var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        var ctx = cv.getContext('2d');
+        try {
+            await new Promise(function(res){ if (img.complete) res(); else img.onload = res; });
+            ctx.drawImage(img, 0, 0, W, H);
+        } catch(e){ console.warn('[cutline trace draw]', e); }
+        var data;
+        try { data = ctx.getImageData(0, 0, W, H).data; } catch(e){
+            alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다. 다시 업로드해보세요.');
+            return;
+        }
+        // 외곽 경계 — 각 행에서 최좌·최우 alpha>40 픽셀.  단순화된 마스크.
+        var THR = 40;
+        var left = [], right = [];
+        for (var y = 0; y < H; y++) {
+            var l = -1, r = -1;
+            for (var x = 0; x < W; x++) {
+                var a = data[(y*W + x) * 4 + 3];
+                if (a > THR) { if (l < 0) l = x; r = x; }
+            }
+            left[y] = l; right[y] = r;
+        }
+        // path 점들 — 왼쪽 내려가다가 오른쪽 올라옴 (시계방향 outline)
+        var pts = [];
+        for (var y1 = 0; y1 < H; y1++) if (left[y1] >= 0) pts.push([left[y1], y1]);
+        for (var y2 = H-1; y2 >= 0; y2--) if (right[y2] >= 0) pts.push([right[y2], y2]);
+        if (pts.length < 4) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
+        // 단순화 — 5픽셀마다 점 sample
+        var sampled = []; for (var i = 0; i < pts.length; i += 5) sampled.push(pts[i]);
+        sampled.push(pts[0]);
+        // sel 의 stage 좌표로 변환 + margin offset (외곽으로 5% 확장)
+        var sx = sel.x, sy = sel.y, sw = sel.w, sh = sel.h;
+        var cx = sx + sw/2, cy = sy + sh/2;
+        var margin = 1.06;
+        var d = '';
+        sampled.forEach(function(p, idx){
+            var px = sx + (p[0] / W) * sw;
+            var py = sy + (p[1] / H) * sh;
+            // 중심에서 6% 외곽으로 확장
+            px = cx + (px - cx) * margin;
+            py = cy + (py - cy) * margin;
+            d += (idx === 0 ? 'M ' : ' L ') + px.toFixed(1) + ' ' + py.toFixed(1);
+        });
+        d += ' Z';
+        _meCutlineRender(d);
+    }
+    window._meCutlineOpen = function() {
+        // 기존 popup 제거
+        var ex = document.getElementById('meCutlinePopup');
+        if (ex) ex.remove();
+        var pop = document.createElement('div');
+        pop.id = 'meCutlinePopup';
+        pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:340px; font-family:inherit;';
+        pop.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">'
+          +   '<div style="font-weight:900; font-size:15px; color:#b91c1c;">✂️ 칼선 모양 선택</div>'
+          +   '<button type="button" id="meCutlineClose" style="border:0; background:transparent; font-size:20px; cursor:pointer; color:#94a3b8;">×</button>'
+          + '</div>'
+          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 중 선택 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적.</div>'
+          + '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">'
+          +   '<button type="button" data-shape="circle"       style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">⭕ 동그라미</button>'
+          +   '<button type="button" data-shape="pill"         style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">💊 알약</button>'
+          +   '<button type="button" data-shape="roundedRect"  style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">▢ 라운드 사각</button>'
+          +   '<button type="button" data-shape="roundedCorner"style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">◣ 한 모서리</button>'
+          + '</div>'
+          + '<div style="margin-top:10px; display:grid; grid-template-columns:1fr; gap:8px;">'
+          +   '<button type="button" data-shape="trace" style="padding:14px 8px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit;">🖼️ 선택 이미지 윤곽선 따기 (복잡/팬시)</button>'
+          +   '<button type="button" data-shape="clear" style="padding:9px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">칼선 삭제</button>'
+          + '</div>';
+        document.body.appendChild(pop);
+        function close(){ pop.remove(); }
+        pop.querySelector('#meCutlineClose').onclick = close;
+        pop.querySelectorAll('[data-shape]').forEach(function(b){
+            b.onclick = function(){
+                var s = b.getAttribute('data-shape');
+                if (s === 'trace') { _meCutlineTrace(); close(); }
+                else if (s === 'clear') { window._meCutlineClear(); close(); }
+                else { _meCutlineSimple(s); close(); }
+            };
+        });
     };
 
     window._meAddImageFromFile = function(input) {
@@ -12032,7 +12195,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=473"></script>
+<script src="/simple_order.js?v=474"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

@@ -3267,7 +3267,7 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-01: 광고인쇄/허니콤 — 인라인 업로드 카드 = 보라 그라데이션 "업로드 완료" 패널 + 이미지 미리보기 노출.
         window._soHandleFile = handleFile;  // ad-print queue reset 에서 onchange 재바인딩에 사용
-        if (state.isAdPrint || state.isHoneycomb) {
+        if (state.isAdPrint || state.isHoneycomb || state.isSticker) {
             var _inlineWrap = document.getElementById('soAdInlineUploadWrap');
             var _inlineDone = document.getElementById('soAdInlineDone');
             var _inlineInfo = document.getElementById('soAdInlineFileInfo');
@@ -3290,6 +3290,12 @@ html, body { background: #ffffff !important; }
                 }
             }
         }
+        // 2026-06-16: 스티커 — 업로드 시 좌측 mini 에디터 캔버스에도 이미지 추가 (디자인 미리보기 + 칼선 트레이스 대상).
+        try {
+            if (state.isSticker && state.thumbDataUrl && typeof window._meAddImage === 'function') {
+                window._meAddImage(state.thumbDataUrl);
+            }
+        } catch (_e) { console.warn('[sticker upload→editor]', _e); }
         renderUploadDone();
     }
 
@@ -11093,6 +11099,13 @@ html, body { background: #ffffff !important; }
                 else if (state.isCutPrint) _addLbl.textContent = tr('재단 추가', 'カット追加', 'Add cut');
                 else _addLbl.textContent = tr('사이즈 추가', 'サイズ追加', 'Add size');
             }
+            // 2026-06-16: 스티커도 인라인 업로드 카드 노출 (사용자 요청). order 는 코팅(-100)/별색 위, 수량(-190) 아래로.
+            if (state.isSticker) {
+                if (_inlineUploadCard) {
+                    _inlineUploadCard.style.display = '';
+                    _inlineUploadCard.style.order = '-150';
+                }
+            }
             if (state.isAdPrint) {
                 if (_tierTable)  _tierTable.style.display  = 'none';
                 if (_presetTier) _presetTier.style.display = 'none';
@@ -11147,7 +11160,8 @@ html, body { background: #ffffff !important; }
                 if (_tierTable) {
                     _tierTable.style.display = (state.isBizCard || state.isSticker || _soIsGeneralPrintProduct(p)) ? 'none' : '';
                 }
-                if (_inlineUploadCard) {
+                // 2026-06-16: 스티커는 위에서 inline upload card 를 켰음 — 끄지 말 것.
+                if (_inlineUploadCard && !state.isSticker) {
                     _inlineUploadCard.style.display = 'none';
                     _inlineUploadCard.style.order = '';
                 }
@@ -11708,6 +11722,12 @@ html, body { background: #ffffff !important; }
             var bcForm = document.getElementById('soQdBcForm');
             if (bcForm) bcForm.style.display = _isBizCard() ? '' : 'none';
             _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
+            // 2026-06-16: 칼선 버튼 — 스티커 상품일 때만 노출. 새 진입 시 기존 칼선 overlay 클리어.
+            try {
+                var _cbBtn = document.getElementById('meCutlineBtn');
+                if (_cbBtn) _cbBtn.style.display = (state && state.isSticker) ? '' : 'none';
+                if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
+            } catch(_e){}
 
             // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
             //   섹션 visible 한 다음 프레임에서 _meSetSize 호출 → _meFitStage 가 올바른 wrap width 로 계산.
