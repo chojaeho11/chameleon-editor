@@ -6604,6 +6604,26 @@ function scrollHotdeal(gridId, dir) {
             } catch(_se){}
             // 2026-06-14: 폰트가 아직 로드 중이면 대기 (Korean fonts 보장)
             try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(_fe){}
+            // 2026-06-18 v563: 사용 중인 텍스트의 정확한 폰트 spec 을 명시적으로 preload
+            //   document.fonts.ready 만으로는 일부 폰트가 로드 완료 전 export 됨 → 폴백 폰트로 렌더 → 다른 폭/굵기로 보임.
+            try {
+                if (document.fonts && document.fonts.load) {
+                    var _fontSpecs = new Set();
+                    me.items.forEach(function(it){
+                        if (it && it.type === 'text' && it.fontFamily) {
+                            var ff = String(it.fontFamily).replace(/["']/g, '');
+                            if (ff && ff !== 'sans-serif' && ff !== 'serif') {
+                                var fs = it.fontSize || 24;
+                                var fw = (typeof _meResolveWeight === 'function') ? _meResolveWeight(ff, it.fontWeight || 400) : (it.fontWeight || 400);
+                                _fontSpecs.add(fw + ' ' + fs + 'px "' + ff + '"');
+                            }
+                        }
+                    });
+                    await Promise.all(Array.from(_fontSpecs).map(function(spec){
+                        return document.fonts.load(spec).catch(function(){ return null; });
+                    }));
+                }
+            } catch(_fle){}
             // 2026-06-14: 텍스트 품질 위해 2배 해상도로 그리고 ctx.scale(2) — 자글거림 감소.
             var EXPORT_DPR = 2;
             var c = document.createElement('canvas');
@@ -6704,6 +6724,11 @@ function scrollHotdeal(gridId, dir) {
                     //   canvas measureText 는 DOM 보다 보수적이라 같은 텍스트도 살짝 더 넓게 측정 → DOM 에 fit 됐는데
                     //   canvas 에선 wrap → 마지막 1글자 떨어짐. 15% 버퍼로 차이 흡수.
                     var lh = fs * (it.lineHeight || 1.2);
+                    // 2026-06-18 v563: DOM 의 line-height 는 글자를 EM box 중앙 정렬 → 상단에 (lh-fs)/2 만큼 여백.
+                    //   canvas textBaseline:'top' 은 EM box 의 top 부터 그림 → DOM 대비 위로 (lh-fs)/2 만큼 올라감.
+                    //   보정: ty 에 (lh-fs)/2 더해서 DOM 과 같은 baseline 위치.
+                    var leadingOffset = (lh - fs) / 2;
+                    ty += leadingOffset;
                     var maxW = Math.max(1, it.w - 2 * padX) * 1.15;
                     var rawLines = (it.text || '').split(/\n/);
                     var allLines = [];
