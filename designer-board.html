@@ -846,8 +846,9 @@ window.openTemplateMyPage = async function() {
             </div>
             <div id="myPayoutBar" style="padding:14px 22px; background:linear-gradient(135deg,#fef9c3,#fef3c7); border-bottom:1px solid #fde68a; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
                 <div style="flex:1; min-width:160px;">
-                    <div style="font-size:11px; font-weight:700; color:#92400e; letter-spacing:0.5px; text-transform:uppercase;">${ML.payoutAmt}</div>
+                    <div style="font-size:11px; font-weight:700; color:#92400e; letter-spacing:0.5px; text-transform:uppercase;">${ML.payoutAmt} <span style="font-weight:500; opacity:0.7; text-transform:none; letter-spacing:0;">(승인된 템플릿 적립금만)</span></div>
                     <div id="myDepositAmount" style="font-size:24px; font-weight:700; color:#1f2937; letter-spacing:-0.3px;">—</div>
+                    <div id="myDepositDetail" style="font-size:11px; color:#78350f; margin-top:3px; opacity:0.85;"></div>
                 </div>
                 <button id="myWdBtn" onclick="dbRequestWithdrawal()" style="padding:11px 18px; background:#0f172a; color:#fde047; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer;">${ML.settleReq}</button>
             </div>
@@ -880,11 +881,29 @@ window.openTemplateMyPage = async function() {
     updateMyTabCounts();
     renderMyTplTab('pending');
 
-    // 예치금 불러오기
+    // 2026-06-18 v555: 정산 가능 금액 = 승인된 템플릿 적립금만 (다른 보너스 제외).
+    //   = sum(approved templates' payment_amount) − sum(이미 정산 요청한 금액)
     try {
-        const { data: prof } = await sb.from('profiles').select('deposit').eq('id', userId).maybeSingle();
-        const deposit = (prof && prof.deposit) || 0;
-        document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(deposit * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (deposit * 0.001).toFixed(2) : deposit.toLocaleString() + '원');
+        const approvedSum = (window._myTplList || [])
+            .filter(t => t.status === 'approved')
+            .reduce((s, t) => s + (t.payment_amount || 0), 0);
+        // 이미 요청한 정산 금액 (designer_withdrawals 에서 template 관련, pending/approved 모두 합산)
+        let withdrawnSum = 0;
+        try {
+            const { data: wds } = await sb.from('designer_withdrawals')
+                .select('amount, status')
+                .eq('designer_id', userId)
+                .in('status', ['pending', 'approved', 'paid']);
+            withdrawnSum = (wds || []).reduce((s, w) => s + (w.amount || 0), 0);
+        } catch(_we) { /* designer_withdrawals 테이블 없으면 0 */ }
+        const available = Math.max(0, approvedSum - withdrawnSum);
+        window._myTplAvailable = available;
+        document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(available * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (available * 0.001).toFixed(2) : available.toLocaleString() + '원');
+        // 상세 라벨 — earned/withdrawn 표시
+        const detailEl = document.getElementById('myDepositDetail');
+        if (detailEl) {
+            detailEl.textContent = '템플릿 적립: ' + approvedSum.toLocaleString() + '원 − 정산요청: ' + withdrawnSum.toLocaleString() + '원';
+        }
     } catch(_e){}
 
     // 탭 클릭 핸들러
@@ -945,27 +964,26 @@ function renderMyTplTab(tab) {
     }).join('');
 }
 
-// 정산 요청 — 기존 designer_withdrawals 테이블에 row INSERT (해당 테이블이 있다고 가정).
+// 정산 요청 — 승인된 템플릿 적립금만 (다른 보너스 제외).
 async function dbRequestWithdrawal() {
     const ML = window._myTplML || {};
     try {
-        const { data: prof } = await sb.from('profiles').select('deposit').eq('id', userId).maybeSingle();
-        const deposit = (prof && prof.deposit) || 0;
-        if (deposit <= 0) { alert(ML.noAmt); return; }
-        if (!confirm(ML.confirmWd + '\n\n' + ML.payoutAmt + ': ' + deposit.toLocaleString() + '원')) return;
-        // 인서트 시도 (테이블 없으면 alert 로 안내)
+        const available = window._myTplAvailable || 0;
+        if (available <= 0) { alert(ML.noAmt); return; }
+        if (!confirm(ML.confirmWd + '\n\n' + ML.payoutAmt + ': ' + available.toLocaleString() + '원')) return;
         const { error } = await sb.from('designer_withdrawals').insert({
             designer_id: userId,
-            amount: deposit,
+            amount: available,
             status: 'pending',
             note: '템플릿 정산 요청'
         });
         if (error) {
-            // 폴백: 의뢰만 알림으로 처리
-            alert('정산 요청은 관리자에게 직접 문의해주세요.\n예치금: ' + deposit.toLocaleString() + '원\n\n(' + error.message + ')');
+            alert('정산 요청은 관리자에게 직접 문의해주세요.\n예치금: ' + available.toLocaleString() + '원\n\n(' + error.message + ')');
             return;
         }
         alert('✅ ' + ML.wdDone + '!\n관리자가 확인 후 등록 계좌로 송금합니다 (3.3% 원천세 공제 후).');
+        // 마이페이지 새로고침
+        openTemplateMyPage();
     } catch(e) { alert('정산 요청 실패: ' + (e.message || e)); }
 }
 
