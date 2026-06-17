@@ -6744,42 +6744,57 @@ function scrollHotdeal(gridId, dir) {
                     //   보정: ty 에 (lh-fs)/2 더해서 DOM 과 같은 baseline 위치.
                     var leadingOffset = (lh - fs) / 2;
                     ty += leadingOffset;
-                    // 2026-06-18 v564: canvas measureText 는 한글에서 DOM 보다 5~25% 넓게 측정 → 더 빨리 줄바꿈됨.
-                    //   DOM 의 actual rendered width 를 ground truth 로 사용하여 maxW 보정 (글자별 측정 오차 제거).
-                    var maxW;
-                    try {
-                        // DOM 의 첫 줄 실제 폭 측정 — Range 로 첫 줄 boundingRect 가져옴
-                        var _domLineW = 0;
-                        var _node = it.el.firstChild;
-                        if (_node && _node.nodeType === 3) {
-                            var _r = document.createRange();
-                            _r.setStart(_node, 0);
-                            _r.setEnd(_node, _node.textContent.length);
-                            var _rects = _r.getClientRects();
-                            if (_rects && _rects.length) {
-                                // 가장 긴 줄의 폭 — natural units 으로 환산
-                                var _maxRectW = 0;
-                                for (var _ri = 0; _ri < _rects.length; _ri++) {
-                                    if (_rects[_ri].width > _maxRectW) _maxRectW = _rects[_ri].width;
-                                }
-                                _domLineW = _maxRectW / (me.wScale || 1);
-                            }
-                        }
-                        if (_domLineW > 0) {
-                            // DOM 가 실제로 fit 시킨 폭 + 5% 마진 (kerning 오차 흡수)
-                            maxW = _domLineW * 1.05;
-                        } else {
-                            maxW = Math.max(1, it.w - 2 * padX) * 1.30;
-                        }
-                    } catch(_mwe) {
-                        maxW = Math.max(1, it.w - 2 * padX) * 1.30;
-                    }
-                    var rawLines = (it.text || '').split(/\n/);
+                    // 2026-06-18 v570: DOM 의 실제 렌더된 줄을 그대로 사용 (canvas wrap 안 함).
+                    //   Range 로 글자 단위 rect 추출 → top 좌표로 줄 그룹핑 → 100% DOM 일치.
                     var allLines = [];
-                    rawLines.forEach(function(rl){
-                        var wrapped = _meWrapText(ctx, rl, maxW);
-                        wrapped.forEach(function(w){ allLines.push(w); });
-                    });
+                    try {
+                        var _txtNode = null;
+                        // 첫 번째 Text node 찾기 (innerText 의 child 가 Text 또는 br/div 중 Text 인 경우)
+                        function _findFirstText(el) {
+                            for (var ci = 0; ci < el.childNodes.length; ci++) {
+                                var cn = el.childNodes[ci];
+                                if (cn.nodeType === 3 && cn.textContent.length > 0) return cn;
+                                if (cn.nodeType === 1) {
+                                    var sub = _findFirstText(cn);
+                                    if (sub) return sub;
+                                }
+                            }
+                            return null;
+                        }
+                        _txtNode = _findFirstText(it.el);
+                        if (_txtNode) {
+                            var _fullText = _txtNode.textContent;
+                            var _lastTop = -9999;
+                            var _curLine = '';
+                            for (var _ci = 0; _ci < _fullText.length; _ci++) {
+                                var _cr = document.createRange();
+                                _cr.setStart(_txtNode, _ci);
+                                _cr.setEnd(_txtNode, _ci + 1);
+                                var _crect = _cr.getBoundingClientRect();
+                                if (_lastTop === -9999) _lastTop = _crect.top;
+                                if (Math.abs(_crect.top - _lastTop) > 2) {
+                                    // 새 줄 시작
+                                    allLines.push(_curLine);
+                                    _curLine = _fullText[_ci];
+                                    _lastTop = _crect.top;
+                                } else {
+                                    _curLine += _fullText[_ci];
+                                }
+                            }
+                            if (_curLine) allLines.push(_curLine);
+                        }
+                    } catch(_mle) {
+                        console.warn('[_meExportPNG] DOM line detection failed', _mle);
+                    }
+                    // 폴백: DOM 추출 실패 시 canvas wrap 사용
+                    if (!allLines.length) {
+                        var maxW = Math.max(1, it.w - 2 * padX) * 1.30;
+                        var rawLines = (it.text || '').split(/\n/);
+                        rawLines.forEach(function(rl){
+                            var wrapped = _meWrapText(ctx, rl, maxW);
+                            wrapped.forEach(function(w){ allLines.push(w); });
+                        });
+                    }
                     allLines.forEach(function(ln, idx) {
                         ctx.fillText(ln, tx, ty + idx * lh);
                     });
