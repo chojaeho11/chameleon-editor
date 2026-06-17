@@ -5865,7 +5865,7 @@ function scrollHotdeal(gridId, dir) {
                 <label class="me-color-wrap" title="배경색"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
                 <!-- 2026-06-17: 가이드 토글 (가벽 옆면 빗금 + 1m 절단선) — 기본 ON, 클릭으로 ON/OFF -->
-                <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="옆면/1m 절단선 가이드 표시/숨김"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i></button>
+                <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i></button>
                 <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
                 <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
             </div>
@@ -6313,7 +6313,13 @@ function scrollHotdeal(gridId, dir) {
         } else {
             var pct = (mm / natWMm) * 100;
             var commonBg = 'repeating-linear-gradient(45deg, rgba(220,38,38,0.18) 0px, rgba(220,38,38,0.18) 10px, rgba(220,38,38,0.06) 10px, rgba(220,38,38,0.06) 20px)';
-            var labelHtml = '<div class="me-wing-label">옆면<br><span class="me-wing-mm">' + mm + 'mm</span></div>';
+            // 2026-06-17: 옆면 라벨 다국어 — KR/JA/EN/기타 한 글자 라벨로.
+            var _wLang = (window.CURRENT_LANG || 'kr').toLowerCase();
+            var _wLbl = (_wLang === 'ja' || _wLang === 'jp') ? '側面'
+                      : (_wLang === 'kr' || _wLang === 'ko') ? '옆면'
+                      : (_wLang === 'zh' || _wLang === 'cn') ? '侧面'
+                      : 'SIDE';
+            var labelHtml = '<div class="me-wing-label">' + _wLbl + '<br><span class="me-wing-mm">' + mm + 'mm</span></div>';
             if (!leftEl) {
                 leftEl = document.createElement('div');
                 leftEl.id = 'meWingLeft';
@@ -12714,7 +12720,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=502"></script>
+<script src="/simple_order.js?v=503"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

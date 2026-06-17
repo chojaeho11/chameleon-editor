@@ -3414,23 +3414,23 @@ html, body { background: #ffffff !important; }
             if (Math.abs(actualH - validHeights[i]) <= TOL_H) { heightOk = true; matchedH = validHeights[i]; break; }
         }
         // 4) 결과 분기 + 팝업.
-        var scaleNote = (scale === 10) ? ' (1:10 축소본)' : '';
+        var scaleNote = (scale === 10) ? tr(' (1:10 축소본)', ' (1:10 縮小サンプル)', ' (1:10 scale sample)') : '';
         if (!widthOk) {
             // 가로 사이즈 오류 — 접수 불가.
             _soWallPopup({
                 kind: 'error',
-                title: '⚠️ 가로 사이즈 오류',
+                title: tr('⚠️ 가로 사이즈 오류', '⚠️ 横サイズエラー', '⚠️ Width size error'),
                 lines: [
-                    '업로드한 파일 가로: <b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일 가로: ','アップロードファイル横: ','Uploaded file width: ') + '<b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
-                    '가벽 가로는 <b>1미터 단위</b>로만 주문 가능합니다.',
-                    '<span style="color:#475569;">예: 1000 / 2000 / 3000 / 4000 / 5000mm (날개 미포함)</span>',
-                    '<span style="color:#475569;">또는 1300 / 2300 / 3300 / 4300 / 5300mm (날개 포함, 좌우 +150mm)</span>',
+                    tr('가벽 가로는 <b>1미터 단위</b>로만 주문 가능합니다.', '壁面の横は<b>1メートル単位</b>のみ注文可能です。', 'Wall width can only be ordered in <b>1 meter units</b>.'),
+                    '<span style="color:#475569;">' + tr('예: 1000 / 2000 / 3000 / 4000 / 5000mm (날개 미포함)', '例: 1000 / 2000 / 3000 / 4000 / 5000mm (側面なし)', 'e.g. 1000 / 2000 / 3000 / 4000 / 5000mm (no side panels)') + '</span>',
+                    '<span style="color:#475569;">' + tr('또는 1300 / 2300 / 3300 / 4300 / 5300mm (날개 포함, 좌우 +150mm)', 'または 1300 / 2300 / 3300 / 4300 / 5300mm (側面込み、左右+150mm)', 'or 1300 / 2300 / 3300 / 4300 / 5300mm (with side panels, +150mm each side)') + '</span>',
                     '',
-                    '<span style="color:#b91c1c; font-weight:800;">현재 사이즈로는 접수가 불가합니다.</span>',
-                    '파일을 다시 확인 후 업로드해주세요.'
+                    '<span style="color:#b91c1c; font-weight:800;">' + tr('현재 사이즈로는 접수가 불가합니다.', '現在のサイズでは受付できません。', 'Order cannot be accepted at the current size.') + '</span>',
+                    tr('파일을 다시 확인 후 업로드해주세요.', 'ファイルをご確認の上、再度アップロードしてください。', 'Please check the file and upload again.')
                 ],
-                buttons: [{ label: '확인', primary: true, action: function(){ /* nothing — user must re-upload */ } }]
+                buttons: [{ label: tr('확인','確認','OK'), primary: true, action: function(){} }]
             });
             return;
         }
@@ -3438,32 +3438,30 @@ html, body { background: #ffffff !important; }
             // 세로 특이 사이즈 — 5만원 추가 confirm.
             _soWallPopup({
                 kind: 'warn',
-                title: '📐 세로 특이 사이즈 — 추가 설계비 안내',
+                title: tr('📐 세로 특이 사이즈 — 추가 설계비 안내', '📐 縦の特殊サイズ — 追加設計費のご案内', '📐 Non-standard height — extra design fee'),
                 lines: [
-                    '업로드한 파일 사이즈: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일 사이즈: ','アップロードファイルサイズ: ','Uploaded file size: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
-                    '기본 세로 사이즈: <b>2000 / 2200 / 2400 / 3000mm</b>',
-                    '<span style="color:#475569;">위 사이즈는 추가 비용 없이 진행됩니다.</span>',
+                    tr('기본 세로 사이즈: ','標準の縦サイズ: ','Standard heights: ') + '<b>2000 / 2200 / 2400 / 3000mm</b>',
+                    '<span style="color:#475569;">' + tr('위 사이즈는 추가 비용 없이 진행됩니다.', '上記サイズは追加費用なしで進行できます。', 'The sizes above incur no extra cost.') + '</span>',
                     '',
-                    '<span style="color:#b45309; font-weight:800;">현재 세로 ' + actualH.toLocaleString() + 'mm 는 특이 사이즈입니다.</span>',
-                    '추가 설계비 <b style="color:#b91c1c;">+50,000원</b> 이 발생합니다.',
+                    '<span style="color:#b45309; font-weight:800;">' + tr('현재 세로 ','現在の縦 ','Current height ') + actualH.toLocaleString() + tr('mm 는 특이 사이즈입니다.','mm は特殊サイズです。','mm is a non-standard size.') + '</span>',
+                    tr('추가 설계비 ','追加設計費 ','Extra design fee ') + '<b style="color:#b91c1c;">+50,000' + tr('원','円','KRW') + '</b>' + tr(' 이 발생합니다.',' が発生します。',' applies.'),
                     '',
-                    '5만원 추가하고 진행하시겠습니까?'
+                    tr('5만원 추가하고 진행하시겠습니까?', '5万円追加して進行しますか?', 'Add 50,000 KRW and proceed?')
                 ],
                 buttons: [
-                    { label: '취소 (파일 다시 올리기)', action: function(){
-                        // 파일 클리어 — 사용자가 사이즈 맞춰서 재업로드 유도.
+                    { label: tr('취소 (파일 다시 올리기)','キャンセル (再アップロード)','Cancel (re-upload)'), action: function(){
                         state.file = null; state.thumbDataUrl = null;
                         state.fileWidthMm = null; state.fileHeightMm = null;
                         try { if (window.me && Array.isArray(window.me.items)) { window.me.items.slice().forEach(function(it){ try { it.el.remove(); } catch(_){} }); window.me.items = []; } } catch(_){}
                         var _b = document.getElementById('soAdInlineUploadWrap'); var _d = document.getElementById('soAdInlineDone');
                         if (_b) _b.style.display = ''; if (_d) _d.style.display = 'none';
                     }},
-                    { label: '5만원 추가하고 진행', primary: true, action: function(){
+                    { label: tr('5만원 추가하고 진행','5万円追加して進行','Add 50,000 and proceed'), primary: true, action: function(){
                         state.wallExtraDesignFee = 50000;
-                        state.wallExtraDesignReason = '특이 세로 사이즈 ' + actualH + 'mm';
+                        state.wallExtraDesignReason = tr('특이 세로 사이즈 ','特殊な縦サイズ ','Non-standard height ') + actualH + 'mm';
                         try { recalc(); } catch(_){}
-                        // 가벽 사이즈 dropdown 도 가까운 값으로 업데이트 (시각 일관성).
                         var _wm = widthM;
                         if (state.wallWidth !== _wm) {
                             state.wallWidth = _wm;
@@ -3475,12 +3473,10 @@ html, body { background: #ffffff !important; }
             return;
         }
         // 5) 정상 — 날개 포함/미포함 안내.
-        // 5만원 추가 플래그가 이전 업로드에서 남아있을 수 있으니 정상 사이즈면 클리어.
         state.wallExtraDesignFee = 0; state.wallExtraDesignReason = null;
-        // 가벽 dropdown 도 파일 가로에 맞춰 자동 갱신 (사용자가 선택한 값 ≠ 파일 가로면 안내).
         var dropdownChangedNote = '';
         if (widthM && state.wallWidth !== widthM) {
-            dropdownChangedNote = '<span style="color:#475569;">가벽 가로를 ' + widthM + 'm 로 자동 설정했습니다.</span>';
+            dropdownChangedNote = '<span style="color:#475569;">' + tr('가벽 가로를 ','壁面の横を ','Wall width auto-set to ') + widthM + tr('m 로 자동 설정했습니다.','m に自動設定しました。','m.') + '</span>';
             state.wallWidth = widthM;
             var ww2 = document.getElementById('soWallWidth'); if (ww2) ww2.value = String(widthM);
         }
@@ -3508,36 +3504,36 @@ html, body { background: #ffffff !important; }
         if (hasWings) {
             _soWallPopup({
                 kind: 'ok',
-                title: '🎯 전문가시네요!',
+                title: tr('🎯 전문가시네요!','🎯 さすがプロ！','🎯 Pro level!'),
                 lines: [
-                    '업로드한 파일: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
-                    '✓ 가로 ' + widthM + '미터 + 양쪽 날개 150mm씩 (300mm) 정확하게 포함',
-                    '✓ 세로 ' + matchedH + 'mm 정상',
+                    '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 + 양쪽 날개 150mm씩 (300mm) 정확하게 포함','メートル + 両側面150mmずつ (300mm) を正確に含む','m + 150mm side panels each (300mm total) included correctly'),
+                    '✓ ' + tr('세로 ','縦 ','Height ') + matchedH + tr('mm 정상','mm 正常','mm OK'),
                     dropdownChangedNote,
                     '',
-                    '<b style="color:#15803d;">옆면까지 잘 만들어주셨네요. 이대로 접수합니다.</b>'
+                    '<b style="color:#15803d;">' + tr('옆면까지 잘 만들어주셨네요. 이대로 접수합니다.', '側面まできちんと作成されましたね。このまま受付いたします。', 'Side panels included perfectly. Proceeding with the order.') + '</b>'
                 ],
-                buttons: [{ label: '확인', primary: true, action: function(){} }]
+                buttons: [{ label: tr('확인','確認','OK'), primary: true, action: function(){} }]
             });
         } else {
             _soWallPopup({
                 kind: 'info',
-                title: '📝 옆면 흰색 인쇄 안내',
+                title: tr('📝 옆면 흰색 인쇄 안내','📝 側面白色印刷のご案内','📝 White side panel notice'),
                 lines: [
-                    '업로드한 파일: <b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
-                    '✓ 가로 ' + widthM + '미터 정상',
-                    '✓ 세로 ' + matchedH + 'mm 정상',
+                    '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 정상','メートル 正常','m OK'),
+                    '✓ ' + tr('세로 ','縦 ','Height ') + matchedH + tr('mm 정상','mm 正常','mm OK'),
                     dropdownChangedNote,
                     '',
-                    '<b style="color:#1e40af;">옆면이 없이 디자인하셨네요.</b>',
-                    '<span style="color:#475569;">옆면(좌우 150mm씩)은 <b>흰색으로 인쇄</b>됩니다.</span>',
+                    '<b style="color:#1e40af;">' + tr('옆면이 없이 디자인하셨네요.','側面なしでデザインされていますね。','Designed without side panels.') + '</b>',
+                    '<span style="color:#475569;">' + tr('옆면(좌우 150mm씩)은 ','側面(左右150mmずつ)は ','Side panels (150mm each side) will be ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','printed in white') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
                     '',
-                    '옆면이 흰색이어도 괜찮다면 <b>그대로 진행</b>해도 됩니다.',
-                    '<span style="color:#475569;">옆면까지 색상을 넣고 싶으시다면 좌우 <b>150mm씩 늘려서</b> 디자인 후 올려주세요.</span>'
+                    tr('옆면이 흰색이어도 괜찮다면 ','側面が白色でよろしければ ','If white side panels are acceptable, ') + '<b>' + tr('그대로 진행','そのまま進行','proceed as is') + '</b>' + tr('해도 됩니다.','で問題ありません。','.'),
+                    '<span style="color:#475569;">' + tr('옆면까지 색상을 넣고 싶으시다면 좌우 ','側面にも色を入れたい場合は左右 ','To extend the design to the side panels, add ') + '<b>' + tr('150mm씩 늘려서','150mmずつ広げて','150mm to each side') + '</b>' + tr(' 디자인 후 올려주세요.',' デザインしてアップロードしてください。',' and re-upload.') + '</span>'
                 ],
-                buttons: [{ label: '확인', primary: true, action: function(){} }]
+                buttons: [{ label: tr('확인','確認','OK'), primary: true, action: function(){} }]
             });
         }
     }
