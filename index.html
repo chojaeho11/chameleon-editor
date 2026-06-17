@@ -6456,18 +6456,27 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-14: Smart guide — 드래그 중 캔버스 중앙(가로·세로)에 6px 이내면 snap.
     var _snapTol = 6;
     function _meDragSnap(it) {
-        var cx = it.x + it.w / 2;
-        var cy = it.y + it.h / 2;
+        // 2026-06-18 v566: 텍스트의 경우 width:max-content 로 실제 폭이 it.w 보다 작음 → 실제 DOM 폭 사용.
+        var realW = it.w, realH = it.h;
+        try {
+            var _r = it.el && it.el.getBoundingClientRect();
+            if (_r && me.wScale) {
+                if (_r.width > 0)  realW = _r.width  / me.wScale;
+                if (_r.height > 0) realH = _r.height / me.wScale;
+            }
+        } catch(_){}
+        var cx = it.x + realW / 2;
+        var cy = it.y + realH / 2;
         var canvasCx = me.natW / 2;
         var canvasCy = me.natH / 2;
         var tol = _snapTol / (me.wScale || 1);
         var showV = false, showH = false;
         if (Math.abs(cx - canvasCx) < tol) {
-            it.x = canvasCx - it.w / 2;
+            it.x = canvasCx - realW / 2;
             showV = true;
         }
         if (Math.abs(cy - canvasCy) < tol) {
-            it.y = canvasCy - it.h / 2;
+            it.y = canvasCy - realH / 2;
             showH = true;
         }
         _meShowGuides(showV, showH);
@@ -6981,8 +6990,9 @@ function scrollHotdeal(gridId, dir) {
         // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
         html += '<span class="me-prop-group" style="gap:4px;">';
         html += '<button type="button" class="me-prop-btn" title="' + T('me_dup','복제 (Ctrl+D)') + '" data-action="dup"><i class="fa-solid fa-clone"></i></button>';
-        html += '<button type="button" class="me-prop-btn" title="' + T('me_flip_x','좌우반전') + '" data-action="flipx"><i class="fa-solid fa-arrows-left-right"></i></button>';
-        html += '<button type="button" class="me-prop-btn" title="' + T('me_flip_y','상하반전') + '" data-action="flipy"><i class="fa-solid fa-arrows-up-down"></i></button>';
+        // 2026-06-18 v566: 좌우/상하 반전 → 캔버스 가로/세로 중앙정렬 로 변경
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_center_h','가로 중앙정렬') + '" data-action="centerh"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_center_v','세로 중앙정렬') + '" data-action="centerv"><i class="fa-solid fa-arrows-up-to-line" style="transform:rotate(0deg);"></i></button>';
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_up','앞으로') + '" data-action="up"><i class="fa-solid fa-arrow-up"></i></button>';
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
         html += '</span>';
@@ -7079,8 +7089,28 @@ function scrollHotdeal(gridId, dir) {
             btn.addEventListener('click', function(){
                 var act = btn.dataset.action;
                 if (act === 'dup' && window._meDuplicate) window._meDuplicate(it);
-                else if (act === 'flipx' && window._meFlip) window._meFlip(it, 'x');
-                else if (act === 'flipy' && window._meFlip) window._meFlip(it, 'y');
+                // 2026-06-18 v566: 가로/세로 중앙정렬 — 선택한 item 의 박스를 캔버스 중앙으로 이동.
+                else if (act === 'centerh') {
+                    _meSnapshot();
+                    // 텍스트의 경우 max-content 로 실제 폭이 it.w 보다 작을 수 있음 — DOM 폭 우선 사용
+                    var _wReal = it.w;
+                    try {
+                        var _rh = it.el.getBoundingClientRect();
+                        if (_rh && _rh.width > 0 && me.wScale) _wReal = _rh.width / me.wScale;
+                    } catch(_){}
+                    it.x = (me.natW - _wReal) / 2;
+                    _meSyncItemDisplay(it);
+                }
+                else if (act === 'centerv') {
+                    _meSnapshot();
+                    var _hReal = it.h;
+                    try {
+                        var _rv = it.el.getBoundingClientRect();
+                        if (_rv && _rv.height > 0 && me.wScale) _hReal = _rv.height / me.wScale;
+                    } catch(_){}
+                    it.y = (me.natH - _hReal) / 2;
+                    _meSyncItemDisplay(it);
+                }
                 else if (act === 'up' && window._meBringForward) window._meBringForward(it);
                 else if (act === 'down' && window._meSendBackward) window._meSendBackward(it);
             });
