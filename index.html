@@ -7636,8 +7636,9 @@ function scrollHotdeal(gridId, dir) {
         }
         var hRange = maxY - minY;
         if (hRange < 10) return contour;
-        // 발 부분 자르기: 아래에서 5% 위 (이 위쪽 contour 는 보존, 아래쪽은 base 로 교체)
-        var cutY = minY + hRange * 0.95;
+        // 발 부분 자르기: 아래에서 8% 위 (이 위쪽 contour 는 보존, 아래쪽은 base 로 교체)
+        // 2026-06-17: 95% → 92% — 발가락/디테일 제거 영역 확대.
+        var cutY = minY + hRange * 0.92;
         // y >= cutY 인 모든 점의 전역 min/max X — 발 폭 전체 (다리 벌어진 경우 포함)
         var globalMinX = W, globalMaxX = 0;
         for (var i = 0; i < contour.length; i++) {
@@ -7648,12 +7649,13 @@ function scrollHotdeal(gridId, dir) {
             }
         }
         if (globalMaxX <= globalMinX) return contour;
-        // base 치수: 발 폭의 15% 양쪽으로 확장 (최소 3% W). 베이스 높이 2% hRange.
+        // base 치수: 발 폭의 20% 양쪽으로 확장 (최소 5% W). 베이스 높이 8% hRange.
+        // 2026-06-17: 받침대가 실제로 보이도록 확실하게 확장 — 너비 15%→20%, 높이 2%→8%.
         var footW = globalMaxX - globalMinX;
-        var basePadX = Math.max(W * 0.03, footW * 0.15);
+        var basePadX = Math.max(W * 0.05, footW * 0.2);
         var baseLeftX = Math.max(0, globalMinX - basePadX);
         var baseRightX = Math.min(W - 1, globalMaxX + basePadX);
-        var baseBottomY = Math.min(H - 1, maxY + hRange * 0.02);
+        var baseBottomY = Math.min(H - 1, maxY + hRange * 0.08);
         // 처음으로 y>=cutY 인 인덱스 (위→아래 진입점) 와 마지막으로 y>=cutY 인 인덱스 (아래→위 출구점)
         var enterIdx = -1, exitIdx = -1;
         for (var i = 0; i < contour.length; i++) {
@@ -12974,7 +12976,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=521"></script>
+<script src="/simple_order.js?v=522"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
