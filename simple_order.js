@@ -1599,7 +1599,8 @@ html, body { background: #ffffff !important; }
             }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
-          <div id="soQdBcForm" style="display:none; margin-top:10px; padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
+          <!-- 2026-06-18 v552: 템플릿 시스템 도입으로 자동 디자인 폼 비활성 (display:none 영구) — 고객은 🎨 템플릿 버튼으로 디자인 선택 -->
+          <div id="soQdBcForm" style="display:none !important; margin-top:10px; padding:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
             <div style="font-size:12.5px; font-weight:800; color:#475569; margin-bottom:10px; letter-spacing:0.02em;">${tr('🪪 명함 자동 디자인', '🪪 名刺自動デザイン', '🪪 Business card auto-design')}</div>
             <div class="qd-bc-field"><label>${tr('상호','商号','Company')}</label><input type="text" id="soQdBcCompany" maxlength="40" placeholder="${tr('카멜레온 프린팅','カメレオン','Chameleon Printing')}" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
             <div class="qd-bc-field"><label>${tr('이름','氏名','Name')}</label><input type="text" id="soQdBcName" maxlength="30" placeholder="${tr('홍길동','山田太郎','John Doe')}" oninput="window._soQdBcSync && window._soQdBcSync()"></div>
@@ -2524,8 +2525,8 @@ html, body { background: #ffffff !important; }
           <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
           <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(1250)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
-            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2000)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
+            <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2500)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
+            <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(4000)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
           </div>
           <!-- 2026-06-03: 명함 전용 — 인쇄면 바로 아래 파일 올리기 버튼 (좌측 soUpload 와 동기화) -->
           <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="margin-top:10px; width:100%; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -8811,10 +8812,10 @@ html, body { background: #ffffff !important; }
     // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
     function _bizPriceFor(side, tier) {
         var t = tier || state.bizTier || 'general';
-        // 2026-06-13: 100매 단위로 변경 — 가격 절반 (1각 = 100매)
-        //   일반 1250/2000 / 프리미엄 4000/5000 (단면/양면)
+        // 2026-06-18 v552: 100매 단위 + 정상 가격 복원 (200매 → 100매 변경 시 절반 적용 버그 수정)
+        //   일반 단면 2500 / 일반 양면 4000 / 프리미엄 단면 4000 / 프리미엄 양면 5000 (1각 = 100매)
         if (t === 'premium') return (side === 'double') ? 5000 : 4000;
-        return (side === 'double') ? 2000 : 1250;
+        return (side === 'double') ? 4000 : 2500;
     }
     function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
         // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
@@ -12467,8 +12468,9 @@ html, body { background: #ffffff !important; }
             // 2026-06-15: 좌측 라이브러리 사이드바 초기 로드 (4 썸네일).
             try { if (typeof window._soQdRailInit === 'function') window._soQdRailInit(); } catch (e) {}
             // 명함 폼 토글 + BC item refs 초기화 (새 상품 진입마다)
+            // 2026-06-18 v552: 템플릿 시스템 도입으로 자동 디자인 폼 영구 숨김.
             var bcForm = document.getElementById('soQdBcForm');
-            if (bcForm) bcForm.style.display = _isBizCard() ? '' : 'none';
+            if (bcForm) bcForm.style.display = 'none';
             _bcItems = { company:null, name:null, addr:null, phone:null, email:null };
             // 2026-06-16 v10: 칼선 버튼 — 스티커 + 등신대 family (스카시/일반 등신대) + 자유인쇄커팅 + 키링 prefix 상품.
             //   모두 die-cut 이 필요한 상품군 (실루엣 따라 잘라야 함).
@@ -15098,7 +15100,7 @@ html, body { background: #ffffff !important; }
             return _lfSubItm;
         }
 
-        // 2026-06-13: 명함 — 100매 단위. 일반 1250/2000 / 프리미엄 4000/5000 (단면/양면) + 박 + 후가공. 배송 무료.
+        // 2026-06-18 v552: 명함 — 100매 단위. 일반 2500/4000 / 프리미엄 4000/5000 (단면/양면) + 박 + 후가공. 배송 무료.
         // 박·후가공 옵션은 각(qty) 만큼 곱셈. 디자인 의뢰비는 신규 15K + 문구수정 5K × (qty-1).
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
@@ -15109,7 +15111,7 @@ html, body { background: #ffffff !important; }
             var _bcTier = _bc.tier || 'general';
             var _bcUnit = (_bcTier === 'premium')
                 ? ((_bc.side === 'double') ? 5000 : 4000)
-                : ((_bc.side === 'double') ? 2000 : 1250);
+                : ((_bc.side === 'double') ? 4000 : 2500);
             var _bcSub = _bcUnit * _bcQty;
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
