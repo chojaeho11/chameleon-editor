@@ -347,7 +347,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         // 주문 + 옵션 카탈로그 병렬 로드
         const [orderResult, addonResult] = await Promise.all([
             sb.from('orders').select('*').eq('id', orderId).single(),
-            sb.from('admin_addons').select('code, name, display_name, price, type')
+            sb.from('admin_addons').select('code, name, display_name, price, type, img_url')
         ]);
         const { data: order, error } = orderResult;
         if (error || !order) {
@@ -786,10 +786,26 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 boxes.push(`<div class="opt-box opt-custom"><div class="opt-head"><i class="fa-solid fa-palette"></i> 원단 / 패턴 사양</div><div class="opt-val">${fabricHtml}</div></div>`);
             }
             // 부자재/옵션 (마감 포함)
+            // 2026-06-17: 추가상품 이미지 (admin_addons.img_url) 도 같이 표시 — 네모낳게 작업자가 한눈에 알아보게.
             if (addonsArr.length > 0) {
+                const addonRows = addonsArr.map(a => {
+                    const dbItem = addonDB[a.code] || {};
+                    const imgUrl = dbItem.img_url || '';
+                    const label = esc(a.label || addonLabel(a.code, a.qty));
+                    const qtyStr = a.qty && a.qty > 1 ? ` × ${a.qty}` : '';
+                    if (imgUrl) {
+                        return `<div style="display:inline-flex; flex-direction:column; align-items:center; gap:4px; margin:4px 6px 4px 0; vertical-align:top;">
+                            <div style="width:72px; height:72px; border:1px solid #d4d4d8; border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center;">
+                                <img src="${esc(imgUrl)}" alt="${label}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'color:#cbd5e1; font-size:24px;\\'></i>';">
+                            </div>
+                            <div style="font-size:10.5px; font-weight:700; color:#0f172a; text-align:center; max-width:80px; line-height:1.3; word-break:keep-all;">${label}${qtyStr}</div>
+                        </div>`;
+                    }
+                    return `<div style="display:inline-block; vertical-align:top; margin:4px 6px 4px 0; padding:6px 10px; border:1px solid #e7e5e4; border-radius:6px; background:#fff; font-size:11.5px; font-weight:700;">${label}${qtyStr}</div>`;
+                }).join('');
                 boxes.push(`<div class="opt-box opt-addon">
                     <div class="opt-head"><i class="fa-solid fa-cube"></i> 마감 / 부자재 / 옵션</div>
-                    <div class="opt-val">${addonsArr.map(a => esc(a.label || addonLabel(a.code, a.qty))).join('<br>')}</div>
+                    <div class="opt-val" style="display:flex; flex-wrap:wrap; align-items:flex-start;">${addonRows}</div>
                 </div>`);
             }
             if (wallHtml) boxes.push(`<div class="opt-box opt-wall"><div class="opt-head"><i class="fa-solid fa-border-all"></i> 가벽 정보</div><div class="opt-val">${wallHtml}</div></div>`);
@@ -969,7 +985,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 'type','json','fileName','file_name','file_url','file_path','filePath','mimeType',
                 'artworkLater','artwork_later','artwork_filename','backFileUrl','backFileName','backFilePath',
                 'back_file_url','back_file_name','back_file_path','back_file_type','backFileType',
-                'cutlineUrl','_designBidId','_designRequestId','_designerId','_gigId',
+                'cutlineUrl','cutlinePath','overlayUrl','overlayPath','_designBidId','_designRequestId','_designerId','_gigId',
                 'partner_id','partner_email','presetType','_presetType','_isBestGoods',
                 'isAcrylicFamily','isCustomSize','isBanner','isSticker','isBizCard','isWall','isCutPrint',
                 'isStandeeV2','isRawBoard','isHoneycomb','isAcrylicGoods','isPresetGoods','isAmountOrder',
@@ -1081,9 +1097,10 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _safeUrl = esc(f.url);
                 const _safeName = esc(f.name || '');
                 const _isPdf = /\.pdf(?:\?|#|$)/i.test(f.url || '');
-                const _dlBtn = '<a href="' + _safeUrl + '" download="' + _safeName + '" target="_blank" title="다운로드" style="font-size:9px; font-weight:700; color:#0369a1; border:1px solid #7dd3fc; border-radius:4px; padding:1px 5px; cursor:pointer; background:#f0f9ff; text-decoration:none;">⬇ 다운로드</a>';
+                // 2026-06-17: 다운로드/삭제 버튼 — 더 깔끔하게. 그라데이션 + 좀 더 큰 padding + 좋은 hover.
+                const _dlBtn = '<a href="' + _safeUrl + '" download="' + _safeName + '" target="_blank" title="다운로드" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:#fff; background:linear-gradient(135deg,#0ea5e9,#0284c7); border:none; border-radius:6px; padding:5px 11px; cursor:pointer; text-decoration:none; box-shadow:0 1px 3px rgba(2,132,199,0.3); letter-spacing:0.2px;"><i class="fa-solid fa-download" style="font-size:10px;"></i> 다운로드</a>';
                 const _delBtn = _woIsAdmin
-                    ? '<button type="button" onclick="window._woDeleteExtraFile(\'' + (f.url || '').replace(/'/g, "\\'") + '\')" title="삭제 (휴지통)" style="font-size:9px; font-weight:700; color:#dc2626; border:1px solid #fca5a5; border-radius:4px; padding:1px 5px; cursor:pointer; background:#fef2f2;">🗑 삭제</button>'
+                    ? '<button type="button" onclick="window._woDeleteExtraFile(\'' + (f.url || '').replace(/'/g, "\\'") + '\')" title="삭제 (휴지통)" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:#fff; background:linear-gradient(135deg,#f87171,#dc2626); border:none; border-radius:6px; padding:5px 11px; cursor:pointer; box-shadow:0 1px 3px rgba(220,38,38,0.3); letter-spacing:0.2px; font-family:inherit;"><i class="fa-solid fa-trash" style="font-size:10px;"></i> 삭제</button>'
                     : '';
                 return '<div>'
                     + '<a href="' + _safeUrl + '" target="_blank" style="display:block;">'
@@ -1092,7 +1109,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         : '<img src="' + _safeUrl + '" alt="' + _safeName + '">') + '</div>'
                     + '</a>'
                     + '<div class="ef-name">' + _safeName + '</div>'
-                    + '<div style="display:flex; gap:3px; justify-content:center; margin-top:3px;">' + _dlBtn + _delBtn + '</div>'
+                    + '<div style="display:flex; gap:6px; justify-content:center; margin-top:6px;">' + _dlBtn + _delBtn + '</div>'
                 + '</div>';
             }).join('');
             const extraFilesHtml = extraFiles ? `<div class="extra-files">
