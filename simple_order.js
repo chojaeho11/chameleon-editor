@@ -3491,6 +3491,20 @@ html, body { background: #ffffff !important; }
         }
         try { recalc(); } catch(_){}
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_){}
+        // 2026-06-17: 캔버스 사이즈가 검증 결과로 바뀌었으니 이미지 위치도 재배치 — 한 프레임 기다린 후 clear+re-add.
+        try {
+            var _meR = window.me;
+            if (_meR && Array.isArray(_meR.items) && state.thumbDataUrl && typeof window._meAddImage === 'function') {
+                requestAnimationFrame(function(){
+                    try {
+                        _meR.items.slice().forEach(function(_it){ try { _it.el.remove(); } catch(_){} });
+                        _meR.items = [];
+                        _meR.selected = null;
+                        window._meAddImage(state.thumbDataUrl, { fitCanvas: true });
+                    } catch(_re) { console.warn('[wall validate refit]', _re); }
+                });
+            }
+        } catch(_){}
         if (hasWings) {
             _soWallPopup({
                 kind: 'ok',
