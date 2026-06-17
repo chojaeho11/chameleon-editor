@@ -28,7 +28,7 @@
     // ─────────────────────────────────────────────
     const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-    const MAX_FILE_BYTES = 50 * 1024 * 1024; // 2026-05-15: 10MB → 50MB (Supabase Storage 안정 한계)
+    const MAX_FILE_BYTES = 500 * 1024 * 1024; // 2026-06-17: 50MB → 500MB. 가벽/실사출력 등 고해상도 대형 파일 대응. Supabase 버킷도 500MB 이상으로 설정 필요.
     const CART_KEY = 'chameleon_cart_current';
 
     const DISCOUNT_TIERS = [
@@ -1672,7 +1672,7 @@ html, body { background: #ffffff !important; }
             <div class="so-upload-icon" style="color:#7c3aed;"></div>
             <div class="so-upload-title">${tr('뒷면 이미지를 올려주세요', '裏面画像をアップロード', 'Upload back side')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 500MB 이하', 'PDF・PNG・JPG・500MB以下', 'PDF / PNG / JPG · max 500MB')}</div>
           </div>
         </div>
 
@@ -2421,9 +2421,9 @@ html, body { background: #ffffff !important; }
             </button>
             <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.6;">
               <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
-              ${tr('파일은 담당 매니저를 통해 전달해 주셔도 되고, 이메일로 보내주셔도 됩니다 — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (50MB 이하)',
-                   'ファイルは担当マネージャーへ直接お渡しいただくか、メールでお送りください — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (50MB以下)',
-                   'You may hand the file to your manager or email it — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (max 50MB)')}
+              ${tr('파일은 담당 매니저를 통해 전달해 주셔도 되고, 이메일로 보내주셔도 됩니다 — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (500MB 이하)',
+                   'ファイルは担当マネージャーへ直接お渡しいただくか、メールでお送りください — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (500MB以下)',
+                   'You may hand the file to your manager or email it — <b><a href="mailto:design@chameleon.design" style="color:#4338ca; text-decoration:underline;">design@chameleon.design</a></b> (max 500MB)')}
             </div>
           </div>
           <!-- 업로드 후 — "업로드 완료" 보라 그라데이션 + 이미지 미리보기 + 파일변경 버튼. handleFile 에서 표시 토글. -->
@@ -3255,9 +3255,9 @@ html, body { background: #ffffff !important; }
         if (file.size > MAX_FILE_BYTES) {
             var sizeMb = (file.size / 1024 / 1024).toFixed(1);
             showStatus(
-                tr('업로드한 파일이 ' + sizeMb + 'MB 입니다. 50MB 이하로 줄여서 다시 올려주세요.',
-                   'アップロードしたファイルは ' + sizeMb + 'MB です。50MB以下に縮小して再アップロードしてください。',
-                   'Uploaded file is ' + sizeMb + 'MB. Please reduce to 50MB or less and try again.'),
+                tr('업로드한 파일이 ' + sizeMb + 'MB 입니다. 500MB 이하로 줄여서 다시 올려주세요.',
+                   'アップロードしたファイルは ' + sizeMb + 'MB です。500MB以下に縮小して再アップロードしてください。',
+                   'Uploaded file is ' + sizeMb + 'MB. Please reduce to 500MB or less and try again.'),
                 'err'
             );
             return;
@@ -3775,7 +3775,7 @@ html, body { background: #ffffff !important; }
             <div class="so-upload-icon"></div>
             <div class="so-upload-title">${tr('이미지를 올려주세요', '画像をアップロード', 'Upload your file')}</div>
             <div class="so-upload-hint">${tr('여기를 클릭하거나 파일을 끌어다 놓으세요', 'クリックまたはドラッグ&ドロップ', 'Click or drag & drop')}</div>
-            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 50MB 이하', 'PDF・PNG・JPG・50MB以下', 'PDF / PNG / JPG · max 50MB')}</div>
+            <div class="so-upload-formats">${tr('PDF · PNG · JPG · 500MB 이하', 'PDF・PNG・JPG・500MB以下', 'PDF / PNG / JPG · max 500MB')}</div>
         `;
         zone.onclick = () => document.getElementById('soFile').click();
         wireUploadEvents();
@@ -8090,7 +8090,7 @@ html, body { background: #ffffff !important; }
                 '<div class="so-upload-icon"></div>' +
                 '<div class="so-upload-title" id="soUploadTitle">' + tr('이미지를 올려주세요','画像をアップロード','Upload your file') + '</div>' +
                 '<div class="so-upload-hint">' + tr('여기를 클릭하거나 파일을 끌어다 놓으세요','クリックまたはドラッグ&ドロップ','Click or drag & drop') + '</div>' +
-                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 50MB 이하','PDF・PNG・JPG・50MB以下','PDF / PNG / JPG · max 50MB') + '</div>';
+                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 500MB 이하','PDF・PNG・JPG・500MB以下','PDF / PNG / JPG · max 500MB') + '</div>';
             uploadZone.onclick = function(){ document.getElementById('soFile').click(); };
             if (typeof window._soWireUploadEvents === 'function') window._soWireUploadEvents();
         }
@@ -8241,7 +8241,7 @@ html, body { background: #ffffff !important; }
                 '<div class="so-upload-icon"></div>' +
                 '<div class="so-upload-title" id="soUploadTitle">' + tr('이미지를 올려주세요','画像をアップロード','Upload your file') + '</div>' +
                 '<div class="so-upload-hint">' + tr('여기를 클릭하거나 파일을 끌어다 놓으세요','クリックまたはドラッグ&ドロップ','Click or drag & drop') + '</div>' +
-                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 50MB 이하','PDF・PNG・JPG・50MB以下','PDF / PNG / JPG · max 50MB') + '</div>';
+                '<div class="so-upload-formats">' + tr('PDF · PNG · JPG · 500MB 이하','PDF・PNG・JPG・500MB以下','PDF / PNG / JPG · max 500MB') + '</div>';
             uploadZone.onclick = function(){ document.getElementById('soFile').click(); };
             if (typeof window._soWireUploadEvents === 'function') window._soWireUploadEvents();
         }
@@ -12945,8 +12945,9 @@ html, body { background: #ffffff !important; }
         const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = 'simple_order/' + ts + '_' + safeName;
         var uploadPromise = sb.storage.from('design').upload(path, file);
+        // 2026-06-17: 60초 → 10분. 500MB+ 파일 일반 회선에서 업로드 가능.
         var timeoutPromise = new Promise(function (_, reject) {
-            setTimeout(function () { reject(new Error('업로드 시간 초과 (60초) — 네트워크 확인 후 재시도')); }, 60000);
+            setTimeout(function () { reject(new Error('업로드 시간 초과 (10분) — 네트워크 확인 후 재시도')); }, 600000);
         });
         const { error } = await Promise.race([uploadPromise, timeoutPromise]);
         if (error) throw error;
@@ -13131,6 +13132,9 @@ html, body { background: #ffffff !important; }
             //   스티커/등신대/키링 모두 같은 필드 사용 (제품 타입과 무관한 generic field).
             cutlineUrl: state._cartCutlineUrl || null,
             cutlinePath: state._cartCutlinePath || null,
+            // 2026-06-17: PDF 원본 + 에디터 편집본 overlay PNG (PDF 위에 글씨/도형 추가 시).
+            overlayUrl: state._cartOverlayUrl || null,
+            overlayPath: state._cartOverlayPath || null,
             bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
@@ -13307,23 +13311,25 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-14: 미니에디터에 디자인 요소가 있고 state.file 미설정이면 자동으로 PNG export → state.file 주입.
         //   사용자가 "디자인 완료 · 적용" 안 누르고 바로 장바구니 담아도 디자인이 함께 저장되도록.
+        // 2026-06-17: PDF + 에디터 편집 시 overlay PNG 도 생성. 케이스별 처리:
+        //   1) state.file 없음 + items 있음 → PNG 로 state.file 설정 (기존 동작)
+        //   2) state.file 가 PDF + items > 1 (PDF 미리보기 + 추가 편집) → 원본 PDF 유지 + overlay PNG 별도 생성 → 카트에 두 파일 다 첨부
+        //   3) state.file 가 이미지 → 그대로 (사용자 의도 = 그 이미지)
+        state._overlayBlob = null;
+        state._overlayFname = null;
         try {
-            var _meS = window._soQdState; // 호환 (현재 미사용이지만 안전 확인)
-            var _meRef = window.me || _meS;
-            // me 는 index.html 내부 closure — window.me 가 노출 안 되어있을 수 있음. _meExportPNG 의 결과만 확인.
-            if (!state.file && typeof window._meExportPNG === 'function') {
-                var _autoPng = await window._meExportPNG();
-                if (_autoPng && _autoPng.length > 200) {  // 빈 캔버스가 아닌 경우 (200자 = base64 헤더 이상)
-                    // 빈 캔버스(흰색만)인지 판별 — 작은 base64 사이즈로 어림. 추가 검증: items 가 있어야 함.
-                    // me.items 가 비어 있으면 _meExportPNG 도 흰 배경만 반환 → 그래도 사이즈가 200자 이상은 됨.
-                    // 따라서 items 직접 확인.
-                    var _hasContent = false;
-                    try {
-                        // me 가 closure 내부지만 me.stage 가 #meStage 이므로 자식 .me-item 으로 판별
-                        var _stage = document.getElementById('meStage');
-                        if (_stage && _stage.querySelectorAll('.me-item').length > 0) _hasContent = true;
-                    } catch(_he){}
-                    if (_hasContent) {
+            if (typeof window._meExportPNG === 'function') {
+                var _stage = document.getElementById('meStage');
+                var _itemCount = _stage ? _stage.querySelectorAll('.me-item').length : 0;
+                var _hasContent = _itemCount > 0;
+                var _isPdfFile = !!(state.file && (
+                    state.file.type === 'application/pdf' ||
+                    /\.pdf$/i.test(String(state.file.name || ''))
+                ));
+                // case 1: no file + has content → PNG as main
+                if (!state.file && _hasContent) {
+                    var _autoPng = await window._meExportPNG();
+                    if (_autoPng && _autoPng.length > 200) {
                         var _binAuto = atob(_autoPng.split(',')[1]);
                         var _arrAuto = new Uint8Array(_binAuto.length);
                         for (var _i = 0; _i < _binAuto.length; _i++) _arrAuto[_i] = _binAuto.charCodeAt(_i);
@@ -13335,6 +13341,18 @@ html, body { background: #ffffff !important; }
                             try { window.renderUploadDone(_fnameAuto); } catch(_re){}
                         }
                         console.log('[simple_order] 미니에디터 디자인 자동 적용:', _fnameAuto);
+                    }
+                }
+                // case 2: PDF + items > 1 (PDF preview + 사용자 추가 편집) → overlay PNG 생성
+                else if (_isPdfFile && _itemCount > 1) {
+                    var _ovPng = await window._meExportPNG();
+                    if (_ovPng && _ovPng.length > 200) {
+                        var _binOv = atob(_ovPng.split(',')[1]);
+                        var _arrOv = new Uint8Array(_binOv.length);
+                        for (var _ii = 0; _ii < _binOv.length; _ii++) _arrOv[_ii] = _binOv.charCodeAt(_ii);
+                        state._overlayBlob = new Blob([_arrOv], { type: 'image/png' });
+                        state._overlayFname = 'overlay-' + Date.now() + '.png';
+                        console.log('[overlay] PDF + 편집 감지 — overlay PNG 별도 업로드 예정');
                     }
                 }
             }
@@ -13397,6 +13415,19 @@ html, body { background: #ffffff !important; }
                 const backResult = await uploadFileGeneric(state.fileBack);
                 backUrl = backResult.url;
                 backPath = backResult.path;
+            }
+            // 2026-06-17: PDF + 편집 overlay PNG 업로드 (있을 때만).
+            state._cartOverlayUrl = null;
+            state._cartOverlayPath = null;
+            if (state._overlayBlob) {
+                try {
+                    updateUploadStep(tr('편집본 overlay 업로드 중...', '編集オーバーレイアップロード中...', 'Uploading overlay...'));
+                    var _ovFile = new File([state._overlayBlob], state._overlayFname, { type: 'image/png' });
+                    var _ovRes = await uploadFileGeneric(_ovFile);
+                    state._cartOverlayUrl = _ovRes.url;
+                    state._cartOverlayPath = _ovRes.path;
+                    console.log('[overlay] uploaded:', _ovRes.url);
+                } catch (_oue) { console.warn('[overlay upload]', _oue); }
             }
             // 2026-06-16 v7: 칼선 PDF — 이미지 + vector cutline 단일 파일 (인쇄소가 한 파일로 처리).
             //   페이지 size = 실제 스티커 mm. 칼선 anchor 점 RDP 단순화로 일러스트레이터/커팅머신 친화적.
@@ -15956,6 +15987,16 @@ html, body { background: #ffffff !important; }
                         name: '[칼선] cutline_' + _cutPCode + '.' + _cutExtStr,
                         url: it.cutlineUrl,
                         type: 'cutline'
+                    });
+                }
+                // 2026-06-17: PDF 위에 에디터로 편집한 경우 — overlay PNG 도 orders.files 에 포함.
+                //   원본 PDF (앞면) + 편집본 PNG (참고) 두 파일이 관리자 파일관리에 모두 표시됨.
+                if (it.overlayUrl) {
+                    var _ovPCode = (it.product && it.product.code) || 'item';
+                    orderFiles.push({
+                        name: '[편집본] overlay_' + _ovPCode + '.png',
+                        url: it.overlayUrl,
+                        type: 'image/png'
                     });
                 }
                 var wallSizeMm = null;
