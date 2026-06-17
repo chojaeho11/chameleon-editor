@@ -8189,8 +8189,9 @@ function scrollHotdeal(gridId, dir) {
         var grid = document.getElementById('meTplGrid');
         var cat = window._meCurrentCategory || '';
         var code = window._meCurrentProductCode || '';
+        try { console.log('[me template] picker cat=' + cat + ' code=' + code); } catch(_){}
         if (!cat) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.<br><span style="font-size:11px;">상품코드: ' + (code || '?') + '</span></div>';
             return;
         }
         try {
@@ -13378,7 +13379,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=539"></script>
+<script src="/simple_order.js?v=540"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

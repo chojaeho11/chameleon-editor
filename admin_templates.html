@@ -75,20 +75,11 @@ header .meta { font-size:11.5px; color:#94a3b8; }
     <div class="panel">
         <h2><i class="fa-solid fa-folder"></i> 카테고리</h2>
         <div class="field">
-            <label>상품 카테고리</label>
+            <label>상품 카테고리 <span style="color:var(--gray-500); font-weight:600;">(DB 실시간 로드)</span></label>
             <select id="filterCategory" onchange="loadTemplates()">
-                <option value="pp_bc">명함 (pp_bc)</option>
-                <option value="pp_lf">전단/리플렛 (pp_lf)</option>
-                <option value="banner">현수막 (banner)</option>
-                <option value="placard">플래카드 (placard)</option>
-                <option value="hb_dw">허니콤 가벽 (hb_dw)</option>
-                <option value="hb_pt">자유인쇄커팅 (hb_pt)</option>
-                <option value="hb_insta">인스타판넬 (hb_insta)</option>
-                <option value="paper_display">종이매대 (paper_display)</option>
-                <option value="goods">굿즈 (goods)</option>
-                <option value="22222">패브릭 (22222)</option>
-                <option value="OTHER">기타 (직접 입력)</option>
+                <option value="">로딩 중...</option>
             </select>
+            <div style="font-size:10.5px; color:var(--gray-500); margin-top:6px; line-height:1.45;">⚠️ 카테고리는 <b>admin_products.category</b> 의 실제 값입니다. 잘못 선택하면 고객 페이지에서 매칭 안 됨.</div>
         </div>
         <div class="field" id="customCategoryField" style="display:none;">
             <label>커스텀 카테고리 코드</label>
@@ -195,8 +186,50 @@ document.getElementById('filterCategory').addEventListener('change', e => {
         return;
     }
     document.getElementById('hdrUser').textContent = `${prof.username || session.user.email} (admin)`;
+    await loadCategories();
     loadTemplates();
 })();
+
+// 2026-06-17: admin_products 의 distinct 카테고리 + 상품 갯수 + 대표 이름 동적 로드.
+//   고객 페이지가 product.category 로 매칭하므로 여기서도 동일 값을 보여야 함.
+async function loadCategories() {
+    try {
+        // 페이지네이션 (Supabase 기본 1000 제한, admin_products 2800+ row)
+        const all = [];
+        const PAGE = 1000;
+        for (let off = 0; off < 10000; off += PAGE) {
+            const { data, error } = await sb.from('admin_products')
+                .select('category, name, name_kr')
+                .not('category', 'is', null)
+                .range(off, off + PAGE - 1);
+            if (error) { console.warn('[loadCategories] page', off, error); break; }
+            if (!data || !data.length) break;
+            all.push(...data);
+            if (data.length < PAGE) break;
+        }
+        const catMap = {};
+        all.forEach(p => {
+            const c = p.category; if (!c) return;
+            if (!catMap[c]) catMap[c] = { count: 0, sample: '' };
+            catMap[c].count++;
+            if (!catMap[c].sample) catMap[c].sample = (p.name_kr || p.name || '').slice(0, 18);
+        });
+        const sorted = Object.entries(catMap)
+            .map(([cat, info]) => ({ cat, count: info.count, label: `${info.sample || '?'} · ${cat} (${info.count}개)` }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+        const sel = document.getElementById('filterCategory');
+        sel.innerHTML = '<option value="">— 카테고리 선택 —</option>'
+            + sorted.map(o => `<option value="${o.cat}">${o.label}</option>`).join('')
+            + '<option value="OTHER">⚙️ 기타 (직접 입력)</option>';
+        // OTHER 선택 시 input 노출 토글
+        sel.addEventListener('change', e => {
+            document.getElementById('customCategoryField').style.display = e.target.value === 'OTHER' ? '' : 'none';
+        });
+    } catch (e) {
+        console.warn('[loadCategories]', e);
+        toast('카테고리 로딩 실패: ' + e.message, 4000);
+    }
+}
 
 function getCategory() {
     const sel = document.getElementById('filterCategory').value;
