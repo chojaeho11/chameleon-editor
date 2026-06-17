@@ -5754,7 +5754,10 @@ function scrollHotdeal(gridId, dir) {
             text-rendering: optimizeLegibility;
             font-synthesis: none;  /* 폰트가 weight 없을 때 가짜 bold 합성 방지 (검은고딕 등) */
             -webkit-font-synthesis: none;
+            transition: box-shadow .15s, background .15s;
         }
+        /* 2026-06-18 v565: 호버 시 부드러운 그림자 표시 → 클릭/드래그 가능함을 시각화 */
+        .me-item.text:hover:not(.selected) { box-shadow: 0 0 0 1px rgba(0,122,255,0.35); border-radius:3px; }
         .me-item.text.selected { cursor: text; }
         .me-stage {
             -webkit-font-smoothing: antialiased;
@@ -7170,8 +7173,9 @@ function scrollHotdeal(gridId, dir) {
                 // 클릭 시점에 이미 선택된 텍스트였으면 즉시 편집 모드.
                 //   첫 클릭(_wasSelectedBefore=false) 은 select 만 — 그 다음 같은 텍스트 탭에서 편집 진입.
                 if (_wasSelectedBefore) {
+                    // 2026-06-18 v565: Canva 스타일 — 선택된 텍스트의 두 번째 클릭은 즉시 편집 모드.
+                    //   delay 0 → setTimeout 한 틱 후 실행. dblclick 이 먼저 fire 되면 contenteditable 이미 true → no-op.
                     var isMobile = window.innerWidth <= 768;
-                    var delay = isMobile ? 30 : 150;
                     var now = Date.now();
                     _lastClickTime = now;
                     setTimeout(function(){
@@ -7180,14 +7184,13 @@ function scrollHotdeal(gridId, dir) {
                             it.el.setAttribute('inputmode', 'text');
                             it.el.focus();
                             try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
-                            // 모바일: 편집 영역을 화면 가운데로 — 키보드에 가려지지 않게
                             if (isMobile) {
                                 setTimeout(function(){
                                     try { it.el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_se){}
                                 }, 300);
                             }
                         }
-                    }, delay);
+                    }, 0);
                 }
             }, true);
             it.el.addEventListener('dblclick', function(){
