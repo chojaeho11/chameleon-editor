@@ -455,6 +455,63 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         const items = order.items || [];
         document.getElementById('woItemCount').textContent = items.length;
         const list = document.getElementById('woItemList');
+        // 2026-06-17: 한국 작업자가 보는 화면 — JP/US 주문이라도 모든 라벨/원단/마감/고리 코드를 한국어로 변환.
+        //   원단·addon 코드는 (cotton_designer.js / cotton_designer.html 의) 코드 ↔ 한국어 매핑을 그대로 사용.
+        //   레이아웃은 centered = 패브릭포스터인쇄 / 그 외 = 패턴원단인쇄.
+        const CW_FABRIC_KR = {
+            cotton20: '면20수 평직', cotton30: '면30수 평직', cotton16: '면16수 평직', cotton10: '면10수 평직',
+            chiffon: '쉬폰', oxford: '옥스포드', rayon: '레이온/인견', linen: '린넨'
+        };
+        const CW_COLOR_KR = { white:'화이트', natural:'네츄럴', ivory:'백아이보리' };
+        const CW_FINISH_KR = {
+            overlock: '오버록', interlock: '인터록', rolledhem: '말아박기', raw: '가재단', none: '미사용'
+        };
+        const CW_HOOK_KR = {
+            top_string: '상단 끈 고리', top_rod: '상단 봉마감',
+            topbottom_string: '상하단 끈 고리', topbottom_rod: '상하단 봉마감',
+            middle_split: '가운데 트임', noren: '노랜 연결 마감', eyelet4: '아일렛 타공 4곳'
+        };
+        const CW_ACC_KR = {
+            thread_color: '실색상 변경',
+            rod_30: '목봉 30cm', rod_50: '목봉 50cm', rod_100: '목봉 100cm', rod_130: '목봉 130cm',
+            opp_pack: 'OPP 개별포장', compress_rod: '압축봉', ring_hook: '링고리'
+        };
+        const CW_LAYOUT_KR = {
+            centered: '패브릭포스터인쇄',
+            basic: '패턴원단인쇄 (기본)', halfdrop: '패턴원단인쇄 (반칸 내림)',
+            halfbrick: '패턴원단인쇄 (반칸 어긋남)', mirror: '패턴원단인쇄 (대칭)',
+            brick: '패턴원단인쇄 (반칸 어긋남)', half_drop: '패턴원단인쇄 (반칸 내림)'
+        };
+        function _cwFabricKr(productCode, fallback) {
+            if (!productCode) return fallback || '-';
+            const code = String(productCode).toLowerCase().trim();
+            // cotton20_white → 면20수 평직 화이트
+            const m = code.match(/^(cotton\d+)(?:_(white|natural|ivory))?$/);
+            if (m) {
+                const base = CW_FABRIC_KR[m[1]] || fallback;
+                const color = m[2] ? CW_COLOR_KR[m[2]] : '';
+                return color ? (base + ' ' + color) : base;
+            }
+            if (CW_FABRIC_KR[code]) return CW_FABRIC_KR[code];
+            return fallback || code;
+        }
+        function _cwAddonKr(addon) {
+            if (!addon) return '-';
+            const c = String(addon.code || '').trim();
+            if (addon.type === 'finish' && CW_FINISH_KR[c]) return CW_FINISH_KR[c];
+            if (addon.type === 'hook' && CW_HOOK_KR[c]) return CW_HOOK_KR[c];
+            if (addon.type === 'accessory' && CW_ACC_KR[c]) return CW_ACC_KR[c];
+            if (addon.type === 'seam') return '이어박기 (대폭 초과)';
+            return addon.name || addon.code || '-';
+        }
+        function _cwLayoutKr(layout) {
+            if (!layout) return '-';
+            const k = String(layout).toLowerCase().trim();
+            return CW_LAYOUT_KR[k] || layout;
+        }
+        function _cwIsPoster(layout) {
+            return String(layout || '').toLowerCase().trim() === 'centered';
+        }
         // 2026-05-11: addons를 type별로 분류해서 그룹 박스로 표시 — 인쇄/배송/커팅팀이 한 눈에 보도록
         const TYPE_META = {
             finish:    { label:'패브릭 마감',   icon:'fa-scissors',          cls:'opt-finish' },
@@ -482,15 +539,18 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 }
                 const valHtml = arr.map(a => {
                     const priceLabel = a.price ? ` <span style="color:#6b7280; font-weight:600;">(+${fmt(a.price)}원)</span>` : '';
-                    return `${a.name||a.code||'-'}${priceLabel}`;
+                    return `${_cwAddonKr(a)}${priceLabel}`;
                 }).join('<br>');
                 return `<div class="opt-box ${meta.cls}"><div class="opt-head"><i class="fa-solid ${meta.icon}"></i> ${meta.label}</div><div class="opt-val">${valHtml}</div></div>`;
             }).filter(Boolean).join('');
-            const otherCard = other.length ? `<div class="opt-box opt-accessory"><div class="opt-head"><i class="fa-solid fa-ellipsis"></i> 기타</div><div class="opt-val">${other.map(a => a.name).join('<br>')}</div></div>` : '';
+            const otherCard = other.length ? `<div class="opt-box opt-accessory"><div class="opt-head"><i class="fa-solid fa-ellipsis"></i> 기타</div><div class="opt-val">${other.map(a => _cwAddonKr(a)).join('<br>')}</div></div>` : '';
             return cards + otherCard;
         }
 
-        // 패턴 spec → cotton-print 인쇄팀이 보는 정보 박스
+        // 패턴/포스터 spec → cotton-print 인쇄팀이 보는 정보 박스
+        // 2026-06-17: 포스터(centered) 와 패턴(basic/halfdrop/...) 분리 표시.
+        //   - 포스터: 1장 인쇄 — 셀 크기 대신 "1장" 표시
+        //   - 패턴: 1셀 크기 표시 + 레이아웃·이미지 비율
         function patternSpecHtml(spec) {
             if (!spec || !spec.cell_cm) return '';
             const bg = spec.bg_color || '#ffffff';
@@ -499,14 +559,19 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 ? '<span class="bg-chip" style="background:repeating-conic-gradient(#cbd5e1 0% 25%, #fff 0% 50%) 0 0/6px 6px;"></span>'
                 : `<span class="bg-chip" style="background:${bg};"></span>`;
             const scalePct = Math.round((spec.image_scale != null ? spec.image_scale : 1) * 100);
+            const isPoster = _cwIsPoster(spec.layout);
+            const headLabel = isPoster ? '패브릭포스터 인쇄 데이터' : '패턴 인쇄 데이터';
+            const sizeRow = isPoster
+                ? `<div>출력: <b>1장</b></div>`
+                : `<div>1셀 크기: <b>${spec.cell_cm.w}×${spec.cell_cm.h} cm</b></div>`;
             return `
                 <div class="pattern-info">
-                    <div class="pi-head"><i class="fa-solid fa-palette"></i> 패턴 인쇄 데이터</div>
+                    <div class="pi-head"><i class="fa-solid fa-palette"></i> ${headLabel}</div>
                     <div class="pi-grid">
-                        <div>한 셀: <b>${spec.cell_cm.w}×${spec.cell_cm.h} cm</b></div>
-                        <div>레이아웃: <b>${spec.layout || '-'}</b></div>
+                        ${sizeRow}
+                        <div>레이아웃: <b>${_cwLayoutKr(spec.layout)}</b></div>
                         <div>배경색: ${bgSwatch}<b>${bg}</b></div>
-                        <div>이미지 비율: <b>${scalePct}%</b></div>
+                        ${isPoster ? '' : `<div>이미지 비율: <b>${scalePct}%</b></div>`}
                         <div>원단 폭: <b>${spec.fabric_cm?.w || '?'} cm</b></div>
                         <div>원본: <b>${spec.artwork_filename || '-'}</b></div>
                     </div>
@@ -535,10 +600,10 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         </label>` : ''}
                     </div>
                     <div class="item-spec">
-                        <div class="lbl">원단</div><div class="val">${it.fabric || '-'}</div>
+                        <div class="lbl">원단</div><div class="val">${_cwFabricKr(it.product_code, it.fabric)}</div>
                         <div class="lbl">출력 사이즈</div><div class="val"><b>${widthCm}×${heightCm}cm</b> (회배 ${it.hoebae?it.hoebae.toFixed(2):'1.0'})</div>
-                        <div class="lbl">레이아웃</div><div class="val">${it.layout || '-'}</div>
-                        <div class="lbl">수량</div><div class="val"><b>${it.qty || 1}개</b></div>
+                        <div class="lbl">인쇄 방식</div><div class="val"><b>${_cwLayoutKr(it.layout)}</b></div>
+                        <div class="lbl">수량</div><div class="val"><b>${it.qty || 1}${_cwIsPoster(it.layout) ? '장' : '마'}</b></div>
                         <div class="lbl">단가 (출력)</div><div class="val">${fmt(it.unit_price)}원</div>
                     </div>
                     ${oversize}
