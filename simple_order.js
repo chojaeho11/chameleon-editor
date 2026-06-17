@@ -12311,7 +12311,7 @@ html, body { background: #ffffff !important; }
                 product_category: cat,
                 product_code: code,
                 name: name,
-                site_code: 'KR',
+                site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })(),
                 background_url: pngUrl,
                 thumbnail_url: pngUrl,
                 width_mm: (state.product && state.product.width_mm) || null,

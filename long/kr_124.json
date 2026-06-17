@@ -1639,5 +1639,7 @@
   "me_sz_banner": "배너",
   "me_sz_landscape": "가로형",
   "me_sz_square": "정사각",
-  "me_img_upload": "이미지 업로드"
+  "me_img_upload": "이미지 업로드",
+  "me_undo": "되돌리기",
+  "me_template": "템플릿"
 }

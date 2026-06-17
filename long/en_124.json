@@ -2036,5 +2036,10 @@
   "me_sz_banner": "Banner",
   "me_sz_landscape": "Landscape",
   "me_sz_square": "Square",
-  "me_img_upload": "Upload Image"
+  "me_img_upload": "Upload Image",
+  "me_undo": "Undo",
+  "me_template": "Template",
+  "me_rect": "",
+  "me_circle": "",
+  "me_star": ""
 }

@@ -5860,9 +5860,10 @@ function scrollHotdeal(gridId, dir) {
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
                 <!-- 2026-06-17 v538: 도형 단일 버튼(rect/circle 토글) → 분리된 3 버튼 (네모/동그라미/별). -->
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모"><i class="fa-solid fa-square me-tb-ic"></i><span data-i18n="me_rect" class="me-tb-lbl">네모</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미"><i class="fa-solid fa-circle me-tb-ic"></i><span data-i18n="me_circle" class="me-tb-lbl">동그라미</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('star')" title="별"><i class="fa-solid fa-star me-tb-ic"></i><span data-i18n="me_star" class="me-tb-lbl">별</span></button>
+                <!-- 2026-06-18 v560: 도형 버튼 아이콘 only (글씨 제거) -->
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모 / Square / 四角"><i class="fa-solid fa-square me-tb-ic"></i></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미 / Circle / 円"><i class="fa-solid fa-circle me-tb-ic"></i></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('star')" title="별 / Star / 星"><i class="fa-solid fa-star me-tb-ic"></i></button>
                 <!-- 2026-06-17 v539: 디자인 템플릿 — admin_templates 에서 현재 카테고리 매칭 로드 -->
                 <button type="button" class="me-tool-btn" id="meTemplateBtn" onclick="window._meOpenTemplatePicker && window._meOpenTemplatePicker()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6;" title="디자인 템플릿"><i class="fa-solid fa-layer-group me-tb-ic"></i><span data-i18n="me_template" class="me-tb-lbl">템플릿</span></button>
                 <label class="me-color-wrap" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
@@ -8203,7 +8204,8 @@ function scrollHotdeal(gridId, dir) {
                 .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots,sort_order')
                 .eq('product_category', cat)
                 .eq('is_active', true)
-                .eq('status', 'approved')   /* 2026-06-18 v554: 승인된 것만 고객에게 노출 (admin/designer 본인은 RLS 통해 pending 도 SELECT 가능했음) */
+                .eq('status', 'approved')   /* 2026-06-18 v554: 승인된 것만 고객에게 노출 */
+                .eq('site_code', (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })())   /* 2026-06-18 v560: 현재 사이트 템플릿만 */
                 .order('sort_order', { ascending: true })
                 .order('id', { ascending: false });
             if (code) q = q.or(orFilter);
@@ -8399,7 +8401,11 @@ function scrollHotdeal(gridId, dir) {
         // shape 는 _meSyncItemDisplay 가 background/border/clipPath 처리.
         me.items.push(it);
         _meSyncItemDisplay(it);
-        _meBindDrag(it);  // _isTemplateSlot 으로 인해 드래그 차단됨
+        // 2026-06-18 v560: 템플릿 TEXT 슬롯은 _meBindDrag 호출 안 함 (contenteditable 충돌 회피).
+        //   드래그·리사이즈·우클릭 메뉴 모두 불필요. 일반 contenteditable element 로만 동작.
+        if (saved.type !== 'text') {
+            _meBindDrag(it);  // _isTemplateSlot 으로 인해 드래그 차단됨 (이미지/도형은 그대로)
+        }
     }
 
     function _meAddTemplateSlot(slot, baseX, baseY, sx, sy) {
@@ -13516,7 +13522,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=554"></script>
+<script src="/simple_order.js?v=560"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
