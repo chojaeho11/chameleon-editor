@@ -7227,22 +7227,26 @@ function scrollHotdeal(gridId, dir) {
         me.items = remaining;
     };
     // 2026-06-17: 선반 — 흰색 + 빨강 테두리. count = 선반 갯수 (단). 각 선반은 독립 드래그 가능.
-    //   wMm = 사용자가 입력한 가로(cm) × 10. hMm = 30 (실제 3cm 두께). 시각 minH 보장.
-    //   count 개수만큼 vertical 균등 분포 (상단 20% / 하단 10% 마진).
+    //   실제 mm 입력 → me.natWMm (실제 가벽 mm 폭) 으로 natW(capped 1200px) 단위로 변환.
+    //   예: 가벽 3300mm, natW=1200 → ratio 0.364. 입력 100cm(1000mm) → 364 natW 단위 (= 가벽의 30%).
+    //   가벽이 아니거나 natWMm 미설정이면 비율 1 (변환 없음).
     window._meAddShelf = function(widthCm, count) {
         _meSnapshot();
         widthCm = Math.max(10, parseInt(widthCm, 10) || 100);
         count = Math.max(1, parseInt(count, 10) || 1);
         // 기존 선반 모두 제거 후 새로 그림 (popup 재호출 시 깔끔하게 갱신)
         try { window._meRemoveShelves(); } catch(_e){}
-        var wMm = widthCm * 10;
-        if (wMm > me.natW * 0.95) wMm = me.natW * 0.95;
-        var hMm = 30;   // 실제 3cm = 30mm 두께
-        var minVisualH = Math.max(20, me.natH * 0.008); // 너무 얇아 보이지 않게 최소 visual 보장
-        var visualH = Math.max(hMm, minVisualH);
+        var ratioW = (me.natWMm && me.natWMm > 0) ? (me.natW / me.natWMm) : 1;
+        var ratioH = (me.natHMm && me.natHMm > 0) ? (me.natH / me.natHMm) : 1;
+        var realMmW = widthCm * 10;            // 사용자 입력 폭 (실제 mm)
+        var realMmH = 30;                       // 실제 3cm = 30mm 두께
+        var w = realMmW * ratioW;               // natW 단위로 변환
+        var h = realMmH * ratioH;               // natW 단위로 변환 (작아질 수 있음)
+        if (w > me.natW * 0.95) w = me.natW * 0.95;
+        if (h < 4) h = 4;                       // 픽셀상 최소 4px (드래그 가능 보장)
         var topMargin = me.natH * 0.2;
         var bottomMargin = me.natH * 0.1;
-        var range = me.natH - topMargin - bottomMargin - visualH;
+        var range = me.natH - topMargin - bottomMargin - h;
         var step = count > 1 ? range / (count - 1) : 0;
         var added = [];
         for (var i = 0; i < count; i++) {
@@ -7253,9 +7257,9 @@ function scrollHotdeal(gridId, dir) {
             var it = {
                 el: el, type: 'shelf', shape: 'shelf',
                 shelfCm: widthCm, shelfIdx: i,
-                x: (me.natW - wMm) / 2,
+                x: (me.natW - w) / 2,
                 y: topMargin + step * i,
-                w: wMm, h: visualH,
+                w: w, h: h,
                 fill: '#ffffff', stroke: '#dc2626', strokeWidth: 2,
                 isShelf: true
             };
@@ -12824,7 +12828,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=517"></script>
+<script src="/simple_order.js?v=518"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
