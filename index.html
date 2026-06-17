@@ -8352,7 +8352,8 @@ function scrollHotdeal(gridId, dir) {
             imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'contain';
             el.appendChild(imgEl);
             me.stage.appendChild(el);
-            var bgIt = { el: el, type: 'image', x: x, y: y, w: w, h: h, src: tpl.background_url, _isTemplateBg: true, _isTemplateSlot: true };
+            // 2026-06-18 v562: 잠금 해제 — _isTemplateSlot 제거
+            var bgIt = { el: el, type: 'image', x: x, y: y, w: w, h: h, src: tpl.background_url };
             me.items.unshift(bgIt);
             _meSyncItemDisplay(bgIt);
             _meBindDrag(bgIt);
@@ -8367,20 +8368,43 @@ function scrollHotdeal(gridId, dir) {
         bgImg.src = tpl.background_url;
     };
 
-    // 2026-06-17 v542: 템플릿(v542 포맷) item 복원 — me.items 직렬화본을 그대로 미니에디터에 재생성.
-    //   고객 입장에선 모든 item 이 _isTemplateSlot=true 로 잠금. 텍스트는 직접 편집 가능.
+    // 2026-06-18 v562: 템플릿 item 복원 — 잠금 해제 + 완전 편집 가능 상태로 로드.
+    //   _isTemplateSlot 플래그 제거. 사용자가 등록 전 디자인 상태 그대로 가져와서 자유 편집.
+    //   드래그·리사이즈·회전·삭제·텍스트 편집·우클릭 메뉴 모두 가능.
     function _meRestoreTemplateItem(saved) {
         if (!saved || !saved.type) return;
         var el = document.createElement('div');
         el.className = 'me-item' + (saved.type === 'text' ? ' text' : '') + (saved.type === 'shape' ? ' shape' : '') + (saved.shape === 'circle' ? ' circle' : '');
         el.style.zIndex = (++me.zCounter);
         me.stage.appendChild(el);
+        // _isTemplateSlot 제거 — 일반 item 으로 복원
+        var it = Object.assign({}, saved, { el: el });
+        if (saved.type === 'text') {
+            el.textContent = saved.text || '';
+            try { if (typeof _meLoadFont === 'function') _meLoadFont(saved.fontFamily, null); } catch(_){}
+        } else if (saved.type === 'image') {
+            var imgEl = document.createElement('img');
+            imgEl.src = saved.src || '';
+            imgEl.style.width = '100%'; imgEl.style.height = '100%';
+            imgEl.style.objectFit = 'contain';
+            el.appendChild(imgEl);
+        }
+        // shape 는 _meSyncItemDisplay 가 background/border/clipPath 처리.
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);  // 모든 type 에 일반 바인딩 — 드래그/리사이즈/회전/편집 모두 가능
+    }
+    // v562 부터 미사용 — 아래는 v557 잠금 모드 코드 (참조용으로 보존, 호출되지 않음)
+    function _meRestoreTemplateItem_legacy_v557(saved) {
+        if (!saved || !saved.type) return;
+        var el = document.createElement('div');
+        el.className = 'me-item' + (saved.type === 'text' ? ' text' : '') + (saved.type === 'shape' ? ' shape' : '') + (saved.shape === 'circle' ? ' circle' : '');
+        el.style.zIndex = (++me.zCounter);
+        me.stage.appendChild(el);
         var it = Object.assign({}, saved, { el: el, _isTemplateSlot: true });
-        // 텍스트면 contenteditable + 편집 가능, 그 외는 잠금
         if (saved.type === 'text') {
             el.textContent = saved.text || '';
             el.setAttribute('contenteditable', 'true');
-            // 2026-06-18 v557: 부모 .me-item / .me-stage 의 user-select:none + touch-action:none 차단 해제 — 클릭 → 커서 배치 가능.
             el.style.userSelect = 'text';
             el.style.webkitUserSelect = 'text';
             el.style.touchAction = 'auto';
@@ -8430,13 +8454,13 @@ function scrollHotdeal(gridId, dir) {
         el.className = 'me-item' + (slot.type === 'text' ? ' text' : '');
         el.style.zIndex = (++me.zCounter);
         me.stage.appendChild(el);
+        // 2026-06-18 v562: 잠금 해제 — _isTemplateSlot 제거
         var it = {
             el: el, type: slot.type,
             x: baseX + slot.x * sx,
             y: baseY + slot.y * sy,
             w: slot.w * sx,
             h: slot.h * sy,
-            _isTemplateSlot: true,
             _slotId: slot.id || ''
         };
         if (slot.type === 'text') {
@@ -8447,37 +8471,8 @@ function scrollHotdeal(gridId, dir) {
             it.fill = slot.color || '#000000';
             it.textAlign = slot.textAlign || 'left';
             it.lineHeight = 1.2;
-            // 2026-06-18 v557: 부모 .me-item user-select:none / touch-action:none 차단 해제 + capture phase focus.
-            el.setAttribute('contenteditable', 'true');
+            // 2026-06-18 v562: 잠금 모드 제거 — 일반 텍스트 item 처럼 동작. _meBindDrag 가 click → edit 사이클 처리.
             el.textContent = it.text;
-            el.style.userSelect = 'text';
-            el.style.webkitUserSelect = 'text';
-            el.style.touchAction = 'auto';
-            el.style.pointerEvents = 'auto';
-            el.style.cursor = 'text';
-            el.style.outline = 'none';
-            var _everEdited = false;
-            el.addEventListener('pointerdown', function(ev){
-                ev.stopPropagation();
-                if (document.activeElement !== el) { try { el.focus(); } catch(_){} }
-            }, true);
-            el.addEventListener('focus', function(){
-                el.style.background = 'rgba(253,224,71,0.20)';
-                el.style.boxShadow = '0 0 0 2px #f59e0b';
-                if (!_everEdited && el.innerText === (it.text || '')) {
-                    try { document.execCommand('selectAll', false, null); } catch(_){}
-                }
-            });
-            el.addEventListener('blur', function(){
-                el.style.background = '';
-                el.style.boxShadow = '';
-                it.text = el.innerText || '';
-                if (it.text !== (slot.default_text || '')) _everEdited = true;
-            });
-            el.addEventListener('input', function(){
-                it.text = el.innerText || '';
-            });
-            // 폰트 로드 (Google Fonts 자동 주입)
             try { if (typeof _meLoadFont === 'function') _meLoadFont(slot.fontFamily, null); } catch(_){}
         } else if (slot.type === 'image') {
             it.src = slot.placeholder_url || '';
@@ -8522,8 +8517,8 @@ function scrollHotdeal(gridId, dir) {
         }
         me.items.push(it);
         _meSyncItemDisplay(it);
-        // 드래그/리사이즈 차단 — _isTemplateSlot 인 item 은 _meBindDrag 가 무시
-        // (선택 시에도 핸들 숨김은 _meSelect 에서 처리)
+        // 2026-06-18 v562: 잠금 해제 — _meBindDrag 호출 → 일반 item 처럼 자유 편집
+        _meBindDrag(it);
     }
 
     window._meAddImageFromFile = function(input) {
@@ -13539,7 +13534,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=560"></script>
+<script src="/simple_order.js?v=562"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
