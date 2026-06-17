@@ -13440,7 +13440,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=546"></script>
+<script src="/simple_order.js?v=549"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
@@ -16778,6 +16778,12 @@ window.goHome = function() {
             if (currentLang) {
                 newUrl += `&lang=${currentLang}`;
             }
+            // 2026-06-17 v549: 템플릿 모드 플래그 유지 (pushState 가 다른 params 를 날려버리면 패널이 안 보임)
+            try {
+                const _curParams = new URLSearchParams(location.search);
+                if (_curParams.get('designer_template_mode') === '1') newUrl += '&designer_template_mode=1';
+                if (_curParams.get('admin_template_mode') === '1') newUrl += '&admin_template_mode=1';
+            } catch(_e){}
             if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
             // 화면 전환
@@ -17184,6 +17190,12 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             if (currentLang) {
                 newUrl += '&lang=' + currentLang;
             }
+            // 2026-06-17 v549: 템플릿 모드 플래그 유지 (pushState 가 다른 params 를 날려버리면 패널이 안 보임)
+            try {
+                const _curParams2 = new URLSearchParams(location.search);
+                if (_curParams2.get('designer_template_mode') === '1') newUrl += '&designer_template_mode=1';
+                if (_curParams2.get('admin_template_mode') === '1') newUrl += '&admin_template_mode=1';
+            } catch(_e2){}
             if (!window._navNavigating) window.history.pushState({ type: 'product', code: productCode }, '', newUrl);
 
             // 화면 전환 (홈 숨김)
