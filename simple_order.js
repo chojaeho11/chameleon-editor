@@ -7226,6 +7226,29 @@ html, body { background: #ffffff !important; }
                     '<input type="hidden" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '">' +
                     '</label>';
             }
+            // 2026-06-17: 가벽 상품 — 3-col × 2-row grid + 큰 네모 이미지 + 라벨 + 수량/+가격.
+            if (state.isWall) {
+                var wallImgUrl = imgUrl;
+                var wallImgHtml;
+                if (wallImgUrl) {
+                    wallImgHtml = '<img src="' + String(wallImgUrl).replace(/"/g,'&quot;') +
+                        '" loading="lazy" alt="' + safe + '" style="width:100%; aspect-ratio:1/1; border-radius:8px; object-fit:cover; border:1.5px solid #e7e5e4; background:#fff; display:block;" ' +
+                        'onerror="this.style.display=&quot;none&quot;">';
+                } else {
+                    wallImgHtml = '<div style="width:100%; aspect-ratio:1/1; border-radius:8px; background:linear-gradient(135deg,#fef3c7,#fed7aa); display:flex; align-items:center; justify-content:center; font-size:24px;">📦</div>';
+                }
+                return '<label style="display:flex; flex-direction:column; gap:6px; padding:8px 8px 9px; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; background:#fff; transition:border-color 0.15s, background 0.15s; min-width:0;">' +
+                    '<div style="display:flex; align-items:center; gap:6px;">' +
+                      '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="' + (isLight ? '1' : '0') + '" onchange="window._soToggleAddon(this); var lbl=this.closest(&quot;label&quot;); if(lbl){ lbl.style.borderColor=this.checked?&quot;#0f172a&quot;:&quot;#e7e5e4&quot;; lbl.style.background=this.checked?&quot;#f8fafc&quot;:&quot;#fff&quot;; }" style="margin:0; width:14px; height:14px; flex-shrink:0;">' +
+                      '<div style="font-weight:800; color:#0f172a; font-size:12px; line-height:1.25; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + safe + '</div>' +
+                    '</div>' +
+                    wallImgHtml +
+                    '<div style="display:flex; align-items:center; gap:6px; justify-content:space-between;">' +
+                      '<input type="number" min="1" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '" onclick="event.stopPropagation();" oninput="window._soSetAddonQty(this)" title="수량" style="width:46px; padding:4px 4px; border:1px solid #d1d5db; border-radius:5px; text-align:center; font-size:11.5px; font-weight:700;">' +
+                      '<span style="font-weight:900; color:#dc2626; font-size:11.5px;">+' + fmtPrice(price) + '</span>' +
+                    '</div>' +
+                    '</label>';
+            }
             var imgHtml;
             if (imgUrl) {
                 imgHtml = '<img src="' + String(imgUrl).replace(/"/g,'&quot;') +
@@ -7247,8 +7270,13 @@ html, body { background: #ffffff !important; }
                 '</label>';
         }).join('');
         // 2026-05-29: 컴팩트 모드면 그리드(1줄 6개), 그 외 flex column
-        // 2026-06-06: 아크릴 인쇄 family — 4개 옵션을 좌우 꽉차게 (4-col 또는 실제 개수). compact 강제 적용.
-        if (_isAcrylicPrintFam) {
+        // 2026-06-17: 가벽 — 3-col × 2-row grid.
+        if (state.isWall) {
+            list.style.display = 'grid';
+            list.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            list.style.gap = '8px';
+            list.style.flexDirection = '';
+        } else if (_isAcrylicPrintFam) {
             var _acrCols = Math.max(1, Math.min(renderList.length, 4));
             list.style.display = 'grid';
             list.style.gridTemplateColumns = 'repeat(' + _acrCols + ', 1fr)';
