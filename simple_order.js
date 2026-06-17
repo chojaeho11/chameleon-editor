@@ -9979,6 +9979,12 @@ html, body { background: #ffffff !important; }
         }
         state.product = p;
 
+        // 2026-06-17 v539: 디자인 템플릿 — 미니에디터 템플릿 픽커가 사용할 현재 상품 카테고리/코드 전달.
+        try {
+            window._meCurrentCategory = (p && p.category) || '';
+            window._meCurrentProductCode = (p && p.code) || '';
+        } catch(_e){}
+
         // 2026-05-29: 굿즈 (goods_*) 상품 — 무료배송 + 100개+ 50% 할인 + 라벨 변경
         state.isGoods = !!(p && p.code && p.code.indexOf('goods_') === 0);
         if (state.isGoods) {

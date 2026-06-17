@@ -5863,6 +5863,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모"><i class="fa-solid fa-square me-tb-ic"></i><span data-i18n="me_rect" class="me-tb-lbl">네모</span></button>
                 <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미"><i class="fa-solid fa-circle me-tb-ic"></i><span data-i18n="me_circle" class="me-tb-lbl">동그라미</span></button>
                 <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('star')" title="별"><i class="fa-solid fa-star me-tb-ic"></i><span data-i18n="me_star" class="me-tb-lbl">별</span></button>
+                <!-- 2026-06-17 v539: 디자인 템플릿 — admin_templates 에서 현재 카테고리 매칭 로드 -->
+                <button type="button" class="me-tool-btn" id="meTemplateBtn" onclick="window._meOpenTemplatePicker && window._meOpenTemplatePicker()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6;" title="디자인 템플릿"><i class="fa-solid fa-layer-group me-tb-ic"></i><span data-i18n="me_template" class="me-tb-lbl">템플릿</span></button>
                 <label class="me-color-wrap" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
                 <!-- 2026-06-17: 가이드 토글 (가벽 옆면 빗금 + 1m 절단선) — 기본 ON, 클릭으로 ON/OFF -->
@@ -6774,6 +6776,11 @@ function scrollHotdeal(gridId, dir) {
         } catch (e) {}
         if (!it) { _meRenderProps(null); return; }
         it.el.classList.add('selected');
+        // 2026-06-17 v539: 템플릿 슬롯은 위치·크기 잠금 — 리사이즈/회전/삭제 핸들 숨김 (텍스트 더블클릭 편집은 가능).
+        if (it._isTemplateSlot) {
+            _meRenderProps(it);
+            return;
+        }
         // 2026-06-14: 4 모서리 핸들 (정비율 리사이즈) + 회전 핸들
         // 2026-06-16: + 4 변 핸들 (n/s/e/w) — 가로/세로 단독 리사이즈 (text 박스 너비/높이 독립 조절).
         ['nw','ne','sw','se','n','s','e','w'].forEach(function(corner){
@@ -7037,6 +7044,8 @@ function scrollHotdeal(gridId, dir) {
         it.el.addEventListener('pointerdown', function(ev){
             if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
             if (ev.button === 2) return;
+            // 2026-06-17 v539: 템플릿 슬롯 — 위치/크기 잠금. 드래그 차단 (텍스트 더블클릭 편집은 별도 핸들러로 가능).
+            if (it._isTemplateSlot) return;
             var isEditing = it.el.getAttribute('contenteditable') === 'true';
             sx = ev.clientX; sy = ev.clientY;
             sLeft = it.x; sTop = it.y;
@@ -8135,6 +8144,226 @@ function scrollHotdeal(gridId, dir) {
             };
         });
     };
+
+    // ─────────────────────── 2026-06-17 v539: 디자인 템플릿 ───────────────────────
+    //   admin_templates 테이블에서 현재 카테고리 매칭 템플릿 로드 → 모달 grid → 선택 시 캔버스에 배치.
+    //   배경 이미지 + text/image 슬롯 (위치·크기 고정, 텍스트 수정만 가능).
+    //   고객 카테고리는 window._meCurrentCategory 로 전달 (simple_order.js 가 product 로드 시 세팅).
+    var _meTplSbClient = null;
+    function _meGetSb() {
+        if (_meTplSbClient) return _meTplSbClient;
+        if (typeof window.supabase === 'undefined') return null;
+        try {
+            _meTplSbClient = window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                { auth: { persistSession:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' } }
+            );
+        } catch(e) { console.warn('[me template] sb client', e); }
+        return _meTplSbClient;
+    }
+
+    window._meOpenTemplatePicker = async function() {
+        var ex = document.getElementById('meTemplatePopup');
+        if (ex) ex.remove();
+        var pop = document.createElement('div');
+        pop.id = 'meTemplatePopup';
+        pop.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.8); display:flex; align-items:center; justify-content:center; padding:20px;';
+        pop.innerHTML =
+            '<div style="background:#fff; max-width:760px; width:100%; max-height:88vh; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.4); overflow:hidden; display:flex; flex-direction:column; font-family:inherit;">'
+          +   '<div style="display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid #e2e8f0; background:linear-gradient(135deg,#f5f3ff,#ede9fe);">'
+          +     '<div style="font-weight:900; font-size:16px; color:#5b21b6;"><i class="fa-solid fa-layer-group" style="margin-right:6px;"></i> 디자인 템플릿 선택</div>'
+          +     '<button type="button" id="meTplClose" style="border:0; background:transparent; font-size:24px; cursor:pointer; color:#94a3b8;">×</button>'
+          +   '</div>'
+          +   '<div style="padding:14px 22px; border-bottom:1px solid #f1f5f9; font-size:12.5px; color:#64748b; line-height:1.55;">'
+          +     '템플릿을 클릭하면 배경 디자인이 캔버스에 자동 적용됩니다. 노란 표시 영역의 글씨를 클릭하여 직접 수정할 수 있습니다.'
+          +   '</div>'
+          +   '<div id="meTplGrid" style="flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px;">'
+          +     '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">로딩 중...</div>'
+          +   '</div>'
+          + '</div>';
+        document.body.appendChild(pop);
+        document.getElementById('meTplClose').onclick = function() { pop.remove(); };
+        pop.addEventListener('click', function(e){ if (e.target === pop) pop.remove(); });
+
+        var grid = document.getElementById('meTplGrid');
+        var cat = window._meCurrentCategory || '';
+        var code = window._meCurrentProductCode || '';
+        if (!cat) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.</div>';
+            return;
+        }
+        try {
+            var sb = _meGetSb();
+            if (!sb) throw new Error('Supabase 클라이언트 초기화 실패');
+            // 1) product_code 일치 우선, 2) product_code = NULL (카테고리 전체) — 둘 다 합쳐서 표시.
+            var orFilter = 'product_code.eq.' + code + ',product_code.is.null';
+            var q = sb.from('admin_templates')
+                .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots,sort_order')
+                .eq('product_category', cat)
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true })
+                .order('id', { ascending: false });
+            if (code) q = q.or(orFilter);
+            var resp = await q;
+            if (resp.error) throw resp.error;
+            var rows = resp.data || [];
+            if (!rows.length) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">이 상품에 등록된 템플릿이 아직 없습니다.</div>';
+                return;
+            }
+            grid.innerHTML = rows.map(function(t){
+                var thumb = t.thumbnail_url || t.background_url;
+                var slotCount = (t.slots || []).length;
+                return '<div class="me-tpl-card" data-tid="' + t.id + '" style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:12px; padding:8px; cursor:pointer; transition:border-color .15s, transform .15s;" onmouseover="this.style.borderColor=\'#7c3aed\'; this.style.transform=\'translateY(-2px)\';" onmouseout="this.style.borderColor=\'#e2e8f0\'; this.style.transform=\'\';">'
+                  +   '<div style="aspect-ratio:1/1; background:#fff; border-radius:8px; overflow:hidden; margin-bottom:8px; display:flex; align-items:center; justify-content:center;">'
+                  +     '<img src="' + thumb + '" alt="" style="max-width:100%; max-height:100%; object-fit:contain;" loading="lazy">'
+                  +   '</div>'
+                  +   '<div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (t.name||'템플릿') + '</div>'
+                  +   '<div style="font-size:10.5px; color:#64748b;">' + (t.width_mm||'?') + '×' + (t.height_mm||'?') + 'mm · 슬롯 ' + slotCount + '개</div>'
+                  + '</div>';
+            }).join('');
+            grid.querySelectorAll('.me-tpl-card').forEach(function(card){
+                card.onclick = function(){
+                    var tid = Number(card.dataset.tid);
+                    var tpl = rows.find(function(r){ return Number(r.id) === tid; });
+                    if (tpl) { window._meLoadTemplate(tpl); pop.remove(); }
+                };
+            });
+        } catch(e) {
+            console.warn('[me template] load', e);
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#dc2626; font-size:13px;">템플릿 로드 실패: ' + (e.message||e) + '</div>';
+        }
+    };
+
+    // 템플릿 로드 — 배경 이미지 + 슬롯들을 me.items 에 추가. 기존 items 모두 제거.
+    //   각 슬롯은 _isTemplateSlot:true 로 표시되어 위치/크기 고정 (드래그·리사이즈 차단).
+    window._meLoadTemplate = function(tpl) {
+        if (!tpl || !tpl.background_url) return;
+        if (!confirm('템플릿을 불러오면 현재 디자인은 지워집니다. 계속하시겠어요?')) return;
+        _meSnapshot();
+        // 1) 기존 items 제거
+        (me.items || []).forEach(function(it){ try { it.el.remove(); } catch(_e){} });
+        me.items = [];
+        me._cutlinePathD = null; me._canvasCutlinePathD = null;
+        try { var ov = document.getElementById('meCutlineOverlay'); if (ov) ov.remove(); } catch(_){}
+        // 2) 배경 이미지 toBack
+        var bgImg = new Image();
+        bgImg.crossOrigin = 'anonymous';
+        bgImg.onload = function() {
+            // 자연 사이즈 → 캔버스에 fit
+            var ratioImg = bgImg.naturalHeight / bgImg.naturalWidth;
+            var ratioCanvas = me.natH / me.natW;
+            var w, h;
+            if (ratioImg > ratioCanvas) { h = me.natH; w = h / ratioImg; }
+            else { w = me.natW; h = w * ratioImg; }
+            var x = (me.natW - w) / 2;
+            var y = (me.natH - h) / 2;
+            // 직접 me.items 에 추가 (toBack)
+            var el = document.createElement('div');
+            el.className = 'me-item';
+            el.style.zIndex = '0';
+            var imgEl = document.createElement('img');
+            imgEl.src = tpl.background_url;
+            imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'contain';
+            el.appendChild(imgEl);
+            me.stage.appendChild(el);
+            var bgIt = { el: el, type: 'image', x: x, y: y, w: w, h: h, src: tpl.background_url, _isTemplateBg: true, _isTemplateSlot: true };
+            me.items.unshift(bgIt);
+            _meSyncItemDisplay(bgIt);
+            _meBindDrag(bgIt);
+            // 3) 슬롯들 추가 — 원본 좌표는 admin 페이지의 배경 픽셀 기준 (admin 의 자연 사이즈). 캔버스 비율에 맞춰 스케일.
+            var sx = w / bgImg.naturalWidth;
+            var sy = h / bgImg.naturalHeight;
+            (tpl.slots || []).forEach(function(slot){
+                _meAddTemplateSlot(slot, x, y, sx, sy);
+            });
+        };
+        bgImg.onerror = function() { alert('템플릿 배경 이미지를 불러오지 못했습니다.'); };
+        bgImg.src = tpl.background_url;
+    };
+
+    function _meAddTemplateSlot(slot, baseX, baseY, sx, sy) {
+        var el = document.createElement('div');
+        el.className = 'me-item' + (slot.type === 'text' ? ' text' : '');
+        el.style.zIndex = (++me.zCounter);
+        me.stage.appendChild(el);
+        var it = {
+            el: el, type: slot.type,
+            x: baseX + slot.x * sx,
+            y: baseY + slot.y * sy,
+            w: slot.w * sx,
+            h: slot.h * sy,
+            _isTemplateSlot: true,
+            _slotId: slot.id || ''
+        };
+        if (slot.type === 'text') {
+            it.text = slot.default_text || '';
+            it.fontSize = (slot.fontSize || 24) * Math.min(sx, sy);
+            it.fontFamily = slot.fontFamily || 'sans-serif';
+            it.fontWeight = slot.fontWeight || 400;
+            it.fill = slot.color || '#000000';
+            it.textAlign = slot.textAlign || 'left';
+            it.lineHeight = 1.2;
+            el.setAttribute('contenteditable', 'false');
+            el.textContent = it.text;
+            // 더블클릭으로 편집 진입 — 위치는 잠금이지만 텍스트는 수정 가능
+            el.addEventListener('dblclick', function(ev){
+                ev.stopPropagation();
+                el.setAttribute('contenteditable', 'true');
+                el.focus();
+                try { document.execCommand('selectAll', false, null); } catch(_){}
+            });
+            el.addEventListener('blur', function(){
+                el.setAttribute('contenteditable', 'false');
+                it.text = el.innerText || '';
+            });
+        } else if (slot.type === 'image') {
+            it.src = slot.placeholder_url || '';
+            // 빈 placeholder 스타일
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.background = 'rgba(34,197,94,0.10)';
+            el.style.border = '2px dashed #22c55e';
+            el.style.color = '#15803d';
+            el.style.fontWeight = '700';
+            el.style.fontSize = '12px';
+            el.style.cursor = 'pointer';
+            if (slot.placeholder_url) {
+                var imgEl = document.createElement('img');
+                imgEl.src = slot.placeholder_url;
+                imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'contain';
+                el.appendChild(imgEl);
+            } else {
+                el.innerHTML = '<div style="text-align:center;"><i class="fa-solid fa-cloud-arrow-up" style="display:block; font-size:20px; margin-bottom:4px;"></i>클릭하여 사진 업로드</div>';
+            }
+            el.addEventListener('click', function(){
+                var input = document.createElement('input');
+                input.type = 'file'; input.accept = 'image/*';
+                input.onchange = function(){
+                    var f = input.files && input.files[0]; if (!f) return;
+                    var r = new FileReader();
+                    r.onload = function(e){
+                        it.src = e.target.result;
+                        el.innerHTML = '';
+                        el.style.background = ''; el.style.border = '';
+                        el.style.display = ''; el.style.cursor = '';
+                        var im = document.createElement('img');
+                        im.src = e.target.result;
+                        im.style.width = '100%'; im.style.height = '100%'; im.style.objectFit = 'contain';
+                        el.appendChild(im);
+                    };
+                    r.readAsDataURL(f);
+                };
+                input.click();
+            });
+        }
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        // 드래그/리사이즈 차단 — _isTemplateSlot 인 item 은 _meBindDrag 가 무시
+        // (선택 시에도 핸들 숨김은 _meSelect 에서 처리)
+    }
 
     window._meAddImageFromFile = function(input) {
         var f = input.files && input.files[0];
@@ -13149,7 +13378,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=538"></script>
+<script src="/simple_order.js?v=539"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
