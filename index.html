@@ -8167,17 +8167,27 @@ function scrollHotdeal(gridId, dir) {
     window._meOpenTemplatePicker = async function() {
         var ex = document.getElementById('meTemplatePopup');
         if (ex) ex.remove();
+        // 2026-06-18 v561: 모달 내부 다국어
+        var _mtL = (function(){
+            var h = (location.hostname || '').toLowerCase();
+            var site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+            return ({
+                KR: { title:'디자인 템플릿 선택', sub:'템플릿을 클릭하면 배경 디자인이 캔버스에 자동 적용됩니다. 노란 표시 영역의 글씨를 클릭하여 직접 수정할 수 있습니다.', loading:'로딩 중...', empty:'이 상품에 등록된 템플릿이 아직 없습니다.', noCat:'상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.', loadFail:'템플릿 로드 실패: ', slots:'슬롯', cnt:'개' },
+                JP: { title:'デザインテンプレートを選択', sub:'テンプレートをクリックすると背景デザインがキャンバスに自動適用されます。黄色いエリアの文字をクリックして直接修正できます。', loading:'読み込み中...', empty:'この商品に登録されたテンプレートはまだありません。', noCat:'商品カテゴリを確認できないためテンプレートを表示できません。', loadFail:'テンプレート読み込み失敗: ', slots:'スロット', cnt:'個' },
+                US: { title:'Pick a Design Template', sub:'Clicking a template auto-applies the background design to the canvas. Click on the yellow text areas to edit directly.', loading:'Loading...', empty:'No templates registered for this product yet.', noCat:'Cannot determine product category — templates unavailable.', loadFail:'Failed to load templates: ', slots:'slots', cnt:'' }
+            })[site];
+        })();
         var pop = document.createElement('div');
         pop.id = 'meTemplatePopup';
         pop.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.8); display:flex; align-items:center; justify-content:center; padding:20px;';
         pop.innerHTML =
             '<div style="background:#fff; max-width:760px; width:100%; max-height:88vh; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.4); overflow:hidden; display:flex; flex-direction:column; font-family:inherit;">'
           +   '<div style="display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid #e2e8f0; background:linear-gradient(135deg,#f5f3ff,#ede9fe);">'
-          +     '<div style="font-weight:900; font-size:16px; color:#5b21b6;"><i class="fa-solid fa-layer-group" style="margin-right:6px;"></i> 디자인 템플릿 선택</div>'
+          +     '<div style="font-weight:900; font-size:16px; color:#5b21b6;"><i class="fa-solid fa-layer-group" style="margin-right:6px;"></i> ' + _mtL.title + '</div>'
           +     '<button type="button" id="meTplClose" style="border:0; background:transparent; font-size:24px; cursor:pointer; color:#94a3b8;">×</button>'
           +   '</div>'
           +   '<div style="padding:14px 22px; border-bottom:1px solid #f1f5f9; font-size:12.5px; color:#64748b; line-height:1.55;">'
-          +     '템플릿을 클릭하면 배경 디자인이 캔버스에 자동 적용됩니다. 노란 표시 영역의 글씨를 클릭하여 직접 수정할 수 있습니다.'
+          +     _mtL.sub
           +   '</div>'
           +   '<div id="meTplGrid" style="flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px;">'
           +     '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">로딩 중...</div>'
@@ -8192,7 +8202,7 @@ function scrollHotdeal(gridId, dir) {
         var code = window._meCurrentProductCode || '';
         try { console.log('[me template] picker cat=' + cat + ' code=' + code); } catch(_){}
         if (!cat) {
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.<br><span style="font-size:11px;">상품코드: ' + (code || '?') + '</span></div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">' + _mtL.noCat + '<br><span style="font-size:11px;">' + (code || '?') + '</span></div>';
             return;
         }
         try {
@@ -8213,7 +8223,7 @@ function scrollHotdeal(gridId, dir) {
             if (resp.error) throw resp.error;
             var rows = resp.data || [];
             if (!rows.length) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">이 상품에 등록된 템플릿이 아직 없습니다.</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px;">' + _mtL.empty + '</div>';
                 return;
             }
             grid.innerHTML = rows.map(function(t){
@@ -8223,8 +8233,8 @@ function scrollHotdeal(gridId, dir) {
                   +   '<div style="aspect-ratio:1/1; background:#fff; border-radius:8px; overflow:hidden; margin-bottom:8px; display:flex; align-items:center; justify-content:center;">'
                   +     '<img src="' + thumb + '" alt="" style="max-width:100%; max-height:100%; object-fit:contain;" loading="lazy">'
                   +   '</div>'
-                  +   '<div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (t.name||'템플릿') + '</div>'
-                  +   '<div style="font-size:10.5px; color:#64748b;">' + (t.width_mm||'?') + '×' + (t.height_mm||'?') + 'mm · 슬롯 ' + slotCount + '개</div>'
+                  +   '<div style="font-size:12.5px; font-weight:800; color:#0f172a; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (t.name||'-') + '</div>'
+                  +   '<div style="font-size:10.5px; color:#64748b;">' + (t.width_mm||'?') + '×' + (t.height_mm||'?') + 'mm · ' + _mtL.slots + ' ' + slotCount + _mtL.cnt + '</div>'
                   + '</div>';
             }).join('');
             grid.querySelectorAll('.me-tpl-card').forEach(function(card){
@@ -8236,7 +8246,7 @@ function scrollHotdeal(gridId, dir) {
             });
         } catch(e) {
             console.warn('[me template] load', e);
-            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#dc2626; font-size:13px;">템플릿 로드 실패: ' + (e.message||e) + '</div>';
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px 20px; color:#dc2626; font-size:13px;">' + _mtL.loadFail + (e.message||e) + '</div>';
         }
     };
 
@@ -8245,7 +8255,14 @@ function scrollHotdeal(gridId, dir) {
     //   (b) v539 "slot" 포맷: slots = [{type:'text'/'image', x, y, w, h, ...}] — 단순 슬롯.
     window._meLoadTemplate = function(tpl) {
         if (!tpl) return;
-        if (!confirm('템플릿을 불러오면 현재 디자인은 지워집니다. 계속하시겠어요?')) return;
+        // 2026-06-18 v561: 다국어 확인 메시지
+        var _lcfm = (function(){
+            var h = (location.hostname || '').toLowerCase();
+            if (h.indexOf('cafe0101') >= 0) return 'テンプレートを読み込むと現在のデザインは消去されます。続行しますか？';
+            if (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0) return 'Loading a template will clear the current design. Continue?';
+            return '템플릿을 불러오면 현재 디자인은 지워집니다. 계속하시겠어요?';
+        })();
+        if (!confirm(_lcfm)) return;
         _meSnapshot();
         // 1) 기존 items 제거
         (me.items || []).forEach(function(it){ try { it.el.remove(); } catch(_e){} });
