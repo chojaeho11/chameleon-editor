@@ -9302,12 +9302,26 @@ html, body { background: #ffffff !important; }
             var _drSub = '';
             var _drNm = (p && p.name || '').toLowerCase();
             var _siteIsKR = !window.SITE_CONFIG || (window.SITE_CONFIG.COUNTRY || 'KR').toUpperCase() === 'KR';
+            // 2026-06-17: 인스타판넬 감지 — state.isInstaPanel 이 아직 세팅 안 됐을 수 있어 product 객체로 직접 판정.
+            //   _soComputeDesignReqPrice 가 line 10415 에서 호출되는데 state.isInstaPanel = ... 은 line 10659 라서 false 인 채로 들어옴.
+            var _isInstaForDR = false;
+            try {
+                if (state && state.isInstaPanel) _isInstaForDR = true;
+                else if (p && typeof window._soIsInstaPanelProduct === 'function') _isInstaForDR = !!window._soIsInstaPanelProduct(p);
+                else if (p) {
+                    var _pcode = (p.code || '').toLowerCase();
+                    var _pcat = (p.category || '').toLowerCase();
+                    if (_pcat === 'hb_insta' || _pcat.indexOf('insta') >= 0) _isInstaForDR = true;
+                    else if (['lll0', '0ll', 'lllllp', 'ppp'].indexOf(_pcode) >= 0) _isInstaForDR = true;
+                    else if (/인스타\s*판넬|insta\s*panel/i.test(_drNm)) _isInstaForDR = true;
+                }
+            } catch(_e){}
             if (_siteIsKR) {
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
                 else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
                 // 2026-06-17: 인스타판넬은 유료 디자인 제품으로 변경 — 3만원 (전단과 동일).
                 //   글씨 포토존(스카시 등) 보다 먼저 체크해서 50K 가 아닌 30K 적용.
-                else if (state.isInstaPanel) { _drProd = '인스타판넬'; _drPrice = 30000; }
+                else if (_isInstaForDR) { _drProd = '인스타판넬'; _drPrice = 30000; }
                 else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
                 else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) {
                     _drProd = '가벽';
