@@ -98,6 +98,128 @@
             }
         }
 
+        // 2026-06-17: 결제 완료 안내 모달 — 다국어 (KR/JP/EN) + 주문 요약 표시.
+        //   일본인 사용자 특히 결제 완료 여부 / 도착 시기 문의 다발. 명확한 시각화.
+        function _detectLang() {
+            try {
+                var p = new URLSearchParams(location.search);
+                var l = p.get('lang') || '';
+                if (l === 'ja' || l === 'jp') return 'ja';
+                if (l === 'en' || l === 'us') return 'en';
+            } catch(e) {}
+            var h = (location.hostname || '').toLowerCase();
+            if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'ja';
+            if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'en';
+            return 'ko';
+        }
+        var SUCCESS_I18N = {
+            ko: {
+                title: '🎉 결제가 정상적으로 완료되었습니다',
+                sub: '주문이 정상 접수되었습니다. 아래 일정을 확인해주세요.',
+                received: '접수완료',
+                orderNo: '주문번호',
+                orderDate: '결제일',
+                amount: '결제금액',
+                eta: '배송예정',
+                etaNote: '제작·검수·배송에 평균 5~7일이 소요됩니다. 주문 진행 상황은 마이페이지에서 실시간 확인 가능합니다.',
+                btn: '확인 — 홈으로'
+            },
+            ja: {
+                title: '🎉 お支払いが正常に完了しました',
+                sub: 'ご注文を正常に受け付けました。下記の日程をご確認ください。',
+                received: '受付完了',
+                orderNo: 'ご注文番号',
+                orderDate: 'お支払い日',
+                amount: 'お支払い金額',
+                eta: 'お届け予定',
+                etaNote: '製作・検品・配送に平均5〜7日かかります。ご注文の進行状況はマイページからリアルタイムでご確認いただけます。',
+                btn: '確認 — トップへ'
+            },
+            en: {
+                title: '🎉 Your payment has been completed',
+                sub: 'Your order was received successfully. Please review the schedule below.',
+                received: 'Order Received',
+                orderNo: 'Order #',
+                orderDate: 'Payment Date',
+                amount: 'Total Amount',
+                eta: 'Estimated Delivery',
+                etaNote: 'Production, QA and shipping take an average of 5–7 days. Real-time progress is available on My Page.',
+                btn: 'OK — Back to Home'
+            }
+        };
+        function _fmtDate(d, lang) {
+            var y = d.getFullYear(), m = d.getMonth() + 1, dd = d.getDate();
+            if (lang === 'ja') return y + '年' + m + '月' + dd + '日';
+            if (lang === 'en') return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1] + ' ' + dd + ', ' + y;
+            return y + '. ' + m + '. ' + dd + '.';
+        }
+        function _fmtAmt(krw, lang) {
+            if (krw == null) return '-';
+            if (lang === 'ja') return '¥' + Math.round(krw * 0.1).toLocaleString();
+            if (lang === 'en') return '$' + (krw * 0.001).toFixed(2);
+            return Number(krw).toLocaleString() + '원';
+        }
+        async function showPaymentSuccessModal(dbId) {
+            var lang = _detectLang();
+            var t = SUCCESS_I18N[lang] || SUCCESS_I18N.ko;
+            // 주문 금액·생성일 조회
+            var totalAmount = 0;
+            var orderDate = new Date();
+            try {
+                var r = await fetch(SUPABASE_URL + '/rest/v1/orders?id=eq.' + encodeURIComponent(dbId) + '&select=total_amount,created_at', {
+                    headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'apikey': SUPABASE_KEY }
+                });
+                var arr = await r.json();
+                if (arr && arr[0]) {
+                    totalAmount = arr[0].total_amount || 0;
+                    if (arr[0].created_at) orderDate = new Date(arr[0].created_at);
+                }
+            } catch (e) { console.warn('[success] order fetch fail', e); }
+            // ETA: 주문일 + 5 ~ 주문일 + 7
+            var d1 = new Date(orderDate); d1.setDate(d1.getDate() + 5);
+            var d2 = new Date(orderDate); d2.setDate(d2.getDate() + 7);
+            var etaLow = _fmtDate(d1, lang);
+            var etaHigh = _fmtDate(d2, lang);
+            var orderDateTxt = _fmtDate(orderDate, lang);
+            var amountTxt = _fmtAmt(totalAmount, lang);
+            // 모달 DOM
+            var overlay = document.createElement('div');
+            overlay.id = 'paySuccessModal';
+            overlay.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.85); display:flex; align-items:center; justify-content:center; padding:18px;';
+            overlay.innerHTML =
+                '<div style="background:linear-gradient(165deg,#1f2937 0%,#0f172a 100%); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:30px 26px 24px; width:100%; max-width:460px; box-shadow:0 30px 70px -10px rgba(0,0,0,0.9); font-family:\'Pretendard Variable\',\'Pretendard\',\'Inter\',\'Noto Sans JP\',sans-serif; color:#fff;">'
+              +   '<div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:18px;">'
+              +     '<div style="width:74px; height:74px; border-radius:50%; background:linear-gradient(135deg,#10b981,#059669); display:flex; align-items:center; justify-content:center; box-shadow:0 12px 28px -8px rgba(16,185,129,0.7); margin-bottom:14px;">'
+              +       '<svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+              +     '</div>'
+              +     '<div style="font-size:18px; font-weight:900; color:#fde047; line-height:1.45; padding:0 8px;">' + t.title + '</div>'
+              +     '<div style="font-size:13px; color:rgba(255,255,255,0.78); margin-top:8px; line-height:1.6; padding:0 4px;">' + t.sub + '</div>'
+              +   '</div>'
+              +   '<div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:18px 18px 14px;">'
+              +     '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">'
+              +       '<div style="display:inline-block; padding:6px 14px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; font-size:11.5px; font-weight:900; border-radius:50px;">' + t.received + '</div>'
+              +       '<div style="font-size:11.5px; color:rgba(255,255,255,0.55); font-weight:700;">#' + dbId + '</div>'
+              +     '</div>'
+              +     '<div style="display:grid; grid-template-columns:auto 1fr; gap:8px 16px; font-size:13px;">'
+              +       '<div style="color:#86efac; font-weight:700;">' + t.orderDate + '</div><div style="color:#fff; font-weight:700;">' + orderDateTxt + '</div>'
+              +       '<div style="color:#86efac; font-weight:700;">' + t.amount + '</div><div style="color:#fff; font-weight:900;">' + amountTxt + '</div>'
+              +       '<div style="color:#fde047; font-weight:800;">' + t.eta + '</div><div style="color:#fff; font-weight:900;">' + etaLow + ' 〜 ' + etaHigh + '</div>'
+              +     '</div>'
+              +   '</div>'
+              +   '<div style="font-size:11.5px; color:rgba(255,255,255,0.58); margin:14px 4px 16px; line-height:1.6;">' + t.etaNote + '</div>'
+              +   '<button type="button" id="paySuccessOk" style="width:100%; padding:14px; background:linear-gradient(135deg,#fde047,#eab308); color:#1f2937; border:none; border-radius:12px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 8px 22px -6px rgba(234,179,8,0.65); font-family:inherit;">' + t.btn + '</button>'
+              + '</div>';
+            document.body.appendChild(overlay);
+            return new Promise(function(resolve){
+                var btn = document.getElementById('paySuccessOk');
+                btn.addEventListener('click', function(){
+                    overlay.remove();
+                    window.location.href = _frHome();
+                    resolve();
+                });
+            });
+        }
+
         // 2026-05-16: 가맹점 스토어 경유 주문이면 홈 대신 가맹점 스토어로 복귀
         function _frHome() {
             var f = '';
@@ -321,8 +443,8 @@
 
                 // 결제 성공 처리
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('title').innerText = "Payment Successful!";
-                document.getElementById('desc').innerText = "Redirecting...";
+                document.getElementById('title').innerText = "";
+                document.getElementById('desc').innerText = "";
 
                 // 장바구니 비우기 (패브릭 cotton-printer.com 의 cp_cart_v1 포함)
                 // 2026-05-22: 서버(cart_sync)까지 비워야 다음 방문 시 주문한 상품이 되살아나지 않음.
@@ -337,7 +459,10 @@
                     });
                 } catch(e) {}
 
-                setTimeout(() => window.location.href = _frHome(), 1500);
+                // 2026-06-17: 결제 완료 안내 모달 — 주문번호/결제일/결제금액/배송예정 표시.
+                //   일본인 고객 특히 "결제됐는지 언제 오는지 잘 모르겠다" 문의 다발 → 명확한 안내.
+                try { await showPaymentSuccessModal(dbId); }
+                catch (mErr) { console.warn('[success modal]', mErr); window.location.href = _frHome(); }
 
             } catch (e) {
                 console.error("Payment verification error:", e);
