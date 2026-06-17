@@ -12017,6 +12017,16 @@ html, body { background: #ffffff !important; }
             if (state && state.isWall && state.wallWidth) {
                 wMm = state.wallWidth * 1000;
                 hMm = (state.wallHeight || 2.4) * 1000;
+                // 2026-06-17: 날개(접히는 옆면) 있는 가벽 — 캔버스 가로에 +300mm (좌우 150mm씩).
+                //   고객이 wallWidth(앞면)만 디자인한 파일 올려도 캔버스에 양쪽 흰 여백이 보여 옆면=흰색 인쇄임을 인지.
+                //   적용: hb_dw_* (허니콤 가벽) + 강화 골판지 가벽. 파티션·병풍형 등 flat panel 은 제외.
+                try {
+                    var _hasWings = false;
+                    if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) _hasWings = true;
+                    else if (p && /^hb_dw/i.test(String(p.code || ''))) _hasWings = true;
+                    if (_hasWings && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(p)) _hasWings = false;
+                    if (_hasWings) wMm += 300;
+                } catch (_we) {}
             } else if (state && state.customW && state.customH) {
                 wMm = state.customW * 10;
                 hMm = state.customH * 10;
