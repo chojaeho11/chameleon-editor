@@ -5864,6 +5864,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()" title="도형"><i class="fa-solid fa-shapes me-tb-ic"></i><span data-i18n="me_shape" class="me-tb-lbl">도형</span></button>
                 <label class="me-color-wrap" title="배경색"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
+                <!-- 2026-06-17: 가이드 토글 (가벽 옆면 빗금 + 1m 절단선) — 기본 ON, 클릭으로 ON/OFF -->
+                <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="옆면/1m 절단선 가이드 표시/숨김"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i></button>
                 <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
                 <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
             </div>
@@ -6275,45 +6277,84 @@ function scrollHotdeal(gridId, dir) {
         try { _meDrawRuler(); } catch(_) {}
         try { _meUpdateWingOverlay(); } catch(_) {}
     };
-    // 2026-06-17: 가벽 날개(접히는 옆면) 시각화 — 양쪽 N mm 영역에 빗금 overlay + "옆면 / FOLD" 라벨.
-    //   pointer-events:none, me.items 와 무관 → export/print/PDF 에 절대 포함 안 됨 (에디터 미리보기 전용).
+    // 2026-06-17: 가벽 가이드 — 양쪽 옆면(접히는 날개) 빗금 + 1미터 단위 절단선 (가벽이 1m 패널 여러 개로 구성됨).
+    //   pointer-events:none, me.items 와 무관 → export/print/PDF 에 절대 포함 안 됨. 토글 가능 (눈 버튼).
     me._wingMm = 0;
+    me._guidesVisible = true;   // 기본 ON
     window._meSetWingMm = function(mm) {
         me._wingMm = mm || 0;
-        try { _meUpdateWingOverlay(); } catch(_) {}
+        try { _meUpdateGuides(); } catch(_) {}
     };
-    function _meUpdateWingOverlay() {
+    window._meGuidesToggle = function() {
+        me._guidesVisible = !me._guidesVisible;
+        try { _meUpdateGuides(); } catch(_) {}
+        var icon = document.getElementById('meGuidesIcon');
+        if (icon) icon.className = me._guidesVisible ? 'fa-solid fa-eye me-tb-ic' : 'fa-solid fa-eye-slash me-tb-ic';
+        var btn = document.getElementById('meGuidesToggle');
+        if (btn) {
+            btn.style.background = me._guidesVisible ? '#fff' : '#fef2f2';
+            btn.style.color = me._guidesVisible ? '#dc2626' : '#94a3b8';
+        }
+    };
+    // legacy 호환 (이전 이름)
+    function _meUpdateWingOverlay() { _meUpdateGuides(); }
+    function _meUpdateGuides() {
         if (!me.stage) return;
+        var visible = (me._guidesVisible !== false);
         var leftEl = document.getElementById('meWingLeft');
         var rightEl = document.getElementById('meWingRight');
         var mm = me._wingMm || 0;
         var natWMm = me.natWMm || 0;
-        if (!mm || !natWMm || mm * 2 >= natWMm) {
+        var hasWing = !!(mm && natWMm && mm * 2 < natWMm);
+        // 1) 옆면 (날개) 빗금 overlay
+        if (!hasWing) {
             if (leftEl) leftEl.style.display = 'none';
             if (rightEl) rightEl.style.display = 'none';
-            return;
+        } else {
+            var pct = (mm / natWMm) * 100;
+            var commonBg = 'repeating-linear-gradient(45deg, rgba(220,38,38,0.18) 0px, rgba(220,38,38,0.18) 10px, rgba(220,38,38,0.06) 10px, rgba(220,38,38,0.06) 20px)';
+            var labelHtml = '<div class="me-wing-label">옆면<br><span class="me-wing-mm">' + mm + 'mm</span></div>';
+            if (!leftEl) {
+                leftEl = document.createElement('div');
+                leftEl.id = 'meWingLeft';
+                leftEl.className = 'me-wing-overlay';
+                leftEl.innerHTML = labelHtml;
+                me.stage.appendChild(leftEl);
+            } else { leftEl.innerHTML = labelHtml; }
+            if (!rightEl) {
+                rightEl = document.createElement('div');
+                rightEl.id = 'meWingRight';
+                rightEl.className = 'me-wing-overlay';
+                rightEl.innerHTML = labelHtml;
+                me.stage.appendChild(rightEl);
+            } else { rightEl.innerHTML = labelHtml; }
+            leftEl.style.cssText  = 'position:absolute; left:0; top:0; bottom:0; width:' + pct.toFixed(3) + '%; pointer-events:none; z-index:998; background:' + commonBg + '; border-right:2px dashed rgba(220,38,38,0.7); display:flex; align-items:center; justify-content:center; box-sizing:border-box;';
+            rightEl.style.cssText = 'position:absolute; right:0; top:0; bottom:0; width:' + pct.toFixed(3) + '%; pointer-events:none; z-index:998; background:' + commonBg + '; border-left:2px dashed rgba(220,38,38,0.7); display:flex; align-items:center; justify-content:center; box-sizing:border-box;';
+            leftEl.style.display = visible ? '' : 'none';
+            rightEl.style.display = visible ? '' : 'none';
         }
-        var pct = (mm / natWMm) * 100;
-        var commonBg = 'repeating-linear-gradient(45deg, rgba(220,38,38,0.18) 0px, rgba(220,38,38,0.18) 10px, rgba(220,38,38,0.06) 10px, rgba(220,38,38,0.06) 20px)';
-        var labelHtml = '<div class="me-wing-label">옆면<br><span class="me-wing-mm">' + mm + 'mm</span></div>';
-        if (!leftEl) {
-            leftEl = document.createElement('div');
-            leftEl.id = 'meWingLeft';
-            leftEl.className = 'me-wing-overlay';
-            leftEl.innerHTML = labelHtml;
-            me.stage.appendChild(leftEl);
-        } else { leftEl.innerHTML = labelHtml; }
-        if (!rightEl) {
-            rightEl = document.createElement('div');
-            rightEl.id = 'meWingRight';
-            rightEl.className = 'me-wing-overlay';
-            rightEl.innerHTML = labelHtml;
-            me.stage.appendChild(rightEl);
-        } else { rightEl.innerHTML = labelHtml; }
-        leftEl.style.cssText  = 'position:absolute; left:0; top:0; bottom:0; width:' + pct.toFixed(3) + '%; pointer-events:none; z-index:998; background:' + commonBg + '; border-right:2px dashed rgba(220,38,38,0.7); display:flex; align-items:center; justify-content:center; box-sizing:border-box;';
-        rightEl.style.cssText = 'position:absolute; right:0; top:0; bottom:0; width:' + pct.toFixed(3) + '%; pointer-events:none; z-index:998; background:' + commonBg + '; border-left:2px dashed rgba(220,38,38,0.7); display:flex; align-items:center; justify-content:center; box-sizing:border-box;';
-        leftEl.style.display = '';
-        rightEl.style.display = '';
+        // 2) 1m 단위 패널 절단선 (내부 fold 라인)
+        var cuts = me.stage.querySelectorAll('.me-panel-cut');
+        cuts.forEach(function(el){ el.remove(); });
+        if (visible && hasWing) {
+            var panelMm = 1000;
+            var innerWMm = natWMm - 2 * mm;
+            var panelCount = Math.round(innerWMm / panelMm);
+            for (var i = 1; i < panelCount; i++) {
+                var posMm = mm + i * panelMm;
+                var posPct = (posMm / natWMm) * 100;
+                var cut = document.createElement('div');
+                cut.className = 'me-panel-cut';
+                cut.style.cssText = 'position:absolute; left:' + posPct.toFixed(3) + '%; top:0; bottom:0; width:0; border-left:1.5px dashed rgba(220,38,38,0.6); pointer-events:none; z-index:997;';
+                me.stage.appendChild(cut);
+                // 작은 라벨 (상단)
+                var lbl = document.createElement('div');
+                lbl.className = 'me-panel-cut-label';
+                lbl.textContent = (i * panelMm) + 'mm';
+                lbl.style.cssText = 'position:absolute; left:' + posPct.toFixed(3) + '%; top:2px; transform:translateX(-50%); font-size:9px; font-weight:800; color:rgba(185,28,28,0.85); background:rgba(255,255,255,0.7); padding:1px 4px; border-radius:3px; pointer-events:none; z-index:997; font-family:inherit; letter-spacing:0.5px;';
+                me.stage.appendChild(lbl);
+            }
+        }
     }
     (function _injectWingCss(){
         if (document.getElementById('meWingCss')) return;
@@ -12679,7 +12720,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=500"></script>
+<script src="/simple_order.js?v=501"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
