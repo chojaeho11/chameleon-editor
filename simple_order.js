@@ -9305,6 +9305,9 @@ html, body { background: #ffffff !important; }
             if (_siteIsKR) {
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
                 else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
+                // 2026-06-17: 인스타판넬은 유료 디자인 제품으로 변경 — 3만원 (전단과 동일).
+                //   글씨 포토존(스카시 등) 보다 먼저 체크해서 50K 가 아닌 30K 적용.
+                else if (state.isInstaPanel) { _drProd = '인스타판넬'; _drPrice = 30000; }
                 else if (state.isPhotozone || /글씨\s*포토존|포토존|photo\s*zone/i.test(_drNm)) { _drProd = '글씨포토존'; _drPrice = 50000; }
                 else if (state.isWall || /가벽|wall|partition/i.test(_drNm)) {
                     _drProd = '가벽';
@@ -10674,15 +10677,13 @@ html, body { background: #ffffff !important; }
                     state.isInstaSmall = false;  // 대형/초대형 → 지방 용차 착불
                 }
             } catch(e){}
-            // 안내 배너 + 텍스트 input 섹션 표시 + 입력 초기화
+            // 2026-06-17: 인스타판넬은 유료 디자인 제품으로 변경 — 무료 디자인 배너 + 텍스트 input 섹션 숨김.
+            //   유료 디자인 의뢰는 하단 디자인 의뢰 배너(30,000원, 영업일 2~3일) 로 처리.
             try {
                 var _ipNotice = document.getElementById('soInstaNotice');
                 var _ipTextIn = document.getElementById('soInstaTextInputs');
-                if (_ipNotice) _ipNotice.style.display = '';
-                if (_ipTextIn) _ipTextIn.style.display = '';
-                ['soInstaTitle','soInstaSub','soInstaHashtag','soInstaLogo'].forEach(function(id){
-                    var _el = document.getElementById(id); if (_el) _el.value = '';
-                });
+                if (_ipNotice) _ipNotice.style.display = 'none';
+                if (_ipTextIn) _ipTextIn.style.display = 'none';
                 state.instaTitle = '';
                 state.instaSub = '';
                 state.instaHashtag = '';
