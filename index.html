@@ -6872,10 +6872,18 @@ function scrollHotdeal(gridId, dir) {
                 if (window._meStandeeBase && it._cutlineMode === 'outer') {
                     var _bhPct = (it._cutlineBaseHeightPct != null) ? it._cutlineBaseHeightPct : 0.1;
                     var _bhPctDisp = (_bhPct * 100).toFixed(1);
-                    html += '<span class="me-prop-group" style="gap:6px; min-width:200px;">'
+                    html += '<span class="me-prop-group" style="gap:6px; min-width:180px;">'
                          +   '<label style="color:#0369a1; font-weight:800;">📏 받침 높이</label>'
-                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:90px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-baseh-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:48px; text-align:right;">' + _bhPctDisp + '%</span>'
+                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:80px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-baseh-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:42px; text-align:right;">' + _bhPctDisp + '%</span>'
+                         + '</span>';
+                    // 2026-06-17 v531: 받침대 좌우 넓이 슬라이더 — footW 의 0~50% 까지 양쪽으로 확장
+                    var _bwPct = (it._cutlineBaseWidthPct != null) ? it._cutlineBaseWidthPct : 0.1;
+                    var _bwPctDisp = (_bwPct * 100).toFixed(1);
+                    html += '<span class="me-prop-group" style="gap:6px; min-width:180px;">'
+                         +   '<label style="color:#0369a1; font-weight:800;">📐 받침 넓이</label>'
+                         +   '<input type="range" min="0" max="500" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:80px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-basew-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:42px; text-align:right;">' + _bwPctDisp + '%</span>'
                          + '</span>';
                 }
             }
@@ -6961,6 +6969,18 @@ function scrollHotdeal(gridId, dir) {
                 var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
                 if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
                 var disp = panel.querySelector('[data-cutline-baseh-val]');
+                if (disp) disp.textContent = (pct * 100).toFixed(1) + '%';
+            });
+        });
+        // 2026-06-17 v531: 받침대 좌우 넓이 슬라이더 — basePadX 비율 변경.
+        panel.querySelectorAll('[data-cutline-basew]').forEach(function(sl){
+            sl.addEventListener('input', function(){
+                var pct = parseInt(sl.value, 10) / 1000;   // 0~500 → 0.0~0.5 (0%~50%)
+                if (!isFinite(pct) || pct < 0) pct = 0;
+                it._cutlineBaseWidthPct = pct;
+                var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
+                if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
+                var disp = panel.querySelector('[data-cutline-basew-val]');
                 if (disp) disp.textContent = (pct * 100).toFixed(1) + '%';
             });
         });
@@ -7684,7 +7704,8 @@ function scrollHotdeal(gridId, dir) {
     //   세워둘 때 안정적인 받침이 되도록 양 발 폭보다 약간 넓은 사다리꼴/직사각 base 를 추가.
     //   contour 가 Moore 트레이스 결과로 시계방향 정렬돼 있다는 전제.
     //   baseHeightPct: 받침대 깊이 비율 (hRange 의 몇 % 만큼 maxY 아래로 내려갈지). 기본 0.1 (10%).
-    function _meAddStandeeBase(contour, W, H, baseHeightPct) {
+    //   baseWidthPct: 받침대 좌우 확장 비율 (footW 의 몇 % 만큼 좌우로 넓어질지). 기본 0.1 (10%).
+    function _meAddStandeeBase(contour, W, H, baseHeightPct, baseWidthPct) {
         if (!contour || contour.length < 20) return contour;
         var maxY = 0, minY = H;
         for (var i = 0; i < contour.length; i++) {
@@ -7722,7 +7743,9 @@ function scrollHotdeal(gridId, dir) {
         var leftMost = Math.min(globalMinX, entryX, exitX);
         var rightMost = Math.max(globalMaxX, entryX, exitX);
         var footW = rightMost - leftMost;
-        var basePadX = Math.max(W * 0.04, footW * 0.1);
+        // 2026-06-17: baseWidthPct 슬라이더 적용 — 기본 10%, 0~50% 사이 사용자 조절
+        var _bwPct = (baseWidthPct != null && isFinite(baseWidthPct) && baseWidthPct >= 0) ? baseWidthPct : 0.1;
+        var basePadX = Math.max(W * 0.02, footW * _bwPct);
         var baseLeftX = leftMost - basePadX;
         var baseRightX = rightMost + basePadX;
         // 받침대 깊이 슬라이더 적용 — 기본 10%, 사용자 0~30% 조절 가능
@@ -7938,7 +7961,7 @@ function scrollHotdeal(gridId, dir) {
         //   이전 (v521-523) 에는 trace 직후 추가 → Chaikin/BoxSmooth 가 받침 corner 를 둥글게 깎아 곡선 바닥.
         //   it._cutlineBaseHeightPct 가 있으면 사용 (슬라이더로 조절), 없으면 기본 10%.
         if (it._cutlineMode === 'outer' && window._meStandeeBase) {
-            try { finalPts = _meAddStandeeBase(finalPts, W, H, it._cutlineBaseHeightPct); } catch(_be){ console.warn('[standee base]', _be); }
+            try { finalPts = _meAddStandeeBase(finalPts, W, H, it._cutlineBaseHeightPct, it._cutlineBaseWidthPct); } catch(_be){ console.warn('[standee base]', _be); }
         }
         // 2026-06-17: sharp flag(3rd element) 보존 — 등신대 받침대 corner 가 곡선이 아닌 직선으로 렌더되어야 함
         it._cutlineRelPts = finalPts.map(function(p){
@@ -8015,30 +8038,37 @@ function scrollHotdeal(gridId, dir) {
         if (ex) ex.remove();
         var pop = document.createElement('div');
         pop.id = 'meCutlinePopup';
-        pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:360px; font-family:inherit; max-height:90vh; overflow-y:auto;';
+        pop.style.cssText = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:99999; background:#fff; border:2px solid #ef4444; border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,0.25); padding:18px 18px 16px; width:380px; font-family:inherit; max-height:90vh; overflow-y:auto;';
+        // 2026-06-17 v531: 단순화 — 간단모양 4종 + 중복 TYPE A/B + 지우개 제거. 상단 예시 이미지 (cut_st.jpg) 의 좌우를
+        //   바로 클릭 가능한 두 버튼으로 변경. 받침대 모양 조정은 props 패널 슬라이더에서.
         pop.innerHTML =
             '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
           +   '<div style="font-weight:900; font-size:15px; color:#b91c1c;">✂️ 칼선 모양 선택</div>'
           +   '<button type="button" id="meCutlineClose" style="border:0; background:transparent; font-size:20px; cursor:pointer; color:#94a3b8;">×</button>'
           + '</div>'
-          + '<img src="/cut_st.jpg" alt="칼선 종류 예시" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:10px; border:1px solid #fecaca;" loading="lazy">'
-          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 (캔버스 꽉 채움). 복잡/팬시: 선택한 이미지 윤곽선 추적 — 이미지 여러 개 가능, 크기조절 시 같이 변경.</div>'
-          + '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">'
-          +   '<button type="button" data-shape="circle"       style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">⭕ 동그라미</button>'
-          +   '<button type="button" data-shape="pill"         style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">💊 알약</button>'
-          +   '<button type="button" data-shape="roundedRect"  style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">▢ 라운드 사각</button>'
-          +   '<button type="button" data-shape="roundedCorner"style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">◣ 한 모서리</button>'
+          + '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">선택한 이미지 윤곽선을 따라 칼선이 생성됩니다. 등신대는 발 아래 받침대가 자동으로 추가되며, 받침대 크기는 칼선 생성 후 우측 패널의 슬라이더 (📏 받침 높이 / 📐 받침 넓이) 로 조절합니다.</div>'
+          + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">'
+          +   '<button type="button" data-shape="trace-outer" style="padding:0; border:2px solid #ef4444; background:linear-gradient(135deg,#fef2f2,#fee2e2); border-radius:12px; cursor:pointer; font-family:inherit; overflow:hidden; display:flex; flex-direction:column;">'
+          +     '<div style="aspect-ratio:1/1; background:#fff; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:8px;">'
+          +       '<img src="/cut_st.jpg" alt="TYPE A" style="width:200%; height:100%; object-fit:cover; object-position:left center; pointer-events:none;" loading="lazy">'
+          +     '</div>'
+          +     '<div style="padding:10px 8px; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;">'
+          +       '<div style="font-weight:900; font-size:14px;">TYPE A</div>'
+          +       '<div style="font-size:10.5px; font-weight:700; margin-top:2px; opacity:0.95;">Margins +2mm Die-Cut<br>(반칼·완칼)</div>'
+          +     '</div>'
+          +   '</button>'
+          +   '<button type="button" data-shape="trace-inner" style="padding:0; border:2px solid #dc2626; background:#fff; border-radius:12px; cursor:pointer; font-family:inherit; overflow:hidden; display:flex; flex-direction:column;">'
+          +     '<div style="aspect-ratio:1/1; background:#fff; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:8px;">'
+          +       '<img src="/cut_st.jpg" alt="TYPE B" style="width:200%; height:100%; object-fit:cover; object-position:right center; pointer-events:none;" loading="lazy">'
+          +     '</div>'
+          +     '<div style="padding:10px 8px; background:#fff; color:#b91c1c; border-top:1px solid #fecaca;">'
+          +       '<div style="font-weight:900; font-size:14px;">TYPE B</div>'
+          +       '<div style="font-size:10.5px; font-weight:700; margin-top:2px; opacity:0.85;">Border -2mm Wancut<br>(무테)</div>'
+          +     '</div>'
+          +   '</button>'
           + '</div>'
-          + '<div style="margin-top:14px; padding-top:12px; border-top:1px dashed #fecaca;">'
-          +   '<div style="font-weight:800; font-size:12px; color:#b91c1c; margin-bottom:8px;">🖼️ 선택 이미지 윤곽선 따기 (복잡/팬시)</div>'
-          +   '<div style="display:grid; grid-template-columns:1fr; gap:6px;">'
-          +     '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;"><div style="font-size:14px;">TYPE A</div><div style="font-size:11px; font-weight:700; opacity:0.95; margin-top:2px;">Margins +2mm Die-Cut (반칼·완칼 스티커)</div></button>'
-          +     '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:2px solid #dc2626; background:#fff; color:#b91c1c; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:left;"><div style="font-size:14px;">TYPE B</div><div style="font-size:11px; font-weight:700; opacity:0.85; margin-top:2px;">Border -2mm Wancut (무테 스티커)</div></button>'
-          +   '</div>'
-          + '</div>'
-          + '<div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">'
-          +   '<button type="button" data-shape="eraser" style="padding:10px 8px; border:1.5px solid #fbbf24; background:#fffbeb; color:#92400e; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">🧽 칼선 지우개</button>'
-          +   '<button type="button" data-shape="clear" style="padding:10px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">전체 삭제</button>'
+          + '<div style="margin-top:14px;">'
+          +   '<button type="button" data-shape="clear" style="width:100%; padding:10px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">전체 삭제</button>'
           + '</div>';
         document.body.appendChild(pop);
         function close(){ pop.remove(); }
@@ -8049,8 +8079,6 @@ function scrollHotdeal(gridId, dir) {
                 if (s === 'trace-outer') { _meCutlineTrace('outer'); close(); }
                 else if (s === 'trace-inner') { _meCutlineTrace('inner'); close(); }
                 else if (s === 'clear') { window._meCutlineClear(); close(); }
-                else if (s === 'eraser') { window._meCutlineEraserToggle(); close(); }
-                else { _meCutlineSimple(s); close(); }
             };
         });
     };
@@ -13068,7 +13096,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=530"></script>
+<script src="/simple_order.js?v=531"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
