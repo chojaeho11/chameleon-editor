@@ -14317,6 +14317,8 @@ html, body { background: #ffffff !important; }
                 //   "최소주문금액 3만원 / 허니콤보드 외 무료배송" 안내 + 부족 시 빨간 경고
                 var _sc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
                 // 2026-06-13: 허니콤보드 family 카트 → 최소 100K. 그 외 30K.
+                // 2026-06-17: 매니저 금액주문 (manager_quote) 가 카트에 있으면 최소금액 면제.
+                var _hasMgrQuoteInCart = allItems.some(_soIsManagerQuoteItem);
                 var _hasHcInCart2 = allItems.some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
                 var _minKrw = _hasHcInCart2 ? 100000 : 30000;
                 var _minLabel = _hasHcInCart2
@@ -14324,7 +14326,7 @@ html, body { background: #ffffff !important; }
                     : ((_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원'));
                 if (_sub <= 0) {
                     _noticeWrap.style.display = 'none';
-                } else if (_sub < _minKrw) {
+                } else if (!_hasMgrQuoteInCart && _sub < _minKrw) {
                     // 최소주문금액 미달 — 빨간 박스 경고
                     _noticeWrap.style.display = '';
                     _noticeWrap.style.background = '#fef2f2';
@@ -14663,18 +14665,31 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
     }
 
+    // 2026-06-17: 매니저 금액주문 (manager_quote) 항목 — 최소주문금액 면제.
+    //   상담 후 합의된 금액이므로 어떤 금액이든 결제 통과.
+    function _soIsManagerQuoteItem(it) {
+        if (!it) return false;
+        if (it.type === 'manager_quote') return true;
+        if (it.product && it.product.category === 'manager_quote') return true;
+        if (it.product && it.product.code && /^manager_quote_/.test(String(it.product.code))) return true;
+        return false;
+    }
+    window._soIsManagerQuoteItem = _soIsManagerQuoteItem;
+
     window._soGoCheckout = function () {
         // 2026-06-12: 카트에서 결제로 넘어가기 전 최소 주문금액 강제 체크.
         // 2026-06-13: 허니콤 family 100K / 그 외 30K + 배송비 포함 grandTotal 기준.
+        // 2026-06-17: 매니저 금액주문 (manager_quote) 가 카트에 있으면 최소금액 체크 SKIP.
         try {
             var _gcCart = _soReadAllCart();
             var _gcCalc = _soCalcCartTotal(_gcCart || []);
             // 배송비 포함 합계 기준
             var _gcSub = (_gcCalc && _gcCalc.grandTotal != null) ? _gcCalc.grandTotal : ((_gcCalc && (_gcCalc.taxBase + _gcCalc.nonDiscountBase + (_gcCalc.shipTotal || 0))) || 0);
+            var _gcHasMgrQuote = (_gcCart || []).some(_soIsManagerQuoteItem);
             // 허니콤 family 가 카트에 있으면 100K, 그 외 30K
             var _gcHasHc = (_gcCart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
             var _MIN = _gcHasHc ? 100000 : 30000;
-            if (_gcSub > 0 && _gcSub < _MIN) {
+            if (!_gcHasMgrQuote && _gcSub > 0 && _gcSub < _MIN) {
                 var _sc3 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
                 var _md = _gcHasHc
                     ? ((_sc3 === 'JP') ? '¥10,000' : (_sc3 === 'US' ? '$100' : '100,000원'))
