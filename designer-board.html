@@ -136,77 +136,74 @@
 
     <!-- 2026-06-17 v544: 템플릿 디자이너 가이드 — 상세페이지 스타일 -->
     <style>
+        /* v544 → v545: 글자 가독성 개선 — text-shadow 차단, font-weight 정상화, letter-spacing 평탄화, 단색 배경 */
+        .tg-wrap, .tg-wrap * { text-shadow:none !important; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
         .tg-wrap { max-width:1080px; margin:18px auto 0; padding:0 20px 8px; }
         .tg-card { background:#ffffff; border-radius:20px; box-shadow:0 1px 3px rgba(0,0,0,0.04); border:0.5px solid var(--border); overflow:hidden; margin-bottom:14px; }
         .tg-card details summary { list-style:none; cursor:pointer; }
         .tg-card details summary::-webkit-details-marker { display:none; }
-        .tg-hero { padding:26px 28px 22px; background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#7c3aed 100%); color:#fff; position:relative; overflow:hidden; }
-        .tg-hero::before { content:""; position:absolute; right:-30px; bottom:-30px; width:180px; height:180px; background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%); border-radius:50%; }
-        .tg-hero-eyebrow { font-size:11px; letter-spacing:3.5px; opacity:0.7; font-weight:600; margin-bottom:8px; text-transform:uppercase; }
-        .tg-hero-title { font-size:24px; font-weight:900; letter-spacing:-1px; line-height:1.25; margin-bottom:8px; }
-        .tg-hero-sub { font-size:13.5px; opacity:0.85; line-height:1.7; max-width:620px; font-weight:500; }
-        .tg-hero-pills { display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
-        .tg-hero-pill { font-size:11.5px; font-weight:700; background:rgba(255,255,255,0.18); padding:5px 11px; border-radius:980px; backdrop-filter:blur(8px); }
-        .tg-tabs-row { display:flex; gap:0; border-top:0.5px solid rgba(255,255,255,0.15); background:rgba(0,0,0,0.18); }
-        .tg-tabs-row .tg-tab { flex:1; padding:14px 12px; text-align:center; font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.7); border:none; background:transparent; cursor:pointer; transition:color .15s, background .15s; }
-        .tg-tabs-row .tg-tab:hover { color:#fff; background:rgba(255,255,255,0.05); }
-        .tg-tabs-row .tg-tab.active { color:#fff; background:rgba(255,255,255,0.10); box-shadow:inset 0 -3px 0 #fbbf24; }
-        .tg-section { padding:30px 28px; }
-        .tg-section.hidden { display:none; }
-        .tg-section h3 { font-size:18px; font-weight:900; letter-spacing:-0.5px; margin-bottom:18px; display:flex; align-items:center; gap:9px; color:#0f172a; }
-        .tg-section h4 { font-size:14px; font-weight:800; color:#0f172a; margin:18px 0 10px; }
+        /* Hero — 단색 다크 보라 (그라데이션 + 라디얼 오버레이 제거하여 글자 선명) */
+        .tg-hero { padding:28px 30px 24px; background:#4c1d95; color:#fff; }
+        .tg-hero-eyebrow { font-size:11px; letter-spacing:2.5px; opacity:0.65; font-weight:600; margin-bottom:10px; text-transform:uppercase; }
+        .tg-hero-title { font-size:24px; font-weight:700; letter-spacing:-0.2px; line-height:1.3; margin-bottom:10px; color:#fff; }
+        .tg-hero-sub { font-size:13.5px; opacity:0.92; line-height:1.7; max-width:640px; font-weight:400; color:#e9d5ff; }
+        .tg-hero-sub b { font-weight:700; color:#fff; }
+        .tg-hero-pills { display:flex; gap:7px; margin-top:16px; flex-wrap:wrap; }
+        .tg-hero-pill { font-size:11.5px; font-weight:600; background:rgba(255,255,255,0.14); color:#fff; padding:5px 11px; border-radius:980px; }
+        /* 섹션 */
+        .tg-section { padding:30px 30px; }
+        .tg-section h3 { font-size:18px; font-weight:700; letter-spacing:-0.2px; margin-bottom:20px; display:flex; align-items:center; gap:9px; color:#0f172a; }
         /* 프로세스 스텝 */
-        .tg-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:6px; }
-        .tg-step { background:#f8fafc; border-radius:14px; padding:18px 16px; position:relative; border:1.5px solid #e2e8f0; transition:border-color .15s, transform .15s; }
+        .tg-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .tg-step { background:#f8fafc; border-radius:14px; padding:18px 18px; border:1px solid #e2e8f0; transition:border-color .15s, transform .15s; }
         .tg-step:hover { border-color:#7c3aed; transform:translateY(-2px); }
-        .tg-step-num { width:32px; height:32px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13.5px; margin-bottom:10px; box-shadow:0 4px 10px -2px rgba(124,58,237,0.45); }
-        .tg-step-title { font-size:13.5px; font-weight:900; color:#0f172a; margin-bottom:4px; }
-        .tg-step-desc { font-size:11.5px; color:#475569; line-height:1.55; font-weight:500; }
-        /* 보상 카드 */
+        .tg-step-num { width:30px; height:30px; background:#7c3aed; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; margin-bottom:12px; }
+        .tg-step-title { font-size:13.5px; font-weight:700; color:#0f172a; margin-bottom:5px; letter-spacing:-0.1px; }
+        .tg-step-desc { font-size:12px; color:#475569; line-height:1.6; font-weight:400; }
+        /* 보상 카드 — 단색 배경으로 글자 더 선명 */
         .tg-rewards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-        .tg-reward { background:linear-gradient(135deg,#fef9c3,#fef3c7); border-radius:16px; padding:24px 20px; border:1.5px solid #fbbf24; position:relative; overflow:hidden; }
-        .tg-reward.green { background:linear-gradient(135deg,#dcfce7,#bbf7d0); border-color:#22c55e; }
-        .tg-reward.blue { background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-color:#3b82f6; }
-        .tg-reward-tag { font-size:10.5px; font-weight:800; color:#92400e; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+        .tg-reward { background:#fef9c3; border-radius:16px; padding:24px 22px; border:1px solid #fde68a; }
+        .tg-reward.green { background:#dcfce7; border-color:#bbf7d0; }
+        .tg-reward.blue  { background:#dbeafe; border-color:#bfdbfe; }
+        .tg-reward-tag { font-size:11px; font-weight:600; color:#92400e; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
         .tg-reward.green .tg-reward-tag { color:#166534; }
         .tg-reward.blue .tg-reward-tag { color:#1e40af; }
-        .tg-reward-amount { font-size:32px; font-weight:900; letter-spacing:-1.5px; color:#1f2937; line-height:1.1; margin-bottom:4px; }
-        .tg-reward-amount .small { font-size:14px; font-weight:700; opacity:0.7; }
-        .tg-reward-jp { font-size:12.5px; color:#78350f; font-weight:700; margin-bottom:10px; }
+        .tg-reward-amount { font-size:32px; font-weight:700; letter-spacing:-0.5px; color:#1f2937; line-height:1.1; margin-bottom:6px; }
+        .tg-reward-amount .small { font-size:14px; font-weight:600; opacity:0.7; }
+        .tg-reward-jp { font-size:12.5px; color:#78350f; font-weight:600; margin-bottom:12px; }
         .tg-reward.green .tg-reward-jp { color:#14532d; }
         .tg-reward.blue .tg-reward-jp { color:#1e3a8a; }
-        .tg-reward-desc { font-size:11.5px; color:#374151; line-height:1.6; font-weight:500; }
+        .tg-reward-desc { font-size:12px; color:#374151; line-height:1.65; font-weight:400; }
         /* 파일 형식 카드 */
         .tg-files { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-        .tg-file { padding:20px 22px; border-radius:14px; border:2px solid; }
-        .tg-file.required { border-color:#ef4444; background:#fef2f2; }
-        .tg-file.allowed  { border-color:#22c55e; background:#f0fdf4; }
-        .tg-file h5 { font-size:14px; font-weight:900; margin-bottom:6px; display:flex; align-items:center; gap:7px; }
+        .tg-file { padding:22px 24px; border-radius:14px; border:1px solid; }
+        .tg-file.required { border-color:#fecaca; background:#fef2f2; }
+        .tg-file.allowed  { border-color:#bbf7d0; background:#f0fdf4; }
+        .tg-file h5 { font-size:14px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:7px; letter-spacing:-0.1px; }
         .tg-file.required h5 { color:#b91c1c; }
         .tg-file.allowed h5  { color:#15803d; }
-        .tg-file ul { padding-left:16px; margin:8px 0 0; font-size:12px; color:#374151; line-height:1.7; }
+        .tg-file ul { padding-left:16px; margin:8px 0 0; font-size:12.5px; color:#374151; line-height:1.75; }
         .tg-file ul li { margin-bottom:3px; }
-        .tg-file .tg-file-note { font-size:11px; color:#6b7280; margin-top:8px; font-style:italic; line-height:1.55; }
+        .tg-file .tg-file-note { font-size:11.5px; color:#6b7280; margin-top:10px; line-height:1.55; }
         /* 인출 박스 */
-        .tg-withdraw { background:linear-gradient(135deg,#0f172a,#1e1b4b); color:#fff; border-radius:14px; padding:22px 24px; display:flex; align-items:center; gap:18px; }
-        .tg-withdraw-icon { font-size:38px; flex-shrink:0; }
-        .tg-withdraw-text h5 { font-size:15px; font-weight:900; margin-bottom:6px; color:#fde047; letter-spacing:-0.3px; }
-        .tg-withdraw-text p { font-size:12.5px; opacity:0.88; line-height:1.65; }
-        .tg-withdraw-text b { color:#fde047; }
+        .tg-withdraw { background:#0f172a; color:#fff; border-radius:14px; padding:24px 26px; display:flex; align-items:center; gap:20px; }
+        .tg-withdraw-icon { font-size:38px; flex-shrink:0; opacity:0.95; }
+        .tg-withdraw-text h5 { font-size:15px; font-weight:700; margin-bottom:8px; color:#fde047; letter-spacing:-0.1px; }
+        .tg-withdraw-text p { font-size:12.5px; opacity:0.88; line-height:1.7; color:#e2e8f0; font-weight:400; }
+        .tg-withdraw-text b { color:#fde047; font-weight:600; }
         /* 체크리스트 */
-        .tg-checklist { background:#f8fafc; border-radius:12px; padding:18px 22px; }
-        .tg-checklist li { list-style:none; padding:6px 0 6px 28px; position:relative; font-size:12.5px; color:#334155; line-height:1.6; font-weight:500; }
-        .tg-checklist li::before { content:"✓"; position:absolute; left:0; top:6px; width:20px; height:20px; background:#22c55e; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; }
+        .tg-checklist { background:#f8fafc; border-radius:12px; padding:20px 24px; }
+        .tg-checklist li { list-style:none; padding:6px 0 6px 28px; position:relative; font-size:12.5px; color:#334155; line-height:1.65; font-weight:400; }
+        .tg-checklist li::before { content:"✓"; position:absolute; left:0; top:5px; width:20px; height:20px; background:#22c55e; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; }
         /* 모바일 */
         @media (max-width: 700px) {
             .tg-hero { padding:22px 20px 18px; }
-            .tg-hero-title { font-size:19px; }
+            .tg-hero-title { font-size:20px; }
             .tg-section { padding:22px 18px; }
             .tg-steps { grid-template-columns:1fr; }
             .tg-rewards { grid-template-columns:1fr; }
             .tg-files { grid-template-columns:1fr; }
             .tg-withdraw { flex-direction:column; text-align:center; }
-            .tg-tabs-row .tg-tab { padding:11px 6px; font-size:11.5px; }
         }
     </style>
     <div class="tg-wrap">
