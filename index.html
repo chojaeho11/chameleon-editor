@@ -5877,7 +5877,7 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거)"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
-                <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성 (스티커/등신대 전용)"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
+                <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 / Cutline / カットライン"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutline" class="me-tb-lbl">칼선</span></button>
                 <!-- Row 3 -->
                 <button type="button" class="me-tool-btn me-r3" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
                 <button type="button" class="me-tool-btn me-r3" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
@@ -5887,8 +5887,7 @@ function scrollHotdeal(gridId, dir) {
                     <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모 / Square / 四角"><i class="fa-solid fa-square me-tb-ic"></i></button>
                     <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미 / Circle / 円"><i class="fa-solid fa-circle me-tb-ic"></i></button>
                 </span>
-                <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
-                <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
+                <!-- 2026-06-18 v574: 중복 칼선 버튼 제거 — v573 에서 row 2 에 추가했으므로 여기엔 불필요 -->
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
