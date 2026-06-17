@@ -6868,6 +6868,16 @@ function scrollHotdeal(gridId, dir) {
                      +   '<input type="range" min="5" max="120" step="1" value="' + Math.round(_curPct * 1000) + '" data-cutline-margin style="flex:1; min-width:90px; accent-color:#ef4444;">'
                      +   '<span data-cutline-margin-val style="font-size:11px; font-weight:800; color:#b91c1c; min-width:48px; text-align:right;">' + _modeLbl + _curPctDisp + '%</span>'
                      + '</span>';
+                // 2026-06-17: 등신대 모드에서만 — 받침대 바닥 높이 슬라이더 (cutY 위쪽은 유지, baseBottomY 만 조절).
+                if (window._meStandeeBase && it._cutlineMode === 'outer') {
+                    var _bhPct = (it._cutlineBaseHeightPct != null) ? it._cutlineBaseHeightPct : 0.1;
+                    var _bhPctDisp = (_bhPct * 100).toFixed(1);
+                    html += '<span class="me-prop-group" style="gap:6px; min-width:200px;">'
+                         +   '<label style="color:#0369a1; font-weight:800;">📏 받침 높이</label>'
+                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:90px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-baseh-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:48px; text-align:right;">' + _bhPctDisp + '%</span>'
+                         + '</span>';
+                }
             }
         }
         // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
@@ -6939,6 +6949,19 @@ function scrollHotdeal(gridId, dir) {
                     var modeLbl = (it._cutlineMode === 'inner') ? 'inner −' : 'outer +';
                     disp.textContent = modeLbl + (pct * 100).toFixed(1) + '%';
                 }
+            });
+        });
+        // 2026-06-17: 등신대 받침대 높이 슬라이더 — 위쪽(cutY) 은 그대로, baseBottomY 만 조절 → 받침대 두께 변경.
+        panel.querySelectorAll('[data-cutline-baseh]').forEach(function(sl){
+            sl.addEventListener('input', function(){
+                var pct = parseInt(sl.value, 10) / 1000;   // 0~300 → 0.0~0.3 (0%~30%)
+                if (!isFinite(pct) || pct < 0) pct = 0;
+                it._cutlineBaseHeightPct = pct;
+                // 기존 margin 값으로 offset 재계산 (받침대도 같이 다시 그려짐)
+                var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
+                if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
+                var disp = panel.querySelector('[data-cutline-baseh-val]');
+                if (disp) disp.textContent = (pct * 100).toFixed(1) + '%';
             });
         });
         // 2026-06-14: 공통 액션 핸들러
@@ -7660,7 +7683,8 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-17: 등신대 베이스 — 발 바닥쪽 컨투어를 잘라내고 평평한 받침대로 교체.
     //   세워둘 때 안정적인 받침이 되도록 양 발 폭보다 약간 넓은 사다리꼴/직사각 base 를 추가.
     //   contour 가 Moore 트레이스 결과로 시계방향 정렬돼 있다는 전제.
-    function _meAddStandeeBase(contour, W, H) {
+    //   baseHeightPct: 받침대 깊이 비율 (hRange 의 몇 % 만큼 maxY 아래로 내려갈지). 기본 0.1 (10%).
+    function _meAddStandeeBase(contour, W, H, baseHeightPct) {
         if (!contour || contour.length < 20) return contour;
         var maxY = 0, minY = H;
         for (var i = 0; i < contour.length; i++) {
@@ -7689,7 +7713,9 @@ function scrollHotdeal(gridId, dir) {
         var basePadX = Math.max(W * 0.04, footW * 0.18);
         var baseLeftX = Math.max(0, globalMinX - basePadX);
         var baseRightX = Math.min(W - 1, globalMaxX + basePadX);
-        var baseBottomY = maxY + hRange * 0.1;  // cap 제거 — 이미지 밖으로 내려가는 게 정상
+        // 2026-06-17: 받침대 깊이 슬라이더 적용 — 기본 10%, 사용자가 0~30% 조절 가능
+        var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
+        var baseBottomY = maxY + hRange * _bhPct;  // cap 제거 — 이미지 밖으로 내려가는 게 정상
         // 처음으로 y>=cutY 인 인덱스 (위→아래 진입점) 와 마지막으로 y>=cutY 인 인덱스 (아래→위 출구점)
         var enterIdx = -1, exitIdx = -1;
         for (var i = 0; i < contour.length; i++) {
@@ -7919,8 +7945,9 @@ function scrollHotdeal(gridId, dir) {
         finalPts = _meChaikin(finalPts, 2);
         // 2026-06-17: 등신대 받침대를 smoothing 이후에 추가 — 사각 corner 가 보존되어 바닥이 평평해짐.
         //   이전 (v521-523) 에는 trace 직후 추가 → Chaikin/BoxSmooth 가 받침 corner 를 둥글게 깎아 곡선 바닥.
+        //   it._cutlineBaseHeightPct 가 있으면 사용 (슬라이더로 조절), 없으면 기본 10%.
         if (it._cutlineMode === 'outer' && window._meStandeeBase) {
-            try { finalPts = _meAddStandeeBase(finalPts, W, H); } catch(_be){ console.warn('[standee base]', _be); }
+            try { finalPts = _meAddStandeeBase(finalPts, W, H, it._cutlineBaseHeightPct); } catch(_be){ console.warn('[standee base]', _be); }
         }
         // 2026-06-17: sharp flag(3rd element) 보존 — 등신대 받침대 corner 가 곡선이 아닌 직선으로 렌더되어야 함
         it._cutlineRelPts = finalPts.map(function(p){
@@ -13050,7 +13077,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=528"></script>
+<script src="/simple_order.js?v=529"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
