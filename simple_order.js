@@ -12304,6 +12304,9 @@ html, body { background: #ffffff !important; }
             var userId = panel && panel.dataset.userid;
             var codeEl = document.getElementById('soTplAdminCode');
             var code = codeEl ? (codeEl.value || '').trim() || null : null;
+            // 2026-06-18 v554: me.bg (캔버스 배경색) 도 첫번째 메타 슬롯으로 보존.
+            var bgColor = (window.me && window.me.bg) || '#ffffff';
+            serialized = [{ _type: 'meta', bg: bgColor }].concat(serialized);
             var row = {
                 product_category: cat,
                 product_code: code,

@@ -8203,6 +8203,7 @@ function scrollHotdeal(gridId, dir) {
                 .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots,sort_order')
                 .eq('product_category', cat)
                 .eq('is_active', true)
+                .eq('status', 'approved')   /* 2026-06-18 v554: 승인된 것만 고객에게 노출 (admin/designer 본인은 RLS 통해 pending 도 SELECT 가능했음) */
                 .order('sort_order', { ascending: true })
                 .order('id', { ascending: false });
             if (code) q = q.or(orFilter);
@@ -8249,14 +8250,23 @@ function scrollHotdeal(gridId, dir) {
         me.items = [];
         me._cutlinePathD = null; me._canvasCutlinePathD = null;
         try { var ov = document.getElementById('meCutlineOverlay'); if (ov) ov.remove(); } catch(_){}
-        // 포맷 자동 감지 — slots 첫 항목에 type='shape'/'shelf' 가 있거나 fontSize/src 가 직접 들어있으면 v542 포맷.
+        // 포맷 자동 감지 — slots 안에 type='shape'/'shelf' 또는 _type='meta' 가 있으면 v542+ 포맷.
         var slots = tpl.slots || [];
         var isV542 = slots.length > 0 && slots.some(function(s){
-            return s && (s.type === 'shape' || s.type === 'shelf' || s.shape || (s.type === 'image' && s.src));
+            return s && (s._type === 'meta' || s.type === 'shape' || s.type === 'shelf' || s.shape || (s.type === 'image' && s.src));
         });
         if (isV542) {
             // v542: me.items 그대로 복원 (admin 의 에디터에서 만든 디자인 통째로)
-            slots.forEach(function(saved){ _meRestoreTemplateItem(saved); });
+            // 2026-06-18 v554: 메타 슬롯 처리 — bg color 복원, 실제 item 만 restore
+            slots.forEach(function(saved){
+                if (saved && saved._type === 'meta') {
+                    if (saved.bg && typeof window._meSetBg === 'function') {
+                        try { window._meSetBg(saved.bg); } catch(_){}
+                    }
+                    return;
+                }
+                _meRestoreTemplateItem(saved);
+            });
             return;
         }
         // v539 폴백: 옛 slot 포맷 (배경 이미지 + 슬롯들)
@@ -8311,14 +8321,28 @@ function scrollHotdeal(gridId, dir) {
             el.setAttribute('contenteditable', 'true');
             el.style.cursor = 'text';
             el.style.outline = 'none';
+            // 2026-06-18 v554: 에디터와 동일한 자연스러운 편집 — 첫 클릭만 selectAll, 재클릭은 커서 위치
+            var _everEditedR = false;
+            var _origTextR = saved.text || '';
             el.addEventListener('focus', function(){
-                el.style.background = 'rgba(253,224,71,0.3)';
+                el.style.background = 'rgba(253,224,71,0.20)';
                 el.style.boxShadow = '0 0 0 2px #f59e0b';
-                try { document.execCommand('selectAll', false, null); } catch(_){}
+                if (!_everEditedR && el.innerText === _origTextR) {
+                    try { document.execCommand('selectAll', false, null); } catch(_){}
+                }
             });
+            el.addEventListener('mousedown', function(ev){
+                ev.stopPropagation();
+                if (document.activeElement !== el) setTimeout(function(){ el.focus(); }, 0);
+            });
+            el.addEventListener('touchstart', function(ev){
+                ev.stopPropagation();
+                if (document.activeElement !== el) setTimeout(function(){ el.focus(); }, 0);
+            }, { passive: true });
             el.addEventListener('blur', function(){
                 el.style.background = ''; el.style.boxShadow = '';
                 it.text = el.innerText || '';
+                if (it.text !== _origTextR) _everEditedR = true;
             });
             el.addEventListener('input', function(){ it.text = el.innerText || ''; });
             try { if (typeof _meLoadFont === 'function') _meLoadFont(saved.fontFamily, null); } catch(_){}
@@ -8357,23 +8381,40 @@ function scrollHotdeal(gridId, dir) {
             it.fill = slot.color || '#000000';
             it.textAlign = slot.textAlign || 'left';
             it.lineHeight = 1.2;
-            // 2026-06-17 v541: 템플릿 텍스트 슬롯 — 항상 직접 편집 가능 (단일 클릭 = 즉시 타이핑).
-            //   드래그·리사이즈는 _isTemplateSlot 차단으로 막혀 있으므로 contenteditable 유지해도 안전.
+            // 2026-06-18 v554: 템플릿 텍스트 슬롯 — 에디터처럼 자연스러운 편집.
+            //   첫 클릭 시 placeholder 전부 선택 → 덮어쓰기 / 재클릭 시 그 위치에 커서 / 키보드 입력 보장.
             el.setAttribute('contenteditable', 'true');
             el.textContent = it.text;
-            // 시각적 단서 — 호버 시 점선 강조, 편집 중엔 하이라이트
             el.style.cursor = 'text';
             el.style.outline = 'none';
+            // 한번이라도 편집한 적이 있으면 selectAll 하지 않음 — 자연스럽게 커서만 위치
+            var _everEdited = false;
             el.addEventListener('focus', function(){
-                el.style.background = 'rgba(253,224,71,0.3)';
+                el.style.background = 'rgba(253,224,71,0.20)';
                 el.style.boxShadow = '0 0 0 2px #f59e0b';
-                // 첫 클릭 시 placeholder 전부 선택 — 바로 덮어쓰기
-                try { document.execCommand('selectAll', false, null); } catch(_){}
+                if (!_everEdited && el.innerText === (it.text || '')) {
+                    // 아직 한번도 편집 안 됨 + 기본 텍스트 그대로 → 전체 선택
+                    try { document.execCommand('selectAll', false, null); } catch(_){}
+                }
             });
+            // 클릭 시 즉시 focus 보장 (다른 곳 클릭 후 재진입 케이스 — pointerdown 이 다른 핸들러에 가로채임 방지)
+            el.addEventListener('mousedown', function(ev){
+                ev.stopPropagation();
+                if (document.activeElement !== el) {
+                    setTimeout(function(){ el.focus(); }, 0);
+                }
+            });
+            el.addEventListener('touchstart', function(ev){
+                ev.stopPropagation();
+                if (document.activeElement !== el) {
+                    setTimeout(function(){ el.focus(); }, 0);
+                }
+            }, { passive: true });
             el.addEventListener('blur', function(){
                 el.style.background = '';
                 el.style.boxShadow = '';
                 it.text = el.innerText || '';
+                if (it.text !== (slot.default_text || '')) _everEdited = true;
             });
             el.addEventListener('input', function(){
                 it.text = el.innerText || '';
@@ -13440,7 +13481,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=552"></script>
+<script src="/simple_order.js?v=554"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
