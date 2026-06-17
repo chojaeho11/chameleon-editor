@@ -8002,6 +8002,7 @@ html, body { background: #ffffff !important; }
             wallSide: state.wallSide || 'single',
             wallShape: state.wallShape || 'straight',
             wallShapeFee: state.wallShapeFee || 0,
+            shelfSpec: state.shelfSpec || null,
             // 2026-06-04: 등신대 V2 재질 (큐 라인별 보존) — hb_ss 는 재질 선택 없음
             isStandee: !!state.isStandee,
             standeeMaterial: state.isStandeeV2 ? (state.standeeMaterial || 'honeycomb_16mm') : null,
@@ -9583,6 +9584,82 @@ html, body { background: #ffffff !important; }
         updateButtons();
     }
 
+    // 2026-06-17: 오려내기 / 선반 추가 — 가벽 전용 특수 addon 코드.
+    //   오려내기 (34234456): 미니에디터 대지에 검정 사각형 추가 (가벽 구멍 표시).
+    //   선반 추가 (45645): 가로(cm) + 칸수 입력 popup → qty = ceil(width/100).
+    var _CUTOUT_CODE = '34234456';
+    var _SHELF_CODE = '45645';
+    function _soShowShelfPopup(addonCb, qtyInp) {
+        // 가로 / 칸수 입력 모달
+        var oldEl = document.getElementById('soShelfPopup');
+        if (oldEl) oldEl.remove();
+        var defaultW = (state && state.shelfSpec && state.shelfSpec.w) || 100;
+        var defaultC = (state && state.shelfSpec && state.shelfSpec.cells) || 3;
+        var overlay = document.createElement('div');
+        overlay.id = 'soShelfPopup';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:99998; display:flex; align-items:center; justify-content:center; padding:20px; font-family:inherit;';
+        overlay.innerHTML =
+            '<div style="background:#fff; max-width:440px; width:100%; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.35); overflow:hidden; border-top:5px solid #2563eb;">'
+          +   '<div style="padding:18px 22px 12px; background:#eff6ff; border-bottom:1px solid #2563eb33;">'
+          +     '<div style="font-weight:900; font-size:16px; color:#2563eb;">🪜 ' + tr('선반 추가 (가벽 부착)','棚追加（壁面貼付）','Add shelf (wall-attached)') + '</div>'
+          +     '<div style="font-size:11.5px; color:#475569; margin-top:4px; line-height:1.55;">' + tr('가벽에 부착하는 얇은 선반입니다. 높이 3cm 고정. 가로 1m당 1개로 자재됩니다.','壁面に取り付ける薄い棚です。高さ3cm固定。横1mごとに1個として資材計算。','Thin wall-attached shelf. Height 3cm fixed. Counted as 1 unit per 1m width.') + '</div>'
+          +   '</div>'
+          +   '<div style="padding:18px 22px 16px; font-size:13px; color:#0f172a; line-height:1.7;">'
+          +     '<label style="display:block; margin-bottom:14px;">'
+          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('가로 (cm)','横 (cm)','Width (cm)') + '</div>'
+          +       '<input id="soShelfW" type="number" min="10" max="600" step="10" value="' + defaultW + '" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; box-sizing:border-box;">'
+          +     '</label>'
+          +     '<label style="display:block; margin-bottom:14px;">'
+          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('칸 수 (수직 구분)','仕切り数','Sections') + '</div>'
+          +       '<input id="soShelfC" type="number" min="1" max="20" step="1" value="' + defaultC + '" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; box-sizing:border-box;">'
+          +     '</label>'
+          +     '<div id="soShelfCalc" style="padding:10px 12px; background:#f1f5f9; border-radius:8px; font-size:12px; color:#0f172a; font-weight:700;"></div>'
+          +   '</div>'
+          +   '<div style="padding:14px 22px 18px; display:flex; gap:8px; justify-content:flex-end;">'
+          +     '<button type="button" id="soShelfCancel" style="padding:11px 22px; background:#fff; color:#475569; border:1.5px solid #cbd5e1; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('취소','キャンセル','Cancel') + '</button>'
+          +     '<button type="button" id="soShelfOk" style="padding:11px 22px; background:#2563eb; color:#fff; border:none; border-radius:10px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit;">' + tr('추가','追加','Add') + '</button>'
+          +   '</div>'
+          + '</div>';
+        document.body.appendChild(overlay);
+        function _calc() {
+            var w = parseInt(document.getElementById('soShelfW').value, 10) || 0;
+            var qty = Math.max(1, Math.ceil(w / 100));
+            var cells = parseInt(document.getElementById('soShelfC').value, 10) || 1;
+            var calcEl = document.getElementById('soShelfCalc');
+            if (calcEl) calcEl.textContent = tr(
+                '👉 자재 ' + qty + '개 · 칸 ' + cells + '칸 (가로 ' + w + 'cm)',
+                '👉 資材 ' + qty + '個 · ' + cells + '仕切り (横 ' + w + 'cm)',
+                '👉 ' + qty + ' unit(s) · ' + cells + ' section(s) (' + w + 'cm wide)'
+            );
+            return { w: w, cells: cells, qty: qty };
+        }
+        _calc();
+        document.getElementById('soShelfW').addEventListener('input', _calc);
+        document.getElementById('soShelfC').addEventListener('input', _calc);
+        document.getElementById('soShelfCancel').addEventListener('click', function(){
+            overlay.remove();
+            // 체크박스 원복
+            if (addonCb) {
+                addonCb.checked = false;
+                var lbl = addonCb.closest('label');
+                if (lbl) { lbl.style.borderColor = '#e7e5e4'; lbl.style.background = '#fff'; }
+            }
+            delete state.selectedAddons[_SHELF_CODE];
+            delete state.addonQuantities[_SHELF_CODE];
+            delete state.shelfSpec;
+            recalc();
+        });
+        document.getElementById('soShelfOk').addEventListener('click', function(){
+            var spec = _calc();
+            if (!spec.w || spec.w < 10) { alert(tr('가로 값을 입력해주세요.','横の値を入力してください。','Please enter the width.')); return; }
+            state.shelfSpec = { w: spec.w, cells: spec.cells };
+            state.selectedAddons[_SHELF_CODE] = _SHELF_CODE;
+            state.addonQuantities[_SHELF_CODE] = spec.qty;
+            if (qtyInp) qtyInp.value = spec.qty;
+            overlay.remove();
+            recalc();
+        });
+    }
     // 2026-05-13: 추가 옵션 체크박스 토글
     window._soToggleAddon = function (inp) {
         var code = inp.dataset.addonCode;
@@ -9591,6 +9668,26 @@ html, body { background: #ffffff !important; }
         if (!state.addonQuantities) state.addonQuantities = {};
         var _lbl = inp.closest('label');
         var _qInp = _lbl ? _lbl.querySelector('input[data-addon-qty-code]') : null;
+        // 2026-06-17: 가벽 특수 addon — 오려내기 / 선반 추가.
+        if (state.isWall && code === _CUTOUT_CODE) {
+            if (inp.checked) {
+                // 미니에디터에 검정 사각형 추가 (구멍 표시)
+                try { if (typeof window._meAddCutout === 'function') window._meAddCutout(); } catch(_e){}
+            } else {
+                // 모든 cutout 사각형 제거
+                try { if (typeof window._meRemoveCutouts === 'function') window._meRemoveCutouts(); } catch(_e){}
+            }
+            // 일반 addon 처리로 계속 (수량/체크 상태)
+        }
+        if (state.isWall && code === _SHELF_CODE) {
+            if (inp.checked) {
+                _soShowShelfPopup(inp, _qInp);
+                return; // 팝업 OK 누르면 거기서 selectedAddons/qty 채움
+            } else {
+                delete state.shelfSpec;
+                // 일반 uncheck 흐름으로 진행
+            }
+        }
         // 2026-05-30: 키링/코롯토 — 고리는 1종류만 선택 (단일선택). 새 고리 체크 시 다른 고리 해제
         if (inp.checked && state.presetHasHooks) {
             Object.keys(state.selectedAddons).forEach(function (existingCode) {
@@ -13156,6 +13253,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 가벽 형태 (straight/L/U) + 코너 추가비
             wallShape: state.isWall ? (state.wallShape || 'straight') : null,
             wallShapeFee: state.isWall ? (state.wallShapeFee || 0) : 0,
+            // 2026-06-17: 선반 추가 spec (가로 cm + 칸 수) — 가벽 전용 addon (45645) 선택 시 저장
+            shelfSpec: state.isWall ? (state.shelfSpec || null) : null,
             // 2026-06-04: 등신대 V2 재질 (honeycomb_16mm / foamex_3mm — 동일 가격, 표시 및 작업지시용)
             standeeMaterial: state.isStandeeV2 ? (state.standeeMaterial || 'honeycomb_16mm') : null,
             // 2026-06-04: 자유인쇄커팅 보드 재질 (6종 — 동일 가격, 표시 및 작업지시용)

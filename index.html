@@ -7187,6 +7187,39 @@ function scrollHotdeal(gridId, dir) {
         window._meAddShape(_meShapeCycle);
         _meShapeCycle = (_meShapeCycle === 'rect') ? 'circle' : 'rect';
     };
+    // 2026-06-17: 오려내기 (가벽 구멍) — 검정 사각형 (대지 외부와 같은 색). 추가옵션 "오려내기" 체크 시 호출.
+    //   shape='rect' 와 동일하지만 isCutout 태그 + 검정 fill. 일반 도형 cycle 에 영향 없음.
+    //   여러 번 추가 가능 (가벽에 구멍 여러 개 가능).
+    window._meAddCutout = function() {
+        _meSnapshot();
+        var el = document.createElement('div');
+        el.className = 'me-item shape';
+        el.style.zIndex = (++me.zCounter);
+        me.stage.appendChild(el);
+        var w = me.natW * 0.2, h = me.natH * 0.2;
+        var it = {
+            el: el, type: 'shape', shape: 'rect',
+            x: (me.natW - w) / 2, y: (me.natH - h) / 2,
+            w: w, h: h,
+            fill: '#000000', stroke: '#000000', strokeWidth: 0,
+            isCutout: true   // export / 작업지시서에서 구분
+        };
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);
+        _meSelect(it);
+        return it;
+    };
+    // 2026-06-17: 모든 오려내기 사각형 제거 (체크박스 해제 시).
+    window._meRemoveCutouts = function() {
+        if (!me || !me.items) return;
+        var remaining = [];
+        me.items.forEach(function(it){
+            if (it && it.isCutout) { try { it.el.remove(); } catch(_){} return; }
+            remaining.push(it);
+        });
+        me.items = remaining;
+    };
     // 2026-06-16: 외부 (simple_order 의 배경 프리셋) 에서 분할 배경 추가.
     //   opts: { kind:'tb'|'lr'|'3', colors:['#a','#b'] or ['#a','#b','#c'] }
     //   tb: 위 2/3 light + 아래 1/3 dark.   lr: 좌 2/3 + 우 1/3.   3: 좌·중·우 3등분.
@@ -12735,7 +12768,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=514"></script>
+<script src="/simple_order.js?v=515"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
