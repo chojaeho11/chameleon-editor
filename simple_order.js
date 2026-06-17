@@ -3528,10 +3528,20 @@ html, body { background: #ffffff !important; }
                     dropdownChangedNote,
                     '',
                     '<b style="color:#1e40af;">' + tr('옆면이 없이 디자인하셨네요.','側面なしでデザインされていますね。','Designed without side panels.') + '</b>',
-                    '<span style="color:#475569;">' + tr('옆면(좌우 150mm씩)은 ','側面(左右150mmずつ)は ','Side panels (150mm each side) will be ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','printed in white') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
+                    '<span style="color:#475569;">' + tr('옆면(좌우 150mm씩)은 기본 ','側面(左右150mmずつ)はデフォルトで ','Side panels (150mm each side) default to ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','white print') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
                     '',
-                    tr('옆면이 흰색이어도 괜찮다면 ','側面が白色でよろしければ ','If white side panels are acceptable, ') + '<b>' + tr('그대로 진행','そのまま進行','proceed as is') + '</b>' + tr('해도 됩니다.','で問題ありません。','.'),
-                    '<span style="color:#475569;">' + tr('옆면까지 색상을 넣고 싶으시다면 좌우 ','側面にも色を入れたい場合は左右 ','To extend the design to the side panels, add ') + '<b>' + tr('150mm씩 늘려서','150mmずつ広げて','150mm to each side') + '</b>' + tr(' 디자인 후 올려주세요.',' デザインしてアップロードしてください。',' and re-upload.') + '</span>'
+                    // 2026-06-17: 옆면 색상 지정 안내 추가
+                    '<div style="margin:8px 0; padding:10px 12px; background:#eff6ff; border-left:3px solid #2563eb; border-radius:6px;">'
+                      + '<b style="color:#1e40af;">💡 ' + tr('옆면 색상을 지정하고 싶다면?', '側面の色を指定したい場合は？', 'Want to specify a side panel color?') + '</b><br>'
+                      + '<span style="color:#475569; font-size:12px;">'
+                      + tr('미니에디터 상단의 ', 'ミニエディター上部の ', 'Click the ')
+                      + '<b style="color:#0f172a;">🎨 ' + tr('배경', '背景', 'Background')
+                      + '</b>'
+                      + tr(' 을 클릭해서 옆면 색을 선택할 수 있습니다.', ' をクリックして側面の色を選択できます。', ' at the top of the mini editor to choose the side panel color.')
+                      + '</span></div>',
+                    '',
+                    tr('이대로 진행해도 됩니다.','このまま進行しても問題ありません。','You can proceed as is.'),
+                    '<span style="color:#475569;">' + tr('옆면까지 색상을 직접 디자인하려면 좌우 ','側面まで直接デザインする場合は左右 ','To fully design the side panels yourself, add ') + '<b>' + tr('150mm씩 늘려서','150mmずつ広げて','150mm to each side') + '</b>' + tr(' 다시 업로드해주세요.',' 再アップロードしてください。',' and re-upload.') + '</span>'
                 ],
                 buttons: [{ label: tr('확인','確認','OK'), primary: true, action: function(){} }]
             });
