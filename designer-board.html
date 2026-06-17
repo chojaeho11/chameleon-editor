@@ -124,15 +124,30 @@
 <body>
     <header class="db-head">
         <div class="db-head-inner">
-            <a href="/" class="db-logo">디자이너 보드<small>· 카멜레온프린팅</small></a>
+            <a href="/" class="db-logo" id="dbLogoText">디자이너 보드<small>· 카멜레온프린팅</small></a>
             <div class="db-user" id="dbUserInfo"></div>
-            <!-- 2026-06-17 v543: 템플릿 등록 버튼 — 디자이너가 자유 디자인하여 검토 요청 -->
-            <button id="btnRegisterTemplate" onclick="openTemplateRegister()" style="padding:8px 16px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:800; box-shadow:0 4px 12px -2px rgba(124,58,237,0.5); display:inline-flex; align-items:center; gap:6px;">
-                <span>🎨</span> 템플릿 등록하기
+            <button id="btnRegisterTemplate" onclick="openTemplateRegister()" style="padding:8px 16px; background:#4c1d95; color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                <span>🎨</span> <span id="btnRegisterTemplateText">템플릿 등록하기</span>
             </button>
-            <button class="db-btn-out" onclick="dbLogout()">로그아웃</button>
+            <button class="db-btn-out" onclick="dbLogout()" id="btnLogoutText">로그아웃</button>
         </div>
     </header>
+    <script>
+        // v546: 헤더 + 버튼 텍스트 사이트 언어에 맞춰 교체
+        (function(){
+            var h = (location.hostname || '').toLowerCase();
+            var site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+            var L = {
+                KR: { logo:'디자이너 보드', sub:'· 카멜레온프린팅', reg:'템플릿 등록하기', out:'로그아웃' },
+                JP: { logo:'デザイナーボード', sub:'· カメレオン印刷', reg:'テンプレート登録', out:'ログアウト' },
+                US: { logo:'Designer Board', sub:'· Chameleon Print', reg:'Register Template', out:'Logout' }
+            }[site];
+            var logo = document.getElementById('dbLogoText'); if (logo) logo.innerHTML = L.logo + '<small>' + L.sub + '</small>';
+            var br = document.getElementById('btnRegisterTemplateText'); if (br) br.textContent = L.reg;
+            var bo = document.getElementById('btnLogoutText'); if (bo) bo.textContent = L.out;
+            document.title = L.logo + ' — ' + L.sub.replace(/^·\s*/, '');
+        })();
+    </script>
 
     <!-- 2026-06-17 v544: 템플릿 디자이너 가이드 — 상세페이지 스타일 -->
     <style>
@@ -208,140 +223,133 @@
     </style>
     <div class="tg-wrap">
         <div class="tg-card">
-            <details>
+            <details id="tgDetails">
                 <summary>
                     <div class="tg-hero">
-                        <div class="tg-hero-eyebrow">🎨 TEMPLATE DESIGNER PROGRAM</div>
-                        <div class="tg-hero-title">디자인하고 적립 받으세요</div>
-                        <div class="tg-hero-sub">승인 즉시 <b>3만원 적립</b> + 고객이 사용할 때마다 <b>판매금의 10%</b> 추가 적립. 디자이너 보드의 예치금은 <b>즉시 현금 인출 가능</b> 합니다.</div>
-                        <div class="tg-hero-pills">
-                            <span class="tg-hero-pill">⚡ 즉시 적립</span>
-                            <span class="tg-hero-pill">💰 + 판매 10% 로열티</span>
-                            <span class="tg-hero-pill">🏦 즉시 인출</span>
-                            <span class="tg-hero-pill">📖 클릭하여 가이드 펼치기</span>
-                        </div>
+                        <div class="tg-hero-eyebrow" id="tgEyebrow">🎨 TEMPLATE DESIGNER PROGRAM</div>
+                        <div class="tg-hero-title" id="tgTitle">디자인하고 적립 받으세요</div>
+                        <div class="tg-hero-sub" id="tgSub"></div>
+                        <div class="tg-hero-pills" id="tgPills"></div>
                     </div>
                 </summary>
 
-                <!-- 보상 섹션 -->
-                <div class="tg-section">
-                    <h3>💰 보상 체계</h3>
-                    <div class="tg-rewards">
-                        <div class="tg-reward">
-                            <div class="tg-reward-tag">기본 승인 적립</div>
-                            <div class="tg-reward-amount">30,000<span class="small">원</span></div>
-                            <div class="tg-reward-jp">日本 ¥3,000</div>
-                            <div class="tg-reward-desc">관리자 승인 즉시 예치금에 자동 적립. 거절 시 row 자동 삭제 (재제출 가능).</div>
-                        </div>
-                        <div class="tg-reward green">
-                            <div class="tg-reward-tag">판매 로열티</div>
-                            <div class="tg-reward-amount">+10<span class="small">%</span></div>
-                            <div class="tg-reward-jp">제품 판매금 대비</div>
-                            <div class="tg-reward-desc">고객이 본인 템플릿을 선택해 결제 완료 시 결제 금액의 10% 가 매 건마다 자동 적립. 인기 디자인은 누적 수익 지속 발생.</div>
-                        </div>
-                        <div class="tg-reward blue">
-                            <div class="tg-reward-tag">현금 인출</div>
-                            <div class="tg-reward-amount">즉시<span class="small"> 가능</span></div>
-                            <div class="tg-reward-jp">3.3% 세금 공제 후</div>
-                            <div class="tg-reward-desc">디자이너 보드 우상단의 예치금 인출 메뉴에서 신청. 영업일 1~2일 내 등록 계좌로 입금.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 프로세스 섹션 -->
-                <div class="tg-section" style="background:#fafafa;">
-                    <h3>🎯 프로세스 6 STEPS</h3>
-                    <div class="tg-steps">
-                        <div class="tg-step">
-                            <div class="tg-step-num">1</div>
-                            <div class="tg-step-title">템플릿 등록하기 클릭</div>
-                            <div class="tg-step-desc">우상단 보라색 <b>🎨 템플릿 등록하기</b> 버튼 클릭</div>
-                        </div>
-                        <div class="tg-step">
-                            <div class="tg-step-num">2</div>
-                            <div class="tg-step-title">상품 선택</div>
-                            <div class="tg-step-desc">카테고리 → 상품 순으로 선택. 명함/현수막/가벽 등 모든 인쇄 상품 가능</div>
-                        </div>
-                        <div class="tg-step">
-                            <div class="tg-step-num">3</div>
-                            <div class="tg-step-title">디자인 모드 진입</div>
-                            <div class="tg-step-desc">상품 페이지가 디자인 모드로 열림. 결제 버튼 자리에 시안 패널</div>
-                        </div>
-                        <div class="tg-step">
-                            <div class="tg-step-num">4</div>
-                            <div class="tg-step-title">자유 디자인</div>
-                            <div class="tg-step-desc">텍스트, 도형, 색상, SVG/PDF/이미지 업로드. 한글 폰트 37종 사용 가능</div>
-                        </div>
-                        <div class="tg-step">
-                            <div class="tg-step-num">5</div>
-                            <div class="tg-step-title">📤 검토 요청</div>
-                            <div class="tg-step-desc">제목 입력 후 검토 요청 버튼 클릭 → 관리자 대기열에 자동 등록</div>
-                        </div>
-                        <div class="tg-step">
-                            <div class="tg-step-num">6</div>
-                            <div class="tg-step-title">승인 & 적립</div>
-                            <div class="tg-step-desc">승인 시 3만원 즉시 적립 + 고객 페이지의 🎨 템플릿 그리드에 자동 노출</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 파일 형식 섹션 -->
-                <div class="tg-section">
-                    <h3>📐 파일 형식 가이드</h3>
-                    <div class="tg-files">
-                        <div class="tg-file required">
-                            <h5>⚠️ 필수 벡터 (SVG / PDF)</h5>
-                            <div style="font-size:12.5px; color:#7f1d1d; font-weight:600; margin-bottom:8px;">대형 제품군 — 인쇄 시 손실 없이 확대되어야 함</div>
-                            <ul>
-                                <li>허니콤보드 가벽 (3m × 2.4m 등)</li>
-                                <li>배너 / 현수막</li>
-                                <li>종이매대 / 등신대</li>
-                                <li>허니콤 원판 / 인스타판넬</li>
-                                <li>강화 골판지 가벽</li>
-                            </ul>
-                            <div class="tg-file-note">PNG·JPG 만 업로드 시 화질 저하로 <b>거절</b> 될 수 있습니다.</div>
-                        </div>
-                        <div class="tg-file allowed">
-                            <h5>✅ 이미지 가능 (PNG / JPG)</h5>
-                            <div style="font-size:12.5px; color:#14532d; font-weight:600; margin-bottom:8px;">소형 인쇄물 — 300 DPI 이상 권장</div>
-                            <ul>
-                                <li>명함 (90×54mm 등)</li>
-                                <li>전단지 · 리플렛</li>
-                                <li>스티커 · 라벨</li>
-                                <li>엽서 · 카드</li>
-                                <li>굿즈 · 키링</li>
-                            </ul>
-                            <div class="tg-file-note">SVG · PDF 도 환영. PNG/JPG 사용 시 충분한 해상도 확보 필수.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 좋은 템플릿 체크리스트 -->
-                <div class="tg-section" style="background:#fafafa;">
-                    <h3>💡 좋은 템플릿의 조건</h3>
-                    <ul class="tg-checklist">
-                        <li>고객이 텍스트 (이름 · 연락처 · 문구) 만 바꿔도 완성도 높은 디자인</li>
-                        <li>편집 영역과 고정 디자인 영역이 명확하게 구분</li>
-                        <li>저작권 침해 없는 자체 제작 (저작권 있는 이미지/폰트 사용 시 거절)</li>
-                        <li>인쇄 가능한 색상 사용 (CMYK 영역, 형광 RGB 색 지양)</li>
-                        <li>같은 카테고리에 다양한 스타일 (모던 · 클래식 · 캐주얼 · 미니멀 등) 환영</li>
-                        <li>여백 · 정렬 · 폰트 조합 등 인쇄 디자인 기본 원칙 준수</li>
-                    </ul>
-                </div>
-
-                <!-- 인출 안내 -->
-                <div class="tg-section">
-                    <div class="tg-withdraw">
-                        <div class="tg-withdraw-icon">🏦</div>
-                        <div class="tg-withdraw-text">
-                            <h5>적립금은 즉시 현금 인출 가능</h5>
-                            <p>디자이너 보드 우상단 <b>예치금 → 인출 신청</b> 메뉴에서 등록한 계좌로 즉시 신청 가능. 영업일 1~2일 내 입금. <b>인출 시 3.3% 원천세 자동 공제</b> 됩니다. 일본 사이트의 경우 ¥10,000 부터 인출 가능 (10% 원천세 공제).</p>
-                        </div>
-                    </div>
-                </div>
+                <div id="tgBody"></div>
             </details>
         </div>
     </div>
+    <script>
+        // v546: 가이드 i18n — 사이트 언어별로 6개 섹션 동적 렌더.
+        (function(){
+            var h = (location.hostname || '').toLowerCase();
+            var site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+            var L = {
+                KR: {
+                    title:'디자인하고 적립 받으세요',
+                    sub:'승인 즉시 <b>3만원 적립</b> + 고객이 사용할 때마다 <b>판매금의 10%</b> 추가 적립. 예치금은 <b>즉시 현금 인출 가능</b> 합니다.',
+                    pills:['⚡ 즉시 적립', '💰 + 판매 10% 로열티', '🏦 즉시 인출', '📖 클릭하여 가이드 펼치기'],
+                    rewards_h:'💰 보상 체계',
+                    r1_tag:'기본 승인 적립', r1_amt:'30,000', r1_unit:'원', r1_jp:'日本 ¥3,000', r1_desc:'관리자 승인 즉시 예치금에 자동 적립. 거절 시 row 자동 삭제 (재제출 가능).',
+                    r2_tag:'판매 로열티', r2_amt:'+10', r2_unit:'%', r2_jp:'제품 판매금 대비', r2_desc:'고객이 본인 템플릿을 선택해 결제 완료 시 결제 금액의 10%가 매 건마다 자동 적립. 인기 디자인은 누적 수익 지속 발생.',
+                    r3_tag:'현금 인출', r3_amt:'즉시', r3_unit:' 가능', r3_jp:'3.3% 세금 공제 후', r3_desc:'디자이너 보드의 예치금 인출 메뉴에서 신청. 영업일 1~2일 내 등록 계좌로 입금.',
+                    steps_h:'🎯 프로세스 6 STEPS',
+                    s1_t:'템플릿 등록하기 클릭', s1_d:'우상단 보라색 <b>🎨 템플릿 등록하기</b> 버튼 클릭',
+                    s2_t:'상품 선택', s2_d:'카테고리 → 상품 순으로 선택',
+                    s3_t:'디자인 모드 진입', s3_d:'상품 페이지가 디자인 모드로 열림. 결제 버튼 자리에 시안 패널',
+                    s4_t:'자유 디자인', s4_d:'텍스트, 도형, 색상, SVG/PDF/이미지 업로드. 한글 폰트 37종 사용 가능',
+                    s5_t:'📤 검토 요청', s5_d:'제목 입력 후 검토 요청 버튼 클릭 → 관리자 대기열 자동 등록',
+                    s6_t:'승인 & 적립', s6_d:'승인 시 3만원 즉시 적립 + 고객 페이지의 🎨 템플릿 그리드에 자동 노출',
+                    files_h:'📐 파일 형식 가이드',
+                    f1_h:'⚠️ 필수 벡터 (SVG / PDF)', f1_sub:'대형 제품군 — 인쇄 시 손실 없이 확대되어야 함',
+                    f1_list:['허니콤보드 가벽','배너 / 현수막','종이매대 / 등신대','허니콤 원판 / 인스타판넬','강화 골판지 가벽'],
+                    f1_note:'PNG·JPG 만 업로드 시 화질 저하로 <b>거절</b>될 수 있습니다.',
+                    f2_h:'✅ 이미지 가능 (PNG / JPG)', f2_sub:'소형 인쇄물 — 300 DPI 이상 권장',
+                    f2_list:['명함 (90×54mm 등)','전단지 · 리플렛','스티커 · 라벨','엽서 · 카드','굿즈 · 키링'],
+                    f2_note:'SVG · PDF 도 환영. PNG/JPG 사용 시 충분한 해상도 확보 필수.',
+                    quality_h:'💡 좋은 템플릿의 조건',
+                    quality:['고객이 텍스트(이름·연락처·문구)만 바꿔도 완성도 높은 디자인','편집 영역과 고정 디자인 영역이 명확히 구분','저작권 침해 없는 자체 제작','인쇄 가능한 색상 사용 (CMYK 영역)','같은 카테고리에 다양한 스타일 환영','여백·정렬·폰트 조합 등 인쇄 디자인 기본 원칙 준수'],
+                    wd_h:'적립금은 즉시 현금 인출 가능',
+                    wd_p:'예치금 인출 메뉴에서 등록한 계좌로 즉시 신청. 영업일 1~2일 내 입금. <b>인출 시 3.3% 원천세 자동 공제</b>됩니다.'
+                },
+                JP: {
+                    title:'デザインして報酬を受け取ろう',
+                    sub:'承認時に <b>¥3,000 即時付与</b> + お客様が使うたび <b>販売金額の10%</b> 追加付与。残高は <b>即時現金引き出し可能</b> です。',
+                    pills:['⚡ 即時付与', '💰 + 販売10%ロイヤリティ', '🏦 即時引き出し', '📖 タップでガイドを開く'],
+                    rewards_h:'💰 報酬体系',
+                    r1_tag:'基本承認報酬', r1_amt:'¥3,000', r1_unit:'', r1_jp:'韓国 30,000ウォン', r1_desc:'管理者承認と同時に残高に自動付与。却下時はデータ自動削除（再提出可）。',
+                    r2_tag:'販売ロイヤリティ', r2_amt:'+10', r2_unit:'%', r2_jp:'商品販売額に対して', r2_desc:'お客様がこのテンプレートで決済完了するたび、決済額の10%が自動付与。人気デザインは継続収益が発生。',
+                    r3_tag:'現金引き出し', r3_amt:'即時', r3_unit:'可能', r3_jp:'源泉税控除後', r3_desc:'デザイナーボードの残高引き出しメニューから申請。営業日1〜2日以内に口座入金。',
+                    steps_h:'🎯 6ステップのフロー',
+                    s1_t:'テンプレート登録ボタン', s1_d:'右上の紫 <b>🎨 テンプレート登録</b> ボタンをクリック',
+                    s2_t:'商品を選択', s2_d:'カテゴリ → 商品の順に選択',
+                    s3_t:'デザインモード起動', s3_d:'商品ページがデザインモードで開く。決済ボタンの位置にパネル',
+                    s4_t:'自由にデザイン', s4_d:'テキスト・図形・色・SVG/PDF/画像アップロード可能',
+                    s5_t:'📤 審査依頼', s5_d:'タイトル入力後、審査依頼ボタンで提出',
+                    s6_t:'承認 & 付与', s6_d:'承認時に¥3,000即時付与 + お客様ページの🎨テンプレート一覧に自動掲載',
+                    files_h:'📐 ファイル形式ガイド',
+                    f1_h:'⚠️ ベクター必須 (SVG / PDF)', f1_sub:'大型製品 — 印刷時に劣化なく拡大される必要あり',
+                    f1_list:['ハニカム間仕切り','バナー / 横断幕','紙売り場 / 等身大POP','ハニカム原板 / インスタパネル','強化段ボール仕切り'],
+                    f1_note:'PNG・JPGのみアップロードの場合、画質劣化により <b>却下</b> される可能性。',
+                    f2_h:'✅ 画像可 (PNG / JPG)', f2_sub:'小型印刷物 — 300 DPI以上推奨',
+                    f2_list:['名刺 (90×54mm 等)','チラシ・リーフレット','ステッカー・ラベル','はがき・カード','グッズ・キーホルダー'],
+                    f2_note:'SVG・PDFも歓迎。PNG/JPG使用時は十分な解像度を確保。',
+                    quality_h:'💡 良いテンプレートの条件',
+                    quality:['お客様がテキスト(名前・連絡先・文言)を変えるだけで高品質','編集領域と固定領域が明確に区分','著作権侵害のない自作デザイン','印刷可能な色 (CMYK領域)','同カテゴリに多様なスタイル(モダン/クラシック等)歓迎','余白・整列・フォント組合せなど印刷デザイン基本原則を遵守'],
+                    wd_h:'残高は即時現金引き出し可能',
+                    wd_p:'残高引き出しメニューから登録口座へ即時申請。営業日1〜2日以内入金。<b>引き出し時に源泉税自動控除</b>されます。'
+                },
+                US: {
+                    title:'Design and earn',
+                    sub:'<b>30,000 KRW instantly</b> on approval + <b>10% royalty per sale</b>. Balance available for <b>immediate withdrawal</b>.',
+                    pills:['⚡ Instant Credit', '💰 + 10% Sales Royalty', '🏦 Instant Withdrawal', '📖 Tap to expand guide'],
+                    rewards_h:'💰 Compensation',
+                    r1_tag:'Base Approval', r1_amt:'30,000', r1_unit:' KRW', r1_jp:'JP ¥3,000 equivalent', r1_desc:'Auto-credited the moment an admin approves your submission. Rejected entries are deleted (resubmit allowed).',
+                    r2_tag:'Sales Royalty', r2_amt:'+10', r2_unit:'%', r2_jp:'of product sale price', r2_desc:'Every time a customer picks your template and completes payment, 10% of the order is auto-credited. Popular designs keep paying out.',
+                    r3_tag:'Cash Out', r3_amt:'Instant', r3_unit:'', r3_jp:'After 3.3% tax (KR) / 10% (JP)', r3_desc:'Request withdrawal from the balance menu. Funds reach the linked bank account within 1–2 business days.',
+                    steps_h:'🎯 6-Step Process',
+                    s1_t:'Click "Register Template"', s1_d:'Purple <b>🎨 Register Template</b> button in the top-right',
+                    s2_t:'Pick a Product', s2_d:'Choose category → product',
+                    s3_t:'Enter Design Mode', s3_d:'The product page opens in design mode. The checkout area is replaced with a submission panel',
+                    s4_t:'Design Freely', s4_d:'Text, shapes, colors, SVG/PDF/image upload — full editor',
+                    s5_t:'📤 Submit for Review', s5_d:'Enter a title and submit to the admin queue',
+                    s6_t:'Approval & Credit', s6_d:'On approval: 30K KRW credited instantly + listed in the customer template grid',
+                    files_h:'📐 File Format Guide',
+                    f1_h:'⚠️ Vector Required (SVG / PDF)', f1_sub:'Large-format products — must scale without quality loss',
+                    f1_list:['Honeycomb walls','Banners / Placards','Paper displays / Standees','Honeycomb panels / Insta panels','Reinforced corrugated walls'],
+                    f1_note:'PNG/JPG-only uploads may be <b>rejected</b> due to quality loss.',
+                    f2_h:'✅ Images Allowed (PNG / JPG)', f2_sub:'Small-format prints — 300 DPI minimum recommended',
+                    f2_list:['Business cards (90×54mm etc.)','Leaflets / brochures','Stickers / labels','Postcards / greeting cards','Goods / keychains'],
+                    f2_note:'SVG / PDF also welcome. Ensure sufficient DPI when using PNG/JPG.',
+                    quality_h:'💡 What Makes a Great Template',
+                    quality:['Looks polished even when the customer only swaps text (name, contact, slogan)','Clear separation between editable and fixed design areas','100% original work — no copyrighted assets or fonts','Print-safe colors (CMYK gamut, avoid neon RGB)','Variety welcomed — modern, classic, minimal, etc. in the same category','Print design fundamentals: spacing, alignment, font pairing'],
+                    wd_h:'Instant cash withdrawal available',
+                    wd_p:'Submit a withdrawal request from the balance menu. Funds arrive in 1–2 business days. <b>3.3% withholding tax automatically deducted</b> (KR / US) — 10% for JP site.'
+                }
+            }[site];
+            // 1) Hero
+            document.getElementById('tgTitle').textContent = L.title;
+            document.getElementById('tgSub').innerHTML = L.sub;
+            document.getElementById('tgPills').innerHTML = L.pills.map(function(p){ return '<span class="tg-hero-pill">' + p + '</span>'; }).join('');
+            // 2) Body sections
+            var html = '';
+            html += '<div class="tg-section"><h3>' + L.rewards_h + '</h3><div class="tg-rewards">'
+                +   '<div class="tg-reward"><div class="tg-reward-tag">' + L.r1_tag + '</div><div class="tg-reward-amount">' + L.r1_amt + '<span class="small">' + L.r1_unit + '</span></div><div class="tg-reward-jp">' + L.r1_jp + '</div><div class="tg-reward-desc">' + L.r1_desc + '</div></div>'
+                +   '<div class="tg-reward green"><div class="tg-reward-tag">' + L.r2_tag + '</div><div class="tg-reward-amount">' + L.r2_amt + '<span class="small">' + L.r2_unit + '</span></div><div class="tg-reward-jp">' + L.r2_jp + '</div><div class="tg-reward-desc">' + L.r2_desc + '</div></div>'
+                +   '<div class="tg-reward blue"><div class="tg-reward-tag">' + L.r3_tag + '</div><div class="tg-reward-amount">' + L.r3_amt + '<span class="small">' + L.r3_unit + '</span></div><div class="tg-reward-jp">' + L.r3_jp + '</div><div class="tg-reward-desc">' + L.r3_desc + '</div></div>'
+                + '</div></div>';
+            html += '<div class="tg-section" style="background:#fafafa;"><h3>' + L.steps_h + '</h3><div class="tg-steps">';
+            ['s1','s2','s3','s4','s5','s6'].forEach(function(k, i){
+                html += '<div class="tg-step"><div class="tg-step-num">' + (i+1) + '</div><div class="tg-step-title">' + L[k+'_t'] + '</div><div class="tg-step-desc">' + L[k+'_d'] + '</div></div>';
+            });
+            html += '</div></div>';
+            html += '<div class="tg-section"><h3>' + L.files_h + '</h3><div class="tg-files">'
+                +   '<div class="tg-file required"><h5>' + L.f1_h + '</h5><div style="font-size:12.5px; color:#7f1d1d; font-weight:600; margin-bottom:8px;">' + L.f1_sub + '</div><ul>' + L.f1_list.map(function(x){return '<li>'+x+'</li>'}).join('') + '</ul><div class="tg-file-note">' + L.f1_note + '</div></div>'
+                +   '<div class="tg-file allowed"><h5>' + L.f2_h + '</h5><div style="font-size:12.5px; color:#14532d; font-weight:600; margin-bottom:8px;">' + L.f2_sub + '</div><ul>' + L.f2_list.map(function(x){return '<li>'+x+'</li>'}).join('') + '</ul><div class="tg-file-note">' + L.f2_note + '</div></div>'
+                + '</div></div>';
+            html += '<div class="tg-section" style="background:#fafafa;"><h3>' + L.quality_h + '</h3><ul class="tg-checklist">' + L.quality.map(function(x){return '<li>'+x+'</li>'}).join('') + '</ul></div>';
+            html += '<div class="tg-section"><div class="tg-withdraw"><div class="tg-withdraw-icon">🏦</div><div class="tg-withdraw-text"><h5>' + L.wd_h + '</h5><p>' + L.wd_p + '</p></div></div></div>';
+            document.getElementById('tgBody').innerHTML = html;
+        })();
+    </script>
 
     <main class="db-wrap" id="dbMain">
         <div class="db-loading">불러오는 중...</div>
@@ -379,6 +387,25 @@
 const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// 2026-06-17 v546: 사이트별 언어 (cafe2626=KR, cafe0101=JP, cafe3355=US)
+const DB_SITE = (function(){
+    var h = (location.hostname || '').toLowerCase();
+    if (h.indexOf('cafe0101') >= 0) return 'JP';
+    if (h.indexOf('cafe3355') >= 0) return 'US';
+    if (h.indexOf('hexa-board') >= 0) return 'US';
+    return 'KR';
+})();
+function tr(kr, jp, en) {
+    if (DB_SITE === 'JP') return jp;
+    if (DB_SITE === 'US') return en;
+    return kr;
+}
+function trCurrency(krVal) {
+    if (DB_SITE === 'JP') return '¥' + Math.round(krVal * 0.1).toLocaleString();
+    if (DB_SITE === 'US') return '$' + (krVal * 0.001).toFixed(2);
+    return krVal.toLocaleString() + '원';
+}
 
 // 카테고리별 디자이너 정산금 (고객금액 - 마진)
 const PAYOUT = {
@@ -513,53 +540,70 @@ async function dbLogout() {
     location.href = '/';
 }
 
-// 2026-06-17 v543: 템플릿 등록하기 — 카테고리·상품 선택 후 디자인 모드 (?designer_template_mode=1) 진입.
+// 2026-06-17 v546: 템플릿 등록하기 — template_eligible_categories 화이트리스트 + 다국어 + 디자이너 모드 진입.
 async function openTemplateRegister() {
-    // 카테고리 + 상품 목록 로드 (페이지네이션)
-    const all = [];
-    const PAGE = 1000;
-    for (let off = 0; off < 5000; off += PAGE) {
-        const { data, error } = await sb.from('admin_products')
-            .select('code, name, category, width_mm, height_mm')
-            .not('category', 'is', null)
-            .range(off, off + PAGE - 1);
-        if (error) { alert('상품 로딩 실패: ' + error.message); return; }
-        if (!data || !data.length) break;
-        all.push(...data);
-        if (data.length < PAGE) break;
-    }
-    // 카테고리별로 그룹화
+    const ML = {
+        KR: { title:'🎨 어느 상품의 템플릿을 만드시겠어요?', sub:'관리자가 지정한 카테고리에서만 템플릿을 등록할 수 있습니다.', cat:'카테고리 선택', pick:'— 선택 —', empty:'위에서 카테고리를 선택하세요', noWhite:'템플릿 등록 가능한 카테고리가 아직 등록되지 않았습니다. 관리자에게 문의해주세요.', cancel:'취소', size:'mm' },
+        JP: { title:'🎨 どの商品のテンプレートを作成しますか？', sub:'管理者が指定したカテゴリでのみ登録できます。', cat:'カテゴリ選択', pick:'— 選択 —', empty:'上でカテゴリを選択してください', noWhite:'登録可能なカテゴリがまだありません。管理者にお問い合わせください。', cancel:'キャンセル', size:'mm' },
+        US: { title:'🎨 Pick a product to design for', sub:'You can only register templates for admin-approved categories.', cat:'Select category', pick:'— Select —', empty:'Pick a category above', noWhite:'No eligible categories yet. Please contact admin.', cancel:'Cancel', size:'mm' }
+    }[DB_SITE];
+
+    // 1) 화이트리스트 로드
+    let whitelist = [];
+    try {
+        const { data, error } = await sb.from('template_eligible_categories')
+            .select('category_code, display_name_kr, display_name_jp, display_name_us, sort_order')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+        if (error) throw error;
+        whitelist = data || [];
+    } catch(e) { alert('Load failed: ' + e.message); return; }
+    if (!whitelist.length) { alert(ML.noWhite); return; }
+
+    // 2) 각 카테고리의 상품 로드 (화이트리스트만)
+    const allowedCodes = whitelist.map(w => w.category_code);
+    const { data: products, error } = await sb.from('admin_products')
+        .select('code, name, name_jp, name_us, category, width_mm, height_mm')
+        .in('category', allowedCodes)
+        .limit(2000);
+    if (error) { alert('Products load failed: ' + error.message); return; }
+
     const grouped = {};
-    all.forEach(p => {
-        const c = p.category; if (!c) return;
-        if (!grouped[c]) grouped[c] = [];
-        grouped[c].push(p);
+    (products || []).forEach(p => {
+        if (!grouped[p.category]) grouped[p.category] = [];
+        grouped[p.category].push(p);
     });
-    const cats = Object.keys(grouped).sort();
-    // 모달 그리기
+
     const ex = document.getElementById('tplRegisterModal');
     if (ex) ex.remove();
     const m = document.createElement('div');
     m.id = 'tplRegisterModal';
     m.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.82); display:flex; align-items:center; justify-content:center; padding:20px;';
+    const catOptions = whitelist.map(w => {
+        const dispName = DB_SITE === 'JP' ? (w.display_name_jp || w.display_name_kr || w.category_code)
+                       : DB_SITE === 'US' ? (w.display_name_us || w.display_name_kr || w.category_code)
+                       : (w.display_name_kr || w.category_code);
+        const cnt = (grouped[w.category_code] || []).length;
+        return `<option value="${w.category_code}">${dispName} (${cnt})</option>`;
+    }).join('');
     m.innerHTML = `
         <div style="background:#fff; max-width:560px; width:100%; max-height:84vh; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; font-family:inherit;">
-            <div style="padding:18px 22px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff;">
-                <div style="font-weight:900; font-size:15px;">🎨 어느 상품의 템플릿을 만드시겠어요?</div>
-                <div style="font-size:11.5px; opacity:0.85; margin-top:4px;">카테고리 → 상품 순으로 선택하시면 디자인 모드로 이동합니다.</div>
+            <div style="padding:18px 22px; background:#4c1d95; color:#fff;">
+                <div style="font-weight:700; font-size:15px;">${ML.title}</div>
+                <div style="font-size:11.5px; opacity:0.85; margin-top:4px;">${ML.sub}</div>
             </div>
             <div style="padding:16px 22px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
-                <label style="font-size:11px; font-weight:800; color:#475569; display:block; margin-bottom:6px;">카테고리 선택</label>
-                <select id="tplRegCat" style="width:100%; padding:9px 11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; font-weight:700;">
-                    <option value="">— 선택 —</option>
-                    ${cats.map(c => `<option value="${c}">${grouped[c][0].name.slice(0,18)} · ${c} (${grouped[c].length}개)</option>`).join('')}
+                <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px;">${ML.cat}</label>
+                <select id="tplRegCat" style="width:100%; padding:9px 11px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; font-weight:600;">
+                    <option value="">${ML.pick}</option>
+                    ${catOptions}
                 </select>
             </div>
             <div id="tplRegProducts" style="flex:1; overflow-y:auto; padding:14px 22px;">
-                <div style="text-align:center; color:#94a3b8; padding:30px 0; font-size:12.5px;">위에서 카테고리를 선택하세요</div>
+                <div style="text-align:center; color:#94a3b8; padding:30px 0; font-size:12.5px;">${ML.empty}</div>
             </div>
             <div style="padding:12px 22px; border-top:1px solid #e2e8f0; text-align:right; background:#fff;">
-                <button onclick="document.getElementById('tplRegisterModal').remove()" style="padding:9px 18px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700;">취소</button>
+                <button onclick="document.getElementById('tplRegisterModal').remove()" style="padding:9px 18px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:600;">${ML.cancel}</button>
             </div>
         </div>`;
     document.body.appendChild(m);
@@ -567,13 +611,15 @@ async function openTemplateRegister() {
     document.getElementById('tplRegCat').addEventListener('change', e => {
         const cat = e.target.value;
         const list = document.getElementById('tplRegProducts');
-        if (!cat) { list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 0; font-size:12.5px;">위에서 카테고리를 선택하세요</div>'; return; }
-        list.innerHTML = (grouped[cat] || []).map(p => `
-            <div onclick="window.location.href='/?product=${encodeURIComponent(p.code)}&designer_template_mode=1'" style="padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color .15s, background .15s;" onmouseover="this.style.borderColor='#7c3aed'; this.style.background='#faf5ff';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
-                <div style="font-size:13px; font-weight:800; color:#0f172a;">${p.name}</div>
-                <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${p.code}${p.width_mm ? ' · ' + p.width_mm + '×' + p.height_mm + 'mm' : ''}</div>
-            </div>
-        `).join('');
+        if (!cat) { list.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 0; font-size:12.5px;">' + ML.empty + '</div>'; return; }
+        const items = (grouped[cat] || []);
+        list.innerHTML = items.map(p => {
+            const dispName = DB_SITE === 'JP' && p.name_jp ? p.name_jp : DB_SITE === 'US' && p.name_us ? p.name_us : p.name;
+            return `<div onclick="window.location.href='/?product=${encodeURIComponent(p.code)}&designer_template_mode=1'" style="padding:11px 14px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color .15s, background .15s;" onmouseover="this.style.borderColor='#7c3aed'; this.style.background='#faf5ff';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#fff';">
+                <div style="font-size:13px; font-weight:700; color:#0f172a;">${dispName}</div>
+                <div style="font-size:10.5px; color:#64748b; margin-top:2px;">${p.code}${p.width_mm ? ' · ' + p.width_mm + '×' + p.height_mm + ML.size : ''}</div>
+            </div>`;
+        }).join('');
     });
 }
 

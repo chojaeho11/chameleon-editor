@@ -12189,16 +12189,17 @@ html, body { background: #ffffff !important; }
     // 2026-06-17 v542: 템플릿 편집 모드 셋업 — 결제 버튼들을 템플릿 저장 UI 로 교체.
     // 2026-06-17 v543: isDesigner=true 면 디자이너 모드 — status='pending' 으로 저장 + 검토 요청 UI.
     async function _soSetupTemplateAdminMode(isDesigner) {
+        console.log('[template mode] setup start, isDesigner=' + isDesigner);
         var sb = getSb();
         var currentUser = null;
         if (sb && sb.auth) {
             try {
                 var sess = await sb.auth.getSession();
                 currentUser = sess && sess.data && sess.data.session && sess.data.session.user;
-                if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+                if (!currentUser) { alert('로그인이 필요합니다 / Login required'); return; }
                 if (!isDesigner) {
                     var prof = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
-                    if (!prof || !prof.data || prof.data.role !== 'admin') { alert('관리자만 직접 편집 모드에 접근할 수 있습니다.'); return; }
+                    if (!prof || !prof.data || prof.data.role !== 'admin') { alert('관리자만 접근 가능'); return; }
                 }
             } catch(_re){ alert('권한 확인 실패: ' + _re.message); return; }
         }
@@ -12206,29 +12207,59 @@ html, body { background: #ffffff !important; }
         ['soPriceBox','soBtnCart','soBtnBuy','soDesignReqBanner'].forEach(function(id){
             var el = document.getElementById(id); if (el) el.style.display = 'none';
         });
-        var sidebar = document.querySelector('#simpleOrderModal .so-right');
-        if (!sidebar) return;
+        // 2026-06-17 v546: sidebar 가 즉시 없을 때 100ms 간격 30번 재시도 (모달 애니메이션 등)
+        var sidebar = null;
+        for (var attempt = 0; attempt < 30; attempt++) {
+            sidebar = document.querySelector('#simpleOrderModal .so-right') || document.querySelector('.so-right');
+            if (sidebar) break;
+            await new Promise(function(res){ setTimeout(res, 100); });
+        }
+        if (!sidebar) { console.warn('[template mode] sidebar .so-right not found after 3s'); return; }
+        console.log('[template mode] sidebar found, injecting panel');
         var panel = document.createElement('div');
         panel.id = 'soTemplateAdminPanel';
         panel.dataset.designer = isDesigner ? '1' : '0';
         panel.dataset.userid = currentUser ? currentUser.id : '';
-        var bg = isDesigner ? 'linear-gradient(135deg,#0ea5e9,#0369a1)' : 'linear-gradient(135deg,#7c3aed,#5b21b6)';
-        var shadow = isDesigner ? 'rgba(14,165,233,0.45)' : 'rgba(124,58,237,0.45)';
-        var btnLabel = isDesigner ? '📤 검토 요청' : '💾 템플릿으로 저장';
-        var heading = isDesigner ? '🎨 디자이너 템플릿 등록 (검토 요청)' : '🎨 디자인 템플릿 등록 모드';
-        var subText = isDesigner
-            ? '디자인 완료 후 검토 요청하시면 관리자 승인 시 <b style="color:#fef9c3;">30,000원 자동 적립</b>. 거절 시 자동 삭제됩니다. 대형 제품(가벽/배너/현수막/원판)은 SVG·PDF 필수.'
-            : '에디터에서 자유롭게 디자인 후 아래 버튼으로 저장하세요. 고객 페이지의 🎨 템플릿 버튼에 자동 노출됩니다.';
-        panel.style.cssText = 'background:' + bg + '; color:#fff; padding:16px 18px; border-radius:14px; margin-bottom:14px; box-shadow:0 8px 24px -6px ' + shadow + ';';
+        // v546: 사이트 언어
+        var h = (location.hostname || '').toLowerCase();
+        var L_site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+        var L = {
+            KR: { heading_d:'🎨 디자이너 템플릿 등록 (검토 요청)', heading_a:'🎨 디자인 템플릿 등록 모드',
+                  sub_d:'디자인 완료 후 검토 요청하시면 관리자 승인 시 <b style="color:#fef9c3;">30,000원 자동 적립</b>. 거절 시 자동 삭제. 대형 제품(가벽/배너/현수막/원판)은 SVG·PDF 필수.',
+                  sub_a:'에디터에서 자유롭게 디자인 후 아래 버튼으로 저장하세요. 고객 페이지의 🎨 템플릿 버튼에 자동 노출됩니다.',
+                  name:'템플릿 이름', name_ph:'예: 모던 그라데이션 명함',
+                  code:'상품 코드 한정 (선택)', code_ph:'비워두면 카테고리 전체에 적용',
+                  btn_d:'📤 검토 요청', btn_a:'💾 템플릿으로 저장',
+                  meta:'카테고리' , prod:'상품' },
+            JP: { heading_d:'🎨 デザイナーテンプレート登録 (審査依頼)', heading_a:'🎨 デザインテンプレート登録モード',
+                  sub_d:'デザイン完了後、審査依頼すると管理者承認時に <b style="color:#fef9c3;">¥3,000 自動付与</b>。却下時は自動削除。大型製品(間仕切り/バナー/横断幕/原板)はSVG・PDF必須。',
+                  sub_a:'エディタで自由にデザイン後、下のボタンで保存してください。お客様ページの🎨テンプレートボタンに自動掲載されます。',
+                  name:'テンプレート名', name_ph:'例: モダングラデーション名刺',
+                  code:'商品コード限定 (任意)', code_ph:'空欄ならカテゴリ全体に適用',
+                  btn_d:'📤 審査依頼', btn_a:'💾 テンプレート保存',
+                  meta:'カテゴリ' , prod:'商品' },
+            US: { heading_d:'🎨 Designer Submission (For Review)', heading_a:'🎨 Template Editor Mode',
+                  sub_d:'Submit your design for review. On admin approval, <b style="color:#fef9c3;">30,000 KRW is auto-credited</b>. Rejected submissions are deleted. Vector files (SVG/PDF) required for large-format products.',
+                  sub_a:'Design freely in the editor, then save. Approved templates appear in the customer 🎨 template grid.',
+                  name:'Template Name', name_ph:'e.g. Modern Gradient Business Card',
+                  code:'Limit to product code (optional)', code_ph:'Leave blank to apply to whole category',
+                  btn_d:'📤 Submit for Review', btn_a:'💾 Save Template',
+                  meta:'Category' , prod:'Product' }
+        }[L_site];
+        var btnLabel = isDesigner ? L.btn_d : L.btn_a;
+        var heading = isDesigner ? L.heading_d : L.heading_a;
+        var subText = isDesigner ? L.sub_d : L.sub_a;
+        var bg = isDesigner ? '#0369a1' : '#4c1d95';
+        panel.style.cssText = 'background:' + bg + '; color:#fff; padding:18px 20px; border-radius:14px; margin-bottom:14px;';
         panel.innerHTML =
-            '<div style="font-weight:900; font-size:14px; margin-bottom:10px; display:flex; align-items:center; gap:6px;">' + heading + '</div>'
-          + '<div style="font-size:11.5px; opacity:0.92; line-height:1.55; margin-bottom:12px;">' + subText + '</div>'
-          + '<label style="display:block; font-size:11px; font-weight:800; opacity:0.85; margin-bottom:4px;">템플릿 이름</label>'
-          + '<input type="text" id="soTplAdminName" placeholder="예: 모던 그라데이션 명함" style="width:100%; padding:9px 11px; border:none; border-radius:8px; font-size:13px; font-weight:700; box-sizing:border-box; margin-bottom:8px; color:#0f172a; font-family:inherit;">'
-          + (isDesigner ? '' : '<label style="display:block; font-size:11px; font-weight:800; opacity:0.85; margin-bottom:4px;">상품 코드 한정 (선택)</label>'
-              + '<input type="text" id="soTplAdminCode" placeholder="비워두면 카테고리 전체에 적용" style="width:100%; padding:9px 11px; border:none; border-radius:8px; font-size:12.5px; font-weight:700; box-sizing:border-box; margin-bottom:12px; color:#0f172a; font-family:inherit;">')
-          + '<button type="button" id="soTplAdminSave" style="width:100%; padding:13px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:900; cursor:pointer; font-family:inherit; box-shadow:0 4px 12px -3px rgba(251,191,36,0.55);">' + btnLabel + '</button>'
-          + '<div style="font-size:10.5px; opacity:0.8; margin-top:10px; line-height:1.55;">카테고리: <b>' + (state.product && state.product.category || '?') + '</b> · 상품: <b>' + (state.product && state.product.code || '?') + '</b></div>';
+            '<div style="font-weight:700; font-size:14px; margin-bottom:10px;">' + heading + '</div>'
+          + '<div style="font-size:11.5px; opacity:0.92; line-height:1.6; margin-bottom:14px;">' + subText + '</div>'
+          + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.name + '</label>'
+          + '<input type="text" id="soTplAdminName" placeholder="' + L.name_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:13px; font-weight:600; box-sizing:border-box; margin-bottom:10px; color:#0f172a; font-family:inherit;">'
+          + (isDesigner ? '' : '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.code + '</label>'
+              + '<input type="text" id="soTplAdminCode" placeholder="' + L.code_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:12.5px; font-weight:600; box-sizing:border-box; margin-bottom:14px; color:#0f172a; font-family:inherit;">')
+          + '<button type="button" id="soTplAdminSave" style="width:100%; padding:14px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + btnLabel + '</button>'
+          + '<div style="font-size:10.5px; opacity:0.8; margin-top:12px; line-height:1.55;">' + L.meta + ': <b>' + (state.product && state.product.category || '?') + '</b> · ' + L.prod + ': <b>' + (state.product && state.product.code || '?') + '</b></div>';
         sidebar.insertBefore(panel, sidebar.firstChild);
         document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
     }
