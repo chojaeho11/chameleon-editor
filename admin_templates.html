@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>관리자 — 디자인 템플릿</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root { --brand:#7c3aed; --brand-dark:#5b21b6; --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0; --gray-300:#cbd5e1; --gray-500:#64748b; --gray-700:#334155; --gray-900:#0f172a; --red:#dc2626; --green:#16a34a; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR',sans-serif; background:var(--gray-50); color:var(--gray-900); }
+header { background:var(--gray-900); color:#fff; padding:14px 22px; display:flex; align-items:center; gap:16px; }
+header h1 { font-size:18px; font-weight:900; flex:1; }
+header .meta { font-size:11.5px; color:#94a3b8; }
+.container { max-width:1400px; margin:18px auto; padding:0 18px; display:grid; grid-template-columns:340px 1fr; gap:18px; }
+.panel { background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,0.06); padding:18px; }
+.panel h2 { font-size:14px; font-weight:900; color:var(--brand-dark); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:none; border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; background:var(--brand); color:#fff; transition:filter .15s; }
+.btn:hover { filter:brightness(1.1); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-secondary { background:var(--gray-200); color:var(--gray-700); }
+.btn-danger { background:var(--red); }
+.btn-success { background:var(--green); }
+.btn-sm { padding:6px 10px; font-size:11.5px; }
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:11.5px; font-weight:800; color:var(--gray-700); margin-bottom:6px; letter-spacing:.02em; }
+.field input, .field select, .field textarea { width:100%; padding:9px 11px; border:1.5px solid var(--gray-200); border-radius:8px; font-size:13px; font-family:inherit; }
+.field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--brand); }
+.tpl-list { display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:6px; }
+.tpl-item { display:flex; align-items:center; gap:10px; padding:8px; background:var(--gray-50); border:1.5px solid transparent; border-radius:10px; cursor:pointer; transition:border-color .15s; }
+.tpl-item:hover { border-color:var(--brand); }
+.tpl-item.active { border-color:var(--brand); background:#f3f0ff; }
+.tpl-item img { width:44px; height:44px; border-radius:6px; object-fit:cover; background:#fff; border:1px solid var(--gray-200); flex-shrink:0; }
+.tpl-item .tpl-info { flex:1; min-width:0; }
+.tpl-item .tpl-name { font-size:12.5px; font-weight:800; color:var(--gray-900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tpl-item .tpl-meta { font-size:10.5px; color:var(--gray-500); margin-top:2px; }
+.tpl-empty { padding:20px; text-align:center; color:var(--gray-500); font-size:12px; }
+.editor-area { display:flex; flex-direction:column; gap:14px; }
+.canvas-wrap { background:var(--gray-100); border-radius:12px; padding:14px; display:flex; align-items:center; justify-content:center; min-height:480px; position:relative; }
+.canvas-stage { position:relative; background:#fff; box-shadow:0 4px 20px rgba(15,23,42,0.1); }
+.canvas-stage img.bg { display:block; max-width:100%; max-height:560px; pointer-events:none; user-select:none; }
+.slot { position:absolute; border:2px dashed var(--brand); background:rgba(124,58,237,0.08); cursor:move; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:4px; }
+.slot.active { border-color:var(--red); background:rgba(220,38,38,0.12); }
+.slot.image-slot { background:rgba(34,197,94,0.08); border-color:var(--green); }
+.slot.image-slot.active { background:rgba(220,38,38,0.12); border-color:var(--red); }
+.slot .slot-label { font-size:10.5px; font-weight:800; color:var(--gray-900); pointer-events:none; user-select:none; text-shadow:0 0 4px rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; max-width:100%; }
+.slot .handle { position:absolute; width:12px; height:12px; background:var(--red); border:2px solid #fff; border-radius:50%; cursor:nwse-resize; bottom:-6px; right:-6px; }
+.slot .del { position:absolute; top:-10px; right:-10px; width:20px; height:20px; background:var(--gray-900); color:#fff; border:none; border-radius:50%; font-size:11px; cursor:pointer; line-height:1; }
+.empty-canvas { padding:60px 30px; color:var(--gray-500); text-align:center; }
+.empty-canvas i { font-size:48px; opacity:0.3; margin-bottom:12px; display:block; }
+.action-bar { display:flex; gap:10px; padding:14px; background:#fff; border-radius:12px; flex-wrap:wrap; align-items:center; }
+.slot-props { background:#fff; border-radius:12px; padding:14px; display:none; }
+.slot-props.visible { display:block; }
+.slot-props h3 { font-size:12.5px; font-weight:900; color:var(--brand-dark); margin-bottom:10px; }
+.slot-props .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.upload-zone { border:2px dashed var(--gray-300); border-radius:10px; padding:30px 20px; text-align:center; background:var(--gray-50); cursor:pointer; transition:background .15s, border-color .15s; }
+.upload-zone:hover { background:#f3f0ff; border-color:var(--brand); }
+.upload-zone i { font-size:32px; color:var(--gray-300); display:block; margin-bottom:8px; }
+.upload-zone p { font-size:12.5px; color:var(--gray-500); }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 22px; background:var(--gray-900); color:#fff; border-radius:24px; font-size:13px; font-weight:700; z-index:99999; box-shadow:0 10px 30px rgba(15,23,42,0.3); }
+</style>
+</head>
+<body>
+<header>
+    <h1><i class="fa-solid fa-palette"></i> 디자인 템플릿 관리</h1>
+    <span class="meta" id="hdrUser">-</span>
+    <a href="/global_admin.html" class="btn btn-secondary" style="background:#475569; color:#fff;"><i class="fa-solid fa-arrow-left"></i> 관리자 메인</a>
+</header>
+
+<div class="container">
+    <!-- 좌측: 카테고리 필터 + 목록 + 신규 -->
+    <div class="panel">
+        <h2><i class="fa-solid fa-folder"></i> 카테고리</h2>
+        <div class="field">
+            <label>상품 카테고리</label>
+            <select id="filterCategory" onchange="loadTemplates()">
+                <option value="pp_bc">명함 (pp_bc)</option>
+                <option value="pp_lf">전단/리플렛 (pp_lf)</option>
+                <option value="banner">현수막 (banner)</option>
+                <option value="placard">플래카드 (placard)</option>
+                <option value="hb_dw">허니콤 가벽 (hb_dw)</option>
+                <option value="hb_pt">자유인쇄커팅 (hb_pt)</option>
+                <option value="hb_insta">인스타판넬 (hb_insta)</option>
+                <option value="paper_display">종이매대 (paper_display)</option>
+                <option value="goods">굿즈 (goods)</option>
+                <option value="22222">패브릭 (22222)</option>
+                <option value="OTHER">기타 (직접 입력)</option>
+            </select>
+        </div>
+        <div class="field" id="customCategoryField" style="display:none;">
+            <label>커스텀 카테고리 코드</label>
+            <input type="text" id="customCategory" placeholder="예: pp_st_a4" oninput="loadTemplates()">
+        </div>
+        <button class="btn" style="width:100%;" onclick="newTemplate()"><i class="fa-solid fa-plus"></i> 신규 템플릿 등록</button>
+        <hr style="border:none; border-top:1px solid var(--gray-200); margin:14px 0;">
+        <h2 style="margin-top:0;"><i class="fa-solid fa-list"></i> 등록된 템플릿</h2>
+        <div id="tplList" class="tpl-list"><div class="tpl-empty">카테고리를 선택하세요</div></div>
+    </div>
+
+    <!-- 우측: 편집 영역 -->
+    <div>
+        <div class="action-bar" id="actionBar" style="display:none;">
+            <input type="text" id="tplName" placeholder="템플릿 이름 (예: 깔끔한 가로 명함)" style="flex:1; padding:9px 12px; border:1.5px solid var(--gray-200); border-radius:8px; font-size:13px;">
+            <button class="btn" onclick="addTextSlot()"><i class="fa-solid fa-font"></i> 텍스트 슬롯 추가</button>
+            <button class="btn btn-success" onclick="addImageSlot()"><i class="fa-solid fa-image"></i> 이미지 슬롯 추가</button>
+            <button class="btn" style="background:var(--gray-700);" onclick="saveTemplate()"><i class="fa-solid fa-save"></i> 저장</button>
+            <button class="btn btn-danger" id="delBtn" style="display:none;" onclick="deleteTemplate()"><i class="fa-solid fa-trash"></i> 삭제</button>
+        </div>
+
+        <div class="panel editor-area" id="editorArea">
+            <div class="canvas-wrap" id="canvasWrap">
+                <div class="empty-canvas">
+                    <i class="fa-solid fa-image"></i>
+                    <p style="font-size:13px; font-weight:700; color:var(--gray-700); margin-bottom:6px;">템플릿을 선택하거나 새로 등록하세요</p>
+                    <p style="font-size:11.5px;">좌측 목록에서 클릭 또는 <b>신규 템플릿 등록</b> 버튼</p>
+                </div>
+            </div>
+
+            <div id="uploadField" style="display:none;">
+                <div class="upload-zone" onclick="document.getElementById('bgFile').click();" ondragover="event.preventDefault(); this.style.background='#f3f0ff';" ondragleave="this.style.background='var(--gray-50)';" ondrop="onDrop(event)">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <p><b>PNG / JPG</b> 파일을 끌어다 놓거나 클릭해서 선택</p>
+                    <p style="font-size:11px; margin-top:6px; opacity:0.7;">300 DPI 이상 권장 · 최대 20MB</p>
+                </div>
+                <input type="file" id="bgFile" accept="image/png,image/jpeg" style="display:none;" onchange="onFileSelect(event)">
+            </div>
+
+            <div class="slot-props" id="slotProps">
+                <h3 id="slotPropsTitle"><i class="fa-solid fa-sliders"></i> 선택한 슬롯</h3>
+                <div class="row">
+                    <div class="field"><label>X (px)</label><input type="number" id="propX" oninput="updateSlotPos()"></div>
+                    <div class="field"><label>Y (px)</label><input type="number" id="propY" oninput="updateSlotPos()"></div>
+                    <div class="field"><label>W (px)</label><input type="number" id="propW" oninput="updateSlotPos()"></div>
+                    <div class="field"><label>H (px)</label><input type="number" id="propH" oninput="updateSlotPos()"></div>
+                </div>
+                <div id="textProps">
+                    <div class="field"><label>기본 텍스트</label><input type="text" id="propText" oninput="updateSlotText()"></div>
+                    <div class="row">
+                        <div class="field"><label>폰트</label><select id="propFont" onchange="updateSlotText()"><option value="sans-serif">Sans</option><option value="serif">Serif</option><option value="Noto Sans KR">Noto Sans KR</option><option value="Pretendard">Pretendard</option><option value="Black Han Sans">Black Han Sans</option></select></div>
+                        <div class="field"><label>크기 (px)</label><input type="number" id="propSize" value="24" oninput="updateSlotText()"></div>
+                    </div>
+                    <div class="row">
+                        <div class="field"><label>색상</label><input type="color" id="propColor" value="#000000" oninput="updateSlotText()"></div>
+                        <div class="field"><label>정렬</label><select id="propAlign" onchange="updateSlotText()"><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' }
+});
+
+let state = {
+    user: null,
+    template: null,     // 현재 편집중인 row { id?, name, ..., slots:[] }
+    bgImageEl: null,    // DOM <img> reference
+    bgImageWidth: 0,    // natural width (px)
+    bgImageHeight: 0,
+    selectedSlotIdx: -1
+};
+
+function toast(msg, ms=2200) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), ms);
+}
+
+document.getElementById('filterCategory').addEventListener('change', e => {
+    document.getElementById('customCategoryField').style.display = e.target.value === 'OTHER' ? '' : 'none';
+});
+
+(async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+        toast('로그인이 필요합니다. 메인 사이트에서 로그인 후 다시 접속해주세요.', 4000);
+        setTimeout(() => location.href = '/', 2000);
+        return;
+    }
+    state.user = session.user;
+    // role 확인
+    const { data: prof } = await sb.from('profiles').select('username,role').eq('id', session.user.id).maybeSingle();
+    if (!prof || prof.role !== 'admin') {
+        toast('관리자만 접근 가능합니다.', 4000);
+        setTimeout(() => location.href = '/', 2500);
+        return;
+    }
+    document.getElementById('hdrUser').textContent = `${prof.username || session.user.email} (admin)`;
+    loadTemplates();
+})();
+
+function getCategory() {
+    const sel = document.getElementById('filterCategory').value;
+    if (sel === 'OTHER') return document.getElementById('customCategory').value.trim();
+    return sel;
+}
+
+async function loadTemplates() {
+    const cat = getCategory();
+    const listEl = document.getElementById('tplList');
+    if (!cat) { listEl.innerHTML = '<div class="tpl-empty">카테고리를 입력하세요</div>'; return; }
+    listEl.innerHTML = '<div class="tpl-empty">로딩 중...</div>';
+    try {
+        const { data, error } = await sb.from('admin_templates')
+            .select('id,name,thumbnail_url,background_url,width_mm,height_mm,sort_order,is_active,slots')
+            .eq('product_category', cat)
+            .order('sort_order', { ascending: true })
+            .order('id', { ascending: false });
+        if (error) throw error;
+        if (!data || !data.length) { listEl.innerHTML = '<div class="tpl-empty">등록된 템플릿이 없습니다</div>'; return; }
+        listEl.innerHTML = data.map(t => `
+            <div class="tpl-item" data-tid="${t.id}" onclick="selectTemplate(${t.id})">
+                <img src="${t.thumbnail_url || t.background_url}" alt="" onerror="this.style.opacity=0.3;">
+                <div class="tpl-info">
+                    <div class="tpl-name">${escapeHtml(t.name)}</div>
+                    <div class="tpl-meta">${t.width_mm || '?'}×${t.height_mm || '?'}mm · 슬롯 ${(t.slots||[]).length}개 · ${t.is_active ? '활성' : '비활성'}</div>
+                </div>
+            </div>`).join('');
+    } catch (e) {
+        listEl.innerHTML = `<div class="tpl-empty" style="color:var(--red);">로딩 실패: ${e.message}</div>`;
+    }
+}
+
+function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function selectTemplate(id) {
+    document.querySelectorAll('.tpl-item').forEach(el => el.classList.toggle('active', String(el.dataset.tid) === String(id)));
+    try {
+        const { data, error } = await sb.from('admin_templates').select('*').eq('id', id).single();
+        if (error) throw error;
+        state.template = data;
+        state.template.slots = data.slots || [];
+        renderEditor();
+    } catch (e) { toast('로딩 실패: ' + e.message); }
+}
+
+function newTemplate() {
+    const cat = getCategory();
+    if (!cat) { toast('카테고리를 먼저 선택하세요'); return; }
+    state.template = {
+        product_category: cat, product_code: null, name: '',
+        background_url: null, thumbnail_url: null,
+        width_mm: null, height_mm: null,
+        slots: [], is_active: true, sort_order: 999
+    };
+    document.querySelectorAll('.tpl-item').forEach(el => el.classList.remove('active'));
+    renderEditor();
+}
+
+function renderEditor() {
+    document.getElementById('actionBar').style.display = '';
+    document.getElementById('tplName').value = state.template?.name || '';
+    document.getElementById('delBtn').style.display = state.template?.id ? '' : 'none';
+    state.selectedSlotIdx = -1;
+    document.getElementById('slotProps').classList.remove('visible');
+    const wrap = document.getElementById('canvasWrap');
+    if (!state.template?.background_url) {
+        wrap.innerHTML = '';
+        document.getElementById('uploadField').style.display = '';
+        return;
+    }
+    document.getElementById('uploadField').style.display = 'none';
+    wrap.innerHTML = '';
+    const stage = document.createElement('div');
+    stage.className = 'canvas-stage';
+    stage.id = 'canvasStage';
+    const img = document.createElement('img');
+    img.className = 'bg';
+    img.src = state.template.background_url;
+    img.onload = () => {
+        state.bgImageEl = img;
+        state.bgImageWidth = img.naturalWidth;
+        state.bgImageHeight = img.naturalHeight;
+        // 이미지 표시 후 slot 렌더
+        renderSlots();
+    };
+    stage.appendChild(img);
+    wrap.appendChild(stage);
+}
+
+function renderSlots() {
+    const stage = document.getElementById('canvasStage');
+    if (!stage) return;
+    stage.querySelectorAll('.slot').forEach(el => el.remove());
+    const dispScale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
+    (state.template.slots || []).forEach((s, idx) => {
+        const el = document.createElement('div');
+        el.className = 'slot' + (s.type === 'image' ? ' image-slot' : '') + (idx === state.selectedSlotIdx ? ' active' : '');
+        el.style.left = (s.x * dispScale) + 'px';
+        el.style.top = (s.y * dispScale) + 'px';
+        el.style.width = (s.w * dispScale) + 'px';
+        el.style.height = (s.h * dispScale) + 'px';
+        el.dataset.idx = idx;
+        const lbl = document.createElement('div');
+        lbl.className = 'slot-label';
+        if (s.type === 'text') {
+            lbl.textContent = s.default_text || 'TEXT';
+            lbl.style.fontFamily = s.fontFamily || 'sans-serif';
+            lbl.style.fontSize = Math.min(s.fontSize * dispScale, 14) + 'px';
+            lbl.style.color = s.color || '#000';
+            lbl.style.textAlign = s.textAlign || 'left';
+        } else {
+            lbl.innerHTML = '<i class="fa-solid fa-image"></i> 이미지 슬롯';
+        }
+        el.appendChild(lbl);
+        const handle = document.createElement('div');
+        handle.className = 'handle';
+        el.appendChild(handle);
+        const del = document.createElement('button');
+        del.className = 'del'; del.innerHTML = '×';
+        del.onclick = (ev) => { ev.stopPropagation(); deleteSlot(idx); };
+        el.appendChild(del);
+        el.addEventListener('mousedown', startDrag);
+        handle.addEventListener('mousedown', startResize);
+        el.addEventListener('click', () => selectSlot(idx));
+        stage.appendChild(el);
+    });
+}
+
+function selectSlot(idx) {
+    state.selectedSlotIdx = idx;
+    document.querySelectorAll('.slot').forEach((el, i) => el.classList.toggle('active', Number(el.dataset.idx) === idx));
+    const s = state.template.slots[idx];
+    if (!s) return;
+    const propsPanel = document.getElementById('slotProps');
+    propsPanel.classList.add('visible');
+    document.getElementById('slotPropsTitle').innerHTML = `<i class="fa-solid fa-sliders"></i> 선택: ${s.type === 'text' ? '📝 텍스트' : '🖼️ 이미지'} 슬롯 #${idx + 1}`;
+    document.getElementById('propX').value = Math.round(s.x);
+    document.getElementById('propY').value = Math.round(s.y);
+    document.getElementById('propW').value = Math.round(s.w);
+    document.getElementById('propH').value = Math.round(s.h);
+    document.getElementById('textProps').style.display = s.type === 'text' ? '' : 'none';
+    if (s.type === 'text') {
+        document.getElementById('propText').value = s.default_text || '';
+        document.getElementById('propFont').value = s.fontFamily || 'sans-serif';
+        document.getElementById('propSize').value = s.fontSize || 24;
+        document.getElementById('propColor').value = s.color || '#000000';
+        document.getElementById('propAlign').value = s.textAlign || 'left';
+    }
+}
+
+function updateSlotPos() {
+    const idx = state.selectedSlotIdx;
+    if (idx < 0) return;
+    const s = state.template.slots[idx];
+    s.x = parseFloat(document.getElementById('propX').value) || 0;
+    s.y = parseFloat(document.getElementById('propY').value) || 0;
+    s.w = parseFloat(document.getElementById('propW').value) || 100;
+    s.h = parseFloat(document.getElementById('propH').value) || 30;
+    renderSlots();
+    selectSlot(idx);
+}
+
+function updateSlotText() {
+    const idx = state.selectedSlotIdx;
+    if (idx < 0) return;
+    const s = state.template.slots[idx];
+    if (s.type !== 'text') return;
+    s.default_text = document.getElementById('propText').value;
+    s.fontFamily = document.getElementById('propFont').value;
+    s.fontSize = parseFloat(document.getElementById('propSize').value) || 24;
+    s.color = document.getElementById('propColor').value;
+    s.textAlign = document.getElementById('propAlign').value;
+    renderSlots();
+    selectSlot(idx);
+}
+
+function deleteSlot(idx) {
+    state.template.slots.splice(idx, 1);
+    state.selectedSlotIdx = -1;
+    document.getElementById('slotProps').classList.remove('visible');
+    renderSlots();
+}
+
+function addTextSlot() {
+    if (!state.template?.background_url) { toast('먼저 배경 이미지를 업로드하세요'); return; }
+    const cx = state.bgImageWidth / 2;
+    const cy = state.bgImageHeight / 2;
+    const w = Math.max(200, state.bgImageWidth * 0.4);
+    const h = 60;
+    state.template.slots.push({
+        id: 't' + Date.now(), type: 'text',
+        x: cx - w/2, y: cy - h/2, w, h,
+        default_text: '여기를 클릭해 텍스트 입력',
+        fontFamily: 'Noto Sans KR', fontSize: 36,
+        fontWeight: 700, color: '#000000', textAlign: 'center'
+    });
+    renderSlots();
+    selectSlot(state.template.slots.length - 1);
+}
+
+function addImageSlot() {
+    if (!state.template?.background_url) { toast('먼저 배경 이미지를 업로드하세요'); return; }
+    const cx = state.bgImageWidth / 2;
+    const cy = state.bgImageHeight / 2;
+    const w = Math.max(150, state.bgImageWidth * 0.25);
+    const h = w;
+    state.template.slots.push({
+        id: 'i' + Date.now(), type: 'image',
+        x: cx - w/2, y: cy - h/2, w, h
+    });
+    renderSlots();
+    selectSlot(state.template.slots.length - 1);
+}
+
+// 드래그·리사이즈 핸들러
+let dragInfo = null;
+function startDrag(e) {
+    if (e.target.classList.contains('handle') || e.target.classList.contains('del')) return;
+    const slot = e.currentTarget;
+    const idx = Number(slot.dataset.idx);
+    selectSlot(idx);
+    const stage = document.getElementById('canvasStage');
+    const scale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
+    dragInfo = { type:'move', idx, startX:e.clientX, startY:e.clientY, sx:state.template.slots[idx].x, sy:state.template.slots[idx].y, scale };
+    e.preventDefault();
+}
+function startResize(e) {
+    const idx = Number(e.target.parentElement.dataset.idx);
+    selectSlot(idx);
+    const stage = document.getElementById('canvasStage');
+    const scale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
+    dragInfo = { type:'resize', idx, startX:e.clientX, startY:e.clientY, sw:state.template.slots[idx].w, sh:state.template.slots[idx].h, scale };
+    e.preventDefault();
+    e.stopPropagation();
+}
+window.addEventListener('mousemove', (e) => {
+    if (!dragInfo) return;
+    const s = state.template.slots[dragInfo.idx];
+    const dx = (e.clientX - dragInfo.startX) / dragInfo.scale;
+    const dy = (e.clientY - dragInfo.startY) / dragInfo.scale;
+    if (dragInfo.type === 'move') {
+        s.x = Math.max(0, Math.min(state.bgImageWidth - s.w, dragInfo.sx + dx));
+        s.y = Math.max(0, Math.min(state.bgImageHeight - s.h, dragInfo.sy + dy));
+    } else {
+        s.w = Math.max(40, Math.min(state.bgImageWidth - s.x, dragInfo.sw + dx));
+        s.h = Math.max(20, Math.min(state.bgImageHeight - s.y, dragInfo.sh + dy));
+    }
+    renderSlots();
+    selectSlot(dragInfo.idx);
+});
+window.addEventListener('mouseup', () => { dragInfo = null; });
+
+// 파일 업로드
+function onDrop(e) {
+    e.preventDefault();
+    e.currentTarget.style.background = 'var(--gray-50)';
+    const f = e.dataTransfer.files?.[0];
+    if (f) handleFile(f);
+}
+function onFileSelect(e) {
+    const f = e.target.files?.[0];
+    if (f) handleFile(f);
+}
+async function handleFile(f) {
+    if (!/^image\/(png|jpeg|jpg)$/i.test(f.type)) { toast('PNG/JPG 만 업로드 가능합니다'); return; }
+    if (f.size > 20 * 1024 * 1024) { toast('20MB 이하 파일만 업로드 가능합니다'); return; }
+    toast('업로드 중...', 4000);
+    try {
+        const ext = f.type === 'image/png' ? 'png' : 'jpg';
+        const path = `templates/${state.template.product_category}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+        const { error } = await sb.storage.from('design').upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data } = sb.storage.from('design').getPublicUrl(path);
+        state.template.background_url = data.publicUrl;
+        // 자연 사이즈 측정
+        const img = new Image();
+        img.onload = () => {
+            // 가로/세로 mm 자동 계산 (300 DPI 가정)
+            const widthMm = Math.round(img.naturalWidth / 11.811);  // 300dpi = 11.811 px/mm
+            const heightMm = Math.round(img.naturalHeight / 11.811);
+            state.template.width_mm = widthMm;
+            state.template.height_mm = heightMm;
+            renderEditor();
+            toast('업로드 완료 — 슬롯을 추가해 주세요');
+        };
+        img.src = data.publicUrl;
+    } catch (e) { toast('업로드 실패: ' + e.message); }
+}
+
+async function saveTemplate() {
+    if (!state.template) return;
+    const name = document.getElementById('tplName').value.trim();
+    if (!name) { toast('템플릿 이름을 입력하세요'); return; }
+    if (!state.template.background_url) { toast('배경 이미지를 업로드하세요'); return; }
+    state.template.name = name;
+    const payload = {
+        product_category: state.template.product_category,
+        product_code: state.template.product_code,
+        name: state.template.name,
+        site_code: state.template.site_code || 'KR',
+        background_url: state.template.background_url,
+        thumbnail_url: state.template.thumbnail_url || state.template.background_url,
+        width_mm: state.template.width_mm,
+        height_mm: state.template.height_mm,
+        slots: state.template.slots,
+        is_active: state.template.is_active !== false,
+        sort_order: state.template.sort_order || 999
+    };
+    try {
+        if (state.template.id) {
+            const { error } = await sb.from('admin_templates').update(payload).eq('id', state.template.id);
+            if (error) throw error;
+            toast('수정 완료');
+        } else {
+            const { data, error } = await sb.from('admin_templates').insert(payload).select().single();
+            if (error) throw error;
+            state.template.id = data.id;
+            document.getElementById('delBtn').style.display = '';
+            toast('저장 완료');
+        }
+        loadTemplates();
+    } catch (e) { toast('저장 실패: ' + e.message, 4000); }
+}
+
+async function deleteTemplate() {
+    if (!state.template?.id) return;
+    if (!confirm('이 템플릿을 정말 삭제하시겠어요?')) return;
+    try {
+        const { error } = await sb.from('admin_templates').delete().eq('id', state.template.id);
+        if (error) throw error;
+        toast('삭제 완료');
+        state.template = null;
+        document.getElementById('actionBar').style.display = 'none';
+        document.getElementById('canvasWrap').innerHTML = '<div class="empty-canvas"><i class="fa-solid fa-image"></i><p>템플릿을 선택하거나 새로 등록하세요</p></div>';
+        loadTemplates();
+    } catch (e) { toast('삭제 실패: ' + e.message); }
+}
+</script>
+</body>
+</html>
