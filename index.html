@@ -6256,17 +6256,11 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.background = it.fill || '#7c3aed';
             it.el.style.border = (it.strokeWidth || 0) > 0 ? (it.strokeWidth + 'px solid ' + (it.stroke || '#000')) : 'none';
         } else if (it.type === 'shelf') {
-            // 2026-06-17: 선반 — 흰색 배경 + 빨강 테두리 + N-1 개 수직 구분선 (셀)
+            // 2026-06-17: 선반 — 흰색 배경 + 빨강 테두리. 얇은 가로 막대 (실제 3cm = 30mm 두께).
             it.el.style.height = (it.h * me.wScale) + 'px';
             it.el.style.background = '#ffffff';
             it.el.style.border = '2px solid #dc2626';
             it.el.style.boxSizing = 'border-box';
-            // 내부 수직선 (cells - 1 개) — 자식 div 가 이미 만들어져 있음, 비율만 갱신
-            var inner = it.el.querySelector('.me-shelf-inner');
-            if (inner) {
-                var cells = it.shelfCells || 1;
-                inner.style.gridTemplateColumns = 'repeat(' + cells + ', 1fr)';
-            }
         }
         // 2026-06-16 v3: 이 item 에 칼선이 있으면 같이 따라 움직임/크기조절 — 전체 재그리기.
         if (it && it._cutlineRelPts) {
@@ -7232,47 +7226,46 @@ function scrollHotdeal(gridId, dir) {
         });
         me.items = remaining;
     };
-    // 2026-06-17: 선반 — 흰색 + 빨강 테두리 + N칸. 입력 폭(cm)·칸 수로 추가.
-    //   wMm 은 사용자가 입력한 가로(cm) × 10. hMm = 300 (시각 표시용 30cm — 실제 선반은 3cm 두께이나 에디터 visibility 위해 더 크게).
-    //   자유롭게 위아래 드래그 가능. 가로는 입력값 고정 (편집 핸들로 변경은 가능).
-    window._meAddShelf = function(widthCm, cells) {
+    // 2026-06-17: 선반 — 흰색 + 빨강 테두리. count = 선반 갯수 (단). 각 선반은 독립 드래그 가능.
+    //   wMm = 사용자가 입력한 가로(cm) × 10. hMm = 30 (실제 3cm 두께). 시각 minH 보장.
+    //   count 개수만큼 vertical 균등 분포 (상단 20% / 하단 10% 마진).
+    window._meAddShelf = function(widthCm, count) {
         _meSnapshot();
         widthCm = Math.max(10, parseInt(widthCm, 10) || 100);
-        cells = Math.max(1, parseInt(cells, 10) || 1);
-        var el = document.createElement('div');
-        el.className = 'me-item shape';
-        el.style.zIndex = (++me.zCounter);
-        // 내부 셀 구분 그리드 (CSS grid + 각 셀 우측 border)
-        var inner = document.createElement('div');
-        inner.className = 'me-shelf-inner';
-        inner.style.cssText = 'position:absolute; inset:0; pointer-events:none; display:grid; grid-template-columns:repeat(' + cells + ', 1fr); gap:0; box-sizing:border-box;';
-        for (var i = 0; i < cells; i++) {
-            var c = document.createElement('div');
-            c.style.cssText = 'border-right:2px solid #dc2626; box-sizing:border-box;';
-            if (i === cells - 1) c.style.borderRight = 'none';
-            inner.appendChild(c);
-        }
-        el.appendChild(inner);
-        me.stage.appendChild(el);
-        // mm 단위 — natW 는 가벽의 mm 폭 (예: 3300mm)
+        count = Math.max(1, parseInt(count, 10) || 1);
+        // 기존 선반 모두 제거 후 새로 그림 (popup 재호출 시 깔끔하게 갱신)
+        try { window._meRemoveShelves(); } catch(_e){}
         var wMm = widthCm * 10;
-        var hMm = 300; // 시각용 30cm — 실제 선반은 3cm. 사용자가 위아래 드래그로 위치 조정.
         if (wMm > me.natW * 0.95) wMm = me.natW * 0.95;
-        if (hMm > me.natH * 0.4) hMm = me.natH * 0.2;
-        var it = {
-            el: el, type: 'shelf', shape: 'shelf',
-            shelfCells: cells, shelfCm: widthCm,
-            x: (me.natW - wMm) / 2,
-            y: me.natH - hMm - (me.natH * 0.15),  // 가벽 하단 쪽 기본 위치
-            w: wMm, h: hMm,
-            fill: '#ffffff', stroke: '#dc2626', strokeWidth: 2,
-            isShelf: true
-        };
-        me.items.push(it);
-        _meSyncItemDisplay(it);
-        _meBindDrag(it);
-        _meSelect(it);
-        return it;
+        var hMm = 30;   // 실제 3cm = 30mm 두께
+        var minVisualH = Math.max(20, me.natH * 0.008); // 너무 얇아 보이지 않게 최소 visual 보장
+        var visualH = Math.max(hMm, minVisualH);
+        var topMargin = me.natH * 0.2;
+        var bottomMargin = me.natH * 0.1;
+        var range = me.natH - topMargin - bottomMargin - visualH;
+        var step = count > 1 ? range / (count - 1) : 0;
+        var added = [];
+        for (var i = 0; i < count; i++) {
+            var el = document.createElement('div');
+            el.className = 'me-item shape';
+            el.style.zIndex = (++me.zCounter);
+            me.stage.appendChild(el);
+            var it = {
+                el: el, type: 'shelf', shape: 'shelf',
+                shelfCm: widthCm, shelfIdx: i,
+                x: (me.natW - wMm) / 2,
+                y: topMargin + step * i,
+                w: wMm, h: visualH,
+                fill: '#ffffff', stroke: '#dc2626', strokeWidth: 2,
+                isShelf: true
+            };
+            me.items.push(it);
+            _meSyncItemDisplay(it);
+            _meBindDrag(it);
+            added.push(it);
+        }
+        if (added.length) _meSelect(added[added.length - 1]);
+        return added;
     };
     window._meRemoveShelves = function() {
         if (!me || !me.items) return;
@@ -12831,7 +12824,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=516"></script>
+<script src="/simple_order.js?v=517"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

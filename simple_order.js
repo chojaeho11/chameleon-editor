@@ -9606,11 +9606,11 @@ html, body { background: #ffffff !important; }
           +   '</div>'
           +   '<div style="padding:18px 22px 16px; font-size:13px; color:#0f172a; line-height:1.7;">'
           +     '<label style="display:block; margin-bottom:14px;">'
-          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('가로 (cm)','横 (cm)','Width (cm)') + '</div>'
+          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('가로 (cm) — 선반 한 개 길이','横 (cm) — 棚1枚の長さ','Width (cm) — per shelf') + '</div>'
           +       '<input id="soShelfW" type="number" min="10" max="600" step="10" value="' + defaultW + '" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; box-sizing:border-box;">'
           +     '</label>'
           +     '<label style="display:block; margin-bottom:14px;">'
-          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('칸 수 (수직 구분)','仕切り数','Sections') + '</div>'
+          +       '<div style="font-weight:800; font-size:12.5px; margin-bottom:6px; color:#0f172a;">' + tr('단 수 (선반 갯수)','段数','Tiers (shelf count)') + '</div>'
           +       '<input id="soShelfC" type="number" min="1" max="20" step="1" value="' + defaultC + '" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; font-weight:700; box-sizing:border-box;">'
           +     '</label>'
           +     '<div id="soShelfCalc" style="padding:10px 12px; background:#f1f5f9; border-radius:8px; font-size:12px; color:#0f172a; font-weight:700;"></div>'
@@ -9623,13 +9623,15 @@ html, body { background: #ffffff !important; }
         document.body.appendChild(overlay);
         function _calc() {
             var w = parseInt(document.getElementById('soShelfW').value, 10) || 0;
-            var qty = Math.max(1, Math.ceil(w / 100));
-            var cells = parseInt(document.getElementById('soShelfC').value, 10) || 1;
+            var cells = Math.max(1, parseInt(document.getElementById('soShelfC').value, 10) || 1);
+            // 선반 1개당 ceil(가로/100) 자재. 총 자재 = perShelf × 단 수.
+            var perShelf = Math.max(1, Math.ceil(w / 100));
+            var qty = perShelf * cells;
             var calcEl = document.getElementById('soShelfCalc');
             if (calcEl) calcEl.textContent = tr(
-                '👉 자재 ' + qty + '개 · 칸 ' + cells + '칸 (가로 ' + w + 'cm)',
-                '👉 資材 ' + qty + '個 · ' + cells + '仕切り (横 ' + w + 'cm)',
-                '👉 ' + qty + ' unit(s) · ' + cells + ' section(s) (' + w + 'cm wide)'
+                '👉 자재 ' + qty + '개 (가로 ' + w + 'cm × ' + cells + '단)',
+                '👉 資材 ' + qty + '個 (横 ' + w + 'cm × ' + cells + '段)',
+                '👉 ' + qty + ' unit(s) (' + w + 'cm wide × ' + cells + ' tiers)'
             );
             return { w: w, cells: cells, qty: qty };
         }
