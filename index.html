@@ -7346,7 +7346,10 @@ function scrollHotdeal(gridId, dir) {
     //   _meCutlineRenderAll() 이 모든 source 합쳐 하나의 SVG overlay 에 그림.
     function _meCutlineBuildItemPathD(it) {
         if (!it || !it._cutlineRelPts || it._cutlineRelPts.length < 3) return '';
-        var pts = it._cutlineRelPts.map(function(p){ return [it.x + p[0]*it.w, it.y + p[1]*it.h]; });
+        // 2026-06-17: sharp flag (3rd element) 전달 — _meSmoothClosedPath 가 sharp 점에서 L(line) 사용
+        var pts = it._cutlineRelPts.map(function(p){
+            return p.length >= 3 ? [it.x + p[0]*it.w, it.y + p[1]*it.h, p[2]] : [it.x + p[0]*it.w, it.y + p[1]*it.h];
+        });
         return _meSmoothClosedPath(pts);
     }
     function _meCutlineRenderAll() {
@@ -7417,6 +7420,7 @@ function scrollHotdeal(gridId, dir) {
     }
     // 2026-06-16: 부드러운 path — quadratic Bézier midpoint smoothing.
     //   각 sample 정점을 control point 로, 두 정점의 중점을 곡선 통과 anchor 로 사용 → 코너가 곡선화.
+    // 2026-06-17: 점의 3번째 element 가 truthy 이면 sharp → L(line) 사용해 직선 모서리 유지 (등신대 받침대 등).
     function _meSmoothClosedPath(pts) {
         if (!pts || pts.length < 3) {
             if (!pts || !pts.length) return '';
@@ -7424,17 +7428,46 @@ function scrollHotdeal(gridId, dir) {
             for (var i0 = 1; i0 < pts.length; i0++) d0 += ' L ' + pts[i0][0].toFixed(1) + ' ' + pts[i0][1].toFixed(1);
             return d0 + ' Z';
         }
-        var mx0 = (pts[0][0] + pts[1][0]) / 2;
-        var my0 = (pts[0][1] + pts[1][1]) / 2;
-        var d = 'M ' + mx0.toFixed(1) + ' ' + my0.toFixed(1);
-        for (var i = 1; i < pts.length; i++) {
-            var ni = (i + 1) % pts.length;
-            var mx = (pts[i][0] + pts[ni][0]) / 2;
-            var my = (pts[i][1] + pts[ni][1]) / 2;
-            d += ' Q ' + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1) + ' ' + mx.toFixed(1) + ' ' + my.toFixed(1);
+        function isSharp(p) { return p && p.length >= 3 && p[2]; }
+        var n = pts.length;
+        // 모두 smooth 라면 기존 경로 빠른 처리
+        var anySharp = false;
+        for (var k = 0; k < n; k++) if (isSharp(pts[k])) { anySharp = true; break; }
+        if (!anySharp) {
+            var mx0 = (pts[0][0] + pts[1][0]) / 2;
+            var my0 = (pts[0][1] + pts[1][1]) / 2;
+            var d = 'M ' + mx0.toFixed(1) + ' ' + my0.toFixed(1);
+            for (var i = 1; i < n; i++) {
+                var ni = (i + 1) % n;
+                var mx = (pts[i][0] + pts[ni][0]) / 2;
+                var my = (pts[i][1] + pts[ni][1]) / 2;
+                d += ' Q ' + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1) + ' ' + mx.toFixed(1) + ' ' + my.toFixed(1);
+            }
+            return d + ' Z';
         }
-        d += ' Z';
-        return d;
+        // sharp + smooth 혼합 — sharp 점은 L(직선), smooth 점은 Q(곡선)
+        // 시작점: pts[0] 이 sharp 면 그 점에서, 아니면 pts[0]·pts[1] 중점에서
+        var d2;
+        if (isSharp(pts[0])) {
+            d2 = 'M ' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+        } else {
+            var sm0x = (pts[0][0] + pts[1][0]) / 2;
+            var sm0y = (pts[0][1] + pts[1][1]) / 2;
+            d2 = 'M ' + sm0x.toFixed(1) + ' ' + sm0y.toFixed(1);
+        }
+        for (var j = 1; j <= n; j++) {
+            var cur = pts[j % n];
+            var nxt = pts[(j + 1) % n];
+            if (isSharp(cur)) {
+                d2 += ' L ' + cur[0].toFixed(1) + ' ' + cur[1].toFixed(1);
+            } else {
+                var mx2 = (cur[0] + nxt[0]) / 2;
+                var my2 = (cur[1] + nxt[1]) / 2;
+                d2 += ' Q ' + cur[0].toFixed(1) + ' ' + cur[1].toFixed(1) + ' ' + mx2.toFixed(1) + ' ' + my2.toFixed(1);
+            }
+        }
+        d2 += ' Z';
+        return d2;
     }
     window._meCutlineClear = function() {
         // 전체 클리어 — 모든 item 의 칼선 + 캔버스 fill
@@ -7673,22 +7706,23 @@ function scrollHotdeal(gridId, dir) {
         // 진입/탈출 좌표 X — contour 가 시계방향이면 진입 X 가 우측, 탈출 X 가 좌측 (보통).
         var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
         var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
+        // 2026-06-17: 받침대 corner 에 sharp flag(1) 부여 → _meSmoothClosedPath 가 L(line) 로 렌더 → 평평한 바닥 유지
         if (entryX >= exitX) {
             // 시계방향: 우측 진입 → base 우측 → base 좌측 → 좌측 출구
-            result.push([entryX, cutY]);
-            result.push([baseRightX, cutY]);
-            result.push([baseRightX, baseBottomY]);
-            result.push([baseLeftX, baseBottomY]);
-            result.push([baseLeftX, cutY]);
-            result.push([exitX, cutY]);
+            result.push([entryX, cutY, 1]);
+            result.push([baseRightX, cutY, 1]);
+            result.push([baseRightX, baseBottomY, 1]);
+            result.push([baseLeftX, baseBottomY, 1]);
+            result.push([baseLeftX, cutY, 1]);
+            result.push([exitX, cutY, 1]);
         } else {
             // 반시계방향
-            result.push([entryX, cutY]);
-            result.push([baseLeftX, cutY]);
-            result.push([baseLeftX, baseBottomY]);
-            result.push([baseRightX, baseBottomY]);
-            result.push([baseRightX, cutY]);
-            result.push([exitX, cutY]);
+            result.push([entryX, cutY, 1]);
+            result.push([baseLeftX, cutY, 1]);
+            result.push([baseLeftX, baseBottomY, 1]);
+            result.push([baseRightX, baseBottomY, 1]);
+            result.push([baseRightX, cutY, 1]);
+            result.push([exitX, cutY, 1]);
         }
         for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
         return result;
@@ -7852,7 +7886,10 @@ function scrollHotdeal(gridId, dir) {
         if (it._cutlineMode === 'outer' && window._meStandeeBase) {
             try { finalPts = _meAddStandeeBase(finalPts, W, H); } catch(_be){ console.warn('[standee base]', _be); }
         }
-        it._cutlineRelPts = finalPts.map(function(p){ return [p[0]/W, p[1]/H]; });
+        // 2026-06-17: sharp flag(3rd element) 보존 — 등신대 받침대 corner 가 곡선이 아닌 직선으로 렌더되어야 함
+        it._cutlineRelPts = finalPts.map(function(p){
+            return p.length >= 3 ? [p[0]/W, p[1]/H, p[2]] : [p[0]/W, p[1]/H];
+        });
         it._cutlineMarginPct = marginPct;
         _meCutlineRenderAll();
     }
@@ -12977,7 +13014,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=524"></script>
+<script src="/simple_order.js?v=525"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
