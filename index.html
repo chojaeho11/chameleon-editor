@@ -8306,19 +8306,29 @@ function scrollHotdeal(gridId, dir) {
             it.fill = slot.color || '#000000';
             it.textAlign = slot.textAlign || 'left';
             it.lineHeight = 1.2;
-            el.setAttribute('contenteditable', 'false');
+            // 2026-06-17 v541: 템플릿 텍스트 슬롯 — 항상 직접 편집 가능 (단일 클릭 = 즉시 타이핑).
+            //   드래그·리사이즈는 _isTemplateSlot 차단으로 막혀 있으므로 contenteditable 유지해도 안전.
+            el.setAttribute('contenteditable', 'true');
             el.textContent = it.text;
-            // 더블클릭으로 편집 진입 — 위치는 잠금이지만 텍스트는 수정 가능
-            el.addEventListener('dblclick', function(ev){
-                ev.stopPropagation();
-                el.setAttribute('contenteditable', 'true');
-                el.focus();
+            // 시각적 단서 — 호버 시 점선 강조, 편집 중엔 하이라이트
+            el.style.cursor = 'text';
+            el.style.outline = 'none';
+            el.addEventListener('focus', function(){
+                el.style.background = 'rgba(253,224,71,0.3)';
+                el.style.boxShadow = '0 0 0 2px #f59e0b';
+                // 첫 클릭 시 placeholder 전부 선택 — 바로 덮어쓰기
                 try { document.execCommand('selectAll', false, null); } catch(_){}
             });
             el.addEventListener('blur', function(){
-                el.setAttribute('contenteditable', 'false');
+                el.style.background = '';
+                el.style.boxShadow = '';
                 it.text = el.innerText || '';
             });
+            el.addEventListener('input', function(){
+                it.text = el.innerText || '';
+            });
+            // 폰트 로드 (Google Fonts 자동 주입)
+            try { if (typeof _meLoadFont === 'function') _meLoadFont(slot.fontFamily, null); } catch(_){}
         } else if (slot.type === 'image') {
             it.src = slot.placeholder_url || '';
             // 빈 placeholder 스타일
@@ -13379,7 +13389,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=540"></script>
+<script src="/simple_order.js?v=541"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

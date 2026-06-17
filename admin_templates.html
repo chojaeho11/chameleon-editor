@@ -130,7 +130,7 @@ header .meta { font-size:11.5px; color:#94a3b8; }
                 <div id="textProps">
                     <div class="field"><label>기본 텍스트</label><input type="text" id="propText" oninput="updateSlotText()"></div>
                     <div class="row">
-                        <div class="field"><label>폰트</label><select id="propFont" onchange="updateSlotText()"><option value="sans-serif">Sans</option><option value="serif">Serif</option><option value="Noto Sans KR">Noto Sans KR</option><option value="Pretendard">Pretendard</option><option value="Black Han Sans">Black Han Sans</option></select></div>
+                        <div class="field"><label>폰트 (한글)</label><select id="propFont" onchange="onFontChange()"></select></div>
                         <div class="field"><label>크기 (px)</label><input type="number" id="propSize" value="24" oninput="updateSlotText()"></div>
                     </div>
                     <div class="row">
@@ -144,6 +144,78 @@ header .meta { font-size:11.5px; color:#94a3b8; }
 </div>
 
 <script>
+// 2026-06-17 v541: index.html 의 ME_GOOGLE_FONTS['KR'] 와 동일한 한글 폰트 목록.
+//   고객 페이지가 같은 폰트로 렌더하므로 admin 에서도 동일 폰트 미리보기/선택.
+const KR_FONTS = [
+    { name:'기본 (Sans)', family:'sans-serif', weights:null },
+    { name:'노토 산스', family:'Noto Sans KR', weights:'400;700;900' },
+    { name:'나눔고딕', family:'Nanum Gothic', weights:'400;700;800' },
+    { name:'나눔명조', family:'Nanum Myeongjo', weights:'400;700' },
+    { name:'검은고딕', family:'Black Han Sans', weights:'400' },
+    { name:'나눔펜스크립트', family:'Nanum Pen Script', weights:'400' },
+    { name:'도현', family:'Do Hyeon', weights:'400' },
+    { name:'주아', family:'Jua', weights:'400' },
+    { name:'싱글데이', family:'Single Day', weights:'400' },
+    { name:'고틱 A1', family:'Gothic A1', weights:'400;700;900' },
+    { name:'하이멜로디', family:'Hi Melody', weights:'400' },
+    { name:'감자꽃', family:'Gamja Flower', weights:'400' },
+    { name:'귀여운글씨', family:'Cute Font', weights:'400' },
+    { name:'동해독도', family:'East Sea Dokdo', weights:'400' },
+    { name:'개구쟁이', family:'Gaegu', weights:'400;700' },
+    { name:'블랙앤화이트', family:'Black And White Picture', weights:'400' },
+    { name:'송명체', family:'Song Myung', weights:'400' },
+    { name:'스타일리쉬', family:'Stylish', weights:'400' },
+    { name:'시적인', family:'Poor Story', weights:'400' },
+    { name:'연성', family:'Yeon Sung', weights:'400' },
+    { name:'고운돋움', family:'Gowun Dodum', weights:'400' },
+    { name:'고운바탕', family:'Gowun Batang', weights:'400;700' },
+    { name:'나눔브러쉬', family:'Nanum Brush Script', weights:'400' },
+    { name:'IBM 플렉스 산스', family:'IBM Plex Sans KR', weights:'400;700' },
+    { name:'노토 세리프', family:'Noto Serif KR', weights:'400;700;900' },
+    { name:'해바라기', family:'Sunflower', weights:'500;700' },
+    { name:'동글', family:'Dongle', weights:'400;700' },
+    { name:'함렛', family:'Hahmlet', weights:'400;700;900' },
+    { name:'구기', family:'Gugi', weights:'400' },
+    { name:'독도', family:'Dokdo', weights:'400' },
+    { name:'기랑해랑', family:'Kirang Haerang', weights:'400' },
+    { name:'거석체', family:'Gasoek One', weights:'400' },
+    { name:'베이글팻원', family:'Bagel Fat One', weights:'400' },
+    { name:'오르빗', family:'Orbit', weights:'400' },
+    { name:'제주명조', family:'Jeju Myeongjo', weights:'400' },
+    { name:'제주고딕', family:'Jeju Gothic', weights:'400' },
+    { name:'제주한라산', family:'Jeju Hallasan', weights:'400' }
+];
+const _loadedFonts = {};
+function loadGoogleFont(family, weights) {
+    if (!family || family === 'sans-serif' || family === 'serif') return;
+    if (_loadedFonts[family]) return;
+    _loadedFonts[family] = true;
+    const famUrl = family.replace(/ /g, '+');
+    let url = 'https://fonts.googleapis.com/css2?family=' + famUrl;
+    if (weights) url += ':wght@' + weights;
+    url += '&display=swap';
+    const link = document.createElement('link');
+    link.rel = 'stylesheet'; link.href = url;
+    document.head.appendChild(link);
+}
+// 폰트 셀렉트박스 초기 채우기 + 모든 폰트 미리 로드 (옵션 hover 시 즉시 렌더)
+function populateFontSelect() {
+    const sel = document.getElementById('propFont');
+    if (!sel) return;
+    sel.innerHTML = KR_FONTS.map(f =>
+        `<option value="${f.family}" style="font-family:'${f.family}', sans-serif;">${f.name}</option>`
+    ).join('');
+    // 모든 폰트 백그라운드 로드 (가벼움 — CSS 만)
+    KR_FONTS.forEach(f => loadGoogleFont(f.family, f.weights));
+}
+function onFontChange() {
+    const sel = document.getElementById('propFont');
+    const fontFam = sel.value;
+    const fontInfo = KR_FONTS.find(f => f.family === fontFam);
+    if (fontInfo) loadGoogleFont(fontInfo.family, fontInfo.weights);
+    updateSlotText();
+}
+
 const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -186,6 +258,7 @@ document.getElementById('filterCategory').addEventListener('change', e => {
         return;
     }
     document.getElementById('hdrUser').textContent = `${prof.username || session.user.email} (admin)`;
+    populateFontSelect();
     await loadCategories();
     loadTemplates();
 })();
@@ -342,10 +415,14 @@ function renderSlots() {
         lbl.className = 'slot-label';
         if (s.type === 'text') {
             lbl.textContent = s.default_text || 'TEXT';
-            lbl.style.fontFamily = s.fontFamily || 'sans-serif';
-            lbl.style.fontSize = Math.min(s.fontSize * dispScale, 14) + 'px';
+            const ff = s.fontFamily || 'sans-serif';
+            lbl.style.fontFamily = (ff === 'sans-serif' || ff === 'serif') ? ff : `"${ff}", sans-serif`;
+            lbl.style.fontSize = Math.max(8, s.fontSize * dispScale) + 'px';
             lbl.style.color = s.color || '#000';
             lbl.style.textAlign = s.textAlign || 'left';
+            lbl.style.whiteSpace = 'normal';
+            lbl.style.textShadow = '';
+            loadGoogleFont(ff, (KR_FONTS.find(f => f.family === ff) || {}).weights);
         } else {
             lbl.innerHTML = '<i class="fa-solid fa-image"></i> 이미지 슬롯';
         }
@@ -432,6 +509,7 @@ function addTextSlot() {
         fontFamily: 'Noto Sans KR', fontSize: 36,
         fontWeight: 700, color: '#000000', textAlign: 'center'
     });
+    loadGoogleFont('Noto Sans KR', '400;700;900');
     renderSlots();
     selectSlot(state.template.slots.length - 1);
 }
