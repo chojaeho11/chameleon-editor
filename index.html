@@ -5792,8 +5792,8 @@ function scrollHotdeal(gridId, dir) {
             .me-color-wrap { padding:6px 9px !important; min-height:36px; gap:5px !important; white-space:nowrap !important; flex-direction:row !important; align-items:center !important; flex:0 0 auto; }
             .me-color-wrap input[type=color] { width:22px !important; height:22px !important; }
             /* 2026-06-15: 모바일 props 패널 — 라벨 숨기고 컴팩트, 2줄 정도로 끝나게 wrap. */
-            /* 2026-06-18 v567: 2줄 고정 높이 (모바일 ~74px) → 대지 흔들림 방지 */
-            .me-props { padding:6px 6px !important; gap:5px !important; flex-wrap:wrap !important; min-height:74px !important; align-content:flex-start !important; }
+            /* 2026-06-18 v568: 모바일도 height 고정 → 대지 흔들림 방지 */
+            .me-props { padding:6px 6px !important; gap:5px !important; flex-wrap:wrap !important; height:80px !important; align-content:flex-start !important; align-items:flex-start !important; overflow:hidden !important; }
             .me-prop-group { padding:5px 8px !important; font-size:12px !important; gap:4px !important; }
             .me-prop-group label { display:none !important; }
             .me-prop-group input[type=number] { width:38px !important; font-size:12px !important; }
@@ -5816,8 +5816,9 @@ function scrollHotdeal(gridId, dir) {
         }
         /* 속성 패널 */
         /* 2026-06-15: props bar 항상 표시 (선택 없을 때도 stub) */
-        /* 2026-06-18 v567: 2줄 고정 높이 → 선택/해제에 따라 컨트롤 개수가 바뀌어도 대지 위치 흔들리지 않음 */
-        .me-props { display:flex; flex-wrap:wrap; gap:8px; align-items:center; align-content:flex-start; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); min-height:84px; box-sizing:border-box; }
+        /* 2026-06-18 v568: 2줄 고정 height (min-height 가 아닌 정확한 height) → 컨트롤 개수 무관하게 대지 위치 100% 고정 */
+        .me-props { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; align-content:flex-start; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); height:96px; box-sizing:border-box; overflow:hidden; }
+        .me-props .me-prop-group { flex-shrink:0; height:36px; }
         .me-props.show { display:flex; }
         .me-props.me-props-stub { opacity:0.55; pointer-events:none; }
         .me-props.me-props-stub * { user-select:none; }
