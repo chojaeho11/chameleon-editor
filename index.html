@@ -6794,6 +6794,25 @@ function scrollHotdeal(gridId, dir) {
                         if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
                         im.onload = function(){
                             try {
+                                // 2026-06-18 v569: DOM 의 objectFit:contain 동작을 정확히 재현
+                                //   이전엔 drawImage(im, x, y, w, h) 로 박스에 stretch → 비율 안 맞으면 왜곡 → 다운로드 시 그림 폭 다르게 보임.
+                                //   contain: 이미지 비율 유지 + 박스 안에 fit (남는 공간은 비움).
+                                var imgAR = (im.naturalWidth || iww) / (im.naturalHeight || ihh);
+                                var boxAR = iww / ihh;
+                                var drawW, drawH, drawX, drawY;
+                                if (imgAR > boxAR) {
+                                    // 이미지가 박스보다 가로 비율 큼 → 가로 fit, 세로 letterbox
+                                    drawW = iww;
+                                    drawH = iww / imgAR;
+                                    drawX = ixx;
+                                    drawY = iyy + (ihh - drawH) / 2;
+                                } else {
+                                    // 이미지가 박스보다 세로 비율 큼 → 세로 fit, 가로 pillarbox
+                                    drawH = ihh;
+                                    drawW = ihh * imgAR;
+                                    drawY = iyy;
+                                    drawX = ixx + (iww - drawW) / 2;
+                                }
                                 var needTransform = rotI || fxI !== 1 || fyI !== 1;
                                 if (needTransform) {
                                     ctx.save();
@@ -6801,10 +6820,13 @@ function scrollHotdeal(gridId, dir) {
                                     ctx.translate(iccx, iccy);
                                     if (rotI) ctx.rotate(rotI * Math.PI / 180);
                                     if (fxI !== 1 || fyI !== 1) ctx.scale(fxI, fyI);
-                                    ctx.drawImage(im, -iww/2, -ihh/2, iww, ihh);
+                                    // contain 적용한 draw 좌표 (박스 중앙 기준 상대좌표)
+                                    var relX = drawX - iccx;
+                                    var relY = drawY - iccy;
+                                    ctx.drawImage(im, relX, relY, drawW, drawH);
                                     ctx.restore();
                                 } else {
-                                    ctx.drawImage(im, ixx, iyy, iww, ihh);
+                                    ctx.drawImage(im, drawX, drawY, drawW, drawH);
                                 }
                             } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
                             resolve();
