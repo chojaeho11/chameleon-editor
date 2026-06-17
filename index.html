@@ -7522,17 +7522,22 @@ function scrollHotdeal(gridId, dir) {
         window._meCutlineSvg = null;
     };
     // 2026-06-16 v7: SVG path 의 anchor 점들 추출 (M·Q·L 끝점만, control point 는 skip).
+    // 2026-06-17: 3번째 element 로 sharp flag — L 명령으로 들어온 점은 sharp(1), Q 명령은 smooth(0).
+    //   PDF 생성 시 sharp 점에선 직선, smooth 점에선 곡선 으로 분기 그릴 수 있도록 정보 보존.
     function _meExtractPathAnchors(d) {
         var tokens = (d || '').match(/[MLQZmlqz]|-?\d*\.?\d+/g) || [];
         var pts = [];
         var i = 0;
         while (i < tokens.length) {
             var c = tokens[i];
-            if (c === 'M' || c === 'm' || c === 'L' || c === 'l') {
-                pts.push([parseFloat(tokens[i+1]), parseFloat(tokens[i+2])]);
+            if (c === 'L' || c === 'l') {
+                pts.push([parseFloat(tokens[i+1]), parseFloat(tokens[i+2]), 1]);
+                i += 3;
+            } else if (c === 'M' || c === 'm') {
+                pts.push([parseFloat(tokens[i+1]), parseFloat(tokens[i+2]), 0]);
                 i += 3;
             } else if (c === 'Q' || c === 'q') {
-                pts.push([parseFloat(tokens[i+3]), parseFloat(tokens[i+4])]);
+                pts.push([parseFloat(tokens[i+3]), parseFloat(tokens[i+4]), 0]);
                 i += 5;
             } else { i++; }
         }
@@ -7548,12 +7553,20 @@ function scrollHotdeal(gridId, dir) {
             if (L < 0.0001) return Math.hypot(p[0]-a[0], p[1]-a[1]);
             return Math.abs((dy*p[0] - dx*p[1] + b[0]*a[1] - b[1]*a[0]) / L);
         }
+        // 2026-06-17: sharp 점은 항상 보존 — 직각 모서리 (등신대 받침대 등) 가 RDP 단순화로 사라지지 않게.
+        function isSharp(p) { return p && p.length >= 3 && p[2]; }
         function rec(s, e) {
             if (e <= s + 1) return [pts[s], pts[e]];
             var maxD = 0, idx = s + 1;
+            // sharp 점이 구간 내 있으면 무조건 그 점을 분할점으로 (거리와 무관하게)
             for (var i = s+1; i < e; i++) {
-                var d = pd(pts[i], pts[s], pts[e]);
-                if (d > maxD) { maxD = d; idx = i; }
+                if (isSharp(pts[i])) { maxD = Infinity; idx = i; break; }
+            }
+            if (maxD < Infinity) {
+                for (var i = s+1; i < e; i++) {
+                    var d = pd(pts[i], pts[s], pts[e]);
+                    if (d > maxD) { maxD = d; idx = i; }
+                }
             }
             if (maxD > eps) {
                 var L = rec(s, idx), R = rec(idx, e);
@@ -7611,30 +7624,44 @@ function scrollHotdeal(gridId, dir) {
         var SX = widthMm / me.natW;
         var SY = heightMm / me.natH;
         // 단순화된 anchor → smooth cubic Bézier (jsPDF lines) — 중점 anchor 통과, 정점은 control point 로 사용.
+        // 2026-06-17: sharp 점 (받침대 corner 등) 은 직선 segment 로 렌더 — 곡선화 방지.
         function _drawSimplifiedSmoothPdf(pts) {
             if (!pts || pts.length < 3) return;
             var n = pts.length;
-            // 시작점 = 첫 두 점의 중점
-            var mx0 = (pts[0][0] + pts[1][0]) / 2;
-            var my0 = (pts[0][1] + pts[1][1]) / 2;
-            var startX = mx0 * SX, startY = my0 * SY;
+            function isSharp(p) { return p && p.length >= 3 && p[2]; }
+            // 시작점: pts[0] 이 sharp 면 그 점, 아니면 pts[0]·pts[1] 중점
+            var startX, startY;
+            if (isSharp(pts[0])) {
+                startX = pts[0][0] * SX; startY = pts[0][1] * SY;
+            } else {
+                var mx0 = (pts[0][0] + pts[1][0]) / 2;
+                var my0 = (pts[0][1] + pts[1][1]) / 2;
+                startX = mx0 * SX; startY = my0 * SY;
+            }
             var curX = startX, curY = startY;
             var lines = [];
-            for (var i = 1; i < n; i++) {
-                var ni = (i + 1) % n;
-                var mx = (pts[i][0] + pts[ni][0]) / 2;
-                var my = (pts[i][1] + pts[ni][1]) / 2;
-                var vx = pts[i][0], vy = pts[i][1];
-                // Quadratic Q (vx, vy) → (mx, my) → cubic 변환
-                var c1x = curX + (2/3) * (vx*SX - curX);
-                var c1y = curY + (2/3) * (vy*SY - curY);
-                var c2x = mx*SX + (2/3) * (vx*SX - mx*SX);
-                var c2y = my*SY + (2/3) * (vy*SY - my*SY);
-                lines.push([c1x - curX, c1y - curY, c2x - curX, c2y - curY, mx*SX - curX, my*SY - curY]);
-                curX = mx*SX; curY = my*SY;
+            for (var i = 1; i <= n; i++) {
+                var cur = pts[i % n];
+                var nxt = pts[(i + 1) % n];
+                if (isSharp(cur)) {
+                    // 직선 segment — current 점까지 line
+                    var lx = cur[0] * SX, ly = cur[1] * SY;
+                    lines.push([lx - curX, ly - curY]);
+                    curX = lx; curY = ly;
+                } else {
+                    // 부드러운 Bezier — Quadratic Q (cur) → (mid) → cubic 변환
+                    var mx = (cur[0] + nxt[0]) / 2;
+                    var my = (cur[1] + nxt[1]) / 2;
+                    var vx = cur[0], vy = cur[1];
+                    var endX = mx * SX, endY = my * SY;
+                    var c1x = curX + (2/3) * (vx*SX - curX);
+                    var c1y = curY + (2/3) * (vy*SY - curY);
+                    var c2x = endX + (2/3) * (vx*SX - endX);
+                    var c2y = endY + (2/3) * (vy*SY - endY);
+                    lines.push([c1x - curX, c1y - curY, c2x - curX, c2y - curY, endX - curX, endY - curY]);
+                    curX = endX; curY = endY;
+                }
             }
-            // 닫기 — 끝점에서 시작점으로 직선
-            lines.push([startX - curX, startY - curY]);
             try { doc.lines(lines, startX, startY, [1, 1], 'S', false); } catch (e) { console.warn('[cutline pdf] lines', e); }
         }
         function _drawPathInPdf(d) {
@@ -13093,7 +13120,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=532"></script>
+<script src="/simple_order.js?v=533"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
