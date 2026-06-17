@@ -7017,22 +7017,20 @@ function scrollHotdeal(gridId, dir) {
                      +   '<input type="range" min="5" max="120" step="1" value="' + Math.round(_curPct * 1000) + '" data-cutline-margin style="flex:1; min-width:90px; accent-color:#ef4444;">'
                      +   '<span data-cutline-margin-val style="font-size:11px; font-weight:800; color:#b91c1c; min-width:48px; text-align:right;">' + _modeLbl + _curPctDisp + '%</span>'
                      + '</span>';
-                // 2026-06-17: 등신대 모드에서만 — 받침대 바닥 높이 슬라이더 (cutY 위쪽은 유지, baseBottomY 만 조절).
+                // 2026-06-17: 등신대 모드 — 받침대 높이 + 넓이 슬라이더 (1 그룹에 좌우 나란히, 라벨은 작은 아이콘만)
+                // 2026-06-18 v577: 두 슬라이더를 한 칸에 합침 (모바일 가로 1칸 안에 둘 다 들어가도록)
                 if (window._meStandeeBase && it._cutlineMode === 'outer') {
                     var _bhPct = (it._cutlineBaseHeightPct != null) ? it._cutlineBaseHeightPct : 0.1;
-                    var _bhPctDisp = (_bhPct * 100).toFixed(1);
-                    html += '<span class="me-prop-group" style="gap:6px; min-width:180px;">'
-                         +   '<label style="color:#0369a1; font-weight:800;">📏 받침 높이</label>'
-                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:80px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-baseh-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:42px; text-align:right;">' + _bhPctDisp + '%</span>'
-                         + '</span>';
-                    // 2026-06-17 v531: 받침대 좌우 넓이 슬라이더 — footW 의 0~50% 까지 양쪽으로 확장
                     var _bwPct = (it._cutlineBaseWidthPct != null) ? it._cutlineBaseWidthPct : 0.1;
+                    var _bhPctDisp = (_bhPct * 100).toFixed(1);
                     var _bwPctDisp = (_bwPct * 100).toFixed(1);
-                    html += '<span class="me-prop-group" style="gap:6px; min-width:180px;">'
-                         +   '<label style="color:#0369a1; font-weight:800;">📐 받침 넓이</label>'
-                         +   '<input type="range" min="0" max="500" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:80px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-basew-val style="font-size:11px; font-weight:800; color:#0369a1; min-width:42px; text-align:right;">' + _bwPctDisp + '%</span>'
+                    html += '<span class="me-prop-group" style="gap:4px; min-width:0; flex:1 1 100%;">'
+                         +   '<i class="fa-solid fa-arrows-up-down" style="color:#0369a1; font-size:11px;" title="받침 높이"></i>'
+                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-baseh-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bhPctDisp + '%</span>'
+                         +   '<i class="fa-solid fa-arrows-left-right" style="color:#0369a1; font-size:11px; margin-left:6px;" title="받침 넓이"></i>'
+                         +   '<input type="range" min="0" max="500" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-basew-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bwPctDisp + '%</span>'
                          + '</span>';
                 }
             }
@@ -8882,38 +8880,50 @@ function scrollHotdeal(gridId, dir) {
                 if (imgChild) imgChild.src = newSrc;
                 else sel.el.style.backgroundImage = 'url("' + newSrc + '")';
             }
-            // 2026-06-18 v576: 누끼 결과는 피사체 외 투명 패딩 비율이 좌우 비대칭 → 시각적으로 좌측으로 치우쳐 보임.
-            //   PNG 분석 후 피사체 bbox 중심을 박스 중심에 맞춰 보정 (자동 우측 이동).
+            // 2026-06-18 v577: 누끼 결과 box 를 피사체 bbox 기준으로 resize + 위치 보정.
+            //   이전 v576: x 만 보정 → 미세함. 이제 box 자체를 subject bbox 로 줄이고 원본 중심점 유지.
             try {
                 var _adjImg = new Image();
                 _adjImg.onload = function() {
                     try {
+                        var _pngW = _adjImg.naturalWidth, _pngH = _adjImg.naturalHeight;
                         var _c = document.createElement('canvas');
-                        _c.width = _adjImg.naturalWidth;
-                        _c.height = _adjImg.naturalHeight;
+                        _c.width = _pngW; _c.height = _pngH;
                         var _cx = _c.getContext('2d');
                         _cx.drawImage(_adjImg, 0, 0);
-                        var _img = _cx.getImageData(0, 0, _c.width, _c.height);
+                        var _img = _cx.getImageData(0, 0, _pngW, _pngH);
                         var _d = _img.data;
-                        var _minX = _c.width, _maxX = 0;
-                        for (var py = 0; py < _c.height; py += 2) {
-                            for (var px = 0; px < _c.width; px += 2) {
-                                var _ai = (py * _c.width + px) * 4 + 3;
-                                if (_d[_ai] > 30) {  // alpha > 30 = 피사체
+                        var _minX = _pngW, _maxX = 0, _minY = _pngH, _maxY = 0;
+                        for (var py = 0; py < _pngH; py += 2) {
+                            for (var px = 0; px < _pngW; px += 2) {
+                                var _ai = (py * _pngW + px) * 4 + 3;
+                                if (_d[_ai] > 30) {
                                     if (px < _minX) _minX = px;
                                     if (px > _maxX) _maxX = px;
+                                    if (py < _minY) _minY = py;
+                                    if (py > _maxY) _maxY = py;
                                 }
                             }
                         }
-                        if (_maxX > _minX) {
-                            // 피사체 중심 (정규화) — 0.5 면 중앙, > 0.5 면 우측, < 0.5 면 좌측에 치우침
-                            var _subjCenter = (_minX + _maxX) / 2 / _c.width;
-                            var _offsetRatio = 0.5 - _subjCenter;  // 양수면 피사체가 좌측 → 박스 우측으로 보정
-                            sel.x += _offsetRatio * sel.w;
+                        if (_maxX > _minX && _maxY > _minY) {
+                            // 원래 box 의 중심점 보존
+                            var _oldCx = sel.x + sel.w / 2;
+                            var _oldCy = sel.y + sel.h / 2;
+                            // 피사체가 PNG 안에서 차지하는 비율 (가로/세로)
+                            var _subjWRatio = (_maxX - _minX) / _pngW;
+                            var _subjHRatio = (_maxY - _minY) / _pngH;
+                            // box 를 피사체 비율로 축소 (불필요한 투명 영역 제거)
+                            sel.w = sel.w * _subjWRatio;
+                            sel.h = sel.h * _subjHRatio;
+                            // 중심점 유지 → x, y 재설정
+                            sel.x = _oldCx - sel.w / 2;
+                            sel.y = _oldCy - sel.h / 2;
                             _meSyncItemDisplay(sel);
-                            console.log('[me cutout] subject re-centered, offset=' + _offsetRatio.toFixed(3));
+                            console.log('[me cutout v577] resized to subject — w=' + Math.round(sel.w) + ' h=' + Math.round(sel.h) + ' subjW%=' + (_subjWRatio*100).toFixed(1));
+                        } else {
+                            console.warn('[me cutout v577] no subject pixels found (alpha threshold)');
                         }
-                    } catch(_ce) { console.warn('[me cutout] center adjust failed', _ce); }
+                    } catch(_ce) { console.warn('[me cutout v577] center adjust failed', _ce); }
                 };
                 _adjImg.src = newSrc;
             } catch(_ae){}
