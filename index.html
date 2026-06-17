@@ -5782,9 +5782,17 @@ function scrollHotdeal(gridId, dir) {
             .me-handle-rot { top:-44px; margin-left:-10px; }
             .me-handle-rot::before { top:20px; height:24px; }
             .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
-            /* 2026-06-18 v571: 모바일 툴바 → 2줄 wrap (이전엔 좌우 스크롤). 별 버튼 제거 + 자동 줄바꿈 */
-            .me-toolbar { gap:5px !important; padding:8px 8px !important; flex-wrap:wrap !important; overflow:visible !important; }
+            /* 2026-06-18 v573: 모바일 툴바 → 3행 grid 레이아웃
+               Row 1: 템플릿 (full width)
+               Row 2: 되돌리기 / 업로드 / 누끼 / 칼선  (4-col)
+               Row 3: 글씨 / 가이드 / 배경 / 도형(네모+동그라미) (4-col) */
+            .me-toolbar { display:grid !important; grid-template-columns:repeat(4, 1fr) !important; gap:5px !important; padding:8px 8px !important; overflow:visible !important; }
             .me-toolbar::-webkit-scrollbar { display:none; }
+            .me-toolbar > .me-r1 { grid-column: 1 / -1; width:100%; box-sizing:border-box; }
+            .me-toolbar > .me-r2, .me-toolbar > .me-r3 { min-width:0; box-sizing:border-box; }
+            /* 도형 그룹 — 한 셀 안에 네모/동그라미 가로 나란히 */
+            .me-tool-shape-group.me-r3 { display:flex !important; gap:3px; min-width:0; }
+            .me-tool-shape-group.me-r3 > button { flex:1; padding:8px 0 !important; min-width:0; }
             .me-tool-btn { padding:8px 11px !important; font-size:12px !important; flex:0 0 auto; min-height:36px; display:inline-flex !important; align-items:center; justify-content:center; gap:5px !important; white-space:nowrap; }
             .me-tool-btn .me-tb-lbl, .me-color-wrap .me-tb-lbl { display:inline !important; font-size:12px !important; }
             .me-tool-btn.accent .me-tb-lbl { display:inline !important; font-size:12.5px !important; }
@@ -5861,20 +5869,24 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
             </div>
             <div class="me-toolbar">
-                <!-- 2026-06-18 v572: 되돌리기 아이콘 only (텍스트 라벨 제거) -->
-                <button type="button" class="me-tool-btn" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 / Undo (Ctrl+Z)" style="display:inline-flex; align-items:center; gap:5px; opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i></button>
-                <!-- 2026-06-18 v572: '이미지 업로드' → '업로드' 짧게 -->
-                <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
+                <!-- 2026-06-18 v573: 모바일 3행 레이아웃 — Row1: 템플릿(full) / Row2: 되돌리기/업로드/누끼/칼선 / Row3: 글씨/가이드/배경/도형 -->
+                <!-- Row 1: 템플릿 promo (mobile 가로 100%) -->
+                <button type="button" class="me-tool-btn me-r1" id="meTemplateBtn" onclick="window._meOpenTemplatePicker && window._meOpenTemplatePicker()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6;" title="디자인 템플릿"><i class="fa-solid fa-layer-group me-tb-ic"></i><span data-i18n="me_template_promo" class="me-tb-lbl" style="font-weight:700;">템플릿 — 글씨만 바꾸면 디자인 끝</span></button>
+                <!-- Row 2 -->
+                <button type="button" class="me-tool-btn me-r2" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 / Undo (Ctrl+Z)" style="opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i></button>
+                <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
-                <!-- 2026-06-18 v572: 템플릿 — 3번째 위치 + 강조 (글씨만 바꾸면 디자인 끝) -->
-                <button type="button" class="me-tool-btn" id="meTemplateBtn" onclick="window._meOpenTemplatePicker && window._meOpenTemplatePicker()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6; padding-left:12px; padding-right:12px;" title="디자인 템플릿"><i class="fa-solid fa-layer-group me-tb-ic"></i><span data-i18n="me_template_promo" class="me-tb-lbl" style="font-weight:700;">템플릿 — 글씨만 바꾸면 디자인 끝</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모 / Square / 四角"><i class="fa-solid fa-square me-tb-ic"></i></button>
-                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미 / Circle / 円"><i class="fa-solid fa-circle me-tb-ic"></i></button>
-                <label class="me-color-wrap" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
-                <!-- 2026-06-18 v572: '배경제거' → '누끼' -->
-                <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거) — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
-                <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
+                <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거)"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
+                <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성 (스티커/등신대 전용)"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
+                <!-- Row 3 -->
+                <button type="button" class="me-tool-btn me-r3" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
+                <button type="button" class="me-tool-btn me-r3" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
+                <label class="me-color-wrap me-r3" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
+                <!-- 도형 그룹 (네모/동그라미) — 한 칸 차지 -->
+                <span class="me-tool-shape-group me-r3">
+                    <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모 / Square / 四角"><i class="fa-solid fa-square me-tb-ic"></i></button>
+                    <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미 / Circle / 円"><i class="fa-solid fa-circle me-tb-ic"></i></button>
+                </span>
                 <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
                 <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
             </div>
