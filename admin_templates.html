@@ -192,14 +192,14 @@ document.getElementById('filterCategory').addEventListener('change', e => {
 
 // 2026-06-17: admin_products 의 distinct 카테고리 + 상품 갯수 + 대표 이름 동적 로드.
 //   고객 페이지가 product.category 로 매칭하므로 여기서도 동일 값을 보여야 함.
+//   (v540 → v541) admin_products 에는 name_kr 컬럼이 없음 — name 만 사용.
 async function loadCategories() {
     try {
-        // 페이지네이션 (Supabase 기본 1000 제한, admin_products 2800+ row)
         const all = [];
         const PAGE = 1000;
         for (let off = 0; off < 10000; off += PAGE) {
             const { data, error } = await sb.from('admin_products')
-                .select('category, name, name_kr')
+                .select('category, name')
                 .not('category', 'is', null)
                 .range(off, off + PAGE - 1);
             if (error) { console.warn('[loadCategories] page', off, error); break; }
@@ -212,22 +212,27 @@ async function loadCategories() {
             const c = p.category; if (!c) return;
             if (!catMap[c]) catMap[c] = { count: 0, sample: '' };
             catMap[c].count++;
-            if (!catMap[c].sample) catMap[c].sample = (p.name_kr || p.name || '').slice(0, 18);
+            if (!catMap[c].sample) catMap[c].sample = (p.name || '').slice(0, 18);
         });
         const sorted = Object.entries(catMap)
             .map(([cat, info]) => ({ cat, count: info.count, label: `${info.sample || '?'} · ${cat} (${info.count}개)` }))
             .sort((a, b) => a.label.localeCompare(b.label));
         const sel = document.getElementById('filterCategory');
-        sel.innerHTML = '<option value="">— 카테고리 선택 —</option>'
-            + sorted.map(o => `<option value="${o.cat}">${o.label}</option>`).join('')
-            + '<option value="OTHER">⚙️ 기타 (직접 입력)</option>';
-        // OTHER 선택 시 input 노출 토글
+        if (!sorted.length) {
+            sel.innerHTML = '<option value="">카테고리 데이터 없음</option><option value="OTHER">⚙️ 기타 (직접 입력)</option>';
+            toast('카테고리 로딩 결과 없음', 3000);
+        } else {
+            sel.innerHTML = '<option value="">— 카테고리 선택 —</option>'
+                + sorted.map(o => `<option value="${o.cat}">${o.label}</option>`).join('')
+                + '<option value="OTHER">⚙️ 기타 (직접 입력)</option>';
+        }
         sel.addEventListener('change', e => {
             document.getElementById('customCategoryField').style.display = e.target.value === 'OTHER' ? '' : 'none';
         });
+        console.log('[loadCategories] loaded', sorted.length, 'categories');
     } catch (e) {
         console.warn('[loadCategories]', e);
-        toast('카테고리 로딩 실패: ' + e.message, 4000);
+        toast('카테고리 로딩 실패: ' + e.message, 4500);
     }
 }
 
