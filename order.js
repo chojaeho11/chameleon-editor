@@ -4443,6 +4443,12 @@ async function initiateStripeCheckout(pubKey, amount, currencyCountry, orderDbId
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
 
+        // 2026-06-17: 직접 URL 이동 (SDK 우회) — iOS Safari ITP / 광고차단에서 redirectToCheckout 가
+        //   "問題が繰り返し起きました" 오류로 실패하던 사례 해결. session.url 은 edge function 이 같이 반환.
+        if (data.url) {
+            location.replace(data.url);
+            return;
+        }
         const result = await stripe.redirectToCheckout({
             sessionId: data.sessionId
         });

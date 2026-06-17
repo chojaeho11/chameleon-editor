@@ -614,6 +614,8 @@ async function startSafeTx(itemId,amount){
                 body:{amount:localAmount,currency,order_id:'SAFE-'+tx.id,cancel_url:failUrl,success_url:successUrl}
             });
             if(fe||data?.error)throw (fe||new Error(data.error));
+            // 2026-06-17: 직접 URL 이동 (iOS Safari ITP 우회). session.url 은 edge function 이 반환.
+            if(data.url){location.replace(data.url);return;}
             await stripe.redirectToCheckout({sessionId:data.sessionId});
         }catch(err){
             toast('Stripe 오류: '+err.message);

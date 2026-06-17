@@ -67,7 +67,8 @@ function showError(msg) {
         document.getElementById('pSub').textContent = t.wait;
 
         if (!orderId) { showError('Missing order_id'); return; }
-        if (typeof Stripe === 'undefined') { showError('Stripe SDK failed to load.'); return; }
+        // 2026-06-17: Stripe SDK 가 차단된 경우(iOS 추적방지/광고차단)도 폴백 (직접 URL 이동) 가능.
+        //   Stripe 가 로드 안 됐어도 결제 진행에는 영향 없음 — edge function 이 반환하는 session.url 로 직접 이동.
 
         const sb = window.supabase.createClient(SB_URL, SB_KEY);
         const { data: order, error } = await sb.from('orders').select('id,total_amount,manager_name,items,site_code,payment_status').eq('id', orderId).single();
@@ -91,8 +92,6 @@ function showError(msg) {
             return;
         }
 
-        const stripe = Stripe(STRIPE_PK);
-
         // Edge function: create-stripe-session
         // 2026-05-18: success/cancel URL 을 호출 도메인 기준(location.origin)으로 설정.
         //   이전엔 cotton-print.com 으로 하드코딩 — cafe0101/cafe3355(가맹점·해외) 결제가
@@ -114,7 +113,20 @@ function showError(msg) {
         if (sErr) throw sErr;
         if (sess?.error) throw new Error(sess.error);
 
-        await stripe.redirectToCheckout({ sessionId: sess.sessionId });
+        // 2026-06-17: 직접 URL 이동 (SDK 우회) — iOS Safari ITP / 광고차단 환경에서 stripe.redirectToCheckout 가
+        //   "問題が繰り返し起きました" 무한 redirect 오류로 실패하던 사례 해결.
+        //   session.url 은 edge function 이 같이 반환 (Stripe API 가 반환하는 1회용 결제 URL).
+        if (sess.url) {
+            location.replace(sess.url);
+            return;
+        }
+        // 폴백: SDK 사용 (구버전 호환)
+        if (typeof Stripe !== 'undefined') {
+            const stripe = Stripe(STRIPE_PK);
+            await stripe.redirectToCheckout({ sessionId: sess.sessionId });
+        } else {
+            throw new Error('Stripe session URL missing and SDK not available.');
+        }
     } catch(e) {
         showError(e.message || String(e));
     }
