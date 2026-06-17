@@ -1011,24 +1011,37 @@ async function dbSubmitComplete() {
         const designerEmail = (myProf && myProf.email) || userEmail || '';
 
         // 3) design_withdrawal_requests 에 등록 (admin 디자인마켓 출금관리에 노출)
+        // 2026-06-17: 디자이너의 designer_tax_profiles 를 먼저 조회해서 세금·은행 정보를 복사 저장.
+        //   (이전엔 모두 빈 문자열로 INSERT → 관리자 출금관리 페이지에 -/- 만 표시되던 버그)
+        let _tax = {};
+        try {
+            const { data: _tp } = await sb.from('designer_tax_profiles').select('*').eq('designer_id', userId).maybeSingle();
+            if (_tp) _tax = _tp;
+        } catch (_e) { /* tax profile 없으면 무시 */ }
         let withdrawalId = null;
         try {
             const memo = `[디자인 의뢰 정산] ${row.category || '자유의뢰'} / 제목: ${row.title || '(제목 없음)'} / 요청ID: ${id}${note ? ' / 메모: ' + note : ''}`;
             const { data: wReq, error: wErr } = await sb.from('design_withdrawal_requests').insert({
                 designer_id: userId,
-                country: 'KR',
+                country: _tax.country || 'KR',
                 gross_amount: payoutAmount,
                 net_amount: payoutAmount,
                 vat_amount: 0,
                 card_fee_amount: 0,
                 platform_fee_amount: 0,
-                legal_name: designerLbl,
-                tax_id: '',
-                tax_id_type: 'RRN',
-                residence_address: '',
-                bank_name: '',
-                bank_holder: '',
-                bank_account: '',
+                legal_name: _tax.legal_name || designerLbl,
+                tax_id: _tax.tax_id || '',
+                tax_id_type: _tax.tax_id_type || 'RRN',
+                residence_address: _tax.residence_address || '',
+                bank_name: _tax.bank_name || '',
+                bank_holder: _tax.bank_holder || '',
+                bank_account: _tax.bank_account || '',
+                swift_bic: _tax.swift_bic || null,
+                iban: _tax.iban || null,
+                routing_number: _tax.routing_number || null,
+                bank_address: _tax.bank_address || null,
+                payout_currency: _tax.payout_currency || null,
+                claim_tax_treaty: _tax.claim_tax_treaty || false,
                 status: 'pending',
                 requested_at: new Date().toISOString(),
                 source: 'design_request',
@@ -1036,17 +1049,22 @@ async function dbSubmitComplete() {
             }).select().single();
             if (wErr) {
                 // source 컬럼 없을 때 fallback
-                if (wErr.message && (wErr.message.indexOf('source') >= 0 || wErr.message.indexOf('memo') >= 0)) {
+                if (wErr.message && (wErr.message.indexOf('source') >= 0 || wErr.message.indexOf('memo') >= 0 || wErr.message.indexOf('swift_bic') >= 0 || wErr.message.indexOf('iban') >= 0 || wErr.message.indexOf('routing_number') >= 0 || wErr.message.indexOf('bank_address') >= 0 || wErr.message.indexOf('payout_currency') >= 0 || wErr.message.indexOf('claim_tax_treaty') >= 0)) {
                     const fb = await sb.from('design_withdrawal_requests').insert({
                         designer_id: userId,
-                        country: 'KR',
+                        country: _tax.country || 'KR',
                         gross_amount: payoutAmount,
                         net_amount: payoutAmount,
                         vat_amount: 0,
                         card_fee_amount: 0,
                         platform_fee_amount: 0,
-                        legal_name: designerLbl,
-                        tax_id_type: 'RRN',
+                        legal_name: _tax.legal_name || designerLbl,
+                        tax_id: _tax.tax_id || '',
+                        tax_id_type: _tax.tax_id_type || 'RRN',
+                        residence_address: _tax.residence_address || '',
+                        bank_name: _tax.bank_name || '',
+                        bank_holder: _tax.bank_holder || '',
+                        bank_account: _tax.bank_account || '',
                         status: 'pending',
                         requested_at: new Date().toISOString()
                     }).select().single();

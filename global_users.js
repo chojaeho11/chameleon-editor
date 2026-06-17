@@ -1932,9 +1932,12 @@ window.loadDesignWithdrawals = async () => {
         const dpMap = {};
         (dps || []).forEach(d => dpMap[d.id] = d);
 
-        // Fetch tax profiles (to show current verified state)
+        // Fetch tax profiles (verified state + full info — used as fallback when withdrawal row 의 필드가 비어 있을 때)
+        // 2026-06-17: 디자이너가 출금 요청을 보내면 design_withdrawal_requests 의 tax/bank 필드가 비어서 저장되는 케이스가 있음.
+        //   (designer-board.html 의 의뢰 정산 흐름이 legal_name 만 채우고 나머지를 빈 문자열로 INSERT)
+        //   → 표시 시에는 designer_tax_profiles 의 값을 fallback 으로 사용.
         const { data: tps } = await sb.from('designer_tax_profiles')
-            .select('designer_id, verified, verified_at')
+            .select('*')
             .in('designer_id', designerIds);
         const tpMap = {};
         (tps || []).forEach(t => tpMap[t.designer_id] = t);
@@ -1958,25 +1961,41 @@ window.loadDesignWithdrawals = async () => {
                 ? `<img src="${dp.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid #e2e8f0;">`
                 : `<div style="width:32px;height:32px;border-radius:50%;background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;">${displayName[0] || 'D'}</div>`;
 
+            // 2026-06-17: 출금 요청 row 의 빈 필드를 디자이너의 designer_tax_profiles 로 보강.
+            const _legal_name  = r.legal_name        || tp.legal_name        || '';
+            const _tax_id_type = r.tax_id_type       || tp.tax_id_type       || '';
+            const _tax_id      = r.tax_id            || tp.tax_id            || '';
+            const _addr        = r.residence_address || tp.residence_address || '';
+            const _bank_name   = r.bank_name         || tp.bank_name         || '';
+            const _bank_holder = r.bank_holder       || tp.bank_holder       || '';
+            const _bank_acct   = r.bank_account      || tp.bank_account      || '';
+            const _swift       = r.swift_bic         || tp.swift_bic         || '';
+            const _iban        = r.iban              || tp.iban              || '';
+            const _routing     = r.routing_number    || tp.routing_number    || '';
+            const _bank_addr   = r.bank_address      || tp.bank_address      || '';
+            const _payout_cur  = r.payout_currency   || tp.payout_currency   || '';
+            const _treaty      = (r.claim_tax_treaty != null ? r.claim_tax_treaty : tp.claim_tax_treaty) || false;
+            const _source      = (!r.legal_name && !r.tax_id && tp.legal_name) ? '<span style="font-size:9px;color:#7c3aed;font-weight:700;">📋 프로필 사용</span>' : '';
+
             const legalInfo = `
                 <div style="font-size:11px;line-height:1.5;">
-                    <div><b>${r.legal_name || '-'}</b> <span style="color:#64748b;">(${r.tax_id_type || '-'})</span></div>
-                    <div style="color:#64748b;font-family:monospace;word-break:break-all;">${r.tax_id || '-'}</div>
-                    <div style="color:#94a3b8;font-size:10px;">${r.residence_address || '-'}</div>
+                    <div><b>${_legal_name || '-'}</b> <span style="color:#64748b;">(${_tax_id_type || '-'})</span> ${_source}</div>
+                    <div style="color:#64748b;font-family:monospace;word-break:break-all;">${_tax_id || '-'}</div>
+                    <div style="color:#94a3b8;font-size:10px;">${_addr || '-'}</div>
                 </div>`;
 
             let bankInfo = `
                 <div style="font-size:11px;line-height:1.5;">
-                    <div><b>${r.bank_name || '-'}</b> / ${r.bank_holder || '-'}</div>
-                    <div style="color:#64748b;font-family:monospace;">${r.bank_account || '-'}</div>`;
+                    <div><b>${_bank_name || '-'}</b> / ${_bank_holder || '-'}</div>
+                    <div style="color:#64748b;font-family:monospace;">${_bank_acct || '-'}</div>`;
             if (r.country && r.country !== 'KR') {
                 bankInfo += `
                     <div style="margin-top:4px;padding:4px 6px;background:#eff6ff;border-radius:4px;">
-                        ${r.swift_bic ? `<div style="color:#1e40af;"><b>SWIFT:</b> ${r.swift_bic}</div>` : ''}
-                        ${r.iban ? `<div style="color:#1e40af;word-break:break-all;"><b>IBAN:</b> ${r.iban}</div>` : ''}
-                        ${r.routing_number ? `<div style="color:#1e40af;"><b>Routing:</b> ${r.routing_number}</div>` : ''}
-                        ${r.bank_address ? `<div style="color:#64748b;font-size:10px;">${r.bank_address}</div>` : ''}
-                        ${r.payout_currency ? `<div style="color:#7c3aed;font-weight:700;">${r.payout_currency}${r.claim_tax_treaty ? ' · Treaty claimed' : ''}</div>` : ''}
+                        ${_swift ? `<div style="color:#1e40af;"><b>SWIFT:</b> ${_swift}</div>` : ''}
+                        ${_iban ? `<div style="color:#1e40af;word-break:break-all;"><b>IBAN:</b> ${_iban}</div>` : ''}
+                        ${_routing ? `<div style="color:#1e40af;"><b>Routing:</b> ${_routing}</div>` : ''}
+                        ${_bank_addr ? `<div style="color:#64748b;font-size:10px;">${_bank_addr}</div>` : ''}
+                        ${_payout_cur ? `<div style="color:#7c3aed;font-weight:700;">${_payout_cur}${_treaty ? ' · Treaty claimed' : ''}</div>` : ''}
                     </div>`;
             }
             bankInfo += '</div>';
