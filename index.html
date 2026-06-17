@@ -6333,8 +6333,8 @@ function scrollHotdeal(gridId, dir) {
             leftEl.style.display = visible ? '' : 'none';
             rightEl.style.display = visible ? '' : 'none';
         }
-        // 2) 1m 단위 패널 절단선 (내부 fold 라인)
-        var cuts = me.stage.querySelectorAll('.me-panel-cut');
+        // 2) 1m 단위 패널 절단선 (내부 fold 라인) — 점선만, 라벨 X (사용자 요청).
+        var cuts = me.stage.querySelectorAll('.me-panel-cut, .me-panel-cut-label');
         cuts.forEach(function(el){ el.remove(); });
         if (visible && hasWing) {
             var panelMm = 1000;
@@ -6347,12 +6347,6 @@ function scrollHotdeal(gridId, dir) {
                 cut.className = 'me-panel-cut';
                 cut.style.cssText = 'position:absolute; left:' + posPct.toFixed(3) + '%; top:0; bottom:0; width:0; border-left:1.5px dashed rgba(220,38,38,0.6); pointer-events:none; z-index:997;';
                 me.stage.appendChild(cut);
-                // 작은 라벨 (상단)
-                var lbl = document.createElement('div');
-                lbl.className = 'me-panel-cut-label';
-                lbl.textContent = (i * panelMm) + 'mm';
-                lbl.style.cssText = 'position:absolute; left:' + posPct.toFixed(3) + '%; top:2px; transform:translateX(-50%); font-size:9px; font-weight:800; color:rgba(185,28,28,0.85); background:rgba(255,255,255,0.7); padding:1px 4px; border-radius:3px; pointer-events:none; z-index:997; font-family:inherit; letter-spacing:0.5px;';
-                me.stage.appendChild(lbl);
             }
         }
     }
@@ -12720,7 +12714,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=501"></script>
+<script src="/simple_order.js?v=502"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
