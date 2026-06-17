@@ -12127,6 +12127,16 @@ html, body { background: #ffffff !important; }
                         window._meSetSize(_spx.w, _spx.h, p.code);
                         // 2026-06-16 v13: 실제 mm 도 저장 → ruler/cutline PDF 가 정확한 값 사용.
                         if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
+                        // 2026-06-17: 날개 가벽이면 양쪽 150mm overlay.
+                        if (typeof window._meSetWingMm === 'function') {
+                            var _isWingWall0 = false;
+                            if (state && state.isWall && p) {
+                                if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) _isWingWall0 = true;
+                                else if (/^hb_dw/i.test(String(p.code || ''))) _isWingWall0 = true;
+                                if (_isWingWall0 && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(p)) _isWingWall0 = false;
+                            }
+                            window._meSetWingMm(_isWingWall0 ? 150 : 0);
+                        }
                         document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
                             b.classList.remove('active');
                         });
@@ -12167,8 +12177,18 @@ html, body { background: #ffffff !important; }
             try {
                 if (typeof window._meSetSize === 'function') {
                     var _spxs = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spxs.w, _spxs.h, state.product.code);
-                    // 2026-06-16 v13: 실제 mm 동기화.
                     if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
+                    // 2026-06-17: 날개 가벽이면 캔버스 양쪽 150mm overlay 표시 (export 영향 없음).
+                    if (typeof window._meSetWingMm === 'function') {
+                        var _isWingWall = false;
+                        if (state && state.isWall && state.product) {
+                            var _p = state.product;
+                            if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(_p)) _isWingWall = true;
+                            else if (/^hb_dw/i.test(String(_p.code || ''))) _isWingWall = true;
+                            if (_isWingWall && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(_p)) _isWingWall = false;
+                        }
+                        window._meSetWingMm(_isWingWall ? 150 : 0);
+                    }
                 }
             } catch(_e){}
         };
