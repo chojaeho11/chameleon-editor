@@ -8237,10 +8237,11 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
-    // 템플릿 로드 — 배경 이미지 + 슬롯들을 me.items 에 추가. 기존 items 모두 제거.
-    //   각 슬롯은 _isTemplateSlot:true 로 표시되어 위치/크기 고정 (드래그·리사이즈 차단).
+    // 템플릿 로드 — 두 가지 포맷 지원:
+    //   (a) v542+ "items" 포맷: slots = [me.items 직렬화] — 미니에디터 전체 복원.
+    //   (b) v539 "slot" 포맷: slots = [{type:'text'/'image', x, y, w, h, ...}] — 단순 슬롯.
     window._meLoadTemplate = function(tpl) {
-        if (!tpl || !tpl.background_url) return;
+        if (!tpl) return;
         if (!confirm('템플릿을 불러오면 현재 디자인은 지워집니다. 계속하시겠어요?')) return;
         _meSnapshot();
         // 1) 기존 items 제거
@@ -8248,7 +8249,18 @@ function scrollHotdeal(gridId, dir) {
         me.items = [];
         me._cutlinePathD = null; me._canvasCutlinePathD = null;
         try { var ov = document.getElementById('meCutlineOverlay'); if (ov) ov.remove(); } catch(_){}
-        // 2) 배경 이미지 toBack
+        // 포맷 자동 감지 — slots 첫 항목에 type='shape'/'shelf' 가 있거나 fontSize/src 가 직접 들어있으면 v542 포맷.
+        var slots = tpl.slots || [];
+        var isV542 = slots.length > 0 && slots.some(function(s){
+            return s && (s.type === 'shape' || s.type === 'shelf' || s.shape || (s.type === 'image' && s.src));
+        });
+        if (isV542) {
+            // v542: me.items 그대로 복원 (admin 의 에디터에서 만든 디자인 통째로)
+            slots.forEach(function(saved){ _meRestoreTemplateItem(saved); });
+            return;
+        }
+        // v539 폴백: 옛 slot 포맷 (배경 이미지 + 슬롯들)
+        if (!tpl.background_url) return;
         var bgImg = new Image();
         bgImg.crossOrigin = 'anonymous';
         bgImg.onload = function() {
@@ -8283,6 +8295,45 @@ function scrollHotdeal(gridId, dir) {
         bgImg.onerror = function() { alert('템플릿 배경 이미지를 불러오지 못했습니다.'); };
         bgImg.src = tpl.background_url;
     };
+
+    // 2026-06-17 v542: 템플릿(v542 포맷) item 복원 — me.items 직렬화본을 그대로 미니에디터에 재생성.
+    //   고객 입장에선 모든 item 이 _isTemplateSlot=true 로 잠금. 텍스트는 직접 편집 가능.
+    function _meRestoreTemplateItem(saved) {
+        if (!saved || !saved.type) return;
+        var el = document.createElement('div');
+        el.className = 'me-item' + (saved.type === 'text' ? ' text' : '') + (saved.type === 'shape' ? ' shape' : '') + (saved.shape === 'circle' ? ' circle' : '');
+        el.style.zIndex = (++me.zCounter);
+        me.stage.appendChild(el);
+        var it = Object.assign({}, saved, { el: el, _isTemplateSlot: true });
+        // 텍스트면 contenteditable + 편집 가능, 그 외는 잠금
+        if (saved.type === 'text') {
+            el.textContent = saved.text || '';
+            el.setAttribute('contenteditable', 'true');
+            el.style.cursor = 'text';
+            el.style.outline = 'none';
+            el.addEventListener('focus', function(){
+                el.style.background = 'rgba(253,224,71,0.3)';
+                el.style.boxShadow = '0 0 0 2px #f59e0b';
+                try { document.execCommand('selectAll', false, null); } catch(_){}
+            });
+            el.addEventListener('blur', function(){
+                el.style.background = ''; el.style.boxShadow = '';
+                it.text = el.innerText || '';
+            });
+            el.addEventListener('input', function(){ it.text = el.innerText || ''; });
+            try { if (typeof _meLoadFont === 'function') _meLoadFont(saved.fontFamily, null); } catch(_){}
+        } else if (saved.type === 'image') {
+            var imgEl = document.createElement('img');
+            imgEl.src = saved.src || '';
+            imgEl.style.width = '100%'; imgEl.style.height = '100%';
+            imgEl.style.objectFit = 'contain';
+            el.appendChild(imgEl);
+        }
+        // shape 는 _meSyncItemDisplay 가 background/border/clipPath 처리.
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);  // _isTemplateSlot 으로 인해 드래그 차단됨
+    }
 
     function _meAddTemplateSlot(slot, baseX, baseY, sx, sy) {
         var el = document.createElement('div');
@@ -13389,7 +13440,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=541"></script>
+<script src="/simple_order.js?v=542"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

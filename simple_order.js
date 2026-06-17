@@ -9952,6 +9952,17 @@ html, body { background: #ffffff !important; }
         }
     };
 
+    // 2026-06-17 v542: admin 템플릿 편집 모드 — URL ?admin_template_mode=1 로 진입.
+    //   simple_order 모달이 평소처럼 열리되, 결제 버튼들 → "💾 템플릿으로 저장" 버튼으로 교체.
+    //   admin 이 미니에디터에서 자유롭게 디자인 (텍스트/도형/이미지/색/폰트) 후 저장 → admin_templates 에 row 생성.
+    //   고객은 평소처럼 템플릿 버튼으로 불러옴.
+    function _soIsTemplateAdminMode() {
+        try {
+            var p = new URLSearchParams(location.search);
+            return p.get('admin_template_mode') === '1';
+        } catch(_e) { return false; }
+    }
+
     window.openSimpleOrderModal = async function(productCode, productData) {
         injectStyles();
         injectModal();
@@ -12161,7 +12172,107 @@ html, body { background: #ffffff !important; }
 
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
+
+        // 2026-06-17 v542: admin 템플릿 편집 모드 — 결제 UI 를 템플릿 저장 UI 로 교체.
+        try { if (_soIsTemplateAdminMode()) _soSetupTemplateAdminMode(); } catch(_te){ console.warn('[template admin]', _te); }
     };
+
+    // 2026-06-17 v542: 템플릿 편집 모드 셋업 — 결제 버튼들을 템플릿 저장 UI 로 교체.
+    async function _soSetupTemplateAdminMode() {
+        // admin role 확인
+        var sb = getSb();
+        if (sb && sb.auth) {
+            try {
+                var sess = await sb.auth.getSession();
+                var u = sess && sess.data && sess.data.session && sess.data.session.user;
+                if (!u) { alert('관리자 로그인이 필요합니다.'); return; }
+                var prof = await sb.from('profiles').select('role').eq('id', u.id).maybeSingle();
+                if (!prof || !prof.data || prof.data.role !== 'admin') { alert('관리자만 템플릿을 편집할 수 있습니다.'); return; }
+            } catch(_re){ alert('권한 확인 실패: ' + _re.message); return; }
+        }
+        // 결제 박스 + 카트/구매 버튼 + 디자인 의뢰 배너 숨김
+        ['soPriceBox','soBtnCart','soBtnBuy','soDesignReqBanner'].forEach(function(id){
+            var el = document.getElementById(id); if (el) el.style.display = 'none';
+        });
+        // 우측 사이드바 윗부분에 템플릿 저장 패널 주입
+        var sidebar = document.querySelector('#simpleOrderModal .so-right');
+        if (!sidebar) return;
+        var panel = document.createElement('div');
+        panel.id = 'soTemplateAdminPanel';
+        panel.style.cssText = 'background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; padding:16px 18px; border-radius:14px; margin-bottom:14px; box-shadow:0 8px 24px -6px rgba(124,58,237,0.45);';
+        panel.innerHTML =
+            '<div style="font-weight:900; font-size:14px; margin-bottom:10px; display:flex; align-items:center; gap:6px;"><i class="fa-solid fa-palette"></i> 디자인 템플릿 등록 모드</div>'
+          + '<div style="font-size:11.5px; opacity:0.9; line-height:1.55; margin-bottom:12px;">에디터에서 자유롭게 디자인 후 아래 버튼으로 저장하세요. 고객 페이지의 🎨 템플릿 버튼에 자동 노출됩니다.</div>'
+          + '<label style="display:block; font-size:11px; font-weight:800; opacity:0.85; margin-bottom:4px;">템플릿 이름</label>'
+          + '<input type="text" id="soTplAdminName" placeholder="예: 모던 그라데이션 명함" style="width:100%; padding:9px 11px; border:none; border-radius:8px; font-size:13px; font-weight:700; box-sizing:border-box; margin-bottom:8px; color:#0f172a; font-family:inherit;">'
+          + '<label style="display:block; font-size:11px; font-weight:800; opacity:0.85; margin-bottom:4px;">상품 코드 한정 (선택)</label>'
+          + '<input type="text" id="soTplAdminCode" placeholder="비워두면 카테고리 전체에 적용" style="width:100%; padding:9px 11px; border:none; border-radius:8px; font-size:12.5px; font-weight:700; box-sizing:border-box; margin-bottom:12px; color:#0f172a; font-family:inherit;">'
+          + '<button type="button" id="soTplAdminSave" style="width:100%; padding:13px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:900; cursor:pointer; font-family:inherit; box-shadow:0 4px 12px -3px rgba(251,191,36,0.55);"><i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i> 템플릿으로 저장</button>'
+          + '<div style="font-size:10.5px; opacity:0.8; margin-top:10px; line-height:1.55;">카테고리: <b>' + (state.product && state.product.category || '?') + '</b> · 상품: <b>' + (state.product && state.product.code || '?') + '</b></div>';
+        sidebar.insertBefore(panel, sidebar.firstChild);
+        document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
+    }
+
+    // 2026-06-17 v542: 미니에디터의 me.items 전체를 admin_templates 에 저장.
+    async function _soSaveAsTemplate() {
+        var name = (document.getElementById('soTplAdminName') || {}).value || '';
+        name = name.trim();
+        if (!name) { alert('템플릿 이름을 입력하세요.'); return; }
+        if (!window.me || !Array.isArray(window.me.items)) { alert('에디터를 초기화할 수 없습니다.'); return; }
+        var btn = document.getElementById('soTplAdminSave');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...'; }
+        try {
+            // 썸네일 PNG 생성
+            var thumbDataUrl = (typeof window._meExportPNG === 'function') ? await window._meExportPNG() : null;
+            if (!thumbDataUrl) throw new Error('썸네일 생성 실패');
+            // 썸네일 업로드
+            var bin = atob(thumbDataUrl.split(',')[1]);
+            var arr = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            var blob = new Blob([arr], { type: 'image/png' });
+            var cat = (state.product && state.product.category) || 'misc';
+            var path = 'templates/' + cat + '/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.png';
+            var sb = getSb();
+            var up = await sb.storage.from('design').upload(path, blob, { upsert: false, contentType: 'image/png' });
+            if (up.error) throw up.error;
+            var pub = sb.storage.from('design').getPublicUrl(path);
+            var pngUrl = pub.data.publicUrl;
+            // me.items 직렬화 (el/handler 등은 제외)
+            var serialized = (window.me.items || []).map(function(it){
+                var clone = {};
+                Object.keys(it).forEach(function(k){
+                    if (k === 'el' || k === '_cutlineRays' || typeof it[k] === 'function') return;
+                    clone[k] = it[k];
+                });
+                return clone;
+            });
+            var code = (document.getElementById('soTplAdminCode') || {}).value || '';
+            code = code.trim() || null;
+            // INSERT
+            var row = {
+                product_category: cat,
+                product_code: code,
+                name: name,
+                site_code: 'KR',
+                background_url: pngUrl,
+                thumbnail_url: pngUrl,
+                width_mm: (state.product && state.product.width_mm) || null,
+                height_mm: (state.product && state.product.height_mm) || null,
+                slots: serialized,
+                is_active: true,
+                sort_order: 999
+            };
+            var ins = await sb.from('admin_templates').insert(row).select().single();
+            if (ins.error) throw ins.error;
+            alert('✅ 템플릿 저장 완료!\n\n관리자 페이지에서 확인 가능합니다.');
+            // 관리자 페이지로 돌아감
+            location.href = '/admin_templates.html';
+        } catch (e) {
+            console.error('[soSaveAsTemplate]', e);
+            alert('저장 실패: ' + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i> 템플릿으로 저장'; }
+        }
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     // 2026-06-14 v3: Quick Design — 메인 페이지 미니에디터 portal 이식 + 사이즈 동기화 + 적용 버튼
