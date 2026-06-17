@@ -887,20 +887,19 @@ window.openTemplateMyPage = async function() {
         const approvedSum = (window._myTplList || [])
             .filter(t => t.status === 'approved')
             .reduce((s, t) => s + (t.payment_amount || 0), 0);
-        // 2026-06-18 v556: 이미 요청한 정산 금액 — design_withdrawal_requests 에서 template_royalty 출처만 합산.
+        // 2026-06-18 v559b: 이미 요청한 정산 금액 — memo 의 [템플릿 prefix 로만 식별 (source 컬럼 없는 환경 호환).
         let withdrawnSum = 0;
         try {
             const { data: wds } = await sb.from('design_withdrawal_requests')
-                .select('gross_amount, status, source, memo')
+                .select('gross_amount, status, memo')
                 .eq('designer_id', userId)
                 .in('status', ['pending', 'approved', 'paid']);
             (wds || []).forEach(w => {
-                // source 가 template_royalty 거나 memo 에 '[템플릿' 포함
-                if (w.source === 'template_royalty' || (w.memo || '').indexOf('[템플릿') >= 0) {
+                if ((w.memo || '').indexOf('[템플릿') >= 0) {
                     withdrawnSum += (w.gross_amount || 0);
                 }
             });
-        } catch(_we) { /* 테이블 접근 권한 없으면 0 */ }
+        } catch(_we) { /* 권한/RLS 차단 시 0 */ }
         const available = Math.max(0, approvedSum - withdrawnSum);
         window._myTplAvailable = available;
         document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(available * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (available * 0.001).toFixed(2) : available.toLocaleString() + '원');
