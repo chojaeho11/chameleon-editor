@@ -7732,6 +7732,43 @@ function scrollHotdeal(gridId, dir) {
     //   기존 centroid ray-cast 는 무게중심에서 사방으로 ray 를 쏴 가장 먼 alpha 픽셀을 찾는 방식이라
     //   캐릭터(루피 등)의 팔다리 사이 오목한 곳을 따라가지 못하고 큰 타원으로 끝남.
     //   Moore: 좌상단 boundary 픽셀에서 시작해 8방향 이웃을 시계방향으로 살펴 가며 외곽선을 따라 한 바퀴 돔.
+    // 2026-06-17 v526: BFS 로 가장 큰 connected component 의 좌상단에서 시작.
+    //   이전엔 단순히 첫 inside 픽셀 — 데코 star/dot 같은 작은 element 가 위에 있으면 그것만 12점 정도 그려져서 실패.
+    function _meFindLargestBlobStart(data, W, H, thr) {
+        var size = W * H;
+        var visited = new Uint8Array(size);
+        var queue = new Int32Array(size);
+        var largestSize = 0;
+        var largestStart = null;
+        for (var y = 0; y < H; y++) {
+            for (var x = 0; x < W; x++) {
+                var idx = y * W + x;
+                if (visited[idx]) continue;
+                if (data[idx * 4 + 3] <= thr) continue;
+                // BFS — 4-connected (상하좌우)
+                var head = 0, tail = 0;
+                queue[tail++] = idx;
+                visited[idx] = 1;
+                var compSize = 0;
+                var topY = y, topX = x;
+                while (head < tail) {
+                    var pidx = queue[head++];
+                    var py = (pidx / W) | 0, px = pidx - py * W;
+                    compSize++;
+                    if (py < topY || (py === topY && px < topX)) { topY = py; topX = px; }
+                    if (py > 0 && !visited[pidx - W] && data[(pidx - W) * 4 + 3] > thr) { visited[pidx - W] = 1; queue[tail++] = pidx - W; }
+                    if (py < H - 1 && !visited[pidx + W] && data[(pidx + W) * 4 + 3] > thr) { visited[pidx + W] = 1; queue[tail++] = pidx + W; }
+                    if (px > 0 && !visited[pidx - 1] && data[(pidx - 1) * 4 + 3] > thr) { visited[pidx - 1] = 1; queue[tail++] = pidx - 1; }
+                    if (px < W - 1 && !visited[pidx + 1] && data[(pidx + 1) * 4 + 3] > thr) { visited[pidx + 1] = 1; queue[tail++] = pidx + 1; }
+                }
+                if (compSize > largestSize) {
+                    largestSize = compSize;
+                    largestStart = [topX, topY, compSize];
+                }
+            }
+        }
+        return largestStart;
+    }
     function _meTraceContourMoore(data, W, H, thr) {
         // 8방향 (N, NE, E, SE, S, SW, W, NW) — 시계방향
         var DX = [0, 1, 1, 1, 0, -1, -1, -1];
@@ -7740,25 +7777,11 @@ function scrollHotdeal(gridId, dir) {
             if (x < 0 || y < 0 || x >= W || y >= H) return false;
             return data[(y * W + x) * 4 + 3] > thr;
         }
-        // 시작점: 가장 큰 connected blob 의 좌상단 픽셀.
-        //   가장 큰 blob 만 잡아야 노이즈/작은 점에 휘둘리지 않음.
-        //   간단히: 모든 inside 픽셀 중 (사방 4-connected) 가장 큰 component 의 minimum-row left-most.
-        // 면적 최적화: 첫 번째 inside 픽셀에서 시작 (대체로 캐릭터 머리/모자 상단). 작은 노이즈는 minBlob 제거로 무력화.
-        // 1) bounding-box 계산 (위치 기준)
-        var minX = W, minY = H, maxX = -1, maxY = -1;
-        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
-            if (isInside(x, y)) {
-                if (x < minX) minX = x; if (x > maxX) maxX = x;
-                if (y < minY) minY = y; if (y > maxY) maxY = y;
-            }
-        }
-        if (maxX < 0) return null;
-        // 2) 시작점: 가장 윗줄(minY)에서 inside 픽셀 첫 발견
-        var sx = -1, sy = -1;
-        for (var x2 = minX; x2 <= maxX; x2++) {
-            if (isInside(x2, minY)) { sx = x2; sy = minY; break; }
-        }
-        if (sx < 0) return null;
+        // 시작점: BFS 로 찾은 가장 큰 connected component 의 topmost-leftmost.
+        var start = _meFindLargestBlobStart(data, W, H, thr);
+        if (!start) return null;
+        var sx = start[0], sy = start[1];
+        try { console.log('[cutline trace] start=(' + sx + ',' + sy + ') largestBlob=' + start[2] + 'px'); } catch(_le){}
         // 3) Moore tracing — 외부에서 시작 방향은 '위' (NW 부터 시계방향으로 첫 inside 픽셀 탐색)
         var contour = [];
         var x = sx, y = sy;
@@ -13016,7 +13039,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=526"></script>
+<script src="/simple_order.js?v=527"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
