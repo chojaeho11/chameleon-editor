@@ -3530,14 +3530,14 @@ html, body { background: #ffffff !important; }
                     '<b style="color:#1e40af;">' + tr('옆면이 없이 디자인하셨네요.','側面なしでデザインされていますね。','Designed without side panels.') + '</b>',
                     '<span style="color:#475569;">' + tr('옆면(좌우 150mm씩)은 기본 ','側面(左右150mmずつ)はデフォルトで ','Side panels (150mm each side) default to ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','white print') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
                     '',
-                    // 2026-06-17: 옆면 색상 지정 안내 — 전용 핑크 "옆면 색" 버튼 사용 안내.
-                    '<div style="margin:8px 0; padding:10px 12px; background:#fdf2f8; border-left:3px solid #ec4899; border-radius:6px;">'
-                      + '<b style="color:#9d174d;">💡 ' + tr('옆면 색상을 지정하고 싶다면?', '側面の色を指定したい場合は？', 'Want to specify a side panel color?') + '</b><br>'
+                    // 2026-06-17: 옆면 색상 지정 안내 — 배경 picker 사용 안내 (선택 해제 후 클릭).
+                    '<div style="margin:8px 0; padding:10px 12px; background:#eff6ff; border-left:3px solid #2563eb; border-radius:6px;">'
+                      + '<b style="color:#1e40af;">💡 ' + tr('옆면 색상을 지정하고 싶다면?', '側面の色を指定したい場合は？', 'Want to specify a side panel color?') + '</b><br>'
                       + '<span style="color:#475569; font-size:12px;">'
-                      + tr('미니에디터 상단의 ', 'ミニエディター上部の ', 'Click the ')
-                      + '<b style="color:#9d174d; background:#fce7f3; padding:1px 6px; border-radius:4px;">🎨 ' + tr('옆면 색', '側面色', 'Side color')
+                      + tr('빈 공간을 클릭해 선택을 해제한 뒤 상단 ', '空白部分をクリックして選択を解除し、上部の ', 'Click an empty area to deselect, then click the ')
+                      + '<b style="color:#0f172a;">🎨 ' + tr('배경', '背景', 'Background')
                       + '</b>'
-                      + tr(' 버튼을 클릭해서 색을 선택하면 양쪽 옆면이 그 색으로 채워집니다.', ' ボタンをクリックして色を選択すると、両側面がその色で塗りつぶされます。', ' button at the top to fill both side panels with the chosen color.')
+                      + tr(' 무지개 원을 클릭하면 양쪽 옆면이 그 색으로 채워집니다.', ' 虹色のサークルをクリックすると、両側面がその色で塗りつぶされます。', ' rainbow circle to fill both side panels with the chosen color.')
                       + '</span></div>',
                     '',
                     tr('이대로 진행해도 됩니다.','このまま進行しても問題ありません。','You can proceed as is.'),
