@@ -7693,29 +7693,7 @@ function scrollHotdeal(gridId, dir) {
         }
         var hRange = maxY - minY;
         if (hRange < 10) return contour;
-        // 2026-06-17 fix: cutY 를 97% 로 (발 거의 보존). 발 아래로 받침대를 확실히 내려서 stand 모양.
-        //   이전 92% 는 발이 통째로 잘려서 사용자가 "발이 잘렸어" 불만.
         var cutY = minY + hRange * 0.97;
-        // y >= cutY 인 모든 점의 전역 min/max X — 발 폭 전체 (다리 벌어진 경우 포함)
-        var globalMinX = W, globalMaxX = 0;
-        for (var i = 0; i < contour.length; i++) {
-            var p = contour[i];
-            if (p[1] >= cutY) {
-                if (p[0] < globalMinX) globalMinX = p[0];
-                if (p[0] > globalMaxX) globalMaxX = p[0];
-            }
-        }
-        if (globalMaxX <= globalMinX) return contour;
-        // 2026-06-17 fix: 받침대가 이미지 영역 밖으로도 내려갈 수 있게 H-1 cap 제거.
-        //   이미지가 캔버스 가득 차 있어도 (maxY ≈ H-1) cutline 의 relPt 가 1.0 이상 가능 → 시각적으로 이미지 아래로 그려짐.
-        //   너비는 발 폭의 18% 확장 (좀 더 자연스러운 비율). 높이는 hRange 의 10% (이미지 아래로 충분히 내려가서 받침대 보임).
-        var footW = globalMaxX - globalMinX;
-        var basePadX = Math.max(W * 0.04, footW * 0.18);
-        var baseLeftX = Math.max(0, globalMinX - basePadX);
-        var baseRightX = Math.min(W - 1, globalMaxX + basePadX);
-        // 2026-06-17: 받침대 깊이 슬라이더 적용 — 기본 10%, 사용자가 0~30% 조절 가능
-        var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
-        var baseBottomY = maxY + hRange * _bhPct;  // cap 제거 — 이미지 밖으로 내려가는 게 정상
         // 처음으로 y>=cutY 인 인덱스 (위→아래 진입점) 와 마지막으로 y>=cutY 인 인덱스 (아래→위 출구점)
         var enterIdx = -1, exitIdx = -1;
         for (var i = 0; i < contour.length; i++) {
@@ -7726,29 +7704,42 @@ function scrollHotdeal(gridId, dir) {
             if (contour[i][1] >= cutY) { exitIdx = i; break; }
         }
         if (exitIdx <= enterIdx) return contour;
-        // 새 contour: enter 이전 + base outline + exit 이후
-        var result = [];
-        for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
         // 진입/탈출 좌표 X — contour 가 시계방향이면 진입 X 가 우측, 탈출 X 가 좌측 (보통).
         var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
         var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
-        // 2026-06-17: 받침대 corner 에 sharp flag(1) 부여 → _meSmoothClosedPath 가 L(line) 로 렌더 → 평평한 바닥 유지
-        if (entryX >= exitX) {
-            // 시계방향: 우측 진입 → base 우측 → base 좌측 → 좌측 출구
-            result.push([entryX, cutY, 1]);
-            result.push([baseRightX, cutY, 1]);
+        // 2026-06-17 v530: 받침대 좌우 한계는 (실루엣 아래쪽 minX/maxX) 와 (진입/탈출 X) 둘 다 고려.
+        //   이전엔 silhouette 아래쪽만 봐서, 바닥보다 위쪽 (cutY 근처) 의 실루엣이 더 넓을 때 베이스가 실루엣 안쪽으로 들어가
+        //   라인이 교차되며 작업파일에서 "겹쳐있는 부분" 으로 보임.
+        var globalMinX = W, globalMaxX = 0;
+        for (var i = 0; i < contour.length; i++) {
+            var p = contour[i];
+            if (p[1] >= cutY) {
+                if (p[0] < globalMinX) globalMinX = p[0];
+                if (p[0] > globalMaxX) globalMaxX = p[0];
+            }
+        }
+        if (globalMaxX <= globalMinX) return contour;
+        var leftMost = Math.min(globalMinX, entryX, exitX);
+        var rightMost = Math.max(globalMaxX, entryX, exitX);
+        var footW = rightMost - leftMost;
+        var basePadX = Math.max(W * 0.04, footW * 0.1);
+        var baseLeftX = leftMost - basePadX;
+        var baseRightX = rightMost + basePadX;
+        // 받침대 깊이 슬라이더 적용 — 기본 10%, 사용자 0~30% 조절 가능
+        var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
+        var baseBottomY = maxY + hRange * _bhPct;
+        // 새 contour: enter 이전 silhouette + base trapezoid (2 sharp corners only) + exit 이후 silhouette
+        // 2026-06-17 v530: 6점 직사각형 → 2점 사다리꼴 — silhouette 끝점에서 base corner 로 바로 사선 연결.
+        //   결과: 평평한 바닥은 유지 (corner ↔ corner 직선) 하면서 silhouette 와의 교차 가능성 제거.
+        var result = [];
+        for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
+        var isCW = entryX >= exitX;
+        if (isCW) {
             result.push([baseRightX, baseBottomY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
-            result.push([baseLeftX, cutY, 1]);
-            result.push([exitX, cutY, 1]);
         } else {
-            // 반시계방향
-            result.push([entryX, cutY, 1]);
-            result.push([baseLeftX, cutY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
             result.push([baseRightX, baseBottomY, 1]);
-            result.push([baseRightX, cutY, 1]);
-            result.push([exitX, cutY, 1]);
         }
         for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
         return result;
@@ -13077,7 +13068,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=529"></script>
+<script src="/simple_order.js?v=530"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
