@@ -7624,6 +7624,66 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-16 v3: 복잡/팬시 — bounding-box 중심 기준 360° ray-cast.
     //   centroid (alpha 평균) 대신 bounding-box 중심 사용 → 위치 정확도 향상 (가벼운 sparkle 등이 무게중심을 끌어당기던 문제 fix).
     //   기존 me._cutlineSource 단일 참조 → 각 item 의 it._cutlineRelPts 로 분산 저장 → 여러 칼선 동시 보존.
+    // 2026-06-17: Moore neighborhood contour tracing — 실루엣의 오목한 부분 (팔, 다리, 모자 등) 도 정확히 추적.
+    //   기존 centroid ray-cast 는 무게중심에서 사방으로 ray 를 쏴 가장 먼 alpha 픽셀을 찾는 방식이라
+    //   캐릭터(루피 등)의 팔다리 사이 오목한 곳을 따라가지 못하고 큰 타원으로 끝남.
+    //   Moore: 좌상단 boundary 픽셀에서 시작해 8방향 이웃을 시계방향으로 살펴 가며 외곽선을 따라 한 바퀴 돔.
+    function _meTraceContourMoore(data, W, H, thr) {
+        // 8방향 (N, NE, E, SE, S, SW, W, NW) — 시계방향
+        var DX = [0, 1, 1, 1, 0, -1, -1, -1];
+        var DY = [-1, -1, 0, 1, 1, 1, 0, -1];
+        function isInside(x, y) {
+            if (x < 0 || y < 0 || x >= W || y >= H) return false;
+            return data[(y * W + x) * 4 + 3] > thr;
+        }
+        // 시작점: 가장 큰 connected blob 의 좌상단 픽셀.
+        //   가장 큰 blob 만 잡아야 노이즈/작은 점에 휘둘리지 않음.
+        //   간단히: 모든 inside 픽셀 중 (사방 4-connected) 가장 큰 component 의 minimum-row left-most.
+        // 면적 최적화: 첫 번째 inside 픽셀에서 시작 (대체로 캐릭터 머리/모자 상단). 작은 노이즈는 minBlob 제거로 무력화.
+        // 1) bounding-box 계산 (위치 기준)
+        var minX = W, minY = H, maxX = -1, maxY = -1;
+        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+            if (isInside(x, y)) {
+                if (x < minX) minX = x; if (x > maxX) maxX = x;
+                if (y < minY) minY = y; if (y > maxY) maxY = y;
+            }
+        }
+        if (maxX < 0) return null;
+        // 2) 시작점: 가장 윗줄(minY)에서 inside 픽셀 첫 발견
+        var sx = -1, sy = -1;
+        for (var x2 = minX; x2 <= maxX; x2++) {
+            if (isInside(x2, minY)) { sx = x2; sy = minY; break; }
+        }
+        if (sx < 0) return null;
+        // 3) Moore tracing — 외부에서 시작 방향은 '위' (NW 부터 시계방향으로 첫 inside 픽셀 탐색)
+        var contour = [];
+        var x = sx, y = sy;
+        // prevDir = 마지막 방향. 첫 step 은 위에서 진입 → prevDir = 4 (남쪽, 즉 위에서 내려왔다고 가정)
+        var prevDir = 4;
+        var maxSteps = (W + H) * 8;
+        var steps = 0;
+        while (steps++ < maxSteps) {
+            contour.push([x, y]);
+            // 시작 방향: prevDir 의 반대쪽 + 1 (시계 방향). 외부 → 내부 첫 픽셀.
+            var startDir = (prevDir + 1) % 8;
+            var found = false;
+            for (var k = 0; k < 8; k++) {
+                var d = (startDir + k) % 8;
+                var nx = x + DX[d], ny = y + DY[d];
+                if (isInside(nx, ny)) {
+                    // 다음 방향은 우리가 이동한 방향의 반대 (외부 방향)
+                    prevDir = (d + 5) % 8;
+                    x = nx; y = ny;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) break;
+            if (x === sx && y === sy && contour.length > 8) break;
+        }
+        return contour.length >= 8 ? contour : null;
+    }
+
     async function _meCutlineTrace(mode) {
         mode = mode || 'outer';
         var sel = me.selected;
@@ -7633,8 +7693,9 @@ function scrollHotdeal(gridId, dir) {
         }
         var img = sel.el.querySelector('img');
         if (!img) return;
-        var W = Math.max(128, Math.min(600, Math.round(sel.w)));
-        var H = Math.max(128, Math.min(600, Math.round(sel.h)));
+        // 2026-06-17: 해상도 캡 600→1000 으로 상향 — 미세 디테일(손가락, 모자 챙 등) 추적 정확도 향상.
+        var W = Math.max(256, Math.min(1000, Math.round(sel.w)));
+        var H = Math.max(256, Math.min(1000, Math.round(sel.h)));
         var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
         var ctx = cv.getContext('2d');
         try {
@@ -7644,35 +7705,38 @@ function scrollHotdeal(gridId, dir) {
         var data;
         try { data = ctx.getImageData(0, 0, W, H).data; }
         catch(e){ alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.'); return; }
-        var THR = 20;
-        // 1) bounding-box of alpha>THR 픽셀 — 무게중심보다 위치 보정에 유리.
-        var minX = W, minY = H, maxX = -1, maxY = -1;
-        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
-            if (data[(y*W+x)*4 + 3] > THR) {
-                if (x < minX) minX = x; if (x > maxX) maxX = x;
-                if (y < minY) minY = y; if (y > maxY) maxY = y;
+        var THR = 30;   // 2026-06-17: 20→30 으로 상향 — 반투명 가장자리/노이즈 영향 감소
+
+        // 2026-06-17: Moore neighborhood 로 윤곽선 추적 — 팔다리 오목한 부분까지 정확히 따라감
+        var rays = _meTraceContourMoore(data, W, H, THR);
+        if (!rays || rays.length < 10) {
+            // 폴백: centroid ray-cast (배경이 알파없이 흰색인 PNG 등에서)
+            var minX = W, minY = H, maxX = -1, maxY = -1;
+            for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+                if (data[(y*W+x)*4 + 3] > THR) {
+                    if (x < minX) minX = x; if (x > maxX) maxX = x;
+                    if (y < minY) minY = y; if (y > maxY) maxY = y;
+                }
             }
-        }
-        if (maxX < 0) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
-        var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-        // 2) 360° ray-cast
-        var N = 240;
-        var rays = [];
-        var maxR = Math.hypot(W, H);
-        for (var k = 0; k < N; k++) {
-            var ang = (k / N) * Math.PI * 2;
-            var dxr = Math.cos(ang), dyr = Math.sin(ang);
-            var lastR = -1;
-            for (var r = 0; r < maxR; r += 1) {
-                var px = Math.round(cx + dxr * r);
-                var py = Math.round(cy + dyr * r);
-                if (px < 0 || py < 0 || px >= W || py >= H) break;
-                if (data[(py*W + px)*4 + 3] > THR) lastR = r;
+            if (maxX < 0) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
+            var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+            var N = 360, fbRays = [], maxR = Math.hypot(W, H);
+            for (var k = 0; k < N; k++) {
+                var ang = (k / N) * Math.PI * 2;
+                var dxr = Math.cos(ang), dyr = Math.sin(ang);
+                var lastR = -1;
+                for (var r = 0; r < maxR; r += 1) {
+                    var px = Math.round(cx + dxr * r);
+                    var py = Math.round(cy + dyr * r);
+                    if (px < 0 || py < 0 || px >= W || py >= H) break;
+                    if (data[(py*W + px)*4 + 3] > THR) lastR = r;
+                }
+                if (lastR > 0) fbRays.push([cx + dxr * lastR, cy + dyr * lastR]);
             }
-            if (lastR > 0) rays.push([cx + dxr * lastR, cy + dyr * lastR]);
+            rays = fbRays;
         }
         if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
-        // 2026-06-16 v8: ray-cast 결과를 item 에 캐시 — 슬라이더로 마진 재계산 시 다시 ray-cast 안 함 (즉시 반응).
+        // 2026-06-16 v8: 결과를 item 에 캐시 — 슬라이더로 마진 재계산 시 다시 trace 안 함 (즉시 반응).
         sel._cutlineRays = rays;
         sel._cutlineRayW = W;
         sel._cutlineRayH = H;
@@ -7680,6 +7744,8 @@ function scrollHotdeal(gridId, dir) {
         // 기본 마진: outer 3% / inner 2%
         var defaultPct = (mode === 'inner') ? 0.02 : 0.03;
         _meCutlineApplyOffsetFromCache(sel, defaultPct);
+        // 2026-06-17: trace 직후 props 패널 다시 렌더 → 칼선 간격 슬라이더 즉시 노출
+        try { if (typeof _meRenderProps === 'function') _meRenderProps(sel); } catch(_pe){}
     }
     // 2026-06-16 v8: 캐시된 ray-cast 결과 + 마진 % 로 offset 다시 계산 → 슬라이더 실시간 반응.
     //   marginPct: outer 모드에선 양수 (+3% 등), inner 는 음수 (-2% 등). UI 에선 모드는 it._cutlineMode 로 결정.
@@ -12835,7 +12901,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=519"></script>
+<script src="/simple_order.js?v=520"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
