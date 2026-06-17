@@ -7778,13 +7778,8 @@ function scrollHotdeal(gridId, dir) {
         var THR = 30;   // 2026-06-17: 20→30 으로 상향 — 반투명 가장자리/노이즈 영향 감소
 
         // 2026-06-17: Moore neighborhood 로 윤곽선 추적 — 팔다리 오목한 부분까지 정확히 따라감
+        //   참고: 등신대 받침대는 smoothing 이후 _meCutlineApplyOffsetFromCache 에서 추가 (sharp corner 보존).
         var rays = _meTraceContourMoore(data, W, H, THR);
-        // 2026-06-17: 등신대 모드 — 발 바닥쪽 contour 를 평평한 받침대로 교체 (서있을 수 있도록).
-        //   simple_order.js 가 hb_pt_* / hb_ss_* 진입 시 window._meStandeeBase = true 설정.
-        //   outer 모드에서만 적용 (inner 는 네거티브 컷이라 base 불필요).
-        if (rays && rays.length >= 20 && mode === 'outer' && window._meStandeeBase) {
-            try { rays = _meAddStandeeBase(rays, W, H); } catch(_be){ console.warn('[standee base]', _be); }
-        }
         if (!rays || rays.length < 10) {
             // 폴백: centroid ray-cast (배경이 알파없이 흰색인 PNG 등에서)
             var minX = W, minY = H, maxX = -1, maxY = -1;
@@ -7852,6 +7847,11 @@ function scrollHotdeal(gridId, dir) {
         }
         var finalPts = _meBoxSmooth(offsetPts, 3);
         finalPts = _meChaikin(finalPts, 2);
+        // 2026-06-17: 등신대 받침대를 smoothing 이후에 추가 — 사각 corner 가 보존되어 바닥이 평평해짐.
+        //   이전 (v521-523) 에는 trace 직후 추가 → Chaikin/BoxSmooth 가 받침 corner 를 둥글게 깎아 곡선 바닥.
+        if (it._cutlineMode === 'outer' && window._meStandeeBase) {
+            try { finalPts = _meAddStandeeBase(finalPts, W, H); } catch(_be){ console.warn('[standee base]', _be); }
+        }
         it._cutlineRelPts = finalPts.map(function(p){ return [p[0]/W, p[1]/H]; });
         it._cutlineMarginPct = marginPct;
         _meCutlineRenderAll();
@@ -12977,7 +12977,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=523"></script>
+<script src="/simple_order.js?v=524"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
