@@ -12289,6 +12289,9 @@ html, body { background: #ffffff !important; }
                 ));
                 if (_cbBtn) _cbBtn.style.display = _cutlineEligible ? '' : 'none';
                 if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
+                // 2026-06-17: 등신대/자유인쇄커팅 → 칼선 trace 시 발 바닥에 평평한 받침대 자동 추가.
+                //   스티커/키링은 평면이라 base 불필요 → false.
+                window._meStandeeBase = !!(state && (state.isStandee || state.isCutPrint));
             } catch(_e){}
 
             // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
