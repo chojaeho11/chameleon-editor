@@ -7650,8 +7650,21 @@ function scrollHotdeal(gridId, dir) {
             var natH = image.naturalHeight || 600;
             var ratio = natH / natW;
             var w, h, x, y;
-            if (options.fillCanvas) {
-                // 대지 꽉 채우기 (cover 처럼): 대지 비율에 맞춰 한 변을 100% 로
+            if (options.fitCanvas) {
+                // 2026-06-17: 대지 비율 맞춰 fit (contain) — 이미지가 절대 잘리지 않게 안쪽에 완벽히 들어감.
+                //   업로드한 완성파일(PDF/이미지) 처럼 이미지 자체가 디자인이라 cropping 절대 불가.
+                var stageRatioF = me.natH / me.natW;
+                if (ratio > stageRatioF) {
+                    // 이미지가 캔버스보다 세로로 김 → 세로를 캔버스에 맞추면 가로 overflow → 가로 기준 fit
+                    h = me.natH; w = h / ratio;
+                } else {
+                    // 이미지가 캔버스보다 가로로 김 → 가로 기준 fit
+                    w = me.natW; h = w * ratio;
+                }
+                x = (me.natW - w) / 2;
+                y = (me.natH - h) / 2;
+            } else if (options.fillCanvas) {
+                // 대지 꽉 채우기 (cover 처럼): 대지 비율에 맞춰 한 변을 100% 로 — 일부 잘릴 수 있음 (템플릿용).
                 var stageRatio = me.natH / me.natW;
                 if (ratio > stageRatio) {
                     w = me.natW; h = w * ratio;
@@ -12619,7 +12632,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=496"></script>
+<script src="/simple_order.js?v=497"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

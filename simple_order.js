@@ -3360,9 +3360,11 @@ html, body { background: #ffffff !important; }
                         meRef.selected = null;
                     }
                 } catch(_) {}
-                // 3) requestAnimationFrame 으로 한 프레임 뒤에 add — 캔버스 resize 완료 후 fillCanvas 가 정확.
+                // 3) requestAnimationFrame 으로 한 프레임 뒤에 add — 캔버스 resize 완료 후 fit 이 정확.
+                //   2026-06-17: fillCanvas (cover, 잘림) → fitCanvas (contain, 완전 포함) 로 변경.
+                //   완성파일은 그 자체가 디자인이라 잘리면 안 됨. 비율 다르면 여백 생기지만 자르지는 않음.
                 requestAnimationFrame(function(){
-                    try { window._meAddImage(state.thumbDataUrl, { fillCanvas: true }); } catch(_ae){}
+                    try { window._meAddImage(state.thumbDataUrl, { fitCanvas: true }); } catch(_ae){}
                 });
                 // 4) 칼선 클리어
                 try { if (typeof window._meCutlineClear === 'function') window._meCutlineClear(); } catch(_){}
@@ -9140,8 +9142,8 @@ html, body { background: #ffffff !important; }
                     meRef.selected = null;
                 }
                 if (typeof window._meAddImage === 'function' && thumbDataUrl) {
-                    // 2026-06-16: 완성파일 → 캔버스 꽉 채우기. 캔버스가 파일 비율로 이미 설정됐으니 완벽히 fit.
-                    window._meAddImage(thumbDataUrl, { fillCanvas: true });
+                    // 2026-06-17: 완성파일은 contain (fit) — 잘림 절대 금지. 비율 다르면 좌우/상하 여백.
+                    window._meAddImage(thumbDataUrl, { fitCanvas: true });
                 }
                 // 칼선도 클리어 (새 파일 → 새 칼선)
                 if (typeof window._meCutlineClear === 'function') window._meCutlineClear();
