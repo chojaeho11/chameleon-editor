@@ -9656,6 +9656,11 @@ html, body { background: #ffffff !important; }
             state.selectedAddons[_SHELF_CODE] = _SHELF_CODE;
             state.addonQuantities[_SHELF_CODE] = spec.qty;
             if (qtyInp) qtyInp.value = spec.qty;
+            // 2026-06-17: 미니에디터에 흰색+빨강 테두리 선반 추가 (입력 폭 cm × 칸 수). 이전 선반은 제거 후 새로 그림.
+            try {
+                if (typeof window._meRemoveShelves === 'function') window._meRemoveShelves();
+                if (typeof window._meAddShelf === 'function') window._meAddShelf(spec.w, spec.cells);
+            } catch(_e){}
             overlay.remove();
             recalc();
         });
@@ -9685,6 +9690,7 @@ html, body { background: #ffffff !important; }
                 return; // 팝업 OK 누르면 거기서 selectedAddons/qty 채움
             } else {
                 delete state.shelfSpec;
+                try { if (typeof window._meRemoveShelves === 'function') window._meRemoveShelves(); } catch(_e){}
                 // 일반 uncheck 흐름으로 진행
             }
         }
