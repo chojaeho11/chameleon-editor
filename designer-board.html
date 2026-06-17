@@ -887,15 +887,20 @@ window.openTemplateMyPage = async function() {
         const approvedSum = (window._myTplList || [])
             .filter(t => t.status === 'approved')
             .reduce((s, t) => s + (t.payment_amount || 0), 0);
-        // 이미 요청한 정산 금액 (designer_withdrawals 에서 template 관련, pending/approved 모두 합산)
+        // 2026-06-18 v556: 이미 요청한 정산 금액 — design_withdrawal_requests 에서 template_royalty 출처만 합산.
         let withdrawnSum = 0;
         try {
-            const { data: wds } = await sb.from('designer_withdrawals')
-                .select('amount, status')
+            const { data: wds } = await sb.from('design_withdrawal_requests')
+                .select('gross_amount, status, source, memo')
                 .eq('designer_id', userId)
                 .in('status', ['pending', 'approved', 'paid']);
-            withdrawnSum = (wds || []).reduce((s, w) => s + (w.amount || 0), 0);
-        } catch(_we) { /* designer_withdrawals 테이블 없으면 0 */ }
+            (wds || []).forEach(w => {
+                // source 가 template_royalty 거나 memo 에 '[템플릿' 포함
+                if (w.source === 'template_royalty' || (w.memo || '').indexOf('[템플릿') >= 0) {
+                    withdrawnSum += (w.gross_amount || 0);
+                }
+            });
+        } catch(_we) { /* 테이블 접근 권한 없으면 0 */ }
         const available = Math.max(0, approvedSum - withdrawnSum);
         window._myTplAvailable = available;
         document.getElementById('myDepositAmount').textContent = (DB_SITE === 'JP' ? '¥' + Math.round(available * 0.1).toLocaleString() : DB_SITE === 'US' ? '$' + (available * 0.001).toFixed(2) : available.toLocaleString() + '원');
@@ -964,25 +969,55 @@ function renderMyTplTab(tab) {
     }).join('');
 }
 
-// 정산 요청 — 승인된 템플릿 적립금만 (다른 보너스 제외).
+// 2026-06-18 v556: 정산 요청 — 기존 design_withdrawal_requests 테이블에 INSERT (디자이너출금 메뉴에서 통합 관리).
 async function dbRequestWithdrawal() {
     const ML = window._myTplML || {};
     try {
         const available = window._myTplAvailable || 0;
         if (available <= 0) { alert(ML.noAmt); return; }
-        if (!confirm(ML.confirmWd + '\n\n' + ML.payoutAmt + ': ' + available.toLocaleString() + '원')) return;
-        const { error } = await sb.from('designer_withdrawals').insert({
+        // 3.3% 원천세 자동 공제 (KR 기준)
+        const taxRate = DB_SITE === 'JP' ? 0.10 : 0.033;
+        const net = Math.round(available * (1 - taxRate));
+        const fee = available - net;
+        const country = DB_SITE === 'JP' ? 'JP' : DB_SITE === 'US' ? 'US' : 'KR';
+        if (!confirm(ML.confirmWd + '\n\n' + ML.payoutAmt + ': ' + available.toLocaleString() + '원\n원천세 (' + (taxRate*100).toFixed(1) + '%): -' + fee.toLocaleString() + '원\n실수령: ' + net.toLocaleString() + '원')) return;
+        // designer_profiles 에서 이 유저의 designer_id 와 등록된 은행/세금 정보 조회
+        let bankInfo = null;
+        try {
+            const { data: dp } = await sb.from('designer_profiles')
+                .select('id, display_name, legal_name, tax_id, residence_address, bank_name, bank_holder, bank_account')
+                .eq('id', userId).maybeSingle();
+            bankInfo = dp;
+        } catch(_) {}
+        const insertPayload = {
             designer_id: userId,
-            amount: available,
+            country: country,
+            gross_amount: available,
+            net_amount: net,
+            vat_amount: 0,
+            card_fee_amount: 0,
+            platform_fee_amount: fee,
+            legal_name: (bankInfo && bankInfo.legal_name) || (bankInfo && bankInfo.display_name) || '',
+            tax_id: (bankInfo && bankInfo.tax_id) || '',
+            tax_id_type: country === 'KR' ? 'RRN' : 'OTHER',
+            residence_address: (bankInfo && bankInfo.residence_address) || '',
+            bank_name: (bankInfo && bankInfo.bank_name) || '',
+            bank_holder: (bankInfo && bankInfo.bank_holder) || '',
+            bank_account: (bankInfo && bankInfo.bank_account) || '',
             status: 'pending',
-            note: '템플릿 정산 요청'
-        });
-        if (error) {
-            alert('정산 요청은 관리자에게 직접 문의해주세요.\n예치금: ' + available.toLocaleString() + '원\n\n(' + error.message + ')');
-            return;
+            requested_at: new Date().toISOString(),
+            source: 'template_royalty',
+            memo: '[템플릿 정산 요청] 디자이너 보드 - 승인된 템플릿 ' + ((window._myTplList || []).filter(t => t.status === 'approved').length) + '개'
+        };
+        let { error } = await sb.from('design_withdrawal_requests').insert(insertPayload);
+        if (error && (error.message || '').indexOf('source') >= 0) {
+            // source 컬럼 없는 환경 폴백
+            delete insertPayload.source;
+            const fb = await sb.from('design_withdrawal_requests').insert(insertPayload);
+            error = fb.error;
         }
-        alert('✅ ' + ML.wdDone + '!\n관리자가 확인 후 등록 계좌로 송금합니다 (3.3% 원천세 공제 후).');
-        // 마이페이지 새로고침
+        if (error) { alert('정산 요청 실패: ' + error.message + '\n\n관리자에게 문의해주세요.'); return; }
+        alert('✅ ' + ML.wdDone + '!\n관리자가 확인 후 등록 계좌로 송금합니다.\n실수령: ' + net.toLocaleString() + '원 (' + (taxRate*100).toFixed(1) + '% 원천세 공제 후)');
         openTemplateMyPage();
     } catch(e) { alert('정산 요청 실패: ' + (e.message || e)); }
 }
