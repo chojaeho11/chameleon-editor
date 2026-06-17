@@ -8257,16 +8257,58 @@ function scrollHotdeal(gridId, dir) {
         });
         if (isV542) {
             // v542: me.items 그대로 복원 (admin 의 에디터에서 만든 디자인 통째로)
-            // 2026-06-18 v554: 메타 슬롯 처리 — bg color 복원, 실제 item 만 restore
+            // 2026-06-18 v554: 메타 슬롯 처리 — bg color 복원
+            var _hasMetaBg = false;
             slots.forEach(function(saved){
                 if (saved && saved._type === 'meta') {
                     if (saved.bg && typeof window._meSetBg === 'function') {
-                        try { window._meSetBg(saved.bg); } catch(_){}
+                        try { window._meSetBg(saved.bg); _hasMetaBg = true; } catch(_){}
                     }
                     return;
                 }
                 _meRestoreTemplateItem(saved);
             });
+            // 2026-06-18 v558: 메타 슬롯이 없는 옛 템플릿 — 썸네일 PNG 모서리 픽셀 샘플링하여 bg 추정.
+            if (!_hasMetaBg && (tpl.thumbnail_url || tpl.background_url)) {
+                var _smpImg = new Image();
+                _smpImg.crossOrigin = 'anonymous';
+                _smpImg.onload = function() {
+                    try {
+                        var c = document.createElement('canvas');
+                        c.width = _smpImg.naturalWidth;
+                        c.height = _smpImg.naturalHeight;
+                        var cx = c.getContext('2d');
+                        cx.drawImage(_smpImg, 0, 0);
+                        // 4 모서리 + 중앙 상단/하단 픽셀 샘플링 → 가장 흔한 색 (=배경) 추정
+                        var pts = [[0,0],[c.width-1,0],[0,c.height-1],[c.width-1,c.height-1],[Math.floor(c.width/2),0],[Math.floor(c.width/2),c.height-1]];
+                        var colorCounts = {};
+                        pts.forEach(function(p){
+                            try {
+                                var d = cx.getImageData(p[0], p[1], 1, 1).data;
+                                // 16단계로 양자화 (비슷한 색 묶음)
+                                var r = (d[0] >> 4) << 4, g = (d[1] >> 4) << 4, b = (d[2] >> 4) << 4;
+                                var key = r + ',' + g + ',' + b;
+                                colorCounts[key] = (colorCounts[key] || 0) + 1;
+                            } catch(_){}
+                        });
+                        // 가장 많이 나온 색
+                        var best = null, bestCnt = 0;
+                        Object.keys(colorCounts).forEach(function(k){
+                            if (colorCounts[k] > bestCnt) { bestCnt = colorCounts[k]; best = k; }
+                        });
+                        if (best && bestCnt >= 3) {  // 최소 3개 모서리 일치
+                            var rgb = best.split(',').map(Number);
+                            var hex = '#' + rgb.map(function(v){ return ('0' + v.toString(16)).slice(-2); }).join('');
+                            if (typeof window._meSetBg === 'function') {
+                                window._meSetBg(hex);
+                                console.log('[me template] bg sampled from thumbnail:', hex);
+                            }
+                        }
+                    } catch(e) { console.warn('[me template] bg sample failed', e); }
+                };
+                _smpImg.onerror = function(){};
+                _smpImg.src = tpl.thumbnail_url || tpl.background_url;
+            }
             return;
         }
         // v539 폴백: 옛 slot 포맷 (배경 이미지 + 슬롯들)
