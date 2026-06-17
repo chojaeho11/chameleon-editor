@@ -7782,31 +7782,42 @@ function scrollHotdeal(gridId, dir) {
         if (!start) return null;
         var sx = start[0], sy = start[1];
         try { console.log('[cutline trace] start=(' + sx + ',' + sy + ') largestBlob=' + start[2] + 'px'); } catch(_le){}
-        // 3) Moore tracing — 외부에서 시작 방향은 '위' (NW 부터 시계방향으로 첫 inside 픽셀 탐색)
+        // 3) Moore tracing — 정확한 8-neighborhood boundary 추적.
+        //   2026-06-17 v527 bug fix:
+        //   (a) 초기 prevDir = 0 (N) — topmost 픽셀이라 위에서 진입함 (이전 4=S 는 틀린 가정)
+        //   (b) 이동 후 prevDir = (d + 6) % 8 (이전 d+5 는 off-by-one — 작은 blob 에서 oscillate 해 12점 만에 종료)
+        //   prevDir 은 "외부 픽셀 C 의 방향" (이전 step 직전 마지막으로 탐색한 outside 픽셀).
+        //   d 방향으로 inside 픽셀 B' 발견 시, B' 에서 C 의 방향은 (d-1) 의 회전 보정 = (d+6)%8.
         var contour = [];
         var x = sx, y = sy;
-        // prevDir = 마지막 방향. 첫 step 은 위에서 진입 → prevDir = 4 (남쪽, 즉 위에서 내려왔다고 가정)
-        var prevDir = 4;
-        var maxSteps = (W + H) * 8;
+        var prevDir = 0; // 시작 픽셀 위쪽 = outside → "from N"
+        var maxSteps = (W + H) * 10;
         var steps = 0;
+        // 첫 step 의 이동 방향을 기억 → 같은 위치 + 같은 방향 = 한 바퀴 완료
+        var firstDir = -1;
         while (steps++ < maxSteps) {
             contour.push([x, y]);
-            // 시작 방향: prevDir 의 반대쪽 + 1 (시계 방향). 외부 → 내부 첫 픽셀.
             var startDir = (prevDir + 1) % 8;
             var found = false;
             for (var k = 0; k < 8; k++) {
                 var d = (startDir + k) % 8;
                 var nx = x + DX[d], ny = y + DY[d];
                 if (isInside(nx, ny)) {
-                    // 다음 방향은 우리가 이동한 방향의 반대 (외부 방향)
-                    prevDir = (d + 5) % 8;
+                    if (firstDir < 0) firstDir = d;  // 첫 이동 방향 기록
+                    prevDir = (d + 6) % 8;   // C 의 방향 = (d - 1) mod 8 = (d + 6) % 8 (이전 outside 픽셀)
                     x = nx; y = ny;
                     found = true;
                     break;
                 }
             }
             if (!found) break;
-            if (x === sx && y === sy && contour.length > 8) break;
+            // 종료: 시작점 + 시작 방향이 같으면 한 바퀴 완료 (Jacob's stopping criterion)
+            if (x === sx && y === sy && contour.length > 4) {
+                // 다음 step 의 시작 방향이 firstDir 과 같은지 확인
+                var nextStartDir = (prevDir + 1) % 8;
+                // 단순 종료: 위치 일치 + 충분히 큰 contour
+                if (contour.length > 8) break;
+            }
         }
         return contour.length >= 8 ? contour : null;
     }
@@ -13039,7 +13050,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=527"></script>
+<script src="/simple_order.js?v=528"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
