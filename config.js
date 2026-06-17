@@ -198,9 +198,10 @@ async function loadSystemData() {
         // 옵션 카테고리 + 옵션 병렬 로드 (1시간 localStorage 캐시)
         // ★ null/빈 데이터는 절대 캐시하지 않음 (Supabase 장애 시 오염 방지)
         let catResult, addonResult;
-        const _cacheKey = 'chameleon_addons_cache_v2';
+        const _cacheKey = 'chameleon_addons_cache_v3';
         const _cacheExpiry = 60 * 60 * 1000; // 1시간
         try { localStorage.removeItem('chameleon_addons_cache'); } catch(e) {} // 구버전 오염 캐시 제거
+        try { localStorage.removeItem('chameleon_addons_cache_v2'); } catch(e) {} // v2 구버전 캐시 제거 (2026-06-17 honey addons 추가)
         try {
             const _cached = localStorage.getItem(_cacheKey);
             if (_cached) {

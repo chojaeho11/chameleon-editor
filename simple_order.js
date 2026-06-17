@@ -7132,8 +7132,17 @@ html, body { background: #ffffff !important; }
             var bv = (b && typeof b.sort_order === 'number') ? b.sort_order : 999999;
             return av - bv;
         });
-        // 2026-06-17: 가벽 상품 — 코너기둥 addon 유지 (wallShape ㄱ자=1개, ㄷ자=2개 자동 체크).
-        // 이전(2026-06-01)에 코너기둥을 제외했으나 사용자 요청으로 복원.
+        // 2026-06-17: 가벽 상품 — admin_addons 의 honey 카테고리 자동 포함 (product.addons CSV 무관).
+        //   사용자 요청: 허니콤부자재 6개 (보조받침대 1조 / 오려내기 / 조명 / 선반 추가 / 코너기둥 / 모양 변경) 모두 노출.
+        //   향후 관리자가 추가하는 honey 항목도 자동 반영.
+        if (state.isWall && window.ADDON_DB) {
+            Object.keys(window.ADDON_DB).forEach(function(k){
+                var a = window.ADDON_DB[k];
+                if (!a) return;
+                if (a.category_code !== 'honey') return;
+                if (renderList.indexOf(a) < 0) renderList.push(a);
+            });
+        }
         // 2026-06-06: 아크릴 인쇄 family — 키링 옵션 제외, 4종만 화이트리스트.
         //   1) 모양커팅  2) 사각커팅  3) 아크릴 전면에 인쇄  4) 아크릴 뒷면에 인쇄
         //   대상: acrl2*/acrl3* + 반투명아크릴 + 글씨스카시
@@ -7239,8 +7248,8 @@ html, body { background: #ffffff !important; }
                     '</div>' +
                     wallImgHtml +
                     '<div style="display:flex; align-items:center; gap:6px; justify-content:space-between;">' +
-                      '<input type="number" min="1" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '" onclick="event.stopPropagation();" oninput="window._soSetAddonQty(this)" title="수량" style="width:46px; padding:4px 4px; border:1px solid #d1d5db; border-radius:5px; text-align:center; font-size:11.5px; font-weight:700;">' +
-                      '<span style="font-weight:900; color:#dc2626; font-size:11.5px;">+' + fmtPrice(price) + '</span>' +
+                      '<input type="number" min="1" value="1" data-addon-qty-code="' + String(a.code).replace(/"/g,'&quot;') + '" onclick="event.stopPropagation();" oninput="window._soSetAddonQty(this)" title="수량" style="width:46px; padding:4px 4px; border:1px solid #d1d5db; border-radius:5px; text-align:center; font-size:11.5px; font-weight:700; flex-shrink:0;">' +
+                      '<span style="font-weight:900; color:#dc2626; font-size:11.5px; white-space:nowrap;">' + fmtPrice(price) + '</span>' +
                     '</div>' +
                     '</label>';
             }
