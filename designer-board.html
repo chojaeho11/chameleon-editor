@@ -888,9 +888,9 @@ async function render() {
 
     html += `
         <div class="db-tabs">
-            <button class="db-tab ${activeTab==='open'?'active':''}" onclick="switchTab('open')">신규 의뢰${cOpen?'<span class="b">'+cOpen+'</span>':''}</button>
-            <button class="db-tab ${activeTab==='inprog'?'active':''}" onclick="switchTab('inprog')">진행중${cIn?'<span class="b">'+cIn+'</span>':''}</button>
-            <button class="db-tab ${activeTab==='done'?'active':''}" onclick="switchTab('done')">완료/정산${cDone?'<span class="b">'+cDone+'</span>':''}</button>
+            <button class="db-tab ${activeTab==='open'?'active':''}" onclick="switchTab('open')">${tr('신규 의뢰','新規依頼','New Requests')}${cOpen?'<span class="b">'+cOpen+'</span>':''}</button>
+            <button class="db-tab ${activeTab==='inprog'?'active':''}" onclick="switchTab('inprog')">${tr('진행중','進行中','In Progress')}${cIn?'<span class="b">'+cIn+'</span>':''}</button>
+            <button class="db-tab ${activeTab==='done'?'active':''}" onclick="switchTab('done')">${tr('완료/정산','完了/精算','Done/Payout')}${cDone?'<span class="b">'+cDone+'</span>':''}</button>
         </div>
     `;
 
@@ -915,9 +915,15 @@ async function render() {
     else list = done;
 
     if (list.length === 0) {
-        const emptyText = activeTab === 'open' ? '신규 의뢰가 없습니다.\n새 의뢰가 들어오면 여기에 표시됩니다.'
-            : activeTab === 'inprog' ? '진행중인 의뢰가 없습니다.\n신규 의뢰 탭에서 의뢰를 받아 보세요.'
-            : '완료한 의뢰가 없습니다.';
+        const emptyText = activeTab === 'open'
+            ? tr('신규 의뢰가 없습니다.\n새 의뢰가 들어오면 여기에 표시됩니다.',
+                  '新規依頼はありません。\n新しい依頼が入るとここに表示されます。',
+                  'No new requests yet.\nThey will appear here when customers submit.')
+            : activeTab === 'inprog'
+                ? tr('진행중인 의뢰가 없습니다.\n신규 의뢰 탭에서 의뢰를 받아 보세요.',
+                      '進行中の依頼はありません。\n新規依頼タブから依頼を受けてみましょう。',
+                      'No requests in progress.\nClaim one from the New Requests tab.')
+                : tr('완료한 의뢰가 없습니다.', '完了した依頼はありません。', 'No completed requests yet.');
         html += `<div class="db-empty"><div class="ic">📭</div>${esc(emptyText).replace(/\n/g,'<br>')}</div>`;
     } else {
         html += list.map(r => renderCard(r)).join('');
@@ -938,21 +944,26 @@ function renderCard(r) {
     const isMine = meta.designerId === userId;
     const claimedBy = (meta.designerId && designerProfileCache[meta.designerId]) ? designerProfileCache[meta.designerId] : null;
 
-    const statusLabel = {
-        'open':'대기중', 'claimed':'진행중', 'completed':'완료',
-        'settlement_requested':'정산 요청', 'settled':'정산 완료'
-    }[r.status] || r.status;
+    const _statusMap = {
+        KR: { open:'대기중', claimed:'진행중', completed:'완료', settlement_requested:'정산 요청', settled:'정산 완료' },
+        JP: { open:'待機中', claimed:'進行中', completed:'完了', settlement_requested:'精算依頼', settled:'精算完了' },
+        US: { open:'Open', claimed:'In Progress', completed:'Done', settlement_requested:'Payout Requested', settled:'Paid Out' }
+    }[DB_SITE];
+    const statusLabel = _statusMap[r.status] || r.status;
     const statusCls = {
         'open':'open', 'claimed':'claimed', 'completed':'completed',
         'settlement_requested':'settle_req', 'settled':'settled'
     }[r.status] || 'open';
 
     const files = (r.files || []);
+    const _refFile = tr('참고 파일', '参考ファイル', 'Reference');
+    const _finalDraft = tr('완성 시안', '完成案', 'Final Draft');
+    const _draftWord = tr('시안', '案', 'Draft');
     const filesHtml = files.length ? `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
                 ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
-                참고 파일
+                ${_refFile}
             </a>`).join('')}
         </div>
     ` : '';
@@ -960,11 +971,11 @@ function renderCard(r) {
     const finalFiles = meta.finalFiles || [];
     const finalHtml = finalFiles.length ? `
         <div style="margin-top:10px; padding:10px 12px; background:rgba(52,199,89,0.08); border-radius:10px;">
-            <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">완성 시안</div>
+            <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">${_finalDraft}</div>
             <div class="db-files">
                 ${finalFiles.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
                     ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
-                    시안
+                    ${_draftWord}
                 </a>`).join('')}
             </div>
         </div>
@@ -1001,10 +1012,12 @@ function renderCard(r) {
     }
 
     // 작업중인 디자이너 정보 (다른 디자이너에게도 보이게)
+    const _myInProg = tr('내가 진행중인 의뢰', '担当中の依頼', 'Claimed by me');
+    const _byDesigner = tr('디자이너 작업중', 'デザイナー作業中', 'In progress by designer');
     const claimedByHtml = (meta.designerId && r.status !== 'open') ? `
         <div style="margin-top:8px; padding:8px 12px; background:${isMine?'rgba(52,199,89,0.10)':'rgba(255,149,0,0.10)'}; border-radius:10px; font-size:12.5px; font-weight:600; color:${isMine?'var(--green)':'var(--orange)'}; display:flex; align-items:center; gap:6px;">
             <span style="font-size:14px;">${isMine ? '✅' : '👤'}</span>
-            ${isMine ? '내가 진행중인 의뢰' : '<b>' + esc(designerLabel(claimedBy)) + '</b> 디자이너 작업중'}
+            ${isMine ? _myInProg : '<b>' + esc(designerLabel(claimedBy)) + '</b> ' + _byDesigner}
         </div>
     ` : '';
 
@@ -1036,30 +1049,44 @@ function renderCard(r) {
         }
     }
 
-    // 액션 버튼
+    // 액션 버튼 — 다국어
+    const _A = {
+        claim:        tr('의뢰 받기', '依頼を受ける', 'Claim'),
+        pending:      tr('승인 대기중 — 의뢰 받기 불가', '承認待ち — 受注不可', 'Awaiting Approval'),
+        applyFirst:   tr('디자이너 신청 후 가능', 'デザイナー申請後に可能', 'Apply as Designer First'),
+        complete:     tr('완료 + 정산 요청', '完了 + 精算依頼', 'Complete + Request Payout'),
+        unclaim:      tr('받기 취소', '受注キャンセル', 'Unclaim'),
+        otherBusy:    tr('다른 디자이너 작업중', '他のデザイナーが作業中', 'Other Designer Working'),
+        settleReq:    tr('정산 요청', '精算依頼', 'Request Payout'),
+        settleWait:   tr('본사 정산 대기 중', '精算待ち', 'Awaiting Payout'),
+        settled:      tr('정산 완료', '精算完了', 'Paid Out'),
+        more:         tr('더 보기', 'もっと見る', 'More'),
+        less:         tr('접기', '閉じる', 'Less'),
+        payout:       tr('디자이너 정산금', 'デザイナー精算金', 'Designer Payout'),
+        adminDel:     tr('🗑 의뢰 삭제 (관리자)', '🗑 依頼削除 (管理者)', '🗑 Delete (Admin)')
+    };
     let actions = '';
     if (r.status === 'open') {
         if (myDesignerStatus === 'approved') {
-            actions = `<button class="db-act primary" onclick="dbClaim('${r.id}')">의뢰 받기</button>`;
+            actions = `<button class="db-act primary" onclick="dbClaim('${r.id}')">${_A.claim}</button>`;
         } else if (myDesignerStatus === 'pending') {
-            actions = `<button class="db-act ghost" disabled>승인 대기중 — 의뢰 받기 불가</button>`;
+            actions = `<button class="db-act ghost" disabled>${_A.pending}</button>`;
         } else {
-            actions = `<button class="db-act ghost" disabled>디자이너 신청 후 가능</button>`;
+            actions = `<button class="db-act ghost" disabled>${_A.applyFirst}</button>`;
         }
     } else if (r.status === 'claimed') {
         if (isMine) {
-            // 2026-06-15: 받기 취소 — 잘못 받은 의뢰를 신규로 되돌려 다른 디자이너가 받을 수 있게 함.
-            actions = `<button class="db-act success" onclick="dbOpenComplete('${r.id}')">완료 + 정산 요청</button>`
-                    + `<button class="db-act ghost" onclick="dbUnclaim('${r.id}')">받기 취소</button>`;
+            actions = `<button class="db-act success" onclick="dbOpenComplete('${r.id}')">${_A.complete}</button>`
+                    + `<button class="db-act ghost" onclick="dbUnclaim('${r.id}')">${_A.unclaim}</button>`;
         } else {
-            actions = `<button class="db-act ghost" disabled>다른 디자이너 작업중</button>`;
+            actions = `<button class="db-act ghost" disabled>${_A.otherBusy}</button>`;
         }
     } else if (r.status === 'completed') {
-        actions = isMine ? `<button class="db-act primary" onclick="dbRequestSettle('${r.id}')">정산 요청</button>` : '';
+        actions = isMine ? `<button class="db-act primary" onclick="dbRequestSettle('${r.id}')">${_A.settleReq}</button>` : '';
     } else if (r.status === 'settlement_requested') {
-        actions = `<button class="db-act ghost" disabled>본사 정산 대기 중</button>`;
+        actions = `<button class="db-act ghost" disabled>${_A.settleWait}</button>`;
     } else if (r.status === 'settled') {
-        actions = `<button class="db-act ghost" disabled>정산 완료</button>`;
+        actions = `<button class="db-act ghost" disabled>${_A.settled}</button>`;
     }
 
     return `
@@ -1073,17 +1100,17 @@ function renderCard(r) {
                     </div>
                     <div class="db-title">${esc(r.title)}</div>
                     <div class="db-desc">${esc(cleanDesc)}</div>
-                    <button class="db-more" onclick="this.previousElementSibling.classList.toggle('exp');this.textContent=this.previousElementSibling.classList.contains('exp')?'접기':'더 보기'">더 보기</button>
+                    <button class="db-more" data-more-on="${_A.more}" data-more-off="${_A.less}" onclick="var p=this.previousElementSibling, on=p.classList.toggle('exp'); this.textContent = on ? this.dataset.moreOff : this.dataset.moreOn;">${_A.more}</button>
                     ${filesHtml}
                     ${finalHtml}
                     ${bizCardHtml}
                     ${claimedByHtml}
                     ${customerHtml}
                     <div class="db-payout-box">
-                        <span class="l">디자이너 정산금</span>
+                        <span class="l">${_A.payout}</span>
                         <span class="v">${payoutLabel(r)}</span>
                     </div>
-                    <div class="db-actions">${actions}${isAdmin() ? `<button class="db-act" onclick="dbAdminDelete('${r.id}')" style="background:rgba(255,59,48,0.10); color:#ff3b30; margin-left:auto;">🗑 의뢰 삭제 (관리자)</button>` : ''}</div>
+                    <div class="db-actions">${actions}${isAdmin() ? `<button class="db-act" onclick="dbAdminDelete('${r.id}')" style="background:rgba(255,59,48,0.10); color:#ff3b30; margin-left:auto;">${_A.adminDel}</button>` : ''}</div>
                 </div>
             </div>
         </div>
