@@ -15909,12 +15909,14 @@ html, body { background: #ffffff !important; }
 
         // 2026-06-12: 최소 주문금액 30,000원 (JP ¥3,000 / US $30) 강제 — 미달 시 결제 차단
         // 2026-06-13: 허니콤 family 100K / 그 외 30K + 배송비 포함 grandTotal 기준
+        // 2026-06-17: 매니저 금액주문 (manager_quote) 가 카트에 있으면 최소금액 면제.
         try {
             var _minCalc = _soCalcCartTotal(cart);
             var _minSub = (_minCalc && _minCalc.grandTotal != null) ? _minCalc.grandTotal : ((_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase + (_minCalc.shipTotal || 0))) || 0);
+            var _minHasMgrQuote = (cart || []).some(function(_it){ return typeof window._soIsManagerQuoteItem === 'function' && window._soIsManagerQuoteItem(_it); });
             var _minHasHc = (cart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
             var _MIN_KRW = _minHasHc ? 100000 : 30000;
-            if (_minSub > 0 && _minSub < _MIN_KRW) {
+            if (!_minHasMgrQuote && _minSub > 0 && _minSub < _MIN_KRW) {
                 var _sc2 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
                 var _minDisp = _minHasHc
                     ? ((_sc2 === 'JP') ? '¥10,000' : (_sc2 === 'US' ? '$100' : '100,000원'))
