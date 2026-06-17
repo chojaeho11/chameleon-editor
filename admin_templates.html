@@ -122,10 +122,10 @@ header .meta { font-size:11.5px; color:#94a3b8; }
             <div id="uploadField" style="display:none;">
                 <div class="upload-zone" onclick="document.getElementById('bgFile').click();" ondragover="event.preventDefault(); this.style.background='#f3f0ff';" ondragleave="this.style.background='var(--gray-50)';" ondrop="onDrop(event)">
                     <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <p><b>PNG / JPG</b> 파일을 끌어다 놓거나 클릭해서 선택</p>
-                    <p style="font-size:11px; margin-top:6px; opacity:0.7;">300 DPI 이상 권장 · 최대 20MB</p>
+                    <p><b>PNG · JPG · PDF · SVG</b> 파일을 끌어다 놓거나 클릭해서 선택</p>
+                    <p style="font-size:11px; margin-top:6px; opacity:0.7;">PDF/SVG 는 자동으로 고해상도 PNG 로 변환됩니다 · 최대 20MB · 첫 페이지만</p>
                 </div>
-                <input type="file" id="bgFile" accept="image/png,image/jpeg" style="display:none;" onchange="onFileSelect(event)">
+                <input type="file" id="bgFile" accept="image/png,image/jpeg,application/pdf,image/svg+xml,.pdf,.svg" style="display:none;" onchange="onFileSelect(event)">
             </div>
 
             <div class="slot-props" id="slotProps">
@@ -461,30 +461,111 @@ function onFileSelect(e) {
     const f = e.target.files?.[0];
     if (f) handleFile(f);
 }
-async function handleFile(f) {
-    if (!/^image\/(png|jpeg|jpg)$/i.test(f.type)) { toast('PNG/JPG 만 업로드 가능합니다'); return; }
-    if (f.size > 20 * 1024 * 1024) { toast('20MB 이하 파일만 업로드 가능합니다'); return; }
-    toast('업로드 중...', 4000);
+// 2026-06-17: PDF.js 동적 로드 — PDF 첫 페이지를 PNG canvas 로 렌더.
+async function _loadPdfJs() {
+    if (typeof window.pdfjsLib !== 'undefined') return window.pdfjsLib;
+    await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = resolve; s.onerror = () => reject(new Error('pdf.js 로드 실패'));
+        document.head.appendChild(s);
+    });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    return window.pdfjsLib;
+}
+
+async function _pdfToPngBlob(arrayBuffer, scale=2.5) {
+    const lib = await _loadPdfJs();
+    const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return await new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/png', 1.0));
+}
+
+async function _svgToPngBlob(svgText) {
+    // SVG 자연 크기 추출 (width/height 또는 viewBox)
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgText, 'image/svg+xml');
+    const svgEl = doc.documentElement;
+    let w = parseFloat(svgEl.getAttribute('width')) || 0;
+    let h = parseFloat(svgEl.getAttribute('height')) || 0;
+    if (!w || !h) {
+        const vb = (svgEl.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+        if (vb.length === 4) { w = vb[2]; h = vb[3]; }
+    }
+    if (!w || !h) { w = 1000; h = 1000; }
+    // 2x 스케일로 렌더링
+    const scale = Math.min(3, 2000 / Math.max(w, h));
+    const blob = new Blob([svgText], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
     try {
-        const ext = f.type === 'image/png' ? 'png' : 'jpg';
+        const img = await new Promise((resolve, reject) => {
+            const im = new Image();
+            im.onload = () => resolve(im);
+            im.onerror = () => reject(new Error('SVG 렌더 실패'));
+            im.src = url;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return await new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/png', 1.0));
+    } finally { URL.revokeObjectURL(url); }
+}
+
+async function handleFile(f) {
+    // 2026-06-17: PNG/JPG/PDF/SVG 모두 허용. PDF/SVG 는 클라이언트에서 PNG 로 변환 후 업로드.
+    const isPng  = /^image\/png$/i.test(f.type) || /\.png$/i.test(f.name);
+    const isJpg  = /^image\/jpe?g$/i.test(f.type) || /\.jpe?g$/i.test(f.name);
+    const isPdf  = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+    const isSvg  = f.type === 'image/svg+xml' || /\.svg$/i.test(f.name);
+    if (!isPng && !isJpg && !isPdf && !isSvg) { toast('PNG/JPG/PDF/SVG 만 업로드 가능합니다'); return; }
+    if (f.size > 20 * 1024 * 1024) { toast('20MB 이하 파일만 업로드 가능합니다'); return; }
+    let uploadBlob = null;
+    try {
+        if (isPdf) {
+            toast('PDF 변환 중... (잠시만 기다려주세요)', 4000);
+            const buf = await f.arrayBuffer();
+            uploadBlob = await _pdfToPngBlob(buf, 2.5);
+        } else if (isSvg) {
+            toast('SVG 변환 중...', 3000);
+            const text = await f.text();
+            uploadBlob = await _svgToPngBlob(text);
+        } else {
+            uploadBlob = f; // PNG/JPG 원본 그대로
+        }
+    } catch (e) { toast('변환 실패: ' + e.message, 4500); return; }
+    if (!uploadBlob) { toast('변환된 이미지가 없습니다'); return; }
+    toast('업로드 중...', 3000);
+    try {
+        const ext = (isPdf || isSvg) ? 'png' : (isJpg ? 'jpg' : 'png');
         const path = `templates/${state.template.product_category}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-        const { error } = await sb.storage.from('design').upload(path, f, { upsert: false, contentType: f.type });
+        const contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png';
+        const { error } = await sb.storage.from('design').upload(path, uploadBlob, { upsert: false, contentType });
         if (error) throw error;
         const { data } = sb.storage.from('design').getPublicUrl(path);
         state.template.background_url = data.publicUrl;
-        // 자연 사이즈 측정
+        // 자연 사이즈 측정 (300 DPI 가정으로 mm 환산)
         const img = new Image();
         img.onload = () => {
-            // 가로/세로 mm 자동 계산 (300 DPI 가정)
             const widthMm = Math.round(img.naturalWidth / 11.811);  // 300dpi = 11.811 px/mm
             const heightMm = Math.round(img.naturalHeight / 11.811);
             state.template.width_mm = widthMm;
             state.template.height_mm = heightMm;
             renderEditor();
-            toast('업로드 완료 — 슬롯을 추가해 주세요');
+            const note = isPdf ? ' (PDF → PNG 변환 완료)' : isSvg ? ' (SVG → PNG 변환 완료)' : '';
+            toast('업로드 완료' + note + ' — 슬롯을 추가해 주세요');
         };
         img.src = data.publicUrl;
-    } catch (e) { toast('업로드 실패: ' + e.message); }
+    } catch (e) { toast('업로드 실패: ' + e.message, 4500); }
 }
 
 async function saveTemplate() {
