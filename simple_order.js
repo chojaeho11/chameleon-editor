@@ -7132,13 +7132,8 @@ html, body { background: #ffffff !important; }
             var bv = (b && typeof b.sort_order === 'number') ? b.sort_order : 999999;
             return av - bv;
         });
-        // 2026-06-01: 가벽 상품은 코너기둥 addon 제거 — 별도 wallShape 섹션(ㄱ자/ㄷ자)으로 대체.
-        if (state.isWall) {
-            renderList = renderList.filter(function(a){
-                var nm = ((a.name || '') + ' ' + (a.name_kr || '') + ' ' + (a.name_us || '') + ' ' + (a.code || '')).toLowerCase();
-                return !/코너\s*기둥|corner.*post|corner.*pillar/i.test(nm);
-            });
-        }
+        // 2026-06-17: 가벽 상품 — 코너기둥 addon 유지 (wallShape ㄱ자=1개, ㄷ자=2개 자동 체크).
+        // 이전(2026-06-01)에 코너기둥을 제외했으나 사용자 요청으로 복원.
         // 2026-06-06: 아크릴 인쇄 family — 키링 옵션 제외, 4종만 화이트리스트.
         //   1) 모양커팅  2) 사각커팅  3) 아크릴 전면에 인쇄  4) 아크릴 뒷면에 인쇄
         //   대상: acrl2*/acrl3* + 반투명아크릴 + 글씨스카시
@@ -9372,11 +9367,14 @@ html, body { background: #ffffff !important; }
     };
 
     // 2026-06-01: 가벽 형태 선택 — 직선/ㄱ자/ㄷ자. 각 단면/양면 무관 동일 코너비.
-    var _WALL_SHAPE_FEE = { straight: 0, L: 100000, U: 200000 };
+    // 2026-06-17: 코너비는 코너기둥(For) addon 이 처리 → wallShapeFee = 0 으로 통합. 형태 선택 시 addon 자동 체크.
+    var _WALL_SHAPE_FEE = { straight: 0, L: 0, U: 0 };
+    var _WALL_SHAPE_CORNER_QTY = { straight: 0, L: 1, U: 2 };
+    var _CORNER_PILLAR_CODE = 'For';
     window._soPickWallShape = function (shape) {
         if (!_WALL_SHAPE_FEE.hasOwnProperty(shape)) shape = 'straight';
         state.wallShape = shape;
-        state.wallShapeFee = _WALL_SHAPE_FEE[shape] || 0;
+        state.wallShapeFee = 0;
         document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
             var on = b.dataset.shape === shape;
             b.classList.toggle('active', on);
@@ -9390,6 +9388,33 @@ html, body { background: #ffffff !important; }
             }
             if (label) label.style.color = on ? '#4f46e5' : '#64748b';
         });
+        // 2026-06-17: 코너기둥 addon 자동 체크/해제 (ㄱ자=1, ㄷ자=2, 직선=해제)
+        try {
+            if (!state.selectedAddons) state.selectedAddons = {};
+            if (!state.addonQuantities) state.addonQuantities = {};
+            var _cornerQty = _WALL_SHAPE_CORNER_QTY[shape] || 0;
+            var _cornerCb = document.querySelector('#soAddonList input[type=checkbox][data-addon-code="' + _CORNER_PILLAR_CODE + '"]');
+            var _cornerQtyInp = document.querySelector('#soAddonList input[data-addon-qty-code="' + _CORNER_PILLAR_CODE + '"]');
+            if (_cornerQty > 0) {
+                state.selectedAddons[_CORNER_PILLAR_CODE] = _CORNER_PILLAR_CODE;
+                state.addonQuantities[_CORNER_PILLAR_CODE] = _cornerQty;
+                if (_cornerCb) {
+                    _cornerCb.checked = true;
+                    var _lbl = _cornerCb.closest('label');
+                    if (_lbl) { _lbl.style.borderColor = '#0f172a'; _lbl.style.background = '#f8fafc'; }
+                }
+                if (_cornerQtyInp) _cornerQtyInp.value = _cornerQty;
+            } else {
+                delete state.selectedAddons[_CORNER_PILLAR_CODE];
+                delete state.addonQuantities[_CORNER_PILLAR_CODE];
+                if (_cornerCb) {
+                    _cornerCb.checked = false;
+                    var _lbl2 = _cornerCb.closest('label');
+                    if (_lbl2) { _lbl2.style.borderColor = '#e7e5e4'; _lbl2.style.background = '#fff'; }
+                }
+                if (_cornerQtyInp) _cornerQtyInp.value = 1;
+            }
+        } catch(e){}
         if (typeof recalc === 'function') recalc();
     };
 
@@ -10355,7 +10380,8 @@ html, body { background: #ffffff !important; }
             // 형태 옵션 안 보이는 변종은 강제 직선 + fee 0
             if (!_showWallShape) { state.wallShape = 'straight'; state.wallShapeFee = 0; }
             state.wallShape = state.wallShape || 'straight';
-            state.wallShapeFee = (state.wallShape === 'L') ? 100000 : (state.wallShape === 'U') ? 200000 : 0;
+            // 2026-06-17: 코너비는 코너기둥 addon (For) 이 처리. wallShapeFee = 0.
+            state.wallShapeFee = 0;
             // 원형 버튼 active 동기화 — _soPickWallShape 와 동일 로직
             document.querySelectorAll('.so-wall-shape-btn').forEach(function (b) {
                 var on = b.dataset.shape === state.wallShape;
