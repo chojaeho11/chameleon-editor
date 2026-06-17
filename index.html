@@ -6659,10 +6659,11 @@ function scrollHotdeal(gridId, dir) {
                     if (ctx.textAlign === 'center') tx = it.x + it.w/2;
                     else if (ctx.textAlign === 'right') tx = it.x + it.w - padX;
                     var ty = it.y + padY;
-                    // 2026-06-15: 박스 폭 초과 시 자동 줄바꿈 (DOM 의 word-wrap 미러링).
-                    //   innerText 는 시각적 wrap 을 \n 으로 안 변환하므로, 캔버스에서 직접 maxW 기준으로 wrap.
+                    // 2026-06-17: 박스 폭 초과 시 자동 줄바꿈 (DOM 의 word-wrap 미러링).
+                    //   canvas measureText 는 DOM 보다 보수적이라 같은 텍스트도 살짝 더 넓게 측정 → DOM 에 fit 됐는데
+                    //   canvas 에선 wrap → 마지막 1글자 떨어짐. 15% 버퍼로 차이 흡수.
                     var lh = fs * (it.lineHeight || 1.2);
-                    var maxW = Math.max(1, it.w - 2 * padX);
+                    var maxW = Math.max(1, it.w - 2 * padX) * 1.15;
                     var rawLines = (it.text || '').split(/\n/);
                     var allLines = [];
                     rawLines.forEach(function(rl){
@@ -12734,7 +12735,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=508"></script>
+<script src="/simple_order.js?v=509"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
