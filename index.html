@@ -5786,7 +5786,7 @@ function scrollHotdeal(gridId, dir) {
             .me-tool-btn .me-tb-lbl, .me-color-wrap .me-tb-lbl { display:inline !important; font-size:12px !important; }
             .me-tool-btn.accent .me-tb-lbl { display:inline !important; font-size:12.5px !important; }
             .me-tool-btn .me-tb-ic { font-size:13px !important; margin:0 !important; }
-            .me-color-wrap { padding:6px 9px !important; min-height:36px; gap:4px !important; }
+            .me-color-wrap { padding:6px 9px !important; min-height:36px; gap:5px !important; white-space:nowrap !important; flex-direction:row !important; align-items:center !important; flex:0 0 auto; }
             .me-color-wrap input[type=color] { width:22px !important; height:22px !important; }
             /* 2026-06-15: 모바일 props 패널 — 라벨 숨기고 컴팩트, 2줄 정도로 끝나게 wrap. */
             .me-props { padding:6px 6px !important; gap:5px !important; flex-wrap:wrap !important; }
@@ -5859,9 +5859,11 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn accent" onclick="document.getElementById('meImgInput').click()" title="이미지 업로드"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">이미지 업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
-                <!-- 2026-06-15: 사각형/원 통합 → '도형' 단일 버튼. 클릭마다 사각/원 토글. -->
-                <button type="button" class="me-tool-btn" id="meShapeBtn" onclick="window._meAddShapeCycle && window._meAddShapeCycle()" title="도형"><i class="fa-solid fa-shapes me-tb-ic"></i><span data-i18n="me_shape" class="me-tb-lbl">도형</span></button>
-                <label class="me-color-wrap" title="배경색"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
+                <!-- 2026-06-17 v538: 도형 단일 버튼(rect/circle 토글) → 분리된 3 버튼 (네모/동그라미/별). -->
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('rect')" title="네모"><i class="fa-solid fa-square me-tb-ic"></i><span data-i18n="me_rect" class="me-tb-lbl">네모</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('circle')" title="동그라미"><i class="fa-solid fa-circle me-tb-ic"></i><span data-i18n="me_circle" class="me-tb-lbl">동그라미</span></button>
+                <button type="button" class="me-tool-btn" onclick="window._meAddShape && window._meAddShape('star')" title="별"><i class="fa-solid fa-star me-tb-ic"></i><span data-i18n="me_star" class="me-tb-lbl">별</span></button>
+                <label class="me-color-wrap" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
                 <!-- 2026-06-17: 가이드 토글 (가벽 옆면 빗금 + 1m 절단선) — 기본 ON, 클릭으로 ON/OFF -->
                 <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
@@ -6254,6 +6256,13 @@ function scrollHotdeal(gridId, dir) {
             it.el.style.height = (it.h * me.wScale) + 'px';
             it.el.style.background = it.fill || '#7c3aed';
             it.el.style.border = (it.strokeWidth || 0) > 0 ? (it.strokeWidth + 'px solid ' + (it.stroke || '#000')) : 'none';
+            // 2026-06-17 v538: 별(star) shape — clip-path 로 5각 별 모양.
+            if (it.shape === 'star') {
+                it.el.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+                it.el.style.borderRadius = '';
+            } else {
+                it.el.style.clipPath = '';
+            }
         } else if (it.type === 'shelf') {
             // 2026-06-17: 선반 — 흰색 배경 + 빨강 테두리. 얇은 가로 막대 (실제 3cm = 30mm 두께).
             it.el.style.height = (it.h * me.wScale) + 'px';
@@ -6610,9 +6619,23 @@ function scrollHotdeal(gridId, dir) {
                 var it = me.items[i];
                 if (it.type === 'shape') {
                     ctx.fillStyle = it.fill || '#7c3aed';
+                    // 2026-06-17 v538: 별(star) shape — clip-path 와 동일한 5각 별 polygon (normalized).
+                    function _drawStarPath(x, y, w, h) {
+                        var pts = [[0.50,0.00],[0.61,0.35],[0.98,0.35],[0.68,0.57],[0.79,0.91],[0.50,0.70],[0.21,0.91],[0.32,0.57],[0.02,0.35],[0.39,0.35]];
+                        ctx.beginPath();
+                        for (var pi = 0; pi < pts.length; pi++) {
+                            var px = x + pts[pi][0] * w;
+                            var py = y + pts[pi][1] * h;
+                            if (pi === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                    }
                     if (it.shape === 'circle') {
                         ctx.beginPath();
                         ctx.ellipse(it.x + it.w/2, it.y + it.h/2, it.w/2, it.h/2, 0, 0, Math.PI*2);
+                        ctx.fill();
+                    } else if (it.shape === 'star') {
+                        _drawStarPath(it.x, it.y, it.w, it.h);
                         ctx.fill();
                     } else {
                         ctx.fillRect(it.x, it.y, it.w, it.h);
@@ -6623,6 +6646,9 @@ function scrollHotdeal(gridId, dir) {
                         if (it.shape === 'circle') {
                             ctx.beginPath();
                             ctx.ellipse(it.x + it.w/2, it.y + it.h/2, it.w/2, it.h/2, 0, 0, Math.PI*2);
+                            ctx.stroke();
+                        } else if (it.shape === 'star') {
+                            _drawStarPath(it.x, it.y, it.w, it.h);
                             ctx.stroke();
                         } else {
                             ctx.strokeRect(it.x, it.y, it.w, it.h);
@@ -7223,12 +7249,15 @@ function scrollHotdeal(gridId, dir) {
         el.className = 'me-item shape' + (shape === 'circle' ? ' circle' : '');
         el.style.zIndex = (++me.zCounter);
         me.stage.appendChild(el);
-        var w = me.natW * 0.3, h = (shape === 'circle' ? w : me.natH * 0.15);
+        // 2026-06-17 v538: star 도 정사각형(w=h) 기본 — circle 과 동일 비율.
+        var isSquareDefault = (shape === 'circle' || shape === 'star');
+        var w = me.natW * 0.3, h = (isSquareDefault ? w : me.natH * 0.15);
+        var defaultFill = (shape === 'circle') ? '#7c3aed' : (shape === 'star') ? '#f59e0b' : '#fbbf24';
         var it = {
             el: el, type: 'shape', shape: shape,
             x: (me.natW - w) / 2, y: (me.natH - h) / 2,
             w: w, h: h,
-            fill: shape === 'circle' ? '#7c3aed' : '#fbbf24',
+            fill: defaultFill,
             stroke: '#000000', strokeWidth: 0
         };
         me.items.push(it);
@@ -7236,7 +7265,8 @@ function scrollHotdeal(gridId, dir) {
         _meBindDrag(it);
         _meSelect(it);
     };
-    // 2026-06-15: 도형 단일 버튼 — 클릭마다 rect / circle 토글 (사각형↔원).
+    // 2026-06-15: 도형 단일 버튼 — 클릭마다 rect / circle 토글.
+    // 2026-06-17 v538: 분리된 3버튼 (네모/동그라미/별) 으로 변경 — Cycle 함수는 호환성 위해 유지하되 미사용.
     var _meShapeCycle = 'rect';
     window._meAddShapeCycle = function() {
         window._meAddShape(_meShapeCycle);
@@ -13119,7 +13149,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=537"></script>
+<script src="/simple_order.js?v=538"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
