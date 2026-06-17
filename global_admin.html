@@ -2052,6 +2052,10 @@
                 <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#0891b2;">
                     <input type="checkbox" id="newProdIsFileUpload" style="width:18px; height:18px;"> 📐 사이즈고정상품 (에디터O, 사이즈변경X)
                 </label>
+                <!-- 2026-06-17 v548: 템플릿 등록 가능 상품 — 디자이너/관리자가 이 상품의 템플릿을 등록할 수 있음. 고객은 🎨 템플릿 버튼으로 이 상품의 템플릿을 불러옴. -->
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; margin-top:5px; color:#7c3aed;">
+                    <input type="checkbox" id="newProdIsTemplateEligible" style="width:18px; height:18px;"> 🎨 템플릿 등록상품 (디자이너 검토요청 가능)
+                </label>
                 <div style="margin-top:10px; padding:10px; background:#fef3c7; border:1px solid #fbbf24; border-radius:8px;">
                     <label class="form-label" style="font-weight:800; color:#92400e; font-size:12px;">🏭 출력 기호 + 이름 (자동다운로드 폴더 분류용)</label>
                     <select id="newProdPrintPreset" class="input-text" style="width:100%; margin-top:4px; font-size:13px;" onchange="window.applyPrintPreset()">

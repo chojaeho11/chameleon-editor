@@ -499,19 +499,18 @@ function newTemplate() {
     renderEditor();
 }
 
-// 2026-06-17 v542: 미니에디터 열기 — 상품 코드 입력 → /?product=XXX&admin_template_mode=1 로 이동.
-//   에디터에서 자유 디자인 후 저장 → admin_templates 자동 생성.
+// 2026-06-17 v548: 미니에디터 열기 — is_template_eligible=true 상품만 표시.
 async function newTemplateInEditor() {
     const cat = getCategory();
     if (!cat) { toast('카테고리를 먼저 선택하세요'); return; }
-    // 해당 카테고리의 상품 목록을 보여주고 선택하게 함
     const { data: products, error } = await sb.from('admin_products')
         .select('code, name, width_mm, height_mm')
         .eq('category', cat)
+        .eq('is_template_eligible', true)
         .order('sort_order', { ascending: true })
-        .limit(50);
+        .limit(100);
     if (error) { toast('상품 로딩 실패: ' + error.message); return; }
-    if (!products || !products.length) { toast(`카테고리 "${cat}" 에 상품이 없습니다`); return; }
+    if (!products || !products.length) { toast('이 카테고리에 🎨 템플릿 등록상품 으로 체크된 상품이 없습니다 — global_admin 에서 체크해주세요', 4500); return; }
     // 상품 선택 모달
     const ex = document.getElementById('productPickerModal');
     if (ex) ex.remove();

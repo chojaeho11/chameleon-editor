@@ -1064,6 +1064,8 @@ window.addProductDB = async () => {
     const isPaperDisplay = document.getElementById('newProdIsPaperDisplay') ? document.getElementById('newProdIsPaperDisplay').checked : false;
     const isFileUpload = document.getElementById('newProdIsFileUpload').checked;
     const isBulkOrder = document.getElementById('newProdIsBulkOrder').checked;
+    // 2026-06-17 v548: 템플릿 등록 가능 상품 — 디자이너/관리자가 이 상품의 템플릿 등록 가능
+    const isTemplateEligible = document.getElementById('newProdIsTemplateEligible') ? document.getElementById('newProdIsTemplateEligible').checked : false;
     const bulkQtyStr = document.getElementById('newProdBulkQtyOptions') ? document.getElementById('newProdBulkQtyOptions').value : '';
     const quantityOptions = bulkQtyStr ? bulkQtyStr.split(',').map(s => parseInt(s.trim())).filter(n => n > 0) : [];
 
@@ -1086,6 +1088,7 @@ window.addProductDB = async () => {
         is_paper_display: isPaperDisplay,
         is_file_upload: isFileUpload,
         is_bulk_order: isBulkOrder,
+        is_template_eligible: isTemplateEligible,
         quantity_options: quantityOptions,
         img_url: imgUrl, // 여기에 짧은 주소가 들어감
         name: document.getElementById('newProdName').value, 
@@ -1177,6 +1180,7 @@ window.editProductLoad = async (id) => {
     if (document.getElementById('newProdIsPaperDisplay')) document.getElementById('newProdIsPaperDisplay').checked = data.is_paper_display || false;
     document.getElementById('newProdIsFileUpload').checked = data.is_file_upload || false;
     document.getElementById('newProdIsBulkOrder').checked = data.is_bulk_order || false;
+    if (document.getElementById('newProdIsTemplateEligible')) document.getElementById('newProdIsTemplateEligible').checked = data.is_template_eligible || false;
     const bulkDiv = document.getElementById('bulkOrderOptions');
     if (bulkDiv) bulkDiv.style.display = data.is_bulk_order ? 'block' : 'none';
     if (document.getElementById('newProdBulkQtyOptions')) document.getElementById('newProdBulkQtyOptions').value = (data.quantity_options || []).join(', ');
@@ -1316,6 +1320,7 @@ window.resetProductForm = () => {
     document.getElementById('newProdIsCustom').checked = false;
     document.getElementById('newProdIsGeneral').checked = false;
     if (document.getElementById('newProdIsBulkOrder')) document.getElementById('newProdIsBulkOrder').checked = false;
+    if (document.getElementById('newProdIsTemplateEligible')) document.getElementById('newProdIsTemplateEligible').checked = false;
     const bulkDiv = document.getElementById('bulkOrderOptions');
     if (bulkDiv) bulkDiv.style.display = 'none';
     if (document.getElementById('newProdBulkQtyOptions')) document.getElementById('newProdBulkQtyOptions').value = '';
