@@ -7809,7 +7809,7 @@ function scrollHotdeal(gridId, dir) {
         var data;
         try { data = ctx.getImageData(0, 0, W, H).data; }
         catch(e){ alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.'); return; }
-        var THR = 30;   // 2026-06-17: 20→30 으로 상향 — 반투명 가장자리/노이즈 영향 감소
+        var THR = 20;   // 2026-06-17: 30→20 으로 복원 — 반투명 alpha 가 있는 이미지 (스티커/이모지 등) trace 실패 해결
 
         // 2026-06-17: Moore neighborhood 로 윤곽선 추적 — 팔다리 오목한 부분까지 정확히 따라감
         //   참고: 등신대 받침대는 smoothing 이후 _meCutlineApplyOffsetFromCache 에서 추가 (sharp corner 보존).
@@ -7841,6 +7841,8 @@ function scrollHotdeal(gridId, dir) {
             rays = fbRays;
         }
         if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
+        // 2026-06-17: 디버그 로그 — 어떤 알고리즘이 몇 점 잡았는지 확인용
+        try { console.log('[cutline trace] W=' + W + ' H=' + H + ' THR=' + THR + ' points=' + rays.length + ' mode=' + mode); } catch(_le){}
         // 2026-06-16 v8: 결과를 item 에 캐시 — 슬라이더로 마진 재계산 시 다시 trace 안 함 (즉시 반응).
         sel._cutlineRays = rays;
         sel._cutlineRayW = W;
@@ -13014,7 +13016,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=525"></script>
+<script src="/simple_order.js?v=526"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
