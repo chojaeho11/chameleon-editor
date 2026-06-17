@@ -5866,6 +5866,11 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거 — 이미지를 선택하면 활성화됩니다"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
                 <!-- 2026-06-17: 가이드 토글 (가벽 옆면 빗금 + 1m 절단선) — 기본 ON, 클릭으로 ON/OFF -->
                 <button type="button" class="me-tool-btn" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5; padding-left:9px; padding-right:9px;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i></button>
+                <!-- 2026-06-17: 옆면 색 전용 picker — 가벽 wing 상품에서만 노출. 텍스트/도형 선택 무관하게 항상 캔버스 bg 만 변경. -->
+                <label class="me-tool-btn" id="meSideColorWrap" style="display:none; cursor:pointer; background:linear-gradient(135deg,#fce7f3,#fbcfe8); color:#9d174d; border:1.5px solid #f9a8d4; padding:0 12px 0 8px; gap:6px;" title="옆면 색 (양쪽 흰 영역에 색 채우기)">
+                    <input type="color" id="meSideColorInput" value="#ffffff" oninput="window._meSetSideColor && window._meSetSideColor(this.value)" style="-webkit-appearance:none; appearance:none; width:22px; height:22px; padding:0; border:1.5px solid #fff; border-radius:50%; cursor:pointer; box-shadow:0 0 0 1px rgba(0,0,0,0.15); background:#ffffff;">
+                    <span class="me-tb-lbl" style="font-weight:800; font-size:12px;">옆면 색</span>
+                </label>
                 <!-- 2026-06-16: 칼선 (die-cut) — 스티커 전용. 빨강 버튼. 클릭 시 모양 선택 popup. -->
                 <button type="button" class="me-tool-btn" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 생성"><i class="fa-solid fa-scissors me-tb-ic"></i><span class="me-tb-lbl">칼선</span></button>
             </div>
@@ -6284,6 +6289,26 @@ function scrollHotdeal(gridId, dir) {
     window._meSetWingMm = function(mm) {
         me._wingMm = mm || 0;
         try { _meUpdateGuides(); } catch(_) {}
+        // 2026-06-17: 옆면 색 picker 표시/숨김 — wing 상품일 때만 노출.
+        try {
+            var sideWrap = document.getElementById('meSideColorWrap');
+            if (sideWrap) sideWrap.style.display = mm > 0 ? 'inline-flex' : 'none';
+        } catch(_){}
+    };
+    // 2026-06-17: 옆면 색 — 텍스트/도형 선택 무관하게 항상 캔버스 bg 변경 + picker 시각 동기화.
+    //   _meSetBg 와 달리 selection 분기 없음 → 가벽 옆면 색 설정 전용으로 명확.
+    window._meSetSideColor = function(color) {
+        if (!color) return;
+        try { _meSnapshot(); } catch(_){}
+        me.bg = color;
+        var stage = document.getElementById('meStage');
+        if (stage) stage.style.background = color;
+        // picker swatch 도 같이 변경 — 사용자가 현재 색 시각 확인 가능.
+        var inp = document.getElementById('meSideColorInput');
+        if (inp) inp.style.background = color;
+        // 기본 배경 picker (meBgColor) 도 동기화.
+        var bgInp = document.getElementById('meBgColor');
+        if (bgInp) { try { bgInp.value = color; } catch(_){} }
     };
     window._meGuidesToggle = function() {
         me._guidesVisible = !me._guidesVisible;
@@ -12720,7 +12745,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=505"></script>
+<script src="/simple_order.js?v=506"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
