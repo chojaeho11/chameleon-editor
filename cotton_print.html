@@ -460,16 +460,13 @@ img, video, canvas { max-width: 100%; height: auto; }
             <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰</span>
         </a>
         <nav class="nav-links">
-            <!-- 2026-06-11: 로그인 / 회원가입 버튼 — 같은 페이지에서 동작 (cpAuth 모달) -->
-            <button id="cpAuthLoginBtn" type="button" onclick="window._cpOpenAuth && window._cpOpenAuth('login')" style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; padding:7px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 3px 10px rgba(99,102,241,0.35);">
-                <i class="fa-solid fa-user" style="font-size:11px; margin-right:4px;"></i><span id="cpLoginBtnLbl">로그인</span>
-            </button>
-            <!-- 로그인 상태일 때 보이는 본인 메뉴 -->
+            <!-- 2026-06-18 v587: 로그인/로그아웃 버튼은 메인 종합몰(cafe2626) 에서만 노출. cotton-print.com 메인 페이지에서는 제거 (사용자 요청). -->
+            <!-- 내부 자바스크립트가 참조하는 ID 는 hidden span 으로 남겨 NPE 방지 -->
+            <span id="cpAuthLoginBtn" style="display:none"></span>
+            <span id="cpLoginBtnLbl" style="display:none"></span>
             <div id="cpAuthLoggedIn" style="display:none; align-items:center; gap:8px;">
-                <span id="cpAuthUserLabel" style="font-size:12px; color:var(--brown-dark); font-weight:700;"></span>
-                <button type="button" onclick="window._cpDoLogout && window._cpDoLogout()" style="background:#fff; color:var(--brown); border:1.5px solid var(--cream-dark); padding:6px 12px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;">
-                    <span id="cpLogoutLbl">로그아웃</span>
-                </button>
+                <span id="cpAuthUserLabel"></span>
+                <span id="cpLogoutLbl" style="display:none"></span>
             </div>
             <!-- 국기 언어 전환 -->
             <div class="cp-lang-flags" style="display:flex; gap:4px; align-items:center; margin-left:8px;">
