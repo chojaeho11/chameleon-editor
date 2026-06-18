@@ -326,6 +326,7 @@ window.__CD_I18N = {
     fab_cotton16: { ko:'면16수', ja:'コットン16番', en:'Cotton 16s' },
     fab_cotton10: { ko:'면10수', ja:'コットン10番', en:'Cotton 10s' },
     fab_chiffon: { ko:'쉬폰', ja:'シフォン', en:'Chiffon' },
+    fab_organza: { ko:'오간자', ja:'オーガンザ', en:'Organza' },
     fab_oxford: { ko:'옥스포드', ja:'オックスフォード', en:'Oxford' },
     fab_rayon: { ko:'레이온', ja:'レーヨン', en:'Rayon' },
     fab_linen: { ko:'린넨', ja:'リネン', en:'Linen' },
@@ -749,7 +750,7 @@ a { text-decoration: none; color: inherit; }
    2026-05-31: minmax(0, 1fr) — column 최소가 0 까지 축소 가능 → 일본어 'コットン20番' 같이
    긴 라벨이 column 폭을 키워서 페이지가 가로로 넓어지던 버그 fix. */
 .fabric-types {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
     width: 100%; max-width: 100%;
 }
 .fabric-type {
@@ -974,6 +975,22 @@ a { text-decoration: none; color: inherit; }
 .fin-opt:hover { background:var(--cream); }
 .fin-opt input { margin:0 4px 0 0; flex-shrink:0; }
 .fin-opt:has(input:checked) { background:var(--cream); border-color:var(--brown); }
+/* 2026-06-18 v588: 옵션 카드에 admin 이미지가 들어왔을 때 — 카드를 세로형 grid 로 전환 */
+.fin-opt-img { width:100%; aspect-ratio:1.4/1; object-fit:cover; border-radius:6px; display:block; background:#f3f4f6; }
+.fin-opt:has(.fin-opt-img) { flex-direction:column; align-items:stretch; justify-content:flex-start; padding:8px; gap:6px; }
+.fin-opt:has(.fin-opt-img) .fin-opt-label { text-align:center; line-height:1.25; }
+.fin-opt:has(.fin-opt-img) .fin-opt-price { text-align:center; }
+.fin-opt:has(.fin-opt-img) input[type=radio] { position:absolute; top:6px; left:6px; z-index:2; background:rgba(255,255,255,0.9); border-radius:50%; }
+.fin-opt:has(.fin-opt-img) { position:relative; }
+/* 2026-06-18 v588: 그리드 컨테이너 — 원단마감 2칸, 끈고리/실색상 3칸.
+   #finishOptions 은 항상 보이는 영역, #hookCollapse/#accCollapse 는 collapse 라 .open 일 때만 펼침. */
+.fin-opt-grid-2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+.collapse-body.open.fin-opt-grid-3 { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; }
+.collapse-body.open.fin-opt-grid-2 { display:grid !important; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+@media (max-width:480px) {
+    .collapse-body.open.fin-opt-grid-3 { gap:5px; }
+    .fin-opt-grid-2 { gap:6px; }
+}
 /* 2026-06-01: 라벨 wrap 허용 — JP 'オーバーロック ほつれ防止' 같은 긴 라벨이 row 폭을 키워 overflow 되던 버그 fix. */
 .fin-opt-label { flex:1; min-width:0; word-break:keep-all; overflow-wrap:anywhere; line-height:1.35; }
 .fin-opt-price { color:var(--accent); font-weight:700; font-size:12px; flex-shrink:0; white-space:nowrap; }
@@ -1531,6 +1548,11 @@ window._cpAuthClick = async function() {
                     <div class="fabric-type-icon"><i class="fa-solid fa-shirt"></i></div>
                     <div class="fabric-type-label" data-cdi18n="fab_linen">린넨</div>
                 </div>
+                <!-- 2026-06-18 v588: 오간자 추가 -->
+                <div class="fabric-type" data-fab="organza" onclick="window._cdSelectFabricType('organza')">
+                    <div class="fabric-type-icon"><i class="fa-solid fa-snowflake"></i></div>
+                    <div class="fabric-type-label" data-cdi18n="fab_organza">오간자</div>
+                </div>
             </div>
             <!-- 면 종류일 때만 색상 선택 표시 -->
             <div id="fabricColorWrap" style="display:none;">
@@ -1558,7 +1580,7 @@ window._cpAuthClick = async function() {
                 <span data-cdi18n="side_finish">원단 마감</span> <span style="color:#dc2626; font-weight:800;">*</span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" data-cdi18n="finish_required">필수 / 제곱미터당</span>
             </div>
-            <div id="finishOptions" style="display:flex; flex-direction:column; gap:6px;">
+            <div id="finishOptions" class="fin-opt-grid-2">
                 <!-- 2026-06-01: 마감 가격 재조정 — 오버록 4000 / 인터록 5000 / 말아박기 6000 / 가재단 1000 -->
                 <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="4000">
                     <input type="radio" name="finish" value="overlock" checked onchange="window._cdOnFinishChange()">
@@ -1589,7 +1611,7 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_hook">끈고리 · 봉끼움 · 미싱</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="hookSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="hookCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
+            <div id="hookCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
                 <label class="fin-opt" data-hook="" data-name="" data-extra="0">
                     <input type="radio" name="hook" value="" checked onchange="window._cdOnHookChange()">
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
@@ -1639,7 +1661,7 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_acc">실색상변경 · 목봉</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="accSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="accCollapse" class="collapse-body" style="display:none; flex-direction:column; gap:6px; margin-top:10px;">
+            <div id="accCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
                 <label class="fin-opt" data-acc="" data-name="" data-extra="0">
                     <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
@@ -2061,7 +2083,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=98"></script>
+<script src="/cotton_designer.js?v=99"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

@@ -31,7 +31,9 @@ const FABRIC_TYPES = {
     chiffon:  { name: '쉬폰', name_ja:'シフォン', name_en:'Chiffon', isCotton: false, desc: '얇고 비치는 원단. 커튼·드레스·드레이프 적합.', desc_ja:'薄く透ける生地。カーテン・ドレス・ドレープに最適。', desc_en:'Sheer thin fabric. Curtains, dresses, draping.' },
     oxford:   { name: '옥스포드', name_ja:'オックスフォード', name_en:'Oxford', isCotton: false, desc: '내구성 뛰어난 폴리. 가방·실외 디스플레이용.', desc_ja:'耐久性に優れたポリエステル。バッグ・屋外ディスプレイ向け。', desc_en:'Durable polyester. Bags and outdoor displays.' },
     rayon:    { name: '레이온/인견', name_ja:'レーヨン', name_en:'Rayon', isCotton: false, desc: '시원한 인견 원단. 여름 의류·블라우스 적합.', desc_ja:'涼しいレーヨン生地。夏物衣類・ブラウスに最適。', desc_en:'Cool rayon fabric. Summer wear and blouses.' },
-    linen:    { name: '린넨', name_ja:'リネン', name_en:'Linen', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.', desc_ja:'天然リネン。高級インテリア・テーブルクロス・エプロン。', desc_en:'Natural linen. Premium interiors, tablecloths, aprons.' }
+    linen:    { name: '린넨', name_ja:'リネン', name_en:'Linen', isCotton: false, desc: '천연 린넨. 고급 인테리어·식탁보·앞치마.', desc_ja:'天然リネン。高級インテリア・テーブルクロス・エプロン。', desc_en:'Natural linen. Premium interiors, tablecloths, aprons.' },
+    // 2026-06-18 v588: 오간자 추가
+    organza:  { name: '오간자', name_ja:'オーガンザ', name_en:'Organza', isCotton: false, desc: '얇고 빳빳한 오간자. 행사·디스플레이·웨딩 장식용.', desc_ja:'薄くハリのあるオーガンザ。イベント・ディスプレイ・ウェディング装飾向け。', desc_en:'Sheer crisp organza. Events, displays, wedding decor.' }
 };
 // 현재 언어로 원단 이름/설명 꺼내기
 function pickFabricName(f){ var L = window.__CD_LANG||'ko'; if (L==='ja' && f.name_ja) return f.name_ja; if (L==='en' && f.name_en) return f.name_en; return f.name; }
@@ -495,7 +497,7 @@ async function loadDbFabrics() {
                               .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
         if (codes.length === 0) return;
         const r2 = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order')
+            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, image')
             .in('category', codes);
         if (r2.error) return;
         const products = r2.data || [];
@@ -506,6 +508,8 @@ async function loadDbFabrics() {
 
         DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
         renderAccessoryOptions();
+        // 2026-06-18 v588: 하드코딩 옵션(.fin-opt[data-name])에 admin_products 이미지 매칭 적용
+        try { _cdApplyFinOptImages(classified); } catch(e){ console.warn('[fin-opt img]', e); }
     } catch(e) {
         // 부자재는 HTML에 하드코딩돼 있어 DB 실패해도 동작에 영향 없음
         if (e && e.message && !/aborted/i.test(e.message)) {
@@ -567,7 +571,8 @@ const FABRIC_SWATCH = {
     chiffon:  { bg: 'linear-gradient(135deg,#fef9e7 0%,#fef3c7 100%)', icon: 'fa-feather',       accent: '#a16207' },
     oxford:   { bg: 'linear-gradient(135deg,#d4d4aa 0%,#a3a380 100%)', icon: 'fa-shirt',         accent: '#3f3f1f' },
     rayon:    { bg: 'linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%)', icon: 'fa-water',         accent: '#1e3a8a' },
-    linen:    { bg: 'linear-gradient(135deg,#ede4d3 0%,#d4c5a0 100%)', icon: 'fa-leaf',          accent: '#5b3a1a' }
+    linen:    { bg: 'linear-gradient(135deg,#ede4d3 0%,#d4c5a0 100%)', icon: 'fa-leaf',          accent: '#5b3a1a' },
+    organza:  { bg: 'linear-gradient(135deg,#fdf4ff 0%,#fae8ff 100%)', icon: 'fa-snowflake',     accent: '#86198f' }
 };
 const COTTON_COLOR_BG = { white: '#ffffff', natural: '#e7d8b8', ivory: '#f5ecd3' };
 
@@ -581,7 +586,8 @@ const FABRIC_PHOTO = {
     chiffon:  '/fabric/chiffon.jpg',
     oxford:   '/fabric/oxford.jpg',
     rayon:    '/fabric/rayon.jpg',
-    linen:    '/fabric/linen.jpg'
+    linen:    '/fabric/linen.jpg',
+    organza:  '/fabric/organza.jpg'
 };
 // 상세 카드 스왓치(색+아이콘) 렌더 — 사진이 없거나 로드 실패 시 폴백
 function _cdSwatchFallback() {
@@ -616,6 +622,39 @@ function _cdApplyFabricChipPhotos() {
     });
 }
 window._cdApplyFabricChipPhotos = _cdApplyFabricChipPhotos;
+
+// 2026-06-18 v588: 하드코딩 옵션 카드(.fin-opt) 에 admin_products 의 이미지를 매칭해 삽입.
+//   매칭 규칙: 첫 2 한글자 일치 (예: "실색상 변경" ↔ "실색변경" 모두 "실색" 으로 매칭).
+function _cdApplyFinOptImages(adminItems) {
+    if (!adminItems || !adminItems.length) return;
+    function firstKr(s){ var m = (s||'').match(/[가-힣]+/); return m ? m[0].substring(0,2) : ''; }
+    // 옵션 카드 전체 (finish + hook + acc)
+    var cards = document.querySelectorAll('.fin-opt[data-name]');
+    cards.forEach(function(card){
+        var optName = card.getAttribute('data-name') || '';
+        if (!optName) return;
+        var key = firstKr(optName);
+        if (!key) return;
+        // admin 에서 첫 2 한글자가 같은 아이템 찾기
+        var match = null;
+        for (var i = 0; i < adminItems.length; i++) {
+            var a = adminItems[i];
+            var aName = a.name_kr || a.name || '';
+            if (firstKr(aName) === key && a.image) { match = a; break; }
+        }
+        if (!match) return;
+        // 이미 이미지 들어가 있으면 패스
+        if (card.querySelector('.fin-opt-img')) return;
+        var img = document.createElement('img');
+        img.className = 'fin-opt-img';
+        img.src = match.image;
+        img.alt = optName;
+        img.loading = 'lazy';
+        // 카드 첫 자식으로 삽입 — CSS 가 grid 일 때 이미지가 위에 표시됨
+        card.insertBefore(img, card.firstChild);
+    });
+}
+window._cdApplyFinOptImages = _cdApplyFinOptImages;
 
 // 2026-05-22: 원단 칩에 마우스 호버 / 터치 시 특징 툴팁 (KR·JP·EN — FABRIC_TYPES 다국어 설명 사용)
 function _cdInitFabricTooltips() {
