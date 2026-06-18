@@ -496,15 +496,18 @@ async function loadDbFabrics() {
         const codes = subCats.map(c => (c.code || '').trim())
                               .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
         if (codes.length === 0) return;
-        // 2026-06-18 v591: thumb_url 만 select (image_url/img_url 컬럼 미존재 → 400 발생). 한 번 더 실패하면 image 컬럼 폴백.
-        let r2 = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, thumb_url')
-            .in('category', codes);
+        // 2026-06-18 v592: name_en 컬럼 미존재 → 400. 폴백 체인으로 점진적 컬럼 제거.
+        async function _tryFabricSelect(cols) {
+            return await sb.from('admin_products').select(cols).in('category', codes);
+        }
+        let r2 = await _tryFabricSelect('code, name, name_jp, name_us, name_kr, price, sort_order, thumb_url');
         if (r2.error) {
-            console.warn('[loadDbFabrics] thumb_url select failed, retrying without it:', r2.error.message);
-            r2 = await sb.from('admin_products')
-                .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order')
-                .in('category', codes);
+            console.warn('[loadDbFabrics] retry1:', r2.error.message);
+            r2 = await _tryFabricSelect('code, name, name_jp, name_us, name_kr, price, sort_order');
+        }
+        if (r2.error) {
+            console.warn('[loadDbFabrics] retry2:', r2.error.message);
+            r2 = await _tryFabricSelect('code, name, price, sort_order');
         }
         if (r2.error) return;
         const products = r2.data || [];
@@ -541,11 +544,11 @@ function renderHookOptions() {
     }).join('');
 }
 
-// 언어별 admin_products 이름 선택 (name_jp / name_us / name_kr / name)
+// 언어별 admin_products 이름 선택 (name_jp / name_us / name_kr / name) — name_en 미존재
 function pickProductName(p) {
     var lang = window.__CD_LANG || 'ko';
     if (lang === 'ja') return p.name_jp || p.name_kr || p.name || '';
-    if (lang === 'en') return p.name_us || p.name_en || p.name_kr || p.name || '';
+    if (lang === 'en') return p.name_us || p.name_kr || p.name || '';
     return p.name_kr || p.name || '';
 }
 
@@ -637,22 +640,37 @@ function _cdGetThumb(p) {
     if (!p) return '';
     return p.thumb_url || p.image_url || p.img_url || p.image || '';
 }
+// 2026-06-18 v592: 매칭 — 정규화한 한글에서 공통 2-char substring 1개라도 있으면 매칭.
+//   "아일렛타공4곳" ↔ "사방타공(아일렛)" → "타공" 공통 ✓
+//   "실색상 변경" ↔ "실색변경" → "실색" 공통 ✓
+//   "가운데 트임" ↔ "가운데트임" → "가운" or "운데" 공통 ✓
+function _normKr(s) {
+    return (s||'').replace(/[\s·\-()（）/_,\.\d]/g, '');
+}
+function _shareKrBigram(a, b) {
+    var na = _normKr(a), nb = _normKr(b);
+    if (na.length < 2 || nb.length < 2) return false;
+    for (var i = 0; i <= na.length - 2; i++) {
+        var sub = na.substring(i, i + 2);
+        if (!/^[가-힣]{2}$/.test(sub)) continue;
+        if (nb.indexOf(sub) >= 0) return true;
+    }
+    return false;
+}
 function _cdApplyFinOptImages(adminItems) {
     if (!adminItems || !adminItems.length) return;
-    function firstKr(s){ var m = (s||'').match(/[가-힣]+/); return m ? m[0].substring(0,2) : ''; }
     var cards = document.querySelectorAll('.fin-opt[data-name]');
     var applied = 0;
+    // 이미지 있는 admin 만 후보로 추림
+    var pool = adminItems.filter(function(a){ return _cdGetThumb(a); });
     cards.forEach(function(card){
         var optName = card.getAttribute('data-name') || '';
         if (!optName) return;
-        var key = firstKr(optName);
-        if (!key) return;
         var match = null;
-        for (var i = 0; i < adminItems.length; i++) {
-            var a = adminItems[i];
+        for (var i = 0; i < pool.length; i++) {
+            var a = pool[i];
             var aName = a.name_kr || a.name || '';
-            var thumb = _cdGetThumb(a);
-            if (firstKr(aName) === key && thumb) { match = a; break; }
+            if (_shareKrBigram(optName, aName)) { match = a; break; }
         }
         if (!match) return;
         if (card.querySelector('.fin-opt-img')) return;
@@ -661,10 +679,11 @@ function _cdApplyFinOptImages(adminItems) {
         img.src = _cdGetThumb(match);
         img.alt = optName;
         img.loading = 'lazy';
+        img.onerror = function(){ this.style.display = 'none'; };
         card.insertBefore(img, card.firstChild);
         applied++;
     });
-    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards from', adminItems.length, 'admin items');
+    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards (pool:', pool.length, '/', adminItems.length, ')');
 }
 window._cdApplyFinOptImages = _cdApplyFinOptImages;
 
