@@ -5704,6 +5704,9 @@ function scrollHotdeal(gridId, dir) {
         .me-size-btn.active { background:#1d1d1f; color:#fff; }
         .me-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
         /* 2026-06-15: PC 툴바 — 아이콘과 글씨 사이 간격 8px (이전 5px 은 너무 붙어보임). */
+        /* 2026-06-18 v610: 배경 잠금 시각 표시 — 잠긴 배경은 살짝 어둡게, 호버 시 안내 */
+        .me-item.me-bg-locked { pointer-events:none; }
+        .me-item.me-bg-locked::after { content:""; position:absolute; inset:0; border:1.5px dashed rgba(56,189,248,0.45); border-radius:2px; pointer-events:none; }
         .me-tool-btn { padding:8px 14px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; font-family:inherit; transition:background .18s, color .18s; letter-spacing:-0.2px; display:inline-flex; align-items:center; gap:8px; }
         .me-tool-btn:hover { background:rgba(120,120,128,0.18); }
         .me-tool-btn.accent { background:#FFCC00; color:#1d1d1f; }
@@ -5881,6 +5884,8 @@ function scrollHotdeal(gridId, dir) {
                 <!-- Row 3 -->
                 <button type="button" class="me-tool-btn me-r3" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
                 <button type="button" class="me-tool-btn me-r3" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
+                <!-- 2026-06-18 v610: 배경 잠금 풀기 (잠긴 배경이 있을 때만 노출) -->
+                <button type="button" class="me-tool-btn me-r3" id="meUnlockBgBtn" onclick="window._meUnlockBackground && window._meUnlockBackground()" style="display:none; background:#fff; color:#0369a1; border:1.5px solid #7dd3fc;" title="배경 잠금 풀기"><i class="fa-solid fa-lock-open me-tb-ic"></i><span class="me-tb-lbl">배경풀기</span></button>
                 <label class="me-color-wrap me-r3" title="배경색" style="white-space:nowrap;"><input type="color" id="meBgColor" value="#ffffff" oninput="window._meSetBg(this.value)"><span data-i18n="me_bg" class="me-tb-lbl">배경</span></label>
                 <!-- 도형 그룹 (네모/동그라미) — 한 칸 차지 -->
                 <span class="me-tool-shape-group me-r3">
@@ -7180,8 +7185,10 @@ function scrollHotdeal(gridId, dir) {
         it.el.addEventListener('pointerdown', function(ev){
             if (ev.target.classList && (ev.target.classList.contains('me-handle') || ev.target.classList.contains('me-del'))) return;
             if (ev.button === 2) return;
-            // 2026-06-17 v539: 템플릿 슬롯 — 위치/크기 잠금. 드래그 차단 (텍스트 더블클릭 편집은 별도 핸들러로 가능).
+            // 2026-06-17 v539: 템플릿 슬롯 — 위치/크기 잠금. 드래그 차단.
             if (it._isTemplateSlot) return;
+            // 2026-06-18 v610: SVG import 배경 — 잠긴 상태에선 선택/드래그 모두 차단.
+            if (it._isBackground) { ev.preventDefault(); return; }
             var isEditing = it.el.getAttribute('contenteditable') === 'true';
             sx = ev.clientX; sy = ev.clientY;
             sLeft = it.x; sTop = it.y;
@@ -8746,7 +8753,87 @@ function scrollHotdeal(gridId, dir) {
 
             _meSnapshot();
 
+            // 2026-06-18 v610: <text> 만 포함된 그룹 또는 직접 <text> 노드인지 판별
+            function _isTextOnly(node) {
+                var tn = node.nodeName.toLowerCase();
+                if (tn === 'text') return true;
+                if (tn !== 'g') return false;
+                var hasText = false;
+                for (var ii = 0; ii < node.children.length; ii++) {
+                    var ct = node.children[ii].nodeName.toLowerCase();
+                    if (ct === 'text') { hasText = true; continue; }
+                    if (ct === 'title' || ct === 'desc' || ct === 'metadata') continue;
+                    return false; // text 외 요소 있음 → 이미지로 처리
+                }
+                return hasText;
+            }
+
+            // 2026-06-18 v610: SVG <text> 노드에서 편집 가능한 텍스트 메타 추출
+            function _extractTextFromSvg(node, renderedNode, bbox) {
+                var textEl = (node.nodeName.toLowerCase() === 'text') ? node : node.querySelector('text');
+                var renderedText = (renderedNode.nodeName.toLowerCase() === 'text') ? renderedNode : renderedNode.querySelector('text');
+                if (!textEl || !renderedText) return null;
+                // 줄별 텍스트 (tspan 단위)
+                var tspans = textEl.querySelectorAll('tspan');
+                var text;
+                if (tspans.length > 0) {
+                    var lines = [];
+                    tspans.forEach(function(ts){ lines.push(ts.textContent || ''); });
+                    text = lines.join('\n');
+                } else {
+                    text = textEl.textContent || '';
+                }
+                text = text.replace(/\s+/g, ' ').trim();
+                if (!text) return null;
+                // computed style — 일러스트가 inline style 로 다 넣어주므로 정확
+                var cs = (typeof window.getComputedStyle === 'function') ? window.getComputedStyle(renderedText) : null;
+                var fam = (cs && cs.fontFamily) || textEl.getAttribute('font-family') || 'sans-serif';
+                var size = parseFloat((cs && cs.fontSize) || textEl.getAttribute('font-size') || '16');
+                var weight = (cs && cs.fontWeight) || textEl.getAttribute('font-weight') || 'normal';
+                var fill = (cs && cs.fill) || textEl.getAttribute('fill') || '#000';
+                var anchor = (cs && cs.textAnchor) || textEl.getAttribute('text-anchor') || 'start';
+                // SVG text-anchor → 우리 textAlign
+                var align = (anchor === 'middle') ? 'center' : (anchor === 'end') ? 'right' : 'left';
+                // fontFamily 정규화 (공백 있으면 따옴표)
+                fam = fam.split(',')[0].trim().replace(/['"]/g, '');
+                var famStr = /\s/.test(fam) ? '"' + fam + '"' : fam;
+                return {
+                    text: text,
+                    fontSize: size * fitScale,
+                    fontFamily: famStr,
+                    fill: fill,
+                    textAlign: align,
+                    fontWeight: weight
+                };
+            }
+
+            // 2026-06-18 v610: 추출된 텍스트 메타로 me.items 에 편집 가능한 text 항목 직접 생성
+            function _addExtractedText(meta, pos) {
+                var el = document.createElement('div');
+                el.className = 'me-item text';
+                el.style.zIndex = (++me.zCounter);
+                el.textContent = meta.text;
+                me.stage.appendChild(el);
+                var it = {
+                    el: el, type: 'text',
+                    x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+                    text: meta.text,
+                    fill: meta.fill,
+                    fontSize: Math.max(10, meta.fontSize),
+                    fontFamily: meta.fontFamily,
+                    fontWeight: (meta.fontWeight === 'bold' || +meta.fontWeight >= 600) ? 'bold' : 'normal',
+                    letterSpacing: 0,
+                    lineHeight: 1.2,
+                    textAlign: meta.textAlign
+                };
+                me.items.push(it);
+                _meSyncItemDisplay(it);
+                _meBindDrag(it);
+                return it;
+            }
+
             var added = 0;
+            var firstItem = null;
             try {
                 topChildren.forEach(function(child, idx) {
                     // rendered 안에서 같은 인덱스의 (skip 태그 제외) 자식 찾기
@@ -8763,26 +8850,50 @@ function scrollHotdeal(gridId, dir) {
                     try { bb = renderedChild.getBBox(); } catch (e) { return; }
                     if (!bb || (bb.width === 0 && bb.height === 0)) return;
 
-                    // 이 그룹만 담은 stand-alone SVG 생성 (viewBox = 그룹 bbox)
-                    var partSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
-                                + 'viewBox="' + bb.x + ' ' + bb.y + ' ' + bb.width + ' ' + bb.height + '" '
-                                + 'width="' + bb.width + '" height="' + bb.height + '">'
-                                + defsHtml + child.outerHTML + '</svg>';
-                    var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
-
-                    // 캔버스 좌표 계산 — SVG bbox 를 fit 변환
                     var x = (bb.x - vbX) * fitScale + offX;
                     var y = (bb.y - vbY) * fitScale + offY;
                     var w = bb.width * fitScale;
                     var h = bb.height * fitScale;
-                    window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: w, h: h } });
+
+                    var newItem;
+
+                    // 2026-06-18 v610: 텍스트 노드는 편집 가능한 me-item text 로 추출
+                    if (_isTextOnly(child)) {
+                        var tmeta = _extractTextFromSvg(child, renderedChild, bb);
+                        if (tmeta) {
+                            newItem = _addExtractedText(tmeta, { x: x, y: y, w: w, h: h });
+                        }
+                    }
+
+                    // 텍스트가 아니거나 추출 실패 시 → 이미지로 처리 (그룹 단위)
+                    if (!newItem) {
+                        var partSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                                    + 'viewBox="' + bb.x + ' ' + bb.y + ' ' + bb.width + ' ' + bb.height + '" '
+                                    + 'width="' + bb.width + '" height="' + bb.height + '">'
+                                    + defsHtml + child.outerHTML + '</svg>';
+                        var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
+                        window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: w, h: h } });
+                        // 방금 추가된 항목 = me.items 마지막
+                        newItem = me.items[me.items.length - 1];
+                    }
+                    if (!firstItem && newItem) firstItem = newItem;
                     added++;
                 });
             } finally {
                 tmp.remove();
             }
 
-            console.log('[svg upload] split into', added, '/', topChildren.length, 'items');
+            // 2026-06-18 v610: 첫 번째 (가장 뒤쪽) 항목 = 배경 → 잠금 처리
+            if (firstItem) {
+                firstItem._isBackground = true;
+                if (firstItem.el) {
+                    firstItem.el.style.cursor = 'default';
+                    firstItem.el.classList.add('me-bg-locked');
+                }
+                _meUpdateUnlockBgBtn();
+            }
+
+            console.log('[svg upload] split into', added, '/', topChildren.length, 'items; bg locked:', !!firstItem);
             if (added === 0) {
                 // 전부 실패 — 통째 import 로 폴백
                 var fb3 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
@@ -8793,6 +8904,29 @@ function scrollHotdeal(gridId, dir) {
             var fbErr = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
             window._meAddImage(fbErr, { fitCanvas: true });
         }
+    };
+
+    // 2026-06-18 v610: 배경 잠금 풀기 버튼 — 잠긴 배경이 있을 때만 활성/노출.
+    function _meUpdateUnlockBgBtn() {
+        var btn = document.getElementById('meUnlockBgBtn');
+        if (!btn) return;
+        var hasLocked = (me.items || []).some(function(it){ return it && it._isBackground; });
+        btn.style.display = hasLocked ? '' : 'none';
+    }
+    window._meUpdateUnlockBgBtn = _meUpdateUnlockBgBtn;
+
+    window._meUnlockBackground = function() {
+        _meSnapshot();
+        (me.items || []).forEach(function(it) {
+            if (it && it._isBackground) {
+                it._isBackground = false;
+                if (it.el) {
+                    it.el.style.cursor = '';
+                    it.el.classList.remove('me-bg-locked');
+                }
+            }
+        });
+        _meUpdateUnlockBgBtn();
     };
 
     window._meAddImage = function(src, opts) {
