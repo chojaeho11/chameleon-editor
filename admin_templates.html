@@ -15,7 +15,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:var(--gray-50); color:v
 header { background:var(--gray-900); color:#fff; padding:14px 22px; display:flex; align-items:center; gap:16px; }
 header h1 { font-size:18px; font-weight:900; flex:1; }
 header .meta { font-size:11.5px; color:#94a3b8; }
-.container { max-width:1400px; margin:18px auto; padding:0 18px; display:grid; grid-template-columns:340px 1fr; gap:18px; }
+.container { max-width:1200px; margin:18px auto; padding:0 18px; }
 .panel { background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,0.06); padding:18px; }
 .panel h2 { font-size:14px; font-weight:900; color:var(--brand-dark); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
 .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:none; border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; background:var(--brand); color:#fff; transition:filter .15s; }
@@ -27,40 +27,27 @@ header .meta { font-size:11.5px; color:#94a3b8; }
 .btn-sm { padding:6px 10px; font-size:11.5px; }
 .field { margin-bottom:14px; }
 .field label { display:block; font-size:11.5px; font-weight:800; color:var(--gray-700); margin-bottom:6px; letter-spacing:.02em; }
-.field input, .field select, .field textarea { width:100%; padding:9px 11px; border:1.5px solid var(--gray-200); border-radius:8px; font-size:13px; font-family:inherit; }
-.field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--brand); }
-.tpl-list { display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:6px; }
-.tpl-item { display:flex; align-items:center; gap:10px; padding:8px; background:var(--gray-50); border:1.5px solid transparent; border-radius:10px; cursor:pointer; transition:border-color .15s; }
-.tpl-item:hover { border-color:var(--brand); }
-.tpl-item.active { border-color:var(--brand); background:#f3f0ff; }
-.tpl-item img { width:44px; height:44px; border-radius:6px; object-fit:cover; background:#fff; border:1px solid var(--gray-200); flex-shrink:0; }
-.tpl-item .tpl-info { flex:1; min-width:0; }
-.tpl-item .tpl-name { font-size:12.5px; font-weight:800; color:var(--gray-900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tpl-item .tpl-meta { font-size:10.5px; color:var(--gray-500); margin-top:2px; }
-.tpl-empty { padding:20px; text-align:center; color:var(--gray-500); font-size:12px; }
-.editor-area { display:flex; flex-direction:column; gap:14px; }
-.canvas-wrap { background:var(--gray-100); border-radius:12px; padding:14px; display:flex; align-items:center; justify-content:center; min-height:480px; position:relative; }
-.canvas-stage { position:relative; background:#fff; box-shadow:0 4px 20px rgba(15,23,42,0.1); }
-.canvas-stage img.bg { display:block; max-width:100%; max-height:560px; pointer-events:none; user-select:none; }
-.slot { position:absolute; border:2px dashed var(--brand); background:rgba(124,58,237,0.08); cursor:move; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding:4px; }
-.slot.active { border-color:var(--red); background:rgba(220,38,38,0.12); }
-.slot.image-slot { background:rgba(34,197,94,0.08); border-color:var(--green); }
-.slot.image-slot.active { background:rgba(220,38,38,0.12); border-color:var(--red); }
-.slot .slot-label { font-size:10.5px; font-weight:800; color:var(--gray-900); pointer-events:none; user-select:none; text-shadow:0 0 4px rgba(255,255,255,0.85); white-space:nowrap; overflow:hidden; max-width:100%; }
-.slot .handle { position:absolute; width:12px; height:12px; background:var(--red); border:2px solid #fff; border-radius:50%; cursor:nwse-resize; bottom:-6px; right:-6px; }
-.slot .del { position:absolute; top:-10px; right:-10px; width:20px; height:20px; background:var(--gray-900); color:#fff; border:none; border-radius:50%; font-size:11px; cursor:pointer; line-height:1; }
-.empty-canvas { padding:60px 30px; color:var(--gray-500); text-align:center; }
-.empty-canvas i { font-size:48px; opacity:0.3; margin-bottom:12px; display:block; }
-.action-bar { display:flex; gap:10px; padding:14px; background:#fff; border-radius:12px; flex-wrap:wrap; align-items:center; }
-.slot-props { background:#fff; border-radius:12px; padding:14px; display:none; }
-.slot-props.visible { display:block; }
-.slot-props h3 { font-size:12.5px; font-weight:900; color:var(--brand-dark); margin-bottom:10px; }
-.slot-props .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.upload-zone { border:2px dashed var(--gray-300); border-radius:10px; padding:30px 20px; text-align:center; background:var(--gray-50); cursor:pointer; transition:background .15s, border-color .15s; }
-.upload-zone:hover { background:#f3f0ff; border-color:var(--brand); }
-.upload-zone i { font-size:32px; color:var(--gray-300); display:block; margin-bottom:8px; }
-.upload-zone p { font-size:12.5px; color:var(--gray-500); }
+.field input, .field select { width:100%; padding:9px 11px; border:1.5px solid var(--gray-200); border-radius:8px; font-size:13px; font-family:inherit; }
+.field input:focus, .field select:focus { outline:none; border-color:var(--brand); }
+
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+.toolbar .field { margin-bottom:0; flex:1; min-width:240px; }
+
+.tpl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+.tpl-card { background:#fff; border:1.5px solid var(--gray-200); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; transition:border-color .15s, box-shadow .15s; }
+.tpl-card:hover { border-color:var(--brand); box-shadow:0 4px 14px rgba(124,58,237,0.15); }
+.tpl-card .thumb { aspect-ratio:5/3; background:var(--gray-100); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.tpl-card .thumb img { width:100%; height:100%; object-fit:contain; }
+.tpl-card .body { padding:12px 14px; flex:1; display:flex; flex-direction:column; gap:6px; }
+.tpl-card .name { font-size:13.5px; font-weight:900; color:var(--gray-900); }
+.tpl-card .meta { font-size:11px; color:var(--gray-500); line-height:1.5; }
+.tpl-card .footer { padding:10px 12px; border-top:1px solid var(--gray-100); display:flex; gap:8px; }
+.tpl-card .footer .btn { flex:1; justify-content:center; }
+.tpl-empty { padding:60px 20px; text-align:center; color:var(--gray-500); font-size:13px; }
+.tpl-empty i { font-size:42px; opacity:0.3; display:block; margin-bottom:10px; }
+
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 22px; background:var(--gray-900); color:#fff; border-radius:24px; font-size:13px; font-weight:700; z-index:99999; box-shadow:0 10px 30px rgba(15,23,42,0.3); }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
 </style>
 </head>
 <body>
@@ -71,167 +58,51 @@ header .meta { font-size:11.5px; color:#94a3b8; }
 </header>
 
 <div class="container">
-    <!-- 좌측: 카테고리 필터 + 목록 + 신규 -->
-    <div class="panel">
-        <h2><i class="fa-solid fa-folder"></i> 카테고리</h2>
-        <div class="field">
-            <label>상품 카테고리 <span style="color:var(--gray-500); font-weight:600;">(DB 실시간 로드)</span></label>
-            <select id="filterCategory" onchange="loadTemplates()">
-                <option value="">로딩 중...</option>
-            </select>
-            <div style="font-size:10.5px; color:var(--gray-500); margin-top:6px; line-height:1.45;">⚠️ 카테고리는 <b>admin_products.category</b> 의 실제 값입니다. 잘못 선택하면 고객 페이지에서 매칭 안 됨.</div>
+    <div class="panel" style="margin-bottom:16px;">
+        <div style="background:#f3f0ff; border-left:4px solid var(--brand); padding:12px 14px; border-radius:8px; margin-bottom:14px;">
+            <div style="font-size:13px; font-weight:800; color:var(--brand-dark); margin-bottom:4px;">
+                <i class="fa-solid fa-circle-info"></i> 템플릿 등록 안내
+            </div>
+            <div style="font-size:12px; color:var(--gray-700); line-height:1.55;">
+                새 템플릿은 <b>상품 페이지의 미니에디터</b> 에서 자유롭게 디자인 후 등록합니다.<br>
+                관리자 계정으로 로그인 → 상품 페이지 진입 → 디자인 → <b>「💾 템플릿으로 저장」</b> 버튼.<br>
+                이 페이지에서는 등록된 템플릿을 <b>확인 / 삭제</b> 만 가능합니다.
+            </div>
         </div>
-        <div class="field" id="customCategoryField" style="display:none;">
-            <label>커스텀 카테고리 코드</label>
-            <input type="text" id="customCategory" placeholder="예: pp_st_a4" oninput="loadTemplates()">
+        <div class="toolbar">
+            <div class="field">
+                <label>상품 카테고리 필터 <span style="color:var(--gray-500); font-weight:600;">(DB 실시간 로드)</span></label>
+                <select id="filterCategory" onchange="onCategoryChange()">
+                    <option value="">로딩 중...</option>
+                </select>
+            </div>
+            <div class="field" id="customCategoryField" style="display:none;">
+                <label>커스텀 카테고리</label>
+                <input type="text" id="customCategory" placeholder="예: pp_st_a4" oninput="loadTemplates()">
+            </div>
+            <button id="btnReviewPending" class="btn" style="background:#ef4444; align-self:end; height:38px;" onclick="openPendingReview()">
+                <i class="fa-solid fa-gavel"></i> 디자이너 검토 대기
+                <span id="pendingBadge" style="background:#fff; color:#ef4444; border-radius:980px; padding:1px 7px; margin-left:4px; font-size:11px; font-weight:900;">0</span>
+            </button>
         </div>
-        <button class="btn" style="width:100%; margin-bottom:8px;" onclick="newTemplateInEditor()"><i class="fa-solid fa-wand-magic-sparkles"></i> 에디터로 새 템플릿 만들기</button>
-        <button class="btn btn-secondary" style="width:100%; font-size:11.5px; margin-bottom:6px;" onclick="newTemplate()" title="간이 등록 (slot 좌표 직접 지정)"><i class="fa-solid fa-plus"></i> (구) 간이 등록</button>
-        <button id="btnReviewPending" class="btn" style="width:100%; background:#ef4444; font-weight:900; margin-top:6px;" onclick="openPendingReview()"><i class="fa-solid fa-gavel"></i> 디자이너 검토 대기 <span id="pendingBadge" style="background:#fff; color:#ef4444; border-radius:980px; padding:1px 7px; margin-left:4px; font-size:11px;">0</span></button>
-        <hr style="border:none; border-top:1px solid var(--gray-200); margin:14px 0;">
-        <h2 style="margin-top:0;"><i class="fa-solid fa-list"></i> 등록된 템플릿</h2>
-        <div id="tplList" class="tpl-list"><div class="tpl-empty">카테고리를 선택하세요</div></div>
     </div>
 
-    <!-- 우측: 편집 영역 -->
-    <div>
-        <div class="action-bar" id="actionBar" style="display:none;">
-            <input type="text" id="tplName" placeholder="템플릿 이름 (예: 깔끔한 가로 명함)" style="flex:1; padding:9px 12px; border:1.5px solid var(--gray-200); border-radius:8px; font-size:13px;">
-            <button class="btn" onclick="addTextSlot()"><i class="fa-solid fa-font"></i> 텍스트 슬롯 추가</button>
-            <button class="btn btn-success" onclick="addImageSlot()"><i class="fa-solid fa-image"></i> 이미지 슬롯 추가</button>
-            <button class="btn" style="background:var(--gray-700);" onclick="saveTemplate()"><i class="fa-solid fa-save"></i> 저장</button>
-            <button class="btn btn-danger" id="delBtn" style="display:none;" onclick="deleteTemplate()"><i class="fa-solid fa-trash"></i> 삭제</button>
-        </div>
-
-        <div class="panel editor-area" id="editorArea">
-            <div class="canvas-wrap" id="canvasWrap">
-                <div class="empty-canvas">
-                    <i class="fa-solid fa-image"></i>
-                    <p style="font-size:13px; font-weight:700; color:var(--gray-700); margin-bottom:6px;">템플릿을 선택하거나 새로 등록하세요</p>
-                    <p style="font-size:11.5px;">좌측 목록에서 클릭 또는 <b>신규 템플릿 등록</b> 버튼</p>
-                </div>
-            </div>
-
-            <div id="uploadField" style="display:none;">
-                <div class="upload-zone" onclick="document.getElementById('bgFile').click();" ondragover="event.preventDefault(); this.style.background='#f3f0ff';" ondragleave="this.style.background='var(--gray-50)';" ondrop="onDrop(event)">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <p><b>PNG · JPG · PDF · SVG</b> 파일을 끌어다 놓거나 클릭해서 선택</p>
-                    <p style="font-size:11px; margin-top:6px; opacity:0.7;">PDF/SVG 는 자동으로 고해상도 PNG 로 변환됩니다 · 최대 20MB · 첫 페이지만</p>
-                </div>
-                <input type="file" id="bgFile" accept="image/png,image/jpeg,application/pdf,image/svg+xml,.pdf,.svg" style="display:none;" onchange="onFileSelect(event)">
-            </div>
-
-            <div class="slot-props" id="slotProps">
-                <h3 id="slotPropsTitle"><i class="fa-solid fa-sliders"></i> 선택한 슬롯</h3>
-                <div class="row">
-                    <div class="field"><label>X (px)</label><input type="number" id="propX" oninput="updateSlotPos()"></div>
-                    <div class="field"><label>Y (px)</label><input type="number" id="propY" oninput="updateSlotPos()"></div>
-                    <div class="field"><label>W (px)</label><input type="number" id="propW" oninput="updateSlotPos()"></div>
-                    <div class="field"><label>H (px)</label><input type="number" id="propH" oninput="updateSlotPos()"></div>
-                </div>
-                <div id="textProps">
-                    <div class="field"><label>기본 텍스트</label><input type="text" id="propText" oninput="updateSlotText()"></div>
-                    <div class="row">
-                        <div class="field"><label>폰트 (한글)</label><select id="propFont" onchange="onFontChange()"></select></div>
-                        <div class="field"><label>크기 (px)</label><input type="number" id="propSize" value="24" oninput="updateSlotText()"></div>
-                    </div>
-                    <div class="row">
-                        <div class="field"><label>색상</label><input type="color" id="propColor" value="#000000" oninput="updateSlotText()"></div>
-                        <div class="field"><label>정렬</label><select id="propAlign" onchange="updateSlotText()"><option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option></select></div>
-                    </div>
-                </div>
-            </div>
+    <div class="panel">
+        <h2 style="margin-bottom:14px;"><i class="fa-solid fa-list"></i> 등록된 템플릿 <span id="tplCount" style="font-size:12px; color:var(--gray-500); font-weight:600; margin-left:6px;"></span></h2>
+        <div id="tplGrid" class="tpl-grid">
+            <div class="tpl-empty"><i class="fa-solid fa-image"></i>카테고리를 선택하세요</div>
         </div>
     </div>
 </div>
 
 <script>
-// 2026-06-17 v541: index.html 의 ME_GOOGLE_FONTS['KR'] 와 동일한 한글 폰트 목록.
-//   고객 페이지가 같은 폰트로 렌더하므로 admin 에서도 동일 폰트 미리보기/선택.
-const KR_FONTS = [
-    { name:'기본 (Sans)', family:'sans-serif', weights:null },
-    { name:'노토 산스', family:'Noto Sans KR', weights:'400;700;900' },
-    { name:'나눔고딕', family:'Nanum Gothic', weights:'400;700;800' },
-    { name:'나눔명조', family:'Nanum Myeongjo', weights:'400;700' },
-    { name:'검은고딕', family:'Black Han Sans', weights:'400' },
-    { name:'나눔펜스크립트', family:'Nanum Pen Script', weights:'400' },
-    { name:'도현', family:'Do Hyeon', weights:'400' },
-    { name:'주아', family:'Jua', weights:'400' },
-    { name:'싱글데이', family:'Single Day', weights:'400' },
-    { name:'고틱 A1', family:'Gothic A1', weights:'400;700;900' },
-    { name:'하이멜로디', family:'Hi Melody', weights:'400' },
-    { name:'감자꽃', family:'Gamja Flower', weights:'400' },
-    { name:'귀여운글씨', family:'Cute Font', weights:'400' },
-    { name:'동해독도', family:'East Sea Dokdo', weights:'400' },
-    { name:'개구쟁이', family:'Gaegu', weights:'400;700' },
-    { name:'블랙앤화이트', family:'Black And White Picture', weights:'400' },
-    { name:'송명체', family:'Song Myung', weights:'400' },
-    { name:'스타일리쉬', family:'Stylish', weights:'400' },
-    { name:'시적인', family:'Poor Story', weights:'400' },
-    { name:'연성', family:'Yeon Sung', weights:'400' },
-    { name:'고운돋움', family:'Gowun Dodum', weights:'400' },
-    { name:'고운바탕', family:'Gowun Batang', weights:'400;700' },
-    { name:'나눔브러쉬', family:'Nanum Brush Script', weights:'400' },
-    { name:'IBM 플렉스 산스', family:'IBM Plex Sans KR', weights:'400;700' },
-    { name:'노토 세리프', family:'Noto Serif KR', weights:'400;700;900' },
-    { name:'해바라기', family:'Sunflower', weights:'500;700' },
-    { name:'동글', family:'Dongle', weights:'400;700' },
-    { name:'함렛', family:'Hahmlet', weights:'400;700;900' },
-    { name:'구기', family:'Gugi', weights:'400' },
-    { name:'독도', family:'Dokdo', weights:'400' },
-    { name:'기랑해랑', family:'Kirang Haerang', weights:'400' },
-    { name:'거석체', family:'Gasoek One', weights:'400' },
-    { name:'베이글팻원', family:'Bagel Fat One', weights:'400' },
-    { name:'오르빗', family:'Orbit', weights:'400' },
-    { name:'제주명조', family:'Jeju Myeongjo', weights:'400' },
-    { name:'제주고딕', family:'Jeju Gothic', weights:'400' },
-    { name:'제주한라산', family:'Jeju Hallasan', weights:'400' }
-];
-const _loadedFonts = {};
-function loadGoogleFont(family, weights) {
-    if (!family || family === 'sans-serif' || family === 'serif') return;
-    if (_loadedFonts[family]) return;
-    _loadedFonts[family] = true;
-    const famUrl = family.replace(/ /g, '+');
-    let url = 'https://fonts.googleapis.com/css2?family=' + famUrl;
-    if (weights) url += ':wght@' + weights;
-    url += '&display=swap';
-    const link = document.createElement('link');
-    link.rel = 'stylesheet'; link.href = url;
-    document.head.appendChild(link);
-}
-// 폰트 셀렉트박스 초기 채우기 + 모든 폰트 미리 로드 (옵션 hover 시 즉시 렌더)
-function populateFontSelect() {
-    const sel = document.getElementById('propFont');
-    if (!sel) return;
-    sel.innerHTML = KR_FONTS.map(f =>
-        `<option value="${f.family}" style="font-family:'${f.family}', sans-serif;">${f.name}</option>`
-    ).join('');
-    // 모든 폰트 백그라운드 로드 (가벼움 — CSS 만)
-    KR_FONTS.forEach(f => loadGoogleFont(f.family, f.weights));
-}
-function onFontChange() {
-    const sel = document.getElementById('propFont');
-    const fontFam = sel.value;
-    const fontInfo = KR_FONTS.find(f => f.family === fontFam);
-    if (fontInfo) loadGoogleFont(fontInfo.family, fontInfo.weights);
-    updateSlotText();
-}
-
 const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
     auth: { persistSession:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' }
 });
 
-let state = {
-    user: null,
-    template: null,     // 현재 편집중인 row { id?, name, ..., slots:[] }
-    bgImageEl: null,    // DOM <img> reference
-    bgImageWidth: 0,    // natural width (px)
-    bgImageHeight: 0,
-    selectedSlotIdx: -1
-};
+let state = { user: null };
 
 function toast(msg, ms=2200) {
     const t = document.createElement('div');
@@ -239,10 +110,7 @@ function toast(msg, ms=2200) {
     document.body.appendChild(t);
     setTimeout(() => t.remove(), ms);
 }
-
-document.getElementById('filterCategory').addEventListener('change', e => {
-    document.getElementById('customCategoryField').style.display = e.target.value === 'OTHER' ? '' : 'none';
-});
+function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
 
 (async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -252,7 +120,6 @@ document.getElementById('filterCategory').addEventListener('change', e => {
         return;
     }
     state.user = session.user;
-    // role 확인
     const { data: prof } = await sb.from('profiles').select('username,role').eq('id', session.user.id).maybeSingle();
     if (!prof || prof.role !== 'admin') {
         toast('관리자만 접근 가능합니다.', 4000);
@@ -260,13 +127,109 @@ document.getElementById('filterCategory').addEventListener('change', e => {
         return;
     }
     document.getElementById('hdrUser').textContent = `${prof.username || session.user.email} (admin)`;
-    populateFontSelect();
     await loadCategories();
     loadTemplates();
     refreshPendingBadge();
 })();
 
-// 2026-06-17 v543: 디자이너 검토 대기 카운트 — pending 상태 row 개수 표시.
+async function loadCategories() {
+    try {
+        const { data, error } = await sb.from('admin_templates')
+            .select('product_category')
+            .eq('status', 'approved')
+            .order('product_category');
+        if (error) throw error;
+        const cats = [...new Set((data || []).map(r => r.product_category).filter(Boolean))];
+        const sel = document.getElementById('filterCategory');
+        sel.innerHTML = '<option value="">전체</option>'
+            + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')
+            + '<option value="OTHER">직접 입력</option>';
+    } catch(e) {
+        console.warn('[loadCategories]', e);
+        toast('카테고리 로드 실패');
+    }
+}
+
+function onCategoryChange() {
+    const v = document.getElementById('filterCategory').value;
+    document.getElementById('customCategoryField').style.display = v === 'OTHER' ? '' : 'none';
+    loadTemplates();
+}
+
+function getCategory() {
+    const sel = document.getElementById('filterCategory').value;
+    if (sel === 'OTHER') return (document.getElementById('customCategory').value || '').trim();
+    return sel;
+}
+
+async function loadTemplates() {
+    const grid = document.getElementById('tplGrid');
+    const countEl = document.getElementById('tplCount');
+    grid.innerHTML = '<div class="tpl-empty"><i class="fa-solid fa-spinner fa-spin"></i>불러오는 중...</div>';
+    try {
+        const cat = getCategory();
+        let q = sb.from('admin_templates').select('*').eq('status', 'approved').order('id', { ascending: false });
+        if (cat) q = q.eq('product_category', cat);
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || !data.length) {
+            grid.innerHTML = '<div class="tpl-empty"><i class="fa-solid fa-folder-open"></i>등록된 템플릿이 없습니다.</div>';
+            countEl.textContent = '';
+            return;
+        }
+        countEl.textContent = `(${data.length}개)`;
+        grid.innerHTML = data.map(t => {
+            const thumb = t.thumbnail_url || t.background_url || '';
+            const meta = [
+                t.product_category || '?',
+                t.product_code ? `<span style="color:var(--brand);">${escapeHtml(t.product_code)}</span>` : null,
+                (t.width_mm && t.height_mm) ? `${t.width_mm}×${t.height_mm}mm` : null,
+                `슬롯 ${(t.slots||[]).length}개`,
+                t.site_code || null
+            ].filter(Boolean).join(' · ');
+            return `
+                <div class="tpl-card" data-id="${t.id}">
+                    <div class="thumb">${thumb ? `<img src="${escapeHtml(thumb)}" alt="">` : '<i class="fa-solid fa-image" style="font-size:32px; color:var(--gray-300);"></i>'}</div>
+                    <div class="body">
+                        <div class="name">${escapeHtml(t.name || '(이름 없음)')}</div>
+                        <div class="meta">${meta}</div>
+                    </div>
+                    <div class="footer">
+                        ${thumb ? `<a href="${escapeHtml(thumb)}" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-up-right-from-square"></i> 원본</a>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id}, this)"><i class="fa-solid fa-trash"></i> 삭제</button>
+                    </div>
+                </div>`;
+        }).join('');
+    } catch(e) {
+        console.error('[loadTemplates]', e);
+        grid.innerHTML = `<div class="tpl-empty" style="color:var(--red);">불러오기 실패: ${escapeHtml(e.message || String(e))}</div>`;
+        countEl.textContent = '';
+    }
+}
+
+async function deleteTemplate(id, btn) {
+    if (!confirm('정말 삭제할까요?\n\n이 템플릿은 고객 페이지에서 즉시 사라집니다.')) return;
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 삭제 중...'; }
+    try {
+        const { error } = await sb.from('admin_templates').delete().eq('id', id);
+        if (error) throw error;
+        toast('✅ 삭제되었습니다.');
+        const card = document.querySelector(`.tpl-card[data-id="${id}"]`);
+        if (card) card.remove();
+        // 카운트 갱신
+        const remaining = document.querySelectorAll('.tpl-card').length;
+        document.getElementById('tplCount').textContent = remaining ? `(${remaining}개)` : '';
+        if (!remaining) {
+            document.getElementById('tplGrid').innerHTML = '<div class="tpl-empty"><i class="fa-solid fa-folder-open"></i>등록된 템플릿이 없습니다.</div>';
+        }
+    } catch(e) {
+        console.error('[deleteTemplate]', e);
+        alert('삭제 실패: ' + (e.message || e));
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> 삭제'; }
+    }
+}
+
+// ────────────────────── 디자이너 검토 큐 (별개 흐름) ──────────────────────
 async function refreshPendingBadge() {
     try {
         const { count, error } = await sb.from('admin_templates')
@@ -277,8 +240,6 @@ async function refreshPendingBadge() {
         if (badge) {
             badge.textContent = count || 0;
             if (count > 0) {
-                badge.style.background = '#fff';
-                badge.style.color = '#ef4444';
                 document.getElementById('btnReviewPending').style.animation = 'pulse 1.5s infinite';
             }
         }
@@ -322,7 +283,6 @@ async function loadPendingReviewList() {
             g.innerHTML = '<div style="text-align:center; padding:60px 20px; color:#94a3b8; font-size:13px;">검토 대기 중인 템플릿이 없습니다.</div>';
             return;
         }
-        // 디자이너 정보 동시 로드
         const designerIds = [...new Set(data.map(d => d.submitted_by).filter(Boolean))];
         let profMap = {};
         if (designerIds.length) {
@@ -338,571 +298,70 @@ async function loadPendingReviewList() {
                 <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:14px; margin-bottom:14px;">
                     <div style="display:grid; grid-template-columns:160px 1fr; gap:14px; align-items:start;">
                         <div style="aspect-ratio:1/1; background:#fff; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                            <img src="${t.thumbnail_url || t.background_url}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                            <img src="${escapeHtml(t.thumbnail_url || t.background_url || '')}" style="max-width:100%; max-height:100%; object-fit:contain;">
                         </div>
                         <div>
                             <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:4px;">${escapeHtml(t.name)}</div>
                             <div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">
-                                카테고리: <b>${t.product_category}</b>${t.product_code ? ' · 상품: <b>' + t.product_code + '</b>' : ''}<br>
+                                카테고리: <b>${escapeHtml(t.product_category)}</b>${t.product_code ? ' · 상품: <b>' + escapeHtml(t.product_code) + '</b>' : ''}<br>
                                 사이즈: ${t.width_mm || '?'}×${t.height_mm || '?'}mm · 슬롯: ${(t.slots||[]).length}개<br>
                                 디자이너: <b>${escapeHtml(designerName)}</b> · 제출: ${dt}
                             </div>
                             <div style="display:flex; gap:8px;">
                                 <button onclick="approveTpl(${t.id}, this)" style="padding:8px 16px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-check"></i> 승인 (+30K)</button>
                                 <button onclick="rejectTpl(${t.id}, this)" style="padding:8px 16px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-xmark"></i> 거절 (삭제)</button>
-                                <a href="${t.thumbnail_url || t.background_url}" target="_blank" style="padding:8px 16px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none;"><i class="fa-solid fa-up-right-from-square"></i> 원본 보기</a>
+                                <a href="${escapeHtml(t.thumbnail_url || t.background_url || '')}" target="_blank" style="padding:8px 16px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none;"><i class="fa-solid fa-up-right-from-square"></i> 원본 보기</a>
                             </div>
                         </div>
                     </div>
                 </div>`;
         }).join('');
     } catch(e) {
-        g.innerHTML = '<div style="text-align:center; padding:40px; color:#dc2626;">로딩 실패: ' + e.message + '</div>';
+        console.error('[loadPendingReviewList]', e);
+        g.innerHTML = `<div style="text-align:center; padding:40px; color:#dc2626;">로드 실패: ${escapeHtml(e.message || String(e))}</div>`;
     }
 }
 
 async function approveTpl(id, btn) {
-    const note = prompt('승인 메모 (선택, 디자이너에게 안내):', '');
-    if (note === null) return;
+    if (!confirm('승인 시 디자이너 예치금 30,000원이 자동 적립됩니다. 계속할까요?')) return;
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
     try {
-        const { data, error } = await sb.rpc('approve_template_submission', { _template_id: id, _note: note });
+        const { data: tpl, error: gErr } = await sb.from('admin_templates').select('submitted_by').eq('id', id).single();
+        if (gErr) throw gErr;
+        const { error } = await sb.from('admin_templates')
+            .update({ status: 'approved', approved_by: state.user.id, approved_at: new Date().toISOString() })
+            .eq('id', id);
         if (error) throw error;
-        toast('승인 완료! 디자이너에게 ' + (data.paid || 30000).toLocaleString() + '원 적립 완료', 3500);
-        await loadPendingReviewList();
-        await refreshPendingBadge();
-        await loadTemplates();
+        if (tpl && tpl.submitted_by) {
+            const { data: prof } = await sb.from('profiles').select('mileage').eq('id', tpl.submitted_by).single();
+            const cur = (prof && prof.mileage) || 0;
+            await sb.from('profiles').update({ mileage: cur + 30000 }).eq('id', tpl.submitted_by);
+        }
+        toast('✅ 승인 + 30,000원 적립 완료');
+        loadPendingReviewList();
+        refreshPendingBadge();
+        loadTemplates();
     } catch(e) {
-        toast('승인 실패: ' + (e.message || e), 4500);
+        console.error('[approveTpl]', e);
+        alert('승인 실패: ' + (e.message || e));
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> 승인 (+30K)';
     }
 }
 
 async function rejectTpl(id, btn) {
-    const note = prompt('거절 사유 (선택, 로그용):', '');
-    if (note === null) return;
-    if (!confirm('정말 거절하시겠어요? row 가 즉시 삭제됩니다.')) return;
+    if (!confirm('거절 시 해당 row 가 즉시 삭제됩니다. 계속할까요?')) return;
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
     try {
-        const { error } = await sb.rpc('reject_template_submission', { _template_id: id, _note: note });
+        const { error } = await sb.from('admin_templates').delete().eq('id', id);
         if (error) throw error;
-        toast('거절 완료 — 템플릿이 삭제되었습니다');
-        await loadPendingReviewList();
-        await refreshPendingBadge();
+        toast('거절 완료 (row 삭제)');
+        loadPendingReviewList();
+        refreshPendingBadge();
     } catch(e) {
-        toast('거절 실패: ' + (e.message || e), 4500);
+        console.error('[rejectTpl]', e);
+        alert('거절 실패: ' + (e.message || e));
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-xmark"></i> 거절 (삭제)';
     }
-}
-
-// 2026-06-17: admin_products 의 distinct 카테고리 + 상품 갯수 + 대표 이름 동적 로드.
-//   고객 페이지가 product.category 로 매칭하므로 여기서도 동일 값을 보여야 함.
-//   (v540 → v541) admin_products 에는 name_kr 컬럼이 없음 — name 만 사용.
-async function loadCategories() {
-    try {
-        const all = [];
-        const PAGE = 1000;
-        for (let off = 0; off < 10000; off += PAGE) {
-            const { data, error } = await sb.from('admin_products')
-                .select('category, name')
-                .not('category', 'is', null)
-                .range(off, off + PAGE - 1);
-            if (error) { console.warn('[loadCategories] page', off, error); break; }
-            if (!data || !data.length) break;
-            all.push(...data);
-            if (data.length < PAGE) break;
-        }
-        const catMap = {};
-        all.forEach(p => {
-            const c = p.category; if (!c) return;
-            if (!catMap[c]) catMap[c] = { count: 0, sample: '' };
-            catMap[c].count++;
-            if (!catMap[c].sample) catMap[c].sample = (p.name || '').slice(0, 18);
-        });
-        const sorted = Object.entries(catMap)
-            .map(([cat, info]) => ({ cat, count: info.count, label: `${info.sample || '?'} · ${cat} (${info.count}개)` }))
-            .sort((a, b) => a.label.localeCompare(b.label));
-        const sel = document.getElementById('filterCategory');
-        if (!sorted.length) {
-            sel.innerHTML = '<option value="">카테고리 데이터 없음</option><option value="OTHER">⚙️ 기타 (직접 입력)</option>';
-            toast('카테고리 로딩 결과 없음', 3000);
-        } else {
-            sel.innerHTML = '<option value="">— 카테고리 선택 —</option>'
-                + sorted.map(o => `<option value="${o.cat}">${o.label}</option>`).join('')
-                + '<option value="OTHER">⚙️ 기타 (직접 입력)</option>';
-        }
-        sel.addEventListener('change', e => {
-            document.getElementById('customCategoryField').style.display = e.target.value === 'OTHER' ? '' : 'none';
-        });
-        console.log('[loadCategories] loaded', sorted.length, 'categories');
-    } catch (e) {
-        console.warn('[loadCategories]', e);
-        toast('카테고리 로딩 실패: ' + e.message, 4500);
-    }
-}
-
-function getCategory() {
-    const sel = document.getElementById('filterCategory').value;
-    if (sel === 'OTHER') return document.getElementById('customCategory').value.trim();
-    return sel;
-}
-
-async function loadTemplates() {
-    const cat = getCategory();
-    const listEl = document.getElementById('tplList');
-    if (!cat) { listEl.innerHTML = '<div class="tpl-empty">카테고리를 입력하세요</div>'; return; }
-    listEl.innerHTML = '<div class="tpl-empty">로딩 중...</div>';
-    try {
-        const { data, error } = await sb.from('admin_templates')
-            .select('id,name,thumbnail_url,background_url,width_mm,height_mm,sort_order,is_active,slots')
-            .eq('product_category', cat)
-            .order('sort_order', { ascending: true })
-            .order('id', { ascending: false });
-        if (error) throw error;
-        if (!data || !data.length) { listEl.innerHTML = '<div class="tpl-empty">등록된 템플릿이 없습니다</div>'; return; }
-        listEl.innerHTML = data.map(t => `
-            <div class="tpl-item" data-tid="${t.id}" onclick="selectTemplate(${t.id})">
-                <img src="${t.thumbnail_url || t.background_url}" alt="" onerror="this.style.opacity=0.3;">
-                <div class="tpl-info">
-                    <div class="tpl-name">${escapeHtml(t.name)}</div>
-                    <div class="tpl-meta">${t.width_mm || '?'}×${t.height_mm || '?'}mm · 슬롯 ${(t.slots||[]).length}개 · ${t.is_active ? '활성' : '비활성'}</div>
-                </div>
-            </div>`).join('');
-    } catch (e) {
-        listEl.innerHTML = `<div class="tpl-empty" style="color:var(--red);">로딩 실패: ${e.message}</div>`;
-    }
-}
-
-function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
-
-async function selectTemplate(id) {
-    document.querySelectorAll('.tpl-item').forEach(el => el.classList.toggle('active', String(el.dataset.tid) === String(id)));
-    try {
-        const { data, error } = await sb.from('admin_templates').select('*').eq('id', id).single();
-        if (error) throw error;
-        state.template = data;
-        state.template.slots = data.slots || [];
-        renderEditor();
-    } catch (e) { toast('로딩 실패: ' + e.message); }
-}
-
-function newTemplate() {
-    const cat = getCategory();
-    if (!cat) { toast('카테고리를 먼저 선택하세요'); return; }
-    state.template = {
-        product_category: cat, product_code: null, name: '',
-        background_url: null, thumbnail_url: null,
-        width_mm: null, height_mm: null,
-        slots: [], is_active: true, sort_order: 999
-    };
-    document.querySelectorAll('.tpl-item').forEach(el => el.classList.remove('active'));
-    renderEditor();
-}
-
-// 2026-06-17 v548: 미니에디터 열기 — is_template_eligible=true 상품만 표시.
-async function newTemplateInEditor() {
-    const cat = getCategory();
-    if (!cat) { toast('카테고리를 먼저 선택하세요'); return; }
-    const { data: products, error } = await sb.from('admin_products')
-        .select('code, name, width_mm, height_mm')
-        .eq('category', cat)
-        .eq('is_template_eligible', true)
-        .order('sort_order', { ascending: true })
-        .limit(100);
-    if (error) { toast('상품 로딩 실패: ' + error.message); return; }
-    if (!products || !products.length) { toast('이 카테고리에 🎨 템플릿 등록상품 으로 체크된 상품이 없습니다 — global_admin 에서 체크해주세요', 4500); return; }
-    // 상품 선택 모달
-    const ex = document.getElementById('productPickerModal');
-    if (ex) ex.remove();
-    const m = document.createElement('div');
-    m.id = 'productPickerModal';
-    m.style.cssText = 'position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.8); display:flex; align-items:center; justify-content:center; padding:20px;';
-    m.innerHTML =
-        `<div style="background:#fff; max-width:520px; width:100%; max-height:80vh; border-radius:14px; overflow:hidden; display:flex; flex-direction:column;">
-            <div style="padding:18px 22px; background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff;">
-                <div style="font-weight:900; font-size:15px;">🎨 어느 상품의 템플릿을 만드시겠어요?</div>
-                <div style="font-size:11.5px; opacity:0.85; margin-top:4px;">상품 선택 → 미니에디터로 진입. 디자인 후 저장하면 자동으로 등록됩니다.</div>
-            </div>
-            <div style="flex:1; overflow-y:auto; padding:14px;">
-                ${products.map(p => `
-                    <div onclick="window.location.href='/?product=${encodeURIComponent(p.code)}&admin_template_mode=1'" style="padding:12px 14px; border:1.5px solid var(--gray-200); border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color .15s;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='var(--gray-200)'">
-                        <div style="font-size:13.5px; font-weight:800; color:var(--gray-900);">${escapeHtml(p.name)}</div>
-                        <div style="font-size:11px; color:var(--gray-500); margin-top:3px;">${p.code}${p.width_mm ? ` · ${p.width_mm}×${p.height_mm}mm` : ''}</div>
-                    </div>
-                `).join('')}
-            </div>
-            <div style="padding:12px 22px; border-top:1px solid var(--gray-200); text-align:right;">
-                <button onclick="document.getElementById('productPickerModal').remove()" class="btn btn-secondary">취소</button>
-            </div>
-        </div>`;
-    document.body.appendChild(m);
-    m.addEventListener('click', e => { if (e.target === m) m.remove(); });
-}
-
-function renderEditor() {
-    document.getElementById('actionBar').style.display = '';
-    document.getElementById('tplName').value = state.template?.name || '';
-    document.getElementById('delBtn').style.display = state.template?.id ? '' : 'none';
-    state.selectedSlotIdx = -1;
-    document.getElementById('slotProps').classList.remove('visible');
-    const wrap = document.getElementById('canvasWrap');
-    if (!state.template?.background_url) {
-        wrap.innerHTML = '';
-        document.getElementById('uploadField').style.display = '';
-        return;
-    }
-    document.getElementById('uploadField').style.display = 'none';
-    wrap.innerHTML = '';
-    const stage = document.createElement('div');
-    stage.className = 'canvas-stage';
-    stage.id = 'canvasStage';
-    const img = document.createElement('img');
-    img.className = 'bg';
-    img.src = state.template.background_url;
-    img.onload = () => {
-        state.bgImageEl = img;
-        state.bgImageWidth = img.naturalWidth;
-        state.bgImageHeight = img.naturalHeight;
-        // 이미지 표시 후 slot 렌더
-        renderSlots();
-    };
-    stage.appendChild(img);
-    wrap.appendChild(stage);
-}
-
-function renderSlots() {
-    const stage = document.getElementById('canvasStage');
-    if (!stage) return;
-    stage.querySelectorAll('.slot').forEach(el => el.remove());
-    const dispScale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
-    (state.template.slots || []).forEach((s, idx) => {
-        const el = document.createElement('div');
-        el.className = 'slot' + (s.type === 'image' ? ' image-slot' : '') + (idx === state.selectedSlotIdx ? ' active' : '');
-        el.style.left = (s.x * dispScale) + 'px';
-        el.style.top = (s.y * dispScale) + 'px';
-        el.style.width = (s.w * dispScale) + 'px';
-        el.style.height = (s.h * dispScale) + 'px';
-        el.dataset.idx = idx;
-        const lbl = document.createElement('div');
-        lbl.className = 'slot-label';
-        if (s.type === 'text') {
-            lbl.textContent = s.default_text || 'TEXT';
-            const ff = s.fontFamily || 'sans-serif';
-            lbl.style.fontFamily = (ff === 'sans-serif' || ff === 'serif') ? ff : `"${ff}", sans-serif`;
-            lbl.style.fontSize = Math.max(8, s.fontSize * dispScale) + 'px';
-            lbl.style.color = s.color || '#000';
-            lbl.style.textAlign = s.textAlign || 'left';
-            lbl.style.whiteSpace = 'normal';
-            lbl.style.textShadow = '';
-            loadGoogleFont(ff, (KR_FONTS.find(f => f.family === ff) || {}).weights);
-        } else {
-            lbl.innerHTML = '<i class="fa-solid fa-image"></i> 이미지 슬롯';
-        }
-        el.appendChild(lbl);
-        const handle = document.createElement('div');
-        handle.className = 'handle';
-        el.appendChild(handle);
-        const del = document.createElement('button');
-        del.className = 'del'; del.innerHTML = '×';
-        del.onclick = (ev) => { ev.stopPropagation(); deleteSlot(idx); };
-        el.appendChild(del);
-        el.addEventListener('mousedown', startDrag);
-        handle.addEventListener('mousedown', startResize);
-        el.addEventListener('click', () => selectSlot(idx));
-        stage.appendChild(el);
-    });
-}
-
-function selectSlot(idx) {
-    state.selectedSlotIdx = idx;
-    document.querySelectorAll('.slot').forEach((el, i) => el.classList.toggle('active', Number(el.dataset.idx) === idx));
-    const s = state.template.slots[idx];
-    if (!s) return;
-    const propsPanel = document.getElementById('slotProps');
-    propsPanel.classList.add('visible');
-    document.getElementById('slotPropsTitle').innerHTML = `<i class="fa-solid fa-sliders"></i> 선택: ${s.type === 'text' ? '📝 텍스트' : '🖼️ 이미지'} 슬롯 #${idx + 1}`;
-    document.getElementById('propX').value = Math.round(s.x);
-    document.getElementById('propY').value = Math.round(s.y);
-    document.getElementById('propW').value = Math.round(s.w);
-    document.getElementById('propH').value = Math.round(s.h);
-    document.getElementById('textProps').style.display = s.type === 'text' ? '' : 'none';
-    if (s.type === 'text') {
-        document.getElementById('propText').value = s.default_text || '';
-        document.getElementById('propFont').value = s.fontFamily || 'sans-serif';
-        document.getElementById('propSize').value = s.fontSize || 24;
-        document.getElementById('propColor').value = s.color || '#000000';
-        document.getElementById('propAlign').value = s.textAlign || 'left';
-    }
-}
-
-function updateSlotPos() {
-    const idx = state.selectedSlotIdx;
-    if (idx < 0) return;
-    const s = state.template.slots[idx];
-    s.x = parseFloat(document.getElementById('propX').value) || 0;
-    s.y = parseFloat(document.getElementById('propY').value) || 0;
-    s.w = parseFloat(document.getElementById('propW').value) || 100;
-    s.h = parseFloat(document.getElementById('propH').value) || 30;
-    renderSlots();
-    selectSlot(idx);
-}
-
-function updateSlotText() {
-    const idx = state.selectedSlotIdx;
-    if (idx < 0) return;
-    const s = state.template.slots[idx];
-    if (s.type !== 'text') return;
-    s.default_text = document.getElementById('propText').value;
-    s.fontFamily = document.getElementById('propFont').value;
-    s.fontSize = parseFloat(document.getElementById('propSize').value) || 24;
-    s.color = document.getElementById('propColor').value;
-    s.textAlign = document.getElementById('propAlign').value;
-    renderSlots();
-    selectSlot(idx);
-}
-
-function deleteSlot(idx) {
-    state.template.slots.splice(idx, 1);
-    state.selectedSlotIdx = -1;
-    document.getElementById('slotProps').classList.remove('visible');
-    renderSlots();
-}
-
-function addTextSlot() {
-    if (!state.template?.background_url) { toast('먼저 배경 이미지를 업로드하세요'); return; }
-    const cx = state.bgImageWidth / 2;
-    const cy = state.bgImageHeight / 2;
-    const w = Math.max(200, state.bgImageWidth * 0.4);
-    const h = 60;
-    state.template.slots.push({
-        id: 't' + Date.now(), type: 'text',
-        x: cx - w/2, y: cy - h/2, w, h,
-        default_text: '여기를 클릭해 텍스트 입력',
-        fontFamily: 'Noto Sans KR', fontSize: 36,
-        fontWeight: 700, color: '#000000', textAlign: 'center'
-    });
-    loadGoogleFont('Noto Sans KR', '400;700;900');
-    renderSlots();
-    selectSlot(state.template.slots.length - 1);
-}
-
-function addImageSlot() {
-    if (!state.template?.background_url) { toast('먼저 배경 이미지를 업로드하세요'); return; }
-    const cx = state.bgImageWidth / 2;
-    const cy = state.bgImageHeight / 2;
-    const w = Math.max(150, state.bgImageWidth * 0.25);
-    const h = w;
-    state.template.slots.push({
-        id: 'i' + Date.now(), type: 'image',
-        x: cx - w/2, y: cy - h/2, w, h
-    });
-    renderSlots();
-    selectSlot(state.template.slots.length - 1);
-}
-
-// 드래그·리사이즈 핸들러
-let dragInfo = null;
-function startDrag(e) {
-    if (e.target.classList.contains('handle') || e.target.classList.contains('del')) return;
-    const slot = e.currentTarget;
-    const idx = Number(slot.dataset.idx);
-    selectSlot(idx);
-    const stage = document.getElementById('canvasStage');
-    const scale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
-    dragInfo = { type:'move', idx, startX:e.clientX, startY:e.clientY, sx:state.template.slots[idx].x, sy:state.template.slots[idx].y, scale };
-    e.preventDefault();
-}
-function startResize(e) {
-    const idx = Number(e.target.parentElement.dataset.idx);
-    selectSlot(idx);
-    const stage = document.getElementById('canvasStage');
-    const scale = stage.querySelector('img.bg').clientWidth / state.bgImageWidth;
-    dragInfo = { type:'resize', idx, startX:e.clientX, startY:e.clientY, sw:state.template.slots[idx].w, sh:state.template.slots[idx].h, scale };
-    e.preventDefault();
-    e.stopPropagation();
-}
-window.addEventListener('mousemove', (e) => {
-    if (!dragInfo) return;
-    const s = state.template.slots[dragInfo.idx];
-    const dx = (e.clientX - dragInfo.startX) / dragInfo.scale;
-    const dy = (e.clientY - dragInfo.startY) / dragInfo.scale;
-    if (dragInfo.type === 'move') {
-        s.x = Math.max(0, Math.min(state.bgImageWidth - s.w, dragInfo.sx + dx));
-        s.y = Math.max(0, Math.min(state.bgImageHeight - s.h, dragInfo.sy + dy));
-    } else {
-        s.w = Math.max(40, Math.min(state.bgImageWidth - s.x, dragInfo.sw + dx));
-        s.h = Math.max(20, Math.min(state.bgImageHeight - s.y, dragInfo.sh + dy));
-    }
-    renderSlots();
-    selectSlot(dragInfo.idx);
-});
-window.addEventListener('mouseup', () => { dragInfo = null; });
-
-// 파일 업로드
-function onDrop(e) {
-    e.preventDefault();
-    e.currentTarget.style.background = 'var(--gray-50)';
-    const f = e.dataTransfer.files?.[0];
-    if (f) handleFile(f);
-}
-function onFileSelect(e) {
-    const f = e.target.files?.[0];
-    if (f) handleFile(f);
-}
-// 2026-06-17: PDF.js 동적 로드 — PDF 첫 페이지를 PNG canvas 로 렌더.
-async function _loadPdfJs() {
-    if (typeof window.pdfjsLib !== 'undefined') return window.pdfjsLib;
-    await new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        s.onload = resolve; s.onerror = () => reject(new Error('pdf.js 로드 실패'));
-        document.head.appendChild(s);
-    });
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    return window.pdfjsLib;
-}
-
-async function _pdfToPngBlob(arrayBuffer, scale=2.5) {
-    const lib = await _loadPdfJs();
-    const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    return await new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/png', 1.0));
-}
-
-async function _svgToPngBlob(svgText) {
-    // SVG 자연 크기 추출 (width/height 또는 viewBox)
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgText, 'image/svg+xml');
-    const svgEl = doc.documentElement;
-    let w = parseFloat(svgEl.getAttribute('width')) || 0;
-    let h = parseFloat(svgEl.getAttribute('height')) || 0;
-    if (!w || !h) {
-        const vb = (svgEl.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
-        if (vb.length === 4) { w = vb[2]; h = vb[3]; }
-    }
-    if (!w || !h) { w = 1000; h = 1000; }
-    // 2x 스케일로 렌더링
-    const scale = Math.min(3, 2000 / Math.max(w, h));
-    const blob = new Blob([svgText], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    try {
-        const img = await new Promise((resolve, reject) => {
-            const im = new Image();
-            im.onload = () => resolve(im);
-            im.onerror = () => reject(new Error('SVG 렌더 실패'));
-            im.src = url;
-        });
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(w * scale);
-        canvas.height = Math.round(h * scale);
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        return await new Promise(resolve => canvas.toBlob(b => resolve(b), 'image/png', 1.0));
-    } finally { URL.revokeObjectURL(url); }
-}
-
-async function handleFile(f) {
-    // 2026-06-17: PNG/JPG/PDF/SVG 모두 허용. PDF/SVG 는 클라이언트에서 PNG 로 변환 후 업로드.
-    const isPng  = /^image\/png$/i.test(f.type) || /\.png$/i.test(f.name);
-    const isJpg  = /^image\/jpe?g$/i.test(f.type) || /\.jpe?g$/i.test(f.name);
-    const isPdf  = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
-    const isSvg  = f.type === 'image/svg+xml' || /\.svg$/i.test(f.name);
-    if (!isPng && !isJpg && !isPdf && !isSvg) { toast('PNG/JPG/PDF/SVG 만 업로드 가능합니다'); return; }
-    if (f.size > 20 * 1024 * 1024) { toast('20MB 이하 파일만 업로드 가능합니다'); return; }
-    let uploadBlob = null;
-    try {
-        if (isPdf) {
-            toast('PDF 변환 중... (잠시만 기다려주세요)', 4000);
-            const buf = await f.arrayBuffer();
-            uploadBlob = await _pdfToPngBlob(buf, 2.5);
-        } else if (isSvg) {
-            toast('SVG 변환 중...', 3000);
-            const text = await f.text();
-            uploadBlob = await _svgToPngBlob(text);
-        } else {
-            uploadBlob = f; // PNG/JPG 원본 그대로
-        }
-    } catch (e) { toast('변환 실패: ' + e.message, 4500); return; }
-    if (!uploadBlob) { toast('변환된 이미지가 없습니다'); return; }
-    toast('업로드 중...', 3000);
-    try {
-        const ext = (isPdf || isSvg) ? 'png' : (isJpg ? 'jpg' : 'png');
-        const path = `templates/${state.template.product_category}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-        const contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png';
-        const { error } = await sb.storage.from('design').upload(path, uploadBlob, { upsert: false, contentType });
-        if (error) throw error;
-        const { data } = sb.storage.from('design').getPublicUrl(path);
-        state.template.background_url = data.publicUrl;
-        // 자연 사이즈 측정 (300 DPI 가정으로 mm 환산)
-        const img = new Image();
-        img.onload = () => {
-            const widthMm = Math.round(img.naturalWidth / 11.811);  // 300dpi = 11.811 px/mm
-            const heightMm = Math.round(img.naturalHeight / 11.811);
-            state.template.width_mm = widthMm;
-            state.template.height_mm = heightMm;
-            renderEditor();
-            const note = isPdf ? ' (PDF → PNG 변환 완료)' : isSvg ? ' (SVG → PNG 변환 완료)' : '';
-            toast('업로드 완료' + note + ' — 슬롯을 추가해 주세요');
-        };
-        img.src = data.publicUrl;
-    } catch (e) { toast('업로드 실패: ' + e.message, 4500); }
-}
-
-async function saveTemplate() {
-    if (!state.template) return;
-    const name = document.getElementById('tplName').value.trim();
-    if (!name) { toast('템플릿 이름을 입력하세요'); return; }
-    if (!state.template.background_url) { toast('배경 이미지를 업로드하세요'); return; }
-    state.template.name = name;
-    const payload = {
-        product_category: state.template.product_category,
-        product_code: state.template.product_code,
-        name: state.template.name,
-        site_code: state.template.site_code || 'KR',
-        background_url: state.template.background_url,
-        thumbnail_url: state.template.thumbnail_url || state.template.background_url,
-        width_mm: state.template.width_mm,
-        height_mm: state.template.height_mm,
-        slots: state.template.slots,
-        is_active: state.template.is_active !== false,
-        sort_order: state.template.sort_order || 999
-    };
-    try {
-        if (state.template.id) {
-            const { error } = await sb.from('admin_templates').update(payload).eq('id', state.template.id);
-            if (error) throw error;
-            toast('수정 완료');
-        } else {
-            const { data, error } = await sb.from('admin_templates').insert(payload).select().single();
-            if (error) throw error;
-            state.template.id = data.id;
-            document.getElementById('delBtn').style.display = '';
-            toast('저장 완료');
-        }
-        loadTemplates();
-    } catch (e) { toast('저장 실패: ' + e.message, 4000); }
-}
-
-async function deleteTemplate() {
-    if (!state.template?.id) return;
-    if (!confirm('이 템플릿을 정말 삭제하시겠어요?')) return;
-    try {
-        const { error } = await sb.from('admin_templates').delete().eq('id', state.template.id);
-        if (error) throw error;
-        toast('삭제 완료');
-        state.template = null;
-        document.getElementById('actionBar').style.display = 'none';
-        document.getElementById('canvasWrap').innerHTML = '<div class="empty-canvas"><i class="fa-solid fa-image"></i><p>템플릿을 선택하거나 새로 등록하세요</p></div>';
-        loadTemplates();
-    } catch (e) { toast('삭제 실패: ' + e.message); }
 }
 </script>
 </body>
