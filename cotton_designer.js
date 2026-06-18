@@ -2130,6 +2130,8 @@ window._cpOpenCheckout = function() {
     document.getElementById('coTotalAmt').textContent = cdFmtPrice(calcFabricCartTotal());
     document.getElementById('checkoutOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
+    // 2026-06-18 v579: 할인 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / PRO) UI 활성화 + 잔액 로드
+    try { if (typeof window._cpLoadDiscounts === 'function') window._cpLoadDiscounts(); } catch(_de){ console.warn('[cp discounts]', _de); }
     // 2026-05-14: 관리자/매니저 로그인 시 '고객 결제창 만들어주기' 버튼 노출 (패브릭)
     // window.isAdmin 폴백 — sb.auth.getUser() + ADMIN_EMAILS 검사 (cross-domain 대비)
     (async function () {
@@ -2408,6 +2410,83 @@ window._cpCopyAccount = function() {
     }
 };
 
+// 2026-06-18 v579: 할인 적용 — 로그인 사용자만, profiles 에서 잔액 로드
+window._cpDiscState = { coupon:0, mileage:0, deposit:0, isPro:false, selected:null, discountAmount:0 };
+
+window._cpLoadDiscounts = async function() {
+    var box = document.getElementById('cpDiscountBox');
+    if (!box) return;
+    var sb = window.supabase ? window.supabase.createClient(
+        'https://qinvtnhiidtmrzosyvys.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
+    ) : null;
+    if (!sb) return;
+    try {
+        var sess = await sb.auth.getSession();
+        var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+        if (!uid) { box.style.display = 'none'; return; }
+        // profiles 에서 잔액
+        var prof = null;
+        try {
+            var r = await sb.from('profiles').select('mileage, deposit, event_coupon, is_pro').eq('id', uid).maybeSingle();
+            prof = r.data;
+        } catch(_) {
+            try { var r2 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r2.data; } catch(_2){}
+        }
+        if (!prof) { box.style.display = 'none'; return; }
+        var coupon  = Number(prof.event_coupon || 0);
+        var mileage = Number(prof.mileage || 0);
+        var deposit = Number(prof.deposit || 0);
+        var isPro   = !!prof.is_pro;
+        window._cpDiscState.coupon  = coupon;
+        window._cpDiscState.mileage = mileage;
+        window._cpDiscState.deposit = deposit;
+        window._cpDiscState.isPro   = isPro;
+        var total = calcFabricCartTotal();
+        // 1) 이벤트 쿠폰: 최대 3만원 또는 보유액 중 작은 것
+        var couponUsable = Math.min(coupon, 30000, total);
+        // 2) 마일리지: 주문의 5%
+        var mileageUsable = Math.min(mileage, Math.floor(total * 0.05));
+        // 3) 예치금: 전액 사용 (단 total 까지)
+        var depositUsable = Math.min(deposit, total);
+        // 4) PRO: 주문 10%
+        var proUsable = isPro ? Math.floor(total * 0.10) : 0;
+        document.getElementById('cpDiscEventAmount').textContent  = couponUsable.toLocaleString() + ' P';
+        document.getElementById('cpDiscEventHint').textContent    = '보유 ' + coupon.toLocaleString() + ' · 최대 3만원';
+        document.getElementById('cpDiscMileageAmount').textContent = mileageUsable.toLocaleString() + ' P';
+        document.getElementById('cpDiscMileageHint').textContent   = '보유 ' + mileage.toLocaleString() + ' · 5%';
+        document.getElementById('cpDiscDepositAmount').textContent = depositUsable.toLocaleString() + ' P';
+        document.getElementById('cpDiscDepositHint').textContent   = '보유 ' + deposit.toLocaleString() + ' · 전액 사용';
+        document.getElementById('cpDiscProAmount').textContent     = isPro ? '-' + proUsable.toLocaleString() + ' P' : '미구독';
+        document.getElementById('cpDiscProHint').textContent       = isPro ? '주문의 10%' : '미구독';
+        // 미구독은 PRO 비활성
+        if (!isPro) {
+            var proRadio = document.querySelector('input[name="cpDiscChoice"][value="pro"]');
+            if (proRadio) { proRadio.disabled = true; proRadio.parentElement.parentElement.style.opacity = '0.5'; }
+        }
+        box.style.display = '';
+    } catch(e) {
+        console.warn('[cp loadDiscounts]', e);
+        box.style.display = 'none';
+    }
+};
+
+window._cpOnDiscountSelect = function() {
+    var chosen = (document.querySelector('input[name="cpDiscChoice"]:checked') || {}).value;
+    var s = window._cpDiscState;
+    var total = calcFabricCartTotal();
+    var disc = 0;
+    if (chosen === 'event_coupon') disc = Math.min(s.coupon, 30000, total);
+    else if (chosen === 'mileage') disc = Math.min(s.mileage, Math.floor(total * 0.05));
+    else if (chosen === 'deposit') disc = Math.min(s.deposit, total);
+    else if (chosen === 'pro' && s.isPro) disc = Math.floor(total * 0.10);
+    s.selected = chosen || null;
+    s.discountAmount = disc;
+    // 합계 라벨 업데이트
+    var totalEl = document.getElementById('coTotalAmt');
+    if (totalEl) totalEl.innerHTML = cdFmtPrice(Math.max(0, total - disc)) + (disc > 0 ? ' <span style="font-size:11px; color:#16a34a; font-weight:600;">(-' + disc.toLocaleString() + ')</span>' : '');
+};
+
 // 체크아웃 → orders 테이블 등록 + Toss/무통장 처리
 // Toss Payments 클라이언트 키 (cafe2626 메인몰과 동일 — 운영용)
 const TOSS_CLIENT_KEY = 'live_ck_KNbdOvk5rkkQE9aLdzlV3n07xlzm';
@@ -2559,6 +2638,11 @@ window._cpSubmitOrder = async function() {
         const fullAddr = '[' + zip + '] ' + addr1 + ' ' + addr2;
         const adminNote = '[COTTON-PRINT] 출처: cotton-print.com\n결제방법: ' + (payMethod==='bank'?'무통장입금':'카드결제(Toss)') + '\n이메일: ' + (email||'없음');
 
+        // 2026-06-18 v579: 할인 적용된 금액 계산
+        var _ds = (window._cpDiscState || { discountAmount:0, selected:null });
+        var _discAmt = Math.max(0, Math.min(_ds.discountAmount || 0, total));
+        var _payable = Math.max(0, total - _discAmt);
+
         // 2) orders 테이블에 등록 → 통합주문관리에 즉시 표시
         const orderInsertPayload = {
             order_date: new Date().toISOString(),
@@ -2569,8 +2653,9 @@ window._cpSubmitOrder = async function() {
             status: payMethod === 'bank' ? '접수됨' : '임시작성',
             payment_status: payMethod === 'bank' ? '입금대기' : '미결제',
             payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
-            total_amount: total,
-            discount_amount: 0,
+            total_amount: _payable,
+            discount_amount: _discAmt,
+            discount_type: _ds.selected || null,
             items: items,
             site_code: _cpSiteCode(),
             files: uploadedFiles.length ? uploadedFiles : null,

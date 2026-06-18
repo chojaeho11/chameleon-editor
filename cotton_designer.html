@@ -1864,6 +1864,47 @@ a { text-decoration: none; color: inherit; }
                     <label class="co-pay-opt"><input type="radio" name="payMethod" value="card"> <i class="fa-solid fa-credit-card" style="color:var(--accent);"></i> <span data-cdi18n="co_pay_card">카드 결제</span> <span style="color:var(--text-light); margin-left:auto; font-size:11px;" data-cdi18n="co_pay_card_sub">토스/Stripe 결제</span></label>
                 </div>
             </div>
+            <!-- 2026-06-18 v579: 할인 적용 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / PRO 구독할인) — 라디오 1개 선택 -->
+            <div class="co-section" id="cpDiscountBox" style="display:none;">
+                <span class="co-label" data-cdi18n="co_discount">할인 적용 (1개 선택)</span>
+                <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:6px;">
+                    <label class="cp-disc-card" style="cursor:pointer; padding:10px 12px; border:2px solid #fde68a; background:#fffbeb; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="cpDiscChoice" value="event_coupon" onchange="window._cpOnDiscountSelect && window._cpOnDiscountSelect()" style="margin:0;">
+                            <b style="font-size:12px; color:#92400e;">🎁 <span data-cdi18n="co_disc_event">이벤트 쿠폰</span></b>
+                        </div>
+                        <div style="font-size:13px; font-weight:800; color:#b45309;" id="cpDiscEventAmount">0 P</div>
+                        <div style="font-size:10.5px; color:#92400e;" id="cpDiscEventHint">보유 0 · 최대 3만원</div>
+                    </label>
+                    <label class="cp-disc-card" style="cursor:pointer; padding:10px 12px; border:2px solid #c7d2fe; background:#eef2ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="cpDiscChoice" value="mileage" onchange="window._cpOnDiscountSelect && window._cpOnDiscountSelect()" style="margin:0;">
+                            <b style="font-size:12px; color:#3730a3;">⭐ <span data-cdi18n="co_disc_mileage">마일리지</span></b>
+                        </div>
+                        <div style="font-size:13px; font-weight:800; color:#4338ca;" id="cpDiscMileageAmount">0 P</div>
+                        <div style="font-size:10.5px; color:#4338ca;" id="cpDiscMileageHint">보유 0 · 5%</div>
+                    </label>
+                    <label class="cp-disc-card" style="cursor:pointer; padding:10px 12px; border:2px solid #99f6e4; background:#ecfeff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="cpDiscChoice" value="deposit" onchange="window._cpOnDiscountSelect && window._cpOnDiscountSelect()" style="margin:0;">
+                            <b style="font-size:12px; color:#0e7490;">💰 <span data-cdi18n="co_disc_deposit">예치금</span></b>
+                        </div>
+                        <div style="font-size:13px; font-weight:800; color:#0e7490;" id="cpDiscDepositAmount">0 P</div>
+                        <div style="font-size:10.5px; color:#0e7490;" id="cpDiscDepositHint">전액 사용</div>
+                    </label>
+                    <label class="cp-disc-card" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <input type="radio" name="cpDiscChoice" value="pro" onchange="window._cpOnDiscountSelect && window._cpOnDiscountSelect()" style="margin:0;">
+                            <b style="font-size:12px; color:#6d28d9;">👑 PRO 구독할인</b>
+                        </div>
+                        <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="cpDiscProAmount">-</div>
+                        <div style="font-size:10.5px; color:#7c3aed;" id="cpDiscProHint">주문의 10%</div>
+                    </label>
+                </div>
+                <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
+                    * 모든 할인은 중복사용 불가
+                </div>
+            </div>
         </div>
         <aside class="co-summary">
             <h4 data-cdi18n="co_summary">주문 요약</h4>
