@@ -8901,11 +8901,49 @@ function scrollHotdeal(gridId, dir) {
 
             var added = 0;
             var firstItem = null;
+            // 2026-06-18 v614: 비동기 _meAddImage 콜백 추적 — 모두 완료된 후 bg 잠금 적용
+            var pendingImageLoads = 0;
+            var pendingResolve = null;
+            function _onAllLoaded(fn) {
+                if (pendingImageLoads === 0) fn();
+                else pendingResolve = fn;
+            }
+            function _decPending() {
+                pendingImageLoads--;
+                if (pendingImageLoads === 0 && pendingResolve) { var f = pendingResolve; pendingResolve = null; f(); }
+            }
+            // 첫 번째 child 의 시각 잔여물을 우선 firstItem 후보로 (배경 잠금용)
+            var visualItemsByChildIdx = {};
             // outerHTML 캐싱 (반복 매칭 가속화)
             var allRendered = rendered.getElementsByTagName('*');
 
-            // rendered 트리에서 src node 와 매칭되는 노드 찾기 (outerHTML 비교 + nodeName/idx 폴백)
+            // 2026-06-18 v614: 텍스트 노드는 textContent 기반 매칭이 더 강건 (한글 폰트명 등으로 outerHTML 불일치 문제 회피)
+            //   일반 노드는 outerHTML 매칭, 폴백으로 nodeName + idx.
+            //   같은 텍스트가 여러개면 같은 부모 그룹의 인덱스로 disambiguate.
+            function _normText(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
             function _findRendered(srcNode, fallbackIdx) {
+                var tn = srcNode.nodeName.toLowerCase();
+                // 텍스트 노드: 내용 매칭 우선
+                if (tn === 'text') {
+                    var target = _normText(srcNode.textContent);
+                    var renderedTexts = rendered.getElementsByTagName('text');
+                    var sameContent = [];
+                    for (var ti = 0; ti < renderedTexts.length; ti++) {
+                        if (_normText(renderedTexts[ti].textContent) === target) sameContent.push(renderedTexts[ti]);
+                    }
+                    if (sameContent.length === 1) return sameContent[0];
+                    if (sameContent.length > 1) {
+                        // 다중 — 원본 순서로 disambiguate
+                        var allSrcTexts = svg.getElementsByTagName('text');
+                        var srcIdx = -1;
+                        for (var si = 0; si < allSrcTexts.length; si++) {
+                            if (allSrcTexts[si] === srcNode) { srcIdx = si; break; }
+                        }
+                        if (srcIdx >= 0 && srcIdx < sameContent.length) return sameContent[srcIdx];
+                        return sameContent[0];
+                    }
+                    // 내용 매칭 실패 — outerHTML 시도
+                }
                 var srcHtml = srcNode.outerHTML;
                 for (var ri = 0; ri < allRendered.length; ri++) {
                     if (allRendered[ri].outerHTML === srcHtml) return allRendered[ri];
@@ -8969,9 +9007,17 @@ function scrollHotdeal(gridId, dir) {
                                                 + 'width="' + vbb.width + '" height="' + vbb.height + '">'
                                                 + defsHtml + visualCopy.outerHTML + '</svg>';
                                     var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
-                                    window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh } });
-                                    var visItem = me.items[me.items.length - 1];
-                                    if (!firstItem) firstItem = visItem;
+                                    // 2026-06-18 v614: 콜백으로 비동기 추가된 item 추적
+                                    pendingImageLoads++;
+                                    (function(capturedIdx){
+                                        window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh } }, function(addedItem){
+                                            if (addedItem) {
+                                                visualItemsByChildIdx[capturedIdx] = addedItem;
+                                                console.log('[svg upload] visual added child', capturedIdx, 'size', vw.toFixed(0)+'x'+vh.toFixed(0));
+                                            }
+                                            _decPending();
+                                        });
+                                    })(idx);
                                     added++;
                                     addedVisual = true;
                                 }
@@ -9006,17 +9052,20 @@ function scrollHotdeal(gridId, dir) {
                 tmp.remove();
             }
 
-            // 2026-06-18 v610: 첫 번째 (가장 뒤쪽) 항목 = 배경 → 잠금 처리
-            if (firstItem) {
-                firstItem._isBackground = true;
-                if (firstItem.el) {
-                    firstItem.el.style.cursor = 'default';
-                    firstItem.el.classList.add('me-bg-locked');
+            // 2026-06-18 v614: 비동기 이미지 로드가 끝난 후 배경 잠금 적용.
+            //   topChildren[0] 의 visual item 이 있으면 그것을 배경. 없으면 sync 추가된 firstItem (텍스트 등).
+            _onAllLoaded(function(){
+                var bgCandidate = visualItemsByChildIdx[0] || firstItem || me.items[0];
+                if (bgCandidate) {
+                    bgCandidate._isBackground = true;
+                    if (bgCandidate.el) {
+                        bgCandidate.el.style.cursor = 'default';
+                        bgCandidate.el.classList.add('me-bg-locked');
+                    }
+                    _meUpdateUnlockBgBtn();
                 }
-                _meUpdateUnlockBgBtn();
-            }
-
-            console.log('[svg upload] split into', added, '/', topChildren.length, 'items; bg locked:', !!firstItem);
+                console.log('[svg upload] split into', added, '/', topChildren.length, 'items; bg locked:', !!bgCandidate, 'me.items:', me.items.length);
+            });
             if (added === 0) {
                 // 전부 실패 — 통째 import 로 폴백
                 var fb3 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
@@ -9052,7 +9101,7 @@ function scrollHotdeal(gridId, dir) {
         _meUpdateUnlockBgBtn();
     };
 
-    window._meAddImage = function(src, opts) {
+    window._meAddImage = function(src, opts, onAdded) {
         opts = opts || {};
         if (!src) { console.warn('[_meAddImage] empty src'); return; }
         _meSnapshot();
@@ -9063,8 +9112,13 @@ function scrollHotdeal(gridId, dir) {
         //   export 시 tainted canvas 가능성 있지만 display 우선.
         im.onerror = function() {
             console.warn('[_meAddImage] load failed:', _logSrc);
+            if (typeof onAdded === 'function') onAdded(null);
         };
-        im.onload = function() { _placeImageOnStage(im, src, opts); };
+        // 2026-06-18 v614: onAdded 콜백 — 비동기 onload 후 추가된 item 을 알려주는 용도 (SVG import 의 firstItem 추적)
+        im.onload = function() {
+            var added = _placeImageOnStage(im, src, opts);
+            if (typeof onAdded === 'function') onAdded(added);
+        };
         im.src = src;
 
         function _placeImageOnStage(image, srcUrl, options) {
@@ -9139,6 +9193,7 @@ function scrollHotdeal(gridId, dir) {
             _meBindDrag(it);
             // toBack 일 땐 자동 선택 X (선택 핸들이 백그라운드 위에 떠서 거슬림)
             if (!options.toBack) _meSelect(it);
+            return it;
         }
     };
 
