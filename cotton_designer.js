@@ -514,6 +514,8 @@ async function loadDbFabrics() {
         renderAccessoryOptions();
         // 2026-06-18 v588: 하드코딩 옵션(.fin-opt[data-name])에 admin_products 이미지 매칭 적용
         try { _cdApplyFinOptImages(classified); } catch(e){ console.warn('[fin-opt img]', e); }
+        // 2026-06-18 v595: 원단 칩(fabric-type)도 admin 썸네일로 폴백 — /fabric/*.jpg 가 없을 때
+        try { _cdApplyFabricChipFromAdmin(classified); } catch(e){ console.warn('[fabric chip admin]', e); }
     } catch(e) {
         // 부자재는 HTML에 하드코딩돼 있어 DB 실패해도 동작에 영향 없음
         if (e && e.message && !/aborted/i.test(e.message)) {
@@ -628,6 +630,48 @@ function _cdApplyFabricChipPhotos() {
 }
 window._cdApplyFabricChipPhotos = _cdApplyFabricChipPhotos;
 
+// 2026-06-18 v595: 원단 칩 폴백 — admin_products 의 name 으로 매칭해 fabric-type 아이콘 박스에 썸네일 삽입.
+//   /fabric/*.jpg 파일이 없는 원단(예: 오간자) 도 admin 에 등록만 하면 자동 노출.
+function _cdApplyFabricChipFromAdmin(adminItems) {
+    if (!adminItems || !adminItems.length) return;
+    // data-fab 별 매칭 키워드 (Korean substring)
+    var KEYWORDS = {
+        cotton20: ['면20수', '20수', 'cotton20', '면 20'],
+        cotton30: ['면30수', '30수', 'cotton30'],
+        cotton16: ['면16수', '16수', 'cotton16'],
+        cotton10: ['면10수', '10수', 'cotton10'],
+        chiffon:  ['쉬폰', 'chiffon'],
+        oxford:   ['옥스포드', 'oxford'],
+        rayon:    ['레이온', '인견', 'rayon'],
+        linen:    ['린넨', '리넨', 'linen'],
+        organza:  ['오간자', 'オーガンザ', 'organza']
+    };
+    var pool = adminItems.filter(function(a){ return _cdGetThumb(a); });
+    document.querySelectorAll('.fabric-type[data-fab]').forEach(function(chip){
+        var fab = chip.dataset.fab;
+        var iconWrap = chip.querySelector('.fabric-type-icon');
+        if (!iconWrap) return;
+        // 이미 사진이 들어가 있으면 (FABRIC_PHOTO 가 정상 로드된 경우) 건드리지 않음
+        if (iconWrap.querySelector('img')) return;
+        var kws = KEYWORDS[fab] || [];
+        if (!kws.length) return;
+        var match = null;
+        for (var i = 0; i < pool.length; i++) {
+            var n = (pool[i].name || '').toLowerCase();
+            for (var j = 0; j < kws.length; j++) {
+                if (n.indexOf(kws[j].toLowerCase()) >= 0) { match = pool[i]; break; }
+            }
+            if (match) break;
+        }
+        if (!match) return;
+        var thumb = _cdGetThumb(match);
+        if (!thumb) return;
+        iconWrap.innerHTML = '<img src="' + thumb + '" alt="" style="width:100%; height:100%; border-radius:6px; object-fit:cover; display:block;">';
+        console.log('[fabric chip admin]', fab, '←', match.name);
+    });
+}
+window._cdApplyFabricChipFromAdmin = _cdApplyFabricChipFromAdmin;
+
 // 2026-06-18 v590: 하드코딩 옵션 카드(.fin-opt) 에 admin_products 의 썸네일을 매칭해 삽입.
 //   매칭 규칙: 첫 2 한글자 일치 (예: "실색상 변경" ↔ "실색변경" 모두 "실색" 으로 매칭).
 //   이미지 필드: thumb_url / image_url / img_url 순서로 폴백.
@@ -662,7 +706,9 @@ function _cdApplyFinOptImages(adminItems) {
     if (!adminItems || !adminItems.length) return;
     var cards = document.querySelectorAll('.fin-opt[data-name]');
     var pool = adminItems.filter(function(a){ return _cdGetThumb(a) && (a.name||'').trim(); });
-    var applied = 0;
+    console.log('[fin-opt img] === START === cards:', cards.length, 'pool:', pool.length);
+    console.log('[fin-opt img] pool names:', pool.map(function(p){ return p.name; }).join(' | '));
+    var applied = 0, skipExisting = 0, lowScore = 0;
     cards.forEach(function(card){
         var optName = card.getAttribute('data-name') || '';
         if (!optName) return;
@@ -671,9 +717,13 @@ function _cdApplyFinOptImages(adminItems) {
             var s = _bigramScore(optName, pool[i].name);
             if (s > bestScore) { bestScore = s; bestItem = pool[i]; }
         }
-        // 50% 이상 일치 + 최소 2 bigram 공통 (1짧은단어 충돌 방지) 만 채택
-        if (!bestItem || bestScore < 0.5) return;
-        if (card.querySelector('.fin-opt-img')) return;
+        if (card.querySelector('.fin-opt-img')) { skipExisting++; return; }
+        if (!bestItem || bestScore < 0.5) {
+            lowScore++;
+            if (bestItem) console.log('[fin-opt img] LOW', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
+            else console.log('[fin-opt img] NONE', optName);
+            return;
+        }
         var img = document.createElement('img');
         img.className = 'fin-opt-img';
         img.src = _cdGetThumb(bestItem);
@@ -682,9 +732,9 @@ function _cdApplyFinOptImages(adminItems) {
         img.onerror = function(){ this.style.display = 'none'; };
         card.insertBefore(img, card.firstChild);
         applied++;
-        console.log('[fin-opt img] match:', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
+        console.log('[fin-opt img] OK', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
     });
-    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards (pool:', pool.length, ')');
+    console.log('[fin-opt img] === END === applied:', applied, 'skipExisting:', skipExisting, 'lowScore:', lowScore, 'total:', cards.length);
 }
 window._cdApplyFinOptImages = _cdApplyFinOptImages;
 

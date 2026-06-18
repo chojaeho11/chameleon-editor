@@ -1725,11 +1725,7 @@ window._cpAuthClick = async function() {
                     <span class="fin-opt-label"><b data-cdi18n="acc_press_rod">압축봉</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_press_sub">탄성 압축 봉</span></span>
                     <span class="fin-opt-price">+5,000원</span>
                 </label>
-                <label class="fin-opt" data-acc="ring_hook" data-name="링고리" data-extra="500">
-                    <input type="radio" name="accessory" value="ring_hook" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_ring_hook">링고리</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_ring_sub">상단 걸이용 링</span></span>
-                    <span class="fin-opt-price">+500원</span>
-                </label>
+                <!-- 2026-06-18 v595: 링고리 삭제 (사용자 요청) -->
                 <div id="accessoryExtraList" style="display:contents;"></div>
             </div>
         </div>
@@ -2104,7 +2100,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=105"></script>
+<script src="/cotton_designer.js?v=106"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
