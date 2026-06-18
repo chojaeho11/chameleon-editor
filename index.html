@@ -8802,25 +8802,43 @@ function scrollHotdeal(gridId, dir) {
 
             _meSnapshot();
 
-            // 2026-06-18 v610: <text> 만 포함된 그룹 또는 직접 <text> 노드인지 판별
-            function _isTextOnly(node) {
-                var tn = node.nodeName.toLowerCase();
-                if (tn === 'text') return true;
-                if (tn !== 'g') return false;
-                var hasText = false;
+            // 2026-06-18 v613: 그룹 내 모든 <text> 노드를 재귀 수집 (다중 텍스트 + 장식 혼합 그룹 처리)
+            function _collectAllText(node) {
+                var out = [];
+                if (node.nodeName.toLowerCase() === 'text') { out.push(node); return out; }
                 for (var ii = 0; ii < node.children.length; ii++) {
-                    var ct = node.children[ii].nodeName.toLowerCase();
-                    if (ct === 'text') { hasText = true; continue; }
-                    if (ct === 'title' || ct === 'desc' || ct === 'metadata') continue;
-                    return false; // text 외 요소 있음 → 이미지로 처리
+                    var c = node.children[ii];
+                    if (SKIP_TAGS.indexOf(c.nodeName.toLowerCase()) >= 0) continue;
+                    out = out.concat(_collectAllText(c));
                 }
-                return hasText;
+                return out;
             }
 
-            // 2026-06-18 v610: SVG <text> 노드에서 편집 가능한 텍스트 메타 추출
-            function _extractTextFromSvg(node, renderedNode, bbox) {
-                var textEl = (node.nodeName.toLowerCase() === 'text') ? node : node.querySelector('text');
-                var renderedText = (renderedNode.nodeName.toLowerCase() === 'text') ? renderedNode : renderedNode.querySelector('text');
+            // 2026-06-18 v613: 노드 트리에서 모든 <text> 노드를 제거한 복제본 반환 (시각적 잔여물 그리기용)
+            function _cloneWithoutText(node) {
+                var cl = node.cloneNode(true);
+                var allTexts = cl.querySelectorAll('text');
+                for (var ti = allTexts.length - 1; ti >= 0; ti--) {
+                    allTexts[ti].parentNode.removeChild(allTexts[ti]);
+                }
+                return cl;
+            }
+
+            // 2026-06-18 v613: 자식들 중에 <text> 외 시각 요소가 하나라도 있는지
+            function _hasNonTextVisual(node) {
+                if (node.nodeName.toLowerCase() === 'text') return false;
+                for (var ii = 0; ii < node.children.length; ii++) {
+                    var c = node.children[ii];
+                    var tn = c.nodeName.toLowerCase();
+                    if (tn === 'text' || SKIP_TAGS.indexOf(tn) >= 0) continue;
+                    // path/rect/circle/line/polygon/ellipse/image/use/g 등은 시각 요소
+                    return true;
+                }
+                return false;
+            }
+
+            // 2026-06-18 v610/v613: 단일 SVG <text> 노드에서 편집 가능한 텍스트 메타 추출
+            function _extractTextFromSvg(textEl, renderedText) {
                 if (!textEl || !renderedText) return null;
                 // 줄별 텍스트 (tspan 단위)
                 var tspans = textEl.querySelectorAll('tspan');
@@ -8883,62 +8901,106 @@ function scrollHotdeal(gridId, dir) {
 
             var added = 0;
             var firstItem = null;
+            // outerHTML 캐싱 (반복 매칭 가속화)
+            var allRendered = rendered.getElementsByTagName('*');
+
+            // rendered 트리에서 src node 와 매칭되는 노드 찾기 (outerHTML 비교 + nodeName/idx 폴백)
+            function _findRendered(srcNode, fallbackIdx) {
+                var srcHtml = srcNode.outerHTML;
+                for (var ri = 0; ri < allRendered.length; ri++) {
+                    if (allRendered[ri].outerHTML === srcHtml) return allRendered[ri];
+                }
+                if (fallbackIdx != null) {
+                    var sameTags = rendered.getElementsByTagName(srcNode.nodeName);
+                    if (sameTags.length > fallbackIdx) return sameTags[fallbackIdx];
+                }
+                return null;
+            }
+
             try {
-                // 2026-06-18 v612: topChildren 이 SVG root 의 직접 자식이 아닐 수도 있음 (unwrap 후).
-                //   rendered 트리에서 동일 노드 찾기 위해 outerHTML 매칭 + 인덱스 폴백.
-                //   가장 안전한 방법은 원본 svg 전체를 다시 querySelector + nth-of-type 으로 찾는 것.
+                // 2026-06-18 v613: 각 top-level child 에 대해
+                //   1) 내부 모든 <text> 노드를 재귀 수집 → 각각 별도 편집 가능 text item
+                //   2) <text> 를 모두 제거한 시각 잔여물(배경/장식/로고 등) 을 한 덩어리 이미지로
                 topChildren.forEach(function(child, idx) {
-                    // child 와 같은 nodeName + 같은 인덱스의 rendered 노드 찾기
-                    var renderedChild = null;
-                    // 우선 outerHTML 비교 — 빠르고 정확
-                    var srcHtml = child.outerHTML;
-                    var allRendered = rendered.getElementsByTagName('*');
-                    for (var ri = 0; ri < allRendered.length; ri++) {
-                        if (allRendered[ri].outerHTML === srcHtml) { renderedChild = allRendered[ri]; break; }
-                    }
-                    if (!renderedChild) {
-                        // 폴백: nodeName + idx 매칭
-                        var sameTags = rendered.getElementsByTagName(child.nodeName);
-                        if (sameTags.length > idx) renderedChild = sameTags[idx];
-                    }
-                    if (!renderedChild || typeof renderedChild.getBBox !== 'function') {
-                        console.warn('[svg upload] item', idx, child.nodeName, 'render lookup failed');
-                        return;
-                    }
-                    var bb = _docBBox(renderedChild);
-                    if (!bb || (bb.width <= 0 && bb.height <= 0)) {
-                        console.warn('[svg upload] item', idx, child.nodeName, 'zero bbox');
-                        return;
-                    }
+                    var allTexts = _collectAllText(child);
+                    var hasVisuals = _hasNonTextVisual(child) || child.nodeName.toLowerCase() !== 'g' && child.nodeName.toLowerCase() !== 'text';
+                    // text-only 그룹은 visual 처리 X. text-only 가 아니면 잔여물 처리.
+                    var addedVisual = false;
 
-                    var x = (bb.x - vbX) * fitScale + offX;
-                    var y = (bb.y - vbY) * fitScale + offY;
-                    var w = bb.width * fitScale;
-                    var h = bb.height * fitScale;
-
-                    var newItem;
-
-                    // 2026-06-18 v610: 텍스트 노드는 편집 가능한 me-item text 로 추출
-                    if (_isTextOnly(child)) {
-                        var tmeta = _extractTextFromSvg(child, renderedChild, bb);
-                        if (tmeta) {
-                            newItem = _addExtractedText(tmeta, { x: x, y: y, w: w, h: h });
+                    // (A) 시각 잔여물 — <text> 빼고 렌더링되는 게 있는 경우만
+                    if (hasVisuals && child.nodeName.toLowerCase() !== 'text') {
+                        // rendered 트리에서 동일 노드 찾기 (transform/style 모두 반영된 상태)
+                        var renderedChild = _findRendered(child, idx);
+                        if (renderedChild && typeof renderedChild.getBBox === 'function') {
+                            // 텍스트 제거한 복제본을 임시 마운트 → bbox 측정 → standalone SVG 로 변환
+                            var visualCopy = _cloneWithoutText(child);
+                            // text 제외하고도 시각 요소가 남았는지 확인
+                            var hasVisualRemaining = false;
+                            for (var vci = 0; vci < visualCopy.children.length; vci++) {
+                                var vct = visualCopy.children[vci].nodeName.toLowerCase();
+                                if (SKIP_TAGS.indexOf(vct) >= 0) continue;
+                                hasVisualRemaining = true; break;
+                            }
+                            // <g> 가 아닌 단일 요소 (path/rect 등) 면 무조건 시각 요소
+                            if (visualCopy.nodeName.toLowerCase() !== 'g') hasVisualRemaining = true;
+                            if (hasVisualRemaining) {
+                                // bbox 는 원본 그룹의 bbox 가 아니라 텍스트 제외한 잔여물 bbox 사용
+                                //   → 텍스트 위치까지 흰 박스로 잡히지 않게.
+                                //   visualCopy 를 임시 마운트해서 측정.
+                                var visTmp = document.createElement('div');
+                                visTmp.style.cssText = 'position:absolute; left:-99999px; top:-99999px; pointer-events:none;';
+                                var visWrap = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                                            + 'viewBox="' + vbX + ' ' + vbY + ' ' + svgW + ' ' + svgH + '" '
+                                            + 'width="' + svgW + '" height="' + svgH + '">'
+                                            + defsHtml + visualCopy.outerHTML + '</svg>';
+                                visTmp.innerHTML = visWrap;
+                                document.body.appendChild(visTmp);
+                                var visRenderedSvg = visTmp.querySelector('svg');
+                                var visTarget = visRenderedSvg.children[visRenderedSvg.children.length - 1];
+                                var vbb = _docBBox(visTarget);
+                                visTmp.remove();
+                                if (vbb && vbb.width > 0 && vbb.height > 0) {
+                                    var vx = (vbb.x - vbX) * fitScale + offX;
+                                    var vy = (vbb.y - vbY) * fitScale + offY;
+                                    var vw = vbb.width * fitScale;
+                                    var vh = vbb.height * fitScale;
+                                    var partSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                                                + 'viewBox="' + vbb.x + ' ' + vbb.y + ' ' + vbb.width + ' ' + vbb.height + '" '
+                                                + 'width="' + vbb.width + '" height="' + vbb.height + '">'
+                                                + defsHtml + visualCopy.outerHTML + '</svg>';
+                                    var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
+                                    window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh } });
+                                    var visItem = me.items[me.items.length - 1];
+                                    if (!firstItem) firstItem = visItem;
+                                    added++;
+                                    addedVisual = true;
+                                }
+                            }
                         }
                     }
 
-                    // 텍스트가 아니거나 추출 실패 시 → 이미지로 처리 (그룹 단위)
-                    if (!newItem) {
-                        var partSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
-                                    + 'viewBox="' + bb.x + ' ' + bb.y + ' ' + bb.width + ' ' + bb.height + '" '
-                                    + 'width="' + bb.width + '" height="' + bb.height + '">'
-                                    + defsHtml + child.outerHTML + '</svg>';
-                        var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
-                        window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: w, h: h } });
-                        // 방금 추가된 항목 = me.items 마지막
-                        newItem = me.items[me.items.length - 1];
-                    }
-                    if (!firstItem && newItem) firstItem = newItem;
-                    added++;
+                    // (B) 그룹 내부의 모든 <text> 를 각각 편집 가능한 text item 으로 추출
+                    allTexts.forEach(function(textNode) {
+                        var renderedText = _findRendered(textNode);
+                        if (!renderedText) {
+                            console.warn('[svg upload] text node render lookup failed:', textNode.textContent);
+                            return;
+                        }
+                        var tbb = _docBBox(renderedText);
+                        if (!tbb || tbb.width <= 0 || tbb.height <= 0) {
+                            console.warn('[svg upload] text zero bbox:', textNode.textContent);
+                            return;
+                        }
+                        var tmeta = _extractTextFromSvg(textNode, renderedText);
+                        if (!tmeta) return;
+                        var tx = (tbb.x - vbX) * fitScale + offX;
+                        var ty = (tbb.y - vbY) * fitScale + offY;
+                        var tw = tbb.width * fitScale;
+                        var th = tbb.height * fitScale;
+                        var ti = _addExtractedText(tmeta, { x: tx, y: ty, w: tw, h: th });
+                        if (!firstItem) firstItem = ti;
+                        added++;
+                    });
                 });
             } finally {
                 tmp.remove();
