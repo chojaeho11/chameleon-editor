@@ -131,10 +131,10 @@ const state = {
     // 2026-05-14: 무료 샘플북 신청 (체크 시 주문 정보에 플래그 저장)
     sampleBook: false,
     // 1) 원단 마감 (필수, 기본 롤인쇄, m²당 가격)
-    // 2026-05-12: 기본 마감 = 오버록 (롤인쇄 옵션 제거)
-    finishCode: 'overlock',
-    finishName: '오버록',
-    finishExtra: 5000,                // 단가/m² (회배 비례)
+    // 2026-06-18 v602: 기본 마감 = 가재단 (사용자 요청 — 카드는 오버록/인터록/말아박기 3종만 노출, 미선택 시 가재단)
+    finishCode: 'raw',
+    finishName: '가재단',
+    finishExtra: 1000,                // 단가/m² (회배 비례)
     // 2) 고리 (선택, 1회 가격)
     hookCode: '',
     hookName: '',

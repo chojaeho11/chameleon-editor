@@ -327,6 +327,7 @@ window.__CD_I18N = {
     fab_cotton10: { ko:'면10수', ja:'コットン10番', en:'Cotton 10s' },
     fab_chiffon: { ko:'쉬폰', ja:'シフォン', en:'Chiffon' },
     fab_organza: { ko:'오간자', ja:'オーガンザ', en:'Organza' },
+    finish_default_note: { ko:'※ 미선택 시 가재단 (+1,000원/회배) 자동 적용', ja:'※ 未選択時はガサイダン (+¥100/㎡) 自動適用', en:'※ Default cut (+$1/㎡) auto-applied if none selected' },
     fab_oxford: { ko:'옥스포드', ja:'オックスフォード', en:'Oxford' },
     fab_rayon: { ko:'레이온', ja:'レーヨン', en:'Rayon' },
     fab_linen: { ko:'린넨', ja:'リネン', en:'Linen' },
@@ -975,42 +976,42 @@ a { text-decoration: none; color: inherit; }
 .fin-opt:hover { background:var(--cream); }
 .fin-opt input { margin:0 4px 0 0; flex-shrink:0; }
 .fin-opt:has(input:checked) { background:var(--cream); border-color:var(--brown); }
-/* 2026-06-18 v590: 옵션 카드 — 항상 세로 (이미지 ↑ / 라벨 ↓ / 가격), 모든 그룹 2칸.
+/* 2026-06-18 v602: 옵션 카드 — 항상 세로 (이미지 ↑ / 라벨 ↓ / 가격), 모든 그룹 3칸.
    주의: _cdToggleCollapse 는 .open 클래스를 부모 .collapse-card 에 붙임 (body 아님!).
    그래서 모든 셀렉터는 .collapse-card.open .collapse-body... 형태. */
 .fin-opt-img { width:100%; aspect-ratio:1.4/1; object-fit:cover; border-radius:6px; display:block; background:#f3f4f6; }
 /* 컨테이너 grid — 항상 보이는 #finishOptions. !important 안 씀 (collapse 안 grid 가 display:none 인라인을 안 덮도록) */
-.fin-opt-grid-2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+.fin-opt-grid-3 { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; }
 /* collapse 안의 #hookCollapse, #accCollapse — 부모(.collapse-card)가 .open 일 때만 grid 로 표시 */
-.collapse-card.open > .collapse-body.fin-opt-grid-2 {
-    display:grid !important; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;
+.collapse-card.open > .collapse-body.fin-opt-grid-3 {
+    display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px;
 }
 /* 카드 내부 — 항상 세로 레이아웃 */
-.fin-opt-grid-2 .fin-opt {
+.fin-opt-grid-3 .fin-opt {
     flex-direction:column; align-items:stretch; justify-content:flex-start;
-    padding:8px 8px 10px; gap:4px; position:relative; min-height:74px;
+    padding:6px 6px 8px; gap:3px; position:relative; min-height:64px;
 }
-.fin-opt-grid-2 .fin-opt-label {
-    text-align:center; line-height:1.3; word-break:keep-all; overflow-wrap:break-word;
+.fin-opt-grid-3 .fin-opt-label {
+    text-align:center; line-height:1.25; word-break:keep-all; overflow-wrap:break-word;
 }
-.fin-opt-grid-2 .fin-opt-price {
-    text-align:center; font-size:11.5px;
+.fin-opt-grid-3 .fin-opt-price {
+    text-align:center; font-size:11px;
 }
-.fin-opt-grid-2 .fin-opt-label > b {
-    display:block; font-size:13px; word-break:keep-all;
+.fin-opt-grid-3 .fin-opt-label > b {
+    display:block; font-size:11.5px; word-break:keep-all;
 }
-.fin-opt-grid-2 .fin-opt-label > span {
-    display:block; margin-left:0 !important; margin-top:2px; font-size:10.5px !important;
-    color:var(--text-light); word-break:keep-all; line-height:1.25;
+.fin-opt-grid-3 .fin-opt-label > span {
+    display:block; margin-left:0 !important; margin-top:1px; font-size:9.5px !important;
+    color:var(--text-light); word-break:keep-all; line-height:1.2;
 }
-.fin-opt-grid-2 .fin-opt input[type=radio] {
-    position:absolute; top:6px; left:6px; z-index:2;
-    background:rgba(255,255,255,0.95); border-radius:50%; margin:0;
+.fin-opt-grid-3 .fin-opt input[type=radio] {
+    position:absolute; top:4px; left:4px; z-index:2;
+    background:rgba(255,255,255,0.95); border-radius:50%; margin:0; width:14px; height:14px;
 }
 @media (max-width:480px) {
-    .fin-opt-grid-2 { gap:6px; }
-    .collapse-card.open > .collapse-body.fin-opt-grid-2 { gap:6px; }
-    .fin-opt-grid-2 .fin-opt-label > b { font-size:12px; }
+    .fin-opt-grid-3 { gap:5px; }
+    .collapse-card.open > .collapse-body.fin-opt-grid-3 { gap:5px; }
+    .fin-opt-grid-3 .fin-opt-label > b { font-size:11px; }
 }
 /* 2026-06-01: 라벨 wrap 허용 — JP 'オーバーロック ほつれ防止' 같은 긴 라벨이 row 폭을 키워 overflow 되던 버그 fix. */
 .fin-opt-label { flex:1; min-width:0; word-break:keep-all; overflow-wrap:break-word; line-height:1.35; }
@@ -1601,10 +1602,10 @@ window._cpAuthClick = async function() {
                 <span data-cdi18n="side_finish">원단 마감</span> <span style="color:#dc2626; font-weight:800;">*</span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" data-cdi18n="finish_required">필수 / 제곱미터당</span>
             </div>
-            <div id="finishOptions" class="fin-opt-grid-2">
-                <!-- 2026-06-01: 마감 가격 재조정 — 오버록 4000 / 인터록 5000 / 말아박기 6000 / 가재단 1000 -->
+            <div id="finishOptions" class="fin-opt-grid-3">
+                <!-- 2026-06-18 v602: 가재단 카드 제거 — 기본값(default) 으로 처리. 카드는 업그레이드 옵션 3종만. -->
                 <label class="fin-opt" data-finish="overlock" data-name="오버록" data-extra="4000">
-                    <input type="radio" name="finish" value="overlock" checked onchange="window._cdOnFinishChange()">
+                    <input type="radio" name="finish" value="overlock" onchange="window._cdOnFinishChange()">
                     <span class="fin-opt-label"><b data-cdi18n="finish_overlock">오버록</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_overlock_sub">올풀림 방지</span></span>
                     <span class="fin-opt-price">+4,000원/회배</span>
                 </label>
@@ -1618,12 +1619,8 @@ window._cpAuthClick = async function() {
                     <span class="fin-opt-label"><b data-cdi18n="finish_rolledhem">말아박기</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_rolledhem_sub">고급 접어박기</span></span>
                     <span class="fin-opt-price">+6,000원/회배</span>
                 </label>
-                <label class="fin-opt" data-finish="raw" data-name="가재단" data-extra="1000">
-                    <input type="radio" name="finish" value="raw" onchange="window._cdOnFinishChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="finish_raw">가재단</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="finish_raw_sub">사이즈 정밀 컷팅</span></span>
-                    <span class="fin-opt-price">+1,000원/회배</span>
-                </label>
             </div>
+            <div style="font-size:10.5px; color:var(--text-light); margin-top:6px; text-align:center;" data-cdi18n="finish_default_note">※ 미선택 시 가재단 (+1,000원/회배) 자동 적용</div>
         </div>
 
         <!-- 2) 고리 옵션 (선택, 접이식) — 패브릭포스터 전용 -->
@@ -1632,12 +1629,8 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_hook">끈고리 · 봉끼움 · 미싱</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="hookSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="hookCollapse" class="collapse-body fin-opt-grid-2" style="display:none; margin-top:10px;">
-                <label class="fin-opt" data-hook="" data-name="" data-extra="0">
-                    <input type="radio" name="hook" value="" checked onchange="window._cdOnHookChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
-                    <span class="fin-opt-price">+0원</span>
-                </label>
+            <div id="hookCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
+                <!-- 2026-06-18 v602: 선택 안 함 + 노랜 연결 마감 삭제. 미선택 시 자동으로 hookCode='' 유지. -->
                 <label class="fin-opt" data-hook="top_string" data-name="상단끈고리" data-extra="2000">
                     <input type="radio" name="hook" value="top_string" onchange="window._cdOnHookChange()">
                     <span class="fin-opt-label"><b data-cdi18n="hook_top_string">상단 끈 고리</b></span>
@@ -1663,11 +1656,6 @@ window._cpAuthClick = async function() {
                     <span class="fin-opt-label"><b data-cdi18n="hook_middle_split">가운데 트임</b></span>
                     <span class="fin-opt-price">+15,000원</span>
                 </label>
-                <label class="fin-opt" data-hook="noren" data-name="노랜연결마감" data-extra="3000">
-                    <input type="radio" name="hook" value="noren" onchange="window._cdOnHookChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="hook_noren">노랜 연결 마감</b></span>
-                    <span class="fin-opt-price">+3,000원</span>
-                </label>
                 <label class="fin-opt" data-hook="eyelet4" data-name="아일렛타공4곳" data-extra="4000">
                     <input type="radio" name="hook" value="eyelet4" onchange="window._cdOnHookChange()">
                     <span class="fin-opt-label"><b data-cdi18n="hook_eyelet4">아일렛 타공 4곳</b></span>
@@ -1682,13 +1670,8 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_acc">실색상변경 · 목봉</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="accSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="accCollapse" class="collapse-body fin-opt-grid-2" style="display:none; margin-top:10px;">
-                <label class="fin-opt" data-acc="" data-name="" data-extra="0">
-                    <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
-                    <span class="fin-opt-price">+0원</span>
-                </label>
-                <!-- 2026-05-12: 하드코딩 부자재 — 실색상 / 목봉 / OPP / 압축봉 / 링고리 -->
+            <div id="accCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
+                <!-- 2026-06-18 v602: 선택 안 함 삭제. 미선택 시 자동으로 accCode='' 유지. -->
                 <label class="fin-opt" data-acc="thread_color" data-name="실색상 변경" data-extra="2000">
                     <input type="radio" name="accessory" value="thread_color" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
@@ -2069,7 +2052,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=112"></script>
+<script src="/cotton_designer.js?v=113"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
