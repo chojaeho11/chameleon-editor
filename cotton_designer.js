@@ -489,22 +489,20 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        const r1 = await sb.from('admin_categories').select('code').eq('top_category_code', '22222');
-        if (r1.error) return; // 무해 — 하드코딩 부자재로 충분
-        const subCats = r1.data || [];
-        // 2026-05-12: 빈 코드 / 공백 / 콤마 포함 코드 필터링 — PostgREST IN 절 깨짐 방지
-        const codes = subCats.map(c => (c.code || '').trim())
-                              .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
-        if (codes.length === 0) return;
-        // 2026-06-18 v593: name_en / name_kr 컬럼 미존재 (admin_products 스키마는 name 하나만).
-        //   SELECT '*' 로 가져와 모든 컬럼(있는 것만) 확보. PostgREST 가 와일드카드를 지원해서 안전.
-        let r2 = await sb.from('admin_products').select('*').in('category', codes);
+        // 2026-06-18 v596: 카테고리 필터 제거 — 오버록/가재단/상단끈고리 등 핵심 옵션이 top_category_code='22222' 밖에 있어서 매칭 실패함.
+        //   썸네일 있는 모든 admin_products 를 풀로 사용. PostgREST: thumb_url IS NOT NULL.
+        let r2 = await sb.from('admin_products').select('*').not('thumb_url', 'is', null);
+        if (r2.error) {
+            console.warn('[loadDbFabrics] select w/ thumb filter failed:', r2.error.message);
+            r2 = await sb.from('admin_products').select('*');
+        }
         if (r2.error) {
             console.warn('[loadDbFabrics] select * failed:', r2.error.message);
-            r2 = await sb.from('admin_products').select('code, name, price, sort_order').in('category', codes);
+            r2 = await sb.from('admin_products').select('code, name, price, sort_order');
         }
         if (r2.error) return;
         const products = r2.data || [];
+        console.log('[loadDbFabrics] loaded', products.length, 'admin products');
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
@@ -677,7 +675,7 @@ window._cdApplyFabricChipFromAdmin = _cdApplyFabricChipFromAdmin;
 //   이미지 필드: thumb_url / image_url / img_url 순서로 폴백.
 function _cdGetThumb(p) {
     if (!p) return '';
-    return p.thumb_url || p.image_url || p.img_url || p.image || '';
+    return p.thumb_url || p.image_url || p.img_url || p.image || p.image_kr || p.photo || p.photo_url || p.thumbnail_url || '';
 }
 // 2026-06-18 v594: 매칭 — 공통 한글 bigram 비율(점수)으로 best-match. 50% 이상만 채택.
 //   "오버록" vs "오버록" admin → 2/2 = 100% ✓

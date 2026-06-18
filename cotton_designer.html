@@ -1694,38 +1694,12 @@ window._cpAuthClick = async function() {
                     <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
                     <span class="fin-opt-price">+2,000원</span>
                 </label>
-                <!-- 2026-05-14: 목봉 3배 인상 / OPP 1000→300 / 압축봉 3000→5000 / 링고리 1500→500 -->
-                <label class="fin-opt" data-acc="rod_30" data-name="목봉 30cm" data-extra="4500">
-                    <input type="radio" name="accessory" value="rod_30" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_30">목봉 30cm</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_rod_sub">상단 봉 끼움용</span></span>
-                    <span class="fin-opt-price">+4,500원</span>
-                </label>
-                <label class="fin-opt" data-acc="rod_50" data-name="목봉 50cm" data-extra="7500">
-                    <input type="radio" name="accessory" value="rod_50" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_50">목봉 50cm</b></span>
-                    <span class="fin-opt-price">+7,500원</span>
-                </label>
-                <label class="fin-opt" data-acc="rod_100" data-name="목봉 100cm" data-extra="12000">
-                    <input type="radio" name="accessory" value="rod_100" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_100">목봉 100cm</b></span>
-                    <span class="fin-opt-price">+12,000원</span>
-                </label>
-                <label class="fin-opt" data-acc="rod_130" data-name="목봉 130cm" data-extra="15000">
-                    <input type="radio" name="accessory" value="rod_130" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_rod_130">목봉 130cm</b></span>
-                    <span class="fin-opt-price">+15,000원</span>
-                </label>
+                <!-- 2026-06-18 v596: 목봉 4종 + 압축봉 + 링고리 삭제 (사용자 요청) — 모두 admin 에서 dynamic 로드 -->
                 <label class="fin-opt" data-acc="opp_pack" data-name="OPP 개별포장" data-extra="300">
                     <input type="radio" name="accessory" value="opp_pack" onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="acc_opp_pack">OPP 개별포장</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_opp_sub">투명 비닐 포장</span></span>
                     <span class="fin-opt-price">+300원</span>
                 </label>
-                <label class="fin-opt" data-acc="press_rod" data-name="압축봉" data-extra="5000">
-                    <input type="radio" name="accessory" value="press_rod" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_press_rod">압축봉</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_press_sub">탄성 압축 봉</span></span>
-                    <span class="fin-opt-price">+5,000원</span>
-                </label>
-                <!-- 2026-06-18 v595: 링고리 삭제 (사용자 요청) -->
                 <div id="accessoryExtraList" style="display:contents;"></div>
             </div>
         </div>
@@ -2100,7 +2074,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=106"></script>
+<script src="/cotton_designer.js?v=107"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
