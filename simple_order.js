@@ -13825,33 +13825,39 @@ html, body { background: #ffffff !important; }
                     console.log('[overlay] uploaded:', _ovRes.url);
                 } catch (_oue) { console.warn('[overlay upload]', _oue); }
             }
-            // 2026-06-19 v623: 템플릿 사용 주문 — 미니에디터를 SVG 로 직렬화하여 관리자 페이지에 첨부.
-            //   벡터 보존 → 인쇄소에서 일러스트레이터로 바로 편집 가능. 템플릿 ID/이름도 메타로 보존.
+            // 2026-06-19 v623/v626: 미니에디터 디자인 주문 — SVG 직렬화 + 텍스트 아웃라인 변환 후 관리자 페이지에 첨부.
+            //   v626: 템플릿 사용 여부 관계없이 미니에디터에 항목이 있으면 무조건 SVG 도 생성 (관리자 일러스트 편집용).
+            //   벡터 보존 → 인쇄소에서 일러스트레이터로 바로 편집 가능. 템플릿 사용 시 메타도 함께 보존.
             state._cartTemplateSvgUrl = null;
             state._cartTemplateSvgPath = null;
             state._cartTemplateMeta = null;
             try {
                 var _meRefT = window.me;
-                if (_meRefT && _meRefT._usedTemplate && typeof window._meExportSVG === 'function') {
-                    updateUploadStep(tr('템플릿 SVG (텍스트 아웃라인 변환) 처리 중...', 'テンプレートSVG (テキストアウトライン変換) 中...', 'Converting template SVG (text outline)...'));
+                var _meHasItems = _meRefT && Array.isArray(_meRefT.items) && _meRefT.items.length > 0;
+                if (_meHasItems && typeof window._meExportSVG === 'function') {
+                    updateUploadStep(tr('디자인 SVG (텍스트 아웃라인 변환) 처리 중...', 'デザインSVG (テキストアウトライン変換) 中...', 'Converting design SVG (text outline)...'));
                     // v624: outline:true → 모든 텍스트를 벡터 path 로 변환 (폰트 없어도 동일 표시)
                     var _svgText = await window._meExportSVG({ outline: true });
                     if (_svgText && _svgText.length > 100) {
                         var _svgBlob = new Blob([_svgText], { type: 'image/svg+xml' });
-                        var _svgFile = new File([_svgBlob], 'template-' + Date.now() + '.svg', { type: 'image/svg+xml' });
+                        var _svgFile = new File([_svgBlob], 'design-' + Date.now() + '.svg', { type: 'image/svg+xml' });
                         var _svgRes = await uploadFileGeneric(_svgFile);
                         state._cartTemplateSvgUrl = _svgRes.url;
                         state._cartTemplateSvgPath = _svgRes.path;
-                        state._cartTemplateMeta = {
-                            id: _meRefT._usedTemplate.id,
-                            name: _meRefT._usedTemplate.name || '',
-                            category: _meRefT._usedTemplate.category || '',
-                            code: _meRefT._usedTemplate.code || ''
-                        };
-                        console.log('[template svg] uploaded:', _svgRes.url, 'tpl:', state._cartTemplateMeta.name);
+                        if (_meRefT._usedTemplate) {
+                            state._cartTemplateMeta = {
+                                id: _meRefT._usedTemplate.id,
+                                name: _meRefT._usedTemplate.name || '',
+                                category: _meRefT._usedTemplate.category || '',
+                                code: _meRefT._usedTemplate.code || ''
+                            };
+                        }
+                        console.log('[design svg] uploaded:', _svgRes.url, 'tpl:', state._cartTemplateMeta ? state._cartTemplateMeta.name : '(no template)');
+                    } else {
+                        console.warn('[design svg] empty or too short, skip');
                     }
                 }
-            } catch(_tse) { console.warn('[template svg upload]', _tse); }
+            } catch(_tse) { console.warn('[design svg upload]', _tse); }
             // 2026-06-16 v7: 칼선 PDF — 이미지 + vector cutline 단일 파일 (인쇄소가 한 파일로 처리).
             //   페이지 size = 실제 스티커 mm. 칼선 anchor 점 RDP 단순화로 일러스트레이터/커팅머신 친화적.
             state._cartCutlineUrl = null;

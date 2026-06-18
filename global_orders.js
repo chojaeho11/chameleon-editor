@@ -2930,7 +2930,7 @@ function renderFileList() {
         const badge = isCutline
             ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">칼선</span>'
             : isTplSvg
-                ? '<span style="background:#7c3aed;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">템플릿 SVG</span>'
+                ? '<span style="background:#7c3aed;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">디자인 SVG · 아웃라인</span>'
                 : '';
         const preview = isImage ? `<div style="margin:4px 0;"><img src="${f.url}" style="max-width:120px;max-height:80px;border:1px solid #e2e8f0;border-radius:4px;cursor:pointer;" onclick="window.open('${f.url}','_blank')"></div>` : '';
         return `<div class="file-item-row" style="flex-direction:column;align-items:flex-start;">

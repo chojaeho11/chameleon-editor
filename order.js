@@ -3534,11 +3534,14 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
                 type: 'cutline'
             });
         }
-        // 2026-06-19 v623: 템플릿 사용 주문 — SVG 벡터본 첨부 (인쇄소 일러스트 편집용)
+        // 2026-06-19 v623/v626: 미니에디터 디자인 — SVG 벡터본 (텍스트 아웃라인 변환) 첨부. 인쇄소 일러스트 편집용.
+        //   v626: 템플릿 사용 여부 관계없이 디자인이 있으면 첨부됨. 파일명은 템플릿 이름 있으면 그것, 없으면 design_*.
         if (item.templateSvgUrl) {
-            var _tplName = (item.templateMeta && item.templateMeta.name) ? item.templateMeta.name.replace(/[^\w가-힣\-]/g, '_') : 'template';
+            var _designLbl = (item.templateMeta && item.templateMeta.name)
+                ? item.templateMeta.name.replace(/[^\w가-힣\-]/g, '_')
+                : 'design';
             uploadedFiles.push({
-                name: `template_${idx}_${_tplName}.svg`,
+                name: `design_${idx}_${_designLbl}.svg`,
                 url: item.templateSvgUrl,
                 type: 'template_svg'
             });
