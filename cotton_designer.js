@@ -496,9 +496,16 @@ async function loadDbFabrics() {
         const codes = subCats.map(c => (c.code || '').trim())
                               .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
         if (codes.length === 0) return;
-        const r2 = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, thumb_url, image_url, img_url')
+        // 2026-06-18 v591: thumb_url 만 select (image_url/img_url 컬럼 미존재 → 400 발생). 한 번 더 실패하면 image 컬럼 폴백.
+        let r2 = await sb.from('admin_products')
+            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, thumb_url')
             .in('category', codes);
+        if (r2.error) {
+            console.warn('[loadDbFabrics] thumb_url select failed, retrying without it:', r2.error.message);
+            r2 = await sb.from('admin_products')
+                .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order')
+                .in('category', codes);
+        }
         if (r2.error) return;
         const products = r2.data || [];
         const classified = products
