@@ -412,7 +412,23 @@ window.__CD_I18N = {
     cd_review_submit:       { ko:'리뷰 등록', ja:'レビュー投稿', en:'Submit Review' },
     cd_review_submitted:    { ko:'리뷰가 등록되었습니다 ✨', ja:'レビューを投稿しました ✨', en:'Review submitted ✨' },
     cd_review_login_or_nick:{ ko:'닉네임을 입력해주세요', ja:'ニックネームを入力してください', en:'Please enter a nickname' },
-    cd_review_comment_min:  { ko:'리뷰 내용을 입력해주세요', ja:'レビュー内容を入力してください', en:'Please enter review content' }
+    cd_review_comment_min:  { ko:'리뷰 내용을 입력해주세요', ja:'レビュー内容を入力してください', en:'Please enter review content' },
+    // 2026-06-18 v585: 할인 적용 i18n + 매니저 결제창 i18n
+    co_discount:            { ko:'할인 적용 (1개 선택)', ja:'割引適用 (1つ選択)', en:'Apply Discount (select 1)' },
+    co_disc_event:          { ko:'이벤트 쿠폰', ja:'イベントクーポン', en:'Event Coupon' },
+    co_disc_mileage:        { ko:'마일리지', ja:'マイレージ', en:'Mileage' },
+    co_disc_deposit:        { ko:'예치금', ja:'預り金', en:'Deposit' },
+    co_disc_pro:            { ko:'PRO 구독할인', ja:'PRO サブスク割引', en:'PRO Subscriber Discount' },
+    co_disc_no_dup:         { ko:'* 모든 할인은 중복사용 불가', ja:'* すべての割引は重複利用不可', en:'* Discounts cannot be combined' },
+    co_disc_event_hint:     { ko:'보유 {bal} · 최대 20%', ja:'残高 {bal} · 最大20%', en:'Bal {bal} · Max 20%' },
+    co_disc_mileage_hint:   { ko:'보유 {bal} · 5%', ja:'残高 {bal} · 5%', en:'Bal {bal} · 5%' },
+    co_disc_deposit_hint:   { ko:'보유 {bal} · 전액 사용', ja:'残高 {bal} · 全額', en:'Bal {bal} · Full' },
+    co_disc_pro_hint:       { ko:'주문의 10%', ja:'注文金額の10%', en:'10% of order' },
+    co_disc_pro_none:       { ko:'미구독', ja:'未加入', en:'Not subscribed' },
+    co_login_to_use:        { ko:'🔐 로그인하시면 이벤트 쿠폰 / 마일리지 / 예치금 / PRO 구독할인을 적용할 수 있습니다.', ja:'🔐 ログインするとイベントクーポン / マイレージ / 預り金 / PRO 割引が適用できます。', en:'🔐 Sign in to use Event Coupon / Mileage / Deposit / PRO Discount.' },
+    co_profile_err:         { ko:'⚠️ 프로필 정보를 불러올 수 없습니다.', ja:'⚠️ プロフィール情報を取得できませんでした。', en:'⚠️ Could not load profile.' },
+    co_mgr_quote_btn:       { ko:'🎁 고객 결제창 만들어주기 (매니저)', ja:'🎁 お客様用 決済リンクを作成 (担当者)', en:'🎁 Create Customer Checkout Link (Manager)' },
+    co_mgr_quote_hint:      { ko:'☎️ 패브릭 카트 그대로 고객에게 결제 URL 만 발송됩니다.', ja:'☎️ ファブリックカートをそのままお客様に決済URLとして送信します。', en:'☎️ Send the fabric cart as a checkout URL to the customer.' }
 };
 window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
 function applyCdI18n() {
@@ -1971,13 +1987,13 @@ window._cpAuthClick = async function() {
                     <label class="cp-disc-card" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <input type="radio" name="cpDiscChoice" value="pro" onchange="window._cpOnDiscountSelect && window._cpOnDiscountSelect()" style="margin:0;">
-                            <b style="font-size:12px; color:#6d28d9;">👑 PRO 구독할인</b>
+                            <b style="font-size:12px; color:#6d28d9;">👑 <span data-cdi18n="co_disc_pro">PRO 구독할인</span></b>
                         </div>
                         <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="cpDiscProAmount">-</div>
                         <div style="font-size:10.5px; color:#7c3aed;" id="cpDiscProHint">주문의 10%</div>
                     </label>
                 </div>
-                <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
+                <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;" data-cdi18n="co_disc_no_dup">
                     * 모든 할인은 중복사용 불가
                 </div>
             </div>
@@ -2006,10 +2022,10 @@ window._cpAuthClick = async function() {
                 <a href="/jp-track" target="_blank" rel="noopener" style="color:#b45309; font-weight:700; text-decoration:underline;" data-cdi18n="co_track_link">주문 진행 상황 조회</a>
             </div>
             <!-- 2026-05-14: 관리자/매니저 전용 — 패브릭 카트 기반 고객 결제창 생성 -->
-            <button id="coMgrQuoteBtn" type="button" onclick="window._cpCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);">
+            <button id="coMgrQuoteBtn" type="button" onclick="window._cpCreateMgrQuote(this)" style="display:none; width:100%; margin-top:10px; padding:14px 20px; background:linear-gradient(135deg,#fbbf24,#b45309); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 6px 18px -4px rgba(251,191,36,0.55);" data-cdi18n="co_mgr_quote_btn">
                 🎁 고객 결제창 만들어주기 (매니저)
             </button>
-            <div id="coMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;">
+            <div id="coMgrQuoteHint" style="display:none; font-size:10px; color:#92400e; text-align:center; margin-top:6px;" data-cdi18n="co_mgr_quote_hint">
                 ☎️ 패브릭 카트 그대로 고객에게 결제 URL 만 발송됩니다.
             </div>
             <div id="coMgrQuoteResult" style="display:none; margin-top:12px; padding:12px; background:#dcfce7; border:1.5px solid #22c55e; border-radius:10px;">
@@ -2045,7 +2061,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=97"></script>
+<script src="/cotton_designer.js?v=98"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

@@ -2427,6 +2427,14 @@ function _cpGetAuthSb() {
     return client;
 }
 
+// 2026-06-18 v585: 할인 라벨 i18n 헬퍼 — cdT 키 + {bal} 치환
+function _cpT(key, fallback) {
+    try { var v = window.cdT && window.cdT(key); if (v) return v; } catch(_){}
+    return fallback;
+}
+// 잔액(P)을 현지 통화로 표시 — cdFmtPrice 의 결과 그대로 사용 (P 접미 없음)
+function _cpFmtBal(krw) { return cdFmtPrice(krw); }
+
 window._cpLoadDiscounts = async function() {
     var box = document.getElementById('cpDiscountBox');
     if (!box) { console.warn('[cp discount] cpDiscountBox element not found in DOM'); return; }
@@ -2439,7 +2447,7 @@ window._cpLoadDiscounts = async function() {
         if (!uid) {
             // 비로그인 사용자에게도 안내 — '로그인하면 할인 적용 가능'
             box.style.display = '';
-            box.innerHTML = '<span class="co-label">할인 적용</span><div style="padding:14px; background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; font-size:12.5px; color:#92400e; line-height:1.6;">🔐 로그인하시면 이벤트 쿠폰 / 마일리지 / 예치금 / PRO 구독할인을 적용할 수 있습니다.</div>';
+            box.innerHTML = '<span class="co-label">' + _cpT('co_discount','할인 적용 (1개 선택)') + '</span><div style="padding:14px; background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; font-size:12.5px; color:#92400e; line-height:1.6;">' + _cpT('co_login_to_use','🔐 로그인하시면 이벤트 쿠폰 / 마일리지 / 예치금 / PRO 구독할인을 적용할 수 있습니다.') + '</div>';
             return;
         }
         // profiles 에서 잔액
@@ -2462,7 +2470,7 @@ window._cpLoadDiscounts = async function() {
         console.log('[cp discount] profile loaded:', prof);
         if (!prof) {
             box.style.display = '';
-            box.innerHTML = '<span class="co-label">할인 적용</span><div style="padding:14px; background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; font-size:12.5px; color:#991b1b;">⚠️ 프로필 정보를 불러올 수 없습니다.</div>';
+            box.innerHTML = '<span class="co-label">' + _cpT('co_discount','할인 적용 (1개 선택)') + '</span><div style="padding:14px; background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; font-size:12.5px; color:#991b1b;">' + _cpT('co_profile_err','⚠️ 프로필 정보를 불러올 수 없습니다.') + '</div>';
             return;
         }
         var coupon  = Number(prof.event_coupon || 0);
@@ -2474,22 +2482,23 @@ window._cpLoadDiscounts = async function() {
         window._cpDiscState.deposit = deposit;
         window._cpDiscState.isPro   = isPro;
         var total = calcFabricCartTotal();
-        // 1) 이벤트 쿠폰: 최대 3만원 또는 보유액 중 작은 것
-        var couponUsable = Math.min(coupon, 30000, total);
+        // 1) 이벤트 쿠폰: 보유액 vs 주문×20% vs 30,000원 중 최소 (2026-06-18 v585: 20% cap 추가)
+        var couponUsable  = Math.min(coupon,  Math.floor(total * 0.20), 30000, total);
         // 2) 마일리지: 주문의 5%
         var mileageUsable = Math.min(mileage, Math.floor(total * 0.05));
         // 3) 예치금: 전액 사용 (단 total 까지)
         var depositUsable = Math.min(deposit, total);
         // 4) PRO: 주문 10%
-        var proUsable = isPro ? Math.floor(total * 0.10) : 0;
-        document.getElementById('cpDiscEventAmount').textContent  = couponUsable.toLocaleString() + ' P';
-        document.getElementById('cpDiscEventHint').textContent    = '보유 ' + coupon.toLocaleString() + ' · 최대 3만원';
-        document.getElementById('cpDiscMileageAmount').textContent = mileageUsable.toLocaleString() + ' P';
-        document.getElementById('cpDiscMileageHint').textContent   = '보유 ' + mileage.toLocaleString() + ' · 5%';
-        document.getElementById('cpDiscDepositAmount').textContent = depositUsable.toLocaleString() + ' P';
-        document.getElementById('cpDiscDepositHint').textContent   = '보유 ' + deposit.toLocaleString() + ' · 전액 사용';
-        document.getElementById('cpDiscProAmount').textContent     = isPro ? '-' + proUsable.toLocaleString() + ' P' : '미구독';
-        document.getElementById('cpDiscProHint').textContent       = isPro ? '주문의 10%' : '미구독';
+        var proUsable     = isPro ? Math.floor(total * 0.10) : 0;
+        // 표시는 모두 현지 통화 (KRW/JPY/USD). 라벨도 lang 별 i18n.
+        document.getElementById('cpDiscEventAmount').textContent   = _cpFmtBal(couponUsable);
+        document.getElementById('cpDiscEventHint').textContent     = _cpT('co_disc_event_hint','보유 {bal} · 최대 20%').replace('{bal}', _cpFmtBal(coupon));
+        document.getElementById('cpDiscMileageAmount').textContent = _cpFmtBal(mileageUsable);
+        document.getElementById('cpDiscMileageHint').textContent   = _cpT('co_disc_mileage_hint','보유 {bal} · 5%').replace('{bal}', _cpFmtBal(mileage));
+        document.getElementById('cpDiscDepositAmount').textContent = _cpFmtBal(depositUsable);
+        document.getElementById('cpDiscDepositHint').textContent   = _cpT('co_disc_deposit_hint','보유 {bal} · 전액 사용').replace('{bal}', _cpFmtBal(deposit));
+        document.getElementById('cpDiscProAmount').textContent     = isPro ? ('-' + _cpFmtBal(proUsable)) : _cpT('co_disc_pro_none','미구독');
+        document.getElementById('cpDiscProHint').textContent       = isPro ? _cpT('co_disc_pro_hint','주문의 10%') : _cpT('co_disc_pro_none','미구독');
         // 미구독은 PRO 비활성
         if (!isPro) {
             var proRadio = document.querySelector('input[name="cpDiscChoice"][value="pro"]');
@@ -2507,15 +2516,16 @@ window._cpOnDiscountSelect = function() {
     var s = window._cpDiscState;
     var total = calcFabricCartTotal();
     var disc = 0;
-    if (chosen === 'event_coupon') disc = Math.min(s.coupon, 30000, total);
+    // 2026-06-18 v585: event_coupon 20% cap 추가 (이전엔 30,000원 cap 만 적용되어 소액주문에서 over-discount 발생)
+    if (chosen === 'event_coupon') disc = Math.min(s.coupon, Math.floor(total * 0.20), 30000, total);
     else if (chosen === 'mileage') disc = Math.min(s.mileage, Math.floor(total * 0.05));
     else if (chosen === 'deposit') disc = Math.min(s.deposit, total);
     else if (chosen === 'pro' && s.isPro) disc = Math.floor(total * 0.10);
     s.selected = chosen || null;
     s.discountAmount = disc;
-    // 합계 라벨 업데이트
+    // 합계 라벨 업데이트 — 통화 변환된 값으로 표시 (JP=¥, US=$)
     var totalEl = document.getElementById('coTotalAmt');
-    if (totalEl) totalEl.innerHTML = cdFmtPrice(Math.max(0, total - disc)) + (disc > 0 ? ' <span style="font-size:11px; color:#16a34a; font-weight:600;">(-' + disc.toLocaleString() + ')</span>' : '');
+    if (totalEl) totalEl.innerHTML = cdFmtPrice(Math.max(0, total - disc)) + (disc > 0 ? ' <span style="font-size:11px; color:#16a34a; font-weight:600;">(-' + cdFmtPrice(disc) + ')</span>' : '');
 };
 
 // 체크아웃 → orders 테이블 등록 + Toss/무통장 처리
