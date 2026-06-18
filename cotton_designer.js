@@ -492,20 +492,23 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        // 2026-06-18 v596: 카테고리 필터 제거 — 오버록/가재단/상단끈고리 등 핵심 옵션이 top_category_code='22222' 밖에 있어서 매칭 실패함.
-        //   썸네일 있는 모든 admin_products 를 풀로 사용. PostgREST: thumb_url IS NOT NULL.
-        let r2 = await sb.from('admin_products').select('*').not('thumb_url', 'is', null);
-        if (r2.error) {
-            console.warn('[loadDbFabrics] select w/ thumb filter failed:', r2.error.message);
-            r2 = await sb.from('admin_products').select('*');
-        }
+        // 2026-06-18 v598: 카테고리/썸네일 필터 모두 제거 — 가장 넓게 가져온 뒤 JS 에서 처리.
+        //   .not('thumb_url','is',null) 가 빈 문자열도 제외할 거라 일부 admin 항목(가재단/오버록)이 누락됨.
+        let r2 = await sb.from('admin_products').select('*');
         if (r2.error) {
             console.warn('[loadDbFabrics] select * failed:', r2.error.message);
-            r2 = await sb.from('admin_products').select('code, name, price, sort_order');
+            r2 = await sb.from('admin_products').select('code, name, price, sort_order, thumb_url');
         }
         if (r2.error) return;
         const products = r2.data || [];
         console.log('[loadDbFabrics] loaded', products.length, 'admin products');
+        // 2026-06-18 v598: 진단 — 첫 admin 항목의 모든 컬럼명 출력 (실제 이미지 필드명 확인용)
+        if (products.length) {
+            console.log('[loadDbFabrics] sample keys:', Object.keys(products[0]).join(','));
+            // 가재단/오버록 처럼 사용자가 확인한 항목의 raw 데이터 출력
+            var debugTargets = products.filter(function(p){ return /오버록|가재단|인터록|말아박기/.test(p.name||''); }).slice(0,4);
+            debugTargets.forEach(function(p){ console.log('[loadDbFabrics] DEBUG', p.name, '→', JSON.stringify(p).substring(0, 400)); });
+        }
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
@@ -678,7 +681,13 @@ window._cdApplyFabricChipFromAdmin = _cdApplyFabricChipFromAdmin;
 //   이미지 필드: thumb_url / image_url / img_url 순서로 폴백.
 function _cdGetThumb(p) {
     if (!p) return '';
-    return p.thumb_url || p.image_url || p.img_url || p.image || p.image_kr || p.photo || p.photo_url || p.thumbnail_url || '';
+    // 2026-06-18 v598: 모든 가능한 이미지 필드 + 첫 mockup/images 배열 폴백
+    var direct = p.thumb_url || p.image_url || p.img_url || p.image || p.image_kr || p.photo || p.photo_url || p.thumbnail_url || p.main_image || p.cover_image || '';
+    if (direct) return direct;
+    // mockups / images 배열 첫 번째
+    if (Array.isArray(p.mockups) && p.mockups.length) return p.mockups[0].url || p.mockups[0] || '';
+    if (Array.isArray(p.images) && p.images.length) return p.images[0].url || p.images[0] || '';
+    return '';
 }
 // 2026-06-18 v594: 매칭 — 공통 한글 bigram 비율(점수)으로 best-match. 50% 이상만 채택.
 //   "오버록" vs "오버록" admin → 2/2 = 100% ✓

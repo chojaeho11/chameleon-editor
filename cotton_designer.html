@@ -1694,12 +1694,7 @@ window._cpAuthClick = async function() {
                     <span class="fin-opt-label"><b data-cdi18n="acc_thread_color">실색상 변경</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_thread_color_sub">기본 외 컬러 마감사</span></span>
                     <span class="fin-opt-price">+2,000원</span>
                 </label>
-                <!-- 2026-06-18 v596: 목봉 4종 + 압축봉 + 링고리 삭제 (사용자 요청) — 모두 admin 에서 dynamic 로드 -->
-                <label class="fin-opt" data-acc="opp_pack" data-name="OPP 개별포장" data-extra="300">
-                    <input type="radio" name="accessory" value="opp_pack" onchange="window._cdOnAccessoryChange()">
-                    <span class="fin-opt-label"><b data-cdi18n="acc_opp_pack">OPP 개별포장</b><span style="color:var(--text-light); font-size:11px; margin-left:4px;" data-cdi18n="acc_opp_sub">투명 비닐 포장</span></span>
-                    <span class="fin-opt-price">+300원</span>
-                </label>
+                <!-- 2026-06-18 v598: OPP 개별포장도 admin mate30001 으로 이동 — 하드코딩 삭제. 중복 방지. -->
                 <div id="accessoryExtraList" style="display:contents;"></div>
             </div>
         </div>
@@ -2074,7 +2069,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=108"></script>
+<script src="/cotton_designer.js?v=109"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
