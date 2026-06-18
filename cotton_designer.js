@@ -635,50 +635,56 @@ function _cdGetThumb(p) {
     if (!p) return '';
     return p.thumb_url || p.image_url || p.img_url || p.image || '';
 }
-// 2026-06-18 v592: 매칭 — 정규화한 한글에서 공통 2-char substring 1개라도 있으면 매칭.
-//   "아일렛타공4곳" ↔ "사방타공(아일렛)" → "타공" 공통 ✓
-//   "실색상 변경" ↔ "실색변경" → "실색" 공통 ✓
-//   "가운데 트임" ↔ "가운데트임" → "가운" or "운데" 공통 ✓
+// 2026-06-18 v594: 매칭 — 공통 한글 bigram 비율(점수)으로 best-match. 50% 이상만 채택.
+//   "오버록" vs "오버록" admin → 2/2 = 100% ✓
+//   "노랜연결마감" vs "목봉마감" → 1/3 = 33% ✗ 거부 (이전 v592 는 1개만 있으면 통과해서 잘못 매칭됐음)
+//   "실색상 변경" vs "실색변경" → 정규화 후 [실색,색상,상변,변경] vs [실색,색변,변경] → 공통 3/3 = 100% ✓
 function _normKr(s) {
     return (s||'').replace(/[\s·\-()（）/_,\.\d]/g, '');
 }
-function _shareKrBigram(a, b) {
-    var na = _normKr(a), nb = _normKr(b);
-    if (na.length < 2 || nb.length < 2) return false;
-    for (var i = 0; i <= na.length - 2; i++) {
-        var sub = na.substring(i, i + 2);
-        if (!/^[가-힣]{2}$/.test(sub)) continue;
-        if (nb.indexOf(sub) >= 0) return true;
+function _krBigrams(s) {
+    var n = _normKr(s);
+    var out = [];
+    for (var i = 0; i <= n.length - 2; i++) {
+        var sub = n.substring(i, i + 2);
+        if (/^[가-힣]{2}$/.test(sub)) out.push(sub);
     }
-    return false;
+    return out;
+}
+function _bigramScore(a, b) {
+    var ba = _krBigrams(a), bb = _krBigrams(b);
+    if (!ba.length || !bb.length) return 0;
+    var common = 0;
+    ba.forEach(function(x){ if (bb.indexOf(x) >= 0) common++; });
+    return common / Math.min(ba.length, bb.length);  // 0~1
 }
 function _cdApplyFinOptImages(adminItems) {
     if (!adminItems || !adminItems.length) return;
     var cards = document.querySelectorAll('.fin-opt[data-name]');
+    var pool = adminItems.filter(function(a){ return _cdGetThumb(a) && (a.name||'').trim(); });
     var applied = 0;
-    // 이미지 있는 admin 만 후보로 추림
-    var pool = adminItems.filter(function(a){ return _cdGetThumb(a); });
     cards.forEach(function(card){
         var optName = card.getAttribute('data-name') || '';
         if (!optName) return;
-        var match = null;
+        var bestItem = null, bestScore = 0;
         for (var i = 0; i < pool.length; i++) {
-            var a = pool[i];
-            var aName = a.name || '';  // admin_products 스키마는 name 하나
-            if (_shareKrBigram(optName, aName)) { match = a; break; }
+            var s = _bigramScore(optName, pool[i].name);
+            if (s > bestScore) { bestScore = s; bestItem = pool[i]; }
         }
-        if (!match) return;
+        // 50% 이상 일치 + 최소 2 bigram 공통 (1짧은단어 충돌 방지) 만 채택
+        if (!bestItem || bestScore < 0.5) return;
         if (card.querySelector('.fin-opt-img')) return;
         var img = document.createElement('img');
         img.className = 'fin-opt-img';
-        img.src = _cdGetThumb(match);
+        img.src = _cdGetThumb(bestItem);
         img.alt = optName;
         img.loading = 'lazy';
         img.onerror = function(){ this.style.display = 'none'; };
         card.insertBefore(img, card.firstChild);
         applied++;
+        console.log('[fin-opt img] match:', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
     });
-    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards (pool:', pool.length, '/', adminItems.length, ')');
+    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards (pool:', pool.length, ')');
 }
 window._cdApplyFinOptImages = _cdApplyFinOptImages;
 
