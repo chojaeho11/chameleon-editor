@@ -14452,6 +14452,11 @@ html, body { background: #ffffff !important; }
                 // 가벽 양면 / 박스/커스텀 사이즈는 별도 unit 필드
                 if (item.boxSize && typeof item.boxSize.unit === 'number') _bdUnit = item.boxSize.unit;
                 if (item.customSize && typeof item.customSize.unit === 'number') _bdUnit = item.customSize.unit;
+                // 2026-06-18 v607: 스티커 단가 표시 — DB product.price(개당 30원) 대신 1세트당 가격으로.
+                var _isStRow = !!item._isSticker || (item.sticker != null) || (item.product && item.product.code && (/^st_/i.test(item.product.code) || item.product.code === '0000241' || item.product.code === '645646544' || item.product.code === '43545345435' || item.product.code === '567756767' || item.product.category === 'pp_sticker'));
+                if (_isStRow && item.sticker && typeof _stickerCalcPrice === 'function') {
+                    _bdUnit = _stickerCalcPrice(item.sticker);
+                }
                 // 2026-06-14: 낱장 인쇄 — DB price (=50) 대신 perSheet × 할인 으로 단가 산출, 사이즈/면 메타 + 박/후가공 breakdown.
                 var _isLfRow = !!item._isLeaflet || !!item.leafletSize || (item.product && item.product.code && /^pp_lf/i.test(item.product.code));
                 if (_isLfRow && typeof window._soLeafletPriceFor === 'function') {
@@ -15076,9 +15081,11 @@ html, body { background: #ffffff !important; }
             }
         }
         // 2026-06-12: 스티커 — 비즈하우스 가격 mirror. 배송 무료.
+        // 2026-06-18 v607: 카트 qty 곱셈 누락 버그 fix — 사용자가 카트에서 수량 늘려도 합계 안 변하던 문제 해결.
+        //   _stickerCalcPrice 는 sticker.qty(1000매 등) 기반 1 set 가격을 반환. cart.qty 는 set 개수.
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241' || it.product.code === '645646544' || it.product.code === '43545345435' || it.product.code === '567756767' || it.product.category === 'pp_sticker'));
         if (_isStItm && it.sticker) {
-            return _stickerCalcPrice(it.sticker);
+            return _stickerCalcPrice(it.sticker) * qty;
         }
 
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
