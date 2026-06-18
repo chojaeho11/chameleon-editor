@@ -2413,13 +2413,24 @@ window._cpCopyAccount = function() {
 // 2026-06-18 v579: 할인 적용 — 로그인 사용자만, profiles 에서 잔액 로드
 window._cpDiscState = { coupon:0, mileage:0, deposit:0, isPro:false, selected:null, discountAmount:0 };
 
+// 2026-06-18 v581: 통합 SSO 클라이언트 헬퍼 — window.sb 우선, 없으면 명시적 storageKey 로 생성.
+//   storageKey 가 같으면 cafe2626.com 도메인 안에서 localStorage 세션 공유 → SSO.
+function _cpGetAuthSb() {
+    if (window.sb) return window.sb;
+    if (!window.supabase || !window.supabase.createClient) return null;
+    var client = window.supabase.createClient(
+        'https://qinvtnhiidtmrzosyvys.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+        { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' } }
+    );
+    window.sb = client;
+    return client;
+}
+
 window._cpLoadDiscounts = async function() {
     var box = document.getElementById('cpDiscountBox');
     if (!box) { console.warn('[cp discount] cpDiscountBox element not found in DOM'); return; }
-    var sb = window.supabase ? window.supabase.createClient(
-        'https://qinvtnhiidtmrzosyvys.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
-    ) : null;
+    var sb = _cpGetAuthSb();
     if (!sb) { console.warn('[cp discount] no supabase'); return; }
     try {
         var sess = await sb.auth.getSession();

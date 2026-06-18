@@ -1,4 +1,4 @@
-import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=440";
+import { sb, currentUser, cartData, PRODUCT_DB } from "./config.js?v=441";
 import { canvas } from "./canvas-core.js?v=435";
 import { applySize } from "./canvas-size.js?v=435";
 

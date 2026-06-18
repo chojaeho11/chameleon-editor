@@ -41,13 +41,16 @@ export function initConfig() {
 
         try {
             // 중복 초기화 방지 로직 추가
+            // 2026-06-18 v581: storageKey 명시 — fabric/cotton_print 등 모든 페이지가 동일 키로 세션 공유 (SSO).
             if (!sb) {
-                sb = createClient(SUPABASE_URL, SUPABASE_KEY, { 
-                    auth: { 
-                        persistSession: true, 
+                sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: true,
                         autoRefreshToken: true,
-                        detectSessionInUrl: true 
-                    } 
+                        detectSessionInUrl: true,
+                        storage: localStorage,
+                        storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token'
+                    }
                 });
             } else {
             }
