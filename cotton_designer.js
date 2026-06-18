@@ -540,8 +540,11 @@ async function loadDbFabrics() {
         if (products.length) {
             console.log('[loadDbFabrics] sample keys:', Object.keys(products[0]).join(','));
         }
+        // 2026-06-18 v603: 사용자 요청 — 압축봉 60-110cm (mate10006) 노출 제외
+        var EXCLUDE_CODES = new Set(['mate10006']);
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
+            .filter(p => !EXCLUDE_CODES.has(p.code))
             .sort((a,b) => (a.sort_order||999) - (b.sort_order||999))
             .map(p => Object.assign(p, { group: classifyGroup(p) }));
 
