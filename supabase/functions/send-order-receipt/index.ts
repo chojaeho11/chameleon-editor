@@ -13,7 +13,18 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') || '';
-const RESEND_FROM = Deno.env.get('RESEND_FROM') || 'no-reply@cafe0101.com';
+// 2026-06-18 v605: 언어별 FROM 주소 — 각 국가 도메인에서 발송 (브랜드/스팸함 방어)
+//   미설정 환경은 기본 FROM 으로 폴백 (보통 cafe0101.com 이 가장 먼저 인증된 도메인이라 default).
+const RESEND_FROM_DEFAULT = Deno.env.get('RESEND_FROM') || 'no-reply@cafe0101.com';
+const RESEND_FROM_KO = Deno.env.get('RESEND_FROM_KO') || RESEND_FROM_DEFAULT;
+const RESEND_FROM_JA = Deno.env.get('RESEND_FROM_JA') || RESEND_FROM_DEFAULT;
+const RESEND_FROM_EN = Deno.env.get('RESEND_FROM_EN') || RESEND_FROM_DEFAULT;
+
+function pickFrom(lang: string): string {
+    if (lang === 'ja') return RESEND_FROM_JA;
+    if (lang === 'en') return RESEND_FROM_EN;
+    return RESEND_FROM_KO;
+}
 
 const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -160,7 +171,7 @@ serve(async (req: Request) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                from: RESEND_FROM,
+                from: pickFrom(langCode),
                 to: [email],
                 subject,
                 html,
