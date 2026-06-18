@@ -499,14 +499,28 @@ async function loadDbFabrics() {
             r2 = await sb.from('admin_products').select('code, name, price, sort_order, thumb_url').limit(5000);
         }
         if (r2.error) return;
-        const products = r2.data || [];
-        console.log('[loadDbFabrics] loaded', products.length, 'admin products');
-        // 2026-06-18 v598: 진단 — 첫 admin 항목의 모든 컬럼명 출력 (실제 이미지 필드명 확인용)
+        let products = r2.data || [];
+        console.log('[loadDbFabrics] admin_products:', products.length);
+
+        // 2026-06-18 v600: admin_addons 에서도 옵션 항목 가져와 합치기 (가재단/오버록 등은 admin_addons 에 등록됨)
+        try {
+            var r3 = await sb.from('admin_addons').select('*').limit(5000);
+            if (!r3.error && r3.data) {
+                console.log('[loadDbFabrics] admin_addons:', r3.data.length);
+                // admin_addons 항목을 products 풀에 추가 (이름 기준 매칭용)
+                products = products.concat(r3.data);
+            } else if (r3.error) {
+                console.warn('[loadDbFabrics] admin_addons fetch failed:', r3.error.message);
+            }
+        } catch(e){ console.warn('[loadDbFabrics] admin_addons:', e); }
+
+        // 2026-06-18 v600: mate 코드 진단 — 9개 다 잡히는지 확인
+        var mateItems = products.filter(function(p){ return /^mate/i.test(p.code||''); });
+        console.log('[loadDbFabrics] mate items found:', mateItems.length);
+        mateItems.forEach(function(p){ console.log('[loadDbFabrics] mate:', p.code, p.name, 'thumb:', !!_cdGetThumb(p)); });
+
         if (products.length) {
             console.log('[loadDbFabrics] sample keys:', Object.keys(products[0]).join(','));
-            // 가재단/오버록 처럼 사용자가 확인한 항목의 raw 데이터 출력
-            var debugTargets = products.filter(function(p){ return /오버록|가재단|인터록|말아박기/.test(p.name||''); }).slice(0,4);
-            debugTargets.forEach(function(p){ console.log('[loadDbFabrics] DEBUG', p.name, '→', JSON.stringify(p).substring(0, 400)); });
         }
         const classified = products
             .filter(p => !(p.code||'').startsWith('ua_'))
@@ -514,10 +528,9 @@ async function loadDbFabrics() {
             .map(p => Object.assign(p, { group: classifyGroup(p) }));
 
         DB_ACCESSORIES = classified.filter(p => p.group === '__accessory__');
+        console.log('[loadDbFabrics] DB_ACCESSORIES:', DB_ACCESSORIES.length, 'codes:', DB_ACCESSORIES.map(p=>p.code).join(','));
         renderAccessoryOptions();
-        // 2026-06-18 v588: 하드코딩 옵션(.fin-opt[data-name])에 admin_products 이미지 매칭 적용
         try { _cdApplyFinOptImages(classified); } catch(e){ console.warn('[fin-opt img]', e); }
-        // 2026-06-18 v595: 원단 칩(fabric-type)도 admin 썸네일로 폴백 — /fabric/*.jpg 가 없을 때
         try { _cdApplyFabricChipFromAdmin(classified); } catch(e){ console.warn('[fabric chip admin]', e); }
     } catch(e) {
         // 부자재는 HTML에 하드코딩돼 있어 DB 실패해도 동작에 영향 없음
