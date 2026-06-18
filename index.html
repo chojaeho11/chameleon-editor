@@ -7224,6 +7224,20 @@ function scrollHotdeal(gridId, dir) {
         var d = document.createElement('div'); d.className = 'me-del'; d.textContent = '×';
         it.el.appendChild(d);
         d.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); ev.preventDefault(); _meRemove(it); });
+        // 2026-06-19 v625: 텍스트의 경우 — X 버튼을 실제 렌더된 텍스트 우상단에 동적 배치 (박스가 더 넓어도 빈 공간에 X 가 뜨지 않게).
+        if (it.type === 'text') {
+            try {
+                var range = document.createRange();
+                range.selectNodeContents(it.el);
+                var rect = range.getBoundingClientRect();
+                var boxRect = it.el.getBoundingClientRect();
+                if (rect && boxRect && rect.width > 0 && boxRect.width > rect.width + 8) {
+                    // 박스가 텍스트보다 충분히 넓을 때만 — 텍스트 우측 끝 + 6px 위치로
+                    var offsetRight = boxRect.right - rect.right;  // 텍스트 우측 끝과 박스 우측 끝의 거리
+                    d.style.right = (offsetRight - 6) + 'px';
+                }
+            } catch(_de){}
+        }
         _meRenderProps(it);
     }
 
@@ -7646,6 +7660,18 @@ function scrollHotdeal(gridId, dir) {
                 if (ev.key === 'Escape') {
                     ev.preventDefault();
                     it.el.blur();
+                }
+            });
+            // 2026-06-19 v625: 편집 중 글자 수 변동 시 box 자동 fit (X 버튼이 텍스트 옆 빈 공간에 떠있는 문제 해결).
+            //   edge-resized 폭이 새 글자보다 넓을 때 _edgeResized 해제 → width:max-content 가 재활성화돼 박스가 텍스트에 fit.
+            it.el.addEventListener('input', function(){
+                if (it.el.getAttribute('contenteditable') !== 'true') return;
+                if (it._edgeResized) {
+                    it._edgeResized = false;
+                    it.el.style.width = '';
+                    it.el.style.maxWidth = '';
+                    it.el.style.height = '';
+                    _meSyncItemDisplay(it);
                 }
             });
         }
