@@ -5875,7 +5875,7 @@ function scrollHotdeal(gridId, dir) {
                 <!-- Row 2 -->
                 <button type="button" class="me-tool-btn me-r2" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 / Undo (Ctrl+Z)" style="opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i></button>
                 <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
-                <input type="file" id="meImgInput" accept="image/*" style="display:none;" onchange="window._meAddImageFromFile(this)">
+                <input type="file" id="meImgInput" accept="image/*,.svg,image/svg+xml" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거)"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
                 <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 / Cutline / カットライン"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutline" class="me-tb-lbl">칼선</span></button>
                 <!-- Row 3 -->
@@ -8659,10 +8659,140 @@ function scrollHotdeal(gridId, dir) {
     window._meAddImageFromFile = function(input) {
         var f = input.files && input.files[0];
         if (!f) return;
+        // 2026-06-18 v609: SVG 분기 — 그룹별 분리 import (디자이너 일러스트 작업물 호환)
+        var isSvg = /\.svg$/i.test(f.name || '') || /svg\+xml/.test(f.type || '');
+        if (isSvg && typeof window._meAddSvgFile === 'function') {
+            var rs = new FileReader();
+            rs.onload = function(e){ window._meAddSvgFile(e.target.result); };
+            rs.readAsText(f);
+            input.value = '';
+            return;
+        }
         var r = new FileReader();
         r.onload = function(e){ window._meAddImage(e.target.result); };
         r.readAsDataURL(f);
         input.value = '';
+    };
+
+    // 2026-06-18 v609: SVG 그룹별 import — 일러스트레이터에서 export 한 SVG 를 받아
+    //   최상위 <g>/<path>/<text>/<image> 등 각 요소를 별도 me-item 으로 분리해 배치.
+    //   각 그룹 내부의 sub-요소는 함께 transform 되므로 캐릭터/로고 등 묶음 보존.
+    //   bbox 계산을 위해 SVG 를 잠깐 DOM 에 렌더 → getBBox() 사용.
+    window._meAddSvgFile = function(svgText) {
+        try {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(svgText, 'image/svg+xml');
+            var svg = doc.documentElement;
+            if (!svg || svg.nodeName.toLowerCase() !== 'svg') {
+                console.warn('[svg upload] not a valid SVG, falling back to image load');
+                var fb = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+                window._meAddImage(fb, { fitCanvas: true });
+                return;
+            }
+            // viewBox 또는 width/height 로 SVG 좌표계 크기 산출
+            var vb = svg.getAttribute('viewBox');
+            var svgW = 0, svgH = 0, vbX = 0, vbY = 0;
+            if (vb) {
+                var p = vb.trim().split(/[\s,]+/).map(parseFloat);
+                vbX = p[0] || 0; vbY = p[1] || 0; svgW = p[2] || 0; svgH = p[3] || 0;
+            }
+            if (!svgW) svgW = parseFloat(svg.getAttribute('width')) || 800;
+            if (!svgH) svgH = parseFloat(svg.getAttribute('height')) || 600;
+
+            // SVG 좌표계 → 캔버스 좌표계 fit 비율 계산
+            var stageRatio = me.natH / me.natW;
+            var svgRatio = svgH / svgW;
+            var fitScale, offX, offY;
+            if (svgRatio > stageRatio) {
+                fitScale = me.natH / svgH;
+                offX = (me.natW - svgW * fitScale) / 2;
+                offY = 0;
+            } else {
+                fitScale = me.natW / svgW;
+                offX = 0;
+                offY = (me.natH - svgH * fitScale) / 2;
+            }
+
+            // 분리 대상 최상위 children — 무시할 메타 태그 (defs/title/desc/style) 제외
+            var SKIP_TAGS = ['defs','title','desc','style','metadata','script'];
+            var topChildren = [];
+            for (var i = 0; i < svg.children.length; i++) {
+                var c = svg.children[i];
+                if (SKIP_TAGS.indexOf(c.nodeName.toLowerCase()) >= 0) continue;
+                topChildren.push(c);
+            }
+
+            if (topChildren.length === 0) {
+                console.warn('[svg upload] no top-level elements found');
+                var fb2 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+                window._meAddImage(fb2, { fitCanvas: true });
+                return;
+            }
+
+            // <defs> + <style> 는 각 부분 SVG 에도 포함시킴 (그라데이션/필터/사용자 폰트 보존)
+            var defsHtml = '';
+            for (var d = 0; d < svg.children.length; d++) {
+                var cd = svg.children[d];
+                var tn = cd.nodeName.toLowerCase();
+                if (tn === 'defs' || tn === 'style') defsHtml += cd.outerHTML;
+            }
+
+            // 임시 렌더 컨테이너 — getBBox() 호출용
+            var tmp = document.createElement('div');
+            tmp.style.cssText = 'position:absolute; left:-99999px; top:-99999px; visibility:hidden; pointer-events:none;';
+            tmp.innerHTML = svg.outerHTML;
+            document.body.appendChild(tmp);
+            var rendered = tmp.querySelector('svg');
+
+            _meSnapshot();
+
+            var added = 0;
+            try {
+                topChildren.forEach(function(child, idx) {
+                    // rendered 안에서 같은 인덱스의 (skip 태그 제외) 자식 찾기
+                    var renderedChild = null;
+                    var rIdx = -1;
+                    for (var k = 0; k < rendered.children.length; k++) {
+                        var rc = rendered.children[k];
+                        if (SKIP_TAGS.indexOf(rc.nodeName.toLowerCase()) >= 0) continue;
+                        rIdx++;
+                        if (rIdx === idx) { renderedChild = rc; break; }
+                    }
+                    if (!renderedChild || typeof renderedChild.getBBox !== 'function') return;
+                    var bb;
+                    try { bb = renderedChild.getBBox(); } catch (e) { return; }
+                    if (!bb || (bb.width === 0 && bb.height === 0)) return;
+
+                    // 이 그룹만 담은 stand-alone SVG 생성 (viewBox = 그룹 bbox)
+                    var partSvg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                                + 'viewBox="' + bb.x + ' ' + bb.y + ' ' + bb.width + ' ' + bb.height + '" '
+                                + 'width="' + bb.width + '" height="' + bb.height + '">'
+                                + defsHtml + child.outerHTML + '</svg>';
+                    var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
+
+                    // 캔버스 좌표 계산 — SVG bbox 를 fit 변환
+                    var x = (bb.x - vbX) * fitScale + offX;
+                    var y = (bb.y - vbY) * fitScale + offY;
+                    var w = bb.width * fitScale;
+                    var h = bb.height * fitScale;
+                    window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: w, h: h } });
+                    added++;
+                });
+            } finally {
+                tmp.remove();
+            }
+
+            console.log('[svg upload] split into', added, '/', topChildren.length, 'items');
+            if (added === 0) {
+                // 전부 실패 — 통째 import 로 폴백
+                var fb3 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+                window._meAddImage(fb3, { fitCanvas: true });
+            }
+        } catch (e) {
+            console.warn('[svg upload] parse failed', e);
+            var fbErr = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+            window._meAddImage(fbErr, { fitCanvas: true });
+        }
     };
 
     window._meAddImage = function(src, opts) {
@@ -8687,7 +8817,13 @@ function scrollHotdeal(gridId, dir) {
             var natH = image.naturalHeight || 600;
             var ratio = natH / natW;
             var w, h, x, y;
-            if (options.fitCanvas) {
+            // 2026-06-18 v609: SVG 그룹별 import 시 정확한 좌표/크기 지정
+            if (options.explicitPos && typeof options.explicitPos === 'object') {
+                x = options.explicitPos.x;
+                y = options.explicitPos.y;
+                w = options.explicitPos.w;
+                h = options.explicitPos.h;
+            } else if (options.fitCanvas) {
                 // 2026-06-17: 대지 비율 맞춰 fit (contain) — 이미지가 절대 잘리지 않게 안쪽에 완벽히 들어감.
                 //   업로드한 완성파일(PDF/이미지) 처럼 이미지 자체가 디자인이라 cropping 절대 불가.
                 var stageRatioF = me.natH / me.natW;
