@@ -496,18 +496,12 @@ async function loadDbFabrics() {
         const codes = subCats.map(c => (c.code || '').trim())
                               .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
         if (codes.length === 0) return;
-        // 2026-06-18 v592: name_en 컬럼 미존재 → 400. 폴백 체인으로 점진적 컬럼 제거.
-        async function _tryFabricSelect(cols) {
-            return await sb.from('admin_products').select(cols).in('category', codes);
-        }
-        let r2 = await _tryFabricSelect('code, name, name_jp, name_us, name_kr, price, sort_order, thumb_url');
+        // 2026-06-18 v593: name_en / name_kr 컬럼 미존재 (admin_products 스키마는 name 하나만).
+        //   SELECT '*' 로 가져와 모든 컬럼(있는 것만) 확보. PostgREST 가 와일드카드를 지원해서 안전.
+        let r2 = await sb.from('admin_products').select('*').in('category', codes);
         if (r2.error) {
-            console.warn('[loadDbFabrics] retry1:', r2.error.message);
-            r2 = await _tryFabricSelect('code, name, name_jp, name_us, name_kr, price, sort_order');
-        }
-        if (r2.error) {
-            console.warn('[loadDbFabrics] retry2:', r2.error.message);
-            r2 = await _tryFabricSelect('code, name, price, sort_order');
+            console.warn('[loadDbFabrics] select * failed:', r2.error.message);
+            r2 = await sb.from('admin_products').select('code, name, price, sort_order').in('category', codes);
         }
         if (r2.error) return;
         const products = r2.data || [];
@@ -544,12 +538,13 @@ function renderHookOptions() {
     }).join('');
 }
 
-// 언어별 admin_products 이름 선택 (name_jp / name_us / name_kr / name) — name_en 미존재
+// 언어별 admin_products 이름 선택 — admin_products 스키마는 name 하나만 (name_kr/name_en 미존재).
+//   name_jp/name_us 가 있으면 그것 우선 사용.
 function pickProductName(p) {
     var lang = window.__CD_LANG || 'ko';
-    if (lang === 'ja') return p.name_jp || p.name_kr || p.name || '';
-    if (lang === 'en') return p.name_us || p.name_kr || p.name || '';
-    return p.name_kr || p.name || '';
+    if (lang === 'ja') return p.name_jp || p.name || '';
+    if (lang === 'en') return p.name_us || p.name || '';
+    return p.name || '';
 }
 
 // 부자재 옵션 렌더 (DB_ACCESSORIES)
@@ -669,7 +664,7 @@ function _cdApplyFinOptImages(adminItems) {
         var match = null;
         for (var i = 0; i < pool.length; i++) {
             var a = pool[i];
-            var aName = a.name_kr || a.name || '';
+            var aName = a.name || '';  // admin_products 스키마는 name 하나
             if (_shareKrBigram(optName, aName)) { match = a; break; }
         }
         if (!match) return;
