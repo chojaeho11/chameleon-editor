@@ -7046,21 +7046,33 @@ function scrollHotdeal(gridId, dir) {
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center">' + svgC + '</button>'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right">' + svgR + '</button>'
             + '</span>';
-            // 2026-06-19 v621: 글자 크기 / 자간 / 행간 — 정렬 옆 추가 (Illustrator 식 미세조정용)
+            // 2026-06-19 v622: 글자 크기 / 자간 / 행간 — 아이콘 + 값 + 화살표 버튼 (간단 조정)
+            //   글자 크기: T + 숫자 + ▼▲
+            //   자간:      ↔ + 숫자 + ◀▶
+            //   행간:      ☰ + 숫자 + ▼▲
             var _fsCur = Math.round(it.fontSize || 24);
             var _lsCur = Math.round((it.letterSpacing || 0) * 10) / 10;
             var _lhCur = Math.round((it.lineHeight || 1.2) * 100) / 100;
-            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_fsize','글자 크기') + '">'
-                + '<i class="fa-solid fa-text-height" style="color:#64748b; font-size:11px;"></i>'
-                + '<input type="number" min="6" max="400" step="1" value="' + _fsCur + '" data-mp="fontSize" data-mp-num="1" style="width:48px;">'
+            // T 글자 + 숫자 + 위/아래 화살표
+            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_fsize','글자 크기 (T)') + '">'
+                + '<span style="font-weight:900; font-size:13px; color:#64748b; font-family:serif;">T</span>'
+                + '<span data-step-val="fontSize" style="min-width:24px; text-align:center; font-size:12px; font-weight:700;">' + _fsCur + '</span>'
+                + '<button type="button" class="me-prop-btn" data-step="fontSize" data-delta="-1" title="−1"><i class="fa-solid fa-caret-down"></i></button>'
+                + '<button type="button" class="me-prop-btn" data-step="fontSize" data-delta="1" title="+1"><i class="fa-solid fa-caret-up"></i></button>'
             + '</span>';
+            // 자간 — 좌우 화살표
             html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_lspace','자간') + '">'
                 + '<i class="fa-solid fa-arrows-left-right" style="color:#64748b; font-size:11px;"></i>'
-                + '<input type="number" min="-20" max="60" step="0.5" value="' + _lsCur + '" data-mp="letterSpacing" data-mp-num="1" style="width:48px;">'
+                + '<span data-step-val="letterSpacing" style="min-width:28px; text-align:center; font-size:12px; font-weight:700;">' + _lsCur + '</span>'
+                + '<button type="button" class="me-prop-btn" data-step="letterSpacing" data-delta="-0.5" title="−0.5"><i class="fa-solid fa-caret-left"></i></button>'
+                + '<button type="button" class="me-prop-btn" data-step="letterSpacing" data-delta="0.5" title="+0.5"><i class="fa-solid fa-caret-right"></i></button>'
             + '</span>';
+            // 행간 — 위아래 화살표
             html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_lheight','행간 (배수)') + '">'
                 + '<i class="fa-solid fa-grip-lines" style="color:#64748b; font-size:11px;"></i>'
-                + '<input type="number" min="0.6" max="3" step="0.05" value="' + _lhCur + '" data-mp="lineHeight" data-mp-num="1" style="width:48px;">'
+                + '<span data-step-val="lineHeight" style="min-width:30px; text-align:center; font-size:12px; font-weight:700;">' + _lhCur.toFixed(2) + '</span>'
+                + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="-0.1" title="−0.1"><i class="fa-solid fa-caret-down"></i></button>'
+                + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="0.1" title="+0.1"><i class="fa-solid fa-caret-up"></i></button>'
             + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
@@ -7144,6 +7156,36 @@ function scrollHotdeal(gridId, dir) {
                 panel.querySelectorAll('[data-align]').forEach(function(b){ b.classList.remove('active'); });
                 btn.classList.add('active');
                 _meSyncItemDisplay(it);
+            });
+        });
+        // 2026-06-19 v622: 글자크기/자간/행간 — 화살표 버튼 step 조정
+        panel.querySelectorAll('[data-step]').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var key = btn.dataset.step;
+                var delta = parseFloat(btn.dataset.delta);
+                if (!isFinite(delta)) return;
+                var cur;
+                if (key === 'fontSize') cur = it.fontSize || 24;
+                else if (key === 'letterSpacing') cur = it.letterSpacing || 0;
+                else if (key === 'lineHeight') cur = it.lineHeight || 1.2;
+                else return;
+                var next = cur + delta;
+                // 범위 clamp
+                if (key === 'fontSize') next = Math.max(6, Math.min(400, next));
+                if (key === 'letterSpacing') next = Math.max(-20, Math.min(60, next));
+                if (key === 'lineHeight') next = Math.max(0.6, Math.min(3, next));
+                // 소수점 정리 (부동소수 누적 방지)
+                next = Math.round(next * 100) / 100;
+                it[key] = next;
+                // 화면 즉시 갱신
+                _meSyncItemDisplay(it);
+                // 값 표시 라벨 업데이트
+                var lbl = panel.querySelector('[data-step-val="' + key + '"]');
+                if (lbl) {
+                    if (key === 'fontSize') lbl.textContent = Math.round(next);
+                    else if (key === 'lineHeight') lbl.textContent = next.toFixed(2);
+                    else lbl.textContent = (Math.round(next * 10) / 10);
+                }
             });
         });
         // 2026-06-15: SMB 두께 토글
