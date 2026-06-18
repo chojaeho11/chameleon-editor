@@ -12336,8 +12336,22 @@ html, body { background: #ffffff !important; }
                 alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드 예치금에 30,000원이 자동 적립됩니다.\n거절될 경우 자동 삭제되니 가이드라인을 다시 확인하고 재제출해주세요.');
                 location.href = '/designer-board';
             } else {
-                alert('✅ 템플릿 저장 완료!\n\n관리자 페이지에서 확인 가능합니다.');
-                location.href = '/admin_templates.html';
+                // 2026-06-19 v620: admin 직접 저장 → 페이지 이동 없이 머무름.
+                //   디자인은 캔버스에 그대로 두고 (변형 저장 가능), 이름 input 만 비움 + 버튼 복원 + 토스트.
+                var nameInput = document.getElementById('soTplAdminName');
+                if (nameInput) { nameInput.value = ''; nameInput.focus(); }
+                if (btn) { btn.disabled = false; btn.innerHTML = '💾 템플릿으로 저장'; }
+                // 우상단 토스트
+                var toastEl = document.createElement('div');
+                toastEl.style.cssText = 'position:fixed; top:24px; right:24px; z-index:999999; background:#16a34a; color:#fff; padding:14px 20px; border-radius:12px; font-weight:800; font-size:13.5px; box-shadow:0 10px 30px rgba(22,163,74,0.4); display:flex; align-items:center; gap:10px;';
+                toastEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> 템플릿 「' + (name.length > 18 ? name.slice(0,18) + '…' : name) + '」 등록 완료. 이어서 다음 디자인 가능.';
+                document.body.appendChild(toastEl);
+                setTimeout(function(){
+                    toastEl.style.transition = 'opacity .4s, transform .4s';
+                    toastEl.style.opacity = '0';
+                    toastEl.style.transform = 'translateY(-10px)';
+                    setTimeout(function(){ toastEl.remove(); }, 400);
+                }, 3000);
             }
         } catch (e) {
             console.error('[soSaveAsTemplate]', e);
