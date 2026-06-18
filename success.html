@@ -133,7 +133,15 @@
                 amount: 'お支払い金額',
                 eta: 'お届け予定',
                 etaNote: '製作・検品・配送に平均5〜7日かかります。ご注文の進行状況はマイページからリアルタイムでご確認いただけます。',
-                btn: '確認 — トップへ'
+                btn: '確認 — トップへ',
+                // 2026-06-18 v604: 결제 후 영수증 이메일 수집 (JP 한정)
+                receiptTitle: '📧 領収書の送信先',
+                receiptSub: 'メールアドレスをご記入いただければ、領収書とご注文内容をお送りいたします。',
+                receiptPlaceholder: 'メールアドレス (任意)',
+                receiptBtn: '領収書を送る',
+                receiptSending: '送信中...',
+                receiptSent: '✅ メールを送信しました。',
+                receiptFail: '送信に失敗しました。後ほどお試しください。'
             },
             en: {
                 title: '🎉 Your payment has been completed',
@@ -207,9 +215,65 @@
               +     '</div>'
               +   '</div>'
               +   '<div style="font-size:11.5px; color:rgba(255,255,255,0.58); margin:14px 4px 16px; line-height:1.6;">' + t.etaNote + '</div>'
+              // 2026-06-18 v604: JP 한정 영수증 이메일 수집 블록
+              +   ((lang === 'ja') ? (
+                    '<div id="receiptBlock" style="margin:0 0 16px; padding:16px 16px 14px; background:rgba(253,224,71,0.08); border:1px solid rgba(253,224,71,0.32); border-radius:12px;">'
+                  +   '<div style="font-size:13.5px; font-weight:900; color:#fde047; margin-bottom:4px;">' + t.receiptTitle + '</div>'
+                  +   '<div style="font-size:11.5px; color:rgba(255,255,255,0.78); line-height:1.55; margin-bottom:10px;">' + t.receiptSub + '</div>'
+                  +   '<input id="receiptEmail" type="email" autocomplete="email" placeholder="' + t.receiptPlaceholder + '" style="width:100%; padding:11px 12px; border:1px solid rgba(255,255,255,0.18); border-radius:9px; font-size:13px; background:rgba(15,23,42,0.5); color:#fff; box-sizing:border-box; font-family:inherit; margin-bottom:8px;">'
+                  +   '<button type="button" id="receiptSendBtn" style="width:100%; padding:11px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">' + t.receiptBtn + '</button>'
+                  +   '<div id="receiptStatus" style="margin-top:8px; font-size:11.5px; text-align:center; min-height:14px;"></div>'
+                  + '</div>'
+                  ) : '')
               +   '<button type="button" id="paySuccessOk" style="width:100%; padding:14px; background:linear-gradient(135deg,#fde047,#eab308); color:#1f2937; border:none; border-radius:12px; font-size:15px; font-weight:900; cursor:pointer; box-shadow:0 8px 22px -6px rgba(234,179,8,0.65); font-family:inherit;">' + t.btn + '</button>'
               + '</div>';
             document.body.appendChild(overlay);
+
+            // 2026-06-18 v604: 영수증 발송 버튼 핸들러 (JP)
+            if (lang === 'ja') {
+                var rBtn = document.getElementById('receiptSendBtn');
+                var rIn = document.getElementById('receiptEmail');
+                var rSt = document.getElementById('receiptStatus');
+                if (rBtn && rIn && rSt) {
+                    rBtn.addEventListener('click', async function(){
+                        var em = (rIn.value || '').trim();
+                        if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+                            rSt.style.color = '#fca5a5';
+                            rSt.textContent = '正しいメールアドレスを入力してください';
+                            return;
+                        }
+                        rBtn.disabled = true;
+                        rSt.style.color = '#fde047';
+                        rSt.textContent = t.receiptSending;
+                        try {
+                            var r = await fetch(SUPABASE_URL + '/functions/v1/send-order-receipt', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': 'Bearer ' + SUPABASE_KEY,
+                                    'apikey': SUPABASE_KEY,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ order_id: dbId, email: em, lang: 'ja' })
+                            });
+                            var data = await r.json();
+                            if (r.ok && data && data.ok) {
+                                rSt.style.color = '#86efac';
+                                rSt.textContent = t.receiptSent;
+                                rBtn.style.opacity = '0.6';
+                            } else {
+                                rSt.style.color = '#fca5a5';
+                                rSt.textContent = t.receiptFail + (data && data.error ? ' (' + data.error + ')' : '');
+                                rBtn.disabled = false;
+                            }
+                        } catch(e) {
+                            rSt.style.color = '#fca5a5';
+                            rSt.textContent = t.receiptFail;
+                            rBtn.disabled = false;
+                        }
+                    });
+                }
+            }
+
             return new Promise(function(resolve){
                 var btn = document.getElementById('paySuccessOk');
                 btn.addEventListener('click', function(){

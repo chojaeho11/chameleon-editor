@@ -2982,6 +2982,9 @@ html, body { background: #ffffff !important; }
       <div class="so-co-section">
         <span class="so-co-label">${tr('받으시는 분', 'お受取人', 'Recipient')} <span style="color:#dc2626;">*</span></span>
         <input id="soCoName" class="so-co-input" placeholder="${tr('홍길동', '山田太郎', 'Full name')}">
+        ${ (window.__SITE_CODE==='JP') ? `
+        <input id="soCoNameFurigana" class="so-co-input" placeholder="フリガナ (例: ヤマダ タロウ)" style="margin-top:6px;">
+        ` : '' }
       </div>
       <div class="so-co-section">
         <span class="so-co-label">${tr('연락처', '連絡先', 'Phone')} <span style="color:#dc2626;">*</span></span>
@@ -16188,6 +16191,10 @@ html, body { background: #ffffff !important; }
 
     window._soSubmitOrder = async function () {
         var name = (document.getElementById('soCoName').value || '').trim();
+        // 2026-06-18 v604: JP 한정 후리가나 수집
+        var nameFurigana = '';
+        var _fEl = document.getElementById('soCoNameFurigana');
+        if (_fEl) nameFurigana = (_fEl.value || '').trim();
         var phone = (document.getElementById('soCoPhone').value || '').trim();
         var email = (document.getElementById('soCoEmail').value || '').trim();
         var zip = (document.getElementById('soCoZip').value || '').trim();
@@ -16197,6 +16204,8 @@ html, body { background: #ffffff !important; }
         var payMethod = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'bank';
 
         if (!name)  { alert('받으시는 분 성함을 입력해주세요.'); return; }
+        // JP 사이트에서는 후리가나 필수
+        if (window.__SITE_CODE === 'JP' && !nameFurigana) { alert('フリガナを入力してください。'); return; }
         if (!phone) { alert('연락처를 입력해주세요.'); return; }
         if (!addr1) { alert('배송지를 입력해주세요.'); return; }
 
@@ -16683,6 +16692,7 @@ html, body { background: #ffffff !important; }
                 order_date: new Date().toISOString(),
                 user_id: loggedInUid,   // 2026-05-26: 로그인 고객 주문은 user_id 연결 → 마이페이지 주문내역에 노출
                 manager_name: name,
+                name_furigana: nameFurigana || null,   // 2026-06-18 v604: JP 후리가나
                 phone: phone,
                 address: fullAddr,
                 request_note: memo || '',
