@@ -492,12 +492,11 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        // 2026-06-18 v598: 카테고리/썸네일 필터 모두 제거 — 가장 넓게 가져온 뒤 JS 에서 처리.
-        //   .not('thumb_url','is',null) 가 빈 문자열도 제외할 거라 일부 admin 항목(가재단/오버록)이 누락됨.
-        let r2 = await sb.from('admin_products').select('*');
+        // 2026-06-18 v599: 기본 1000 limit 명시 + 안전한 select *.
+        let r2 = await sb.from('admin_products').select('*').limit(5000);
         if (r2.error) {
             console.warn('[loadDbFabrics] select * failed:', r2.error.message);
-            r2 = await sb.from('admin_products').select('code, name, price, sort_order, thumb_url');
+            r2 = await sb.from('admin_products').select('code, name, price, sort_order, thumb_url').limit(5000);
         }
         if (r2.error) return;
         const products = r2.data || [];
@@ -715,10 +714,13 @@ function _bigramScore(a, b) {
 function _cdApplyFinOptImages(adminItems) {
     if (!adminItems || !adminItems.length) return;
     var cards = document.querySelectorAll('.fin-opt[data-name]');
-    var pool = adminItems.filter(function(a){ return _cdGetThumb(a) && (a.name||'').trim(); });
+    // 2026-06-18 v599: pool = name 만 있는 모든 admin (thumb 필터 제거).
+    //   thumb_url 가 빈 문자열이라 pool 에서 잘려서 가재단/오버록/인터록/말아박기 모두 NONE 처리되던 회귀 수정.
+    //   매칭 자체는 name 으로 하고, 매칭 성공 후에만 thumb 체크.
+    var pool = adminItems.filter(function(a){ return (a.name||'').trim(); });
     console.log('[fin-opt img] === START === cards:', cards.length, 'pool:', pool.length);
     console.log('[fin-opt img] pool names:', pool.map(function(p){ return p.name; }).join(' | '));
-    var applied = 0, skipExisting = 0, lowScore = 0;
+    var applied = 0, skipExisting = 0, low = 0, none = 0, noThumb = 0;
     cards.forEach(function(card){
         var optName = card.getAttribute('data-name') || '';
         if (!optName) return;
@@ -729,14 +731,19 @@ function _cdApplyFinOptImages(adminItems) {
         }
         if (card.querySelector('.fin-opt-img')) { skipExisting++; return; }
         if (!bestItem || bestScore < 0.5) {
-            lowScore++;
-            if (bestItem) console.log('[fin-opt img] LOW', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
-            else console.log('[fin-opt img] NONE', optName);
+            if (bestItem) { low++; console.log('[fin-opt img] LOW', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)'); }
+            else { none++; console.log('[fin-opt img] NONE', optName); }
+            return;
+        }
+        var thumb = _cdGetThumb(bestItem);
+        if (!thumb) {
+            noThumb++;
+            console.log('[fin-opt img] NOTHUMB', optName, '→', bestItem.name, '(매칭됐지만 admin 에 이미지 없음 — 업로드 필요)');
             return;
         }
         var img = document.createElement('img');
         img.className = 'fin-opt-img';
-        img.src = _cdGetThumb(bestItem);
+        img.src = thumb;
         img.alt = optName;
         img.loading = 'lazy';
         img.onerror = function(){ this.style.display = 'none'; };
@@ -744,7 +751,7 @@ function _cdApplyFinOptImages(adminItems) {
         applied++;
         console.log('[fin-opt img] OK', optName, '→', bestItem.name, '(' + Math.round(bestScore*100) + '%)');
     });
-    console.log('[fin-opt img] === END === applied:', applied, 'skipExisting:', skipExisting, 'lowScore:', lowScore, 'total:', cards.length);
+    console.log('[fin-opt img] === END === applied:', applied, 'skip:', skipExisting, 'low:', low, 'none:', none, 'noThumb:', noThumb, 'total:', cards.length);
 }
 window._cdApplyFinOptImages = _cdApplyFinOptImages;
 
