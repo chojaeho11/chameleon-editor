@@ -3534,6 +3534,15 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
                 type: 'cutline'
             });
         }
+        // 2026-06-19 v623: 템플릿 사용 주문 — SVG 벡터본 첨부 (인쇄소 일러스트 편집용)
+        if (item.templateSvgUrl) {
+            var _tplName = (item.templateMeta && item.templateMeta.name) ? item.templateMeta.name.replace(/[^\w가-힣\-]/g, '_') : 'template';
+            uploadedFiles.push({
+                name: `template_${idx}_${_tplName}.svg`,
+                url: item.templateSvgUrl,
+                type: 'template_svg'
+            });
+        }
     }
 
     // [2] PDF 생성 (작업지시서 + 견적서)

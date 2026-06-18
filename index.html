@@ -6923,6 +6923,134 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
+    // 2026-06-19 v623: 미니에디터를 SVG 텍스트로 직렬화 (벡터 보존 — 템플릿 주문 시 관리자 페이지 첨부용)
+    //   문자열 반환. text/image/shape 모두 처리. zIndex 순으로 정렬해서 같은 stacking 유지.
+    window._meExportSVG = async function() {
+        try {
+            if (!me || !me.natW || !me.natH) return null;
+            // contenteditable 강제 sync
+            try {
+                if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+                me.items.forEach(function(it){
+                    if (it && it.type === 'text' && it.el) {
+                        var raw;
+                        try {
+                            var _c = it.el.cloneNode(true);
+                            _c.querySelectorAll('br').forEach(function(b){ b.replaceWith('\n'); });
+                            _c.querySelectorAll('div, p').forEach(function(d){ d.append('\n'); });
+                            raw = (_c.textContent || '').replace(/\n+$/g, '');
+                        } catch(_){ raw = it.el.textContent || ''; }
+                        it.text = raw;
+                    }
+                });
+            } catch(_){}
+
+            function _esc(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+            }
+            function _fmt(n) {
+                if (!isFinite(n)) return '0';
+                return (Math.round(n * 100) / 100).toString();
+            }
+            // base64 → data URL (외부 이미지 embedding) — image src 가 cross-origin 일 수도 있어 fetch + blob → dataURL
+            async function _imgToDataUrl(src) {
+                if (!src) return null;
+                if (/^data:/i.test(src)) return src;
+                try {
+                    var resp = await fetch(src, { mode: 'cors' });
+                    if (!resp.ok) return src; // fallback 원 URL
+                    var blob = await resp.blob();
+                    return await new Promise(function(res, rej){
+                        var fr = new FileReader();
+                        fr.onload = function(){ res(fr.result); };
+                        fr.onerror = function(){ res(src); };
+                        fr.readAsDataURL(blob);
+                    });
+                } catch(_){ return src; }
+            }
+
+            // zIndex 정렬
+            var items = (me.items || []).slice().sort(function(a, b){
+                var az = parseInt((a.el && a.el.style.zIndex) || 0, 10);
+                var bz = parseInt((b.el && b.el.style.zIndex) || 0, 10);
+                return az - bz;
+            });
+
+            var parts = [];
+            parts.push('<?xml version="1.0" encoding="UTF-8"?>');
+            parts.push('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+                + 'viewBox="0 0 ' + _fmt(me.natW) + ' ' + _fmt(me.natH) + '" '
+                + 'width="' + _fmt(me.natW) + '" height="' + _fmt(me.natH) + '">');
+            // 배경
+            var bg = (me.bg || '#ffffff');
+            parts.push('<rect x="0" y="0" width="' + _fmt(me.natW) + '" height="' + _fmt(me.natH) + '" fill="' + _esc(bg) + '"/>');
+
+            for (var ii = 0; ii < items.length; ii++) {
+                var it = items[ii];
+                if (!it || !it.type) continue;
+                var rot = it.rotation || 0;
+                var sx = it.flipX ? -1 : 1, sy = it.flipY ? -1 : 1;
+                var cx = (it.x || 0) + (it.w || 0) / 2;
+                var cy = (it.y || 0) + (it.h || 0) / 2;
+                var gTrans = '';
+                if (rot) gTrans += 'rotate(' + _fmt(rot) + ' ' + _fmt(cx) + ' ' + _fmt(cy) + ') ';
+                if (sx !== 1 || sy !== 1) gTrans += 'translate(' + _fmt(cx) + ' ' + _fmt(cy) + ') scale(' + sx + ' ' + sy + ') translate(' + _fmt(-cx) + ' ' + _fmt(-cy) + ')';
+                if (gTrans) parts.push('<g transform="' + gTrans.trim() + '">');
+
+                if (it.type === 'image' && it.src) {
+                    var dataUrl = await _imgToDataUrl(it.src);
+                    parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
+                        + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                        + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
+                        + 'preserveAspectRatio="xMidYMid meet"/>');
+                } else if (it.type === 'shape') {
+                    var fill = _esc(it.fill || '#000000');
+                    var stroke = it.stroke ? ' stroke="' + _esc(it.stroke) + '" stroke-width="' + _fmt(it.strokeWidth || 1) + '"' : '';
+                    if (it.shape === 'circle') {
+                        parts.push('<ellipse cx="' + _fmt(it.x + it.w/2) + '" cy="' + _fmt(it.y + it.h/2) + '" '
+                            + 'rx="' + _fmt(it.w/2) + '" ry="' + _fmt(it.h/2) + '" fill="' + fill + '"' + stroke + '/>');
+                    } else {
+                        parts.push('<rect x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                            + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" fill="' + fill + '"' + stroke + '/>');
+                    }
+                } else if (it.type === 'text') {
+                    var text = it.text || (it.el && it.el.textContent) || '';
+                    var lines = String(text).split(/\r?\n/);
+                    var fs = it.fontSize || 24;
+                    var fam = _esc(String(it.fontFamily || 'sans-serif').replace(/["']/g, ''));
+                    var fw = it.fontWeight || 400;
+                    var ls = (it.letterSpacing || 0);
+                    var lh = fs * (it.lineHeight || 1.2);
+                    var align = it.textAlign || 'left';
+                    var anchor = (align === 'center') ? 'middle' : (align === 'right') ? 'end' : 'start';
+                    // 텍스트 좌표 — anchor 기준
+                    var tx = it.x;
+                    if (anchor === 'middle') tx = it.x + (it.w || 0) / 2;
+                    else if (anchor === 'end') tx = it.x + (it.w || 0);
+                    var ty0 = it.y + fs;  // 첫 줄 baseline (대략 fontSize 만큼 내려)
+                    var tspans = lines.map(function(line, li){
+                        return '<tspan x="' + _fmt(tx) + '" '
+                            + (li === 0 ? 'y="' + _fmt(ty0) + '"' : 'dy="' + _fmt(lh) + '"')
+                            + '>' + _esc(line) + '</tspan>';
+                    }).join('');
+                    parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
+                        + 'font-weight="' + fw + '" '
+                        + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
+                        + 'fill="' + _esc(it.fill || '#000') + '" text-anchor="' + anchor + '">'
+                        + tspans + '</text>');
+                }
+                if (gTrans) parts.push('</g>');
+            }
+            parts.push('</svg>');
+            return parts.join('\n');
+        } catch(e) {
+            console.warn('[_meExportSVG]', e);
+            return null;
+        }
+    };
+
     function _meSelect(it) {
         me.items.forEach(function(o){ o.el.classList.remove('selected'); });
         var existing = me.stage.querySelectorAll('.me-handle, .me-del');
@@ -8488,6 +8616,10 @@ function scrollHotdeal(gridId, dir) {
     //   (b) v539 "slot" 포맷: slots = [{type:'text'/'image', x, y, w, h, ...}] — 단순 슬롯.
     window._meLoadTemplate = function(tpl) {
         if (!tpl) return;
+        // 2026-06-19 v623: 템플릿 사용 추적 — 주문 시 SVG 출력 + 메타 첨부에 사용.
+        try {
+            me._usedTemplate = { id: tpl.id, name: tpl.name || '', category: tpl.product_category || '', code: tpl.product_code || '' };
+        } catch(_te){}
         // 2026-06-18 v561: 다국어 확인 메시지
         var _lcfm = (function(){
             var h = (location.hostname || '').toLowerCase();
@@ -14303,7 +14435,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=566"></script>
+<script src="/simple_order.js?v=567"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

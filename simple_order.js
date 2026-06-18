@@ -13527,6 +13527,10 @@ html, body { background: #ffffff !important; }
             // 2026-06-17: PDF 원본 + 에디터 편집본 overlay PNG (PDF 위에 글씨/도형 추가 시).
             overlayUrl: state._cartOverlayUrl || null,
             overlayPath: state._cartOverlayPath || null,
+            // 2026-06-19 v623: 템플릿 주문 — 미니에디터 SVG 직렬화본 + 메타 (id/name) → 관리자 페이지에서 다운로드.
+            templateSvgUrl: state._cartTemplateSvgUrl || null,
+            templateSvgPath: state._cartTemplateSvgPath || null,
+            templateMeta: state._cartTemplateMeta || null,
             bundleShipping: !!state.bundleShipping,
             // 2026-05-13: 허니콤 박스 사이즈 + 계산된 단가 (장바구니/주문관리에서 재계산 안전 보존)
             boxSize: state.isBox ? { w: state.boxW, h: state.boxH, d: state.boxD, unit: state.boxUnitPrice, nesting: state.boxNesting } : null,
@@ -13821,6 +13825,32 @@ html, body { background: #ffffff !important; }
                     console.log('[overlay] uploaded:', _ovRes.url);
                 } catch (_oue) { console.warn('[overlay upload]', _oue); }
             }
+            // 2026-06-19 v623: 템플릿 사용 주문 — 미니에디터를 SVG 로 직렬화하여 관리자 페이지에 첨부.
+            //   벡터 보존 → 인쇄소에서 일러스트레이터로 바로 편집 가능. 템플릿 ID/이름도 메타로 보존.
+            state._cartTemplateSvgUrl = null;
+            state._cartTemplateSvgPath = null;
+            state._cartTemplateMeta = null;
+            try {
+                var _meRefT = window.me;
+                if (_meRefT && _meRefT._usedTemplate && typeof window._meExportSVG === 'function') {
+                    updateUploadStep(tr('템플릿 SVG 변환·업로드 중...', 'テンプレートSVG変換·アップロード中...', 'Converting template SVG...'));
+                    var _svgText = await window._meExportSVG();
+                    if (_svgText && _svgText.length > 100) {
+                        var _svgBlob = new Blob([_svgText], { type: 'image/svg+xml' });
+                        var _svgFile = new File([_svgBlob], 'template-' + Date.now() + '.svg', { type: 'image/svg+xml' });
+                        var _svgRes = await uploadFileGeneric(_svgFile);
+                        state._cartTemplateSvgUrl = _svgRes.url;
+                        state._cartTemplateSvgPath = _svgRes.path;
+                        state._cartTemplateMeta = {
+                            id: _meRefT._usedTemplate.id,
+                            name: _meRefT._usedTemplate.name || '',
+                            category: _meRefT._usedTemplate.category || '',
+                            code: _meRefT._usedTemplate.code || ''
+                        };
+                        console.log('[template svg] uploaded:', _svgRes.url, 'tpl:', state._cartTemplateMeta.name);
+                    }
+                }
+            } catch(_tse) { console.warn('[template svg upload]', _tse); }
             // 2026-06-16 v7: 칼선 PDF — 이미지 + vector cutline 단일 파일 (인쇄소가 한 파일로 처리).
             //   페이지 size = 실제 스티커 mm. 칼선 anchor 점 RDP 단순화로 일러스트레이터/커팅머신 친화적.
             state._cartCutlineUrl = null;

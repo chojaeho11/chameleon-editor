@@ -2921,10 +2921,17 @@ function renderFileList() {
     const list = document.getElementById('fileMgrList');
     list.innerHTML = currentMgrFiles.map((f, i) => {
         const isCutline = f.type === 'cutline';
+        const isTplSvg = f.type === 'template_svg';
         // 2026-06-16: PDF 칼선은 embed 로 미리보기 (image 아님). isImage 는 raster image 만.
+        // 2026-06-19 v623: SVG 도 inline 미리보기 가능 (Storage 가 CORS 허용 시).
         const isImage = f.url && f.url.match(/\.(png|jpg|jpeg|webp)(\?|$)/i);
-        const icon = isCutline ? '✂️' : f.type === 'customer_file' ? '📎' : f.type === 'order_sheet' ? '📋' : f.type === 'quotation' ? '💰' : '📄';
-        const badge = isCutline ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">칼선</span>' : '';
+        const isSvg = f.url && /\.svg(\?|$)/i.test(f.url);
+        const icon = isCutline ? '✂️' : isTplSvg ? '🎨' : f.type === 'customer_file' ? '📎' : f.type === 'order_sheet' ? '📋' : f.type === 'quotation' ? '💰' : '📄';
+        const badge = isCutline
+            ? '<span style="background:#ef4444;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">칼선</span>'
+            : isTplSvg
+                ? '<span style="background:#7c3aed;color:#fff;font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;">템플릿 SVG</span>'
+                : '';
         const preview = isImage ? `<div style="margin:4px 0;"><img src="${f.url}" style="max-width:120px;max-height:80px;border:1px solid #e2e8f0;border-radius:4px;cursor:pointer;" onclick="window.open('${f.url}','_blank')"></div>` : '';
         return `<div class="file-item-row" style="flex-direction:column;align-items:flex-start;">
             <div style="display:flex;align-items:center;width:100%;justify-content:space-between;">
