@@ -1123,11 +1123,28 @@ a { text-decoration: none; color: inherit; }
             if (ic) ic.className = 'fa-solid fa-right-to-bracket';
             window._cpLoggedIn = false;
         }
-        // 인증 상태 변경 시 자동 새로고침 (로그아웃 같은 즉시 반영)
+        // 2026-06-18 v584 HOTFIX: 무한 reload 루프 차단.
+        //   이전 v582 의 onAuthStateChange → location.reload() 는 TOKEN_REFRESHED / SIGNED_IN 가
+        //   초기 세션 복원 시 발생 → 새로고침 → 다시 SIGNED_IN → 무한 루프.
+        //   이제는 reload 안 함. 헤더만 갱신.
         sb.auth.onAuthStateChange(function(evt, sess2){
-            if (evt === 'SIGNED_OUT' || evt === 'SIGNED_IN' || evt === 'TOKEN_REFRESHED') {
-                location.reload();
-            }
+            try {
+                var u = sess2 && sess2.user;
+                var l = document.getElementById('cpAuthLabel');
+                var ic = document.getElementById('cpAuthIcon');
+                if (evt === 'SIGNED_OUT') {
+                    if (l) l.textContent = '로그인';
+                    if (ic) ic.className = 'fa-solid fa-right-to-bracket';
+                    window._cpLoggedIn = false;
+                } else if (u && (evt === 'SIGNED_IN' || evt === 'TOKEN_REFRESHED' || evt === 'USER_UPDATED')) {
+                    var em = u.email || '';
+                    var sh = em.split('@')[0];
+                    if (sh.length > 12) sh = sh.slice(0, 12) + '…';
+                    if (l) l.textContent = sh;
+                    if (ic) ic.className = 'fa-solid fa-right-from-bracket';
+                    window._cpLoggedIn = true;
+                }
+            } catch(_){}
         });
     } catch (e) { console.warn('[cp auth init]', e); }
 })();
@@ -1138,9 +1155,8 @@ window._cpAuthClick = async function() {
     if (window._cpLoggedIn) {
         if (!confirm('로그아웃 하시겠어요?')) return;
         try { await sb.auth.signOut(); } catch(_){}
-        location.reload();
+        // onAuthStateChange 가 헤더 자동 업데이트
     } else {
-        // 메인 사이트 로그인 페이지로 이동 (현재 페이지를 redirect 로 전달)
         var ret = encodeURIComponent(location.pathname + location.search);
         location.href = '/?login=1&return=' + ret;
     }
