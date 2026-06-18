@@ -6556,6 +6556,48 @@ function scrollHotdeal(gridId, dir) {
         _meSelect(newIt);
     };
 
+    // 2026-06-19 v619: Ctrl+C / Ctrl+V 복사·붙여넣기 — 클립보드는 in-memory (한 번 복사 → 여러 번 붙여넣기 가능)
+    var _meClipboard = null;
+    window._meCopy = function(target) {
+        var it = target || me.selected;
+        if (!it) return false;
+        var snap = {};
+        Object.keys(it).forEach(function(k){ if (k !== 'el') snap[k] = it[k]; });
+        _meClipboard = snap;
+        return true;
+    };
+    window._mePaste = function() {
+        if (!_meClipboard) return;
+        _meSnapshot();
+        var clone = JSON.parse(JSON.stringify(_meClipboard));
+        var offset = 20 / (me.wScale || 1);
+        clone.x = (clone.x || 0) + offset;
+        clone.y = (clone.y || 0) + offset;
+        // 연속 paste 시 누적 오프셋 — 같은 위치 겹쳐 보이지 않게
+        _meClipboard.x = clone.x;
+        _meClipboard.y = clone.y;
+        var el = document.createElement('div');
+        var cls = 'me-item';
+        if (clone.type === 'text') cls += ' text';
+        if (clone.type === 'shape') cls += ' shape' + (clone.shape === 'circle' ? ' circle' : '');
+        el.className = cls;
+        el.style.zIndex = (++me.zCounter);
+        if (clone.type === 'image') {
+            var img = document.createElement('img'); img.src = clone.src; el.appendChild(img);
+        } else if (clone.type === 'text') {
+            el.textContent = clone.text || '';
+        }
+        me.stage.appendChild(el);
+        var newIt = Object.assign({ el: el }, clone);
+        // _isBackground 플래그는 paste 본에는 적용 안 함 — 잠금 풀린 자유 편집 사본
+        delete newIt._isBackground;
+        if (newIt.el) newIt.el.classList.remove('me-bg-locked');
+        me.items.push(newIt);
+        _meSyncItemDisplay(newIt);
+        _meBindDrag(newIt);
+        _meSelect(newIt);
+    };
+
     // 2026-06-14: 좌우/상하 반전 (flipX/flipY 토글)
     window._meFlip = function(target, axis) {
         var it = target || me.selected;
@@ -9746,6 +9788,22 @@ function scrollHotdeal(gridId, dir) {
                 if (!stageVis2) return;
                 ev.preventDefault();
                 if (typeof window._meDuplicate === 'function') window._meDuplicate();
+                return;
+            }
+            // 2026-06-19 v619: Ctrl+C 복사 / Ctrl+V 붙여넣기
+            if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'c' || ev.key === 'C')) {
+                if (!me.selected) return;
+                var stageVisC = me.stage && me.stage.offsetParent !== null;
+                if (!stageVisC) return;
+                ev.preventDefault();
+                if (typeof window._meCopy === 'function') window._meCopy();
+                return;
+            }
+            if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'v' || ev.key === 'V')) {
+                var stageVisV = me.stage && me.stage.offsetParent !== null;
+                if (!stageVisV) return;
+                ev.preventDefault();
+                if (typeof window._mePaste === 'function') window._mePaste();
                 return;
             }
             if (!me.selected) return;
