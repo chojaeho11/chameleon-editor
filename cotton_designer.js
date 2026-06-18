@@ -2670,9 +2670,13 @@ window._cpSubmitOrder = async function() {
         const adminNote = '[COTTON-PRINT] 출처: cotton-print.com\n결제방법: ' + (payMethod==='bank'?'무통장입금':'카드결제(Toss)') + '\n이메일: ' + (email||'없음');
 
         // 2026-06-18 v579: 할인 적용된 금액 계산
+        // 2026-06-18 v583 HOTFIX: discount_type 컬럼이 orders 테이블에 없음 → admin_note 에 prefix 로 기록.
         var _ds = (window._cpDiscState || { discountAmount:0, selected:null });
         var _discAmt = Math.max(0, Math.min(_ds.discountAmount || 0, total));
         var _payable = Math.max(0, total - _discAmt);
+        // admin_note 에 할인 정보 prefix 추가 (별도 컬럼 추가 마이그레이션 없이 운영 가능)
+        var _discNotePrefix = _ds.selected ? ('[DISCOUNT:' + _ds.selected + ':' + _discAmt + '] ') : '';
+        var _finalAdminNote = _discNotePrefix + (adminNote || '');
 
         // 2) orders 테이블에 등록 → 통합주문관리에 즉시 표시
         const orderInsertPayload = {
@@ -2686,11 +2690,10 @@ window._cpSubmitOrder = async function() {
             payment_method: payMethod === 'bank' ? '무통장입금' : '카드',
             total_amount: _payable,
             discount_amount: _discAmt,
-            discount_type: _ds.selected || null,
             items: items,
             site_code: _cpSiteCode(),
             files: uploadedFiles.length ? uploadedFiles : null,
-            admin_note: adminNote
+            admin_note: _finalAdminNote
         };
         const { data: orderData, error: orderErr } = await sb.from('orders').insert([orderInsertPayload]).select();
         if (orderErr) throw orderErr;
