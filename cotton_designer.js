@@ -497,7 +497,7 @@ async function loadDbFabrics() {
                               .filter(c => c && !c.includes(',') && !c.includes('(') && !c.includes(')'));
         if (codes.length === 0) return;
         const r2 = await sb.from('admin_products')
-            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, image')
+            .select('code, name, name_jp, name_us, name_en, name_kr, price, sort_order, thumb_url, image_url, img_url')
             .in('category', codes);
         if (r2.error) return;
         const products = r2.data || [];
@@ -623,36 +623,41 @@ function _cdApplyFabricChipPhotos() {
 }
 window._cdApplyFabricChipPhotos = _cdApplyFabricChipPhotos;
 
-// 2026-06-18 v588: 하드코딩 옵션 카드(.fin-opt) 에 admin_products 의 이미지를 매칭해 삽입.
+// 2026-06-18 v590: 하드코딩 옵션 카드(.fin-opt) 에 admin_products 의 썸네일을 매칭해 삽입.
 //   매칭 규칙: 첫 2 한글자 일치 (예: "실색상 변경" ↔ "실색변경" 모두 "실색" 으로 매칭).
+//   이미지 필드: thumb_url / image_url / img_url 순서로 폴백.
+function _cdGetThumb(p) {
+    if (!p) return '';
+    return p.thumb_url || p.image_url || p.img_url || p.image || '';
+}
 function _cdApplyFinOptImages(adminItems) {
     if (!adminItems || !adminItems.length) return;
     function firstKr(s){ var m = (s||'').match(/[가-힣]+/); return m ? m[0].substring(0,2) : ''; }
-    // 옵션 카드 전체 (finish + hook + acc)
     var cards = document.querySelectorAll('.fin-opt[data-name]');
+    var applied = 0;
     cards.forEach(function(card){
         var optName = card.getAttribute('data-name') || '';
         if (!optName) return;
         var key = firstKr(optName);
         if (!key) return;
-        // admin 에서 첫 2 한글자가 같은 아이템 찾기
         var match = null;
         for (var i = 0; i < adminItems.length; i++) {
             var a = adminItems[i];
             var aName = a.name_kr || a.name || '';
-            if (firstKr(aName) === key && a.image) { match = a; break; }
+            var thumb = _cdGetThumb(a);
+            if (firstKr(aName) === key && thumb) { match = a; break; }
         }
         if (!match) return;
-        // 이미 이미지 들어가 있으면 패스
         if (card.querySelector('.fin-opt-img')) return;
         var img = document.createElement('img');
         img.className = 'fin-opt-img';
-        img.src = match.image;
+        img.src = _cdGetThumb(match);
         img.alt = optName;
         img.loading = 'lazy';
-        // 카드 첫 자식으로 삽입 — CSS 가 grid 일 때 이미지가 위에 표시됨
         card.insertBefore(img, card.firstChild);
+        applied++;
     });
+    console.log('[fin-opt img] matched/applied:', applied, 'of', cards.length, 'cards from', adminItems.length, 'admin items');
 }
 window._cdApplyFinOptImages = _cdApplyFinOptImages;
 
