@@ -12201,10 +12201,14 @@ html, body { background: #ffffff !important; }
                 var sess = await sb.auth.getSession();
                 currentUser = sess && sess.data && sess.data.session && sess.data.session.user;
                 if (!currentUser) { alert('로그인이 필요합니다 / Login required'); return; }
-                if (!isDesigner) {
-                    var prof = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
-                    if (!prof || !prof.data || prof.data.role !== 'admin') { alert('관리자만 접근 가능'); return; }
+                // 2026-06-18 v618: designer 모드라도 admin 으로 로그인 → 검토 단계 생략하고 직접 등록(approved) UI 로 자동 승격
+                var prof = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+                var isAdmin = prof && prof.data && prof.data.role === 'admin';
+                if (isDesigner && isAdmin) {
+                    console.log('[template mode] admin detected → auto-promote designer → admin save mode');
+                    isDesigner = false;
                 }
+                if (!isDesigner && !isAdmin) { alert('관리자만 접근 가능'); return; }
             } catch(_re){ alert('권한 확인 실패: ' + _re.message); return; }
         }
         // 결제 박스 + 카트/구매 버튼 + 디자인 의뢰 배너 숨김
