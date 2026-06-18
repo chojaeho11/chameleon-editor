@@ -2158,7 +2158,33 @@ window.changeStatusSelected = async (status) => {
         }
     }
 
+    // 2026-06-18 v608: 상태 전환에 따른 알림 이메일 자동 발송 (fire-and-forget)
+    //   접수됨/접수완료 → accepted, 발송완료/배송완료 → shipped. 그 외는 무시.
+    let mailType = null;
+    if (status === '접수됨' || status === '접수완료' || status === '결제완료') mailType = 'accepted';
+    else if (status === '발송완료' || status === '배송완료') mailType = 'shipped';
+    if (mailType) {
+        for (const orderId of ids) {
+            try { window._sendOrderMail && window._sendOrderMail(orderId, mailType); } catch(e) {}
+        }
+    }
+
     loadOrders();
+};
+
+// 2026-06-18 v608: 알림 메일 발송 헬퍼 — send-order-receipt edge function 호출.
+//   언어는 함수가 orders.site_code 로 자동 판별. fire-and-forget (실패해도 운영 영향 X)
+window._sendOrderMail = async function(orderId, type) {
+    try {
+        const r = await sb.functions.invoke('send-order-receipt', { body: { order_id: orderId, type } });
+        if (r && r.data && r.data.ok) {
+            console.log('[mail]', type, orderId, '→', r.data.email, '(' + r.data.lang + ')');
+        } else if (r && r.error) {
+            console.warn('[mail]', type, orderId, 'failed:', r.error?.message || r.error);
+        } else if (r && r.data && r.data.error === 'no_email_available') {
+            console.log('[mail] skip', type, orderId, '(no email)');
+        }
+    } catch (e) { console.warn('[mail]', type, orderId, e); }
 };
 
 // ★ 작품 판매 수익 정산: partner_settlements에서 pending 건 찾아 예치금 지급
@@ -2249,6 +2275,12 @@ async function refundSingleOrder(id, reason = '관리자 취소') {
                 description: `${reason} 마일리지 복원 (주문번호: ${id})`
             });
         }
+    }
+
+    // 2026-06-18 v608: 환불 알림 메일 자동 발송 (fire-and-forget)
+    //   환불완료 상태만 — '환불대기' 인 케이스는 실제 환불 안 됐으니 메일 X
+    if (newPaymentStatus === '환불완료') {
+        try { window._sendOrderMail && window._sendOrderMail(id, 'refund'); } catch(e) {}
     }
 
     return newPaymentStatus;
