@@ -1081,11 +1081,71 @@ a { text-decoration: none; color: inherit; }
                 <i class="fa-solid fa-cart-shopping" style="margin-right:6px;"></i><span data-cdi18n="cart_btn">장바구니</span>
                 <span id="cartBadge" style="position:absolute; top:-6px; right:-6px; background:#dc2626; color:#fff; min-width:20px; height:20px; border-radius:10px; font-size:11px; font-weight:800; display:none; align-items:center; justify-content:center; padding:0 6px;">0</span>
             </button>
-            <!-- 2026-06-04: 로그인 버튼 제거 — 메인 사이트 헤더 로그인 사용. cotton-print 진입 시 별도 로그인 불필요. -->
+            <!-- 2026-06-18 v582: 로그인 상태 표시 + 로그인/로그아웃 버튼 -->
+            <button id="cpAuthBtn" class="brand-back" style="background:#fff; border:1px solid var(--cream-dark); cursor:pointer; min-width:88px;" onclick="window._cpAuthClick && window._cpAuthClick()">
+                <i id="cpAuthIcon" class="fa-solid fa-right-to-bracket" style="margin-right:6px;"></i><span id="cpAuthLabel">로그인</span>
+            </button>
             <a href="/" class="brand-back"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i><span data-cdi18n="main_btn">메인으로</span></a>
         </div>
     </div>
 </div>
+<script>
+// 2026-06-18 v582: 로그인 상태 헤더 렌더 + 클릭 동작
+(async function _cpAuthInit() {
+    try {
+        // supabase 라이브러리 로드 대기
+        for (var i = 0; i < 50 && typeof window.supabase === 'undefined'; i++) {
+            await new Promise(function(r){ setTimeout(r, 100); });
+        }
+        var sb = window.sb;
+        if (!sb && window.supabase && window.supabase.createClient) {
+            sb = window.supabase.createClient(
+                'https://qinvtnhiidtmrzosyvys.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                { auth: { persistSession:true, autoRefreshToken:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' } }
+            );
+            window.sb = sb;
+        }
+        if (!sb) return;
+        var sess = await sb.auth.getSession();
+        var user = sess && sess.data && sess.data.session && sess.data.session.user;
+        var lbl = document.getElementById('cpAuthLabel');
+        var ic  = document.getElementById('cpAuthIcon');
+        if (user) {
+            var email = user.email || '';
+            var short = email.split('@')[0];
+            if (short.length > 12) short = short.slice(0, 12) + '…';
+            if (lbl) lbl.textContent = short;
+            if (ic) ic.className = 'fa-solid fa-right-from-bracket';
+            window._cpLoggedIn = true;
+        } else {
+            if (lbl) lbl.textContent = '로그인';
+            if (ic) ic.className = 'fa-solid fa-right-to-bracket';
+            window._cpLoggedIn = false;
+        }
+        // 인증 상태 변경 시 자동 새로고침 (로그아웃 같은 즉시 반영)
+        sb.auth.onAuthStateChange(function(evt, sess2){
+            if (evt === 'SIGNED_OUT' || evt === 'SIGNED_IN' || evt === 'TOKEN_REFRESHED') {
+                location.reload();
+            }
+        });
+    } catch (e) { console.warn('[cp auth init]', e); }
+})();
+
+window._cpAuthClick = async function() {
+    var sb = window.sb;
+    if (!sb) { location.href = '/'; return; }
+    if (window._cpLoggedIn) {
+        if (!confirm('로그아웃 하시겠어요?')) return;
+        try { await sb.auth.signOut(); } catch(_){}
+        location.reload();
+    } else {
+        // 메인 사이트 로그인 페이지로 이동 (현재 페이지를 redirect 로 전달)
+        var ret = encodeURIComponent(location.pathname + location.search);
+        location.href = '/?login=1&return=' + ret;
+    }
+};
+</script>
 
 <!-- 2026-05-13: 메인 페이지 #topCatMenu 와 동일한 보라색 nav bar -->
 <div id="topCatMenu" style="width:100%; background:#4338ca; border-bottom:none; padding:0; position:relative; left:0; right:0;">
