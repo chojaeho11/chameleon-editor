@@ -492,12 +492,30 @@ async function loadDbFabrics() {
     ) : null;
     if (!sb) return;
     try {
-        // 2026-06-18 v599: 기본 1000 limit 명시 + 안전한 select *.
+        // 2026-06-18 v601: 두 번에 나눠 쿼리 — 일반 SELECT * 가 mate10001~10007 을 누락하는 케이스 회피.
+        //   admin_products 에 RLS 또는 페이지네이션 이슈가 있을 수 있어 mate% 코드는 별도로 명시 쿼리.
         let r2 = await sb.from('admin_products').select('*').limit(5000);
         if (r2.error) {
             console.warn('[loadDbFabrics] select * failed:', r2.error.message);
             r2 = await sb.from('admin_products').select('code, name, price, sort_order, thumb_url').limit(5000);
         }
+        // mate 접두사 상품 별도 보강 — 중복은 code 로 dedupe
+        try {
+            var mateOnly = await sb.from('admin_products').select('*').like('code', 'mate%').limit(1000);
+            if (!mateOnly.error && mateOnly.data) {
+                console.log('[loadDbFabrics] mate-only query:', mateOnly.data.length);
+                var existing = new Set((r2.data || []).map(function(p){ return p.code; }));
+                mateOnly.data.forEach(function(p){
+                    if (!existing.has(p.code)) {
+                        r2.data = r2.data || [];
+                        r2.data.push(p);
+                        existing.add(p.code);
+                    }
+                });
+            } else if (mateOnly.error) {
+                console.warn('[loadDbFabrics] mate query failed:', mateOnly.error.message);
+            }
+        } catch(e){ console.warn('[loadDbFabrics] mate query:', e); }
         if (r2.error) return;
         let products = r2.data || [];
         console.log('[loadDbFabrics] admin_products:', products.length);
@@ -662,12 +680,12 @@ function _cdApplyFabricChipFromAdmin(adminItems) {
         linen:    ['린넨', '리넨', 'linen'],
         organza:  ['오간자', 'オーガンザ', 'organza']
     };
-    var pool = adminItems.filter(function(a){ return _cdGetThumb(a); });
+    // 2026-06-18 v601: pool 에서 thumb 사전 필터 제거 — name 으로만 매칭하고 매칭 후 thumb 체크.
+    var pool = adminItems.filter(function(a){ return (a.name||'').trim(); });
     document.querySelectorAll('.fabric-type[data-fab]').forEach(function(chip){
         var fab = chip.dataset.fab;
         var iconWrap = chip.querySelector('.fabric-type-icon');
         if (!iconWrap) return;
-        // 이미 사진이 들어가 있으면 (FABRIC_PHOTO 가 정상 로드된 경우) 건드리지 않음
         if (iconWrap.querySelector('img')) return;
         var kws = KEYWORDS[fab] || [];
         if (!kws.length) return;
@@ -679,9 +697,9 @@ function _cdApplyFabricChipFromAdmin(adminItems) {
             }
             if (match) break;
         }
-        if (!match) return;
+        if (!match) { console.log('[fabric chip admin]', fab, 'no match'); return; }
         var thumb = _cdGetThumb(match);
-        if (!thumb) return;
+        if (!thumb) { console.log('[fabric chip admin]', fab, '←', match.name, '(matched but no thumb)'); return; }
         iconWrap.innerHTML = '<img src="' + thumb + '" alt="" style="width:100%; height:100%; border-radius:6px; object-fit:cover; display:block;">';
         console.log('[fabric chip admin]', fab, '←', match.name);
     });
