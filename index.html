@@ -7046,6 +7046,22 @@ function scrollHotdeal(gridId, dir) {
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'center' ? ' active' : '') + '" data-align="center">' + svgC + '</button>'
                 + '<button type="button" class="me-prop-btn' + (it.textAlign === 'right' ? ' active' : '') + '" data-align="right">' + svgR + '</button>'
             + '</span>';
+            // 2026-06-19 v621: 글자 크기 / 자간 / 행간 — 정렬 옆 추가 (Illustrator 식 미세조정용)
+            var _fsCur = Math.round(it.fontSize || 24);
+            var _lsCur = Math.round((it.letterSpacing || 0) * 10) / 10;
+            var _lhCur = Math.round((it.lineHeight || 1.2) * 100) / 100;
+            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_fsize','글자 크기') + '">'
+                + '<i class="fa-solid fa-text-height" style="color:#64748b; font-size:11px;"></i>'
+                + '<input type="number" min="6" max="400" step="1" value="' + _fsCur + '" data-mp="fontSize" data-mp-num="1" style="width:48px;">'
+            + '</span>';
+            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_lspace','자간') + '">'
+                + '<i class="fa-solid fa-arrows-left-right" style="color:#64748b; font-size:11px;"></i>'
+                + '<input type="number" min="-20" max="60" step="0.5" value="' + _lsCur + '" data-mp="letterSpacing" data-mp-num="1" style="width:48px;">'
+            + '</span>';
+            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_lheight','행간 (배수)') + '">'
+                + '<i class="fa-solid fa-grip-lines" style="color:#64748b; font-size:11px;"></i>'
+                + '<input type="number" min="0.6" max="3" step="0.05" value="' + _lhCur + '" data-mp="lineHeight" data-mp-num="1" style="width:48px;">'
+            + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
             html += '<span class="me-prop-group"><label>' + T('me_prop_stroke','테두리') + '</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
@@ -7235,8 +7251,8 @@ function scrollHotdeal(gridId, dir) {
             sx = ev.clientX; sy = ev.clientY;
             sLeft = it.x; sTop = it.y;
             if (isEditing) {
-                // 편집 모드 — 즉시 drag 시작하지 않음. pointermove 에서 임계값 넘으면 편집 종료 후 drag 시작.
-                _pendingDrag = true;
+                // 2026-06-19 v621: 편집 모드 중엔 박스 드래그 전면 차단 — 텍스트 드래그-선택(Illustrator 식) 가능하게.
+                //   박스 이동은 편집 종료(외부 클릭/Esc) 후에만. 이전 _pendingDrag 임계값 방식은 부분 드래그 선택 막음.
                 return;
             }
             _meSnapshot();
@@ -7246,20 +7262,7 @@ function scrollHotdeal(gridId, dir) {
             ev.preventDefault();
         });
         it.el.addEventListener('pointermove', function(ev){
-            // 편집 중 드래그 전환 임계값 검사 (10px)
-            if (_pendingDrag && !dragging) {
-                var pdx = ev.clientX - sx, pdy = ev.clientY - sy;
-                if (Math.sqrt(pdx*pdx + pdy*pdy) > 10) {
-                    // 편집 종료 → 드래그 시작
-                    it.el.blur();  // contenteditable=false + it.text sync
-                    _meSnapshot();
-                    dragging = true;
-                    _pendingDrag = false;
-                    try { it.el.setPointerCapture(ev.pointerId); } catch(_e){}
-                    _meSelect(it);
-                    ev.preventDefault();
-                }
-            }
+            // v621: 편집 중 박스 드래그 전환 제거 — 텍스트 드래그-선택을 위해 편집 종료까지 드래그 비활성.
             if (!dragging) return;
             var dx = (ev.clientX - sx) / me.wScale;
             var dy = (ev.clientY - sy) / me.wScale;
@@ -7310,7 +7313,7 @@ function scrollHotdeal(gridId, dir) {
                             it.el.setAttribute('contenteditable', 'true');
                             it.el.setAttribute('inputmode', 'text');
                             it.el.focus();
-                            try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
+                            // v621: selectAll 제거 — 클릭한 글자 사이에 커서 위치 → Illustrator 식 부분 편집
                             if (isMobile) {
                                 setTimeout(function(){
                                     try { it.el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_se){}
@@ -7326,7 +7329,7 @@ function scrollHotdeal(gridId, dir) {
                 if (it._isBackground) return;
                 it.el.setAttribute('contenteditable', 'true');
                 it.el.focus();
-                try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
+                // v621: selectAll 제거 — 클릭한 글자 사이에 커서 위치 → Illustrator 식 부분 편집
             });
             it.el.addEventListener('blur', function(){
                 it.el.removeAttribute('contenteditable');
@@ -7366,11 +7369,12 @@ function scrollHotdeal(gridId, dir) {
             //   n: dy 반전 + y 앵커 이동.    s: dy 만 적용.
             var isEdge = (corner === 'n' || corner === 's' || corner === 'e' || corner === 'w');
             if (isEdge) {
+                // v621: 최소 20px → 6px — 텍스트 박스 더 좁게 줄일 수 있도록
                 var newW2 = sw, newH2 = sh;
-                if (corner === 'e') newW2 = Math.max(20, sw + dx);
-                if (corner === 'w') { newW2 = Math.max(20, sw - dx); it.x = sX + (sw - newW2); }
-                if (corner === 's') newH2 = Math.max(20, sh + dy);
-                if (corner === 'n') { newH2 = Math.max(20, sh - dy); it.y = sY + (sh - newH2); }
+                if (corner === 'e') newW2 = Math.max(6, sw + dx);
+                if (corner === 'w') { newW2 = Math.max(6, sw - dx); it.x = sX + (sw - newW2); }
+                if (corner === 's') newH2 = Math.max(6, sh + dy);
+                if (corner === 'n') { newH2 = Math.max(6, sh - dy); it.y = sY + (sh - newH2); }
                 it.w = newW2; it.h = newH2;
                 // 2026-06-16: edge 리사이즈 후엔 width:max-content auto-shrink 끄고 고정 폭 유지.
                 if (it.type === 'text') it._edgeResized = true;
@@ -7384,8 +7388,8 @@ function scrollHotdeal(gridId, dir) {
             // 큰 변의 변화량으로 정비율 결정
             var signX = (corner === 'nw' || corner === 'sw') ? -1 : 1;
             var signY = (corner === 'nw' || corner === 'ne') ? -1 : 1;
-            var newW = Math.max(20, sw + dx * signX);
-            var newH = Math.max(20, newW * sRatio);  // 정비율
+            var newW = Math.max(6, sw + dx * signX);
+            var newH = Math.max(6, newW * sRatio);  // 정비율
             // 앵커(반대 모서리) 고정
             if (signX < 0) it.x = sX + (sw - newW);
             if (signY < 0) it.y = sY + (sh - newH);
