@@ -7224,17 +7224,28 @@ function scrollHotdeal(gridId, dir) {
         var d = document.createElement('div'); d.className = 'me-del'; d.textContent = '×';
         it.el.appendChild(d);
         d.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); ev.preventDefault(); _meRemove(it); });
-        // 2026-06-19 v625: 텍스트의 경우 — X 버튼을 실제 렌더된 텍스트 우상단에 동적 배치 (박스가 더 넓어도 빈 공간에 X 가 뜨지 않게).
+        // 2026-06-19 v625/v627: 텍스트의 경우 — X 버튼을 실제 렌더된 텍스트 우상단에 동적 배치.
+        //   v625 의 selectNodeContents 는 자식 .me-del/.me-handle 까지 측정 범위에 포함시켜 잘못된 rect 가 나옴.
+        //   v627: TreeWalker 로 텍스트 노드만 골라서 정확한 텍스트 bbox 측정.
         if (it.type === 'text') {
             try {
-                var range = document.createRange();
-                range.selectNodeContents(it.el);
-                var rect = range.getBoundingClientRect();
-                var boxRect = it.el.getBoundingClientRect();
-                if (rect && boxRect && rect.width > 0 && boxRect.width > rect.width + 8) {
-                    // 박스가 텍스트보다 충분히 넓을 때만 — 텍스트 우측 끝 + 6px 위치로
-                    var offsetRight = boxRect.right - rect.right;  // 텍스트 우측 끝과 박스 우측 끝의 거리
-                    d.style.right = (offsetRight - 6) + 'px';
+                var firstText = null, lastText = null;
+                var walker = document.createTreeWalker(it.el, NodeFilter.SHOW_TEXT, null, false);
+                var tn;
+                while ((tn = walker.nextNode())) {
+                    if (!firstText) firstText = tn;
+                    lastText = tn;
+                }
+                if (firstText && lastText) {
+                    var range = document.createRange();
+                    range.setStart(firstText, 0);
+                    range.setEnd(lastText, (lastText.textContent || '').length);
+                    var rect = range.getBoundingClientRect();
+                    var boxRect = it.el.getBoundingClientRect();
+                    if (rect && boxRect && rect.width > 0 && boxRect.width > rect.width + 8) {
+                        var offsetRight = boxRect.right - rect.right;
+                        d.style.right = (offsetRight - 6) + 'px';
+                    }
                 }
             } catch(_de){}
         }
@@ -14595,7 +14606,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=569"></script>
+<script src="/simple_order.js?v=570"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

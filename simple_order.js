@@ -13825,39 +13825,61 @@ html, body { background: #ffffff !important; }
                     console.log('[overlay] uploaded:', _ovRes.url);
                 } catch (_oue) { console.warn('[overlay upload]', _oue); }
             }
-            // 2026-06-19 v623/v626: 미니에디터 디자인 주문 — SVG 직렬화 + 텍스트 아웃라인 변환 후 관리자 페이지에 첨부.
-            //   v626: 템플릿 사용 여부 관계없이 미니에디터에 항목이 있으면 무조건 SVG 도 생성 (관리자 일러스트 편집용).
-            //   벡터 보존 → 인쇄소에서 일러스트레이터로 바로 편집 가능. 템플릿 사용 시 메타도 함께 보존.
+            // 2026-06-19 v623/v626/v627: 미니에디터 디자인 주문 — SVG 직렬화 + 텍스트 아웃라인 변환 후 관리자 페이지에 첨부.
+            //   v626: 템플릿 사용 여부 관계없이 미니에디터에 항목이 있으면 무조건 SVG 도 생성.
+            //   v627: 명시적 contentType + 직접 storage.upload 호출 (uploadFileGeneric 거치지 않음 — MIME 안전 보장).
+            //     상세 로그 추가하여 실패 원인 추적.
             state._cartTemplateSvgUrl = null;
             state._cartTemplateSvgPath = null;
             state._cartTemplateMeta = null;
             try {
                 var _meRefT = window.me;
                 var _meHasItems = _meRefT && Array.isArray(_meRefT.items) && _meRefT.items.length > 0;
+                console.log('[design svg] check — hasItems:', _meHasItems, 'natW:', _meRefT && _meRefT.natW, 'natH:', _meRefT && _meRefT.natH, 'exportFn:', typeof window._meExportSVG);
                 if (_meHasItems && typeof window._meExportSVG === 'function') {
                     updateUploadStep(tr('디자인 SVG (텍스트 아웃라인 변환) 처리 중...', 'デザインSVG (テキストアウトライン変換) 中...', 'Converting design SVG (text outline)...'));
-                    // v624: outline:true → 모든 텍스트를 벡터 path 로 변환 (폰트 없어도 동일 표시)
-                    var _svgText = await window._meExportSVG({ outline: true });
+                    var _svgText;
+                    try {
+                        // v624: outline:true → 모든 텍스트를 벡터 path 로 변환 (폰트 없어도 동일 표시)
+                        _svgText = await window._meExportSVG({ outline: true });
+                        console.log('[design svg] export returned length:', _svgText ? _svgText.length : 0);
+                    } catch (_exErr) {
+                        console.error('[design svg] _meExportSVG threw:', _exErr);
+                        _svgText = null;
+                    }
                     if (_svgText && _svgText.length > 100) {
-                        var _svgBlob = new Blob([_svgText], { type: 'image/svg+xml' });
-                        var _svgFile = new File([_svgBlob], 'design-' + Date.now() + '.svg', { type: 'image/svg+xml' });
-                        var _svgRes = await uploadFileGeneric(_svgFile);
-                        state._cartTemplateSvgUrl = _svgRes.url;
-                        state._cartTemplateSvgPath = _svgRes.path;
-                        if (_meRefT._usedTemplate) {
-                            state._cartTemplateMeta = {
-                                id: _meRefT._usedTemplate.id,
-                                name: _meRefT._usedTemplate.name || '',
-                                category: _meRefT._usedTemplate.category || '',
-                                code: _meRefT._usedTemplate.code || ''
-                            };
+                        try {
+                            var _sb = getSb();
+                            if (!_sb) throw new Error('sb null');
+                            var _svgBlob = new Blob([_svgText], { type: 'image/svg+xml' });
+                            var _svgTs = Date.now() + '_' + Math.floor(Math.random() * 10000);
+                            var _svgPath = 'simple_order/design-' + _svgTs + '.svg';
+                            console.log('[design svg] uploading to:', _svgPath, 'size:', _svgBlob.size);
+                            var _upRes = await _sb.storage.from('design').upload(_svgPath, _svgBlob, {
+                                contentType: 'image/svg+xml',
+                                upsert: false
+                            });
+                            if (_upRes.error) { console.error('[design svg] upload error:', _upRes.error); throw _upRes.error; }
+                            var _svgPub = _sb.storage.from('design').getPublicUrl(_svgPath).data.publicUrl;
+                            state._cartTemplateSvgUrl = _svgPub;
+                            state._cartTemplateSvgPath = _svgPath;
+                            if (_meRefT._usedTemplate) {
+                                state._cartTemplateMeta = {
+                                    id: _meRefT._usedTemplate.id,
+                                    name: _meRefT._usedTemplate.name || '',
+                                    category: _meRefT._usedTemplate.category || '',
+                                    code: _meRefT._usedTemplate.code || ''
+                                };
+                            }
+                            console.log('[design svg] uploaded OK:', _svgPub, 'tpl:', state._cartTemplateMeta ? state._cartTemplateMeta.name : '(no template)');
+                        } catch (_upE) {
+                            console.error('[design svg] upload failed:', _upE && (_upE.message || _upE));
                         }
-                        console.log('[design svg] uploaded:', _svgRes.url, 'tpl:', state._cartTemplateMeta ? state._cartTemplateMeta.name : '(no template)');
                     } else {
-                        console.warn('[design svg] empty or too short, skip');
+                        console.warn('[design svg] empty or too short, skip — length:', _svgText ? _svgText.length : 0);
                     }
                 }
-            } catch(_tse) { console.warn('[design svg upload]', _tse); }
+            } catch(_tse) { console.error('[design svg outer]', _tse); }
             // 2026-06-16 v7: 칼선 PDF — 이미지 + vector cutline 단일 파일 (인쇄소가 한 파일로 처리).
             //   페이지 size = 실제 스티커 mm. 칼선 anchor 점 RDP 단순화로 일러스트레이터/커팅머신 친화적.
             state._cartCutlineUrl = null;

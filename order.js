@@ -4249,6 +4249,13 @@ async function processFinalPayment() {
                     cartData.length = 0;
                 } catch(e) {}
 
+                // 2026-06-19 v627: 토스트로도 한번 더 명확히 안내 — 팝업 안 보이는 경우 대비
+                try {
+                    if (typeof showToast === 'function') {
+                        showToast(window.t('msg_bank_order_received', '✅ 주문이 정상적으로 접수되었습니다'), 'success');
+                    }
+                } catch(_te){}
+
                 // ★ 계좌번호 안내 팝업 표시
                 const bankPopup = document.createElement('div');
                 bankPopup.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
@@ -4257,8 +4264,9 @@ async function processFinalPayment() {
                 const _bankName = _isKR ? '국민은행' : 'Community Federal Savings Bank';
                 const acctNum = _isKR ? '647701-04-277763' : '8487335989';
                 const _holder = _isKR ? '(예금주: 카멜레온프린팅)' : '(CHAMELEON PRINTING INC)';
-                const _orderMsg = _isKR ? '✅ 주문이 접수되었습니다' : '✅ Order Confirmed';
-                const _noteMsg = _isKR ? '입금 확인 후 제작이 시작됩니다.' : 'Production begins after payment is confirmed.';
+                // 2026-06-19 v627: "정상적으로 접수" 문구 명확화
+                const _orderMsg = _isKR ? '✅ 주문이 정상적으로 접수되었습니다' : '✅ Order Successfully Received';
+                const _noteMsg = _isKR ? '아래 계좌로 입금해주세요. 입금 확인 후 제작이 시작됩니다.' : 'Please transfer to the account below. Production begins after payment is confirmed.';
                 const _copyBtn = _isKR ? '📋 계좌번호 복사' : '📋 Copy Account';
                 const _printBtn = _isKR ? '🖨️ 인쇄하기' : '🖨️ Print';
                 const _closeBtn = _isKR ? '닫기' : 'Close';
