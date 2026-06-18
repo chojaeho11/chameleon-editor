@@ -8978,6 +8978,11 @@ function scrollHotdeal(gridId, dir) {
                     var hasVisuals = _hasNonTextVisual(child) || child.nodeName.toLowerCase() !== 'g' && child.nodeName.toLowerCase() !== 'text';
                     // text-only 그룹은 visual 처리 X. text-only 가 아니면 잔여물 처리.
                     var addedVisual = false;
+                    // v617 진단: 어떤 child 가 어떤 구조를 가졌는지 출력
+                    console.log('[svg upload] child', idx, 'tag=' + child.nodeName,
+                        'texts=' + allTexts.length,
+                        'hasVisuals=' + hasVisuals,
+                        'preview=' + (child.outerHTML || '').slice(0, 200).replace(/\s+/g, ' '));
 
                     // (A) 시각 잔여물 — <text> 빼고 렌더링되는 게 있는 경우만
                     if (hasVisuals && child.nodeName.toLowerCase() !== 'text') {
@@ -9055,6 +9060,10 @@ function scrollHotdeal(gridId, dir) {
                             return;
                         }
                         var tbb = _docBBox(renderedText);
+                        // v617: 작은 글씨/외곽선 케이스 진단
+                        console.log('[svg upload] text candidate child=' + idx,
+                            'content=' + (textNode.textContent || '').trim().slice(0, 40),
+                            'bbox=' + (tbb ? (tbb.width.toFixed(1) + 'x' + tbb.height.toFixed(1)) : 'null'));
                         if (!tbb || tbb.width <= 0 || tbb.height <= 0) {
                             console.warn('[svg upload] text zero bbox:', textNode.textContent);
                             return;
