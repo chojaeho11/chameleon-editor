@@ -6428,6 +6428,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     setTimeout(_refreshAuthUI, 400);
 
+    // 2026-06-18 v585: 도메인 간 SSO — cotton-print.com / cotton-printer.com / hexa-board.com 등 별도 도메인에서
+    //   cafe2626.com 의 로그인 세션을 자동 가져옴. cafe2626.com 자체이거나 이미 로그인 상태면 스킵.
+    (async function _crossDomainSSO(){
+        try {
+            var host = (location.hostname || '').toLowerCase();
+            // cafe2626 자체 또는 sub-path 면 같은 localStorage 라 SSO 불필요
+            if (host === 'www.cafe2626.com' || host === 'cafe2626.com') return;
+            // 이미 토큰 있으면 스킵
+            try {
+                var existing = localStorage.getItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                if (existing) { /* 이미 로그인 상태 — SSO 건너뜀 */ return; }
+            } catch(_lsErr){}
+
+            // 1) postMessage 리스너 먼저 등록
+            window.addEventListener('message', async function(ev){
+                if (ev.origin !== 'https://www.cafe2626.com' && ev.origin !== 'https://cafe2626.com') return;
+                if (!ev.data || ev.data.type !== 'sso_token') return;
+                var tok = ev.data.token;
+                if (!tok) return;     // cafe2626 에서도 로그아웃 상태
+                try {
+                    localStorage.setItem('sb-qinvtnhiidtmrzosyvys-auth-token', tok);
+                    // supabase 클라이언트가 토큰을 인식하도록 setSession 강제
+                    var parsed = JSON.parse(tok);
+                    var access  = parsed && (parsed.access_token  || (parsed.currentSession && parsed.currentSession.access_token));
+                    var refresh = parsed && (parsed.refresh_token || (parsed.currentSession && parsed.currentSession.refresh_token));
+                    if (access && refresh) {
+                        var sb = _getSb();
+                        if (sb && sb.auth && sb.auth.setSession) {
+                            await sb.auth.setSession({ access_token: access, refresh_token: refresh });
+                        }
+                    }
+                    _refreshAuthUI();
+                    // 한 번만 처리
+                    var fr = document.getElementById('cpSsoFrame'); if (fr) fr.remove();
+                } catch(e){ console.warn('[cp sso recv]', e); }
+            });
+
+            // 2) hidden iframe 으로 cafe2626 의 auth_bridge.html 로드 → 자동 postMessage 받음
+            var fr = document.createElement('iframe');
+            fr.id = 'cpSsoFrame';
+            fr.src = 'https://www.cafe2626.com/auth_bridge.html';
+            fr.style.cssText = 'position:absolute; width:0; height:0; border:0; opacity:0; pointer-events:none;';
+            fr.setAttribute('aria-hidden','true');
+            (document.body || document.documentElement).appendChild(fr);
+        } catch(e){ console.warn('[cp sso]', e); }
+    })();
+
     // Enter 키 처리
     ['cpAuthId','cpAuthPw','cpAuthPwc'].forEach(function(id){
         var el = $(id); if (el) el.addEventListener('keydown', function(e){ if (e.key === 'Enter') window._cpDoAuth(); });

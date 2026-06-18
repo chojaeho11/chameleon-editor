@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Auth Bridge</title>
+<meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<script>
+// 2026-06-18 v585: 도메인 간 SSO 브리지.
+//   cotton-print.com (별도 도메인) 페이지가 hidden iframe 으로 이 페이지(cafe2626.com 도메인) 를
+//   로드하면, 여기서 cafe2626.com origin 의 localStorage 의 supabase auth token 을 읽어
+//   parent 에게 postMessage 로 전달. 부모 도메인은 그 토큰을 자기 localStorage 에 저장하여
+//   동일 supabase 백엔드로 로그인 상태가 됨.
+(function(){
+    // 허용 부모 origin — 이 목록 외에서 부르면 무시 (보안)
+    var ALLOWED_PARENTS = [
+        'https://www.cotton-print.com',
+        'https://cotton-print.com',
+        'https://www.cotton-printer.com',
+        'https://cotton-printer.com',
+        'https://www.hexa-board.com',
+        'https://hexa-board.com',
+        'https://chameleon.design',
+        'https://www.chameleon.design'
+    ];
+    function isAllowed(o){ return ALLOWED_PARENTS.indexOf(o) !== -1; }
+    var TOKEN_KEY = 'sb-qinvtnhiidtmrzosyvys-auth-token';
+
+    function readToken(){
+        try { return localStorage.getItem(TOKEN_KEY); } catch(e){ return null; }
+    }
+
+    // parent 가 명시적으로 요청한 경우 → 토큰 회신
+    window.addEventListener('message', function(ev){
+        if (!isAllowed(ev.origin)) return;
+        if (!ev.data || ev.data.type !== 'sso_get_token') return;
+        var tok = readToken();
+        try {
+            ev.source.postMessage({ type:'sso_token', token: tok }, ev.origin);
+        } catch(e){}
+    });
+
+    // 자동 회신 — iframe 이 부모에 의해 로드되면 그 즉시 토큰 push
+    try {
+        if (window.parent && window.parent !== window) {
+            var t = readToken();
+            // parent 의 origin 을 모를 수 있으므로 허용 목록 전체에 broadcast
+            ALLOWED_PARENTS.forEach(function(orig){
+                try { window.parent.postMessage({ type:'sso_token', token: t }, orig); } catch(e){}
+            });
+        }
+    } catch(e){}
+})();
+</script>
+</body>
+</html>
