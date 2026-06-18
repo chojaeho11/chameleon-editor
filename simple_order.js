@@ -13833,8 +13833,9 @@ html, body { background: #ffffff !important; }
             try {
                 var _meRefT = window.me;
                 if (_meRefT && _meRefT._usedTemplate && typeof window._meExportSVG === 'function') {
-                    updateUploadStep(tr('템플릿 SVG 변환·업로드 중...', 'テンプレートSVG変換·アップロード中...', 'Converting template SVG...'));
-                    var _svgText = await window._meExportSVG();
+                    updateUploadStep(tr('템플릿 SVG (텍스트 아웃라인 변환) 처리 중...', 'テンプレートSVG (テキストアウトライン変換) 中...', 'Converting template SVG (text outline)...'));
+                    // v624: outline:true → 모든 텍스트를 벡터 path 로 변환 (폰트 없어도 동일 표시)
+                    var _svgText = await window._meExportSVG({ outline: true });
                     if (_svgText && _svgText.length > 100) {
                         var _svgBlob = new Blob([_svgText], { type: 'image/svg+xml' });
                         var _svgFile = new File([_svgBlob], 'template-' + Date.now() + '.svg', { type: 'image/svg+xml' });

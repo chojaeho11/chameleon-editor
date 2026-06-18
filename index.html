@@ -6923,9 +6923,99 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
+    // 2026-06-19 v624: 텍스트 아웃라인 변환용 opentype.js + 폰트 캐시
+    //   Google Font name → fontsource slug 매핑. fontsource (jsdelivr CDN) 가 WOFF 형식으로 미러링.
+    //   opentype.js 가 WOFF 지원하므로 직접 파싱 가능 (WOFF2 디코더 불필요).
+    var _meOpentypeLib = null;
+    var _meFontCache = {};       // key = family+weight → opentype.Font
+    var _meOutlineFailedFonts = {};  // key = family+weight → true (한 번 실패하면 재시도 X)
+    var _meFontSourceSlug = {
+        'Noto Sans KR': { slug: 'noto-sans-kr', subsets: ['korean','latin'] },
+        'Nanum Gothic': { slug: 'nanum-gothic', subsets: ['korean','latin'] },
+        'Nanum Myeongjo': { slug: 'nanum-myeongjo', subsets: ['korean','latin'] },
+        'Black Han Sans': { slug: 'black-han-sans', subsets: ['korean','latin'] },
+        'Nanum Pen Script': { slug: 'nanum-pen-script', subsets: ['korean','latin'] },
+        'Do Hyeon': { slug: 'do-hyeon', subsets: ['korean','latin'] },
+        'Jua': { slug: 'jua', subsets: ['korean','latin'] },
+        'Single Day': { slug: 'single-day', subsets: ['korean','latin'] },
+        'Gothic A1': { slug: 'gothic-a1', subsets: ['korean','latin'] },
+        'Hi Melody': { slug: 'hi-melody', subsets: ['korean','latin'] },
+        'Gamja Flower': { slug: 'gamja-flower', subsets: ['korean','latin'] },
+        'Cute Font': { slug: 'cute-font', subsets: ['korean','latin'] },
+        'East Sea Dokdo': { slug: 'east-sea-dokdo', subsets: ['korean','latin'] },
+        'Gaegu': { slug: 'gaegu', subsets: ['korean','latin'] },
+        'Black And White Picture': { slug: 'black-and-white-picture', subsets: ['korean','latin'] },
+        'Song Myung': { slug: 'song-myung', subsets: ['korean','latin'] },
+        'Stylish': { slug: 'stylish', subsets: ['korean','latin'] },
+        'Poor Story': { slug: 'poor-story', subsets: ['korean','latin'] },
+        'Yeon Sung': { slug: 'yeon-sung', subsets: ['korean','latin'] },
+        'Gowun Dodum': { slug: 'gowun-dodum', subsets: ['korean','latin'] },
+        'Gowun Batang': { slug: 'gowun-batang', subsets: ['korean','latin'] },
+        'Nanum Brush Script': { slug: 'nanum-brush-script', subsets: ['korean','latin'] },
+        'IBM Plex Sans KR': { slug: 'ibm-plex-sans-kr', subsets: ['korean','latin'] },
+        'Noto Serif KR': { slug: 'noto-serif-kr', subsets: ['korean','latin'] },
+        'Sunflower': { slug: 'sunflower', subsets: ['korean','latin'] },
+        'Dongle': { slug: 'dongle', subsets: ['korean','latin'] },
+        'Hahmlet': { slug: 'hahmlet', subsets: ['korean','latin'] },
+        'Gugi': { slug: 'gugi', subsets: ['korean','latin'] },
+        'Dokdo': { slug: 'dokdo', subsets: ['korean','latin'] },
+        'Kirang Haerang': { slug: 'kirang-haerang', subsets: ['korean','latin'] },
+        'Gasoek One': { slug: 'gasoek-one', subsets: ['korean','latin'] },
+        'Bagel Fat One': { slug: 'bagel-fat-one', subsets: ['korean','latin'] },
+        'Orbit': { slug: 'orbit', subsets: ['korean','latin'] },
+        'Jeju Myeongjo': { slug: 'jeju-myeongjo', subsets: ['korean','latin'] },
+        'Jeju Gothic': { slug: 'jeju-gothic', subsets: ['korean','latin'] },
+        'Jeju Hallasan': { slug: 'jeju-hallasan', subsets: ['korean','latin'] }
+    };
+    async function _meLoadOpentype() {
+        if (_meOpentypeLib) return _meOpentypeLib;
+        if (window.opentype) { _meOpentypeLib = window.opentype; return _meOpentypeLib; }
+        await new Promise(function(res, rej){
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js';
+            s.onload = res;
+            s.onerror = function(){ rej(new Error('opentype.js load failed')); };
+            document.head.appendChild(s);
+        });
+        _meOpentypeLib = window.opentype;
+        return _meOpentypeLib;
+    }
+    async function _meLoadFontForOutline(family, weight) {
+        var clean = String(family || '').replace(/["']/g, '').trim();
+        var w = String(weight || 400);
+        var key = clean + '|' + w;
+        if (_meFontCache[key]) return _meFontCache[key];
+        if (_meOutlineFailedFonts[key]) return null;
+        var info = _meFontSourceSlug[clean];
+        if (!info) { _meOutlineFailedFonts[key] = true; return null; }
+        try { await _meLoadOpentype(); } catch(_loe){ _meOutlineFailedFonts[key] = true; return null; }
+        var weights = (info.weights || [400, 700, 900]);
+        // weight 보정 — 폰트가 지원하는 weight 중 가장 가까운 값으로
+        var aw = parseInt(w, 10) || 400;
+        var bestW = weights.reduce(function(a, b){ return Math.abs(b - aw) < Math.abs(a - aw) ? b : a; }, weights[0]);
+        // subset 우선순위로 시도
+        for (var si = 0; si < info.subsets.length; si++) {
+            var subset = info.subsets[si];
+            var url = 'https://cdn.jsdelivr.net/fontsource/fonts/' + info.slug + '@latest/' + subset + '-' + bestW + '-normal.woff';
+            try {
+                var resp = await fetch(url, { cache: 'force-cache' });
+                if (!resp.ok) continue;
+                var buf = await resp.arrayBuffer();
+                var font = _meOpentypeLib.parse(buf);
+                _meFontCache[key] = font;
+                console.log('[outline] loaded font', clean, bestW, 'subset:', subset, 'glyphs:', font.numGlyphs);
+                return font;
+            } catch(_fe){ continue; }
+        }
+        _meOutlineFailedFonts[key] = true;
+        return null;
+    }
+
     // 2026-06-19 v623: 미니에디터를 SVG 텍스트로 직렬화 (벡터 보존 — 템플릿 주문 시 관리자 페이지 첨부용)
     //   문자열 반환. text/image/shape 모두 처리. zIndex 순으로 정렬해서 같은 stacking 유지.
-    window._meExportSVG = async function() {
+    // 2026-06-19 v624: outline:true 옵션 — 모든 텍스트를 opentype.js 로 벡터 path 변환 (폰트 무관 동일 표시).
+    window._meExportSVG = async function(opts) {
+        var outline = !!(opts && opts.outline);
         try {
             if (!me || !me.natW || !me.natH) return null;
             // contenteditable 강제 sync
@@ -7020,6 +7110,7 @@ function scrollHotdeal(gridId, dir) {
                     var lines = String(text).split(/\r?\n/);
                     var fs = it.fontSize || 24;
                     var fam = _esc(String(it.fontFamily || 'sans-serif').replace(/["']/g, ''));
+                    var famClean = String(it.fontFamily || 'sans-serif').replace(/["']/g, '');
                     var fw = it.fontWeight || 400;
                     var ls = (it.letterSpacing || 0);
                     var lh = fs * (it.lineHeight || 1.2);
@@ -7030,16 +7121,59 @@ function scrollHotdeal(gridId, dir) {
                     if (anchor === 'middle') tx = it.x + (it.w || 0) / 2;
                     else if (anchor === 'end') tx = it.x + (it.w || 0);
                     var ty0 = it.y + fs;  // 첫 줄 baseline (대략 fontSize 만큼 내려)
-                    var tspans = lines.map(function(line, li){
-                        return '<tspan x="' + _fmt(tx) + '" '
-                            + (li === 0 ? 'y="' + _fmt(ty0) + '"' : 'dy="' + _fmt(lh) + '"')
-                            + '>' + _esc(line) + '</tspan>';
-                    }).join('');
-                    parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
-                        + 'font-weight="' + fw + '" '
-                        + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
-                        + 'fill="' + _esc(it.fill || '#000') + '" text-anchor="' + anchor + '">'
-                        + tspans + '</text>');
+                    // v624: outline 모드 — opentype.js 로 글자 → SVG path data 변환
+                    var outlinedOk = false;
+                    if (outline) {
+                        try {
+                            var fontObj = await _meLoadFontForOutline(famClean, fw);
+                            if (fontObj) {
+                                var pathD = '';
+                                for (var li = 0; li < lines.length; li++) {
+                                    var line = lines[li];
+                                    if (!line) continue;
+                                    // 줄별 폭 측정 → anchor 보정
+                                    var lineW = fontObj.getAdvanceWidth(line, fs);
+                                    if (ls) lineW += ls * (line.length - 1);
+                                    var lineX = tx;
+                                    if (anchor === 'middle') lineX = tx - lineW / 2;
+                                    else if (anchor === 'end') lineX = tx - lineW;
+                                    var lineY = ty0 + li * lh;
+                                    // letterSpacing 적용 — 글자 단위로 분리해서 getPath
+                                    if (ls) {
+                                        var cursorX = lineX;
+                                        for (var ci = 0; ci < line.length; ci++) {
+                                            var ch = line.charAt(ci);
+                                            var p = fontObj.getPath(ch, cursorX, lineY, fs);
+                                            pathD += p.toPathData(2) + ' ';
+                                            cursorX += fontObj.getAdvanceWidth(ch, fs) + ls;
+                                        }
+                                    } else {
+                                        var p2 = fontObj.getPath(line, lineX, lineY, fs);
+                                        pathD += p2.toPathData(2) + ' ';
+                                    }
+                                }
+                                if (pathD.trim()) {
+                                    parts.push('<path d="' + pathD.trim() + '" fill="' + _esc(it.fill || '#000') + '"/>');
+                                    outlinedOk = true;
+                                }
+                            } else {
+                                console.warn('[outline] font not available, fallback to <text>:', famClean, fw);
+                            }
+                        } catch(_oe){ console.warn('[outline] failed for text:', famClean, _oe); }
+                    }
+                    // 폴백: 일반 <text> 요소
+                    if (!outlinedOk) {
+                        var tspans = lines.map(function(line, li){
+                            return '<tspan x="' + _fmt(tx) + '" '
+                                + (li === 0 ? 'y="' + _fmt(ty0) + '"' : 'dy="' + _fmt(lh) + '"')
+                                + '>' + _esc(line) + '</tspan>';
+                        }).join('');
+                        parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
+                            + 'font-weight="' + fw + '" '
+                            + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
+                            + 'fill="' + _esc(it.fill || '#000') + '" text-anchor="' + anchor + '">'
+                            + tspans + '</text>');
+                    }
                 }
                 if (gTrans) parts.push('</g>');
             }
@@ -14435,7 +14569,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=567"></script>
+<script src="/simple_order.js?v=568"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
