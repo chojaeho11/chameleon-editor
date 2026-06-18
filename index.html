@@ -8722,12 +8722,30 @@ function scrollHotdeal(gridId, dir) {
 
             // 분리 대상 최상위 children — 무시할 메타 태그 (defs/title/desc/style) 제외
             var SKIP_TAGS = ['defs','title','desc','style','metadata','script'];
-            var topChildren = [];
-            for (var i = 0; i < svg.children.length; i++) {
-                var c = svg.children[i];
-                if (SKIP_TAGS.indexOf(c.nodeName.toLowerCase()) >= 0) continue;
-                topChildren.push(c);
+            function _gatherChildren(parent) {
+                var out = [];
+                for (var ii = 0; ii < parent.children.length; ii++) {
+                    var c = parent.children[ii];
+                    if (SKIP_TAGS.indexOf(c.nodeName.toLowerCase()) >= 0) continue;
+                    out.push(c);
+                }
+                return out;
             }
+            var topChildren = _gatherChildren(svg);
+
+            // 2026-06-18 v611: Illustrator SVG 외곽 wrapper <g> 자동 unwrap.
+            //   일러스트는 보통 모든 객체를 'Layer_1' 같은 하나의 <g> 로 감싸 export 함.
+            //   wrapper 가 하나뿐이고 내부에 여러 자식이 있으면, 그 안쪽을 진짜 최상위 children 으로 사용.
+            //   transform 이 wrapper 에 있으면 추후 bbox 가 그 변환을 반영하므로 좌표는 문제 없음.
+            var unwrapCount = 0;
+            while (topChildren.length === 1
+                   && topChildren[0].nodeName.toLowerCase() === 'g'
+                   && _gatherChildren(topChildren[0]).length >= 2) {
+                topChildren = _gatherChildren(topChildren[0]);
+                unwrapCount++;
+                if (unwrapCount > 5) break; // 안전장치
+            }
+            console.log('[svg upload] unwrap depth:', unwrapCount, 'top items:', topChildren.length);
 
             if (topChildren.length === 0) {
                 console.warn('[svg upload] no top-level elements found');
