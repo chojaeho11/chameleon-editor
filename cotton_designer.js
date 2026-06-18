@@ -2415,25 +2415,45 @@ window._cpDiscState = { coupon:0, mileage:0, deposit:0, isPro:false, selected:nu
 
 window._cpLoadDiscounts = async function() {
     var box = document.getElementById('cpDiscountBox');
-    if (!box) return;
+    if (!box) { console.warn('[cp discount] cpDiscountBox element not found in DOM'); return; }
     var sb = window.supabase ? window.supabase.createClient(
         'https://qinvtnhiidtmrzosyvys.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
     ) : null;
-    if (!sb) return;
+    if (!sb) { console.warn('[cp discount] no supabase'); return; }
     try {
         var sess = await sb.auth.getSession();
         var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
-        if (!uid) { box.style.display = 'none'; return; }
+        console.log('[cp discount] uid =', uid);
+        if (!uid) {
+            // 비로그인 사용자에게도 안내 — '로그인하면 할인 적용 가능'
+            box.style.display = '';
+            box.innerHTML = '<span class="co-label">할인 적용</span><div style="padding:14px; background:#fef3c7; border:1px solid #fbbf24; border-radius:10px; font-size:12.5px; color:#92400e; line-height:1.6;">🔐 로그인하시면 이벤트 쿠폰 / 마일리지 / 예치금 / PRO 구독할인을 적용할 수 있습니다.</div>';
+            return;
+        }
         // profiles 에서 잔액
         var prof = null;
+        var profErr = null;
         try {
             var r = await sb.from('profiles').select('mileage, deposit, event_coupon, is_pro').eq('id', uid).maybeSingle();
-            prof = r.data;
-        } catch(_) {
-            try { var r2 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r2.data; } catch(_2){}
+            prof = r.data; profErr = r.error;
+        } catch(e) { profErr = e; }
+        // is_pro 컬럼 없을 경우 폴백
+        if (!prof && profErr) {
+            console.warn('[cp discount] first profile query error:', profErr.message || profErr);
+            try {
+                var r2 = await sb.from('profiles').select('mileage, deposit, event_coupon').eq('id', uid).maybeSingle();
+                prof = r2.data;
+            } catch(e2) {
+                try { var r3 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r3.data; } catch(e3){}
+            }
         }
-        if (!prof) { box.style.display = 'none'; return; }
+        console.log('[cp discount] profile loaded:', prof);
+        if (!prof) {
+            box.style.display = '';
+            box.innerHTML = '<span class="co-label">할인 적용</span><div style="padding:14px; background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; font-size:12.5px; color:#991b1b;">⚠️ 프로필 정보를 불러올 수 없습니다.</div>';
+            return;
+        }
         var coupon  = Number(prof.event_coupon || 0);
         var mileage = Number(prof.mileage || 0);
         var deposit = Number(prof.deposit || 0);
