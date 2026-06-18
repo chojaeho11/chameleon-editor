@@ -975,24 +975,48 @@ a { text-decoration: none; color: inherit; }
 .fin-opt:hover { background:var(--cream); }
 .fin-opt input { margin:0 4px 0 0; flex-shrink:0; }
 .fin-opt:has(input:checked) { background:var(--cream); border-color:var(--brown); }
-/* 2026-06-18 v588: 옵션 카드에 admin 이미지가 들어왔을 때 — 카드를 세로형 grid 로 전환 */
+/* 2026-06-18 v589: 옵션 카드 — 항상 세로 (이미지 ↑ / 라벨 ↓ / 가격), 모든 그룹 2칸. */
 .fin-opt-img { width:100%; aspect-ratio:1.4/1; object-fit:cover; border-radius:6px; display:block; background:#f3f4f6; }
-.fin-opt:has(.fin-opt-img) { flex-direction:column; align-items:stretch; justify-content:flex-start; padding:8px; gap:6px; }
-.fin-opt:has(.fin-opt-img) .fin-opt-label { text-align:center; line-height:1.25; }
-.fin-opt:has(.fin-opt-img) .fin-opt-price { text-align:center; }
-.fin-opt:has(.fin-opt-img) input[type=radio] { position:absolute; top:6px; left:6px; z-index:2; background:rgba(255,255,255,0.9); border-radius:50%; }
-.fin-opt:has(.fin-opt-img) { position:relative; }
-/* 2026-06-18 v588: 그리드 컨테이너 — 원단마감 2칸, 끈고리/실색상 3칸.
-   #finishOptions 은 항상 보이는 영역, #hookCollapse/#accCollapse 는 collapse 라 .open 일 때만 펼침. */
+/* 이미지 유무 관계 없이 — 카드는 항상 세로 레이아웃 */
+.fin-opt-grid-2 .fin-opt,
+.collapse-body.open.fin-opt-grid-2 .fin-opt {
+    flex-direction:column; align-items:stretch; justify-content:flex-start;
+    padding:8px; gap:4px; position:relative; min-height:64px;
+}
+.fin-opt-grid-2 .fin-opt-label,
+.collapse-body.open.fin-opt-grid-2 .fin-opt-label {
+    text-align:center; line-height:1.3; word-break:keep-all; overflow-wrap:break-word;
+}
+.fin-opt-grid-2 .fin-opt-price,
+.collapse-body.open.fin-opt-grid-2 .fin-opt-price {
+    text-align:center; font-size:11.5px;
+}
+/* 보조 설명 텍스트 (예: "올풀림 방지") — 글자 깨짐 방지 + 줄바꿈 허용 + 가운데 정렬 */
+.fin-opt-grid-2 .fin-opt-label > b,
+.collapse-body.open.fin-opt-grid-2 .fin-opt-label > b {
+    display:block; font-size:13px; word-break:keep-all;
+}
+.fin-opt-grid-2 .fin-opt-label > span,
+.collapse-body.open.fin-opt-grid-2 .fin-opt-label > span {
+    display:block; margin-left:0 !important; margin-top:2px; font-size:10.5px !important;
+    color:var(--text-light); word-break:keep-all; line-height:1.25;
+}
+/* radio 는 좌상단 모서리 오버레이 */
+.fin-opt-grid-2 .fin-opt input[type=radio],
+.collapse-body.open.fin-opt-grid-2 .fin-opt input[type=radio] {
+    position:absolute; top:6px; left:6px; z-index:2;
+    background:rgba(255,255,255,0.95); border-radius:50%; margin:0;
+}
+/* 컨테이너 grid 정의 */
 .fin-opt-grid-2 { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
-.collapse-body.open.fin-opt-grid-3 { display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; }
 .collapse-body.open.fin-opt-grid-2 { display:grid !important; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
 @media (max-width:480px) {
-    .collapse-body.open.fin-opt-grid-3 { gap:5px; }
     .fin-opt-grid-2 { gap:6px; }
+    .collapse-body.open.fin-opt-grid-2 { gap:6px; }
+    .fin-opt-grid-2 .fin-opt-label > b { font-size:12px; }
 }
 /* 2026-06-01: 라벨 wrap 허용 — JP 'オーバーロック ほつれ防止' 같은 긴 라벨이 row 폭을 키워 overflow 되던 버그 fix. */
-.fin-opt-label { flex:1; min-width:0; word-break:keep-all; overflow-wrap:anywhere; line-height:1.35; }
+.fin-opt-label { flex:1; min-width:0; word-break:keep-all; overflow-wrap:break-word; line-height:1.35; }
 .fin-opt-price { color:var(--accent); font-weight:700; font-size:12px; flex-shrink:0; white-space:nowrap; }
 @media (max-width:480px) {
     .fin-opt { font-size:12px; padding:9px 10px; gap:6px; }
@@ -1611,7 +1635,7 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_hook">끈고리 · 봉끼움 · 미싱</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="hookSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="hookCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
+            <div id="hookCollapse" class="collapse-body fin-opt-grid-2" style="display:none; margin-top:10px;">
                 <label class="fin-opt" data-hook="" data-name="" data-extra="0">
                     <input type="radio" name="hook" value="" checked onchange="window._cdOnHookChange()">
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
@@ -1661,7 +1685,7 @@ window._cpAuthClick = async function() {
                 <span><i class="fa-solid fa-chevron-right collapse-arrow"></i> <span data-cdi18n="side_acc">실색상변경 · 목봉</span></span>
                 <span style="font-size:10px; color:var(--text-light); font-weight:600;" id="accSummary" data-cdi18n="none_selected">선택 안 함</span>
             </div>
-            <div id="accCollapse" class="collapse-body fin-opt-grid-3" style="display:none; margin-top:10px;">
+            <div id="accCollapse" class="collapse-body fin-opt-grid-2" style="display:none; margin-top:10px;">
                 <label class="fin-opt" data-acc="" data-name="" data-extra="0">
                     <input type="radio" name="accessory" value="" checked onchange="window._cdOnAccessoryChange()">
                     <span class="fin-opt-label"><b data-cdi18n="none_selected">선택 안 함</b></span>
@@ -2083,7 +2107,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=99"></script>
+<script src="/cotton_designer.js?v=100"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>
