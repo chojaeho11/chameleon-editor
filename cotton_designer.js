@@ -87,13 +87,16 @@ let DB_GROUPS = {};      // group_label -> [products]
 
 // 원단 키워드로 그룹 분류
 // 반환: 패브릭 그룹명 / '__hook__' (고리) / '__accessory__' (그 외 부자재) / null (노출 안 함)
+// 2026-06-18 v597: __accessory__ 는 admin 에서 mate 접두사로 등록된 패브릭 전용 부자재만 인정.
+//   이전엔 name 의 단순 키워드(봉/링/재단)로 분류해서 '봉투', '키링', '봉투 씰' 같은 무관한 상품까지 부자재로 끌려와 카드에 노출됨.
 function classifyGroup(p) {
     const n = (p.name || '').toLowerCase();
+    const c = (p.code || '');
+    // 패브릭 부자재 — admin 등록 mate 접두사 코드 (mate10001 ~ mate30001 등)
+    if (/^mate\d/i.test(c)) return '__accessory__';
     // 고리 부자재 (고리/아일릿/후크/걸이만)
     if (/^고리|\s고리|아일릿|후크|걸이|hook|eyelet/.test(n)) return '__hook__';
-    // 그 외 부자재 (집게/봉/벨크로/행거/클립/받침/스탠드/배접/재단)
-    if (/집게|링|봉|벨크로|행거|클립|받침|스탠드|배접|재단/.test(n)) return '__accessory__';
-    if (/광목|면\b|cotton|cb/i.test(n) || (p.code||'').startsWith('cb')) return '면/광목';
+    if (/광목|면\b|cotton|cb/i.test(n) || c.startsWith('cb')) return '면/광목';
     if (/쉬폰|chiffon|실크|silk/.test(n)) return '쉬폰/실크';
     if (/레이온|rayon|인견/.test(n)) return '레이온/인견';
     if (/폴리|polyester|oxford|옥스포드/.test(n)) return '폴리/옥스포드';
