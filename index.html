@@ -7279,6 +7279,9 @@ function scrollHotdeal(gridId, dir) {
                 }
             }, true);
             it.el.addEventListener('dblclick', function(){
+                // 2026-06-18 v616: 진단 로그 — 더블클릭이 실제로 발화되는지 확인용
+                console.log('[me text] dblclick fired on:', (it.text || '').slice(0, 40), 'isBg:', !!it._isBackground);
+                if (it._isBackground) return;
                 it.el.setAttribute('contenteditable', 'true');
                 it.el.focus();
                 try { document.execCommand && document.execCommand('selectAll', false, null); } catch(_e){}
@@ -9025,6 +9028,13 @@ function scrollHotdeal(gridId, dir) {
                                         window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh }, toBack: true }, function(addedItem){
                                             if (addedItem) {
                                                 visualItemsByChildIdx[capturedIdx] = addedItem;
+                                                // 2026-06-18 v616: 시각 잔여물은 직접 클릭/드래그 차단 → 위에 있는 텍스트의 클릭이 절대 안 가로채임.
+                                                //   배경풀기 버튼으로 한꺼번에 해제됨 (배경 잠금과 동일 메커니즘).
+                                                addedItem._isBackground = true;
+                                                if (addedItem.el) {
+                                                    addedItem.el.classList.add('me-bg-locked');
+                                                    addedItem.el.style.cursor = 'default';
+                                                }
                                                 console.log('[svg upload] visual added child', capturedIdx, 'size', vw.toFixed(0)+'x'+vh.toFixed(0));
                                             }
                                             _decPending();
