@@ -8837,6 +8837,17 @@ function scrollHotdeal(gridId, dir) {
                 return false;
             }
 
+            // 2026-06-18 v615: rgb(r,g,b) → #rrggbb 변환 (편집기의 color input 이 #hex 만 받음)
+            function _rgbToHex(c) {
+                if (!c) return '#000000';
+                c = c.trim();
+                if (c.charAt(0) === '#') return c;
+                var m = c.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+                if (!m) return c;
+                function _h(n){ var h = (+n | 0).toString(16); return h.length < 2 ? '0' + h : h; }
+                return '#' + _h(m[1]) + _h(m[2]) + _h(m[3]);
+            }
+
             // 2026-06-18 v610/v613: 단일 SVG <text> 노드에서 편집 가능한 텍스트 메타 추출
             function _extractTextFromSvg(textEl, renderedText) {
                 if (!textEl || !renderedText) return null;
@@ -8857,7 +8868,7 @@ function scrollHotdeal(gridId, dir) {
                 var fam = (cs && cs.fontFamily) || textEl.getAttribute('font-family') || 'sans-serif';
                 var size = parseFloat((cs && cs.fontSize) || textEl.getAttribute('font-size') || '16');
                 var weight = (cs && cs.fontWeight) || textEl.getAttribute('font-weight') || 'normal';
-                var fill = (cs && cs.fill) || textEl.getAttribute('fill') || '#000';
+                var fill = _rgbToHex((cs && cs.fill) || textEl.getAttribute('fill') || '#000');
                 var anchor = (cs && cs.textAnchor) || textEl.getAttribute('text-anchor') || 'start';
                 // SVG text-anchor → 우리 textAlign
                 var align = (anchor === 'middle') ? 'center' : (anchor === 'end') ? 'right' : 'left';
@@ -9007,10 +9018,11 @@ function scrollHotdeal(gridId, dir) {
                                                 + 'width="' + vbb.width + '" height="' + vbb.height + '">'
                                                 + defsHtml + visualCopy.outerHTML + '</svg>';
                                     var dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(partSvg)));
-                                    // 2026-06-18 v614: 콜백으로 비동기 추가된 item 추적
+                                    // 2026-06-18 v615: toBack:true → z-index=0, me.items 맨 앞 unshift.
+                                    //   → 텍스트(z=zCounter++)가 항상 위에 위치 → 텍스트 클릭이 시각에 가려지지 않음.
                                     pendingImageLoads++;
                                     (function(capturedIdx){
-                                        window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh } }, function(addedItem){
+                                        window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh }, toBack: true }, function(addedItem){
                                             if (addedItem) {
                                                 visualItemsByChildIdx[capturedIdx] = addedItem;
                                                 console.log('[svg upload] visual added child', capturedIdx, 'size', vw.toFixed(0)+'x'+vh.toFixed(0));
@@ -9039,10 +9051,14 @@ function scrollHotdeal(gridId, dir) {
                         }
                         var tmeta = _extractTextFromSvg(textNode, renderedText);
                         if (!tmeta) return;
-                        var tx = (tbb.x - vbX) * fitScale + offX;
-                        var ty = (tbb.y - vbY) * fitScale + offY;
-                        var tw = tbb.width * fitScale;
-                        var th = tbb.height * fitScale;
+                        // 2026-06-18 v615: 텍스트 bbox 좌우 패딩 — getBBox 는 글자 외곽선 딱 맞춤 → 폴백 폰트는 더 넓어 줄바꿈 발생.
+                        //   30% 폭 + 20% 높이 여유로 wrap 방지. 정렬 보존 위해 anchor 따라 x 이동.
+                        var padX = tbb.width * 0.15;
+                        var padY = tbb.height * 0.10;
+                        var tx = (tbb.x - vbX) * fitScale + offX - padX * fitScale;
+                        var ty = (tbb.y - vbY) * fitScale + offY - padY * fitScale;
+                        var tw = (tbb.width + padX * 2) * fitScale;
+                        var th = (tbb.height + padY * 2) * fitScale;
                         var ti = _addExtractedText(tmeta, { x: tx, y: ty, w: tw, h: th });
                         if (!firstItem) firstItem = ti;
                         added++;
