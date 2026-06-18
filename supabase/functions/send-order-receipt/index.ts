@@ -149,14 +149,27 @@ serve(async (req: Request) => {
     if (req.method !== 'POST') return new Response('method not allowed', { status: 405, headers: corsHeaders });
 
     try {
-        const { order_id, email, lang } = await req.json();
+        const { order_id, email: emailInput, lang } = await req.json();
         if (!order_id) return new Response(JSON.stringify({ error: 'order_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return new Response(JSON.stringify({ error: 'invalid email' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         if (!RESEND_API_KEY) return new Response(JSON.stringify({ error: 'RESEND_API_KEY not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
         // 주문 조회
         const { data: order, error: oerr } = await sb.from('orders').select('*').eq('id', order_id).maybeSingle();
         if (oerr || !order) return new Response(JSON.stringify({ error: 'order not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        // 2026-06-18 v606: 이메일 우선순위 — request body > orders.receipt_email > auth.users.email (회원)
+        let email = (emailInput || '').trim();
+        let emailSource = email ? 'request' : '';
+        if (!email && order.receipt_email) { email = order.receipt_email; emailSource = 'order_field'; }
+        if (!email && order.user_id) {
+            try {
+                const { data: { user }, error: uErr } = await sb.auth.admin.getUserById(order.user_id);
+                if (!uErr && user?.email) { email = user.email; emailSource = 'auth_profile'; }
+            } catch (e) { console.warn('[send-order-receipt] getUserById failed', e); }
+        }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return new Response(JSON.stringify({ error: 'no_email_available', message: 'guest order — email required in request body' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
 
         const langCode = (lang === 'ja' || lang === 'jp') ? 'ja' : (lang === 'en' || lang === 'us') ? 'en' : 'ko';
 
@@ -190,7 +203,7 @@ serve(async (req: Request) => {
             receipt_sent_at: new Date().toISOString(),
         }).eq('id', order_id);
 
-        return new Response(JSON.stringify({ ok: true, message_id: resendBody.id }), {
+        return new Response(JSON.stringify({ ok: true, message_id: resendBody.id, email, email_source: emailSource }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
