@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>디자이너 기여 · 카멜레온프린팅</title>
+<meta name="description" content="에디터 요소를 합쳐 만든 디자인을 올리고 즉시 적립. 판매될 때마다 3% 마일리지 추가. 디자이너가 아니라도 OK.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans KR',sans-serif; background:#0a0a0f; color:#0f172a; }
+.wrap { max-width:1100px; margin:0 auto; padding:20px; }
+.top-back { display:inline-flex; align-items:center; gap:6px; color:#cbd5e1; text-decoration:none; padding:10px 14px; background:rgba(255,255,255,0.06); border-radius:10px; font-size:13px; font-weight:700; margin-bottom:18px; }
+.top-back:hover { background:rgba(255,255,255,0.12); }
+
+.hero { background:linear-gradient(135deg, #7c3aed 0%, #5b21b6 35%, #db2777 100%); border-radius:24px; padding:50px 40px; color:#fff; position:relative; overflow:hidden; box-shadow:0 20px 60px rgba(124,58,237,0.4); }
+.hero::before { content:''; position:absolute; right:-100px; top:-100px; width:340px; height:340px; background:rgba(255,255,255,0.08); border-radius:50%; }
+.hero::after { content:''; position:absolute; left:-80px; bottom:-120px; width:280px; height:280px; background:rgba(255,255,255,0.06); border-radius:50%; }
+.hero .inner { position:relative; z-index:1; }
+.hero .pill { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.2); padding:8px 16px; border-radius:30px; font-size:12px; font-weight:800; margin-bottom:18px; letter-spacing:1px; }
+.hero h1 { font-size:38px; font-weight:900; line-height:1.2; letter-spacing:-1px; margin-bottom:16px; }
+.hero p { font-size:17px; line-height:1.65; opacity:0.95; max-width:680px; margin-bottom:24px; }
+.hero .bonus { display:inline-flex; align-items:center; gap:10px; background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#451a03; padding:14px 24px; border-radius:30px; font-weight:900; font-size:15px; box-shadow:0 8px 24px rgba(251,191,36,0.5); }
+
+.section-title { color:#fff; font-size:22px; font-weight:900; margin:48px 0 8px; }
+.section-sub { color:#94a3b8; font-size:14px; margin-bottom:24px; }
+
+.cards { display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; }
+@media (max-width:900px) { .cards { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:560px) { .cards { grid-template-columns:1fr; } }
+
+.card { background:#fff; border-radius:18px; padding:24px 22px 20px; display:flex; flex-direction:column; gap:14px; box-shadow:0 6px 20px rgba(0,0,0,0.25); transition:transform .2s, box-shadow .2s; cursor:pointer; }
+.card:hover { transform:translateY(-4px); box-shadow:0 14px 36px rgba(0,0,0,0.4); }
+.card .ico { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:26px; color:#fff; }
+.card .label { font-size:11px; font-weight:800; letter-spacing:0.8px; opacity:0.7; }
+.card h3 { font-size:18px; font-weight:900; color:#0f172a; }
+.card .desc { font-size:12.5px; color:#64748b; line-height:1.5; min-height:54px; }
+.card .reward { display:flex; align-items:baseline; gap:6px; color:#0f172a; }
+.card .reward .num { font-size:26px; font-weight:900; }
+.card .reward .unit { font-size:13px; font-weight:700; color:#64748b; }
+.card .btn { background:#0f172a; color:#fff; border:none; padding:12px; border-radius:10px; font-size:13px; font-weight:800; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.card .btn:hover { filter:brightness(1.15); }
+
+.card.tpl .ico { background:linear-gradient(135deg,#7c3aed,#5b21b6); }
+.card.vec .ico { background:linear-gradient(135deg,#0ea5e9,#0369a1); }
+.card.png .ico { background:linear-gradient(135deg,#16a34a,#15803d); }
+.card.logo .ico { background:linear-gradient(135deg,#f59e0b,#d97706); }
+
+.how { background:#1e293b; color:#fff; border-radius:18px; padding:32px; margin-top:36px; }
+.how h2 { font-size:20px; font-weight:900; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+@media (max-width:760px) { .steps { grid-template-columns:1fr; } }
+.step { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:20px; }
+.step .num { font-size:12px; color:#94a3b8; font-weight:800; margin-bottom:6px; letter-spacing:1px; }
+.step h4 { font-size:15px; font-weight:800; margin-bottom:8px; }
+.step p { font-size:12.5px; color:#cbd5e1; line-height:1.55; }
+
+.faq { background:#fff; border-radius:18px; padding:28px; margin-top:24px; }
+.faq h2 { font-size:18px; font-weight:900; margin-bottom:14px; color:#0f172a; }
+.faq details { border-top:1px solid #f1f5f9; padding:14px 0; }
+.faq summary { cursor:pointer; font-weight:800; font-size:13.5px; color:#0f172a; padding:4px 0; }
+.faq summary:hover { color:#7c3aed; }
+.faq p { color:#64748b; font-size:12.5px; line-height:1.6; margin-top:8px; }
+
+.notice { background:rgba(251,191,36,0.12); color:#fcd34d; border:1px solid rgba(251,191,36,0.3); border-radius:12px; padding:14px 18px; margin-top:24px; font-size:12.5px; line-height:1.6; }
+
+/* Upload modal */
+.mdl-bg { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; display:none; align-items:center; justify-content:center; padding:18px; }
+.mdl-bg.open { display:flex; }
+.mdl { background:#fff; max-width:460px; width:100%; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:14px; }
+.mdl h3 { font-size:16px; font-weight:900; color:#0f172a; }
+.mdl label { font-size:11.5px; font-weight:800; color:#64748b; }
+.mdl input[type=text], .mdl input[type=file] { width:100%; padding:11px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit; }
+.mdl .btn-row { display:flex; gap:8px; justify-content:flex-end; }
+.mdl .btn-cancel { background:#e2e8f0; color:#334155; padding:11px 18px; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; }
+.mdl .btn-submit { background:#7c3aed; color:#fff; padding:11px 24px; border:none; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; }
+.mdl .btn-submit:disabled { opacity:0.5; cursor:wait; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:13px 22px; border-radius:30px; font-size:13.5px; font-weight:700; z-index:99999; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <a href="/" class="top-back"><i class="fa-solid fa-arrow-left"></i> 메인으로</a>
+
+    <div class="hero">
+        <div class="inner">
+            <div class="pill">🎨 DESIGNER CONTRIBUTOR</div>
+            <h1>당신의 재능을 판매하세요</h1>
+            <p>디자이너가 아니라도 괜찮아요. 카멜레온 에디터 안의 요소를 이것저것 합쳐서 예쁘고 감각적인 디자인을 만들어 올려주세요. 관리자 승인 즉시 적립금이 들어오고, 판매될 때마다 3% 마일리지가 추가됩니다.</p>
+            <div class="bonus">💎 보너스 — 내 디자인이 팔릴 때마다 3% 마일리지 자동 적립</div>
+        </div>
+    </div>
+
+    <h2 class="section-title">🎁 적립금 가이드</h2>
+    <p class="section-sub">유형 별로 보상이 다릅니다. 승인 즉시 지급, 거절 시 자동 삭제.</p>
+
+    <div class="cards">
+        <div class="card tpl" onclick="openUpload('template')">
+            <div class="ico">🎨</div>
+            <span class="label">TEMPLATE</span>
+            <h3>템플릿 만들기</h3>
+            <div class="desc">미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.</div>
+            <div class="reward"><span class="num">3,000</span><span class="unit">원 / 건</span></div>
+            <button class="btn"><i class="fa-solid fa-plus"></i> 템플릿 등록</button>
+        </div>
+        <div class="card vec" onclick="openUpload('vector')">
+            <div class="ico">📐</div>
+            <span class="label">VECTOR</span>
+            <h3>벡터 올리기</h3>
+            <div class="desc">SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.</div>
+            <div class="reward"><span class="num">1,000</span><span class="unit">원 / 건</span></div>
+            <button class="btn"><i class="fa-solid fa-plus"></i> 벡터 등록</button>
+        </div>
+        <div class="card png" onclick="openUpload('image')">
+            <div class="ico">🖼️</div>
+            <span class="label">IMAGE</span>
+            <h3>PNG 올리기</h3>
+            <div class="desc">투명 배경 PNG. 사진, 그래픽, 일러스트 등.</div>
+            <div class="reward"><span class="num">500</span><span class="unit">원 / 건</span></div>
+            <button class="btn"><i class="fa-solid fa-plus"></i> PNG 등록</button>
+        </div>
+        <div class="card logo" onclick="openUpload('logo')">
+            <div class="ico">🔰</div>
+            <span class="label">LOGO</span>
+            <h3>로고 올리기</h3>
+            <div class="desc">브랜드/캐릭터 로고. PNG 또는 SVG 가능.</div>
+            <div class="reward"><span class="num">200</span><span class="unit">원 / 건</span></div>
+            <button class="btn"><i class="fa-solid fa-plus"></i> 로고 등록</button>
+        </div>
+    </div>
+
+    <div class="notice">
+        <b>📌 환산 — JP 0.1× / US 0.001×</b><br>
+        예: 템플릿 3,000원 = 300엔 = 3달러 / 벡터 1,000원 = 100엔 = 1달러 / PNG 500원 = 50엔 = 0.5달러 / 로고 200원 = 20엔 = 0.2달러
+    </div>
+
+    <div class="how">
+        <h2><i class="fa-solid fa-route"></i> 진행 방법</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="num">STEP 1</div>
+                <h4>업로드</h4>
+                <p>위 카드에서 유형 선택 → 파일과 이름 입력 → 검토 요청.</p>
+            </div>
+            <div class="step">
+                <div class="num">STEP 2</div>
+                <h4>관리자 검토</h4>
+                <p>저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.</p>
+            </div>
+            <div class="step">
+                <div class="num">STEP 3</div>
+                <h4>적립 + 판매 보너스</h4>
+                <p>승인 즉시 기본 적립금 지급. 사용자가 내 디자인으로 주문하면 결제 금액의 3%가 자동 추가 적립.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq">
+        <h2><i class="fa-solid fa-circle-question"></i> 자주 묻는 질문</h2>
+        <details>
+            <summary>저작권은 어떻게 처리되나요?</summary>
+            <p>본인이 직접 만든 디자인만 업로드 가능합니다. 무단 도용·복제 의심 시 거절되며, 발견 즉시 해당 디자인은 비공개 처리 후 적립금이 회수됩니다.</p>
+        </details>
+        <details>
+            <summary>적립금은 어떻게 사용/환전하나요?</summary>
+            <p>My page → 마일리지에서 확인 가능. 사이트 내 주문 결제에 사용하거나, 일정 금액 이상부터 현금 환전 신청이 가능합니다 (KR 사이트 기준).</p>
+        </details>
+        <details>
+            <summary>3% 판매 보너스는 어떻게 계산되나요?</summary>
+            <p>고객이 내 디자인(템플릿/벡터/PNG/로고)을 적용해서 주문을 완료하면, 그 주문의 결제 금액 × 3% 가 자동으로 내 마일리지에 추가됩니다. 환불 시에는 차감됩니다.</p>
+        </details>
+        <details>
+            <summary>디자이너가 아닌데 가능한가요?</summary>
+            <p>네! 카멜레온 에디터 안에 사진·벡터·요소·장식이 이미 많이 들어 있습니다. 그것들을 이리저리 조합해서 감각있게 배치하면 그 자체로 훌륭한 템플릿이 됩니다. 그림 실력보다 색감·배치·아이디어가 중요합니다.</p>
+        </details>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="mdl-bg" id="uploadMdlBg">
+    <div class="mdl">
+        <h3 id="uploadMdlTitle">📤 업로드</h3>
+        <div>
+            <label>이름</label>
+            <input type="text" id="uploadName" placeholder="예: 여름 그라데이션 배경" style="margin-top:6px;">
+        </div>
+        <div>
+            <label>파일</label>
+            <input type="file" id="uploadFile" style="margin-top:6px;">
+            <div style="font-size:11px; color:#94a3b8; margin-top:6px;" id="uploadHint"></div>
+        </div>
+        <div class="btn-row">
+            <button class="btn-cancel" onclick="closeUpload()">취소</button>
+            <button class="btn-submit" id="uploadSubmit" onclick="submitUpload()">검토 요청</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession:true, storage:localStorage, storageKey:'sb-qinvtnhiidtmrzosyvys-auth-token' }
+});
+let currentType = 'vector';
+const TYPE_META = {
+    template: { title:'🎨 템플릿 등록', hint:'템플릿은 상품 페이지에서 미니에디터로 작업해야 합니다. 이 페이지는 단일 자산 등록용입니다.', acceptStr:'image/svg+xml,image/png,image/jpeg', exts:['.svg','.png','.jpg','.jpeg'], reward:3000 },
+    vector:   { title:'📐 벡터 (SVG) 등록', hint:'SVG 파일만 가능 · 최대 5MB', acceptStr:'image/svg+xml,.svg', exts:['.svg'], reward:1000 },
+    image:    { title:'🖼️ PNG 이미지 등록', hint:'PNG · JPG 가능 · 최대 10MB', acceptStr:'image/png,image/jpeg,.png,.jpg,.jpeg', exts:['.png','.jpg','.jpeg'], reward:500 },
+    logo:     { title:'🔰 로고 등록', hint:'PNG · SVG 가능 · 최대 5MB · 정사각 권장', acceptStr:'image/png,image/svg+xml,.png,.svg', exts:['.png','.svg'], reward:200 }
+};
+
+function toast(msg, ms=2400) {
+    const t = document.createElement('div');
+    t.className='toast'; t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), ms);
+}
+
+async function openUpload(type) {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (!session) {
+        toast('로그인이 필요합니다. 메인에서 로그인 후 다시 와주세요.', 3500);
+        setTimeout(() => location.href='/', 1500);
+        return;
+    }
+    if (type === 'template') {
+        if (!confirm('템플릿은 상품 페이지의 미니에디터에서 작업해야 합니다.\n\n명함 페이지에서 디자이너 모드로 진입할까요?')) return;
+        location.href = '/?product=pp_bc_1&designer_template_mode=1';
+        return;
+    }
+    currentType = type;
+    const m = TYPE_META[type];
+    document.getElementById('uploadMdlTitle').textContent = m.title;
+    document.getElementById('uploadHint').textContent = m.hint + ` · 승인 시 ${m.reward.toLocaleString()}원 적립`;
+    document.getElementById('uploadFile').setAttribute('accept', m.acceptStr);
+    document.getElementById('uploadName').value = '';
+    document.getElementById('uploadFile').value = '';
+    document.getElementById('uploadMdlBg').classList.add('open');
+}
+
+function closeUpload() {
+    document.getElementById('uploadMdlBg').classList.remove('open');
+}
+
+async function submitUpload() {
+    const name = (document.getElementById('uploadName').value || '').trim();
+    if (!name) { alert('이름을 입력하세요.'); return; }
+    const fileInput = document.getElementById('uploadFile');
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) { alert('파일을 선택하세요.'); return; }
+
+    const m = TYPE_META[currentType];
+    const fname = (file.name || '').toLowerCase();
+    const okExt = m.exts.some(e => fname.endsWith(e));
+    if (!okExt) { alert('허용된 파일 형식: ' + m.exts.join(', ')); return; }
+    // 사이즈
+    const maxMB = currentType === 'image' ? 10 : 5;
+    if (file.size > maxMB * 1024 * 1024) { alert(`파일이 너무 큽니다 (${maxMB}MB 이하).`); return; }
+
+    const btn = document.getElementById('uploadSubmit');
+    btn.disabled = true; btn.textContent = '업로드 중...';
+    try {
+        const { data:{ session } } = await sb.auth.getSession();
+        const userId = session?.user?.id;
+        if (!userId) { alert('로그인이 필요합니다.'); btn.disabled=false; btn.textContent='검토 요청'; return; }
+
+        const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
+        const safe = fname.replace(/[^a-z0-9._-]/g, '_');
+        const path = `designer_assets/${currentType}/${ts}_${safe}`;
+        const up = await sb.storage.from('design').upload(path, file, { contentType:file.type||undefined, upsert:false });
+        if (up.error) throw up.error;
+        const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+
+        const siteCode = (() => {
+            const h = (location.hostname || '').toLowerCase();
+            if (h.includes('cafe0101')) return 'JP';
+            if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
+            return 'KR';
+        })();
+
+        const row = {
+            name: name,
+            product_category: 'asset',
+            product_code: null,
+            site_code: siteCode,
+            background_url: pub,
+            thumbnail_url: pub,
+            asset_type: currentType,
+            asset_url: pub,
+            asset_path: path,
+            slots: [],
+            is_active: true,
+            sort_order: 999,
+            status: 'pending',
+            submitted_by: userId,
+            submitted_at: new Date().toISOString()
+        };
+        const ins = await sb.from('admin_templates').insert(row).select().single();
+        if (ins.error) throw ins.error;
+        closeUpload();
+        toast(`✅ 검토 요청 완료! 승인 시 ${m.reward.toLocaleString()}원 적립.`, 3500);
+    } catch (e) {
+        console.error('[upload]', e);
+        alert('업로드 실패: ' + (e.message || e));
+        btn.disabled = false; btn.textContent = '검토 요청';
+    }
+}
+
+// 외부 클릭으로 모달 닫기
+document.getElementById('uploadMdlBg').addEventListener('click', e => {
+    if (e.target === document.getElementById('uploadMdlBg')) closeUpload();
+});
+</script>
+</body>
+</html>

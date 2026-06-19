@@ -293,7 +293,8 @@ async function loadPendingReviewList() {
         // 2026-06-19 v631: 자산 종류(asset_type) 별로 보상 및 라벨 분기.
         //   template/vector: 1000원 (벡터=백터 동일 취급), image: 500원, logo: 100원.
         //   (기존 디자이너 템플릿은 30K 보상 유지 — 'template' 와 'vector' 분리 처리)
-        const REWARD = { template: 30000, vector: 1000, image: 500, logo: 100 };
+        // 2026-06-19 v632: 사용자 정책 — template 3000원, vector 1000, image 500, logo 200
+        const REWARD = { template: 3000, vector: 1000, image: 500, logo: 200 };
         const TYPE_LBL = { template: '🎨 템플릿', vector: '📐 벡터(SVG)', image: '🖼️ 이미지(PNG)', logo: '🔰 로고' };
         const TYPE_COLOR = { template: '#7c3aed', vector: '#0369a1', image: '#16a34a', logo: '#d97706' };
         g.innerHTML = data.map(t => {

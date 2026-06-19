@@ -12271,7 +12271,7 @@ html, body { background: #ffffff !important; }
           // 2026-06-19 v631: 단일 디자인 업로드 — 벡터(SVG)/이미지(PNG)/로고. 보상 차등(1000/500/100원).
           + '<div style="border-top:1px solid rgba(255,255,255,0.2); margin-top:14px; padding-top:14px;">'
             + '<button type="button" id="soSingleAssetUpload" style="width:100%; padding:11px; background:rgba(255,255,255,0.92); color:#0369a1; border:none; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit;">📤 단일 디자인 업로드 (벡터/이미지/로고)</button>'
-            + '<div style="font-size:10.5px; opacity:0.85; margin-top:8px; line-height:1.5;">벡터(SVG) 승인 시 <b>1,000원</b> · 이미지(PNG) <b>500원</b> · 로고 <b>100원</b> 자동 적립.</div>'
+            + '<div style="font-size:10.5px; opacity:0.85; margin-top:8px; line-height:1.5;">템플릿 <b>3,000원</b> · 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>200원</b> · 판매 시 <b>+3%</b></div>'
           + '</div>';
         sidebar.insertBefore(panel, sidebar.firstChild);
         document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
@@ -12292,7 +12292,7 @@ html, body { background: #ffffff !important; }
             '<div style="background:#fff;border-radius:16px;padding:22px;max-width:480px;width:100%;display:flex;flex-direction:column;gap:14px;font-family:inherit;box-shadow:0 20px 50px rgba(0,0,0,0.4);">'
               + '<div style="font-weight:900;font-size:15px;color:#0f172a;display:flex;align-items:center;gap:8px;">📤 단일 디자인 업로드</div>'
               + '<div style="font-size:12px;color:#64748b;line-height:1.55;">'
-                + '관리자 승인 시 자동 적립 — 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>100원</b><br>'
+                + '관리자 승인 시 자동 적립 — 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>200원</b> · 판매 시 <b>+3%</b><br>'
                 + '<span style="color:#94a3b8;">(JP 0.1×, US 0.001×)</span>'
               + '</div>'
               + '<div>'
@@ -12300,7 +12300,7 @@ html, body { background: #ffffff !important; }
                 + '<div style="display:flex;gap:6px;">'
                   + '<button type="button" class="so-asset-type-btn" data-type="vector" style="flex:1;padding:10px;border:2px solid #7c3aed;background:#f3f0ff;color:#5b21b6;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📐 벡터(SVG)<br><span style="font-size:10px;font-weight:600;">1,000원</span></button>'
                   + '<button type="button" class="so-asset-type-btn" data-type="image" style="flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;color:#334155;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🖼️ 이미지(PNG)<br><span style="font-size:10px;font-weight:600;">500원</span></button>'
-                  + '<button type="button" class="so-asset-type-btn" data-type="logo" style="flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;color:#334155;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🔰 로고<br><span style="font-size:10px;font-weight:600;">100원</span></button>'
+                  + '<button type="button" class="so-asset-type-btn" data-type="logo" style="flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;color:#334155;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🔰 로고<br><span style="font-size:10px;font-weight:600;">200원</span></button>'
                 + '</div>'
               + '</div>'
               + '<div>'
@@ -12374,7 +12374,7 @@ html, body { background: #ffffff !important; }
                 if (ins.error) throw ins.error;
                 ov.remove();
                 if (isDesigner) {
-                    alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드에 적립됩니다.\n벡터 1,000원 · 이미지 500원 · 로고 100원');
+                    alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드에 적립됩니다.\n벡터 1,000원 · 이미지 500원 · 로고 200원\n+ 판매 시 결제 금액의 3% 추가 적립');
                 } else {
                     alert('✅ 업로드 완료. 관리자 페이지에서 확인 가능합니다.');
                 }
