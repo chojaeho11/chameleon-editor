@@ -561,14 +561,16 @@ function toast(msg, ms=2400) {
 }
 
 async function openUpload(type) {
+    // v674: 템플릿 등록은 로그인 체크 없이 picker 표시 — 실제 로그인은 에디터 페이지에서
+    //   (해외 사이트에서 cross-domain 세션 없는 경우, 메인으로 튕기던 버그 수정)
+    if (type === 'template') {
+        openTplPicker();  // 언어/제품 선택 모달
+        return;
+    }
     const { data:{ session } } = await sb.auth.getSession();
     if (!session) {
         toast(_LANG === 'ja' ? 'ログインが必要です。メインからログイン後、再度お越しください。' : _LANG === 'en' ? 'Login required. Please log in from the main page and come back.' : '로그인이 필요합니다. 메인에서 로그인 후 다시 와주세요.', 3500);
         setTimeout(() => location.href='/', 1500);
-        return;
-    }
-    if (type === 'template') {
-        openTplPicker();  // v661: 언어/제품 선택 모달
         return;
     }
     currentType = type;
@@ -738,12 +740,7 @@ const TPL_DOMAINS = {
     US: 'https://chameleon.design'
 };
 window.openTplPicker = async function() {
-    const { data:{ session } } = await sb.auth.getSession();
-    if (!session) {
-        toast(_LANG === 'ja' ? 'ログインが必要です。' : _LANG === 'en' ? 'Login required.' : '로그인이 필요합니다.', 3500);
-        setTimeout(() => location.href='/', 1500);
-        return;
-    }
+    // v674: 로그인 체크 제거 — 에디터 페이지(designer_template_mode=1)에서 알아서 처리
     document.getElementById('tplPickerBg').classList.add('open');
     const h = (location.hostname || '').toLowerCase();
     const def = h.includes('cafe0101') ? 'JP' : (h.includes('cafe3355') || h.includes('hexa-board') ? 'US' : 'KR');
