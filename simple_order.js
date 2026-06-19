@@ -12264,16 +12264,44 @@ html, body { background: #ffffff !important; }
         var subText = isDesigner ? L.sub_d : L.sub_a;
         var bg = isDesigner ? '#0369a1' : '#4c1d95';
         panel.style.cssText = 'background:' + bg + '; color:#fff; padding:18px 20px; border-radius:14px; margin-bottom:14px;';
+        // 2026-06-19 v664: 디자이너 모드는 SVG/PNG 업로드 모달처럼 단순화 — 검색어 + 번역 미리보기 + 검토요청
+        if (isDesigner) {
+            panel.innerHTML =
+                '<div style="font-weight:700; font-size:14px; margin-bottom:10px;">' + heading + '</div>'
+              + '<div style="font-size:11.5px; opacity:0.92; line-height:1.6; margin-bottom:14px;">' + subText + '</div>'
+              + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">검색어 (한국어, 쉼표 구분)</label>'
+              + '<input type="text" id="soTplAdminName" placeholder="예: 여름, 시원한, 휴가, 바다" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:13px; font-weight:500; box-sizing:border-box; margin-bottom:8px; color:#0f172a; font-family:inherit;">'
+              + '<div id="soTplLangPreview" style="display:none; background:rgba(255,255,255,0.12); border-radius:8px; padding:8px 10px; font-size:11px; line-height:1.6; margin-bottom:12px;">'
+                + '<div style="display:grid; grid-template-columns:22px 1fr; gap:6px;">'
+                  + '<b style="color:#fde68a;">KO</b><span id="soTplLpKo">-</span>'
+                  + '<b style="color:#fde68a;">JA</b><span id="soTplLpJa">-</span>'
+                  + '<b style="color:#fde68a;">EN</b><span id="soTplLpEn">-</span>'
+                  + '<b style="color:#fde68a;">FR</b><span id="soTplLpFr">-</span>'
+                  + '<b style="color:#fde68a;">AR</b><span id="soTplLpAr">-</span>'
+                + '</div>'
+              + '</div>'
+              + '<button type="button" id="soTplAdminSave" style="width:100%; padding:14px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + btnLabel + '</button>'
+              + '<div style="font-size:10.5px; opacity:0.8; margin-top:12px; line-height:1.55;">' + L.meta + ': <b>' + (state.product && state.product.category || '?') + '</b> · ' + L.prod + ': <b>' + (state.product && state.product.code || '?') + '</b></div>';
+            sidebar.insertBefore(panel, sidebar.firstChild);
+            document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
+            // 검색어 입력 시 5개 언어 자동 번역 (700ms debounce)
+            var _tplTrTimer = null;
+            document.getElementById('soTplAdminName').addEventListener('input', function(){
+                if (_tplTrTimer) clearTimeout(_tplTrTimer);
+                _tplTrTimer = setTimeout(_soTplTranslate, 700);
+            });
+            return;
+        }
+        // admin 모드는 기존 그대로
         panel.innerHTML =
             '<div style="font-weight:700; font-size:14px; margin-bottom:10px;">' + heading + '</div>'
           + '<div style="font-size:11.5px; opacity:0.92; line-height:1.6; margin-bottom:14px;">' + subText + '</div>'
           + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.name + '</label>'
           + '<input type="text" id="soTplAdminName" placeholder="' + L.name_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:13px; font-weight:600; box-sizing:border-box; margin-bottom:10px; color:#0f172a; font-family:inherit;">'
-          + (isDesigner ? '' : '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.code + '</label>'
-              + '<input type="text" id="soTplAdminCode" placeholder="' + L.code_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:12.5px; font-weight:600; box-sizing:border-box; margin-bottom:14px; color:#0f172a; font-family:inherit;">')
+          + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.code + '</label>'
+          + '<input type="text" id="soTplAdminCode" placeholder="' + L.code_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:12.5px; font-weight:600; box-sizing:border-box; margin-bottom:14px; color:#0f172a; font-family:inherit;">'
           + '<button type="button" id="soTplAdminSave" style="width:100%; padding:14px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + btnLabel + '</button>'
           + '<div style="font-size:10.5px; opacity:0.8; margin-top:12px; line-height:1.55;">' + L.meta + ': <b>' + (state.product && state.product.category || '?') + '</b> · ' + L.prod + ': <b>' + (state.product && state.product.code || '?') + '</b></div>'
-          // 2026-06-19 v631: 단일 디자인 업로드 — 벡터(SVG)/이미지(PNG)/로고. 보상 차등(1000/500/100원).
           + '<div style="border-top:1px solid rgba(255,255,255,0.2); margin-top:14px; padding-top:14px;">'
             + '<button type="button" id="soSingleAssetUpload" style="width:100%; padding:11px; background:rgba(255,255,255,0.92); color:#0369a1; border:none; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit;">📤 단일 디자인 업로드 (벡터/이미지/로고)</button>'
             + '<div style="font-size:10.5px; opacity:0.85; margin-top:8px; line-height:1.5;">템플릿 <b>3,000원</b> · 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>200원</b> · 판매 시 <b>+3%</b></div>'
@@ -12282,6 +12310,40 @@ html, body { background: #ffffff !important; }
         document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
         var _singleBtn = document.getElementById('soSingleAssetUpload');
         if (_singleBtn) _singleBtn.addEventListener('click', function(){ _soOpenAssetUpload(isDesigner, currentUser); });
+    }
+
+    // 2026-06-19 v664: 디자이너 검색어 → 5개 언어 자동 번역 (Google Translate gtx)
+    window._soTplCurrentTranslations = null;
+    async function _soTplTranslate() {
+        var nameEl = document.getElementById('soTplAdminName');
+        if (!nameEl) return;
+        var text = (nameEl.value || '').trim();
+        if (!text) {
+            document.getElementById('soTplLangPreview').style.display = 'none';
+            window._soTplCurrentTranslations = null;
+            return;
+        }
+        document.getElementById('soTplLangPreview').style.display = '';
+        document.getElementById('soTplLpKo').textContent = text;
+        ['soTplLpJa','soTplLpEn','soTplLpFr','soTplLpAr'].forEach(function(id){
+            document.getElementById(id).textContent = '번역 중...';
+        });
+        async function gtx(t, lang) {
+            try {
+                var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + lang + '&dt=t&q=' + encodeURIComponent(t);
+                var r = await fetch(url);
+                if (!r.ok) return t;
+                var d = await r.json();
+                if (Array.isArray(d) && Array.isArray(d[0])) return d[0].map(function(s){ return s[0]; }).join('');
+                return t;
+            } catch(e) { return t; }
+        }
+        var results = await Promise.all([gtx(text,'ja'), gtx(text,'en'), gtx(text,'fr'), gtx(text,'ar')]);
+        document.getElementById('soTplLpJa').textContent = results[0];
+        document.getElementById('soTplLpEn').textContent = results[1];
+        document.getElementById('soTplLpFr').textContent = results[2];
+        document.getElementById('soTplLpAr').textContent = results[3];
+        window._soTplCurrentTranslations = { ko: text, ja: results[0], en: results[1], fr: results[2], ar: results[3] };
     }
 
     // 2026-06-19 v631: 단일 디자인 업로드 모달 — 벡터(SVG) / 이미지(PNG) / 로고.
@@ -12433,6 +12495,13 @@ html, body { background: #ffffff !important; }
             // 2026-06-18 v554: me.bg (캔버스 배경색) 도 첫번째 메타 슬롯으로 보존.
             var bgColor = (window.me && window.me.bg) || '#ffffff';
             serialized = [{ _type: 'meta', bg: bgColor }].concat(serialized);
+            // v664: 디자이너 모드는 검색어 → 5개 언어 번역 결과를 keywords JSONB 에 저장
+            var keywordsObj = null;
+            if (isDesigner && window._soTplCurrentTranslations) {
+                keywordsObj = window._soTplCurrentTranslations;
+            } else if (isDesigner) {
+                keywordsObj = { ko: name };
+            }
             var row = {
                 product_category: cat,
                 product_code: code,
@@ -12443,6 +12512,8 @@ html, body { background: #ffffff !important; }
                 width_mm: (state.product && state.product.width_mm) || null,
                 height_mm: (state.product && state.product.height_mm) || null,
                 slots: serialized,
+                keywords: keywordsObj,
+                asset_type: 'template',
                 is_active: true,
                 sort_order: 999,
                 status: isDesigner ? 'pending' : 'approved',
