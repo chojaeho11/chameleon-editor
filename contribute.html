@@ -558,18 +558,22 @@ window.requestWithdrawAsset = async function() {
             `진행 ${oCnt.진행} · 완료 ${oCnt.완료} · 요청 ${oCnt.정산요청} · 지급 ${oCnt.정산완료}`;
 
         // v654: 현재 예치금 카드 제거 — 상태 머신(적립→대기→지급)으로 통합.
-        // v654: 출금 상태 머신
-        //   pending/approved 상태 = 입금 대기중 (신청 후 지급 전)
-        //   paid 상태 = 누적 출금 (지급 완료)
+        // v655: 출금 상태 머신 — pending 만 "입금 대기중", approved 는 admin 이 승인했으니 곧 지급될 거지만 표시 X
+        //   사용자 정의: "입금 대기중" = 디자이너가 신청해서 admin 처리 안 한 것 (pending 만)
+        //   approved (admin 승인 후 지급 전) 는 별도 표시 안 함 — 곧 paid 될 예정.
         const { data: wds } = await sb.from('design_withdrawal_requests')
-            .select('gross_amount, net_amount, status')
+            .select('id, requested_at, gross_amount, net_amount, status')
             .eq('designer_id', uid);
+        console.log('[settlement] withdrawals for uid=' + uid + ':', wds);
         let paidTotal = 0, pendingTotal = 0;
         (wds||[]).forEach(r => {
             const amt = r.gross_amount || r.net_amount || 0;
-            if (r.status === 'paid') paidTotal += amt;
-            else if (r.status === 'pending' || r.status === 'approved') pendingTotal += amt;
+            const st = String(r.status || '').toLowerCase().trim();
+            if (st === 'paid') paidTotal += amt;
+            else if (st === 'pending') pendingTotal += amt;
+            // approved/rejected 는 별도 처리 안 함
         });
+        console.log('[settlement] paidTotal:', paidTotal, 'pendingTotal:', pendingTotal);
         // 카드 값 채우기 (v654 상태 머신)
         const available = Math.max(0, aTotal - paidTotal - pendingTotal);
         document.getElementById('seAssetTotal').textContent = fmt(available);   // 자산 적립 (출금 가능)
