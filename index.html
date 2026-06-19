@@ -8899,7 +8899,7 @@ function scrollHotdeal(gridId, dir) {
         // 2026-06-18 v561: 모달 내부 다국어
         var _mtL = (function(){
             var h = (location.hostname || '').toLowerCase();
-            var site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+            var site = (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 || h.indexOf('chameleon.design') >= 0 ? 'US' : 'KR');
             return ({
                 KR: { title:'디자인 템플릿 선택', sub:'템플릿을 클릭하면 배경 디자인이 캔버스에 자동 적용됩니다. 노란 표시 영역의 글씨를 클릭하여 직접 수정할 수 있습니다.', loading:'로딩 중...', empty:'이 상품에 등록된 템플릿이 아직 없습니다.', noCat:'상품 카테고리를 확인할 수 없어 템플릿을 표시할 수 없습니다.', loadFail:'템플릿 로드 실패: ', slots:'슬롯', cnt:'개' },
                 JP: { title:'デザインテンプレートを選択', sub:'テンプレートをクリックすると背景デザインがキャンバスに自動適用されます。黄色いエリアの文字をクリックして直接修正できます。', loading:'読み込み中...', empty:'この商品に登録されたテンプレートはまだありません。', noCat:'商品カテゴリを確認できないためテンプレートを表示できません。', loadFail:'テンプレート読み込み失敗: ', slots:'スロット', cnt:'個' },
@@ -8944,7 +8944,7 @@ function scrollHotdeal(gridId, dir) {
                 .eq('product_category', cat)
                 .eq('is_active', true)
                 .eq('status', 'approved')   /* 2026-06-18 v554: 승인된 것만 고객에게 노출 */
-                .eq('site_code', (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })())   /* 2026-06-18 v560: 현재 사이트 템플릿만 */
+                .eq('site_code', (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0||h.indexOf('chameleon.design')>=0)return'US'; return'KR'; })())   /* 2026-06-18 v560: 현재 사이트 템플릿만 + v680 chameleon.design 추가 */
                 .order('sort_order', { ascending: true })
                 .order('id', { ascending: false });
             if (code) q = q.or(orFilter);
@@ -8989,10 +8989,11 @@ function scrollHotdeal(gridId, dir) {
             me._usedTemplate = { id: tpl.id, name: tpl.name || '', category: tpl.product_category || '', code: tpl.product_code || '' };
         } catch(_te){}
         // 2026-06-18 v561: 다국어 확인 메시지
+        // 2026-06-19 v680: chameleon.design / cotton-printer 추가
         var _lcfm = (function(){
             var h = (location.hostname || '').toLowerCase();
-            if (h.indexOf('cafe0101') >= 0) return 'テンプレートを読み込むと現在のデザインは消去されます。続行しますか？';
-            if (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0) return 'Loading a template will clear the current design. Continue?';
+            if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'テンプレートを読み込むと現在のデザインは消去されます。続行しますか？';
+            if (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 || h.indexOf('chameleon.design') >= 0) return 'Loading a template will clear the current design. Continue?';
             return '템플릿을 불러오면 현재 디자인은 지워집니다. 계속하시겠어요?';
         })();
         if (!confirm(_lcfm)) return;
