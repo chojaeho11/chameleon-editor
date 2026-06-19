@@ -1565,37 +1565,41 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-14: "현재 상품 사이즈로 대지 맞추기" 버튼 제거 — 모달 진입 시 자동 적용되므로 불필요. -->
           <!-- 2026-06-15: 라이브러리는 좌측 사이드바로 이동 — 상단 row 제거. -->
           <style>
-            /* 2026-06-15: rail 폭 좁힘 (180→120), 썸네일 1열×6 정사각 꽉차게 (object-fit:cover). */
-            #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 120px 1fr; gap:10px; margin-top:10px; align-items:stretch; }
-            #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:200px; }
-            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
-            #soQuickDesignSec .qd-rail-tab { padding:5px 0; background:#fff; border:1px solid #cbd5e1; border-radius:6px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:background .15s; }
+            /* 2026-06-19 v644: 사이드바를 캔버스 아래로 이동 (PC + 모바일 모두). 대지 넓게 사용.
+               5개 탭 (템플릿 / 사진 / 벡터 / 요소 / 장식) — 템플릿 기본 활성화. 버튼 크게. */
+            #soQuickDesignSec .qd-edit-grid { display:grid; grid-template-columns: 1fr; gap:10px; margin-top:10px; }
+            #soQuickDesignSec .qd-edit-grid > #soEmbeddedEditorMount { order:1; }
+            #soQuickDesignSec .qd-edit-grid > .qd-rail { order:2; min-height:0; }
+            #soQuickDesignSec .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+            #soQuickDesignSec .qd-rail-tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+            #soQuickDesignSec .qd-rail-tab { padding:12px 4px; background:#fff; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:all .15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; line-height:1.1; }
+            #soQuickDesignSec .qd-rail-tab .tab-ico { font-size:18px; }
+            #soQuickDesignSec .qd-rail-tab:hover { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:1fr; gap:5px; flex:1; align-content:start; }
-            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:6px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
+            #soQuickDesignSec .qd-rail-tab.active .tab-ico { color:#fff; }
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
             #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
             #soQuickDesignSec .qd-rail-thumb svg { width:80%; height:80%; }
-            #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:10px; }
-            #soQuickDesignSec .qd-rail-more { padding:7px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:10.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; margin-top:auto; }
+            #soQuickDesignSec .qd-rail-thumb.loading { color:#94a3b8; font-size:11px; }
+            #soQuickDesignSec .qd-rail-more { padding:10px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; }
             #soQuickDesignSec .qd-rail-more:hover { background:#f1f5f9; }
-            /* 2026-06-15: rail 검색 + 페이지네이션 (이전/다음). 모바일에서 4개 페이지 단위로 넘김. */
-            #soQuickDesignSec .qd-rail-search { padding:6px 9px; border:1px solid #cbd5e1; border-radius:8px; font-size:11.5px; font-family:inherit; outline:none; background:#fff; color:#0f172a; width:100%; box-sizing:border-box; }
+            #soQuickDesignSec .qd-rail-search { padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#fff; color:#0f172a; width:100%; box-sizing:border-box; }
             #soQuickDesignSec .qd-rail-search:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.18); }
             #soQuickDesignSec .qd-rail-pager { display:flex; align-items:center; justify-content:center; gap:8px; padding:2px 0; }
-            #soQuickDesignSec .qd-rail-pager-btn { width:28px; height:28px; border-radius:50%; background:#fff; border:1px solid #cbd5e1; color:#475569; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:all .15s; }
+            #soQuickDesignSec .qd-rail-pager-btn { width:32px; height:32px; border-radius:50%; background:#fff; border:1px solid #cbd5e1; color:#475569; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:all .15s; }
             #soQuickDesignSec .qd-rail-pager-btn:hover:not(:disabled) { background:#eef2ff; border-color:#6366f1; color:#4338ca; }
             #soQuickDesignSec .qd-rail-pager-btn:disabled { opacity:0.35; cursor:not-allowed; }
-            #soQuickDesignSec .qd-rail-pager-info { font-size:11px; font-weight:700; color:#475569; min-width:42px; text-align:center; }
-            /* 2026-06-15: 모바일 — 대지(에디터) 먼저, 그 아래 [템플릿/요소/장식] 버튼 3개 + 미리보기 4열 그리드. */
+            #soQuickDesignSec .qd-rail-pager-info { font-size:12px; font-weight:700; color:#475569; min-width:42px; text-align:center; }
             @media (max-width:768px) {
-                #soQuickDesignSec .qd-edit-grid { grid-template-columns: 1fr; gap:8px; }
-                #soQuickDesignSec .qd-edit-grid > #soEmbeddedEditorMount { order:1; }
-                #soQuickDesignSec .qd-edit-grid > .qd-rail { order:2; min-height:0; }
-                #soQuickDesignSec .qd-rail-tabs { gap:6px; }
-                #soQuickDesignSec .qd-rail-tab { padding:9px 0; font-size:12.5px; }
-                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(3,1fr); gap:6px; }
-                #soQuickDesignSec .qd-rail-more { margin-top:4px; padding:9px; font-size:12px; }
+                #soQuickDesignSec .qd-rail-tabs { gap:4px; }
+                #soQuickDesignSec .qd-rail-tab { padding:10px 2px; font-size:11.5px; }
+                #soQuickDesignSec .qd-rail-tab .tab-ico { font-size:16px; }
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(4,1fr); }
+            }
+            @media (max-width:480px) {
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(3,1fr); }
             }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
@@ -1612,10 +1616,11 @@ html, body { background: #ffffff !important; }
           <div class="qd-edit-grid">
             <aside class="qd-rail">
               <div class="qd-rail-tabs">
-                <button type="button" class="qd-rail-tab active" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')">${tr('사진','写真','Photo')}</button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="background" onclick="window._soQdRailSwitch && window._soQdRailSwitch('background')">${tr('배경','背景','BG')}</button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')">${tr('요소','要素','Elem')}</button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')">${tr('장식','装飾','Deco')}</button>
+                <button type="button" class="qd-rail-tab active" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch('design_tpl')"><span class="tab-ico">🎨</span><span>${tr('템플릿','テンプレ','Template')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')"><span class="tab-ico">🖼</span><span>${tr('사진','写真','Photo')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch('vector')"><span class="tab-ico">📐</span><span>${tr('벡터','ベクター','Vector')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')"><span class="tab-ico">⭐</span><span>${tr('요소','要素','Elem')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')"><span class="tab-ico">✨</span><span>${tr('장식','装飾','Deco')}</span></button>
               </div>
               <input type="search" id="soQdRailSearch" placeholder="${tr('검색','検索','Search')}" oninput="window._soQdRailSearch && window._soQdRailSearch(this.value)" class="qd-rail-search">
               <div class="qd-rail-thumbs" id="soQdRailThumbs">
@@ -12940,7 +12945,8 @@ html, body { background: #ffffff !important; }
         };
 
         // 2026-06-15: 좌측 사이드바 (qd-rail) — 4개 페이지 + 탭 + 검색 + 이전/다음. 전체보기는 기존 팝업 재사용.
-        var _railTab = 'template';
+        // 2026-06-19 v644: 기본 활성 탭 — design_tpl (디자인 템플릿 = admin_templates.status='approved' && asset_type='template')
+        var _railTab = 'design_tpl';
         var _railSearch = '';
         var _railSearchDebounce = null;
         var _railAllItems = [];
@@ -13074,6 +13080,62 @@ html, body { background: #ffffff !important; }
             if (_railTab === 'decoration' && !window.ORNAMENTS) {
                 try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }
             }
+            // 2026-06-19 v644: vector / design_tpl 탭 — admin_templates 에서 직접 fetch
+            if (_railTab === 'vector' || _railTab === 'design_tpl') {
+                try {
+                    var sb = getSb();
+                    var targetType = _railTab === 'vector' ? 'vector' : 'template';
+                    var q = sb.from('admin_templates')
+                        .select('id, name, thumbnail_url, background_url, asset_url, asset_type, slots, keywords, product_category, product_code')
+                        .eq('status', 'approved')
+                        .order('id', { ascending: false });
+                    // design_tpl: asset_type='template' OR asset_type IS NULL (legacy templates with slots)
+                    // vector: asset_type='vector'
+                    if (targetType === 'vector') q = q.eq('asset_type', 'vector');
+                    else q = q.or('asset_type.eq.template,asset_type.is.null');
+                    var resp = await q;
+                    if (resp.error) throw resp.error;
+                    var rows = resp.data || [];
+                    // 사이트 언어 keyword 필터
+                    var siteLang = (function(){
+                        var h = (location.hostname || '').toLowerCase();
+                        if (h.indexOf('cafe0101')>=0) return 'ja';
+                        if (h.indexOf('cafe3355')>=0 || h.indexOf('hexa-board')>=0) return 'en';
+                        return 'ko';
+                    })();
+                    var search = (_railSearch || '').toLowerCase().trim();
+                    if (search) {
+                        rows = rows.filter(function(r){
+                            if ((r.name || '').toLowerCase().indexOf(search) >= 0) return true;
+                            if (r.keywords && typeof r.keywords === 'object') {
+                                var langs = ['ko','ja','en','fr','ar'];
+                                for (var li=0; li<langs.length; li++) {
+                                    var v = String(r.keywords[langs[li]] || '').toLowerCase();
+                                    if (v && v.indexOf(search) >= 0) return true;
+                                }
+                            }
+                            return false;
+                        });
+                    }
+                    _railAllItems = rows.map(function(r){
+                        return {
+                            id: r.id,
+                            thumb_url: r.thumbnail_url || r.background_url || r.asset_url || '',
+                            data_url: r.asset_url || r.background_url || '',
+                            title: r.name || '',
+                            _row: r,
+                            _isTemplate: targetType === 'template'
+                        };
+                    });
+                    _renderRailPage();
+                    return;
+                } catch(e) {
+                    console.warn('[rail vector/design_tpl]', e);
+                    grid.innerHTML = '<div class="qd-rail-thumb loading" style="grid-column:1/-1;">' + tr('로드 실패','失敗','Failed') + '</div>';
+                    _updateRailPager();
+                    return;
+                }
+            }
             try {
                 _railAllItems = await _fetchLib(_railTab, _railSearch);
                 if (_railAllItems.length === 0) {
@@ -13128,7 +13190,7 @@ html, body { background: #ffffff !important; }
                 }
                 return data;
             }
-            grid.innerHTML = top.map(function(it){
+            grid.innerHTML = top.map(function(it, _idx){
                 if (it && it.__ornament) {
                     var sv = String(it.svg || '');
                     if (it.color && sv.indexOf('fill="currentColor"') >= 0) {
@@ -13136,14 +13198,40 @@ html, body { background: #ffffff !important; }
                     }
                     return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
                 }
-                var thumbUrl = it.thumb_url || it.data_url || '';   // 표시용 (작음/빠름)
-                var fullUrl = _railResolveImgUrl(it);               // 클릭 시 캔버스용 (고해상도)
+                // v644: 디자인 템플릿 / 벡터 항목 — 별도 클릭 처리
+                if (it._row) {
+                    var thumb = it.thumb_url || '';
+                    var dataAttr = it._isTemplate ? 'data-rail-tpl="' + it._row.id + '"' : 'data-rail-vec="' + (it.data_url || '') + '"';
+                    return '<div class="qd-rail-thumb" ' + dataAttr + ' title="' + (it.title || '').replace(/"/g, '&quot;') + '"><img src="' + thumb + '" alt=""></div>';
+                }
+                var thumbUrl = it.thumb_url || it.data_url || '';
+                var fullUrl = _railResolveImgUrl(it);
                 return '<div class="qd-rail-thumb" data-rail-url="' + encodeURI(fullUrl) + '"><img src="' + thumbUrl + '" alt=""></div>';
             }).join('');
             grid.querySelectorAll('[data-rail-url]').forEach(function(el){
                 el.addEventListener('click', function(){
                     var u = decodeURI(el.getAttribute('data-rail-url') || '');
                     if (u && window._soQdLibPick) window._soQdLibPick(u);
+                });
+            });
+            // v644: 디자인 템플릿 클릭 → _meLoadTemplate 으로 전체 디자인 로드
+            grid.querySelectorAll('[data-rail-tpl]').forEach(function(el){
+                el.addEventListener('click', async function(){
+                    var tplId = parseInt(el.getAttribute('data-rail-tpl'), 10);
+                    if (!tplId) return;
+                    try {
+                        var sb = getSb();
+                        var resp = await sb.from('admin_templates').select('*').eq('id', tplId).single();
+                        if (resp.error || !resp.data) throw resp.error || new Error('not found');
+                        if (typeof window._meLoadTemplate === 'function') window._meLoadTemplate(resp.data);
+                    } catch(e) { alert('템플릿 로드 실패: ' + (e.message || e)); }
+                });
+            });
+            // v644: 벡터 클릭 → _meAddImage 로 캔버스에 단순 추가
+            grid.querySelectorAll('[data-rail-vec]').forEach(function(el){
+                el.addEventListener('click', function(){
+                    var u = el.getAttribute('data-rail-vec') || '';
+                    if (u && typeof window._meAddImage === 'function') window._meAddImage(u, { fitCanvas: false });
                 });
             });
             grid.querySelectorAll('[data-rail-orn]').forEach(function(el){
