@@ -119,26 +119,27 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <i class="fa-solid fa-wallet" style="color:#fbbf24; font-size:18px;"></i>
             <h2 style="font-size:16px; font-weight:700;">디자이너 정산</h2>
         </div>
+        <!-- v654: 명확한 흐름 - 적립 → 대기 → 지급 -->
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;">
-            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">자산 승인 적립</div>
-                <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seAssetTotal">-</div>
-                <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seAssetBreak">템플릿/벡터/PNG/로고</div>
+            <div style="background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#fde68a; font-weight:600; letter-spacing:0.5px;">자산 적립 (출금 가능)</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px; color:#fbbf24;" id="seAssetTotal">-</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="seAssetBreak">관리자 승인 적립</div>
+            </div>
+            <div style="background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#7dd3fc; font-weight:600; letter-spacing:0.5px;">입금 대기중</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px; color:#38bdf8;" id="sePending">-</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">출금 신청 → 처리 대기</div>
+            </div>
+            <div style="background:rgba(34,197,94,0.10); border:1px solid rgba(34,197,94,0.25); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#86efac; font-weight:600; letter-spacing:0.5px;">누적 출금 (지급완료)</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px; color:#4ade80;" id="seWithdrawn">-</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">경리가 지급 완료한 금액</div>
             </div>
             <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
                 <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">의뢰 완료 정산</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seOrderTotal">-</div>
-                <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seOrderBreak">고객 의뢰</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">현재 예치금</div>
-                <div style="font-size:18px; font-weight:700; margin-top:4px; color:#fbbf24;" id="seDeposit">-</div>
-                <div style="font-size:10px; color:#64748b; margin-top:2px;">출금 가능</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">누적 출금</div>
-                <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seWithdrawn">-</div>
-                <div style="font-size:10px; color:#64748b; margin-top:2px;">지급 완료</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seOrderBreak">고객 의뢰 (마스터)</div>
             </div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -531,13 +532,13 @@ window.requestWithdrawAsset = async function() {
         (assets||[]).forEach(r => {
             let t = r.asset_type;
             if (!t) t = (r.slots && r.slots.length) ? 'template' : 'vector';
-            const amt = r.payment_amount || 0;  // payment_amount 만, fallback 없음
+            const amt = r.payment_amount || 0;
             aTotal += amt;
             if (aBreak[t] != null) aBreak[t] += amt;
         });
-        document.getElementById('seAssetTotal').textContent = fmt(aTotal);
+        // 자산 적립 총합은 별도 변수에 보관 — 카드 값은 available 로 표시 (아래에서 계산)
         document.getElementById('seAssetBreak').textContent =
-            `T ${aBreak.template/1000|0}K · V ${aBreak.vector/1000|0}K · I ${aBreak.image/1000|0}K · L ${aBreak.logo/1000|0}K`;
+            `T ${aBreak.template/1000|0}K · V ${aBreak.vector/1000|0}K · I ${aBreak.image/1000|0}K · L ${aBreak.logo/1000|0}K (총 ${fmt(aTotal)})`;
 
         // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
         const { data: orders } = await sb.from('design_requests')
@@ -556,21 +557,10 @@ window.requestWithdrawAsset = async function() {
         document.getElementById('seOrderBreak').textContent =
             `진행 ${oCnt.진행} · 완료 ${oCnt.완료} · 요청 ${oCnt.정산요청} · 지급 ${oCnt.정산완료}`;
 
-        // 3) 현재 예치금 (profiles.mileage 일부 + designer_deposits 가 있으면 우선)
-        let deposit = 0;
-        try {
-            const { data: dep } = await sb.from('designer_deposits')
-                .select('amount').eq('user_id', uid).maybeSingle();
-            if (dep) deposit = dep.amount || 0;
-        } catch(_){}
-        if (!deposit) {
-            const { data: prof } = await sb.from('profiles').select('mileage').eq('id', uid).maybeSingle();
-            deposit = (prof && prof.mileage) || 0;
-        }
-        document.getElementById('seDeposit').textContent = fmt(deposit);
-
-        // 4) v653: 출금 내역 — design_withdrawal_requests 에서 집계
-        //   paidTotal = 실제 지급 완료, pendingTotal = 대기중/승인됨 (아직 지급 안 됐지만 신청한 금액)
+        // v654: 현재 예치금 카드 제거 — 상태 머신(적립→대기→지급)으로 통합.
+        // v654: 출금 상태 머신
+        //   pending/approved 상태 = 입금 대기중 (신청 후 지급 전)
+        //   paid 상태 = 누적 출금 (지급 완료)
         const { data: wds } = await sb.from('design_withdrawal_requests')
             .select('gross_amount, net_amount, status')
             .eq('designer_id', uid);
@@ -580,10 +570,11 @@ window.requestWithdrawAsset = async function() {
             if (r.status === 'paid') paidTotal += amt;
             else if (r.status === 'pending' || r.status === 'approved') pendingTotal += amt;
         });
-        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);
-
-        // 출금 가능 금액 = 자산 적립 - (지급된 + 대기중) — 중복 출금 방지
+        // 카드 값 채우기 (v654 상태 머신)
         const available = Math.max(0, aTotal - paidTotal - pendingTotal);
+        document.getElementById('seAssetTotal').textContent = fmt(available);   // 자산 적립 (출금 가능)
+        document.getElementById('sePending').textContent = fmt(pendingTotal);    // 입금 대기중
+        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);     // 누적 출금
         _assetEarningsTotal = available;
         document.getElementById('seWithdrawAmt').textContent = fmt(available);
         // 출금 가능 0 이면 버튼 비활성
