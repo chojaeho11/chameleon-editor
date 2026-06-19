@@ -12522,7 +12522,7 @@ html, body { background: #ffffff !important; }
             var ins = await sb.from('admin_templates').insert(row).select().single();
             if (ins.error) throw ins.error;
             if (isDesigner) {
-                alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드 예치금에 30,000원이 자동 적립됩니다.\n거절될 경우 자동 삭제되니 가이드라인을 다시 확인하고 재제출해주세요.');
+                alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드 예치금에 3,000원이 자동 적립됩니다.\n거절될 경우 자동 삭제되니 가이드라인을 다시 확인하고 재제출해주세요.');
                 location.href = '/designer-board';
             } else {
                 // 2026-06-19 v620: admin 직접 저장 → 페이지 이동 없이 머무름.
