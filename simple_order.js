@@ -12462,10 +12462,16 @@ html, body { background: #ffffff !important; }
 
     // 2026-06-17 v542: 미니에디터의 me.items 전체를 admin_templates 에 저장.
     async function _soSaveAsTemplate() {
+        // v681: 사이트별 alert 메시지
+        var _sLh = (location.hostname || '').toLowerCase();
+        var _sLang = (_sLh.indexOf('cafe0101')>=0 || _sLh.indexOf('cotton-printer')>=0) ? 'ja'
+                   : (_sLh.indexOf('cafe3355')>=0 || _sLh.indexOf('hexa-board')>=0 || _sLh.indexOf('chameleon.design')>=0) ? 'en'
+                   : 'ko';
+        var _sA = function(ko, ja, en){ return _sLang==='ja'?ja:_sLang==='en'?en:ko; };
         var name = (document.getElementById('soTplAdminName') || {}).value || '';
         name = name.trim();
-        if (!name) { alert('템플릿 이름을 입력하세요.'); return; }
-        if (!window.me || !Array.isArray(window.me.items)) { alert('에디터를 초기화할 수 없습니다.'); return; }
+        if (!name) { alert(_sA('템플릿 이름(검색어)을 입력하세요.','テンプレート名(キーワード)を入力してください。','Please enter a template name (keyword).')); return; }
+        if (!window.me || !Array.isArray(window.me.items)) { alert(_sA('에디터를 초기화할 수 없습니다.','エディタを初期化できません。','Editor not ready.')); return; }
         var btn = document.getElementById('soTplAdminSave');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 저장 중...'; }
         try {
@@ -12506,10 +12512,13 @@ html, body { background: #ffffff !important; }
                 } catch(_le) { console.warn('[save tpl] auth recheck failed', _le); }
             }
             if (isDesigner && !userId) {
-                if (btn) { btn.disabled = false; btn.innerHTML = '📤 검토 요청'; }
-                if (confirm('로그인이 필요합니다. 메인 페이지로 이동하여 로그인 후 다시 시도해주세요.\n\nLogin required. Go to main page?')) {
-                    location.href = '/';
-                }
+                if (btn) { btn.disabled = false; btn.innerHTML = _sA('📤 검토 요청','📤 審査依頼','📤 Submit for Review'); }
+                var _liMsg = _sA(
+                    '로그인이 필요합니다. 메인 페이지로 이동하여 로그인 후 다시 시도해주세요.',
+                    'ログインが必要です。メインページでログイン後、再度お試しください。',
+                    'Login required. Go to main page to log in?'
+                );
+                if (confirm(_liMsg)) location.href = '/';
                 return;
             }
             var codeEl = document.getElementById('soTplAdminCode');
@@ -12553,15 +12562,32 @@ html, body { background: #ffffff !important; }
             ['soTplLpKo','soTplLpJa','soTplLpEn','soTplLpFr','soTplLpAr'].forEach(function(id){
                 var el = document.getElementById(id); if (el) el.textContent = '-';
             });
+            // v681: 사이트별 토스트 + 버튼 라벨
+            var _stLh = (location.hostname || '').toLowerCase();
+            var _stLang = (_stLh.indexOf('cafe0101')>=0 || _stLh.indexOf('cotton-printer')>=0) ? 'ja'
+                        : (_stLh.indexOf('cafe3355')>=0 || _stLh.indexOf('hexa-board')>=0 || _stLh.indexOf('chameleon.design')>=0) ? 'en'
+                        : 'ko';
+            var _shortName = name.length > 18 ? name.slice(0,18) + '…' : name;
+            var _stT = _stLang === 'ja' ? {
+                btnD:'📤 審査依頼', btnA:'💾 テンプレート保存',
+                okD:'審査依頼完了。承認時 ¥300 付与。続けて次のデザイン可能。',
+                okA:'テンプレート 「' + _shortName + '」 登録完了。続けて次のデザイン可能。'
+            } : _stLang === 'en' ? {
+                btnD:'📤 Submit for Review', btnA:'💾 Save Template',
+                okD:'Submitted for review. $3 on approval. Continue with the next design.',
+                okA:'Template "' + _shortName + '" registered. Continue with the next design.'
+            } : {
+                btnD:'📤 검토 요청', btnA:'💾 템플릿으로 저장',
+                okD:'검토 요청 완료. 승인 시 3,000원 적립. 이어서 다음 디자인 가능.',
+                okA:'템플릿 「' + _shortName + '」 등록 완료. 이어서 다음 디자인 가능.'
+            };
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = isDesigner ? '📤 검토 요청' : '💾 템플릿으로 저장';
+                btn.innerHTML = isDesigner ? _stT.btnD : _stT.btnA;
             }
             var toastEl = document.createElement('div');
             toastEl.style.cssText = 'position:fixed; top:24px; right:24px; z-index:999999; background:#16a34a; color:#fff; padding:14px 20px; border-radius:12px; font-weight:800; font-size:13.5px; box-shadow:0 10px 30px rgba(22,163,74,0.4); display:flex; align-items:center; gap:10px; max-width:380px;';
-            toastEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (isDesigner
-                ? '검토 요청 완료. 승인 시 3,000원 적립. 이어서 다음 디자인 가능.'
-                : '템플릿 「' + (name.length > 18 ? name.slice(0,18) + '…' : name) + '」 등록 완료. 이어서 다음 디자인 가능.');
+            toastEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (isDesigner ? _stT.okD : _stT.okA);
             document.body.appendChild(toastEl);
             setTimeout(function(){
                 toastEl.style.transition = 'opacity .4s, transform .4s';
@@ -12571,8 +12597,15 @@ html, body { background: #ffffff !important; }
             }, 3500);
         } catch (e) {
             console.error('[soSaveAsTemplate]', e);
-            alert('저장 실패: ' + (e.message || e));
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i> 템플릿으로 저장'; }
+            // v681: 오류 메시지도 사이트별
+            var _erLh = (location.hostname || '').toLowerCase();
+            var _erLang = (_erLh.indexOf('cafe0101')>=0 || _erLh.indexOf('cotton-printer')>=0) ? 'ja'
+                        : (_erLh.indexOf('cafe3355')>=0 || _erLh.indexOf('hexa-board')>=0 || _erLh.indexOf('chameleon.design')>=0) ? 'en'
+                        : 'ko';
+            var _erMsg = _erLang === 'ja' ? '保存失敗: ' : _erLang === 'en' ? 'Save failed: ' : '저장 실패: ';
+            var _erBtn = _erLang === 'ja' ? 'テンプレート保存' : _erLang === 'en' ? 'Save Template' : '템플릿으로 저장';
+            alert(_erMsg + (e.message || e));
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i> ' + _erBtn; }
         }
     }
 
