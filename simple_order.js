@@ -1577,8 +1577,9 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-tab:hover { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
             #soQuickDesignSec .qd-rail-tab.active .tab-ico { color:#fff; }
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
-            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
+            /* v667: 4개 그리드 + 16:9 썸네일 */
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:16/9; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
             #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
             #soQuickDesignSec .qd-rail-thumb svg { width:80%; height:80%; }
@@ -1596,10 +1597,10 @@ html, body { background: #ffffff !important; }
                 #soQuickDesignSec .qd-rail-tabs { gap:4px; }
                 #soQuickDesignSec .qd-rail-tab { padding:10px 2px; font-size:11.5px; }
                 #soQuickDesignSec .qd-rail-tab .tab-ico { font-size:16px; }
-                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(4,1fr); }
+                /* v667: 모바일도 4 그대로 (작아도 16:9 좁아서 OK), 480 이하만 2 */
             }
             @media (max-width:480px) {
-                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(3,1fr); }
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(2,1fr); }
             }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
@@ -1629,10 +1630,10 @@ html, body { background: #ffffff !important; }
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
                 <div class="qd-rail-thumb loading">${tr('로딩…','読み込み…','Loading…')}</div>
               </div>
-              <div class="qd-rail-pager" id="soQdRailPager">
-                <button type="button" class="qd-rail-pager-btn" id="soQdRailPrev" onclick="window._soQdRailPage && window._soQdRailPage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <div class="qd-rail-pager" id="soQdRailPager" style="display:flex; align-items:center; justify-content:space-between; padding:6px 0;">
+                <button type="button" class="qd-rail-pager-btn" id="soQdRailPrev" onclick="window._soQdRailPage && window._soQdRailPage(-1)" style="width:auto; padding:8px 18px; border-radius:8px;"><i class="fa-solid fa-chevron-left" style="margin-right:5px;"></i> ${tr('이전','前へ','Prev')}</button>
                 <span class="qd-rail-pager-info" id="soQdRailPageInfo">1 / 1</span>
-                <button type="button" class="qd-rail-pager-btn" id="soQdRailNext" onclick="window._soQdRailPage && window._soQdRailPage(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                <button type="button" class="qd-rail-pager-btn" id="soQdRailNext" onclick="window._soQdRailPage && window._soQdRailPage(1)" style="width:auto; padding:8px 18px; border-radius:8px;">${tr('다음','次へ','Next')} <i class="fa-solid fa-chevron-right" style="margin-left:5px;"></i></button>
               </div>
               <button type="button" class="qd-rail-more" onclick="window._soQdRailMore && window._soQdRailMore()">${tr('전체보기 →','すべて見る →','See all →')}</button>
             </aside>
@@ -13021,7 +13022,7 @@ html, body { background: #ffffff !important; }
         var _railSearchDebounce = null;
         var _railAllItems = [];
         var _railPage = 0;
-        var _RAIL_PER_PAGE = 6;
+        var _RAIL_PER_PAGE = 4;  // v667: 4개 한 줄로 표시
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
             _railPage = 0;
@@ -13240,7 +13241,8 @@ html, body { background: #ffffff !important; }
             if (info) info.textContent = (_railPage + 1) + ' / ' + totalPages;
             if (prev) prev.disabled = (_railPage <= 0);
             if (next) next.disabled = (_railPage >= totalPages - 1);
-            if (pager) pager.style.display = (totalPages > 1) ? 'flex' : 'none';
+            // v667: 항상 표시 (1페이지여도 사용자가 다음 페이지 있는지 확인 가능)
+            if (pager) pager.style.display = 'flex';
         }
         function _renderRailPage() {
             var grid = document.getElementById('soQdRailThumbs');
