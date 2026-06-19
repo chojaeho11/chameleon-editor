@@ -381,7 +381,7 @@ const STR = {
         SeOrderLbl: '의뢰 완료 정산',
         SeOrderBtn: '고객의뢰 보기',
         SeWithdrawBtn: '출금 신청',
-        SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· <b style="color:#fbbf24;">최소 출금액 100,000원</b> · 출금에는 <b>마스터 디자이너 등록</b>(계좌 정보 포함)이 필요합니다.<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
+        SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· <b style="color:#fbbf24;">최소 출금액 100,000원</b> · 첫 출금 시 계좌·전화·이메일 등록 (1회).<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
         GuideH: '적립금 가이드', GuideSub: '유형 별로 보상이 다릅니다.',
         CardTemplateH3: '템플릿 만들기',
         CardTemplateDesc: '미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.',
@@ -430,7 +430,7 @@ const STR = {
         SeOrderLbl: '依頼完了精算',
         SeOrderBtn: '顧客依頼を見る',
         SeWithdrawBtn: '出金申請',
-        SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· <b style="color:#fbbf24;">最低出金額 ¥10,000</b> · 出金には <b>マスターデザイナー登録</b>（口座情報含む）が必要です。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
+        SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· <b style="color:#fbbf24;">最低出金額 ¥10,000</b> · 初回出金時に口座・電話・メール登録（1回のみ）。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
         GuideH: '積立金ガイド', GuideSub: 'タイプ別に報酬が異なります。',
         CardTemplateH3: 'テンプレート作成',
         CardTemplateDesc: 'ミニエディタで全体デザインを完成させて登録。ユーザーが文字だけ変更すれば完了する形式。',
@@ -479,7 +479,7 @@ const STR = {
         SeOrderLbl: 'Order Settlement',
         SeOrderBtn: 'View Customer Orders',
         SeWithdrawBtn: 'Withdraw',
-        SeHint: '· Asset earnings appear immediately after admin approval.<br>· <b style="color:#fbbf24;">Minimum withdrawal $100</b> · Withdrawal requires <b>Master Designer registration</b> (with bank info).<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
+        SeHint: '· Asset earnings appear immediately after admin approval.<br>· <b style="color:#fbbf24;">Minimum withdrawal $100</b> · One-time bank/phone/email setup on first withdrawal.<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
         GuideH: 'Reward Guide', GuideSub: 'Rewards differ by type.',
         CardTemplateH3: 'Make a Template',
         CardTemplateDesc: 'Build a complete design in the mini editor — the format where users only need to change the text.',
@@ -845,6 +845,113 @@ async function checkDesignerStatus(uid) {
 // v691: 최소 출금액 — 100,000 KRW = ¥10,000 = $100 (CURRENCY_RATE 동일 적용)
 const MIN_WITHDRAW_KRW = 100000;
 
+// v692: 출금용 필수 정보 폼 (designer_tax_profiles)
+//   country/payout_currency 는 _SITE 따라 자동, tax_id_type 은 'personal' 고정.
+//   필수 입력: legal_name, tax_id, residence_address, phone, bank_name, bank_holder, bank_account.
+//   해외(JP/US): swift_bic, bank_address 추가.
+function _payoutMeta() {
+    return _SITE === 'JP' ? { cur:'JPY', taxLbl:'My Number', phPh:'例: 090-1234-5678', adPh:'例: 東京都港区赤坂...' }
+         : _SITE === 'US' ? { cur:'USD', taxLbl:'SSN / EIN', phPh:'e.g. 555-123-4567', adPh:'e.g. 123 Main St, NY...' }
+         : { cur:'KRW', taxLbl:'주민등록번호 (앞 6자리)', phPh:'예: 010-1234-5678', adPh:'예: 서울시 강남구...' };
+}
+
+window.openWithdrawForm = async function(onSaved) {
+    const sb2 = sb;
+    const { data:{ session } } = await sb2.auth.getSession();
+    if (!session) { alert(_LANG === 'ja' ? 'ログインが必要です。' : _LANG === 'en' ? 'Login required.' : '로그인이 필요합니다.'); return; }
+    const uid = session.user.id;
+    const email = session.user.email || '';
+    // 기존 프로필 prefill
+    let prof = null;
+    try { const r = await sb2.from('designer_tax_profiles').select('*').eq('designer_id', uid).maybeSingle(); prof = r.data || null; } catch(_){}
+    let pPhone = '';
+    try { const r2 = await sb2.from('profiles').select('phone').eq('id', uid).maybeSingle(); pPhone = (r2.data && r2.data.phone) || ''; } catch(_){}
+    const meta = _payoutMeta();
+    const isIntl = _SITE !== 'KR';
+    const L = _LANG === 'ja' ? {
+        title:'💰 出金情報の登録', sub:'出金にはこちらの情報が必要です（一度登録すれば次回から不要）。',
+        legal:'法的氏名（口座名義と一致）', tax:meta.taxLbl, addr:'住所', phone:'電話番号', emailL:'メール',
+        bankN:'銀行名', bankH:'口座名義人', bankA:'口座番号', swift:'SWIFT/BIC', bankAddr:'銀行住所',
+        masterHint:'マスターデザイナー登録すると顧客依頼も受けられます →', cancel:'キャンセル', save:'保存して出金申請'
+    } : _LANG === 'en' ? {
+        title:'💰 Payout Information', sub:'Required for withdrawal (one-time setup).',
+        legal:'Legal name (matches bank account)', tax:meta.taxLbl, addr:'Address', phone:'Phone', emailL:'Email',
+        bankN:'Bank name', bankH:'Account holder', bankA:'Account number', swift:'SWIFT/BIC', bankAddr:'Bank address',
+        masterHint:'Master Designer registration also unlocks customer orders →', cancel:'Cancel', save:'Save & Submit'
+    } : {
+        title:'💰 출금 정보 등록', sub:'출금에 필요한 정보입니다 (1회 입력 후 다음부터는 자동).',
+        legal:'법적 이름 (계좌 명의와 일치)', tax:meta.taxLbl, addr:'주소', phone:'전화번호', emailL:'이메일',
+        bankN:'은행명', bankH:'예금주', bankA:'계좌번호', swift:'SWIFT/BIC', bankAddr:'은행 주소',
+        masterHint:'마스터 디자이너로 등록하면 고객 의뢰도 받을 수 있어요 →', cancel:'취소', save:'저장 후 출금 신청'
+    };
+    const ov = document.createElement('div');
+    ov.id = 'wdFormOv';
+    ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99998; display:flex; align-items:center; justify-content:center; padding:16px;';
+    const fld = (id, label, val, ph, type) => '<label style="font-size:11.5px; color:#475569; font-weight:600; display:block; margin:8px 0 3px;">' + label + ' *</label>'
+        + '<input type="' + (type||'text') + '" id="' + id + '" value="' + String(val||'').replace(/"/g,'&quot;') + '" placeholder="' + (ph||'').replace(/"/g,'&quot;') + '" style="width:100%; padding:9px 11px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; box-sizing:border-box; font-family:inherit;">';
+    ov.innerHTML =
+        '<div style="background:#fff; border-radius:14px; padding:20px 22px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto;">'
+        + '<h3 style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:4px;">' + L.title + '</h3>'
+        + '<p style="font-size:12px; color:#64748b; margin-bottom:14px;">' + L.sub + '</p>'
+        + fld('wdLegal', L.legal, prof && prof.legal_name)
+        + fld('wdTax',   L.tax,    prof && prof.tax_id)
+        + fld('wdAddr',  L.addr,   prof && prof.residence_address, meta.adPh)
+        + fld('wdPhone', L.phone,  pPhone, meta.phPh, 'tel')
+        + '<label style="font-size:11.5px; color:#475569; font-weight:600; display:block; margin:8px 0 3px;">' + L.emailL + '</label>'
+        + '<input type="email" value="' + email.replace(/"/g,'&quot;') + '" disabled style="width:100%; padding:9px 11px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; box-sizing:border-box; background:#f1f5f9; color:#64748b; font-family:inherit;">'
+        + fld('wdBankN', L.bankN, prof && prof.bank_name)
+        + fld('wdBankH', L.bankH, prof && prof.bank_holder)
+        + fld('wdBankA', L.bankA, prof && prof.bank_account)
+        + (isIntl ? fld('wdSwift', L.swift, prof && prof.swift_bic) + fld('wdBankAddr', L.bankAddr, prof && prof.bank_address) : '')
+        + '<a href="/designer-board" style="display:block; margin-top:14px; padding:10px 12px; background:#f3f0fa; color:#5b21b6; border:1px solid #ddd6fe; border-radius:8px; font-size:11.5px; font-weight:600; text-decoration:none; text-align:center;">⭐ ' + L.masterHint + '</a>'
+        + '<div style="display:flex; gap:8px; margin-top:14px;">'
+        +   '<button type="button" id="wdCancel" style="flex:1; padding:11px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + L.cancel + '</button>'
+        +   '<button type="button" id="wdSave" style="flex:2; padding:11px; background:#fbbf24; color:#0f172a; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + L.save + '</button>'
+        + '</div>'
+        + '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    document.getElementById('wdCancel').addEventListener('click', () => ov.remove());
+    document.getElementById('wdSave').addEventListener('click', async () => {
+        const v = id => (document.getElementById(id) || {}).value || '';
+        const req = ['wdLegal','wdTax','wdAddr','wdPhone','wdBankN','wdBankH','wdBankA'].concat(isIntl ? ['wdSwift','wdBankAddr'] : []);
+        for (const id of req) {
+            if (!v(id).trim()) {
+                alert(_LANG === 'ja' ? 'すべての項目を入力してください。' : _LANG === 'en' ? 'Please fill in all fields.' : '모든 항목을 입력해주세요.');
+                document.getElementById(id).focus(); return;
+            }
+        }
+        const btn = document.getElementById('wdSave');
+        btn.disabled = true; btn.textContent = _LANG === 'ja' ? '保存中...' : _LANG === 'en' ? 'Saving...' : '저장 중...';
+        try {
+            // designer_tax_profiles upsert
+            const row = {
+                designer_id: uid,
+                country: _SITE,
+                legal_name: v('wdLegal').trim(),
+                tax_id_type: 'personal',
+                tax_id: v('wdTax').trim(),
+                residence_address: v('wdAddr').trim(),
+                bank_name: v('wdBankN').trim(),
+                bank_holder: v('wdBankH').trim(),
+                bank_account: v('wdBankA').trim(),
+                payout_currency: meta.cur
+            };
+            if (isIntl) { row.swift_bic = v('wdSwift').trim(); row.bank_address = v('wdBankAddr').trim(); }
+            const up = await sb.from('designer_tax_profiles').upsert(row, { onConflict: 'designer_id' });
+            if (up.error) throw up.error;
+            // profiles.phone 도 갱신
+            try { await sb.from('profiles').update({ phone: v('wdPhone').trim() }).eq('id', uid); } catch(_){}
+            ov.remove();
+            if (typeof onSaved === 'function') onSaved();
+        } catch(e) {
+            console.error('[withdraw form]', e);
+            alert((_LANG === 'ja' ? '保存失敗: ' : _LANG === 'en' ? 'Save failed: ' : '저장 실패: ') + (e.message || e));
+            btn.disabled = false; btn.textContent = L.save;
+        }
+    });
+};
+
 // v657: 출금 신청 — 즉시 버튼 잠금 + 신청 완료 후 데이터 재로드로 중복 신청 방지
 let _withdrawInFlight = false;
 window.requestWithdrawAsset = async function() {
@@ -865,21 +972,20 @@ window.requestWithdrawAsset = async function() {
             : '출금은 ' + minLbl + ' 이상부터 가능합니다.\n\n현재 잔액: ' + _fmtKrw(_assetEarningsTotal) + '\n최소 출금액: ' + minLbl + '\n\n계속 디자인을 등록해서 잔액을 모아주세요.';
         alert(minMsg); return;
     }
-    // v691: 마스터 디자이너(계좌 정보 보유) 가 아니면 출금 불가 — 등록 페이지로 안내
+    // v692: designer_tax_profiles 가 없으면 인라인 폼으로 받기. verified 마스터 디자이너 체크는 제거.
     try {
-        const { data: dprof } = await sb.from('designer_profiles')
-            .select('id, verified').eq('id', (await sb.auth.getSession()).data.session.user.id).maybeSingle();
-        const isVerified = !!(dprof && dprof.verified);
-        if (!isVerified) {
-            const regMsg = _LANG === 'ja'
-                ? '出金にはマスターデザイナー登録（ポートフォリオ・身分証・口座情報）と本社承認が必要です。\n\n登録ページに移動しますか？'
-                : _LANG === 'en'
-                ? 'Withdrawal requires Master Designer registration (portfolio, ID, bank info) and HQ approval.\n\nGo to registration page?'
-                : '출금에는 마스터 디자이너 등록(포트폴리오 · 신분증 · 계좌정보)과 본사 승인이 필요합니다.\n\n등록 페이지로 이동할까요?';
-            if (confirm(regMsg)) location.href = '/designer-board';
+        const { data:{ session: ses } } = await sb.auth.getSession();
+        const uid = ses && ses.user && ses.user.id;
+        if (!uid) { alert('Auth missing'); return; }
+        const { data: tax } = await sb.from('designer_tax_profiles')
+            .select('legal_name, bank_name, bank_account').eq('designer_id', uid).maybeSingle();
+        const hasTax = !!(tax && tax.legal_name && tax.bank_name && tax.bank_account);
+        if (!hasTax) {
+            // 폼 띄우고 저장 콜백에서 동일 함수 재호출
+            window.openWithdrawForm(function(){ window.requestWithdrawAsset(); });
             return;
         }
-    } catch(_pe) { console.warn('[withdraw] designer profile check failed', _pe); }
+    } catch(_pe) { console.warn('[withdraw] tax profile check failed', _pe); }
     const confirmMsg = _LANG === 'ja' ? '出金可能残高 ' + _fmtKrw(_assetEarningsTotal) + ' を出金申請します。続行しますか？'
                       : _LANG === 'en' ? 'Withdraw ' + _fmtKrw(_assetEarningsTotal) + '? Continue?'
                       : '출금 가능 잔액 ' + _fmtKrw(_assetEarningsTotal) + '을 출금 신청합니다. 계속할까요?';
