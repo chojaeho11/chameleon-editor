@@ -13499,12 +13499,11 @@ html, body { background: #ffffff !important; }
                 var r = await q2;
                 var data = (r && r.data) || [];
 
-                // v690: 디자이너 자산 (admin_templates asset_type='image'/'logo') 도 element 탭에 노출.
-                //   "요소" 탭에서 승인된 PNG/로고가 보이지 않던 버그 fix.
-                //   tab === 'element' → image + logo, tab === 'template' (사진) → image 도 함께.
-                if (tab === 'element' || tab === 'template') {
+                // v690/v694: 디자이너 자산 (admin_templates asset_type='image'/'logo') 은 element 탭에만 노출.
+                //   v690 에서 사진 탭에도 노출되던 문제 fix — 사진 탭은 photo-bg(실제 사진)만.
+                if (tab === 'element') {
                     try {
-                        var assetTypes = tab === 'element' ? ['image', 'logo'] : ['image'];
+                        var assetTypes = ['image', 'logo'];
                         var qA = sb.from('admin_templates')
                             .select('id, name, thumbnail_url, background_url, asset_url, asset_type, keywords')
                             .eq('status', 'approved')
