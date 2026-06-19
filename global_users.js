@@ -2060,14 +2060,14 @@ window.loadDesignWithdrawals = async () => {
             if (r.status === 'pending') {
                 actionHtml = `
                     <div style="display:flex;flex-direction:column;gap:3px;align-items:stretch;">
-                        <button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 8px;font-size:11px;font-weight:700;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급완료</button>
+                        <button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 8px;font-size:11px;font-weight:700;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급완료하기</button>
                         <div style="display:flex;gap:3px;">
-                            <button class="btn btn-outline btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;">승인대기방</button>
+                            <button class="btn btn-outline btn-sm" onclick="approveDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;">승인대기</button>
                             <button class="btn btn-outline btn-sm" onclick="rejectDesignWithdrawal('${r.id}')" style="padding:3px 6px;font-size:10px;flex:1;color:#dc2626;border-color:#fecaca;">삭제</button>
                         </div>
                     </div>`;
             } else if (r.status === 'approved') {
-                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 10px;font-size:11px;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급완료</button>`;
+                actionHtml = `<button class="btn btn-primary btn-sm" onclick="markDesignWithdrawalPaid('${r.id}')" style="padding:5px 10px;font-size:11px;background:#16a34a;border-color:#15803d;color:#fff;">💰 지급완료하기</button>`;
             } else {
                 actionHtml = `<span style="font-size:10px;color:#94a3b8;">${r.processed_at ? new Date(r.processed_at).toLocaleDateString() : '-'}</span>`;
             }
