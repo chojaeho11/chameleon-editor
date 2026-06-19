@@ -561,16 +561,10 @@ function toast(msg, ms=2400) {
 }
 
 async function openUpload(type) {
-    // v674: 템플릿 등록은 로그인 체크 없이 picker 표시 — 실제 로그인은 에디터 페이지에서
-    //   (해외 사이트에서 cross-domain 세션 없는 경우, 메인으로 튕기던 버그 수정)
+    // v674/v675: 로그인 체크 제거 — 모달은 누구나 열고, submit 시점에 인증 확인.
+    //   해외 사이트 cross-domain 세션 없는 경우 메인 페이지로 튕기던 버그 수정.
     if (type === 'template') {
         openTplPicker();  // 언어/제품 선택 모달
-        return;
-    }
-    const { data:{ session } } = await sb.auth.getSession();
-    if (!session) {
-        toast(_LANG === 'ja' ? 'ログインが必要です。メインからログイン後、再度お越しください。' : _LANG === 'en' ? 'Login required. Please log in from the main page and come back.' : '로그인이 필요합니다. 메인에서 로그인 후 다시 와주세요.', 3500);
-        setTimeout(() => location.href='/', 1500);
         return;
     }
     currentType = type;
@@ -673,7 +667,12 @@ async function submitUpload() {
         const { data:{ session } } = await sb.auth.getSession();
         const userId = session?.user?.id;
         if (!userId) {
-            alert(_A('로그인이 필요합니다.','ログインが必要です。','Login required.'));
+            const loginMsg = _A(
+                '로그인이 필요합니다.\n\n메인 페이지로 이동하여 로그인 후 다시 시도해주세요.',
+                'ログインが必要です。\n\nメインページに移動してログイン後、再度お試しください。',
+                'Login required.\n\nPlease go to the main page, log in, then try again.'
+            );
+            if (confirm(loginMsg)) location.href = '/';
             btn.disabled=false;
             btn.textContent = _A('검토 요청','レビュー申請','Submit for Review');
             return;
