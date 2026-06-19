@@ -524,9 +524,10 @@ async function loadTplProducts() {
     const grid = document.getElementById('tplProductGrid');
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;">로딩 중...</div>';
     try {
-        // is_active 필터 없이 모든 제품 fetch (스키마에 컬럼 없음)
+        // v663: 관리자가 「🎨 템플릿 등록상품」 체크한 제품만 (designer-board 와 동일 규칙)
         const { data, error } = await sb.from('admin_products')
             .select('code, name, name_jp, name_us, img_url')
+            .eq('is_template_eligible', true)
             .order('sort_order', { ascending: true, nullsLast: true })
             .order('code');
         if (error) throw error;
@@ -540,7 +541,7 @@ async function loadTplProducts() {
 function renderTplProducts() {
     const grid = document.getElementById('tplProductGrid');
     if (!_tplAllProducts.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;">등록된 제품이 없습니다.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:12.5px; line-height:1.55;">템플릿 등록 가능한 제품이 없습니다.<br><small>관리자가 상품옵션에서 「🎨 템플릿 등록상품」 을 체크해야 합니다.</small></div>';
         return;
     }
     grid.innerHTML = _tplAllProducts.map(p => {
