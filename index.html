@@ -7264,6 +7264,50 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
+    // 2026-06-19 v682: 미니에디터 디자인 → PDF 변환 (인쇄소 표준).
+    //   템플릿 주문 등에서 PNG 대신 PDF 가 들어가도록.
+    //   페이지 사이즈는 me.natWMm × natHMm (mm), PNG 를 raster 로 embed.
+    window._meExportPDF = async function(opts) {
+        opts = opts || {};
+        if (!window.jspdf) {
+            try { if (typeof window.loadEditorLibraries === 'function') await window.loadEditorLibraries(); } catch(_){}
+        }
+        if (!window.jspdf) {
+            try {
+                await new Promise(function(res, rej){
+                    var s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    s.onload = res; s.onerror = function(){ rej(new Error('jsPDF load fail')); };
+                    document.head.appendChild(s);
+                });
+            } catch(e) { console.warn('[me pdf] jsPDF load failed', e); return null; }
+        }
+        var jsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!jsPDF || !me || !me.natW || !me.natH) return null;
+        var pngDataUrl = opts.pngDataUrl;
+        if (!pngDataUrl && typeof window._meExportPNG === 'function') {
+            try { pngDataUrl = await window._meExportPNG(); } catch(e) { console.warn('[me pdf] _meExportPNG fail', e); }
+        }
+        if (!pngDataUrl) return null;
+        var PX_PER_MM = 3.7795;
+        var widthMm  = Math.max(10, me.natWMm || (me.natW / PX_PER_MM));
+        var heightMm = Math.max(10, me.natHMm || (me.natH / PX_PER_MM));
+        try {
+            var doc = new jsPDF({
+                orientation: widthMm > heightMm ? 'l' : 'p',
+                unit: 'mm',
+                format: [widthMm, heightMm],
+                compress: true
+            });
+            var fmt = /^data:image\/jpe?g/.test(pngDataUrl) ? 'JPEG' : 'PNG';
+            doc.addImage(pngDataUrl, fmt, 0, 0, widthMm, heightMm);
+            return doc.output('blob');
+        } catch(e) {
+            console.warn('[me pdf] generation failed', e);
+            return null;
+        }
+    };
+
     // 2026-06-19 v630: 텍스트 추출 시 .me-handle/.me-del 자식 제외 — × 가 텍스트로 빨려들어가던 버그 fix.
     //   innerText/textContent 는 absolute 자식의 텍스트(×)까지 포함하므로 항상 이 헬퍼 경유.
     function _meGetCleanText(el) {
@@ -14804,7 +14848,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=585"></script>
+<script src="/simple_order.js?v=586"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

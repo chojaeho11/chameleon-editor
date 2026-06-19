@@ -12851,12 +12851,23 @@ html, body { background: #ffffff !important; }
                     if (typeof showToast === 'function') showToast(tr('대지에 디자인 요소를 추가해주세요','デザイン要素を追加してください','Add design elements first'), 'warn');
                     return;
                 }
-                var bin = atob(dataUrl.split(',')[1]);
-                var arr = new Uint8Array(bin.length);
-                for (var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
-                var blob = new Blob([arr], { type:'image/png' });
-                var fname = 'inline-design-' + Date.now() + '.png';
-                var file = new File([blob], fname, { type:'image/png' });
+                // v682: PNG → PDF 변환 (인쇄소 표준)
+                var _pdfBlob = null;
+                if (typeof window._meExportPDF === 'function') {
+                    try { _pdfBlob = await window._meExportPDF({ pngDataUrl: dataUrl }); } catch(_pe){ console.warn('[qd apply] PDF 변환 실패, PNG 폴백', _pe); }
+                }
+                var fname, file;
+                if (_pdfBlob) {
+                    fname = 'inline-design-' + Date.now() + '.pdf';
+                    file = new File([_pdfBlob], fname, { type:'application/pdf' });
+                } else {
+                    var bin = atob(dataUrl.split(',')[1]);
+                    var arr = new Uint8Array(bin.length);
+                    for (var i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+                    var blob = new Blob([arr], { type:'image/png' });
+                    fname = 'inline-design-' + Date.now() + '.png';
+                    file = new File([blob], fname, { type:'image/png' });
+                }
                 state.file = file;
                 state._cartThumb = dataUrl;
                 if (typeof window.renderUploadDone === 'function') {
@@ -14069,21 +14080,36 @@ html, body { background: #ffffff !important; }
                     state.file.type === 'application/pdf' ||
                     /\.pdf$/i.test(String(state.file.name || ''))
                 ));
-                // case 1: no file + has content → PNG as main
+                // case 1: no file + has content → PDF as main (v682: PNG → PDF 변환, 인쇄소 표준)
                 if (!state.file && _hasContent) {
                     var _autoPng = await window._meExportPNG();
                     if (_autoPng && _autoPng.length > 200) {
-                        var _binAuto = atob(_autoPng.split(',')[1]);
-                        var _arrAuto = new Uint8Array(_binAuto.length);
-                        for (var _i = 0; _i < _binAuto.length; _i++) _arrAuto[_i] = _binAuto.charCodeAt(_i);
-                        var _blobAuto = new Blob([_arrAuto], { type: 'image/png' });
-                        var _fnameAuto = 'inline-design-' + Date.now() + '.png';
-                        state.file = new File([_blobAuto], _fnameAuto, { type: 'image/png' });
-                        state._cartThumb = _autoPng;
-                        if (typeof window.renderUploadDone === 'function') {
-                            try { window.renderUploadDone(_fnameAuto); } catch(_re){}
+                        var _pdfBlobAuto = null;
+                        if (typeof window._meExportPDF === 'function') {
+                            try { _pdfBlobAuto = await window._meExportPDF({ pngDataUrl: _autoPng }); } catch(_pe){ console.warn('[simple_order] PDF 변환 실패, PNG 폴백', _pe); }
                         }
-                        console.log('[simple_order] 미니에디터 디자인 자동 적용:', _fnameAuto);
+                        if (_pdfBlobAuto) {
+                            var _fnameAutoPdf = 'inline-design-' + Date.now() + '.pdf';
+                            state.file = new File([_pdfBlobAuto], _fnameAutoPdf, { type: 'application/pdf' });
+                            state._cartThumb = _autoPng;
+                            if (typeof window.renderUploadDone === 'function') {
+                                try { window.renderUploadDone(_fnameAutoPdf); } catch(_re){}
+                            }
+                            console.log('[simple_order] 미니에디터 디자인 PDF 적용:', _fnameAutoPdf);
+                        } else {
+                            // PDF 변환 실패 시 PNG 폴백
+                            var _binAuto = atob(_autoPng.split(',')[1]);
+                            var _arrAuto = new Uint8Array(_binAuto.length);
+                            for (var _i = 0; _i < _binAuto.length; _i++) _arrAuto[_i] = _binAuto.charCodeAt(_i);
+                            var _blobAuto = new Blob([_arrAuto], { type: 'image/png' });
+                            var _fnameAuto = 'inline-design-' + Date.now() + '.png';
+                            state.file = new File([_blobAuto], _fnameAuto, { type: 'image/png' });
+                            state._cartThumb = _autoPng;
+                            if (typeof window.renderUploadDone === 'function') {
+                                try { window.renderUploadDone(_fnameAuto); } catch(_re){}
+                            }
+                            console.log('[simple_order] 미니에디터 디자인 PNG 폴백:', _fnameAuto);
+                        }
                     }
                 }
                 // case 2: PDF + items > 1 (PDF preview + 사용자 추가 편집) → overlay PNG 생성
