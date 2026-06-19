@@ -7185,6 +7185,86 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
+    // 2026-06-19 v629: 텍스트 편집 모달 — contenteditable 대신 textarea 입력.
+    //   모바일 키보드 친화 + 번역기 복붙 흰배경/스타일 잔재 영구 차단 (textarea 는 plain text only).
+    //   Enter = 줄바꿈, Ctrl/Cmd+Enter = 적용, Esc = 취소.
+    function _meOpenTextEditModal(it) {
+        if (!it || it.type !== 'text' || it._isBackground) return;
+        // 기존 모달 있으면 제거
+        var ex = document.getElementById('meTextEditOverlay');
+        if (ex) ex.remove();
+        var overlay = document.createElement('div');
+        overlay.id = 'meTextEditOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;';
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;border-radius:16px;padding:18px 18px 14px;max-width:520px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:12px;font-family:inherit;';
+        // 현재 텍스트 (innerText 사용 — <br> → \n 자동 변환)
+        var cur = (it.el && it.el.innerText !== undefined) ? it.el.innerText : (it.text || '');
+        cur = String(cur).replace(/\r\n?/g, '\n');
+        modal.innerHTML =
+            '<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#0f172a;">'
+              + '<i class="fa-solid fa-pen"></i> ' + (typeof window.t === 'function' ? window.t('me_text_edit_title','텍스트 편집') : '텍스트 편집')
+            + '</div>'
+            + '<textarea id="meTextEditArea" rows="5" '
+              + 'style="width:100%;padding:14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.5;outline:none;" '
+              + 'placeholder="' + (typeof window.t === 'function' ? window.t('me_text_edit_ph','여기에 텍스트를 입력하세요') : '여기에 텍스트를 입력하세요') + '"></textarea>'
+            + '<div style="font-size:11px;color:#64748b;line-height:1.5;">'
+              + 'Enter = 줄바꿈 · Ctrl+Enter = 적용 · Esc = 취소'
+            + '</div>'
+            + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
+              + '<button type="button" id="meTextEditCancel" style="padding:11px 18px;border:none;border-radius:9px;background:#e2e8f0;color:#334155;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">취소</button>'
+              + '<button type="button" id="meTextEditApply" style="padding:11px 22px;border:none;border-radius:9px;background:#7c3aed;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">적용</button>'
+            + '</div>';
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        var ta = modal.querySelector('#meTextEditArea');
+        ta.value = cur;
+        // 약간 지연 후 포커스 (모바일 키보드 안정성)
+        setTimeout(function(){ ta.focus(); ta.select(); }, 50);
+
+        function close() {
+            try { overlay.remove(); } catch(_){}
+        }
+        function apply() {
+            var newText = ta.value;
+            _meSnapshot();
+            it.text = newText;
+            // DOM 갱신 — innerHTML 정리 후 텍스트 노드 + <br> 삽입 (모든 인라인 스타일 박멸)
+            //   주의: 자식 .me-handle/.me-del 은 _meSelect 가 다시 그려주므로 여기서 모두 제거됨.
+            it.el.textContent = '';
+            var lines = newText.split('\n');
+            lines.forEach(function(line, i){
+                if (i > 0) it.el.appendChild(document.createElement('br'));
+                it.el.appendChild(document.createTextNode(line));
+            });
+            // 글자 수가 줄어서 박스가 텍스트보다 크면 자동 refit
+            if (it._edgeResized) {
+                it._edgeResized = false;
+                it.el.style.width = '';
+                it.el.style.maxWidth = '';
+                it.el.style.height = '';
+            }
+            _meSyncItemDisplay(it);
+            _meSelect(it);  // 핸들/X 재배치
+            close();
+        }
+        overlay.addEventListener('click', function(e){
+            if (e.target === overlay) close();
+        });
+        modal.querySelector('#meTextEditCancel').addEventListener('click', close);
+        modal.querySelector('#meTextEditApply').addEventListener('click', apply);
+        ta.addEventListener('keydown', function(e){
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                apply();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                close();
+            }
+        });
+    }
+    window._meOpenTextEditModal = _meOpenTextEditModal;
+
     function _meSelect(it) {
         me.items.forEach(function(o){ o.el.classList.remove('selected'); });
         var existing = me.stage.querySelectorAll('.me-handle, .me-del');
@@ -7610,55 +7690,35 @@ function scrollHotdeal(gridId, dir) {
             _pendingDrag = false; dragging = false; _meHideGuides();
         });
         if (it.type === 'text') {
-            // 2026-06-15: Miricanvas/Canva 스타일 — 첫 클릭은 선택만 (드래그 자유), 같은 텍스트 두 번째 클릭에 편집 모드.
-            //   _wasSelectedBefore 는 pointerdown 시점 (메인 핸들러가 me.selected 를 it 으로 바꾸기 직전) 값.
+            // 2026-06-19 v629: 인라인 contenteditable → 모달 입력. 모바일/번역기 복붙 호환성 + 흰배경 문제 영구 해결.
+            //   탭/클릭 패턴은 그대로 (첫 탭: 선택, 두 번째 탭/dblclick: 모달 오픈).
             var _lastClickTime = 0;
             var _tapStart = null;
             var _wasSelectedBefore = false;
             it.el.addEventListener('pointerdown', function(ev){
-                if (it.el.getAttribute('contenteditable') === 'true') return;
                 _wasSelectedBefore = (me.selected === it);
                 _tapStart = { x: ev.clientX, y: ev.clientY, t: Date.now() };
             }, true);
             it.el.addEventListener('pointerup', function(ev){
-                if (it.el.getAttribute('contenteditable') === 'true') return;
                 if (!_tapStart) return;
                 var dx = ev.clientX - _tapStart.x, dy = ev.clientY - _tapStart.y;
                 var dist = Math.sqrt(dx*dx + dy*dy);
                 var dt = Date.now() - _tapStart.t;
                 _tapStart = null;
-                // 탭 판별 — 8px 이내 + 500ms 이내 (드래그/길게 누름 제외)
                 if (dist > 8 || dt > 500) return;
-                // 클릭 시점에 이미 선택된 텍스트였으면 즉시 편집 모드.
-                //   첫 클릭(_wasSelectedBefore=false) 은 select 만 — 그 다음 같은 텍스트 탭에서 편집 진입.
                 if (_wasSelectedBefore) {
-                    // 2026-06-18 v565: Canva 스타일 — 선택된 텍스트의 두 번째 클릭은 즉시 편집 모드.
-                    //   delay 0 → setTimeout 한 틱 후 실행. dblclick 이 먼저 fire 되면 contenteditable 이미 true → no-op.
-                    var isMobile = window.innerWidth <= 768;
                     var now = Date.now();
                     _lastClickTime = now;
                     setTimeout(function(){
-                        if (_lastClickTime === now && it.el.getAttribute('contenteditable') !== 'true') {
-                            it.el.setAttribute('contenteditable', 'true');
-                            it.el.setAttribute('inputmode', 'text');
-                            it.el.focus();
-                            // v621: selectAll 제거 — 클릭한 글자 사이에 커서 위치 → Illustrator 식 부분 편집
-                            if (isMobile) {
-                                setTimeout(function(){
-                                    try { it.el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_se){}
-                                }, 300);
-                            }
+                        if (_lastClickTime === now) {
+                            _meOpenTextEditModal(it);
                         }
                     }, 0);
                 }
             }, true);
             it.el.addEventListener('dblclick', function(){
-                // 2026-06-18 v616: 진단 로그 — 더블클릭이 실제로 발화되는지 확인용
-                console.log('[me text] dblclick fired on:', (it.text || '').slice(0, 40), 'isBg:', !!it._isBackground);
                 if (it._isBackground) return;
-                it.el.setAttribute('contenteditable', 'true');
-                it.el.focus();
-                // v621: selectAll 제거 — 클릭한 글자 사이에 커서 위치 → Illustrator 식 부분 편집
+                _meOpenTextEditModal(it);
             });
             it.el.addEventListener('blur', function(){
                 it.el.removeAttribute('contenteditable');
