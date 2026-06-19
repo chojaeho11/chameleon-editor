@@ -7673,6 +7673,41 @@ function scrollHotdeal(gridId, dir) {
                     it.el.blur();
                 }
             });
+            // 2026-06-19 v628: 외부 사이트(번역기 등) 에서 복사한 텍스트의 인라인 스타일(흰 배경/다른 폰트/색) 제거.
+            //   paste 시점에 clipboard.getData('text/plain') 으로 순수 텍스트만 가로채서 삽입 → 텍스트 항목의 기존 스타일 유지.
+            it.el.addEventListener('paste', function(ev){
+                if (it.el.getAttribute('contenteditable') !== 'true') return;
+                ev.preventDefault();
+                var txt = '';
+                try { txt = (ev.clipboardData || window.clipboardData).getData('text/plain') || ''; } catch(_pe){ txt = ''; }
+                if (!txt) return;
+                // 줄바꿈 정규화 (CRLF → LF)
+                txt = txt.replace(/\r\n?/g, '\n');
+                // 현재 selection 위치에 삽입 (다중 줄은 <br> 로 변환)
+                try {
+                    var sel = window.getSelection();
+                    if (!sel || sel.rangeCount === 0) {
+                        it.el.appendChild(document.createTextNode(txt));
+                        return;
+                    }
+                    sel.deleteFromDocument();
+                    var range = sel.getRangeAt(0);
+                    var parts = txt.split('\n');
+                    var frag = document.createDocumentFragment();
+                    parts.forEach(function(p, i){
+                        if (i > 0) frag.appendChild(document.createElement('br'));
+                        frag.appendChild(document.createTextNode(p));
+                    });
+                    range.insertNode(frag);
+                    // 캐럿을 삽입 끝으로 이동
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } catch(_pe2) {
+                    // 폴백 — execCommand 사용 (구버전 브라우저)
+                    try { document.execCommand('insertText', false, txt); } catch(_){}
+                }
+            });
             // 2026-06-19 v625: 편집 중 글자 수 변동 시 box 자동 fit (X 버튼이 텍스트 옆 빈 공간에 떠있는 문제 해결).
             //   edge-resized 폭이 새 글자보다 넓을 때 _edgeResized 해제 → width:max-content 가 재활성화돼 박스가 텍스트에 fit.
             it.el.addEventListener('input', function(){
