@@ -13498,6 +13498,50 @@ html, body { background: #ffffff !important; }
                 if (search && search.trim()) q2 = q2.ilike('tags', '%' + search.trim() + '%');
                 var r = await q2;
                 var data = (r && r.data) || [];
+
+                // v690: 디자이너 자산 (admin_templates asset_type='image'/'logo') 도 element 탭에 노출.
+                //   "요소" 탭에서 승인된 PNG/로고가 보이지 않던 버그 fix.
+                //   tab === 'element' → image + logo, tab === 'template' (사진) → image 도 함께.
+                if (tab === 'element' || tab === 'template') {
+                    try {
+                        var assetTypes = tab === 'element' ? ['image', 'logo'] : ['image'];
+                        var qA = sb.from('admin_templates')
+                            .select('id, name, thumbnail_url, background_url, asset_url, asset_type, keywords')
+                            .eq('status', 'approved')
+                            .in('asset_type', assetTypes)
+                            .order('id', { ascending: false })
+                            .limit(_LIB_FETCH_MAX);
+                        var rA = await qA;
+                        var rowsA = (rA && rA.data) || [];
+                        // 검색어 필터 (5개 언어 keywords + name)
+                        var s = (search || '').trim().toLowerCase();
+                        if (s) {
+                            rowsA = rowsA.filter(function(rw){
+                                if ((rw.name || '').toLowerCase().indexOf(s) >= 0) return true;
+                                if (rw.keywords && typeof rw.keywords === 'object') {
+                                    var kk = ['ko','ja','en','fr','ar'];
+                                    for (var ki=0; ki<kk.length; ki++) {
+                                        var v = String(rw.keywords[kk[ki]] || '').toLowerCase();
+                                        if (v && v.indexOf(s) >= 0) return true;
+                                    }
+                                }
+                                return false;
+                            });
+                        }
+                        var assetItems = rowsA.map(function(rw){
+                            return {
+                                id: 'at-' + rw.id,
+                                thumb_url: rw.thumbnail_url || rw.background_url || rw.asset_url || '',
+                                data_url: rw.asset_url || rw.background_url || rw.thumbnail_url || '',
+                                title: rw.name || '',
+                                category: rw.asset_type,
+                                is_featured: false
+                            };
+                        });
+                        data = assetItems.concat(data);  // 신규 자산이 위쪽에 노출
+                    } catch(aE) { console.warn('[qd lib admin_templates merge]', aE); }
+                }
+
                 _libCache[cacheKey] = data;
                 return data;
             } catch(e) { console.warn('[qd lib fetch]', e); return []; }
