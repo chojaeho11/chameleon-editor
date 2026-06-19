@@ -685,12 +685,7 @@ async function submitUpload() {
         if (up.error) throw up.error;
         const pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
 
-        const siteCode = (() => {
-            const h = (location.hostname || '').toLowerCase();
-            if (h.includes('cafe0101')) return 'JP';
-            if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
-            return 'KR';
-        })();
+        const siteCode = _SITE;  // v676: 통일
 
         const row = {
             name: name,
@@ -740,10 +735,9 @@ const TPL_DOMAINS = {
 };
 window.openTplPicker = async function() {
     // v674: 로그인 체크 제거 — 에디터 페이지(designer_template_mode=1)에서 알아서 처리
+    // v676: 기본 언어를 현재 사이트(_SITE)에 맞춤 — chameleon.design 누락 버그 수정
     document.getElementById('tplPickerBg').classList.add('open');
-    const h = (location.hostname || '').toLowerCase();
-    const def = h.includes('cafe0101') ? 'JP' : (h.includes('cafe3355') || h.includes('hexa-board') ? 'US' : 'KR');
-    pickTplLang(def);
+    pickTplLang(_SITE);
     await loadTplProducts();
 };
 window.closeTplPicker = function() {
@@ -854,12 +848,7 @@ window.requestWithdrawAsset = async function() {
     try {
         const { data:{ session } } = await sb.auth.getSession();
         const uid = session.user.id;
-        const country = (() => {
-            const h = (location.hostname || '').toLowerCase();
-            if (h.includes('cafe0101')) return 'JP';
-            if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
-            return 'KR';
-        })();
+        const country = _SITE;  // v676: 통일
         // v659: source='asset' 로 자산 적립금 출금 식별 (옛 마일리지/의뢰 출금과 구분)
         const row = {
             designer_id: uid,
@@ -905,10 +894,8 @@ async function loadSettlement() {
         const uid = session.user.id;
         document.getElementById('settlementCard').style.display = '';
         // v648: KR 사이트만 마스터 디자이너 동선. 그 외 국가는 일반 디자이너 only.
-        const siteIsKR = (() => {
-            const h = (location.hostname || '').toLowerCase();
-            return !h.includes('cafe0101') && !h.includes('cafe3355') && !h.includes('hexa-board');
-        })();
+        // v676: _SITE 재사용 — chameleon.design 도 US 로 정상 처리됨
+        const siteIsKR = _SITE === 'KR';
         if (siteIsKR) {
             const dstatus = await checkDesignerStatus(uid);
             if (dstatus === 'verified') {
@@ -1015,12 +1002,7 @@ window.requestWithdraw = function() {
 // 2026-06-19 v645: 고객 의뢰 (design_requests) open 카운트 로드
 (async function loadOrderBoardCount() {
     try {
-        const siteCountry = (() => {
-            const h = (location.hostname || '').toLowerCase();
-            if (h.includes('cafe0101')) return 'JP';
-            if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
-            return 'KR';
-        })();
+        const siteCountry = _SITE;  // v676: 통일
         const { count, error } = await sb.from('design_requests')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'open')
