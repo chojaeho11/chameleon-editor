@@ -1949,6 +1949,47 @@ window.loadDesignWithdrawals = async () => {
         const profMap = {};
         (profs || []).forEach(p => profMap[p.id] = p);
 
+        // 2026-06-19 v646: 디자이너별 작업 내역 한꺼번에 fetch — 경리과가 출처 확인 가능
+        const ASSET_REWARD = { template:3000, vector:1000, image:500, logo:200 };
+        const workMap = {};  // designerId → { templates, vectors, images, logos, orderClaimed, orderCompleted, orderSettled, totalAsset, totalOrder }
+        try {
+            // admin_templates approved by these designers
+            const { data: assetRows } = await sb.from('admin_templates')
+                .select('submitted_by, asset_type, payment_amount, slots, status')
+                .in('submitted_by', designerIds)
+                .eq('status', 'approved');
+            (assetRows || []).forEach(r => {
+                if (!workMap[r.submitted_by]) workMap[r.submitted_by] = { templates:0, vectors:0, images:0, logos:0, orderClaimed:0, orderCompleted:0, orderSettled:0, totalAsset:0, totalOrder:0 };
+                const w = workMap[r.submitted_by];
+                let t = r.asset_type;
+                if (!t) t = (r.slots && r.slots.length) ? 'template' : 'vector';
+                const amt = r.payment_amount || ASSET_REWARD[t] || 0;
+                w.totalAsset += amt;
+                if (t === 'template') w.templates++;
+                else if (t === 'vector') w.vectors++;
+                else if (t === 'image') w.images++;
+                else if (t === 'logo') w.logos++;
+            });
+            // design_requests 의뢰 - description LIKE '%[DESIGNER:uid%' (designer-board 식 메타)
+            // 한 번에 fetch — designer_id 가 description 안에 들어있어 필터링 어려우니 status in 으로 추리고 클라이언트 분류
+            const { data: orderRows } = await sb.from('design_requests')
+                .select('id, description, status, amount')
+                .in('status', ['claimed','completed','settlement_requested','settled']);
+            (orderRows || []).forEach(r => {
+                const m = String(r.description || '').match(/\[DESIGNER:([^\]\s]+)/);
+                if (!m) return;
+                const did = m[1];
+                if (!designerIds.includes(did)) return;
+                if (!workMap[did]) workMap[did] = { templates:0, vectors:0, images:0, logos:0, orderClaimed:0, orderCompleted:0, orderSettled:0, totalAsset:0, totalOrder:0 };
+                const w = workMap[did];
+                const amt = r.amount || 0;
+                if (r.status === 'claimed') w.orderClaimed++;
+                else if (r.status === 'completed') { w.orderCompleted++; w.totalOrder += amt; }
+                else if (r.status === 'settlement_requested') w.orderCompleted++;
+                else if (r.status === 'settled') { w.orderSettled++; w.totalOrder += amt; }
+            });
+        } catch(workErr) { console.warn('[work breakdown]', workErr); }
+
         tbody.innerHTML = '';
         rows.forEach(r => {
             const dp = dpMap[r.designer_id] || {};
@@ -2031,6 +2072,21 @@ window.loadDesignWithdrawals = async () => {
                 actionHtml = `<span style="font-size:10px;color:#94a3b8;">${r.processed_at ? new Date(r.processed_at).toLocaleDateString() : '-'}</span>`;
             }
 
+            // v646: 작업 내역 — 디자이너의 자산 + 의뢰 합산
+            const w = workMap[r.designer_id] || { templates:0, vectors:0, images:0, logos:0, orderClaimed:0, orderCompleted:0, orderSettled:0, totalAsset:0, totalOrder:0 };
+            const assetTotal = w.totalAsset;
+            const orderTotal = w.totalOrder;
+            const workCell = `
+                <div style="font-size:11px; line-height:1.55;">
+                    <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:6px; padding:4px 6px; margin-bottom:4px;">
+                        <b style="color:#5b21b6; font-size:10px;">자산 ${assetTotal.toLocaleString()}원</b>
+                        <div style="color:#475569; font-size:10px;">T ${w.templates} · V ${w.vectors} · I ${w.images} · L ${w.logos}</div>
+                    </div>
+                    <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:6px; padding:4px 6px;">
+                        <b style="color:#065f46; font-size:10px;">의뢰 ${orderTotal.toLocaleString()}원</b>
+                        <div style="color:#475569; font-size:10px;">진행 ${w.orderClaimed} · 완료 ${w.orderCompleted} · 지급 ${w.orderSettled}</div>
+                    </div>
+                </div>`;
             tbody.innerHTML += `
                 <tr style="vertical-align:top;">
                     <td style="font-size:11px;">${new Date(r.requested_at).toLocaleDateString()}<br><span style="color:#94a3b8;">${new Date(r.requested_at).toLocaleTimeString()}</span></td>
@@ -2046,6 +2102,7 @@ window.loadDesignWithdrawals = async () => {
                     <td style="text-align:center;font-size:14px;">${flag}<br><span style="font-size:10px;color:#64748b;">${r.country || '-'}</span></td>
                     <td style="text-align:right;font-weight:700;color:#7c3aed;">${(r.gross_amount||0).toLocaleString()}원</td>
                     <td style="text-align:right;font-weight:700;color:#16a34a;">${(r.net_amount||0).toLocaleString()}원<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">(-${((r.vat_amount||0)+(r.card_fee_amount||0)+(r.platform_fee_amount||0)).toLocaleString()} fee)</span></td>
+                    <td>${workCell}</td>
                     <td>${legalInfo}</td>
                     <td>${bankInfo}</td>
                     <td style="text-align:center;">${verifyBadge}</td>

@@ -114,6 +114,48 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
         <div class="bonus">보너스 — 내 디자인이 팔릴 때마다 3% 마일리지 자동 적립</div>
     </div>
 
+    <!-- 2026-06-19 v646: 디자이너 정산 — 내 자산 승인 적립 + 고객 의뢰 정산 통합 -->
+    <div id="settlementCard" style="background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; border-radius:14px; padding:24px; margin-top:20px; display:none;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <i class="fa-solid fa-wallet" style="color:#fbbf24; font-size:18px;"></i>
+            <h2 style="font-size:16px; font-weight:700;">디자이너 정산</h2>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;">
+            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">자산 승인 적립</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seAssetTotal">-</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seAssetBreak">템플릿/벡터/PNG/로고</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">의뢰 완료 정산</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seOrderTotal">-</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seOrderBreak">고객 의뢰</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">현재 예치금</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px; color:#fbbf24;" id="seDeposit">-</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;">출금 가능</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
+                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">누적 출금</div>
+                <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seWithdrawn">-</div>
+                <div style="font-size:10px; color:#64748b; margin-top:2px;">지급 완료</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a href="/designer-board" style="flex:1; min-width:200px; background:#0ea5e9; color:#fff; padding:12px 20px; border-radius:10px; font-size:13.5px; font-weight:600; text-decoration:none; text-align:center;">
+                보드 열기 (의뢰 + 출금)
+            </a>
+            <button id="seWithdrawBtn" type="button" onclick="requestWithdraw()" style="flex:1; min-width:200px; background:#fbbf24; color:#0f172a; padding:12px 20px; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">
+                출금 신청
+            </button>
+        </div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:12px; line-height:1.6;">
+            · 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>
+            · 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).
+        </div>
+    </div>
+
     <h2 class="section-title">적립금 가이드</h2>
     <p class="section-sub">유형 별로 보상이 다릅니다.</p>
 
@@ -402,6 +444,79 @@ async function submitUpload() {
 document.getElementById('uploadMdlBg').addEventListener('click', e => {
     if (e.target === document.getElementById('uploadMdlBg')) closeUpload();
 });
+
+// 2026-06-19 v646: 디자이너 정산 요약 — 자산 적립 + 의뢰 정산 + 예치금 + 누적 출금
+(async function loadSettlement() {
+    try {
+        const { data:{ session } } = await sb.auth.getSession();
+        if (!session) return;  // 비로그인 시 카드 안 보임 (display:none 그대로)
+        const uid = session.user.id;
+        document.getElementById('settlementCard').style.display = '';
+        const fmt = n => (n||0).toLocaleString() + '원';
+
+        // 1) 자산 (admin_templates) 승인 합계 + 종류별 집계
+        const { data: assets } = await sb.from('admin_templates')
+            .select('id, asset_type, payment_amount, slots')
+            .eq('submitted_by', uid)
+            .eq('status', 'approved');
+        const ASSET_REWARD = { template:3000, vector:1000, image:500, logo:200 };
+        let aTotal = 0; const aBreak = { template:0, vector:0, image:0, logo:0 };
+        (assets||[]).forEach(r => {
+            let t = r.asset_type;
+            if (!t) t = (r.slots && r.slots.length) ? 'template' : 'vector';
+            const amt = r.payment_amount || ASSET_REWARD[t] || 0;
+            aTotal += amt;
+            if (aBreak[t] != null) aBreak[t] += amt;
+        });
+        document.getElementById('seAssetTotal').textContent = fmt(aTotal);
+        document.getElementById('seAssetBreak').textContent =
+            `T ${aBreak.template/1000|0}K · V ${aBreak.vector/1000|0}K · I ${aBreak.image/1000|0}K · L ${aBreak.logo/1000|0}K`;
+
+        // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
+        const { data: orders } = await sb.from('design_requests')
+            .select('id, status, description, amount, country')
+            .like('description', '%[DESIGNER:' + uid + '%')
+            .in('status', ['claimed','completed','settlement_requested','settled']);
+        let oTotal = 0; let oCnt = { 진행:0, 완료:0, 정산요청:0, 정산완료:0 };
+        (orders||[]).forEach(r => {
+            const amt = r.amount || 0;
+            if (r.status === 'settled') { oTotal += amt; oCnt.정산완료++; }
+            else if (r.status === 'settlement_requested') oCnt.정산요청++;
+            else if (r.status === 'completed') { oTotal += amt; oCnt.완료++; }
+            else if (r.status === 'claimed') oCnt.진행++;
+        });
+        document.getElementById('seOrderTotal').textContent = fmt(oTotal);
+        document.getElementById('seOrderBreak').textContent =
+            `진행 ${oCnt.진행} · 완료 ${oCnt.완료} · 요청 ${oCnt.정산요청} · 지급 ${oCnt.정산완료}`;
+
+        // 3) 현재 예치금 (profiles.mileage 일부 + designer_deposits 가 있으면 우선)
+        let deposit = 0;
+        try {
+            const { data: dep } = await sb.from('designer_deposits')
+                .select('amount').eq('user_id', uid).maybeSingle();
+            if (dep) deposit = dep.amount || 0;
+        } catch(_){}
+        if (!deposit) {
+            const { data: prof } = await sb.from('profiles').select('mileage').eq('id', uid).maybeSingle();
+            deposit = (prof && prof.mileage) || 0;
+        }
+        document.getElementById('seDeposit').textContent = fmt(deposit);
+
+        // 4) 누적 출금 (designer_withdrawals settled total)
+        const { data: wds } = await sb.from('designer_withdrawals')
+            .select('amount, status')
+            .eq('user_id', uid)
+            .eq('status', 'paid');
+        const wdTotal = (wds||[]).reduce((s,r) => s + (r.amount||0), 0);
+        document.getElementById('seWithdrawn').textContent = fmt(wdTotal);
+    } catch (e) {
+        console.warn('[settlement load]', e);
+    }
+})();
+
+window.requestWithdraw = function() {
+    location.href = '/designer-board#withdraw';
+};
 
 // 2026-06-19 v645: 고객 의뢰 (design_requests) open 카운트 로드
 (async function loadOrderBoardCount() {
