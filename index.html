@@ -6649,7 +6649,6 @@ function scrollHotdeal(gridId, dir) {
                 me.items.forEach(function(it){
                     if (it && it.type === 'text' && it.el) {
                         // 2026-06-15: width:max-content 로 글씨 박스가 줄어든 경우 — 실제 렌더된 폭을 it.w 에 반영.
-                        //   안 하면 export 의 textAlign:center 계산이 it.w(원래 max-cap)를 기준 잡아서 DOM 보다 오른쪽으로 밀림.
                         try {
                             var _rect = it.el.getBoundingClientRect();
                             var _scale = me.wScale || 1;
@@ -6657,20 +6656,8 @@ function scrollHotdeal(gridId, dir) {
                                 it.w = _rect.width / _scale;
                             }
                         } catch(_we) {}
-                        // 2026-06-17: innerText 는 CSS 시각적 wrap 도 \n 으로 포함시켜서 한 줄로 쓴 텍스트가 export 시 wrap 되는 버그.
-                        //   해결: <br> 와 block 만 \n 으로 보존하고 CSS wrap 은 무시 — clone 노드 처리 후 textContent.
-                        var raw;
-                        try {
-                            var _clone = it.el.cloneNode(true);
-                            _clone.querySelectorAll('br').forEach(function(b){ b.replaceWith('\n'); });
-                            _clone.querySelectorAll('div, p').forEach(function(d){ d.append('\n'); });
-                            raw = _clone.textContent || '';
-                            // 연속된 \n 정리
-                            raw = raw.replace(/\n+$/g, '');
-                        } catch(_te) {
-                            raw = (it.el.textContent || '');
-                        }
-                        it.text = raw;
+                        // 2026-06-19 v630: _meGetCleanText 통합 — .me-del(×)/.me-handle 자식 자동 제외.
+                        it.text = _meGetCleanText(it.el);
                     }
                 });
             } catch(_se){}
@@ -7018,19 +7005,12 @@ function scrollHotdeal(gridId, dir) {
         var outline = !!(opts && opts.outline);
         try {
             if (!me || !me.natW || !me.natH) return null;
-            // contenteditable 강제 sync
+            // contenteditable 강제 sync + v630: _meGetCleanText 사용 (× 제외)
             try {
                 if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
                 me.items.forEach(function(it){
                     if (it && it.type === 'text' && it.el) {
-                        var raw;
-                        try {
-                            var _c = it.el.cloneNode(true);
-                            _c.querySelectorAll('br').forEach(function(b){ b.replaceWith('\n'); });
-                            _c.querySelectorAll('div, p').forEach(function(d){ d.append('\n'); });
-                            raw = (_c.textContent || '').replace(/\n+$/g, '');
-                        } catch(_){ raw = it.el.textContent || ''; }
-                        it.text = raw;
+                        it.text = _meGetCleanText(it.el);
                     }
                 });
             } catch(_){}
@@ -7185,6 +7165,20 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
+    // 2026-06-19 v630: 텍스트 추출 시 .me-handle/.me-del 자식 제외 — × 가 텍스트로 빨려들어가던 버그 fix.
+    //   innerText/textContent 는 absolute 자식의 텍스트(×)까지 포함하므로 항상 이 헬퍼 경유.
+    function _meGetCleanText(el) {
+        if (!el) return '';
+        try {
+            var clone = el.cloneNode(true);
+            clone.querySelectorAll('.me-handle, .me-del').forEach(function(n){ n.remove(); });
+            clone.querySelectorAll('br').forEach(function(b){ b.replaceWith('\n'); });
+            clone.querySelectorAll('div, p').forEach(function(d){ d.append('\n'); });
+            return (clone.textContent || '').replace(/\n+$/g, '');
+        } catch(_){ return (el.textContent || ''); }
+    }
+    window._meGetCleanText = _meGetCleanText;
+
     // 2026-06-19 v629: 텍스트 편집 모달 — contenteditable 대신 textarea 입력.
     //   모바일 키보드 친화 + 번역기 복붙 흰배경/스타일 잔재 영구 차단 (textarea 는 plain text only).
     //   Enter = 줄바꿈, Ctrl/Cmd+Enter = 적용, Esc = 취소.
@@ -7198,9 +7192,10 @@ function scrollHotdeal(gridId, dir) {
         overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;';
         var modal = document.createElement('div');
         modal.style.cssText = 'background:#fff;border-radius:16px;padding:18px 18px 14px;max-width:520px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:12px;font-family:inherit;';
-        // 현재 텍스트 (innerText 사용 — <br> → \n 자동 변환)
-        var cur = (it.el && it.el.innerText !== undefined) ? it.el.innerText : (it.text || '');
-        cur = String(cur).replace(/\r\n?/g, '\n');
+        // v630: _meGetCleanText 로 .me-del(×)/.me-handle 자식 제외하고 순수 텍스트만 추출
+        var cur = _meGetCleanText(it.el) || it.text || '';
+        // 기존에 × 가 it.text 에 들어간 케이스 — 우상단 단독 × 제거 (한 글자/공백 포함)
+        cur = String(cur).replace(/\r\n?/g, '\n').replace(/[\s×]+$/g, '');
         modal.innerHTML =
             '<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#0f172a;">'
               + '<i class="fa-solid fa-pen"></i> ' + (typeof window.t === 'function' ? window.t('me_text_edit_title','텍스트 편집') : '텍스트 편집')
