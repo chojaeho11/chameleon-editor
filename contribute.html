@@ -485,6 +485,7 @@ window.requestWithdrawAsset = async function() {
             if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
             return 'KR';
         })();
+        // v659: source='asset' 로 자산 적립금 출금 식별 (옛 마일리지/의뢰 출금과 구분)
         const row = {
             designer_id: uid,
             country: country,
@@ -494,7 +495,8 @@ window.requestWithdrawAsset = async function() {
             card_fee_amount: 0,
             platform_fee_amount: 0,
             status: 'pending',
-            requested_at: new Date().toISOString()
+            requested_at: new Date().toISOString(),
+            source: 'asset'
         };
         const ins = await sb.from('design_withdrawal_requests').insert(row);
         if (ins.error) throw ins.error;
@@ -580,35 +582,37 @@ async function loadSettlement() {
         // v655: 출금 상태 머신 — pending 만 "입금 대기중", approved 는 admin 이 승인했으니 곧 지급될 거지만 표시 X
         //   사용자 정의: "입금 대기중" = 디자이너가 신청해서 admin 처리 안 한 것 (pending 만)
         //   approved (admin 승인 후 지급 전) 는 별도 표시 안 함 — 곧 paid 될 예정.
+        // v659: source 별로 분리 — 자산 적립과 옛 마일리지 출금 구분
         const { data: wds } = await sb.from('design_withdrawal_requests')
-            .select('id, requested_at, gross_amount, net_amount, status')
+            .select('id, requested_at, gross_amount, net_amount, status, source')
             .eq('designer_id', uid);
         console.log('[settlement] withdrawals for uid=' + uid + ':', wds);
-        let paidTotal = 0, pendingTotal = 0;
+        let assetPaid = 0, assetPending = 0, legacyPaid = 0;
         (wds||[]).forEach(r => {
             const amt = r.gross_amount || r.net_amount || 0;
             const st = String(r.status || '').toLowerCase().trim();
-            if (st === 'paid') paidTotal += amt;
-            else if (st === 'pending') pendingTotal += amt;
-            // approved/rejected 는 별도 처리 안 함
+            const src = String(r.source || 'legacy').toLowerCase().trim();
+            if (src === 'asset') {
+                if (st === 'paid') assetPaid += amt;
+                else if (st === 'pending') assetPending += amt;
+            } else {
+                if (st === 'paid') legacyPaid += amt;
+            }
         });
-        console.log('[settlement] paidTotal:', paidTotal, 'pendingTotal:', pendingTotal);
-        // v656: 카드 값 채우기 — 자산 적립은 paid 차감하지 않음.
-        //   이유: 옛날 누적 출금(50,000)은 자산 외 출처에서 나간 것이라 자산 적립과 무관.
-        //   pending(대기중) 만 차감 → 같은 적립금에 중복 신청 방지.
-        const available = Math.max(0, aTotal - pendingTotal);
-        document.getElementById('seAssetTotal').textContent = fmt(available);   // 자산 적립 (출금 가능)
-        document.getElementById('sePending').textContent = fmt(pendingTotal);    // 입금 대기중
-        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);     // 누적 출금 (정보용)
+        const available = Math.max(0, aTotal - assetPaid - assetPending);
+        const totalWithdrawn = assetPaid + legacyPaid;
+        console.log('[settlement] assetPaid:', assetPaid, 'assetPending:', assetPending, 'legacyPaid:', legacyPaid, 'available:', available);
+        document.getElementById('seAssetTotal').textContent = fmt(available);
+        document.getElementById('sePending').textContent = fmt(assetPending);
+        document.getElementById('seWithdrawn').textContent = fmt(totalWithdrawn);
         _assetEarningsTotal = available;
         document.getElementById('seWithdrawAmt').textContent = fmt(available);
-        // 출금 가능 0 이면 버튼 비활성
         const btn = document.getElementById('seWithdrawBtn');
         if (available <= 0) {
             btn.disabled = true;
             btn.style.opacity = '0.5';
             btn.style.cursor = 'not-allowed';
-            btn.title = pendingTotal > 0 ? '출금 신청 대기 중 — 처리 완료 후 추가 신청 가능' : '출금 가능한 자산 적립금이 없습니다';
+            btn.title = assetPending > 0 ? '출금 신청 대기 중 — 처리 완료 후 추가 신청 가능' : '출금 가능한 자산 적립금이 없습니다';
         }
     } catch (e) {
         console.warn('[settlement load]', e);
