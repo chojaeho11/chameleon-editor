@@ -1130,14 +1130,23 @@ async function dbRejectTpl(tplId, btn) {
     }
 }
 
+// 2026-06-19 v647: 사이트 도메인 → country 자동 분기 (디자이너는 같은 언어 의뢰만)
+function _siteCountry() {
+    const h = (location.hostname || '').toLowerCase();
+    if (h.includes('cafe0101')) return 'JP';
+    if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
+    return 'KR';
+}
+
 async function render() {
     document.getElementById('dbMain').innerHTML = '<div class="db-loading">불러오는 중...</div>';
 
-    // 신규 의뢰 게시판: open + claimed (claimed 는 누가 작업중인지 표시)
+    const siteCountry = _siteCountry();
+    // 신규 의뢰 게시판: open + claimed (claimed 는 누가 작업중인지 표시) — 사이트 국가만
     const { data: board, error: e1 } = await sb.from('design_requests')
         .select('*')
         .in('status', ['open', 'claimed'])
-        .eq('country', 'KR')
+        .eq('country', siteCountry)
         .order('created_at', { ascending: false });
     if (e1) console.warn('[board]', e1);
 
@@ -1451,7 +1460,7 @@ async function dbAdminPurgeTab() {
     let label, fetcher;
     if (activeTab === 'open') {
         label = '신규 의뢰';
-        fetcher = () => sb.from('design_requests').select('id').in('status', ['open','claimed']).eq('country', 'KR');
+        fetcher = () => sb.from('design_requests').select('id').in('status', ['open','claimed']).eq('country', _siteCountry());
     } else if (activeTab === 'inprog') {
         label = '내가 진행중인 의뢰';
         fetcher = () => sb.from('design_requests').select('id').in('status', ['claimed','completed']).like('description', '%[DESIGNER:' + userId + '%');
