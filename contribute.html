@@ -473,12 +473,16 @@ window.requestWithdrawAsset = async function() {
             if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
             return 'KR';
         })();
-        // v649: 'source' 컬럼은 스키마에 없어서 제거. admin 페이지의 작업 내역 컬럼으로 출처 식별 가능.
+        // v650: vat_amount/card_fee_amount/platform_fee_amount 도 NOT NULL → 0 명시 (자산 적립 출금은 수수료 없음).
+        //   net = gross (KR 자산 적립금은 세금/수수료 별도 부과 없이 전액 지급).
         const row = {
             designer_id: uid,
             country: country,
             gross_amount: _assetEarningsTotal,
             net_amount: _assetEarningsTotal,
+            vat_amount: 0,
+            card_fee_amount: 0,
+            platform_fee_amount: 0,
             status: 'pending',
             requested_at: new Date().toISOString()
         };
