@@ -488,10 +488,11 @@ document.getElementById('uploadMdlBg').addEventListener('click', e => {
 
 // v662: 템플릿 등록 — 언어 + 제품 그리드 (카테고리 단계 제거, 깔끔 UI)
 let _tplSelectedLang = 'KR';
+// v672: cafe3355.com 은 종이매대 전용 도메인 — US 에디터는 chameleon.design
 const TPL_DOMAINS = {
     KR: 'https://www.cafe2626.com',
     JP: 'https://www.cafe0101.com',
-    US: 'https://www.cafe3355.com'
+    US: 'https://chameleon.design'
 };
 window.openTplPicker = async function() {
     const { data:{ session } } = await sb.auth.getSession();
