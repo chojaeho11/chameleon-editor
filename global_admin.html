@@ -2656,7 +2656,7 @@
             </div>
         </div>
         <div style="font-size:12.5px; color:#475569; margin-bottom:14px; line-height:1.7; background:#f8fafc; padding:12px 14px; border-radius:10px;">
-            💡 디자이너가 검토 요청한 템플릿 · 관리자가 직접 등록한 템플릿을 모두 한 곳에서 관리. <b style="color:#16a34a;">✓ 승인</b> 시 디자이너에게 <b>30,000원 자동 적립</b>. <b style="color:#dc2626;">🗑 삭제</b> 는 status 무관 즉시 삭제.
+            💡 디자이너 자산 검토. <b style="color:#16a34a;">✓ 승인</b> 시 유형별 자동 적립 — 템플릿 <b>3,000원</b> · 벡터 <b>1,000원</b> · PNG <b>500원</b> · 로고 <b>200원</b>. <b style="color:#dc2626;">🗑 삭제</b> 는 즉시.
         </div>
         <div id="tplReviewGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px;">
             <div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">로딩 중...</div>
@@ -2673,7 +2673,7 @@ window.loadTplReview = async function() {
     grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">로딩 중...</div>';
     const filter = (document.getElementById('tplReviewFilter') || {}).value || 'pending';
     let q = sb.from('admin_templates')
-        .select('id, name, thumbnail_url, background_url, product_category, product_code, width_mm, height_mm, slots, submitted_by, submitted_at, status, payment_amount, reviewed_at')
+        .select('id, name, thumbnail_url, background_url, product_category, product_code, width_mm, height_mm, slots, submitted_by, submitted_at, status, payment_amount, reviewed_at, asset_type, asset_url, keywords')
         .order('submitted_at', { ascending: false, nullsLast: true })
         .order('id', { ascending: false });
     if (filter === 'pending')  q = q.eq('status', 'pending');
@@ -2696,6 +2696,10 @@ window.loadTplReview = async function() {
         const { data: profs } = await sb.from('profiles').select('id, username, email').in('id', designerIds);
         (profs || []).forEach(p => profMap[p.id] = p);
     }
+    // 2026-06-19 v643: asset_type 별 보상 + 키워드 표시 + 타입 배지
+    const ASSET_REWARD = { template: 3000, vector: 1000, image: 500, logo: 200 };
+    const ASSET_LBL = { template: '템플릿', vector: '벡터(SVG)', image: 'PNG', logo: '로고' };
+    const ASSET_COLOR = { template: '#7c3aed', vector: '#0369a1', image: '#16a34a', logo: '#d97706' };
     grid.innerHTML = data.map(t => {
         const p = profMap[t.submitted_by] || {};
         const designer = t.submitted_by ? (p.username || (p.email || '').split('@')[0] || '?') : '관리자 직접 등록';
@@ -2704,39 +2708,88 @@ window.loadTplReview = async function() {
         const isApproved = t.status === 'approved';
         const bg = isPending ? '#fef9c3' : isApproved ? '#dcfce7' : '#fff';
         const bd = isPending ? '#fde68a' : isApproved ? '#bbf7d0' : '#e2e8f0';
+        // asset_type 결정 (NULL fallback)
+        let aType = t.asset_type;
+        if (!aType) {
+            if ((t.slots || []).length > 0) aType = 'template';
+            else if (t.asset_url) aType = 'vector';
+            else aType = 'template';
+        }
+        const reward = ASSET_REWARD[aType] || 0;
+        const rewardLbl = reward >= 1000 ? (reward/1000).toFixed(0) + ',000원' : reward + '원';
+        const tLbl = ASSET_LBL[aType] || aType;
+        const tColor = ASSET_COLOR[aType] || '#64748b';
+        const typeBadge = '<span style="background:' + tColor + '; color:#fff; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:700; margin-right:6px;">' + tLbl + '</span>';
         const statusBadge = isPending
             ? '<span style="background:#f59e0b; color:#fff; padding:3px 10px; border-radius:980px; font-size:11px; font-weight:700;">⏳ 검토 대기</span>'
             : isApproved
                 ? '<span style="background:#16a34a; color:#fff; padding:3px 10px; border-radius:980px; font-size:11px; font-weight:700;">✅ 승인됨</span>'
                 : '<span style="background:#64748b; color:#fff; padding:3px 10px; border-radius:980px; font-size:11px; font-weight:700;">' + t.status + '</span>';
+        // 키워드 5개 언어
+        let kwBlock = '';
+        if (t.keywords && typeof t.keywords === 'object') {
+            const kw = t.keywords;
+            const langs = [['KO',kw.ko],['JA',kw.ja],['EN',kw.en],['FR',kw.fr],['AR',kw.ar]];
+            const items = langs.filter(([_,v]) => v).map(([k,v]) => '<span style="display:inline-block; margin-right:6px;"><b style="color:#7c3aed; font-size:9px;">' + k + '</b> <span style="color:#334155;">' + v + '</span></span>');
+            if (items.length) kwBlock = '<div style="margin-top:6px; padding:6px 8px; background:rgba(124,58,237,0.06); border-radius:6px; font-size:10.5px; line-height:1.6;">' + items.join('') + '</div>';
+        }
+        // 사이즈는 template 만 의미 있음
+        const sizeLine = (aType === 'template')
+            ? (t.width_mm||'?') + '×' + (t.height_mm||'?') + 'mm'
+            : '자산';
         return '<div style="background:' + bg + '; border:1.5px solid ' + bd + '; border-radius:14px; padding:14px;">'
               +   '<div style="display:flex; gap:12px;">'
-              +     '<div style="width:90px; height:90px; background:#fff; border-radius:10px; overflow:hidden; flex-shrink:0;"><img src="' + (t.thumbnail_url||t.background_url||'') + '" style="width:100%; height:100%; object-fit:contain;"></div>'
+              +     '<div style="width:90px; height:90px; background:#fff; border-radius:10px; overflow:hidden; flex-shrink:0;"><img src="' + (t.thumbnail_url||t.background_url||t.asset_url||'') + '" style="width:100%; height:100%; object-fit:contain;"></div>'
               +     '<div style="flex:1; min-width:0;">'
-              +       '<div style="font-size:14px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:5px;">' + (t.name||'?') + '</div>'
+              +       '<div style="font-size:14px; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:5px;">' + typeBadge + (t.name||'?') + '</div>'
               +       statusBadge
-              +       '<div style="font-size:11px; color:#475569; margin-top:6px; line-height:1.55;">디자이너: <b>' + designer + '</b><br>' + (t.product_code || t.product_category || '?') + ' · ' + (t.width_mm||'?') + '×' + (t.height_mm||'?') + 'mm<br>' + dt + '</div>'
+              +       '<div style="font-size:11px; color:#475569; margin-top:6px; line-height:1.55;">디자이너: <b>' + designer + '</b><br>' + (t.product_code || t.product_category || '?') + ' · ' + sizeLine + '<br>' + dt + '</div>'
+              +       kwBlock
               +     '</div>'
               +   '</div>'
               +   '<div style="display:flex; gap:6px; margin-top:12px;">'
-              +     (isPending ? '<button onclick="tplReviewApprove(' + t.id + ', this)" style="flex:1; padding:8px 10px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">✓ 승인 (+30K)</button>' : '')
+              +     (isPending ? '<button onclick="tplReviewApprove(' + t.id + ', this, ' + reward + ')" style="flex:1; padding:8px 10px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">✓ 승인 (+' + rewardLbl + ')</button>' : '')
               +     '<button onclick="tplReviewDelete(' + t.id + ', \'' + (t.name||'?').replace(/[\\\'"]/g,'') + '\', this)" style="flex:1; padding:8px 10px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">🗑 삭제</button>'
-              +     '<a href="' + (t.thumbnail_url||t.background_url||'') + '" target="_blank" style="padding:8px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none;">↗</a>'
+              +     '<a href="' + (t.asset_url||t.thumbnail_url||t.background_url||'') + '" target="_blank" style="padding:8px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none;">↗</a>'
               +   '</div>'
               + '</div>';
     }).join('');
 };
 
-window.tplReviewApprove = async function(id, btn) {
-    const note = prompt('승인 메모 (선택, 디자이너 안내용):', '');
-    if (note === null) return;
+// 2026-06-19 v643: reward 매개변수로 자산 타입별 적립금 전달. RPC 가 _paid_amount 받지 못하면 fallback 으로 직접 mileage 업데이트.
+window.tplReviewApprove = async function(id, btn, reward) {
+    if (typeof reward !== 'number') reward = 30000;
+    const rewardLbl = reward.toLocaleString();
+    if (!confirm('승인 시 디자이너에게 ' + rewardLbl + '원이 적립됩니다. 계속할까요?')) return;
+    const note = prompt('승인 메모 (선택, 디자이너 안내용):', '') || '';
     btn.disabled = true; btn.textContent = '처리 중...';
     try {
-        const { data, error } = await window.sb.rpc('approve_template_submission', { _template_id: id, _note: note });
-        if (error) throw error;
-        alert('✅ 승인 완료 — ' + ((data && data.paid) || 30000).toLocaleString() + '원 적립 완료');
+        // RPC 우선 시도 — _paid_amount 매개변수 받는 새 버전이면 그 값 사용. 안 받으면 RPC 무시하고 직접 업데이트.
+        let rpcOk = false;
+        try {
+            const { data, error } = await window.sb.rpc('approve_template_submission', { _template_id: id, _note: note, _paid_amount: reward });
+            if (!error) { rpcOk = true; }
+        } catch(_re) { /* fall through */ }
+        if (!rpcOk) {
+            // 직접 처리 — submitted_by 가져와서 mileage 차등 적립
+            const { data: tpl, error: gErr } = await window.sb.from('admin_templates').select('submitted_by').eq('id', id).single();
+            if (gErr) throw gErr;
+            const { error: uErr } = await window.sb.from('admin_templates')
+                .update({ status: 'approved', payment_amount: reward, reviewed_at: new Date().toISOString() })
+                .eq('id', id);
+            if (uErr) throw uErr;
+            if (tpl && tpl.submitted_by && reward > 0) {
+                const { data: prof } = await window.sb.from('profiles').select('mileage').eq('id', tpl.submitted_by).single();
+                const cur = (prof && prof.mileage) || 0;
+                await window.sb.from('profiles').update({ mileage: cur + reward }).eq('id', tpl.submitted_by);
+            }
+        }
+        alert('✅ 승인 완료 — ' + rewardLbl + '원 적립');
         loadTplReview();
-    } catch(e) { alert('승인 실패: ' + (e.message || e)); btn.disabled = false; btn.textContent = '✓ 승인 (+30K)'; }
+    } catch(e) {
+        alert('승인 실패: ' + (e.message || e));
+        btn.disabled = false; btn.textContent = '✓ 승인';
+    }
 };
 
 window.tplReviewDelete = async function(id, name, btn) {

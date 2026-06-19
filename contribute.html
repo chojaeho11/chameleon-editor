@@ -288,27 +288,29 @@ async function gtxTranslate(text, targetLang) {
     }
 }
 async function translateKeywords() {
+    // v643: 키워드 필드 우선. 비어 있으면 이름 필드 사용. 한 단어만 넣어도 번역 동작.
     const name = (document.getElementById('uploadName').value || '').trim();
     const kws = (document.getElementById('uploadKeywords').value || '').trim();
-    const combined = [name, kws].filter(Boolean).join(', ');
-    if (!combined) {
+    const source = kws || name;  // 키워드가 있으면 키워드, 없으면 이름
+    if (!source) {
         document.getElementById('langPreview').style.display = 'none';
+        currentTranslations = null;
         return;
     }
     document.getElementById('langPreview').style.display = '';
-    document.getElementById('lpKo').textContent = combined;
+    document.getElementById('lpKo').textContent = source;
     ['lpJa','lpEn','lpFr','lpAr'].forEach(id => { document.getElementById(id).textContent = '번역 중...'; });
     const [ja, en, fr, ar] = await Promise.all([
-        gtxTranslate(combined, 'ja'),
-        gtxTranslate(combined, 'en'),
-        gtxTranslate(combined, 'fr'),
-        gtxTranslate(combined, 'ar')
+        gtxTranslate(source, 'ja'),
+        gtxTranslate(source, 'en'),
+        gtxTranslate(source, 'fr'),
+        gtxTranslate(source, 'ar')
     ]);
     document.getElementById('lpJa').textContent = ja;
     document.getElementById('lpEn').textContent = en;
     document.getElementById('lpFr').textContent = fr;
     document.getElementById('lpAr').textContent = ar;
-    currentTranslations = { ko: combined, ja, en, fr, ar };
+    currentTranslations = { ko: source, ja, en, fr, ar };
 }
 
 async function submitUpload() {
