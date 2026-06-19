@@ -460,10 +460,10 @@ async function checkDesignerStatus(uid) {
     } catch(e) { return 'general'; }
 }
 
-// v648: 자산 적립금 출금 — 등록 게이트 제거. 일반 디자이너도 자산 적립 있으면 즉시 신청 가능.
+// v653: 출금 신청 — `_assetEarningsTotal` 는 실제 출금 가능액 (적립금 - 지급완료 - 대기중)
 window.requestWithdrawAsset = async function() {
-    if (_assetEarningsTotal <= 0) { alert('출금 가능한 자산 적립금이 없습니다.'); return; }
-    if (!confirm('자산 적립금 ' + _assetEarningsTotal.toLocaleString() + '원을 출금 신청합니다. 계속할까요?')) return;
+    if (_assetEarningsTotal <= 0) { alert('출금 가능한 잔액이 없습니다.\n\n(이미 출금 신청한 금액이 처리 중일 수 있습니다)'); return; }
+    if (!confirm('출금 가능 잔액 ' + _assetEarningsTotal.toLocaleString() + '원을 출금 신청합니다. 계속할까요?')) return;
     try {
         const { data:{ session } } = await sb.auth.getSession();
         const uid = session.user.id;
@@ -519,25 +519,25 @@ window.requestWithdrawAsset = async function() {
         }
         const fmt = n => (n||0).toLocaleString() + '원';
 
-        // 1) 자산 (admin_templates) 승인 합계 + 종류별 집계
+        // v653: 엄격 — payment_amount 가 실제로 set 된 row 만 (관리자가 명시적으로 승인한 row).
+        //   status='approved' 만으로는 부족 (옛 데이터에 payment_amount 없는 row 가 잘못 포함됨).
         const { data: assets } = await sb.from('admin_templates')
-            .select('id, asset_type, payment_amount, slots')
+            .select('id, asset_type, payment_amount, slots, status')
             .eq('submitted_by', uid)
-            .eq('status', 'approved');
-        const ASSET_REWARD = { template:3000, vector:1000, image:500, logo:200 };
+            .eq('status', 'approved')
+            .not('payment_amount', 'is', null)
+            .gt('payment_amount', 0);
         let aTotal = 0; const aBreak = { template:0, vector:0, image:0, logo:0 };
         (assets||[]).forEach(r => {
             let t = r.asset_type;
             if (!t) t = (r.slots && r.slots.length) ? 'template' : 'vector';
-            const amt = r.payment_amount || ASSET_REWARD[t] || 0;
+            const amt = r.payment_amount || 0;  // payment_amount 만, fallback 없음
             aTotal += amt;
             if (aBreak[t] != null) aBreak[t] += amt;
         });
-        _assetEarningsTotal = aTotal;
         document.getElementById('seAssetTotal').textContent = fmt(aTotal);
         document.getElementById('seAssetBreak').textContent =
             `T ${aBreak.template/1000|0}K · V ${aBreak.vector/1000|0}K · I ${aBreak.image/1000|0}K · L ${aBreak.logo/1000|0}K`;
-        document.getElementById('seWithdrawAmt').textContent = fmt(aTotal);
 
         // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
         const { data: orders } = await sb.from('design_requests')
@@ -569,13 +569,31 @@ window.requestWithdrawAsset = async function() {
         }
         document.getElementById('seDeposit').textContent = fmt(deposit);
 
-        // 4) 누적 출금 (designer_withdrawals settled total)
-        const { data: wds } = await sb.from('designer_withdrawals')
-            .select('amount, status')
-            .eq('user_id', uid)
-            .eq('status', 'paid');
-        const wdTotal = (wds||[]).reduce((s,r) => s + (r.amount||0), 0);
-        document.getElementById('seWithdrawn').textContent = fmt(wdTotal);
+        // 4) v653: 출금 내역 — design_withdrawal_requests 에서 집계
+        //   paidTotal = 실제 지급 완료, pendingTotal = 대기중/승인됨 (아직 지급 안 됐지만 신청한 금액)
+        const { data: wds } = await sb.from('design_withdrawal_requests')
+            .select('gross_amount, net_amount, status')
+            .eq('designer_id', uid);
+        let paidTotal = 0, pendingTotal = 0;
+        (wds||[]).forEach(r => {
+            const amt = r.gross_amount || r.net_amount || 0;
+            if (r.status === 'paid') paidTotal += amt;
+            else if (r.status === 'pending' || r.status === 'approved') pendingTotal += amt;
+        });
+        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);
+
+        // 출금 가능 금액 = 자산 적립 - (지급된 + 대기중) — 중복 출금 방지
+        const available = Math.max(0, aTotal - paidTotal - pendingTotal);
+        _assetEarningsTotal = available;
+        document.getElementById('seWithdrawAmt').textContent = fmt(available);
+        // 출금 가능 0 이면 버튼 비활성
+        const btn = document.getElementById('seWithdrawBtn');
+        if (available <= 0) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            btn.title = pendingTotal > 0 ? '출금 신청 대기 중 — 처리 완료 후 추가 신청 가능' : '출금 가능한 자산 적립금이 없습니다';
+        }
     } catch (e) {
         console.warn('[settlement load]', e);
     }
