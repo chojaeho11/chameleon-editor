@@ -33,8 +33,11 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
 .card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:0 0 20px; display:flex; flex-direction:column; gap:10px; transition:all .2s; cursor:pointer; overflow:hidden; }
 .card:hover { border-color:#7c3aed; transform:translateY(-3px); box-shadow:0 12px 28px rgba(124,58,237,0.15); }
 /* v684: 카드 헤더 — 게임카드 스타일 이미지 (tm/ve/im/lo.png)
-   v685: contain 으로 변경 — 상단 카테고리 타이틀이 잘리지 않게 전체 이미지 노출 */
-.card .hero { width:100%; aspect-ratio:1/1.4; background:#0a0a0f center/contain no-repeat; position:relative; }
+   v685: contain 으로 변경 — 상단 카테고리 타이틀이 잘리지 않게 전체 이미지 노출
+   v686: 검은 배경 → 연한 그레이 + radial vignette 로 부드러운 그림자 느낌.
+         (inline background-image 가 url 만 덮어쓰도록 color/size/position/repeat 만 따로 지정) */
+.card .hero { width:100%; aspect-ratio:1/1.4; background-color:#f1f5f9; background-position:center; background-size:contain; background-repeat:no-repeat; position:relative; }
+.card .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, transparent 40%, rgba(15,23,42,0.08) 100%); pointer-events:none; }
 .card .hero::after { content:''; position:absolute; left:0; right:0; bottom:0; height:30%; background:linear-gradient(to bottom, transparent 0%, #fff 100%); pointer-events:none; }
 .card .body { padding:0 20px; display:flex; flex-direction:column; gap:10px; margin-top:-10px; position:relative; z-index:2; }
 .card .label { font-size:10.5px; font-weight:700; letter-spacing:0.8px; color:#94a3b8; }
