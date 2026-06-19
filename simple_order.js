@@ -13280,6 +13280,18 @@ html, body { background: #ffffff !important; }
                             _isTemplate: targetType === 'template'
                         };
                     });
+                    // v687: design_tpl 탭이 비어 있으면 photo(_fetchLib 'template') 콘텐츠로 폴백.
+                    //   "템플릿이 아직 없는 제품" 도 빈 공간 대신 사진이 표시되도록.
+                    //   vector 탭은 폴백 안 함 (벡터 0개면 그대로 0개 노출).
+                    if (_railTab === 'design_tpl' && _railAllItems.length === 0) {
+                        try {
+                            var _fallbackPhotos = await _fetchLib('template', _railSearch);
+                            if (_fallbackPhotos && _fallbackPhotos.length > 0) {
+                                _railAllItems = _fallbackPhotos;
+                                console.log('[rail design_tpl] fallback to photos:', _fallbackPhotos.length);
+                            }
+                        } catch(_fe) { console.warn('[rail design_tpl fallback]', _fe); }
+                    }
                     _renderRailPage();
                     return;
                 } catch(e) {
