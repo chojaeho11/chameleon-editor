@@ -1979,23 +1979,23 @@ window._tcmFallbackClick = function(code) {
             }
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
-                /* 2026-06-19 v636: 모바일에서도 5 버튼 1줄 (디자이너 모집은 별도 배너) */
-                #mgrQuoteHero { margin:8px auto 20px !important; padding:0 10px !important; min-height:80px !important; }
+                /* 2026-06-19 v638: 모바일 5버튼 — 아이콘/라벨 키워서 가득 차게 */
+                #mgrQuoteHero { margin:8px auto 20px !important; padding:0 12px !important; min-height:80px !important; }
                 #mgrActionsGrid {
                     grid-template-columns:repeat(5, 1fr) !important;
-                    gap:6px !important;
+                    gap:8px !important;
                 }
                 #mgrActionsGrid .mgr-action {
-                    padding:8px 2px !important;
-                    gap:5px !important;
-                    border-radius:12px !important;
+                    padding:10px 4px !important;
+                    gap:7px !important;
+                    border-radius:14px !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:36px !important; height:36px !important; font-size:15px !important;
-                    border-radius:11px !important;
+                    width:50px !important; height:50px !important; font-size:21px !important;
+                    border-radius:14px !important;
                 }
-                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:15px !important; }
-                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:10.5px !important; line-height:1.15 !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:21px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:11.5px !important; line-height:1.2 !important; font-weight:800 !important; }
             }
             /* 공통 모달 (전화 + 상담후금액주문) */
             .mgr-modal {
@@ -2429,6 +2429,24 @@ window._tcmFallbackClick = function(code) {
             <!-- 기존 hint 는 i18n 스크립트 호환 위해 빈 노드로 유지 -->
             <div id="mgrQuoteHint" style="display:none;"></div>
         </div>
+    </div>
+
+    <!-- 2026-06-19 v638: 디자이너 모집 배너 — 5버튼 다크 패널 바로 다음, 캐러셀 직전 (사용자 요청 위치) -->
+    <div id="designerRecruitWrap" style="max-width:1100px; margin:-12px auto 24px; padding:0 20px; box-sizing:border-box;">
+        <button type="button" id="designerRecruitBar" onclick="location.href='/contribute'">
+            <span class="dr-left">
+                <span class="dr-ico"><i class="fa-solid fa-id-badge"></i></span>
+            </span>
+            <span class="dr-center">
+                <span class="dr-title" data-i18n="btn_designer_recruit">🎨 디자이너 모집</span>
+                <span class="dr-sub" data-i18n="btn_designer_recruit_sub_short">당신의 재능을 판매하세요</span>
+            </span>
+            <span class="dr-right">
+                <span class="dr-desc" id="drDescText"><b>템플릿 3,000원</b> · 벡터 1,000원 · PNG 500원 · 로고 200원<br><span class="dr-bonus" id="drBonusText">💎 판매 시 +3% 마일리지 자동 적립</span></span>
+                <i class="fa-solid fa-arrow-right dr-arr"></i>
+            </span>
+            <span class="dr-mob-chip" id="drMobChip">템플릿 3K · 벡터 1K · PNG 500 · 로고 200 · 판매 +3% →</span>
+        </button>
     </div>
 
     <!-- 2026-06-10: 매니저 영역 신규 라벨 다국어 (KR/JP/EN) -->
@@ -5220,23 +5238,7 @@ window.addEventListener('load', function() {
 
 <!-- 2026-06-01: 브랜드 영상(#honeycombVideoSection) 위치 이동 → 허니콤보드 원지 섹션 아래로. 여기는 placeholder 만 유지. -->
 
-<!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 다크 패널과 분리. 자체 컨테이너로 풀폭 표시. -->
-<div id="designerRecruitWrap" style="max-width:1100px; margin:0 auto 18px; padding:0 16px; box-sizing:border-box;">
-    <button type="button" id="designerRecruitBar" onclick="location.href='/contribute'">
-        <span class="dr-left">
-            <span class="dr-ico"><i class="fa-solid fa-id-badge"></i></span>
-        </span>
-        <span class="dr-center">
-            <span class="dr-title" data-i18n="btn_designer_recruit">🎨 디자이너 모집</span>
-            <span class="dr-sub" data-i18n="btn_designer_recruit_sub_short">당신의 재능을 판매하세요</span>
-        </span>
-        <span class="dr-right">
-            <span class="dr-desc" id="drDescText"><b>템플릿 3,000원</b> · 벡터 1,000원 · PNG 500원 · 로고 200원<br><span class="dr-bonus" id="drBonusText">💎 판매 시 +3% 마일리지 자동 적립</span></span>
-            <i class="fa-solid fa-arrow-right dr-arr"></i>
-        </span>
-        <span class="dr-mob-chip" id="drMobChip">템플릿 3K · 벡터 1K · PNG 500 · 로고 200 · 판매 +3% →</span>
-    </button>
-</div>
+<!-- 2026-06-19 v638: 디자이너 모집 배너 → 5버튼 바로 아래로 다시 이동 (mgrQuoteHero 직후). 아래 코드는 style 만 남음. -->
 <style>
     /* 2026-06-19 v637: 디자이너 모집 배너 — 독립 컨테이너 + 진한 그라데이션 */
     #designerRecruitBar {
