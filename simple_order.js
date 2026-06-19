@@ -13171,8 +13171,10 @@ html, body { background: #ffffff !important; }
                 var moreBtn2 = document.querySelector('#soQuickDesignSec .qd-rail-more');
                 if (moreBtn2) moreBtn2.style.display = '';
             }
+            // v679: 로딩 placeholder 도 _RAIL_PER_PAGE 와 일치 (5개)
             var _loadStr = '<div class="qd-rail-thumb loading">' + tr('로딩…','読み込み…','Loading…') + '</div>';
-            grid.innerHTML = _loadStr + _loadStr + _loadStr + _loadStr + _loadStr + _loadStr;
+            var _loadHtml = ''; for (var _li=0; _li<_RAIL_PER_PAGE; _li++) _loadHtml += _loadStr;
+            grid.innerHTML = _loadHtml;
             // 장식 탭은 canvas-icons.js lazy load
             if (_railTab === 'decoration' && !window.ORNAMENTS) {
                 try { await import('./canvas-icons.js?v=435'); } catch(e) { console.warn('[rail icons import]', e); }

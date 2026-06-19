@@ -7295,19 +7295,27 @@ function scrollHotdeal(gridId, dir) {
         var cur = _meGetCleanText(it.el) || it.text || '';
         // 기존에 × 가 it.text 에 들어간 케이스 — 우상단 단독 × 제거 (한 글자/공백 포함)
         cur = String(cur).replace(/\r\n?/g, '\n').replace(/[\s×]+$/g, '');
+        // v679: 사이트별 다국어
+        var _meLh = (location.hostname || '').toLowerCase();
+        var _meLang = (_meLh.indexOf('cafe0101')>=0 || _meLh.indexOf('cotton-printer')>=0) ? 'ja'
+                    : (_meLh.indexOf('cafe3355')>=0 || _meLh.indexOf('hexa-board')>=0 || _meLh.indexOf('chameleon.design')>=0) ? 'en'
+                    : 'ko';
+        var _meL = _meLang === 'ja' ? {title:'テキスト編集', ph:'ここにテキストを入力', hint:'Enter = 改行 · Ctrl+Enter = 適用 · Esc = キャンセル', cancel:'キャンセル', apply:'適用'}
+                 : _meLang === 'en' ? {title:'Edit Text', ph:'Type text here', hint:'Enter = newline · Ctrl+Enter = apply · Esc = cancel', cancel:'Cancel', apply:'Apply'}
+                 : {title:'텍스트 편집', ph:'여기에 텍스트를 입력하세요', hint:'Enter = 줄바꿈 · Ctrl+Enter = 적용 · Esc = 취소', cancel:'취소', apply:'적용'};
         modal.innerHTML =
             '<div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#0f172a;">'
-              + '<i class="fa-solid fa-pen"></i> ' + (typeof window.t === 'function' ? window.t('me_text_edit_title','텍스트 편집') : '텍스트 편집')
+              + '<i class="fa-solid fa-pen"></i> ' + _meL.title
             + '</div>'
             + '<textarea id="meTextEditArea" rows="5" '
               + 'style="width:100%;padding:14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:16px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.5;outline:none;" '
-              + 'placeholder="' + (typeof window.t === 'function' ? window.t('me_text_edit_ph','여기에 텍스트를 입력하세요') : '여기에 텍스트를 입력하세요') + '"></textarea>'
+              + 'placeholder="' + _meL.ph + '"></textarea>'
             + '<div style="font-size:11px;color:#64748b;line-height:1.5;">'
-              + 'Enter = 줄바꿈 · Ctrl+Enter = 적용 · Esc = 취소'
+              + _meL.hint
             + '</div>'
             + '<div style="display:flex;gap:8px;justify-content:flex-end;">'
-              + '<button type="button" id="meTextEditCancel" style="padding:11px 18px;border:none;border-radius:9px;background:#e2e8f0;color:#334155;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">취소</button>'
-              + '<button type="button" id="meTextEditApply" style="padding:11px 22px;border:none;border-radius:9px;background:#7c3aed;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">적용</button>'
+              + '<button type="button" id="meTextEditCancel" style="padding:11px 18px;border:none;border-radius:9px;background:#e2e8f0;color:#334155;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">' + _meL.cancel + '</button>'
+              + '<button type="button" id="meTextEditApply" style="padding:11px 22px;border:none;border-radius:9px;background:#7c3aed;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">' + _meL.apply + '</button>'
             + '</div>';
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
@@ -14795,7 +14803,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=583"></script>
+<script src="/simple_order.js?v=584"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
