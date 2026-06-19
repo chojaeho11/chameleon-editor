@@ -1979,23 +1979,32 @@ window._tcmFallbackClick = function(code) {
             }
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
-                /* 2026-06-19 v640: 모바일 6버튼 — 3×2 그리드로 충분한 탭 영역 확보 */
-                #mgrQuoteHero { margin:8px auto 20px !important; padding:0 12px !important; min-height:80px !important; }
+                /* 2026-06-19 v641: 모바일 6버튼 1줄 — 아이콘 작게 줄여서 6개 모두 한 줄에 */
+                #mgrQuoteHero { margin:8px auto 20px !important; padding:0 8px !important; min-height:80px !important; }
                 #mgrActionsGrid {
-                    grid-template-columns:repeat(3, 1fr) !important;
-                    gap:10px !important;
+                    grid-template-columns:repeat(6, 1fr) !important;
+                    gap:4px !important;
                 }
                 #mgrActionsGrid .mgr-action {
-                    padding:12px 4px !important;
-                    gap:8px !important;
-                    border-radius:14px !important;
+                    padding:8px 2px !important;
+                    gap:5px !important;
+                    border-radius:11px !important;
+                    min-width:0 !important;
                 }
                 #mgrActionsGrid .mgr-action .mgr-action-icon-wrap {
-                    width:52px !important; height:52px !important; font-size:22px !important;
-                    border-radius:15px !important;
+                    width:38px !important; height:38px !important; font-size:16px !important;
+                    border-radius:11px !important;
                 }
-                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:22px !important; }
-                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:12px !important; line-height:1.2 !important; font-weight:800 !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:16px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:10px !important; line-height:1.15 !important; font-weight:700 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+            }
+            /* 2026-06-19 v641: 아주 작은 폰(<380px) 에서도 6개 안 잘리게 */
+            @media (max-width: 380px) {
+                #mgrActionsGrid { gap:2px !important; }
+                #mgrActionsGrid .mgr-action { padding:7px 1px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap { width:34px !important; height:34px !important; font-size:14px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-icon-wrap i { font-size:14px !important; }
+                #mgrActionsGrid .mgr-action .mgr-action-label { font-size:9px !important; }
             }
             /* 공통 모달 (전화 + 상담후금액주문) */
             .mgr-modal {
