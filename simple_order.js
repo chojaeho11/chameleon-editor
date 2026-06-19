@@ -1577,9 +1577,9 @@ html, body { background: #ffffff !important; }
             #soQuickDesignSec .qd-rail-tab:hover { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
             #soQuickDesignSec .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
             #soQuickDesignSec .qd-rail-tab.active .tab-ico { color:#fff; }
-            /* v667: 4개 그리드 + 16:9 썸네일 */
-            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:16/9; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
+            /* v669: 5열 × 1행 + 1:1 썸네일 (탭과 동일한 5칸 그리드, gap 6px) */
+            #soQuickDesignSec .qd-rail-thumbs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+            #soQuickDesignSec .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
             #soQuickDesignSec .qd-rail-thumb:hover { border-color:#6366f1; }
             #soQuickDesignSec .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
             #soQuickDesignSec .qd-rail-thumb svg { width:80%; height:80%; }
@@ -1596,11 +1596,10 @@ html, body { background: #ffffff !important; }
             @media (max-width:768px) {
                 #soQuickDesignSec .qd-rail-tabs { gap:4px; }
                 #soQuickDesignSec .qd-rail-tab { padding:10px 2px; font-size:11.5px; }
-                #soQuickDesignSec .qd-rail-tab .tab-ico { font-size:16px; }
-                /* v667: 모바일도 4 그대로 (작아도 16:9 좁아서 OK), 480 이하만 2 */
+                #soQuickDesignSec .qd-rail-thumbs { gap:4px; }
             }
             @media (max-width:480px) {
-                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(2,1fr); }
+                #soQuickDesignSec .qd-rail-thumbs { grid-template-columns:repeat(5,1fr); }
             }
           </style>
           <!-- 2026-06-14: 명함 전용 5필드 입력 → 자동 타이포그래피 (pp_bc_*만 표시) -->
@@ -1617,11 +1616,11 @@ html, body { background: #ffffff !important; }
           <div class="qd-edit-grid">
             <aside class="qd-rail">
               <div class="qd-rail-tabs">
-                <button type="button" class="qd-rail-tab active" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch('design_tpl')"><span class="tab-ico">🎨</span><span>${tr('템플릿','テンプレ','Template')}</span></button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')"><span class="tab-ico">🖼</span><span>${tr('사진','写真','Photo')}</span></button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch('vector')"><span class="tab-ico">📐</span><span>${tr('벡터','ベクター','Vector')}</span></button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')"><span class="tab-ico">⭐</span><span>${tr('요소','要素','Elem')}</span></button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')"><span class="tab-ico">✨</span><span>${tr('장식','装飾','Deco')}</span></button>
+                <button type="button" class="qd-rail-tab active" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch('design_tpl')"><span>${tr('템플릿','テンプレ','Template')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')"><span>${tr('사진','写真','Photo')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch('vector')"><span>${tr('벡터','ベクター','Vector')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')"><span>${tr('요소','要素','Elem')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')"><span>${tr('장식','装飾','Deco')}</span></button>
               </div>
               <input type="search" id="soQdRailSearch" placeholder="${tr('검색','検索','Search')}" oninput="window._soQdRailSearch && window._soQdRailSearch(this.value)" class="qd-rail-search">
               <div class="qd-rail-thumbs" id="soQdRailThumbs">
@@ -13022,7 +13021,7 @@ html, body { background: #ffffff !important; }
         var _railSearchDebounce = null;
         var _railAllItems = [];
         var _railPage = 0;
-        var _RAIL_PER_PAGE = 8;  // v668: 4열 × 2행 = 8개
+        var _RAIL_PER_PAGE = 5;  // v669: 5열 × 1행 = 5개 (1:1 비율)
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
             _railPage = 0;
