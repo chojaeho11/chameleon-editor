@@ -1413,15 +1413,10 @@ window._tcmFallbackClick = function(code) {
                 #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
                 #mgrPhoneList #mgrPhoneJp { grid-column:1 / -1; }
             }
-            /* 2026-06-19 v635: 5버튼으로 줄어듦 — PC: 5열 1행, 모바일: 2열 2행 + 마지막 1개 가운데 정렬 */
+            /* 2026-06-19 v635/v636: 5 버튼 1줄 — 아래 !important 규칙이 실제로 적용. 여기는 fallback. */
             #mgrActionsGrid {
                 display:grid; grid-template-columns:repeat(5, 1fr); gap:10px;
                 margin-bottom:4px; justify-content:center;
-            }
-            @media (max-width: 760px) {
-                #mgrActionsGrid { grid-template-columns:repeat(2, 1fr); gap:9px; }
-                /* 5번째 (마지막) 버튼 가운데 정렬 */
-                #mgrActionsGrid > .mgr-action:nth-child(5) { grid-column:1 / -1; max-width:50%; margin:0 auto; }
             }
             .mgr-action {
                 position:relative; overflow:hidden;
@@ -1902,11 +1897,12 @@ window._tcmFallbackClick = function(code) {
                 -webkit-backdrop-filter:none !important;
             }
             #mgrQuoteHero #mgrQuoteTitle, #mgrQuoteHero #mgrQuoteDesc { display:none !important; }
-            /* 6 버튼 — PC: 1줄 6개, 텍스트 라벨 아래 (디자이너신청은 챗봇상담 자리 차지) */
+            /* 2026-06-19 v636: 5 버튼 1줄 (디자이너 모집은 별도 배너로 분리됨) */
             #mgrActionsGrid {
-                grid-template-columns:repeat(6, 1fr) !important;
+                grid-template-columns:repeat(5, 1fr) !important;
                 gap:16px !important;
                 padding:0 !important;
+                justify-content:center !important;
             }
             /* 버튼 — 테두리/그림자 없이 깔끔, 아이콘 칩 + 라벨만 */
             #mgrActionsGrid .mgr-action {
@@ -1983,10 +1979,10 @@ window._tcmFallbackClick = function(code) {
             }
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
-                /* 2026-06-11: 모바일에서도 6 버튼 1줄로 배치 + 6 버튼 영역 최소 높이 보장 */
+                /* 2026-06-19 v636: 모바일에서도 5 버튼 1줄 (디자이너 모집은 별도 배너) */
                 #mgrQuoteHero { margin:8px auto 20px !important; padding:0 10px !important; min-height:80px !important; }
                 #mgrActionsGrid {
-                    grid-template-columns:repeat(6, 1fr) !important;
+                    grid-template-columns:repeat(5, 1fr) !important;
                     gap:6px !important;
                 }
                 #mgrActionsGrid .mgr-action {
