@@ -13022,7 +13022,7 @@ html, body { background: #ffffff !important; }
         var _railSearchDebounce = null;
         var _railAllItems = [];
         var _railPage = 0;
-        var _RAIL_PER_PAGE = 4;  // v667: 4개 한 줄로 표시
+        var _RAIL_PER_PAGE = 8;  // v668: 4열 × 2행 = 8개
         window._soQdRailSwitch = async function(tab) {
             _railTab = tab;
             _railPage = 0;
