@@ -12247,21 +12247,24 @@ html, body { background: #ffffff !important; }
                   name:'템플릿 이름', name_ph:'예: 모던 그라데이션 명함',
                   code:'상품 코드 한정 (선택)', code_ph:'비워두면 카테고리 전체에 적용',
                   btn_d:'📤 검토 요청', btn_a:'💾 템플릿으로 저장',
-                  meta:'카테고리' , prod:'상품' },
+                  meta:'카테고리' , prod:'상품',
+                  kw_label:'검색어 (한국어, 쉼표 구분)', kw_ph:'예: 여름, 시원한, 휴가, 바다' },
             JP: { heading_d:'🎨 デザイナーテンプレート登録 (審査依頼)', heading_a:'🎨 デザインテンプレート登録モード',
                   sub_d:'デザイン完了後、審査依頼すると管理者承認時に <b style="color:#fef9c3;">¥3,000 自動付与</b>。却下時は自動削除。大型製品(間仕切り/バナー/横断幕/原板)はSVG・PDF必須。',
                   sub_a:'エディタで自由にデザイン後、下のボタンで保存してください。お客様ページの🎨テンプレートボタンに自動掲載されます。',
                   name:'テンプレート名', name_ph:'例: モダングラデーション名刺',
                   code:'商品コード限定 (任意)', code_ph:'空欄ならカテゴリ全体に適用',
                   btn_d:'📤 審査依頼', btn_a:'💾 テンプレート保存',
-                  meta:'カテゴリ' , prod:'商品' },
+                  meta:'カテゴリ' , prod:'商品',
+                  kw_label:'検索キーワード (カンマ区切り)', kw_ph:'例: 夏, 涼しい, バケーション, 海' },
             US: { heading_d:'🎨 Designer Submission (For Review)', heading_a:'🎨 Template Editor Mode',
                   sub_d:'Submit your design for review. On admin approval, <b style="color:#fef9c3;">$3 is auto-credited</b>. Rejected submissions are deleted. Vector files (SVG/PDF) required for large-format products.',
                   sub_a:'Design freely in the editor, then save. Approved templates appear in the customer 🎨 template grid.',
                   name:'Template Name', name_ph:'e.g. Modern Gradient Business Card',
                   code:'Limit to product code (optional)', code_ph:'Leave blank to apply to whole category',
                   btn_d:'📤 Submit for Review', btn_a:'💾 Save Template',
-                  meta:'Category' , prod:'Product' }
+                  meta:'Category' , prod:'Product',
+                  kw_label:'Search keywords (comma-separated)', kw_ph:'e.g. summer, cool, vacation, beach' }
         }[L_site];
         var btnLabel = isDesigner ? L.btn_d : L.btn_a;
         var heading = isDesigner ? L.heading_d : L.heading_a;
@@ -12273,8 +12276,8 @@ html, body { background: #ffffff !important; }
             panel.innerHTML =
                 '<div style="font-weight:700; font-size:14px; margin-bottom:10px;">' + heading + '</div>'
               + '<div style="font-size:11.5px; opacity:0.92; line-height:1.6; margin-bottom:14px;">' + subText + '</div>'
-              + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">검색어 (한국어, 쉼표 구분)</label>'
-              + '<input type="text" id="soTplAdminName" placeholder="예: 여름, 시원한, 휴가, 바다" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:13px; font-weight:500; box-sizing:border-box; margin-bottom:8px; color:#0f172a; font-family:inherit;">'
+              + '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.kw_label + '</label>'
+              + '<input type="text" id="soTplAdminName" placeholder="' + L.kw_ph.replace(/"/g,'&quot;') + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:13px; font-weight:500; box-sizing:border-box; margin-bottom:8px; color:#0f172a; font-family:inherit;">'
               + '<div id="soTplLangPreview" style="display:none; background:rgba(255,255,255,0.12); border-radius:8px; padding:8px 10px; font-size:11px; line-height:1.6; margin-bottom:12px;">'
                 + '<div style="display:grid; grid-template-columns:22px 1fr; gap:6px;">'
                   + '<b style="color:#fde68a;">KO</b><span id="soTplLpKo">-</span>'
