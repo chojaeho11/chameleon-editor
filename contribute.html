@@ -87,7 +87,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
 <body>
 
 <div class="wrap">
-    <a href="/" class="top-back"><i class="fa-solid fa-arrow-left"></i> 메인으로</a>
+    <a href="/" class="top-back"><i class="fa-solid fa-arrow-left"></i> <span id="i18nBack">메인으로</span></a>
 
     <!-- 2026-06-19 v648: 디자이너 등록 카드 제거 — 일반 디자이너는 자유 업로드.
          마스터 디자이너(KR 한정)는 designer-board 에서 별도 신청. -->
@@ -96,48 +96,48 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <i class="fa-solid fa-crown"></i>
         </div>
         <div style="flex:1; min-width:0;">
-            <div style="font-size:14px; font-weight:700; color:#0f172a;">마스터 디자이너로 활동하시려면?</div>
-            <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.5;">
+            <div style="font-size:14px; font-weight:700; color:#0f172a;" id="i18nMasterTitle">마스터 디자이너로 활동하시려면?</div>
+            <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.5;" id="i18nMasterDesc">
                 고객 의뢰를 받아 작업하려면 마스터 디자이너 등록(포트폴리오 · 신분증 · 계좌정보) 후 본사 승인이 필요합니다.
             </div>
         </div>
-        <a href="/designer-board" style="background:#7c3aed; color:#fff; padding:10px 18px; border-radius:8px; font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap;">
+        <a href="/designer-board" style="background:#7c3aed; color:#fff; padding:10px 18px; border-radius:8px; font-size:12.5px; font-weight:600; text-decoration:none; white-space:nowrap;" id="i18nMasterBtn">
             마스터 등록 →
         </a>
     </div>
 
     <div class="hero">
         <div class="pill">DESIGNER CONTRIBUTOR</div>
-        <h1>당신의 재능을 판매하세요</h1>
-        <p>디자이너가 아니라도 괜찮아요. 카멜레온 에디터 안의 요소를 이것저것 합쳐서 예쁘고 감각적인 디자인을 만들어 올려주세요. 관리자 승인 즉시 적립금이 들어오고, 판매될 때마다 3% 마일리지가 추가됩니다.</p>
-        <div class="bonus">보너스 — 내 디자인이 팔릴 때마다 3% 마일리지 자동 적립</div>
+        <h1 id="i18nHeroH1">당신의 재능을 판매하세요</h1>
+        <p id="i18nHeroP">디자이너가 아니라도 괜찮아요. 카멜레온 에디터 안의 요소를 이것저것 합쳐서 예쁘고 감각적인 디자인을 만들어 올려주세요. 관리자 승인 즉시 적립금이 들어오고, 판매될 때마다 3% 마일리지가 추가됩니다.</p>
+        <div class="bonus" id="i18nHeroBonus">보너스 — 내 디자인이 팔릴 때마다 3% 마일리지 자동 적립</div>
     </div>
 
     <!-- 2026-06-19 v646: 디자이너 정산 — 내 자산 승인 적립 + 고객 의뢰 정산 통합 -->
     <div id="settlementCard" style="background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; border-radius:14px; padding:24px; margin-top:20px; display:none;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
             <i class="fa-solid fa-wallet" style="color:#fbbf24; font-size:18px;"></i>
-            <h2 style="font-size:16px; font-weight:700;">디자이너 정산</h2>
+            <h2 style="font-size:16px; font-weight:700;" id="i18nSettleH">디자이너 정산</h2>
         </div>
         <!-- v654: 명확한 흐름 - 적립 → 대기 → 지급 -->
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;">
             <div style="background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#fde68a; font-weight:600; letter-spacing:0.5px;">자산 적립 (출금 가능)</div>
+                <div style="font-size:10.5px; color:#fde68a; font-weight:600; letter-spacing:0.5px;" id="i18nSeAssetLbl">자산 적립 (출금 가능)</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px; color:#fbbf24;" id="seAssetTotal">-</div>
                 <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="seAssetBreak">관리자 승인 적립</div>
             </div>
             <div style="background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#7dd3fc; font-weight:600; letter-spacing:0.5px;">입금 대기중</div>
+                <div style="font-size:10.5px; color:#7dd3fc; font-weight:600; letter-spacing:0.5px;" id="i18nSePendingLbl">입금 대기중</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px; color:#38bdf8;" id="sePending">-</div>
-                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">출금 신청 → 처리 대기</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="i18nSePendingSub">출금 신청 → 처리 대기</div>
             </div>
             <div style="background:rgba(34,197,94,0.10); border:1px solid rgba(34,197,94,0.25); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#86efac; font-weight:600; letter-spacing:0.5px;">누적 출금 (지급완료)</div>
+                <div style="font-size:10.5px; color:#86efac; font-weight:600; letter-spacing:0.5px;" id="i18nSeWithdrawnLbl">누적 출금 (지급완료)</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px; color:#4ade80;" id="seWithdrawn">-</div>
-                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">경리가 지급 완료한 금액</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:2px;" id="i18nSeWithdrawnSub">경리가 지급 완료한 금액</div>
             </div>
             <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px;">
-                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;">의뢰 완료 정산</div>
+                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; letter-spacing:0.5px;" id="i18nSeOrderLbl">의뢰 완료 정산</div>
                 <div style="font-size:18px; font-weight:700; margin-top:4px;" id="seOrderTotal">-</div>
                 <div style="font-size:10px; color:#64748b; margin-top:2px;" id="seOrderBreak">고객 의뢰 (마스터)</div>
             </div>
@@ -145,101 +145,101 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <!-- v648: 고객의뢰 보기는 마스터 디자이너 + KR 한정. 일반 디자이너는 안 보임. -->
             <a id="seOrderBtn" href="/designer-board" style="display:none; flex:1; min-width:200px; background:#0ea5e9; color:#fff; padding:12px 20px; border-radius:10px; font-size:13.5px; font-weight:600; text-decoration:none; text-align:center;">
-                고객의뢰 보기
+                <span id="i18nSeOrderBtn">고객의뢰 보기</span>
             </a>
             <button id="seWithdrawBtn" type="button" onclick="requestWithdrawAsset()" style="flex:1; min-width:200px; background:#fbbf24; color:#0f172a; padding:12px 20px; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">
-                출금 신청 (<span id="seWithdrawAmt">-</span>)
+                <span id="i18nSeWithdrawBtn">출금 신청</span> (<span id="seWithdrawAmt">-</span>)
             </button>
         </div>
-        <div style="font-size:11px; color:#94a3b8; margin-top:12px; line-height:1.6;">
+        <div style="font-size:11px; color:#94a3b8; margin-top:12px; line-height:1.6;" id="i18nSeHint">
             · 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>
             · 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).
         </div>
     </div>
 
-    <h2 class="section-title">적립금 가이드</h2>
-    <p class="section-sub">유형 별로 보상이 다릅니다.</p>
+    <h2 class="section-title" id="i18nGuideH">적립금 가이드</h2>
+    <p class="section-sub" id="i18nGuideSub">유형 별로 보상이 다릅니다.</p>
 
     <div class="cards">
         <div class="card" onclick="openUpload('template')">
             <span class="label">TEMPLATE</span>
-            <h3>템플릿 만들기</h3>
-            <div class="desc">미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.</div>
-            <div class="reward"><span class="num">3,000</span><span class="unit">원 / 건</span></div>
-            <button class="btn">+ 템플릿 등록</button>
+            <h3 id="i18nCardTemplateH3">템플릿 만들기</h3>
+            <div class="desc" id="i18nCardTemplateDesc">미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.</div>
+            <div class="reward" id="i18nCardTemplateRwd"><span class="num">3,000</span><span class="unit">원 / 건</span></div>
+            <button class="btn" id="i18nCardTemplateBtn">+ 템플릿 등록</button>
         </div>
         <div class="card" onclick="openUpload('vector')">
             <span class="label">VECTOR</span>
-            <h3>벡터 올리기</h3>
-            <div class="desc">SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.</div>
-            <div class="reward"><span class="num">1,000</span><span class="unit">원 / 건</span></div>
-            <button class="btn">+ 벡터 등록</button>
+            <h3 id="i18nCardVectorH3">벡터 올리기</h3>
+            <div class="desc" id="i18nCardVectorDesc">SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.</div>
+            <div class="reward" id="i18nCardVectorRwd"><span class="num">1,000</span><span class="unit">원 / 건</span></div>
+            <button class="btn" id="i18nCardVectorBtn">+ 벡터 등록</button>
         </div>
         <div class="card" onclick="openUpload('image')">
             <span class="label">IMAGE</span>
-            <h3>PNG 올리기</h3>
-            <div class="desc">투명 배경 PNG. 사진, 그래픽, 일러스트 등.</div>
-            <div class="reward"><span class="num">500</span><span class="unit">원 / 건</span></div>
-            <button class="btn">+ PNG 등록</button>
+            <h3 id="i18nCardImageH3">PNG 올리기</h3>
+            <div class="desc" id="i18nCardImageDesc">배경이 투명인 그림이 잘리지 않은 객체. 배경이 있다면 반려됩니다.</div>
+            <div class="reward" id="i18nCardImageRwd"><span class="num">500</span><span class="unit">원 / 건</span></div>
+            <button class="btn" id="i18nCardImageBtn">+ PNG 등록</button>
         </div>
         <div class="card" onclick="openUpload('logo')">
             <span class="label">LOGO</span>
-            <h3>로고 올리기</h3>
-            <div class="desc">브랜드/캐릭터 로고. PNG 또는 SVG 가능.</div>
-            <div class="reward"><span class="num">200</span><span class="unit">원 / 건</span></div>
-            <button class="btn">+ 로고 등록</button>
+            <h3 id="i18nCardLogoH3">로고 올리기</h3>
+            <div class="desc" id="i18nCardLogoDesc">브랜드/캐릭터 로고. PNG 또는 SVG 가능.</div>
+            <div class="reward" id="i18nCardLogoRwd"><span class="num">200</span><span class="unit">원 / 건</span></div>
+            <button class="btn" id="i18nCardLogoBtn">+ 로고 등록</button>
         </div>
     </div>
 
     <div class="warn">
-        <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> 주의</div>
-        저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>
+        <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> <span id="i18nWarnTitle">주의</span></div>
+        <div id="i18nWarnBody">저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>
         디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>
-        판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.
+        판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.</div>
     </div>
 
     <div class="how">
-        <h2>진행 방법</h2>
+        <h2 id="i18nHowH2">진행 방법</h2>
         <div class="steps">
             <div class="step">
                 <div class="num">STEP 1</div>
-                <h4>업로드</h4>
-                <p>유형 선택 후 파일·이름·키워드 입력. 키워드는 5개 언어로 자동 번역되어 저장됩니다.</p>
+                <h4 id="i18nStep1H4">업로드</h4>
+                <p id="i18nStep1P">유형 선택 후 파일·이름·키워드 입력. 키워드는 5개 언어로 자동 번역되어 저장됩니다.</p>
             </div>
             <div class="step">
                 <div class="num">STEP 2</div>
-                <h4>관리자 검토</h4>
-                <p>저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.</p>
+                <h4 id="i18nStep2H4">관리자 검토</h4>
+                <p id="i18nStep2P">저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.</p>
             </div>
             <div class="step">
                 <div class="num">STEP 3</div>
-                <h4>적립 + 판매 보너스</h4>
-                <p>승인 즉시 기본 적립금 지급. 사용자가 내 디자인으로 주문하면 결제 금액의 3%가 매월 30일에 합산 적립.</p>
+                <h4 id="i18nStep3H4">적립 + 판매 보너스</h4>
+                <p id="i18nStep3P">승인 즉시 기본 적립금 지급. 사용자가 내 디자인으로 주문하면 결제 금액의 3%가 매월 30일에 합산 적립.</p>
             </div>
         </div>
     </div>
 
     <div class="faq">
-        <h2>자주 묻는 질문</h2>
+        <h2 id="i18nFaqH2">자주 묻는 질문</h2>
         <details>
-            <summary>저작권은 어떻게 처리되나요?</summary>
-            <p>본인이 직접 만든 디자인만 업로드 가능합니다. 무단 도용·복제 의심 시 거절되며, 발견 즉시 해당 디자인은 비공개 처리 후 적립금이 회수됩니다.</p>
+            <summary id="i18nFaqQ1">저작권은 어떻게 처리되나요?</summary>
+            <p id="i18nFaqA1">본인이 직접 만든 디자인만 업로드 가능합니다. 무단 도용·복제 의심 시 거절되며, 발견 즉시 해당 디자인은 비공개 처리 후 적립금이 회수됩니다.</p>
         </details>
         <details>
-            <summary>적립금은 어떻게 사용/환전하나요?</summary>
-            <p>My page → 마일리지에서 확인 가능. 사이트 내 주문 결제에 사용하거나, 일정 금액 이상부터 현금 환전 신청이 가능합니다.</p>
+            <summary id="i18nFaqQ2">적립금은 어떻게 사용/환전하나요?</summary>
+            <p id="i18nFaqA2">My page → 마일리지에서 확인 가능. 사이트 내 주문 결제에 사용하거나, 일정 금액 이상부터 현금 환전 신청이 가능합니다.</p>
         </details>
         <details>
-            <summary>3% 판매 보너스는 언제 지급되나요?</summary>
-            <p>매월 30일 합산해서 적립됩니다. 마이페이지 → 마일리지 내역에서 확인 가능합니다.</p>
+            <summary id="i18nFaqQ3">3% 판매 보너스는 언제 지급되나요?</summary>
+            <p id="i18nFaqA3">매월 30일 합산해서 적립됩니다. 마이페이지 → 마일리지 내역에서 확인 가능합니다.</p>
         </details>
         <details>
-            <summary>키워드는 왜 5개 언어로 번역되나요?</summary>
-            <p>카멜레온은 한국 / 일본 / 미국 / 프랑스 / 아랍권 사용자가 모두 검색하므로, 디자이너가 한국어로 입력한 키워드를 5개 언어로 자동 번역해서 저장합니다. 해외 사용자도 자국어로 검색 가능 → 판매 기회 확대.</p>
+            <summary id="i18nFaqQ4">키워드는 왜 5개 언어로 번역되나요?</summary>
+            <p id="i18nFaqA4">카멜레온은 한국 / 일본 / 미국 / 프랑스 / 아랍권 사용자가 모두 검색하므로, 디자이너가 한국어로 입력한 키워드를 5개 언어로 자동 번역해서 저장합니다. 해외 사용자도 자국어로 검색 가능 → 판매 기회 확대.</p>
         </details>
         <details>
-            <summary>디자이너가 아닌데 가능한가요?</summary>
-            <p>네! 카멜레온 에디터 안에 사진·벡터·요소·장식이 이미 많이 들어 있습니다. 그것들을 이리저리 조합해서 감각있게 배치하면 그 자체로 훌륭한 템플릿이 됩니다.</p>
+            <summary id="i18nFaqQ5">디자이너가 아닌데 가능한가요?</summary>
+            <p id="i18nFaqA5">네! 카멜레온 에디터 안에 사진·벡터·요소·장식이 이미 많이 들어 있습니다. 그것들을 이리저리 조합해서 감각있게 배치하면 그 자체로 훌륭한 템플릿이 됩니다.</p>
         </details>
     </div>
 </div>
@@ -247,29 +247,29 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
 <!-- v662: 템플릿 등록 — 언어 + 제품 그리드 깔끔 -->
 <div class="mdl-bg" id="tplPickerBg">
     <div class="mdl" style="max-width:680px; max-height:88vh;">
-        <h3 style="font-size:16px;">🎨 템플릿 등록</h3>
-        <div style="font-size:12.5px; color:#64748b; line-height:1.55;">
+        <h3 style="font-size:16px;" id="i18nTplPickerTitle">🎨 템플릿 등록</h3>
+        <div style="font-size:12.5px; color:#64748b; line-height:1.55;" id="i18nTplPickerDesc">
             언어 선택 → 제품 클릭 → 미니에디터에서 디자인 → 「💾 템플릿으로 저장」
         </div>
 
         <div>
-            <label style="margin-bottom:8px;">1. 언어 / 사이트</label>
+            <label style="margin-bottom:8px;" id="i18nTplLangLbl">1. 언어 / 사이트</label>
             <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;">
-                <button type="button" class="tpl-lang-btn" data-lang="KR" onclick="pickTplLang('KR')" style="padding:14px 10px; border:2px solid #7c3aed; background:#f3f0ff; color:#5b21b6; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇰🇷 한국 (KR)</button>
-                <button type="button" class="tpl-lang-btn" data-lang="JP" onclick="pickTplLang('JP')" style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇯🇵 일본 (JP)</button>
-                <button type="button" class="tpl-lang-btn" data-lang="US" onclick="pickTplLang('US')" style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇺🇸 미국 (US)</button>
+                <button type="button" class="tpl-lang-btn" data-lang="KR" onclick="pickTplLang('KR')" style="padding:14px 10px; border:2px solid #7c3aed; background:#f3f0ff; color:#5b21b6; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇰🇷 <span id="i18nTplLangKR">한국</span> (KR)</button>
+                <button type="button" class="tpl-lang-btn" data-lang="JP" onclick="pickTplLang('JP')" style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇯🇵 <span id="i18nTplLangJP">일본</span> (JP)</button>
+                <button type="button" class="tpl-lang-btn" data-lang="US" onclick="pickTplLang('US')" style="padding:14px 10px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s;">🇺🇸 <span id="i18nTplLangUS">미국</span> (US)</button>
             </div>
         </div>
 
         <div>
-            <label style="margin-bottom:8px;">2. 제품 선택 (클릭하면 바로 이동)</label>
+            <label style="margin-bottom:8px;" id="i18nTplProdLbl">2. 제품 선택 (클릭하면 바로 이동)</label>
             <div id="tplProductGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; max-height:280px; overflow-y:auto; padding:4px;">
-                <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;">로딩 중...</div>
+                <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;" id="i18nTplLoading">로딩 중...</div>
             </div>
         </div>
 
         <div class="btn-row">
-            <button class="btn-cancel" onclick="closeTplPicker()">취소</button>
+            <button class="btn-cancel" onclick="closeTplPicker()" id="i18nTplCancel">취소</button>
         </div>
     </div>
 </div>
@@ -290,13 +290,13 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
     <div class="mdl">
         <h3 id="uploadMdlTitle">업로드</h3>
         <div>
-            <label>이름 (한국어)</label>
-            <input type="text" id="uploadName" placeholder="예: 여름 그라데이션 배경" oninput="onKeywordChange()">
+            <label id="i18nUploadNameLbl">이름</label>
+            <input type="text" id="uploadName" placeholder="" oninput="onKeywordChange()">
         </div>
         <div>
-            <label>키워드 (검색용, 쉼표로 구분)</label>
-            <textarea id="uploadKeywords" placeholder="예: 여름, 그라데이션, 배경, 파스텔" oninput="scheduleTranslate()"></textarea>
-            <div class="hint">5개 언어로 자동 번역됩니다. 입력 후 잠깐 기다리면 아래에 번역 결과 표시.</div>
+            <label id="i18nUploadKwLbl">키워드 (검색용, 쉼표로 구분)</label>
+            <textarea id="uploadKeywords" placeholder="" oninput="scheduleTranslate()"></textarea>
+            <div class="hint" id="i18nUploadKwHint">5개 언어로 자동 번역됩니다. 입력 후 잠깐 기다리면 아래에 번역 결과 표시.</div>
             <div class="lang-preview" id="langPreview" style="display:none;">
                 <div class="lang-row"><span class="lang-flag">KO</span><span id="lpKo">-</span></div>
                 <div class="lang-row"><span class="lang-flag">JA</span><span id="lpJa">-</span></div>
@@ -306,18 +306,218 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             </div>
         </div>
         <div>
-            <label>파일</label>
+            <label id="i18nUploadFileLbl">파일</label>
             <input type="file" id="uploadFile">
             <div class="hint" id="uploadHint"></div>
         </div>
         <div class="btn-row">
-            <button class="btn-cancel" onclick="closeUpload()">취소</button>
+            <button class="btn-cancel" onclick="closeUpload()" id="i18nUploadCancel">취소</button>
             <button class="btn-submit" id="uploadSubmit" onclick="submitUpload()">검토 요청</button>
         </div>
     </div>
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════════════════
+// v673: 다국어(KR/JP/US) + 통화 변환 (KR=1, JP=0.1, US=0.001)
+// ════════════════════════════════════════════════════════════════════
+const _SITE = (() => {
+    const h = (location.hostname || '').toLowerCase();
+    if (h.includes('cafe0101') || h.includes('cotton-printer')) return 'JP';
+    if (h.includes('cafe3355') || h.includes('hexa-board') || h.includes('chameleon.design')) return 'US';
+    return 'KR';
+})();
+const _LANG = _SITE === 'JP' ? 'ja' : _SITE === 'US' ? 'en' : 'ko';
+const _RATE = _SITE === 'JP' ? 0.1 : _SITE === 'US' ? 0.001 : 1;
+function _fmtKrw(krw) {
+    const v = (krw || 0) * _RATE;
+    if (_SITE === 'KR') return v.toLocaleString() + '원';
+    if (_SITE === 'JP') return '¥' + Math.round(v).toLocaleString();
+    return '$' + (v < 1 ? v.toFixed(2) : v.toLocaleString());
+}
+function _fmtRewardCard(krw) {
+    const v = (krw || 0) * _RATE;
+    if (_SITE === 'KR') return '<span class="num">' + v.toLocaleString() + '</span><span class="unit">원 / 건</span>';
+    if (_SITE === 'JP') return '<span class="num">¥' + Math.round(v).toLocaleString() + '</span><span class="unit">/ 件</span>';
+    const numStr = v < 1 ? v.toFixed(2) : v.toLocaleString();
+    return '<span class="num">$' + numStr + '</span><span class="unit">/ each</span>';
+}
+const STR = {
+    ko: {
+        title: '디자이너 기여 · 카멜레온프린팅',
+        Back: '메인으로',
+        MasterTitle: '마스터 디자이너로 활동하시려면?',
+        MasterDesc: '고객 의뢰를 받아 작업하려면 마스터 디자이너 등록(포트폴리오 · 신분증 · 계좌정보) 후 본사 승인이 필요합니다.',
+        MasterBtn: '마스터 등록 →',
+        HeroH1: '당신의 재능을 판매하세요',
+        HeroP: '디자이너가 아니라도 괜찮아요. 카멜레온 에디터 안의 요소를 이것저것 합쳐서 예쁘고 감각적인 디자인을 만들어 올려주세요. 관리자 승인 즉시 적립금이 들어오고, 판매될 때마다 3% 마일리지가 추가됩니다.',
+        HeroBonus: '보너스 — 내 디자인이 팔릴 때마다 3% 마일리지 자동 적립',
+        SettleH: '디자이너 정산',
+        SeAssetLbl: '자산 적립 (출금 가능)',
+        SePendingLbl: '입금 대기중',
+        SePendingSub: '출금 신청 → 처리 대기',
+        SeWithdrawnLbl: '누적 출금 (지급완료)',
+        SeWithdrawnSub: '경리가 지급 완료한 금액',
+        SeOrderLbl: '의뢰 완료 정산',
+        SeOrderBtn: '고객의뢰 보기',
+        SeWithdrawBtn: '출금 신청',
+        SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
+        GuideH: '적립금 가이드', GuideSub: '유형 별로 보상이 다릅니다.',
+        CardTemplateH3: '템플릿 만들기',
+        CardTemplateDesc: '미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.',
+        CardTemplateBtn: '+ 템플릿 등록',
+        CardVectorH3: '벡터 올리기',
+        CardVectorDesc: 'SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.',
+        CardVectorBtn: '+ 벡터 등록',
+        CardImageH3: 'PNG 올리기',
+        CardImageDesc: '배경이 투명인 그림이 잘리지 않은 객체. 배경이 있다면 반려됩니다.',
+        CardImageBtn: '+ PNG 등록',
+        CardLogoH3: '로고 올리기',
+        CardLogoDesc: '브랜드/캐릭터 로고. PNG 또는 SVG 가능.',
+        CardLogoBtn: '+ 로고 등록',
+        WarnTitle: '주의',
+        WarnBody: '저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.',
+        HowH2: '진행 방법',
+        Step1H4: '업로드', Step1P: '유형 선택 후 파일·이름·키워드 입력. 키워드는 5개 언어로 자동 번역되어 저장됩니다.',
+        Step2H4: '관리자 검토', Step2P: '저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.',
+        Step3H4: '적립 + 판매 보너스', Step3P: '승인 즉시 기본 적립금 지급. 사용자가 내 디자인으로 주문하면 결제 금액의 3%가 매월 30일에 합산 적립.',
+        FaqH2: '자주 묻는 질문',
+        FaqQ1: '저작권은 어떻게 처리되나요?', FaqA1: '본인이 직접 만든 디자인만 업로드 가능합니다. 무단 도용·복제 의심 시 거절되며, 발견 즉시 해당 디자인은 비공개 처리 후 적립금이 회수됩니다.',
+        FaqQ2: '적립금은 어떻게 사용/환전하나요?', FaqA2: 'My page → 마일리지에서 확인 가능. 사이트 내 주문 결제에 사용하거나, 일정 금액 이상부터 현금 환전 신청이 가능합니다.',
+        FaqQ3: '3% 판매 보너스는 언제 지급되나요?', FaqA3: '매월 30일 합산해서 적립됩니다. 마이페이지 → 마일리지 내역에서 확인 가능합니다.',
+        FaqQ4: '키워드는 왜 5개 언어로 번역되나요?', FaqA4: '카멜레온은 한국 / 일본 / 미국 / 프랑스 / 아랍권 사용자가 모두 검색하므로, 디자이너가 한국어로 입력한 키워드를 5개 언어로 자동 번역해서 저장합니다. 해외 사용자도 자국어로 검색 가능 → 판매 기회 확대.',
+        FaqQ5: '디자이너가 아닌데 가능한가요?', FaqA5: '네! 카멜레온 에디터 안에 사진·벡터·요소·장식이 이미 많이 들어 있습니다. 그것들을 이리저리 조합해서 감각있게 배치하면 그 자체로 훌륭한 템플릿이 됩니다.',
+        UploadNameLbl:'이름', UploadKwLbl:'키워드 (검색용, 쉼표로 구분)', UploadKwHint:'5개 언어로 자동 번역됩니다. 입력 후 잠깐 기다리면 아래에 번역 결과 표시.', UploadFileLbl:'파일', UploadCancel:'취소',
+        TplPickerTitle:'🎨 템플릿 등록', TplPickerDesc:'언어 선택 → 제품 클릭 → 미니에디터에서 디자인 → 「💾 템플릿으로 저장」',
+        TplLangLbl:'1. 언어 / 사이트', TplLangKR:'한국', TplLangJP:'일본', TplLangUS:'미국',
+        TplProdLbl:'2. 제품 선택 (클릭하면 바로 이동)', TplLoading:'로딩 중...', TplCancel:'취소'
+    },
+    ja: {
+        title: 'デザイナー貢献 · カメレオンプリンティング',
+        Back: 'メインへ',
+        MasterTitle: 'マスターデザイナーとして活動するには？',
+        MasterDesc: 'お客様の依頼を受けて作業するには、マスターデザイナー登録（ポートフォリオ・身分証・口座情報）後、本社の承認が必要です。',
+        MasterBtn: 'マスター登録 →',
+        HeroH1: 'あなたの才能を販売しましょう',
+        HeroP: 'デザイナーでなくても大丈夫。カメレオンエディタ内の素材を組み合わせて、おしゃれで感覚的なデザインを作って投稿してください。管理者承認と同時に積立金が入り、販売されるたびに3%のマイレージが追加されます。',
+        HeroBonus: 'ボーナス — 自分のデザインが売れるたびに3%マイレージ自動積立',
+        SettleH: 'デザイナー精算',
+        SeAssetLbl: '資産積立（出金可能）',
+        SePendingLbl: '入金待ち',
+        SePendingSub: '出金申請 → 処理待ち',
+        SeWithdrawnLbl: '累計出金（支払済）',
+        SeWithdrawnSub: '経理が支払完了した金額',
+        SeOrderLbl: '依頼完了精算',
+        SeOrderBtn: '顧客依頼を見る',
+        SeWithdrawBtn: '出金申請',
+        SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
+        GuideH: '積立金ガイド', GuideSub: 'タイプ別に報酬が異なります。',
+        CardTemplateH3: 'テンプレート作成',
+        CardTemplateDesc: 'ミニエディタで全体デザインを完成させて登録。ユーザーが文字だけ変更すれば完了する形式。',
+        CardTemplateBtn: '+ テンプレート登録',
+        CardVectorH3: 'ベクター登録',
+        CardVectorDesc: 'SVG形式のベクターグラフィック。イラスト・アイコン・背景・パターンなど。',
+        CardVectorBtn: '+ ベクター登録',
+        CardImageH3: 'PNG登録',
+        CardImageDesc: '背景が透明で、切り取られていないオブジェクト画像。背景がある場合は却下されます。',
+        CardImageBtn: '+ PNG登録',
+        CardLogoH3: 'ロゴ登録',
+        CardLogoDesc: 'ブランド／キャラクターロゴ。PNGまたはSVG可能。',
+        CardLogoBtn: '+ ロゴ登録',
+        WarnTitle: '注意',
+        WarnBody: '著作権に問題のない<b>個人作品</b>をアップロードしてください。著作権の責任はデザイナー本人にあります。<br>デザインをアップロードし、<b>承認されたデザインに限り</b>費用が支払われます。<br>販売ボーナスは<b>毎月30日に合算積立</b>されます。マイページをご確認ください。',
+        HowH2: '進行方法',
+        Step1H4: 'アップロード', Step1P: 'タイプ選択後、ファイル・名前・キーワードを入力。キーワードは5言語に自動翻訳されて保存されます。',
+        Step2H4: '管理者レビュー', Step2P: '著作権・品質レビュー後、承認または却下。却下時はrow自動削除。',
+        Step3H4: '積立 + 販売ボーナス', Step3P: '承認と同時に基本積立金を支給。ユーザーが自分のデザインで注文すれば決済金額の3%が毎月30日に合算積立。',
+        FaqH2: 'よくある質問',
+        FaqQ1: '著作権はどう処理されますか？', FaqA1: '本人が直接作成したデザインのみアップロード可能。無断盗用・複製の疑いがある場合は却下され、発覚次第該当デザインは非公開処理後、積立金が回収されます。',
+        FaqQ2: '積立金はどう使う/換金しますか？', FaqA2: 'マイページ → マイレージで確認可能。サイト内の注文決済に使用するか、一定額以上から現金換金申請が可能。',
+        FaqQ3: '3% 販売ボーナスはいつ支給？', FaqA3: '毎月30日に合算して積立されます。マイページ → マイレージ履歴から確認可能。',
+        FaqQ4: 'なぜキーワードは5言語に翻訳？', FaqA4: 'カメレオンは韓国／日本／米国／フランス／アラブ圏ユーザー全員が検索するため、デザイナーが韓国語/日本語で入力したキーワードを5言語に自動翻訳して保存。海外ユーザーも自国語で検索可能 → 販売機会拡大。',
+        FaqQ5: 'デザイナーじゃなくても可能？', FaqA5: 'はい！カメレオンエディタには写真・ベクター・要素・装飾が多数入っています。それらを組み合わせてセンスよく配置すれば、それ自体が立派なテンプレートになります。',
+        UploadNameLbl:'名前', UploadKwLbl:'キーワード（検索用、カンマ区切り）', UploadKwHint:'5言語に自動翻訳されます。入力後しばらく待つと下に翻訳結果が表示されます。', UploadFileLbl:'ファイル', UploadCancel:'キャンセル',
+        TplPickerTitle:'🎨 テンプレート登録', TplPickerDesc:'言語選択 → 商品クリック → ミニエディタでデザイン → 「💾 テンプレートとして保存」',
+        TplLangLbl:'1. 言語 / サイト', TplLangKR:'韓国', TplLangJP:'日本', TplLangUS:'米国',
+        TplProdLbl:'2. 商品選択（クリックで移動）', TplLoading:'読み込み中...', TplCancel:'キャンセル'
+    },
+    en: {
+        title: 'Designer Contributor · Chameleon Printing',
+        Back: 'Back to main',
+        MasterTitle: 'Want to work as a Master Designer?',
+        MasterDesc: 'To take on customer orders, you need to register as a Master Designer (portfolio · ID · bank info) and get HQ approval.',
+        MasterBtn: 'Register as Master →',
+        HeroH1: 'Sell Your Talent',
+        HeroP: "You don't have to be a designer. Combine elements inside the Chameleon editor into beautiful, stylish designs and upload them. As soon as admin approves, you get paid; every time it sells, you earn an extra 3% mileage.",
+        HeroBonus: 'Bonus — automatic 3% mileage every time your design sells',
+        SettleH: 'Designer Settlement',
+        SeAssetLbl: 'Asset Earnings (Withdrawable)',
+        SePendingLbl: 'Pending Deposit',
+        SePendingSub: 'Withdrawal requested → awaiting',
+        SeWithdrawnLbl: 'Total Withdrawn (Paid)',
+        SeWithdrawnSub: 'Amount finance has paid out',
+        SeOrderLbl: 'Order Settlement',
+        SeOrderBtn: 'View Customer Orders',
+        SeWithdrawBtn: 'Withdraw',
+        SeHint: '· Asset earnings appear immediately after admin approval.<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
+        GuideH: 'Reward Guide', GuideSub: 'Rewards differ by type.',
+        CardTemplateH3: 'Make a Template',
+        CardTemplateDesc: 'Build a complete design in the mini editor — the format where users only need to change the text.',
+        CardTemplateBtn: '+ Register Template',
+        CardVectorH3: 'Upload Vector',
+        CardVectorDesc: 'SVG vector graphics — illustrations, icons, backgrounds, patterns.',
+        CardVectorBtn: '+ Register Vector',
+        CardImageH3: 'Upload PNG',
+        CardImageDesc: 'Object on transparent background, not cropped. Submissions with a background will be rejected.',
+        CardImageBtn: '+ Register PNG',
+        CardLogoH3: 'Upload Logo',
+        CardLogoDesc: 'Brand or character logo. PNG or SVG accepted.',
+        CardLogoBtn: '+ Register Logo',
+        WarnTitle: 'Notice',
+        WarnBody: 'Only upload <b>your own work</b> with no copyright issues. Copyright responsibility rests with the designer.<br>Payment is made <b>only for approved designs</b>.<br>Sales bonuses are <b>aggregated and credited on the 30th of each month</b>. Check My Page.',
+        HowH2: 'How it works',
+        Step1H4: 'Upload', Step1P: 'Pick a type, then enter file · name · keywords. Keywords are auto-translated into 5 languages.',
+        Step2H4: 'Admin Review', Step2P: 'Copyright & quality review → approve or reject. Rejected rows are auto-deleted.',
+        Step3H4: 'Earn + Sales Bonus', Step3P: 'Base reward is paid immediately on approval. When a customer orders your design, 3% of the payment is credited on the 30th of each month.',
+        FaqH2: 'FAQ',
+        FaqQ1: 'How is copyright handled?', FaqA1: 'Only designs you personally created can be uploaded. Suspected misuse leads to rejection; once detected, the design is hidden and earnings are reclaimed.',
+        FaqQ2: 'How do I use/cash out earnings?', FaqA2: 'Check My Page → Mileage. Use it for on-site orders, or request a cash payout above the minimum threshold.',
+        FaqQ3: 'When is the 3% sales bonus paid?', FaqA3: 'Aggregated and credited on the 30th of each month. View it in My Page → Mileage history.',
+        FaqQ4: 'Why translate keywords into 5 languages?', FaqA4: 'Chameleon serves KR / JP / US / FR / Arabic users who all search. Your keywords are auto-translated into 5 languages so overseas users can find your work in their own language → wider sales reach.',
+        FaqQ5: 'Can I do this if I am not a designer?', FaqA5: "Yes! Chameleon's editor already includes photos, vectors, elements and decorations. Combine and arrange them tastefully — that itself becomes a great template.",
+        UploadNameLbl:'Name', UploadKwLbl:'Keywords (for search, comma-separated)', UploadKwHint:'Auto-translated into 5 languages. Wait briefly after typing to see the preview below.', UploadFileLbl:'File', UploadCancel:'Cancel',
+        TplPickerTitle:'🎨 Register Template', TplPickerDesc:'Pick language → click product → design in mini editor → "💾 Save as Template"',
+        TplLangLbl:'1. Language / Site', TplLangKR:'Korea', TplLangJP:'Japan', TplLangUS:'USA',
+        TplProdLbl:'2. Pick Product (click to open)', TplLoading:'Loading...', TplCancel:'Cancel'
+    }
+};
+function applyI18n() {
+    const T = STR[_LANG] || STR.ko;
+    document.title = T.title;
+    document.documentElement.lang = _LANG;
+    Object.keys(T).forEach(k => {
+        if (k === 'title') return;
+        const el = document.getElementById('i18n' + k);
+        if (el) el.innerHTML = T[k];
+    });
+    // 보상 카드 — 통화 변환
+    const rewards = { Template: 3000, Vector: 1000, Image: 500, Logo: 200 };
+    Object.keys(rewards).forEach(key => {
+        const el = document.getElementById('i18nCard' + key + 'Rwd');
+        if (el) el.innerHTML = _fmtRewardCard(rewards[key]);
+    });
+    // 정산 카드 초기 텍스트 (loadSettlement 전)
+    const aBreak = document.getElementById('seAssetBreak');
+    if (aBreak) aBreak.textContent = _LANG === 'ja' ? '管理者承認後の積立' : _LANG === 'en' ? 'Admin-approved earnings' : '관리자 승인 적립';
+    const oBreak = document.getElementById('seOrderBreak');
+    if (oBreak) oBreak.textContent = _LANG === 'ja' ? '顧客依頼（マスター）' : _LANG === 'en' ? 'Customer orders (Master)' : '고객 의뢰 (마스터)';
+}
+applyI18n();
+// DOM 로드 후 한번 더 (안전장치)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyI18n);
+}
+
 const SB_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const sb = window.supabase.createClient(SB_URL, SB_KEY, {
@@ -325,11 +525,32 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
 });
 let currentType = 'vector';
 let currentTranslations = null;
+const _TM_STR = {
+    ko: {
+        tplT:'템플릿 등록', tplH:'템플릿은 상품 페이지에서 미니에디터로 작업해야 합니다.',
+        vecT:'벡터 (SVG) 등록', vecH:'SVG 파일만 가능 · 최대 5MB',
+        imgT:'PNG 이미지 등록', imgH:'PNG · JPG 가능 · 최대 10MB · 배경 투명 필수',
+        logoT:'로고 등록', logoH:'PNG · SVG 가능 · 최대 5MB · 정사각 권장'
+    },
+    ja: {
+        tplT:'テンプレート登録', tplH:'テンプレートは商品ページのミニエディタで作業してください。',
+        vecT:'ベクター (SVG) 登録', vecH:'SVGファイルのみ · 最大5MB',
+        imgT:'PNG画像登録', imgH:'PNG・JPG可 · 最大10MB · 透明背景必須',
+        logoT:'ロゴ登録', logoH:'PNG・SVG可 · 最大5MB · 正方形推奨'
+    },
+    en: {
+        tplT:'Register Template', tplH:'Templates must be created in the mini editor on the product page.',
+        vecT:'Register Vector (SVG)', vecH:'SVG only · max 5MB',
+        imgT:'Register PNG', imgH:'PNG/JPG · max 10MB · transparent background required',
+        logoT:'Register Logo', logoH:'PNG/SVG · max 5MB · square recommended'
+    }
+};
+function _tm() { return _TM_STR[_LANG] || _TM_STR.ko; }
 const TYPE_META = {
-    template: { title:'템플릿 등록', hint:'템플릿은 상품 페이지에서 미니에디터로 작업해야 합니다.', acceptStr:'image/svg+xml,image/png,image/jpeg', exts:['.svg','.png','.jpg','.jpeg'], reward:3000 },
-    vector:   { title:'벡터 (SVG) 등록', hint:'SVG 파일만 가능 · 최대 5MB', acceptStr:'image/svg+xml,.svg', exts:['.svg'], reward:1000 },
-    image:    { title:'PNG 이미지 등록', hint:'PNG · JPG 가능 · 최대 10MB', acceptStr:'image/png,image/jpeg,.png,.jpg,.jpeg', exts:['.png','.jpg','.jpeg'], reward:500 },
-    logo:     { title:'로고 등록', hint:'PNG · SVG 가능 · 최대 5MB · 정사각 권장', acceptStr:'image/png,image/svg+xml,.png,.svg', exts:['.png','.svg'], reward:200 }
+    template: { get title(){return _tm().tplT;}, get hint(){return _tm().tplH;}, acceptStr:'image/svg+xml,image/png,image/jpeg', exts:['.svg','.png','.jpg','.jpeg'], reward:3000 },
+    vector:   { get title(){return _tm().vecT;}, get hint(){return _tm().vecH;}, acceptStr:'image/svg+xml,.svg', exts:['.svg'], reward:1000 },
+    image:    { get title(){return _tm().imgT;}, get hint(){return _tm().imgH;}, acceptStr:'image/png,image/jpeg,.png,.jpg,.jpeg', exts:['.png','.jpg','.jpeg'], reward:500 },
+    logo:     { get title(){return _tm().logoT;}, get hint(){return _tm().logoH;}, acceptStr:'image/png,image/svg+xml,.png,.svg', exts:['.png','.svg'], reward:200 }
 };
 
 function toast(msg, ms=2400) {
@@ -342,7 +563,7 @@ function toast(msg, ms=2400) {
 async function openUpload(type) {
     const { data:{ session } } = await sb.auth.getSession();
     if (!session) {
-        toast('로그인이 필요합니다. 메인에서 로그인 후 다시 와주세요.', 3500);
+        toast(_LANG === 'ja' ? 'ログインが必要です。メインからログイン後、再度お越しください。' : _LANG === 'en' ? 'Login required. Please log in from the main page and come back.' : '로그인이 필요합니다. 메인에서 로그인 후 다시 와주세요.', 3500);
         setTimeout(() => location.href='/', 1500);
         return;
     }
@@ -354,13 +575,24 @@ async function openUpload(type) {
     currentTranslations = null;
     const m = TYPE_META[type];
     document.getElementById('uploadMdlTitle').textContent = m.title;
-    document.getElementById('uploadHint').textContent = m.hint + ' · 승인 시 ' + m.reward.toLocaleString() + '원 적립';
+    const onApprove = _LANG === 'ja' ? ' · 承認時 ' + _fmtKrw(m.reward) + ' 積立'
+                     : _LANG === 'en' ? ' · ' + _fmtKrw(m.reward) + ' on approval'
+                     : ' · 승인 시 ' + _fmtKrw(m.reward) + ' 적립';
+    document.getElementById('uploadHint').textContent = m.hint + onApprove;
     document.getElementById('uploadFile').setAttribute('accept', m.acceptStr);
+    // placeholder
+    const namePh = _LANG === 'ja' ? '例: 夏のグラデーション背景' : _LANG === 'en' ? 'e.g. summer gradient background' : '예: 여름 그라데이션 배경';
+    const kwPh = _LANG === 'ja' ? '例: 夏, グラデーション, 背景, パステル' : _LANG === 'en' ? 'e.g. summer, gradient, background, pastel' : '예: 여름, 그라데이션, 배경, 파스텔';
+    document.getElementById('uploadName').placeholder = namePh;
+    document.getElementById('uploadKeywords').placeholder = kwPh;
     document.getElementById('uploadName').value = '';
     document.getElementById('uploadKeywords').value = '';
     document.getElementById('uploadFile').value = '';
     document.getElementById('langPreview').style.display = 'none';
     document.getElementById('uploadMdlBg').classList.add('open');
+    // submit 버튼 라벨 (사이트별)
+    const reqLbl = _LANG === 'ja' ? 'レビュー申請' : _LANG === 'en' ? 'Submit for Review' : '검토 요청';
+    document.getElementById('uploadSubmit').textContent = reqLbl;
 }
 function closeUpload() {
     document.getElementById('uploadMdlBg').classList.remove('open');
@@ -415,21 +647,22 @@ async function translateKeywords() {
 }
 
 async function submitUpload() {
+    const _A = (ko, ja, en) => _LANG === 'ja' ? ja : _LANG === 'en' ? en : ko;
     const name = (document.getElementById('uploadName').value || '').trim();
-    if (!name) { alert('이름을 입력하세요.'); return; }
+    if (!name) { alert(_A('이름을 입력하세요.','名前を入力してください。','Please enter a name.')); return; }
     const fileInput = document.getElementById('uploadFile');
     const file = fileInput.files && fileInput.files[0];
-    if (!file) { alert('파일을 선택하세요.'); return; }
+    if (!file) { alert(_A('파일을 선택하세요.','ファイルを選択してください。','Please select a file.')); return; }
 
     const m = TYPE_META[currentType];
     const fname = (file.name || '').toLowerCase();
     const okExt = m.exts.some(e => fname.endsWith(e));
-    if (!okExt) { alert('허용된 파일 형식: ' + m.exts.join(', ')); return; }
+    if (!okExt) { alert(_A('허용된 파일 형식: ', '対応ファイル形式: ', 'Allowed file types: ') + m.exts.join(', ')); return; }
     const maxMB = currentType === 'image' ? 10 : 5;
-    if (file.size > maxMB * 1024 * 1024) { alert('파일이 너무 큽니다 (' + maxMB + 'MB 이하).'); return; }
+    if (file.size > maxMB * 1024 * 1024) { alert(_A('파일이 너무 큽니다 (', 'ファイルが大きすぎます (', 'File too large (') + maxMB + 'MB).'); return; }
 
     const btn = document.getElementById('uploadSubmit');
-    btn.disabled = true; btn.textContent = '업로드 중...';
+    btn.disabled = true; btn.textContent = _A('업로드 중...','アップロード中...','Uploading...');
     try {
         // 번역이 아직 안 됐으면 지금 실행
         if (!currentTranslations) await translateKeywords();
@@ -437,7 +670,12 @@ async function submitUpload() {
 
         const { data:{ session } } = await sb.auth.getSession();
         const userId = session?.user?.id;
-        if (!userId) { alert('로그인이 필요합니다.'); btn.disabled=false; btn.textContent='검토 요청'; return; }
+        if (!userId) {
+            alert(_A('로그인이 필요합니다.','ログインが必要です。','Login required.'));
+            btn.disabled=false;
+            btn.textContent = _A('검토 요청','レビュー申請','Submit for Review');
+            return;
+        }
 
         const ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
         const safe = fname.replace(/[^a-z0-9._-]/g, '_');
@@ -474,11 +712,16 @@ async function submitUpload() {
         const ins = await sb.from('admin_templates').insert(row).select().single();
         if (ins.error) throw ins.error;
         closeUpload();
-        toast('검토 요청 완료! 승인 시 ' + m.reward.toLocaleString() + '원 적립.', 3500);
+        const okMsg = _LANG === 'ja' ? 'レビューリクエスト完了！承認時 ' + _fmtKrw(m.reward) + ' 積立。'
+                     : _LANG === 'en' ? 'Submitted for review! ' + _fmtKrw(m.reward) + ' on approval.'
+                     : '검토 요청 완료! 승인 시 ' + _fmtKrw(m.reward) + ' 적립.';
+        toast(okMsg, 3500);
     } catch (e) {
         console.error('[upload]', e);
-        alert('업로드 실패: ' + (e.message || e));
-        btn.disabled = false; btn.textContent = '검토 요청';
+        const failMsg = _LANG === 'ja' ? 'アップロード失敗: ' : _LANG === 'en' ? 'Upload failed: ' : '업로드 실패: ';
+        alert(failMsg + (e.message || e));
+        const reqLbl = _LANG === 'ja' ? 'レビュー申請' : _LANG === 'en' ? 'Submit for Review' : '검토 요청';
+        btn.disabled = false; btn.textContent = reqLbl;
     }
 }
 
@@ -497,7 +740,7 @@ const TPL_DOMAINS = {
 window.openTplPicker = async function() {
     const { data:{ session } } = await sb.auth.getSession();
     if (!session) {
-        toast('로그인이 필요합니다.', 3500);
+        toast(_LANG === 'ja' ? 'ログインが必要です。' : _LANG === 'en' ? 'Login required.' : '로그인이 필요합니다.', 3500);
         setTimeout(() => location.href='/', 1500);
         return;
     }
@@ -523,7 +766,8 @@ window.pickTplLang = function(lang) {
 let _tplAllProducts = [];
 async function loadTplProducts() {
     const grid = document.getElementById('tplProductGrid');
-    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;">로딩 중...</div>';
+    const loading = (STR[_LANG] || STR.ko).TplLoading;
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:13px;">' + loading + '</div>';
     try {
         // v663: 관리자가 「🎨 템플릿 등록상품」 체크한 제품만 (designer-board 와 동일 규칙)
         const { data, error } = await sb.from('admin_products')
@@ -536,13 +780,17 @@ async function loadTplProducts() {
         renderTplProducts();
     } catch(e) {
         console.warn('[tpl products]', e);
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#dc2626; font-size:12.5px;">제품 로드 실패: ' + (e.message || e) + '</div>';
+        const failLbl = _LANG === 'ja' ? '商品の読み込み失敗: ' : _LANG === 'en' ? 'Failed to load products: ' : '제품 로드 실패: ';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#dc2626; font-size:12.5px;">' + failLbl + (e.message || e) + '</div>';
     }
 }
 function renderTplProducts() {
     const grid = document.getElementById('tplProductGrid');
     if (!_tplAllProducts.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:12.5px; line-height:1.55;">템플릿 등록 가능한 제품이 없습니다.<br><small>관리자가 상품옵션에서 「🎨 템플릿 등록상품」 을 체크해야 합니다.</small></div>';
+        const empty = _LANG === 'ja' ? 'テンプレート登録可能な商品がありません。<br><small>管理者が商品オプションで「🎨 テンプレート登録商品」をチェックする必要があります。</small>'
+                     : _LANG === 'en' ? 'No products available for template registration.<br><small>Admin must enable "🎨 Template-eligible" on the product options.</small>'
+                     : '템플릿 등록 가능한 제품이 없습니다.<br><small>관리자가 상품옵션에서 「🎨 템플릿 등록상품」 을 체크해야 합니다.</small>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:12.5px; line-height:1.55;">' + empty + '</div>';
         return;
     }
     grid.innerHTML = _tplAllProducts.map(p => {
@@ -588,8 +836,16 @@ async function checkDesignerStatus(uid) {
 let _withdrawInFlight = false;
 window.requestWithdrawAsset = async function() {
     if (_withdrawInFlight) return;  // 중복 클릭 차단
-    if (_assetEarningsTotal <= 0) { alert('출금 가능한 잔액이 없습니다.\n\n(이미 출금 신청한 금액이 처리 중일 수 있습니다)'); return; }
-    if (!confirm('출금 가능 잔액 ' + _assetEarningsTotal.toLocaleString() + '원을 출금 신청합니다. 계속할까요?')) return;
+    if (_assetEarningsTotal <= 0) {
+        const noBal = _LANG === 'ja' ? '出金可能な残高がありません。\n\n(既に出金申請した金額が処理中の可能性があります)'
+                     : _LANG === 'en' ? 'No withdrawable balance.\n\n(A previous request may still be processing)'
+                     : '출금 가능한 잔액이 없습니다.\n\n(이미 출금 신청한 금액이 처리 중일 수 있습니다)';
+        alert(noBal); return;
+    }
+    const confirmMsg = _LANG === 'ja' ? '出金可能残高 ' + _fmtKrw(_assetEarningsTotal) + ' を出金申請します。続行しますか？'
+                      : _LANG === 'en' ? 'Withdraw ' + _fmtKrw(_assetEarningsTotal) + '? Continue?'
+                      : '출금 가능 잔액 ' + _fmtKrw(_assetEarningsTotal) + '을 출금 신청합니다. 계속할까요?';
+    if (!confirm(confirmMsg)) return;
     _withdrawInFlight = true;
     const btn = document.getElementById('seWithdrawBtn');
     const requestAmount = _assetEarningsTotal;  // 캡쳐
@@ -597,7 +853,7 @@ window.requestWithdrawAsset = async function() {
     btn.disabled = true;
     btn.style.opacity = '0.5';
     btn.style.cursor = 'wait';
-    btn.textContent = '신청 중...';
+    btn.textContent = _LANG === 'ja' ? '申請中...' : _LANG === 'en' ? 'Submitting...' : '신청 중...';
     _assetEarningsTotal = 0;  // 재신청 가드
     try {
         const { data:{ session } } = await sb.auth.getSession();
@@ -623,18 +879,23 @@ window.requestWithdrawAsset = async function() {
         };
         const ins = await sb.from('design_withdrawal_requests').insert(row);
         if (ins.error) throw ins.error;
-        toast('출금 신청 완료! 영업일 1~2일 내 입금됩니다.', 4000);
+        const okMsg = _LANG === 'ja' ? '出金申請完了！営業日1〜2日以内に入金されます。'
+                     : _LANG === 'en' ? 'Withdrawal submitted! Funds arrive within 1–2 business days.'
+                     : '출금 신청 완료! 영업일 1~2일 내 입금됩니다.';
+        toast(okMsg, 4000);
         // 즉시 카드 갱신 → 자산 적립 0원, 입금 대기중 +금액
         await loadSettlement();
     } catch(e) {
         console.error('[withdraw asset]', e);
-        alert('출금 신청 실패: ' + (e.message || e));
+        const failMsg = _LANG === 'ja' ? '出金申請失敗: ' : _LANG === 'en' ? 'Withdrawal failed: ' : '출금 신청 실패: ';
+        alert(failMsg + (e.message || e));
         // 실패 시 복구
         _assetEarningsTotal = requestAmount;
         btn.disabled = false;
         btn.style.opacity = '';
         btn.style.cursor = '';
-        btn.innerHTML = '출금 신청 (<span id="seWithdrawAmt">' + requestAmount.toLocaleString() + '원</span>)';
+        const wdLbl = (STR[_LANG] || STR.ko).SeWithdrawBtn;
+        btn.innerHTML = wdLbl + ' (<span id="seWithdrawAmt">' + _fmtKrw(requestAmount) + '</span>)';
     } finally {
         _withdrawInFlight = false;
     }
@@ -662,7 +923,7 @@ async function loadSettlement() {
                 document.getElementById('masterDesignerCard').style.display = 'flex';
             }
         }
-        const fmt = n => (n||0).toLocaleString() + '원';
+        const fmt = n => _fmtKrw(n);
 
         // v653: 엄격 — payment_amount 가 실제로 set 된 row 만 (관리자가 명시적으로 승인한 row).
         //   status='approved' 만으로는 부족 (옛 데이터에 payment_amount 없는 row 가 잘못 포함됨).
@@ -681,8 +942,12 @@ async function loadSettlement() {
             if (aBreak[t] != null) aBreak[t] += amt;
         });
         // 자산 적립 총합은 별도 변수에 보관 — 카드 값은 available 로 표시 (아래에서 계산)
+        // 통화 변환된 값으로 K 단위 표시 (KRW 기준 1K = JP ¥100 = US $1 라서 K 단위는 사이트마다 다른 의미)
+        const kBreak = key => Math.round(aBreak[key] * _RATE / (_SITE === 'KR' ? 1000 : _SITE === 'JP' ? 100 : 1));
+        const kUnit = _SITE === 'KR' ? 'K' : _SITE === 'JP' ? '百' : '';
+        const totalLbl = _LANG === 'ja' ? '計' : _LANG === 'en' ? 'Total' : '총';
         document.getElementById('seAssetBreak').textContent =
-            `T ${aBreak.template/1000|0}K · V ${aBreak.vector/1000|0}K · I ${aBreak.image/1000|0}K · L ${aBreak.logo/1000|0}K (총 ${fmt(aTotal)})`;
+            `T ${kBreak('template')}${kUnit} · V ${kBreak('vector')}${kUnit} · I ${kBreak('image')}${kUnit} · L ${kBreak('logo')}${kUnit} (${totalLbl} ${fmt(aTotal)})`;
 
         // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
         const { data: orders } = await sb.from('design_requests')
@@ -698,8 +963,11 @@ async function loadSettlement() {
             else if (r.status === 'claimed') oCnt.진행++;
         });
         document.getElementById('seOrderTotal').textContent = fmt(oTotal);
+        const oLabels = _LANG === 'ja' ? { p:'進行', c:'完了', r:'要請', s:'支給' }
+                       : _LANG === 'en' ? { p:'WIP', c:'Done', r:'Req', s:'Paid' }
+                       : { p:'진행', c:'완료', r:'요청', s:'지급' };
         document.getElementById('seOrderBreak').textContent =
-            `진행 ${oCnt.진행} · 완료 ${oCnt.완료} · 요청 ${oCnt.정산요청} · 지급 ${oCnt.정산완료}`;
+            `${oLabels.p} ${oCnt.진행} · ${oLabels.c} ${oCnt.완료} · ${oLabels.r} ${oCnt.정산요청} · ${oLabels.s} ${oCnt.정산완료}`;
 
         // v654: 현재 예치금 카드 제거 — 상태 머신(적립→대기→지급)으로 통합.
         // v655: 출금 상태 머신 — pending 만 "입금 대기중", approved 는 admin 이 승인했으니 곧 지급될 거지만 표시 X
@@ -765,9 +1033,13 @@ window.requestWithdraw = function() {
         const el = document.getElementById('orderBoardCount');
         if (el) {
             if (count && count > 0) {
-                el.textContent = ' · 현재 ' + count + '건 대기 중';
+                el.textContent = _LANG === 'ja' ? ' · 現在 ' + count + '件 待機中'
+                                : _LANG === 'en' ? ' · ' + count + ' open'
+                                : ' · 현재 ' + count + '건 대기 중';
             } else {
-                el.textContent = ' · 현재 대기 의뢰 없음';
+                el.textContent = _LANG === 'ja' ? ' · 待機中の依頼なし'
+                                : _LANG === 'en' ? ' · No open requests'
+                                : ' · 현재 대기 의뢰 없음';
                 el.style.color = '#64748b';
                 el.style.fontWeight = '500';
             }
