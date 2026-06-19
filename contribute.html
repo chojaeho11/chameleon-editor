@@ -381,7 +381,7 @@ const STR = {
         SeOrderLbl: '의뢰 완료 정산',
         SeOrderBtn: '고객의뢰 보기',
         SeWithdrawBtn: '출금 신청',
-        SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
+        SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· <b style="color:#fbbf24;">최소 출금액 100,000원</b> · 출금에는 <b>마스터 디자이너 등록</b>(계좌 정보 포함)이 필요합니다.<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
         GuideH: '적립금 가이드', GuideSub: '유형 별로 보상이 다릅니다.',
         CardTemplateH3: '템플릿 만들기',
         CardTemplateDesc: '미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.',
@@ -430,7 +430,7 @@ const STR = {
         SeOrderLbl: '依頼完了精算',
         SeOrderBtn: '顧客依頼を見る',
         SeWithdrawBtn: '出金申請',
-        SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
+        SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· <b style="color:#fbbf24;">最低出金額 ¥10,000</b> · 出金には <b>マスターデザイナー登録</b>（口座情報含む）が必要です。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
         GuideH: '積立金ガイド', GuideSub: 'タイプ別に報酬が異なります。',
         CardTemplateH3: 'テンプレート作成',
         CardTemplateDesc: 'ミニエディタで全体デザインを完成させて登録。ユーザーが文字だけ変更すれば完了する形式。',
@@ -479,7 +479,7 @@ const STR = {
         SeOrderLbl: 'Order Settlement',
         SeOrderBtn: 'View Customer Orders',
         SeWithdrawBtn: 'Withdraw',
-        SeHint: '· Asset earnings appear immediately after admin approval.<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
+        SeHint: '· Asset earnings appear immediately after admin approval.<br>· <b style="color:#fbbf24;">Minimum withdrawal $100</b> · Withdrawal requires <b>Master Designer registration</b> (with bank info).<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
         GuideH: 'Reward Guide', GuideSub: 'Rewards differ by type.',
         CardTemplateH3: 'Make a Template',
         CardTemplateDesc: 'Build a complete design in the mini editor — the format where users only need to change the text.',
@@ -842,6 +842,9 @@ async function checkDesignerStatus(uid) {
     } catch(e) { return 'general'; }
 }
 
+// v691: 최소 출금액 — 100,000 KRW = ¥10,000 = $100 (CURRENCY_RATE 동일 적용)
+const MIN_WITHDRAW_KRW = 100000;
+
 // v657: 출금 신청 — 즉시 버튼 잠금 + 신청 완료 후 데이터 재로드로 중복 신청 방지
 let _withdrawInFlight = false;
 window.requestWithdrawAsset = async function() {
@@ -852,6 +855,31 @@ window.requestWithdrawAsset = async function() {
                      : '출금 가능한 잔액이 없습니다.\n\n(이미 출금 신청한 금액이 처리 중일 수 있습니다)';
         alert(noBal); return;
     }
+    // v691: 최소 출금액 체크 — 100,000원 / ¥10,000 / $100
+    if (_assetEarningsTotal < MIN_WITHDRAW_KRW) {
+        const minLbl = _LANG === 'ja' ? '¥10,000' : _LANG === 'en' ? '$100' : '100,000원';
+        const minMsg = _LANG === 'ja'
+            ? '出金は ' + minLbl + ' 以上から可能です。\n\n現在の残高: ' + _fmtKrw(_assetEarningsTotal) + '\n最低出金額: ' + minLbl + '\n\n引き続きデザインをアップロードして残高を貯めてください。'
+            : _LANG === 'en'
+            ? 'Minimum withdrawal is ' + minLbl + '.\n\nCurrent balance: ' + _fmtKrw(_assetEarningsTotal) + '\nMinimum: ' + minLbl + '\n\nKeep uploading designs to reach the threshold.'
+            : '출금은 ' + minLbl + ' 이상부터 가능합니다.\n\n현재 잔액: ' + _fmtKrw(_assetEarningsTotal) + '\n최소 출금액: ' + minLbl + '\n\n계속 디자인을 등록해서 잔액을 모아주세요.';
+        alert(minMsg); return;
+    }
+    // v691: 마스터 디자이너(계좌 정보 보유) 가 아니면 출금 불가 — 등록 페이지로 안내
+    try {
+        const { data: dprof } = await sb.from('designer_profiles')
+            .select('id, verified').eq('id', (await sb.auth.getSession()).data.session.user.id).maybeSingle();
+        const isVerified = !!(dprof && dprof.verified);
+        if (!isVerified) {
+            const regMsg = _LANG === 'ja'
+                ? '出金にはマスターデザイナー登録（ポートフォリオ・身分証・口座情報）と本社承認が必要です。\n\n登録ページに移動しますか？'
+                : _LANG === 'en'
+                ? 'Withdrawal requires Master Designer registration (portfolio, ID, bank info) and HQ approval.\n\nGo to registration page?'
+                : '출금에는 마스터 디자이너 등록(포트폴리오 · 신분증 · 계좌정보)과 본사 승인이 필요합니다.\n\n등록 페이지로 이동할까요?';
+            if (confirm(regMsg)) location.href = '/designer-board';
+            return;
+        }
+    } catch(_pe) { console.warn('[withdraw] designer profile check failed', _pe); }
     const confirmMsg = _LANG === 'ja' ? '出金可能残高 ' + _fmtKrw(_assetEarningsTotal) + ' を出金申請します。続行しますか？'
                       : _LANG === 'en' ? 'Withdraw ' + _fmtKrw(_assetEarningsTotal) + '? Continue?'
                       : '출금 가능 잔액 ' + _fmtKrw(_assetEarningsTotal) + '을 출금 신청합니다. 계속할까요?';
