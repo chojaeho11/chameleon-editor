@@ -89,6 +89,24 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
 <div class="wrap">
     <a href="/" class="top-back"><i class="fa-solid fa-arrow-left"></i> 메인으로</a>
 
+    <!-- 2026-06-19 v645: 고객 의뢰 받기 — designer-board 통합 (재능 판매 위) -->
+    <div id="orderBoardCard" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:22px; margin-bottom:18px; display:flex; align-items:center; gap:18px;">
+        <div style="width:54px; height:54px; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">
+            <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+            <div style="font-size:11px; color:#0369a1; font-weight:700; letter-spacing:0.8px; margin-bottom:4px;">CUSTOMER ORDERS</div>
+            <h3 style="font-size:16px; font-weight:600; color:#0f172a; margin-bottom:4px;">고객 디자인 의뢰 받기</h3>
+            <div style="font-size:12.5px; color:#64748b; line-height:1.5;">
+                고객이 요청한 디자인 의뢰를 받아서 작업하고 비용을 받습니다.
+                <span id="orderBoardCount" style="color:#0369a1; font-weight:700;">의뢰 확인 중...</span>
+            </div>
+        </div>
+        <a href="/designer-board" style="background:#0ea5e9; color:#fff; padding:11px 22px; border-radius:10px; font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap; transition:filter .15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+            보드 열기 <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
     <div class="hero">
         <div class="pill">DESIGNER CONTRIBUTOR</div>
         <h1>당신의 재능을 판매하세요</h1>
@@ -384,6 +402,37 @@ async function submitUpload() {
 document.getElementById('uploadMdlBg').addEventListener('click', e => {
     if (e.target === document.getElementById('uploadMdlBg')) closeUpload();
 });
+
+// 2026-06-19 v645: 고객 의뢰 (design_requests) open 카운트 로드
+(async function loadOrderBoardCount() {
+    try {
+        const siteCountry = (() => {
+            const h = (location.hostname || '').toLowerCase();
+            if (h.includes('cafe0101')) return 'JP';
+            if (h.includes('cafe3355') || h.includes('hexa-board')) return 'US';
+            return 'KR';
+        })();
+        const { count, error } = await sb.from('design_requests')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'open')
+            .eq('country', siteCountry);
+        if (error) throw error;
+        const el = document.getElementById('orderBoardCount');
+        if (el) {
+            if (count && count > 0) {
+                el.textContent = ' · 현재 ' + count + '건 대기 중';
+            } else {
+                el.textContent = ' · 현재 대기 의뢰 없음';
+                el.style.color = '#64748b';
+                el.style.fontWeight = '500';
+            }
+        }
+    } catch(e) {
+        console.warn('[order board count]', e);
+        const el = document.getElementById('orderBoardCount');
+        if (el) el.textContent = '';
+    }
+})();
 </script>
 </body>
 </html>
