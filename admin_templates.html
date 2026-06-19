@@ -290,27 +290,48 @@ async function loadPendingReviewList() {
                 .select('id, username, email').in('id', designerIds);
             (profs || []).forEach(p => profMap[p.id] = p);
         }
+        // 2026-06-19 v631: 자산 종류(asset_type) 별로 보상 및 라벨 분기.
+        //   template/vector: 1000원 (벡터=백터 동일 취급), image: 500원, logo: 100원.
+        //   (기존 디자이너 템플릿은 30K 보상 유지 — 'template' 와 'vector' 분리 처리)
+        const REWARD = { template: 30000, vector: 1000, image: 500, logo: 100 };
+        const TYPE_LBL = { template: '🎨 템플릿', vector: '📐 벡터(SVG)', image: '🖼️ 이미지(PNG)', logo: '🔰 로고' };
+        const TYPE_COLOR = { template: '#7c3aed', vector: '#0369a1', image: '#16a34a', logo: '#d97706' };
         g.innerHTML = data.map(t => {
             const p = profMap[t.submitted_by] || {};
             const designerName = p.username || (p.email || '').split('@')[0] || '익명';
             const dt = t.submitted_at ? new Date(t.submitted_at).toLocaleString('ko-KR') : '-';
+            const aType = t.asset_type || 'template';
+            const reward = REWARD[aType] || 0;
+            const typeLbl = TYPE_LBL[aType] || aType;
+            const typeColor = TYPE_COLOR[aType] || '#64748b';
+            const rewardKR = reward.toLocaleString();
+            const rewardLbl = reward >= 1000 ? `+${(reward/1000).toFixed(0)}K` : `+${reward}원`;
+            const previewUrl = t.thumbnail_url || t.background_url || t.asset_url || '';
+            const originUrl = t.asset_url || t.background_url || t.thumbnail_url || '';
+            // 자산 행은 사이즈/슬롯 의미 없음
+            const metaLine = (aType === 'template')
+                ? `사이즈: ${t.width_mm || '?'}×${t.height_mm || '?'}mm · 슬롯: ${(t.slots||[]).length}개<br>`
+                : '';
             return `
                 <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:14px; margin-bottom:14px;">
                     <div style="display:grid; grid-template-columns:160px 1fr; gap:14px; align-items:start;">
-                        <div style="aspect-ratio:1/1; background:#fff; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                            <img src="${escapeHtml(t.thumbnail_url || t.background_url || '')}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                        <div style="aspect-ratio:1/1; background:#fff; border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px;">
+                            <img src="${escapeHtml(previewUrl)}" style="max-width:100%; max-height:100%; object-fit:contain;" onerror="this.style.display='none';this.parentNode.innerHTML+='<div style=color:#94a3b8;font-size:11px;>미리보기 없음</div>'">
                         </div>
                         <div>
-                            <div style="font-size:14px; font-weight:900; color:#0f172a; margin-bottom:4px;">${escapeHtml(t.name)}</div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                                <span style="background:${typeColor};color:#fff;padding:3px 9px;border-radius:7px;font-size:10.5px;font-weight:800;">${typeLbl}</span>
+                                <span style="font-size:14px; font-weight:900; color:#0f172a;">${escapeHtml(t.name)}</span>
+                            </div>
                             <div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">
                                 카테고리: <b>${escapeHtml(t.product_category)}</b>${t.product_code ? ' · 상품: <b>' + escapeHtml(t.product_code) + '</b>' : ''}<br>
-                                사이즈: ${t.width_mm || '?'}×${t.height_mm || '?'}mm · 슬롯: ${(t.slots||[]).length}개<br>
+                                ${metaLine}
                                 디자이너: <b>${escapeHtml(designerName)}</b> · 제출: ${dt}
                             </div>
                             <div style="display:flex; gap:8px;">
-                                <button onclick="approveTpl(${t.id}, this)" style="padding:8px 16px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-check"></i> 승인 (+30K)</button>
+                                <button onclick="approveTpl(${t.id}, this, ${reward})" style="padding:8px 16px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-check"></i> 승인 (${rewardLbl})</button>
                                 <button onclick="rejectTpl(${t.id}, this)" style="padding:8px 16px; background:#dc2626; color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-xmark"></i> 거절 (삭제)</button>
-                                <a href="${escapeHtml(t.thumbnail_url || t.background_url || '')}" target="_blank" style="padding:8px 16px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none;"><i class="fa-solid fa-up-right-from-square"></i> 원본 보기</a>
+                                <a href="${escapeHtml(originUrl)}" target="_blank" style="padding:8px 16px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none;"><i class="fa-solid fa-up-right-from-square"></i> 원본 보기</a>
                             </div>
                         </div>
                     </div>
@@ -322,8 +343,11 @@ async function loadPendingReviewList() {
     }
 }
 
-async function approveTpl(id, btn) {
-    if (!confirm('승인 시 디자이너 예치금 30,000원이 자동 적립됩니다. 계속할까요?')) return;
+async function approveTpl(id, btn, reward) {
+    // 2026-06-19 v631: reward 매개변수 — asset_type 별 차등 (template 30K, vector 1K, image 500, logo 100)
+    if (typeof reward !== 'number') reward = 30000;
+    const rewardLabel = reward.toLocaleString();
+    if (!confirm(`승인 시 디자이너 예치금 ${rewardLabel}원이 자동 적립됩니다. 계속할까요?`)) return;
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 처리 중...';
     try {
         const { data: tpl, error: gErr } = await sb.from('admin_templates').select('submitted_by').eq('id', id).single();
@@ -332,19 +356,19 @@ async function approveTpl(id, btn) {
             .update({ status: 'approved', approved_by: state.user.id, approved_at: new Date().toISOString() })
             .eq('id', id);
         if (error) throw error;
-        if (tpl && tpl.submitted_by) {
+        if (tpl && tpl.submitted_by && reward > 0) {
             const { data: prof } = await sb.from('profiles').select('mileage').eq('id', tpl.submitted_by).single();
             const cur = (prof && prof.mileage) || 0;
-            await sb.from('profiles').update({ mileage: cur + 30000 }).eq('id', tpl.submitted_by);
+            await sb.from('profiles').update({ mileage: cur + reward }).eq('id', tpl.submitted_by);
         }
-        toast('✅ 승인 + 30,000원 적립 완료');
+        toast(`✅ 승인 + ${rewardLabel}원 적립 완료`);
         loadPendingReviewList();
         refreshPendingBadge();
         loadTemplates();
     } catch(e) {
         console.error('[approveTpl]', e);
         alert('승인 실패: ' + (e.message || e));
-        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> 승인 (+30K)';
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> 승인';
     }
 }
 

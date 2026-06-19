@@ -12267,9 +12267,123 @@ html, body { background: #ffffff !important; }
           + (isDesigner ? '' : '<label style="display:block; font-size:11px; font-weight:600; opacity:0.85; margin-bottom:5px;">' + L.code + '</label>'
               + '<input type="text" id="soTplAdminCode" placeholder="' + L.code_ph + '" style="width:100%; padding:10px 12px; border:none; border-radius:8px; font-size:12.5px; font-weight:600; box-sizing:border-box; margin-bottom:14px; color:#0f172a; font-family:inherit;">')
           + '<button type="button" id="soTplAdminSave" style="width:100%; padding:14px; background:#fbbf24; color:#0f172a; border:none; border-radius:10px; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + btnLabel + '</button>'
-          + '<div style="font-size:10.5px; opacity:0.8; margin-top:12px; line-height:1.55;">' + L.meta + ': <b>' + (state.product && state.product.category || '?') + '</b> · ' + L.prod + ': <b>' + (state.product && state.product.code || '?') + '</b></div>';
+          + '<div style="font-size:10.5px; opacity:0.8; margin-top:12px; line-height:1.55;">' + L.meta + ': <b>' + (state.product && state.product.category || '?') + '</b> · ' + L.prod + ': <b>' + (state.product && state.product.code || '?') + '</b></div>'
+          // 2026-06-19 v631: 단일 디자인 업로드 — 벡터(SVG)/이미지(PNG)/로고. 보상 차등(1000/500/100원).
+          + '<div style="border-top:1px solid rgba(255,255,255,0.2); margin-top:14px; padding-top:14px;">'
+            + '<button type="button" id="soSingleAssetUpload" style="width:100%; padding:11px; background:rgba(255,255,255,0.92); color:#0369a1; border:none; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit;">📤 단일 디자인 업로드 (벡터/이미지/로고)</button>'
+            + '<div style="font-size:10.5px; opacity:0.85; margin-top:8px; line-height:1.5;">벡터(SVG) 승인 시 <b>1,000원</b> · 이미지(PNG) <b>500원</b> · 로고 <b>100원</b> 자동 적립.</div>'
+          + '</div>';
         sidebar.insertBefore(panel, sidebar.firstChild);
         document.getElementById('soTplAdminSave').addEventListener('click', _soSaveAsTemplate);
+        var _singleBtn = document.getElementById('soSingleAssetUpload');
+        if (_singleBtn) _singleBtn.addEventListener('click', function(){ _soOpenAssetUpload(isDesigner, currentUser); });
+    }
+
+    // 2026-06-19 v631: 단일 디자인 업로드 모달 — 벡터(SVG) / 이미지(PNG) / 로고.
+    //   admin_templates 에 asset_type/asset_url 만 채워서 insert (slots 비움, status='pending').
+    //   admin 직접 업로드면 status='approved' + 즉시 노출.
+    function _soOpenAssetUpload(isDesigner, currentUser) {
+        var ex = document.getElementById('soAssetUploadOverlay');
+        if (ex) ex.remove();
+        var ov = document.createElement('div');
+        ov.id = 'soAssetUploadOverlay';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:18px;';
+        ov.innerHTML =
+            '<div style="background:#fff;border-radius:16px;padding:22px;max-width:480px;width:100%;display:flex;flex-direction:column;gap:14px;font-family:inherit;box-shadow:0 20px 50px rgba(0,0,0,0.4);">'
+              + '<div style="font-weight:900;font-size:15px;color:#0f172a;display:flex;align-items:center;gap:8px;">📤 단일 디자인 업로드</div>'
+              + '<div style="font-size:12px;color:#64748b;line-height:1.55;">'
+                + '관리자 승인 시 자동 적립 — 벡터 <b>1,000원</b> · 이미지 <b>500원</b> · 로고 <b>100원</b><br>'
+                + '<span style="color:#94a3b8;">(JP 0.1×, US 0.001×)</span>'
+              + '</div>'
+              + '<div>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;">유형</label>'
+                + '<div style="display:flex;gap:6px;">'
+                  + '<button type="button" class="so-asset-type-btn" data-type="vector" style="flex:1;padding:10px;border:2px solid #7c3aed;background:#f3f0ff;color:#5b21b6;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">📐 벡터(SVG)<br><span style="font-size:10px;font-weight:600;">1,000원</span></button>'
+                  + '<button type="button" class="so-asset-type-btn" data-type="image" style="flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;color:#334155;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🖼️ 이미지(PNG)<br><span style="font-size:10px;font-weight:600;">500원</span></button>'
+                  + '<button type="button" class="so-asset-type-btn" data-type="logo" style="flex:1;padding:10px;border:2px solid #e2e8f0;background:#fff;color:#334155;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;">🔰 로고<br><span style="font-size:10px;font-weight:600;">100원</span></button>'
+                + '</div>'
+              + '</div>'
+              + '<div>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;">이름</label>'
+                + '<input type="text" id="soAssetName" placeholder="예: 여름 그라데이션 백그라운드" style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;">'
+              + '</div>'
+              + '<div>'
+                + '<label style="display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;">파일 (SVG / PNG / JPG)</label>'
+                + '<input type="file" id="soAssetFile" accept="image/svg+xml,image/png,image/jpeg,.svg,.png,.jpg" style="width:100%;padding:8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;box-sizing:border-box;">'
+              + '</div>'
+              + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">'
+                + '<button type="button" id="soAssetCancel" style="padding:11px 16px;border:none;border-radius:9px;background:#e2e8f0;color:#334155;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">취소</button>'
+                + '<button type="button" id="soAssetSubmit" style="padding:11px 22px;border:none;border-radius:9px;background:#7c3aed;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">' + (isDesigner ? '검토 요청' : '바로 등록') + '</button>'
+              + '</div>'
+            + '</div>';
+        document.body.appendChild(ov);
+        var selectedType = 'vector';
+        ov.querySelectorAll('.so-asset-type-btn').forEach(function(b){
+            b.addEventListener('click', function(){
+                selectedType = b.dataset.type;
+                ov.querySelectorAll('.so-asset-type-btn').forEach(function(x){
+                    x.style.border = '2px solid #e2e8f0'; x.style.background = '#fff'; x.style.color = '#334155';
+                });
+                b.style.border = '2px solid #7c3aed'; b.style.background = '#f3f0ff'; b.style.color = '#5b21b6';
+            });
+        });
+        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        document.getElementById('soAssetCancel').addEventListener('click', function(){ ov.remove(); });
+        document.getElementById('soAssetSubmit').addEventListener('click', async function(){
+            var nameInput = document.getElementById('soAssetName');
+            var fileInput = document.getElementById('soAssetFile');
+            var name = (nameInput.value || '').trim();
+            if (!name) { alert('이름을 입력하세요.'); return; }
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) { alert('파일을 선택하세요.'); return; }
+            // 유형/MIME 검증
+            var fname = (file.name || '').toLowerCase();
+            if (selectedType === 'vector' && !/\.svg$/.test(fname)) { alert('벡터는 SVG 파일만 가능합니다.'); return; }
+            if (selectedType !== 'vector' && /\.svg$/.test(fname)) { alert('이미지/로고는 PNG · JPG 만 가능합니다.'); return; }
+            var btn = document.getElementById('soAssetSubmit');
+            btn.disabled = true; btn.textContent = '업로드 중...';
+            try {
+                var sb = getSb();
+                var ts = Date.now() + '_' + Math.floor(Math.random() * 10000);
+                var safeName = fname.replace(/[^a-z0-9._-]/g, '_');
+                var ext = (fname.match(/\.[a-z]+$/) || ['.bin'])[0];
+                var assetPath = 'designer_assets/' + selectedType + '/' + ts + '_' + safeName;
+                var up = await sb.storage.from('design').upload(assetPath, file, { contentType: file.type || undefined, upsert: false });
+                if (up.error) throw up.error;
+                var assetPub = sb.storage.from('design').getPublicUrl(assetPath).data.publicUrl;
+                // PNG/JPG 는 그대로 썸네일, SVG 는 같은 URL (preview)
+                var thumbUrl = assetPub;
+                var row = {
+                    name: name,
+                    product_category: (state.product && state.product.category) || 'asset',
+                    product_code: null,
+                    site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })(),
+                    background_url: thumbUrl,
+                    thumbnail_url: thumbUrl,
+                    asset_type: selectedType,
+                    asset_url: assetPub,
+                    asset_path: assetPath,
+                    slots: [],
+                    is_active: true,
+                    sort_order: 999,
+                    status: isDesigner ? 'pending' : 'approved',
+                    submitted_by: isDesigner && currentUser ? currentUser.id : null,
+                    submitted_at: isDesigner ? new Date().toISOString() : null
+                };
+                var ins = await sb.from('admin_templates').insert(row).select().single();
+                if (ins.error) throw ins.error;
+                ov.remove();
+                if (isDesigner) {
+                    alert('✅ 검토 요청 완료!\n\n관리자 승인 시 디자이너 보드에 적립됩니다.\n벡터 1,000원 · 이미지 500원 · 로고 100원');
+                } else {
+                    alert('✅ 업로드 완료. 관리자 페이지에서 확인 가능합니다.');
+                }
+            } catch (e) {
+                console.error('[asset upload]', e);
+                alert('업로드 실패: ' + (e.message || e));
+                btn.disabled = false; btn.textContent = isDesigner ? '검토 요청' : '바로 등록';
+            }
+        });
     }
 
     // 2026-06-17 v542: 미니에디터의 me.items 전체를 admin_templates 에 저장.
