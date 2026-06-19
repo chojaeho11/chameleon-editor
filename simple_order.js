@@ -13167,6 +13167,16 @@ html, body { background: #ffffff !important; }
                     var resp = await q;
                     if (resp.error) throw resp.error;
                     var rows = resp.data || [];
+                    // 2026-06-19 v665: 템플릿은 해당 제품 한정 노출 — product_code 일치 OR (product_code 없음 + 같은 카테고리)
+                    if (targetType === 'template' && state.product) {
+                        var curCode = state.product.code;
+                        var curCat = state.product.category;
+                        rows = rows.filter(function(r){
+                            if (r.product_code && r.product_code === curCode) return true;
+                            if (!r.product_code && r.product_category === curCat) return true;
+                            return false;
+                        });
+                    }
                     // 사이트 언어 keyword 필터
                     var siteLang = (function(){
                         var h = (location.hostname || '').toLowerCase();
@@ -13270,10 +13280,12 @@ html, body { background: #ffffff !important; }
                     return '<div class="qd-rail-thumb" data-rail-orn="' + it.idx + '">' + sv + '</div>';
                 }
                 // v644: 디자인 템플릿 / 벡터 항목 — 별도 클릭 처리
+                // v665: 템플릿 썸네일은 전체 디자인이 보이도록 object-fit:contain (cover 면 가로 비율 잘림)
                 if (it._row) {
                     var thumb = it.thumb_url || '';
                     var dataAttr = it._isTemplate ? 'data-rail-tpl="' + it._row.id + '"' : 'data-rail-vec="' + (it.data_url || '') + '"';
-                    return '<div class="qd-rail-thumb" ' + dataAttr + ' title="' + (it.title || '').replace(/"/g, '&quot;') + '"><img src="' + thumb + '" alt=""></div>';
+                    var fitStyle = it._isTemplate ? 'object-fit:contain; background:#f8fafc;' : '';
+                    return '<div class="qd-rail-thumb" ' + dataAttr + ' title="' + (it.title || '').replace(/"/g, '&quot;') + '" style="' + (it._isTemplate ? 'background:#f8fafc;' : '') + '"><img src="' + thumb + '" alt="" style="' + fitStyle + '"></div>';
                 }
                 var thumbUrl = it.thumb_url || it.data_url || '';
                 var fullUrl = _railResolveImgUrl(it);
