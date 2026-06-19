@@ -7264,46 +7264,98 @@ function scrollHotdeal(gridId, dir) {
         }
     };
 
-    // 2026-06-19 v682: 미니에디터 디자인 → PDF 변환 (인쇄소 표준).
-    //   템플릿 주문 등에서 PNG 대신 PDF 가 들어가도록.
-    //   페이지 사이즈는 me.natWMm × natHMm (mm), PNG 를 raster 로 embed.
+    // 2026-06-19 v682/v683: 미니에디터 디자인 → 벡터 PDF 변환 (인쇄소 표준).
+    //   v682: PNG raster 임베드 → 일러스트레이터에서 raster 로 표시되던 문제
+    //   v683: _meExportSVG({outline:true}) → svg2pdf.js → 벡터 PDF (텍스트도 path).
+    //         이미지 객체는 SVG 내 base64 raster 로 자연스럽게 임베드. 텍스트/도형/배경은 벡터.
+    //         svg2pdf 실패 시 PNG raster 임베드로 폴백.
+    async function _loadJsPDFIfNeeded() {
+        if (window.jspdf) return true;
+        try { if (typeof window.loadEditorLibraries === 'function') await window.loadEditorLibraries(); } catch(_){}
+        if (window.jspdf) return true;
+        try {
+            await new Promise(function(res, rej){
+                var s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                s.onload = res; s.onerror = function(){ rej(new Error('jsPDF load fail')); };
+                document.head.appendChild(s);
+            });
+        } catch(e) { console.warn('[me pdf] jsPDF load failed', e); return false; }
+        return !!window.jspdf;
+    }
+    async function _loadSvg2PdfIfNeeded() {
+        if (window.svg2pdf || (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.svg)) return true;
+        try {
+            await new Promise(function(res, rej){
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/svg2pdf.js@2.2.4/dist/svg2pdf.umd.js';
+                s.onload = res; s.onerror = function(){ rej(new Error('svg2pdf load fail')); };
+                document.head.appendChild(s);
+            });
+        } catch(e) { console.warn('[me pdf] svg2pdf load failed', e); return false; }
+        return !!(window.svg2pdf || (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.svg));
+    }
+
     window._meExportPDF = async function(opts) {
         opts = opts || {};
-        if (!window.jspdf) {
-            try { if (typeof window.loadEditorLibraries === 'function') await window.loadEditorLibraries(); } catch(_){}
-        }
-        if (!window.jspdf) {
-            try {
-                await new Promise(function(res, rej){
-                    var s = document.createElement('script');
-                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                    s.onload = res; s.onerror = function(){ rej(new Error('jsPDF load fail')); };
-                    document.head.appendChild(s);
-                });
-            } catch(e) { console.warn('[me pdf] jsPDF load failed', e); return null; }
-        }
+        if (!(await _loadJsPDFIfNeeded())) return null;
         var jsPDF = window.jspdf && window.jspdf.jsPDF;
         if (!jsPDF || !me || !me.natW || !me.natH) return null;
+        var PX_PER_MM = 3.7795;
+        var widthMm  = Math.max(10, me.natWMm || (me.natW / PX_PER_MM));
+        var heightMm = Math.max(10, me.natHMm || (me.natH / PX_PER_MM));
+
+        // 1) 벡터 경로: SVG (텍스트 outline) → svg2pdf
+        try {
+            if (typeof window._meExportSVG === 'function' && (await _loadSvg2PdfIfNeeded())) {
+                var svgText = await window._meExportSVG({ outline: true });
+                if (svgText && svgText.length > 100) {
+                    var parser = new DOMParser();
+                    var svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+                    var svgEl = svgDoc.documentElement;
+                    if (svgEl && svgEl.nodeName.toLowerCase() === 'svg') {
+                        // svg2pdf 가 DOM 에 붙어있길 요구할 수 있어 임시 컨테이너에 mount
+                        var holder = document.createElement('div');
+                        holder.style.cssText = 'position:absolute; left:-99999px; top:0; visibility:hidden;';
+                        document.body.appendChild(holder);
+                        holder.appendChild(svgEl);
+                        var doc = new jsPDF({
+                            orientation: widthMm > heightMm ? 'l' : 'p',
+                            unit: 'mm',
+                            format: [widthMm, heightMm],
+                            compress: true
+                        });
+                        try {
+                            await doc.svg(svgEl, { x: 0, y: 0, width: widthMm, height: heightMm });
+                            holder.remove();
+                            return doc.output('blob');
+                        } catch (svgErr) {
+                            console.warn('[me pdf] svg2pdf render failed, fallback to PNG:', svgErr);
+                            try { holder.remove(); } catch(_){}
+                        }
+                    }
+                }
+            }
+        } catch(e) { console.warn('[me pdf] SVG path errored, fallback to PNG:', e); }
+
+        // 2) 폴백: PNG raster 임베드
         var pngDataUrl = opts.pngDataUrl;
         if (!pngDataUrl && typeof window._meExportPNG === 'function') {
             try { pngDataUrl = await window._meExportPNG(); } catch(e) { console.warn('[me pdf] _meExportPNG fail', e); }
         }
         if (!pngDataUrl) return null;
-        var PX_PER_MM = 3.7795;
-        var widthMm  = Math.max(10, me.natWMm || (me.natW / PX_PER_MM));
-        var heightMm = Math.max(10, me.natHMm || (me.natH / PX_PER_MM));
         try {
-            var doc = new jsPDF({
+            var doc2 = new jsPDF({
                 orientation: widthMm > heightMm ? 'l' : 'p',
                 unit: 'mm',
                 format: [widthMm, heightMm],
                 compress: true
             });
             var fmt = /^data:image\/jpe?g/.test(pngDataUrl) ? 'JPEG' : 'PNG';
-            doc.addImage(pngDataUrl, fmt, 0, 0, widthMm, heightMm);
-            return doc.output('blob');
+            doc2.addImage(pngDataUrl, fmt, 0, 0, widthMm, heightMm);
+            return doc2.output('blob');
         } catch(e) {
-            console.warn('[me pdf] generation failed', e);
+            console.warn('[me pdf] PNG fallback failed', e);
             return null;
         }
     };
@@ -14848,7 +14900,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=586"></script>
+<script src="/simple_order.js?v=587"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
