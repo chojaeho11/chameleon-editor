@@ -12201,19 +12201,21 @@ html, body { background: #ffffff !important; }
         console.log('[template mode] setup start, isDesigner=' + isDesigner);
         var sb = getSb();
         var currentUser = null;
+        // 2026-06-19 v677: 로그인 안 되어 있어도 패널 표시 — submit 시점에 인증 확인.
+        //   해외 사이트(chameleon.design 등) cross-domain 세션 없어 alert+return 으로 빠져서
+        //   사용자가 상품 페이지만 보던 버그 수정.
         if (sb && sb.auth) {
             try {
                 var sess = await sb.auth.getSession();
                 currentUser = sess && sess.data && sess.data.session && sess.data.session.user;
-                if (!currentUser) { alert('로그인이 필요합니다 / Login required'); return; }
-                // 2026-06-19 v666: admin auto-promote 제거 — admin 도 디자이너 화면으로 테스트 가능.
-                //   admin 직접 저장(승인됨)이 필요하면 ?admin_template_mode=1 URL 사용.
-                if (!isDesigner) {
+                if (!isDesigner && currentUser) {
                     var prof = await sb.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
                     var isAdmin = prof && prof.data && prof.data.role === 'admin';
                     if (!isAdmin) { alert('관리자만 접근 가능'); return; }
+                } else if (!isDesigner && !currentUser) {
+                    alert('관리자 로그인이 필요합니다'); return;
                 }
-            } catch(_re){ alert('권한 확인 실패: ' + _re.message); return; }
+            } catch(_re){ console.warn('[template mode] auth check failed (continuing anonymously):', _re); }
         }
         // 결제 박스 + 카트/구매 버튼 + 디자인 의뢰 배너 숨김
         ['soPriceBox','soBtnCart','soBtnBuy','soDesignReqBanner'].forEach(function(id){
@@ -12233,11 +12235,14 @@ html, body { background: #ffffff !important; }
         panel.dataset.designer = isDesigner ? '1' : '0';
         panel.dataset.userid = currentUser ? currentUser.id : '';
         // v546: 사이트 언어
+        // v677: chameleon.design / cotton-printer.com 추가 (KR/JP/US 정확히 분리)
         var h = (location.hostname || '').toLowerCase();
-        var L_site = h.indexOf('cafe0101') >= 0 ? 'JP' : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 ? 'US' : 'KR');
+        var L_site = (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) ? 'JP'
+                   : (h.indexOf('cafe3355') >= 0 || h.indexOf('hexa-board') >= 0 || h.indexOf('chameleon.design') >= 0) ? 'US'
+                   : 'KR';
         var L = {
             KR: { heading_d:'🎨 디자이너 템플릿 등록 (검토 요청)', heading_a:'🎨 디자인 템플릿 등록 모드',
-                  sub_d:'디자인 완료 후 검토 요청하시면 관리자 승인 시 <b style="color:#fef9c3;">30,000원 자동 적립</b>. 거절 시 자동 삭제. 대형 제품(가벽/배너/현수막/원판)은 SVG·PDF 필수.',
+                  sub_d:'디자인 완료 후 검토 요청하시면 관리자 승인 시 <b style="color:#fef9c3;">3,000원 자동 적립</b>. 거절 시 자동 삭제. 대형 제품(가벽/배너/현수막/원판)은 SVG·PDF 필수.',
                   sub_a:'에디터에서 자유롭게 디자인 후 아래 버튼으로 저장하세요. 고객 페이지의 🎨 템플릿 버튼에 자동 노출됩니다.',
                   name:'템플릿 이름', name_ph:'예: 모던 그라데이션 명함',
                   code:'상품 코드 한정 (선택)', code_ph:'비워두면 카테고리 전체에 적용',
@@ -12251,7 +12256,7 @@ html, body { background: #ffffff !important; }
                   btn_d:'📤 審査依頼', btn_a:'💾 テンプレート保存',
                   meta:'カテゴリ' , prod:'商品' },
             US: { heading_d:'🎨 Designer Submission (For Review)', heading_a:'🎨 Template Editor Mode',
-                  sub_d:'Submit your design for review. On admin approval, <b style="color:#fef9c3;">30,000 KRW is auto-credited</b>. Rejected submissions are deleted. Vector files (SVG/PDF) required for large-format products.',
+                  sub_d:'Submit your design for review. On admin approval, <b style="color:#fef9c3;">$3 is auto-credited</b>. Rejected submissions are deleted. Vector files (SVG/PDF) required for large-format products.',
                   sub_a:'Design freely in the editor, then save. Approved templates appear in the customer 🎨 template grid.',
                   name:'Template Name', name_ph:'e.g. Modern Gradient Business Card',
                   code:'Limit to product code (optional)', code_ph:'Leave blank to apply to whole category',
@@ -12423,7 +12428,7 @@ html, body { background: #ffffff !important; }
                     name: name,
                     product_category: (state.product && state.product.category) || 'asset',
                     product_code: null,
-                    site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })(),
+                    site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0||h.indexOf('chameleon.design')>=0)return'US'; return'KR'; })(),
                     background_url: thumbUrl,
                     thumbnail_url: thumbUrl,
                     asset_type: selectedType,
@@ -12489,6 +12494,21 @@ html, body { background: #ffffff !important; }
             var panel = document.getElementById('soTemplateAdminPanel');
             var isDesigner = panel && panel.dataset.designer === '1';
             var userId = panel && panel.dataset.userid;
+            // v677: 패널 setup 시 비로그인이었어도 submit 시점에 다시 확인
+            if (isDesigner && !userId) {
+                try {
+                    var sess2 = await sb.auth.getSession();
+                    var u2 = sess2 && sess2.data && sess2.data.session && sess2.data.session.user;
+                    if (u2) { userId = u2.id; if (panel) panel.dataset.userid = u2.id; }
+                } catch(_le) { console.warn('[save tpl] auth recheck failed', _le); }
+            }
+            if (isDesigner && !userId) {
+                if (btn) { btn.disabled = false; btn.innerHTML = '📤 검토 요청'; }
+                if (confirm('로그인이 필요합니다. 메인 페이지로 이동하여 로그인 후 다시 시도해주세요.\n\nLogin required. Go to main page?')) {
+                    location.href = '/';
+                }
+                return;
+            }
             var codeEl = document.getElementById('soTplAdminCode');
             var code = codeEl ? (codeEl.value || '').trim() || null : null;
             // 2026-06-18 v554: me.bg (캔버스 배경색) 도 첫번째 메타 슬롯으로 보존.
@@ -12505,7 +12525,7 @@ html, body { background: #ffffff !important; }
                 product_category: cat,
                 product_code: code,
                 name: name,
-                site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0)return'US'; return'KR'; })(),
+                site_code: (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0||h.indexOf('chameleon.design')>=0)return'US'; return'KR'; })(),
                 background_url: pngUrl,
                 thumbnail_url: pngUrl,
                 width_mm: (state.product && state.product.width_mm) || null,
