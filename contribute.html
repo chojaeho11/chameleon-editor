@@ -574,11 +574,13 @@ window.requestWithdrawAsset = async function() {
             // approved/rejected 는 별도 처리 안 함
         });
         console.log('[settlement] paidTotal:', paidTotal, 'pendingTotal:', pendingTotal);
-        // 카드 값 채우기 (v654 상태 머신)
-        const available = Math.max(0, aTotal - paidTotal - pendingTotal);
+        // v656: 카드 값 채우기 — 자산 적립은 paid 차감하지 않음.
+        //   이유: 옛날 누적 출금(50,000)은 자산 외 출처에서 나간 것이라 자산 적립과 무관.
+        //   pending(대기중) 만 차감 → 같은 적립금에 중복 신청 방지.
+        const available = Math.max(0, aTotal - pendingTotal);
         document.getElementById('seAssetTotal').textContent = fmt(available);   // 자산 적립 (출금 가능)
         document.getElementById('sePending').textContent = fmt(pendingTotal);    // 입금 대기중
-        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);     // 누적 출금
+        document.getElementById('seWithdrawn').textContent = fmt(paidTotal);     // 누적 출금 (정보용)
         _assetEarningsTotal = available;
         document.getElementById('seWithdrawAmt').textContent = fmt(available);
         // 출금 가능 0 이면 버튼 비활성
