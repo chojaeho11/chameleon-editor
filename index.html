@@ -3386,6 +3386,18 @@ window._tcmFallbackClick = function(code) {
                     }
                     if (!o.total_amount || o.total_amount <= 0) { return; }
                     if (!o.items || o.items.length === 0) { return; }
+                    // 2026-06-22 v700: 개인결제창은 매니저 견적(_mgrQuoteOrder)만 표시.
+                    //   고객이 직접 일반 카트로 주문한 건 mypage 에서 확인하면 됨 — 여기엔 안 들어와야 함.
+                    //   매니저 견적 식별: items[0].type='manager_quote' OR product.code 'manager_quote_'로 시작 OR category='manager_quote'.
+                    var _primary = o.items[0] || {};
+                    var _prod = _primary.product || {};
+                    var _isMgrQuote = (_primary.type === 'manager_quote')
+                        || String(_prod.code || '').indexOf('manager_quote_') === 0
+                        || _prod.category === 'manager_quote';
+                    if (!_isMgrQuote) {
+                        if (!isAdm) _removePendingId(o.id);
+                        return;
+                    }
                     active.push(o);
                 });
                 if (!isAdm) {
