@@ -16028,41 +16028,70 @@ window.filterFxCards = function(cat, btn) {
     }
 
     // 한국 전화문의 팝업
+    // 2026-06-22 v695: 매니저 목록 chatbot_knowledge._managers 동적 로드.
+    //   새 매니저 추가 → 직원관리 (admin_staff role='manager') + 챗봇등록(chatbot_knowledge)
+    //   에 추가하면 자동으로 이 팝업에 반영. 휴가(is_active=false)는 제외.
+    async function _loadActiveManagers() {
+        try {
+            const _sb = window.sb || (window.supabase && window.SB_URL && window.SB_KEY
+                ? window.supabase.createClient(window.SB_URL, window.SB_KEY) : null);
+            if (!_sb) return null;
+            const { data } = await _sb.from('chatbot_knowledge')
+                .select('question, answer')
+                .eq('category', '_managers')
+                .eq('is_active', true);
+            return (data || []).map(r => {
+                let phone = '';
+                try { phone = (JSON.parse(r.answer || '{}').phone || ''); } catch(e){}
+                const ph = phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+                const name = String(r.question || '').trim();
+                const last = name.length >= 2 ? name.slice(-2) : name;  // 마지막 2글자 = 통칭
+                return { fullName: name, lastName: last, phone: ph, phoneRaw: phone };
+            }).filter(m => m.fullName && m.phone);
+        } catch(e) { console.warn('[phone popup] managers load fail', e); return null; }
+    }
     function showPhonePopup() {
         const overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);';
+        // 기본 폴백 (동적 로드 실패 시 옛 4명)
+        const FALLBACK = [
+            { lastName:'지숙', phone:'010-3455-1946' },
+            { lastName:'은미', phone:'010-7793-5393' },
+            { lastName:'성희', phone:'010-4994-5950' },
+            { lastName:'연두', phone:'010-2525-9943' }
+        ];
+        const renderMgrs = (list) => list.map(m =>
+            '<a href="tel:' + m.phone + '" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
+              '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> ' + m.lastName + ' 매니저 ' + m.phone + '</a>'
+        ).join('');
         overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 28px 20px;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2);">' +
             '<div style="text-align:center;margin-bottom:16px;"><span style="font-size:36px;">📞</span></div>' +
             '<div style="font-size:16px;font-weight:800;color:#333;text-align:center;margin-bottom:18px;">전화 문의 안내</div>' +
-            // 출고문의
             '<div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
                 '<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px;">🏭 출고문의</div>' +
                 '<a href="tel:031-366-1984" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">' +
                     '<i class="fa-solid fa-phone" style="color:#16a34a;"></i> 031-366-1984</a>' +
             '</div>' +
-            // 일본 사무실
             '<div style="background:#fef3c7;border-radius:12px;padding:14px 16px;margin-bottom:10px;">' +
                 '<div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:6px;">🇯🇵 일본 사무실</div>' +
                 '<a href="tel:047-712-1148" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:15px;font-weight:700;">' +
                     '<i class="fa-solid fa-phone" style="color:#d97706;"></i> 047-712-1148</a>' +
             '</div>' +
-            // 제품문의 담당 매니저
-            '<div style="background:#ede9fe;border-radius:12px;padding:14px 16px;margin-bottom:6px;">' +
+            '<div style="background:#ede9fe;border-radius:12px;padding:14px 16px;margin-bottom:6px;" id="phPopupMgrs">' +
                 '<div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">👤 제품문의 담당 매니저</div>' +
-                '<a href="tel:010-3455-1946" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
-                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 지숙 매니저 010-3455-1946</a>' +
-                '<a href="tel:010-7793-5393" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
-                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 은미 매니저 010-7793-5393</a>' +
-                '<a href="tel:010-4994-5950" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;margin-bottom:6px;">' +
-                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 성희 매니저 010-4994-5950</a>' +
-                '<a href="tel:010-2525-9943" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:#333;font-size:14px;font-weight:600;">' +
-                    '<i class="fa-solid fa-user" style="color:#7c3aed;width:14px;text-align:center;"></i> 연두 매니저 010-2525-9943</a>' +
+                renderMgrs(FALLBACK) +
             '</div>' +
-            // 닫기
             '<div onclick="this.closest(\'div[style*=inset]\').remove()" style="text-align:center;margin-top:14px;font-size:13px;color:#999;cursor:pointer;font-weight:600;">닫기</div>' +
         '</div>';
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => { if(e.target===overlay) overlay.remove(); });
+        // 동적 매니저 로드 → 성공 시 폴백을 교체
+        _loadActiveManagers().then(dyn => {
+            if (!dyn || !dyn.length) return;
+            const box = document.getElementById('phPopupMgrs');
+            if (!box) return;
+            box.innerHTML = '<div style="font-size:12px;font-weight:700;color:#7c3aed;margin-bottom:8px;">👤 제품문의 담당 매니저</div>' + renderMgrs(dyn);
+        });
     }
 
     // 자체 챗봇 열기 (각 국가 언어에 맞게)

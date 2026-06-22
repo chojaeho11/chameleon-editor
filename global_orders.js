@@ -1,6 +1,37 @@
 import { sb } from "./global_config.js?v=435";
 import { showLoading } from "./global_common.js?v=435";
 
+// 2026-06-22 v695: 현장 매니저 목록 — chatbot_knowledge category='_managers' 에서 동적 로드.
+//   하드코딩된 ['은미','성희','지숙','연두'] 제거 → 새 매니저는 직원관리(admin_staff) + 챗봇등록(chatbot_knowledge)
+//   에 추가하면 자동으로 주문관리 드롭다운/필터에 노출. 휴가(is_active=false)는 제외.
+//   메모리(45일전): 기존엔 5개 파일 35곳 하드코딩이었음 → 이 모듈은 dynamic 화 완료.
+let _fieldMgrCache = null;
+let _fieldMgrPromise = null;
+async function getFieldManagerNames() {
+    if (_fieldMgrCache) return _fieldMgrCache;
+    if (_fieldMgrPromise) return await _fieldMgrPromise;
+    _fieldMgrPromise = (async () => {
+        try {
+            const { data } = await sb.from('chatbot_knowledge')
+                .select('question, is_active')
+                .eq('category', '_managers')
+                .eq('is_active', true);
+            // question = 풀네임 ("이윤희"), 이름 fragment 매칭은 마지막 2글자 사용 (예: 윤희)
+            //   메모리 가이드: 마지막 2글자가 last-name fragment.
+            _fieldMgrCache = (data || []).map(r => {
+                const n = String(r.question || '').trim();
+                return n.length >= 2 ? n.slice(-2) : n;
+            }).filter(Boolean);
+            return _fieldMgrCache;
+        } catch (e) {
+            console.warn('[FIELD_MANAGERS] dynamic load failed, fallback:', e);
+            _fieldMgrCache = ['은미', '성희', '지숙', '연두'];  // 폴백
+            return _fieldMgrCache;
+        }
+    })();
+    return await _fieldMgrPromise;
+}
+
 // [권한] 특수 관리자 (주문취소 복구 + 매니저 변경 허용)
 const _PRIV_EMAILS = ['doubleu202201@gmail.com', 'korea900as@gmail.com', 'seonyul661@gmail.com'];
 let _isPrivileged = false;
@@ -1697,10 +1728,10 @@ window.loadOrders = async () => {
         if(staffList.length === 0) {
             const { data } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = data || [];
-            // 매니저 필터 드롭다운 채우기
+            // v695: 매니저 필터 드롭다운 — 동적 FIELD_MANAGERS 사용
             const filterMgr = document.getElementById('filterManager');
             if (filterMgr) {
-                const _FM = ['은미', '성희', '지숙', '연두'];
+                const _FM = await getFieldManagerNames();
                 const managers = staffList.filter(s => s.role === 'manager' && _FM.some(n => s.name.includes(n)));
                 managers.forEach(m => {
                     const opt = document.createElement('option');
@@ -2030,8 +2061,9 @@ function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     // 기본 스타일 (미지정 상태)
     let style = `background-color: #ffffff; color: #334155; border: 1px solid #e2e8f0;`;
 
-    // ★ 매니저: 은미/성희/지숙/연두만 표시 (나머지는 본사 소속)
-    const FIELD_MANAGERS = ['은미', '성희', '지숙', '연두'];
+    // ★ 매니저: chatbot_knowledge._managers 에 등록된 사람만 표시 (v695 동적 로드)
+    //   캐시가 비어 있으면 폴백 + 백그라운드 로드 트리거 (다음 호출부터 정확).
+    const FIELD_MANAGERS = _fieldMgrCache || (function(){ getFieldManagerNames(); return ['은미','성희','지숙','연두']; })();
     const filteredStaff = staffList.filter(s => {
         if (s.role !== role) return false;
         if (role === 'manager') return FIELD_MANAGERS.some(n => s.name.includes(n));
