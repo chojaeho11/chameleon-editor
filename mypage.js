@@ -656,8 +656,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; border-bottom:1px solid #f1f5f9;">${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:10px 14px; font-size:12.5px; cursor:pointer;">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:10px 14px; font-size:12.5px; cursor:pointer; ${(typeof window._hasCardReceipt === 'function' && window._hasCardReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}">${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasCardReceipt === 'function' && window._hasCardReceipt(o)) ? `<div onclick="openCardReceipt('${o.id}')" style="padding:10px 14px; font-size:12.5px; cursor:pointer;">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -712,8 +712,8 @@ async function loadOrders() {
                                 <div onclick="downloadOrderDoc('${o.id}','quotation')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_quotation', 'Quotation')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','receipt')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_receipt', 'Receipt')}</div>
                                 <div onclick="downloadOrderDoc('${o.id}','order_sheet')" style="padding:7px 10px; font-size:11px; cursor:pointer; border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_order_sheet', 'Work Order')}</div>
-                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_statement', 'Invoice')}</div>
-                                ${(typeof window._hasTossReceipt === 'function' && window._hasTossReceipt(o)) ? `<div onclick="openTossReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
+                                <div onclick="downloadOrderDoc('${o.id}','statement')" style="padding:7px 10px; font-size:11px; cursor:pointer; ${(typeof window._hasCardReceipt === 'function' && window._hasCardReceipt(o)) ? 'border-bottom:1px solid #f1f5f9;' : ''}" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_statement', 'Invoice')}</div>
+                                ${(typeof window._hasCardReceipt === 'function' && window._hasCardReceipt(o)) ? `<div onclick="openCardReceipt('${o.id}')" style="padding:7px 10px; font-size:11px; cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">${window.t('doc_card_sales', 'Card Receipt')}</div>` : ''}
                             </div>
                         </div>
                     </div>
@@ -1974,18 +1974,51 @@ async function _genOrderSheet(doc, orderInfo, cartItems) {
     return doc.output('blob');
 }
 
-// ============ 카드매출전표 (Toss) 열기 — 2026-05-31 ============
-// 사용자 요청: 인터넷 사이트들처럼 토스에서 제공하는 매출전표 그대로 끌어와 열기.
-// supabase edge fn `get-toss-receipt` 가 paymentKey 로 Toss API 호출 → receipt.url 반환.
+// ============ 카드매출전표 (Toss/Stripe) 열기 — 2026-05-31 / v699 ============
+// 사용자 요청: 인터넷 사이트들처럼 결제사 제공 매출전표 그대로 끌어와 열기.
+// supabase edge fn `get-toss-receipt` (KR Toss) / `get-stripe-receipt` (해외 Stripe).
 //
-// 결제 미완료 (임시작성/결제실패) 주문은 토스에 paymentKey 가 없거나 invalid 라
-// Toss API 가 거절함. _hasTossReceipt 로 사전 체크해서 버튼 자체를 숨김.
+// 결제 미완료 (임시작성/결제실패) 주문은 paymentKey 가 없거나 invalid 라
+// API 가 거절함. _hasXxxReceipt 로 사전 체크해서 버튼 자체를 숨김.
+//
+// v699: payment_method 로 Toss vs Stripe 구분 — 'Stripe' 포함 시 Stripe, 그 외 Toss.
+//   verify-stripe-payment.ts 가 결제 완료 시 toss_payment_key 에 session_id (cs_...) 저장하고
+//   payment_method='Stripe Card' 로 마킹함.
+function _isStripeOrder(o) {
+    if (!o) return false;
+    const pm = String(o.payment_method || '').toLowerCase();
+    if (pm.includes('stripe')) return true;
+    // 폴백: toss_payment_key 가 cs_ 로 시작하면 Stripe
+    const k = String(o.toss_payment_key || o.payment_key || '');
+    if (k.startsWith('cs_')) return true;
+    return false;
+}
 window._hasTossReceipt = function (o) {
     if (!o) return false;
+    if (_isStripeOrder(o)) return false;  // v699: Stripe 주문은 Toss 헬퍼에서 제외
     if (!(o.toss_payment_key || o.payment_key)) return false;
     // 결제완료 상태만 — 임시작성/결제대기/결제실패/취소 등은 매출전표 없음
     const ps = String(o.payment_status || '').trim();
     return ps === '결제완료';
+};
+// v699: Stripe 매출전표 존재 여부
+window._hasStripeReceipt = function (o) {
+    if (!o) return false;
+    if (!_isStripeOrder(o)) return false;
+    if (!(o.toss_payment_key || o.payment_key)) return false;
+    const ps = String(o.payment_status || '').trim();
+    return ps === '결제완료';
+};
+// v699: 통합 - 결제사 무관하게 카드매출전표 가능 여부
+window._hasCardReceipt = function (o) {
+    return window._hasTossReceipt(o) || window._hasStripeReceipt(o);
+};
+// v699: 통합 라우터 - Toss/Stripe 자동 분기
+window.openCardReceipt = function (orderId) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) { showToast('Order not found', 'error'); return; }
+    if (_isStripeOrder(order)) return window.openStripeReceipt(orderId);
+    return window.openTossReceipt(orderId);
 };
 window.openTossReceipt = async function (orderId) {
     const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
@@ -2026,6 +2059,50 @@ window.openTossReceipt = async function (orderId) {
     } catch (e) {
         console.error('[openTossReceipt] error:', e);
         showToast('매출전표 조회 중 오류: ' + (e?.message || e), 'error');
+    }
+};
+
+// v699: Stripe 카드매출전표 열기 (해외 결제) — get-stripe-receipt edge fn 호출
+window.openStripeReceipt = async function (orderId) {
+    const order = window.myOrdersData?.find(o => String(o.id) === String(orderId));
+    if (!order) { showToast('Order not found', 'error'); return; }
+    document.querySelectorAll('.doc-dropdown').forEach(d => d.style.display = 'none');
+
+    const sessionId = order.toss_payment_key || order.payment_key;  // Stripe 도 toss_payment_key 컬럼에 저장됨
+    if (!sessionId) {
+        showToast('Card payment not found', 'error');
+        return;
+    }
+    if (!window._hasStripeReceipt(order)) {
+        showToast('Not a completed Stripe payment', 'error');
+        return;
+    }
+    const loadingMsg = (window.SITE_LANG === 'ja') ? 'カード明細を取得中...'
+                    : (window.SITE_LANG === 'kr' || !window.SITE_LANG) ? '카드매출전표 조회 중...'
+                    : 'Fetching card receipt...';
+    showToast(loadingMsg, 'info');
+    try {
+        const sb = window.sb || window._supabase;
+        const { data, error } = await sb.functions.invoke('get-stripe-receipt', {
+            body: { sessionId }
+        });
+        if (error) {
+            let detail = error.message || String(error);
+            try {
+                const ctx = error.context;
+                if (ctx && typeof ctx.json === 'function') {
+                    const body = await ctx.json();
+                    if (body?.error) detail = body.error;
+                }
+            } catch(_) {}
+            showToast('Receipt lookup failed: ' + detail, 'error');
+            return;
+        }
+        if (!data || !data.url) { showToast(data?.error || 'Receipt URL not available', 'error'); return; }
+        window.open(data.url, '_blank', 'noopener');
+    } catch (e) {
+        console.error('[openStripeReceipt] error:', e);
+        showToast('Receipt lookup error: ' + (e?.message || e), 'error');
     }
 };
 
