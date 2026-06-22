@@ -2084,9 +2084,9 @@ window._tcmFallbackClick = function(code) {
             <!-- 전화번호 그리드: 모달 안으로 이동 (display:none 컨테이너) -->
             <div id="mgrPhoneListHidden" style="display:none;">
             <div id="mgrPhoneList">
-                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
+                <a href="tel:031-366-1984" class="mgr-kr-only" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:500; text-align:center; min-width:0;">
                     <span>본사</span>
-                    <b style="color:#ffffff; font-size:13px; white-space:nowrap;">031-366-1984</b>
+                    <span style="color:#ffffff; font-size:13px; white-space:nowrap; font-weight:500;">031-366-1984</span>
                 </a>
                 <!-- 2026-05-28: JP 전용 ナナミ 직통 카드 — 일본 도메인(cafe0101.com)에서만 표시 -->
                 <a href="tel:09053970420" id="mgrPhoneJp" style="display:none; flex-direction:row; align-items:center; justify-content:center; gap:14px; padding:16px 18px; background:rgba(6,199,85,0.18); border:1.5px solid rgba(6,199,85,0.55); border-radius:12px; text-decoration:none; color:#fff; font-size:13px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(6,199,85,0.25); backdrop-filter:blur(4px);">
@@ -2220,13 +2220,13 @@ window._tcmFallbackClick = function(code) {
                     <div style="padding:12px 8px; background:#fff; border:1.5px solid #fed7aa; border-radius:10px; opacity:0.4; text-align:center; font-size:11px; color:#78350f;">⌛ 로딩중...</div>
                 </div>
                 <!-- 2026-06-12: KR 전용 이메일 카드 — 매니저 4명 아래 풀와이드 -->
-                <a id="mgrPhoneKrEmail" href="mailto:design@chameleon.design" class="mgr-kr-only" style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:linear-gradient(135deg,rgba(251,191,36,0.18) 0%,rgba(217,119,6,0.12) 100%); border:1.5px solid rgba(251,191,36,0.5); border-radius:12px; text-decoration:none; color:#fff; grid-column:1 / -1; box-shadow:0 4px 14px rgba(251,191,36,0.18);">
-                    <div style="flex-shrink:0; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#fbbf24,#d97706); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(251,191,36,0.4);">
+                <a id="mgrPhoneKrEmail" href="mailto:design@chameleon.design" class="mgr-kr-only" style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:linear-gradient(135deg,rgba(251,191,36,0.18) 0%,rgba(217,119,6,0.12) 100%); border:1px solid rgba(251,191,36,0.5); border-radius:12px; text-decoration:none; color:#fff; grid-column:1 / -1;">
+                    <div style="flex-shrink:0; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#fbbf24,#d97706); display:flex; align-items:center; justify-content:center;">
                         <i class="fa-solid fa-envelope" style="font-size:20px; color:#fff;"></i>
                     </div>
                     <div style="flex:1; min-width:0;">
-                        <div style="font-size:11px; color:#fde047; font-weight:700; letter-spacing:0.5px; margin-bottom:3px;">이메일 문의 · 대표 이메일</div>
-                        <div style="font-size:15px; color:#fff; font-weight:900; word-break:break-all;">design@chameleon.design</div>
+                        <div style="font-size:11px; color:#fde047; font-weight:500; letter-spacing:0.5px; margin-bottom:3px;">이메일 문의 · 대표 이메일</div>
+                        <div style="font-size:15px; color:#fff; font-weight:600; word-break:break-all;">design@chameleon.design</div>
                         <div style="font-size:10.5px; color:rgba(255,255,255,0.6); margin-top:3px;">24시간 내 회신 · 대용량 파일 전송 가능</div>
                     </div>
                 </a>
@@ -2247,7 +2247,7 @@ window._tcmFallbackClick = function(code) {
                     return res;
                 }
                 // 2026-05-30: sessionStorage 캐시 — 같은 세션에서 새로고침/페이지 이동 시 즉시 표시
-                var _MGR_CACHE_KEY = 'mgrPhones_html_v3';
+                var _MGR_CACHE_KEY = 'mgrPhones_html_v4';  // v697: 스타일 변경으로 캐시 무효화
                 var _MGR_CACHE_TTL = 30 * 60 * 1000; // 30분
                 function _hydrateFromCache() {
                     try {
@@ -2281,33 +2281,48 @@ window._tcmFallbackClick = function(code) {
                         }
                         if (resp.error || !resp.data) { console.warn('[mgrPhones] 재시도도 실패 — 슬롯 정리'); _cleanupSlot(); return; }
                         var data = resp.data;
-                        var FIELD = ['은미','성희','지숙','연두'];
-                        var rows = (data || []).filter(function(r){ return FIELD.some(function(n){ return (r.question||'').includes(n); }); });
+                        // v697: 하드코딩 FIELD 제거 — chatbot_knowledge._managers 에 등록된 모든 row 표시.
+                        //   새 매니저는 DB row 만 추가하면 자동 노출 (휴가 row 도 회색으로 표시).
+                        //   sort: 활성 우선 → 이름 가나다순
+                        var rows = (data || []).slice();
                         rows.sort(function(a,b){
-                            var ai = FIELD.findIndex(function(n){ return (a.question||'').includes(n); });
-                            var bi = FIELD.findIndex(function(n){ return (b.question||'').includes(n); });
-                            return ai - bi;
+                            var aOff = (a.is_active === false) ? 1 : 0;
+                            var bOff = (b.is_active === false) ? 1 : 0;
+                            if (aOff !== bOff) return aOff - bOff;
+                            return String(a.question||'').localeCompare(String(b.question||''), 'ko');
                         });
-                        // FIELD 이름 필터 결과가 비어있으면 (DB 등록명이 다를 수도) 전체 활성 매니저 사용
-                        if (rows.length === 0) rows = (data || []).filter(function(r){ return r.is_active !== false; });
+                        // v697: 동명이인 dedupe (이름 같으면 활성 row 우선)
+                        var _seen = {};
+                        rows = rows.filter(function(r){
+                            var k = String(r.question || '').trim();
+                            if (_seen[k]) {
+                                // 기존 row 가 비활성이면 새 row(활성) 로 교체
+                                if (_seen[k].is_active === false && r.is_active !== false) {
+                                    _seen[k] = r; return true;
+                                }
+                                return false;
+                            }
+                            _seen[k] = r; return true;
+                        });
                         var html = rows.map(function(r){
                             var phone = '';
                             try { phone = (JSON.parse(r.answer || '{}').phone || '').toString(); } catch(e){}
-                            // keywords 도 fallback (저장 형식이 다를 수 있음)
                             if (!phone && r.keywords) phone = String(r.keywords).replace(/[^0-9-]/g, '');
                             var phoneFmt = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
                             var tel = phone.replace(/-/g, '');
                             var off = r.is_active === false;
                             var nm = (r.question || '').replace(/[<>"'&]/g, '');
                             if (off) {
-                                return '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#f1f5f9; border:1.5px solid #cbd5e1; border-radius:10px; color:#94a3b8; font-size:12px; font-weight:700; text-align:center; opacity:0.6;">' +
+                                // v697: 그림자/볼드 톤다운
+                                return '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; color:#94a3b8; font-size:12px; font-weight:500; text-align:center; opacity:0.6;">' +
                                     '<div style="display:flex; align-items:center; gap:4px;"><span style="font-size:14px;">🌴</span><span style="text-decoration:line-through;">' + nm + '</span></div>' +
                                     '<span style="font-size:11px;">휴가중</span>' +
                                     '</div>';
                             }
-                            return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:800; text-align:center; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,0.1); backdrop-filter:blur(4px);">' +
+                            // v697: box-shadow + backdrop-filter 제거, font-weight 800→500, <b> → <span>
+                            return '<a href="tel:' + tel + '" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:12px 8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:10px; text-decoration:none; color:#fff; font-size:12px; font-weight:500; text-align:center; min-width:0;">' +
                                 '<span>' + nm + '</span>' +
-                                '<b style="color:#ffffff; font-size:13px; white-space:nowrap;">' + (phoneFmt || phone || '-') + '</b>' +
+                                '<span style="color:#ffffff; font-size:13px; white-space:nowrap; font-weight:500;">' + (phoneFmt || phone || '-') + '</span>' +
                                 '</a>';
                         }).join('');
                         // DB 에 매니저 등록 안 됐으면 슬롯 자체를 제거 (본사 카드만 남음 + auto-fit 으로 가운데 정렬)
