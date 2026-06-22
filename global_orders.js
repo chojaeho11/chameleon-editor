@@ -1729,11 +1729,17 @@ window.loadOrders = async () => {
             const { data } = await sb.from('admin_staff').select('id, name, role, color');
             staffList = data || [];
             // v695: 매니저 필터 드롭다운 — 동적 FIELD_MANAGERS 사용
+            // v696: 동명이인 dedupe (이름 같으면 가장 작은 id 만)
             const filterMgr = document.getElementById('filterManager');
             if (filterMgr) {
                 const _FM = await getFieldManagerNames();
-                const managers = staffList.filter(s => s.role === 'manager' && _FM.some(n => s.name.includes(n)));
-                managers.forEach(m => {
+                const matched = staffList.filter(s => s.role === 'manager' && _FM.some(n => s.name.includes(n)));
+                const _seen = new Map();
+                matched.forEach(m => {
+                    const k = String(m.name || '').trim();
+                    if (!_seen.has(k) || Number(_seen.get(k).id) > Number(m.id)) _seen.set(k, m);
+                });
+                Array.from(_seen.values()).forEach(m => {
                     const opt = document.createElement('option');
                     opt.value = m.id;
                     opt.textContent = m.name;
@@ -2064,11 +2070,20 @@ function createStaffSelectHTML(orderId, role, selectedId, isHqOrder) {
     // ★ 매니저: chatbot_knowledge._managers 에 등록된 사람만 표시 (v695 동적 로드)
     //   캐시가 비어 있으면 폴백 + 백그라운드 로드 트리거 (다음 호출부터 정확).
     const FIELD_MANAGERS = _fieldMgrCache || (function(){ getFieldManagerNames(); return ['은미','성희','지숙','연두']; })();
-    const filteredStaff = staffList.filter(s => {
+    let filteredStaff = staffList.filter(s => {
         if (s.role !== role) return false;
         if (role === 'manager') return FIELD_MANAGERS.some(n => s.name.includes(n));
         return true;
     });
+    // v696: admin_staff 에 동일 이름 중복 row 가 있으면 dedupe (가장 작은 id = 최초 등록 우선)
+    if (role === 'manager') {
+        const seen = new Map();
+        filteredStaff.forEach(s => {
+            const key = String(s.name || '').trim();
+            if (!seen.has(key) || Number(seen.get(key).id) > Number(s.id)) seen.set(key, s);
+        });
+        filteredStaff = Array.from(seen.values());
+    }
 
     // 특수 관리자 — 매니저 드롭다운에 "🏢 본사" 옵션 추가
     if (role === 'manager' && _isPrivileged) {
