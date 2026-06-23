@@ -839,8 +839,8 @@ async function submitPdSample() {
 @media(max-width:480px){.rb-feat-grid{grid-template-columns:1fr;}}
 </style>
 <section class="section" id="rbCalc" style="padding-top:8px;">
-    <h2 class="section-title" data-i18n="calc_title">커스텀 원판 제작 계산기</h2>
-    <p class="section-desc" data-i18n="calc_desc">원하는 사이즈와 두께를 입력하면 예상 단가를 바로 확인하실 수 있습니다.</p>
+    <h2 class="section-title" data-i18n="calc_title">유통사 원판제작 안내</h2>
+    <p class="section-desc" data-i18n="calc_desc">유통사 전용 계산기 금액은 동일 종류 100매 이상 구매 가능한 유통사 전용입니다. 이 외 소량 구매는 아래 규격사이즈를 이용해 구매해 주세요.</p>
     <div class="rb-calc-wrap">
         <div class="rb-type-row">
             <button type="button" class="rb-type active" data-type="premium" onclick="rbSetType('premium')">
@@ -851,6 +851,28 @@ async function submitPdSample() {
                 <div class="rb-type-name" data-i18n="calc_type_core">내장재용</div>
                 <div class="rb-type-sub" data-i18n="calc_type_core_sub">건축·문짝내부·차량·포장용 · 10~100mm</div>
             </button>
+        </div>
+        <!-- v704: 용지 선택 — 고급 인쇄용은 표면지/코어지 각 2종 중 선택, 내장재용은 고정 표시 -->
+        <div class="rb-paper-row" id="rbPaperRow" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+            <label class="rb-paper-pick" id="rbPaperSurfaceWrap">
+                <span data-i18n="calc_paper_surface" style="display:block; font-size:12px; color:#64748b; font-weight:600; margin-bottom:6px;">표면지</span>
+                <select id="rbPaperSurface" onchange="rbCalc()" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13.5px; background:#fff; font-family:inherit;">
+                    <option value="matte_canvas_420" data-i18n="calc_paper_surf_canvas">무광캔버스 백색 420g</option>
+                    <option value="eco_kraft_420" data-i18n="calc_paper_surf_kraft">에코크라프트 420g</option>
+                </select>
+            </label>
+            <label class="rb-paper-pick" id="rbPaperCoreWrap">
+                <span data-i18n="calc_paper_core" style="display:block; font-size:12px; color:#64748b; font-weight:600; margin-bottom:6px;">코어지</span>
+                <select id="rbPaperCore" onchange="rbCalc()" style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13.5px; background:#fff; font-family:inherit;">
+                    <option value="white_virgin_180" data-i18n="calc_paper_core_white">화이트버진 180g</option>
+                    <option value="kraft_virgin_180" data-i18n="calc_paper_core_kraft">크라프트버진 180g</option>
+                </select>
+            </label>
+        </div>
+        <!-- v704: 내장재용 안내 (premium 일 땐 숨김) -->
+        <div id="rbCorePaperNotice" style="display:none; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; font-size:12.5px; color:#475569; line-height:1.7; margin-bottom:14px;">
+            <div data-i18n="calc_core_paper_fixed"><b style="color:#0f172a;">표면지:</b> 재생지갈색 180g · <b style="color:#0f172a;">코어지:</b> 재생지갈색 120g (고정)</div>
+            <div data-i18n="calc_paper_other_consult" style="font-size:11.5px; color:#64748b; margin-top:4px;">⚠️ 기타 용지는 개별 상담이 필요합니다.</div>
         </div>
         <div class="rb-input-grid">
             <label><span data-i18n="calc_width">가로 (mm)</span><input id="rbW" type="number" value="1300" min="1" oninput="rbCalc()"></label>
@@ -865,19 +887,20 @@ async function submitPdSample() {
             <div class="rb-res-note" data-i18n="calc_res_note">VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.</div>
         </div>
     </div>
+    <!-- v704: 배송 안내 — 일반(100매 이하) / 유통사 2단 구성 -->
     <div class="rb-order-info">
         <div class="rb-oi-card">
-            <div class="rb-oi-flag">🇰🇷 🇯🇵 🇺🇸 🇲🇦</div>
-            <div class="rb-oi-title" data-i18n="calc_oi_local_t">맞춤제작 최소수량 · 한국·일본·미국·모로코</div>
-            <div class="rb-oi-desc" data-i18n="calc_oi_local_d">최소 100매부터 · 무료 배송</div>
+            <div class="rb-oi-flag">📦</div>
+            <div class="rb-oi-title" data-i18n="calc_ship_small_t">소량 주문 (100매 이하)</div>
+            <div class="rb-oi-desc" data-i18n-html="calc_ship_small_d">수도권(서울·경기) <b>무료배송</b><br>지방은 <b>착불 또는 20만원</b></div>
         </div>
         <div class="rb-oi-card">
-            <div class="rb-oi-flag">🇪🇺 🌏</div>
-            <div class="rb-oi-title" data-i18n="calc_oi_global_t">그 외 유럽·동남아시아 국가</div>
-            <div class="rb-oi-desc" data-i18n="calc_oi_global_d">최소 주문 40ft 컨테이너 단위</div>
+            <div class="rb-oi-flag">🚚</div>
+            <div class="rb-oi-title" data-i18n="calc_ship_dist_t">유통사 (100매 이상)</div>
+            <div class="rb-oi-desc" data-i18n-html="calc_ship_dist_d">수도권 <b>무료배송</b><br>지방은 <b>300매 이상 무료배송</b></div>
         </div>
     </div>
-    <div class="rb-ship-notice" data-i18n-html="calc_ship_notice">🚚 <b>대량 주문 고객</b>은 전세계 <b>무료배송</b>됩니다 (최소 1,000매).</div>
+    <div class="rb-ship-notice" data-i18n-html="calc_ship_notice">🌏 <b>해외 유통사</b>는 40ft 컨테이너 단위 대량주문 시 전세계 <b>무료배송</b>됩니다.</div>
 </section>
 
 <!-- ===== 장점 4가지 ===== -->
@@ -926,6 +949,11 @@ async function submitPdSample() {
     window.rbSetType = function(t){
         rbType = t;
         document.querySelectorAll('.rb-type').forEach(function(b){ b.classList.toggle('active', b.dataset.type===t); });
+        // v704: 용지 선택 UI 토글 — premium 만 선택 가능, core 는 고정 안내
+        var paperRow = document.getElementById('rbPaperRow');
+        var coreNotice = document.getElementById('rbCorePaperNotice');
+        if (paperRow) paperRow.style.display = (t === 'premium') ? 'grid' : 'none';
+        if (coreNotice) coreNotice.style.display = (t === 'core') ? 'block' : 'none';
         rbFillThick(); rbCalc();
     };
     window.rbCalc = function(){
@@ -1385,8 +1413,8 @@ raw_contact_jp: {
     ar:'طوكيو · أوساكا مباشر · ناNAمي', es:'Tokio · Osaka Directo · Nanami', de:'Tokio · Osaka Direkt · Nanami', fr:'Tokyo · Osaka Direct · Nanami'
 },
 // ── Custom Calculator & Features ──
-calc_title: { ko:'커스텀 원판 제작 계산기', ja:'カスタム原板 製作 計算機', en:'Custom Raw Board Price Calculator', zh:'Custom Raw Board Price Calculator', ar:'Custom Raw Board Price Calculator', es:'Custom Raw Board Price Calculator', de:'Custom Raw Board Price Calculator', fr:'Custom Raw Board Price Calculator' },
-calc_desc: { ko:'원하는 사이즈와 두께를 입력하면 예상 단가를 바로 확인하실 수 있습니다.', ja:'ご希望のサイズと厚みを入力すると、概算単価をすぐに確認できます。', en:'Enter your size and thickness to instantly see the estimated price.', zh:'Enter your size and thickness to instantly see the estimated price.', ar:'Enter your size and thickness to instantly see the estimated price.', es:'Enter your size and thickness to instantly see the estimated price.', de:'Enter your size and thickness to instantly see the estimated price.', fr:'Enter your size and thickness to instantly see the estimated price.' },
+calc_title: { ko:'유통사 원판제작 안내', ja:'代理店向け 原板製作のご案内', en:'Distributor Custom Board Guide', zh:'经销商定制板材指南', ar:'دليل اللوحات المخصصة للموزعين', es:'Guía de tableros personalizados para distribuidores', de:'Distributor Custom Board Guide', fr:'Guide des panneaux sur mesure pour distributeurs' },
+calc_desc: { ko:'유통사 전용 계산기 금액은 동일 종류 100매 이상 구매 가능한 유통사 전용입니다. 이 외 소량 구매는 아래 규격사이즈를 이용해 구매해 주세요.', ja:'代理店専用計算機の金額は、同一種類100枚以上ご購入の代理店様向けです。少量購入は下記の規格サイズからご注文ください。', en:'The distributor calculator price applies to distributors purchasing 100+ sheets of the same type. For smaller quantities, please use the standard-size products below.', zh:'经销商专用计算器价格适用于同种类购买100张以上的经销商。少量订购请使用下方标准尺寸产品。', ar:'يطبق سعر آلة حساب الموزعين على الموزعين الذين يشترون 100 لوح أو أكثر من نفس النوع. للكميات الصغيرة، يرجى استخدام منتجات الحجم القياسي أدناه.', es:'El precio de la calculadora para distribuidores se aplica a distribuidores que compran 100+ hojas del mismo tipo. Para cantidades menores, use los productos de tamaño estándar a continuación.', de:'Der Preis im Vertriebspartner-Rechner gilt für Distributoren, die 100+ Blatt derselben Sorte bestellen. Für Kleinmengen nutzen Sie die Standardgrößen unten.', fr:'Le prix de la calculatrice distributeur s\'applique aux distributeurs achetant 100+ feuilles du même type. Pour de plus petites quantités, utilisez les produits de taille standard ci-dessous.' },
 calc_type_premium: { ko:'고급 인쇄용', ja:'高級印刷用', en:'Premium Print Grade', zh:'Premium Print Grade', ar:'Premium Print Grade', es:'Premium Print Grade', de:'Premium Print Grade', fr:'Premium Print Grade' },
 calc_type_premium_sub: { ko:'우수한 발색 · 두께 8~16mm', ja:'優れた発色 · 厚み 8〜16mm', en:'Superb color · 8–16mm', zh:'Superb color · 8–16mm', ar:'Superb color · 8–16mm', es:'Superb color · 8–16mm', de:'Superb color · 8–16mm', fr:'Superb color · 8–16mm' },
 calc_type_core: { ko:'내장재용', ja:'内装材用', en:'Core / Filler Grade', zh:'Core / Filler Grade', ar:'Core / Filler Grade', es:'Core / Filler Grade', de:'Core / Filler Grade', fr:'Core / Filler Grade' },
@@ -1399,11 +1427,21 @@ calc_res_persqm: { ko:'제곱미터당 단가', ja:'1m²あたり単価', en:'Pr
 calc_res_persheet: { ko:'1장당 가격', ja:'1枚あたり価格', en:'Price per sheet', zh:'Price per sheet', ar:'Price per sheet', es:'Price per sheet', de:'Price per sheet', fr:'Price per sheet' },
 calc_res_total: { ko:'합계 (수량 기준)', ja:'合計 (数量)', en:'Total (for quantity)', zh:'Total (for quantity)', ar:'Total (for quantity)', es:'Total (for quantity)', de:'Total (for quantity)', fr:'Total (for quantity)' },
 calc_res_note: { ko:'VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.', ja:'税別 · 表示価格はサイズ·厚み·数量により変動する場合があります。', en:'VAT excluded · Final price may vary by size, thickness, and volume.', zh:'VAT excluded · Final price may vary by size, thickness, and volume.', ar:'VAT excluded · Final price may vary by size, thickness, and volume.', es:'VAT excluded · Final price may vary by size, thickness, and volume.', de:'VAT excluded · Final price may vary by size, thickness, and volume.', fr:'VAT excluded · Final price may vary by size, thickness, and volume.' },
-calc_oi_local_t: { ko:'맞춤제작 최소수량 · 한국·일본·미국·모로코', ja:'受注製作 最小数量 · 韓国·日本·米国·モロッコ', en:'Custom order minimum · Korea·Japan·USA·Morocco', zh:'Custom order minimum · Korea·Japan·USA·Morocco', ar:'Custom order minimum · Korea·Japan·USA·Morocco', es:'Custom order minimum · Korea·Japan·USA·Morocco', de:'Custom order minimum · Korea·Japan·USA·Morocco', fr:'Custom order minimum · Korea·Japan·USA·Morocco' },
-calc_oi_local_d: { ko:'최소 100매부터 · 무료 배송', ja:'最小100枚から · 送料無料', en:'From 100 sheets · Free shipping', zh:'From 100 sheets · Free shipping', ar:'From 100 sheets · Free shipping', es:'From 100 sheets · Free shipping', de:'From 100 sheets · Free shipping', fr:'From 100 sheets · Free shipping' },
-calc_oi_global_t: { ko:'그 외 유럽·동남아시아 국가', ja:'その他 欧州·東南アジア諸国', en:'Other Europe & Southeast Asia', zh:'Other Europe & Southeast Asia', ar:'Other Europe & Southeast Asia', es:'Other Europe & Southeast Asia', de:'Other Europe & Southeast Asia', fr:'Other Europe & Southeast Asia' },
-calc_oi_global_d: { ko:'최소 주문 40ft 컨테이너 단위', ja:'最小注文は40ftコンテナ単位', en:'Minimum order: 1×40ft container', zh:'Minimum order: 1×40ft container', ar:'Minimum order: 1×40ft container', es:'Minimum order: 1×40ft container', de:'Minimum order: 1×40ft container', fr:'Minimum order: 1×40ft container' },
-calc_ship_notice: { ko:'🚚 <b>대량 주문 고객</b>은 전세계 <b>무료배송</b>됩니다 (최소 1,000매).', ja:'🚚 <b>大量注文のお客様</b>は世界中<b>送料無料</b>です（最小1,000枚）。', en:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).', zh:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).', ar:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).', es:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).', de:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).', fr:'🚚 <b>Free worldwide shipping</b> for bulk orders (minimum 1,000 sheets).' },
+// v704: 배송 안내 — 소량(100매 이하) + 유통사(100매 이상) 두 카드 + 해외 유통사 노티스
+calc_ship_small_t: { ko:'소량 주문 (100매 이하)', ja:'少量注文 (100枚以下)', en:'Small Orders (≤100 sheets)', zh:'少量订单 (100张以下)', ar:'الطلبات الصغيرة (≤100 لوح)', es:'Pedidos pequeños (≤100 hojas)', de:'Kleinmengen (≤100 Blatt)', fr:'Petites commandes (≤100 feuilles)' },
+calc_ship_small_d: { ko:'수도권(서울·경기) <b>무료배송</b><br>지방은 <b>착불 또는 20만원</b>', ja:'首都圏(ソウル·京畿) <b>送料無料</b><br>地方は <b>着払 または 20万ウォン</b>', en:'<b>Free shipping</b> in Seoul/Gyeonggi<br>Other regions: <b>COD or ₩200,000</b>', zh:'首都圈(首尔·京畿)<b>免运费</b><br>其他地区: <b>到付或20万韩元</b>', ar:'<b>شحن مجاني</b> في سيول/جيونجي<br>المناطق الأخرى: <b>دفع عند الاستلام أو 200,000 وون</b>', es:'<b>Envío gratis</b> en Seúl/Gyeonggi<br>Otras regiones: <b>contra reembolso o ₩200.000</b>', de:'<b>Gratisversand</b> in Seoul/Gyeonggi<br>Andere Regionen: <b>Nachnahme oder ₩200.000</b>', fr:'<b>Livraison gratuite</b> à Séoul/Gyeonggi<br>Autres régions: <b>contre-remboursement ou 200 000 ₩</b>' },
+calc_ship_dist_t: { ko:'유통사 (100매 이상)', ja:'代理店 (100枚以上)', en:'Distributor (≥100 sheets)', zh:'经销商 (100张以上)', ar:'الموزع (≥100 لوح)', es:'Distribuidor (≥100 hojas)', de:'Vertriebspartner (≥100 Blatt)', fr:'Distributeur (≥100 feuilles)' },
+calc_ship_dist_d: { ko:'수도권 <b>무료배송</b><br>지방은 <b>300매 이상 무료배송</b>', ja:'首都圏 <b>送料無料</b><br>地方は <b>300枚以上で送料無料</b>', en:'<b>Free shipping</b> in Seoul/Gyeonggi<br>Other regions: <b>free for ≥300 sheets</b>', zh:'首都圈<b>免运费</b><br>其他地区: <b>300张以上免运费</b>', ar:'<b>شحن مجاني</b> في سيول/جيونجي<br>المناطق الأخرى: <b>مجاناً لـ ≥300 لوح</b>', es:'<b>Envío gratis</b> en Seúl/Gyeonggi<br>Otras regiones: <b>gratis desde 300 hojas</b>', de:'<b>Gratisversand</b> in Seoul/Gyeonggi<br>Andere Regionen: <b>frei ab 300 Blatt</b>', fr:'<b>Livraison gratuite</b> à Séoul/Gyeonggi<br>Autres régions: <b>gratuite à partir de 300 feuilles</b>' },
+calc_ship_notice: { ko:'🌏 <b>해외 유통사</b>는 40ft 컨테이너 단위 대량주문 시 전세계 <b>무료배송</b>됩니다.', ja:'🌏 <b>海外代理店</b>は40ftコンテナ単位の大量注文で世界中<b>送料無料</b>です。', en:'🌏 <b>Overseas distributors</b>: free worldwide shipping with 1×40ft container orders.', zh:'🌏 <b>海外经销商</b>: 40ft集装箱大量订单全球<b>免运费</b>。', ar:'🌏 <b>الموزعون في الخارج</b>: شحن عالمي مجاني عند طلب حاوية 40 قدم.', es:'🌏 <b>Distribuidores en el extranjero</b>: envío internacional gratuito con pedidos de contenedor de 40 pies.', de:'🌏 <b>Auslandsvertriebspartner</b>: weltweit kostenloser Versand bei 40ft-Container-Bestellungen.', fr:'🌏 <b>Distributeurs étrangers</b>: livraison mondiale gratuite pour commandes de conteneur 40ft.' },
+// v704: 용지 선택 (premium 만 노출)
+calc_paper_surface: { ko:'표면지', ja:'表面紙', en:'Surface Paper', zh:'表面纸', ar:'الورق السطحي', es:'Papel de superficie', de:'Oberflächenpapier', fr:'Papier de surface' },
+calc_paper_core: { ko:'코어지', ja:'コア紙', en:'Core Paper', zh:'芯纸', ar:'ورق النواة', es:'Papel del núcleo', de:'Kernpapier', fr:'Papier de cœur' },
+calc_paper_surf_canvas: { ko:'무광캔버스 백색 420g', ja:'マットキャンバス ホワイト 420g', en:'Matte Canvas White 420g', zh:'哑光帆布白 420g', ar:'كانفاس مطفي أبيض 420g', es:'Lienzo mate blanco 420g', de:'Matte Canvas Weiß 420g', fr:'Toile mate blanche 420g' },
+calc_paper_surf_kraft: { ko:'에코크라프트 420g', ja:'エコクラフト 420g', en:'Eco Kraft 420g', zh:'环保牛皮纸 420g', ar:'إيكو كرافت 420g', es:'Eco Kraft 420g', de:'Eco Kraft 420g', fr:'Eco Kraft 420g' },
+calc_paper_core_white: { ko:'화이트버진 180g', ja:'ホワイトバージン 180g', en:'White Virgin 180g', zh:'白色原浆 180g', ar:'فيرجن أبيض 180g', es:'Virgin blanco 180g', de:'Weiß Virgin 180g', fr:'Vierge blanc 180g' },
+calc_paper_core_kraft: { ko:'크라프트버진 180g', ja:'クラフトバージン 180g', en:'Kraft Virgin 180g', zh:'牛皮原浆 180g', ar:'فيرجن كرافت 180g', es:'Virgin Kraft 180g', de:'Kraft Virgin 180g', fr:'Vierge Kraft 180g' },
+calc_core_paper_fixed: { ko:'<b style="color:#0f172a;">표면지:</b> 재생지갈색 180g · <b style="color:#0f172a;">코어지:</b> 재생지갈색 120g (고정)', ja:'<b style="color:#0f172a;">表面紙:</b> 再生紙ブラウン 180g · <b style="color:#0f172a;">コア紙:</b> 再生紙ブラウン 120g (固定)', en:'<b style="color:#0f172a;">Surface:</b> Recycled Brown 180g · <b style="color:#0f172a;">Core:</b> Recycled Brown 120g (fixed)', zh:'<b style="color:#0f172a;">表面纸:</b> 再生纸棕 180g · <b style="color:#0f172a;">芯纸:</b> 再生纸棕 120g (固定)', ar:'<b style="color:#0f172a;">الورق السطحي:</b> ورق معاد بني 180g · <b style="color:#0f172a;">ورق النواة:</b> ورق معاد بني 120g (ثابت)', es:'<b style="color:#0f172a;">Superficie:</b> Reciclado marrón 180g · <b style="color:#0f172a;">Núcleo:</b> Reciclado marrón 120g (fijo)', de:'<b style="color:#0f172a;">Oberfläche:</b> Recycling Braun 180g · <b style="color:#0f172a;">Kern:</b> Recycling Braun 120g (fest)', fr:'<b style="color:#0f172a;">Surface:</b> Recyclé brun 180g · <b style="color:#0f172a;">Cœur:</b> Recyclé brun 120g (fixe)' },
+calc_paper_other_consult: { ko:'⚠️ 기타 용지는 개별 상담이 필요합니다.', ja:'⚠️ その他の用紙は個別ご相談が必要です。', en:'⚠️ Other paper types require individual consultation.', zh:'⚠️ 其他纸张需个别咨询。', ar:'⚠️ تتطلب أنواع الورق الأخرى استشارة فردية.', es:'⚠️ Otros papeles requieren consulta personalizada.', de:'⚠️ Andere Papiersorten erfordern individuelle Beratung.', fr:'⚠️ Les autres papiers nécessitent une consultation individuelle.' },
 calc_wholesale_note: { ko:'📦 1,000매 이상 도매·유통업체는 위 단가 계산기 금액을 참조하세요 (예: 장당 16,250원).<br>🛒 소량 주문은 아래 제품을 클릭하시면 구매 가능합니다.', ja:'📦 1,000枚以上の卸·流通業者は上記の単価計算機の金額をご参照ください（例：1枚あたり ¥1,625）。<br>🛒 少量注文は下記の商品をクリックしてご購入いただけます。', en:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', zh:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', ar:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', es:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', de:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.', fr:'📦 Wholesale & distributors (1,000+ sheets): refer to the calculator above (e.g., $16.25 per sheet).<br>🛒 For small orders, click a product below to purchase.' },
 feat_title: { ko:'왜 헥사라이트 원판인가요?', ja:'なぜHexaliteの原板なのか', en:'Why Hexalite Raw Board?', zh:'Why Hexalite Raw Board?', ar:'Why Hexalite Raw Board?', es:'Why Hexalite Raw Board?', de:'Why Hexalite Raw Board?', fr:'Why Hexalite Raw Board?' },
 feat1_t: { ko:'인쇄 전문 보드 · 우수한 발색', ja:'印刷専門ボード · 優れた発色', en:'Print-grade board · superb color', zh:'Print-grade board · superb color', ar:'Print-grade board · superb color', es:'Print-grade board · superb color', de:'Print-grade board · superb color', fr:'Print-grade board · superb color' },
