@@ -501,6 +501,48 @@ html, body { background: #ffffff !important; }
     width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
     font-size: 14px; box-sizing: border-box; transition: border-color 0.15s;
 }
+/* v712: 옵션 카드 info 버튼 — PC hover tooltip (모바일은 클릭 시 모달) */
+.so-lf-info { position: relative; }
+.so-lf-info:hover { background: #c7d2fe !important; color: #4338ca !important; }
+@media (hover: hover) and (pointer: fine) {
+    .so-lf-info::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        right: -4px;
+        background: #1e1b4b;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 7px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        max-width: 240px;
+        white-space: normal;
+        width: max-content;
+        max-width: 220px;
+        line-height: 1.5;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(4px);
+        transition: opacity 0.15s, transform 0.15s;
+        z-index: 99;
+        box-shadow: 0 8px 20px -4px rgba(0,0,0,0.3);
+    }
+    .so-lf-info::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% + 1px);
+        right: 4px;
+        border: 5px solid transparent;
+        border-top-color: #1e1b4b;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 99;
+    }
+    .so-lf-info:hover::after,
+    .so-lf-info:hover::before { opacity: 1; transform: translateY(0); }
+}
 .so-co-input:focus { outline: none; border-color: #f59e0b; }
 .so-co-row { display: flex; gap: 8px; }
 .so-co-row > .so-co-input { flex: 1; }
@@ -5959,38 +6001,42 @@ html, body { background: #ffffff !important; }
             bs2.style.color = dbl ? '#fff' : '#475569';
             bs2.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
-        // 용지 (BIZ_PAPERS 재사용)
+        // 2026-06-23 v712: 옵션 카드 — 정보 아이콘 (i) 추가, 클릭 시 모달 (PC hover tooltip + 모바일 popup)
+        function _renderOptCard(o, selected, onClick, category) {
+            var nm = _bizI18n(o, 'name');
+            var desc = _bizI18n(o, 'desc');
+            var bc = selected ? '#7c3aed' : '#e2e8f0';
+            var bg = selected ? '#faf5ff' : '#fff';
+            var priceTag = (o.price > 0) ? ' <span style="color:#dc2626; font-weight:700;">+' + fmtPrice(o.price) + '</span>' : '';
+            return '<div style="position:relative; cursor:pointer; padding:10px 24px 10px 10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;" onclick="' + onClick + '">' +
+                nm + priceTag +
+                '<button type="button" class="so-lf-info" data-tip="' + String(desc).replace(/"/g,'&quot;') + '" onclick="event.stopPropagation(); window._soShowOptInfo(\'' + category + '\', \'' + o.key + '\')" '
+                + 'style="position:absolute; top:5px; right:6px; width:18px; height:18px; border-radius:50%; background:#f1f5f9; color:#64748b; border:none; font-size:11px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; padding:0; font-family:inherit;">i</button>' +
+                '</div>';
+        }
+        // 용지 (BIZ_PAPERS)
         var ppGrid = document.getElementById('soLfPaperGrid');
         if (ppGrid && typeof BIZ_PAPERS !== 'undefined') {
             ppGrid.innerHTML = BIZ_PAPERS.map(function(o){
-                var nm = _bizI18n(o, 'name');
-                var sel = (state.leafletPaper === o.key);
-                var bc = sel ? '#7c3aed' : '#e2e8f0';
-                var bg = sel ? '#faf5ff' : '#fff';
-                return '<div onclick="window._soPickLeafletPaper(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + '</div>';
+                return _renderOptCard(o, state.leafletPaper === o.key, "window._soPickLeafletPaper('" + o.key + "')", 'paper');
             }).join('');
         }
-        // 박 (BIZ_FOILS) — 클릭 토글
+        // 박 (BIZ_FOILS) — 없음 카드 + 박 옵션들
         var foGrid = document.getElementById('soLfFoilGrid');
         if (foGrid && typeof BIZ_FOILS !== 'undefined') {
-            foGrid.innerHTML = '<div onclick="window._soPickLeafletFoil(null)" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + (!state.leafletFoil ? '#7c3aed' : '#e2e8f0') + '; background:' + (!state.leafletFoil ? '#faf5ff' : '#fff') + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#475569;">' + tr('없음','なし','None') + '</div>' +
+            var noneBC = !state.leafletFoil ? '#7c3aed' : '#e2e8f0';
+            var noneBG = !state.leafletFoil ? '#faf5ff' : '#fff';
+            foGrid.innerHTML = '<div onclick="window._soPickLeafletFoil(null)" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + noneBC + '; background:' + noneBG + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#475569;">' + tr('없음','なし','None') + '</div>' +
                 BIZ_FOILS.map(function(o){
-                    var nm = _bizI18n(o, 'name');
-                    var sel = (state.leafletFoil === o.key);
-                    var bc = sel ? '#7c3aed' : '#e2e8f0';
-                    var bg = sel ? '#faf5ff' : '#fff';
-                    return '<div onclick="window._soPickLeafletFoil(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + ' <span style="color:#dc2626;">+' + fmtPrice(o.price) + '</span></div>';
+                    return _renderOptCard(o, state.leafletFoil === o.key, "window._soPickLeafletFoil('" + o.key + "')", 'foil');
                 }).join('');
         }
         // 후가공 (BIZ_FINISHES) — 체크박스 다중 선택
         var fnGrid = document.getElementById('soLfFinishGrid');
         if (fnGrid && typeof BIZ_FINISHES !== 'undefined') {
             fnGrid.innerHTML = BIZ_FINISHES.map(function(o){
-                var nm = _bizI18n(o, 'name');
                 var sel = !!(state.leafletFinishes && state.leafletFinishes[o.key]);
-                var bc = sel ? '#7c3aed' : '#e2e8f0';
-                var bg = sel ? '#faf5ff' : '#fff';
-                return '<div onclick="window._soToggleLeafletFinish(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + ' <span style="color:#dc2626;">+' + fmtPrice(o.price) + '</span></div>';
+                return _renderOptCard(o, sel, "window._soToggleLeafletFinish('" + o.key + "')", 'finish');
             }).join('');
         }
         // 2026-06-23 v710: 토글 버튼 라벨에 현재 선택값 표시
@@ -6051,6 +6097,74 @@ html, body { background: #ffffff !important; }
         state.leafletFinishes[key] = !state.leafletFinishes[key];
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
+    };
+    // 2026-06-23 v712: 옵션 정보 모달 (용지/박/후가공) — PC hover tooltip + 모바일 클릭 popup
+    // 각 옵션의 시각적 표현 (CSS swatch) + 상세 설명 + 사용 예시
+    var _OPT_VISUAL = {
+        // 용지 — 종이별 색감/질감 미리보기 (CSS)
+        paper: {
+            nuvegi240:    { bg:'linear-gradient(135deg,#faf7f0,#f0ebe0)', label:'누브지', hint:'결혼식 청첩장, 고급 명함, 브로셔에 가장 많이 사용되는 무난한 고급지입니다.' },
+            whirale230:   { bg:'repeating-linear-gradient(45deg,#f5f0e6 0 3px,#ebe3d3 3px 6px)', label:'리넨', hint:'실로 짠 듯한 직조 패턴이 살짝 비쳐 클래식 명함과 안내장에 인기.' },
+            stardream240: { bg:'linear-gradient(135deg,#fdfbf0,#e8e2c5,#fdfbf0)', label:'펄', hint:'화이트 위에 미세한 펄이 반짝여 결혼식·이벤트 청첩장에 자주 쓰는 화려한 용지.' },
+            rendez240:    { bg:'#f5f1ea', label:'내추럴', hint:'재생지 느낌의 부드러운 매트 표면. 친환경/내추럴 컨셉 브랜드에 적합.' },
+            concept270:   { bg:'#ffffff', label:'두꺼움', hint:'270g 의 두께감 있는 백상지. 묵직한 명함 또는 고급 인쇄물에 사용.' },
+            popset250:    { bg:'linear-gradient(135deg,#fffaf0,#fff5e1)', label:'밝음', hint:'밝고 화사한 컬러로 디자인 색감이 가장 잘 표현되는 용지. 사진 포함 명함에 강추.' },
+            yupoblue250:  { bg:'linear-gradient(135deg,#f0f4fa,#e8eef7)', label:'블루', hint:'은은한 푸른 빛이 도는 차분한 톤. 비즈니스·법무·금융 명함 인기.' },
+            scot220:      { bg:'#ffffff', label:'코팅', hint:'양면 코팅으로 인쇄가 가장 선명함. 사진·이미지가 많은 카드/리플렛에 추천.' },
+            montblanc240: { bg:'#fefefe', label:'순백', hint:'완전 순백색 표면. 미니멀/정갈한 디자인에 가장 적합.' },
+            arte310:      { bg:'#ffffff', label:'프리미엄', hint:'310g 두께의 초백색 프리미엄 용지. 명함 중 가장 고급 옵션.' }
+        },
+        // 박 — 박지 색상별 시각 미리보기
+        foil: {
+            gold_matte:   { bg:'linear-gradient(135deg,#d4af37,#b8941f)', label:'무광 GOLD', hint:'반짝임 없이 차분한 골드. 결혼식 청첩장·고급 브랜드에 가장 인기.' },
+            gold_gloss:   { bg:'linear-gradient(135deg,#ffd700,#ffaa00,#ffd700)', label:'유광 GOLD', hint:'거울처럼 반짝이는 골드. 이벤트·파티 초대장에 화려한 포인트.' },
+            silver_gloss: { bg:'linear-gradient(135deg,#1f1f1f,#0a0a0a)', label:'먹박', hint:'유광 블랙 박. 럭셔리 브랜드 로고/타이틀에 사용하면 무게감 UP.' },
+            black_matte:  { bg:'#1a1a1a', label:'무광 BLACK', hint:'무광 검정. 시크하고 모던한 디자인 마감에 최적.' },
+            red_foil:     { bg:'linear-gradient(135deg,#dc2626,#991b1b)', label:'RED', hint:'강렬한 빨강. 이벤트·세일·신년 카드 등 임팩트를 줄 때.' },
+            blue_foil:    { bg:'linear-gradient(135deg,#1e40af,#1e3a8a)', label:'BLUE', hint:'쿨한 파랑. 비즈니스·테크 브랜드에 세련된 포인트.' },
+            holo_foil:    { bg:'linear-gradient(135deg,#f0abfc,#a5f3fc,#fde047,#86efac,#f0abfc)', label:'HOLO', hint:'보는 각도에 따라 무지개 빛으로 변하는 박. 한정판·아트워크에 독특한 효과.' }
+        },
+        // 후가공 — SVG 아이콘으로 표현
+        finish: {
+            hyungap:   { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><rect x="6" y="6" width="68" height="48" fill="#fff" stroke="#d4d4d8" stroke-width="2"/><rect x="22" y="20" width="36" height="20" fill="#e0e7ff" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="2 2"/><text x="40" y="34" text-anchor="middle" font-size="11" font-weight="900" fill="#4338ca">LOGO</text></svg>', hint:'압력으로 표면에 양각 입체감을 만들어 로고나 타이틀이 도드라져 보입니다. 손으로 만져보면 솟아있음.' },
+            embossing: { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><rect x="6" y="6" width="68" height="48" fill="#fff" stroke="#d4d4d8" stroke-width="2"/><circle cx="25" cy="30" r="6" fill="#e0e7ff"/><circle cx="40" cy="30" r="6" fill="#e0e7ff"/><circle cx="55" cy="30" r="6" fill="#e0e7ff"/></svg>', hint:'표면 전체에 양각 무늬를 넣어 텍스처를 만듭니다. 도트/꽃/패턴 등 다양한 무늬 가능.' },
+            mising:    { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><rect x="6" y="6" width="68" height="48" fill="#fff" stroke="#d4d4d8" stroke-width="2"/><line x1="6" y1="30" x2="74" y2="30" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3 3"/></svg>', hint:'재봉선 모양의 점선 절취. 쿠폰·티켓처럼 한쪽을 깔끔하게 떼어낼 수 있게 합니다.' },
+            oshi:      { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><path d="M 10 6 L 40 6 L 40 54 L 70 54 L 70 6" fill="#e0e7ff" stroke="#7c3aed" stroke-width="2"/></svg>', hint:'접히는 부분을 미리 눌러주는 가공. 접지/2단/3단 카드 만들 때 필수.' },
+            taegong:   { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><rect x="6" y="6" width="68" height="48" fill="#fff" stroke="#d4d4d8" stroke-width="2"/><circle cx="40" cy="30" r="6" fill="#fff" stroke="#7c3aed" stroke-width="2"/></svg>', hint:'원형 구멍을 뚫어 끈/링을 꿸 수 있게 합니다. 행택·도서 카드 등에 사용.' },
+            gwidori:   { svg:'<svg viewBox="0 0 80 60" width="80" height="60"><rect x="6" y="6" width="68" height="48" rx="12" ry="12" fill="#fff" stroke="#7c3aed" stroke-width="2"/></svg>', hint:'모서리를 둥글게 가공. 부드러운 인상 + 끝이 닳지 않아 카드 수명도 늘어납니다.' }
+        }
+    };
+    window._soShowOptInfo = function(category, key) {
+        var pool = (category === 'paper') ? BIZ_PAPERS : (category === 'foil') ? BIZ_FOILS : BIZ_FINISHES;
+        var item = pool.find(function(x){ return x.key === key; });
+        if (!item) return;
+        var nm = _bizI18n(item, 'name');
+        var desc = _bizI18n(item, 'desc');
+        var vis = (_OPT_VISUAL[category] || {})[key] || {};
+        var visualHtml;
+        if (vis.svg) {
+            visualHtml = '<div style="display:flex; align-items:center; justify-content:center; width:100%; height:140px; background:#f8fafc; border-radius:12px; padding:12px;">' + vis.svg + '</div>';
+        } else {
+            visualHtml = '<div style="width:100%; height:140px; background:' + (vis.bg || '#f1f5f9') + '; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:900; color:rgba(0,0,0,0.35); letter-spacing:2px; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06);">' + (vis.label || '') + '</div>';
+        }
+        var priceLine = (item.price > 0) ? '<div style="font-size:13px; font-weight:800; color:#dc2626; margin-top:4px;">+' + fmtPrice(item.price) + '</div>' : '';
+        var hintLine = vis.hint ? '<div style="font-size:12.5px; color:#475569; line-height:1.7; margin-top:10px; padding:10px 12px; background:#f8fafc; border-radius:8px;">' + vis.hint + '</div>' : '';
+        var ov = document.createElement('div');
+        ov.id = 'soOptInfoOv';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99998; display:flex; align-items:center; justify-content:center; padding:16px;';
+        ov.innerHTML = '<div style="background:#fff; border-radius:16px; padding:18px 20px; max-width:380px; width:100%; max-height:85vh; overflow-y:auto;">'
+            + '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">'
+            +   '<div style="font-size:15px; font-weight:800; color:#0f172a;">' + nm + '</div>'
+            +   '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:30px; height:30px; border:none; background:#f1f5f9; border-radius:50%; cursor:pointer; font-size:16px; line-height:1; color:#64748b; font-family:inherit;">×</button>'
+            + '</div>'
+            + visualHtml
+            + priceLine
+            + '<div style="font-size:13px; color:#1e293b; line-height:1.6; margin-top:10px; font-weight:600;">' + desc + '</div>'
+            + hintLine
+            + '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:100%; margin-top:14px; padding:11px; background:#0f172a; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>'
+            + '</div>';
+        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        document.body.appendChild(ov);
     };
     // 2026-06-23 v710: 용지/박/후가공 섹션 토글 (각각 클릭 시 그리드 열기/닫기)
     window._soLeafletToggleSection = function(which) {
