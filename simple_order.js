@@ -1876,28 +1876,31 @@ html, body { background: #ffffff !important; }
             <div id="soLfPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
           </div>
 
-          <!-- v710: 박 (옵션) — 토글 버튼 -->
-          <button type="button" id="soLfFoilToggle" onclick="window._soLeafletToggleSection('foil')" style="width:100%; margin-top:10px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span style="display:flex; align-items:center; gap:8px;">
-              <i class="fa-solid fa-sparkles"></i>
-              <span>${tr('박','箔','Foil')} (${tr('옵션','任意','optional')}): <span id="soLfFoilCurrent" style="color:#1e1b4b;">${tr('없음','なし','None')}</span></span>
-            </span>
-            <i id="soLfFoilChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          <!-- v722: 리플렛 박/후가공 토글 — 명함과 동일 스타일 (헤더 텍스트 + 힌트 + chevron) -->
+          <button type="button" id="soLfFoilToggle" onclick="window._soLeafletToggleSection('foil')"
+            style="width:100%; margin-top:18px; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span id="soLfFoilCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
+              <span id="soLfFoilTogglePreview" style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+            </div>
+            <i id="soLfFoilChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
-          <div id="soLfFoilWrap" style="display:none; margin-top:6px;">
-            <div id="soLfFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          <div id="soLfFoilWrap" style="display:none; margin-top:8px;">
+            <div id="soLfFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
 
-          <!-- v710: 후가공 (옵션) — 토글 버튼 -->
-          <button type="button" id="soLfFinishToggle" onclick="window._soLeafletToggleSection('finish')" style="width:100%; margin-top:10px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span style="display:flex; align-items:center; gap:8px;">
-              <i class="fa-solid fa-screwdriver-wrench"></i>
-              <span>${tr('후가공','後加工','Finishing')} (${tr('옵션','任意','optional')}): <span id="soLfFinishCurrent" style="color:#1e1b4b;">${tr('없음','なし','None')}</span></span>
-            </span>
-            <i id="soLfFinishChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          <button type="button" id="soLfFinishToggle" onclick="window._soLeafletToggleSection('finish')"
+            style="width:100%; margin-top:12px; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')} <span id="soLfFinishCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
+              <span id="soLfFinishTogglePreview" style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+            </div>
+            <i id="soLfFinishChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
-          <div id="soLfFinishWrap" style="display:none; margin-top:6px;">
-            <div id="soLfFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          <div id="soLfFinishWrap" style="display:none; margin-top:8px;">
+            <div id="soLfFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
         </div>
 
@@ -2658,6 +2661,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span style="font-weight:600; color:#be185d; font-size:11px; margin-left:4px;">+${fmtPrice(10000)}</span></span>
               <span id="soBizFoilTogglePreview" style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
             </div>
             <span id="soBizFoilToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
@@ -2674,6 +2678,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')}</span>
               <span id="soBizFinishTogglePreview" style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
             </div>
             <span id="soBizFinishToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
@@ -6030,23 +6035,17 @@ html, body { background: #ffffff !important; }
             bs2.style.color = dbl ? '#fff' : '#475569';
             bs2.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
-        // 2026-06-23 v713/v714: 옵션 카드 — PC 호버 미리보기 + 모바일 돋보기 버튼 (우측, 클릭 시 모달)
-        function _renderOptCard(o, selected, onClick, category) {
+        // v722: 리플렛 옵션 카드 — 명함과 동일한 `_bizCard2tone` 스타일 + hover preview + 모바일 모달
+        function _renderOptCard(o, selected, onClickStr, category) {
             var nm = _bizI18n(o, 'name');
-            var bc = selected ? '#7c3aed' : '#e2e8f0';
-            var bg = selected ? '#faf5ff' : '#fff';
-            var priceTag = (o.price > 0) ? ' <span style="color:#dc2626; font-weight:700;">+' + fmtPrice(o.price) + '</span>' : '';
-            // v714: 모바일에서만 보이는 돋보기 버튼 (CSS @media 로 PC 숨김) — 클릭 시 모달
-            var magBtn = '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
-                + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'' + category + '\',\'' + o.key + '\', null)" '
-                + 'style="position:absolute; top:50%; right:6px; transform:translateY(-50%); width:26px; height:26px; border:none; background:#eef2ff; color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>';
+            var ds = _bizI18n(o, 'desc');
+            var priceTag = (o.price > 0) ? '+' + fmtPrice(o.price) : '';
             return '<div class="so-lf-opt-card" data-opt-cat="' + category + '" data-opt-key="' + o.key + '" '
                 + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
                 + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
-                + 'onclick="' + onClick + '" '
-                + 'style="position:relative; cursor:pointer; padding:10px 36px 10px 10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">'
-                + nm + priceTag
-                + magBtn
+                + 'onclick="window._soBizCardClick(\'' + category + '\',\'' + o.key + '\', function(){' + onClickStr + ';})" '
+                + 'style="position:relative; cursor:pointer;">'
+                + _bizCard2tone(nm, ds, priceTag, selected)
                 + '</div>';
         }
         // 용지 (BIZ_PAPERS)
@@ -6056,15 +6055,12 @@ html, body { background: #ffffff !important; }
                 return _renderOptCard(o, state.leafletPaper === o.key, "window._soPickLeafletPaper('" + o.key + "')", 'paper');
             }).join('');
         }
-        // 박 (BIZ_FOILS) — 없음 카드 + 박 옵션들
+        // v722: 박 (BIZ_FOILS) — 없음 카드 제거. 선택된 박 다시 클릭하면 해제 (명함과 동일)
         var foGrid = document.getElementById('soLfFoilGrid');
         if (foGrid && typeof BIZ_FOILS !== 'undefined') {
-            var noneBC = !state.leafletFoil ? '#7c3aed' : '#e2e8f0';
-            var noneBG = !state.leafletFoil ? '#faf5ff' : '#fff';
-            foGrid.innerHTML = '<div onclick="window._soPickLeafletFoil(null)" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + noneBC + '; background:' + noneBG + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#475569;">' + tr('없음','なし','None') + '</div>' +
-                BIZ_FOILS.map(function(o){
-                    return _renderOptCard(o, state.leafletFoil === o.key, "window._soPickLeafletFoil('" + o.key + "')", 'foil');
-                }).join('');
+            foGrid.innerHTML = BIZ_FOILS.map(function(o){
+                return _renderOptCard(o, state.leafletFoil === o.key, "window._soPickLeafletFoil('" + o.key + "')", 'foil');
+            }).join('');
         }
         // 후가공 (BIZ_FINISHES) — 체크박스 다중 선택
         var fnGrid = document.getElementById('soLfFinishGrid');
@@ -6074,7 +6070,7 @@ html, body { background: #ffffff !important; }
                 return _renderOptCard(o, sel, "window._soToggleLeafletFinish('" + o.key + "')", 'finish');
             }).join('');
         }
-        // 2026-06-23 v710: 토글 버튼 라벨에 현재 선택값 표시
+        // v710/v722: 토글 버튼 라벨에 현재 선택값 표시 (✓ 표시 — 미선택 시 빈 문자열)
         try {
             var pCur = document.getElementById('soLfPaperCurrent');
             if (pCur && typeof BIZ_PAPERS !== 'undefined') {
@@ -6085,9 +6081,9 @@ html, body { background: #ffffff !important; }
             if (fCur) {
                 if (state.leafletFoil && typeof BIZ_FOILS !== 'undefined') {
                     var fSel = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
-                    fCur.textContent = fSel ? _bizI18n(fSel, 'name') : tr('없음','なし','None');
+                    fCur.textContent = fSel ? '· ✓ ' + _bizI18n(fSel, 'name') : '';
                 } else {
-                    fCur.textContent = tr('없음','なし','None');
+                    fCur.textContent = '';
                 }
             }
             var fnCur = document.getElementById('soLfFinishCurrent');
@@ -6098,9 +6094,9 @@ html, body { background: #ffffff !important; }
                         var o = BIZ_FINISHES.find(function(x){ return x.key === k; });
                         return o ? _bizI18n(o, 'name') : k;
                     });
-                    fnCur.textContent = names.join(', ');
+                    fnCur.textContent = '· ✓ ' + names.join(', ');
                 } else {
-                    fnCur.textContent = tr('없음','なし','None');
+                    fnCur.textContent = '';
                 }
             }
         } catch(_lbE){}
@@ -6123,7 +6119,8 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
     };
     window._soPickLeafletFoil = function(key) {
-        state.leafletFoil = key;
+        // v722: 같은 박 다시 클릭 시 해제 (명함과 동일 토글 UX)
+        state.leafletFoil = (state.leafletFoil === key) ? null : key;
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
     };
