@@ -819,6 +819,10 @@ async function submitPdSample() {
 .rb-oi-title{font-weight:700;font-size:13.5px;color:#0f172a;margin-bottom:8px;line-height:1.4;letter-spacing:-0.01em;}
 .rb-oi-desc{font-size:12.5px;color:#475569;line-height:1.8;font-weight:400;}
 .rb-ship-notice{max-width:760px;margin:16px auto 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;font-size:13px;color:#475569;line-height:1.7;text-align:center;font-weight:400;}
+/* v706: 계산기 인트로 — 보라색 그라데이션 박스 + 흰색 텍스트 */
+.rb-calc-intro{max-width:920px;margin:0 auto 24px;padding:22px 28px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 50%,#4f46e5 100%);border-radius:16px;box-shadow:0 8px 24px -8px rgba(99,102,241,0.45);}
+.rb-calc-intro p{margin:0;color:#fff;font-size:14px;line-height:1.85;font-weight:400;letter-spacing:-0.01em;text-align:center;}
+@media(max-width:680px){.rb-calc-intro{padding:18px 20px;margin-bottom:18px;}.rb-calc-intro p{font-size:13px;line-height:1.75;}}
 .rb-wholesale-note{max-width:760px;margin:0 auto 22px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 18px;font-size:13px;color:#92400e;font-weight:700;text-align:center;line-height:1.6;}
 @media(max-width:680px){.rb-calc-wrap{padding:16px;}.rb-input-grid{grid-template-columns:1fr 1fr;gap:10px;}.rb-order-info{grid-template-columns:1fr;}.rb-type-row{grid-template-columns:1fr;}.rb-ship-notice,.rb-wholesale-note{font-size:12px;}}
 .rb-feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1100px;margin:0 auto;}
@@ -838,8 +842,11 @@ async function submitPdSample() {
 @media(max-width:480px){.rb-feat-grid{grid-template-columns:1fr;}}
 </style>
 <section class="section" id="rbCalc" style="padding-top:8px;">
-    <h2 class="section-title" data-i18n="calc_title">유통사 원판제작 안내</h2>
-    <p class="section-desc" data-i18n="calc_desc">유통사 전용 계산기 금액은 동일 종류 100매 이상 구매 가능한 유통사 전용입니다. 이 외 소량 구매는 아래 규격사이즈를 이용해 구매해 주세요.</p>
+    <h2 class="section-title" data-i18n="calc_title">대량구매 유통사 최소 주문 100매</h2>
+    <!-- v706: 설명을 보라색 그라데이션 박스 안에 흰색 글씨로 -->
+    <div class="rb-calc-intro">
+        <p data-i18n="calc_desc">이 계산기는 동일 종류의 원판을 100매 이상 구매하시는 유통사 · 인쇄소 · 가공공장 등 기업 고객을 위한 도매 단가 산정 도구입니다. 원하시는 사이즈와 두께, 용지 사양을 입력하시면 즉시 예상 단가가 표시됩니다. 100매 미만 소량 주문의 경우 이 도매가가 적용되지 않으며, 페이지 아래의 규격 사이즈 상품을 통해 주문하실 수 있습니다.</p>
+    </div>
     <div class="rb-calc-wrap">
         <div class="rb-type-row">
             <button type="button" class="rb-type active" data-type="premium" onclick="rbSetType('premium')">
@@ -1410,7 +1417,7 @@ raw_contact_jp: {
     ar:'طوكيو · أوساكا مباشر · ناNAمي', es:'Tokio · Osaka Directo · Nanami', de:'Tokio · Osaka Direkt · Nanami', fr:'Tokyo · Osaka Direct · Nanami'
 },
 // ── Custom Calculator & Features ──
-calc_title: { ko:'유통사 원판제작 안내', ja:'代理店向け 原板製作のご案内', en:'Distributor Custom Board Guide', zh:'经销商定制板材指南', ar:'دليل اللوحات المخصصة للموزعين', es:'Guía de tableros personalizados para distribuidores', de:'Distributor Custom Board Guide', fr:'Guide des panneaux sur mesure pour distributeurs' },
+calc_title: { ko:'대량구매 유통사 최소 주문 100매', ja:'大量購入·代理店 最低注文 100枚', en:'Bulk Distributors — Minimum Order 100 Sheets', zh:'大批量经销商 — 最低订购 100张', ar:'الموزعون بالجملة — الحد الأدنى للطلب 100 لوح', es:'Distribuidores al por mayor — Pedido mínimo 100 hojas', de:'Großhandelsvertrieb — Mindestbestellung 100 Blatt', fr:'Distributeurs en gros — Commande minimum 100 feuilles' },
 calc_desc: { ko:'이 계산기는 동일 종류의 원판을 100매 이상 구매하시는 유통사 · 인쇄소 · 가공공장 등 기업 고객을 위한 도매 단가 산정 도구입니다. 원하시는 사이즈와 두께, 용지 사양을 입력하시면 즉시 예상 단가가 표시됩니다. 100매 미만 소량 주문의 경우 이 도매가가 적용되지 않으며, 페이지 아래의 규격 사이즈 상품을 통해 주문하실 수 있습니다.', ja:'こちらの計算機は、同一種類の原板を100枚以上ご購入される代理店・印刷会社・加工工場など法人のお客様向けの卸単価算出ツールです。希望のサイズ・厚み・用紙仕様をご入力いただくと、概算単価がその場で表示されます。100枚未満の少量注文には卸価格は適用されず、ページ下部の規格サイズ商品からご注文ください。', en:'This calculator is a wholesale pricing tool for business customers — distributors, print houses, and processing factories — who purchase 100 or more sheets of the same type. Enter your desired size, thickness, and paper spec to see the estimated unit price instantly. Orders below 100 sheets do not qualify for wholesale pricing; please order through the standard-size products at the bottom of this page.', zh:'此计算器是面向同种类购买100张以上的经销商、印刷厂、加工厂等企业客户的批发单价工具。输入所需尺寸、厚度和纸张规格即可立即查看预估单价。100张以下小量订单不适用批发价，请通过页面底部的标准尺寸产品订购。', ar:'هذه الآلة الحاسبة هي أداة تسعير للجملة لعملاء الأعمال (الموزعين والمطابع ومصانع التصنيع) الذين يشترون 100 لوح أو أكثر من نفس النوع. أدخل المقاس والسماكة ومواصفات الورق لعرض السعر التقديري للوحدة فوراً. الطلبات الأقل من 100 لوح لا تستحق سعر الجملة؛ يرجى الطلب عبر المنتجات ذات الحجم القياسي أسفل هذه الصفحة.', es:'Esta calculadora es una herramienta de precios mayoristas para clientes empresariales — distribuidores, imprentas y fábricas de procesamiento — que compran 100 o más hojas del mismo tipo. Ingrese el tamaño, espesor y especificación de papel deseados para ver el precio unitario estimado al instante. Pedidos inferiores a 100 hojas no califican para precios mayoristas; por favor ordene a través de los productos de tamaño estándar al final de esta página.', de:'Dieser Rechner ist ein Großhandelspreis-Tool für Geschäftskunden – Vertriebspartner, Druckereien und Verarbeitungsbetriebe –, die 100 oder mehr Blatt derselben Sorte bestellen. Geben Sie Ihre gewünschte Größe, Dicke und Papierspezifikation ein, um den geschätzten Stückpreis sofort zu sehen. Bestellungen unter 100 Blatt qualifizieren nicht für Großhandelspreise; bitte bestellen Sie über die Standardgrößen-Produkte unten auf dieser Seite.', fr:'Cette calculatrice est un outil de tarification de gros pour les clients professionnels — distributeurs, imprimeries et usines de transformation — qui achètent 100 feuilles ou plus du même type. Saisissez la taille, l\'épaisseur et la spécification de papier souhaitées pour voir le prix unitaire estimé instantanément. Les commandes de moins de 100 feuilles ne bénéficient pas du prix de gros ; veuillez commander via les produits de taille standard en bas de cette page.' },
 calc_type_premium: { ko:'고급 인쇄용', ja:'高級印刷用', en:'Premium Print Grade', zh:'Premium Print Grade', ar:'Premium Print Grade', es:'Premium Print Grade', de:'Premium Print Grade', fr:'Premium Print Grade' },
 calc_type_premium_sub: { ko:'우수한 발색 · 두께 8~16mm', ja:'優れた発色 · 厚み 8〜16mm', en:'Superb color · 8–16mm', zh:'Superb color · 8–16mm', ar:'Superb color · 8–16mm', es:'Superb color · 8–16mm', de:'Superb color · 8–16mm', fr:'Superb color · 8–16mm' },
