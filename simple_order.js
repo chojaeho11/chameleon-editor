@@ -9200,18 +9200,17 @@ html, body { background: #ffffff !important; }
         return (side === 'double') ? 4000 : 2500;
     }
     function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
-        // 2026-06-03: 카드 디자인 반전 — 상단 컬러 배경 + 흰색 제목 / 하단 흰 배경 + 검정 설명
-        // colorTopBg: 박은 박색상, 그 외는 검정. titleColor: 박 색감에 따른 글씨 색
-        // 2026-06-03: 설명 2줄 고정 (line-clamp + min-height) — 카드 높이 통일
+        // 2026-06-03: 카드 디자인 — 상단 컬러 배경 + 제목 / 하단 흰 배경 + 검정 설명
+        // 2026-06-23 v718: 제목/가격 항상 흰색 + font-weight 500 (볼드 제거) — 어두운 배경에서 가독성 통일
         var border = sel ? '#4338ca' : '#d6d3d1';
         var shadow = sel ? '0 4px 12px -4px rgba(67,56,202,0.45)' : 'none';
         var topBg  = colorTopBg || '#0a0a0a';
-        var topTxt = titleColor || '#ffffff';
-        var pTag = priceTag ? '<span style="font-size:11px; font-weight:800; color:' + (titleColor || '#fbbf24') + '; opacity:0.95;">' + priceTag + '</span>' : '';
-        // 설명: 2줄 강제 (overflow ellipsis), min-height 로 한 줄짜리도 2줄 높이 차지
+        var topTxt = '#ffffff';
+        var pTag = priceTag ? '<span style="font-size:11px; font-weight:500; color:#ffffff; opacity:0.92;">' + priceTag + '</span>' : '';
         var descStyle = 'background:#ffffff; color:#0a0a0a; padding:8px 10px; font-size:11px; line-height:1.45; min-height:38px; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;';
+        // v718: 가독성을 위해 글씨 그림자 살짝 — 모든 배경에서 잘 보이도록
         return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s;">'
-            + '<div style="background:' + topBg + '; color:' + topTxt + '; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px;"><span style="font-size:13px; font-weight:900;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
+            + '<div style="background:' + topBg + '; color:' + topTxt + '; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px; text-shadow:0 1px 2px rgba(0,0,0,0.4);"><span style="font-size:13px; font-weight:500;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
             + '<div style="' + descStyle + '">' + descHtml + '</div>'
             + '</div>';
     }
@@ -9297,14 +9296,10 @@ html, body { background: #ffffff !important; }
                 foilPrev.style.fontWeight = '400';
             }
         }
-        // 박
+        // 박 — v718: "선택 안 함" 카드 제거. 선택된 박을 다시 클릭하면 해제 (토글)
         var gf = document.getElementById('soBizFoilGrid');
         if (gf && foilOpen) {
-            var noneSel = !state.bizFoil;
-            var foilNone = '<button type="button" onclick="window._soBizPickFoil(null)" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                + _bizCard2tone(tr('선택 안 함','選択しない','None'), tr('박 없이 인쇄만 진행','箔押しなし','Print only — no foil'), '', noneSel, '#475569', '#fff')
-                + '</button>';
-            gf.innerHTML = foilNone + BIZ_FOILS.map(function(o){
+            gf.innerHTML = BIZ_FOILS.map(function(o){
                 var sel = (state.bizFoil === o.key);
                 var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
@@ -9375,7 +9370,11 @@ html, body { background: #ffffff !important; }
         recalc();
     };
     window._soBizPickPaper = function(k){ state.bizPaper = k; _soBizCardRender(); recalc(); };
-    window._soBizPickFoil  = function(k){ state.bizFoil = k; _soBizCardRender(); recalc(); };
+    window._soBizPickFoil  = function(k){
+        // v718: 같은 박을 다시 클릭하면 해제 (후가공 multi-toggle 과 동일 UX)
+        state.bizFoil = (state.bizFoil === k) ? null : k;
+        _soBizCardRender(); recalc();
+    };
     window._soBizPickSide  = function(s){ state.bizSide = (s === 'double') ? 'double' : 'single'; _soBizCardRender(); recalc(); };
     window._soBizToggleFinish = function(k){
         if (!state.bizFinishes) state.bizFinishes = {};
