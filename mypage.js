@@ -475,14 +475,41 @@ async function deleteDesign(id) {
 async function loadOrders() {
     const tbody = document.getElementById('orderListBody');
     if(!tbody) return;
-    
+
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">${window.t('msg_loading', 'Loading...')}</td></tr>`;
 
-    const { data: orders } = await sb.from('orders')
-        .select('id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, delivery_time, staff_manager_id, staff_driver_id, admin_note, site_code, files, has_partner_items, selected_customer_phone')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
+    // v708: user_id 매칭 + 이메일 기반 폴백 — 옛 주문(특히 JP) 이 user_id 미연결되어 보이지 않던 문제 fix.
+    //   1) user_id 정확히 매칭되는 주문 (primary)
+    //   2) user_id IS NULL 인데 admin_note 에 이메일 일치 (orphan orders)
+    //   이메일은 admin_note 의 '\n이메일: <email>\n' 형식으로 저장됨 (simple_order.js v604+ 흐름)
+    const _selCols = 'id, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, delivery_time, staff_manager_id, staff_driver_id, admin_note, site_code, files, has_partner_items, selected_customer_phone, user_id';
+    let orders = [];
+    try {
+        const { data: primaryOrders } = await sb.from('orders')
+            .select(_selCols)
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(100);
+        orders = primaryOrders || [];
+    } catch(e) { console.warn('[mypage] primary orders fetch fail:', e); }
+
+    // 이메일 폴백: user_id NULL + admin_note 이메일 일치
+    const _userEmail = (currentUser && currentUser.email || '').trim().toLowerCase();
+    if (_userEmail) {
+        try {
+            const { data: orphanOrders } = await sb.from('orders')
+                .select(_selCols)
+                .is('user_id', null)
+                .ilike('admin_note', '%이메일: ' + _userEmail + '%')
+                .order('created_at', { ascending: false })
+                .limit(50);
+            const _existingIds = new Set(orders.map(o => o.id));
+            (orphanOrders || []).forEach(o => { if (!_existingIds.has(o.id)) orders.push(o); });
+            // 주문일 기준 재정렬
+            orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        } catch(e) { console.warn('[mypage] email-fallback orders fetch fail:', e); }
+    }
+    console.log('[mypage] loaded orders:', orders.length, '(by user_id + email fallback)');
 
     // 2026-05-26: 매니저 전화(_managers) + admin_staff 이름 매핑 로드 (best-effort)
     var _mgrPhoneMap = {}, _staffMap = {};
