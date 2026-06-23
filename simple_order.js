@@ -6232,6 +6232,15 @@ html, body { background: #ffffff !important; }
             if (typeof doSelect === 'function') doSelect();
         }
     };
+    // v719: 명함 카드용 (cat/key 직접 전달) — 모바일은 모달, PC 는 즉시 선택
+    window._soBizCardClick = function(cat, key, doSelect) {
+        var isTouch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+        if (isTouch) {
+            window._soShowOptInfo(cat, key, doSelect);
+        } else {
+            if (typeof doSelect === 'function') doSelect();
+        }
+    };
     // 2026-06-23 v713: PC 호버 시 미리보기 카드 자동 노출
     function _ensurePreviewEl() {
         var pv = document.getElementById('soOptPreviewBox');
@@ -9199,19 +9208,16 @@ html, body { background: #ffffff !important; }
         if (t === 'premium') return (side === 'double') ? 5000 : 4000;
         return (side === 'double') ? 4000 : 2500;
     }
-    function _bizCard2tone(title, descHtml, priceTag, sel, colorTopBg, titleColor) {
-        // 2026-06-03: 카드 디자인 — 상단 컬러 배경 + 제목 / 하단 흰 배경 + 검정 설명
-        // 2026-06-23 v718: 제목/가격 항상 흰색 + font-weight 500 (볼드 제거) — 어두운 배경에서 가독성 통일
-        var border = sel ? '#4338ca' : '#d6d3d1';
+    function _bizCard2tone(title, descHtml, priceTag, sel /*, colorTopBg, titleColor — v719 unused*/) {
+        // 2026-06-23 v719: 모든 카드 상단 = 연한 하늘색 통일. 제목 검정. 카드 높이 고정 (1줄/2줄 차이 무시).
+        var border = sel ? '#4338ca' : '#cbd5e1';
         var shadow = sel ? '0 4px 12px -4px rgba(67,56,202,0.45)' : 'none';
-        var topBg  = colorTopBg || '#0a0a0a';
-        var topTxt = '#ffffff';
-        var pTag = priceTag ? '<span style="font-size:11px; font-weight:500; color:#ffffff; opacity:0.92;">' + priceTag + '</span>' : '';
-        var descStyle = 'background:#ffffff; color:#0a0a0a; padding:8px 10px; font-size:11px; line-height:1.45; min-height:38px; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;';
-        // v718: 가독성을 위해 글씨 그림자 살짝 — 모든 배경에서 잘 보이도록
-        return '<div style="display:flex; flex-direction:column; border:2px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s;">'
-            + '<div style="background:' + topBg + '; color:' + topTxt + '; padding:8px 10px; display:flex; justify-content:space-between; align-items:baseline; gap:6px; text-shadow:0 1px 2px rgba(0,0,0,0.4);"><span style="font-size:13px; font-weight:500;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
-            + '<div style="' + descStyle + '">' + descHtml + '</div>'
+        var topBg  = sel ? '#bae6fd' : '#e0f2fe';   // sky-200 / sky-100
+        var topTxt = '#0c4a6e';                       // sky-900
+        var pTag   = priceTag ? '<span style="font-size:11px; font-weight:600; color:#0369a1;">' + priceTag + '</span>' : '';
+        return '<div style="display:flex; flex-direction:column; border:1.5px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s; height:80px;">'
+            + '<div style="background:' + topBg + '; color:' + topTxt + '; height:34px; flex:none; padding:0 10px; display:flex; justify-content:space-between; align-items:center; gap:6px;"><span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
+            + '<div style="background:#ffffff; color:#0a0a0a; flex:1; padding:6px 10px; font-size:11px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">' + descHtml + '</div>'
             + '</div>';
     }
     // 박 색상 매핑 (상단 컬러 배경) + 그에 맞는 글씨색
@@ -9263,17 +9269,13 @@ html, body { background: #ffffff !important; }
             gp.innerHTML = BIZ_PAPERS.map(function(o){
                 var sel = (state.bizPaper === o.key);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                // v716: 명함도 hover preview + 모바일 돋보기 버튼 적용
+                // v719: 돋보기 제거. PC=hover preview, 모바일=클릭시 모달 (선택은 모달 내 버튼)
                 return '<div class="so-biz-opt-card" data-opt-cat="paper" data-opt-key="' + o.key + '" '
                     + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
                     + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
-                    + 'style="position:relative;">'
-                    + '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(nm, ds, '', sel, '#e5e7eb', '#0a0a0a')
-                    + '</button>'
-                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
-                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'paper\',\'' + o.key + '\', null)" '
-                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
+                    + 'onclick="window._soBizCardClick(\'paper\',\'' + o.key + '\', function(){window._soBizPickPaper(\'' + o.key + '\');})" '
+                    + 'style="position:relative; cursor:pointer;">'
+                    + _bizCard2tone(nm, ds, '', sel)
                     + '</div>';
             }).join('');
         }
@@ -9301,19 +9303,13 @@ html, body { background: #ffffff !important; }
         if (gf && foilOpen) {
             gf.innerHTML = BIZ_FOILS.map(function(o){
                 var sel = (state.bizFoil === o.key);
-                var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                // v716: hover preview + 모바일 돋보기 버튼
                 return '<div class="so-biz-opt-card" data-opt-cat="foil" data-opt-key="' + o.key + '" '
                     + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
                     + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
-                    + 'style="position:relative;">'
-                    + '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
-                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel, fc.bg, fc.txt)
-                    + '</button>'
-                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
-                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'foil\',\'' + o.key + '\', null)" '
-                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
+                    + 'onclick="window._soBizCardClick(\'foil\',\'' + o.key + '\', function(){window._soBizPickFoil(\'' + o.key + '\');})" '
+                    + 'style="position:relative; cursor:pointer;">'
+                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
                     + '</div>';
             }).join('');
         }
@@ -9346,17 +9342,12 @@ html, body { background: #ffffff !important; }
             gx.innerHTML = BIZ_FINISHES.map(function(o){
                 var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                // v716: hover preview + 모바일 돋보기 버튼
                 return '<div class="so-biz-opt-card" data-opt-cat="finish" data-opt-key="' + o.key + '" '
                     + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
                     + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
-                    + 'style="position:relative;">'
-                    + '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                    + 'onclick="window._soBizCardClick(\'finish\',\'' + o.key + '\', function(){window._soBizToggleFinish(\'' + o.key + '\');})" '
+                    + 'style="position:relative; cursor:pointer;">'
                     + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
-                    + '</button>'
-                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
-                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'finish\',\'' + o.key + '\', null)" '
-                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
                     + '</div>';
             }).join('');
         }
