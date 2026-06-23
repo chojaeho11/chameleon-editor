@@ -2270,7 +2270,7 @@ html, body { background: #ffffff !important; }
         <!--   (b) 미니배너 — 100장 이상 30% 할인 -->
         <div class="so-section" id="soBannerDiscountNotice" style="display:none; padding:0;">
           <button type="button" id="soBannerDiscountBtn50" style="display:none; width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
-            🎉 ${tr('같은 디자인 10장 이상 주문 시 50% 할인', '同じデザイン10枚以上で 50%割引', '50% off · 10+ same design')}
+            🎉 ${tr('같은 디자인 10장 이상 주문 시 30% 할인', '同じデザイン10枚以上で 30%割引', '30% off · 10+ same design')}
             <div style="font-size:12px; font-weight:600; margin-top:5px; opacity:0.92;">${tr('수량 10개 이상 입력하면 자동 적용 · 별도 쿠폰 불필요', '10枚以上で自動適用', 'Auto-applied at qty 10+')}</div>
           </button>
           <button type="button" id="soBannerDiscountBtnMini" style="display:none; width:100%; padding:18px 16px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:none; border-radius:14px; font-size:15px; font-weight:900; letter-spacing:0.3px; box-shadow:0 8px 20px -8px rgba(16,185,129,0.6); cursor:default; font-family:inherit; line-height:1.4;">
@@ -4205,7 +4205,8 @@ html, body { background: #ffffff !important; }
             else if (qty >= 300) _pdPct = 0.1;
             if (_pdPct > 0) presetBulkDiscount = Math.round(subtotal * _pdPct);
         } else if (state.isBannerDiscountEligible && qty >= 10) {
-            presetBulkDiscount = Math.round(subtotal * 0.5);
+            // 2026-06-23 v709: 배너 family 10장+ 30% 할인 (이전 50% → 30%, 거치대 세트 포함 8종)
+            presetBulkDiscount = Math.round(subtotal * 0.3);
         } else if (state.isMiniBanner && qty >= 100) {
             presetBulkDiscount = Math.round(subtotal * 0.3);
         }
@@ -4375,8 +4376,9 @@ html, body { background: #ffffff !important; }
             else if (qty >= 300)  { _bulkRowLabel = tr('300개 이상 10% 할인',   '300個以上 10%割引',   '10% off on 300+');   _bulkPct = '10%'; }
             else                  { _bulkRowLabel = '';                                                                              _bulkPct = ''; }
         } else if (state.isBannerDiscountEligible) {
-            _bulkRowLabel = tr('같은 디자인 10장 이상 50% 할인', '同じデザイン10枚以上 50%割引', '10+ same design: 50% off');
-            _bulkPct = '50%';
+            // 2026-06-23 v709: 배너 family 10장+ 30%
+            _bulkRowLabel = tr('같은 디자인 10장 이상 30% 할인', '同じデザイン10枚以上 30%割引', '10+ same design: 30% off');
+            _bulkPct = '30%';
         } else if (state.isMiniBanner) {
             _bulkRowLabel = tr('100장 이상 30% 할인', '100枚以上 30%割引', '100+ pcs: 30% off');
             _bulkPct = '30%';
@@ -10449,7 +10451,9 @@ html, body { background: #ffffff !important; }
         state.isBannerStandless = _isBannerStandless;
         state.isBannerWithStand = _isBannerWithStand;
         state.isMiniBanner = state.isBannerOutput && /미니\s*배너|mini\s*banner/i.test(_pNm);
-        state.isBannerDiscountEligible = _isBannerStandless && /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard/i.test(_pNm);
+        // 2026-06-23 v709: 배너 family 10장+ 30% 할인 — 거치대 세트 포함 8종 전체 (미니배너 제외, 미니는 별도 100장+ 30%)
+        state.isBannerDiscountEligible = state.isBannerOutput && !state.isMiniBanner &&
+            /현수막|페트|패트|메쉬|매쉬|pet|mesh|placard|배너|banner/i.test(_pNm);
         // 미니 배너 단가 1,000원 override
         if (state.isMiniBanner && p) {
             p.price = 1000;
@@ -13995,6 +13999,9 @@ html, body { background: #ffffff !important; }
             _isPresetGoods: !!state.isPresetGoods,
             _presetType: state.presetType || null,
             _presetHasHooks: !!state.presetHasHooks,
+            // 2026-06-23 v709: 배너 family 10장+ 30% 할인 — 카트 계산에서도 적용되도록 플래그 저장
+            _isBannerDiscountEligible: !!state.isBannerDiscountEligible,
+            _isMiniBanner: !!state.isMiniBanner,
             // 2026-05-30: 프리셋 굿즈 개별포장 (3종 / 5만원 정액 또는 무료)
             _presetWrap: !!state.presetWrap,         // legacy boolean
             _presetWrapType: state.presetWrapType || 'none', // 'none' | 'insert' | 'top'
@@ -15764,6 +15771,12 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 상품가 고정, 인쇄비에서만 할인)
         if (_isBest && it._presetType !== 'tshirt' && qty >= 100) {
             subtotal = Math.round(subtotal * 0.5);
+        }
+        // 2026-06-23 v709: 배너 family 10장+ 30% 할인 (카트 적용) — 미니배너는 별도 100장+ 30%
+        if (it._isBannerDiscountEligible && qty >= 10) {
+            subtotal = Math.round(subtotal * 0.7);
+        } else if (it._isMiniBanner && qty >= 100) {
+            subtotal = Math.round(subtotal * 0.7);
         }
         // 가벽 양면 → 가격 2배 (배너는 단가가 이미 다르므로 ×2 skip)
         var isDouble = (it.wallSide === 'double');
