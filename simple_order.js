@@ -2050,24 +2050,55 @@ html, body { background: #ffffff !important; }
               <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
             </button>
           </div>
-          <!-- 2026-06-23 v721: 명함 전용 수량 프리셋 (1/2/3/5각 = 100/200/300/500매) -->
-          <div id="soBizQtyPresets" style="display:none; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:6px;">
+          <!-- v721/v725: 명함 전용 수량 프리셋 — 100/200/500매 (수량별 할인 제거) + 직원수 동시 주문 섹션 -->
+          <div id="soBizQtyPresets" style="display:none; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:6px;">
             <button type="button" class="so-pd-qty-btn" data-bc-qty="1" onclick="window._soBcQtyPick(1)">
               <span style="font-size:14px; font-weight:900;">100${tr('장','枚','')}</span>
-              <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('기본가','基本価格','Base')}</span>
+              <span style="font-size:10px; opacity:0.7; margin-top:2px;">${tr('1각','1ロット','1 set')}</span>
             </button>
             <button type="button" class="so-pd-qty-btn" data-bc-qty="2" onclick="window._soBcQtyPick(2)">
               <span style="font-size:14px; font-weight:900;">200${tr('장','枚','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
-            </button>
-            <button type="button" class="so-pd-qty-btn" data-bc-qty="3" onclick="window._soBcQtyPick(3)">
-              <span style="font-size:14px; font-weight:900;">300${tr('장','枚','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">30% ${tr('할인','割引','OFF')}</span>
+              <span style="font-size:10px; opacity:0.7; margin-top:2px;">${tr('2각','2ロット','2 sets')}</span>
             </button>
             <button type="button" class="so-pd-qty-btn" data-bc-qty="5" onclick="window._soBcQtyPick(5)">
               <span style="font-size:14px; font-weight:900;">500${tr('장','枚','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
+              <span style="font-size:10px; opacity:0.7; margin-top:2px;">${tr('5각','5ロット','5 sets')}</span>
             </button>
+          </div>
+          <!-- v725: 같은 회사 직원명함 동시 주문 — 명수 선택 + 자동 할인 -->
+          <div id="soBizEmpSection" style="display:none; margin-top:14px; padding:12px; background:#f0f9ff; border:1.5px solid #7dd3fc; border-radius:10px;">
+            <div style="font-size:12.5px; font-weight:800; color:#0c4a6e; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+              <i class="fa-solid fa-users"></i>
+              ${tr('같은 회사 직원명함 동시 주문', '同じ会社・社員名刺の同時注文', 'Same-company employee cards together')}
+            </div>
+            <div style="font-size:11px; color:#0369a1; margin-bottom:8px; line-height:1.5;">
+              ${tr('명수가 많을수록 할인 — 3명 10% / 5명 20% / 10명+ 50% 할인', '人数が多いほど割引 — 3名10% / 5名20% / 10名以上50%', 'Bulk discount: 3 people 10% / 5 people 20% / 10+ people 50%')}
+            </div>
+            <div id="soBizEmpPresets" style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
+              <button type="button" class="so-pd-qty-btn" data-bc-emp="1" onclick="window._soBcEmpPick(1)">
+                <span style="font-size:14px; font-weight:900;">1${tr('명','名','')}</span>
+                <span style="font-size:10px; opacity:0.7; margin-top:2px;">${tr('기본','基本','Base')}</span>
+              </button>
+              <button type="button" class="so-pd-qty-btn" data-bc-emp="3" onclick="window._soBcEmpPick(3)">
+                <span style="font-size:14px; font-weight:900;">3${tr('명','名','')}</span>
+                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">10% ${tr('할인','割引','OFF')}</span>
+              </button>
+              <button type="button" class="so-pd-qty-btn" data-bc-emp="5" onclick="window._soBcEmpPick(5)">
+                <span style="font-size:14px; font-weight:900;">5${tr('명','名','')}</span>
+                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
+              </button>
+              <button type="button" class="so-pd-qty-btn" data-bc-emp="10" onclick="window._soBcEmpPick(10)">
+                <span style="font-size:14px; font-weight:900;">10${tr('명+','名+','+')}</span>
+                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
+              </button>
+            </div>
+            <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+              <span style="font-size:11px; color:#475569; flex-shrink:0;">${tr('직접 입력','直接入力','Custom')}:</span>
+              <input type="number" id="soBizEmpCount" value="1" min="1" max="999"
+                oninput="window._soBcEmpInput(this.value)"
+                style="flex:1; padding:7px 10px; border:1.5px solid #bae6fd; border-radius:8px; font-size:13px; font-weight:700; text-align:center; font-family:inherit; color:#0c4a6e;">
+              <span style="font-size:11px; color:#475569; flex-shrink:0;">${tr('명','名','people')}</span>
+            </div>
           </div>
           <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
           <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
@@ -4127,12 +4158,13 @@ html, body { background: #ffffff !important; }
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
             } else if (state.isBizCard) {
                 // 2026-06-13: 명함 — qty = 각 (1각 = 100매). 가격은 _bizPriceFor 에서 계산
-                // v721: 수량 프리셋 할인 — 1각=0% / 2각=20% / 3각=30% / 5각=50%
+                // v725: 수량별 할인 제거. 직원수(empCount) 곱셈 + 직원수 할인 (3명 10% / 5명 20% / 10명+ 50%)
                 qty = Math.max(1, qty || 1);
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
-                var _bcDisc = (window._BIZ_QTY_DISC && window._BIZ_QTY_DISC[qty]) || 0;
-                subtotal = Math.round(_bizUnit * qty * (1 - _bcDisc));
+                var _emp = Math.max(1, Number(state.bizEmpCount) || 1);
+                var _empDisc = _bizEmpDisc(_emp);
+                subtotal = Math.round(_bizUnit * qty * _emp * (1 - _empDisc));
             } else if (state.isLeaflet) {
                 // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
                 // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4
@@ -4230,17 +4262,14 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 2026-06-03: 명함 (pp_bc_*) — 박 + 후가공 비용 (각=200매 단위마다 적용)
-        // 2026-06-13: qty(각) 만큼 곱셈 — 여러 디자인에 옵션이 모두 들어가야 하므로
+        // 명함 (pp_bc_*) — 박/후가공 1회 정액 (수량/직원수 무관, 사용자 요청 v725)
         if (state.isBizCard) {
-            var _bcOptQty = Math.max(1, qty || 1);
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
-                    var _foilLine = _bizFoilOpt.price * _bcOptQty;
-                    addonTotal += _foilLine;
+                    addonTotal += _bizFoilOpt.price;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + (_bcOptQty > 1 ? ' × ' + _bcOptQty : '') + '</span><span>+' + fmtPrice(_foilLine) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + '</span><span>+' + fmtPrice(_bizFoilOpt.price) + '</span></div>'
                     );
                 }
             }
@@ -4249,23 +4278,21 @@ html, body { background: #ffffff !important; }
                     if (!state.bizFinishes[k]) return;
                     var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (!fopt) return;
-                    var _finLine = fopt.price * _bcOptQty;
-                    addonTotal += _finLine;
+                    addonTotal += fopt.price;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + (_bcOptQty > 1 ? ' × ' + _bcOptQty : '') + '</span><span>+' + fmtPrice(_finLine) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
                     );
                 });
             }
-            // 용지/등급 정보는 가격 영향 없음 — 합계 위 한 줄 메모로만 표시
-            var _tierLbl = (state.bizTier === 'premium')
-                ? tr('프리미엄', 'プレミアム', 'Premium')
-                : tr('일반', '一般', 'Standard');
-            var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
+            // v725: 프리미엄 only. 직원수 + 직원수 할인 표시
+            var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
             var _qtyLbl  = (qty * 100).toLocaleString() + tr('매','枚','pcs');
-            var _bcDiscPct = Math.round(((window._BIZ_QTY_DISC && window._BIZ_QTY_DISC[qty]) || 0) * 100);
-            var _discLbl = _bcDiscPct > 0 ? ' · <b style="color:#dc2626;">-' + _bcDiscPct + '%</b>' : '';
-            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl + _discLbl;
+            var _empN = Math.max(1, Number(state.bizEmpCount) || 1);
+            var _empLbl = (_empN > 1) ? ' × ' + _empN + tr('명','名','people') : '';
+            var _empDiscPct = Math.round(_bizEmpDisc(_empN) * 100);
+            var _discLbl = _empDiscPct > 0 ? ' · <b style="color:#dc2626;">-' + _empDiscPct + '%</b>' : '';
+            var _metaLbl = '📇 ' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl + _empLbl + _discLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
@@ -9384,12 +9411,20 @@ html, body { background: #ffffff !important; }
     // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급/면/용지/박/후가공 핸들러 + 렌더
     // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
     function _bizPriceFor(side, tier) {
-        var t = tier || state.bizTier || 'general';
-        // 2026-06-18 v552: 100매 단위 + 정상 가격 복원 (200매 → 100매 변경 시 절반 적용 버그 수정)
-        //   일반 단면 2500 / 일반 양면 4000 / 프리미엄 단면 4000 / 프리미엄 양면 5000 (1각 = 100매)
-        if (t === 'premium') return (side === 'double') ? 5000 : 4000;
-        return (side === 'double') ? 4000 : 2500;
+        // 2026-06-23 v725: 일반 등급 폐지 — 프리미엄만. 가격 2배 인상 (사용자 요청)
+        //   프리미엄 단면 8000 / 프리미엄 양면 10000 (1각 = 100매)
+        //   (이전: 일반 2500/4000, 프리미엄 4000/5000)
+        return (side === 'double') ? 10000 : 8000;
     }
+    // v725: 직원수 할인 — 1~2명 0% / 3~4명 10% / 5~9명 20% / 10명+ 50%
+    function _bizEmpDisc(n) {
+        n = Math.max(1, Number(n) || 1);
+        if (n >= 10) return 0.5;
+        if (n >= 5)  return 0.2;
+        if (n >= 3)  return 0.1;
+        return 0;
+    }
+    window._bizEmpDisc = _bizEmpDisc;
     function _bizCard2tone(title, descHtml, priceTag, sel /*, colorTopBg, titleColor — v719 unused*/) {
         // 2026-06-23 v719: 모든 카드 상단 = 연한 하늘색 통일. 제목 검정. 카드 높이 고정 (1줄/2줄 차이 무시).
         var border = sel ? '#4338ca' : '#cbd5e1';
@@ -9535,10 +9570,9 @@ html, body { background: #ffffff !important; }
         }
     }
     window._soBizPickTier = function(t){
-        state.bizTier = (t === 'premium') ? 'premium' : 'general';
-        // 일반으로 가면 용지 선택 해제 (가격에 무관하지만 cart 표시 깔끔)
-        if (state.bizTier === 'general') state.bizPaper = null;
-        else if (!state.bizPaper) state.bizPaper = 'nuvegi240';
+        // v725: 일반 등급 폐지 — 어떤 입력이든 프리미엄으로 고정
+        state.bizTier = 'premium';
+        if (!state.bizPaper) state.bizPaper = 'nuvegi240';
         _soBizCardRender();
         recalc();
     };
@@ -10365,14 +10399,40 @@ html, body { background: #ffffff !important; }
         });
     }
 
-    // 2026-06-23 v721: 명함 전용 수량 프리셋 — 1각/2각/3각/5각 (100/200/300/500매)
-    window._BIZ_QTY_DISC = { 1: 0, 2: 0.2, 3: 0.3, 5: 0.5 };  // qty(각) → 할인율
+    // 2026-06-23 v721/v725: 명함 수량 프리셋 — 100/200/500매 (1/2/5각). 수량별 할인 제거.
+    window._BIZ_QTY_DISC = { 1: 0, 2: 0, 5: 0 };  // 호환용 (가격 계산에서는 사용 안 함)
     window._soBcQtyPick = function(q) {
         state.qty = q;
         var inp = document.getElementById('soQty');
         if (inp) inp.value = q;
         document.querySelectorAll('#soBizQtyPresets .so-pd-qty-btn').forEach(function(btn){
             btn.classList.toggle('is-active', String(btn.getAttribute('data-bc-qty')) === String(q));
+        });
+        if (typeof recalc === 'function') recalc();
+    };
+    // v725: 직원수 (동시 주문) 선택 핸들러
+    window._soBcEmpPick = function(n) {
+        n = Math.max(1, Number(n) || 1);
+        state.bizEmpCount = n;
+        var inp = document.getElementById('soBizEmpCount');
+        if (inp) inp.value = n;
+        document.querySelectorAll('#soBizEmpPresets .so-pd-qty-btn').forEach(function(btn){
+            var v = Number(btn.getAttribute('data-bc-emp'));
+            // 1/3/5/10 임계값 — n 이 해당 구간에 들면 active
+            var active = (v === 1 && n < 3) || (v === 3 && n >= 3 && n < 5) || (v === 5 && n >= 5 && n < 10) || (v === 10 && n >= 10);
+            btn.classList.toggle('is-active', active);
+        });
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soBcEmpInput = function(v) {
+        var n = Math.max(1, Math.floor(Number(v) || 1));
+        if (n > 999) n = 999;
+        state.bizEmpCount = n;
+        // 프리셋 active 토글
+        document.querySelectorAll('#soBizEmpPresets .so-pd-qty-btn').forEach(function(btn){
+            var bv = Number(btn.getAttribute('data-bc-emp'));
+            var active = (bv === 1 && n < 3) || (bv === 3 && n >= 3 && n < 5) || (bv === 5 && n >= 5 && n < 10) || (bv === 10 && n >= 10);
+            btn.classList.toggle('is-active', active);
         });
         if (typeof recalc === 'function') recalc();
     };
@@ -10981,18 +11041,21 @@ html, body { background: #ffffff !important; }
         // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급(일반/프리미엄) + 면 + 박/후가공
         state.isBizCard = _soIsBizCardProduct(p);
         if (state.isBizCard) {
-            state.bizTier = state.bizTier || 'general';
-            state.bizPaper = state.bizPaper || ((state.bizTier === 'premium') ? 'nuvegi240' : null);
+            // v725: 일반 등급 폐지 — 프리미엄 강제
+            state.bizTier = 'premium';
+            state.bizPaper = state.bizPaper || 'nuvegi240';
             state.bizSide = state.bizSide || 'single';
             state.bizFoil = (state.bizFoil === undefined) ? null : state.bizFoil;
             state.bizFinishes = state.bizFinishes || {};
+            // v725: 직원수 (동시 주문) — 기본 1명
+            if (!state.bizEmpCount || state.bizEmpCount < 1) state.bizEmpCount = 1;
             // 2026-06-13: 명함 qty = 각 단위 (1각 = 100매), step 1, min 1. 가격 단가 = 1각 기준
             // 기존 매 단위 데이터 호환: 100 이상이면 100으로 나눠서 각 환산
             if (state.qty == null) state.qty = 1;
             else if (state.qty >= 100 && state.qty % 100 === 0) state.qty = state.qty / 100;
             else if (state.qty < 1) state.qty = 1;
-            // v721: 프리셋(1/2/3/5) 외 값이면 1로 보정
-            if ([1,2,3,5].indexOf(state.qty) === -1) state.qty = 1;
+            // v721/v725: 프리셋(1/2/5) 외 값이면 1로 보정 (300 제거 → 3각도 1로)
+            if ([1,2,5].indexOf(state.qty) === -1) state.qty = 1;
             var _qiBc = document.getElementById('soQty');
             if (_qiBc) {
                 _qiBc.value = state.qty;
@@ -11011,6 +11074,17 @@ html, body { background: #ffffff !important; }
                     btn.classList.toggle('is-active', String(btn.getAttribute('data-bc-qty')) === String(state.qty));
                 });
             }
+            // v725: 직원수 섹션 노출 + 입력 init + 활성 버튼 표시
+            var _bcEmpSec = document.getElementById('soBizEmpSection');
+            if (_bcEmpSec) _bcEmpSec.style.display = '';
+            var _bcEmpInp = document.getElementById('soBizEmpCount');
+            if (_bcEmpInp) _bcEmpInp.value = state.bizEmpCount;
+            if (typeof window._soBcEmpInput === 'function') window._soBcEmpInput(state.bizEmpCount);
+            // v725: 일반 등급 버튼 숨김 + 프리미엄 버튼만 강조
+            var _bcTierG = document.getElementById('soBizTierGeneral');
+            if (_bcTierG) _bcTierG.style.display = 'none';
+            var _bcTierP = document.getElementById('soBizTierPremium');
+            if (_bcTierP) _bcTierP.style.flex = '1';
             // 수량 할인 tier 테이블 숨김 + 명함 전용 안내 표시
             var _ttBc = document.getElementById('soTierTable');
             if (_ttBc) _ttBc.style.display = 'none';
@@ -11020,13 +11094,17 @@ html, body { background: #ffffff !important; }
             state.selectedAddons = {};
             state.addonQuantities = {};
         } else {
-            // 명함이 아닌 경우 안내 박스 숨김 + v721: 프리셋 숨김, 기본 qty row 복원
+            // 명함이 아닌 경우 안내 박스 숨김 + v721: 프리셋 숨김, 기본 qty row 복원 + v725: 직원수 섹션 숨김
             var _ttBcInfo2 = document.getElementById('soBizCardOrderInfo');
             if (_ttBcInfo2) _ttBcInfo2.style.display = 'none';
             var _bcPresetsOff = document.getElementById('soBizQtyPresets');
             if (_bcPresetsOff) _bcPresetsOff.style.display = 'none';
             var _bcDefRowOn = document.getElementById('soQtyRowDefault');
             if (_bcDefRowOn) _bcDefRowOn.style.display = '';
+            var _bcEmpSecOff = document.getElementById('soBizEmpSection');
+            if (_bcEmpSecOff) _bcEmpSecOff.style.display = 'none';
+            var _bcTierG2 = document.getElementById('soBizTierGeneral');
+            if (_bcTierG2) _bcTierG2.style.display = '';
         }
         var bizSec = document.getElementById('soBizCardSection');
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
@@ -14579,10 +14657,11 @@ html, body { background: #ffffff !important; }
             cutPrint: state.isCutPrint ? { size: state.cutSize || 'full' } : null,
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
             bizCard: state.isBizCard ? {
-                tier: state.bizTier || 'general',
+                tier: 'premium',
                 paper: state.bizPaper, side: state.bizSide || 'single',
                 foil: state.bizFoil || null,
-                finishes: Object.assign({}, state.bizFinishes || {})
+                finishes: Object.assign({}, state.bizFinishes || {}),
+                empCount: Math.max(1, Number(state.bizEmpCount) || 1)  // v725
             } : null,
             _isBizCard: !!state.isBizCard,
             // v723: 일반 상업인쇄물 박/후가공
@@ -16026,12 +16105,14 @@ html, body { background: #ffffff !important; }
             // 2026-06-03: 명함 옵션 복원
             if (item.bizCard) {
                 state.isBizCard = true;
-                state.bizTier = item.bizCard.tier || 'general';
-                state.bizPaper = item.bizCard.paper || (state.bizTier === 'premium' ? 'nuvegi240' : null);
+                state.bizTier = 'premium';   // v725: 일반 폐지
+                state.bizPaper = item.bizCard.paper || 'nuvegi240';
                 state.bizSide = item.bizCard.side || 'single';
                 state.bizFoil = item.bizCard.foil || null;
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
+                state.bizEmpCount = Math.max(1, Number(item.bizCard.empCount) || 1);  // v725
                 if (typeof _soBizCardRender === 'function') _soBizCardRender();
+                if (typeof window._soBcEmpInput === 'function') window._soBcEmpInput(state.bizEmpCount);
             }
             // v723: 상업인쇄물 일반 박/후가공 옵션 복원
             if (item.cpOptions) {
