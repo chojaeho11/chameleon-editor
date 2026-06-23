@@ -3386,14 +3386,26 @@ window._tcmFallbackClick = function(code) {
                     }
                     if (!o.total_amount || o.total_amount <= 0) { return; }
                     if (!o.items || o.items.length === 0) { return; }
-                    // 2026-06-22 v700: 개인결제창은 매니저 견적(_mgrQuoteOrder)만 표시.
-                    //   고객이 직접 일반 카트로 주문한 건 mypage 에서 확인하면 됨 — 여기엔 안 들어와야 함.
-                    //   매니저 견적 식별: items[0].type='manager_quote' OR product.code 'manager_quote_'로 시작 OR category='manager_quote'.
-                    var _primary = o.items[0] || {};
-                    var _prod = _primary.product || {};
-                    var _isMgrQuote = (_primary.type === 'manager_quote')
-                        || String(_prod.code || '').indexOf('manager_quote_') === 0
-                        || _prod.category === 'manager_quote';
+                    // 2026-06-22 v700/v701: 개인결제창은 매니저가 만든 결제만 표시.
+                    //   고객 직접 카트 주문은 마이페이지 → Documents 에서 확인 (v700 에서 제외).
+                    //   v701: 필터 너무 좁아서 정상 매니저 견적(선우기획 #4135 등)도 빠지던 버그 fix.
+                    //   매니저 견적 식별 (any one of):
+                    //     (a) items[*].type === 'manager_quote' (manager_quote.js 가 모든 아이템에 마킹)
+                    //     (b) product.code 가 'manager_quote_'로 시작
+                    //     (c) product.category === 'manager_quote'
+                    //     (d) admin_note 가 '[MANAGER_QUOTE]' 로 시작 (백업 마커)
+                    //     (e) payment_status === '상담대기' (manager_quote.js 의 초기 상태 — 고객이 아직 결제 안 함)
+                    var _hasMgrItem = (o.items || []).some(function(it){
+                        if (!it) return false;
+                        if (it.type === 'manager_quote') return true;
+                        var p = it.product || {};
+                        if (String(p.code || '').indexOf('manager_quote_') === 0) return true;
+                        if (p.category === 'manager_quote') return true;
+                        return false;
+                    });
+                    var _adminMarker = String(o.admin_note || '').indexOf('[MANAGER_QUOTE]') === 0;
+                    var _consultStatus = o.payment_status === '상담대기';
+                    var _isMgrQuote = _hasMgrItem || _adminMarker || _consultStatus;
                     if (!_isMgrQuote) {
                         if (!isAdm) _removePendingId(o.id);
                         return;
