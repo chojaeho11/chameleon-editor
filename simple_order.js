@@ -501,6 +501,12 @@ html, body { background: #ffffff !important; }
     width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px;
     font-size: 14px; box-sizing: border-box; transition: border-color 0.15s;
 }
+/* v714: 모바일 돋보기 버튼 — 터치 디바이스에서만 표시 (PC는 hover 미리보기) */
+.so-lf-mag { display: none; }
+@media (pointer: coarse) {
+    .so-lf-mag { display: flex !important; }
+}
+.so-lf-mag:active { background: #c7d2fe !important; }
 /* v712: 옵션 카드 info 버튼 — PC hover tooltip (모바일은 클릭 시 모달) */
 .so-lf-info { position: relative; }
 .so-lf-info:hover { background: #c7d2fe !important; color: #4338ca !important; }
@@ -6001,18 +6007,23 @@ html, body { background: #ffffff !important; }
             bs2.style.color = dbl ? '#fff' : '#475569';
             bs2.style.borderColor = dbl ? '#4338ca' : '#e7e5e4';
         }
-        // 2026-06-23 v713: 옵션 카드 — PC 호버 시 실제 사진 미리보기 자동 노출, 모바일은 클릭 시 모달
+        // 2026-06-23 v713/v714: 옵션 카드 — PC 호버 미리보기 + 모바일 돋보기 버튼 (우측, 클릭 시 모달)
         function _renderOptCard(o, selected, onClick, category) {
             var nm = _bizI18n(o, 'name');
             var bc = selected ? '#7c3aed' : '#e2e8f0';
             var bg = selected ? '#faf5ff' : '#fff';
             var priceTag = (o.price > 0) ? ' <span style="color:#dc2626; font-weight:700;">+' + fmtPrice(o.price) + '</span>' : '';
+            // v714: 모바일에서만 보이는 돋보기 버튼 (CSS @media 로 PC 숨김) — 클릭 시 모달
+            var magBtn = '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
+                + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'' + category + '\',\'' + o.key + '\', null)" '
+                + 'style="position:absolute; top:50%; right:6px; transform:translateY(-50%); width:26px; height:26px; border:none; background:#eef2ff; color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>';
             return '<div class="so-lf-opt-card" data-opt-cat="' + category + '" data-opt-key="' + o.key + '" '
                 + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
                 + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
-                + 'onclick="window._soOptCardClick(this, function(){' + onClick + ';})" '
-                + 'style="position:relative; cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">'
+                + 'onclick="' + onClick + '" '
+                + 'style="position:relative; cursor:pointer; padding:10px 36px 10px 10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">'
                 + nm + priceTag
+                + magBtn
                 + '</div>';
         }
         // 용지 (BIZ_PAPERS)
@@ -6099,40 +6110,116 @@ html, body { background: #ffffff !important; }
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
     };
-    // 2026-06-23 v712/v713: 옵션 정보 — 실제 사진 + hover 시 큰 미리보기 카드 표시
-    //   img: Unsplash photo URLs (paper texture, foil samples, finishing technique photos)
-    //   hint: 사용 예시 + 추천 용도
+    // 2026-06-23 v714: 옵션 정보 — 로컬 이미지 (user 업로드 예정) + 다국어 hint (KR/JP/EN)
+    //   img: /opt/{category}/{key}.jpg — user 가 작업 폴더에 업로드 예정. 없으면 placeholder.
+    //   hint_kr/jp/us: 사용 예시 + 추천 용도 (3개 언어)
     var _OPT_VISUAL = {
         paper: {
-            nuvegi240:    { img:'https://images.unsplash.com/photo-1518557984649-43f36b99d1b2?w=400&q=70', hint:'결혼식 청첩장, 고급 명함, 브로셔에 가장 많이 사용되는 부드러운 질감의 무난한 고급지입니다.' },
-            whirale230:   { img:'https://images.unsplash.com/photo-1530631673369-3bdc1e80b27a?w=400&q=70', hint:'실로 짠 듯한 직조(린넨) 패턴이 살짝 비쳐 클래식 명함·청첩장·안내장에 가장 인기.' },
-            stardream240: { img:'https://images.unsplash.com/photo-1620207418302-439b387441b0?w=400&q=70', hint:'표면에 미세한 펄이 들어있어 빛에 따라 반짝이는 화려한 용지. 결혼식·이벤트 청첩장 단골.' },
-            rendez240:    { img:'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=400&q=70', hint:'재생지 느낌의 부드러운 매트 표면. 친환경 컨셉 브랜드, 카페 메뉴판에 적합.' },
-            concept270:   { img:'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&q=70', hint:'270g 두께감 있는 백상지. 묵직한 손맛 + 고급스러운 인상. 럭셔리 브랜드 명함 추천.' },
-            popset250:    { img:'https://images.unsplash.com/photo-1583484963886-cfe2bff2945f?w=400&q=70', hint:'밝고 화사한 컬러 발색. 사진이나 일러스트 디자인 명함에 가장 적합.' },
-            yupoblue250:  { img:'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=400&q=70', hint:'은은한 푸른 빛이 도는 차분한 톤. 비즈니스·법무·금융권 명함에 인기.' },
-            scot220:      { img:'https://images.unsplash.com/photo-1606159068539-43f36b99d1b2?w=400&q=70', hint:'양면 코팅으로 인쇄가 가장 선명. 사진·이미지가 많은 리플렛·카드에 추천.' },
-            montblanc240: { img:'https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&q=70', hint:'완전 순백색 표면. 미니멀/정갈한 디자인의 무채색 명함에 가장 적합.' },
-            arte310:      { img:'https://images.unsplash.com/photo-1581302203228-b8eb0d54f4a9?w=400&q=70', hint:'310g 두께의 초백색 프리미엄 용지. 명함 중 가장 고급 옵션. 두께로 느껴지는 품격.' }
+            nuvegi240:    { img:'/opt/paper/nuvegi240.jpg',
+                hint_kr:'결혼식 청첩장, 고급 명함, 브로셔에 가장 많이 사용되는 부드러운 질감의 무난한 고급지입니다.',
+                hint_jp:'結婚式の招待状、高級名刺、ブローシャーに最も多く使われる柔らかな質感の定番高級紙です。',
+                hint_us:'A smooth, premium-feel paper most often used for wedding invitations, luxury business cards and brochures.' },
+            whirale230:   { img:'/opt/paper/whirale230.jpg',
+                hint_kr:'실로 짠 듯한 직조(린넨) 패턴이 살짝 비쳐 클래식 명함·청첩장·안내장에 가장 인기.',
+                hint_jp:'糸で織ったようなリネン柄が表面に浮かぶ、クラシック名刺・招待状で大人気の紙。',
+                hint_us:'A subtly woven linen-pattern surface — a favorite for classic business cards and invitations.' },
+            stardream240: { img:'/opt/paper/stardream240.jpg',
+                hint_kr:'표면에 미세한 펄이 들어있어 빛에 따라 반짝이는 화려한 용지. 결혼식·이벤트 청첩장 단골.',
+                hint_jp:'微細なパールが含まれ、光に反射してきらめく華やかな紙。結婚式・イベント招待状の定番。',
+                hint_us:'Contains fine pearl flecks that shimmer under light — a go-to choice for weddings and event invitations.' },
+            rendez240:    { img:'/opt/paper/rendez240.jpg',
+                hint_kr:'재생지 느낌의 부드러운 매트 표면. 친환경 컨셉 브랜드, 카페 메뉴판에 적합.',
+                hint_jp:'再生紙のような柔らかいマット表面。エコ系ブランドやカフェのメニュー表に最適。',
+                hint_us:'Soft matte surface with a recycled-paper feel. Great for eco-friendly brands and café menus.' },
+            concept270:   { img:'/opt/paper/concept270.jpg',
+                hint_kr:'270g 두께감 있는 백상지. 묵직한 손맛 + 고급스러운 인상. 럭셔리 브랜드 명함 추천.',
+                hint_jp:'270g の厚みある白紙。重厚な手触りと高級感。ラグジュアリーブランドの名刺におすすめ。',
+                hint_us:'Substantial 270g white card stock with a weighty, premium feel. Ideal for luxury brand cards.' },
+            popset250:    { img:'/opt/paper/popset250.jpg',
+                hint_kr:'밝고 화사한 컬러 발색. 사진이나 일러스트 디자인 명함에 가장 적합.',
+                hint_jp:'明るく華やかな発色。写真やイラストデザインの名刺に最も適しています。',
+                hint_us:'Bright, vivid color reproduction — perfect for cards with photos or illustrations.' },
+            yupoblue250:  { img:'/opt/paper/yupoblue250.jpg',
+                hint_kr:'은은한 푸른 빛이 도는 차분한 톤. 비즈니스·법무·금융권 명함에 인기.',
+                hint_jp:'淡い青みのある落ち着いたトーン。ビジネス・法務・金融業界の名刺に人気。',
+                hint_us:'A subtle bluish hue with a calm tone — popular for business, legal and finance cards.' },
+            scot220:      { img:'/opt/paper/scot220.jpg',
+                hint_kr:'양면 코팅으로 인쇄가 가장 선명. 사진·이미지가 많은 리플렛·카드에 추천.',
+                hint_jp:'両面コーティングで印刷が最もシャープ。写真・画像の多いリーフレット・カードに推奨。',
+                hint_us:'Double-coated for the crispest print. Recommended for image-heavy leaflets and cards.' },
+            montblanc240: { img:'/opt/paper/montblanc240.jpg',
+                hint_kr:'완전 순백색 표면. 미니멀/정갈한 디자인의 무채색 명함에 가장 적합.',
+                hint_jp:'純白の表面。ミニマル・整ったデザインの無彩色名刺に最適。',
+                hint_us:'Pure white surface. Best suited for minimal, monochrome card designs.' },
+            arte310:      { img:'/opt/paper/arte310.jpg',
+                hint_kr:'310g 두께의 초백색 프리미엄 용지. 명함 중 가장 고급 옵션. 두께로 느껴지는 품격.',
+                hint_jp:'310g 厚手の超白色プレミアム紙。名刺の中で最高級オプション。厚みで伝わる品格。',
+                hint_us:'Thick 310g ultra-white premium stock — the top-tier business card option. Class you can feel.' }
         },
         foil: {
-            gold_matte:   { img:'https://images.unsplash.com/photo-1633522472907-1ce7e8c5ce67?w=400&q=70', hint:'반짝임을 절제한 차분한 골드 마감. 결혼식 청첩장·고급 브랜드 로고에 가장 많이 사용.' },
-            gold_gloss:   { img:'https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=400&q=70', hint:'거울처럼 반짝이는 유광 골드. 이벤트·파티 초대장의 화려한 포인트.' },
-            silver_gloss: { img:'https://images.unsplash.com/photo-1620207418302-439b387441b0?w=400&q=70', hint:'유광 검정(먹박). 럭셔리 브랜드 로고/타이틀에 사용하면 무게감과 깊이가 살아납니다.' },
-            black_matte:  { img:'https://images.unsplash.com/photo-1521252659862-eec69941b071?w=400&q=70', hint:'무광 검정 박. 시크하고 모던한 디자인의 마감 포인트.' },
-            red_foil:     { img:'https://images.unsplash.com/photo-1602734846297-9299fc2d4703?w=400&q=70', hint:'강렬한 빨간 박. 이벤트·세일·신년 카드 등 임팩트가 필요할 때.' },
-            blue_foil:    { img:'https://images.unsplash.com/photo-1559059699-085698eba48d?w=400&q=70', hint:'쿨한 파란 박. 비즈니스·테크 브랜드의 세련된 포인트로 사용.' },
-            holo_foil:    { img:'https://images.unsplash.com/photo-1559963110-71b394e7494d?w=400&q=70', hint:'보는 각도에 따라 무지개빛으로 변하는 홀로그램. 한정판·아트워크에 독특한 효과.' }
+            gold_matte:   { img:'/opt/foil/gold_matte.jpg',
+                hint_kr:'반짝임을 절제한 차분한 골드 마감. 결혼식 청첩장·고급 브랜드 로고에 가장 많이 사용.',
+                hint_jp:'光沢を抑えた落ち着いたゴールド仕上げ。結婚式招待状・高級ブランドロゴで最も多用。',
+                hint_us:'Restrained, calm gold finish — the most popular choice for wedding invitations and luxury brand logos.' },
+            gold_gloss:   { img:'/opt/foil/gold_gloss.jpg',
+                hint_kr:'거울처럼 반짝이는 유광 골드. 이벤트·파티 초대장의 화려한 포인트.',
+                hint_jp:'鏡のように輝くグロスゴールド。イベント・パーティ招待状の華やかなアクセント。',
+                hint_us:'Mirror-bright glossy gold. A flashy accent for event and party invitations.' },
+            silver_gloss: { img:'/opt/foil/silver_gloss.jpg',
+                hint_kr:'유광 검정(먹박). 럭셔리 브랜드 로고/타이틀에 사용하면 무게감과 깊이가 살아납니다.',
+                hint_jp:'グロスブラック(墨箔)。ラグジュアリーブランドのロゴ/タイトルで重厚感と深みが際立つ。',
+                hint_us:'Glossy black foil ("meokbak"). Adds weight and depth when used on luxury brand logos or titles.' },
+            black_matte:  { img:'/opt/foil/black_matte.jpg',
+                hint_kr:'무광 검정 박. 시크하고 모던한 디자인의 마감 포인트.',
+                hint_jp:'マットブラック箔。シックでモダンなデザインの仕上げポイント。',
+                hint_us:'Matte black foil — a chic, modern finishing accent.' },
+            red_foil:     { img:'/opt/foil/red_foil.jpg',
+                hint_kr:'강렬한 빨간 박. 이벤트·세일·신년 카드 등 임팩트가 필요할 때.',
+                hint_jp:'鮮烈なレッド箔。イベント・セール・新年カードなどインパクトが必要な時に。',
+                hint_us:'Bold red foil — when you need maximum impact for events, sales or new-year cards.' },
+            blue_foil:    { img:'/opt/foil/blue_foil.jpg',
+                hint_kr:'쿨한 파란 박. 비즈니스·테크 브랜드의 세련된 포인트로 사용.',
+                hint_jp:'クールなブルー箔。ビジネス・テックブランドの洗練されたアクセントに。',
+                hint_us:'Cool blue foil — a refined accent for business and tech brands.' },
+            holo_foil:    { img:'/opt/foil/holo_foil.jpg',
+                hint_kr:'보는 각도에 따라 무지개빛으로 변하는 홀로그램. 한정판·아트워크에 독특한 효과.',
+                hint_jp:'見る角度で虹色に変化するホログラム箔。限定版・アート作品に独特な効果。',
+                hint_us:'Holographic foil that shifts through rainbow colors with the viewing angle. Unique effect for limited editions and artwork.' }
         },
         finish: {
-            hyungap:   { img:'https://images.unsplash.com/photo-1568871391290-c2d5c3a3b3a8?w=400&q=70', hint:'압력으로 표면을 눌러 양각 입체감을 만듭니다. 로고나 타이틀이 도드라져 보여 손으로 만져보면 솟아있음을 느낄 수 있습니다.' },
-            embossing: { img:'https://images.unsplash.com/photo-1607004468138-e7e23ea26947?w=400&q=70', hint:'표면 전체에 양각 무늬를 새겨 텍스처를 만듭니다. 도트·꽃·패턴 등 다양한 무늬 가공이 가능합니다.' },
-            mising:    { img:'https://images.unsplash.com/photo-1591115766354-1f60854dbf9b?w=400&q=70', hint:'재봉선 모양의 점선 절취. 쿠폰·티켓처럼 한쪽을 깔끔하게 떼어낼 수 있게 합니다.' },
-            oshi:      { img:'https://images.unsplash.com/photo-1612537590400-fc4cc01a73c9?w=400&q=70', hint:'접히는 라인을 미리 눌러주는 가공. 접지/2단/3단 카드 제작 시 필수 작업입니다.' },
-            taegong:   { img:'https://images.unsplash.com/photo-1599598425947-5482bbb3f7d9?w=400&q=70', hint:'원형 구멍 가공. 끈이나 링을 꿰어 행택·도서 카드 등으로 활용 가능.' },
-            gwidori:   { img:'https://images.unsplash.com/photo-1606326608690-4e0281b1e588?w=400&q=70', hint:'모서리를 둥글게 가공. 부드러운 인상 + 모서리가 닳지 않아 카드 수명이 길어집니다.' }
+            hyungap:   { img:'/opt/finish/hyungap.jpg',
+                hint_kr:'압력으로 표면을 눌러 양각 입체감을 만듭니다. 로고나 타이틀이 도드라져 보여 손으로 만져보면 솟아있음을 느낄 수 있습니다.',
+                hint_jp:'圧力で表面を押し、立体感のある型押し効果を作ります。ロゴやタイトルが浮き出て、触ると盛り上がりを感じられます。',
+                hint_us:'Press-embossing — pressure pushes the paper to create a raised 3D effect. Logos and titles stand out and you can feel the lift by touch.' },
+            embossing: { img:'/opt/finish/embossing.jpg',
+                hint_kr:'표면 전체에 양각 무늬를 새겨 텍스처를 만듭니다. 도트·꽃·패턴 등 다양한 무늬 가공이 가능합니다.',
+                hint_jp:'表面全体に浮き彫り模様を施し、テクスチャを作ります。ドット・花・パターンなど様々な模様が可能。',
+                hint_us:'Adds a raised pattern across the surface to create texture. Many patterns possible — dots, florals, geometrics, etc.' },
+            mising:    { img:'/opt/finish/mising.jpg',
+                hint_kr:'재봉선 모양의 점선 절취. 쿠폰·티켓처럼 한쪽을 깔끔하게 떼어낼 수 있게 합니다.',
+                hint_jp:'ミシン目のような点線カット。クーポンやチケットのように片側をきれいに切り取れます。',
+                hint_us:'A perforated tear line. Lets one side be cleanly torn off — like coupons or tickets.' },
+            oshi:      { img:'/opt/finish/oshi.jpg',
+                hint_kr:'접히는 라인을 미리 눌러주는 가공. 접지/2단/3단 카드 제작 시 필수 작업입니다.',
+                hint_jp:'折り目をあらかじめ付ける加工。折り名刺・2つ折り・3つ折りカード制作時の必須工程。',
+                hint_us:'Pre-creases the fold lines. Essential when making folded cards (bi-fold, tri-fold, etc).' },
+            taegong:   { img:'/opt/finish/taegong.jpg',
+                hint_kr:'원형 구멍 가공. 끈이나 링을 꿰어 행택·도서 카드 등으로 활용 가능.',
+                hint_jp:'丸穴あけ加工。ひもやリングを通してハングタグ・図書カードなどに活用可能。',
+                hint_us:'Round hole punching. Lets you thread strings or rings — useful for hang tags and library-style cards.' },
+            gwidori:   { img:'/opt/finish/gwidori.jpg',
+                hint_kr:'모서리를 둥글게 가공. 부드러운 인상 + 모서리가 닳지 않아 카드 수명이 길어집니다.',
+                hint_jp:'角を丸く加工。柔らかい印象 + 角が傷みにくくカードが長持ちします。',
+                hint_us:'Rounds off the corners. Softer impression + corners stay intact longer, so cards last.' }
         }
     };
+    function _optHint(vis) {
+        if (!vis) return '';
+        var lg = (typeof getLang === 'function') ? getLang() : 'ko';
+        if (lg === 'ja') return vis.hint_jp || vis.hint_kr || '';
+        if (lg === 'en') return vis.hint_us || vis.hint_kr || '';
+        return vis.hint_kr || '';
+    }
     // 2026-06-23 v713: 모바일/PC 클릭 라우터 — 모바일은 모달, PC 는 선택만
     window._soOptCardClick = function(cardEl, doSelect) {
         var isTouch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
@@ -6168,12 +6255,13 @@ html, body { background: #ffffff !important; }
         var desc = _bizI18n(item, 'desc');
         var vis = (_OPT_VISUAL[cat] || {})[key] || {};
         var priceLine = (item.price > 0) ? '<div style="font-size:13px; font-weight:800; color:#dc2626; margin-top:6px;">+' + fmtPrice(item.price) + '</div>' : '';
+        var _hintTx = _optHint(vis);
         pv.innerHTML = '<div style="width:100%; aspect-ratio:4/3; background:#f1f5f9 ' + (vis.img ? 'url(' + vis.img + ') center/cover no-repeat' : '') + ';"></div>'
             + '<div style="padding:12px 14px;">'
             +   '<div style="font-size:14px; font-weight:800; color:#0f172a;">' + nm + '</div>'
             +   priceLine
             +   '<div style="font-size:12px; color:#475569; line-height:1.6; margin-top:6px;">' + desc + '</div>'
-            +   (vis.hint ? '<div style="font-size:11.5px; color:#64748b; line-height:1.55; margin-top:8px; padding:8px 10px; background:#f8fafc; border-radius:6px;">' + vis.hint + '</div>' : '')
+            +   (_hintTx ? '<div style="font-size:11.5px; color:#64748b; line-height:1.55; margin-top:8px; padding:8px 10px; background:#f8fafc; border-radius:6px;">' + _hintTx + '</div>' : '')
             + '</div>';
         // 위치 계산 — 카드 우측에 표시. 우측에 공간 없으면 좌측. 화면 밖이면 위로.
         var rect = cardEl.getBoundingClientRect();
@@ -6203,7 +6291,8 @@ html, body { background: #ffffff !important; }
         var vis = (_OPT_VISUAL[category] || {})[key] || {};
         var visualHtml = '<div style="width:100%; aspect-ratio:4/3; background:#f1f5f9 ' + (vis.img ? 'url(' + vis.img + ') center/cover no-repeat' : '') + ';"></div>';
         var priceLine = (item.price > 0) ? '<div style="font-size:13px; font-weight:800; color:#dc2626; margin-top:4px;">+' + fmtPrice(item.price) + '</div>' : '';
-        var hintLine = vis.hint ? '<div style="font-size:12.5px; color:#475569; line-height:1.7; margin-top:10px; padding:10px 12px; background:#f8fafc; border-radius:8px;">' + vis.hint + '</div>' : '';
+        var _modalHint = _optHint(vis);
+        var hintLine = _modalHint ? '<div style="font-size:12.5px; color:#475569; line-height:1.7; margin-top:10px; padding:10px 12px; background:#f8fafc; border-radius:8px;">' + _modalHint + '</div>' : '';
         var selectBtnHtml = (typeof doSelect === 'function')
             ? '<button type="button" id="soOptInfoSelect" style="width:100%; margin-top:14px; padding:13px; background:linear-gradient(135deg,#7c3aed,#4338ca); color:#fff; border:none; border-radius:9px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit;">' + tr('이 옵션 선택','このオプションを選択','Pick this option') + '</button>'
             + '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:100%; margin-top:8px; padding:11px; background:#f1f5f9; color:#475569; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>'
