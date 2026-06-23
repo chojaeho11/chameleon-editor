@@ -908,6 +908,41 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 }
             }
 
+            // 2026-06-23 v703: 티셔츠 옵션 박스 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
+            const _isTshirtItem = it._presetType === 'tshirt' || (it.product && it.product.category === '3244432');
+            if (_isTshirtItem) {
+                const _tLines = [];
+                if (it._tshirtSizes) {
+                    const _ts = it._tshirtSizes;
+                    const _tsParts = [];
+                    if (_ts.S) _tsParts.push('S <b>' + _ts.S + '장</b>');
+                    if (_ts.M) _tsParts.push('M <b>' + _ts.M + '장</b>');
+                    if (_ts.L) _tsParts.push('L <b>' + _ts.L + '장</b>');
+                    const _tot = (_ts.S||0) + (_ts.M||0) + (_ts.L||0);
+                    if (_tsParts.length) _tLines.push('사이즈별 수량: ' + _tsParts.join(' · ') + ' <span style="color:#64748b;">(총 ' + _tot + '장)</span>');
+                }
+                if (it._tshirtPrintMethod) {
+                    const _pmLbl = it._tshirtPrintMethod === 'dtg' ? 'DTG (직접 인쇄)'
+                                : it._tshirtPrintMethod === 'dtf' ? 'DTF (전사 필름)'
+                                : it._tshirtPrintMethod === 'hologram' ? '홀로그램 (홀로 전사)'
+                                : String(it._tshirtPrintMethod).toUpperCase();
+                    _tLines.push('인쇄 방식: <b style="color:#7c2d12;">🖨️ ' + esc(_pmLbl) + '</b>');
+                }
+                const _tshAreasW = Array.isArray(it._tshirtPrintAreas) ? it._tshirtPrintAreas : (it._tshirtPrintArea ? [it._tshirtPrintArea] : null);
+                if (_tshAreasW && _tshAreasW.length) {
+                    const _areaLbl = _tshAreasW.map(a =>
+                        a === 'front_logo' ? '앞면 로고 (+3,000원/장)'
+                      : a === 'front_full' ? '앞면 전체 (+8,000원/장)'
+                      : a === 'back_full'  ? '뒷면 전체 (+8,000원/장)'
+                      : a
+                    );
+                    _tLines.push('인쇄 위치: <b style="color:#9a3412;">📍 ' + esc(_areaLbl.join(' + ')) + '</b>');
+                }
+                if (_tLines.length > 0) {
+                    boxes.push(`<div class="opt-box" style="border-color:#fed7aa; background:#fff7ed;"><div class="opt-head" style="color:#7c2d12;"><i class="fa-solid fa-shirt"></i> 티셔츠 옵션</div><div class="opt-val" style="line-height:1.9;">${_tLines.join('<br>')}</div></div>`);
+                }
+            }
+
             // 2026-06-13: 인스타판넬 디자인 문구 박스 (담당자 무료디자인 작업용)
             if (it.isInstaPanel || it.instaTitle || it.instaSub || it.instaHashtag || it.instaLogo) {
                 const _ipLines = [];

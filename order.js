@@ -2716,6 +2716,40 @@ else if (item.product && item.product.img && (item.product.img.startsWith('http'
         const displayMmH = (item.height && item.type === 'design') ? Math.round(item.height / _mmToPxR) : (item.height || 0);
 
         let addonHtml = '';
+        // 2026-06-23 v703: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치 표시
+        if (item._presetType === 'tshirt') {
+            var _tshLines = [];
+            if (item._tshirtSizes) {
+                var _ts = item._tshirtSizes;
+                var _tsParts = [];
+                if (_ts.S) _tsParts.push('S ' + _ts.S);
+                if (_ts.M) _tsParts.push('M ' + _ts.M);
+                if (_ts.L) _tsParts.push('L ' + _ts.L);
+                if (_tsParts.length) _tshLines.push('<span style="font-weight:700;">👕 사이즈:</span> ' + _tsParts.join(' · '));
+            }
+            if (item._tshirtPrintMethod) {
+                var _pmLbl = item._tshirtPrintMethod === 'dtg' ? 'DTG (직접 인쇄)'
+                          : item._tshirtPrintMethod === 'dtf' ? 'DTF (전사 필름)'
+                          : item._tshirtPrintMethod === 'hologram' ? '홀로그램 (홀로 전사)'
+                          : String(item._tshirtPrintMethod).toUpperCase();
+                _tshLines.push('<span style="font-weight:700;">🖨️ 인쇄방식:</span> ' + _pmLbl);
+            }
+            var _tshAreas = Array.isArray(item._tshirtPrintAreas) ? item._tshirtPrintAreas : (item._tshirtPrintArea ? [item._tshirtPrintArea] : null);
+            if (_tshAreas && _tshAreas.length) {
+                var _areaLbl = _tshAreas.map(function(a){
+                    return a === 'front_logo' ? '앞면 로고 (+3,000원/장)'
+                         : a === 'front_full' ? '앞면 전체 (+8,000원/장)'
+                         : a === 'back_full'  ? '뒷면 전체 (+8,000원/장)'
+                         : a;
+                });
+                _tshLines.push('<span style="font-weight:700;">📍 인쇄위치:</span> ' + _areaLbl.join(' + '));
+            }
+            if (_tshLines.length) {
+                addonHtml += '<div style="margin-bottom:10px; padding:10px 12px; background:#fff7ed; border-left:3px solid #f97316; border-radius:6px; font-size:12px; color:#7c2d12; line-height:1.8;">'
+                          + _tshLines.join('<br>')
+                          + '</div>';
+            }
+        }
         // ★ 견적서 아이템: selectedAddons에 있는 옵션을 직접 표시
         if (item.product._quote_item && item.selectedAddons && Object.keys(item.selectedAddons).length > 0) {
             addonHtml += '<div style="margin-bottom:8px;"><div style="font-size:11px; font-weight:800; color:#6366f1; margin-bottom:5px;"># 추가 옵션</div>';

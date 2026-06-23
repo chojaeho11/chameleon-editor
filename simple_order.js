@@ -14941,6 +14941,34 @@ html, body { background: #ffffff !important; }
                         ));
                     }
                 }
+                // 2026-06-23 v703: 티셔츠 — 사이즈별 수량 / 인쇄 방식 / 인쇄 위치
+                if (item._presetType === 'tshirt') {
+                    if (item._tshirtSizes) {
+                        var _tsLine = item._tshirtSizes;
+                        var _tsParts = [];
+                        if (_tsLine.S) _tsParts.push('S ' + _tsLine.S);
+                        if (_tsLine.M) _tsParts.push('M ' + _tsLine.M);
+                        if (_tsLine.L) _tsParts.push('L ' + _tsLine.L);
+                        if (_tsParts.length) meta.push('👕 ' + tr('사이즈','サイズ','Sizes') + ': ' + _tsParts.join(' · '));
+                    }
+                    if (item._tshirtPrintMethod) {
+                        var _pmLine = item._tshirtPrintMethod === 'dtg' ? 'DTG ' + tr('(직접인쇄)','(直接)','(Direct)')
+                                    : item._tshirtPrintMethod === 'dtf' ? 'DTF ' + tr('(전사필름)','(転写)','(Film)')
+                                    : item._tshirtPrintMethod === 'hologram' ? tr('홀로그램','ホログラム','Hologram')
+                                    : String(item._tshirtPrintMethod).toUpperCase();
+                        meta.push('🖨️ ' + _pmLine);
+                    }
+                    var _tshAreas = Array.isArray(item._tshirtPrintAreas) ? item._tshirtPrintAreas : (item._tshirtPrintArea ? [item._tshirtPrintArea] : null);
+                    if (_tshAreas && _tshAreas.length) {
+                        var _aLine = _tshAreas.map(function(a){
+                            return a === 'front_logo' ? tr('앞면 로고','前面ロゴ','Front Logo')
+                                 : a === 'front_full' ? tr('앞면 전체','前面全','Front Full')
+                                 : a === 'back_full'  ? tr('뒷면 전체','背面全','Back Full')
+                                 : a;
+                        });
+                        meta.push('📍 ' + tr('인쇄위치','印刷位置','Print') + ': ' + _aLine.join(' + '));
+                    }
+                }
                 // 2026-06-04: 자유인쇄커팅 보드 재질 표시 (6종 중 1)
                 if (item.cutBoardMaterial) {
                     var _cbMap = {
