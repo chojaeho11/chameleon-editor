@@ -1816,14 +1816,41 @@ html, body { background: #ffffff !important; }
           <!-- 주문 수량 슬롯 — soQtySection 이 낱장 모드일 때 여기로 이동 (JS) -->
           <div id="soLfQtySlot" style="margin-top:16px;"></div>
 
-          <div class="so-section-title" style="margin-top:16px;">${tr('용지 선택', '用紙選択', 'Paper')}</div>
-          <div id="soLfPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
+          <!-- v710: 용지 선택 — 토글 버튼 (현재 선택 표시) -->
+          <button type="button" id="soLfPaperToggle" onclick="window._soLeafletToggleSection('paper')" style="width:100%; margin-top:16px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-file-lines"></i>
+              <span>${tr('용지 선택','用紙選択','Paper')}: <span id="soLfPaperCurrent" style="color:#1e1b4b;">-</span></span>
+            </span>
+            <i id="soLfPaperChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          </button>
+          <div id="soLfPaperWrap" style="display:none; margin-top:6px;">
+            <div id="soLfPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          </div>
 
-          <div class="so-section-title" style="margin-top:16px;">${tr('박 (옵션)', '箔 (任意)', 'Foil (optional)')}</div>
-          <div id="soLfFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
+          <!-- v710: 박 (옵션) — 토글 버튼 -->
+          <button type="button" id="soLfFoilToggle" onclick="window._soLeafletToggleSection('foil')" style="width:100%; margin-top:10px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-sparkles"></i>
+              <span>${tr('박','箔','Foil')} (${tr('옵션','任意','optional')}): <span id="soLfFoilCurrent" style="color:#1e1b4b;">${tr('없음','なし','None')}</span></span>
+            </span>
+            <i id="soLfFoilChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          </button>
+          <div id="soLfFoilWrap" style="display:none; margin-top:6px;">
+            <div id="soLfFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          </div>
 
-          <div class="so-section-title" style="margin-top:16px;">${tr('후가공 (옵션)', '後加工 (任意)', 'Finishing (optional)')}</div>
-          <div id="soLfFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
+          <!-- v710: 후가공 (옵션) — 토글 버튼 -->
+          <button type="button" id="soLfFinishToggle" onclick="window._soLeafletToggleSection('finish')" style="width:100%; margin-top:10px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span style="display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-screwdriver-wrench"></i>
+              <span>${tr('후가공','後加工','Finishing')} (${tr('옵션','任意','optional')}): <span id="soLfFinishCurrent" style="color:#1e1b4b;">${tr('없음','なし','None')}</span></span>
+            </span>
+            <i id="soLfFinishChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          </button>
+          <div id="soLfFinishWrap" style="display:none; margin-top:6px;">
+            <div id="soLfFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          </div>
         </div>
 
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
@@ -5966,6 +5993,36 @@ html, body { background: #ffffff !important; }
                 return '<div onclick="window._soToggleLeafletFinish(\'' + o.key + '\')" style="cursor:pointer; padding:10px; text-align:center; border:1.5px solid ' + bc + '; background:' + bg + '; border-radius:10px; font-size:11.5px; font-weight:700; color:#1e293b;">' + nm + ' <span style="color:#dc2626;">+' + fmtPrice(o.price) + '</span></div>';
             }).join('');
         }
+        // 2026-06-23 v710: 토글 버튼 라벨에 현재 선택값 표시
+        try {
+            var pCur = document.getElementById('soLfPaperCurrent');
+            if (pCur && typeof BIZ_PAPERS !== 'undefined') {
+                var pSel = BIZ_PAPERS.find(function(o){ return o.key === state.leafletPaper; });
+                pCur.textContent = pSel ? _bizI18n(pSel, 'name') : '-';
+            }
+            var fCur = document.getElementById('soLfFoilCurrent');
+            if (fCur) {
+                if (state.leafletFoil && typeof BIZ_FOILS !== 'undefined') {
+                    var fSel = BIZ_FOILS.find(function(o){ return o.key === state.leafletFoil; });
+                    fCur.textContent = fSel ? _bizI18n(fSel, 'name') : tr('없음','なし','None');
+                } else {
+                    fCur.textContent = tr('없음','なし','None');
+                }
+            }
+            var fnCur = document.getElementById('soLfFinishCurrent');
+            if (fnCur) {
+                var picked = state.leafletFinishes ? Object.keys(state.leafletFinishes).filter(function(k){ return !!state.leafletFinishes[k]; }) : [];
+                if (picked.length > 0 && typeof BIZ_FINISHES !== 'undefined') {
+                    var names = picked.map(function(k){
+                        var o = BIZ_FINISHES.find(function(x){ return x.key === k; });
+                        return o ? _bizI18n(o, 'name') : k;
+                    });
+                    fnCur.textContent = names.join(', ');
+                } else {
+                    fnCur.textContent = tr('없음','なし','None');
+                }
+            }
+        } catch(_lbE){}
     }
     window._soPickLeafletSize = function(id) {
         state.leafletSize = id;
@@ -5994,6 +6051,22 @@ html, body { background: #ffffff !important; }
         state.leafletFinishes[key] = !state.leafletFinishes[key];
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
+    };
+    // 2026-06-23 v710: 용지/박/후가공 섹션 토글 (각각 클릭 시 그리드 열기/닫기)
+    window._soLeafletToggleSection = function(which) {
+        var map = { paper:'soLfPaperWrap', foil:'soLfFoilWrap', finish:'soLfFinishWrap' };
+        var chMap = { paper:'soLfPaperChevron', foil:'soLfFoilChevron', finish:'soLfFinishChevron' };
+        var wrap = document.getElementById(map[which]);
+        var ch = document.getElementById(chMap[which]);
+        if (!wrap) return;
+        var isOpen = wrap.style.display !== 'none';
+        if (isOpen) {
+            wrap.style.display = 'none';
+            if (ch) { ch.classList.remove('fa-chevron-up'); ch.classList.add('fa-chevron-down'); }
+        } else {
+            wrap.style.display = '';
+            if (ch) { ch.classList.remove('fa-chevron-down'); ch.classList.add('fa-chevron-up'); }
+        }
     };
     // 2026-06-23 v710: 비규격 사이즈 토글 — 클릭 시 W/H 입력 칸 열기/닫기
     window._soLeafletCustomToggle = function() {
@@ -10887,12 +10960,20 @@ html, body { background: #ffffff !important; }
                     _qtySlot.appendChild(_qtySec);
                 }
             } catch(_qe){}
-            // v710: 비규격 토글 초기 상태 — 닫힘
+            // v710: 모든 토글 섹션 초기 상태 — 닫힘 (비규격/용지/박/후가공)
             try {
-                var _custW = document.getElementById('soLfCustomWrap');
-                var _custCh = document.getElementById('soLfCustChevron');
-                if (_custW) _custW.style.display = 'none';
-                if (_custCh) { _custCh.classList.remove('fa-chevron-up'); _custCh.classList.add('fa-chevron-down'); }
+                var _toggleIds = [
+                    ['soLfCustomWrap', 'soLfCustChevron'],
+                    ['soLfPaperWrap',  'soLfPaperChevron'],
+                    ['soLfFoilWrap',   'soLfFoilChevron'],
+                    ['soLfFinishWrap', 'soLfFinishChevron']
+                ];
+                _toggleIds.forEach(function(pair){
+                    var w = document.getElementById(pair[0]);
+                    var c = document.getElementById(pair[1]);
+                    if (w) w.style.display = 'none';
+                    if (c) { c.classList.remove('fa-chevron-up'); c.classList.add('fa-chevron-down'); }
+                });
             } catch(_te){}
             try { _soRenderLeafletAll(); } catch(e){}
         } else {
