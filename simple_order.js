@@ -6906,20 +6906,27 @@ html, body { background: #ffffff !important; }
     function _soIsBizCardProduct(p) {
         return !!(p && p.code && /^pp_bc/i.test(p.code));
     }
-    // 2026-06-23 v723: 상업인쇄물 일반 박/후가공 옵션 대상 — 명함/리플렛/스티커/블라인드/커튼 제외, 나머지 pp_* + 명시 코드
-    var CP_EXPLICIT_CODES = ['535435355'];  // pp_* 가 아닌 상업인쇄물 product code 화이트리스트
+    // 2026-06-23 v723/v724: 상업인쇄물 일반 박/후가공 옵션 대상 — 명함/리플렛/스티커 제외, 나머지 모두
+    //   범위: 봉투/달력/쇼핑백/책자/포스터/전단/엽서/카탈로그/팜플렛/리플렛(특수아님)/홍보물/기타 인쇄물
+    var CP_EXPLICIT_CODES = ['535435355', '435345435'];  // pp_* 가 아닌 상업인쇄물 product code 화이트리스트
+    var CP_NAME_KW = /봉투|달력|쇼핑백|책자|포스터|전단|엽서|카탈로그|catalog|팜플렛|pamphlet|brochure|책표지|메모지|메뉴판|menu|티켓|ticket|상장|증서|certificate|편지지|letterhead|북커버|envelope|calendar|booklet|shopping\s*bag/i;
     function _soShouldShowCpOptions(p) {
         if (!p || !p.code) return false;
         if (_soIsBizCardProduct(p)) return false;
         if (typeof _soIsLeafletProduct === 'function' && _soIsLeafletProduct(p)) return false;
         if (typeof _soIsStickerProduct === 'function' && _soIsStickerProduct(p)) return false;
-        var code = String(p.code).toLowerCase();
+        var code = String(p.code || '').toLowerCase();
         var cat = String(p.category || '').toLowerCase();
+        var nm  = String(p.name_kr || p.name || '');
+        // 명시적 제외
         if (cat.startsWith('pp_sticker')) return false;
         if (cat.startsWith('pp_bl') || cat.startsWith('pp_bk') || cat.startsWith('pp_ct')) return false;
-        if (cat.startsWith('pp_')) return true;
-        if (code.startsWith('pp_')) return true;
+        // 명시적 포함
         if (CP_EXPLICIT_CODES.indexOf(p.code) !== -1) return true;
+        if (cat.startsWith('pp_'))  return true;
+        if (code.startsWith('pp_')) return true;
+        // 제품명에 상업인쇄물 키워드 — 광고인쇄 / 기타 카테고리에 잘못 분류된 제품도 인식
+        if (CP_NAME_KW.test(nm)) return true;
         return false;
     }
     window._soShouldShowCpOptions = _soShouldShowCpOptions;
@@ -16025,6 +16032,13 @@ html, body { background: #ffffff !important; }
                 state.bizFoil = item.bizCard.foil || null;
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
                 if (typeof _soBizCardRender === 'function') _soBizCardRender();
+            }
+            // v723: 상업인쇄물 일반 박/후가공 옵션 복원
+            if (item.cpOptions) {
+                state.isCpGeneric = true;
+                state.cpFoil = item.cpOptions.foil || null;
+                state.cpFinishes = Object.assign({}, item.cpOptions.finishes || {});
+                if (typeof _soRenderCpOptions === 'function') _soRenderCpOptions();
             }
             // 2026-06-04: 쿠션 옵션 복원
             if (item._cushionStuff != null) state.cushionStuff = !!item._cushionStuff;
