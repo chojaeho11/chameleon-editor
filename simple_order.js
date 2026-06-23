@@ -7386,6 +7386,8 @@ html, body { background: #ffffff !important; }
         var hint = document.getElementById('soTshirtTotalHint');
         if (hint) hint.textContent = tr('합계: ' + total + '장', '合計: ' + total + '枚', 'Total: ' + total + ' pcs');
         if (typeof recalc === 'function') recalc();
+        // 2026-06-22 v702: S/M/L 합계 변경 시 카트 버튼 활성화 상태 재계산
+        if (typeof updateButtons === 'function') updateButtons();
     };
 
     // 2026-05-30: 티셔츠 인쇄 방식 선택 (DTG / DTF / 홀로그램)
@@ -9822,6 +9824,8 @@ html, body { background: #ffffff !important; }
         state.qty = next;
         _soSyncAcrylicAddonQty();
         recalc();
+        // 2026-06-22 v702: +/- 버튼으로 수량 변경 시 카트 버튼 상태 재계산
+        if (typeof updateButtons === 'function') updateButtons();
         // 2026-05-15: 원판/종이매대는 수량에 따라 배송비/라벨이 바뀜
         if (state.isRawBoard && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
         if (state.isPaperDisplay) {
@@ -9841,6 +9845,8 @@ html, body { background: #ffffff !important; }
         state.qty = v;
         _soSyncAcrylicAddonQty();
         recalc();
+        // 2026-06-22 v702: 수량 변경 시 카트/구매 버튼 활성화 상태 재계산 — 티셔츠 등 파일업로드 안 하는 상품에서 0→양수 전환 시 enable 필요
+        if (typeof updateButtons === 'function') updateButtons();
         // 2026-05-15: 원판/종이매대는 수량에 따라 배송비/라벨이 바뀜
         if (state.isRawBoard && typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
         if (state.isPaperDisplay) {
