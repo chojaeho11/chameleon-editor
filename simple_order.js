@@ -9264,9 +9264,18 @@ html, body { background: #ffffff !important; }
             gp.innerHTML = BIZ_PAPERS.map(function(o){
                 var sel = (state.bizPaper === o.key);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                return '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                // v716: 명함도 hover preview + 모바일 돋보기 버튼 적용
+                return '<div class="so-biz-opt-card" data-opt-cat="paper" data-opt-key="' + o.key + '" '
+                    + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
+                    + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
+                    + 'style="position:relative;">'
+                    + '<button type="button" onclick="window._soBizPickPaper(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
                     + _bizCard2tone(nm, ds, '', sel, '#e5e7eb', '#0a0a0a')
-                    + '</button>';
+                    + '</button>'
+                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
+                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'paper\',\'' + o.key + '\', null)" '
+                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
+                    + '</div>';
             }).join('');
         }
         // 박 토글 상태 + 선택 미리보기
@@ -9299,9 +9308,18 @@ html, body { background: #ffffff !important; }
                 var sel = (state.bizFoil === o.key);
                 var fc = BIZ_FOIL_BG[o.key] || { bg:'#0a0a0a', txt:'#fff' };
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                return '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                // v716: hover preview + 모바일 돋보기 버튼
+                return '<div class="so-biz-opt-card" data-opt-cat="foil" data-opt-key="' + o.key + '" '
+                    + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
+                    + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
+                    + 'style="position:relative;">'
+                    + '<button type="button" onclick="window._soBizPickFoil(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
                     + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel, fc.bg, fc.txt)
-                    + '</button>';
+                    + '</button>'
+                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
+                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'foil\',\'' + o.key + '\', null)" '
+                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
+                    + '</div>';
             }).join('');
         }
         // 후가공 토글 상태 + 선택 미리보기
@@ -9333,9 +9351,18 @@ html, body { background: #ffffff !important; }
             gx.innerHTML = BIZ_FINISHES.map(function(o){
                 var sel = !!(state.bizFinishes && state.bizFinishes[o.key]);
                 var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
-                return '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" title="' + ds.replace(/"/g,'&quot;') + '" style="padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
+                // v716: hover preview + 모바일 돋보기 버튼
+                return '<div class="so-biz-opt-card" data-opt-cat="finish" data-opt-key="' + o.key + '" '
+                    + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
+                    + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
+                    + 'style="position:relative;">'
+                    + '<button type="button" onclick="window._soBizToggleFinish(\'' + o.key + '\')" style="width:100%; padding:0; background:transparent; border:none; cursor:pointer; text-align:left; font-family:inherit;">'
                     + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
-                    + '</button>';
+                    + '</button>'
+                    + '<button type="button" class="so-lf-mag" aria-label="' + tr('자세히 보기','詳細を見る','See details') + '" '
+                    + 'onclick="event.stopPropagation(); window._soShowOptInfo(\'finish\',\'' + o.key + '\', null)" '
+                    + 'style="position:absolute; top:8px; right:8px; width:28px; height:28px; border:none; background:rgba(255,255,255,0.92); color:#4338ca; border-radius:50%; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; padding:0; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,0.15); z-index:2;"><i class="fa-solid fa-magnifying-glass-plus"></i></button>'
+                    + '</div>';
             }).join('');
         }
     }
