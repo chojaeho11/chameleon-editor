@@ -814,11 +814,17 @@ async function submitPdSample() {
 .rb-res-total b{color:#6366f1;font-size:20px;}
 .rb-res-note{font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.5;}
 .rb-order-info{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:760px;margin:0 auto;}
-.rb-oi-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px 20px;}
+.rb-oi-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:0;overflow:hidden;}
 .rb-oi-flag{display:none;}
-.rb-oi-title{font-weight:700;font-size:13.5px;color:#0f172a;margin-bottom:8px;line-height:1.4;letter-spacing:-0.01em;}
-.rb-oi-desc{font-size:12.5px;color:#475569;line-height:1.8;font-weight:400;}
-.rb-ship-notice{max-width:760px;margin:16px auto 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;font-size:13px;color:#475569;line-height:1.7;text-align:center;font-weight:400;}
+/* v707: 카드 상단 보라 그라데이션 배지 */
+.rb-oi-badge{background:linear-gradient(135deg,#7c3aed 0%,#6366f1 50%,#4f46e5 100%);color:#fff;font-weight:700;font-size:13px;padding:10px 18px;letter-spacing:-0.01em;text-align:center;}
+.rb-oi-title{font-weight:700;font-size:13.5px;color:#0f172a;line-height:1.4;letter-spacing:-0.01em;padding:14px 20px 6px;}
+.rb-oi-desc{padding:0 20px 16px;}
+.rb-oi-desc{font-size:12.5px;color:#475569;line-height:1.8;font-weight:400;padding:0 20px 16px;}
+.rb-ship-notice{max-width:760px;margin:16px auto 0;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px 22px;font-size:13.5px;color:#78350f;line-height:1.8;text-align:center;font-weight:500;}
+/* v707: 강조 — 유통사판매 (보라 강조) + 8월 15일 (빨강 굵게) */
+.rb-ship-notice .rb-emph{color:#6d28d9;font-weight:800;background:rgba(124,58,237,0.08);padding:2px 8px;border-radius:6px;}
+.rb-ship-notice .rb-emph-date{color:#dc2626;font-weight:900;font-size:15px;letter-spacing:-0.01em;}
 /* v706: 계산기 인트로 — 보라색 그라데이션 박스 + 흰색 텍스트 */
 .rb-calc-intro{max-width:920px;margin:0 auto 24px;padding:22px 28px;background:linear-gradient(135deg,#7c3aed 0%,#6366f1 50%,#4f46e5 100%);border-radius:16px;box-shadow:0 8px 24px -8px rgba(99,102,241,0.45);}
 .rb-calc-intro p{margin:0;color:#fff;font-size:14px;line-height:1.85;font-weight:400;letter-spacing:-0.01em;text-align:center;}
@@ -893,18 +899,20 @@ async function submitPdSample() {
             <div class="rb-res-note" data-i18n="calc_res_note">VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.</div>
         </div>
     </div>
-    <!-- v705: 배송 안내 — 아이콘/볼드 제거, 깔끔한 2단 구성 -->
+    <!-- v707: 배송 안내 — 카드 위쪽에 보라색 그라데이션 헤더 -->
     <div class="rb-order-info">
         <div class="rb-oi-card">
+            <div class="rb-oi-badge" data-i18n="calc_ship_small_h">소량주문 배송안내</div>
             <div class="rb-oi-title" data-i18n="calc_ship_small_t">소량 주문 (100매 이하)</div>
             <div class="rb-oi-desc" data-i18n-html="calc_ship_small_d">수도권(서울·경기) 무료배송<br>지방은 착불 또는 20만원 정액 배송</div>
         </div>
         <div class="rb-oi-card">
+            <div class="rb-oi-badge" data-i18n="calc_ship_dist_h">유통사 배송안내</div>
             <div class="rb-oi-title" data-i18n="calc_ship_dist_t">유통사 (100매 이상)</div>
             <div class="rb-oi-desc" data-i18n-html="calc_ship_dist_d">수도권 무료배송<br>지방은 300매 이상 무료배송</div>
         </div>
     </div>
-    <div class="rb-ship-notice" data-i18n="calc_ship_notice">해외 유통사는 40ft 컨테이너 단위 대량주문 시 전세계 무료배송됩니다.</div>
+    <div class="rb-ship-notice" data-i18n-html="calc_ship_notice">지금은 일반 구매만 가능합니다. <b class="rb-emph">유통사 판매</b>는 <b class="rb-emph-date">8월 15일</b>부터 가능합니다.</div>
 </section>
 
 <!-- ===== 장점 4가지 ===== -->
@@ -1431,12 +1439,16 @@ calc_res_persqm: { ko:'제곱미터당 단가', ja:'1m²あたり単価', en:'Pr
 calc_res_persheet: { ko:'1장당 가격', ja:'1枚あたり価格', en:'Price per sheet', zh:'Price per sheet', ar:'Price per sheet', es:'Price per sheet', de:'Price per sheet', fr:'Price per sheet' },
 calc_res_total: { ko:'합계 (수량 기준)', ja:'合計 (数量)', en:'Total (for quantity)', zh:'Total (for quantity)', ar:'Total (for quantity)', es:'Total (for quantity)', de:'Total (for quantity)', fr:'Total (for quantity)' },
 calc_res_note: { ko:'VAT 별도 · 표시 가격은 사이즈·두께·물량에 따라 달라질 수 있습니다.', ja:'税別 · 表示価格はサイズ·厚み·数量により変動する場合があります。', en:'VAT excluded · Final price may vary by size, thickness, and volume.', zh:'VAT excluded · Final price may vary by size, thickness, and volume.', ar:'VAT excluded · Final price may vary by size, thickness, and volume.', es:'VAT excluded · Final price may vary by size, thickness, and volume.', de:'VAT excluded · Final price may vary by size, thickness, and volume.', fr:'VAT excluded · Final price may vary by size, thickness, and volume.' },
+// v707: 카드 상단 보라 그라데이션 배지 헤더
+calc_ship_small_h: { ko:'소량주문 배송안내', ja:'少量注文 配送のご案内', en:'Small Order Shipping', zh:'少量订单 配送说明', ar:'شحن الطلبات الصغيرة', es:'Envío para pedidos pequeños', de:'Versand Kleinmengen', fr:'Livraison petites commandes' },
+calc_ship_dist_h: { ko:'유통사 배송안내', ja:'代理店 配送のご案内', en:'Distributor Shipping', zh:'经销商 配送说明', ar:'شحن الموزعين', es:'Envío para distribuidores', de:'Versand Vertriebspartner', fr:'Livraison distributeurs' },
 // v705: 배송 안내 — 아이콘/볼드 제거, 깔끔한 텍스트
 calc_ship_small_t: { ko:'소량 주문 (100매 이하)', ja:'少量注文 (100枚以下)', en:'Small Orders (under 100 sheets)', zh:'少量订单 (100张以下)', ar:'الطلبات الصغيرة (أقل من 100 لوح)', es:'Pedidos pequeños (menos de 100 hojas)', de:'Kleinmengen (unter 100 Blatt)', fr:'Petites commandes (moins de 100 feuilles)' },
 calc_ship_small_d: { ko:'수도권(서울·경기) 무료배송<br>지방은 착불 또는 20만원 정액 배송', ja:'首都圏(ソウル·京畿) 送料無料<br>地方は着払 または20万ウォンの定額配送', en:'Free shipping within Seoul and Gyeonggi.<br>Other regions: cash on delivery or a flat 200,000 KRW shipping fee.', zh:'首尔·京畿地区免运费。<br>其他地区为到付或20万韩元定额运费。', ar:'شحن مجاني داخل سيول وجيونجي.<br>المناطق الأخرى: الدفع عند الاستلام أو رسوم شحن ثابتة 200,000 وون.', es:'Envío gratuito dentro de Seúl y Gyeonggi.<br>Otras regiones: contra reembolso o una tarifa fija de 200.000 KRW.', de:'Kostenloser Versand in Seoul und Gyeonggi.<br>Andere Regionen: Nachnahme oder pauschal 200.000 KRW Versandkosten.', fr:'Livraison gratuite à Séoul et Gyeonggi.<br>Autres régions : contre-remboursement ou frais fixes de 200 000 KRW.' },
 calc_ship_dist_t: { ko:'유통사 (100매 이상)', ja:'代理店 (100枚以上)', en:'Distributor (100 sheets or more)', zh:'经销商 (100张以上)', ar:'الموزع (100 لوح أو أكثر)', es:'Distribuidor (100 hojas o más)', de:'Vertriebspartner (100 Blatt oder mehr)', fr:'Distributeur (100 feuilles ou plus)' },
 calc_ship_dist_d: { ko:'수도권 무료배송<br>지방은 300매 이상 무료배송', ja:'首都圏 送料無料<br>地方は300枚以上で送料無料', en:'Free shipping within Seoul and Gyeonggi.<br>Other regions: free shipping on orders of 300 sheets or more.', zh:'首尔·京畿地区免运费。<br>其他地区订购300张以上免运费。', ar:'شحن مجاني داخل سيول وجيونجي.<br>المناطق الأخرى: شحن مجاني للطلبات من 300 لوح فأكثر.', es:'Envío gratuito dentro de Seúl y Gyeonggi.<br>Otras regiones: envío gratuito para pedidos de 300 hojas o más.', de:'Kostenloser Versand in Seoul und Gyeonggi.<br>Andere Regionen: kostenloser Versand ab 300 Blatt.', fr:'Livraison gratuite à Séoul et Gyeonggi.<br>Autres régions : livraison gratuite à partir de 300 feuilles.' },
-calc_ship_notice: { ko:'해외 유통사는 40ft 컨테이너 단위 대량주문 시 전세계 무료배송됩니다.', ja:'海外代理店は40ftコンテナ単位の大量注文で世界中送料無料です。', en:'Overseas distributors receive free worldwide shipping on orders of one or more 40-foot containers.', zh:'海外经销商以40ft集装箱单位大量订购时享受全球免运费。', ar:'يحصل الموزعون في الخارج على شحن عالمي مجاني لطلبات حاوية 40 قدم أو أكثر.', es:'Los distribuidores extranjeros reciben envío internacional gratuito en pedidos de uno o más contenedores de 40 pies.', de:'Auslandsvertriebspartner erhalten kostenlosen weltweiten Versand bei Bestellungen ab einem 40-Fuß-Container.', fr:'Les distributeurs étrangers bénéficient de la livraison mondiale gratuite pour les commandes d\'un conteneur 40 pieds ou plus.' },
+// v707: 안내 변경 — 8월 15일부터 유통사판매 오픈 (강조)
+calc_ship_notice: { ko:'지금은 일반 구매만 가능합니다. <b class="rb-emph">유통사 판매</b>는 <b class="rb-emph-date">8월 15일</b>부터 가능합니다.', ja:'現在は一般購入のみ可能です。<b class="rb-emph">代理店販売</b>は <b class="rb-emph-date">8月15日</b>から開始いたします。', en:'Currently only retail purchases are available. <b class="rb-emph">Distributor sales</b> open on <b class="rb-emph-date">August 15</b>.', zh:'目前仅开放零售购买。<b class="rb-emph">经销商销售</b>将于 <b class="rb-emph-date">8月15日</b> 起开放。', ar:'حالياً متاح الشراء بالتجزئة فقط. <b class="rb-emph">مبيعات الموزعين</b> ستفتح في <b class="rb-emph-date">15 أغسطس</b>.', es:'Actualmente solo están disponibles las compras minoristas. <b class="rb-emph">Las ventas a distribuidores</b> se abren el <b class="rb-emph-date">15 de agosto</b>.', de:'Aktuell sind nur Einzelkäufe möglich. <b class="rb-emph">Der Vertrieb für Distributoren</b> startet am <b class="rb-emph-date">15. August</b>.', fr:'Seuls les achats au détail sont actuellement disponibles. <b class="rb-emph">Les ventes aux distributeurs</b> ouvrent le <b class="rb-emph-date">15 août</b>.' },
 // v704: 용지 선택 (premium 만 노출)
 calc_paper_surface: { ko:'표면지', ja:'表面紙', en:'Surface Paper', zh:'表面纸', ar:'الورق السطحي', es:'Papel de superficie', de:'Oberflächenpapier', fr:'Papier de surface' },
 calc_paper_core: { ko:'코어지', ja:'コア紙', en:'Core Paper', zh:'芯纸', ar:'ورق النواة', es:'Papel del núcleo', de:'Kernpapier', fr:'Papier de cœur' },
