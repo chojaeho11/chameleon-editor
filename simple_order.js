@@ -2626,6 +2626,43 @@ html, body { background: #ffffff !important; }
           <div id="soAddonList" style="display:flex; flex-direction:column; gap:6px;"></div>
         </div>
 
+        <!-- 2026-06-23 v723: 상업인쇄물 (봉투/달력/쇼핑백/홍보물/기타) — 박/후가공 공용 옵션 -->
+        <div class="so-section" id="soCpOptionsSection" style="display:none;">
+          <div class="so-section-title">${tr('인쇄 옵션', '印刷オプション', 'Print Options')}</div>
+
+          <button type="button" id="soCpFoilToggle" onclick="window._soCpToggleSection('foil')"
+            style="width:100%; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span id="soCpFoilCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
+              <span style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+            </div>
+            <i id="soCpFoilChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
+          </button>
+          <div id="soCpFoilWrap" style="display:none; margin-top:8px;">
+            <div style="margin-bottom:8px; padding:9px 12px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#78350f; line-height:1.5; font-weight:700;">
+              💡 ${tr('박을 추가할 곳은 일러스트 작업에서 별도의 레이어에 <b>C100</b>으로 작업해주세요.', '箔押し位置はイラスト作業時、別レイヤーに <b>C100</b> で作成してください。', 'Mark foil areas on a separate Illustrator layer using <b>C100</b>.')}
+            </div>
+            <div id="soCpFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
+
+          <button type="button" id="soCpFinishToggle" onclick="window._soCpToggleSection('finish')"
+            style="width:100%; margin-top:12px; padding:12px 14px; border:1.5px dashed #d6d3d1; background:#fff; color:#1c1917; border-radius:10px; cursor:pointer; font-family:inherit; text-align:left; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')} <span id="soCpFinishCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
+              <span style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+            </div>
+            <i id="soCpFinishChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
+          </button>
+          <div id="soCpFinishWrap" style="display:none; margin-top:8px;">
+            <div style="margin-bottom:8px; padding:9px 12px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#78350f; line-height:1.5; font-weight:700;">
+              💡 ${tr('후가공 위치는 일러스트 작업에서 별도의 레이어에 <b>C100</b>으로 작업해주세요.', '後加工位置はイラスト作業時、別レイヤーに <b>C100</b> で作成してください。', 'Mark finishing areas on a separate Illustrator layer using <b>C100</b>.')}
+            </div>
+            <div id="soCpFinishGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-06-03: 명함/리플렛 (pp_bc_*) 전용 — 등급/면/용지/박/후가공 -->
         <div class="so-section" id="soBizCardSection" style="display:none;">
           <!-- 1) 등급: 일반 / 프리미엄 — 핑크/로즈 톤 (인쇄면 인디고와 구분) -->
@@ -4232,6 +4269,29 @@ html, body { background: #ffffff !important; }
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
+        }
+        // v723: 일반 상업인쇄물 박/후가공 — 1회 정액 (수량 무관)
+        if (state.isCpGeneric) {
+            if (state.cpFoil) {
+                var _cpFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.cpFoil; });
+                if (_cpFoilOpt) {
+                    addonTotal += _cpFoilOpt.price;
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_cpFoilOpt, 'name') + '</span><span>+' + fmtPrice(_cpFoilOpt.price) + '</span></div>'
+                    );
+                }
+            }
+            if (state.cpFinishes) {
+                Object.keys(state.cpFinishes).forEach(function(k){
+                    if (!state.cpFinishes[k]) return;
+                    var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    if (!fopt) return;
+                    addonTotal += fopt.price;
+                    addonBreakdownLines.push(
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
+                    );
+                });
+            }
         }
         // 2026-06-16: 스티커 메타 라벨 — 신규 admin 변형 + 사이즈/코팅/별색.
         if (state.isSticker && state.stickerProductCode) {
@@ -6846,6 +6906,101 @@ html, body { background: #ffffff !important; }
     function _soIsBizCardProduct(p) {
         return !!(p && p.code && /^pp_bc/i.test(p.code));
     }
+    // 2026-06-23 v723: 상업인쇄물 일반 박/후가공 옵션 대상 — 명함/리플렛/스티커/블라인드/커튼 제외, 나머지 pp_* + 명시 코드
+    var CP_EXPLICIT_CODES = ['535435355'];  // pp_* 가 아닌 상업인쇄물 product code 화이트리스트
+    function _soShouldShowCpOptions(p) {
+        if (!p || !p.code) return false;
+        if (_soIsBizCardProduct(p)) return false;
+        if (typeof _soIsLeafletProduct === 'function' && _soIsLeafletProduct(p)) return false;
+        if (typeof _soIsStickerProduct === 'function' && _soIsStickerProduct(p)) return false;
+        var code = String(p.code).toLowerCase();
+        var cat = String(p.category || '').toLowerCase();
+        if (cat.startsWith('pp_sticker')) return false;
+        if (cat.startsWith('pp_bl') || cat.startsWith('pp_bk') || cat.startsWith('pp_ct')) return false;
+        if (cat.startsWith('pp_')) return true;
+        if (code.startsWith('pp_')) return true;
+        if (CP_EXPLICIT_CODES.indexOf(p.code) !== -1) return true;
+        return false;
+    }
+    window._soShouldShowCpOptions = _soShouldShowCpOptions;
+    function _soRenderCpOptions() {
+        if (!state.cpFinishes) state.cpFinishes = {};
+        var foilOpen = !!state._cpFoilOpen;
+        var fxOpen = !!state._cpFinishOpen;
+        // 박 토글 + 그리드
+        var fw = document.getElementById('soCpFoilWrap');
+        var fa = document.getElementById('soCpFoilChevron');
+        var fc = document.getElementById('soCpFoilCurrent');
+        if (fw) fw.style.display = foilOpen ? '' : 'none';
+        if (fa) fa.className = 'fa-solid ' + (foilOpen ? 'fa-chevron-up' : 'fa-chevron-down');
+        if (fc) {
+            if (state.cpFoil) {
+                var _selF = BIZ_FOILS.find(function(o){ return o.key === state.cpFoil; });
+                fc.textContent = _selF ? '· ✓ ' + _bizI18n(_selF, 'name') : '';
+            } else { fc.textContent = ''; }
+        }
+        var gf = document.getElementById('soCpFoilGrid');
+        if (gf && foilOpen) {
+            gf.innerHTML = BIZ_FOILS.map(function(o){
+                var sel = (state.cpFoil === o.key);
+                var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+                return '<div class="so-biz-opt-card" data-opt-cat="foil" data-opt-key="' + o.key + '" '
+                    + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
+                    + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
+                    + 'onclick="window._soBizCardClick(\'foil\',\'' + o.key + '\', function(){window._soCpPickFoil(\'' + o.key + '\');})" '
+                    + 'style="position:relative; cursor:pointer;">'
+                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
+                    + '</div>';
+            }).join('');
+        }
+        // 후가공
+        var xw = document.getElementById('soCpFinishWrap');
+        var xa = document.getElementById('soCpFinishChevron');
+        var xc = document.getElementById('soCpFinishCurrent');
+        if (xw) xw.style.display = fxOpen ? '' : 'none';
+        if (xa) xa.className = 'fa-solid ' + (fxOpen ? 'fa-chevron-up' : 'fa-chevron-down');
+        if (xc) {
+            var picked = Object.keys(state.cpFinishes || {}).filter(function(k){ return !!state.cpFinishes[k]; });
+            if (picked.length) {
+                var names = picked.map(function(k){
+                    var fo = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    return fo ? _bizI18n(fo, 'name') : k;
+                });
+                xc.textContent = '· ✓ ' + names.join(', ');
+            } else { xc.textContent = ''; }
+        }
+        var gx = document.getElementById('soCpFinishGrid');
+        if (gx && fxOpen) {
+            gx.innerHTML = BIZ_FINISHES.map(function(o){
+                var sel = !!(state.cpFinishes && state.cpFinishes[o.key]);
+                var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+                return '<div class="so-biz-opt-card" data-opt-cat="finish" data-opt-key="' + o.key + '" '
+                    + 'onmouseenter="window._soOptPreview && window._soOptPreview(this, true)" '
+                    + 'onmouseleave="window._soOptPreview && window._soOptPreview(this, false)" '
+                    + 'onclick="window._soBizCardClick(\'finish\',\'' + o.key + '\', function(){window._soCpToggleFinish(\'' + o.key + '\');})" '
+                    + 'style="position:relative; cursor:pointer;">'
+                    + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
+                    + '</div>';
+            }).join('');
+        }
+    }
+    window._soRenderCpOptions = _soRenderCpOptions;
+    window._soCpToggleSection = function(sec) {
+        if (sec === 'foil')   state._cpFoilOpen   = !state._cpFoilOpen;
+        if (sec === 'finish') state._cpFinishOpen = !state._cpFinishOpen;
+        _soRenderCpOptions();
+    };
+    window._soCpPickFoil = function(k) {
+        state.cpFoil = (state.cpFoil === k) ? null : k;
+        _soRenderCpOptions();
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soCpToggleFinish = function(k) {
+        if (!state.cpFinishes) state.cpFinishes = {};
+        state.cpFinishes[k] = !state.cpFinishes[k];
+        _soRenderCpOptions();
+        if (typeof recalc === 'function') recalc();
+    };
 
     // 2026-06-16: 스티커 — 관리자(admin_products) 자동 로드.
     //   사용자가 admin 에 등록한 카테고리 pp_sticker 상품을 variant 카드로 보여줌.
@@ -10869,6 +11024,20 @@ html, body { background: #ffffff !important; }
         var bizSec = document.getElementById('soBizCardSection');
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
         if (state.isBizCard) _soBizCardRender();
+        // v723: 일반 상업인쇄물 (명함/리플렛/스티커 제외) — 박/후가공 공용 옵션 표시
+        state.isCpGeneric = _soShouldShowCpOptions(p);
+        if (state.isCpGeneric) {
+            if (state.cpFoil === undefined) state.cpFoil = null;
+            if (!state.cpFinishes) state.cpFinishes = {};
+        }
+        var cpSec = document.getElementById('soCpOptionsSection');
+        if (cpSec) cpSec.style.display = state.isCpGeneric ? '' : 'none';
+        if (state.isCpGeneric) _soRenderCpOptions();
+        // CP 적용 상품은 admin_addons 섹션 숨김 (중복 방지)
+        var _addonSec = document.querySelector('#soAddonList');
+        if (_addonSec && _addonSec.parentElement) {
+            _addonSec.parentElement.style.display = state.isCpGeneric ? 'none' : '';
+        }
 
         // 2026-06-12: 배너 family 감지 — 거치대 포함/미포함 모두 (현수막/페트/패트/매쉬/메쉬/미니 + 세트류)
         //   - DB 단가 그대로 사용 (면적 곱셈 X)
@@ -14409,6 +14578,12 @@ html, body { background: #ffffff !important; }
                 finishes: Object.assign({}, state.bizFinishes || {})
             } : null,
             _isBizCard: !!state.isBizCard,
+            // v723: 일반 상업인쇄물 박/후가공
+            cpOptions: state.isCpGeneric ? {
+                foil: state.cpFoil || null,
+                finishes: Object.assign({}, state.cpFinishes || {})
+            } : null,
+            _isCpGeneric: !!state.isCpGeneric,
             // 2026-06-03: 스티커 옵션 (카테고리/모양/사이즈/용지/수량)
             sticker: state.isSticker ? {
                 productCode: state.stickerProductCode, w: state.stickerW, h: state.stickerH,
