@@ -2047,6 +2047,25 @@ html, body { background: #ffffff !important; }
               <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
             </button>
           </div>
+          <!-- 2026-06-23 v721: 명함 전용 수량 프리셋 (1/2/3/5각 = 100/200/300/500매) -->
+          <div id="soBizQtyPresets" style="display:none; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:6px;">
+            <button type="button" class="so-pd-qty-btn" data-bc-qty="1" onclick="window._soBcQtyPick(1)">
+              <span style="font-size:14px; font-weight:900;">100${tr('장','枚','')}</span>
+              <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('기본가','基本価格','Base')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-bc-qty="2" onclick="window._soBcQtyPick(2)">
+              <span style="font-size:14px; font-weight:900;">200${tr('장','枚','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-bc-qty="3" onclick="window._soBcQtyPick(3)">
+              <span style="font-size:14px; font-weight:900;">300${tr('장','枚','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">30% ${tr('할인','割引','OFF')}</span>
+            </button>
+            <button type="button" class="so-pd-qty-btn" data-bc-qty="5" onclick="window._soBcQtyPick(5)">
+              <span style="font-size:14px; font-weight:900;">500${tr('장','枚','')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
+            </button>
+          </div>
           <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
           <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
             <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개는 기본 디자인 및 샘플 제작비용입니다 (단가 5배)', '1個は基本デザイン・サンプル制作費 (単価5倍)', 'For 1 pc: base design + sample fee (5× unit price)')}
@@ -4066,10 +4085,12 @@ html, body { background: #ffffff !important; }
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
             } else if (state.isBizCard) {
                 // 2026-06-13: 명함 — qty = 각 (1각 = 100매). 가격은 _bizPriceFor 에서 계산
+                // v721: 수량 프리셋 할인 — 1각=0% / 2각=20% / 3각=30% / 5각=50%
                 qty = Math.max(1, qty || 1);
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
-                subtotal = _bizUnit * qty;
+                var _bcDisc = (window._BIZ_QTY_DISC && window._BIZ_QTY_DISC[qty]) || 0;
+                subtotal = Math.round(_bizUnit * qty * (1 - _bcDisc));
             } else if (state.isLeaflet) {
                 // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
                 // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4
@@ -4199,8 +4220,10 @@ html, body { background: #ffffff !important; }
                 : tr('일반', '一般', 'Standard');
             var _paperOpt = (state.bizTier === 'premium') ? BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; }) : null;
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _qtyLbl  = qty.toLocaleString() + tr('각','ロット','set') + ' (' + (qty * 100).toLocaleString() + tr('매','枚','pcs') + ')';
-            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl;
+            var _qtyLbl  = (qty * 100).toLocaleString() + tr('매','枚','pcs');
+            var _bcDiscPct = Math.round(((window._BIZ_QTY_DISC && window._BIZ_QTY_DISC[qty]) || 0) * 100);
+            var _discLbl = _bcDiscPct > 0 ? ' · <b style="color:#dc2626;">-' + _bcDiscPct + '%</b>' : '';
+            var _metaLbl = '📇 ' + _tierLbl + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl + _discLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
@@ -10183,6 +10206,17 @@ html, body { background: #ffffff !important; }
         });
     }
 
+    // 2026-06-23 v721: 명함 전용 수량 프리셋 — 1각/2각/3각/5각 (100/200/300/500매)
+    window._BIZ_QTY_DISC = { 1: 0, 2: 0.2, 3: 0.3, 5: 0.5 };  // qty(각) → 할인율
+    window._soBcQtyPick = function(q) {
+        state.qty = q;
+        var inp = document.getElementById('soQty');
+        if (inp) inp.value = q;
+        document.querySelectorAll('#soBizQtyPresets .so-pd-qty-btn').forEach(function(btn){
+            btn.classList.toggle('is-active', String(btn.getAttribute('data-bc-qty')) === String(q));
+        });
+        if (typeof recalc === 'function') recalc();
+    };
     // 2026-06-12: 종이매대 전용 수량 프리셋 핸들러 (1/100/300/500/1000)
     window._soPdQtyPick = function(q) {
         state.qty = q;
@@ -10798,6 +10832,8 @@ html, body { background: #ffffff !important; }
             if (state.qty == null) state.qty = 1;
             else if (state.qty >= 100 && state.qty % 100 === 0) state.qty = state.qty / 100;
             else if (state.qty < 1) state.qty = 1;
+            // v721: 프리셋(1/2/3/5) 외 값이면 1로 보정
+            if ([1,2,3,5].indexOf(state.qty) === -1) state.qty = 1;
             var _qiBc = document.getElementById('soQty');
             if (_qiBc) {
                 _qiBc.value = state.qty;
@@ -10806,6 +10842,16 @@ html, body { background: #ffffff !important; }
             }
             var _quBc = document.querySelector('.so-qty-unit');
             if (_quBc) _quBc.textContent = tr('각', 'ロット', 'set');
+            // v721: 명함은 숫자 입력 대신 프리셋 버튼 표시
+            var _bcDefRow = document.getElementById('soQtyRowDefault');
+            if (_bcDefRow) _bcDefRow.style.display = 'none';
+            var _bcPresets = document.getElementById('soBizQtyPresets');
+            if (_bcPresets) {
+                _bcPresets.style.display = 'grid';
+                _bcPresets.querySelectorAll('.so-pd-qty-btn').forEach(function(btn){
+                    btn.classList.toggle('is-active', String(btn.getAttribute('data-bc-qty')) === String(state.qty));
+                });
+            }
             // 수량 할인 tier 테이블 숨김 + 명함 전용 안내 표시
             var _ttBc = document.getElementById('soTierTable');
             if (_ttBc) _ttBc.style.display = 'none';
@@ -10815,9 +10861,13 @@ html, body { background: #ffffff !important; }
             state.selectedAddons = {};
             state.addonQuantities = {};
         } else {
-            // 명함이 아닌 경우 안내 박스 숨김
+            // 명함이 아닌 경우 안내 박스 숨김 + v721: 프리셋 숨김, 기본 qty row 복원
             var _ttBcInfo2 = document.getElementById('soBizCardOrderInfo');
             if (_ttBcInfo2) _ttBcInfo2.style.display = 'none';
+            var _bcPresetsOff = document.getElementById('soBizQtyPresets');
+            if (_bcPresetsOff) _bcPresetsOff.style.display = 'none';
+            var _bcDefRowOn = document.getElementById('soQtyRowDefault');
+            if (_bcDefRowOn) _bcDefRowOn.style.display = '';
         }
         var bizSec = document.getElementById('soBizCardSection');
         if (bizSec) bizSec.style.display = state.isBizCard ? '' : 'none';
