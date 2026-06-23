@@ -6188,7 +6188,7 @@ html, body { background: #ffffff !important; }
                 hint_us:'Holographic foil that shifts through rainbow colors with the viewing angle. Unique effect for limited editions and artwork.' }
         },
         finish: {
-            embossing: { img:'',
+            embossing: { img:'/인쇄옵션/엠보싱.png',
                 hint_kr:'표면 전체에 양각 무늬를 새겨 텍스처를 만듭니다. 도트·꽃·패턴 등 다양한 무늬 가공이 가능합니다.',
                 hint_jp:'表面全体に浮き彫り模様を施し、テクスチャを作ります。ドット・花・パターンなど様々な模様が可能。',
                 hint_us:'Adds a raised pattern across the surface to create texture. Many patterns possible — dots, florals, geometrics, etc.' },
