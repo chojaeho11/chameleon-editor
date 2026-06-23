@@ -1787,9 +1787,25 @@ html, body { background: #ffffff !important; }
         </div>
 
         <!-- 2026-06-13: 낱장 인쇄 (pp_lf_*) — 사이즈(A4/A3/A2) + 단/양면 + 비규격 입력 + 용지/박/후가공 -->
+        <!-- 2026-06-23 v710: 순서 변경 - 규격 → 비규격(토글) → 인쇄면 → 수량슬롯 → 용지 → 박 → 후가공 -->
         <div class="so-section" id="soLeafletPresetSec" style="display:none;">
           <div class="so-section-title">${tr('규격 사이즈', '規格サイズ', 'Standard size')}</div>
           <div id="soLeafletSizeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:6px;"></div>
+
+          <!-- 비규격 사이즈 — 토글 버튼 (클릭 시 입력칸 노출) -->
+          <button type="button" id="soLfCustToggle" onclick="window._soLeafletCustomToggle()" style="width:100%; margin-top:10px; padding:11px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fa-solid fa-ruler-combined"></i>
+            <span>${tr('비규격 사이즈 클릭!', '非規格サイズ クリック!', 'Custom size — click!')}</span>
+            <i id="soLfCustChevron" class="fa-solid fa-chevron-down" style="font-size:11px;"></i>
+          </button>
+          <div id="soLfCustomWrap" style="display:none; margin-top:8px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input type="number" id="soLfCustW" placeholder="${tr('가로 mm','横 mm','W mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+              <span style="color:#94a3b8;">×</span>
+              <input type="number" id="soLfCustH" placeholder="${tr('세로 mm','縦 mm','H mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+            </div>
+            <div id="soLfAutoSizeNotice" style="display:none; margin-top:6px; padding:7px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#92400e; font-weight:700;"></div>
+          </div>
 
           <div class="so-section-title" style="margin-top:16px;">${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:flex; gap:8px; margin-top:6px;">
@@ -1797,13 +1813,8 @@ html, body { background: #ffffff !important; }
             <button type="button" id="soLfSideDouble" onclick="window._soPickLeafletSide('double')" style="flex:1; padding:10px; border:2px solid #e7e5e4; background:#fff; color:#475569; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')}</button>
           </div>
 
-          <div class="so-section-title" style="margin-top:16px;">${tr('비규격 사이즈 (선택)', '非規格サイズ (任意)', 'Custom size (optional)')}</div>
-          <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-            <input type="number" id="soLfCustW" placeholder="${tr('가로 mm','横 mm','W mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
-            <span style="color:#94a3b8;">×</span>
-            <input type="number" id="soLfCustH" placeholder="${tr('세로 mm','縦 mm','H mm')}" min="50" max="600" oninput="window._soLeafletCustomDims()" style="flex:1; padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
-          </div>
-          <div id="soLfAutoSizeNotice" style="display:none; margin-top:6px; padding:7px 10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:11.5px; color:#92400e; font-weight:700;"></div>
+          <!-- 주문 수량 슬롯 — soQtySection 이 낱장 모드일 때 여기로 이동 (JS) -->
+          <div id="soLfQtySlot" style="margin-top:16px;"></div>
 
           <div class="so-section-title" style="margin-top:16px;">${tr('용지 선택', '用紙選択', 'Paper')}</div>
           <div id="soLfPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-top:6px;"></div>
@@ -5983,6 +5994,23 @@ html, body { background: #ffffff !important; }
         state.leafletFinishes[key] = !state.leafletFinishes[key];
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
+    };
+    // 2026-06-23 v710: 비규격 사이즈 토글 — 클릭 시 W/H 입력 칸 열기/닫기
+    window._soLeafletCustomToggle = function() {
+        var wrap = document.getElementById('soLfCustomWrap');
+        var ch = document.getElementById('soLfCustChevron');
+        if (!wrap) return;
+        var isOpen = wrap.style.display !== 'none';
+        if (isOpen) {
+            wrap.style.display = 'none';
+            if (ch) { ch.classList.remove('fa-chevron-up'); ch.classList.add('fa-chevron-down'); }
+        } else {
+            wrap.style.display = '';
+            if (ch) { ch.classList.remove('fa-chevron-down'); ch.classList.add('fa-chevron-up'); }
+            // 펼치면 가로 input 에 포커스
+            var w = document.getElementById('soLfCustW');
+            if (w) setTimeout(function(){ w.focus(); }, 50);
+        }
     };
     window._soLeafletCustomDims = function() {
         var w = parseInt(document.getElementById('soLfCustW').value, 10) || 0;
@@ -10847,9 +10875,41 @@ html, body { background: #ffffff !important; }
             state.customW = _szDef.wMm / 10;
             state.customH = _szDef.hMm / 10;
             if (_lfSec) _lfSec.style.display = '';
+            // 2026-06-23 v710: 주문수량 섹션을 낱장 인쇄 섹션 안 (인쇄면 아래) 으로 이동
+            try {
+                var _qtySec = document.getElementById('soQtySection');
+                var _qtySlot = document.getElementById('soLfQtySlot');
+                if (_qtySec && _qtySlot && _qtySec.parentNode !== _qtySlot) {
+                    if (!window.__soQtyOrigParent) {
+                        window.__soQtyOrigParent = _qtySec.parentNode;
+                        window.__soQtyOrigNext = _qtySec.nextSibling;
+                    }
+                    _qtySlot.appendChild(_qtySec);
+                }
+            } catch(_qe){}
+            // v710: 비규격 토글 초기 상태 — 닫힘
+            try {
+                var _custW = document.getElementById('soLfCustomWrap');
+                var _custCh = document.getElementById('soLfCustChevron');
+                if (_custW) _custW.style.display = 'none';
+                if (_custCh) { _custCh.classList.remove('fa-chevron-up'); _custCh.classList.add('fa-chevron-down'); }
+            } catch(_te){}
             try { _soRenderLeafletAll(); } catch(e){}
         } else {
             if (_lfSec) _lfSec.style.display = 'none';
+            // v710: 낱장 모드에서 빠져나오면 주문수량 섹션을 원래 위치로 복귀
+            try {
+                var _qtySec2 = document.getElementById('soQtySection');
+                var _origParent = window.__soQtyOrigParent;
+                var _origNext = window.__soQtyOrigNext;
+                if (_qtySec2 && _origParent && _qtySec2.parentNode !== _origParent) {
+                    if (_origNext && _origNext.parentNode === _origParent) {
+                        _origParent.insertBefore(_qtySec2, _origNext);
+                    } else {
+                        _origParent.appendChild(_qtySec2);
+                    }
+                }
+            } catch(_re){}
         }
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
         var _isGate = _soIsGateProduct(p);
