@@ -4262,14 +4262,22 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 명함 (pp_bc_*) — 박/후가공 1회 정액 (수량/직원수 무관, 사용자 요청 v725)
+        // 명함 (pp_bc_*) — 박/후가공: 직원수(empCount) 곱셈 + 직원수 할인 적용, 수량(각) 무관 (v726, 사용자 요청)
+        //   후가공비는 인원수 기준 → 100장이든 500장이든 동일. 예: 박 1만원 × 10명 × 50%할인 = 5만원
         if (state.isBizCard) {
+            var _bcEmpN = Math.max(1, Number(state.bizEmpCount) || 1);
+            var _bcEmpDisc = _bizEmpDisc(_bcEmpN);
+            var _bcEmpMult = function(base){ return Math.round(base * _bcEmpN * (1 - _bcEmpDisc)); };
+            var _bcEmpSuffix = (_bcEmpN > 1)
+                ? ' × ' + _bcEmpN + tr('명','名','people') + (_bcEmpDisc > 0 ? ' · -' + Math.round(_bcEmpDisc * 100) + '%' : '')
+                : '';
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
-                    addonTotal += _bizFoilOpt.price;
+                    var _bcFoilLine = _bcEmpMult(_bizFoilOpt.price);
+                    addonTotal += _bcFoilLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + '</span><span>+' + fmtPrice(_bizFoilOpt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + _bcEmpSuffix + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
                     );
                 }
             }
@@ -4278,9 +4286,10 @@ html, body { background: #ffffff !important; }
                     if (!state.bizFinishes[k]) return;
                     var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (!fopt) return;
-                    addonTotal += fopt.price;
+                    var _bcFxLine = _bcEmpMult(fopt.price);
+                    addonTotal += _bcFxLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(fopt.price) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + _bcEmpSuffix + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
                     );
                 });
             }
@@ -7316,10 +7325,10 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
-        // 2026-06-06: 아크릴 family — 정액 배송비 10,000원 (시공/배송 옵션 비표시)
+        // 2026-06-24: 아크릴 family — 무료배송 (이전 정액 10,000원 제거, 사용자 요청)
         if (state.isAcrylicFamily) {
             state._shipUpgradeReason = null;
-            return 10000;
+            return 0;
         }
         // 2026-06-05: 게이트 — 무료 배송 (담당자 협의)
         if (state.isGate) {
@@ -15812,7 +15821,8 @@ html, body { background: #ffffff !important; }
                     _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ 가벽 형태 (' + escapeHtml(_wsLbl) + ') 코너</span><b>+' + fmtPrice(item.wallShapeFee) + '</b></div>');
                 }
                 // 배송 (첫 번째 일반 항목만 표시, 나머지는 묶음배송 0원)
-                var _bdShipFee = (item.shipping && item.shipping.fee) || 0;
+                // 2026-06-24: 아크릴 family 는 무료배송 — 저장된 shipping.fee 무시
+                var _bdShipFee = _soIsAcrylicFamilyItem(item) ? 0 : ((item.shipping && item.shipping.fee) || 0);
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
                 if (_bdShipFee > 0 && _bdIsFirstShip) {
                     _bd.push('<div style="display:flex; justify-content:space-between;"><span>배송</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
@@ -16458,22 +16468,10 @@ html, body { background: #ffffff !important; }
         if (it.customSize && typeof it.customSize.unit === 'number') {
             unit = it.customSize.unit;
         }
-        // 2026-06-06: 아크릴 family 안전망 — 저장된 unit 이 per-m² 그대로일 때 area_m2 로 환산.
-        //   증상: customSize.unit = 150000 (per-m²) + area_m2 = 0.0025 (50×50mm) 같이 잘못 저장된 카트 데이터.
-        //   재계산 = unit × area_m2 + 1,000원 (기본 인쇄/가공비).
-        try {
-            var _acrCode = (it.product && it.product.code) || '';
-            var _acrNm = ((it.product && it.product.name) || '').toLowerCase();
-            var _isAcrItm = /^acrl[23]/i.test(_acrCode) || /반투명|스카시|글씨\s*커팅/.test(_acrNm);
-            if (_isAcrItm && it.customSize && it.customSize.area_m2 != null) {
-                var _amA = parseFloat(it.customSize.area_m2);
-                if (_amA > 0 && _amA < 1 && unit > 1500) {
-                    // unit 이 per-m² 일 가능성 — area 로 환산 + 기본 인쇄/가공비 1000원
-                    var _calcU = Math.round(unit * _amA / 10) * 10 + 1000;
-                    if (_calcU < unit) unit = _calcU;
-                }
-            }
-        } catch (e) {}
+        // 2026-06-24: (구) 아크릴 family 안전망 제거 — customSize.unit 은 add 시점에 이미 per-piece
+        //   가격(area × perSqm + 1,000)으로 저장됨. 기존 안전망은 area<1 인 모든 정상 아크릴 항목에서
+        //   unit × area 를 다시 곱해(항상 unit 보다 작아짐) 가격을 깎아버리는 버그였음.
+        //   (예: 은경 11,110 → 1,750, 반투명 19,000 → 3,280). 저장값을 그대로 신뢰한다.
         // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (재계산 안전)
         if (it.rawBoardDouble || (it.product && _soIsRawBoardDoubleSided(it.product))) {
             unit = unit * 2;
@@ -16591,7 +16589,8 @@ html, body { background: #ffffff !important; }
         } else if (_isBest) {
             // 2026-05-30: 베스트굿즈 — 3,000원 정액 배송비 (저장된 shipping 무시, 항상 새로 계산)
             base += 3000;
-        } else if (it.shipping && it.shipping.fee) {
+        } else if (it.shipping && it.shipping.fee && !_soIsAcrylicFamilyItem(it)) {
+            // 2026-06-24: 아크릴 family 는 무료배송 — 기존 카트에 저장된 shipping.fee 도 무시
             base += (it.shipping.fee || 0);
         }
         // 2026-06-13: 디자인 의뢰비 포함
@@ -16634,6 +16633,17 @@ html, body { background: #ffffff !important; }
     }
     window._soIsHoneycombCartItem = _soIsHoneycombCartItem;
 
+    // 2026-06-24: 아크릴 family 항목 판정 — 무료배송 (저장된 shipping.fee 무시, 신규/기존 카트 모두 적용)
+    function _soIsAcrylicFamilyItem(it) {
+        if (!it) return false;
+        if (it._isAcrylicFamily) return true;
+        var c = String((it.product && it.product.code) || '').toLowerCase();
+        if (/^acrl[23]/.test(c) || c === '64545465' || c === '3455534543') return true;
+        var n = String((it.product && it.product.name) || it.productName || '');
+        return /반투명|스카시|은경아크릴|금경아크릴|아크릴\s*인쇄/.test(n);
+    }
+    window._soIsAcrylicFamilyItem = _soIsAcrylicFamilyItem;
+
     function _soCalcCartTotal(cart) {
         if (!Array.isArray(cart)) cart = [];
         // 2026-06-12: 허니콤보드 외 카테고리만 있으면 배송비 무조건 0 (사용자 요청 — 단일 규칙)
@@ -16653,6 +16663,8 @@ html, body { background: #ffffff !important; }
             var shipFee;
             if (it._isBestGoods) {
                 shipFee = 3000;
+            } else if (_soIsAcrylicFamilyItem(it)) {
+                shipFee = 0;   // 2026-06-24: 아크릴 family 무료배송
             } else {
                 shipFee = (it.shipping && it.shipping.fee) || 0;
             }
