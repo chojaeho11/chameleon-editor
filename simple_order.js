@@ -2824,7 +2824,7 @@ html, body { background: #ffffff !important; }
 
           <!-- 5) 별색 박 -->
           <div id="soStickerFoilWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">✨ ${tr('별색 박 (각 +50,000원)', '別色箔 (各+50,000円)', 'Spot foil (each +50,000)')}</div>
+            <div class="so-section-title">✨ ${tr('별색 박', '別色箔', 'Spot foil')} (${tr('각', '各', 'each')} +${fmtPrice(50000)})</div>
             <div id="soStickerFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
           </div>
 
@@ -9727,7 +9727,7 @@ html, body { background: #ffffff !important; }
                 var sel = (foils.indexOf(f.key) >= 0);
                 return '<button type="button" onclick="window._soStickerToggleFoil(\'' + f.key + '\')" '
                     + 'style="padding:10px 8px; border:2px solid ' + (sel?'#b45309':'#e7e5e4') + '; background:' + (sel?'linear-gradient(135deg,#fef3c7,#fde68a)':'#fff') + '; color:' + (sel?'#78350f':'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center;">'
-                    + (sel?'✓ ':'') + _stickerI18n(f, 'name') + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel?'#92400e':'#64748b') + '; margin-top:2px;">+' + f.fee.toLocaleString() + tr('원','円','KRW') + '</span>'
+                    + (sel?'✓ ':'') + _stickerI18n(f, 'name') + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel?'#92400e':'#64748b') + '; margin-top:2px;">+' + fmtPrice(f.fee) + '</span>'
                     + '</button>';
             }).join('');
         }
