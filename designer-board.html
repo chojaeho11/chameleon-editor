@@ -1283,7 +1283,7 @@ function renderCard(r) {
     const filesHtml = files.length ? `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
+                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? '🖼️' : '📎'}
                 ${_refFile}
             </a>`).join('')}
         </div>
@@ -1295,7 +1295,7 @@ function renderCard(r) {
             <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">${_finalDraft}</div>
             <div class="db-files">
                 ${finalFiles.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}">` : '📎'}
+                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? '🖼️' : '📎'}
                     ${_draftWord}
                 </a>`).join('')}
             </div>
