@@ -2072,7 +2072,7 @@ html, body { background: #ffffff !important; }
               ${tr('같은 회사 직원명함 동시 주문', '同じ会社・社員名刺の同時注文', 'Same-company employee cards together')}
             </div>
             <div style="font-size:11px; color:#0369a1; margin-bottom:8px; line-height:1.5;">
-              ${tr('명수가 많을수록 할인 — 3명 10% / 5명 20% / 10명+ 50% 할인', '人数が多いほど割引 — 3名10% / 5名20% / 10名以上50%', 'Bulk discount: 3 people 10% / 5 people 20% / 10+ people 50%')}
+              ${tr('매수 × 명수 = 총 장수. 박·후가공·기본가는 첫 100장 정가, 초과분은 반값으로 계산됩니다.', '枚数 × 人数 = 合計枚数。箔・後加工・基本料金は最初の100枚は定価、超過分は半額で計算されます。', 'Sheets × people = total. Base, foil & finishing: first 100 full price, the rest half price.')}
             </div>
             <div id="soBizEmpPresets" style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px;">
               <button type="button" class="so-pd-qty-btn" data-bc-emp="1" onclick="window._soBcEmpPick(1)">
@@ -2081,15 +2081,15 @@ html, body { background: #ffffff !important; }
               </button>
               <button type="button" class="so-pd-qty-btn" data-bc-emp="3" onclick="window._soBcEmpPick(3)">
                 <span style="font-size:14px; font-weight:900;">3${tr('명','名','')}</span>
-                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">10% ${tr('할인','割引','OFF')}</span>
+                <span style="font-size:10px; opacity:0.7; margin-top:2px;">× 3</span>
               </button>
               <button type="button" class="so-pd-qty-btn" data-bc-emp="5" onclick="window._soBcEmpPick(5)">
                 <span style="font-size:14px; font-weight:900;">5${tr('명','名','')}</span>
-                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
+                <span style="font-size:10px; opacity:0.7; margin-top:2px;">× 5</span>
               </button>
               <button type="button" class="so-pd-qty-btn" data-bc-emp="10" onclick="window._soBcEmpPick(10)">
                 <span style="font-size:14px; font-weight:900;">10${tr('명+','名+','+')}</span>
-                <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
+                <span style="font-size:10px; opacity:0.7; margin-top:2px;">× 10</span>
               </button>
             </div>
             <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
@@ -4157,14 +4157,14 @@ html, body { background: #ffffff !important; }
             if (state.isBanner) {
                 unit = (state.wallSide === 'double') ? (state._bannerDoublePrice || 80000) : (state._bannerSinglePrice || 45000);
             } else if (state.isBizCard) {
-                // 2026-06-13: 명함 — qty = 각 (1각 = 100매). 가격은 _bizPriceFor 에서 계산
-                // v725: 수량별 할인 제거. 직원수(empCount) 곱셈 + 직원수 할인 (3명 10% / 5명 20% / 10명+ 50%)
+                // 2026-06-24 v726: 명함 — qty = 각(1각=100매). 총 장수 = 각 × 명수.
+                //   첫 100장 정가 + 초과분 반값 (_bizSheetTotal). 직원수 % 할인 폐지.
                 qty = Math.max(1, qty || 1);
                 var _bizUnit = _bizPriceFor(state.bizSide, state.bizTier);
                 unit = _bizUnit;
                 var _emp = Math.max(1, Number(state.bizEmpCount) || 1);
-                var _empDisc = _bizEmpDisc(_emp);
-                subtotal = Math.round(_bizUnit * qty * _emp * (1 - _empDisc));
+                var _bcTotalUnits = qty * _emp;
+                subtotal = _bizSheetTotal(_bizUnit, _bcTotalUnits);
             } else if (state.isLeaflet) {
                 // 2026-06-13: 낱장 인쇄 — A4/A3/A2 × 단/양면 × 수량 할인 + 박/후가공 옵션
                 // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4
@@ -4262,22 +4262,21 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 명함 (pp_bc_*) — 박/후가공: 직원수(empCount) 곱셈 + 직원수 할인 적용, 수량(각) 무관 (v726, 사용자 요청)
-        //   후가공비는 인원수 기준 → 100장이든 500장이든 동일. 예: 박 1만원 × 10명 × 50%할인 = 5만원
+        // 2026-06-24 v726: 명함 박/후가공 — 총 장수(각 × 명수) 기준, 첫 100장 정가 + 초과분 반값.
+        //   예) 금박 1만원 · 200장(2각) × 2명 = 400장(N4) → 10000×(4+1)/2 = 25,000원.
         if (state.isBizCard) {
             var _bcEmpN = Math.max(1, Number(state.bizEmpCount) || 1);
-            var _bcEmpDisc = _bizEmpDisc(_bcEmpN);
-            var _bcEmpMult = function(base){ return Math.round(base * _bcEmpN * (1 - _bcEmpDisc)); };
-            var _bcEmpSuffix = (_bcEmpN > 1)
-                ? ' × ' + _bcEmpN + tr('명','名','people') + (_bcEmpDisc > 0 ? ' · -' + Math.round(_bcEmpDisc * 100) + '%' : '')
-                : '';
+            var _bcQtyUnits = Math.max(1, qty);
+            var _bcTU = _bcQtyUnits * _bcEmpN;           // 총 100장-단위 수
+            var _bcTotalSheets = _bcTU * 100;
+            var _bcHalfNote = (_bcTU > 1) ? ' · ' + tr('첫100장 정가+초과 반값','最初100枚定価+超過半額','first 100 full, rest half') : '';
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
-                    var _bcFoilLine = _bcEmpMult(_bizFoilOpt.price);
+                    var _bcFoilLine = _bizSheetTotal(_bizFoilOpt.price, _bcTU);
                     addonTotal += _bcFoilLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + _bcEmpSuffix + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + _bcHalfNote + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
                     );
                 }
             }
@@ -4286,22 +4285,18 @@ html, body { background: #ffffff !important; }
                     if (!state.bizFinishes[k]) return;
                     var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (!fopt) return;
-                    var _bcFxLine = _bcEmpMult(fopt.price);
+                    var _bcFxLine = _bizSheetTotal(fopt.price, _bcTU);
                     addonTotal += _bcFxLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + _bcEmpSuffix + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + _bcHalfNote + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
                     );
                 });
             }
-            // v725: 프리미엄 only. 직원수 + 직원수 할인 표시
+            // 메타 — 프리미엄 · 용지 · 면 · 총 장수 (매수 × 명수)
             var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _qtyLbl  = (qty * 100).toLocaleString() + tr('매','枚','pcs');
-            var _empN = Math.max(1, Number(state.bizEmpCount) || 1);
-            var _empLbl = (_empN > 1) ? ' × ' + _empN + tr('명','名','people') : '';
-            var _empDiscPct = Math.round(_bizEmpDisc(_empN) * 100);
-            var _discLbl = _empDiscPct > 0 ? ' · <b style="color:#dc2626;">-' + _empDiscPct + '%</b>' : '';
-            var _metaLbl = '📇 ' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _qtyLbl + _empLbl + _discLbl;
+            var _empLbl = (_bcEmpN > 1) ? ' × ' + _bcEmpN + tr('명','名','people') + ' = ' + _bcTotalSheets.toLocaleString() + tr('매','枚','pcs') : '';
+            var _metaLbl = '📇 ' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + (_bcQtyUnits * 100).toLocaleString() + tr('매','枚','pcs') + _empLbl;
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
             );
@@ -9434,6 +9429,15 @@ html, body { background: #ffffff !important; }
         return 0;
     }
     window._bizEmpDisc = _bizEmpDisc;
+    // 2026-06-24 v726: 명함 가격 규칙 통일 — 총 100장-단위 수 N(= 각 × 명수) 기준,
+    //   첫 100장 정가 + 초과분 반값. per-100 단가 P → 합계 = round(P × (N+1) / 2).
+    //   기본 명함값·박·후가공 모두 동일 규칙. 직원수 % 할인은 폐지 (사용자 요청).
+    //   예) 금박 10,000 · 200장(2각) × 2명 = N4 → 10000×(4+1)/2 = 25,000.
+    function _bizSheetTotal(perUnit, totalUnits) {
+        var n = Math.max(1, Number(totalUnits) || 1);
+        return Math.round((Number(perUnit) || 0) * (n + 1) / 2);
+    }
+    window._bizSheetTotal = _bizSheetTotal;
     function _bizCard2tone(title, descHtml, priceTag, sel /*, colorTopBg, titleColor — v719 unused*/) {
         // 2026-06-23 v719: 모든 카드 상단 = 연한 하늘색 통일. 제목 검정. 카드 높이 고정 (1줄/2줄 차이 무시).
         var border = sel ? '#4338ca' : '#cbd5e1';
@@ -16413,28 +16417,27 @@ html, body { background: #ffffff !important; }
             return _lfSubItm;
         }
 
-        // 2026-06-18 v552: 명함 — 100매 단위. 일반 2500/4000 / 프리미엄 4000/5000 (단면/양면) + 박 + 후가공. 배송 무료.
-        // 박·후가공 옵션은 각(qty) 만큼 곱셈. 디자인 의뢰비는 신규 15K + 문구수정 5K × (qty-1).
+        // 2026-06-24 v726: 명함 — 프리미엄 단가 8,000(단면)/10,000(양면) per 100장.
+        //   총 장수 = 각 × 명수(empCount). 첫 100장 정가 + 초과분 반값 (_bizSheetTotal). 직원수 % 할인 폐지. 배송 무료.
         var _isBcItm = !!it._isBizCard || (it.bizCard != null) || (it.product && it.product.code && /^pp_bc/i.test(it.product.code));
         if (_isBcItm) {
             var _bc = it.bizCard || {};
             var _bcQty = qty || 1;
             if (_bcQty >= 100 && _bcQty % 100 === 0) _bcQty = _bcQty / 100;
             if (_bcQty < 1) _bcQty = 1;
-            var _bcTier = _bc.tier || 'general';
-            var _bcUnit = (_bcTier === 'premium')
-                ? ((_bc.side === 'double') ? 5000 : 4000)
-                : ((_bc.side === 'double') ? 4000 : 2500);
-            var _bcSub = _bcUnit * _bcQty;
+            var _bcEmpC = Math.max(1, Number(_bc.empCount) || 1);
+            var _bcTU = _bcQty * _bcEmpC;                       // 총 100장-단위 수 = 각 × 명수
+            var _bcUnit = (_bc.side === 'double') ? 10000 : 8000;
+            var _bcSub = _bizSheetTotal(_bcUnit, _bcTU);
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
-                if (_bcFoil) _bcSub += _bcFoil.price * _bcQty;
+                if (_bcFoil) _bcSub += _bizSheetTotal(_bcFoil.price, _bcTU);
             }
             if (_bc.finishes) {
                 Object.keys(_bc.finishes).forEach(function(k){
                     if (!_bc.finishes[k]) return;
                     var fo = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                    if (fo) _bcSub += fo.price * _bcQty;
+                    if (fo) _bcSub += _bizSheetTotal(fo.price, _bcTU);
                 });
             }
             // 디자인 의뢰비 (명함 전용 tier — 신규 15K + 문구수정 5K × 추가건. 양면 ×2.)
