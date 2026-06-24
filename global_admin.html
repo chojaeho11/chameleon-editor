@@ -855,11 +855,12 @@ function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>
             </div>
             <select id="doFilterStatus" onchange="loadDesignOrders()" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;font-size:13px;">
                 <option value="">전체 상태</option>
-                <option value="bank_pending">🟡 입금확인 대기</option>
-                <option value="pending">⏳ 결제 대기</option>
-                <option value="paid">💰 결제완료(작업중)</option>
-                <option value="completed_pending_files">✅ 고객 완료확인</option>
-                <option value="released">📦 작업완료 · 미정산/정산</option>
+                <option value="payment_pending">🟡 결제/입금 대기</option>
+                <option value="open">💰 결제완료 · 배정대기</option>
+                <option value="claimed">🎨 작업중</option>
+                <option value="completed">✅ 고객 완료확인</option>
+                <option value="settlement_requested">💸 정산 요청</option>
+                <option value="settled">✅ 정산완료</option>
             </select>
         </div>
         <div id="designOrderArea"><div style="text-align:center;padding:30px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</div></div>
@@ -3603,7 +3604,7 @@ window.showSection = function(id, el) {
 </div>
 
 
-    <script type="module" src="global_admin.js?v=285"></script>
+    <script type="module" src="global_admin.js?v=286"></script>
 
 <div id="addonCatModal" class="modal-overlay" style="display:none; z-index:50000;">
     <div class="modal-box" style="width:500px;">
