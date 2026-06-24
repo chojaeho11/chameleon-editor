@@ -1163,7 +1163,8 @@ async function render() {
     await Promise.all(claimedIds.map(loadDesignerProfile));
 
     // 2026-06-15: 내가 받은 의뢰의 고객 프로필 미리 로드 (연락처/이름 표시용).
-    const myCustomerIds = [...new Set((mine || []).map(r => r.customer_id).filter(Boolean))];
+    // 2026-06-24: 게시판(open/claimed) 의뢰의 고객 이름도 노출되도록 board 의 customer_id 도 포함.
+    const myCustomerIds = [...new Set([...(mine || []), ...(board || [])].map(r => r.customer_id).filter(Boolean))];
     await loadCustomerProfiles(myCustomerIds);
 
     const inprog = (mine || []).filter(r => ['claimed','completed'].includes(r.status));
@@ -1346,7 +1347,12 @@ function renderCard(r) {
     let customerHtml = '';
     if (isMine || (r.status === 'open' && myDesignerStatus === 'approved' && isAdmin())) {
         const cp = (r.customer_id && customerProfileCache[r.customer_id]) || null;
-        const custName = (cp && cp.username) || '';
+        // 2026-06-24: 이름 우선순위 — 설명 인라인 [이름 · 연락처] / '고객명:' → profiles.username.
+        let _inlineNm = '';
+        { const _d = String(r.description || '');
+          let _m = _d.match(/^\s*\[([^·\]]+?)\s*·/); if (_m) _inlineNm = _m[1].trim();
+          if (!_inlineNm) { let _m2 = _d.match(/고객명:\s*([^\n]+)/); if (_m2) _inlineNm = _m2[1].trim(); } }
+        const custName = _inlineNm || (cp && cp.username) || '';
         const custEmail = (cp && cp.email) || '';
         const custPhone = r.phone || (cp && cp.phone) || '';
         const rows = [];
