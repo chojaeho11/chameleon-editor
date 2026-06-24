@@ -4269,10 +4269,17 @@ html, body { background: #ffffff !important; }
             var _bcQtyUnits = Math.max(1, qty);
             var _bcTU = _bcQtyUnits * _bcEmpN;           // 총 100장-단위 수
             var _bcTotalSheets = _bcTU * 100;
-            // 라인 설명: "기본 100장 P · 총 N00장" + (할인 시) "· 정가 (P×N) → 초과분 반값"
+            // 라인 설명: "기본 100장 P · 총 N00장" + (할인 시) "· 정가 ~~P×N~~ · [할인액 빨강 굵게]"
             var _bcDetail = function(p) {
                 var s = tr('기본 100장','基本100枚','first 100') + ' ' + fmtPrice(p) + ' · ' + tr('총','計','total') + ' ' + _bcTotalSheets.toLocaleString() + tr('장','枚','');
-                if (_bcTU > 1) s += ' · ' + tr('정가','定価','list') + ' ' + fmtPrice(p * _bcTU) + ' → ' + tr('초과분 반값','超過半額','rest half');
+                if (_bcTU > 1) {
+                    var _full = p * _bcTU;
+                    var _actual = _bizSheetTotal(p, _bcTU);
+                    var _disc = _full - _actual;
+                    var _pct = _full > 0 ? Math.round(_disc / _full * 100) : 0;
+                    s += ' · ' + tr('정가','定価','list') + ' <s style="color:#94a3b8;">' + fmtPrice(_full) + '</s>'
+                       + ' <b style="color:#dc2626; font-weight:800;">▼ ' + fmtPrice(_disc) + ' ' + tr('할인','割引','off') + ' (' + _pct + '%)</b>';
+                }
                 return s;
             };
             // 1) 기본 명함값 라인 — 정가 vs 할인적용가 명확히
