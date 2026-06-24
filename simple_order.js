@@ -4262,58 +4262,54 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 2026-06-24 v726: 명함 — 기본가/박/후가공 모두 총 장수(각 × 명수) 기준, 첫 100장 정가 + 초과분 반값.
-        //   각 라인에 "기본 100장 단가 · 총 장수 (정가 → 초과분 반값)" + 우측에 할인적용가 표기.
+        // 2026-06-24 v726: 명함 가격 표기 — 깔끔하게. 각 항목은 정가로 한 줄씩, 할인은 맨 아래 빨강 1줄로 합산.
+        //   총 장수(각 × 명수) 기준, 첫 100장 정가 + 초과분 반값. (단가 row 는 숨김)
         if (state.isBizCard) {
             var _bcEmpN = Math.max(1, Number(state.bizEmpCount) || 1);
             var _bcQtyUnits = Math.max(1, qty);
             var _bcTU = _bcQtyUnits * _bcEmpN;           // 총 100장-단위 수
             var _bcTotalSheets = _bcTU * 100;
-            // 라인 설명: "기본 100장 P · 총 N00장" + (할인 시) "· 정가 ~~P×N~~ · [할인액 빨강 굵게]"
-            var _bcDetail = function(p) {
-                var s = tr('기본 100장','基本100枚','first 100') + ' ' + fmtPrice(p) + ' · ' + tr('총','計','total') + ' ' + _bcTotalSheets.toLocaleString() + tr('장','枚','');
-                if (_bcTU > 1) {
-                    var _full = p * _bcTU;
-                    var _actual = _bizSheetTotal(p, _bcTU);
-                    var _disc = _full - _actual;
-                    var _pct = _full > 0 ? Math.round(_disc / _full * 100) : 0;
-                    s += ' · ' + tr('정가','定価','list') + ' <s style="color:#94a3b8;">' + fmtPrice(_full) + '</s>'
-                       + ' <b style="color:#dc2626; font-weight:800;">▼ ' + fmtPrice(_disc) + ' ' + tr('할인','割引','off') + ' (' + _pct + '%)</b>';
-                }
-                return s;
-            };
-            // 1) 기본 명함값 라인 — 정가 vs 할인적용가 명확히
+            var _bcFullSum = 0, _bcDiscSum = 0;
+            // 정가 누적 + 할인(정가-실제) 누적. 반환값은 정가(라인 우측 표기용).
+            var _bcAddFull = function(p){ var _full = p * _bcTU; _bcFullSum += _full; _bcDiscSum += (_full - _bizSheetTotal(p, _bcTU)); return _full; };
+            // 1) 기본 명함 — 정가 표기
             var _bcBaseUnit = _bizPriceFor(state.bizSide, state.bizTier);
-            var _bcBaseTotal = _bizSheetTotal(_bcBaseUnit, _bcTU);
             var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
             var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _bcBaseLabel = '📇 ' + tr('명함','名刺','Card') + ' (' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ') · ' + _bcDetail(_bcBaseUnit);
+            var _bcBaseFull = _bcAddFull(_bcBaseUnit);
             addonBreakdownLines.unshift(
-                '<div class="so-price-row"><span>' + _bcBaseLabel + '</span><span>' + fmtPrice(_bcBaseTotal) + '</span></div>'
+                '<div class="so-price-row"><span>📇 ' + tr('명함','名刺','Card') + ' · ' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + _bcTotalSheets.toLocaleString() + tr('장','枚','pcs') + '</span><span>' + fmtPrice(_bcBaseFull) + '</span></div>'
             );
-            // 2) 박
+            // 2) 박 — 정가 표기 (실제 할인가는 합계에 반영)
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
-                    var _bcFoilLine = _bizSheetTotal(_bizFoilOpt.price, _bcTU);
-                    addonTotal += _bcFoilLine;
+                    addonTotal += _bizSheetTotal(_bizFoilOpt.price, _bcTU);
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + ' · ' + _bcDetail(_bizFoilOpt.price) + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + '</span><span>+' + fmtPrice(_bcAddFull(_bizFoilOpt.price)) + '</span></div>'
                     );
                 }
             }
-            // 3) 후가공
+            // 3) 후가공 — 정가 표기
             if (state.bizFinishes) {
                 Object.keys(state.bizFinishes).forEach(function(k){
                     if (!state.bizFinishes[k]) return;
                     var fopt = BIZ_FINISHES.find(function(o){ return o.key === k; });
                     if (!fopt) return;
-                    var _bcFxLine = _bizSheetTotal(fopt.price, _bcTU);
-                    addonTotal += _bcFxLine;
+                    addonTotal += _bizSheetTotal(fopt.price, _bcTU);
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + ' · ' + _bcDetail(fopt.price) + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + '</span><span>+' + fmtPrice(_bcAddFull(fopt.price)) + '</span></div>'
                     );
                 });
+            }
+            // 4) 할인 — 빨강 굵게 1줄 (100장 초과분 반값). N=1 이면 할인 없음.
+            if (_bcDiscSum > 0) {
+                var _bcPct = _bcFullSum > 0 ? Math.round(_bcDiscSum / _bcFullSum * 100) : 0;
+                addonBreakdownLines.push(
+                    '<div class="so-price-row" style="border-top:1px dashed #fecaca; margin-top:3px; padding-top:5px;">'
+                    + '<span style="color:#dc2626; font-weight:800;">🎉 ' + tr('100장 초과분 반값 할인','100枚超過分 半額割引','Bulk: excess at half') + ' (' + _bcPct + '%)</span>'
+                    + '<span style="color:#dc2626; font-weight:800;">−' + fmtPrice(_bcDiscSum) + '</span></div>'
+                );
             }
         }
         // v723: 일반 상업인쇄물 박/후가공 — 1회 정액 (수량 무관)
@@ -4538,7 +4534,8 @@ html, body { background: #ffffff !important; }
         var bdHtml = '';
         {
             // 단가 row + 가벽 사이즈 row 표시 (가벽이면 위쪽 가벽 사이즈 row 도 보여줌)
-            showRow('soUnitRow', true);
+            // 2026-06-24 v726: 명함은 단가 row 숨김 — breakdown 의 '명함' 라인이 정가/할인/장수를 모두 표기
+            showRow('soUnitRow', !state.isBizCard);
             bdHtml = addonBreakdownLines.join('');
             if (adExtraLinesBreakdown.length > 0) bdHtml += adExtraLinesBreakdown.join('');
             if (heightExtra > 0) {
