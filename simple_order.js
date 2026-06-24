@@ -1953,9 +1953,9 @@ html, body { background: #ffffff !important; }
             ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
           </div>
           <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
-            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 입체 디자인+설계 후 고객님께 시안을 보내드립니다.<br><b style="color:#dc2626;">디자인+설계 비용 5만원</b>이 가격에 포함되어 있습니다 (누끼·칼선·받침 포함).',
-                 '左側にロゴや参考写真・テキストをアップロードしていただくと、担当者が立体デザイン+設計後にお客様に校正をお送りします。<br><b style="color:#dc2626;">デザイン+設計費 5万ウォン</b>が価格に含まれています。',
-                 'Upload your logo, reference photos & text on the left — our designer will create the 3D design & layout and send you a proof.<br>A <b style="color:#dc2626;">₩50,000 design + layout fee</b> is included in the price.')}
+            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면, 결제 후 전문 디자이너가 입체 디자인을 해드립니다 (누끼·칼선 포함).<br>결제하면 자동으로 디자인 작업이 의뢰되며, <b style="color:#16a34a;">디자인은 무료</b>입니다.',
+                 '左側にロゴや参考写真・テキストをアップロードしていただくと、お支払い後に専門デザイナーが立体デザインを行います。<br>お支払いで自動的にデザイン依頼され、<b style="color:#16a34a;">デザインは無料</b>です。',
+                 'Upload your logo, reference photos & text on the left — after payment a designer will create the 3D design (cutout & cutline included).<br>The design is auto-requested on payment and is <b style="color:#16a34a;">free of charge</b>.')}
           </div>
         </div>
 
@@ -18121,6 +18121,59 @@ html, body { background: #ffffff !important; }
                     } catch (_cie) { console.warn('[cutline dreq insert on submit]', _cie); }
                 }
             } catch (e) { console.warn('[cutline dreq batch]', e); }
+
+            // 2026-06-24: 글씨 스카시 — 결제 시 디자인의뢰방 자동 등록 (전문 디자이너가 입체디자인 작업). 디자이너 지급 4만원.
+            try {
+                var _scSb = sb;
+                var _scU = await _scSb.auth.getUser();
+                var _scUid = (_scU && _scU.data && _scU.data.user && _scU.data.user.id) || loggedInUid || null;
+                for (var _si = 0; _si < items.length; _si++) {
+                    var _si_it = items[_si];
+                    if (!_si_it) continue;
+                    var _si_isScarci = (typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(_si_it.product))
+                        || (_si_it.product && _si_it.product.code && /^hb_ss/i.test(_si_it.product.code));
+                    if (!_si_isScarci) continue;
+                    if (_si_it.designRequest && _si_it.designRequest.request_id) continue; // 중복 방지
+                    var _si_prodName = (_si_it.productName || (_si_it.product && (_si_it.product.name_kr || _si_it.product.name)) || '글씨 스카시');
+                    var _si_custName = (typeof name !== 'undefined' && name) ? name : '';
+                    var _si_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
+                    var _si_title = (_si_it.scarciTitle || '').trim();
+                    var _si_sub = (_si_it.scarciSub || '').trim();
+                    var _si_qty = Math.max(1, Number(_si_it.qty) || 1);
+                    var _si_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_si_it) : ((_si_it.product && _si_it.product.price) || 0);
+                    var _si_payout = 40000;   // 디자이너 지급 (사용자 요청)
+                    // 참고 파일 (로고/참고사진) 수집
+                    var _si_files = [];
+                    ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function(f){ if (_si_it[f] && typeof _si_it[f] === 'string') _si_files.push(_si_it[f]); });
+                    if (Array.isArray(_si_it.uploadedFiles)) _si_it.uploadedFiles.forEach(function(u){ if (u && typeof u === 'string') _si_files.push(u); });
+                    var _si_desc = '[' + (_si_custName || '고객') + ' · ' + (_si_custPhone || '-') + ']\n'
+                        + '제품: ' + _si_prodName + ' · 수량 ' + _si_qty + '\n'
+                        + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
+                        + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
+                        + '주문번호: ' + (newOrderId || '-') + '\n'
+                        + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
+                        + '[FREE_REQ:{"customerPrice":' + (Number(_si_price) || 0) + ',"designerPayout":' + _si_payout + '}]';
+                    var _si_payload = {
+                        customer_id: _scUid,
+                        title: '[글씨스카시] ' + _si_prodName + (_si_title ? ' — ' + _si_title : ''),
+                        description: _si_desc,
+                        category: '글씨스카시',
+                        country: 'KR',
+                        budget_min: _si_payout,
+                        budget_max: _si_payout,
+                        phone: _si_custPhone || null,
+                        files: _si_files,
+                        status: 'open'
+                    };
+                    try {
+                        var _si_ins = await _scSb.from('design_requests').insert(_si_payload).select().single();
+                        if (!_si_ins.error && _si_ins.data) {
+                            if (!_si_it.designRequest) _si_it.designRequest = {};
+                            _si_it.designRequest.request_id = _si_ins.data.id;
+                        }
+                    } catch (_sie) { console.warn('[scarci dreq insert]', _sie); }
+                }
+            } catch (e) { console.warn('[scarci dreq batch]', e); }
 
             // 2026-06-13: 디자인 의뢰 row 들에 order_id 태그 — 디자이너 보드 / 출금관리에서 결제 연결 추적
             try {
