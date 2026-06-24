@@ -2448,7 +2448,7 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-01: 광고인쇄 배송 안내 배너 — isAdPrint 일 때만 노출 (_soApplyAdPrintLayout 에서 토글) -->
           <div id="soAdShipNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:10px; font-size:12px; font-weight:700; color:#1e40af; line-height:1.5; display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
-            <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 <b>1만원</b> 자동 적용', 'ご注文合計 <b>10万円以上 送料無料</b> · 未満 <b>1万円</b> 自動適用', 'Free shipping over ₩100k · ₩10k under (auto)')}</span>
+            <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 시 배송비 <b>1만원</b> 자동 적용', 'ご注文合計が<b>10万円以上で送料無料</b>。10万円未満は<b>送料1万円</b>が自動で加算されます。', 'Free shipping on orders over ₩100,000. Under ₩100,000, a ₩10,000 shipping fee is added automatically.')}</span>
           </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
@@ -2546,7 +2546,7 @@ html, body { background: #ffffff !important; }
             <div>• <b>${tr('돔보커팅 비용', 'トンボカット代', 'Register cut fee')}</b>: <b style="color:#16a34a;">${tr('무료', '無料', 'Free')}</b></div>
             <div>• <b>${tr('칼선 레이어', 'カットラインレイヤー', 'Cut-line layer')}</b>: ${tr('별도로 분리해서 접수해주세요', '別レイヤーで分けてご提出ください', 'Please submit on a separate layer')}</div>
             <div>• <b>${tr('1제곱미터 이하', '1平方メートル以下', 'Under 1㎡')}</b>: ${tr('1제곱미터 가격으로 계산됩니다', '1㎡価格として計算されます', 'charged at 1㎡ rate')}</div>
-            <div>• <b>${tr('배송비', '配送料', 'Shipping')}</b>: ${tr('10만원 이하 1만원 · 10만원 이상 무료배송', '10万円未満1万円·10万円以上 送料無料', '<₩100K = ₩10K · ≥₩100K free')}</div>
+            <div>• <b>${tr('배송비', '配送料', 'Shipping')}</b>: ${tr('10만원 미만 1만원 · 10만원 이상 무료배송', '10万円未満は送料1万円 · 10万円以上で送料無料', 'Under ₩100K: ₩10K · ₩100K+ : free')}</div>
             <div>• <b style="color:#dc2626;">${tr('30미터 이상 30% 할인 자동 적용', '30m以上 30%自動割引', 'Auto 30% off on 30m+')}</b></div>
           </div>
         </div>
