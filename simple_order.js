@@ -4262,24 +4262,40 @@ html, body { background: #ffffff !important; }
             });
         }
 
-        // 2026-06-24 v726: 명함 박/후가공 — 총 장수(각 × 명수) 기준, 첫 100장 정가 + 초과분 반값.
-        //   예) 금박 1만원 · 200장(2각) × 2명 = 400장(N4) → 10000×(4+1)/2 = 25,000원.
+        // 2026-06-24 v726: 명함 — 기본가/박/후가공 모두 총 장수(각 × 명수) 기준, 첫 100장 정가 + 초과분 반값.
+        //   각 라인에 "기본 100장 단가 · 총 장수 (정가 → 초과분 반값)" + 우측에 할인적용가 표기.
         if (state.isBizCard) {
             var _bcEmpN = Math.max(1, Number(state.bizEmpCount) || 1);
             var _bcQtyUnits = Math.max(1, qty);
             var _bcTU = _bcQtyUnits * _bcEmpN;           // 총 100장-단위 수
             var _bcTotalSheets = _bcTU * 100;
-            var _bcHalfNote = (_bcTU > 1) ? ' · ' + tr('첫100장 정가+초과 반값','最初100枚定価+超過半額','first 100 full, rest half') : '';
+            // 라인 설명: "기본 100장 P · 총 N00장" + (할인 시) "· 정가 (P×N) → 초과분 반값"
+            var _bcDetail = function(p) {
+                var s = tr('기본 100장','基本100枚','first 100') + ' ' + fmtPrice(p) + ' · ' + tr('총','計','total') + ' ' + _bcTotalSheets.toLocaleString() + tr('장','枚','');
+                if (_bcTU > 1) s += ' · ' + tr('정가','定価','list') + ' ' + fmtPrice(p * _bcTU) + ' → ' + tr('초과분 반값','超過半額','rest half');
+                return s;
+            };
+            // 1) 기본 명함값 라인 — 정가 vs 할인적용가 명확히
+            var _bcBaseUnit = _bizPriceFor(state.bizSide, state.bizTier);
+            var _bcBaseTotal = _bizSheetTotal(_bcBaseUnit, _bcTU);
+            var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
+            var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
+            var _bcBaseLabel = '📇 ' + tr('명함','名刺','Card') + ' (' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ') · ' + _bcDetail(_bcBaseUnit);
+            addonBreakdownLines.unshift(
+                '<div class="so-price-row"><span>' + _bcBaseLabel + '</span><span>' + fmtPrice(_bcBaseTotal) + '</span></div>'
+            );
+            // 2) 박
             if (state.bizFoil) {
                 var _bizFoilOpt = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
                 if (_bizFoilOpt) {
                     var _bcFoilLine = _bizSheetTotal(_bizFoilOpt.price, _bcTU);
                     addonTotal += _bcFoilLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + _bcHalfNote + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
+                        '<div class="so-price-row"><span>✨ ' + _bizI18n(_bizFoilOpt, 'name') + ' · ' + _bcDetail(_bizFoilOpt.price) + '</span><span>+' + fmtPrice(_bcFoilLine) + '</span></div>'
                     );
                 }
             }
+            // 3) 후가공
             if (state.bizFinishes) {
                 Object.keys(state.bizFinishes).forEach(function(k){
                     if (!state.bizFinishes[k]) return;
@@ -4288,18 +4304,10 @@ html, body { background: #ffffff !important; }
                     var _bcFxLine = _bizSheetTotal(fopt.price, _bcTU);
                     addonTotal += _bcFxLine;
                     addonBreakdownLines.push(
-                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + _bcHalfNote + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
+                        '<div class="so-price-row"><span>🛠️ ' + _bizI18n(fopt, 'name') + ' · ' + _bcDetail(fopt.price) + '</span><span>+' + fmtPrice(_bcFxLine) + '</span></div>'
                     );
                 });
             }
-            // 메타 — 프리미엄 · 용지 · 면 · 총 장수 (매수 × 명수)
-            var _paperOpt = BIZ_PAPERS.find(function(o){ return o.key === state.bizPaper; });
-            var _sideLbl = (state.bizSide === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
-            var _empLbl = (_bcEmpN > 1) ? ' × ' + _bcEmpN + tr('명','名','people') + ' = ' + _bcTotalSheets.toLocaleString() + tr('매','枚','pcs') : '';
-            var _metaLbl = '📇 ' + tr('프리미엄','プレミアム','Premium') + (_paperOpt ? ' · ' + _bizI18n(_paperOpt, 'name') : '') + ' · ' + _sideLbl + ' · ' + (_bcQtyUnits * 100).toLocaleString() + tr('매','枚','pcs') + _empLbl;
-            addonBreakdownLines.unshift(
-                '<div class="so-price-row" style="color:#64748b;"><span>' + _metaLbl + '</span><span></span></div>'
-            );
         }
         // v723: 일반 상업인쇄물 박/후가공 — 1회 정액 (수량 무관)
         if (state.isCpGeneric) {
@@ -11103,6 +11111,9 @@ html, body { background: #ffffff !important; }
             if (_ttBc) _ttBc.style.display = 'none';
             var _ttBcInfo = document.getElementById('soBizCardOrderInfo');
             if (_ttBcInfo) _ttBcInfo.style.display = '';
+            // 2026-06-24 v726: 단가 row 숨김 — 명함은 breakdown 의 '명함 …' 라인이 기본 100장 단가+총장수+할인적용가를 모두 표기
+            var _bcUnitRow = document.getElementById('soUnitRow');
+            if (_bcUnitRow) _bcUnitRow.style.display = 'none';
             // 일반 addon 선택은 모두 제거 (명함은 자체 UI 사용)
             state.selectedAddons = {};
             state.addonQuantities = {};
@@ -11114,6 +11125,8 @@ html, body { background: #ffffff !important; }
             if (_bcPresetsOff) _bcPresetsOff.style.display = 'none';
             var _bcDefRowOn = document.getElementById('soQtyRowDefault');
             if (_bcDefRowOn) _bcDefRowOn.style.display = '';
+            var _bcUnitRowOn = document.getElementById('soUnitRow');
+            if (_bcUnitRowOn) _bcUnitRowOn.style.display = '';
             var _bcEmpSecOff = document.getElementById('soBizEmpSection');
             if (_bcEmpSecOff) _bcEmpSecOff.style.display = 'none';
             var _bcTierG2 = document.getElementById('soBizTierGeneral');
