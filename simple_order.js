@@ -1953,9 +1953,9 @@ html, body { background: #ffffff !important; }
             ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
           </div>
           <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
-            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 디자인 후 고객님께 시안을 보내드립니다.<br>결제 후 디자인이 시작되며 <b style="color:#dc2626;">디자인은 무료</b>입니다.',
-                 '左側にロゴや参考写真・テキストをアップロードしていただくと、担当者がデザイン後にお客様に校正をお送りします。お支払い後にデザインが開始され、<b style="color:#dc2626;">デザインは無料</b>です。',
-                 'Upload your logo, reference photos & text on the left — our designer will send you a proof. Design begins after payment and is <b style="color:#dc2626;">free of charge</b>.')}
+            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면 담당자가 입체 디자인+설계 후 고객님께 시안을 보내드립니다.<br><b style="color:#dc2626;">디자인+설계 비용 5만원</b>이 가격에 포함되어 있습니다 (누끼·칼선·받침 포함).',
+                 '左側にロゴや参考写真・テキストをアップロードしていただくと、担当者が立体デザイン+設計後にお客様に校正をお送りします。<br><b style="color:#dc2626;">デザイン+設計費 5万ウォン</b>が価格に含まれています。',
+                 'Upload your logo, reference photos & text on the left — our designer will create the 3D design & layout and send you a proof.<br>A <b style="color:#dc2626;">₩50,000 design + layout fee</b> is included in the price.')}
           </div>
         </div>
 
@@ -9891,6 +9891,8 @@ html, body { background: #ffffff !important; }
         if (!p) return false;
         var code = (p.code || '').toLowerCase();
         var name = ((p.name_kr || p.name || '') + ' ' + (p.name || '')).toLowerCase();
+        // 2026-06-24: 글씨 스카시 — 입체디자인+설계 5만원에 누끼/칼선 포함이므로 별도 배경제거 옵션 제외 (사용자 요청)
+        if (typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(p)) return false;
         // 등신대 family (hb_pi_5 / hb_ss_* / hb_point* / acr_crt_stand)
         if (typeof _soIsStandeeProduct === 'function' && _soIsStandeeProduct(p)) return true;
         // 원판인쇄 / 자유인쇄커팅 (hb_pt_*)
