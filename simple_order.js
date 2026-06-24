@@ -8445,9 +8445,10 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
         //   사용자 피드백: "가격이 3만원에 고정되어 있어 사이즈나 재질이 변해도" — 30k 최소가 모든 차이를 가림.
+        var _minApplied = false;   // 2026-06-24: 면적가가 최소단가보다 작아 floor 가 적용됐는지 (라벨 정직하게 표기용)
         if (state.isCutPrint && calcPrice < 3000) calcPrice = 3000;
         // 너무 작은 사이즈는 최소 단가 (per_m² 그대로) 보장 — 현수막용
-        else if (!isAcrGoods && calcPrice < perSqm * 0.1) calcPrice = Math.round(perSqm * 0.1 / 10) * 10;
+        else if (!isAcrGoods && calcPrice < perSqm * 0.1) { calcPrice = Math.round(perSqm * 0.1 / 10) * 10; _minApplied = true; }
         // 2026-06-04: 자유인쇄커팅 — A3 (max 변 420mm) 초과 시 끼우는/종이 받침대 disable
         if (state.isCutPrint) {
             try {
@@ -8497,7 +8498,9 @@ html, body { background: #ffffff !important; }
                 var hMm = Math.round(hCm * 10);
                 infoEl.textContent =
                     wMm + '×' + hMm + 'mm · ' +
-                    areaM2.toFixed(3) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+                    (_minApplied
+                        ? tr('개당 ', '1枚 ', 'each ') + fmtPrice(calcPrice) + tr(' (최소단가 적용)', '（最低単価適用）', ' (min unit price)')
+                        : areaM2.toFixed(3) + 'm² × ' + fmtPrice(perSqm) + '/m²');
             } else if (isAcrGoods) {
                 // 아크릴 굿즈 — cm² 단위로 표시 (m² 보다 직관적)
                 var areaCm2 = wCm * hCm;
@@ -8508,7 +8511,9 @@ html, body { background: #ffffff !important; }
             } else {
                 infoEl.textContent =
                     wCm + '×' + hCm + 'cm · ' +
-                    areaM2.toFixed(2) + 'm² × ' + fmtPrice(perSqm) + '/m²';
+                    (_minApplied
+                        ? tr('개당 ', '1枚 ', 'each ') + fmtPrice(calcPrice) + tr(' (최소단가 적용)', '（最低単価適用）', ' (min unit price)')
+                        : areaM2.toFixed(2) + 'm² × ' + fmtPrice(perSqm) + '/m²');
             }
         }
         recalc();
