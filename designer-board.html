@@ -75,7 +75,7 @@
         /* 파일 */
         .db-files { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
         .db-file { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--gray-fill); color:var(--text); border-radius:980px; font-size:12px; font-weight:500; }
-        .db-file img { width:18px; height:18px; object-fit:cover; border-radius:3px; }
+        .db-file img { width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border); }
 
         /* 액션 버튼 */
         .db-actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
@@ -1283,7 +1283,7 @@ function renderCard(r) {
     const filesHtml = files.length ? `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? '🖼️' : '📎'}
+                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}" loading="lazy" decoding="async" alt="">` : '📎'}
                 ${_refFile}
             </a>`).join('')}
         </div>
@@ -1295,7 +1295,7 @@ function renderCard(r) {
             <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">${_finalDraft}</div>
             <div class="db-files">
                 ${finalFiles.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? '🖼️' : '📎'}
+                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}" loading="lazy" decoding="async" alt="">` : '📎'}
                     ${_draftWord}
                 </a>`).join('')}
             </div>
