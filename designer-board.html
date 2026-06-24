@@ -695,6 +695,8 @@ function payoutLabel(r) {
     // 자유의뢰: FREE_REQ 메타 → 70% 자동, 없으면 합의 금액, 그것도 없으면 협의
     var fr = parseFreeReqMeta(r.description);
     if (fr && fr.designerPayout) {
+        // 2026-06-24: 글씨 스카시 — 무료디자인(고객) · 본사결제(디자이너 지급). 70% 표기 대신 명시.
+        if (r && r.category === '글씨스카시') return fr.designerPayout.toLocaleString() + '원 (무료디자인 · 본사결제)';
         return fr.designerPayout.toLocaleString() + '원 (의뢰금액 ' + Number(fr.customerPrice || 0).toLocaleString() + '원의 70%)';
     }
     if (r && (r.budget_max || r.budget_min)) {
