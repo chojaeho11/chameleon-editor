@@ -1118,6 +1118,37 @@ window.addProductDB = async () => {
         addons: addons
     };
 
+    // 2026-06-24: 저장 시 비어있는 다국어 필드 자동 번역 (Claude translate). 한국어 원문이 있고 해당 언어가
+    //   비어있을 때만 채움 — 수동 입력값은 보존. 신규 상품을 포함한 모든 저장에서 일본어 등 누락 방지.
+    try {
+        var _nameNeed = !payload.name_jp || !payload.name_us || !payload.name_cn || !payload.name_ar || !payload.name_es || !payload.name_de || !payload.name_fr;
+        if (payload.name && _nameNeed) {
+            var _nt = await claudeTranslateAll(payload.name);
+            if (_nt) {
+                if (!payload.name_jp) payload.name_jp = _nt.ja || '';
+                if (!payload.name_us) payload.name_us = _nt.en || '';
+                if (!payload.name_cn) payload.name_cn = _nt.zh || '';
+                if (!payload.name_ar) payload.name_ar = _nt.ar || '';
+                if (!payload.name_es) payload.name_es = _nt.es || '';
+                if (!payload.name_de) payload.name_de = _nt.de || '';
+                if (!payload.name_fr) payload.name_fr = _nt.fr || '';
+            }
+        }
+        var _descNeed = !payload.description_jp || !payload.description_us || !payload.description_cn || !payload.description_ar || !payload.description_es || !payload.description_de || !payload.description_fr;
+        if (payload.description && _descNeed) {
+            var _dt = await claudeTranslateAllHtml(payload.description);
+            if (_dt) {
+                if (!payload.description_jp) payload.description_jp = _dt.ja || '';
+                if (!payload.description_us) payload.description_us = _dt.en || '';
+                if (!payload.description_cn) payload.description_cn = _dt.zh || '';
+                if (!payload.description_ar) payload.description_ar = _dt.ar || '';
+                if (!payload.description_es) payload.description_es = _dt.es || '';
+                if (!payload.description_de) payload.description_de = _dt.de || '';
+                if (!payload.description_fr) payload.description_fr = _dt.fr || '';
+            }
+        }
+    } catch (_te) { console.warn('[auto-translate on save]', _te); }
+
     let error;
     if(editingProdId) {
         const res = await sb.from('admin_products').update(payload).eq('id', editingProdId);
@@ -1491,6 +1522,18 @@ async function claudeTranslateAll(text) {
         }
         return result;
     }
+}
+
+// 2026-06-24: HTML 상세설명 배치 번역 (태그 보존) — translate 함수 html 모드.
+async function claudeTranslateAllHtml(html) {
+    if (!html) return {};
+    try {
+        const { data, error } = await sb.functions.invoke('translate', {
+            body: { text: html, sourceLang: 'kr', targetLangs: ['ja','en','zh','ar','es','de','fr'], html: true }
+        });
+        if (error) throw error;
+        return (data && data.translations) || {};
+    } catch(e) { console.warn('HTML 번역 실패:', e); return {}; }
 }
 
 async function googleTranslateFallback(text, targetLang) {
