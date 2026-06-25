@@ -6034,6 +6034,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 / Cutline / カットライン"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutline" class="me-tb-lbl">칼선</span></button>
                 <!-- Row 3 -->
                 <button type="button" class="me-tool-btn me-r3" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
+                <!-- 2026-06-25: QR코드 (인스타/홈페이지 URL → 중앙에 QR) -->
+                <button type="button" class="me-tool-btn me-r3" onclick="window._meAddQR && window._meAddQR()" title="QR코드 / QRコード / QR code"><i class="fa-solid fa-qrcode me-tb-ic"></i><span data-i18n="me_qr" class="me-tb-lbl">QR</span></button>
                 <button type="button" class="me-tool-btn me-r3" id="meGuidesToggle" onclick="window._meGuidesToggle && window._meGuidesToggle()" style="background:#fff; color:#dc2626; border:1.5px solid #fca5a5;" title="Toggle guides / ガイド表示 / 가이드 표시"><i class="fa-solid fa-eye me-tb-ic" id="meGuidesIcon"></i><span data-i18n="me_guides" class="me-tb-lbl">가이드</span></button>
                 <!-- 2026-06-18 v610: 배경 잠금 풀기 (잠긴 배경이 있을 때만 노출) -->
                 <button type="button" class="me-tool-btn me-r3" id="meUnlockBgBtn" onclick="window._meUnlockBackground && window._meUnlockBackground()" style="display:none; background:#fff; color:#0369a1; border:1.5px solid #7dd3fc;" title="배경 잠금 풀기"><i class="fa-solid fa-lock-open me-tb-ic"></i><span data-i18n="editor_unlock_bg" class="me-tb-lbl">배경풀기</span></button>
@@ -9940,6 +9942,53 @@ function scrollHotdeal(gridId, dir) {
             }
         });
         _meUpdateUnlockBgBtn();
+    };
+
+    // 2026-06-25: QR코드 추가 — 인스타/홈페이지 URL 입력 → QR 생성 → 캔버스 중앙에 이미지로 배치.
+    //   qrcode@1.5.1 (window.QRCode.toDataURL) 사용. 명함 뒷면 등에 활용.
+    window._meAddQR = function() {
+        var lang = (document.documentElement.lang || 'ko');
+        var T = function(ko, ja, en){ return lang === 'ja' ? ja : (lang === 'en' ? en : ko); };
+        var prev = document.getElementById('meQrModal'); if (prev) prev.remove();
+        var ov = document.createElement('div');
+        ov.id = 'meQrModal';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:2147483300;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;font-family:Pretendard,-apple-system,system-ui,sans-serif;';
+        ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:20px;width:min(360px,calc(100vw - 32px));box-sizing:border-box;">'
+            + '<div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px;">📱 ' + T('QR코드 추가','QRコード追加','Add QR code') + '</div>'
+            + '<div style="font-size:12.5px;color:#6b7280;margin-bottom:12px;line-height:1.5;">' + T('인스타 주소나 회사 홈페이지를 입력하면 중앙에 QR이 생성돼요.','インスタや会社サイトのURLを入力すると中央にQRが入ります。','Enter your Instagram or website URL — a QR appears in the center.') + '</div>'
+            + '<input id="meQrInput" type="text" inputmode="url" placeholder="https://instagram.com/yourid" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />'
+            + '<div style="display:flex;gap:8px;margin-top:14px;">'
+            + '<button id="meQrCancel" style="flex:none;padding:11px 14px;border:none;border-radius:10px;background:#f3f4f6;color:#4b5563;font-weight:700;cursor:pointer;font-family:inherit;">' + T('취소','キャンセル','Cancel') + '</button>'
+            + '<button id="meQrGo" style="flex:1;padding:11px;border:none;border-radius:10px;background:#6d28d9;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;">' + T('QR 생성','QR作成','Create QR') + '</button>'
+            + '</div></div>';
+        document.body.appendChild(ov);
+        var inp = ov.querySelector('#meQrInput');
+        var close = function(){ ov.remove(); };
+        setTimeout(function(){ try { inp.focus(); } catch(_){} }, 30);
+        ov.querySelector('#meQrCancel').onclick = close;
+        ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+        var go = function(){
+            var url = (inp.value || '').trim();
+            if (!url) { try { inp.focus(); } catch(_){} return; }
+            if (/^@/.test(url)) url = 'https://instagram.com/' + url.replace(/^@+/, '');
+            else if (!/^https?:\/\//i.test(url) && !/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
+            if (!window.QRCode || typeof window.QRCode.toDataURL !== 'function') {
+                alert(T('QR 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.','QRライブラリ読込中。少し待って再試行。','QR library is still loading. Try again shortly.'));
+                return;
+            }
+            window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }, function(err, dataUrl){
+                if (err || !dataUrl) { alert(T('QR 생성 실패','QR作成失敗','Failed to create QR')); return; }
+                try {
+                    var side = Math.round(Math.min(me.natW, me.natH) * 0.42);
+                    var x = Math.round((me.natW - side) / 2);
+                    var y = Math.round((me.natH - side) / 2);
+                    window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: side, h: side } });
+                } catch (e2) { console.warn('[me qr] add image', e2); }
+                close();
+            });
+        };
+        ov.querySelector('#meQrGo').onclick = go;
+        inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); go(); } });
     };
 
     window._meAddImage = function(src, opts, onAdded) {
