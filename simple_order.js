@@ -2059,7 +2059,7 @@ html, body { background: #ffffff !important; }
             </button>
             <button type="button" class="so-pd-qty-btn" data-bc-qty="5" onclick="window._soBcQtyPick(5)">
               <span style="font-size:14px; font-weight:900;">500${tr('장','枚','')}</span>
-              <span style="font-size:10px; opacity:0.7; margin-top:2px;">${tr('5각','5ロット','5 sets')}</span>
+              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
             </button>
           </div>
           <!-- v725: 같은 회사 직원명함 동시 주문 — 명수 선택 + 자동 할인 -->
@@ -4305,12 +4305,12 @@ html, body { background: #ffffff !important; }
                     );
                 });
             }
-            // 4) 할인 — 빨강 굵게 1줄 (100장 초과분 반값). N=1 이면 할인 없음.
+            // 4) 할인 — 빨강 굵게 1줄 (500장(5각)+ 50% 할인, 박·후가공 포함). 100/200장은 할인 없음.
             if (_bcDiscSum > 0) {
                 var _bcPct = _bcFullSum > 0 ? Math.round(_bcDiscSum / _bcFullSum * 100) : 0;
                 addonBreakdownLines.push(
                     '<div class="so-price-row" style="border-top:1px dashed #fecaca; margin-top:3px; padding-top:5px;">'
-                    + '<span style="color:#dc2626; font-weight:800;">🎉 ' + tr('100장 초과분 반값 할인','100枚超過分 半額割引','Bulk: excess at half') + ' (' + _bcPct + '%)</span>'
+                    + '<span style="color:#dc2626; font-weight:800;">🎉 ' + tr('500장 50% 할인 (박·후가공 포함)','500枚 50%割引 (箔·後加工込み)','500pcs 50% off (incl. foil/finishing)') + ' (' + _bcPct + '%)</span>'
                     + '<span style="color:#dc2626; font-weight:800;">−' + fmtPrice(_bcDiscSum) + '</span></div>'
                 );
             }
@@ -9418,9 +9418,10 @@ html, body { background: #ffffff !important; }
     //   기본 명함값·박·후가공 모두 동일 규칙. 직원수 % 할인은 폐지 (사용자 요청).
     //   예) 금박 10,000 · 200장(2각) × 2명 = N4 → 10000×(4+1)/2 = 25,000.
     function _bizSheetTotal(perUnit, totalUnits) {
-        // 2026-06-25: 수량 할인 전면 폐지 (사용자 요청) — 정가 × 총각수. (구: 첫 100장 정가 + 초과분 반값)
+        // 2026-06-25: 명함 수량 할인 — 100/200장(1·2각) 정가, 500장(5각)+ 50% 할인. 박·후가공 포함(같은 n으로 호출됨).
         var n = Math.max(1, Number(totalUnits) || 1);
-        return Math.round((Number(perUnit) || 0) * n);
+        var mult = (n >= 5) ? 0.5 : 1;
+        return Math.round((Number(perUnit) || 0) * n * mult);
     }
     window._bizSheetTotal = _bizSheetTotal;
     function _bizCard2tone(title, descHtml, priceTag, sel /*, colorTopBg, titleColor — v719 unused*/) {
