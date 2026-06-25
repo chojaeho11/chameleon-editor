@@ -15997,7 +15997,8 @@ html, body { background: #ffffff !important; }
                 // 2026-06-17: 매니저 금액주문 (manager_quote) 가 카트에 있으면 최소금액 면제.
                 var _hasMgrQuoteInCart = allItems.some(_soIsManagerQuoteItem);
                 var _hasHcInCart2 = allItems.some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-                var _minKrw = _hasHcInCart2 ? 100000 : 30000;
+                // 2026-06-25: 허니콤보드만 최소금액(100K) 유지, 그 외 전 제품 최소금액 폐지 (0)
+                var _minKrw = _hasHcInCart2 ? 100000 : 0;
                 var _minLabel = _hasHcInCart2
                     ? ((_sc === 'JP') ? '¥10,000' : (_sc === 'US' ? '$100' : '100,000원'))
                     : ((_sc === 'JP') ? '¥3,000' : (_sc === 'US' ? '$30' : '30,000원'));
@@ -16034,12 +16035,16 @@ html, body { background: #ffffff !important; }
                             'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
                         );
                     }
+                    // 2026-06-25: 허니콤보드만 최소금액 안내, 그 외엔 최소금액 문구 제거
+                    var _headerLine = _hasHcInCart2
+                        ? tr('💚 최소주문 ' + _minLabel + ' 이상 · 허니콤보드 외 전제품 무료배송',
+                             '💚 最低注文 ' + _minLabel + ' 以上 · ハニカムボード以外 全商品 送料無料',
+                             '💚 Min order ' + _minLabel + ' · Free shipping (non-Honeycomb)')
+                        : tr('💚 허니콤보드 외 전제품 무료배송',
+                             '💚 ハニカムボード以外 全商品 送料無料',
+                             '💚 Free shipping (non-Honeycomb)');
                     _noticeText.innerHTML =
-                        '<div style="font-weight:800; margin-bottom:4px;">' +
-                            tr('💚 최소주문 ' + _minLabel + ' 이상 · 허니콤보드 외 전제품 무료배송',
-                               '💚 最低注文 ' + _minLabel + ' 以上 · ハニカムボード以外 全商品 送料無料',
-                               '💚 Min order ' + _minLabel + ' · Free shipping (non-Honeycomb)') +
-                        '</div>' +
+                        '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
                         '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>';
                 }
             }
@@ -16374,7 +16379,7 @@ html, body { background: #ffffff !important; }
             var _gcHasMgrQuote = (_gcCart || []).some(_soIsManagerQuoteItem);
             // 허니콤 family 가 카트에 있으면 100K, 그 외 30K
             var _gcHasHc = (_gcCart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-            var _MIN = _gcHasHc ? 100000 : 30000;
+            var _MIN = _gcHasHc ? 100000 : 0;  // 2026-06-25: 허니콤보드만 최소금액, 그 외 폐지
             if (!_gcHasMgrQuote && _gcSub > 0 && _gcSub < _MIN) {
                 var _sc3 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
                 var _md = _gcHasHc
@@ -17601,7 +17606,7 @@ html, body { background: #ffffff !important; }
             var _minSub = (_minCalc && _minCalc.grandTotal != null) ? _minCalc.grandTotal : ((_minCalc && (_minCalc.taxBase + _minCalc.nonDiscountBase + (_minCalc.shipTotal || 0))) || 0);
             var _minHasMgrQuote = (cart || []).some(function(_it){ return typeof window._soIsManagerQuoteItem === 'function' && window._soIsManagerQuoteItem(_it); });
             var _minHasHc = (cart || []).some(function(_it){ return typeof window._soIsHoneycombCartItem === 'function' && window._soIsHoneycombCartItem(_it); });
-            var _MIN_KRW = _minHasHc ? 100000 : 30000;
+            var _MIN_KRW = _minHasHc ? 100000 : 0;  // 2026-06-25: 허니콤보드만 최소금액, 그 외 폐지
             if (!_minHasMgrQuote && _minSub > 0 && _minSub < _MIN_KRW) {
                 var _sc2 = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
                 var _minDisp = _minHasHc
