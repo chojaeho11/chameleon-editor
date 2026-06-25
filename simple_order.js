@@ -2699,18 +2699,23 @@ html, body { background: #ffffff !important; }
             <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('10종의 최고급 수입지', '10種の最高級輸入紙', '10 premium imported papers')}</span></button>
           </div>
 
-          <!-- 2) 인쇄면 — 인디고 (등급 핑크와 구분) -->
-          <div class="so-section-title" style="margin-top:18px;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
-          <div style="display:flex; gap:8px;">
+          <!-- 2026-06-25: 명함 단/양면 선택 폐지 — 항상 양면 기본. 인쇄면 섹션 숨김. -->
+          <div class="so-section-title" style="margin-top:18px; display:none;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
+          <div style="display:none; gap:8px;">
             <button type="button" id="soBizSideSingle" onclick="window._soBizPickSide('single')" style="flex:1; padding:12px; border:2px solid #4338ca; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('단면', '片面', 'Single')} <span id="soBizSidePriceS" style="font-weight:600; opacity:0.9; font-size:12px; display:block; margin-top:2px;">${fmtPrice(2500)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
             <button type="button" id="soBizSideDouble" onclick="window._soBizPickSide('double')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('양면', '両面', 'Double')} <span id="soBizSidePriceD" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${fmtPrice(4000)}${tr(' / 100매', ' / 100枚', ' / 100pcs')}</span></button>
           </div>
-          <!-- 2026-06-03: 명함 전용 — 인쇄면 바로 아래 파일 올리기 버튼 (좌측 soUpload 와 동기화) -->
-          <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="margin-top:10px; width:100%; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <span style="font-size:18px;">📎</span>
-            <span>${tr('파일 올리기', 'ファイルをアップロード', 'Upload file')}</span>
-            <span style="font-size:11px; font-weight:700; color:#6366f1; background:#fff; padding:2px 8px; border-radius:4px; border:1px solid #c7d2fe;">${tr('PDF 권장', 'PDF推奨', 'PDF recommended')}</span>
-          </button>
+          <!-- 2026-06-25: 명함 양면 — 앞면/뒷면 각각 업로드. 앞=soFile(state.file) / 뒤=soBackFile(state.fileBack) -->
+          <div class="so-section-title" style="margin-top:18px;">📎 ${tr('디자인 파일 (앞면 / 뒷면)', 'デザインファイル (表面 / 裏面)', 'Design file (front / back)')}</div>
+          <div style="font-size:11px; color:#64748b; margin:2px 0 8px; line-height:1.45;">${tr('작업 92 × 52mm · 재단 90 × 50mm · 앞뒤 각각 올려주세요 (PDF 권장)', '作業 92×52mm · 仕上がり 90×50mm · 表裏それぞれアップロード (PDF推奨)', 'Work 92×52mm · trim 90×50mm · upload each side (PDF recommended)')}</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="soBizUploadBtn" onclick="(function(){ var f=document.getElementById('soFile'); if (f) f.click(); })()" style="flex:1; padding:11px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <span style="font-size:16px;">🟦</span><span>${tr('앞면 올리기', '表面アップロード', 'Front')}</span>
+            </button>
+            <button type="button" id="soBizUploadBtnBack" onclick="(function(){ var f=document.getElementById('soBackFile'); if (f) f.click(); })()" style="flex:1; padding:11px; border:1.5px dashed #a855f7; background:#faf5ff; color:#6b21a8; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;">
+              <span style="font-size:16px;">🟪</span><span>${tr('뒷면 올리기', '裏面アップロード', 'Back')}</span>
+            </button>
+          </div>
 
           <!-- 3) 용지 (프리미엄만) -->
           <div id="soBizPaperWrap" style="display:none;">
@@ -3771,6 +3776,8 @@ html, body { background: #ffffff !important; }
     }
 
     function renderUploadDone() {
+        // 2026-06-25: 명함 앞면 업로드 버튼 ✓ 표시
+        try { if (typeof window._soBizRefreshUploadBtns === 'function') window._soBizRefreshUploadBtns(); } catch(_){}
         const zone = document.getElementById('soUpload');
         if (!zone) return;
         zone.classList.add('done');
@@ -4435,12 +4442,12 @@ html, body { background: #ffffff !important; }
         const _designUnit = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
         const _queueLines = (Array.isArray(state._adLines) ? state._adLines.length : 0);
         const _cartLineCount = Math.max(1, _queueLines + (state._adCurIsDraft ? 0 : (_queueLines > 0 ? 1 : 0)) || 1);
-        // 2026-06-13: 명함 — 신규 15K + 문구수정 5K × (qty-1). 양면이면 모두 ×2.
+        // 2026-06-13: 명함 — 신규 15K + 문구수정 5K × (qty-1). 2026-06-25: 양면 ×2 폐지, 단면 기준 고정.
         let designReqFee = 0;
         let designReqBreakdown = null;
         if (state.designReqId) {
             if (state.isBizCard) {
-                const SIDE_MULT = (state.bizSide === 'double') ? 2 : 1;
+                const SIDE_MULT = 1;
                 const NEW_DESIGN = 15000 * SIDE_MULT;
                 const TEXT_MOD = 5000 * SIDE_MULT;
                 const numCards = Math.max(1, qty || 1);
@@ -9394,10 +9401,8 @@ html, body { background: #ffffff !important; }
     // 2026-06-03: 명함/리플렛 (pp_bc_*) — 등급/면/용지/박/후가공 핸들러 + 렌더
     // 카드 디자인: 상단 흰색 배경 + 검정 제목 / 하단 검정 배경 + 흰색 설명 (사용자 요청)
     function _bizPriceFor(side, tier) {
-        // 2026-06-23 v725: 일반 등급 폐지 — 프리미엄만. 가격 2배 인상 (사용자 요청)
-        //   프리미엄 단면 8000 / 프리미엄 양면 10000 (1각 = 100매)
-        //   (이전: 일반 2500/4000, 프리미엄 4000/5000)
-        return (side === 'double') ? 10000 : 8000;
+        // 2026-06-25: 명함 단순화 — 단/양면 구분 폐지, 항상 양면 기본. 기본가 5,000원 (1각=100매, JP ¥500).
+        return 5000;
     }
     // v725: 직원수 할인 — 1~2명 0% / 3~4명 10% / 5~9명 20% / 10명+ 50%
     function _bizEmpDisc(n) {
@@ -9590,6 +9595,28 @@ html, body { background: #ffffff !important; }
     window._soBizToggleFinishSection = function() {
         state._bizFinishOpen = !state._bizFinishOpen;
         _soBizCardRender();
+    };
+
+    // 2026-06-25: 명함 앞/뒤 업로드 버튼 — 파일 올라가면 버튼에 ✓ 완료 표시 (앞=state.file, 뒤=state.fileBack).
+    window._soBizRefreshUploadBtns = function() {
+        if (!state.isBizCard) return;
+        var setBtn = function(id, has, label) {
+            var b = document.getElementById(id);
+            if (!b) return;
+            var sp = b.querySelectorAll('span');
+            if (has) {
+                b.style.borderStyle = 'solid';
+                b.style.background = '#dcfce7';
+                b.style.color = '#15803d';
+                b.style.borderColor = '#22c55e';
+                if (sp[0]) sp[0].textContent = '✅';
+                if (sp[1]) sp[1].textContent = label.done;
+            } else {
+                if (sp[1]) sp[1].textContent = label.todo;
+            }
+        };
+        setBtn('soBizUploadBtn', !!state.file, { done: tr('앞면 완료', '表面 完了', 'Front ✓'), todo: tr('앞면 올리기', '表面アップロード', 'Front') });
+        setBtn('soBizUploadBtnBack', !!state.fileBack, { done: tr('뒷면 완료', '裏面 完了', 'Back ✓'), todo: tr('뒷면 올리기', '裏面アップロード', 'Back') });
     };
 
     // 2026-06-16: 스티커 렌더 + 핸들러 — admin_products(category=pp_sticker) 자동 로드.
@@ -10106,6 +10133,8 @@ html, body { background: #ffffff !important; }
         }
         state.fileBack = f;
         state.thumbDataUrlBack = null;
+        // 2026-06-25: 명함 뒷면 업로드 버튼 ✓ 표시
+        try { if (typeof window._soBizRefreshUploadBtns === 'function') window._soBizRefreshUploadBtns(); } catch(_){}
         // 2026-05-15: 뒷면도 파일 사이즈를 측정 (가변형 프레임용)
         state.fileBackWidthMm = null;
         state.fileBackHeightMm = null;
@@ -11036,7 +11065,7 @@ html, body { background: #ffffff !important; }
             // v725: 일반 등급 폐지 — 프리미엄 강제
             state.bizTier = 'premium';
             state.bizPaper = state.bizPaper || 'nuvegi240';
-            state.bizSide = state.bizSide || 'single';
+            state.bizSide = 'double';  // 2026-06-25: 명함 항상 양면 기본
             state.bizFoil = (state.bizFoil === undefined) ? null : state.bizFoil;
             state.bizFinishes = state.bizFinishes || {};
             // v725: 직원수 (동시 주문) — 기본 1명
@@ -14658,7 +14687,7 @@ html, body { background: #ffffff !important; }
             // 2026-06-03: 명함 옵션 (등급/면/용지/박/후가공)
             bizCard: state.isBizCard ? {
                 tier: 'premium',
-                paper: state.bizPaper, side: state.bizSide || 'single',
+                paper: state.bizPaper, side: 'double',
                 foil: state.bizFoil || null,
                 finishes: Object.assign({}, state.bizFinishes || {}),
                 empCount: Math.max(1, Number(state.bizEmpCount) || 1)  // v725
@@ -14710,11 +14739,11 @@ html, body { background: #ffffff !important; }
                 }
                 return arr.length ? arr : null;
             })(),
-            // 2026-05-13: 뒷면 파일 (양면 가벽만) — 업로드는 _soSubmitOrder 에서 처리
-            backFileName: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.name : null,
-            backFileType: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.type : null,
-            backFileSize: (state.wallSide === 'double' && state.fileBack) ? state.fileBack.size : null,
-            _backFileBlob: (state.wallSide === 'double' && state.fileBack) ? state.fileBack : null,  // 임시 — 결제 시 업로드
+            // 2026-05-13: 뒷면 파일 (양면 가벽). 2026-06-25: 명함(항상 양면)도 포함 — 업로드는 _soSubmitOrder 에서 처리
+            backFileName: (((state.wallSide === 'double') || state.isBizCard) && state.fileBack) ? state.fileBack.name : null,
+            backFileType: (((state.wallSide === 'double') || state.isBizCard) && state.fileBack) ? state.fileBack.type : null,
+            backFileSize: (((state.wallSide === 'double') || state.isBizCard) && state.fileBack) ? state.fileBack.size : null,
+            _backFileBlob: (((state.wallSide === 'double') || state.isBizCard) && state.fileBack) ? state.fileBack : null,  // 임시 — 결제 시 업로드
             // 2026-05-13: 전달사항 (제작 요청)
             itemNote: itemNote,
             // 2026-05-13: 시공/배송 일정 (가벽/포토존만)
@@ -14794,7 +14823,7 @@ html, body { background: #ffffff !important; }
                 qty: state.designReqQty || 1,
                 total: state.designReqTotal || 0,
                 // 명함 전용: 단면/양면 + qty (각 단위) — workorder / 디자이너보드 에서 작업 산정용
-                biz_side: state.isBizCard ? (state.bizSide || 'single') : null,
+                biz_side: state.isBizCard ? 'double' : null,
                 biz_tier: state.isBizCard ? (state.bizTier || 'general') : null,
                 biz_qty: state.isBizCard ? Math.max(1, state.qty || 1) : null
             } : null,
@@ -14979,9 +15008,9 @@ html, body { background: #ffffff !important; }
         try {
             // 2026-05-15: 원판·금액주문은 디자인 파일 업로드 스킵
             const { url, path } = _noFileFlow ? { url: null, path: null } : await uploadFile();
-            // 2026-05-13: 양면 가벽이면 뒷면 파일도 같이 업로드
+            // 2026-05-13: 양면 가벽이면 뒷면 파일도 같이 업로드. 2026-06-25: 명함(항상 양면)도 뒷면 업로드.
             let backUrl = null, backPath = null;
-            if (state.wallSide === 'double' && state.fileBack) {
+            if (((state.wallSide === 'double') || state.isBizCard) && state.fileBack) {
                 updateUploadStep(tr('2/2 뒷면 파일 업로드 중', '2/2 裏面ファイル', '2/2 back side'));
                 showStatus(tr('뒷면 파일 업로드 중...', '裏面ファイル...', 'Uploading back...'), 'ok');
                 const backResult = await uploadFileGeneric(state.fileBack);
@@ -15351,7 +15380,7 @@ html, body { background: #ffffff !important; }
                 presetDesc += '\n';
                 bizMeta = {
                     tier: state.bizTier || 'general',
-                    side: state.bizSide || 'single',
+                    side: 'double',
                     paper: state.bizPaper || null,
                     qty: state.qty || 1,
                     foil: state.bizFoil || null,
@@ -16105,7 +16134,7 @@ html, body { background: #ffffff !important; }
                 state.isBizCard = true;
                 state.bizTier = 'premium';   // v725: 일반 폐지
                 state.bizPaper = item.bizCard.paper || 'nuvegi240';
-                state.bizSide = item.bizCard.side || 'single';
+                state.bizSide = 'double';  // 2026-06-25: 명함 항상 양면
                 state.bizFoil = item.bizCard.foil || null;
                 state.bizFinishes = Object.assign({}, item.bizCard.finishes || {});
                 state.bizEmpCount = Math.max(1, Number(item.bizCard.empCount) || 1);  // v725
@@ -16411,7 +16440,7 @@ html, body { background: #ffffff !important; }
             if (_bcQty < 1) _bcQty = 1;
             var _bcEmpC = Math.max(1, Number(_bc.empCount) || 1);
             var _bcTU = _bcQty * _bcEmpC;                       // 총 100장-단위 수 = 각 × 명수
-            var _bcUnit = (_bc.side === 'double') ? 10000 : 8000;
+            var _bcUnit = 5000;                                 // 2026-06-25: 항상 양면 기본가 5,000원
             var _bcSub = _bizSheetTotal(_bcUnit, _bcTU);
             if (_bc.foil) {
                 var _bcFoil = BIZ_FOILS.find(function(o){ return o.key === _bc.foil; });
@@ -16424,11 +16453,10 @@ html, body { background: #ffffff !important; }
                     if (fo) _bcSub += _bizSheetTotal(fo.price, _bcTU);
                 });
             }
-            // 디자인 의뢰비 (명함 전용 tier — 신규 15K + 문구수정 5K × 추가건. 양면 ×2.)
+            // 디자인 의뢰비 (명함 — 신규 15K + 문구수정 5K × 추가건. 2026-06-25: 양면 ×2 폐지, 단면 기준 고정.)
             if (it.designRequest && it.designRequest.total) {
-                var _bcSideMult = (_bc.side === 'double') ? 2 : 1;
-                var _newDesign = 15000 * _bcSideMult;
-                var _textMod = 5000 * _bcSideMult;
+                var _newDesign = 15000;
+                var _textMod = 5000;
                 var _textModCount = Math.max(0, _bcQty - 1);
                 _bcSub += _newDesign + _textModCount * _textMod;
             }

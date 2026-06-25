@@ -510,30 +510,27 @@
   }
 
   var BIZCARD_STEPS = [
-    { // 1) 인쇄면
-      target: ['#soBizSideSingle', '#soBizSideDouble'], mode: 'wait',
-      msg: { kr: '먼저 <b>단면</b>으로 할지 <b>양면</b>으로 할지 골라주세요!',
-        ja: 'まず <b>片面</b> か <b>両面</b> かを選んでください!',
-        en: 'First, choose <b>single</b> or <b>double</b> sided!' },
-      cheer: { kr: '좋아요! 👍', ja: 'いいね! 👍', en: 'Nice! 👍' }
-    },
-    { // 2) 디자인 방법 — 3갈래
+    // 2026-06-25: 명함은 항상 양면 기본 — 단/양면 선택 단계 폐지.
+    { // 1) 디자인 방법 — 3갈래 (양면: 앞/뒤 모두)
       msg: { kr: '디자인은 <b>3가지 방법</b>이 있어요. 마음에 드는 걸 골라보세요!',
         ja: 'デザイン方法は <b>3つ</b>。お好きなものを選んでください!',
         en: 'There are <b>3 ways</b> to design. Pick the one you like!' },
       branch: [
-        { key: 'upload', always: true, target: '#soBizUploadBtn',
-          label: { kr: '📎 파일 올리기', ja: '📎 ファイルをアップロード', en: '📎 Upload a file' },
-          sub: { kr: '완성된 파일이 있어요', ja: '完成ファイルがある', en: 'I have a finished file' },
-          msg: { kr: '완성 파일이 있군요! <b>파일 올리기</b> 버튼을 눌러 올려주세요.<br>작업은 <b>92 × 52mm</b>, 재단은 <b>90 × 50mm</b> 로 작업하면 돼요 📎',
-            ja: '完成ファイルがあるんですね! <b>ファイルアップロード</b> を押してください。<br>作業サイズ <b>92 × 52mm</b>、仕上がり <b>90 × 50mm</b> です 📎',
-            en: 'You have a finished file! Tap <b>Upload file</b>.<br>Work size <b>92 × 52mm</b>, trim <b>90 × 50mm</b> 📎' },
+        { key: 'upload', always: true, target: ['#soBizUploadBtn', '#soBizUploadBtnBack'],
+          label: { kr: '📎 파일 올리기 (앞·뒤)', ja: '📎 ファイルをアップロード (表裏)', en: '📎 Upload files (front/back)' },
+          sub: { kr: '완성된 앞/뒤 파일이 있어요', ja: '完成した表裏ファイルがある', en: 'I have front & back files' },
+          msg: { kr: '명함은 <b>양면</b>이에요! <b>앞면</b>과 <b>뒷면</b> 파일을 각각 올려주세요.<br>작업은 <b>92 × 52mm</b>, 재단은 <b>90 × 50mm</b> 📎 (한 면만 있으면 한쪽만 올려도 돼요)',
+            ja: '名刺は <b>両面</b> です! <b>表面</b>と<b>裏面</b>のファイルをそれぞれアップロードしてください。<br>作業 <b>92 × 52mm</b>、仕上がり <b>90 × 50mm</b> 📎 (片面だけでもOK)',
+            en: 'Cards are <b>double-sided</b>! Upload the <b>front</b> and <b>back</b> files separately.<br>Work <b>92 × 52mm</b>, trim <b>90 × 50mm</b> 📎 (one side is fine too)' },
           hook: function (advance) {
             var f = document.getElementById('soFile');
-            if (!f) return null;
-            var on = function () { advance({ kr: '와우! 잘했어요 🎉', ja: 'ワオ!上手にできました 🎉', en: 'Wow! Nicely done 🎉' }); };
-            f.addEventListener('change', on, { once: true });
-            return function () { f.removeEventListener('change', on); };
+            var b = document.getElementById('soBizUploadBtnBack');
+            var bf = document.getElementById('soBackFile');
+            var done = false;
+            var on = function () { if (done) return; done = true; advance({ kr: '와우! 잘했어요 🎉', ja: 'ワオ!上手にできました 🎉', en: 'Wow! Nicely done 🎉' }); };
+            if (f) f.addEventListener('change', on, { once: true });
+            if (bf) bf.addEventListener('change', on, { once: true });
+            return function () { if (f) f.removeEventListener('change', on); if (bf) bf.removeEventListener('change', on); };
           }
         },
         { key: 'editor', mode: 'free', target: ['.qd-head-row', '#soQuickDesignSec'],
@@ -546,9 +543,9 @@
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
-          msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 멋지게 만들어 드려요. 영업일 <b>2~3일</b>이면 완성! ✏️',
-            ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが仕上げます。<b>営業日2~3日</b>で完成! ✏️',
-            en: 'If designing is hard, leave it to a pro! Tap the <b>Request a design</b> banner below and a designer will craft it. Ready in <b>2–3 business days</b>! ✏️' }
+          msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 <b>앞·뒤 모두</b> 멋지게 만들어 드려요. 영업일 <b>2~3일</b>이면 완성! ✏️',
+            ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが <b>表裏とも</b> 仕上げます。<b>営業日2~3日</b>で完成! ✏️',
+            en: 'If designing is hard, leave it to a pro! Tap the <b>Request a design</b> banner below — a designer crafts <b>both sides</b>. Ready in <b>2–3 business days</b>! ✏️' }
         }
       ]
     },
