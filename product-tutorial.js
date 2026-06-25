@@ -427,8 +427,8 @@
     removeDoneBar();
     var bar = document.createElement('div');
     bar.id = 'tut-donebar';
-    bar.innerHTML = '<button class="db-back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>'
-      + '<button class="db-go">✏️ ' + T({ kr: '디자인 끝나고 다음 진행하기', ja: 'デザイン完了 → 次へ進む', en: 'Done designing → Continue' }) + '</button>';
+    bar.innerHTML = '<button class="db-back" aria-label="back">←</button>'
+      + '<button class="db-go">' + T({ kr: '디자인 끝났나요? 다음진행', ja: 'デザイン完了? 次へ', en: 'Done designing? Continue' }) + '</button>';
     document.body.appendChild(bar);
     bar.querySelector('.db-go').addEventListener('click', onGo);
     bar.querySelector('.db-back').addEventListener('click', onBack);

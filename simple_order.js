@@ -1882,7 +1882,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span id="soLfFoilCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
               <span id="soLfFoilTogglePreview" style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <i id="soLfFoilChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
@@ -1895,7 +1895,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')} <span id="soLfFinishCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
               <span id="soLfFinishTogglePreview" style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <i id="soLfFinishChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
@@ -2662,7 +2662,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span id="soCpFoilCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
               <span style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <i id="soCpFoilChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
@@ -2678,7 +2678,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')} <span id="soCpFinishCurrent" style="font-weight:700; color:#0c4a6e; font-size:11.5px; margin-left:4px;"></span></span>
               <span style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <i id="soCpFinishChevron" class="fa-solid fa-chevron-down" style="font-size:14px; color:#64748b;"></i>
           </button>
@@ -2720,7 +2720,7 @@ html, body { background: #ffffff !important; }
           <!-- 3) 용지 (프리미엄만) -->
           <div id="soBizPaperWrap" style="display:none;">
             <div class="so-section-title" style="margin-top:18px;">📇 ${tr('용지 선택', '用紙選択', 'Paper')}</div>
-            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.45;">${tr('이미지가 비슷해 보이므로 카드에 마우스를 올리면 상세 설명이 표시됩니다.', '画像が似ているため、カードにマウスを乗せると説明が表示されます。', 'Hover over a card to see its description.')}</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.45;">${tr('이미지가 비슷해 보이므로 카드를 누르면 상세 설명과 사진이 크게 표시됩니다.', '画像が似ているため、カードをタップすると説明と写真が大きく表示されます。', 'Tap a card to see its full photo and description.')}</div>
             <div id="soBizPaperGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
           </div>
 
@@ -2730,7 +2730,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">✨ ${tr('박 추가하기', '箔押しを追加', 'Add foil')} <span style="font-weight:600; color:#be185d; font-size:11px; margin-left:4px;">+${fmtPrice(10000)}</span></span>
               <span id="soBizFoilTogglePreview" style="font-size:11px; color:#64748b;">${tr('금/은/홀로그램 등 특수 마감이 필요하면 클릭', 'ゴールド/シルバー/ホログラムなど特殊箔押しはタップ', 'Gold/silver/hologram foil — tap to choose')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <span id="soBizFoilToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
@@ -2747,7 +2747,7 @@ html, body { background: #ffffff !important; }
             <div style="display:flex; flex-direction:column; gap:3px;">
               <span style="font-size:13px; font-weight:800; color:#451a03;">🛠️ ${tr('후가공 추가하기', '後加工を追加', 'Add finishing')}</span>
               <span id="soBizFinishTogglePreview" style="font-size:11px; color:#64748b;">${tr('형압·미싱·오시·타공·귀도리 등 특수 가공', '型押し·ミシン目·スジ入れ·穴あけ·角丸など', 'Emboss / perforation / crease / hole / round')}</span>
-              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드에 마우스를 올리거나 탭하면 자세한 설명과 사진을 볼 수 있어요', 'オプションカードにマウスを乗せるかタップすると詳細な説明と写真が見られます', 'Hover or tap an option to see photo and details')}</span>
+              <span style="font-size:10.5px; color:#0ea5e9; font-style:italic;">💡 ${tr('옵션 카드를 누르면 자세한 설명과 사진을 크게 볼 수 있어요', 'オプションカードをタップすると詳細な説明と写真が大きく見られます', 'Tap an option to see a full photo and details')}</span>
             </div>
             <span id="soBizFinishToggleArrow" style="font-size:14px; color:#64748b;">▼</span>
           </button>
@@ -6326,12 +6326,9 @@ html, body { background: #ffffff !important; }
     };
     // v719: 명함 카드용 (cat/key 직접 전달) — 모바일은 모달, PC 는 즉시 선택
     window._soBizCardClick = function(cat, key, doSelect) {
-        var isTouch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
-        if (isTouch) {
-            window._soShowOptInfo(cat, key, doSelect);
-        } else {
-            if (typeof doSelect === 'function') doSelect();
-        }
+        // 2026-06-25: PC/모바일 모두 전체화면 미리보기 모달로 통일.
+        //   (작은 호버 미리보기 박스가 카드를 가려 불편 → 클릭하면 전체화면으로 보고 선택/닫기)
+        window._soShowOptInfo(cat, key, doSelect);
     };
     // 2026-06-23 v713: PC 호버 시 미리보기 카드 자동 노출
     function _ensurePreviewEl() {
@@ -6344,7 +6341,9 @@ html, body { background: #ffffff !important; }
         return pv;
     }
     window._soOptPreview = function(cardEl, show) {
-        // 터치 디바이스는 hover 미리보기 비활성 (모달 사용)
+        // 2026-06-25: 호버 미리보기 박스 폐지 (카드 가림) — 클릭 시 _soShowOptInfo 전체화면 모달로 대체.
+        return;
+        // (이하 구버전 호버 박스 코드 — 미사용)
         if (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) return;
         var pv = _ensurePreviewEl();
         if (!show) { pv.style.display = 'none'; return; }
@@ -6401,8 +6400,8 @@ html, body { background: #ffffff !important; }
             : '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:100%; margin-top:14px; padding:11px; background:#0f172a; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>';
         var ov = document.createElement('div');
         ov.id = 'soOptInfoOv';
-        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99998; display:flex; align-items:center; justify-content:center; padding:16px;';
-        ov.innerHTML = '<div style="background:#fff; border-radius:16px; padding:0 0 18px; max-width:380px; width:100%; max-height:90vh; overflow-y:auto;">'
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.62); z-index:99998; display:flex; align-items:center; justify-content:center; padding:0;';
+        ov.innerHTML = '<div style="background:#fff; border-radius:16px; padding:0 0 20px; max-width:560px; width:100%; max-height:100vh; overflow-y:auto;">'
             + visualHtml
             + '<div style="padding:14px 20px 0;">'
             +   '<div style="display:flex; align-items:center; justify-content:space-between;">'
