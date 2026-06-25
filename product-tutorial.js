@@ -574,9 +574,9 @@
     },
     { // 5) 수량
       target: ['#soBizQtyPresets', '#soQtySection'], mode: 'next',
-      msg: { kr: '<b>수량</b> 안내! 기본 100매(1각) <b>이상부터 50% 할인</b> 돼요.<br>많이 필요할지 모르면 미리 넉넉히 만들어 두세요. 금박 같은 후가공도 똑같이 할인되니 지금 추가해도 이득! 💰',
-        ja: '<b>数量</b> のご案内!基本100枚(1ロット) <b>以上で50%割引</b>。<br>多めに必要かもなら今のうちに。箔押しなど後加工も同じく割引なので今追加がお得! 💰',
-        en: '<b>Quantity</b> tip! From 100 pcs (1 set) up, <b>50% off</b>.<br>If you might need more, make extra now. Foil & finishing get the same discount — adding now pays off! 💰' }
+      msg: { kr: '<b>수량</b>을 정해요! 명함은 <b>100장(1각) 단위</b>로 주문돼요.<br>필요한 만큼 넉넉히 만들어 두면 좋아요 😊 박·후가공도 함께 하면 한 번에 끝! 💰',
+        ja: '<b>数量</b>を決めましょう!名刺は <b>100枚(1ロット)単位</b> でご注文できます。<br>必要な分を多めに用意すると安心 😊 箔・後加工も一緒にすると一度で完了! 💰',
+        en: "Pick the <b>quantity</b>! Cards are ordered in <b>sets of 100 (1 set)</b>.<br>Make a comfortable amount at once 😊 Add foil & finishing together to finish in one go! 💰" }
     },
     { // 6) 별색 C100 안내 — 직접 파일 업로드 + 박/후가공 선택 시에만 (에디터/의뢰는 자동/디자이너 처리)
       target: ['#soBizFoilToggle', '#soBizFinishToggle'], mode: 'next',

@@ -79,7 +79,7 @@
     }
 
     function getDiscountTier(qty) {
-        for (const t of DISCOUNT_TIERS) if (qty >= t.min && qty <= t.max) return t;
+        // 2026-06-25: 전 제품 수량 할인 전면 폐지 (사용자 요청) — 항상 0% tier.
         return DISCOUNT_TIERS[0];
     }
 
@@ -2039,15 +2039,12 @@ html, body { background: #ffffff !important; }
             </button>
             <button type="button" class="so-pd-qty-btn" data-pd-qty="300" onclick="window._soPdQtyPick(300)">
               <span style="font-size:14px; font-weight:900;">300${tr('개','個','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">10% ${tr('할인','割引','OFF')}</span>
             </button>
             <button type="button" class="so-pd-qty-btn" data-pd-qty="500" onclick="window._soPdQtyPick(500)">
               <span style="font-size:14px; font-weight:900;">500${tr('개','個','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">20% ${tr('할인','割引','OFF')}</span>
             </button>
             <button type="button" class="so-pd-qty-btn" data-pd-qty="1000" onclick="window._soPdQtyPick(1000)">
               <span style="font-size:14px; font-weight:900;">1,000${tr('개','個','')}</span>
-              <span style="font-size:10px; color:#dc2626; font-weight:800; margin-top:2px;">50% ${tr('할인','割引','OFF')}</span>
             </button>
           </div>
           <!-- v721/v725: 명함 전용 수량 프리셋 — 100/200/500매 (수량별 할인 제거) + 직원수 동시 주문 섹션 -->
@@ -2547,7 +2544,6 @@ html, body { background: #ffffff !important; }
             <div>• <b>${tr('칼선 레이어', 'カットラインレイヤー', 'Cut-line layer')}</b>: ${tr('별도로 분리해서 접수해주세요', '別レイヤーで分けてご提出ください', 'Please submit on a separate layer')}</div>
             <div>• <b>${tr('1제곱미터 이하', '1平方メートル以下', 'Under 1㎡')}</b>: ${tr('1제곱미터 가격으로 계산됩니다', '1㎡価格として計算されます', 'charged at 1㎡ rate')}</div>
             <div>• <b>${tr('배송비', '配送料', 'Shipping')}</b>: ${tr('10만원 미만 1만원 · 10만원 이상 무료배송', '10万円未満は送料1万円 · 10万円以上で送料無料', 'Under ₩100K: ₩10K · ₩100K+ : free')}</div>
-            <div>• <b style="color:#dc2626;">${tr('30미터 이상 30% 할인 자동 적용', '30m以上 30%自動割引', 'Auto 30% off on 30m+')}</b></div>
           </div>
         </div>
 
@@ -4147,7 +4143,7 @@ html, body { background: #ffffff !important; }
             unit = Math.round(_rpBase * _rpMult + _rpCoat);
             qty = Math.max(1, state.qty || 1);
             subtotal = unit * qty;
-            if (qty >= 30) subtotal = Math.round(subtotal * 0.7);
+            // 2026-06-25: 수량 할인 폐지 (구: 30m+ 30% 할인)
             state.customUnitPrice = unit;  // 견적서/카트 표시 일관성용
             state.wallHeightExtra = 0;
         } else {
@@ -4411,21 +4407,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 종이매대 수량 티어 — 100=정가 / 300=10% / 500=20% / 1000=50%. 1개 샘플은 할인 없음.
         // 2026-06-12: 거치대 없는 배너 (현수막/패트/매쉬) — 같은 디자인 10장+ 50% 할인 이벤트
         // 2026-06-12: 미니배너 — 100장+ 30% 할인
+        // 2026-06-25: 모든 수량/번들 자동 할인 폐지 (사용자 요청) — 굿즈/베스트굿즈/종이매대/배너/미니배너 정가.
         let presetBulkDiscount = 0;
-        if (state.isBestGoods && state.presetType !== 'tshirt' && qty >= 100) {
-            presetBulkDiscount = Math.round(subtotal * 0.5);
-        } else if (state.isPaperDisplay) {
-            var _pdPct = 0;
-            if (qty >= 1000) _pdPct = 0.5;
-            else if (qty >= 500) _pdPct = 0.2;
-            else if (qty >= 300) _pdPct = 0.1;
-            if (_pdPct > 0) presetBulkDiscount = Math.round(subtotal * _pdPct);
-        } else if (state.isBannerDiscountEligible && qty >= 10) {
-            // 2026-06-23 v709: 배너 family 10장+ 30% 할인 (이전 50% → 30%, 거치대 세트 포함 8종)
-            presetBulkDiscount = Math.round(subtotal * 0.3);
-        } else if (state.isMiniBanner && qty >= 100) {
-            presetBulkDiscount = Math.round(subtotal * 0.3);
-        }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
         //   3장 이상 주문 시 인쇄비만 50% 할인
         let tshirtPrintFee = 0;
@@ -4433,8 +4416,8 @@ html, body { background: #ffffff !important; }
             var _PRINT_FEE_PER_AREA = { front_logo: 3000, front_full: 8000, back_full: 8000 };
             var _basePrint = 0;
             state.tshirtPrintAreas.forEach(function(a){ _basePrint += (_PRINT_FEE_PER_AREA[a] || 0); });
-            var _printMult = (qty >= 3) ? 0.5 : 1;
-            tshirtPrintFee = Math.round(_basePrint * _printMult * qty);
+            // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 (사용자 요청) — 정가.
+            tshirtPrintFee = Math.round(_basePrint * qty);
         }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 3종
         //   포장없음 = 0 / 내지인쇄·상단인쇄 = 5만원 정액 (수량 무관)
@@ -4561,8 +4544,8 @@ html, body { background: #ffffff !important; }
                 back_full:  tr('뒷면 전체', '背面全体', 'Full back')
             };
             var _printNames = state.tshirtPrintAreas.map(function(a){ return _AREA_NAMES[a] || a; });
-            var _bulkSuffix = (qty >= 3) ? (' · ' + tr('3장 이상 주문이라서 50%할인', '3枚以上のご注文で50%割引', '3+ pcs: 50% off')) : '';
-            bdHtml += '<div class="so-price-row"><span>· ' + tr('인쇄비', '印刷費', 'Print fee') + ' (' + _printNames.join(' + ') + ') × ' + qty + tr('장','枚','pcs') + _bulkSuffix + '</span><span>+' + fmtPrice(tshirtPrintFee) + '</span></div>';
+            // 2026-06-25: 3장+ 50% 할인 폐지 — suffix 제거.
+            bdHtml += '<div class="so-price-row"><span>· ' + tr('인쇄비', '印刷費', 'Print fee') + ' (' + _printNames.join(' + ') + ') × ' + qty + tr('장','枚','pcs') + '</span><span>+' + fmtPrice(tshirtPrintFee) + '</span></div>';
         }
         // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 라인 (3종 / 정액 5만원)
         if (presetWrapFee > 0) {
@@ -4615,28 +4598,10 @@ html, body { background: #ffffff !important; }
         //   (rawBoard/amountOrder 의 tier 숨김은 별도 로직이 처리 — 여기선 best 일 때만 강제 변경)
         var _regularTier = document.getElementById('soTierTable');
         var _presetTier = document.getElementById('soPresetTierTable');
+        // 2026-06-25: 수량 할인 폐지 — 베스트굿즈 50% tier 배지 표도 숨김.
         if (state.isBestGoods) {
             if (_regularTier) _regularTier.style.display = 'none';
-            if (_presetTier)  _presetTier.style.display = '';
-            // tier 표 배지 텍스트도 동적 (티셔츠 → 3장 이상 50%)
-            if (_presetTier) {
-                var _badgeEl = _presetTier.querySelector('[data-qty-tier="50"]');
-                if (_badgeEl) {
-                    if (state.presetType === 'tshirt') {
-                        _badgeEl.innerHTML = tr(
-                            '3장 이상 주문이라서 인쇄비 <b style="color:#dc2626;">50% 할인</b>',
-                            '3枚以上のご注文で印刷費 <b style="color:#dc2626;">50%割引</b>',
-                            '3+ pcs order: print fee <b style="color:#dc2626;">50% off</b>'
-                        );
-                    } else {
-                        _badgeEl.innerHTML = tr(
-                            '100개 이상 주문이라서 <b style="color:#dc2626;">50% 할인</b>',
-                            '100個以上のご注文で <b style="color:#dc2626;">50%割引</b>',
-                            '100+ pcs order: <b style="color:#dc2626;">50% off</b>'
-                        );
-                    }
-                }
-            }
+            if (_presetTier)  _presetTier.style.display = 'none';
         } else {
             if (_presetTier)  _presetTier.style.display = 'none';
             // _regularTier 는 _hideUpload 분기(rawBoard/amountOrder)가 제어 — 여기선 손대지 않음
@@ -6003,9 +5968,7 @@ html, body { background: #ffffff !important; }
         { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 2400 } }
     ];
     function _soLeafletQtyDisc(qty) {
-        if (qty >= 1000) return 0.50;  // 50% 할인
-        if (qty >= 500)  return 0.70;  // 30% 할인
-        if (qty >= 100)  return 0.80;  // 20% 할인
+        // 2026-06-25: 수량 할인 전면 폐지 (사용자 요청) — 항상 정가.
         return 1.00;
     }
     // 박/후가공 옵션 multiplier — 수량 구간별로 base option price 배수
@@ -7133,8 +7096,7 @@ html, body { background: #ffffff !important; }
             var h = Math.max(10, Number(stState.h) || 100);
             var areaMult = (w * h) / 10000;
             subtotal = basePrice * areaMult * qty;
-            // 1만매 이상 30% 할인
-            if (qty >= 10000) subtotal *= 0.7;
+            // 2026-06-25: 수량 할인 폐지 (구: 1만매 이상 30% 할인)
         }
         // 코팅 배수 (투명용지만 2x)
         var coat = STICKER_COATINGS.find(function(c){ return c.key === (stState.coating || 'matte'); });
@@ -9451,8 +9413,9 @@ html, body { background: #ffffff !important; }
     //   기본 명함값·박·후가공 모두 동일 규칙. 직원수 % 할인은 폐지 (사용자 요청).
     //   예) 금박 10,000 · 200장(2각) × 2명 = N4 → 10000×(4+1)/2 = 25,000.
     function _bizSheetTotal(perUnit, totalUnits) {
+        // 2026-06-25: 수량 할인 전면 폐지 (사용자 요청) — 정가 × 총각수. (구: 첫 100장 정가 + 초과분 반값)
         var n = Math.max(1, Number(totalUnits) || 1);
-        return Math.round((Number(perUnit) || 0) * (n + 1) / 2);
+        return Math.round((Number(perUnit) || 0) * n);
     }
     window._bizSheetTotal = _bizSheetTotal;
     function _bizCard2tone(title, descHtml, priceTag, sel /*, colorTopBg, titleColor — v719 unused*/) {
@@ -9704,7 +9667,7 @@ html, body { background: #ffffff !important; }
         if (hintEl) {
             hintEl.textContent = isFancy
                 ? tr('기본 4매 · 4매 단위로 주문 가능','基本4枚 · 4枚単位','Default 4 pcs · 4-step orders')
-                : tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인','基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引','Default 1,000 pcs · 1,000-step · 30% off at 10,000+');
+                : tr('기본 1,000매 · 1,000매 단위로 주문 가능','基本1,000枚 · 1,000枚単位','Default 1,000 pcs · 1,000-step');
         }
         // 코팅
         if (coatW) coatW.style.display = '';
@@ -10708,10 +10671,7 @@ html, body { background: #ffffff !important; }
                     var banner = document.createElement('div');
                     banner.id = 'soGoodsFreeShipBanner';
                     banner.style.cssText = 'background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:800; text-align:center; margin-bottom:10px; box-shadow:0 4px 12px rgba(16,185,129,0.35);';
-                    banner.innerHTML = '' + tr('이 제품은 무료배송 됩니다', 'この商品は送料無料です', 'Free shipping on this item') +
-                        '<div style="font-size:11px; font-weight:500; margin-top:3px; opacity:0.95;">' +
-                        tr('100개 이상 주문 시 50% 자동 할인', '100個以上で50%自動割引', '50% off automatically on 100+ orders') +
-                        '</div>';
+                    banner.innerHTML = '' + tr('이 제품은 무료배송 됩니다', 'この商品は送料無料です', 'Free shipping on this item');
                     pBox.parentNode.insertBefore(banner, pBox);
                 }
             }, 100);
@@ -11106,12 +11066,12 @@ html, body { background: #ffffff !important; }
                     btn.classList.toggle('is-active', String(btn.getAttribute('data-bc-qty')) === String(state.qty));
                 });
             }
-            // v725: 직원수 섹션 노출 + 입력 init + 활성 버튼 표시
+            // 2026-06-25: 직원수 동시주문 섹션 숨김 (수량 할인 폐지로 혜택 사라짐) — empCount=1 고정.
+            state.bizEmpCount = 1;
             var _bcEmpSec = document.getElementById('soBizEmpSection');
-            if (_bcEmpSec) _bcEmpSec.style.display = '';
+            if (_bcEmpSec) _bcEmpSec.style.display = 'none';
             var _bcEmpInp = document.getElementById('soBizEmpCount');
-            if (_bcEmpInp) _bcEmpInp.value = state.bizEmpCount;
-            if (typeof window._soBcEmpInput === 'function') window._soBcEmpInput(state.bizEmpCount);
+            if (_bcEmpInp) _bcEmpInp.value = 1;
             // v725: 일반 등급 버튼 숨김 + 프리미엄 버튼만 강조
             var _bcTierG = document.getElementById('soBizTierGeneral');
             if (_bcTierG) _bcTierG.style.display = 'none';
@@ -12152,19 +12112,19 @@ html, body { background: #ffffff !important; }
             var _bdNoticeSS = document.getElementById('soBannerDiscountNotice');
             var _bdBtn50SS  = document.getElementById('soBannerDiscountBtn50');
             var _bdBtnMiniSS = document.getElementById('soBannerDiscountBtnMini');
-            if (_bdNoticeSS)  _bdNoticeSS.style.display = '';
+            if (_bdNoticeSS)  _bdNoticeSS.style.display = 'none';
             if (_bdBtn50SS)   _bdBtn50SS.style.display = 'none';
             if (_bdBtnMiniSS) _bdBtnMiniSS.style.display = 'none';
             if (_shoulderNoticeEl) _shoulderNoticeEl.style.display = '';
         } else if (state.isBannerOutput && !_isPlacardForCustom) {
             if (custSec) custSec.style.display = 'none';
+            // 2026-06-25: 배너 수량 할인 폐지 — 할인 안내 버튼 영구 숨김.
             var _bdNotice = document.getElementById('soBannerDiscountNotice');
             var _bdBtn50  = document.getElementById('soBannerDiscountBtn50');
             var _bdBtnMini = document.getElementById('soBannerDiscountBtnMini');
-            var _showAnyNotice = !!(state.isBannerDiscountEligible || state.isMiniBanner);
-            if (_bdNotice)  _bdNotice.style.display = _showAnyNotice ? '' : 'none';
-            if (_bdBtn50)   _bdBtn50.style.display  = state.isBannerDiscountEligible ? '' : 'none';
-            if (_bdBtnMini) _bdBtnMini.style.display = state.isMiniBanner ? '' : 'none';
+            if (_bdNotice)  _bdNotice.style.display = 'none';
+            if (_bdBtn50)   _bdBtn50.style.display  = 'none';
+            if (_bdBtnMini) _bdBtnMini.style.display = 'none';
         } else if (state.isLeaflet) {
             // 2026-06-13: 낱장 인쇄 — 상단 사이즈 입력 비표시 (자체 사이즈 카드 사용)
             if (custSec) custSec.style.display = 'none';
@@ -15506,10 +15466,7 @@ html, body { background: #ffffff !important; }
         if (item._isBizCard || (item.bizCard != null) || _soIsBizCardProduct(item.product)) tierPct = 0;
         // 2026-06-03: 스티커 — 비즈하우스 mirror, 수량 할인 없음 (단가에 이미 반영)
         if (item._isSticker || (item.sticker != null) || _soIsStickerProduct(item.product)) tierPct = 0;
-        // 2026-05-30: 베스트굿즈 — 100개+ 시 50% 배지 (티셔츠는 인쇄비 할인이라 상품 tier 0)
-        if (item._isBestGoods && item._presetType !== 'tshirt') {
-            tierPct = (qty >= 100) ? 50 : 0;
-        }
+        // 2026-06-25: 수량 할인 폐지 — 베스트굿즈 100개+ 50% 배지 제거.
         const discount = Math.round(subtotal * tierPct / 100);
         // final 은 _soCalcItemPrice 통해 정확히 계산 (addon + shipping + PRO 할인 포함)
         const final = (typeof _soCalcItemPrice === 'function')
@@ -16506,10 +16463,7 @@ html, body { background: #ffffff !important; }
         if (it.rawBoardDouble || (it.product && _soIsRawBoardDoubleSided(it.product))) {
             unit = unit * 2;
         }
-        // 2026-05-29: 굿즈 (goods_*) — 100개 이상 주문 시 50% 자동 할인
-        if (it.product && it.product.code && it.product.code.indexOf('goods_') === 0 && qty >= 100) {
-            unit = unit * 0.5;
-        }
+        // 2026-06-25: 굿즈 100개+ 50% 자동 할인 폐지 (사용자 요청) — 정가.
         // 2026-05-30: 베스트굿즈 (키링/코롯토 + 손수건/티셔츠/머그/허니콤/스마트톡) — 50% 할인 (상품 단가만)
         //   티셔츠는 3장+, 그 외는 100개+
         var _isBest = !!it._isBestGoods;
@@ -16537,19 +16491,8 @@ html, body { background: #ffffff !important; }
         if (it._presetType === 'cushion' && it._cushionWrap) {
             subtotal += 500 * qty;
         }
-        if (_isRealPrintItm && qty >= 30) {
-            subtotal = Math.round(subtotal * 0.7);
-        }
-        // 2026-05-30: 100개+ → 50% (티셔츠 제외 — 상품가 고정, 인쇄비에서만 할인)
-        if (_isBest && it._presetType !== 'tshirt' && qty >= 100) {
-            subtotal = Math.round(subtotal * 0.5);
-        }
-        // 2026-06-23 v709: 배너 family 10장+ 30% 할인 (카트 적용) — 미니배너는 별도 100장+ 30%
-        if (it._isBannerDiscountEligible && qty >= 10) {
-            subtotal = Math.round(subtotal * 0.7);
-        } else if (it._isMiniBanner && qty >= 100) {
-            subtotal = Math.round(subtotal * 0.7);
-        }
+        // 2026-06-25: 모든 수량/번들 자동 할인 폐지 (사용자 요청) — 실사출력 30m+ / 베스트굿즈 100+ /
+        //   배너 10+ / 미니배너 100+ 30~50% 할인 전부 제거. 정가 = unit × qty.
         // 가벽 양면 → 가격 2배 (배너는 단가가 이미 다르므로 ×2 skip)
         var isDouble = (it.wallSide === 'double');
         if (isDouble && !_isBannerItm) subtotal *= 2;
@@ -16606,8 +16549,8 @@ html, body { background: #ffffff !important; }
             var _FEE = { front_logo: 3000, front_full: 8000, back_full: 8000 };
             var _bpr = 0;
             it._tshirtPrintAreas.forEach(function(a){ _bpr += (_FEE[a] || 0); });
-            var _mlt = (qty >= 3) ? 0.5 : 1;
-            base += Math.round(_bpr * _mlt * qty);
+            // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 — 정가.
+            base += Math.round(_bpr * qty);
         }
         // 2026-05-13: 할인 정책 (단일 항목 가격에는 미적용 — 카트 전체 합산 기준이라 각 항목별로는 base 만 반환)
         // 시공/배송비 합산 (묶음배송이면 0)
@@ -17990,20 +17933,7 @@ html, body { background: #ffffff !important; }
             } else if (cartCalc.proPct > 0 && _proSuppressed) {
                 discountSummary += '\nPRO 구독자 10% (-' + cartCalc.proDisc.toLocaleString() + '원) — 쿠폰 사용으로 자동 제외';
             }
-            // 2026-05-30: 베스트굿즈 50% 할인 — 카트에 베스트굿즈가 있고 임계값+ 인 항목 합산 표시
-            //   티셔츠는 3장+ / 그 외는 100개+
-            var _bestDiscTotal = 0;
-            cart.forEach(function (it) {
-                if (!it._isBestGoods) return;
-                var _thrB = (it._presetType === 'tshirt') ? 3 : 100;
-                if ((it.qty || 1) >= _thrB) {
-                    var _u = (it.customSize && it.customSize.unit) || (it.product && it.product.price) || 0;
-                    _bestDiscTotal += Math.round(_u * (it.qty || 1) * 0.5);
-                }
-            });
-            if (_bestDiscTotal > 0) {
-                discountSummary += '\n베스트굿즈 50% 할인 (-' + _bestDiscTotal.toLocaleString() + '원) — 티셔츠 3장 이상 / 그 외 100개 이상 주문 자동 적용';
-            }
+            // 2026-06-25: 베스트굿즈/수량 자동 할인 폐지 (사용자 요청) — 요약 표기 제거.
             if (_useMileage > 0) discountSummary += '\n🎁 이벤트 쿠폰 사용 (-' + _useMileage.toLocaleString() + '원, 최대 50,000원 한도)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
             // 마일리지/예치금으로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
