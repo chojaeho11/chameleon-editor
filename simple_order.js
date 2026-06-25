@@ -12964,6 +12964,9 @@ html, body { background: #ffffff !important; }
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
 
+        // 2026-06-25: 게임형 제품 튜토리얼 (product-tutorial.js) — 명함 등 시나리오 매칭 시 모드 선택 창.
+        try { if (typeof window._tutMaybeStart === 'function') window._tutMaybeStart(p); } catch(_tut) {}
+
         // 2026-06-17 v542: admin 템플릿 편집 모드 — 결제 UI 를 템플릿 저장 UI 로 교체.
         try { if (_soIsTemplateAdminMode()) _soSetupTemplateAdminMode(false); } catch(_te){ console.warn('[template admin]', _te); }
         // 2026-06-17 v543: 디자이너 템플릿 등록 모드 — 검토 요청 UI 로 교체.
