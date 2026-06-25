@@ -4442,18 +4442,17 @@ html, body { background: #ffffff !important; }
         const _designUnit = (state.designReqId && state.designReqTotal) ? state.designReqTotal : 0;
         const _queueLines = (Array.isArray(state._adLines) ? state._adLines.length : 0);
         const _cartLineCount = Math.max(1, _queueLines + (state._adCurIsDraft ? 0 : (_queueLines > 0 ? 1 : 0)) || 1);
-        // 2026-06-13: 명함 — 신규 15K + 문구수정 5K × (qty-1). 2026-06-25: 양면 ×2 폐지, 단면 기준 고정.
+        // 2026-06-13: 명함 — 신규 15K + 문구수정 5K. 2026-06-25: 양면 ×2 폐지. 문구수정은 직원수(서로 다른 명함) 기준 — qty(각) 아님. 직원수 1명이면 0건 → 15K 만.
         let designReqFee = 0;
         let designReqBreakdown = null;
         if (state.designReqId) {
             if (state.isBizCard) {
-                const SIDE_MULT = 1;
-                const NEW_DESIGN = 15000 * SIDE_MULT;
-                const TEXT_MOD = 5000 * SIDE_MULT;
-                const numCards = Math.max(1, qty || 1);
-                const textModCount = Math.max(0, numCards - 1);
+                const NEW_DESIGN = 15000;
+                const TEXT_MOD = 5000;
+                const numPeople = Math.max(1, Number(state.bizEmpCount) || 1);
+                const textModCount = Math.max(0, numPeople - 1);
                 designReqFee = NEW_DESIGN + textModCount * TEXT_MOD;
-                designReqBreakdown = { newDesign: NEW_DESIGN, textMod: TEXT_MOD, textModCount: textModCount, total: designReqFee, sideMult: SIDE_MULT };
+                designReqBreakdown = { newDesign: NEW_DESIGN, textMod: TEXT_MOD, textModCount: textModCount, total: designReqFee, sideMult: 1 };
             } else {
                 designReqFee = _designUnit * _cartLineCount;
             }
@@ -15690,13 +15689,13 @@ html, body { background: #ffffff !important; }
                         var _bcLineQty = item.qty || 1;
                         if (_bcLineQty >= 100 && _bcLineQty % 100 === 0) _bcLineQty = _bcLineQty / 100;
                         if (_bcLineQty < 1) _bcLineQty = 1;
-                        var _bcSideForMeta = (item.bizCard && item.bizCard.side === 'double') ? 'double' : 'single';
-                        var _bcMult = (_bcSideForMeta === 'double') ? 2 : 1;
-                        var _bcNewFee = 15000 * _bcMult;
-                        var _bcTextFee = 5000 * _bcMult;
-                        var _textMods = Math.max(0, _bcLineQty - 1);
+                        // 2026-06-25: 디자인 의뢰비 — 신규 15K + 문구수정 5K(직원수 기준). 양면 ×2 폐지.
+                        var _bcEmpForMeta = Math.max(1, Number(item.bizCard && item.bizCard.empCount) || 1);
+                        var _bcNewFee = 15000;
+                        var _bcTextFee = 5000;
+                        var _textMods = Math.max(0, _bcEmpForMeta - 1);
                         var _drTotal = _bcNewFee + _textMods * _bcTextFee;
-                        var _sideLbl = (_bcSideForMeta === 'double') ? '양면(×2) ' : '';
+                        var _sideLbl = '';
                         if (_textMods > 0) {
                             meta.push('🎨 ' + _sideLbl + '디자인 신규 ' + _bcNewFee.toLocaleString() + '원 + 문구 수정 × ' + _textMods + '건 (+' + _drTotal.toLocaleString() + '원)');
                         } else {
@@ -16454,11 +16453,11 @@ html, body { background: #ffffff !important; }
                     if (fo) _bcSub += _bizSheetTotal(fo.price, _bcTU);
                 });
             }
-            // 디자인 의뢰비 (명함 — 신규 15K + 문구수정 5K × 추가건. 2026-06-25: 양면 ×2 폐지, 단면 기준 고정.)
+            // 디자인 의뢰비 (명함 — 신규 15K + 문구수정 5K. 2026-06-25: 문구수정은 직원수(서로 다른 명함) 기준, qty(각) 아님. 1명이면 0건.)
             if (it.designRequest && it.designRequest.total) {
                 var _newDesign = 15000;
                 var _textMod = 5000;
-                var _textModCount = Math.max(0, _bcQty - 1);
+                var _textModCount = Math.max(0, _bcEmpC - 1);
                 _bcSub += _newDesign + _textModCount * _textMod;
             }
             // 배송 무료
