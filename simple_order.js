@@ -16119,15 +16119,18 @@ html, body { background: #ffffff !important; }
                             '🚚 Parcel shipping <b>' + fmtPrice(_shipFinal) + '</b>'
                         );
                     }
+                    var _freeShipTh = fmtPrice(50000);   // 5만원 (JP 5,000엔 / US $50)
                     var _headerLine = _hasHcInCart2
                         ? tr('💚 최소주문 ' + _minLabel + ' 이상',
                              '💚 最低注文 ' + _minLabel + ' 以上',
                              '💚 Min order ' + _minLabel)
                         : (_shipFinal > 0
-                            ? tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' (허니콤보드 외 전 상품)',
-                                 '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (ハニカムボード以外)',
-                                 '💚 Parcel shipping ' + fmtPrice(_shipFinal) + ' (non-Honeycomb)')
-                            : tr('💚 무료배송', '💚 送料無料', '💚 Free shipping'));
+                            ? tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 이상 무료배송',
+                                 '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 以上で送料無料',
+                                 '💚 Shipping ' + fmtPrice(_shipFinal) + ' · FREE over ' + _freeShipTh)
+                            : tr('💚 무료배송 (' + _freeShipTh + ' 이상)',
+                                 '💚 送料無料 (' + _freeShipTh + ' 以上)',
+                                 '💚 Free shipping (over ' + _freeShipTh + ')'));
                     _noticeText.innerHTML =
                         '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
                         '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>';
@@ -16929,9 +16932,17 @@ html, body { background: #ffffff !important; }
         // 2026-06-13: 사용자 요청 — 자동 +30K 포장배송비 제거.
         //   대신 허니콤보드 family 는 최소주문 100K, 그 외 30K 로 강제 차단 (renderSoCart 에서 경고 + 버튼 비활성화).
         // 2026-06-26: 허니콤보드 외 상품군 카트 → 택배비 5,000원 (JP 500엔 / US $5, fmtPrice 환산).
-        //   금액주문(1원/천원단위)·매니저견적·빈 카트는 제외 (입력 금액 그대로 결제).
+        //   단, ① 상품합계 5만원 이상 무료배송 ② 금액주문/매니저견적/개인결제(_hasAmountOrder)
+        //   ③ 디자인비 전용 카트 ④ 빈 카트 는 배송비 면제.
         if (!_hasHcInCart) {
-            shipTotal = (_hasAmountOrder || _allProductSub <= 0) ? 0 : 5000;
+            var _allDesignFee = cart.length > 0 && cart.every(function(_it){
+                var _p = (_it && _it.product) ? _it.product : {};
+                var _code = String(_p.code || _p.product_key || _p.id || '');
+                var _cat = String(_p.category || _it.category || '');
+                return _cat === 'design_fee' || _code.indexOf('design_fee_') === 0;
+            });
+            var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee || (_allProductSub >= 50000);
+            shipTotal = _shipExempt ? 0 : 5000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
