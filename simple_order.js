@@ -9634,13 +9634,25 @@ html, body { background: #ffffff !important; }
         if (typeof window._meExportBothSides !== 'function') return false;
         var ex = await window._meExportBothSides();
         var any = false;
-        if (ex && ex.front) {
-            state.file = _soPngToFile(ex.front, 'biz-front-' + Date.now() + '.png');
-            state.thumbDataUrl = ex.front; state._cartThumb = ex.front; any = true;
+        // 면별: 인쇄용 PDF(벡터/고해상도) 우선, 없으면 PNG 폴백. 썸네일은 PNG(png) 사용.
+        var _ts = Date.now();
+        var _mkSideFile = function(side, base) {
+            var d = ex && ex[side];
+            if (!d || (!d.pdf && !d.png)) return null;
+            if (d.pdf) return new File([d.pdf], base + '-' + _ts + '.pdf', { type: 'application/pdf' });
+            return _soPngToFile(d.png, base + '-' + _ts + '.png');
+        };
+        var _ff = _mkSideFile('front', 'biz-front');
+        if (_ff) {
+            state.file = _ff;
+            if (ex.front.png) { state.thumbDataUrl = ex.front.png; state._cartThumb = ex.front.png; }
+            any = true;
         }
-        if (ex && ex.back) {
-            state.fileBack = _soPngToFile(ex.back, 'biz-back-' + Date.now() + '.png');
-            state.thumbDataUrlBack = ex.back; any = true;
+        var _bf = _mkSideFile('back', 'biz-back');
+        if (_bf) {
+            state.fileBack = _bf;
+            if (ex.back.png) state.thumbDataUrlBack = ex.back.png;
+            any = true;
         }
         if (any) {
             try { if (typeof window.renderUploadDone === 'function') window.renderUploadDone('biz-design'); } catch(_){}
