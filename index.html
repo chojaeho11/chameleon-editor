@@ -7029,19 +7029,30 @@ function scrollHotdeal(gridId, dir) {
                                 else if (cn.nodeType === 1 && !(cn.classList && (cn.classList.contains('me-handle') || cn.classList.contains('me-del')))) _collectTextNodes(cn);
                             }
                         })(it.el);
-                        var _lastTop = -9999, _curLine = '';
+                        // 2026-06-25: 줄 간격(top 점프)으로 빈 줄도 복원 — 주소/전화 사이 빈 줄(엔터 한 번 더)이
+                        //   export 에서 사라지던 문제. dy/줄높이 ≈ 2 면 빈 줄 1개 삽입.
+                        var _lineGapPx = Math.max(1, (it.fontSize || 24) * (it.lineHeight || 1.2) * (me.wScale || 1));
+                        var _lastTop = -9999, _curLine = '', _started = false;
                         _textNodes.forEach(function(_tn){
                             var _full = _tn.textContent;
                             for (var _ci = 0; _ci < _full.length; _ci++) {
                                 var _cr = document.createRange();
                                 _cr.setStart(_tn, _ci); _cr.setEnd(_tn, _ci + 1);
                                 var _crect = _cr.getBoundingClientRect();
-                                if (_lastTop === -9999) _lastTop = _crect.top;
-                                if (Math.abs(_crect.top - _lastTop) > 2) { allLines.push(_curLine); _curLine = _full[_ci]; _lastTop = _crect.top; }
-                                else _curLine += _full[_ci];
+                                if (!_started) { _lastTop = _crect.top; _curLine = _full[_ci]; _started = true; continue; }
+                                var _dy = _crect.top - _lastTop;
+                                if (_dy > _lineGapPx * 0.6) {
+                                    allLines.push(_curLine);
+                                    var _steps = Math.max(1, Math.round(_dy / _lineGapPx));
+                                    for (var _k = 1; _k < _steps; _k++) allLines.push('');  // 빈 줄 채우기
+                                    _curLine = _full[_ci];
+                                    _lastTop = _crect.top;
+                                } else {
+                                    _curLine += _full[_ci];
+                                }
                             }
                         });
-                        if (_curLine) allLines.push(_curLine);
+                        if (_started) allLines.push(_curLine);
                     } catch(_mle) {
                         console.warn('[_meExportPNG] DOM line detection failed', _mle);
                     }
