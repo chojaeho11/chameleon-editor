@@ -5873,7 +5873,8 @@ function scrollHotdeal(gridId, dir) {
         .me-color-wrap input[type=color]::-webkit-color-swatch { visibility:hidden; border:none; }
         .me-color-wrap input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
         /* 대지 외 어두운 배경 */
-        .me-stage-wrap { background:#1d1d1f; border:none; border-radius:18px; padding:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+        /* 2026-06-26: 여백 최소화 — 캔버스 가득 차게. 가로비율=줄자 상단 / 세로비율=줄자 좌측 (JS 제어) */
+        .me-stage-wrap { background:#1d1d1f; border:none; border-radius:14px; padding:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
         /* 2026-06-25: 양면(앞/뒤) 탭 — 캔버스 바로 위 */
         .me-side-tabs { display:flex; gap:8px; margin-bottom:10px; }
         .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
@@ -6055,10 +6056,14 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-side-tab" data-side="back" onclick="window._meSwitchSide('back')"><span data-i18n="editor_face_back">뒷면</span></button>
             </div>
             <div class="me-stage-wrap">
-                <div class="me-stage-row" style="display:flex; align-items:stretch; gap:14px; max-width:100%;">
-                    <!-- 2026-06-16 v9: 세로 mm 줄자 — 캔버스 왼쪽, 약간 떨어진 위치. natH 기반 자동 tick. -->
-                    <div id="meRulerV" class="me-ruler-v" style="position:relative; width:28px; flex:0 0 28px; align-self:stretch;"></div>
-                    <div id="meStage" class="me-stage"></div>
+                <div class="me-stage-row" style="display:flex; align-items:stretch; gap:8px; max-width:100%; width:100%;">
+                    <!-- 세로비율: 좌측 세로 줄자 / 가로비율: 숨김 (JS _meFitStage 제어) -->
+                    <div id="meRulerV" class="me-ruler-v" style="position:relative; width:22px; flex:0 0 22px; align-self:stretch;"></div>
+                    <div id="meStageCol" style="display:flex; flex-direction:column; gap:4px; min-width:0; flex:1 1 auto; align-items:center;">
+                        <!-- 가로비율: 상단 가로 줄자 (JS 가 너비/표시 제어) -->
+                        <div id="meRulerH" class="me-ruler-h" style="position:relative; height:20px; display:none;"></div>
+                        <div id="meStage" class="me-stage"></div>
+                    </div>
                 </div>
             </div>
             <a id="aiNbAiDl" class="aiNb-btn full" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
@@ -6115,15 +6120,28 @@ function scrollHotdeal(gridId, dir) {
     function _meFitStage() {
         var stage = $('meStage');
         if (!stage) return;
-        // 2026-06-16 v9: meStage 의 부모 = me-stage-row, 그 부모 = me-stage-wrap.
-        //   클라이언트 width 는 stage-row 기준 — 줄자(28px) + gap(14px) = 42 빠진 영역에서 stage.
-        var row = stage.parentElement;       // me-stage-row
-        var wrap = row && row.parentElement; // me-stage-wrap
-        var availW = (wrap ? wrap.clientWidth : 600) - 24 - 42;  // ruler + gap
-        var maxW = Math.max(200, availW);
+        // 2026-06-26: 가로비율 → 줄자 상단 + 폭 가득 / 세로비율 → 줄자 좌측 + 높이 가득. 여백 최소화.
+        var landscape = (me.natW >= me.natH);
+        var rulerV = $('meRulerV'), rulerH = $('meRulerH');
+        var wrap = document.querySelector('.me-stage-wrap');
+        var wrapW = (wrap ? wrap.clientWidth : 600);
+        var pad = 20;                         // me-stage-wrap 좌우 padding 합 (10*2)
         var maxH = window._meStageMaxH || 540;
-        var sw = maxW, sh = sw * (me.natH / me.natW);
-        if (sh > maxH) { sh = maxH; sw = sh * (me.natW / me.natH); }
+        var sw, sh;
+        if (landscape) {
+            if (rulerV) rulerV.style.display = 'none';
+            if (rulerH) rulerH.style.display = '';
+            var availWL = Math.max(200, wrapW - pad);
+            sw = availWL; sh = sw * (me.natH / me.natW);
+            var maxHL = maxH - 26;            // 상단 가로 줄자 높이만큼 여유
+            if (sh > maxHL) { sh = maxHL; sw = sh * (me.natW / me.natH); }
+        } else {
+            if (rulerV) rulerV.style.display = '';
+            if (rulerH) rulerH.style.display = 'none';
+            var availWP = Math.max(160, wrapW - pad - 22 - 8);  // 좌측 줄자(22) + gap(8)
+            sh = maxH; sw = sh * (me.natW / me.natH);
+            if (sw > availWP) { sw = availWP; sh = sw * (me.natH / me.natW); }
+        }
         me.wScale = sw / me.natW;
         stage.style.width = Math.round(sw) + 'px';
         stage.style.height = Math.round(sh) + 'px';
@@ -6133,38 +6151,61 @@ function scrollHotdeal(gridId, dir) {
     window._meFitStage = _meFitStage;
     // 2026-06-16 v9: 세로 mm 줄자 렌더 — stage 높이에 맞춰 10mm tick (5mm 짧은 sub-tick) + 라벨.
     //   v13: me.natHMm 이 있으면 그걸 우선 사용 (가벽 등 capped pixel canvas 에서 mm 정확).
+    function _meRulerSteps(lenMm) {
+        if (lenMm <= 200)       return { major: 10,  minor: 5 };
+        if (lenMm <= 500)       return { major: 25,  minor: 5 };
+        if (lenMm <= 1500)      return { major: 100, minor: 50 };
+        if (lenMm <= 5000)      return { major: 250, minor: 100 };
+        return { major: 500, minor: 250 };
+    }
     function _meDrawRuler() {
-        var r = $('meRulerV');
         var stage = $('meStage');
-        if (!r || !stage) return;
-        var heightPx = parseFloat(stage.style.height) || stage.clientHeight || 0;
-        if (!heightPx) { r.innerHTML = ''; return; }
-        r.style.height = heightPx + 'px';
-        var heightMm = me.natHMm || (me.natH / 3.7795);
-        var pxPerMm = heightPx / heightMm;
-        // 2026-06-16 v13: 적응형 tick — 가벽처럼 큰 사이즈에선 100/250/500mm 단위로 표시.
-        var majorStep, minorStep, unit;
-        if (heightMm <= 200)       { majorStep = 10;   minorStep = 5;   unit = 'mm'; }
-        else if (heightMm <= 500)  { majorStep = 25;   minorStep = 5;   unit = 'mm'; }
-        else if (heightMm <= 1500) { majorStep = 100;  minorStep = 50;  unit = 'mm'; }
-        else if (heightMm <= 5000) { majorStep = 250;  minorStep = 100; unit = 'mm'; }
-        else                       { majorStep = 500;  minorStep = 250; unit = 'mm'; }
-        var ticksHtml = '';
-        for (var mm = 0; mm <= Math.floor(heightMm); mm += majorStep) {
-            var top = mm * pxPerMm;
-            ticksHtml += '<div style="position:absolute; right:0; top:' + top.toFixed(1) + 'px; width:10px; height:1px; background:rgba(255,255,255,0.55);"></div>'
-                       + '<div style="position:absolute; right:12px; top:' + (top - 6).toFixed(1) + 'px; font-size:9px; font-weight:700; color:rgba(255,255,255,0.7); font-family:inherit; letter-spacing:-0.3px;">' + mm + '</div>';
+        if (!stage) return;
+        var landscape = (me.natW >= me.natH);
+        var rV = $('meRulerV'), rH = $('meRulerH');
+        if (landscape) {
+            // 가로 줄자 (상단) — 폭(natW) 기준
+            if (rV) rV.innerHTML = '';
+            if (!rH) return;
+            var widthPx = parseFloat(stage.style.width) || stage.clientWidth || 0;
+            if (!widthPx) { rH.innerHTML = ''; return; }
+            rH.style.width = widthPx + 'px';
+            var widthMm = me.natWMm || (me.natW / 3.7795);
+            var pxW = widthPx / widthMm, sW = _meRulerSteps(widthMm), hh = '';
+            for (var x = 0; x <= Math.floor(widthMm); x += sW.major) {
+                var lf = x * pxW;
+                hh += '<div style="position:absolute; bottom:0; left:' + lf.toFixed(1) + 'px; width:1px; height:10px; background:rgba(255,255,255,0.55);"></div>'
+                    + '<div style="position:absolute; bottom:11px; left:' + (lf + 2).toFixed(1) + 'px; font-size:9px; font-weight:700; color:rgba(255,255,255,0.7); letter-spacing:-0.3px;">' + x + '</div>';
+            }
+            for (var x2 = sW.minor; x2 <= widthMm; x2 += sW.minor) {
+                if (x2 % sW.major === 0) continue;
+                hh += '<div style="position:absolute; bottom:0; left:' + (x2 * pxW).toFixed(1) + 'px; width:1px; height:5px; background:rgba(255,255,255,0.32);"></div>';
+            }
+            hh += '<div style="position:absolute; bottom:0; left:0; right:0; height:1px; background:rgba(255,255,255,0.4);"></div>';
+            hh += '<div style="position:absolute; bottom:11px; right:0; font-size:8px; font-weight:600; color:rgba(255,255,255,0.5);">mm</div>';
+            rH.innerHTML = hh;
+        } else {
+            // 세로 줄자 (좌측) — 높이(natH) 기준
+            if (rH) rH.innerHTML = '';
+            if (!rV) return;
+            var heightPx = parseFloat(stage.style.height) || stage.clientHeight || 0;
+            if (!heightPx) { rV.innerHTML = ''; return; }
+            rV.style.height = heightPx + 'px';
+            var heightMm = me.natHMm || (me.natH / 3.7795);
+            var pxH = heightPx / heightMm, sH = _meRulerSteps(heightMm), tv = '';
+            for (var mm = 0; mm <= Math.floor(heightMm); mm += sH.major) {
+                var top = mm * pxH;
+                tv += '<div style="position:absolute; right:0; top:' + top.toFixed(1) + 'px; width:10px; height:1px; background:rgba(255,255,255,0.55);"></div>'
+                    + '<div style="position:absolute; right:12px; top:' + (top - 6).toFixed(1) + 'px; font-size:9px; font-weight:700; color:rgba(255,255,255,0.7); letter-spacing:-0.3px;">' + mm + '</div>';
+            }
+            for (var mm2 = sH.minor; mm2 <= heightMm; mm2 += sH.minor) {
+                if (mm2 % sH.major === 0) continue;
+                tv += '<div style="position:absolute; right:0; top:' + (mm2 * pxH).toFixed(1) + 'px; width:5px; height:1px; background:rgba(255,255,255,0.32);"></div>';
+            }
+            tv += '<div style="position:absolute; right:0; top:0; bottom:0; width:1px; background:rgba(255,255,255,0.4);"></div>';
+            tv += '<div style="position:absolute; right:12px; bottom:-2px; font-size:8px; font-weight:600; color:rgba(255,255,255,0.5); letter-spacing:0.5px;">mm</div>';
+            rV.innerHTML = tv;
         }
-        for (var mm2 = minorStep; mm2 <= heightMm; mm2 += minorStep) {
-            if (mm2 % majorStep === 0) continue;  // major 와 겹치는 건 skip
-            var top2 = mm2 * pxPerMm;
-            ticksHtml += '<div style="position:absolute; right:0; top:' + top2.toFixed(1) + 'px; width:5px; height:1px; background:rgba(255,255,255,0.32);"></div>';
-        }
-        // 우측 세로 라인 (줄자 본체)
-        ticksHtml += '<div style="position:absolute; right:0; top:0; bottom:0; width:1px; background:rgba(255,255,255,0.4);"></div>';
-        // 단위 표기
-        ticksHtml += '<div style="position:absolute; right:12px; bottom:-2px; font-size:8px; font-weight:600; color:rgba(255,255,255,0.5); letter-spacing:0.5px;">mm</div>';
-        r.innerHTML = ticksHtml;
     }
     window._meDrawRuler = _meDrawRuler;
 
@@ -15181,7 +15222,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=635"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
-<script src="/product-tutorial.js?v=634"></script>
+<script src="/product-tutorial.js?v=635"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 

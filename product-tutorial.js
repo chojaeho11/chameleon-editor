@@ -655,6 +655,7 @@
     },
     { // 7) 장바구니
       target: '#soBtnCart', mode: 'wait',
+      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
       msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
         ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
         en: "Now, let's <b>add it to the cart</b> 🛒" }
