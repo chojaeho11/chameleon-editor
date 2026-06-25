@@ -22291,6 +22291,14 @@ if (w >= 20 && h >= 20) {
 
         const _lang = window.currentReviewLang || 'kr';
         const _nickPh = { kr: '닉네임 (예: 행복한고객)', ja: 'ニックネーム (例: ハッピー顧客)', en: 'Nickname (e.g. HappyCustomer)', zh: '昵称 (例: 快乐客户)', ar: 'الاسم المستعار', es: 'Apodo (ej: ClienteFeliz)', de: 'Spitzname (z.B. GlücklicherKunde)', fr: 'Pseudo (ex: ClientHeureux)' }[_lang] || 'Nickname';
+        // 2026-06-25: 리뷰 작성 라벨도 _nickPh 처럼 _lang(깃발 선택) 하드코딩 사전으로 — window.t 는 번역 로드 전 렌더 시 한국어 fallback + 깃발선택 미반영 버그.
+        const _rvL = {
+            write:  { kr:'리뷰 작성', ja:'レビューを書く', en:'Write a Review', zh:'撰写评论', ar:'اكتب مراجعة', es:'Escribir reseña', de:'Bewertung schreiben', fr:'Écrire un avis' },
+            ph:     { kr:'상품에 대한 솔직한 리뷰를 남겨주세요', ja:'商品についての率直なレビューをお聞かせください', en:'Share your honest review', zh:'请分享您对商品的真实评价', ar:'شاركنا رأيك الصادق عن المنتج', es:'Comparte tu opinión honesta sobre el producto', de:'Teilen Sie Ihre ehrliche Bewertung ab', fr:'Partagez votre avis honnête' },
+            photo:  { kr:'사진 첨부', ja:'写真を添付', en:'Attach Photo', zh:'添加照片', ar:'إرفاق صورة', es:'Adjuntar foto', de:'Foto anhängen', fr:'Ajouter une photo' },
+            submit: { kr:'리뷰 등록', ja:'レビュー投稿', en:'Submit Review', zh:'提交评论', ar:'إرسال المراجعة', es:'Enviar reseña', de:'Bewertung senden', fr:'Soumettre' }
+        };
+        const _rvT = (k) => (_rvL[k] && (_rvL[k][_lang] || _rvL[k].en || _rvL[k].kr)) || '';
         const _isLoggedIn = !!window.currentUser;
         let _userDisplayName = '';
         if (_isLoggedIn) {
@@ -22301,7 +22309,7 @@ if (w >= 20 && h >= 20) {
 
         area.innerHTML = `
             <div class="review-write-box">
-                <div style="font-weight:700;font-size:15px;margin-bottom:12px;">${window.t('rv_write','리뷰 작성')}</div>
+                <div style="font-weight:700;font-size:15px;margin-bottom:12px;">${_rvT('write')}</div>
                 ${_isLoggedIn
                     ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 14px;background:#eef2ff;border-radius:10px;border:1px solid #c7d2fe;">
                         <i class="fa-solid fa-user-circle" style="color:#6366f1;font-size:18px;"></i>
@@ -22316,14 +22324,14 @@ if (w >= 20 && h >= 20) {
                     <i class="fa-solid fa-star" id="prvStar4" style="color:#f59e0b;" onclick="window.setProductReviewRating(4)"></i>
                     <i class="fa-solid fa-star" id="prvStar5" style="color:#f59e0b;" onclick="window.setProductReviewRating(5)"></i>
                 </div>
-                <textarea id="prvComment" class="ai-input-pretty" placeholder="${window.t('rv_placeholder','상품에 대한 솔직한 리뷰를 남겨주세요')}" style="height:80px;width:100%;resize:vertical;"></textarea>
+                <textarea id="prvComment" class="ai-input-pretty" placeholder="${_rvT('ph')}" style="height:80px;width:100%;resize:vertical;"></textarea>
                 <div id="prvPhotoPreview"></div>
                 <div style="display:flex;gap:10px;margin-top:12px;">
                     <label style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border:2px solid #6366f1;border-radius:10px;background:#eef2ff;color:#6366f1;font-size:14px;font-weight:700;transition:all 0.2s;">
-                        <i class="fa-solid fa-camera"></i> ${window.t('rv_photo_add','사진 첨부')}
+                        <i class="fa-solid fa-camera"></i> ${_rvT('photo')}
                         <input type="file" id="prvPhoto" accept="image/*" style="display:none;">
                     </label>
-                    <button onclick="window.submitProductReview()" class="btn-round primary" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:10px;">${window.t('rv_submit','리뷰 등록')}</button>
+                    <button onclick="window.submitProductReview()" class="btn-round primary" style="flex:1;padding:12px;font-size:14px;font-weight:700;border-radius:10px;">${_rvT('submit')}</button>
                 </div>
             </div>`;
 
