@@ -6390,33 +6390,53 @@ html, body { background: #ffffff !important; }
         var nm = _bizI18n(item, 'name');
         var desc = _bizI18n(item, 'desc');
         var vis = (_OPT_VISUAL[category] || {})[key] || {};
-        var visualHtml = '<div style="width:100%; aspect-ratio:4/3; background:#f1f5f9 ' + (vis.img ? 'url(' + vis.img + ') center/cover no-repeat' : '') + ';"></div>';
-        var priceLine = (item.price > 0) ? '<div style="font-size:13px; font-weight:800; color:#dc2626; margin-top:4px;">+' + fmtPrice(item.price) + '</div>' : '';
+        var priceLine = (item.price > 0) ? '<div style="font-size:14px; font-weight:800; color:#dc2626; margin-top:4px;">+' + fmtPrice(item.price) + '</div>' : '';
         var _modalHint = _optHint(vis);
         var hintLine = _modalHint ? '<div style="font-size:12.5px; color:#475569; line-height:1.7; margin-top:10px; padding:10px 12px; background:#f8fafc; border-radius:8px;">' + _modalHint + '</div>' : '';
-        var selectBtnHtml = (typeof doSelect === 'function')
-            ? '<button type="button" id="soOptInfoSelect" style="width:100%; margin-top:14px; padding:13px; background:linear-gradient(135deg,#7c3aed,#4338ca); color:#fff; border:none; border-radius:9px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit;">' + tr('이 옵션 선택','このオプションを選択','Pick this option') + '</button>'
-            + '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:100%; margin-top:8px; padding:11px; background:#f1f5f9; color:#475569; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>'
-            : '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:100%; margin-top:14px; padding:11px; background:#0f172a; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>';
+        var vw = window.innerWidth, vh = window.innerHeight;
+        // 2026-06-25: 설명 패널을 옵션 그리드(카드 8칸) 영역 크기에 맞춰 그 위에 표시 + 닫기 버튼.
+        var gridRect = null;
+        try {
+            var _card = document.querySelector('[data-opt-cat="' + category + '"][data-opt-key="' + key + '"]');
+            if (_card && _card.parentElement) {
+                var _gr = _card.parentElement.getBoundingClientRect();
+                if (_gr.width > 40 && _gr.height > 40) gridRect = _gr;
+            }
+        } catch (_ge) {}
+        var posStyle;
+        if (gridRect) {
+            var W = Math.min(Math.max(gridRect.width, 280), vw - 16);
+            var H = Math.min(Math.max(gridRect.height, 320), vh - 16);
+            var L = gridRect.left, Tp = gridRect.top;
+            if (L + W > vw - 8) L = vw - W - 8;
+            if (L < 8) L = 8;
+            if (Tp + H > vh - 8) Tp = vh - H - 8;
+            if (Tp < 8) Tp = 8;
+            posStyle = 'position:fixed; left:' + L + 'px; top:' + Tp + 'px; width:' + W + 'px; height:' + H + 'px;';
+        } else {
+            posStyle = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(440px, calc(100vw - 24px)); height:min(560px, calc(100vh - 24px));';
+        }
+        var closeX = '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="position:absolute; top:8px; right:8px; width:32px; height:32px; border:none; background:rgba(255,255,255,0.92); border-radius:50%; cursor:pointer; font-size:18px; line-height:1; color:#334155; box-shadow:0 2px 6px rgba(0,0,0,0.2); font-family:inherit; z-index:2;">×</button>';
+        var imgBox = '<div style="flex:0 0 auto; height:46%; min-height:120px; background:#f1f5f9 ' + (vis.img ? 'url(' + vis.img + ') center/cover no-repeat' : '') + ';"></div>';
+        var bodyBox = '<div style="flex:1 1 auto; overflow-y:auto; padding:14px 18px;">'
+            + '<div style="font-size:17px; font-weight:800; color:#0f172a;">' + nm + '</div>'
+            + priceLine
+            + '<div style="font-size:13.5px; color:#1e293b; line-height:1.65; margin-top:8px; font-weight:600;">' + desc + '</div>'
+            + hintLine
+            + '</div>';
+        var hasSel = (typeof doSelect === 'function');
+        var btnBox = '<div style="flex:0 0 auto; padding:10px 14px 12px; border-top:1px solid #f1f5f9; display:flex; gap:8px;">'
+            + (hasSel ? '<button type="button" id="soOptInfoSelect" style="flex:1; padding:13px; background:linear-gradient(135deg,#7c3aed,#4338ca); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit;">' + tr('이 옵션 선택','このオプションを選択','Pick this') + '</button>' : '')
+            + '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="' + (hasSel ? 'flex:0 0 auto; padding:13px 18px;' : 'flex:1; padding:13px;') + ' background:#eef2f7; color:#475569; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기','閉じる','Close') + '</button>'
+            + '</div>';
         var ov = document.createElement('div');
         ov.id = 'soOptInfoOv';
-        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.62); z-index:99998; display:flex; align-items:center; justify-content:center; padding:0;';
-        ov.innerHTML = '<div style="background:#fff; border-radius:16px; padding:0 0 20px; max-width:560px; width:100%; max-height:100vh; overflow-y:auto;">'
-            + visualHtml
-            + '<div style="padding:14px 20px 0;">'
-            +   '<div style="display:flex; align-items:center; justify-content:space-between;">'
-            +     '<div style="font-size:16px; font-weight:800; color:#0f172a;">' + nm + '</div>'
-            +     '<button type="button" onclick="document.getElementById(\'soOptInfoOv\').remove()" style="width:30px; height:30px; border:none; background:#f1f5f9; border-radius:50%; cursor:pointer; font-size:16px; line-height:1; color:#64748b; font-family:inherit;">×</button>'
-            +   '</div>'
-            +   priceLine
-            +   '<div style="font-size:13px; color:#1e293b; line-height:1.6; margin-top:8px; font-weight:600;">' + desc + '</div>'
-            +   hintLine
-            +   selectBtnHtml
-            + '</div>'
-            + '</div>';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99998;';
+        ov.innerHTML = '<div style="' + posStyle + ' background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 24px 60px -10px rgba(0,0,0,0.5); display:flex; flex-direction:column;">'
+            + closeX + imgBox + bodyBox + btnBox + '</div>';
         ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
         document.body.appendChild(ov);
-        if (typeof doSelect === 'function') {
+        if (hasSel) {
             var sb = document.getElementById('soOptInfoSelect');
             if (sb) sb.addEventListener('click', function(){ try { doSelect(); } catch(e){} ov.remove(); });
         }
