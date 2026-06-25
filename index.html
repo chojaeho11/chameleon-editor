@@ -6862,6 +6862,9 @@ function scrollHotdeal(gridId, dir) {
             if (!me || !me.stage || !me.natW || !me.natH) return null;
             // 선택 핸들/del 버튼 임시 제거 (export 에 포함되지 않도록)
             _meSelect(null);
+            // 2026-06-25: 그리기 순서를 화면 z-index 순으로 정렬 — '뒤로/앞으로'는 zIndex 만 바꾸고 배열은 안 바꿔서,
+            //   배경을 뒤로 보내도 export(썸네일)·저장(slots)·적용 시 배경이 글씨를 덮던 문제 해결.
+            try { if (me.items && me.items.length > 1) me.items.sort(function(a, b){ return _meZ(a) - _meZ(b); }); } catch(_zsort){}
             // 2026-06-14: 텍스트 동기화 — 사용자가 typing 중(blur 안 함)이면 it.text 미반영. textContent 로 강제 sync.
             //   또한 활성 contenteditable 강제 blur (caret 숨김 + sync 트리거).
             try {
