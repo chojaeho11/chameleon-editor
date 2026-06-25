@@ -2400,7 +2400,7 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
     }
     if (shippingFee > 0) {
         doc.setTextColor(0, 0, 0);
-        const shippingLabel = CURRENT_LANG_CODE === 'ja' ? '地方配送追加料金 :' : CURRENT_LANG_CODE === 'us' ? 'Non-metro shipping fee :' : '비수도권 추가 배송비 :';
+        const shippingLabel = CURRENT_LANG_CODE === 'ja' ? '配送料 :' : CURRENT_LANG_CODE === 'us' ? 'Shipping fee :' : '배송비 :';
         drawText(doc, shippingLabel, summaryX, y+5, {align:'right'});
         drawText(doc, "+" + _fmtSummary(shippingFee), 195, y+5, {align:'right'}); y+=6;
     }

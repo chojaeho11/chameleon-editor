@@ -16102,28 +16102,32 @@ html, body { background: #ffffff !important; }
                     _noticeWrap.style.background = '#dcfce7';
                     _noticeWrap.style.borderColor = '#86efac';
                     _noticeWrap.style.color = '#14532d';
+                    // 2026-06-26: 허니콤보드=시공/배송, 그 외=택배비 5,000원(JP 500엔). 무료(0)는 면제 케이스만.
                     var _shipLine;
                     if (_shipFinal === 0) {
+                        _shipLine = tr('✅ <b>무료배송</b>', '✅ <b>送料無料</b>', '✅ <b>FREE shipping</b>');
+                    } else if (_hasHcInCart2) {
                         _shipLine = tr(
-                            '✅ <b>무료배송</b> — 허니콤보드 카테고리 외 전 제품 무료',
-                            '✅ <b>送料無料</b> — ハニカムボードカテゴリー以外 全商品無料',
-                            '✅ <b>FREE shipping</b> — All non-Honeycomb products free'
+                            '배송비 <b>' + fmtPrice(_shipFinal) + '</b> (허니콤보드 시공/배송)',
+                            '配送料 <b>' + fmtPrice(_shipFinal) + '</b> (ハニカムボード設置/配送)',
+                            'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
                         );
                     } else {
                         _shipLine = tr(
-                            '주문 합계 <b>' + fmtPrice(_shipFinal) + '</b> 배송비 (허니콤보드 카테고리 시공/배송)',
-                            'ご注文合計 配送料 <b>' + fmtPrice(_shipFinal) + '</b> (ハニカムボード設置/配送)',
-                            'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
+                            '🚚 택배 배송비 <b>' + fmtPrice(_shipFinal) + '</b>',
+                            '🚚 宅配 送料 <b>' + fmtPrice(_shipFinal) + '</b>',
+                            '🚚 Parcel shipping <b>' + fmtPrice(_shipFinal) + '</b>'
                         );
                     }
-                    // 2026-06-25: 허니콤보드만 최소금액 안내, 그 외엔 최소금액 문구 제거
                     var _headerLine = _hasHcInCart2
-                        ? tr('💚 최소주문 ' + _minLabel + ' 이상 · 허니콤보드 외 전제품 무료배송',
-                             '💚 最低注文 ' + _minLabel + ' 以上 · ハニカムボード以外 全商品 送料無料',
-                             '💚 Min order ' + _minLabel + ' · Free shipping (non-Honeycomb)')
-                        : tr('💚 허니콤보드 외 전제품 무료배송',
-                             '💚 ハニカムボード以外 全商品 送料無料',
-                             '💚 Free shipping (non-Honeycomb)');
+                        ? tr('💚 최소주문 ' + _minLabel + ' 이상',
+                             '💚 最低注文 ' + _minLabel + ' 以上',
+                             '💚 Min order ' + _minLabel)
+                        : (_shipFinal > 0
+                            ? tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' (허니콤보드 외 전 상품)',
+                                 '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (ハニカムボード以外)',
+                                 '💚 Parcel shipping ' + fmtPrice(_shipFinal) + ' (non-Honeycomb)')
+                            : tr('💚 무료배송', '💚 送料無料', '💚 Free shipping'));
                     _noticeText.innerHTML =
                         '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
                         '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>';
@@ -16924,9 +16928,10 @@ html, body { background: #ffffff !important; }
         });
         // 2026-06-13: 사용자 요청 — 자동 +30K 포장배송비 제거.
         //   대신 허니콤보드 family 는 최소주문 100K, 그 외 30K 로 강제 차단 (renderSoCart 에서 경고 + 버튼 비활성화).
-        // 비-허니콤만 있는 카트 → 배송비 강제 0 (베스트굿즈 3K, 패브릭 5K/10K, real-print +10K 등 모두 무시)
+        // 2026-06-26: 허니콤보드 외 상품군 카트 → 택배비 5,000원 (JP 500엔 / US $5, fmtPrice 환산).
+        //   금액주문(1원/천원단위)·매니저견적·빈 카트는 제외 (입력 금액 그대로 결제).
         if (!_hasHcInCart) {
-            shipTotal = 0;
+            shipTotal = (_hasAmountOrder || _allProductSub <= 0) ? 0 : 5000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
@@ -17411,7 +17416,7 @@ html, body { background: #ffffff !important; }
             if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
 
             // export.js 동적 import (ES module)
-            var mod = await import('./export.js?v=439');
+            var mod = await import('./export.js?v=442');
             if (!mod || !mod.generateQuotationPDF) { alert('견적서 생성 모듈을 로드할 수 없습니다.'); return; }
 
             var name = (document.getElementById('soCoName').value || '').trim() || '-';
