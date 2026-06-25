@@ -794,6 +794,14 @@ if ('caches' in window) {
 </button>
 
 <style>
+    /* 2026-06-25: 일본어 — 자간이 넓어 칸을 넘치거나 가독성이 떨어짐 → 전역 자간 축소.
+       letter-spacing 은 인라인 스타일에 거의 없어서 상속으로 모달/카드까지 적용됨. */
+    html[lang="ja"], html[lang="jp"] { letter-spacing: -0.035em; }
+    /* 주문 모달 등 밀집 영역은 조금 더 타이트하게 (긴 일본어 카드 텍스트가 칸 안에 들어오도록) */
+    html[lang="ja"] .so-overlay, html[lang="jp"] .so-overlay,
+    html[lang="ja"] .so-modal,   html[lang="jp"] .so-modal,
+    html[lang="ja"] .so-section, html[lang="jp"] .so-section { letter-spacing: -0.045em; }
+    html[lang="ja"] .so-biz-opt-card, html[lang="jp"] .so-biz-opt-card { letter-spacing: -0.05em; }
     /* 2026-05-16: 에디터 전용 모드 — 탑바를 디자인 다운로드 전용으로 정리 */
     body.editor-designonly #btnHomeTop,
     body.editor-designonly #btnOrderTop,
@@ -14939,7 +14947,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=622"></script>
+<script src="/simple_order.js?v=623"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=624"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
