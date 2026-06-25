@@ -54,6 +54,7 @@
   var _looping = false;
   var _freeMode = false;    // 에디터 자유 디자인 모드
   var _chosenBranch = 'upload'; // upload | editor | request
+  var _awaitPick = null;    // {cat,i,cheer} — 실제 옵션 '선택' 시에만 다음 단계 진행 (미리보기 탭 무시)
 
   // ── DOM refs ────────────────────────────────────────────────────────────
   var _root, _blocker, _hole, _pop;
@@ -317,6 +318,14 @@
     else if (rec.kind === 'finale') renderFinale();
   }
 
+  // 2026-06-26: simple_order 가 옵션을 '선택'했을 때 호출 — 그 카테고리를 기다리는 wait 스텝이면 다음 진행.
+  window._soTutOnPick = function (cat) {
+    if (!_active || !_awaitPick || _awaitPick.cat !== cat) return;
+    var rec = _awaitPick; _awaitPick = null;
+    try { celebrate(rec.cheer); } catch (_) {}
+    enterStep(rec.i + 1);
+  };
+
   // ── 일반 단계 ──────────────────────────────────────────────────────────
   function renderStep(i) {
     clearStep(); removeDoneBar(); _freeMode = false;
@@ -359,12 +368,18 @@
       });
     });
 
+    _awaitPick = null;
     if (step.mode === 'wait') {
-      var onClick = function () { celebrate(step.cheer); enterStep(i + 1); };
-      _targets.forEach(function (t) {
-        t.addEventListener('click', onClick, { once: true });
-        _stepCleanup.push(function () { t.removeEventListener('click', onClick); });
-      });
+      if (step.awaitPick) {
+        // 2026-06-26: 실제 옵션 '선택'(모달의 '이 옵션 선택') 시에만 진행 — 미리보기 탭/닫기로는 진행 안 함.
+        _awaitPick = { cat: step.awaitPick, i: i, cheer: step.cheer };
+      } else {
+        var onClick = function () { celebrate(step.cheer); enterStep(i + 1); };
+        _targets.forEach(function (t) {
+          t.addEventListener('click', onClick, { once: true });
+          _stepCleanup.push(function () { t.removeEventListener('click', onClick); });
+        });
+      }
     }
     loop();
   }
@@ -608,7 +623,7 @@
       ]
     },
     { // 3) 용지
-      target: '#soBizPaperGrid', mode: 'wait',
+      target: '#soBizPaperGrid', mode: 'wait', awaitPick: 'paper',
       hint: { kr: '설명을 보고 맘에 드는 용지를 골라주세요', ja: '説明を見てお好みの用紙をお選びください', en: 'Read the notes and pick the paper you like' },
       msg: { kr: '잘했어요! 🎉 다음은 <b>용지</b>예요.<br>제일 무난한 건 <b>누브지</b>나 <b>랑데뷰 네추럴</b>. 펄 느낌 <b>컨셉</b>이나 <b>팝셋</b>도 멋져요 ✨',
         ja: '上手! 🎉 次は <b>用紙</b>。<br>無難なのは <b>ヌーブ紙</b> や <b>ランデブーナチュラル</b>。パール感の <b>コンセプト</b> や <b>ポップセット</b> も素敵 ✨',

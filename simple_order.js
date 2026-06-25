@@ -9655,7 +9655,7 @@ html, body { background: #ffffff !important; }
         _soBizCardRender();
         recalc();
     };
-    window._soBizPickPaper = function(k){ state.bizPaper = k; _soBizCardRender(); recalc(); };
+    window._soBizPickPaper = function(k){ state.bizPaper = k; _soBizCardRender(); recalc(); try { window._soTutOnPick && window._soTutOnPick('paper'); } catch(_){} };
     window._soBizPickFoil  = function(k){
         // v718: 같은 박을 다시 클릭하면 해제 (후가공 multi-toggle 과 동일 UX)
         state.bizFoil = (state.bizFoil === k) ? null : k;
