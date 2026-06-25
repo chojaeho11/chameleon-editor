@@ -174,18 +174,35 @@
       _hole.style.width = (rect.width + pad * 2) + 'px';
       _hole.style.height = (rect.height + pad * 2) + 'px';
       _pop.classList.remove('center');
-      // 2026-06-25: 코치마크를 타깃 옆(좌/우 중 공간 넓은 쪽 가장자리)에 좁고 길게 배치 —
-      //   카드/설명 위를 덮지 않게. 모바일도 한쪽 가장자리에 좁게 붙여 시야 방해 최소화.
+      // 2026-06-25: 코치마크가 타깃(카드/옵션) 위를 덮지 않도록 우선순위 배치.
+      //   ① 오른쪽 옆 공간 → ② 왼쪽 옆 공간 (데스크탑: 카드 옆 빈 영역) →
+      //   ③ 타깃 아래 → ④ 타깃 위 → ⑤ (모바일 풀폭 타깃처럼 공간 없음) 화면 하단 고정.
       var vw = window.innerWidth, vh = window.innerHeight;
+      var gap = 14;
       var roomLeft = rect.left, roomRight = vw - rect.right;
-      var onLeft = roomLeft >= roomRight;            // 더 넓은 쪽
-      var w = Math.min(vw < 480 ? 200 : 300, vw - 24);
+      var roomTop = rect.top, roomBottom = vh - rect.bottom;
+      var w = Math.min(vw < 480 ? 290 : 300, vw - 24);
       _pop.style.width = w + 'px';
       var popH = _pop.offsetHeight || 200;
-      var top = rect.top + rect.height / 2 - popH / 2;   // 타깃 높이에 세로 중앙
-      top = Math.max(12, Math.min(top, vh - popH - 12));
-      var left = onLeft ? 12 : (vw - w - 12);            // 넓은 쪽 가장자리에 붙임
-      _pop.style.left = left + 'px'; _pop.style.top = top + 'px';
+      var cl = function (v, lo, hi) { return Math.max(lo, Math.min(v, hi)); };
+      var L, Tp;
+      if (roomRight >= w + gap) {                 // ① 오른쪽 옆
+        L = Math.min(vw - w - 10, rect.right + gap);
+        Tp = cl(rect.top + rect.height / 2 - popH / 2, 12, vh - popH - 12);
+      } else if (roomLeft >= w + gap) {           // ② 왼쪽 옆
+        L = Math.max(10, rect.left - w - gap);
+        Tp = cl(rect.top + rect.height / 2 - popH / 2, 12, vh - popH - 12);
+      } else if (roomBottom >= popH + gap) {      // ③ 아래
+        Tp = rect.bottom + gap;
+        L = cl(rect.left + rect.width / 2 - w / 2, 12, vw - w - 12);
+      } else if (roomTop >= popH + gap) {         // ④ 위
+        Tp = rect.top - popH - gap;
+        L = cl(rect.left + rect.width / 2 - w / 2, 12, vw - w - 12);
+      } else {                                    // ⑤ 화면 하단 고정 (덮을 공간 없을 때)
+        Tp = vh - popH - 12;
+        L = cl(rect.left + rect.width / 2 - w / 2, 12, vw - w - 12);
+      }
+      _pop.style.left = L + 'px'; _pop.style.top = Tp + 'px';
     } else {
       _hole.style.display = 'none';
       _pop.classList.add('center');
