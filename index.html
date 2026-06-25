@@ -6879,7 +6879,9 @@ function scrollHotdeal(gridId, dir) {
                             }
                         } catch(_we) {}
                         // 2026-06-19 v630: _meGetCleanText 통합 — .me-del(×)/.me-handle 자식 자동 제외.
-                        it.text = _meGetCleanText(it.el);
+                        // 2026-06-25: 빈값이면 기존 it.text 보존 (텍스트 사라짐 방지)
+                        var _ct2 = _meGetCleanText(it.el);
+                        if (_ct2) it.text = _ct2;
                     }
                 });
             } catch(_se){}
@@ -7232,7 +7234,9 @@ function scrollHotdeal(gridId, dir) {
                 if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
                 me.items.forEach(function(it){
                     if (it && it.type === 'text' && it.el) {
-                        it.text = _meGetCleanText(it.el);
+                        // 2026-06-25: 빈값이면 기존 it.text 보존 (DOM 재읽기 실패로 텍스트 사라지는 것 방지)
+                        var _ct = _meGetCleanText(it.el);
+                        if (_ct) it.text = _ct;
                     }
                 });
             } catch(_){}
@@ -9976,16 +9980,23 @@ function scrollHotdeal(gridId, dir) {
                 alert(T('QR 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.','QRライブラリ読込中。少し待って再試行。','QR library is still loading. Try again shortly.'));
                 return;
             }
-            window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }, function(err, dataUrl){
-                if (err || !dataUrl) { alert(T('QR 생성 실패','QR作成失敗','Failed to create QR')); return; }
-                try {
+            var _goBtn = ov.querySelector('#meQrGo');
+            if (_goBtn) { _goBtn.disabled = true; _goBtn.textContent = T('생성 중...','作成中...','Creating...'); }
+            // qrcode@1.5.1 toDataURL 은 Promise 반환 (다른 코드와 동일하게 .then 사용)
+            Promise.resolve(window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }))
+                .then(function(dataUrl){
+                    if (!dataUrl) throw new Error('empty');
                     var side = Math.round(Math.min(me.natW, me.natH) * 0.42);
                     var x = Math.round((me.natW - side) / 2);
                     var y = Math.round((me.natH - side) / 2);
                     window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: side, h: side } });
-                } catch (e2) { console.warn('[me qr] add image', e2); }
-                close();
-            });
+                    close();
+                })
+                .catch(function(e){
+                    console.warn('[me qr]', e);
+                    if (_goBtn) { _goBtn.disabled = false; _goBtn.textContent = T('QR 생성','QR作成','Create QR'); }
+                    alert(T('QR 생성 실패 — 주소를 확인해주세요.','QR作成失敗 — URLをご確認ください。','Failed to create QR — check the URL.'));
+                });
         };
         ov.querySelector('#meQrGo').onclick = go;
         inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); go(); } });
