@@ -6572,7 +6572,7 @@ function scrollHotdeal(gridId, dir) {
             natW: me.natW, natH: me.natH, bg: me.bg,
             items: me.items.map(function(it){
                 var clone = {};
-                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized'].forEach(function(k){
+                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized','_isQr','_qrUrl'].forEach(function(k){
                     if (it[k] !== undefined) clone[k] = it[k];
                 });
                 return clone;
@@ -6640,7 +6640,7 @@ function scrollHotdeal(gridId, dir) {
             natW: me.natW, natH: me.natH, bg: me.bg,
             items: me.items.map(function(it){
                 var clone = {};
-                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized'].forEach(function(k){
+                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized','_isQr','_qrUrl'].forEach(function(k){
                     if (it[k] !== undefined) clone[k] = it[k];
                 });
                 return clone;
@@ -7666,7 +7666,9 @@ function scrollHotdeal(gridId, dir) {
         // 2026-06-16 v11: 칼선이 있는 이미지도 stub 해제 — 슬라이더 interactive 하도록.
         //   이전엔 image type 이면 무조건 stub 처리되어 .me-props-stub의 pointer-events:none 때문에 슬라이더 비활성.
         var _hasCutlineActive = !!(it && it._cutlineRays && it._cutlineRays.length > 10);
-        panel.classList.toggle('me-props-stub', !it || (it.type !== 'text' && !_hasCutlineActive));
+        // 2026-06-25: 선택된 객체(이미지/도형 포함)가 있으면 stub 해제 — 회전/꽉채우기/정렬 등 공용 액션이 클릭되도록.
+        //   (이전엔 텍스트 외 타입은 stub → pointer-events:none 으로 버튼 비활성)
+        panel.classList.toggle('me-props-stub', !it);
         var html = '';
         var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
         // 2026-06-15: 선택이 없으면 stub 용 가짜 item 만들어서 text 분기로 흘려보냄 → 동일 UI 항상 노출.
@@ -7759,7 +7761,12 @@ function scrollHotdeal(gridId, dir) {
             html += '<span class="me-prop-group"><label>' + T('me_prop_stroke','테두리') + '</label><input type="color" value="' + (it.stroke || '#000000') + '" data-mp="stroke"></span>';
             html += '<span class="me-prop-group"><label>' + T('me_prop_strokew','두께') + '</label><input type="number" min="0" max="40" value="' + (it.strokeWidth || 0) + '" data-mp="strokeWidth"></span>';
         } else if (it.type === 'image') {
-            html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">' + T('me_prop_img_hint','이미지 — 모서리 핸들로 크기 조절') + '</span>';
+            // 2026-06-25: QR 이미지면 'QR 수정' 버튼 (주소 변경) 노출
+            if (it._isQr) {
+                html += '<button type="button" class="me-prop-btn" data-action="qredit" style="background:#ede9fe; color:#6d28d9; font-weight:800; padding:0 12px; gap:5px;"><i class="fa-solid fa-qrcode"></i> ' + T('me_qr_edit','QR 수정') + '</button>';
+            } else {
+                html += '<span style="font-size:11.5px; color:#7c3aed; font-weight:700; padding:0 6px;">' + T('me_prop_img_hint','이미지 — 모서리 핸들로 크기 조절') + '</span>';
+            }
             // 2026-06-16 v8: 칼선이 있는 이미지 → 마진 % 슬라이더 (0.5%~12% 가변).
             //   모드 (outer/inner) 는 trace 시 결정된 it._cutlineMode 그대로 사용 — 슬라이더는 절대값만 조절.
             //   horn/뾰족한 곳 칼선이 좁아 보일 때 사용자가 직접 늘릴 수 있도록.
@@ -7925,6 +7932,8 @@ function scrollHotdeal(gridId, dir) {
             btn.addEventListener('click', function(){
                 var act = btn.dataset.action;
                 if (act === 'dup' && window._meDuplicate) window._meDuplicate(it);
+                // 2026-06-25: QR 수정 — 주소 입력 모달을 편집 모드로
+                else if (act === 'qredit' && window._meAddQR) window._meAddQR(it);
                 // 2026-06-25: 90° 회전 — 선택 객체를 시계방향 90도씩
                 else if (act === 'rot90') {
                     _meSnapshot();
@@ -8040,13 +8049,15 @@ function scrollHotdeal(gridId, dir) {
                     _lastClickTime = now;
                     setTimeout(function(){
                         if (_lastClickTime === now) {
-                            _meOpenTextEditModal(it);
+                            if (it._isQr && window._meAddQR) window._meAddQR(it);  // 2026-06-25: QR 두 번째 탭 → 주소 수정
+                            else _meOpenTextEditModal(it);
                         }
                     }, 0);
                 }
             }, true);
             it.el.addEventListener('dblclick', function(){
                 if (it._isBackground) return;
+                if (it._isQr && window._meAddQR) { window._meAddQR(it); return; }  // 2026-06-25: QR 더블클릭 → 주소 수정
                 _meOpenTextEditModal(it);
             });
             it.el.addEventListener('blur', function(){
@@ -9954,7 +9965,8 @@ function scrollHotdeal(gridId, dir) {
 
     // 2026-06-25: QR코드 추가 — 인스타/홈페이지 URL 입력 → QR 생성 → 캔버스 중앙에 이미지로 배치.
     //   qrcode@1.5.1 (window.QRCode.toDataURL) 사용. 명함 뒷면 등에 활용.
-    window._meAddQR = function() {
+    window._meAddQR = function(editItem) {
+        var _isEdit = !!(editItem && editItem._isQr);
         var lang = (document.documentElement.lang || 'ko');
         var T = function(ko, ja, en){ return lang === 'ja' ? ja : (lang === 'en' ? en : ko); };
         var prev = document.getElementById('meQrModal'); if (prev) prev.remove();
@@ -9962,15 +9974,16 @@ function scrollHotdeal(gridId, dir) {
         ov.id = 'meQrModal';
         ov.style.cssText = 'position:fixed;inset:0;z-index:2147483300;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;font-family:Pretendard,-apple-system,system-ui,sans-serif;';
         ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:20px;width:min(360px,calc(100vw - 32px));box-sizing:border-box;">'
-            + '<div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px;">📱 ' + T('QR코드 추가','QRコード追加','Add QR code') + '</div>'
+            + '<div style="font-size:16px;font-weight:800;color:#111827;margin-bottom:6px;">📱 ' + (_isEdit ? T('QR코드 수정','QRコード編集','Edit QR code') : T('QR코드 추가','QRコード追加','Add QR code')) + '</div>'
             + '<div style="font-size:12.5px;color:#6b7280;margin-bottom:12px;line-height:1.5;">' + T('인스타 주소나 회사 홈페이지를 입력하면 중앙에 QR이 생성돼요.','インスタや会社サイトのURLを入力すると中央にQRが入ります。','Enter your Instagram or website URL — a QR appears in the center.') + '</div>'
             + '<input id="meQrInput" type="text" inputmode="url" placeholder="https://instagram.com/yourid" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;outline:none;" />'
             + '<div style="display:flex;gap:8px;margin-top:14px;">'
             + '<button id="meQrCancel" style="flex:none;padding:11px 14px;border:none;border-radius:10px;background:#f3f4f6;color:#4b5563;font-weight:700;cursor:pointer;font-family:inherit;">' + T('취소','キャンセル','Cancel') + '</button>'
-            + '<button id="meQrGo" style="flex:1;padding:11px;border:none;border-radius:10px;background:#6d28d9;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;">' + T('QR 생성','QR作成','Create QR') + '</button>'
+            + '<button id="meQrGo" style="flex:1;padding:11px;border:none;border-radius:10px;background:#6d28d9;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;">' + (_isEdit ? T('수정 적용','変更を適用','Update') : T('QR 생성','QR作成','Create QR')) + '</button>'
             + '</div></div>';
         document.body.appendChild(ov);
         var inp = ov.querySelector('#meQrInput');
+        if (_isEdit && editItem._qrUrl) inp.value = editItem._qrUrl;
         var close = function(){ ov.remove(); };
         setTimeout(function(){ try { inp.focus(); } catch(_){} }, 30);
         ov.querySelector('#meQrCancel').onclick = close;
@@ -9987,10 +10000,21 @@ function scrollHotdeal(gridId, dir) {
             return Promise.resolve(window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }))
                 .then(function(dataUrl){
                     if (!dataUrl) throw new Error('empty');
-                    var side = Math.round(Math.min(me.natW, me.natH) * 0.42);
-                    var x = Math.round((me.natW - side) / 2);
-                    var y = Math.round((me.natH - side) / 2);
-                    window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: side, h: side } });
+                    if (_isEdit) {
+                        // 기존 QR 교체 — 위치/크기 유지, src·URL 만 갱신
+                        if (typeof _meSnapshot === 'function') _meSnapshot();
+                        editItem.src = dataUrl;
+                        editItem._qrUrl = url;
+                        try { var _qimg = editItem.el.querySelector('img'); if (_qimg) _qimg.src = dataUrl; } catch(_){}
+                        _meSyncItemDisplay(editItem);
+                    } else {
+                        var side = Math.round(Math.min(me.natW, me.natH) * 0.42);
+                        var x = Math.round((me.natW - side) / 2);
+                        var y = Math.round((me.natH - side) / 2);
+                        window._meAddImage(dataUrl, { explicitPos: { x: x, y: y, w: side, h: side } }, function(added){
+                            if (added) { added._isQr = true; added._qrUrl = url; }
+                        });
+                    }
                     close();
                 })
                 .catch(function(e){
