@@ -174,17 +174,22 @@
       _hole.style.width = (rect.width + pad * 2) + 'px';
       _hole.style.height = (rect.height + pad * 2) + 'px';
       _pop.classList.remove('center');
-      var popH = _pop.offsetHeight || 190, popW = _pop.offsetWidth || 300;
-      var vw = window.innerWidth, vh = window.innerHeight, top;
-      if (vh - rect.bottom > popH + 22) top = rect.bottom + 16;
-      else if (rect.top > popH + 22) top = rect.top - popH - 16;
-      else top = Math.max(12, vh - popH - 12);
-      var left = rect.left + rect.width / 2 - popW / 2;
-      left = Math.max(12, Math.min(left, vw - popW - 12));
+      // 2026-06-25: 코치마크를 타깃 옆(좌/우 중 공간 넓은 쪽 가장자리)에 좁고 길게 배치 —
+      //   카드/설명 위를 덮지 않게. 모바일도 한쪽 가장자리에 좁게 붙여 시야 방해 최소화.
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var roomLeft = rect.left, roomRight = vw - rect.right;
+      var onLeft = roomLeft >= roomRight;            // 더 넓은 쪽
+      var w = Math.min(vw < 480 ? 200 : 300, vw - 24);
+      _pop.style.width = w + 'px';
+      var popH = _pop.offsetHeight || 200;
+      var top = rect.top + rect.height / 2 - popH / 2;   // 타깃 높이에 세로 중앙
+      top = Math.max(12, Math.min(top, vh - popH - 12));
+      var left = onLeft ? 12 : (vw - w - 12);            // 넓은 쪽 가장자리에 붙임
       _pop.style.left = left + 'px'; _pop.style.top = top + 'px';
     } else {
       _hole.style.display = 'none';
       _pop.classList.add('center');
+      _pop.style.width = ''; _pop.style.left = ''; _pop.style.top = '';
     }
   }
   function loop() {
@@ -287,12 +292,15 @@
     _blocker.style.display = _targets.length ? 'none' : 'block';
 
     var foot;
+    var _defHint = { kr: '반짝이는 곳을 눌러주세요', ja: '光っている所をタップ', en: 'Tap the highlighted spot' };
     if (step.mode === 'wait') {
-      foot = '<div class="tut-hint">👆 ' + T({ kr: '반짝이는 곳을 눌러주세요', ja: '光っている所をタップ', en: 'Tap the highlighted spot' }) + '</div>'
+      foot = '<div class="tut-hint">👆 ' + T(step.hint || _defHint) + '</div>'
         + '<div class="tut-foot">' + backLink()
         + '<button class="tut-link" data-act="next">' + T({ kr: '건너뛰기', ja: 'スキップ', en: 'Skip' }) + '</button></div>';
     } else {
-      foot = '<div class="tut-actions">'
+      // 2026-06-25: next 모드도 step.hint 있으면 안내 라인 표시 (예: 후가공 — 설명 보고 골라주세요)
+      foot = (step.hint ? '<div class="tut-hint" style="margin-bottom:9px;">👆 ' + T(step.hint) + '</div>' : '')
+        + '<div class="tut-actions">'
         + (_hist.length ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
         + '<button class="tut-btn tut-btn-go" data-act="next">' + T({ kr: '다음 ▶', ja: '次へ ▶', en: 'Next ▶' }) + '</button></div>';
     }
@@ -551,6 +559,7 @@
     },
     { // 3) 용지
       target: '#soBizPaperGrid', mode: 'wait',
+      hint: { kr: '설명을 보고 맘에 드는 용지를 골라주세요', ja: '説明を見てお好みの用紙をお選びください', en: 'Read the notes and pick the paper you like' },
       msg: { kr: '잘했어요! 🎉 다음은 <b>용지</b>예요.<br>제일 무난한 건 <b>누브지</b>나 <b>랑데뷰 네추럴</b>. 펄 느낌 <b>컨셉</b>이나 <b>팝셋</b>도 멋져요 ✨',
         ja: '上手! 🎉 次は <b>用紙</b>。<br>無難なのは <b>ヌーブ紙</b> や <b>ランデブーナチュラル</b>。パール感の <b>コンセプト</b> や <b>ポップセット</b> も素敵 ✨',
         en: 'Great! 🎉 Next, the <b>paper</b>.<br>Safest picks: <b>Nuvegi</b> or <b>Rendezvous Natural</b>. Pearly <b>Concept</b> or <b>Popset</b> are lovely too ✨' },
@@ -558,6 +567,7 @@
     },
     { // 4) 박 / 후가공 — 에디터 모드면 "로고 부분 처리" 안내
       target: ['#soBizFoilToggle', '#soBizFinishToggle'], mode: 'next',
+      hint: { kr: '설명을 보고 원하는 후가공을 골라주세요 (선택)', ja: '説明を見てお好みの後加工をお選びください(任意)', en: 'Read the notes and pick any finishing you like (optional)' },
       msg: function () {
         if (_chosenBranch === 'editor') {
           return { kr: '에디터로 디자인 중이시죠? 박·후가공은 위치를 직접 잡기 어려워요.<br>그래서 <b>박 추가</b>나 <b>후가공</b>을 선택하면 <b>로고 부분</b>에 맞춰 처리해 드려요. 필요 없으면 패스~ 😉',
