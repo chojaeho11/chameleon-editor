@@ -9463,7 +9463,7 @@ html, body { background: #ffffff !important; }
         var topTxt = '#0c4a6e';                       // sky-900
         var pTag   = priceTag ? '<span style="font-size:11px; font-weight:600; color:#0369a1;">' + priceTag + '</span>' : '';
         return '<div style="display:flex; flex-direction:column; border:1.5px solid ' + border + '; border-radius:10px; overflow:hidden; box-shadow:' + shadow + '; transition:all 0.12s; height:80px;">'
-            + '<div style="background:' + topBg + '; color:' + topTxt + '; height:34px; flex:none; padding:0 10px; display:flex; justify-content:space-between; align-items:center; gap:6px;"><span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
+            + '<div style="background:' + topBg + '; color:' + topTxt + '; height:34px; flex:none; padding:0 10px; display:flex; justify-content:space-between; align-items:center; gap:6px;"><span style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1 1 auto; min-width:0;">' + (sel ? '✓ ' : '') + title + '</span>' + pTag + '</div>'
             + '<div style="background:#ffffff; color:#0a0a0a; flex:1; padding:6px 10px; font-size:11px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">' + descHtml + '</div>'
             + '</div>';
     }
