@@ -6405,13 +6405,14 @@ html, body { background: #ffffff !important; }
         } catch (_ge) {}
         var posStyle;
         if (gridRect) {
-            var W = Math.min(Math.max(gridRect.width, 280), vw - 16);
-            var H = Math.min(Math.max(gridRect.height, 320), vh - 16);
-            var L = gridRect.left, Tp = gridRect.top;
+            // 그리드 폭 유지 + 사진·설명·버튼이 다 들어오도록 충분한 높이 확보 후 화면 세로 중앙으로.
+            var W = Math.min(Math.max(gridRect.width, 300), vw - 16);
+            var H = Math.min(vh - 24, Math.max(gridRect.height, 460));
+            var L = gridRect.left;
             if (L + W > vw - 8) L = vw - W - 8;
             if (L < 8) L = 8;
-            if (Tp + H > vh - 8) Tp = vh - H - 8;
-            if (Tp < 8) Tp = 8;
+            var Tp = Math.round((vh - H) / 2);   // 세로 중앙 → 위로 올라가 내용이 다 보임
+            if (Tp < 12) Tp = 12;
             posStyle = 'position:fixed; left:' + L + 'px; top:' + Tp + 'px; width:' + W + 'px; height:' + H + 'px;';
         } else {
             posStyle = 'position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(440px, calc(100vw - 24px)); height:min(560px, calc(100vh - 24px));';
@@ -6431,7 +6432,8 @@ html, body { background: #ffffff !important; }
             + '</div>';
         var ov = document.createElement('div');
         ov.id = 'soOptInfoOv';
-        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:99998;';
+        // z-index: 튜토리얼 오버레이(약 2.1e9) 위로 — 튜토리얼 중에도 패널/버튼이 안 가리게.
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2147483600;';
         ov.innerHTML = '<div style="' + posStyle + ' background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 24px 60px -10px rgba(0,0,0,0.5); display:flex; flex-direction:column;">'
             + closeX + imgBox + bodyBox + btnBox + '</div>';
         ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
