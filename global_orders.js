@@ -1434,7 +1434,7 @@ window.loadVipOrders = async () => {
             // 모든 VIP 행: 컴팩트 표시 + 상세보기 팝업 (QQ 여부 무관)
             const lockLabel = lockMatch ? `🔒 ${lockedBy} 잠금` : (assignedManager ? '🔓 오픈' : '🆕 미지정');
             const statusBadge = st.includes('상담중:')
-                ? `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;">💬 ${assignedManager} 상담중</span>`
+                ? `<span class="badge" style="background:#dbeafe;color:#1d4ed8;font-weight:bold;white-space:nowrap;">💬 ${assignedManager} 상담중</span>`
                 : (st === '확인됨'
                     ? `<span class="badge" style="background:#dcfce7;color:#15803d;">✅ 완료</span>`
                     : `<span class="badge" style="background:#fee2e2;color:#ef4444;">대기중</span>`);
