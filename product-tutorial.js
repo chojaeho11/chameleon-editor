@@ -322,7 +322,7 @@
       foot = (step.hint ? '<div class="tut-hint" style="margin-bottom:9px;">👆 ' + T(step.hint) + '</div>' : '')
         + '<div class="tut-actions">'
         + (_hist.length ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
-        + '<button class="tut-btn tut-btn-go" data-act="next">' + T({ kr: '다음 ▶', ja: '次へ ▶', en: 'Next ▶' }) + '</button></div>';
+        + '<button class="tut-btn tut-btn-go" data-act="next">' + T(step.nextLabel || { kr: '다음 ▶', ja: '次へ ▶', en: 'Next ▶' }) + '</button></div>';
     }
     // 2026-06-25: 스텝에 picker 버튼 (예: 박 추가하기 / 후가공 추가하기) — 클릭 시 window[action](arg) 호출.
     var picksHtml = '';
@@ -598,10 +598,11 @@
         en: 'Great! 🎉 Next, the <b>paper</b>.<br>Safest picks: <b>Nuvegi</b> or <b>Rendezvous Natural</b>. Pearly <b>Concept</b> or <b>Popset</b> are lovely too ✨' },
       cheer: { kr: '탁월한 선택! 😍', ja: '素晴らしい選択! 😍', en: 'Excellent choice! 😍' }
     },
-    { // 4) 박 / 후가공 — 코치마크 안 버튼으로 옵션 모달 열기 (그리드는 접어둠)
-      target: ['#soBizFoilToggle', '#soBizFinishToggle'], mode: 'next',
+    { // 4) 박 / 후가공 — 타깃 없이 가이드만 띄우고, 버튼으로 옵션 모달 열기 (페이지 그리드는 가림)
+      target: null, mode: 'next',
+      nextLabel: { kr: '추가 없음', ja: '追加なし', en: 'No add-on' },
       onEnter: function () {
-        // 2026-06-25: 박/후가공 그리드를 접어 코치마크 뒤로 안 보이게 → 버튼으로 모달 표시.
+        // 2026-06-25: 박/후가공 그리드를 접어 가이드 뒤로 안 보이게 → 버튼으로 모달 표시.
         try {
           ['soBizFoilWrap', 'soBizFinishWrap'].forEach(function (id) { var w = document.getElementById(id); if (w) w.style.display = 'none'; });
           ['soBizFoilToggleArrow', 'soBizFinishToggleArrow'].forEach(function (id) { var a = document.getElementById(id); if (a) a.textContent = '▼'; });

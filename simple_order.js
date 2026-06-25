@@ -6432,8 +6432,8 @@ html, body { background: #ffffff !important; }
             + '</div>';
         var ov = document.createElement('div');
         ov.id = 'soOptInfoOv';
-        // z-index: 튜토리얼 오버레이(약 2.1e9) 위로 — 튜토리얼 중에도 패널/버튼이 안 가리게.
-        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2147483600;';
+        // z-index: 튜토리얼 오버레이(약 2.1e9) + 옵션 picker(2147483601) 위로 — 상세 패널이 항상 최상단.
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2147483646;';
         ov.innerHTML = '<div style="' + posStyle + ' background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 24px 60px -10px rgba(0,0,0,0.5); display:flex; flex-direction:column;">'
             + closeX + imgBox + bodyBox + btnBox + '</div>';
         ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
@@ -6446,9 +6446,18 @@ html, body { background: #ffffff !important; }
     // 2026-06-25: 튜토리얼/모달용 — 박·후가공 옵션 카드를 (튜토리얼 위) 전체 모달로 띄움.
     //   페이지의 grid 카드(인라인 onclick 그대로)를 복제해서 보여줌 → 클릭 시 기존 _soShowOptInfo 동작.
     window._soOpenOptionPicker = function(category) {
-        var gridId = (category === 'foil') ? 'soBizFoilGrid' : 'soBizFinishGrid';
-        var grid = document.getElementById(gridId);
-        var cardsHtml = grid ? grid.innerHTML : '';
+        // 2026-06-25: 카드를 데이터에서 직접 생성 — 페이지 섹션이 안 열려 grid 가 비어도 항상 표시.
+        var pool = (category === 'foil') ? BIZ_FOILS : BIZ_FINISHES;
+        var cardsHtml = (pool || []).map(function(o){
+            var sel = (category === 'foil') ? (state.bizFoil === o.key) : !!(state.bizFinishes && state.bizFinishes[o.key]);
+            var nm = _bizI18n(o, 'name'), ds = _bizI18n(o, 'desc');
+            var pickFn = (category === 'foil') ? ("window._soBizPickFoil('" + o.key + "')") : ("window._soBizToggleFinish('" + o.key + "')");
+            return '<div class="so-biz-opt-card" data-opt-cat="' + category + '" data-opt-key="' + o.key + '" '
+                + 'onclick="window._soBizCardClick(\'' + category + '\',\'' + o.key + '\', function(){' + pickFn + ';})" '
+                + 'style="position:relative; cursor:pointer;">'
+                + _bizCard2tone(nm, ds, '+' + fmtPrice(o.price), sel)
+                + '</div>';
+        }).join('');
         var title = (category === 'foil')
             ? tr('✨ 박 추가하기', '✨ 箔押しを追加', '✨ Add foil')
             : tr('🛠️ 후가공 추가하기', '🛠️ 後加工を追加', '🛠️ Add finishing');
