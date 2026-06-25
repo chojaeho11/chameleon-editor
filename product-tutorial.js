@@ -601,6 +601,11 @@
 
   window._tutMaybeStart = function (product) {
     try {
+      // 2026-06-25: 디자이너/관리자 템플릿 제작 모드에서는 튜토리얼 끔 (작업 방해)
+      try {
+        var _q = location.search || '';
+        if (/[?&](designer_template_mode|admin_template_mode)=/.test(_q)) { removeReplay(); if (_active) quit(); return; }
+      } catch (_qe) {}
       var code = (product && product.code) || '';
       var scn = pickScenario(code);
       if (!scn) { removeReplay(); if (_active) quit(); return; }

@@ -7016,41 +7016,29 @@ function scrollHotdeal(gridId, dir) {
                     //   Range 로 글자 단위 rect 추출 → top 좌표로 줄 그룹핑 → 100% DOM 일치.
                     var allLines = [];
                     try {
-                        var _txtNode = null;
-                        // 첫 번째 Text node 찾기 (innerText 의 child 가 Text 또는 br/div 중 Text 인 경우)
-                        function _findFirstText(el) {
+                        // 2026-06-25: 모든 텍스트 노드 수집 — 멀티라인(<br>로 분리)은 텍스트 노드가 여러 개이므로
+                        //   기존처럼 '첫 번째 노드'만 읽으면 둘째 줄부터 export 에서 누락됨 (영문 주소 등 여러 줄 텍스트 사라짐).
+                        var _textNodes = [];
+                        (function _collectTextNodes(el){
                             for (var ci = 0; ci < el.childNodes.length; ci++) {
                                 var cn = el.childNodes[ci];
-                                if (cn.nodeType === 3 && cn.textContent.length > 0) return cn;
-                                if (cn.nodeType === 1) {
-                                    var sub = _findFirstText(cn);
-                                    if (sub) return sub;
-                                }
+                                if (cn.nodeType === 3 && cn.textContent.length > 0) _textNodes.push(cn);
+                                else if (cn.nodeType === 1 && !(cn.classList && (cn.classList.contains('me-handle') || cn.classList.contains('me-del')))) _collectTextNodes(cn);
                             }
-                            return null;
-                        }
-                        _txtNode = _findFirstText(it.el);
-                        if (_txtNode) {
-                            var _fullText = _txtNode.textContent;
-                            var _lastTop = -9999;
-                            var _curLine = '';
-                            for (var _ci = 0; _ci < _fullText.length; _ci++) {
+                        })(it.el);
+                        var _lastTop = -9999, _curLine = '';
+                        _textNodes.forEach(function(_tn){
+                            var _full = _tn.textContent;
+                            for (var _ci = 0; _ci < _full.length; _ci++) {
                                 var _cr = document.createRange();
-                                _cr.setStart(_txtNode, _ci);
-                                _cr.setEnd(_txtNode, _ci + 1);
+                                _cr.setStart(_tn, _ci); _cr.setEnd(_tn, _ci + 1);
                                 var _crect = _cr.getBoundingClientRect();
                                 if (_lastTop === -9999) _lastTop = _crect.top;
-                                if (Math.abs(_crect.top - _lastTop) > 2) {
-                                    // 새 줄 시작
-                                    allLines.push(_curLine);
-                                    _curLine = _fullText[_ci];
-                                    _lastTop = _crect.top;
-                                } else {
-                                    _curLine += _fullText[_ci];
-                                }
+                                if (Math.abs(_crect.top - _lastTop) > 2) { allLines.push(_curLine); _curLine = _full[_ci]; _lastTop = _crect.top; }
+                                else _curLine += _full[_ci];
                             }
-                            if (_curLine) allLines.push(_curLine);
-                        }
+                        });
+                        if (_curLine) allLines.push(_curLine);
                     } catch(_mle) {
                         console.warn('[_meExportPNG] DOM line detection failed', _mle);
                     }
@@ -7804,6 +7792,9 @@ function scrollHotdeal(gridId, dir) {
         }
         // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
         html += '<span class="me-prop-group" style="gap:4px;">';
+        // 2026-06-25: 90° 회전 + 화면 꽉 채우기 (사진/객체 공용)
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_rotate90','90° 회전') + '" data-action="rot90"><i class="fa-solid fa-rotate-right"></i></button>';
+        html += '<button type="button" class="me-prop-btn" title="' + T('me_fill','화면 꽉 채우기') + '" data-action="fill"><i class="fa-solid fa-expand"></i></button>';
         html += '<button type="button" class="me-prop-btn" title="' + T('me_dup','복제 (Ctrl+D)') + '" data-action="dup"><i class="fa-solid fa-clone"></i></button>';
         // 2026-06-18 v566: 좌우/상하 반전 → 캔버스 가로/세로 중앙정렬 로 변경
         html += '<button type="button" class="me-prop-btn" title="' + T('me_center_h','가로 중앙정렬') + '" data-action="centerh"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>';
@@ -7934,6 +7925,19 @@ function scrollHotdeal(gridId, dir) {
             btn.addEventListener('click', function(){
                 var act = btn.dataset.action;
                 if (act === 'dup' && window._meDuplicate) window._meDuplicate(it);
+                // 2026-06-25: 90° 회전 — 선택 객체를 시계방향 90도씩
+                else if (act === 'rot90') {
+                    _meSnapshot();
+                    it.rotation = ((((it.rotation || 0) + 90) % 360) + 360) % 360;
+                    _meSyncItemDisplay(it);
+                }
+                // 2026-06-25: 화면 꽉 채우기 — 박스를 캔버스 전체로 (이미지=배경처럼). 회전 리셋.
+                else if (act === 'fill') {
+                    _meSnapshot();
+                    it.rotation = 0;
+                    it.x = 0; it.y = 0; it.w = me.natW; it.h = me.natH;
+                    _meSyncItemDisplay(it);
+                }
                 // 2026-06-18 v566: 가로/세로 중앙정렬 — 선택한 item 의 박스를 캔버스 중앙으로 이동.
                 else if (act === 'centerh') {
                     _meSnapshot();
@@ -9976,14 +9980,11 @@ function scrollHotdeal(gridId, dir) {
             if (!url) { try { inp.focus(); } catch(_){} return; }
             if (/^@/.test(url)) url = 'https://instagram.com/' + url.replace(/^@+/, '');
             else if (!/^https?:\/\//i.test(url) && !/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
-            if (!window.QRCode || typeof window.QRCode.toDataURL !== 'function') {
-                alert(T('QR 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.','QRライブラリ読込中。少し待って再試行。','QR library is still loading. Try again shortly.'));
-                return;
-            }
             var _goBtn = ov.querySelector('#meQrGo');
             if (_goBtn) { _goBtn.disabled = true; _goBtn.textContent = T('생성 중...','作成中...','Creating...'); }
-            // qrcode@1.5.1 toDataURL 은 Promise 반환 (다른 코드와 동일하게 .then 사용)
-            Promise.resolve(window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }))
+            // QR 라이브러리가 아직(lazy) 안 떴으면 즉시 로드 후 생성
+            _meEnsureQRLib().then(function(){
+            return Promise.resolve(window.QRCode.toDataURL(url, { width: 600, margin: 1, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } }))
                 .then(function(dataUrl){
                     if (!dataUrl) throw new Error('empty');
                     var side = Math.round(Math.min(me.natW, me.natH) * 0.42);
@@ -9997,10 +9998,31 @@ function scrollHotdeal(gridId, dir) {
                     if (_goBtn) { _goBtn.disabled = false; _goBtn.textContent = T('QR 생성','QR作成','Create QR'); }
                     alert(T('QR 생성 실패 — 주소를 확인해주세요.','QR作成失敗 — URLをご確認ください。','Failed to create QR — check the URL.'));
                 });
+            }).catch(function(le){
+                console.warn('[me qr lib]', le);
+                if (_goBtn) { _goBtn.disabled = false; _goBtn.textContent = T('QR 생성','QR作成','Create QR'); }
+                alert(T('QR 라이브러리를 불러오지 못했어요. 잠시 후 다시 시도해주세요.','QRライブラリを読み込めませんでした。少し待って再試行。','Could not load QR library. Try again shortly.'));
+            });
         };
         ov.querySelector('#meQrGo').onclick = go;
         inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); go(); } });
     };
+
+    // 2026-06-25: QR 라이브러리(qrcode@1.5.1) 보장 로드 — lazy 로딩이 안 끝났거나 실패해도 즉시 주입.
+    var _meQrLibPromise = null;
+    function _meEnsureQRLib() {
+        if (window.QRCode && typeof window.QRCode.toDataURL === 'function') return Promise.resolve();
+        if (_meQrLibPromise) return _meQrLibPromise;
+        _meQrLibPromise = new Promise(function(resolve, reject){
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';
+            s.async = true;
+            s.onload = function(){ (window.QRCode && window.QRCode.toDataURL) ? resolve() : reject(new Error('QRCode global missing')); };
+            s.onerror = function(){ _meQrLibPromise = null; reject(new Error('script load error')); };
+            document.head.appendChild(s);
+        });
+        return _meQrLibPromise;
+    }
 
     window._meAddImage = function(src, opts, onAdded) {
         opts = opts || {};
@@ -15083,7 +15105,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=627"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
-<script src="/product-tutorial.js?v=626"></script>
+<script src="/product-tutorial.js?v=627"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=17"></script>
 
