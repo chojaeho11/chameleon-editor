@@ -10214,11 +10214,11 @@ function scrollHotdeal(gridId, dir) {
         _meSyncItemDisplay(it);
         _meBindDrag(it);
         _meSelect(it);
+        // 2026-06-25: 새 텍스트도 textarea 모달로 편집 (인라인 contenteditable 폐지).
+        //   모바일 일본어/한국어 IME(히라가나↔한자 변환 등)가 transform 된 contenteditable 에서 깨지던 문제 해결.
         setTimeout(function(){
-            el.setAttribute('contenteditable', 'true');
-            el.focus();
-            document.execCommand && document.execCommand('selectAll', false, null);
-        }, 50);
+            try { if (typeof _meOpenTextEditModal === 'function') _meOpenTextEditModal(it); } catch(_){}
+        }, 30);
     };
 
     // 2026-06-15: 상단 색상 chip 통합 — 선택 상태에 따라 글씨/도형 색 vs 배경에 적용.
