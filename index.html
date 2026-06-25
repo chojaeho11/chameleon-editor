@@ -7200,30 +7200,43 @@ function scrollHotdeal(gridId, dir) {
     }
     async function _meLoadFontForOutline(family, weight) {
         var clean = String(family || '').replace(/["']/g, '').trim();
+        // 시스템 폰트(generic)는 아웃라인 대상 아님
+        if (!clean || clean === 'sans-serif' || clean === 'serif' || clean === 'monospace' || clean === 'cursive') return null;
         var w = String(weight || 400);
         var key = clean + '|' + w;
         if (_meFontCache[key]) return _meFontCache[key];
         if (_meOutlineFailedFonts[key]) return null;
         var info = _meFontSourceSlug[clean];
-        if (!info) { _meOutlineFailedFonts[key] = true; return null; }
+        var slug, subsets, weights;
+        if (info) {
+            slug = info.slug; subsets = info.subsets; weights = info.weights || [400, 700, 900];
+        } else {
+            // 2026-06-25: 맵에 없는 폰트(영문 스크립트/세리프 등)도 이름→fontsource 슬러그 추정으로 아웃라인 시도.
+            //   (이전엔 맵에 없으면 즉시 실패 → 라이브 텍스트로 들어가 인쇄 시 폰트 치환 위험)
+            slug = clean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+            subsets = ['latin'];
+            weights = [400, 700, 900];
+            if (!slug) { _meOutlineFailedFonts[key] = true; return null; }
+        }
         try { await _meLoadOpentype(); } catch(_loe){ _meOutlineFailedFonts[key] = true; return null; }
-        var weights = (info.weights || [400, 700, 900]);
-        // weight 보정 — 폰트가 지원하는 weight 중 가장 가까운 값으로
         var aw = parseInt(w, 10) || 400;
         var bestW = weights.reduce(function(a, b){ return Math.abs(b - aw) < Math.abs(a - aw) ? b : a; }, weights[0]);
-        // subset 우선순위로 시도
-        for (var si = 0; si < info.subsets.length; si++) {
-            var subset = info.subsets[si];
-            var url = 'https://cdn.jsdelivr.net/fontsource/fonts/' + info.slug + '@latest/' + subset + '-' + bestW + '-normal.woff';
-            try {
-                var resp = await fetch(url, { cache: 'force-cache' });
-                if (!resp.ok) continue;
-                var buf = await resp.arrayBuffer();
-                var font = _meOpentypeLib.parse(buf);
-                _meFontCache[key] = font;
-                console.log('[outline] loaded font', clean, bestW, 'subset:', subset, 'glyphs:', font.numGlyphs);
-                return font;
-            } catch(_fe){ continue; }
+        // 요청 weight 우선, 없으면 흔한 weight 들로 폴백 (fontsource 파일이 weight 별로 존재)
+        var weightsToTry = [bestW];
+        [400, 700, 500, 600, 900, 300, 800].forEach(function(x){ if (weightsToTry.indexOf(x) < 0) weightsToTry.push(x); });
+        for (var si = 0; si < subsets.length; si++) {
+            for (var wi = 0; wi < weightsToTry.length; wi++) {
+                var url = 'https://cdn.jsdelivr.net/fontsource/fonts/' + slug + '@latest/' + subsets[si] + '-' + weightsToTry[wi] + '-normal.woff';
+                try {
+                    var resp = await fetch(url, { cache: 'force-cache' });
+                    if (!resp.ok) continue;
+                    var buf = await resp.arrayBuffer();
+                    var font = _meOpentypeLib.parse(buf);
+                    _meFontCache[key] = font;
+                    console.log('[outline] loaded font', clean, weightsToTry[wi], 'subset:', subsets[si], 'glyphs:', font.numGlyphs);
+                    return font;
+                } catch(_fe){ continue; }
+            }
         }
         _meOutlineFailedFonts[key] = true;
         return null;
