@@ -9619,6 +9619,36 @@ html, body { background: #ffffff !important; }
         setBtn('soBizUploadBtnBack', !!state.fileBack, { done: tr('뒷면 완료', '裏面 完了', 'Back ✓'), todo: tr('뒷면 올리기', '裏面アップロード', 'Back') });
     };
 
+    // 2026-06-25: PNG dataURL → File (image/png). 미니에디터 앞/뒤 export 용.
+    function _soPngToFile(dataUrl, name) {
+        var bin = atob(dataUrl.split(',')[1]);
+        var arr = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return new File([new Blob([arr], { type: 'image/png' })], name, { type: 'image/png' });
+    }
+    // 2026-06-25: 명함 양면 — 미니에디터 앞/뒤 둘 다 export → state.file / state.fileBack.
+    //   하나라도 내용 있으면 true 반환(=generic export 스킵). 빈 면은 set 안 함(업로드 보존).
+    async function _soBizExportEditorSides() {
+        if (!state.isBizCard) return false;
+        if (typeof window._meSidesEnabled !== 'function' || !window._meSidesEnabled()) return false;
+        if (typeof window._meExportBothSides !== 'function') return false;
+        var ex = await window._meExportBothSides();
+        var any = false;
+        if (ex && ex.front) {
+            state.file = _soPngToFile(ex.front, 'biz-front-' + Date.now() + '.png');
+            state.thumbDataUrl = ex.front; state._cartThumb = ex.front; any = true;
+        }
+        if (ex && ex.back) {
+            state.fileBack = _soPngToFile(ex.back, 'biz-back-' + Date.now() + '.png');
+            state.thumbDataUrlBack = ex.back; any = true;
+        }
+        if (any) {
+            try { if (typeof window.renderUploadDone === 'function') window.renderUploadDone('biz-design'); } catch(_){}
+            try { if (typeof window._soBizRefreshUploadBtns === 'function') window._soBizRefreshUploadBtns(); } catch(_){}
+        }
+        return any;
+    }
+
     // 2026-06-16: 스티커 렌더 + 핸들러 — admin_products(category=pp_sticker) 자동 로드.
     async function _soStickerRender() {
         if (!state.isSticker) return;
@@ -13556,6 +13586,8 @@ html, body { background: #ffffff !important; }
                     if (typeof window._meFitStage === 'function') window._meFitStage();
                 } catch(_se) { console.warn('[qd setSize]', _se); }
             };
+            // 2026-06-25: 명함(양면)이면 에디터 앞/뒤 탭 ON, 그 외 OFF (단일면)
+            try { if (typeof window._meSidesInit === 'function') window._meSidesInit(!!state.isBizCard); } catch(_msi) {}
             requestAnimationFrame(function(){
                 _doFit();
                 setTimeout(_doFit, 200);
@@ -13610,6 +13642,12 @@ html, body { background: #ffffff !important; }
             var btn = document.getElementById('soQdApplyBtn');
             try {
                 if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px;"></i>' + tr('처리 중...','処理中...','Processing...'); }
+                // 2026-06-25: 명함 양면 — 앞/뒤 둘 다 export 후 종료 (단일 export 분기 스킵)
+                if (await _soBizExportEditorSides()) {
+                    if (typeof recalc === 'function') recalc();
+                    if (typeof showToast === 'function') showToast(tr('앞·뒤 디자인이 주문에 적용되었습니다','表裏のデザインが注文に適用されました','Front & back applied to order'), 'success');
+                    return;
+                }
                 var dataUrl = null;
                 if (typeof window._meExportPNG === 'function') {
                     dataUrl = await window._meExportPNG();
@@ -14903,8 +14941,11 @@ html, body { background: #ffffff !important; }
         //   3) state.file 가 이미지 → 그대로 (사용자 의도 = 그 이미지)
         state._overlayBlob = null;
         state._overlayFname = null;
+        // 2026-06-25: 명함 양면 — 미니에디터 앞/뒤 둘 다 export (현재 면 1개만 export 하는 generic 경로 대체)
+        var _bizSidesHandled = false;
+        try { _bizSidesHandled = await _soBizExportEditorSides(); } catch(_bse) { console.warn('[biz sides export]', _bse); }
         try {
-            if (typeof window._meExportPNG === 'function') {
+            if (!_bizSidesHandled && typeof window._meExportPNG === 'function') {
                 var _stage = document.getElementById('meStage');
                 var _itemCount = _stage ? _stage.querySelectorAll('.me-item').length : 0;
                 var _hasContent = _itemCount > 0;

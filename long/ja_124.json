@@ -502,6 +502,8 @@
   "ph_search_template": "検索ワード入力 (例: カフェ、セール)",
   "editor_design_wizard": "デザインウィザード",
   "editor_unlock_bg": "解除",
+  "editor_face_front": "表面",
+  "editor_face_back": "裏面",
   "editor_stroke_width": "線の太さ",
   "editor_text_edit": "テキスト編集",
   "editor_text_label": "テキスト",

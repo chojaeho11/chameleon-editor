@@ -5874,6 +5874,11 @@ function scrollHotdeal(gridId, dir) {
         .me-color-wrap input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
         /* 대지 외 어두운 배경 */
         .me-stage-wrap { background:#1d1d1f; border:none; border-radius:18px; padding:20px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+        /* 2026-06-25: 양면(앞/뒤) 탭 — 캔버스 바로 위 */
+        .me-side-tabs { display:flex; gap:8px; margin-bottom:10px; }
+        .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+        .me-side-tab:hover { border-color:#c4b5fd; }
+        .me-side-tab.active { background:#6d28d9; color:#fff; border-color:#6d28d9; }
         .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; border-radius:2px; }
         .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
         .me-item.selected { outline:1.5px solid #007AFF; outline-offset:2px; }
@@ -6042,6 +6047,11 @@ function scrollHotdeal(gridId, dir) {
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
+            <!-- 2026-06-25: 양면(앞/뒤) 탭 — 명함 등 양면 제품에서만 표시 (_meSidesInit) -->
+            <div class="me-side-tabs" id="meSideTabs" style="display:none;">
+                <button type="button" class="me-side-tab active" data-side="front" onclick="window._meSwitchSide('front')"><span data-i18n="editor_face_front">앞면</span></button>
+                <button type="button" class="me-side-tab" data-side="back" onclick="window._meSwitchSide('back')"><span data-i18n="editor_face_back">뒷면</span></button>
+            </div>
             <div class="me-stage-wrap">
                 <div class="me-stage-row" style="display:flex; align-items:stretch; gap:14px; max-width:100%;">
                     <!-- 2026-06-16 v9: 세로 mm 줄자 — 캔버스 왼쪽, 약간 떨어진 위치. natH 기반 자동 tick. -->
@@ -6616,6 +6626,70 @@ function scrollHotdeal(gridId, dir) {
         _meUpdateUndoBtn();
     };
     window._meSnapshot = _meSnapshot;
+
+    // 2026-06-25: 앞/뒤면(양면 명함 등) — 단일면 me 모델 위에 두 면 스냅샷을 저장/교체.
+    //   _meRestore 가 비노출이라 여기(IIFE 내부)에 구현하고 깔끔한 API만 window 에 노출.
+    var _meSideCur = 'front';
+    var _meSideEnabled = false;
+    var _meSideSnap = { front: null, back: null };
+    function _meSerializeState() {
+        if (!me) return null;
+        return {
+            natW: me.natW, natH: me.natH, bg: me.bg,
+            items: me.items.map(function(it){
+                var clone = {};
+                ['type','x','y','w','h','rotation','src','text','fill','fontSize','fontFamily','fontWeight','letterSpacing','lineHeight','textAlign','shape','stroke','strokeWidth','_edgeResized'].forEach(function(k){
+                    if (it[k] !== undefined) clone[k] = it[k];
+                });
+                return clone;
+            })
+        };
+    }
+    function _meEmptyState() {
+        return { natW: me.natW, natH: me.natH, bg: me.bg, items: [] };
+    }
+    function _meUpdateSideTabsUI() {
+        var box = document.getElementById('meSideTabs');
+        if (!box) return;
+        box.style.display = _meSideEnabled ? 'flex' : 'none';
+        box.querySelectorAll('.me-side-tab').forEach(function(t){
+            t.classList.toggle('active', t.getAttribute('data-side') === _meSideCur);
+        });
+    }
+    window._meSidesEnabled = function() { return _meSideEnabled; };
+    window._meSidesInit = function(on) {
+        _meSideEnabled = !!on;
+        _meSideCur = 'front';
+        _meSideSnap = { front: null, back: null };
+        _meUpdateSideTabsUI();
+    };
+    window._meSwitchSide = function(side) {
+        if (!_meSideEnabled || (side !== 'front' && side !== 'back')) return;
+        if (side === _meSideCur) return;
+        // 현재 면 저장
+        _meSideSnap[_meSideCur] = _meSerializeState();
+        _meSideCur = side;
+        var snap = _meSideSnap[side];
+        _meRestore(snap || _meEmptyState());  // 미방문 면 = 빈 캔버스 (confirm 없음)
+        _meSelect(null);
+        _meUpdateSideTabsUI();
+    };
+    // 앞·뒤 둘 다 PNG export (내용 있는 면만). { front, back } dataURL 반환. 끝에 보던 면 복원.
+    window._meExportBothSides = async function() {
+        if (!me) return { front: null, back: null };
+        _meSideSnap[_meSideCur] = _meSerializeState();  // 현재 면 캡처
+        var out = { front: null, back: null };
+        var sides = ['front', 'back'];
+        for (var i = 0; i < sides.length; i++) {
+            var s = sides[i];
+            var snap = _meSideSnap[s];
+            if (!snap || !snap.items || snap.items.length === 0) continue;
+            _meRestore(snap);
+            try { out[s] = await window._meExportPNG(); } catch (e) { console.warn('[me sides export]', s, e); }
+        }
+        _meRestore(_meSideSnap[_meSideCur] || _meEmptyState());  // 보던 면 복원
+        return out;
+    };
 
     // 2026-06-14: Smart guide — 드래그 중 캔버스 중앙(가로·세로)에 6px 이내면 snap.
     var _snapTol = 6;
@@ -14947,7 +15021,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=626"></script>
+<script src="/simple_order.js?v=627"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=626"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
