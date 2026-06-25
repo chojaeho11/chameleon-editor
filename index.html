@@ -18679,8 +18679,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 var pName = product.name || '';
                 var pPrice = product.price || 0;
                 var currency = 'KRW';
-                if (cc === 'JP') { pName = product.name_jp || pName; pPrice = product.price_jp || pPrice; currency = 'JPY'; }
-                if (cc === 'US') { pName = product.name_us || pName; pPrice = product.price_us || pPrice; currency = 'USD'; }
+                if (cc === 'JP') { pName = product.name_jp || pName; pPrice = product.price_jp || Math.round(pPrice * 0.1); currency = 'JPY'; }
+                if (cc === 'US') { pName = product.name_us || pName; pPrice = product.price_us || Math.round(pPrice * 0.001); currency = 'USD'; }
                 var _scr = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE) || {};
                 if (cc === 'CN') { pName = product.name_cn || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.CN || 0.05)); currency = 'CNY'; }
                 if (cc === 'AR') { pName = product.name_ar || product.name_us || pName; pPrice = Math.round(pPrice * (_scr.AR || 0.001)); currency = 'SAR'; }
@@ -19022,7 +19022,8 @@ window.showChoiceModal = async function(key) {
         // 2026-06-04: JP description_jp 가 비어있으면 description 한국어 fallback → 골판지 등 부적합 텍스트 노출.
         //   description_jp 없으면 dDesc 비움 (description 한국어 fallback 방지)
         else dDesc = "";
-        if (product.price_jp) dPrice = product.price_jp;
+        // 2026-06-25: price_jp 없으면 KRW×0.1 환산 (구: 원화 그대로 ¥ 표시 버그)
+        dPrice = product.price_jp || Math.round((product.price || 0) * 0.1);
     } else if (lang === 'en') {
         if (product.name_us) dName = _stripSz(product.name_us);
         if (product.description_us) dDesc = product.description_us;
@@ -19299,13 +19300,13 @@ window.showChoiceModal = async function(key) {
                         optionsHtml += `<div style="display:flex; flex-wrap:wrap; gap:5px;">`;
                         catAddons.forEach(a => {
                             let basePrice = a.price_kr || a.price || 0;
-                            if (lang === 'ja' && a.price_jp) basePrice = a.price_jp;
+                            // 2026-06-25: ja 도 KRW(price_kr) 유지 → 표시는 ×rate 로 환산 (price_jp 직접 사용 금지, data-price 는 KRW 기준)
                             // EN: price_us(구버전 환율) 사용 안 함 → KRW 유지
                             const imgUrl = a.img_url || 'https://placehold.co/40/eeeeee/cccccc?text=+';
                             let colorPriceLabel = '';
                             if (basePrice > 0) {
                                 const _usR = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001;
-                                if (lang === 'ja') colorPriceLabel = `+¥${basePrice.toLocaleString()}`;
+                                if (lang === 'ja') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.JP || 0.1)).toLocaleString()}`;
                                 else if (lang === 'en') colorPriceLabel = `+$${Math.round(basePrice * _usR).toLocaleString()}`;
                                 else if (lang === 'zh') colorPriceLabel = `+¥${Math.round(basePrice * (_cr.CN || 0.05)).toLocaleString()}`;
                                 else if (lang === 'ar') colorPriceLabel = `+$${Math.round(basePrice * (_cr.AR || 0.001)).toLocaleString()}`;
@@ -19335,7 +19336,7 @@ window.showChoiceModal = async function(key) {
                             let optName = a.name_kr || a.name;
                             let basePrice = a.price_kr || a.price || 0;
                             let priceStr = `+${basePrice.toLocaleString()}원`;
-                            if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; if (a.price_jp) { basePrice = a.price_jp; priceStr = `+¥${basePrice.toLocaleString()}`; } }
+                            if (lang === 'ja') { if (a.name_jp) optName = a.name_jp; const _rJ = (_cr && _cr.JP) || 0.1; priceStr = `+¥${Math.round(basePrice * _rJ).toLocaleString()}`; }
                             else if (lang === 'en') { if (a.name_us) optName = a.name_us; const _usR2 = (window.SITE_CONFIG && window.SITE_CONFIG.CURRENCY_RATE && window.SITE_CONFIG.CURRENCY_RATE.US) || 0.001; priceStr = `+$${Math.round(basePrice * _usR2).toLocaleString()}`; }
                             else if (lang === 'zh') { optName = a.name_cn || a.name_us || optName; const _r = (_cr && _cr.CN) || 0.05; priceStr = `+¥${Math.round(basePrice * _r).toLocaleString()}`; }
                             else if (lang === 'ar') { optName = a.name_ar || a.name_us || optName; const _r = (_cr && _cr.AR) || 0.001; priceStr = `+$${Math.round(basePrice * _r).toLocaleString()}`; }
@@ -20437,7 +20438,8 @@ window.updateModalTotal = function() {
     } else {
         // 일반: (국가별 단가) * (상품 수량)
         let unitPrice = product.price; // KRW 기본
-        if (lang === 'ja' && product.price_jp) unitPrice = product.price_jp;
+        // 2026-06-25: ja 표시 단가 = price_jp(엔) 또는 KRW×0.1 (구: price_jp 없으면 원화 그대로 버그)
+        if (lang === 'ja') unitPrice = product.price_jp || Math.round((product.price || 0) * 0.1);
 
         productTotal = unitPrice * prodQty;
     }
@@ -20810,8 +20812,9 @@ window.updateModalTotal = function() {
         }
 
         // 일본어면 price_jp 사용 (작품 제품타입/프로모 규격 선택 시 제외)
-        if (!product._artworkTypePrice && !window.__promoFormatPriceKRW && lang === 'ja' && product.price_jp && product.price_jp > 0) {
-            unitPrice = product.price_jp;
+        if (!product._artworkTypePrice && !window.__promoFormatPriceKRW && lang === 'ja') {
+            // 2026-06-25: price_jp(엔) 또는 KRW×0.1 (구: price_jp 없으면 원화 그대로 ¥ 버그)
+            unitPrice = (product.price_jp && product.price_jp > 0) ? product.price_jp : Math.round((unitPrice || 0) * 0.1);
         }
         const formatValue = (val) => {
             if (lang === 'ja') return '¥' + Math.floor(val).toLocaleString();
@@ -21301,7 +21304,7 @@ if (w >= 20 && h >= 20) {
         const renderItem = (a) => {
             let optName = _lang==='ja' ? (a.name_jp||a.name_us||a.name_kr||a.name) : _lang==='kr' ? (a.name_kr||a.name) : (a.name_us||a.name_kr||a.name);
             let basePrice = a.price_kr || a.price || 0;
-            if (_lang==='ja' && a.price_jp) basePrice = a.price_jp;
+            // 2026-06-25: ja 도 KRW(price_kr) 유지 — data-price 는 KRW 기준 (표시는 formatValue 가 환산)
             const isPreSelected = window.pendingSelectedAddons && window.pendingSelectedAddons.includes(a.code);
             const imgUrl = a.img_url || '';
             // 짧은 이름 (2글자 약어)
@@ -26478,8 +26481,8 @@ window.filterModalItems = function(keyword) {
         };
         const _fmtR = (p) => {
             const price = Number(p.price) || 0;
-            if (_c==='JP') { const jp = Number(p.price_jp) || price; return '¥' + Math.floor(jp).toLocaleString(); }
-            if (_c==='US') { const us = Number(p.price_us) || price; return '$' + Math.round(us).toLocaleString(); }
+            if (_c==='JP') { const jp = Number(p.price_jp) || Math.round(price * 0.1); return '¥' + Math.floor(jp).toLocaleString(); }
+            if (_c==='US') { const us = Number(p.price_us) || Math.round(price * 0.001); return '$' + Math.round(us).toLocaleString(); }
             const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
             if (_c==='CN') { const r = rates.CN||0.05; return '¥' + Math.round(price*r).toLocaleString(); }
             if (_c==='AR') { const r = rates.AR||0.001; return '$' + Math.round(price*r).toLocaleString(); }
@@ -26639,8 +26642,8 @@ window.filterModalItems = function(keyword) {
     };
     const _localPrice = (it) => {
         const price = Number(it.price) || 0;
-        if (_cc==='JP') { return '¥' + Math.floor(Number(it.price_jp)||price).toLocaleString(); }
-        if (_cc==='US') { return '$' + Math.round(Number(it.price_us)||price).toLocaleString(); }
+        if (_cc==='JP') { return '¥' + Math.floor(Number(it.price_jp)||Math.round(price*0.1)).toLocaleString(); }
+        if (_cc==='US') { return '$' + Math.round(Number(it.price_us)||Math.round(price*0.001)).toLocaleString(); }
         const rates = window.SITE_CONFIG?.CURRENCY_RATE || {};
         if (_cc==='CN') return '¥' + Math.round(price*(rates.CN||0.01)).toLocaleString();
         if (_cc==='AR') return '$' + Math.round(price*(rates.AR||0.001)).toLocaleString();

@@ -283,7 +283,16 @@ function condClass(id){return 'cond-'+(id||'good');}
 function statusLabel(s){return{active:t('active'),reserved:t('reserved'),sold:t('sold')}[s]||s;}
 function statusClass(s){return{active:'status-active',reserved:'status-reserved',sold:'status-sold'}[s]||'status-active';}
 function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):'';}
-function fmtPrice(v){return v?Number(v).toLocaleString():'0';}
+// 2026-06-25: 통화 환산 (KRW 저장 → 현지 통화). ja=¥(×0.1) / en=$(×0.001) / ko=원. 심볼 포함 문자열 반환.
+const _MKT_CCY = LANG==='ja' ? 'JP' : LANG==='en' ? 'US' : 'KR';
+function fmtPrice(v){
+    const krw=Number(v)||0;
+    const rate=({KR:1,JP:0.1,US:0.001})[_MKT_CCY]||1;
+    const c=Math.round(krw*rate);
+    if(_MKT_CCY==='JP')return '¥'+c.toLocaleString();
+    if(_MKT_CCY==='US')return '$'+c.toLocaleString();
+    return c.toLocaleString()+'원';
+}
 
 function tempDisplay(temp){
     const v=Number(temp)||36.5;
@@ -382,7 +391,7 @@ async function loadMyTx(){
                     ${thumb}
                     <div style="flex:1;min-width:0;">
                         <div style="font-weight:700;font-size:13px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.title)}</div>
-                        <div style="font-size:12px;color:#475569;margin-top:2px;">${fmtPrice(it.price)}원 · <span style="color:${sl.color};font-weight:700;">${sl.txt}</span></div>
+                        <div style="font-size:12px;color:#475569;margin-top:2px;">${fmtPrice(it.price)} · <span style="color:${sl.color};font-weight:700;">${sl.txt}</span></div>
                     </div>
                     <div style="display:flex;gap:4px;flex-shrink:0;">${actions}</div>
                 </div>`;
@@ -427,7 +436,7 @@ async function loadItems(){
             <div class="item-img">${(Array.isArray(item.images)&&item.images.length>0)?`<img src="${item.images[0]}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`:`<i class="fa-solid fa-image"></i>`}</div>
             <div class="item-body">
                 <h3>${esc(item.title)}</h3>
-                <div class="item-price">${fmtPrice(item.price)} ${t('won')}</div>
+                <div class="item-price">${fmtPrice(item.price)}</div>
                 <div style="margin-bottom:6px;">
                     <span class="cond-badge ${condClass(item.condition)}">${condName(item.condition)}</span>
                     ${item.is_negotiable?`<span class="nego-badge">${t('negotiable')}</span>`:''}
@@ -480,7 +489,7 @@ async function showDetail(id){
         ${galleryHtml}
         <span class="status-badge ${statusClass(item.status)}" style="position:static;display:inline-block;margin-bottom:8px;">${statusLabel(item.status)}</span>
         <h2 style="font-size:20px;font-weight:900;margin-bottom:4px;">${esc(item.title)}</h2>
-        <div style="font-size:24px;font-weight:900;color:#0f172a;margin-bottom:8px;">${fmtPrice(item.price)} ${t('won')}</div>
+        <div style="font-size:24px;font-weight:900;color:#0f172a;margin-bottom:8px;">${fmtPrice(item.price)}</div>
         <div style="margin-bottom:10px;">
             <span class="cond-badge ${condClass(item.condition)}">${condName(item.condition)}</span>
             ${item.is_negotiable?`<span class="nego-badge">${t('negotiable')}</span>`:''}
@@ -511,9 +520,9 @@ async function showDetail(id){
             <p>${t('safeDesc')}</p>
             <div class="fee-note">${t('safeFee')}</div>
             <button class="safe-tx-btn" onclick="startSafeTx('${item.id}',${item.price})" style="margin-top:10px;">
-                <i class="fa-solid fa-building-columns"></i> ${t('safeBuy')} (${fmtPrice(item.price)} ${t('won')})
+                <i class="fa-solid fa-building-columns"></i> ${t('safeBuy')} (${fmtPrice(item.price)})
             </button>
-            <div style="font-size:11px;color:#78350f;margin-top:6px;text-align:center;">판매자 수령액: ${fmtPrice(Math.round(item.price*0.95))} ${t('won')} (5% 공제 후)</div>
+            <div style="font-size:11px;color:#78350f;margin-top:6px;text-align:center;">판매자 수령액: ${fmtPrice(Math.round(item.price*0.95))} (5% 공제 후)</div>
         </div>
         `:''}
     `;
@@ -559,7 +568,7 @@ async function startSafeTx(itemId,amount){
     const total=amount;                          // 구매자가 이체하는 금액 = 상품가 그대로
     const fee=Math.round(amount*0.05);           // 플랫폼 수수료 5%
     const sellerReceives=total-fee;              // 판매자 수령액 = 95%
-    if(!confirm(`계좌이체로 ${fmtPrice(total)}원 입금합니다.\n\n상품가: ${fmtPrice(amount)}원\n수수료(5%): ${fmtPrice(fee)}원 (판매자 송금 시 공제)\n판매자 수령액: ${fmtPrice(sellerReceives)}원\n\n계속하시겠습니까?`))return;
+    if(!confirm(`계좌이체로 ${fmtPrice(total)} 입금합니다.\n\n상품가: ${fmtPrice(amount)}\n수수료(5%): ${fmtPrice(fee)} (판매자 송금 시 공제)\n판매자 수령액: ${fmtPrice(sellerReceives)}\n\n계속하시겠습니까?`))return;
 
     // 1. safe_transactions에 pending_payment 레코드 생성
     const {data:tx,error}=await sb.from('community_safe_transactions').insert({
