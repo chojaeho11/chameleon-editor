@@ -6485,6 +6485,24 @@ html, body { background: #ffffff !important; }
         ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
         document.body.appendChild(ov);
     };
+    // 2026-06-25: 현재 선택된 박/후가공 요약 (튜토리얼에 실시간 표시용). 없으면 '' 반환.
+    window._soBizSelectedSummary = function() {
+        var parts = [];
+        try {
+            if (state.bizFoil) {
+                var f = BIZ_FOILS.find(function(o){ return o.key === state.bizFoil; });
+                if (f) parts.push(_bizI18n(f, 'name'));
+            }
+            if (state.bizFinishes) {
+                Object.keys(state.bizFinishes).forEach(function(k){
+                    if (!state.bizFinishes[k]) return;
+                    var x = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                    if (x) parts.push(_bizI18n(x, 'name'));
+                });
+            }
+        } catch (e) {}
+        return parts.join(' · ');
+    };
     // 2026-06-23 v710: 용지/박/후가공 섹션 토글 (각각 클릭 시 그리드 열기/닫기)
     window._soLeafletToggleSection = function(which) {
         var map = { paper:'soLfPaperWrap', foil:'soLfFoilWrap', finish:'soLfFinishWrap' };

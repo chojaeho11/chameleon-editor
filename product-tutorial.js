@@ -86,6 +86,7 @@
       + '.tut-pick{display:flex;gap:8px;margin:4px 0 12px;}'
       + '.tut-pick-btn{flex:1;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:12px;padding:12px 8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1.3;}'
       + '.tut-pick-btn:hover{background:#ede9fe;border-color:#c4b5fd;}'
+      + '.tut-sel{margin:0 0 12px;padding:9px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;color:#047857;font-size:12.5px;font-weight:700;line-height:1.45;}'
       + '.tut-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;}'
       + '.tut-link{border:none;background:transparent;color:#9ca3af;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}'
       + '.tut-link:hover{color:#6b7280;text-decoration:underline;}'
@@ -212,6 +213,19 @@
       _pop.style.width = ''; _pop.style.left = ''; _pop.style.top = '';
     }
   }
+  // 2026-06-25: 현재 선택된 박/후가공을 가이드에 실시간 표시 (picker 에서 고르면 즉시 반영).
+  function _tutUpdateSel() {
+    var el = _pop && _pop.querySelector('#tutSelLine');
+    if (!el) return;
+    var s = '';
+    try { if (typeof window._soBizSelectedSummary === 'function') s = window._soBizSelectedSummary() || ''; } catch (_) {}
+    if (s) {
+      el.style.display = '';
+      el.textContent = T({ kr: '✅ 선택됨: ', ja: '✅ 選択: ', en: '✅ Selected: ' }) + s;
+    } else {
+      el.style.display = 'none';
+    }
+  }
   function loop() {
     if (_looping) return;
     _looping = true;
@@ -219,6 +233,7 @@
       if (!_active) { _looping = false; return; }
       if (!modalOpen()) { quit(); _looping = false; return; }
       place();
+      _tutUpdateSel();
       requestAnimationFrame(frame);
     })();
   }
@@ -331,9 +346,11 @@
         return '<button class="tut-pick-btn" data-pick-action="' + b.action + '" data-pick-arg="' + (b.arg || '') + '">' + T(b.label) + '</button>';
       }).join('') + '</div>';
     }
+    var selHtml = step.showSelection ? '<div class="tut-sel" id="tutSelLine" style="display:none;"></div>' : '';
     _pop.innerHTML = '<button class="tut-x" data-act="quit">✕</button>' + headHtml(i)
-      + '<div class="tut-msg">' + T(step.msg) + '</div>' + picksHtml + foot;
+      + '<div class="tut-msg">' + T(step.msg) + '</div>' + picksHtml + selHtml + foot;
     _pop.style.display = 'block';
+    if (step.showSelection) _tutUpdateSel();
     bindCommon(function () { enterStep(i + 1); });
     _pop.querySelectorAll('[data-pick-action]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -600,7 +617,7 @@
     },
     { // 4) 박 / 후가공 — 타깃 없이 가이드만 띄우고, 버튼으로 옵션 모달 열기 (페이지 그리드는 가림)
       target: null, mode: 'next',
-      nextLabel: { kr: '추가 없음', ja: '追加なし', en: 'No add-on' },
+      showSelection: true,
       onEnter: function () {
         // 2026-06-25: 박/후가공 그리드를 접어 가이드 뒤로 안 보이게 → 버튼으로 모달 표시.
         try {
