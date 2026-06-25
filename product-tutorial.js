@@ -103,7 +103,7 @@
       + '.tut-confetti{position:fixed;top:0;left:0;pointer-events:none;z-index:2147483500;border-radius:2px;}'
       + '#tut-donebar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483200;pointer-events:auto;'
       + 'display:flex;gap:6px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:7px 8px;}'
-      + '#tut-donebar .db-go{background:#6d28d9;color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;}'
+      + '#tut-donebar .db-go{background:#6d28d9;color:#fff;border:none;border-radius:18px;padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;line-height:1.28;}'
       + '#tut-donebar .db-go:hover{background:#5b21b6;}'
       + '#tut-donebar .db-back{background:transparent;border:none;color:#6b7280;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;padding:8px 12px;}'
       + '#tut-replay{position:fixed;left:14px;bottom:16px;z-index:50050;pointer-events:auto;'
@@ -428,7 +428,7 @@
     var bar = document.createElement('div');
     bar.id = 'tut-donebar';
     bar.innerHTML = '<button class="db-back" aria-label="back">←</button>'
-      + '<button class="db-go">' + T({ kr: '디자인 끝났나요? 다음진행', ja: 'デザイン完了? 次へ', en: 'Done designing? Continue' }) + '</button>';
+      + '<button class="db-go">' + T({ kr: '디자인 끝났나요?<br>다음진행', ja: 'デザイン完了?<br>次へ', en: 'Done designing?<br>Continue' }) + '</button>';
     document.body.appendChild(bar);
     bar.querySelector('.db-go').addEventListener('click', onGo);
     bar.querySelector('.db-back').addEventListener('click', onBack);
