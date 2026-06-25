@@ -10536,9 +10536,29 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-15: 기존 _meDownload 는 이미지(async onload) 와 텍스트(sync) 가 섞일 때
     //   이미지 onload 가 텍스트 뒤에 fire 되면서 텍스트를 덮어쓰는 z-order 버그가 있었음.
     //   _meExportPNG 는 await new Promise() 로 이미지 로드까지 순서대로 처리하므로 안전 — 그것 재사용.
+    // 2026-06-25: 다운로드 = 주문과 동일한 인쇄용 PDF(벡터/아웃라인). 명함 앞/뒤면이면 앞·뒤 둘 다.
     window._meDownload = async function(ev) {
         if (ev) ev.preventDefault();
+        var _dlBlob = function(blob, name){
+            var u = URL.createObjectURL(blob);
+            var el = document.createElement('a');
+            el.href = u; el.download = name;
+            document.body.appendChild(el); el.click(); el.remove();
+            setTimeout(function(){ try { URL.revokeObjectURL(u); } catch(_){} }, 5000);
+        };
         try {
+            // 양면(명함 앞/뒤) → 앞·뒤 PDF 둘 다 다운로드
+            if (typeof window._meSidesEnabled === 'function' && window._meSidesEnabled() && typeof window._meExportBothSides === 'function') {
+                var ex = await window._meExportBothSides();
+                var did = false;
+                if (ex && ex.front && ex.front.pdf) { _dlBlob(ex.front.pdf, 'my-design-front.pdf'); did = true; }
+                if (ex && ex.back && ex.back.pdf) { setTimeout(function(){ _dlBlob(ex.back.pdf, 'my-design-back.pdf'); }, 500); did = true; }
+                if (did) return false;
+            }
+            // 단면/일반 → 현재 캔버스를 PDF 로
+            var pdf = (typeof window._meExportPDF === 'function') ? await window._meExportPDF() : null;
+            if (pdf) { _dlBlob(pdf, 'my-design.pdf'); return false; }
+            // 최후 폴백: PNG
             var url = await window._meExportPNG();
             if (!url) { alert('다운로드 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단'); return false; }
             var a = document.createElement('a');
