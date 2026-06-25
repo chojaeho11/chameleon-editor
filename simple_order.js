@@ -6443,6 +6443,39 @@ html, body { background: #ffffff !important; }
             if (sb) sb.addEventListener('click', function(){ try { doSelect(); } catch(e){} ov.remove(); });
         }
     };
+    // 2026-06-25: 튜토리얼/모달용 — 박·후가공 옵션 카드를 (튜토리얼 위) 전체 모달로 띄움.
+    //   페이지의 grid 카드(인라인 onclick 그대로)를 복제해서 보여줌 → 클릭 시 기존 _soShowOptInfo 동작.
+    window._soOpenOptionPicker = function(category) {
+        var gridId = (category === 'foil') ? 'soBizFoilGrid' : 'soBizFinishGrid';
+        var grid = document.getElementById(gridId);
+        var cardsHtml = grid ? grid.innerHTML : '';
+        var title = (category === 'foil')
+            ? tr('✨ 박 추가하기', '✨ 箔押しを追加', '✨ Add foil')
+            : tr('🛠️ 후가공 추가하기', '🛠️ 後加工を追加', '🛠️ Add finishing');
+        var sub = (category === 'foil')
+            ? tr('카드를 누르면 사진·설명을 크게 보고 선택할 수 있어요', 'カードをタップで写真·説明を見て選べます', 'Tap a card to view & pick')
+            : tr('카드를 누르면 사진·설명을 크게 보고 선택할 수 있어요', 'カードをタップで写真·説明を見て選べます', 'Tap a card to view & pick');
+        var old = document.getElementById('soOptPickerOv');
+        if (old) old.remove();
+        var ov = document.createElement('div');
+        ov.id = 'soOptPickerOv';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:2147483601; display:flex; align-items:center; justify-content:center; padding:14px;';
+        ov.innerHTML = '<div style="background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 60px -10px rgba(0,0,0,0.55);">'
+            + '<div style="flex:0 0 auto; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:14px 16px; border-bottom:1px solid #f1f5f9;">'
+            +   '<div><div style="font-size:15px; font-weight:800; color:#0f172a;">' + title + '</div>'
+            +     '<div style="font-size:11.5px; color:#64748b; margin-top:3px;">' + sub + '</div></div>'
+            +   '<button type="button" onclick="document.getElementById(\'soOptPickerOv\').remove()" style="flex:0 0 auto; width:30px; height:30px; border:none; background:#f1f5f9; border-radius:50%; cursor:pointer; font-size:16px; line-height:1; color:#64748b; font-family:inherit;">×</button>'
+            + '</div>'
+            + '<div style="flex:1 1 auto; overflow-y:auto; padding:14px 16px;">'
+            +   '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">' + cardsHtml + '</div>'
+            + '</div>'
+            + '<div style="flex:0 0 auto; padding:10px 16px 12px; border-top:1px solid #f1f5f9;">'
+            +   '<button type="button" onclick="document.getElementById(\'soOptPickerOv\').remove()" style="width:100%; padding:13px; background:#eef2f7; color:#475569; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기', '閉じる', 'Close') + '</button>'
+            + '</div>'
+            + '</div>';
+        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        document.body.appendChild(ov);
+    };
     // 2026-06-23 v710: 용지/박/후가공 섹션 토글 (각각 클릭 시 그리드 열기/닫기)
     window._soLeafletToggleSection = function(which) {
         var map = { paper:'soLfPaperWrap', foil:'soLfFoilWrap', finish:'soLfFinishWrap' };

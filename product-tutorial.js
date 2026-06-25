@@ -83,6 +83,9 @@
       + '.tut-btn-ghost:hover{background:#e5e7eb;}'
       + '.tut-hint{display:flex;align-items:center;gap:7px;justify-content:center;background:#f5f3ff;color:#6d28d9;'
       + 'border:1px dashed #ddd6fe;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:600;box-sizing:border-box;}'
+      + '.tut-pick{display:flex;gap:8px;margin:4px 0 12px;}'
+      + '.tut-pick-btn{flex:1;border:1.5px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;border-radius:12px;padding:12px 8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1.3;}'
+      + '.tut-pick-btn:hover{background:#ede9fe;border-color:#c4b5fd;}'
       + '.tut-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;}'
       + '.tut-link{border:none;background:transparent;color:#9ca3af;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}'
       + '.tut-link:hover{color:#6b7280;text-decoration:underline;}'
@@ -321,10 +324,23 @@
         + (_hist.length ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
         + '<button class="tut-btn tut-btn-go" data-act="next">' + T({ kr: '다음 ▶', ja: '次へ ▶', en: 'Next ▶' }) + '</button></div>';
     }
+    // 2026-06-25: 스텝에 picker 버튼 (예: 박 추가하기 / 후가공 추가하기) — 클릭 시 window[action](arg) 호출.
+    var picksHtml = '';
+    if (step.buttons && step.buttons.length) {
+      picksHtml = '<div class="tut-pick">' + step.buttons.map(function (b) {
+        return '<button class="tut-pick-btn" data-pick-action="' + b.action + '" data-pick-arg="' + (b.arg || '') + '">' + T(b.label) + '</button>';
+      }).join('') + '</div>';
+    }
     _pop.innerHTML = '<button class="tut-x" data-act="quit">✕</button>' + headHtml(i)
-      + '<div class="tut-msg">' + T(step.msg) + '</div>' + foot;
+      + '<div class="tut-msg">' + T(step.msg) + '</div>' + picksHtml + foot;
     _pop.style.display = 'block';
     bindCommon(function () { enterStep(i + 1); });
+    _pop.querySelectorAll('[data-pick-action]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var fn = window[b.getAttribute('data-pick-action')];
+        if (typeof fn === 'function') { try { fn(b.getAttribute('data-pick-arg')); } catch (_) {} }
+      });
+    });
 
     if (step.mode === 'wait') {
       var onClick = function () { celebrate(step.cheer); enterStep(i + 1); };
@@ -582,9 +598,19 @@
         en: 'Great! 🎉 Next, the <b>paper</b>.<br>Safest picks: <b>Nuvegi</b> or <b>Rendezvous Natural</b>. Pearly <b>Concept</b> or <b>Popset</b> are lovely too ✨' },
       cheer: { kr: '탁월한 선택! 😍', ja: '素晴らしい選択! 😍', en: 'Excellent choice! 😍' }
     },
-    { // 4) 박 / 후가공 — 에디터 모드면 "로고 부분 처리" 안내
+    { // 4) 박 / 후가공 — 코치마크 안 버튼으로 옵션 모달 열기 (그리드는 접어둠)
       target: ['#soBizFoilToggle', '#soBizFinishToggle'], mode: 'next',
-      hint: { kr: '설명을 보고 원하는 후가공을 골라주세요 (선택)', ja: '説明を見てお好みの後加工をお選びください(任意)', en: 'Read the notes and pick any finishing you like (optional)' },
+      onEnter: function () {
+        // 2026-06-25: 박/후가공 그리드를 접어 코치마크 뒤로 안 보이게 → 버튼으로 모달 표시.
+        try {
+          ['soBizFoilWrap', 'soBizFinishWrap'].forEach(function (id) { var w = document.getElementById(id); if (w) w.style.display = 'none'; });
+          ['soBizFoilToggleArrow', 'soBizFinishToggleArrow'].forEach(function (id) { var a = document.getElementById(id); if (a) a.textContent = '▼'; });
+        } catch (_) {}
+      },
+      buttons: [
+        { label: { kr: '✨ 박 추가하기', ja: '✨ 箔押し追加', en: '✨ Add foil' }, action: '_soOpenOptionPicker', arg: 'foil' },
+        { label: { kr: '🛠️ 후가공 추가하기', ja: '🛠️ 後加工追加', en: '🛠️ Finishing' }, action: '_soOpenOptionPicker', arg: 'finish' }
+      ],
       msg: function () {
         if (_chosenBranch === 'editor') {
           return { kr: '에디터로 디자인 중이시죠? 박·후가공은 위치를 직접 잡기 어려워요.<br>그래서 <b>박 추가</b>나 <b>후가공</b>을 선택하면 <b>로고 부분</b>에 맞춰 처리해 드려요. 필요 없으면 패스~ 😉',
