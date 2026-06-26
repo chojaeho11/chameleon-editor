@@ -441,9 +441,20 @@ export default {
             //   /distributors (또는 /distributors.html) → 유통사 모집 랜딩 페이지.
             //   그 외 모든 경로 → raw_board.html(원판 랜딩). index.html 의 hexa-mode 가 카멜레온 흔적을 숨김.
             const _hbPath = (url.pathname || '/').toLowerCase().replace(/\.html$/, '').replace(/\/$/, '');
-            const _hbTarget = (url.searchParams.has('product') || url.searchParams.has('_p'))
-                ? '/index.html'
-                : (_hbPath === '/distributors' ? '/distributors.html' : '/raw_board.html');
+            // 2026-06-26: 결제·콜백 페이지는 실제 파일 그대로 서빙 — raw_board.html 로 가로채면
+            //   카드결제 클릭 시 결제창 대신 hexa 메인(원판 랜딩)으로 튕기던 버그.
+            //   (cotton_checkout=Toss / cotton_stripe_checkout=Stripe / success·fail=PG 콜백 / design-pay=디자인결제)
+            const _hbPayPages = ['/cotton_checkout', '/cotton_stripe_checkout', '/success', '/fail', '/design-pay'];
+            let _hbTarget;
+            if (url.searchParams.has('product') || url.searchParams.has('_p')) {
+                _hbTarget = '/index.html';
+            } else if (_hbPath === '/distributors') {
+                _hbTarget = '/distributors.html';
+            } else if (_hbPayPages.indexOf(_hbPath) >= 0) {
+                _hbTarget = _hbPath + '.html';
+            } else {
+                _hbTarget = '/raw_board.html';
+            }
             const rbRewrite = new URL(_hbTarget, url.origin);
             let rbResp = await env.ASSETS.fetch(new Request(rbRewrite.toString(), request));
             if ((rbResp.status === 308 || rbResp.status === 301) && rbResp.headers.get('Location')) {
