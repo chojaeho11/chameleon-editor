@@ -6821,23 +6821,58 @@ html, body { background: #ffffff !important; }
     };
     // 2026-06-26: 자동 배치 — 셸프 패킹 + 사각형 90° 회전으로 대지를 최대한 채움 (파 최소화).
     window._rbCutAutoArrange = function () { _rbSnapshot(); _rbArrange(); _rbCutRender(); };
-    function _rbArrange() {
-        var m = 20; // mm 간격
-        var items = _rbCutItems.slice().sort(function (a, b) { return Math.max(b.wMm, b.hMm) - Math.max(a.wMm, a.hMm); });
-        var x = m, y = m, shelfH = 0;
-        items.forEach(function (it) {
-            var w = it.wMm, h = it.hMm;
-            if (it.shape === 'rect' && (x + w > _rbBoardW - m) && (x + h <= _rbBoardW - m)) { var t = w; w = h; h = t; }
-            if (x + w > _rbBoardW - m) {
-                x = m; y += shelfH + m; shelfH = 0;
-                if (it.shape === 'rect' && w > _rbBoardW - 2 * m && h <= _rbBoardW - 2 * m) { var t2 = w; w = h; h = t2; }
+    // MaxRects(BSSF) 패킹 — 겹침 없음 + 사각형 90° 회전 + 빈 공간 채움. 간격 0.
+    function _rbBestFree(free, iw, ih, allowRot) {
+        var best = { ok: false, s1: Infinity, s2: Infinity, x: 0, y: 0, w: 0, h: 0 };
+        function consider(fx, fy, fw, fh, w, h) {
+            if (w > fw || h > fh) return;
+            var s1 = Math.min(fw - w, fh - h), s2 = Math.max(fw - w, fh - h);
+            if (s1 < best.s1 || (s1 === best.s1 && s2 < best.s2)) {
+                best = { ok: true, s1: s1, s2: s2, x: fx, y: fy, w: w, h: h };
             }
-            it.wMm = w; it.hMm = h;
-            it.xMm = x;
-            it.yMm = Math.min(y, Math.max(m, _rbBoardH - h));
-            x += w + m;
-            if (h > shelfH) shelfH = h;
+        }
+        for (var i = 0; i < free.length; i++) {
+            var f = free[i];
+            consider(f.x, f.y, f.w, f.h, iw, ih);
+            if (allowRot && iw !== ih) consider(f.x, f.y, f.w, f.h, ih, iw);
+        }
+        return best;
+    }
+    function _rbSplitFree(free, u) {
+        var res = [];
+        for (var i = 0; i < free.length; i++) {
+            var f = free[i];
+            if (u.x >= f.x + f.w || u.x + u.w <= f.x || u.y >= f.y + f.h || u.y + u.h <= f.y) { res.push(f); continue; }
+            if (u.x > f.x) res.push({ x: f.x, y: f.y, w: u.x - f.x, h: f.h });
+            if (u.x + u.w < f.x + f.w) res.push({ x: u.x + u.w, y: f.y, w: (f.x + f.w) - (u.x + u.w), h: f.h });
+            if (u.y > f.y) res.push({ x: f.x, y: f.y, w: f.w, h: u.y - f.y });
+            if (u.y + u.h < f.y + f.h) res.push({ x: f.x, y: u.y + u.h, w: f.w, h: (f.y + f.h) - (u.y + u.h) });
+        }
+        // 다른 free 안에 완전히 포함된 것 제거
+        var out = [];
+        for (var a = 0; a < res.length; a++) {
+            var ra = res[a], contained = false;
+            for (var b = 0; b < res.length; b++) {
+                if (a === b) continue;
+                var rb = res[b];
+                if (rb.x <= ra.x && rb.y <= ra.y && rb.x + rb.w >= ra.x + ra.w && rb.y + rb.h >= ra.y + ra.h && (rb.w * rb.h > ra.w * ra.h || b < a)) { contained = true; break; }
+            }
+            if (!contained && ra.w > 0.5 && ra.h > 0.5) out.push(ra);
+        }
+        return out;
+    }
+    function _rbArrange() {
+        var items = _rbCutItems.slice().sort(function (a, b) { return (b.wMm * b.hMm) - (a.wMm * a.hMm); });
+        var free = [{ x: 0, y: 0, w: _rbBoardW, h: _rbBoardH }];
+        var overflow = 0;
+        items.forEach(function (it) {
+            var allowRot = (it.shape === 'rect');
+            var best = _rbBestFree(free, it.wMm, it.hMm, allowRot);
+            if (!best.ok) { overflow++; it.xMm = 0; it.yMm = 0; return; }
+            it.xMm = best.x; it.yMm = best.y; it.wMm = best.w; it.hMm = best.h;
+            free = _rbSplitFree(free, { x: best.x, y: best.y, w: best.w, h: best.h });
         });
+        if (overflow > 0) setTimeout(function () { alert(tr(overflow + '개가 대지에 다 들어가지 않습니다. 크기나 개수를 줄여주세요.', overflow + '個が台紙に収まりません。', overflow + ' shape(s) do not fit the board.')); }, 0);
     }
     window._rbCutSelect = function (id) {
         _rbCutSel = id;
