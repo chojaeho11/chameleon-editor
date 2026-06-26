@@ -6711,9 +6711,10 @@ html, body { background: #ffffff !important; }
             // PRO 10%
             var proPct = (!!window.isProSubscriber) ? 10 : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
-            // 2026-06-26: 커팅비 — 커팅 유닛(도형) 개수 구간제 (1~10:1만 / 11~20:2만 / 21~50:3만). 판수와 무관.
+            // 2026-06-26: 커팅비 — 유닛(도형) 개수 구간제 1장당 단가 (1~10:1만 / 11~20:2만 / 21~50:3만) × 원판 장수.
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
-            var _rbCutFee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_rbUnits) : 0;
+            var _rbPerBoard = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_rbUnits) : 0;
+            var _rbCutFee = _rbPerBoard * totalQty;
             var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
@@ -6730,10 +6731,10 @@ html, body { background: #ffffff !important; }
                 '<span style="color:#475569; font-weight:600;">' + tr('소계', '小計', 'Subtotal') + ' (' + totalQty + tr('장', '枚', ' sheets') + ')</span>' +
                 '<span style="font-weight:700;">' + fmtPrice(subtotalKrw) + '</span>' +
                 '</div>';
-            // 커팅비 라인 (유닛 개수 구간제)
+            // 커팅비 라인 (유닛 구간 1장당 단가 × 장수)
             if (_rbCutFee > 0) {
                 lineHtml += '<div class="so-price-row" style="font-size:12.5px;">' +
-                    '<span style="color:#9a3412; font-weight:700;">' + tr('원판 커팅비', '原板カット費', 'Cutting fee') + ' (' + tr('유닛', 'ユニット', 'units') + ' ' + _rbUnits + ')</span>' +
+                    '<span style="color:#9a3412; font-weight:700;">' + tr('원판 커팅비', '原板カット費', 'Cutting fee') + ' (' + tr('유닛', 'ユニット', 'units') + ' ' + _rbUnits + ' · ' + fmtPrice(_rbPerBoard) + tr('/장', '/枚', '/sheet') + ' × ' + totalQty + tr('장', '枚', '') + ')</span>' +
                     '<span style="font-weight:800; color:#9a3412;">+' + fmtPrice(_rbCutFee) + '</span>' +
                     '</div>';
             }
@@ -7060,7 +7061,7 @@ html, body { background: #ffffff !important; }
             var _u = parseInt(_ans, 10);
             state.rbCutUnitCount = (_u > 0) ? Math.min(_u, 50) : 1;
             var _fee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(state.rbCutUnitCount) : 0;
-            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('유닛 ' + state.rbCutUnitCount + '개 · 커팅비 ', 'ユニット' + state.rbCutUnitCount + ' · カット費 ', state.rbCutUnitCount + ' units · fee ') + fmtPrice(_fee);
+            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('유닛 ' + state.rbCutUnitCount + '개 · 1장당 커팅비 ', 'ユニット' + state.rbCutUnitCount + ' · 1枚 ', state.rbCutUnitCount + ' units · /sheet ') + fmtPrice(_fee);
             try { _rbCutShowPdf(state.rbCutFileUrl, f.name); } catch (_pv) {}  // PDF 면 미리보기 표시
             if (typeof window._soUpdateRawBoardPreview === 'function') window._soUpdateRawBoardPreview();
         } catch (e) {
@@ -7164,20 +7165,20 @@ html, body { background: #ffffff !important; }
             if (state.rbCutFileUrl && newQtySum > 0) {
                 var _cutName = state.rbCutFileName || 'cut-file';
                 var _cutUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
-                var _cutFee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_cutUnits) : 0;
-                if (_cutFee > 0) cur.push({
+                var _cutPerBoard = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_cutUnits) : 0;  // 1장당 단가
+                if (_cutPerBoard > 0) cur.push({
                     uid: Date.now() + 99999,
-                    product: { code: 'rb_cut_service', name: tr('원판 커팅서비스 (유닛 ' + _cutUnits + '개)', '原板カットサービス (ユニット' + _cutUnits + ')', 'Raw board cutting (' + _cutUnits + ' units)'), category: 'Wholesale Board Prices', price: _cutFee },
+                    product: { code: 'rb_cut_service', name: tr('원판 커팅서비스 (유닛 ' + _cutUnits + '개 · 1장당)', '原板カットサービス (ユニット' + _cutUnits + ' · 1枚)', 'Raw board cutting (' + _cutUnits + ' units / sheet)'), category: 'Wholesale Board Prices', price: _cutPerBoard },
                     type: 'file_upload',
                     fileName: _cutName,
                     mimeType: '', fileData: null,
                     originalUrl: state.rbCutFileUrl, file_url: state.rbCutFileUrl, filePath: null,
                     thumb: null, isOpen: false,
-                    qty: 1,
+                    qty: newQtySum,   // 원판 장수만큼 (1장당 단가 × 장수)
                     selectedAddons: {}, addonQuantities: {},
                     rawBoardDouble: false, bundleShipping: false,
                     shipping: { method: shipMethod, fee: 0, delivery_date: _rbDate, delivery_time: '' },
-                    item_note: tr('커팅 파일 첨부 · 유닛 ' + _cutUnits + '개', 'カットファイル添付 · ユニット' + _cutUnits, 'Cut file attached · ' + _cutUnits + ' units'),
+                    item_note: tr('커팅 유닛 ' + _cutUnits + '개 · ' + newQtySum + '장', 'カットユニット' + _cutUnits + ' · ' + newQtySum + '枚', _cutUnits + ' units · ' + newQtySum + ' sheets'),
                     _isRawBoardAuto: true, _isRbCutService: true
                 });
                 addedCount++;
