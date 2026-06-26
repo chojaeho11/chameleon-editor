@@ -1705,14 +1705,17 @@ html, body { background: #ffffff !important; }
               <input id="rbCutW" type="number" min="10" max="240" placeholder="${tr('가로cm', '横cm', 'W cm')}" oninput="window._rbCutSizeInput && window._rbCutSizeInput()" style="width:80px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
               <span style="color:#94a3b8;">×</span>
               <input id="rbCutH" type="number" min="10" max="120" placeholder="${tr('세로cm', '縦cm', 'H cm')}" oninput="window._rbCutSizeInput && window._rbCutSizeInput()" style="width:80px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+              <span style="font-size:12px; color:#64748b;">${tr('수량', '数量', 'Qty')}</span>
+              <input id="rbCutQty" type="number" min="1" max="10" value="1" style="width:56px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
               <button type="button" onclick="window._rbCutAdd && window._rbCutAdd()" style="padding:9px 16px; background:#6366f1; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('도형 추가', '図形追加', 'Add shape')}</button>
+              <button type="button" onclick="window._rbCutAutoArrange && window._rbCutAutoArrange()" style="padding:9px 14px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('자동 배치', '自動配置', 'Auto-arrange')}</button>
               <button type="button" onclick="window._rbCutRotateBoard && window._rbCutRotateBoard()" style="padding:9px 14px; background:#fff; color:#475569; border:1px solid #d1d5db; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('대지 회전', '台紙回転', 'Rotate board')}</button>
               <input type="file" id="soRbCutFile" accept=".ai,.pdf,application/pdf,application/illustrator,application/postscript" style="display:none;" onchange="window._soRbCutFileUpload && window._soRbCutFileUpload(this)">
               <button type="button" onclick="document.getElementById('soRbCutFile').click()" style="padding:9px 16px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('파일 올리기 (.ai/PDF)', 'ファイル (.ai/PDF)', 'Upload (.ai/PDF)')}</button>
             </div>
 
             <!-- 캔버스 (대지 — 줄자 그리드 포함) -->
-            <div id="rbCutCanvas" style="position:relative; width:100%; aspect-ratio:2/1; background:#fff; border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; touch-action:none;"></div>
+            <div id="rbCutCanvas" style="position:relative; width:100%; aspect-ratio:2/1; background:#e3d4b0; border:1.5px solid #b89b6e; border-radius:8px; overflow:hidden; touch-action:none;"></div>
             <!-- 업로드 PDF 미리보기 -->
             <div id="rbCutPdfPreview" style="display:none; margin-top:10px;"></div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
@@ -6775,27 +6778,43 @@ html, body { background: #ffffff !important; }
         _rbCutRender();
     };
     window._rbCutAdd = function () {
-        if (_rbCutItems.length >= _RB_MAX) { alert(tr('1판 최대 10개까지만 가능합니다.', '1枚最大10個まで', 'Max 10 per board')); return; }
         var shape = (document.getElementById('rbCutShape') || {}).value || 'rect';
         var wCm = parseFloat((document.getElementById('rbCutW') || {}).value) || 0;
         var hCm = parseFloat((document.getElementById('rbCutH') || {}).value) || 0;
+        var qty = Math.max(1, parseInt((document.getElementById('rbCutQty') || {}).value, 10) || 1);
         if (shape === 'circle' && !hCm) hCm = wCm;
         if (!wCm) wCm = 20; if (!hCm) hCm = (shape === 'circle' ? wCm : 15);
         var wMm = wCm * 10, hMm = hCm * 10;
         if (wMm < _RB_MIN_MM || hMm < _RB_MIN_MM) { alert(tr('최소 크기는 10cm × 10cm 입니다.', '最小10cm×10cm', 'Minimum 10cm × 10cm')); return; }
         if (wMm > _rbBoardW || hMm > _rbBoardH) { alert(tr('대지를 넘을 수 없습니다.', '台紙を超えられません', 'Exceeds the board')); return; }
-        var x = 20, y = 20;
-        if (_rbCutItems.length) {
-            var last = _rbCutItems[_rbCutItems.length - 1];
-            x = last.xMm + last.wMm + 20; y = last.yMm;
-            if (x + wMm > _rbBoardW) { x = 20; y = last.yMm + last.hMm + 20; }
-            if (y + hMm > _rbBoardH) { y = 20; }
-        }
-        var nid = ++_rbCutSeq;
-        _rbCutItems.push({ id: nid, shape: shape, wMm: wMm, hMm: hMm, xMm: x, yMm: y });
-        _rbCutSel = nid;
-        _rbCutRender();
+        var room = _RB_MAX - _rbCutItems.length;
+        if (room <= 0) { alert(tr('1판 최대 10개까지만 가능합니다.', '1枚最大10個まで', 'Max 10 per board')); return; }
+        var add = Math.min(qty, room);
+        for (var i = 0; i < add; i++) _rbCutItems.push({ id: ++_rbCutSeq, shape: shape, wMm: wMm, hMm: hMm, xMm: 20, yMm: 20 });
+        _rbCutSel = null;
+        window._rbCutAutoArrange();   // 추가 후 자동 배치 (회전 포함, 대지를 최대한 채움)
+        if (add < qty) alert(tr('1판 최대 10개 — ' + add + '개만 추가했습니다.', '最大10個 — ' + add + '個のみ追加', 'Max 10 — added ' + add));
         if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
+    };
+    // 2026-06-26: 자동 배치 — 셸프 패킹 + 사각형 90° 회전으로 대지를 최대한 채움 (파 최소화).
+    window._rbCutAutoArrange = function () {
+        var m = 20; // mm 간격
+        var items = _rbCutItems.slice().sort(function (a, b) { return Math.max(b.wMm, b.hMm) - Math.max(a.wMm, a.hMm); });
+        var x = m, y = m, shelfH = 0;
+        items.forEach(function (it) {
+            var w = it.wMm, h = it.hMm;
+            if (it.shape === 'rect' && (x + w > _rbBoardW - m) && (x + h <= _rbBoardW - m)) { var t = w; w = h; h = t; }
+            if (x + w > _rbBoardW - m) {
+                x = m; y += shelfH + m; shelfH = 0;
+                if (it.shape === 'rect' && w > _rbBoardW - 2 * m && h <= _rbBoardW - 2 * m) { var t2 = w; w = h; h = t2; }
+            }
+            it.wMm = w; it.hMm = h;
+            it.xMm = x;
+            it.yMm = Math.min(y, Math.max(m, _rbBoardH - h));
+            x += w + m;
+            if (h > shelfH) shelfH = h;
+        });
+        _rbCutRender();
     };
     window._rbCutSelect = function (id) {
         _rbCutSel = id;
@@ -6834,15 +6853,15 @@ html, body { background: #ffffff !important; }
         // 줄자 그리드 (10cm 간격 회색선 + 50cm 라벨) — SVG 배경, 클릭 안 받음
         var g = '';
         for (var gx = 0; gx <= _rbBoardW; gx += 100) {
-            g += '<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="' + _rbBoardH + '" stroke="' + (gx % 500 === 0 ? '#cbd5e1' : '#eef2f7') + '" stroke-width="' + (gx % 500 === 0 ? 3 : 2) + '"/>';
-            if (gx % 500 === 0) g += '<text x="' + (gx + 6) + '" y="42" font-size="38" fill="#94a3b8">' + (gx / 10) + '</text>';
+            g += '<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="' + _rbBoardH + '" stroke="' + (gx % 500 === 0 ? 'rgba(120,85,40,0.34)' : 'rgba(120,85,40,0.14)') + '" stroke-width="' + (gx % 500 === 0 ? 3 : 2) + '"/>';
+            if (gx % 500 === 0) g += '<text x="' + (gx + 6) + '" y="42" font-size="38" fill="#7a5c30">' + (gx / 10) + '</text>';
         }
         for (var gy = 0; gy <= _rbBoardH; gy += 100) {
-            g += '<line x1="0" y1="' + gy + '" x2="' + _rbBoardW + '" y2="' + gy + '" stroke="' + (gy % 500 === 0 ? '#cbd5e1' : '#eef2f7') + '" stroke-width="' + (gy % 500 === 0 ? 3 : 2) + '"/>';
-            if (gy % 500 === 0 && gy > 0) g += '<text x="6" y="' + (gy + 38) + '" font-size="38" fill="#94a3b8">' + (gy / 10) + '</text>';
+            g += '<line x1="0" y1="' + gy + '" x2="' + _rbBoardW + '" y2="' + gy + '" stroke="' + (gy % 500 === 0 ? 'rgba(120,85,40,0.34)' : 'rgba(120,85,40,0.14)') + '" stroke-width="' + (gy % 500 === 0 ? 3 : 2) + '"/>';
+            if (gy % 500 === 0 && gy > 0) g += '<text x="6" y="' + (gy + 38) + '" font-size="38" fill="#7a5c30">' + (gy / 10) + '</text>';
         }
         canvas.innerHTML = '<svg viewBox="0 0 ' + _rbBoardW + ' ' + _rbBoardH + '" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">' + g
-            + '<text x="' + (_rbBoardW - 6) + '" y="42" font-size="34" fill="#cbd5e1" text-anchor="end">cm</text></svg>';
+            + '<text x="' + (_rbBoardW - 6) + '" y="42" font-size="34" fill="#9c7b45" text-anchor="end">cm</text></svg>';
         _rbCutItems.forEach(function (it) {
             var seln = (it.id === _rbCutSel);
             var el = document.createElement('div');
