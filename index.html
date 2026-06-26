@@ -7286,6 +7286,47 @@ function scrollHotdeal(gridId, dir) {
         return null;
     }
 
+    // 2026-06-26: 텍스트 박스 폭으로 줄바꿈된(엔터 없이 wrap 된) 실제 렌더 줄을 DOM 에서 추출.
+    //   PNG export(_meExportPNG) 와 동일한 Range top 점프 감지 → SVG/PDF 도 화면과 동일하게 줄바꿈.
+    //   (이전엔 SVG export 가 하드 엔터(\n)만 split 해서, 박스폭 wrap 된 글씨가 PDF 에서 한 줄로 죽 나열됨.)
+    function _meGetVisualLines(it) {
+        var lines = [];
+        try {
+            if (!it || !it.el) return lines;
+            var textNodes = [];
+            (function collect(el){
+                for (var ci = 0; ci < el.childNodes.length; ci++) {
+                    var cn = el.childNodes[ci];
+                    if (cn.nodeType === 3 && cn.textContent.length > 0) textNodes.push(cn);
+                    else if (cn.nodeType === 1 && !(cn.classList && (cn.classList.contains('me-handle') || cn.classList.contains('me-del')))) collect(cn);
+                }
+            })(it.el);
+            var lineGapPx = Math.max(1, (it.fontSize || 24) * (it.lineHeight || 1.2) * (me.wScale || 1));
+            var lastTop = -9999, curLine = '', started = false;
+            textNodes.forEach(function(tn){
+                var full = tn.textContent;
+                for (var ci = 0; ci < full.length; ci++) {
+                    var cr = document.createRange();
+                    cr.setStart(tn, ci); cr.setEnd(tn, ci + 1);
+                    var crect = cr.getBoundingClientRect();
+                    if (!started) { lastTop = crect.top; curLine = full[ci]; started = true; continue; }
+                    var dy = crect.top - lastTop;
+                    if (dy > lineGapPx * 0.6) {
+                        lines.push(curLine);
+                        var steps = Math.max(1, Math.round(dy / lineGapPx));
+                        for (var k = 1; k < steps; k++) lines.push('');
+                        curLine = full[ci];
+                        lastTop = crect.top;
+                    } else {
+                        curLine += full[ci];
+                    }
+                }
+            });
+            if (started) lines.push(curLine);
+        } catch(e) { console.warn('[_meGetVisualLines]', e); return []; }
+        return lines;
+    }
+
     // 2026-06-19 v623: 미니에디터를 SVG 텍스트로 직렬화 (벡터 보존 — 템플릿 주문 시 관리자 페이지 첨부용)
     //   문자열 반환. text/image/shape 모두 처리. zIndex 순으로 정렬해서 같은 stacking 유지.
     // 2026-06-19 v624: outline:true 옵션 — 모든 텍스트를 opentype.js 로 벡터 path 변환 (폰트 무관 동일 표시).
@@ -7377,7 +7418,9 @@ function scrollHotdeal(gridId, dir) {
                     }
                 } else if (it.type === 'text') {
                     var text = it.text || (it.el && it.el.textContent) || '';
-                    var lines = String(text).split(/\r?\n/);
+                    // 박스폭 wrap 포함 실제 렌더 줄 사용 (화면과 동일). 실패 시 하드 엔터만 split.
+                    var lines = _meGetVisualLines(it);
+                    if (!lines.length) lines = String(text).split(/\r?\n/);
                     var fs = it.fontSize || 24;
                     var fam = _esc(String(it.fontFamily || 'sans-serif').replace(/["']/g, ''));
                     var famClean = String(it.fontFamily || 'sans-serif').replace(/["']/g, '');
