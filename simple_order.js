@@ -1766,9 +1766,21 @@ html, body { background: #ffffff !important; }
           <div id="soRawBoardMoreRight" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
         </div>
 
+        <!-- 2026-06-26: 허니콤보드 원판 커팅서비스 — 파일 업로드(.ai/.pdf) + 안내 (커팅 사용 시 1판 1만원) -->
+        <div class="so-section" id="soRbCutSec" style="display:none;">
+          <div class="so-section-title">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 1万ウォン', 'Cutting service · 10,000/board')}</div>
+          <div style="font-size:11.5px; color:#475569; line-height:1.7; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
+            ${tr('대지 크기를 <b>2400×1200</b>으로 잡고 <b>커팅라인 및 V커팅라인을 별도 레이어</b>로 만든 후 올려주세요.<br>한 판에 유닛은 <b>최대 10개</b>를 넘을 수 없습니다.<br>원판 커팅비용은 <b>1판 기준 1만원</b>입니다.', '台紙サイズを <b>2400×1200</b> にし、<b>カットライン・Vカットラインを別レイヤー</b>で作成してアップロードしてください。<br>1枚あたりユニットは <b>最大10個</b> まで。<br>カット費用は <b>1枚あたり1万ウォン</b> です。', 'Set artboard to <b>2400×1200</b> with <b>cutting & V-cut lines on a separate layer</b>, then upload.<br>Max <b>10 units</b> per board.<br>Cutting fee is <b>10,000 KRW per board</b>.')}
+          </div>
+          <input type="file" id="soRbCutFile" accept=".ai,.pdf,application/pdf,application/illustrator,application/postscript" style="display:none;" onchange="window._soRbCutFileUpload && window._soRbCutFileUpload(this)">
+          <button type="button" onclick="document.getElementById('soRbCutFile').click()" style="width:100%; padding:12px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('커팅 파일 올리기 (일러스트 .ai / PDF)', 'カットファイル (.ai / PDF)', 'Upload cut file (.ai / PDF)')}</button>
+          <div id="soRbCutFileStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
+        </div>
+
         <!-- 2026-06-26: 허니콤보드 원판 전용 — 배송 희망일 + 배송 메모 (전용 필드, 작업지시서 반영) -->
         <div class="so-section" id="soRbDeliveryBox" style="display:none;">
           <div class="so-section-title">${tr('배송 희망일 · 배송 메모', '配送希望日 · メモ', 'Delivery date · memo')}</div>
+          <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-bottom:10px; line-height:1.6;">${tr('서울·경기 외 <b>지방은 착불 용차배송</b> · <b>300장 이상 무료배송</b>', '首都圏外 <b>地方は着払い専用車配送</b> · <b>300枚以上 送料無料</b>', 'Outside metro: <b>freight-collect truck</b> · <b>free over 300 sheets</b>')}</div>
           <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
           <input type="date" id="soRbDeliveryDate" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
           <textarea id="soRbDeliveryMemo" rows="2" placeholder="${tr('배송 메모 (예: 부재 시 경비실에 맡겨주세요)', '配送メモ (例: 不在時は管理室へ)', 'Delivery memo (e.g. leave with security if absent)')}" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
@@ -6674,7 +6686,9 @@ html, body { background: #ffffff !important; }
             // PRO 10%
             var proPct = (!!window.isProSubscriber) ? 10 : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
-            var finalKrw = subtotalKrw - proDisc + shipFee;
+            // 2026-06-26: 커팅 파일 업로드 시 — 커팅비 (판수 × 1만원) 합계에 반영
+            var _rbCutFee = (state.rbCutFileUrl && totalQty > 0) ? (10000 * totalQty) : 0;
+            var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
                 var safeName = String(it.name || '').replace(/[<>"]/g, '');
@@ -6722,6 +6736,29 @@ html, body { background: #ffffff !important; }
     //   배송: state.shipMethod 사용 (사용자가 선택한 수도권/지방). fee 는 카트 내 모든 원판 합산 qty 기준으로 계산하여
     //         "첫 번째 추가 item" 에만 부과 (item 별 중복 방지 — 한 번의 배송이라 정액).
     //   _isRawBoardAuto 플래그로 _soIsRawBoardProduct 보조 인식 보강.
+    // 2026-06-26: 원판 커팅 파일(.ai/.pdf) 업로드 — 선택 즉시 스토리지 업로드 → state 에 URL 저장 (커팅 사용 = 1판 1만원).
+    window._soRbCutFileUpload = async function (input) {
+        var f = input && input.files && input.files[0];
+        if (!f) return;
+        var statusEl = document.getElementById('soRbCutFileStatus');
+        var sb = getSb();
+        if (!sb) { if (statusEl) statusEl.textContent = tr('업로드 실패 — 연결 오류', 'アップロード失敗', 'Upload failed'); return; }
+        if (statusEl) statusEl.textContent = tr('업로드 중...', 'アップロード中...', 'Uploading...');
+        try {
+            var ext = (String(f.name).split('.').pop() || 'dat').toLowerCase();
+            var path = 'rawboard_cut/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+            var up = await sb.storage.from('design').upload(path, f, { contentType: f.type || undefined, upsert: false });
+            if (up.error) throw up.error;
+            state.rbCutFileUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+            state.rbCutFileName = f.name;
+            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('커팅비 1판 1만원 적용', 'カット費 1枚1万', 'cutting fee applies');
+            if (typeof window._soUpdateRawBoardPreview === 'function') window._soUpdateRawBoardPreview();
+        } catch (e) {
+            console.warn('[rb cut upload]', e);
+            if (statusEl) statusEl.textContent = tr('업로드 실패: ', 'アップロード失敗: ', 'Upload failed: ') + (e.message || e);
+        }
+    };
+
     window._soAddRawBoardBatch = function () {
         try {
             if (!_soRbMoreCache) { console.warn('[so] rb batch: cache empty'); return; }
@@ -6797,9 +6834,33 @@ html, body { background: #ffffff !important; }
                 });
                 addedCount++;
             });
+            // 2026-06-26: 커팅 파일 업로드 시 — 커팅서비스 라인(판수 × 1만원) 추가 (커팅 사용 시에만 과금).
+            if (state.rbCutFileUrl && newQtySum > 0) {
+                var _cutName = state.rbCutFileName || 'cut-file';
+                cur.push({
+                    uid: Date.now() + 99999,
+                    product: { code: 'rb_cut_service', name: tr('원판 커팅서비스 (1판 1만원)', '原板カットサービス', 'Raw board cutting (10,000/board)'), category: 'Wholesale Board Prices', price: 10000 },
+                    type: 'file_upload',
+                    fileName: _cutName,
+                    mimeType: '', fileData: null,
+                    originalUrl: state.rbCutFileUrl, file_url: state.rbCutFileUrl, filePath: null,
+                    thumb: null, isOpen: false,
+                    qty: newQtySum,
+                    selectedAddons: {}, addonQuantities: {},
+                    rawBoardDouble: false, bundleShipping: false,
+                    shipping: { method: shipMethod, fee: 0, delivery_date: _rbDate, delivery_time: '' },
+                    item_note: tr('커팅 파일 첨부 · 유닛 ' + newQtySum + '판', 'カットファイル添付', 'Cut file attached'),
+                    _isRawBoardAuto: true, _isRbCutService: true
+                });
+                addedCount++;
+                // 중복 과금 방지 — 담은 후 커팅 파일 상태 초기화
+                state.rbCutFileUrl = null; state.rbCutFileName = null;
+                var _cutStat2 = document.getElementById('soRbCutFileStatus'); if (_cutStat2) _cutStat2.textContent = '';
+                var _cutInp2 = document.getElementById('soRbCutFile'); if (_cutInp2) _cutInp2.value = '';
+            }
             localStorage.setItem(CART_KEY, JSON.stringify(cur));
             if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
-            console.log('[so] rawBoard batch added:', addedCount, 'items; method=', shipMethod, 'totalQty=', totalRawQty, 'fee=', batchShipFee);
+            console.log('[so] rawBoard batch added:', addedCount, 'items; method=', shipMethod, 'totalQty=', totalRawQty, 'fee=', batchShipFee, 'cutFile=', !!_cutName);
             try { if (window.renderCart) window.renderCart(); } catch (e) {}
             try { if (window.gtagTrackAddToCart) window.gtagTrackAddToCart(); } catch (e) {}
             showStatus('' + tr(addedCount + '개 상품 담겼습니다', addedCount + '点 追加しました', addedCount + ' items added'), 'ok');
@@ -12872,9 +12933,19 @@ html, body { background: #ffffff !important; }
         var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput && !state.isShoulderSash
             && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
-        // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 노출 (기존 시공/배송 섹션은 숨김 유지).
+        // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 + 커팅서비스(파일 업로드) 박스 노출.
         var _rbDelBox = document.getElementById('soRbDeliveryBox');
         if (_rbDelBox) _rbDelBox.style.display = state.isRawBoard ? '' : 'none';
+        var _rbCutSec = document.getElementById('soRbCutSec');
+        if (_rbCutSec) _rbCutSec.style.display = state.isRawBoard ? '' : 'none';
+        if (state.isRawBoard) {
+            // 새 상품 진입마다 커팅 파일 초기화 (이전 업로드 잔존 방지)
+            state.rbCutFileUrl = null; state.rbCutFileName = null;
+            var _rbCutStat = document.getElementById('soRbCutFileStatus');
+            if (_rbCutStat) _rbCutStat.textContent = '';
+            var _rbCutInp = document.getElementById('soRbCutFile');
+            if (_rbCutInp) _rbCutInp.value = '';
+        }
         if (state.isRawBoard) {
             var _rbSd = document.getElementById('soRbDeliveryDate');
             if (_rbSd) {
