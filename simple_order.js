@@ -1694,7 +1694,7 @@ html, body { background: #ffffff !important; }
         <div id="soRbCutEditorMain" style="display:none;">
           <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
             <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 1万ウォン', 'Cutting service · 10,000/board')} <span style="font-size:12px; font-weight:800; color:#dc2626;">· ${tr('커팅서비스만 가능합니다', 'カットサービスのみ', 'cutting service only')}</span></div>
-            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 추가 → <b>클릭해 선택</b>(위 칸에서 크기 수정) · <b>모서리</b>로 크기조절 · <b>Delete</b>로 삭제. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 20개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인 별도 레이어</b>로 올려도 됩니다. 커팅비 <b>1판 1만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を追加 → <b>クリックで選択</b>(上の欄でサイズ変更)·<b>角</b>でリサイズ·<b>Delete</b>で削除。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大20個</b>。<br>または .ai/PDF を別レイヤーでアップロード可。カット費 <b>1枚1万</b>。', 'Add <b>rect/circle</b> to the <b>2400×1200</b> board → <b>click to select</b> (edit size above) · resize from the <b>corner</b> · <b>Delete</b> to remove. Cut-line only · min <b>10cm</b> · max <b>20</b>.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>10,000/board</b>.')}</div>
+            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 추가 → <b>클릭해 선택</b>(위 칸에서 크기 수정) · <b>모서리</b>로 크기조절 · <b>Delete</b>로 삭제. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 50개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인 별도 레이어</b>로 올려도 됩니다. 커팅비 <b>1판 1만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を追加 → <b>クリックで選択</b>(上の欄でサイズ変更)·<b>角</b>でリサイズ·<b>Delete</b>で削除。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大50個</b>。<br>または .ai/PDF を別レイヤーでアップロード可。カット費 <b>1枚1万</b>。', 'Add <b>rect/circle</b> to the <b>2400×1200</b> board → <b>click to select</b> (edit size above) · resize from the <b>corner</b> · <b>Delete</b> to remove. Cut-line only · min <b>10cm</b> · max <b>50</b>.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>10,000/board</b>.')}</div>
 
             <!-- 도구 -->
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
@@ -1706,7 +1706,7 @@ html, body { background: #ffffff !important; }
               <span style="color:#94a3b8;">×</span>
               <input id="rbCutH" type="number" min="10" max="120" placeholder="${tr('세로cm', '縦cm', 'H cm')}" oninput="window._rbCutSizeInput && window._rbCutSizeInput()" style="width:80px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
               <span style="font-size:12px; color:#64748b;">${tr('수량', '数量', 'Qty')}</span>
-              <input id="rbCutQty" type="number" min="1" max="20" value="1" style="width:56px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+              <input id="rbCutQty" type="number" min="1" max="50" value="1" style="width:56px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
               <button type="button" onclick="window._rbCutAdd && window._rbCutAdd()" style="padding:9px 16px; background:#6366f1; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('도형 추가', '図形追加', 'Add shape')}</button>
               <button type="button" onclick="window._rbCutAutoArrange && window._rbCutAutoArrange()" style="padding:9px 14px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('자동 배치', '自動配置', 'Auto-arrange')}</button>
               <button type="button" onclick="window._rbCutRotateBoard && window._rbCutRotateBoard()" style="padding:9px 14px; background:#fff; color:#475569; border:1px solid #d1d5db; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('대지 회전', '台紙回転', 'Rotate board')}</button>
@@ -6711,9 +6711,9 @@ html, body { background: #ffffff !important; }
             // PRO 10%
             var proPct = (!!window.isProSubscriber) ? 10 : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
-            // 2026-06-26: 커팅 사용(파일 업로드 또는 도면 그리기) 시 — 커팅비 (판수 × 1만원) 합계에 반영
-            var _rbCutUsed = !!state.rbCutFileUrl || (typeof window._rbCutHasShapes === 'function' && window._rbCutHasShapes() > 0);
-            var _rbCutFee = (_rbCutUsed && totalQty > 0) ? (10000 * totalQty) : 0;
+            // 2026-06-26: 커팅비 — 커팅 유닛(도형) 개수 구간제 (1~10:1만 / 11~20:2만 / 21~50:3만). 판수와 무관.
+            var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
+            var _rbCutFee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_rbUnits) : 0;
             var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
@@ -6730,6 +6730,13 @@ html, body { background: #ffffff !important; }
                 '<span style="color:#475569; font-weight:600;">' + tr('소계', '小計', 'Subtotal') + ' (' + totalQty + tr('장', '枚', ' sheets') + ')</span>' +
                 '<span style="font-weight:700;">' + fmtPrice(subtotalKrw) + '</span>' +
                 '</div>';
+            // 커팅비 라인 (유닛 개수 구간제)
+            if (_rbCutFee > 0) {
+                lineHtml += '<div class="so-price-row" style="font-size:12.5px;">' +
+                    '<span style="color:#9a3412; font-weight:700;">' + tr('원판 커팅비', '原板カット費', 'Cutting fee') + ' (' + tr('유닛', 'ユニット', 'units') + ' ' + _rbUnits + ')</span>' +
+                    '<span style="font-weight:800; color:#9a3412;">+' + fmtPrice(_rbCutFee) + '</span>' +
+                    '</div>';
+            }
             preview.innerHTML = lineHtml;
             preview.style.display = 'flex';
             if (unitRow) unitRow.style.display = 'none';
@@ -6763,7 +6770,7 @@ html, body { background: #ffffff !important; }
     //         "첫 번째 추가 item" 에만 부과 (item 별 중복 방지 — 한 번의 배송이라 정액).
     //   _isRawBoardAuto 플래그로 _soIsRawBoardProduct 보조 인식 보강.
     // 2026-06-26: 원판 커팅 도면 에디터 (독립 모듈) — 네모/원형 cm, 선택·수정·리사이즈·삭제·대지회전·줄자. 인쇄X(커팅라인).
-    var _rbBoardW = 2400, _rbBoardH = 1200, _RB_MIN_MM = 100, _RB_MAX = 20;
+    var _rbBoardW = 2400, _rbBoardH = 1200, _RB_MIN_MM = 100, _RB_MAX = 50;
     var _rbCutItems = [], _rbCutSeq = 0, _rbCutSel = null;
     // 2026-06-26: 실행취소/복사붙여넣기 (Ctrl+Z/Y/C/V/D)
     var _rbUndo = [], _rbRedo = [], _rbClip = null;
@@ -6775,7 +6782,7 @@ html, body { background: #ffffff !important; }
     function _rbCopy() { var it = _rbCutFind(_rbCutSel); if (it) _rbClip = { shape: it.shape, wMm: it.wMm, hMm: it.hMm, xMm: it.xMm, yMm: it.yMm }; }
     function _rbPaste() {
         if (!_rbClip) return;
-        if (_rbCutItems.length >= _RB_MAX) { alert(tr('1판 최대 20개까지만 가능합니다.', '1枚最大20個まで', 'Max 20 per board')); return; }
+        if (_rbCutItems.length >= _RB_MAX) { alert(tr('1판 최대 50개까지만 가능합니다.', '1枚最大50個まで', 'Max 50 per board')); return; }
         _rbSnapshot();
         var nid = ++_rbCutSeq;
         _rbCutItems.push({ id: nid, shape: _rbClip.shape, wMm: _rbClip.wMm, hMm: _rbClip.hMm,
@@ -6786,6 +6793,18 @@ html, body { background: #ffffff !important; }
         if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
     }
     function _rbDuplicate() { if (_rbCutSel != null) { _rbCopy(); _rbPaste(); } }
+    // 2026-06-26: 커팅 유닛(도형) 개수 기준 구간제 커팅비. 에디터 도형 수 우선, 없으면 파일 업로드 시 입력받은 개수.
+    window._rbCutUnitCount = function () {
+        if (_rbCutItems.length > 0) return _rbCutItems.length;
+        if (state.rbCutFileUrl && state.rbCutUnitCount > 0) return state.rbCutUnitCount;
+        return 0;
+    };
+    window._rbCutFeeFor = function (n) {
+        if (!n || n <= 0) return 0;
+        if (n <= 10) return 10000;   // 1~10 유닛
+        if (n <= 20) return 20000;   // 11~20 유닛
+        return 30000;                // 21~50 유닛
+    };
     window._rbCutHasShapes = function () { return _rbCutItems.length; };
     window._rbCutInit = function () { _rbCutItems = []; _rbCutSeq = 0; _rbCutSel = null; _rbBoardW = 2400; _rbBoardH = 1200; _rbUndo = []; _rbRedo = []; _rbClip = null; _rbCutRender(); _rbCutHidePdf(); };
     function _rbCutFind(id) { for (var i = 0; i < _rbCutItems.length; i++) if (_rbCutItems[i].id === id) return _rbCutItems[i]; return null; }
@@ -6810,13 +6829,13 @@ html, body { background: #ffffff !important; }
         if (wMm < _RB_MIN_MM || hMm < _RB_MIN_MM) { alert(tr('최소 크기는 10cm × 10cm 입니다.', '最小10cm×10cm', 'Minimum 10cm × 10cm')); return; }
         if (wMm > _rbBoardW || hMm > _rbBoardH) { alert(tr('대지를 넘을 수 없습니다.', '台紙を超えられません', 'Exceeds the board')); return; }
         var room = _RB_MAX - _rbCutItems.length;
-        if (room <= 0) { alert(tr('1판 최대 20개까지만 가능합니다.', '1枚最大20個まで', 'Max 20 per board')); return; }
+        if (room <= 0) { alert(tr('1판 최대 50개까지만 가능합니다.', '1枚最大50個まで', 'Max 50 per board')); return; }
         _rbSnapshot();
         var add = Math.min(qty, room);
         for (var i = 0; i < add; i++) _rbCutItems.push({ id: ++_rbCutSeq, shape: shape, wMm: wMm, hMm: hMm, xMm: 20, yMm: 20 });
         _rbCutSel = null;
         _rbArrange(); _rbCutRender();   // 추가 후 자동 배치 (회전 포함, 대지를 최대한 채움)
-        if (add < qty) alert(tr('1판 최대 20개 — ' + add + '개만 추가했습니다.', '最大20個 — ' + add + '個のみ追加', 'Max 20 — added ' + add));
+        if (add < qty) alert(tr('1판 최대 50개 — ' + add + '개만 추가했습니다.', '最大50個 — ' + add + '個のみ追加', 'Max 50 — added ' + add));
         if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
     };
     // 2026-06-26: 자동 배치 — 셸프 패킹 + 사각형 90° 회전으로 대지를 최대한 채움 (파 최소화).
@@ -7036,7 +7055,12 @@ html, body { background: #ffffff !important; }
             if (up.error) throw up.error;
             state.rbCutFileUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
             state.rbCutFileName = f.name;
-            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('커팅비 1판 1만원 적용', 'カット費 1枚1万', 'cutting fee applies');
+            // 2026-06-26: 파일에 들어있는 커팅 도형(유닛) 개수를 입력받아 구간제 커팅비 산정
+            var _ans = prompt(tr('이 파일에 들어있는 커팅 도형(유닛)의 개수를 입력해주세요.\n(1~10=1만원 · 11~20=2만원 · 21~50=3만원)', 'このファイルのカット図形(ユニット)の数を入力してください。\n(1~10=1万 · 11~20=2万 · 21~50=3万)', 'How many cut shapes (units) are in this file?\n(1-10=10,000 · 11-20=20,000 · 21-50=30,000)'), '1');
+            var _u = parseInt(_ans, 10);
+            state.rbCutUnitCount = (_u > 0) ? Math.min(_u, 50) : 1;
+            var _fee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(state.rbCutUnitCount) : 0;
+            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('유닛 ' + state.rbCutUnitCount + '개 · 커팅비 ', 'ユニット' + state.rbCutUnitCount + ' · カット費 ', state.rbCutUnitCount + ' units · fee ') + fmtPrice(_fee);
             try { _rbCutShowPdf(state.rbCutFileUrl, f.name); } catch (_pv) {}  // PDF 면 미리보기 표시
             if (typeof window._soUpdateRawBoardPreview === 'function') window._soUpdateRawBoardPreview();
         } catch (e) {
@@ -7139,24 +7163,26 @@ html, body { background: #ffffff !important; }
             // 2026-06-26: 커팅 파일 업로드 시 — 커팅서비스 라인(판수 × 1만원) 추가 (커팅 사용 시에만 과금).
             if (state.rbCutFileUrl && newQtySum > 0) {
                 var _cutName = state.rbCutFileName || 'cut-file';
-                cur.push({
+                var _cutUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
+                var _cutFee = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_cutUnits) : 0;
+                if (_cutFee > 0) cur.push({
                     uid: Date.now() + 99999,
-                    product: { code: 'rb_cut_service', name: tr('원판 커팅서비스 (1판 1만원)', '原板カットサービス', 'Raw board cutting (10,000/board)'), category: 'Wholesale Board Prices', price: 10000 },
+                    product: { code: 'rb_cut_service', name: tr('원판 커팅서비스 (유닛 ' + _cutUnits + '개)', '原板カットサービス (ユニット' + _cutUnits + ')', 'Raw board cutting (' + _cutUnits + ' units)'), category: 'Wholesale Board Prices', price: _cutFee },
                     type: 'file_upload',
                     fileName: _cutName,
                     mimeType: '', fileData: null,
                     originalUrl: state.rbCutFileUrl, file_url: state.rbCutFileUrl, filePath: null,
                     thumb: null, isOpen: false,
-                    qty: newQtySum,
+                    qty: 1,
                     selectedAddons: {}, addonQuantities: {},
                     rawBoardDouble: false, bundleShipping: false,
                     shipping: { method: shipMethod, fee: 0, delivery_date: _rbDate, delivery_time: '' },
-                    item_note: tr('커팅 파일 첨부 · 유닛 ' + newQtySum + '판', 'カットファイル添付', 'Cut file attached'),
+                    item_note: tr('커팅 파일 첨부 · 유닛 ' + _cutUnits + '개', 'カットファイル添付 · ユニット' + _cutUnits, 'Cut file attached · ' + _cutUnits + ' units'),
                     _isRawBoardAuto: true, _isRbCutService: true
                 });
                 addedCount++;
                 // 중복 과금 방지 — 담은 후 커팅 파일/도면 초기화
-                state.rbCutFileUrl = null; state.rbCutFileName = null;
+                state.rbCutFileUrl = null; state.rbCutFileName = null; state.rbCutUnitCount = 0;
                 var _cutStat2 = document.getElementById('soRbCutFileStatus'); if (_cutStat2) _cutStat2.textContent = '';
                 var _cutInp2 = document.getElementById('soRbCutFile'); if (_cutInp2) _cutInp2.value = '';
                 try { if (window._rbCutInit) window._rbCutInit(); } catch(_rbi){}
@@ -13243,7 +13269,7 @@ html, body { background: #ffffff !important; }
         if (_rbCutSec) _rbCutSec.style.display = state.isRawBoard ? '' : 'none';
         if (state.isRawBoard) {
             // 새 상품 진입마다 커팅 파일/도면 초기화 (이전 잔존 방지)
-            state.rbCutFileUrl = null; state.rbCutFileName = null;
+            state.rbCutFileUrl = null; state.rbCutFileName = null; state.rbCutUnitCount = 0;
             var _rbCutStat = document.getElementById('soRbCutFileStatus');
             if (_rbCutStat) _rbCutStat.textContent = '';
             var _rbCutInp = document.getElementById('soRbCutFile');
