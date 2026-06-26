@@ -1726,6 +1726,18 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-26: 허니콤보드 원판 — HP 라텍스 프린팅 서비스 (PDF 전용, 1장당 3만원) -->
+        <div id="soRbLatexSec" style="display:none; margin-top:14px;">
+          <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
+            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('HP 라텍스 프린팅 서비스 · 1장당 3만원', 'HPラテックス印刷サービス · 1枚3万', 'HP Latex printing · 30,000/sheet')}</div>
+            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('<b>PDF 파일만</b> 가능합니다 · 대지 사이즈는 <b>2400×1200</b> · 커팅 시 <b>칼선 레이어를 별도로 분리</b>해 주세요. 프린팅비 <b>1장당 3만원</b>.', '<b>PDFのみ</b> · 台紙サイズ <b>2400×1200</b> · カット時は<b>カットラインを別レイヤー</b>に。印刷費 <b>1枚3万</b>。', '<b>PDF only</b> · board <b>2400×1200</b> · keep <b>cut lines on a separate layer</b>. Fee <b>30,000/sheet</b>.')}</div>
+            <input type="file" id="soRbLatexFile" accept=".pdf,application/pdf" style="display:none;" onchange="window._soRbLatexFileUpload && window._soRbLatexFileUpload(this)">
+            <button type="button" onclick="document.getElementById('soRbLatexFile').click()" style="width:100%; padding:12px; border:1.5px dashed #0ea5e9; background:#f0f9ff; color:#075985; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프린팅 PDF 올리기', '印刷PDFをアップロード', 'Upload print PDF')}</button>
+            <div id="soRbLatexStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
+            <div id="rbLatexPdfPreview" style="display:none; margin-top:10px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-06-15: '앞면 업로드' 섹션 제거 — 우측 사이드바의 파일업로드 카드로 통일.
                         soFile input 만 보존 (다른 분기들이 doc.getElementById('soFile') 로 참조). -->
         <div id="soUploadWrap" style="display:none;">
@@ -6715,7 +6727,9 @@ html, body { background: #ffffff !important; }
             var _rbUnits = (typeof window._rbCutUnitCount === 'function') ? window._rbCutUnitCount() : 0;
             var _rbPerBoard = (typeof window._rbCutFeeFor === 'function') ? window._rbCutFeeFor(_rbUnits) : 0;
             var _rbCutFee = _rbPerBoard * totalQty;
-            var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee;
+            // HP 라텍스 프린팅 — 1장당 3만원 × 장수
+            var _rbLatexFee = (state.rbLatexFileUrl && totalQty > 0) ? (30000 * totalQty) : 0;
+            var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee + _rbLatexFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
                 var safeName = String(it.name || '').replace(/[<>"]/g, '');
@@ -6736,6 +6750,13 @@ html, body { background: #ffffff !important; }
                 lineHtml += '<div class="so-price-row" style="font-size:12.5px;">' +
                     '<span style="color:#9a3412; font-weight:700;">' + tr('원판 커팅비', '原板カット費', 'Cutting fee') + ' (' + tr('유닛', 'ユニット', 'units') + ' ' + _rbUnits + ' · ' + fmtPrice(_rbPerBoard) + tr('/장', '/枚', '/sheet') + ' × ' + totalQty + tr('장', '枚', '') + ')</span>' +
                     '<span style="font-weight:800; color:#9a3412;">+' + fmtPrice(_rbCutFee) + '</span>' +
+                    '</div>';
+            }
+            // HP 라텍스 프린팅비 라인 (1장당 3만원 × 장수)
+            if (_rbLatexFee > 0) {
+                lineHtml += '<div class="so-price-row" style="font-size:12.5px;">' +
+                    '<span style="color:#075985; font-weight:700;">' + tr('HP 라텍스 프린팅', 'HPラテックス印刷', 'HP Latex printing') + ' (' + fmtPrice(30000) + tr('/장', '/枚', '/sheet') + ' × ' + totalQty + tr('장', '枚', '') + ')</span>' +
+                    '<span style="font-weight:800; color:#075985;">+' + fmtPrice(_rbLatexFee) + '</span>' +
                     '</div>';
             }
             preview.innerHTML = lineHtml;
@@ -7070,6 +7091,32 @@ html, body { background: #ffffff !important; }
         }
     };
 
+    // 2026-06-26: HP 라텍스 프린팅 — PDF 전용 업로드 (1장당 3만원). 대지 2400×1200 · 칼선 별도 레이어 안내.
+    window._soRbLatexFileUpload = async function (input) {
+        var f = input && input.files && input.files[0];
+        if (!f) return;
+        var statusEl = document.getElementById('soRbLatexStatus');
+        var isPdf = /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
+        if (!isPdf) { alert(tr('PDF 파일만 가능합니다.', 'PDFファイルのみ可能です。', 'PDF files only.')); input.value = ''; return; }
+        var sb = getSb();
+        if (!sb) { if (statusEl) statusEl.textContent = tr('업로드 실패 — 연결 오류', 'アップロード失敗', 'Upload failed'); return; }
+        if (statusEl) statusEl.textContent = tr('업로드 중...', 'アップロード中...', 'Uploading...');
+        try {
+            var path = 'rawboard_latex/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.pdf';
+            var up = await sb.storage.from('design').upload(path, f, { contentType: 'application/pdf', upsert: false });
+            if (up.error) throw up.error;
+            state.rbLatexFileUrl = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+            state.rbLatexFileName = f.name;
+            if (statusEl) statusEl.textContent = '✅ ' + f.name + ' · ' + tr('1장당 프린팅비 ₩30,000 적용', '1枚 印刷費 ₩30,000', 'printing ₩30,000/sheet');
+            var box = document.getElementById('rbLatexPdfPreview');
+            if (box) { box.style.display = ''; box.innerHTML = '<iframe src="' + state.rbLatexFileUrl + '" style="width:100%; height:360px; border:1px solid #cbd5e1; border-radius:8px; background:#fff;"></iframe>'; }
+            if (typeof window._soUpdateRawBoardPreview === 'function') window._soUpdateRawBoardPreview();
+        } catch (e) {
+            console.warn('[rb latex upload]', e);
+            if (statusEl) statusEl.textContent = tr('업로드 실패: ', 'アップロード失敗: ', 'Upload failed: ') + (e.message || e);
+        }
+    };
+
     window._soAddRawBoardBatch = async function () {
         try {
             if (!_soRbMoreCache) { console.warn('[so] rb batch: cache empty'); return; }
@@ -7187,6 +7234,29 @@ html, body { background: #ffffff !important; }
                 var _cutStat2 = document.getElementById('soRbCutFileStatus'); if (_cutStat2) _cutStat2.textContent = '';
                 var _cutInp2 = document.getElementById('soRbCutFile'); if (_cutInp2) _cutInp2.value = '';
                 try { if (window._rbCutInit) window._rbCutInit(); } catch(_rbi){}
+            }
+            // 2026-06-26: HP 라텍스 프린팅 — PDF 업로드 시 1장당 3만원 × 장수 라인 추가
+            if (state.rbLatexFileUrl && newQtySum > 0) {
+                cur.push({
+                    uid: Date.now() + 88888,
+                    product: { code: 'rb_latex_print', name: tr('HP 라텍스 프린팅 (1장당)', 'HPラテックス印刷 (1枚)', 'HP Latex printing (per sheet)'), category: 'Wholesale Board Prices', price: 30000 },
+                    type: 'file_upload',
+                    fileName: state.rbLatexFileName || 'latex-print.pdf',
+                    mimeType: 'application/pdf', fileData: null,
+                    originalUrl: state.rbLatexFileUrl, file_url: state.rbLatexFileUrl, filePath: null,
+                    thumb: null, isOpen: false,
+                    qty: newQtySum,
+                    selectedAddons: {}, addonQuantities: {},
+                    rawBoardDouble: false, bundleShipping: false,
+                    shipping: { method: shipMethod, fee: 0, delivery_date: _rbDate, delivery_time: '' },
+                    item_note: tr('HP 라텍스 프린팅 · ' + newQtySum + '장', 'HPラテックス印刷 · ' + newQtySum + '枚', 'HP Latex print · ' + newQtySum + ' sheets'),
+                    _isRawBoardAuto: true, _isRbLatexService: true
+                });
+                addedCount++;
+                state.rbLatexFileUrl = null; state.rbLatexFileName = null;
+                var _lxS = document.getElementById('soRbLatexStatus'); if (_lxS) _lxS.textContent = '';
+                var _lxI = document.getElementById('soRbLatexFile'); if (_lxI) _lxI.value = '';
+                var _lxP = document.getElementById('rbLatexPdfPreview'); if (_lxP) { _lxP.style.display = 'none'; _lxP.innerHTML = ''; }
             }
             localStorage.setItem(CART_KEY, JSON.stringify(cur));
             if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
@@ -13268,9 +13338,15 @@ html, body { background: #ffffff !important; }
         if (_rbDelBox) _rbDelBox.style.display = state.isRawBoard ? '' : 'none';
         var _rbCutSec = document.getElementById('soRbCutEditorMain');
         if (_rbCutSec) _rbCutSec.style.display = state.isRawBoard ? '' : 'none';
+        var _rbLatexSec = document.getElementById('soRbLatexSec');
+        if (_rbLatexSec) _rbLatexSec.style.display = state.isRawBoard ? '' : 'none';
         if (state.isRawBoard) {
-            // 새 상품 진입마다 커팅 파일/도면 초기화 (이전 잔존 방지)
+            // 새 상품 진입마다 커팅 파일/도면 + 라텍스 초기화 (이전 잔존 방지)
             state.rbCutFileUrl = null; state.rbCutFileName = null; state.rbCutUnitCount = 0;
+            state.rbLatexFileUrl = null; state.rbLatexFileName = null;
+            var _rbLxStat = document.getElementById('soRbLatexStatus'); if (_rbLxStat) _rbLxStat.textContent = '';
+            var _rbLxInp = document.getElementById('soRbLatexFile'); if (_rbLxInp) _rbLxInp.value = '';
+            var _rbLxPv = document.getElementById('rbLatexPdfPreview'); if (_rbLxPv) { _rbLxPv.style.display = 'none'; _rbLxPv.innerHTML = ''; }
             var _rbCutStat = document.getElementById('soRbCutFileStatus');
             if (_rbCutStat) _rbCutStat.textContent = '';
             var _rbCutInp = document.getElementById('soRbCutFile');
