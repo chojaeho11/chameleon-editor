@@ -878,6 +878,13 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 boxes.push(`<div class="opt-box" style="border-color:#fde68a; background:#fffbeb;"><div class="opt-head" style="color:#92400e;"><i class="fa-solid fa-id-card"></i> 명함 옵션</div><div class="opt-val" style="line-height:1.8;">${_bcLines.join('<br>')}</div></div>`);
             }
 
+            // 2026-06-26: 반투명아크릴(acrl20003) 선택 색상
+            if (it.acrylicColor && (it.acrylicColor.name || it.acrylicColor.code)) {
+                const _ac = it.acrylicColor;
+                const _acImg = _ac.file ? `<img src="/acrylic-chips/${esc(_ac.file)}" alt="" style="width:34px; height:34px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb; vertical-align:middle; margin-right:8px;">` : '';
+                boxes.push(`<div class="opt-box" style="border-color:#bae6fd; background:#f0f9ff;"><div class="opt-head" style="color:#0369a1;">아크릴 색상</div><div class="opt-val" style="line-height:1.8;">${_acImg}<b style="color:#0369a1;">${esc(_ac.name || '')}</b>${_ac.code ? ' <span style="color:#64748b; font-weight:500;">(' + esc(_ac.code) + ')</span>' : ''}</div></div>`);
+            }
+
             // 2026-06-13: 스티커 옵션 박스
             // 2026-06-16: 신규 sticker schema 반영 — { productCode, w, h, qty, coating, foils, isFancy }.
             //   기존 legacy keys (category/shape/size/paper/qtyKey) 도 fallback 유지.
@@ -1022,7 +1029,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 'shipping','itemNote','item_note','mgr_size_w','mgr_size_h','mgr_size','mgr_memo',
                 'selectedAddons','addonQuantities','addons','customSize','boxSize','cutPrint','cutBoardMaterial',
                 'standeeMaterial','baseStands','baseStand','wallSize','wall_size','wallSide','wall_side',
-                'wallCount','wallShape','wallShapeFee','rawBoardDouble','scarciTitle','scarciSub',
+                'wallCount','wallShape','wallShapeFee','rawBoardDouble','scarciTitle','scarciSub','acrylicColor',
                 'bizCard','sticker','isInstaPanel','instaTitle','instaSub','instaHashtag','instaLogo','instaSmall',
                 'isGate','gate','designRequest','source','fabricType','fabricColor','fabricCode','fabricName',
                 'pattern_spec','width_mm','height_mm','width_cm','height_cm','width','height','w','h',

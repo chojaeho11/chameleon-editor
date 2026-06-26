@@ -2704,6 +2704,14 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-06-26: 반투명아크릴(acrl20003) 컬러칩 색상 선택 -->
+        <div class="so-section" id="soAcrylicColorSection" style="display:none;">
+          <div class="so-section-title">${tr('컬러칩 색상 선택', 'カラーチップの色を選択', 'Color chip')}</div>
+          <div style="font-size:11.5px; color:#64748b; margin:-2px 0 8px;">${tr('원하시는 아크릴 색상을 선택해 주세요.', 'ご希望のアクリル色をお選びください。', 'Pick your acrylic color.')}</div>
+          <div id="soAcrylicColorGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
+          <div id="soAcrylicColorSel" style="display:none; margin-top:10px; font-size:12.5px; color:#0f172a;"></div>
+        </div>
+
         <!-- 2026-05-13: 상품별 추가 옵션 (admin_addons) -->
         <div class="so-section" id="soAddonSection" style="display:none;">
           <div class="so-section-title">${tr('추가 옵션', '追加オプション', 'Add-ons')}</div>
@@ -5873,6 +5881,32 @@ html, body { background: #ffffff !important; }
         if (!p) return false;
         return ACRYLIC_CODES_ORDERED.indexOf(p.code) >= 0;
     }
+    // 2026-06-26: 반투명아크릴(acrl20003) 컬러칩 — 파일명 CA-<no>-<COLOR>-CAST.jpg, 색상명만 표시.
+    var _ACRYLIC_CHIP_FILES = ['CA-603-BLACK-CAST.jpg', 'CA-413-ORANGE-CAST.jpg', 'CA-323-BLUE-CAST.jpg', 'CA-324-BLUE-CAST.jpg', 'CA-340-BLACK-CAST.jpg', 'CA-317-BROWN-CAST.jpg', 'CA-411-YELLOW-CAST.jpg', 'CA-507-CLEAR-CAST.jpg', 'CA-320-GREEN-CAST.jpg', 'CA-421-GREEN-CAST.jpg', 'CA-305-IVORY-CAST.jpg', 'CA-316-RED-CAST.jpg', 'CA-604-SATIN-CAST.jpg', 'CA-310-ORANGE-CAST.jpg', 'CA-414-PINK-CAST.jpg', 'CA-451-SMOKE-CAST.jpg', 'CA-314-VIOLET-CAST.jpg', 'CA-301-WHITE-CAST.jpg', 'CA-319-YELLOW-CAST.jpg', 'CA-605-SATIN-CAST.jpg'];
+    function _acChipColor(f) { var p = String(f || '').split('-'); return (p[2] || '').toUpperCase(); }
+    function _acChipCode(f) { var p = String(f || '').split('-'); return (p[0] || '') + '-' + (p[1] || ''); }
+    window._soRenderAcrylicColors = function () {
+        var grid = document.getElementById('soAcrylicColorGrid'); if (!grid) return;
+        var cur = state.selectedAcrylicColorFile || null;
+        grid.innerHTML = _ACRYLIC_CHIP_FILES.map(function (f) {
+            var color = _acChipColor(f), sel = (f === cur);
+            return '<button type="button" onclick="window._soPickAcrylicColor(\'' + f + '\')" style="display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px; border:' + (sel ? '2px solid #0ea5e9' : '1px solid #e5e7eb') + '; border-radius:10px; background:' + (sel ? '#f0f9ff' : '#fff') + '; cursor:pointer; font-family:inherit;">'
+                + '<img src="/acrylic-chips/' + f + '" alt="' + color + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:7px;">'
+                + '<span style="font-size:11.5px; color:' + (sel ? '#0369a1' : '#334155') + ';">' + color + '</span>'
+                + '</button>';
+        }).join('');
+        var selEl = document.getElementById('soAcrylicColorSel');
+        if (selEl) {
+            if (cur) { selEl.style.display = ''; selEl.textContent = tr('선택한 색상: ', '選択した色: ', 'Selected: ') + _acChipColor(cur); }
+            else { selEl.style.display = 'none'; selEl.textContent = ''; }
+        }
+    };
+    window._soPickAcrylicColor = function (file) {
+        state.selectedAcrylicColorFile = file;
+        state.selectedAcrylicColor = _acChipCode(file);
+        state.selectedAcrylicColorName = _acChipColor(file);
+        window._soRenderAcrylicColors();
+    };
     var _soAcrylicFamilyCache = null;
     async function _soLoadAcrylicFamilyVariants(currentCode) {
         var sec = document.getElementById('soAcrylicVariantsSec');
@@ -12411,6 +12445,12 @@ html, body { background: #ffffff !important; }
                 if (_acSchedSec) _acSchedSec.style.display = 'none';
             } catch (e) {}
         }
+        // 2026-06-26: 반투명아크릴 (acrl20003) — 컬러칩 색상 선택 UI
+        state.isAcrylicPrint = !!(p && p.code === 'acrl20003');
+        state.selectedAcrylicColorFile = null; state.selectedAcrylicColor = null; state.selectedAcrylicColorName = null;
+        var _acColorSec = document.getElementById('soAcrylicColorSection');
+        if (_acColorSec) _acColorSec.style.display = state.isAcrylicPrint ? '' : 'none';
+        if (state.isAcrylicPrint && typeof window._soRenderAcrylicColors === 'function') window._soRenderAcrylicColors();
         // 2026-06-08: 실사출력 family (9종) — 1미터 단위 판매 + 폭(90/127) 선택 + 코팅(캘지/유포지) + 30m+ 30% 할인.
         //   사이즈 W×H 계산기 비활성 (state.isCustomSize=false). 광고인쇄 layout 도 비활성 (state.isAdPrint=false).
         //   단가 = product.price × (90폭=1, 127폭=1.2) + 코팅비 (UV 0, 무광 1000, 유광 2000). 수량=m.
@@ -15369,6 +15409,8 @@ html, body { background: #ffffff !important; }
             customSize: state.isCustomSize ? { w_cm: state.customW, h_cm: state.customH, unit: state.customUnitPrice, area_m2: state.customAreaM2 } : null,
             // 2026-05-13: 허니콤보드 원판인쇄 양면 플래그 (단가 2배 재계산용)
             rawBoardDouble: !!state.isRawBoardDouble,
+            // 2026-06-26: 반투명아크릴(acrl20003) 선택 색상 — 작업지시서 표시용
+            acrylicColor: (state.isAcrylicPrint && state.selectedAcrylicColorName) ? { code: state.selectedAcrylicColor, name: state.selectedAcrylicColorName, file: state.selectedAcrylicColorFile } : null,
             // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
             // 2026-05-22: 받침대 다중 — 배열로 저장 [{key,fee,qty,label}, ...]
             baseStands: (function () {
