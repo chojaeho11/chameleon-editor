@@ -2708,7 +2708,7 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soAcrylicColorSection" style="display:none;">
           <div class="so-section-title">${tr('컬러칩 색상 선택', 'カラーチップの色を選択', 'Color chip')}</div>
           <div style="font-size:11.5px; color:#64748b; margin:-2px 0 8px;">${tr('원하시는 아크릴 색상을 선택해 주세요.', 'ご希望のアクリル色をお選びください。', 'Pick your acrylic color.')}</div>
-          <div id="soAcrylicColorGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
+          <div id="soAcrylicColorGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px;"></div>
           <div id="soAcrylicColorSel" style="display:none; margin-top:10px; font-size:12.5px; color:#0f172a;"></div>
         </div>
 
@@ -12445,8 +12445,8 @@ html, body { background: #ffffff !important; }
                 if (_acSchedSec) _acSchedSec.style.display = 'none';
             } catch (e) {}
         }
-        // 2026-06-26: 반투명아크릴 (acrl20003) — 컬러칩 색상 선택 UI
-        state.isAcrylicPrint = !!(p && p.code === 'acrl20003');
+        // 2026-06-26: 아크릴 컬러칩 — 금경(acrl30002)/은경(acrl30001) 미러 제외, 아크릴 family 전 제품 표시
+        state.isAcrylicPrint = !!(p && _soIsAcrylicFamilyProduct(p) && p.code !== 'acrl30001' && p.code !== 'acrl30002');
         state.selectedAcrylicColorFile = null; state.selectedAcrylicColor = null; state.selectedAcrylicColorName = null;
         var _acColorSec = document.getElementById('soAcrylicColorSection');
         if (_acColorSec) _acColorSec.style.display = state.isAcrylicPrint ? '' : 'none';
