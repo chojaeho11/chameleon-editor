@@ -7587,7 +7587,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 종이매대 전용 ship method 들도 schedule 안 필요
         var noScheduleMethods = ['self_pickup', 'metro_delivery', 'regional_delivery', 'parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel', 'bundle_shipping', 'pd_bulk_free', 'pd_parcel_1', 'pd_parcel_2'];
         var needsSchedule = noScheduleMethods.indexOf(method) < 0;
-        if (dateWrap) dateWrap.style.display = needsSchedule ? '' : 'none';
+        // 2026-06-26: 허니콤보드 원판도 배송 희망일 선택 노출 (시공 아니어도 — 사용자 요청)
+        if (dateWrap) dateWrap.style.display = (needsSchedule || (state && state.isRawBoard)) ? '' : 'none';
         // 철거 옵션 (수도권 설치+철거 시만)
         if (remWrap) remWrap.style.display = (method === 'metro_install_removal') ? '' : 'none';
         // 배송 희망일 최소값 = 오늘 + 영업일 3일
@@ -13623,6 +13624,12 @@ html, body { background: #ffffff !important; }
             var p = state && state.product;
             if (!p) return;
 
+            // 2026-06-26: 허니콤보드 원판(혜림허니콤) — 디자인 에디터 불필요(원자재). 섹션 숨김 + 에디터 언마운트.
+            if (state.isRawBoard) {
+                sec.style.display = 'none';
+                try { _unmountEditor(); } catch(_ue){}
+                return;
+            }
             _mountEditor();
 
             var sz = _resolveSize(p);
@@ -14742,7 +14749,8 @@ html, body { background: #ffffff !important; }
             //   기존엔 DOM input 값이 stale 로 남아있어 작업지시서에 엉뚱한 철거일자가 찍히던 버그.
             var actualFee = (typeof _soComputeShipFee === 'function') ? _soComputeShipFee() : (state.shipFee || 0);
             var _noScheduleSet = ['metro_delivery','regional_delivery','parcel_shipping','large_parcel','small_parcel','compact_parcel','pd_bulk_free','pd_parcel_1','pd_parcel_2'];
-            var _needsSchedule = _noScheduleSet.indexOf(state.shipMethod) < 0;
+            // 2026-06-26: 허니콤보드 원판도 배송 희망일/시간 저장 (배송 방식이 택배여도)
+            var _needsSchedule = (_noScheduleSet.indexOf(state.shipMethod) < 0) || state.isRawBoard;
             var _needsRemoval = state.shipMethod === 'metro_install_removal';
             shipping = {
                 method: state.shipMethod,
