@@ -1766,6 +1766,14 @@ html, body { background: #ffffff !important; }
           <div id="soRawBoardMoreRight" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
         </div>
 
+        <!-- 2026-06-26: 허니콤보드 원판 전용 — 배송 희망일 + 배송 메모 (전용 필드, 작업지시서 반영) -->
+        <div class="so-section" id="soRbDeliveryBox" style="display:none;">
+          <div class="so-section-title">${tr('배송 희망일 · 배송 메모', '配送希望日 · メモ', 'Delivery date · memo')}</div>
+          <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
+          <input type="date" id="soRbDeliveryDate" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
+          <textarea id="soRbDeliveryMemo" rows="2" placeholder="${tr('배송 메모 (예: 부재 시 경비실에 맡겨주세요)', '配送メモ (例: 不在時は管理室へ)', 'Delivery memo (e.g. leave with security if absent)')}" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+        </div>
+
         <!-- 2026-06-04: 글씨 스카시 (hb_ss_*) 변형 5종 — 우측 상단 카드 그리드, 클릭 시 해당 변형으로 전환 -->
         <div class="so-section" id="soScarciVariantsSec" style="display:none;">
           <div class="so-section-title">${tr('스카시 종류 선택', 'スカシ種類選択', 'Choose variant')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
@@ -6758,9 +6766,9 @@ html, body { background: #ffffff !important; }
                     if (it.shipping.fee > 0) it.shipping.fee = 0;
                 }
             });
-            // 2026-06-26: 원판 배송 희망일/시간 (사용자 선택) — 각 아이템 shipping 에 저장.
-            var _rbDate = (document.getElementById('soScheduleDate') || {}).value || '';
-            var _rbTime = (document.getElementById('soScheduleTime') || {}).value || '';
+            // 2026-06-26: 원판 배송 희망일 + 배송 메모 (전용 필드) — 각 아이템에 저장 (작업지시서 표시).
+            var _rbDate = (document.getElementById('soRbDeliveryDate') || {}).value || '';
+            var _rbMemo = ((document.getElementById('soRbDeliveryMemo') || {}).value || '').trim();
             var addedCount = 0;
             picks.forEach(function(pick, idx){
                 var p = _soRbMoreCache.find(function(x){ return x.code === pick.code; });
@@ -6783,7 +6791,8 @@ html, body { background: #ffffff !important; }
                     qty: pick.qty,
                     selectedAddons: {}, addonQuantities: {},
                     rawBoardDouble: false, bundleShipping: false,
-                    shipping: { method: shipMethod, fee: feeOnThisItem, delivery_date: _rbDate, delivery_time: _rbTime },
+                    shipping: { method: shipMethod, fee: feeOnThisItem, delivery_date: _rbDate, delivery_time: '' },
+                    item_note: _rbMemo,
                     _isRawBoardAuto: true
                 });
                 addedCount++;
@@ -6834,7 +6843,8 @@ html, body { background: #ffffff !important; }
                 addonQuantities: {},
                 rawBoardDouble: false,
                 bundleShipping: false,
-                shipping: { method: 'metro_delivery', fee: 100000, delivery_date: ((document.getElementById('soScheduleDate') || {}).value || ''), delivery_time: ((document.getElementById('soScheduleTime') || {}).value || '') },
+                shipping: { method: 'metro_delivery', fee: 100000, delivery_date: ((document.getElementById('soRbDeliveryDate') || {}).value || ''), delivery_time: '' },
+                item_note: ((document.getElementById('soRbDeliveryMemo') || {}).value || '').trim(),
                 _isRawBoardAuto: true
             };
             var cur = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
@@ -12862,21 +12872,15 @@ html, body { background: #ffffff !important; }
         var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput && !state.isShoulderSash
             && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
-        // 2026-06-26: 허니콤보드 원판(혜림허니콤) — 배송 옵션 버튼은 숨기되 '배송 희망일'만 노출 (사용자 요청).
-        var _rbShipBtnGrid = document.getElementById('soShipBtnGrid');
-        if (_rbShipBtnGrid) _rbShipBtnGrid.style.display = '';   // 기본 복구 (다른 제품 영향 방지)
-        if (state.isRawBoard && schedSec) {
-            schedSec.style.display = '';
-            if (_rbShipBtnGrid) _rbShipBtnGrid.style.display = 'none';
-            var _rbDateWrap = document.getElementById('soScheduleDateWrap');
-            if (_rbDateWrap) {
-                _rbDateWrap.style.display = '';
-                var _rbSd = document.getElementById('soScheduleDate');
-                if (_rbSd) {
-                    var _rbMin = _soAddBusinessDays(new Date(), 3);
-                    _rbSd.min = _rbMin;
-                    if (!_rbSd.value || _rbSd.value < _rbMin) _rbSd.value = _rbMin;
-                }
+        // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 노출 (기존 시공/배송 섹션은 숨김 유지).
+        var _rbDelBox = document.getElementById('soRbDeliveryBox');
+        if (_rbDelBox) _rbDelBox.style.display = state.isRawBoard ? '' : 'none';
+        if (state.isRawBoard) {
+            var _rbSd = document.getElementById('soRbDeliveryDate');
+            if (_rbSd) {
+                var _rbMin = _soAddBusinessDays(new Date(), 3);
+                _rbSd.min = _rbMin;
+                if (!_rbSd.value || _rbSd.value < _rbMin) _rbSd.value = _rbMin;
             }
         }
         if (state.isBestGoods) {
