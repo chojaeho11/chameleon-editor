@@ -6758,6 +6758,9 @@ html, body { background: #ffffff !important; }
                     if (it.shipping.fee > 0) it.shipping.fee = 0;
                 }
             });
+            // 2026-06-26: 원판 배송 희망일/시간 (사용자 선택) — 각 아이템 shipping 에 저장.
+            var _rbDate = (document.getElementById('soScheduleDate') || {}).value || '';
+            var _rbTime = (document.getElementById('soScheduleTime') || {}).value || '';
             var addedCount = 0;
             picks.forEach(function(pick, idx){
                 var p = _soRbMoreCache.find(function(x){ return x.code === pick.code; });
@@ -6780,7 +6783,7 @@ html, body { background: #ffffff !important; }
                     qty: pick.qty,
                     selectedAddons: {}, addonQuantities: {},
                     rawBoardDouble: false, bundleShipping: false,
-                    shipping: { method: shipMethod, fee: feeOnThisItem },
+                    shipping: { method: shipMethod, fee: feeOnThisItem, delivery_date: _rbDate, delivery_time: _rbTime },
                     _isRawBoardAuto: true
                 });
                 addedCount++;
@@ -6831,7 +6834,7 @@ html, body { background: #ffffff !important; }
                 addonQuantities: {},
                 rawBoardDouble: false,
                 bundleShipping: false,
-                shipping: { method: 'metro_delivery', fee: 100000 },
+                shipping: { method: 'metro_delivery', fee: 100000, delivery_date: ((document.getElementById('soScheduleDate') || {}).value || ''), delivery_time: ((document.getElementById('soScheduleTime') || {}).value || '') },
                 _isRawBoardAuto: true
             };
             var cur = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
@@ -12859,6 +12862,23 @@ html, body { background: #ffffff !important; }
         var anyShipScope = !state.isAmountOrder && !state.isBestGoods && !state.isAdPrint && !state.isRealPrint && !_isHbFreeShip && !state.isBizCard && !state.isSticker && !state.isAcrylicFamily && !state.isBannerOutput && !state.isShoulderSash
             && (state.isInstallEligible || state.isPhotozone || state.isDeliveryOnly || state.isForexFoam || state.isGeneralPrint || state.isPaperDisplay);
         if (schedSec) schedSec.style.display = anyShipScope ? '' : 'none';
+        // 2026-06-26: 허니콤보드 원판(혜림허니콤) — 배송 옵션 버튼은 숨기되 '배송 희망일'만 노출 (사용자 요청).
+        var _rbShipBtnGrid = document.getElementById('soShipBtnGrid');
+        if (_rbShipBtnGrid) _rbShipBtnGrid.style.display = '';   // 기본 복구 (다른 제품 영향 방지)
+        if (state.isRawBoard && schedSec) {
+            schedSec.style.display = '';
+            if (_rbShipBtnGrid) _rbShipBtnGrid.style.display = 'none';
+            var _rbDateWrap = document.getElementById('soScheduleDateWrap');
+            if (_rbDateWrap) {
+                _rbDateWrap.style.display = '';
+                var _rbSd = document.getElementById('soScheduleDate');
+                if (_rbSd) {
+                    var _rbMin = _soAddBusinessDays(new Date(), 3);
+                    _rbSd.min = _rbMin;
+                    if (!_rbSd.value || _rbSd.value < _rbMin) _rbSd.value = _rbMin;
+                }
+            }
+        }
         if (state.isBestGoods) {
             // 정액 배송비 모드 — shipMethod 를 가짜 키로 세팅, _soComputeShipFee 가 분기 처리
             state.shipMethod = 'preset_goods_flat';
