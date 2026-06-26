@@ -1690,6 +1690,36 @@ html, body { background: #ffffff !important; }
                           'or 아래에서 직접 이미지 업로드' 가이드도 제거 — 우측 파일 업로드 카드 사용. -->
         </div>
 
+        <!-- 2026-06-26: 허니콤보드 원판 커팅 에디터 — 좌측 메인 영역 (다른 제품 에디터와 같은 자리). -->
+        <div id="soRbCutEditorMain" style="display:none;">
+          <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
+            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:4px;">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 1万ウォン', 'Cutting service · 10,000/board')}</div>
+            <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 가로×세로(cm)로 추가해 커팅 도면을 만드세요. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 10개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인을 별도 레이어</b>로 만들어 올려도 됩니다. 커팅비 <b>1판 1만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を 横×縦(cm) で追加してカット図面を作成。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大10個</b>。<br>または .ai/PDF を別レイヤーでアップロードも可。カット費 <b>1枚1万</b>。', 'Build a cut layout on a <b>2400×1200</b> board with <b>rect/circle</b> by W×H(cm). Cut-line only (not printed) · min <b>10cm</b> · max <b>10</b>/board.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>10,000/board</b>.')}</div>
+
+            <!-- 도구 -->
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+              <select id="rbCutShape" style="padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit;">
+                <option value="rect">${tr('네모', '四角', 'Rect')}</option>
+                <option value="circle">${tr('원형', '円', 'Circle')}</option>
+              </select>
+              <input id="rbCutW" type="number" min="10" max="240" placeholder="${tr('가로cm', '横cm', 'W cm')}" style="width:80px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+              <span style="color:#94a3b8;">×</span>
+              <input id="rbCutH" type="number" min="10" max="120" placeholder="${tr('세로cm', '縦cm', 'H cm')}" style="width:80px; padding:8px; border:1px solid #d1d5db; border-radius:8px; font-size:13px;">
+              <button type="button" onclick="window._rbCutAdd && window._rbCutAdd()" style="padding:9px 16px; background:#6366f1; color:#fff; border:none; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('도형 추가', '図形追加', 'Add shape')}</button>
+              <input type="file" id="soRbCutFile" accept=".ai,.pdf,application/pdf,application/illustrator,application/postscript" style="display:none;" onchange="window._soRbCutFileUpload && window._soRbCutFileUpload(this)">
+              <button type="button" onclick="document.getElementById('soRbCutFile').click()" style="padding:9px 16px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('파일 올리기 (.ai/PDF)', 'ファイル (.ai/PDF)', 'Upload (.ai/PDF)')}</button>
+            </div>
+
+            <!-- 캔버스 (2400×1200) -->
+            <div id="rbCutCanvas" style="position:relative; width:100%; aspect-ratio:2/1; background:#fff; border:1.5px solid #cbd5e1; border-radius:8px; overflow:hidden; touch-action:none;"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+              <span id="rbCutCount" style="font-size:12px; color:#475569; font-weight:700;">0 / 10</span>
+              <button type="button" onclick="window._rbCutClear && window._rbCutClear()" style="font-size:12px; color:#94a3b8; background:none; border:none; cursor:pointer; font-family:inherit;">${tr('전체 지우기', '全消去', 'Clear all')}</button>
+            </div>
+            <div id="soRbCutFileStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
+          </div>
+        </div>
+
         <!-- 2026-06-15: '앞면 업로드' 섹션 제거 — 우측 사이드바의 파일업로드 카드로 통일.
                         soFile input 만 보존 (다른 분기들이 doc.getElementById('soFile') 로 참조). -->
         <div id="soUploadWrap" style="display:none;">
@@ -1764,36 +1794,6 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soRawBoardMoreRightSec" style="display:none;">
           <div class="so-section-title">${tr('다른 원판 제품 더 담기', '他の原板商品を追加', 'Add more raw boards')}</div>
           <div id="soRawBoardMoreRight" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
-        </div>
-
-        <!-- 2026-06-26: 허니콤보드 원판 커팅서비스 — 파일 업로드(.ai/.pdf) + 안내 (커팅 사용 시 1판 1만원) -->
-        <div class="so-section" id="soRbCutSec" style="display:none;">
-          <div class="so-section-title">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 1万ウォン', 'Cutting service · 10,000/board')}</div>
-          <div style="font-size:11.5px; color:#475569; line-height:1.7; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
-            ${tr('대지 크기를 <b>2400×1200</b>으로 잡고 <b>커팅라인 및 V커팅라인을 별도 레이어</b>로 만든 후 올려주세요.<br>한 판에 유닛은 <b>최대 10개</b>를 넘을 수 없습니다.<br>원판 커팅비용은 <b>1판 기준 1만원</b>입니다.', '台紙サイズを <b>2400×1200</b> にし、<b>カットライン・Vカットラインを別レイヤー</b>で作成してアップロードしてください。<br>1枚あたりユニットは <b>最大10個</b> まで。<br>カット費用は <b>1枚あたり1万ウォン</b> です。', 'Set artboard to <b>2400×1200</b> with <b>cutting & V-cut lines on a separate layer</b>, then upload.<br>Max <b>10 units</b> per board.<br>Cutting fee is <b>10,000 KRW per board</b>.')}
-          </div>
-          <input type="file" id="soRbCutFile" accept=".ai,.pdf,application/pdf,application/illustrator,application/postscript" style="display:none;" onchange="window._soRbCutFileUpload && window._soRbCutFileUpload(this)">
-          <button type="button" onclick="document.getElementById('soRbCutFile').click()" style="width:100%; padding:12px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('커팅 파일 올리기 (일러스트 .ai / PDF)', 'カットファイル (.ai / PDF)', 'Upload cut file (.ai / PDF)')}</button>
-          <div id="soRbCutFileStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
-
-          <!-- 2026-06-26: 또는 — 직접 커팅 도면 그리기 (2400×1200, 네모/원형 cm 입력, 최소10cm·최대10개) -->
-          <div style="text-align:center; font-size:11px; color:#94a3b8; margin:12px 0 10px;">${tr('— 또는 직접 도면 그리기 —', '— または直接作図 —', '— or draw the layout —')}</div>
-          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
-            <select id="rbCutShape" style="padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px; font-family:inherit;">
-              <option value="rect">${tr('네모', '四角', 'Rect')}</option>
-              <option value="circle">${tr('원형', '円', 'Circle')}</option>
-            </select>
-            <input id="rbCutW" type="number" min="10" max="240" placeholder="${tr('가로cm', '横cm', 'W cm')}" style="width:66px; padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px;">
-            <span style="color:#94a3b8;">×</span>
-            <input id="rbCutH" type="number" min="10" max="120" placeholder="${tr('세로cm', '縦cm', 'H cm')}" style="width:66px; padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px;">
-            <button type="button" onclick="window._rbCutAdd && window._rbCutAdd()" style="padding:8px 14px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('추가', '追加', 'Add')}</button>
-          </div>
-          <div style="font-size:10.5px; color:#94a3b8; margin-bottom:6px;">${tr('도형을 드래그해 배치하세요 · 인쇄 안 됨(커팅라인) · 최소 10cm', '図形をドラッグで配置 · 印刷なし(カットライン) · 最小10cm', 'Drag to place · cut-line only (not printed) · min 10cm')}</div>
-          <div id="rbCutCanvas" style="position:relative; width:100%; aspect-ratio:2/1; background:#fff; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden; touch-action:none;"></div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            <span id="rbCutCount" style="font-size:11.5px; color:#475569; font-weight:700;">0 / 10</span>
-            <button type="button" onclick="window._rbCutClear && window._rbCutClear()" style="font-size:11px; color:#94a3b8; background:none; border:none; cursor:pointer; font-family:inherit;">${tr('전체 지우기', '全消去', 'Clear all')}</button>
-          </div>
         </div>
 
         <!-- 2026-06-26: 허니콤보드 원판 전용 — 배송 희망일 + 배송 메모 (전용 필드, 작업지시서 반영) -->
@@ -13050,7 +13050,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-26: 허니콤보드 원판 — 전용 배송일/메모 박스 + 커팅서비스(파일 업로드) 박스 노출.
         var _rbDelBox = document.getElementById('soRbDeliveryBox');
         if (_rbDelBox) _rbDelBox.style.display = state.isRawBoard ? '' : 'none';
-        var _rbCutSec = document.getElementById('soRbCutSec');
+        var _rbCutSec = document.getElementById('soRbCutEditorMain');
         if (_rbCutSec) _rbCutSec.style.display = state.isRawBoard ? '' : 'none';
         if (state.isRawBoard) {
             // 새 상품 진입마다 커팅 파일/도면 초기화 (이전 잔존 방지)
