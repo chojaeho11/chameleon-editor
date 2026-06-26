@@ -1781,7 +1781,7 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soRbDeliveryBox" style="display:none;">
           <div class="so-section-title">${tr('배송 희망일 · 배송 메모', '配送希望日 · メモ', 'Delivery date · memo')}</div>
           <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-bottom:10px; line-height:1.6;">${tr('서울·경기 외 <b>지방은 착불 용차배송</b> · <b>300장 이상 무료배송</b>', '首都圏外 <b>地方は着払い専用車配送</b> · <b>300枚以上 送料無料</b>', 'Outside metro: <b>freight-collect truck</b> · <b>free over 300 sheets</b>')}</div>
-          <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">${tr('영업일 기준 최소 3일 이후부터 선택 가능', '営業日基準で最短3日後から', 'From 3 business days after')}</div>
+          <div style="font-size:11px; color:#15803d; margin-bottom:6px; font-weight:700;">${tr('재고 보유 — 즉시 배송 가능 · 원하는 배송일을 선택하세요', '在庫あり — 即日配送可能 · ご希望日を選択', 'In stock — immediate delivery available · pick any date')}</div>
           <input type="date" id="soRbDeliveryDate" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
           <textarea id="soRbDeliveryMemo" rows="2" placeholder="${tr('배송 메모 (예: 부재 시 경비실에 맡겨주세요)', '配送メモ (例: 不在時は管理室へ)', 'Delivery memo (e.g. leave with security if absent)')}" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
         </div>
@@ -12949,7 +12949,9 @@ html, body { background: #ffffff !important; }
         if (state.isRawBoard) {
             var _rbSd = document.getElementById('soRbDeliveryDate');
             if (_rbSd) {
-                var _rbMin = _soAddBusinessDays(new Date(), 3);
+                // 원판은 재고 보유 — 오늘(즉시)부터 선택 가능
+                var _rbToday = new Date();
+                var _rbMin = _rbToday.getFullYear() + '-' + String(_rbToday.getMonth() + 1).padStart(2, '0') + '-' + String(_rbToday.getDate()).padStart(2, '0');
                 _rbSd.min = _rbMin;
                 if (!_rbSd.value || _rbSd.value < _rbMin) _rbSd.value = _rbMin;
             }
