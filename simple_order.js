@@ -1775,6 +1775,25 @@ html, body { background: #ffffff !important; }
           <input type="file" id="soRbCutFile" accept=".ai,.pdf,application/pdf,application/illustrator,application/postscript" style="display:none;" onchange="window._soRbCutFileUpload && window._soRbCutFileUpload(this)">
           <button type="button" onclick="document.getElementById('soRbCutFile').click()" style="width:100%; padding:12px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('커팅 파일 올리기 (일러스트 .ai / PDF)', 'カットファイル (.ai / PDF)', 'Upload cut file (.ai / PDF)')}</button>
           <div id="soRbCutFileStatus" style="font-size:11.5px; color:#475569; margin-top:8px; min-height:16px;"></div>
+
+          <!-- 2026-06-26: 또는 — 직접 커팅 도면 그리기 (2400×1200, 네모/원형 cm 입력, 최소10cm·최대10개) -->
+          <div style="text-align:center; font-size:11px; color:#94a3b8; margin:12px 0 10px;">${tr('— 또는 직접 도면 그리기 —', '— または直接作図 —', '— or draw the layout —')}</div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+            <select id="rbCutShape" style="padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px; font-family:inherit;">
+              <option value="rect">${tr('네모', '四角', 'Rect')}</option>
+              <option value="circle">${tr('원형', '円', 'Circle')}</option>
+            </select>
+            <input id="rbCutW" type="number" min="10" max="240" placeholder="${tr('가로cm', '横cm', 'W cm')}" style="width:66px; padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px;">
+            <span style="color:#94a3b8;">×</span>
+            <input id="rbCutH" type="number" min="10" max="120" placeholder="${tr('세로cm', '縦cm', 'H cm')}" style="width:66px; padding:7px; border:1px solid #d1d5db; border-radius:7px; font-size:12px;">
+            <button type="button" onclick="window._rbCutAdd && window._rbCutAdd()" style="padding:8px 14px; background:#6366f1; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('추가', '追加', 'Add')}</button>
+          </div>
+          <div style="font-size:10.5px; color:#94a3b8; margin-bottom:6px;">${tr('도형을 드래그해 배치하세요 · 인쇄 안 됨(커팅라인) · 최소 10cm', '図形をドラッグで配置 · 印刷なし(カットライン) · 最小10cm', 'Drag to place · cut-line only (not printed) · min 10cm')}</div>
+          <div id="rbCutCanvas" style="position:relative; width:100%; aspect-ratio:2/1; background:#fff; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden; touch-action:none;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span id="rbCutCount" style="font-size:11.5px; color:#475569; font-weight:700;">0 / 10</span>
+            <button type="button" onclick="window._rbCutClear && window._rbCutClear()" style="font-size:11px; color:#94a3b8; background:none; border:none; cursor:pointer; font-family:inherit;">${tr('전체 지우기', '全消去', 'Clear all')}</button>
+          </div>
         </div>
 
         <!-- 2026-06-26: 허니콤보드 원판 전용 — 배송 희망일 + 배송 메모 (전용 필드, 작업지시서 반영) -->
@@ -6686,8 +6705,9 @@ html, body { background: #ffffff !important; }
             // PRO 10%
             var proPct = (!!window.isProSubscriber) ? 10 : 0;
             var proDisc = Math.round(subtotalKrw * proPct / 100);
-            // 2026-06-26: 커팅 파일 업로드 시 — 커팅비 (판수 × 1만원) 합계에 반영
-            var _rbCutFee = (state.rbCutFileUrl && totalQty > 0) ? (10000 * totalQty) : 0;
+            // 2026-06-26: 커팅 사용(파일 업로드 또는 도면 그리기) 시 — 커팅비 (판수 × 1만원) 합계에 반영
+            var _rbCutUsed = !!state.rbCutFileUrl || (typeof window._rbCutHasShapes === 'function' && window._rbCutHasShapes() > 0);
+            var _rbCutFee = (_rbCutUsed && totalQty > 0) ? (10000 * totalQty) : 0;
             var finalKrw = subtotalKrw - proDisc + shipFee + _rbCutFee;
             // 미리보기 라인 HTML
             var lineHtml = picks.map(function (it) {
@@ -6736,6 +6756,83 @@ html, body { background: #ffffff !important; }
     //   배송: state.shipMethod 사용 (사용자가 선택한 수도권/지방). fee 는 카트 내 모든 원판 합산 qty 기준으로 계산하여
     //         "첫 번째 추가 item" 에만 부과 (item 별 중복 방지 — 한 번의 배송이라 정액).
     //   _isRawBoardAuto 플래그로 _soIsRawBoardProduct 보조 인식 보강.
+    // 2026-06-26: 원판 커팅 도면 에디터 (독립 모듈) — 2400×1200, 네모/원형 cm 입력, 최소 10cm, 최대 10개. 인쇄X(커팅라인).
+    var _RB_BOARD_W = 2400, _RB_BOARD_H = 1200, _RB_MIN_MM = 100, _RB_MAX = 10;
+    var _rbCutItems = [], _rbCutSeq = 0;
+    window._rbCutHasShapes = function () { return _rbCutItems.length; };
+    window._rbCutInit = function () { _rbCutItems = []; _rbCutSeq = 0; _rbCutRender(); };
+    window._rbCutAdd = function () {
+        if (_rbCutItems.length >= _RB_MAX) { alert(tr('1판 최대 10개까지만 가능합니다.', '1枚最大10個まで', 'Max 10 per board')); return; }
+        var shape = (document.getElementById('rbCutShape') || {}).value || 'rect';
+        var wCm = parseFloat((document.getElementById('rbCutW') || {}).value) || 0;
+        var hCm = parseFloat((document.getElementById('rbCutH') || {}).value) || 0;
+        if (shape === 'circle' && !hCm) hCm = wCm;
+        var wMm = wCm * 10, hMm = hCm * 10;
+        if (wMm < _RB_MIN_MM || hMm < _RB_MIN_MM) { alert(tr('최소 크기는 10cm × 10cm 입니다.', '最小10cm×10cm', 'Minimum 10cm × 10cm')); return; }
+        if (wMm > _RB_BOARD_W || hMm > _RB_BOARD_H) { alert(tr('판형(240×120cm)을 넘을 수 없습니다.', '台紙(240×120cm)を超えられません', 'Exceeds board (240×120cm)')); return; }
+        var x = 20, y = 20;
+        if (_rbCutItems.length) {
+            var last = _rbCutItems[_rbCutItems.length - 1];
+            x = last.xMm + last.wMm + 20; y = last.yMm;
+            if (x + wMm > _RB_BOARD_W) { x = 20; y = last.yMm + last.hMm + 20; }
+            if (y + hMm > _RB_BOARD_H) { y = 20; }
+        }
+        _rbCutItems.push({ id: ++_rbCutSeq, shape: shape, wMm: wMm, hMm: hMm, xMm: x, yMm: y });
+        var wi = document.getElementById('rbCutW'); if (wi) wi.value = '';
+        var hi = document.getElementById('rbCutH'); if (hi) hi.value = '';
+        _rbCutRender();
+        if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
+    };
+    window._rbCutDelete = function (id) {
+        _rbCutItems = _rbCutItems.filter(function (it) { return it.id !== id; });
+        _rbCutRender();
+        if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
+    };
+    window._rbCutClear = function () { _rbCutItems = []; _rbCutRender(); if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview(); };
+    function _rbCutRender() {
+        var canvas = document.getElementById('rbCutCanvas');
+        if (!canvas) return;
+        var cw = canvas.clientWidth || 300;
+        var scale = cw / _RB_BOARD_W;
+        canvas.innerHTML = '';
+        _rbCutItems.forEach(function (it) {
+            var el = document.createElement('div');
+            el.style.cssText = 'position:absolute; box-sizing:border-box; border:2px solid #dc2626; background:rgba(220,38,38,0.06); cursor:move; touch-action:none;'
+                + 'left:' + (it.xMm * scale) + 'px; top:' + (it.yMm * scale) + 'px; width:' + (it.wMm * scale) + 'px; height:' + (it.hMm * scale) + 'px;'
+                + (it.shape === 'circle' ? 'border-radius:50%;' : 'border-radius:2px;');
+            el.innerHTML = '<div style="position:absolute; top:1px; left:3px; font-size:9px; color:#dc2626; font-weight:800; white-space:nowrap; pointer-events:none;">' + (it.wMm / 10) + '×' + (it.hMm / 10) + 'cm</div>'
+                + '<div onpointerdown="event.stopPropagation();" onclick="window._rbCutDelete(' + it.id + ')" style="position:absolute; top:-9px; right:-9px; width:18px; height:18px; background:#dc2626; color:#fff; border-radius:50%; font-size:12px; line-height:18px; text-align:center; cursor:pointer; z-index:2;">×</div>';
+            el.addEventListener('pointerdown', function (ev) {
+                if (ev.target !== el) return;  // X 버튼 제외
+                ev.preventDefault();
+                var sx = ev.clientX, sy = ev.clientY, ox = it.xMm, oy = it.yMm;
+                try { el.setPointerCapture(ev.pointerId); } catch (_) {}
+                function mv(e) {
+                    var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
+                    it.xMm = Math.max(0, Math.min(_RB_BOARD_W - it.wMm, ox + dx));
+                    it.yMm = Math.max(0, Math.min(_RB_BOARD_H - it.hMm, oy + dy));
+                    el.style.left = (it.xMm * scale) + 'px'; el.style.top = (it.yMm * scale) + 'px';
+                }
+                function up() { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); }
+                el.addEventListener('pointermove', mv);
+                el.addEventListener('pointerup', up);
+            });
+            canvas.appendChild(el);
+        });
+        var cnt = document.getElementById('rbCutCount'); if (cnt) cnt.textContent = _rbCutItems.length + ' / ' + _RB_MAX;
+    }
+    window._rbCutExportSVG = function () {
+        var shapes = _rbCutItems.map(function (it) {
+            if (it.shape === 'circle') {
+                return '<ellipse cx="' + (it.xMm + it.wMm / 2) + '" cy="' + (it.yMm + it.hMm / 2) + '" rx="' + (it.wMm / 2) + '" ry="' + (it.hMm / 2) + '" fill="none" stroke="#FF0000" stroke-width="1"/>';
+            }
+            return '<rect x="' + it.xMm + '" y="' + it.yMm + '" width="' + it.wMm + '" height="' + it.hMm + '" fill="none" stroke="#FF0000" stroke-width="1"/>';
+        }).join('');
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' + _RB_BOARD_W + 'mm" height="' + _RB_BOARD_H + 'mm" viewBox="0 0 ' + _RB_BOARD_W + ' ' + _RB_BOARD_H + '">'
+            + '<rect x="0" y="0" width="' + _RB_BOARD_W + '" height="' + _RB_BOARD_H + '" fill="none" stroke="#000000" stroke-width="2"/>'
+            + shapes + '</svg>';
+    };
+
     // 2026-06-26: 원판 커팅 파일(.ai/.pdf) 업로드 — 선택 즉시 스토리지 업로드 → state 에 URL 저장 (커팅 사용 = 1판 1만원).
     window._soRbCutFileUpload = async function (input) {
         var f = input && input.files && input.files[0];
@@ -6759,7 +6856,7 @@ html, body { background: #ffffff !important; }
         }
     };
 
-    window._soAddRawBoardBatch = function () {
+    window._soAddRawBoardBatch = async function () {
         try {
             if (!_soRbMoreCache) { console.warn('[so] rb batch: cache empty'); return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
@@ -6772,6 +6869,22 @@ html, body { background: #ffffff !important; }
             if (!picks.length) {
                 showStatus(tr('수량을 입력해주세요 (1 이상).', '数量を入力してください (1以上)。', 'Please enter qty (≥1).'), 'warn');
                 return;
+            }
+            // 2026-06-26: 커팅 도면(에디터)에 도형이 있고 파일 업로드가 없으면 → SVG 내보내 업로드 (커팅 데이터).
+            if (!state.rbCutFileUrl && typeof window._rbCutHasShapes === 'function' && window._rbCutHasShapes() > 0) {
+                try {
+                    var _cutSvg = window._rbCutExportSVG();
+                    var _csb = getSb();
+                    if (_csb) {
+                        var _csPath = 'rawboard_cut/' + Date.now() + '_layout.svg';
+                        var _csBlob = new Blob([_cutSvg], { type: 'image/svg+xml' });
+                        var _csUp = await _csb.storage.from('design').upload(_csPath, _csBlob, { contentType: 'image/svg+xml', upsert: false });
+                        if (!_csUp.error) {
+                            state.rbCutFileUrl = _csb.storage.from('design').getPublicUrl(_csPath).data.publicUrl;
+                            state.rbCutFileName = tr('커팅도면.svg', 'カット図面.svg', 'cut-layout.svg');
+                        }
+                    }
+                } catch (_cse) { console.warn('[rb cut svg export]', _cse); }
             }
             var curRaw = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || [];
             // 2026-05-30: 사용자 요청 — 매 batch 클릭마다 이전 원판 batch item 들은 모두 제거하고 새 batch 만 남김.
@@ -6853,10 +6966,11 @@ html, body { background: #ffffff !important; }
                     _isRawBoardAuto: true, _isRbCutService: true
                 });
                 addedCount++;
-                // 중복 과금 방지 — 담은 후 커팅 파일 상태 초기화
+                // 중복 과금 방지 — 담은 후 커팅 파일/도면 초기화
                 state.rbCutFileUrl = null; state.rbCutFileName = null;
                 var _cutStat2 = document.getElementById('soRbCutFileStatus'); if (_cutStat2) _cutStat2.textContent = '';
                 var _cutInp2 = document.getElementById('soRbCutFile'); if (_cutInp2) _cutInp2.value = '';
+                try { if (window._rbCutInit) window._rbCutInit(); } catch(_rbi){}
             }
             localStorage.setItem(CART_KEY, JSON.stringify(cur));
             if (Array.isArray(window.cartData)) { window.cartData.length = 0; cur.forEach(function (i) { window.cartData.push(i); }); }
@@ -12939,12 +13053,14 @@ html, body { background: #ffffff !important; }
         var _rbCutSec = document.getElementById('soRbCutSec');
         if (_rbCutSec) _rbCutSec.style.display = state.isRawBoard ? '' : 'none';
         if (state.isRawBoard) {
-            // 새 상품 진입마다 커팅 파일 초기화 (이전 업로드 잔존 방지)
+            // 새 상품 진입마다 커팅 파일/도면 초기화 (이전 잔존 방지)
             state.rbCutFileUrl = null; state.rbCutFileName = null;
             var _rbCutStat = document.getElementById('soRbCutFileStatus');
             if (_rbCutStat) _rbCutStat.textContent = '';
             var _rbCutInp = document.getElementById('soRbCutFile');
             if (_rbCutInp) _rbCutInp.value = '';
+            try { if (window._rbCutInit) window._rbCutInit(); } catch(_rci){}
+            setTimeout(function(){ try { if (window._rbCutInit) window._rbCutInit(); } catch(_){} }, 120);  // 레이아웃 후 캔버스 재렌더
         }
         if (state.isRawBoard) {
             var _rbSd = document.getElementById('soRbDeliveryDate');
