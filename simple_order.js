@@ -17227,6 +17227,15 @@ html, body { background: #ffffff !important; }
             return;
         }
         _renderCheckoutSummary();
+        // 2026-06-26: 원판 배송 메모 → 체크아웃 메모(소CoMemo) 자동 채움 → 주문 request_note 로 저장돼
+        //   작업지시서의 "고객 요청사항 (배송 메모)" 박스에 표시됨. (소CoMemo 비어있을 때만)
+        try {
+            var _memoEl = document.getElementById('soCoMemo');
+            if (_memoEl && !(_memoEl.value || '').trim()) {
+                var _rbMemoItem = (cart || []).find(function (it) { return it && (it.item_note || it.itemNote || '').trim(); });
+                if (_rbMemoItem) _memoEl.value = (_rbMemoItem.item_note || _rbMemoItem.itemNote || '').trim();
+            }
+        } catch (_me) {}
         document.getElementById('soCheckoutOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
         _soApplyFranchisePay();
