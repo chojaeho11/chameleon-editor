@@ -6765,10 +6765,32 @@ html, body { background: #ffffff !important; }
     // 2026-06-26: 원판 커팅 도면 에디터 (독립 모듈) — 네모/원형 cm, 선택·수정·리사이즈·삭제·대지회전·줄자. 인쇄X(커팅라인).
     var _rbBoardW = 2400, _rbBoardH = 1200, _RB_MIN_MM = 100, _RB_MAX = 10;
     var _rbCutItems = [], _rbCutSeq = 0, _rbCutSel = null;
+    // 2026-06-26: 실행취소/복사붙여넣기 (Ctrl+Z/Y/C/V/D)
+    var _rbUndo = [], _rbRedo = [], _rbClip = null;
+    function _rbClone() { return _rbCutItems.map(function (o) { return { id: o.id, shape: o.shape, wMm: o.wMm, hMm: o.hMm, xMm: o.xMm, yMm: o.yMm }; }); }
+    function _rbSnapshot() { _rbUndo.push(_rbClone()); if (_rbUndo.length > 40) _rbUndo.shift(); _rbRedo = []; }
+    function _rbRestore(arr) { _rbCutItems = (arr || []).map(function (o) { return { id: o.id, shape: o.shape, wMm: o.wMm, hMm: o.hMm, xMm: o.xMm, yMm: o.yMm }; }); _rbCutSel = null; _rbCutRender(); if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview(); }
+    function _rbUndoAction() { if (!_rbUndo.length) return; _rbRedo.push(_rbClone()); _rbRestore(_rbUndo.pop()); }
+    function _rbRedoAction() { if (!_rbRedo.length) return; _rbUndo.push(_rbClone()); _rbRestore(_rbRedo.pop()); }
+    function _rbCopy() { var it = _rbCutFind(_rbCutSel); if (it) _rbClip = { shape: it.shape, wMm: it.wMm, hMm: it.hMm, xMm: it.xMm, yMm: it.yMm }; }
+    function _rbPaste() {
+        if (!_rbClip) return;
+        if (_rbCutItems.length >= _RB_MAX) { alert(tr('1판 최대 10개까지만 가능합니다.', '1枚最大10個まで', 'Max 10 per board')); return; }
+        _rbSnapshot();
+        var nid = ++_rbCutSeq;
+        _rbCutItems.push({ id: nid, shape: _rbClip.shape, wMm: _rbClip.wMm, hMm: _rbClip.hMm,
+            xMm: Math.max(0, Math.min(_rbBoardW - _rbClip.wMm, _rbClip.xMm + 40)),
+            yMm: Math.max(0, Math.min(_rbBoardH - _rbClip.hMm, _rbClip.yMm + 40)) });
+        _rbCutSel = nid;
+        _rbCutRender();
+        if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
+    }
+    function _rbDuplicate() { if (_rbCutSel != null) { _rbCopy(); _rbPaste(); } }
     window._rbCutHasShapes = function () { return _rbCutItems.length; };
-    window._rbCutInit = function () { _rbCutItems = []; _rbCutSeq = 0; _rbCutSel = null; _rbBoardW = 2400; _rbBoardH = 1200; _rbCutRender(); _rbCutHidePdf(); };
+    window._rbCutInit = function () { _rbCutItems = []; _rbCutSeq = 0; _rbCutSel = null; _rbBoardW = 2400; _rbBoardH = 1200; _rbUndo = []; _rbRedo = []; _rbClip = null; _rbCutRender(); _rbCutHidePdf(); };
     function _rbCutFind(id) { for (var i = 0; i < _rbCutItems.length; i++) if (_rbCutItems[i].id === id) return _rbCutItems[i]; return null; }
     window._rbCutRotateBoard = function () {
+        _rbSnapshot();
         var t = _rbBoardW; _rbBoardW = _rbBoardH; _rbBoardH = t;
         _rbCutItems.forEach(function (it) {
             it.wMm = Math.min(it.wMm, _rbBoardW); it.hMm = Math.min(it.hMm, _rbBoardH);
@@ -6789,15 +6811,17 @@ html, body { background: #ffffff !important; }
         if (wMm > _rbBoardW || hMm > _rbBoardH) { alert(tr('대지를 넘을 수 없습니다.', '台紙を超えられません', 'Exceeds the board')); return; }
         var room = _RB_MAX - _rbCutItems.length;
         if (room <= 0) { alert(tr('1판 최대 10개까지만 가능합니다.', '1枚最大10個まで', 'Max 10 per board')); return; }
+        _rbSnapshot();
         var add = Math.min(qty, room);
         for (var i = 0; i < add; i++) _rbCutItems.push({ id: ++_rbCutSeq, shape: shape, wMm: wMm, hMm: hMm, xMm: 20, yMm: 20 });
         _rbCutSel = null;
-        window._rbCutAutoArrange();   // 추가 후 자동 배치 (회전 포함, 대지를 최대한 채움)
+        _rbArrange(); _rbCutRender();   // 추가 후 자동 배치 (회전 포함, 대지를 최대한 채움)
         if (add < qty) alert(tr('1판 최대 10개 — ' + add + '개만 추가했습니다.', '最大10個 — ' + add + '個のみ追加', 'Max 10 — added ' + add));
         if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
     };
     // 2026-06-26: 자동 배치 — 셸프 패킹 + 사각형 90° 회전으로 대지를 최대한 채움 (파 최소화).
-    window._rbCutAutoArrange = function () {
+    window._rbCutAutoArrange = function () { _rbSnapshot(); _rbArrange(); _rbCutRender(); };
+    function _rbArrange() {
         var m = 20; // mm 간격
         var items = _rbCutItems.slice().sort(function (a, b) { return Math.max(b.wMm, b.hMm) - Math.max(a.wMm, a.hMm); });
         var x = m, y = m, shelfH = 0;
@@ -6814,8 +6838,7 @@ html, body { background: #ffffff !important; }
             x += w + m;
             if (h > shelfH) shelfH = h;
         });
-        _rbCutRender();
-    };
+    }
     window._rbCutSelect = function (id) {
         _rbCutSel = id;
         var it = _rbCutFind(id);
@@ -6838,12 +6861,13 @@ html, body { background: #ffffff !important; }
         _rbCutRender();
     };
     window._rbCutDelete = function (id) {
+        _rbSnapshot();
         _rbCutItems = _rbCutItems.filter(function (it) { return it.id !== id; });
         if (_rbCutSel === id) _rbCutSel = null;
         _rbCutRender();
         if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview();
     };
-    window._rbCutClear = function () { _rbCutItems = []; _rbCutSel = null; _rbCutRender(); if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview(); };
+    window._rbCutClear = function () { if (!_rbCutItems.length) return; _rbSnapshot(); _rbCutItems = []; _rbCutSel = null; _rbCutRender(); if (window._soUpdateRawBoardPreview) window._soUpdateRawBoardPreview(); };
     function _rbCutRender() {
         var canvas = document.getElementById('rbCutCanvas');
         if (!canvas) return;
@@ -6878,8 +6902,10 @@ html, body { background: #ffffff !important; }
                     ev.preventDefault(); ev.stopPropagation();
                     window._rbCutSelect(it.id);
                     var rsx = ev.clientX, rsy = ev.clientY, ow = it.wMm, oh = it.hMm;
+                    var _rpre = _rbClone(), _rmoved = false;
                     try { el.setPointerCapture(ev.pointerId); } catch (_) {}
                     function rmv(e) {
+                        if (!_rmoved) { _rmoved = true; _rbUndo.push(_rpre); _rbRedo = []; if (_rbUndo.length > 40) _rbUndo.shift(); }
                         var dw = (e.clientX - rsx) / scale, dh = (e.clientY - rsy) / scale;
                         it.wMm = Math.max(_RB_MIN_MM, Math.min(_rbBoardW - it.xMm, ow + dw));
                         it.hMm = Math.max(_RB_MIN_MM, Math.min(_rbBoardH - it.yMm, oh + dh));
@@ -6895,8 +6921,10 @@ html, body { background: #ffffff !important; }
                 ev.preventDefault();
                 if (it.id !== _rbCutSel) window._rbCutSelect(it.id);
                 var sx = ev.clientX, sy = ev.clientY, ox = it.xMm, oy = it.yMm;
+                var _dpre = _rbClone(), _dmoved = false;
                 try { el.setPointerCapture(ev.pointerId); } catch (_) {}
                 function mv(e) {
+                    if (!_dmoved) { _dmoved = true; _rbUndo.push(_dpre); _rbRedo = []; if (_rbUndo.length > 40) _rbUndo.shift(); }
                     var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
                     it.xMm = Math.max(0, Math.min(_rbBoardW - it.wMm, ox + dx));
                     it.yMm = Math.max(0, Math.min(_rbBoardH - it.hMm, oy + dy));
@@ -6941,14 +6969,21 @@ html, body { background: #ffffff !important; }
     function _rbCutHidePdf() { var box = document.getElementById('rbCutPdfPreview'); if (box) { box.style.display = 'none'; box.innerHTML = ''; } }
     // Delete 키로 선택 도형 삭제 (입력칸 포커스 중 제외)
     document.addEventListener('keydown', function (e) {
-        if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-        if (_rbCutSel == null) return;
         var ed = document.getElementById('soRbCutEditorMain');
-        if (!ed || ed.style.display === 'none') return;
+        if (!ed || ed.style.display === 'none') return;   // 원판 커팅 에디터 열려있을 때만
         var ae = document.activeElement;
-        if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return;
-        e.preventDefault();
-        window._rbCutDelete(_rbCutSel);
+        var inInput = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT');
+        // Delete — 선택 도형 삭제
+        if ((e.key === 'Delete' || e.key === 'Backspace') && !inInput && _rbCutSel != null) {
+            e.preventDefault(); window._rbCutDelete(_rbCutSel); return;
+        }
+        if (!(e.ctrlKey || e.metaKey) || inInput) return;
+        var k = (e.key || '').toLowerCase();
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); _rbUndoAction(); }
+        else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); _rbRedoAction(); }
+        else if (k === 'c') { e.preventDefault(); _rbCopy(); }
+        else if (k === 'v') { e.preventDefault(); _rbPaste(); }
+        else if (k === 'd') { e.preventDefault(); _rbDuplicate(); }
     });
 
     // 2026-06-26: 원판 커팅 파일(.ai/.pdf) 업로드 — 선택 즉시 스토리지 업로드 → state 에 URL 저장 (커팅 사용 = 1판 1만원).
