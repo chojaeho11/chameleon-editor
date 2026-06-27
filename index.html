@@ -620,6 +620,9 @@ window.loadEditorLibraries = function() {
                 _styleEl.id = '_pdp_flash_block';
                 _styleEl.textContent = 'html[data-pdp="1"] #startScreen, html[data-pdp="1"] #honeycombVideoSection, html[data-pdp="1"] .hotdeal-wrapper, html[data-pdp="1"] #artworkMarketBanner, html[data-pdp="1"] #homeReviewSection { visibility: hidden !important; }';
                 (document.head || document.documentElement).appendChild(_styleEl);
+                // 2026-06-27: 안전망 — 12초 내 상품/카테고리가 안 열려도 메인 섹션은 보이게 (영구 빈 화면 방지).
+                //   유효 상품이면 그 사이 모달이 viewport 를 덮으므로 메인 노출돼도 안 보임.
+                setTimeout(function(){ try { if (document.documentElement.getAttribute('data-pdp') === '1') { document.documentElement.removeAttribute('data-pdp'); var _s = document.getElementById('_pdp_flash_block'); if (_s) _s.remove(); } } catch(e){} }, 12000);
             }
         } catch(e) {}
     })();
@@ -18952,9 +18955,10 @@ window.goHome = function() {
             window.scrollTo(0, 0);
 
         } catch (e) {
-            console.error(e);
-            showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + e.message, 'error');
-            window.history.back();
+            // 2026-06-27: 삭제된/없는 상품 등 로드 실패 — 에러 토스트+뒤로가기 대신 메인페이지로 자연스럽게 폴백.
+            //   (검색엔진에서 직접 들어오면 뒤로갈 곳이 없어 빈 화면으로 남던 문제 해결)
+            console.warn('[loadProductDetailAndOpen] fallback to main:', e && e.message);
+            if (window._revealMainPage) window._revealMainPage(true);
         } finally {
             if(loading) loading.style.display = 'none';
         }
@@ -19096,6 +19100,21 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
     // [통합] 상품 상세페이지 전체화면 모드 시스템 (상단바+URL변경)
     // ============================================================
 
+    // 2026-06-27: 어떤 URL(레거시 _p, 삭제된 상품, 잘못된 코드)로 들어와도 메인페이지가 정상 노출되게 하는 안전망.
+    //   ?product=/?_p= 진입 시 data-pdp 로 메인을 숨겨두는데, 상품/카테고리가 안 열리면 그대로 빈 화면이 됨 → 메인 복구.
+    window._revealMainPage = function(clearUrl) {
+        try {
+            document.documentElement.removeAttribute('data-pdp');
+            var s = document.getElementById('_pdp_flash_block'); if (s) s.remove();
+            var ld = document.getElementById('loading'); if (ld) ld.style.display = 'none';
+            // 잘못된/삭제된 상품 파라미터는 URL 에서 제거 — 새로고침·공유 시 다시 깨지지 않게 (lang 만 보존).
+            if (clearUrl && /[?&](product|_p)=/i.test(location.search || '')) {
+                var lang = new URLSearchParams(location.search).get('lang');
+                history.replaceState(null, '', '/' + (lang ? '?lang=' + encodeURIComponent(lang) : ''));
+            }
+        } catch (e) {}
+    };
+
     // 1. 상품 상세 정보 로드 및 전체화면 열기 (언어 유지 버전)
     window.loadProductDetailAndOpen = async function(productCode) {
         // sb 초기화 대기 (최대 15초 — load 이벤트 후 initConfig 완료 대기)
@@ -19163,8 +19182,8 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             if (error || !product) {
                 const _catCode = _SEO_CAT_MAP[productCode];
                 if (_catCode) {
-                    if(loading) loading.style.display = 'none';
-                    // 카테고리 슬러그 → 메인 홈 표시 (SEO 메타태그는 product-seo.js에서 이미 설정됨)
+                    // 카테고리 슬러그 → 메인 홈 표시. data-pdp 로 숨겨둔 메인을 다시 보이게 (안 그러면 빈 화면).
+                    window._revealMainPage(false);
                     return;
                 }
                 throw new Error("상품 정보를 찾을 수 없습니다.");
@@ -19365,9 +19384,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
             window.scrollTo(0, 0);
 
         } catch (e) {
-            console.error(e);
-            showToast((window.t ? window.t('err_prefix', 'Error: ') : 'Error: ') + e.message, 'error');
-            window.history.back();
+            // 2026-06-27: 삭제된/없는 상품 등 로드 실패 — 에러 토스트+뒤로가기 대신 메인페이지로 자연스럽게 폴백.
+            //   (검색엔진에서 직접 들어오면 뒤로갈 곳이 없어 빈 화면으로 남던 문제 해결)
+            console.warn('[loadProductDetailAndOpen] fallback to main:', e && e.message);
+            if (window._revealMainPage) window._revealMainPage(true);
         } finally {
             if(loading) loading.style.display = 'none';
         }
@@ -19499,9 +19519,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
                 window.loadProductDetailAndOpen(productCode);
             } else {
                 console.error("❌ loadProductDetailAndOpen 함수 없음");
-                // 함수를 찾지 못하면 홈으로 이동
+                // 함수를 찾지 못하면 메인페이지로 폴백 (빈 화면 방지)
                 const loading = document.getElementById('loading');
                 if(loading) loading.style.display = 'none';
+                if (window._revealMainPage) window._revealMainPage(true);
             }
         }
     })();
