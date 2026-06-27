@@ -7989,8 +7989,9 @@ function scrollHotdeal(gridId, dir) {
             // 2026-06-25: QR 이미지면 'QR 수정' 버튼 (주소 변경) 노출
             if (it._isQr) {
                 html += '<button type="button" class="me-prop-btn" data-action="qredit" style="background:#ede9fe; color:#6d28d9; font-weight:800; padding:0 12px; gap:5px;"><i class="fa-solid fa-qrcode"></i> ' + T('me_qr_edit','QR 수정') + '</button>';
-            } else if (!(it._cutlineRays && it._cutlineRays.length > 10) && !it._isBackground && !it._isTemplateSlot) {
-                // 2026-06-27: 그림 변경 — 요소·클립아트에서 고르기 / 내사진 올려 배경제거. (칼선/배경/템플릿슬롯 이미지는 제외)
+            } else if (!(it._cutlineRays && it._cutlineRays.length > 10) && !it._isBackground) {
+                // 2026-06-27: 그림 변경 — 요소·클립아트에서 고르기 / 내사진 올려 배경제거.
+                //   템플릿에서 불러온 객체(_isTemplateSlot)도 교체 가능해야 하므로 슬롯은 제외하지 않음. (배경/칼선만 제외)
                 html += '<button type="button" class="me-prop-btn" data-action="changeImage" style="background:#eef2ff; color:#4338ca; font-weight:700; padding:0 14px;">' + T('me_change_img','그림 변경') + '</button>';
             }
             // 2026-06-16 v8: 칼선이 있는 이미지 → 마진 % 슬라이더 (0.5%~12% 가변).
