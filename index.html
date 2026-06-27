@@ -5824,6 +5824,10 @@ function scrollHotdeal(gridId, dir) {
         .aiNb-btn.amber { background:#FF9500; }
         .aiNb-btn.amber:hover { background:#e08500; }
         .aiNb-btn.full { width:100%; padding:12px 14px; font-size:14px; }
+        /* 2026-06-27: 미니에디터 확대/축소/이동 버튼 — 플랫, 그림자 없음 */
+        .me-zoom-btn { padding:10px 11px; min-width:38px; background:#f1f3f5; color:#1d1d1f; border:1px solid #e0e0e2; border-radius:9px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; line-height:1; transition:background .15s; }
+        .me-zoom-btn:hover { background:#e6e8eb; }
+        .me-zoom-btn.on { background:#007AFF; color:#fff; border-color:#007AFF; }
         .aiNb-preview { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; min-height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px; }
         .aiNb-card.bg .aiNb-preview { border-color:#fcd34d; background:repeating-conic-gradient(#f8fafc 0% 25%, #eef2ff 0% 50%) 50% / 16px 16px; flex:1 1 auto; min-height:420px; }
         .aiNb-preview img { max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; display:block; }
@@ -6066,7 +6070,15 @@ function scrollHotdeal(gridId, dir) {
                     </div>
                 </div>
             </div>
-            <a id="aiNbAiDl" class="aiNb-btn full" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <a id="aiNbAiDl" class="aiNb-btn" style="flex:1; padding:12px 14px; font-size:14px;" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
+                <div id="meZoomBar" style="display:flex; align-items:center; gap:4px; flex:0 0 auto;">
+                    <button type="button" class="me-zoom-btn" title="축소 (휠 아래)" onclick="window._meZoom(-1)">−</button>
+                    <button type="button" class="me-zoom-btn" id="meZoomPct" title="화면 맞춤 (100%)" onclick="window._meZoomFit()" style="min-width:50px; font-size:13px; font-variant-numeric:tabular-nums;">100%</button>
+                    <button type="button" class="me-zoom-btn" title="확대 (휠 위)" onclick="window._meZoom(1)">+</button>
+                    <button type="button" class="me-zoom-btn" id="mePanBtn" title="화면 이동 (스페이스바+드래그)" onclick="window._meTogglePan()" style="font-size:13px;"><span data-i18n="me_pan">이동</span></button>
+                </div>
+            </div>
             <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
         </div>
 
@@ -6106,7 +6118,9 @@ function scrollHotdeal(gridId, dir) {
     // ─────────────────────── 미니 에디터 ───────────────────────
     var me = {
         stage: null,
-        wScale: 1,                   // 화면 표시 배율 (자연 w → 표시 w)
+        wScale: 1,                   // 화면 표시 배율 (자연 w → 표시 w) = baseScale × zoom
+        baseScale: 1,                // fit 배율 (zoom 1 기준)
+        zoom: 1, panX: 0, panY: 0,   // 2026-06-27: 확대/축소/이동
         natW: 595, natH: 842,        // 자연 (다운로드) 사이즈
         bg: '#ffffff',
         items: [],                   // {el, type, x, y, w, h, src?, text?, fill?, fontSize?}
@@ -6142,11 +6156,19 @@ function scrollHotdeal(gridId, dir) {
             sh = maxH; sw = sh * (me.natW / me.natH);
             if (sw > availWP) { sw = availWP; sh = sw * (me.natH / me.natW); }
         }
-        me.wScale = sw / me.natW;
-        stage.style.width = Math.round(sw) + 'px';
-        stage.style.height = Math.round(sh) + 'px';
+        // 2026-06-27: zoom — base fit 스케일에 zoom 곱. 드래그/리사이즈/export 는 모두 me.wScale 기준이라 자동 정합.
+        me.baseScale = sw / me.natW;
+        var _z = me.zoom || 1;
+        me.wScale = me.baseScale * _z;
+        stage.style.maxWidth = 'none'; stage.style.maxHeight = 'none';
+        stage.style.width = Math.round(sw * _z) + 'px';
+        stage.style.height = Math.round(sh * _z) + 'px';
+        // 뷰포트 고정 — zoom 해도 에디터 영역 높이는 fit 기준 유지 (넘침은 wrap overflow:hidden 클립 + pan 으로 이동)
+        if (wrap) wrap.style.height = (Math.round(sh) + (landscape ? 24 : 0) + 20) + 'px';
         me.items.forEach(_meSyncItemDisplay);
         try { _meDrawRuler(); } catch(_) {}
+        _meApplyPan();
+        _meUpdateZoomUI();
     }
     window._meFitStage = _meFitStage;
     // 2026-06-16 v9: 세로 mm 줄자 렌더 — stage 높이에 맞춰 10mm tick (5mm 짧은 sub-tick) + 라벨.
@@ -6208,6 +6230,89 @@ function scrollHotdeal(gridId, dir) {
         }
     }
     window._meDrawRuler = _meDrawRuler;
+
+    // ─────────── 2026-06-27: 미니에디터 확대/축소/이동 (zoom & pan) ───────────
+    //   zoom 은 me.wScale 에 곱해 표시 (드래그/리사이즈/룰러/export 모두 me.wScale 기준 → 자동 정합).
+    //   pan 은 .me-stage-row(룰러+대지 묶음) translate → 룰러도 함께 이동해 정렬 유지.
+    function _meApplyPan() {
+        var row = document.querySelector('.me-stage-row');
+        if (row) row.style.transform = 'translate(' + Math.round(me.panX || 0) + 'px,' + Math.round(me.panY || 0) + 'px)';
+    }
+    function _meUpdateZoomUI() {
+        var pct = document.getElementById('meZoomPct');
+        if (pct) pct.textContent = Math.round((me.zoom || 1) * 100) + '%';
+    }
+    function _meTypingInField() {
+        var a = document.activeElement;
+        if (!a) return false;
+        return a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable;
+    }
+    window._meZoom = function (dir) {
+        var f = 1.2;
+        var z = (me.zoom || 1) * (dir > 0 ? f : 1 / f);
+        z = Math.max(0.3, Math.min(6, z));
+        if (Math.abs(z - 1) < 0.02) { z = 1; me.panX = 0; me.panY = 0; }
+        me.zoom = z;
+        _meFitStage();
+    };
+    window._meZoomFit = function () { me.zoom = 1; me.panX = 0; me.panY = 0; _meFitStage(); };
+    window._meTogglePan = function () {
+        me._panLock = !me._panLock;
+        var b = document.getElementById('mePanBtn');
+        if (b) b.classList.toggle('on', me._panLock);
+        var s = $('meStage');
+        if (s) s.style.cursor = me._panLock ? 'grab' : '';
+    };
+    (function _meSetupZoomPan() {
+        var wrap = document.querySelector('.me-stage-wrap');
+        if (!wrap) return;
+        var over = false;
+        wrap.addEventListener('mouseenter', function () { over = true; });
+        wrap.addEventListener('mouseleave', function () { over = false; });
+        // 대지 위에서 마우스 휠 → 확대/축소 (페이지 스크롤 막음)
+        wrap.addEventListener('wheel', function (e) {
+            if (!over) return;
+            e.preventDefault();
+            window._meZoom(e.deltaY < 0 ? 1 : -1);
+        }, { passive: false });
+        // 스페이스바 누른 채로 → 화면 이동 모드
+        document.addEventListener('keydown', function (e) {
+            if (e.code === 'Space' && over && !_meTypingInField()) {
+                me._spaceDown = true; e.preventDefault();
+                var s = $('meStage'); if (s) s.style.cursor = 'grab';
+            }
+        });
+        document.addEventListener('keyup', function (e) {
+            if (e.code === 'Space') {
+                me._spaceDown = false;
+                var s = $('meStage'); if (s && !me._panLock) s.style.cursor = '';
+            }
+        });
+        var panning = false, psx = 0, psy = 0, ppx = 0, ppy = 0;
+        // capture 단계에서 가로채 도형 드래그보다 우선 (이동 모드일 때만)
+        wrap.addEventListener('pointerdown', function (e) {
+            if (!(me._spaceDown || me._panLock)) return;
+            panning = true; psx = e.clientX; psy = e.clientY; ppx = me.panX || 0; ppy = me.panY || 0;
+            var s = $('meStage'); if (s) s.style.cursor = 'grabbing';
+            e.preventDefault(); e.stopPropagation();
+            try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+        }, true);
+        wrap.addEventListener('pointermove', function (e) {
+            if (!panning) return;
+            me.panX = ppx + (e.clientX - psx);
+            me.panY = ppy + (e.clientY - psy);
+            _meApplyPan();
+            e.preventDefault(); e.stopPropagation();
+        }, true);
+        function _endPan(e) {
+            if (!panning) return;
+            panning = false;
+            var s = $('meStage'); if (s) s.style.cursor = (me._spaceDown || me._panLock) ? 'grab' : '';
+            try { wrap.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+        wrap.addEventListener('pointerup', _endPan, true);
+        wrap.addEventListener('pointercancel', _endPan, true);
+    })();
 
     // 사이트 언어 → 폰트 카테고리 매핑 (canvas-objects.js 와 동일)
     function _meFontLang() {
