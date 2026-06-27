@@ -14941,7 +14941,8 @@ html, body { background: #ffffff !important; }
                 '</div>';
             ov.appendChild(box); document.body.appendChild(ov);
             function close() { ov.remove(); }
-            ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+            // 2026-06-27: 모바일 — 여는 터치의 잔여 click 이 배경을 닫던 문제. pointerdown(배경에서 시작) 으로만 닫음.
+            ov.addEventListener('pointerdown', function (e) { if (e.target === ov) close(); });
             box.querySelector('#soObjPickerClose').onclick = close;
             var grid = box.querySelector('#soObjPickerGrid');
             var info = box.querySelector('#soObjPickerInfo');
