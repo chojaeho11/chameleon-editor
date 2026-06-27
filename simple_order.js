@@ -15932,7 +15932,14 @@ html, body { background: #ffffff !important; }
             state._cartDesignPngUrl = null;
             try {
                 var _isPdfMain = !!(state.file && (state.file.type === 'application/pdf' || /\.pdf$/i.test(String(state.file.name || ''))));
-                var _previewSrc = state._cartThumb || state.thumbDataUrl;
+                var _previewSrc = null;
+                // 에디터에 디자인이 있으면 직접 PNG export (state.thumbDataUrl 이 비어있는 템플릿 디자인 케이스 대비)
+                if (_isPdfMain) {
+                    try { if (typeof window._meExportPNG === 'function') _previewSrc = await window._meExportPNG(); } catch (_ee) { console.warn('[design png] meExportPNG fail', _ee); }
+                    if (!_previewSrc || !/^data:image\//i.test(_previewSrc)) _previewSrc = state._cartThumb || state.thumbDataUrl;
+                    // 너무 큰 PNG 방지 — 600px 로 축소 후 업로드
+                    try { if (_previewSrc && typeof _soShrinkThumb === 'function') { var _sh = await _soShrinkThumb(_previewSrc, 600); if (_sh) _previewSrc = _sh; } } catch (_she) {}
+                }
                 if (_isPdfMain && _previewSrc && /^data:image\//i.test(_previewSrc)) {
                     var _sbPv = getSb();
                     if (_sbPv) {
