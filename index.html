@@ -7519,6 +7519,43 @@ function scrollHotdeal(gridId, dir) {
                     } catch(e){ resolve(null); }
                 });
             }
+            // 2026-06-27: 이미지가 SVG 면 원본 SVG 텍스트를 얻음 (dataURL base64 디코드 또는 URL fetch).
+            async function _resolveSvgText(origSrc, dataUrl) {
+                try {
+                    var s = dataUrl || '';
+                    if (/^data:image\/svg\+xml;base64,/i.test(s)) {
+                        return decodeURIComponent(escape(atob(s.split(',')[1])));
+                    }
+                    if (/^data:image\/svg\+xml/i.test(s)) {
+                        return decodeURIComponent(s.substring(s.indexOf(',') + 1));
+                    }
+                    if (/\.svg(\?|$)/i.test(String(origSrc || ''))) {
+                        var r = await fetch(origSrc, { mode: 'cors' });
+                        if (r.ok) return await r.text();
+                    }
+                } catch(e) { console.warn('[_resolveSvgText]', e); }
+                return null;
+            }
+            // 2026-06-27: SVG 텍스트를 export SVG 안에 nested <svg>(벡터)로 넣기 — svg2pdf 가 벡터로 출력.
+            function _buildNestedSvg(svgText, x, y, w, h) {
+                try {
+                    var pr = new DOMParser();
+                    var d = pr.parseFromString(svgText, 'image/svg+xml');
+                    if (d.getElementsByTagName('parsererror').length) return null;
+                    var sv = d.documentElement;
+                    if (!sv || sv.nodeName.toLowerCase() !== 'svg') return null;
+                    var vb = sv.getAttribute('viewBox');
+                    if (!vb) {
+                        var vw = parseFloat(sv.getAttribute('width')) || 0, vh = parseFloat(sv.getAttribute('height')) || 0;
+                        if (vw && vh) vb = '0 0 ' + vw + ' ' + vh;
+                    }
+                    var inner = sv.innerHTML;
+                    if (!inner || !inner.trim()) return null;
+                    return '<svg x="' + _fmt(x) + '" y="' + _fmt(y) + '" width="' + _fmt(w) + '" height="' + _fmt(h) + '"'
+                        + (vb ? ' viewBox="' + _esc(vb) + '"' : '')
+                        + ' preserveAspectRatio="xMidYMid meet" overflow="visible">' + inner + '</svg>';
+                } catch(e) { console.warn('[_buildNestedSvg]', e); return null; }
+            }
 
             // zIndex 정렬
             var items = (me.items || []).slice().sort(function(a, b){
@@ -7550,15 +7587,31 @@ function scrollHotdeal(gridId, dir) {
 
                 if (it.type === 'image' && it.src) {
                     var dataUrl = await _imgToDataUrl(it.src);
-                    // PDF(rasterize): 모든 이미지를 PNG 로 — SVG 프레임이 PDF 에서 사라지던 문제 해결.
-                    if (rasterize && dataUrl) {
-                        var _png = await _imgToPng(dataUrl, it.w, it.h);
-                        if (_png) dataUrl = _png;
+                    var _isSvgImg = /^data:image\/svg\+xml/i.test(dataUrl || '') || /\.svg(\?|$)/i.test(String(it.src));
+                    var _emitted = false;
+                    // PDF 경로 + SVG 이미지 → 벡터(nested svg)로 inline. 업로드 프레임도 벡터 그대로 PDF 출력.
+                    if (rasterize && _isSvgImg) {
+                        try {
+                            var _svgTxt = await _resolveSvgText(it.src, dataUrl);
+                            var _nested = _svgTxt ? _buildNestedSvg(_svgTxt, it.x, it.y, it.w, it.h) : null;
+                            if (_nested) { parts.push(_nested); _emitted = true; }
+                        } catch(_se) { console.warn('[svg inline export]', _se); }
+                        if (!_emitted) {
+                            // 인라인 실패 시 — PNG 래스터화 폴백 (svg2pdf 가 SVG-in-image 못 그리므로)
+                            var _png = await _imgToPng(dataUrl, it.w, it.h);
+                            parts.push('<image href="' + _esc(_png || dataUrl || it.src) + '" '
+                                + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                                + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
+                                + 'preserveAspectRatio="xMidYMid meet"/>');
+                            _emitted = true;
+                        }
                     }
-                    parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
-                        + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
-                        + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                        + 'preserveAspectRatio="xMidYMid meet"/>');
+                    if (!_emitted) {
+                        parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
+                            + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                            + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
+                            + 'preserveAspectRatio="xMidYMid meet"/>');
+                    }
                 } else if (it.type === 'shape') {
                     var fill = _esc(it.fill || '#000000');
                     var stroke = it.stroke ? ' stroke="' + _esc(it.stroke) + '" stroke-width="' + _fmt(it.strokeWidth || 1) + '"' : '';
