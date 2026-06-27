@@ -15927,10 +15927,30 @@ html, body { background: #ffffff !important; }
             updateUploadStep(tr('장바구니에 추가 중...', 'カート追加中...', 'Adding to cart...'));
             // 2026-05-15: 카트 저장 전 썸네일 축소 — localStorage quota 초과로 카트가 silently 사라지던 버그 fix
             state._cartThumb = await _soShrinkThumb(state.thumbDataUrl, 220);
+            // 2026-06-28: state.file 이 PDF(에디터 디자인 등) 면 작업지시서가 <img> 로 못 보여줌(이미지 빈칸).
+            //   → PNG 미리보기를 storage 에 업로드해 item.thumb(http URL) 에 부착. (base64 썸네일은 order.js 가 null 처리하므로 URL 필요)
+            state._cartDesignPngUrl = null;
+            try {
+                var _isPdfMain = !!(state.file && (state.file.type === 'application/pdf' || /\.pdf$/i.test(String(state.file.name || ''))));
+                var _previewSrc = state._cartThumb || state.thumbDataUrl;
+                if (_isPdfMain && _previewSrc && /^data:image\//i.test(_previewSrc)) {
+                    var _sbPv = getSb();
+                    if (_sbPv) {
+                        var _pvBin = atob(_previewSrc.split(',')[1]);
+                        var _pvArr = new Uint8Array(_pvBin.length);
+                        for (var _pvi = 0; _pvi < _pvBin.length; _pvi++) _pvArr[_pvi] = _pvBin.charCodeAt(_pvi);
+                        var _pvPath = 'simple_order/design-preview-' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '.png';
+                        var _pvUp = await _sbPv.storage.from('design').upload(_pvPath, new Blob([_pvArr], { type: 'image/png' }), { contentType: 'image/png', upsert: false });
+                        if (!_pvUp.error) { state._cartDesignPngUrl = _sbPv.storage.from('design').getPublicUrl(_pvPath).data.publicUrl; console.log('[design png] workorder preview uploaded:', state._cartDesignPngUrl); }
+                        else console.warn('[design png] upload error:', _pvUp.error);
+                    }
+                }
+            } catch (_pve) { console.warn('[design png preview upload]', _pve); }
             // 2026-06-06: 담기 직전 사이즈 입력값 강제 재계산 (oninput 미발생 케이스 안전망)
             //   예: 키보드 입력 후 모달 닫기 전 다른 곳 클릭으로 blur 가 안 일어난 경우.
             try { if (state.isCustomSize && typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
             const item = buildCartItem(url, path);
+            if (state._cartDesignPngUrl) item.thumb = state._cartDesignPngUrl;   // 작업지시서 이미지 미리보기 (PDF 대신 PNG)
             // 뒷면 파일 URL 부착 (localStorage 호환 — Blob 직접 저장 안 함)
             if (backUrl) {
                 item.backFileUrl = backUrl;
