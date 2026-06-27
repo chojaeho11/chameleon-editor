@@ -7649,10 +7649,13 @@ function scrollHotdeal(gridId, dir) {
                                 var pathD = '';
                                 for (var li = 0; li < lines.length; li++) {
                                     var line = lines[li];
-                                    if (!line) continue;
+                                    // 2026-06-28: 줄 끝 공백 제거 — 브라우저는 줄 끝 공백을 hang 시켜 폭에서 제외하는데,
+                                    //   export 가 그 공백을 폭에 포함시켜 중앙/우측 정렬 시 글씨가 한쪽으로 밀리던 문제.
+                                    var dline = line.replace(/\s+$/, '');
+                                    if (!dline) continue;
                                     // 줄별 폭 측정 → anchor 보정
-                                    var lineW = fontObj.getAdvanceWidth(line, fs);
-                                    if (ls) lineW += ls * (line.length - 1);
+                                    var lineW = fontObj.getAdvanceWidth(dline, fs);
+                                    if (ls) lineW += ls * Math.max(0, dline.length - 1);
                                     var lineX = tx;
                                     if (anchor === 'middle') lineX = tx - lineW / 2;
                                     else if (anchor === 'end') lineX = tx - lineW;
@@ -7661,8 +7664,8 @@ function scrollHotdeal(gridId, dir) {
                                     //   .notdef(X박스) 로 그려지던 문제 방지. 단어(런)는 커닝 유지하며 getPath.
                                     if (ls) {
                                         var cursorX = lineX;
-                                        for (var ci = 0; ci < line.length; ci++) {
-                                            var ch = line.charAt(ci);
+                                        for (var ci = 0; ci < dline.length; ci++) {
+                                            var ch = dline.charAt(ci);
                                             if (!/\s/.test(ch)) {
                                                 var p = fontObj.getPath(ch, cursorX, lineY, fs);
                                                 pathD += p.toPathData(2) + ' ';
@@ -7671,7 +7674,7 @@ function scrollHotdeal(gridId, dir) {
                                         }
                                     } else {
                                         var cursorX2 = lineX;
-                                        var runs = line.split(/(\s+)/);
+                                        var runs = dline.split(/(\s+)/);
                                         for (var ri = 0; ri < runs.length; ri++) {
                                             var run = runs[ri];
                                             if (!run) continue;
@@ -7699,7 +7702,7 @@ function scrollHotdeal(gridId, dir) {
                         var tspans = lines.map(function(line, li){
                             return '<tspan x="' + _fmt(tx) + '" '
                                 + (li === 0 ? 'y="' + _fmt(ty0) + '"' : 'dy="' + _fmt(lh) + '"')
-                                + '>' + _esc(line) + '</tspan>';
+                                + '>' + _esc(line.replace(/\s+$/, '')) + '</tspan>';   // 줄 끝 공백 제거 (중앙정렬 밀림 방지)
                         }).join('');
                         parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
                             + 'font-weight="' + fw + '" '
