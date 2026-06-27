@@ -13671,6 +13671,8 @@ html, body { background: #ffffff !important; }
         }
         if (!sidebar) { console.warn('[template mode] sidebar .so-right not found after 3s'); return; }
         console.log('[template mode] sidebar found, injecting panel');
+        // 2026-06-28: 상품 전환 시마다 패널이 누적 추가되던 버그 — 기존 패널 모두 제거 후 새로 생성 (현재 상품 것만 표시).
+        document.querySelectorAll('#soTemplateAdminPanel').forEach(function(_el){ _el.remove(); });
         var panel = document.createElement('div');
         panel.id = 'soTemplateAdminPanel';
         panel.dataset.designer = isDesigner ? '1' : '0';
