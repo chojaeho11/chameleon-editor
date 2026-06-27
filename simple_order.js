@@ -14693,9 +14693,12 @@ html, body { background: #ffffff !important; }
                     if (targetType === 'template' && state.product) {
                         var curCode = state.product.code;
                         var curCat = state.product.category;
+                        // 2026-06-27: 인스타판넬(hb_insta) 은 사이즈별로 제품이 달라 카테고리 공유 불가 — product_code 정확히 일치만 노출.
+                        //   그 외 카테고리는 기존대로 product_code 일치 OR (product_code 없는 카테고리 공용) 둘 다 노출.
+                        var _strictByCode = (curCat === 'hb_insta');
                         rows = rows.filter(function(r){
                             if (r.product_code && r.product_code === curCode) return true;
-                            if (!r.product_code && r.product_category === curCat) return true;
+                            if (!_strictByCode && !r.product_code && r.product_category === curCat) return true;
                             return false;
                         });
                     }
@@ -14908,6 +14911,62 @@ html, body { background: #ffffff !important; }
             if (p > maxPage) p = maxPage;
             _libCurrentPage = p;
             _renderCurrentPage();
+        };
+
+        // 2026-06-27: 미니에디터 '그림 변경 → 요소에서 고르기' — 요소·클립아트 미니 팝업 (작은 썸네일, 빠름).
+        //   onPick(highResUrl) 콜백으로 선택 결과 전달. _fetchLib('element') 재사용.
+        window._soOpenObjPicker = async function (onPick) {
+            var old = document.getElementById('soObjPickerModal'); if (old) old.remove();
+            var ov = document.createElement('div');
+            ov.id = 'soObjPickerModal';
+            ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:2147483600; display:flex; align-items:center; justify-content:center; padding:16px; font-family:inherit;';
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#fff; border-radius:16px; width:min(640px,95vw); max-height:86vh; display:flex; flex-direction:column; overflow:hidden;';
+            box.innerHTML =
+                '<div style="padding:14px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #eef2f7;">' +
+                    '<div style="font-size:15px; color:#0f172a; flex:1;">' + tr('요소에서 고르기', '要素から選ぶ', 'Pick an element') + '</div>' +
+                    '<input type="search" id="soObjPickerSearch" placeholder="' + tr('검색', '検索', 'Search') + '" style="flex:0 0 150px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit;">' +
+                    '<button type="button" id="soObjPickerClose" style="border:none; background:#f1f5f9; color:#475569; border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('닫기', '閉じる', 'Close') + '</button>' +
+                '</div>' +
+                '<div id="soObjPickerGrid" style="flex:1; overflow-y:auto; padding:14px; display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px;"></div>';
+            ov.appendChild(box); document.body.appendChild(ov);
+            function close() { ov.remove(); }
+            ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+            box.querySelector('#soObjPickerClose').onclick = close;
+            var grid = box.querySelector('#soObjPickerGrid');
+            function _resolve(it) {
+                var data = String(it && it.data_url || '').trim();
+                if (!data) return (it && it.thumb_url) || '';
+                var c0 = data.charAt(0);
+                if (c0 === '{' || c0 === '[') {
+                    try { var p = JSON.parse(data); var objs = p.objects || (Array.isArray(p) ? p : []); for (var i = 0; i < objs.length; i++) { if (objs[i] && objs[i].type === 'image' && objs[i].src) return objs[i].src; } } catch (_) {}
+                    return (it && it.thumb_url) || '';
+                }
+                return data;
+            }
+            function _msg(t) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:22px;">' + t + '</div>'; }
+            async function render(search) {
+                _msg(tr('로딩…', '読み込み…', 'Loading…'));
+                var items = [];
+                try { items = await _fetchLib('element', search); } catch (e) { console.warn('[objpicker]', e); }
+                if (!items || !items.length) { _msg(tr('항목 없음', '空', 'None')); return; }
+                items = items.slice(0, 60);   // 성능 — 작은 썸네일 60개만
+                grid.innerHTML = items.map(function (it, i) {
+                    var t = it.thumb_url || it.data_url || '';
+                    return '<button type="button" data-i="' + i + '" style="aspect-ratio:1/1; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; background:#fff; cursor:pointer; padding:0;"><img src="' + t + '" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></button>';
+                }).join('');
+                grid.querySelectorAll('button[data-i]').forEach(function (b) {
+                    b.onclick = function () {
+                        var it = items[parseInt(b.dataset.i, 10)];
+                        var url = _resolve(it);
+                        close();
+                        if (typeof onPick === 'function') onPick(url);
+                    };
+                });
+            }
+            var se = box.querySelector('#soObjPickerSearch');
+            var _t; se.oninput = function () { clearTimeout(_t); _t = setTimeout(function () { render(se.value); }, 250); };
+            render('');
         };
 
         async function _fetchLib(tab, search) {
