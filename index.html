@@ -6058,6 +6058,8 @@ function scrollHotdeal(gridId, dir) {
             </div>
             <!-- 선택 시 속성 패널 -->
             <div class="me-props" id="meProps"></div>
+            <!-- 2026-06-27: 줄자 대신 캔버스 크기(mm) 표시 -->
+            <div id="meSizeLabel" style="font-size:12.5px; color:#64748b; padding:3px 6px 0; font-weight:600; letter-spacing:-0.2px;"></div>
             <!-- 2026-06-25: 양면(앞/뒤) 탭 — 명함 등 양면 제품에서만 표시 (_meSidesInit) -->
             <div class="me-side-tabs" id="meSideTabs" style="display:none;">
                 <button type="button" class="me-side-tab active" data-side="front" onclick="window._meSwitchSide('front')"><span data-i18n="editor_face_front">앞면</span></button>
@@ -6138,25 +6140,22 @@ function scrollHotdeal(gridId, dir) {
     function _meFitStage() {
         var stage = $('meStage');
         if (!stage) return;
-        // 2026-06-26: 가로비율 → 줄자 상단 + 폭 가득 / 세로비율 → 줄자 좌측 + 높이 가득. 여백 최소화.
+        // 2026-06-27: 줄자(ruler) 제거 — 그만큼 캔버스를 더 크게. 크기는 #meSizeLabel(mm)로 표시.
         var landscape = (me.natW >= me.natH);
         var rulerV = $('meRulerV'), rulerH = $('meRulerH');
+        if (rulerV) rulerV.style.display = 'none';
+        if (rulerH) rulerH.style.display = 'none';
         var wrap = document.querySelector('.me-stage-wrap');
         var wrapW = (wrap ? wrap.clientWidth : 600);
         var pad = 20;                         // me-stage-wrap 좌우 padding 합 (10*2)
         var maxH = window._meStageMaxH || 540;
         var sw, sh;
         if (landscape) {
-            if (rulerV) rulerV.style.display = 'none';
-            if (rulerH) rulerH.style.display = '';
             var availWL = Math.max(200, wrapW - pad);
             sw = availWL; sh = sw * (me.natH / me.natW);
-            var maxHL = maxH - 26;            // 상단 가로 줄자 높이만큼 여유
-            if (sh > maxHL) { sh = maxHL; sw = sh * (me.natW / me.natH); }
+            if (sh > maxH) { sh = maxH; sw = sh * (me.natW / me.natH); }   // 줄자 없앤 만큼 상단 26px 안 뺌
         } else {
-            if (rulerV) rulerV.style.display = '';
-            if (rulerH) rulerH.style.display = 'none';
-            var availWP = Math.max(160, wrapW - pad - 22 - 8);  // 좌측 줄자(22) + gap(8)
+            var availWP = Math.max(160, wrapW - pad);  // 줄자(22)+gap(8) 제거 → 더 넓게
             sh = maxH; sw = sh * (me.natW / me.natH);
             if (sw > availWP) { sw = availWP; sh = sw * (me.natH / me.natW); }
         }
@@ -6167,13 +6166,25 @@ function scrollHotdeal(gridId, dir) {
         stage.style.maxWidth = 'none'; stage.style.maxHeight = 'none';
         stage.style.width = Math.round(sw * _z) + 'px';
         stage.style.height = Math.round(sh * _z) + 'px';
-        // 뷰포트 고정 — zoom 해도 에디터 영역 높이는 fit 기준 유지 (넘침은 wrap overflow:hidden 클립 + pan 으로 이동)
-        if (wrap) wrap.style.height = (Math.round(sh) + (landscape ? 24 : 0) + 20) + 'px';
+        // 뷰포트 고정 — zoom 해도 에디터 영역 높이는 fit 기준 유지 (넘침은 wrap overflow:hidden 클립 + pan 으로 이동). 줄자 제거로 +24 불필요.
+        if (wrap) wrap.style.height = (Math.round(sh) + 20) + 'px';
         me.items.forEach(_meSyncItemDisplay);
-        try { _meDrawRuler(); } catch(_) {}
+        _meUpdateSizeLabel();
         _meApplyPan();
         _meUpdateZoomUI();
     }
+    // 2026-06-27: 줄자 대신 캔버스 크기(mm)를 #meSizeLabel 에 표시.
+    function _meUpdateSizeLabel() {
+        var el = document.getElementById('meSizeLabel');
+        if (!el) return;
+        // 실제 mm 가 지정된 상품만 표시 (데모 프리셋은 point 기반이라 mm 변환이 부정확 → 숨김)
+        if (me.natWMm && me.natHMm) {
+            el.textContent = Math.round(me.natWMm) + ' × ' + Math.round(me.natHMm) + ' mm';
+        } else {
+            el.textContent = '';
+        }
+    }
+    window._meUpdateSizeLabel = _meUpdateSizeLabel;
     window._meFitStage = _meFitStage;
     // 2026-06-16 v9: 세로 mm 줄자 렌더 — stage 높이에 맞춰 10mm tick (5mm 짧은 sub-tick) + 라벨.
     //   v13: me.natHMm 이 있으면 그걸 우선 사용 (가벽 등 capped pixel canvas 에서 mm 정확).
@@ -6623,7 +6634,7 @@ function scrollHotdeal(gridId, dir) {
     //   _meSetMmSize(wMm, hMm) 로 mm 직접 저장 → 줄자/칼선 PDF 가 이 값을 우선 사용.
     window._meSetMmSize = function(wMm, hMm) {
         me.natWMm = wMm; me.natHMm = hMm;
-        try { _meDrawRuler(); } catch(_) {}
+        try { _meUpdateSizeLabel(); } catch(_) {}   // 2026-06-27: 줄자 대신 크기 라벨 갱신
         try { _meUpdateWingOverlay(); } catch(_) {}
     };
     // 2026-06-17: 가벽 가이드 — 양쪽 옆면(접히는 날개) 빗금 + 1미터 단위 절단선 (가벽이 1m 패널 여러 개로 구성됨).
