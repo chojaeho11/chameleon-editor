@@ -14918,6 +14918,9 @@ html, body { background: #ffffff !important; }
         //   onPick(highResUrl) 콜백으로 선택 결과 전달. _fetchLib('element') 재사용.
         window._soOpenObjPicker = async function (onPick) {
             var old = document.getElementById('soObjPickerModal'); if (old) old.remove();
+            // 2026-06-27: 너무 많이 보여주면 느림 — 8개만 (데스크탑 4열×2행, 모바일 2열×4행). 더 찾으려면 검색.
+            var _cols = (window.innerWidth <= 600) ? 2 : 4;
+            var _MAX_OBJ = 8;
             var ov = document.createElement('div');
             ov.id = 'soObjPickerModal';
             ov.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:2147483600; display:flex; align-items:center; justify-content:center; padding:16px; font-family:inherit;';
@@ -14929,7 +14932,7 @@ html, body { background: #ffffff !important; }
                     '<input type="search" id="soObjPickerSearch" placeholder="' + tr('검색', '検索', 'Search') + '" style="flex:0 0 150px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit;">' +
                     '<button type="button" id="soObjPickerClose" style="border:none; background:#f1f5f9; color:#475569; border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('닫기', '閉じる', 'Close') + '</button>' +
                 '</div>' +
-                '<div id="soObjPickerGrid" style="flex:1; overflow-y:auto; padding:14px; display:grid; grid-template-columns:repeat(auto-fill, minmax(72px, 1fr)); gap:8px;"></div>';
+                '<div id="soObjPickerGrid" style="flex:1; overflow-y:auto; padding:14px; display:grid; grid-template-columns:repeat(' + _cols + ', 1fr); gap:10px;"></div>';
             ov.appendChild(box); document.body.appendChild(ov);
             function close() { ov.remove(); }
             ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
@@ -14951,7 +14954,7 @@ html, body { background: #ffffff !important; }
                 var items = [];
                 try { items = await _fetchLib('element', search); } catch (e) { console.warn('[objpicker]', e); }
                 if (!items || !items.length) { _msg(tr('항목 없음', '空', 'None')); return; }
-                items = items.slice(0, 60);   // 성능 — 작은 썸네일 60개만
+                items = items.slice(0, _MAX_OBJ);   // 성능 — 8개만 (더 찾으려면 검색)
                 grid.innerHTML = items.map(function (it, i) {
                     var t = it.thumb_url || it.data_url || '';
                     return '<button type="button" data-i="' + i + '" style="aspect-ratio:1/1; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; background:#fff; cursor:pointer; padding:0;"><img src="' + t + '" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></button>';
