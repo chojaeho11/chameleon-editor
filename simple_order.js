@@ -15006,21 +15006,25 @@ html, body { background: #ffffff !important; }
                     .order('created_at', { ascending: false })
                     .limit(_LIB_FETCH_MAX);
                 if (search && search.trim()) q2 = q2.ilike('tags', '%' + search.trim() + '%');
-                var r = await q2;
+                // 2026-06-27: element 탭 — library 와 admin_templates 두 쿼리를 병렬 실행 (순차 대기로 로딩 느리던 것 개선).
+                var qA = null;
+                if (tab === 'element') {
+                    qA = sb.from('admin_templates')
+                        .select('id, name, thumbnail_url, background_url, asset_url, asset_type, keywords')
+                        .eq('status', 'approved')
+                        .in('asset_type', ['image', 'logo'])
+                        .order('id', { ascending: false })
+                        .limit(_LIB_FETCH_MAX);
+                }
+                var _libResults = await Promise.all(qA ? [q2, qA] : [q2]);
+                var r = _libResults[0];
                 var data = (r && r.data) || [];
 
                 // v690/v694: 디자이너 자산 (admin_templates asset_type='image'/'logo') 은 element 탭에만 노출.
                 //   v690 에서 사진 탭에도 노출되던 문제 fix — 사진 탭은 photo-bg(실제 사진)만.
-                if (tab === 'element') {
+                if (tab === 'element' && qA) {
                     try {
-                        var assetTypes = ['image', 'logo'];
-                        var qA = sb.from('admin_templates')
-                            .select('id, name, thumbnail_url, background_url, asset_url, asset_type, keywords')
-                            .eq('status', 'approved')
-                            .in('asset_type', assetTypes)
-                            .order('id', { ascending: false })
-                            .limit(_LIB_FETCH_MAX);
-                        var rA = await qA;
+                        var rA = _libResults[1];
                         var rowsA = (rA && rA.data) || [];
                         // 검색어 필터 (5개 언어 keywords + name)
                         var s = (search || '').trim().toLowerCase();
