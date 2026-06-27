@@ -7452,6 +7452,8 @@ function scrollHotdeal(gridId, dir) {
     // 2026-06-19 v624: outline:true 옵션 — 모든 텍스트를 opentype.js 로 벡터 path 변환 (폰트 무관 동일 표시).
     window._meExportSVG = async function(opts) {
         var outline = !!(opts && opts.outline);
+        // 2026-06-27: PDF(svg2pdf) 는 <image> 안의 SVG 를 못 그림 → 이미지를 PNG 로 래스터화해 넣어야 프레임이 PDF 에 보임.
+        var rasterize = !!(opts && opts.rasterizeImages);
         try {
             if (!me || !me.natW || !me.natH) return null;
             // contenteditable 강제 sync + v630: _meGetCleanText 사용 (× 제외)
@@ -7491,6 +7493,32 @@ function scrollHotdeal(gridId, dir) {
                     });
                 } catch(_){ return src; }
             }
+            // 2026-06-27: 이미지(특히 SVG) 를 PNG dataURL 로 래스터화 — svg2pdf 가 SVG-in-image 를 못 그리는 문제 해결.
+            //   dataURL 을 Image 로 로드 후 canvas 에 그려 PNG 추출 (dataURL 이라 canvas taint 없음).
+            function _imgToPng(srcDataUrl, boxW, boxH) {
+                return new Promise(function(resolve){
+                    try {
+                        var img = new Image();
+                        img.onload = function(){
+                            try {
+                                var scale = 3;
+                                var bw = boxW || img.naturalWidth || 300;
+                                var bh = boxH || img.naturalHeight || 300;
+                                var cw = Math.max(1, Math.round(bw * scale));
+                                var ch = Math.max(1, Math.round(bh * scale));
+                                var MAXPX = 4000;
+                                if (cw > MAXPX || ch > MAXPX) { var r = MAXPX / Math.max(cw, ch); cw = Math.max(1, Math.round(cw * r)); ch = Math.max(1, Math.round(ch * r)); }
+                                var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+                                var cx = c.getContext('2d');
+                                cx.drawImage(img, 0, 0, cw, ch);
+                                resolve(c.toDataURL('image/png'));
+                            } catch(e){ console.warn('[_imgToPng draw]', e); resolve(null); }
+                        };
+                        img.onerror = function(){ resolve(null); };
+                        img.src = srcDataUrl;
+                    } catch(e){ resolve(null); }
+                });
+            }
 
             // zIndex 정렬
             var items = (me.items || []).slice().sort(function(a, b){
@@ -7522,6 +7550,11 @@ function scrollHotdeal(gridId, dir) {
 
                 if (it.type === 'image' && it.src) {
                     var dataUrl = await _imgToDataUrl(it.src);
+                    // PDF(rasterize): 모든 이미지를 PNG 로 — SVG 프레임이 PDF 에서 사라지던 문제 해결.
+                    if (rasterize && dataUrl) {
+                        var _png = await _imgToPng(dataUrl, it.w, it.h);
+                        if (_png) dataUrl = _png;
+                    }
                     parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
                         + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
                         + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
@@ -7662,7 +7695,7 @@ function scrollHotdeal(gridId, dir) {
         // 1) 벡터 경로: SVG (텍스트 outline) → svg2pdf
         try {
             if (typeof window._meExportSVG === 'function' && (await _loadSvg2PdfIfNeeded())) {
-                var svgText = await window._meExportSVG({ outline: true });
+                var svgText = await window._meExportSVG({ outline: true, rasterizeImages: true });
                 if (svgText && svgText.length > 100) {
                     var parser = new DOMParser();
                     var svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
