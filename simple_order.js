@@ -5320,18 +5320,9 @@ html, body { background: #ffffff !important; }
         if (!sec || !grid) return;
         try {
             if (!_soBannerCache) {
-                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
-                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
-                // hb_bn_ 로 시작하는 모든 상품 fetch
-                var fb = await sb.from('admin_products').select(_COLS).like('code', 'hb_bn%');
-                var rows = (fb && fb.data) || [];
-                // 중복 제거 + sort_order 정렬
-                var _byCode = {};
-                rows.forEach(function(r){ if (r && r.code && !_byCode[r.code]) _byCode[r.code] = r; });
-                _soBannerCache = Object.values(_byCode).sort(function (a, b) { return (a.sort_order || 999) - (b.sort_order || 999); });
-                console.log('[so] banner variants loaded:', _soBannerCache.length);
+                _soBannerCache = await _soFetchAllBannerVariants();   // 2026-06-27: 배너 10종 통합
             }
-            if (_soBannerCache.length < 2) { sec.style.display = 'none'; if (host) host.style.display = 'none'; return; }
+            if (!_soBannerCache || _soBannerCache.length < 2) { sec.style.display = 'none'; if (host) host.style.display = 'none'; return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             grid.innerHTML = _soBannerCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
@@ -5725,6 +5716,29 @@ html, body { background: #ffffff !important; }
         if (!p) return false;
         return BANNER_STAND_CODES_ORDERED.indexOf(p.code) >= 0;
     }
+    // 2026-06-27: 배너 10종 통합 — 허니콤배너(hb_bn*) + 거치대세트(752xxx) 를 한 그룹으로. 셀렉터/템플릿 공유.
+    function _soIsAnyBannerCode(c) {
+        return !!c && (/^hb_bn/i.test(c) || BANNER_STAND_CODES_ORDERED.indexOf(c) >= 0);
+    }
+    var _soAllBannerCache = null;
+    async function _soFetchAllBannerVariants() {
+        if (_soAllBannerCache) return _soAllBannerCache;
+        var sb = getSb(); if (!sb) return [];
+        var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+        var r = await sb.from('admin_products').select(_COLS).or('code.like.hb_bn*,code.in.(' + BANNER_STAND_CODES_ORDERED.join(',') + ')');
+        var rows = (r && r.data) || [];
+        var byCode = {};
+        rows.forEach(function (x) { if (x && x.code) byCode[x.code] = x; });
+        // 정렬: 허니콤배너(hb_bn*, sort_order) 먼저 → 거치대세트(관리자 순서)
+        var hb = Object.keys(byCode).filter(function (c) { return /^hb_bn/i.test(c); })
+            .sort(function (a, b) { return (byCode[a].sort_order || 999) - (byCode[b].sort_order || 999); });
+        var ordered = [];
+        hb.forEach(function (c) { ordered.push(byCode[c]); });
+        BANNER_STAND_CODES_ORDERED.forEach(function (c) { if (byCode[c]) ordered.push(byCode[c]); });
+        _soAllBannerCache = ordered;
+        console.log('[so] ALL banner variants (merged 10):', ordered.length);
+        return ordered;
+    }
     var _soBannerStandCache = null;
     async function _soLoadBannerStandVariants(currentCode) {
         var sec = document.getElementById('soBannerStandVariantsSec');
@@ -5732,18 +5746,9 @@ html, body { background: #ffffff !important; }
         if (!sec || !grid) return;
         try {
             if (!_soBannerStandCache) {
-                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
-                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
-                var r1 = await sb.from('admin_products').select(_COLS).in('code', BANNER_STAND_CODES_ORDERED);
-                var rows = (r1 && r1.data) || [];
-                var _byCode = {};
-                rows.forEach(function(r){ if (r && r.code) _byCode[r.code] = r; });
-                _soBannerStandCache = BANNER_STAND_CODES_ORDERED
-                    .map(function(c){ return _byCode[c]; })
-                    .filter(function(r){ return !!r; });
-                console.log('[so] banner&stand variants loaded:', _soBannerStandCache.length);
+                _soBannerStandCache = await _soFetchAllBannerVariants();   // 2026-06-27: 배너 10종 통합
             }
-            if (_soBannerStandCache.length < 2) { sec.style.display = 'none'; return; }
+            if (!_soBannerStandCache || _soBannerStandCache.length < 2) { sec.style.display = 'none'; return; }
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             grid.innerHTML = _soBannerStandCache.map(function (p) {
                 var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
@@ -14699,6 +14704,8 @@ html, body { background: #ffffff !important; }
                         //   템플릿은 같은 카테고리 전체에 노출(기존 동작 보존 — 사라지지 않게). 신규 등록은 자동으로 제품코드가 붙음.
                         rows = rows.filter(function(r){
                             if (r.product_code && r.product_code === curCode) return true;
+                            // 2026-06-27: 배너 10종은 템플릿 공유 — 어느 배너 템플릿이든 모든 배너 제품에서 노출.
+                            if (_soIsAnyBannerCode(curCode) && _soIsAnyBannerCode(r.product_code)) return true;
                             if (!r.product_code && r.product_category === curCat) return true;
                             return false;
                         });
