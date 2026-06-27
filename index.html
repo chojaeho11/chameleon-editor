@@ -7657,18 +7657,32 @@ function scrollHotdeal(gridId, dir) {
                                     if (anchor === 'middle') lineX = tx - lineW / 2;
                                     else if (anchor === 'end') lineX = tx - lineW;
                                     var lineY = ty0 + li * lh;
-                                    // letterSpacing 적용 — 글자 단위로 분리해서 getPath
+                                    // 2026-06-28: 공백(스페이스)은 그리지 않고 advance 만 — 폰트에 space 글리프가 없으면
+                                    //   .notdef(X박스) 로 그려지던 문제 방지. 단어(런)는 커닝 유지하며 getPath.
                                     if (ls) {
                                         var cursorX = lineX;
                                         for (var ci = 0; ci < line.length; ci++) {
                                             var ch = line.charAt(ci);
-                                            var p = fontObj.getPath(ch, cursorX, lineY, fs);
-                                            pathD += p.toPathData(2) + ' ';
+                                            if (!/\s/.test(ch)) {
+                                                var p = fontObj.getPath(ch, cursorX, lineY, fs);
+                                                pathD += p.toPathData(2) + ' ';
+                                            }
                                             cursorX += fontObj.getAdvanceWidth(ch, fs) + ls;
                                         }
                                     } else {
-                                        var p2 = fontObj.getPath(line, lineX, lineY, fs);
-                                        pathD += p2.toPathData(2) + ' ';
+                                        var cursorX2 = lineX;
+                                        var runs = line.split(/(\s+)/);
+                                        for (var ri = 0; ri < runs.length; ri++) {
+                                            var run = runs[ri];
+                                            if (!run) continue;
+                                            if (/^\s+$/.test(run)) {
+                                                for (var wi = 0; wi < run.length; wi++) cursorX2 += fontObj.getAdvanceWidth(run.charAt(wi), fs);
+                                            } else {
+                                                var pr = fontObj.getPath(run, cursorX2, lineY, fs);
+                                                pathD += pr.toPathData(2) + ' ';
+                                                cursorX2 += fontObj.getAdvanceWidth(run, fs);
+                                            }
+                                        }
                                     }
                                 }
                                 if (pathD.trim()) {
