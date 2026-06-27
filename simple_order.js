@@ -13958,7 +13958,9 @@ html, body { background: #ffffff !important; }
                 return;
             }
             var codeEl = document.getElementById('soTplAdminCode');
-            var code = codeEl ? (codeEl.value || '').trim() || null : null;
+            var code = codeEl ? (codeEl.value || '').trim() : '';
+            // 2026-06-27: 코드 입력 비우면 현재 제품 코드 자동 적용 — 템플릿이 그 제품(사이즈)에만 노출되도록.
+            if (!code) code = (state.product && state.product.code) || null;
             // 2026-06-18 v554: me.bg (캔버스 배경색) 도 첫번째 메타 슬롯으로 보존.
             var bgColor = (window.me && window.me.bg) || '#ffffff';
             serialized = [{ _type: 'meta', bg: bgColor }].concat(serialized);
@@ -14693,12 +14695,11 @@ html, body { background: #ffffff !important; }
                     if (targetType === 'template' && state.product) {
                         var curCode = state.product.code;
                         var curCat = state.product.category;
-                        // 2026-06-27: 인스타판넬(hb_insta) 은 사이즈별로 제품이 달라 카테고리 공유 불가 — product_code 정확히 일치만 노출.
-                        //   그 외 카테고리는 기존대로 product_code 일치 OR (product_code 없는 카테고리 공용) 둘 다 노출.
-                        var _strictByCode = (curCat === 'hb_insta');
+                        // 2026-06-27: product_code 가 붙은 템플릿은 그 제품에만 노출(사이즈별 격리). product_code 없는(레거시)
+                        //   템플릿은 같은 카테고리 전체에 노출(기존 동작 보존 — 사라지지 않게). 신규 등록은 자동으로 제품코드가 붙음.
                         rows = rows.filter(function(r){
                             if (r.product_code && r.product_code === curCode) return true;
-                            if (!_strictByCode && !r.product_code && r.product_category === curCat) return true;
+                            if (!r.product_code && r.product_category === curCat) return true;
                             return false;
                         });
                     }
