@@ -14927,17 +14927,27 @@ html, body { background: #ffffff !important; }
             var box = document.createElement('div');
             box.style.cssText = 'background:#fff; border-radius:16px; width:min(640px,95vw); max-height:86vh; display:flex; flex-direction:column; overflow:hidden;';
             box.innerHTML =
-                '<div style="padding:14px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #eef2f7;">' +
+                '<div style="padding:14px 18px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #eef2f7;">' +
                     '<div style="font-size:15px; color:#0f172a; flex:1;">' + tr('요소에서 고르기', '要素から選ぶ', 'Pick an element') + '</div>' +
-                    '<input type="search" id="soObjPickerSearch" placeholder="' + tr('검색', '検索', 'Search') + '" style="flex:0 0 150px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit;">' +
+                    '<input type="search" id="soObjPickerSearch" placeholder="' + tr('검색어 입력 후 Enter', 'キーワード入力後Enter', 'Type then Enter') + '" style="flex:0 0 150px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit;">' +
+                    '<button type="button" id="soObjPickerSearchBtn" style="border:none; background:#4338ca; color:#fff; border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('검색', '検索', 'Search') + '</button>' +
                     '<button type="button" id="soObjPickerClose" style="border:none; background:#f1f5f9; color:#475569; border-radius:8px; padding:8px 12px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('닫기', '閉じる', 'Close') + '</button>' +
                 '</div>' +
-                '<div id="soObjPickerGrid" style="flex:1; overflow-y:auto; padding:14px; display:grid; grid-template-columns:repeat(' + _cols + ', 1fr); gap:10px;"></div>';
+                '<div id="soObjPickerGrid" style="flex:1; overflow-y:auto; padding:14px; display:grid; grid-template-columns:repeat(' + _cols + ', 1fr); gap:10px; align-content:start;"></div>' +
+                '<div style="padding:10px 18px; display:flex; align-items:center; justify-content:center; gap:14px; border-top:1px solid #eef2f7;">' +
+                    '<button type="button" id="soObjPickerPrev" style="border:1px solid #e2e8f0; background:#fff; color:#475569; border-radius:8px; padding:8px 18px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('이전', '前へ', 'Prev') + '</button>' +
+                    '<span id="soObjPickerInfo" style="font-size:12.5px; color:#64748b; min-width:50px; text-align:center;">1 / 1</span>' +
+                    '<button type="button" id="soObjPickerNext" style="border:1px solid #e2e8f0; background:#fff; color:#475569; border-radius:8px; padding:8px 18px; font-size:13px; cursor:pointer; font-family:inherit;">' + tr('다음', '次へ', 'Next') + '</button>' +
+                '</div>';
             ov.appendChild(box); document.body.appendChild(ov);
             function close() { ov.remove(); }
             ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
             box.querySelector('#soObjPickerClose').onclick = close;
             var grid = box.querySelector('#soObjPickerGrid');
+            var info = box.querySelector('#soObjPickerInfo');
+            var prevB = box.querySelector('#soObjPickerPrev');
+            var nextB = box.querySelector('#soObjPickerNext');
+            var _all = [], _page = 0;
             function _resolve(it) {
                 var data = String(it && it.data_url || '').trim();
                 if (!data) return (it && it.thumb_url) || '';
@@ -14949,28 +14959,52 @@ html, body { background: #ffffff !important; }
                 return data;
             }
             function _msg(t) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12px; padding:22px;">' + t + '</div>'; }
-            async function render(search) {
-                _msg(tr('로딩…', '読み込み…', 'Loading…'));
-                var items = [];
-                try { items = await _fetchLib('element', search); } catch (e) { console.warn('[objpicker]', e); }
-                if (!items || !items.length) { _msg(tr('항목 없음', '空', 'None')); return; }
-                items = items.slice(0, _MAX_OBJ);   // 성능 — 8개만 (더 찾으려면 검색)
-                grid.innerHTML = items.map(function (it, i) {
-                    var t = it.thumb_url || it.data_url || '';
-                    return '<button type="button" data-i="' + i + '" style="aspect-ratio:1/1; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; background:#fff; cursor:pointer; padding:0;"><img src="' + t + '" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></button>';
-                }).join('');
-                grid.querySelectorAll('button[data-i]').forEach(function (b) {
-                    b.onclick = function () {
-                        var it = items[parseInt(b.dataset.i, 10)];
-                        var url = _resolve(it);
-                        close();
-                        if (typeof onPick === 'function') onPick(url);
-                    };
+            function renderPage() {
+                var totalPages = Math.max(1, Math.ceil(_all.length / _MAX_OBJ));
+                if (_page >= totalPages) _page = totalPages - 1;
+                if (_page < 0) _page = 0;
+                var pageItems = _all.slice(_page * _MAX_OBJ, _page * _MAX_OBJ + _MAX_OBJ);
+                if (!pageItems.length) {
+                    _msg(tr('항목 없음', '空', 'None'));
+                } else {
+                    grid.innerHTML = pageItems.map(function (it, i) {
+                        var t = it.thumb_url || it.data_url || '';
+                        return '<button type="button" data-i="' + i + '" style="aspect-ratio:1/1; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; background:#fff; cursor:pointer; padding:0;"><img src="' + t + '" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></button>';
+                    }).join('');
+                    grid.querySelectorAll('button[data-i]').forEach(function (b) {
+                        b.onclick = function () {
+                            var it = pageItems[parseInt(b.dataset.i, 10)];
+                            var url = _resolve(it);
+                            close();
+                            if (typeof onPick === 'function') onPick(url);
+                        };
+                    });
+                }
+                if (info) info.textContent = (_page + 1) + ' / ' + totalPages;
+                [prevB, nextB].forEach(function (b, idx) {
+                    if (!b) return;
+                    var dis = idx === 0 ? (_page <= 0) : (_page >= totalPages - 1);
+                    b.disabled = dis; b.style.opacity = dis ? '0.4' : '1'; b.style.cursor = dis ? 'default' : 'pointer';
                 });
             }
+            async function loadItems(search) {
+                _msg(tr('로딩…', '読み込み…', 'Loading…'));
+                if (info) info.textContent = '…';
+                var items = [];
+                try { items = await _fetchLib('element', search); } catch (e) { console.warn('[objpicker]', e); }
+                _all = items || [];
+                _page = 0;
+                renderPage();
+            }
+            if (prevB) prevB.onclick = function () { if (_page > 0) { _page--; renderPage(); grid.scrollTop = 0; } };
+            if (nextB) nextB.onclick = function () { if (_page < Math.ceil(_all.length / _MAX_OBJ) - 1) { _page++; renderPage(); grid.scrollTop = 0; } };
             var se = box.querySelector('#soObjPickerSearch');
-            var _t; se.oninput = function () { clearTimeout(_t); _t = setTimeout(function () { render(se.value); }, 250); };
-            render('');
+            var seBtn = box.querySelector('#soObjPickerSearchBtn');
+            function doSearch() { loadItems((se.value || '').trim()); }
+            if (seBtn) seBtn.onclick = doSearch;
+            // 2026-06-27: 글자 칠 때마다 검색하지 않고, Enter(또는 검색 버튼) 눌렀을 때만 검색. (한글 IME 조합 중 Enter 무시)
+            if (se) se.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doSearch(); } });
+            loadItems('');
         };
 
         async function _fetchLib(tab, search) {
