@@ -7434,25 +7434,25 @@ function scrollHotdeal(gridId, dir) {
             var lh = fs * (it.lineHeight || 1.2);
             if (!lines || !lines.length) lines = String(it.text || (it.el && it.el.textContent) || '').split(/\r?\n/);
             var _ctsw = it.textStrokeW || 0;
-            var pad = Math.ceil(fs * 0.45 + _ctsw * 3);   // 디센더 + 테두리 여유
-            var boxW = (it.w || 100), boxH = Math.max((it.h || fs), lines.length * lh + fs * 0.5);
-            var totalW = boxW + 2 * pad, totalH = boxH + 2 * pad;
-            var S = 3, MAX = 4000;
-            var cw = totalW * S, ch = totalH * S;
-            if (cw > MAX || ch > MAX) { var r = MAX / Math.max(cw, ch); S = S * r; }
+            var joinP = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+            // 스크립트체는 글자가 박스(it.w)를 크게 넘침 → 캔버스 좌표(natural)에 그대로 그린 뒤 실제 잉크 영역(알파 bbox)을
+            //   측정해 그만큼만 크롭. 위치/넘침/회전(바깥 <g>가 처리) 모두 정확.
+            var MARG = Math.ceil(fs * 2 + _ctsw * 4);   // 캔버스 밖으로 넘치는 swash 여유
+            var S = 3;
+            var fullW = (me.natW || 1000) + 2 * MARG, fullH = (me.natH || 1000) + 2 * MARG;
+            if (Math.max(fullW, fullH) * S > 6000) S = 6000 / Math.max(fullW, fullH);
             var cv = document.createElement('canvas');
-            cv.width = Math.max(1, Math.round(totalW * S)); cv.height = Math.max(1, Math.round(totalH * S));
+            cv.width = Math.max(1, Math.round(fullW * S)); cv.height = Math.max(1, Math.round(fullH * S));
             var c = cv.getContext('2d');
-            c.scale(S, S); c.translate(pad, pad);   // 박스 로컬 좌표: (it.x,it.y) → (pad,pad)
+            c.scale(S, S); c.translate(MARG, MARG);   // natural (0,0) → 캔버스 (MARG,MARG)
             c.font = fw + ' ' + fs + 'px ' + ff;
             try { c.letterSpacing = (it.letterSpacing || 0) + 'px'; } catch(_le){}
             c.textBaseline = 'top';
             c.textAlign = (it.textAlign === 'center') ? 'center' : (it.textAlign === 'right') ? 'right' : 'left';
             var padX = 6 / (me.wScale || 1), padY = 4 / (me.wScale || 1);
-            var tx = padX;
-            if (c.textAlign === 'center') tx = boxW / 2; else if (c.textAlign === 'right') tx = boxW - padX;
-            var ty = padY + (lh - fs) / 2;
-            var joinP = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+            var tx = it.x + padX;
+            if (c.textAlign === 'center') tx = it.x + (it.w || 0) / 2; else if (c.textAlign === 'right') tx = it.x + (it.w || 0) - padX;
+            var ty = it.y + padY + (lh - fs) / 2;   // 메인 PNG export 와 동일 baseline → 화면과 일치
             lines.forEach(function(ln, idx){
                 var yy = ty + idx * lh;
                 var dln = String(ln).replace(/\s+$/, '');
@@ -7467,7 +7467,23 @@ function scrollHotdeal(gridId, dir) {
                 c.fillStyle = it.fill || '#1d1d1f';
                 c.fillText(dln, tx, yy);
             });
-            return { dataUrl: cv.toDataURL('image/png'), x: it.x - pad, y: it.y - pad, w: totalW, h: totalH };
+            // 실제 잉크 영역(알파>8) bbox 측정
+            var data = c.getImageData(0, 0, cv.width, cv.height).data;
+            var W = cv.width, H = cv.height;
+            var minX = W, minY = H, maxX = -1, maxY = -1;
+            for (var y = 0; y < H; y++) {
+                var row = y * W;
+                for (var x = 0; x < W; x++) {
+                    if (data[(row + x) * 4 + 3] > 8) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+                }
+            }
+            if (maxX < 0) return null;
+            var cwid = maxX - minX + 1, chei = maxY - minY + 1;
+            var crop = document.createElement('canvas');
+            crop.width = cwid; crop.height = chei;
+            crop.getContext('2d').drawImage(cv, minX, minY, cwid, chei, 0, 0, cwid, chei);
+            // 크롭 픽셀(minX,minY) → natural 좌표
+            return { dataUrl: crop.toDataURL('image/png'), x: minX / S - MARG, y: minY / S - MARG, w: cwid / S, h: chei / S };
         } catch(e) { console.warn('[_meTextItemToPng]', e); return null; }
     }
 
