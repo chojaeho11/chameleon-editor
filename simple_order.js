@@ -7536,6 +7536,19 @@ html, body { background: #ffffff !important; }
         return false;
     }
     window._soShouldShowCpOptions = _soShouldShowCpOptions;
+    // 2026-06-28: 평면인쇄 제품군 — 광고인쇄(현수막9종 포함) + 상업인쇄물 + 가벽. 명함 제외. 이 그룹은 템플릿을 공유.
+    //   (p 는 {code,category,name...} — 템플릿 행은 name 이 비어도 카테고리/코드로 대부분 판별됨)
+    function _soIsFlatPrintProduct(p) {
+        if (!p) return false;
+        if (_soIsBizCardProduct(p)) return false;                       // 명함 제외
+        var top = '';
+        try { if (window._getTopCategoryCode) top = String(window._getTopCategoryCode(p.category) || ''); } catch (e) {}
+        if (top === '44444') return true;                               // 광고인쇄
+        if (typeof _soShouldShowCpOptions === 'function' && _soShouldShowCpOptions(p)) return true;  // 상업인쇄물
+        if (typeof _soIsWallProduct === 'function' && _soIsWallProduct(p)) return true;              // 가벽
+        return false;
+    }
+    window._soIsFlatPrintProduct = _soIsFlatPrintProduct;
     function _soRenderCpOptions() {
         if (!state.cpFinishes) state.cpFinishes = {};
         var foilOpen = !!state._cpFoilOpen;
@@ -14702,12 +14715,14 @@ html, body { background: #ffffff !important; }
                     if (targetType === 'template' && state.product) {
                         var curCode = state.product.code;
                         var curCat = state.product.category;
-                        // 2026-06-27: product_code 가 붙은 템플릿은 그 제품에만 노출(사이즈별 격리). product_code 없는(레거시)
-                        //   템플릿은 같은 카테고리 전체에 노출(기존 동작 보존 — 사라지지 않게). 신규 등록은 자동으로 제품코드가 붙음.
+                        // 2026-06-28: 평면인쇄 제품군(광고인쇄+상업인쇄+가벽, 명함 제외)은 템플릿 공유.
+                        var _curFlat = _soIsFlatPrintProduct(state.product);
                         rows = rows.filter(function(r){
                             if (r.product_code && r.product_code === curCode) return true;
                             // 2026-06-27: 배너 10종은 템플릿 공유 — 어느 배너 템플릿이든 모든 배너 제품에서 노출.
                             if (_soIsAnyBannerCode(curCode) && _soIsAnyBannerCode(r.product_code)) return true;
+                            // 2026-06-28: 평면인쇄 그룹 공유 — 현재 제품도 템플릿 제품도 평면인쇄면 노출.
+                            if (_curFlat && _soIsFlatPrintProduct({ code: r.product_code, category: r.product_category, name: '', name_us: '' })) return true;
                             if (!r.product_code && r.product_category === curCat) return true;
                             return false;
                         });
