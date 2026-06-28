@@ -7573,6 +7573,9 @@ function scrollHotdeal(gridId, dir) {
             function _buildInlineSvgGroup(svgText, x, y, w, h, uid) {
                 var holder = null;
                 try {
+                    // 2026-06-28: svg2pdf 가 clipPath/mask/filter 를 제대로 못 그려 클리핑이 풀리거나 깨짐.
+                    //   그런 SVG 는 벡터 인라인을 포기하고 PNG 래스터화 폴백(브라우저가 정확히 래스터). null 반환.
+                    if (/<\s*clippath|clip-path\s*[:=]|<\s*mask\b|[^-]mask\s*[:=]|<\s*filter\b|[^-]filter\s*[:=]|<\s*pattern\b/i.test(svgText || '')) return null;
                     var pr = new DOMParser();
                     var d = pr.parseFromString(svgText, 'image/svg+xml');
                     if (d.getElementsByTagName('parsererror').length) return null;
@@ -7715,6 +7718,7 @@ function scrollHotdeal(gridId, dir) {
                             var fontObj = await _meLoadFontForOutline(famClean, fw);
                             if (fontObj) {
                                 var pathD = '';
+                                var glyphPaths = [];   // 글자별 개별 path — fill 상쇄(구멍) 방지용
                                 for (var li = 0; li < lines.length; li++) {
                                     var line = lines[li];
                                     // 2026-06-28: 줄 끝 공백 제거 — 브라우저는 줄 끝 공백을 hang 시켜 폭에서 제외하는데,
@@ -7736,7 +7740,8 @@ function scrollHotdeal(gridId, dir) {
                                             var ch = dline.charAt(ci);
                                             if (!/\s/.test(ch)) {
                                                 var p = fontObj.getPath(ch, cursorX, lineY, fs);
-                                                pathD += p.toPathData(2) + ' ';
+                                                var _pdc = p.toPathData(2);
+                                                pathD += _pdc + ' '; glyphPaths.push(_pdc);
                                             }
                                             cursorX += fontObj.getAdvanceWidth(ch, fs) + ls;
                                         }
@@ -7750,7 +7755,8 @@ function scrollHotdeal(gridId, dir) {
                                                 for (var wi = 0; wi < run.length; wi++) cursorX2 += fontObj.getAdvanceWidth(run.charAt(wi), fs);
                                             } else {
                                                 var pr = fontObj.getPath(run, cursorX2, lineY, fs);
-                                                pathD += pr.toPathData(2) + ' ';
+                                                var _pdr = pr.toPathData(2);
+                                                pathD += _pdr + ' '; glyphPaths.push(_pdr);
                                                 cursorX2 += fontObj.getAdvanceWidth(run, fs);
                                             }
                                         }
@@ -7758,13 +7764,19 @@ function scrollHotdeal(gridId, dir) {
                                 }
                                 if (pathD.trim()) {
                                     var _pdT = pathD.trim();
-                                    // 2026-06-28: 글씨 테두리 — 같은 글자 path 를 2×두께 stroke(뒤) + fill(앞) 2겹으로. 글자 모양 보존(서체 안 깨짐).
+                                    var _fillC = _esc(it.fill || '#000');
+                                    // 2026-06-28: 글씨 테두리 — 합친 path 를 2×두께 stroke(뒤) 한 번, fill 은 글자별 개별 path(앞).
+                                    //   음수 자간으로 글자가 겹쳐도 nonzero winding 상쇄(구멍/검정네모)가 안 생기도록 fill 을 글자별 분리.
                                     var _stswO = (it.textStrokeW || 0);
                                     if (_stswO > 0) {
                                         var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
                                         parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '') + '/>');
                                     }
-                                    parts.push('<path d="' + _pdT + '" fill="' + _esc(it.fill || '#000') + '"/>');
+                                    if (glyphPaths.length) {
+                                        glyphPaths.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
+                                    } else {
+                                        parts.push('<path d="' + _pdT + '" fill="' + _fillC + '"/>');
+                                    }
                                     outlinedOk = true;
                                 }
                             } else {
@@ -8199,7 +8211,11 @@ function scrollHotdeal(gridId, dir) {
                 + '<input type="number" min="0" max="40" step="0.5" value="' + (it.textStrokeW || 0) + '" data-mp="textStrokeW" style="width:42px;" title="' + T('me_prop_textstrokew','테두리 두께') + '">'
                 + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="-0.5" title="−0.5"><i class="fa-solid fa-caret-down"></i></button>'
                 + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="0.5" title="+0.5"><i class="fa-solid fa-caret-up"></i></button>'
-                + '<button type="button" class="me-prop-btn" data-action="strokeJoin" style="min-width:26px; font-size:11px; font-weight:700;" title="' + T('me_prop_strokejoin','테두리 모서리 둥글게/각지게') + '">' + ((it.textStrokeJoin === 'miter') ? T('me_join_miter','각') : T('me_join_round','둥')) + '</button>'
+                + '<button type="button" class="me-prop-btn" data-action="strokeJoin" style="padding:0 6px;" title="' + T('me_prop_strokejoin','테두리 모서리 둥글게/각지게') + '">'
+                    + ((it.textStrokeJoin === 'miter')
+                        ? '<svg width="16" height="16" viewBox="0 0 16 16" style="display:block;"><path d="M3 13 L3 3 L13 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter"/></svg>'
+                        : '<svg width="16" height="16" viewBox="0 0 16 16" style="display:block;"><path d="M3 13 L3 7 Q3 3 7 3 L13 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>')
+                + '</button>'
             + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
