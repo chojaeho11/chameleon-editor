@@ -606,9 +606,10 @@ async function openUpload(type) {
     document.getElementById('uploadFile').value = '';
     document.getElementById('langPreview').style.display = 'none';
     document.getElementById('uploadMdlBg').classList.add('open');
-    // submit 버튼 라벨 (사이트별)
+    // submit 버튼 라벨 (사이트별) + 활성화 리셋 (이전 제출로 disabled 남았을 수 있음)
     const reqLbl = _LANG === 'ja' ? 'レビュー申請' : _LANG === 'en' ? 'Submit for Review' : '검토 요청';
-    document.getElementById('uploadSubmit').textContent = reqLbl;
+    var _usb = document.getElementById('uploadSubmit');
+    _usb.textContent = reqLbl; _usb.disabled = false;
 }
 function closeUpload() {
     document.getElementById('uploadMdlBg').classList.remove('open');
@@ -727,6 +728,8 @@ async function submitUpload() {
         };
         const ins = await sb.from('admin_templates').insert(row).select().single();
         if (ins.error) throw ins.error;
+        // 2026-06-28: 성공 후 버튼 재활성화 — 안 하면 다시 열어도 '업로드 중...' 비활성 상태로 남아 새로고침해야 했음.
+        btn.disabled = false; btn.textContent = _A('검토 요청','レビュー申請','Submit for Review');
         closeUpload();
         const okMsg = _LANG === 'ja' ? 'レビューリクエスト完了！承認時 ' + _fmtKrw(m.reward) + ' 積立。'
                      : _LANG === 'en' ? 'Submitted for review! ' + _fmtKrw(m.reward) + ' on approval.'
