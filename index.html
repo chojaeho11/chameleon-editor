@@ -7251,11 +7251,11 @@ function scrollHotdeal(gridId, dir) {
                             wrapped.forEach(function(w){ allLines.push(w); });
                         });
                     }
-                    // 2026-06-28: 글씨 테두리 — strokeText(뒤, 2×두께 round) 후 fillText(앞). 글자 모양 보존.
+                    // 2026-06-28: 글씨 테두리 — 흰 테두리(뒤, 3×두께) → fill → fill색 stroke(앞, 1×두께)로 글자 사이 슬리버 메움.
                     var _ctsw = (it.textStrokeW || 0);
                     if (_ctsw > 0) {
                         ctx.save();
-                        ctx.lineWidth = 2 * _ctsw;
+                        ctx.lineWidth = 3 * _ctsw;
                         ctx.strokeStyle = it.textStroke || '#000000';
                         ctx.lineJoin = (it.textStrokeJoin === 'miter') ? 'miter' : 'round'; ctx.miterLimit = (it.textStrokeJoin === 'miter') ? 6 : 2;
                         allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
@@ -7264,6 +7264,14 @@ function scrollHotdeal(gridId, dir) {
                     allLines.forEach(function(ln, idx) {
                         ctx.fillText(ln, tx, ty + idx * lh);
                     });
+                    if (_ctsw > 0) {
+                        ctx.save();
+                        ctx.lineWidth = _ctsw;
+                        ctx.strokeStyle = it.fill || '#1d1d1f';
+                        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                        allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
+                        ctx.restore();
+                    }
                     ctx.restore();
                 } else if (it.type === 'image' && it.src) {
                     var rotI = it.rotation || 0;
@@ -7779,11 +7787,16 @@ function scrollHotdeal(gridId, dir) {
                                     var _gps = glyphPaths.length ? glyphPaths : [_pdT];
                                     if (_stswO > 0) {
                                         var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
-                                        var _strokeTail = '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '') + '/>';
-                                        // stroke 도 글자별 개별 path 로 전부 뒤에 깔기 — 겹친 글자 사이 내부 경계선이 fill 에 가려져 r 함몰 방지.
+                                        var _mlim = (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '');
+                                        // 1) 흰 테두리 — 글자 dilate 1.5W (아래 fill stroke 0.5W 를 더해도 테두리 두께 = W 유지).
+                                        var _strokeTail = '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(3 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + _mlim + '/>';
                                         _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _strokeTail); });
+                                        // 2) fill — 같은 색 stroke W 로 글자를 0.5W 부풀려 글자 사이 흰 슬리버(틈)를 fill 색으로 메움(테두리 안쪽 채우기).
+                                        var _fillTail = '" fill="' + _fillC + '" stroke="' + _fillC + '" stroke-width="' + _fmt(_stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+                                        _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _fillTail); });
+                                    } else {
+                                        _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
                                     }
-                                    _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
                                     outlinedOk = true;
                                 }
                             } else {
