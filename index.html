@@ -6587,9 +6587,9 @@ function scrollHotdeal(gridId, dir) {
             // 2026-06-28: 글씨 테두리(stroke) — paint-order:stroke fill 로 글자 모양 보존(서체 안 깨짐).
             //   두께는 2×(centered) → 보이는 외곽 테두리 = textStrokeW. 표시 px 는 wScale 반영.
             var _tsw = (it.textStrokeW || 0);
-            if (_tsw > 0 && it.textStroke) {
+            if (_tsw > 0) {
                 it.el.style.webkitTextStrokeWidth = (2 * _tsw * me.wScale) + 'px';
-                it.el.style.webkitTextStrokeColor = it.textStroke;
+                it.el.style.webkitTextStrokeColor = it.textStroke || '#000000';
                 it.el.style.paintOrder = 'stroke fill';
             } else {
                 it.el.style.webkitTextStrokeWidth = '0';
@@ -7251,10 +7251,10 @@ function scrollHotdeal(gridId, dir) {
                     }
                     // 2026-06-28: 글씨 테두리 — strokeText(뒤, 2×두께 round) 후 fillText(앞). 글자 모양 보존.
                     var _ctsw = (it.textStrokeW || 0);
-                    if (_ctsw > 0 && it.textStroke) {
+                    if (_ctsw > 0) {
                         ctx.save();
                         ctx.lineWidth = 2 * _ctsw;
-                        ctx.strokeStyle = it.textStroke;
+                        ctx.strokeStyle = it.textStroke || '#000000';
                         ctx.lineJoin = 'round'; ctx.miterLimit = 2;
                         allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
                         ctx.restore();
@@ -7565,6 +7565,40 @@ function scrollHotdeal(gridId, dir) {
                         + ' preserveAspectRatio="none" overflow="visible">' + inner + '</svg>';
                 } catch(e) { console.warn('[_buildNestedSvg]', e); return null; }
             }
+            // 2026-06-28: SVG 를 export 안에 <g transform>(평탄화 벡터)로 인라인 — 대형 출력 픽셀화 방지.
+            //   nested <svg> 는 svg2pdf 가 위치/스케일을 틀리게 그리고, 분리된 조각마다 같은 defs/gradient/clip ID 가
+            //   충돌해 색이 빠짐 → ID 를 조각별 고유 접두어로 네임스페이스하고 viewBox→박스 transform 으로 평탄화.
+            function _buildInlineSvgGroup(svgText, x, y, w, h, uid) {
+                try {
+                    var pr = new DOMParser();
+                    var d = pr.parseFromString(svgText, 'image/svg+xml');
+                    if (d.getElementsByTagName('parsererror').length) return null;
+                    var sv = d.documentElement;
+                    if (!sv || sv.nodeName.toLowerCase() !== 'svg') return null;
+                    var vx = 0, vy = 0, vw = 0, vh = 0;
+                    var vb = sv.getAttribute('viewBox');
+                    if (vb) { var p = vb.trim().split(/[\s,]+/).map(parseFloat); vx = p[0] || 0; vy = p[1] || 0; vw = p[2] || 0; vh = p[3] || 0; }
+                    if (!vw) vw = parseFloat(sv.getAttribute('width')) || 0;
+                    if (!vh) vh = parseFloat(sv.getAttribute('height')) || 0;
+                    if (!vw || !vh) return null;
+                    var inner = sv.innerHTML;
+                    if (!inner || !inner.trim()) return null;
+                    // ID 네임스페이스 — 조각 간 ID 충돌 방지 (id="x" / url(#x) / href="#x")
+                    var prefix = 'sv' + uid + '_';
+                    var ids = [];
+                    inner.replace(/\bid\s*=\s*"([^"]+)"/g, function(m, id){ if (ids.indexOf(id) < 0) ids.push(id); return m; });
+                    ids.forEach(function(id){
+                        var safe = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        inner = inner.replace(new RegExp('id\\s*=\\s*"' + safe + '"', 'g'), 'id="' + prefix + id + '"');
+                        inner = inner.replace(new RegExp('url\\(\\s*#' + safe + '\\s*\\)', 'g'), 'url(#' + prefix + id + ')');
+                        inner = inner.replace(new RegExp('(xlink:href|href)\\s*=\\s*"#' + safe + '"', 'g'), '$1="#' + prefix + id + '"');
+                    });
+                    var scX = w / vw, scY = h / vh;
+                    var tr = 'translate(' + _fmt(x) + ' ' + _fmt(y) + ') scale(' + _fmt(scX) + ' ' + _fmt(scY) + ')';
+                    if (vx || vy) tr += ' translate(' + _fmt(-vx) + ' ' + _fmt(-vy) + ')';
+                    return '<g transform="' + tr + '">' + inner + '</g>';
+                } catch(e) { console.warn('[_buildInlineSvgGroup]', e); return null; }
+            }
 
             // zIndex 정렬
             var items = (me.items || []).slice().sort(function(a, b){
@@ -7597,16 +7631,26 @@ function scrollHotdeal(gridId, dir) {
                 if (it.type === 'image' && it.src) {
                     var dataUrl = await _imgToDataUrl(it.src);
                     var _isSvgImg = /^data:image\/svg\+xml/i.test(dataUrl || '') || /\.svg(\?|$)/i.test(String(it.src));
-                    // 2026-06-28: PDF(svg2pdf)는 <image> 속 SVG 를 못 그림. 벡터 inline(nested svg)은 분리된 조각들의
-                    //   defs/그라데이션 ID 충돌·위치 오류로 색이 빠지고 좌표가 틀어지므로, SVG 이미지는 PNG 로 래스터화해 넣음.
-                    if (rasterize && _isSvgImg && dataUrl) {
-                        var _png = await _imgToPng(dataUrl, it.w, it.h);
-                        if (_png) dataUrl = _png;
+                    var _imgEmitted = false;
+                    // 2026-06-28: PDF(svg2pdf)는 <image> 속 SVG 를 못 그림. 대형 출력은 벡터여야 하므로
+                    //   SVG 를 <g transform>(ID 네임스페이스 평탄화)로 벡터 인라인 시도 → 실패 시에만 PNG 래스터화 폴백.
+                    if (rasterize && _isSvgImg) {
+                        try {
+                            var _svgTxt2 = await _resolveSvgText(it.src, dataUrl);
+                            var _grp = _svgTxt2 ? _buildInlineSvgGroup(_svgTxt2, it.x, it.y, it.w, it.h, ii) : null;
+                            if (_grp) { parts.push(_grp); _imgEmitted = true; }
+                        } catch(_se) { console.warn('[svg vector inline]', _se); }
+                        if (!_imgEmitted && dataUrl) {
+                            var _png = await _imgToPng(dataUrl, it.w, it.h);
+                            if (_png) dataUrl = _png;
+                        }
                     }
-                    parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
-                        + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
-                        + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                        + 'preserveAspectRatio="none"/>');
+                    if (!_imgEmitted) {
+                        parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
+                            + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                            + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
+                            + 'preserveAspectRatio="none"/>');
+                    }
                 } else if (it.type === 'shape') {
                     var fill = _esc(it.fill || '#000000');
                     var stroke = it.stroke ? ' stroke="' + _esc(it.stroke) + '" stroke-width="' + _fmt(it.strokeWidth || 1) + '"' : '';
@@ -7687,8 +7731,8 @@ function scrollHotdeal(gridId, dir) {
                                     var _pdT = pathD.trim();
                                     // 2026-06-28: 글씨 테두리 — 같은 글자 path 를 2×두께 stroke(뒤) + fill(앞) 2겹으로. 글자 모양 보존(서체 안 깨짐).
                                     var _stswO = (it.textStrokeW || 0);
-                                    if (_stswO > 0 && it.textStroke) {
-                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke) + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>');
+                                    if (_stswO > 0) {
+                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>');
                                     }
                                     parts.push('<path d="' + _pdT + '" fill="' + _esc(it.fill || '#000') + '"/>');
                                     outlinedOk = true;
@@ -7706,7 +7750,7 @@ function scrollHotdeal(gridId, dir) {
                                 + '>' + _esc(line.replace(/\s+$/, '')) + '</tspan>';   // 줄 끝 공백 제거 (중앙정렬 밀림 방지)
                         }).join('');
                         var _stswF = (it.textStrokeW || 0);
-                        var _strokeAttr = (_stswF > 0 && it.textStroke) ? ('stroke="' + _esc(it.textStroke) + '" stroke-width="' + _fmt(2 * _stswF) + '" paint-order="stroke" stroke-linejoin="round" ') : '';
+                        var _strokeAttr = (_stswF > 0) ? ('stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswF) + '" paint-order="stroke" stroke-linejoin="round" ') : '';
                         parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
                             + 'font-weight="' + fw + '" '
                             + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
@@ -8117,11 +8161,13 @@ function scrollHotdeal(gridId, dir) {
                 + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="-0.1" title="−0.1"><i class="fa-solid fa-caret-down"></i></button>'
                 + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="0.1" title="+0.1"><i class="fa-solid fa-caret-up"></i></button>'
             + '</span>';
-            // 2026-06-28: 글씨 테두리 (색 + 두께). 두께 0 = 없음.
+            // 2026-06-28: 글씨 테두리 (색 + 두께 + 작은 ▲▼ 스텝). 두께 0 = 없음.
             html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_textstroke','글씨 테두리') + '">'
                 + '<label>' + T('me_prop_textstroke','테두리') + '</label>'
-                + '<input type="color" value="' + (it.textStroke || '#ffffff') + '" data-mp="textStroke">'
-                + '<input type="number" min="0" max="20" step="0.5" value="' + (it.textStrokeW || 0) + '" data-mp="textStrokeW" style="width:46px;" title="' + T('me_prop_textstrokew','테두리 두께') + '">'
+                + '<input type="color" value="' + (it.textStroke || '#000000') + '" data-mp="textStroke">'
+                + '<input type="number" min="0" max="40" step="0.5" value="' + (it.textStrokeW || 0) + '" data-mp="textStrokeW" style="width:42px;" title="' + T('me_prop_textstrokew','테두리 두께') + '">'
+                + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="-0.5" title="−0.5"><i class="fa-solid fa-caret-down"></i></button>'
+                + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="0.5" title="+0.5"><i class="fa-solid fa-caret-up"></i></button>'
             + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
@@ -8227,12 +8273,14 @@ function scrollHotdeal(gridId, dir) {
                 if (key === 'fontSize') cur = it.fontSize || 24;
                 else if (key === 'letterSpacing') cur = it.letterSpacing || 0;
                 else if (key === 'lineHeight') cur = it.lineHeight || 1.2;
+                else if (key === 'textStrokeW') cur = it.textStrokeW || 0;
                 else return;
                 var next = cur + delta;
                 // 범위 clamp
                 if (key === 'fontSize') next = Math.max(6, Math.min(400, next));
                 if (key === 'letterSpacing') next = Math.max(-20, Math.min(60, next));
                 if (key === 'lineHeight') next = Math.max(0.6, Math.min(3, next));
+                if (key === 'textStrokeW') next = Math.max(0, Math.min(40, next));
                 // 소수점 정리 (부동소수 누적 방지)
                 next = Math.round(next * 100) / 100;
                 it[key] = next;
@@ -8245,6 +8293,8 @@ function scrollHotdeal(gridId, dir) {
                     else if (key === 'lineHeight') lbl.textContent = next.toFixed(2);
                     else lbl.textContent = (Math.round(next * 10) / 10);
                 }
+                // textStrokeW 는 number input 도 동기화
+                if (key === 'textStrokeW') { var _ni = panel.querySelector('input[data-mp="textStrokeW"]'); if (_ni) _ni.value = next; }
             });
         });
         // 2026-06-15: SMB 두께 토글
