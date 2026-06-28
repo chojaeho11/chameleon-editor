@@ -11818,8 +11818,10 @@ html, body { background: #ffffff !important; }
         //   - 현수막/패트/매쉬 3종 (거치대 없음) 은 같은 디자인 10장+ 50% 할인
         var _pNm = (p && p.name || '');
         var _bannerKw = /배너|banner|バナー|거치대|패트|페트|매쉬|메쉬|현수막|placard|hanging\s*sign/i;
-        state.isBannerOutput = !!(p && p.code && (/^hb_bn/i.test(p.code) || /^bn_/i.test(p.code))) ||
-            _bannerKw.test(_pNm);
+        // 2026-06-28: 실사출력 9종(캘지·패트·후렉스·매쉬천·부직포·인화지·유포지·백릿)은 이름에 매쉬/패트가 있어도 배너 아님.
+        //   배너로 오인되면 면적 계산기가 DB 단가로 덮어써 1만원/m² 통일이 깨짐(매쉬천 15,000 버그).
+        state.isBannerOutput = (!!(p && p.code && (/^hb_bn/i.test(p.code) || /^bn_/i.test(p.code))) || _bannerKw.test(_pNm))
+            && !(typeof _soIsRealPrintProduct === 'function' && _soIsRealPrintProduct(p));
         var _isBannerWithStand = state.isBannerOutput && (/거치대|세트|set|stand|スタンド/i.test(_pNm)
             && !/거치대\s*미포함|stand\s*not/i.test(_pNm));
         var _isBannerStandless = state.isBannerOutput && !_isBannerWithStand;
