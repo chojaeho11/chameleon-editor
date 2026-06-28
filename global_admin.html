@@ -3033,8 +3033,7 @@ window.openTplPreview = function(url, name) {
 window.tplReviewApprove = async function(id, btn, reward) {
     if (typeof reward !== 'number') reward = 30000;
     const rewardLbl = reward.toLocaleString();
-    if (!confirm('승인 시 디자이너에게 ' + rewardLbl + '원이 적립됩니다. 계속할까요?')) return;
-    const note = prompt('승인 메모 (선택, 디자이너 안내용):', '') || '';
+    const note = '';   // 2026-06-28: confirm/prompt 제거 — 클릭 즉시 승인.
     btn.disabled = true; btn.textContent = '처리 중...';
     try {
         // RPC 우선 시도 — _paid_amount 매개변수 받는 새 버전이면 그 값 사용. 안 받으면 RPC 무시하고 직접 업데이트.
@@ -3057,7 +3056,7 @@ window.tplReviewApprove = async function(id, btn, reward) {
                 await window.sb.from('profiles').update({ mileage: cur + reward }).eq('id', tpl.submitted_by);
             }
         }
-        alert('✅ 승인 완료 — ' + rewardLbl + '원 적립');
+        if (window.showToast) showToast('승인 완료 — ' + rewardLbl + '원 적립', 'success');   // 2026-06-28: 차단 alert → toast
         loadTplReview();
     } catch(e) {
         alert('승인 실패: ' + (e.message || e));
@@ -3066,11 +3065,12 @@ window.tplReviewApprove = async function(id, btn, reward) {
 };
 
 window.tplReviewDelete = async function(id, name, btn) {
-    if (!confirm('정말 "' + name + '" 템플릿을 삭제하시겠어요?\n복구 불가합니다.')) return;
+    // 2026-06-28: confirm 제거 — 클릭 즉시 삭제.
     btn.disabled = true; btn.textContent = '삭제 중...';
     try {
         const { error } = await window.sb.from('admin_templates').delete().eq('id', id);
         if (error) throw error;
+        if (window.showToast) showToast('삭제 완료', 'success');
         loadTplReview();
     } catch(e) { alert('삭제 실패: ' + (e.message || e)); btn.disabled = false; btn.textContent = '🗑 삭제'; }
 };
