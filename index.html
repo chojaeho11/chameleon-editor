@@ -6610,24 +6610,12 @@ function scrollHotdeal(gridId, dir) {
             //   두께는 2×(centered) → 보이는 외곽 테두리 = textStrokeW. 표시 px 는 wScale 반영.
             var _tsw = (it.textStrokeW || 0);
             if (_tsw > 0) {
-                var _scol = it.textStroke || '#000000';
-                if (it.textStrokeJoin === 'miter') {
-                    // 각진 모서리 — webkit-text-stroke (miter)
-                    it.el.style.webkitTextStrokeWidth = (2 * _tsw * me.wScale) + 'px';
-                    it.el.style.webkitTextStrokeColor = _scol;
-                    it.el.style.paintOrder = 'stroke fill';
-                    it.el.style.textShadow = '';
-                } else {
-                    // 2026-06-28: 둥근 모서리 — webkit-text-stroke 의 miter 삐죽임 방지용으로 text-shadow 다방향 외곽선.
-                    var _r = _tsw * me.wScale;
-                    var _sh = [];
-                    for (var _si = 0; _si < 20; _si++) { var _ang = (_si / 20) * 6.2832; _sh.push((Math.cos(_ang) * _r).toFixed(1) + 'px ' + (Math.sin(_ang) * _r).toFixed(1) + 'px 0 ' + _scol); }
-                    // 안쪽 링 하나 더(두꺼운 경우 빈틈 방지)
-                    for (var _sj = 0; _sj < 20; _sj++) { var _ang2 = (_sj / 20 + 0.025) * 6.2832; _sh.push((Math.cos(_ang2) * _r * 0.6).toFixed(1) + 'px ' + (Math.sin(_ang2) * _r * 0.6).toFixed(1) + 'px 0 ' + _scol); }
-                    it.el.style.textShadow = _sh.join(',');
-                    it.el.style.webkitTextStrokeWidth = '0';
-                    it.el.style.paintOrder = '';
-                }
+                // 2026-06-28: 에디터 미리보기 — 매끄러운 -webkit-text-stroke 사용(다방향 text-shadow 는 찌글거림).
+                //   PDF 는 stroke-linejoin=round 로 정확히 둥글게 출력. (둥근/각 미세 차이는 안내 문구로 안내)
+                it.el.style.webkitTextStrokeWidth = (2 * _tsw * me.wScale) + 'px';
+                it.el.style.webkitTextStrokeColor = it.textStroke || '#000000';
+                it.el.style.paintOrder = 'stroke fill';
+                it.el.style.textShadow = '';
             } else {
                 it.el.style.webkitTextStrokeWidth = '0';
                 it.el.style.paintOrder = '';
