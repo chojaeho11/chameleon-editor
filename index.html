@@ -7717,6 +7717,14 @@ function scrollHotdeal(gridId, dir) {
                         try {
                             var fontObj = await _meLoadFontForOutline(famClean, fw);
                             if (fontObj) {
+                                // 2026-06-28: 폰트 메트릭 기반 첫 줄 baseline — 줄간격(lineHeight) 반영.
+                                //   기존 it.y+fs 고정은 좁은 줄간격(0.8 등)에서 글자가 아래로 내려가 아래 글씨에 붙던 문제.
+                                //   CSS first-baseline = top + (lineHeight*fs - (asc+desc)*fs)/2 + asc*fs.
+                                var _upm = fontObj.unitsPerEm || 1000;
+                                var _ascR = (fontObj.ascender != null ? fontObj.ascender : _upm) / _upm;
+                                var _descR = Math.abs(fontObj.descender || 0) / _upm;
+                                var _lhMul = (it.lineHeight || 1.2);
+                                var ty0m = it.y + (_lhMul * fs - (_ascR + _descR) * fs) / 2 + _ascR * fs;
                                 var pathD = '';
                                 var glyphPaths = [];   // 글자별 개별 path — fill 상쇄(구멍) 방지용
                                 for (var li = 0; li < lines.length; li++) {
@@ -7731,7 +7739,7 @@ function scrollHotdeal(gridId, dir) {
                                     var lineX = tx;
                                     if (anchor === 'middle') lineX = tx - lineW / 2;
                                     else if (anchor === 'end') lineX = tx - lineW;
-                                    var lineY = ty0 + li * lh;
+                                    var lineY = ty0m + li * lh;
                                     // 2026-06-28: 공백(스페이스)은 그리지 않고 advance 만 — 폰트에 space 글리프가 없으면
                                     //   .notdef(X박스) 로 그려지던 문제 방지. 단어(런)는 커닝 유지하며 getPath.
                                     if (ls) {
@@ -7768,15 +7776,14 @@ function scrollHotdeal(gridId, dir) {
                                     // 2026-06-28: 글씨 테두리 — 합친 path 를 2×두께 stroke(뒤) 한 번, fill 은 글자별 개별 path(앞).
                                     //   음수 자간으로 글자가 겹쳐도 nonzero winding 상쇄(구멍/검정네모)가 안 생기도록 fill 을 글자별 분리.
                                     var _stswO = (it.textStrokeW || 0);
+                                    var _gps = glyphPaths.length ? glyphPaths : [_pdT];
                                     if (_stswO > 0) {
                                         var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
-                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '') + '/>');
+                                        var _strokeTail = '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '') + '/>';
+                                        // stroke 도 글자별 개별 path 로 전부 뒤에 깔기 — 겹친 글자 사이 내부 경계선이 fill 에 가려져 r 함몰 방지.
+                                        _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _strokeTail); });
                                     }
-                                    if (glyphPaths.length) {
-                                        glyphPaths.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
-                                    } else {
-                                        parts.push('<path d="' + _pdT + '" fill="' + _fillC + '"/>');
-                                    }
+                                    _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
                                     outlinedOk = true;
                                 }
                             } else {
