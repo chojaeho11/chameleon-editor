@@ -9592,6 +9592,34 @@ function scrollHotdeal(gridId, dir) {
             _meSyncItemDisplay(it);
         });
     };
+    // 2026-06-28: 디자인(모든 item)을 캔버스에 가득 차게 — 맞는 쪽(가로/세로)으로 스케일 업 후 중앙. 템플릿 로드 시 사용.
+    window._meFitDesignToCanvas = function() {
+        if (!me.items || !me.items.length) return;
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, any = false;
+        me.items.forEach(function(it){
+            if (!it || it._type === 'meta' || it.el == null) return;
+            any = true;
+            minX = Math.min(minX, it.x); minY = Math.min(minY, it.y);
+            maxX = Math.max(maxX, it.x + (it.w || 0)); maxY = Math.max(maxY, it.y + (it.h || 0));
+        });
+        if (!any || !isFinite(minX)) return;
+        var bw = maxX - minX, bh = maxY - minY;
+        if (bw <= 0 || bh <= 0) return;
+        var scale = Math.min(me.natW / bw, me.natH / bh);   // contain — 맞는 쪽으로 가득
+        if (!isFinite(scale) || scale <= 0) return;
+        var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;   // 현재 bbox 중심
+        var ncx = me.natW / 2, ncy = me.natH / 2;             // 캔버스 중심
+        me.items.forEach(function(it){
+            if (!it || it._type === 'meta' || it.el == null) return;
+            var iw = (it.w || 0) * scale, ih = (it.h || 0) * scale;
+            var icx = it.x + (it.w || 0) / 2, icy = it.y + (it.h || 0) / 2;
+            var nicx = ncx + (icx - cx) * scale, nicy = ncy + (icy - cy) * scale;
+            it.x = nicx - iw / 2; it.y = nicy - ih / 2;
+            it.w = iw; it.h = ih;
+            if (it.type === 'text' && it.fontSize) it.fontSize = it.fontSize * scale;
+            _meSyncItemDisplay(it);
+        });
+    };
     window._meLoadTemplate = function(tpl) {
         if (!tpl) return;
         // 2026-06-19 v623: 템플릿 사용 추적 — 주문 시 SVG 출력 + 메타 첨부에 사용.
@@ -9631,8 +9659,8 @@ function scrollHotdeal(gridId, dir) {
                 }
                 _meRestoreTemplateItem(saved);
             });
-            // 2026-06-28: 로드한 디자인을 현재 캔버스 중앙으로 (다른 사이즈 제품에서 위로 붙던 문제 해결).
-            try { window._meCenterDesign(); } catch(_ce) {}
+            // 2026-06-28: 로드한 디자인을 현재 캔버스에 가득 차게 (맞는 쪽으로 스케일 업 + 중앙).
+            try { window._meFitDesignToCanvas(); } catch(_ce) {}
             // 2026-06-18 v558: 메타 슬롯이 없는 옛 템플릿 — 썸네일 PNG 모서리 픽셀 샘플링하여 bg 추정.
             if (!_hasMetaBg && (tpl.thumbnail_url || tpl.background_url)) {
                 var _smpImg = new Image();
