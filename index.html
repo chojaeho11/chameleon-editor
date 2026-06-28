@@ -1705,6 +1705,7 @@ window._tcmFallbackClick = function(code) {
                 margin:0 0 18px;
                 color:var(--accent);
                 text-align:center;
+                word-break:keep-all;   /* 2026-06-28: 한글/일본어 — 글자 단위 줄바꿈 금지, 단어(공백) 단위로만 */
             }
             .hc-sub {
                 font-family:'Pretendard Variable', sans-serif;
@@ -1716,6 +1717,7 @@ window._tcmFallbackClick = function(code) {
                 margin:0 0 30px;
                 max-width:none;
                 text-align:center;
+                word-break:keep-all;   /* 2026-06-28: 한글/일본어 — 글자 단위 줄바꿈 금지 */
             }
             .hc-cta {
                 display:inline-flex;
