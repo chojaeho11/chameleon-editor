@@ -1623,7 +1623,8 @@ window._tcmFallbackClick = function(code) {
                 transform:translateX(0);
                 transition:opacity 0.6s ease, transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease;
                 pointer-events:none;
-                background:linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+                /* 2026-06-28: 좌측 진한색(--bg2) → 우측(이미지쪽) 연한색(--bg) 가로 그라데이션 — 사진 배경색에 가깝게 자연 블렌딩 */
+                background:linear-gradient(90deg, var(--bg2) 0%, var(--bg) 48%);
                 overflow:hidden;
                 box-shadow:0 8px 20px -10px rgba(15,23,42,0.1);
                 z-index:1;
@@ -1758,8 +1759,9 @@ window._tcmFallbackClick = function(code) {
                 content:'';
                 position:absolute;
                 left:0; top:0; bottom:0;
-                width:140px;
-                background:linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+                /* 2026-06-28: 넓고 부드러운 블렌딩 — 색이 사진 배경으로 서서히 사라지도록 폭 확대 + 부드러운 곡선 */
+                width:55%;
+                background:linear-gradient(90deg, var(--bg) 0%, var(--bg) 8%, transparent 100%);
                 z-index:2;
                 pointer-events:none;
             }
@@ -1868,8 +1870,8 @@ window._tcmFallbackClick = function(code) {
                     z-index:1;
                 }
                 .hc-visual::before {
-                    width:60px;
-                    background:linear-gradient(90deg, var(--bg) 0%, transparent 100%);
+                    width:55%;
+                    background:linear-gradient(90deg, var(--bg) 0%, var(--bg) 8%, transparent 100%);
                 }
                 .hc-visual img {
                     width:100%;
