@@ -5908,7 +5908,9 @@ function scrollHotdeal(gridId, dir) {
         .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
         /* 2026-06-28: 회전 핸들 — 우측상단 바깥 + 회전(↻) 모양 + grab 커서 (일러스트식). 녹색 점/줄기 제거. */
         .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:22px; height:22px; background:#fff; border:1.5px solid #007AFF; cursor:grab; display:flex; align-items:center; justify-content:center; }
-        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#007AFF; font-size:14px; font-weight:800; line-height:1; }
+        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#007AFF; font-size:14px; font-weight:800; line-height:1; -webkit-text-stroke:0; }
+        /* 2026-06-28: 글씨 테두리(-webkit-text-stroke)가 자식 핸들·삭제버튼·칩까지 상속되어 회전 화살표에 테두리가 생기고 드래그 잔상이 남던 문제 차단 */
+        .me-handle, .me-handle::before, .me-handle-rot, .me-handle-rot::before, .me-del, .me-imgchip { -webkit-text-stroke:0 !important; -webkit-text-stroke-width:0 !important; paint-order:normal !important; }
         .me-item.text {
             cursor: move;
             /* 2026-06-14: 폰트 렌더링 품질 — faux-bold 합성 차단 + antialiasing */
@@ -7255,7 +7257,7 @@ function scrollHotdeal(gridId, dir) {
                         ctx.save();
                         ctx.lineWidth = 2 * _ctsw;
                         ctx.strokeStyle = it.textStroke || '#000000';
-                        ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+                        ctx.lineJoin = (it.textStrokeJoin === 'miter') ? 'miter' : 'round'; ctx.miterLimit = (it.textStrokeJoin === 'miter') ? 6 : 2;
                         allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
                         ctx.restore();
                     }
@@ -7569,6 +7571,7 @@ function scrollHotdeal(gridId, dir) {
             //   nested <svg> 는 svg2pdf 가 위치/스케일을 틀리게 그리고, 분리된 조각마다 같은 defs/gradient/clip ID 가
             //   충돌해 색이 빠짐 → ID 를 조각별 고유 접두어로 네임스페이스하고 viewBox→박스 transform 으로 평탄화.
             function _buildInlineSvgGroup(svgText, x, y, w, h, uid) {
+                var holder = null;
                 try {
                     var pr = new DOMParser();
                     var d = pr.parseFromString(svgText, 'image/svg+xml');
@@ -7581,23 +7584,49 @@ function scrollHotdeal(gridId, dir) {
                     if (!vw) vw = parseFloat(sv.getAttribute('width')) || 0;
                     if (!vh) vh = parseFloat(sv.getAttribute('height')) || 0;
                     if (!vw || !vh) return null;
-                    var inner = sv.innerHTML;
+                    // 1) computed style 을 attribute 로 구움 — svg2pdf 는 <style>/class 기반 fill 을 못 읽어 색이 빠짐.
+                    //    라이브 DOM 에 붙여서 브라우저가 해석한 실제 색을 inline 으로 박는다.
+                    holder = document.createElement('div');
+                    holder.setAttribute('style', 'position:absolute; left:-99999px; top:0; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none;');
+                    var liveSvg = document.importNode(sv, true);
+                    holder.appendChild(liveSvg);
+                    document.body.appendChild(holder);
+                    var SP = ['fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-opacity','stroke-linecap','stroke-linejoin','stroke-miterlimit','stroke-dasharray','stroke-dashoffset','opacity'];
+                    var nodes = liveSvg.querySelectorAll('path,rect,circle,ellipse,polygon,polyline,line,text,tspan,g,use');
+                    for (var ni = 0; ni < nodes.length; ni++) {
+                        var el = nodes[ni];
+                        var cs = window.getComputedStyle(el);
+                        for (var si = 0; si < SP.length; si++) {
+                            var v = cs.getPropertyValue(SP[si]);
+                            if (v && v !== '' && v !== 'normal') el.setAttribute(SP[si], v.trim());
+                        }
+                        el.removeAttribute('style');
+                        el.removeAttribute('class');
+                    }
+                    var styEls = liveSvg.querySelectorAll('style');
+                    for (var sti = 0; sti < styEls.length; sti++) styEls[sti].parentNode && styEls[sti].parentNode.removeChild(styEls[sti]);
+                    var inner = liveSvg.innerHTML;
+                    document.body.removeChild(holder); holder = null;
                     if (!inner || !inner.trim()) return null;
-                    // ID 네임스페이스 — 조각 간 ID 충돌 방지 (id="x" / url(#x) / href="#x")
+                    // 2) ID 네임스페이스 — 조각 간 defs/gradient/clip ID 충돌 방지 (id="x" / url(#x) / url("#x") / href="#x")
                     var prefix = 'sv' + uid + '_';
                     var ids = [];
                     inner.replace(/\bid\s*=\s*"([^"]+)"/g, function(m, id){ if (ids.indexOf(id) < 0) ids.push(id); return m; });
                     ids.forEach(function(id){
                         var safe = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         inner = inner.replace(new RegExp('id\\s*=\\s*"' + safe + '"', 'g'), 'id="' + prefix + id + '"');
-                        inner = inner.replace(new RegExp('url\\(\\s*#' + safe + '\\s*\\)', 'g'), 'url(#' + prefix + id + ')');
+                        inner = inner.replace(new RegExp('url\\(\\s*["\\\']?#' + safe + '["\\\']?\\s*\\)', 'g'), 'url(#' + prefix + id + ')');
                         inner = inner.replace(new RegExp('(xlink:href|href)\\s*=\\s*"#' + safe + '"', 'g'), '$1="#' + prefix + id + '"');
                     });
                     var scX = w / vw, scY = h / vh;
                     var tr = 'translate(' + _fmt(x) + ' ' + _fmt(y) + ') scale(' + _fmt(scX) + ' ' + _fmt(scY) + ')';
                     if (vx || vy) tr += ' translate(' + _fmt(-vx) + ' ' + _fmt(-vy) + ')';
                     return '<g transform="' + tr + '">' + inner + '</g>';
-                } catch(e) { console.warn('[_buildInlineSvgGroup]', e); return null; }
+                } catch(e) {
+                    console.warn('[_buildInlineSvgGroup]', e);
+                    try { if (holder && holder.parentNode) holder.parentNode.removeChild(holder); } catch(_h){}
+                    return null;
+                }
             }
 
             // zIndex 정렬
@@ -7732,7 +7761,8 @@ function scrollHotdeal(gridId, dir) {
                                     // 2026-06-28: 글씨 테두리 — 같은 글자 path 를 2×두께 stroke(뒤) + fill(앞) 2겹으로. 글자 모양 보존(서체 안 깨짐).
                                     var _stswO = (it.textStrokeW || 0);
                                     if (_stswO > 0) {
-                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>');
+                                        var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '') + '/>');
                                     }
                                     parts.push('<path d="' + _pdT + '" fill="' + _esc(it.fill || '#000') + '"/>');
                                     outlinedOk = true;
@@ -7750,7 +7780,8 @@ function scrollHotdeal(gridId, dir) {
                                 + '>' + _esc(line.replace(/\s+$/, '')) + '</tspan>';   // 줄 끝 공백 제거 (중앙정렬 밀림 방지)
                         }).join('');
                         var _stswF = (it.textStrokeW || 0);
-                        var _strokeAttr = (_stswF > 0) ? ('stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswF) + '" paint-order="stroke" stroke-linejoin="round" ') : '';
+                        var _joinF = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+                        var _strokeAttr = (_stswF > 0) ? ('stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswF) + '" paint-order="stroke" stroke-linejoin="' + _joinF + '" ') : '';
                         parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
                             + 'font-weight="' + fw + '" '
                             + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
@@ -8168,6 +8199,7 @@ function scrollHotdeal(gridId, dir) {
                 + '<input type="number" min="0" max="40" step="0.5" value="' + (it.textStrokeW || 0) + '" data-mp="textStrokeW" style="width:42px;" title="' + T('me_prop_textstrokew','테두리 두께') + '">'
                 + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="-0.5" title="−0.5"><i class="fa-solid fa-caret-down"></i></button>'
                 + '<button type="button" class="me-prop-btn" data-step="textStrokeW" data-delta="0.5" title="+0.5"><i class="fa-solid fa-caret-up"></i></button>'
+                + '<button type="button" class="me-prop-btn" data-action="strokeJoin" style="min-width:26px; font-size:11px; font-weight:700;" title="' + T('me_prop_strokejoin','테두리 모서리 둥글게/각지게') + '">' + ((it.textStrokeJoin === 'miter') ? T('me_join_miter','각') : T('me_join_round','둥')) + '</button>'
             + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
@@ -8355,6 +8387,12 @@ function scrollHotdeal(gridId, dir) {
                 else if (act === 'qredit' && window._meAddQR) window._meAddQR(it);
                 // 2026-06-27: 그림 변경 — 요소 고르기 / 내사진 누끼 교체
                 else if (act === 'changeImage' && window._meChangeImage) window._meChangeImage(it);
+                // 2026-06-28: 글씨 테두리 모서리 — 둥글게(round) ↔ 각지게(miter) 토글
+                else if (act === 'strokeJoin') {
+                    it.textStrokeJoin = (it.textStrokeJoin === 'miter') ? 'round' : 'miter';
+                    _meSyncItemDisplay(it);
+                    _meRenderProps(it);
+                }
                 // 2026-06-25: 90° 회전 — 선택 객체를 시계방향 90도씩
                 else if (act === 'rot90') {
                     _meSnapshot();
