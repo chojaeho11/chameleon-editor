@@ -7546,6 +7546,9 @@ html, body { background: #ffffff !important; }
         if (top === '44444') return true;                               // 광고인쇄
         if (typeof _soShouldShowCpOptions === 'function' && _soShouldShowCpOptions(p)) return true;  // 상업인쇄물
         if (typeof _soIsWallProduct === 'function' && _soIsWallProduct(p)) return true;              // 가벽
+        // 2026-06-28: 스티커·전단·리플렛도 평면인쇄 그룹에 포함
+        if (typeof _soIsStickerProduct === 'function' && _soIsStickerProduct(p)) return true;
+        if (typeof _soIsLeafletProduct === 'function' && _soIsLeafletProduct(p)) return true;
         return false;
     }
     window._soIsFlatPrintProduct = _soIsFlatPrintProduct;
