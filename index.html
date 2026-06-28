@@ -7805,6 +7805,20 @@ function scrollHotdeal(gridId, dir) {
                                 var _descR = Math.abs(fontObj.descender || 0) / _upm;
                                 var _lhMul = (it.lineHeight || 1.2);
                                 var ty0m = it.y + (_lhMul * fs - (_ascR + _descR) * fs) / 2 + _ascR * fs;
+                                // 2026-06-28: 중앙/우측 정렬 — it.w(박스폭) 대신 실제 콘텐츠 폭(가장 넓은 줄) 기준.
+                                //   흘림/이텔릭체는 글씨폭이 박스보다 좁아 it.w/2 로 잡으면 우측으로 밀림(화면=콘텐츠 기준).
+                                if (anchor === 'middle' || anchor === 'end') {
+                                    var _widestW = 0;
+                                    for (var _wi = 0; _wi < lines.length; _wi++) {
+                                        var _dlw = String(lines[_wi]).replace(/\s+$/, '');
+                                        if (!_dlw) continue;
+                                        var _lww = fontObj.getAdvanceWidth(_dlw, fs);
+                                        if (ls) _lww += ls * Math.max(0, _dlw.length - 1);
+                                        if (_lww > _widestW) _widestW = _lww;
+                                    }
+                                    var _padXo = 6 / (me.wScale || 1);
+                                    tx = (anchor === 'middle') ? (it.x + _padXo + _widestW / 2) : (it.x + _padXo + _widestW);
+                                }
                                 var pathD = '';
                                 var linePaths = [];   // 줄별 [글자 path...] — 줄을 각각 스티커로 그려 아래 줄이 위 줄 위에 겹치게.
                                 for (var li = 0; li < lines.length; li++) {
