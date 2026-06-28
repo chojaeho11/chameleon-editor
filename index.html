@@ -6584,6 +6584,17 @@ function scrollHotdeal(gridId, dir) {
             var fwReq = it.fontWeight || 400;
             var fwResolved = (typeof _meResolveWeight === 'function') ? _meResolveWeight(it.fontFamily, fwReq) : fwReq;
             it.el.style.fontWeight = String(fwResolved);
+            // 2026-06-28: 글씨 테두리(stroke) — paint-order:stroke fill 로 글자 모양 보존(서체 안 깨짐).
+            //   두께는 2×(centered) → 보이는 외곽 테두리 = textStrokeW. 표시 px 는 wScale 반영.
+            var _tsw = (it.textStrokeW || 0);
+            if (_tsw > 0 && it.textStroke) {
+                it.el.style.webkitTextStrokeWidth = (2 * _tsw * me.wScale) + 'px';
+                it.el.style.webkitTextStrokeColor = it.textStroke;
+                it.el.style.paintOrder = 'stroke fill';
+            } else {
+                it.el.style.webkitTextStrokeWidth = '0';
+                it.el.style.paintOrder = '';
+            }
             // 2026-06-15: 텍스트 박스는 글자에 맞춰 줄어들도록 width:max-content, 최대폭은 it.w 로 캡.
             //   결과: 선택 핸들이 글자 끝에 붙음 (우측으로 빈 공간 없음). 글자가 길어지면 it.w 까지 늘다가 그 이후엔 wrap.
             // 2026-06-16: 사용자가 edge 핸들(n/s/e/w)로 명시적 리사이즈 한 경우 — 고정 width/height 사용.
@@ -7238,6 +7249,16 @@ function scrollHotdeal(gridId, dir) {
                             wrapped.forEach(function(w){ allLines.push(w); });
                         });
                     }
+                    // 2026-06-28: 글씨 테두리 — strokeText(뒤, 2×두께 round) 후 fillText(앞). 글자 모양 보존.
+                    var _ctsw = (it.textStrokeW || 0);
+                    if (_ctsw > 0 && it.textStroke) {
+                        ctx.save();
+                        ctx.lineWidth = 2 * _ctsw;
+                        ctx.strokeStyle = it.textStroke;
+                        ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+                        allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
+                        ctx.restore();
+                    }
                     allLines.forEach(function(ln, idx) {
                         ctx.fillText(ln, tx, ty + idx * lh);
                     });
@@ -7677,7 +7698,13 @@ function scrollHotdeal(gridId, dir) {
                                     }
                                 }
                                 if (pathD.trim()) {
-                                    parts.push('<path d="' + pathD.trim() + '" fill="' + _esc(it.fill || '#000') + '"/>');
+                                    var _pdT = pathD.trim();
+                                    // 2026-06-28: 글씨 테두리 — 같은 글자 path 를 2×두께 stroke(뒤) + fill(앞) 2겹으로. 글자 모양 보존(서체 안 깨짐).
+                                    var _stswO = (it.textStrokeW || 0);
+                                    if (_stswO > 0 && it.textStroke) {
+                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke) + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>');
+                                    }
+                                    parts.push('<path d="' + _pdT + '" fill="' + _esc(it.fill || '#000') + '"/>');
                                     outlinedOk = true;
                                 }
                             } else {
@@ -7692,9 +7719,12 @@ function scrollHotdeal(gridId, dir) {
                                 + (li === 0 ? 'y="' + _fmt(ty0) + '"' : 'dy="' + _fmt(lh) + '"')
                                 + '>' + _esc(line.replace(/\s+$/, '')) + '</tspan>';   // 줄 끝 공백 제거 (중앙정렬 밀림 방지)
                         }).join('');
+                        var _stswF = (it.textStrokeW || 0);
+                        var _strokeAttr = (_stswF > 0 && it.textStroke) ? ('stroke="' + _esc(it.textStroke) + '" stroke-width="' + _fmt(2 * _stswF) + '" paint-order="stroke" stroke-linejoin="round" ') : '';
                         parts.push('<text font-family="' + fam + '" font-size="' + _fmt(fs) + '" '
                             + 'font-weight="' + fw + '" '
                             + (ls ? 'letter-spacing="' + _fmt(ls) + '" ' : '')
+                            + _strokeAttr
                             + 'fill="' + _esc(it.fill || '#000') + '" text-anchor="' + anchor + '">'
                             + tspans + '</text>');
                     }
@@ -8100,6 +8130,12 @@ function scrollHotdeal(gridId, dir) {
                 + '<span data-step-val="lineHeight" style="min-width:30px; text-align:center; font-size:12px; font-weight:700;">' + _lhCur.toFixed(2) + '</span>'
                 + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="-0.1" title="−0.1"><i class="fa-solid fa-caret-down"></i></button>'
                 + '<button type="button" class="me-prop-btn" data-step="lineHeight" data-delta="0.1" title="+0.1"><i class="fa-solid fa-caret-up"></i></button>'
+            + '</span>';
+            // 2026-06-28: 글씨 테두리 (색 + 두께). 두께 0 = 없음.
+            html += '<span class="me-prop-group" style="gap:3px;" title="' + T('me_prop_textstroke','글씨 테두리') + '">'
+                + '<label>' + T('me_prop_textstroke','테두리') + '</label>'
+                + '<input type="color" value="' + (it.textStroke || '#ffffff') + '" data-mp="textStroke">'
+                + '<input type="number" min="0" max="20" step="0.5" value="' + (it.textStrokeW || 0) + '" data-mp="textStrokeW" style="width:46px;" title="' + T('me_prop_textstrokew','테두리 두께') + '">'
             + '</span>';
         } else if (it.type === 'shape') {
             // 2026-06-15: 색상은 상단 chip 으로 통합 — props 의 채움 색은 제거. 테두리/두께만 유지.
