@@ -7450,8 +7450,14 @@ function scrollHotdeal(gridId, dir) {
             c.textBaseline = 'top';
             c.textAlign = (it.textAlign === 'center') ? 'center' : (it.textAlign === 'right') ? 'right' : 'left';
             var padX = 6 / (me.wScale || 1), padY = 4 / (me.wScale || 1);
-            var tx = it.x + padX;
-            if (c.textAlign === 'center') tx = it.x + (it.w || 0) / 2; else if (c.textAlign === 'right') tx = it.x + (it.w || 0) - padX;
+            // 콘텐츠(가장 넓은 줄 advance) 기준 정렬 — it.w 가 폰트 변경 등으로 실제 글씨폭과 달라도 화면(DOM max-content)과 일치.
+            //   (이탤릭/스크립트체에서 it.w 가 옛 폰트 기준이라 중앙이 우측으로 밀리던 문제 보정.)
+            var _widestW = 0;
+            lines.forEach(function(ln){ var _dl = String(ln).replace(/\s+$/, ''); if (!_dl) return; var _mw = c.measureText(_dl).width; if (_mw > _widestW) _widestW = _mw; });
+            var tx;
+            if (c.textAlign === 'center') tx = it.x + padX + _widestW / 2;
+            else if (c.textAlign === 'right') tx = it.x + padX + _widestW;
+            else tx = it.x + padX;
             var ty = it.y + padY + (lh - fs) / 2;   // 메인 PNG export 와 동일 baseline → 화면과 일치
             lines.forEach(function(ln, idx){
                 var yy = ty + idx * lh;
