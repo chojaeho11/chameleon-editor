@@ -9605,7 +9605,7 @@ function scrollHotdeal(gridId, dir) {
         if (!any || !isFinite(minX)) return;
         var bw = maxX - minX, bh = maxY - minY;
         if (bw <= 0 || bh <= 0) return;
-        var scale = Math.min(me.natW / bw, me.natH / bh);   // contain — 맞는 쪽으로 가득
+        var scale = Math.max(me.natW / bw, me.natH / bh);   // cover — 여백 없이 가득 (넘치는 부분은 잘림)
         if (!isFinite(scale) || scale <= 0) return;
         var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;   // 현재 bbox 중심
         var ncx = me.natW / 2, ncy = me.natH / 2;             // 캔버스 중심
