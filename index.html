@@ -7255,7 +7255,7 @@ function scrollHotdeal(gridId, dir) {
                     var _ctsw = (it.textStrokeW || 0);
                     if (_ctsw > 0) {
                         ctx.save();
-                        ctx.lineWidth = 2 * _ctsw;
+                        ctx.lineWidth = 2.5 * _ctsw;
                         ctx.strokeStyle = it.textStroke || '#000000';
                         ctx.lineJoin = (it.textStrokeJoin === 'miter') ? 'miter' : 'round'; ctx.miterLimit = (it.textStrokeJoin === 'miter') ? 6 : 2;
                         allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
@@ -7266,7 +7266,7 @@ function scrollHotdeal(gridId, dir) {
                     });
                     if (_ctsw > 0) {
                         ctx.save();
-                        ctx.lineWidth = 0.7 * _ctsw;
+                        ctx.lineWidth = 1.2 * _ctsw;
                         ctx.strokeStyle = it.fill || '#1d1d1f';
                         ctx.lineJoin = 'round'; ctx.lineCap = 'round';
                         allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
@@ -7789,9 +7789,10 @@ function scrollHotdeal(gridId, dir) {
                                         var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
                                         var _mlim = (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '');
                                         // 1) 흰 테두리 — 합친 path 한 번(외곽 실루엣 하나, per-glyph 이중 테두리 방지). 안쪽 내부선은 아래 fill 이 덮음.
-                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + _mlim + '/>');
-                                        // 2) fill — 글자별 개별 path(검정네모 방지) + 같은 색 stroke 0.7W 로 살짝 부풀려 글자 사이 흰 슬리버만 메움.
-                                        var _fillTail = '" fill="' + _fillC + '" stroke="' + _fillC + '" stroke-width="' + _fmt(0.7 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+                                        //    fill 을 1.2W 부풀리므로 흰 두께를 2.5W 로 키워 외곽 테두리 두께(~0.65W) 유지.
+                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2.5 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + _mlim + '/>');
+                                        // 2) fill — 글자별 개별 path(검정네모 방지) + 같은 색 stroke 1.2W 로 부풀려 글자 사이 위쪽 틈(notch)까지 fill 색으로 메움.
+                                        var _fillTail = '" fill="' + _fillC + '" stroke="' + _fillC + '" stroke-width="' + _fmt(1.2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>';
                                         _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _fillTail); });
                                     } else {
                                         _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
