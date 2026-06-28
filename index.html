@@ -7597,30 +7597,16 @@ function scrollHotdeal(gridId, dir) {
                 if (it.type === 'image' && it.src) {
                     var dataUrl = await _imgToDataUrl(it.src);
                     var _isSvgImg = /^data:image\/svg\+xml/i.test(dataUrl || '') || /\.svg(\?|$)/i.test(String(it.src));
-                    var _emitted = false;
-                    // PDF 경로 + SVG 이미지 → 벡터(nested svg)로 inline. 업로드 프레임도 벡터 그대로 PDF 출력.
-                    if (rasterize && _isSvgImg) {
-                        try {
-                            var _svgTxt = await _resolveSvgText(it.src, dataUrl);
-                            var _nested = _svgTxt ? _buildNestedSvg(_svgTxt, it.x, it.y, it.w, it.h) : null;
-                            if (_nested) { parts.push(_nested); _emitted = true; }
-                        } catch(_se) { console.warn('[svg inline export]', _se); }
-                        if (!_emitted) {
-                            // 인라인 실패 시 — PNG 래스터화 폴백 (svg2pdf 가 SVG-in-image 못 그리므로)
-                            var _png = await _imgToPng(dataUrl, it.w, it.h);
-                            parts.push('<image href="' + _esc(_png || dataUrl || it.src) + '" '
-                                + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
-                                + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                                + 'preserveAspectRatio="none"/>');
-                            _emitted = true;
-                        }
+                    // 2026-06-28: PDF(svg2pdf)는 <image> 속 SVG 를 못 그림. 벡터 inline(nested svg)은 분리된 조각들의
+                    //   defs/그라데이션 ID 충돌·위치 오류로 색이 빠지고 좌표가 틀어지므로, SVG 이미지는 PNG 로 래스터화해 넣음.
+                    if (rasterize && _isSvgImg && dataUrl) {
+                        var _png = await _imgToPng(dataUrl, it.w, it.h);
+                        if (_png) dataUrl = _png;
                     }
-                    if (!_emitted) {
-                        parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
-                            + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
-                            + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                            + 'preserveAspectRatio="none"/>');
-                    }
+                    parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
+                        + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
+                        + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
+                        + 'preserveAspectRatio="none"/>');
                 } else if (it.type === 'shape') {
                     var fill = _esc(it.fill || '#000000');
                     var stroke = it.stroke ? ' stroke="' + _esc(it.stroke) + '" stroke-width="' + _fmt(it.strokeWidth || 1) + '"' : '';
