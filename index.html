@@ -9592,22 +9592,30 @@ function scrollHotdeal(gridId, dir) {
             _meSyncItemDisplay(it);
         });
     };
-    // 2026-06-28: 디자인(모든 item)을 캔버스에 가득 차게 — 맞는 쪽(가로/세로)으로 스케일 업 후 중앙. 템플릿 로드 시 사용.
-    window._meFitDesignToCanvas = function() {
+    // 2026-06-28: 디자인을 캔버스에 가득 차게(cover) + 중앙. 템플릿 로드 시 사용.
+    //   srcW/srcH(템플릿이 디자인된 캔버스 크기)가 주어지면 그 기준으로 스케일 → 대지 밖 요소(bleed)도 비율 보존.
+    //   없으면(옛 템플릿) bbox 기준 폴백.
+    window._meFitDesignToCanvas = function(srcW, srcH) {
         if (!me.items || !me.items.length) return;
-        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, any = false;
-        me.items.forEach(function(it){
-            if (!it || it._type === 'meta' || it.el == null) return;
-            any = true;
-            minX = Math.min(minX, it.x); minY = Math.min(minY, it.y);
-            maxX = Math.max(maxX, it.x + (it.w || 0)); maxY = Math.max(maxY, it.y + (it.h || 0));
-        });
-        if (!any || !isFinite(minX)) return;
-        var bw = maxX - minX, bh = maxY - minY;
+        var cx, cy, bw, bh;
+        if (srcW > 0 && srcH > 0) {
+            // 템플릿 캔버스 == 현재 캔버스(±1%)면 그대로 둠 (불필요한 재스케일·bleed 왜곡 방지)
+            if (Math.abs(srcW - me.natW) <= me.natW * 0.01 && Math.abs(srcH - me.natH) <= me.natH * 0.01) return;
+            cx = srcW / 2; cy = srcH / 2; bw = srcW; bh = srcH;
+        } else {
+            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, any = false;
+            me.items.forEach(function(it){
+                if (!it || it._type === 'meta' || it.el == null) return;
+                any = true;
+                minX = Math.min(minX, it.x); minY = Math.min(minY, it.y);
+                maxX = Math.max(maxX, it.x + (it.w || 0)); maxY = Math.max(maxY, it.y + (it.h || 0));
+            });
+            if (!any || !isFinite(minX)) return;
+            cx = (minX + maxX) / 2; cy = (minY + maxY) / 2; bw = maxX - minX; bh = maxY - minY;
+        }
         if (bw <= 0 || bh <= 0) return;
         var scale = Math.max(me.natW / bw, me.natH / bh);   // cover — 여백 없이 가득 (넘치는 부분은 잘림)
         if (!isFinite(scale) || scale <= 0) return;
-        var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;   // 현재 bbox 중심
         var ncx = me.natW / 2, ncy = me.natH / 2;             // 캔버스 중심
         me.items.forEach(function(it){
             if (!it || it._type === 'meta' || it.el == null) return;
@@ -9650,17 +9658,20 @@ function scrollHotdeal(gridId, dir) {
             // v542: me.items 그대로 복원 (admin 의 에디터에서 만든 디자인 통째로)
             // 2026-06-18 v554: 메타 슬롯 처리 — bg color 복원
             var _hasMetaBg = false;
+            var _tplSrcW = 0, _tplSrcH = 0;
             slots.forEach(function(saved){
                 if (saved && saved._type === 'meta') {
                     if (saved.bg && typeof window._meSetBg === 'function') {
                         try { window._meSetBg(saved.bg); _hasMetaBg = true; } catch(_){}
                     }
+                    if (saved.natW) _tplSrcW = saved.natW;
+                    if (saved.natH) _tplSrcH = saved.natH;
                     return;
                 }
                 _meRestoreTemplateItem(saved);
             });
-            // 2026-06-28: 로드한 디자인을 현재 캔버스에 가득 차게 (맞는 쪽으로 스케일 업 + 중앙).
-            try { window._meFitDesignToCanvas(); } catch(_ce) {}
+            // 2026-06-28: 로드한 디자인을 현재 캔버스에 가득 차게 (cover). 템플릿 캔버스 크기 기준이라 대지 밖 요소(bleed) 보존.
+            try { window._meFitDesignToCanvas(_tplSrcW, _tplSrcH); } catch(_ce) {}
             // 2026-06-18 v558: 메타 슬롯이 없는 옛 템플릿 — 썸네일 PNG 모서리 픽셀 샘플링하여 bg 추정.
             if (!_hasMetaBg && (tpl.thumbnail_url || tpl.background_url)) {
                 var _smpImg = new Image();
@@ -15609,7 +15620,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./login.js?v=438"></script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
-<script src="/simple_order.js?v=669"></script>
+<script src="/simple_order.js?v=670"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=636"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->

@@ -13985,8 +13985,10 @@ html, body { background: #ffffff !important; }
             // 2026-06-27: 코드 입력 비우면 현재 제품 코드 자동 적용 — 템플릿이 그 제품(사이즈)에만 노출되도록.
             if (!code) code = (state.product && state.product.code) || null;
             // 2026-06-18 v554: me.bg (캔버스 배경색) 도 첫번째 메타 슬롯으로 보존.
+            // 2026-06-28: 디자인된 캔버스 크기(natW/natH)도 저장 — 로드 시 이 기준으로 스케일해야 bleed(대지 밖 요소)가 보존됨.
             var bgColor = (window.me && window.me.bg) || '#ffffff';
-            serialized = [{ _type: 'meta', bg: bgColor }].concat(serialized);
+            var _mNatW = (window.me && window.me.natW) || 0, _mNatH = (window.me && window.me.natH) || 0;
+            serialized = [{ _type: 'meta', bg: bgColor, natW: _mNatW, natH: _mNatH }].concat(serialized);
             // v664: 디자이너 모드는 검색어 → 5개 언어 번역 결과를 keywords JSONB 에 저장
             var keywordsObj = null;
             if (isDesigner && window._soTplCurrentTranslations) {
