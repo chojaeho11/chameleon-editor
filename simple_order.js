@@ -2502,7 +2502,7 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-01: 광고인쇄 배송 안내 배너 — isAdPrint 일 때만 노출 (_soApplyAdPrintLayout 에서 토글) -->
           <div id="soAdShipNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:10px; font-size:12px; font-weight:700; color:#1e40af; line-height:1.5; display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
-            <span>${tr('주문 합계 <b>10만원 이상 무료배송</b> · 미만 시 배송비 <b>1만원</b> 자동 적용', 'ご注文合計が<b>10万円以上で送料無料</b>。10万円未満は<b>送料1万円</b>が自動で加算されます。', 'Free shipping on orders over ₩100,000. Under ₩100,000, a ₩10,000 shipping fee is added automatically.')}</span>
+            <span>${tr('기본 <b>포장+배송비 1만원</b>이 자동 적용됩니다 (카트 묶음 시 1건만)', '基本 <b>梱包+配送費 1,000円</b> が自動で加算されます (まとめ買いは1件のみ)', 'A base <b>$10 packing + shipping fee</b> applies automatically (one per cart)')}</span>
           </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
@@ -2597,10 +2597,10 @@ html, body { background: #ffffff !important; }
               ${tr('실사출력 주문 안내', '実写出力 ご案内', 'Real-Print Order Info')}
             </div>
             <div>• <b>${tr('판매 단위', '販売単位', 'Sold by')}</b>: ${tr('1미터 단위 (수량 = m)', '1メートル単位 (数量 = m)', '1 meter unit (qty = m)')}</div>
-            <div>• <b>${tr('돔보커팅 비용', 'トンボカット代', 'Register cut fee')}</b>: <b style="color:#16a34a;">${tr('무료', '無料', 'Free')}</b></div>
-            <div>• <b>${tr('칼선 레이어', 'カットラインレイヤー', 'Cut-line layer')}</b>: ${tr('별도로 분리해서 접수해주세요', '別レイヤーで分けてご提出ください', 'Please submit on a separate layer')}</div>
+            <div>• <b>${tr('돔보커팅 비용', 'トンボカット代', 'Register cut fee')}</b>: <b style="color:#dc2626;">${tr('무료', '無料', 'Free')}</b></div>
+            <div>• <b>${tr('돔보칼선 레이어', 'トンボ・カットラインレイヤー', 'Register & cut-line layer')}</b>: ${tr('별도로 분리해서 작업해주세요', '別レイヤーで分けて作成してください', 'Please keep on a separate layer')}</div>
             <div>• <b>${tr('1제곱미터 이하', '1平方メートル以下', 'Under 1㎡')}</b>: ${tr('1제곱미터 가격으로 계산됩니다', '1㎡価格として計算されます', 'charged at 1㎡ rate')}</div>
-            <div>• <b>${tr('배송비', '配送料', 'Shipping')}</b>: ${tr('10만원 미만 1만원 · 10만원 이상 무료배송', '10万円未満は送料1万円 · 10万円以上で送料無料', 'Under ₩100K: ₩10K · ₩100K+ : free')}</div>
+            <div>${tr('실사출력물은 포장+배송비용으로 기본 <b>1만원</b>이 부가됩니다', '実写出力物は梱包+配送費として基本 <b>1,000円</b> が加算されます', 'A base <b>$10</b> packing + shipping fee applies to real-print items')}</div>
           </div>
         </div>
 
@@ -4681,10 +4681,10 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 허니콤보드 카테고리 family 판정 — 가벽/등신대/박스/자유인쇄커팅/원판/종이매대 외 전부 무료
         var _isHcFamilyDetail = !!(state.isWall || state.isBox || state.isStandee || state.isCutPrint || state.isRawBoard || state.isHoneycomb || state.isPaperDisplay || state.isAcrylicFamily);
         showRow('soShipRow', shipFee > 0 || !!state.bundleShipping || !!state.isAdPrint || !!state.isCutPrint || !_isHcFamilyDetail);
-        if (state.isAdPrint) {
-            // 2026-06-12: 광고인쇄 — 무료배송 (허니콤보드 외 카테고리 전 제품 무료)
-            setText('soShipLabel', tr('배송', '配送', 'Shipping'));
-            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+        if (state.isAdPrint || state.isRealPrint) {
+            // 2026-06-28: 광고인쇄/실사출력 — 기본 포장+배송비 1만원 (카트 묶음 시 0 → '묶음' 표시)
+            setText('soShipLabel', tr('포장+배송', '梱包+配送', 'Pack+Ship'));
+            setText('soShipAmount', shipFee > 0 ? ('+' + fmtPrice(shipFee)) : tr('묶음배송', 'まとめ配送', 'Bundled'));
         } else if (state.isBizCard || state.isSticker) {
             // 2026-06-12: 명함/스티커 — 무료배송
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
@@ -7995,14 +7995,15 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-12: 사용자 요청 — 허니콤보드 카테고리 외 전 제품 무료배송.
+        // 2026-06-28: 광고인쇄 카테고리(실사출력·광고인쇄) — 기본 포장+배송비 1만원(=10000 KRW; JP 1000엔·US $10 환율 자동).
+        //   카트 묶음 시 가장 큰 배송비 1건만 부과되는 기존 로직 그대로 적용.
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
-            return 0;
+            return 10000;
         }
         if (state.isAdPrint) {
             state._shipUpgradeReason = null;
-            return 0;
+            return 10000;
         }
         // 2026-06-12: 배너 family (거치대 포함/미포함 모두) — 무료배송
         if (state.isBannerOutput) {
