@@ -6628,6 +6628,8 @@ function scrollHotdeal(gridId, dir) {
         me.natW = w; me.natH = h;
         $('meStage').style.background = me.bg;
         _meFitStage();
+        // 2026-06-28: 사이즈 변경 후 디자인을 캔버스 중앙으로 (위로 붙던 문제). 연속 입력(타이핑) 시 튀지 않게 debounce.
+        try { clearTimeout(me._centerT); me._centerT = setTimeout(function(){ try { if (window._meCenterDesign) window._meCenterDesign(); } catch(_) {} }, 220); } catch(_) {}
     }
     // 2026-06-14: simple_order 모달에서 호출하기 위해 window 노출
     window._meSetSize = _meSetSize;
@@ -9567,6 +9569,29 @@ function scrollHotdeal(gridId, dir) {
     // 템플릿 로드 — 두 가지 포맷 지원:
     //   (a) v542+ "items" 포맷: slots = [me.items 직렬화] — 미니에디터 전체 복원.
     //   (b) v539 "slot" 포맷: slots = [{type:'text'/'image', x, y, w, h, ...}] — 단순 슬롯.
+    // 2026-06-28: 디자인(모든 item) 의 bounding box 를 캔버스 중앙으로 이동 — 템플릿 로드/사이즈 변경 시 위로 붙던 문제 해결.
+    window._meCenterDesign = function() {
+        if (!me.items || !me.items.length) return;
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, any = false;
+        me.items.forEach(function(it){
+            if (!it || it._type === 'meta' || it.el == null) return;
+            any = true;
+            minX = Math.min(minX, it.x);
+            minY = Math.min(minY, it.y);
+            maxX = Math.max(maxX, it.x + (it.w || 0));
+            maxY = Math.max(maxY, it.y + (it.h || 0));
+        });
+        if (!any || !isFinite(minX)) return;
+        var bw = maxX - minX, bh = maxY - minY;
+        var dx = (me.natW - bw) / 2 - minX;
+        var dy = (me.natH - bh) / 2 - minY;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+        me.items.forEach(function(it){
+            if (!it || it._type === 'meta' || it.el == null) return;
+            it.x += dx; it.y += dy;
+            _meSyncItemDisplay(it);
+        });
+    };
     window._meLoadTemplate = function(tpl) {
         if (!tpl) return;
         // 2026-06-19 v623: 템플릿 사용 추적 — 주문 시 SVG 출력 + 메타 첨부에 사용.
@@ -9606,6 +9631,8 @@ function scrollHotdeal(gridId, dir) {
                 }
                 _meRestoreTemplateItem(saved);
             });
+            // 2026-06-28: 로드한 디자인을 현재 캔버스 중앙으로 (다른 사이즈 제품에서 위로 붙던 문제 해결).
+            try { window._meCenterDesign(); } catch(_ce) {}
             // 2026-06-18 v558: 메타 슬롯이 없는 옛 템플릿 — 썸네일 PNG 모서리 픽셀 샘플링하여 bg 추정.
             if (!_hasMetaBg && (tpl.thumbnail_url || tpl.background_url)) {
                 var _smpImg = new Image();
@@ -9698,6 +9725,9 @@ function scrollHotdeal(gridId, dir) {
         me.stage.appendChild(el);
         // _isTemplateSlot 제거 — 일반 item 으로 복원
         var it = Object.assign({}, saved, { el: el });
+        // 2026-06-28: 배경 잠금 제거 — 이전에 저장된 템플릿의 _isBackground 플래그도 해제 (자유 편집).
+        it._isBackground = false; it._isTemplateSlot = false;
+        if (el.classList) el.classList.remove('me-bg-locked');
         if (saved.type === 'text') {
             el.textContent = saved.text || '';
             try { if (typeof _meLoadFont === 'function') _meLoadFont(saved.fontFamily, null); } catch(_){}
@@ -10207,13 +10237,7 @@ function scrollHotdeal(gridId, dir) {
                                         window._meAddImage(dataUrl, { explicitPos: { x: vx, y: vy, w: vw, h: vh }, toBack: true }, function(addedItem){
                                             if (addedItem) {
                                                 visualItemsByChildIdx[capturedIdx] = addedItem;
-                                                // 2026-06-18 v616: 시각 잔여물은 직접 클릭/드래그 차단 → 위에 있는 텍스트의 클릭이 절대 안 가로채임.
-                                                //   배경풀기 버튼으로 한꺼번에 해제됨 (배경 잠금과 동일 메커니즘).
-                                                addedItem._isBackground = true;
-                                                if (addedItem.el) {
-                                                    addedItem.el.classList.add('me-bg-locked');
-                                                    addedItem.el.style.cursor = 'default';
-                                                }
+                                                // 2026-06-28: 배경 잠금 제거 — 템플릿/SVG 의 배경도 자유롭게 선택·편집 가능하게.
                                                 console.log('[svg upload] visual added child', capturedIdx, 'size', vw.toFixed(0)+'x'+vh.toFixed(0));
                                             }
                                             _decPending();
@@ -10261,19 +10285,10 @@ function scrollHotdeal(gridId, dir) {
                 tmp.remove();
             }
 
-            // 2026-06-18 v614: 비동기 이미지 로드가 끝난 후 배경 잠금 적용.
-            //   topChildren[0] 의 visual item 이 있으면 그것을 배경. 없으면 sync 추가된 firstItem (텍스트 등).
+            // 2026-06-28: 배경 잠금 제거 — 더 이상 배경을 잠그지 않음 (모든 요소 자유 편집).
             _onAllLoaded(function(){
-                var bgCandidate = visualItemsByChildIdx[0] || firstItem || me.items[0];
-                if (bgCandidate) {
-                    bgCandidate._isBackground = true;
-                    if (bgCandidate.el) {
-                        bgCandidate.el.style.cursor = 'default';
-                        bgCandidate.el.classList.add('me-bg-locked');
-                    }
-                    _meUpdateUnlockBgBtn();
-                }
-                console.log('[svg upload] split into', added, '/', topChildren.length, 'items; bg locked:', !!bgCandidate, 'me.items:', me.items.length);
+                try { _meUpdateUnlockBgBtn(); } catch(_) {}
+                console.log('[svg upload] split into', added, '/', topChildren.length, 'items (no bg lock); me.items:', me.items.length);
             });
             if (added === 0) {
                 // 전부 실패 — 통째 import 로 폴백
