@@ -7420,6 +7420,57 @@ function scrollHotdeal(gridId, dir) {
         return null;
     }
 
+    // 2026-06-28: 아웃라인 불가 폰트(스크립트체 등) — 그 텍스트 한 객체만 캔버스(브라우저 웹폰트)로 PNG 래스터화.
+    //   svg2pdf 의 <text> 폴백은 웹폰트 없이 + paint-order 무시로 앞글씨가 사라지고 테두리만 남으므로 대체.
+    //   메인 PNG export 와 동일한 baseline(top + (lh-fs)/2) 으로 화면과 일치. 줄별로 [테두리→fill] 그려 아래 줄이 위 줄 덮음.
+    function _meTextItemToPng(it, lines) {
+        try {
+            if (!it || it.type !== 'text') return null;
+            var fs = it.fontSize || 24;
+            var ffRaw = it.fontFamily || 'sans-serif';
+            var ff = ffRaw; if (!/["']/.test(ff) && /\s/.test(ff)) ff = '"' + ff + '"';
+            var fwRaw = it.fontWeight || 400;
+            var fw = (typeof _meResolveWeight === 'function') ? _meResolveWeight(ffRaw, fwRaw) : fwRaw;
+            var lh = fs * (it.lineHeight || 1.2);
+            if (!lines || !lines.length) lines = String(it.text || (it.el && it.el.textContent) || '').split(/\r?\n/);
+            var _ctsw = it.textStrokeW || 0;
+            var pad = Math.ceil(fs * 0.45 + _ctsw * 3);   // 디센더 + 테두리 여유
+            var boxW = (it.w || 100), boxH = Math.max((it.h || fs), lines.length * lh + fs * 0.5);
+            var totalW = boxW + 2 * pad, totalH = boxH + 2 * pad;
+            var S = 3, MAX = 4000;
+            var cw = totalW * S, ch = totalH * S;
+            if (cw > MAX || ch > MAX) { var r = MAX / Math.max(cw, ch); S = S * r; }
+            var cv = document.createElement('canvas');
+            cv.width = Math.max(1, Math.round(totalW * S)); cv.height = Math.max(1, Math.round(totalH * S));
+            var c = cv.getContext('2d');
+            c.scale(S, S); c.translate(pad, pad);   // 박스 로컬 좌표: (it.x,it.y) → (pad,pad)
+            c.font = fw + ' ' + fs + 'px ' + ff;
+            try { c.letterSpacing = (it.letterSpacing || 0) + 'px'; } catch(_le){}
+            c.textBaseline = 'top';
+            c.textAlign = (it.textAlign === 'center') ? 'center' : (it.textAlign === 'right') ? 'right' : 'left';
+            var padX = 6 / (me.wScale || 1), padY = 4 / (me.wScale || 1);
+            var tx = padX;
+            if (c.textAlign === 'center') tx = boxW / 2; else if (c.textAlign === 'right') tx = boxW - padX;
+            var ty = padY + (lh - fs) / 2;
+            var joinP = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+            lines.forEach(function(ln, idx){
+                var yy = ty + idx * lh;
+                var dln = String(ln).replace(/\s+$/, '');
+                if (!dln) return;
+                if (_ctsw > 0) {
+                    c.save();
+                    c.lineWidth = 2 * _ctsw; c.strokeStyle = it.textStroke || '#000000';
+                    c.lineJoin = joinP; c.miterLimit = (joinP === 'miter') ? 6 : 2;
+                    c.strokeText(dln, tx, yy);
+                    c.restore();
+                }
+                c.fillStyle = it.fill || '#1d1d1f';
+                c.fillText(dln, tx, yy);
+            });
+            return { dataUrl: cv.toDataURL('image/png'), x: it.x - pad, y: it.y - pad, w: totalW, h: totalH };
+        } catch(e) { console.warn('[_meTextItemToPng]', e); return null; }
+    }
+
     // 2026-06-26: 텍스트 박스 폭으로 줄바꿈된(엔터 없이 wrap 된) 실제 렌더 줄을 DOM 에서 추출.
     //   PNG export(_meExportPNG) 와 동일한 Range top 점프 감지 → SVG/PDF 도 화면과 동일하게 줄바꿈.
     //   (이전엔 SVG export 가 하드 엔터(\n)만 split 해서, 박스폭 wrap 된 글씨가 PDF 에서 한 줄로 죽 나열됨.)
@@ -7802,6 +7853,15 @@ function scrollHotdeal(gridId, dir) {
                                 console.warn('[outline] font not available, fallback to <text>:', famClean, fw);
                             }
                         } catch(_oe){ console.warn('[outline] failed for text:', famClean, _oe); }
+                    }
+                    // 2026-06-28: PDF(rasterize) 인데 아웃라인 실패 — 그 텍스트만 웹폰트로 PNG 래스터화해 임베드.
+                    //   (svg2pdf <text> 폴백은 웹폰트 없이 + paint-order 무시로 앞글씨 사라지고 테두리만 남음)
+                    if (!outlinedOk && rasterize) {
+                        var _txtPng = _meTextItemToPng(it, lines);
+                        if (_txtPng && _txtPng.dataUrl) {
+                            parts.push('<image href="' + _esc(_txtPng.dataUrl) + '" x="' + _fmt(_txtPng.x) + '" y="' + _fmt(_txtPng.y) + '" width="' + _fmt(_txtPng.w) + '" height="' + _fmt(_txtPng.h) + '" preserveAspectRatio="none"/>');
+                            outlinedOk = true;
+                        }
                     }
                     // 폴백: 일반 <text> 요소
                     if (!outlinedOk) {
