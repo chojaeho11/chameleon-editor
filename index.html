@@ -7251,27 +7251,30 @@ function scrollHotdeal(gridId, dir) {
                             wrapped.forEach(function(w){ allLines.push(w); });
                         });
                     }
-                    // 2026-06-28: 글씨 테두리 — 흰 테두리(뒤, 3×두께) → fill → fill색 stroke(앞, 1×두께)로 글자 사이 슬리버 메움.
+                    // 2026-06-28: 줄별 스티커 — 각 줄을 [흰 테두리 2W → fill → fill색 0.7W] 순으로, 위 줄부터 아래 줄로 그림.
+                    //   아래 줄이 위 줄의 아래 테두리를 덮어 줄 사이 이중 테두리 제거.
                     var _ctsw = (it.textStrokeW || 0);
-                    if (_ctsw > 0) {
-                        ctx.save();
-                        ctx.lineWidth = 2.5 * _ctsw;
-                        ctx.strokeStyle = it.textStroke || '#000000';
-                        ctx.lineJoin = (it.textStrokeJoin === 'miter') ? 'miter' : 'round'; ctx.miterLimit = (it.textStrokeJoin === 'miter') ? 6 : 2;
-                        allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
-                        ctx.restore();
-                    }
+                    var _joinP = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
                     allLines.forEach(function(ln, idx) {
-                        ctx.fillText(ln, tx, ty + idx * lh);
+                        var _yy = ty + idx * lh;
+                        if (_ctsw > 0) {
+                            ctx.save();
+                            ctx.lineWidth = 2 * _ctsw;
+                            ctx.strokeStyle = it.textStroke || '#000000';
+                            ctx.lineJoin = _joinP; ctx.miterLimit = (_joinP === 'miter') ? 6 : 2;
+                            ctx.strokeText(ln, tx, _yy);
+                            ctx.restore();
+                        }
+                        ctx.fillText(ln, tx, _yy);
+                        if (_ctsw > 0) {
+                            ctx.save();
+                            ctx.lineWidth = 0.7 * _ctsw;
+                            ctx.strokeStyle = it.fill || '#1d1d1f';
+                            ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                            ctx.strokeText(ln, tx, _yy);
+                            ctx.restore();
+                        }
                     });
-                    if (_ctsw > 0) {
-                        ctx.save();
-                        ctx.lineWidth = 1.2 * _ctsw;
-                        ctx.strokeStyle = it.fill || '#1d1d1f';
-                        ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-                        allLines.forEach(function(ln, idx) { ctx.strokeText(ln, tx, ty + idx * lh); });
-                        ctx.restore();
-                    }
                     ctx.restore();
                 } else if (it.type === 'image' && it.src) {
                     var rotI = it.rotation || 0;
@@ -7734,13 +7737,14 @@ function scrollHotdeal(gridId, dir) {
                                 var _lhMul = (it.lineHeight || 1.2);
                                 var ty0m = it.y + (_lhMul * fs - (_ascR + _descR) * fs) / 2 + _ascR * fs;
                                 var pathD = '';
-                                var glyphPaths = [];   // 글자별 개별 path — fill 상쇄(구멍) 방지용
+                                var linePaths = [];   // 줄별 [글자 path...] — 줄을 각각 스티커로 그려 아래 줄이 위 줄 위에 겹치게.
                                 for (var li = 0; li < lines.length; li++) {
                                     var line = lines[li];
                                     // 2026-06-28: 줄 끝 공백 제거 — 브라우저는 줄 끝 공백을 hang 시켜 폭에서 제외하는데,
                                     //   export 가 그 공백을 폭에 포함시켜 중앙/우측 정렬 시 글씨가 한쪽으로 밀리던 문제.
                                     var dline = line.replace(/\s+$/, '');
                                     if (!dline) continue;
+                                    var _lineGlyphs = [];
                                     // 줄별 폭 측정 → anchor 보정
                                     var lineW = fontObj.getAdvanceWidth(dline, fs);
                                     if (ls) lineW += ls * Math.max(0, dline.length - 1);
@@ -7757,7 +7761,7 @@ function scrollHotdeal(gridId, dir) {
                                             if (!/\s/.test(ch)) {
                                                 var p = fontObj.getPath(ch, cursorX, lineY, fs);
                                                 var _pdc = p.toPathData(2);
-                                                pathD += _pdc + ' '; glyphPaths.push(_pdc);
+                                                pathD += _pdc + ' '; _lineGlyphs.push(_pdc);
                                             }
                                             cursorX += fontObj.getAdvanceWidth(ch, fs) + ls;
                                         }
@@ -7772,31 +7776,33 @@ function scrollHotdeal(gridId, dir) {
                                             } else {
                                                 var pr = fontObj.getPath(run, cursorX2, lineY, fs);
                                                 var _pdr = pr.toPathData(2);
-                                                pathD += _pdr + ' '; glyphPaths.push(_pdr);
+                                                pathD += _pdr + ' '; _lineGlyphs.push(_pdr);
                                                 cursorX2 += fontObj.getAdvanceWidth(run, fs);
                                             }
                                         }
                                     }
+                                    if (_lineGlyphs.length) linePaths.push(_lineGlyphs);
                                 }
                                 if (pathD.trim()) {
-                                    var _pdT = pathD.trim();
                                     var _fillC = _esc(it.fill || '#000');
-                                    // 2026-06-28: 글씨 테두리 — 합친 path 를 2×두께 stroke(뒤) 한 번, fill 은 글자별 개별 path(앞).
-                                    //   음수 자간으로 글자가 겹쳐도 nonzero winding 상쇄(구멍/검정네모)가 안 생기도록 fill 을 글자별 분리.
                                     var _stswO = (it.textStrokeW || 0);
-                                    var _gps = glyphPaths.length ? glyphPaths : [_pdT];
-                                    if (_stswO > 0) {
-                                        var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
-                                        var _mlim = (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '');
-                                        // 1) 흰 테두리 — 합친 path 한 번(외곽 실루엣 하나, per-glyph 이중 테두리 방지). 안쪽 내부선은 아래 fill 이 덮음.
-                                        //    fill 을 1.2W 부풀리므로 흰 두께를 2.5W 로 키워 외곽 테두리 두께(~0.65W) 유지.
-                                        parts.push('<path d="' + _pdT + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2.5 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + _mlim + '/>');
-                                        // 2) fill — 글자별 개별 path(검정네모 방지) + 같은 색 stroke 1.2W 로 부풀려 글자 사이 위쪽 틈(notch)까지 fill 색으로 메움.
-                                        var _fillTail = '" fill="' + _fillC + '" stroke="' + _fillC + '" stroke-width="' + _fmt(1.2 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>';
-                                        _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _fillTail); });
-                                    } else {
-                                        _gps.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
-                                    }
+                                    if (!linePaths.length) linePaths = [[pathD.trim()]];
+                                    // 2026-06-28: 줄을 각각 "스티커"(테두리+글자)로, 위 줄부터 아래 줄 순서로 그림 →
+                                    //   아래 줄 스티커가 위 줄의 아래쪽 테두리를 덮음 = 줄 사이 이중 테두리 제거(아래 줄 테두리만 남음).
+                                    //   각 줄 안에서는 테두리=합친 path 한 번(이중 방지), fill=글자별(검정네모 방지)+살짝 부풀려(0.7W) 글자 사이 메움.
+                                    var _joinO = (it.textStrokeJoin === 'miter') ? 'miter' : 'round';
+                                    var _mlim = (_joinO === 'miter' ? ' stroke-miterlimit="6"' : '');
+                                    var _fillTail = '" fill="' + _fillC + '" stroke="' + _fillC + '" stroke-width="' + _fmt(0.7 * _stswO) + '" stroke-linejoin="round" stroke-linecap="round"/>';
+                                    linePaths.forEach(function(lineGlyphs){
+                                        if (!lineGlyphs || !lineGlyphs.length) return;
+                                        if (_stswO > 0) {
+                                            var _lineD = lineGlyphs.join(' ');
+                                            parts.push('<path d="' + _lineD + '" fill="none" stroke="' + _esc(it.textStroke || '#000000') + '" stroke-width="' + _fmt(2 * _stswO) + '" stroke-linejoin="' + _joinO + '" stroke-linecap="' + _joinO + '"' + _mlim + '/>');
+                                            lineGlyphs.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + _fillTail); });
+                                        } else {
+                                            lineGlyphs.forEach(function(gp){ if (gp && gp.trim()) parts.push('<path d="' + gp.trim() + '" fill="' + _fillC + '"/>'); });
+                                        }
+                                    });
                                     outlinedOk = true;
                                 }
                             } else {
