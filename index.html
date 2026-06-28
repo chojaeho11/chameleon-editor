@@ -5906,8 +5906,9 @@ function scrollHotdeal(gridId, dir) {
         .me-handle-s  { left:50%; bottom:-6px; transform:translateX(-50%); cursor:ns-resize; }
         .me-handle-e  { right:-6px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
         .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
-        .me-handle-rot { left:50%; top:-32px; margin-left:-6px; background:#10b981; cursor:grab; }
-        .me-handle-rot::before { content:''; position:absolute; left:50%; top:13px; width:1.5px; height:18px; background:#10b981; transform:translateX(-50%); }
+        /* 2026-06-28: 회전 핸들 — 우측상단 바깥 + 회전(↻) 모양 + grab 커서 (일러스트식). 녹색 점/줄기 제거. */
+        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:22px; height:22px; background:#fff; border:1.5px solid #007AFF; cursor:grab; display:flex; align-items:center; justify-content:center; }
+        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#007AFF; font-size:14px; font-weight:800; line-height:1; }
         .me-item.text {
             cursor: move;
             /* 2026-06-14: 폰트 렌더링 품질 — faux-bold 합성 차단 + antialiasing */
@@ -5941,7 +5942,7 @@ function scrollHotdeal(gridId, dir) {
             .me-handle-s  { bottom:-10px; }
             .me-handle-e  { right:-10px; }
             .me-handle-w  { left:-10px; }
-            .me-handle-rot { top:-44px; margin-left:-10px; }
+            .me-handle-rot { left:auto; right:-34px; top:-34px; margin-left:0; width:28px; height:28px; }
             .me-handle-rot::before { top:20px; height:24px; }
             .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
             /* 2026-06-18 v573: 모바일 툴바 → 3행 grid 레이아웃
@@ -6568,7 +6569,8 @@ function scrollHotdeal(gridId, dir) {
         if (it.type === 'image') {
             it.el.style.height = (it.h * me.wScale) + 'px';
             var im = it.el.querySelector('img');
-            if (im) { im.style.width = '100%'; im.style.height = '100%'; im.style.objectFit = 'contain'; }
+            // 2026-06-28: object-fit fill — 변(edge) 핸들로 늘리면 이미지도 같이 늘어남(일러스트식 자유변형). 모서리는 정비율(박스 비율 유지)이라 왜곡 없음.
+            if (im) { im.style.width = '100%'; im.style.height = '100%'; im.style.objectFit = 'fill'; }
         } else if (it.type === 'text') {
             it.el.style.fontSize = (it.fontSize * me.wScale) + 'px';
             it.el.style.color = it.fill || '#1d1d1f';
@@ -7248,25 +7250,9 @@ function scrollHotdeal(gridId, dir) {
                         if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
                         im.onload = function(){
                             try {
-                                // 2026-06-18 v569: DOM 의 objectFit:contain 동작을 정확히 재현
-                                //   이전엔 drawImage(im, x, y, w, h) 로 박스에 stretch → 비율 안 맞으면 왜곡 → 다운로드 시 그림 폭 다르게 보임.
-                                //   contain: 이미지 비율 유지 + 박스 안에 fit (남는 공간은 비움).
-                                var imgAR = (im.naturalWidth || iww) / (im.naturalHeight || ihh);
-                                var boxAR = iww / ihh;
-                                var drawW, drawH, drawX, drawY;
-                                if (imgAR > boxAR) {
-                                    // 이미지가 박스보다 가로 비율 큼 → 가로 fit, 세로 letterbox
-                                    drawW = iww;
-                                    drawH = iww / imgAR;
-                                    drawX = ixx;
-                                    drawY = iyy + (ihh - drawH) / 2;
-                                } else {
-                                    // 이미지가 박스보다 세로 비율 큼 → 세로 fit, 가로 pillarbox
-                                    drawH = ihh;
-                                    drawW = ihh * imgAR;
-                                    drawY = iyy;
-                                    drawX = ixx + (iww - drawW) / 2;
-                                }
+                                // 2026-06-28: object-fit:fill 재현 — 박스 전체로 stretch (display 와 동일, 일러스트식 자유변형).
+                                //   박스 비율은 모서리=정비율 / 변=자유 로 조절되므로, 그림은 그 박스를 그대로 채움.
+                                var drawW = iww, drawH = ihh, drawX = ixx, drawY = iyy;
                                 var needTransform = rotI || fxI !== 1 || fyI !== 1;
                                 if (needTransform) {
                                     ctx.save();
@@ -7553,7 +7539,7 @@ function scrollHotdeal(gridId, dir) {
                     if (!inner || !inner.trim()) return null;
                     return '<svg x="' + _fmt(x) + '" y="' + _fmt(y) + '" width="' + _fmt(w) + '" height="' + _fmt(h) + '"'
                         + (vb ? ' viewBox="' + _esc(vb) + '"' : '')
-                        + ' preserveAspectRatio="xMidYMid meet" overflow="visible">' + inner + '</svg>';
+                        + ' preserveAspectRatio="none" overflow="visible">' + inner + '</svg>';
                 } catch(e) { console.warn('[_buildNestedSvg]', e); return null; }
             }
 
@@ -7602,7 +7588,7 @@ function scrollHotdeal(gridId, dir) {
                             parts.push('<image href="' + _esc(_png || dataUrl || it.src) + '" '
                                 + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
                                 + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                                + 'preserveAspectRatio="xMidYMid meet"/>');
+                                + 'preserveAspectRatio="none"/>');
                             _emitted = true;
                         }
                     }
@@ -7610,7 +7596,7 @@ function scrollHotdeal(gridId, dir) {
                         parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
                             + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
                             + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                            + 'preserveAspectRatio="xMidYMid meet"/>');
+                            + 'preserveAspectRatio="none"/>');
                     }
                 } else if (it.type === 'shape') {
                     var fill = _esc(it.fill || '#000000');
@@ -9682,7 +9668,7 @@ function scrollHotdeal(gridId, dir) {
             el.style.zIndex = '0';
             var imgEl = document.createElement('img');
             imgEl.src = tpl.background_url;
-            imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'contain';
+            imgEl.style.width = '100%'; imgEl.style.height = '100%'; imgEl.style.objectFit = 'fill';
             el.appendChild(imgEl);
             me.stage.appendChild(el);
             // 2026-06-18 v562: 잠금 해제 — _isTemplateSlot 제거
@@ -9719,7 +9705,7 @@ function scrollHotdeal(gridId, dir) {
             var imgEl = document.createElement('img');
             imgEl.src = saved.src || '';
             imgEl.style.width = '100%'; imgEl.style.height = '100%';
-            imgEl.style.objectFit = 'contain';
+            imgEl.style.objectFit = 'fill';
             el.appendChild(imgEl);
         }
         // shape 는 _meSyncItemDisplay 가 background/border/clipPath 처리.
@@ -9769,7 +9755,7 @@ function scrollHotdeal(gridId, dir) {
             var imgEl = document.createElement('img');
             imgEl.src = saved.src || '';
             imgEl.style.width = '100%'; imgEl.style.height = '100%';
-            imgEl.style.objectFit = 'contain';
+            imgEl.style.objectFit = 'fill';
             el.appendChild(imgEl);
         }
         // shape 는 _meSyncItemDisplay 가 background/border/clipPath 처리.
