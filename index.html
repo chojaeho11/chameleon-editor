@@ -9707,22 +9707,12 @@ function scrollHotdeal(gridId, dir) {
     //   없으면(옛 템플릿) bbox 기준 폴백.
     window._meFitDesignToCanvas = function(srcW, srcH) {
         if (!me.items || !me.items.length) return;
-        var cx, cy, bw, bh;
-        if (srcW > 0 && srcH > 0) {
-            // 템플릿 캔버스 == 현재 캔버스(±1%)면 그대로 둠 (불필요한 재스케일·bleed 왜곡 방지)
-            if (Math.abs(srcW - me.natW) <= me.natW * 0.01 && Math.abs(srcH - me.natH) <= me.natH * 0.01) return;
-            cx = srcW / 2; cy = srcH / 2; bw = srcW; bh = srcH;
-        } else {
-            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, any = false;
-            me.items.forEach(function(it){
-                if (!it || it._type === 'meta' || it.el == null) return;
-                any = true;
-                minX = Math.min(minX, it.x); minY = Math.min(minY, it.y);
-                maxX = Math.max(maxX, it.x + (it.w || 0)); maxY = Math.max(maxY, it.y + (it.h || 0));
-            });
-            if (!any || !isFinite(minX)) return;
-            cx = (minX + maxX) / 2; cy = (minY + maxY) / 2; bw = maxX - minX; bh = maxY - minY;
-        }
+        // 2026-06-28: 캔버스 크기를 아는 새 템플릿만 fit. 크기 정보 없는 기존 템플릿(명함 등)은
+        //   그대로 로드(원래 동작) — bbox 재스케일이 명함 등 멀쩡하던 좌표를 틀어지게 했음.
+        if (!(srcW > 0 && srcH > 0)) return;
+        // 템플릿 캔버스 == 현재 캔버스(±1%)면 그대로 둠 (불필요한 재스케일·bleed 왜곡 방지)
+        if (Math.abs(srcW - me.natW) <= me.natW * 0.01 && Math.abs(srcH - me.natH) <= me.natH * 0.01) return;
+        var cx = srcW / 2, cy = srcH / 2, bw = srcW, bh = srcH;
         if (bw <= 0 || bh <= 0) return;
         var scale = Math.max(me.natW / bw, me.natH / bh);   // cover — 여백 없이 가득 (넘치는 부분은 잘림)
         if (!isFinite(scale) || scale <= 0) return;
