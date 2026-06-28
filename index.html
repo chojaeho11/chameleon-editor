@@ -7839,12 +7839,17 @@ function scrollHotdeal(gridId, dir) {
                                 // 2026-06-28: 중앙/우측 정렬 — it.w(박스폭) 대신 실제 콘텐츠 폭(가장 넓은 줄) 기준.
                                 //   흘림/이텔릭체는 글씨폭이 박스보다 좁아 it.w/2 로 잡으면 우측으로 밀림(화면=콘텐츠 기준).
                                 if (anchor === 'middle' || anchor === 'end') {
+                                    // 콘텐츠 폭은 canvas measureText(브라우저 정확 — 화면/DOM 과 동일)로 측정.
+                                    //   opentype getAdvanceWidth 는 한글에서 브라우저와 달라 좌측으로 어긋남.
+                                    var _mctx = (window.__meMeasureCtx || (window.__meMeasureCtx = document.createElement('canvas').getContext('2d')));
+                                    var _ffm = famClean; if (/\s/.test(_ffm) && !/["']/.test(_ffm)) _ffm = '"' + _ffm + '"';
+                                    _mctx.font = fw + ' ' + fs + 'px ' + _ffm;
+                                    try { _mctx.letterSpacing = (ls || 0) + 'px'; } catch(_lse){}
                                     var _widestW = 0;
                                     for (var _wi = 0; _wi < lines.length; _wi++) {
                                         var _dlw = String(lines[_wi]).replace(/\s+$/, '');
                                         if (!_dlw) continue;
-                                        var _lww = fontObj.getAdvanceWidth(_dlw, fs);
-                                        if (ls) _lww += ls * Math.max(0, _dlw.length - 1);
+                                        var _lww = _mctx.measureText(_dlw).width;
                                         if (_lww > _widestW) _widestW = _lww;
                                     }
                                     var _padXo = 6 / (me.wScale || 1);
