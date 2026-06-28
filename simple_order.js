@@ -5679,7 +5679,7 @@ html, body { background: #ffffff !important; }
                     '</div>' +
                     '<div style="padding:6px 8px;">' +
                         '<div style="font-size:10.5px; font-weight:700; color:#1e293b; line-height:1.3; height:26px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
-                        '<div style="font-size:10.5px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + tr('/m²','/m²','/m²') + '</div>' +
+                        '<div style="font-size:10.5px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(10000) + tr('/m²','/m²','/m²') + '</div>' +   /* 2026-06-28: 전 실사출력 1만원/m² 통일 표기 (환율 자동) */
                     '</div>' +
                 '</div>';
             }).join('');
