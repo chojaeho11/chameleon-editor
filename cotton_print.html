@@ -1907,9 +1907,9 @@ async function submitRollFabricRequest() {
     var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
     var L = (window.__PS_LANG === 'ja') ? 'ja' : (window.__PS_LANG === 'en' ? 'en' : 'kr');
     var STR = {
-      kr:{ title:'디자인 템플릿', sub:'클릭하면 캔버스에 바로 적용', loading:'로딩 중...', empty:'등록된 템플릿이 없습니다.' },
-      ja:{ title:'デザインテンプレート', sub:'クリックするとキャンバスに適用', loading:'読み込み中...', empty:'登録されたテンプレートがありません。' },
-      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.' }
+      kr:{ title:'디자인 템플릿', sub:'클릭하면 캔버스에 바로 적용', loading:'로딩 중...', empty:'등록된 템플릿이 없습니다.', size:'사이즈 직접 입력', apply:'적용' },
+      ja:{ title:'デザインテンプレート', sub:'クリックするとキャンバスに適用', loading:'読み込み中...', empty:'登録されたテンプレートがありません。', size:'サイズを入力', apply:'適用' },
+      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.', size:'Custom size', apply:'Apply' }
     }[L];
     function ready(fn){ if (document.readyState !== 'loading') setTimeout(fn, 350); else document.addEventListener('DOMContentLoaded', function(){ setTimeout(fn, 350); }); }
     window._cpPickTpl = function(i){ var t = (window.__cpTpls||[])[i]; if (t && typeof window._meLoadTemplate === 'function') window._meLoadTemplate(t); };
@@ -1944,17 +1944,43 @@ async function submitRollFabricRequest() {
         window.__cpTpls = rows;
         grid.innerHTML = rows.map(function(t, i){
           var thumb = t.thumbnail_url || t.background_url || '';
-          return '<button type="button" onclick="window._cpPickTpl(' + i + ')" style="flex:0 0 auto; width:132px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff; cursor:pointer; padding:0; font-family:inherit;">' +
+          // 이름은 site_code별 단일 저장(번역 없음) → 폴백 시 한글이 떠서 썸네일만 표시
+          return '<button type="button" onclick="window._cpPickTpl(' + i + ')" style="flex:0 0 auto; width:132px; height:132px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff; cursor:pointer; padding:0; font-family:inherit;">' +
             '<img src="' + String(thumb).replace(/"/g,'&quot;') + '" alt="" loading="lazy" style="width:132px; height:132px; object-fit:cover; display:block; background:#f1f5f9;">' +
-            '<div style="font-size:11px; color:#475569; padding:6px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + String(t.name||'').replace(/</g,'&lt;') + '</div>' +
             '</button>';
         }).join('');
       } catch(e) { grid.innerHTML = '<div style="color:#dc2626; font-size:12px; padding:14px;">템플릿 로드 실패</div>'; }
     }
+    // mm 사이즈 적용 — natW/H(px, 최장 1200 cap) + 실제 mm 별도 저장
+    function applyMm(wMm, hMm){
+      wMm = Math.max(10, parseInt(wMm,10)||0); hMm = Math.max(10, parseInt(hMm,10)||0);
+      var s = 1200 / Math.max(wMm, hMm);
+      try { window._meSetSize(Math.round(wMm*s), Math.round(hMm*s), wMm + '×' + hMm + 'mm'); } catch(e){}
+      try { if (typeof window._meSetMmSize === 'function') window._meSetMmSize(wMm, hMm); } catch(e){}
+    }
+    function buildSizeInput(){
+      var host = document.getElementById('meSizes');
+      if (!host || document.getElementById('cpSizeRow')) return;
+      var row = document.createElement('div');
+      row.id = 'cpSizeRow';
+      row.style.cssText = 'display:flex; align-items:center; gap:8px; margin:0 0 10px; flex-wrap:wrap;';
+      row.innerHTML =
+        '<span style="font-size:13px; font-weight:700; color:#334155;">' + STR.size + '</span>' +
+        '<input id="cpSzW" type="number" min="10" value="500" style="width:78px; padding:8px; border:1px solid #cbd5e1; border-radius:8px; text-align:center; font-size:14px;">' +
+        '<span style="color:#94a3b8;">×</span>' +
+        '<input id="cpSzH" type="number" min="10" value="500" style="width:78px; padding:8px; border:1px solid #cbd5e1; border-radius:8px; text-align:center; font-size:14px;">' +
+        '<span style="font-size:13px; color:#64748b;">mm</span>' +
+        '<button type="button" id="cpSzApply" style="padding:8px 18px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit;">' + STR.apply + '</button>';
+      host.parentNode.insertBefore(row, host);   // 프리셋 버튼 위(맨 위)
+      function go(){ applyMm(document.getElementById('cpSzW').value, document.getElementById('cpSzH').value); }
+      document.getElementById('cpSzApply').onclick = go;
+      ['cpSzW','cpSzH'].forEach(function(id){ document.getElementById(id).addEventListener('keydown', function(e){ if (e.key==='Enter'){ e.preventDefault(); go(); } }); });
+    }
     ready(function(){
       try { var tt = document.getElementById('cpTplTitle'); if (tt) tt.innerHTML = STR.title + ' <span style="font-weight:500; color:#64748b; font-size:12px;">— ' + STR.sub + '</span>'; } catch(e){}
       try { var g0 = document.getElementById('cpTplGrid'); if (g0) g0.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:14px;">' + STR.loading + '</div>'; } catch(e){}
-      try { var sq = document.querySelector('#meSizes .me-size-btn[data-w="500"][data-h="500"]'); if (sq) sq.click(); } catch(e){}  // 기본 대지 정사각
+      try { buildSizeInput(); } catch(e){}
+      try { applyMm(500, 500); } catch(e){}   // 기본 대지 = 정사각 500×500mm
       applyEditorI18n();
       loadTpls();
     });
