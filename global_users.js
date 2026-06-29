@@ -1916,12 +1916,13 @@ window.loadStaffPayroll = async () => {
     };
 
     // ===== ② 디자이너 페이 — 고객의뢰(디자인보드) 자동정산 =====
-    //   귀속 = description 의 [DESIGNER:uid CLAIMED:..] / 금액 = budget_max||budget_min (디자이너 정산금)
-    //   발생 = 완료/정산요청/정산완료 (이번달) · 미정산 = 완료/정산요청 (정산완료 제외)
+    //   귀속 = [DESIGNER:uid CLAIMED:..] / 금액 = budget_max||budget_min (디자이너 정산금)
+    //   이번달 발생 = 이번달 완료/정산요청/정산완료 · 미정산 = 정산완료(settled) 전 전체(경리 미처리)
+    //   미리정산 = 그 중 디자이너가 출금요청(design_withdrawal_requests pending+approved)한 금액(세전)
     const dgnBody = document.getElementById('payDgnBody');
-    if (dgnBody) dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
+    if (dgnBody) dgnBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
     try {
-        const earnMonth = {}, unpaid = {};
+        const earnMonth = {}, unsettled = {}, preSettle = {};
         const { data: dr } = await sb.from('design_requests')
             .select('description, status, budget_min, budget_max, created_at')
             .in('status', ['completed', 'settlement_requested', 'settled'])
@@ -1931,51 +1932,34 @@ window.loadStaffPayroll = async () => {
             const did = mm[1];
             const amt = Number(r.budget_max || r.budget_min || 0);
             if (r.created_at >= startTs && r.created_at <= endTs) earnMonth[did] = (earnMonth[did] || 0) + amt;
-            if (r.status !== 'settled') unpaid[did] = (unpaid[did] || 0) + amt;
+            if (r.status !== 'settled') unsettled[did] = (unsettled[did] || 0) + amt;   // 미정산 = 경리 정산완료(settled) 전
         });
-        const dids = Array.from(new Set([...Object.keys(earnMonth), ...Object.keys(unpaid)]));
+        // 미리정산 = 디자이너가 출금요청 (pending+approved, 경리 지급 전)
+        const { data: wr } = await sb.from('design_withdrawal_requests')
+            .select('designer_id, gross_amount, net_amount, status').in('status', ['pending', 'approved']);
+        (wr || []).forEach(r => { preSettle[r.designer_id] = (preSettle[r.designer_id] || 0) + Number(r.gross_amount || r.net_amount || 0); });
+
+        const dids = Array.from(new Set([...Object.keys(earnMonth), ...Object.keys(unsettled), ...Object.keys(preSettle)]));
         const nameMap = await _resolveDesigners(dids);
-        const rows = dids.map(did => ({ name: nameMap[did] || '(이름없음)', month: earnMonth[did] || 0, bal: unpaid[did] || 0 }))
-            .filter(r => r.month > 0 || r.bal > 0).sort((a, b) => b.bal - a.bal);
+        const rows = dids.map(did => ({
+            name: nameMap[did] || '(이름없음)',
+            month: earnMonth[did] || 0,
+            unsettled: unsettled[did] || 0,
+            pre: preSettle[did] || 0
+        })).filter(r => r.month > 0 || r.unsettled > 0 || r.pre > 0).sort((a, b) => b.unsettled - a.unsettled);
         if (dgnBody) {
             if (!rows.length) {
-                dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">고객의뢰 정산 없음</td></tr>';
+                dgnBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">고객의뢰 정산 없음</td></tr>';
             } else {
-                let sM = 0, sB = 0;
+                let sM = 0, sU = 0, sP = 0;
                 const body = rows.map(r => {
-                    sM += r.month; sB += r.bal;
-                    return `<tr><td>${esc(r.name)}</td><td style="text-align:right;">${r.month.toLocaleString()}원</td><td style="text-align:right;font-weight:800;color:#dc2626;">${r.bal.toLocaleString()}원</td></tr>`;
+                    sM += r.month; sU += r.unsettled; sP += r.pre;
+                    return `<tr><td>${esc(r.name)}</td><td style="text-align:right;">${r.month.toLocaleString()}원</td><td style="text-align:right;font-weight:800;color:#dc2626;">${r.unsettled.toLocaleString()}원</td><td style="text-align:right;color:#2563eb;">${r.pre.toLocaleString()}원</td></tr>`;
                 }).join('');
-                dgnBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td>합계</td><td style="text-align:right;">${sM.toLocaleString()}원</td><td style="text-align:right;color:#dc2626;">${sB.toLocaleString()}원</td></tr>`;
+                dgnBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td>합계</td><td style="text-align:right;">${sM.toLocaleString()}원</td><td style="text-align:right;color:#dc2626;">${sU.toLocaleString()}원</td><td style="text-align:right;color:#2563eb;">${sP.toLocaleString()}원</td></tr>`;
             }
         }
-    } catch (e) { if (dgnBody) dgnBody.innerHTML = `<tr><td colspan="3" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
-
-    // ===== ③ 템플릿·이미지 적립금 출금요청 ($100+ 디자이너가 요청한 건만) =====
-    const reqBody = document.getElementById('payDgnReqBody');
-    if (reqBody) reqBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
-    try {
-        const { data: wr } = await sb.from('design_withdrawal_requests')
-            .select('designer_id, gross_amount, net_amount, status, requested_at')
-            .in('status', ['pending', 'approved'])
-            .order('requested_at', { ascending: false });
-        const nameMap = await _resolveDesigners((wr || []).map(r => r.designer_id));
-        if (reqBody) {
-            if (!wr || !wr.length) {
-                reqBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">출금 요청 없음</td></tr>';
-            } else {
-                let sum = 0;
-                const STT = { pending: '⏳ 대기', approved: '✓ 승인' };
-                const body = wr.map(r => {
-                    const amt = Number(r.gross_amount || r.net_amount || 0);
-                    sum += amt;
-                    const dt = r.requested_at ? String(r.requested_at).slice(0, 10) : '';
-                    return `<tr><td>${esc(nameMap[r.designer_id] || '(이름없음)')}</td><td style="font-size:12px;color:#64748b;">${dt}</td><td style="font-size:12px;">${STT[r.status] || esc(r.status)}</td><td style="text-align:right;font-weight:800;color:#dc2626;">${amt.toLocaleString()}원</td></tr>`;
-                }).join('');
-                reqBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td colspan="3">합계</td><td style="text-align:right;color:#dc2626;">${sum.toLocaleString()}원</td></tr>`;
-            }
-        }
-    } catch (e) { if (reqBody) reqBody.innerHTML = `<tr><td colspan="4" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
+    } catch (e) { if (dgnBody) dgnBody.innerHTML = `<tr><td colspan="4" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
 };
 
 window.downloadSettlementCsv = async (designerId) => {
