@@ -1847,6 +1847,121 @@ window.loadDesignerSettlementPanel = async () => {
     }
 };
 
+// 2026-06-29: 직원관리 페이 정산 — ① 매니저 페이(매출기여 ×4%) ② 디자이너 페이(디자인마켓 수익, 요청+미요청 세전 총액)
+//   매니저/디자이너는 별개 시스템(매니저=admin_staff+orders, 디자이너=UUID 디자인마켓). 한 사람이 둘 다면 각각 따로 집계됨.
+window.loadStaffPayroll = async () => {
+    const mEl = document.getElementById('payMonth');
+    if (mEl && !mEl.value) {
+        const kr = new Date(Date.now() + 9 * 3600 * 1000);
+        mEl.value = kr.getFullYear() + '-' + String(kr.getMonth() + 1).padStart(2, '0');
+    }
+    const month = (mEl && mEl.value) || '';   // 'YYYY-MM'
+    if (!/^\d{4}-\d{2}$/.test(month)) return;
+    const [y, m] = month.split('-').map(Number);
+    const lastDay = new Date(y, m, 0).getDate();
+    const startTs = `${month}-01T00:00:00`;
+    const endTs   = `${month}-${String(lastDay).padStart(2, '0')}T23:59:59`;
+
+    // ===== ① 매니저 페이 (매출기여 4%) =====
+    const mgrBody = document.getElementById('payMgrBody');
+    if (mgrBody) mgrBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
+    try {
+        const EXCLUDE = ['정미선'];   // 본사직원 — 매니저 정산 제외 (사용자 요청)
+        const { data: staff } = await sb.from('admin_staff').select('id,name,role,color').eq('role', 'manager');
+        const { data: orders } = await sb.from('orders')
+            .select('total_amount, staff_manager_id, status, payment_status, created_at')
+            .gte('created_at', startTs).lte('created_at', endTs)
+            .not('status', 'eq', '임시작성').not('status', 'eq', '취소됨');
+        const VP = ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'];
+        const rev = {};
+        (orders || []).forEach(o => {
+            if (!VP.includes(o.payment_status)) return;
+            if (o.staff_manager_id) rev[o.staff_manager_id] = (rev[o.staff_manager_id] || 0) + (o.total_amount || 0);
+        });
+        const rows = (staff || [])
+            .filter(s => !EXCLUDE.includes(s.name))
+            .map(s => ({ name: s.name, color: s.color, rev: rev[s.id] || 0 }))
+            .filter(r => r.rev > 0)
+            .sort((a, b) => b.rev - a.rev);
+        if (mgrBody) {
+            if (!rows.length) {
+                mgrBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">해당 월 매니저 매출 없음</td></tr>';
+            } else {
+                let sumRev = 0, sumPay = 0;
+                const body = rows.map(r => {
+                    const pay = Math.round(r.rev * 0.04);
+                    sumRev += r.rev; sumPay += pay;
+                    return `<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${r.color || '#cbd5e1'};margin-right:6px;"></span>${esc(r.name)}</td><td style="text-align:right;">${r.rev.toLocaleString()}원</td><td style="text-align:right;font-weight:800;color:#dc2626;">${pay.toLocaleString()}원</td></tr>`;
+                }).join('');
+                mgrBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td>합계</td><td style="text-align:right;">${sumRev.toLocaleString()}원</td><td style="text-align:right;color:#dc2626;">${sumPay.toLocaleString()}원</td></tr>`;
+            }
+        }
+    } catch (e) { if (mgrBody) mgrBody.innerHTML = `<tr><td colspan="3" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
+
+    // ===== ② 디자이너 페이 (디자인마켓 수익) =====
+    const dgnBody = document.getElementById('payDgnBody');
+    if (dgnBody) dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
+    try {
+        const ASSET_REWARD = { template: 3000, vector: 1000, image: 500, logo: 200 };
+        const earnAll = {}, earnMonth = {}, nameMap = {};
+        const inMonth = (ts) => ts && ts >= startTs && ts <= endTs;
+        // 자산 보상 (admin_templates approved)
+        const { data: tpl } = await sb.from('admin_templates')
+            .select('submitted_by, asset_type, payment_amount, slots, status, created_at')
+            .eq('status', 'approved').not('submitted_by', 'is', null);
+        (tpl || []).forEach(r => {
+            const did = r.submitted_by; if (!did) return;
+            const t = r.asset_type || ((r.slots && r.slots.length) ? 'template' : 'vector');
+            const amt = r.payment_amount || ASSET_REWARD[t] || 0;
+            earnAll[did] = (earnAll[did] || 0) + amt;
+            if (inMonth(r.created_at)) earnMonth[did] = (earnMonth[did] || 0) + amt;
+        });
+        // 의뢰 수수료 (design_requests completed/settled)
+        const { data: dr } = await sb.from('design_requests')
+            .select('description, status, amount, created_at')
+            .in('status', ['completed', 'settled']);
+        (dr || []).forEach(r => {
+            const mm = String(r.description || '').match(/\[DESIGNER:([^\]\s]+)/); if (!mm) return;
+            const did = mm[1]; const amt = r.amount || 0;
+            earnAll[did] = (earnAll[did] || 0) + amt;
+            if (inMonth(r.created_at)) earnMonth[did] = (earnMonth[did] || 0) + amt;
+        });
+        // 지급 완료 (design_withdrawal_requests paid) — 세전 총액 기준
+        const paidAll = {};
+        const { data: wd } = await sb.from('design_withdrawal_requests')
+            .select('designer_id, gross_amount, net_amount, status').eq('status', 'paid');
+        (wd || []).forEach(r => { paidAll[r.designer_id] = (paidAll[r.designer_id] || 0) + (r.gross_amount || r.net_amount || 0); });
+        // 이름 매핑
+        const dids = Array.from(new Set([...Object.keys(earnAll), ...Object.keys(paidAll)]));
+        if (dids.length) {
+            const { data: dps } = await sb.from('designer_profiles').select('id, display_name').in('id', dids);
+            (dps || []).forEach(d => { if (d.display_name) nameMap[d.id] = d.display_name; });
+            const miss = dids.filter(d => !nameMap[d]);
+            if (miss.length) {
+                const { data: pfs } = await sb.from('profiles').select('id, username, email').in('id', miss);
+                (pfs || []).forEach(p => nameMap[p.id] = p.username || p.email || '(이름없음)');
+            }
+        }
+        const rows = dids.map(did => ({
+            name: nameMap[did] || '(이름없음)',
+            month: earnMonth[did] || 0,
+            bal: (earnAll[did] || 0) - (paidAll[did] || 0)
+        })).filter(r => r.month > 0 || r.bal > 0).sort((a, b) => b.bal - a.bal);
+        if (dgnBody) {
+            if (!rows.length) {
+                dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">디자이너 수익 없음</td></tr>';
+            } else {
+                let sM = 0, sB = 0;
+                const body = rows.map(r => {
+                    sM += r.month; sB += r.bal;
+                    return `<tr><td>${esc(r.name)}</td><td style="text-align:right;">${r.month.toLocaleString()}원</td><td style="text-align:right;font-weight:800;color:#dc2626;">${r.bal.toLocaleString()}원</td></tr>`;
+                }).join('');
+                dgnBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td>합계</td><td style="text-align:right;">${sM.toLocaleString()}원</td><td style="text-align:right;color:#dc2626;">${sB.toLocaleString()}원</td></tr>`;
+            }
+        }
+    } catch (e) { if (dgnBody) dgnBody.innerHTML = `<tr><td colspan="3" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
+};
+
 window.downloadSettlementCsv = async (designerId) => {
     try {
         const { data: pending } = await sb.from('design_withdrawal_requests')

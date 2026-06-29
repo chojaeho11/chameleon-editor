@@ -2585,6 +2585,29 @@ function escapeHtml(s) { return (s||'').replace(/[<>&"']/g, c => ({'<':'&lt;','>
                     <div id="designerAppListBody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;"><div style="grid-column:1/-1;text-align:center;padding:20px;color:#94a3b8;">새로고침 버튼을 눌러주세요.</div></div>
                 </div>
 
+                <!-- 💰 페이 정산 (매니저 4% + 디자이너) -->
+                <div class="card" style="margin-bottom:16px; border:2px solid #fcd34d; background:linear-gradient(135deg,#fffbeb 0%,#fef9c3 100%);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                        <h3 style="margin:0;color:#92400e;">💰 페이 정산</h3>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <label style="font-size:12px;color:#78350f;font-weight:700;">정산 월</label>
+                            <input type="month" id="payMonth" style="padding:5px 8px;border-radius:6px;border:1px solid #fcd34d;font-size:13px;">
+                            <button class="btn btn-primary btn-sm" onclick="loadStaffPayroll()" style="font-size:12px;">🔄 정산 조회</button>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:#78350f;margin-bottom:14px;line-height:1.6;">매니저 = <b>매출 기여 ×4%</b> · 디자이너 = <b>디자인마켓 수익</b>(출금 요청 + 미요청 포함, 세전 총액). 1일~말일 발생 기준 · 다음달 10일 지급. (정미선=본사직원 제외)</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="payGrid">
+                        <div>
+                            <div style="font-weight:800;color:#1e293b;margin-bottom:6px;">🧑‍💼 매니저 페이 (매출기여 4%)</div>
+                            <table><thead><tr><th>매니저</th><th style="text-align:right;">매출 기여</th><th style="text-align:right;">페이 (4%)</th></tr></thead><tbody id="payMgrBody"><tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:14px;">정산 조회를 눌러주세요.</td></tr></tbody></table>
+                        </div>
+                        <div>
+                            <div style="font-weight:800;color:#1e293b;margin-bottom:6px;">🎨 디자이너 페이 (디자인마켓)</div>
+                            <table><thead><tr><th>디자이너</th><th style="text-align:right;">이번 달 발생</th><th style="text-align:right;">누적 미지급</th></tr></thead><tbody id="payDgnBody"><tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:14px;">정산 조회를 눌러주세요.</td></tr></tbody></table>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="product-layout">
                     <div class="card tpl-form">
                         <h3 style="margin-top:0;">👤 스태프 등록</h3>
