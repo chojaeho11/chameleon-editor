@@ -2086,7 +2086,7 @@ window._tcmFallbackClick = function(code) {
                 </button>
                 <button type="button" class="mgr-action mgr-coupon" onclick="window._openCouponShareModal && window._openCouponShareModal()">
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-gift"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_event_coupon">이벤트 쿠폰</span>
+                    <span class="mgr-action-label" data-i18n="btn_event_coupon">회원가입</span>
                 </button>
                 <!-- 2026-06-19 v640: 6번째 — 디자이너 모집 (큰 배너와 동일 링크) -->
                 <button type="button" class="mgr-action mgr-dapply" onclick="location.href='/contribute'">
@@ -2514,7 +2514,7 @@ window._tcmFallbackClick = function(code) {
             kr: {
                 btnPhone:'전화번호', btnChat:'챗봇상담',
                 btnVip:'개인결제', btnScrap:'금액주문',
-                btnDesign:'디자인의뢰', btnCoupon:'이벤트', btnDapply:'디자이너',
+                btnDesign:'디자인의뢰', btnCoupon:'회원가입', btnDapply:'디자이너',
                 btnRecruitBtn:'디자이너 모집',
                 drTitle:'🎨 디자이너 모집', drSub:'당신의 재능을 판매하세요',
                 drDesc:'템플릿 3,000원 · 벡터 1,000원 · PNG 500원 · 로고 200원',
@@ -2531,7 +2531,7 @@ window._tcmFallbackClick = function(code) {
             ja: {
                 btnPhone:'担当へお電話', btnChat:'ご注文照会',
                 btnVip:'VIP 個別決済', btnScrap:'金額決済',
-                btnDesign:'デザイン依頼', btnCoupon:'クーポン', btnDapply:'デザイナー',
+                btnDesign:'デザイン依頼', btnCoupon:'会員登録', btnDapply:'デザイナー',
                 btnRecruitBtn:'デザイナー募集',
                 drTitle:'🎨 デザイナー募集', drSub:'あなたの才能を販売しよう',
                 drDesc:'テンプレート 300円 · ベクター 100円 · PNG 50円 · ロゴ 20円',
@@ -2548,7 +2548,7 @@ window._tcmFallbackClick = function(code) {
             en: {
                 btnPhone:'Manager Phones', btnChat:'Chat Support',
                 btnVip:'VIP Personal Pay', btnScrap:'Pay After Consult',
-                btnDesign:'Request Design', btnCoupon:'Event Coupon', btnDapply:'Designer',
+                btnDesign:'Request Design', btnCoupon:'Sign up', btnDapply:'Designer',
                 btnRecruitBtn:'Designer Sign-Up',
                 drTitle:'🎨 Designer Sign-Up', drSub:'Sell your talent',
                 drDesc:'Template $3 · Vector $1 · PNG $0.5 · Logo $0.2',
@@ -2667,14 +2667,16 @@ window._tcmFallbackClick = function(code) {
         function $(id){ return document.getElementById(id); }
         // 2026-06-01: 독립 카드 → 각 contact 박스 내부 inline 버튼으로 이동. 인라인 라벨만 lang 별 갱신.
         if ($('couponInlineBtnLabel')) $('couponInlineBtnLabel').textContent = t.title;
-        if ($('jpCouponBtnLabel'))     $('jpCouponBtnLabel').textContent = (COUPON.ja || {}).title || 'クーポン申請';
-        if ($('enCouponBtnLabel'))     $('enCouponBtnLabel').textContent = (COUPON.en || {}).title || 'Claim Event Coupon';
+        if ($('jpCouponBtnLabel'))     $('jpCouponBtnLabel').textContent = '会員登録イベント';
+        if ($('enCouponBtnLabel'))     $('enCouponBtnLabel').textContent = 'Signup Event';
         window.__COUPON_T = t;
         window.__COUPON_LANG = lang;
     })();
 
     // 모달 열기/닫기
     window._openCouponShareModal = function(){
+        // 2026-06-29: SNS 이벤트 폐기 → 회원가입 + 추천인 적립 통합 흐름으로 연결
+        if (typeof window._startSignupEventFlow === 'function') { window._startSignupEventFlow(); return; }
         var modal = document.getElementById('couponShareModal');
         if (!modal) return;
         // 2026-06-11: position:fixed 가 ancestor 의 transform 등으로 깨지는 케이스 방지 — 모달을 body 직접 자식으로 재배치
