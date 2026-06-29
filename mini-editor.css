@@ -1,0 +1,206 @@
+        /* 2026-06-15: 누끼따기 패널 통합 → 에디터 단독 1열. */
+        #aiNbWrap { display:grid; grid-template-columns: 1fr; gap:16px; }
+        .aiNb-card { background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%); border:1.5px solid #c4b5fd; border-radius:16px; padding:18px 18px 20px; box-shadow:0 6px 24px -8px rgba(124,58,237,0.18); display:flex; flex-direction:column; gap:10px; min-width:0; }
+        .aiNb-card.bg { background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border-color:#fcd34d; box-shadow:0 6px 24px -8px rgba(217,119,6,0.18); }
+        .aiNb-title { font-size:16px; font-weight:900; color:#5b21b6; display:flex; align-items:center; gap:8px; }
+        .aiNb-card.bg .aiNb-title { color:#92400e; }
+        .aiNb-sub { font-size:11.5px; color:#7c3aed; font-weight:600; line-height:1.55; }
+        .aiNb-card.bg .aiNb-sub { color:#a16207; }
+        .aiNb-btn { padding:10px 14px; background:#007AFF; color:#fff; border:none; border-radius:980px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .18s; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; gap:5px; letter-spacing:-0.2px; }
+        .aiNb-btn:hover { background:#0a6dd5; }
+        .aiNb-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .aiNb-btn.amber { background:#FF9500; }
+        .aiNb-btn.amber:hover { background:#e08500; }
+        .aiNb-btn.full { width:100%; padding:12px 14px; font-size:14px; }
+        /* 2026-06-27: 미니에디터 확대/축소/이동 버튼 — 플랫, 그림자 없음 */
+        .me-zoom-btn { padding:10px 11px; min-width:38px; background:#f1f3f5; color:#1d1d1f; border:1px solid #e0e0e2; border-radius:9px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; line-height:1; transition:background .15s; }
+        .me-zoom-btn:hover { background:#e6e8eb; }
+        .me-zoom-btn.on { background:#007AFF; color:#fff; border-color:#007AFF; }
+        .aiNb-preview { background:#fff; border:1.5px dashed #c4b5fd; border-radius:12px; min-height:200px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:10px; }
+        .aiNb-card.bg .aiNb-preview { border-color:#fcd34d; background:repeating-conic-gradient(#f8fafc 0% 25%, #eef2ff 0% 50%) 50% / 16px 16px; flex:1 1 auto; min-height:420px; }
+        .aiNb-preview img { max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; display:block; }
+        .aiNb-empty { color:#a78bfa; font-size:12px; font-weight:600; text-align:center; padding:30px 16px; line-height:1.6; }
+        .aiNb-card.bg .aiNb-empty { color:#a16207; }
+        .aiNb-spinner { display:none; flex-direction:column; align-items:center; gap:10px; color:#7c3aed; font-size:12.5px; font-weight:700; padding:30px 16px; }
+        .aiNb-card.bg .aiNb-spinner { color:#92400e; }
+        .aiNb-spinner.show { display:flex; }
+        .aiNb-spinner i { font-size:28px; animation:aiNbSpin 1s linear infinite; }
+        @keyframes aiNbSpin { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+        .aiNb-upload { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; background:#fff; border:2px dashed #fcd34d; border-radius:10px; font-size:13px; font-weight:800; color:#92400e; cursor:pointer; transition:all .15s; }
+        .aiNb-upload:hover { background:#fef3c7; transform:translateY(-1px); }
+        .aiNb-dl { display:none; }
+        .aiNb-dl.show { display:inline-flex; }
+        .aiNb-error { font-size:12px; color:#dc2626; font-weight:700; margin-top:6px; }
+
+        /* ─── 미니 에디터 (Apple style) ─── */
+        #aiNbAi { font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; background:#fbfbfd; border:0.5px solid rgba(0,0,0,0.08); box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+        #aiNbAi .aiNb-title { color:#1d1d1f; font-weight:700; font-size:17px; letter-spacing:-0.5px; }
+        #aiNbAi .aiNb-sub { color:#86868b; font-weight:500; font-size:12.5px; letter-spacing:-0.1px; }
+        .me-sizes { display:flex; flex-wrap:wrap; gap:6px; }
+        .me-size-btn { padding:7px 14px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; font-family:inherit; transition:background .18s, color .18s; letter-spacing:-0.2px; }
+        .me-size-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-size-btn.active { background:#1d1d1f; color:#fff; }
+        .me-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+        /* 2026-06-15: PC 툴바 — 아이콘과 글씨 사이 간격 8px (이전 5px 은 너무 붙어보임). */
+        /* 2026-06-18 v610: 배경 잠금 시각 표시 — 잠긴 배경은 살짝 어둡게, 호버 시 안내 */
+        .me-item.me-bg-locked { pointer-events:none; }
+        .me-item.me-bg-locked::after { content:""; position:absolute; inset:0; border:1.5px dashed rgba(56,189,248,0.45); border-radius:2px; pointer-events:none; }
+        .me-tool-btn { padding:8px 14px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; font-family:inherit; transition:background .18s, color .18s; letter-spacing:-0.2px; display:inline-flex; align-items:center; gap:8px; }
+        .me-tool-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-tool-btn.accent { background:#FFCC00; color:#1d1d1f; }
+        .me-tool-btn.accent:hover { background:#ffd633; }
+        .me-tb-ic { font-size:12px; line-height:1; }
+        /* 2026-06-15: 배경색 칩 — 무지개 그라데이션 원형. 아이콘/사각형 없이 색상 picker 임을 시각화. */
+        .me-color-wrap { display:inline-flex; align-items:center; gap:8px; padding:5px 12px 5px 8px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12.5px; font-weight:600; color:#1d1d1f; cursor:pointer; letter-spacing:-0.2px; }
+        .me-color-wrap:hover { background:rgba(120,120,128,0.18); }
+        .me-color-wrap input[type=color] {
+            -webkit-appearance:none; appearance:none;
+            width:24px; height:24px; padding:0; cursor:pointer;
+            border:1.5px solid #fff; border-radius:50%;
+            background: conic-gradient(from 180deg, #ff0080, #ff8c00, #ffd900, #2ecc71, #00d1ff, #6c5ce7, #ff0080);
+            box-shadow:0 0 0 1px rgba(0,0,0,0.18);
+            overflow:hidden;
+        }
+        .me-color-wrap input[type=color]::-webkit-color-swatch-wrapper { padding:0; }
+        .me-color-wrap input[type=color]::-webkit-color-swatch { visibility:hidden; border:none; }
+        .me-color-wrap input[type=color]::-moz-color-swatch { visibility:hidden; border:none; }
+        /* 대지 외 어두운 배경 */
+        /* 2026-06-26: 여백 최소화 — 캔버스 가득 차게. 가로비율=줄자 상단 / 세로비율=줄자 좌측 (JS 제어) */
+        .me-stage-wrap { background:#808080; border:none; border-radius:14px; padding:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+        /* 2026-06-25: 양면(앞/뒤) 탭 — 캔버스 바로 위 */
+        .me-side-tabs { display:flex; gap:8px; margin-bottom:10px; }
+        .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+        .me-side-tab:hover { border-color:#c4b5fd; }
+        .me-side-tab.active { background:#6d28d9; color:#fff; border-color:#6d28d9; }
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; border-radius:2px; }
+        .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
+        .me-item.selected { outline:1.5px solid #007AFF; outline-offset:2px; }
+        .me-item img { display:block; max-width:none; pointer-events:none; }
+        .me-item.text { padding:4px 6px; line-height:1.2; word-break:keep-all; white-space:pre-wrap; }
+        .me-item.text[contenteditable=true] { cursor:text; outline:1.5px solid #007AFF; background:rgba(255,255,255,0.6); }
+        .me-item.shape { background:#007AFF; }
+        .me-item.shape.circle { border-radius:50%; }
+        /* 2026-06-14: 4 모서리 핸들 + 회전 핸들 (Photoshop/Figma 스타일) */
+        .me-handle { position:absolute; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.25); z-index:5; }
+        .me-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
+        .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
+        .me-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
+        .me-handle-se { right:-6px; bottom:-6px; cursor:nwse-resize; }
+        /* 2026-06-16: 변(edge) 핸들 — 가로/세로 단독 리사이즈 (text 박스 너비/높이 독립 조절) */
+        .me-handle-n  { left:50%; top:-6px; transform:translateX(-50%); cursor:ns-resize; }
+        .me-handle-s  { left:50%; bottom:-6px; transform:translateX(-50%); cursor:ns-resize; }
+        .me-handle-e  { right:-6px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
+        .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
+        /* 2026-06-28: 회전 핸들 — 우측상단 바깥 + 회전(↻) 모양 + grab 커서 (일러스트식). 녹색 점/줄기 제거. */
+        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:22px; height:22px; background:#fff; border:1.5px solid #007AFF; cursor:grab; display:flex; align-items:center; justify-content:center; }
+        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#007AFF; font-size:14px; font-weight:800; line-height:1; -webkit-text-stroke:0; }
+        /* 2026-06-28: 글씨 테두리(-webkit-text-stroke)가 자식 핸들·삭제버튼·칩까지 상속되어 회전 화살표에 테두리가 생기고 드래그 잔상이 남던 문제 차단 */
+        .me-handle, .me-handle::before, .me-handle-rot, .me-handle-rot::before, .me-del, .me-imgchip { -webkit-text-stroke:0 !important; -webkit-text-stroke-width:0 !important; paint-order:normal !important; text-shadow:none !important; }
+        .me-item.text {
+            cursor: move;
+            /* 2026-06-14: 폰트 렌더링 품질 — faux-bold 합성 차단 + antialiasing */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            font-synthesis: none;  /* 폰트가 weight 없을 때 가짜 bold 합성 방지 (검은고딕 등) */
+            -webkit-font-synthesis: none;
+            transition: box-shadow .15s, background .15s;
+        }
+        /* 2026-06-18 v565: 호버 시 부드러운 그림자 표시 → 클릭/드래그 가능함을 시각화 */
+        .me-item.text:hover:not(.selected) { box-shadow: 0 0 0 1px rgba(0,122,255,0.35); border-radius:3px; }
+        .me-item.text.selected { cursor: text; }
+        .me-stage {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .me-del { position:absolute; right:-6px; top:-6px; width:18px; height:18px; background:#ff3b30; color:#fff; border-radius:50%; font-size:10px; line-height:18px; text-align:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.25); font-weight:600; touch-action:none; }
+        /* 2026-06-14: Smart guide — 드래그 중 캔버스 중앙 라인 */
+        .me-guide { position:absolute; background:#ec4899; pointer-events:none; z-index:100; }
+        .me-guide-v { width:1px; top:0; bottom:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
+        .me-guide-h { height:1px; left:0; right:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
+        /* 2026-06-14: 모바일 — 핸들·삭제버튼 터치 친화적 크기 + 텍스트 편집 UX */
+        @media (max-width: 768px) {
+            .me-handle { width:20px; height:20px; border-width:2.5px; }
+            .me-handle-nw { left:-10px; top:-10px; }
+            .me-handle-ne { right:-10px; top:-10px; }
+            .me-handle-sw { left:-10px; bottom:-10px; }
+            .me-handle-se { right:-10px; bottom:-10px; }
+            .me-handle-n  { top:-10px; }
+            .me-handle-s  { bottom:-10px; }
+            .me-handle-e  { right:-10px; }
+            .me-handle-w  { left:-10px; }
+            .me-handle-rot { left:auto; right:-34px; top:-34px; margin-left:0; width:28px; height:28px; }
+            .me-handle-rot::before { top:20px; height:24px; }
+            .me-del { width:24px; height:24px; font-size:14px; line-height:24px; right:-12px; top:-12px; }
+            /* 2026-06-18 v573: 모바일 툴바 → 3행 grid 레이아웃
+               Row 1: 템플릿 (full width)
+               Row 2: 되돌리기 / 업로드 / 누끼 / 칼선  (4-col)
+               Row 3: 글씨 / 가이드 / 배경 / 도형(네모+동그라미) (4-col) */
+            .me-toolbar { display:grid !important; grid-template-columns:repeat(4, 1fr) !important; gap:5px !important; padding:8px 8px !important; overflow:visible !important; }
+            .me-toolbar::-webkit-scrollbar { display:none; }
+            .me-toolbar > .me-r1 { grid-column: 1 / -1; width:100%; box-sizing:border-box; }
+            .me-toolbar > .me-r2, .me-toolbar > .me-r3 { min-width:0; box-sizing:border-box; }
+            /* 도형 그룹 — 한 그리드 셀 안에 네모/동그라미 가로 나란히 (span 이 grid item) */
+            .me-tool-shape-group { display:flex !important; gap:3px; min-width:0; align-items:stretch; }
+            .me-tool-shape-group > button { flex:1 !important; padding:8px 0 !important; min-width:0 !important; }
+            .me-tool-btn { padding:8px 11px !important; font-size:12px !important; flex:0 0 auto; min-height:36px; display:inline-flex !important; align-items:center; justify-content:center; gap:5px !important; white-space:nowrap; }
+            .me-tool-btn .me-tb-lbl, .me-color-wrap .me-tb-lbl { display:inline !important; font-size:12px !important; }
+            .me-tool-btn.accent .me-tb-lbl { display:inline !important; font-size:12.5px !important; }
+            .me-tool-btn .me-tb-ic { font-size:13px !important; margin:0 !important; }
+            .me-color-wrap { padding:6px 9px !important; min-height:36px; gap:5px !important; white-space:nowrap !important; flex-direction:row !important; align-items:center !important; flex:0 0 auto; }
+            .me-color-wrap input[type=color] { width:22px !important; height:22px !important; }
+            /* 2026-06-15: 모바일 props 패널 — 라벨 숨기고 컴팩트 */
+            /* 2026-06-18 v578: 모바일도 min-height + overflow:visible → 받침대 슬라이더 등 추가 컨트롤 표시 */
+            .me-props { padding:6px 6px !important; gap:5px !important; flex-wrap:wrap !important; min-height:80px !important; align-content:flex-start !important; align-items:flex-start !important; overflow:visible !important; }
+            .me-prop-group { padding:5px 8px !important; font-size:12px !important; gap:4px !important; }
+            .me-prop-group label { display:none !important; }
+            .me-prop-group input[type=number] { width:38px !important; font-size:12px !important; }
+            .me-prop-group select { min-width:80px !important; max-width:110px !important; font-size:12px !important; padding:2px 12px 2px 2px !important; }
+            .me-prop-group input[type=color] { width:20px !important; height:20px !important; }
+            .me-prop-btn { padding:5px 8px !important; min-width:28px !important; }
+            /* 텍스트 — 선택 시 padding 확장 (탭 영역 보장) + 편집 중 배경 강조 */
+            .me-item.text { padding: 6px 8px !important; min-height: 28px; }
+            .me-item.text.selected { background: rgba(0,122,255,0.06); border-radius:4px; }
+            .me-item.text[contenteditable="true"] {
+                background: rgba(255,255,255,0.95) !important;
+                box-shadow: 0 0 0 2px #007AFF, 0 4px 16px rgba(0,0,0,0.2);
+                -webkit-user-select: text; user-select: text;
+            }
+        }
+        /* 데스크톱도 편집 중 강조 */
+        .me-item.text[contenteditable="true"] {
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 0 0 1.5px #007AFF;
+        }
+        /* 속성 패널 */
+        /* 2026-06-15: props bar 항상 표시 (선택 없을 때도 stub) */
+        /* 2026-06-18 v578: 기본 2줄 분량 + 받침대 모드 등 추가 컨트롤 있을 땐 확장 가능 (min-height) */
+        .me-props { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; align-content:flex-start; padding:10px 12px; background:rgba(255,255,255,0.72); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); min-height:96px; box-sizing:border-box; }
+        .me-props .me-prop-group { flex-shrink:0; min-height:36px; }
+        .me-props.show { display:flex; }
+        .me-props.me-props-stub { opacity:0.55; pointer-events:none; }
+        .me-props.me-props-stub * { user-select:none; }
+        .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
+        .me-prop-group label { color:#86868b; font-size:11px; font-weight:500; }
+        .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:none; background:transparent; border-radius:4px; font-size:12px; font-family:inherit; outline:none; color:#1d1d1f; font-weight:600; }
+        .me-prop-group input[type=number] { width:42px; -moz-appearance:textfield; }
+        .me-prop-group input[type=number]::-webkit-outer-spin-button, .me-prop-group input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+        .me-prop-group input[type=color] { width:22px; height:22px; border:none; padding:0; cursor:pointer; background:transparent; border-radius:50%; }
+        .me-prop-group select { min-width:96px; -webkit-appearance:none; -moz-appearance:none; appearance:none; padding-right:14px; background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 6' fill='%2386868b'%3e%3cpath d='M4 6L0 0h8z'/%3e%3c/svg%3e"); background-repeat:no-repeat; background-position:right 2px center; background-size:7px 5px; }
+        .me-prop-btn { padding:5px 10px; background:transparent; border:none; border-radius:6px; font-size:12px; color:#1d1d1f; cursor:pointer; font-family:inherit; font-weight:600; min-width:26px; }
+        .me-prop-btn:hover { background:rgba(120,120,128,0.18); }
+        .me-prop-btn.active { background:#007AFF; color:#fff; }
+        /* 2026-06-15: 두께 S/M/B 토글 — 가독성 위해 단색 배경. S=얇게, M=보통, B=굵게. */
+        .me-prop-btn.smb { padding:4px 9px; font-size:11.5px; font-weight:800; min-width:24px; letter-spacing:0.5px; }
+        .me-prop-btn.smb[data-weight]:not(.active) { background:rgba(120,120,128,0.10); }
+        .me-prop-btn.smb[data-weight="300"]:not(.active) { font-weight:300; }
+        .me-prop-btn.smb[data-weight="700"]:not(.active),
+        .me-prop-btn.smb[data-weight="800"]:not(.active),
+        .me-prop-btn.smb[data-weight="900"]:not(.active) { font-weight:800; }
+        /* 우클릭 컨텍스트 메뉴 */
+        .me-ctx { position:fixed; z-index:100002; background:rgba(250,250,250,0.88); -webkit-backdrop-filter:saturate(180%) blur(22px); backdrop-filter:saturate(180%) blur(22px); border:0.5px solid rgba(0,0,0,0.10); border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,0.18); padding:5px; min-width:200px; font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", system-ui, sans-serif; }
+        .me-ctx button { display:flex; align-items:center; gap:8px; width:100%; padding:7px 12px; background:transparent; border:none; border-radius:6px; font-size:13px; font-weight:500; color:#1d1d1f; cursor:pointer; text-align:left; font-family:inherit; letter-spacing:-0.2px; }
+        .me-ctx button:hover { background:#007AFF; color:#fff; }
+        .me-ctx button.danger { color:#ff3b30; }
+        .me-ctx button.danger:hover { background:#ff3b30; color:#fff; }
+        .me-ctx hr { border:none; border-top:0.5px solid rgba(0,0,0,0.12); margin:4px 0; }
