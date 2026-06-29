@@ -101,7 +101,7 @@ serve(async (req) => {
 
             // 본인은 추천 적립 1회만
             const { data: prev } = await admin.from("wallet_logs")
-                .select("id").eq("user_id", applicant.id).eq("type", "referral_bonus").limit(1);
+                .select("id").eq("user_id", applicant.id).eq("type", "event_referral").limit(1);
             if (prev && prev.length) return json({ error: "이미 추천인 적립을 받으셨습니다. (계정당 1회)" });
 
             // 양쪽 event_coupon 증액
@@ -109,8 +109,8 @@ serve(async (req) => {
             await admin.from("profiles").update({ event_coupon: (referrer.event_coupon || 0) + REFERRAL_KRW }).eq("id", referrer.id);
             // 원장 기록 (감사·중복방지)
             await admin.from("wallet_logs").insert([
-                { user_id: applicant.id, type: "referral_bonus", amount: REFERRAL_KRW, description: "추천인 적립(피추천) ref=" + referrer.id },
-                { user_id: referrer.id, type: "referral_bonus", amount: REFERRAL_KRW, description: "추천 적립(추천인) applicant=" + applicant.id },
+                { user_id: applicant.id, type: "event_referral", amount: REFERRAL_KRW, description: "추천인 적립(피추천) ref=" + referrer.id },
+                { user_id: referrer.id, type: "event_referral", amount: REFERRAL_KRW, description: "추천 적립(추천인) applicant=" + applicant.id },
             ]);
             return json({ ok: true, amount: REFERRAL_KRW });
         }
