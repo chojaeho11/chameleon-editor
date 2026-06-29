@@ -19634,8 +19634,10 @@ window.showCategoryProducts = async function(catKey, catName, catDesc, backActio
 
             // 2026-06-27: 허니콤보드(원판) 상품 — 헥사라이트 메인(hexa-board.com)으로 보냄.
             //   옛 'Honeycomb Board' 카테고리 상품(16mm 원판 등) 딥링크가 깨진 generic 페이지로 뜨던 것 → 원판 도매 메인으로.
+            //   2026-06-29: 단, hexa-board.com 안에서는 제외 — 이미 원판 도메인이라 메인으로 보내면 제품이 안 열리고 루프.
+            //   (hexa-board 의 상품 클릭은 이 상세를 그대로 열어야 함 — 정상 sub-category 제품처럼.)
             try {
-                if ((product.category || '') === 'Honeycomb Board') {
+                if ((product.category || '') === 'Honeycomb Board' && (location.hostname || '').indexOf('hexa-board') < 0) {
                     location.replace('https://www.hexa-board.com/');
                     return;
                 }
