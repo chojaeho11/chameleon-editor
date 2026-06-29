@@ -8494,6 +8494,18 @@ html, body { background: #ffffff !important; }
         }
         list.innerHTML = html;
         sec.style.display = '';
+        // 2026-06-29: 가벽 — 이미 선택된 파인텍스/입체부착물의 안내·색상 박스 렌더 (카트 편집 재진입 포함)
+        if (state.isWall) {
+            try {
+                (renderList || []).forEach(function(a){
+                    if (a && state.selectedAddons && state.selectedAddons[a.code]) {
+                        var cb = list.querySelector('input[type=checkbox][data-addon-code="' + String(a.code).replace(/"/g,'\\"') + '"]');
+                        if (cb && !cb.checked) { cb.checked = true; var _l = cb.closest('label'); if (_l) { _l.style.borderColor = '#0f172a'; _l.style.background = '#f8fafc'; } }
+                    }
+                });
+                _soRenderWallAddonExtra();
+            } catch(_we){}
+        }
     }
 
     // 2026-05-13: 가벽 가로 변경 시 조명 옵션 수량 자동 재계산
@@ -10907,6 +10919,46 @@ html, body { background: #ffffff !important; }
     //   선반 추가 (45645): 가로(cm) + 칸수 입력 popup → qty = ceil(width/100).
     var _CUTOUT_CODE = '34234456';
     var _SHELF_CODE = '45645';
+    // 2026-06-29: 파인텍스(hb_finetex) — 1m² 1만원 안내 + 색상선택 / 입체부착물(hb_cube3d) — 최대 50×50cm 안내.
+    var _FINETEX_CODE = 'hb_finetex';
+    var _CUBE3D_CODE = 'hb_cube3d';
+    var _FINETEX_COLORS = [
+        { name: '빨강', name_jp: '赤',     name_us: 'Red',         hex: '#dc2626' },
+        { name: '녹색', name_jp: '緑',     name_us: 'Green',       hex: '#16a34a' },
+        { name: '연두', name_jp: '黄緑',   name_us: 'Light green', hex: '#a3e635' },
+        { name: '파랑', name_jp: '青',     name_us: 'Blue',        hex: '#2563eb' },
+        { name: '회색', name_jp: 'グレー', name_us: 'Gray',        hex: '#6b7280' }
+    ];
+    window._soPickFinetexColor = function (nameKr) { state.finetexColor = nameKr; _soRenderWallAddonExtra(); };
+    function _soRenderWallAddonExtra() {
+        var sec = document.getElementById('soAddonSection');
+        if (!sec) return;
+        var box = document.getElementById('soWallAddonExtra');
+        if (!box) { box = document.createElement('div'); box.id = 'soWallAddonExtra'; box.style.cssText = 'margin-top:10px;'; sec.appendChild(box); }
+        var sel = state.selectedAddons || {};
+        var lang = getLang();
+        var html = '';
+        if (sel[_FINETEX_CODE]) {
+            var chips = _FINETEX_COLORS.map(function (c) {
+                var on = state.finetexColor === c.name;
+                var lbl = (lang === 'ja') ? c.name_jp : ((lang === 'kr' || lang === 'ko') ? c.name : c.name_us);
+                return '<button type="button" onclick="window._soPickFinetexColor(\'' + c.name + '\')" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border:2px solid ' + (on ? '#0f172a' : '#e2e8f0') + ';border-radius:9px;background:#fff;cursor:pointer;font-size:12px;font-weight:700;color:#1e293b;">' +
+                    '<span style="width:14px;height:14px;border-radius:50%;background:' + c.hex + ';border:1px solid #cbd5e1;flex-shrink:0;"></span>' + lbl + '</button>';
+            }).join('');
+            html += '<div style="padding:11px 13px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;margin-bottom:8px;font-size:12.5px;color:#1e40af;line-height:1.6;">' +
+                '<div style="font-weight:800;">🧵 ' + tr('파인텍스', 'ファインテックス', 'Fine-tex') + ' — ' + tr('1제곱미터 기준 1만원입니다.', '1平方メートルあたり1,000円です。', '$10 per square meter.') + '</div>' +
+                '<div style="font-weight:700;margin-top:7px;margin-bottom:5px;">' + tr('색상 선택', '色を選択', 'Choose color') + (state.finetexColor ? ' · <span style="color:#0f172a;">' + esc(state.finetexColor) + '</span>' : ' <span style="color:#dc2626;">(' + tr('미선택', '未選択', 'not selected') + ')</span>') + '</div>' +
+                '<div style="display:flex;gap:7px;flex-wrap:wrap;">' + chips + '</div>' +
+                '</div>';
+        }
+        if (sel[_CUBE3D_CODE]) {
+            html += '<div style="padding:11px 13px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:12.5px;color:#9a3412;line-height:1.6;font-weight:700;">' +
+                '🧩 ' + tr('입체부착물은 최대 50×50cm 이내입니다. 더 큰 사이즈는 인쇄커팅을 이용해 주세요.', '立体貼付物は最大50×50cm以内です。これより大きいサイズは印刷カットをご利用ください。', '3D attachments are up to 50×50cm. For larger sizes, please use print-cutting.') +
+                '</div>';
+        }
+        box.innerHTML = html;
+    }
+    window._soRenderWallAddonExtra = _soRenderWallAddonExtra;
     function _soShowShelfPopup(addonCb, qtyInp) {
         // 가로 / 칸수 입력 모달
         var oldEl = document.getElementById('soShelfPopup');
@@ -11050,7 +11102,11 @@ html, body { background: #ffffff !important; }
             delete state.selectedAddons[code];
             delete state.addonQuantities[code];
             if (_qInp) _qInp.value = 1;
+            // 2026-06-29: 파인텍스 해제 시 색상 초기화
+            if (code === _FINETEX_CODE) state.finetexColor = null;
         }
+        // 2026-06-29: 파인텍스 색상선택 / 입체부착물 안내 박스 갱신
+        if (state.isWall) { try { _soRenderWallAddonExtra(); } catch(_we){} }
         recalc();
     };
 
@@ -12482,6 +12538,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-26: 아크릴 컬러칩 — 금경(acrl30002)/은경(acrl30001) 미러 제외, 아크릴 family 전 제품 표시
         state.isAcrylicPrint = !!(p && _soIsAcrylicFamilyProduct(p) && p.code !== 'acrl30001' && p.code !== 'acrl30002');
         state.selectedAcrylicColorFile = null; state.selectedAcrylicColor = null; state.selectedAcrylicColorName = null;
+        state.finetexColor = null;   // 2026-06-29: 파인텍스 색상 초기화
         var _acColorSec = document.getElementById('soAcrylicColorSection');
         if (_acColorSec) _acColorSec.style.display = state.isAcrylicPrint ? '' : 'none';
         if (state.isAcrylicPrint && typeof window._soRenderAcrylicColors === 'function') window._soRenderAcrylicColors();
@@ -15568,6 +15625,8 @@ html, body { background: #ffffff !important; }
             rawBoardDouble: !!state.isRawBoardDouble,
             // 2026-06-26: 반투명아크릴(acrl20003) 선택 색상 — 작업지시서 표시용
             acrylicColor: (state.isAcrylicPrint && state.selectedAcrylicColorName) ? { code: state.selectedAcrylicColor, name: state.selectedAcrylicColorName, file: state.selectedAcrylicColorFile } : null,
+            // 2026-06-29: 파인텍스(가벽 옵션) 선택 색상 — 작업지시서 표시용
+            finetexColor: (state.selectedAddons && state.selectedAddons['hb_finetex'] && state.finetexColor) ? state.finetexColor : null,
             // 2026-05-13: 받침대 옵션 (등신대·자유인쇄커팅)
             // 2026-05-22: 받침대 다중 — 배열로 저장 [{key,fee,qty,label}, ...]
             baseStands: (function () {

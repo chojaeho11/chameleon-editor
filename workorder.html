@@ -884,6 +884,11 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _acImg = _ac.file ? `<img src="/acrylic-chips/${esc(_ac.file)}" alt="" style="width:34px; height:34px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb; vertical-align:middle; margin-right:8px;">` : '';
                 boxes.push(`<div class="opt-box" style="border-color:#bae6fd; background:#f0f9ff;"><div class="opt-head" style="color:#0369a1;">아크릴 색상</div><div class="opt-val" style="line-height:1.8;">${_acImg}<b style="color:#0369a1;">${esc(_ac.name || '')}</b>${_ac.code ? ' <span style="color:#64748b; font-weight:500;">(' + esc(_ac.code) + ')</span>' : ''}</div></div>`);
             }
+            // 2026-06-29: 파인텍스(가벽 옵션) 선택 색상
+            if (it.finetexColor) {
+                const _ftHex = ({'빨강':'#dc2626','녹색':'#16a34a','연두':'#a3e635','파랑':'#2563eb','회색':'#6b7280'})[it.finetexColor] || '#94a3b8';
+                boxes.push(`<div class="opt-box" style="border-color:#93c5fd; background:#eff6ff;"><div class="opt-head" style="color:#1e40af;">파인텍스 색상</div><div class="opt-val" style="line-height:1.8;"><span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${_ftHex};border:1px solid #cbd5e1;vertical-align:middle;margin-right:7px;"></span><b style="color:#1e40af;">${esc(it.finetexColor)}</b></div></div>`);
+            }
 
             // 2026-06-13: 스티커 옵션 박스
             // 2026-06-16: 신규 sticker schema 반영 — { productCode, w, h, qty, coating, foils, isFancy }.
@@ -1029,7 +1034,7 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 'shipping','itemNote','item_note','mgr_size_w','mgr_size_h','mgr_size','mgr_memo',
                 'selectedAddons','addonQuantities','addons','customSize','boxSize','cutPrint','cutBoardMaterial',
                 'standeeMaterial','baseStands','baseStand','wallSize','wall_size','wallSide','wall_side',
-                'wallCount','wallShape','wallShapeFee','rawBoardDouble','scarciTitle','scarciSub','acrylicColor',
+                'wallCount','wallShape','wallShapeFee','rawBoardDouble','scarciTitle','scarciSub','acrylicColor','finetexColor',
                 'bizCard','sticker','isInstaPanel','instaTitle','instaSub','instaHashtag','instaLogo','instaSmall',
                 'isGate','gate','designRequest','source','fabricType','fabricColor','fabricCode','fabricName',
                 'pattern_spec','width_mm','height_mm','width_cm','height_cm','width','height','w','h',
