@@ -4303,6 +4303,8 @@ html, body { background: #ffffff !important; }
                 const line = addonPrice * aQty;
                 addonTotal += line;
                 let nm = addon.name || code;
+                // 2026-06-29: 파인텍스 — 선택 색상을 가격 내역에 표기
+                if (code === 'hb_finetex' && state.finetexColor) nm = nm + '(' + state.finetexColor + ')';
                 addonBreakdownLines.push(
                     '<div class="so-price-row"><span>· ' + nm + ' × ' + aQty + '</span><span>+' + fmtPrice(line) + '</span></div>'
                 );
@@ -9251,6 +9253,7 @@ html, body { background: #ffffff !important; }
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
             baseStands: Object.assign({}, state.baseStands || {}),
             addonsTotal: addonsTotal,
+            finetexColor: (state.selectedAddons && state.selectedAddons['hb_finetex'] && state.finetexColor) ? state.finetexColor : null,
             lineTotal: lineTotal
         };
         state._adLines.push(snapshot);
@@ -9586,6 +9589,9 @@ html, body { background: #ffffff !important; }
             var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g,'\\"') + '"]');
             if (qi && state.addonQuantities[code]) qi.value = state.addonQuantities[code];
         });
+        // 2026-06-29: 파인텍스 색상 복원 + 안내/색상칩 박스 재렌더
+        state.finetexColor = line.finetexColor || null;
+        if (state.isWall) { try { _soRenderWallAddonExtra(); } catch(_we){} }
         // 받침대
         state.baseStands = Object.assign({}, line.baseStands || {});
         document.querySelectorAll('#soBaseStandList input[type=checkbox][data-bs-key]').forEach(function(cb){
@@ -9646,6 +9652,8 @@ html, body { background: #ffffff !important; }
                 var addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
                 var nm = addon.name_kr || addon.name || addon.display_name || code;
+                // 2026-06-29: 파인텍스 — 선택 색상 표기
+                if (code === 'hb_finetex' && line.finetexColor) nm = nm + '(' + line.finetexColor + ')';
                 var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
                 details.push(nm + (aQty > 1 ? ' ' + aQty + tr('개','個','pcs') : ''));
             });
