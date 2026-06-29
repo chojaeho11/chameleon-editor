@@ -1889,15 +1889,54 @@ async function submitRollFabricRequest() {
     
             <!-- 2026-06-15: 별도 누끼따기 패널 제거 — 에디터 툴바의 [누끼따기] 버튼이 선택 이미지에 직접 적용. -->
         </div>
+        <!-- 2026-06-29: 인라인 디자인 템플릿 줄 (banner 카테고리) — 클릭 시 _meLoadTemplate -->
+        <div id="cpTplStrip" style="margin-top:16px;">
+            <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:8px;">디자인 템플릿 <span style="font-weight:500; color:#64748b; font-size:12px;">— 클릭하면 캔버스에 바로 적용</span></div>
+            <div id="cpTplGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;"><div style="color:#94a3b8; font-size:13px; padding:14px;">로딩 중...</div></div>
+        </div>
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
 <script src="./mini-editor.js?v=1"></script>
 <script>
-  // 패브릭 단독 부트스트랩 — 템플릿 카테고리 = 'banner'(일반 인쇄물 공용 디자인 템플릿) + 라이브러리 선로드
+  // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄
   window._meCurrentCategory = window._meCurrentCategory || 'banner';
   window._meCurrentProductCode = window._meCurrentProductCode || '';
   try { if (typeof window.loadEditorLibraries === "function") window.loadEditorLibraries(); } catch(e){}
+  (function(){
+    var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
+    function ready(fn){ if (document.readyState !== 'loading') setTimeout(fn, 350); else document.addEventListener('DOMContentLoaded', function(){ setTimeout(fn, 350); }); }
+    window._cpPickTpl = function(i){ var t = (window.__cpTpls||[])[i]; if (t && typeof window._meLoadTemplate === 'function') window._meLoadTemplate(t); };
+    async function loadTpls(){
+      var grid = document.getElementById('cpTplGrid'); if (!grid) return;
+      if (typeof supabase === 'undefined') { grid.innerHTML=''; return; }
+      var h = (location.hostname||'').toLowerCase();
+      var site = (h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)?'JP':((h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)?'US':'KR');
+      try {
+        var sb = supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co', ANON);
+        var resp = await sb.from('admin_templates')
+          .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots')
+          .eq('product_category', window._meCurrentCategory || 'banner')
+          .eq('is_active', true).eq('status', 'approved').eq('site_code', site)
+          .order('sort_order', { ascending: true }).order('id', { ascending: false });
+        var rows = (resp && resp.data) || [];
+        if (!rows.length) { grid.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:14px;">등록된 템플릿이 없습니다.</div>'; return; }
+        window.__cpTpls = rows;
+        grid.innerHTML = rows.map(function(t, i){
+          var thumb = t.thumbnail_url || t.background_url || '';
+          return '<button type="button" onclick="window._cpPickTpl(' + i + ')" style="flex:0 0 auto; width:132px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff; cursor:pointer; padding:0; font-family:inherit;">' +
+            '<img src="' + String(thumb).replace(/"/g,'&quot;') + '" alt="" loading="lazy" style="width:132px; height:132px; object-fit:cover; display:block; background:#f1f5f9;">' +
+            '<div style="font-size:11px; color:#475569; padding:6px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + String(t.name||'').replace(/</g,'&lt;') + '</div>' +
+            '</button>';
+        }).join('');
+      } catch(e) { grid.innerHTML = '<div style="color:#dc2626; font-size:12px; padding:14px;">템플릿 로드 실패</div>'; }
+    }
+    ready(function(){
+      // 기본 대지 = 정사각
+      try { var sq = document.querySelector('#meSizes .me-size-btn[data-w="500"][data-h="500"]'); if (sq) sq.click(); } catch(e){}
+      loadTpls();
+    });
+  })();
 </script>
 <style>
 /* ========== 디자인 시스템 — 슬레이트 + 인디고, 미니멀 ========== */
