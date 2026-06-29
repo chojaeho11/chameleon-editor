@@ -1894,8 +1894,8 @@ async function submitRollFabricRequest() {
 <script src="./editor-libs.js?v=1"></script>
 <script src="./mini-editor.js?v=1"></script>
 <script>
-  // 패브릭 단독 부트스트랩 — 템플릿 카테고리 기본값(공용 asset) + 라이브러리 선로드
-  window._meCurrentCategory = window._meCurrentCategory || 'asset';
+  // 패브릭 단독 부트스트랩 — 템플릿 카테고리 = 'banner'(일반 인쇄물 공용 디자인 템플릿) + 라이브러리 선로드
+  window._meCurrentCategory = window._meCurrentCategory || 'banner';
   window._meCurrentProductCode = window._meCurrentProductCode || '';
   try { if (typeof window.loadEditorLibraries === "function") window.loadEditorLibraries(); } catch(e){}
 </script>
