@@ -13050,6 +13050,8 @@ html, body { background: #ffffff !important; }
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
                     var act = (w.type === 'plain'); // 기본 = 개별포장(인쇄없음)
                     var lbl = tr(w.label_ko, w.label_jp, w.label_en);
+                    // 2026-06-29: 괄호(인쇄없음/印刷なし) 부분은 통째로 다음 줄로 — 1글자만 떨어지는 현상 방지
+                    var lblHtml = lbl.replace(/\s*[（(]/, '<br>$&');
                     var feeStr = '+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc');
                     var feeColor = '#dc2626';
                     return '<button type="button" class="so-wrap-card' + (act ? ' active' : '') + '" '
@@ -13061,7 +13063,7 @@ html, body { background: #ffffff !important; }
                         + 'transition:border-color 0.15s ease; font-family:inherit;">'
                         + '<img src="' + w.img + '" alt="' + lbl + '" loading="lazy" '
                         + 'style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">'
-                        + '<span style="font-size:11.5px; font-weight:800; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.2;">' + lbl + '</span>'
+                        + '<span style="font-size:11.5px; font-weight:800; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.25; word-break:keep-all;">' + lblHtml + '</span>'
                         + '<span style="font-size:10.5px; font-weight:800; color:' + feeColor + ';">' + feeStr + '</span>'
                         + '</button>';
                 }).join('');
