@@ -725,7 +725,7 @@ window._cottonSearch = function(){
                     <!-- 2026-06-01: 이벤트 쿠폰 받기 — 매니저 카드 내부 통합 (아이콘 없이 텍스트만) -->
                     <button type="button" onclick="window._openCpCouponModal && window._openCpCouponModal()"
                         style="width:100%; margin-top:6px; padding:10px; background:linear-gradient(135deg,#f472b6,#be185d); color:#fff; border:none; border-radius:8px; font-size:12.5px; font-weight:500; cursor:pointer; box-shadow:0 4px 12px -2px rgba(190,24,93,0.5); letter-spacing:0.3px; font-family:inherit;">
-                        <span id="cpCouponInlineLabel">이벤트 쿠폰 받기</span>
+                        <span id="cpCouponInlineLabel">회원가입이벤트</span>
                     </button>
                 </div>
                 <!-- 2026-06-10: JP 전용 — 受付照会 + 配送案内 (LINE 상담으로 주문, 진행상황은 추적페이지로) -->
@@ -867,30 +867,54 @@ window._cottonSearch = function(){
                 en: { t:'Free Fabric Sample', d:'Check quality in person', btn:'Request Sample' }
             };
             var COUPON = {
-                ko: { title:'🎁 이벤트 쿠폰 받기', subtitle:'클릭하여 자세히 보기 →',
-                      modalTitle:'🎁 이벤트 쿠폰 받기',
+                ko: { title:'🎁 회원가입이벤트', subtitle:'클릭하여 자세히 보기 →',
+                      modalTitle:'🎁 회원가입이벤트',
                       line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
-                      line2:'SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득',
-                      fEmail:'가입 아이디 또는 이메일', fScreenshot:'스크린샷', hintScreenshot:'캡처해서 사진올려주세요.', submit:'쿠폰 신청',
-                      success:'신청이 접수되었습니다! 관리자 확인 후 24시간 내 100,000원 쿠폰이 지급됩니다.',
-                      reqLogin:'먼저 로그인해 주세요. 회원가입하면 30,000원 쿠폰이 자동 지급됩니다.',
-                      reqFields:'가입 이메일과 스크린샷은 필수입니다.' },
-                ja: { title:'🎁 イベントクーポン申請', subtitle:'タップして詳細 →',
-                      modalTitle:'🎁 イベントクーポン申請',
+                      signupBtn:'메인 사이트에서 회원가입하기 →',
+                      refTitle:'<b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 1만원</b>',
+                      refDesc:'추천인을 검색해 입력하면 추천인과 본인 모두에게 1만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)',
+                      refSelfLbl:'본인 가입 아이디 또는 이메일',
+                      refSelfPh:'가입한 아이디/이메일',
+                      refSearchLbl:'추천인 검색 (아이디·전화번호·이름)',
+                      refSearchPh:'추천인 아이디/전화/이름 입력',
+                      refSearchBtn:'검색', refSearching:'검색 중...', refNoResult:'검색 결과가 없습니다.',
+                      refSelected:'선택된 추천인:', refSubmit:'추천 적립 받기',
+                      refNoSelf:'본인 가입 아이디/이메일을 입력해 주세요.',
+                      refNoRef:'추천인을 검색해서 선택해 주세요.',
+                      refSuccess:'🎉 적립 완료! 추천인과 회원님 모두에게 1만원이 적립되었습니다.',
+                      signupRedirect:'회원가입은 메인 사이트(카멜레온)에서 진행됩니다. 이동할까요?\n가입 후 3만원 쿠폰이 자동 지급됩니다.' },
+                ja: { title:'🎁 会員登録イベント', subtitle:'タップして詳細 →',
+                      modalTitle:'🎁 会員登録イベント',
                       line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
-                      line2:'SNSに <b>Chameleonで作った作品</b> を投稿して <b style="color:#be185d;">10,000円</b> クーポンGET',
-                      fEmail:'登録ID または メール', fScreenshot:'スクリーンショット', hintScreenshot:'キャプチャした画像をアップロードしてください。', submit:'申請する',
-                      success:'申請を受け付けました！管理者確認後、24時間以内に10,000円クーポンが付与されます。',
-                      reqLogin:'先にログインしてください。会員登録すると3,000円クーポンが自動付与されます。',
-                      reqFields:'登録メールとスクリーンショットは必須です。' },
-                en: { title:'🎁 Claim Event Coupon', subtitle:'Tap to learn more →',
-                      modalTitle:'🎁 Claim Event Coupon',
+                      signupBtn:'メインサイトで会員登録する →',
+                      refTitle:'<b>紹介者特典</b> — 紹介者と私に <b style="color:#be185d;">各1,000円</b>',
+                      refDesc:'紹介者を検索して入力すると、紹介者ご本人の両方に1,000円が付与されます。（イベントクーポンは購入金額の50%まで利用可）',
+                      refSelfLbl:'ご本人の登録ID または メール',
+                      refSelfPh:'登録したID/メール',
+                      refSearchLbl:'紹介者を検索 (ID・電話番号・名前)',
+                      refSearchPh:'紹介者のID/電話/名前を入力',
+                      refSearchBtn:'検索', refSearching:'検索中...', refNoResult:'検索結果がありません。',
+                      refSelected:'選択した紹介者:', refSubmit:'紹介特典を受け取る',
+                      refNoSelf:'ご本人の登録ID/メールを入力してください。',
+                      refNoRef:'紹介者を検索して選択してください。',
+                      refSuccess:'🎉 付与完了！紹介者とお客様の両方に1,000円が付与されました。',
+                      signupRedirect:'会員登録はメインサイト(Chameleon)で行います。移動しますか?\n登録後、3,000円クーポンが自動付与されます。' },
+                en: { title:'🎁 Signup Event', subtitle:'Tap to learn more →',
+                      modalTitle:'🎁 Signup Event',
                       line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
-                      line2:'Post your <b>Chameleon-made artwork</b> on SNS for a <b style="color:#be185d;">$100</b> coupon',
-                      fEmail:'Account ID or email', fScreenshot:'Screenshot', hintScreenshot:'Please upload a screenshot.', submit:'Submit',
-                      success:'Claim received! Coupon will appear within 24 hours.',
-                      reqLogin:'Please log in first. Signup grants a $30 coupon automatically.',
-                      reqFields:'Email and screenshot are required.' }
+                      signupBtn:'Sign up on the main site →',
+                      refTitle:'<b>Referral bonus</b> — <b style="color:#be185d;">$10 each</b> for you both',
+                      refDesc:'Search and enter your referrer — both of you get a $10 coupon. (Event coupons are usable up to 50% of the order.)',
+                      refSelfLbl:'Your account ID or email',
+                      refSelfPh:'Your signup ID/email',
+                      refSearchLbl:'Find referrer (ID, phone, or name)',
+                      refSearchPh:'Referrer ID / phone / name',
+                      refSearchBtn:'Search', refSearching:'Searching...', refNoResult:'No results.',
+                      refSelected:'Selected referrer:', refSubmit:'Get referral bonus',
+                      refNoSelf:'Please enter your signup ID/email.',
+                      refNoRef:'Please search and select a referrer.',
+                      refSuccess:'🎉 Done! A $10 coupon was credited to both you and your referrer.',
+                      signupRedirect:'Signup is on the main site (Chameleon). Continue?\nA $30 coupon is granted after signup.' }
             };
             var s = SAMPLE[lang] || SAMPLE.ko;
             var c = COUPON[lang] || COUPON.ko;
@@ -916,8 +940,8 @@ window._cottonSearch = function(){
                 );
                 window.sb = sb;
             }
-            var emailIn = document.getElementById('cpCouponEmail');
-            // 같은 도메인 세션이 있으면 자동 채움 — 없으면 수동 입력 허용
+            var emailIn = document.getElementById('cpRefSelf');
+            // 같은 도메인 세션이 있으면 본인 아이디 자동 채움 — 없으면 수동 입력 허용
             try {
                 if (sb && sb.auth) {
                     var r = await sb.auth.getSession();
@@ -945,100 +969,94 @@ window._cottonSearch = function(){
         };
         // 2026-06-02: "1️⃣ 회원가입하고 쿠폰받기" 클릭 — 패브릭 도메인에서는 openAuthModal 미로드.
         //   메인 사이트 (cafe2626.com) 회원가입 페이지로 이동. 가입 후 30K 쿠폰 자동 적립됨 (login.js).
+        // 2026-06-29: 회원가입 — 항상 메인 사이트(카멜레온)에서 가입 (도메인 연동 보장).
+        //   cotton-print 에서 직접 signUp 하면 cafe2626 과 세션·연동이 끊기는 문제 → 메인으로 이동.
         window._cpCouponOpenSignup = function(){
-            // openAuthModal 이 같은 도메인에 있으면 그걸 사용 (드물지만 보존)
-            if (typeof window.openAuthModal === 'function') {
-                var couponModal = document.getElementById('cpCouponShareModal');
-                if (couponModal) couponModal.style.display = 'none';
-                window.openAuthModal('signup', function(){
-                    setTimeout(async function(){
-                        try {
-                            var sb = window.sb;
-                            if (sb && sb.auth) {
-                                var r = await sb.auth.getSession();
-                                var sess = r && r.data && r.data.session;
-                                var emailIn = document.getElementById('cpCouponEmail');
-                                if (sess && sess.user && sess.user.email && emailIn) {
-                                    emailIn.value = sess.user.email;
-                                }
-                            }
-                            if (couponModal) couponModal.style.display = 'flex';
-                            alert('🎉 가입 완료! 30,000원 이벤트 쿠폰이 지급되었습니다.');
-                        } catch(e) {}
-                    }, 400);
-                });
-                return;
-            }
-            // Fallback — 메인 사이트로 이동 (cafe0101/2626/3355 자동 선택)
-            var host = location.hostname || '';
             var c = window.__CP_COUPON || {};
-            var msg = (window.__CP_LANG === 'ja')
-                ? '会員登録はメインサイトで可能です。移動しますか?\n登録後、30,000円相当のクーポンが自動付与されます。'
-                : (window.__CP_LANG === 'en')
-                    ? 'Signup is on the main site. Continue?\nA $30 coupon will be granted after signup.'
-                    : '회원가입은 메인 사이트에서 가능합니다. 이동할까요?\n가입 후 30,000원 쿠폰이 자동 지급됩니다.';
+            var msg = c.signupRedirect || '회원가입은 메인 사이트에서 진행됩니다. 이동할까요?';
             if (!confirm(msg)) return;
-            // 도메인 매핑 — 사용자의 현재 lang 기준으로 적절한 사이트
             var target = 'https://www.cafe2626.com/?login=1';
             if (window.__CP_LANG === 'ja') target = 'https://www.cafe0101.com/?login=1';
             else if (window.__CP_LANG === 'en') target = 'https://www.cafe3355.com/?login=1';
-            location.href = target;
+            // 새 탭 — 가입 후 다시 돌아와 추천인 적립을 진행할 수 있도록
+            window.open(target, '_blank');
         };
-        async function _cpCouponUploadScreenshot(file){
+
+        // 2026-06-29: 추천인 검색/적립 — referral-credit edge function (service_role) 호출
+        window.__cpRefSelected = null;
+        function _cpGetSb(){
             var sb = window.sb;
-            if (!sb) throw new Error('DB not ready');
-            var ext = ((file.name||'').split('.').pop()||'png').toLowerCase();
-            var path = 'sns-share/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
-            // 'orders' 는 기존에 사용중인 public 버킷 — 검증된 위치
-            var { error } = await sb.storage.from('orders').upload(path, file, { upsert:false, contentType:file.type });
-            if (error) throw error;
-            return sb.storage.from('orders').getPublicUrl(path).data.publicUrl;
+            if (!sb && typeof supabase !== 'undefined') {
+                sb = supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
+                window.sb = sb;
+            }
+            return sb;
         }
-        window._submitCpCoupon = async function(){
+        function _cpEsc(s){ return String(s==null?'':s).replace(/[<>&"]/g, function(ch){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[ch]; }); }
+        window._cpRefSearch = async function(){
             var c = window.__CP_COUPON || {};
-            var email = (document.getElementById('cpCouponEmail').value||'').trim();
-            var file  = document.getElementById('cpCouponScreenshot').files[0];
-            if (!email || !file) { alert(c.reqFields || 'Email & screenshot required'); return; }
-            var btn = document.getElementById('cpCouponSubmitBtn');
-            if (btn) { btn.disabled = true; btn.textContent = '...'; }
+            var q = (document.getElementById('cpRefSearch').value||'').trim();
+            var box = document.getElementById('cpRefResults');
+            if (q.length < 2) { if(box){ box.style.display='none'; } return; }
+            var btn = document.getElementById('cpRefSearchBtn');
+            var old = btn ? btn.textContent : '';
+            if (btn){ btn.disabled = true; btn.textContent = '...'; }
             try {
-                var sb = window.sb;
-                if (!sb && typeof supabase !== 'undefined') {
-                    sb = supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co',
-                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y');
+                var sb = _cpGetSb();
+                var resp = await sb.functions.invoke('referral-credit', { body: { action:'search', query:q } });
+                var results = (resp && resp.data && resp.data.results) || [];
+                box.style.display = 'block';
+                if (!results.length) {
+                    box.innerHTML = '<div style="padding:11px; font-size:12.5px; color:#9ca3af; text-align:center;">'+_cpEsc(c.refNoResult||'No results.')+'</div>';
+                    return;
                 }
-                if (!sb) throw new Error('DB');
-                // 2026-06-02: cotton-print.com 은 cafe2626 과 도메인 분리 — 로그인 강제 안 함.
-                //   user_id 는 같은 도메인 세션이 있으면 자동 첨부, 없으면 null. 관리자가 email 로 매칭.
-                var userId = null;
-                try {
-                    var sess = await sb.auth.getSession();
-                    var user = sess && sess.data && sess.data.session && sess.data.session.user;
-                    if (user) userId = user.id;
-                } catch(e) {}
-                var screenshotUrl = await _cpCouponUploadScreenshot(file);
-                var info = {
-                    user_id: userId, email: email,
-                    screenshot_url: screenshotUrl,
-                    lang: window.__CP_LANG||'ko', from:'cotton_print',
-                    submitted_at: new Date().toISOString(),
-                    status: 'pending', coupon_amount_krw: 100000
-                };
-                var { error } = await sb.from('chatbot_knowledge').insert({
-                    category: '_sns_share_apps',
-                    question: 'SNS Share Claim - ' + email + ' (cotton_print, ' + (window.__CP_LANG||'ko') + ')',
-                    answer: JSON.stringify(info),
-                    is_active: true,
-                    keywords: 'sns_share cotton_print ' + (window.__CP_LANG||'ko') + ' ' + user.id
-                });
-                if (error) throw error;
-                alert(c.success || 'OK');
-                window._closeCpCouponModal();
-                var f = document.getElementById('cpCouponScreenshot'); if (f) f.value = '';
+                box.innerHTML = results.map(function(r){
+                    var lbl = _cpEsc(r.label);
+                    return '<button type="button" onclick="window._cpRefPick(\''+r.id+'\', this.getAttribute(\'data-lbl\'))" data-lbl="'+lbl+'" style="display:block; width:100%; text-align:left; padding:10px 12px; border:none; border-bottom:1px solid #f3e8ee; background:#fff; cursor:pointer; font-size:12.5px; color:#1f2937; font-family:inherit;">'+lbl+'</button>';
+                }).join('');
             } catch(e) {
-                alert('Failed: ' + (e.message||e));
+                box.style.display='block';
+                box.innerHTML = '<div style="padding:11px; font-size:12px; color:#dc2626;">'+_cpEsc(e.message||e)+'</div>';
             } finally {
-                if (btn) { btn.disabled = false; btn.textContent = c.submit || 'Submit'; }
+                if (btn){ btn.disabled = false; btn.textContent = old || (c.refSearchBtn||'검색'); }
+            }
+        };
+        window._cpRefPick = function(id, label){
+            window.__cpRefSelected = { id:id, label:label };
+            var nm = document.getElementById('cpRefSelectedName');
+            if (nm) nm.textContent = label || '';
+            var sel = document.getElementById('cpRefSelectedBox');
+            if (sel) sel.style.display = 'block';
+            var box = document.getElementById('cpRefResults');
+            if (box) box.style.display = 'none';
+        };
+        window._cpRefSubmit = async function(){
+            var c = window.__CP_COUPON || {};
+            var self = (document.getElementById('cpRefSelf').value||'').trim();
+            if (!self) { alert(c.refNoSelf||'Enter your account.'); return; }
+            if (!window.__cpRefSelected || !window.__cpRefSelected.id) { alert(c.refNoRef||'Select a referrer.'); return; }
+            var btn = document.getElementById('cpRefSubmitBtn');
+            var old = btn ? btn.textContent : '';
+            if (btn){ btn.disabled = true; btn.textContent = '...'; }
+            try {
+                var sb = _cpGetSb();
+                var resp = await sb.functions.invoke('referral-credit', { body: { action:'credit', applicant:self, referrerId: window.__cpRefSelected.id } });
+                var data = (resp && resp.data) || {};
+                if (data.ok) {
+                    alert(c.refSuccess||'Done!');
+                    window._closeCpCouponModal();
+                    window.__cpRefSelected = null;
+                    var s1=document.getElementById('cpRefSelf'); if(s1) s1.value='';
+                    var s2=document.getElementById('cpRefSearch'); if(s2) s2.value='';
+                    var sb2=document.getElementById('cpRefSelectedBox'); if(sb2) sb2.style.display='none';
+                } else {
+                    alert(data.error || (resp && resp.error && resp.error.message) || '적립에 실패했습니다.');
+                }
+            } catch(e) {
+                alert(e.message||e);
+            } finally {
+                if (btn){ btn.disabled = false; btn.textContent = old || (c.refSubmit||'추천 적립 받기'); }
             }
         };
         </script>
@@ -1051,184 +1069,66 @@ window._cottonSearch = function(){
     <div style="background:#fff; border-radius:16px; max-width:460px; width:100%; max-height:96vh; box-shadow:0 24px 70px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; position:relative; font-family:'Pretendard Variable','Pretendard','Inter',sans-serif;">
         <button onclick="window._closeCpCouponModal()" aria-label="close" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.95); border:none; color:#be185d; width:32px; height:32px; border-radius:50%; font-size:20px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.25); line-height:1; display:flex; align-items:center; justify-content:center;">&times;</button>
         <div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:16px 18px; color:#fff; flex-shrink:0;">
-            <div id="cpCouponModalTitle" style="font-size:17px; font-weight:700; letter-spacing:-0.2px;">🎁 이벤트 쿠폰 받기</div>
+            <div id="cpCouponModalTitle" style="font-size:17px; font-weight:700; letter-spacing:-0.2px;">🎁 회원가입이벤트</div>
         </div>
         <div style="padding:18px 20px; overflow-y:auto; flex:1; min-height:0;">
-            <div style="margin-bottom:18px;">
-                <!-- 1️⃣ 회원가입 — 클릭 시 인라인 폼 펼침 (2026-06-11) -->
-                <button type="button" id="cpCouponInfoLine1" onclick="window._cpToggleQuickSignup && window._cpToggleQuickSignup()"
-                    style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a; cursor:pointer; font-family:inherit; text-align:left; transition:all 0.15s;"
-                    onmouseenter="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6';"
-                    onmouseleave="this.style.background='#eff6ff'; this.style.borderColor='#c7d2fe';">
-                    <span style="font-size:20px;">1️⃣</span>
-                    <span style="flex:1;"><b>5초 회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
-                    <span id="cpQuickSignupArrow" style="font-size:13px; color:#3b82f6;">→</span>
-                </button>
-                <!-- 2026-06-11: 인라인 회원가입 폼 — 아이디 + 비번 + 비번확인 (4자+) -->
-                <div id="cpQuickSignupForm" style="display:none; padding:14px; background:#f0f9ff; border:1.5px solid #93c5fd; border-radius:10px; margin-bottom:8px;">
-                    <div style="font-size:11.5px; color:#1e3a8a; font-weight:600; margin-bottom:10px; line-height:1.5;" id="cpQuickSignupDesc">
-                        아이디(이메일)와 비밀번호만 입력하면 끝! <b>4자 이상</b> 입력 후 가입.
-                    </div>
-                    <input id="cpQuickSignupEmail" type="email" autocomplete="username" placeholder="example@email.com" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
-                    <input id="cpQuickSignupPw" type="password" autocomplete="new-password" placeholder="비밀번호 (4자 이상)" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:7px; box-sizing:border-box; background:#fff; font-family:inherit;">
-                    <input id="cpQuickSignupPwc" type="password" autocomplete="new-password" placeholder="비밀번호 확인" style="width:100%; padding:10px 12px; border:1.5px solid #c7d2fe; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box; background:#fff; font-family:inherit;">
-                    <button type="button" id="cpQuickSignupBtn" onclick="window._cpDoQuickSignup && window._cpDoQuickSignup()" style="width:100%; padding:11px; background:linear-gradient(135deg,#3b82f6,#1e40af); color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px -2px rgba(30,64,175,0.45); font-family:inherit;">
-                        <span id="cpQuickSignupBtnLbl">⚡ 5초 가입하고 3만원 쿠폰받기</span>
-                    </button>
-                </div>
-                <div id="cpCouponInfoLine2" style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; font-size:14px; color:#831843;">
+            <!-- 1️⃣ 회원가입 — 메인 사이트(카멜레온)로 이동해 가입 (도메인 연동 보장) -->
+            <button type="button" id="cpCouponInfoLine1" onclick="window._cpCouponOpenSignup && window._cpCouponOpenSignup()"
+                style="width:100%; display:flex; align-items:center; gap:10px; padding:14px 14px; background:#eff6ff; border:1px solid #c7d2fe; border-radius:10px; margin-bottom:8px; font-size:14px; color:#1e3a8a; cursor:pointer; font-family:inherit; text-align:left; transition:all 0.15s;"
+                onmouseenter="this.style.background='#dbeafe'; this.style.borderColor='#3b82f6';"
+                onmouseleave="this.style.background='#eff6ff'; this.style.borderColor='#c7d2fe';">
+                <span style="font-size:20px;">1️⃣</span>
+                <span style="flex:1;"><b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b></span>
+                <span style="font-size:13px; color:#3b82f6;">→</span>
+            </button>
+
+            <!-- 2️⃣ 추천인 적립 — 추천인과 나 각 1만원 (즉시 자동 적립) -->
+            <div style="padding:14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; margin-top:6px;">
+                <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:#831843; margin-bottom:6px;">
                     <span style="font-size:20px;">2️⃣</span>
-                    <span>SNS에 <b>카멜레온에서 만든작품</b> 올리고 <b style="color:#be185d;">10만원</b> 쿠폰획득</span>
+                    <span id="cpRefTitle"><b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 1만원</b></span>
                 </div>
+                <div id="cpRefDesc" style="font-size:11.5px; color:#9d174d; line-height:1.55; margin-bottom:12px;">추천인을 검색해 입력하면 추천인과 본인 모두에게 1만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)</div>
+
+                <label id="cpRefSelfLbl" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">본인 가입 아이디 또는 이메일</label>
+                <input id="cpRefSelf" type="text" placeholder="가입한 아이디/이메일" style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box; background:#fff; font-family:inherit;">
+
+                <label id="cpRefSearchLbl" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">추천인 검색 (아이디·전화번호·이름)</label>
+                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                    <input id="cpRefSearch" type="text" placeholder="추천인 아이디/전화/이름 입력" onkeydown="if(event.key==='Enter'){event.preventDefault(); window._cpRefSearch && window._cpRefSearch();}" style="flex:1; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; box-sizing:border-box; background:#fff; font-family:inherit;">
+                    <button id="cpRefSearchBtn" type="button" onclick="window._cpRefSearch && window._cpRefSearch()" style="flex-shrink:0; padding:10px 16px; background:#be185d; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">검색</button>
+                </div>
+                <div id="cpRefResults" style="display:none; max-height:160px; overflow-y:auto; border:1px solid #f3e8ee; border-radius:8px; margin-bottom:8px;"></div>
+                <div id="cpRefSelectedBox" style="display:none; padding:9px 12px; background:#ecfdf5; border:1.5px solid #6ee7b7; border-radius:8px; font-size:12.5px; color:#065f46; margin-bottom:10px;">
+                    <span id="cpRefSelectedLbl" style="font-weight:700;">선택된 추천인:</span> <span id="cpRefSelectedName"></span>
+                </div>
+
+                <button id="cpRefSubmitBtn" type="button" onclick="window._cpRefSubmit && window._cpRefSubmit()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.3px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">추천 적립 받기</button>
             </div>
-            <label id="cpCouponLblEmail" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">가입 아이디 또는 이메일</label>
-            <input id="cpCouponEmail" type="text" readonly style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box; background:#f9fafb;">
-            <label id="cpCouponLblScreenshot" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">스크린샷</label>
-            <div id="cpCouponHintScreenshot" style="font-size:11.5px; color:#6b7280; margin-bottom:6px; line-height:1.45;">캡처해서 사진올려주세요.</div>
-            <input id="cpCouponScreenshot" type="file" accept="image/*" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; margin-bottom:18px; box-sizing:border-box; background:#fff;">
-            <button id="cpCouponSubmitBtn" type="button" onclick="window._submitCpCoupon()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; letter-spacing:0.5px; cursor:pointer; box-shadow:0 6px 18px -6px rgba(190,24,93,0.4); font-family:inherit;">쿠폰 신청</button>
         </div>
     </div>
 </div>
 <script>
-// 쿠폰 모달 라벨 i18n
+// 쿠폰 모달 라벨 i18n (회원가입이벤트 + 추천인 적립)
 (function(){
     var c = window.__CP_COUPON;
     if (!c) return;
     function $(id){ return document.getElementById(id); }
-    if ($('cpCouponModalTitle')) $('cpCouponModalTitle').textContent = c.modalTitle;
-    if ($('cpCouponInfoLine1')) {
-        var sp = $('cpCouponInfoLine1').children[1];
-        if (sp) sp.innerHTML = c.line1;
-    }
-    if ($('cpCouponInfoLine2')) $('cpCouponInfoLine2').children[1].innerHTML = c.line2;
-    if ($('cpCouponLblEmail')) $('cpCouponLblEmail').textContent = c.fEmail;
-    if ($('cpCouponLblScreenshot')) $('cpCouponLblScreenshot').textContent = c.fScreenshot;
-    if ($('cpCouponHintScreenshot') && c.hintScreenshot) $('cpCouponHintScreenshot').textContent = c.hintScreenshot;
-    if ($('cpCouponSubmitBtn')) $('cpCouponSubmitBtn').textContent = c.submit;
+    function setHtml(id, v){ var el=$(id); if(el && v!=null) el.innerHTML = v; }
+    function setTxt(id, v){ var el=$(id); if(el && v!=null) el.textContent = v; }
+    setTxt('cpCouponModalTitle', c.modalTitle);
+    if ($('cpCouponInfoLine1')) { var sp = $('cpCouponInfoLine1').children[1]; if (sp) sp.innerHTML = c.line1; }
+    setHtml('cpRefTitle', c.refTitle);
+    setHtml('cpRefDesc', c.refDesc);
+    setTxt('cpRefSelfLbl', c.refSelfLbl);
+    setTxt('cpRefSearchLbl', c.refSearchLbl);
+    setTxt('cpRefSelectedLbl', c.refSelected);
+    var rs=$('cpRefSelf'); if(rs && c.refSelfPh) rs.placeholder=c.refSelfPh;
+    var rq=$('cpRefSearch'); if(rq && c.refSearchPh) rq.placeholder=c.refSearchPh;
+    setTxt('cpRefSearchBtn', c.refSearchBtn);
+    setTxt('cpRefSubmitBtn', c.refSubmit);
 })();
 
-// 2026-06-11: 인라인 5초 회원가입 — 아이디 + 비번 + 비번확인 (4자+) → sb.auth.signUp → 3만원 쿠폰 자동 적립
-(function(){
-    function $(id){ return document.getElementById(id); }
-    var lang = window.__CP_LANG || (function(){
-        var h = location.hostname;
-        if (h.indexOf('cafe0101')>=0 || h.indexOf('cotton-printer')>=0) return 'ja';
-        if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
-        return 'ko';
-    })();
-    var T = {
-        ko: { desc:'아이디 4자 이상, 비밀번호 <b>6자 이상</b> 입력 후 가입.',
-              phEmail:'아이디 (4자 이상)', phPw:'비밀번호 (6자 이상)', phPwc:'비밀번호 확인',
-              btn:'⚡ 5초 가입하고 3만원 쿠폰받기', btnLoading:'가입 중...',
-              errEmail:'아이디는 4자 이상이어야 합니다.', errPwLen:'비밀번호는 6자 이상이어야 합니다.',
-              errPwMatch:'비밀번호가 일치하지 않습니다.', errSignup:'가입 실패:',
-              successHtml:'🎉 가입 완료!<br>3만원 쿠폰이 자동 지급되었습니다.' },
-        ja: { desc:'ID 4文字以上、パスワード <b>6文字以上</b> で会員登録。',
-              phEmail:'ID (4文字以上)', phPw:'パスワード (6文字以上)', phPwc:'パスワード確認',
-              btn:'⚡ 5秒登録して3,000円クーポン獲得', btnLoading:'登録中...',
-              errEmail:'IDは4文字以上にしてください。', errPwLen:'パスワードは6文字以上にしてください。',
-              errPwMatch:'パスワードが一致しません。', errSignup:'登録失敗:',
-              successHtml:'🎉 登録完了!<br>3,000円クーポンが自動付与されました。' },
-        en: { desc:'Enter ID (4+ chars) and password (<b>6+ chars</b>) to join!',
-              phEmail:'ID (4+ chars)', phPw:'Password (6+ chars)', phPwc:'Confirm password',
-              btn:'⚡ 5-sec Signup & $30 Coupon', btnLoading:'Signing up...',
-              errEmail:'ID must be 4+ characters.', errPwLen:'Password must be 6+ characters.',
-              errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
-              successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
-    };
-    var t = T[lang] || T.ko;
-    // 라벨 적용
-    if ($('cpQuickSignupDesc')) $('cpQuickSignupDesc').innerHTML = t.desc;
-    if ($('cpQuickSignupEmail')) { $('cpQuickSignupEmail').placeholder = t.phEmail; $('cpQuickSignupEmail').type = 'text'; }
-    if ($('cpQuickSignupPw'))    $('cpQuickSignupPw').placeholder    = t.phPw;
-    if ($('cpQuickSignupPwc'))   $('cpQuickSignupPwc').placeholder   = t.phPwc;
-    if ($('cpQuickSignupBtnLbl')) $('cpQuickSignupBtnLbl').textContent = t.btn;
-
-    window._cpToggleQuickSignup = function(){
-        var f = $('cpQuickSignupForm'); var ar = $('cpQuickSignupArrow');
-        if (!f) return;
-        var willOpen = (f.style.display === 'none' || !f.style.display);
-        f.style.display = willOpen ? 'block' : 'none';
-        if (ar) ar.textContent = willOpen ? '▾' : '→';
-        if (willOpen) setTimeout(function(){ var i = $('cpQuickSignupEmail'); if (i) i.focus(); }, 80);
-    };
-
-    window._cpDoQuickSignup = async function(){
-        var raw = ($('cpQuickSignupEmail').value || '').trim();
-        var pw = ($('cpQuickSignupPw').value || '');
-        var pwc = ($('cpQuickSignupPwc').value || '');
-        if (raw.length < 4) { alert(t.errEmail); return; }
-        if (pw.length < 6)  { alert(t.errPwLen); return; }
-        if (pw !== pwc)     { alert(t.errPwMatch); return; }
-        // 2026-06-11: 이메일 형식 아니어도 OK — login.js 와 동일하게 @cafe2626.com 자동 부착
-        //   (크로스사이트 로그인 호환성 유지). 원본 ID 는 profiles.username 에 보존.
-        var em = raw.toLowerCase();
-        var origUsername = null;
-        if (em.indexOf('@') < 0) {
-            origUsername = raw;
-            em = raw + '@cafe2626.com';
-        }
-        var btn = $('cpQuickSignupBtn'); var lbl = $('cpQuickSignupBtnLbl');
-        btn.disabled = true;
-        if (lbl) lbl.textContent = t.btnLoading;
-        try {
-            // Supabase 클라이언트 확보
-            var sb = window.sb;
-            if (!sb && typeof supabase !== 'undefined') {
-                sb = supabase.createClient(
-                    'https://qinvtnhiidtmrzosyvys.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y'
-                );
-                window.sb = sb;
-            }
-            if (!sb) throw new Error('DB');
-            // 1) signUp
-            var up = await sb.auth.signUp({ email: em, password: pw });
-            if (up.error) {
-                var msg = up.error.message || 'signup error';
-                // 이미 가입된 이메일이면 sign in 시도
-                if (/already|exists|registered/i.test(msg)) {
-                    var inResp = await sb.auth.signInWithPassword({ email: em, password: pw });
-                    if (inResp.error) throw new Error(msg + ' (sign-in 도 실패)');
-                } else {
-                    throw new Error(msg);
-                }
-            }
-            // 2) 세션 확보 + profiles.event_coupon = 30000 적립 (이미 있으면 누적 안 함)
-            var sess = await sb.auth.getSession();
-            var uid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
-            if (uid) {
-                try {
-                    // 기존 프로필 조회
-                    var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
-                    var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
-                    if (!hasCoupon) {
-                        // 신규 적립 (profile 없으면 upsert) + username 보존 (이메일 형식 아닐 경우)
-                        var payload = { id: uid, email: em, event_coupon: 30000 };
-                        if (origUsername) payload.username = origUsername;
-                        await sb.from('profiles').upsert(payload, { onConflict: 'id' });
-                    } else if (origUsername) {
-                        // 이미 쿠폰 있어도 username 비어있으면 갱신
-                        await sb.from('profiles').update({ username: origUsername }).eq('id', uid).is('username', null);
-                    }
-                } catch(e) { console.warn('[profile credit]', e); }
-            }
-            // 3) 성공 메시지 + 모달 닫기 + cpCouponEmail 자동 채움 (원본 ID 우선)
-            var coupEmailIn = $('cpCouponEmail');
-            if (coupEmailIn) coupEmailIn.value = origUsername || em;
-            // 성공 패널 표시
-            var f = $('cpQuickSignupForm');
-            if (f) f.innerHTML = '<div style="text-align:center; padding:8px 4px; color:#065f46; font-weight:700; line-height:1.6;">' + t.successHtml + '</div>';
-        } catch (e) {
-            console.error('[quick signup]', e);
-            alert(t.errSignup + ' ' + (e.message || e));
-        } finally {
-            btn.disabled = false;
-            if (lbl) lbl.textContent = t.btn;
-        }
-    };
-})();
 </script>
 <style>
 @media (max-width:768px) {
@@ -1554,6 +1454,18 @@ async function submitRollFabricRequest() {
             </div>
         </div>
     </a>
+
+    <!-- 2026-06-29: 회원가입이벤트 — 원단 주문하기 아래 같은 크기 버튼 -->
+    <button type="button" id="ctaEventCoupon" onclick="window._openCpCouponModal && window._openCpCouponModal()"
+        style="display:block; width:100%; margin-top:16px; background:linear-gradient(135deg,#be185d 0%,#ec4899 50%,#a855f7 100%); border:none; border-radius:20px; padding:32px; cursor:pointer; color:#fff; text-align:left; box-shadow:0 12px 32px rgba(190,24,93,0.32); font-family:inherit;">
+        <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
+            <div>
+                <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_event_title">🎁 회원가입이벤트</h2>
+                <p style="margin:8px 0 0; font-size:13px; color:#fce7f3; line-height:1.5;" data-i18n="cta_event_sub">가입하면 3만원 · 친구 추천하면 추천인과 나 각 1만원</p>
+            </div>
+            <div style="background:#fff; color:#be185d; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(0,0,0,0.18); white-space:nowrap;" data-i18n="cta_event_btn">이벤트 참여</div>
+        </div>
+    </button>
 
     <!-- 2026-06-11: 4-card adv 섹션 삭제 — 동일 콘텐츠가 hero 캐러셀 슬라이드 4 장으로 이전됨 -->
 </section>
@@ -5682,6 +5594,10 @@ cta_poster_title: {
 },
 cta_poster_btn: { ko:'내원단 만들기', ja:'オリジナル生地を作る', en:'Make my fabric', zh:'制作我的面料', ar:'اصنع قماشي', es:'Crear mi tela', de:'Meinen Stoff erstellen', fr:'Créer mon tissu' },
 cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
+// 2026-06-29: 회원가입이벤트 CTA
+cta_event_title: { ko:'🎁 회원가입이벤트', ja:'🎁 会員登録イベント', en:'🎁 Signup Event', zh:'🎁 注册活动', ar:'🎁 حدث التسجيل', es:'🎁 Evento de registro', de:'🎁 Anmelde-Event', fr:'🎁 Événement d\'inscription' },
+cta_event_sub: { ko:'가입하면 3만원 · 친구 추천하면 추천인과 나 각 1만원', ja:'登録で3,000円 · 友達紹介で紹介者と私に各1,000円', en:'$30 on signup · Refer a friend: $10 each for you both', zh:'注册得3万韩元 · 推荐好友双方各得1万韩元', ar:'30$ عند التسجيل · أحِل صديقاً واحصلا على 10$ لكليكما', es:'30$ al registrarse · Recomienda y ganan 10$ cada uno', de:'30$ bei Anmeldung · Freund werben: je 10$', fr:'30$ à l\'inscription · Parrainez: 10$ chacun' },
+cta_event_btn: { ko:'이벤트 참여', ja:'イベント参加', en:'Join event', zh:'参加活动', ar:'شارك', es:'Participar', de:'Teilnehmen', fr:'Participer' },
 // 2026-05-23: 코튼프린트 장점 설명
 adv_title: { ko:'왜 코튼프린트일까요?', ja:'なぜコットンプリントなのか', en:'Why Cotton Print?' },
 adv_subtitle: { ko:'소량부터 안전하게 — 세계 최고 수준의 패브릭 인쇄', ja:'小ロットから安全に — 世界最高水準のファブリック印刷', en:'From small runs, safely — world-class fabric printing' },
