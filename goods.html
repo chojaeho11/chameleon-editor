@@ -633,7 +633,7 @@ a { text-decoration: none; color: inherit; }
 </section>
 
 <!-- 상품 그리드 -->
-<section class="products-wrap">
+<section class="products-wrap" id="productsWrap">
     <div class="section-title">
         <h2 id="curCatTitle">전체</h2>
         <span class="count" id="curCatCount"></span>
@@ -1443,11 +1443,15 @@ a { text-decoration: none; color: inherit; }
 
         countEl.textContent = list.length ? (list.length + t('countSuffix')) : '';
 
+        var wrap = document.getElementById('productsWrap');
         if (list.length === 0) {
+            // 2026-06-29: 등록 상품 없으면 "전체" 섹션(빈 박스) 통째로 숨김 (사용자 요청)
             grid.innerHTML = '';
-            empty.style.display = '';
+            empty.style.display = 'none';
+            if (wrap) wrap.style.display = 'none';
             return;
         }
+        if (wrap) wrap.style.display = '';
         empty.style.display = 'none';
         grid.innerHTML = list.map(productCard).join('');
     }
