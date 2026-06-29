@@ -1898,58 +1898,48 @@ window.loadStaffPayroll = async () => {
         }
     } catch (e) { if (mgrBody) mgrBody.innerHTML = `<tr><td colspan="3" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
 
-    // ===== ② 디자이너 페이 (디자인마켓 수익) =====
+    // 디자이너 UUID → 이름 해석 헬퍼 (designer_profiles.display_name → profiles.username/email)
+    const _resolveDesigners = async (ids) => {
+        const map = {};
+        const list = Array.from(new Set(ids.filter(Boolean)));
+        if (!list.length) return map;
+        try {
+            const { data: dps } = await sb.from('designer_profiles').select('id, display_name').in('id', list);
+            (dps || []).forEach(d => { if (d.display_name) map[d.id] = d.display_name; });
+            const miss = list.filter(d => !map[d]);
+            if (miss.length) {
+                const { data: pfs } = await sb.from('profiles').select('id, username, email').in('id', miss);
+                (pfs || []).forEach(p => map[p.id] = p.username || p.email || '(이름없음)');
+            }
+        } catch (_) {}
+        return map;
+    };
+
+    // ===== ② 디자이너 페이 — 고객의뢰(디자인보드) 자동정산 =====
+    //   귀속 = description 의 [DESIGNER:uid CLAIMED:..] / 금액 = budget_max||budget_min (디자이너 정산금)
+    //   발생 = 완료/정산요청/정산완료 (이번달) · 미정산 = 완료/정산요청 (정산완료 제외)
     const dgnBody = document.getElementById('payDgnBody');
     if (dgnBody) dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
     try {
-        const ASSET_REWARD = { template: 3000, vector: 1000, image: 500, logo: 200 };
-        const earnAll = {}, earnMonth = {}, nameMap = {};
-        const inMonth = (ts) => ts && ts >= startTs && ts <= endTs;
-        // 자산 보상 (admin_templates approved)
-        const { data: tpl } = await sb.from('admin_templates')
-            .select('submitted_by, asset_type, payment_amount, slots, status, created_at')
-            .eq('status', 'approved').not('submitted_by', 'is', null);
-        (tpl || []).forEach(r => {
-            const did = r.submitted_by; if (!did) return;
-            const t = r.asset_type || ((r.slots && r.slots.length) ? 'template' : 'vector');
-            const amt = r.payment_amount || ASSET_REWARD[t] || 0;
-            earnAll[did] = (earnAll[did] || 0) + amt;
-            if (inMonth(r.created_at)) earnMonth[did] = (earnMonth[did] || 0) + amt;
-        });
-        // 의뢰 수수료 (design_requests completed/settled)
+        const earnMonth = {}, unpaid = {};
         const { data: dr } = await sb.from('design_requests')
-            .select('description, status, amount, created_at')
-            .in('status', ['completed', 'settled']);
+            .select('description, status, budget_min, budget_max, created_at')
+            .in('status', ['completed', 'settlement_requested', 'settled'])
+            .like('description', '%[DESIGNER:%');
         (dr || []).forEach(r => {
-            const mm = String(r.description || '').match(/\[DESIGNER:([^\]\s]+)/); if (!mm) return;
-            const did = mm[1]; const amt = r.amount || 0;
-            earnAll[did] = (earnAll[did] || 0) + amt;
-            if (inMonth(r.created_at)) earnMonth[did] = (earnMonth[did] || 0) + amt;
+            const mm = String(r.description || '').match(/\[DESIGNER:([^\s\]]+)/); if (!mm) return;
+            const did = mm[1];
+            const amt = Number(r.budget_max || r.budget_min || 0);
+            if (r.created_at >= startTs && r.created_at <= endTs) earnMonth[did] = (earnMonth[did] || 0) + amt;
+            if (r.status !== 'settled') unpaid[did] = (unpaid[did] || 0) + amt;
         });
-        // 지급 완료 (design_withdrawal_requests paid) — 세전 총액 기준
-        const paidAll = {};
-        const { data: wd } = await sb.from('design_withdrawal_requests')
-            .select('designer_id, gross_amount, net_amount, status').eq('status', 'paid');
-        (wd || []).forEach(r => { paidAll[r.designer_id] = (paidAll[r.designer_id] || 0) + (r.gross_amount || r.net_amount || 0); });
-        // 이름 매핑
-        const dids = Array.from(new Set([...Object.keys(earnAll), ...Object.keys(paidAll)]));
-        if (dids.length) {
-            const { data: dps } = await sb.from('designer_profiles').select('id, display_name').in('id', dids);
-            (dps || []).forEach(d => { if (d.display_name) nameMap[d.id] = d.display_name; });
-            const miss = dids.filter(d => !nameMap[d]);
-            if (miss.length) {
-                const { data: pfs } = await sb.from('profiles').select('id, username, email').in('id', miss);
-                (pfs || []).forEach(p => nameMap[p.id] = p.username || p.email || '(이름없음)');
-            }
-        }
-        const rows = dids.map(did => ({
-            name: nameMap[did] || '(이름없음)',
-            month: earnMonth[did] || 0,
-            bal: (earnAll[did] || 0) - (paidAll[did] || 0)
-        })).filter(r => r.month > 0 || r.bal > 0).sort((a, b) => b.bal - a.bal);
+        const dids = Array.from(new Set([...Object.keys(earnMonth), ...Object.keys(unpaid)]));
+        const nameMap = await _resolveDesigners(dids);
+        const rows = dids.map(did => ({ name: nameMap[did] || '(이름없음)', month: earnMonth[did] || 0, bal: unpaid[did] || 0 }))
+            .filter(r => r.month > 0 || r.bal > 0).sort((a, b) => b.bal - a.bal);
         if (dgnBody) {
             if (!rows.length) {
-                dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">디자이너 수익 없음</td></tr>';
+                dgnBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px;">고객의뢰 정산 없음</td></tr>';
             } else {
                 let sM = 0, sB = 0;
                 const body = rows.map(r => {
@@ -1960,6 +1950,32 @@ window.loadStaffPayroll = async () => {
             }
         }
     } catch (e) { if (dgnBody) dgnBody.innerHTML = `<tr><td colspan="3" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
+
+    // ===== ③ 템플릿·이미지 적립금 출금요청 ($100+ 디자이너가 요청한 건만) =====
+    const reqBody = document.getElementById('payDgnReqBody');
+    if (reqBody) reqBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">로딩...</td></tr>';
+    try {
+        const { data: wr } = await sb.from('design_withdrawal_requests')
+            .select('designer_id, gross_amount, net_amount, status, requested_at')
+            .in('status', ['pending', 'approved'])
+            .order('requested_at', { ascending: false });
+        const nameMap = await _resolveDesigners((wr || []).map(r => r.designer_id));
+        if (reqBody) {
+            if (!wr || !wr.length) {
+                reqBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;">출금 요청 없음</td></tr>';
+            } else {
+                let sum = 0;
+                const STT = { pending: '⏳ 대기', approved: '✓ 승인' };
+                const body = wr.map(r => {
+                    const amt = Number(r.gross_amount || r.net_amount || 0);
+                    sum += amt;
+                    const dt = r.requested_at ? String(r.requested_at).slice(0, 10) : '';
+                    return `<tr><td>${esc(nameMap[r.designer_id] || '(이름없음)')}</td><td style="font-size:12px;color:#64748b;">${dt}</td><td style="font-size:12px;">${STT[r.status] || esc(r.status)}</td><td style="text-align:right;font-weight:800;color:#dc2626;">${amt.toLocaleString()}원</td></tr>`;
+                }).join('');
+                reqBody.innerHTML = body + `<tr style="border-top:2px solid #cbd5e1;font-weight:800;background:#f8fafc;"><td colspan="3">합계</td><td style="text-align:right;color:#dc2626;">${sum.toLocaleString()}원</td></tr>`;
+            }
+        }
+    } catch (e) { if (reqBody) reqBody.innerHTML = `<tr><td colspan="4" style="color:#ef4444;padding:10px;">오류: ${esc(e.message || String(e))}</td></tr>`; }
 };
 
 window.downloadSettlementCsv = async (designerId) => {
