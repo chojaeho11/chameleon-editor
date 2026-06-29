@@ -15888,7 +15888,161 @@ window.filterFxCards = function(cat, btn) {
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script type="module" src="./order.js?v=466"></script>
-<script type="module" src="./login.js?v=438"></script>
+<script type="module" src="./login.js?v=439"></script>
+<!-- 2026-06-29: 회원가입이벤트 — 패브릭에서 ?signup_event=1 로 진입 → 가입창 자동 + 추천인 적립 + 쇼핑 이어가기 -->
+<script>
+(function(){
+    function $(id){ return document.getElementById(id); }
+    var SC = window.__SITE_CODE || '';
+    var lang = (SC === 'JP') ? 'ja' : (SC === 'US' ? 'en' : 'ko');
+    var AMT = { ko:'1만원', ja:'1,000円', en:'$10' }[lang];
+    var T = {
+        ko:{ title:'🎁 추천인 적립', desc:'추천인을 검색해 선택하면 추천인과 나 모두 <b>1만원</b>이 적립됩니다! 추천인이 없으면 건너뛰셔도 됩니다.',
+             selfNote:'가입이 완료되었어요. 추천인이 있다면 적어주세요.', searchPh:'추천인 아이디/전화/이름', searchBtn:'검색', searching:'검색 중...', noResult:'검색 결과가 없습니다.',
+             selected:'선택된 추천인:', submit:'추천 적립 받기', skip:'건너뛰고 쇼핑하기', noSel:'추천인을 검색해 선택해 주세요.', loginFirst:'먼저 회원가입/로그인이 필요합니다.',
+             doneRef:'🎉 적립 완료! 추천인과 회원님 모두 1만원이 적립되었습니다.', doneSkip:'🎉 가입 완료! 지금 바로 쇼핑을 시작해 보세요.', browse:'카멜레온 구경하기', fabric:'패브릭 페이지 바로가기' },
+        ja:{ title:'🎁 紹介者特典', desc:'紹介者を検索して選択すると、紹介者ご本人の両方に<b>1,000円</b>が付与されます！紹介者がいない場合はスキップできます。',
+             selfNote:'登録が完了しました。紹介者がいれば入力してください。', searchPh:'紹介者のID/電話/名前', searchBtn:'検索', searching:'検索中...', noResult:'検索結果がありません。',
+             selected:'選択した紹介者:', submit:'紹介特典を受け取る', skip:'スキップして買い物', noSel:'紹介者を検索して選択してください。', loginFirst:'先に会員登録/ログインが必要です。',
+             doneRef:'🎉 付与完了！紹介者とお客様の両方に1,000円が付与されました。', doneSkip:'🎉 登録完了！今すぐ買い物を始めましょう。', browse:'Chameleonを見る', fabric:'ファブリックページへ' },
+        en:{ title:'🎁 Referral bonus', desc:'Search and pick your referrer — both of you get a <b>$10</b> coupon! You can skip if you have none.',
+             selfNote:'Signup complete. Enter your referrer if you have one.', searchPh:'Referrer ID / phone / name', searchBtn:'Search', searching:'Searching...', noResult:'No results.',
+             selected:'Selected referrer:', submit:'Get referral bonus', skip:'Skip and shop', noSel:'Please search and select a referrer.', loginFirst:'Please sign up / log in first.',
+             doneRef:'🎉 Done! A $10 coupon was credited to both of you.', doneSkip:'🎉 Welcome! Start shopping now.', browse:'Explore Chameleon', fabric:'Go to fabric page' }
+    }[lang];
+    var FABRIC_URL = (lang === 'ja') ? 'https://www.cotton-printer.com' : 'https://www.cotton-print.com';
+
+    function esc(s){ return String(s==null?'':s).replace(/[<>&"]/g, function(ch){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[ch]; }); }
+    function getSb(){ return window.sb || null; }
+
+    function buildModal(){
+        if ($('refEvModal')) return;
+        var div = document.createElement('div');
+        div.id = 'refEvModal';
+        div.style.cssText = 'display:none; position:fixed; inset:0; z-index:100050; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:12px; font-family:inherit;';
+        div.innerHTML =
+            '<div style="background:#fff; border-radius:16px; max-width:440px; width:100%; overflow:hidden;">' +
+              '<div style="background:linear-gradient(135deg,#ec4899,#be185d); padding:15px 18px; color:#fff; display:flex; justify-content:space-between; align-items:center;">' +
+                '<div style="font-size:16px; font-weight:700;">' + esc(T.title) + '</div>' +
+                '<button type="button" onclick="window._refEvClose()" aria-label="close" style="background:rgba(255,255,255,0.25); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:18px; cursor:pointer; line-height:1;">&times;</button>' +
+              '</div>' +
+              '<div id="refEvBody" style="padding:18px 20px;">' +
+                '<div style="font-size:12.5px; color:#9d174d; line-height:1.55; margin-bottom:12px;">' + T.desc + '</div>' +
+                '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
+                  '<input id="refEvSearch" type="text" placeholder="' + esc(T.searchPh) + '" onkeydown="if(event.key===\'Enter\'){event.preventDefault(); window._refEvSearch();}" style="flex:1; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; box-sizing:border-box; font-family:inherit;">' +
+                  '<button id="refEvSearchBtn" type="button" onclick="window._refEvSearch()" style="flex-shrink:0; padding:10px 16px; background:#be185d; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">' + esc(T.searchBtn) + '</button>' +
+                '</div>' +
+                '<div id="refEvResults" style="display:none; max-height:170px; overflow-y:auto; border:1px solid #f3e8ee; border-radius:8px; margin-bottom:8px;"></div>' +
+                '<div id="refEvSelectedBox" style="display:none; padding:9px 12px; background:#ecfdf5; border:1.5px solid #6ee7b7; border-radius:8px; font-size:12.5px; color:#065f46; margin-bottom:10px;"><span style="font-weight:700;">' + esc(T.selected) + '</span> <span id="refEvSelName"></span></div>' +
+                '<button id="refEvSubmit" type="button" onclick="window._refEvSubmit()" style="width:100%; padding:13px; background:linear-gradient(135deg,#ec4899,#be185d); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px;">' + esc(T.submit) + '</button>' +
+                '<button id="refEvSkip" type="button" onclick="window._refEvShowDone(true)" style="width:100%; padding:11px; background:#f3f4f6; color:#6b7280; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;">' + esc(T.skip) + '</button>' +
+              '</div>' +
+              '<div id="refEvDoneView" style="display:none; padding:24px 20px; text-align:center;">' +
+                '<div id="refEvDoneMsg" style="font-size:14.5px; font-weight:700; color:#065f46; line-height:1.6; margin-bottom:18px;"></div>' +
+                '<a href="/" onclick="window._refEvClose()" style="display:block; width:100%; padding:13px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border-radius:10px; font-size:14px; font-weight:700; text-decoration:none; margin-bottom:9px; box-sizing:border-box;">' + esc(T.browse) + '</a>' +
+                '<a href="' + FABRIC_URL + '" style="display:block; width:100%; padding:13px; background:#fff; color:#be185d; border:2px solid #f9a8d4; border-radius:10px; font-size:14px; font-weight:700; text-decoration:none; box-sizing:border-box;">' + esc(T.fabric) + '</a>' +
+              '</div>' +
+            '</div>';
+        document.body.appendChild(div);
+    }
+
+    window.__refEvSelected = null;
+    window._refEvClose = function(){ var m=$('refEvModal'); if(m) m.style.display='none'; try{ var u=new URL(location.href); u.searchParams.delete('signup_event'); history.replaceState(null,'',u.pathname+u.search); }catch(e){} };
+    window._refEvSearch = async function(){
+        var q = ($('refEvSearch').value||'').trim();
+        var box = $('refEvResults');
+        if (q.length < 2) { if(box) box.style.display='none'; return; }
+        var btn = $('refEvSearchBtn'); var old = btn?btn.textContent:'';
+        if(btn){ btn.disabled=true; btn.textContent='...'; }
+        try {
+            var sb = getSb();
+            var resp = await sb.functions.invoke('referral-credit', { body:{ action:'search', query:q } });
+            var results = (resp && resp.data && resp.data.results) || [];
+            box.style.display='block';
+            if (!results.length){ box.innerHTML='<div style="padding:11px; font-size:12.5px; color:#9ca3af; text-align:center;">'+esc(T.noResult)+'</div>'; return; }
+            box.innerHTML = results.map(function(r){
+                var lbl = esc(r.label);
+                return '<button type="button" onclick="window._refEvPick(\''+r.id+'\', this.getAttribute(\'data-lbl\'))" data-lbl="'+lbl+'" style="display:block; width:100%; text-align:left; padding:10px 12px; border:none; border-bottom:1px solid #f3e8ee; background:#fff; cursor:pointer; font-size:12.5px; color:#1f2937; font-family:inherit;">'+lbl+'</button>';
+            }).join('');
+        } catch(e){ box.style.display='block'; box.innerHTML='<div style="padding:11px; font-size:12px; color:#dc2626;">'+esc(e.message||e)+'</div>'; }
+        finally { if(btn){ btn.disabled=false; btn.textContent=old||T.searchBtn; } }
+    };
+    window._refEvPick = function(id,label){
+        window.__refEvSelected = { id:id, label:label };
+        var nm=$('refEvSelName'); if(nm) nm.textContent=label||'';
+        var sel=$('refEvSelectedBox'); if(sel) sel.style.display='block';
+        var box=$('refEvResults'); if(box) box.style.display='none';
+    };
+    window._refEvShowDone = function(skipped){
+        var msg=$('refEvDoneMsg'); if(msg) msg.innerHTML = skipped ? T.doneSkip : T.doneRef;
+        var b=$('refEvBody'); if(b) b.style.display='none';
+        var d=$('refEvDoneView'); if(d) d.style.display='block';
+        var m=$('refEvModal'); if(m) m.style.display='flex';
+    };
+    window._refEvSubmit = async function(){
+        if (!window.__refEvSelected || !window.__refEvSelected.id){ alert(T.noSel); return; }
+        var btn=$('refEvSubmit'); var old=btn?btn.textContent:'';
+        if(btn){ btn.disabled=true; btn.textContent='...'; }
+        try {
+            var sb = getSb();
+            // 로그인 토큰으로 본인 식별 → applicant 파라미터 불필요 (남용 차단)
+            var resp = await sb.functions.invoke('referral-credit', { body:{ action:'credit', referrerId: window.__refEvSelected.id } });
+            var data = (resp && resp.data) || {};
+            if (data.ok){ window._refEvShowDone(false); }
+            else { alert(data.error || (resp && resp.error && resp.error.message) || '적립에 실패했습니다.'); }
+        } catch(e){ alert(e.message||e); }
+        finally { if(btn){ btn.disabled=false; btn.textContent=old||T.submit; } }
+    };
+
+    // 가입/로그인 후 추천단계 노출 (이메일 콜백 + 구글 OAuth 복귀 모두 커버)
+    window.__refStepShown = false;
+    window._showRefStep = function(){
+        if (window.__refStepShown) return;
+        window.__refStepShown = true;
+        try { localStorage.removeItem('cm_ref_event'); } catch(e){}
+        buildModal();
+        var b=$('refEvBody'); if(b) b.style.display='';
+        var d=$('refEvDoneView'); if(d) d.style.display='none';
+        var m=$('refEvModal'); if(m) m.style.display='flex';
+        setTimeout(function(){ var i=$('refEvSearch'); if(i) i.focus(); }, 150);
+    };
+
+    async function isLoggedIn(){
+        try { var sb=getSb(); if(!sb) return false; var r=await sb.auth.getSession(); return !!(r && r.data && r.data.session && r.data.session.user); } catch(e){ return false; }
+    }
+    function waitOpenAuth(cb, tries){
+        tries = tries||0;
+        if (typeof window.openAuthModal === 'function') return cb();
+        if (tries > 40) return; // ~12s
+        setTimeout(function(){ waitOpenAuth(cb, tries+1); }, 300);
+    }
+    function initRefEvent(){
+        var sp = new URLSearchParams(location.search);
+        var fromParam = sp.get('signup_event') === '1';
+        var flagRaw = null; try { flagRaw = localStorage.getItem('cm_ref_event'); } catch(e){}
+        var flagFresh = flagRaw && (Date.now() - (parseInt(flagRaw,10)||0) < 15*60*1000);
+        if (fromParam) { try { localStorage.setItem('cm_ref_event', String(Date.now())); } catch(e){} }
+        if (!fromParam && !flagFresh) return;
+
+        buildModal();
+        var openedSignup = false, tries = 0;
+        (function check(){
+            isLoggedIn().then(function(li){
+                if (li) { setTimeout(window._showRefStep, 300); return; }   // 로그인됨(구글 복귀 포함) → 추천단계
+                if (fromParam && !openedSignup && typeof window.openAuthModal === 'function') {
+                    openedSignup = true;   // 비로그인 + 패브릭 진입 → 가입창, 콜백에서 추천단계
+                    window.openAuthModal('signup', function(){ setTimeout(window._showRefStep, 500); });
+                    return;
+                }
+                tries++;
+                if (tries < 14) setTimeout(check, 600);   // OAuth 세션 정착/모듈 로드 대기 (~8s)
+            });
+        })();
+    }
+    if (document.readyState !== 'loading') setTimeout(initRefEvent, 500);
+    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(initRefEvent, 500); });
+})();
+</script>
 <script type="module" src="./main.js?v=447"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/simple_order.js?v=678"></script>

@@ -62,19 +62,35 @@ serve(async (req) => {
             const referrerId = String(body.referrerId || "").trim();
             const rawApplicant = String(body.applicant || "").trim().toLowerCase();
             if (!referrerId) return json({ error: "추천인을 선택해 주세요." });
-            if (!rawApplicant) return json({ error: "본인 가입 아이디/이메일을 입력해 주세요." });
 
-            // 본인 계정 찾기 — 이메일 / 아이디(username) / 아이디+@cafe2626.com
-            const candidates = [rawApplicant];
-            if (rawApplicant.indexOf("@") < 0) candidates.push(rawApplicant + "@cafe2626.com");
             let applicant: any = null;
-            const { data: byEmail } = await admin.from("profiles")
-                .select("id, event_coupon, email, username").in("email", candidates).limit(1);
-            if (byEmail && byEmail.length) applicant = byEmail[0];
+            // 1순위: 로그인 토큰으로 본인 식별 (메인 사이트 가입 직후 — 남용 차단)
+            const authH = req.headers.get("authorization") || "";
+            const token = authH.replace(/^Bearer\s+/i, "");
+            if (token) {
+                try {
+                    const { data: ures } = await admin.auth.getUser(token);
+                    const u = ures && ures.user;
+                    if (u) {
+                        const { data: prof } = await admin.from("profiles")
+                            .select("id, event_coupon, email, username").eq("id", u.id).maybeSingle();
+                        if (prof) applicant = prof;
+                    }
+                } catch (_e) { /* 토큰 무효 → 아래 이메일 경로로 폴백 */ }
+            }
+            // 2순위: 이메일/아이디 입력 (비로그인 도메인 폴백)
             if (!applicant) {
-                const { data: byUser } = await admin.from("profiles")
-                    .select("id, event_coupon, email, username").eq("username", rawApplicant).limit(1);
-                if (byUser && byUser.length) applicant = byUser[0];
+                if (!rawApplicant) return json({ error: "본인 가입 아이디/이메일을 입력해 주세요." });
+                const candidates = [rawApplicant];
+                if (rawApplicant.indexOf("@") < 0) candidates.push(rawApplicant + "@cafe2626.com");
+                const { data: byEmail } = await admin.from("profiles")
+                    .select("id, event_coupon, email, username").in("email", candidates).limit(1);
+                if (byEmail && byEmail.length) applicant = byEmail[0];
+                if (!applicant) {
+                    const { data: byUser } = await admin.from("profiles")
+                        .select("id, event_coupon, email, username").eq("username", rawApplicant).limit(1);
+                    if (byUser && byUser.length) applicant = byUser[0];
+                }
             }
             if (!applicant) return json({ error: "본인 계정을 찾을 수 없습니다. 먼저 회원가입 후, 가입한 아이디/이메일을 정확히 입력해 주세요." });
 

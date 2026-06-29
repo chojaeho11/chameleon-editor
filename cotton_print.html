@@ -926,42 +926,14 @@ window._cottonSearch = function(){
             window.__CP_COUPON = c;
             window.__CP_LANG = lang;
         })();
-        // 이벤트 쿠폰 모달 open/close/submit
-        //   cotton-print.com 은 cafe2626.com 과 별도 도메인 → localStorage 세션 분리됨.
-        //   로그인 강제하지 않고 이메일 수동 입력으로 받음 — 관리자가 /sns-rewards 에서 이메일로 profiles 매칭.
-        window._openCpCouponModal = async function(){
-            var c = window.__CP_COUPON || {};
-            var sb = window.sb;
-            if (!sb && typeof supabase !== 'undefined') {
-                sb = supabase.createClient(
-                    'https://qinvtnhiidtmrzosyvys.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
-                    { auth: { persistSession: true } }
-                );
-                window.sb = sb;
-            }
-            var emailIn = document.getElementById('cpRefSelf');
-            // 같은 도메인 세션이 있으면 본인 아이디 자동 채움 — 없으면 수동 입력 허용
-            try {
-                if (sb && sb.auth) {
-                    var r = await sb.auth.getSession();
-                    var sess = r && r.data && r.data.session;
-                    if (sess && sess.user && sess.user.email && emailIn) {
-                        emailIn.value = sess.user.email;
-                        emailIn.readOnly = false;  // 다른 ID 사용도 허용
-                        emailIn.style.background = '#fff';
-                    } else if (emailIn) {
-                        emailIn.value = emailIn.value || '';
-                        emailIn.readOnly = false;
-                        emailIn.style.background = '#fff';
-                        emailIn.placeholder = 'you@example.com';
-                    }
-                }
-            } catch(e) {
-                if (emailIn) { emailIn.readOnly = false; emailIn.style.background = '#fff'; }
-            }
-            var m = document.getElementById('cpCouponShareModal');
-            if (m) m.style.display = 'flex';
+        // 2026-06-29: 회원가입이벤트 버튼 — 카멜레온 메인으로 이동해 한 번에 가입+추천 진행.
+        //   cotton-print 직접 가입 시 메인과 연동이 끊기는 문제 → 메인 ?signup_event=1 로 보내
+        //   거기서 가입창 자동 오픈 → 추천인 검색·적립 → 쇼핑 이어가기 (index.html 에서 처리).
+        window._openCpCouponModal = function(){
+            var target = 'https://www.cafe2626.com/?signup_event=1';
+            if (window.__CP_LANG === 'ja') target = 'https://www.cafe0101.com/?signup_event=1';
+            else if (window.__CP_LANG === 'en') target = 'https://www.cafe3355.com/?signup_event=1';
+            location.href = target;
         };
         window._closeCpCouponModal = function(){
             var m = document.getElementById('cpCouponShareModal');
@@ -1461,7 +1433,7 @@ async function submitRollFabricRequest() {
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_event_title">🎁 회원가입이벤트</h2>
-                <p style="margin:8px 0 0; font-size:13px; color:#fce7f3; line-height:1.5;" data-i18n="cta_event_sub">가입하면 3만원 · 친구 추천하면 추천인과 나 각 1만원</p>
+                <p style="margin:8px 0 0; font-size:13px; color:#fce7f3; line-height:1.5;" data-i18n="cta_event_sub">가입하면 1만원 · 친구 추천하면 추천인과 나 각 1만원</p>
             </div>
             <div style="background:#fff; color:#be185d; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(0,0,0,0.18); white-space:nowrap;" data-i18n="cta_event_btn">이벤트 참여</div>
         </div>
@@ -5596,7 +5568,7 @@ cta_poster_btn: { ko:'내원단 만들기', ja:'オリジナル生地を作る',
 cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
 // 2026-06-29: 회원가입이벤트 CTA
 cta_event_title: { ko:'🎁 회원가입이벤트', ja:'🎁 会員登録イベント', en:'🎁 Signup Event', zh:'🎁 注册活动', ar:'🎁 حدث التسجيل', es:'🎁 Evento de registro', de:'🎁 Anmelde-Event', fr:'🎁 Événement d\'inscription' },
-cta_event_sub: { ko:'가입하면 3만원 · 친구 추천하면 추천인과 나 각 1만원', ja:'登録で3,000円 · 友達紹介で紹介者と私に各1,000円', en:'$30 on signup · Refer a friend: $10 each for you both', zh:'注册得3万韩元 · 推荐好友双方各得1万韩元', ar:'30$ عند التسجيل · أحِل صديقاً واحصلا على 10$ لكليكما', es:'30$ al registrarse · Recomienda y ganan 10$ cada uno', de:'30$ bei Anmeldung · Freund werben: je 10$', fr:'30$ à l\'inscription · Parrainez: 10$ chacun' },
+cta_event_sub: { ko:'가입하면 1만원 · 친구 추천하면 추천인과 나 각 1만원', ja:'登録で1,000円 · 友達紹介で紹介者と私に各1,000円', en:'$10 on signup · Refer a friend: $10 each for you both', zh:'注册得1万韩元 · 推荐好友双方各得1万韩元', ar:'10$ عند التسجيل · أحِل صديقاً واحصلا على 10$ لكليكما', es:'10$ al registrarse · Recomienda y ganan 10$ cada uno', de:'10$ bei Anmeldung · Freund werben: je 10$', fr:'10$ à l\'inscription · Parrainez: 10$ chacun' },
 cta_event_btn: { ko:'이벤트 참여', ja:'イベント参加', en:'Join event', zh:'参加活动', ar:'شارك', es:'Participar', de:'Teilnehmen', fr:'Participer' },
 // 2026-05-23: 코튼프린트 장점 설명
 adv_title: { ko:'왜 코튼프린트일까요?', ja:'なぜコットンプリントなのか', en:'Why Cotton Print?' },
