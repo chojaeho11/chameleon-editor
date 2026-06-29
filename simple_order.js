@@ -11245,6 +11245,9 @@ html, body { background: #ffffff !important; }
                         return;
                     }
                     if (code === 'Wholesale Board Prices') {
+                        // 2026-06-29: hexa-board.com 에선 이미 원판 도메인 → /raw-board 로 보내면 상세가 닫히고 랜딩으로 루프.
+                        //   현재 상세 그대로 유지(redirect/close 안 함).
+                        if ((location.hostname || '').indexOf('hexa-board') >= 0) { _hideLoadingShield(); return; }
                         var rbLang = langMap[cl] || '';
                         location.href = '/raw-board' + (rbLang && rbLang !== 'ko' ? '?lang=' + rbLang : '');
                         return;
