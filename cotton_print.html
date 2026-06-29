@@ -1811,8 +1811,8 @@ async function submitRollFabricRequest() {
 <!-- 2026-06-29: 패브릭 에디터 = 카멜레온 공용 미니에디터(window.me). mini-editor.js/.css/editor-libs.js 공유 → 한 곳 고치면 양쪽 반영 -->
 <section id="cpMiniEditorSection" style="max-width:1100px; margin:50px auto 0; padding:0 24px;">
     <div style="text-align:center; margin-bottom:18px;">
-        <div style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
-        <div style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
+        <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
+        <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
     <link rel="stylesheet" href="./mini-editor.css?v=1">
         <div id="aiNbWrap">
@@ -1907,16 +1907,22 @@ async function submitRollFabricRequest() {
     var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
     var L = (window.__PS_LANG === 'ja') ? 'ja' : (window.__PS_LANG === 'en' ? 'en' : 'kr');
     var STR = {
-      kr:{ title:'디자인 템플릿', sub:'클릭하면 캔버스에 바로 적용', loading:'로딩 중...', empty:'등록된 템플릿이 없습니다.', size:'사이즈 직접 입력', apply:'적용' },
-      ja:{ title:'デザインテンプレート', sub:'クリックするとキャンバスに適用', loading:'読み込み中...', empty:'登録されたテンプレートがありません。', size:'サイズを入力', apply:'適用' },
-      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.', size:'Custom size', apply:'Apply' }
+      kr:{ title:'디자인 템플릿', sub:'클릭하면 캔버스에 바로 적용', loading:'로딩 중...', empty:'등록된 템플릿이 없습니다.', size:'사이즈 직접 입력', apply:'적용', edTitle:'간단한 디자인 바로바로', edSub:'사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드' },
+      ja:{ title:'デザインテンプレート', sub:'クリックするとキャンバスに適用', loading:'読み込み中...', empty:'登録されたテンプレートがありません。', size:'サイズを入力', apply:'適用', edTitle:'かんたんデザインをすぐに', edSub:'写真の背景消し · 文字・画像・テンプレートで飾ってすぐダウンロード' },
+      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.', size:'Custom size', apply:'Apply', edTitle:'Quick & Easy Design', edSub:'Remove photo background · add text, images, templates, then download' }
     }[L];
+    // 미니에디터 내부 라벨(서체/테두리/두께 등)은 T()=window.t(key,fallback) 를 사용 → window.t 를 long JSON 사전으로 정의
+    window.__cpI18nDict = window.__cpI18nDict || {};
+    if (typeof window.t !== 'function') {
+      window.t = function(k, fb){ var v = window.__cpI18nDict[k]; return (v !== undefined && v !== null && v !== '') ? v : (fb || k); };
+    }
     function ready(fn){ if (document.readyState !== 'loading') setTimeout(fn, 350); else document.addEventListener('DOMContentLoaded', function(){ setTimeout(fn, 350); }); }
     window._cpPickTpl = function(i){ var t = (window.__cpTpls||[])[i]; if (t && typeof window._meLoadTemplate === 'function') window._meLoadTemplate(t); };
     // 에디터 라벨 다국어 — 메인과 동일한 long/{lang}_124.json 적용 (JP/EN)
     function applyEditorI18n(){
       if (L === 'kr') return;
       fetch('long/' + L + '_124.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(dict){
+        window.__cpI18nDict = dict;   // window.t 가 props 라벨(서체/테두리/두께)에 사용
         document.querySelectorAll('#cpMiniEditorSection [data-i18n]').forEach(function(el){
           var v = dict[el.getAttribute('data-i18n')];
           if (v !== undefined && v !== null && v !== '') el.textContent = v;
@@ -1977,6 +1983,7 @@ async function submitRollFabricRequest() {
       ['cpSzW','cpSzH'].forEach(function(id){ document.getElementById(id).addEventListener('keydown', function(e){ if (e.key==='Enter'){ e.preventDefault(); go(); } }); });
     }
     ready(function(){
+      try { var et = document.getElementById('cpEdTitle'); if (et) et.textContent = STR.edTitle; var es = document.getElementById('cpEdSub'); if (es) es.textContent = STR.edSub; } catch(e){}
       try { var tt = document.getElementById('cpTplTitle'); if (tt) tt.innerHTML = STR.title + ' <span style="font-weight:500; color:#64748b; font-size:12px;">— ' + STR.sub + '</span>'; } catch(e){}
       try { var g0 = document.getElementById('cpTplGrid'); if (g0) g0.innerHTML = '<div style="color:#94a3b8; font-size:13px; padding:14px;">' + STR.loading + '</div>'; } catch(e){}
       try { buildSizeInput(); } catch(e){}
