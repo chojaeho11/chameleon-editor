@@ -1226,6 +1226,13 @@ async function _generateWorkMemo(order, matItems, matLabel) {
                     y += 18;
                 }
             }
+            // 2026-06-29: 파인텍스(가벽) 선택 색상
+            if (item.finetexColor) {
+                ctx.fillStyle = '#2563eb';
+                ctx.font = 'bold 12px Pretendard, sans-serif';
+                ctx.fillText(`    ▸ 파인텍스 색상: ${item.finetexColor}`, 40, y);
+                y += 18;
+            }
             y += 6;
         }
 

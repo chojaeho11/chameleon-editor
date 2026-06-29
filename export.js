@@ -1,5 +1,5 @@
 import { canvas } from "./canvas-core.js?v=435";
-import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=441";
+import { ADDON_DB as _IMPORTED_ADDON_DB, currentUser, sb } from "./config.js?v=442";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=435"; // 페이지 인덱스 가져오기
 import { FONT_URLS, FONT_ALIASES } from "./fonts.js?v=294";
 
@@ -2098,7 +2098,8 @@ async function generateCommonDocument(doc, title, orderInfo, cartItems, discount
                 }
 
                 const aTotal = addPrice * uQty; totalAmt += aTotal;
-                
+                // 2026-06-29: 파인텍스 — 선택 색상을 옵션명에 괄호로 표기
+                if (code === 'hb_finetex' && item.finetexColor) addName = addName + ' (' + item.finetexColor + ')';
                 const addonName = "└ " + addName;
                 const splitAddon = doc.splitTextToSize(addonName, nameColWidth - 4);
                 const addonRows = splitAddon.length;
