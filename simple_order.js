@@ -2495,7 +2495,7 @@ html, body { background: #ffffff !important; }
               </button>
               <button type="button" class="so-side-btn" data-side="double" onclick="window._soPickKeyringSide(this)"
                 style="padding:10px 12px; border:2px solid #e2e8f0; background:#fff; color:#334155; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease;">
-                ${tr('양면', '両面', 'Double')} <span style="font-size:11px; color:#dc2626; font-weight:800;">×2</span>
+                ${tr('양면', '両面', 'Double')} <span style="font-size:11px; color:#dc2626; font-weight:800;">${tr('(기본 가격 ×2)', '（基本価格 ×2）', '(Base ×2)')}</span>
               </button>
             </div>
           </div>
@@ -4492,14 +4492,14 @@ html, body { background: #ffffff !important; }
             // 2026-06-25: 3장+ 인쇄비 50% 할인 폐지 (사용자 요청) — 정가.
             tshirtPrintFee = Math.round(_basePrint * qty);
         }
-        // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 3종
-        //   포장없음 = 0 / 내지인쇄·상단인쇄 = 5만원 정액 (수량 무관)
+        // 2026-06-29: 베스트굿즈 프리셋 — 개별포장 3종 모두 개당(×수량) 과금
+        //   개별포장(인쇄없음) plain = 200원/개 / 내지인쇄·상단인쇄 = 500원/개 (JP 20엔 / 50엔)
         let presetWrapFee = 0;
         if (state.isPresetGoods) {
             if (state.presetWrapType === 'insert' || state.presetWrapType === 'top') {
-                presetWrapFee = 50000;
-            } else if (state.presetWrap && !state.presetWrapType) {
-                // legacy: 구 boolean true 인 경우 (저장된 카트 호환 — 200원/개로 처리)
+                presetWrapFee = 500 * qty;
+            } else {
+                // 'plain' (인쇄없음) 또는 미설정/legacy → 200원/개
                 presetWrapFee = 200 * qty;
             }
         }
@@ -4619,15 +4619,13 @@ html, body { background: #ffffff !important; }
             // 2026-06-25: 3장+ 50% 할인 폐지 — suffix 제거.
             bdHtml += '<div class="so-price-row"><span>· ' + tr('인쇄비', '印刷費', 'Print fee') + ' (' + _printNames.join(' + ') + ') × ' + qty + tr('장','枚','pcs') + '</span><span>+' + fmtPrice(tshirtPrintFee) + '</span></div>';
         }
-        // 2026-05-30: 베스트굿즈 프리셋 — 개별포장 라인 (3종 / 정액 5만원)
+        // 2026-06-29: 베스트굿즈 프리셋 — 개별포장 라인 (3종 모두 개당 ×수량)
         if (presetWrapFee > 0) {
             var _wrapTypeLabel = '';
             if (state.presetWrapType === 'insert') _wrapTypeLabel = tr('내지인쇄 포장', '内側印刷ラッピング', 'Insert print wrap');
             else if (state.presetWrapType === 'top') _wrapTypeLabel = tr('상단인쇄 포장', '上部印刷ラッピング', 'Top print wrap');
-            else _wrapTypeLabel = tr('개별포장', '個別包装', 'Individual wrap');
-            var _wrapQtyLabel = (state.presetWrapType === 'insert' || state.presetWrapType === 'top')
-                ? tr(' · 정액', ' · 定額', ' · flat')
-                : ' × ' + qty;
+            else _wrapTypeLabel = tr('개별포장 (인쇄없음)', '個別包装（印刷なし）', 'Individual (no print)');
+            var _wrapQtyLabel = ' × ' + qty;
             bdHtml += '<div class="so-price-row"><span>· ' + _wrapTypeLabel + _wrapQtyLabel + '</span><span>+' + fmtPrice(presetWrapFee) + '</span></div>';
         }
         setHTML('soAddonBreakdown', bdHtml);
@@ -13036,23 +13034,24 @@ html, body { background: #ffffff !important; }
             }
             // 2026-05-30: 개별포장 3가지 선택 — 새 상품 진입 시 '포장없음' 으로 초기화
             state.presetWrap = false;          // legacy boolean (구 카트 호환)
-            state.presetWrapType = 'none';     // 'none' | 'insert' | 'top'
+            state.presetWrapType = 'plain';    // 2026-06-29: 기본 = 개별포장(인쇄없음) 200원/개. 'plain' | 'insert' | 'top'
             var _wrapWrap = document.getElementById('soPresetWrapWrap');
             var _wrapGrid = document.getElementById('soPresetWrapGrid');
             var _wrapHint = document.getElementById('soPresetWrapHint');
             if (_wrapWrap && _wrapGrid) {
                 // 2026-06-04: 쿠션은 자체 솜포함/개별포장 옵션을 사용하므로 기존 3종 박스 숨김
                 _wrapWrap.style.display = (state.presetType === 'cushion') ? 'none' : '';
+                // 2026-06-29: 3종 모두 개당(×수량) 과금 — 개별포장(인쇄없음) 200원 / 내지·상단인쇄 500원 (JP 20·50·50엔)
                 var WRAP_OPTS = [
-                    { type:'none',   img:'/keyringcut/pac3.jpg', label_ko:'포장없음',     label_jp:'包装なし',         label_en:'No wrap',         fee:0     },
-                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'내지인쇄 포장', label_jp:'内側印刷ラッピング', label_en:'Insert print',    fee:50000 },
-                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단인쇄 포장', label_jp:'上部印刷ラッピング', label_en:'Top print',       fee:50000 }
+                    { type:'plain',  img:'/keyringcut/pac3.jpg', label_ko:'개별포장 (인쇄없음)', label_jp:'個別包装（印刷なし）', label_en:'Individual (no print)', fee:200 },
+                    { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'내지인쇄 포장', label_jp:'内側印刷ラッピング', label_en:'Insert print',    fee:500 },
+                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단인쇄 포장', label_jp:'上部印刷ラッピング', label_en:'Top print',       fee:500 }
                 ];
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
-                    var act = (w.type === 'none'); // default
+                    var act = (w.type === 'plain'); // 기본 = 개별포장(인쇄없음)
                     var lbl = tr(w.label_ko, w.label_jp, w.label_en);
-                    var feeStr = w.fee > 0 ? ('+' + fmtPrice(w.fee)) : tr('무료', '無料', 'Free');
-                    var feeColor = w.fee > 0 ? '#dc2626' : '#10b981';
+                    var feeStr = '+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc');
+                    var feeColor = '#dc2626';
                     return '<button type="button" class="so-wrap-card' + (act ? ' active' : '') + '" '
                         + 'data-wrap-type="' + w.type + '" data-wrap-fee="' + w.fee + '" '
                         + 'onclick="window._soPickPresetWrap(this)" '
@@ -13066,7 +13065,7 @@ html, body { background: #ffffff !important; }
                         + '<span style="font-size:10.5px; font-weight:800; color:' + feeColor + ';">' + feeStr + '</span>'
                         + '</button>';
                 }).join('');
-                if (_wrapHint) _wrapHint.textContent = tr('인쇄 포장은 5만원 정액 (수량 무관)', 'プリントラッピングは5万ウォン定額 (数量無関係)', 'Printed wrap is flat 50,000 KRW (any qty)');
+                if (_wrapHint) _wrapHint.textContent = tr('포장 비용은 수량에 따라 개당 부과됩니다', '梱包費は数量に応じて1個あたりで加算されます', 'Packaging is charged per item by quantity');
             }
             // 프리셋 굿즈 — 디자인에디터 숨김 / 업로드 안내 변경
             if (editorBtn) editorBtn.style.display = 'none';
