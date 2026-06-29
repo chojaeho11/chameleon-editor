@@ -10947,7 +10947,7 @@ html, body { background: #ffffff !important; }
             }).join('');
             html += '<div style="padding:11px 13px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;margin-bottom:8px;font-size:12.5px;color:#1e40af;line-height:1.6;">' +
                 '<div style="font-weight:800;">🧵 ' + tr('파인텍스', 'ファインテックス', 'Fine-tex') + ' — ' + tr('1제곱미터 기준 1만원입니다.', '1平方メートルあたり1,000円です。', '$10 per square meter.') + '</div>' +
-                '<div style="font-weight:700;margin-top:7px;margin-bottom:5px;">' + tr('색상 선택', '色を選択', 'Choose color') + (state.finetexColor ? ' · <span style="color:#0f172a;">' + esc(state.finetexColor) + '</span>' : ' <span style="color:#dc2626;">(' + tr('미선택', '未選択', 'not selected') + ')</span>') + '</div>' +
+                '<div style="font-weight:700;margin-top:7px;margin-bottom:5px;">' + tr('색상 선택', '色を選択', 'Choose color') + (state.finetexColor ? ' · <span style="color:#0f172a;">' + state.finetexColor + '</span>' : ' <span style="color:#dc2626;">(' + tr('미선택', '未選択', 'not selected') + ')</span>') + '</div>' +
                 '<div style="display:flex;gap:7px;flex-wrap:wrap;">' + chips + '</div>' +
                 '</div>';
         }
