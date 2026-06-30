@@ -7933,6 +7933,14 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
+        // 2026-06-30: JP 사이트 — 일반 택배 상품 배송비 1000엔(10,000원) 통일 (사용자 요청).
+        //   시공/트럭/대형(가벽·원판·종이매대·시공가능·금액주문)·묶음배송은 제외 — 실비 유지.
+        if (window.__SITE_CODE === 'JP' && !state.bundleShipping
+            && !state.isWall && !state.isRawBoard && !state.isPaperDisplay
+            && !state.isInstallEligible && !state.isAmountOrder) {
+            state._shipUpgradeReason = null;
+            return 10000;
+        }
         // 2026-06-24: 아크릴 family — 무료배송 (이전 정액 10,000원 제거, 사용자 요청)
         if (state.isAcrylicFamily) {
             state._shipUpgradeReason = null;
@@ -16978,9 +16986,11 @@ html, body { background: #ffffff !important; }
                              '💚 最低注文 ' + _minLabel + ' 以上',
                              '💚 Min order ' + _minLabel)
                         : (_shipFinal > 0
-                            ? tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 이상 무료배송',
-                                 '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 以上で送料無料',
-                                 '💚 Shipping ' + fmtPrice(_shipFinal) + ' · FREE over ' + _freeShipTh)
+                            ? (window.__SITE_CODE === 'JP'
+                                ? '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (全国一律)'   // 2026-06-30: JP 정액 — 무료기준 없음
+                                : tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 이상 무료배송',
+                                     '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 以上で送料無料',
+                                     '💚 Shipping ' + fmtPrice(_shipFinal) + ' · FREE over ' + _freeShipTh))
                             : tr('💚 무료배송 (' + _freeShipTh + ' 이상)',
                                  '💚 送料無料 (' + _freeShipTh + ' 以上)',
                                  '💚 Free shipping (over ' + _freeShipTh + ')'));
@@ -17812,6 +17822,14 @@ html, body { background: #ffffff !important; }
             });
             var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee || (_allProductSub >= 50000);
             shipTotal = _shipExempt ? 0 : 5000;
+        }
+        // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 1000엔(10,000원) 정액 통일 (위 모든 규칙 대체).
+        //   제외(실비/면제 유지): 시공(가벽·등신대·스카시)·원판/종이매대 트럭·금액주문·디자인비 전용·패브릭전용.
+        if (window.__SITE_CODE === 'JP' && cart.length > 0 && !_hasInstall && !_hasAmountOrder
+            && !cart.some(function (_it) { return _it && _it.product && ((typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(_it.product)) || (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_it.product))); })
+            && cart.some(function (_it) { return _it && !_soIsFabricItem(_it); })
+            && !cart.every(function (_it) { var _p = (_it && _it.product) || {}; return String(_p.category || '') === 'design_fee' || String(_p.code || '').indexOf('design_fee_') === 0; })) {
+            shipTotal = 10000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
