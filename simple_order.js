@@ -16638,9 +16638,9 @@ html, body { background: #ffffff !important; }
                         var _drTotal = _bcNewFee + _textMods * _bcTextFee;
                         var _sideLbl = '';
                         if (_textMods > 0) {
-                            meta.push('🎨 ' + _sideLbl + '디자인 신규 ' + _bcNewFee.toLocaleString() + '원 + 문구 수정 × ' + _textMods + '건 (+' + _drTotal.toLocaleString() + '원)');
+                            meta.push('🎨 ' + _sideLbl + tr('디자인 신규','デザイン新規','New design') + ' ' + fmtPrice(_bcNewFee) + ' + ' + tr('문구 수정','文言修正','Text edit') + ' × ' + _textMods + tr('건','件','') + ' (+' + fmtPrice(_drTotal) + ')');
                         } else {
-                            meta.push('🎨 ' + _sideLbl + '디자인 신규 의뢰 (+' + _bcNewFee.toLocaleString() + '원)');
+                            meta.push('🎨 ' + _sideLbl + tr('디자인 신규 의뢰','デザイン新規依頼','New design request') + ' (+' + fmtPrice(_bcNewFee) + ')');
                         }
                     } else {
                         meta.push('🎨 ' + tr(
@@ -16770,13 +16770,13 @@ html, body { background: #ffffff !important; }
                     var bsMult = item.cutPrint ? (_bdQty || 1) : 1;
                     var bsLine = bsFee * bsQty * bsMult;
                     if (bsLine > 0) {
-                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ ' + escapeHtml(bs.label || '받침대') + (bsQty > 1 ? ' × ' + bsQty : '') + (bsMult > 1 ? ' (제품 ' + bsMult + '개)' : '') + '</span><b>+' + fmtPrice(bsLine) + '</b></div>');
+                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ ' + escapeHtml(bs.label || tr('받침대','スタンド','Base')) + (bsQty > 1 ? ' × ' + bsQty : '') + (bsMult > 1 ? ' (' + tr('제품','製品','item') + ' ' + bsMult + tr('개','個','') + ')' : '') + '</span><b>+' + fmtPrice(bsLine) + '</b></div>');
                     }
                 });
                 // 가벽 형태 (L자/U자) 코너 추가비
                 if (item.wallShapeFee && item.wallShapeFee > 0) {
-                    var _wsLbl = item.wallShape === 'L' ? 'L자' : (item.wallShape === 'U' ? 'U자/ㄷ자' : item.wallShape);
-                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ 가벽 형태 (' + escapeHtml(_wsLbl) + ') 코너</span><b>+' + fmtPrice(item.wallShapeFee) + '</b></div>');
+                    var _wsLbl = item.wallShape === 'L' ? 'L' : (item.wallShape === 'U' ? 'U/ㄷ' : item.wallShape);
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ 🏗️ ' + tr('가벽 형태','壁の形','Wall shape') + ' (' + escapeHtml(_wsLbl) + ') ' + tr('코너','コーナー','corner') + '</span><b>+' + fmtPrice(item.wallShapeFee) + '</b></div>');
                 }
                 // 배송 (첫 번째 일반 항목만 표시, 나머지는 묶음배송 0원)
                 // 2026-06-24: 아크릴 family 는 무료배송 — 저장된 shipping.fee 무시
