@@ -2104,6 +2104,14 @@ html, body { background: #ffffff !important; }
               <span style="font-size:14px; font-weight:900;">1,000${tr('개','個','')}</span>
             </button>
           </div>
+          <!-- 2026-06-30: 종이매대 낱개 수량 직접입력 (2~99개) -->
+          <div id="soPdQtyCustomRow" style="display:none; align-items:center; gap:8px; margin-top:8px;">
+            <span style="font-size:11.5px; color:#475569; flex-shrink:0;">${tr('직접 입력 (낱개)','直接入力 (個別)','Custom (each)')}:</span>
+            <input type="number" id="soPdQtyCustom" min="1" max="99" placeholder="2~99"
+              oninput="window._soPdQtyCustomInput(this.value)"
+              style="flex:1; padding:7px 10px; border:1.5px solid #fed7aa; border-radius:8px; font-size:13px; font-weight:700; text-align:center; font-family:inherit; color:#9a3412;">
+            <span style="font-size:11.5px; color:#475569; flex-shrink:0;">${tr('개','個','pcs')}</span>
+          </div>
           <!-- v721/v725: 명함 전용 수량 프리셋 — 100/200/500매 (수량별 할인 제거) + 직원수 동시 주문 섹션 -->
           <div id="soBizQtyPresets" style="display:none; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:6px;">
             <button type="button" class="so-pd-qty-btn" data-bc-qty="1" onclick="window._soBcQtyPick(1)">
@@ -2156,7 +2164,7 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
           <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
-            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개는 기본 디자인 및 샘플 제작비용입니다 (단가 5배)', '1個は基本デザイン・サンプル制作費 (単価5倍)', 'For 1 pc: base design + sample fee (5× unit price)')}
+            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개는 샘플(기본 디자인+제작비)입니다. 2~99개는 낱개 추가요금이 붙고, 100개부터 정상 단가입니다.', '1個はサンプル(基本デザイン+制作費)です。2~99個は個別追加料金、100個から通常単価です。', '1 pc = sample (base design + fee). 2–99 pcs: per-unit surcharge. 100+ at regular unit price.')}
           </div>
           <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
           <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
@@ -4271,10 +4279,11 @@ html, body { background: #ffffff !important; }
                 unit = unit * 2;
             }
             if (!state.isBizCard) subtotal = unit * qty;
-            // 2026-06-12: 종이매대 1개 = 샘플 (단가 5배, 기본 디자인 + 샘플 제작비용)
-            if (state.isPaperDisplay && qty === 1) {
-                subtotal = unit * 5;
-            }
+        }
+        // 2026-06-30: 종이매대 — 샘플(1)/낱개(2~99)/대량(100+) 통합. 대형·소형(면적) 분기 무관 최종 override.
+        //   _soCalcItemPrice(장바구니) 와 동일 helper 사용 → 제품페이지=장바구니 일치.
+        if (state.isPaperDisplay) {
+            subtotal = _soPaperStandSubtotal(unit, qty, _soIsSmallPaperStand(state.product));
         }
         const tierPct = 0;
         const discount = 0;
@@ -4952,6 +4961,21 @@ html, body { background: #ffffff !important; }
         } catch (e) {}
         if (/종이매대|paper\s*display|paper\s*stand|cardboard\s*display/i.test(name)) return true;
         return false;
+    }
+
+    // 2026-06-30: 종이매대 소형 판정 (소형 종이매대 pd_sm_* + 종이 칸막이 pd_tr_*).
+    function _soIsSmallPaperStand(p) {
+        var c = ((p && p.code) || '').toLowerCase();
+        return c.indexOf('pd_sm') === 0 || c.indexOf('pd_tr') === 0;
+    }
+    // 2026-06-30: 종이매대 가격 통합 — 제품페이지(recalc) / 장바구니(_soCalcItemPrice) 공용 단일 진실.
+    //   1개 = 샘플 / 2~99개 = 샘플 + 낱개 추가요금 / 100개+ = 단가 × 수량 (대량 정가).
+    //   대형 pd_b_*: 샘플 = 단가×5, 낱개 +50,000/개.  소형 pd_sm_*·pd_tr_*: 샘플 100,000, 낱개 +20,000/개.
+    function _soPaperStandSubtotal(unit, qty, isSmall) {
+        qty = Math.max(1, parseInt(qty, 10) || 1);
+        if (qty >= 100) return unit * qty;
+        if (isSmall) return 100000 + (qty - 1) * 20000;
+        return unit * 5 + (qty - 1) * 50000;
     }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
@@ -11188,13 +11212,31 @@ html, body { background: #ffffff !important; }
         state.qty = q;
         var inp = document.getElementById('soQty');
         if (inp) inp.value = q;
+        // 프리셋 선택 시 직접입력칸 비움
+        var _pdc = document.getElementById('soPdQtyCustom');
+        if (_pdc) _pdc.value = '';
         // 활성화 토글
         document.querySelectorAll('#soPdQtyPresets .so-pd-qty-btn').forEach(function(btn){
             btn.classList.toggle('is-active', String(btn.getAttribute('data-pd-qty')) === String(q));
         });
-        // 1개일 때 샘플 안내
+        // 100개 미만(샘플·낱개)일 때 안내
         var note = document.getElementById('soPdSampleNote');
-        if (note) note.style.display = (q === 1) ? 'block' : 'none';
+        if (note) note.style.display = (q < 100) ? 'block' : 'none';
+        if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
+        if (typeof recalc === 'function') recalc();
+        if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
+        if (typeof window._soUpdateShipBreakdown === 'function') window._soUpdateShipBreakdown();
+    };
+
+    // 2026-06-30: 종이매대 낱개 수량 직접입력 (1~99). 프리셋 비활성화 + 샘플/낱개 안내.
+    window._soPdQtyCustomInput = function(v) {
+        var q = Math.max(1, Math.min(99, parseInt(v, 10) || 1));
+        state.qty = q;
+        var inp = document.getElementById('soQty');
+        if (inp) inp.value = q;
+        document.querySelectorAll('#soPdQtyPresets .so-pd-qty-btn').forEach(function(btn){ btn.classList.remove('is-active'); });
+        var note = document.getElementById('soPdSampleNote');
+        if (note) note.style.display = 'block';
         if (typeof _soSyncAcrylicAddonQty === 'function') _soSyncAcrylicAddonQty();
         if (typeof recalc === 'function') recalc();
         if (typeof window._soUpdatePdParcelLabels === 'function') window._soUpdatePdParcelLabels();
@@ -11206,8 +11248,8 @@ html, body { background: #ffffff !important; }
         const cur = parseInt(input.value) || 1;
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        // 2026-06-12: 종이매대 MOQ 100
-        const _qtyMin = state.isPaperDisplay ? 100 : 1;
+        // 2026-06-30: 종이매대 낱개 주문 허용 (샘플 1 / 낱개 2~99 / 대량 100+) → MOQ 1
+        const _qtyMin = 1;
         const next = Math.max(_qtyMin, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
@@ -11227,8 +11269,8 @@ html, body { background: #ffffff !important; }
         const input = document.getElementById('soQty');
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
-        // 2026-06-12: 종이매대 MOQ = 100 (최소 주문수량)
-        const _qtyMin = state.isPaperDisplay ? 100 : 1;
+        // 2026-06-30: 종이매대 낱개 주문 허용 (샘플 1 / 낱개 2~99 / 대량 100+) → MOQ 1
+        const _qtyMin = 1;
         let v = Math.max(_qtyMin, Math.min(_qtyMax, parseInt(input.value) || _qtyMin));
         if (v !== parseInt(input.value)) input.value = v;
         state.qty = v;
@@ -12086,6 +12128,8 @@ html, body { background: #ffffff !important; }
             });
             var _note = document.getElementById('soPdSampleNote');
             if (_note) _note.style.display = 'none';
+            var _pdCustomRow = document.getElementById('soPdQtyCustomRow');
+            if (_pdCustomRow) { _pdCustomRow.style.display = 'flex'; var _pdc = document.getElementById('soPdQtyCustom'); if (_pdc) _pdc.value = ''; }
         } else {
             // 다른 상품 — preset 숨기고 default 행 복구
             var _defaultRow2 = document.getElementById('soQtyRowDefault');
@@ -12094,6 +12138,8 @@ html, body { background: #ffffff !important; }
             if (_presetRow2) { _presetRow2.style.display = 'none'; _presetRow2.classList.remove('is-open'); }
             var _note2 = document.getElementById('soPdSampleNote');
             if (_note2) _note2.style.display = 'none';
+            var _pdCustomRow2 = document.getElementById('soPdQtyCustomRow');
+            if (_pdCustomRow2) _pdCustomRow2.style.display = 'none';
         }
         // 2026-05-15: 금액주문 (21355677) — 수량 무제한 + 할인·배송·이미지 전부 불필요
         state.isAmountOrder = _soIsAmountOrder(p);
@@ -13564,11 +13610,11 @@ html, body { background: #ffffff !important; }
             allowed = ['self_pickup'];
         }
         // 2026-05-14: 택배 옵션이 있는 상품은 택배를 기본 선택 (본사 방문 대신)
-        // 2026-06-12: 종이매대 MOQ 100 — qty < 100 이면 100 으로 자동 보정
-        if (state.isPaperDisplay && (parseInt(state.qty, 10) || 0) < 100) {
-            state.qty = 100;
+        // 2026-06-30: 종이매대 — 낱개(1~99) 허용. qty 가 비정상(<1)일 때만 1 로 보정 (100 강제 폐지).
+        if (state.isPaperDisplay && (parseInt(state.qty, 10) || 0) < 1) {
+            state.qty = 1;
             var _qIn = document.getElementById('soQty');
-            if (_qIn) _qIn.value = 100;
+            if (_qIn) _qIn.value = 1;
         }
         // 2026-06-12: 종이매대 — 항상 pd_bulk_free 기본 (MOQ 100 강제이므로 분기 불필요)
         var parcelKeys = ['parcel_shipping', 'large_parcel', 'small_parcel', 'compact_parcel'];
@@ -17487,6 +17533,10 @@ html, body { background: #ffffff !important; }
         var isDouble = (it.wallSide === 'double');
         if (isDouble && !_isBannerItm) subtotal *= 2;
         var base = subtotal;
+        // 2026-06-30: 종이매대 — recalc 와 동일 (샘플/낱개/대량). 카트에서 샘플 ×5 누락 + 낱개 추가요금 일치.
+        if (_soIsPaperDisplayProduct(it.product)) {
+            base = _soPaperStandSubtotal(unit, qty, _soIsSmallPaperStand(it.product));
+        }
         // 가벽 세로 3m → 가로 m당 +5만 (양면이면 2배)
         if (it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
             var hExtra = 50000 * qty;
