@@ -7982,12 +7982,11 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-05-29: 베스트굿즈 전체 — 정액 배송비
-        //   KR 3,000원 / JP 1,000엔 (= 10,000 KRW × 0.1 rate) / EN ~$3
+        // 2026-05-29: 베스트굿즈 전체 — 정액 배송비 3,000원 (통화변환 → JP ¥300 / US $3).
+        //   2026-06-30: 제품페이지가 JP만 10,000원으로 달라 장바구니(_soCalcItemPrice/CartTotal=3,000)와 불일치 → 3,000 으로 통일.
         if (state.isBestGoods) {
             state._shipUpgradeReason = null;
-            var lng = getLang();
-            return (lng === 'ja') ? 10000 : 3000;
+            return 3000;
         }
         // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
         if (state.bundleShipping) {
