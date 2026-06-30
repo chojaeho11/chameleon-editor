@@ -1293,19 +1293,21 @@ async function render() {
         </div>
     `;
 
-    // 2026-06-30: 현재 탭 전체 삭제 — 이 페이지(로그인 필수)에 들어온 모든 사용자에게 노출 (사용자 요청)
-    if (board || mine) {
+    // 2026-06-30: 삭제 도구 — 최근 삭제 복구(항상) + 현재 탭 전체 삭제(항목 있을 때). 로그인 필수 페이지라 전체 사용자 노출.
+    {
         let total = 0;
         if (activeTab === 'open') total = _openList.length;
         else if (activeTab === 'inprog') total = inprog.length;
         else total = done.length;
-        if (total > 0) {
-            html += `
-                <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
-                    <button onclick="dbAdminPurgeTab()" style="padding:8px 14px; background:#ff3b30; color:#fff; border:none; border-radius:980px; font-size:12.5px; font-weight:600; cursor:pointer; letter-spacing:-0.2px;">🗑 현재 탭 ${total}개 전체 삭제</button>
-                </div>
-            `;
-        }
+        const _purgeBtn = (total > 0)
+            ? `<button onclick="dbAdminPurgeTab()" style="padding:8px 14px; background:#ff3b30; color:#fff; border:none; border-radius:980px; font-size:12.5px; font-weight:600; cursor:pointer; letter-spacing:-0.2px;">🗑 현재 탭 ${total}개 전체 삭제</button>`
+            : '';
+        html += `
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:12px;">
+                <button onclick="dbOpenTrash()" style="padding:8px 14px; background:#0f172a; color:#fff; border:none; border-radius:980px; font-size:12.5px; font-weight:600; cursor:pointer; letter-spacing:-0.2px;">🔄 최근 삭제 복구</button>
+                ${_purgeBtn}
+            </div>
+        `;
     }
 
     let list = [];
@@ -1525,11 +1527,27 @@ function renderCard(r) {
     `;
 }
 
+// 2026-06-30: 삭제 전 자동 백업 — deleted_design_requests(휴지통)에 원본 row 저장 → 최근 삭제 복구 가능
+async function _dbArchiveRequests(ids) {
+    if (!ids || !ids.length) return;
+    try {
+        const { data: rows } = await sb.from('design_requests').select('*').in('id', ids);
+        if (rows && rows.length) {
+            const trash = rows.map(r => ({
+                request_id: r.id, payload: r, title: r.title || '',
+                country: r.country || null, deleted_by: userEmail || ''
+            }));
+            await sb.from('deleted_design_requests').insert(trash);
+        }
+    } catch (e) { console.warn('[archive]', e); }
+}
+
 // 관리자 — 단일 의뢰 삭제 (FK 자식 먼저 삭제 후 부모)
 async function dbAdminDelete(id) {
     // 2026-06-30: 관리자 전용 가드 제거 — 로그인한 모든 사용자 삭제 가능 (사용자 요청)
-    if (!confirm('이 의뢰를 삭제하시겠습니까? 복구 불가능합니다.')) return;
+    if (!confirm('이 의뢰를 삭제하시겠습니까?\n(삭제 후 "최근 삭제 복구" 로 되돌릴 수 있습니다)')) return;
     try {
+        await _dbArchiveRequests([id]);   // 휴지통 백업
         // FK 자식 테이블부터 정리
         await sb.from('design_reviews').delete().eq('request_id', id);
         await sb.from('design_bids').delete().eq('request_id', id);
@@ -1556,17 +1574,17 @@ async function dbAdminPurgeTab() {
         label = '내 완료/정산';
         fetcher = () => sb.from('design_requests').select('id').in('status', ['settlement_requested','settled']).like('description', '%[DESIGNER:' + userId + '%');
     }
-    if (!confirm(label + ' 탭의 모든 의뢰를 영구 삭제합니다. 진행하시겠습니까?')) return;
-    if (!confirm('정말 모두 삭제합니다. 복구 불가능합니다.')) return;
+    if (!confirm(label + ' 탭의 모든 의뢰를 삭제합니다. 진행하시겠습니까?\n(삭제 후 "최근 삭제 복구" 로 되돌릴 수 있습니다)')) return;
     try {
         const { data, error } = await fetcher();
         if (error) throw error;
         const ids = (data || []).map(r => r.id);
         if (ids.length === 0) { alert('삭제할 의뢰가 없습니다.'); return; }
-        // 100개씩 청크 — 각 청크마다 자식 → 부모 순서
+        // 100개씩 청크 — 각 청크마다 백업 → 자식 → 부모 순서
         let total = 0;
         for (let i = 0; i < ids.length; i += 100) {
             const chunk = ids.slice(i, i + 100);
+            await _dbArchiveRequests(chunk);   // 휴지통 백업
             // FK 자식 먼저
             await sb.from('design_reviews').delete().in('request_id', chunk);
             await sb.from('design_bids').delete().in('request_id', chunk);
@@ -1584,6 +1602,63 @@ async function dbAdminPurgeTab() {
     } catch (e) { alert('실패: ' + (e.message || e)); }
 }
 window.dbAdminPurgeTab = dbAdminPurgeTab;
+
+// 2026-06-30: 최근 삭제 복구 — 휴지통(deleted_design_requests) 목록 모달
+async function dbOpenTrash() {
+    let rows = [];
+    try {
+        let q = sb.from('deleted_design_requests')
+            .select('id, title, country, deleted_at, deleted_by')
+            .order('deleted_at', { ascending: false })
+            .limit(100);
+        const c = _siteCountry();
+        if (c) q = q.eq('country', c);
+        const { data, error } = await q;
+        if (error) throw error;
+        rows = data || [];
+    } catch (e) { alert('복구 목록 로드 실패: ' + (e.message || e)); return; }
+
+    const old = document.getElementById('dbTrashModal');
+    if (old) old.remove();
+    const ov = document.createElement('div');
+    ov.id = 'dbTrashModal';
+    ov.style.cssText = 'position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:20px;';
+    const itemsHtml = rows.length ? rows.map(r => {
+        const who = r.deleted_by ? (' · ' + esc(r.deleted_by)) : '';
+        return `<div style="display:flex; align-items:center; gap:10px; padding:11px 13px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px;">
+            <div style="flex:1; min-width:0;">
+                <div style="font-size:13px; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(r.title || '(제목 없음)')}</div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">${timeAgo(r.deleted_at)}${who}</div>
+            </div>
+            <button onclick="dbRestore(${r.id})" style="padding:7px 14px; background:#16a34a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; flex-shrink:0;">복구</button>
+        </div>`;
+    }).join('') : '<div style="text-align:center; color:#94a3b8; padding:30px 0; font-size:13px;">최근 삭제된 의뢰가 없습니다.</div>';
+    ov.innerHTML = `<div style="background:#fff; border-radius:16px; width:100%; max-width:480px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #f1f5f9;">
+            <div style="font-size:15px; font-weight:800; color:#0f172a;">🔄 최근 삭제 복구</div>
+            <button onclick="document.getElementById('dbTrashModal').remove()" style="background:none; border:none; font-size:22px; line-height:1; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div style="padding:14px 16px; overflow-y:auto;">${itemsHtml}</div>
+    </div>`;
+    ov.addEventListener('click', function(e) { if (e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+}
+window.dbOpenTrash = dbOpenTrash;
+
+// 복구 — 휴지통 payload 를 design_requests 에 재삽입 후 휴지통에서 제거
+async function dbRestore(trashId) {
+    try {
+        const { data: t, error: e1 } = await sb.from('deleted_design_requests').select('*').eq('id', trashId).maybeSingle();
+        if (e1) throw e1;
+        if (!t || !t.payload) { alert('이미 복구되었거나 없는 항목입니다.'); dbOpenTrash(); return; }
+        const { error: e2 } = await sb.from('design_requests').insert(t.payload);
+        if (e2) throw e2;
+        await sb.from('deleted_design_requests').delete().eq('id', trashId);
+        await dbOpenTrash();   // 목록 갱신
+        render();              // 보드 갱신
+    } catch (e) { alert('복구 실패: ' + (e.message || e)); }
+}
+window.dbRestore = dbRestore;
 
 async function dbClaim(id) {
     if (myDesignerStatus !== 'approved') {
