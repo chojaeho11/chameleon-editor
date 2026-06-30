@@ -1342,13 +1342,17 @@ function renderCard(r) {
     }[r.status] || 'open';
 
     const files = (r.files || []);
+    // 2026-06-30: 썸네일은 Supabase 이미지 변환(width=120)으로 작게 받아 버벅임 제거. 클릭(href)은 원본.
+    const _dbThumb = (u) => (typeof u === 'string' && u.indexOf('/storage/v1/object/public/') >= 0)
+        ? u.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + (u.indexOf('?') >= 0 ? '&' : '?') + 'width=120&quality=55'
+        : u;
     const _refFile = tr('참고 파일', '参考ファイル', 'Reference');
     const _finalDraft = tr('완성 시안', '完成案', 'Final Draft');
     const _draftWord = tr('시안', '案', 'Draft');
     const filesHtml = files.length ? `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}" loading="lazy" decoding="async" alt="">` : '📎'}
+                ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(_dbThumb(u))}" loading="lazy" decoding="async" alt="">` : '📎'}
                 ${_refFile}
             </a>`).join('')}
         </div>
@@ -1360,7 +1364,7 @@ function renderCard(r) {
             <div style="font-size:12px; font-weight:700; color:var(--green); margin-bottom:6px;">${_finalDraft}</div>
             <div class="db-files">
                 ${finalFiles.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
-                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(u)}" loading="lazy" decoding="async" alt="">` : '📎'}
+                    ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(_dbThumb(u))}" loading="lazy" decoding="async" alt="">` : '📎'}
                     ${_draftWord}
                 </a>`).join('')}
             </div>
