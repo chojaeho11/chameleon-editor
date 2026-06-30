@@ -16718,7 +16718,7 @@ html, body { background: #ffffff !important; }
                     meta.push('📐 ' + _lfSizeId + ' (' + _lfSizeObj.wMm + '×' + _lfSizeObj.hMm + 'mm) · ' + _lfSideLbl);
                 }
                 var _bdSub = _bdUnit * _bdQty;
-                _bd.push('<div style="display:flex; justify-content:space-between;"><span>단가 × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('단가','単価','Unit') + ' × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
                 // 2026-06-14: 낱장 인쇄 — 박/후가공 breakdown (multiplier 적용된 옵션비)
                 if (_isLfRow && typeof window._soLeafletOptMult === 'function') {
                     var _lfMult = window._soLeafletOptMult(_bdQty);
@@ -16783,15 +16783,15 @@ html, body { background: #ffffff !important; }
                 var _bdShipFee = _soIsAcrylicFamilyItem(item) ? 0 : ((item.shipping && item.shipping.fee) || 0);
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
                 if (_bdShipFee > 0 && _bdIsFirstShip) {
-                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>배송</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + '</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
                 } else if (_bdShipFee > 0 && !_bdIsFirstShip) {
-                    _bd.push('<div style="display:flex; justify-content:space-between; color:#16a34a;"><span>배송 (묶음)</span><b>무료</b></div>');
+                    _bd.push('<div style="display:flex; justify-content:space-between; color:#16a34a;"><span>' + tr('배송 (묶음)','送料（まとめ）','Shipping (bundled)') + '</span><b>' + tr('무료','無料','Free') + '</b></div>');
                 }
                 // 칼선작업
                 if (item.cutlineWork || (item.cutlineCharCount && item.cutlineCharCount > 0)) {
                     var _bdClN = item.cutlineCharCount || 1;
                     var _bdClFee = item.cutlineFee || (_bdClN * 10000);
-                    _bd.push('<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>✂️ 칼선작업 (' + _bdClN + '개)</span><b>+' + fmtPrice(_bdClFee) + '</b></div>');
+                    _bd.push('<div style="display:flex; justify-content:space-between; color:#dc2626;"><span>✂️ ' + tr('칼선작업','カット線作業','Cut line') + ' (' + _bdClN + tr('개','個','pc') + ')</span><b>+' + fmtPrice(_bdClFee) + '</b></div>');
                 }
                 // 디자인 의뢰비 (별도)
                 if (item.designRequest && item.designRequest.total && item.designRequest.product_label !== '칼선작업') {
@@ -16800,7 +16800,7 @@ html, body { background: #ffffff !important; }
                 // 합계 (해당 라인 — 묶음배송이면 shipping 빼고)
                 var _bdLineTotal = calc.final;
                 if (!_bdIsFirstShip && _bdShipFee > 0) _bdLineTotal -= _bdShipFee;
-                _bd.push('<div style="display:flex; justify-content:space-between; border-top:1px dashed #d1d5db; margin-top:4px; padding-top:4px; font-weight:900;"><span>합계</span><b style="color:#dc2626;">' + fmtPrice(_bdLineTotal) + '</b></div>');
+                _bd.push('<div style="display:flex; justify-content:space-between; border-top:1px dashed #d1d5db; margin-top:4px; padding-top:4px; font-weight:900;"><span>' + tr('합계','合計','Total') + '</span><b style="color:#dc2626;">' + fmtPrice(_bdLineTotal) + '</b></div>');
                 var _bdHtml = '<div style="margin:6px 0 8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; font-size:11.5px; color:#374151; line-height:1.7;">' + _bd.join('') + '</div>';
 
                 return `
