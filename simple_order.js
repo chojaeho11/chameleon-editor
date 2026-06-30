@@ -17524,14 +17524,13 @@ html, body { background: #ffffff !important; }
         } else if (it.baseStand && typeof it.baseStand.fee === 'number') {
             base += it.baseStand.fee * (it.baseStand.qty || 1) * _bsMult;
         }
-        // 2026-05-30: 프리셋 굿즈 — 개별포장 3종 (포장없음=0, 내지/상단인쇄=5만 정액)
+        // 2026-06-30: 프리셋 굿즈 개별포장 — 전부 개당(×수량). plain(인쇄없음)=200, 내지/상단인쇄=500. (recalc 와 일치)
         if (_isPreset) {
             var _wt = it._presetWrapType;
-            if (_wt === 'insert' || _wt === 'top') {
-                base += 50000;
-            } else if (it._presetWrap && !_wt) {
-                // legacy: 구 cart 호환 (200원/개)
-                base += 200 * qty;
+            if (_wt && _wt !== 'none') {
+                base += ((_wt === 'insert' || _wt === 'top') ? 500 : 200) * qty;
+            } else if (it._presetWrap) {
+                base += 200 * qty;   // legacy
             }
         }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (로고 3000, 앞면전체 8000, 뒷면전체 8000 / 장)
