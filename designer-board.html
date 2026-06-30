@@ -1607,8 +1607,11 @@ window.dbAdminPurgeTab = dbAdminPurgeTab;
 async function dbOpenTrash() {
     let rows = [];
     try {
+        // 2026-06-30: 30일 이내 삭제건만 복구 대상 (그 이후는 서버 pg_cron 이 영구삭제)
+        const _cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         let q = sb.from('deleted_design_requests')
             .select('id, title, country, deleted_at, deleted_by')
+            .gte('deleted_at', _cutoff)
             .order('deleted_at', { ascending: false })
             .limit(100);
         const c = _siteCountry();
