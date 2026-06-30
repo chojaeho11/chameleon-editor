@@ -1096,12 +1096,13 @@ async function loadSettlement() {
 
         // 2) 고객 의뢰 — design_requests 에서 내가 작업한 (description 안에 [DESIGNER:uid] 포함) settled/completed
         const { data: orders } = await sb.from('design_requests')
-            .select('id, status, description, amount, country')
+            .select('id, status, description, budget_max, country')
             .like('description', '%[DESIGNER:' + uid + '%')
             .in('status', ['claimed','completed','settlement_requested','settled']);
         let oTotal = 0; let oCnt = { 진행:0, 완료:0, 정산요청:0, 정산완료:0 };
         (orders||[]).forEach(r => {
-            const amt = r.amount || 0;
+            // 2026-06-30: design_requests 에 amount 컬럼 없음 → 400. budget_max 사용 (의뢰 예산).
+            const amt = r.budget_max || 0;
             if (r.status === 'settled') { oTotal += amt; oCnt.정산완료++; }
             else if (r.status === 'settlement_requested') oCnt.정산요청++;
             else if (r.status === 'completed') { oTotal += amt; oCnt.완료++; }
