@@ -4302,7 +4302,7 @@ html, body { background: #ffffff !important; }
                 const addonPrice = state.presetHasHooks ? 300 : (state.presetType === 'tshirt' ? 0 : (addon.price || 0));
                 const line = addonPrice * aQty;
                 addonTotal += line;
-                let nm = addon.name || code;
+                let nm = addon.display_name || addon.name || code;   // 2026-06-30: 언어별 이름(config display_name=name_jp/us)
                 // 2026-06-29: 파인텍스 — 선택 색상을 가격 내역에 표기
                 if (code === 'hb_finetex' && state.finetexColor) nm = nm + '(' + state.finetexColor + ')';
                 addonBreakdownLines.push(
@@ -9649,7 +9649,7 @@ html, body { background: #ffffff !important; }
                 if (!code || seen[code]) return; seen[code] = true;
                 var addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
-                var nm = addon.name_kr || addon.name || addon.display_name || code;
+                var nm = addon.display_name || addon.name || code;
                 // 2026-06-29: 파인텍스 — 선택 색상 표기
                 if (code === 'hb_finetex' && line.finetexColor) nm = nm + '(' + line.finetexColor + ')';
                 var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
@@ -9681,7 +9681,7 @@ html, body { background: #ffffff !important; }
                 if (!code || seen[code]) return; seen[code] = true;
                 var addon = (window.ADDON_DB || {})[code];
                 if (!addon) return;
-                var nm = addon.name_kr || addon.name || addon.display_name || code;
+                var nm = addon.display_name || addon.name || code;
                 var aQty = (line.addonQuantities && line.addonQuantities[code]) || 1;
                 var img = addon.img_url || '';
                 var iconHtml = img
