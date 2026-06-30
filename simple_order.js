@@ -3060,8 +3060,8 @@ html, body { background: #ffffff !important; }
           <label for="soCutlineCheckbox" id="soCutlineRow" style="display:flex; align-items:flex-start; gap:9px; padding:12px 14px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:12px; font-size:12.5px; color:#7c2d12; font-weight:600; line-height:1.55; cursor:pointer;">
             <input type="checkbox" id="soCutlineCheckbox" onchange="window._soToggleCutline(this.checked)" style="margin-top:2px; width:18px; height:18px; accent-color:#dc2626; flex-shrink:0; cursor:pointer;">
             <div style="flex:1;">
-              <div style="font-weight:800; color:#7c2d12; font-size:13.5px;">✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요</div>
-              <div style="margin-top:3px;">디자이너가 깔끔하게 작업해드립니다 — <b>+10,000원 추가</b> (누끼 + 칼선 + 받침)</div>
+              <div style="font-weight:800; color:#7c2d12; font-size:13.5px;">${tr('✂️ 배경제거 + 칼선작업이 필요하시면 체크해 주세요', '✂️ 背景を消したり、カット用の線を作る必要がある場合はチェックしてください', '✂️ Check this if you need background removal + cut lines')}</div>
+              <div style="margin-top:3px;">${tr('디자이너가 깔끔하게 작업해드립니다', 'デザイナーがきれいに仕上げます', 'Our designer finishes it cleanly')} — <b>+${fmtPrice(10000)}</b> ${tr('(누끼 + 칼선 + 받침)', '（切り抜き・カットライン・台紙込み）', '(cutout + cut line + base)')}</div>
             </div>
           </label>
         </div>
@@ -8415,7 +8415,8 @@ html, body { background: #ffffff !important; }
                 }
                 var nameHtml = _hookOnly ? '' :
                     '<div style="font-size:10.5px; font-weight:700; color:#451a03; text-align:center; line-height:1.2; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:keep-all;">' + safe + '</div>';
-                var priceHtml = (_hookOnly || price <= 0) ? '' :
+                // 2026-06-30: 고리(hook)도 가격(+개당) 표시 — 무료 오해 방지 (일본 직원 요청)
+                var priceHtml = (price <= 0) ? '' :
                     '<span style="font-weight:800; color:#dc2626; font-size:10.5px;">+' + fmtPrice(price) + '</span>';
                 return '<label class="so-addon-card" title="' + safe + '" style="display:flex; flex-direction:column; align-items:center; gap:5px; padding:' + _padding + '; border:2px solid #e7e5e4; border-radius:10px; cursor:pointer; background:#fff; transition:border-color 0.15s ease, background 0.15s ease; min-width:0;">' +
                     '<input type="checkbox" data-addon-code="' + String(a.code).replace(/"/g,'&quot;') + '" data-addon-light="0" onchange="window._soToggleAddon(this); this.closest(&quot;.so-addon-card&quot;).style.borderColor=this.checked?&quot;#0f172a&quot;:&quot;#e7e5e4&quot;; this.closest(&quot;.so-addon-card&quot;).style.background=this.checked?&quot;#f8fafc&quot;:&quot;#fff&quot;;" style="display:none;">' +
