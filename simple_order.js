@@ -1961,16 +1961,26 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-07-01: 책자제본 (435345435) — 표지(용지+박+후가공) + 내지(용지+페이지수) × 권수 -->
+        <!-- 2026-07-01: 책자제본 (435345435) — 사이즈 + 표지/내지 용지 + 페이지수 × 권수 (박/후가공은 아래 인쇄옵션 공용) -->
         <div class="so-section" id="soBookletSection" style="display:none;">
-          <div class="so-section-title">📖 ${tr('표지 용지', '表紙の用紙', 'Cover paper')}</div>
+          <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Size')}</div>
+          <div id="soBkSizeGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:6px;">
+            <button type="button" class="so-bk-size" data-bk-size="A4" onclick="window._soBkPickSize('A4',210,297)" style="padding:9px 3px; border:2px solid #4338ca; background:#eef2ff; color:#3730a3; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">A4<span style="display:block; font-size:9.5px; opacity:0.7; font-weight:500;">210×297</span></button>
+            <button type="button" class="so-bk-size" data-bk-size="A5" onclick="window._soBkPickSize('A5',148,210)" style="padding:9px 3px; border:2px solid #e5e7eb; background:#fff; color:#334155; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">A5<span style="display:block; font-size:9.5px; opacity:0.7; font-weight:500;">148×210</span></button>
+            <button type="button" class="so-bk-size" data-bk-size="B5" onclick="window._soBkPickSize('B5',182,257)" style="padding:9px 3px; border:2px solid #e5e7eb; background:#fff; color:#334155; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">B5<span style="display:block; font-size:9.5px; opacity:0.7; font-weight:500;">${tr('16절','16切','')} 182×257</span></button>
+            <button type="button" class="so-bk-size" data-bk-size="B6" onclick="window._soBkPickSize('B6',128,182)" style="padding:9px 3px; border:2px solid #e5e7eb; background:#fff; color:#334155; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;">B6<span style="display:block; font-size:9.5px; opacity:0.7; font-weight:500;">${tr('32절','32切','')} 128×182</span></button>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+            <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('직접입력', '直接入力', 'Custom')}</span>
+            <input type="number" id="soBkW" placeholder="${tr('가로mm','横mm','W')}" min="30" max="500" oninput="window._soBkCustomSize()" style="flex:1; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; text-align:center; font-family:inherit;">
+            <span style="color:#94a3b8;">×</span>
+            <input type="number" id="soBkH" placeholder="${tr('세로mm','縦mm','H')}" min="30" max="500" oninput="window._soBkCustomSize()" style="flex:1; padding:8px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; text-align:center; font-family:inherit;">
+            <span style="font-size:12px; color:#64748b; flex-shrink:0;">mm</span>
+          </div>
+          <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:8px 11px; margin-top:8px; line-height:1.5;">💡 ${tr('여백은 사방 2mm 여유를 두고 작업해 주세요.', '余白は四方2mmの余裕をとって作業してください。', 'Please keep a 2mm bleed margin on all sides.')}</div>
+
+          <div class="so-section-title" style="margin-top:18px;">📖 ${tr('표지 용지', '表紙の用紙', 'Cover paper')}</div>
           <select id="soBkCoverPaper" onchange="window._soBkSet('coverPaper', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
-
-          <div class="so-section-title" style="margin-top:16px;">✨ ${tr('표지 박 (선택)', '表紙の箔押し (任意)', 'Cover foil (optional)')} <span style="font-size:11px; color:#64748b; font-weight:500;">${tr('주문 1회 정액', '注文1回定額', 'once per order')}</span></div>
-          <select id="soBkFoil" onchange="window._soBkSet('foil', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
-
-          <div class="so-section-title" style="margin-top:16px;">🛠️ ${tr('표지 후가공 (선택)', '表紙の後加工 (任意)', 'Cover finishing (optional)')} <span style="font-size:11px; color:#64748b; font-weight:500;">${tr('주문 1회 정액', '注文1回定額', 'once per order')}</span></div>
-          <div id="soBkFinishList" style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:6px;"></div>
 
           <div class="so-section-title" style="margin-top:18px;">📄 ${tr('내지 용지', '本文の用紙', 'Inner paper')}</div>
           <select id="soBkInnerPaper" onchange="window._soBkSet('innerPaper', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
@@ -1981,7 +1991,7 @@ html, body { background: #ffffff !important; }
             <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원', 'ページ · 1P 100ウォン', 'pages · ₩100/pg')}</span>
           </div>
           <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-top:12px; line-height:1.55;">
-            ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 주문 1회 정액. 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は注文1回定額。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing once per order. Total = per-book × copies(qty).')}
+            ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 아래 인쇄 옵션에서 선택(주문 1회 정액). 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は下の印刷オプションで選択(注文1回定額)。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing selected below (once per order). Total = per-book × copies(qty).')}
           </div>
         </div>
 
@@ -4230,9 +4240,9 @@ html, body { background: #ffffff !important; }
             subtotal = _lfSubTop;
             state.wallHeightExtra = 0;
         } else if (state.isBooklet) {
-            // 2026-07-01: 책자 = (1000 + 페이지×100) × 권수 + 박/후가공(1회)
+            // 2026-07-01: 책자 = (1000 + 페이지×100) × 권수. 박/후가공(cp)은 addonTotal 에서 1회 정액 가산.
             qty = Math.max(1, state.qty || 1);
-            subtotal = _soBookletTotal(state.bookletPages, qty, state.bookletFoil, state.bookletFinishes);
+            subtotal = _soBookletTotal(state.bookletPages, qty);
             unit = Math.round(subtotal / qty);
             state.wallHeightExtra = 0;
         } else if (state.isCustomSize) {
@@ -6327,8 +6337,14 @@ html, body { background: #ffffff !important; }
             }
         } catch(_lbE){}
     }
-    // 2026-07-01: 책자제본 (435345435) — 표지(용지+박+후가공) + 내지(용지+페이지수) × 권수
+    // 2026-07-01: 책자제본 (435345435) — 사이즈 + 표지/내지 용지 + 페이지수 × 권수. 박/후가공은 하단 soCp 공용 사용.
     var BOOKLET_CODE = '435345435';
+    var BOOKLET_INNER_PAPERS = [
+        { key:'mojo70',   name_kr:'모조지 70g',   name_jp:'上質紙 70g',     name_us:'Woodfree 70g' },
+        { key:'snow90',   name_kr:'스노우지 90g', name_jp:'スノー紙 90g',   name_us:'Snow 90g' },
+        { key:'art90',    name_kr:'아트지 90g',   name_jp:'アート紙 90g',   name_us:'Art 90g' },
+        { key:'rendez90', name_kr:'랑데뷰 90g',   name_jp:'ランデブー 90g', name_us:'Rendezvous 90g' }
+    ];
     function _soIsBookletProduct(p) { return !!(p && String(p.code || '') === BOOKLET_CODE); }
     function _soRenderBookletAll() {
         if (typeof BIZ_PAPERS === 'undefined') return;
@@ -6336,30 +6352,38 @@ html, body { background: #ffffff !important; }
         var cp = document.getElementById('soBkCoverPaper');
         if (cp) cp.innerHTML = BIZ_PAPERS.map(function(o){ return _opt(o, state.bookletCoverPaper); }).join('');
         var ip = document.getElementById('soBkInnerPaper');
-        if (ip) ip.innerHTML = BIZ_PAPERS.map(function(o){ return _opt(o, state.bookletInnerPaper); }).join('');
-        var fo = document.getElementById('soBkFoil');
-        if (fo) fo.innerHTML = '<option value="">' + tr('없음', 'なし', 'None') + '</option>' + BIZ_FOILS.map(function(o){ return '<option value="' + o.key + '"' + (o.key === state.bookletFoil ? ' selected' : '') + '>' + _bizI18n(o, 'name') + ' (+' + fmtPrice(o.price || 0) + ')</option>'; }).join('');
-        var fl = document.getElementById('soBkFinishList');
-        if (fl) fl.innerHTML = BIZ_FINISHES.map(function(o){
-            var sel = !!(state.bookletFinishes && state.bookletFinishes[o.key]);
-            return '<label style="display:flex; align-items:center; gap:6px; padding:8px 10px; border:1.5px solid ' + (sel ? '#4338ca' : '#e5e7eb') + '; border-radius:8px; font-size:12px; cursor:pointer; background:' + (sel ? '#eef2ff' : '#fff') + ';"><input type="checkbox"' + (sel ? ' checked' : '') + ' onchange="window._soBkToggleFinish(\'' + o.key + '\', this.checked)"> ' + _bizI18n(o, 'name') + ' (+' + fmtPrice(o.price || 0) + ')</label>';
-        }).join('');
+        if (ip) ip.innerHTML = BOOKLET_INNER_PAPERS.map(function(o){ return _opt(o, state.bookletInnerPaper); }).join('');
+        try {
+            document.querySelectorAll('#soBkSizeGrid .so-bk-size').forEach(function(b){
+                var on = (b.getAttribute('data-bk-size') === state.bookletSize);
+                b.style.borderColor = on ? '#4338ca' : '#e5e7eb';
+                b.style.background = on ? '#eef2ff' : '#fff';
+                b.style.color = on ? '#3730a3' : '#334155';
+            });
+        } catch (e) {}
     }
     window._soRenderBookletAll = _soRenderBookletAll;
     window._soBkSet = function(field, val) {
         if (field === 'pages') state.bookletPages = Math.max(1, Math.min(500, parseInt(val, 10) || 1));
         else if (field === 'coverPaper') state.bookletCoverPaper = val;
         else if (field === 'innerPaper') state.bookletInnerPaper = val;
-        else if (field === 'foil') state.bookletFoil = val || null;
         if (typeof recalc === 'function') recalc();
     };
-    window._soBkToggleFinish = function(key, checked) {
-        if (!state.bookletFinishes) state.bookletFinishes = {};
-        if (checked) state.bookletFinishes[key] = true; else delete state.bookletFinishes[key];
+    window._soBkPickSize = function(name, w, h) {
+        state.bookletSize = name; state.bookletW = w; state.bookletH = h;
+        var wi = document.getElementById('soBkW'), hi = document.getElementById('soBkH');
+        if (wi) wi.value = ''; if (hi) hi.value = '';
         _soRenderBookletAll();
         if (typeof recalc === 'function') recalc();
     };
-    // 책자 총액 (recalc / _soCalcItemPrice 공용): (1000 + 페이지×100) × 권수 + 박/후가공(1회)
+    window._soBkCustomSize = function() {
+        var wi = document.getElementById('soBkW'), hi = document.getElementById('soBkH');
+        var w = parseInt(wi && wi.value, 10) || 0, h = parseInt(hi && hi.value, 10) || 0;
+        if (w > 0 && h > 0) { state.bookletSize = 'custom'; state.bookletW = w; state.bookletH = h; }
+        _soRenderBookletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    // 책자 총액: (1000 + 페이지×100) × 권수 (+ 박/후가공은 인자로 주면 가산 — 카트용). recalc 는 addonTotal 로 cp 박 처리.
     function _soBookletTotal(pages, qty, foilKey, finishes) {
         pages = Math.max(1, parseInt(pages, 10) || 1);
         qty = Math.max(1, parseInt(qty, 10) || 1);
@@ -12470,10 +12494,9 @@ html, body { background: #ffffff !important; }
             var _bkSec = document.getElementById('soBookletSection');
             if (state.isBooklet) {
                 if (!state.bookletCoverPaper) state.bookletCoverPaper = (typeof BIZ_PAPERS !== 'undefined' && BIZ_PAPERS[0]) ? BIZ_PAPERS[0].key : '';
-                if (!state.bookletInnerPaper) state.bookletInnerPaper = state.bookletCoverPaper;
-                if (state.bookletFoil === undefined) state.bookletFoil = null;
-                if (!state.bookletFinishes) state.bookletFinishes = {};
+                if (!state.bookletInnerPaper) state.bookletInnerPaper = 'mojo70';
                 if (!state.bookletPages) state.bookletPages = 8;
+                if (!state.bookletSize) { state.bookletSize = 'A4'; state.bookletW = 210; state.bookletH = 297; }
                 state.isCustomSize = false; state.isAdPrint = false;
                 if (_bkSec) _bkSec.style.display = '';
                 var _bkPg = document.getElementById('soBkPages'); if (_bkPg) _bkPg.value = state.bookletPages;
@@ -15876,13 +15899,16 @@ html, body { background: #ffffff !important; }
             leafletCustomW: state.isLeaflet ? (state.leafletCustomW || null) : null,
             leafletCustomH: state.isLeaflet ? (state.leafletCustomH || null) : null,
             _isLeaflet: !!state.isLeaflet,
-            // 2026-07-01: 책자제본 — 표지 용지/박/후가공 + 내지 용지/페이지 (권수=qty)
+            // 2026-07-01: 책자제본 — 사이즈/표지·내지 용지/페이지 (권수=qty). 박/후가공은 cp 공용.
             _isBooklet: !!state.isBooklet,
             bookletPages: state.isBooklet ? Math.max(1, parseInt(state.bookletPages, 10) || 1) : null,
             bookletCoverPaper: state.isBooklet ? (state.bookletCoverPaper || null) : null,
             bookletInnerPaper: state.isBooklet ? (state.bookletInnerPaper || null) : null,
-            bookletFoil: state.isBooklet ? (state.bookletFoil || null) : null,
-            bookletFinishes: state.isBooklet ? Object.assign({}, state.bookletFinishes || {}) : null,
+            bookletSize: state.isBooklet ? (state.bookletSize || null) : null,
+            bookletW: state.isBooklet ? (state.bookletW || null) : null,
+            bookletH: state.isBooklet ? (state.bookletH || null) : null,
+            cpFoil: (state.isBooklet || state.isCpGeneric) ? (state.cpFoil || null) : null,
+            cpFinishes: (state.isBooklet || state.isCpGeneric) ? (state.cpFinishes ? Object.assign({}, state.cpFinishes) : null) : null,
             // 2026-06-13: 디자인 의뢰 정보 (의뢰 후 카트 담은 경우 포함)
             designRequest: state.designReqId ? {
                 request_id: state.designReqId,
@@ -17520,9 +17546,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
         // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4 (Math.ceil(qty/10) 폐기)
         //             + 디자인 의뢰비 (it.designRequest.total) 포함 — early-return 이라 outer base+= 분기 안 탐.
-        // 2026-07-01: 책자제본 — (1000 + 페이지×100) × 권수 + 박/후가공(1회). recalc 와 동일 helper.
+        // 2026-07-01: 책자제본 — (1000 + 페이지×100) × 권수 + 박/후가공(cp, 1회 정액).
         if (it._isBooklet || (it.product && String(it.product.code || '') === '435345435')) {
-            return _soBookletTotal(it.bookletPages, qty, it.bookletFoil, it.bookletFinishes);
+            return _soBookletTotal(it.bookletPages, qty, it.cpFoil, it.cpFinishes);
         }
         var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
         if (_isLfItm) {
