@@ -1990,8 +1990,9 @@ html, body { background: #ffffff !important; }
             <input type="number" id="soBkPages" value="8" min="1" max="500" oninput="window._soBkSet('pages', this.value)" style="flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-align:center; font-family:inherit;">
             <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원', 'ページ · 1P 100ウォン', 'pages · ₩100/pg')}</span>
           </div>
-          <div style="font-size:11.5px; color:#0c4a6e; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55;">
-            📏 ${tr('책 두께: 100페이지 ≈ 8mm · 50페이지 ≈ 4mm 기준으로 작업해 주세요.', '本の厚み: 100ページ ≈ 8mm · 50ページ ≈ 4mm を目安に作業してください。', 'Thickness: about 8mm per 100 pages · 4mm per 50 pages.')}
+          <div style="font-size:12px; color:#0c4a6e; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 12px; margin-top:8px; line-height:1.55;">
+            📏 ${tr('예상 책등 두께', '背表紙の予想厚み', 'Estimated spine thickness')}: <span id="soBkThickness" style="font-size:15px; color:#1d4ed8; font-weight:700;">-</span>
+            <span style="font-size:11px; color:#64748b;"> · ${tr('100페이지 ≈ 8mm 기준으로 작업해 주세요', '100ページ ≈ 8mm を目安に', 'about 8mm per 100 pages')}</span>
           </div>
           <div style="font-size:12px; color:#9d174d; background:#fdf2f8; border:1.5px solid #f9a8d4; border-radius:8px; padding:10px 12px; margin-top:8px; line-height:1.6;">
             📤 ${tr('고용량 책자 인쇄물은 이메일(design@chameleon.design)로 파일 접수 부탁드립니다.', '大容量の冊子印刷物はメール(design@chameleon.design)でファイルをお送りください。', 'For large booklet files, please email them to design@chameleon.design.')}<br>
@@ -6368,12 +6369,21 @@ html, body { background: #ffffff !important; }
                 b.style.color = on ? '#3730a3' : '#334155';
             });
         } catch (e) {}
+        _soBkUpdateThickness();
     }
     window._soRenderBookletAll = _soRenderBookletAll;
+    function _soBkUpdateThickness() {
+        var el = document.getElementById('soBkThickness');
+        if (!el) return;
+        var pages = Math.max(1, parseInt(state.bookletPages, 10) || 1);
+        var mm = pages * 0.08;   // 100페이지 ≈ 8mm
+        el.textContent = '≈ ' + (mm < 10 ? mm.toFixed(1) : Math.round(mm)) + ' mm';
+    }
     window._soBkSet = function(field, val) {
         if (field === 'pages') state.bookletPages = Math.max(1, Math.min(500, parseInt(val, 10) || 1));
         else if (field === 'coverPaper') state.bookletCoverPaper = val;
         else if (field === 'innerPaper') state.bookletInnerPaper = val;
+        if (field === 'pages') _soBkUpdateThickness();
         if (typeof recalc === 'function') recalc();
     };
     window._soBkPickSize = function(name, w, h) {
