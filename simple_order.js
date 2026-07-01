@@ -2776,6 +2776,11 @@ html, body { background: #ffffff !important; }
             <button type="button" id="soBizTierPremium" onclick="window._soBizPickTier('premium')" style="flex:1; padding:12px; border:2px solid #e7e5e4; background:#fff; color:#451a03; border-radius:10px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('프리미엄', 'プレミアム', 'Premium')} <span id="soBizTierPriceP" style="font-weight:600; opacity:0.7; font-size:12px; display:block; margin-top:2px;">${tr('10종의 최고급 수입지', '10種の最高級輸入紙', '10 premium imported papers')}</span></button>
           </div>
 
+          <!-- 2026-07-01: 명함 이벤트 배너 — 단면 가격으로 양면 제작 (사용자 요청) -->
+          <div style="margin-top:14px; padding:12px 14px; background:#fdf2f8; border:1.5px solid #f9a8d4; border-radius:10px; color:#9d174d; font-size:13px; line-height:1.55;">
+            🎉 ${tr('양면 인쇄를 단면 가격에! 이벤트 진행 중', '両面印刷を片面価格で！イベント開催中', 'Double-sided at the single-side price! Event')}
+            <div style="font-size:12px; color:#be185d; margin-top:4px;">${tr('100매 ' + fmtPrice(5000) + ' · 양면 기본 제작', '100枚 ' + fmtPrice(5000) + ' · 両面仕上げが基本', '100pcs ' + fmtPrice(5000) + ' · double-sided included')}</div>
+          </div>
           <!-- 2026-06-25: 명함 단/양면 선택 폐지 — 항상 양면 기본. 인쇄면 섹션 숨김. -->
           <div class="so-section-title" style="margin-top:18px; display:none;">📐 ${tr('인쇄면', '印刷面', 'Print side')}</div>
           <div style="display:none; gap:8px;">
@@ -7933,13 +7938,13 @@ html, body { background: #ffffff !important; }
 
     // 2026-05-13: 야간/주말 자동 보정 — 수도권 설치(10만) 인데 시간이 야간이면 자동 20만(야간 설치)
     function _soComputeShipFee() {
-        // 2026-06-30: JP 사이트 — 일반 택배 상품 배송비 1000엔(10,000원) 통일 (사용자 요청).
+        // 2026-06-30: JP 사이트 — 일반 택배 상품 배송비 500엔(5,000원) 통일 (2026-07-01 1000엔→500엔).
         //   시공/트럭/대형(가벽·원판·종이매대·시공가능·금액주문)·묶음배송은 제외 — 실비 유지.
         if (window.__SITE_CODE === 'JP' && !state.bundleShipping
             && !state.isWall && !state.isRawBoard && !state.isPaperDisplay
             && !state.isInstallEligible && !state.isAmountOrder) {
             state._shipUpgradeReason = null;
-            return 10000;
+            return 5000;
         }
         // 2026-06-24: 아크릴 family — 무료배송 (이전 정액 10,000원 제거, 사용자 요청)
         if (state.isAcrylicFamily) {
@@ -17823,13 +17828,13 @@ html, body { background: #ffffff !important; }
             var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee || (_allProductSub >= 50000);
             shipTotal = _shipExempt ? 0 : 5000;
         }
-        // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 1000엔(10,000원) 정액 통일 (위 모든 규칙 대체).
+        // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 500엔(5,000원) 정액 통일 (2026-07-01 1000엔→500엔).
         //   제외(실비/면제 유지): 시공(가벽·등신대·스카시)·원판/종이매대 트럭·금액주문·디자인비 전용·패브릭전용.
         if (window.__SITE_CODE === 'JP' && cart.length > 0 && !_hasInstall && !_hasAmountOrder
             && !cart.some(function (_it) { return _it && _it.product && ((typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(_it.product)) || (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_it.product))); })
             && cart.some(function (_it) { return _it && !_soIsFabricItem(_it); })
             && !cart.every(function (_it) { var _p = (_it && _it.product) || {}; return String(_p.category || '') === 'design_fee' || String(_p.code || '').indexOf('design_fee_') === 0; })) {
-            shipTotal = 10000;
+            shipTotal = 5000;
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
