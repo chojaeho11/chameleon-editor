@@ -1364,14 +1364,16 @@ function renderCard(r) {
     const _refFile = tr('참고 파일', '参考ファイル', 'Reference');
     const _finalDraft = tr('완성 시안', '完成案', 'Final Draft');
     const _draftWord = tr('시안', '案', 'Draft');
-    const filesHtml = files.length ? `
+    // 2026-07-01: 참고 파일 — 항상 표시 + "파일 첨부" 버튼 (별도로 받은 파일을 매니저가 직접 첨부).
+    const filesHtml = `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
                 ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(_dbThumb(u))}" loading="lazy" decoding="async" alt="">` : '📎'}
                 ${_refFile}
             </a>`).join('')}
+            <button type="button" onclick="dbAttachFile('${r.id}')" title="${esc(tr('고객이 이메일/카톡 등으로 별도 전달한 파일을 여기에 첨부','お客様が別途送ったファイルをここに添付','Attach files the customer sent separately'))}" style="display:inline-flex; align-items:center; gap:4px; padding:7px 12px; background:#eef2ff; color:#4c1d95; border:1px dashed #a78bfa; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">📎 ${tr('파일 첨부','ファイル添付','Attach file')}</button>
         </div>
-    ` : '';
+    `;
 
     const finalFiles = meta.finalFiles || [];
     const finalHtml = finalFiles.length ? `
@@ -1662,6 +1664,43 @@ async function dbRestore(trashId) {
     } catch (e) { alert('복구 실패: ' + (e.message || e)); }
 }
 window.dbRestore = dbRestore;
+
+// 2026-07-01: 매니저/디자이너 파일 첨부 — 고객이 별도(이메일/카톡)로 보낸 파일을 의뢰에 직접 추가.
+async function dbAttachFile(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*,.pdf,.ai,.psd,.eps,.zip';
+    input.onchange = async () => {
+        const picked = Array.from(input.files || []);
+        if (!picked.length) return;
+        const _toast = _dbToast || function(t){ console.log(t); };
+        try {
+            _toast('업로드 중… (' + picked.length + '개)');
+            const uploaded = [];
+            for (const f of picked) {
+                const safe = (f.name || 'file').replace(/[^\w.\-]/g, '_');
+                const path = 'design-requests/manual/' + id + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '_' + safe;
+                const { error: upErr } = await sb.storage.from('design').upload(path, f, { upsert: false, contentType: f.type || undefined });
+                if (upErr) throw upErr;
+                const { data: pub } = sb.storage.from('design').getPublicUrl(path);
+                if (pub && pub.publicUrl) uploaded.push(pub.publicUrl);
+            }
+            if (!uploaded.length) throw new Error('업로드된 파일이 없습니다.');
+            // 현재 files 에 append (덮어쓰기 방지)
+            const { data: cur } = await sb.from('design_requests').select('files').eq('id', id).maybeSingle();
+            const merged = (Array.isArray(cur && cur.files) ? cur.files : []).concat(uploaded);
+            const { error } = await sb.from('design_requests').update({ files: merged }).eq('id', id);
+            if (error) throw error;
+            _toast('✓ ' + uploaded.length + '개 파일을 첨부했습니다.');
+            render();
+        } catch (e) {
+            alert('첨부 실패: ' + (e.message || e) + '\n(승인된 디자이너만 첨부할 수 있습니다.)');
+        }
+    };
+    input.click();
+}
+window.dbAttachFile = dbAttachFile;
 
 async function dbClaim(id) {
     if (myDesignerStatus !== 'approved') {
