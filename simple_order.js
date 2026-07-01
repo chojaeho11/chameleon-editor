@@ -19118,6 +19118,12 @@ html, body { background: #ffffff !important; }
                     //   기존엔 design_requests.phone 이 비어 디자이너가 고객 정보를 찾을 길이 없었음 (보드 카드의 주문번호로 조회 시 데이터 없음).
                     var _ci_custName = (typeof name !== 'undefined' && name) ? name : '';
                     var _ci_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
+                    // 2026-07-01: 고객 업로드 파일 수집 — 이전엔 files:[] 하드코딩이라 디자이너가 첨부파일을 못 봤음.
+                    var _ci_files = [];
+                    ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function(f){ if (_ci_it[f] && typeof _ci_it[f] === 'string' && /^https?:/.test(_ci_it[f])) _ci_files.push(_ci_it[f]); });
+                    if (typeof _ci_it.filePath === 'string' && _ci_it.filePath) _ci_files.push('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/' + _ci_it.filePath.replace(/^\/+/, ''));
+                    if (Array.isArray(_ci_it.uploadedFiles)) _ci_it.uploadedFiles.forEach(function(u){ if (u && typeof u === 'string' && /^https?:/.test(u)) _ci_files.push(u); });
+                    _ci_files = _ci_files.filter(function(v, i, a){ return a.indexOf(v) === i; });
                     var _ci_payload = {
                         customer_id: _cutUid,
                         title: '[칼선작업] ' + _ci_prodName + ' · 유닛 ' + _ci_n + '개',
@@ -19127,7 +19133,7 @@ html, body { background: #ffffff !important; }
                         budget_min: _ci_fee,
                         budget_max: _ci_fee,
                         phone: _ci_custPhone || null,
-                        files: [],
+                        files: _ci_files,
                         status: 'open'
                     };
                     try {
