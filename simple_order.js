@@ -1961,6 +1961,30 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-07-01: 책자제본 (435345435) — 표지(용지+박+후가공) + 내지(용지+페이지수) × 권수 -->
+        <div class="so-section" id="soBookletSection" style="display:none;">
+          <div class="so-section-title">📖 ${tr('표지 용지', '表紙の用紙', 'Cover paper')}</div>
+          <select id="soBkCoverPaper" onchange="window._soBkSet('coverPaper', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
+
+          <div class="so-section-title" style="margin-top:16px;">✨ ${tr('표지 박 (선택)', '表紙の箔押し (任意)', 'Cover foil (optional)')} <span style="font-size:11px; color:#64748b; font-weight:500;">${tr('주문 1회 정액', '注文1回定額', 'once per order')}</span></div>
+          <select id="soBkFoil" onchange="window._soBkSet('foil', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
+
+          <div class="so-section-title" style="margin-top:16px;">🛠️ ${tr('표지 후가공 (선택)', '表紙の後加工 (任意)', 'Cover finishing (optional)')} <span style="font-size:11px; color:#64748b; font-weight:500;">${tr('주문 1회 정액', '注文1回定額', 'once per order')}</span></div>
+          <div id="soBkFinishList" style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:6px;"></div>
+
+          <div class="so-section-title" style="margin-top:18px;">📄 ${tr('내지 용지', '本文の用紙', 'Inner paper')}</div>
+          <select id="soBkInnerPaper" onchange="window._soBkSet('innerPaper', this.value)" style="width:100%; margin-top:6px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; font-family:inherit; background:#fff;"></select>
+
+          <div class="so-section-title" style="margin-top:18px;">📑 ${tr('내지 페이지 수', '本文ページ数', 'Inner pages')}</div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+            <input type="number" id="soBkPages" value="8" min="1" max="500" oninput="window._soBkSet('pages', this.value)" style="flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-align:center; font-family:inherit;">
+            <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원', 'ページ · 1P 100ウォン', 'pages · ₩100/pg')}</span>
+          </div>
+          <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-top:12px; line-height:1.55;">
+            ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 주문 1회 정액. 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は注文1回定額。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing once per order. Total = per-book × copies(qty).')}
+          </div>
+        </div>
+
         <!-- 2026-06-05: 게이트 (gate) — 가로 2~6m / 세로 3~4m 사이즈 선택 + 무료 디자인 안내 -->
         <div class="so-section" id="soGateNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -4205,6 +4229,12 @@ html, body { background: #ffffff !important; }
             unit = Math.round(_lfSubTop / qty);
             subtotal = _lfSubTop;
             state.wallHeightExtra = 0;
+        } else if (state.isBooklet) {
+            // 2026-07-01: 책자 = (1000 + 페이지×100) × 권수 + 박/후가공(1회)
+            qty = Math.max(1, state.qty || 1);
+            subtotal = _soBookletTotal(state.bookletPages, qty, state.bookletFoil, state.bookletFinishes);
+            unit = Math.round(subtotal / qty);
+            state.wallHeightExtra = 0;
         } else if (state.isCustomSize) {
             // 현수막·실사출력 등 면적 기반: 계산된 단가 × 수량
             unit = state.customUnitPrice || 0;
@@ -6297,6 +6327,48 @@ html, body { background: #ffffff !important; }
             }
         } catch(_lbE){}
     }
+    // 2026-07-01: 책자제본 (435345435) — 표지(용지+박+후가공) + 내지(용지+페이지수) × 권수
+    var BOOKLET_CODE = '435345435';
+    function _soIsBookletProduct(p) { return !!(p && String(p.code || '') === BOOKLET_CODE); }
+    function _soRenderBookletAll() {
+        if (typeof BIZ_PAPERS === 'undefined') return;
+        var _opt = function(o, selKey){ return '<option value="' + o.key + '"' + (o.key === selKey ? ' selected' : '') + '>' + _bizI18n(o, 'name') + '</option>'; };
+        var cp = document.getElementById('soBkCoverPaper');
+        if (cp) cp.innerHTML = BIZ_PAPERS.map(function(o){ return _opt(o, state.bookletCoverPaper); }).join('');
+        var ip = document.getElementById('soBkInnerPaper');
+        if (ip) ip.innerHTML = BIZ_PAPERS.map(function(o){ return _opt(o, state.bookletInnerPaper); }).join('');
+        var fo = document.getElementById('soBkFoil');
+        if (fo) fo.innerHTML = '<option value="">' + tr('없음', 'なし', 'None') + '</option>' + BIZ_FOILS.map(function(o){ return '<option value="' + o.key + '"' + (o.key === state.bookletFoil ? ' selected' : '') + '>' + _bizI18n(o, 'name') + ' (+' + fmtPrice(o.price || 0) + ')</option>'; }).join('');
+        var fl = document.getElementById('soBkFinishList');
+        if (fl) fl.innerHTML = BIZ_FINISHES.map(function(o){
+            var sel = !!(state.bookletFinishes && state.bookletFinishes[o.key]);
+            return '<label style="display:flex; align-items:center; gap:6px; padding:8px 10px; border:1.5px solid ' + (sel ? '#4338ca' : '#e5e7eb') + '; border-radius:8px; font-size:12px; cursor:pointer; background:' + (sel ? '#eef2ff' : '#fff') + ';"><input type="checkbox"' + (sel ? ' checked' : '') + ' onchange="window._soBkToggleFinish(\'' + o.key + '\', this.checked)"> ' + _bizI18n(o, 'name') + ' (+' + fmtPrice(o.price || 0) + ')</label>';
+        }).join('');
+    }
+    window._soRenderBookletAll = _soRenderBookletAll;
+    window._soBkSet = function(field, val) {
+        if (field === 'pages') state.bookletPages = Math.max(1, Math.min(500, parseInt(val, 10) || 1));
+        else if (field === 'coverPaper') state.bookletCoverPaper = val;
+        else if (field === 'innerPaper') state.bookletInnerPaper = val;
+        else if (field === 'foil') state.bookletFoil = val || null;
+        if (typeof recalc === 'function') recalc();
+    };
+    window._soBkToggleFinish = function(key, checked) {
+        if (!state.bookletFinishes) state.bookletFinishes = {};
+        if (checked) state.bookletFinishes[key] = true; else delete state.bookletFinishes[key];
+        _soRenderBookletAll();
+        if (typeof recalc === 'function') recalc();
+    };
+    // 책자 총액 (recalc / _soCalcItemPrice 공용): (1000 + 페이지×100) × 권수 + 박/후가공(1회)
+    function _soBookletTotal(pages, qty, foilKey, finishes) {
+        pages = Math.max(1, parseInt(pages, 10) || 1);
+        qty = Math.max(1, parseInt(qty, 10) || 1);
+        var opt = 0;
+        if (foilKey && typeof BIZ_FOILS !== 'undefined') { var f = BIZ_FOILS.find(function(o){ return o.key === foilKey; }); if (f) opt += (f.price || 0); }
+        if (finishes && typeof BIZ_FINISHES !== 'undefined') Object.keys(finishes).forEach(function(k){ if (finishes[k]) { var x = BIZ_FINISHES.find(function(o){ return o.key === k; }); if (x) opt += (x.price || 0); } });
+        return (1000 + pages * 100) * qty + opt;
+    }
+
     window._soPickLeafletSize = function(id) {
         state.leafletSize = id;
         var sz = LEAFLET_SIZES.find(function(s){ return s.id === id; });
@@ -12392,6 +12464,24 @@ html, body { background: #ffffff !important; }
                 }
             } catch(_re){}
         }
+        // 2026-07-01: 책자제본 — 표지(용지/박/후가공) + 내지(용지/페이지) × 권수
+        state.isBooklet = _soIsBookletProduct(p);
+        try {
+            var _bkSec = document.getElementById('soBookletSection');
+            if (state.isBooklet) {
+                if (!state.bookletCoverPaper) state.bookletCoverPaper = (typeof BIZ_PAPERS !== 'undefined' && BIZ_PAPERS[0]) ? BIZ_PAPERS[0].key : '';
+                if (!state.bookletInnerPaper) state.bookletInnerPaper = state.bookletCoverPaper;
+                if (state.bookletFoil === undefined) state.bookletFoil = null;
+                if (!state.bookletFinishes) state.bookletFinishes = {};
+                if (!state.bookletPages) state.bookletPages = 8;
+                state.isCustomSize = false; state.isAdPrint = false;
+                if (_bkSec) _bkSec.style.display = '';
+                var _bkPg = document.getElementById('soBkPages'); if (_bkPg) _bkPg.value = state.bookletPages;
+                try { _soRenderBookletAll(); } catch (e) {}
+            } else {
+                if (_bkSec) _bkSec.style.display = 'none';
+            }
+        } catch (_bke) {}
         // 2026-06-05: 게이트 (이름 매칭) — 가로/세로 선택 + 무료 디자인 안내
         var _isGate = _soIsGateProduct(p);
         state.isGate = _isGate;
@@ -12564,6 +12654,7 @@ html, body { background: #ffffff !important; }
         state.isCustomSize = _soIsCustomSizeProduct(p);
         // 2026-06-01: 허니콤배너는 60×180cm 고정사이즈로 flat 가격. customSize 분기 진입 금지.
         if (state.isBanner) state.isCustomSize = false;
+        if (state.isBooklet) state.isCustomSize = false;   // 2026-07-01: 책자는 자체 가격(페이지×권수) — 면적 분기 차단
         // 2026-06-03: 스티커는 자체 카테고리/사이즈 UI 사용 — 레거시 면적×단가 카드 차단
         if (state.isSticker) state.isCustomSize = false;
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
@@ -15785,6 +15876,13 @@ html, body { background: #ffffff !important; }
             leafletCustomW: state.isLeaflet ? (state.leafletCustomW || null) : null,
             leafletCustomH: state.isLeaflet ? (state.leafletCustomH || null) : null,
             _isLeaflet: !!state.isLeaflet,
+            // 2026-07-01: 책자제본 — 표지 용지/박/후가공 + 내지 용지/페이지 (권수=qty)
+            _isBooklet: !!state.isBooklet,
+            bookletPages: state.isBooklet ? Math.max(1, parseInt(state.bookletPages, 10) || 1) : null,
+            bookletCoverPaper: state.isBooklet ? (state.bookletCoverPaper || null) : null,
+            bookletInnerPaper: state.isBooklet ? (state.bookletInnerPaper || null) : null,
+            bookletFoil: state.isBooklet ? (state.bookletFoil || null) : null,
+            bookletFinishes: state.isBooklet ? Object.assign({}, state.bookletFinishes || {}) : null,
             // 2026-06-13: 디자인 의뢰 정보 (의뢰 후 카트 담은 경우 포함)
             designRequest: state.designReqId ? {
                 request_id: state.designReqId,
@@ -17422,6 +17520,10 @@ html, body { background: #ffffff !important; }
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
         // 2026-06-14: 박/후가공 multiplier — 100매+ ×2 / 500매+ ×3 / 1000매+ ×4 (Math.ceil(qty/10) 폐기)
         //             + 디자인 의뢰비 (it.designRequest.total) 포함 — early-return 이라 outer base+= 분기 안 탐.
+        // 2026-07-01: 책자제본 — (1000 + 페이지×100) × 권수 + 박/후가공(1회). recalc 와 동일 helper.
+        if (it._isBooklet || (it.product && String(it.product.code || '') === '435345435')) {
+            return _soBookletTotal(it.bookletPages, qty, it.bookletFoil, it.bookletFinishes);
+        }
         var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
         if (_isLfItm) {
             var _lfQ = qty || 1;
