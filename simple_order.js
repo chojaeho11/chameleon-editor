@@ -1990,7 +1990,14 @@ html, body { background: #ffffff !important; }
             <input type="number" id="soBkPages" value="8" min="1" max="500" oninput="window._soBkSet('pages', this.value)" style="flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-align:center; font-family:inherit;">
             <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원', 'ページ · 1P 100ウォン', 'pages · ₩100/pg')}</span>
           </div>
-          <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-top:12px; line-height:1.55;">
+          <div style="font-size:11.5px; color:#0c4a6e; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55;">
+            📏 ${tr('책 두께: 100페이지 ≈ 8mm · 50페이지 ≈ 4mm 기준으로 작업해 주세요.', '本の厚み: 100ページ ≈ 8mm · 50ページ ≈ 4mm を目安に作業してください。', 'Thickness: about 8mm per 100 pages · 4mm per 50 pages.')}
+          </div>
+          <div style="font-size:12px; color:#9d174d; background:#fdf2f8; border:1.5px solid #f9a8d4; border-radius:8px; padding:10px 12px; margin-top:8px; line-height:1.6;">
+            📤 ${tr('고용량 책자 인쇄물은 이메일(design@chameleon.design)로 파일 접수 부탁드립니다.', '大容量の冊子印刷物はメール(design@chameleon.design)でファイルをお送りください。', 'For large booklet files, please email them to design@chameleon.design.')}<br>
+            ${tr('표지 4페이지와 내지를 별도 파일로 올려주세요.', '表紙4ページと本文を別々のファイルでアップロードしてください。', 'Upload the 4-page cover and inner pages as separate files.')}
+          </div>
+          <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55;">
             ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 아래 인쇄 옵션에서 선택(주문 1회 정액). 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は下の印刷オプションで選択(注文1回定額)。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing selected below (once per order). Total = per-book × copies(qty).')}
           </div>
         </div>
@@ -12687,6 +12694,7 @@ html, body { background: #ffffff !important; }
         if (state.isAdPrint && !state.isBanner) state.isCustomSize = true;
         // 2026-06-12: 명함/스티커는 광고인쇄 layout 대상 X — 자체 등급/면/사이즈 UI 사용
         if (state.isBizCard) { state.isAdPrint = false; state.isCustomSize = false; }
+        if (state.isBooklet) { state.isAdPrint = false; state.isCustomSize = false; }   // 2026-07-01: 책자 BEST(is_popular) → isAdPrint 재설정 되돌림 (상단 면적 사이즈 중복 제거)
         // 2026-06-16: 스티커는 자체 사이즈 UI 를 쓰므로 isCustomSize 도 같이 끔
         //   (위에서 is_popular=true → isAdPrint=true → isCustomSize=true 로 재설정된 것을 되돌림)
         if (state.isSticker) { state.isAdPrint = false; state.isCustomSize = false; }
