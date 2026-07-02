@@ -1899,6 +1899,9 @@ html, body { background: #ffffff !important; }
           <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:10px; line-height:1.55; font-weight:600;">
             ✅ ${tr('1장(1매)부터 제작 가능합니다 — 소량 주문 환영', '1枚から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 sheet — small quantities welcome')}
           </div>
+          <div style="font-size:12px; color:#7c2d12; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.6; font-weight:600;">
+            📉 ${tr('수량 볼륨 할인', '数量ボリューム割引', 'Volume discount')} — ${tr('100장 50% · 500장 76% · 1,000장 84% 할인', '100枚 50% · 500枚 76% · 1,000枚 84% OFF', '100:50% · 500:76% · 1,000:84% off')}
+          </div>
 
           <!-- 비규격 사이즈 — 토글 버튼 (클릭 시 입력칸 노출) -->
           <button type="button" id="soLfCustToggle" onclick="window._soLeafletCustomToggle()" style="width:100%; margin-top:10px; padding:11px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -2006,6 +2009,9 @@ html, body { background: #ffffff !important; }
           </div>
           <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55; font-weight:600;">
             ✅ ${tr('1권(1부)부터 제작 가능합니다 — 소량 주문 환영', '1冊（1部）から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 copy — small quantities welcome')}
+          </div>
+          <div style="font-size:12px; color:#7c2d12; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.6; font-weight:600;">
+            📉 ${tr('수량 볼륨 할인', '数量ボリューム割引', 'Volume discount')} — ${tr('100부 50% · 500부 65% · 1,000부 69% 할인', '100部 50% · 500部 65% · 1,000部 69% OFF', '100:50% · 500:65% · 1,000:69% off')}
           </div>
         </div>
 
@@ -6214,7 +6220,15 @@ html, body { background: #ffffff !important; }
         { id:'A2', label:'A2', wMm:420, hMm:594, perSheet: { single: 2000, double: 2400 } }
     ];
     function _soLeafletQtyDisc(qty) {
-        // 2026-06-25: 수량 할인 전면 폐지 (사용자 요청) — 항상 정가.
+        // 2026-07-02: 리플렛(낱장) 수량 볼륨 할인 재도입 — 일본(kingprinters) 대량가보다 저렴하게.
+        //   예) A3 양면 1,000장 = 1,200×1000×0.16 = 192,000원 = ¥19,200 (kingprinters 折パンフ ¥20,493 대비 ↓).
+        //   소량(1~99)은 정가 유지(1장부터 소량 특화). 100장↑부터 대량할인.
+        qty = Math.max(1, parseInt(qty, 10) || 1);
+        if (qty >= 3000) return 0.12;
+        if (qty >= 1000) return 0.16;
+        if (qty >= 500)  return 0.24;
+        if (qty >= 300)  return 0.34;
+        if (qty >= 100)  return 0.50;
         return 1.00;
     }
     // 박/후가공 옵션 multiplier — 수량 구간별로 base option price 배수
@@ -6469,13 +6483,30 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
     };
     // 책자 총액: (1000 + 페이지×100) × 권수 (+ 박/후가공은 인자로 주면 가산 — 카트용). recalc 는 addonTotal 로 cp 박 처리.
+    // 2026-07-02: 책자 수량(권수) 볼륨 할인 — 인쇄부(표지+내지) 에만 적용. 박/후가공(opt)은 정액 유지.
+    //   목표: 1,000부 기준 한국(성원애드피아)보다 약간 저렴 + 일본(kingprinters)보다 저렴.
+    //   예) 32P 1,000부 = (1000+3200)×1000×0.31 = 1,302,000원 (성원 1,424,000 대비 ~9%↓ · JP ¥130,200).
+    //       4P(8P) 1,000부 = 434,000원 = ¥43,400 (kingprinters ¥47,652 대비 ↓).
+    function _soBookletQtyDisc(qty) {
+        qty = Math.max(1, parseInt(qty, 10) || 1);
+        if (qty >= 1000) return 0.31;
+        if (qty >= 500)  return 0.35;
+        if (qty >= 300)  return 0.40;
+        if (qty >= 200)  return 0.45;
+        if (qty >= 100)  return 0.50;
+        if (qty >= 50)   return 0.58;
+        if (qty >= 30)   return 0.68;
+        if (qty >= 10)   return 0.80;
+        return 1.00;
+    }
+    window._soBookletQtyDisc = _soBookletQtyDisc;
     function _soBookletTotal(pages, qty, foilKey, finishes) {
         pages = Math.max(1, parseInt(pages, 10) || 1);
         qty = Math.max(1, parseInt(qty, 10) || 1);
         var opt = 0;
         if (foilKey && typeof BIZ_FOILS !== 'undefined') { var f = BIZ_FOILS.find(function(o){ return o.key === foilKey; }); if (f) opt += (f.price || 0); }
         if (finishes && typeof BIZ_FINISHES !== 'undefined') Object.keys(finishes).forEach(function(k){ if (finishes[k]) { var x = BIZ_FINISHES.find(function(o){ return o.key === k; }); if (x) opt += (x.price || 0); } });
-        return (1000 + pages * 100) * qty + opt;
+        return Math.round((1000 + pages * 100) * qty * _soBookletQtyDisc(qty)) + opt;
     }
 
     window._soPickLeafletSize = function(id) {
