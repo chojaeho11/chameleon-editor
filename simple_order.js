@@ -4795,9 +4795,15 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('포장+배송', '梱包+配送', 'Pack+Ship'));
             setText('soShipAmount', shipFee > 0 ? ('+' + fmtPrice(shipFee)) : tr('묶음배송', 'まとめ配送', 'Bundled'));
         } else if (state.isBizCard || state.isSticker) {
-            // 2026-06-12: 명함/스티커 — 무료배송
+            // 2026-06-12: 명함/스티커 — KR 무료배송.
+            // 2026-07-02: JP 는 택배 ¥500 정액(全国一律) — shipFee(JP=5000) 를 반영해 카트/결제와 일치시킴.
+            //   기존엔 shipFee 는 총액에 더해지는데 라벨만 '無料' 로 하드코딩돼 "무료 안내인데 총액은 ¥1,000" 불일치 발생.
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
-            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+            if (shipFee > 0) {
+                setText('soShipAmount', '+' + fmtPrice(shipFee) + (window.__SITE_CODE === 'JP' ? tr('', ' (全国一律)', ' (flat)') : ''));
+            } else {
+                setText('soShipAmount', tr('무료', '無料', 'FREE'));
+            }
         } else if (state.isBestGoods) {
             // 베스트굿즈는 정액 3K 별도 (기존 유지)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
