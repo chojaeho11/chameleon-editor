@@ -3717,6 +3717,9 @@ html, body { background: #ffffff !important; }
         if (fwMm >= 60 && fwMm <= 700 && fhMm >= 180 && fhMm <= 320) scale = 10;
         var actualW = fwMm * scale;
         var actualH = fhMm * scale;
+        // 2026-07-02: 팝업 표기용 — 10단위로 반올림(소수점/1의자리 숨김). 검증은 actualW/actualH 원본으로.
+        var dispW = Math.round(actualW / 10) * 10;
+        var dispH = Math.round(actualH / 10) * 10;
         // 2026-07-02: 가로 허용오차 — 날개 차이(허니콤 100 vs 강화골판지 150 = 총 100mm)를 구분하려면 40mm 이하로 제한.
         //   (기존 10×scale = 1:10 샘플에서 100mm 라 3300 이 3200 으로 오인 통과되던 문제)
         var TOL_W = Math.min(40, 10 * scale);
@@ -3762,9 +3765,9 @@ html, body { background: #ffffff !important; }
                         kind: 'error',
                         title: tr('⚠️ 날개(옆면) 사이즈가 다릅니다', '⚠️ 側面サイズが異なります', '⚠️ Side panel size mismatch'),
                         lines: [
-                            tr('업로드한 파일 가로: ', 'アップロードファイル横: ', 'Uploaded file width: ') + '<b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
+                            tr('업로드한 파일 가로: ', 'アップロードファイル横: ', 'Uploaded file width: ') + '<b>' + dispW.toLocaleString() + 'mm</b>' + scaleNote,
                             '',
-                            '<span style="color:#b91c1c;">' + tr(actualW.toLocaleString() + 'mm 는 ' + _otherType + '용 사이즈입니다.', actualW.toLocaleString() + 'mm は' + _otherType + '用のサイズです。', actualW.toLocaleString() + 'mm is the size for the ' + _otherType + '.') + '</span>',
+                            '<span style="color:#b91c1c;">' + tr(dispW.toLocaleString() + 'mm 는 ' + _otherType + '용 사이즈입니다.', dispW.toLocaleString() + 'mm は' + _otherType + '用のサイズです。', dispW.toLocaleString() + 'mm is the size for the ' + _otherType + '.') + '</span>',
                             '',
                             '<span style="color:#0369a1; font-weight:800;">' + tr('선택하신 ' + _curType + '은(는) 좌우 날개 ' + _wm + 'mm → <b>' + _correctW.toLocaleString() + 'mm</b> 으로 변경해주세요.', 'ご選択の' + _curType + 'は左右側面' + _wm + 'mm → <b>' + _correctW.toLocaleString() + 'mm</b> に変更してください。', 'The selected ' + _curType + ' uses +' + _wm + 'mm side panels → please change to <b>' + _correctW.toLocaleString() + 'mm</b>.') + '</span>'
                         ],
@@ -3778,7 +3781,7 @@ html, body { background: #ffffff !important; }
                 kind: 'error',
                 title: tr('⚠️ 가로 사이즈 오류', '⚠️ 横サイズエラー', '⚠️ Width size error'),
                 lines: [
-                    tr('업로드한 파일 가로: ','アップロードファイル横: ','Uploaded file width: ') + '<b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일 가로: ','アップロードファイル横: ','Uploaded file width: ') + '<b>' + dispW.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
                     tr('가벽 가로는 <b>1미터 단위</b>로만 주문 가능합니다.', '壁面の横は<b>1メートル単位</b>のみ注文可能です。', 'Wall width can only be ordered in <b>1 meter units</b>.'),
                     '<span style="color:#475569;">' + tr('예: 1000 / 2000 / 3000 / 4000 / 5000mm (날개 미포함)', '例: 1000 / 2000 / 3000 / 4000 / 5000mm (側面なし)', 'e.g. 1000 / 2000 / 3000 / 4000 / 5000mm (no side panels)') + '</span>',
@@ -3797,12 +3800,12 @@ html, body { background: #ffffff !important; }
                 kind: 'warn',
                 title: tr('📐 세로 특이 사이즈 — 추가 설계비 안내', '📐 縦の特殊サイズ — 追加設計費のご案内', '📐 Non-standard height — extra design fee'),
                 lines: [
-                    tr('업로드한 파일 사이즈: ','アップロードファイルサイズ: ','Uploaded file size: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일 사이즈: ','アップロードファイルサイズ: ','Uploaded file size: ') + '<b>' + dispW.toLocaleString() + ' × ' + dispH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
                     tr('기본 세로 사이즈: ','標準の縦サイズ: ','Standard heights: ') + '<b>2000 / 2200 / 2400 / 3000mm</b>',
                     '<span style="color:#475569;">' + tr('위 사이즈는 추가 비용 없이 진행됩니다.', '上記サイズは追加費用なしで進行できます。', 'The sizes above incur no extra cost.') + '</span>',
                     '',
-                    '<span style="color:#b45309; font-weight:800;">' + tr('현재 세로 ','現在の縦 ','Current height ') + actualH.toLocaleString() + tr('mm 는 특이 사이즈입니다.','mm は特殊サイズです。','mm is a non-standard size.') + '</span>',
+                    '<span style="color:#b45309; font-weight:800;">' + tr('현재 세로 ','現在の縦 ','Current height ') + dispH.toLocaleString() + tr('mm 는 특이 사이즈입니다.','mm は特殊サイズです。','mm is a non-standard size.') + '</span>',
                     tr('추가 설계비 ','追加設計費 ','Extra design fee ') + '<b style="color:#b91c1c;">+50,000' + tr('원','円','KRW') + '</b>' + tr(' 이 발생합니다.',' が発生します。',' applies.'),
                     '',
                     tr('5만원 추가하고 진행하시겠습니까?', '5万円追加して進行しますか?', 'Add 50,000 KRW and proceed?')
@@ -3863,7 +3866,7 @@ html, body { background: #ffffff !important; }
                 kind: 'ok',
                 title: tr('🎯 전문가시네요!','🎯 さすがプロ！','🎯 Pro level!'),
                 lines: [
-                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + dispW.toLocaleString() + ' × ' + dispH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
                     '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 + 양쪽 날개 ' + _wm + 'mm씩 (' + _wt + 'mm) 정확하게 포함','メートル + 両側面' + _wm + 'mmずつ (' + _wt + 'mm) を正確に含む','m + ' + _wm + 'mm side panels each (' + _wt + 'mm total) included correctly'),
                     '✓ ' + tr('세로 ','縦 ','Height ') + matchedH + tr('mm 정상','mm 正常','mm OK'),
@@ -3878,7 +3881,7 @@ html, body { background: #ffffff !important; }
                 kind: 'info',
                 title: tr('📝 옆면 흰색 인쇄 안내','📝 側面白色印刷のご案内','📝 White side panel notice'),
                 lines: [
-                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
+                    tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + dispW.toLocaleString() + ' × ' + dispH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
                     '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 정상','メートル 正常','m OK'),
                     '✓ ' + tr('세로 ','縦 ','Height ') + matchedH + tr('mm 정상','mm 正常','mm OK'),
