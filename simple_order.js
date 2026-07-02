@@ -2011,7 +2011,7 @@ html, body { background: #ffffff !important; }
             ✅ ${tr('1권(1부)부터 제작 가능합니다 — 소량 주문 환영', '1冊（1部）から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 copy — small quantities welcome')}
           </div>
           <div style="font-size:12px; color:#7c2d12; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.6; font-weight:600;">
-            📉 ${tr('수량 볼륨 할인', '数量ボリューム割引', 'Volume discount')} — ${tr('100부 50% · 500부 65% · 1,000부 69% 할인', '100部 50% · 500部 65% · 1,000部 69% OFF', '100:50% · 500:65% · 1,000:69% off')}
+            📉 ${tr('수량이 많을수록 자동 대량할인 — 대량(500부↑)은 국내 최저 수준, 소량은 1부부터 저렴', '数量が多いほど自動割引 — 大ロット(500部↑)は業界最安値水準、小ロットは1部から低価格', 'Auto bulk discount — 500+ at lowest market rate, small runs cheap from 1 copy')}
           </div>
         </div>
 
@@ -6483,30 +6483,28 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
     };
     // 책자 총액: (1000 + 페이지×100) × 권수 (+ 박/후가공은 인자로 주면 가산 — 카트용). recalc 는 addonTotal 로 cp 박 처리.
-    // 2026-07-02: 책자 수량(권수) 볼륨 할인 — 인쇄부(표지+내지) 에만 적용. 박/후가공(opt)은 정액 유지.
-    //   목표: 1,000부 기준 한국(성원애드피아)보다 약간 저렴 + 일본(kingprinters)보다 저렴.
-    //   예) 32P 1,000부 = (1000+3200)×1000×0.31 = 1,302,000원 (성원 1,424,000 대비 ~9%↓ · JP ¥130,200).
-    //       4P(8P) 1,000부 = 434,000원 = ¥43,400 (kingprinters ¥47,652 대비 ↓).
-    function _soBookletQtyDisc(qty) {
+    // 2026-07-02: 책자 가격 = min(디지털 소량가, 옵셋 대량가). 박/후가공(opt)은 정액 별도 가산.
+    //   ● 디지털(소량): 표지 1,000 + 내지(페이지×100), 부수 정비례 → 1부부터 저렴 (소량 특화 유지).
+    //   ● 옵셋(대량): 성원애드피아 결제액(VAT포함) 선형근사 × 0.93 (약 7% 저렴).
+    //       성원 선형근사: 고정 = 8,004×p + 239,168 / 부당 = 174.4 + 28.02×p  (p=내지 페이지수).
+    //   두 방식 중 저렴한 쪽 자동 채택 → 소량은 디지털(성원보다 훨씬 저렴), 대량은 옵셋(성원보다 ~7% 저렴).
+    //   교차점 ~150~200부. 둘 다 증가함수라 수량 늘수록 가격도 오름(역전 없음).
+    //   검증(우리/성원): 32P 1000부 1,456,692/1,566,400(-7%) · 8P 4000부 1,764,619/1,897,500(-7%).
+    function _soBookletPrintCost(pages, qty) {
+        pages = Math.max(1, parseInt(pages, 10) || 1);
         qty = Math.max(1, parseInt(qty, 10) || 1);
-        if (qty >= 1000) return 0.31;
-        if (qty >= 500)  return 0.35;
-        if (qty >= 300)  return 0.40;
-        if (qty >= 200)  return 0.45;
-        if (qty >= 100)  return 0.50;
-        if (qty >= 50)   return 0.58;
-        if (qty >= 30)   return 0.68;
-        if (qty >= 10)   return 0.80;
-        return 1.00;
+        var digital = (1000 + pages * 100) * qty;
+        var offset = Math.round(((8004 * pages + 239168) + (174.4 + 28.02 * pages) * qty) * 0.93);
+        return Math.min(digital, offset);
     }
-    window._soBookletQtyDisc = _soBookletQtyDisc;
+    window._soBookletPrintCost = _soBookletPrintCost;
     function _soBookletTotal(pages, qty, foilKey, finishes) {
         pages = Math.max(1, parseInt(pages, 10) || 1);
         qty = Math.max(1, parseInt(qty, 10) || 1);
         var opt = 0;
         if (foilKey && typeof BIZ_FOILS !== 'undefined') { var f = BIZ_FOILS.find(function(o){ return o.key === foilKey; }); if (f) opt += (f.price || 0); }
         if (finishes && typeof BIZ_FINISHES !== 'undefined') Object.keys(finishes).forEach(function(k){ if (finishes[k]) { var x = BIZ_FINISHES.find(function(o){ return o.key === k; }); if (x) opt += (x.price || 0); } });
-        return Math.round((1000 + pages * 100) * qty * _soBookletQtyDisc(qty)) + opt;
+        return _soBookletPrintCost(pages, qty) + opt;
     }
 
     window._soPickLeafletSize = function(id) {
