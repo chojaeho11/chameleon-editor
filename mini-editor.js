@@ -3701,8 +3701,8 @@
         try {
             var sb = _meGetSb();
             if (!sb) throw new Error('Supabase 클라이언트 초기화 실패');
-            // 1) product_code 일치 우선, 2) product_code = NULL (카테고리 전체) — 둘 다 합쳐서 표시.
-            var orFilter = 'product_code.eq.' + code + ',product_code.is.null';
+            // 2026-07-02: 같은 카테고리(제품군)면 product_code 가 달라도 모두 노출.
+            //   인스타판넬 4종(lll0/0ll/lllllp/ppp) 처럼 한 제품군 안에서 코드가 여러 개라도 템플릿 공유.
             var q = sb.from('admin_templates')
                 .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots,sort_order')
                 .eq('product_category', cat)
@@ -3711,7 +3711,6 @@
                 /* 2026-07-02: 사이트 공통 노출 — site_code 필터 제거. 승인 템플릿은 KR/JP/US 어느 사이트에서나 표시 (사장님 요청). */
                 .order('sort_order', { ascending: true })
                 .order('id', { ascending: false });
-            if (code) q = q.or(orFilter);
             var resp = await q;
             if (resp.error) throw resp.error;
             var rows = resp.data || [];

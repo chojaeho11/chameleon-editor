@@ -15053,7 +15053,9 @@ html, body { background: #ffffff !important; }
                             if (_soIsAnyBannerCode(curCode) && _soIsAnyBannerCode(r.product_code)) return true;
                             // 2026-06-28: 평면인쇄 그룹 공유 — 현재 제품도 템플릿 제품도 평면인쇄면 노출.
                             if (_curFlat && _soIsFlatPrintProduct({ code: r.product_code, category: r.product_category, name: '', name_us: '' })) return true;
-                            if (!r.product_code && r.product_category === curCat) return true;
+                            // 2026-07-02: 같은 제품군(카테고리) 공유 — 인스타판넬 4종(lll0/0ll/lllllp/ppp)·명함 등
+                            //   product_code 가 달라도 같은 category 면 노출 (한 제품군 안에서 템플릿 공유).
+                            if (r.product_category && curCat && r.product_category === curCat) return true;
                             return false;
                         });
                     }
