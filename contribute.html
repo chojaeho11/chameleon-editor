@@ -281,6 +281,8 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             </div>
         </div>
 
+        <div id="tplDesignGuide" style="margin:2px 0 4px; padding:11px 13px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; font-size:12.5px; color:#78350f; line-height:1.6;"></div>
+
         <div>
             <label style="margin-bottom:8px;" id="i18nTplProdLbl">2. 제품 선택 (클릭하면 바로 이동)</label>
             <div id="tplProductGrid" style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; max-height:280px; overflow-y:auto; padding:4px;">
@@ -799,6 +801,15 @@ async function loadTplProducts() {
 }
 function renderTplProducts() {
     const grid = document.getElementById('tplProductGrid');
+    // 2026-07-02: 1·2 사이 디자인 안내 (언어별) — 벡터요소+텍스트로 만들라는 필수 안내.
+    var _gd = document.getElementById('tplDesignGuide');
+    if (_gd) {
+        _gd.innerHTML = _tplSelectedLang === 'JP'
+            ? '🎨 エディタで<b>ベクター素材・背景</b>を選び、<b>テキストを直接入力</b>してテンプレートを作成してください。<b>必ずテキストを入力</b>してください — ネットでキャプチャした画像をそのまま上げると、お客様が文字を編集できません。ベクター素材とテキストを配置してデザインした後、<b>レビュー申請</b>を押してください。'
+            : _tplSelectedLang === 'US'
+            ? '🎨 In the editor, pick <b>vector elements &amp; a background</b> and <b>type your own text</b> to build the template. You <b>must add editable text</b> — uploading a screenshot from the web means customers cannot edit the wording. Arrange vector elements and text, then press <b>Submit for review</b>.'
+            : '🎨 에디터에서 <b>벡터 요소·배경</b>을 고르고 <b>텍스트를 예쁘게 직접 입력</b>해 템플릿을 만들어 주세요. <b>반드시 텍스트를 입력</b>해야 합니다 — 인터넷에서 캡처한 이미지를 그냥 올리면 고객이 글씨를 수정할 수 없어요. 벡터 요소와 텍스트를 배치해 디자인한 뒤 <b>검토 요청</b>을 눌러 주세요.';
+    }
     if (!_tplAllProducts.length) {
         const empty = _LANG === 'ja' ? 'テンプレート登録可能な商品がありません。<br><small>管理者が商品オプションで「🎨 テンプレート登録商品」をチェックする必要があります。</small>'
                      : _LANG === 'en' ? 'No products available for template registration.<br><small>Admin must enable "🎨 Template-eligible" on the product options.</small>'
@@ -806,18 +817,34 @@ function renderTplProducts() {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8; font-size:12.5px; line-height:1.55;">' + empty + '</div>';
         return;
     }
-    grid.innerHTML = _tplAllProducts.map(p => {
-        const name = _tplSelectedLang === 'JP' ? (p.name_jp || p.name)
-                    : _tplSelectedLang === 'US' ? (p.name_us || p.name)
-                    : p.name;
+    // 2026-07-02: 공통인쇄(초저가현수막 44578) — 명함·인스타판넬 외 모든 상품에 공통으로 들어가는 템플릿.
+    //   디자이너가 "초저가현수막" 이름 때문에 헷갈려해서 "공통인쇄"로 relabel + 맨 앞으로 이동 + 강조.
+    const _COMMON_CODE = '44578';
+    const _common = _tplAllProducts.find(p => String(p.code) === _COMMON_CODE);
+    const _rest = _tplAllProducts.filter(p => String(p.code) !== _COMMON_CODE);
+    const _ordered = _common ? [_common].concat(_rest) : _rest;
+    grid.innerHTML = _ordered.map(p => {
+        const isCommon = String(p.code) === _COMMON_CODE;
+        const name = isCommon
+            ? (_tplSelectedLang === 'JP' ? '共通印刷' : _tplSelectedLang === 'US' ? 'Common Print' : '공통인쇄')
+            : (_tplSelectedLang === 'JP' ? (p.name_jp || p.name)
+              : _tplSelectedLang === 'US' ? (p.name_us || p.name)
+              : p.name);
+        const sub = isCommon
+            ? (_tplSelectedLang === 'JP' ? '名刺・インスタパネル以外の<b>全商品に共通表示</b>'
+              : _tplSelectedLang === 'US' ? 'Shows on <b>all products</b> except business cards &amp; Insta panels'
+              : '명함·인스타판넬 외 <b>모든 상품에 공통 노출</b>')
+            : '';
         const thumb = p.img_url
             ? `<img src="${p.img_url}" alt="">`
             : '<i class="fa-solid fa-image" style="color:#cbd5e1; font-size:18px;"></i>';
-        return `<button type="button" class="tpl-product-card" onclick="goToTplEditor('${p.code}')">
+        const cardStyle = isCommon ? ' style="border:2px solid #7c3aed; background:#f5f3ff;"' : '';
+        const safeName = (name || p.code).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+        return `<button type="button" class="tpl-product-card"${cardStyle} onclick="goToTplEditor('${p.code}')">
             <div class="thumb">${thumb}</div>
             <div class="info">
-                <div class="name">${(name || p.code).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}</div>
-                <div class="code">${p.code}</div>
+                <div class="name"${isCommon ? ' style="color:#5b21b6;"' : ''}>${safeName}</div>
+                <div class="code">${isCommon ? sub : p.code}</div>
             </div>
             <span class="arrow">→</span>
         </button>`;
