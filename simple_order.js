@@ -3694,6 +3694,19 @@ html, body { background: #ffffff !important; }
     //   가로: N미터 단위 (1m, 2m, 3m, 4m, 5m...). 날개 포함이면 +300mm.
     //   세로: 2000 / 2200 / 2400 / 3000mm 중 하나. 그 외엔 +50,000 추가 설계비 confirm.
     //   1:10 축소 샘플(예: 330×240mm = 3300×2400 원본) 도 자동 감지.
+    // 2026-07-02: 미니에디터에서 PDF 업로드 시에도 가벽 사이즈 검증을 태우는 훅.
+    //   (우측 패널 업로드는 pdfFirstPageToDataUrl 로 mm 를 얻어 검증하지만 에디터 경로는 검증이 없었음)
+    //   에디터가 pdf.js viewport 로 계산한 mm 를 넘겨주면 state 에 반영 후 동일 검증 실행. 가벽 제품만.
+    window._soValidateWallPdfDims = function (wMm, hMm) {
+        try {
+            if (!state || !state.isWall) return;
+            if (!wMm || !hMm) return;
+            state.fileWidthMm = wMm;
+            state.fileHeightMm = hMm;
+            _soValidateWallFileSize();
+        } catch (e) { console.warn('[simple_order] _soValidateWallPdfDims 실패:', e); }
+    };
+
     function _soValidateWallFileSize() {
         var fwMm = state.fileWidthMm, fhMm = state.fileHeightMm;
         if (!fwMm || !fhMm) return;
@@ -3704,7 +3717,9 @@ html, body { background: #ffffff !important; }
         if (fwMm >= 60 && fwMm <= 700 && fhMm >= 180 && fhMm <= 320) scale = 10;
         var actualW = fwMm * scale;
         var actualH = fhMm * scale;
-        var TOL_W = 10 * scale;   // 1cm tolerance × scale
+        // 2026-07-02: 가로 허용오차 — 날개 차이(허니콤 100 vs 강화골판지 150 = 총 100mm)를 구분하려면 40mm 이하로 제한.
+        //   (기존 10×scale = 1:10 샘플에서 100mm 라 3300 이 3200 으로 오인 통과되던 문제)
+        var TOL_W = Math.min(40, 10 * scale);
         var TOL_H = 10 * scale;
         // 2) 가로 검증 — N미터 단위 (날개 미포함) 또는 N미터+300mm (날개 포함).
         var widthM = Math.round(actualW / 1000);
@@ -3733,6 +3748,31 @@ html, body { background: #ffffff !important; }
         // 4) 결과 분기 + 팝업.
         var scaleNote = (scale === 10) ? tr(' (1:10 축소본)', ' (1:10 縮小サンプル)', ' (1:10 scale sample)') : '';
         if (!widthOk) {
+            // 2026-07-02: 다른 가벽용 날개 사이즈로 올린 경우 — 어느 사이즈로 바꿔야 하는지 명확히 안내.
+            //   허니콤(날개 100 → +200mm) 에 3300(=+300, 강화골판지용) 올림 → 3200 으로 안내.
+            //   강화골판지(날개 150 → +300mm) 에 3200(=+200, 허니콤용) 올림 → 3300 으로 안내.
+            var _otherWing = (_wingSide2 === 100) ? 150 : (_wingSide2 === 150 ? 100 : 0);
+            if (_otherWing && widthM >= 1 && widthM <= 10) {
+                var _wrongWithOther = widthM * 1000 + _otherWing * 2;
+                if (Math.abs(actualW - _wrongWithOther) <= TOL_W) {
+                    var _correctW = widthM * 1000 + _wingTotal;
+                    var _curType = (_wingSide2 === 100) ? tr('허니콤 가벽', 'ハニカム壁面', 'honeycomb wall') : tr('강화골판지 가벽', '強化段ボール壁面', 'reinforced corrugated wall');
+                    var _otherType = (_otherWing === 150) ? tr('강화골판지 가벽', '強化段ボール壁面', 'reinforced corrugated wall') : tr('허니콤 가벽', 'ハニカム壁面', 'honeycomb wall');
+                    _soWallPopup({
+                        kind: 'error',
+                        title: tr('⚠️ 날개(옆면) 사이즈가 다릅니다', '⚠️ 側面サイズが異なります', '⚠️ Side panel size mismatch'),
+                        lines: [
+                            tr('업로드한 파일 가로: ', 'アップロードファイル横: ', 'Uploaded file width: ') + '<b>' + actualW.toLocaleString() + 'mm</b>' + scaleNote,
+                            '',
+                            '<span style="color:#b91c1c;">' + tr(actualW.toLocaleString() + 'mm 는 ' + _otherType + '용 사이즈입니다.', actualW.toLocaleString() + 'mm は' + _otherType + '用のサイズです。', actualW.toLocaleString() + 'mm is the size for the ' + _otherType + '.') + '</span>',
+                            '',
+                            '<span style="color:#0369a1; font-weight:800;">' + tr('선택하신 ' + _curType + '은(는) 좌우 날개 ' + _wm + 'mm → <b>' + _correctW.toLocaleString() + 'mm</b> 으로 변경해주세요.', 'ご選択の' + _curType + 'は左右側面' + _wm + 'mm → <b>' + _correctW.toLocaleString() + 'mm</b> に変更してください。', 'The selected ' + _curType + ' uses +' + _wm + 'mm side panels → please change to <b>' + _correctW.toLocaleString() + 'mm</b>.') + '</span>'
+                        ],
+                        buttons: [{ label: tr('확인', '確認', 'OK'), primary: true, action: function () {} }]
+                    });
+                    return;
+                }
+            }
             // 가로 사이즈 오류 — 접수 불가.
             _soWallPopup({
                 kind: 'error',

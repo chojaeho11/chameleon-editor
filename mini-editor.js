@@ -4124,6 +4124,14 @@
             ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
             await page.render({ canvasContext: ctx, viewport: vp }).promise;
             window._meAddImage(cv.toDataURL('image/png'), { fitCanvas: true });
+            // 2026-07-02: 가벽 제품이면 PDF 실제 mm 사이즈로 사이즈 검증(우측 패널과 동일). scale1 viewport=points → mm = pt×25.4/72.
+            try {
+                if (typeof window._soValidateWallPdfDims === 'function') {
+                    var _wMm = vp1.width * 25.4 / 72;
+                    var _hMm = vp1.height * 25.4 / 72;
+                    window._soValidateWallPdfDims(_wMm, _hMm);
+                }
+            } catch (_) {}
         } catch (e) {
             console.warn('[me pdf]', e);
             alert('PDF 미리보기를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.');
