@@ -1897,7 +1897,7 @@ html, body { background: #ffffff !important; }
           <div class="so-section-title">${tr('규격 사이즈', '規格サイズ', 'Standard size')}</div>
           <div id="soLeafletSizeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:6px;"></div>
           <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:10px; line-height:1.55; font-weight:600;">
-            ✅ ${tr('1장(1매)부터 제작 가능합니다 — 소량 주문 환영', '1枚から製作可能です — 小ロット注文歓迎', 'Orderable from just 1 sheet — small quantities welcome')}
+            ✅ ${tr('1장(1매)부터 제작 가능합니다 — 소량 주문 환영', '1枚から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 sheet — small quantities welcome')}
           </div>
 
           <!-- 비규격 사이즈 — 토글 버튼 (클릭 시 입력칸 노출) -->
@@ -1991,7 +1991,7 @@ html, body { background: #ffffff !important; }
           <div class="so-section-title" style="margin-top:18px;">📑 ${tr('내지 페이지 수', '本文ページ数', 'Inner pages')}</div>
           <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
             <input type="number" id="soBkPages" value="8" min="1" max="500" oninput="window._soBkSet('pages', this.value)" style="flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; text-align:center; font-family:inherit;">
-            <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원 · 최대 500P', 'ページ · 1P 100ウォン · 最大500P', 'pages · ₩100/pg · max 500P')}</span>
+            <span style="font-size:12px; color:#64748b; flex-shrink:0;">${tr('페이지 · 1P당 100원 · 최대 500P', 'ページ · 1Pあたり¥10 · 最大500ページ', 'pages · max 500P')}</span>
           </div>
           <div style="font-size:12px; color:#0c4a6e; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 12px; margin-top:8px; line-height:1.55;">
             📏 ${tr('예상 책등 두께', '背表紙の予想厚み', 'Estimated spine thickness')}: <span id="soBkThickness" style="font-size:15px; color:#1d4ed8; font-weight:700;">-</span>
@@ -2005,7 +2005,7 @@ html, body { background: #ffffff !important; }
             ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 아래 인쇄 옵션에서 선택(주문 1회 정액). 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は下の印刷オプションで選択(注文1回定額)。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing selected below (once per order). Total = per-book × copies(qty).')}
           </div>
           <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55; font-weight:600;">
-            ✅ ${tr('1권(1부)부터 제작 가능합니다 — 소량 주문 환영', '1冊(1部)から製作可能です — 小ロット注文歓迎', 'Orderable from just 1 copy — small quantities welcome')}
+            ✅ ${tr('1권(1부)부터 제작 가능합니다 — 소량 주문 환영', '1冊（1部）から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 copy — small quantities welcome')}
           </div>
         </div>
 
