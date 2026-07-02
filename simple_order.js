@@ -14161,38 +14161,41 @@ html, body { background: #ffffff !important; }
         if (_singleBtn) _singleBtn.addEventListener('click', function(){ _soOpenAssetUpload(isDesigner, currentUser); });
     }
 
-    // 2026-06-19 v664: 디자이너 검색어 → 5개 언어 자동 번역 (Google Translate gtx)
+    // 2026-06-19 v664: 디자이너 검색어 → 5개 언어 자동 번역.
+    // 2026-07-02: Google Translate 무료(gtx) 엔드포인트가 500 에러 다발 → EN/FR/AR 이 원문(한글)으로 폴백되고,
+    //   KO 슬롯은 항상 원문이라 해외(영어 등) 입력 시 KO 에 영어가 그대로 뜨는 문제. Claude 기반 translate
+    //   edge function(배치, auto 소스감지)으로 교체 → 입력 언어와 무관하게 5개 언어(ko 포함) 모두 정확 번역.
     window._soTplCurrentTranslations = null;
     async function _soTplTranslate() {
         var nameEl = document.getElementById('soTplAdminName');
         if (!nameEl) return;
         var text = (nameEl.value || '').trim();
+        var prev = document.getElementById('soTplLangPreview');
+        function setTr(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
         if (!text) {
-            document.getElementById('soTplLangPreview').style.display = 'none';
+            if (prev) prev.style.display = 'none';
             window._soTplCurrentTranslations = null;
             return;
         }
-        document.getElementById('soTplLangPreview').style.display = '';
-        document.getElementById('soTplLpKo').textContent = text;
-        ['soTplLpJa','soTplLpEn','soTplLpFr','soTplLpAr'].forEach(function(id){
-            document.getElementById(id).textContent = '번역 중...';
-        });
-        async function gtx(t, lang) {
-            try {
-                var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + lang + '&dt=t&q=' + encodeURIComponent(t);
-                var r = await fetch(url);
-                if (!r.ok) return t;
-                var d = await r.json();
-                if (Array.isArray(d) && Array.isArray(d[0])) return d[0].map(function(s){ return s[0]; }).join('');
-                return t;
-            } catch(e) { return t; }
+        if (prev) prev.style.display = '';
+        ['soTplLpKo','soTplLpJa','soTplLpEn','soTplLpFr','soTplLpAr'].forEach(function(id){ setTr(id, tr('번역 중...','翻訳中...','Translating...')); });
+        try {
+            var sb = getSb();
+            if (!sb) throw new Error('supabase client 없음');
+            var resp = await sb.functions.invoke('translate', { body: { text: text, sourceLang: 'auto', targetLangs: ['ko','ja','en','fr','ar'] } });
+            // debounce race: 입력이 그새 바뀌었으면 이 응답은 폐기
+            var cur = document.getElementById('soTplAdminName');
+            if (!cur || (cur.value || '').trim() !== text) return;
+            var t = (resp && resp.data && resp.data.translations) || {};
+            var ko = t.ko || t.kr || text, ja = t.ja || text, en = t.en || text, fr = t.fr || text, ar = t.ar || text;
+            setTr('soTplLpKo', ko); setTr('soTplLpJa', ja); setTr('soTplLpEn', en); setTr('soTplLpFr', fr); setTr('soTplLpAr', ar);
+            window._soTplCurrentTranslations = { ko: ko, ja: ja, en: en, fr: fr, ar: ar };
+        } catch (e) {
+            console.warn('[tpl translate]', e);
+            // 폴백: 원문 그대로 (번역 실패해도 저장은 가능)
+            setTr('soTplLpKo', text); setTr('soTplLpJa', text); setTr('soTplLpEn', text); setTr('soTplLpFr', text); setTr('soTplLpAr', text);
+            window._soTplCurrentTranslations = { ko: text, ja: text, en: text, fr: text, ar: text };
         }
-        var results = await Promise.all([gtx(text,'ja'), gtx(text,'en'), gtx(text,'fr'), gtx(text,'ar')]);
-        document.getElementById('soTplLpJa').textContent = results[0];
-        document.getElementById('soTplLpEn').textContent = results[1];
-        document.getElementById('soTplLpFr').textContent = results[2];
-        document.getElementById('soTplLpAr').textContent = results[3];
-        window._soTplCurrentTranslations = { ko: text, ja: results[0], en: results[1], fr: results[2], ar: results[3] };
     }
 
     // 2026-06-19 v631: 단일 디자인 업로드 모달 — 벡터(SVG) / 이미지(PNG) / 로고.
