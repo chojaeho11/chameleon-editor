@@ -3708,10 +3708,15 @@ html, body { background: #ffffff !important; }
         var TOL_H = 10 * scale;
         // 2) 가로 검증 — N미터 단위 (날개 미포함) 또는 N미터+300mm (날개 포함).
         var widthM = Math.round(actualW / 1000);
+        // 2026-07-02: 날개 여백 — 제품별 (허니콤 100mm / 강화골판지 150mm). 0 이면 no-wing.
+        var _wingSide2 = (typeof _soWallWingMm === 'function' && state && state.product) ? _soWallWingMm(state.product) : 150;
+        var _wingTotal = _wingSide2 * 2;
+        var _wm = _wingSide2 || 150, _wt = _wingTotal || 300;
+        var _wex = [1, 2, 3, 4, 5].map(function (_w) { return _w * 1000 + _wt; }).join(' / ');
         var hasWings = null, widthOk = false;
         if (widthM >= 1 && widthM <= 10) {
             var exactNoWings = widthM * 1000;
-            var exactWithWings = widthM * 1000 + 300;
+            var exactWithWings = widthM * 1000 + (_wingTotal || 300);
             if (Math.abs(actualW - exactNoWings) <= TOL_W) { widthOk = true; hasWings = false; }
             else if (Math.abs(actualW - exactWithWings) <= TOL_W) { widthOk = true; hasWings = true; }
             // 양쪽 다 안 맞으면 가까운 쪽으로 추정 (어떤 사이즈를 의도했는지 안내용)
@@ -3737,7 +3742,7 @@ html, body { background: #ffffff !important; }
                     '',
                     tr('가벽 가로는 <b>1미터 단위</b>로만 주문 가능합니다.', '壁面の横は<b>1メートル単位</b>のみ注文可能です。', 'Wall width can only be ordered in <b>1 meter units</b>.'),
                     '<span style="color:#475569;">' + tr('예: 1000 / 2000 / 3000 / 4000 / 5000mm (날개 미포함)', '例: 1000 / 2000 / 3000 / 4000 / 5000mm (側面なし)', 'e.g. 1000 / 2000 / 3000 / 4000 / 5000mm (no side panels)') + '</span>',
-                    '<span style="color:#475569;">' + tr('또는 1300 / 2300 / 3300 / 4300 / 5300mm (날개 포함, 좌우 +150mm)', 'または 1300 / 2300 / 3300 / 4300 / 5300mm (側面込み、左右+150mm)', 'or 1300 / 2300 / 3300 / 4300 / 5300mm (with side panels, +150mm each side)') + '</span>',
+                    '<span style="color:#475569;">' + tr('또는 ' + _wex + 'mm (날개 포함, 좌우 +' + _wm + 'mm)', 'または ' + _wex + 'mm (側面込み、左右+' + _wm + 'mm)', 'or ' + _wex + 'mm (with side panels, +' + _wm + 'mm each side)') + '</span>',
                     '',
                     '<span style="color:#b91c1c; font-weight:800;">' + tr('현재 사이즈로는 접수가 불가합니다.', '現在のサイズでは受付できません。', 'Order cannot be accepted at the current size.') + '</span>',
                     tr('파일을 다시 확인 후 업로드해주세요.', 'ファイルをご確認の上、再度アップロードしてください。', 'Please check the file and upload again.')
@@ -3820,7 +3825,7 @@ html, body { background: #ffffff !important; }
                 lines: [
                     tr('업로드한 파일: ','アップロードファイル: ','Uploaded file: ') + '<b>' + actualW.toLocaleString() + ' × ' + actualH.toLocaleString() + 'mm</b>' + scaleNote,
                     '',
-                    '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 + 양쪽 날개 150mm씩 (300mm) 정확하게 포함','メートル + 両側面150mmずつ (300mm) を正確に含む','m + 150mm side panels each (300mm total) included correctly'),
+                    '✓ ' + tr('가로 ','横 ','Width ') + widthM + tr('미터 + 양쪽 날개 ' + _wm + 'mm씩 (' + _wt + 'mm) 정확하게 포함','メートル + 両側面' + _wm + 'mmずつ (' + _wt + 'mm) を正確に含む','m + ' + _wm + 'mm side panels each (' + _wt + 'mm total) included correctly'),
                     '✓ ' + tr('세로 ','縦 ','Height ') + matchedH + tr('mm 정상','mm 正常','mm OK'),
                     dropdownChangedNote,
                     '',
@@ -3840,7 +3845,7 @@ html, body { background: #ffffff !important; }
                     dropdownChangedNote,
                     '',
                     '<b style="color:#1e40af;">' + tr('옆면이 없이 디자인하셨네요.','側面なしでデザインされていますね。','Designed without side panels.') + '</b>',
-                    '<span style="color:#475569;">' + tr('옆면(좌우 150mm씩)은 기본 ','側面(左右150mmずつ)はデフォルトで ','Side panels (150mm each side) default to ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','white print') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
+                    '<span style="color:#475569;">' + tr('옆면(좌우 ' + _wm + 'mm씩)은 기본 ','側面(左右' + _wm + 'mmずつ)はデフォルトで ','Side panels (' + _wm + 'mm each side) default to ') + '<b>' + tr('흰색으로 인쇄','白色で印刷','white print') + '</b>' + tr('됩니다.','されます。','.') + '</span>',
                     '',
                     // 2026-06-17: 옆면 색상 지정 안내 — 배경 picker 사용 안내 (선택 해제 후 클릭).
                     '<div style="margin:8px 0; padding:10px 12px; background:#eff6ff; border-left:3px solid #2563eb; border-radius:6px;">'
@@ -3853,7 +3858,7 @@ html, body { background: #ffffff !important; }
                       + '</span></div>',
                     '',
                     tr('이대로 진행해도 됩니다.','このまま進行しても問題ありません。','You can proceed as is.'),
-                    '<span style="color:#475569;">' + tr('옆면까지 색상을 직접 디자인하려면 좌우 ','側面まで直接デザインする場合は左右 ','To fully design the side panels yourself, add ') + '<b>' + tr('150mm씩 늘려서','150mmずつ広げて','150mm to each side') + '</b>' + tr(' 다시 업로드해주세요.',' 再アップロードしてください。',' and re-upload.') + '</span>'
+                    '<span style="color:#475569;">' + tr('옆면까지 색상을 직접 디자인하려면 좌우 ','側面まで直接デザインする場合は左右 ','To fully design the side panels yourself, add ') + '<b>' + tr(_wm + 'mm씩 늘려서', _wm + 'mmずつ広げて', _wm + 'mm to each side') + '</b>' + tr(' 다시 업로드해주세요.',' 再アップロードしてください。',' and re-upload.') + '</span>'
                 ],
                 buttons: [{ label: tr('확인','確認','OK'), primary: true, action: function(){} }]
             });
@@ -5051,6 +5056,14 @@ html, body { background: #ffffff !important; }
         if (!p) return false;
         const name = ((p.name || '') + ' ' + (p.name_us || '')).toLowerCase();
         return /강화\s*골판지|골판지\s*가벽|corrugated\s*wall|reinforced\s*corrugated/i.test(name);
+    }
+    // 2026-07-02: 가벽 옆면(접히는 날개) 한쪽 여백(mm). 강화골판지 가벽=150mm, 허니콤 가벽(hb_dw)=100mm(10cm), 파티션/그 외=0.
+    function _soWallWingMm(p) {
+        if (!p) return 0;
+        var _hw = (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) || /^hb_dw/i.test(String(p.code || ''));
+        if (_hw && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(p)) _hw = false;
+        if (!_hw) return 0;
+        return (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) ? 150 : 100;
     }
 
     // 2026-05-14: 단면 전용 가벽 변종 (병풍형 / 지붕형 / 파티션 가림막)
@@ -14401,15 +14414,11 @@ html, body { background: #ffffff !important; }
             if (state && state.isWall && state.wallWidth) {
                 wMm = state.wallWidth * 1000;
                 hMm = (state.wallHeight || 2.4) * 1000;
-                // 2026-06-17: 날개(접히는 옆면) 있는 가벽 — 캔버스 가로에 +300mm (좌우 150mm씩).
-                //   고객이 wallWidth(앞면)만 디자인한 파일 올려도 캔버스에 양쪽 흰 여백이 보여 옆면=흰색 인쇄임을 인지.
-                //   적용: hb_dw_* (허니콤 가벽) + 강화 골판지 가벽. 파티션·병풍형 등 flat panel 은 제외.
+                // 2026-06-17: 날개(접히는 옆면) 있는 가벽 — 캔버스 가로에 양쪽 여백 추가 (한쪽씩 _soWallWingMm).
+                //   2026-07-02: 허니콤 가벽=100mm, 강화골판지 가벽=150mm (한쪽). 파티션·병풍형 등 flat panel 은 제외.
                 try {
-                    var _hasWings = false;
-                    if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) _hasWings = true;
-                    else if (p && /^hb_dw/i.test(String(p.code || ''))) _hasWings = true;
-                    if (_hasWings && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(p)) _hasWings = false;
-                    if (_hasWings) wMm += 300;
+                    var _wingSide = (typeof _soWallWingMm === 'function') ? _soWallWingMm(p) : 0;
+                    if (_wingSide > 0) wMm += _wingSide * 2;
                 } catch (_we) {}
             } else if (state && state.customW && state.customH) {
                 wMm = state.customW * 10;
@@ -14521,15 +14530,9 @@ html, body { background: #ffffff !important; }
                         window._meSetSize(_spx.w, _spx.h, p.code);
                         // 2026-06-16 v13: 실제 mm 도 저장 → ruler/cutline PDF 가 정확한 값 사용.
                         if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
-                        // 2026-06-17: 날개 가벽이면 양쪽 150mm overlay.
+                        // 2026-06-17: 날개 가벽 옆면 overlay. 2026-07-02: 허니콤 100mm / 강화골판지 150mm (_soWallWingMm).
                         if (typeof window._meSetWingMm === 'function') {
-                            var _isWingWall0 = false;
-                            if (state && state.isWall && p) {
-                                if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(p)) _isWingWall0 = true;
-                                else if (/^hb_dw/i.test(String(p.code || ''))) _isWingWall0 = true;
-                                if (_isWingWall0 && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(p)) _isWingWall0 = false;
-                            }
-                            window._meSetWingMm(_isWingWall0 ? 150 : 0);
+                            window._meSetWingMm((state && state.isWall && typeof _soWallWingMm === 'function') ? _soWallWingMm(p) : 0);
                         }
                         document.querySelectorAll('#meSizes .me-size-btn').forEach(function(b){
                             b.classList.remove('active');
@@ -14574,16 +14577,9 @@ html, body { background: #ffffff !important; }
                 if (typeof window._meSetSize === 'function') {
                     var _spxs = _mmPairToPx(sz.wMm, sz.hMm); window._meSetSize(_spxs.w, _spxs.h, state.product.code);
                     if (typeof window._meSetMmSize === 'function') window._meSetMmSize(sz.wMm, sz.hMm);
-                    // 2026-06-17: 날개 가벽이면 캔버스 양쪽 150mm overlay 표시 (export 영향 없음).
+                    // 2026-06-17: 날개 가벽 옆면 overlay. 2026-07-02: 허니콤 100mm / 강화골판지 150mm.
                     if (typeof window._meSetWingMm === 'function') {
-                        var _isWingWall = false;
-                        if (state && state.isWall && state.product) {
-                            var _p = state.product;
-                            if (typeof _soIsReinforcedWall === 'function' && _soIsReinforcedWall(_p)) _isWingWall = true;
-                            else if (/^hb_dw/i.test(String(_p.code || ''))) _isWingWall = true;
-                            if (_isWingWall && typeof _soIsPartitionProduct === 'function' && _soIsPartitionProduct(_p)) _isWingWall = false;
-                        }
-                        window._meSetWingMm(_isWingWall ? 150 : 0);
+                        window._meSetWingMm((state && state.isWall && typeof _soWallWingMm === 'function') ? _soWallWingMm(state.product) : 0);
                     }
                 }
             } catch(_e){}
