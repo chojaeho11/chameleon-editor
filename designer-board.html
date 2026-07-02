@@ -1364,13 +1364,15 @@ function renderCard(r) {
     const _refFile = tr('참고 파일', '参考ファイル', 'Reference');
     const _finalDraft = tr('완성 시안', '完成案', 'Final Draft');
     const _draftWord = tr('시안', '案', 'Draft');
-    // 2026-07-01: 참고 파일 — 항상 표시 + "파일 첨부" 버튼 (별도로 받은 파일을 매니저가 직접 첨부).
+    // 2026-07-01: 참고 파일 — 항상 표시 + "파일 첨부" 버튼. 2026-07-02: 일괄 다운받기 버튼.
+    try { window._dbFilesMap = window._dbFilesMap || {}; window._dbFilesMap[r.id] = files; } catch (e) {}
     const filesHtml = `
         <div class="db-files">
             ${files.map(u => `<a class="db-file" href="${esc(u)}" target="_blank">
                 ${/\.(jpg|jpeg|png|gif|webp)$/i.test(u) ? `<img src="${esc(_dbThumb(u))}" loading="lazy" decoding="async" alt="">` : '📎'}
                 ${_refFile}
             </a>`).join('')}
+            ${files.length >= 2 ? `<button type="button" onclick="dbDownloadAll('${r.id}')" style="display:inline-flex; align-items:center; gap:4px; padding:7px 12px; background:#0f172a; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">⬇ ${tr('일괄 다운받기','一括ダウンロード','Download all')} (${files.length})</button>` : ''}
             <button type="button" onclick="dbAttachFile('${r.id}')" title="${esc(tr('고객이 이메일/카톡 등으로 별도 전달한 파일을 여기에 첨부','お客様が別途送ったファイルをここに添付','Attach files the customer sent separately'))}" style="display:inline-flex; align-items:center; gap:4px; padding:7px 12px; background:#eef2ff; color:#4c1d95; border:1px dashed #a78bfa; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">📎 ${tr('파일 첨부','ファイル添付','Attach file')}</button>
         </div>
     `;
@@ -1704,6 +1706,36 @@ async function dbAttachFile(id) {
     input.click();
 }
 window.dbAttachFile = dbAttachFile;
+
+// 2026-07-02: 참고 파일 일괄 다운받기 — blob 으로 받아 파일명 유지 강제 다운로드 (CORS 실패 시 새 탭).
+async function dbDownloadAll(id) {
+    const files = (window._dbFilesMap && window._dbFilesMap[id]) || [];
+    if (!files.length) return;
+    const _toast = (typeof _dbToast === 'function') ? _dbToast : function(){};
+    _toast(files.length + '개 파일 다운로드 중…');
+    let ok = 0;
+    for (let i = 0; i < files.length; i++) {
+        const url = files[i];
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('http ' + res.status);
+            const blob = await res.blob();
+            const bu = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = bu;
+            let name = decodeURIComponent((url.split('/').pop() || ('file' + (i + 1))).split('?')[0]) || ('file' + (i + 1));
+            a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function(){ URL.revokeObjectURL(bu); }, 5000);
+            ok++;
+            await new Promise(function(r){ setTimeout(r, 400); });   // 브라우저 다중 다운로드 간격
+        } catch (e) {
+            window.open(url, '_blank');   // fallback
+        }
+    }
+    _toast('✓ ' + ok + '/' + files.length + ' 다운로드 완료');
+}
+window.dbDownloadAll = dbDownloadAll;
 
 async function dbClaim(id) {
     if (myDesignerStatus !== 'approved') {
