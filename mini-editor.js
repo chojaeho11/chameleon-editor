@@ -1752,6 +1752,29 @@
                                 }
                                 var _padXo = 6 / (me.wScale || 1);
                                 var _baseLeft = it.x + _padXo;
+                                // 2026-07-02: 화면 텍스트 요소의 실제 content-box(좌/우)를 DOM 에서 직접 측정 →
+                                //   박스폭 고정(리사이즈) / max-content / 패딩 무관하게 화면 정렬과 정확히 일치.
+                                //   (콘텐츠 중앙만 쓰면 넓은 박스에서 좌측 치우침 발생 → 실측으로 해결)
+                                var _contentLeft, _contentRight, _measuredBox = false;
+                                try {
+                                    if (it.el && it.el.offsetWidth > 0) {
+                                        var _wS = me.wScale || 1;
+                                        var _cs = window.getComputedStyle(it.el);
+                                        var _plN = (parseFloat(_cs.paddingLeft) || 0) / _wS;
+                                        var _prN = (parseFloat(_cs.paddingRight) || 0) / _wS;
+                                        var _blN = (parseFloat(_cs.borderLeftWidth) || 0) / _wS;
+                                        var _brN = (parseFloat(_cs.borderRightWidth) || 0) / _wS;
+                                        // it.x = 요소 border-box 좌측(natural). offsetWidth = border-box 폭(display).
+                                        _contentLeft = it.x + _blN + _plN;
+                                        _contentRight = it.x + it.el.offsetWidth / _wS - _brN - _prN;
+                                        _measuredBox = true;
+                                    }
+                                } catch (_be) {}
+                                if (!_measuredBox) {
+                                    _contentLeft = _baseLeft;
+                                    _contentRight = it._edgeResized ? (it.x + (it.w || 0) - _padXo) : (_baseLeft + _widestW);
+                                }
+                                var _centerX = (_contentLeft + _contentRight) / 2;
                                 var pathD = '';
                                 var linePaths = [];   // 줄별 [글자 path...] — 줄을 각각 스티커로 그려 아래 줄이 위 줄 위에 겹치게.
                                 for (var li = 0; li < lines.length; li++) {
@@ -1761,9 +1784,9 @@
                                     var _lineGlyphs = [];
                                     // 줄 폭(브라우저) → anchor 별 시작 x. opentype advance 는 정렬에 안 씀 (서체 어긋남 원인).
                                     var _browserLineW = _mctx.measureText(dline).width;
-                                    var lineStartX = (anchor === 'middle') ? (_baseLeft + (_widestW - _browserLineW) / 2)
-                                                   : (anchor === 'end')  ? (_baseLeft + (_widestW - _browserLineW))
-                                                   : _baseLeft;
+                                    var lineStartX = (anchor === 'middle') ? (_centerX - _browserLineW / 2)
+                                                   : (anchor === 'end')  ? (_contentRight - _browserLineW)
+                                                   : _contentLeft;
                                     var lineY = ty0m + li * lh;
                                     // 단어(run) 단위로 그림 — 단어 내부는 opentype 커닝/연결 유지, 단어 시작 위치는 브라우저 누적 좌표.
                                     //   공백은 그리지 않고 브라우저 폭만큼 건너뜀(.notdef 방지). 자간(ls) 있으면 글자별 배치.
