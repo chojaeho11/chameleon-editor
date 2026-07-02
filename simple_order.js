@@ -19315,37 +19315,42 @@ html, body { background: #ffffff !important; }
                     var _si_sub = (_si_it.scarciSub || '').trim();
                     var _si_qty = Math.max(1, Number(_si_it.qty) || 1);
                     var _si_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_si_it) : ((_si_it.product && _si_it.product.price) || 0);
-                    var _si_payout = 40000;   // 디자이너 지급 (사용자 요청)
+                    var _si_unitPrice = Math.round((Number(_si_price) || 0) / _si_qty);
+                    var _si_payout = 40000;   // 디자이너 지급 (사용자 요청) — 1개당
                     // 참고 파일 (로고/참고사진) 수집
                     var _si_files = [];
                     ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function(f){ if (_si_it[f] && typeof _si_it[f] === 'string') _si_files.push(_si_it[f]); });
                     if (Array.isArray(_si_it.uploadedFiles)) _si_it.uploadedFiles.forEach(function(u){ if (u && typeof u === 'string') _si_files.push(u); });
-                    var _si_desc = '[' + (_si_custName || '고객') + ' · ' + (_si_custPhone || '-') + ']\n'
-                        + '제품: ' + _si_prodName + ' · 수량 ' + _si_qty + '\n'
-                        + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
-                        + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
-                        + '주문번호: ' + (newOrderId || '-') + '\n'
-                        + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
-                        + '[FREE_REQ:{"customerPrice":' + (Number(_si_price) || 0) + ',"designerPayout":' + _si_payout + '}]';
-                    var _si_payload = {
-                        customer_id: _scUid,
-                        title: '[글씨스카시] ' + _si_prodName + (_si_title ? ' — ' + _si_title : ''),
-                        description: _si_desc,
-                        category: '글씨스카시',
-                        country: 'KR',
-                        budget_min: _si_payout,
-                        budget_max: _si_payout,
-                        phone: _si_custPhone || null,
-                        files: _si_files,
-                        status: 'open'
-                    };
-                    try {
-                        var _si_ins = await _scSb.from('design_requests').insert(_si_payload).select().single();
-                        if (!_si_ins.error && _si_ins.data) {
-                            if (!_si_it.designRequest) _si_it.designRequest = {};
-                            _si_it.designRequest.request_id = _si_ins.data.id;
-                        }
-                    } catch (_sie) { console.warn('[scarci dreq insert]', _sie); }
+                    // 2026-07-02: 구매 수량만큼 의뢰 생성 (1개=1디자인 작업, 각 payout 40,000).
+                    for (var _su = 0; _su < _si_qty; _su++) {
+                        var _si_idxLbl = (_si_qty > 1) ? ' (' + (_su + 1) + '/' + _si_qty + ')' : '';
+                        var _si_desc = '[' + (_si_custName || '고객') + ' · ' + (_si_custPhone || '-') + ']\n'
+                            + '제품: ' + _si_prodName + (_si_qty > 1 ? ' · ' + (_su + 1) + '/' + _si_qty + '번째' : '') + '\n'
+                            + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
+                            + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
+                            + '주문번호: ' + (newOrderId || '-') + '\n'
+                            + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
+                            + '[FREE_REQ:{"customerPrice":' + _si_unitPrice + ',"designerPayout":' + _si_payout + '}]';
+                        var _si_payload = {
+                            customer_id: _scUid,
+                            title: '[글씨스카시] ' + _si_prodName + (_si_title ? ' — ' + _si_title : '') + _si_idxLbl,
+                            description: _si_desc,
+                            category: '글씨스카시',
+                            country: 'KR',
+                            budget_min: _si_payout,
+                            budget_max: _si_payout,
+                            phone: _si_custPhone || null,
+                            files: _si_files,
+                            status: 'open'
+                        };
+                        try {
+                            var _si_ins = await _scSb.from('design_requests').insert(_si_payload).select().single();
+                            if (!_si_ins.error && _si_ins.data && _su === 0) {
+                                if (!_si_it.designRequest) _si_it.designRequest = {};
+                                _si_it.designRequest.request_id = _si_ins.data.id;
+                            }
+                        } catch (_sie) { console.warn('[scarci dreq insert]', _sie); }
+                    }
                 }
             } catch (e) { console.warn('[scarci dreq batch]', e); }
 
