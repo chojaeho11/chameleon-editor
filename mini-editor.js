@@ -4088,11 +4088,47 @@
             input.value = '';
             return;
         }
+        // 2026-07-02: PDF 분기 — pdf.js 로 첫 페이지를 렌더해 이미지로 배치 (에디터에서 PDF 미리보기).
+        var isPdf = /\.pdf$/i.test(f.name || '') || /pdf/.test(f.type || '');
+        if (isPdf) {
+            _meAddPdfFile(f);
+            input.value = '';
+            return;
+        }
         var r = new FileReader();
         r.onload = function(e){ window._meAddImage(e.target.result); };
         r.readAsDataURL(f);
         input.value = '';
     };
+
+    // 2026-07-02: PDF 첫 페이지 → 고해상도 PNG 로 렌더 후 캔버스에 배치.
+    async function _meAddPdfFile(f) {
+        try {
+            if (typeof window.loadEditorLibraries === 'function') { try { await window.loadEditorLibraries(); } catch (_) {} }
+            var pdfjs = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+            if (!pdfjs || typeof pdfjs.getDocument !== 'function') {
+                alert('PDF 미리보기 라이브러리를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.');
+                return;
+            }
+            try { if (pdfjs.GlobalWorkerOptions && !pdfjs.GlobalWorkerOptions.workerSrc) pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (_) {}
+            var buf = await f.arrayBuffer();
+            var pdf = await pdfjs.getDocument({ data: buf }).promise;
+            var page = await pdf.getPage(1);
+            var vp1 = page.getViewport({ scale: 1 });
+            var target = 2200;   // 긴 변 목표 px (고해상도)
+            var scale = Math.min(5, Math.max(1, target / Math.max(vp1.width, vp1.height)));
+            var vp = page.getViewport({ scale: scale });
+            var cv = document.createElement('canvas');
+            cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+            var ctx = cv.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            window._meAddImage(cv.toDataURL('image/png'), { fitCanvas: true });
+        } catch (e) {
+            console.warn('[me pdf]', e);
+            alert('PDF 미리보기를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.');
+        }
+    }
 
     // 2026-06-18 v609: SVG 그룹별 import — 일러스트레이터에서 export 한 SVG 를 받아
     //   최상위 <g>/<path>/<text>/<image> 등 각 요소를 별도 me-item 으로 분리해 배치.
