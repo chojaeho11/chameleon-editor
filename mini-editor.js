@@ -3708,7 +3708,7 @@
                 .eq('product_category', cat)
                 .eq('is_active', true)
                 .eq('status', 'approved')   /* 2026-06-18 v554: 승인된 것만 고객에게 노출 */
-                .eq('site_code', (function(){ var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)return'JP'; if(h.indexOf('cafe3355')>=0||h.indexOf('hexa-board')>=0||h.indexOf('chameleon.design')>=0)return'US'; return'KR'; })())   /* 2026-06-18 v560: 현재 사이트 템플릿만 + v680 chameleon.design 추가 */
+                /* 2026-07-02: 사이트 공통 노출 — site_code 필터 제거. 승인 템플릿은 KR/JP/US 어느 사이트에서나 표시 (사장님 요청). */
                 .order('sort_order', { ascending: true })
                 .order('id', { ascending: false });
             if (code) q = q.or(orFilter);

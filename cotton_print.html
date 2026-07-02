@@ -1897,7 +1897,7 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=436"></script>
+<script src="./mini-editor.js?v=437"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄
   window._meCurrentCategory = window._meCurrentCategory || 'banner';
@@ -1939,7 +1939,7 @@ async function submitRollFabricRequest() {
           .from('admin_templates')
           .select('id,name,thumbnail_url,background_url,width_mm,height_mm,slots')
           .eq('product_category', window._meCurrentCategory || 'banner')
-          .eq('is_active', true).eq('status', 'approved').eq('site_code', siteCode)
+          .eq('is_active', true).eq('status', 'approved')  /* 2026-07-02: 사이트 공통 노출 — site_code 필터 제거 */
           .order('sort_order', { ascending: true }).order('id', { ascending: false });
       }
       try {
