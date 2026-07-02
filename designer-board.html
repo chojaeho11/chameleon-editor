@@ -701,6 +701,26 @@ async function openTemplateRegister() {
 
 function payoutOf(cat) { return PAYOUT[cat] || 0; }
 
+// 2026-07-02: HQ 정찰가 정산금 — 전단 양면(고객 디자인비 60,000)이면 정산금 2배(40,000).
+//   + 수동 override([AGREED_PAYOUT:N]) 가 기본값보다 크면 우선 (예: 양면인데 단면으로 결제된 건 보정).
+//   AGREED_PAYOUT 은 완료 시 자동으로 붙지만 그때 값=기본값이라 '>' 비교로 이중계산 방지.
+function hqFixedPayout(row) {
+    if (!row) return 0;
+    var base = payoutOf(row.category);
+    if (base <= 0) return 0;   // 명함/칼선/자유의뢰 등은 호출부에서 별도 처리
+    if (row.category === '전단') {
+        var cust = Number(row.budget_max || row.budget_min || 0);
+        if (cust >= 60000) base = base * 2;   // 양면
+    }
+    var mm = parseMeta(row.description || '');
+    if (mm && mm.agreedPayout && Number(mm.agreedPayout) > base) return Number(mm.agreedPayout);
+    return base;
+}
+function hqPayoutSuffix(row) {
+    if (row && row.category === '전단' && Number(row.budget_max || row.budget_min || 0) >= 60000) return ' (양면 ×2)';
+    return '';
+}
+
 function payoutDetailFor(r) {
     // 명함은 단면/양면 + 수량(각) 기반 tiered 계산
     if (r && r.category === '명함') {
@@ -761,8 +781,8 @@ function payoutLabel(r) {
         var pay = Math.floor(cust * 0.7);
         return pay.toLocaleString() + '원 (캐릭터 ' + n + '개 × 10,000원의 70%)';
     }
-    var p = payoutOf(r.category);
-    if (p > 0) return p.toLocaleString() + '원';
+    var p = hqFixedPayout(r);
+    if (p > 0) return p.toLocaleString() + '원' + hqPayoutSuffix(r);
     // 자유의뢰: FREE_REQ 메타 → 70% 자동, 없으면 합의 금액, 그것도 없으면 협의
     var fr = parseFreeReqMeta(r.description);
     if (fr && fr.designerPayout) {
@@ -1831,8 +1851,8 @@ async function dbOpenComplete(id) {
             fixedLabel = fixed.toLocaleString() + '원 (의뢰금액 ' + cust.toLocaleString() + '원의 70%)';
         }
     } else {
-        fixed = payoutOf(row && row.category);
-        fixedLabel = fixed.toLocaleString() + '원';
+        fixed = hqFixedPayout(row);
+        fixedLabel = fixed.toLocaleString() + '원' + hqPayoutSuffix(row);
     }
     const fixedEl = document.getElementById('dbCompletePayoutFixed');
     const inpEl = document.getElementById('dbCompletePayoutInput');
@@ -1892,7 +1912,7 @@ async function dbSubmitComplete() {
         const cust3 = fr2 ? (fr2.customerPrice || 0) : Number(row.budget_max || row.budget_min || 0);
         if (cust3 > 0) fixedPayout = Math.floor(cust3 * 0.7);
     } else {
-        fixedPayout = payoutOf(row.category);
+        fixedPayout = hqFixedPayout(row);
     }
     let payoutAmount = fixedPayout;
     if (fixedPayout <= 0) {

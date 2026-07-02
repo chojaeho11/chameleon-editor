@@ -10841,7 +10841,13 @@ html, body { background: #ffffff !important; }
             } catch(_e){}
             if (_siteIsKR) {
                 if (state.isBizCard) { _drProd = '명함'; _drPrice = 15000; }
-                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) { _drProd = '전단'; _drPrice = 30000; }
+                else if (/전단|리플렛|leaflet|flyer|チラシ/i.test(_drNm) || /^pp_lf/i.test(p && p.code || '')) {
+                    // 2026-07-02: 전단 양면은 디자인비 2배 (앞·뒤 2면 = 60,000원 / 디자이너 정산 40,000원). 단면 30,000.
+                    _drProd = '전단';
+                    var _lfDbl = (state.leafletSide === 'double');
+                    _drPrice = _lfDbl ? 60000 : 30000;
+                    if (_lfDbl) _drSub = '전단 <span style="color:#007AFF; font-weight:700;">60,000원</span> (양면 ×2 — 앞·뒤 2면 디자인) · 영업일 2~3일';
+                }
                 // 2026-06-17: 인스타판넬은 유료 디자인 제품으로 변경 — 3만원 (전단과 동일).
                 //   글씨 포토존(스카시 등) 보다 먼저 체크해서 50K 가 아닌 30K 적용.
                 else if (_isInstaForDR) { _drProd = '인스타판넬'; _drPrice = 30000; }
