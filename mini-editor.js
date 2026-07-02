@@ -1734,67 +1734,57 @@
                                 var ty0m = it.y + (_lhMul * fs - (_ascR + _descR) * fs) / 2 + _ascR * fs;
                                 // 2026-06-28: 중앙/우측 정렬 — it.w(박스폭) 대신 실제 콘텐츠 폭(가장 넓은 줄) 기준.
                                 //   흘림/이텔릭체는 글씨폭이 박스보다 좁아 it.w/2 로 잡으면 우측으로 밀림(화면=콘텐츠 기준).
-                                if (anchor === 'middle' || anchor === 'end') {
-                                    // 콘텐츠 폭은 canvas measureText(브라우저 정확 — 화면/DOM 과 동일)로 측정.
-                                    //   opentype getAdvanceWidth 는 한글에서 브라우저와 달라 좌측으로 어긋남.
-                                    var _mctx = (window.__meMeasureCtx || (window.__meMeasureCtx = document.createElement('canvas').getContext('2d')));
-                                    var _ffm = famClean; if (/\s/.test(_ffm) && !/["']/.test(_ffm)) _ffm = '"' + _ffm + '"';
-                                    _mctx.font = fw + ' ' + fs + 'px ' + _ffm;
-                                    try { _mctx.letterSpacing = (ls || 0) + 'px'; } catch(_lse){}
-                                    var _widestW = 0;
-                                    for (var _wi = 0; _wi < lines.length; _wi++) {
-                                        var _dlw = String(lines[_wi]).replace(/\s+$/, '');
-                                        if (!_dlw) continue;
-                                        var _lww = _mctx.measureText(_dlw).width;
-                                        if (_lww > _widestW) _widestW = _lww;
-                                    }
-                                    var _padXo = 6 / (me.wScale || 1);
-                                    tx = (anchor === 'middle') ? (it.x + _padXo + _widestW / 2) : (it.x + _padXo + _widestW);
+                                // 2026-07-02: 서체별 가로 어긋남 근본 해결 — opentype advance 대신 브라우저(canvas measureText)
+                                //   좌표로 글자/단어를 배치. 화면(브라우저 렌더)과 동일 위치에 opentype 글리프 shape 만 그림 →
+                                //   이탤릭/스크립트(예: Yellowtail — opentype advance 가 브라우저보다 커서 좌측 치우치던 것)도 화면과 일치.
+                                var _mctx = (window.__meMeasureCtx || (window.__meMeasureCtx = document.createElement('canvas').getContext('2d')));
+                                var _ffm = famClean; if (/\s/.test(_ffm) && !/["']/.test(_ffm)) _ffm = '"' + _ffm + '"';
+                                _mctx.font = fw + ' ' + fs + 'px ' + _ffm;
+                                _mctx.textAlign = 'left'; _mctx.textBaseline = 'alphabetic';
+                                try { _mctx.letterSpacing = (ls || 0) + 'px'; } catch(_lse){}
+                                // 콘텐츠(가장 넓은 줄) 폭 — 브라우저 기준 (화면=콘텐츠 기준 정렬과 동일)
+                                var _widestW = 0;
+                                for (var _wi = 0; _wi < lines.length; _wi++) {
+                                    var _dlw = String(lines[_wi]).replace(/\s+$/, '');
+                                    if (!_dlw) continue;
+                                    var _lww = _mctx.measureText(_dlw).width;
+                                    if (_lww > _widestW) _widestW = _lww;
                                 }
+                                var _padXo = 6 / (me.wScale || 1);
+                                var _baseLeft = it.x + _padXo;
                                 var pathD = '';
                                 var linePaths = [];   // 줄별 [글자 path...] — 줄을 각각 스티커로 그려 아래 줄이 위 줄 위에 겹치게.
                                 for (var li = 0; li < lines.length; li++) {
-                                    var line = lines[li];
-                                    // 2026-06-28: 줄 끝 공백 제거 — 브라우저는 줄 끝 공백을 hang 시켜 폭에서 제외하는데,
-                                    //   export 가 그 공백을 폭에 포함시켜 중앙/우측 정렬 시 글씨가 한쪽으로 밀리던 문제.
-                                    var dline = line.replace(/\s+$/, '');
+                                    // 2026-06-28: 줄 끝 공백 제거 — 브라우저는 줄 끝 공백을 hang 시켜 폭에서 제외.
+                                    var dline = String(lines[li]).replace(/\s+$/, '');
                                     if (!dline) continue;
                                     var _lineGlyphs = [];
-                                    // 줄별 폭 측정 → anchor 보정
-                                    var lineW = fontObj.getAdvanceWidth(dline, fs);
-                                    if (ls) lineW += ls * Math.max(0, dline.length - 1);
-                                    var lineX = tx;
-                                    if (anchor === 'middle') lineX = tx - lineW / 2;
-                                    else if (anchor === 'end') lineX = tx - lineW;
+                                    // 줄 폭(브라우저) → anchor 별 시작 x. opentype advance 는 정렬에 안 씀 (서체 어긋남 원인).
+                                    var _browserLineW = _mctx.measureText(dline).width;
+                                    var lineStartX = (anchor === 'middle') ? (_baseLeft + (_widestW - _browserLineW) / 2)
+                                                   : (anchor === 'end')  ? (_baseLeft + (_widestW - _browserLineW))
+                                                   : _baseLeft;
                                     var lineY = ty0m + li * lh;
-                                    // 2026-06-28: 공백(스페이스)은 그리지 않고 advance 만 — 폰트에 space 글리프가 없으면
-                                    //   .notdef(X박스) 로 그려지던 문제 방지. 단어(런)는 커닝 유지하며 getPath.
-                                    if (ls) {
-                                        var cursorX = lineX;
-                                        for (var ci = 0; ci < dline.length; ci++) {
-                                            var ch = dline.charAt(ci);
-                                            if (!/\s/.test(ch)) {
-                                                var p = fontObj.getPath(ch, cursorX, lineY, fs);
-                                                var _pdc = p.toPathData(2);
-                                                pathD += _pdc + ' '; _lineGlyphs.push(_pdc);
+                                    // 단어(run) 단위로 그림 — 단어 내부는 opentype 커닝/연결 유지, 단어 시작 위치는 브라우저 누적 좌표.
+                                    //   공백은 그리지 않고 브라우저 폭만큼 건너뜀(.notdef 방지). 자간(ls) 있으면 글자별 배치.
+                                    var _runs = dline.split(/(\s+)/);
+                                    var _prefix = '';
+                                    for (var ri = 0; ri < _runs.length; ri++) {
+                                        var run = _runs[ri];
+                                        if (!run) continue;
+                                        if (/^\s+$/.test(run)) { _prefix += run; continue; }
+                                        if (ls) {
+                                            for (var ci = 0; ci < run.length; ci++) {
+                                                var _chX = lineStartX + _mctx.measureText(_prefix + run.slice(0, ci)).width;
+                                                var _pc = fontObj.getPath(run.charAt(ci), _chX, lineY, fs).toPathData(2);
+                                                if (_pc && _pc.trim()) { pathD += _pc + ' '; _lineGlyphs.push(_pc); }
                                             }
-                                            cursorX += fontObj.getAdvanceWidth(ch, fs) + ls;
+                                        } else {
+                                            var _runX = lineStartX + _mctx.measureText(_prefix).width;
+                                            var _pr = fontObj.getPath(run, _runX, lineY, fs).toPathData(2);
+                                            if (_pr && _pr.trim()) { pathD += _pr + ' '; _lineGlyphs.push(_pr); }
                                         }
-                                    } else {
-                                        var cursorX2 = lineX;
-                                        var runs = dline.split(/(\s+)/);
-                                        for (var ri = 0; ri < runs.length; ri++) {
-                                            var run = runs[ri];
-                                            if (!run) continue;
-                                            if (/^\s+$/.test(run)) {
-                                                for (var wi = 0; wi < run.length; wi++) cursorX2 += fontObj.getAdvanceWidth(run.charAt(wi), fs);
-                                            } else {
-                                                var pr = fontObj.getPath(run, cursorX2, lineY, fs);
-                                                var _pdr = pr.toPathData(2);
-                                                pathD += _pdr + ' '; _lineGlyphs.push(_pdr);
-                                                cursorX2 += fontObj.getAdvanceWidth(run, fs);
-                                            }
-                                        }
+                                        _prefix += run;
                                     }
                                     if (_lineGlyphs.length) linePaths.push(_lineGlyphs);
                                 }
