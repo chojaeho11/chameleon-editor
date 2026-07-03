@@ -43,6 +43,9 @@
 
     let _sb = null;
     function getSb() {
+        // 2026-07-03: 페이지 공용 클라이언트(window.sb)를 우선 사용 — 별도 인스턴스를 만들면 로그인 세션을
+        //   공유 못 해 hexa-board 등에서 로그인해도 uid=null(할인 4종 비활성)이 되던 문제. 있으면 항상 window.sb.
+        if (window.sb) { _sb = window.sb; return _sb; }
         if (_sb) return _sb;
         if (!window.supabase) return null;
         _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
