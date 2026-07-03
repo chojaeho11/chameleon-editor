@@ -10631,9 +10631,13 @@ html, body { background: #ffffff !important; }
                     var sel = (state.stickerProductCode === v.code);
                     var label = _stickerVariantLabel(v);
                     var fancy = _stickerIsFancy(v);
+                    // 2026-07-03: 카드 가격 = 실제 계산가(통화 환산). 재단 스티커는 1,000매 기준(사장님 요청), 팬시는 4매 세트 기준.
+                    var _stHintPrice = fancy
+                        ? _stickerCalcPrice({ productCode: v.code, qty: 4, coating: 'matte', isFancy: true })
+                        : _stickerCalcPrice({ productCode: v.code, w: 100, h: 100, qty: 1000, coating: 'matte', isFancy: false });
                     var priceHint = fancy
-                        ? ('4' + tr('매','枚','pc') + ' ' + (Number(v.price) || 0).toLocaleString() + tr('원','円','KRW'))
-                        : ('100×100mm ' + (Number(v.price) || 0).toLocaleString() + tr('원','円','KRW') + '~');
+                        ? ('4' + tr('매','枚','pc') + ' ' + fmtPrice(_stHintPrice))
+                        : ('100×100mm 1,000' + tr('매','枚','pcs') + ' ' + fmtPrice(_stHintPrice) + '~');
                     var img = v.img_url ? '<img src="' + String(v.img_url).replace(/"/g,'&quot;') + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; background:#f8fafc;">'
                         : '<div style="width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:22px;">🏷️</div>';
                     return '<button type="button" onclick="window._soStickerPickVariant(\'' + v.code + '\')" '
