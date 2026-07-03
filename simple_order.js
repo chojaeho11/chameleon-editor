@@ -5276,8 +5276,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 return '<div style="display:flex; flex-direction:column; border:1.5px solid #e7e5e4; border-radius:10px; overflow:hidden; background:#fff;">' +
                     '<div style="position:relative; padding-bottom:100%; background:#f8fafc; overflow:hidden;">' +
                         '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
@@ -5404,8 +5402,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -5608,8 +5604,6 @@ html, body { background: #ffffff !important; }
                     else                                                     priceVal = _ovKrw;
                 } else {
                     priceVal = p.price || 0;
-                    if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                    else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 }
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
@@ -5676,8 +5670,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -5751,8 +5743,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -5822,8 +5812,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var _sz = (p.width_mm && p.height_mm) ? (p.width_mm + '×' + p.height_mm + 'mm') : '';
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
@@ -5899,8 +5887,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -5988,8 +5974,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -6064,8 +6048,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 // 2026-06-14: 어깨띠 — flat 1,000원/개 표시 (DB 2000원/m² 무시)
                 var _isShoulderCard = (p.code === '45645656');
                 var _priceLabel = _isShoulderCard
@@ -6180,8 +6162,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 // 인쇄형은 5×5cm = perSqm × (0.05 × 0.05) = perSqm/400
                 var priceLabel;
                 if (_isAcrylicPrintFlat(p)) {
@@ -6254,8 +6234,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -6389,8 +6367,6 @@ html, body { background: #ffffff !important; }
                 var safeNm = String(nm || '').replace(/[<>"]/g, '');
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 var priceVal = p.price || 0;
-                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -7640,8 +7616,6 @@ html, body { background: #ffffff !important; }
             var qty = Math.max(1, parseInt(qtyInput && qtyInput.value, 10) || 1);
             var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
             var priceVal = p.price || 0;
-            if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
-            else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
             var pickedName = p.name; if (lang === 'ja' && p.name_jp) pickedName = p.name_jp; else if (lang !== 'ko' && p.name_us) pickedName = p.name_us;
             var item = {
                 uid: Date.now() + Math.floor(Math.random() * 1000),
