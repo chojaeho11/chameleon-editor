@@ -17915,6 +17915,7 @@ html, body { background: #ffffff !important; }
         var _hasHcInCart = cart.some(_soIsHoneycombCartItem);
         var taxBase = 0;          // 할인 적용 대상 (일반 상품가 + 옵션)
         var nonDiscountBase = 0;  // 할인 비적용 (매니저 견적 — 이미 협의가)
+        var rawBoardBase = 0;     // 2026-07-03: 원판(허니콤보드) 부분 — nonDiscountBase 이지만 PRO(구독) 할인은 허용 (hexa-board 메인상품)
         // 2026-06-01: 카트 합계 시 자동 묶음배송 — 모든 일반 항목의 개별 배송비 중 가장 큰 것 1건만 부과.
         //   (베스트굿즈는 정액 3천원 별도, 패브릭은 별도 발송이므로 가산 — 둘 다 max 룰에서 제외)
         var itemShipFees = [];
@@ -17936,8 +17937,11 @@ html, body { background: #ffffff !important; }
             // 2026-05-13: 매니저 견적 주문은 할인 대상에서 제외 (담당자가 이미 할인 반영)
             // 2026-05-15: 원판 / 금액주문 — 단순 발송·입력 금액 그대로이므로 수량/구독 할인 제외
             // 2026-05-30: 베스트굿즈 — 100개+ 50% 만 적용, 금액티어(1M/5M/10M)·PRO 할인 모두 제외
-            if (_soIsManagerQuoteItem(it) || it._isBestGoods || (it.product && (_soIsRawBoardProduct(it.product) || _soIsAmountOrder(it.product)))) {
+            var _isRawBoardItem = !!(it.product && typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(it.product));
+            if (_soIsManagerQuoteItem(it) || it._isBestGoods || _isRawBoardItem || (it.product && _soIsAmountOrder(it.product))) {
                 nonDiscountBase += (subPrice - shipFee);
+                // 2026-07-03: 원판만 PRO(구독) 할인 base 에 포함 (사용자 요청) — 나머지 비할인(매니저견적/베스트굿즈/금액주문)은 제외 유지.
+                if (_isRawBoardItem) rawBoardBase += (subPrice - shipFee);
             } else {
                 taxBase += (subPrice - shipFee);
             }
@@ -18078,7 +18082,8 @@ html, body { background: #ffffff !important; }
         var amountPct = 0;
         var proPct = window.isProSubscriber ? 10 : 0;
         var amountDisc = Math.round(taxBase * amountPct / 100);
-        var proDisc = Math.round(taxBase * proPct / 100);
+        // 2026-07-03: PRO(구독) 할인 base = taxBase + 원판(rawBoardBase). 원판(hexa-board 메인상품)도 구독할인 적용.
+        var proDisc = Math.round((taxBase + rawBoardBase) * proPct / 100);
         var grandTotal = taxBase + nonDiscountBase - amountDisc - proDisc + shipTotal;
         return {
             taxBase: taxBase,
