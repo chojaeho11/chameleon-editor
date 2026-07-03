@@ -1894,6 +1894,12 @@ html, body { background: #ffffff !important; }
           <div id="soVinylVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
+        <!-- 2026-07-03: 봉투 family (pp_envelope) — 8종 한 페이지에서 선택 -->
+        <div class="so-section" id="soEnvelopeVariantsSec" style="display:none;">
+          <div class="so-section-title">${tr('봉투 종류 선택', '封筒 種類選択', 'Choose envelope type')} <span style="font-size:11px; color:#64748b; font-weight:600;">${tr('카드를 눌러 종류 변경', 'カードで切替', 'Click to switch')}</span></div>
+          <div id="soEnvelopeVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-13: 낱장 인쇄 (pp_lf_*) — 사이즈(A4/A3/A2) + 단/양면 + 비규격 입력 + 용지/박/후가공 -->
         <!-- 2026-06-23 v710: 순서 변경 - 규격 → 비규격(토글) → 인쇄면 → 수량슬롯 → 용지 → 박 → 후가공 -->
         <div class="so-section" id="soLeafletPresetSec" style="display:none;">
@@ -5777,6 +5783,74 @@ html, body { background: #ffffff !important; }
                 location.href = location.pathname + '?product=' + encodeURIComponent(code);
             }
         } catch (e) { console.warn('[so] switchPhotozone', e); }
+    };
+
+    // 2026-07-03: 봉투 family (category pp_envelope) — 8종(사각/중/대/자켓/쿠폰/종교/소/캘린더) 한 페이지에서 카드 선택
+    function _soIsEnvelopeProduct(p) {
+        if (!p) return false;
+        if ((p.category || '').toLowerCase() === 'pp_envelope') return true;
+        return /^pp_el(_|\d|$)/i.test(String(p.code || ''));
+    }
+    window._soIsEnvelopeProduct = _soIsEnvelopeProduct;
+    var _soEnvelopeCache = null;
+    async function _soLoadEnvelopeVariants(currentCode) {
+        var sec = document.getElementById('soEnvelopeVariantsSec');
+        var grid = document.getElementById('soEnvelopeVariants');
+        if (!sec || !grid) return;
+        try {
+            if (!_soEnvelopeCache) {
+                var sb = getSb(); if (!sb) { sec.style.display = 'none'; return; }
+                var _COLS = 'code,name,name_jp,name_us,price,price_jp,price_us,img_url,category,sort_order,width_mm,height_mm';
+                var fb = await sb.from('admin_products').select(_COLS).eq('category', 'pp_envelope');
+                var rows = (fb && fb.data) || [];
+                var _byCode = {};
+                rows.forEach(function(r){ if (r && r.code) _byCode[r.code] = r; });
+                // sort_order 우선(있는 것 먼저), 없으면 가격 오름차순
+                _soEnvelopeCache = Object.values(_byCode).sort(function(a,b){
+                    if (a.sort_order != null && b.sort_order != null) return (a.sort_order||999) - (b.sort_order||999);
+                    if (a.sort_order != null) return -1;
+                    if (b.sort_order != null) return 1;
+                    return (a.price||0) - (b.price||0);
+                });
+                console.log('[so] envelope variants loaded:', _soEnvelopeCache.length);
+            }
+            if (_soEnvelopeCache.length < 2) { sec.style.display = 'none'; return; }
+            var lang = window.__PS_LANG || (window.__SITE_CODE === 'JP' ? 'ja' : window.__SITE_CODE === 'US' ? 'en' : 'ko');
+            grid.innerHTML = _soEnvelopeCache.map(function (p) {
+                var nm = p.name; if (lang === 'ja' && p.name_jp) nm = p.name_jp; else if (lang !== 'ko' && p.name_us) nm = p.name_us;
+                var img = p.img_url || 'https://placehold.co/200?text=Envelope';
+                var safeNm = String(nm || '').replace(/[<>"]/g, '');
+                var safeCode = String(p.code || '').replace(/'/g, "\\'");
+                var priceVal = p.price || 0;
+                if (lang === 'ja' && p.price_jp != null) priceVal = p.price_jp;
+                else if ((lang === 'en' || window.__SITE_CODE === 'US') && p.price_us != null) priceVal = p.price_us;
+                var _sz = (p.width_mm && p.height_mm) ? (p.width_mm + '×' + p.height_mm + 'mm') : '';
+                var isCur = (p.code === currentCode);
+                var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
+                var borderW = isCur ? '2.5px' : '1.5px';
+                var ring = isCur ? 'box-shadow:0 0 0 3px rgba(124,58,237,0.15);' : '';
+                return '<div onclick="window._soSwitchEnvelope(\'' + safeCode + '\')" style="cursor:pointer; display:flex; flex-direction:column; border:' + borderW + ' solid ' + borderColor + '; border-radius:10px; overflow:hidden; background:#fff; transition:border-color .15s ease; ' + ring + '">' +
+                    '<div style="position:relative; padding-bottom:75%; background:#f8fafc; overflow:hidden;">' +
+                        '<img src="' + img + '" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" onerror="this.style.opacity=0">' +
+                        (isCur ? '<div style="position:absolute; top:4px; right:4px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:900;">' + tr('현재','現在','Current') + '</div>' : '') +
+                    '</div>' +
+                    '<div style="padding:6px 8px;">' +
+                        '<div style="font-size:11px; font-weight:700; color:#1e293b; line-height:1.3; height:28px; overflow:hidden;" title="' + safeNm + '">' + safeNm + '</div>' +
+                        (_sz ? '<div style="font-size:10px; color:#94a3b8; margin-top:1px;">' + _sz + '</div>' : '') +
+                        '<div style="font-size:11px; font-weight:800; color:#dc2626; margin-top:2px;">' + fmtPrice(priceVal) + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+            sec.style.display = '';
+        } catch (e) { console.warn('[so] envelopeVariants render', e); sec.style.display = 'none'; }
+    }
+    window._soLoadEnvelopeVariants = _soLoadEnvelopeVariants;
+    window._soSwitchEnvelope = function (code) {
+        if (!code) return;
+        try {
+            if (typeof window.openSimpleOrderModal === 'function') window.openSimpleOrderModal(code);
+            else location.href = location.pathname + '?product=' + encodeURIComponent(code);
+        } catch (e) { console.warn('[so] switchEnvelope', e); }
     };
 
     // 2026-06-05: 실사출력 family (현수막·라텍스·매쉬·부직포·UV·캘지·인화지·PET·유포지·백릿)
@@ -12510,6 +12584,14 @@ html, body { background: #ffffff !important; }
         } else {
             var _pzSec = document.getElementById('soPhotozoneVariantsSec');
             if (_pzSec) _pzSec.style.display = 'none';
+        }
+        // 2026-07-03: 봉투 family (pp_envelope) — 8종 한 페이지 변형 그리드
+        var _isEnvVariant = (typeof window._soIsEnvelopeProduct === 'function') ? window._soIsEnvelopeProduct(p) : false;
+        if (_isEnvVariant) {
+            try { window._soLoadEnvelopeVariants(p.code); } catch(e){}
+        } else {
+            var _envSec = document.getElementById('soEnvelopeVariantsSec');
+            if (_envSec) _envSec.style.display = 'none';
         }
         // 2026-06-05: 실사출력 family (현수막/래탁스/매쉬/부직포/캘지/인화지/PET/유포지/백릿)
         var _isRealVariant = (typeof window._soIsRealPrintProduct === 'function')
