@@ -1696,7 +1696,7 @@ html, body { background: #ffffff !important; }
         <!-- 2026-06-26: 허니콤보드 원판 커팅 에디터 — 좌측 메인 영역 (다른 제품 에디터와 같은 자리). -->
         <div id="soRbCutEditorMain" style="display:none;">
           <div style="background:#fafbfc; border:1px solid #e5e7eb; border-radius:14px; padding:16px 18px;">
-            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 1万ウォン', 'Cutting service · 10,000/board')} <span style="font-size:12px; font-weight:800; color:#dc2626;">· ${tr('커팅서비스만 가능합니다', 'カットサービスのみ', 'cutting service only')}</span></div>
+            <div style="font-size:15px; font-weight:900; color:#0f172a; margin-bottom:2px;">${tr('원판 커팅서비스 · 1판 기준 1만원', '原板カットサービス · 1枚 ¥1,000', 'Cutting service · 10,000/board')} <span style="font-size:12px; font-weight:800; color:#dc2626;">· ${tr('커팅서비스만 가능합니다', 'カットサービスのみ', 'cutting service only')}</span></div>
             <div style="font-size:11.5px; color:#64748b; line-height:1.7; margin-bottom:12px;">${tr('대지 <b>2400×1200</b>에 <b>네모/원형</b>을 추가 → <b>클릭해 선택</b>(위 칸에서 크기 수정) · <b>모서리</b>로 크기조절 · <b>Delete</b>로 삭제. 인쇄 안 됨(커팅라인) · 최소 <b>10cm</b> · 1판 <b>최대 50개</b>.<br>또는 일러스트(.ai)/PDF로 <b>커팅·V커팅라인 별도 레이어</b>로 올려도 됩니다. 커팅비 <b>1판 1만원</b>.', '台紙 <b>2400×1200</b> に <b>四角/円</b> を追加 → <b>クリックで選択</b>(上の欄でサイズ変更)·<b>角</b>でリサイズ·<b>Delete</b>で削除。印刷なし · 最小 <b>10cm</b> · 1枚 <b>最大50個</b>。<br>または .ai/PDF を別レイヤーでアップロード可。カット費 <b>1枚1万</b>。', 'Add <b>rect/circle</b> to the <b>2400×1200</b> board → <b>click to select</b> (edit size above) · resize from the <b>corner</b> · <b>Delete</b> to remove. Cut-line only · min <b>10cm</b> · max <b>50</b>.<br>Or upload .ai/PDF with cut lines on a separate layer. Fee <b>10,000/board</b>.')}</div>
 
             <!-- 도구 -->
@@ -2019,7 +2019,7 @@ html, body { background: #ffffff !important; }
             ${tr('표지 4페이지와 내지를 별도 파일로 올려주세요.', '表紙4ページと本文を別々のファイルでアップロードしてください。', 'Upload the 4-page cover and inner pages as separate files.')}
           </div>
           <div style="font-size:11.5px; color:#9a3412; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55;">
-            ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 아래 인쇄 옵션에서 선택(주문 1회 정액). 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙1,000ウォン + 本文(ページ数×100ウォン)。箔・後加工は下の印刷オプションで選択(注文1回定額)。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing selected below (once per order). Total = per-book × copies(qty).')}
+            ${tr('책 1권 = 표지 1,000원 + 내지(페이지수 × 100원). 박·후가공은 아래 인쇄 옵션에서 선택(주문 1회 정액). 최종 = 1권 가격 × 권수(수량).', '1冊 = 表紙¥100 + 本文(ページ数×¥10)。箔・後加工は下の印刷オプションで選択(注文1回定額)。合計 = 1冊価格 × 冊数(数量)。', '1 book = cover ₩1,000 + inner(pages×₩100). Foil/finishing selected below (once per order). Total = per-book × copies(qty).')}
           </div>
           <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.55; font-weight:600;">
             ✅ ${tr('1권(1부)부터 제작 가능합니다 — 소량 주문 환영', '1冊（1部）から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 copy — small quantities welcome')}
@@ -8236,8 +8236,8 @@ html, body { background: #ffffff !important; }
             '대형택배':                          tr('대형택배',                      '大型宅配',                   'Large parcel'),
             '묶음 소형택배':                     tr('묶음 소형택배',                 '小型宅配 (まとめ)',           'Small parcel (bundled)'),
             '택배배송 60×40 이하':               tr('택배배송 60×40 이하',           '宅配便 60×40以下',           'Parcel ≤60×40'),
-            '1개씩 포장 택배배송 (3만원/개)':    tr('1개씩 포장 택배배송 (3만원/개)',    '1個ずつ梱包 宅配 (3万ウォン/個)',   'Parcel · 1 per box (₩30k/ea)'),
-            '2개씩 포장 택배배송 (1.5만원/2개)': tr('2개씩 포장 택배배송 (1.5만원/2개)', '2個ずつ梱包 宅配 (1.5万ウォン/2個)', 'Parcel · 2 per box (₩15k/2)')
+            '1개씩 포장 택배배송 (3만원/개)':    tr('1개씩 포장 택배배송 (3만원/개)',    '1個ずつ梱包 宅配 (¥3,000/個)',   'Parcel · 1 per box (₩30k/ea)'),
+            '2개씩 포장 택배배송 (1.5만원/2개)': tr('2개씩 포장 택배배송 (1.5만원/2개)', '2個ずつ梱包 宅配 (¥1,500/2個)', 'Parcel · 2 per box (₩15k/2)')
         };
         return M[ko] || ko;
     }
@@ -17178,10 +17178,14 @@ html, body { background: #ffffff !important; }
                 // 2026-06-24: 아크릴 family 는 무료배송 — 저장된 shipping.fee 무시
                 var _bdShipFee = _soIsAcrylicFamilyItem(item) ? 0 : ((item.shipping && item.shipping.fee) || 0);
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
-                if (_bdShipFee > 0 && _bdIsFirstShip) {
-                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + '</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
-                } else if (_bdShipFee > 0 && !_bdIsFirstShip) {
-                    _bd.push('<div style="display:flex; justify-content:space-between; color:#16a34a;"><span>' + tr('배송 (묶음)','送料（まとめ）','Shipping (bundled)') + '</span><b>' + tr('무료','無料','Free') + '</b></div>');
+                // 2026-07-03: JP 는 배송이 카트 단위 정액(全国一律, 하단 안내에 1회 표시)이라 아이템별 送料 라인은 숨김.
+                //   (아이템 박스 合計 = 상품가만 → 아이템마다 送料 +¥500 을 띄우면 合計와 불일치해 혼란. 일본 직원 지적)
+                if (window.__SITE_CODE !== 'JP') {
+                    if (_bdShipFee > 0 && _bdIsFirstShip) {
+                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + '</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
+                    } else if (_bdShipFee > 0 && !_bdIsFirstShip) {
+                        _bd.push('<div style="display:flex; justify-content:space-between; color:#16a34a;"><span>' + tr('배송 (묶음)','送料（まとめ）','Shipping (bundled)') + '</span><b>' + tr('무료','無料','Free') + '</b></div>');
+                    }
                 }
                 // 칼선작업
                 if (item.cutlineWork || (item.cutlineCharCount && item.cutlineCharCount > 0)) {
@@ -17194,8 +17198,9 @@ html, body { background: #ffffff !important; }
                     _bd.push('<div style="display:flex; justify-content:space-between; color:#0369a1;"><span>🎨 ' + (item.designRequest.product_label || '디자인') + ' 의뢰비</span><b>+' + fmtPrice(item.designRequest.total) + '</b></div>');
                 }
                 // 합계 (해당 라인 — 묶음배송이면 shipping 빼고)
-                var _bdLineTotal = calc.final;
-                if (!_bdIsFirstShip && _bdShipFee > 0) _bdLineTotal -= _bdShipFee;
+                // 2026-07-03: JP 는 배송을 아이템별로 안 붙이고 카트 단위(全国一律)로 표시 → 아이템 合計 = 상품가만(lineDisplay).
+                var _bdLineTotal = (window.__SITE_CODE === 'JP') ? calc.lineDisplay : calc.final;
+                if (window.__SITE_CODE !== 'JP' && !_bdIsFirstShip && _bdShipFee > 0) _bdLineTotal -= _bdShipFee;
                 _bd.push('<div style="display:flex; justify-content:space-between; border-top:1px dashed #d1d5db; margin-top:4px; padding-top:4px; font-weight:900;"><span>' + tr('합계','合計','Total') + '</span><b style="color:#dc2626;">' + fmtPrice(_bdLineTotal) + '</b></div>');
                 var _bdHtml = '<div style="margin:6px 0 8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; font-size:11.5px; color:#374151; line-height:1.7;">' + _bd.join('') + '</div>';
 
@@ -17315,6 +17320,8 @@ html, body { background: #ffffff !important; }
                             '配送料 <b>' + fmtPrice(_shipFinal) + '</b> (ハニカムボード設置/配送)',
                             'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
                         );
+                    } else if (window.__SITE_CODE === 'JP') {
+                        _shipLine = '';   // 2026-07-03: JP 는 header(宅配 送料 全国一律)에 이미 표시 — 중복 라인 제거 (일본 직원 지적)
                     } else {
                         _shipLine = tr(
                             '🚚 택배 배송비 <b>' + fmtPrice(_shipFinal) + '</b>',
@@ -17338,7 +17345,7 @@ html, body { background: #ffffff !important; }
                                  '💚 Free shipping (over ' + _freeShipTh + ')'));
                     _noticeText.innerHTML =
                         '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
-                        '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>';
+                        (_shipLine ? '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>' : '');
                 }
             }
         } catch(e) {
