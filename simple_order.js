@@ -4308,8 +4308,8 @@ html, body { background: #ffffff !important; }
             if (state.leafletFinishes) {
                 Object.keys(state.leafletFinishes).forEach(function(k){
                     if (!state.leafletFinishes[k]) return;
-                    var _lfFnTop = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                    if (_lfFnTop) _lfSubTop += _lfFnTop.price * _lfOptMultTop;
+                    var _lfFnTop = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
+                    if (_lfFnTop) _lfSubTop += _lfFnTop.price * (_lfFnTop.flat ? 1 : _lfOptMultTop);
                 });
             }
             unit = Math.round(_lfSubTop / qty);
@@ -4374,8 +4374,8 @@ html, body { background: #ffffff !important; }
                 if (state.leafletFinishes) {
                     Object.keys(state.leafletFinishes).forEach(function(k){
                         if (!state.leafletFinishes[k]) return;
-                        var _lfFn = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                        if (_lfFn) _lfSubtotal += _lfFn.price * _lfOptMult;
+                        var _lfFn = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
+                        if (_lfFn) _lfSubtotal += _lfFn.price * (_lfFn.flat ? 1 : _lfOptMult);
                     });
                 }
                 unit = Math.round(_lfSubtotal / qty);
@@ -6398,8 +6398,8 @@ html, body { background: #ffffff !important; }
         }
         // 후가공 (BIZ_FINISHES) — 체크박스 다중 선택
         var fnGrid = document.getElementById('soLfFinishGrid');
-        if (fnGrid && typeof BIZ_FINISHES !== 'undefined') {
-            fnGrid.innerHTML = BIZ_FINISHES.map(function(o){
+        if (fnGrid && typeof LEAFLET_FINISHES !== 'undefined') {
+            fnGrid.innerHTML = LEAFLET_FINISHES.map(function(o){
                 var sel = !!(state.leafletFinishes && state.leafletFinishes[o.key]);
                 return _renderOptCard(o, sel, "window._soToggleLeafletFinish('" + o.key + "')", 'finish');
             }).join('');
@@ -6423,9 +6423,9 @@ html, body { background: #ffffff !important; }
             var fnCur = document.getElementById('soLfFinishCurrent');
             if (fnCur) {
                 var picked = state.leafletFinishes ? Object.keys(state.leafletFinishes).filter(function(k){ return !!state.leafletFinishes[k]; }) : [];
-                if (picked.length > 0 && typeof BIZ_FINISHES !== 'undefined') {
+                if (picked.length > 0 && typeof LEAFLET_FINISHES !== 'undefined') {
                     var names = picked.map(function(k){
-                        var o = BIZ_FINISHES.find(function(x){ return x.key === k; });
+                        var o = LEAFLET_FINISHES.find(function(x){ return x.key === k; });
                         return o ? _bizI18n(o, 'name') : k;
                     });
                     fnCur.textContent = '· ✓ ' + names.join(', ');
@@ -7757,6 +7757,13 @@ html, body { background: #ffffff !important; }
         { key:'gwidori',  name_kr:'귀도리', name_jp:'角丸',         name_us:'Rounded Corners',
           desc_kr:'모서리 둥글게 · 부드러운 인상',                 desc_jp:'角を丸く · 柔らかい印象',                          desc_us:'Round corners · softer feel', price:3000 }
     ];
+    // 2026-07-03: 전단(낱장) 전용 후가공 — 명함용 BIZ_FINISHES + 톰슨(도무송)/접지. flat:true = 수량배수 없이 정액.
+    var LEAFLET_FINISHES = BIZ_FINISHES.concat([
+        { key:'thomson', name_kr:'톰슨(도무송) 재단', name_jp:'トムソン(型抜き)', name_us:'Die-cut (Thomson)',
+          desc_kr:'원하는 모양으로 칼선 재단 · 정액 (수량 무관)',   desc_jp:'指定形状で型抜き · 定額 (数量問わず)',            desc_us:'Custom-shape die-cut · flat fee', price:100000, flat:true },
+        { key:'fold',    name_kr:'접지(접기)',        name_jp:'折り加工',         name_us:'Folding',
+          desc_kr:'2단/3단 등 접기 가공 · 정액 (수량 무관)',       desc_jp:'2つ折り/3つ折りなど · 定額 (数量問わず)',        desc_us:'Fold finishing · flat fee', price:10000, flat:true }
+    ]);
     function _bizI18n(o, field) {
         var lang = (typeof getLang === 'function') ? getLang() : 'ko';
         if (lang === 'ja') return o[field + '_jp'] || o[field + '_kr'] || '';
@@ -17037,15 +17044,16 @@ html, body { background: #ffffff !important; }
                             _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(_foilNm) + (_lfMult > 1 ? ' × ' + _lfMult : '') + '</span><b>+' + fmtPrice(_foilLine) + '</b></div>');
                         }
                     }
-                    if (item.leafletFinishes && typeof BIZ_FINISHES !== 'undefined') {
+                    if (item.leafletFinishes && typeof LEAFLET_FINISHES !== 'undefined') {
                         Object.keys(item.leafletFinishes).forEach(function(k){
                             if (!item.leafletFinishes[k]) return;
-                            var _lfFnRow = BIZ_FINISHES.find(function(o){ return o.key === k; });
+                            var _lfFnRow = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
                             if (!_lfFnRow) return;
-                            var _fnLine = _lfFnRow.price * _lfMult;
+                            var _fnMult = _lfFnRow.flat ? 1 : _lfMult;
+                            var _fnLine = _lfFnRow.price * _fnMult;
                             _bdSub += _fnLine;
                             var _fnNm = (typeof _bizI18n === 'function') ? _bizI18n(_lfFnRow, 'name') : (_lfFnRow.name_kr || '후가공');
-                            _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(_fnNm) + (_lfMult > 1 ? ' × ' + _lfMult : '') + '</span><b>+' + fmtPrice(_fnLine) + '</b></div>');
+                            _bd.push('<div style="display:flex; justify-content:space-between;"><span>└ ' + escapeHtml(_fnNm) + (_fnMult > 1 ? ' × ' + _fnMult : '') + '</span><b>+' + fmtPrice(_fnLine) + '</b></div>');
                         });
                     }
                 }
@@ -17685,8 +17693,8 @@ html, body { background: #ffffff !important; }
             if (it.leafletFinishes) {
                 Object.keys(it.leafletFinishes).forEach(function(k){
                     if (!it.leafletFinishes[k]) return;
-                    var _lfFnItm = BIZ_FINISHES.find(function(o){ return o.key === k; });
-                    if (_lfFnItm) _lfSubItm += _lfFnItm.price * _lfOptMultItm;
+                    var _lfFnItm = LEAFLET_FINISHES.find(function(o){ return o.key === k; });
+                    if (_lfFnItm) _lfSubItm += _lfFnItm.price * (_lfFnItm.flat ? 1 : _lfOptMultItm);
                 });
             }
             if (it.designRequest && it.designRequest.total) {
