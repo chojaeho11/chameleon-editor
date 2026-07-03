@@ -3665,7 +3665,11 @@ window._tcmFallbackClick = function(code) {
                     var f = (order.files || []).filter(function(x){
                         return x && x.url && x.type !== 'order_sheet' && x.type !== 'quotation' && x.type !== '_error_log';
                     });
-                    var resolvedPrice = Number(it.price) || (it.product && Number(it.product.price)) || 0;
+                    // 2026-07-03: redistribute 안 할 때 resolvedPrice = LINE 합계(단가×수량).
+                    //   기존 (it.price || product.price) 는 UNIT 가라 수량>1 항목이 1개분만 잡혀 총액이 낮아지던 버그.
+                    //   예: 허니콤배너 product.price 45,000 × qty 4 = 180,000 인데 45,000 만 잡혀 610,000→475,000.
+                    //   __pendingQuoteId 가 이 값을 LINE total 로 쓰므로 반드시 LINE 합계여야 함.
+                    var resolvedPrice = _estLineTotal(it);
                     if (needRedistribute) {
                         // qty 비례로 LINE 합계 분배 (fabric 의 it.price 가 LINE 합계 의미라서 그대로 적용 가능)
                         var w = (Number(it.qty) || 1) / qtySum;
