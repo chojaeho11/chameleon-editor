@@ -3356,11 +3356,11 @@ html, body { background: #ffffff !important; }
             <div style="font-size:13px; font-weight:800; color:#4338ca;" id="soDiscMileageAmount">0 P</div>
             <div style="font-size:10.5px; color:#4338ca;" id="soDiscMileageHint">${tr('보유 0 · 5%','残高 0 · 5%','Balance 0 · 5%')}</div>
           </label>
-          <!-- 3) 예치금 -->
+          <!-- 3) 예치금 — 2026-07-03: 할인이 아니라 고객이 맡긴 돈 → 다른 할인과 중복 사용 가능 (독립 체크박스) -->
           <label class="so-disc-card" data-disc="deposit" style="cursor:pointer; padding:10px 12px; border:2px solid #99f6e4; background:#ecfeff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <input type="radio" name="soDiscChoice" value="deposit" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#0e7490;">💰 ${tr('예치금','預り金','Deposit')}</b>
+              <input type="checkbox" id="soDiscDepositChk" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#0e7490;">💰 ${tr('예치금','預り金','Deposit')} <span style="font-size:9.5px; color:#0891b2; font-weight:800;">${tr('중복가능','併用可','stacks')}</span></b>
             </div>
             <div style="font-size:13px; font-weight:800; color:#0e7490;" id="soDiscDepositAmount">0 P</div>
             <div style="font-size:10.5px; color:#0e7490;" id="soDiscDepositHint">${tr('전액 사용','全額使用','Full balance')}</div>
@@ -3376,7 +3376,7 @@ html, body { background: #ffffff !important; }
           </label>
         </div>
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
-          * ${tr('모든 할인은 중복사용 불가','すべての割引は併用不可','All discounts cannot stack — pick one')}
+          * ${tr('쿠폰·마일리지·PRO는 1개만 · 예치금은 중복 사용 가능','クーポン・マイル・PROは1つのみ · 預り金は併用可','Coupon / Mileage / PRO: pick one · Deposit stacks')}
         </div>
         <!-- legacy hidden inputs — 기존 코드 호환용 (값은 _soOnDiscountSelect 에서 동기화) -->
         <input id="soUseMileage" type="hidden" value="0">
@@ -18143,7 +18143,7 @@ html, body { background: #ffffff !important; }
         if (!uid) {
             var disableCard = function (disc) {
                 var card = document.querySelector('.so-disc-card[data-disc="' + disc + '"]');
-                var radio = card ? card.querySelector('input[type=radio]') : null;
+                var radio = card ? card.querySelector('input') : null;
                 if (card) { card.style.opacity = '0.45'; card.style.cursor = 'not-allowed'; }
                 if (radio) radio.disabled = true;
             };
@@ -18212,7 +18212,7 @@ html, body { background: #ffffff !important; }
             var amtEl = document.getElementById(amtId);
             var hintEl = document.getElementById(hintId);
             var card = document.querySelector('.so-disc-card[data-disc="' + disc + '"]');
-            var radio = card ? card.querySelector('input[type=radio]') : null;
+            var radio = card ? card.querySelector('input') : null;
             var disable = (balance <= 0 && disc !== 'pro') || (disc === 'pro' && !isPro) || (maxApply <= 0);
             if (card) {
                 card.style.opacity = disable ? '0.45' : '1';
@@ -18246,16 +18246,22 @@ html, body { background: #ffffff !important; }
     //   - 'deposit'      : useDeposit = depositMax
     //   - 'pro'          : useMileage=0, useDeposit=0. PRO 할인 그대로 유지 (suppress 안 함)
     //   - null           : 아무것도 안 씀, PRO 가 있으면 PRO 자동 적용
-    function _soGetWalletUseKRW(grand) {
+    function _soGetWalletUseKRW(grand, proDisc) {
+        // 2026-07-03: 예치금은 '할인'이 아니라 고객이 맡긴 돈 → 다른 할인(쿠폰/마일리지/PRO)과 중복 사용.
+        //   discChoice ∈ { null, 'event_coupon', 'mileage', 'pro' } (예치금 제외 · mutex),  depositOn = 독립 체크박스.
         var st = window._soWallet || {};
-        if (!st.ready) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
-        if (st.excluded) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
+        if (!st.ready || st.excluded) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
+        if (proDisc == null) proDisc = window._soCheckoutProDisc || 0;
         var choice = st.discChoice;
-        if (choice === 'event_coupon') return { useMileage: st.eventMax || 0, useDeposit: 0, source:'event_coupon', proSuppressed: !!window._soCheckoutProDisc };
-        if (choice === 'mileage')      return { useMileage: st.mileageMax || 0, useDeposit: 0, source:'mileage', proSuppressed: !!window._soCheckoutProDisc };
-        if (choice === 'deposit')      return { useMileage: 0, useDeposit: st.depositMax || 0, source:'deposit', proSuppressed: !!window._soCheckoutProDisc };
-        if (choice === 'pro')          return { useMileage: 0, useDeposit: 0, source:'pro', proSuppressed: false };  // PRO 가 자동 적용 — suppress 안 함
-        return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };  // 미선택 — PRO 가 있으면 자동 적용 그대로
+        var useMileage = 0, source = null, proSuppressed = false;
+        if (choice === 'event_coupon') { useMileage = st.eventMax || 0; source = 'event_coupon'; proSuppressed = !!proDisc; }
+        else if (choice === 'mileage') { useMileage = st.mileageMax || 0; source = 'mileage'; proSuppressed = !!proDisc; }
+        else if (choice === 'pro')     { source = 'pro'; }   // PRO 는 grand 에 이미 반영
+        // 할인 반영된 소계 — grand 은 PRO 이미 차감. 쿠폰/마일리지 선택이면 PRO 복원 후 그만큼 차감.
+        var afterDiscount = Math.max(0, (proSuppressed ? (grand + proDisc) : grand) - useMileage);
+        // 예치금 — 중복 사용. 남은 결제금액까지.
+        var useDeposit = st.depositOn ? Math.min(st.depositBalKRW || 0, afterDiscount) : 0;
+        return { useMileage: useMileage, useDeposit: useDeposit, source: source, proSuppressed: proSuppressed };
     }
     function _soApplyWalletToTotal() {
         var grand = window._soCheckoutGrandTotal || 0;
@@ -18290,15 +18296,19 @@ html, body { background: #ffffff !important; }
             bd.innerHTML = html;
         }
     }
-    // 라디오 선택 → discChoice 저장 → UI 갱신
+    // 라디오(쿠폰/마일리지/PRO) 선택 + 예치금 체크박스(독립·중복) → 상태 저장 → UI 갱신
     window._soOnDiscountSelect = function() {
         var sel = document.querySelector('input[name="soDiscChoice"]:checked');
         var v = sel ? sel.value : null;
+        var depChk = document.getElementById('soDiscDepositChk');
+        var depositOn = !!(depChk && depChk.checked && !depChk.disabled);
         if (!window._soWallet) window._soWallet = { ready:false };
         window._soWallet.discChoice = v;
-        // 시각 강조 — 선택된 카드 굵게
+        window._soWallet.depositOn = depositOn;
+        // 시각 강조 — 선택된 카드 굵게 (예치금은 독립 체크)
         document.querySelectorAll('.so-disc-card').forEach(function(c){
-            var isSel = (c.dataset.disc === v);
+            var d = c.dataset.disc;
+            var isSel = (d === 'deposit') ? depositOn : (d === v);
             c.style.boxShadow = isSel ? '0 0 0 3px rgba(99,102,241,0.25)' : 'none';
         });
         _soApplyWalletToTotal();
