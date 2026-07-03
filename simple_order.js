@@ -5491,10 +5491,8 @@ html, body { background: #ffffff !important; }
                 var safeCode = String(p.code || '').replace(/'/g, "\\'");
                 // 2026-06-15: 배너 variant 별 DB 가격 표시 (hb_bn_1=45K, hb_bn_2=33K, hb_bn_3=80K).
                 //   기존 45K 하드코딩은 hb_bn_2(연결형) 가 33K 임에도 45K 로 보여 카트 합계와 불일치하던 버그.
-                var priceVal;
-                if (lang === 'ja') priceVal = Number(p.price_jp) || Math.round((Number(p.price) || 45000) * 0.1);
-                else if (lang === 'en' || window.__SITE_CODE === 'US') priceVal = Number(p.price_us) || ((Number(p.price) || 45000) * 0.001);
-                else priceVal = Number(p.price) || 45000;
+                // 2026-07-03: 가격은 항상 KRW(p.price) → fmtPrice 가 통화 환산. price_jp/us 직접 쓰면 fmtPrice 가 재차 ×0.1 하여 1/10 표기되는 이중변환 버그.
+                var priceVal = Number(p.price) || 45000;
                 var isCur = (p.code === currentCode);
                 var borderColor = isCur ? '#7c3aed' : '#e7e5e4';
                 var borderW = isCur ? '2.5px' : '1.5px';
@@ -17718,6 +17716,10 @@ html, body { background: #ffffff !important; }
         if (it && it.__pendingQuoteId && Number(it.price) > 0) return Number(it.price);
         var qty = it.qty || 1;
         var unit = (it.product && it.product.price) || 0;
+        // 2026-07-03: early-return 상품(명함·리플렛·스티커·책자)도 일반 경로(하단 base += shipping.fee)와 동일하게
+        //   배송비를 포함해 반환해야 함. 미포함 시 카트합계 taxBase += (subPrice - shipFee) 에서 배송비만큼 상품가가
+        //   깎여, JP 명함 카트 合計가 상품가 0 + 배송 5000 = ¥500 으로만 표시되던 버그. (KR 은 shipFee 0 이라 변화 없음)
+        var _soItmShipInc = (it.shipping && typeof it.shipping.fee === 'number') ? it.shipping.fee : 0;
         // 2026-06-15: 허니콤 배너 family — 코드 × 단/양 매핑 (_BANNER_PRICES 한 곳에서 관리).
         //   hb_bn_1: 단면 45K / 양면 80K, hb_bn_2(연결형): 단면 33K / 양면 70K, hb_bn_3: 80K.
         //   매핑 없으면 DB price → 레거시 폴백.
@@ -17738,7 +17740,7 @@ html, body { background: #ffffff !important; }
         //   _stickerCalcPrice 는 sticker.qty(1000매 등) 기반 1 set 가격을 반환. cart.qty 는 set 개수.
         var _isStItm = !!it._isSticker || (it.sticker != null) || (it.product && it.product.code && (/^st_/i.test(it.product.code) || it.product.code === '0000241' || it.product.code === '645646544' || it.product.code === '43545345435' || it.product.code === '567756767' || it.product.category === 'pp_sticker'));
         if (_isStItm && it.sticker) {
-            return _stickerCalcPrice(it.sticker) * qty;
+            return _stickerCalcPrice(it.sticker) * qty + _soItmShipInc;
         }
 
         // 2026-06-13: 낱장 인쇄 (pp_lf_*) — A4/A3/A2 × 단/양면 + 수량할인 + 옵션
@@ -17746,7 +17748,7 @@ html, body { background: #ffffff !important; }
         //             + 디자인 의뢰비 (it.designRequest.total) 포함 — early-return 이라 outer base+= 분기 안 탐.
         // 2026-07-01: 책자제본 — (1000 + 페이지×100) × 권수 + 박/후가공(cp, 1회 정액).
         if (it._isBooklet || (it.product && String(it.product.code || '') === '435345435')) {
-            return _soBookletTotal(it.bookletPages, qty, it.cpFoil, it.cpFinishes);
+            return _soBookletTotal(it.bookletPages, qty, it.cpFoil, it.cpFinishes) + _soItmShipInc;
         }
         var _isLfItm = !!it._isLeaflet || !!it.leafletSize || (it.product && it.product.code && /^pp_lf/i.test(it.product.code));
         if (_isLfItm) {
@@ -17767,7 +17769,7 @@ html, body { background: #ffffff !important; }
             if (it.designRequest && it.designRequest.total) {
                 _lfSubItm += (it.designRequest.total || 0);
             }
-            return _lfSubItm;
+            return _lfSubItm + _soItmShipInc;
         }
 
         // 2026-06-24 v726: 명함 — 프리미엄 단가 8,000(단면)/10,000(양면) per 100장.
@@ -17800,8 +17802,9 @@ html, body { background: #ffffff !important; }
                 var _textModCount = Math.max(0, _bcEmpC - 1);
                 _bcSub += _newDesign + _textModCount * _textMod;
             }
-            // 배송 무료
-            return _bcSub;
+            // 2026-07-03: 배송비 포함해 반환 (일반 경로와 일관 — 카트합계가 subPrice-shipFee 로 상품가만 추출).
+            //   KR 은 명함 shipFee 0 이라 변화 없음. JP 는 ¥500 정액이 stamped → 포함해야 카트 合計 ¥1,000 정상.
+            return _bcSub + _soItmShipInc;
         }
         // 2026-05-13: 자유인쇄커팅 — 사이즈별 고정 단가
         if (it.cutPrint) {
