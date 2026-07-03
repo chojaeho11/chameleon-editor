@@ -1930,6 +1930,11 @@ html, body { background: #ffffff !important; }
           <!-- 주문 수량 슬롯 — soQtySection 이 낱장 모드일 때 여기로 이동 (JS) -->
           <div id="soLfQtySlot" style="margin-top:16px;"></div>
 
+          <!-- 2026-07-03: 용지 이벤트 배너 — 고급지를 일반지 가격에 (모든 용지 동일가) -->
+          <div style="margin-top:16px; padding:11px 13px; background:#fdf2f8; border:1.5px solid #f9a8d4; border-radius:10px; color:#9d174d; font-size:12.5px; line-height:1.55;">
+            🎉 ${tr('고급지를 일반지 가격에! 할인 이벤트', '高級紙を一般紙の価格で！割引イベント', 'Premium paper at standard price — event!')}
+            <div style="font-size:11.5px; color:#be185d; margin-top:3px; font-weight:600;">${tr('모든 용지 가격 동일 — 원하는 용지를 추가금 없이 선택하세요', 'すべての用紙が同一価格 — 追加料金なしでお選びいただけます', 'All papers same price — pick any at no extra cost')}</div>
+          </div>
           <!-- v710: 용지 선택 — 토글 버튼 (현재 선택 표시) -->
           <button type="button" id="soLfPaperToggle" onclick="window._soLeafletToggleSection('paper')" style="width:100%; margin-top:16px; padding:12px 14px; border:1.5px dashed #c7d2fe; background:#eef2ff; color:#4338ca; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:space-between; gap:8px;">
             <span style="display:flex; align-items:center; gap:8px;">
@@ -6377,10 +6382,10 @@ html, body { background: #ffffff !important; }
                 + _bizCard2tone(nm, ds, priceTag, selected)
                 + '</div>';
         }
-        // 용지 (BIZ_PAPERS)
+        // 용지 (LEAFLET_PAPERS — 일반지 스노우180/아트180 + 고급지)
         var ppGrid = document.getElementById('soLfPaperGrid');
-        if (ppGrid && typeof BIZ_PAPERS !== 'undefined') {
-            ppGrid.innerHTML = BIZ_PAPERS.map(function(o){
+        if (ppGrid && typeof LEAFLET_PAPERS !== 'undefined') {
+            ppGrid.innerHTML = LEAFLET_PAPERS.map(function(o){
                 return _renderOptCard(o, state.leafletPaper === o.key, "window._soPickLeafletPaper('" + o.key + "')", 'paper');
             }).join('');
         }
@@ -6402,8 +6407,8 @@ html, body { background: #ffffff !important; }
         // v710/v722: 토글 버튼 라벨에 현재 선택값 표시 (✓ 표시 — 미선택 시 빈 문자열)
         try {
             var pCur = document.getElementById('soLfPaperCurrent');
-            if (pCur && typeof BIZ_PAPERS !== 'undefined') {
-                var pSel = BIZ_PAPERS.find(function(o){ return o.key === state.leafletPaper; });
+            if (pCur && typeof LEAFLET_PAPERS !== 'undefined') {
+                var pSel = LEAFLET_PAPERS.find(function(o){ return o.key === state.leafletPaper; });
                 pCur.textContent = pSel ? _bizI18n(pSel, 'name') : '-';
             }
             var fCur = document.getElementById('soLfFoilCurrent');
@@ -7714,6 +7719,14 @@ html, body { background: #ffffff !important; }
         { key:'arte310',       name_kr:'아르떼 울트라 화이트 310g',name_jp:'アルテ ウルトラホワイト 310g', name_us:'Arte Ultra White 310g',
           desc_kr:'두꺼운 초백색 · 프리미엄 명함 추천',              desc_jp:'厚手の超白色 · プレミアム名刺向け',                       desc_us:'Thick ultra-white · premium pick' }
     ];
+    // 2026-07-03: 전단(낱장) 전용 용지 — 일반지(스노우180/아트180) + 기존 고급지(BIZ_PAPERS). 명함엔 영향 없음.
+    //   전단은 용지에 따라 가격 변동 없음(모든 용지 동일가) → "고급지를 일반지 가격에" 이벤트.
+    var LEAFLET_PAPERS = [
+        { key:'snow180', name_kr:'스노우지 180g', name_jp:'スノー紙 180g', name_us:'Snow 180g',
+          desc_kr:'일반지 · 발색 좋고 매끈한 표면 · 전단 기본',      desc_jp:'一般紙 · 発色が良く滑らかな表面 · チラシ標準',            desc_us:'Standard · vivid & smooth · flyer default' },
+        { key:'art180',  name_kr:'아트지 180g',   name_jp:'アート紙 180g', name_us:'Art 180g',
+          desc_kr:'일반지 · 은은한 광택 · 사진·컬러 표현 우수',      desc_jp:'一般紙 · ほどよい光沢 · 写真·カラー表現に優れる',         desc_us:'Standard · soft gloss · great for photos' }
+    ].concat(BIZ_PAPERS);
     var BIZ_FOILS = [
         { key:'gold_matte',    name_kr:'무광 금박',     name_jp:'マットゴールド箔',    name_us:'Matte Gold Foil',
           desc_kr:'은은하고 차분한 골드 마감 · 고급스러운 분위기', desc_jp:'落ち着いたゴールド仕上げ · 高級感のある雰囲気',  desc_us:'Subtle gold finish · luxe vibe', price:10000 },
@@ -12553,10 +12566,10 @@ html, body { background: #ffffff !important; }
         state.isLeaflet = (typeof window._soIsLeafletProduct === 'function') ? window._soIsLeafletProduct(p) : false;
         var _lfSec = document.getElementById('soLeafletPresetSec');
         if (state.isLeaflet) {
-            // 기본값 — A4 단면, 누벅 240g, 박/후가공 없음
+            // 기본값 — A4 단면, 스노우지 180g(전단 표준), 박/후가공 없음
             if (!state.leafletSize) state.leafletSize = 'A4';
             if (!state.leafletSide) state.leafletSide = 'single';
-            if (!state.leafletPaper) state.leafletPaper = 'nuvegi240';
+            if (!state.leafletPaper) state.leafletPaper = 'snow180';
             if (state.leafletFoil === undefined) state.leafletFoil = null;
             if (!state.leafletFinishes) state.leafletFinishes = {};
             // 면적 기반 계산 비활성 (자체 가격 공식 사용)
