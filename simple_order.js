@@ -2581,6 +2581,8 @@ html, body { background: #ffffff !important; }
             <span>${tr('기본 <b>포장+배송비 1만원</b>이 자동 적용됩니다 (카트 묶음 시 1건만)', '基本 <b>梱包+配送費 1,000円</b> が自動で加算されます (まとめ買いは1件のみ)', 'A base <b>$10 packing + shipping fee</b> applies automatically (one per cart)')}</span>
           </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
+          <!-- 2026-07-04: 현수막(placard) 9종 — 가로/세로 10cm 단위 안내·경고. _soOnCustomDimsChange 에서 placard 일 때만 표시. -->
+          <div id="soPlacardStepNote" style="display:none; font-size:11.5px; font-weight:700; border-radius:8px; padding:9px 11px; margin-bottom:8px; line-height:1.55;"></div>
           <div id="soPresetSizePills" style="display:none; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:8px;"></div>
           <div id="soPresetSizeNote" style="display:none; font-size:12px; color:#92400e; font-weight:800; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:9px 10px; margin-bottom:8px; text-align:center;">🔗 ${tr('고리를 선택해주세요. 조립되어 배송됩니다', 'リング(金具)を選択してください。組み立てて発送いたします', 'Please choose a ring/hook. Will be assembled and shipped')}</div>
           <!-- 2026-05-30: 개별포장 3가지 선택 (포장없음·내지인쇄·상단인쇄). 인쇄 포장 = 50,000원 정액 (수량 무관) -->
@@ -9306,6 +9308,36 @@ html, body { background: #ffffff !important; }
         var hCm = isMmInput ? (hRaw / 10) : (parseInt(hRaw, 10) || 0);
         state.customW = wCm;
         state.customH = hCm;
+        // 2026-07-04: 현수막(placard) 9종 — 가로/세로 10cm 단위 안내·실시간 경고 (담기 차단은 doAddToCart 에서).
+        var _plNote = document.getElementById('soPlacardStepNote');
+        var _isPlacardCk = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(state.product);
+        if (_plNote) {
+            if (_isPlacardCk) {
+                if (wEl) wEl.step = '10';
+                if (hEl) hEl.step = '10';
+                var _plBad = (wCm % 10 !== 0) || (hCm % 10 !== 0);
+                state._placardSizeInvalid = _plBad || wCm < 10 || hCm < 10;
+                _plNote.style.display = '';
+                if (_plBad) {
+                    _plNote.style.background = '#fef2f2'; _plNote.style.border = '1.5px solid #fca5a5'; _plNote.style.color = '#b91c1c';
+                    _plNote.innerHTML = '⚠ ' + tr(
+                        '현수막은 <b>가로·세로 10cm 단위</b>로만 주문할 수 있어요. 현재 ' + wCm + '×' + hCm + 'cm 는 이대로 주문되지 않습니다. (예: 65 → 60 또는 70)',
+                        '横断幕は <b>横・縦とも 10cm 単位</b>のみご注文可能です。現在 ' + wCm + '×' + hCm + 'cm はこのままではご注文いただけません。(例: 65 → 60 か 70)',
+                        'Banners can only be ordered in <b>10 cm steps</b> (W & H). ' + wCm + ' x ' + hCm + ' cm cannot be ordered as-is. (e.g. 65 -> 60 or 70)'
+                    );
+                } else {
+                    _plNote.style.background = '#eff6ff'; _plNote.style.border = '1.5px solid #bfdbfe'; _plNote.style.color = '#1e40af';
+                    _plNote.innerHTML = tr(
+                        '현수막은 <b>가로·세로 10cm 단위</b>로 주문됩니다. (예: 300×60)',
+                        '横断幕は <b>横・縦とも 10cm 単位</b>でご注文いただけます。(例: 300×60)',
+                        'Banners are ordered in <b>10 cm steps</b> for width &amp; height. (e.g. 300 x 60)'
+                    );
+                }
+            } else {
+                _plNote.style.display = 'none';
+                state._placardSizeInvalid = false;
+            }
+        }
         var unitEl = document.getElementById('soCustomUnitPrice');
         var infoEl = document.getElementById('soCustomAreaInfo');
         // 2026-05-14: 아크릴 굿즈는 5cm×5cm 같은 소형이 정상 → min 1cm 허용 (현수막·배너만 min 10cm)
@@ -16176,6 +16208,20 @@ html, body { background: #ffffff !important; }
         // 2026-06-08: 실사출력 family — 최소 1미터 주문 (qty < 1 인 경우 자동 보정).
         if (state.isRealPrint) {
             if (!state.qty || state.qty < 1) state.qty = 1;
+        }
+        // 2026-07-04: 현수막(placard) 9종 — 가로·세로 10cm 단위만 주문 가능. 아니면 경고 + 담기 차단.
+        //   state.customW/H 는 _soOnCustomDimsChange 에서 cm 로 정규화됨 (placard 는 cm 입력).
+        if (typeof window._soIsPlacardProduct === 'function' && window._soIsPlacardProduct(state.product)) {
+            var _plWc = Math.round(Number(state.customW) || 0);
+            var _plHc = Math.round(Number(state.customH) || 0);
+            if (_plWc < 10 || _plHc < 10 || _plWc % 10 !== 0 || _plHc % 10 !== 0) {
+                try { alert(tr(
+                    '현수막은 가로·세로를 10cm 단위로만 주문할 수 있습니다.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm\n(예: 300 × 60 가능 / 300 × 65 불가)',
+                    '横断幕は 横・縦とも 10cm 単位でのみご注文いただけます。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm\n(例: 300 × 60 可 / 300 × 65 不可)',
+                    'Banners can only be ordered in 10 cm increments (width & height).\nEntered: ' + _plWc + ' x ' + _plHc + ' cm\n(e.g. 300 x 60 OK / 300 x 65 not allowed)'
+                )); } catch(e) {}
+                return false;
+            }
         }
         // 2026-06-14: 미니에디터에 디자인 요소가 있고 state.file 미설정이면 자동으로 PNG export → state.file 주입.
         //   사용자가 "디자인 완료 · 적용" 안 누르고 바로 장바구니 담아도 디자인이 함께 저장되도록.
