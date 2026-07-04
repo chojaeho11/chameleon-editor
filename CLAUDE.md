@@ -61,15 +61,20 @@
 - `advisor-panel.js` 수정 → `index.html` + `chameleon-chatbot.html` + `cotton_print.html` 의 `?v=NNN` 동시 bump
 - `_headers` 는 v171 이후 JS/CSS 를 no-cache 로 설정했지만 버전 번프는 CDN 캐시 무효화 + 브라우저 강제 재요청 보장용으로 계속 필요
 
-## 4. 배포 절차
+## 4. 배포 절차 — 반드시 `./deploy.sh` 사용 (고객 자동 최신화)
 
 ```bash
-git push origin main
-npx wrangler pages deploy . --project-name=chameleon-print --commit-dirty=true --commit-message="ASCII only"
+./deploy.sh "ASCII commit message"
 ```
 
+- **항상 `deploy.sh` 로 배포할 것.** 이 스크립트가 매 배포마다 `version.txt` + `index.html` 의 `var CV='...'` 를
+  **동일한 새 stamp(타임스탬프)** 로 교체한다. → 구버전을 보던 고객(일본/한국 모두)의 브라우저가
+  version.txt 불일치를 감지해 **스스로 새로고침** = 고객 수동 새로고침 없이 항상 최신 버전.
+  (자동 갱신 로직: index.html 상단 `[버전 자동 갱신]` 블록 — 최초 로드 즉시 + 탭 재포커스/online/bfcache 복귀 시 재체크, 작업 중이면 보류.)
+- 수동 `wrangler` 명령 직접 실행 금지 — version.txt/CV 갱신이 빠져 자동 최신화가 멈춤(휴면). 급하면 deploy.sh 내부 명령 참고.
 - **커밋 메시지는 반드시 ASCII** — 한국어 포함 시 "Invalid commit message" 에러
 - Cloudflare Pages 가 7개 도메인 (cafe2626 / cafe0101 / cafe3355 / chameleon.design / cotton-print / cotton-printer / hexa-board) 동시 배포
+- JS 를 수정했으면 `?v=NNN` bump 은 여전히 병행(§3) — deploy.sh 는 전역 자동새로고침, `?v=` 는 파일별 CDN 버스팅.
 
 ## 5. 사이트 감지 (3중 layer)
 
