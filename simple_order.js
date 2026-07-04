@@ -16933,7 +16933,15 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 라인 표시용 = 배송비 빼고 상품 가격만 (장바구니에서 배송비는 합계에서 1회만 부과).
         //   _soCalcItemPrice 는 항목별 shipping.fee 를 포함하므로 row 표시 시 이를 차감해 중복 표시 방지.
         var rowShipFee = (item && item.shipping && typeof item.shipping.fee === 'number') ? item.shipping.fee : 0;
-        if (item._isBestGoods) rowShipFee = 3000;  // 정액 3K (별도 가산)
+        if (item._isBestGoods) rowShipFee = 3000;  // 정액 3K (별도 가산 — _soCalcItemPrice 가 +3000 포함하므로 차감)
+        // 2026-07-04: _soCalcItemPrice 가 배송비를 포함하지 않는 상품(아크릴/실사출력/굿즈/묶음)은 final 에서 빼면 안 됨.
+        //   기존엔 item.shipping.fee(정액 스탬프)를 빼서 JP lineDisplay(=합계)가 유령 차감돼 単価와 불일치(아크릴 키링 사례).
+        else if ((typeof _soIsAcrylicFamilyItem === 'function' && _soIsAcrylicFamilyItem(item))
+                 || item._isRealPrint
+                 || (item.product && String(item.product.code || '').indexOf('goods_') === 0)
+                 || item.bundleShipping) {
+            rowShipFee = 0;
+        }
         var lineDisplay = Math.max(0, final - rowShipFee);
         return { unit, subtotal, discount, final, lineDisplay, tierPct };
     }
