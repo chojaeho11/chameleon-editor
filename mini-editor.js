@@ -1193,38 +1193,64 @@
                     var fxI = it.flipX ? -1 : 1;
                     var fyI = it.flipY ? -1 : 1;
                     var ixx = it.x, iyy = it.y, iww = it.w, ihh = it.h;
-                    await new Promise(function(resolve){
-                        var im = new Image();
-                        if (/^https?:/i.test(it.src)) im.crossOrigin = 'anonymous';
-                        im.onload = function(){
-                            try {
-                                // 2026-06-28: object-fit:fill 재현 — 박스 전체로 stretch (display 와 동일, 일러스트식 자유변형).
-                                //   박스 비율은 모서리=정비율 / 변=자유 로 조절되므로, 그림은 그 박스를 그대로 채움.
-                                var drawW = iww, drawH = ihh, drawX = ixx, drawY = iyy;
-                                var needTransform = rotI || fxI !== 1 || fyI !== 1;
-                                if (needTransform) {
-                                    ctx.save();
-                                    var iccx = ixx + iww/2, iccy = iyy + ihh/2;
-                                    ctx.translate(iccx, iccy);
-                                    if (rotI) ctx.rotate(rotI * Math.PI / 180);
-                                    if (fxI !== 1 || fyI !== 1) ctx.scale(fxI, fyI);
-                                    // contain 적용한 draw 좌표 (박스 중앙 기준 상대좌표)
-                                    var relX = drawX - iccx;
-                                    var relY = drawY - iccy;
-                                    ctx.drawImage(im, relX, relY, drawW, drawH);
-                                    ctx.restore();
-                                } else {
-                                    ctx.drawImage(im, drawX, drawY, drawW, drawH);
-                                }
-                            } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
-                            resolve();
-                        };
-                        im.onerror = function(){
-                            console.warn('[_meExportPNG] image load failed (will be missing from export)');
-                            resolve();
-                        };
-                        im.src = it.src;
-                    });
+                    // 2026-07-04: 원격 이미지 export 실패(빈 썸네일) 수정.
+                    //   기존엔 crossOrigin='anonymous' 로만 로드 → Supabase/외부가 CORS 응답 안 하면 onerror → 이미지 누락(흰 배경만).
+                    //   display 는 crossOrigin 없이 로드하므로 화면엔 보이는데 썸네일만 빈 현상. (김경희 매니저 사례)
+                    //   해결: fetch→blob(object URL) 로 먼저 로드 → CORS 허용 시 untainted clean draw. 실패 시 crossOrigin→plain 폴백.
+                    var _meDrawExportImg = function(im){
+                        try {
+                            var drawW = iww, drawH = ihh, drawX = ixx, drawY = iyy;
+                            var needTransform = rotI || fxI !== 1 || fyI !== 1;
+                            if (needTransform) {
+                                ctx.save();
+                                var iccx = ixx + iww/2, iccy = iyy + ihh/2;
+                                ctx.translate(iccx, iccy);
+                                if (rotI) ctx.rotate(rotI * Math.PI / 180);
+                                if (fxI !== 1 || fyI !== 1) ctx.scale(fxI, fyI);
+                                ctx.drawImage(im, drawX - iccx, drawY - iccy, drawW, drawH);
+                                ctx.restore();
+                            } else {
+                                ctx.drawImage(im, drawX, drawY, drawW, drawH);
+                            }
+                        } catch(_de){ console.warn('[_meExportPNG] drawImage failed', _de); }
+                    };
+                    var _meLoadImg = function(src, useCO){
+                        return new Promise(function(res){
+                            var im = new Image();
+                            if (useCO) im.crossOrigin = 'anonymous';
+                            im.onload = function(){ res(im); };
+                            im.onerror = function(){ res(null); };
+                            im.src = src;
+                        });
+                    };
+                    await (async function(){
+                        var src = it.src;
+                        // data:/blob: 는 same-origin — 바로 로드 (taint 없음)
+                        if (/^(data:|blob:)/i.test(src)) {
+                            var im0 = await _meLoadImg(src, false);
+                            if (im0) _meDrawExportImg(im0);
+                            else console.warn('[_meExportPNG] data/blob image load failed');
+                            return;
+                        }
+                        // 원격: fetch→objectURL (CORS 허용 소스는 이걸로 untainted 하게 그려짐)
+                        try {
+                            var resp = await fetch(src, { mode: 'cors', credentials: 'omit' });
+                            if (resp && resp.ok) {
+                                var blob = await resp.blob();
+                                var objUrl = URL.createObjectURL(blob);
+                                var imF = await _meLoadImg(objUrl, false);
+                                URL.revokeObjectURL(objUrl);
+                                if (imF) { _meDrawExportImg(imF); return; }
+                            }
+                        } catch(_fe){ /* CORS/네트워크 실패 → 폴백 */ }
+                        // 폴백1: crossOrigin Image (CORS 헤더 주는 소스)
+                        var imC = await _meLoadImg(src, true);
+                        if (imC) { _meDrawExportImg(imC); return; }
+                        // 폴백2: crossOrigin 없이 (display 파리티 — 그려지되 canvas taint 가능 → toDataURL 에서 감지)
+                        var imP = await _meLoadImg(src, false);
+                        if (imP) _meDrawExportImg(imP);
+                        else console.warn('[_meExportPNG] image load failed (will be missing from export)');
+                    })();
                 }
             }
             try {
