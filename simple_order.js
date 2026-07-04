@@ -1905,8 +1905,12 @@ html, body { background: #ffffff !important; }
         <div class="so-section" id="soLeafletPresetSec" style="display:none;">
           <div class="so-section-title">${tr('규격 사이즈', '規格サイズ', 'Standard size')}</div>
           <div id="soLeafletSizeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:6px;"></div>
-          <div style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:10px; line-height:1.55; font-weight:600;">
+          <div id="soLfMinOneNotice" style="font-size:12px; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:9px 11px; margin-top:10px; line-height:1.55; font-weight:600;">
             ✅ ${tr('1장(1매)부터 제작 가능합니다 — 소량 주문 환영', '1枚から作成可能 · 小ロットのご注文も歓迎です', 'Orderable from just 1 sheet — small quantities welcome')}
+          </div>
+          <!-- 2026-07-04: A3 초과 사이즈(A2 등·비규격 포함)는 디지털 소량인쇄 불가 → 최소 1,000장. _soRenderLeafletAll 에서 토글. -->
+          <div id="soLfBulkNotice" style="display:none; font-size:12px; color:#9a3412; background:#fff7ed; border:1.5px solid #fb923c; border-radius:8px; padding:10px 12px; margin-top:10px; line-height:1.6; font-weight:700;">
+            ⚠ ${tr('A3보다 큰 사이즈(A2 등)는 디지털 소량인쇄가 불가하여 <b>최소 1,000장</b>부터 주문됩니다.', 'A3より大きいサイズ(A2 など)はデジタル小ロット印刷ができないため <b>最小1,000枚</b>からのご注文となります。', 'Sizes larger than A3 (A2, etc.) cannot be digitally printed in small runs — <b>minimum 1,000 sheets</b>.')}
           </div>
           <div style="font-size:12px; color:#7c2d12; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:9px 11px; margin-top:8px; line-height:1.6; font-weight:600;">
             📉 ${tr('수량 볼륨 할인', '数量ボリューム割引', 'Volume discount')} — ${tr('100장 50% · 500장 76% · 1,000장 84% 할인', '100枚 50% · 500枚 76% · 1,000枚 84% OFF', '100:50% · 500:76% · 1,000:84% off')}
@@ -6315,6 +6319,27 @@ html, body { background: #ffffff !important; }
         return Math.round(per * qty * disc);
     }
     window._soLeafletOptMult = _soLeafletOptMult;
+    // 2026-07-04: 낱장 인쇄 — A3(297×420) 초과 사이즈는 디지털 소량인쇄 불가 → 최소 1,000장.
+    //   규격 A2 이거나, 비규격 실치수가 A3 를 벗어나면(회전 포함) bulk.
+    var LEAFLET_MIN_BULK_QTY = 1000;
+    function _soLeafletNeedsBulk() {
+        if (state.leafletSize === 'A2') return true;
+        if (state.leafletCustomW && state.leafletCustomH) {
+            var lo = Math.min(state.leafletCustomW, state.leafletCustomH);
+            var hi = Math.max(state.leafletCustomW, state.leafletCustomH);
+            if (hi > 420 || lo > 297) return true;
+        }
+        return false;
+    }
+    function _soLeafletEnforceMinQty() {
+        if (!state.isLeaflet || !_soLeafletNeedsBulk()) return;
+        if ((parseInt(state.qty, 10) || 1) < LEAFLET_MIN_BULK_QTY) {
+            state.qty = LEAFLET_MIN_BULK_QTY;
+            var qi = document.getElementById('soQty');
+            if (qi) qi.value = LEAFLET_MIN_BULK_QTY;
+        }
+    }
+    window._soLeafletNeedsBulk = _soLeafletNeedsBulk;
     function _soIsLeafletProduct(p) {
         if (!p) return false;
         var code = (p.code || '').toLowerCase();
@@ -6484,6 +6509,14 @@ html, body { background: #ffffff !important; }
                 }
             }
         } catch(_lbE){}
+        // 2026-07-04: A3 초과(A2 등·비규격) → 최소 1,000장 안내 토글 + 소량 안내 숨김.
+        try {
+            var _lfBulk = _soLeafletNeedsBulk();
+            var _bulkEl = document.getElementById('soLfBulkNotice');
+            var _minOneEl = document.getElementById('soLfMinOneNotice');
+            if (_bulkEl) _bulkEl.style.display = _lfBulk ? '' : 'none';
+            if (_minOneEl) _minOneEl.style.display = _lfBulk ? 'none' : '';
+        } catch(_bkE){}
     }
     // 2026-07-01: 책자제본 (435345435) — 사이즈 + 표지/내지 용지 + 페이지수 × 권수. 박/후가공은 하단 soCp 공용 사용.
     var BOOKLET_CODE = '435345435';
@@ -6567,8 +6600,13 @@ html, body { background: #ffffff !important; }
 
     window._soPickLeafletSize = function(id) {
         state.leafletSize = id;
+        // 규격 선택 시 비규격 치수 초기화 (stale 치수가 bulk 판정 오염 방지)
+        state.leafletCustomW = null;
+        state.leafletCustomH = null;
         var sz = LEAFLET_SIZES.find(function(s){ return s.id === id; });
         if (sz) { state.customW = sz.wMm / 10; state.customH = sz.hMm / 10; }
+        // 2026-07-04: A3 초과(A2)면 최소 1,000장 자동 보정
+        _soLeafletEnforceMinQty();
         _soRenderLeafletAll();
         if (typeof recalc === 'function') recalc();
     };
@@ -6941,6 +6979,8 @@ html, body { background: #ffffff !important; }
                 noticeEl.style.display = '';
                 noticeEl.textContent = '✓ 입력 사이즈 ' + w + '×' + h + 'mm → ' + autoId + ' 사이즈 가격으로 계산됩니다.';
             }
+            // 2026-07-04: 비규격이 A3 초과면 최소 1,000장 자동 보정
+            _soLeafletEnforceMinQty();
             _soRenderLeafletAll();
             if (typeof recalc === 'function') recalc();
         } else {
@@ -11583,7 +11623,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
         // 2026-06-30: 종이매대 낱개 주문 허용 (샘플 1 / 낱개 2~99 / 대량 100+) → MOQ 1
-        const _qtyMin = 1;
+        // 2026-07-04: 낱장 A3 초과(A2 등) → 최소 1,000장
+        const _qtyMin = (state.isLeaflet && _soLeafletNeedsBulk()) ? LEAFLET_MIN_BULK_QTY : 1;
         const next = Math.max(_qtyMin, Math.min(_qtyMax, cur + delta));
         input.value = next;
         state.qty = next;
@@ -11604,6 +11645,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 금액주문은 수량(=금액) 무제한 — 9999 클램프 해제
         const _qtyMax = state.isAmountOrder ? 99999999 : 9999;
         // 2026-06-30: 종이매대 낱개 주문 허용 (샘플 1 / 낱개 2~99 / 대량 100+) → MOQ 1
+        // 2026-07-04: 낱장 A3 초과(A2 등)는 최소 1,000장이지만, 타이핑 중 클램프하면 "5000" 입력이 막히므로
+        //   여기선 min 1 유지. 실제 강제는 사이즈선택 자동보정 + 주문(doAddToCart) 차단 + +/- 버튼 클램프.
         const _qtyMin = 1;
         let v = Math.max(_qtyMin, Math.min(_qtyMax, parseInt(input.value) || _qtyMin));
         if (v !== parseInt(input.value)) input.value = v;
@@ -16219,6 +16262,18 @@ html, body { background: #ffffff !important; }
                     '현수막은 가로·세로를 10cm 단위로만 주문할 수 있습니다.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm\n(예: 300 × 60 가능 / 300 × 65 불가)',
                     '横断幕は 横・縦とも 10cm 単位でのみご注文いただけます。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm\n(例: 300 × 60 可 / 300 × 65 不可)',
                     'Banners can only be ordered in 10 cm increments (width & height).\nEntered: ' + _plWc + ' x ' + _plHc + ' cm\n(e.g. 300 x 60 OK / 300 x 65 not allowed)'
+                )); } catch(e) {}
+                return false;
+            }
+        }
+        // 2026-07-04: 낱장 인쇄 — A3 초과 사이즈(A2 등·비규격 포함)는 최소 1,000장. 미만이면 경고 + 담기 차단.
+        if (state.isLeaflet && typeof _soLeafletNeedsBulk === 'function' && _soLeafletNeedsBulk()) {
+            var _lfQ = parseInt(state.qty, 10) || 1;
+            if (_lfQ < LEAFLET_MIN_BULK_QTY) {
+                try { alert(tr(
+                    'A3보다 큰 사이즈는 디지털 소량인쇄가 불가하여 최소 1,000장부터 주문할 수 있습니다.\n현재 수량: ' + _lfQ + '장\n수량을 1,000장 이상으로 입력해 주세요.',
+                    'A3より大きいサイズはデジタル小ロット印刷ができないため、最小1,000枚からのご注文となります。\n現在の数量: ' + _lfQ + '枚\n1,000枚以上でご入力ください。',
+                    'Sizes larger than A3 require a minimum of 1,000 sheets (no small-run digital printing).\nCurrent qty: ' + _lfQ + '\nPlease enter 1,000 or more.'
                 )); } catch(e) {}
                 return false;
             }
