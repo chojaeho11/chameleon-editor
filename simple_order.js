@@ -6319,6 +6319,17 @@ html, body { background: #ffffff !important; }
         return Math.round(per * qty * disc);
     }
     window._soLeafletOptMult = _soLeafletOptMult;
+    // 2026-07-04: 낱장 인쇄 실제 사이즈(mm) — leafletSize(규격) 또는 leafletCustomW/H(비규격)가 authoritative.
+    //   customSize/customW 는 desync 위험 → 카트표시/주문/작업지시서는 모두 이 함수로 통일.
+    //   o 는 state 또는 cart item (둘 다 leafletSize/leafletCustomW/H 보유).
+    function _soLeafletDimsMm(o) {
+        if (!o) return null;
+        if (o.leafletCustomW && o.leafletCustomH) return { w: Math.round(o.leafletCustomW), h: Math.round(o.leafletCustomH) };
+        var sz = (typeof LEAFLET_SIZES !== 'undefined') ? LEAFLET_SIZES.find(function(s){ return s.id === o.leafletSize; }) : null;
+        if (sz) return { w: sz.wMm, h: sz.hMm };
+        return null;
+    }
+    window._soLeafletDimsMm = _soLeafletDimsMm;
     // 2026-07-04: 낱장 인쇄 — A3(297×420) 초과 사이즈는 디지털 소량인쇄 불가 → 최소 1,000장.
     //   규격 A2 이거나, 비규격 실치수가 A3 를 벗어나면(회전 포함) bulk.
     var LEAFLET_MIN_BULK_QTY = 1000;
@@ -6975,6 +6986,9 @@ html, body { background: #ffffff !important; }
             state.leafletSize = autoId;
             state.leafletCustomW = w;
             state.leafletCustomH = h;
+            // 2026-07-04: 비규격 실치수를 customW/H(cm) 로도 동기화 — 편집기 대지·customSize 표시가 실제 사이즈 반영.
+            state.customW = w / 10;
+            state.customH = h / 10;
             if (noticeEl) {
                 noticeEl.style.display = '';
                 noticeEl.textContent = '✓ 입력 사이즈 ' + w + '×' + h + 'mm → ' + autoId + ' 사이즈 가격으로 계산됩니다.';
@@ -8331,7 +8345,9 @@ html, body { background: #ffffff !important; }
             // 가벽과 동일한 옵션·가격 사용 (아래 일반 분기로 fall through)
         }
         // 2026-06-12: 명함/리플렛 — 허니콤보드 외 전 제품 무료배송 정책 (사용자 요청)
-        if (state.isBizCard) {
+        // 2026-07-04: 낱장(리플렛)도 per-item 배송비 0 — 카트 전체 택배 5,000원 정액(묶음)만 부과.
+        //   기존엔 fall-through 로 10,000원이 찍혀 아이템 박스에 "배송 +10,000" 표시되던 버그.
+        if (state.isBizCard || state.isLeaflet) {
             state._shipUpgradeReason = null;
             return 0;
         }
@@ -17388,25 +17404,20 @@ html, body { background: #ffffff !important; }
                     _noticeWrap.style.borderColor = '#86efac';
                     _noticeWrap.style.color = '#14532d';
                     // 2026-06-26: 허니콤보드=시공/배송, 그 외=택배비 5,000원(JP 500엔). 무료(0)는 면제 케이스만.
+                    // 2026-07-04: 허니콤(시공/배송)만 별도 라인. 그 외(택배 5,000 정액)·무료·JP 는 header 로 충분 — 중복 라인 제거.
                     var _shipLine;
-                    if (_shipFinal === 0) {
+                    if (!_hasHcInCart2) {
+                        _shipLine = '';
+                    } else if (_shipFinal === 0) {
                         _shipLine = tr('✅ <b>무료배송</b>', '✅ <b>送料無料</b>', '✅ <b>FREE shipping</b>');
-                    } else if (_hasHcInCart2) {
+                    } else {
                         _shipLine = tr(
                             '배송비 <b>' + fmtPrice(_shipFinal) + '</b> (허니콤보드 시공/배송)',
                             '配送料 <b>' + fmtPrice(_shipFinal) + '</b> (ハニカムボード設置/配送)',
                             'Shipping <b>' + fmtPrice(_shipFinal) + '</b> (Honeycomb install/delivery)'
                         );
-                    } else if (window.__SITE_CODE === 'JP') {
-                        _shipLine = '';   // 2026-07-03: JP 는 header(宅配 送料 全国一律)에 이미 표시 — 중복 라인 제거 (일본 직원 지적)
-                    } else {
-                        _shipLine = tr(
-                            '🚚 택배 배송비 <b>' + fmtPrice(_shipFinal) + '</b>',
-                            '🚚 宅配 送料 <b>' + fmtPrice(_shipFinal) + '</b>',
-                            '🚚 Parcel shipping <b>' + fmtPrice(_shipFinal) + '</b>'
-                        );
                     }
-                    var _freeShipTh = fmtPrice(50000);   // 5만원 (JP 5,000엔 / US $50)
+                    // 2026-07-04: "5만원 이상 무료배송" 정책 제거 — 택배 5,000원 정액 묶음배송 (사용자 요청).
                     var _headerLine = _hasHcInCart2
                         ? tr('💚 최소주문 ' + _minLabel + ' 이상',
                              '💚 最低注文 ' + _minLabel + ' 以上',
@@ -17414,12 +17425,12 @@ html, body { background: #ffffff !important; }
                         : (_shipFinal > 0
                             ? (window.__SITE_CODE === 'JP'
                                 ? '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (全国一律)'   // 2026-06-30: JP 정액 — 무료기준 없음
-                                : tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 이상 무료배송',
-                                     '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' · ' + _freeShipTh + ' 以上で送料無料',
-                                     '💚 Shipping ' + fmtPrice(_shipFinal) + ' · FREE over ' + _freeShipTh))
-                            : tr('💚 무료배송 (' + _freeShipTh + ' 이상)',
-                                 '💚 送料無料 (' + _freeShipTh + ' 以上)',
-                                 '💚 Free shipping (over ' + _freeShipTh + ')'));
+                                : tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' (묶음배송)',
+                                     '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (まとめ配送)',
+                                     '💚 Shipping ' + fmtPrice(_shipFinal) + ' (bundled)'))
+                            : tr('✅ 무료배송',
+                                 '✅ 送料無料',
+                                 '✅ Free shipping'));
                     _noticeText.innerHTML =
                         '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
                         (_shipLine ? '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>' : '');
@@ -18249,9 +18260,9 @@ html, body { background: #ffffff !important; }
         });
         // 2026-06-13: 사용자 요청 — 자동 +30K 포장배송비 제거.
         //   대신 허니콤보드 family 는 최소주문 100K, 그 외 30K 로 강제 차단 (renderSoCart 에서 경고 + 버튼 비활성화).
-        // 2026-06-26: 허니콤보드 외 상품군 카트 → 택배비 5,000원 (JP 500엔 / US $5, fmtPrice 환산).
-        //   단, ① 상품합계 5만원 이상 무료배송 ② 금액주문/매니저견적/개인결제(_hasAmountOrder)
-        //   ③ 디자인비 전용 카트 ④ 빈 카트 는 배송비 면제.
+        // 2026-06-26: 허니콤보드 외 상품군 카트 → 택배비 5,000원 (JP 500엔 / US $5, fmtPrice 환산). 묶음배송 1회 정액.
+        //   2026-07-04: "5만원 이상 무료배송" 정책 제거 (사용자 요청) — 금액 무관 항상 5,000원.
+        //   면제: ① 금액주문/매니저견적/개인결제(_hasAmountOrder) ② 디자인비 전용 카트 ③ 빈 카트.
         if (!_hasHcInCart) {
             var _allDesignFee = cart.length > 0 && cart.every(function(_it){
                 var _p = (_it && _it.product) ? _it.product : {};
@@ -18259,7 +18270,7 @@ html, body { background: #ffffff !important; }
                 var _cat = String(_p.category || _it.category || '');
                 return _cat === 'design_fee' || _code.indexOf('design_fee_') === 0;
             });
-            var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee || (_allProductSub >= 50000);
+            var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee;
             shipTotal = _shipExempt ? 0 : 5000;
         }
         // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 500엔(5,000원) 정액 통일 (2026-07-01 1000엔→500엔).
@@ -18636,7 +18647,11 @@ html, body { background: #ffffff !important; }
                     else if ((_lng === 'en' || _lng === 'es' || _lng === 'de' || _lng === 'fr' || _lng === 'zh' || _lng === 'ar') && it._keyringCut.label_en) _cl = it._keyringCut.label_en;
                     opts += ' · ' + _cl;
                 }
-                if (it.customSize && it.customSize.w_cm) {
+                // 2026-07-04: 낱장은 leafletSize/비규격이 authoritative (customSize desync 방지). A2 등 정확 표시.
+                if (it._isLeaflet) {
+                    var _lfD = _soLeafletDimsMm(it);
+                    if (_lfD) opts += ' · ' + (it.leafletSize && !it.leafletCustomW ? it.leafletSize + ' ' : '') + Math.round(_lfD.w / 10) + '×' + Math.round(_lfD.h / 10) + 'cm';
+                } else if (it.customSize && it.customSize.w_cm) {
                     opts += ' · ' + it.customSize.w_cm + '×' + it.customSize.h_cm + 'cm';
                 }
             }
@@ -19227,12 +19242,15 @@ html, body { background: #ffffff !important; }
                 var _stkW = (it.sticker && it.sticker.w) ? it.sticker.w : null;
                 var _stkH = (it.sticker && it.sticker.h) ? it.sticker.h : null;
                 var _stkQty = (it.sticker && it.sticker.qty) ? it.sticker.qty : null;
+                // 2026-07-04: 낱장 인쇄 — 선택 사이즈(규격 A2 등 / 비규격)를 width_mm/height_mm 로 반영.
+                //   기존엔 product.w_mm(A4 210×297) 로 떨어져 A2 주문이 작업지시서/요약에 21×29 로 잘못 표시되던 버그.
+                var _lfDimsMm = it._isLeaflet ? _soLeafletDimsMm(it) : null;
                 return Object.assign({}, it, {
                     product_code: (it.product && it.product.code) || '',
                     product_name: (it.product && (it.product.name || it.product.name_jp || it.product.name_us)) || (it.productName || ''),
                     qty: _stkQty || it.qty || 1,
-                    width_mm: (wallSizeMm && wallSizeMm.width_mm) || _stkW || it.width || (it.product && it.product.w_mm) || null,
-                    height_mm: (wallSizeMm && wallSizeMm.height_mm) || _stkH || it.height || (it.product && it.product.h_mm) || null,
+                    width_mm: (wallSizeMm && wallSizeMm.width_mm) || (_lfDimsMm && _lfDimsMm.w) || _stkW || it.width || (it.product && it.product.w_mm) || null,
+                    height_mm: (wallSizeMm && wallSizeMm.height_mm) || (_lfDimsMm && _lfDimsMm.h) || _stkH || it.height || (it.product && it.product.h_mm) || null,
                     unit_price: (it.product && it.product.price) || 0,
                     price: _soCalcItemPrice(it),
                     source: 'cafe2626',
