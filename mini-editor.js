@@ -1487,6 +1487,10 @@
         var outline = !!(opts && opts.outline);
         // 2026-06-27: PDF(svg2pdf) 는 <image> 안의 SVG 를 못 그림 → 이미지를 PNG 로 래스터화해 넣어야 프레임이 PDF 에 보임.
         var rasterize = !!(opts && opts.rasterizeImages);
+        // 2026-07-06: SVG 자산을 벡터 인라인하지 않고 강제 래스터 (단계적 폴백 2단계용).
+        //   특정 디자이너 SVG 가 svg2pdf 를 throw 시켜 전체 디자인이 PNG 로 떨어지는 것을 막고,
+        //   그 SVG 만 래스터·나머지(텍스트/도형/배경)는 벡터로 유지하기 위함.
+        var forceRasterSvg = !!(opts && opts.forceRasterSvg);
         try {
             if (!me || !me.natW || !me.natH) return null;
             // contenteditable 강제 sync + v630: _meGetCleanText 사용 (× 제외)
@@ -1617,6 +1621,20 @@
                     var liveSvg = document.importNode(sv, true);
                     holder.appendChild(liveSvg);
                     document.body.appendChild(holder);
+                    // 2026-07-06: svg2pdf 안전 — 비렌더/사유 네임스페이스 요소 제거 (Illustrator <i:pgf>, Inkscape sodipodi/inkscape,
+                    //   metadata/script/foreignObject/title/desc). 스톡 SVG 에 흔하며 svg2pdf 를 throw 시켜 전체 디자인이 PNG 로 떨어지게 함.
+                    try {
+                        var _junk = [];
+                        var _allEl = liveSvg.getElementsByTagName('*');
+                        for (var _ji = 0; _ji < _allEl.length; _ji++) {
+                            var _jtn = (_allEl[_ji].tagName || '').toLowerCase();
+                            var _jlocal = _jtn.indexOf(':') >= 0 ? _jtn.split(':').pop() : _jtn;
+                            if (_jtn.indexOf(':') >= 0 || _jlocal === 'metadata' || _jlocal === 'script' || _jlocal === 'foreignobject' || _jlocal === 'title' || _jlocal === 'desc') {
+                                _junk.push(_allEl[_ji]);
+                            }
+                        }
+                        _junk.forEach(function(n){ try { n.parentNode && n.parentNode.removeChild(n); } catch(_){} });
+                    } catch(_jke){}
                     var SP = ['fill','fill-opacity','fill-rule','stroke','stroke-width','stroke-opacity','stroke-linecap','stroke-linejoin','stroke-miterlimit','stroke-dasharray','stroke-dashoffset','opacity'];
                     var nodes = liveSvg.querySelectorAll('path,rect,circle,ellipse,polygon,polyline,line,text,tspan,g,use');
                     for (var ni = 0; ni < nodes.length; ni++) {
@@ -1690,11 +1708,13 @@
                     // 2026-06-28: PDF(svg2pdf)는 <image> 속 SVG 를 못 그림. 대형 출력은 벡터여야 하므로
                     //   SVG 를 <g transform>(ID 네임스페이스 평탄화)로 벡터 인라인 시도 → 실패 시에만 PNG 래스터화 폴백.
                     if (rasterize && _isSvgImg) {
-                        try {
-                            var _svgTxt2 = await _resolveSvgText(it.src, dataUrl);
-                            var _grp = _svgTxt2 ? _buildInlineSvgGroup(_svgTxt2, it.x, it.y, it.w, it.h, ii) : null;
-                            if (_grp) { parts.push(_grp); _imgEmitted = true; }
-                        } catch(_se) { console.warn('[svg vector inline]', _se); }
+                        if (!forceRasterSvg) {
+                            try {
+                                var _svgTxt2 = await _resolveSvgText(it.src, dataUrl);
+                                var _grp = _svgTxt2 ? _buildInlineSvgGroup(_svgTxt2, it.x, it.y, it.w, it.h, ii) : null;
+                                if (_grp) { parts.push(_grp); _imgEmitted = true; }
+                            } catch(_se) { console.warn('[svg vector inline]', _se); }
+                        }
                         if (!_imgEmitted && dataUrl) {
                             var _png = await _imgToPng(dataUrl, it.w, it.h);
                             if (_png) dataUrl = _png;
@@ -1944,36 +1964,41 @@
         var widthMm  = Math.max(10, me.natWMm || (me.natW / PX_PER_MM));
         var heightMm = Math.max(10, me.natHMm || (me.natH / PX_PER_MM));
 
-        // 1) 벡터 경로: SVG (텍스트 outline) → svg2pdf
+        // 2026-07-06: 단계적 폴백 — 디자이너 SVG 하나가 svg2pdf 를 throw 시켜도 전체가 PNG 로 안 떨어지게.
+        //   Tier1 전체 벡터(SVG 자산 인라인) → 실패 시 Tier2 (SVG 자산만 래스터, 텍스트/도형/배경 벡터 유지) → 실패 시 Tier3 전체 PNG.
+        async function _svgTextToPdfBlob(svgText) {
+            if (!svgText || svgText.length <= 100) return null;
+            var parser = new DOMParser();
+            var svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+            var svgEl = svgDoc.documentElement;
+            if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') return null;
+            if (svgDoc.getElementsByTagName('parsererror').length) { console.warn('[me pdf] export SVG parse error'); return null; }
+            // svg2pdf 가 DOM 에 붙어있길 요구할 수 있어 임시 컨테이너에 mount
+            var holder = document.createElement('div');
+            holder.style.cssText = 'position:absolute; left:-99999px; top:0; visibility:hidden;';
+            document.body.appendChild(holder);
+            holder.appendChild(svgEl);
+            var doc = new jsPDF({ orientation: widthMm > heightMm ? 'l' : 'p', unit: 'mm', format: [widthMm, heightMm], compress: true });
+            try {
+                await doc.svg(svgEl, { x: 0, y: 0, width: widthMm, height: heightMm });
+                try { holder.remove(); } catch(_){}
+                return doc.output('blob');
+            } catch (svgErr) {
+                console.warn('[me pdf] svg2pdf render failed:', svgErr);
+                try { holder.remove(); } catch(_){}
+                return null;
+            }
+        }
         try {
             if (typeof window._meExportSVG === 'function' && (await _loadSvg2PdfIfNeeded())) {
-                var svgText = await window._meExportSVG({ outline: true, rasterizeImages: true });
-                if (svgText && svgText.length > 100) {
-                    var parser = new DOMParser();
-                    var svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-                    var svgEl = svgDoc.documentElement;
-                    if (svgEl && svgEl.nodeName.toLowerCase() === 'svg') {
-                        // svg2pdf 가 DOM 에 붙어있길 요구할 수 있어 임시 컨테이너에 mount
-                        var holder = document.createElement('div');
-                        holder.style.cssText = 'position:absolute; left:-99999px; top:0; visibility:hidden;';
-                        document.body.appendChild(holder);
-                        holder.appendChild(svgEl);
-                        var doc = new jsPDF({
-                            orientation: widthMm > heightMm ? 'l' : 'p',
-                            unit: 'mm',
-                            format: [widthMm, heightMm],
-                            compress: true
-                        });
-                        try {
-                            await doc.svg(svgEl, { x: 0, y: 0, width: widthMm, height: heightMm });
-                            holder.remove();
-                            return doc.output('blob');
-                        } catch (svgErr) {
-                            console.warn('[me pdf] svg2pdf render failed, fallback to PNG:', svgErr);
-                            try { holder.remove(); } catch(_){}
-                        }
-                    }
-                }
+                // Tier1: 전체 벡터
+                var _b1 = await _svgTextToPdfBlob(await window._meExportSVG({ outline: true, rasterizeImages: true }));
+                if (_b1) return _b1;
+                // Tier2: SVG 자산만 래스터 (텍스트/도형/배경 벡터 유지) — svg2pdf 를 깨뜨리는 SVG 가 있어도 나머지는 벡터로.
+                console.warn('[me pdf] tier1(full vector) failed → tier2 (rasterize SVG assets, keep text/shapes vector)');
+                var _b2 = await _svgTextToPdfBlob(await window._meExportSVG({ outline: true, rasterizeImages: true, forceRasterSvg: true }));
+                if (_b2) return _b2;
+                console.warn('[me pdf] tier2 failed → tier3 (full PNG)');
             }
         } catch(e) { console.warn('[me pdf] SVG path errored, fallback to PNG:', e); }
 
