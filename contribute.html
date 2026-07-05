@@ -660,6 +660,20 @@ async function translateKeywords() {
     }
 }
 
+// 2026-07-06: 가짜 벡터 감지 — SVG 안에 래스터(PNG/JPG) 이미지를 박은 파일. 대형 인쇄 시 픽셀 깨짐 → 업로드 차단.
+function _svgIsFakeVector(svgText) {
+    if (!svgText) return false;
+    const s = String(svgText);
+    // 1) <image> 에 래스터(data:image/png|jpg... 또는 .png/.jpg URL) 임베드 → 가짜 벡터
+    if (/<image\b[^>]*(?:xlink:href|href)\s*=\s*["']?\s*data:image\/(png|jpe?g|gif|webp|bmp)/i.test(s)) return true;
+    if (/<image\b[^>]*(?:xlink:href|href)\s*=\s*["'][^"']*\.(png|jpe?g|gif|webp|bmp)([\s"'?#]|$)/i.test(s)) return true;
+    // 2) <image> 는 있는데 벡터 경로가 사실상 없음(래스터 래퍼)
+    const hasImage = /<image\b/i.test(s);
+    const vectorCount = (s.match(/<(path|rect|circle|ellipse|polygon|polyline|line|text)\b/gi) || []).length;
+    if (hasImage && vectorCount <= 1) return true;
+    return false;
+}
+
 async function submitUpload() {
     const _A = (ko, ja, en) => _LANG === 'ja' ? ja : _LANG === 'en' ? en : ko;
     const name = (document.getElementById('uploadName').value || '').trim();
@@ -674,6 +688,25 @@ async function submitUpload() {
     if (!okExt) { alert(_A('허용된 파일 형식: ', '対応ファイル形式: ', 'Allowed file types: ') + m.exts.join(', ')); return; }
     const maxMB = currentType === 'image' ? 10 : 5;
     if (file.size > maxMB * 1024 * 1024) { alert(_A('파일이 너무 큽니다 (', 'ファイルが大きすぎます (', 'File too large (') + maxMB + 'MB).'); return; }
+
+    // 2026-07-06: 벡터(SVG) 는 실제 벡터인지 검사 — PNG/JPG 를 감싼 "가짜 벡터" 는 대형 인쇄에서 픽셀 깨짐 → 차단.
+    if (currentType === 'vector') {
+        try {
+            const svgTxt = await file.text();
+            if (!/<svg[\s>]/i.test(svgTxt)) {
+                alert(_A('올바른 SVG 파일이 아닙니다.','正しいSVGファイルではありません。','Not a valid SVG file.'));
+                return;
+            }
+            if (_svgIsFakeVector(svgTxt)) {
+                alert(_A(
+                    '이 SVG 는 실제 벡터가 아니라 이미지(PNG/JPG)를 감싼 "가짜 벡터" 입니다.\n대형 인쇄 시 픽셀이 깨져 사용할 수 없어 업로드가 차단되었습니다.\n\n일러스트레이터 등에서 "이미지 추적(벡터화)" 후 순수 경로(path)로 저장해 다시 올려주세요.',
+                    'このSVGは実際のベクターではなく、画像(PNG/JPG)を包んだ「偽ベクター」です。\n大判印刷でピクセルが粗くなり使用できないため、アップロードをブロックしました。\n\nイラストレーター等で「画像トレース(ベクター化)」してパスとして保存し、再度アップロードしてください。',
+                    'This SVG is not a true vector — it wraps a raster image (PNG/JPG).\nIt pixelates in large-format printing, so the upload was blocked.\n\nPlease vectorize it (Image Trace) and save as pure paths, then re-upload.'
+                ));
+                return;
+            }
+        } catch(_fv) { console.warn('[fake vector check]', _fv); }
+    }
 
     const btn = document.getElementById('uploadSubmit');
     btn.disabled = true; btn.textContent = _A('업로드 중...','アップロード中...','Uploading...');

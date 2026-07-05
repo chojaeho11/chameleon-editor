@@ -14431,6 +14431,20 @@ html, body { background: #ffffff !important; }
             var fname = (file.name || '').toLowerCase();
             if (selectedType === 'vector' && !/\.svg$/.test(fname)) { alert('벡터는 SVG 파일만 가능합니다.'); return; }
             if (selectedType !== 'vector' && /\.svg$/.test(fname)) { alert('이미지/로고는 PNG · JPG 만 가능합니다.'); return; }
+            // 2026-07-06: 벡터(SVG) 는 실제 벡터인지 검사 — PNG/JPG 를 감싼 "가짜 벡터" 는 대형 인쇄 픽셀 깨짐 → 차단.
+            if (selectedType === 'vector') {
+                try {
+                    var _svgTxt = await file.text();
+                    if (!/<svg[\s>]/i.test(_svgTxt)) { alert('올바른 SVG 파일이 아닙니다.'); return; }
+                    var _fake = /<image\b[^>]*(?:xlink:href|href)\s*=\s*["']?\s*data:image\/(png|jpe?g|gif|webp|bmp)/i.test(_svgTxt)
+                             || /<image\b[^>]*(?:xlink:href|href)\s*=\s*["'][^"']*\.(png|jpe?g|gif|webp|bmp)([\s"'?#]|$)/i.test(_svgTxt)
+                             || (/<image\b/i.test(_svgTxt) && (_svgTxt.match(/<(path|rect|circle|ellipse|polygon|polyline|line|text)\b/gi) || []).length <= 1);
+                    if (_fake) {
+                        alert('이 SVG 는 실제 벡터가 아니라 이미지(PNG/JPG)를 감싼 "가짜 벡터" 입니다.\n대형 인쇄 시 픽셀이 깨져 업로드할 수 없습니다.\n일러스트레이터 등에서 "이미지 추적(벡터화)" 후 순수 경로(path)로 저장해 다시 올려주세요.');
+                        return;
+                    }
+                } catch(_fv) { console.warn('[fake vector check]', _fv); }
+            }
             var btn = document.getElementById('soAssetSubmit');
             btn.disabled = true; btn.textContent = '업로드 중...';
             try {
