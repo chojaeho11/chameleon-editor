@@ -1595,9 +1595,10 @@
             function _buildInlineSvgGroup(svgText, x, y, w, h, uid) {
                 var holder = null;
                 try {
-                    // 2026-06-28: svg2pdf 가 clipPath/mask/filter 를 제대로 못 그려 클리핑이 풀리거나 깨짐.
-                    //   그런 SVG 는 벡터 인라인을 포기하고 PNG 래스터화 폴백(브라우저가 정확히 래스터). null 반환.
-                    if (/<\s*clippath|clip-path\s*[:=]|<\s*mask\b|[^-]mask\s*[:=]|<\s*filter\b|[^-]filter\s*[:=]|<\s*pattern\b/i.test(svgText || '')) return null;
+                    // 2026-07-06: clipPath 는 벡터 인라인 허용 (svg2pdf 2.2.4 지원, ID 네임스페이싱으로 충돌 방지).
+                    //   대형 출력(허니콤보드 등)에서 라이브러리/업로드 SVG 가 래스터(저 PPI)로 나오던 문제 해결 — 벡터 유지.
+                    //   mask/filter/pattern 은 svg2pdf 가 여전히 못 그려 깨지므로 래스터 폴백(null 반환) 유지.
+                    if (/<\s*mask\b|[^-]mask\s*[:=]|<\s*filter\b|[^-]filter\s*[:=]|<\s*pattern\b/i.test(svgText || '')) return null;
                     var pr = new DOMParser();
                     var d = pr.parseFromString(svgText, 'image/svg+xml');
                     if (d.getElementsByTagName('parsererror').length) return null;
@@ -4467,6 +4468,19 @@
                 //   1) 내부 모든 <text> 노드를 재귀 수집 → 각각 별도 편집 가능 text item
                 //   2) <text> 를 모두 제거한 시각 잔여물(배경/장식/로고 등) 을 한 덩어리 이미지로
                 topChildren.forEach(function(child, idx) {
+                    // 2026-07-06: 대지(viewBox) 완전히 밖에 있는 객체는 불러오지 않음 (사용자 지적 — SVG 제작 시 대지 밖 잔여 객체가 같이 딸려오던 문제).
+                    //   child 의 SVG 문서좌표 bbox 가 viewBox [vbX, vbX+svgW] × [vbY, vbY+svgH] 와 전혀 겹치지 않으면 skip.
+                    //   (부분 겹침은 유지 — 대지에 걸친 객체는 살림.) 약간의 여유(margin)로 경계 오차 흡수.
+                    try {
+                        var _rc = _findRendered(child, idx);
+                        var _cbb = _rc ? _docBBox(_rc) : null;
+                        if (_cbb && _cbb.width > 0 && _cbb.height > 0) {
+                            var _mgX = svgW * 0.02, _mgY = svgH * 0.02;  // 2% 여유
+                            var _outside = (_cbb.x + _cbb.width < vbX - _mgX) || (_cbb.x > vbX + svgW + _mgX)
+                                        || (_cbb.y + _cbb.height < vbY - _mgY) || (_cbb.y > vbY + svgH + _mgY);
+                            if (_outside) { console.log('[svg upload] skip off-viewBox child', idx, _cbb); return; }
+                        }
+                    } catch(_ov) {}
                     var allTexts = _collectAllText(child);
                     var hasVisuals = _hasNonTextVisual(child) || child.nodeName.toLowerCase() !== 'g' && child.nodeName.toLowerCase() !== 'text';
                     // text-only 그룹은 visual 처리 X. text-only 가 아니면 잔여물 처리.
