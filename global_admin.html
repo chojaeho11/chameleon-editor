@@ -193,6 +193,7 @@
                 <i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <span style="font-weight: bold; color: #fff;">대량주문</span>
             </li>
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 주문관리</li>
+            <li class="nav-item" onclick="showSection('sec-bugreport', this); if(window.loadBugReports) loadBugReports();" style="color:#fca5a5;"><i class="fa-solid fa-bug" style="color:#fca5a5;"></i> <span id="navBugReport">🐞 버그 제보</span></li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 배송관리</li>
             <li class="nav-item" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
@@ -228,7 +229,43 @@
         </div>
 
         <div class="content-scroll">
-            
+
+            <!-- 2026-07-06: 버그 제보 (담당자 이름 + 스크린샷 + 내용) — 8개국어. bug_reports 테이블 저장. -->
+            <div id="sec-bugreport" class="section">
+              <style>
+                #sec-bugreport .bug-wrap { max-width: 920px; margin: 0 auto; }
+                #sec-bugreport .bug-card { background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:22px; }
+                #sec-bugreport label { display:block; font-size:13px; font-weight:700; color:#334155; margin:14px 0 6px; }
+                #sec-bugreport input[type=text], #sec-bugreport textarea { width:100%; padding:11px 13px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; box-sizing:border-box; }
+                #sec-bugreport textarea { min-height:120px; resize:vertical; }
+                #sec-bugreport .bug-submit { margin-top:18px; width:100%; padding:14px; border:none; border-radius:12px; background:linear-gradient(135deg,#dc2626,#b91c1c); color:#fff; font-size:15px; font-weight:800; cursor:pointer; }
+                #sec-bugreport .bug-submit:disabled { opacity:.6; cursor:default; }
+                #sec-bugreport .bug-lang-btn { border:1px solid #e2e8f0; background:#fff; border-radius:8px; padding:4px 9px; cursor:pointer; font-size:12px; font-weight:700; color:#475569; line-height:1.2; }
+                #sec-bugreport .bug-lang-btn.active { border-color:#dc2626; background:#fef2f2; color:#b91c1c; }
+                #sec-bugreport .bug-item { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; gap:12px; align-items:flex-start; }
+                #sec-bugreport .bug-thumb { width:64px; height:64px; border-radius:8px; object-fit:cover; background:#f1f5f9; flex-shrink:0; cursor:zoom-in; }
+                #sec-bugreport .bug-badge { display:inline-block; font-size:11px; font-weight:800; padding:2px 8px; border-radius:980px; }
+              </style>
+              <div class="bug-wrap">
+                <div style="display:flex; justify-content:flex-end; gap:5px; flex-wrap:wrap; margin-bottom:14px;" id="bugLangBar"></div>
+                <h2 id="bugTitle" style="margin:0 0 4px;">🐞 버그 제보</h2>
+                <p id="bugSubtitle" style="color:#64748b; margin:0 0 16px; font-size:13.5px; line-height:1.6;">발견한 버그를 알려주세요. 담당자·스크린샷·내용을 남기면 즉시 접수됩니다.</p>
+                <div class="bug-card">
+                  <label id="bugNameLbl" for="bugName">담당자 이름</label>
+                  <input type="text" id="bugName" placeholder="예: 홍길동">
+                  <label id="bugDescLbl" for="bugDesc">버그 내용</label>
+                  <textarea id="bugDesc" placeholder="어느 페이지에서 무엇이 잘못됐는지 자세히 적어주세요."></textarea>
+                  <label id="bugFileLbl" for="bugFile">스크린샷 (선택 · 여러 장 가능)</label>
+                  <input type="file" id="bugFile" accept="image/*" multiple>
+                  <div id="bugPreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                  <button class="bug-submit" id="bugSubmit" onclick="submitBugReport()">제출하기</button>
+                  <div id="bugStatus" style="margin-top:12px; font-size:13px;"></div>
+                </div>
+                <h3 id="bugRecentH" style="margin:26px 0 12px; font-size:15px; color:#334155;">최근 제보</h3>
+                <div id="bugList"><div style="color:#94a3b8; font-size:13px;">로딩 중...</div></div>
+              </div>
+            </div>
+
             <div id="sec-vip" class="section active">
                 <style>
                     #sec-vip .card { background: linear-gradient(180deg,#0f172a 0%,#1e1b4b 100%); border:1px solid #312e81; color:#e2e8f0; }
@@ -6445,6 +6482,134 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     console.log(`🎉 일괄 번역 완료! 생성: ${created}건 | 건너뜀: ${skipped}건 | 실패: ${failed}건`);
 };
 
+</script>
+
+<!-- 2026-07-06: 버그 제보 (8개국어) — 담당자 이름 + 스크린샷 + 내용 → bug_reports 테이블 -->
+<script>
+(function(){
+  var BUG_LANGS = ['ko','ja','en','zh','ar','es','de','fr'];
+  var BUG_LANG_LABEL = { ko:'한국어', ja:'日本語', en:'English', zh:'中文', ar:'العربية', es:'Español', de:'Deutsch', fr:'Français' };
+  var BUG_I18N = {
+    nav:      { ko:'🐞 버그 제보', ja:'🐞 バグ報告', en:'🐞 Report a Bug', zh:'🐞 报告错误', ar:'🐞 الإبلاغ عن خطأ', es:'🐞 Reportar un error', de:'🐞 Fehler melden', fr:'🐞 Signaler un bug' },
+    title:    { ko:'🐞 버그 제보', ja:'🐞 バグ報告', en:'🐞 Report a Bug', zh:'🐞 报告错误', ar:'🐞 الإبلاغ عن خطأ', es:'🐞 Reportar un error', de:'🐞 Fehler melden', fr:'🐞 Signaler un bug' },
+    subtitle: { ko:'발견한 버그를 알려주세요. 담당자·스크린샷·내용을 남기면 즉시 접수됩니다.',
+                ja:'見つけたバグをお知らせください。担当者名・スクリーンショット・内容を入力するとすぐに受付されます。',
+                en:'Tell us about any bug you found. Enter your name, a screenshot, and details — it is submitted instantly.',
+                zh:'请告诉我们您发现的错误。填写姓名、截图和详情，即时提交。',
+                ar:'أخبرنا بأي خطأ وجدته. أدخل اسمك ولقطة شاشة والتفاصيل — يُرسَل فورًا.',
+                es:'Cuéntanos sobre cualquier error que encontraste. Ingresa tu nombre, una captura y los detalles — se envía al instante.',
+                de:'Teilen Sie uns jeden gefundenen Fehler mit. Name, Screenshot und Details eingeben — wird sofort übermittelt.',
+                fr:"Signalez tout bug trouvé. Entrez votre nom, une capture d'écran et les détails — envoyé instantanément." },
+    nameLbl:  { ko:'담당자 이름', ja:'担当者名', en:'Your name', zh:'负责人姓名', ar:'اسمك', es:'Tu nombre', de:'Ihr Name', fr:'Votre nom' },
+    descLbl:  { ko:'버그 내용', ja:'バグの内容', en:'Bug details', zh:'错误详情', ar:'تفاصيل الخطأ', es:'Detalles del error', de:'Fehlerdetails', fr:'Détails du bug' },
+    fileLbl:  { ko:'스크린샷 (선택 · 여러 장 가능)', ja:'スクリーンショット (任意・複数可)', en:'Screenshots (optional, multiple)', zh:'截图（可选，可多张）', ar:'لقطات الشاشة (اختياري، متعددة)', es:'Capturas (opcional, varias)', de:'Screenshots (optional, mehrere)', fr:'Captures (facultatif, plusieurs)' },
+    submit:   { ko:'제출하기', ja:'送信する', en:'Submit', zh:'提交', ar:'إرسال', es:'Enviar', de:'Senden', fr:'Envoyer' },
+    recentH:  { ko:'최근 제보', ja:'最近の報告', en:'Recent reports', zh:'最近的报告', ar:'التقارير الأخيرة', es:'Reportes recientes', de:'Neueste Meldungen', fr:'Signalements récents' },
+    namePh:   { ko:'예: 홍길동', ja:'例: 山田', en:'e.g. John', zh:'例: 张三', ar:'مثال: أحمد', es:'ej. Juan', de:'z.B. Max', fr:'ex. Jean' },
+    descPh:   { ko:'어느 페이지에서 무엇이 잘못됐는지 자세히 적어주세요.', ja:'どのページで何が問題かを詳しく記入してください。', en:'Describe which page and what went wrong, in detail.', zh:'请详细说明哪个页面出了什么问题。', ar:'صف الصفحة وما الخطأ بالتفصيل.', es:'Describe en qué página y qué salió mal, en detalle.', de:'Beschreiben Sie ausführlich, welche Seite und was schiefging.', fr:'Décrivez en détail quelle page et ce qui ne va pas.' },
+    reqName:  { ko:'담당자 이름을 입력해주세요.', ja:'担当者名を入力してください。', en:'Please enter your name.', zh:'请输入姓名。', ar:'يرجى إدخال اسمك.', es:'Ingresa tu nombre.', de:'Bitte Namen eingeben.', fr:'Veuillez entrer votre nom.' },
+    reqDesc:  { ko:'버그 내용을 입력해주세요.', ja:'バグの内容を入力してください。', en:'Please describe the bug.', zh:'请填写错误内容。', ar:'يرجى وصف الخطأ.', es:'Describe el error.', de:'Bitte den Fehler beschreiben.', fr:'Veuillez décrire le bug.' },
+    sending:  { ko:'제출 중...', ja:'送信中...', en:'Submitting...', zh:'提交中...', ar:'جارٍ الإرسال...', es:'Enviando...', de:'Wird gesendet...', fr:'Envoi...' },
+    done:     { ko:'✅ 접수되었습니다. 감사합니다!', ja:'✅ 受付けました。ありがとうございます！', en:'✅ Received. Thank you!', zh:'✅ 已收到，谢谢！', ar:'✅ تم الاستلام. شكرًا!', es:'✅ Recibido. ¡Gracias!', de:'✅ Erhalten. Danke!', fr:'✅ Reçu. Merci !' },
+    fail:     { ko:'❌ 제출 실패: ', ja:'❌ 送信失敗: ', en:'❌ Submit failed: ', zh:'❌ 提交失败: ', ar:'❌ فشل الإرسال: ', es:'❌ Error al enviar: ', de:'❌ Senden fehlgeschlagen: ', fr:'❌ Échec: ' },
+    empty:    { ko:'아직 제보가 없습니다.', ja:'まだ報告はありません。', en:'No reports yet.', zh:'暂无报告。', ar:'لا توجد تقارير بعد.', es:'Aún no hay reportes.', de:'Noch keine Meldungen.', fr:'Aucun signalement.' },
+    st_new:   { ko:'접수', ja:'受付', en:'New', zh:'新', ar:'جديد', es:'Nuevo', de:'Neu', fr:'Nouveau' },
+    st_prog:  { ko:'처리중', ja:'対応中', en:'In progress', zh:'处理中', ar:'قيد المعالجة', es:'En progreso', de:'In Bearbeitung', fr:'En cours' },
+    st_done:  { ko:'완료', ja:'完了', en:'Done', zh:'完成', ar:'تم', es:'Hecho', de:'Erledigt', fr:'Terminé' }
+  };
+  function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
+  function T(k){ var d = BUG_I18N[k] || {}; return d[_bl()] || d.ko || ''; }
+  function bugSb(){ return window.sb || null; }
+
+  window.applyBugI18n = function(){
+    var L = _bl();
+    var setTxt = function(id, v){ var e = document.getElementById(id); if (e) e.textContent = v; };
+    var setPh = function(id, v){ var e = document.getElementById(id); if (e) e.placeholder = v; };
+    setTxt('navBugReport', T('nav')); setTxt('bugTitle', T('title')); setTxt('bugSubtitle', T('subtitle'));
+    setTxt('bugNameLbl', T('nameLbl')); setTxt('bugDescLbl', T('descLbl')); setTxt('bugFileLbl', T('fileLbl'));
+    setTxt('bugSubmit', T('submit')); setTxt('bugRecentH', T('recentH'));
+    setPh('bugName', T('namePh')); setPh('bugDesc', T('descPh'));
+    var wrap = document.querySelector('#sec-bugreport .bug-wrap'); if (wrap) wrap.style.direction = (L === 'ar') ? 'rtl' : 'ltr';
+    var bar = document.getElementById('bugLangBar');
+    if (bar) bar.innerHTML = BUG_LANGS.map(function(lg){ return '<button class="bug-lang-btn' + (lg===L?' active':'') + '" onclick="setBugLang(\'' + lg + '\')">' + BUG_LANG_LABEL[lg] + '</button>'; }).join('');
+  };
+  window.setBugLang = function(lg){ try { localStorage.setItem('bugLang', lg); } catch(e){} window.applyBugI18n(); if (window.loadBugReports) window.loadBugReports(); };
+
+  document.addEventListener('change', function(e){
+    if (e.target && e.target.id === 'bugFile') {
+      var prev = document.getElementById('bugPreview'); if (!prev) return;
+      prev.innerHTML = '';
+      Array.prototype.slice.call(e.target.files || []).forEach(function(f){
+        var img = document.createElement('img'); img.src = URL.createObjectURL(f);
+        img.style.cssText = 'width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;'; prev.appendChild(img);
+      });
+    }
+  });
+
+  window.submitBugReport = async function(){
+    var name = (document.getElementById('bugName').value || '').trim();
+    var desc = (document.getElementById('bugDesc').value || '').trim();
+    var files = (document.getElementById('bugFile').files) || [];
+    var statusEl = document.getElementById('bugStatus');
+    var btn = document.getElementById('bugSubmit');
+    if (!name) { statusEl.style.color = '#dc2626'; statusEl.textContent = T('reqName'); return; }
+    if (!desc) { statusEl.style.color = '#dc2626'; statusEl.textContent = T('reqDesc'); return; }
+    var sb = bugSb(); if (!sb) { statusEl.style.color='#dc2626'; statusEl.textContent = 'Supabase not ready'; return; }
+    btn.disabled = true; statusEl.style.color = '#64748b'; statusEl.textContent = T('sending');
+    try {
+      var urls = [];
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        var ext = (String(f.name).split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g,'') || 'png';
+        var path = 'bug_reports/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+        var up = await sb.storage.from('design').upload(path, f, { contentType: f.type || undefined, upsert: false });
+        if (!up.error) urls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
+      }
+      var row = {
+        reporter_name: name, description: desc,
+        screenshot_url: urls.length ? urls.join('\n') : null,
+        lang: _bl(), status: 'new',
+        page_url: (function(){ try { return location.href; } catch(e){ return null; } })(),
+        user_agent: (function(){ try { return navigator.userAgent.slice(0,300); } catch(e){ return null; } })()
+      };
+      var ins = await sb.from('bug_reports').insert(row);
+      if (ins.error) throw ins.error;
+      statusEl.style.color = '#16a34a'; statusEl.textContent = T('done');
+      document.getElementById('bugDesc').value = ''; document.getElementById('bugFile').value = ''; document.getElementById('bugPreview').innerHTML = '';
+      if (window.loadBugReports) window.loadBugReports();
+    } catch(err) { statusEl.style.color = '#dc2626'; statusEl.textContent = T('fail') + (err.message || err); }
+    finally { btn.disabled = false; }
+  };
+
+  window.loadBugReports = async function(){
+    var listEl = document.getElementById('bugList'); if (!listEl) return;
+    var sb = bugSb(); if (!sb) return;
+    try {
+      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status').order('id',{ascending:false}).limit(30);
+      var rows = (r && r.data) || [];
+      if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
+      var stColor = { new:'#f59e0b', in_progress:'#3b82f6', done:'#16a34a' };
+      var stLbl = { new:T('st_new'), in_progress:T('st_prog'), done:T('st_done') };
+      var esc = function(s){ return String(s||'').replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); };
+      listEl.innerHTML = rows.map(function(b){
+        var thumbs = String(b.screenshot_url || '').split('\n').filter(Boolean);
+        var thumbHtml = thumbs.length ? '<img class="bug-thumb" src="' + thumbs[0] + '" onclick="window.open(\'' + thumbs[0] + '\',\'_blank\')">' : '';
+        var dt = b.created_at ? new Date(b.created_at).toLocaleString() : '';
+        var stc = stColor[b.status] || '#64748b';
+        return '<div class="bug-item">' + thumbHtml +
+          '<div style="flex:1; min-width:0;">' +
+            '<div style="display:flex; justify-content:space-between; gap:8px; align-items:center;"><b style="font-size:13px; color:#0f172a;">' + esc(b.reporter_name) + '</b>' +
+            '<span class="bug-badge" style="background:' + stc + '22; color:' + stc + ';">' + (stLbl[b.status]||esc(b.status)) + '</span></div>' +
+            '<div style="font-size:12.5px; color:#334155; margin-top:4px; white-space:pre-wrap; word-break:break-word;">' + esc(b.description) + '</div>' +
+            '<div style="font-size:10.5px; color:#94a3b8; margin-top:5px;">#' + b.id + ' · ' + dt + (thumbs.length>1?(' · 📎'+thumbs.length):'') + '</div>' +
+          '</div></div>';
+      }).join('');
+    } catch(e) { listEl.innerHTML = '<div style="color:#dc2626; font-size:12px;">' + (e.message||e) + '</div>'; }
+  };
+
+  try { window.applyBugI18n(); } catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){ try { window.applyBugI18n(); } catch(e){} });
+})();
 </script>
 
 </body>
