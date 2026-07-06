@@ -174,7 +174,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <div class="body">
                 <span class="label">TEMPLATE</span>
                 <h3 id="i18nCardTemplateH3">템플릿 만들기</h3>
-                <div class="desc" id="i18nCardTemplateDesc">미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.</div>
+                <div class="desc" id="i18nCardTemplateDesc">에디터 안의 이미지 요소와 텍스트로 멋진 템플릿을 만들어 주세요. 직접 만든 SVG 배경 이미지를 사용하면 승인율이 높아집니다. 글씨 이미지는 사용할 수 없으며, 반드시 에디터의 텍스트로 디자인해 주세요.</div>
                 <div class="reward" id="i18nCardTemplateRwd"><span class="num">3,000</span><span class="unit">원 / 건</span></div>
                 <button class="btn" id="i18nCardTemplateBtn">+ 템플릿 등록</button>
             </div>
@@ -184,7 +184,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <div class="body">
                 <span class="label">VECTOR</span>
                 <h3 id="i18nCardVectorH3">벡터 올리기</h3>
-                <div class="desc" id="i18nCardVectorDesc">SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.</div>
+                <div class="desc" id="i18nCardVectorDesc">일러스트레이터에서 벡터로 작업한 뒤 SVG 파일로 저장해 올려주세요. 개별 요소뿐 아니라 배너 배경이나 디자인 배경도 좋습니다.</div>
                 <div class="reward" id="i18nCardVectorRwd"><span class="num">1,000</span><span class="unit">원 / 건</span></div>
                 <button class="btn" id="i18nCardVectorBtn">+ 벡터 등록</button>
             </div>
@@ -194,7 +194,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <div class="body">
                 <span class="label">IMAGE</span>
                 <h3 id="i18nCardImageH3">PNG 올리기</h3>
-                <div class="desc" id="i18nCardImageDesc">배경이 투명인 그림이 잘리지 않은 객체. 배경이 있다면 반려됩니다.</div>
+                <div class="desc" id="i18nCardImageDesc">배경 없는 요소·캐릭터만 가능합니다. 글씨 이미지가 함께 있으면 승인되지 않습니다. 반드시 직접 만든 창작 요소만 올려주세요.</div>
                 <div class="reward" id="i18nCardImageRwd"><span class="num">500</span><span class="unit">원 / 건</span></div>
                 <button class="btn" id="i18nCardImageBtn">+ PNG 등록</button>
             </div>
@@ -204,7 +204,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
             <div class="body">
                 <span class="label">LOGO</span>
                 <h3 id="i18nCardLogoH3">로고 올리기</h3>
-                <div class="desc" id="i18nCardLogoDesc">브랜드/캐릭터 로고. PNG 또는 SVG 가능.</div>
+                <div class="desc" id="i18nCardLogoDesc">로고도 배경이 투명한 로고만 승인됩니다. SVG와 PNG 모두 가능합니다.</div>
                 <div class="reward" id="i18nCardLogoRwd"><span class="num">200</span><span class="unit">원 / 건</span></div>
                 <button class="btn" id="i18nCardLogoBtn">+ 로고 등록</button>
             </div>
@@ -215,7 +215,9 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
         <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> <span id="i18nWarnTitle">주의</span></div>
         <div id="i18nWarnBody">저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>
         디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>
-        판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.</div>
+        판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.<br>
+        적립금은 <b>미화 100달러 초과 시 출금</b>이 가능합니다.<br>
+        좋은 디자인을 많이 올린 디자이너를 매월 선정해 <b>1,000달러 보너스</b>를 드립니다.</div>
     </div>
 
     <div class="how">
@@ -386,19 +388,19 @@ const STR = {
         SeHint: '· 자산 적립금은 관리자 승인 즉시 표시됩니다.<br>· <b style="color:#fbbf24;">최소 출금액 100,000원</b> · 첫 출금 시 계좌·전화·이메일 등록 (1회).<br>· 고객 의뢰 정산은 작업 완료 → <b>정산 요청</b> 클릭 후 관리자 확인 시 입금됩니다 (영업일 1~2일).',
         GuideH: '적립금 가이드', GuideSub: '유형 별로 보상이 다릅니다.',
         CardTemplateH3: '템플릿 만들기',
-        CardTemplateDesc: '미니에디터에서 전체 디자인을 완성해서 등록. 사용자가 글씨만 바꾸면 끝나는 형태.',
+        CardTemplateDesc: '에디터 안의 이미지 요소와 텍스트로 멋진 템플릿을 만들어 주세요. 직접 만든 SVG 배경 이미지를 사용하면 승인율이 높아집니다. 글씨 이미지는 사용할 수 없으며, 반드시 에디터의 텍스트로 디자인해 주세요.',
         CardTemplateBtn: '+ 템플릿 등록',
         CardVectorH3: '벡터 올리기',
-        CardVectorDesc: 'SVG 형식의 벡터 그래픽. 일러스트, 아이콘, 배경, 패턴 등.',
+        CardVectorDesc: '일러스트레이터에서 벡터로 작업한 뒤 SVG 파일로 저장해 올려주세요. 개별 요소뿐 아니라 배너 배경이나 디자인 배경도 좋습니다.',
         CardVectorBtn: '+ 벡터 등록',
         CardImageH3: 'PNG 올리기',
-        CardImageDesc: '배경이 투명인 그림이 잘리지 않은 객체. 배경이 있다면 반려됩니다.',
+        CardImageDesc: '배경 없는 요소·캐릭터만 가능합니다. 글씨 이미지가 함께 있으면 승인되지 않습니다. 반드시 직접 만든 창작 요소만 올려주세요.',
         CardImageBtn: '+ PNG 등록',
         CardLogoH3: '로고 올리기',
-        CardLogoDesc: '브랜드/캐릭터 로고. PNG 또는 SVG 가능.',
+        CardLogoDesc: '로고도 배경이 투명한 로고만 승인됩니다. SVG와 PNG 모두 가능합니다.',
         CardLogoBtn: '+ 로고 등록',
         WarnTitle: '주의',
-        WarnBody: '저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.',
+        WarnBody: '저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.<br>적립금은 <b>미화 100달러 초과 시 출금</b>이 가능합니다.<br>좋은 디자인을 많이 올린 디자이너를 매월 선정해 <b>1,000달러 보너스</b>를 드립니다.',
         HowH2: '진행 방법',
         Step1H4: '업로드', Step1P: '유형 선택 후 파일·이름·키워드 입력. 키워드는 5개 언어로 자동 번역되어 저장됩니다.',
         Step2H4: '관리자 검토', Step2P: '저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.',
@@ -435,19 +437,19 @@ const STR = {
         SeHint: '· 資産積立金は管理者承認と同時に表示されます。<br>· <b style="color:#fbbf24;">最低出金額 ¥10,000</b> · 初回出金時に口座・電話・メール登録（1回のみ）。<br>· 顧客依頼の精算は作業完了 → <b>精算リクエスト</b> クリック後、管理者確認時に入金されます（営業日1〜2日）。',
         GuideH: '積立金ガイド', GuideSub: 'タイプ別に報酬が異なります。',
         CardTemplateH3: 'テンプレート作成',
-        CardTemplateDesc: 'ミニエディタで全体デザインを完成させて登録。ユーザーが文字だけ変更すれば完了する形式。',
+        CardTemplateDesc: 'エディター内の画像要素とテキストを使って、素敵なテンプレートを作成してください。ご自身で作成したSVG背景画像を使うと承認率が上がります。文字を画像化したものは使用できません。必ずエディターのテキスト機能でデザインしてください。',
         CardTemplateBtn: '+ テンプレート登録',
         CardVectorH3: 'ベクター登録',
-        CardVectorDesc: 'SVG形式のベクターグラフィック。イラスト・アイコン・背景・パターンなど。',
+        CardVectorDesc: 'イラストレーターでベクターとして作業し、SVGファイルで保存してアップロードしてください。単体の要素だけでなく、バナー背景やデザイン背景も歓迎です。',
         CardVectorBtn: '+ ベクター登録',
         CardImageH3: 'PNG登録',
-        CardImageDesc: '背景が透明で、切り取られていないオブジェクト画像。背景がある場合は却下されます。',
+        CardImageDesc: '背景のない要素・キャラクターのみ可能です。文字画像が一緒に含まれていると承認されません。必ずご自身が制作したオリジナル要素のみをアップロードしてください。',
         CardImageBtn: '+ PNG登録',
         CardLogoH3: 'ロゴ登録',
-        CardLogoDesc: 'ブランド／キャラクターロゴ。PNGまたはSVG可能。',
+        CardLogoDesc: 'ロゴも背景が透明なものだけが承認されます。SVG・PNGどちらも可能です。',
         CardLogoBtn: '+ ロゴ登録',
         WarnTitle: '注意',
-        WarnBody: '著作権に問題のない<b>個人作品</b>をアップロードしてください。著作権の責任はデザイナー本人にあります。<br>デザインをアップロードし、<b>承認されたデザインに限り</b>費用が支払われます。<br>販売ボーナスは<b>毎月30日に合算積立</b>されます。マイページをご確認ください。',
+        WarnBody: '著作権に問題のない<b>個人作品</b>をアップロードしてください。著作権の責任はデザイナー本人にあります。<br>デザインをアップロードし、<b>承認されたデザインに限り</b>費用が支払われます。<br>販売ボーナスは<b>毎月30日に合算積立</b>されます。マイページをご確認ください。<br>積立金は<b>米ドル100ドルを超えると出金</b>できます。<br>優れたデザインを多くアップロードしたデザイナーを毎月選び、<b>1,000ドルのボーナス</b>を差し上げます。',
         HowH2: '進行方法',
         Step1H4: 'アップロード', Step1P: 'タイプ選択後、ファイル・名前・キーワードを入力。キーワードは5言語に自動翻訳されて保存されます。',
         Step2H4: '管理者レビュー', Step2P: '著作権・品質レビュー後、承認または却下。却下時はrow自動削除。',
@@ -484,19 +486,19 @@ const STR = {
         SeHint: '· Asset earnings appear immediately after admin approval.<br>· <b style="color:#fbbf24;">Minimum withdrawal $100</b> · One-time bank/phone/email setup on first withdrawal.<br>· Order settlement: after completion, click <b>Request Settlement</b> — admin confirmation triggers payment (1–2 business days).',
         GuideH: 'Reward Guide', GuideSub: 'Rewards differ by type.',
         CardTemplateH3: 'Make a Template',
-        CardTemplateDesc: 'Build a complete design in the mini editor — the format where users only need to change the text.',
+        CardTemplateDesc: 'Create a beautiful template using the image elements and text inside the editor. Using your own SVG background image raises your approval rate. Text baked into an image is not allowed — you must design with the editor\'s text tool.',
         CardTemplateBtn: '+ Register Template',
         CardVectorH3: 'Upload Vector',
-        CardVectorDesc: 'SVG vector graphics — illustrations, icons, backgrounds, patterns.',
+        CardVectorDesc: 'Work in vector in Illustrator, save as an SVG file, then upload. Beyond individual elements, banner backgrounds and design backgrounds are also welcome.',
         CardVectorBtn: '+ Register Vector',
         CardImageH3: 'Upload PNG',
-        CardImageDesc: 'Object on transparent background, not cropped. Submissions with a background will be rejected.',
+        CardImageDesc: 'Only background-free elements or characters are allowed. If text is baked into the image, it will not be approved. Upload only your own original creations.',
         CardImageBtn: '+ Register PNG',
         CardLogoH3: 'Upload Logo',
-        CardLogoDesc: 'Brand or character logo. PNG or SVG accepted.',
+        CardLogoDesc: 'Logos are approved only if they have a transparent background. Both SVG and PNG are accepted.',
         CardLogoBtn: '+ Register Logo',
         WarnTitle: 'Notice',
-        WarnBody: 'Only upload <b>your own work</b> with no copyright issues. Copyright responsibility rests with the designer.<br>Payment is made <b>only for approved designs</b>.<br>Sales bonuses are <b>aggregated and credited on the 30th of each month</b>. Check My Page.',
+        WarnBody: 'Only upload <b>your own work</b> with no copyright issues. Copyright responsibility rests with the designer.<br>Payment is made <b>only for approved designs</b>.<br>Sales bonuses are <b>aggregated and credited on the 30th of each month</b>. Check My Page.<br>Earnings can be withdrawn once they exceed <b>USD $100</b>.<br>Each month we select designers who upload many great designs and award a <b>USD $1,000 bonus</b>.',
         HowH2: 'How it works',
         Step1H4: 'Upload', Step1P: 'Pick a type, then enter file · name · keywords. Keywords are auto-translated into 5 languages.',
         Step2H4: 'Admin Review', Step2P: 'Copyright & quality review → approve or reject. Rejected rows are auto-deleted.',
