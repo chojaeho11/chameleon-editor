@@ -1874,12 +1874,12 @@ html, body { background: #ffffff !important; }
           <div id="soAcrylicVariants" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;"></div>
         </div>
 
-        <!-- 2026-06-06: 아크릴 인쇄 family 안내 — 기본 인쇄/커팅 가공비 포함 안내 (KR 1,000원 / JP 100엔 / US $1) -->
+        <!-- 2026-07-06: 아크릴 인쇄 family 안내 — 면적당(회배) 가격. 기본가 +100엔 제거(사용자 요청) → 5×5cm = 카드 표시가. -->
         <div class="so-section" id="soAcrylicFeeNotice" style="display:none; padding:10px 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:8px; font-size:12px; color:#1e3a8a; line-height:1.55; font-weight:600;">
           <i class="fa-solid fa-circle-info" style="color:#4f46e5; margin-right:4px;"></i>
-          ${tr('크기·모양과 상관없이 <b>개당 1,000원</b>의 기본 인쇄/커팅 비용이 포함됩니다.',
-               'サイズ・形状に関わらず、<b>1個あたり100円</b>の基本印刷・カット費用が含まれます。',
-               'A base <b>$1 per unit</b> print/cut fee is included regardless of size or shape.')}
+          ${tr('가격은 <b>면적당</b>으로 계산됩니다. (표시가는 <b>5×5cm 기준</b> · 크기에 비례해 증감)',
+               '価格は<b>面積あたり</b>で計算されます。(表示価格は<b>5×5cm基準</b> · サイズに比例して増減)',
+               'Price is calculated <b>per area</b>. (Listed price is <b>for 5×5cm</b>, scaling with size.)')}
         </div>
 
         <!-- 2026-06-06: 투명시트 2종 (점착/비점착) — 카드 그리드 -->
@@ -9483,11 +9483,8 @@ html, body { background: #ffffff !important; }
         }
         // 아크릴 굿즈 — 최소 100원 (사이즈 1×1cm 같은 극단값 방지)
         if (isAcrGoods && calcPrice < 100) calcPrice = 100;
-        // 2026-06-06: 아크릴 인쇄 family — 기본 인쇄/가공비 +1,000원/개 추가 (사용자 요청).
-        //   예: 50×50mm 380원 + 1000 = 1,380원/개. 2개면 2,760원.
-        if (typeof state.isAcrylicFamily !== 'undefined' && state.isAcrylicFamily) {
-            calcPrice += 1000;
-        }
+        // 2026-07-06: 아크릴 인쇄 family — 기본가 +1,000원(¥100) 제거 (사용자 요청). 순수 면적당(회배) 가격.
+        //   → 5×5cm = 변형카드 표시가(면적가)와 일치. (기존 +1,000원이 5×5cm 을 ¥38→¥138 로 만들어 카드와 불일치했음)
         state.customUnitPrice = calcPrice;
         state.customAreaM2 = areaM2;
         // 2026-06-14 Phase 1: Quick Design 캔버스에 사이즈 변경 반영
