@@ -6515,7 +6515,12 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     empty:    { ko:'아직 제보가 없습니다.', ja:'まだ報告はありません。', en:'No reports yet.', zh:'暂无报告。', ar:'لا توجد تقارير بعد.', es:'Aún no hay reportes.', de:'Noch keine Meldungen.', fr:'Aucun signalement.' },
     st_new:   { ko:'접수', ja:'受付', en:'New', zh:'新', ar:'جديد', es:'Nuevo', de:'Neu', fr:'Nouveau' },
     st_prog:  { ko:'처리중', ja:'対応中', en:'In progress', zh:'处理中', ar:'قيد المعالجة', es:'En progreso', de:'In Bearbeitung', fr:'En cours' },
-    st_done:  { ko:'완료', ja:'完了', en:'Done', zh:'完成', ar:'تم', es:'Hecho', de:'Erledigt', fr:'Terminé' }
+    st_done:  { ko:'완료', ja:'完了', en:'Done', zh:'完成', ar:'تم', es:'Hecho', de:'Erledigt', fr:'Terminé' },
+    st_appr:  { ko:'승인', ja:'承認', en:'Approved', zh:'已批准', ar:'موافق عليه', es:'Aprobado', de:'Genehmigt', fr:'Approuvé' },
+    st_rej:   { ko:'반려', ja:'却下', en:'Rejected', zh:'已拒绝', ar:'مرفوض', es:'Rechazado', de:'Abgelehnt', fr:'Rejeté' },
+    btnAppr:  { ko:'✓ 승인', ja:'✓ 承認', en:'✓ Approve', zh:'✓ 批准', ar:'✓ موافقة', es:'✓ Aprobar', de:'✓ Genehmigen', fr:'✓ Approuver' },
+    btnRej:   { ko:'✕ 반려', ja:'✕ 却下', en:'✕ Reject', zh:'✕ 拒绝', ar:'✕ رفض', es:'✕ Rechazar', de:'✕ Ablehnen', fr:'✕ Rejeter' },
+    btnDone:  { ko:'완료 처리', ja:'完了にする', en:'Mark done', zh:'标记完成', ar:'وضع علامة تم', es:'Marcar hecho', de:'Als erledigt', fr:'Terminer' }
   };
   function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
   function T(k){ var d = BUG_I18N[k] || {}; return d[_bl()] || d.ko || ''; }
@@ -6588,23 +6593,46 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
       var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status').order('id',{ascending:false}).limit(30);
       var rows = (r && r.data) || [];
       if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
-      var stColor = { new:'#f59e0b', in_progress:'#3b82f6', done:'#16a34a' };
-      var stLbl = { new:T('st_new'), in_progress:T('st_prog'), done:T('st_done') };
+      var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', done:'#16a34a' };
+      var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), done:T('st_done') };
       var esc = function(s){ return String(s||'').replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); };
+      var btnCss = 'padding:5px 11px; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;';
       listEl.innerHTML = rows.map(function(b){
         var thumbs = String(b.screenshot_url || '').split('\n').filter(Boolean);
-        var thumbHtml = thumbs.length ? '<img class="bug-thumb" src="' + thumbs[0] + '" onclick="window.open(\'' + thumbs[0] + '\',\'_blank\')">' : '';
+        var thumbHtml = thumbs.length ? thumbs.map(function(u){ return '<img class="bug-thumb" src="' + u + '" onclick="window.open(\'' + u + '\',\'_blank\')">'; }).join('') : '';
         var dt = b.created_at ? new Date(b.created_at).toLocaleString() : '';
         var stc = stColor[b.status] || '#64748b';
-        return '<div class="bug-item">' + thumbHtml +
+        // 검토 버튼 — 사장님 검토용 (접수 → 승인/반려, 승인·처리중 → 완료)
+        var actions = '';
+        if (b.status === 'new') {
+          actions = '<button style="' + btnCss + 'background:#7c3aed;color:#fff;" onclick="updateBugStatus(' + b.id + ',\'approved\')">' + T('btnAppr') + '</button>' +
+                    '<button style="' + btnCss + 'background:#fee2e2;color:#b91c1c;" onclick="updateBugStatus(' + b.id + ',\'rejected\')">' + T('btnRej') + '</button>';
+        } else if (b.status === 'approved' || b.status === 'in_progress') {
+          actions = '<button style="' + btnCss + 'background:#dcfce7;color:#15803d;" onclick="updateBugStatus(' + b.id + ',\'done\')">' + T('btnDone') + '</button>' +
+                    '<button style="' + btnCss + 'background:#fee2e2;color:#b91c1c;" onclick="updateBugStatus(' + b.id + ',\'rejected\')">' + T('btnRej') + '</button>';
+        }
+        return '<div class="bug-item">' +
+          (thumbHtml ? '<div style="display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; max-width:150px;">' + thumbHtml + '</div>' : '') +
           '<div style="flex:1; min-width:0;">' +
             '<div style="display:flex; justify-content:space-between; gap:8px; align-items:center;"><b style="font-size:13px; color:#0f172a;">' + esc(b.reporter_name) + '</b>' +
             '<span class="bug-badge" style="background:' + stc + '22; color:' + stc + ';">' + (stLbl[b.status]||esc(b.status)) + '</span></div>' +
             '<div style="font-size:12.5px; color:#334155; margin-top:4px; white-space:pre-wrap; word-break:break-word;">' + esc(b.description) + '</div>' +
+            (b.resolution ? '<div style="font-size:11.5px; color:#15803d; margin-top:5px; background:#f0fdf4; border-radius:6px; padding:5px 8px;">✅ ' + esc(b.resolution) + '</div>' : '') +
             '<div style="font-size:10.5px; color:#94a3b8; margin-top:5px;">#' + b.id + ' · ' + dt + (thumbs.length>1?(' · 📎'+thumbs.length):'') + '</div>' +
+            (actions ? '<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">' + actions + '</div>' : '') +
           '</div></div>';
       }).join('');
     } catch(e) { listEl.innerHTML = '<div style="color:#dc2626; font-size:12px;">' + (e.message||e) + '</div>'; }
+  };
+
+  window.updateBugStatus = async function(id, status){
+    var sb = bugSb(); if (!sb) return;
+    try {
+      var patch = { status: status };
+      if (status === 'done') patch.resolved_at = new Date().toISOString();
+      await sb.from('bug_reports').update(patch).eq('id', id);
+      if (window.loadBugReports) window.loadBugReports();
+    } catch(e) { alert('상태 변경 실패: ' + (e.message||e)); }
   };
 
   try { window.applyBugI18n(); } catch(e){}
