@@ -4846,9 +4846,13 @@ html, body { background: #ffffff !important; }
             setText('soShipLabel', tr('배송', '配送', 'Shipping') + (_shipNameCp ? ' (' + _shipNameCp + ')' : ''));
             setText('soShipAmount', shipFee > 0 ? ('+' + fmtPrice(shipFee)) : tr('무료', '無料', 'FREE'));
         } else if (!_isHcFamilyDetail) {
-            // 2026-06-12: 허니콤 family 아니면 무조건 무료 (페트배너/매쉬배너/현수막+거치대 세트 등)
+            // 2026-06-12: 허니콤 family 아니면 무료 (페트배너/매쉬배너/현수막+거치대 세트 등)
+            // 2026-07-06: 단, 실제 배송비(shipFee)가 있으면(소형택배 ¥500 선택 등) 그 금액을 표시 — 合計(taxBase+shipFee)와 일치.
+            //   기존엔 무료로 하드코딩돼 "配送 無料 인데 合計엔 ¥500 포함" 불일치 (일본 직원 지적).
             setText('soShipLabel', tr('배송', '配送', 'Shipping'));
-            setText('soShipAmount', tr('무료', '無料', 'FREE'));
+            setText('soShipAmount', shipFee > 0
+                ? ('+' + fmtPrice(shipFee) + (window.__SITE_CODE === 'JP' ? tr('', ' (全国一律)', '') : ''))
+                : tr('무료', '無料', 'FREE'));
         } else {
             var shipName;
             if (state.bundleShipping) {
@@ -17055,6 +17059,16 @@ html, body { background: #ffffff !important; }
             });
             window._soCartFirstShipUid = _topShipUid;
         } catch (e) { window._soCartFirstShipUid = null; }
+        // 2026-07-06: JP — 카트 정액 배송비(全国一律)를 첫 아이템 박스에 1회 표시하고 그 아이템 合計에 포함.
+        //   → 단일 아이템일 때 아이템 合計 = 하단 총액 일치 (일본 직원 요청: 아이템박스에도 배송비 표기해 총액 일치).
+        var _jpShipTotal = 0, _jpFirstItemUid = null;
+        try {
+            if (window.__SITE_CODE === 'JP') {
+                var _preCalcJP = _soCalcCartTotal(allItems);
+                _jpShipTotal = (_preCalcJP && _preCalcJP.shipTotal) || 0;
+                _jpFirstItemUid = (allItems[0] && allItems[0].uid) || null;
+            }
+        } catch(_je) {}
         // 2026-05-22: 장바구니 썸네일 — 업로드 디자인(originalUrl 등, 이미지 형식만) 우선. 박스 대신 실제 이미지.
         const _imgLike = function (u) { return !!u && /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(u); };
         const _catalogImg = function (item) {
@@ -17227,7 +17241,12 @@ html, body { background: #ffffff !important; }
                     meta.push('📐 ' + _lfSizeId + ' (' + _lfSizeObj.wMm + '×' + _lfSizeObj.hMm + 'mm) · ' + _lfSideLbl);
                 }
                 var _bdSub = _bdUnit * _bdQty;
-                _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('단가','単価','Unit') + ' × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                // 2026-07-06: 스티커는 "단가 × 1000 (¥3)" 이 "3장"처럼 오해됨(일본 직원 지적) → "1,000매 = ¥3,000" 으로 명확 표기.
+                if (_isStRow && item.sticker && item.sticker.qty) {
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + Number(item.sticker.qty).toLocaleString() + tr('매','枚','pcs') + '</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                } else {
+                    _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('단가','単価','Unit') + ' × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                }
                 // 2026-06-14: 낱장 인쇄 — 박/후가공 breakdown (multiplier 적용된 옵션비)
                 if (_isLfRow && typeof window._soLeafletOptMult === 'function') {
                     var _lfMult = window._soLeafletOptMult(_bdQty);
@@ -17295,7 +17314,12 @@ html, body { background: #ffffff !important; }
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
                 // 2026-07-03: JP 는 배송이 카트 단위 정액(全国一律, 하단 안내에 1회 표시)이라 아이템별 送料 라인은 숨김.
                 //   (아이템 박스 合計 = 상품가만 → 아이템마다 送料 +¥500 을 띄우면 合計와 불일치해 혼란. 일본 직원 지적)
-                if (window.__SITE_CODE !== 'JP') {
+                if (window.__SITE_CODE === 'JP') {
+                    // 2026-07-06: JP — 카트 정액 배송비를 첫 아이템에만 1회 표시 (그 아이템 合計에도 포함 → 하단 총액과 일치).
+                    if (_jpShipTotal > 0 && item.uid === _jpFirstItemUid) {
+                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>宅配 送料</span><b>+' + fmtPrice(_jpShipTotal) + ' (全国一律)</b></div>');
+                    }
+                } else {
                     if (_bdShipFee > 0 && _bdIsFirstShip) {
                         _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('배송','送料','Shipping') + '</span><b>+' + fmtPrice(_bdShipFee) + '</b></div>');
                     } else if (_bdShipFee > 0 && !_bdIsFirstShip) {
@@ -17315,6 +17339,8 @@ html, body { background: #ffffff !important; }
                 // 합계 (해당 라인 — 묶음배송이면 shipping 빼고)
                 // 2026-07-03: JP 는 배송을 아이템별로 안 붙이고 카트 단위(全国一律)로 표시 → 아이템 合計 = 상품가만(lineDisplay).
                 var _bdLineTotal = (window.__SITE_CODE === 'JP') ? calc.lineDisplay : calc.final;
+                // 2026-07-06: JP 첫 아이템은 정액 배송비를 合計에 포함 → 아이템 合計 = 하단 총액(단일 아이템 시).
+                if (window.__SITE_CODE === 'JP' && _jpShipTotal > 0 && item.uid === _jpFirstItemUid) _bdLineTotal += _jpShipTotal;
                 if (window.__SITE_CODE !== 'JP' && !_bdIsFirstShip && _bdShipFee > 0) _bdLineTotal -= _bdShipFee;
                 _bd.push('<div style="display:flex; justify-content:space-between; border-top:1px dashed #d1d5db; margin-top:4px; padding-top:4px; font-weight:900;"><span>' + tr('합계','合計','Total') + '</span><b style="color:#dc2626;">' + fmtPrice(_bdLineTotal) + '</b></div>');
                 var _bdHtml = '<div style="margin:6px 0 8px; padding:8px 10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; font-size:11.5px; color:#374151; line-height:1.7;">' + _bd.join('') + '</div>';
