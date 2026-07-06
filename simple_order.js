@@ -8370,8 +8370,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-28: 실사출력 — 5m² 이상 주문 무료배송, 5m² 미만은 택배비 1만원(JP 1000엔·US $10 환율 자동).
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
-            var _rpAreaTot = ((state.customW || 0) / 100) * ((state.customH || 0) / 100) * Math.max(1, state.qty || 1);
-            return (_rpAreaTot >= 5) ? 0 : 10000;
+            return 5000;   // 2026-07-06: 실사출력도 일반 택배 5,000원 정액 (사용자 요청: 배송비 5천원 통일). 카트합계는 _soCalcCartTotal 정액룰로 5,000 처리.
         }
         // 2026-06-28: 광고인쇄(자유인쇄) — 기본 포장+배송비 1만원.
         if (state.isAdPrint) {
@@ -17291,7 +17290,8 @@ html, body { background: #ffffff !important; }
                 }
                 // 배송 (첫 번째 일반 항목만 표시, 나머지는 묶음배송 0원)
                 // 2026-06-24: 아크릴 family 는 무료배송 — 저장된 shipping.fee 무시
-                var _bdShipFee = _soIsAcrylicFamilyItem(item) ? 0 : ((item.shipping && item.shipping.fee) || 0);
+                // 2026-07-06: 실사출력도 per-item 배송 라인 숨김 — 배송은 카트 단위 5,000원 정액(하단 표시)이라 항목별 +10,000 표기는 오해.
+                var _bdShipFee = (_soIsAcrylicFamilyItem(item) || item._isRealPrint) ? 0 : ((item.shipping && item.shipping.fee) || 0);
                 var _bdIsFirstShip = (typeof window._soCartFirstShipUid !== 'undefined') ? (window._soCartFirstShipUid === item.uid) : true;
                 // 2026-07-03: JP 는 배송이 카트 단위 정액(全国一律, 하단 안내에 1회 표시)이라 아이템별 送料 라인은 숨김.
                 //   (아이템 박스 合計 = 상품가만 → 아이템마다 送料 +¥500 을 띄우면 合計와 불일치해 혼란. 일본 직원 지적)
@@ -18153,9 +18153,13 @@ html, body { background: #ffffff !important; }
             // 2026-05-30: 베스트굿즈는 정액 3,000원 배송 — shipping.fee 가 비어있어도 _soCalcItemPrice 가 +3000 반영하므로 별도로 빼야 함
             var shipFee;
             if (it._isBestGoods) {
-                shipFee = 3000;
-            } else if (_soIsAcrylicFamilyItem(it)) {
-                shipFee = 0;   // 2026-06-24: 아크릴 family 무료배송
+                shipFee = 3000;   // _soCalcItemPrice 가 +3000 포함 → 빼야 함
+            } else if (_soIsAcrylicFamilyItem(it) || it._isRealPrint
+                       || (it.product && String(it.product.code || '').indexOf('goods_') === 0)
+                       || it.bundleShipping) {
+                // 2026-07-06: _soCalcItemPrice 가 배송비를 포함 안 하는 상품(아크릴/실사출력/굿즈/묶음)은 subPrice 에서 빼면 안 됨.
+                //   기존엔 item.shipping.fee(실사출력 1만원 등)를 빼서 taxBase 가 0 → 총결제금액 0원 버그.
+                shipFee = 0;
             } else {
                 shipFee = (it.shipping && it.shipping.fee) || 0;
             }
@@ -18269,10 +18273,9 @@ html, body { background: #ffffff !important; }
             // 2026-06-08: 고객 결제창 (?quote=ID) 로 로드된 매니저 견적 아이템 — manager-set price 가 LINE total 진실 (배송비 포함).
             //   _payPendingQuote 가 patched item 에 __pendingQuoteId 를 박아둠. 이게 있으면 자동 배송비 가산 절대 금지.
             if (_it.__pendingQuoteId) return true;
-            // 2026-06-08: 실사출력 family — 자체 batch 배송 룰 적용 (위에서 가산). 자동 +30K 가산 절대 금지.
-            if (_it._isRealPrint) return true;
+            // 2026-07-06: 실사출력 family 는 _hasAmountOrder 에서 제외 — 일반 택배 5,000원 정액 적용 (사용자 요청: 배송비 5천원 통일).
+            //   기존엔 여기서 배송 면제되어 총결제금액에 배송비가 안 붙던 문제(총액 0원 등).
             var _c = (_it.product && _it.product.code) || '';
-            if (['345645645','34534543','34554322','345345436','35456345345','75766757','4563435','42355223','456474546'].indexOf(_c) >= 0) return true;
             var _cat = (_it.product && _it.product.category) || '';
             var _type = _it.type || '';
             if (_c === '21355677' || _c === '21355677_copy') return true;
