@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260707214316';
+        var CV = '20260707215356';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6659,12 +6659,22 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     } catch(e) { listEl.innerHTML = '<div style="color:#dc2626; font-size:12px;">' + (e.message||e) + '</div>'; }
   };
 
+  // 2026-07-07: 완료 처리 시 제보자에게 자동 기록되는 3개국어 안내 (한국/일본/영어).
+  var BUG_DONE_NOTICE = '✅ 제보하신 버그가 수정되었으니 확인해 주세요.\n✅ 報告いただいたバグは修正されましたので、ご確認ください。\n✅ The bug you reported has been fixed — please check.';
   window.updateBugStatus = async function(id, status){
     var sb = bugSb(); if (!sb) { alert('DB 연결이 없습니다. 새로고침 후 다시 시도해 주세요.'); return; }
     // 2026-07-07: 승인 눌러도 "아무 반응 없음" 개선 — .select() 로 실제 저장 확인 + 성공 토스트 피드백.
     try {
       var patch = { status: status };
-      if (status === 'done') patch.resolved_at = new Date().toISOString();
+      if (status === 'done') {
+        patch.resolved_at = new Date().toISOString();
+        // 완료 처리 시 제보자 안내(3개국어) 자동 기록 — 이미 상세 resolution 이 있으면 유지.
+        try {
+          var _cur = await sb.from('bug_reports').select('resolution').eq('id', id).maybeSingle();
+          var _ex = _cur && _cur.data && _cur.data.resolution;
+          if (!_ex) patch.resolution = BUG_DONE_NOTICE;
+        } catch(_re){ patch.resolution = BUG_DONE_NOTICE; }
+      }
       var res = await sb.from('bug_reports').update(patch).eq('id', id).select();
       if (res.error) throw res.error;
       if (!res.data || res.data.length === 0) {
