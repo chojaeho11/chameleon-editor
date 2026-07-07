@@ -254,7 +254,7 @@ window.showSection = function(){};
         <div id="sec-orders" class="page-section active">
             <div class="toolbar">
                 <div class="toolbar-row">
-                    <input type="text" id="orderSearchInput" placeholder="고객명 / 연락처 / 주문번호" style="width:220px;" onkeyup="if(event.key=='Enter'){resetPage();loadOrders();}">
+                    <input type="text" id="orderSearchInput" placeholder="고객명 / 연락처 / 주문번호 / 금액" style="width:240px;" onkeyup="if(event.key=='Enter'){resetPage();loadOrders();}">
                     <span style="font-size:13px;font-weight:600;color:#475569;">📅 주문일:</span>
                     <input type="date" id="filterOrderDate" style="width:150px;" onchange="resetPage();loadOrders()">
                     <i class="fa-solid fa-xmark" style="cursor:pointer;color:#94a3b8;font-size:12px;" onclick="document.getElementById('filterOrderDate').value='';resetPage();loadOrders();" title="초기화"></i>
@@ -565,7 +565,7 @@ window.showSection = function(){};
 <script type="module">
 import { sb, initConfig } from './global_config.js?v=435';
 import { checkAdminAccess, showLoading } from './global_common.js?v=435';
-import './global_orders.js?v=481';
+import './global_orders.js?v=482';
 import './global_stats.js?v=435';
 
 window.sb = sb;

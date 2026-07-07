@@ -1798,9 +1798,11 @@ window.loadOrders = async () => {
         if (deliveryDateFilter) query = query.eq('delivery_target_date', deliveryDateFilter);
         if (orderDateFilter) query = query.gte('created_at', orderDateFilter + 'T00:00:00').lte('created_at', orderDateFilter + 'T23:59:59');
         if (searchKeyword) {
-            const isNum = /^\d+$/.test(searchKeyword);
+            // 2026-07-07: 주문 금액 검색 추가 — 콤마/공백 제거 후 숫자면 주문번호(id)·주문금액(total_amount)도 매칭.
+            const numKeyword = searchKeyword.replace(/[,\s원¥$]/g, '');
+            const isNum = /^\d+$/.test(numKeyword);
             if (isNum) {
-                query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%,id.eq.${searchKeyword}`);
+                query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%,id.eq.${numKeyword},total_amount.eq.${numKeyword}`);
             } else {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%`);
             }
