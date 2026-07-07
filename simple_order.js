@@ -3566,6 +3566,117 @@ html, body { background: #ffffff !important; }
         };
     }
 
+    // 2026-07-07: 업로드 PDF 의 "미래스터화 효과" 위험 신호 감지.
+    //   일러스트 라이브 효과(외부광선/그림자/블러/투명도)는 저장 시 소프트마스크(SMask)·
+    //   혼합모드(Blend)·저해상도 래스터로 바뀌며, 인쇄소 RIP 의 문서래스터효과(기본 72ppi) 설정 때문에
+    //   화면과 출력이 달라짐(광채가 하얗게 터짐 등). 100% 판별은 불가하나 아래 구조 신호로 위험을 잡아 경고.
+    //   반환: null(스캔불가) 또는 { smask, blend, lowDpi, minDpi, hasSignal }.  (차단 아님 — 경고용)
+    async function _soScanPdfEffects(file) {
+        try {
+            await loadPdfJs();
+            if (!window.pdfjsLib || !window.pdfjsLib.OPS) return null;
+            var OPS = window.pdfjsLib.OPS;
+            var buf = await file.arrayBuffer();
+            var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+            var res = { smask: false, blend: false, lowDpi: false, minDpi: Infinity, hasSignal: false };
+            var maxPages = Math.min(pdf.numPages || 1, 6); // 성능 — 앞 6페이지만
+            function _matMul(a, b) { // CTM 합성 (a ∘ b) — b(cm) 를 현재 a 에 post-multiply
+                return [
+                    a[0]*b[0]+a[2]*b[1], a[1]*b[0]+a[3]*b[1],
+                    a[0]*b[2]+a[2]*b[3], a[1]*b[2]+a[3]*b[3],
+                    a[0]*b[4]+a[2]*b[5]+a[4], a[1]*b[4]+a[3]*b[5]+a[5]
+                ];
+            }
+            for (var pn = 1; pn <= maxPages; pn++) {
+                var page = await pdf.getPage(pn);
+                var ol = await page.getOperatorList();
+                var fn = ol.fnArray, args = ol.argsArray;
+                var ctm = [1,0,0,1,0,0], stack = [];
+                for (var i = 0; i < fn.length; i++) {
+                    var op = fn[i];
+                    if (op === OPS.save) { stack.push(ctm.slice()); }
+                    else if (op === OPS.restore) { ctm = stack.pop() || [1,0,0,1,0,0]; }
+                    else if (op === OPS.transform) {
+                        var m = args[i];
+                        if (m && m.length >= 6) ctm = _matMul(ctm, m);
+                    }
+                    else if (op === OPS.setGState) {
+                        var g = args[i];
+                        if (g && g.length === 1 && Array.isArray(g[0])) g = g[0]; // 래핑 해제
+                        if (Array.isArray(g)) {
+                            for (var k = 0; k < g.length; k++) {
+                                var pair = g[k]; if (!Array.isArray(pair)) continue;
+                                var key = pair[0], val = pair[1];
+                                if (key === 'SMask' && val && val !== 'None') res.smask = true;
+                                if (key === 'BM') {
+                                    var bm = Array.isArray(val) ? val[0] : val;
+                                    if (bm && bm !== 'Normal' && bm !== 'Compatible') res.blend = true;
+                                }
+                            }
+                        }
+                    }
+                    else if (op === OPS.paintImageXObject || op === OPS.paintInlineImageXObject) {
+                        var imgW = 0;
+                        if (op === OPS.paintInlineImageXObject) {
+                            var im = args[i] && args[i][0]; imgW = im && im.width || 0;
+                        } else {
+                            imgW = args[i] && args[i][1] || 0; // [objId, w, h]
+                        }
+                        var dispWpt = Math.hypot(ctm[0], ctm[1]); // 표시 폭(pt)
+                        if (imgW > 0 && dispWpt > 72) { // 1inch 초과 이미지만 (아이콘 제외)
+                            var dpi = imgW / (dispWpt / 72);
+                            if (dpi < res.minDpi) res.minDpi = dpi;
+                            if (dpi < 150) res.lowDpi = true;
+                        }
+                    }
+                }
+                if (page.cleanup) { try { page.cleanup(); } catch(_){} }
+            }
+            if (res.minDpi === Infinity) res.minDpi = null;
+            res.hasSignal = !!(res.smask || res.blend || res.lowDpi);
+            return res;
+        } catch (e) {
+            console.warn('[simple_order] PDF 효과 스캔 실패(무시):', e);
+            return null;
+        }
+    }
+
+    // 업로드 영역 아래 "효과 경고" 배너 (경고만 — 주문 차단 안 함).  el 은 필요 시 동적 생성.
+    function _soShowEffectWarn(info) {
+        try {
+            var anchor = document.getElementById('soUpload');
+            if (!anchor) return;
+            var wrap = document.getElementById('soEffectWarn');
+            if (!wrap) {
+                wrap = document.createElement('div');
+                wrap.id = 'soEffectWarn';
+                wrap.style.cssText = 'display:none;margin:10px 0;padding:12px 14px;border:1.5px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:10px;font-size:12.5px;line-height:1.65;';
+                anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+            }
+            var dpiTxt = (info && info.lowDpi && info.minDpi)
+                ? tr(' (일부 이미지 약 ' + Math.round(info.minDpi) + 'dpi — 인쇄 시 흐려질 수 있음)',
+                     '（一部の画像 約' + Math.round(info.minDpi) + 'dpi — 印刷時ぼやける可能性）',
+                     ' (some images ~' + Math.round(info.minDpi) + 'dpi — may look blurry in print)')
+                : '';
+            wrap.innerHTML =
+                '<div style="font-size:13px;margin-bottom:4px;">' +
+                tr('⚠ 이 PDF 에 투명·효과(그림자/광채/블러 등)가 감지되었습니다' + dpiTxt,
+                   '⚠ このPDFに透明・効果（影/光彩/ぼかし等）が検出されました' + dpiTxt,
+                   '⚠ Transparency / effects (shadow, glow, blur) detected in this PDF' + dpiTxt) +
+                '</div>' +
+                '<div>' +
+                tr('일러스트에서 <b>[효과 → 문서 래스터 효과 설정 → 300ppi]</b> 로 바꾼 뒤 해당 오브젝트를 <b>래스터화(평탄화)</b> 하여 다시 올려주시면 출력물이 화면과 동일하게 나옵니다. 이대로도 주문은 가능하나, 화면과 인쇄물이 다를 수 있습니다.',
+                   'Illustratorで <b>[効果 → ドキュメントのラスタライズ効果設定 → 300ppi]</b> にしてから対象オブジェクトを <b>ラスタライズ（統合）</b> して再アップロードすると、印刷が画面と同じになります。このままでも注文可能ですが、画面と印刷が異なる場合があります。',
+                   'In Illustrator set <b>[Effect → Document Raster Effects → 300ppi]</b>, then <b>rasterize (flatten)</b> those objects and re-upload so the print matches the screen. You can still order as-is, but the print may differ from the preview.') +
+                '</div>';
+            wrap.style.display = 'block';
+        } catch (e) { console.warn('[simple_order] effect warn 표시 실패:', e); }
+    }
+    function _soHideEffectWarn() {
+        var wrap = document.getElementById('soEffectWarn');
+        if (wrap) wrap.style.display = 'none';
+    }
+
     // 이미지 (PNG/JPG) — 픽셀 사이즈만 추출 (DPI 불명 — 환산 불가)
     function imageDataUrlWithDims(file) {
         return new Promise((resolve, reject) => {
@@ -3615,6 +3726,8 @@ html, body { background: #ffffff !important; }
         state.fileWidthPx = null;
         state.fileHeightPx = null;
         state.fileKind = isPdf ? 'pdf' : (isPng ? 'png' : 'jpg');
+        state.pdfEffectRisk = null; // 2026-07-07: 미래스터화 효과 위험 플래그 초기화
+        _soHideEffectWarn();
 
         try {
             if (isPdf) {
@@ -3624,6 +3737,14 @@ html, body { background: #ffffff !important; }
                 state.fileWidthMm = r.widthMm;
                 state.fileHeightMm = r.heightMm;
                 hideStatus();
+                // 2026-07-07: 미래스터화 효과(투명/그림자/광채/블러/저해상도) 감지 → 경고(차단 아님)
+                try {
+                    var _fx = await _soScanPdfEffects(file);
+                    if (_fx && _fx.hasSignal) {
+                        state.pdfEffectRisk = _fx;
+                        _soShowEffectWarn(_fx);
+                    }
+                } catch (_fxe) { console.warn('[simple_order] 효과 스캔 훅 실패:', _fxe); }
             } else {
                 // PNG / JPG
                 const r = await imageDataUrlWithDims(file);
@@ -9650,6 +9771,7 @@ html, body { background: #ffffff !important; }
             fileHeightPx: state.fileHeightPx || null,
             fileKind: state.fileKind || null,
             fileName: state.file ? state.file.name : null,
+            pdfEffectRisk: state.pdfEffectRisk || null, // 2026-07-07: 미래스터화 효과 감지 플래그(관리자 확인용)
             // addon 스냅샷
             selectedAddons: Object.assign({}, state.selectedAddons || {}),
             addonQuantities: Object.assign({}, state.addonQuantities || {}),
@@ -10012,8 +10134,12 @@ html, body { background: #ffffff !important; }
         state.fileWidthPx = line.fileWidthPx || null;
         state.fileHeightPx = line.fileHeightPx || null;
         state.fileKind = line.fileKind || null;
+        state.pdfEffectRisk = line.pdfEffectRisk || null; // 2026-07-07: 효과 위험 플래그 복원
         if (state.file && typeof renderUploadDone === 'function') {
             try { renderUploadDone(); } catch(e){}
+        }
+        if (state.pdfEffectRisk && state.pdfEffectRisk.hasSignal) {
+            try { _soShowEffectWarn(state.pdfEffectRisk); } catch(_){}
         }
         var _inlineInfo = document.getElementById('soAdInlineFileInfo');
         if (_inlineInfo && line.fileName) {
@@ -17094,6 +17220,10 @@ html, body { background: #ffffff !important; }
                 const meta = [];
                 if (calc.tierPct > 0) meta.push(`${calc.tierPct}% ${tr('할인', '割引', 'off')}`);
                 if (item.fileName) meta.push(`📎 ${escapeHtml(item.fileName)}`);
+                // 2026-07-07: 미래스터화 효과 감지 파일 — 카트에서도 노란 경고 표시
+                if (item.pdfEffectRisk && item.pdfEffectRisk.hasSignal) {
+                    meta.push('<span style="color:#b45309;">' + tr('⚠ 투명·효과 감지 (래스터화 권장)', '⚠ 透明・効果検出（ラスタライズ推奨）', '⚠ transparency/effects (rasterize recommended)') + '</span>');
+                }
                 // 2026-06-14: 모든 제작물 사이즈 표시 — leaflet 제외 (별도 분기) / gate 제외 (별도 분기 already).
                 //   customSize/wallSize/boxSize 우선, 없으면 product.w_mm × h_mm (DB).
                 try {
