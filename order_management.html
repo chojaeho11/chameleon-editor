@@ -539,6 +539,17 @@ window.showSection = function(){};
         <div id="fileMgrList" class="file-list-area"></div>
         <div style="background:#f0f9ff;padding:15px;border-radius:8px;border:1px dashed #bae6fd;">
             <div style="font-size:12px;font-weight:bold;color:#0369a1;margin-bottom:8px;">➕ 새 파일 추가</div>
+            <div style="margin-bottom:10px;padding:11px 13px;border:1px solid #e5e7eb;background:#f8fafc;border-radius:8px;font-size:12px;line-height:1.7;color:#334155;">
+                <div style="color:#1e40af;margin-bottom:4px;">인쇄 전 확인 — 고객 파일 업로드 시 아래를 점검하세요.</div>
+                <ul style="margin:0;padding-left:18px;">
+                    <li>서체(폰트) 아웃라인(윤곽선) 처리 여부</li>
+                    <li>색상 CMYK 모드 변환 여부 (RGB는 인쇄 색이 달라짐)</li>
+                    <li>칼선·커팅라인이 있으면 별도 레이어 분리 여부</li>
+                    <li>일러스트 효과(그림자·광원·투명·블러) 래스터화(평탄화) 여부</li>
+                    <li>이미지 해상도 실제 크기 300dpi 이상 (대형 출력 100~150dpi)</li>
+                    <li>재단 여백(도련) 포함 여부</li>
+                </ul>
+            </div>
             <div style="display:flex;gap:8px;">
                 <input type="file" id="fileMgrInput" class="input-text" style="padding:6px;">
                 <button class="btn btn-primary" onclick="uploadFileToOrder()">업로드</button>
@@ -684,6 +695,14 @@ setInterval(updateSideBadges, 30000);
 
         <div style="margin-bottom:14px;">
             <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:6px;">📎 디자인 파일 업로드 (여러 파일 선택 가능)</label>
+            <div style="margin-bottom:8px;padding:10px 12px;border:1px solid #e5e7eb;background:#f8fafc;border-radius:8px;font-size:11.5px;line-height:1.7;color:#334155;">
+                <div style="color:#1e40af;margin-bottom:3px;">인쇄 전 확인</div>
+                <ul style="margin:0;padding-left:16px;">
+                    <li>서체 아웃라인 / CMYK 변환 여부</li>
+                    <li>칼선 있으면 별도 레이어 분리 / 효과는 래스터화(평탄화)</li>
+                    <li>해상도 300dpi 이상(대형 100~150) · 재단 여백(도련) 포함</li>
+                </ul>
+            </div>
             <input id="mqFiles" type="file" multiple accept=".png,.jpg,.jpeg,.pdf,.ai,.psd,.zip" style="width:100%; padding:8px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:12px; background:#f9fafb;">
             <div id="mqFileList" style="font-size:11px; color:#6b7280; margin-top:6px;"></div>
         </div>

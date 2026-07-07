@@ -1243,7 +1243,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                                     : `<img src="${esc(thumbUrl)}" alt="design ${i+1}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fa-solid fa-image\\' style=\\'font-size:32px; color:#d1d5db;\\'></i>';">`)
                                 : (it.artwork_later ? '<div style="text-align:center; color:#b45309; font-size:12px; font-weight:700; padding:8px;"><i class="fa-solid fa-envelope" style="font-size:26px; display:block; margin-bottom:6px;"></i>이미지<br>추후 전달</div>' : '<i class="fa-solid fa-image" style="font-size:32px; color:#d1d5db;"></i>')}</div>`;
                         })()}
-                        ${_woIsAdmin ? `<label class="wo-attach-btn" style="font-size:11px;font-weight:700;color:#7c3aed;border:1.5px solid #c4b5fd;border-radius:7px;padding:5px 10px;cursor:pointer;background:#faf5ff;white-space:nowrap;">📎 파일 첨부<input type="file" multiple style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>` : ''}
+                        ${_woIsAdmin ? `<label class="wo-attach-btn" style="font-size:11px;font-weight:700;color:#7c3aed;border:1.5px solid #c4b5fd;border-radius:7px;padding:5px 10px;cursor:pointer;background:#faf5ff;white-space:nowrap;">📎 파일 첨부<input type="file" multiple style="display:none;" onchange="window._woAttachFile(${i}, this)"></label>
+                        <div style="font-size:10px; color:#64748b; line-height:1.6; margin-top:6px; max-width:220px;">인쇄 전 확인: 서체 아웃라인 · CMYK 변환 · 칼선 별도 레이어 · 효과 래스터화(평탄화) · 해상도 300dpi(대형 100~150) · 도련(재단여백)</div>` : ''}
                     </div>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div class="item-spec">

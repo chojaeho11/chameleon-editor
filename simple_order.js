@@ -3677,6 +3677,39 @@ html, body { background: #ffffff !important; }
         if (wrap) wrap.style.display = 'none';
     }
 
+    // 2026-07-07: 파일 업로드 시 "인쇄 전 확인사항" 체크리스트(경고 아님 · 차단 아님 — 통상 안내).
+    //   서체 아웃라인 / CMYK 변환 / 칼선 레이어 분리 / 효과 래스터화 / 해상도 / 도련.
+    function _soShowPrintChecklist() {
+        try {
+            var anchor = document.getElementById('soUpload');
+            if (!anchor) return;
+            var wrap = document.getElementById('soPrintChecklist');
+            if (!wrap) {
+                wrap = document.createElement('div');
+                wrap.id = 'soPrintChecklist';
+                wrap.style.cssText = 'margin:10px 0;padding:12px 14px;border:1px solid #dbeafe;background:#f8fafc;color:#334155;border-radius:10px;font-size:12.5px;line-height:1.75;';
+                anchor.parentNode.insertBefore(wrap, anchor.nextSibling);
+            }
+            var items = [
+                tr('서체(폰트)를 아웃라인(윤곽선) 처리하셨나요?', 'フォントをアウトライン化しましたか？', 'Fonts converted to outlines?'),
+                tr('색상을 CMYK 모드로 변환하셨나요? (RGB는 인쇄 색상이 달라질 수 있어요)', 'カラーをCMYKに変換しましたか？（RGBは印刷色が変わる場合があります）', 'Converted to CMYK? (RGB colors may shift in print)'),
+                tr('칼선·커팅라인이 있다면 별도 레이어로 분리하셨나요?', 'カット・トムソン線がある場合、別レイヤーに分けましたか？', 'If there are cut lines, are they on a separate layer?'),
+                tr('일러스트 효과(그림자·광원·투명·블러)를 사용했다면 래스터화(평탄화)하셨나요?', '効果（影・光彩・透明・ぼかし）を使った場合、ラスタライズ（統合）しましたか？', 'If you used effects (shadow/glow/transparency/blur), did you rasterize (flatten) them?'),
+                tr('이미지 해상도는 실제 크기 기준 300dpi 이상인가요? (대형 출력은 100~150dpi)', '画像解像度は原寸で300dpi以上ですか？（大判出力は100〜150dpi）', 'Is image resolution 300dpi+ at actual size? (large format 100–150dpi)'),
+                tr('재단 여백(도련)을 포함하셨나요?', '塗り足し（裁ち落とし）を入れましたか？', 'Did you include bleed margins?')
+            ];
+            var lis = items.map(function(t){ return '<li style="margin:2px 0;">' + t + '</li>'; }).join('');
+            wrap.innerHTML =
+                '<div style="color:#1e40af;margin-bottom:5px;">' +
+                tr('인쇄 전 확인해 주세요 — 아래 항목을 점검하면 화면과 출력물이 동일하게 나옵니다.',
+                   '印刷前にご確認ください — 下記を点検すると画面と印刷物が同じになります。',
+                   'Please check before printing — verifying these makes the print match your screen.') +
+                '</div>' +
+                '<ul style="margin:0;padding-left:18px;">' + lis + '</ul>';
+            wrap.style.display = 'block';
+        } catch (e) { console.warn('[simple_order] print checklist 표시 실패:', e); }
+    }
+
     // 이미지 (PNG/JPG) — 픽셀 사이즈만 추출 (DPI 불명 — 환산 불가)
     function imageDataUrlWithDims(file) {
         return new Promise((resolve, reject) => {
@@ -3728,6 +3761,7 @@ html, body { background: #ffffff !important; }
         state.fileKind = isPdf ? 'pdf' : (isPng ? 'png' : 'jpg');
         state.pdfEffectRisk = null; // 2026-07-07: 미래스터화 효과 위험 플래그 초기화
         _soHideEffectWarn();
+        _soShowPrintChecklist(); // 2026-07-07: 인쇄 전 확인사항 안내 (모든 업로드 공통)
 
         try {
             if (isPdf) {
