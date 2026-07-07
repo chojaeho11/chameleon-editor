@@ -9666,6 +9666,13 @@ html, body { background: #ffffff !important; }
                 calcPrice = state.product.price;
             }
         } catch (e) {}
+        // 2026-07-07: 봉투(pp_envelope) 8종 — 고정 사이즈·flat DB 가격(500매 74,000원 등). 면적상품 아님.
+        //   product.price 를 perSqm 로 오용 → 면적가·최소단가(perSqm×0.1)가 1/10(7,400원)로 깎던 버그 수정.
+        try {
+            if (typeof _soIsEnvelopeProduct === 'function' && _soIsEnvelopeProduct(state.product) && state.product && state.product.price) {
+                calcPrice = state.product.price;
+            }
+        } catch (e) {}
         // 2026-06-05: 자유인쇄커팅 — 최소 단가 3,000원 (이전 30,000원은 너무 높아서 사이즈/재질 차이가 안 보였음).
         //   사용자 피드백: "가격이 3만원에 고정되어 있어 사이즈나 재질이 변해도" — 30k 최소가 모든 차이를 가림.
         var _minApplied = false;   // 2026-06-24: 면적가가 최소단가보다 작아 floor 가 적용됐는지 (라벨 정직하게 표기용)

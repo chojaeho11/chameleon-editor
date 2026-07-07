@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260707220539';
+        var CV = '20260707221736';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6556,6 +6556,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     btnRej:   { ko:'✕ 반려', ja:'✕ 却下', en:'✕ Reject', zh:'✕ 拒绝', ar:'✕ رفض', es:'✕ Rechazar', de:'✕ Ablehnen', fr:'✕ Rejeter' },
     btnDone:  { ko:'완료 처리', ja:'完了にする', en:'Mark done', zh:'标记完成', ar:'وضع علامة تم', es:'Marcar hecho', de:'Als erledigt', fr:'Terminer' },
     st_closed:{ ko:'종료', ja:'クローズ', en:'Closed', zh:'已关闭', ar:'مغلق', es:'Cerrado', de:'Geschlossen', fr:'Clôturé' },
+    st_reopen:{ ko:'⚠ 재접수', ja:'⚠ 再受付', en:'⚠ Reopened', zh:'⚠ 重新提交', ar:'⚠ أعيد فتحه', es:'⚠ Reabierto', de:'⚠ Wieder offen', fr:'⚠ Rouvert' },
     btnClose: { ko:'✓ 확인·종료', ja:'✓ 確認・クローズ', en:'✓ Confirm & close', zh:'✓ 确认并关闭', ar:'✓ تأكيد وإغلاق', es:'✓ Confirmar y cerrar', de:'✓ Bestätigen & schließen', fr:'✓ Confirmer et clôturer' },
     btnReopen:{ ko:'↩ 재접수 (미해결)', ja:'↩ 再受付 (未解決)', en:'↩ Reopen (not fixed)', zh:'↩ 重新提交 (未解决)', ar:'↩ إعادة فتح (لم يُحل)', es:'↩ Reabrir (no resuelto)', de:'↩ Wieder öffnen (nicht gelöst)', fr:'↩ Rouvrir (non résolu)' },
     btnDel:   { ko:'🗑 삭제', ja:'🗑 削除', en:'🗑 Delete', zh:'🗑 删除', ar:'🗑 حذف', es:'🗑 Eliminar', de:'🗑 Löschen', fr:'🗑 Supprimer' }
@@ -6628,18 +6629,23 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     var listEl = document.getElementById('bugList'); if (!listEl) return;
     var sb = bugSb(); if (!sb) return;
     try {
-      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution').order('id',{ascending:false}).limit(30);
+      // 2026-07-07: 재접수(reopened_at) 건은 맨 위로 — reopened_at desc(널 뒤로) → id desc.
+      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution,reopened_at').order('reopened_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(30);
       var rows = (r && r.data) || [];
       if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
       var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', done:'#16a34a', closed:'#64748b' };
       var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), done:T('st_done'), closed:T('st_closed') };
+      // 재접수(미해결로 되돌린) 건 = status 'new' + reopened_at 있음 → 배지/색 별도.
       var esc = function(s){ return String(s||'').replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); };
       var btnCss = 'padding:5px 11px; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;';
       listEl.innerHTML = rows.map(function(b){
         var thumbs = String(b.screenshot_url || '').split('\n').filter(Boolean);
         var thumbHtml = thumbs.length ? thumbs.map(function(u){ return '<img class="bug-thumb" src="' + u + '" onclick="window.open(\'' + u + '\',\'_blank\')">'; }).join('') : '';
         var dt = b.created_at ? new Date(b.created_at).toLocaleString() : '';
-        var stc = stColor[b.status] || '#64748b';
+        // 재접수(미해결로 되돌린) 건 = status 'new' + reopened_at → 빨간 '⚠ 재접수' 배지로 눈에 띄게.
+        var _isReopen = (b.status === 'new' && b.reopened_at);
+        var stc = _isReopen ? '#ef4444' : (stColor[b.status] || '#64748b');
+        var _badgeLbl = _isReopen ? T('st_reopen') : (stLbl[b.status] || esc(b.status));
         // 검토 버튼 — 접수→승인/반려, 승인·처리중→완료, 완료→확인·종료/재접수. 삭제는 모든 상태.
         var actions = '';
         if (b.status === 'new') {
@@ -6659,7 +6665,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
           (thumbHtml ? '<div style="display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; max-width:150px;">' + thumbHtml + '</div>' : '') +
           '<div style="flex:1; min-width:0;">' +
             '<div style="display:flex; justify-content:space-between; gap:8px; align-items:center;"><b style="font-size:13px; color:#0f172a;">' + esc(b.reporter_name) + '</b>' +
-            '<span class="bug-badge" style="background:' + stc + '22; color:' + stc + ';">' + (stLbl[b.status]||esc(b.status)) + '</span></div>' +
+            '<span class="bug-badge" style="background:' + stc + '22; color:' + stc + ';">' + _badgeLbl + '</span></div>' +
             '<div style="font-size:12.5px; color:#334155; margin-top:4px; white-space:pre-wrap; word-break:break-word;">' + esc(b.description) + '</div>' +
             (b.resolution ? '<div style="font-size:11.5px; color:#15803d; margin-top:5px; background:#f0fdf4; border-radius:6px; padding:5px 8px;">✅ ' + esc(b.resolution) + '</div>' : '') +
             '<div style="font-size:10.5px; color:#94a3b8; margin-top:5px;">#' + b.id + ' · ' + dt + (thumbs.length>1?(' · 📎'+thumbs.length):'') + '</div>' +
@@ -6685,9 +6691,10 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
           if (!_ex) patch.resolution = BUG_DONE_NOTICE;
         } catch(_re){ patch.resolution = BUG_DONE_NOTICE; }
       } else if (status === 'new') {
-        // 재접수(미해결로 되돌림) — 완료 안내/완료시각 초기화하여 다시 미해결 상태로.
+        // 재접수(미해결로 되돌림) — 완료 안내/완료시각 초기화 + reopened_at 기록(목록 맨 위로 + '재접수' 배지).
         patch.resolution = null;
         patch.resolved_at = null;
+        patch.reopened_at = new Date().toISOString();
       }
       var res = await sb.from('bug_reports').update(patch).eq('id', id).select();
       if (res.error) throw res.error;
