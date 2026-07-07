@@ -2632,6 +2632,12 @@ html, body { background: #ffffff !important; }
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
+          <!-- 2026-07-07: 현수막(placard) — 완성 파일 업로드 진입점. #soFile(→handleFile) 트리거: 사이즈 자동인식·가격반영·에디터 로드·체크리스트·효과경고 모두 handleFile 이 처리. -->
+          <div id="soPlacardFinalFileWrap" style="display:none; margin-top:14px;">
+            <div style="font-size:13px; color:#0f172a; margin-bottom:3px;">${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload final file')}</div>
+            <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.6;">${tr('이미 디자인한 PDF·PNG·JPG 가 있으면 여기서 올려주세요. 페이지 사이즈를 자동 인식해 가로·세로와 가격에 반영합니다. (위 에디터로 직접 디자인해도 됩니다.)', 'デザイン済みの PDF·PNG·JPG があればここからアップロード。ページサイズを自動認識して横·縦と価格に反映します。（上のエディタで直接デザインしてもOKです。）', 'If you already have a designed PDF/PNG/JPG, upload it here — the page size is auto-detected and applied to W×H and price. (Or design in the editor above.)')}</div>
+            <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; padding:13px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択 (PDF·PNG·JPG)', 'Choose final file (PDF·PNG·JPG)')}</button>
+          </div>
           <!-- 2026-06-01: 광고인쇄/허니콤 인라인 업로드는 별도 카드(#soInlineUploadCard)로 분리되어 사이드바 최상단으로 이동. -->
         </div>
 
@@ -12847,6 +12853,9 @@ html, body { background: #ffffff !important; }
             var _plSec = document.getElementById('soPlacardVariantsSec');
             if (_plSec) _plSec.style.display = 'none';
         }
+        // 2026-07-07: 현수막 완성파일 업로드 카드 — placard 일 때만 노출
+        var _plFinalFile = document.getElementById('soPlacardFinalFileWrap');
+        if (_plFinalFile) _plFinalFile.style.display = _isPlVariant ? '' : 'none';
         // 2026-06-06: 아크릴 family (8종 — 2T/3T/5T/8T/금경/은경/탁상스탠드/글씨스카시)
         var _isAcVariant = (typeof window._soIsAcrylicFamilyProduct === 'function')
             ? window._soIsAcrylicFamilyProduct(p) : false;
