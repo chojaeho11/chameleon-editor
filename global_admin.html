@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260707215356';
+        var CV = '20260707220539';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6554,7 +6554,11 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     st_rej:   { ko:'반려', ja:'却下', en:'Rejected', zh:'已拒绝', ar:'مرفوض', es:'Rechazado', de:'Abgelehnt', fr:'Rejeté' },
     btnAppr:  { ko:'✓ 승인', ja:'✓ 承認', en:'✓ Approve', zh:'✓ 批准', ar:'✓ موافقة', es:'✓ Aprobar', de:'✓ Genehmigen', fr:'✓ Approuver' },
     btnRej:   { ko:'✕ 반려', ja:'✕ 却下', en:'✕ Reject', zh:'✕ 拒绝', ar:'✕ رفض', es:'✕ Rechazar', de:'✕ Ablehnen', fr:'✕ Rejeter' },
-    btnDone:  { ko:'완료 처리', ja:'完了にする', en:'Mark done', zh:'标记完成', ar:'وضع علامة تم', es:'Marcar hecho', de:'Als erledigt', fr:'Terminer' }
+    btnDone:  { ko:'완료 처리', ja:'完了にする', en:'Mark done', zh:'标记完成', ar:'وضع علامة تم', es:'Marcar hecho', de:'Als erledigt', fr:'Terminer' },
+    st_closed:{ ko:'종료', ja:'クローズ', en:'Closed', zh:'已关闭', ar:'مغلق', es:'Cerrado', de:'Geschlossen', fr:'Clôturé' },
+    btnClose: { ko:'✓ 확인·종료', ja:'✓ 確認・クローズ', en:'✓ Confirm & close', zh:'✓ 确认并关闭', ar:'✓ تأكيد وإغلاق', es:'✓ Confirmar y cerrar', de:'✓ Bestätigen & schließen', fr:'✓ Confirmer et clôturer' },
+    btnReopen:{ ko:'↩ 재접수 (미해결)', ja:'↩ 再受付 (未解決)', en:'↩ Reopen (not fixed)', zh:'↩ 重新提交 (未解决)', ar:'↩ إعادة فتح (لم يُحل)', es:'↩ Reabrir (no resuelto)', de:'↩ Wieder öffnen (nicht gelöst)', fr:'↩ Rouvrir (non résolu)' },
+    btnDel:   { ko:'🗑 삭제', ja:'🗑 削除', en:'🗑 Delete', zh:'🗑 删除', ar:'🗑 حذف', es:'🗑 Eliminar', de:'🗑 Löschen', fr:'🗑 Supprimer' }
   };
   function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
   function T(k){ var d = BUG_I18N[k] || {}; return d[_bl()] || d.ko || ''; }
@@ -6624,11 +6628,11 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     var listEl = document.getElementById('bugList'); if (!listEl) return;
     var sb = bugSb(); if (!sb) return;
     try {
-      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status').order('id',{ascending:false}).limit(30);
+      var r = await sb.from('bug_reports').select('id,created_at,reporter_name,description,screenshot_url,status,resolution').order('id',{ascending:false}).limit(30);
       var rows = (r && r.data) || [];
       if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8; font-size:13px;">' + T('empty') + '</div>'; return; }
-      var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', done:'#16a34a' };
-      var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), done:T('st_done') };
+      var stColor = { new:'#f59e0b', approved:'#7c3aed', rejected:'#ef4444', in_progress:'#3b82f6', done:'#16a34a', closed:'#64748b' };
+      var stLbl = { new:T('st_new'), approved:T('st_appr'), rejected:T('st_rej'), in_progress:T('st_prog'), done:T('st_done'), closed:T('st_closed') };
       var esc = function(s){ return String(s||'').replace(/[<>&]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); };
       var btnCss = 'padding:5px 11px; border:none; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;';
       listEl.innerHTML = rows.map(function(b){
@@ -6636,7 +6640,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
         var thumbHtml = thumbs.length ? thumbs.map(function(u){ return '<img class="bug-thumb" src="' + u + '" onclick="window.open(\'' + u + '\',\'_blank\')">'; }).join('') : '';
         var dt = b.created_at ? new Date(b.created_at).toLocaleString() : '';
         var stc = stColor[b.status] || '#64748b';
-        // 검토 버튼 — 사장님 검토용 (접수 → 승인/반려, 승인·처리중 → 완료)
+        // 검토 버튼 — 접수→승인/반려, 승인·처리중→완료, 완료→확인·종료/재접수. 삭제는 모든 상태.
         var actions = '';
         if (b.status === 'new') {
           actions = '<button style="' + btnCss + 'background:#7c3aed;color:#fff;" onclick="updateBugStatus(' + b.id + ',\'approved\')">' + T('btnAppr') + '</button>' +
@@ -6644,7 +6648,13 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
         } else if (b.status === 'approved' || b.status === 'in_progress') {
           actions = '<button style="' + btnCss + 'background:#dcfce7;color:#15803d;" onclick="updateBugStatus(' + b.id + ',\'done\')">' + T('btnDone') + '</button>' +
                     '<button style="' + btnCss + 'background:#fee2e2;color:#b91c1c;" onclick="updateBugStatus(' + b.id + ',\'rejected\')">' + T('btnRej') + '</button>';
+        } else if (b.status === 'done') {
+          // 담당 직원이 확인 후 — 정상이면 종료, 아직 안 고쳐졌으면 재접수(미해결로 되돌림).
+          actions = '<button style="' + btnCss + 'background:#0f172a;color:#fff;" onclick="updateBugStatus(' + b.id + ',\'closed\')">' + T('btnClose') + '</button>' +
+                    '<button style="' + btnCss + 'background:#fef3c7;color:#92400e;" onclick="updateBugStatus(' + b.id + ',\'new\')">' + T('btnReopen') + '</button>';
         }
+        // 삭제 버튼 — 모든 제보에 노출 (오른쪽 끝).
+        actions += '<button style="' + btnCss + 'background:#f1f5f9;color:#64748b;margin-left:auto;" onclick="deleteBugReport(' + b.id + ')">' + T('btnDel') + '</button>';
         return '<div class="bug-item">' +
           (thumbHtml ? '<div style="display:flex; gap:6px; flex-wrap:wrap; flex-shrink:0; max-width:150px;">' + thumbHtml + '</div>' : '') +
           '<div style="flex:1; min-width:0;">' +
@@ -6674,6 +6684,10 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
           var _ex = _cur && _cur.data && _cur.data.resolution;
           if (!_ex) patch.resolution = BUG_DONE_NOTICE;
         } catch(_re){ patch.resolution = BUG_DONE_NOTICE; }
+      } else if (status === 'new') {
+        // 재접수(미해결로 되돌림) — 완료 안내/완료시각 초기화하여 다시 미해결 상태로.
+        patch.resolution = null;
+        patch.resolved_at = null;
       }
       var res = await sb.from('bug_reports').update(patch).eq('id', id).select();
       if (res.error) throw res.error;
@@ -6683,12 +6697,33 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
         else alert('상태가 저장되지 않았습니다 (권한/RLS 문제일 수 있어요).');
         return;
       }
-      var _lbl = status === 'approved' ? '승인' : status === 'rejected' ? '반려' : status === 'done' ? '완료 처리' : status;
+      var _lblMap = { approved:'승인', rejected:'반려', done:'완료 처리', closed:'확인·종료', new:'재접수' };
+      var _lbl = _lblMap[status] || status;
       if (window.showToast) showToast('버그 제보 ' + _lbl + ' 완료', 'success');
       if (window.loadBugReports) await window.loadBugReports();
     } catch(e) {
       if (window.showToast) showToast('상태 변경 실패: ' + (e.message||e), 'error');
       else alert('상태 변경 실패: ' + (e.message||e));
+    }
+  };
+
+  // 2026-07-07: 버그 제보 삭제 (모든 상태 · 확인 후 완전 삭제).
+  window.deleteBugReport = async function(id){
+    var sb = bugSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
+    if (!confirm('이 버그 제보를 완전히 삭제하시겠습니까? (되돌릴 수 없습니다)')) return;
+    try {
+      var res = await sb.from('bug_reports').delete().eq('id', id).select();
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length === 0) {
+        if (window.showToast) showToast('삭제되지 않았습니다 (권한/RLS). 새로고침 후 다시 시도해 주세요.', 'error');
+        else alert('삭제되지 않았습니다 (권한/RLS).');
+        return;
+      }
+      if (window.showToast) showToast('버그 제보 삭제 완료', 'success');
+      if (window.loadBugReports) await window.loadBugReports();
+    } catch(e) {
+      if (window.showToast) showToast('삭제 실패: ' + (e.message||e), 'error');
+      else alert('삭제 실패: ' + (e.message||e));
     }
   };
 
