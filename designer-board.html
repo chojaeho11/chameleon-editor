@@ -1267,8 +1267,8 @@ async function render() {
     const _openList = (board || []).filter(r => r.status === 'open');
     const inprog = (mine || []).filter(r => ['claimed','completed','settlement_requested'].includes(r.status));
     const done = (mine || []).filter(r => r.status === 'settled');
-    // 2026-07-07: "내 작업" 탭 — 진행중 전체 중 내가 받은(담당 디자이너=나) 건만.
-    const mywork = inprog.filter(r => parseMeta(r.description).designerId === userId);
+    // 2026-07-07: "내 작업" 탭 — 내가 받은(담당 디자이너=나) 건 전부 (진행중·완료·정산요청·정산완료 모두 포함).
+    const mywork = (mine || []).filter(r => parseMeta(r.description).designerId === userId);
 
     // 신규의뢰 뱃지는 'open' 만 카운트
     const cOpen = _openList.length;
@@ -1353,9 +1353,9 @@ async function render() {
                       '進行中の依頼はありません。\n新規依頼タブから依頼を受けてみましょう。',
                       'No requests in progress.\nClaim one from the New Requests tab.')
                 : activeTab === 'mywork'
-                    ? tr('내가 받은 진행 건이 없습니다.\n신규 의뢰 탭에서 의뢰를 받으면 여기에 모아 보여집니다.',
-                          '担当中の依頼はありません。\n新規依頼タブから依頼を受けるとここにまとまります。',
-                          'You have no claimed work.\nClaim a request and it will collect here.')
+                    ? tr('내가 맡은 의뢰가 없습니다.\n신규 의뢰 탭에서 의뢰를 받으면 진행·완료·정산까지 여기에 모아 보여집니다.',
+                          '担当した依頼はありません。\n新規依頼タブから依頼を受けると、進行・完了・精算までここにまとまります。',
+                          'You have no assigned work.\nClaim a request and everything (in-progress, done, payout) collects here.')
                     : tr('완료한 의뢰가 없습니다.', '完了した依頼はありません。', 'No completed requests yet.');
         html += `<div class="db-empty"><div class="ic">📭</div>${esc(emptyText).replace(/\n/g,'<br>')}</div>`;
     } else {
