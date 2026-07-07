@@ -1224,6 +1224,16 @@ html, body { background: #ffffff !important; }
     animation: so-spin 0.9s linear infinite;
 }
 @keyframes so-spin { to { transform: rotate(360deg); } }
+/* 2026-07-07: 파일 업로드 버튼 — 보라색 그라데이션이 흐르는 애니메이션 + 흰색 글씨 */
+@keyframes soUploadGradFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+.so-upload-grad-btn {
+    background: linear-gradient(90deg, #6d28d9, #a855f7, #7c3aed, #c026d3, #6d28d9);
+    background-size: 300% 100%;
+    animation: soUploadGradFlow 3.5s ease infinite;
+    color: #ffffff !important;
+    border: none !important;
+}
+.so-upload-grad-btn:hover { filter: brightness(1.08); }
 .so-upload-title {
     font-size: 17px; font-weight: 900; color: #451a03; margin-bottom: 8px;
 }
@@ -2327,10 +2337,9 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 파일 업로드 — #soFile (기존) 트리거 -->
           <div id="soBannerUploadWrap">
-            <button type="button" id="soBannerUploadBtn" onclick="document.getElementById('soFile').click()"
-              style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
-              <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
+            <button type="button" id="soBannerUploadBtn" class="so-upload-grad-btn" onclick="document.getElementById('soFile').click()"
+              style="width:100%; padding:15px; border-radius:12px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">
+              <span>${tr('파일 업로드 (PDF·PNG·JPG)', 'ファイルアップロード (PDF·PNG·JPG)', 'Upload file (PDF·PNG·JPG)')}</span>
             </button>
           </div>
           <div id="soBannerUploadDone" style="display:none; margin-bottom:10px;">
@@ -2698,10 +2707,9 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 업로드 전 — 큰 점선 버튼 -->
           <div id="soAdInlineUploadWrap">
-            <button type="button" id="soAdInlineUploadBtn" onclick="document.getElementById('soFile').click()"
-              style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; transition:all 0.15s ease; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>
-              <span>${tr('파일 업로드 (PDF · PNG · JPG)', 'ファイルアップロード (PDF · PNG · JPG)', 'Upload file (PDF · PNG · JPG)')}</span>
+            <button type="button" id="soAdInlineUploadBtn" class="so-upload-grad-btn" onclick="document.getElementById('soFile').click()"
+              style="width:100%; padding:15px; border-radius:12px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">
+              <span>${tr('파일 업로드 (PDF·PNG·JPG)', 'ファイルアップロード (PDF·PNG·JPG)', 'Upload file (PDF·PNG·JPG)')}</span>
             </button>
             <div style="font-size:10.5px; color:#64748b; margin-top:6px; line-height:1.6;">
               <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i>
@@ -2938,12 +2946,11 @@ html, body { background: #ffffff !important; }
 
           <!-- 2026-06-16: 완성파일 업로드 — 직접 디자인한 PDF/이미지 올리면 사이즈 자동 인식 + 캔버스 교체. -->
           <div id="soStickerFinalFileWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">📄 ${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload Final File')}</div>
+            <div class="so-section-title">${tr('파일 업로드', 'ファイルアップロード', 'Upload file')}</div>
             <div style="font-size:11px; color:#64748b; margin-bottom:8px; line-height:1.5;">${tr('PDF·PNG·JPG 파일을 직접 올리면 페이지 사이즈를 자동 인식해 캔버스·가격에 반영됩니다.', 'PDF·PNG·JPGをアップロードするとサイズを自動認識して反映します。', 'Upload PDF/PNG/JPG — page size auto-detected & applied to canvas & price.')}</div>
             <div id="soStickerFinalFileBefore">
-              <button type="button" onclick="document.getElementById('soStickerFinalFile').click()" style="width:100%; padding:14px; border:2px dashed #2563eb; border-radius:12px; background:#eff6ff; color:#1e40af; font-size:13.5px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size:17px;"></i>
-                <span>${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択', 'Choose final file')}</span>
+              <button type="button" class="so-upload-grad-btn" onclick="document.getElementById('soStickerFinalFile').click()" style="width:100%; padding:15px; border-radius:12px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">
+                <span>${tr('파일 업로드 (PDF·PNG·JPG)', 'ファイルアップロード (PDF·PNG·JPG)', 'Upload file (PDF·PNG·JPG)')}</span>
               </button>
               <input type="file" id="soStickerFinalFile" accept="application/pdf,image/png,image/jpeg" style="display:none;" onchange="window._soStickerFinalFileUpload(this)">
             </div>
@@ -3156,13 +3163,13 @@ html, body { background: #ffffff !important; }
         <!-- 2026-07-07: 범용 완성 파일 업로드 — 전용 업로드가 없는 모든 제품(실사출력/아크릴/배너/현수막/봉투/달력 등)에 노출.
              _soSyncUniversalUpload 가 전용 업로드 있는 제품(스티커/명함/광고인쇄/허니콤/가벽/원판/티셔츠/허니콤배너)만 숨김. #soFile(→handleFile) 트리거. -->
         <div class="so-section" id="soUniversalUpload" style="display:none;">
-          <div class="so-section-title">${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload final file')}</div>
+          <div class="so-section-title">${tr('파일 업로드', 'ファイルアップロード', 'Upload file')}</div>
           <div id="soUnivUploadBefore">
-            <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; padding:14px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:11px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択 (PDF·PNG·JPG)', 'Choose final file (PDF·PNG·JPG)')}</button>
+            <button type="button" class="so-upload-grad-btn" onclick="document.getElementById('soFile').click()" style="width:100%; padding:15px; border-radius:11px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">${tr('파일 업로드 (PDF·PNG·JPG)', 'ファイルアップロード (PDF·PNG·JPG)', 'Upload file (PDF·PNG·JPG)')}</button>
             <div style="font-size:11px; color:#64748b; margin-top:7px; line-height:1.6;">${tr('직접 디자인한 파일이 있으면 올려주세요. 사이즈를 자동 인식해 가격에 반영합니다. (위 에디터로 디자인해도 됩니다.)', 'デザイン済みファイルがあればアップロード。サイズを自動認識して価格に反映します。（上のエディタでデザインしてもOK。）', 'Upload your finished file — size auto-detected & applied to price. (Or design in the editor above.)')}</div>
           </div>
           <div id="soUnivUploadDone" style="display:none;">
-            <div style="padding:13px 15px; border:1px solid #a7f3d0; background:#ecfdf5; border-radius:11px; color:#065f46; font-size:13px;">${tr('완성 파일 업로드 완료', '完成ファイルアップロード完了', 'Final file uploaded')}<div id="soUnivUploadInfo" style="font-size:11.5px; margin-top:4px; color:#047857; word-break:break-all;"></div></div>
+            <div style="padding:13px 15px; border:1px solid #a7f3d0; background:#ecfdf5; border-radius:11px; color:#065f46; font-size:13px;">${tr('파일 업로드 완료', 'ファイルアップロード完了', 'File uploaded')}<div id="soUnivUploadInfo" style="font-size:11.5px; margin-top:4px; color:#047857; word-break:break-all;"></div></div>
             <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; margin-top:8px; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('파일 변경', 'ファイル変更', 'Change file')}</button>
           </div>
         </div>
