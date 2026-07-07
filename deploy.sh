@@ -14,11 +14,13 @@ STAMP="$(date +%Y%m%d%H%M%S)"
 # 1) version.txt = 새 stamp
 printf '%s' "$STAMP" > version.txt
 
-# 2) index.html 내장 CV = 같은 stamp (버전 자동 갱신 블록)
+# 2) index.html + global_admin.html 내장 CV = 같은 stamp (버전 자동 갱신 블록)
 sed -i "s/var CV = '[^']*';/var CV = '$STAMP';/" index.html
+sed -i "s/var CV = '[^']*';/var CV = '$STAMP';/" global_admin.html
 
 echo "[deploy] build stamp = $STAMP"
 grep -n "var CV = '$STAMP'" index.html >/dev/null && echo "[deploy] index.html CV updated OK" || { echo "[deploy] ERROR: CV not updated in index.html"; exit 1; }
+grep -n "var CV = '$STAMP'" global_admin.html >/dev/null && echo "[deploy] global_admin.html CV updated OK" || echo "[deploy] WARN: CV not updated in global_admin.html"
 
 # 3) git
 git add -A
