@@ -603,7 +603,7 @@
                 return mapped;
             }
 
-            var sb = window.sb;
+            var sb = _cfg.getSb();
             if (!sb) return [];
             var cats = _LIB_CATEGORIES[tab];
             if (!cats) return [];
