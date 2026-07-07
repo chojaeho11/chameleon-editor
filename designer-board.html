@@ -1559,7 +1559,7 @@ function renderCard(r) {
                         <span class="l">${_A.payout}</span>
                         <span class="v">${payoutLabel(r)}</span>
                     </div>
-                    <div class="db-actions">${actions}${(isMine || isAdmin()) ? `<button class="db-act" onclick="dbAdminDelete('${r.id}')" style="background:rgba(255,59,48,0.10); color:#ff3b30; margin-left:auto;">${_A.adminDel}</button>` : ''}</div>
+                    <div class="db-actions">${actions}<button class="db-act" onclick="dbAdminDelete('${r.id}')" style="background:rgba(255,59,48,0.10); color:#ff3b30; margin-left:auto;">${_A.adminDel}</button></div>
                 </div>
             </div>
         </div>
@@ -1581,14 +1581,9 @@ async function _dbArchiveRequests(ids) {
     } catch (e) { console.warn('[archive]', e); }
 }
 
-// 관리자 — 단일 의뢰 삭제 (FK 자식 먼저 삭제 후 부모)
+// 단일 의뢰 삭제 (FK 자식 먼저 삭제 후 부모)
 async function dbAdminDelete(id) {
-    // 2026-07-02: 본인이 진행 중인 의뢰(또는 관리자)만 삭제 가능 (사용자 요청). 다른 디자이너 건 삭제 차단.
-    if (!isAdmin()) {
-        const { data: _row } = await sb.from('design_requests').select('description').eq('id', id).maybeSingle();
-        const _isMineRow = _row && typeof _row.description === 'string' && _row.description.indexOf('[DESIGNER:' + userId) >= 0;
-        if (!_isMineRow) { alert('본인이 진행 중인 의뢰만 삭제할 수 있습니다.'); return; }
-    }
+    // 2026-07-07: 삭제 버튼/기능 전체 개방 (사용자 요청) — 로그인한 모두가 삭제 가능. 삭제 시 휴지통 백업 → "최근 삭제 복구" 로 되돌릴 수 있어 안전.
     if (!confirm('이 의뢰를 삭제하시겠습니까?\n(삭제 후 "최근 삭제 복구" 로 되돌릴 수 있습니다)')) return;
     try {
         await _dbArchiveRequests([id]);   // 휴지통 백업
