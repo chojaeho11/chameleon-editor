@@ -6626,13 +6626,26 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
   };
 
   window.updateBugStatus = async function(id, status){
-    var sb = bugSb(); if (!sb) return;
+    var sb = bugSb(); if (!sb) { alert('DB 연결이 없습니다. 새로고침 후 다시 시도해 주세요.'); return; }
+    // 2026-07-07: 승인 눌러도 "아무 반응 없음" 개선 — .select() 로 실제 저장 확인 + 성공 토스트 피드백.
     try {
       var patch = { status: status };
       if (status === 'done') patch.resolved_at = new Date().toISOString();
-      await sb.from('bug_reports').update(patch).eq('id', id);
-      if (window.loadBugReports) window.loadBugReports();
-    } catch(e) { alert('상태 변경 실패: ' + (e.message||e)); }
+      var res = await sb.from('bug_reports').update(patch).eq('id', id).select();
+      if (res.error) throw res.error;
+      if (!res.data || res.data.length === 0) {
+        // RLS 등으로 0행 업데이트 — 에러는 안 나지만 저장 안 됨.
+        if (window.showToast) showToast('상태가 저장되지 않았습니다 (권한/RLS). 새로고침 후 다시 시도해 주세요.', 'error');
+        else alert('상태가 저장되지 않았습니다 (권한/RLS 문제일 수 있어요).');
+        return;
+      }
+      var _lbl = status === 'approved' ? '승인' : status === 'rejected' ? '반려' : status === 'done' ? '완료 처리' : status;
+      if (window.showToast) showToast('버그 제보 ' + _lbl + ' 완료', 'success');
+      if (window.loadBugReports) await window.loadBugReports();
+    } catch(e) {
+      if (window.showToast) showToast('상태 변경 실패: ' + (e.message||e), 'error');
+      else alert('상태 변경 실패: ' + (e.message||e));
+    }
   };
 
   try { window.applyBugI18n(); } catch(e){}
