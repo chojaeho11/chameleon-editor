@@ -2632,12 +2632,6 @@ html, body { background: #ffffff !important; }
             <div id="soCustomUnitPrice" style="font-size:20px; font-weight:900; color:#451a03;">-</div>
             <div id="soCustomAreaInfo" style="font-size:10px; color:#92400e; margin-top:4px;"></div>
           </div>
-          <!-- 2026-07-07: 현수막(placard) — 완성 파일 업로드 진입점. #soFile(→handleFile) 트리거: 사이즈 자동인식·가격반영·에디터 로드·체크리스트·효과경고 모두 handleFile 이 처리. -->
-          <div id="soPlacardFinalFileWrap" style="display:none; margin-top:14px;">
-            <div style="font-size:13px; color:#0f172a; margin-bottom:3px;">${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload final file')}</div>
-            <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.6;">${tr('이미 디자인한 PDF·PNG·JPG 가 있으면 여기서 올려주세요. 페이지 사이즈를 자동 인식해 가로·세로와 가격에 반영합니다. (위 에디터로 직접 디자인해도 됩니다.)', 'デザイン済みの PDF·PNG·JPG があればここからアップロード。ページサイズを自動認識して横·縦と価格に反映します。（上のエディタで直接デザインしてもOKです。）', 'If you already have a designed PDF/PNG/JPG, upload it here — the page size is auto-detected and applied to W×H and price. (Or design in the editor above.)')}</div>
-            <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; padding:13px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;">${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択 (PDF·PNG·JPG)', 'Choose final file (PDF·PNG·JPG)')}</button>
-          </div>
           <!-- 2026-06-01: 광고인쇄/허니콤 인라인 업로드는 별도 카드(#soInlineUploadCard)로 분리되어 사이드바 최상단으로 이동. -->
         </div>
 
@@ -3157,6 +3151,20 @@ html, body { background: #ffffff !important; }
               <div style="margin-top:3px;">${tr('디자이너가 깔끔하게 작업해드립니다', 'デザイナーがきれいに仕上げます', 'Our designer finishes it cleanly')} — <b>+${fmtPrice(10000)}</b> ${tr('(누끼 + 칼선 + 받침)', '（切り抜き・カットライン・台紙込み）', '(cutout + cut line + base)')}</div>
             </div>
           </label>
+        </div>
+
+        <!-- 2026-07-07: 범용 완성 파일 업로드 — 전용 업로드가 없는 모든 제품(실사출력/아크릴/배너/현수막/봉투/달력 등)에 노출.
+             _soSyncUniversalUpload 가 전용 업로드 있는 제품(스티커/명함/광고인쇄/허니콤/가벽/원판/티셔츠/허니콤배너)만 숨김. #soFile(→handleFile) 트리거. -->
+        <div class="so-section" id="soUniversalUpload" style="display:none;">
+          <div class="so-section-title">${tr('완성 파일 업로드', '完成ファイルアップロード', 'Upload final file')}</div>
+          <div id="soUnivUploadBefore">
+            <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; padding:14px; border:1.5px dashed #6366f1; background:#eef2ff; color:#312e81; border-radius:11px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('완성 파일 선택 (PDF·PNG·JPG)', '完成ファイル選択 (PDF·PNG·JPG)', 'Choose final file (PDF·PNG·JPG)')}</button>
+            <div style="font-size:11px; color:#64748b; margin-top:7px; line-height:1.6;">${tr('직접 디자인한 파일이 있으면 올려주세요. 사이즈를 자동 인식해 가격에 반영합니다. (위 에디터로 디자인해도 됩니다.)', 'デザイン済みファイルがあればアップロード。サイズを自動認識して価格に反映します。（上のエディタでデザインしてもOK。）', 'Upload your finished file — size auto-detected & applied to price. (Or design in the editor above.)')}</div>
+          </div>
+          <div id="soUnivUploadDone" style="display:none;">
+            <div style="padding:13px 15px; border:1px solid #a7f3d0; background:#ecfdf5; border-radius:11px; color:#065f46; font-size:13px;">${tr('완성 파일 업로드 완료', '完成ファイルアップロード完了', 'Final file uploaded')}<div id="soUnivUploadInfo" style="font-size:11.5px; margin-top:4px; color:#047857; word-break:break-all;"></div></div>
+            <button type="button" onclick="document.getElementById('soFile').click()" style="width:100%; margin-top:8px; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('파일 변경', 'ファイル変更', 'Change file')}</button>
+          </div>
         </div>
 
         <div class="so-section so-price-box" id="soPriceBox">
@@ -3716,6 +3724,45 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[simple_order] print checklist 표시 실패:', e); }
     }
 
+    // 2026-07-07: 범용 완성 파일 업로드 카드 토글 + 완료상태 반영.
+    //   전용 업로드 UI 가 이미 있는 제품(스티커/명함/광고인쇄/허니콤/허니콤배너/가벽/원판/티셔츠/금액주문)은 숨겨 중복 방지.
+    //   그 외 모든 제품(실사출력/아크릴/일반배너/현수막/봉투/달력/낱장 등)은 노출. 업로드는 #soFile→handleFile 이 처리.
+    function _soSyncUniversalUpload() {
+        try {
+            var card = document.getElementById('soUniversalUpload');
+            if (!card) return;
+            if (!state.product) { card.style.display = 'none'; return; }
+            // 전용 인라인 업로드 카드가 실제로 "보이는지" 로 중복 판단 (광고인쇄/허니콤=soInlineUploadCard, 허니콤배너=soBannerSection, 스티커=soStickerFinalFileWrap).
+            //   → 인라인 카드가 실제 렌더될 때만 범용카드 숨김. 안 보이면(=진짜 업로드 없음) 범용카드가 그 빈자리를 채움.
+            var dupVisible = ['soInlineUploadCard', 'soStickerFinalFileWrap', 'soBannerSection'].some(function(id){
+                var el = document.getElementById(id);
+                return el && el.style.display !== 'none';
+            });
+            // 버튼형 전용 업로드(에디터 자리 밖 별도 버튼)가 있는 제품 — 플래그로 제외.
+            var flagDedicated = state.isBizCard || state.isWall || (state.presetType === 'tshirt')
+                || state.isRawBoard || state.isSticker || state.isAmountOrder;
+            var hide = dupVisible || flagDedicated;
+            card.style.display = hide ? 'none' : '';
+            // 완료 상태 반영 (파일 있으면 '완료' 뷰).
+            var before = document.getElementById('soUnivUploadBefore');
+            var done = document.getElementById('soUnivUploadDone');
+            var info = document.getElementById('soUnivUploadInfo');
+            if (!hide && state.file) {
+                if (before) before.style.display = 'none';
+                if (done) done.style.display = '';
+                if (info) {
+                    var _nm = (state.file && state.file.name) ? state.file.name : 'file';
+                    var _dim = (state.fileWidthMm && state.fileHeightMm) ? (' · ' + state.fileWidthMm + '×' + state.fileHeightMm + 'mm') : '';
+                    info.textContent = _nm + _dim;
+                }
+            } else {
+                if (before) before.style.display = '';
+                if (done) done.style.display = 'none';
+            }
+        } catch (_e) { console.warn('[simple_order] universal upload sync 실패:', _e); }
+    }
+    window._soSyncUniversalUpload = _soSyncUniversalUpload;
+
     // 이미지 (PNG/JPG) — 픽셀 사이즈만 추출 (DPI 불명 — 환산 불가)
     function imageDataUrlWithDims(file) {
         return new Promise((resolve, reject) => {
@@ -3882,6 +3929,7 @@ html, body { background: #ffffff !important; }
             }
         } catch (_we) { console.warn('[wall validate]', _we); }
         renderUploadDone();
+        try { _soSyncUniversalUpload(); } catch(_){}
     }
     // 2026-06-16 v14: 가벽 파일 사이즈 검증 + 4가지 사례별 팝업.
     //   가로: N미터 단위 (1m, 2m, 3m, 4m, 5m...). 날개 포함이면 +300mm.
@@ -5155,6 +5203,8 @@ html, body { background: #ffffff !important; }
                 el.classList.toggle('active', parseInt(el.dataset.amtTier) === amountPct);
             });
         }
+        // 2026-07-07: 범용 완성파일 업로드 카드 동기화 (전용 업로드 없는 제품에만 노출 + 완료상태)
+        try { _soSyncUniversalUpload(); } catch(_){}
     }
 
     // 2026-05-13: 가벽 카테고리 감지 (hb_dw_*, hb_display_wall, 또는 product.name 에 "가벽")
@@ -12853,9 +12903,6 @@ html, body { background: #ffffff !important; }
             var _plSec = document.getElementById('soPlacardVariantsSec');
             if (_plSec) _plSec.style.display = 'none';
         }
-        // 2026-07-07: 현수막 완성파일 업로드 카드 — placard 일 때만 노출
-        var _plFinalFile = document.getElementById('soPlacardFinalFileWrap');
-        if (_plFinalFile) _plFinalFile.style.display = _isPlVariant ? '' : 'none';
         // 2026-06-06: 아크릴 family (8종 — 2T/3T/5T/8T/금경/은경/탁상스탠드/글씨스카시)
         var _isAcVariant = (typeof window._soIsAcrylicFamilyProduct === 'function')
             ? window._soIsAcrylicFamilyProduct(p) : false;
