@@ -1,0 +1,89 @@
+/* ==========================================================================
+ * editor-rail.css — 공용 에디터 에셋 레일 + 전체보기 라이브러리 팝업 CSS
+ * index.html(simple_order) + cotton_print.html(패브릭) 공유. editor-rail.js 와 세트.
+ * simple_order.js 에서 추출(2026-07-08): 레일 1631-1664(#soQuickDesignSec 프리픽스 제거) + 팝업 694-739.
+ * ========================================================================== */
+
+/* ----- 레일 (탭/썸네일/검색/페이저/전체보기) ----- */
+            .qd-edit-grid { display:grid; grid-template-columns: 1fr; gap:10px; margin-top:10px; }
+            .qd-edit-grid > #soEmbeddedEditorMount { order:1; }
+            .qd-edit-grid > .qd-rail { order:2; min-height:0; }
+            .qd-rail { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+            .qd-rail-tabs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+            .qd-rail-tab { padding:12px 4px; background:#fff; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; transition:all .15s; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; line-height:1.1; }
+            .qd-rail-tab .tab-ico { font-size:18px; }
+            .qd-rail-tab:hover { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
+            .qd-rail-tab.active { background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca; }
+            .qd-rail-tab.active .tab-ico { color:#fff; }
+            /* v669: 5열 × 1행 + 1:1 썸네일 (탭과 동일한 5칸 그리드, gap 6px) */
+            .qd-rail-thumbs { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+            .qd-rail-thumb { aspect-ratio:1/1; background:#fff; border:1.5px solid #e2e8f0; border-radius:8px; overflow:hidden; cursor:pointer; transition:border-color .15s; display:flex; align-items:center; justify-content:center; padding:0; }
+            .qd-rail-thumb:hover { border-color:#6366f1; }
+            .qd-rail-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+            .qd-rail-thumb svg { width:80%; height:80%; }
+            .qd-rail-thumb.loading { color:#94a3b8; font-size:11px; }
+            .qd-rail-more { padding:10px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer; font-family:inherit; }
+            .qd-rail-more:hover { background:#f1f5f9; }
+            .qd-rail-search { padding:9px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; outline:none; background:#fff; color:#0f172a; width:100%; box-sizing:border-box; }
+            .qd-rail-search:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.18); }
+            .qd-rail-pager { display:flex; align-items:center; justify-content:center; gap:8px; padding:2px 0; }
+            .qd-rail-pager-btn { width:32px; height:32px; border-radius:50%; background:#fff; border:1px solid #cbd5e1; color:#475569; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:all .15s; }
+            .qd-rail-pager-btn:hover:not(:disabled) { background:#eef2ff; border-color:#6366f1; color:#4338ca; }
+            .qd-rail-pager-btn:disabled { opacity:0.35; cursor:not-allowed; }
+            .qd-rail-pager-info { font-size:12px; font-weight:700; color:#475569; min-width:42px; text-align:center; }
+            @media (max-width:768px) {
+                .qd-rail-tabs { gap:4px; }
+                .qd-rail-tab { padding:10px 2px; font-size:11.5px; }
+                .qd-rail-thumbs { gap:4px; }
+            }
+            @media (max-width:480px) {
+                .qd-rail-thumbs { grid-template-columns:repeat(5,1fr); }
+            }
+
+/* ----- 전체보기 라이브러리 팝업 ----- */
+/* 라이브러리 팝업 — 탭 + 썸네일 */
+#soQdLibPopup[style*="display: flex"], #soQdLibPopup[style*="display:flex"] { display: flex !important; }
+#soQdLibPopup .qd-lib-tab {
+    padding: 8px 14px; background: #f8fafc; border: 1.5px solid #e2e8f0;
+    color: #475569; border-radius: 999px; cursor: pointer; font-family: inherit;
+    font-size: 12.5px; font-weight: 800; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+#soQdLibPopup .qd-lib-tab:hover { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+#soQdLibPopup .qd-lib-tab.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+#soQdLibPopup .qd-lib-thumb {
+    aspect-ratio: 1/1; background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; overflow: hidden; cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center; padding: 4px;
+}
+#soQdLibPopup .qd-lib-thumb:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 6px 14px -4px rgba(99,102,241,0.3); }
+#soQdLibPopup .qd-lib-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
+#soQdLibPopup .qd-lib-loading { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6366f1; font-size: 14px; font-weight: 700; }
+#soQdLibPopup .qd-lib-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 13px; }
+/* 모바일: 라이브러리 팝업 풀스크린 */
+@media (max-width: 768px) {
+    #soQdLibPopup { padding: 0 !important; }
+    #soQdLibPopup > div { max-width: 100% !important; max-height: 100vh !important; height: 100vh !important; border-radius: 0 !important; }
+    #soQdLibPopup .qd-lib-tab { padding: 8px 11px; font-size: 12px; }
+    #soQdLibPopup .qd-lib-thumb { aspect-ratio: 1/1; }
+    #soQdLibPopup #soQdLibPager { padding: 14px 16px !important; }
+    #soQdLibPopup .qd-lib-pager-btn { width: 40px; height: 40px; }
+}
+/* 5 cols PC × 2 rows = 10 / 2 cols mobile × 5 rows = 10 */
+#soQdLibPopup #soQdLibGrid { grid-template-columns: repeat(5, 1fr) !important; }
+@media (max-width: 768px) {
+    #soQdLibPopup #soQdLibGrid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+/* 페이지네이션 버튼 */
+#soQdLibPopup #soQdLibPager { display: flex !important; }
+#soQdLibPopup #soQdLibPager.hidden { display: none !important; }
+#soQdLibPopup .qd-lib-pager-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #f1f5f9; border: 1.5px solid #e2e8f0; color: #475569;
+    cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-family: inherit;
+}
+#soQdLibPopup .qd-lib-pager-btn:hover:not(:disabled) {
+    background: #6366f1; color: #fff; border-color: #6366f1;
+}
+#soQdLibPopup .qd-lib-pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }

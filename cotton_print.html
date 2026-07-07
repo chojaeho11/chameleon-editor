@@ -1815,6 +1815,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
     <link rel="stylesheet" href="./mini-editor.css?v=1">
+    <link rel="stylesheet" href="./editor-rail.css?v=1">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
             <div class="aiNb-card" id="aiNbAi">
@@ -1898,6 +1899,7 @@ async function submitRollFabricRequest() {
 
 <script src="./editor-libs.js?v=1"></script>
 <script src="./mini-editor.js?v=442"></script>
+<script src="./editor-rail.js?v=1"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄
   window._meCurrentCategory = window._meCurrentCategory || 'banner';
@@ -1990,7 +1992,35 @@ async function submitRollFabricRequest() {
       try { applyMm(500, 500); } catch(e){}   // 기본 대지 = 정사각 500×500mm
       applyEditorI18n();
       loadTpls();
+      try { mountRail(); } catch(e){ console.warn('[cp rail]', e); }
     });
+    // 2026-07-08: 공용 에셋 레일(editor-rail.js) 장착 — 메인 에디터와 동일 검색/사진/벡터/요소/장식/전체보기.
+    function mountRail(){
+      if (!window.EditorRail) return;
+      var wrap = document.getElementById('aiNbWrap');
+      if (!wrap || document.getElementById('cpEditGrid')) return;
+      // #aiNbWrap 을 2컬럼 그리드로 감싸고 레일을 형제로 삽입 (CSS: 에디터 위, 레일 아래).
+      var grid = document.createElement('div');
+      grid.className = 'qd-edit-grid'; grid.id = 'cpEditGrid';
+      wrap.parentNode.insertBefore(grid, wrap);
+      var holder = document.createElement('div');
+      holder.innerHTML = window.EditorRail.railHtml();
+      var aside = holder.firstElementChild;   // <aside class="qd-rail">
+      if (aside) grid.appendChild(aside);
+      grid.appendChild(wrap);                  // 에디터를 그리드 안으로 이동
+      window.EditorRail.init({
+        getSb: function(){ return supabase.createClient('https://qinvtnhiidtmrzosyvys.supabase.co', ANON); },
+        tr: function(ko, ja, en){ return L === 'ja' ? (ja || ko) : (L === 'en' ? (en || ko) : ko); },
+        getProduct: function(){ return { code: window._meCurrentProductCode || '', category: window._meCurrentCategory || 'banner' }; },
+        isFlatPrint: function(){ return true; },   // 패브릭=평면인쇄류 → banner 카테고리 템플릿 노출
+        isBannerCode: function(){ return false; },
+        showToast: window.showToast || function(){},
+        scope: '#cpEditGrid', iconsPath: './canvas-icons.js?v=435'
+      });
+      window.EditorRail.reload();
+      // 기존 가로 템플릿 스트립은 레일 '템플릿' 탭과 중복 → 숨김.
+      var strip = document.getElementById('cpTplStrip'); if (strip) strip.style.display = 'none';
+    }
   })();
 </script>
 <style>
