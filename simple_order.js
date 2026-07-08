@@ -16893,19 +16893,38 @@ html, body { background: #ffffff !important; }
                         );
                     }
                     // 2026-07-04: "5만원 이상 무료배송" 정책 제거 — 택배 5,000원 정액 묶음배송 (사용자 요청).
-                    var _headerLine = _hasHcInCart2
-                        ? tr('💚 최소주문 ' + _minLabel + ' 이상',
-                             '💚 最低注文 ' + _minLabel + ' 以上',
-                             '💚 Min order ' + _minLabel)
-                        : (_shipFinal > 0
-                            ? (window.__SITE_CODE === 'JP'
-                                ? '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (全国一律)'   // 2026-06-30: JP 정액 — 무료기준 없음
-                                : tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' (묶음배송)',
-                                     '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (まとめ配送)',
-                                     '💚 Shipping ' + fmtPrice(_shipFinal) + ' (bundled)'))
-                            : tr('✅ 무료배송',
-                                 '✅ 送料無料',
-                                 '✅ Free shipping'));
+                    // 2026-07-08: 시공/설치/용차 배송(가벽·등신대·스카시 등)은 "택배 묶음배송" 대신 실제 방법명으로 표기.
+                    //   적용된 배송비(_shipFinal)와 같은 시공/설치 방법 항목을 찾아 그 라벨 노출 (예: 지방 설치배송 700,000원).
+                    var _INSTALL_SHIP_METHODS = ['metro_install','metro_weekend','metro_install_removal','regional_truck','regional_install','metro_delivery','regional_delivery','regional_compact_60_180','regional_delivery_simple'];
+                    var _instShipItem = null;
+                    allItems.forEach(function(_it){
+                        var _m = _it && _it.shipping && _it.shipping.method;
+                        if (_m && _INSTALL_SHIP_METHODS.indexOf(_m) >= 0) {
+                            var _f = (_it.shipping && _it.shipping.fee) || 0;
+                            if (!_instShipItem || _f >= ((_instShipItem.shipping && _instShipItem.shipping.fee) || 0)) _instShipItem = _it;
+                        }
+                    });
+                    var _headerLine;
+                    if (_hasHcInCart2) {
+                        _headerLine = tr('💚 최소주문 ' + _minLabel + ' 이상',
+                                         '💚 最低注文 ' + _minLabel + ' 以上',
+                                         '💚 Min order ' + _minLabel);
+                    } else if (_instShipItem && _shipFinal > 0) {
+                        // 시공/설치 배송 — 방법명 + 금액 (묶음 트럭 1회)
+                        var _instLbl = (typeof window._soShipMethodLabel === 'function')
+                            ? window._soShipMethodLabel(_instShipItem.shipping.method)
+                            : tr('설치/배송', '設置/配送', 'Install/delivery');
+                        _headerLine = '💚 ' + _instLbl + ' ' + fmtPrice(_shipFinal)
+                            + tr(' (묶음 1회)', ' (まとめ1回)', ' (bundled)');
+                    } else if (_shipFinal > 0) {
+                        _headerLine = (window.__SITE_CODE === 'JP')
+                            ? '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (全国一律)'   // 2026-06-30: JP 정액 — 무료기준 없음
+                            : tr('💚 택배 배송비 ' + fmtPrice(_shipFinal) + ' (묶음배송)',
+                                 '💚 宅配 送料 ' + fmtPrice(_shipFinal) + ' (まとめ配送)',
+                                 '💚 Shipping ' + fmtPrice(_shipFinal) + ' (bundled)');
+                    } else {
+                        _headerLine = tr('✅ 무료배송', '✅ 送料無料', '✅ Free shipping');
+                    }
                     _noticeText.innerHTML =
                         '<div style="font-weight:800; margin-bottom:4px;">' + _headerLine + '</div>' +
                         (_shipLine ? '<div style="font-size:11.5px; opacity:0.92;">' + _shipLine + '</div>' : '');
