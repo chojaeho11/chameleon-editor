@@ -17741,7 +17741,10 @@ html, body { background: #ffffff !important; }
         // 2026-06-26: 허니콤보드 외 상품군 카트 → 택배비 5,000원 (JP 500엔 / US $5, fmtPrice 환산). 묶음배송 1회 정액.
         //   2026-07-04: "5만원 이상 무료배송" 정책 제거 (사용자 요청) — 금액 무관 항상 5,000원.
         //   면제: ① 금액주문/매니저견적/개인결제(_hasAmountOrder) ② 디자인비 전용 카트 ③ 빈 카트.
-        if (!_hasHcInCart) {
+        // 2026-07-08: 시공 항목(_hasInstall: 가벽/등신대/스카시)이 있으면 위에서 계산한 설치/시공 배송비(예 지방설치 70만)를
+        //   유지해야 함. '강화 골판지 가벽'은 허니콤이 아니라 _hasHcInCart=false 라 이 5,000 정액 룰이 70만을 덮어쓰던 버그.
+        //   (JP 분기 17756 은 이미 !_hasInstall 가드가 있어 정상이었음 — KR 분기에도 동일 가드 추가.)
+        if (!_hasHcInCart && !_hasInstall) {
             var _allDesignFee = cart.length > 0 && cart.every(function(_it){
                 var _p = (_it && _it.product) ? _it.product : {};
                 var _code = String(_p.code || _p.product_key || _p.id || '');

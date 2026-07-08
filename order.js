@@ -890,11 +890,6 @@ function calculateCartTotalKRW() {
     let total = 0;
     cartData.forEach(item => {
         if (!item.product) return;
-        // 2026-07-08: simple_order 항목(_simple)은 _soCalcItemPrice 전체총액(시공배송 포함) 사용 — 설치슬롯/임계값 정확화.
-        if (item._simple && typeof window._soCalcItemPrice === 'function') {
-            total += (window._soCalcItemPrice(item) || 0);
-            return;
-        }
         const unitPrice = item.product.price || 0;
         const qty = item.qty || 1;
         let optTotal = 0;
@@ -2643,9 +2638,7 @@ function renderCart() {
 
         // pendingSelectedAddons는 addCanvasToCart/addFileToCart/addProductToCartDirectly에서 이미 적용 후 초기화됨
         
-        // 2026-07-08: simple_order 항목(_simple)은 _soCalcItemPrice 가 전체 line total(양면/사이즈/addon/시공배송 포함) → 재계산 금지(표시=결제 일치).
-        const _isSimpleItem = item._simple && typeof window._soCalcItemPrice === 'function';
-        let baseProductTotal = _isSimpleItem ? (window._soCalcItemPrice(item) || 0) : ((item.product.price || 0) * item.qty);
+        let baseProductTotal = (item.product.price || 0) * item.qty;
 
         // 수량 할인 적용 (커스텀사이즈, 허니콤보드, 보드류 도매, 천원단위 주문, 가벽, 가맹점 전용 제외)
         // ★ 커스텀사이즈 상품은 상세페이지에서 이미 할인 적용된 가격으로 담기므로 제외
@@ -2660,7 +2653,7 @@ function renderCart() {
             || _pCat === 'design_fee' || _pCode.indexOf('design_fee_') === 0
             || item.product._calculated_price;
         let _qtyDiscountRate = 0;
-        if (!_isSimpleItem && !_noDiscount && item.qty >= 3) {
+        if (!_noDiscount && item.qty >= 3) {
             if (item.qty >= 501) _qtyDiscountRate = 0.50;
             else if (item.qty >= 101) _qtyDiscountRate = 0.40;
             else if (item.qty >= 10) _qtyDiscountRate = 0.30;
@@ -2671,7 +2664,7 @@ function renderCart() {
 
         let optionTotal = 0;
 
-        if (!_isSimpleItem) Object.values(item.selectedAddons).forEach(code => {
+        Object.values(item.selectedAddons).forEach(code => {
             const addon = ADDON_DB[code];
             if (addon) {
                 const isSwatchAddon = addon.category_code === 'opt_8796' || addon.is_swatch;
@@ -3359,13 +3352,6 @@ async function processOrderSubmission() {
     let rawTotal = 0;
     cartData.forEach(item => {
         if (!item.product) return;
-        // 2026-07-08: simple_order 항목(_simple)은 _soCalcItemPrice 가 양면·사이즈·addon·시공/설치배송까지 포함한
-        //   전체 line total → 그대로 사용(재계산 금지). 재계산하면 양면 ×2·설치배송(예 지방설치 70만) 누락되어
-        //   결제금액이 실제보다 적게 청구되던 버그(주문 4552: 158만 → 88.7만). 배송비는 아래에서 별도 가산 안 함.
-        if (item._simple && typeof window._soCalcItemPrice === 'function') {
-            rawTotal += (window._soCalcItemPrice(item) || 0);
-            return;
-        }
         const unitPrice = item.product.price || 0;
         const qty = item.qty || 1;
 
@@ -3438,12 +3424,8 @@ async function processOrderSubmission() {
     const metroRadio = document.querySelector('input[name="metroArea"]:checked');
     const metroSection = document.getElementById('metroAreaSection');
     const isNonMetroModal = metroSection && metroSection.style.display !== 'none' && metroRadio && metroRadio.value === 'non-metro';
-    // 2026-07-08: simple_order 전용 카트는 각 item.price 에 시공/배송비가 이미 포함 → 별도 배송비(비수도권/설치) 가산 금지(이중과금·stray fee 방지).
-    const _allSimpleCart = cartData.length > 0 && cartData.every(i => !i.product || i._simple);
-    const isNonMetro = !_allSimpleCart && (isNonMetroModal || _existingShipFee > 0);
-    if (_allSimpleCart) {
-        window._nonMetroFeeApplied = 0;
-    } else if (isNonMetroModal) {
+    const isNonMetro = isNonMetroModal || _existingShipFee > 0;
+    if (isNonMetroModal) {
         rawTotal += NON_METRO_FEE_KRW;
         window._nonMetroFeeApplied = NON_METRO_FEE_KRW;
     } else if (_existingShipFee > 0) {
@@ -3453,8 +3435,8 @@ async function processOrderSubmission() {
         window._nonMetroFeeApplied = 0;
     }
 
-    // ★ 등급 할인은 상품+옵션에만 적용 (배송비 제외). simple_order 전용 카트는 별도 배송비를 안 더했으므로 차감도 0.
-    const _rawWithoutShip = rawTotal - (_allSimpleCart ? 0 : (_existingShipFee > 0 ? _existingShipFee : (isNonMetroModal ? NON_METRO_FEE_KRW : 0)));
+    // ★ 등급 할인은 상품+옵션에만 적용 (배송비 제외)
+    const _rawWithoutShip = rawTotal - (_existingShipFee > 0 ? _existingShipFee : (isNonMetroModal ? NON_METRO_FEE_KRW : 0));
     const gradeDisc = Math.floor(_rawWithoutShip * currentUserDiscountRate);
     const refDisc = window.verifiedReferrerId ? Math.floor(_rawWithoutShip * 0.05) : 0;
     const discountAmt = gradeDisc + refDisc;
