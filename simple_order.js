@@ -19059,11 +19059,11 @@ html, body { background: #ffffff !important; }
                 };
                 // 2026-05-26: 로그인 고객이 매니저 견적을 결제하면 user_id 연결 → 마이페이지 노출
                 if (loggedInUid) updateRow.user_id = loggedInUid;
-                // 2026-05-22: 마일리지/예치금 사용 시 결제금액·할인 반영 (매니저견적 결제 경로)
-                if (_useMileage > 0 || _useDeposit > 0) {
-                    updateRow.total_amount = _finalTotal;
-                    updateRow.discount_amount = _useMileage + _useDeposit;
-                }
+                // 2026-07-08: 매니저 견적 결제 시 total_amount 를 항상 실제 결제액(_finalTotal)으로 갱신.
+                //   기존엔 마일리지/예치금 쓸 때만 갱신 → 쿠폰·PRO 할인만 쓰면 주문금액이 협의가(full) 그대로 남아
+                //   관리자 실입금액 ≠ 고객 실제 결제액(경리 불일치). 할인 없으면 _finalTotal=협의가라 동일(무해).
+                updateRow.total_amount = _finalTotal;
+                updateRow.discount_amount = _useMileage + _useDeposit;
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
                 if (!_fullyCovered && payMethod === 'bank') updateRow.depositor_name = depositorName;
                 var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
