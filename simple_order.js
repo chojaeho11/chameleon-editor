@@ -17956,15 +17956,21 @@ html, body { background: #ffffff !important; }
         if (!st.ready || st.excluded) return { useMileage:0, useDeposit:0, source:null, proSuppressed:false };
         if (proDisc == null) proDisc = window._soCheckoutProDisc || 0;
         var choice = st.discChoice;
-        var useMileage = 0, source = null, proSuppressed = false;
+        var useMileage = 0, source = null, proSuppressed = false, proApplied = 0;
         if (choice === 'event_coupon') { useMileage = st.eventMax || 0; source = 'event_coupon'; proSuppressed = !!proDisc; }
         else if (choice === 'mileage') { useMileage = st.mileageMax || 0; source = 'mileage'; proSuppressed = !!proDisc; }
-        else if (choice === 'pro')     { source = 'pro'; }   // PRO 는 grand 에 이미 반영
-        // 할인 반영된 소계 — grand 은 PRO 이미 차감. 쿠폰/마일리지 선택이면 PRO 복원 후 그만큼 차감.
-        var afterDiscount = Math.max(0, (proSuppressed ? (grand + proDisc) : grand) - useMileage);
+        else if (choice === 'pro')     {
+            source = 'pro';
+            // 2026-07-08: 매니저 견적(nonDiscountBase) 등 auto proDisc 에서 빠진 금액도 PRO 고객이 결제창에서 PRO 선택 시 10% 적용.
+            //   proMax(=discBase×10%, 매니저견적 포함) 중 grand 에 이미 반영된 proDisc(taxBase+원판) 를 뺀 나머지를 추가 차감.
+            //   마일리지가 아니라 순수 할인 → discount_amount(마일리지 환불 기준) 에 넣지 않고 최종액에서만 차감.
+            proApplied = Math.max(0, (st.proMax || 0) - (proDisc || 0));
+        }
+        // 할인 반영된 소계 — grand 은 (자동)PRO 이미 차감. 쿠폰/마일리지 선택이면 PRO 복원 후 그만큼 차감. proApplied 는 매니저견적 등 추가 PRO 차감.
+        var afterDiscount = Math.max(0, (proSuppressed ? (grand + proDisc) : grand) - useMileage - proApplied);
         // 예치금 — 중복 사용. 남은 결제금액까지.
         var useDeposit = st.depositOn ? Math.min(st.depositBalKRW || 0, afterDiscount) : 0;
-        return { useMileage: useMileage, useDeposit: useDeposit, source: source, proSuppressed: proSuppressed };
+        return { useMileage: useMileage, useDeposit: useDeposit, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
         var grand = window._soCheckoutGrandTotal || 0;
@@ -17972,7 +17978,7 @@ html, body { background: #ffffff !important; }
         var w = _soGetWalletUseKRW(grand);
         // grand 는 이미 PRO 할인이 빠진 상태. 사용자가 event_coupon/mileage/deposit 을 골랐다면 PRO 가 제외되므로 복원
         var grandAdjusted = w.proSuppressed ? (grand + proDisc) : grand;
-        var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit);
+        var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit - (w.proApplied || 0));
         var totalEl = document.getElementById('soCoTotalAmt');
         if (totalEl) totalEl.textContent = _soFormatPrice(finalAmt);
         var bd = document.getElementById('soCoWalletBreakdown');
@@ -17986,6 +17992,9 @@ html, body { background: #ffffff !important; }
             }
             if (w.source === 'deposit' && w.useDeposit > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· 💰 ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
+            }
+            if (w.source === 'pro' && (w.proApplied || 0) > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
             }
             if (w.proSuppressed && proDisc > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 위 할인 선택으로 자동 제외','PRO 10%割引 — 上記割引選択により自動除外','PRO 10% — auto-excluded by selected discount') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
@@ -18595,11 +18604,12 @@ html, body { background: #ffffff !important; }
             window._soCheckoutProDisc = cartCalc.proDisc || 0;
 
             // 2026-05-22: 마일리지/예치금 사용 — KR + 로그인 시. 실제 잔액 재조회로 검증 후 차감은 주문 생성 직후.
-            var _useMileage = 0, _useDeposit = 0, _walletUid = null, _proSuppressed = false;
+            var _useMileage = 0, _useDeposit = 0, _walletUid = null, _proSuppressed = false, _proApplied = 0;
             if (window._soWallet && window._soWallet.ready) {
                 var _wu = _soGetWalletUseKRW(total);
                 _useMileage = _wu.useMileage; _useDeposit = _wu.useDeposit;
                 _proSuppressed = !!_wu.proSuppressed;
+                _proApplied = _wu.proApplied || 0;   // 2026-07-08: PRO 카드 선택 시 매니저견적 등 추가 10% 차감분
                 _walletUid = window._soWallet.userId;
             }
             if ((_useMileage > 0 || _useDeposit > 0) && _walletUid) {
@@ -18628,7 +18638,8 @@ html, body { background: #ffffff !important; }
             }
             // 2026-06-01: 쿠폰 사용 시 PRO 할인은 자동 제외 — total 에서 빠져있는 PRO 복원 후 쿠폰 차감
             var _totalForFinal = _proSuppressed ? (total + (cartCalc.proDisc || 0)) : total;
-            var _finalTotal = Math.max(0, _totalForFinal - _useMileage - _useDeposit);
+            // 2026-07-08: PRO 카드 추가 할인(_proApplied: 매니저견적 등 auto proDisc 미포함분)도 최종액에서 차감. total_amount 에 녹아 관리자 실입금액에 반영.
+            var _finalTotal = Math.max(0, _totalForFinal - _useMileage - _useDeposit - _proApplied);
 
             // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
             // 동시에 orderRow.files 도 채우기 위해 파일 정보 수집
