@@ -2981,7 +2981,7 @@ html, body { background: #ffffff !important; }
           <!-- 2026-07-08: 허니콤보드 배송/시공 상세 안내 (nanami 버그제보 #7 — 별도 설명 요청). 3개국어. -->
           <div style="font-size:12px; line-height:1.75; color:#334155; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:11px 13px; margin-bottom:12px;">
             <div style="color:#15803d; font-size:12.5px; margin-bottom:3px;">${tr('수도권(서울·경기) 무료 배송 · 무료 설치', '首都圏（東京都内）送料・設置 無料', 'Tokyo / metro area: free delivery & installation')}</div>
-            <div>${tr('배송기간은 약 10일입니다. 지방은 지역·크기에 따라 택배 또는 용차(트럭) 배송비가 적용됩니다. 아래에서 배송 방법을 선택해 주세요.', '配送期間は約10日です。地方は地域・サイズにより宅配またはトラック（用車）配送費が適用されます。下記より配送方法をお選びください。', 'Delivery takes about 10 days. Regional areas incur a parcel or truck delivery fee depending on area and size. Please choose a delivery method below.')}</div>
+            <div>${tr('배송기간은 최소 4일이며, 긴급 비용 추가 시 다음날 배송도 가능합니다. 긴급 의뢰는 담당 매니저와 상담해 주세요.', '配送期間は約10日です。お急ぎの場合は追加費用で翌日配送も可能です。緊急のご依頼は担当マネージャーへご相談ください。', 'Delivery takes at least 4 days; with an extra rush fee, next-day delivery is also possible. For urgent requests, please consult your manager.')}</div>
           </div>
           <!-- 배송 옵션 (버튼형 — 가격 라벨 없이 깔끔하게) -->
           <div id="soShipBtnGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
