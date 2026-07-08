@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260708122425';
+    var CV = '20260708150635';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2447,18 +2447,11 @@ window._tcmFallbackClick = function(code) {
     <!-- 2026-06-19 v639: 디자이너 모집 배너 — 5버튼 직후, z-index 로 위에 올림 (캐러셀에 가려지지 않게) -->
     <div id="designerRecruitWrap" style="max-width:1100px; margin:8px auto 20px; padding:0 20px; box-sizing:border-box; position:relative; z-index:60; display:flex; gap:12px; align-items:stretch;">
         <button type="button" id="designerRecruitBar" onclick="location.href='/contribute'">
-            <span class="dr-left">
-                <span class="dr-ico"><i class="fa-solid fa-id-badge"></i></span>
-            </span>
             <span class="dr-center">
-                <span class="dr-title" data-i18n="btn_designer_recruit">🎨 디자이너 모집</span>
-                <span class="dr-sub" data-i18n="btn_designer_recruit_sub_short">당신의 재능을 판매하세요</span>
+                <span class="dr-title" data-i18n="btn_designer_recruit">디자이너 모집</span>
+                <span class="dr-sub"><span id="drDescText">템플릿 3,000원 · 벡터 1,000원 · PNG 500원 · 로고 200원</span> · <span id="drBonusText">판매 시 +3% 마일리지 자동 적립</span></span>
             </span>
-            <span class="dr-right">
-                <span class="dr-desc" id="drDescText">템플릿 3,000원 · 벡터 1,000원 · PNG 500원 · 로고 200원<br><span class="dr-bonus" id="drBonusText">판매 시 +3% 마일리지 자동 적립</span></span>
-                <i class="fa-solid fa-arrow-right dr-arr"></i>
-            </span>
-            <span class="dr-mob-chip" id="drMobChip">템플릿 3,000 · 벡터 1,000 · PNG 500 · 로고 200 · 판매 +3%</span>
+            <span class="dr-arr">→</span>
         </button>
         <!-- 2026-06-29: 추천인 이벤트 버튼 (디자이너 모집 우측) -->
         <button type="button" id="refEventBar" onclick="window._startSignupEventFlow && window._startSignupEventFlow()">
@@ -2485,7 +2478,7 @@ window._tcmFallbackClick = function(code) {
                 btnVip:'개인결제', btnScrap:'금액주문',
                 btnDesign:'디자인의뢰', btnCoupon:'회원가입', btnDapply:'디자이너',
                 btnRecruitBtn:'디자이너 모집',
-                drTitle:'🎨 디자이너 모집', drSub:'당신의 재능을 판매하세요',
+                drTitle:'디자이너 모집', drSub:'당신의 재능을 판매하세요',
                 drDesc:'템플릿 3,000원 · 벡터 1,000원 · PNG 500원 · 로고 200원',
                 drBonus:'판매 시 +3% 마일리지 자동 적립',
                 drMobChip:'템플릿 3,000 · 벡터 1,000 · PNG 500 · 로고 200 · 판매 +3%',
@@ -2502,7 +2495,7 @@ window._tcmFallbackClick = function(code) {
                 btnVip:'VIP 個別決済', btnScrap:'金額決済',
                 btnDesign:'デザイン依頼', btnCoupon:'会員登録', btnDapply:'デザイナー',
                 btnRecruitBtn:'デザイナー募集',
-                drTitle:'🎨 デザイナー募集', drSub:'あなたの才能を販売しよう',
+                drTitle:'デザイナー募集', drSub:'あなたの才能を販売しよう',
                 drDesc:'テンプレート 300円 · ベクター 100円 · PNG 50円 · ロゴ 20円',
                 drBonus:'販売時 +3% マイル自動付与',
                 drMobChip:'テンプレ 300 · ベクター 100 · PNG 50 · ロゴ 20 · 販売 +3%',
@@ -2519,7 +2512,7 @@ window._tcmFallbackClick = function(code) {
                 btnVip:'VIP Personal Pay', btnScrap:'Pay After Consult',
                 btnDesign:'Request Design', btnCoupon:'Sign up', btnDapply:'Designer',
                 btnRecruitBtn:'Designer Sign-Up',
-                drTitle:'🎨 Designer Sign-Up', drSub:'Sell your talent',
+                drTitle:'Designer Sign-Up', drSub:'Sell your talent',
                 drDesc:'Template $3 · Vector $1 · PNG $0.5 · Logo $0.2',
                 drBonus:'+3% mileage when sold',
                 drMobChip:'TPL $3 · VEC $1 · PNG $0.5 · LOGO $0.2 · +3% on sale',
@@ -2546,16 +2539,15 @@ window._tcmFallbackClick = function(code) {
         setI18n('[data-i18n="btn_designer_apply"]', t.btnDapply || '디자이너 신청');
         // 2026-06-19 v640: 6번째 단축 — 디자이너 모집 버튼
         setI18n('[data-i18n="btn_designer_recruit_btn"]', t.btnRecruitBtn || '디자이너 모집');
-        // 2026-06-19 v635: 디자이너 모집 배너 다국어
-        setI18n('[data-i18n="btn_designer_recruit"]', t.drTitle || '🎨 디자이너 모집');
-        setI18n('[data-i18n="btn_designer_recruit_sub_short"]', t.drSub || '당신의 재능을 판매하세요');
+        // 2026-06-19 v635: 디자이너 모집 배너 다국어 (2026-07-08: 제목+설명 2줄 구조, 픽토그램 제거)
+        setI18n('[data-i18n="btn_designer_recruit"]', t.drTitle || '디자이너 모집');
         // 2026-06-29: 추천인 이벤트 버튼 다국어
         if (t.reTitle) setText('refEvBarTitle', t.reTitle);
         if (t.reSub) setText('refEvBarSub', t.reSub);
         var _drDesc = document.getElementById('drDescText');
-        if (_drDesc && t.drDesc) _drDesc.innerHTML = t.drDesc + '<br><span class="dr-bonus" id="drBonusText">' + (t.drBonus || '') + '</span>';
-        var _drMob = document.getElementById('drMobChip');
-        if (_drMob && t.drMobChip) _drMob.textContent = t.drMobChip;
+        if (_drDesc && t.drDesc) _drDesc.textContent = t.drDesc;
+        var _drBonus = document.getElementById('drBonusText');
+        if (_drBonus && t.drBonus) _drBonus.textContent = t.drBonus;
         // 전화 모달
         setText('mgrPhoneModalTitle', t.phoneTitle);
         setI18n('#mgrPhoneModal [data-i18n="mgr_phone_modal_hint"]', t.phoneHint);
@@ -5304,7 +5296,7 @@ window.addEventListener('load', function() {
 <style>
     /* 2026-06-19 v639: 디자이너 모집 배너 — 깔끔 (그림자/볼드/장식 모두 제거), z-index 로 항상 위에 */
     #designerRecruitBar {
-        display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
         width: 100%; max-width: 100%; box-sizing: border-box; margin: 0;
         padding: 14px 20px; border: none; border-radius: 14px; cursor: pointer; font-family: inherit;
         background: linear-gradient(95deg, #5b21b6 0%, #7c3aed 50%, #ec4899 100%);
@@ -5325,44 +5317,21 @@ window.addEventListener('load', function() {
     #refEventBar .re-title { font-size: 15px; font-weight: 600; color: #fff; }
     #refEventBar .re-sub { font-size: 11.5px; font-weight: 400; color: rgba(255,255,255,0.9); line-height: 1.4; }
     #refEventBar .re-arr { font-size: 18px; flex-shrink: 0; color: rgba(255,255,255,0.9); }
-    #designerRecruitBar .dr-left { display: flex; align-items: center; }
-    #designerRecruitBar .dr-ico {
-        width: 42px; height: 42px; border-radius: 10px;
-        background: rgba(255,255,255,0.18);
-        color: #fff; display: flex; align-items: center; justify-content: center;
-        font-size: 18px;
-    }
-    #designerRecruitBar .dr-center {
-        display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
-    }
+    /* 2026-07-08: 추천인 이벤트와 동일 구조 — 제목 한 줄 + 아래 설명, 픽토그램 없음 */
+    #designerRecruitBar .dr-center { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
     #designerRecruitBar .dr-title { font-size: 15px; font-weight: 600; color: #fff; }
-    #designerRecruitBar .dr-sub { font-size: 11.5px; font-weight: 400; color: rgba(255,255,255,0.85); }
-    #designerRecruitBar .dr-right {
-        display: flex; align-items: center; gap: 10px;
-        text-align: right; min-width: 0;
-    }
-    #designerRecruitBar .dr-desc { font-size: 11.5px; line-height: 1.5; color: rgba(255,255,255,0.9); font-weight: 400; white-space: nowrap; }
-    #designerRecruitBar .dr-desc b { font-weight: 600; color: #fff; }
-    #designerRecruitBar .dr-bonus { display: inline-block; margin-top: 2px; color: rgba(255,255,255,0.95); font-weight: 400; font-size: 11px; }
-    #designerRecruitBar .dr-arr { font-size: 14px; color: rgba(255,255,255,0.9); flex-shrink: 0; }
+    #designerRecruitBar .dr-sub { font-size: 11.5px; font-weight: 400; color: rgba(255,255,255,0.9); line-height: 1.4; }
+    #designerRecruitBar .dr-sub #drBonusText { color: rgba(255,255,255,0.95); }
+    #designerRecruitBar .dr-arr { font-size: 18px; flex-shrink: 0; color: rgba(255,255,255,0.9); }
     @media (max-width: 760px) {
         #designerRecruitWrap { padding: 0 12px; margin: 8px auto 16px; flex-direction: column; }
         #refEventBar { flex: 1 1 auto; width: 100%; }
         #refEventBar .re-title { font-size: 14px; }
         #refEventBar .re-sub { font-size: 11px; }
-        #designerRecruitBar { grid-template-columns: auto 1fr; gap: 10px; padding: 12px 14px; }
-        #designerRecruitBar .dr-right { display: none; }
-        #designerRecruitBar .dr-ico { width: 38px; height: 38px; font-size: 16px; }
+        #designerRecruitBar { gap: 10px; padding: 12px 14px; }
         #designerRecruitBar .dr-title { font-size: 14px; }
         #designerRecruitBar .dr-sub { font-size: 11px; }
-        #designerRecruitBar .dr-mob-chip {
-            grid-column: 1 / -1; display: flex; align-items: center; justify-content: center;
-            font-size: 10.5px; font-weight: 400; color: rgba(255,255,255,0.9);
-            background: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 8px;
-            margin-top: 6px; line-height: 1.4; text-align: center;
-        }
     }
-    @media (min-width: 761px) { #designerRecruitBar .dr-mob-chip { display: none; } }
 </style>
 
 <!-- 오늘의핫딜 -->
