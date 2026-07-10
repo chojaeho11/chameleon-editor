@@ -5637,9 +5637,9 @@
         });
         var hint = document.getElementById('meAiModelHint');
         if (hint) hint.textContent = _meAiModel === 'ideogram'
-            ? _meAiTr('“SALE 50%” 같은 글자를 이미지 안에 넣어요. (일본어·한국어 글자는 깨질 수 있어요 — 정확한 글자는 에디터에서 직접 입력을 권장)',
-                      '「SALE 50%」など文字を画像内に入れます。(日本語·韓国語の文字は崩れる場合あり — 正確な文字はエディタで直接入力を推奨)',
-                      'Puts text like “SALE 50%” inside the image. (CJK text may be imperfect — for exact text, type it in the editor)')
+            ? _meAiTr('“세일 50%” 같은 글자를 이미지 안에 넣어요 (GPT 이미지2). 긴 문장·특수문자는 간혹 어긋날 수 있어요 — 중요한 글자는 에디터에서 직접 넣으면 확실해요.',
+                      '「SALE 50%」など文字を画像内に入れます(GPTイメージ2)。長い文·特殊文字は時々ずれることがあります — 重要な文字はエディタで直接入れると確実です。',
+                      'Puts text like “SALE 50%” inside the image (GPT Image 2). Long sentences/special characters may occasionally slip — for important text, add it in the editor.')
             : _meAiTr('글자 없이 그림·배경만 생성해요. 글자는 에디터에서 직접 넣으면 정확해요.',
                       '文字なしで絵柄·背景のみ生成。文字はエディタで直接入れると正確です。',
                       'Generates art/background only (no text). Add text in the editor for accuracy.');
