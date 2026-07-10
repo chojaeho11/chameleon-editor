@@ -456,13 +456,25 @@
     _pop.style.display = 'none'; _hole.style.display = 'none'; _blocker.style.display = 'none';
     var sec = document.getElementById('soQuickDesignSec');
     if (sec) { try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {} }
-    // 템플릿 픽커 띄우기
-    setTimeout(function () {
-      try {
-        if (typeof window._meOpenTemplatePicker === 'function') window._meOpenTemplatePicker();
-        else { var tb = document.getElementById('meTemplateBtn'); if (tb) tb.click(); }
-      } catch (_) {}
-    }, 350);
+    if (opt.template === 'rail') {
+      // 2026-07-10: 공통 템플릿 레일(editor-rail.js) 사용 — 명함/인스타판넬 같은 제품별 전용 모달 대신
+      //   대부분 제품은 하단 레일의 공통 템플릿을 씀. 레일의 '템플릿' 탭을 켜고 그쪽으로 스크롤.
+      setTimeout(function () {
+        try { if (typeof window._soQdRailSwitch === 'function') window._soQdRailSwitch('design_tpl'); } catch (_) {}
+        try {
+          var rail = document.getElementById('soQdRailThumbs') || document.querySelector('.qd-rail');
+          if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (_) {}
+      }, 350);
+    } else {
+      // 제품별 전용 템플릿 픽커 (명함 등 특수 제품)
+      setTimeout(function () {
+        try {
+          if (typeof window._meOpenTemplatePicker === 'function') window._meOpenTemplatePicker();
+          else { var tb = document.getElementById('meTemplateBtn'); if (tb) tb.click(); }
+        } catch (_) {}
+      }, 350);
+    }
     toast(opt.msg);
     mountDoneBar(
       function () { _freeMode = false; removeDoneBar(); celebrate({ kr: '디자인 완성! 🎉', ja: 'デザイン完成! 🎉', en: 'Design done! 🎉' }); enterStep(i + 1); },
@@ -698,12 +710,12 @@
             ja: '光る <b>AI画像</b> ボタンを押して説明を書くと、AIが画像を作ります。<br><b>ご注意:</b> AI画像は解像度が低く、ハニカム間仕切り·横断幕などの <b>大きな出力物</b> は <b>アップスケールで補正</b> しますが <b>画像が少しにじむ(ぼやける)ことがあります</b>。くっきりした大判出力には <b>テンプレート(ベクター)</b> がおすすめです。',
             en: 'Tap the glowing <b>AI image</b> button and describe it — the AI creates an image.<br><b>Note:</b> AI images are low-resolution. For <b>large prints</b> (honeycomb walls, banners) we <b>upscale</b> them, but <b>the image may look slightly blurry</b>. For crisp large output, we recommend a <b>vector template</b>.' }
         },
-        { key: 'editor', mode: 'free', target: ['#meTemplateBtn', '.qd-head-row', '#soQuickDesignSec'],
+        { key: 'editor', mode: 'free', template: 'rail', target: ['#soQdRailThumbs', '.qd-rail', '#soQuickDesignSec'],
           label: { kr: '🎨 템플릿으로 디자인', ja: '🎨 テンプレートでデザイン', en: '🎨 Design with a template' },
           sub: { kr: '벡터라 크게 뽑아도 선명해요', ja: 'ベクターで大判でも鮮明', en: 'Vector — crisp even large' },
-          msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝.<br><b>템플릿은 벡터라 가벽·현수막처럼 크게 인쇄해도 깨끗하게</b> 나와요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
-            ja: '🎨 テンプレートを表示! お好きなものを選んで <b>文字·写真を変えるだけ</b>。<br><b>テンプレートはベクターなので、間仕切りや横断幕のように大きく印刷しても鮮明</b>です。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
-            en: '🎨 Templates are open! Pick one and <b>just change text & photos</b>.<br><b>Templates are vector, so they print cleanly even at large sizes</b> (walls, banners). When done, tap <b>"Done → Continue"</b> below!' }
+          msg: { kr: '🎨 아래 <b>템플릿</b>들 중 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝!<br><b>템플릿은 벡터라 가벽·현수막처럼 크게 인쇄해도 깨끗하게</b> 나와요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
+            ja: '🎨 下の <b>テンプレート</b> からお好きなものを選んで <b>文字·写真を変えるだけ</b>!<br><b>テンプレートはベクターなので、間仕切りや横断幕のように大きく印刷しても鮮明</b>です。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
+            en: '🎨 Pick a <b>template</b> from below and <b>just change text & photos</b>!<br><b>Templates are vector, so they print cleanly even at large sizes</b> (walls, banners). When done, tap <b>"Done → Continue"</b> below!' }
         },
         { key: 'upload', always: true,
           target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
