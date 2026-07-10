@@ -1128,7 +1128,7 @@
         modal.appendChild(confirmBtn);
 
         overlay.appendChild(modal);
-        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        overlay.onpointerdown = (e) => { if (e.target === overlay) overlay.remove(); };
         document.body.appendChild(overlay);
 
         // 첫 번째 입력에 포커스

@@ -145,9 +145,9 @@ window.addEventListener("DOMContentLoaded", async () => {
                 import('./canvas-objects.js?v=435'),
                 import('./canvas-pages.js?v=435'),
                 import('./canvas-image.js?v=294'),
-                import('./canvas-template.js?v=294'),
+                import('./canvas-template.js?v=295'),
                 import('./canvas-ai.js?v=434'),
-                import('./canvas-retouch.js?v=294'),
+                import('./canvas-retouch.js?v=295'),
                 import('./canvas-utils.js?v=294'),
                 import('./canvas-icons.js?v=435'),
                 import('./shortcuts.js?v=434'),
@@ -156,7 +156,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 import('./my-design.js?v=434'),
                 import('./video-maker.js?v=434'),
                 import('./ppt-mode.js?v=434'),
-                import('./greeting-card-mode.js?v=434')
+                import('./greeting-card-mode.js?v=435')
             ]);
             // 전역 노출 (외부 모듈/order.js 가 window.loadProductFixedTemplate 등 참조)
             window.loadProductFixedTemplate = tmplM.loadProductFixedTemplate;

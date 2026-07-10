@@ -125,7 +125,7 @@ function _showPremiumUpsell() {
         if (window.startSubscription) window.startSubscription('monthly');
     };
     overlay.querySelector('#_premUpsellCloseBtn').onclick = function() { overlay.remove(); };
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    overlay.onpointerdown = function(e) { if (e.target === overlay) overlay.remove(); };
 }
 
 function _isPremiumItem(item) {

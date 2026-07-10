@@ -335,7 +335,7 @@ function showStickerPanel() {
     panel = document.createElement('div');
     panel.id = 'gcStickerSheet';
     panel.style.cssText = 'position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.4); display:flex; align-items:flex-end; justify-content:center;';
-    panel.onclick = (e) => { if (e.target === panel) panel.style.display = 'none'; };
+    panel.onpointerdown = (e) => { if (e.target === panel) panel.style.display = 'none'; };
     const sheet = document.createElement('div');
     sheet.style.cssText = 'background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:500px; max-height:60vh; overflow-y:auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom, 0));';
     sheet.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:16px;font-weight:800;color:#0f766e;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right:6px;color:#14b8a6;"></i>${_t('gc_sticker_title','애니메이션 효과')}</span><button onclick="document.getElementById('gcStickerSheet').style.display='none'" style="background:none;border:none;font-size:18px;color:#94a3b8;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button></div>`;

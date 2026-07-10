@@ -7020,7 +7020,7 @@ html, body { background: #ffffff !important; }
         ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2147483646;';
         ov.innerHTML = '<div style="' + posStyle + ' background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 24px 60px -10px rgba(0,0,0,0.5); display:flex; flex-direction:column;">'
             + closeX + imgBox + bodyBox + btnBox + '</div>';
-        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        ov.addEventListener('pointerdown', function(e){ if (e.target === ov) ov.remove(); });
         document.body.appendChild(ov);
         if (hasSel) {
             var sb = document.getElementById('soOptInfoSelect');
@@ -7066,7 +7066,7 @@ html, body { background: #ffffff !important; }
             +   '<button type="button" onclick="document.getElementById(\'soOptPickerOv\').remove()" style="width:100%; padding:13px; background:#eef2f7; color:#475569; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;">' + tr('닫기', '閉じる', 'Close') + '</button>'
             + '</div>'
             + '</div>';
-        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        ov.addEventListener('pointerdown', function(e){ if (e.target === ov) ov.remove(); });
         document.body.appendChild(ov);
     };
     // 2026-06-25: 현재 선택된 박/후가공 요약 (튜토리얼에 실시간 표시용). 없으면 '' 반환.
@@ -14569,7 +14569,7 @@ html, body { background: #ffffff !important; }
                 b.style.border = '2px solid #7c3aed'; b.style.background = '#f3f0ff'; b.style.color = '#5b21b6';
             });
         });
-        ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+        ov.addEventListener('pointerdown', function(e){ if (e.target === ov) ov.remove(); });
         document.getElementById('soAssetCancel').addEventListener('click', function(){ ov.remove(); });
         document.getElementById('soAssetSubmit').addEventListener('click', async function(){
             var nameInput = document.getElementById('soAssetName');

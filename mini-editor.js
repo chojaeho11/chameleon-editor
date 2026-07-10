@@ -2110,7 +2110,8 @@
             _meSelect(it);  // 핸들/X 재배치
             close();
         }
-        overlay.addEventListener('click', function(e){
+        // pointerdown: 글씨를 드래그 선택하다 배경에서 놓아도 닫히지 않게 (click 은 드래그 종료도 잡음)
+        overlay.addEventListener('pointerdown', function(e){
             if (e.target === overlay) close();
         });
         modal.querySelector('#meTextEditCancel').addEventListener('click', close);
@@ -3753,7 +3754,7 @@
           + '</div>';
         document.body.appendChild(pop);
         document.getElementById('meTplClose').onclick = function() { pop.remove(); };
-        pop.addEventListener('click', function(e){ if (e.target === pop) pop.remove(); });
+        pop.addEventListener('pointerdown', function(e){ if (e.target === pop) pop.remove(); });
 
         var grid = document.getElementById('meTplGrid');
         var cat = window._meCurrentCategory || '';
@@ -4677,7 +4678,7 @@
         var close = function(){ ov.remove(); };
         setTimeout(function(){ try { inp.focus(); } catch(_){} }, 30);
         ov.querySelector('#meQrCancel').onclick = close;
-        ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+        ov.addEventListener('pointerdown', function(e){ if (e.target === ov) close(); });
         var go = function(){
             var url = (inp.value || '').trim();
             if (!url) { try { inp.focus(); } catch(_){} return; }
@@ -5605,7 +5606,8 @@
             '</div>';
         document.body.appendChild(wrap);
 
-        wrap.addEventListener('click', function (e) { if (e.target === wrap) _meAiGenClose(); });
+        // pointerdown: 프롬프트 글씨를 드래그 선택하다 배경에서 놓아도 닫히지 않게 (click 은 드래그 종료도 잡아 닫힘)
+        wrap.addEventListener('pointerdown', function (e) { if (e.target === wrap) _meAiGenClose(); });
         document.getElementById('meAiClose').addEventListener('click', _meAiGenClose);
 
         wrap.querySelectorAll('.meAiModelBtn').forEach(function (b) {

@@ -466,7 +466,7 @@ function _showOptionModal(config) {
         }
 
         modal.querySelector('#retouchOptionClose').onclick = () => { modal.remove(); resolve(null); };
-        modal.onclick = (e) => { if (e.target === modal) { modal.remove(); resolve(null); } };
+        modal.onpointerdown = (e) => { if (e.target === modal) { modal.remove(); resolve(null); } };
     });
 }
 
@@ -500,7 +500,7 @@ function _pickSecondImage(imageList) {
         }
 
         modal.querySelector('#retouchOptionClose').onclick = () => { modal.remove(); resolve(null); };
-        modal.onclick = (e) => { if (e.target === modal) { modal.remove(); resolve(null); } };
+        modal.onpointerdown = (e) => { if (e.target === modal) { modal.remove(); resolve(null); } };
     });
 }
 
@@ -724,6 +724,6 @@ function _showSkinAnalysis(analysis) {
             <button onclick="this.closest('#retouchOptionModal').remove()" style="margin-top:16px;width:100%;height:38px;border:none;border-radius:10px;background:#6366f1;color:#fff;font-size:13px;cursor:pointer;font-weight:600;">확인</button>
         </div>
     `;
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    modal.onpointerdown = (e) => { if (e.target === modal) modal.remove(); };
     document.body.appendChild(modal);
 }
