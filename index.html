@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260710184904';
+    var CV = '20260710192806';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5814,6 +5814,7 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
                 <input type="file" id="meImgInput" accept="image/*,.svg,image/svg+xml,.pdf,application/pdf" style="display:none;" onchange="window._meAddImageFromFile(this)">
                 <input type="file" id="meChangeImgInput" accept="image/*" style="display:none;" onchange="window._meChangeImgUpload(this)">
+                <button type="button" class="me-tool-btn me-r2" id="meAiGenBtn" onclick="window._meAiGenOpen && window._meAiGenOpen()" style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca;" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles me-tb-ic"></i><span data-i18n="me_ai_gen" class="me-tb-lbl">AI 이미지</span></button>
                 <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거)"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
                 <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 / Cutline / カットライン"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutline" class="me-tb-lbl">칼선</span></button>
                 <!-- Row 3 -->
@@ -5869,7 +5870,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=442"></script>
+<script src="./mini-editor.js?v=443"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">

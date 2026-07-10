@@ -5546,4 +5546,190 @@
             input.value = '';
         }
     };
+
+    // ══════════════════════════════════════════════════════════════════
+    // 2026-07-10: 미니에디터 AI 이미지 생성 (모델 선택: 일반=Flux / 글자·포스터=Ideogram)
+    //   툴바 [AI 이미지] 버튼 → window._meAiGenOpen(). 결과를 window._meAddImage 로 캔버스에 삽입.
+    //   Ideogram: ai-image-gen(=dataURL) — 이미지 안 텍스트에 강함.  Flux: generate-image-flux(=storage URL) — 그림·배경.
+    //   플랫 디자인(그림자·아이콘·볼드 도배 지양, CLAUDE.md §0).
+    // ══════════════════════════════════════════════════════════════════
+    function _meAiLang() {
+        try { var s = (window.__SITE_CODE || '').toString().toUpperCase(); if (s === 'JP' || s === 'JA') return 'ja'; if (s === 'US' || s === 'EN') return 'en'; } catch (_) {}
+        try { var l = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); if (l === 'ja' || l === 'jp') return 'ja'; if (l === 'en' || l === 'us') return 'en'; if (l === 'ko' || l === 'kr') return 'ko'; } catch (_) {}
+        var h = (location.hostname || '').toLowerCase();
+        if (h.indexOf('cafe0101') >= 0) return 'ja';
+        if (h.indexOf('cafe3355') >= 0) return 'en';
+        return 'ko';
+    }
+    function _meAiTr(ko, ja, en) { var l = _meAiLang(); return l === 'ja' ? (ja || ko) : l === 'en' ? (en || ko) : ko; }
+
+    var _meAiModel = 'flux';      // 'flux' | 'ideogram'
+    var _meAiRatio = '1:1';
+    var _meAiPendingUrl = null;
+
+    function _meAiEnsureModal() {
+        if (document.getElementById('meAiGenModal')) return;
+        var wrap = document.createElement('div');
+        wrap.id = 'meAiGenModal';
+        wrap.style.cssText = 'position:fixed; inset:0; z-index:2147483200; background:rgba(15,23,42,0.5); display:none; align-items:center; justify-content:center; padding:16px; font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Segoe UI",sans-serif;';
+        wrap.innerHTML =
+            '<div style="background:#fff; border-radius:16px; width:min(440px,100%); max-height:92vh; overflow-y:auto; padding:20px;">' +
+              '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">' +
+                '<div style="font-size:16px; color:#4338ca;">' + _meAiTr('AI 이미지 생성', 'AI画像生成', 'AI image') + '</div>' +
+                '<button type="button" id="meAiClose" style="border:none; background:transparent; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">✕</button>' +
+              '</div>' +
+              '<div style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
+                _meAiTr('만들고 싶은 이미지를 설명해 주세요. 아래에서 종류를 고르면 더 잘 나와요.',
+                        '作りたい画像を説明してください。下で種類を選ぶとより良く仕上がります。',
+                        'Describe the image you want. Pick a type below for better results.') +
+              '</div>' +
+              // 모델 선택 (세그먼트)
+              '<div style="display:flex; gap:8px; margin-bottom:6px;">' +
+                '<button type="button" class="meAiModelBtn" data-model="flux" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:13px; cursor:pointer; font-family:inherit;">' +
+                  _meAiTr('그림·배경', 'イラスト·背景', 'Art / BG') + '</button>' +
+                '<button type="button" class="meAiModelBtn" data-model="ideogram" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:13px; cursor:pointer; font-family:inherit;">' +
+                  _meAiTr('글자·포스터', '文字·ポスター', 'Text / Poster') + '</button>' +
+              '</div>' +
+              '<div id="meAiModelHint" style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.5;"></div>' +
+              // 비율 선택
+              '<div style="display:flex; gap:6px; margin-bottom:12px;">' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각 1:1', '正方形 1:1', 'Square') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로 9:16', '縦 9:16', 'Portrait') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 16:9', '横 16:9', 'Landscape') + '</button>' +
+              '</div>' +
+              '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 벚꽃이 흩날리는 봄 풍경', '例: 桜が舞う春の風景', 'e.g. spring scene with cherry blossoms') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
+              '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
+              '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
+              '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
+              '<div id="meAiErr" style="display:none; margin-top:10px; font-size:12.5px; color:#dc2626; line-height:1.5;"></div>' +
+            '</div>';
+        document.body.appendChild(wrap);
+
+        wrap.addEventListener('click', function (e) { if (e.target === wrap) _meAiGenClose(); });
+        document.getElementById('meAiClose').addEventListener('click', _meAiGenClose);
+
+        wrap.querySelectorAll('.meAiModelBtn').forEach(function (b) {
+            b.addEventListener('click', function () { _meAiModel = b.getAttribute('data-model'); _meAiSyncBtns(); });
+        });
+        wrap.querySelectorAll('.meAiRatioBtn').forEach(function (b) {
+            b.addEventListener('click', function () { _meAiRatio = b.getAttribute('data-ratio'); _meAiSyncBtns(); });
+        });
+        document.getElementById('meAiGoBtn').addEventListener('click', _meAiGenerate);
+        document.getElementById('meAiInsertBtn').addEventListener('click', function () {
+            if (!_meAiPendingUrl) return;
+            try { window._meAddImage(_meAiPendingUrl, {}); } catch (err) { console.warn('[meAi] add', err); }
+            _meAiGenClose();
+        });
+        _meAiSyncBtns();
+    }
+
+    function _meAiSyncBtns() {
+        var m = document.getElementById('meAiGenModal'); if (!m) return;
+        m.querySelectorAll('.meAiModelBtn').forEach(function (b) {
+            var on = b.getAttribute('data-model') === _meAiModel;
+            b.style.borderColor = on ? '#4338ca' : '#e2e8f0';
+            b.style.background = on ? '#eef2ff' : '#fff';
+            b.style.color = on ? '#4338ca' : '#334155';
+        });
+        m.querySelectorAll('.meAiRatioBtn').forEach(function (b) {
+            var on = b.getAttribute('data-ratio') === _meAiRatio;
+            b.style.borderColor = on ? '#4338ca' : '#e2e8f0';
+            b.style.background = on ? '#eef2ff' : '#fff';
+            b.style.color = on ? '#4338ca' : '#334155';
+        });
+        var hint = document.getElementById('meAiModelHint');
+        if (hint) hint.textContent = _meAiModel === 'ideogram'
+            ? _meAiTr('“세일 50%” 같은 글자가 이미지에 들어가야 할 때. (일본어·한국어 글자는 깨질 수 있어요)',
+                      '「SALE 50%」など文字を画像に入れたい時。(日本語·韓国語の文字は崩れる場合あり)',
+                      'When text like “SALE 50%” must appear in the image. (CJK text may be imperfect)')
+            : _meAiTr('풍경·패턴·배경 등 그림 위주일 때. 글자는 에디터에서 직접 넣는 걸 추천해요.',
+                      '風景·パターン·背景など絵柄中心の時。文字はエディタで直接入れるのがおすすめ。',
+                      'For scenery, patterns, backgrounds. Add text in the editor for accuracy.');
+    }
+
+    window._meAiGenOpen = function () {
+        _meAiEnsureModal();
+        _meAiPendingUrl = null;
+        var m = document.getElementById('meAiGenModal');
+        var res = document.getElementById('meAiResult');
+        var ins = document.getElementById('meAiInsertBtn');
+        var err = document.getElementById('meAiErr');
+        if (res) { res.innerHTML = _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here'); res.style.color = '#cbd5e1'; }
+        if (ins) ins.style.display = 'none';
+        if (err) err.style.display = 'none';
+        m.style.display = 'flex';
+        setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
+    };
+    function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
+
+    async function _meAiGenerate() {
+        var promptEl = document.getElementById('meAiPrompt');
+        var res = document.getElementById('meAiResult');
+        var ins = document.getElementById('meAiInsertBtn');
+        var err = document.getElementById('meAiErr');
+        var go = document.getElementById('meAiGoBtn');
+        var prompt = (promptEl && promptEl.value || '').trim();
+        if (err) err.style.display = 'none';
+        if (ins) ins.style.display = 'none';
+        _meAiPendingUrl = null;
+        if (prompt.length < 3) {
+            if (err) { err.textContent = _meAiTr('설명을 조금 더 자세히 적어주세요.', 'もう少し詳しく説明してください。', 'Please describe a bit more.'); err.style.display = 'block'; }
+            return;
+        }
+        if (res) { res.innerHTML = '<span style="color:#64748b;">' + _meAiTr('AI가 만드는 중…', 'AIが生成中…', 'Generating…') + '</span>'; res.style.color = '#64748b'; }
+        if (go) go.disabled = true;
+        try {
+            var url;
+            if (_meAiModel === 'ideogram') {
+                // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
+                var size = _meAiRatio === '9:16' ? '1024x1536' : _meAiRatio === '16:9' ? '1536x1024' : '1024x1024';
+                var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
+                    body: JSON.stringify({ prompt: prompt, size: size })
+                });
+                var d1 = await r1.json();
+                if (!r1.ok || d1.error) throw new Error(d1.detail || d1.error || ('HTTP ' + r1.status));
+                url = d1.url;
+            } else {
+                var r2 = await fetch(SB_URL + '/functions/v1/generate-image-flux', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
+                    body: JSON.stringify({ prompt: prompt, ratio: _meAiRatio })
+                });
+                var d2 = await r2.json();
+                if (!r2.ok || d2.error) throw new Error(d2.error || ('HTTP ' + r2.status));
+                var raw = d2.imageUrl || d2;
+                if (Array.isArray(raw)) raw = raw[0];
+                if (raw && typeof raw === 'object' && raw.url) raw = raw.url;
+                url = raw;
+            }
+            if (!url) throw new Error(_meAiTr('이미지를 받지 못했어요.', '画像を取得できませんでした。', 'No image returned.'));
+            // 호스팅 URL(Flux)은 _meAddImage 가 crossOrigin 없이 로드 → 캔버스 오염(export 깨짐).
+            //   삽입 전 dataURL 로 변환해 안전하게. (dataURL 이면 그대로)
+            if (url.indexOf('data:') !== 0) {
+                try {
+                    var ir = await fetch(url, { mode: 'cors' });
+                    if (ir.ok) {
+                        var ib = await ir.blob();
+                        url = await new Promise(function (resolve, reject) {
+                            var fr = new FileReader();
+                            fr.onload = function () { resolve(String(fr.result)); };
+                            fr.onerror = function () { reject(new Error('dataURL 변환 실패')); };
+                            fr.readAsDataURL(ib);
+                        });
+                    }
+                } catch (_conv) { console.warn('[meAi] dataURL convert failed, using raw url', _conv); }
+            }
+            _meAiPendingUrl = url;
+            if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
+            if (ins) ins.style.display = 'block';
+        } catch (e) {
+            console.error('[meAi] generate', e);
+            if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
+            if (err) { err.textContent = '⚠️ ' + (e.message || 'error'); err.style.display = 'block'; }
+        } finally {
+            if (go) go.disabled = false;
+        }
+    }
 })();
