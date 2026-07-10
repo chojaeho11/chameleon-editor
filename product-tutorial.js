@@ -951,14 +951,21 @@
         en: 'Tap <b>Cutline</b> and pick a <b>die-cut shape</b> (circle, pill, rounded square, one corner…). It cuts along this line ✂️<br>Pick a shape to continue.' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
-    { // 5) 사이즈 선택
+    { // 5) 사이즈 선택 — 이미지가 아닌 보드(대지) 전체 크기
       target: '#soCustomSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection'); },
-      msg: { kr: '이제 <b>사이즈</b>를 정해요. 실제 세울 크기에 맞춰 가로·세로(cm)를 입력하면 가격이 자동 계산돼요.',
-        ja: '次は <b>サイズ</b>。実際に立てる大きさに合わせ横·縦(cm)を入力すると価格が自動計算されます。',
-        en: 'Now set the <b>size</b>. Enter width/height (cm) to match the real display size — the price updates automatically.' }
+      msg: { kr: '이제 <b>사이즈</b>를 정해요. 이건 <b>이미지 크기가 아니라, 배경까지 포함한 보드(대지) 전체 크기</b>예요. 실제로 세울 크기를 감안해 <b>가로·세로(cm)</b>를 조절해 주세요 — 가격이 자동 계산돼요.',
+        ja: '次は <b>サイズ</b>。これは <b>画像のサイズではなく、背景まで含めたボード(台紙)全体のサイズ</b> です。実際に立てる大きさを考えて <b>横·縦(cm)</b> を調整してください — 価格が自動計算されます。',
+        en: 'Now set the <b>size</b>. This is <b>the whole board size (including the background), not the image size</b>. Adjust <b>width/height (cm)</b> for the real display size — the price updates automatically.' }
     },
-    { // 6) 받침대 선택
+    { // 6) 칼선 간격 · 받침(꽂이) 위치 조절 — 에디터 상단 슬라이더
+      target: ['[data-cutline-margin]', '#meProps'], mode: 'next',
+      hint: { kr: '이미지를 선택하면 위쪽에 슬라이더가 나와요', ja: '画像を選択すると上にスライダーが出ます', en: 'Select the image to see the sliders above' },
+      msg: { kr: '이제 <b>칼선 간격</b>과 <b>받침(꽂이) 위치</b>를 다듬어요. 이미지를 선택하면 위쪽에 슬라이더가 나와요.<br>• <b>칼선 간격</b> — 재단선을 이미지에서 얼마나 띄울지 조절해요.<br>• <b>받침 높이·넓이</b> — 등신대 아래 <b>꽂이(받침) 위치·크기</b>를 조절해요. 이걸로 스탠드에 안정적으로 꽂혀요.',
+        ja: '<b>カットライン間隔</b>と<b>差し込み(スタンド)位置</b>を調整します。画像を選択すると上にスライダーが表示されます。<br>• <b>カットライン間隔</b> — 裁断線を画像からどれだけ離すか。<br>• <b>差し込みの高さ·幅</b> — 等身大の下の <b>差し込み位置·サイズ</b>。これでスタンドに安定して差し込めます。',
+        en: 'Now fine-tune the <b>cutline gap</b> and <b>base tab position</b>. Select the image to reveal the sliders above.<br>• <b>Cutline gap</b> — how far the die-cut line sits from the image.<br>• <b>Base height/width</b> — the <b>insert tab position/size</b> at the bottom, so it sits firmly in the stand.' }
+    },
+    { // 7) 받침대 선택
       target: '#soBaseStandSection', mode: 'next',
       onEnter: function () { return _secVisible('#soBaseStandSection'); },
       msg: { kr: '<b>받침대</b>를 골라요. 크기에 맞는 받침대를 선택해야 등신대가 안정적으로 서 있어요 (여러 종류·수량 선택 가능).',
