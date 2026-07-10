@@ -669,7 +669,7 @@
         en: 'There are <b>3 ways</b> to design. Pick the one you like!' },
       branch: [
         { key: 'upload', always: true, target: ['#soBizUploadBtn', '#soBizUploadBtnBack'],
-          label: { kr: '📎 파일 올리기 (앞·뒤)', ja: '📎 ファイルをアップロード (表裏)', en: '📎 Upload files (front/back)' },
+          label: { kr: '파일 올리기 (앞·뒤)', ja: 'ファイルをアップロード (表裏)', en: 'Upload files (front/back)' },
           sub: { kr: '완성된 앞/뒤 파일이 있어요', ja: '完成した表裏ファイルがある', en: 'I have front & back files' },
           msg: { kr: '명함은 <b>양면</b>이에요! <b>앞면</b>과 <b>뒷면</b> 파일을 각각 올려주세요.<br>작업은 <b>92 × 52mm</b>, 재단은 <b>90 × 50mm</b> 📎 (한 면만 있으면 한쪽만 올려도 돼요)',
             ja: '名刺は <b>両面</b> です! <b>表面</b>と<b>裏面</b>のファイルをそれぞれアップロードしてください。<br>作業 <b>92 × 52mm</b>、仕上がり <b>90 × 50mm</b> 📎 (片面だけでもOK)',
@@ -686,14 +686,14 @@
           }
         },
         { key: 'editor', mode: 'free', target: ['.qd-head-row', '#soQuickDesignSec'],
-          label: { kr: '🎨 에디터로 직접 디자인', ja: '🎨 エディタで自分でデザイン', en: '🎨 Design it yourself' },
+          label: { kr: '에디터로 직접 디자인', ja: 'エディタで自分でデザイン', en: 'Design it yourself' },
           sub: { kr: '템플릿에 글씨만 바꾸면 끝', ja: 'テンプレの文字を変えるだけ', en: 'Just edit text on a template' },
           msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨만 바꾸면</b> 끝. 사진·요소도 자유롭게 넣으세요.<br>다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
             ja: '🎨 テンプレートを表示しました! お好きなものを選んで <b>文字を変えるだけ</b>。写真·要素も自由に。<br>完成したら下の <b>「デザイン完了 → 次へ進む」</b> を押してください!',
             en: '🎨 Templates are open! Pick one and <b>just change the text</b>. Add photos & elements freely.<br>When done, tap <b>"Done designing → Continue"</b> below!' }
         },
         { key: 'request', target: '#soDesignReqBanner',
-          label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
+          label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
           msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 <b>앞·뒤 모두</b> 멋지게 만들어 드려요. 영업일 <b>2~3일</b>이면 완성! ✏️',
             ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが <b>表裏とも</b> 仕上げます。<b>営業日2~3日</b>で完成! ✏️',
@@ -771,14 +771,14 @@
         en: "I'll help you order! First, choose <b>how to design</b>." },
       branch: [
         { key: 'ai', mode: 'free', template: 'ai', target: '#meAiGenBtn',
-          label: { kr: '🤖 AI 이미지로 생성', ja: '🤖 AIで画像生成', en: '🤖 Generate with AI' },
+          label: { kr: 'AI 이미지로 생성', ja: 'AIで画像生成', en: 'Generate with AI' },
           sub: { kr: '설명만 쓰면 AI가 그려줘요', ja: '説明するだけでAIが描く', en: 'Describe it, AI draws it' },
           msg: { kr: '반짝이는 <b>AI 이미지</b> 버튼을 눌러 이미지를 만들고, <b>글씨·요소·이미지</b>도 더해 디자인을 마무리하세요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요! (AI 이미지는 큰 출력물에선 약간 뭉개질 수 있어요 — 선명한 대형은 템플릿 추천)',
             ja: '光る <b>AI画像</b> ボタンを押して画像を作り、<b>文字·要素·画像</b> も加えてデザインを仕上げてください。完成したら下の <b>「デザイン完了 → 次へ」</b> を!(AI画像は大判では少しにじむことがあります — 鮮明な大判はテンプレート推奨)',
             en: 'Tap the glowing <b>AI image</b> button to create an image, then add <b>text/elements/images</b> to finish your design. When done, tap <b>"Done → Continue"</b> below! (AI images can look slightly blurry at large sizes — use a template for crisp large output)' }
         },
         { key: 'editor', mode: 'free', template: 'rail', target: ['#soQdRailThumbs', '.qd-rail', '#soQuickDesignSec'],
-          label: { kr: '🎨 템플릿으로 디자인', ja: '🎨 テンプレートでデザイン', en: '🎨 Design with a template' },
+          label: { kr: '템플릿으로 디자인', ja: 'テンプレートでデザイン', en: 'Design with a template' },
           sub: { kr: '벡터라 크게 뽑아도 선명해요', ja: 'ベクターで大判でも鮮明', en: 'Vector — crisp even large' },
           msg: { kr: '🎨 아래 <b>템플릿</b>들 중 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝!<br><b>템플릿은 벡터라 가벽·현수막처럼 크게 인쇄해도 깨끗하게</b> 나와요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
             ja: '🎨 下の <b>テンプレート</b> からお好きなものを選んで <b>文字·写真を変えるだけ</b>!<br><b>テンプレートはベクターなので、間仕切りや横断幕のように大きく印刷しても鮮明</b>です。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
@@ -786,8 +786,13 @@
         },
         { key: 'upload', always: true,
           target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
-          label: { kr: '📎 파일 업로드', ja: '📎 ファイルアップロード', en: '📎 Upload file' },
-          sub: { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' },
+          label: { kr: '파일 업로드', ja: 'ファイルアップロード', en: 'Upload file' },
+          sub: function () {
+            // 등신대·자유인쇄커팅(칼선 버튼 보임) — 배경제거·칼선 안내
+            return _secVisible('#meCutlineBtn')
+              ? { kr: 'PDF 또는 이미지를 올려주세요. 배경제거 및 칼선작업 도와드릴게요', ja: 'PDF·画像をアップ。背景除去·カットライン対応します', en: 'Upload a PDF or image — we help with background removal & cutline' }
+              : { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' };
+          },
           msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올리면 다음으로 넘어가요 📎',
             ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップすると次へ進みます 📎',
             en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded 📎' },
@@ -803,7 +808,7 @@
           }
         },
         { key: 'request', mode: 'request', target: '#soDesignReqBanner',
-          label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
+          label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
           msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해 드릴게요 ✏️',
             ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けて次のステップをご案内します ✏️',
