@@ -5732,8 +5732,9 @@
             if (_meAiModel === 'ideogram') {
                 // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
                 var size = _meAiRatio === '9:16' ? '1024x1536' : _meAiRatio === '16:9' ? '1536x1024' : '1024x1024';
-                // 기본 여백 지시 — 글자·핵심 요소를 가장자리에서 떨어뜨려 재단 시 잘리지 않게 (글자 모델은 특히 강조)
-                var genPrompt1 = prompt + ' Leave a generous, even safe margin around all four edges. Keep every important element and ALL text well inside the frame, away from the borders, so nothing is cut off when the image is trimmed.';
+                // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
+                //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
+                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.';
                 var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
@@ -5743,7 +5744,7 @@
                 if (!r1.ok || d1.error) throw new Error(d1.detail || d1.error || ('HTTP ' + r1.status));
                 url = d1.url;
             } else {
-                var genPrompt2 = prompt + ' Leave a generous even margin around all edges; keep the main subject fully inside the frame, away from the borders.';
+                var genPrompt2 = prompt + ' The background must extend fully to all edges (full bleed). Do NOT draw any border, frame, or colored margin. Keep the main subject within the central area, away from the outer edges.';
                 var r2 = await fetch(SB_URL + '/functions/v1/generate-image-flux', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
