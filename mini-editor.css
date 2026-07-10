@@ -180,11 +180,17 @@
         .me-props.show { display:flex; }
         .me-props.me-props-stub { opacity:0.55; pointer-events:none; }
         .me-props.me-props-stub * { user-select:none; }
-        /* 2026-07-11: 칼선 조절바를 대지 옆(우측)에 별도의 떠있는 창으로 — .me-stage-wrap 안 position:absolute (줌/팬 영향 없음). 칼선 이미지 선택 시만 JS 가 토글 */
-        .me-props.me-props-side { position:absolute; top:12px; right:12px; z-index:6; flex-direction:column; width:200px; max-width:45%; max-height:calc(100% - 24px); min-height:0; flex-wrap:nowrap; align-content:flex-start; overflow-y:auto; background:rgba(255,255,255,0.92); }
-        .me-props.me-props-side .me-prop-group { width:100%; min-width:0 !important; flex:0 0 auto; flex-wrap:wrap; box-sizing:border-box; }
+        /* 2026-07-11: 칼선(외곽선/받침) 조절만 대지 옆 별도의 떠있는 창으로 — .me-stage-wrap 안 position:absolute (줌/팬 영향 없음). 칼선 이미지 선택 시만 JS 가 노드 이동 */
+        .me-cutline-float { position:absolute; top:14px; right:14px; z-index:6; display:flex; flex-direction:column; gap:14px; width:210px; max-width:46%; max-height:calc(100% - 28px); box-sizing:border-box; overflow-y:auto; padding:14px 16px; background:rgba(255,255,255,0.92); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border:0.5px solid rgba(0,0,0,0.08); border-radius:14px; }
+        /* 회색 알약테두리 제거 + 세로로 라벨/슬라이더 줄맞춤 */
+        .me-cutline-float .me-cf-group { display:flex; flex-direction:column; align-items:stretch; gap:7px; width:100%; min-width:0 !important; flex:0 0 auto; background:transparent !important; padding:0 !important; border-radius:0; }
+        .me-cutline-float .me-cf-group > label { display:block; font-size:12.5px; font-weight:600; letter-spacing:-0.2px; }
+        .me-cutline-float .me-cf-row { display:flex; align-items:center; gap:10px; width:100%; }
+        .me-cutline-float .me-cf-row input[type=range] { flex:1 1 auto; min-width:0; width:100%; }
         /* 별도 창이 뜬 동안엔 대지를 왼쪽 정렬해 창과 겹치지 않게 */
         .me-stage-wrap.me-has-side #meStageCol { align-items:flex-start !important; }
+        /* 상단 props 바(모바일 등)에 남아있을 때는 두 슬라이더를 한 줄에 인라인 */
+        .me-cf-row { display:inline-flex; align-items:center; gap:6px; }
         .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
         .me-prop-group label { color:#86868b; font-size:11px; font-weight:500; }
         .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:none; background:transparent; border-radius:4px; font-size:12px; font-family:inherit; outline:none; color:#1d1d1f; font-weight:600; }

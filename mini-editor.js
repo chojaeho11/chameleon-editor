@@ -52,9 +52,9 @@
         if (rulerH) rulerH.style.display = 'none';
         var wrap = document.querySelector('.me-stage-wrap');
         var wrapW = (wrap ? wrap.clientWidth : 600);
-        // 2026-07-11: 칼선 조절바가 대지 옆(stage-row 안)에 있을 땐 그 폭만큼 대지 가용폭에서 뺌.
-        var _sideP = document.querySelector('.me-props.me-props-side');
-        if (_sideP) { var _spr = _sideP.getBoundingClientRect(); if (_spr.width) wrapW -= (_spr.width + 8); }
+        // 2026-07-11: 칼선 조절 창(#meCutlineFloat)이 대지 옆에 떠 있을 땐 그 폭만큼 대지 가용폭에서 뺌 (겹침 방지).
+        var _sideP = document.getElementById('meCutlineFloat');
+        if (_sideP && _sideP.style.display !== 'none') { var _spr = _sideP.getBoundingClientRect(); if (_spr.width) wrapW -= (_spr.width + 16); }
         var pad = 20;                         // me-stage-wrap 좌우 padding 합 (10*2)
         var maxH = window._meStageMaxH || 540;
         var sw, sh;
@@ -2357,10 +2357,12 @@
                 var _curPct = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
                 var _curPctDisp = (_curPct * 100).toFixed(1);
                 var _modeLbl = (it._cutlineMode === 'inner') ? 'inner −' : 'outer +';
-                html += '<span class="me-prop-group" style="gap:6px; min-width:200px;">'
-                     +   '<label style="color:#b91c1c; font-weight:800;">✂️ 칼선 간격</label>'
-                     +   '<input type="range" min="5" max="120" step="1" value="' + Math.round(_curPct * 1000) + '" data-cutline-margin style="flex:1; min-width:90px; accent-color:#ef4444;">'
-                     +   '<span data-cutline-margin-val style="font-size:11px; font-weight:800; color:#b91c1c; min-width:48px; text-align:right;">' + _modeLbl + _curPctDisp + '%</span>'
+                html += '<span class="me-prop-group me-cf-group" style="gap:6px; min-width:200px;">'
+                     +   '<label style="color:#b91c1c;">외곽선 두께</label>'
+                     +   '<span class="me-cf-row">'
+                     +     '<input type="range" min="5" max="120" step="1" value="' + Math.round(_curPct * 1000) + '" data-cutline-margin style="flex:1; min-width:90px; accent-color:#ef4444;">'
+                     +     '<span data-cutline-margin-val style="font-size:11px; font-weight:700; color:#b91c1c; min-width:48px; text-align:right;">' + _modeLbl + _curPctDisp + '%</span>'
+                     +   '</span>'
                      + '</span>';
                 // 2026-06-17: 등신대 모드 — 받침대 높이 + 넓이 슬라이더 (1 그룹에 좌우 나란히, 라벨은 작은 아이콘만)
                 // 2026-06-18 v577: 두 슬라이더를 한 칸에 합침 (모바일 가로 1칸 안에 둘 다 들어가도록)
@@ -2368,13 +2370,16 @@
                     // 2026-07-11: 받침 사각형 — 위로 늘리기 / 아래로 늘리기 2슬라이더로 높이·위치 조절.
                     var _upP = (it._cutlineBaseUpPct != null) ? it._cutlineBaseUpPct : 0.12;
                     var _dnP = (it._cutlineBaseDownPct != null) ? it._cutlineBaseDownPct : 0.10;
-                    html += '<span class="me-prop-group" style="gap:4px; min-width:0; flex:1 1 100%;">'
-                         +   '<i class="fa-solid fa-arrow-up" style="color:#0369a1; font-size:11px;" title="받침 위로 늘리기"></i>'
-                         +   '<input type="range" min="0" max="400" step="1" value="' + Math.round(_upP * 1000) + '" data-cutline-baseup style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-baseup-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_upP * 100).toFixed(0) + '%</span>'
-                         +   '<i class="fa-solid fa-arrow-down" style="color:#0369a1; font-size:11px; margin-left:6px;" title="받침 아래로 늘리기"></i>'
-                         +   '<input type="range" min="0" max="400" step="1" value="' + Math.round(_dnP * 1000) + '" data-cutline-basedown style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-basedown-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_dnP * 100).toFixed(0) + '%</span>'
+                    html += '<span class="me-prop-group me-cf-group" style="gap:4px; min-width:0; flex:1 1 100%;">'
+                         +   '<label style="color:#0369a1;">받침 위치</label>'
+                         +   '<span class="me-cf-row">'
+                         +     '<input type="range" min="0" max="400" step="1" value="' + Math.round(_upP * 1000) + '" data-cutline-baseup style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +     '<span data-cutline-baseup-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_upP * 100).toFixed(0) + '%</span>'
+                         +   '</span>'
+                         +   '<span class="me-cf-row">'
+                         +     '<input type="range" min="0" max="400" step="1" value="' + Math.round(_dnP * 1000) + '" data-cutline-basedown style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +     '<span data-cutline-basedown-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_dnP * 100).toFixed(0) + '%</span>'
+                         +   '</span>'
                          + '</span>';
                 }
             }
@@ -2392,28 +2397,6 @@
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
         html += '</span>';
         panel.innerHTML = html;
-        // 2026-07-11: 칼선 조절바를 이미지 옆(대지 우측)에 별도의 떠있는 창으로 배치.
-        //   칼선 이미지를 선택했고 화면이 넓을 때(데스크톱)만 props 패널을 .me-stage-wrap 안에 position:absolute 로 띄움.
-        //   .me-stage-row(줌·팬 대상)가 아니라 wrap 의 직계 자식이라 마우스휠 확대/이동에 영향 없음(고정 창).
-        //   대지는 왼쪽 정렬(me-has-side) + 폭 축소로 창과 겹치지 않게. 텍스트/일반 편집·모바일은 기존 가로 바 유지.
-        try {
-            if (!panel._meHome) panel._meHome = { parent: panel.parentNode, next: panel.nextSibling };
-            var _wrap = document.querySelector('.me-stage-wrap');
-            var _wantSide = !!(_hasCutlineActive && _wrap && window.innerWidth >= 820);
-            if (_wantSide !== !!panel._meSideOn) {
-                if (_wantSide) {
-                    _wrap.appendChild(panel);
-                    _wrap.classList.add('me-has-side');
-                    panel.classList.add('me-props-side');
-                } else {
-                    panel.classList.remove('me-props-side');
-                    if (_wrap) _wrap.classList.remove('me-has-side');
-                    if (panel._meHome && panel._meHome.parent) panel._meHome.parent.insertBefore(panel, panel._meHome.next);
-                }
-                panel._meSideOn = _wantSide;
-                if (typeof _meFitStage === 'function') { try { _meFitStage(); } catch(_fe){} }
-            }
-        } catch(_sp){}
         // 2026-06-16: 드롭다운 모든 옵션의 폰트를 미리 로드 — 펼치기 전엔 preview 가 안 나오던 문제 해결.
         //   Google Fonts CSS 는 가벼우므로 35+개 link 주입해도 부담 적음. 실제 글자 파일은 사용 시에만 다운로드.
         var sel = panel.querySelector('select[data-font-select]');
@@ -2588,6 +2571,34 @@
                 else if (act === 'down' && window._meSendBackward) window._meSendBackward(it);
             });
         });
+        // 2026-07-11: 칼선(외곽선/받침) 조절 컨트롤만 대지 옆 별도의 떠있는 창으로 분리.
+        //   회전·정렬·레이어 등 공용 버튼은 원래 자리(대지 위 props 바)에 그대로 둠.
+        //   떠있는 창(#meCutlineFloat)은 .me-stage-wrap 직계 자식(줌/팬 대상인 .me-stage-row 밖)이라 마우스휠 확대/이동에 영향 없음(고정).
+        //   리스너는 위에서 노드에 이미 붙어 있으므로, 노드를 창으로 옮겨도 동작 유지.
+        try {
+            var _wrap = document.querySelector('.me-stage-wrap');
+            var _float = document.getElementById('meCutlineFloat');
+            var _wantSide = !!(_hasCutlineActive && _wrap && window.innerWidth >= 820);
+            if (_wantSide && _wrap) {
+                if (!_float) {
+                    _float = document.createElement('div');
+                    _float.id = 'meCutlineFloat';
+                    _float.className = 'me-cutline-float';
+                    _wrap.appendChild(_float);
+                }
+                _float.innerHTML = '';
+                panel.querySelectorAll('.me-cf-group').forEach(function(g){ _float.appendChild(g); });
+                _float.style.display = _float.children.length ? 'flex' : 'none';
+                _wrap.classList.add('me-has-side');
+            } else {
+                if (_float) { _float.innerHTML = ''; _float.style.display = 'none'; }
+                if (_wrap) _wrap.classList.remove('me-has-side');
+            }
+            if (_wantSide !== !!panel._meSideOn) {
+                panel._meSideOn = _wantSide;
+                if (typeof _meFitStage === 'function') { try { _meFitStage(); } catch(_fe){} }
+            }
+        } catch(_sp){}
         // 2026-06-15: 상단 chip 의 value/tooltip 을 현재 선택에 동기화.
         try { if (typeof window._meSyncBgChip === 'function') window._meSyncBgChip(); } catch(_) {}
     }
