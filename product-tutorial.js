@@ -391,7 +391,14 @@
 
     _awaitPick = null;
     if (step.mode === 'wait') {
-      if (step.waitClose) {
+      if (step.waitEvent) {
+        // 2026-07-11: 타깃을 눌러 작업을 시작하되(버튼 onclick), 실제 완료 이벤트가 올 때만 다음 단계로.
+        //   예: 누끼(배경제거)는 3~4초 걸리므로 클릭 즉시가 아니라 'me-cutout-done' 이벤트를 기다림.
+        var _ev = step.waitEvent;
+        var onEv = function () { document.removeEventListener(_ev, onEv); celebrate(step.cheer); enterStep(i + 1); };
+        document.addEventListener(_ev, onEv);
+        _stepCleanup.push(function () { document.removeEventListener(_ev, onEv); });
+      } else if (step.waitClose) {
         // 2026-07-10: 타깃(예: 칼선 버튼)을 눌러 모달을 열고, 그 모달이 닫혀야(작업 완료) 다음 단계로.
         //   버튼 클릭만으로는 진행 안 함 (칼선 모양 선택을 마쳐야 사이즈 단계로). 모달 열리면 안내창 숨김.
         var _wc = step.waitClose, _wcOpen = false, _wcTicks = 0;
@@ -932,13 +939,13 @@
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
     GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
-    { // 4) 누끼 (배경 제거) — 선택 사항. 원하면 누끼, 그대로 네모면 '다음'.
-      target: '#meBgRemoveBtn', mode: 'wait',
+    { // 4) 누끼 (배경 제거) — 선택 사항. 원하면 누끼(완료까지 대기), 그대로 네모면 '다음'.
+      target: '#meBgRemoveBtn', mode: 'wait', waitEvent: 'me-cutout-done',
       onEnter: function () { return _secVisible('#meBgRemoveBtn'); },
       hint: { kr: '이미지면 선택 후 누끼 / PDF·네모면 아래 다음', ja: '画像は選択して切り抜き / PDF·四角は下の次へ', en: 'Image: select + Cut-out / PDF·rectangle: Next' },
-      msg: { kr: '업로드 잘 하셨어요! 🎉<br>• <b>배경 있는 이미지(JPG·PNG)</b> — <b>이미지를 클릭해 선택</b>하고 반짝이는 <b>누끼</b> 버튼을 누르면 배경을 지워드려요 (칼선도 이어서).<br>• <b>칼선까지 완성된 PDF</b> 또는 <b>네모 그대로</b> 쓰실 거면 아래 <b>다음</b>을 눌러주세요.<br><span style="color:#94a3b8;">※ PDF는 자동 배경제거·칼선이 안 돼요. PDF로 만들 땐 칼선을 <b>별도 레이어</b>로, 선은 <b>부드럽게</b>, <b>받침 부분은 평평하게</b> 준비해 주세요.</span>',
-        ja: 'アップロードOK! 🎉<br>• <b>背景ありの画像(JPG·PNG)</b> — <b>画像を選択</b>して光る <b>切り抜き</b> ボタンで背景を除去(カットラインも続けて)。<br>• <b>カットライン済PDF</b> や <b>四角のまま</b> なら下の <b>次へ</b>。<br><span style="color:#94a3b8;">※ PDFは自動の背景除去·カットライン不可。PDFで作る際はカットラインを <b>別レイヤー</b> で、線は <b>滑らかに</b>、<b>差し込み部分は平らに</b> ご準備ください。</span>',
-        en: 'Nicely uploaded! 🎉<br>• <b>Image with background (JPG/PNG)</b> — <b>click to select</b> and tap the glowing <b>Cut-out</b> button (cutline follows).<br>• <b>Cutline-ready PDF</b> or keeping it <b>rectangular</b> — tap <b>Next</b> below.<br><span style="color:#94a3b8;">※ PDFs can\'t be auto bg-removed/cut. For PDFs, make the cutline on a <b>separate layer</b>, keep lines <b>smooth</b>, and the <b>base tab flat</b>.</span>' },
+      msg: { kr: '업로드 잘 하셨어요! 🎉<br>• <b>배경 있는 이미지(JPG·PNG)</b> — <b>이미지를 클릭해 선택</b>하고 반짝이는 <b>누끼</b> 버튼을 눌러주세요. <b>배경 제거에 몇 초 걸려요</b> — 완료되면 자동으로 다음으로 넘어가요.<br>• <b>칼선까지 완성된 PDF</b> 또는 <b>네모 그대로</b> 쓰실 거면 아래 <b>다음</b>을 눌러주세요.<br><span style="color:#94a3b8;">※ PDF는 자동 배경제거·칼선이 안 돼요. PDF로 만들 땐 칼선을 <b>별도 레이어</b>로, 선은 <b>부드럽게</b>, <b>받침 부분은 평평하게</b> 준비해 주세요.</span>',
+        ja: 'アップロードOK! 🎉<br>• <b>背景ありの画像(JPG·PNG)</b> — <b>画像を選択</b>して光る <b>切り抜き</b> ボタンを押してください。<b>背景除去に数秒かかります</b> — 完了すると自動で次へ進みます。<br>• <b>カットライン済PDF</b> や <b>四角のまま</b> なら下の <b>次へ</b>。<br><span style="color:#94a3b8;">※ PDFは自動の背景除去·カットライン不可。PDFで作る際はカットラインを <b>別レイヤー</b> で、線は <b>滑らかに</b>、<b>差し込み部分は平らに</b> ご準備ください。</span>',
+        en: 'Nicely uploaded! 🎉<br>• <b>Image with background (JPG/PNG)</b> — <b>click to select</b> and tap the glowing <b>Cut-out</b> button. <b>Background removal takes a few seconds</b> — it advances automatically when done.<br>• <b>Cutline-ready PDF</b> or keeping it <b>rectangular</b> — tap <b>Next</b> below.<br><span style="color:#94a3b8;">※ PDFs can\'t be auto bg-removed/cut. For PDFs, make the cutline on a <b>separate layer</b>, keep lines <b>smooth</b>, and the <b>base tab flat</b>.</span>' },
       skipLabel: { kr: 'PDF·네모 그대로 다음 ▶', ja: 'PDF·四角のまま次へ ▶', en: 'PDF/rectangle · Next ▶' },
       cheer: { kr: '배경 제거 완료! 👍', ja: '背景除去完了! 👍', en: 'Background removed! 👍' }
     },

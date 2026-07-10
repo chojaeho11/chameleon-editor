@@ -3355,29 +3355,27 @@
         var _baseHalf = (objW * (2 / 3)) / 2;
         var baseLeftX = Math.max(0, objCx - _baseHalf);
         var baseRightX = Math.min(W, objCx + _baseHalf);
-        // topY 에서 실루엣이 교차하는 아래 구간을 사각형 받침으로 교체 (객체 바닥이 사각형으로 대체 → 틈 없이 채워짐)
+        // topY 아래 구간(bottom-cap)을 순회 — [baseLeftX..baseRightX] '바깥'의 객체 부분은 그대로 유지(위 도형을 파먹지 않음),
+        //   가운데 [baseLeftX..baseRightX] 부분만 직사각형 받침(수직 옆선 → botY)으로 채워 union.
         var enterIdx = -1, exitIdx = -1;
         for (var i = 0; i < contour.length; i++) { if (contour[i][1] >= topY) { enterIdx = i; break; } }
         if (enterIdx < 0) return contour;
         for (var i = contour.length - 1; i >= enterIdx; i--) { if (contour[i][1] >= topY) { exitIdx = i; break; } }
         if (exitIdx <= enterIdx) return contour;
-        var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
-        var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
-        var isCW = entryX >= exitX;
+        // cap 은 시계방향(오른쪽→왼쪽). 오른쪽에서 x<=baseRightX 로 처음 들어오는 지점(kEnter) / 왼쪽에서 x>=baseLeftX 인 마지막 지점(kExit).
+        var kEnter = -1, kExit = -1;
+        for (var k = enterIdx; k <= exitIdx; k++) { if (contour[k][0] <= baseRightX) { kEnter = k; break; } }
+        for (var k = exitIdx; k >= enterIdx; k--) { if (contour[k][0] >= baseLeftX) { kExit = k; break; } }
+        if (kEnter < 0 || kExit < 0 || kExit < kEnter) return contour; // 받침 범위가 객체 밖 → 원본 유지
+        var yEnter = contour[kEnter][1];
+        var yExit = contour[kExit][1];
         var result = [];
-        for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
-        if (isCW) {
-            result.push([baseRightX, topY, 1]);
-            result.push([baseRightX, botY, 1]);
-            result.push([baseLeftX, botY, 1]);
-            result.push([baseLeftX, topY, 1]);
-        } else {
-            result.push([baseLeftX, topY, 1]);
-            result.push([baseLeftX, botY, 1]);
-            result.push([baseRightX, botY, 1]);
-            result.push([baseRightX, topY, 1]);
-        }
-        for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
+        for (var i = 0; i < kEnter; i++) result.push(contour[i]);      // 위쪽 + 오른쪽(받침보다 넓은 부분) 유지
+        result.push([baseRightX, yEnter, 1]);
+        result.push([baseRightX, botY, 1]);
+        result.push([baseLeftX, botY, 1]);
+        result.push([baseLeftX, yExit, 1]);
+        for (var i = kExit + 1; i < contour.length; i++) result.push(contour[i]); // 왼쪽(넓은 부분) + 위쪽 유지
         return result;
     }
 
@@ -5016,6 +5014,8 @@
             } catch(_ae){}
             // history 갱신 (Ctrl+Z 로 원본 복귀)
             if (typeof _meSnapshot === 'function') { try { _meSnapshot(); } catch(e){} }
+            // 2026-07-11: 배경제거(누끼) 완료 알림 — 튜토리얼 등이 실제 완료 후 다음 단계로 진행하도록.
+            try { document.dispatchEvent(new CustomEvent('me-cutout-done')); } catch(_ev){}
         } catch (e) {
             console.error('[me bgRemove]', e);
             alert('⚠️ ' + (e.message || '배경 제거 실패. 잠시 후 다시 시도해주세요'));
