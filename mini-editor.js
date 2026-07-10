@@ -610,6 +610,8 @@
         try {
             var st = $('meStage'); if (st) st.classList.toggle('me-stage--nofill', !!on);
             var lbl = document.getElementById('meSizeLabel'); if (lbl) lbl.style.display = on ? 'none' : '';
+            // 흰색 바닥 fill 갱신/제거 (칼선이 이미 있으면 반영)
+            if (typeof _meCutlineRenderAll === 'function') _meCutlineRenderAll();
         } catch(_) {}
     };
     // 칼선 가진 메인 객체(없으면 선택/첫 이미지) 찾기
@@ -3162,6 +3164,19 @@
         });
         return _meSmoothClosedPath(pts);
     }
+    // 2026-07-11: 칼선 안쪽(받침+외곽 여백)을 흰색으로 채우는 바닥 레이어 — 대지 숨김(객체크기 모드)일 때
+    //   투명 대지 대신 실제 인쇄물(흰 보드) 색으로 보이게. items 뒤(z-index:0)에 깔림.
+    function _meCutlineFillEl() {
+        var s = document.getElementById('meCutlineFill');
+        if (!s) {
+            s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.id = 'meCutlineFill';
+            s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            s.style.cssText = 'position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:0;';
+            if (me.stage) me.stage.insertBefore(s, me.stage.firstChild);
+        }
+        return s;
+    }
     function _meCutlineRenderAll() {
         var svg = _meCutlineSvgEl();
         svg.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
@@ -3173,6 +3188,15 @@
         });
         // 캔버스-fill simple shape
         if (me._canvasCutlinePathD) paths.push(me._canvasCutlinePathD);
+        // 흰색 바닥 fill (객체크기 모드 = 대지 숨김일 때만)
+        var fillEl = _meCutlineFillEl();
+        if (window._meObjSizeMode && paths.length) {
+            fillEl.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
+            fillEl.innerHTML = paths.map(function(d){ return '<path d="' + d + '" fill="#ffffff"/>'; }).join('');
+            fillEl.style.display = '';
+        } else {
+            fillEl.innerHTML = ''; fillEl.style.display = 'none';
+        }
         if (!paths.length) { svg.innerHTML = ''; window._meCutlineSvg = null; return; }
         // 2026-06-16 v5: 칼선 안쪽 = 디자인 노출(투명), 바깥쪽 = 회색 마스크.
         //   SVG mask 로 — white=visible, black=hidden. cutline path 를 mask 의 black 으로 → 그 영역만 회색 hide.
