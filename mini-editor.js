@@ -5705,9 +5705,18 @@
             if (_meAiModel === 'ideogram') {
                 // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
                 var size = _meAiRatio === '9:16' ? '1024x1536' : _meAiRatio === '16:9' ? '1536x1024' : '1024x1024';
+                // 2026-07-10: 아주 긴 세로 제품(배너 등, 캔버스 H/W ≥ 2)은 gpt-image 최대 세로(1024x1536)로 생성 +
+                //   글자·요소를 좁은 중앙 세로열에 몰고 좌우 여백 크게 → cover 삽입 시 옆만 잘리고 글자는 안 잘림.
+                //   (배너는 1:3 등 매우 길지만 API 최대 세로는 2:3 이라 정확히 못 맞춤 → 중앙열 구성으로 대응.)
+                var _isTallBanner = false;
+                try { _isTallBanner = !!(me && me.natW && me.natH && (me.natH / me.natW) >= 2.0); } catch (_) {}
+                if (_isTallBanner) size = '1024x1536';
+                var _bannerHint = _isTallBanner
+                    ? ' Compose as a TALL VERTICAL BANNER: place ALL text and key elements in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
+                    : '';
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
-                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.';
+                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.' + _bannerHint;
                 var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
