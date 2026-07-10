@@ -134,6 +134,21 @@
         return it;
     }
 
+    // 2026-07-10: __cart_id 기준 중복 제거.
+    //   forceSync 가 통합 도메인에서 타 source(키링 등) 항목을 others.concat(local) 로 이중 등록하던 버그 방어.
+    //   같은 __cart_id 를 가진 항목이 둘 이상이면 첫 번째만 유지. id 없는 항목은 그대로(안전).
+    function dedupById(items) {
+        var seen = {}, out = [];
+        (items || []).forEach(function (it) {
+            if (!it || typeof it !== 'object') return;
+            var id = it.__cart_id;
+            if (id == null) { out.push(it); return; }
+            if (seen[id]) return;
+            seen[id] = true; out.push(it);
+        });
+        return out;
+    }
+
     // 2026-05-12: 빈/손상된 카트 항목 식별 — 표시 가능한 최소 필드 검증
     // 패브릭: title/fabricName/fabricCode/orderWcm 중 하나는 있어야 함
     // 일반: product (object) 또는 productCode/productName 중 하나
@@ -204,6 +219,7 @@
     function push(items) {
         var c = sb();
         if (!c) return Promise.resolve();
+        items = dedupById(items); // 2026-07-10: 서버로 보내기 전 중복 __cart_id 제거 (forceSync 이중등록 방어)
         var row, conflict;
         if (_userId) {
             // 로그인 상태: user_id 만으로 키잉. session_id 는 row 에서 제외하여
@@ -250,10 +266,13 @@
     //   sendBeacon 은 brower 가 navigation 후에도 백그라운드로 완료 보장.
     function flushOnUnload() {
         try {
+            // 2026-07-10 FIX: 이 탭에서 실제 변경(pending push)이 있었을 때만 flush.
+            //   변경 없는 stale 탭이 탭전환(visibilitychange)·이탈 시 자기 메모리(_unified)를
+            //   fresh timestamp 로 재푸시하면, 다른 탭/이전에 삭제한 항목이 서버에서 부활한다.
+            //   pending push 가 없다는 건 이 탭이 서버에 반영할 변경이 없다는 뜻 → 아무것도 안 함.
+            var hadPending = !!pushTimer;
             if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
-            if (!_unified || !_unified.length && !readLocal().length) {
-                // _unified 도 비고 local 도 비어있으면 빈 상태 push (= 비움)
-            }
+            if (!hadPending) return;
             var c = sb();
             if (!c) return;
             var row;
@@ -364,6 +383,7 @@
             console.warn('[cart_sync] invalid 카트 항목 ' + (before - mine.length) + '개 자동 정리');
         }
         mine.forEach(tagItem);
+        mine = dedupById(mine); // 2026-07-10: 중복 __cart_id 자동 정리 (누적된 이중항목 청소)
         // 2026-05-15: localStorage quota 초과 방어.
         //   가벽 등 큰 base64 thumb 가 쌓이면 5MB 한도 초과 → __origLocalSet 이 QuotaExceededError.
         //   기존엔 이 예외가 writeCart 의 빈 catch 로 조용히 삼켜져 항목이 "안 담기던" 버그.
@@ -476,17 +496,22 @@
             local.forEach(tagItem);
             // 2026-05-14: last-write-wins by timestamp — 옛 merge-by-id 는 삭제가 부활하던 버그.
             var picked = pickFreshState(serverState, local);
-            _unified = picked.items;
+            // 2026-07-10: 로드 직후 중복 __cart_id 정리 — 그동안 누적된 이중 항목(키링 등) 청소.
+            var _preDedup = (picked.items || []).length;
+            _unified = dedupById(picked.items);
+            var _dupCleaned = _preDedup - _unified.length;
+            if (_dupCleaned > 0) console.warn('[cart_sync] init — 중복 항목 ' + _dupCleaned + '개 정리');
             console.log('[cart_sync] init —', picked.source, '/', _unified.length, 'items @', picked.tsIso);
             // 로컬에 timestamp 가 없거나 server 가 더 최신이면 ts 동기화
             writeLocalTs(picked.tsIso);
             rebuildLocalFromUnified();
-            // local 이 더 최신이면 즉시 push, 아니면 anon orphan 정리만
+            // local 이 더 최신이거나 중복을 정리했으면 즉시 push (서버의 중복도 청소), 아니면 anon orphan 정리만
+            var _needPush = picked.source === 'local' || _dupCleaned > 0;
             if (_userId) {
                 cleanupAnonRow().then(function () {
-                    if (picked.source === 'local') schedulePush();
+                    if (_needPush) schedulePush();
                 });
-            } else if (picked.source === 'local') {
+            } else if (_needPush) {
                 schedulePush();
             }
             // 5) Patch outbound sibling links
@@ -588,10 +613,18 @@
         forceSync: function () {
             var local = readLocal();
             local.forEach(tagItem);
-            var others = _unified.filter(function (it) {
-                return it && it.__source && it.__source !== SOURCE;
-            });
-            _unified = others.concat(local);
+            if (IS_COTTON_HOST) {
+                // 레거시 cotton-print.com: cp_cart_v1 은 fabric 만 담김 → 서버의 타 source(메인) 항목 보존 필요.
+                var others = _unified.filter(function (it) {
+                    return it && it.__source && it.__source !== SOURCE;
+                });
+                _unified = dedupById(others.concat(local));
+            } else {
+                // 2026-07-10 FIX: 통합 cafe 도메인은 chameleon_cart_current 가 이미 모든 source 통합.
+                //   기존 others.concat(local) 은 타 source(키링 등)를 이중 등록 → 카트에 같은 상품 중복.
+                //   local 자체가 완전한 통합 카트이므로 그대로 사용.
+                _unified = dedupById(local);
+            }
             return push(_unified.slice());
         },
         clearAll: clearAllCart,
