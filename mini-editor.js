@@ -5668,9 +5668,9 @@
             var imgEl = document.querySelector('#meAiResult img');
             var iw = imgEl && imgEl.naturalWidth, ih = imgEl && imgEl.naturalHeight;
             if (me && me.natW && me.natH && iw && ih) {
-                var cover = Math.max(me.natW / iw, me.natH / ih) * 1.2; // cover 후 20% 확대
+                var cover = Math.max(me.natW / iw, me.natH / ih); // 대지에 여백 없이 딱 꽉 차게(cover, 오버플로 없음)
                 var w = iw * cover, h = ih * cover;
-                var x = (me.natW - w) / 2, y = (me.natH - h) / 2; // 중앙 정렬(사방 균등 오버플로)
+                var x = (me.natW - w) / 2, y = (me.natH - h) / 2; // 중앙 정렬
                 opts.explicitPos = { x: x, y: y, w: w, h: h };
             } else {
                 opts.fitCanvas = true; // 자연크기 못 구하면 최소한 대지에 맞춤
@@ -5732,19 +5732,22 @@
             if (_meAiModel === 'ideogram') {
                 // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
                 var size = _meAiRatio === '9:16' ? '1024x1536' : _meAiRatio === '16:9' ? '1536x1024' : '1024x1024';
+                // 기본 여백 지시 — 글자·핵심 요소를 가장자리에서 떨어뜨려 재단 시 잘리지 않게 (글자 모델은 특히 강조)
+                var genPrompt1 = prompt + ' Leave a generous, even safe margin around all four edges. Keep every important element and ALL text well inside the frame, away from the borders, so nothing is cut off when the image is trimmed.';
                 var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
-                    body: JSON.stringify({ prompt: prompt, size: size })
+                    body: JSON.stringify({ prompt: genPrompt1, size: size })
                 });
                 var d1 = await r1.json();
                 if (!r1.ok || d1.error) throw new Error(d1.detail || d1.error || ('HTTP ' + r1.status));
                 url = d1.url;
             } else {
+                var genPrompt2 = prompt + ' Leave a generous even margin around all edges; keep the main subject fully inside the frame, away from the borders.';
                 var r2 = await fetch(SB_URL + '/functions/v1/generate-image-flux', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
-                    body: JSON.stringify({ prompt: prompt, ratio: _meAiRatio })
+                    body: JSON.stringify({ prompt: genPrompt2, ratio: _meAiRatio })
                 });
                 var d2 = await r2.json();
                 if (!r2.ok || d2.error) throw new Error(d2.error || ('HTTP ' + r2.status));
