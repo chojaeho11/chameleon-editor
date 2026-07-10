@@ -4995,17 +4995,30 @@
                             // 원래 box 의 중심점 보존
                             var _oldCx = sel.x + sel.w / 2;
                             var _oldCy = sel.y + sel.h / 2;
-                            // 피사체가 PNG 안에서 차지하는 비율 (가로/세로)
-                            var _subjWRatio = (_maxX - _minX) / _pngW;
                             var _subjHRatio = (_maxY - _minY) / _pngH;
-                            // box 를 피사체 비율로 축소 (불필요한 투명 영역 제거)
-                            sel.w = sel.w * _subjWRatio;
-                            sel.h = sel.h * _subjHRatio;
-                            // 중심점 유지 → x, y 재설정
+                            var _bw = _maxX - _minX, _bh = _maxY - _minY;
+                            // 2026-07-10 FIX: 박스만 줄이면 전체 PNG(투명 여백 포함)가 눌려 피사체가 찌그러짐.
+                            //   → 피사체 영역만 실제로 잘라내고(crop), 박스를 잘라낸 이미지의 실제 비율로 맞춘다.
+                            var _cropCv = document.createElement('canvas');
+                            _cropCv.width = _bw; _cropCv.height = _bh;
+                            _cropCv.getContext('2d').drawImage(_adjImg, _minX, _minY, _bw, _bh, 0, 0, _bw, _bh);
+                            var _croppedSrc = _cropCv.toDataURL('image/png');
+                            // 피사체의 기존 화면 '높이'는 유지하고, 폭은 잘라낸 이미지 비율로 결정 → 왜곡 0
+                            var _newH = sel.h * _subjHRatio;
+                            var _newW = _newH * (_bw / _bh);
+                            sel.w = _newW;
+                            sel.h = _newH;
                             sel.x = _oldCx - sel.w / 2;
                             sel.y = _oldCy - sel.h / 2;
+                            // 잘라낸(투명 여백 제거) 이미지로 src 교체
+                            sel.src = _croppedSrc;
+                            if (sel.el) {
+                                var _icrop = sel.el.querySelector('img');
+                                if (_icrop) _icrop.src = _croppedSrc;
+                                else sel.el.style.backgroundImage = 'url("' + _croppedSrc + '")';
+                            }
                             _meSyncItemDisplay(sel);
-                            console.log('[me cutout v577] resized to subject — w=' + Math.round(sel.w) + ' h=' + Math.round(sel.h) + ' subjW%=' + (_subjWRatio*100).toFixed(1));
+                            console.log('[me cutout v578] cropped to subject — box w=' + Math.round(sel.w) + ' h=' + Math.round(sel.h) + ' cropAspect=' + (_bw/_bh).toFixed(2));
                         } else {
                             console.warn('[me cutout v577] no subject pixels found (alpha threshold)');
                         }
