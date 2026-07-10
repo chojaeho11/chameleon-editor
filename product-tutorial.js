@@ -686,11 +686,25 @@
   //  전용 STEPS 를 SCENARIOS 앞쪽에 추가하면 그쪽이 우선 매치됨.)
   // ════════════════════════════════════════════════════════════════════
   var GENERIC_STEPS = [
-    { // 1) 디자인 방법 — 3갈래 (없는 분기는 자동 제외)
+    { // 1) 디자인 방법 — AI 생성 / 템플릿 / 파일 / 의뢰 (없는 분기는 자동 제외)
       msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
         ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
         en: "I'll help you order! First, choose <b>how to design</b>." },
       branch: [
+        { key: 'ai', target: '#meAiGenBtn',
+          label: { kr: '🤖 AI 이미지로 생성', ja: '🤖 AIで画像生成', en: '🤖 Generate with AI' },
+          sub: { kr: '설명만 쓰면 AI가 그려줘요', ja: '説明するだけでAIが描く', en: 'Describe it, AI draws it' },
+          msg: { kr: '반짝이는 <b>AI 이미지</b> 버튼을 눌러 설명을 적으면 AI가 그림을 만들어줘요.<br><b>참고:</b> AI 이미지는 해상도가 낮아, 허니콤 가벽·현수막 같은 <b>큰 출력물</b>은 저희가 <b>업스케일로 보정</b>해 드리지만 <b>이미지가 약간 뭉개질 수 있어요</b>. 선명한 대형 출력이 필요하면 <b>템플릿(벡터)</b>을 추천해요.',
+            ja: '光る <b>AI画像</b> ボタンを押して説明を書くと、AIが画像を作ります。<br><b>ご注意:</b> AI画像は解像度が低く、ハニカム間仕切り·横断幕などの <b>大きな出力物</b> は <b>アップスケールで補正</b> しますが <b>画像が少しにじむ(ぼやける)ことがあります</b>。くっきりした大判出力には <b>テンプレート(ベクター)</b> がおすすめです。',
+            en: 'Tap the glowing <b>AI image</b> button and describe it — the AI creates an image.<br><b>Note:</b> AI images are low-resolution. For <b>large prints</b> (honeycomb walls, banners) we <b>upscale</b> them, but <b>the image may look slightly blurry</b>. For crisp large output, we recommend a <b>vector template</b>.' }
+        },
+        { key: 'editor', mode: 'free', target: ['#meTemplateBtn', '.qd-head-row', '#soQuickDesignSec'],
+          label: { kr: '🎨 템플릿으로 디자인', ja: '🎨 テンプレートでデザイン', en: '🎨 Design with a template' },
+          sub: { kr: '벡터라 크게 뽑아도 선명해요', ja: 'ベクターで大判でも鮮明', en: 'Vector — crisp even large' },
+          msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝.<br><b>템플릿은 벡터라 가벽·현수막처럼 크게 인쇄해도 깨끗하게</b> 나와요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
+            ja: '🎨 テンプレートを表示! お好きなものを選んで <b>文字·写真を変えるだけ</b>。<br><b>テンプレートはベクターなので、間仕切りや横断幕のように大きく印刷しても鮮明</b>です。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
+            en: '🎨 Templates are open! Pick one and <b>just change text & photos</b>.<br><b>Templates are vector, so they print cleanly even at large sizes</b> (walls, banners). When done, tap <b>"Done → Continue"</b> below!' }
+        },
         { key: 'upload', always: true,
           target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
           label: { kr: '📎 파일 업로드', ja: '📎 ファイルアップロード', en: '📎 Upload file' },
@@ -698,13 +712,6 @@
           msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올린 뒤 <b>다음</b>을 눌러요 📎',
             ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップ後 <b>次へ</b> 📎',
             en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. Then tap <b>Next</b> 📎' }
-        },
-        { key: 'editor', mode: 'free', target: ['.qd-head-row', '#soQuickDesignSec'],
-          label: { kr: '🎨 에디터로 직접 디자인', ja: '🎨 エディタでデザイン', en: '🎨 Design it yourself' },
-          sub: { kr: '템플릿에 글씨만 바꾸면 끝', ja: 'テンプレの文字を変えるだけ', en: 'Just edit text on a template' },
-          msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
-            ja: '🎨 テンプレートを表示! お好きなものを選んで <b>文字·写真を変えるだけ</b>。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
-            en: '🎨 Templates are open! Pick one and <b>change text & photos</b>. When done, tap <b>"Done → Continue"</b> below!' }
         },
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
