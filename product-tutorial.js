@@ -882,10 +882,63 @@
     GENERIC_STEPS[2] // 5) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 등신대 POP / 자유인쇄커팅 (hb_pt_*)  2026-07-10
+  //  순서: 단면/양면 → 보드 종류 → 디자인(보통 파일 업로드) → 누끼+칼선(핵심) →
+  //  사이즈 → 받침대 → 배송 → 장바구니. 없는 옵션 단계는 onEnter 로 자동 스킵.
+  // ════════════════════════════════════════════════════════════════════
+  var STANDEE_STEPS = [
+    { // 1) 인쇄면 (단면/양면)
+      target: '#soCutPrintSizeSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soCutPrintSizeSection'); },
+      msg: { kr: '먼저 <b>인쇄면</b>을 골라요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요 (양면은 ×2).',
+        ja: 'まず <b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも (両面は×2)。',
+        en: 'First choose the <b>print side</b>. <b>Single</b> = front only, <b>double</b> = both sides (double is ×2).' }
+    },
+    { // 2) 보드 종류 선택
+      target: '#soCutBoardMaterialSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soCutBoardMaterialSection'); },
+      msg: { kr: '<b>보드 종류</b>를 골라요. 허니콤보드·포맥스·폼보드 등 — 가격은 동일하니 원하는 재질로 선택하세요.',
+        ja: '<b>ボードの種類</b>を選びます。ハニカム·フォーメックス·フォームボード等 — 価格は同じなのでお好みで。',
+        en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
+    },
+    GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
+    { // 4) 누끼 + 칼선 (등신대 핵심!)
+      target: ['#meBgRemoveBtn', '#meCutlineBtn'], mode: 'next',
+      onEnter: function () { return _secVisible('#meBgRemoveBtn') || _secVisible('#meCutlineBtn'); },
+      msg: { kr: '등신대는 이 단계가 <b>가장 중요해요!</b><br>① 넣은 이미지를 클릭해 선택 → 반짝이는 <b>누끼</b>(배경제거)를 눌러 배경을 깔끔히 지워요.<br>② 이어서 <b>칼선</b>을 눌러 모양대로 <b>재단선</b>을 만들면 완성! (이 선을 따라 잘려 나와요)',
+        ja: '等身大はこの工程が <b>最重要!</b><br>① 入れた画像をクリックで選択 → 光る <b>切り抜き</b>(背景除去)で背景をきれいに消します。<br>② 続けて <b>カットライン</b> を押すと形に沿った <b>裁断線</b> が完成!(この線で切り抜かれます)',
+        en: 'For standees, this step is <b>the most important!</b><br>1) Click your image to select it → tap the glowing <b>Cut-out</b> (remove background).<br>2) Then tap <b>Cutline</b> to make the <b>die-cut line</b> around the shape — done! (it gets cut along this line)' }
+    },
+    { // 5) 사이즈 선택
+      target: '#soCustomSizeSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soCustomSizeSection'); },
+      msg: { kr: '이제 <b>사이즈</b>를 정해요. 실제 세울 크기에 맞춰 가로·세로(cm)를 입력하면 가격이 자동 계산돼요.',
+        ja: '次は <b>サイズ</b>。実際に立てる大きさに合わせ横·縦(cm)を入力すると価格が自動計算されます。',
+        en: 'Now set the <b>size</b>. Enter width/height (cm) to match the real display size — the price updates automatically.' }
+    },
+    { // 6) 받침대 선택
+      target: '#soBaseStandSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soBaseStandSection'); },
+      msg: { kr: '<b>받침대</b>를 골라요. 크기에 맞는 받침대를 선택해야 등신대가 안정적으로 서 있어요 (여러 종류·수량 선택 가능).',
+        ja: '<b>スタンド</b>を選びます。サイズに合うスタンドを選ぶと安定して自立します (複数種類·数量可)。',
+        en: 'Choose a <b>stand</b>. Pick one that fits the size so the standee stays upright (multiple types & quantities possible).' }
+    },
+    { // 7) 배송 옵션
+      target: '#soScheduleSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soScheduleSection'); },
+      msg: { kr: '<b>배송 방법</b>을 골라요. 등신대는 택배 배송이 가능하고, 지역·크기에 따라 옵션이 달라져요.',
+        ja: '<b>配送方法</b>を選びます。等身大は宅配可能で、地域·サイズにより選択肢が変わります。',
+        en: 'Choose the <b>delivery method</b>. Standees can ship by parcel; options vary by region and size.' }
+    },
+    GENERIC_STEPS[2] // 8) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
+    { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
   ];
