@@ -558,6 +558,27 @@
         if (it && it._cutlineRelPts) {
             try { _meCutlineRenderAll(); } catch(_ce) {}
         }
+        // 2026-07-11: 객체크기 모드 — 칼선 객체 크기 변화를 주문(가격/사이즈칸)에 디바운스 동기화.
+        if (window._meObjSizeMode && it && it._cutlineRelPts) {
+            try {
+                clearTimeout(me._objSizeSyncT);
+                me._objSizeSyncT = setTimeout(function(){
+                    try {
+                        var s = window._meGetStandeeSizeMm();
+                        if (!s) return;
+                        _meUpdateObjSizeInputs(s.wMm, s.hMm);
+                        if (typeof window._soOnStandeeObjSize === 'function') window._soOnStandeeObjSize(s.wMm, s.hMm);
+                    } catch(_) {}
+                }, 60);
+            } catch(_) {}
+        }
+    }
+    // 떠있는 창의 크기 입력값을 현재 객체 크기로 갱신 (드래그 중 라이브)
+    function _meUpdateObjSizeInputs(wMm, hMm) {
+        var wi = document.getElementById('meObjSizeW');
+        var hi = document.getElementById('meObjSizeH');
+        if (wi && document.activeElement !== wi) wi.value = Math.round(wMm);
+        if (hi && document.activeElement !== hi) hi.value = Math.round(hMm);
     }
 
     function _meSetSize(w, h, label) {
@@ -577,6 +598,87 @@
         try { _meUpdateSizeLabel(); } catch(_) {}   // 2026-06-27: 줄자 대신 크기 라벨 갱신
         try { _meUpdateWingOverlay(); } catch(_) {}
     };
+
+    // ─────────────────────────────────────────────────────────────────────
+    // 2026-07-11: 등신대/자유인쇄커팅 — "객체(칼선 바깥 윤곽=그림+받침) 크기" 모드.
+    //   가로·세로·가격이 대지가 아니라 실제 잘려나갈 조각(칼선 bbox) 기준이 되도록.
+    //   simple_order 가 _meSetObjSizeMode(true) 로 켬. 대지는 시각적으로 숨김.
+    // ─────────────────────────────────────────────────────────────────────
+    window._meObjSizeMode = false;
+    window._meSetObjSizeMode = function(on) {
+        window._meObjSizeMode = !!on;
+        try {
+            var st = $('meStage'); if (st) st.classList.toggle('me-stage--nofill', !!on);
+            var lbl = document.getElementById('meSizeLabel'); if (lbl) lbl.style.display = on ? 'none' : '';
+        } catch(_) {}
+    };
+    // 칼선 가진 메인 객체(없으면 선택/첫 이미지) 찾기
+    function _meFindStandeeItem() {
+        var items = me.items || [];
+        for (var i = items.length - 1; i >= 0; i--) {
+            if (items[i] && items[i]._cutlineRelPts && items[i]._cutlineRelPts.length >= 3) return items[i];
+        }
+        if (me.selected && me.selected.type === 'image') return me.selected;
+        for (var j = 0; j < items.length; j++) { if (items[j] && items[j].type === 'image') return items[j]; }
+        return me.selected || items[0] || null;
+    }
+    // 칼선 rel-pts bbox(px, 받침 포함) — 없으면 it 박스
+    function _meStandeeBBoxPx(it) {
+        if (it && it._cutlineRelPts && it._cutlineRelPts.length >= 3) {
+            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            it._cutlineRelPts.forEach(function(p){
+                var ax = it.x + p[0]*it.w, ay = it.y + p[1]*it.h;
+                if (ax < minX) minX = ax; if (ax > maxX) maxX = ax;
+                if (ay < minY) minY = ay; if (ay > maxY) maxY = ay;
+            });
+            return { x:minX, y:minY, w:maxX-minX, h:maxY-minY };
+        }
+        if (it) return { x:it.x, y:it.y, w:it.w, h:it.h };
+        return null;
+    }
+    window._meGetStandeeSizeMm = function() {
+        var it = _meFindStandeeItem();
+        var bb = _meStandeeBBoxPx(it);
+        if (!bb || !(bb.w > 0) || !(bb.h > 0)) return null;
+        var mmPerPxW = (me.natWMm && me.natW) ? (me.natWMm / me.natW) : (1 / 3.7795);
+        var mmPerPxH = (me.natHMm && me.natH) ? (me.natHMm / me.natH) : (1 / 3.7795);
+        return { wMm: bb.w * mmPerPxW, hMm: bb.h * mmPerPxH, it: it, bb: bb };
+    };
+    // 객체를 targetWMm 가로가 되도록 균등 스케일(비율 고정). 중심 유지.
+    window._meSetStandeeSizeMm = function(targetWMm) {
+        var cur = window._meGetStandeeSizeMm();
+        if (!cur || !(cur.wMm > 0) || !(targetWMm > 0)) return;
+        var it = cur.it; if (!it) return;
+        var scale = targetWMm / cur.wMm;
+        if (!isFinite(scale) || scale <= 0 || Math.abs(scale - 1) < 0.0005) return;
+        var cx = it.x + it.w / 2, cy = it.y + it.h / 2;
+        it.w = it.w * scale; it.h = it.h * scale;
+        it.x = cx - it.w / 2; it.y = cy - it.h / 2;
+        _meSyncItemDisplay(it);
+        try { _meFitStandeeCanvas(); } catch(_) {}
+    };
+    // 객체가 너무 크거나(잘림) 작을 때만 캔버스 px/mm 를 비례 조정(물리 mm 불변) + 중앙 재배치.
+    //   natW/natH 와 natWMm/natHMm 를 같은 배율 k 로 바꾸므로 객체 mm = it.w×natWMm/natW 는 불변.
+    function _meFitStandeeCanvas() {
+        if (!window._meObjSizeMode) return;
+        var cur = window._meGetStandeeSizeMm(); if (!cur) return;
+        var bb = cur.bb, it = cur.it; if (!it) return;
+        var frac = Math.max(bb.w / me.natW, bb.h / me.natH);
+        if (!(frac > 0)) return;
+        if (frac > 0.9 || frac < 0.4) {
+            var k = frac / 0.7;                        // 목표: bbox 가 캔버스의 ~70%
+            me.natW = Math.max(60, Math.round(me.natW * k));
+            me.natH = Math.max(60, Math.round(me.natH * k));
+            if (me.natWMm) me.natWMm *= k;
+            if (me.natHMm) me.natHMm *= k;
+            // bbox 중심을 캔버스 중심으로 (it.x/y 만 이동, 크기·mm 불변)
+            var bbCx = bb.x + bb.w / 2, bbCy = bb.y + bb.h / 2;
+            it.x += (me.natW / 2 - bbCx);
+            it.y += (me.natH / 2 - bbCy);
+            try { _meFitStage(); } catch(_) {}
+            _meSyncItemDisplay(it);
+        }
+    }
     // 2026-06-17: 가벽 가이드 — 양쪽 옆면(접히는 날개) 빗금 + 1미터 단위 절단선 (가벽이 1m 패널 여러 개로 구성됨).
     //   pointer-events:none, me.items 와 무관 → export/print/PDF 에 절대 포함 안 됨. 토글 가능 (눈 버튼).
     me._wingMm = 0;
@@ -2382,6 +2484,17 @@
                          +   '</span>'
                          + '</span>';
                 }
+                // 2026-07-11: 객체크기 모드 — 이 조각(칼선 바깥 윤곽)의 실제 mm 크기 입력(비율 고정).
+                if (window._meObjSizeMode) {
+                    var _osz = (typeof window._meGetStandeeSizeMm === 'function') ? window._meGetStandeeSizeMm() : null;
+                    var _oW = _osz ? Math.round(_osz.wMm) : 0;
+                    var _oH = _osz ? Math.round(_osz.hMm) : 0;
+                    html += '<span class="me-prop-group me-cf-group me-cf-size" style="min-width:0; flex:1 1 100%;">'
+                         +   '<label style="color:#334155;">크기 (mm · 비율고정)</label>'
+                         +   '<span class="me-cf-row"><span class="me-cf-dim">가로</span><input type="number" min="10" max="3000" step="1" value="' + _oW + '" data-obj-size-w id="meObjSizeW"><span class="me-cf-unit">mm</span></span>'
+                         +   '<span class="me-cf-row"><span class="me-cf-dim">세로</span><input type="number" min="10" max="3000" step="1" value="' + _oH + '" data-obj-size-h id="meObjSizeH"><span class="me-cf-unit">mm</span></span>'
+                         + '</span>';
+                }
             }
         }
         // 2026-06-14: 공통 액션 — 복제 / 반전 / 레이어 순서 (모든 type 공용)
@@ -2515,6 +2628,24 @@
                 if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
                 var disp = panel.querySelector('[data-cutline-basedown-val]');
                 if (disp) disp.textContent = (pct * 100).toFixed(0) + '%';
+            });
+        });
+        // 2026-07-11: 객체 크기 입력 (mm, 비율 고정) — change(blur/enter) 시에만 반영해 튐 방지.
+        panel.querySelectorAll('[data-obj-size-w]').forEach(function(inp){
+            inp.addEventListener('change', function(){
+                var wMm = parseFloat(inp.value);
+                if (!(wMm > 0)) return;
+                if (typeof window._meSetStandeeSizeMm === 'function') window._meSetStandeeSizeMm(wMm);
+            });
+        });
+        panel.querySelectorAll('[data-obj-size-h]').forEach(function(inp){
+            inp.addEventListener('change', function(){
+                var hMm = parseFloat(inp.value);
+                if (!(hMm > 0)) return;
+                var s = (typeof window._meGetStandeeSizeMm === 'function') ? window._meGetStandeeSizeMm() : null;
+                if (s && s.hMm > 0 && typeof window._meSetStandeeSizeMm === 'function') {
+                    window._meSetStandeeSizeMm(hMm * (s.wMm / s.hMm));
+                }
             });
         });
         // 2026-06-14: 공통 액션 핸들러
@@ -2769,7 +2900,9 @@
             // 2026-06-16: 변(edge) 핸들 — 단일 축 자유 리사이즈 (정비율 X, fontSize 유지)
             //   e: dx 만 적용 (우측 늘리기).  w: dx 반전 + x 앵커 이동.
             //   n: dy 반전 + y 앵커 이동.    s: dy 만 적용.
-            var isEdge = (corner === 'n' || corner === 's' || corner === 'e' || corner === 'w');
+            // 2026-07-11: 객체크기 모드(칼선 객체)에선 변(edge) 핸들도 정비율 — 실물 비율 고정.
+            var isEdge = (corner === 'n' || corner === 's' || corner === 'e' || corner === 'w')
+                && !(window._meObjSizeMode && it && it._cutlineRelPts);
             if (isEdge) {
                 // v621: 최소 20px → 6px — 텍스트 박스 더 좁게 줄일 수 있도록
                 var newW2 = sw, newH2 = sh;
@@ -2807,6 +2940,8 @@
         handle.addEventListener('pointerup', function(ev){
             resizing = false;
             try { handle.releasePointerCapture(ev.pointerId); } catch(e){}
+            // 2026-07-11: 리사이즈 종료 시 캔버스를 객체 크기에 맞게 자동조정(잘림 방지·정밀도)
+            if (window._meObjSizeMode && it && it._cutlineRelPts) { try { _meFitStandeeCanvas(); } catch(_){} }
         });
     }
 

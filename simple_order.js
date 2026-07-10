@@ -9637,6 +9637,11 @@ html, body { background: #ffffff !important; }
         state.customAreaM2 = areaM2;
         // 2026-06-14 Phase 1: Quick Design 캔버스에 사이즈 변경 반영
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_qe){}
+        // 2026-07-11: 객체크기 모드 — 사용자가 우측 사이즈칸을 직접 바꾼 경우 편집기 객체를 그 크기로 스케일(비율 고정).
+        //   (편집기 리사이즈→여기로 온 경우는 _soStandeeSyncing 가드로 스킵 → 루프 차단)
+        if (state.isObjSizeMode && !window._soStandeeSyncing && typeof window._meSetStandeeSizeMm === 'function') {
+            try { window._meSetStandeeSizeMm((state.customW || 0) * 10); } catch(_oe){}
+        }
         // 2026-05-22: 포맥스·폼보드 — 사이즈(가로+세로)에 따라 배송수단 자동 변경
         if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
             window._soFoamApplyAutoShip();
@@ -13018,6 +13023,11 @@ html, body { background: #ffffff !important; }
         //   가벽/등신대/글씨스카시 — 가벽 없이도 시공 옵션 노출 + 카트에서 2종 이상 묶음 배송.
         state.isScarci = _soIsScarciProduct(p);
         state.isInstallEligible = state.isWall || state.isStandee || state.isScarci;
+        // 2026-07-11: 객체크기 모드 — 자유인쇄커팅/등신대(글씨스카시 등)는 가로·세로·가격을 대지가 아닌 "객체(칼선 바깥 윤곽)" 크기로.
+        //   편집기에 알려 대지 숨김 + 객체 크기 컨트롤 노출. (이 flag 로만 신규 분기 gating → 타 제품 회귀 방지)
+        //   등신대 V2(hb_pi_5, 실물 100~150cm preset 플로우)는 제외 — 기존 사이즈 파이프라인 유지.
+        state.isObjSizeMode = !!(state.isCutPrint || (state.isStandee && !state.isStandeeV2));
+        try { if (typeof window._meSetObjSizeMode === 'function') window._meSetObjSizeMode(state.isObjSizeMode); } catch(_e){}
         // 2026-06-04: 등신대 — 재질 선택 섹션 노출 + 기본값 (허니콤보드 16mm) — V2 만
         state.standeeMaterial = state.isStandeeV2 ? 'honeycomb_16mm' : null;
         try {
@@ -14961,6 +14971,8 @@ html, body { background: #ffffff !important; }
                 // 2026-06-17: 등신대/자유인쇄커팅 → 칼선 trace 시 발 바닥에 평평한 받침대 자동 추가.
                 //   스티커/키링은 평면이라 base 불필요 → false.
                 window._meStandeeBase = !!(state && (state.isStandee || state.isCutPrint));
+                // 2026-07-11: 객체크기 모드 재적용 (마운트 후 #meStage 존재 시 대지 숨김 클래스 반영)
+                if (typeof window._meSetObjSizeMode === 'function') window._meSetObjSizeMode(!!(state && state.isObjSizeMode));
             } catch(_e){}
 
             // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
@@ -15014,6 +15026,12 @@ html, body { background: #ffffff !important; }
         // 우측 W/H 입력 변경 시 사이즈 + 대지 동기화 (가벽/일반 모두)
         window._soQdSyncFromCustomDims = function() {
             if (!state || !state.product) return;
+            // 2026-07-11: 객체크기 모드 — 대지는 편집기가 객체에 맞춰 자동관리. 입력이 대지를 resize 하지 않음(루프 차단).
+            //   뱃지만 객체 크기(customW/H)로 갱신.
+            if (state.isObjSizeMode) {
+                _updateSizeBadge(Math.round((state.customW||0)*10), Math.round((state.customH||0)*10));
+                return;
+            }
             var sz = _resolveSize(state.product);
             _updateSizeBadge(sz.wMm, sz.hMm);
             try {
@@ -15026,6 +15044,26 @@ html, body { background: #ffffff !important; }
                     }
                 }
             } catch(_e){}
+        };
+
+        // 2026-07-11: 편집기(객체 리사이즈) → 주문 역방향 동기화. 객체 mm 크기를 customW/H·가격·뱃지에 반영.
+        //   재진입 가드(window._soStandeeSyncing)로 입력↔객체 무한 루프 차단.
+        window._soOnStandeeObjSize = function(wMm, hMm) {
+            if (!state || !state.isObjSizeMode) return;
+            if (window._soStandeeSyncing) return;
+            if (!(wMm > 0) || !(hMm > 0)) return;
+            window._soStandeeSyncing = true;
+            try {
+                state.customW = wMm / 10;   // cm
+                state.customH = hMm / 10;
+                var wEl = document.getElementById('soCustomW');
+                var hEl = document.getElementById('soCustomH');
+                if (wEl) wEl.value = Math.round(wMm);   // mm 표시
+                if (hEl) hEl.value = Math.round(hMm);
+                _updateSizeBadge(Math.round(wMm), Math.round(hMm));
+                if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+            } catch(_e){}
+            window._soStandeeSyncing = false;
         };
 
         // "디자인 완료 · 적용" — stage → PNG → state.file

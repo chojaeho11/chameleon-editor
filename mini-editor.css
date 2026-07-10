@@ -187,8 +187,16 @@
         .me-cutline-float .me-cf-group > label { display:block; font-size:12.5px; font-weight:600; letter-spacing:-0.2px; }
         .me-cutline-float .me-cf-row { display:flex; align-items:center; gap:10px; width:100%; }
         .me-cutline-float .me-cf-row input[type=range] { flex:1 1 auto; min-width:0; width:100%; }
+        /* 크기 입력(mm) 줄맞춤 — 라벨(가로/세로) + 인풋 + 단위 */
+        .me-cutline-float .me-cf-size .me-cf-row { gap:8px; }
+        .me-cutline-float .me-cf-size .me-cf-dim { font-size:12px; color:#64748b; min-width:28px; }
+        .me-cutline-float .me-cf-size input[type=number] { flex:1 1 auto; min-width:0; width:100%; padding:5px 8px; border:0.5px solid rgba(0,0,0,0.15); border-radius:8px; background:#fff; font-size:13px; font-variant-numeric:tabular-nums; color:#1d1d1f; -moz-appearance:textfield; }
+        .me-cutline-float .me-cf-size input[type=number]::-webkit-outer-spin-button, .me-cutline-float .me-cf-size input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+        .me-cutline-float .me-cf-size .me-cf-unit { font-size:11px; color:#94a3b8; }
         /* 별도 창이 뜬 동안엔 대지를 왼쪽 정렬해 창과 겹치지 않게 */
         .me-stage-wrap.me-has-side #meStageCol { align-items:flex-start !important; }
+        /* 2026-07-11: 객체크기 모드 — 대지(흰 캔버스) 숨김: 배경·그림자 제거해 객체만 보이게 */
+        .me-stage.me-stage--nofill { background:transparent !important; box-shadow:none !important; }
         /* 상단 props 바(모바일 등)에 남아있을 때는 두 슬라이더를 한 줄에 인라인 */
         .me-cf-row { display:inline-flex; align-items:center; gap:6px; }
         .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
