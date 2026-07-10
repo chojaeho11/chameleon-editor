@@ -10488,7 +10488,10 @@ html, body { background: #ffffff !important; }
         var lbl = inp.closest('label');
         var qInp = lbl ? lbl.querySelector('input[data-bs-qty-key]') : null;
         if (inp.checked) {
-            state.baseStands[key] = (qInp && parseInt(qInp.value, 10) > 0) ? parseInt(qInp.value, 10) : 1;
+            // 2026-07-11: 객체크기 모드(자유인쇄커팅/등신대) — 받침대 선택 시 기본 수량을 제품 수량으로.
+            var _defBsQty = state.isObjSizeMode ? Math.max(1, state.qty || 1) : 1;
+            state.baseStands[key] = (qInp && parseInt(qInp.value, 10) > 0) ? parseInt(qInp.value, 10) : _defBsQty;
+            if (state.isObjSizeMode) state.baseStands[key] = _defBsQty;   // 제품 수량과 강제 일치
             if (qInp) qInp.value = state.baseStands[key];
         } else {
             delete state.baseStands[key];
@@ -11713,15 +11716,27 @@ html, body { background: #ffffff !important; }
     // 2026-05-14: 아크릴 굿즈 — 제품 수량 변경 시 체크된 모든 부자재 수량을 제품 수량과 동일하게 동기화
     // 2026-05-22: 등신대도 동일 — 동일 사이즈 수량 추가 시 모양컷팅 등 옵션 수량도 함께 증가
     function _soSyncAcrylicAddonQty() {
-        if (!state.isAcrylicGoods && !state.isStandee) return;
-        if (!state.selectedAddons || !state.addonQuantities) return;
+        // 2026-07-11: 객체크기 모드(자유인쇄커팅/등신대)도 포함 — 제품 수량에 맞춰 부자재·받침대 수량 동기화.
+        if (!state.isAcrylicGoods && !state.isStandee && !state.isObjSizeMode) return;
         var newQty = state.qty || 1;
-        Object.keys(state.selectedAddons).forEach(function (code) {
-            state.addonQuantities[code] = newQty;
-            // 2026-05-22: 옵션 수량 입력칸도 동기화
-            var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g, '\\"') + '"]');
-            if (qi) qi.value = newQty;
-        });
+        // 부자재(addon) 수량 동기화
+        if (state.selectedAddons && state.addonQuantities) {
+            Object.keys(state.selectedAddons).forEach(function (code) {
+                state.addonQuantities[code] = newQty;
+                // 2026-05-22: 옵션 수량 입력칸도 동기화
+                var qi = document.querySelector('#soAddonList input[data-addon-qty-code="' + String(code).replace(/"/g, '\\"') + '"]');
+                if (qi) qi.value = newQty;
+            });
+        }
+        // 2026-07-11: 받침대 수량 = 제품 수량 (제품 10개 → 고른 받침대도 10개)
+        if (state.baseStands) {
+            Object.keys(state.baseStands).forEach(function (bk) {
+                if (!state.baseStands[bk]) return;
+                state.baseStands[bk] = newQty;
+                var bqi = document.querySelector('#soBaseStandList input[data-bs-qty-key="' + String(bk).replace(/"/g, '\\"') + '"]');
+                if (bqi) bqi.value = newQty;
+            });
+        }
     }
 
     // 2026-06-23 v721/v725: 명함 수량 프리셋 — 100/200/500매 (1/2/5각). 수량별 할인 제거.
@@ -13785,7 +13800,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 원판도 숨김 — 우측 6개 카드 각각의 수량 input 으로 대체.
         // 2026-06-05: cutPrint 도 숨김 — 큐 라인별 인라인 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
-        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || state.isCutPrint || state.isSticker) ? 'none' : '';
+        // 2026-07-11: 객체크기 모드(등신대/자유인쇄커팅)는 주문 수량 입력 노출 — 수량↔받침대 동기화 위해.
+        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || (state.isCutPrint && !state.isObjSizeMode) || state.isSticker) ? 'none' : '';
 
         // 2026-06-01: 광고인쇄 — 사이즈 카드 → qty 위 / 추가옵션 / 배송 순서 + 단위 mm + 인라인 업로드 + 멀티-라인
         (function _soApplyAdPrintLayout(){
