@@ -5564,8 +5564,8 @@
     }
     function _meAiTr(ko, ja, en) { var l = _meAiLang(); return l === 'ja' ? (ja || ko) : l === 'en' ? (en || ko) : ko; }
 
-    var _meAiModel = 'flux';      // 'flux' | 'ideogram'
-    var _meAiRatio = '1:1';
+    var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
+    var _meAiRatio = '16:9';      // 기본 가로 16:9
     var _meAiPendingUrl = null;
 
     function _meAiEnsureModal() {
@@ -5580,25 +5580,15 @@
                 '<button type="button" id="meAiClose" style="border:none; background:transparent; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">✕</button>' +
               '</div>' +
               '<div style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
-                _meAiTr('만들고 싶은 이미지를 설명해 주세요. 아래에서 종류를 고르면 더 잘 나와요.',
-                        '作りたい画像を説明してください。下で種類を選ぶとより良く仕上がります。',
-                        'Describe the image you want. Pick a type below for better results.') +
+                _meAiTr('타이틀을 입력해 주세요.', 'タイトルを入力してください。', 'Enter a title.') +
               '</div>' +
-              // 모델 선택 (세그먼트)
-              '<div style="display:flex; gap:8px; margin-bottom:6px;">' +
-                '<button type="button" class="meAiModelBtn" data-model="flux" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:13px; cursor:pointer; font-family:inherit;">' +
-                  _meAiTr('글씨 없이 이미지만', '文字なし·画像のみ', 'Image only') + '</button>' +
-                '<button type="button" class="meAiModelBtn" data-model="ideogram" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:13px; cursor:pointer; font-family:inherit;">' +
-                  _meAiTr('글씨까지 넣기', '文字も入れる', 'With text') + '</button>' +
-              '</div>' +
-              '<div id="meAiModelHint" style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.5;"></div>' +
               // 비율 선택
               '<div style="display:flex; gap:6px; margin-bottom:12px;">' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각 1:1', '正方形 1:1', 'Square') + '</button>' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로 9:16', '縦 9:16', 'Portrait') + '</button>' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 16:9', '横 16:9', 'Landscape') + '</button>' +
               '</div>' +
-              '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 벚꽃이 흩날리는 봄 풍경', '例: 桜が舞う春の風景', 'e.g. spring scene with cherry blossoms') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
+              '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
               '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
               '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
@@ -5610,9 +5600,6 @@
         wrap.addEventListener('pointerdown', function (e) { if (e.target === wrap) _meAiGenClose(); });
         document.getElementById('meAiClose').addEventListener('click', _meAiGenClose);
 
-        wrap.querySelectorAll('.meAiModelBtn').forEach(function (b) {
-            b.addEventListener('click', function () { _meAiModel = b.getAttribute('data-model'); _meAiSyncBtns(); });
-        });
         wrap.querySelectorAll('.meAiRatioBtn').forEach(function (b) {
             b.addEventListener('click', function () { _meAiRatio = b.getAttribute('data-ratio'); _meAiSyncBtns(); });
         });
@@ -5623,26 +5610,12 @@
 
     function _meAiSyncBtns() {
         var m = document.getElementById('meAiGenModal'); if (!m) return;
-        m.querySelectorAll('.meAiModelBtn').forEach(function (b) {
-            var on = b.getAttribute('data-model') === _meAiModel;
-            b.style.borderColor = on ? '#4338ca' : '#e2e8f0';
-            b.style.background = on ? '#eef2ff' : '#fff';
-            b.style.color = on ? '#4338ca' : '#334155';
-        });
         m.querySelectorAll('.meAiRatioBtn').forEach(function (b) {
             var on = b.getAttribute('data-ratio') === _meAiRatio;
             b.style.borderColor = on ? '#4338ca' : '#e2e8f0';
             b.style.background = on ? '#eef2ff' : '#fff';
             b.style.color = on ? '#4338ca' : '#334155';
         });
-        var hint = document.getElementById('meAiModelHint');
-        if (hint) hint.textContent = _meAiModel === 'ideogram'
-            ? _meAiTr('“세일 50%” 같은 글자를 이미지 안에 넣어요 (GPT 이미지2). 긴 문장·특수문자는 간혹 어긋날 수 있어요 — 중요한 글자는 에디터에서 직접 넣으면 확실해요.',
-                      '「SALE 50%」など文字を画像内に入れます(GPTイメージ2)。長い文·特殊文字は時々ずれることがあります — 重要な文字はエディタで直接入れると確実です。',
-                      'Puts text like “SALE 50%” inside the image (GPT Image 2). Long sentences/special characters may occasionally slip — for important text, add it in the editor.')
-            : _meAiTr('글자 없이 그림·배경만 생성해요. 글자는 에디터에서 직접 넣으면 정확해요.',
-                      '文字なしで絵柄·背景のみ生成。文字はエディタで直接入れると正確です。',
-                      'Generates art/background only (no text). Add text in the editor for accuracy.');
     }
 
     window._meAiGenOpen = function () {
