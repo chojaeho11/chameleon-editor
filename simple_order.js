@@ -13146,6 +13146,15 @@ html, body { background: #ffffff !important; }
                     _bsList.style.gap = '6px';
                     _bsList.innerHTML = window._soBaseStandOriginalHTML;
                 }
+                // 2026-07-11: 객체크기 모드 — 받침대 수량 칸 숨김 (제품 수량을 그대로 따라감 → 별도 입력 불필요, 깔끔하게).
+                //   cutPrint 4-card 엔 원래 없음(no-op), 6종 UI(hb_ss 등)에서만 숨겨짐.
+                if (state.isObjSizeMode) {
+                    _bsList.querySelectorAll('input[data-bs-qty-key]').forEach(function(qi){
+                        var wrap = qi.closest('label') ? null : qi.parentNode;
+                        if (wrap && wrap !== _bsList && wrap.children && wrap.children.length <= 3) wrap.style.display = 'none';
+                        else qi.style.display = 'none';
+                    });
+                }
             }
         } catch (e) { console.warn('[so free-stand UI]', e); }
 
