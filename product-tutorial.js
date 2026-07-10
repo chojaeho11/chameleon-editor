@@ -361,7 +361,7 @@
     if (step.mode === 'wait') {
       foot = '<div class="tut-hint">👆 ' + T(step.hint || _defHint) + '</div>'
         + '<div class="tut-foot">' + backLink()
-        + '<button class="tut-link" data-act="next">' + T({ kr: '건너뛰기', ja: 'スキップ', en: 'Skip' }) + '</button></div>';
+        + '<button class="tut-link" data-act="next">' + T(step.skipLabel || { kr: '건너뛰기', ja: 'スキップ', en: 'Skip' }) + '</button></div>';
     } else {
       // 2026-06-25: next 모드도 step.hint 있으면 안내 라인 표시 (예: 후가공 — 설명 보고 골라주세요)
       foot = (step.hint ? '<div class="tut-hint" style="margin-bottom:9px;">👆 ' + T(step.hint) + '</div>' : '')
@@ -391,7 +391,20 @@
 
     _awaitPick = null;
     if (step.mode === 'wait') {
-      if (step.awaitPick) {
+      if (step.waitClose) {
+        // 2026-07-10: 타깃(예: 칼선 버튼)을 눌러 모달을 열고, 그 모달이 닫혀야(작업 완료) 다음 단계로.
+        //   버튼 클릭만으로는 진행 안 함 (칼선 모양 선택을 마쳐야 사이즈 단계로). 모달 열리면 안내창 숨김.
+        var _wc = step.waitClose, _wcOpen = false, _wcTicks = 0;
+        var _wcMon = setInterval(function () {
+          if (!_active) { clearInterval(_wcMon); return; }
+          _wcTicks++;
+          var op = _secVisible(_wc);
+          if (op) { _wcOpen = true; _freeMode = true; _pop.style.display = 'none'; _hole.style.display = 'none'; return; }
+          if (_wcOpen) { clearInterval(_wcMon); _freeMode = false; celebrate(step.cheer); enterStep(i + 1); return; }
+          if (_wcTicks > 240) { clearInterval(_wcMon); } // ~2분 안전 종료
+        }, 500);
+        _stepCleanup.push(function () { clearInterval(_wcMon); });
+      } else if (step.awaitPick) {
         // 2026-06-26: 실제 옵션 '선택'(모달의 '이 옵션 선택') 시에만 진행 — 미리보기 탭/닫기로는 진행 안 함.
         _awaitPick = { cat: step.awaitPick, i: i, cheer: step.cheer };
       } else {
@@ -913,22 +926,24 @@
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
     GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
-    { // 4) 누끼 (배경 제거) — 등신대 핵심 ①
+    { // 4) 누끼 (배경 제거) — 선택 사항. 원하면 누끼, 그대로 네모면 '다음'.
       target: '#meBgRemoveBtn', mode: 'wait',
       onEnter: function () { return _secVisible('#meBgRemoveBtn'); },
-      hint: { kr: '이미지를 클릭해 선택한 뒤 누끼 버튼을 눌러주세요', ja: '画像を選択して切り抜きボタンを押してください', en: 'Select the image, then tap Cut-out' },
-      msg: { kr: '업로드까지 잘 하셨어요! 🎉 이제 <b>배경을 제거</b>할 차례예요.<br><b>이미지를 클릭해 선택</b>한 뒤, 반짝이는 <b>누끼</b>(배경제거) 버튼을 눌러 배경을 깔끔히 지워요.',
-        ja: 'アップロードできました! 🎉 次は <b>背景を除去</b>します。<br><b>画像をクリックして選択</b>し、光る <b>切り抜き</b>(背景除去)ボタンを押してください。',
-        en: 'Nicely uploaded! 🎉 Now <b>remove the background</b>.<br><b>Click the image to select it</b>, then tap the glowing <b>Cut-out</b> (background removal) button.' },
+      hint: { kr: '이미지를 클릭해 선택한 뒤 누끼를 누르세요 (또는 아래 다음)', ja: '画像を選択して切り抜き (または下の次へ)', en: 'Select the image then Cut-out (or Next below)' },
+      msg: { kr: '업로드 잘 하셨어요! 🎉<br>올려주신 이미지의 <b>배경을 제거</b>하고 싶으면 <b>이미지를 클릭해 선택</b>한 뒤 반짝이는 <b>누끼</b> 버튼을 눌러주세요.<br>배경 없이 <b>이미지 그대로 네모로 출력</b>하려면 아래 <b>다음</b>을 눌러주세요.',
+        ja: 'アップロードOK! 🎉<br>画像の <b>背景を除去</b>したい場合は <b>画像をクリックで選択</b>して光る <b>切り抜き</b> ボタンを。<br>そのまま <b>四角で出力</b>する場合は下の <b>次へ</b> を押してください。',
+        en: 'Nicely uploaded! 🎉<br>To <b>remove the background</b>, <b>click the image to select it</b> and tap the glowing <b>Cut-out</b> button.<br>To print the <b>image as-is (rectangular)</b>, tap <b>Next</b> below.' },
+      skipLabel: { kr: '네모 그대로 다음 ▶', ja: '四角のまま次へ ▶', en: 'Keep rectangle · Next ▶' },
       cheer: { kr: '배경 제거 완료! 👍', ja: '背景除去完了! 👍', en: 'Background removed! 👍' }
     },
-    { // 5) 칼선 만들기 — 등신대 핵심 ②
-      target: '#meCutlineBtn', mode: 'wait',
+    { // 5) 칼선 만들기 — 칼선 버튼 → 모양 선택 모달이 닫혀야(작업 완료) 다음(사이즈)으로.
+      target: '#meCutlineBtn', mode: 'wait', waitClose: '#meCutlinePopup',
       onEnter: function () { return _secVisible('#meCutlineBtn'); },
-      hint: { kr: '칼선 버튼을 눌러주세요', ja: 'カットラインボタンを押してください', en: 'Tap the Cutline button' },
-      msg: { kr: '이제 <b>칼선</b>을 눌러 모양대로 <b>재단선</b>을 만들어요. 등신대는 이 선을 따라 잘려 나와요 ✂️',
-        ja: '次は <b>カットライン</b> を押して形に沿った <b>裁断線</b> を作ります。この線で切り抜かれます ✂️',
-        en: 'Now tap <b>Cutline</b> to make the <b>die-cut line</b> around the shape. The standee is cut along this line ✂️' },
+      hint: { kr: '칼선 버튼을 눌러 모양을 골라주세요', ja: 'カットラインボタンで形を選択', en: 'Tap Cutline and pick a shape' },
+      skipLabel: { kr: '칼선 없이 다음 ▶', ja: 'カットラインなしで次へ ▶', en: 'Skip cutline · Next ▶' },
+      msg: { kr: '이제 <b>칼선</b>을 눌러 <b>재단선 모양</b>을 골라요 (동그라미·알약·라운드 사각·한 모서리 등). 등신대는 이 선을 따라 잘려 나와요 ✂️<br>모양을 고르면 다음 단계로 넘어가요.',
+        ja: '<b>カットライン</b> を押して <b>裁断線の形</b> を選びます(丸·カプセル·角丸など)。この線で切り抜かれます ✂️<br>形を選ぶと次へ進みます。',
+        en: 'Tap <b>Cutline</b> and pick a <b>die-cut shape</b> (circle, pill, rounded square, one corner…). It cuts along this line ✂️<br>Pick a shape to continue.' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
     { // 5) 사이즈 선택
