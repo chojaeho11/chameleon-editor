@@ -751,9 +751,56 @@
     }
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 허니콤 가벽 (hb_dw_*)  2026-07-10
+  //  디자인 방법(공통) → 가벽 사이즈 → 단/양면 → 공간모양 → 추가옵션(설명) →
+  //  시공/배송(설명) → 배송희망일(설명) → 장바구니. 각 단계 실제 섹션을 하이라이트.
+  // ════════════════════════════════════════════════════════════════════
+  var HONEYCOMB_WALL_STEPS = [
+    GENERIC_STEPS[0], // 1) 디자인 방법 (AI 이미지 / 템플릿 / 파일 / 의뢰) — 공통 재사용
+    { // 2) 가벽 사이즈
+      target: '#soWallSizeSection', mode: 'next',
+      msg: { kr: '📐 이제 <b>가벽 사이즈</b>를 골라요. 설치할 공간에 맞춰 <b>가로(m)</b>와 <b>세로(m)</b>를 선택하면 가격이 자동으로 계산돼요.',
+        ja: '📐 次は <b>壁面サイズ</b>。設置スペースに合わせて <b>横(m)</b> と <b>縦(m)</b> を選ぶと価格が自動計算されます。',
+        en: '📐 Now pick the <b>wall size</b>. Choose <b>width (m)</b> and <b>height (m)</b> to fit your space — the price updates automatically.' }
+    },
+    { // 3) 단면 / 양면
+      target: ['#soWallSideRow', '#soWallSizeSection'], mode: 'next',
+      msg: { kr: '<b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. 뒤쪽도 사람들에게 보이는 자리라면 <b>양면</b>을 추천해요.',
+        ja: '<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷。裏側も見える場所なら <b>両面</b> がおすすめ。',
+        en: '<b>Single</b> prints the front only; <b>double</b> prints both sides. If the back is also visible, we recommend <b>double</b>.' }
+    },
+    { // 4) 공간 모양 (일자/꺾임)
+      target: '#soWallShapeSection', mode: 'next',
+      msg: { kr: '위에서 봤을 때 <b>가벽 모양</b>을 골라요. <b>一자</b>(일자) · <b>ㄱ자</b>(한 번 꺾임) · <b>ㄷ자</b>(양쪽 꺾임) 중 공간에 맞는 걸 선택하세요.',
+        ja: '上から見た <b>壁の形</b> を選びます。<b>一字</b>(まっすぐ) · <b>L字</b>(1回曲げ) · <b>コ字</b>(両側曲げ) から空間に合うものを。',
+        en: 'Pick the <b>floor-plan shape</b> (seen from above): <b>Straight</b> · <b>L-shape</b> (one bend) · <b>U-shape</b> (both sides) — choose what fits your space.' }
+    },
+    { // 5) 추가 옵션 (설명 포함)
+      target: '#soAddonSection', mode: 'next',
+      msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요:<br>• <b>보조받침대</b> — 야외나 아이 손이 많이 닿는 곳은 넘어지지 않게 꼭 추가!<br>• <b>오려내기(타공)</b> — 가운데를 뚫어 <b>포토존</b>으로 쓰거나 뒤에 <b>TV</b>를 배치할 수 있어요.<br>• <b>조명</b> — 허니콤보드로 만든 <b>카멜레온프린팅 특허 제품</b>이에요.<br>• <b>선반 추가</b> — 가벼운 물건을 올릴 선반. 네모난 가벽보다 <b>재미있는 연출</b>이 가능해요.<br>• <b>파인텍스 시공</b> — 전시장 <b>바닥에 설치</b>해 드려요.<br>• <b>모래주머니</b> — 옆면 받침대 대신, 가벽이 <b>흔들리지 않게</b> 잡아줘요.',
+        ja: '必要な <b>追加オプション</b> だけチェック:<br>• <b>補助スタンド</b> — 屋外や子供が触れる場所は転倒防止に必須!<br>• <b>くり抜き(穴あけ)</b> — 中央を開けて <b>フォトゾーン</b> や背面に <b>TV</b> を設置。<br>• <b>照明</b> — ハニカムボード製の <b>カメレオン印刷 特許製品</b>。<br>• <b>棚追加</b> — 軽い物を置ける棚。四角い壁より <b>面白い演出</b> が可能。<br>• <b>ファインテックス施工</b> — 会場の <b>床に設置</b>。<br>• <b>砂袋</b> — 側面スタンドの代わりに、壁が <b>揺れないよう</b> 固定。',
+        en: 'Check only the <b>add-ons</b> you need:<br>• <b>Support base</b> — a must outdoors or where kids reach, to prevent tipping!<br>• <b>Cut-out</b> — open the center for a <b>photo zone</b> or to place a <b>TV</b> behind.<br>• <b>Lighting</b> — a <b>Chameleon-Printing patented</b> honeycomb-board product.<br>• <b>Shelf</b> — holds light items; more <b>creative</b> than a plain wall.<br>• <b>Finetex install</b> — we install it on the <b>venue floor</b>.<br>• <b>Sandbags</b> — instead of side bases, keeps the wall <b>steady</b>.' }
+    },
+    { // 6) 시공/배송 (설명)
+      target: '#soScheduleSection', mode: 'next',
+      msg: { kr: '<b>시공/배송</b>을 골라요. <b>수도권(서울·경기)</b>은 <b>무료 배송·무료 설치</b>! <b>지방</b>은 용차배송 또는 설치배송 중에 고르면 되고, 설치까지 원하면 <b>설치배송</b>을 선택하세요.',
+        ja: '<b>施工/配送</b> を選びます。<b>首都圏</b>は <b>送料・設置 無料</b>!<b>地方</b>はトラック配送か設置配送から選び、設置も希望なら <b>設置配送</b> を。',
+        en: 'Choose <b>install/delivery</b>. <b>Metro area</b> = <b>free delivery & install</b>! For <b>regional</b>, pick truck delivery or install delivery — choose <b>install delivery</b> if you want it set up.' }
+    },
+    { // 7) 배송 희망일 (설명)
+      target: ['#soScheduleDateWrap', '#soScheduleSection'], mode: 'next',
+      msg: { kr: '마지막으로 <b>배송 희망일</b>을 정해요 (영업일 기준 <b>최소 3일 이후</b>). <b>100만원 이상</b> 주문은 <b>시간까지</b> 지정할 수 있고, 그 이하는 <b>날짜만</b> 선택돼요.',
+        ja: '最後に <b>配送希望日</b> を決めます(営業日基準で <b>最短3日後</b>)。<b>100万ウォン以上</b> の注文は <b>時間指定</b> も可能、それ以下は <b>日付のみ</b>。',
+        en: 'Finally, set your <b>preferred delivery date</b> (from <b>3 business days</b>). Orders <b>over ₩1,000,000</b> can also pick a <b>time</b>; below that, <b>date only</b>.' }
+    },
+    GENERIC_STEPS[2] // 8) 장바구니 — 공통 재사용
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
-    // catch-all — 명함 외 모든 제품. 반드시 마지막(먼저 매치된 전용 시나리오 우선).
+    { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
+    // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
   ];
   function pickScenario(code) {
@@ -764,6 +811,7 @@
     return null;
   }
 
+  var _lastScn = null;
   window._tutMaybeStart = function (product) {
     try {
       // 2026-06-25: 디자이너/관리자 템플릿 제작 모드에서는 튜토리얼 끔 (작업 방해)
@@ -773,11 +821,23 @@
       } catch (_qe) {}
       var code = (product && product.code) || '';
       var scn = pickScenario(code);
-      if (!scn) { removeReplay(); if (_active) quit(); return; }
+      if (!scn) { removeReplay(); if (_active) quit(); _lastScn = null; return; }
+      _lastScn = scn;
       _lang = detectLang();
       ensureStyles();
       mountReplay(scn);
       showChooser(scn);
     } catch (e) { console.warn('[tut] _tutMaybeStart', e); }
+  };
+
+  // 2026-07-10: "튜토리얼 보기" 버튼 등에서 수동으로 다시 열기 (현재 제품 시나리오 기준).
+  window._tutOpenChooser = function () {
+    try {
+      if (!_lastScn) return;
+      _lang = detectLang();
+      ensureStyles();
+      mountReplay(_lastScn);
+      showChooser(_lastScn);
+    } catch (e) { console.warn('[tut] _tutOpenChooser', e); }
   };
 })();

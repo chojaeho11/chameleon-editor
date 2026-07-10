@@ -1544,16 +1544,18 @@ html, body { background: #ffffff !important; }
 
         <!-- 2026-05-14: 칼선 도안 제공 안내 + 다운로드 (admin_products.cutline_url 있을 때만 표시).
              2026-05-31: 위의 추가옵션·시공/배송 카드와 톤 통일 — 흰 카드 + 검정 보더 + 10px 라운딩. -->
-        <div id="soCutlineDownload" style="display:none; margin-bottom:14px; padding:16px 14px; background:#ffffff; border:1px solid #1c1917; border-radius:10px;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:26px;"></span>
-            <div style="flex:1; min-width:0;">
-              <div style="font-weight:800; color:#1c1917; font-size:13px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template available')}</div>
-              <div style="font-size:11px; color:#57534e; margin-top:2px;">${tr('이 제품 전용 칼선 템플릿을 다운받아 디자인에 맞춰주세요.', 'この商品専用の型抜きテンプレートをダウンロードしてデザインしてください。', 'Download the die-cut template for this product to align your design.')}</div>
+        <div id="soCutlineDownload" style="display:none; margin-bottom:10px; padding:9px 12px; background:#ffffff; border:1px solid #1c1917; border-radius:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:120px;">
+              <div style="font-weight:800; color:#1c1917; font-size:12.5px;">${tr('칼선 도안 제공', '型抜きテンプレート提供', 'Die-cut template')}</div>
+              <div style="font-size:10.5px; color:#57534e; margin-top:1px;">${tr('전용 칼선 템플릿을 받아 디자인에 맞춰주세요.', '専用テンプレートを取得してデザインを合わせてください。', 'Download the die-cut template and align your design.')}</div>
             </div>
-            <a id="soCutlineDownloadBtn" href="#" download target="_blank" rel="noopener" style="flex-shrink:0; padding:10px 16px; background:#4338ca; color:#ffffff; border-radius:999px; font-size:12px; font-weight:700; text-decoration:none; box-shadow:0 4px 12px rgba(67,56,202,0.25); white-space:nowrap;">
+            <a id="soCutlineDownloadBtn" href="#" download target="_blank" rel="noopener" style="flex-shrink:0; padding:8px 14px; background:#4338ca; color:#ffffff; border-radius:999px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap;">
               <i class="fa-solid fa-download"></i> ${tr('칼선 다운받기', 'ダウンロード', 'Download')}
             </a>
+            <button type="button" onclick="window._tutOpenChooser && window._tutOpenChooser()" style="flex-shrink:0; padding:8px 14px; background:#ffffff; color:#4338ca; border:1.5px solid #4338ca; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:inherit;">
+              ${tr('튜토리얼 보기', 'チュートリアル', 'Tutorial')}
+            </button>
           </div>
         </div>
 
