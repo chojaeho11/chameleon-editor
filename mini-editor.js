@@ -2362,17 +2362,16 @@
                 // 2026-06-17: 등신대 모드 — 받침대 높이 + 넓이 슬라이더 (1 그룹에 좌우 나란히, 라벨은 작은 아이콘만)
                 // 2026-06-18 v577: 두 슬라이더를 한 칸에 합침 (모바일 가로 1칸 안에 둘 다 들어가도록)
                 if (window._meStandeeBase && it._cutlineMode === 'outer') {
-                    var _bhPct = (it._cutlineBaseHeightPct != null) ? it._cutlineBaseHeightPct : 0.1;
-                    var _bwPct = (it._cutlineBaseWidthPct != null) ? it._cutlineBaseWidthPct : (2 / 3); // 받침 폭 기본 2/3
-                    var _bhPctDisp = (_bhPct * 100).toFixed(1);
-                    var _bwPctDisp = (_bwPct * 100).toFixed(1);
+                    // 2026-07-11: 받침 사각형 — 위로 늘리기 / 아래로 늘리기 2슬라이더로 높이·위치 조절.
+                    var _upP = (it._cutlineBaseUpPct != null) ? it._cutlineBaseUpPct : 0.12;
+                    var _dnP = (it._cutlineBaseDownPct != null) ? it._cutlineBaseDownPct : 0.10;
                     html += '<span class="me-prop-group" style="gap:4px; min-width:0; flex:1 1 100%;">'
-                         +   '<i class="fa-solid fa-arrows-up-down" style="color:#0369a1; font-size:11px;" title="받침 높이"></i>'
-                         +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-baseh-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bhPctDisp + '%</span>'
-                         +   '<i class="fa-solid fa-arrows-left-right" style="color:#0369a1; font-size:11px; margin-left:6px;" title="받침 넓이"></i>'
-                         +   '<input type="range" min="100" max="1000" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
-                         +   '<span data-cutline-basew-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bwPctDisp + '%</span>'
+                         +   '<i class="fa-solid fa-arrow-up" style="color:#0369a1; font-size:11px;" title="받침 위로 늘리기"></i>'
+                         +   '<input type="range" min="0" max="400" step="1" value="' + Math.round(_upP * 1000) + '" data-cutline-baseup style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-baseup-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_upP * 100).toFixed(0) + '%</span>'
+                         +   '<i class="fa-solid fa-arrow-down" style="color:#0369a1; font-size:11px; margin-left:6px;" title="받침 아래로 늘리기"></i>'
+                         +   '<input type="range" min="0" max="400" step="1" value="' + Math.round(_dnP * 1000) + '" data-cutline-basedown style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +   '<span data-cutline-basedown-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:34px; text-align:right;">' + (_dnP * 100).toFixed(0) + '%</span>'
                          + '</span>';
                 }
             }
@@ -2486,29 +2485,28 @@
                 }
             });
         });
-        // 2026-06-17: 등신대 받침대 높이 슬라이더 — 위쪽(cutY) 은 그대로, baseBottomY 만 조절 → 받침대 두께 변경.
-        panel.querySelectorAll('[data-cutline-baseh]').forEach(function(sl){
+        // 2026-07-11: 받침 사각형 '위로 늘리기' 슬라이더 — topY 를 객체 안쪽으로 (틈 없이 붙게).
+        panel.querySelectorAll('[data-cutline-baseup]').forEach(function(sl){
             sl.addEventListener('input', function(){
-                var pct = parseInt(sl.value, 10) / 1000;   // 0~300 → 0.0~0.3 (0%~30%)
+                var pct = parseInt(sl.value, 10) / 1000;   // 0~400 → 0.0~0.4
                 if (!isFinite(pct) || pct < 0) pct = 0;
-                it._cutlineBaseHeightPct = pct;
-                // 기존 margin 값으로 offset 재계산 (받침대도 같이 다시 그려짐)
+                it._cutlineBaseUpPct = pct;
                 var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
                 if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
-                var disp = panel.querySelector('[data-cutline-baseh-val]');
-                if (disp) disp.textContent = (pct * 100).toFixed(1) + '%';
+                var disp = panel.querySelector('[data-cutline-baseup-val]');
+                if (disp) disp.textContent = (pct * 100).toFixed(0) + '%';
             });
         });
-        // 2026-06-17 v531: 받침대 좌우 넓이 슬라이더 — basePadX 비율 변경.
-        panel.querySelectorAll('[data-cutline-basew]').forEach(function(sl){
+        // 2026-07-11: 받침 사각형 '아래로 늘리기' 슬라이더 — botY 를 객체 바닥 아래로.
+        panel.querySelectorAll('[data-cutline-basedown]').forEach(function(sl){
             sl.addEventListener('input', function(){
-                var pct = parseInt(sl.value, 10) / 1000;   // 100~1000 → 0.1~1.0 (객체 폭 대비 받침 폭 비율, 기본 2/3)
+                var pct = parseInt(sl.value, 10) / 1000;   // 0~400 → 0.0~0.4
                 if (!isFinite(pct) || pct < 0) pct = 0;
-                it._cutlineBaseWidthPct = pct;
+                it._cutlineBaseDownPct = pct;
                 var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
                 if (typeof window._meCutlineSetMargin === 'function') window._meCutlineSetMargin(it, curMargin);
-                var disp = panel.querySelector('[data-cutline-basew-val]');
-                if (disp) disp.textContent = (pct * 100).toFixed(1) + '%';
+                var disp = panel.querySelector('[data-cutline-basedown-val]');
+                if (disp) disp.textContent = (pct * 100).toFixed(0) + '%';
             });
         });
         // 2026-06-14: 공통 액션 핸들러
@@ -3330,7 +3328,10 @@
     //   contour 가 Moore 트레이스 결과로 시계방향 정렬돼 있다는 전제.
     //   baseHeightPct: 받침대 깊이 비율 (hRange 의 몇 % 만큼 maxY 아래로 내려갈지). 기본 0.1 (10%).
     //   baseWidthPct: 받침대 좌우 확장 비율 (footW 의 몇 % 만큼 좌우로 넓어질지). 기본 0.1 (10%).
-    function _meAddStandeeBase(contour, W, H, baseHeightPct, baseWidthPct) {
+    // 2026-07-11: 받침 = 객체 중앙에 정렬된 '직사각형(네모)'. 위/아래 슬라이더로 높이·위치 조절.
+    //   upPct: 사각형 상단을 객체 안쪽으로 얼마나 올릴지 (hRange 대비). 클수록 받침이 위로 파고들어 틈 없이 붙음.
+    //   downPct: 사각형 하단을 객체 바닥 아래로 얼마나 내릴지.
+    function _meAddStandeeBase(contour, W, H, upPct, downPct) {
         if (!contour || contour.length < 20) return contour;
         var maxY = 0, minY = H;
         for (var i = 0; i < contour.length; i++) {
@@ -3339,48 +3340,42 @@
         }
         var hRange = maxY - minY;
         if (hRange < 10) return contour;
-        var cutY = minY + hRange * 0.97;
-        // 처음으로 y>=cutY 인 인덱스 (위→아래 진입점) 와 마지막으로 y>=cutY 인 인덱스 (아래→위 출구점)
-        var enterIdx = -1, exitIdx = -1;
-        for (var i = 0; i < contour.length; i++) {
-            if (contour[i][1] >= cutY) { enterIdx = i; break; }
-        }
-        if (enterIdx < 0) return contour;
-        for (var i = contour.length - 1; i >= enterIdx; i--) {
-            if (contour[i][1] >= cutY) { exitIdx = i; break; }
-        }
-        if (exitIdx <= enterIdx) return contour;
-        // 진입/탈출 좌표 X — contour 가 시계방향이면 진입 X 가 우측, 탈출 X 가 좌측 (보통).
-        var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
-        var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
-        // 2026-07-11: 받침을 '객체 전체 가로 중앙'에 정렬 + 가로 폭의 2/3 직사각형으로.
-        //   이전엔 발(실루엣 하단) 폭 기준이라, 발이 좁거나 한쪽에 치우친 캐릭터는 받침도 좁고 치우쳤음.
+        var _up = (upPct != null && isFinite(upPct) && upPct >= 0) ? upPct : 0.12;
+        var _down = (downPct != null && isFinite(downPct) && downPct >= 0) ? downPct : 0.10;
+        var topY = maxY - hRange * _up;    // 받침 사각형 상단 (객체 실루엣 안쪽)
+        var botY = maxY + hRange * _down;  // 받침 사각형 하단
+        // 객체 전체 가로 중심·폭 → 받침은 중앙 정렬, 가로 2/3 고정
         var allMinX = W, allMaxX = 0;
         for (var i = 0; i < contour.length; i++) {
             if (contour[i][0] < allMinX) allMinX = contour[i][0];
             if (contour[i][0] > allMaxX) allMaxX = contour[i][0];
         }
-        var objCx = (allMinX + allMaxX) / 2;   // 객체 가로 중심
-        var objW = allMaxX - allMinX;          // 객체 전체 가로 폭
-        // baseWidthPct = 객체 가로 폭 대비 받침 폭 비율 (기본 2/3). 슬라이더로 조절.
-        var _bwFrac = (baseWidthPct != null && isFinite(baseWidthPct) && baseWidthPct > 0) ? baseWidthPct : (2 / 3);
-        var _baseHalf = (objW * _bwFrac) / 2;
+        var objCx = (allMinX + allMaxX) / 2;
+        var objW = allMaxX - allMinX;
+        var _baseHalf = (objW * (2 / 3)) / 2;
         var baseLeftX = Math.max(0, objCx - _baseHalf);
         var baseRightX = Math.min(W, objCx + _baseHalf);
-        // 받침대 깊이 슬라이더 — 기본 10%
-        var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
-        var baseBottomY = maxY + hRange * _bhPct;
-        // 새 contour: enter 이전 silhouette + 중앙 2/3 폭 받침(하단 2 corner, 틈 없이 실루엣 끝점→코너 직결) + exit 이후 silhouette.
-        //   ※ 상단에 별도 가로 edge 를 넣으면 실루엣과 안 맞아 '빈 사각형' 틈이 생김 → 실루엣 끝점에서 코너로 바로 연결해 꽉 채움.
+        // topY 에서 실루엣이 교차하는 아래 구간을 사각형 받침으로 교체 (객체 바닥이 사각형으로 대체 → 틈 없이 채워짐)
+        var enterIdx = -1, exitIdx = -1;
+        for (var i = 0; i < contour.length; i++) { if (contour[i][1] >= topY) { enterIdx = i; break; } }
+        if (enterIdx < 0) return contour;
+        for (var i = contour.length - 1; i >= enterIdx; i--) { if (contour[i][1] >= topY) { exitIdx = i; break; } }
+        if (exitIdx <= enterIdx) return contour;
+        var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
+        var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
+        var isCW = entryX >= exitX;
         var result = [];
         for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
-        var isCW = entryX >= exitX;
         if (isCW) {
-            result.push([baseRightX, baseBottomY, 1]);
-            result.push([baseLeftX, baseBottomY, 1]);
+            result.push([baseRightX, topY, 1]);
+            result.push([baseRightX, botY, 1]);
+            result.push([baseLeftX, botY, 1]);
+            result.push([baseLeftX, topY, 1]);
         } else {
-            result.push([baseLeftX, baseBottomY, 1]);
-            result.push([baseRightX, baseBottomY, 1]);
+            result.push([baseLeftX, topY, 1]);
+            result.push([baseLeftX, botY, 1]);
+            result.push([baseRightX, botY, 1]);
+            result.push([baseRightX, topY, 1]);
         }
         for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
         return result;
@@ -3579,7 +3574,7 @@
         //   이전 (v521-523) 에는 trace 직후 추가 → Chaikin/BoxSmooth 가 받침 corner 를 둥글게 깎아 곡선 바닥.
         //   it._cutlineBaseHeightPct 가 있으면 사용 (슬라이더로 조절), 없으면 기본 10%.
         if (it._cutlineMode === 'outer' && window._meStandeeBase) {
-            try { finalPts = _meAddStandeeBase(finalPts, W, H, it._cutlineBaseHeightPct, it._cutlineBaseWidthPct); } catch(_be){ console.warn('[standee base]', _be); }
+            try { finalPts = _meAddStandeeBase(finalPts, W, H, it._cutlineBaseUpPct, it._cutlineBaseDownPct); } catch(_be){ console.warn('[standee base]', _be); }
         }
         // 2026-06-17: sharp flag(3rd element) 보존 — 등신대 받침대 corner 가 곡선이 아닌 직선으로 렌더되어야 함
         it._cutlineRelPts = finalPts.map(function(p){
