@@ -605,6 +605,16 @@
     //   simple_order 가 _meSetObjSizeMode(true) 로 켬. 대지는 시각적으로 숨김.
     // ─────────────────────────────────────────────────────────────────────
     window._meObjSizeMode = false;
+    // 보드(받침/외곽) 색 — 재질에 따라 (화이트/크라프트 등). export 배경(me.bg)에도 반영.
+    window._meBoardColor = '#ffffff';
+    window._meSetBoardColor = function(color) {
+        window._meBoardColor = color || '#ffffff';
+        try {
+            me.bg = window._meBoardColor;
+            var st = $('meStage'); if (st) st.style.background = me.bg;   // (nofill 클래스가 화면상은 투명 유지)
+            if (typeof _meCutlineRenderAll === 'function') _meCutlineRenderAll();
+        } catch(_) {}
+    };
     window._meSetObjSizeMode = function(on) {
         window._meObjSizeMode = !!on;
         try {
@@ -3188,26 +3198,33 @@
         });
         // 캔버스-fill simple shape
         if (me._canvasCutlinePathD) paths.push(me._canvasCutlinePathD);
-        // 흰색 바닥 fill (객체크기 모드 = 대지 숨김일 때만)
+        // 흰색(=보드색) 바닥 fill (객체크기 모드 = 대지 숨김일 때만) — 받침+외곽 여백이 실제 보드색으로 보이게
         var fillEl = _meCutlineFillEl();
         if (window._meObjSizeMode && paths.length) {
+            var _board = window._meBoardColor || '#ffffff';
             fillEl.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
-            fillEl.innerHTML = paths.map(function(d){ return '<path d="' + d + '" fill="#ffffff"/>'; }).join('');
+            fillEl.innerHTML = paths.map(function(d){ return '<path d="' + d + '" fill="' + _board + '"/>'; }).join('');
             fillEl.style.display = '';
         } else {
             fillEl.innerHTML = ''; fillEl.style.display = 'none';
         }
         if (!paths.length) { svg.innerHTML = ''; window._meCutlineSvg = null; return; }
-        // 2026-06-16 v5: 칼선 안쪽 = 디자인 노출(투명), 바깥쪽 = 회색 마스크.
-        //   SVG mask 로 — white=visible, black=hidden. cutline path 를 mask 의 black 으로 → 그 영역만 회색 hide.
-        //   결과: 회색 fill rect 위에 cutline interior 만 구멍 → 아래 캔버스(흰배경+디자인) 보임.
-        var maskPaths = paths.map(function(d){ return '<path d="' + d + '" fill="black"/>'; }).join('');
-        svg.innerHTML =
-            '<defs><mask id="meCutMask">'
-          +   '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="white"/>'
-          +   maskPaths
-          + '</mask></defs>'
-          + '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="#9ca3af" fill-opacity="0.78" mask="url(#meCutMask)"/>';
+        if (window._meObjSizeMode) {
+            // 2026-07-11: 대지/회색 마스크 없이 — 흰 보드 조각(_meCutlineFill) + 빨간 재단선만 표시.
+            //   (회색 마스크 rect 가 대지처럼 보이던 문제 제거)
+            svg.innerHTML = paths.map(function(d){ return '<path d="' + d + '" fill="none" stroke="#ef4444" stroke-width="1" stroke-opacity="0.9"/>'; }).join('');
+        } else {
+            // 2026-06-16 v5: 칼선 안쪽 = 디자인 노출(투명), 바깥쪽 = 회색 마스크.
+            //   SVG mask 로 — white=visible, black=hidden. cutline path 를 mask 의 black 으로 → 그 영역만 회색 hide.
+            //   결과: 회색 fill rect 위에 cutline interior 만 구멍 → 아래 캔버스(흰배경+디자인) 보임.
+            var maskPaths = paths.map(function(d){ return '<path d="' + d + '" fill="black"/>'; }).join('');
+            svg.innerHTML =
+                '<defs><mask id="meCutMask">'
+              +   '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="white"/>'
+              +   maskPaths
+              + '</mask></defs>'
+              + '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="#9ca3af" fill-opacity="0.78" mask="url(#meCutMask)"/>';
+        }
         // export 용 — 제작 단계에서 칼선은 빨강 0.3 실선으로 저장.
         window._meCutlineSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + me.natW + ' ' + me.natH + '">'
             + paths.map(function(d){ return '<path d="' + d + '" fill="none" stroke="#FF0000" stroke-width="0.3"/>'; }).join('')

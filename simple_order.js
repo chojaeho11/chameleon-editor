@@ -11348,11 +11348,17 @@ html, body { background: #ffffff !important; }
         });
     };
 
+    // 2026-07-11: 보드 재질 → 받침/외곽 색 (크라프트만 갈색, 나머지는 흰색). 편집기 흰 조각 fill 색에 반영.
+    function _soCutBoardColor(mat) {
+        return (mat === 'honeycomb_16mm_kraft') ? '#c9a879' : '#ffffff';
+    }
     // 2026-06-04: 자유인쇄커팅 보드 재질 선택 (6종) — 재질에 따라 회베당 단가가 달라지므로 가격 재계산.
     window._soPickCutBoardMaterial = function (btn) {
         if (!btn) return;
         var mat = btn.getAttribute('data-cutboard') || 'honeycomb_16mm_white';
         state.cutBoardMaterial = mat;
+        // 2026-07-11: 편집기 받침/외곽 색을 재질색(크라프트=갈색)으로
+        try { if (typeof window._meSetBoardColor === 'function') window._meSetBoardColor(_soCutBoardColor(mat)); } catch(e){}
         document.querySelectorAll('.so-cutboard-btn').forEach(function (b) {
             var on = b.dataset.cutboard === mat;
             b.classList.toggle('active', on);
@@ -14973,6 +14979,8 @@ html, body { background: #ffffff !important; }
                 window._meStandeeBase = !!(state && (state.isStandee || state.isCutPrint));
                 // 2026-07-11: 객체크기 모드 재적용 (마운트 후 #meStage 존재 시 대지 숨김 클래스 반영)
                 if (typeof window._meSetObjSizeMode === 'function') window._meSetObjSizeMode(!!(state && state.isObjSizeMode));
+                // 2026-07-11: 받침/외곽 색을 현재 보드 재질색으로 (크라프트=갈색)
+                if (typeof window._meSetBoardColor === 'function') window._meSetBoardColor(_soCutBoardColor(state && state.cutBoardMaterial));
             } catch(_e){}
 
             // 2026-06-14: portal 직후엔 wrap.clientWidth 가 stale 일 수 있음.
