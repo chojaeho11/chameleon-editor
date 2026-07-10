@@ -13256,10 +13256,10 @@ html, body { background: #ffffff !important; }
             state.customW = 100;  // 100cm = 1000mm
             state.customH = 150;  // 150cm = 1500mm
         }
-        // 2026-06-05: 자유인쇄커팅 (cutPrint) 기본 사이즈 — A4 근처 (200×300mm = 20×30cm). 사용자 요청.
+        // 2026-07-11: 자유인쇄커팅 (cutPrint) 기본 대지 — 1000×1000mm (=100×100cm). 객체크기 모드 작업여유 확보. 사용자 요청.
         if (state.isCutPrint) {
-            state.customW = 20;  // 20cm = 200mm
-            state.customH = 30;  // 30cm = 300mm
+            state.customW = 100;  // 100cm = 1000mm
+            state.customH = 100;  // 100cm = 1000mm
         }
         // 2026-06-04: 광고인쇄/등신대는 mm 입력이라 W/H input 의 표시값·min·max 도 mm 로 갱신.
         //   라벨 (cm)→(mm), input 기본값 mm 환산, min=100mm, max=2500mm.

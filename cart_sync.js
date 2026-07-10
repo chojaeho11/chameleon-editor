@@ -313,6 +313,24 @@
         }, { capture: true });
     } catch (e) {}
 
+    // 2026-07-11: 크로스탭 동기화 — 다른 탭에서 카트가 바뀌면(삭제/추가/주문) 이 탭의 메모리·UI 를 즉시 맞춤.
+    //   [중요] 이게 없으면 여러 탭 중 한 곳에서 삭제·주문해도, 옛 카트를 메모리(_unified)에 든 다른 탭이
+    //   나중에 push/flush 로 옛 상태를 서버에 재푸시 → 삭제한 항목이 부활한다. (반복 신고된 버그)
+    //   storage 이벤트는 '다른 탭'에서 localStorage(LOCAL_KEY) 가 바뀔 때만 발생 → self-loop 없음.
+    try {
+        window.addEventListener('storage', function (e) {
+            if (!e || e.key !== LOCAL_KEY) return;
+            var items = [];
+            try { items = JSON.parse(e.newValue || '[]') || []; } catch (_) { return; }
+            _unified = dedupById(items.filter(isValidCartItem));
+            // 다른 탭이 방금 쓴 상태가 최신 → 이 탭의 대기중(오래된) push 취소 (stale 재푸시 방지)
+            if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+            // 열려있는 카트 UI 실시간 갱신 (읽기전용 렌더 — 재푸시 유발 안 함)
+            try { if (typeof window.renderCart === 'function') window.renderCart(); } catch (_) {}
+            try { document.dispatchEvent(new CustomEvent('cart-sync-external-update')); } catch (_) {}
+        }, { capture: true });
+    } catch (e) {}
+
     // 2026-05-14: merge-by-id 제거. 삭제가 표현 안 돼서 옛 아이템이 부활하던 버그.
     //   대신 last-write-wins by timestamp — pickFreshState(server, local) 사용.
     var LOCAL_TS_KEY = 'chameleon_cart_updated_at';
