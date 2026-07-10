@@ -558,8 +558,8 @@
         if (it && it._cutlineRelPts) {
             try { _meCutlineRenderAll(); } catch(_ce) {}
         }
-        // 2026-07-11: 객체크기 모드 — 칼선 객체 크기 변화를 주문(가격/사이즈칸)에 디바운스 동기화.
-        if (window._meObjSizeMode && it && it._cutlineRelPts) {
+        // 2026-07-11: 객체크기 모드 — 객체(칼선 조각 또는 네모 이미지) 크기 변화를 주문(가격/사이즈칸)에 디바운스 동기화.
+        if (window._meObjSizeMode && it && (it._cutlineRelPts || it.type === 'image')) {
             try {
                 clearTimeout(me._objSizeSyncT);
                 me._objSizeSyncT = setTimeout(function(){
@@ -3856,6 +3856,13 @@
         document.addEventListener('keydown', escHandler);
     };
     window._meCutlineOpen = function() {
+        // 2026-07-11: 객체크기 모드(등신대/자유인쇄커팅) — 모양 선택 모달 없이 바로 TYPE A(outer) 칼선.
+        if (window._meObjSizeMode) {
+            var s = me && me.selected;
+            if (!s || s.type !== 'image') _meAutoSelectImage();
+            try { _meCutlineTrace('outer'); } catch(_){}
+            return;
+        }
         // 기존 popup 제거
         var ex = document.getElementById('meCutlinePopup');
         if (ex) ex.remove();
@@ -5220,6 +5227,8 @@
                         } else {
                             console.warn('[me cutout v577] no subject pixels found (alpha threshold)');
                         }
+                        // 2026-07-11: 크롭(피사체 bbox 보정) 완료 알림 — 자동 칼선 플로우가 정확한 박스로 trace 하도록.
+                        try { document.dispatchEvent(new CustomEvent('me-cutout-cropped')); } catch(_cev){}
                     } catch(_ce) { console.warn('[me cutout v577] center adjust failed', _ce); }
                 };
                 _adjImg.src = newSrc;
@@ -5244,6 +5253,38 @@
     };
     // 레거시 호환 — 다른 곳에서 호출 시 위로 위임.
     window._meImportCutout = window._meBgRemoveSelected;
+
+    // 2026-07-11: 등신대/자유인쇄커팅 자동 플로우 — 배경제거(누끼) → 크롭 완료 대기 → TYPE A(outer) 칼선 자동.
+    //   튜토리얼 '자동 배경제거 및 칼선작업' 버튼용. 완료되면 me-standee-ready 이벤트로 다음 단계 진행.
+    function _meAutoSelectImage() {
+        var sel = me && me.selected;
+        if (sel && sel.type === 'image') return sel;
+        var img = (me.items || []).filter(function(i){ return i && i.type === 'image'; }).pop();
+        if (img && typeof _meSelect === 'function') { _meSelect(img); return me.selected; }
+        return null;
+    }
+    window._meAutoBgAndCutline = async function() {
+        var sel = _meAutoSelectImage();
+        if (!sel || sel.type !== 'image') {
+            alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
+            return;
+        }
+        // 크롭 완료 이벤트 대기 준비 (bgRemove 호출 전에 등록)
+        var croppedP = new Promise(function(res){
+            var done = false;
+            function h(){ if (done) return; done = true; document.removeEventListener('me-cutout-cropped', h); res(); }
+            document.addEventListener('me-cutout-cropped', h);
+            setTimeout(h, 4000);   // 폴백 (실패/무피사체 시 진행)
+        });
+        try { await window._meBgRemoveSelected(); } catch(_){}
+        await croppedP;
+        try { await _meCutlineTrace('outer'); } catch(_){}
+        try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
+    };
+    // 네모 이미지 그대로 — 칼선 없이 진행 (튜토리얼 진행 이벤트만)
+    window._meStandeeSkipCutline = function() {
+        try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
+    };
 
     // ─────────── 2026-06-27: 이미지 객체 '그림 변경' (요소 고르기 / 내사진 누끼 교체) ───────────
     //   선택 이미지의 src 만 교체 (위치는 중심 유지, 새 그림 비율로 박스 보정).

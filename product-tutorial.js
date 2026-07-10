@@ -377,8 +377,10 @@
       }).join('') + '</div>';
     }
     var selHtml = step.showSelection ? '<div class="tut-sel" id="tutSelLine" style="display:none;"></div>' : '';
+    // 2026-07-11: 버튼 아래 부가 설명 (step.note) — 예: PDF는 별도 레이어 칼선 안내
+    var noteHtml = step.note ? '<div class="tut-note" style="margin-top:10px; font-size:11.5px; color:#94a3b8; line-height:1.55;">' + T(step.note) + '</div>' : '';
     _pop.innerHTML = '<button class="tut-x" data-act="quit">✕</button>' + headHtml(i)
-      + '<div class="tut-msg">' + T(step.msg) + '</div>' + picksHtml + selHtml + foot;
+      + '<div class="tut-msg">' + T(step.msg) + '</div>' + picksHtml + noteHtml + selHtml + foot;
     _pop.style.display = 'block';
     if (step.showSelection) _tutUpdateSel();
     bindCommon(function () { enterStep(i + 1); });
@@ -939,24 +941,21 @@
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
     GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
-    { // 4) 누끼 (배경 제거) — 선택 사항. 원하면 누끼(완료까지 대기), 그대로 네모면 '다음'.
-      target: '#meBgRemoveBtn', mode: 'wait', waitEvent: 'me-cutout-done',
+    { // 4) 업로드 후 — 자동(배경제거+칼선) or 네모 그대로, 버튼으로 선택
+      target: '#meBgRemoveBtn', mode: 'wait', waitEvent: 'me-standee-ready',
       onEnter: function () { return _secVisible('#meBgRemoveBtn'); },
-      hint: { kr: '이미지면 선택 후 누끼 / PDF·네모면 아래 다음', ja: '画像は選択して切り抜き / PDF·四角は下の次へ', en: 'Image: select + Cut-out / PDF·rectangle: Next' },
-      msg: { kr: '업로드 잘 하셨어요! 🎉<br>• <b>배경 있는 이미지(JPG·PNG)</b> — <b>이미지를 클릭해 선택</b>하고 반짝이는 <b>누끼</b> 버튼을 눌러주세요. <b>배경 제거에 몇 초 걸려요</b> — 완료되면 자동으로 다음으로 넘어가요.<br>• <b>칼선까지 완성된 PDF</b> 또는 <b>네모 그대로</b> 쓰실 거면 아래 <b>다음</b>을 눌러주세요.<br><span style="color:#94a3b8;">※ PDF는 자동 배경제거·칼선이 안 돼요. PDF로 만들 땐 칼선을 <b>별도 레이어</b>로, 선은 <b>부드럽게</b>, <b>받침 부분은 평평하게</b> 준비해 주세요.</span>',
-        ja: 'アップロードOK! 🎉<br>• <b>背景ありの画像(JPG·PNG)</b> — <b>画像を選択</b>して光る <b>切り抜き</b> ボタンを押してください。<b>背景除去に数秒かかります</b> — 完了すると自動で次へ進みます。<br>• <b>カットライン済PDF</b> や <b>四角のまま</b> なら下の <b>次へ</b>。<br><span style="color:#94a3b8;">※ PDFは自動の背景除去·カットライン不可。PDFで作る際はカットラインを <b>別レイヤー</b> で、線は <b>滑らかに</b>、<b>差し込み部分は平らに</b> ご準備ください。</span>',
-        en: 'Nicely uploaded! 🎉<br>• <b>Image with background (JPG/PNG)</b> — <b>click to select</b> and tap the glowing <b>Cut-out</b> button. <b>Background removal takes a few seconds</b> — it advances automatically when done.<br>• <b>Cutline-ready PDF</b> or keeping it <b>rectangular</b> — tap <b>Next</b> below.<br><span style="color:#94a3b8;">※ PDFs can\'t be auto bg-removed/cut. For PDFs, make the cutline on a <b>separate layer</b>, keep lines <b>smooth</b>, and the <b>base tab flat</b>.</span>' },
-      skipLabel: { kr: 'PDF·네모 그대로 다음 ▶', ja: 'PDF·四角のまま次へ ▶', en: 'PDF/rectangle · Next ▶' },
-      cheer: { kr: '배경 제거 완료! 👍', ja: '背景除去完了! 👍', en: 'Background removed! 👍' }
-    },
-    { // 5) 칼선 만들기 — 칼선 버튼 → 모양 선택 모달이 닫혀야(작업 완료) 다음(사이즈)으로.
-      target: '#meCutlineBtn', mode: 'wait', waitClose: '#meCutlinePopup',
-      onEnter: function () { return _secVisible('#meCutlineBtn'); },
-      hint: { kr: '칼선 버튼을 눌러 모양을 골라주세요', ja: 'カットラインボタンで形を選択', en: 'Tap Cutline and pick a shape' },
-      skipLabel: { kr: '칼선 완료 PDF·칼선 없이 다음 ▶', ja: 'カットライン済PDF·なしで次へ ▶', en: 'Cutline-ready PDF · skip · Next ▶' },
-      msg: { kr: '배경을 지운 <b>이미지</b>라면 이제 <b>칼선</b>을 눌러 <b>재단선 모양</b>을 골라요 (동그라미·알약·라운드 사각·한 모서리 등). 이 선을 따라 잘려 나와요 ✂️<br>모양을 고르면 다음 단계로 넘어가요.<br><span style="color:#94a3b8;">※ <b>칼선이 이미 있는 PDF</b>를 올리셨다면 아래 <b>다음</b>을 눌러 넘어가세요.</span>',
-        ja: '背景を消した <b>画像</b> なら <b>カットライン</b> を押して <b>裁断線の形</b> を選びます(丸·カプセル·角丸など)。この線で切り抜かれます ✂️<br>形を選ぶと次へ。<br><span style="color:#94a3b8;">※ <b>カットライン済のPDF</b> をアップした場合は下の <b>次へ</b> を。</span>',
-        en: 'For a <b>background-removed image</b>, tap <b>Cutline</b> and pick a <b>die-cut shape</b> (circle, pill, rounded square, one corner…). It cuts along this line ✂️<br>Pick a shape to continue.<br><span style="color:#94a3b8;">※ If you uploaded a <b>PDF that already has a cutline</b>, tap <b>Next</b> below.</span>' },
+      buttons: [
+        { action: '_meAutoBgAndCutline', label: { kr: '① 자동 배경제거 및 칼선작업', ja: '① 自動 背景除去＋カットライン', en: '① Auto bg-removal & cutline' } },
+        { action: '_meStandeeSkipCutline', label: { kr: '② 네모 이미지 그대로 제작', ja: '② 四角い画像のまま製作', en: '② Keep the rectangular image' } }
+      ],
+      msg: { kr: '업로드 잘 하셨어요! 🎉 어떻게 만들지 골라주세요.',
+        ja: 'アップロードOK! 🎉 作り方を選んでください。',
+        en: 'Nicely uploaded! 🎉 Choose how to make it.' },
+      note: { kr: '※ 일러스트로 작업한 <b>PDF</b>는 <b>별도의 레이어에 칼선</b>을 작업해 주세요. <b>이미지</b>는 자동으로 칼선을 만듭니다.',
+        ja: '※ イラストで作った <b>PDF</b> は <b>別レイヤーにカットライン</b> をご用意ください。<b>画像</b> は自動でカットラインを作成します。',
+        en: '※ For an illustrator <b>PDF</b>, put the <b>cutline on a separate layer</b>. <b>Images</b> get an automatic cutline.' },
+      hint: { kr: '자동은 몇 초 걸려요 — 끝나면 자동으로 넘어가요', ja: '自動は数秒かかります — 完了で次へ', en: 'Auto takes a few seconds — it advances when done' },
+      skipLabel: { kr: '건너뛰기', ja: 'スキップ', en: 'Skip' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
     { // 5) 외곽선 두께 · 받침(꽂이) 위치 조절 — 이미지 옆 떠있는 창의 슬라이더
