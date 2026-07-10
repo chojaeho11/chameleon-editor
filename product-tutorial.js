@@ -804,9 +804,9 @@
     },
     { // 5) 추가 옵션 (설명 포함)
       target: '#soAddonSection', mode: 'next',
-      msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요:<br>• <b>보조받침대</b> — 야외나 아이 손이 많이 닿는 곳은 넘어지지 않게 꼭 추가!<br>• <b>오려내기(타공)</b> — 가운데를 뚫어 <b>포토존</b>으로 쓰거나 뒤에 <b>TV</b>를 배치할 수 있어요.<br>• <b>조명</b> — 허니콤보드로 만든 <b>카멜레온프린팅 특허 제품</b>이에요.<br>• <b>선반 추가</b> — 가벼운 물건을 올릴 선반. 네모난 가벽보다 <b>재미있는 연출</b>이 가능해요.<br>• <b>파인텍스 시공</b> — 전시장 <b>바닥에 설치</b>해 드려요.<br>• <b>모래주머니</b> — 옆면 받침대 대신, 가벽이 <b>흔들리지 않게</b> 잡아줘요.',
-        ja: '必要な <b>追加オプション</b> だけチェック:<br>• <b>補助スタンド</b> — 屋外や子供が触れる場所は転倒防止に必須!<br>• <b>くり抜き(穴あけ)</b> — 中央を開けて <b>フォトゾーン</b> や背面に <b>TV</b> を設置。<br>• <b>照明</b> — ハニカムボード製の <b>カメレオン印刷 特許製品</b>。<br>• <b>棚追加</b> — 軽い物を置ける棚。四角い壁より <b>面白い演出</b> が可能。<br>• <b>ファインテックス施工</b> — 会場の <b>床に設置</b>。<br>• <b>砂袋</b> — 側面スタンドの代わりに、壁が <b>揺れないよう</b> 固定。',
-        en: 'Check only the <b>add-ons</b> you need:<br>• <b>Support base</b> — a must outdoors or where kids reach, to prevent tipping!<br>• <b>Cut-out</b> — open the center for a <b>photo zone</b> or to place a <b>TV</b> behind.<br>• <b>Lighting</b> — a <b>Chameleon-Printing patented</b> honeycomb-board product.<br>• <b>Shelf</b> — holds light items; more <b>creative</b> than a plain wall.<br>• <b>Finetex install</b> — we install it on the <b>venue floor</b>.<br>• <b>Sandbags</b> — instead of side bases, keeps the wall <b>steady</b>.' }
+      msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요.<br>• 야외나 아이들이 많은 곳이라면 <b>보조받침대</b>를 선택해 주세요.<br>• 특별한 연출을 원한다면 <b>비싸지 않은 비용으로 조명</b>을 설치할 수 있어요. 조명은 <b>콘센트형</b>이라 끼우면 설치 끝!',
+        ja: '必要な <b>追加オプション</b> だけチェックしてください。<br>• 屋外や子供が多い場所なら <b>補助スタンド</b> を選んでください。<br>• 特別な演出をご希望なら <b>手頃な価格で照明</b> を設置できます。照明は <b>コンセント式</b> なので差し込むだけで設置完了!',
+        en: 'Check only the <b>add-ons</b> you need.<br>• For outdoor spots or places crowded with kids, pick the <b>support base</b>.<br>• Want a special touch? Add <b>affordable lighting</b> — it\'s <b>plug-in type</b>, just plug it in and it\'s done!' }
     },
     { // 6) 시공/배송 (설명)
       target: '#soScheduleSection', mode: 'next',
