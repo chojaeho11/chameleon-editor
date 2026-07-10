@@ -180,6 +180,9 @@
         .me-props.show { display:flex; }
         .me-props.me-props-stub { opacity:0.55; pointer-events:none; }
         .me-props.me-props-stub * { user-select:none; }
+        /* 2026-07-11: 칼선 조절바를 대지 옆(우측)으로 — .me-stage-row 안에 세로 컬럼으로 배치 (칼선 이미지 선택 시만, JS 가 클래스 토글) */
+        .me-props.me-props-side { flex-direction:column; flex:0 0 220px; width:220px; max-width:38%; align-self:stretch; min-height:0; flex-wrap:nowrap; align-content:flex-start; overflow-y:auto; }
+        .me-props.me-props-side .me-prop-group { width:100%; min-width:0 !important; flex:0 0 auto; flex-wrap:wrap; box-sizing:border-box; }
         .me-prop-group { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; background:rgba(120,120,128,0.10); border:none; border-radius:980px; font-size:12px; font-weight:500; color:#1d1d1f; letter-spacing:-0.2px; }
         .me-prop-group label { color:#86868b; font-size:11px; font-weight:500; }
         .me-prop-group select, .me-prop-group input[type=number] { padding:2px 4px; border:none; background:transparent; border-radius:4px; font-size:12px; font-family:inherit; outline:none; color:#1d1d1f; font-weight:600; }

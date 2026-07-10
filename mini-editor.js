@@ -52,6 +52,9 @@
         if (rulerH) rulerH.style.display = 'none';
         var wrap = document.querySelector('.me-stage-wrap');
         var wrapW = (wrap ? wrap.clientWidth : 600);
+        // 2026-07-11: 칼선 조절바가 대지 옆(stage-row 안)에 있을 땐 그 폭만큼 대지 가용폭에서 뺌.
+        var _sideP = document.querySelector('.me-props.me-props-side');
+        if (_sideP) { var _spr = _sideP.getBoundingClientRect(); if (_spr.width) wrapW -= (_spr.width + 8); }
         var pad = 20;                         // me-stage-wrap 좌우 padding 합 (10*2)
         var maxH = window._meStageMaxH || 540;
         var sw, sh;
@@ -2389,6 +2392,25 @@
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
         html += '</span>';
         panel.innerHTML = html;
+        // 2026-07-11: 칼선 조절바를 이미지 옆(대지 우측)으로 이동.
+        //   칼선 이미지를 선택했고 화면이 넓을 때(데스크톱)만 props 패널을 .me-stage-row 안(대지 오른쪽)에 세로로 배치.
+        //   텍스트/일반 편집·모바일은 기존처럼 대지 위 가로 바 유지 (회귀 방지). 상태가 바뀔 때만 _meFitStage 재실행해 대지 폭 재계산.
+        try {
+            if (!panel._meHome) panel._meHome = { parent: panel.parentNode, next: panel.nextSibling };
+            var _row = document.querySelector('.me-stage-row');
+            var _wantSide = !!(_hasCutlineActive && _row && window.innerWidth >= 820);
+            if (_wantSide !== !!panel._meSideOn) {
+                if (_wantSide) {
+                    _row.appendChild(panel);
+                    panel.classList.add('me-props-side');
+                } else {
+                    panel.classList.remove('me-props-side');
+                    if (panel._meHome && panel._meHome.parent) panel._meHome.parent.insertBefore(panel, panel._meHome.next);
+                }
+                panel._meSideOn = _wantSide;
+                if (typeof _meFitStage === 'function') { try { _meFitStage(); } catch(_fe){} }
+            }
+        } catch(_sp){}
         // 2026-06-16: 드롭다운 모든 옵션의 폰트를 미리 로드 — 펼치기 전엔 preview 가 안 나오던 문제 해결.
         //   Google Fonts CSS 는 가벼우므로 35+개 link 주입해도 부담 적음. 실제 글자 파일은 사용 시에만 다운로드.
         var sel = panel.querySelector('select[data-font-select]');
