@@ -67,7 +67,11 @@
       + '#tut-blocker{position:fixed;inset:0;background:rgba(17,24,39,0.55);pointer-events:auto;display:none;}'
       + '#tut-hole{position:fixed;display:none;border-radius:12px;pointer-events:none;'
       + 'box-shadow:0 0 0 3px rgba(109,40,217,0.9),0 0 0 9999px rgba(17,24,39,0.55);'
-      + 'transition:left .26s ease,top .26s ease,width .26s ease,height .26s ease;}'
+      + 'transition:left .26s ease,top .26s ease,width .26s ease,height .26s ease;'
+      + 'animation:tutHolePulse 1.15s ease-in-out infinite;}'
+      + '@keyframes tutHolePulse{0%,100%{box-shadow:0 0 0 3px rgba(109,40,217,0.9),0 0 0 9999px rgba(17,24,39,0.55);}50%{box-shadow:0 0 0 7px rgba(109,40,217,0.55),0 0 0 9999px rgba(17,24,39,0.55);}}'
+      + '@keyframes tutBlink{0%,100%{box-shadow:0 0 0 0 rgba(109,40,217,0);}50%{box-shadow:0 0 0 6px rgba(109,40,217,0.6);}}'
+      + '.tut-blink{position:relative;z-index:2147483050;border-radius:12px;animation:tutBlink 1.05s ease-in-out infinite;}'
       + '.tut-pop{position:fixed;pointer-events:auto;width:min(320px,calc(100vw - 28px));'
       + 'background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;}'
       + '.tut-pop.center{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;}'
@@ -277,10 +281,24 @@
   }
   function celebrate(cheer) { confetti(false); if (cheer) toast(cheer); }
 
+  // ── 버튼 반짝임 (자유 모드에서 눌러야 할 버튼 강조) ──────────────────────
+  var _blinkEls = [];
+  function _tutBlink(sels) {
+    _tutBlinkClear();
+    (sels || []).forEach(function (s) {
+      try { var el = typeof s === 'string' ? document.querySelector(s) : s; if (el) { el.classList.add('tut-blink'); _blinkEls.push(el); } } catch (_) {}
+    });
+  }
+  function _tutBlinkClear() {
+    _blinkEls.forEach(function (el) { try { el.classList.remove('tut-blink'); } catch (_) {} });
+    _blinkEls = [];
+  }
+
   // ── 공통 렌더 헬퍼 ──────────────────────────────────────────────────────
   function clearStep() {
     _stepCleanup.forEach(function (fn) { try { fn(); } catch (_) {} });
     _stepCleanup = [];
+    _tutBlinkClear();
   }
   function headHtml(i) {
     return '<div class="tut-head">' + T({ kr: '주문 안내', ja: 'ご案内', en: 'Order guide' })
@@ -457,15 +475,22 @@
     _pop.style.display = 'none'; _hole.style.display = 'none'; _blocker.style.display = 'none';
     var sec = document.getElementById('soQuickDesignSec');
     if (sec) { try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {} }
-    if (opt.template === 'rail') {
+    if (opt.template === 'ai') {
+      // 2026-07-10: AI 이미지 자유 디자인 — AI 버튼을 반짝이게 → 눌러서 생성 후 글씨·요소 추가하고 done bar 로 진행.
+      _tutBlink(['#meAiGenBtn']);
+      setTimeout(function () {
+        try { var b = document.getElementById('meAiGenBtn'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+      }, 300);
+    } else if (opt.template === 'rail') {
       // 2026-07-10: 공통 템플릿 레일(editor-rail.js) 사용 — 명함/인스타판넬 같은 제품별 전용 모달 대신
-      //   대부분 제품은 하단 레일의 공통 템플릿을 씀. 레일의 '템플릿' 탭을 켜고 그쪽으로 스크롤.
+      //   대부분 제품은 하단 레일의 공통 템플릿을 씀. 레일의 '템플릿' 탭을 켜고 그쪽으로 스크롤 + 반짝임.
       setTimeout(function () {
         try { if (typeof window._soQdRailSwitch === 'function') window._soQdRailSwitch('design_tpl'); } catch (_) {}
         try {
           var rail = document.getElementById('soQdRailThumbs') || document.querySelector('.qd-rail');
           if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (_) {}
+        _tutBlink(['#soQdRailThumbs']);
       }, 350);
     } else {
       // 제품별 전용 템플릿 픽커 (명함 등 특수 제품)
@@ -704,12 +729,12 @@
         ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
         en: "I'll help you order! First, choose <b>how to design</b>." },
       branch: [
-        { key: 'ai', target: '#meAiGenBtn',
+        { key: 'ai', mode: 'free', template: 'ai', target: '#meAiGenBtn',
           label: { kr: '🤖 AI 이미지로 생성', ja: '🤖 AIで画像生成', en: '🤖 Generate with AI' },
           sub: { kr: '설명만 쓰면 AI가 그려줘요', ja: '説明するだけでAIが描く', en: 'Describe it, AI draws it' },
-          msg: { kr: '반짝이는 <b>AI 이미지</b> 버튼을 눌러 설명을 적으면 AI가 그림을 만들어줘요.<br><b>참고:</b> AI 이미지는 해상도가 낮아, 허니콤 가벽·현수막 같은 <b>큰 출력물</b>은 저희가 <b>업스케일로 보정</b>해 드리지만 <b>이미지가 약간 뭉개질 수 있어요</b>. 선명한 대형 출력이 필요하면 <b>템플릿(벡터)</b>을 추천해요.',
-            ja: '光る <b>AI画像</b> ボタンを押して説明を書くと、AIが画像を作ります。<br><b>ご注意:</b> AI画像は解像度が低く、ハニカム間仕切り·横断幕などの <b>大きな出力物</b> は <b>アップスケールで補正</b> しますが <b>画像が少しにじむ(ぼやける)ことがあります</b>。くっきりした大判出力には <b>テンプレート(ベクター)</b> がおすすめです。',
-            en: 'Tap the glowing <b>AI image</b> button and describe it — the AI creates an image.<br><b>Note:</b> AI images are low-resolution. For <b>large prints</b> (honeycomb walls, banners) we <b>upscale</b> them, but <b>the image may look slightly blurry</b>. For crisp large output, we recommend a <b>vector template</b>.' }
+          msg: { kr: '반짝이는 <b>AI 이미지</b> 버튼을 눌러 이미지를 만들고, <b>글씨·요소·이미지</b>도 더해 디자인을 마무리하세요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요! (AI 이미지는 큰 출력물에선 약간 뭉개질 수 있어요 — 선명한 대형은 템플릿 추천)',
+            ja: '光る <b>AI画像</b> ボタンを押して画像を作り、<b>文字·要素·画像</b> も加えてデザインを仕上げてください。完成したら下の <b>「デザイン完了 → 次へ」</b> を!(AI画像は大判では少しにじむことがあります — 鮮明な大判はテンプレート推奨)',
+            en: 'Tap the glowing <b>AI image</b> button to create an image, then add <b>text/elements/images</b> to finish your design. When done, tap <b>"Done → Continue"</b> below! (AI images can look slightly blurry at large sizes — use a template for crisp large output)' }
         },
         { key: 'editor', mode: 'free', template: 'rail', target: ['#soQdRailThumbs', '.qd-rail', '#soQuickDesignSec'],
           label: { kr: '🎨 템플릿으로 디자인', ja: '🎨 テンプレートでデザイン', en: '🎨 Design with a template' },
