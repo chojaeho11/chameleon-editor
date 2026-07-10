@@ -3369,22 +3369,18 @@
         var baseRightX = Math.min(W, objCx + _baseHalf);
         // 받침대 깊이 슬라이더 — 기본 10%
         var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
-        var baseTopY = cutY;
         var baseBottomY = maxY + hRange * _bhPct;
-        // 새 contour: enter 이전 silhouette + 중앙 정렬 직사각형 받침(4 sharp corners) + exit 이후 silhouette
+        // 새 contour: enter 이전 silhouette + 중앙 2/3 폭 받침(하단 2 corner, 틈 없이 실루엣 끝점→코너 직결) + exit 이후 silhouette.
+        //   ※ 상단에 별도 가로 edge 를 넣으면 실루엣과 안 맞아 '빈 사각형' 틈이 생김 → 실루엣 끝점에서 코너로 바로 연결해 꽉 채움.
         var result = [];
         for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
         var isCW = entryX >= exitX;
         if (isCW) {
-            result.push([baseRightX, baseTopY, 1]);
             result.push([baseRightX, baseBottomY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
-            result.push([baseLeftX, baseTopY, 1]);
         } else {
-            result.push([baseLeftX, baseTopY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
             result.push([baseRightX, baseBottomY, 1]);
-            result.push([baseRightX, baseTopY, 1]);
         }
         for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
         return result;
