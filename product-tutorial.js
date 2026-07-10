@@ -785,7 +785,8 @@
             en: '🎨 Pick a <b>template</b> from below and <b>just change text & photos</b>!<br><b>Templates are vector, so they print cleanly even at large sizes</b> (walls, banners). When done, tap <b>"Done → Continue"</b> below!' }
         },
         { key: 'upload', always: true,
-          target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
+          // 업로드 후엔 원래 업로드 버튼이 숨고 '파일 변경' 버튼이 나옴 → 그것도 가리켜 재업로드 가능하게.
+          target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn', '#soAdInlineChangeBtn'],
           label: { kr: '파일 업로드', ja: 'ファイルアップロード', en: 'Upload file' },
           sub: function () {
             // 등신대·자유인쇄커팅(칼선 버튼 보임) — 이미지=누끼·칼선 대행 / PDF=칼선 완료본
@@ -793,9 +794,9 @@
               ? { kr: '이미지(JPG·PNG)면 배경제거·칼선을 우리가 따드려요. 칼선 완성 PDF면 그대로 올려요', ja: '画像(JPG·PNG)なら背景除去·カットライン代行。カットライン済PDFはそのまま', en: 'Image (JPG/PNG): we do bg-removal & cutline. Cutline-ready PDF: upload as-is' }
               : { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' };
           },
-          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올리면 다음으로 넘어가요 📎',
-            ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップすると次へ進みます 📎',
-            en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded 📎' },
+          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올리면 다음으로 넘어가요.<br><span style="color:#94a3b8;">이미 올린 파일을 바꾸려면 반짝이는 <b>파일 변경</b> 버튼을 눌러 다시 올려주세요.</span>',
+            ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップすると次へ進みます。<br><span style="color:#94a3b8;">既にアップ済のファイルを変えるには光る <b>ファイル変更</b> ボタンから。</span>',
+            en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded.<br><span style="color:#94a3b8;">To replace an already-uploaded file, tap the glowing <b>Change file</b> button.</span>' },
           // 2026-07-10: 파일 업로드 감지 시 자동으로 다음 단계로 (하드코딩된 "다음" 클릭 불필요 — 막힘 방지)
           hook: function (advance) {
             var f = document.getElementById('soFile');
