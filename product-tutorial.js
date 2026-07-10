@@ -959,14 +959,15 @@
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
     { // 5) 외곽선 두께 · 받침(꽂이) 위치 조절 — 이미지 옆 떠있는 창의 슬라이더
-      target: ['[data-cutline-margin]', '#meCutlineFloat', '#meProps'], mode: 'next',
+      //  target 은 떠있는 창만 (여러 selector union 시 상단 빈 #meProps 까지 감싸 하이라이트가 위로 커짐)
+      target: '#meCutlineFloat', mode: 'next',
       hint: { kr: '이미지를 선택하면 옆에 조절창이 나와요', ja: '画像を選択すると横に調整パネルが出ます', en: 'Select the image to see the panel beside it' },
       msg: { kr: '이제 <b>외곽선 두께</b>와 <b>받침(꽂이) 위치</b>를 다듬어요. 이미지를 선택하면 <b>옆에 조절창</b>이 나와요.<br>• <b>외곽선 두께</b> — 재단선을 이미지에서 얼마나 띄울지 조절해요.<br>• <b>받침 위치</b> — 등신대 아래 <b>꽂이(받침)</b>를 위·아래로 늘려 스탠드에 안정적으로 꽂히게 해요.',
         ja: '<b>フチの太さ</b>と<b>差し込み(スタンド)位置</b>を調整します。画像を選択すると <b>横に調整パネル</b> が表示されます。<br>• <b>フチの太さ</b> — 裁断線を画像からどれだけ離すか。<br>• <b>差し込み位置</b> — 等身大の下の <b>差し込み</b> を上下に伸ばして安定して差し込めるように。',
         en: 'Fine-tune the <b>outline thickness</b> and <b>base tab position</b>. Select the image to reveal the <b>panel beside it</b>.<br>• <b>Outline thickness</b> — how far the die-cut line sits from the image.<br>• <b>Base position</b> — stretch the bottom <b>insert tab</b> up/down so it sits firmly in the stand.' }
     },
     { // 6) 크기 입력 — 등신대(조각)의 실제 크기(mm). 비율 고정 + 가격 자동.
-      target: ['#meObjSizeW', '#meCutlineFloat', '#soCustomSizeSection'], mode: 'next',
+      target: '#meCutlineFloat', mode: 'next',
       hint: { kr: '옆 조절창의 크기(mm) 칸에 입력', ja: '横パネルのサイズ(mm)欄に入力', en: 'Type in the Size (mm) fields in the panel' },
       msg: { kr: '잘하셨습니다! 🎉 이제 <b>등신대의 크기</b>를 정하면 <b>가격이 자동으로</b> 만들어집니다.<br>옆 조절창의 <b>크기(mm)</b> 칸에 <b>가로·세로</b>를 입력하세요 — <b>비율이 고정</b>돼 한쪽만 바꿔도 반대쪽이 같이 맞춰져요. (모서리를 드래그해 키워도 돼요.)',
         ja: 'お見事です! 🎉 あとは <b>等身大のサイズ</b> を決めると <b>価格が自動</b> で計算されます。<br>横パネルの <b>サイズ(mm)</b> 欄に <b>横·縦</b> を入力してください — <b>比率が固定</b> され、片方を変えるともう片方も合わせて変わります。(角をドラッグして拡大してもOK。)',
