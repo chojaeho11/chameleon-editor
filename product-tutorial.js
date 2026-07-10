@@ -439,6 +439,7 @@
         var o = opts[parseInt(b.getAttribute('data-opt'), 10)];
         _chosenBranch = o.key || 'upload';
         if (o.mode === 'free') renderFree(i, o);
+        else if (o.mode === 'request') renderRequest(i, o);
         else renderDetail(i, o);
       });
     });
@@ -508,6 +509,31 @@
       function () { _freeMode = false; removeDoneBar(); celebrate({ kr: '디자인 완성! 🎉', ja: 'デザイン完成! 🎉', en: 'Design done! 🎉' }); enterStep(i + 1); },
       function () { _freeMode = false; removeDoneBar(); renderBranch(i); }
     );
+    loop();
+  }
+
+  // 디자인 의뢰 모드 — 튜토리얼을 잠시 숨기고 디자인 의뢰 팝업을 띄움.
+  //   의뢰 팝업이 닫히면(등록/취소/닫기) 튜토리얼 재개 → 다음 단계(배너 종류 등)로.
+  function renderRequest(i, opt) {
+    clearStep(); removeDoneBar();
+    _freeMode = true; // place() 가 숨긴 팝업을 다시 안 띄우도록
+    _targets = [];
+    _pop.style.display = 'none'; _hole.style.display = 'none'; _blocker.style.display = 'none';
+    setTimeout(function () {
+      try { if (typeof window._soOpenDesignRequest === 'function') window._soOpenDesignRequest(); } catch (_) {}
+    }, 150);
+    toast(opt.msg || { kr: '디자인 의뢰를 작성해 주세요. 다 하시면 이어서 안내할게요.', ja: 'デザイン依頼を作成してください。完了後、続けてご案内します。', en: 'Fill out the design request. I\'ll continue guiding you after.' });
+    // 의뢰 팝업이 열렸다가 닫히면 재개
+    var wasOpen = false, ticks = 0;
+    var mon = setInterval(function () {
+      if (!_active) { clearInterval(mon); return; }
+      ticks++;
+      var open = _secVisible('#designReqPopup');
+      if (open) { wasOpen = true; return; }
+      if (wasOpen) { clearInterval(mon); _freeMode = false; enterStep(i + 1); return; }
+      if (ticks > 40 && !wasOpen) { clearInterval(mon); } // ~20s 내 안 열리면 감시 종료(리다이렉트 등)
+    }, 500);
+    _stepCleanup.push(function () { clearInterval(mon); });
     loop();
   }
 
@@ -753,12 +779,12 @@
             ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップ後 <b>次へ</b> 📎',
             en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. Then tap <b>Next</b> 📎' }
         },
-        { key: 'request', target: '#soDesignReqBanner',
+        { key: 'request', mode: 'request', target: '#soDesignReqBanner',
           label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
           sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
-          msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 멋지게 만들어 드려요 ✏️',
-            ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが仕上げます ✏️',
-            en: 'If designing is hard, leave it to a pro! Tap the <b>Request a design</b> banner below ✏️' }
+          msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해 드릴게요 ✏️',
+            ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けて次のステップをご案内します ✏️',
+            en: 'Leave it to a pro! Fill out and submit the <b>design request</b>, and I\'ll continue to the next step ✏️' }
         }
       ]
     },
