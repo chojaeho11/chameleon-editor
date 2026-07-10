@@ -150,6 +150,8 @@
       return (el.offsetParent !== null || fixed) && r.width > 0 && r.height > 0;
     } catch (_) { return false; }
   }
+  // 2026-07-10: 선택자로 가리키는 섹션이 실제로 화면에 보이는지 (제품별 옵션 단계 조건 스킵용)
+  function _secVisible(sel) { try { var el = document.querySelector(sel); return !!(el && isVisible(el)); } catch (_) { return false; } }
   function resolveTargets(t) {
     if (!t) return [];
     var sels = Array.isArray(t) ? t : [t];
@@ -823,9 +825,41 @@
     GENERIC_STEPS[2] // 8) 장바구니 — 공통 재사용
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 허니콤 배너 (hb_bn_*)  2026-07-10
+  //  디자인(공통) → 배너 종류 선택 → 단면/양면(허니콤배너·연결형만, 나머지는 자동 스킵)
+  //  → 수량(있으면) → 장바구니. 제품별로 없는 옵션 단계는 onEnter 로 자동 스킵.
+  // ════════════════════════════════════════════════════════════════════
+  var HONEYCOMB_BANNER_STEPS = [
+    GENERIC_STEPS[0], // 1) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    { // 2) 배너 종류 선택
+      target: '#soBannerVariantsHostSec', mode: 'next',
+      onEnter: function () { return _secVisible('#soBannerVariantsHostSec'); },
+      msg: { kr: '이제 <b>배너 종류</b>를 골라요. <b>허니콤배너·연결형·선반형·거치대 세트</b> 등 카드를 눌러 원하는 종류로 바꿀 수 있어요.',
+        ja: '次は <b>バナーの種類</b>。<b>ハニカムバナー·連結型·棚型·スタンドセット</b> などカードを押して選べます。',
+        en: 'Now pick the <b>banner type</b>. Tap a card to switch between <b>honeycomb / linked / shelf / stand set</b>, etc.' }
+    },
+    { // 3) 단면/양면 — 허니콤배너·연결형만 (섹션 안 보이면 자동 스킵)
+      target: '#soBannerSideSec', mode: 'next',
+      onEnter: function () { return _secVisible('#soBannerSideSec'); },
+      msg: { kr: '<b>인쇄면</b>을 골라요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. (허니콤배너·연결형 배너에서만 선택할 수 있어요)',
+        ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも。(ハニカムバナー·連結型のみ選択可)',
+        en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>double</b> = both sides. (Only for honeycomb / linked banners)' }
+    },
+    { // 4) 수량 — 있으면 (없으면 자동 스킵)
+      target: '#soQtySection', mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요. 여러 장이면 한 파일에 담아 올리고 수량을 입력하면 돼요.',
+        ja: '<b>数量</b>を決めます。複数枚は1ファイルにまとめて数量を入力してください。',
+        en: 'Set the <b>quantity</b>. For multiple banners, put them in one file and enter the count.' }
+    },
+    GENERIC_STEPS[2] // 5) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
+    { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
   ];
