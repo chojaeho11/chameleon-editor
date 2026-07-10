@@ -775,9 +775,19 @@
           target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
           label: { kr: '📎 파일 업로드', ja: '📎 ファイルアップロード', en: '📎 Upload file' },
           sub: { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' },
-          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올린 뒤 <b>다음</b>을 눌러요 📎',
-            ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップ後 <b>次へ</b> 📎',
-            en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. Then tap <b>Next</b> 📎' }
+          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올리면 다음으로 넘어가요 📎',
+            ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップすると次へ進みます 📎',
+            en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded 📎' },
+          // 2026-07-10: 파일 업로드 감지 시 자동으로 다음 단계로 (하드코딩된 "다음" 클릭 불필요 — 막힘 방지)
+          hook: function (advance) {
+            var f = document.getElementById('soFile');
+            var m = document.getElementById('meImgInput');
+            var done = false;
+            var on = function () { if (done) return; done = true; advance({ kr: '업로드 완료! 🎉', ja: 'アップロード完了! 🎉', en: 'Uploaded! 🎉' }); };
+            if (f) f.addEventListener('change', on);
+            if (m) m.addEventListener('change', on);
+            return function () { if (f) f.removeEventListener('change', on); if (m) m.removeEventListener('change', on); };
+          }
         },
         { key: 'request', mode: 'request', target: '#soDesignReqBanner',
           label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
@@ -903,12 +913,23 @@
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
     GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
-    { // 4) 누끼 + 칼선 (등신대 핵심!)
-      target: ['#meBgRemoveBtn', '#meCutlineBtn'], mode: 'next',
-      onEnter: function () { return _secVisible('#meBgRemoveBtn') || _secVisible('#meCutlineBtn'); },
-      msg: { kr: '등신대는 이 단계가 <b>가장 중요해요!</b><br>① 넣은 이미지를 클릭해 선택 → 반짝이는 <b>누끼</b>(배경제거)를 눌러 배경을 깔끔히 지워요.<br>② 이어서 <b>칼선</b>을 눌러 모양대로 <b>재단선</b>을 만들면 완성! (이 선을 따라 잘려 나와요)',
-        ja: '等身大はこの工程が <b>最重要!</b><br>① 入れた画像をクリックで選択 → 光る <b>切り抜き</b>(背景除去)で背景をきれいに消します。<br>② 続けて <b>カットライン</b> を押すと形に沿った <b>裁断線</b> が完成!(この線で切り抜かれます)',
-        en: 'For standees, this step is <b>the most important!</b><br>1) Click your image to select it → tap the glowing <b>Cut-out</b> (remove background).<br>2) Then tap <b>Cutline</b> to make the <b>die-cut line</b> around the shape — done! (it gets cut along this line)' }
+    { // 4) 누끼 (배경 제거) — 등신대 핵심 ①
+      target: '#meBgRemoveBtn', mode: 'wait',
+      onEnter: function () { return _secVisible('#meBgRemoveBtn'); },
+      hint: { kr: '이미지를 클릭해 선택한 뒤 누끼 버튼을 눌러주세요', ja: '画像を選択して切り抜きボタンを押してください', en: 'Select the image, then tap Cut-out' },
+      msg: { kr: '업로드까지 잘 하셨어요! 🎉 이제 <b>배경을 제거</b>할 차례예요.<br><b>이미지를 클릭해 선택</b>한 뒤, 반짝이는 <b>누끼</b>(배경제거) 버튼을 눌러 배경을 깔끔히 지워요.',
+        ja: 'アップロードできました! 🎉 次は <b>背景を除去</b>します。<br><b>画像をクリックして選択</b>し、光る <b>切り抜き</b>(背景除去)ボタンを押してください。',
+        en: 'Nicely uploaded! 🎉 Now <b>remove the background</b>.<br><b>Click the image to select it</b>, then tap the glowing <b>Cut-out</b> (background removal) button.' },
+      cheer: { kr: '배경 제거 완료! 👍', ja: '背景除去完了! 👍', en: 'Background removed! 👍' }
+    },
+    { // 5) 칼선 만들기 — 등신대 핵심 ②
+      target: '#meCutlineBtn', mode: 'wait',
+      onEnter: function () { return _secVisible('#meCutlineBtn'); },
+      hint: { kr: '칼선 버튼을 눌러주세요', ja: 'カットラインボタンを押してください', en: 'Tap the Cutline button' },
+      msg: { kr: '이제 <b>칼선</b>을 눌러 모양대로 <b>재단선</b>을 만들어요. 등신대는 이 선을 따라 잘려 나와요 ✂️',
+        ja: '次は <b>カットライン</b> を押して形に沿った <b>裁断線</b> を作ります。この線で切り抜かれます ✂️',
+        en: 'Now tap <b>Cutline</b> to make the <b>die-cut line</b> around the shape. The standee is cut along this line ✂️' },
+      cheer: { kr: '칼선 완성! ✂️', ja: 'カットライン完成! ✂️', en: 'Cutline done! ✂️' }
     },
     { // 5) 사이즈 선택
       target: '#soCustomSizeSection', mode: 'next',
