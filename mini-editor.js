@@ -2392,19 +2392,22 @@
         html += '<button type="button" class="me-prop-btn" title="' + T('me_layer_down','뒤로') + '" data-action="down"><i class="fa-solid fa-arrow-down"></i></button>';
         html += '</span>';
         panel.innerHTML = html;
-        // 2026-07-11: 칼선 조절바를 이미지 옆(대지 우측)으로 이동.
-        //   칼선 이미지를 선택했고 화면이 넓을 때(데스크톱)만 props 패널을 .me-stage-row 안(대지 오른쪽)에 세로로 배치.
-        //   텍스트/일반 편집·모바일은 기존처럼 대지 위 가로 바 유지 (회귀 방지). 상태가 바뀔 때만 _meFitStage 재실행해 대지 폭 재계산.
+        // 2026-07-11: 칼선 조절바를 이미지 옆(대지 우측)에 별도의 떠있는 창으로 배치.
+        //   칼선 이미지를 선택했고 화면이 넓을 때(데스크톱)만 props 패널을 .me-stage-wrap 안에 position:absolute 로 띄움.
+        //   .me-stage-row(줌·팬 대상)가 아니라 wrap 의 직계 자식이라 마우스휠 확대/이동에 영향 없음(고정 창).
+        //   대지는 왼쪽 정렬(me-has-side) + 폭 축소로 창과 겹치지 않게. 텍스트/일반 편집·모바일은 기존 가로 바 유지.
         try {
             if (!panel._meHome) panel._meHome = { parent: panel.parentNode, next: panel.nextSibling };
-            var _row = document.querySelector('.me-stage-row');
-            var _wantSide = !!(_hasCutlineActive && _row && window.innerWidth >= 820);
+            var _wrap = document.querySelector('.me-stage-wrap');
+            var _wantSide = !!(_hasCutlineActive && _wrap && window.innerWidth >= 820);
             if (_wantSide !== !!panel._meSideOn) {
                 if (_wantSide) {
-                    _row.appendChild(panel);
+                    _wrap.appendChild(panel);
+                    _wrap.classList.add('me-has-side');
                     panel.classList.add('me-props-side');
                 } else {
                     panel.classList.remove('me-props-side');
+                    if (_wrap) _wrap.classList.remove('me-has-side');
                     if (panel._meHome && panel._meHome.parent) panel._meHome.parent.insertBefore(panel, panel._meHome.next);
                 }
                 panel._meSideOn = _wantSide;
