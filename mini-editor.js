@@ -2363,7 +2363,7 @@
                 // 2026-06-18 v577: 두 슬라이더를 한 칸에 합침 (모바일 가로 1칸 안에 둘 다 들어가도록)
                 if (window._meStandeeBase && it._cutlineMode === 'outer') {
                     var _bhPct = (it._cutlineBaseHeightPct != null) ? it._cutlineBaseHeightPct : 0.1;
-                    var _bwPct = (it._cutlineBaseWidthPct != null) ? it._cutlineBaseWidthPct : 0.1;
+                    var _bwPct = (it._cutlineBaseWidthPct != null) ? it._cutlineBaseWidthPct : (2 / 3); // 받침 폭 기본 2/3
                     var _bhPctDisp = (_bhPct * 100).toFixed(1);
                     var _bwPctDisp = (_bwPct * 100).toFixed(1);
                     html += '<span class="me-prop-group" style="gap:4px; min-width:0; flex:1 1 100%;">'
@@ -2371,7 +2371,7 @@
                          +   '<input type="range" min="0" max="300" step="1" value="' + Math.round(_bhPct * 1000) + '" data-cutline-baseh style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
                          +   '<span data-cutline-baseh-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bhPctDisp + '%</span>'
                          +   '<i class="fa-solid fa-arrows-left-right" style="color:#0369a1; font-size:11px; margin-left:6px;" title="받침 넓이"></i>'
-                         +   '<input type="range" min="0" max="500" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
+                         +   '<input type="range" min="100" max="1000" step="1" value="' + Math.round(_bwPct * 1000) + '" data-cutline-basew style="flex:1; min-width:60px; accent-color:#0ea5e9;">'
                          +   '<span data-cutline-basew-val style="font-size:10.5px; font-weight:700; color:#0369a1; min-width:38px; text-align:right;">' + _bwPctDisp + '%</span>'
                          + '</span>';
                 }
@@ -2502,7 +2502,7 @@
         // 2026-06-17 v531: 받침대 좌우 넓이 슬라이더 — basePadX 비율 변경.
         panel.querySelectorAll('[data-cutline-basew]').forEach(function(sl){
             sl.addEventListener('input', function(){
-                var pct = parseInt(sl.value, 10) / 1000;   // 0~500 → 0.0~0.5 (0%~50%)
+                var pct = parseInt(sl.value, 10) / 1000;   // 100~1000 → 0.1~1.0 (객체 폭 대비 받침 폭 비율, 기본 2/3)
                 if (!isFinite(pct) || pct < 0) pct = 0;
                 it._cutlineBaseWidthPct = pct;
                 var curMargin = (it._cutlineMarginPct != null) ? it._cutlineMarginPct : (it._cutlineMode === 'inner' ? 0.02 : 0.03);
@@ -3353,41 +3353,38 @@
         // 진입/탈출 좌표 X — contour 가 시계방향이면 진입 X 가 우측, 탈출 X 가 좌측 (보통).
         var entryX = (enterIdx > 0) ? contour[enterIdx - 1][0] : contour[enterIdx][0];
         var exitX = (exitIdx < contour.length - 1) ? contour[exitIdx + 1][0] : contour[exitIdx][0];
-        // 2026-06-17 v530: 받침대 좌우 한계는 (실루엣 아래쪽 minX/maxX) 와 (진입/탈출 X) 둘 다 고려.
-        //   이전엔 silhouette 아래쪽만 봐서, 바닥보다 위쪽 (cutY 근처) 의 실루엣이 더 넓을 때 베이스가 실루엣 안쪽으로 들어가
-        //   라인이 교차되며 작업파일에서 "겹쳐있는 부분" 으로 보임.
-        var globalMinX = W, globalMaxX = 0;
+        // 2026-07-11: 받침을 '객체 전체 가로 중앙'에 정렬 + 가로 폭의 2/3 직사각형으로.
+        //   이전엔 발(실루엣 하단) 폭 기준이라, 발이 좁거나 한쪽에 치우친 캐릭터는 받침도 좁고 치우쳤음.
+        var allMinX = W, allMaxX = 0;
         for (var i = 0; i < contour.length; i++) {
-            var p = contour[i];
-            if (p[1] >= cutY) {
-                if (p[0] < globalMinX) globalMinX = p[0];
-                if (p[0] > globalMaxX) globalMaxX = p[0];
-            }
+            if (contour[i][0] < allMinX) allMinX = contour[i][0];
+            if (contour[i][0] > allMaxX) allMaxX = contour[i][0];
         }
-        if (globalMaxX <= globalMinX) return contour;
-        var leftMost = Math.min(globalMinX, entryX, exitX);
-        var rightMost = Math.max(globalMaxX, entryX, exitX);
-        var footW = rightMost - leftMost;
-        // 2026-06-17: baseWidthPct 슬라이더 적용 — 기본 10%, 0~50% 사이 사용자 조절
-        var _bwPct = (baseWidthPct != null && isFinite(baseWidthPct) && baseWidthPct >= 0) ? baseWidthPct : 0.1;
-        var basePadX = Math.max(W * 0.02, footW * _bwPct);
-        var baseLeftX = leftMost - basePadX;
-        var baseRightX = rightMost + basePadX;
-        // 받침대 깊이 슬라이더 적용 — 기본 10%, 사용자 0~30% 조절 가능
+        var objCx = (allMinX + allMaxX) / 2;   // 객체 가로 중심
+        var objW = allMaxX - allMinX;          // 객체 전체 가로 폭
+        // baseWidthPct = 객체 가로 폭 대비 받침 폭 비율 (기본 2/3). 슬라이더로 조절.
+        var _bwFrac = (baseWidthPct != null && isFinite(baseWidthPct) && baseWidthPct > 0) ? baseWidthPct : (2 / 3);
+        var _baseHalf = (objW * _bwFrac) / 2;
+        var baseLeftX = Math.max(0, objCx - _baseHalf);
+        var baseRightX = Math.min(W, objCx + _baseHalf);
+        // 받침대 깊이 슬라이더 — 기본 10%
         var _bhPct = (baseHeightPct != null && isFinite(baseHeightPct) && baseHeightPct >= 0) ? baseHeightPct : 0.1;
+        var baseTopY = cutY;
         var baseBottomY = maxY + hRange * _bhPct;
-        // 새 contour: enter 이전 silhouette + base trapezoid (2 sharp corners only) + exit 이후 silhouette
-        // 2026-06-17 v530: 6점 직사각형 → 2점 사다리꼴 — silhouette 끝점에서 base corner 로 바로 사선 연결.
-        //   결과: 평평한 바닥은 유지 (corner ↔ corner 직선) 하면서 silhouette 와의 교차 가능성 제거.
+        // 새 contour: enter 이전 silhouette + 중앙 정렬 직사각형 받침(4 sharp corners) + exit 이후 silhouette
         var result = [];
         for (var i = 0; i < enterIdx; i++) result.push(contour[i]);
         var isCW = entryX >= exitX;
         if (isCW) {
+            result.push([baseRightX, baseTopY, 1]);
             result.push([baseRightX, baseBottomY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
+            result.push([baseLeftX, baseTopY, 1]);
         } else {
+            result.push([baseLeftX, baseTopY, 1]);
             result.push([baseLeftX, baseBottomY, 1]);
             result.push([baseRightX, baseBottomY, 1]);
+            result.push([baseRightX, baseTopY, 1]);
         }
         for (var i = exitIdx + 1; i < contour.length; i++) result.push(contour[i]);
         return result;
