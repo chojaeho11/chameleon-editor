@@ -5269,15 +5269,22 @@
             alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
             return;
         }
-        // 크롭 완료 이벤트 대기 준비 (bgRemove 호출 전에 등록)
-        var croppedP = new Promise(function(res){
-            var done = false;
-            function h(){ if (done) return; done = true; document.removeEventListener('me-cutout-cropped', h); res(); }
-            document.addEventListener('me-cutout-cropped', h);
-            setTimeout(h, 4000);   // 폴백 (실패/무피사체 시 진행)
-        });
+        // 크롭(피사체 bbox 보정) 완료 신호 — bgRemove 호출 전에 리스너 등록해 이벤트를 놓치지 않게.
+        var _cropRes; var croppedP = new Promise(function(res){ _cropRes = res; });
+        var onCropped = function(){ document.removeEventListener('me-cutout-cropped', onCropped); _cropRes(); };
+        document.addEventListener('me-cutout-cropped', onCropped);
         try { await window._meBgRemoveSelected(); } catch(_){}
-        await croppedP;
+        // 폴백 타이머는 bgRemove '완료 후' 시작 → API 지연(수 초)이 트레이스를 앞당기지 않게 (좁게 잡히던 원인).
+        await Promise.race([ croppedP, new Promise(function(r){ setTimeout(r, 2500); }) ]);
+        document.removeEventListener('me-cutout-cropped', onCropped);
+        // 크롭된 이미지가 완전히 디코드된 뒤에만 trace (덜 로드된 상태면 알파가 비어 좁게 잡힘)
+        try {
+            var s2 = me && me.selected, im2 = s2 && s2.el && s2.el.querySelector('img');
+            if (im2) {
+                if (!im2.complete) await new Promise(function(r){ im2.onload = r; im2.onerror = r; setTimeout(r, 1500); });
+                if (im2.decode) { try { await im2.decode(); } catch(_){} }
+            }
+        } catch(_){}
         try { await _meCutlineTrace('outer'); } catch(_){}
         try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
     };
