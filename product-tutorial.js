@@ -677,7 +677,66 @@
     }
   ];
 
-  var SCENARIOS = [{ id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS }];
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 범용(모든 제품 catch-all)
+  //  2026-07-10: 명함 외 전 제품에 튜토리얼 부착. 공통으로 존재하는 요소만
+  //  사용 → 제품별 DOM 차이에 안전. 숨겨진 분기(에디터·의뢰 배너)는
+  //  resolveTargets(isVisible) 로 자동 제외, 수량 없는 면적/사이즈 제품은
+  //  mode:'wait'+타깃없음 → 자동 스킵. (명함처럼 세밀한 안내가 필요한 제품은
+  //  전용 STEPS 를 SCENARIOS 앞쪽에 추가하면 그쪽이 우선 매치됨.)
+  // ════════════════════════════════════════════════════════════════════
+  var GENERIC_STEPS = [
+    { // 1) 디자인 방법 — 3갈래 (없는 분기는 자동 제외)
+      msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
+        ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
+        en: "I'll help you order! First, choose <b>how to design</b>." },
+      branch: [
+        { key: 'upload', always: true,
+          target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn'],
+          label: { kr: '📎 파일 업로드', ja: '📎 ファイルアップロード', en: '📎 Upload file' },
+          sub: { kr: '완성된 인쇄용 파일이 있어요', ja: '完成した印刷用ファイルがある', en: 'I have a print-ready file' },
+          msg: { kr: '완성된 <b>인쇄용 파일</b>(PDF·PNG·JPG)이 있다면 <b>파일 업로드</b> 버튼으로 올려주세요. 올린 뒤 <b>다음</b>을 눌러요 📎',
+            ja: '完成した <b>印刷用ファイル</b>(PDF·PNG·JPG)があれば <b>ファイルアップロード</b> ボタンから。アップ後 <b>次へ</b> 📎',
+            en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. Then tap <b>Next</b> 📎' }
+        },
+        { key: 'editor', mode: 'free', target: ['.qd-head-row', '#soQuickDesignSec'],
+          label: { kr: '🎨 에디터로 직접 디자인', ja: '🎨 エディタでデザイン', en: '🎨 Design it yourself' },
+          sub: { kr: '템플릿에 글씨만 바꾸면 끝', ja: 'テンプレの文字を変えるだけ', en: 'Just edit text on a template' },
+          msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
+            ja: '🎨 テンプレートを表示! お好きなものを選んで <b>文字·写真を変えるだけ</b>。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
+            en: '🎨 Templates are open! Pick one and <b>change text & photos</b>. When done, tap <b>"Done → Continue"</b> below!' }
+        },
+        { key: 'request', target: '#soDesignReqBanner',
+          label: { kr: '✏️ 디자인 의뢰하기', ja: '✏️ デザインを依頼', en: '✏️ Request a design' },
+          sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
+          msg: { kr: '디자인이 어렵다면 전문가에게 맡기세요! 아래 <b>디자인 의뢰</b> 배너를 누르면 디자이너가 멋지게 만들어 드려요 ✏️',
+            ja: 'デザインが難しければプロに! 下の <b>デザイン依頼</b> バナーを押すとデザイナーが仕上げます ✏️',
+            en: 'If designing is hard, leave it to a pro! Tap the <b>Request a design</b> banner below ✏️' }
+        }
+      ]
+    },
+    { // 2) 수량 — 수량 섹션이 있는 제품만 (면적/사이즈 제품은 숨김 → 자동 스킵)
+      target: '#soQtySection', mode: 'wait',
+      hint: { kr: '수량을 골라주세요', ja: '数量をお選びください', en: 'Pick the quantity' },
+      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰',
+        ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰',
+        en: 'Choose the <b>quantity</b>! The more you print, the lower the unit price 💰' },
+      cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
+    },
+    { // 3) 장바구니
+      target: '#soBtnCart', mode: 'wait',
+      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
+      msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
+        ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
+        en: "Now, let's <b>add it to the cart</b> 🛒" }
+    }
+  ];
+
+  var SCENARIOS = [
+    { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
+    // catch-all — 명함 외 모든 제품. 반드시 마지막(먼저 매치된 전용 시나리오 우선).
+    { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
+  ];
   function pickScenario(code) {
     if (!code) return null;
     for (var i = 0; i < SCENARIOS.length; i++) {

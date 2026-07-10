@@ -1159,6 +1159,8 @@ ${hreflangTags('/editor')}
             // 2026-06-10: 일본 注文照会 + 特商法 표기 (JP 매출 신뢰도)
             'jp-track': '/jp_track.html',
             'tokushoho': '/tokushoho.html',
+            // 2026-07-10: 일본어 인쇄통판 SEO 랜딩 (名刺·チラシ·ポスター·大判·冊子 키워드 집중, cafe0101.com/insatsu)
+            'insatsu': '/insatsu.html',
         };
         // 가맹점 스토어 — /store/{slug} (slug 무관, 동적 — store.html 이 slug 읽어 렌더)
         if (path.indexOf('store/') === 0 && path.length > 6) {
