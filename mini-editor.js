@@ -5586,9 +5586,9 @@
               // 모델 선택 (세그먼트)
               '<div style="display:flex; gap:8px; margin-bottom:6px;">' +
                 '<button type="button" class="meAiModelBtn" data-model="flux" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:13px; cursor:pointer; font-family:inherit;">' +
-                  _meAiTr('그림·배경', 'イラスト·背景', 'Art / BG') + '</button>' +
+                  _meAiTr('글씨 없이 이미지만', '文字なし·画像のみ', 'Image only') + '</button>' +
                 '<button type="button" class="meAiModelBtn" data-model="ideogram" style="flex:1; padding:11px 8px; border-radius:10px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:13px; cursor:pointer; font-family:inherit;">' +
-                  _meAiTr('글자·포스터', '文字·ポスター', 'Text / Poster') + '</button>' +
+                  _meAiTr('글씨까지 넣기', '文字も入れる', 'With text') + '</button>' +
               '</div>' +
               '<div id="meAiModelHint" style="font-size:12px; color:#64748b; margin-bottom:12px; line-height:1.5;"></div>' +
               // 비율 선택
@@ -5615,11 +5615,7 @@
             b.addEventListener('click', function () { _meAiRatio = b.getAttribute('data-ratio'); _meAiSyncBtns(); });
         });
         document.getElementById('meAiGoBtn').addEventListener('click', _meAiGenerate);
-        document.getElementById('meAiInsertBtn').addEventListener('click', function () {
-            if (!_meAiPendingUrl) return;
-            try { window._meAddImage(_meAiPendingUrl, {}); } catch (err) { console.warn('[meAi] add', err); }
-            _meAiGenClose();
-        });
+        document.getElementById('meAiInsertBtn').addEventListener('click', _meAiInsert);
         _meAiSyncBtns();
     }
 
@@ -5639,12 +5635,12 @@
         });
         var hint = document.getElementById('meAiModelHint');
         if (hint) hint.textContent = _meAiModel === 'ideogram'
-            ? _meAiTr('“세일 50%” 같은 글자가 이미지에 들어가야 할 때. (일본어·한국어 글자는 깨질 수 있어요)',
-                      '「SALE 50%」など文字を画像に入れたい時。(日本語·韓国語の文字は崩れる場合あり)',
-                      'When text like “SALE 50%” must appear in the image. (CJK text may be imperfect)')
-            : _meAiTr('풍경·패턴·배경 등 그림 위주일 때. 글자는 에디터에서 직접 넣는 걸 추천해요.',
-                      '風景·パターン·背景など絵柄中心の時。文字はエディタで直接入れるのがおすすめ。',
-                      'For scenery, patterns, backgrounds. Add text in the editor for accuracy.');
+            ? _meAiTr('“SALE 50%” 같은 글자를 이미지 안에 넣어요. (일본어·한국어 글자는 깨질 수 있어요 — 정확한 글자는 에디터에서 직접 입력을 권장)',
+                      '「SALE 50%」など文字を画像内に入れます。(日本語·韓国語の文字は崩れる場合あり — 正確な文字はエディタで直接入力を推奨)',
+                      'Puts text like “SALE 50%” inside the image. (CJK text may be imperfect — for exact text, type it in the editor)')
+            : _meAiTr('글자 없이 그림·배경만 생성해요. 글자는 에디터에서 직접 넣으면 정확해요.',
+                      '文字なしで絵柄·背景のみ生成。文字はエディタで直接入れると正確です。',
+                      'Generates art/background only (no text). Add text in the editor for accuracy.');
     }
 
     window._meAiGenOpen = function () {
@@ -5662,6 +5658,47 @@
     };
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
 
+    // 생성 이미지를 대지 꽉 채우고 20% 넘치게(cover×1.2) + 뒤로 보내기(배경/풀블리드).
+    function _meAiInsert() {
+        if (!_meAiPendingUrl) return;
+        var opts = { toBack: true };
+        try {
+            var imgEl = document.querySelector('#meAiResult img');
+            var iw = imgEl && imgEl.naturalWidth, ih = imgEl && imgEl.naturalHeight;
+            if (me && me.natW && me.natH && iw && ih) {
+                var cover = Math.max(me.natW / iw, me.natH / ih) * 1.2; // cover 후 20% 확대
+                var w = iw * cover, h = ih * cover;
+                var x = (me.natW - w) / 2, y = (me.natH - h) / 2; // 중앙 정렬(사방 균등 오버플로)
+                opts.explicitPos = { x: x, y: y, w: w, h: h };
+            } else {
+                opts.fitCanvas = true; // 자연크기 못 구하면 최소한 대지에 맞춤
+            }
+        } catch (err) { console.warn('[meAi] cover calc', err); opts = { fitCanvas: true, toBack: true }; }
+        try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
+        _meAiGenClose();
+    }
+
+    // 로딩 진행바 — 실제 진행률을 알 수 없어 90%까지 부드럽게 채운 뒤 완료 시 100%.
+    var _meAiBarTimer = null;
+    function _meAiBarStart() {
+        _meAiBarStop();
+        var pct = 6;
+        var bar = document.getElementById('meAiBar');
+        if (bar) bar.style.width = pct + '%';
+        _meAiBarTimer = setInterval(function () {
+            pct += (90 - pct) * 0.10 + 0.6;      // 90% 로 점근
+            if (pct > 92) pct = 92;
+            var b = document.getElementById('meAiBar');
+            if (b) b.style.width = pct.toFixed(1) + '%';
+        }, 400);
+    }
+    function _meAiBarDone() {
+        var b = document.getElementById('meAiBar');
+        if (b) b.style.width = '100%';
+        _meAiBarStop();
+    }
+    function _meAiBarStop() { if (_meAiBarTimer) { clearInterval(_meAiBarTimer); _meAiBarTimer = null; } }
+
     async function _meAiGenerate() {
         var promptEl = document.getElementById('meAiPrompt');
         var res = document.getElementById('meAiResult');
@@ -5676,7 +5713,17 @@
             if (err) { err.textContent = _meAiTr('설명을 조금 더 자세히 적어주세요.', 'もう少し詳しく説明してください。', 'Please describe a bit more.'); err.style.display = 'block'; }
             return;
         }
-        if (res) { res.innerHTML = '<span style="color:#64748b;">' + _meAiTr('AI가 만드는 중…', 'AIが生成中…', 'Generating…') + '</span>'; res.style.color = '#64748b'; }
+        if (res) {
+            res.style.color = '';
+            res.innerHTML =
+                '<div style="width:100%; padding:6px 8px;">' +
+                  '<div style="font-size:13px; color:#64748b; margin-bottom:9px;">' + _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight') + '</div>' +
+                  '<div style="height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden;">' +
+                    '<div id="meAiBar" style="height:100%; width:6%; background:linear-gradient(90deg,#6366f1,#4338ca); border-radius:99px; transition:width .45s ease;"></div>' +
+                  '</div>' +
+                '</div>';
+        }
+        _meAiBarStart();
         if (go) go.disabled = true;
         try {
             var url;
@@ -5729,6 +5776,7 @@
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
             if (err) { err.textContent = '⚠️ ' + (e.message || 'error'); err.style.display = 'block'; }
         } finally {
+            _meAiBarStop();
             if (go) go.disabled = false;
         }
     }
