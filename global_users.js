@@ -1712,9 +1712,11 @@ window.markDesignSettled = async (reqId, btn) => {
     if (!confirm('이 건을 디자이너에게 정산완료 처리할까요?')) return;
     if (btn) btn.disabled = true;
     try {
-        const { error } = await sb.from('design_requests').update({ status: 'settled' }).eq('id', reqId);
+        // 2026-07-13: .select() 로 실제 반영 행수 확인 — RLS 로 0행이면 조용히 실패하던 문제(버그#8) 감지.
+        const { data, error } = await sb.from('design_requests').update({ status: 'settled' }).eq('id', reqId).select('id, status');
         if (error) throw error;
-        alert('정산완료 처리되었습니다.');
+        if (!data || !data.length) throw new Error('반영된 건이 없습니다 (권한/대상 확인). 페이지를 새로고침 후 다시 시도해 주세요.');
+        alert('정산완료 처리되었습니다. (디자이너 지갑·미정산 목록에도 자동 반영됩니다)');
         loadDesignOrders();
     } catch (e) { alert('처리 실패: ' + (e.message || e)); if (btn) btn.disabled = false; }
 };
@@ -1722,8 +1724,9 @@ window.unmarkDesignSettled = async (reqId, btn) => {
     if (!confirm('정산완료를 취소할까요? (다시 정산요청 상태가 됩니다)')) return;
     if (btn) btn.disabled = true;
     try {
-        const { error } = await sb.from('design_requests').update({ status: 'settlement_requested' }).eq('id', reqId);
+        const { data, error } = await sb.from('design_requests').update({ status: 'settlement_requested' }).eq('id', reqId).select('id, status');
         if (error) throw error;
+        if (!data || !data.length) throw new Error('반영된 건이 없습니다 (권한/대상 확인). 페이지를 새로고침 후 다시 시도해 주세요.');
         loadDesignOrders();
     } catch (e) { alert('처리 실패: ' + (e.message || e)); if (btn) btn.disabled = false; }
 };
