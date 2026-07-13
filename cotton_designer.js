@@ -2860,9 +2860,23 @@ window._cpSubmitOrder = async function() {
         var _discNotePrefix = _ds.selected ? ('[DISCOUNT:' + _ds.selected + ':' + _discAmt + '] ') : '';
         var _finalAdminNote = _discNotePrefix + (adminNote || '');
 
+        // 2026-07-13: 로그인 회원 주문이면 orders.user_id 연결 — 이게 없어서 패브릭 주문이 전부 '비회원'으로
+        //   들어가 고객 마이페이지 주문내역(user_id 매칭)에 안 뜨던 버그. window.sb(공용 세션) 우선 사용.
+        var _cpUid = null;
+        try {
+            var _authSb = (typeof _cpGetAuthSb === 'function') ? _cpGetAuthSb() : (window.sb || sb);
+            if (_authSb && _authSb.auth && _authSb.auth.getSession) {
+                var _sess = await _authSb.auth.getSession();
+                _cpUid = (_sess && _sess.data && _sess.data.session && _sess.data.session.user) ? _sess.data.session.user.id : null;
+            }
+            if (!_cpUid && (window.currentUser || window._cpCurrentUser)) _cpUid = (window.currentUser || window._cpCurrentUser).id || null;
+        } catch (_cpe) { console.warn('[cotton order] user_id lookup', _cpe); }
+        console.log('[cotton order] user_id =', _cpUid || '(guest)');
+
         // 2) orders 테이블에 등록 → 통합주문관리에 즉시 표시
         const orderInsertPayload = {
             order_date: new Date().toISOString(),
+            user_id: _cpUid,            // 2026-07-13: 회원 연결 (null 이면 비회원)
             manager_name: name,         // 통합주문관리에서 "고객 정보" 컬럼에 표시됨
             phone: phone,
             address: fullAddr,
