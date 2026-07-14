@@ -2898,10 +2898,10 @@ html, body { background: #ffffff !important; }
             <div id="soStickerQtyHint" style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인', '基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引', 'Default 1,000 pcs · 1,000-step · 30% off at 10,000+')}</div>
           </div>
 
-          <!-- 4) 코팅 -->
-          <div id="soStickerCoatingWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">🪞 ${tr('코팅', 'コーティング', 'Coating')}</div>
-            <div id="soStickerCoatingGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+          <!-- 2026-07-14: 4) 종류(용지) 13종 — 이미지 썸네일 그리드. 코팅/별색 대체. -->
+          <div id="soStickerTypeWrap" style="display:none; margin-top:14px;">
+            <div class="so-section-title">🏷️ ${tr('종류', '種類', 'Type')}</div>
+            <div id="soStickerTypeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
           </div>
 
           <!-- 2026-07-14: 4.5) 모양 따기 (커팅) — 네모 그대로 / 사진 모양대로 오리기(+30,000원) -->
@@ -2909,12 +2909,6 @@ html, body { background: #ffffff !important; }
             <div class="so-section-title">${tr('모양 (재단 방식)', '形 (カット方式)', 'Shape (cut)')}</div>
             <div id="soStickerDieCutGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
             <div id="soStickerDieCutHint" style="display:none; margin-top:7px; font-size:11px; color:#78350f; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; line-height:1.55;">${tr('사진 모양대로 오리려면 위 에디터에서 <b>업로드 → 누끼</b>(배경 제거) → <b>칼선</b>을 눌러 모양을 따 주세요.', '写真の形に切るには、上のエディターで <b>アップロード → 切り抜き</b> → <b>カットライン</b> を作成してください。', 'To cut to the photo shape, in the editor above: <b>Upload → Cut-out</b> (remove bg) → <b>Cutline</b>.')}</div>
-          </div>
-
-          <!-- 5) 별색 박 -->
-          <div id="soStickerFoilWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">✨ ${tr('별색 박', '別色箔', 'Spot foil')} (${tr('각', '各', 'each')} +${fmtPrice(50000)})</div>
-            <div id="soStickerFoilGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
           </div>
 
           <!-- 안내 -->
@@ -4546,8 +4540,8 @@ html, body { background: #ffffff !important; }
                     productCode: state.stickerProductCode,
                     w: state.stickerW, h: state.stickerH,
                     qty: state.stickerQty,
-                    coating: state.stickerCoating,
-                    foils: state.stickerFoils,
+                    type: state.stickerType,
+                    shape: state.stickerShape,
                     isFancy: _stIsFancy,
                     dieCut: state.stickerDieCut
                 });
@@ -4697,17 +4691,15 @@ html, body { background: #ffffff !important; }
         if (state.isSticker && state.stickerProductCode) {
             var _stV = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
             var _stFancy = !!(_stV && _stickerIsFancy(_stV));
-            var _stCoatOpt = STICKER_COATINGS.find(function(c){ return c.key === (state.stickerCoating || 'matte'); });
-            var _stFoilLabels = (state.stickerFoils || []).map(function(k){
-                var f = STICKER_FOILS.find(function(x){ return x.key === k; });
-                return f ? _stickerI18n(f, 'name') : k;
-            });
+            var _stTypeOpt = STICKER_TYPES.find(function(c){ return c.key === (state.stickerType || 'art_matte'); });
+            var _stShape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
+            var _stShapeLbl = (_stShape === 'simple') ? (tr('도형따기 +','図形カット +','Shape-cut +') + fmtPrice(10000))
+                            : (_stShape === 'complex') ? (tr('복잡모양 +','複雑カット +','Complex-cut +') + fmtPrice(30000)) : '';
             var _stSizeLbl = _stFancy ? '' : ((state.stickerW||100) + '×' + (state.stickerH||100) + 'mm');
             var _stMeta = '🏷️ ' + (_stV ? _stickerVariantLabel(_stV) : '') +
                           (_stSizeLbl ? ' · ' + _stSizeLbl : '') +
-                          (_stCoatOpt ? ' · ' + _stickerI18n(_stCoatOpt, 'name') : '') +
-                          (_stFoilLabels.length ? ' · ✨ ' + _stFoilLabels.join(', ') : '') +
-                          (state.stickerDieCut ? ' · ' + tr('모양따기 +', '型抜き +', 'Die-cut +') + fmtPrice(30000) : '') +
+                          (_stTypeOpt ? ' · ' + _stickerI18n(_stTypeOpt, 'name') : '') +
+                          (_stShapeLbl ? ' · ' + _stShapeLbl : '') +
                           ' · ' + qty.toLocaleString() + tr('매','枚','pcs');
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _stMeta + '</span><span></span></div>'
@@ -8154,15 +8146,35 @@ html, body { background: #ffffff !important; }
     //     실제 가격 = price × (W × H / 10000) × qty × coatingMult + foilTotal.
     //   - 팬시 스티커: name 에 "팬시" / "fancy" 포함 — price 는 4매 당 단가 (flat).
     //     실제 가격 = price × (qty / 4) × coatingMult + foilTotal.
-    var STICKER_COATINGS = [
-        { key:'matte',       name_kr:'무광코팅 (기본)', name_jp:'マット (基本)', name_us:'Matte (default)', mult:1 },
-        { key:'gloss',       name_kr:'유광코팅',         name_jp:'グロス',         name_us:'Gloss',           mult:1 },
-        { key:'none',        name_kr:'무코팅',           name_jp:'コート無し',     name_us:'No coating',      mult:1 },
-        { key:'transparent', name_kr:'투명용지 (×2)',    name_jp:'透明用紙 (×2)',  name_us:'Clear film (×2)', mult:2 }
-    ];
-    var STICKER_FOILS = [
-        { key:'gold',   name_kr:'금별색', name_jp:'金別色', name_us:'Gold foil',   fee:50000 },
-        { key:'silver', name_kr:'은별색', name_jp:'銀別色', name_us:'Silver foil', fee:50000 }
+    // 2026-07-14: 스티커 종류(용지) 13종 — 기본 4종(mult 1) + 프리미엄 9종(mult 3). 코팅/별색 대체.
+    //   img = /st/*.png|jpg (작업/st, 정적 호스팅). desc = 짧은 안내(KO/JA/EN).
+    var STICKER_TYPES = [
+        { key:'art_matte',   mult:1, img:'/st/st_art_matte.png',   name_kr:'아트지 무코팅',     name_jp:'アート紙 コート無し', name_us:'Art paper (no coat)',
+          desc_kr:'가장 많이 쓰는 기본 스티커. 무코팅 아트지.', desc_jp:'一番人気の基本ステッカー(コート無し)。', desc_us:'Most popular basic sticker (uncoated).' },
+        { key:'matte',       mult:1, img:'/st/st_matte.png',       name_kr:'무광코팅',           name_jp:'マットコート',       name_us:'Matte coating',
+          desc_kr:'은은하고 고급스러운 무광 마감.', desc_jp:'落ち着いた高級感のマット仕上げ。', desc_us:'Elegant, non-glare matte finish.' },
+        { key:'gloss',       mult:1, img:'/st/st_gloss.jpg',       name_kr:'유광코팅',           name_jp:'グロスコート',       name_us:'Gloss coating',
+          desc_kr:'선명하고 반짝이는 유광 마감.', desc_jp:'鮮やかで光沢のあるグロス仕上げ。', desc_us:'Vivid, glossy finish.' },
+        { key:'strong',      mult:1, img:'/st/st_strong.jpg',      name_kr:'강접 스티커',        name_jp:'強粘着ステッカー',   name_us:'Strong-adhesive',
+          desc_kr:'일반보다 끈끈하게 착 붙는 강접착.', desc_jp:'通常より強力に密着する強粘着。', desc_us:'Extra-strong adhesive.' },
+        { key:'removable',   mult:3, img:'/st/st_removable.png',   name_kr:'탈부착 스티커',      name_jp:'貼ってはがせる',     name_us:'Removable',
+          desc_kr:'반복해서 붙였다 떼는 리무벌 스티커.', desc_jp:'繰り返し貼ってはがせるリムーバブル。', desc_us:'Repositionable / removable.' },
+        { key:'sparkle',     mult:3, img:'/st/st_sparkle.jpg',     name_kr:'스파클링 스티커',    name_jp:'スパークリング',     name_us:'Sparkle',
+          desc_kr:'빛에 따라 작은 패턴이 반짝이는 스티커.', desc_jp:'光で小さなパターンがきらめく。', desc_us:'Glittering sparkle pattern.' },
+        { key:'clear',       mult:3, img:'/st/st_clear.jpg',       name_kr:'투명 스티커',        name_jp:'透明ステッカー',     name_us:'Clear',
+          desc_kr:'비닐 재질 투명 스티커. 내수성 우수.', desc_jp:'透明フィルム素材。耐水性◎。', desc_us:'Clear vinyl, water-resistant.' },
+        { key:'holo',        mult:3, img:'/st/st_holo.png',        name_kr:'홀로그램 스티커',    name_jp:'ホログラム',         name_us:'Hologram',
+          desc_kr:'빛에 따라 무지개빛으로 빛나는 스티커.', desc_jp:'光で虹色に輝くホログラム。', desc_us:'Rainbow holographic shine.' },
+        { key:'emboss_gold', mult:3, img:'/st/st_emboss_gold.png', name_kr:'엠보싱 금박',        name_jp:'エンボス金箔',       name_us:'Embossed gold foil',
+          desc_kr:'입체감 있는 고급 금박 엠보싱.', desc_jp:'立体感のある高級金箔エンボス。', desc_us:'Raised premium gold foil.' },
+        { key:'emboss_holo', mult:3, img:'/st/st_emboss_holo.jpg', name_kr:'엠보싱 홀로그램박',  name_jp:'エンボスホログラム箔', name_us:'Embossed holo foil',
+          desc_kr:'입체 엠보싱 + 홀로그램박.', desc_jp:'立体エンボス+ホログラム箔。', desc_us:'Raised holo foil.' },
+        { key:'paper',       mult:3, img:'/st/st_paper.jpg',       name_kr:'종이 스티커',        name_jp:'紙ステッカー',       name_us:'Paper',
+          desc_kr:'필기 가능한 종이 재질(찢어짐).', desc_jp:'筆記可能な紙素材。', desc_us:'Writable paper (tearable).' },
+        { key:'transfer',    mult:3, img:'/st/st_transfer.jpg',    name_kr:'전사지 스티커',      name_jp:'転写ステッカー',     name_us:'Transfer',
+          desc_kr:'배경 없이 그림만 붙는 전사 스티커.', desc_jp:'絵柄だけ転写できるステッカー。', desc_us:'Design-only transfer sticker.' },
+        { key:'single',      mult:3, img:'/st/st_single.png',      name_kr:'낱장 스티커',        name_jp:'1枚ステッカー',      name_us:'Single sheet',
+          desc_kr:'한 장씩 낱개로 재단된 스티커.', desc_jp:'1枚ずつカットされたステッカー。', desc_us:'Individually cut single stickers.' }
     ];
     // 캐시: admin_products 에서 가져온 sticker variant 목록.
     var _stickerVariantsCache = null;
@@ -8221,29 +8233,49 @@ html, body { background: #ffffff !important; }
         if (!v) return 0;
         var basePrice = Number(v.price) || 0;
         var qty = Math.max(1, Number(stState.qty) || 1000);
-        // 코팅 배수 (투명용지만 2x)
-        var coat = STICKER_COATINGS.find(function(c){ return c.key === (stState.coating || 'matte'); });
-        var coatMult = coat ? (coat.mult || 1) : 1;
-        // 2026-07-14: 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
-        //   (기존엔 총액을 마지막에 round → 제품페이지=60원×1000=60,000, 카트=round(총액)=59,858 로 어긋남)
+        // 2026-07-14: 종류(용지) 배수 — 기본 4종 1, 프리미엄 9종 3.
+        var typeMult = _stickerTypeMult(stState.type);
+        // 2026-07-14: 수량 단가배수 — 10:0.6 / 50:0.7 / 100:0.8 / 500:0.9 / 1000:1.0 (개당 단가에 곱)
+        var qtyMult = stState.isFancy ? 1 : _stickerQtyMult(qty);
+        // 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
         var perUnit;
         if (stState.isFancy) {
             perUnit = basePrice / 4;   // 팬시는 4매 단위 판매 → 개당 = 기준가/4
         } else {
             var w = Math.max(10, Number(stState.w) || 100);
             var h = Math.max(10, Number(stState.h) || 100);
-            perUnit = basePrice * ((w * h) / 10000);
-            // 2026-06-25: 수량 할인 폐지 (구: 1만매 이상 30% 할인)
+            perUnit = basePrice * ((w * h) / 10000) * typeMult * qtyMult;
         }
-        perUnit *= coatMult;
         var subtotal = Math.round(perUnit) * qty;
-        // 별색 박 (각 +50,000원 flat)
-        var foilTotal = 0;
-        var foils = stState.foils || [];
-        STICKER_FOILS.forEach(function(f){ if (foils.indexOf(f.key) >= 0) foilTotal += f.fee; });
-        // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — 정액 +30,000원 (수량 무관)
-        var dieCutFee = stState.dieCut ? 30000 : 0;
-        return subtotal + foilTotal + dieCutFee;
+        // 2026-07-14: 모양(재단) 정액 — 사각 0 / 간단도형 +10,000 / 복잡모양 +30,000. (구 dieCut 토글 호환: dieCut=true → complex)
+        var shapeFee = _stickerShapeFee(stState.shape, stState.dieCut);
+        return subtotal + shapeFee;
+    }
+    // 종류(용지) 배수: STICKER_TYPES[type].mult (기본 4종 1 / 나머지 3). 기본값 art_matte(1).
+    function _stickerTypeMult(typeKey) {
+        var t = STICKER_TYPES.find(function(x){ return x.key === (typeKey || 'art_matte'); });
+        return t ? (t.mult || 1) : 1;
+    }
+    // 수량 단가배수: 앵커 {10:.6, 50:.7, 100:.8, 500:.9, 1000:1}. 사이 값은 선형보간, 범위 밖은 클램프.
+    function _stickerQtyMult(qty) {
+        var A = [[10,0.6],[50,0.7],[100,0.8],[500,0.9],[1000,1.0]];
+        qty = Math.max(1, Number(qty) || 1000);
+        if (qty <= A[0][0]) return A[0][1];
+        if (qty >= A[A.length-1][0]) return A[A.length-1][1];
+        for (var i = 0; i < A.length - 1; i++) {
+            if (qty >= A[i][0] && qty <= A[i+1][0]) {
+                var t = (qty - A[i][0]) / (A[i+1][0] - A[i][0]);
+                return A[i][1] + t * (A[i+1][1] - A[i][1]);
+            }
+        }
+        return 1.0;
+    }
+    // 모양(재단) 정액. shape: 'square'|'simple'|'complex'. (구 dieCut boolean → complex 로 매핑)
+    function _stickerShapeFee(shape, legacyDieCut) {
+        if (!shape) shape = legacyDieCut ? 'complex' : 'square';
+        if (shape === 'simple') return 10000;
+        if (shape === 'complex') return 30000;
+        return 0;
     }
 
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
@@ -10894,8 +10926,8 @@ html, body { background: #ffffff !important; }
                     var fancy = _stickerIsFancy(v);
                     // 2026-07-03: 카드 가격 = 실제 계산가(통화 환산). 재단 스티커는 1,000매 기준(사장님 요청), 팬시는 4매 세트 기준.
                     var _stHintPrice = fancy
-                        ? _stickerCalcPrice({ productCode: v.code, qty: 4, coating: 'matte', isFancy: true })
-                        : _stickerCalcPrice({ productCode: v.code, w: 100, h: 100, qty: 1000, coating: 'matte', isFancy: false });
+                        ? _stickerCalcPrice({ productCode: v.code, qty: 4, type: 'art_matte', isFancy: true })
+                        : _stickerCalcPrice({ productCode: v.code, w: 100, h: 100, qty: 1000, type: 'art_matte', shape: 'square', isFancy: false });
                     var priceHint = fancy
                         ? ('4' + tr('매','枚','pc') + ' ' + fmtPrice(_stHintPrice))
                         : ('100×100mm 1,000' + tr('매','枚','pcs') + ' ' + fmtPrice(_stHintPrice) + '~');
@@ -10912,12 +10944,11 @@ html, body { background: #ffffff !important; }
         }
         var sizeW = document.getElementById('soStickerSizeWrap');
         var qtyW  = document.getElementById('soStickerQtyWrap');
-        var coatW = document.getElementById('soStickerCoatingWrap');
-        var foilW = document.getElementById('soStickerFoilWrap');
+        var typeW = document.getElementById('soStickerTypeWrap');
         var notice= document.getElementById('soStickerNotice');
         var finalFileW = document.getElementById('soStickerFinalFileWrap');
         if (!state.stickerProductCode) {
-            [sizeW, qtyW, coatW, foilW, notice, finalFileW].forEach(function(el){ if (el) el.style.display='none'; });
+            [sizeW, qtyW, typeW, notice, finalFileW].forEach(function(el){ if (el) el.style.display='none'; });
             return;
         }
         var picked = variants.find(function(x){ return x.code === state.stickerProductCode; });
@@ -10933,7 +10964,8 @@ html, body { background: #ffffff !important; }
         var qtyEl = document.getElementById('soStickerQty');
         var hintEl = document.getElementById('soStickerQtyHint');
         var qtyGrid = document.getElementById('soStickerQtyGrid');
-        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : [1000, 2000, 3000, 5000, 10000];
+        // 2026-07-14: 수량 프리셋 10/50/100/500/1000 (개당 단가배수). 팬시는 4매 단위 유지.
+        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : [10, 50, 100, 500, 1000];
         var curQty = state.stickerQty || (isFancy ? 4 : 1000);
         if (qtyGrid) {
             qtyGrid.innerHTML = qtyPresets.map(function(q){
@@ -10941,32 +10973,34 @@ html, body { background: #ffffff !important; }
                 var bgStyle = sel ? 'linear-gradient(135deg,#6366f1,#4338ca)' : '#fff';
                 var color = sel ? '#fff' : '#1f2937';
                 var border = sel ? '#4338ca' : '#e7e5e4';
-                var badge = (!isFancy && q === 10000) ? '<span style="display:block; font-size:9px; font-weight:800; color:' + (sel?'#fef3c7':'#dc2626') + '; margin-top:2px;">30%↓</span>' : '';
                 return '<button type="button" onclick="window._soStickerPickQty(' + q + ')" '
                     + 'style="padding:8px 4px; border:2px solid ' + border + '; background:' + bgStyle + '; color:' + color + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center;">'
-                    + q.toLocaleString() + tr('매','枚','pcs') + badge
+                    + q.toLocaleString() + tr('매','枚','pcs')
                     + '</button>';
             }).join('');
         }
         if (qtyEl) {
-            qtyEl.min = isFancy ? 4 : 1000;
-            qtyEl.step = isFancy ? 4 : 1000;
+            qtyEl.min = isFancy ? 4 : 10;
+            qtyEl.step = isFancy ? 4 : 10;
             if (document.activeElement !== qtyEl) qtyEl.value = curQty;
         }
         if (hintEl) {
             hintEl.textContent = isFancy
                 ? tr('기본 4매 · 4매 단위로 주문 가능','基本4枚 · 4枚単位','Default 4 pcs · 4-step orders')
-                : tr('기본 1,000매 · 1,000매 단위로 주문 가능','基本1,000枚 · 1,000枚単位','Default 1,000 pcs · 1,000-step');
+                : tr('10 / 50 / 100 / 500 / 1,000매 · 수량이 많을수록 개당 단가가 올라가요','10/50/100/500/1,000枚 · 数量が多いほど1枚単価UP','10/50/100/500/1,000 pcs · higher qty = higher unit price');
         }
-        // 코팅
-        if (coatW) coatW.style.display = '';
-        var coatGrid = document.getElementById('soStickerCoatingGrid');
-        if (coatGrid) {
-            coatGrid.innerHTML = STICKER_COATINGS.map(function(c){
-                var sel = ((state.stickerCoating || 'matte') === c.key);
-                return '<button type="button" onclick="window._soStickerPickCoating(\'' + c.key + '\')" '
-                    + 'style="padding:9px 8px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; color:' + (sel?'#3730a3':'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center;">'
-                    + (sel?'✓ ':'') + _stickerI18n(c, 'name')
+        // 2026-07-14: 종류(용지) 13종 — 이미지 썸네일 그리드
+        if (typeW) typeW.style.display = '';
+        var typeGrid = document.getElementById('soStickerTypeGrid');
+        if (typeGrid) {
+            typeGrid.innerHTML = STICKER_TYPES.map(function(c){
+                var sel = ((state.stickerType || 'art_matte') === c.key);
+                var mb = (c.mult && c.mult !== 1) ? ('<span style="display:block; font-size:9.5px; font-weight:800; color:#be185d; margin-top:1px;">×' + c.mult + '</span>') : '';
+                return '<button type="button" onclick="window._soStickerPickType(\'' + c.key + '\')" title="' + String(_stickerI18n(c,'desc')).replace(/"/g,'&quot;') + '" '
+                    + 'style="padding:6px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; border-radius:10px; cursor:pointer; font-family:inherit; text-align:center;">'
+                    + '<img src="' + c.img + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:7px; background:#f8fafc;" onerror="this.style.opacity=0.2">'
+                    + '<div style="font-size:11px; font-weight:800; color:' + (sel?'#3730a3':'#0f172a') + '; margin-top:4px; line-height:1.25;">' + (sel?'✓ ':'') + _stickerI18n(c, 'name') + '</div>'
+                    + mb
                     + '</button>';
             }).join('');
         }
@@ -10991,19 +11025,6 @@ html, body { background: #ffffff !important; }
             var dcHint = document.getElementById('soStickerDieCutHint');
             if (dcHint) dcHint.style.display = state.stickerDieCut ? '' : 'none';
         }
-        // 별색 박
-        if (foilW) foilW.style.display = '';
-        var foilGrid = document.getElementById('soStickerFoilGrid');
-        if (foilGrid) {
-            var foils = state.stickerFoils || [];
-            foilGrid.innerHTML = STICKER_FOILS.map(function(f){
-                var sel = (foils.indexOf(f.key) >= 0);
-                return '<button type="button" onclick="window._soStickerToggleFoil(\'' + f.key + '\')" '
-                    + 'style="padding:10px 8px; border:2px solid ' + (sel?'#b45309':'#e7e5e4') + '; background:' + (sel?'linear-gradient(135deg,#fef3c7,#fde68a)':'#fff') + '; color:' + (sel?'#78350f':'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center;">'
-                    + (sel?'✓ ':'') + _stickerI18n(f, 'name') + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel?'#92400e':'#64748b') + '; margin-top:2px;">+' + fmtPrice(f.fee) + '</span>'
-                    + '</button>';
-            }).join('');
-        }
         if (notice) notice.style.display = '';
     }
     window._soStickerPickVariant = function(code) {
@@ -11023,8 +11044,7 @@ html, body { background: #ffffff !important; }
         }
         if (!state.stickerW) state.stickerW = 100;
         if (!state.stickerH) state.stickerH = 100;
-        if (!state.stickerCoating) state.stickerCoating = 'matte';
-        if (!state.stickerFoils)   state.stickerFoils   = [];
+        if (!state.stickerType) state.stickerType = 'art_matte';
         // 2026-06-16: 변형 선택 시 상단 상품 헤더 (이름·설명·이미지) 도 같이 스왑.
         try {
             if (picked) {
@@ -11153,7 +11173,7 @@ html, body { background: #ffffff !important; }
         _soStickerRender();
         recalc();
     };
-    window._soStickerPickCoating = function(k) { state.stickerCoating = k; _soStickerRender(); recalc(); };
+    window._soStickerPickType = function(k) { state.stickerType = k; _soStickerRender(); recalc(); };
     // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — true 면 +30,000원. 위 에디터에서 누끼·칼선으로 모양 작업.
     window._soStickerPickDieCut = function(v) { state.stickerDieCut = !!v; _soStickerRender(); recalc(); };
     // 2026-07-14: 튜토리얼용 — 모양 선택(사진모양/네모). 사진모양이면 에디터에서 자동 배경제거+칼선. 완료 후 진행 이벤트.
@@ -11163,15 +11183,6 @@ html, body { background: #ffffff !important; }
         if (on) { try { if (typeof window._meAutoBgAndCutline === 'function') window._meAutoBgAndCutline(); } catch(_){} }
         try { document.dispatchEvent(new CustomEvent('me-sticker-shape-chosen')); } catch(_){}
     };
-    window._soStickerToggleFoil = function(k) {
-        if (!state.stickerFoils) state.stickerFoils = [];
-        var idx = state.stickerFoils.indexOf(k);
-        if (idx >= 0) state.stickerFoils.splice(idx, 1);
-        else state.stickerFoils.push(k);
-        _soStickerRender();
-        recalc();
-    };
-
     // 2026-06-13: 칼선작업 (누끼·칼선·받침) — 등신대 POP, 키링, 원판 등에 디자이너 작업 추가
     //   캐릭터 1개당 +10,000원. 작업지시서와 디자이너 보드에 모두 표시됨.
     window._soIsCutlineEligible = function(p) {
@@ -12410,8 +12421,7 @@ html, body { background: #ffffff !important; }
             }
             state.stickerW           = state.stickerW || 100;
             state.stickerH           = state.stickerH || 100;
-            state.stickerCoating     = state.stickerCoating || 'matte';
-            state.stickerFoils       = state.stickerFoils || [];
+            state.stickerType        = state.stickerType || 'art_matte';
             if (state.stickerDieCut == null) state.stickerDieCut = false;   // 2026-07-14: 모양 따기 기본 = 네모
             // 변형 캐시 미리 채움 + 첫 렌더. 팬시 감지 후 qty 기본값 결정.
             try {
@@ -15624,7 +15634,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-03: 스티커 옵션 (카테고리/모양/사이즈/용지/수량)
             sticker: state.isSticker ? {
                 productCode: state.stickerProductCode, w: state.stickerW, h: state.stickerH,
-                qty: state.stickerQty, coating: state.stickerCoating, foils: (state.stickerFoils || []).slice(),
+                qty: state.stickerQty, type: state.stickerType, shape: state.stickerShape || (state.stickerDieCut ? 'complex' : 'square'),
+                shapeKind: state.stickerShapeKind || null,
                 dieCut: !!state.stickerDieCut,
                 isFancy: !!(_stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode && _stickerIsFancy(x); }))
             } : null,
@@ -17226,8 +17237,9 @@ html, body { background: #ffffff !important; }
                 state.stickerW           = item.sticker.w || 100;
                 state.stickerH           = item.sticker.h || 100;
                 state.stickerQty         = item.sticker.qty || 1000;
-                state.stickerCoating     = item.sticker.coating || 'matte';
-                state.stickerFoils       = (item.sticker.foils || []).slice();
+                state.stickerType        = item.sticker.type || 'art_matte';
+                state.stickerShape       = item.sticker.shape || (item.sticker.dieCut ? 'complex' : 'square');
+                state.stickerShapeKind   = item.sticker.shapeKind || null;
                 state.stickerDieCut      = !!item.sticker.dieCut;
                 if (typeof _soStickerRender === 'function') _soStickerRender();
             }
