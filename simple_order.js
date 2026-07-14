@@ -8212,24 +8212,27 @@ html, body { background: #ffffff !important; }
         if (!v) return 0;
         var basePrice = Number(v.price) || 0;
         var qty = Math.max(1, Number(stState.qty) || 1000);
-        var subtotal;
+        // 코팅 배수 (투명용지만 2x)
+        var coat = STICKER_COATINGS.find(function(c){ return c.key === (stState.coating || 'matte'); });
+        var coatMult = coat ? (coat.mult || 1) : 1;
+        // 2026-07-14: 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
+        //   (기존엔 총액을 마지막에 round → 제품페이지=60원×1000=60,000, 카트=round(총액)=59,858 로 어긋남)
+        var perUnit;
         if (stState.isFancy) {
-            subtotal = basePrice * (qty / 4);
+            perUnit = basePrice / 4;   // 팬시는 4매 단위 판매 → 개당 = 기준가/4
         } else {
             var w = Math.max(10, Number(stState.w) || 100);
             var h = Math.max(10, Number(stState.h) || 100);
-            var areaMult = (w * h) / 10000;
-            subtotal = basePrice * areaMult * qty;
+            perUnit = basePrice * ((w * h) / 10000);
             // 2026-06-25: 수량 할인 폐지 (구: 1만매 이상 30% 할인)
         }
-        // 코팅 배수 (투명용지만 2x)
-        var coat = STICKER_COATINGS.find(function(c){ return c.key === (stState.coating || 'matte'); });
-        if (coat) subtotal *= (coat.mult || 1);
+        perUnit *= coatMult;
+        var subtotal = Math.round(perUnit) * qty;
         // 별색 박 (각 +50,000원 flat)
         var foilTotal = 0;
         var foils = stState.foils || [];
         STICKER_FOILS.forEach(function(f){ if (foils.indexOf(f.key) >= 0) foilTotal += f.fee; });
-        return Math.round(subtotal + foilTotal);
+        return subtotal + foilTotal;
     }
 
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
