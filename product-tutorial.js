@@ -903,8 +903,21 @@
         en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
     },
     GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
-    PROOF_STEP,       // 6) 시안 최종 확인
-    GENERIC_STEPS[2]  // 7) 장바구니
+    { // 6) 모양 선택 (스티커만) — 사진 모양대로 오리기(+30,000) / 네모. 없는 제품은 자동 스킵.
+      target: ['#soStickerDieCutWrap', '#embeddedEditorPreview'], mode: 'wait', waitEvent: 'me-sticker-shape-chosen',
+      onEnter: function () { return _secVisible('#soStickerDieCutWrap'); },
+      buttons: [
+        { action: '_soTutStickerDieCut', arg: '1', label: { kr: '✂️ 사진 모양대로 오리기 (+30,000원)', ja: '✂️ 写真の形にカット (+¥3,000)', en: '✂️ Cut to photo shape (+₩30,000)' } },
+        { action: '_soTutStickerDieCut', arg: '0', label: { kr: '⬜ 네모 모양 그대로', ja: '⬜ 四角のまま', en: '⬜ Keep it square' } }
+      ],
+      msg: { kr: '스티커를 <b>어떤 모양</b>으로 만들까요?<br>• <b>사진 모양대로 오리기</b> — 배경을 지우고 그림 외곽을 따서 예쁘게! <b>(+30,000원)</b><br>• <b>네모 모양 그대로</b> — 사각형으로 그대로.',
+        ja: 'ステッカーを <b>どの形</b> にしますか?<br>• <b>写真の形にカット</b> — 背景を消して形通りに! <b>(+¥3,000)</b><br>• <b>四角のまま</b> — 四角形で。',
+        en: 'What <b>shape</b> for your sticker?<br>• <b>Cut to photo shape</b> — remove bg & die-cut the outline! <b>(+₩30,000)</b><br>• <b>Keep it square</b> — plain rectangle.' },
+      hint: { kr: '사진 모양대로 고르면 자동으로 배경제거+칼선을 따드려요', ja: '写真の形を選ぶと自動で背景除去+カットライン', en: 'Photo shape auto-runs bg-removal + cutline' },
+      cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
+    },
+    PROOF_STEP,       // 7) 시안 최종 확인
+    GENERIC_STEPS[2]  // 8) 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════

@@ -11156,6 +11156,13 @@ html, body { background: #ffffff !important; }
     window._soStickerPickCoating = function(k) { state.stickerCoating = k; _soStickerRender(); recalc(); };
     // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — true 면 +30,000원. 위 에디터에서 누끼·칼선으로 모양 작업.
     window._soStickerPickDieCut = function(v) { state.stickerDieCut = !!v; _soStickerRender(); recalc(); };
+    // 2026-07-14: 튜토리얼용 — 모양 선택(사진모양/네모). 사진모양이면 에디터에서 자동 배경제거+칼선. 완료 후 진행 이벤트.
+    window._soTutStickerDieCut = function(arg) {
+        var on = (String(arg) === '1');
+        try { if (typeof window._soStickerPickDieCut === 'function') window._soStickerPickDieCut(on); } catch(_){}
+        if (on) { try { if (typeof window._meAutoBgAndCutline === 'function') window._meAutoBgAndCutline(); } catch(_){} }
+        try { document.dispatchEvent(new CustomEvent('me-sticker-shape-chosen')); } catch(_){}
+    };
     window._soStickerToggleFoil = function(k) {
         if (!state.stickerFoils) state.stickerFoils = [];
         var idx = state.stickerFoils.indexOf(k);
