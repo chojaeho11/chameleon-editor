@@ -9620,9 +9620,21 @@ html, body { background: #ffffff !important; }
                 if (wEl) wEl.step = '10';
                 if (hEl) hEl.step = '10';
                 var _plBad = (wCm % 10 !== 0) || (hCm % 10 !== 0);
+                // 2026-07-14: 초저가 현수막(44578) 롤 폭 최대 1600mm(160cm) — 롤이라 한쪽만 160cm 이내면 됨.
+                //   가로·세로 둘 다 160cm 초과면 롤에 안 들어감 → UV 3미터 대폭현수막(44578_copy) 안내·이동.
+                var _plCode = (state.product && state.product.code) || '';
+                var _plOversized = (_plCode === '44578') && (wCm > 160) && (hCm > 160);
+                state._placardOversized = _plOversized;
                 state._placardSizeInvalid = _plBad || wCm < 10 || hCm < 10;
                 _plNote.style.display = '';
-                if (_plBad) {
+                if (_plOversized) {
+                    _plNote.style.background = '#fff7ed'; _plNote.style.border = '1.5px solid #fb923c'; _plNote.style.color = '#9a3412';
+                    _plNote.innerHTML = '⚠ ' + tr(
+                        '초저가 현수막은 롤 폭이 <b>최대 1600mm(160cm)</b>예요. 롤이라 <b>가로·세로 한쪽만 160cm 이내</b>면 되는데, 지금 ' + wCm + '×' + hCm + 'cm 는 <b>둘 다 초과</b>라 제작이 안 돼요. 더 넓은 <b>UV 3미터 대폭현수막</b>으로 주문해 주세요.',
+                        '激安横断幕はロール幅 <b>最大1600mm(160cm)</b>。ロールなので <b>横・縦どちらかが160cm以内</b> ならOKですが、現在 ' + wCm + '×' + hCm + 'cm は <b>両方超過</b> で製作できません。より広い <b>UV3メートル大幅横断幕</b> をご利用ください。',
+                        'The low-cost banner roll is <b>max 1600 mm (160 cm)</b> wide. Since it is a roll, <b>one side within 160 cm</b> is enough — but ' + wCm + ' x ' + hCm + ' cm exceeds on <b>both</b>. Please use the wider <b>UV 3 m banner</b>.'
+                    ) + '<div style="margin-top:8px;"><button type="button" onclick="window._soSwitchPlacard(\'44578_copy\')" style="width:100%; padding:9px; border:0; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12.5px;">' + tr('UV 3미터 대폭현수막으로 변경 →', 'UV3メートル大幅横断幕へ変更 →', 'Switch to UV 3 m banner →') + '</button></div>';
+                } else if (_plBad) {
                     _plNote.style.background = '#fef2f2'; _plNote.style.border = '1.5px solid #fca5a5'; _plNote.style.color = '#b91c1c';
                     _plNote.innerHTML = '⚠ ' + tr(
                         '현수막은 <b>가로·세로 10cm 단위</b>로만 주문할 수 있어요. 현재 ' + wCm + '×' + hCm + 'cm 는 이대로 주문되지 않습니다. (예: 65 → 60 또는 70)',
@@ -9640,6 +9652,7 @@ html, body { background: #ffffff !important; }
             } else {
                 _plNote.style.display = 'none';
                 state._placardSizeInvalid = false;
+                state._placardOversized = false;
             }
         }
         var unitEl = document.getElementById('soCustomUnitPrice');
@@ -16066,6 +16079,17 @@ html, body { background: #ffffff !important; }
         if (typeof window._soIsPlacardProduct === 'function' && window._soIsPlacardProduct(state.product)) {
             var _plWc = Math.round(Number(state.customW) || 0);
             var _plHc = Math.round(Number(state.customH) || 0);
+            // 2026-07-14: 초저가 현수막 롤 폭 1600mm(160cm) 초과 — 가로·세로 둘 다 160cm 초과면 UV 3미터로 이동.
+            if ((state.product.code === '44578') && _plWc > 160 && _plHc > 160) {
+                var _moveUv = false;
+                try { _moveUv = confirm(tr(
+                    '초저가 현수막은 롤 폭이 최대 1600mm(160cm)라, 가로·세로 한쪽은 160cm 이내여야 합니다.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm (둘 다 초과)\n\n확인을 누르면 더 넓은 [UV 3미터 대폭현수막] 으로 이동합니다.',
+                    '激安横断幕はロール幅 最大1600mm(160cm)。横・縦のどちらかは160cm以内が必要です。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm（両方超過）\n\nOKを押すと [UV3メートル大幅横断幕] へ移動します。',
+                    'The low-cost banner roll is max 1600 mm (160 cm) wide — one side must be within 160 cm.\nEntered: ' + _plWc + ' x ' + _plHc + ' cm (both exceed)\n\nPress OK to switch to the wider [UV 3 m banner].'
+                )); } catch(e) {}
+                if (_moveUv) { try { window._soSwitchPlacard('44578_copy'); } catch(_){} }
+                return false;
+            }
             if (_plWc < 10 || _plHc < 10 || _plWc % 10 !== 0 || _plHc % 10 !== 0) {
                 try { alert(tr(
                     '현수막은 가로·세로를 10cm 단위로만 주문할 수 있습니다.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm\n(예: 300 × 60 가능 / 300 × 65 불가)',
