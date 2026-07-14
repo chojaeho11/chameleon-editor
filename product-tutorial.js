@@ -844,6 +844,52 @@
   ];
 
   // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 사이즈 지정 제품 (스티커 / 실사출력 / 현수막 / 광고인쇄 등)  2026-07-14
+  //  사용자 요청: 사이즈를 정해야 하는 제품은 먼저 우측의 사이즈·용지·별색·수량 옵션을
+  //  순서대로 고른 뒤에 디자인 방법 선택 화면이 나오게. 없는 옵션 단계는 onEnter 로 자동 스킵.
+  //  (generic catch-all 앞에 두되, 우측 사이즈 섹션이 보일 때만 매치 → 그 외엔 generic 유지)
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsSizeProduct() {
+    try {
+      return _secVisible('#soStickerSection') || _secVisible('#soStickerSizeWrap')
+          || _secVisible('#soCustomSizeSection') || _secVisible('#soRealPrintSection');
+    } catch (_) { return false; }
+  }
+  var SIZE_PRODUCT_STEPS = [
+    { // 1) 사이즈
+      target: ['#soStickerSizeWrap', '#soCustomSizeSection', '#soRealPrintSection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerSizeWrap') || _secVisible('#soCustomSizeSection') || _secVisible('#soRealPrintSection'); },
+      msg: { kr: '먼저 <b>사이즈</b>를 정해요. 가격은 <b>사이즈(면적)에 따라 자동 계산</b>돼요.',
+        ja: 'まず <b>サイズ</b> を決めます。価格は <b>サイズ(面積)で自動計算</b> されます。',
+        en: 'First set the <b>size</b> — the price is <b>calculated automatically</b> from it.' },
+      cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
+    },
+    { // 2) 용지(코팅)
+      target: '#soStickerCoatingWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerCoatingWrap'); },
+      msg: { kr: '<b>용지(코팅)</b>를 골라요. 무광·유광·무코팅·투명용지 중에서 선택할 수 있어요.',
+        ja: '<b>用紙(コーティング)</b> を選びます。マット·グロス·コート無し·透明から選べます。',
+        en: 'Choose the <b>paper/coating</b> — matte, gloss, none, or transparent.' }
+    },
+    { // 3) 별색 박 (선택)
+      target: '#soStickerFoilWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerFoilWrap'); },
+      msg: { kr: '금·은 <b>별색 박</b>이 필요하면 선택해요 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
+        ja: '金·銀の <b>別色箔</b> が必要なら選択 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
+        en: 'Add <b>gold/silver spot foil</b> if you like <span style="color:#94a3b8;">(optional — or tap Next)</span>.' }
+    },
+    { // 4) 수량
+      target: ['#soStickerQtyWrap', '#soQtySection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerQtyWrap') || _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰',
+        ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰',
+        en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
+    },
+    GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    GENERIC_STEPS[2]  // 6) 장바구니
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
   //  시나리오 — 허니콤 가벽 (hb_dw_*)  2026-07-10
   //  디자인 방법(공통) → 가벽 사이즈 → 단/양면 → 공간모양 → 추가옵션(설명) →
   //  시공/배송(설명) → 배송희망일(설명) → 장바구니. 각 단계 실제 섹션을 하이라이트.
@@ -996,6 +1042,9 @@
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
+    // 2026-07-14: 사이즈 지정 제품(스티커/실사출력/현수막/광고인쇄 등) — 우측 사이즈·옵션 먼저, 그다음 디자인 방법.
+    //   match 는 코드 대신 우측 사이즈 섹션 노출 여부로 판정(그 외엔 generic). 반드시 generic 앞.
+    { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: SIZE_PRODUCT_STEPS },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
   ];
