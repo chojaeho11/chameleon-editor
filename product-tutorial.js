@@ -1159,28 +1159,28 @@
         ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! More prints = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' }
     },
-    GENERIC_STEPS[0], // 4) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
-    { // 5) 용지
+    { // 4) 용지
       target: '#soLfPaperToggle', mode: 'next',
       onEnter: function () { return _secVisible('#soLfPaperToggle'); },
       msg: { kr: '<b>용지</b>를 골라요. 기본은 전단에 많이 쓰는 스노우지 180g이에요. 눌러서 다른 용지도 볼 수 있어요. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
         ja: '<b>用紙</b>を選びます。基本はチラシによく使うスノー紙180g。押すと他の用紙も見られます。<span style="color:#94a3b8;">(全用紙同価格イベント)</span>',
         en: 'Choose the <b>paper</b>. Default is Snow 180g (popular for flyers). Tap to see others. <span style="color:#94a3b8;">(all papers same price event)</span>' }
     },
-    { // 6) 박 추가 (선택)
+    { // 5) 박 추가 (선택)
       target: '#soLfFoilToggle', mode: 'next',
       onEnter: function () { return _secVisible('#soLfFoilToggle'); },
       msg: { kr: '금·은·홀로그램 등 <b>박</b> 마감이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
         ja: '金·銀·ホログラムなどの <b>箔</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
         en: 'Add <b>foil</b> (gold/silver/holographic) if you like <span style="color:#94a3b8;">(optional — or Next)</span>.' }
     },
-    { // 7) 후가공 추가 (선택)
+    { // 6) 후가공 추가 (선택)
       target: '#soLfFinishToggle', mode: 'next',
       onEnter: function () { return _secVisible('#soLfFinishToggle'); },
-      msg: { kr: '형압·미싱·오시·타공·귀도리 등 <b>특수 후가공</b>이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항)</span>.',
-        ja: 'エンボス·ミシン·スジ·穴あけ·角丸などの <b>特殊加工</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意)</span>。',
-        en: 'Add <b>special finishing</b> (emboss, perforation, scoring, hole, round-corner) if needed <span style="color:#94a3b8;">(optional)</span>.' }
+      msg: { kr: '형압·미싱·오시·타공·귀도리 등 <b>특수 후가공</b>이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항 — 없으면 다음)</span>.',
+        ja: 'エンボス·ミシン·スジ·穴あけ·角丸などの <b>特殊加工</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
+        en: 'Add <b>special finishing</b> (emboss, perforation, scoring, hole, round-corner) if needed <span style="color:#94a3b8;">(optional — or Next)</span>.' }
     },
+    GENERIC_STEPS[0], // 7) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰) — 옵션 다 고른 뒤 디자인
     PROOF_STEP,       // 8) 시안 최종 확인
     GENERIC_STEPS[2]  // 9) 장바구니
   ];
