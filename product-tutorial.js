@@ -904,7 +904,8 @@
     },
     GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
     { // 6) 모양 선택 (스티커만) — 사진 모양대로 오리기(+30,000) / 네모. 없는 제품은 자동 스킵.
-      target: ['#soStickerDieCutWrap', '#embeddedEditorPreview'], mode: 'wait', waitEvent: 'me-sticker-shape-chosen',
+      //  target 은 대지(#meStage)만 — 에디터 전체를 잡으면 하이라이트가 위로 치우쳐 잘림(사용자 지적). 대지를 화면 중앙에.
+      target: '#meStage', mode: 'wait', waitEvent: 'me-sticker-shape-chosen',
       onEnter: function () { return _secVisible('#soStickerDieCutWrap'); },
       buttons: [
         { action: '_soTutStickerDieCut', arg: '1', label: { kr: '✂️ 사진 모양대로 오리기 (+30,000원)', ja: '✂️ 写真の形にカット (+¥3,000)', en: '✂️ Cut to photo shape (+₩30,000)' } },
