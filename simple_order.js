@@ -11088,6 +11088,7 @@ html, body { background: #ffffff !important; }
         if (shW) shW.style.display = isFancy ? 'none' : '';
         if (!isFancy) {
             var _shape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
+            window._soStickerShapeCur = _shape;
             // 상단: 사각 / 복잡모양
             var topGrid = document.getElementById('soStickerShapeTopGrid');
             if (topGrid) {
@@ -11365,6 +11366,7 @@ html, body { background: #ffffff !important; }
     // 2026-07-14: 모양(재단) 선택. shape='square'|'simple'|'complex'. simple 이면 kind(9도형) 선택 시 편집기에 칼선 생성.
     window._soStickerPickShape = function(shape, kind) {
         state.stickerShape = shape || 'square';
+        window._soStickerShapeCur = state.stickerShape;   // 2026-07-14: 튜토리얼 복잡모양 누끼+칼선 스텝 판정용
         state.stickerDieCut = (shape === 'complex');   // 구 dieCut 호환 유지
         if (shape === 'simple' && kind) state.stickerShapeKind = kind;
         if (shape !== 'simple') state.stickerShapeKind = null;

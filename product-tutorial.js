@@ -927,6 +927,18 @@
       hint: { kr: '간단도형을 고르면 도형 칼선이 대지에 생겨요 — 드래그·핸들로 크기 조정', ja: 'かんたん図形を選ぶと図形カットラインが台紙に生成 — ドラッグ·ハンドルで調整', en: 'Pick a simple shape to place a cutline you can drag & resize' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
     },
+    { // 6.5) 복잡모양 선택 시 — 그림 외곽 누끼+칼선 자동 작업 (복잡모양 아니면 자동 스킵). 완료 이벤트로 다음 진행.
+      target: '#meStage', mode: 'wait', waitEvent: 'me-standee-ready',
+      onEnter: function () { return window._soStickerShapeCur === 'complex'; },
+      buttons: [
+        { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
+      ],
+      msg: { kr: '<b>복잡모양</b>을 고르셨네요! 아래 버튼을 누르면 그림의 <b>배경을 지우고(누끼)</b> <b>외곽을 따라 칼선</b>을 자동으로 따드려요. 칼선 간격·모양은 대지에서 조정할 수 있어요.',
+        ja: '<b>複雑な形</b> ですね!下のボタンで <b>背景を消して(切り抜き)</b> <b>輪郭に沿ってカットライン</b> を自動作成します。カット間隔·形は台紙で調整できます。',
+        en: 'You chose <b>Complex</b>! Tap below to <b>remove the background</b> and <b>auto-trace a cutline</b> along the outline. Adjust the cut margin/shape on the canvas.' },
+      hint: { kr: '버튼을 누르면 자동으로 누끼+칼선을 따드려요 (몇 초 걸려요)', ja: 'ボタンで自動切り抜き+カットライン(数秒)', en: 'Tap to auto cut-out + cutline (takes a few seconds)' },
+      cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
+    },
     PROOF_STEP,       // 7) 시안 최종 확인
     GENERIC_STEPS[2]  // 8) 장바구니
   ];
