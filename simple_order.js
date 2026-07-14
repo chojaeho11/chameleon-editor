@@ -5298,12 +5298,12 @@ html, body { background: #ffffff !important; }
     }
     // 2026-06-30: 종이매대 가격 통합 — 제품페이지(recalc) / 장바구니(_soCalcItemPrice) 공용 단일 진실.
     //   1개 = 샘플 / 2~99개 = 샘플 + 낱개 추가요금 / 100개+ = 단가 × 수량 (대량 정가).
-    //   대형 pd_b_*: 샘플 = 단가×5, 낱개 +50,000/개.  소형 pd_sm_*·pd_tr_*: 샘플 100,000, 낱개 +20,000/개.
+    // 2026-07-15: 샘플(1개) = 150,000 전 제품 통일(사장님 요청). 낱개 추가요금은 대형 +50,000/개, 소형 +20,000/개 유지.
     function _soPaperStandSubtotal(unit, qty, isSmall) {
         qty = Math.max(1, parseInt(qty, 10) || 1);
-        if (qty >= 100) return unit * qty;
-        if (isSmall) return 100000 + (qty - 1) * 20000;
-        return unit * 5 + (qty - 1) * 50000;
+        if (qty >= 100) return unit * qty;             // 100개+ = 정상 단가 × 수량
+        var perExtra = isSmall ? 20000 : 50000;         // 2~99개 낱개 추가요금/개
+        return 150000 + (qty - 1) * perExtra;           // 1개 샘플 150,000 + 낱개 추가
     }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
@@ -13519,6 +13519,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-01: 허니콤배너는 60×180cm 고정사이즈로 flat 가격. customSize 분기 진입 금지.
         if (state.isBanner) state.isCustomSize = false;
         if (state.isBooklet) state.isCustomSize = false;   // 2026-07-01: 책자는 자체 가격(페이지×권수) — 면적 분기 차단
+        // 2026-07-15: 종이매대 전 제품 flat 단가(=p.price) 통일 — 소형(pd_sm/pd_tr)이 면적×단가(m²)로 계산돼
+        //   대지 2500×1600(4m²) 변경 후 단가가 부풀던 문제(소형 4만원) 차단. 소형=정가 그대로.
+        if (state.isPaperDisplay) state.isCustomSize = false;
         // 2026-06-03: 스티커는 자체 카테고리/사이즈 UI 사용 — 레거시 면적×단가 카드 차단
         if (state.isSticker) state.isCustomSize = false;
         // 2026-05-14: 아크릴 굿즈 (키링·코롯도 등) — min 1cm + 고리/부자재 자동 표시
