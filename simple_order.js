@@ -2859,7 +2859,7 @@ html, body { background: #ffffff !important; }
               <span style="font-size:14px; font-weight:800; color:#94a3b8;">×</span>
               <input type="number" id="soStickerH" value="100" min="10" max="1000" step="1" oninput="window._soStickerSizeInput()" style="padding:10px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
             </div>
-            <div style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 100×100mm — 가격은 면적 비례로 계산됩니다.', '基本100×100mm — 価格は面積比例。', 'Default 100×100mm — price scales by area.')}</div>
+            <div style="margin-top:6px; font-size:11px; color:#64748b;">${tr('100×100mm 이하는 동일 가격, 100×100mm 초과 시 면적에 비례해 계산됩니다.', '100×100mm以下は同一価格、超過分は面積比例。', 'Up to 100×100mm = same price; above that, scales by area.')}</div>
           </div>
 
           <!-- 2026-06-16: 완성파일 업로드 — 직접 디자인한 PDF/이미지 올리면 사이즈 자동 인식 + 캔버스 교체. -->
@@ -8256,7 +8256,9 @@ html, body { background: #ffffff !important; }
         } else {
             var w = Math.max(10, Number(stState.w) || 100);
             var h = Math.max(10, Number(stState.h) || 100);
-            var area = (w * h) / 10000;   // 100×100mm = 1.0 기준
+            // 2026-07-14: 면적 배수 하한 1.0 — 100×100mm 이하(40×40 등)는 100×100 가격과 동일(더 싸지지 않음).
+            //   100×100 초과만 면적 비례로 증가. (예: 200×100 → 2.0배)
+            var area = Math.max(1.0, (w * h) / 10000);
             perUnit = _stickerPerUnitRef(stState.type, qty) * area;
         }
         var subtotal = Math.round(perUnit) * qty;
