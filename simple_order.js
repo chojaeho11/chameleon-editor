@@ -13026,6 +13026,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-15: 종이매대 상품 — 배송옵션 5종 + 담당자 안내 카드
         // 2026-06-12: 종이매대 — 5단 프리셋 (1/100/300/500/1000). 기본 100.
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
+        window._soCurrentIsPaperDisplay = !!state.isPaperDisplay;   // 2026-07-15: 튜토리얼 매칭용(종이매대)
         if (state.isPaperDisplay) {
             state.qty = 100; // 기본 MOQ
             var _qtyInpInit = document.getElementById('soQty');

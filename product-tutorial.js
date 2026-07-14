@@ -1542,6 +1542,46 @@
   ];
 
   // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 종이매대 (pd_* : 원터치 종이매대·소형·칸막이 등)  2026-07-15
+  //  칼선 다운받기 → 파일 업로드(칼선에 맞춰 작업) → 시공/배송 → 주문 수량 → 시안 → 장바구니.
+  //  종류 카드가 없는 단일 제품군 — window._soCurrentIsPaperDisplay 로 판정.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsPaperDisplay() { try { return window._soCurrentIsPaperDisplay === true; } catch (_) { return false; } }
+  var PAPER_DISPLAY_STEPS = [
+    { // 1) 칼선 다운받기
+      target: ['#soCutlineDownloadBtn', '#soCutlineDownload'], mode: 'next',
+      onEnter: function () { return _secVisible('#soCutlineDownload'); },
+      msg: { kr: '먼저 <b>칼선 도안을 다운받아</b> 주세요. 이 도안(칼선 규격)에 <b>맞춰 디자인</b>한 뒤, 다음 단계에서 완성 파일을 올리면 돼요.',
+        ja: 'まず <b>型抜きテンプレートをダウンロード</b> してください。この規格に <b>合わせてデザイン</b> し、次のステップで完成ファイルをアップします。',
+        en: 'First <b>download the die-cut template</b>. Design <b>to fit this template</b>, then upload the finished file in the next step.' },
+      cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
+    },
+    Object.assign({}, GENERIC_STEPS[0], { // 2) 파일 업로드(칼선에 맞춰 작업한 완성본)
+      msg: { kr: '받은 <b>칼선 도안에 맞춰 디자인</b>한 뒤 <b>파일 업로드</b>로 올려주세요. 직접 하기 어려우면 <b>디자인 의뢰</b>도 가능해요.',
+        ja: '<b>型抜きテンプレートに合わせてデザイン</b> し <b>ファイルアップロード</b> してください。難しければ <b>デザイン依頼</b> も可能です。',
+        en: 'Design <b>to fit the die-cut template</b>, then <b>upload the file</b>. You can also <b>request a design</b> if it\'s tricky.' }
+    }),
+    { // 3) 시공/배송 옵션
+      target: '#soScheduleSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soScheduleSection'); },
+      msg: { kr: '<b>배송 방식</b>을 골라요. 1개씩/2개씩 택배포장 또는 <b>100개 이상 벌크포장 무료</b> 등에서 선택할 수 있어요.',
+        ja: '<b>配送方式</b>を選びます。1個ずつ/2個ずつ宅配、または <b>100個以上バルク梱包 無料</b> などから。',
+        en: 'Choose the <b>delivery method</b> — parcel (1 or 2 per box) or <b>free bulk packing over 100 pcs</b>.' },
+      cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
+    },
+    { // 4) 주문 수량 (100개 최소수량 등)
+      target: '#soQtySection', mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>주문 수량</b>을 정해요. 샘플 1개, 100개(최소수량), 300·500·1,000개 또는 직접 입력(2~99)도 가능해요. 많이 만들수록 개당 단가가 내려가요 💰',
+        ja: '<b>注文数量</b>を決めます。サンプル1個、100個(最小)、300·500·1,000個、または直接入力(2〜99)も可。たくさん作るほどお得 💰',
+        en: 'Set the <b>quantity</b> — sample 1, 100 (min), 300/500/1,000, or type 2–99. More = lower unit price 💰' },
+      cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
+    },
+    PROOF_STEP,       // 5) 시안 최종 확인
+    GENERIC_STEPS[2]  // 6) 장바구니
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
   //  공통 '종류 먼저 고르기' 스텝 — 종류 카드 그리드가 있는 모든 제품(봉투/실사출력/
   //  탁상/인스타판넬/포토존/거치대 등)이 size-product·generic 시나리오로 빠질 때, 맨 앞에
   //  이 스텝을 붙여 '제품(종류) 먼저 → 위에서부터 순서대로' 흐름을 보장. 카드 없으면 자동 스킵.
@@ -1573,6 +1613,8 @@
     { id: 'vinyl', match: { test: function () { return _tutIsVinyl(); } }, steps: VINYL_STEPS },
     // 2026-07-15: 허니콤 포토존/조형물 — 종류·칼선다운·디자인·배송. 나무조형물 2종은 기성품(디자인 스킵). generic 보다 앞.
     { id: 'photozone', match: { test: function () { return _tutIsPhotozone(); } }, steps: PHOTOZONE_STEPS },
+    // 2026-07-15: 종이매대 — 칼선다운→파일업로드→배송→수량. size-product/generic 보다 앞.
+    { id: 'paper-display', match: { test: function () { return _tutIsPaperDisplay(); } }, steps: PAPER_DISPLAY_STEPS },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
     { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
