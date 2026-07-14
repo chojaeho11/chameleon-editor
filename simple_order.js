@@ -13107,6 +13107,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 현수막 family (9종 — 초저가/UV/친환경/어깨띠/라텍스/깃발/텐트천/방염/족자)
         var _isPlVariant = (typeof window._soIsPlacardProduct === 'function')
             ? window._soIsPlacardProduct(p) : false;
+        // 2026-07-14: 튜토리얼 매칭용 동기 플래그 — 종류 카드(soPlacardVariantsSec)는 async 로 뜨므로
+        //   시나리오 선택 시점엔 아직 숨겨져 있음. 이 플래그로 현수막 시나리오를 확실히 매칭.
+        window._soCurrentIsPlacard = !!_isPlVariant;
         if (_isPlVariant) {
             try { window._soLoadPlacardVariants(p.code); } catch(e){}
         } else {

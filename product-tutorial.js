@@ -1194,11 +1194,13 @@
   //  종류 선택 → 사이즈 → 마감(고리·로프 등) → 디자인 → 시안확인 → 수량 → 장바구니.
   //  종류 카드는 클릭 시 제품 URL 이 바뀌어 리로드됨 → resumeNext 로 다음 챕터 이어감.
   // ════════════════════════════════════════════════════════════════════
-  function _tutIsPlacard() { try { return _secVisible('#soPlacardVariantsSec'); } catch (_) { return false; } }
+  // 종류 카드(soPlacardVariantsSec)는 async 로 로드되므로 시나리오 선택 시점엔 아직 숨겨져 있음 →
+  //   simple_order 가 세팅하는 동기 플래그(window._soCurrentIsPlacard)로 판정.
+  function _tutIsPlacard() { try { return window._soCurrentIsPlacard === true; } catch (_) { return false; } }
   var PLACARD_STEPS = [
     { // 1) 현수막 종류 선택 (카드) — 클릭 시 리로드 → 다음 챕터로 이어감
       target: ['#soPlacardVariants', '#soPlacardVariantsSec'], mode: 'next', resumeNext: true,
-      onEnter: function () { return _secVisible('#soPlacardVariantsSec'); },
+      onEnter: function () { return window._soCurrentIsPlacard === true; },
       msg: { kr: '먼저 <b>현수막 종류</b>를 골라요. 초저가·UV대폭·친환경·라텍스·깃발·족자 등 카드를 눌러 종류를 바꿀 수 있어요. 종류마다 <b>㎡당 단가</b>가 달라요.',
         ja: 'まず <b>横断幕の種類</b> を選びます。激安·UV大幅·エコ·ラテックス·フラッグなど、カードをタップで切替。種類ごとに <b>㎡単価</b> が異なります。',
         en: 'First pick the <b>banner type</b>. Tap a card to switch (low-cost, UV wide, eco, latex, flag…). Each has its own <b>price per ㎡</b>.' },
