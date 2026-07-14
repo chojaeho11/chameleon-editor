@@ -1060,8 +1060,50 @@
     GENERIC_STEPS[2] // 8) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 팬시 스티커 (시트형 · 여러 이미지 자동 누끼+칼선+배치)  2026-07-14
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsFancySticker() { try { return _secVisible('#soFancyMultiWrap'); } catch (_) { return false; } }
+  var FANCY_STICKER_STEPS = [
+    { // 1) 종류(용지)
+      target: '#soStickerTypeWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerTypeWrap'); },
+      msg: { kr: '먼저 <b>종류</b>를 골라요. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가예요.',
+        ja: 'まず <b>種類</b> を選びます。上質紙·マット·グロス·強粘着は標準価格、特殊用紙は3倍です。',
+        en: 'First pick the <b>type</b>. Art/matte/gloss/strong = base price; special papers ×3.' },
+      cheer: { kr: '종류 선택! 🏷️', ja: '種類OK! 🏷️', en: 'Type set! 🏷️' }
+    },
+    { // 2) 이미지 여러 장 올리기 → 자동 누끼+칼선+배치
+      target: '#soFancyMultiWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soFancyMultiWrap'); },
+      msg: { kr: '이제 <b>이미지를 여러 장</b> 올려요! <span style="color:#94a3b8;">(3~10장 권장 · 최대 12장)</span><br>올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 <b>착착 배치</b>해 드려요. 🪄',
+        ja: '次に <b>画像を複数枚</b> アップロード! <span style="color:#94a3b8;">(3〜10枚推奨・最大12枚)</span><br>アップロードすると <b>自動で背景除去とカットライン</b> を作成してシートに配置します。🪄',
+        en: 'Now upload <b>several images</b>! <span style="color:#94a3b8;">(3–10 recommended · up to 12)</span><br>We <b>auto-remove backgrounds & add cut lines</b>, then lay them out on the sheet. 🪄' },
+      hint: { kr: '여러 장을 한 번에 선택해서 올려도 돼요', ja: '複数枚まとめて選択OK', en: 'Select multiple images at once' },
+      cheer: { kr: '자동 배치 완료! 🎉', ja: '自動配置OK! 🎉', en: 'Auto-arranged! 🎉' }
+    },
+    { // 3) 배치·크기 조정
+      target: '#meStage', mode: 'next',
+      msg: { kr: '시트에 배치된 스티커들의 <b>위치와 크기</b>를 조정해요. 각 이미지를 <b>드래그</b>하거나 <b>모서리 핸들</b>로 크기를 바꾸면 칼선도 같이 따라와요.',
+        ja: 'シート上のステッカーの <b>位置とサイズ</b> を調整。各画像を <b>ドラッグ</b> したり <b>角ハンドル</b> でサイズ変更するとカットラインも追従します。',
+        en: 'Adjust each sticker’s <b>position & size</b> on the sheet. <b>Drag</b> an image or use the <b>corner handles</b> — the cut line follows.' },
+      cheer: { kr: '배치 완성! ✨', ja: '配置完了! ✨', en: 'Layout done! ✨' }
+    },
+    { // 4) 수량
+      target: ['#soStickerQtyWrap', '#soQtySection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerQtyWrap') || _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량(세트)</b>을 정해요. 팬시 스티커는 <b>4매 단위</b>로 주문돼요.',
+        ja: '<b>数量(セット)</b>を決めます。ファンシーは <b>4枚単位</b> です。',
+        en: 'Choose the <b>quantity (sets)</b>. Fancy stickers are ordered in <b>units of 4</b>.' }
+    },
+    PROOF_STEP,       // 시안 최종 확인
+    GENERIC_STEPS[2]  // 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
+    // 2026-07-14: 팬시 스티커 — 멀티이미지 자동 처리. size-product(스티커 공통) 보다 먼저 매칭.
+    { id: 'fancy-sticker', match: { test: function () { return _tutIsFancySticker(); } }, steps: FANCY_STICKER_STEPS },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },

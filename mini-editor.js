@@ -585,6 +585,8 @@
         me.natW = w; me.natH = h;
         $('meStage').style.background = me.bg;
         _meFitStage();
+        // 재단 가이드가 있으면 새 대지 크기에 맞춰 재계산
+        try { if (me._trimGuideMm && typeof _meRenderTrimGuide === 'function') _meRenderTrimGuide(); } catch(_) {}
         // 2026-06-28: 사이즈 변경 후 디자인을 캔버스 중앙으로 (위로 붙던 문제). 연속 입력(타이핑) 시 튀지 않게 debounce.
         try { clearTimeout(me._centerT); me._centerT = setTimeout(function(){ try { if (window._meCenterDesign) window._meCenterDesign(); } catch(_) {} }, 220); } catch(_) {}
     }
@@ -3187,6 +3189,38 @@
         }
         return s;
     }
+    // 2026-07-14: 재단 가이드 — 작업사이즈(대지) 안의 재단선을 빨강 점선으로 표시(시각용, export/PDF 제외).
+    //   팬시 시트(작업 140×210 / 재단 138×208) 등. cutWmm=0 이면 제거.
+    window._meSetTrimGuideMm = function(cutWmm, cutHmm) {
+        var s = document.getElementById('meTrimGuide');
+        if (!cutWmm || !cutHmm) { me._trimGuideMm = null; if (s) s.remove(); return; }
+        if (!s) {
+            s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.id = 'meTrimGuide';
+            s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            s.style.cssText = 'position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:999;';
+            if (me.stage) me.stage.appendChild(s);
+        }
+        me._trimGuideMm = { w: cutWmm, h: cutHmm };
+        _meRenderTrimGuide();
+        return s;
+    };
+    function _meRenderTrimGuide() {
+        var s = document.getElementById('meTrimGuide');
+        if (!s || !me._trimGuideMm) return;
+        var workWmm = me.natWMm || (me.natW / 3.7795);
+        var workHmm = me.natHMm || (me.natH / 3.7795);
+        var cw = me._trimGuideMm.w, ch = me._trimGuideMm.h;
+        // 재단 rect 를 작업(대지) 중앙에 — 자연좌표(px) 변환.
+        var insetXmm = Math.max(0, (workWmm - cw) / 2), insetYmm = Math.max(0, (workHmm - ch) / 2);
+        var x = (insetXmm / workWmm) * me.natW, y = (insetYmm / workHmm) * me.natH;
+        var w = (cw / workWmm) * me.natW, h = (ch / workHmm) * me.natH;
+        var sw = Math.max(1, me.natW / 500);
+        s.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
+        s.innerHTML = '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="none" stroke="#ef4444" stroke-width="' + sw.toFixed(2) + '" stroke-dasharray="' + (sw*3).toFixed(1) + ' ' + (sw*2).toFixed(1) + '" stroke-opacity="0.55"/>';
+    }
+    // 대지 크기 변경 시 재단 가이드도 재계산 (있을 때만).
+    window._meRenderTrimGuide = _meRenderTrimGuide;
     function _meCutlineRenderAll() {
         var svg = _meCutlineSvgEl();
         svg.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
@@ -5402,6 +5436,88 @@
     // 네모 이미지 그대로 — 칼선 없이 진행 (튜토리얼 진행 이벤트만)
     window._meStandeeSkipCutline = function() {
         try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
+    };
+
+    // ─────────── 2026-07-14: 팬시 스티커 — 여러 이미지 배치 + 자동 누끼(투명 스킵)+칼선 ───────────
+    // 이미지 자연 크기 로드 (그리드 fit 용).
+    function _meLoadImgDims(src) {
+        return new Promise(function(res){
+            var im = new Image();
+            im.onload  = function(){ res({ w: im.naturalWidth || 1, h: im.naturalHeight || 1 }); };
+            im.onerror = function(){ res({ w: 1, h: 1 }); };
+            im.src = src;
+        });
+    }
+    // 이미지가 대부분 불투명이면 true → 누끼(배경제거) 필요. 이미 투명 영역이 많으면 스킵.
+    window._meImageMostlyOpaque = function(it) {
+        try {
+            var img = it && it.el && it.el.querySelector('img');
+            if (!img) return true;
+            var S = 48;
+            var cv = document.createElement('canvas'); cv.width = S; cv.height = S;
+            var ctx = cv.getContext('2d');
+            ctx.drawImage(img, 0, 0, S, S);
+            var data = ctx.getImageData(0, 0, S, S).data;
+            var transp = 0, total = S * S;
+            for (var i = 3; i < data.length; i += 4) { if (data[i] < 250) transp++; }
+            return (transp / total) < 0.05;   // 투명영역 <5% → 불투명 → 누끼 필요
+        } catch(_) { return true; }   // tainted/에러면 안전하게 누끼 시도
+    };
+    // 여러 이미지를 그리드로 배치 후, 순차로 (불투명만) 누끼 + 전부 칼선.
+    //   srcList: dataURL 배열, opts.onProgress(done, total). 반환: 추가된 item 배열.
+    window._meBatchAddBgCutline = async function(srcList, opts) {
+        opts = opts || {};
+        srcList = (srcList || []).slice(0, 12);
+        var n = srcList.length;
+        if (!n) return [];
+        try { _meSnapshot(); } catch(_) {}
+        // 기존 items + 칼선 클리어 (재업로드 대비)
+        (me.items || []).slice().forEach(function(it){ try { it.el.remove(); } catch(_) {} });
+        me.items = []; me.selected = null;
+        try { if (typeof window._meCutlineClear === 'function') window._meCutlineClear(); } catch(_) {}
+        // 그리드 계산
+        var cols = n <= 4 ? 2 : (n <= 9 ? 3 : 4);
+        var rows = Math.ceil(n / cols);
+        var pad = me.natW * 0.03;
+        var cellW = (me.natW - pad * 2) / cols;
+        var cellH = (me.natH - pad * 2) / rows;
+        var items = [];
+        for (var i = 0; i < n; i++) {
+            var src = srcList[i];
+            var dims = await _meLoadImgDims(src);
+            var r = (dims.h || 1) / (dims.w || 1);
+            var col = i % cols, row = Math.floor(i / cols);
+            var cellX = pad + col * cellW, cellY = pad + row * cellH;
+            var maxW = cellW * 0.85, maxH = cellH * 0.85;
+            var w = maxW, h = w * r;
+            if (h > maxH) { h = maxH; w = h / r; }
+            var x = cellX + (cellW - w) / 2, y = cellY + (cellH - h) / 2;
+            /* eslint-disable no-loop-func */
+            var added = await new Promise(function(res){
+                try { window._meAddImage(src, { explicitPos: { x: x, y: y, w: w, h: h } }, res); }
+                catch(_) { res(null); }
+            });
+            if (added) items.push(added);
+        }
+        // 순차 누끼(투명 스킵)+칼선
+        for (var j = 0; j < items.length; j++) {
+            var it2 = items[j];
+            if (typeof opts.onProgress === 'function') { try { opts.onProgress(j, items.length); } catch(_) {} }
+            try {
+                _meSelect(it2);
+                if (window._meImageMostlyOpaque(it2)) {
+                    try { await window._meBgRemoveSelected(); } catch(_) {}
+                }
+                var img2 = it2.el && it2.el.querySelector('img');
+                if (img2 && !img2.complete) { await new Promise(function(rr){ img2.onload = rr; img2.onerror = rr; setTimeout(rr, 1500); }); }
+                if (img2 && img2.decode) { try { await img2.decode(); } catch(_) {} }
+                try { await _meCutlineTrace('outer'); } catch(_) {}
+            } catch(_) {}
+        }
+        if (typeof opts.onProgress === 'function') { try { opts.onProgress(items.length, items.length); } catch(_) {} }
+        try { _meSelect(null); } catch(_) {}
+        try { _meCutlineRenderAll(); } catch(_) {}
+        return items;
     };
 
     // ─────────── 2026-06-27: 이미지 객체 '그림 변경' (요소 고르기 / 내사진 누끼 교체) ───────────

@@ -2887,6 +2887,17 @@ html, body { background: #ffffff !important; }
             </div>
           </div>
 
+          <!-- 2026-07-14: 팬시 스티커 전용 — 여러 이미지 한 번에 올리면 자동 누끼+칼선+배치 (재단 스티커는 숨김) -->
+          <div id="soFancyMultiWrap" style="display:none; margin-top:14px;">
+            <div class="so-section-title">${tr('이미지 올리기 (여러 장)', '画像アップロード (複数)', 'Upload images (multiple)')}</div>
+            <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.6;">${tr('원하는 이미지를 <b>여러 장(3~10장 권장, 최대 12장)</b> 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 배치해 드려요. 이후 <b>위치·크기만</b> 조정하면 끝!', '好きな画像を <b>複数枚（3〜10枚推奨・最大12枚）</b> アップロードすると、<b>自動で背景除去とカットライン</b> を作成してシートに配置します。あとは <b>位置・サイズ</b> を調整するだけ！', 'Upload <b>several images (3–10 recommended, up to 12)</b> and we <b>auto-remove backgrounds & add cut lines</b>, then lay them out on the sheet. Just adjust <b>position & size</b>!')}</div>
+            <button type="button" class="so-upload-grad-btn" onclick="document.getElementById('soFancyMultiFile').click()" style="width:100%; padding:15px; border-radius:12px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">
+              <span>${tr('이미지 여러 장 올리기', '複数画像アップロード', 'Upload multiple images')}</span>
+            </button>
+            <input type="file" id="soFancyMultiFile" accept="image/png,image/jpeg,image/webp" multiple style="display:none;" onchange="window._soFancyMultiUpload(this)">
+            <div id="soFancyMultiProgress" style="display:none; margin-top:10px; padding:11px 13px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; font-size:12px; font-weight:700; color:#3730a3; line-height:1.5;"></div>
+          </div>
+
           <!-- 3) 수량 — 프리셋 버튼 + 직접 입력 -->
           <div id="soStickerQtyWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">🧮 ${tr('수량 (매)', '数量 (枚)', 'Quantity (pcs)')}</div>
@@ -8236,7 +8247,8 @@ html, body { background: #ffffff !important; }
         // 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
         var perUnit;
         if (stState.isFancy) {
-            perUnit = basePrice / 4;   // 팬시는 4매 단위 판매 → 개당 = 기준가/4
+            // 팬시는 4매 단위 판매 → 개당 = 기준가/4. 2026-07-14: 종류(용지) 배수 적용 — 기본 4종 1× / 특수 3×.
+            perUnit = (basePrice / 4) * (_stickerIsBaseType(stState.type) ? 1 : 3);
         } else {
             var w = Math.max(10, Number(stState.w) || 100);
             var h = Math.max(10, Number(stState.h) || 100);
@@ -10985,8 +10997,9 @@ html, body { background: #ffffff !important; }
         var typeW = document.getElementById('soStickerTypeWrap');
         var notice= document.getElementById('soStickerNotice');
         var finalFileW = document.getElementById('soStickerFinalFileWrap');
+        var fancyMultiW = document.getElementById('soFancyMultiWrap');
         if (!state.stickerProductCode) {
-            [sizeW, qtyW, typeW, notice, finalFileW].forEach(function(el){ if (el) el.style.display='none'; });
+            [sizeW, qtyW, typeW, notice, finalFileW, fancyMultiW].forEach(function(el){ if (el) el.style.display='none'; });
             return;
         }
         var picked = variants.find(function(x){ return x.code === state.stickerProductCode; });
@@ -10995,6 +11008,8 @@ html, body { background: #ffffff !important; }
         if (sizeW) sizeW.style.display = isFancy ? 'none' : '';
         // 2026-06-16: 완성파일 업로드 — 팬시는 사이즈 의미 없어 숨김, 재단 스티커는 항상 노출.
         if (finalFileW) finalFileW.style.display = isFancy ? 'none' : '';
+        // 2026-07-14: 팬시 전용 멀티이미지 업로드 — 팬시일 때만 노출.
+        if (fancyMultiW) fancyMultiW.style.display = isFancy ? '' : 'none';
         var wEl = document.getElementById('soStickerW'); if (wEl && document.activeElement !== wEl) wEl.value = state.stickerW || 100;
         var hEl = document.getElementById('soStickerH'); if (hEl && document.activeElement !== hEl) hEl.value = state.stickerH || 100;
         // 수량: 팬시면 4매 단위 (4/8/12/20/40), 그 외 1000매 단위 (1000/2000/3000/5000/10000).
@@ -11156,6 +11171,45 @@ html, body { background: #ffffff !important; }
         // 2026-06-16: 디자인 에디터 대지도 같이 sync.
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
+    };
+    // 2026-07-14: 팬시 스티커 — 여러 이미지 한 번에 업로드 → 자동 누끼(투명 스킵)+칼선 → 시트 배치.
+    //   에디터(140×210mm 시트)에 합성됨. state.file 은 설정 안 함 → 담기 시 에디터 export(합성 PNG→PDF)가 주문 파일이 됨.
+    window._soFancyMultiUpload = async function(input) {
+        var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+        if (!files.length) return;
+        var MAX = 12;
+        var over = files.length > MAX;
+        files = files.slice(0, MAX);
+        var prog = document.getElementById('soFancyMultiProgress');
+        function setProg(html) { if (prog) { prog.style.display = ''; prog.innerHTML = html; } }
+        try {
+            setProg(tr('이미지 읽는 중...', '画像を読み込み中...', 'Reading images...') + (over ? (' <span style="color:#b45309;">(' + tr('최대 12장까지만 사용','最大12枚まで','max 12 used') + ')</span>') : ''));
+            // 파일 → dataURL
+            var srcList = [];
+            for (var i = 0; i < files.length; i++) {
+                var f = files[i];
+                if (!/^image\//i.test(f.type)) continue;
+                var du = await new Promise(function(res){ var r = new FileReader(); r.onload = function(e){ res(e.target.result); }; r.onerror = function(){ res(null); }; r.readAsDataURL(f); });
+                if (du) srcList.push(du);
+            }
+            if (!srcList.length) { setProg(tr('이미지를 읽지 못했습니다.', '画像を読み込めませんでした。', 'Could not read images.')); return; }
+            if (typeof window._meBatchAddBgCutline !== 'function') { setProg(tr('에디터가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'エディタ準備中。少し後で。', 'Editor not ready — try again.')); return; }
+            // 팬시 캔버스 140×210mm 보장
+            try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
+            var total = srcList.length;
+            await window._meBatchAddBgCutline(srcList, {
+                onProgress: function(done, tot){
+                    if (done >= tot) setProg('✓ ' + tr(tot + '장 배치 완료! 이제 위치·크기를 조정하세요.', tot + '枚配置完了！位置·サイズを調整してください。', tot + ' images placed! Now adjust position & size.'));
+                    else setProg(tr('자동 누끼·칼선 작업 중...', '自動切り抜き・カットライン処理中...', 'Auto cut-out & cut line...') + ' <b>' + (done + 1) + ' / ' + tot + '</b>');
+                }
+            });
+            try { recalc(); } catch(_) {}
+        } catch (e) {
+            console.error('[fancy multi upload]', e);
+            setProg(tr('처리 중 오류가 발생했어요. 다시 시도해주세요.', '処理中にエラー。再試行してください。', 'Something went wrong — please retry.'));
+        } finally {
+            try { input.value = ''; } catch(_) {}
+        }
     };
     // 2026-06-16: 완성파일 업로드 — PDF 페이지 사이즈/이미지 해상도 자동 인식 → 캔버스 + stickerW/H + 가격 동시 반영.
     //   업로드한 파일은 state.file 로 보관 → 주문 시 그대로 인쇄소로 전달 (에디터 export 무시).
@@ -15237,6 +15291,23 @@ html, body { background: #ffffff !important; }
                 _updateSizeBadge(Math.round((state.customW||0)*10), Math.round((state.customH||0)*10));
                 return;
             }
+            // 2026-07-14: 팬시 스티커 — 시트 규격 고정. 작업 140×210mm(재단 138×208). 여러 이미지 배치용.
+            if (state.isSticker) {
+                var _fv = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
+                if (_fv && _stickerIsFancy(_fv)) {
+                    _updateSizeBadge(140, 210);
+                    try {
+                        if (typeof window._meSetSize === 'function') {
+                            var _fpx = _mmPairToPx(140, 210); window._meSetSize(_fpx.w, _fpx.h, state.product.code);
+                            if (typeof window._meSetMmSize === 'function') window._meSetMmSize(140, 210);
+                            if (typeof window._meSetTrimGuideMm === 'function') window._meSetTrimGuideMm(138, 208);
+                        }
+                    } catch(_fe){}
+                    return;
+                }
+                // 재단 스티커면 팬시용 재단 가이드 제거
+                try { if (typeof window._meSetTrimGuideMm === 'function') window._meSetTrimGuideMm(0, 0); } catch(_){}
+            }
             var sz = _resolveSize(state.product);
             _updateSizeBadge(sz.wMm, sz.hMm);
             try {
@@ -16809,14 +16880,19 @@ html, body { background: #ffffff !important; }
                         if (!_sk.isFancy && (_sk.w || _sk.h)) meta.push('📐 ' + (_sk.w || 100) + '×' + (_sk.h || 100) + 'mm');
                         var _skType = STICKER_TYPES.find(function(x){ return x.key === (_sk.type || 'art_matte'); });
                         if (_skType) meta.push('🏷️ ' + _stickerI18n(_skType, 'name'));
-                        var _skShape = _sk.shape || (_sk.dieCut ? 'complex' : 'square');
-                        if (_skShape === 'simple') {
-                            var _skKind = STICKER_SHAPE_KINDS.find(function(x){ return x.key === _sk.shapeKind; });
-                            meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: die-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : '') + ' +' + fmtPrice(10000));
-                        } else if (_skShape === 'complex') {
-                            meta.push(tr('모양: 복잡모양(외곽따기)', '形: 複雑カット', 'Shape: complex die-cut') + ' +' + fmtPrice(30000));
+                        if (_sk.isFancy) {
+                            // 팬시: 시트형(여러 이미지 개별 칼선) — 모양(재단) 라벨 없음.
+                            meta.push(tr('팬시 시트 (개별 칼선)', 'ファンシーシート (個別カット)', 'Fancy sheet (individual cut)'));
                         } else {
-                            meta.push(tr('모양: 사각', '形: 四角', 'Shape: square'));
+                            var _skShape = _sk.shape || (_sk.dieCut ? 'complex' : 'square');
+                            if (_skShape === 'simple') {
+                                var _skKind = STICKER_SHAPE_KINDS.find(function(x){ return x.key === _sk.shapeKind; });
+                                meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: die-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : '') + ' +' + fmtPrice(10000));
+                            } else if (_skShape === 'complex') {
+                                meta.push(tr('모양: 복잡모양(외곽따기)', '形: 複雑カット', 'Shape: complex die-cut') + ' +' + fmtPrice(30000));
+                            } else {
+                                meta.push(tr('모양: 사각', '形: 四角', 'Shape: square'));
+                            }
                         }
                         if (_sk.qty) meta.push(_sk.qty.toLocaleString() + tr('매', '枚', ' pcs'));
                     } catch (_ske) {}
