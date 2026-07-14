@@ -1137,8 +1137,8 @@
   // ════════════════════════════════════════════════════════════════════
   function _tutIsLeaflet() { try { return _secVisible('#soLeafletPresetSec'); } catch (_) { return false; } }
   var LEAFLET_STEPS = [
-    { // 1) 사이즈 (규격 A4/A3/A2 · 비규격)
-      target: ['#soLeafletSizeGrid', '#soLeafletPresetSec'], mode: 'next',
+    { // 1) 사이즈 (규격 A4/A3/A2 · 비규격) — 규격 그리드 + 비규격 토글만 하이라이트 (섹션 전체 X)
+      target: ['#soLeafletSizeGrid', '#soLfCustToggle'], mode: 'next',
       onEnter: function () { return _secVisible('#soLeafletPresetSec'); },
       msg: { kr: '먼저 <b>사이즈</b>를 골라요. A4·A3·A2 규격 중 선택하거나, 아래 <b>비규격 사이즈</b>를 눌러 원하는 크기(mm)를 직접 넣을 수 있어요. 가격은 사이즈·수량에 따라 자동 계산돼요.',
         ja: 'まず <b>サイズ</b> を選びます。A4·A3·A2 の規格、または下の <b>非規格サイズ</b> で好きな寸法(mm)を入力できます。価格はサイズ·数量で自動計算。',
