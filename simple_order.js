@@ -2657,6 +2657,27 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-07-15: 글씨 스카시 전용 — 참고사진·로고 여러 장 업로드 (디자이너 자료용). #soScarciRefFile(multiple) → _soScarciRefUpload. -->
+        <div class="so-section" id="soScarciRefUpload" style="display:none;">
+          <div class="so-section-title">${tr('참고사진 · 로고 올리기', '参考写真・ロゴをアップロード', 'Reference photos / logo')}</div>
+          <div style="font-size:12px; color:#475569; line-height:1.7; margin-bottom:11px;">
+            ${tr('이 제품은 디자인이 까다로워 <b style="color:#1e293b;">전문 디자이너가 직접 만들어드려요</b> (디자인 무료). 참고사진·로고·글귀 등을 올려주시면 디자인에 반영합니다.',
+                 'この商品はデザインが難しいため <b style="color:#1e293b;">専門デザイナーが直接制作</b> いたします（デザイン無料）。参考写真・ロゴ・文言などをアップロードいただくとデザインに反映します。',
+                 'This product is designed for you by a <b style="color:#1e293b;">professional designer</b> (free). Upload reference photos, logos and text and we\'ll reflect them in the design.')}
+          </div>
+          <input type="file" id="soScarciRefFile" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" multiple style="display:none;" onchange="window._soScarciRefUpload && window._soScarciRefUpload(this)">
+          <button type="button" id="soScarciRefBtn" onclick="document.getElementById('soScarciRefFile').click()"
+            style="width:100%; padding:15px; border:2px dashed #94a3b8; border-radius:11px; background:#f8fafc; color:#334155; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">
+            ${tr('참고사진 또는 로고 올리기 (여러 장 가능)', '参考写真・ロゴをアップロード (複数可)', 'Upload references / logo (multiple)')}
+          </button>
+          <div id="soScarciRefHint" style="font-size:11px; color:#64748b; margin-top:7px; line-height:1.6;">
+            ${tr('여러 파일을 한 번에 선택할 수 있어요. 파일은 이메일(<b>design@chameleon.design</b>)로 보내주셔도 됩니다.',
+                 '複数ファイルを一度に選択できます。ファイルはメール(<b>design@chameleon.design</b>)でお送りいただいてもOKです。',
+                 'You can select multiple files at once. You may also email files to <b>design@chameleon.design</b>.')}
+          </div>
+          <div id="soScarciRefList" style="display:none; margin-top:12px; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px;"></div>
+        </div>
+
         <!-- 2026-06-01: 뒷면 디자인 파일 업로드 — 가벽 양면일 때만 표시. 동일 패턴 (점선 → 보라 완료 + 썸네일). -->
         <div class="so-section" id="soBackInlineUploadCard" style="display:none;">
           <div class="so-section-title">
@@ -5493,6 +5514,70 @@ html, body { background: #ffffff !important; }
         if (el) state.scarciSub = (el.value || '').trim();
     };
 
+    // 2026-07-15: 글씨 스카시 전용 — 참고사진·로고 여러 장 업로드. 각 파일을 design 버킷에 올려
+    //   URL 을 state.scarciRefUrls 에 축적 → 카트 item.uploadedFiles 로 전달 → 주문 시 design_requests.files 로 첨부.
+    function _soScarciRefRender() {
+        var list = document.getElementById('soScarciRefList');
+        if (!list) return;
+        var items = state._scarciRefItems || [];
+        if (!items.length) { list.style.display = 'none'; list.innerHTML = ''; return; }
+        list.style.display = 'grid';
+        list.innerHTML = items.map(function (it, i) {
+            var inner = it.thumb
+                ? '<img src="' + it.thumb + '" alt="" style="width:100%; height:64px; object-fit:cover; display:block; background:#fff;">'
+                : '<div style="width:100%; height:64px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#64748b; background:#f1f5f9;">PDF</div>';
+            var busy = it.uploading ? '<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.8); font-size:10px; font-weight:800; color:#475569;">' + tr('올리는 중…', 'アップ中…', 'Uploading…') + '</div>' : '';
+            var rm = '<button type="button" onclick="window._soScarciRefRemove(' + i + ')" title="' + tr('삭제', '削除', 'Remove') + '" style="position:absolute; top:3px; right:3px; width:20px; height:20px; border:none; border-radius:50%; background:rgba(15,23,42,0.72); color:#fff; font-size:12px; line-height:1; cursor:pointer; font-family:inherit;">×</button>';
+            return '<div style="position:relative; border:1px solid #e2e8f0; border-radius:9px; overflow:hidden; background:#fff;">' + inner + busy + rm + '</div>';
+        }).join('');
+    }
+    window._soScarciRefRemove = function (i) {
+        if (!Array.isArray(state._scarciRefItems)) return;
+        state._scarciRefItems.splice(i, 1);
+        state.scarciRefUrls = state._scarciRefItems.map(function (it) { return it.url; }).filter(Boolean);
+        _soScarciRefRender();
+    };
+    window._soScarciRefUpload = async function (input) {
+        var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+        if (input) input.value = '';   // 같은 파일 재선택 허용
+        if (!files.length) return;
+        if (!Array.isArray(state._scarciRefItems)) state._scarciRefItems = [];
+        if (!Array.isArray(state.scarciRefUrls)) state.scarciRefUrls = [];
+        for (var fi = 0; fi < files.length; fi++) {
+            var f = files[fi];
+            var nm = (f.name || '').toLowerCase();
+            var okType = nm.endsWith('.pdf') || nm.endsWith('.png') || nm.endsWith('.jpg') || nm.endsWith('.jpeg')
+                || /^(image\/(png|jpeg)|application\/pdf)$/.test(f.type || '');
+            if (!okType) { showStatus(tr('PDF · PNG · JPG 파일만 가능합니다.', 'PDF・PNG・JPGのみ可能です。', 'Only PDF / PNG / JPG allowed.'), 'err'); continue; }
+            if (f.size > MAX_FILE_BYTES) {
+                var mb = (f.size / 1024 / 1024).toFixed(1);
+                showStatus(tr('업로드한 파일이 ' + mb + 'MB 입니다. 500MB 이하로 줄여서 다시 올려주세요.', 'ファイルは ' + mb + 'MB です。500MB以下にしてください。', 'File is ' + mb + 'MB. Please keep it under 500MB.'), 'err');
+                continue;
+            }
+            var isImg = !nm.endsWith('.pdf') && (f.type || '').indexOf('pdf') < 0;
+            var thumb = null;
+            if (isImg) { try { thumb = await new Promise(function (res) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = function () { res(null); }; r.readAsDataURL(f); }); } catch (e) {} }
+            var item = { url: null, name: f.name || 'file', thumb: thumb, uploading: true };
+            state._scarciRefItems.push(item);
+            _soScarciRefRender();
+            try {
+                var safe = (f.name || 'ref').replace(/[^a-zA-Z0-9._-]/g, '_');
+                var path = 'scarci-ref/' + Date.now() + '-' + Math.floor(fi) + '-' + safe;
+                var up = await sb.storage.from('design').upload(path, f, { contentType: f.type || undefined, upsert: false });
+                if (up && up.error) throw up.error;
+                item.url = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+                item.uploading = false;
+            } catch (e) {
+                console.warn('[scarci ref upload]', e);
+                item.uploading = false;
+                item.url = null;
+                showStatus(tr('일부 파일 업로드에 실패했어요. 다시 시도해 주세요.', '一部のファイルのアップロードに失敗しました。', 'Some files failed to upload. Please retry.'), 'err');
+            }
+            state.scarciRefUrls = state._scarciRefItems.map(function (it) { return it.url; }).filter(Boolean);
+            _soScarciRefRender();
+        }
+    };
+
     // 2026-06-05: 인스타판넬 family — 타이틀/작은글씨/해시태그/로고 input 핸들러 (state.instaTitle 등 저장)
     window._soOnInstaTitleChange = function () {
         var el = document.getElementById('soInstaTitle');
@@ -5599,6 +5684,8 @@ html, body { background: #ffffff !important; }
     // 카드 클릭 → 다른 글씨 스카시 변형으로 즉시 전환
     window._soSwitchScarci = function (code) {
         if (!code) return;
+        // 2026-07-15: 튜토리얼 진행 중이면 리로드 후 '종류'가 아니라 다음 단계부터 이어가도록 진행상태 저장.
+        try { if (typeof window._tutBeforeVariantReload === 'function') window._tutBeforeVariantReload(); } catch(_){}
         try {
             // 현재 모달은 그대로 두고 같은 모달을 재초기화 (close→open)
             if (typeof window.openSimpleOrderModal === 'function') {
@@ -13295,6 +13382,11 @@ html, body { background: #ffffff !important; }
         // 2026-06-09: 글씨 스카시 family 감지 + 시공 가능 상품 통합 플래그.
         //   가벽/등신대/글씨스카시 — 가벽 없이도 시공 옵션 노출 + 카트에서 2종 이상 묶음 배송.
         state.isScarci = _soIsScarciProduct(p);
+        window._soCurrentIsScarci = !!state.isScarci;   // 2026-07-15: 튜토리얼 매칭용(글씨 스카시)
+        // 2026-07-15: 글씨 스카시 참고자료(로고/사진) 업로드 상태 초기화
+        state.scarciRefUrls = [];
+        state._scarciRefItems = [];
+        try { _soScarciRefRender(); } catch (_e) {}
         state.isInstallEligible = state.isWall || state.isStandee || state.isScarci;
         // 2026-07-11: 객체크기 모드 — 자유인쇄커팅/등신대(글씨스카시 등)는 가로·세로·가격을 대지가 아닌 "객체(칼선 바깥 윤곽)" 크기로.
         //   편집기에 알려 대지 숨김 + 객체 크기 컨트롤 노출. (이 flag 로만 신규 분기 gating → 타 제품 회귀 방지)
@@ -14376,6 +14468,18 @@ html, body { background: #ffffff !important; }
                 if (_bannerSec2) _bannerSec2.style.display = 'none';
             }
         })();
+        // 2026-07-15: 글씨 스카시 — 위 허니콤 분기에서 표시된 범용 인라인 업로드 카드를 숨기고
+        //   전용 참고자료(로고/사진) 여러 장 업로드 섹션으로 대체 (디자이너가 디자인하는 상품).
+        try {
+            var _scRefSec = document.getElementById('soScarciRefUpload');
+            var _scInline = document.getElementById('soInlineUploadCard');
+            if (state.isScarci) {
+                if (_scInline) { _scInline.style.display = 'none'; _scInline.style.order = ''; }
+                if (_scRefSec) { _scRefSec.style.display = ''; _scRefSec.style.order = '-210'; }
+            } else {
+                if (_scRefSec) { _scRefSec.style.display = 'none'; _scRefSec.style.order = ''; }
+            }
+        } catch (_sce) {}
         // 2026-05-13: 배송만 사용하는 상품 — 허니콤 가벽 제외 모든 허니콤 (박스/자유인쇄커팅/원판 등)
         state.isDeliveryOnly = _soUsesDeliveryShipping(p);
         // 2026-05-13: 택배배송 가능 (배너·인스타판넬)
@@ -15822,6 +15926,8 @@ html, body { background: #ffffff !important; }
             // 2026-06-04: 글씨 스카시 family 전용 — 타이틀/서브 문구 (담당자 디자인용)
             scarciTitle: (state.scarciTitle || '') || null,
             scarciSub: (state.scarciSub || '') || null,
+            // 2026-07-15: 글씨 스카시 참고자료(로고/사진) URL 배열 — 주문 시 design_requests.files 로 첨부
+            uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice() : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
             isInstaPanel: !!state.isInstaPanel,
             instaTitle: (state.instaTitle || '') || null,

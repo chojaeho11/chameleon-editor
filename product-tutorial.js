@@ -1331,8 +1331,53 @@
     GENERIC_STEPS[2]  // 10) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 글씨 스카시 (hb_ss_*)  2026-07-15
+  //  종류선택 → 디자인 문구(타이틀·서브) → 참고사진·로고 업로드(여러 장) → 배송 → 장바구니.
+  //  고객이 직접 디자인하기 어려운 상품 — 자료만 올리면 디자이너가 제작. simple_order 의
+  //  동기 플래그(window._soCurrentIsScarci)로 판정.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsScarci() { try { return window._soCurrentIsScarci === true; } catch (_) { return false; } }
+  var SCARCI_STEPS = [
+    { // 1) 스카시 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 챕터로 이어감
+      target: ['#soScarciVariants', '#soScarciVariantsSec'], mode: 'next', resumeNext: true,
+      onEnter: function () { return window._soCurrentIsScarci === true; },
+      msg: { kr: '먼저 <b>스카시 종류</b>를 골라요. 1장짜리·하단박스·묵직한 스타일·아크릴 허니콤 글씨 등 카드를 눌러 종류를 바꿀 수 있어요.',
+        ja: 'まず <b>スカシの種類</b> を選びます。1枚·下段ボックス·重厚スタイル·アクリルハニカム文字など、カードをタップで切替できます。',
+        en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
+      cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
+    },
+    { // 2) 디자인 문구 (타이틀/서브) — 디자이너가 직접 디자인해주는 상품 안내
+      target: '#soScarciTextInputs', mode: 'next',
+      onEnter: function () { return _secVisible('#soScarciTextInputs'); },
+      msg: { kr: '이 제품은 디자인이 까다로워 <b>전문 디자이너가 직접 만들어드려요</b> (디자인 무료). 넣고 싶은 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요.',
+        ja: 'この商品はデザインが難しいため <b>専門デザイナーが直接制作</b> します（デザイン無料）。入れたい <b>タイトル文</b> と <b>サブ文</b> をご記入ください。',
+        en: 'This product is crafted by a <b>professional designer</b> for you (free). Enter the <b>title</b> and <b>subtitle</b> text you\'d like.' },
+      cheer: { kr: '문구 입력! 📝', ja: '文言OK! 📝', en: 'Text set! 📝' }
+    },
+    { // 3) 참고사진 · 로고 올리기 (여러 장) + 30분 안내
+      target: '#soScarciRefUpload', mode: 'next',
+      onEnter: function () { return _secVisible('#soScarciRefUpload'); },
+      msg: { kr: '<b>참고사진·로고</b>를 올려주세요 — <b>여러 장 한 번에</b> 올릴 수 있어요. 주문을 마치시면 <b>30분 이내</b>에 담당 매니저와 디자이너가 배정되어 연락드려요. <b>끝까지 주문을 마무리</b>하고 기다려 주세요!',
+        ja: '<b>参考写真·ロゴ</b>をアップロード — <b>複数まとめて</b> OK。ご注文完了後 <b>30分以内</b> に担当マネージャーとデザイナーが決まりご連絡します。<b>最後まで注文を完了</b> してお待ちください!',
+        en: 'Upload <b>reference photos & logos</b> — <b>several at once</b> is fine. After you order, a manager and designer are assigned <b>within 30 min</b> and will contact you. Please <b>finish the order</b> and wait!' },
+      cheer: { kr: '자료 업로드! 📎', ja: '資料OK! 📎', en: 'Files uploaded! 📎' }
+    },
+    { // 4) 배송 (수도권 무료 / 지방)
+      target: '#soScheduleSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soScheduleSection'); },
+      msg: { kr: '<b>배송 방법</b>을 골라요. <b>수도권 무료배송</b> 또는 <b>지방배송</b> 중에서 선택할 수 있어요.',
+        ja: '<b>配送方法</b>を選びます。<b>首都圏 送料無料</b> または <b>地方配送</b> から選べます。',
+        en: 'Choose the <b>delivery method</b> — <b>free metro delivery</b> or <b>regional delivery</b>.' },
+      cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
+    },
+    GENERIC_STEPS[2]  // 5) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
+    // 2026-07-15: 글씨 스카시 — 종류·문구·참고자료·배송 전용 스텝. honeycomb/size-product 보다 앞.
+    { id: 'scarci', match: { test: function () { return _tutIsScarci(); } }, steps: SCARCI_STEPS },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
     { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
