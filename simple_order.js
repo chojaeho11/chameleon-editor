@@ -2904,6 +2904,13 @@ html, body { background: #ffffff !important; }
             <div id="soStickerCoatingGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
           </div>
 
+          <!-- 2026-07-14: 4.5) 모양 따기 (커팅) — 네모 그대로 / 사진 모양대로 오리기(+30,000원) -->
+          <div id="soStickerDieCutWrap" style="display:none; margin-top:14px;">
+            <div class="so-section-title">${tr('모양 (재단 방식)', '形 (カット方式)', 'Shape (cut)')}</div>
+            <div id="soStickerDieCutGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+            <div id="soStickerDieCutHint" style="display:none; margin-top:7px; font-size:11px; color:#78350f; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; line-height:1.55;">${tr('사진 모양대로 오리려면 위 에디터에서 <b>업로드 → 누끼</b>(배경 제거) → <b>칼선</b>을 눌러 모양을 따 주세요.', '写真の形に切るには、上のエディターで <b>アップロード → 切り抜き</b> → <b>カットライン</b> を作成してください。', 'To cut to the photo shape, in the editor above: <b>Upload → Cut-out</b> (remove bg) → <b>Cutline</b>.')}</div>
+          </div>
+
           <!-- 5) 별색 박 -->
           <div id="soStickerFoilWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">✨ ${tr('별색 박', '別色箔', 'Spot foil')} (${tr('각', '各', 'each')} +${fmtPrice(50000)})</div>
@@ -4541,7 +4548,8 @@ html, body { background: #ffffff !important; }
                     qty: state.stickerQty,
                     coating: state.stickerCoating,
                     foils: state.stickerFoils,
-                    isFancy: _stIsFancy
+                    isFancy: _stIsFancy,
+                    dieCut: state.stickerDieCut
                 });
                 qty = Math.max(1, Number(state.stickerQty) || 1000);
                 unit = (qty > 0) ? Math.round(_stPrice / qty) : 0;
@@ -4699,6 +4707,7 @@ html, body { background: #ffffff !important; }
                           (_stSizeLbl ? ' · ' + _stSizeLbl : '') +
                           (_stCoatOpt ? ' · ' + _stickerI18n(_stCoatOpt, 'name') : '') +
                           (_stFoilLabels.length ? ' · ✨ ' + _stFoilLabels.join(', ') : '') +
+                          (state.stickerDieCut ? ' · ' + tr('모양따기 +', '型抜き +', 'Die-cut +') + fmtPrice(30000) : '') +
                           ' · ' + qty.toLocaleString() + tr('매','枚','pcs');
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _stMeta + '</span><span></span></div>'
@@ -8232,7 +8241,9 @@ html, body { background: #ffffff !important; }
         var foilTotal = 0;
         var foils = stState.foils || [];
         STICKER_FOILS.forEach(function(f){ if (foils.indexOf(f.key) >= 0) foilTotal += f.fee; });
-        return subtotal + foilTotal;
+        // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — 정액 +30,000원 (수량 무관)
+        var dieCutFee = stState.dieCut ? 30000 : 0;
+        return subtotal + foilTotal + dieCutFee;
     }
 
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
@@ -10959,6 +10970,27 @@ html, body { background: #ffffff !important; }
                     + '</button>';
             }).join('');
         }
+        // 2026-07-14: 모양 따기 (커팅) — 팬시 제외, 재단 스티커만. 사진 모양대로 오리기 = +30,000원.
+        var dcW = document.getElementById('soStickerDieCutWrap');
+        if (dcW) dcW.style.display = isFancy ? 'none' : '';
+        var dcGrid = document.getElementById('soStickerDieCutGrid');
+        if (dcGrid && !isFancy) {
+            var _dcOpts = [
+                { v: false, label: tr('네모 그대로', '四角のまま', 'Square'), sub: tr('기본', '標準', 'Default') },
+                { v: true,  label: tr('사진 모양대로 오리기', '写真の形にカット', 'Cut to photo shape'), sub: '+' + fmtPrice(30000) }
+            ];
+            dcGrid.innerHTML = _dcOpts.map(function(o){
+                var sel = (!!state.stickerDieCut === o.v);
+                var _c = o.v ? '#b45309' : '#4338ca';
+                return '<button type="button" onclick="window._soStickerPickDieCut(' + o.v + ')" '
+                    + 'style="padding:9px 8px; border:2px solid ' + (sel?_c:'#e7e5e4') + '; background:' + (sel?(o.v?'#fffbeb':'#eef2ff'):'#fff') + '; color:' + (sel?(o.v?'#78350f':'#3730a3'):'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center; line-height:1.3;">'
+                    + (sel?'✓ ':'') + o.label
+                    + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel?(o.v?'#92400e':'#4f46e5'):'#64748b') + '; margin-top:2px;">' + o.sub + '</span>'
+                    + '</button>';
+            }).join('');
+            var dcHint = document.getElementById('soStickerDieCutHint');
+            if (dcHint) dcHint.style.display = state.stickerDieCut ? '' : 'none';
+        }
         // 별색 박
         if (foilW) foilW.style.display = '';
         var foilGrid = document.getElementById('soStickerFoilGrid');
@@ -11122,6 +11154,8 @@ html, body { background: #ffffff !important; }
         recalc();
     };
     window._soStickerPickCoating = function(k) { state.stickerCoating = k; _soStickerRender(); recalc(); };
+    // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — true 면 +30,000원. 위 에디터에서 누끼·칼선으로 모양 작업.
+    window._soStickerPickDieCut = function(v) { state.stickerDieCut = !!v; _soStickerRender(); recalc(); };
     window._soStickerToggleFoil = function(k) {
         if (!state.stickerFoils) state.stickerFoils = [];
         var idx = state.stickerFoils.indexOf(k);
@@ -12371,6 +12405,7 @@ html, body { background: #ffffff !important; }
             state.stickerH           = state.stickerH || 100;
             state.stickerCoating     = state.stickerCoating || 'matte';
             state.stickerFoils       = state.stickerFoils || [];
+            if (state.stickerDieCut == null) state.stickerDieCut = false;   // 2026-07-14: 모양 따기 기본 = 네모
             // 변형 캐시 미리 채움 + 첫 렌더. 팬시 감지 후 qty 기본값 결정.
             try {
                 _soLoadStickerVariants().then(function(vs){
@@ -15583,6 +15618,7 @@ html, body { background: #ffffff !important; }
             sticker: state.isSticker ? {
                 productCode: state.stickerProductCode, w: state.stickerW, h: state.stickerH,
                 qty: state.stickerQty, coating: state.stickerCoating, foils: (state.stickerFoils || []).slice(),
+                dieCut: !!state.stickerDieCut,
                 isFancy: !!(_stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode && _stickerIsFancy(x); }))
             } : null,
             _isSticker: !!state.isSticker,
@@ -17185,6 +17221,7 @@ html, body { background: #ffffff !important; }
                 state.stickerQty         = item.sticker.qty || 1000;
                 state.stickerCoating     = item.sticker.coating || 'matte';
                 state.stickerFoils       = (item.sticker.foils || []).slice();
+                state.stickerDieCut      = !!item.sticker.dieCut;
                 if (typeof _soStickerRender === 'function') _soStickerRender();
             }
             // 배송 복원
