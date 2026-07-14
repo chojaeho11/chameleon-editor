@@ -4706,7 +4706,7 @@ html, body { background: #ffffff !important; }
             var _stKindOpt = STICKER_SHAPE_KINDS.find(function(k){ return k.key === state.stickerShapeKind; });
             var _stKindNm = _stKindOpt ? (' ' + _stickerI18n(_stKindOpt, 'name')) : '';
             var _stShapeLbl = (_stShape === 'simple') ? (tr('도형따기','図形カット','Shape-cut') + _stKindNm + ' +' + fmtPrice(10000))
-                            : (_stShape === 'complex') ? (tr('복잡모양 +','複雑カット +','Complex-cut +') + fmtPrice(30000)) : '';
+                            : (_stShape === 'complex') ? (tr('모양스티커 +','型抜き +','Die-cut +') + fmtPrice(10000)) : '';
             var _stSizeLbl = _stFancy ? '' : ((state.stickerW||100) + '×' + (state.stickerH||100) + 'mm');
             var _stMeta = '🏷️ ' + (_stV ? _stickerVariantLabel(_stV) : '') +
                           (_stSizeLbl ? ' · ' + _stSizeLbl : '') +
@@ -8268,9 +8268,11 @@ html, body { background: #ffffff !important; }
     // 기준 사이즈(100×100mm) 낱장 단가(원). 사이즈는 면적 비례로 별도 곱함.
     function _stickerPerUnitRef(typeKey, qty) {
         qty = Math.max(1, Number(qty) || 1000);
-        if (_stickerIsBaseType(typeKey)) return 10;   // 일반: 낱장 10원 정액 (500매5천/1000매1만/2000매2만)
-        // 특수용지: 총액 앵커 → 낱장단가. 10매3만 / 50매5만 / 100매8만 / 500매15만 / 1000매20만.
-        var A = [[10,3000],[50,1000],[100,800],[500,300],[1000,200]];
+        // 일반(기본가): 수량 앵커 낱장단가 — 500매 5천(10원)/1000매 8천(8원)/2000매 1만(5원). 2026-07-14.
+        // 특수용지: 10매3만(3000) / 50매5만(1000) / 100매8만(800) / 500매15만(300) / 1000매20만(200).
+        var A = _stickerIsBaseType(typeKey)
+            ? [[500,10],[1000,8],[2000,5]]
+            : [[10,3000],[50,1000],[100,800],[500,300],[1000,200]];
         if (qty <= A[0][0]) return A[0][1];
         if (qty >= A[A.length-1][0]) return A[A.length-1][1];
         for (var i = 0; i < A.length - 1; i++) {
@@ -8284,8 +8286,8 @@ html, body { background: #ffffff !important; }
     // 모양(재단) 정액. shape: 'square'|'simple'|'complex'. (구 dieCut boolean → complex 로 매핑)
     function _stickerShapeFee(shape, legacyDieCut) {
         if (!shape) shape = legacyDieCut ? 'complex' : 'square';
-        if (shape === 'simple') return 10000;
-        if (shape === 'complex') return 30000;
+        if (shape === 'simple') return 10000;   // (구 간단도형 — UI 삭제됨, 호환용)
+        if (shape === 'complex') return 10000;   // 2026-07-14: 모양스티커 — 3만→1만원
         return 0;
     }
     // 2026-07-14: 간단도형 9종 (간단도형 선택 시 편집기 칼선 생성용). key = 편집기 _meCutlineShapeItem(kind) 와 공유.
@@ -11093,7 +11095,7 @@ html, body { background: #ffffff !important; }
             if (topGrid) {
                 var _topOpts = [
                     { v: 'square',  label: tr('사각', '四角', 'Square'),       sub: tr('기본', '標準', 'Default'), c: '#4338ca' },
-                    { v: 'complex', label: tr('복잡모양', '複雑な形', 'Complex'), sub: '+' + fmtPrice(30000),        c: '#b45309' }
+                    { v: 'complex', label: tr('모양스티커', '型抜きステッカー', 'Die-cut'), sub: '+' + fmtPrice(10000),        c: '#b45309' }
                 ];
                 topGrid.innerHTML = _topOpts.map(function(o){
                     var sel = (_shape === o.v);
@@ -16936,7 +16938,7 @@ html, body { background: #ffffff !important; }
                                 var _skKind = STICKER_SHAPE_KINDS.find(function(x){ return x.key === _sk.shapeKind; });
                                 meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: die-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : '') + ' +' + fmtPrice(10000));
                             } else if (_skShape === 'complex') {
-                                meta.push(tr('모양: 복잡모양(외곽따기)', '形: 複雑カット', 'Shape: complex die-cut') + ' +' + fmtPrice(30000));
+                                meta.push(tr('모양: 모양스티커(외곽따기)', '形: 型抜き', 'Shape: die-cut') + ' +' + fmtPrice(10000));
                             } else {
                                 meta.push(tr('모양: 사각', '形: 四角', 'Shape: square'));
                             }

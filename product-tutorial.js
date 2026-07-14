@@ -921,9 +921,9 @@
     { // 6) 모양(재단) 선택 (스티커만) — 사각(기본)/간단도형(+10,000)/복잡모양(+30,000). 없는 제품은 자동 스킵.
       target: '#soStickerShapeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerShapeWrap'); },
-      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>복잡모양</b> — 그림 외곽 그대로 따기 <b>(+30,000원)</b>. 다음 단계에서 자동으로 누끼+칼선을 따드려요.',
-        ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>複雑な形</b> — 絵の輪郭通りにカット <b>(+¥3,000)</b>。次のステップで自動で切り抜き+カットライン。',
-        en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Complex</b> — die-cut the artwork outline <b>(+₩30,000)</b>; auto cut-out + cutline next.' },
+      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>모양스티커</b> — 그림 외곽 그대로 따기 <b>(+10,000원)</b>. 다음 단계에서 자동으로 누끼+칼선을 따드려요.',
+        ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>型抜きステッカー</b> — 絵の輪郭通りにカット <b>(+¥1,000)</b>。次のステップで自動で切り抜き+カットライン。',
+        en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Die-cut</b> — cut to the artwork outline <b>(+₩10,000)</b>; auto cut-out + cutline next.' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
     },
     { // 6.5) 복잡모양 — 자동 누끼+칼선 실행 후, 이미지 크기·위치를 조정해 칼선에 맞춤 (복잡모양 아니면 자동 스킵).
@@ -932,9 +932,9 @@
       buttons: [
         { action: '_meStickerAutoCutout', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>복잡모양</b>이에요! ① 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요. ② 그 다음 <b>이미지의 크기와 위치를 조정해서 빨강 점선(칼선)에 맞춰</b> 주세요. 이미지와 칼선은 <b>각각 드래그·모서리 핸들</b>로 따로 조정돼요.',
-        ja: '<b>複雑な形</b> です! ① 下の <b>[自動 背景除去+カットライン]</b> を押します。② 次に <b>画像のサイズと位置を調整して赤い点線(カットライン)に合わせて</b> ください。画像とカットラインは <b>それぞれドラッグ·角ハンドル</b> で別々に調整できます。',
-        en: 'It\'s <b>Complex</b>! ① Tap <b>[Auto bg-removal + cutline]</b> below. ② Then <b>adjust the image size & position to match the red dashed cutline</b>. The image and cutline move <b>independently</b> — drag or use the corner handles.' },
+      msg: { kr: '<b>모양스티커</b>예요! ① 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요. ② 그 다음 <b>이미지의 크기와 위치를 조정해서 빨강 점선(칼선)에 맞춰</b> 주세요. 이미지와 칼선은 <b>각각 드래그·모서리 핸들</b>로 따로 조정돼요.',
+        ja: '<b>型抜きステッカー</b> です! ① 下の <b>[自動 背景除去+カットライン]</b> を押します。② 次に <b>画像のサイズと位置を調整して赤い点線(カットライン)に合わせて</b> ください。画像とカットラインは <b>それぞれドラッグ·角ハンドル</b> で別々に調整できます。',
+        en: 'It\'s <b>Die-cut</b>! ① Tap <b>[Auto bg-removal + cutline]</b> below. ② Then <b>adjust the image size & position to match the red dashed cutline</b>. The image and cutline move <b>independently</b> — drag or use the corner handles.' },
       hint: { kr: '이미지·칼선을 각각 맞춘 뒤 다음을 눌러요', ja: '画像·カットラインを合わせてから次へ', en: 'Align image & cutline, then Next' },
       cheer: { kr: '칼선 정렬 완료! ✂️', ja: 'カットライン整列OK! ✂️', en: 'Aligned! ✂️' }
     },
