@@ -4594,6 +4594,8 @@ html, body { background: #ffffff !important; }
         //   _soCalcItemPrice(장바구니) 와 동일 helper 사용 → 제품페이지=장바구니 일치.
         if (state.isPaperDisplay) {
             subtotal = _soPaperStandSubtotal(unit, qty, _soIsSmallPaperStand(state.product));
+            // 표시 단가 = 합계 / 수량 (10~99 2배·샘플 등에서 '단가 × 수량 = 합계' 일치)
+            unit = Math.round(subtotal / Math.max(1, qty));
         }
         const tierPct = 0;
         const discount = 0;
@@ -5300,18 +5302,19 @@ html, body { background: #ffffff !important; }
     // 2026-06-30: 종이매대 가격 통합 — 제품페이지(recalc) / 장바구니(_soCalcItemPrice) 공용 단일 진실.
     // 2026-07-15: 수량 티어 재정의(사장님 요청).
     //   1~9개  = 샘플비 150,000 (전 제품 통일)
-    //   10~99개 = 100개 단가(정가)의 2배 × 수량  (원터치 60,000×10=600,000 / 소형 20,000×10=200,000)
-    //             단, 2배 단가가 샘플비(150,000)를 넘는 고가 제품(특수설계·트리·테이블형 등)은 샘플값(150,000)으로.
-    //   100개+ = 정상 단가(정가) × 수량
+    //   10~99개 = 실효 단가 × 수량. 실효 단가 = 정가의 2배. 단, 2배가 샘플비(150,000)를 넘는
+    //             고가 제품(특수설계·트리·테이블형 등)은 2배 없이 정가(1배)로.
+    //             (원터치 60,000×10=600,000 / 소형 20,000×10=200,000 / 트리 100,000×10=1,000,000 / 특수 150,000×10=1,500,000)
+    //   100개+ = 정가 × 수량
     var _PD_SAMPLE = 150000;
+    function _soPdUnit10(unit) {                         // 10~99개 실효 단가
+        var per2x = unit * 2;
+        return (per2x > _PD_SAMPLE) ? unit : per2x;      // 2배가 샘플비 초과 고가품은 정가(1배)
+    }
     function _soPaperStandSubtotal(unit, qty, isSmall) {
         qty = Math.max(1, parseInt(qty, 10) || 1);
         if (qty >= 100) return unit * qty;              // 100개+ = 정가 × 수량
-        if (qty >= 10) {                                // 10~99개 = 정가 2배 × 수량
-            var per2x = unit * 2;
-            if (per2x > _PD_SAMPLE) return _PD_SAMPLE;   // 2배가 샘플비 초과 고가품 → 샘플값
-            return per2x * qty;
-        }
+        if (qty >= 10) return _soPdUnit10(unit) * qty;   // 10~99개 = 실효 단가 × 수량
         return _PD_SAMPLE;                              // 1~9개 = 샘플비
     }
 
@@ -17212,6 +17215,12 @@ html, body { background: #ffffff !important; }
                     var _lfSizeObj = (window.LEAFLET_SIZES || []).find(function(s){ return s.id === _lfSizeId; }) || { wMm:0, hMm:0 };
                     var _lfSideLbl = (_lfSideId === 'double') ? tr('양면','両面','Double') : tr('단면','片面','Single');
                     meta.push('📐 ' + _lfSizeId + ' (' + _lfSizeObj.wMm + '×' + _lfSizeObj.hMm + 'mm) · ' + _lfSideLbl);
+                }
+                // 2026-07-15: 종이매대 — 샘플(1~9)/2배(10~99)/정가(100+) 티어 실효 단가로 표시 (단가 × 수량 = 소계 일치)
+                var _isPdRow = (typeof _soIsPaperDisplayProduct === 'function') && _soIsPaperDisplayProduct(item.product);
+                if (_isPdRow && typeof _soPaperStandSubtotal === 'function') {
+                    var _pdSubC = _soPaperStandSubtotal((item.product && item.product.price) || 0, _bdQty, (typeof _soIsSmallPaperStand === 'function') && _soIsSmallPaperStand(item.product));
+                    _bdUnit = (_bdQty > 0) ? Math.round(_pdSubC / _bdQty) : _pdSubC;
                 }
                 var _bdSub = _bdUnit * _bdQty;
                 // 2026-07-06: 스티커는 "단가 × 1000 (¥3)" 이 "3장"처럼 오해됨(일본 직원 지적) → "1,000매 = ¥3,000" 으로 명확 표기.
