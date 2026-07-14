@@ -1296,6 +1296,15 @@
     } catch (e) { console.warn('[tut] _tutMaybeStart', e); }
   };
 
+  // 2026-07-14: 종류 카드 등 variant 선택으로 리로드되기 직전 호출 — 튜토리얼이 진행 중(또는 모드선택 창이 떠 있으면)이면
+  //   resumeNext 진행상태를 저장해, 리로드 후 '주문이 처음이신가요?'로 재시작하지 않고 다음 챕터(사이즈)로 이어가게 함.
+  window._tutBeforeVariantReload = function () {
+    try {
+      if (!_active && !_choice) return;   // 튜토리얼 미진행이면 무시 (일반 사용자는 그대로 리로드)
+      sessionStorage.setItem('__tut_progress', JSON.stringify({ code: _curCode || '', i: 0, resumeNext: true, ts: Date.now() }));
+    } catch (_) {}
+  };
+
   // 2026-07-10: "튜토리얼 보기" 버튼 등에서 수동으로 다시 열기 (현재 제품 시나리오 기준).
   window._tutOpenChooser = function () {
     try {
