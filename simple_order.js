@@ -3810,11 +3810,9 @@ html, body { background: #ffffff !important; }
             if (state.thumbDataUrl && typeof window._meAddImage === 'function' && window.me) {
                 var _fwMm = state.fileWidthMm, _fhMm = state.fileHeightMm;
                 // 1) 사이즈 자동 인식 (인식된 경우만)
-                if (_fwMm && _fhMm) {
-                    if (state.isSticker) {
-                        state.stickerW = Math.max(10, Math.min(1000, _fwMm));
-                        state.stickerH = Math.max(10, Math.min(1000, _fhMm));
-                    } else if (state.isCustomSize && !state.isWall && !state.isBox && !state.isRealPrint) {
+                //   2026-07-14: 스티커는 제외 — 업로드 파일 페이지크기로 사이즈 덮어쓰지 않음(기본 100×100mm 유지, 사이즈 칸에서 조정).
+                if (_fwMm && _fhMm && !state.isSticker) {
+                    if (state.isCustomSize && !state.isWall && !state.isBox && !state.isRealPrint) {
                         // customSize 는 cm 단위 — mm → cm.
                         state.customW = Math.round(_fwMm) / 10;
                         state.customH = Math.round(_fhMm) / 10;
@@ -11193,11 +11191,10 @@ html, body { background: #ffffff !important; }
             state.fileWidthMm = widthMm;
             state.fileHeightMm = heightMm;
             state.fileKind = isPdf ? 'pdf' : (file.type === 'image/png' ? 'png' : 'jpg');
-            state.stickerW = Math.max(10, Math.min(1000, widthMm));
-            state.stickerH = Math.max(10, Math.min(1000, heightMm));
-            // DOM 입력 동기화
-            var wEl = document.getElementById('soStickerW'); if (wEl) wEl.value = state.stickerW;
-            var hEl = document.getElementById('soStickerH'); if (hEl) hEl.value = state.stickerH;
+            // 2026-07-14: 스티커는 업로드 파일 페이지 크기로 사이즈를 덮어쓰지 않음 — 기본 100×100mm 유지.
+            //   (파일 페이지가 1000mm 등이어도 물리 사이즈는 사용자가 사이즈 칸에서 지정. 가격 폭증 방지.)
+            if (!state.stickerW) state.stickerW = 100;
+            if (!state.stickerH) state.stickerH = 100;
             // 완료 UI 표시
             var beforeEl = document.getElementById('soStickerFinalFileBefore');
             var afterEl  = document.getElementById('soStickerFinalFileAfter');
@@ -11207,7 +11204,8 @@ html, body { background: #ffffff !important; }
             if (infoEl) {
                 var sizeMB = (file.size/1024/1024).toFixed(1);
                 infoEl.innerHTML = '📎 <b>' + escapeHtml(file.name) + '</b> · ' + sizeMB + 'MB<br>'
-                                 + '📐 자동인식 사이즈: <b>' + state.stickerW + ' × ' + state.stickerH + ' mm</b>';
+                                 + '📐 ' + tr('제작 사이즈', '製作サイズ', 'Print size') + ': <b>' + state.stickerW + ' × ' + state.stickerH + ' mm</b> '
+                                 + '<span style="color:#94a3b8;">(' + tr('사이즈 칸에서 조정', 'サイズ欄で調整', 'adjust in size box') + ')</span>';
             }
             // 캔버스 사이즈 + 가격 재계산
             try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch (_) {}
