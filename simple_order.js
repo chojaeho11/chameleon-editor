@@ -2915,14 +2915,10 @@ html, body { background: #ffffff !important; }
             <div id="soStickerTypeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
           </div>
 
-          <!-- 2026-07-14: 4.5) 모양 (재단) — 3분류: 사각(0)/복잡모양(+30,000) 상단, 간단도형(+10,000)+9도형 하단 -->
+          <!-- 2026-07-14: 4.5) 모양 (재단) — 사각(0) / 복잡모양(+30,000). (간단도형 삭제) -->
           <div id="soStickerShapeWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">${tr('모양 (재단)', '形 (カット)', 'Shape (cut)')}</div>
             <div id="soStickerShapeTopGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
-            <div id="soStickerSimpleShapeBox" style="margin-top:6px; border:2px solid #e7e5e4; border-radius:10px; padding:10px;">
-              <button type="button" id="soStickerSimpleShapeBtn" onclick="window._soStickerPickShape('simple')" style="width:100%; padding:8px; border:0; background:transparent; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; color:#1f2937; text-align:left;"></button>
-              <div id="soStickerShapeKindGrid" style="display:none; grid-template-columns:repeat(5, 1fr); gap:5px; margin-top:8px;"></div>
-            </div>
             <div id="soStickerShapeHint" style="display:none; margin-top:7px; font-size:11px; color:#78350f; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; line-height:1.55;"></div>
           </div>
 
@@ -11085,13 +11081,14 @@ html, body { background: #ffffff !important; }
                     + '</button>';
             }).join('');
         }
-        // 2026-07-14: 모양 (재단) — 팬시 제외, 재단 스티커만. 사각(0)/간단도형(+10,000)/복잡모양(+30,000).
+        // 2026-07-14: 모양 (재단) — 팬시 제외, 재단 스티커만. 사각(0)/복잡모양(+30,000). (간단도형 삭제)
         var shW = document.getElementById('soStickerShapeWrap');
         if (shW) shW.style.display = isFancy ? 'none' : '';
         if (!isFancy) {
             var _shape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
+            // 간단도형 제거 — 예전 값이 남아있으면 사각으로 정규화.
+            if (_shape === 'simple') { _shape = 'square'; state.stickerShape = 'square'; state.stickerShapeKind = null; }
             window._soStickerShapeCur = _shape;
-            // 상단: 사각 / 복잡모양
             var topGrid = document.getElementById('soStickerShapeTopGrid');
             if (topGrid) {
                 var _topOpts = [
@@ -11109,32 +11106,6 @@ html, body { background: #ffffff !important; }
                         + '</button>';
                 }).join('');
             }
-            // 하단: 간단도형 라벨 + 9도형 서브그리드
-            var simpleSel = (_shape === 'simple');
-            var simpleBox = document.getElementById('soStickerSimpleShapeBox');
-            if (simpleBox) simpleBox.style.borderColor = simpleSel ? '#4338ca' : '#e7e5e4';
-            var simpleBtn = document.getElementById('soStickerSimpleShapeBtn');
-            if (simpleBtn) {
-                simpleBtn.style.color = simpleSel ? '#3730a3' : '#1f2937';
-                simpleBtn.innerHTML = (simpleSel?'✓ ':'') + tr('간단도형', 'かんたん図形', 'Simple shape')
-                    + ' <span style="font-size:10px; font-weight:600; color:' + (simpleSel?'#4f46e5':'#64748b') + ';">+' + fmtPrice(10000) + '</span>';
-            }
-            var kindGrid = document.getElementById('soStickerShapeKindGrid');
-            if (kindGrid) {
-                kindGrid.style.display = simpleSel ? 'grid' : 'none';
-                if (simpleSel) {
-                    kindGrid.innerHTML = STICKER_SHAPE_KINDS.map(function(sk){
-                        var ksel = (state.stickerShapeKind === sk.key);
-                        var col = ksel ? '#4338ca' : '#94a3b8';
-                        return '<button type="button" onclick="window._soStickerPickShape(\'simple\',\'' + sk.key + '\')" '
-                            + 'style="padding:6px 3px; border:2px solid ' + (ksel?'#4338ca':'#e7e5e4') + '; background:' + (ksel?'#eef2ff':'#fff') + '; border-radius:8px; cursor:pointer; font-family:inherit; text-align:center;">'
-                            + _stickerShapeSvg(sk.key, col)
-                            + '<span style="display:block; font-size:9.5px; font-weight:700; color:' + (ksel?'#3730a3':'#475569') + '; margin-top:2px; line-height:1.15;">' + _stickerI18n(sk, 'name') + '</span>'
-                            + '</button>';
-                    }).join('');
-                }
-            }
-            // 힌트: 복잡모양 = 편집기 누끼+칼선 안내 / 간단도형 = 대지에서 드래그·핸들 조정 안내
             var shHint = document.getElementById('soStickerShapeHint');
             if (shHint) {
                 if (_shape === 'complex') {
@@ -11142,11 +11113,6 @@ html, body { background: #ffffff !important; }
                     shHint.innerHTML = tr('사진 모양대로 오리려면 위 에디터에서 <b>업로드 → 누끼</b>(배경 제거) → <b>칼선</b>을 눌러 모양을 따 주세요.',
                         '写真の形に切るには、上のエディターで <b>アップロード → 切り抜き</b> → <b>カットライン</b> を作成してください。',
                         'To cut to the photo shape, in the editor above: <b>Upload → Cut-out</b> (remove bg) → <b>Cutline</b>.');
-                } else if (simpleSel && state.stickerShapeKind) {
-                    shHint.style.display = '';
-                    shHint.innerHTML = tr('선택한 도형 칼선이 대지에 생성됩니다. <b>드래그·모서리 핸들</b>로 위치·크기를 조정하세요.',
-                        '選んだ図形のカットラインが台紙に生成されます。<b>ドラッグ・角ハンドル</b>で位置・サイズを調整してください。',
-                        'A cutline for the chosen shape is placed on the canvas. Adjust position/size by <b>dragging or the corner handles</b>.');
                 } else {
                     shHint.style.display = 'none';
                 }

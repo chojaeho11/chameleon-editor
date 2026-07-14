@@ -921,10 +921,9 @@
     { // 6) 모양(재단) 선택 (스티커만) — 사각(기본)/간단도형(+10,000)/복잡모양(+30,000). 없는 제품은 자동 스킵.
       target: '#soStickerShapeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerShapeWrap'); },
-      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>간단도형</b> — 원·별·다각형 등 도형으로 오리기 <b>(+10,000원)</b>. 고른 도형 칼선을 대지에서 드래그·핸들로 조정해요.<br>• <b>복잡모양</b> — 그림 외곽 그대로 따기 <b>(+30,000원)</b>.',
-        ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>かんたん図形</b> — 円·星·多角形などでカット <b>(+¥1,000)</b>。選んだ図形のカットラインを台紙でドラッグ·ハンドル調整。<br>• <b>複雑な形</b> — 絵の輪郭通りにカット <b>(+¥3,000)</b>。',
-        en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Simple shape</b> — circle/star/polygon cut <b>(+₩10,000)</b>; drag & resize the cutline on the canvas.<br>• <b>Complex</b> — die-cut the artwork outline <b>(+₩30,000)</b>.' },
-      hint: { kr: '간단도형을 고르면 도형 칼선이 대지에 생겨요 — 드래그·핸들로 크기 조정', ja: 'かんたん図形を選ぶと図形カットラインが台紙に生成 — ドラッグ·ハンドルで調整', en: 'Pick a simple shape to place a cutline you can drag & resize' },
+      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>복잡모양</b> — 그림 외곽 그대로 따기 <b>(+30,000원)</b>. 다음 단계에서 자동으로 누끼+칼선을 따드려요.',
+        ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>複雑な形</b> — 絵の輪郭通りにカット <b>(+¥3,000)</b>。次のステップで自動で切り抜き+カットライン。',
+        en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Complex</b> — die-cut the artwork outline <b>(+₩30,000)</b>; auto cut-out + cutline next.' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
     },
     { // 6.5) 복잡모양 — 자동 누끼+칼선 실행 후, 이미지 크기·위치를 조정해 칼선에 맞춤 (복잡모양 아니면 자동 스킵).
