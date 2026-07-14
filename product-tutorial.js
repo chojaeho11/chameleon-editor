@@ -670,6 +670,18 @@
     return ft.indexOf('✓') === 0 || xt.indexOf('✓') === 0;
   }
 
+  // 2026-07-14: 장바구니 담기 직전 — 미니에디터 시안 최종 확인 + PDF 다운로드 점검 (모든 제품 공통).
+  //   에디터가 없는 제품(원판/금액주문 등)은 onEnter 로 자동 스킵.
+  var PROOF_STEP = {
+    target: '#aiNbAiDl', mode: 'next',
+    onEnter: function () { return _secVisible('#meStage') || _secVisible('#aiNbAiDl'); },
+    hint: { kr: '⬇ 다운로드로 PDF 시안을 꼭 확인!', ja: '⬇ ダウンロードでPDF確認を!', en: '⬇ Download & check the PDF proof!' },
+    msg: { kr: '담기 전에 <b>시안을 최종 확인</b>해요. 위 에디터에서 디자인을 한 번 더 보고, <b>다운로드</b>로 <b>PDF 시안</b>을 꼭 확인해 주세요.<br><span style="color:#94a3b8;">에디터 화면과 실제 인쇄 PDF는 약간 다를 수 있어요.</span>',
+      ja: 'カートに入れる前に <b>デザインを最終確認</b>。上のエディターでもう一度見て、<b>ダウンロード</b> で <b>PDF</b> を必ずご確認ください。<br><span style="color:#94a3b8;">エディター画面と実際の印刷PDFは多少異なる場合があります。</span>',
+      en: 'Do a <b>final check</b> before adding to cart. Review your design above and tap <b>Download</b> to check the <b>PDF proof</b>.<br><span style="color:#94a3b8;">The editor may differ slightly from the printed PDF.</span>' },
+    cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
+  };
+
   var BIZCARD_STEPS = [
     // 2026-06-25: 명함은 항상 양면 기본 — 단/양면 선택 단계 폐지.
     { // 1) 디자인 방법 — 3갈래 (양면: 앞/뒤 모두)
@@ -756,7 +768,8 @@
         ja: '箔押し・ミシン目・スジ・型押しを選びましたね!イラストで <b>別レイヤー</b> に <b>C100 (シアン100%) 特色</b> または <b>金箔</b> 指定で作成してください 🎨',
         en: 'You picked foil/perforation/crease/emboss! In Illustrator, mark them on a <b>separate layer</b> using <b>C100 (cyan 100%) spot</b> or specify <b>gold foil</b> 🎨' }
     },
-    { // 7) 장바구니
+    PROOF_STEP, // 7) 시안 최종 확인 (다운로드 PDF 점검)
+    { // 8) 장바구니
       target: '#soBtnCart', mode: 'wait',
       hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
       msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
@@ -886,7 +899,8 @@
         en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
     },
     GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
-    GENERIC_STEPS[2]  // 6) 장바구니
+    PROOF_STEP,       // 6) 시안 최종 확인
+    GENERIC_STEPS[2]  // 7) 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════
@@ -932,7 +946,8 @@
         ja: '最後に <b>配送希望日</b> を決めます(営業日基準で <b>最短3日後</b>)。<b>100万ウォン以上</b> の注文は <b>時間指定</b> も可能、それ以下は <b>日付のみ</b>。',
         en: 'Finally, set your <b>preferred delivery date</b> (from <b>3 business days</b>). Orders <b>over ₩1,000,000</b> can also pick a <b>time</b>; below that, <b>date only</b>.' }
     },
-    GENERIC_STEPS[2] // 8) 장바구니 — 공통 재사용
+    PROOF_STEP,      // 시안 최종 확인
+    GENERIC_STEPS[2] // 장바구니 — 공통 재사용
   ];
 
   // ════════════════════════════════════════════════════════════════════
@@ -963,7 +978,8 @@
         ja: '<b>数量</b>を決めます。複数枚は1ファイルにまとめて数量を入力してください。',
         en: 'Set the <b>quantity</b>. For multiple banners, put them in one file and enter the count.' }
     },
-    GENERIC_STEPS[2] // 5) 장바구니
+    PROOF_STEP,      // 시안 최종 확인
+    GENERIC_STEPS[2] // 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════
@@ -1034,6 +1050,7 @@
         ja: '<b>配送方法</b>を選びます。等身大は宅配可能で、地域·サイズにより選択肢が変わります。',
         en: 'Choose the <b>delivery method</b>. Standees can ship by parcel; options vary by region and size.' }
     },
+    PROOF_STEP,      // 시안 최종 확인
     GENERIC_STEPS[2] // 8) 장바구니
   ];
 
@@ -1046,7 +1063,8 @@
     //   match 는 코드 대신 우측 사이즈 섹션 노출 여부로 판정(그 외엔 generic). 반드시 generic 앞.
     { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: SIZE_PRODUCT_STEPS },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
-    { id: 'generic', match: /.*/, steps: GENERIC_STEPS }
+    //   2026-07-14: 장바구니 직전 시안확인(PROOF_STEP) 삽입 (GENERIC_STEPS 배열은 그대로 두고 조합).
+    { id: 'generic', match: /.*/, steps: [GENERIC_STEPS[0], GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
   ];
   function pickScenario(code) {
     if (!code) return null;
