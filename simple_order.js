@@ -2893,7 +2893,7 @@ html, body { background: #ffffff !important; }
             <div id="soStickerQtyGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px;"></div>
             <div style="display:flex; gap:8px; align-items:center; margin-top:8px; min-width:0;">
               <span style="font-size:11.5px; color:#64748b; flex-shrink:0;">${tr('직접 입력','直接入力','Custom')}</span>
-              <input type="number" id="soStickerQty" value="1000" min="1000" step="1000" oninput="window._soStickerQtyInput()" style="flex:1 1 0; min-width:0; box-sizing:border-box; padding:9px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
+              <input type="number" id="soStickerQty" value="100" min="10" step="10" oninput="window._soStickerQtyInput()" style="flex:1 1 0; min-width:0; box-sizing:border-box; padding:9px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
             </div>
             <div id="soStickerQtyHint" style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인', '基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引', 'Default 1,000 pcs · 1,000-step · 30% off at 10,000+')}</div>
           </div>
@@ -4549,7 +4549,7 @@ html, body { background: #ffffff !important; }
                     isFancy: _stIsFancy,
                     dieCut: state.stickerDieCut
                 });
-                qty = Math.max(1, Number(state.stickerQty) || 1000);
+                qty = Math.max(1, Number(state.stickerQty) || 100);
                 unit = (qty > 0) ? Math.round(_stPrice / qty) : 0;
                 subtotal = _stPrice;
             } else if (state.isRawBoardDouble) {
@@ -11007,7 +11007,7 @@ html, body { background: #ffffff !important; }
         // 2026-07-14: 수량 프리셋 — 팬시 4단위 / 일반(기본가) 500·1000·2000 / 특수 10·50·100·500·1000.
         var isBaseType = _stickerIsBaseType(state.stickerType);
         var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : (isBaseType ? [500, 1000, 2000] : [10, 50, 100, 500, 1000]);
-        var curQty = state.stickerQty || (isFancy ? 4 : 1000);
+        var curQty = state.stickerQty || (isFancy ? 4 : 100);
         if (qtyGrid) {
             qtyGrid.innerHTML = qtyPresets.map(function(q){
                 var sel = (curQty === q);
@@ -11125,8 +11125,8 @@ html, body { background: #ffffff !important; }
         //   1000 % 4 === 0 이라 단순 '%4' 체크로는 재단→팬시 전환 못 잡음.
         if (isFancy && (!state.stickerQty || wasFancy === false || state.stickerQty > 200)) {
             state.stickerQty = 4;
-        } else if (!isFancy && (!state.stickerQty || wasFancy === true || state.stickerQty < 1000)) {
-            state.stickerQty = 1000;
+        } else if (!isFancy && (!state.stickerQty || wasFancy === true)) {
+            state.stickerQty = 100;   // 2026-07-14: 기본 수량 100매
         }
         if (!state.stickerW) state.stickerW = 100;
         if (!state.stickerH) state.stickerH = 100;
@@ -11264,7 +11264,7 @@ html, body { background: #ffffff !important; }
         // 일반↔특수 카테고리가 바뀌면 수량 프리셋이 달라짐 → 공통값 1000 으로 리셋 (혼란 방지)
         var wasBase = _stickerIsBaseType(state.stickerType);
         state.stickerType = k;
-        if (wasBase !== _stickerIsBaseType(k)) state.stickerQty = 1000;
+        if (wasBase !== _stickerIsBaseType(k)) state.stickerQty = 100;
         _soStickerRender();
         recalc();
     };
@@ -12547,8 +12547,8 @@ html, body { background: #ffffff !important; }
                 _soLoadStickerVariants().then(function(vs){
                     var picked = (vs || []).find(function(x){ return x.code === state.stickerProductCode; });
                     var isFancy = !!(picked && _stickerIsFancy(picked));
-                    if (!state.stickerQty || (isFancy && state.stickerQty % 4 !== 0) || (!isFancy && state.stickerQty % 1000 !== 0)) {
-                        state.stickerQty = isFancy ? 4 : 1000;
+                    if (!state.stickerQty || (isFancy && state.stickerQty % 4 !== 0)) {
+                        state.stickerQty = isFancy ? 4 : 100;
                     }
                     _soStickerRender();
                     try { recalc(); } catch(_) {}
