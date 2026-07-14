@@ -1454,7 +1454,15 @@
         en: 'Choose the <b>cut & print method</b>.<br>• <b>Square / shape cut</b> — rectangular vs. to the artwork outline<br>• <b>Front / back print</b> — pick the print side. Shape cut auto bg-removal + cutline later.' },
       cheer: { kr: '방식 결정! ✂️', ja: '方式OK! ✂️', en: 'Method set! ✂️' }
     },
-    { // 3) 사이즈 (객체 크기 — 있으면)
+    { // 3) 컬러칩 색상 선택 (반투명아크릴 등 — 있으면. 없으면 자동 스킵)
+      target: ['#soAcrylicColorGrid', '#soAcrylicColorSection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soAcrylicColorSection'); },
+      msg: { kr: '<b>컬러칩 색상</b>을 골라요. 원하시는 아크릴 색상을 눌러 선택해 주세요 (블랙·클리어·아이보리 등).',
+        ja: '<b>カラーチップの色</b>を選びます。ご希望のアクリル色をタップしてください（ブラック·クリア·アイボリーなど）。',
+        en: 'Choose the <b>color chip</b>. Tap the acrylic color you want (black, clear, ivory, etc.).' },
+      cheer: { kr: '색상 선택! 🎨', ja: '色OK! 🎨', en: 'Color set! 🎨' }
+    },
+    { // 4) 사이즈 (객체 크기 — 있으면)
       target: ['#soCustomSizeSection', '#soStickerSizeWrap'], mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection') || _secVisible('#soStickerSizeWrap'); },
       msg: { kr: '<b>사이즈</b>를 정해요. 가격은 사이즈(면적)에 따라 자동 계산돼요.',
@@ -1462,7 +1470,7 @@
         en: 'Set the <b>size</b> — the price is calculated automatically from it.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
-    GENERIC_STEPS[0], // 4) 디자인 방법
+    GENERIC_STEPS[0], // 5) 디자인 방법
     { // 5) 누끼 + 칼선 (모양커팅 선택 시) — 사각커팅이면 그냥 다음
       target: '#meStage', mode: 'next',
       onEnter: function () { return _secVisible('#meStage'); },
