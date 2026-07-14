@@ -4546,7 +4546,9 @@ html, body { background: #ffffff !important; }
                 // 2026-06-16: 신규 스티커 — admin price 기반 + 코팅 + 별색.
                 var _stPickedV = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
                 var _stIsFancy = !!(_stPickedV && _stickerIsFancy(_stPickedV));
-                var _stPrice = _stickerCalcPrice({
+                // 2026-07-14: 모양(재단) 수수료를 단가에서 분리 — 단가는 base 만, 모양스티커 +10,000 은 별도 라인.
+                var _stShapeFeeVal = _stIsFancy ? 0 : _stickerShapeFee(state.stickerShape, state.stickerDieCut);
+                var _stFull = _stickerCalcPrice({
                     productCode: state.stickerProductCode,
                     w: state.stickerW, h: state.stickerH,
                     qty: state.stickerQty,
@@ -4555,9 +4557,11 @@ html, body { background: #ffffff !important; }
                     isFancy: _stIsFancy,
                     dieCut: state.stickerDieCut
                 });
+                var _stBase = Math.max(0, _stFull - _stShapeFeeVal);
                 qty = Math.max(1, Number(state.stickerQty) || 100);
-                unit = (qty > 0) ? Math.round(_stPrice / qty) : 0;
-                subtotal = _stPrice;
+                unit = (qty > 0) ? Math.round(_stBase / qty) : 0;
+                subtotal = _stBase;
+                state._soStickerShapeFeeAmt = _stShapeFeeVal;
             } else if (state.isRawBoardDouble) {
                 // 2026-05-13: 허니콤보드 원판인쇄 양면 → 단가 2배 (DB 등록가가 단면과 동일하므로 프론트 보정)
                 unit = unit * 2;
@@ -4703,16 +4707,22 @@ html, body { background: #ffffff !important; }
             var _stFancy = !!(_stV && _stickerIsFancy(_stV));
             var _stTypeOpt = STICKER_TYPES.find(function(c){ return c.key === (state.stickerType || 'art_matte'); });
             var _stShape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
-            var _stKindOpt = STICKER_SHAPE_KINDS.find(function(k){ return k.key === state.stickerShapeKind; });
-            var _stKindNm = _stKindOpt ? (' ' + _stickerI18n(_stKindOpt, 'name')) : '';
-            var _stShapeLbl = (_stShape === 'simple') ? (tr('도형따기','図形カット','Shape-cut') + _stKindNm + ' +' + fmtPrice(10000))
-                            : (_stShape === 'complex') ? (tr('모양스티커 +','型抜き +','Die-cut +') + fmtPrice(10000)) : '';
             var _stSizeLbl = _stFancy ? '' : ((state.stickerW||100) + '×' + (state.stickerH||100) + 'mm');
+            // 스펙 라인(가격 없음): 사이즈 · 종류 · 수량. (모양 수수료는 별도 라인)
             var _stMeta = '🏷️ ' + (_stV ? _stickerVariantLabel(_stV) : '') +
                           (_stSizeLbl ? ' · ' + _stSizeLbl : '') +
                           (_stTypeOpt ? ' · ' + _stickerI18n(_stTypeOpt, 'name') : '') +
-                          (_stShapeLbl ? ' · ' + _stShapeLbl : '') +
                           ' · ' + qty.toLocaleString() + tr('매','枚','pcs');
+            // 2026-07-14: 모양(재단) 수수료는 별도 라인 + addonTotal 로 합산(단가에서 분리).
+            var _stShapeFeeAmt = (state._soStickerShapeFeeAmt != null) ? state._soStickerShapeFeeAmt : 0;
+            if (_stShapeFeeAmt > 0) {
+                var _stShapeName = (_stShape === 'simple') ? tr('도형따기','図形カット','Shape-cut')
+                                 : tr('모양스티커','型抜きステッカー','Die-cut');
+                addonTotal += _stShapeFeeAmt;
+                addonBreakdownLines.push(
+                    '<div class="so-price-row"><span>✂️ ' + _stShapeName + '</span><span>+' + fmtPrice(_stShapeFeeAmt) + '</span></div>'
+                );
+            }
             addonBreakdownLines.unshift(
                 '<div class="so-price-row" style="color:#64748b;"><span>' + _stMeta + '</span><span></span></div>'
             );
