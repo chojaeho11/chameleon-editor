@@ -11326,10 +11326,13 @@ html, body { background: #ffffff !important; }
         recalc();
     };
     window._soStickerPickType = function(k) {
-        // 일반↔특수 카테고리가 바뀌면 수량 프리셋이 달라짐 → 공통값 1000 으로 리셋 (혼란 방지)
+        // 팬시는 수량 프리셋이 종류와 무관하게 항상 4/8/12/20/40 → 종류 변경 시 수량 리셋 안 함(4 유지).
+        //   일반(재단)만 일반↔특수 카테고리 전환 시 프리셋(500/1000/2000 ↔ 10/50/100/500/1000)이 달라져 공통값 100 으로 리셋.
+        var _pvT = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
+        var _isFancyT = !!(_pvT && _stickerIsFancy(_pvT));
         var wasBase = _stickerIsBaseType(state.stickerType);
         state.stickerType = k;
-        if (wasBase !== _stickerIsBaseType(k)) state.stickerQty = 100;
+        if (!_isFancyT && wasBase !== _stickerIsBaseType(k)) state.stickerQty = 100;
         _soStickerRender();
         recalc();
     };
