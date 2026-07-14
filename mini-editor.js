@@ -5465,9 +5465,9 @@
         if (!src) return null;
         var existImgs = (me.items || []).filter(function(it){ return it.type === 'image'; });
         var idx = existImgs.length;   // 0-based 다음 슬롯
-        if (idx >= 12) { try { alert(_meT('me_fancy_max','최대 12장까지 올릴 수 있어요.')); } catch(_){}; return null; }
-        // 그리드(3열×4행) 다음 슬롯 배치.
-        var cols = 3, rows = 4;
+        if (idx >= 8) { try { alert(_meT('me_fancy_max','최대 8개까지 올릴 수 있어요.')); } catch(_){}; return null; }
+        // 그리드(2열×4행 = 8칸, 세로 시트) 다음 슬롯 배치.
+        var cols = 2, rows = 4;
         var pad = me.natW * 0.03;
         var cellW = (me.natW - pad * 2) / cols, cellH = (me.natH - pad * 2) / rows;
         var col = idx % cols, row = Math.floor(idx / cols);
@@ -5502,7 +5502,7 @@
     //   srcList: dataURL 배열, opts.onProgress(done, total). 반환: 추가된 item 배열.
     window._meBatchAddBgCutline = async function(srcList, opts) {
         opts = opts || {};
-        srcList = (srcList || []).slice(0, 12);
+        srcList = (srcList || []).slice(0, 8);
         var n = srcList.length;
         if (!n) return [];
         try { _meSnapshot(); } catch(_) {}
