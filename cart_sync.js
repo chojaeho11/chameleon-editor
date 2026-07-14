@@ -410,28 +410,51 @@
         //         (3) 그래도 실패하면 사용자에게 토스트 경고
         _unified = mine;
         writeLocalTs(new Date().toISOString());
+        // 2026-07-14: 항상 초대용량(>100KB) 인라인 문자열은 localStorage 저장 전에 제거 — 정상 저장도 비대해지지 않게.
+        //   (팬시 스티커 등 대용량 SVG/base64. 서버 _unified 엔 원본 유지, 디자인/칼선은 Storage URL 로 보존.)
+        //   썸네일(<100KB data URL)은 유지 → 카트 미리보기 정상.
+        function _forLocal(arr) {
+            var hit = false;
+            var out = (arr || []).map(function (it) {
+                if (!it || typeof it !== 'object') return it;
+                var copy = {}, changed = false;
+                for (var k in it) {
+                    if (!Object.prototype.hasOwnProperty.call(it, k)) continue;
+                    var v = it[k];
+                    if (typeof v === 'string' && v.length > 100000) { changed = true; hit = true; continue; }
+                    copy[k] = v;
+                }
+                return changed ? copy : it;
+            });
+            return { arr: out, hit: hit };
+        }
+        var _lg = _forLocal(mine);
+        if (_lg.hit) console.warn('[cart_sync] 초대용량 인라인 문자열 제거 후 localStorage 저장 (서버엔 원본 보존)');
         var _saved = false;
         try {
-            __origLocalSet(key, JSON.stringify(mine));
+            __origLocalSet(key, JSON.stringify(_lg.arr));
             _saved = true;
         } catch (e1) {
             // 1차 실패 — 무거운 인라인 데이터 제거 후 재시도 (서버엔 _unified 원본이 push 됨)
             try {
+                // 2026-07-14: 큰 인라인 문자열(데이터URL·SVG·base64 등, data: 접두어 유무 무관) 전부 제거.
+                //   디자인/칼선/썸네일은 모두 Supabase Storage URL 로 이미 보존됨 → localStorage 엔 불필요.
+                //   (기존엔 data: 만 제거 → 팬시 스티커의 대용량 SVG 등 non-data 문자열이 남아 재시도도 quota 초과.)
+                var _stripped = [];
                 var slim = mine.map(function (it) {
                     if (!it || typeof it !== 'object') return it;
                     var copy = {};
                     for (var k in it) {
                         if (!Object.prototype.hasOwnProperty.call(it, k)) continue;
                         var v = it[k];
-                        // 큰 data: URL 문자열은 localStorage 에서 제외 (서버 _unified 엔 남음)
-                        if (typeof v === 'string' && v.length > 8000 && /^data:/.test(v)) continue;
+                        if (typeof v === 'string' && ((v.length > 8000 && /^data:/.test(v)) || v.length > 100000)) { _stripped.push(k + '(' + v.length + ')'); continue; }
                         copy[k] = v;
                     }
                     return copy;
                 });
                 __origLocalSet(key, JSON.stringify(slim));
                 _saved = true;
-                console.warn('[cart_sync] localStorage quota — 큰 썸네일 제거 후 저장 (서버엔 원본 보존)');
+                console.warn('[cart_sync] localStorage quota — 큰 인라인 문자열 제거 후 저장 (서버엔 원본 보존). 제거:', _stripped.join(', '));
             } catch (e2) {
                 console.error('[cart_sync] localStorage 저장 실패 (quota 초과). 서버 동기화는 계속 시도됨.', e2);
                 try {
