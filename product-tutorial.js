@@ -1283,7 +1283,8 @@
         if (_rawP) {
           var _st = JSON.parse(_rawP);
           var _fresh = _st && ((Date.now() - (_st.ts || 0)) < 30000);
-          if (_fresh && _st.resumeNext && _st.code && _st.code !== code) {
+          // 2026-07-14: variantReload(종류 카드 클릭)면 같은 코드로 리로드돼도 이어감 (초저가 '현재' 카드 재클릭 등).
+          if (_fresh && _st.resumeNext && (_st.variantReload || (_st.code && _st.code !== code))) {
             sessionStorage.removeItem('__tut_progress');
             var _startIdx = 0;
             for (var _k = 0; _k < scn.steps.length; _k++) { if (scn.steps[_k] && scn.steps[_k].resumeNext) { _startIdx = _k + 1; break; } }
@@ -1301,7 +1302,7 @@
   window._tutBeforeVariantReload = function () {
     try {
       if (!_active && !_choice) return;   // 튜토리얼 미진행이면 무시 (일반 사용자는 그대로 리로드)
-      sessionStorage.setItem('__tut_progress', JSON.stringify({ code: _curCode || '', i: 0, resumeNext: true, ts: Date.now() }));
+      sessionStorage.setItem('__tut_progress', JSON.stringify({ code: _curCode || '', i: 0, resumeNext: true, variantReload: true, ts: Date.now() }));
     } catch (_) {}
   };
 
