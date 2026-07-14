@@ -8585,12 +8585,17 @@ html, body { background: #ffffff !important; }
             }
             // 가벽과 동일한 옵션·가격 사용 (아래 일반 분기로 fall through)
         }
-        // 2026-06-12: 명함/리플렛 — 허니콤보드 외 전 제품 무료배송 정책 (사용자 요청)
-        // 2026-07-04: 낱장(리플렛)도 per-item 배송비 0 — 카트 전체 택배 5,000원 정액(묶음)만 부과.
-        //   기존엔 fall-through 로 10,000원이 찍혀 아이템 박스에 "배송 +10,000" 표시되던 버그.
-        if (state.isBizCard || state.isLeaflet) {
+        // 2026-06-12: 명함 — 허니콤보드 외 무료배송 정책 (KR). JP 는 위 JP 분기서 500엔.
+        if (state.isBizCard) {
             state._shipUpgradeReason = null;
             return 0;
+        }
+        // 2026-07-14: 낱장 인쇄(리플렛) — 일반택배 5,000원 (스티커와 동일, 무료 아님). 제품페이지 표시용.
+        //   실제 카트 부과는 _soCalcCartTotal 정액 5,000 1회. 이중부과 방지 위해 shipMethod=self_pickup 로 강제
+        //   (item.shipping.fee 미설정 → _soItmShipInc=0). JP 는 위 JP 분기서 이미 5,000(=500엔).
+        if (state.isLeaflet) {
+            state._shipUpgradeReason = null;
+            return 5000;
         }
         // 2026-07-14: 스티커 — 일반택배 5,000원 (사용자 요청, 무료 아님). JP 는 위 JP 분기에서 이미 5,000 처리.
         if (state.isSticker) {
@@ -14494,6 +14499,9 @@ html, body { background: #ffffff !important; }
         state.shipMethod = defaultShip;
         // 2026-06-14: 어깨띠 무료배송 — defaultShip 계산이 small_parcel 로 덮는 것 차단 (최종 override).
         if (state.isShoulderSash) state.shipMethod = 'self_pickup';
+        // 2026-07-14: 낱장 인쇄 — per-item 배송비 미부과(카트 정액 5,000 1회만). shipMethod=self_pickup 로 강제
+        //   → buildCartItem 이 shipping.fee 를 안 넣음 → _soItmShipInc=0 (이중부과 방지). 제품페이지 표시는 _soComputeShipFee(5,000).
+        if (state.isLeaflet) state.shipMethod = 'self_pickup';
         document.querySelectorAll('.so-ship-btn').forEach(function (b) {
             var k = b.dataset.ship;
             b.style.display = (allowed.indexOf(k) >= 0) ? '' : 'none';

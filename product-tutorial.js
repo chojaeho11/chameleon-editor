@@ -1131,10 +1131,66 @@
       en: 'Which <b>sticker</b> would you like? Pick a type to start.' }
   };
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 낱장 인쇄 (리플렛/전단, pp_lf)  2026-07-14
+  //  규격/비규격 사이즈 → 인쇄면(단면/양면) → 수량 → 디자인 → 용지 → 박 → 후가공 → 시안 → 장바구니.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsLeaflet() { try { return _secVisible('#soLeafletPresetSec'); } catch (_) { return false; } }
+  var LEAFLET_STEPS = [
+    { // 1) 사이즈 (규격 A4/A3/A2 · 비규격)
+      target: ['#soLeafletSizeGrid', '#soLeafletPresetSec'], mode: 'next',
+      onEnter: function () { return _secVisible('#soLeafletPresetSec'); },
+      msg: { kr: '먼저 <b>사이즈</b>를 골라요. A4·A3·A2 규격 중 선택하거나, 아래 <b>비규격 사이즈</b>를 눌러 원하는 크기(mm)를 직접 넣을 수 있어요. 가격은 사이즈·수량에 따라 자동 계산돼요.',
+        ja: 'まず <b>サイズ</b> を選びます。A4·A3·A2 の規格、または下の <b>非規格サイズ</b> で好きな寸法(mm)を入力できます。価格はサイズ·数量で自動計算。',
+        en: 'First pick the <b>size</b>. Choose A4/A3/A2, or tap <b>Custom size</b> to enter your own (mm). Price updates by size & quantity.' },
+      cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
+    },
+    { // 2) 인쇄면 (단면/양면)
+      target: ['#soLfSideSingle', '#soLfSideDouble'], mode: 'next',
+      onEnter: function () { return _secVisible('#soLfSideSingle'); },
+      msg: { kr: '<b>인쇄면</b>을 정해요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요.',
+        ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷します。',
+        en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>Double</b> = both sides.' }
+    },
+    { // 3) 수량
+      target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection') || _secVisible('#soLfQtySlot'); },
+      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+        ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
+        en: 'Choose the <b>quantity</b>! More prints = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' }
+    },
+    GENERIC_STEPS[0], // 4) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    { // 5) 용지
+      target: '#soLfPaperToggle', mode: 'next',
+      onEnter: function () { return _secVisible('#soLfPaperToggle'); },
+      msg: { kr: '<b>용지</b>를 골라요. 기본은 전단에 많이 쓰는 스노우지 180g이에요. 눌러서 다른 용지도 볼 수 있어요. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
+        ja: '<b>用紙</b>を選びます。基本はチラシによく使うスノー紙180g。押すと他の用紙も見られます。<span style="color:#94a3b8;">(全用紙同価格イベント)</span>',
+        en: 'Choose the <b>paper</b>. Default is Snow 180g (popular for flyers). Tap to see others. <span style="color:#94a3b8;">(all papers same price event)</span>' }
+    },
+    { // 6) 박 추가 (선택)
+      target: '#soLfFoilToggle', mode: 'next',
+      onEnter: function () { return _secVisible('#soLfFoilToggle'); },
+      msg: { kr: '금·은·홀로그램 등 <b>박</b> 마감이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
+        ja: '金·銀·ホログラムなどの <b>箔</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
+        en: 'Add <b>foil</b> (gold/silver/holographic) if you like <span style="color:#94a3b8;">(optional — or Next)</span>.' }
+    },
+    { // 7) 후가공 추가 (선택)
+      target: '#soLfFinishToggle', mode: 'next',
+      onEnter: function () { return _secVisible('#soLfFinishToggle'); },
+      msg: { kr: '형압·미싱·오시·타공·귀도리 등 <b>특수 후가공</b>이 필요하면 눌러서 추가해요 <span style="color:#94a3b8;">(선택 사항)</span>.',
+        ja: 'エンボス·ミシン·スジ·穴あけ·角丸などの <b>特殊加工</b> が必要なら押して追加 <span style="color:#94a3b8;">(任意)</span>。',
+        en: 'Add <b>special finishing</b> (emboss, perforation, scoring, hole, round-corner) if needed <span style="color:#94a3b8;">(optional)</span>.' }
+    },
+    PROOF_STEP,       // 8) 시안 최종 확인
+    GENERIC_STEPS[2]  // 9) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
     { id: 'sticker', match: { test: function () { return _tutIsStickerProduct(); } }, steps: [STICKER_CHOOSE_STEP] },
+    // 2026-07-14: 낱장 인쇄(리플렛) — 사이즈·인쇄면·용지·박·후가공 전용 스텝. generic 보다 앞.
+    { id: 'leaflet', match: { test: function () { return _tutIsLeaflet(); } }, steps: LEAFLET_STEPS },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
