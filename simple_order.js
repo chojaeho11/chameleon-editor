@@ -2084,18 +2084,19 @@ html, body { background: #ffffff !important; }
             <button class="so-qty-btn" onclick="window._soQtyChg(1)">+</button>
             <span class="so-qty-unit">${tr('개', '個', 'pcs')}</span>
           </div>
-          <!-- 2026-06-12: 종이매대 전용 수량 프리셋 (1/100/300/500/1000) — DEFAULT row 를 대체 -->
+          <!-- 2026-07-15: 종이매대 전용 수량 프리셋 (1/10/100/500/1000) — 300 제거, 10개(2배 단가) 추가 -->
           <div id="soPdQtyPresets" style="display:none; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:6px;">
             <button type="button" class="so-pd-qty-btn" data-pd-qty="1" onclick="window._soPdQtyPick(1)">
               <span style="font-size:14px; font-weight:900;">1${tr('개','個','')}</span>
               <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('샘플','サンプル','Sample')}</span>
             </button>
+            <button type="button" class="so-pd-qty-btn" data-pd-qty="10" onclick="window._soPdQtyPick(10)">
+              <span style="font-size:14px; font-weight:900;">10${tr('개','個','')}</span>
+              <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('소량','小ロット','Small')}</span>
+            </button>
             <button type="button" class="so-pd-qty-btn" data-pd-qty="100" onclick="window._soPdQtyPick(100)">
               <span style="font-size:14px; font-weight:900;">100${tr('개','個','')}</span>
               <span style="font-size:10px; opacity:0.75; margin-top:2px;">${tr('최소수량','最小数量','MOQ')}</span>
-            </button>
-            <button type="button" class="so-pd-qty-btn" data-pd-qty="300" onclick="window._soPdQtyPick(300)">
-              <span style="font-size:14px; font-weight:900;">300${tr('개','個','')}</span>
             </button>
             <button type="button" class="so-pd-qty-btn" data-pd-qty="500" onclick="window._soPdQtyPick(500)">
               <span style="font-size:14px; font-weight:900;">500${tr('개','個','')}</span>
@@ -2164,7 +2165,7 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
           <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
-            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개는 샘플(기본 디자인+제작비)입니다. 2~99개는 낱개 추가요금이 붙고, 100개부터 정상 단가입니다.', '1個はサンプル(基本デザイン+制作費)です。2~99個は個別追加料金、100個から通常単価です。', '1 pc = sample (base design + fee). 2–99 pcs: per-unit surcharge. 100+ at regular unit price.')}
+            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1~9개는 샘플비(기본 디자인+제작비)입니다. 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1~9個はサンプル費(基本デザイン+制作費)です。10~99個は定価の2倍単価、100個から通常単価です。', '1–9 pcs = sample fee (base design + fee). 10–99 pcs: 2× unit price. 100+ at regular unit price.')}
           </div>
           <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
           <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
@@ -5297,13 +5298,21 @@ html, body { background: #ffffff !important; }
         return c.indexOf('pd_sm') === 0 || c.indexOf('pd_tr') === 0;
     }
     // 2026-06-30: 종이매대 가격 통합 — 제품페이지(recalc) / 장바구니(_soCalcItemPrice) 공용 단일 진실.
-    //   1개 = 샘플 / 2~99개 = 샘플 + 낱개 추가요금 / 100개+ = 단가 × 수량 (대량 정가).
-    // 2026-07-15: 샘플(1개) = 150,000 전 제품 통일(사장님 요청). 낱개 추가요금은 대형 +50,000/개, 소형 +20,000/개 유지.
+    // 2026-07-15: 수량 티어 재정의(사장님 요청).
+    //   1~9개  = 샘플비 150,000 (전 제품 통일)
+    //   10~99개 = 100개 단가(정가)의 2배 × 수량  (원터치 60,000×10=600,000 / 소형 20,000×10=200,000)
+    //             단, 2배 단가가 샘플비(150,000)를 넘는 고가 제품(특수설계·트리·테이블형 등)은 샘플값(150,000)으로.
+    //   100개+ = 정상 단가(정가) × 수량
+    var _PD_SAMPLE = 150000;
     function _soPaperStandSubtotal(unit, qty, isSmall) {
         qty = Math.max(1, parseInt(qty, 10) || 1);
-        if (qty >= 100) return unit * qty;             // 100개+ = 정상 단가 × 수량
-        var perExtra = isSmall ? 20000 : 50000;         // 2~99개 낱개 추가요금/개
-        return 150000 + (qty - 1) * perExtra;           // 1개 샘플 150,000 + 낱개 추가
+        if (qty >= 100) return unit * qty;              // 100개+ = 정가 × 수량
+        if (qty >= 10) {                                // 10~99개 = 정가 2배 × 수량
+            var per2x = unit * 2;
+            if (per2x > _PD_SAMPLE) return _PD_SAMPLE;   // 2배가 샘플비 초과 고가품 → 샘플값
+            return per2x * qty;
+        }
+        return _PD_SAMPLE;                              // 1~9개 = 샘플비
     }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지

@@ -283,7 +283,8 @@
       "Bash(./deploy.sh \"paper-display\\(pd_*\\) tutorial: download cutline -> upload file \\(design to fit cutline\\) -> delivery option -> order quantity -> proof -> cart. window._soCurrentIsPaperDisplay flag. simple_order v784 tutorial v694\")",
       "Bash(./deploy.sh \"paper-display cutline step: reword - standard-size cutline for most; custom size/shelf-count call HQ \\(KR 031-366-1984 / JP Nanami 090-5397-0420\\). tutorial v695\")",
       "Bash(./deploy.sh \"paper-stand cards: show full price \\(matches order/checkout\\). Was showing 50%-off bulk price \\(price x0.5\\) as headline while order charges full - card vs detail mismatch. Now 원터치 30k / 소형 10k / others full DB price on card = order. paper_stand.js v190\")",
-      "Bash(./deploy.sh \"paper-display pricing: force flat unit \\(=p.price\\) for ALL incl small stands \\(pd_sm/pd_tr were area-priced m2, so 2500x1600 canvas inflated to 40k\\). Small now flat 10k. Unify sample\\(1pc\\)=150,000 for all paper display. simple_order v785\")"
+      "Bash(./deploy.sh \"paper-display pricing: force flat unit \\(=p.price\\) for ALL incl small stands \\(pd_sm/pd_tr were area-priced m2, so 2500x1600 canvas inflated to 40k\\). Small now flat 10k. Unify sample\\(1pc\\)=150,000 for all paper display. simple_order v785\")",
+      "Bash(./deploy.sh \"paper-display qty tiers: remove 300 preset, add 10 \\(next to 1\\). New pricing: 1-9pc=sample 150k, 10-99pc=2x unit price x qty \\(wonter 600k/small 200k\\), 100+=normal. High-price items \\(specialty/tree/table\\) where 2x>150k use sample value. simple_order v786\")"
     ],
     "additionalDirectories": [
       "\\tmp",
