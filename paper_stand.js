@@ -155,11 +155,9 @@
         const name = getProductName(product);
         const imgSrc = getThumb(product.img_url, 400);
         const sizeText = getSizeText(product);
-        // 1000개 이상 대량 할인가 (50% 할인) 표시
-        var bulkPrice = Math.round(product.price * 0.5);
-        var price = formatPrice(bulkPrice);
-        var originalPrice = formatPrice(product.price);
-        var bulkLabel = psLang === 'ko' ? '1,000개~' : psLang === 'ja' ? '1,000個~' : '1,000+';
+        // 2026-07-15: 카드 표기 = 실제 주문 단가(정가)와 일치. 이전엔 ×0.5(50% 할인가)만 크게 보여줘
+        //   상세/주문 결제금액(정가)과 표기가 어긋났음(사장님 지적). 정가 그대로 표시.
+        var price = formatPrice(product.price);
 
         card.innerHTML =
             '<img class="product-img" src="' + imgSrc + '" alt="' + name + '" loading="lazy" ' +
@@ -168,10 +166,7 @@
                 '<div class="product-badge">' + ls('badge') + '</div>' +
                 '<div class="product-name">' + name + '</div>' +
                 '<div class="product-size"><i class="fa-solid fa-ruler" style="margin-right:4px;"></i>' + sizeText + '</div>' +
-                '<div class="product-price">' + price +
-                    ' <span style="font-size:11px; color:#94a3b8; text-decoration:line-through; font-weight:400;">' + originalPrice + '</span>' +
-                    ' <span style="font-size:10px; color:#16a34a; font-weight:600;">' + bulkLabel + '</span>' +
-                '</div>' +
+                '<div class="product-price">' + price + '</div>' +
             '</div>';
 
         // 클릭 시 메인 에디터로 이동 (언어별 도메인)
