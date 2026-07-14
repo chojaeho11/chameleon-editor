@@ -280,7 +280,8 @@
       "Bash(sed -i 's/\"me_cutout\": \"누끼따기\"/\"me_cutout\": \"배경제거\"/' \"c:/Users/win 10/Desktop/작업/long/kr_124.json\")",
       "Bash(sed -i 's/\"me_cutout\": \"切り抜き\"/\"me_cutout\": \"背景削除\"/' \"c:/Users/win 10/Desktop/작업/long/ja_124.json\")",
       "Bash(./deploy.sh \"photozone/sculpture tutorial: type -> download cutline template -> design\\(upload/request\\) -> delivery -> proof -> cart. Tree-sculpture 2 \\(45245252/345353\\) are ready-made: skip cutline/design/proof, go type -> delivery -> cart. window._soCurrentIsPhotozone + _soPzReadyMade flags. simple_order v783 tutorial v693\")",
-      "Bash(./deploy.sh \"paper-display\\(pd_*\\) tutorial: download cutline -> upload file \\(design to fit cutline\\) -> delivery option -> order quantity -> proof -> cart. window._soCurrentIsPaperDisplay flag. simple_order v784 tutorial v694\")"
+      "Bash(./deploy.sh \"paper-display\\(pd_*\\) tutorial: download cutline -> upload file \\(design to fit cutline\\) -> delivery option -> order quantity -> proof -> cart. window._soCurrentIsPaperDisplay flag. simple_order v784 tutorial v694\")",
+      "Bash(./deploy.sh \"paper-display cutline step: reword - standard-size cutline for most; custom size/shelf-count call HQ \\(KR 031-366-1984 / JP Nanami 090-5397-0420\\). tutorial v695\")"
     ],
     "additionalDirectories": [
       "\\tmp",

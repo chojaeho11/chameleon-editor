@@ -1548,12 +1548,12 @@
   // ════════════════════════════════════════════════════════════════════
   function _tutIsPaperDisplay() { try { return window._soCurrentIsPaperDisplay === true; } catch (_) { return false; } }
   var PAPER_DISPLAY_STEPS = [
-    { // 1) 칼선 다운받기
+    { // 1) 칼선 다운받기 — 기본 규격 도안 + 별도 규격/선반 갯수는 본사(한국)·나나미(일본) 전화 요청
       target: ['#soCutlineDownloadBtn', '#soCutlineDownload'], mode: 'next',
       onEnter: function () { return _secVisible('#soCutlineDownload'); },
-      msg: { kr: '먼저 <b>칼선 도안을 다운받아</b> 주세요. 이 도안(칼선 규격)에 <b>맞춰 디자인</b>한 뒤, 다음 단계에서 완성 파일을 올리면 돼요.',
-        ja: 'まず <b>型抜きテンプレートをダウンロード</b> してください。この規格に <b>合わせてデザイン</b> し、次のステップで完成ファイルをアップします。',
-        en: 'First <b>download the die-cut template</b>. Design <b>to fit this template</b>, then upload the finished file in the next step.' },
+      msg: { kr: '가장 많이 쓰는 <b>기본 규격 칼선</b>을 다운받아 그 규격에 맞춰 작업할 수 있어요. 만약 <b>별도 규격이나 선반 갯수</b>가 필요하다면 본사담당자 <b>031-366-1984</b>로 전화해 칼선을 요청하신 뒤 작업해 주세요.',
+        ja: '最もよく使う <b>基本規格のカットライン</b> をダウンロードして、その規格に合わせて作業できます。<b>別途の規格や棚の数</b> が必要な場合は、担当のナナミ <b>090-5397-0420</b> へお電話でカットラインをご依頼のうえ作業してください。',
+        en: 'Download the <b>most-used standard-size cutline</b> and design to fit it. If you need a <b>custom size or a different number of shelves</b>, please call our HQ manager at <b>+82 31-366-1984</b> to request a cutline first.' },
       cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
     },
     Object.assign({}, GENERIC_STEPS[0], { // 2) 파일 업로드(칼선에 맞춰 작업한 완성본)
