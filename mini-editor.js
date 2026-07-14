@@ -5448,7 +5448,8 @@
             im.src = src;
         });
     }
-    // 이미지가 대부분 불투명이면 true → 누끼(배경제거) 필요. 이미 투명 영역이 많으면 스킵.
+    // 누끼(배경제거) 필요 여부 — 이미지 '테두리'가 불투명하면 배경이 있는 것 → 누끼 필요.
+    //   이미 오려진(cutout) 스티커는 테두리가 투명 → 스킵. (전체 투명도 대신 테두리로 판정: 더 정확)
     window._meImageMostlyOpaque = function(it) {
         try {
             var img = it && it.el && it.el.querySelector('img');
@@ -5458,12 +5459,59 @@
             var ctx = cv.getContext('2d');
             ctx.drawImage(img, 0, 0, S, S);
             var data = ctx.getImageData(0, 0, S, S).data;
-            var transp = 0, total = S * S;
-            for (var i = 3; i < data.length; i += 4) { if (data[i] < 250) transp++; }
-            return (transp / total) < 0.05;   // 투명영역 <5% → 불투명 → 누끼 필요
+            var border = 0, borderOpaque = 0;
+            for (var y = 0; y < S; y++) {
+                for (var x = 0; x < S; x++) {
+                    if (y !== 0 && y !== S - 1 && x !== 0 && x !== S - 1) continue;  // 테두리 링만
+                    border++;
+                    if (data[(y * S + x) * 4 + 3] >= 250) borderOpaque++;
+                }
+            }
+            if (!border) return true;
+            return (borderOpaque / border) > 0.5;   // 테두리 50%+ 불투명 → 배경 있음 → 누끼 필요
         } catch(_) { return true; }   // tainted/에러면 안전하게 누끼 시도
     };
-    // 여러 이미지를 그리드로 배치 후, 순차로 (불투명만) 누끼 + 전부 칼선.
+    // 2026-07-14: 한 장씩 추가 — 기존 이미지 유지하고 다음 그리드 슬롯에 1장 추가 + (불투명이면) 누끼 + 칼선.
+    //   opts.onStage(stage): 'place'|'bg'|'cut'|'done'. 반환: 추가된 item (실패 null).
+    window._meAddOneBgCutline = async function(src, opts) {
+        opts = opts || {};
+        if (!src) return null;
+        var existImgs = (me.items || []).filter(function(it){ return it.type === 'image'; });
+        var idx = existImgs.length;   // 0-based 다음 슬롯
+        if (idx >= 12) { try { alert(_meT('me_fancy_max','최대 12장까지 올릴 수 있어요.')); } catch(_){}; return null; }
+        // 그리드(3열×4행) 다음 슬롯 배치.
+        var cols = 3, rows = 4;
+        var pad = me.natW * 0.03;
+        var cellW = (me.natW - pad * 2) / cols, cellH = (me.natH - pad * 2) / rows;
+        var col = idx % cols, row = Math.floor(idx / cols);
+        var cellX = pad + col * cellW, cellY = pad + row * cellH;
+        var dims = await _meLoadImgDims(src);
+        var r = (dims.h || 1) / (dims.w || 1);
+        var maxW = cellW * 0.85, maxH = cellH * 0.85;
+        var w = maxW, h = w * r;
+        if (h > maxH) { h = maxH; w = h / r; }
+        var x = cellX + (cellW - w) / 2, y = cellY + (cellH - h) / 2;
+        if (typeof opts.onStage === 'function') { try { opts.onStage('place'); } catch(_) {} }
+        var added = await new Promise(function(res){
+            try { window._meAddImage(src, { explicitPos: { x: x, y: y, w: w, h: h } }, res); }
+            catch(_) { res(null); }
+        });
+        if (!added) return null;
+        _meSelect(added);
+        if (window._meImageMostlyOpaque(added)) {
+            if (typeof opts.onStage === 'function') { try { opts.onStage('bg'); } catch(_) {} }
+            try { await window._meBgRemoveSelected(); } catch(_) {}
+        }
+        var img = added.el && added.el.querySelector('img');
+        if (img && !img.complete) { await new Promise(function(rr){ img.onload = rr; img.onerror = rr; setTimeout(rr, 1500); }); }
+        if (img && img.decode) { try { await img.decode(); } catch(_) {} }
+        if (typeof opts.onStage === 'function') { try { opts.onStage('cut'); } catch(_) {} }
+        try { await _meCutlineTrace('outer'); } catch(_) {}
+        try { _meCutlineRenderAll(); } catch(_) {}
+        if (typeof opts.onStage === 'function') { try { opts.onStage('done'); } catch(_) {} }
+        return added;
+    };
+    // 여러 이미지를 그리드로 배치 후, 순차로 (불투명만) 누끼 + 전부 칼선. (일괄 — 현재 미사용, 보존)
     //   srcList: dataURL 배열, opts.onProgress(done, total). 반환: 추가된 item 배열.
     window._meBatchAddBgCutline = async function(srcList, opts) {
         opts = opts || {};

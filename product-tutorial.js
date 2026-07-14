@@ -1073,13 +1073,13 @@
         en: 'First pick the <b>type</b>. Art/matte/gloss/strong = base price; special papers ×3.' },
       cheer: { kr: '종류 선택! 🏷️', ja: '種類OK! 🏷️', en: 'Type set! 🏷️' }
     },
-    { // 2) 이미지 여러 장 올리기 → 자동 누끼+칼선+배치
+    { // 2) 이미지 한 장씩 올리기 → 자동 누끼+칼선+배치
       target: '#soFancyMultiWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soFancyMultiWrap'); },
-      msg: { kr: '이제 <b>이미지를 여러 장</b> 올려요! <span style="color:#94a3b8;">(3~10장 권장 · 최대 12장)</span><br>올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 <b>착착 배치</b>해 드려요. 🪄',
-        ja: '次に <b>画像を複数枚</b> アップロード! <span style="color:#94a3b8;">(3〜10枚推奨・最大12枚)</span><br>アップロードすると <b>自動で背景除去とカットライン</b> を作成してシートに配置します。🪄',
-        en: 'Now upload <b>several images</b>! <span style="color:#94a3b8;">(3–10 recommended · up to 12)</span><br>We <b>auto-remove backgrounds & add cut lines</b>, then lay them out on the sheet. 🪄' },
-      hint: { kr: '여러 장을 한 번에 선택해서 올려도 돼요', ja: '複数枚まとめて選択OK', en: 'Select multiple images at once' },
+      msg: { kr: '이제 <b>이미지를 한 장씩</b> 올려요! <span style="color:#94a3b8;">(최대 12장)</span><br>한 장 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 놓아드려요. 결과를 보고 <b>다음 장을 더 올리거나</b> 사진을 <b>교체</b>할 수 있어요. 🪄',
+        ja: '<b>画像を1枚ずつ</b> アップロード! <span style="color:#94a3b8;">(最大12枚)</span><br>1枚ごとに <b>自動で背景除去とカットライン</b> を作成して配置します。結果を見て <b>追加</b> や <b>差し替え</b> ができます。🪄',
+        en: 'Add images <b>one at a time</b>! <span style="color:#94a3b8;">(up to 12)</span><br>Each is <b>auto background-removed & cut-lined</b> and placed. Then <b>add more</b> or <b>replace</b> a photo. 🪄' },
+      hint: { kr: '한 장씩 올려서 결과를 확인하고 조정할 수 있어요', ja: '1枚ずつ確認しながら追加', en: 'Add one at a time, check, adjust' },
       cheer: { kr: '자동 배치 완료! 🎉', ja: '自動配置OK! 🎉', en: 'Auto-arranged! 🎉' }
     },
     { // 3) 배치·크기 조정

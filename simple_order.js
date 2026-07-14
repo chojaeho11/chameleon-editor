@@ -2887,14 +2887,14 @@ html, body { background: #ffffff !important; }
             </div>
           </div>
 
-          <!-- 2026-07-14: 팬시 스티커 전용 — 여러 이미지 한 번에 올리면 자동 누끼+칼선+배치 (재단 스티커는 숨김) -->
+          <!-- 2026-07-14: 팬시 스티커 전용 — 이미지를 한 장씩 올리면 자동 누끼+칼선+배치 (재단 스티커는 숨김) -->
           <div id="soFancyMultiWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">${tr('이미지 올리기 (여러 장)', '画像アップロード (複数)', 'Upload images (multiple)')}</div>
-            <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.6;">${tr('원하는 이미지를 <b>여러 장(3~10장 권장, 최대 12장)</b> 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 배치해 드려요. 이후 <b>위치·크기만</b> 조정하면 끝!', '好きな画像を <b>複数枚（3〜10枚推奨・最大12枚）</b> アップロードすると、<b>自動で背景除去とカットライン</b> を作成してシートに配置します。あとは <b>位置・サイズ</b> を調整するだけ！', 'Upload <b>several images (3–10 recommended, up to 12)</b> and we <b>auto-remove backgrounds & add cut lines</b>, then lay them out on the sheet. Just adjust <b>position & size</b>!')}</div>
+            <div class="so-section-title">${tr('이미지 올리기 (한 장씩)', '画像アップロード (1枚ずつ)', 'Add image (one at a time)')}</div>
+            <div style="font-size:11.5px; color:#64748b; margin-bottom:8px; line-height:1.6;">${tr('이미지를 <b>한 장씩</b> 올리면 <b>자동으로 배경제거(누끼)와 칼선</b>을 따서 시트에 놓아드려요. 결과를 보고 <b>다음 장을 더 올리거나</b>, 각 이미지의 <b>위치·크기 조정·사진 교체</b>가 가능해요. (최대 12장)', '画像を <b>1枚ずつ</b> アップロードすると <b>自動で背景除去とカットライン</b> を作成して配置します。結果を見て <b>次の画像を追加</b>したり、各画像の <b>位置·サイズ調整·写真差し替え</b> ができます。(最大12枚)', 'Add images <b>one at a time</b> — each is <b>auto background-removed & cut-lined</b> and placed on the sheet. Then <b>add more</b>, or <b>move/resize/replace</b> each image. (up to 12)')}</div>
             <button type="button" class="so-upload-grad-btn" onclick="document.getElementById('soFancyMultiFile').click()" style="width:100%; padding:15px; border-radius:12px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:inherit; letter-spacing:0.01em;">
-              <span>${tr('이미지 여러 장 올리기', '複数画像アップロード', 'Upload multiple images')}</span>
+              <span id="soFancyAddBtnLabel">${tr('이미지 한 장 올리기', '画像を1枚追加', 'Add one image')}</span>
             </button>
-            <input type="file" id="soFancyMultiFile" accept="image/png,image/jpeg,image/webp" multiple style="display:none;" onchange="window._soFancyMultiUpload(this)">
+            <input type="file" id="soFancyMultiFile" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="window._soFancyMultiUpload(this)">
             <div id="soFancyMultiProgress" style="display:none; margin-top:10px; padding:11px 13px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; font-size:12px; font-weight:700; color:#3730a3; line-height:1.5;"></div>
           </div>
 
@@ -11172,40 +11172,40 @@ html, body { background: #ffffff !important; }
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
     };
-    // 2026-07-14: 팬시 스티커 — 여러 이미지 한 번에 업로드 → 자동 누끼(투명 스킵)+칼선 → 시트 배치.
-    //   에디터(140×210mm 시트)에 합성됨. state.file 은 설정 안 함 → 담기 시 에디터 export(합성 PNG→PDF)가 주문 파일이 됨.
+    // 2026-07-14: 팬시 스티커 — 이미지 한 장씩 업로드 → 자동 누끼(투명 스킵)+칼선 → 다음 슬롯에 배치(기존 유지).
+    //   결과를 보고 더 올리거나 각 이미지 위치·크기 조정·교체 가능. 에디터(140×210mm 시트)에 합성됨.
+    //   state.file 은 설정 안 함 → 담기 시 에디터 export(합성 PNG→PDF)가 주문 파일이 됨.
     window._soFancyMultiUpload = async function(input) {
-        var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
-        if (!files.length) return;
-        var MAX = 12;
-        var over = files.length > MAX;
-        files = files.slice(0, MAX);
+        var file = input && input.files && input.files[0];
+        if (!file) return;
         var prog = document.getElementById('soFancyMultiProgress');
+        var btnLbl = document.getElementById('soFancyAddBtnLabel');
         function setProg(html) { if (prog) { prog.style.display = ''; prog.innerHTML = html; } }
         try {
-            setProg(tr('이미지 읽는 중...', '画像を読み込み中...', 'Reading images...') + (over ? (' <span style="color:#b45309;">(' + tr('최대 12장까지만 사용','最大12枚まで','max 12 used') + ')</span>') : ''));
-            // 파일 → dataURL
-            var srcList = [];
-            for (var i = 0; i < files.length; i++) {
-                var f = files[i];
-                if (!/^image\//i.test(f.type)) continue;
-                var du = await new Promise(function(res){ var r = new FileReader(); r.onload = function(e){ res(e.target.result); }; r.onerror = function(){ res(null); }; r.readAsDataURL(f); });
-                if (du) srcList.push(du);
-            }
-            if (!srcList.length) { setProg(tr('이미지를 읽지 못했습니다.', '画像を読み込めませんでした。', 'Could not read images.')); return; }
-            if (typeof window._meBatchAddBgCutline !== 'function') { setProg(tr('에디터가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'エディタ準備中。少し後で。', 'Editor not ready — try again.')); return; }
+            if (!/^image\//i.test(file.type)) { setProg(tr('이미지 파일만 올릴 수 있어요 (PNG·JPG).', '画像ファイルのみ (PNG·JPG)。', 'Images only (PNG/JPG).')); return; }
+            if (typeof window._meAddOneBgCutline !== 'function') { setProg(tr('에디터가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.', 'エディタ準備中。少し後で。', 'Editor not ready — try again.')); return; }
             // 팬시 캔버스 140×210mm 보장
             try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
-            var total = srcList.length;
-            await window._meBatchAddBgCutline(srcList, {
-                onProgress: function(done, tot){
-                    if (done >= tot) setProg('✓ ' + tr(tot + '장 배치 완료! 이제 위치·크기를 조정하세요.', tot + '枚配置完了！位置·サイズを調整してください。', tot + ' images placed! Now adjust position & size.'));
-                    else setProg(tr('자동 누끼·칼선 작업 중...', '自動切り抜き・カットライン処理中...', 'Auto cut-out & cut line...') + ' <b>' + (done + 1) + ' / ' + tot + '</b>');
+            setProg(tr('이미지 읽는 중...', '画像を読み込み中...', 'Reading image...'));
+            var du = await new Promise(function(res){ var r = new FileReader(); r.onload = function(e){ res(e.target.result); }; r.onerror = function(){ res(null); }; r.readAsDataURL(file); });
+            if (!du) { setProg(tr('이미지를 읽지 못했습니다.', '画像を読み込めませんでした。', 'Could not read image.')); return; }
+            await window._meAddOneBgCutline(du, {
+                onStage: function(stage){
+                    if (stage === 'bg') setProg(tr('배경 제거(누끼) 중...', '背景除去中...', 'Removing background...'));
+                    else if (stage === 'cut') setProg(tr('칼선 작업 중...', 'カットライン作成中...', 'Making cut line...'));
+                    else if (stage === 'place') setProg(tr('배치 중...', '配置中...', 'Placing...'));
                 }
             });
+            // 현재 이미지 수 표시
+            var _cnt = 0;
+            try { var _st = document.getElementById('meStage'); _cnt = _st ? _st.querySelectorAll('.me-item img').length : 0; } catch(_) {}
+            setProg('✓ ' + tr(_cnt + '장 배치됨. 더 올리거나 위치·크기를 조정하세요. 칼선이 이상하면 그 이미지를 지우고 다시 올려주세요.',
+                _cnt + '枚配置。追加または位置·サイズ調整。カットラインが変なら削除して再アップロード。',
+                _cnt + ' placed. Add more or adjust. If a cut line looks off, delete that image and re-add.'));
+            if (btnLbl) btnLbl.textContent = tr('이미지 더 올리기 (한 장씩)', '画像を追加 (1枚ずつ)', 'Add another image');
             try { recalc(); } catch(_) {}
         } catch (e) {
-            console.error('[fancy multi upload]', e);
+            console.error('[fancy add one]', e);
             setProg(tr('처리 중 오류가 발생했어요. 다시 시도해주세요.', '処理中にエラー。再試行してください。', 'Something went wrong — please retry.'));
         } finally {
             try { input.value = ''; } catch(_) {}
