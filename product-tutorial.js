@@ -931,11 +931,11 @@
       target: '#meStage', mode: 'wait', waitEvent: 'me-standee-ready',
       onEnter: function () { return window._soStickerShapeCur === 'complex'; },
       buttons: [
-        { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
+        { action: '_meStickerAutoCutout', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>복잡모양</b>을 고르셨네요! 아래 버튼을 누르면 그림의 <b>배경을 지우고(누끼)</b> <b>외곽을 따라 칼선</b>을 자동으로 따드려요. 칼선 간격·모양은 대지에서 조정할 수 있어요.',
-        ja: '<b>複雑な形</b> ですね!下のボタンで <b>背景を消して(切り抜き)</b> <b>輪郭に沿ってカットライン</b> を自動作成します。カット間隔·形は台紙で調整できます。',
-        en: 'You chose <b>Complex</b>! Tap below to <b>remove the background</b> and <b>auto-trace a cutline</b> along the outline. Adjust the cut margin/shape on the canvas.' },
+      msg: { kr: '<b>복잡모양</b>을 고르셨네요! 아래 버튼을 누르면 그림의 <b>배경을 지우고(누끼)</b> <b>외곽을 따라 칼선</b>을 자동으로 따드려요. 그림이 대지에 크게 배치되니, <b>드래그·모서리 핸들</b>로 위치·크기를 조정하세요.',
+        ja: '<b>複雑な形</b> ですね!下のボタンで <b>背景を消して(切り抜き)</b> <b>輪郭に沿ってカットライン</b> を自動作成します。絵は台紙に大きく配置されるので、<b>ドラッグ·角ハンドル</b> で位置·サイズを調整してください。',
+        en: 'You chose <b>Complex</b>! Tap below to <b>remove the background</b> and <b>auto-trace a cutline</b>. The artwork is placed large on the canvas — <b>drag or use the corner handles</b> to adjust position & size.' },
       hint: { kr: '버튼을 누르면 자동으로 누끼+칼선을 따드려요 (몇 초 걸려요)', ja: 'ボタンで自動切り抜き+カットライン(数秒)', en: 'Tap to auto cut-out + cutline (takes a few seconds)' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
     },

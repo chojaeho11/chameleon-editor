@@ -5420,6 +5420,48 @@
         try { await _meCutlineTrace('outer'); } catch(_){}
         try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
     };
+    // 2026-07-14: 스티커 복잡모양 전용 — 누끼 후 크롭된 피사체를 대지에 크게 채운 뒤 칼선 트레이스.
+    //   (기존엔 크롭된 피사체가 작아서 칼선이 작고 지저분하게 잡히고, 작아서 만지기 어려움 — 모바일/일본 문제.)
+    //   피사체를 대지 92%로 키움 → 트레이스 고해상 + 이미지가 커서 드래그로 위치 조정 쉬움(PC/모바일 동일).
+    window._meStickerAutoCutout = async function() {
+        var sel = _meAutoSelectImage();
+        if (!sel || sel.type !== 'image') {
+            alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
+            return;
+        }
+        var _cropRes; var croppedP = new Promise(function(res){ _cropRes = res; });
+        var onCropped = function(){ document.removeEventListener('me-cutout-cropped', onCropped); _cropRes(); };
+        document.addEventListener('me-cutout-cropped', onCropped);
+        try { await window._meBgRemoveSelected(); } catch(_){}
+        await Promise.race([ croppedP, new Promise(function(r){ setTimeout(r, 2500); }) ]);
+        document.removeEventListener('me-cutout-cropped', onCropped);
+        // 크롭된 피사체를 대지 92%로 확대(중앙) — 트레이스 전에 키워야 칼선이 크고 깔끔.
+        try {
+            var it = me && me.selected;
+            var im0 = it && it.el && it.el.querySelector('img');
+            if (im0 && !im0.complete) await new Promise(function(r){ im0.onload = r; im0.onerror = r; setTimeout(r, 1500); });
+            if (it && it.w > 0 && it.h > 0) {
+                var r0 = it.h / it.w;
+                var maxW = me.natW * 0.92, maxH = me.natH * 0.92;
+                var w = maxW, h = w * r0;
+                if (h > maxH) { h = maxH; w = h / r0; }
+                it.w = w; it.h = h;
+                it.x = (me.natW - w) / 2; it.y = (me.natH - h) / 2;
+                if (typeof _meSyncItemDisplay === 'function') _meSyncItemDisplay(it);
+            }
+        } catch(_){}
+        // 확대된 이미지가 완전히 디코드된 뒤 trace (고해상)
+        try {
+            var s2 = me && me.selected, im2 = s2 && s2.el && s2.el.querySelector('img');
+            if (im2) {
+                if (!im2.complete) await new Promise(function(r){ im2.onload = r; im2.onerror = r; setTimeout(r, 1500); });
+                if (im2.decode) { try { await im2.decode(); } catch(_){} }
+            }
+        } catch(_){}
+        try { await _meCutlineTrace('outer'); } catch(_){}
+        try { if (me.selected && typeof _meSelect === 'function') _meSelect(me.selected); } catch(_){}   // 핸들 재표시(조정 쉽게)
+        try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
+    };
     // 네모 이미지 그대로 — 칼선 없이 진행 (튜토리얼 진행 이벤트만)
     window._meStandeeSkipCutline = function() {
         try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
