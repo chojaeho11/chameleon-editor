@@ -1159,12 +1159,16 @@
         ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
         en: 'Choose the <b>quantity</b>! More prints = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' }
     },
-    { // 4) 용지
-      target: '#soLfPaperToggle', mode: 'next',
-      onEnter: function () { return _secVisible('#soLfPaperToggle'); },
-      msg: { kr: '<b>용지</b>를 골라요. 기본은 전단에 많이 쓰는 스노우지 180g이에요. 눌러서 다른 용지도 볼 수 있어요. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
-        ja: '<b>用紙</b>を選びます。基本はチラシによく使うスノー紙180g。押すと他の用紙も見られます。<span style="color:#94a3b8;">(全用紙同価格イベント)</span>',
-        en: 'Choose the <b>paper</b>. Default is Snow 180g (popular for flyers). Tap to see others. <span style="color:#94a3b8;">(all papers same price event)</span>' }
+    { // 4) 용지 — 필수 옵션. 진입 시 용지 목록 자동 펼침 + 목록까지 하이라이트.
+      target: ['#soLfPaperToggle', '#soLfPaperGrid'], mode: 'next',
+      onEnter: function () {
+        if (!_secVisible('#soLfPaperToggle')) return false;
+        try { var w = document.getElementById('soLfPaperWrap'); if (w && w.style.display === 'none' && typeof window._soLeafletToggleSection === 'function') window._soLeafletToggleSection('paper'); } catch (_) {}
+        return true;
+      },
+      msg: { kr: '<b>용지</b>를 골라요 <span style="color:#94a3b8;">(필수)</span>. 기본은 전단에 많이 쓰는 스노우지 180g이에요. 아래 목록에서 원하는 용지를 고르세요. <span style="color:#94a3b8;">(모든 용지 같은 가격 이벤트)</span>',
+        ja: '<b>用紙</b>を選びます <span style="color:#94a3b8;">(必須)</span>。基本はチラシによく使うスノー紙180g。下の一覧からお好みの用紙をお選びください。<span style="color:#94a3b8;">(全用紙同価格イベント)</span>',
+        en: 'Choose the <b>paper</b> <span style="color:#94a3b8;">(required)</span>. Default is Snow 180g (popular for flyers). Pick from the list below. <span style="color:#94a3b8;">(all papers same price event)</span>' }
     },
     { // 5) 박 추가 (선택)
       target: '#soLfFoilToggle', mode: 'next',
