@@ -8268,10 +8268,10 @@ html, body { background: #ffffff !important; }
     // 기준 사이즈(100×100mm) 낱장 단가(원). 사이즈는 면적 비례로 별도 곱함.
     function _stickerPerUnitRef(typeKey, qty) {
         qty = Math.max(1, Number(qty) || 1000);
-        // 일반(기본가): 수량 앵커 낱장단가 — 500매 5천(10원)/1000매 8천(8원)/2000매 1만(5원). 2026-07-14.
+        // 일반(기본가): 수량 앵커 낱장단가 — 100매 4천(40원)/500매 5천(10원)/1000매 8천(8원)/2000매 1만(5원). 2026-07-14.
         // 특수용지: 10매3만(3000) / 50매5만(1000) / 100매8만(800) / 500매15만(300) / 1000매20만(200).
         var A = _stickerIsBaseType(typeKey)
-            ? [[500,10],[1000,8],[2000,5]]
+            ? [[100,40],[500,10],[1000,8],[2000,5]]
             : [[10,3000],[50,1000],[100,800],[500,300],[1000,200]];
         if (qty <= A[0][0]) return A[0][1];
         if (qty >= A[A.length-1][0]) return A[A.length-1][1];
@@ -11044,7 +11044,7 @@ html, body { background: #ffffff !important; }
         var qtyGrid = document.getElementById('soStickerQtyGrid');
         // 2026-07-14: 수량 프리셋 — 팬시 4단위 / 일반(기본가) 500·1000·2000 / 특수 10·50·100·500·1000.
         var isBaseType = _stickerIsBaseType(state.stickerType);
-        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : (isBaseType ? [500, 1000, 2000] : [10, 50, 100, 500, 1000]);
+        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : (isBaseType ? [100, 500, 1000, 2000] : [10, 50, 100, 500, 1000]);
         var curQty = state.stickerQty || (isFancy ? 4 : 100);
         if (qtyGrid) {
             qtyGrid.innerHTML = qtyPresets.map(function(q){
@@ -11067,7 +11067,7 @@ html, body { background: #ffffff !important; }
             hintEl.textContent = isFancy
                 ? tr('기본 4매 · 4매 단위로 주문 가능','基本4枚 · 4枚単位','Default 4 pcs · 4-step orders')
                 : (isBaseType
-                    ? tr('500 / 1,000 / 2,000매 · 100×100mm 기준, 크기에 비례해 가격 계산','500/1,000/2,000枚 · 100×100mm基準、サイズ比例','500/1,000/2,000 pcs · priced by size (100×100mm base)')
+                    ? tr('100 / 500 / 1,000 / 2,000매 · 100×100mm 기준, 크기에 비례해 가격 계산','100/500/1,000/2,000枚 · 100×100mm基準、サイズ比例','100/500/1,000/2,000 pcs · priced by size (100×100mm base)')
                     : tr('10 / 50 / 100 / 500 / 1,000매 · 특수용지 · 크기·수량에 따라 단가 계산','10/50/100/500/1,000枚 · 特殊用紙 · サイズ·数量で単価','10/50/100/500/1,000 pcs · special paper · priced by size & qty'));
         }
         // 2026-07-14: 종류(용지) 13종 — 이미지 썸네일 그리드
