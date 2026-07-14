@@ -368,7 +368,7 @@
       // 2026-06-25: next 모드도 step.hint 있으면 안내 라인 표시 (예: 후가공 — 설명 보고 골라주세요)
       foot = (step.hint ? '<div class="tut-hint" style="margin-bottom:9px;">👆 ' + T(step.hint) + '</div>' : '')
         + '<div class="tut-actions">'
-        + (_hist.length ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
+        + ((_hist.length && !step.hideBack) ? '<button class="tut-btn tut-btn-ghost" data-act="back">' + T({ kr: '← 이전', ja: '← 戻る', en: '← Back' }) + '</button>' : '')
         + '<button class="tut-btn tut-btn-go" data-act="next">' + T(step.nextLabel || { kr: '다음 ▶', ja: '次へ ▶', en: 'Next ▶' }) + '</button></div>';
     }
     // 2026-06-25: 스텝에 picker 버튼 (예: 박 추가하기 / 후가공 추가하기) — 클릭 시 window[action](arg) 호출.
@@ -1084,11 +1084,14 @@
       hint: { kr: '한 장씩 올려서 결과를 확인하고 조정할 수 있어요', ja: '1枚ずつ確認しながら追加', en: 'Add one at a time, check, adjust' },
       cheer: { kr: '자동 배치 완료! 🎉', ja: '自動配置OK! 🎉', en: 'Auto-arranged! 🎉' }
     },
-    { // 3) 배치·크기 조정
-      target: '#meStage', mode: 'next',
-      msg: { kr: '시트에 배치된 스티커들의 <b>위치와 크기</b>를 조정해요. 각 이미지를 <b>드래그</b>하거나 <b>모서리 핸들</b>로 크기를 바꾸면 칼선도 같이 따라와요.',
-        ja: 'シート上のステッカーの <b>位置とサイズ</b> を調整。各画像を <b>ドラッグ</b> したり <b>角ハンドル</b> でサイズ変更するとカットラインも追従します。',
-        en: 'Adjust each sticker’s <b>position & size</b> on the sheet. <b>Drag</b> an image or use the <b>corner handles</b> — the cut line follows.' },
+    { // 3) 배치·크기 조정 (+ 이미지 더 올리기)
+      target: '#meStage', mode: 'next', hideBack: true,
+      buttons: [
+        { action: '_soFancyAddMore', label: { kr: '＋ 이미지 더 올리기', ja: '＋ 画像を追加', en: '＋ Add another image' } }
+      ],
+      msg: { kr: '시트에 배치된 스티커들의 <b>위치와 크기</b>를 조정해요. 각 이미지를 <b>드래그</b>하거나 <b>모서리 핸들</b>로 크기를 바꾸면 칼선도 같이 따라와요.<br>더 넣고 싶으면 아래 <b>＋ 이미지 더 올리기</b>!',
+        ja: 'シート上のステッカーの <b>位置とサイズ</b> を調整。<b>ドラッグ</b> や <b>角ハンドル</b> でサイズ変更するとカットラインも追従。<br>追加したい場合は下の <b>＋ 画像を追加</b>！',
+        en: 'Adjust each sticker’s <b>position & size</b> — <b>drag</b> or use the <b>corner handles</b> (the cut line follows).<br>Want more? Tap <b>＋ Add another image</b> below!' },
       cheer: { kr: '배치 완성! ✨', ja: '配置完了! ✨', en: 'Layout done! ✨' }
     },
     { // 4) 수량

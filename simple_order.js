@@ -11135,8 +11135,9 @@ html, body { background: #ffffff !important; }
         var isFancy  = !!(picked && _stickerIsFancy(picked));
         var wasFancy = !!(prev   && _stickerIsFancy(prev));
         // 2026-06-16: 변형 타입 전환 시 (재단↔팬시) 수량 기본값으로 강제 리셋.
-        //   1000 % 4 === 0 이라 단순 '%4' 체크로는 재단→팬시 전환 못 잡음.
-        if (isFancy && (!state.stickerQty || wasFancy === false || state.stickerQty > 200)) {
+        //   2026-07-14: 팬시 기본 4매. 재단→팬시 전환 시 100(=4의 배수) 이 %4 체크를 통과해 안 잡히던 문제 →
+        //   팬시 프리셋 최대 40 초과(재단 범위 100/500/1000 등) 이면 리셋.
+        if (isFancy && (!state.stickerQty || wasFancy === false || state.stickerQty > 40)) {
             state.stickerQty = 4;
         } else if (!isFancy && (!state.stickerQty || wasFancy === true)) {
             state.stickerQty = 100;   // 2026-07-14: 기본 수량 100매
@@ -11217,6 +11218,11 @@ html, body { background: #ffffff !important; }
         } finally {
             try { input.value = ''; } catch(_) {}
         }
+    };
+    // 2026-07-14: 팬시 — 이미지 더 올리기 (튜토리얼 배치 단계 버튼 등에서 호출). 파일 선택창 열기.
+    window._soFancyAddMore = function() {
+        var el = document.getElementById('soFancyMultiFile');
+        if (el) el.click();
     };
     // 2026-06-16: 완성파일 업로드 — PDF 페이지 사이즈/이미지 해상도 자동 인식 → 캔버스 + stickerW/H + 가격 동시 반영.
     //   업로드한 파일은 state.file 로 보관 → 주문 시 그대로 인쇄소로 전달 (에디터 export 무시).
@@ -12606,7 +12612,7 @@ html, body { background: #ffffff !important; }
                 _soLoadStickerVariants().then(function(vs){
                     var picked = (vs || []).find(function(x){ return x.code === state.stickerProductCode; });
                     var isFancy = !!(picked && _stickerIsFancy(picked));
-                    if (!state.stickerQty || (isFancy && state.stickerQty % 4 !== 0)) {
+                    if (!state.stickerQty || (isFancy && (state.stickerQty % 4 !== 0 || state.stickerQty > 40))) {
                         state.stickerQty = isFancy ? 4 : 100;
                     }
                     _soStickerRender();
@@ -16212,8 +16218,11 @@ html, body { background: #ffffff !important; }
             try {
                 var _meRefT = window.me;
                 var _meHasItems = _meRefT && Array.isArray(_meRefT.items) && _meRefT.items.length > 0;
-                console.log('[design svg] check — hasItems:', _meHasItems, 'natW:', _meRefT && _meRefT.natW, 'natH:', _meRefT && _meRefT.natH, 'exportFn:', typeof window._meExportSVG);
-                if (_meHasItems && typeof window._meExportSVG === 'function') {
+                // 2026-07-14: 스티커(특히 팬시=여러 이미지)는 벡터 SVG 불필요 — 래스터 이미지가 통째로 박혀 5MB+ 됨.
+                //   칼선 PDF + 디자인 PDF 로 충분. 서버 저장공간·업로드 시간 절약 + localStorage 부담 제거.
+                var _skipDesignSvg = !!state.isSticker;
+                console.log('[design svg] check — hasItems:', _meHasItems, 'skipSticker:', _skipDesignSvg, 'exportFn:', typeof window._meExportSVG);
+                if (_meHasItems && !_skipDesignSvg && typeof window._meExportSVG === 'function') {
                     updateUploadStep(tr('디자인 SVG (텍스트 아웃라인 변환) 처리 중...', 'デザインSVG (テキストアウトライン変換) 中...', 'Converting design SVG (text outline)...'));
                     var _svgText;
                     try {

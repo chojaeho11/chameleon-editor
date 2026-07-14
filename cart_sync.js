@@ -413,48 +413,53 @@
         // 2026-07-14: 항상 초대용량(>100KB) 인라인 문자열은 localStorage 저장 전에 제거 — 정상 저장도 비대해지지 않게.
         //   (팬시 스티커 등 대용량 SVG/base64. 서버 _unified 엔 원본 유지, 디자인/칼선은 Storage URL 로 보존.)
         //   썸네일(<100KB data URL)은 유지 → 카트 미리보기 정상.
+        //   2026-07-14: 깊은(중첩 포함) 탐색 — 대용량 문자열이 객체/배열 안에 있어도 제거.
+        function _deepStrip(obj, path, stripped) {
+            if (typeof obj === 'string') {
+                if (obj.length > 100000) { stripped.push((path || '?') + '(' + obj.length + ')'); return null; }
+                return obj;
+            }
+            if (Array.isArray(obj)) return obj.map(function (v, i) { return _deepStrip(v, path + '[' + i + ']', stripped); });
+            if (obj && typeof obj === 'object') {
+                var copy = {};
+                for (var k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) copy[k] = _deepStrip(obj[k], (path ? path + '.' : '') + k, stripped); }
+                return copy;
+            }
+            return obj;
+        }
         function _forLocal(arr) {
-            var hit = false;
-            var out = (arr || []).map(function (it) {
-                if (!it || typeof it !== 'object') return it;
-                var copy = {}, changed = false;
-                for (var k in it) {
-                    if (!Object.prototype.hasOwnProperty.call(it, k)) continue;
-                    var v = it[k];
-                    if (typeof v === 'string' && v.length > 100000) { changed = true; hit = true; continue; }
-                    copy[k] = v;
-                }
-                return changed ? copy : it;
-            });
-            return { arr: out, hit: hit };
+            var stripped = [];
+            var out = _deepStrip(arr || [], '', stripped);
+            return { arr: out, stripped: stripped, hit: stripped.length > 0 };
         }
         var _lg = _forLocal(mine);
-        if (_lg.hit) console.warn('[cart_sync] 초대용량 인라인 문자열 제거 후 localStorage 저장 (서버엔 원본 보존)');
+        if (_lg.hit) console.warn('[cart_sync] 초대용량 인라인 문자열 제거 후 localStorage 저장 (서버엔 원본 보존). 제거:', _lg.stripped.join(', '));
         var _saved = false;
         try {
             __origLocalSet(key, JSON.stringify(_lg.arr));
             _saved = true;
         } catch (e1) {
-            // 1차 실패 — 무거운 인라인 데이터 제거 후 재시도 (서버엔 _unified 원본이 push 됨)
+            // 1차 실패 — 8KB 초과 문자열까지 전부(중첩 포함) 제거 후 재시도 (썸네일 포함, 최후수단).
+            //   디자인/칼선은 Storage URL 로 보존됨 → 카트 미리보기 썸네일만 사라짐(기능 정상).
             try {
-                // 2026-07-14: 큰 인라인 문자열(데이터URL·SVG·base64 등, data: 접두어 유무 무관) 전부 제거.
-                //   디자인/칼선/썸네일은 모두 Supabase Storage URL 로 이미 보존됨 → localStorage 엔 불필요.
-                //   (기존엔 data: 만 제거 → 팬시 스티커의 대용량 SVG 등 non-data 문자열이 남아 재시도도 quota 초과.)
-                var _stripped = [];
-                var slim = mine.map(function (it) {
-                    if (!it || typeof it !== 'object') return it;
-                    var copy = {};
-                    for (var k in it) {
-                        if (!Object.prototype.hasOwnProperty.call(it, k)) continue;
-                        var v = it[k];
-                        if (typeof v === 'string' && ((v.length > 8000 && /^data:/.test(v)) || v.length > 100000)) { _stripped.push(k + '(' + v.length + ')'); continue; }
-                        copy[k] = v;
+                var _stripped2 = [];
+                function _deepStrip2(obj, path) {
+                    if (typeof obj === 'string') {
+                        if (obj.length > 8000) { _stripped2.push((path || '?') + '(' + obj.length + ')'); return null; }
+                        return obj;
                     }
-                    return copy;
-                });
+                    if (Array.isArray(obj)) return obj.map(function (v, i) { return _deepStrip2(v, path + '[' + i + ']'); });
+                    if (obj && typeof obj === 'object') {
+                        var copy = {};
+                        for (var k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) copy[k] = _deepStrip2(obj[k], (path ? path + '.' : '') + k); }
+                        return copy;
+                    }
+                    return obj;
+                }
+                var slim = _deepStrip2(mine, '');
                 __origLocalSet(key, JSON.stringify(slim));
                 _saved = true;
-                console.warn('[cart_sync] localStorage quota — 큰 인라인 문자열 제거 후 저장 (서버엔 원본 보존). 제거:', _stripped.join(', '));
+                console.warn('[cart_sync] localStorage quota — 8KB+ 문자열 전부 제거 후 저장 (서버엔 원본 보존). 제거:', _stripped2.join(', '));
             } catch (e2) {
                 console.error('[cart_sync] localStorage 저장 실패 (quota 초과). 서버 동기화는 계속 시도됨.', e2);
                 try {
