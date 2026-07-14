@@ -5242,7 +5242,8 @@
         var sel = me && me.selected;
         var tooltip;
         if (sel && (sel.type === 'text' || sel.type === 'shape')) {
-            input.value = sel.fill || '#1e293b';
+            // 2026-07-14: 칼선 등 fill:'transparent' 이면 color input(#rrggbb 전용)에 넣으면 경고 → 기본색으로.
+            input.value = /^#[0-9a-fA-F]{6}$/.test(sel.fill || '') ? sel.fill : '#1e293b';
             tooltip = (sel.type === 'text') ? '글씨 색상' : '도형 색상';
         } else {
             input.value = me.bg || '#ffffff';

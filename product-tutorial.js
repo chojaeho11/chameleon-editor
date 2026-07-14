@@ -927,17 +927,17 @@
       hint: { kr: '간단도형을 고르면 도형 칼선이 대지에 생겨요 — 드래그·핸들로 크기 조정', ja: 'かんたん図形を選ぶと図形カットラインが台紙に生成 — ドラッグ·ハンドルで調整', en: 'Pick a simple shape to place a cutline you can drag & resize' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
     },
-    { // 6.5) 복잡모양 선택 시 — 그림 외곽 누끼+칼선 자동 작업 (복잡모양 아니면 자동 스킵). 완료 이벤트로 다음 진행.
-      target: '#meStage', mode: 'wait', waitEvent: 'me-standee-ready',
+    { // 6.5) 복잡모양 — 자동 누끼+칼선 실행 후, 이미지 크기·위치를 조정해 칼선에 맞춤 (복잡모양 아니면 자동 스킵).
+      target: '#meStage', mode: 'next',
       onEnter: function () { return window._soStickerShapeCur === 'complex'; },
       buttons: [
         { action: '_meStickerAutoCutout', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
       ],
-      msg: { kr: '<b>복잡모양</b>을 고르셨네요! 아래 버튼을 누르면 그림의 <b>배경을 지우고(누끼)</b> <b>외곽을 따라 칼선</b>을 자동으로 따드려요. 그림이 대지에 크게 배치되니, <b>드래그·모서리 핸들</b>로 위치·크기를 조정하세요.',
-        ja: '<b>複雑な形</b> ですね!下のボタンで <b>背景を消して(切り抜き)</b> <b>輪郭に沿ってカットライン</b> を自動作成します。絵は台紙に大きく配置されるので、<b>ドラッグ·角ハンドル</b> で位置·サイズを調整してください。',
-        en: 'You chose <b>Complex</b>! Tap below to <b>remove the background</b> and <b>auto-trace a cutline</b>. The artwork is placed large on the canvas — <b>drag or use the corner handles</b> to adjust position & size.' },
-      hint: { kr: '버튼을 누르면 자동으로 누끼+칼선을 따드려요 (몇 초 걸려요)', ja: 'ボタンで自動切り抜き+カットライン(数秒)', en: 'Tap to auto cut-out + cutline (takes a few seconds)' },
-      cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
+      msg: { kr: '<b>복잡모양</b>이에요! ① 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요. ② 그 다음 <b>이미지의 크기와 위치를 조정해서 빨강 점선(칼선)에 맞춰</b> 주세요. 이미지와 칼선은 <b>각각 드래그·모서리 핸들</b>로 따로 조정돼요.',
+        ja: '<b>複雑な形</b> です! ① 下の <b>[自動 背景除去+カットライン]</b> を押します。② 次に <b>画像のサイズと位置を調整して赤い点線(カットライン)に合わせて</b> ください。画像とカットラインは <b>それぞれドラッグ·角ハンドル</b> で別々に調整できます。',
+        en: 'It\'s <b>Complex</b>! ① Tap <b>[Auto bg-removal + cutline]</b> below. ② Then <b>adjust the image size & position to match the red dashed cutline</b>. The image and cutline move <b>independently</b> — drag or use the corner handles.' },
+      hint: { kr: '이미지·칼선을 각각 맞춘 뒤 다음을 눌러요', ja: '画像·カットラインを合わせてから次へ', en: 'Align image & cutline, then Next' },
+      cheer: { kr: '칼선 정렬 완료! ✂️', ja: 'カットライン整列OK! ✂️', en: 'Aligned! ✂️' }
     },
     PROOF_STEP,       // 7) 시안 최종 확인
     GENERIC_STEPS[2]  // 8) 장바구니
