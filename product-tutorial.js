@@ -462,6 +462,8 @@
       b.addEventListener('click', function () {
         var o = opts[parseInt(b.getAttribute('data-opt'), 10)];
         _chosenBranch = o.key || 'upload';
+        // 2026-07-14: 'jump' — 다른 스텝 흐름으로 전환 (예: 스티커 종류 선택 → 일반/팬시 각 튜토리얼).
+        if (o.mode === 'jump' && typeof o.run === 'function') { try { o.run(); } catch (_) {} return; }
         if (o.mode === 'free') renderFree(i, o);
         else if (o.mode === 'request') renderRequest(i, o);
         else renderDetail(i, o);
@@ -1100,10 +1102,34 @@
     GENERIC_STEPS[2]  // 장바구니
   ];
 
+  // 2026-07-14: 스티커 진입 시 — 먼저 '일반 스티커 / 팬시 스티커' 중 선택 → 각 튜토리얼로 분기.
+  function _tutIsStickerProduct() { try { return _secVisible('#soStickerSection'); } catch (_) { return false; } }
+  var STICKER_CHOOSE_STEP = {
+    branch: [
+      { key: 'regular', mode: 'jump', always: true,
+        label: { kr: '📄 일반 스티커', ja: '📄 通常ステッカー', en: '📄 Regular sticker' },
+        sub: { kr: '원하는 사이즈 · 모양(사각/도형/복잡)으로 재단', ja: 'サイズ・形(四角/図形/複雑)でカット', en: 'Cut to your size & shape (square/shape/complex)' },
+        run: function () {
+          try { if (window._soStickerSelectKind) window._soStickerSelectKind('regular'); } catch (_) {}
+          setTimeout(function () { run(SIZE_PRODUCT_STEPS, 0); }, 90);
+        } },
+      { key: 'fancy', mode: 'jump', always: true,
+        label: { kr: '✨ 팬시 스티커 (여러 이미지)', ja: '✨ ファンシー (複数画像)', en: '✨ Fancy sticker (multi-image)' },
+        sub: { kr: '이미지를 한 장씩 올리면 자동 누끼+칼선, 시트형(140×210mm)', ja: '画像を1枚ずつ→自動切り抜き+カットライン、シート型', en: 'Add images one by one → auto cut-out + cut line, sheet type' },
+        run: function () {
+          try { if (window._soStickerSelectKind) window._soStickerSelectKind('fancy'); } catch (_) {}
+          setTimeout(function () { run(FANCY_STICKER_STEPS, 0); }, 140);
+        } }
+    ],
+    msg: { kr: '어떤 <b>스티커</b>를 만들까요? 종류를 먼저 골라주세요.',
+      ja: 'どの <b>ステッカー</b> にしますか? まず種類をお選びください。',
+      en: 'Which <b>sticker</b> would you like? Pick a type to start.' }
+  };
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
-    // 2026-07-14: 팬시 스티커 — 멀티이미지 자동 처리. size-product(스티커 공통) 보다 먼저 매칭.
-    { id: 'fancy-sticker', match: { test: function () { return _tutIsFancySticker(); } }, steps: FANCY_STICKER_STEPS },
+    // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
+    { id: 'sticker', match: { test: function () { return _tutIsStickerProduct(); } }, steps: [STICKER_CHOOSE_STEP] },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },

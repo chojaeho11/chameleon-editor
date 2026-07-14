@@ -11163,6 +11163,13 @@ html, body { background: #ffffff !important; }
         try { if (typeof window._soQdSyncFromCustomDims === 'function') window._soQdSyncFromCustomDims(); } catch(_) {}
         recalc();
     };
+    // 2026-07-14: 튜토리얼용 — 종류(일반/팬시)로 변형 선택. kind: 'fancy' | 'regular'.
+    window._soStickerSelectKind = function(kind) {
+        var vs = _stickerVariantsCache || [];
+        var target = vs.find(function(v){ return kind === 'fancy' ? _stickerIsFancy(v) : !_stickerIsFancy(v); });
+        if (target && typeof window._soStickerPickVariant === 'function') { window._soStickerPickVariant(target.code); return target.code; }
+        return null;
+    };
     window._soStickerSizeInput = function() {
         var w = parseInt(document.getElementById('soStickerW').value, 10) || 100;
         var h = parseInt(document.getElementById('soStickerH').value, 10) || 100;
