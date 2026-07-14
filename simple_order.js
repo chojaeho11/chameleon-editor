@@ -16943,17 +16943,17 @@ html, body { background: #ffffff !important; }
                             // 팬시: 시트형(여러 이미지 개별 칼선) — 모양(재단) 라벨 없음.
                             meta.push(tr('팬시 시트 (개별 칼선)', 'ファンシーシート (個別カット)', 'Fancy sheet (individual cut)'));
                         } else {
+                            // 모양(재단) — 이름만(수수료는 아래 가격 breakdown 의 별도 라인). 수량도 가격줄에 표시되어 생략.
                             var _skShape = _sk.shape || (_sk.dieCut ? 'complex' : 'square');
                             if (_skShape === 'simple') {
                                 var _skKind = STICKER_SHAPE_KINDS.find(function(x){ return x.key === _sk.shapeKind; });
-                                meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: die-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : '') + ' +' + fmtPrice(10000));
+                                meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: shape-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : ''));
                             } else if (_skShape === 'complex') {
-                                meta.push(tr('모양: 모양스티커(외곽따기)', '形: 型抜き', 'Shape: die-cut') + ' +' + fmtPrice(10000));
+                                meta.push(tr('모양: 모양스티커', '形: 型抜き', 'Shape: die-cut'));
                             } else {
                                 meta.push(tr('모양: 사각', '形: 四角', 'Shape: square'));
                             }
                         }
-                        if (_sk.qty) meta.push(_sk.qty.toLocaleString() + tr('매', '枚', ' pcs'));
                     } catch (_ske) {}
                 }
                 // 2026-06-04: 등신대 재질 표시 (허니콤보드 16mm / 포맥스 3mm)
@@ -17058,8 +17058,12 @@ html, body { background: #ffffff !important; }
                 if (item.customSize && typeof item.customSize.unit === 'number') _bdUnit = item.customSize.unit;
                 // 2026-06-18 v607: 스티커 단가 표시 — DB product.price(개당 30원) 대신 1세트당 가격으로.
                 var _isStRow = !!item._isSticker || (item.sticker != null) || (item.product && item.product.code && (/^st_/i.test(item.product.code) || item.product.code === '0000241' || item.product.code === '645646544' || item.product.code === '43545345435' || item.product.code === '567756767' || item.product.category === 'pp_sticker'));
+                // 2026-07-14: 스티커 — 모양(재단) 수수료를 base 와 분리해 별도 라인으로 표시(제품페이지와 동일).
+                var _stCartShapeFee = 0;
                 if (_isStRow && item.sticker && typeof _stickerCalcPrice === 'function') {
-                    _bdUnit = _stickerCalcPrice(item.sticker);
+                    var _stFullCart = _stickerCalcPrice(item.sticker);
+                    _stCartShapeFee = item.sticker.isFancy ? 0 : (typeof _stickerShapeFee === 'function' ? _stickerShapeFee(item.sticker.shape, item.sticker.dieCut) : 0);
+                    _bdUnit = Math.max(0, _stFullCart - _stCartShapeFee);
                 }
                 // 2026-06-14: 낱장 인쇄 — DB price (=50) 대신 perSheet × 할인 으로 단가 산출, 사이즈/면 메타 + 박/후가공 breakdown.
                 var _isLfRow = !!item._isLeaflet || !!item.leafletSize || (item.product && item.product.code && /^pp_lf/i.test(item.product.code));
@@ -17077,6 +17081,11 @@ html, body { background: #ffffff !important; }
                 // 2026-07-06: 스티커는 "단가 × 1000 (¥3)" 이 "3장"처럼 오해됨(일본 직원 지적) → "1,000매 = ¥3,000" 으로 명확 표기.
                 if (_isStRow && item.sticker && item.sticker.qty) {
                     _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + Number(item.sticker.qty).toLocaleString() + tr('매','枚','pcs') + '</span><b>' + fmtPrice(_bdSub) + '</b></div>');
+                    // 모양(재단) 수수료 별도 라인
+                    if (_stCartShapeFee > 0) {
+                        var _stCartShapeName = (item.sticker.shape === 'simple') ? tr('도형따기','図形カット','Shape-cut') : tr('모양스티커','型抜きステッカー','Die-cut');
+                        _bd.push('<div style="display:flex; justify-content:space-between;"><span>✂️ ' + _stCartShapeName + '</span><b>+' + fmtPrice(_stCartShapeFee) + '</b></div>');
+                    }
                 } else {
                     _bd.push('<div style="display:flex; justify-content:space-between;"><span>' + tr('단가','単価','Unit') + ' × ' + _bdQty + ' (' + fmtPrice(_bdUnit) + ')</span><b>' + fmtPrice(_bdSub) + '</b></div>');
                 }
