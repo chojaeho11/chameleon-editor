@@ -2891,9 +2891,9 @@ html, body { background: #ffffff !important; }
           <div id="soStickerQtyWrap" style="display:none; margin-top:14px;">
             <div class="so-section-title">🧮 ${tr('수량 (매)', '数量 (枚)', 'Quantity (pcs)')}</div>
             <div id="soStickerQtyGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px;"></div>
-            <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+            <div style="display:flex; gap:8px; align-items:center; margin-top:8px; min-width:0;">
               <span style="font-size:11.5px; color:#64748b; flex-shrink:0;">${tr('직접 입력','直接入力','Custom')}</span>
-              <input type="number" id="soStickerQty" value="1000" min="1000" step="1000" oninput="window._soStickerQtyInput()" style="flex:1; padding:9px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
+              <input type="number" id="soStickerQty" value="1000" min="1000" step="1000" oninput="window._soStickerQtyInput()" style="flex:1 1 0; min-width:0; box-sizing:border-box; padding:9px 12px; border:1.5px solid #e7e5e4; border-radius:10px; font-size:13px; font-weight:800; color:#0f172a; background:#fff; font-family:inherit; text-align:center;">
             </div>
             <div id="soStickerQtyHint" style="margin-top:6px; font-size:11px; color:#64748b;">${tr('기본 1,000매 · 1,000매 단위로 주문 가능 · 10,000매 이상 30% 할인', '基本1,000枚 · 1,000枚単位 · 10,000枚以上30%割引', 'Default 1,000 pcs · 1,000-step · 30% off at 10,000+')}</div>
           </div>
@@ -8496,10 +8496,10 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 0;
         }
-        // 2026-06-12: 스티커도 무료배송
+        // 2026-07-14: 스티커 — 일반택배 5,000원 (사용자 요청, 무료 아님). JP 는 위 JP 분기에서 이미 5,000 처리.
         if (state.isSticker) {
             state._shipUpgradeReason = null;
-            return 0;
+            return 5000;
         }
         // 2026-05-29: 베스트굿즈 전체 — 정액 배송비 3,000원 (통화변환 → JP ¥300 / US $3).
         //   2026-06-30: 제품페이지가 JP만 10,000원으로 달라 장바구니(_soCalcItemPrice/CartTotal=3,000)와 불일치 → 3,000 으로 통일.
