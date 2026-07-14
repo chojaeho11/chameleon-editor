@@ -1263,8 +1263,70 @@
     GENERIC_STEPS[2]  // 7) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 아크릴 키링/코롯토 (gds_acr_kr_*)  2026-07-14
+  //  모양선택 → 단면/양면 → 사이즈 → 개별포장 → 고리선택 → 파일업로드 → 누끼/칼선.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsKeyring() { try { return window._soCurrentIsKeyringLike === true; } catch (_) { return false; } }
+  var KEYRING_STEPS = [
+    { // 1) 모양 선택 (모양따기/사각배경/원형배경/모양배경/사각투명/원형투명)
+      target: ['#soPresetCutGrid', '#soPresetCutSection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soPresetCutSection'); },
+      msg: { kr: '먼저 <b>모양</b>을 골라요! <b>모양따기</b>(그림 외곽 그대로)·사각/원형 배경·투명 등 6가지 중 선택할 수 있어요.',
+        ja: 'まず <b>形</b> を選びます!<b>型抜き</b>(絵の輪郭通り)・四角/円形の背景・透明など6種類から。',
+        en: 'First pick the <b>shape</b>! Choose from 6: <b>die-cut</b> (to the artwork outline), square/round background, transparent, etc.' },
+      cheer: { kr: '모양 선택! 🔑', ja: '形OK! 🔑', en: 'Shape set! 🔑' }
+    },
+    { // 2) 단면 / 양면
+      target: '#soKeyringSideRow', mode: 'next',
+      onEnter: function () { return _secVisible('#soKeyringSideRow'); },
+      msg: { kr: '<b>인쇄 면</b>을 정해요. <b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요 <span style="color:#94a3b8;">(양면 = 기본가 ×2)</span>.',
+        ja: '<b>印刷面</b>を選びます。<b>片面</b>は表のみ、<b>両面</b>は表裏とも <span style="color:#94a3b8;">(両面=基本価格×2)</span>。',
+        en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>Double</b> = both sides <span style="color:#94a3b8;">(double = base ×2)</span>.' }
+    },
+    { // 3) 사이즈 선택
+      target: ['#soPresetSizePills', '#soCustomSizeSection'], mode: 'next',
+      onEnter: function () { return _secVisible('#soPresetSizePills') || _secVisible('#soCustomSizeSection'); },
+      msg: { kr: '<b>사이즈</b>를 골라요 (4×4 ~ 10×10cm). 큰 사이즈일수록 단가가 올라가요.',
+        ja: '<b>サイズ</b>を選びます (4×4〜10×10cm)。大きいほど単価UP。',
+        en: 'Choose the <b>size</b> (4×4 to 10×10cm). Bigger = higher unit price.' },
+      cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
+    },
+    { // 4) 개별포장
+      target: '#soPresetWrapWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soPresetWrapWrap'); },
+      msg: { kr: '<b>개별포장</b>을 골라요. 포장없음 / 내지인쇄 / 상단인쇄 중 선택할 수 있어요 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
+        ja: '<b>個別包装</b>を選びます。包装なし / 台紙印刷 / 上部印刷から <span style="color:#94a3b8;">(不要なら次へ)</span>。',
+        en: 'Choose <b>individual packaging</b> — none / insert-print / header-print <span style="color:#94a3b8;">(or Next)</span>.' }
+    },
+    { // 5) 고리 선택 (addon)
+      target: '#soAddonSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soAddonSection'); },
+      msg: { kr: '<b>고리(체인)</b>를 골라요! 고리를 선택하면 <b>조립되어 배송</b>돼요. 원하는 고리 종류를 눌러주세요.',
+        ja: '<b>リング(金具)</b>を選びます!選ぶと <b>組み立てて発送</b> されます。お好みのリングをタップ。',
+        en: 'Choose the <b>ring/chain</b>! Selected rings are <b>assembled & shipped</b>. Tap the ring you want.' },
+      cheer: { kr: '고리 선택! 🔗', ja: 'リングOK! 🔗', en: 'Ring set! 🔗' }
+    },
+    GENERIC_STEPS[0], // 6) 파일 업로드 / 디자인 방법
+    { // 7) 누끼 + 칼선 (모양따기 등)
+      target: '#meStage', mode: 'next',
+      buttons: [
+        { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
+      ],
+      msg: { kr: '<b>모양따기</b>라면 아래 버튼으로 <b>배경을 지우고(누끼) 외곽 칼선</b>을 자동으로 따드려요. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하세요. <span style="color:#94a3b8;">(사각/원형 배경은 건너뛰어도 돼요)</span>',
+        ja: '<b>型抜き</b>なら下のボタンで <b>背景除去+輪郭カットライン</b> を自動作成。<b>ドラッグ·ハンドル</b> で調整。<span style="color:#94a3b8;">(四角/円形背景はスキップ可)</span>',
+        en: 'For <b>die-cut</b>, tap below for <b>auto bg-removal + outline cutline</b>, then <b>drag/handles</b> to adjust. <span style="color:#94a3b8;">(skip for square/round background)</span>' },
+      hint: { kr: '모양따기가 아니면 그냥 다음을 눌러요', ja: '型抜きでなければ次へ', en: 'Not die-cut? Just tap Next' },
+      cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
+    },
+    PROOF_STEP,       // 8) 시안 확인
+    GENERIC_STEPS[2]  // 9) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
+    // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
+    { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
     { id: 'sticker', match: { test: function () { return _tutIsStickerProduct(); } }, steps: [STICKER_CHOOSE_STEP] },
     // 2026-07-14: 낱장 인쇄(리플렛) — 사이즈·인쇄면·용지·박·후가공 전용 스텝. generic 보다 앞.

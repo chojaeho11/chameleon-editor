@@ -13683,6 +13683,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-30: 프리셋 타입 / 고리 옵션 보유 여부 (키링·코롯토만 고리 300원 override + 안내문구 변경)
         state.presetType = _resolvedType;
         state.presetHasHooks = (state.presetType === 'keyring' || state.presetType === 'korotto');
+        window._soCurrentIsKeyringLike = !!state.presetHasHooks;   // 2026-07-14: 튜토리얼 매칭용(키링/코롯토)
         // 프리셋 굿즈는 사이즈 입력 UI 강제 활성화 — DB 의 is_custom_size 와 무관
         if (state.presetSizes) state.isCustomSize = true;
         // 2026-06-04: 쿠션 — 솜포함 + 개별포장 옵션 초기화 + 섹션 표시
