@@ -673,12 +673,13 @@
   // 2026-07-14: 장바구니 담기 직전 — 미니에디터 시안 최종 확인 + PDF 다운로드 점검 (모든 제품 공통).
   //   에디터가 없는 제품(원판/금액주문 등)은 onEnter 로 자동 스킵.
   var PROOF_STEP = {
-    target: '#aiNbAiDl', mode: 'next',
-    onEnter: function () { return _secVisible('#meStage') || _secVisible('#aiNbAiDl'); },
-    hint: { kr: '⬇ 다운로드로 PDF 시안을 꼭 확인!', ja: '⬇ ダウンロードでPDF確認を!', en: '⬇ Download & check the PDF proof!' },
-    msg: { kr: '담기 전에 <b>시안을 최종 확인</b>해요. 위 에디터에서 디자인을 한 번 더 보고, <b>다운로드</b>로 <b>PDF 시안</b>을 꼭 확인해 주세요.<br><span style="color:#94a3b8;">에디터 화면과 실제 인쇄 PDF는 약간 다를 수 있어요.</span>',
-      ja: 'カートに入れる前に <b>デザインを最終確認</b>。上のエディターでもう一度見て、<b>ダウンロード</b> で <b>PDF</b> を必ずご確認ください。<br><span style="color:#94a3b8;">エディター画面と実際の印刷PDFは多少異なる場合があります。</span>',
-      en: 'Do a <b>final check</b> before adding to cart. Review your design above and tap <b>Download</b> to check the <b>PDF proof</b>.<br><span style="color:#94a3b8;">The editor may differ slightly from the printed PDF.</span>' },
+    // 2026-07-14: 다운로드 버튼이 아니라 '에디터 디자인 화면'을 밝게 하이라이트 (버튼만 비추면 대지가 어둡게 보임).
+    target: ['#embeddedEditorPreview', '#meStage'], mode: 'next',
+    onEnter: function () { return _secVisible('#meStage') || _secVisible('#embeddedEditorPreview'); },
+    hint: { kr: '여기서 디자인을 확인하고, 다운로드로 PDF도 확인!', ja: 'ここでデザイン確認、ダウンロードでPDFも!', en: 'Review here, then Download the PDF!' },
+    msg: { kr: '담기 전에 <b>시안을 최종 확인</b>해요. 이 <b>에디터 화면</b>에서 디자인을 한 번 더 보고, 아래 <b>다운로드</b>로 <b>PDF 시안</b>도 꼭 확인해 주세요.<br><span style="color:#94a3b8;">에디터 화면과 실제 인쇄 PDF는 약간 다를 수 있어요.</span>',
+      ja: 'カートに入れる前に <b>デザインを最終確認</b>。この <b>エディター画面</b> でもう一度見て、下の <b>ダウンロード</b> で <b>PDF</b> も必ずご確認ください。<br><span style="color:#94a3b8;">エディター画面と実際の印刷PDFは多少異なる場合があります。</span>',
+      en: 'Do a <b>final check</b> before adding to cart. Review your design in this <b>editor</b>, then tap <b>Download</b> below to check the <b>PDF proof</b>.<br><span style="color:#94a3b8;">The editor may differ slightly from the printed PDF.</span>' },
     cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
   };
 
