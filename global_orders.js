@@ -2280,7 +2280,7 @@ async function processArtworkSettlement(orderId) {
 // [환불 헬퍼] 단건 환불 처리 — 여러 함수에서 공유
 async function refundSingleOrder(id, reason = '관리자 취소') {
     const { data: order } = await sb.from('orders')
-        .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id')
+        .select('payment_method, toss_payment_key, total_amount, discount_amount, user_id, payment_status')
         .eq('id', id).single();
     if (!order) throw new Error('주문 조회 실패');
 
@@ -2317,7 +2317,11 @@ async function refundSingleOrder(id, reason = '관리자 취소') {
             });
         }
     } else {
-        newPaymentStatus = '환불대기';
+        // 2026-07-14 (버그#9): 무통장(bank) — 실제 '입금완료'된 건만 환불이 필요하므로 환불대기.
+        //   아직 입금 전(입금대기 등)이면 받은 돈이 없으니 바로 '환불완료' (환불대기 목록에는 입금완료 무통장/카드만 남게).
+        const _bankPaidStatuses = ['입금완료', '입금확인', '입금확인됨', '결제완료', '승인완료', '구매확정'];
+        const _bankPaid = _bankPaidStatuses.indexOf(order.payment_status || '') >= 0;
+        newPaymentStatus = _bankPaid ? '환불대기' : '환불완료';
     }
 
     // 마일리지 복원

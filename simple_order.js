@@ -2509,7 +2509,7 @@ html, body { background: #ffffff !important; }
           <!-- 2026-06-01: 광고인쇄 배송 안내 배너 — isAdPrint 일 때만 노출 (_soApplyAdPrintLayout 에서 토글) -->
           <div id="soAdShipNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1.5px solid #93c5fd; border-radius:10px; font-size:12px; font-weight:700; color:#1e40af; line-height:1.5; display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-truck-fast" style="font-size:16px; color:#2563eb;"></i>
-            <span>${tr('기본 <b>포장+배송비 1만원</b>이 자동 적용됩니다 (카트 묶음 시 1건만)', '基本 <b>梱包+配送費 1,000円</b> が自動で加算されます (まとめ買いは1件のみ)', 'A base <b>$10 packing + shipping fee</b> applies automatically (one per cart)')}</span>
+            <span>${tr('기본 <b>포장+배송비 1만원</b>이 자동 적용됩니다 (카트 묶음 시 1건만)', '基本 <b>梱包+配送費 500円</b> が自動で加算されます (まとめ買いは1件のみ)', 'A base <b>$10 packing + shipping fee</b> applies automatically (one per cart)')}</span>
           </div>
           <div class="so-section-title">📐 ${tr('사이즈 선택', 'サイズ選択', 'Choose Size')} <span id="soCustomSizeUnit" style="font-size:10px; color:#94a3b8; font-weight:400;">(cm)</span></div>
           <!-- 2026-07-04: 현수막(placard) 9종 — 가로/세로 10cm 단위 안내·경고. _soOnCustomDimsChange 에서 placard 일 때만 표시. -->
