@@ -4023,22 +4023,9 @@
           + '</div>'
           + '<img src="/cut_st.jpg" alt="칼선 종류 예시" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:10px; border:1px solid #fecaca;" loading="lazy">'
           //  TYPE A/B (이미지 윤곽선 따기) — 그림 바로 아래 2-column 배치
-          + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">'
-          +   '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:2px solid #ef4444; background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:center;"><div style="font-size:14px;">TYPE A</div><div style="font-size:10.5px; font-weight:700; opacity:0.95; margin-top:3px; line-height:1.35;">Margins +2mm<br>Die-Cut<br>(반칼·완칼)</div></button>'
-          +   '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:2px solid #dc2626; background:#fff; color:#b91c1c; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:center;"><div style="font-size:14px;">TYPE B</div><div style="font-size:10.5px; font-weight:700; opacity:0.85; margin-top:3px; line-height:1.35;">Border -2mm<br>Wancut<br>(무테)</div></button>'
-          + '</div>'
-          + '<div style="padding-top:10px; border-top:1px dashed #fecaca;">'
-          +   '<div style="font-size:11.5px; color:#64748b; margin-bottom:10px; line-height:1.5;">간단모양: 4가지 기본 형태 (캔버스 꽉 채움).</div>'
-          +   '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">'
-          +     '<button type="button" data-shape="circle"       style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">⭕ 동그라미</button>'
-          +     '<button type="button" data-shape="pill"         style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">💊 알약</button>'
-          +     '<button type="button" data-shape="roundedRect"  style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">▢ 라운드 사각</button>'
-          +     '<button type="button" data-shape="roundedCorner"style="padding:14px 8px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">◣ 한 모서리</button>'
-          +   '</div>'
-          + '</div>'
-          + '<div style="margin-top:12px; display:grid; grid-template-columns:1fr 1fr; gap:6px;">'
-          +   '<button type="button" data-shape="eraser" style="padding:10px 8px; border:1.5px solid #fbbf24; background:#fffbeb; color:#92400e; border-radius:10px; cursor:pointer; font-weight:800; font-family:inherit;">🧽 칼선 지우개</button>'
-          +   '<button type="button" data-shape="clear" style="padding:10px 8px; border:1.5px solid #cbd5e1; background:#fff; color:#64748b; border-radius:10px; cursor:pointer; font-weight:700; font-family:inherit;">전체 삭제</button>'
+          + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">'
+          +   '<button type="button" data-shape="trace-outer" style="padding:12px 10px; border:0; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:center;"><div style="font-size:14px;">TYPE A</div><div style="font-size:10.5px; font-weight:700; opacity:0.95; margin-top:3px; line-height:1.35;">Margins +2mm<br>Die-Cut<br>(반칼·완칼)</div></button>'
+          +   '<button type="button" data-shape="trace-inner" style="padding:12px 10px; border:0; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-radius:10px; cursor:pointer; font-weight:900; font-family:inherit; text-align:center;"><div style="font-size:14px;">TYPE B</div><div style="font-size:10.5px; font-weight:700; opacity:0.95; margin-top:3px; line-height:1.35;">Border -2mm<br>Wancut<br>(무테)</div></button>'
           + '</div>';
         document.body.appendChild(pop);
         function close(){ pop.remove(); }
