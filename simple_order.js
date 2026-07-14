@@ -13166,6 +13166,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-05: 허니콤 포토존 family (나무조형물·동화책·큐브·룰렛) — 6종 변형 카드 그리드
         var _isPzVariant = (typeof window._soIsPhotozoneVariantProduct === 'function')
             ? window._soIsPhotozoneVariantProduct(p) : false;
+        // 2026-07-15: 튜토리얼 매칭용(허니콤 포토존) + 나무조형물 2종은 기성품(디자인 작업 없이 바로 주문)
+        window._soCurrentIsPhotozone = !!_isPzVariant;
+        window._soPzReadyMade = !!(p && (p.code === '45245252' || p.code === '345353'));  // 나무조형물 소형/대형
         if (_isPzVariant) {
             try { window._soLoadPhotozoneVariants(p.code); } catch(e){}
         } else {

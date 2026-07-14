@@ -1496,6 +1496,52 @@
   ];
 
   // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 허니콤 포토존/조형물 (나무조형물·동화책 포토존·큐브·룰렛)  2026-07-15
+  //  종류선택 → 칼선 다운받기 → 디자인(업로드/의뢰) → 시공/배송 → 시안 → 장바구니.
+  //  칼선 도안을 받아 그에 맞춰 작업 후 업로드하거나 의뢰하는 제품.
+  //  예외) 나무조형물 소형/대형(45245252·345353)은 기성품 — 디자인·칼선·시안 단계 스킵,
+  //        종류선택 후 바로 시공/배송 → 장바구니. window._soPzReadyMade 로 판정.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsPhotozone() { try { return window._soCurrentIsPhotozone === true; } catch (_) { return false; } }
+  function _pzNotReadyMade() { try { return window._soPzReadyMade !== true; } catch (_) { return true; } }
+  var PHOTOZONE_STEPS = [
+    { // 1) 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
+      target: ['#soPhotozoneVariants', '#soPhotozoneVariantsSec'], mode: 'next', resumeNext: true,
+      onEnter: function () { return window._soCurrentIsPhotozone === true; },
+      msg: { kr: '먼저 <b>어떤 조형물/포토존</b>을 만들지 골라요. 나무조형물·동화책 포토존·회전 큐브·룰렛 등 카드를 눌러 종류를 바꿀 수 있어요.',
+        ja: 'まず <b>どの造形物/フォトゾーン</b> を作るか選びます。ツリー造形·絵本フォトゾーン·回転キューブ·ルーレットなど、カードをタップで切替。',
+        en: 'First choose <b>which sculpture/photo-zone</b> to make. Tap a card to switch — tree sculpture, storybook photo-zone, spinning cube, roulette…' },
+      cheer: { kr: '종류 선택! 🌳', ja: '種類OK! 🌳', en: 'Type set! 🌳' }
+    },
+    { // 2) 칼선 다운받기 (기성품 나무조형물이면 스킵)
+      target: ['#soCutlineDownloadBtn', '#soCutlineDownload'], mode: 'next',
+      onEnter: function () { return _pzNotReadyMade() && _secVisible('#soCutlineDownload'); },
+      msg: { kr: '먼저 <b>칼선 도안을 다운받아</b> 주세요. 이 도안(칼선 규격)에 <b>맞춰 디자인</b>한 뒤, 다음 단계에서 완성 파일을 올리거나 의뢰하면 돼요.',
+        ja: 'まず <b>型抜きテンプレートをダウンロード</b> してください。この規格に <b>合わせてデザイン</b> し、次のステップで完成ファイルをアップまたは依頼します。',
+        en: 'First <b>download the die-cut template</b>. Design <b>to fit this template</b>, then upload the finished file or request a design in the next step.' },
+      cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
+    },
+    Object.assign({}, GENERIC_STEPS[0], { // 3) 디자인 방법 (업로드/의뢰 중심) — 기성품이면 스킵
+      onEnter: function () { return _pzNotReadyMade(); },
+      msg: { kr: '받은 <b>칼선 도안에 맞춰 디자인</b>한 뒤 <b>파일 업로드</b>로 올리거나, 직접 하기 어려우면 <b>디자인 의뢰</b>를 맡겨주세요.',
+        ja: '<b>型抜きテンプレートに合わせてデザイン</b> し <b>ファイルアップロード</b>、または <b>デザイン依頼</b> をお任せください。',
+        en: 'Design <b>to fit the die-cut template</b>, then <b>upload the file</b> — or <b>request a design</b> if it\'s tricky to do yourself.' }
+    }),
+    { // 4) 시공/배송 옵션 (배송 위치·날짜)
+      target: '#soScheduleSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soScheduleSection'); },
+      msg: { kr: '<b>배송·설치</b>를 골라요. 수도권 무료배송/설치 또는 지방배송 등 위치를 정하고, 아래에서 <b>배송 희망일</b>도 선택할 수 있어요.',
+        ja: '<b>配送·設置</b>を選びます。首都圏 送料·設置無料 または 地方配送 など場所を決め、下で <b>配送希望日</b> も選べます。',
+        en: 'Choose <b>delivery/installation</b> — metro free delivery/install or regional, and pick your <b>preferred date</b> below.' },
+      cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
+    },
+    Object.assign({}, PROOF_STEP, { // 5) 시안 최종 확인 — 기성품이면 스킵
+      onEnter: function () { return _pzNotReadyMade() && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); }
+    }),
+    GENERIC_STEPS[2]  // 6) 장바구니
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
   //  공통 '종류 먼저 고르기' 스텝 — 종류 카드 그리드가 있는 모든 제품(봉투/실사출력/
   //  탁상/인스타판넬/포토존/거치대 등)이 size-product·generic 시나리오로 빠질 때, 맨 앞에
   //  이 스텝을 붙여 '제품(종류) 먼저 → 위에서부터 순서대로' 흐름을 보장. 카드 없으면 자동 스킵.
@@ -1525,6 +1571,8 @@
     { id: 'acrylic', match: { test: function () { return _tutIsAcrylicPrint(); } }, steps: ACRYLIC_STEPS },
     // 2026-07-15: 시트지(vinyl) — 종류·커팅방식·디자인·누끼칼선 전용 스텝. size-product 보다 앞.
     { id: 'vinyl', match: { test: function () { return _tutIsVinyl(); } }, steps: VINYL_STEPS },
+    // 2026-07-15: 허니콤 포토존/조형물 — 종류·칼선다운·디자인·배송. 나무조형물 2종은 기성품(디자인 스킵). generic 보다 앞.
+    { id: 'photozone', match: { test: function () { return _tutIsPhotozone(); } }, steps: PHOTOZONE_STEPS },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
     { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
