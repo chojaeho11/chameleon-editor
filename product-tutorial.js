@@ -242,8 +242,26 @@
       if (!modalOpen()) { quit(); _looping = false; return; }
       place();
       _tutUpdateSel();
+      _tutUpdateNextBlock();
       requestAnimationFrame(frame);
     })();
+  }
+  // 2026-07-14: 현재 스텝에 blockNext(조건함수)가 있으면, 조건이 참일 때 '다음' 버튼을 비활성화.
+  //   예: 초저가 현수막 롤 폭 초과(가로·세로 둘 다 160cm 초과)면 사이즈를 고칠 때까지 다음 진행 차단.
+  function _tutUpdateNextBlock() {
+    try {
+      if (!_pop) return;
+      var nextBtn = _pop.querySelector('[data-act="next"].tut-btn-go');
+      if (!nextBtn) return;
+      var step = (_cur && _cur.kind === 'step' && _steps) ? _steps[_cur.i] : null;
+      var blocked = !!(step && typeof step.blockNext === 'function' && step.blockNext());
+      if (nextBtn._tutBlocked === blocked) return;   // 변화 없으면 skip
+      nextBtn._tutBlocked = blocked;
+      nextBtn.disabled = blocked;
+      nextBtn.style.opacity = blocked ? '0.45' : '';
+      nextBtn.style.cursor = blocked ? 'not-allowed' : '';
+      nextBtn.style.pointerEvents = blocked ? 'none' : '';
+    } catch (_) {}
   }
 
   // ── 칭찬 연출 ──────────────────────────────────────────────────────────
@@ -1206,9 +1224,10 @@
         en: 'First pick the <b>banner type</b>. Tap a card to switch (low-cost, UV wide, eco, latex, flag…). Each has its own <b>price per ㎡</b>.' },
       cheer: { kr: '종류 선택! 🎌', ja: '種類OK! 🎌', en: 'Type set! 🎌' }
     },
-    { // 2) 사이즈 (가로×세로 cm, 10cm 단위)
+    { // 2) 사이즈 (가로×세로 cm, 10cm 단위) — 초저가 롤 폭 초과 시 '다음' 차단(끝까지 갔다 되돌아오는 번거로움 방지)
       target: '#soCustomSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection'); },
+      blockNext: function () { return window._soPlacardOversized === true; },
       msg: { kr: '<b>사이즈</b>를 정해요. 현수막은 <b>가로·세로 10cm 단위</b>로 주문해요 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼요.',
         ja: '<b>サイズ</b>を決めます。横断幕は <b>横·縦10cm単位</b>（例: 300×60）。価格は面積(㎡)で自動計算。',
         en: 'Set the <b>size</b>. Banners are ordered in <b>10 cm steps</b> (e.g. 300×60). Price is auto-calculated by area (㎡).' },

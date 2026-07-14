@@ -9656,8 +9656,9 @@ html, body { background: #ffffff !important; }
                 state._placardOversized = false;
             }
         }
-        // 2026-07-14: 롤 폭 초과 상태 반영 — 담기/주문 버튼 즉시 비활성/활성.
+        // 2026-07-14: 롤 폭 초과 상태 반영 — 담기/주문 버튼 즉시 비활성/활성 + 튜토리얼 '다음' 차단용 전역 플래그.
         try { if (typeof updateButtons === 'function') updateButtons(); } catch(_){}
+        window._soPlacardOversized = !!state._placardOversized;
         var unitEl = document.getElementById('soCustomUnitPrice');
         var infoEl = document.getElementById('soCustomAreaInfo');
         // 2026-05-14: 아크릴 굿즈는 5cm×5cm 같은 소형이 정상 → min 1cm 허용 (현수막·배너만 min 10cm)
