@@ -1358,9 +1358,9 @@
     { // 3) 참고사진 · 로고 올리기 (여러 장) + 30분 안내
       target: '#soScarciRefUpload', mode: 'next',
       onEnter: function () { return _secVisible('#soScarciRefUpload'); },
-      msg: { kr: '<b>참고사진·로고</b>를 올려주세요 — <b>여러 장 한 번에</b> 올릴 수 있어요. 주문을 마치시면 <b>30분 이내</b>에 담당 매니저와 디자이너가 배정되어 연락드려요. <b>끝까지 주문을 마무리</b>하고 기다려 주세요!',
-        ja: '<b>参考写真·ロゴ</b>をアップロード — <b>複数まとめて</b> OK。ご注文完了後 <b>30分以内</b> に担当マネージャーとデザイナーが決まりご連絡します。<b>最後まで注文を完了</b> してお待ちください!',
-        en: 'Upload <b>reference photos & logos</b> — <b>several at once</b> is fine. After you order, a manager and designer are assigned <b>within 30 min</b> and will contact you. Please <b>finish the order</b> and wait!' },
+      msg: { kr: '<b>참고사진·로고</b>를 올려주세요 — <b>여러 장 한 번에</b> 올릴 수 있어요. 결제 후 담당 디자이너·매니저가 배정되어 자료를 검토하는 데 <b>약 30분</b> 소요돼요. 기다려주시면 고객님께 연락드립니다. <b>디자인 비용은 무료</b>예요!',
+        ja: '<b>参考写真·ロゴ</b>をアップロード — <b>複数まとめて</b> OK。ご決済後、担当デザイナー·マネージャーが決まり資料を確認するまで <b>約30分</b> かかります。お待ちいただければご連絡します。<b>デザイン費用は無料</b>です!',
+        en: 'Upload <b>reference photos & logos</b> — <b>several at once</b> is fine. After payment, a designer and manager are assigned and review your materials in <b>about 30 min</b>, then contact you. <b>The design is free</b>!' },
       cheer: { kr: '자료 업로드! 📎', ja: '資料OK! 📎', en: 'Files uploaded! 📎' }
     },
     { // 4) 배송 (수도권 무료 / 지방)

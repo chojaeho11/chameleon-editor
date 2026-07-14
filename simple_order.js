@@ -16290,7 +16290,12 @@ html, body { background: #ffffff !important; }
         //   원판·금액주문은 원래 파일 불필요. 그 외 상품은 파일 미첨부 시 확인창만 띄우고 진행.
         state.artworkLater = false;
         if (!state.isRawBoard && !state.isAmountOrder && !state.file) {
-            var _noFileMsg = tr(
+            // 2026-07-15: 글씨 스카시 — 디자이너가 직접 디자인하는 상품이라 '파일 없이 주문' 대신 배정·검토 안내.
+            var _noFileMsg = state.isScarci ? tr(
+                '담당 디자이너와 매니저가 배정되어 고객님의 자료를 검토하는 데까지 약 30분 소요됩니다.\n결제 후 기다려주시면 고객님께 연락을 드립니다.\n디자인 비용은 무료입니다.',
+                '担当デザイナーとマネージャーが決まり、お客様の資料を確認するまでに約30分かかります。\nご決済後お待ちいただければ、お客様へご連絡いたします。\nデザイン費用は無料です。',
+                'It takes about 30 minutes for a designer and manager to be assigned and review your materials.\nAfter payment, please wait and we will contact you.\nThe design is free of charge.'
+            ) : tr(
                 '디자인 파일 없이 주문하시겠어요?\n이미지는 주문 후 이메일 등으로 전달하실 수 있습니다.',
                 'デザインファイルなしで注文しますか？\n画像はご注文後にメール等でお送りいただけます。',
                 'Order without a design file?\nYou can send the image later by email after ordering.'
