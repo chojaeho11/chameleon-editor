@@ -846,11 +846,13 @@
       ]
     },
     { // 2) 수량 — 수량 섹션이 있는 제품만 (면적/사이즈 제품은 숨김 → 자동 스킵)
-      target: '#soQtySection', mode: 'wait',
-      hint: { kr: '수량을 골라주세요', ja: '数量をお選びください', en: 'Pick the quantity' },
-      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰',
-        ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰',
-        en: 'Choose the <b>quantity</b>! The more you print, the lower the unit price 💰' },
+      //   2026-07-14: mode 'wait' → 'next'. wait 는 타깃 클릭 시 자동 진행이라 수량 입력칸을 눌러 타이핑하려 하면
+      //   튜토리얼이 넘어가버려 입력 불가. next 는 자유롭게 입력 후 '다음'으로 진행.
+      target: '#soQtySection', mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 낱장 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력하거나 버튼으로 선택 후 다음)</span>',
+        ja: '<b>数量</b>を決めましょう!たくさん作るほど1枚あたりお得です 💰 <span style="color:#94a3b8;">(直接入力またはボタンで選択して次へ)</span>',
+        en: 'Choose the <b>quantity</b>! The more you print, the lower the unit price 💰 <span style="color:#94a3b8;">(type it in or pick, then Next)</span>' },
       cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
     },
     { // 3) 장바구니
