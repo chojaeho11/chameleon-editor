@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260714235128';
+    var CV = '20260714235448';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -12720,14 +12720,14 @@ async function loadSpecialProducts(sectionId, gridId, flagColumn, limitCount = 6
                 cardPrice = (window.formatCurrency ? window.formatCurrency(_small) : Number(_small).toLocaleString() + '원') + '~';
                 cardSize = (window._isUSsite && window._isUSsite()) ? '2 x 2 in~' : '5 x 5cm~';
             }
-            // 2026-07-03: 스티커(재단) 카탈로그 카드는 1,000매 기준가로 표시 (사장님 요청).
-            //   신규 스티커 계산식(_stickerCalcPrice)에서 p.price = 100×100mm 1매 단가 → 1,000매 = price×1000.
+            // 2026-07-14: 스티커(재단) 카탈로그 카드 — 신규 가격표 기준 500매 5,000원(¥500)~ 로 표시.
+            //   (기존 p.price×1000 은 폐기 — 신규 단가는 _stickerPerUnitRef 앵커라 DB price 와 무관.)
             //   팬시(셋 단위)는 제외. 위 5×5cm 로직보다 우선 적용.
-            const _isCutStickerCard = (_agCat === 'pp_sticker' || _agCat.indexOf('sticker') >= 0 || /스티커|sticker|シール/i.test(_agName)) && Number(p.price) > 0 && !/팬시|fancy|ファンシー/i.test(_agName);
+            const _isCutStickerCard = (_agCat === 'pp_sticker' || _agCat.indexOf('sticker') >= 0 || /스티커|sticker|シール/i.test(_agName)) && !/팬시|fancy|ファンシー/i.test(_agName);
             if (_isCutStickerCard) {
-                const _st1k = Math.round(Number(p.price) * 1000);
-                cardPrice = (window.formatCurrency ? window.formatCurrency(_st1k) : Number(_st1k).toLocaleString() + '원') + '~';
-                cardSize = (window._isUSsite && window._isUSsite()) ? '100 x 100mm x1,000~' : (window.__SITE_CODE === 'JP' ? '100x100mm 1,000枚~' : '100x100mm 1,000매~');
+                const _stFrom = 5000;   // 일반 아트지무코팅 500매 기준가 (JP ¥500 / US $5 는 formatCurrency 환산)
+                cardPrice = (window.formatCurrency ? window.formatCurrency(_stFrom) : Number(_stFrom).toLocaleString() + '원') + '~';
+                cardSize = (window._isUSsite && window._isUSsite()) ? '100 x 100mm 500~' : (window.__SITE_CODE === 'JP' ? '100x100mm 500枚~' : '100x100mm 500매~');
             }
 
             // 뱃지 색상
