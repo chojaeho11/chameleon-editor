@@ -1319,8 +1319,16 @@
       hint: { kr: '모양따기가 아니면 그냥 다음을 눌러요', ja: '型抜きでなければ次へ', en: 'Not die-cut? Just tap Next' },
       cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
     },
-    PROOF_STEP,       // 8) 시안 확인
-    GENERIC_STEPS[2]  // 9) 장바구니
+    { // 8) 수량
+      target: '#soQtySection', mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요! 많이 만들수록 개당 단가가 내려가요 💰 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+        ja: '<b>数量</b>を決めます!たくさん作るほど1個あたりお得 💰 <span style="color:#94a3b8;">(直接入力OK)</span>',
+        en: 'Choose the <b>quantity</b>! More = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' },
+      cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
+    },
+    PROOF_STEP,       // 9) 시안 확인
+    GENERIC_STEPS[2]  // 10) 장바구니
   ];
 
   var SCENARIOS = [
