@@ -4396,7 +4396,8 @@ html, body { background: #ffffff !important; }
         //   단, 앞면 파일을 올린 양면 가벽은 뒷면도 함께 올려야 함.
         const backOk = !needBack || !state.file || !!state.fileBack;
         const fileOk = true;
-        const ready = !!(state.product && fileOk && state.qty > 0 && backOk);
+        // 2026-07-14: 초저가 현수막 롤 폭 초과(가로·세로 둘 다 160cm 초과)면 담기/주문 비활성 — UV 3미터로 전환 유도.
+        const ready = !!(state.product && fileOk && state.qty > 0 && backOk && !state._placardOversized);
         const btnC = document.getElementById('soBtnCart');
         const btnB = document.getElementById('soBtnBuy');
         if (btnC) btnC.disabled = !ready;
@@ -9655,6 +9656,8 @@ html, body { background: #ffffff !important; }
                 state._placardOversized = false;
             }
         }
+        // 2026-07-14: 롤 폭 초과 상태 반영 — 담기/주문 버튼 즉시 비활성/활성.
+        try { if (typeof updateButtons === 'function') updateButtons(); } catch(_){}
         var unitEl = document.getElementById('soCustomUnitPrice');
         var infoEl = document.getElementById('soCustomAreaInfo');
         // 2026-05-14: 아크릴 굿즈는 5cm×5cm 같은 소형이 정상 → min 1cm 허용 (현수막·배너만 min 10cm)
