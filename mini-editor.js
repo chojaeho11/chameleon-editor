@@ -5424,6 +5424,8 @@
     //   (기존엔 크롭된 피사체가 작아서 칼선이 작고 지저분하게 잡히고, 작아서 만지기 어려움 — 모바일/일본 문제.)
     //   피사체를 대지 92%로 키움 → 트레이스 고해상 + 이미지가 커서 드래그로 위치 조정 쉬움(PC/모바일 동일).
     window._meStickerAutoCutout = async function() {
+        // 재실행 시 이전에 분리해둔 칼선 item 제거 (중복 방지)
+        try { if (typeof window._meRemoveShapeCutline === 'function') window._meRemoveShapeCutline(); } catch(_){}
         var sel = _meAutoSelectImage();
         if (!sel || sel.type !== 'image') {
             alert(_meT('me_alert_cutout','먼저 누끼를 따고 싶은 이미지를 선택해주세요'));
@@ -5459,7 +5461,38 @@
             }
         } catch(_){}
         try { await _meCutlineTrace('outer'); } catch(_){}
-        try { if (me.selected && typeof _meSelect === 'function') _meSelect(me.selected); } catch(_){}   // 핸들 재표시(조정 쉽게)
+        // 2026-07-14: 트레이스된 칼선을 이미지에서 '분리'해 독립 이동/조정 가능한 칼선 item 으로 전환.
+        //   → 모바일에서 칼선이 살짝 안 맞아도 점선을 드래그·핸들로 밀어서 맞출 수 있음(이미지와 따로).
+        try {
+            var _srcIt = me && me.selected;
+            if (_srcIt && _srcIt.type === 'image' && _srcIt._cutlineRelPts && _srcIt._cutlineRelPts.length >= 3) {
+                var _relPts = _srcIt._cutlineRelPts.map(function(p){ return p.slice(); });
+                var _bx = _srcIt.x, _by = _srcIt.y, _bw = _srcIt.w, _bh = _srcIt.h;
+                // 이미지에서 칼선 제거
+                _srcIt._cutlineRelPts = null; _srcIt._cutlineMode = null; _srcIt._cutlineRays = null;
+                // 같은 위치·크기에 독립 칼선 item 생성 (드래그·핸들·점선클릭으로 조정)
+                var _cel = document.createElement('div');
+                _cel.className = 'me-item shape';
+                _cel.style.pointerEvents = 'none';
+                _cel.style.zIndex = '1001';
+                me.stage.appendChild(_cel);
+                var _cutIt = {
+                    el: _cel, type: 'shape', shape: 'rect',
+                    x: _bx, y: _by, w: _bw, h: _bh,
+                    fill: 'transparent', stroke: '#000000', strokeWidth: 0,
+                    _isShapeCutline: true, _shapeCutlineKind: 'traced'
+                };
+                _cutIt._cutlineRelPts = _relPts;
+                _cutIt._cutlineMode = 'outer';
+                me.items.push(_cutIt);
+                _meSyncItemDisplay(_cutIt);
+                _meBindDrag(_cutIt);
+                _meCutlineRenderAll();
+                _meSelect(_cutIt);
+            } else if (_srcIt && typeof _meSelect === 'function') {
+                _meSelect(_srcIt);
+            }
+        } catch(_){}
         try { document.dispatchEvent(new CustomEvent('me-standee-ready')); } catch(_){}
     };
     // 네모 이미지 그대로 — 칼선 없이 진행 (튜토리얼 진행 이벤트만)
