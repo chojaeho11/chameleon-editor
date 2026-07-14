@@ -1189,12 +1189,56 @@
     GENERIC_STEPS[2]  // 9) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 현수막 (placard, 44578 등)  2026-07-14
+  //  종류 선택 → 사이즈 → 마감(고리·로프 등) → 디자인 → 시안확인 → 수량 → 장바구니.
+  //  종류 카드는 클릭 시 제품 URL 이 바뀌어 리로드됨 → resumeNext 로 다음 챕터 이어감.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsPlacard() { try { return _secVisible('#soPlacardVariantsSec'); } catch (_) { return false; } }
+  var PLACARD_STEPS = [
+    { // 1) 현수막 종류 선택 (카드) — 클릭 시 리로드 → 다음 챕터로 이어감
+      target: ['#soPlacardVariants', '#soPlacardVariantsSec'], mode: 'next', resumeNext: true,
+      onEnter: function () { return _secVisible('#soPlacardVariantsSec'); },
+      msg: { kr: '먼저 <b>현수막 종류</b>를 골라요. 초저가·UV대폭·친환경·라텍스·깃발·족자 등 카드를 눌러 종류를 바꿀 수 있어요. 종류마다 <b>㎡당 단가</b>가 달라요.',
+        ja: 'まず <b>横断幕の種類</b> を選びます。激安·UV大幅·エコ·ラテックス·フラッグなど、カードをタップで切替。種類ごとに <b>㎡単価</b> が異なります。',
+        en: 'First pick the <b>banner type</b>. Tap a card to switch (low-cost, UV wide, eco, latex, flag…). Each has its own <b>price per ㎡</b>.' },
+      cheer: { kr: '종류 선택! 🎌', ja: '種類OK! 🎌', en: 'Type set! 🎌' }
+    },
+    { // 2) 사이즈 (가로×세로 cm, 10cm 단위)
+      target: '#soCustomSizeSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soCustomSizeSection'); },
+      msg: { kr: '<b>사이즈</b>를 정해요. 현수막은 <b>가로·세로 10cm 단위</b>로 주문해요 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼요.',
+        ja: '<b>サイズ</b>を決めます。横断幕は <b>横·縦10cm単位</b>（例: 300×60）。価格は面積(㎡)で自動計算。',
+        en: 'Set the <b>size</b>. Banners are ordered in <b>10 cm steps</b> (e.g. 300×60). Price is auto-calculated by area (㎡).' },
+      cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
+    },
+    { // 3) 마감 (고리·로프·코팅 등 추가옵션)
+      target: '#soAddonSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soAddonSection'); },
+      msg: { kr: '<b>마감</b>을 골라요. 고리(하도메)·로프·코팅 등 필요한 마감을 선택하면 조립·발송돼요 <span style="color:#94a3b8;">(필요 없으면 다음)</span>.',
+        ja: '<b>仕上げ</b>を選びます。ハトメ·ロープ·コーティングなど、必要な仕上げを選ぶと組立·発送されます <span style="color:#94a3b8;">(不要なら次へ)</span>。',
+        en: 'Choose <b>finishing</b> — eyelets, rope, coating, etc. Selected items are assembled & shipped <span style="color:#94a3b8;">(or Next)</span>.' }
+    },
+    GENERIC_STEPS[0], // 4) 디자인 방법 (파일 업로드 / 만들기 / 의뢰)
+    PROOF_STEP,       // 5) 시안 최종 확인
+    { // 6) 수량
+      target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요! 같은 현수막을 여러 장 주문할 수 있어요 <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>.',
+        ja: '<b>数量</b>を決めます!同じ横断幕を複数枚注文できます <span style="color:#94a3b8;">(直接入力OK)</span>。',
+        en: 'Choose the <b>quantity</b>! Order multiple copies of the same banner <span style="color:#94a3b8;">(type it in)</span>.' }
+    },
+    GENERIC_STEPS[2]  // 7) 장바구니
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
     { id: 'sticker', match: { test: function () { return _tutIsStickerProduct(); } }, steps: [STICKER_CHOOSE_STEP] },
     // 2026-07-14: 낱장 인쇄(리플렛) — 사이즈·인쇄면·용지·박·후가공 전용 스텝. generic 보다 앞.
     { id: 'leaflet', match: { test: function () { return _tutIsLeaflet(); } }, steps: LEAFLET_STEPS },
+    // 2026-07-14: 현수막(placard) — 종류·사이즈·마감·수량 전용 스텝. size-product 보다 앞.
+    { id: 'placard', match: { test: function () { return _tutIsPlacard(); } }, steps: PLACARD_STEPS },
     { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
