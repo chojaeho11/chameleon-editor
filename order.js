@@ -3547,8 +3547,9 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
                     type: 'customer_file'
                 });
                 if (f.cutlineUrl) {
+                    const _cutExt = /\.pdf(\?|$)/i.test(f.cutlineUrl) ? 'pdf' : 'png';
                     uploadedFiles.push({
-                        name: `cutline_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'keyring'}.png`,
+                        name: `cutline_${idx}_${String(fi+1).padStart(2,'0')}_${f.fileName || 'cutline'}.${_cutExt}`,
                         url: f.cutlineUrl,
                         type: 'cutline'
                     });
@@ -3562,8 +3563,9 @@ async function uploadOrderFiles(orderId, cartData, useMileage) {
             });
         }
         if (item.cutlineUrl) {
+            const _cutExt = /\.pdf(\?|$)/i.test(item.cutlineUrl) ? 'pdf' : 'png';
             uploadedFiles.push({
-                name: `cutline_${idx}_${item.fileName || 'keyring'}.png`,
+                name: `cutline_${idx}_${item.fileName || 'cutline'}.${_cutExt}`,
                 url: item.cutlineUrl,
                 type: 'cutline'
             });
