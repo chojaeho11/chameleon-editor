@@ -3190,11 +3190,15 @@
     function _meCutlineRenderAll() {
         var svg = _meCutlineSvgEl();
         svg.setAttribute('viewBox', '0 0 ' + me.natW + ' ' + me.natH);
-        var paths = [];
+        var paths = [];          // path d 문자열 (마스크·export 용)
+        var shapeCutPaths = [];  // 조정 가능한 도형 칼선 { d, it } — 점선 클릭으로 선택/드래그
         // 각 item 의 칼선
         (me.items || []).forEach(function(it){
             var d = _meCutlineBuildItemPathD(it);
-            if (d) paths.push(d);
+            if (d) {
+                paths.push(d);
+                if (it._isShapeCutline) shapeCutPaths.push({ d: d, it: it });
+            }
         });
         // 캔버스-fill simple shape
         if (me._canvasCutlinePathD) paths.push(me._canvasCutlinePathD);
@@ -3209,26 +3213,73 @@
             fillEl.innerHTML = ''; fillEl.style.display = 'none';
         }
         if (!paths.length) { svg.innerHTML = ''; window._meCutlineSvg = null; return; }
+        // 2026-07-14: 화면 칼선 = 빨강 점선 (재단선임을 명확히). dash·두께는 캔버스 크기 비례.
+        var _sw = Math.max(1.4, me.natW / 460);
+        var _dash = (_sw * 3.2).toFixed(1) + ' ' + (_sw * 2.2).toFixed(1);
+        var _dashAttr = 'fill="none" stroke="#ef4444" stroke-width="' + _sw.toFixed(2) + '" stroke-dasharray="' + _dash + '" stroke-opacity="0.95" stroke-linejoin="round"';
         if (window._meObjSizeMode) {
-            // 2026-07-11: 대지/회색 마스크 없이 — 흰 보드 조각(_meCutlineFill) + 빨간 재단선만 표시.
-            //   (회색 마스크 rect 가 대지처럼 보이던 문제 제거)
-            svg.innerHTML = paths.map(function(d){ return '<path d="' + d + '" fill="none" stroke="#ef4444" stroke-width="1" stroke-opacity="0.9"/>'; }).join('');
+            // 2026-07-11: 대지/회색 마스크 없이 — 흰 보드 조각(_meCutlineFill) + 빨간 재단 점선만 표시.
+            svg.innerHTML = paths.map(function(d){ return '<path d="' + d + '" ' + _dashAttr + '/>'; }).join('');
         } else {
             // 2026-06-16 v5: 칼선 안쪽 = 디자인 노출(투명), 바깥쪽 = 회색 마스크.
-            //   SVG mask 로 — white=visible, black=hidden. cutline path 를 mask 의 black 으로 → 그 영역만 회색 hide.
-            //   결과: 회색 fill rect 위에 cutline interior 만 구멍 → 아래 캔버스(흰배경+디자인) 보임.
+            //   + 2026-07-14: 재단 경계를 빨강 점선으로 오버레이 (모양이 명확히 보이도록).
             var maskPaths = paths.map(function(d){ return '<path d="' + d + '" fill="black"/>'; }).join('');
+            var dashLines = paths.map(function(d){ return '<path d="' + d + '" ' + _dashAttr + '/>'; }).join('');
             svg.innerHTML =
                 '<defs><mask id="meCutMask">'
               +   '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="white"/>'
               +   maskPaths
               + '</mask></defs>'
-              + '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="#9ca3af" fill-opacity="0.78" mask="url(#meCutMask)"/>';
+              + '<rect x="0" y="0" width="' + me.natW + '" height="' + me.natH + '" fill="#9ca3af" fill-opacity="0.78" mask="url(#meCutMask)"/>'
+              + dashLines;
+        }
+        // 2026-07-14: 도형 칼선(간단도형)은 점선을 클릭·드래그로 선택/이동 가능 — 투명 넓은 hit path 추가.
+        //   (이미지는 별도 선택 → 이미지 위치/크기 조정, 점선은 별도 선택 → 칼선 위치/크기 조정)
+        if (shapeCutPaths.length) {
+            var _hitW = Math.max(9, me.natW / 55);
+            var _svgNS = 'http://www.w3.org/2000/svg';
+            shapeCutPaths.forEach(function(sp){
+                var hit = document.createElementNS(_svgNS, 'path');
+                hit.setAttribute('d', sp.d);
+                hit.setAttribute('fill', 'none');
+                hit.setAttribute('stroke', 'rgba(0,0,0,0.001)');
+                hit.setAttribute('stroke-width', String(_hitW));
+                hit.style.pointerEvents = 'stroke';   // 부모 svg 가 pointer-events:none 여도 이 path 는 hit
+                hit.style.cursor = 'move';
+                svg.appendChild(hit);
+                _meBindShapeCutlinePointer(hit, sp.it);
+            });
         }
         // export 용 — 제작 단계에서 칼선은 빨강 0.3 실선으로 저장.
         window._meCutlineSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + me.natW + ' ' + me.natH + '">'
             + paths.map(function(d){ return '<path d="' + d + '" fill="none" stroke="#FF0000" stroke-width="0.3"/>'; }).join('')
             + '</svg>';
+    }
+    // 2026-07-14: 도형 칼선 점선(hit path) 을 눌러 해당 칼선 item 선택 + 드래그 이동.
+    //   드래그 중 _meSyncItemDisplay 가 _meCutlineRenderAll 을 재호출해 hit path 를 재생성하지만,
+    //   pointermove/up 은 window 에 걸려 있어 끊기지 않음.
+    function _meBindShapeCutlinePointer(pathEl, it) {
+        pathEl.addEventListener('pointerdown', function(ev){
+            if (ev.button === 2) return;
+            ev.preventDefault(); ev.stopPropagation();
+            _meSnapshot();
+            _meSelect(it);
+            var sx = ev.clientX, sy = ev.clientY, sLeft = it.x, sTop = it.y;
+            function mv(e){
+                var dx = (e.clientX - sx) / me.wScale;
+                var dy = (e.clientY - sy) / me.wScale;
+                it.x = sLeft + dx; it.y = sTop + dy;
+                try { _meDragSnap(it); } catch(_){}
+                _meSyncItemDisplay(it);
+            }
+            function up(){
+                window.removeEventListener('pointermove', mv);
+                window.removeEventListener('pointerup', up);
+                try { _meHideGuides(); } catch(_){}
+            }
+            window.addEventListener('pointermove', mv);
+            window.addEventListener('pointerup', up);
+        });
     }
     // legacy shim — 기존 호출자 (simple shape 등) 는 d 를 _canvasCutlinePathD 로 저장 후 render all
     function _meCutlineRender(pathD) {
@@ -3812,8 +3863,13 @@
         });
         var el = document.createElement('div');
         el.className = 'me-item shape';
-        el.style.zIndex = (++me.zCounter);
+        // 2026-07-14: 칼선 박스는 클릭 통과(pointer-events:none) — 아래 이미지가 직접 선택되도록.
+        //   칼선 자체는 점선(hit path)으로 선택/드래그, 크기조절은 핸들(pointer-events:auto)로.
+        //   zIndex 는 칼선 오버레이(1000)보다 위 → 핸들이 오버레이보다 위에서 잡힘. 박스는 투명·통과라 무해.
+        el.style.pointerEvents = 'none';
+        el.style.zIndex = '1001';
         me.stage.appendChild(el);
+        ++me.zCounter;
         // 캔버스의 ~65% 정사각형, 중앙. (도형 aspect 는 relPts 가 인코딩 — 타원 등)
         var side = Math.min(me.natW, me.natH) * 0.65;
         var it = {

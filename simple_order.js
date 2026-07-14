@@ -16804,6 +16804,25 @@ html, body { background: #ffffff !important; }
                         }
                     }
                 } catch (e) {}
+                // 2026-07-14: 스티커 옵션 상세 — 사이즈 · 종류(용지) · 모양(재단/도형). 카트·작업지시서에서 한눈에.
+                if (item.sticker) {
+                    try {
+                        var _sk = item.sticker;
+                        if (!_sk.isFancy && (_sk.w || _sk.h)) meta.push('📐 ' + (_sk.w || 100) + '×' + (_sk.h || 100) + 'mm');
+                        var _skType = STICKER_TYPES.find(function(x){ return x.key === (_sk.type || 'art_matte'); });
+                        if (_skType) meta.push('🏷️ ' + _stickerI18n(_skType, 'name'));
+                        var _skShape = _sk.shape || (_sk.dieCut ? 'complex' : 'square');
+                        if (_skShape === 'simple') {
+                            var _skKind = STICKER_SHAPE_KINDS.find(function(x){ return x.key === _sk.shapeKind; });
+                            meta.push(tr('모양: 도형따기', '形: 図形カット', 'Shape: die-cut') + (_skKind ? ' (' + _stickerI18n(_skKind, 'name') + ')' : '') + ' +' + fmtPrice(10000));
+                        } else if (_skShape === 'complex') {
+                            meta.push(tr('모양: 복잡모양(외곽따기)', '形: 複雑カット', 'Shape: complex die-cut') + ' +' + fmtPrice(30000));
+                        } else {
+                            meta.push(tr('모양: 사각', '形: 四角', 'Shape: square'));
+                        }
+                        if (_sk.qty) meta.push(_sk.qty.toLocaleString() + tr('매', '枚', ' pcs'));
+                    } catch (_ske) {}
+                }
                 // 2026-06-04: 등신대 재질 표시 (허니콤보드 16mm / 포맥스 3mm)
                 if (item.standeeMaterial) {
                     var _matLbl = item.standeeMaterial === 'foamex_3mm'

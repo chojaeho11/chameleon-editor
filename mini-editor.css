@@ -81,6 +81,8 @@
         .me-item.shape { background:#007AFF; }
         .me-item.shape.circle { border-radius:50%; }
         /* 2026-06-14: 4 모서리 핸들 + 회전 핸들 (Photoshop/Figma 스타일) */
+        /* 2026-07-14: 핸들/삭제/칩은 항상 클릭 가능 — 부모(칼선 박스)가 pointer-events:none 여도 조작되도록 (pointer-events 는 상속됨). */
+        .me-handle, .me-handle-rot, .me-del, .me-imgchip { pointer-events:auto; }
         .me-handle { position:absolute; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.25); z-index:5; }
         .me-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
         .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
