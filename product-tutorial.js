@@ -1196,7 +1196,7 @@
   // ════════════════════════════════════════════════════════════════════
   // 종류 카드(soPlacardVariantsSec)는 async 로 로드되므로 시나리오 선택 시점엔 아직 숨겨져 있음 →
   //   simple_order 가 세팅하는 동기 플래그(window._soCurrentIsPlacard)로 판정.
-  function _tutIsPlacard() { try { return window._soCurrentIsPlacard === true; } catch (_) { return false; } }
+  function _tutIsPlacard() { try { return window._soCurrentIsPlacard === true || _secVisible('#soPlacardVariantsSec'); } catch (_) { return false; } }
   var PLACARD_STEPS = [
     { // 1) 현수막 종류 선택 (카드) — 클릭 시 리로드 → 다음 챕터로 이어감
       target: ['#soPlacardVariants', '#soPlacardVariantsSec'], mode: 'next', resumeNext: true,
