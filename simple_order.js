@@ -8178,9 +8178,7 @@ html, body { background: #ffffff !important; }
         { key:'paper',       mult:3, img:'/st/st_paper.jpg',       name_kr:'종이 스티커',        name_jp:'紙ステッカー',       name_us:'Paper',
           desc_kr:'필기 가능한 종이 재질(찢어짐).', desc_jp:'筆記可能な紙素材。', desc_us:'Writable paper (tearable).' },
         { key:'transfer',    mult:3, img:'/st/st_transfer.jpg',    name_kr:'전사지 스티커',      name_jp:'転写ステッカー',     name_us:'Transfer',
-          desc_kr:'배경 없이 그림만 붙는 전사 스티커.', desc_jp:'絵柄だけ転写できるステッカー。', desc_us:'Design-only transfer sticker.' },
-        { key:'single',      mult:3, img:'/st/st_single.png',      name_kr:'낱장 스티커',        name_jp:'1枚ステッカー',      name_us:'Single sheet',
-          desc_kr:'한 장씩 낱개로 재단된 스티커.', desc_jp:'1枚ずつカットされたステッカー。', desc_us:'Individually cut single stickers.' }
+          desc_kr:'배경 없이 그림만 붙는 전사 스티커.', desc_jp:'絵柄だけ転写できるステッカー。', desc_us:'Design-only transfer sticker.' }
     ];
     // 캐시: admin_products 에서 가져온 sticker variant 목록.
     var _stickerVariantsCache = null;
@@ -11042,12 +11040,10 @@ html, body { background: #ffffff !important; }
         if (typeGrid) {
             typeGrid.innerHTML = STICKER_TYPES.map(function(c){
                 var sel = ((state.stickerType || 'art_matte') === c.key);
-                var mb = (c.mult && c.mult !== 1) ? ('<span style="display:block; font-size:9.5px; font-weight:800; color:#be185d; margin-top:1px;">×' + c.mult + '</span>') : '';
                 return '<button type="button" onclick="window._soStickerPickType(\'' + c.key + '\')" title="' + String(_stickerI18n(c,'desc')).replace(/"/g,'&quot;') + '" '
                     + 'style="padding:6px; border:2px solid ' + (sel?'#4338ca':'#e7e5e4') + '; background:' + (sel?'#eef2ff':'#fff') + '; border-radius:10px; cursor:pointer; font-family:inherit; text-align:center;">'
                     + '<img src="' + c.img + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:7px; background:#f8fafc;" onerror="this.style.opacity=0.2">'
                     + '<div style="font-size:11px; font-weight:800; color:' + (sel?'#3730a3':'#0f172a') + '; margin-top:4px; line-height:1.25;">' + (sel?'✓ ':'') + _stickerI18n(c, 'name') + '</div>'
-                    + mb
                     + '</button>';
             }).join('');
         }
