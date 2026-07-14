@@ -16034,24 +16034,40 @@ html, body { background: #ffffff !important; }
             return all.filter(function (it) { return !isFabricItem(it); });
         } catch (e) { return []; }
     }
+    // 2026-07-14: 카트 항목의 대용량 인라인 문자열(썸네일 base64 등, 중첩 포함)을 threshold 초과 시 제거.
+    //   디자인/칼선/미리보기는 Supabase Storage URL 로 이미 보존됨 → localStorage 엔 불필요. quota 방어용.
+    function _soStripBigStrings(obj, threshold) {
+        if (typeof obj === 'string') return (obj.length > threshold) ? null : obj;
+        if (Array.isArray(obj)) return obj.map(function (v) { return _soStripBigStrings(v, threshold); });
+        if (obj && typeof obj === 'object') {
+            var copy = {};
+            for (var k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) copy[k] = _soStripBigStrings(obj[k], threshold); }
+            return copy;
+        }
+        return obj;
+    }
     function writeCart(arr) {
+        // 기존 패브릭 항목 보존 + 새 일반상품 배열 머지
+        var existing = [];
+        try { existing = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) {}
+        var fabrics = existing.filter(isFabricItem);
+        var full = fabrics.concat(arr || []);
         try {
-            // 기존 패브릭 항목 보존 + 새 일반상품 배열 머지
-            var existing = [];
-            try { existing = JSON.parse(localStorage.getItem(CART_KEY) || '[]') || []; } catch (e) {}
-            var fabrics = existing.filter(isFabricItem);
-            localStorage.setItem(CART_KEY, JSON.stringify(fabrics.concat(arr || [])));
+            localStorage.setItem(CART_KEY, JSON.stringify(full));
         } catch (e) {
-            // 2026-05-15: localStorage quota 초과 — 조용히 실패하면 "담겼습니다" 뜨고 실제 저장 안 됨.
-            //   썸네일 축소 후에도 초과하면 사용자에게 명확히 알림 + throw 로 doAddToCart 가 실패 처리.
             var isQuota = e && (e.name === 'QuotaExceededError' || /quota|exceeded|storage/i.test(e.message || ''));
-            console.error('[simple_order] writeCart 실패' + (isQuota ? ' (localStorage quota 초과)' : ''), e);
-            if (isQuota) {
-                throw new Error(tr(
-                    '장바구니 저장공간이 가득 찼습니다. 일부 항목을 삭제하거나 주문을 완료한 후 다시 시도해주세요.',
-                    'カートの保存容量がいっぱいです。一部の項目を削除してから再度お試しください。',
-                    'Cart storage is full. Please remove some items or complete the order first.'
-                ));
+            if (!isQuota) { console.error('[simple_order] writeCart 실패', e); return; }
+            // 2026-07-14: quota 초과 — 큰 인라인 문자열(썸네일 등 >8KB) 제거 후 재시도. 담기는 성공 처리(에러 안 던짐).
+            //   (cart_sync 도 별도로 슬림 저장 + 서버 push 하므로 데이터는 보존됨.)
+            try {
+                var slim = _soStripBigStrings(full, 8000);
+                localStorage.setItem(CART_KEY, JSON.stringify(slim));
+                console.warn('[simple_order] writeCart quota — 큰 썸네일 제거 후 저장 (디자인/칼선은 Storage URL 로 보존)');
+                return;
+            } catch (e2) {
+                // 슬림 후에도 실패 = 진짜 저장공간 부족. 그래도 던지지 않음 — cart_sync 서버 push 로 보존, 담기 자체는 진행.
+                console.error('[simple_order] writeCart 재시도도 quota 초과 — 로컬 저장 생략 (서버엔 보존)', e2);
+                return;
             }
         }
     }
