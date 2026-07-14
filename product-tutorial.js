@@ -812,7 +812,8 @@
         },
         { key: 'upload', always: true,
           // 업로드 후엔 원래 업로드 버튼이 숨고 '파일 변경' 버튼이 나옴 → 그것도 가리켜 재업로드 가능하게.
-          target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn', '#soAdInlineChangeBtn'],
+          // 2026-07-14: 스티커 전용 완성파일 업로드(#soStickerFinalFileWrap)도 포함 — 안 넣으면 스포트라이트가 안 잡혀 버튼 클릭 불가.
+          target: ['#soUniversalUpload', '#soBannerUploadBtn', '#soAdInlineUploadBtn', '#soAdInlineChangeBtn', '#soStickerFinalFileWrap'],
           label: { kr: '파일 업로드', ja: 'ファイルアップロード', en: 'Upload file' },
           sub: function () {
             // 등신대·자유인쇄커팅(칼선 버튼 보임) — 이미지=누끼·칼선 대행 / PDF=칼선 완료본
@@ -825,13 +826,12 @@
             en: 'If you have a <b>print-ready file</b> (PDF·PNG·JPG), use the <b>Upload file</b> button. It advances once uploaded.<br><span style="color:#94a3b8;">To replace an already-uploaded file, tap the glowing <b>Change file</b> button.</span>' },
           // 2026-07-10: 파일 업로드 감지 시 자동으로 다음 단계로 (하드코딩된 "다음" 클릭 불필요 — 막힘 방지)
           hook: function (advance) {
-            var f = document.getElementById('soFile');
-            var m = document.getElementById('meImgInput');
+            // 2026-07-14: 스티커 전용 완성파일 입력(#soStickerFinalFile)도 감지 — #soFile 과 별개 input 이라 안 넣으면 자동진행 안 됨.
+            var inputs = ['soFile', 'meImgInput', 'soStickerFinalFile'].map(function (id) { return document.getElementById(id); });
             var done = false;
             var on = function () { if (done) return; done = true; advance({ kr: '업로드 완료! 🎉', ja: 'アップロード完了! 🎉', en: 'Uploaded! 🎉' }); };
-            if (f) f.addEventListener('change', on);
-            if (m) m.addEventListener('change', on);
-            return function () { if (f) f.removeEventListener('change', on); if (m) m.removeEventListener('change', on); };
+            inputs.forEach(function (el) { if (el) el.addEventListener('change', on); });
+            return function () { inputs.forEach(function (el) { if (el) el.removeEventListener('change', on); }); };
           }
         },
         { key: 'request', mode: 'request', target: '#soDesignReqBanner',
