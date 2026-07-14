@@ -12328,6 +12328,9 @@ html, body { background: #ffffff !important; }
     }
 
     window.openSimpleOrderModal = async function(productCode, productData) {
+        // 2026-07-15: 모든 제품 — 튜토리얼 진행 중 '종류 카드'로 재진입하면 종류선택 다음 단계부터 이어가도록
+        //   진행상태 저장 (미진행이면 내부에서 무시). 각 _soSwitch* 가 이 함수를 호출하므로 한 곳에서 처리.
+        try { if (typeof window._tutBeforeVariantReload === 'function') window._tutBeforeVariantReload(); } catch(_){}
         injectStyles();
         injectModal();
         // 2026-05-13: 자체 nav 제거 — 메인의 #topCatMenu 가 z-index 60000 으로 표시됨
@@ -13210,6 +13213,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 아크릴 family (8종 — 2T/3T/5T/8T/금경/은경/탁상스탠드/글씨스카시)
         var _isAcVariant = (typeof window._soIsAcrylicFamilyProduct === 'function')
             ? window._soIsAcrylicFamilyProduct(p) : false;
+        // 2026-07-15: 튜토리얼 매칭용(아크릴 인쇄 family) — 글씨스카시는 위 scarci 플래그가 우선.
+        window._soCurrentIsAcrylicPrint = !!(_isAcVariant && !(typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(p)));
         if (_isAcVariant) {
             try { window._soLoadAcrylicFamilyVariants(p.code); } catch(e){}
             var _acFeeN = document.getElementById('soAcrylicFeeNotice');

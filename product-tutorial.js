@@ -1431,10 +1431,90 @@
     GENERIC_STEPS[2]  // 8) 장바구니
   ];
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 아크릴 인쇄 family (acrl2*/acrl3*: 2T/3T/5T/8T/금경/은경 등)  2026-07-15
+  //  종류선택 → 커팅·인쇄 방식(모양/사각 커팅, 전면/뒷면 인쇄) → 사이즈 → 디자인 →
+  //  (모양커팅이면) 누끼+칼선 → 수량 → 시안 → 장바구니. window._soCurrentIsAcrylicPrint 로 판정.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsAcrylicPrint() { try { return window._soCurrentIsAcrylicPrint === true; } catch (_) { return false; } }
+  var ACRYLIC_STEPS = [
+    { // 1) 아크릴 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 단계로 이어감
+      target: ['#soAcrylicVariants', '#soAcrylicVariantsSec'], mode: 'next', resumeNext: true,
+      onEnter: function () { return window._soCurrentIsAcrylicPrint === true; },
+      msg: { kr: '먼저 <b>어떤 아크릴</b>을 만들지 골라요. 3T·5T·8T 두께, 금경·은경, 반투명 등 카드를 눌러 종류를 바꿀 수 있어요.',
+        ja: 'まず <b>どのアクリル</b> を作るか選びます。3T·5T·8Tの厚み、金鏡·銀鏡、半透明など、カードをタップで切替。',
+        en: 'First choose <b>which acrylic</b> to make. Tap a card to switch — 3T/5T/8T thickness, gold/silver mirror, translucent…' },
+      cheer: { kr: '종류 선택! 🪟', ja: '種類OK! 🪟', en: 'Type set! 🪟' }
+    },
+    { // 2) 커팅·인쇄 방식 (추가옵션: 모양커팅/사각커팅, 전면/뒷면 인쇄)
+      target: '#soAddonSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soAddonSection'); },
+      msg: { kr: '<b>커팅·인쇄 방식</b>을 골라요.<br>• <b>사각커팅 / 모양커팅</b> — 네모로 재단할지, 그림 외곽 그대로 딸지<br>• <b>전면 인쇄 / 뒷면 인쇄</b> — 인쇄 면을 선택해요. 모양커팅이면 뒤에서 자동으로 누끼+칼선을 따드려요.',
+        ja: '<b>カット·印刷方式</b>を選びます。<br>• <b>四角カット / 型抜きカット</b> — 四角に裁断か、絵の輪郭通りか<br>• <b>前面印刷 / 裏面印刷</b> — 印刷面を選択。型抜きなら後で自動で背景除去+カットライン。',
+        en: 'Choose the <b>cut & print method</b>.<br>• <b>Square / shape cut</b> — rectangular vs. to the artwork outline<br>• <b>Front / back print</b> — pick the print side. Shape cut auto bg-removal + cutline later.' },
+      cheer: { kr: '방식 결정! ✂️', ja: '方式OK! ✂️', en: 'Method set! ✂️' }
+    },
+    { // 3) 사이즈 (객체 크기 — 있으면)
+      target: ['#soCustomSizeSection', '#soStickerSizeWrap'], mode: 'next',
+      onEnter: function () { return _secVisible('#soCustomSizeSection') || _secVisible('#soStickerSizeWrap'); },
+      msg: { kr: '<b>사이즈</b>를 정해요. 가격은 사이즈(면적)에 따라 자동 계산돼요.',
+        ja: '<b>サイズ</b>を決めます。価格はサイズ(面積)で自動計算されます。',
+        en: 'Set the <b>size</b> — the price is calculated automatically from it.' },
+      cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
+    },
+    GENERIC_STEPS[0], // 4) 디자인 방법
+    { // 5) 누끼 + 칼선 (모양커팅 선택 시) — 사각커팅이면 그냥 다음
+      target: '#meStage', mode: 'next',
+      onEnter: function () { return _secVisible('#meStage'); },
+      buttons: [
+        { action: '_meAutoBgAndCutline', label: { kr: '✂️ 자동 배경제거 + 칼선 따기', ja: '✂️ 自動 背景除去＋カットライン', en: '✂️ Auto bg-removal + cutline' } }
+      ],
+      msg: { kr: '<b>모양커팅</b>을 고르셨다면 아래 <b>[자동 배경제거+칼선]</b> 버튼을 눌러요 — 그림 외곽을 따라 칼선을 자동으로 따드려요. 그 다음 <b>드래그·핸들</b>로 위치·크기를 조정하세요. <span style="color:#94a3b8;">(사각커팅이면 그냥 다음)</span>',
+        ja: '<b>型抜きカット</b>を選んだ場合は下の <b>[自動 背景除去+カットライン]</b> を押します — 絵の輪郭に沿ってカットラインを自動作成。<b>ドラッグ·ハンドル</b> で調整。<span style="color:#94a3b8;">(四角カットならそのまま次へ)</span>',
+        en: 'If you chose <b>shape cut</b>, tap <b>[Auto bg-removal + cutline]</b> below — it traces the cutline along your artwork. Then <b>drag/handles</b> to adjust. <span style="color:#94a3b8;">(Square cut? Just tap Next)</span>' },
+      hint: { kr: '사각커팅이면 그냥 다음을 눌러요', ja: '四角カットなら次へ', en: 'Square cut? Just tap Next' },
+      cheer: { kr: '칼선 완성! ✂️', ja: 'カットラインOK! ✂️', en: 'Cutline done! ✂️' }
+    },
+    { // 6) 수량
+      target: '#soQtySection', mode: 'next',
+      onEnter: function () { return _secVisible('#soQtySection'); },
+      msg: { kr: '<b>수량</b>을 정해요! <span style="color:#94a3b8;">(칸에 직접 입력 가능)</span>',
+        ja: '<b>数量</b>を決めます! <span style="color:#94a3b8;">(直接入力OK)</span>',
+        en: 'Choose the <b>quantity</b>! <span style="color:#94a3b8;">(type it in)</span>' },
+      cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
+    },
+    PROOF_STEP,       // 7) 시안 최종 확인
+    GENERIC_STEPS[2]  // 8) 장바구니
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
+  //  공통 '종류 먼저 고르기' 스텝 — 종류 카드 그리드가 있는 모든 제품(봉투/실사출력/
+  //  탁상/인스타판넬/포토존/거치대 등)이 size-product·generic 시나리오로 빠질 때, 맨 앞에
+  //  이 스텝을 붙여 '제품(종류) 먼저 → 위에서부터 순서대로' 흐름을 보장. 카드 없으면 자동 스킵.
+  // ════════════════════════════════════════════════════════════════════
+  var _ALL_VARIANT_SELS = [
+    '#soAcrylicVariants', '#soVinylVariants', '#soScarciVariants', '#soEnvelopeVariants',
+    '#soSheetVariants', '#soBannerVariants', '#soPlacardVariants', '#soRealVariants',
+    '#soInstaVariants', '#soTableVariants', '#soPhotozoneVariants', '#soBannerStandVariants',
+    '#soAcrylicVariantsSec', '#soVinylVariantsSec', '#soEnvelopeVariantsSec', '#soRealVariantsSec',
+    '#soInstaVariantsSec', '#soTableVariantsSec', '#soPhotozoneVariantsSec', '#soBannerStandVariantsSec'
+  ];
+  function _tutAnyVariantVisible() { try { return _ALL_VARIANT_SELS.some(function (s) { return _secVisible(s); }); } catch (_) { return false; } }
+  var CHOOSE_VARIANT_STEP = {
+    target: _ALL_VARIANT_SELS, mode: 'next', resumeNext: true,
+    onEnter: function () { return _tutAnyVariantVisible(); },
+    msg: { kr: '먼저 <b>어떤 종류</b>를 만들지 골라요. 위 카드를 눌러 종류를 바꿀 수 있어요. 정했으면 <b>다음</b>을 눌러 위에서부터 하나씩 옵션을 골라봐요.',
+      ja: 'まず <b>どの種類</b> を作るか選びます。上のカードをタップで切替。決まったら <b>次へ</b> を押して、上から順にオプションを選びましょう。',
+      en: 'First choose <b>which type</b> to make — tap a card above to switch. Then tap <b>Next</b> and pick the options top to bottom.' },
+    cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
+  };
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
     // 2026-07-15: 글씨 스카시 — 종류·문구·참고자료·배송 전용 스텝. honeycomb/size-product 보다 앞.
     { id: 'scarci', match: { test: function () { return _tutIsScarci(); } }, steps: SCARCI_STEPS },
+    // 2026-07-15: 아크릴 인쇄 — 종류·커팅/인쇄방식·사이즈·디자인·누끼칼선. size-product 보다 앞.
+    { id: 'acrylic', match: { test: function () { return _tutIsAcrylicPrint(); } }, steps: ACRYLIC_STEPS },
     // 2026-07-15: 시트지(vinyl) — 종류·커팅방식·디자인·누끼칼선 전용 스텝. size-product 보다 앞.
     { id: 'vinyl', match: { test: function () { return _tutIsVinyl(); } }, steps: VINYL_STEPS },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
@@ -1450,10 +1530,12 @@
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
     // 2026-07-14: 사이즈 지정 제품(스티커/실사출력/현수막/광고인쇄 등) — 우측 사이즈·옵션 먼저, 그다음 디자인 방법.
     //   match 는 코드 대신 우측 사이즈 섹션 노출 여부로 판정(그 외엔 generic). 반드시 generic 앞.
-    { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: SIZE_PRODUCT_STEPS },
+    //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 — 종류 카드 있는 제품(봉투/실사출력/탁상 등)은 제품부터, 없으면 자동 스킵.
+    { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: [CHOOSE_VARIANT_STEP].concat(SIZE_PRODUCT_STEPS) },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     //   2026-07-14: 장바구니 직전 시안확인(PROOF_STEP) 삽입 (GENERIC_STEPS 배열은 그대로 두고 조합).
-    { id: 'generic', match: /.*/, steps: [GENERIC_STEPS[0], GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
+    //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 (종류 카드 없으면 자동 스킵).
+    { id: 'generic', match: /.*/, steps: [CHOOSE_VARIANT_STEP, GENERIC_STEPS[0], GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
   ];
   function pickScenario(code) {
     if (!code) return null;
@@ -1506,6 +1588,7 @@
   window._tutBeforeVariantReload = function () {
     try {
       if (!_active && !_choice) return;   // 튜토리얼 미진행이면 무시 (일반 사용자는 그대로 리로드)
+      if (!modalOpen()) return;           // 2026-07-15: 모달이 열려있는 재초기화(=종류 전환)일 때만. 신규 오픈 오판 방지.
       sessionStorage.setItem('__tut_progress', JSON.stringify({ code: _curCode || '', i: 0, resumeNext: true, variantReload: true, ts: Date.now() }));
     } catch (_) {}
   };
