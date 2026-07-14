@@ -3797,6 +3797,61 @@
     window._meCutlineSetMargin = function(it, marginPct) {
         _meCutlineApplyOffsetFromCache(it, marginPct);
     };
+    // 2026-07-14: 간단도형 스티커 — 선택한 도형(원/타원/귀돌이/다각형/별 등)으로 조정 가능한 칼선 생성.
+    //   item-attached 칼선(_cutlineRelPts) 재사용 → 대지에서 드래그·핸들 리사이즈로 위치/크기 조정.
+    //   점 생성은 simple_order 의 window._stickerShapePts(kind) 와 공유(미리보기 SVG 와 동일 도형).
+    window._meCutlineShapeItem = function(kind) {
+        if (!kind || typeof window._stickerShapePts !== 'function') return;
+        try { _meSnapshot(); } catch(_) {}
+        // 기존 도형 칼선 item 제거 (도형 교체 = 스택 방지)
+        (me.items || []).slice().forEach(function(it){
+            if (it && it._isShapeCutline) {
+                try { if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); } catch(_) {}
+                var ix = me.items.indexOf(it); if (ix >= 0) me.items.splice(ix, 1);
+            }
+        });
+        var el = document.createElement('div');
+        el.className = 'me-item shape';
+        el.style.zIndex = (++me.zCounter);
+        me.stage.appendChild(el);
+        // 캔버스의 ~65% 정사각형, 중앙. (도형 aspect 는 relPts 가 인코딩 — 타원 등)
+        var side = Math.min(me.natW, me.natH) * 0.65;
+        var it = {
+            el: el, type: 'shape', shape: 'rect',
+            x: (me.natW - side) / 2, y: (me.natH - side) / 2,
+            w: side, h: side,
+            fill: 'transparent', stroke: '#000000', strokeWidth: 0,
+            _isShapeCutline: true, _shapeCutlineKind: kind
+        };
+        // 도형 정규화 점 → 칼선. 원/타원은 부드러운 곡선(Q), 나머지는 sharp(직선 L)로 정확한 모서리 유지.
+        var pts = window._stickerShapePts(kind) || [];
+        var smooth = (kind === 'circle' || kind === 'ellipse');
+        it._cutlineRelPts = pts.map(function(p){ return smooth ? [p.x, p.y] : [p.x, p.y, 1]; });
+        it._cutlineMode = 'outer';
+        me.items.push(it);
+        _meSyncItemDisplay(it);
+        _meBindDrag(it);
+        _meSelect(it);
+        try { _meCutlineRenderAll(); } catch(_) {}
+        return it;
+    };
+    // simple_order 호환 별칭 (window.me.addShapeCutline)
+    try { me.addShapeCutline = window._meCutlineShapeItem; } catch(_) {}
+    // 도형 칼선 제거 — 사각/복잡모양으로 전환 시 남아있는 간단도형 칼선 정리.
+    window._meRemoveShapeCutline = function() {
+        var removed = false;
+        (me.items || []).slice().forEach(function(it){
+            if (it && it._isShapeCutline) {
+                try { if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); } catch(_) {}
+                var ix = me.items.indexOf(it); if (ix >= 0) me.items.splice(ix, 1);
+                if (me.selected === it) { try { _meSelect(null); } catch(_) { me.selected = null; } }
+                removed = true;
+            }
+        });
+        if (removed) { try { _meCutlineRenderAll(); } catch(_) {} }
+        return removed;
+    };
+    try { me.removeShapeCutline = window._meRemoveShapeCutline; } catch(_) {}
     // 2026-06-16 v3: 지우개 모드 — 활성화 시 stage 위에 capture overlay 추가,
     //   click/drag 한 좌표 근처 (반경 R) 의 모든 it._cutlineRelPts 점 제거 → 부드럽게 재렌더.
     me._cutlineEraserMode = false;

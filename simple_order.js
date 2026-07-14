@@ -2904,11 +2904,15 @@ html, body { background: #ffffff !important; }
             <div id="soStickerTypeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
           </div>
 
-          <!-- 2026-07-14: 4.5) 모양 따기 (커팅) — 네모 그대로 / 사진 모양대로 오리기(+30,000원) -->
-          <div id="soStickerDieCutWrap" style="display:none; margin-top:14px;">
-            <div class="so-section-title">${tr('모양 (재단 방식)', '形 (カット方式)', 'Shape (cut)')}</div>
-            <div id="soStickerDieCutGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
-            <div id="soStickerDieCutHint" style="display:none; margin-top:7px; font-size:11px; color:#78350f; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; line-height:1.55;">${tr('사진 모양대로 오리려면 위 에디터에서 <b>업로드 → 누끼</b>(배경 제거) → <b>칼선</b>을 눌러 모양을 따 주세요.', '写真の形に切るには、上のエディターで <b>アップロード → 切り抜き</b> → <b>カットライン</b> を作成してください。', 'To cut to the photo shape, in the editor above: <b>Upload → Cut-out</b> (remove bg) → <b>Cutline</b>.')}</div>
+          <!-- 2026-07-14: 4.5) 모양 (재단) — 3분류: 사각(0)/복잡모양(+30,000) 상단, 간단도형(+10,000)+9도형 하단 -->
+          <div id="soStickerShapeWrap" style="display:none; margin-top:14px;">
+            <div class="so-section-title">${tr('모양 (재단)', '形 (カット)', 'Shape (cut)')}</div>
+            <div id="soStickerShapeTopGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;"></div>
+            <div id="soStickerSimpleShapeBox" style="margin-top:6px; border:2px solid #e7e5e4; border-radius:10px; padding:10px;">
+              <button type="button" id="soStickerSimpleShapeBtn" onclick="window._soStickerPickShape('simple')" style="width:100%; padding:8px; border:0; background:transparent; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; color:#1f2937; text-align:left;"></button>
+              <div id="soStickerShapeKindGrid" style="display:none; grid-template-columns:repeat(5, 1fr); gap:5px; margin-top:8px;"></div>
+            </div>
+            <div id="soStickerShapeHint" style="display:none; margin-top:7px; font-size:11px; color:#78350f; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 10px; line-height:1.55;"></div>
           </div>
 
           <!-- 안내 -->
@@ -4693,7 +4697,9 @@ html, body { background: #ffffff !important; }
             var _stFancy = !!(_stV && _stickerIsFancy(_stV));
             var _stTypeOpt = STICKER_TYPES.find(function(c){ return c.key === (state.stickerType || 'art_matte'); });
             var _stShape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
-            var _stShapeLbl = (_stShape === 'simple') ? (tr('도형따기 +','図形カット +','Shape-cut +') + fmtPrice(10000))
+            var _stKindOpt = STICKER_SHAPE_KINDS.find(function(k){ return k.key === state.stickerShapeKind; });
+            var _stKindNm = _stKindOpt ? (' ' + _stickerI18n(_stKindOpt, 'name')) : '';
+            var _stShapeLbl = (_stShape === 'simple') ? (tr('도형따기','図形カット','Shape-cut') + _stKindNm + ' +' + fmtPrice(10000))
                             : (_stShape === 'complex') ? (tr('복잡모양 +','複雑カット +','Complex-cut +') + fmtPrice(30000)) : '';
             var _stSizeLbl = _stFancy ? '' : ((state.stickerW||100) + '×' + (state.stickerH||100) + 'mm');
             var _stMeta = '🏷️ ' + (_stV ? _stickerVariantLabel(_stV) : '') +
@@ -8277,6 +8283,47 @@ html, body { background: #ffffff !important; }
         if (shape === 'complex') return 30000;
         return 0;
     }
+    // 2026-07-14: 간단도형 9종 (간단도형 선택 시 편집기 칼선 생성용). key = 편집기 _meCutlineShapeItem(kind) 와 공유.
+    var STICKER_SHAPE_KINDS = [
+        { key:'roundedCorner', name_kr:'귀돌이', name_jp:'角丸',   name_us:'Rounded' },
+        { key:'circle',        name_kr:'원형',   name_jp:'円形',   name_us:'Circle' },
+        { key:'ellipse',       name_kr:'타원형', name_jp:'楕円',   name_us:'Ellipse' },
+        { key:'penta',         name_kr:'5각형',  name_jp:'五角形', name_us:'Pentagon' },
+        { key:'hexa',          name_kr:'6각형',  name_jp:'六角形', name_us:'Hexagon' },
+        { key:'octa',          name_kr:'8각형',  name_jp:'八角形', name_us:'Octagon' },
+        { key:'rhombus',       name_kr:'마름모', name_jp:'ひし形', name_us:'Rhombus' },
+        { key:'tri',           name_kr:'세모',   name_jp:'三角形', name_us:'Triangle' },
+        { key:'star',          name_kr:'별',     name_jp:'星',     name_us:'Star' }
+    ];
+    // 도형별 정규화 점 [0..1] 생성기 — SVG 미리보기와 편집기 칼선(_meCutlineShapeItem) 이 동일 함수 사용.
+    window._stickerShapePts = function(kind) {
+        var TAU = Math.PI * 2, pts = [], i, a;
+        function poly(n, rot){ var o = []; for (i = 0; i < n; i++){ a = -Math.PI/2 + rot + TAU * i / n; o.push({ x:0.5 + 0.5*Math.cos(a), y:0.5 + 0.5*Math.sin(a) }); } return o; }
+        switch (kind) {
+            case 'circle':  { for (i = 0; i < 48; i++){ a = TAU*i/48; pts.push({ x:0.5 + 0.5*Math.cos(a), y:0.5 + 0.5*Math.sin(a) }); } break; }
+            case 'ellipse': { for (i = 0; i < 48; i++){ a = TAU*i/48; pts.push({ x:0.5 + 0.5*Math.cos(a), y:0.5 + 0.35*Math.sin(a) }); } break; }
+            case 'roundedCorner': {
+                var r = 0.2;
+                var corners = [[1-r,r,-Math.PI/2,0],[1-r,1-r,0,Math.PI/2],[r,1-r,Math.PI/2,Math.PI],[r,r,Math.PI,Math.PI*1.5]];
+                corners.forEach(function(c){ for (var k = 0; k <= 6; k++){ var aa = c[2] + (c[3]-c[2])*k/6; pts.push({ x:c[0] + r*Math.cos(aa), y:c[1] + r*Math.sin(aa) }); } });
+                break;
+            }
+            case 'penta': pts = poly(5, 0); break;
+            case 'hexa':  pts = poly(6, Math.PI/6); break;
+            case 'octa':  pts = poly(8, Math.PI/8); break;
+            case 'rhombus': pts = [{x:.5,y:0},{x:1,y:.5},{x:.5,y:1},{x:0,y:.5}]; break;
+            case 'tri':     pts = [{x:.5,y:0},{x:1,y:1},{x:0,y:1}]; break;
+            case 'star':    { for (i = 0; i < 10; i++){ a = -Math.PI/2 + Math.PI*i/5; var rr = (i%2===0) ? 0.5 : 0.22; pts.push({ x:0.5 + rr*Math.cos(a), y:0.5 + rr*Math.sin(a) }); } break; }
+            default: pts = [{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:0,y:1}];
+        }
+        return pts;
+    };
+    function _stickerShapeSvg(kind, stroke) {
+        var pts = window._stickerShapePts(kind), S = 30, pad = 3, sz = S - pad*2;
+        var d = pts.map(function(p, i){ return (i ? 'L' : 'M') + (pad + p.x*sz).toFixed(1) + ' ' + (pad + p.y*sz).toFixed(1); }).join(' ') + ' Z';
+        return '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" style="display:block; margin:0 auto;">'
+             + '<path d="' + d + '" stroke="' + stroke + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    }
 
     // 2026-05-13: 사이즈 입력 → 면적 × 단가 (m²) 자동 계산 상품 — 현수막·실사출력 등
     // admin_products.is_custom_size = true 이면서 가벽/박스/자유인쇄커팅 처럼 자체 UI가 없는 상품
@@ -11004,26 +11051,71 @@ html, body { background: #ffffff !important; }
                     + '</button>';
             }).join('');
         }
-        // 2026-07-14: 모양 따기 (커팅) — 팬시 제외, 재단 스티커만. 사진 모양대로 오리기 = +30,000원.
-        var dcW = document.getElementById('soStickerDieCutWrap');
-        if (dcW) dcW.style.display = isFancy ? 'none' : '';
-        var dcGrid = document.getElementById('soStickerDieCutGrid');
-        if (dcGrid && !isFancy) {
-            var _dcOpts = [
-                { v: false, label: tr('네모 그대로', '四角のまま', 'Square'), sub: tr('기본', '標準', 'Default') },
-                { v: true,  label: tr('사진 모양대로 오리기', '写真の形にカット', 'Cut to photo shape'), sub: '+' + fmtPrice(30000) }
-            ];
-            dcGrid.innerHTML = _dcOpts.map(function(o){
-                var sel = (!!state.stickerDieCut === o.v);
-                var _c = o.v ? '#b45309' : '#4338ca';
-                return '<button type="button" onclick="window._soStickerPickDieCut(' + o.v + ')" '
-                    + 'style="padding:9px 8px; border:2px solid ' + (sel?_c:'#e7e5e4') + '; background:' + (sel?(o.v?'#fffbeb':'#eef2ff'):'#fff') + '; color:' + (sel?(o.v?'#78350f':'#3730a3'):'#1f2937') + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center; line-height:1.3;">'
-                    + (sel?'✓ ':'') + o.label
-                    + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel?(o.v?'#92400e':'#4f46e5'):'#64748b') + '; margin-top:2px;">' + o.sub + '</span>'
-                    + '</button>';
-            }).join('');
-            var dcHint = document.getElementById('soStickerDieCutHint');
-            if (dcHint) dcHint.style.display = state.stickerDieCut ? '' : 'none';
+        // 2026-07-14: 모양 (재단) — 팬시 제외, 재단 스티커만. 사각(0)/간단도형(+10,000)/복잡모양(+30,000).
+        var shW = document.getElementById('soStickerShapeWrap');
+        if (shW) shW.style.display = isFancy ? 'none' : '';
+        if (!isFancy) {
+            var _shape = state.stickerShape || (state.stickerDieCut ? 'complex' : 'square');
+            // 상단: 사각 / 복잡모양
+            var topGrid = document.getElementById('soStickerShapeTopGrid');
+            if (topGrid) {
+                var _topOpts = [
+                    { v: 'square',  label: tr('사각', '四角', 'Square'),       sub: tr('기본', '標準', 'Default'), c: '#4338ca' },
+                    { v: 'complex', label: tr('복잡모양', '複雑な形', 'Complex'), sub: '+' + fmtPrice(30000),        c: '#b45309' }
+                ];
+                topGrid.innerHTML = _topOpts.map(function(o){
+                    var sel = (_shape === o.v);
+                    var bg = sel ? (o.v === 'complex' ? '#fffbeb' : '#eef2ff') : '#fff';
+                    var fg = sel ? (o.v === 'complex' ? '#78350f' : '#3730a3') : '#1f2937';
+                    return '<button type="button" onclick="window._soStickerPickShape(\'' + o.v + '\')" '
+                        + 'style="padding:9px 8px; border:2px solid ' + (sel?o.c:'#e7e5e4') + '; background:' + bg + '; color:' + fg + '; border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:800; text-align:center; line-height:1.3;">'
+                        + (sel?'✓ ':'') + o.label
+                        + '<span style="display:block; font-size:10px; font-weight:600; color:' + (sel ? (o.v==='complex'?'#92400e':'#4f46e5') : '#64748b') + '; margin-top:2px;">' + o.sub + '</span>'
+                        + '</button>';
+                }).join('');
+            }
+            // 하단: 간단도형 라벨 + 9도형 서브그리드
+            var simpleSel = (_shape === 'simple');
+            var simpleBox = document.getElementById('soStickerSimpleShapeBox');
+            if (simpleBox) simpleBox.style.borderColor = simpleSel ? '#4338ca' : '#e7e5e4';
+            var simpleBtn = document.getElementById('soStickerSimpleShapeBtn');
+            if (simpleBtn) {
+                simpleBtn.style.color = simpleSel ? '#3730a3' : '#1f2937';
+                simpleBtn.innerHTML = (simpleSel?'✓ ':'') + tr('간단도형', 'かんたん図形', 'Simple shape')
+                    + ' <span style="font-size:10px; font-weight:600; color:' + (simpleSel?'#4f46e5':'#64748b') + ';">+' + fmtPrice(10000) + '</span>';
+            }
+            var kindGrid = document.getElementById('soStickerShapeKindGrid');
+            if (kindGrid) {
+                kindGrid.style.display = simpleSel ? 'grid' : 'none';
+                if (simpleSel) {
+                    kindGrid.innerHTML = STICKER_SHAPE_KINDS.map(function(sk){
+                        var ksel = (state.stickerShapeKind === sk.key);
+                        var col = ksel ? '#4338ca' : '#94a3b8';
+                        return '<button type="button" onclick="window._soStickerPickShape(\'simple\',\'' + sk.key + '\')" '
+                            + 'style="padding:6px 3px; border:2px solid ' + (ksel?'#4338ca':'#e7e5e4') + '; background:' + (ksel?'#eef2ff':'#fff') + '; border-radius:8px; cursor:pointer; font-family:inherit; text-align:center;">'
+                            + _stickerShapeSvg(sk.key, col)
+                            + '<span style="display:block; font-size:9.5px; font-weight:700; color:' + (ksel?'#3730a3':'#475569') + '; margin-top:2px; line-height:1.15;">' + _stickerI18n(sk, 'name') + '</span>'
+                            + '</button>';
+                    }).join('');
+                }
+            }
+            // 힌트: 복잡모양 = 편집기 누끼+칼선 안내 / 간단도형 = 대지에서 드래그·핸들 조정 안내
+            var shHint = document.getElementById('soStickerShapeHint');
+            if (shHint) {
+                if (_shape === 'complex') {
+                    shHint.style.display = '';
+                    shHint.innerHTML = tr('사진 모양대로 오리려면 위 에디터에서 <b>업로드 → 누끼</b>(배경 제거) → <b>칼선</b>을 눌러 모양을 따 주세요.',
+                        '写真の形に切るには、上のエディターで <b>アップロード → 切り抜き</b> → <b>カットライン</b> を作成してください。',
+                        'To cut to the photo shape, in the editor above: <b>Upload → Cut-out</b> (remove bg) → <b>Cutline</b>.');
+                } else if (simpleSel && state.stickerShapeKind) {
+                    shHint.style.display = '';
+                    shHint.innerHTML = tr('선택한 도형 칼선이 대지에 생성됩니다. <b>드래그·모서리 핸들</b>로 위치·크기를 조정하세요.',
+                        '選んだ図形のカットラインが台紙に生成されます。<b>ドラッグ・角ハンドル</b>で位置・サイズを調整してください。',
+                        'A cutline for the chosen shape is placed on the canvas. Adjust position/size by <b>dragging or the corner handles</b>.');
+                } else {
+                    shHint.style.display = 'none';
+                }
+            }
         }
         if (notice) notice.style.display = '';
     }
@@ -11045,6 +11137,7 @@ html, body { background: #ffffff !important; }
         if (!state.stickerW) state.stickerW = 100;
         if (!state.stickerH) state.stickerH = 100;
         if (!state.stickerType) state.stickerType = 'art_matte';
+        if (!state.stickerShape) state.stickerShape = 'square';
         // 2026-06-16: 변형 선택 시 상단 상품 헤더 (이름·설명·이미지) 도 같이 스왑.
         try {
             if (picked) {
@@ -11159,7 +11252,7 @@ html, body { background: #ffffff !important; }
     window._soStickerQtyInput = function() {
         var qty = parseInt(document.getElementById('soStickerQty').value, 10) || 0;
         var picked = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
-        var step = (picked && _stickerIsFancy(picked)) ? 4 : 1000;
+        var step = (picked && _stickerIsFancy(picked)) ? 4 : 10;   // 2026-07-14: 최소 10장(구 1000)
         if (qty < step) qty = step;
         // step 으로 정렬 (입력값이 step 의 배수가 아니면 가장 가까운 step 으로 반올림은 안 하고 그대로 둠 — blur 시 처리).
         state.stickerQty = qty;
@@ -11175,7 +11268,30 @@ html, body { background: #ffffff !important; }
     };
     window._soStickerPickType = function(k) { state.stickerType = k; _soStickerRender(); recalc(); };
     // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — true 면 +30,000원. 위 에디터에서 누끼·칼선으로 모양 작업.
-    window._soStickerPickDieCut = function(v) { state.stickerDieCut = !!v; _soStickerRender(); recalc(); };
+    // 2026-07-14: 모양(재단) 선택. shape='square'|'simple'|'complex'. simple 이면 kind(9도형) 선택 시 편집기에 칼선 생성.
+    window._soStickerPickShape = function(shape, kind) {
+        state.stickerShape = shape || 'square';
+        state.stickerDieCut = (shape === 'complex');   // 구 dieCut 호환 유지
+        if (shape === 'simple' && kind) state.stickerShapeKind = kind;
+        if (shape !== 'simple') state.stickerShapeKind = null;
+        _soStickerRender();
+        recalc();
+        if (shape === 'simple' && kind) {
+            // 간단도형: 선택한 kind 로 편집기 칼선 도형 생성 (드래그·핸들로 조정)
+            try {
+                if (window.me && typeof window.me.addShapeCutline === 'function') window.me.addShapeCutline(kind);
+                else if (typeof window._meCutlineShapeItem === 'function') window._meCutlineShapeItem(kind);
+            } catch(_){}
+        } else if (shape !== 'simple') {
+            // 사각/복잡모양 전환 — 남아있는 간단도형 칼선 제거
+            try {
+                if (window.me && typeof window.me.removeShapeCutline === 'function') window.me.removeShapeCutline();
+                else if (typeof window._meRemoveShapeCutline === 'function') window._meRemoveShapeCutline();
+            } catch(_){}
+        }
+    };
+    // 구 호환 alias — 튜토리얼 _soTutStickerDieCut 등이 호출 (true=복잡모양, false=사각)
+    window._soStickerPickDieCut = function(v) { window._soStickerPickShape(v ? 'complex' : 'square'); };
     // 2026-07-14: 튜토리얼용 — 모양 선택(사진모양/네모). 사진모양이면 에디터에서 자동 배경제거+칼선. 완료 후 진행 이벤트.
     window._soTutStickerDieCut = function(arg) {
         var on = (String(arg) === '1');
@@ -12422,6 +12538,8 @@ html, body { background: #ffffff !important; }
             state.stickerW           = state.stickerW || 100;
             state.stickerH           = state.stickerH || 100;
             state.stickerType        = state.stickerType || 'art_matte';
+            if (!state.stickerShape) state.stickerShape = 'square';         // 2026-07-14: 모양 재단 기본 = 사각
+            if (state.stickerShapeKind == null) state.stickerShapeKind = null;
             if (state.stickerDieCut == null) state.stickerDieCut = false;   // 2026-07-14: 모양 따기 기본 = 네모
             // 변형 캐시 미리 채움 + 첫 렌더. 팬시 감지 후 qty 기본값 결정.
             try {

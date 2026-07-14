@@ -881,19 +881,12 @@
         en: 'First set the <b>size</b> — the price is <b>calculated automatically</b> from it.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
-    { // 2) 용지(코팅)
-      target: '#soStickerCoatingWrap', mode: 'next',
-      onEnter: function () { return _secVisible('#soStickerCoatingWrap'); },
-      msg: { kr: '<b>용지(코팅)</b>를 골라요. 무광·유광·무코팅·투명용지 중에서 선택할 수 있어요.',
-        ja: '<b>用紙(コーティング)</b> を選びます。マット·グロス·コート無し·透明から選べます。',
-        en: 'Choose the <b>paper/coating</b> — matte, gloss, none, or transparent.' }
-    },
-    { // 3) 별색 박 (선택)
-      target: '#soStickerFoilWrap', mode: 'next',
-      onEnter: function () { return _secVisible('#soStickerFoilWrap'); },
-      msg: { kr: '금·은 <b>별색 박</b>이 필요하면 선택해요 <span style="color:#94a3b8;">(선택 사항 — 필요 없으면 다음)</span>.',
-        ja: '金·銀の <b>別色箔</b> が必要なら選択 <span style="color:#94a3b8;">(任意 — 不要なら次へ)</span>。',
-        en: 'Add <b>gold/silver spot foil</b> if you like <span style="color:#94a3b8;">(optional — or tap Next)</span>.' }
+    { // 2) 종류(용지)
+      target: '#soStickerTypeWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerTypeWrap'); },
+      msg: { kr: '<b>종류</b>를 골라요. 아트지·무광·유광·강접은 기본가, 스파클링·홀로그램·투명 등 특수용지는 3배가예요.',
+        ja: '<b>種類</b> を選びます。上質紙·マット·グロス·強粘着は標準価格、スパークリング·ホログラム·透明などの特殊用紙は3倍です。',
+        en: 'Choose the <b>type</b>. Art/matte/gloss/strong-adhesive are base price; special papers (sparkle, holo, clear…) are ×3.' }
     },
     { // 4) 수량
       target: ['#soStickerQtyWrap', '#soQtySection'], mode: 'next',
@@ -903,18 +896,13 @@
         en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
     },
     GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
-    { // 6) 모양 선택 (스티커만) — 사진 모양대로 오리기(+30,000) / 네모. 없는 제품은 자동 스킵.
-      //  target 은 대지(#meStage)만 — 에디터 전체를 잡으면 하이라이트가 위로 치우쳐 잘림(사용자 지적). 대지를 화면 중앙에.
-      target: '#meStage', mode: 'wait', waitEvent: 'me-sticker-shape-chosen',
-      onEnter: function () { return _secVisible('#soStickerDieCutWrap'); },
-      buttons: [
-        { action: '_soTutStickerDieCut', arg: '1', label: { kr: '✂️ 사진 모양대로 오리기 (+30,000원)', ja: '✂️ 写真の形にカット (+¥3,000)', en: '✂️ Cut to photo shape (+₩30,000)' } },
-        { action: '_soTutStickerDieCut', arg: '0', label: { kr: '⬜ 네모 모양 그대로', ja: '⬜ 四角のまま', en: '⬜ Keep it square' } }
-      ],
-      msg: { kr: '스티커를 <b>어떤 모양</b>으로 만들까요?<br>• <b>사진 모양대로 오리기</b> — 배경을 지우고 그림 외곽을 따서 예쁘게! <b>(+30,000원)</b><br>• <b>네모 모양 그대로</b> — 사각형으로 그대로.',
-        ja: 'ステッカーを <b>どの形</b> にしますか?<br>• <b>写真の形にカット</b> — 背景を消して形通りに! <b>(+¥3,000)</b><br>• <b>四角のまま</b> — 四角形で。',
-        en: 'What <b>shape</b> for your sticker?<br>• <b>Cut to photo shape</b> — remove bg & die-cut the outline! <b>(+₩30,000)</b><br>• <b>Keep it square</b> — plain rectangle.' },
-      hint: { kr: '사진 모양대로 고르면 자동으로 배경제거+칼선을 따드려요', ja: '写真の形を選ぶと自動で背景除去+カットライン', en: 'Photo shape auto-runs bg-removal + cutline' },
+    { // 6) 모양(재단) 선택 (스티커만) — 사각(기본)/간단도형(+10,000)/복잡모양(+30,000). 없는 제품은 자동 스킵.
+      target: '#soStickerShapeWrap', mode: 'next',
+      onEnter: function () { return _secVisible('#soStickerShapeWrap'); },
+      msg: { kr: '스티커를 <b>어떤 모양</b>으로 재단할까요?<br>• <b>사각</b> — 사각형 그대로 <b>(기본)</b><br>• <b>간단도형</b> — 원·별·다각형 등 도형으로 오리기 <b>(+10,000원)</b>. 고른 도형 칼선을 대지에서 드래그·핸들로 조정해요.<br>• <b>복잡모양</b> — 그림 외곽 그대로 따기 <b>(+30,000원)</b>.',
+        ja: 'ステッカーを <b>どの形</b> にカットしますか?<br>• <b>四角</b> — 四角形のまま <b>(標準)</b><br>• <b>かんたん図形</b> — 円·星·多角形などでカット <b>(+¥1,000)</b>。選んだ図形のカットラインを台紙でドラッグ·ハンドル調整。<br>• <b>複雑な形</b> — 絵の輪郭通りにカット <b>(+¥3,000)</b>。',
+        en: 'What <b>cut shape</b> for your sticker?<br>• <b>Square</b> — plain rectangle <b>(default)</b><br>• <b>Simple shape</b> — circle/star/polygon cut <b>(+₩10,000)</b>; drag & resize the cutline on the canvas.<br>• <b>Complex</b> — die-cut the artwork outline <b>(+₩30,000)</b>.' },
+      hint: { kr: '간단도형을 고르면 도형 칼선이 대지에 생겨요 — 드래그·핸들로 크기 조정', ja: 'かんたん図形を選ぶと図形カットラインが台紙に生成 — ドラッグ·ハンドルで調整', en: 'Pick a simple shape to place a cutline you can drag & resize' },
       cheer: { kr: '모양 결정! ✂️', ja: '形OK! ✂️', en: 'Shape set! ✂️' }
     },
     PROOF_STEP,       // 7) 시안 최종 확인
