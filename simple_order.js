@@ -8222,13 +8222,11 @@ html, body { background: #ffffff !important; }
         if (lang === 'en') return v.name_us || v.name || '';
         return v.name || '';
     }
-    // 가격 계산: anchor 5,200원 (3.5cm 원형 100매 무코팅아트지) 기준
-    // category.base = 1매 기준 anchor price (원) — 일부는 sheet 단위
-    // 2026-06-16: 신규 스티커 가격 산식 — admin price 기반.
-    //   재단(네모/원형/모양): basePrice × (W × H / 10000) × qty × coatingMult × bulkDisc + foilTotal
-    //   팬시: basePrice × (qty / 4) × coatingMult + foilTotal  (벌크 할인 없음)
-    //   stState 는 { productCode, w, h, qty, coating, foils, isFancy } 형태.
-    //   1만매 이상 30% 할인 (재단 스티커만, 팬시는 셋 단위라 제외).
+    // 2026-07-14: 스티커 가격 — 기준 사이즈 100×100mm(면적 1.0) 낱장단가 × 면적비례 × 수량.
+    //   일반(강접까지 4종): 낱장 10원 정액 → 500매 5천 / 1000매 1만 / 2000매 2만.
+    //   특수(나머지): 수량 앵커 (10매 3만 / 50매 5만 / 100매 8만 / 500매 15만 / 1000매 20만).
+    //   면적 비례: 실제(W×H)/10000 을 낱장단가에 곱 (200×100mm → 2배). + 모양(재단) 정액.
+    //   팬시: basePrice/4 (기존 유지). stState = { productCode, w, h, qty, type, shape, isFancy }.
     function _stickerCalcPrice(stState) {
         if (!stState) return 0;
         // variant 캐시에서 찾음 — 모달 진입 시 _soLoadStickerVariants 가 미리 채워둠.
@@ -8237,10 +8235,6 @@ html, body { background: #ffffff !important; }
         if (!v) return 0;
         var basePrice = Number(v.price) || 0;
         var qty = Math.max(1, Number(stState.qty) || 1000);
-        // 2026-07-14: 종류(용지) 배수 — 기본 4종 1, 프리미엄 9종 3.
-        var typeMult = _stickerTypeMult(stState.type);
-        // 2026-07-14: 수량 단가배수 — 10:0.6 / 50:0.7 / 100:0.8 / 500:0.9 / 1000:1.0 (개당 단가에 곱)
-        var qtyMult = stState.isFancy ? 1 : _stickerQtyMult(qty);
         // 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
         var perUnit;
         if (stState.isFancy) {
@@ -8248,22 +8242,23 @@ html, body { background: #ffffff !important; }
         } else {
             var w = Math.max(10, Number(stState.w) || 100);
             var h = Math.max(10, Number(stState.h) || 100);
-            perUnit = basePrice * ((w * h) / 10000) * typeMult * qtyMult;
+            var area = (w * h) / 10000;   // 100×100mm = 1.0 기준
+            perUnit = _stickerPerUnitRef(stState.type, qty) * area;
         }
         var subtotal = Math.round(perUnit) * qty;
         // 2026-07-14: 모양(재단) 정액 — 사각 0 / 간단도형 +10,000 / 복잡모양 +30,000. (구 dieCut 토글 호환: dieCut=true → complex)
         var shapeFee = _stickerShapeFee(stState.shape, stState.dieCut);
         return subtotal + shapeFee;
     }
-    // 종류(용지) 배수: STICKER_TYPES[type].mult (기본 4종 1 / 나머지 3). 기본값 art_matte(1).
-    function _stickerTypeMult(typeKey) {
-        var t = STICKER_TYPES.find(function(x){ return x.key === (typeKey || 'art_matte'); });
-        return t ? (t.mult || 1) : 1;
-    }
-    // 수량 단가배수: 앵커 {10:.6, 50:.7, 100:.8, 500:.9, 1000:1}. 사이 값은 선형보간, 범위 밖은 클램프.
-    function _stickerQtyMult(qty) {
-        var A = [[10,0.6],[50,0.7],[100,0.8],[500,0.9],[1000,1.0]];
+    // 일반(기본가) 종류 4종 — 강접까지. 나머지는 특수(고가).
+    var STICKER_BASE_TYPES = ['art_matte', 'matte', 'gloss', 'strong'];
+    function _stickerIsBaseType(typeKey) { return STICKER_BASE_TYPES.indexOf(typeKey || 'art_matte') >= 0; }
+    // 기준 사이즈(100×100mm) 낱장 단가(원). 사이즈는 면적 비례로 별도 곱함.
+    function _stickerPerUnitRef(typeKey, qty) {
         qty = Math.max(1, Number(qty) || 1000);
+        if (_stickerIsBaseType(typeKey)) return 10;   // 일반: 낱장 10원 정액 (500매5천/1000매1만/2000매2만)
+        // 특수용지: 총액 앵커 → 낱장단가. 10매3만 / 50매5만 / 100매8만 / 500매15만 / 1000매20만.
+        var A = [[10,3000],[50,1000],[100,800],[500,300],[1000,200]];
         if (qty <= A[0][0]) return A[0][1];
         if (qty >= A[A.length-1][0]) return A[A.length-1][1];
         for (var i = 0; i < A.length - 1; i++) {
@@ -8272,7 +8267,7 @@ html, body { background: #ffffff !important; }
                 return A[i][1] + t * (A[i+1][1] - A[i][1]);
             }
         }
-        return 1.0;
+        return A[A.length-1][1];
     }
     // 모양(재단) 정액. shape: 'square'|'simple'|'complex'. (구 dieCut boolean → complex 로 매핑)
     function _stickerShapeFee(shape, legacyDieCut) {
@@ -11009,8 +11004,9 @@ html, body { background: #ffffff !important; }
         var qtyEl = document.getElementById('soStickerQty');
         var hintEl = document.getElementById('soStickerQtyHint');
         var qtyGrid = document.getElementById('soStickerQtyGrid');
-        // 2026-07-14: 수량 프리셋 10/50/100/500/1000 (개당 단가배수). 팬시는 4매 단위 유지.
-        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : [10, 50, 100, 500, 1000];
+        // 2026-07-14: 수량 프리셋 — 팬시 4단위 / 일반(기본가) 500·1000·2000 / 특수 10·50·100·500·1000.
+        var isBaseType = _stickerIsBaseType(state.stickerType);
+        var qtyPresets = isFancy ? [4, 8, 12, 20, 40] : (isBaseType ? [500, 1000, 2000] : [10, 50, 100, 500, 1000]);
         var curQty = state.stickerQty || (isFancy ? 4 : 1000);
         if (qtyGrid) {
             qtyGrid.innerHTML = qtyPresets.map(function(q){
@@ -11025,14 +11021,16 @@ html, body { background: #ffffff !important; }
             }).join('');
         }
         if (qtyEl) {
-            qtyEl.min = isFancy ? 4 : 10;
-            qtyEl.step = isFancy ? 4 : 10;
+            qtyEl.min = isFancy ? 4 : (isBaseType ? 100 : 10);
+            qtyEl.step = isFancy ? 4 : (isBaseType ? 100 : 10);
             if (document.activeElement !== qtyEl) qtyEl.value = curQty;
         }
         if (hintEl) {
             hintEl.textContent = isFancy
                 ? tr('기본 4매 · 4매 단위로 주문 가능','基本4枚 · 4枚単位','Default 4 pcs · 4-step orders')
-                : tr('10 / 50 / 100 / 500 / 1,000매 · 수량이 많을수록 개당 단가가 올라가요','10/50/100/500/1,000枚 · 数量が多いほど1枚単価UP','10/50/100/500/1,000 pcs · higher qty = higher unit price');
+                : (isBaseType
+                    ? tr('500 / 1,000 / 2,000매 · 100×100mm 기준, 크기에 비례해 가격 계산','500/1,000/2,000枚 · 100×100mm基準、サイズ比例','500/1,000/2,000 pcs · priced by size (100×100mm base)')
+                    : tr('10 / 50 / 100 / 500 / 1,000매 · 특수용지 · 크기·수량에 따라 단가 계산','10/50/100/500/1,000枚 · 特殊用紙 · サイズ·数量で単価','10/50/100/500/1,000 pcs · special paper · priced by size & qty'));
         }
         // 2026-07-14: 종류(용지) 13종 — 이미지 썸네일 그리드
         if (typeW) typeW.style.display = '';
@@ -11248,7 +11246,7 @@ html, body { background: #ffffff !important; }
     window._soStickerQtyInput = function() {
         var qty = parseInt(document.getElementById('soStickerQty').value, 10) || 0;
         var picked = (_stickerVariantsCache || []).find(function(x){ return x.code === state.stickerProductCode; });
-        var step = (picked && _stickerIsFancy(picked)) ? 4 : 10;   // 2026-07-14: 최소 10장(구 1000)
+        var step = (picked && _stickerIsFancy(picked)) ? 4 : (_stickerIsBaseType(state.stickerType) ? 100 : 10);   // 일반 100 / 특수 10 단위
         if (qty < step) qty = step;
         // step 으로 정렬 (입력값이 step 의 배수가 아니면 가장 가까운 step 으로 반올림은 안 하고 그대로 둠 — blur 시 처리).
         state.stickerQty = qty;
@@ -11262,7 +11260,14 @@ html, body { background: #ffffff !important; }
         _soStickerRender();
         recalc();
     };
-    window._soStickerPickType = function(k) { state.stickerType = k; _soStickerRender(); recalc(); };
+    window._soStickerPickType = function(k) {
+        // 일반↔특수 카테고리가 바뀌면 수량 프리셋이 달라짐 → 공통값 1000 으로 리셋 (혼란 방지)
+        var wasBase = _stickerIsBaseType(state.stickerType);
+        state.stickerType = k;
+        if (wasBase !== _stickerIsBaseType(k)) state.stickerQty = 1000;
+        _soStickerRender();
+        recalc();
+    };
     // 2026-07-14: 모양 따기 (사진 모양대로 오리기) — true 면 +30,000원. 위 에디터에서 누끼·칼선으로 모양 작업.
     // 2026-07-14: 모양(재단) 선택. shape='square'|'simple'|'complex'. simple 이면 kind(9도형) 선택 시 편집기에 칼선 생성.
     window._soStickerPickShape = function(shape, kind) {
