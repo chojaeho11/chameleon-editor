@@ -331,6 +331,8 @@
       var ok = true; try { ok = s.onEnter() !== false; } catch (_) { ok = true; }
       if (!ok) { enterStep(i + 1); return; }
     }
+    // 2026-07-14: 진행상태 저장 — 종류 선택으로 페이지가 리로드돼도 다음 챕터로 이어가기.
+    try { sessionStorage.setItem('__tut_progress', JSON.stringify({ code: _curCode || '', i: i, resumeNext: !!s.resumeNext, ts: Date.now() })); } catch (_) {}
     navigate(s.branch ? { kind: 'branch', i: i } : { kind: 'step', i: i });
   }
   function render(rec) {
@@ -596,6 +598,7 @@
 
   function quit() {
     clearStep(); removeDoneBar();
+    try { sessionStorage.removeItem('__tut_progress'); } catch (_) {}   // 2026-07-14: 종료 시 이어가기 마커 제거
     _active = false; _looping = false; _freeMode = false;
     _targets = []; _cur = null; _hist = [];
     if (_pop) { _pop.style.display = 'none'; _pop.classList.remove('center'); }
@@ -603,11 +606,11 @@
     if (_blocker) _blocker.style.display = 'none';
   }
 
-  function run(steps) {
+  function run(steps, startIdx) {
     closeChooser(); ensureStyles();
     _steps = steps; _active = true;
     _cur = null; _hist = []; _freeMode = false; _chosenBranch = 'upload';
-    enterStep(0);
+    enterStep(startIdx || 0);
   }
 
   // ── 모드 선택 창 ──────────────────────────────────────────────────────
@@ -957,14 +960,14 @@
   //  → 수량(있으면) → 장바구니. 제품별로 없는 옵션 단계는 onEnter 로 자동 스킵.
   // ════════════════════════════════════════════════════════════════════
   var HONEYCOMB_BANNER_STEPS = [
-    GENERIC_STEPS[0], // 1) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
-    { // 2) 배너 종류 선택
-      target: '#soBannerVariantsHostSec', mode: 'next',
+    { // 1) 배너 종류 선택 — 먼저 종류를 고른 뒤 디자인. (resumeNext: 카드로 다른 종류 선택 시 처음이 아니라 다음 챕터로 이어감)
+      target: '#soBannerVariantsHostSec', mode: 'next', resumeNext: true,
       onEnter: function () { return _secVisible('#soBannerVariantsHostSec'); },
-      msg: { kr: '이제 <b>배너 종류</b>를 골라요. <b>허니콤배너·연결형·선반형·거치대 세트</b> 등 카드를 눌러 원하는 종류로 바꿀 수 있어요.',
-        ja: '次は <b>バナーの種類</b>。<b>ハニカムバナー·連結型·棚型·スタンドセット</b> などカードを押して選べます。',
-        en: 'Now pick the <b>banner type</b>. Tap a card to switch between <b>honeycomb / linked / shelf / stand set</b>, etc.' }
+      msg: { kr: '먼저 <b>배너 종류</b>를 골라요. <b>허니콤배너·연결형·선반형·거치대 세트</b> 등 카드를 눌러 원하는 종류를 고르면 이어서 디자인해요.',
+        ja: 'まず <b>バナーの種類</b> を選びます。<b>ハニカムバナー·連結型·棚型·スタンドセット</b> などカードを押して選ぶと、続けてデザインへ。',
+        en: 'First pick the <b>banner type</b> — tap a card (<b>honeycomb / linked / shelf / stand set</b>). Then we\'ll continue to the design.' }
     },
+    GENERIC_STEPS[0], // 2) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
     { // 3) 단면/양면 — 허니콤배너·연결형만 (섹션 안 보이면 자동 스킵)
       target: '#soBannerSideSec', mode: 'next',
       onEnter: function () { return _secVisible('#soBannerSideSec'); },
@@ -1076,6 +1079,7 @@
   }
 
   var _lastScn = null;
+  var _curCode = '';   // 2026-07-14: 현재 튜토리얼 대상 제품 코드 (종류 선택 이어가기 판정용)
   window._tutMaybeStart = function (product) {
     try {
       // 2026-06-25: 디자이너/관리자 템플릿 제작 모드에서는 튜토리얼 끔 (작업 방해)
@@ -1087,9 +1091,26 @@
       var scn = pickScenario(code);
       if (!scn) { removeReplay(); if (_active) quit(); _lastScn = null; return; }
       _lastScn = scn;
+      _curCode = code;
       _lang = detectLang();
       ensureStyles();
       mountReplay(scn);
+      // 2026-07-14: 종류 선택(resumeNext 단계)에서 다른 제품(카드)으로 넘어온 경우 —
+      //   '주문이 처음이신가요?' 모드선택/처음부터 대신, 새 제품의 종류선택 단계 '다음'부터 이어감.
+      try {
+        var _rawP = sessionStorage.getItem('__tut_progress');
+        if (_rawP) {
+          var _st = JSON.parse(_rawP);
+          var _fresh = _st && ((Date.now() - (_st.ts || 0)) < 30000);
+          if (_fresh && _st.resumeNext && _st.code && _st.code !== code) {
+            sessionStorage.removeItem('__tut_progress');
+            var _startIdx = 0;
+            for (var _k = 0; _k < scn.steps.length; _k++) { if (scn.steps[_k] && scn.steps[_k].resumeNext) { _startIdx = _k + 1; break; } }
+            run(scn.steps, _startIdx);
+            return;
+          }
+        }
+      } catch (_re) {}
       showChooser(scn);
     } catch (e) { console.warn('[tut] _tutMaybeStart', e); }
   };
