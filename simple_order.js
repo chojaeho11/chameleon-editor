@@ -7265,6 +7265,8 @@ html, body { background: #ffffff !important; }
 
     window._soSwitchVinyl = function (code) {
         if (!code) return;
+        // 2026-07-15: 튜토리얼 진행 중이면 리로드 후 '종류'가 아니라 다음 단계부터 이어가도록 진행상태 저장.
+        try { if (typeof window._tutBeforeVariantReload === 'function') window._tutBeforeVariantReload(); } catch(_){}
         try {
             if (typeof window.openSimpleOrderModal === 'function') {
                 window.openSimpleOrderModal(code);
@@ -13230,6 +13232,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 시트지 family (4종 — 탈부착/안개/차량랩핑/글씨커팅)
         var _isVnVariant = (typeof window._soIsVinylProduct === 'function')
             ? window._soIsVinylProduct(p) : false;
+        window._soCurrentIsVinyl = !!_isVnVariant;   // 2026-07-15: 튜토리얼 매칭용(시트지)
         if (_isVnVariant) {
             try { window._soLoadVinylVariants(p.code); } catch(e){}
         } else {
