@@ -315,12 +315,22 @@ async function handleAuthAction() {
 
             // IP 기반 국가 감지 (Cloudflare cdn-cgi/trace), 실패 시 도메인 기반 fallback
             let siteCode = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-            try {
-                const resp = await fetch('/cdn-cgi/trace');
-                const text = await resp.text();
-                const locMatch = text.match(/loc=(\w+)/);
-                if (locMatch) siteCode = locMatch[1];
-            } catch(e) { /* fallback to SITE_CONFIG */ }
+            // 2026-07-15: 일본 전용 도메인(cafe0101 / cotton-printer = 패브릭 JP)은 IP 무관 항상 JP 로 귀속.
+            //   패브릭(cotton-printer) 가입은 cafe0101 로 redirect 되어 가입되는데, 한국에서 가입/테스트하면
+            //   IP(loc=KR) 때문에 KR 로 잡혀 통계·관리자에서 JP 로 안 보이던 문제 → 사이트 기준으로 고정.
+            //   그 외(cafe2626 KR메인 / cafe3355·chameleon 글로벌)는 해외고객(모로코 등) 위해 IP 기반 감지 유지.
+            const _authHost = (location.hostname || '').toLowerCase();
+            const _jpOnlyDomain = _authHost.indexOf('cafe0101') >= 0 || _authHost.indexOf('cotton-printer') >= 0;
+            if (_jpOnlyDomain) {
+                siteCode = 'JP';
+            } else {
+                try {
+                    const resp = await fetch('/cdn-cgi/trace');
+                    const text = await resp.text();
+                    const locMatch = text.match(/loc=(\w+)/);
+                    if (locMatch) siteCode = locMatch[1];
+                } catch(e) { /* fallback to SITE_CONFIG */ }
+            }
             const { data, error } = await sb.auth.signUp({ email, password: paddedPassword });
             if (error) throw error;
 
@@ -550,3 +560,29 @@ async function handleResetPassword() {
         btn.disabled = false;
     }
 }
+
+// 2026-07-15: 일본 전용 도메인(cafe0101 / cotton-printer = 패브릭 JP) — 로그인/가입된 사용자 중
+//   profiles.site 가 비어있는 경우(소셜 Google 가입 등 site 미설정) JP 로 채움.
+//   NULL/빈값만 채우므로 기존에 국가가 잡힌 사용자(KR 등)는 절대 덮어쓰지 않음 → 오염 없음.
+//   이메일 가입은 위 signUp 흐름에서 이미 site 설정. 소셜 가입 커버용.
+(function _jpSiteBackfill(){
+    try {
+        var h = (location.hostname || '').toLowerCase();
+        if (h.indexOf('cafe0101') < 0 && h.indexOf('cotton-printer') < 0) return;
+        var tries = 0;
+        (function run(){
+            var _sb = window.sb;
+            if (!_sb || !_sb.auth) { if (tries++ < 20) setTimeout(run, 500); return; }
+            _sb.auth.getSession().then(function(r){
+                var u = r && r.data && r.data.session && r.data.session.user;
+                if (!u) return;
+                _sb.from('profiles').select('site').eq('id', u.id).maybeSingle().then(function(p){
+                    var cur = p && p.data && p.data.site;
+                    if (!cur) {
+                        _sb.from('profiles').update({ site: 'JP' }).eq('id', u.id).then(function(){}, function(){});
+                    }
+                }, function(){});
+            }, function(){});
+        })();
+    } catch(e){}
+})();
