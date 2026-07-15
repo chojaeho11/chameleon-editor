@@ -108,11 +108,10 @@ export function initAuth() {
 
     // 국가별 소셜 로그인 버튼 표시
     const country = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
-    // KR: 카카오 표시 (기본), JP: LINE 표시 (일본 대표 메신저 — 사용자 요청), 해외: Apple 표시
-    // 2026-07-15: JP 에서 LINE 을 숨기고 Apple 만 보이던 버그 수정 → JP 는 LINE 노출 (+Apple), 카카오 숨김.
+    // KR: 카카오 표시 (기본), JP/해외: Apple 표시. LINE 은 콜백 미등록 이슈로 숨김(사용자 요청 2026-07-15).
     if (country === 'JP') {
         if (btnKakao) btnKakao.style.display = 'none';
-        if (btnLine) btnLine.style.display = 'flex';
+        if (btnLine) btnLine.style.display = 'none';
         if (btnApple) btnApple.style.display = 'flex';
     } else if (country !== 'KR') {
         if (btnKakao) btnKakao.style.display = 'none';
