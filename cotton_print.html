@@ -876,8 +876,8 @@ window._cottonSearch = function(){
                       modalTitle:'🎁 회원가입이벤트',
                       line1:'<b>회원가입</b>하고 쿠폰받기 <b style="color:#be185d;">3만원</b>',
                       signupBtn:'메인 사이트에서 회원가입하기 →',
-                      refTitle:'<b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 1만원</b>',
-                      refDesc:'추천인을 검색해 입력하면 추천인과 본인 모두에게 1만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)',
+                      refTitle:'<b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 3만원</b>',
+                      refDesc:'추천인을 검색해 입력하면 추천인과 본인 모두에게 3만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)',
                       refSelfLbl:'본인 가입 아이디 또는 이메일',
                       refSelfPh:'가입한 아이디/이메일',
                       refSearchLbl:'추천인 검색 (아이디·전화번호·이름)',
@@ -886,14 +886,14 @@ window._cottonSearch = function(){
                       refSelected:'선택된 추천인:', refSubmit:'추천 적립 받기',
                       refNoSelf:'본인 가입 아이디/이메일을 입력해 주세요.',
                       refNoRef:'추천인을 검색해서 선택해 주세요.',
-                      refSuccess:'🎉 적립 완료! 추천인과 회원님 모두에게 1만원이 적립되었습니다.',
+                      refSuccess:'🎉 적립 완료! 추천인과 회원님 모두에게 3만원이 적립되었습니다.',
                       signupRedirect:'회원가입은 메인 사이트(카멜레온)에서 진행됩니다. 이동할까요?\n가입 후 3만원 쿠폰이 자동 지급됩니다.' },
                 ja: { title:'🎁 会員登録イベント', subtitle:'タップして詳細 →',
                       modalTitle:'🎁 会員登録イベント',
                       line1:'<b>会員登録</b>でクーポン獲得 <b style="color:#be185d;">3,000円</b>',
                       signupBtn:'メインサイトで会員登録する →',
-                      refTitle:'<b>紹介者特典</b> — 紹介者と私に <b style="color:#be185d;">各1,000円</b>',
-                      refDesc:'紹介者を検索して入力すると、紹介者ご本人の両方に1,000円が付与されます。（イベントクーポンは購入金額の50%まで利用可）',
+                      refTitle:'<b>紹介者特典</b> — 紹介者と私に <b style="color:#be185d;">各3,000円</b>',
+                      refDesc:'紹介者を検索して入力すると、紹介者ご本人の両方に3,000円が付与されます。（イベントクーポンは購入金額の50%まで利用可）',
                       refSelfLbl:'ご本人の登録ID または メール',
                       refSelfPh:'登録したID/メール',
                       refSearchLbl:'紹介者を検索 (ID・電話番号・名前)',
@@ -902,14 +902,14 @@ window._cottonSearch = function(){
                       refSelected:'選択した紹介者:', refSubmit:'紹介特典を受け取る',
                       refNoSelf:'ご本人の登録ID/メールを入力してください。',
                       refNoRef:'紹介者を検索して選択してください。',
-                      refSuccess:'🎉 付与完了！紹介者とお客様の両方に1,000円が付与されました。',
+                      refSuccess:'🎉 付与完了！紹介者とお客様の両方に3,000円が付与されました。',
                       signupRedirect:'会員登録はメインサイト(Chameleon)で行います。移動しますか?\n登録後、3,000円クーポンが自動付与されます。' },
                 en: { title:'🎁 Signup Event', subtitle:'Tap to learn more →',
                       modalTitle:'🎁 Signup Event',
                       line1:'<b>Sign up</b> for a <b style="color:#be185d;">$30</b> coupon',
                       signupBtn:'Sign up on the main site →',
-                      refTitle:'<b>Referral bonus</b> — <b style="color:#be185d;">$10 each</b> for you both',
-                      refDesc:'Search and enter your referrer — both of you get a $10 coupon. (Event coupons are usable up to 50% of the order.)',
+                      refTitle:'<b>Referral bonus</b> — <b style="color:#be185d;">$30 each</b> for you both',
+                      refDesc:'Search and enter your referrer — both of you get a $30 coupon. (Event coupons are usable up to 50% of the order.)',
                       refSelfLbl:'Your account ID or email',
                       refSelfPh:'Your signup ID/email',
                       refSearchLbl:'Find referrer (ID, phone, or name)',
@@ -918,7 +918,7 @@ window._cottonSearch = function(){
                       refSelected:'Selected referrer:', refSubmit:'Get referral bonus',
                       refNoSelf:'Please enter your signup ID/email.',
                       refNoRef:'Please search and select a referrer.',
-                      refSuccess:'🎉 Done! A $10 coupon was credited to both you and your referrer.',
+                      refSuccess:'🎉 Done! A $30 coupon was credited to both you and your referrer.',
                       signupRedirect:'Signup is on the main site (Chameleon). Continue?\nA $30 coupon is granted after signup.' }
             };
             var s = SAMPLE[lang] || SAMPLE.ko;
@@ -1059,13 +1059,13 @@ window._cottonSearch = function(){
                 <span style="font-size:13px; color:#3b82f6;">→</span>
             </button>
 
-            <!-- 2️⃣ 추천인 적립 — 추천인과 나 각 1만원 (즉시 자동 적립) -->
+            <!-- 2️⃣ 추천인 적립 — 추천인과 나 각 3만원 (즉시 자동 적립) -->
             <div style="padding:14px; background:#fdf2f8; border:1px solid #fbcfe8; border-radius:10px; margin-top:6px;">
                 <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:#831843; margin-bottom:6px;">
                     <span style="font-size:20px;">2️⃣</span>
-                    <span id="cpRefTitle"><b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 1만원</b></span>
+                    <span id="cpRefTitle"><b>추천인 적립</b> — 추천인과 나 <b style="color:#be185d;">각 3만원</b></span>
                 </div>
-                <div id="cpRefDesc" style="font-size:11.5px; color:#9d174d; line-height:1.55; margin-bottom:12px;">추천인을 검색해 입력하면 추천인과 본인 모두에게 1만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)</div>
+                <div id="cpRefDesc" style="font-size:11.5px; color:#9d174d; line-height:1.55; margin-bottom:12px;">추천인을 검색해 입력하면 추천인과 본인 모두에게 3만원이 적립됩니다. (이벤트 쿠폰은 구매금액의 50%까지 사용)</div>
 
                 <label id="cpRefSelfLbl" style="display:block; font-size:12px; font-weight:700; color:#374151; margin-bottom:5px;">본인 가입 아이디 또는 이메일</label>
                 <input id="cpRefSelf" type="text" placeholder="가입한 아이디/이메일" style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box; background:#fff; font-family:inherit;">
@@ -1438,7 +1438,7 @@ async function submitRollFabricRequest() {
         <div style="display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center;" class="cta-grid">
             <div>
                 <h2 style="font-size:22px; font-weight:900; line-height:1.4; margin:0; letter-spacing:-0.5px; color:#fff;" data-i18n="cta_event_title">회원가입이벤트</h2>
-                <p style="margin:8px 0 0; font-size:13px; color:#e0f2fe; line-height:1.5;" data-i18n="cta_event_sub">가입하면 1만원 · 친구 추천하면 추천인과 나 각 1만원</p>
+                <p style="margin:8px 0 0; font-size:13px; color:#e0f2fe; line-height:1.5;" data-i18n="cta_event_sub">가입하면 3만원 · 친구 추천하면 추천인과 나 각 3만원</p>
             </div>
             <div style="background:#fff; color:#0284c7; font-size:14px; font-weight:900; padding:16px 32px; border-radius:50px; box-shadow:0 6px 16px rgba(0,0,0,0.18); white-space:nowrap;" data-i18n="cta_event_btn">이벤트 참여</div>
         </div>
@@ -4477,7 +4477,7 @@ cta_poster_btn: { ko:'내원단 만들기', ja:'オリジナル生地を作る',
 cta_poster_sample: { ko:'1장 그대로 인쇄', ja:'1枚そのまま印刷', en:'Print as single sheet', zh:'单张原样打印', ar:'طباعة كصفحة واحدة', es:'Imprimir como hoja única', de:'Als Einzelblatt drucken', fr:'Imprimer en feuille unique' },
 // 2026-06-29: 회원가입이벤트 CTA
 cta_event_title: { ko:'회원가입이벤트', ja:'会員登録イベント', en:'Signup Event', zh:'注册活动', ar:'حدث التسجيل', es:'Evento de registro', de:'Anmelde-Event', fr:'Événement d\'inscription' },
-cta_event_sub: { ko:'가입하면 1만원 · 친구 추천하면 추천인과 나 각 1만원', ja:'登録で1,000円 · 友達紹介で紹介者と私に各1,000円', en:'$10 on signup · Refer a friend: $10 each for you both', zh:'注册得1万韩元 · 推荐好友双方各得1万韩元', ar:'10$ عند التسجيل · أحِل صديقاً واحصلا على 10$ لكليكما', es:'10$ al registrarse · Recomienda y ganan 10$ cada uno', de:'10$ bei Anmeldung · Freund werben: je 10$', fr:'10$ à l\'inscription · Parrainez: 10$ chacun' },
+cta_event_sub: { ko:'가입하면 3만원 · 친구 추천하면 추천인과 나 각 3만원', ja:'登録で3,000円 · 友達紹介で紹介者と私に各3,000円', en:'$30 on signup · Refer a friend: $30 each for you both', zh:'注册得3万韩元 · 推荐好友双方各得3万韩元', ar:'30$ عند التسجيل · أحِل صديقاً واحصلا على 30$ لكليكما', es:'30$ al registrarse · Recomienda y ganan 30$ cada uno', de:'30$ bei Anmeldung · Freund werben: je 30$', fr:'30$ à l\'inscription · Parrainez: 30$ chacun' },
 cta_event_btn: { ko:'이벤트 참여', ja:'イベント参加', en:'Join event', zh:'参加活动', ar:'شارك', es:'Participar', de:'Teilnehmen', fr:'Participer' },
 // 2026-05-23: 코튼프린트 장점 설명
 adv_title: { ko:'왜 코튼프린트일까요?', ja:'なぜコットンプリントなのか', en:'Why Cotton Print?' },
@@ -5042,8 +5042,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="font-size:17px; font-weight:900; color:#1f2937;" id="cpAuthTitle">로그인</div>
             <button type="button" onclick="window._cpCloseAuth()" aria-label="Close" style="width:32px; height:32px; border-radius:50%; border:none; background:#f3f4f6; color:#374151; font-size:18px; cursor:pointer; line-height:1;">✕</button>
         </div>
-        <!-- 2026-07-15: 간편가입 안심 안내 + 가입 적립금 (개인정보 미요구). -->
-        <div id="cpAuthNotice" style="margin-bottom:14px; padding:11px 13px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:11px; font-size:12px; line-height:1.7; color:#166534;"></div>
+        <!-- 2026-07-15: 간편가입 안심 안내 + 가입 적립금 (개인정보 미요구). 세련된 검정 박스 + 흰 글씨(플랫). -->
+        <div id="cpAuthNotice" style="margin-bottom:14px; padding:13px 15px; background:#111827; border-radius:12px; font-size:12px; line-height:1.7; color:#f3f4f6;"></div>
         <!-- 2026-06-18 v586: 소셜 로그인 (구글) — 가장 빠른 로그인 -->
         <button type="button" onclick="window._cpDoSocial && window._cpDoSocial('google')" style="width:100%; padding:11px 14px; background:#fff; color:#1f2937; border:1.5px solid #d1d5db; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
             <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -5093,7 +5093,7 @@ document.addEventListener('DOMContentLoaded', function() {
               errInput:'아이디와 비밀번호를 입력해주세요.', errPwMatch:'비밀번호가 일치하지 않습니다.',
               errLogin:'로그인 실패: 아이디 또는 비밀번호를 확인해주세요.', errSignup:'가입 실패:',
               loginSuccess:'로그인 완료!', signupSuccess:'가입 완료! 3만원 적립금 자동 지급.',
-              signupNotice:'카멜레온프린팅은 <b>아이디와 비밀번호 한 번</b> 입력만으로 간단하게 가입돼요. <b>개인정보를 요구하지 않습니다.</b> 안심하고 가입해 주세요.<br>가입하면 이벤트 적립금 <b style="color:#16a34a;">3만원</b>이 즉시 적립됩니다. 🎁',
+              signupNotice:'카멜레온프린팅은 <b>아이디와 비밀번호 한 번</b> 입력만으로 간단하게 가입돼요. <b>개인정보를 요구하지 않습니다.</b> 안심하고 가입해 주세요.<br>가입하면 이벤트 적립금 <b style="color:#34d399;">3만원</b>이 즉시 적립됩니다. 🎁',
               googleBtn:'Google 로 로그인', lineBtn:'LINE 으로 로그인', or:'또는' },
         ja: { login:'ログイン', signup:'会員登録', logout:'ログアウト',
               loginTitle:'ログイン', signupTitle:'会員登録',
@@ -5103,7 +5103,7 @@ document.addEventListener('DOMContentLoaded', function() {
               errInput:'IDとパスワードを入力してください。', errPwMatch:'パスワードが一致しません。',
               errLogin:'ログイン失敗: IDまたはパスワードをご確認ください。', errSignup:'登録失敗:',
               loginSuccess:'ログイン完了!', signupSuccess:'登録完了! 3,000円 積立金 自動付与。',
-              signupNotice:'カメレオンプリンティングは <b>IDとパスワードを1回</b> 入力するだけで簡単に登録できます。<b>個人情報は一切要求しません。</b> 安心してご登録ください。<br>ご登録で イベント積立金 <b style="color:#16a34a;">3,000円</b> が即時付与されます。🎁',
+              signupNotice:'カメレオンプリンティングは <b>IDとパスワードを1回</b> 入力するだけで簡単に登録できます。<b>個人情報は一切要求しません。</b> 安心してご登録ください。<br>ご登録で イベント積立金 <b style="color:#34d399;">3,000円</b> が即時付与されます。🎁',
               googleBtn:'Google でログイン', lineBtn:'LINE でログイン', or:'または' },
         en: { login:'Login', signup:'Sign Up', logout:'Logout',
               loginTitle:'Login', signupTitle:'Create Account',
@@ -5113,7 +5113,7 @@ document.addEventListener('DOMContentLoaded', function() {
               errInput:'Please enter ID and password.', errPwMatch:"Passwords don't match.",
               errLogin:'Login failed: please check your ID/password.', errSignup:'Signup failed:',
               loginSuccess:'Logged in!', signupSuccess:'Welcome! $30 credit added.',
-              signupNotice:'Signing up takes just <b>one ID &amp; password</b> — <b>no personal info required.</b> Sign up with confidence.<br>Get <b style="color:#16a34a;">$30</b> event credit instantly. 🎁',
+              signupNotice:'Signing up takes just <b>one ID &amp; password</b> — <b>no personal info required.</b> Sign up with confidence.<br>Get <b style="color:#34d399;">$30</b> event credit instantly. 🎁',
               googleBtn:'Continue with Google', lineBtn:'Continue with LINE', or:'or' }
     };
     var t = T[lang] || T.ko;

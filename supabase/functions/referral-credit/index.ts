@@ -1,4 +1,4 @@
-// 추천인(레퍼럴) 적립 — service_role 로 추천인+본인 양쪽 event_coupon += 10,000 KRW (JP 1,000엔 / US $10 환산표시).
+// 추천인(레퍼럴) 적립 — service_role 로 추천인+본인 양쪽 event_coupon += 30,000 KRW (JP 3,000엔 / US $30 환산표시).
 // cotton-print.com 등 anon 도메인에서 호출 (타인 profile 수정은 anon 불가 → 이 함수가 service_role 로 처리).
 // action: 'search' (추천인 검색) | 'credit' (적립).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -6,7 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const REFERRAL_KRW = 10000; // DB 는 KRW 저장 → 프론트에서 JP×0.1=1,000엔 / US×0.001=$10 환산표시
+const REFERRAL_KRW = 30000; // 2026-07-15: 1만→3만 (사장님 요청). DB 는 KRW 저장 → 프론트에서 JP×0.1=3,000엔 / US×0.001=$30 환산표시
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
