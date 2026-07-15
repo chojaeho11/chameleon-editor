@@ -1156,7 +1156,12 @@ function updatePrice() {
 
     const extraParts = [];
     // 2026-06-11: 마감 표시 — ceil(회배) 개수로 표시 ("오버록 ×1 = 4,000원" / "×2 = 8,000원")
-    extraParts.push(state.finishName + (finishPerItem > 0 ? ' ×' + finishCount + ' = ' + cdFmtPrice(finishPerItem) : ''));
+    // 2026-07-15: 기본 마감(가재단)이 한국어로 남던 문제 — raw 는 현재 언어로 번역. (선택 마감은 카드 텍스트라 이미 번역됨)
+    var _finLang = (typeof _cdLangCode === 'function') ? _cdLangCode() : 'ko';
+    var _finNm = (state.finishCode === 'raw')
+        ? (_finLang === 'ja' ? '仮裁断' : _finLang === 'en' ? 'Pre-cut' : '가재단')
+        : state.finishName;
+    extraParts.push(_finNm + (finishPerItem > 0 ? ' ×' + finishCount + ' = ' + cdFmtPrice(finishPerItem) : ''));
     if (state.hookCode) extraParts.push((window.cdT?window.cdT('hook'):'고리') + ': ' + state.hookName + ' (' + cdFmtPrice(state.hookExtra||0) + ')');
     if (state.accCode) extraParts.push((window.cdT?window.cdT('acc'):'부자재') + ': ' + state.accName + ' (' + cdFmtPrice(state.accExtra||0) + ')');
     if (state.seamExtra > 0) extraParts.push((window.cdT?window.cdT('seam_label'):'이어박기 (대폭 초과)') + ' (+' + cdFmtPrice(state.seamExtra) + ')');

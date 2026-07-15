@@ -292,7 +292,8 @@
       "Bash(./deploy.sh \"AI image-gen modal untranslated on cotton-printer: _meAiLang\\(\\) checked cafe0101/cafe3355 but not cotton-printer/chameleon.design so fell back to Korean. Added them \\(cotton-printer->ja, chameleon.design->en\\). All modal strings already had JP. mini-editor v474\")",
       "Bash(sed -i \"s/if \\(lbl\\) lbl.textContent = '로그인';/if \\(lbl\\) lbl.textContent = _cdLoginTxt\\(\\);/; s/if \\(l\\) l.textContent = '로그인';/if \\(l\\) l.textContent = _cdLoginTxt\\(\\);/; s/if \\(!confirm\\('로그아웃 하시겠어요?'\\)\\) return;/if \\(!confirm\\(_cdLogoutConfirm\\(\\)\\)\\) return;/\" cotton_designer.html)",
       "Bash(sed -i 's|<span id=\"cpAuthLabel\">로그인</span>|<span id=\"cpAuthLabel\"></span>|' cotton_designer.html)",
-      "Bash(./deploy.sh \"JP fabric login: \\(1\\) cross-domain session handoff cotton-printer->cafe0101/fabric via URL hash \\(login now carries to designer\\). \\(2\\) cotton_designer login label KR->JP \\(login/logout\\). \\(3\\) LINE login button on cotton-printer auth modal \\(_cpDoLine\\).\")"
+      "Bash(./deploy.sh \"JP fabric login: \\(1\\) cross-domain session handoff cotton-printer->cafe0101/fabric via URL hash \\(login now carries to designer\\). \\(2\\) cotton_designer login label KR->JP \\(login/logout\\). \\(3\\) LINE login button on cotton-printer auth modal \\(_cpDoLine\\).\")",
+      "Bash(./deploy.sh \"JP fabric fixes: \\(1\\) 가재단 -> 仮裁断 in designer price box \\(raw finish default was showing Korean; now translated by lang\\) + fix wrong ガサイダン->仮裁断 in note. \\(2\\) LINE login now shown for JP \\(was hidden - JP showed Apple only, LINE is dominant in Japan\\); btnLine already wired to handleSocialLogin\\(line\\). login.js v441 cotton_designer.js v116\")"
     ],
     "additionalDirectories": [
       "\\tmp",
