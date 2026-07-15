@@ -286,7 +286,9 @@
       "Bash(./deploy.sh \"paper-display pricing: force flat unit \\(=p.price\\) for ALL incl small stands \\(pd_sm/pd_tr were area-priced m2, so 2500x1600 canvas inflated to 40k\\). Small now flat 10k. Unify sample\\(1pc\\)=150,000 for all paper display. simple_order v785\")",
       "Bash(./deploy.sh \"paper-display qty tiers: remove 300 preset, add 10 \\(next to 1\\). New pricing: 1-9pc=sample 150k, 10-99pc=2x unit price x qty \\(wonter 600k/small 200k\\), 100+=normal. High-price items \\(specialty/tree/table\\) where 2x>150k use sample value. simple_order v786\")",
       "Bash(awk -F: '$1 > 16800 && $1 < 17300')",
-      "Bash(./deploy.sh \"paper-display 10-99 tier fix: high-price items \\(2x > 150k\\) use NORMAL price x qty \\(not sample cap\\): tree 100k->1M, specialty 150k->1.5M, table 149k->1.49M. Cheap items still 2x. Display unit = subtotal/qty so 'unit x qty = total' matches \\(product page + cart\\). simple_order v787\")"
+      "Bash(./deploy.sh \"paper-display 10-99 tier fix: high-price items \\(2x > 150k\\) use NORMAL price x qty \\(not sample cap\\): tree 100k->1M, specialty 150k->1.5M, table 149k->1.49M. Cheap items still 2x. Display unit = subtotal/qty so 'unit x qty = total' matches \\(product page + cart\\). simple_order v787\")",
+      "Bash(awk 'NR>=2150 && NR<=2380 && /function T|var T =|T = function|_meT|lang =/' mini-editor.js)",
+      "Bash(./deploy.sh \"JP fabric \\(cotton-printer\\): \\(1\\) fix untranslated mini-editor UI - editor-rail default tr now host-lang aware \\(template/photo/vector/element/deco/search/prev/next/see-all\\), mini-editor _meUiT JP/EN dict \\(font/border/width/context-menu\\). \\(2\\) enable login+signup on cotton-printer.com \\(buttons were hidden\\) - full modal already built; signup sets site=JP + 10k coupon \\(matches main\\), Google backfills site=JP. Added cotton-printer.com to Supabase OAuth allowlist. mini-editor v473 editor-rail v3\")"
     ],
     "additionalDirectories": [
       "\\tmp",

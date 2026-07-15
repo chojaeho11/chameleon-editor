@@ -460,13 +460,18 @@ img, video, canvas { max-width: 100%; height: auto; }
             <i class="fa-solid fa-store" style="margin-right:6px;color:var(--accent);"></i><span data-i18n="logo_main_link">인쇄종합몰</span>
         </a>
         <nav class="nav-links">
-            <!-- 2026-06-18 v587: 로그인/로그아웃 버튼은 메인 종합몰(cafe2626) 에서만 노출. cotton-print.com 메인 페이지에서는 제거 (사용자 요청). -->
-            <!-- 내부 자바스크립트가 참조하는 ID 는 hidden span 으로 남겨 NPE 방지 -->
-            <span id="cpAuthLoginBtn" style="display:none"></span>
-            <span id="cpLoginBtnLbl" style="display:none"></span>
+            <!-- 2026-07-15: 로그인/회원가입 버튼 재노출 (사용자 요청). cotton-printer.com 에서 직접 가입/로그인
+                 → 일본 카멜레온(cafe0101)과 동일 계정(공유 Supabase). 가입 시 site='JP' 귀속. -->
+            <button type="button" id="cpAuthLoginBtn" onclick="window._cpOpenAuth && window._cpOpenAuth()"
+                style="display:none; padding:7px 16px; border:1.5px solid var(--brown,#7c4a2d); background:#fff; color:var(--brown,#7c4a2d); border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                <span id="cpLoginBtnLbl">ログイン</span>
+            </button>
             <div id="cpAuthLoggedIn" style="display:none; align-items:center; gap:8px;">
-                <span id="cpAuthUserLabel"></span>
-                <span id="cpLogoutLbl" style="display:none"></span>
+                <span id="cpAuthUserLabel" style="font-size:13px; color:#334155; font-weight:700; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
+                <button type="button" id="cpLogoutBtn" onclick="window._cpDoLogout && window._cpDoLogout()"
+                    style="padding:6px 12px; border:1px solid #cbd5e1; background:#f8fafc; color:#475569; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                    <span id="cpLogoutLbl">ログアウト</span>
+                </button>
             </div>
             <!-- 국기 언어 전환 -->
             <div class="cp-lang-flags" style="display:flex; gap:4px; align-items:center; margin-left:8px;">
@@ -1899,8 +1904,8 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=472"></script>
-<script src="./editor-rail.js?v=2"></script>
+<script src="./mini-editor.js?v=473"></script>
+<script src="./editor-rail.js?v=3"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄
   window._meCurrentCategory = window._meCurrentCategory || 'banner';
@@ -5080,7 +5085,7 @@ document.addEventListener('DOMContentLoaded', function() {
               linkSignup:'회원가입', linkLogin:'로그인',
               errInput:'아이디와 비밀번호를 입력해주세요.', errPwMatch:'비밀번호가 일치하지 않습니다.',
               errLogin:'로그인 실패: 아이디 또는 비밀번호를 확인해주세요.', errSignup:'가입 실패:',
-              loginSuccess:'로그인 완료!', signupSuccess:'가입 완료! 3만원 쿠폰 자동 지급.',
+              loginSuccess:'로그인 완료!', signupSuccess:'가입 완료! 1만원 쿠폰 자동 지급.',
               googleBtn:'Google 로 로그인', or:'또는' },
         ja: { login:'ログイン', signup:'会員登録', logout:'ログアウト',
               loginTitle:'ログイン', signupTitle:'会員登録',
@@ -5089,7 +5094,7 @@ document.addEventListener('DOMContentLoaded', function() {
               linkSignup:'会員登録', linkLogin:'ログイン',
               errInput:'IDとパスワードを入力してください。', errPwMatch:'パスワードが一致しません。',
               errLogin:'ログイン失敗: IDまたはパスワードをご確認ください。', errSignup:'登録失敗:',
-              loginSuccess:'ログイン完了!', signupSuccess:'登録完了! 3,000円クーポン自動付与。',
+              loginSuccess:'ログイン完了!', signupSuccess:'登録完了! 1,000円クーポン自動付与。',
               googleBtn:'Google でログイン', or:'または' },
         en: { login:'Login', signup:'Sign Up', logout:'Logout',
               loginTitle:'Login', signupTitle:'Create Account',
@@ -5098,7 +5103,7 @@ document.addEventListener('DOMContentLoaded', function() {
               linkSignup:'Sign up', linkLogin:'Login',
               errInput:'Please enter ID and password.', errPwMatch:"Passwords don't match.",
               errLogin:'Login failed: please check your ID/password.', errSignup:'Signup failed:',
-              loginSuccess:'Logged in!', signupSuccess:'Welcome! $30 coupon credited.',
+              loginSuccess:'Logged in!', signupSuccess:'Welcome! $10 coupon credited.',
               googleBtn:'Continue with Google', or:'or' }
     };
     var t = T[lang] || T.ko;
@@ -5181,11 +5186,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         var prf = await sb.from('profiles').select('id, event_coupon').eq('id', uid).maybeSingle();
                         var hasCoupon = prf && prf.data && prf.data.event_coupon && prf.data.event_coupon > 0;
                         if (!hasCoupon) {
-                            var payload = { id: uid, email: em, event_coupon: 30000 };
+                            // 2026-07-15: site='JP' 귀속(일본 패브릭 도메인) + role customer + 가입쿠폰 10,000원(=¥1,000, login.js 와 동일).
+                            var payload = { id: uid, email: em, event_coupon: 10000, site: 'JP', role: 'customer' };
                             if (origUsername) payload.username = origUsername;
                             await sb.from('profiles').upsert(payload, { onConflict: 'id' });
-                        } else if (origUsername) {
-                            await sb.from('profiles').update({ username: origUsername }).eq('id', uid).is('username', null);
+                        } else {
+                            // 기존 회원(쿠폰 있음) — site 미설정이면 JP 로 채움(덮어쓰기 아님)
+                            try { await sb.from('profiles').update({ site: 'JP' }).eq('id', uid).is('site', null); } catch(_se){}
+                            if (origUsername) { try { await sb.from('profiles').update({ username: origUsername }).eq('id', uid).is('username', null); } catch(_ue){} }
                         }
                     } catch(e) { console.warn('[cp credit]', e); }
                 }
@@ -5235,8 +5243,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // username 우선 표시
             var label = (user.email || '').split('@')[0];
             try {
-                var prf = await sb.from('profiles').select('username').eq('id', user.id).maybeSingle();
+                var prf = await sb.from('profiles').select('username, site').eq('id', user.id).maybeSingle();
                 if (prf && prf.data && prf.data.username) label = prf.data.username;
+                // 2026-07-15: 소셜(구글) 가입 등 site 미설정이면 JP 로 채움(일본 패브릭 도메인). 기존 국가는 덮어쓰지 않음.
+                if (prf && prf.data && !prf.data.site) {
+                    try { await sb.from('profiles').update({ site: 'JP' }).eq('id', user.id).is('site', null); } catch(_se){}
+                }
             } catch(e){}
             if ($('cpAuthLoginBtn')) $('cpAuthLoginBtn').style.display = 'none';
             var li = $('cpAuthLoggedIn'); if (li) li.style.display = 'inline-flex';

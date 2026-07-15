@@ -179,6 +179,42 @@
         var pct = document.getElementById('meZoomPct');
         if (pct) pct.textContent = Math.round((me.zoom || 1) * 100) + '%';
     }
+    // 2026-07-15: 미니에디터 UI 라벨 다국어 — 호스트 언어(cotton-printer/cafe0101=ja, cafe3355/chameleon=en) 인식.
+    //   기존엔 window.t 없으면 한국어 fallback 만 나와 JP 패브릭에서 서체/테두리/우클릭메뉴 등이 한국어로 남던 문제.
+    var _ME_UI_LANG = (function () {
+        try {
+            var h = (location.hostname || '').toLowerCase();
+            if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'ja';
+            if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'en';
+        } catch (e) {}
+        return 'ko';
+    })();
+    var _ME_UI_JA = {
+        me_prop_font:'書体', me_script_fonts:'かっこいい英字', me_prop_fsize:'文字サイズ (T)', me_prop_lheight:'行間 (倍数)',
+        me_prop_lspace:'字間', me_prop_stroke:'縁取り', me_prop_strokejoin:'縁の角を丸く/角ばる', me_prop_strokew:'太さ',
+        me_prop_textstroke:'縁取り', me_prop_textstrokew:'縁取りの太さ', me_qr_edit:'QR編集', me_text_placeholder:'クリックして文字入力',
+        me_cancel:'キャンセル', me_center_h:'水平中央揃え', me_center_v:'垂直中央揃え', me_change_img:'画像を変更',
+        me_change_img_desc:'選択した画像をどう変更しますか?', me_change_pick:'要素・クリップアートから選ぶ', me_change_upload:'自分の写真をアップして背景除去',
+        me_clear_confirm:'キャンバスの全要素を削除しますか?', me_ctx_back:'背面へ', me_ctx_bottom:'最背面へ', me_ctx_del:'削除',
+        me_ctx_dup:'複製', me_ctx_front:'最前面へ', me_ctx_fwd:'前面へ', me_dup:'複製 (Ctrl+D)', me_fancy_max:'最大8個までアップできます。',
+        me_fill:'画面いっぱいに', me_layer_down:'背面へ', me_layer_up:'前面へ', me_alert_cutout:'先に切り抜きたい画像を選択してください'
+    };
+    var _ME_UI_EN = {
+        me_prop_font:'Font', me_script_fonts:'Stylish English', me_prop_fsize:'Font size (T)', me_prop_lheight:'Line height (×)',
+        me_prop_lspace:'Spacing', me_prop_stroke:'Border', me_prop_strokejoin:'Round/sharp corners', me_prop_strokew:'Width',
+        me_prop_textstroke:'Outline', me_prop_textstrokew:'Outline width', me_qr_edit:'Edit QR', me_text_placeholder:'Click to type',
+        me_cancel:'Cancel', me_center_h:'Center horizontally', me_center_v:'Center vertically', me_change_img:'Change image',
+        me_change_img_desc:'How do you want to change the image?', me_change_pick:'Pick from elements/clipart', me_change_upload:'Upload my photo & remove background',
+        me_clear_confirm:'Delete all elements on the canvas?', me_ctx_back:'Backward', me_ctx_bottom:'To back', me_ctx_del:'Delete',
+        me_ctx_dup:'Duplicate', me_ctx_front:'To front', me_ctx_fwd:'Forward', me_dup:'Duplicate (Ctrl+D)', me_fancy_max:'Up to 8 images.',
+        me_fill:'Fill screen', me_layer_down:'Backward', me_layer_up:'Forward', me_alert_cutout:'Please select an image to cut out first'
+    };
+    function _meUiT(k, fb) {
+        if (_ME_UI_LANG === 'ja' && _ME_UI_JA[k]) return _ME_UI_JA[k];
+        if (_ME_UI_LANG === 'en' && _ME_UI_EN[k]) return _ME_UI_EN[k];
+        if (typeof window.t === 'function') { try { var r = window.t(k, fb); if (r && r !== k) return r; } catch (e) {} }
+        return fb || k;
+    }
     function _meTypingInField() {
         var a = document.activeElement;
         if (!a) return false;
@@ -2354,7 +2390,7 @@
         //   (이전엔 텍스트 외 타입은 stub → pointer-events:none 으로 버튼 비활성)
         panel.classList.toggle('me-props-stub', !it);
         var html = '';
-        var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
+        var T = _meUiT;
         // 2026-06-15: 선택이 없으면 stub 용 가짜 item 만들어서 text 분기로 흘려보냄 → 동일 UI 항상 노출.
         if (!it) {
             it = { type:'text', fill:'#1e293b', fontFamily:'sans-serif', fontWeight:400, fontSize:24, letterSpacing:0, lineHeight:1.2, textAlign:'left' };
@@ -5174,7 +5210,7 @@
 
     window._meAddText = function() {
         _meSnapshot();
-        var T = (typeof window.t === 'function') ? window.t : function(k, fb){ return fb || k; };
+        var T = _meUiT;
         var placeholder = T('me_text_placeholder', '클릭하여 글씨 입력');
         // 사이트 언어의 주요 폰트 (Sans 제외 첫 번째) 를 디폴트로
         var fonts = _meCurrentFonts();
@@ -5254,7 +5290,7 @@
     };
 
     function _meT(k, fb) {
-        return (typeof window.t === 'function') ? window.t(k, fb) : (fb || k);
+        return _meUiT(k, fb);
     }
 
     // 2026-06-15: 별도 패널 폐기 — 에디터에서 선택된 이미지에 직접 누끼따기 적용.

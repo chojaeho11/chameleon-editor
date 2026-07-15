@@ -7,9 +7,19 @@
  * ==========================================================================*/
 (function(){
     'use strict';
+    // 2026-07-15: 기본 tr 을 호스트 언어 인식형으로. cotton_print.html 이 railHtml() 을 init() 보다
+    //   먼저 호출해 기본 tr(ko 고정)로 탭이 한국어로 굳던 문제(템플릿/사진/벡터/요소/장식/검색/전체보기) fix.
+    function _railDefaultTr(ko, ja, en){
+        try {
+            var _h = (location.hostname || '').toLowerCase();
+            if (_h.indexOf('cafe0101') >= 0 || _h.indexOf('cotton-printer') >= 0) return ja || ko;
+            if (_h.indexOf('cafe3355') >= 0 || _h.indexOf('chameleon.design') >= 0) return en || ko;
+        } catch (e) {}
+        return ko;
+    }
     var _cfg = {
         getSb:        function(){ return window.sb || null; },
-        tr:           function(ko, ja, en){ return ko; },
+        tr:           _railDefaultTr,
         getProduct:   function(){ return null; },
         isFlatPrint:  function(){ return false; },
         isBannerCode: function(){ return false; },
