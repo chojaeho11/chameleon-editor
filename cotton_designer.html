@@ -1138,7 +1138,7 @@ a { text-decoration: none; color: inherit; }
             </button>
             <!-- 2026-06-18 v582: 로그인 상태 표시 + 로그인/로그아웃 버튼 -->
             <button id="cpAuthBtn" class="brand-back" style="background:#fff; border:1px solid var(--cream-dark); cursor:pointer; min-width:88px;" onclick="window._cpAuthClick && window._cpAuthClick()">
-                <i id="cpAuthIcon" class="fa-solid fa-right-to-bracket" style="margin-right:6px;"></i><span id="cpAuthLabel">로그인</span>
+                <i id="cpAuthIcon" class="fa-solid fa-right-to-bracket" style="margin-right:6px;"></i><span id="cpAuthLabel"></span>
             </button>
             <a href="/" class="brand-back"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i><span data-cdi18n="main_btn">메인으로</span></a>
         </div>
@@ -1146,6 +1146,10 @@ a { text-decoration: none; color: inherit; }
 </div>
 <script>
 // 2026-06-18 v582: 로그인 상태 헤더 렌더 + 클릭 동작
+// 2026-07-15: 로그인 라벨 다국어 (JP 패브릭에서 '로그인' 한국어로 남던 문제) + 크로스도메인 세션 핸드오프.
+var _cdAuthLang = (function(){ try { var h=(location.hostname||'').toLowerCase(); if(h.indexOf('cafe0101')>=0||h.indexOf('cotton-printer')>=0)return 'ja'; if(h.indexOf('cafe3355')>=0||h.indexOf('chameleon.design')>=0)return 'en'; }catch(e){} return 'ko'; })();
+function _cdLoginTxt(){ return _cdAuthLang==='ja'?'ログイン':(_cdAuthLang==='en'?'Login':'로그인'); }
+function _cdLogoutConfirm(){ return _cdAuthLang==='ja'?'ログアウトしますか?':(_cdAuthLang==='en'?'Log out?':'로그아웃 하시겠어요?'); }
 (async function _cpAuthInit() {
     try {
         // supabase 라이브러리 로드 대기
@@ -1162,6 +1166,19 @@ a { text-decoration: none; color: inherit; }
             window.sb = sb;
         }
         if (!sb) return;
+        // 2026-07-15: 크로스도메인 세션 핸드오프 — cotton-printer.com(다른 도메인)에서 로그인 후 넘어올 때
+        //   URL 해시 #_sess= 로 전달된 토큰으로 세션 복원. 해시는 서버로 전송 안 됨(안전), 즉시 제거.
+        try {
+            var _hm = (location.hash || '').match(/[#&]_sess=([^&]+)/);
+            if (_hm && _hm[1]) {
+                var _tok = null;
+                try { _tok = JSON.parse(atob(decodeURIComponent(_hm[1]))); } catch(_pe){}
+                if (_tok && _tok.a && _tok.r) {
+                    try { await sb.auth.setSession({ access_token: _tok.a, refresh_token: _tok.r }); } catch(_se){ console.warn('[cd setSession]', _se); }
+                }
+                try { history.replaceState(null, '', location.pathname + location.search); } catch(_he){}
+            }
+        } catch (_hoe) { console.warn('[cd sess handoff]', _hoe); }
         var sess = await sb.auth.getSession();
         var user = sess && sess.data && sess.data.session && sess.data.session.user;
         var lbl = document.getElementById('cpAuthLabel');
@@ -1174,7 +1191,7 @@ a { text-decoration: none; color: inherit; }
             if (ic) ic.className = 'fa-solid fa-right-from-bracket';
             window._cpLoggedIn = true;
         } else {
-            if (lbl) lbl.textContent = '로그인';
+            if (lbl) lbl.textContent = _cdLoginTxt();
             if (ic) ic.className = 'fa-solid fa-right-to-bracket';
             window._cpLoggedIn = false;
         }
@@ -1188,7 +1205,7 @@ a { text-decoration: none; color: inherit; }
                 var l = document.getElementById('cpAuthLabel');
                 var ic = document.getElementById('cpAuthIcon');
                 if (evt === 'SIGNED_OUT') {
-                    if (l) l.textContent = '로그인';
+                    if (l) l.textContent = _cdLoginTxt();
                     if (ic) ic.className = 'fa-solid fa-right-to-bracket';
                     window._cpLoggedIn = false;
                 } else if (u && (evt === 'SIGNED_IN' || evt === 'TOKEN_REFRESHED' || evt === 'USER_UPDATED')) {
@@ -1208,7 +1225,7 @@ window._cpAuthClick = async function() {
     var sb = window.sb;
     if (!sb) { location.href = '/'; return; }
     if (window._cpLoggedIn) {
-        if (!confirm('로그아웃 하시겠어요?')) return;
+        if (!confirm(_cdLogoutConfirm())) return;
         try { await sb.auth.signOut(); } catch(_){}
         // onAuthStateChange 가 헤더 자동 업데이트
     } else {
