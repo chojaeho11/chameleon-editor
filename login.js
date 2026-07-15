@@ -339,7 +339,7 @@ async function handleAuthAction() {
             //   (JP=3,000엔 / KR=30,000원 / US=$30 — CURRENCY_RATE 로 자동 환산 표시)
             if (data.user) {
                 let profileUpdated = false;
-                const SIGNUP_BONUS_KRW = 10000;  // 2026-06-29: 3만→1만 (모든 사이트 동일, 표시는 통화 변환)
+                const SIGNUP_BONUS_KRW = 30000;  // 2026-07-15: 1만→3만 재통일 (사장님 요청 — 마케팅 표기(3만원)와 실제 지급 일치). JP=3,000엔/US=$30 통화 자동 환산.
                 for (let attempt = 0; attempt < 3; attempt++) {
                     if (attempt > 0) await new Promise(r => setTimeout(r, 800));
                     try {

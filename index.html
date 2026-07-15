@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260715184853';
+    var CV = '20260715185444';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2457,7 +2457,7 @@ window._tcmFallbackClick = function(code) {
         <button type="button" id="refEventBar" onclick="window._startSignupEventFlow && window._startSignupEventFlow()">
             <span class="re-center">
                 <span class="re-title" id="refEvBarTitle">추천인 이벤트</span>
-                <span class="re-sub" id="refEvBarSub">가입 1만원 · 추천하면 추천인과 나 각 1만원</span>
+                <span class="re-sub" id="refEvBarSub">가입 3만원 · 추천하면 추천인과 나 각 1만원</span>
             </span>
             <span class="re-arr">→</span>
         </button>
@@ -2482,7 +2482,7 @@ window._tcmFallbackClick = function(code) {
                 drDesc:'템플릿 3,000원 · 벡터 1,000원 · PNG 500원 · 로고 200원',
                 drBonus:'판매 시 +3% 마일리지 자동 적립',
                 drMobChip:'템플릿 3,000 · 벡터 1,000 · PNG 500 · 로고 200 · 판매 +3%',
-                reTitle:'추천인 이벤트', reSub:'가입 1만원 · 추천하면 추천인과 나 각 1만원',
+                reTitle:'추천인 이벤트', reSub:'가입 3만원 · 추천하면 추천인과 나 각 1만원',
                 phoneTitle:'📞 본사 · 매니저 전화 안내',
                 phoneHint:'담당 매니저와 통화 후 받으신 견적 금액은 「상담 후 금액주문」 버튼에서 직접 입력하실 수 있습니다.',
                 quoteTitle:'💴 상담 후 금액주문',
@@ -2499,7 +2499,7 @@ window._tcmFallbackClick = function(code) {
                 drDesc:'テンプレート 300円 · ベクター 100円 · PNG 50円 · ロゴ 20円',
                 drBonus:'販売時 +3% マイル自動付与',
                 drMobChip:'テンプレ 300 · ベクター 100 · PNG 50 · ロゴ 20 · 販売 +3%',
-                reTitle:'紹介イベント', reSub:'登録1,000円 · 紹介で紹介者と私に各1,000円',
+                reTitle:'紹介イベント', reSub:'登録3,000円 · 紹介で紹介者と私に各1,000円',
                 phoneTitle:'📞 本社・担当の電話番号',
                 phoneHint:'担当との通話後にお受けしたお見積もり金額は「相談後の金額決済」ボタンから直接入力できます。',
                 quoteTitle:'💴 相談後の金額決済',
@@ -2516,7 +2516,7 @@ window._tcmFallbackClick = function(code) {
                 drDesc:'Template $3 · Vector $1 · PNG $0.5 · Logo $0.2',
                 drBonus:'+3% mileage when sold',
                 drMobChip:'TPL $3 · VEC $1 · PNG $0.5 · LOGO $0.2 · +3% on sale',
-                reTitle:'Referral Event', reSub:'$10 on signup · refer a friend: $10 each',
+                reTitle:'Referral Event', reSub:'$30 on signup · refer a friend: $10 each',
                 phoneTitle:'📞 HQ & Manager Phones',
                 phoneHint:'After speaking with a manager, enter the agreed amount via the "Pay After Consult" button.',
                 quoteTitle:'💴 Pay After Consult',
@@ -10229,7 +10229,7 @@ window.filterFxCards = function(cat, btn) {
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script type="module" src="./order.js?v=733"></script>
-<script type="module" src="./login.js?v=442"></script>
+<script type="module" src="./login.js?v=443"></script>
 <!-- 2026-06-29: 회원가입이벤트 — 패브릭에서 ?signup_event=1 로 진입 → 가입창 자동 + 추천인 적립 + 쇼핑 이어가기 -->
 <script>
 (function(){
