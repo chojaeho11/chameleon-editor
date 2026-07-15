@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260715231401';
+    var CV = '20260715232930';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -8797,7 +8797,7 @@ async function handleSubReturn() {
         <h3 id="authTitle" style="margin-top:0; margin-bottom:5px;" data-i18n="modal_login_title">로그인</h3>
 
         <!-- ★ 간편 가입 안내 (회원가입 모드에서만 표시). 2026-07-15: 개인정보 미요구 + 3만원 적립 안내, 세련된 검정 박스(플랫). -->
-        <div id="signupGuide" style="display:none; background:#111827; border-radius:12px; padding:13px 15px; margin-bottom:14px; font-size:12.5px; line-height:1.7; color:#f3f4f6;"></div>
+        <div id="signupGuide" style="display:none; background:#111827; border-radius:12px; padding:13px 15px; margin-bottom:14px; font-size:12.5px; line-height:1.7; color:#f3f4f6; word-break:keep-all; overflow-wrap:break-word;"></div>
         <script>
         (function(){
             var el = document.getElementById('signupGuide'); if (!el) return;
