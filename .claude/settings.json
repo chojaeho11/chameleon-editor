@@ -288,7 +288,8 @@
       "Bash(awk -F: '$1 > 16800 && $1 < 17300')",
       "Bash(./deploy.sh \"paper-display 10-99 tier fix: high-price items \\(2x > 150k\\) use NORMAL price x qty \\(not sample cap\\): tree 100k->1M, specialty 150k->1.5M, table 149k->1.49M. Cheap items still 2x. Display unit = subtotal/qty so 'unit x qty = total' matches \\(product page + cart\\). simple_order v787\")",
       "Bash(awk 'NR>=2150 && NR<=2380 && /function T|var T =|T = function|_meT|lang =/' mini-editor.js)",
-      "Bash(./deploy.sh \"JP fabric \\(cotton-printer\\): \\(1\\) fix untranslated mini-editor UI - editor-rail default tr now host-lang aware \\(template/photo/vector/element/deco/search/prev/next/see-all\\), mini-editor _meUiT JP/EN dict \\(font/border/width/context-menu\\). \\(2\\) enable login+signup on cotton-printer.com \\(buttons were hidden\\) - full modal already built; signup sets site=JP + 10k coupon \\(matches main\\), Google backfills site=JP. Added cotton-printer.com to Supabase OAuth allowlist. mini-editor v473 editor-rail v3\")"
+      "Bash(./deploy.sh \"JP fabric \\(cotton-printer\\): \\(1\\) fix untranslated mini-editor UI - editor-rail default tr now host-lang aware \\(template/photo/vector/element/deco/search/prev/next/see-all\\), mini-editor _meUiT JP/EN dict \\(font/border/width/context-menu\\). \\(2\\) enable login+signup on cotton-printer.com \\(buttons were hidden\\) - full modal already built; signup sets site=JP + 10k coupon \\(matches main\\), Google backfills site=JP. Added cotton-printer.com to Supabase OAuth allowlist. mini-editor v473 editor-rail v3\")",
+      "Bash(./deploy.sh \"AI image-gen modal untranslated on cotton-printer: _meAiLang\\(\\) checked cafe0101/cafe3355 but not cotton-printer/chameleon.design so fell back to Korean. Added them \\(cotton-printer->ja, chameleon.design->en\\). All modal strings already had JP. mini-editor v474\")"
     ],
     "additionalDirectories": [
       "\\tmp",

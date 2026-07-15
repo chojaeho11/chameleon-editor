@@ -6193,8 +6193,9 @@
         try { var s = (window.__SITE_CODE || '').toString().toUpperCase(); if (s === 'JP' || s === 'JA') return 'ja'; if (s === 'US' || s === 'EN') return 'en'; } catch (_) {}
         try { var l = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); if (l === 'ja' || l === 'jp') return 'ja'; if (l === 'en' || l === 'us') return 'en'; if (l === 'ko' || l === 'kr') return 'ko'; } catch (_) {}
         var h = (location.hostname || '').toLowerCase();
-        if (h.indexOf('cafe0101') >= 0) return 'ja';
-        if (h.indexOf('cafe3355') >= 0) return 'en';
+        // 2026-07-15: cotton-printer(패브릭 JP) / chameleon.design(글로벌 EN) 도 포함 — 빠져서 AI 생성 모달이 한국어로 남던 문제.
+        if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'ja';
+        if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'en';
         return 'ko';
     }
     function _meAiTr(ko, ja, en) { var l = _meAiLang(); return l === 'ja' ? (ja || ko) : l === 'en' ? (en || ko) : ko; }
