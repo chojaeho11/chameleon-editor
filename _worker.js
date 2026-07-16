@@ -409,7 +409,10 @@ ${desc ? `<p>${escHtml(desc)}</p>` : ''}
 //   → 봇 요청이면 워커가 Supabase 에서 글을 직접 읽어 완성된 HTML 을 돌려준다.
 //   사람은 기존 board.html(JS 버전)을 그대로 받는다.
 // ══════════════════════════════════════════════════════════════
-const BLOG_DOMAINS = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
+// 2026-07-17: 영어권은 chameleon.design.
+//   cafe3355.com 은 2026-05-15 부터 종이매대 전용 랜딩 도메인이라 블로그를 서빙하지 않는다(:609 참조).
+//   위쪽 generateProductHtml/hreflangTags 의 도메인 맵은 기존 동작 보존을 위해 건드리지 않았다.
+const BLOG_DOMAINS = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.chameleon.design' };
 
 function generateBlogHtml(post, cc) {
     const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
