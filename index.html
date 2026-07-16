@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260716215320';
+    var CV = '20260716220745';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -10451,7 +10451,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=3"></script>
-<script src="/simple_order.js?v=787"></script>
+<script src="/simple_order.js?v=788"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=695"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
@@ -20360,6 +20360,8 @@ if (w >= 20 && h >= 20) {
                     <button type="button" class="dreq-prod" data-prod="배너" data-price="30000"><div class="dpn">배너</div><div class="dpp">30,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="가벽" data-price="50000"><div class="dpn">가벽</div><div class="dpp">50,000원</div></button>
                     <button type="button" class="dreq-prod" data-prod="글씨포토존" data-price="50000"><div class="dpn">글씨포토존</div><div class="dpp">50,000원</div></button>
+                    <!-- 2026-07-16: 전용 단가가 없는 나머지 제품용 기본 디자인의뢰 (최연두 제보 #12) — 3만원, 디자이너 70% 정산 -->
+                    <button type="button" class="dreq-prod" data-prod="기본디자인" data-price="30000"><div class="dpn">기본 디자인</div><div class="dpp">30,000원</div></button>
                 </div>
                 <!-- 2026-06-13: 수량 선택 제거 — 항상 1건 단위로 등록 (입력칸은 숨김 유지, 호환성 위해 hidden input) -->
                 <input type="hidden" id="dreqQty" value="1">
@@ -20766,7 +20768,8 @@ if (w >= 20 && h >= 20) {
                 } catch (e) {}
             }
             // 2026-06-13: 자유의뢰 — 디자이너 정산금 70% 메타 태그 (디자이너 보드가 파싱)
-            if (state.mode === 'cust') {
+            // 2026-07-16: '기본디자인'(전용 단가 없는 제품의 기본 3만원 의뢰) 도 동일하게 70% 정산 (최연두 제보 #12).
+            if (state.mode === 'cust' || state.product === '기본디자인') {
                 var _designerPayout = Math.floor(unitPrice * 0.7);
                 finalDesc += '\n\n[FREE_REQ:{"customerPrice":' + unitPrice + ',"designerPayout":' + _designerPayout + '}]';
             }

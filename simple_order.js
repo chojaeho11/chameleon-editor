@@ -11579,6 +11579,17 @@ html, body { background: #ffffff !important; }
                     }
                 }
                 else if (state.isBannerOutput || state.isBanner) { _drProd = '배너'; _drPrice = 30000; }
+                // 2026-07-16: [신규] 위 전용 단가가 없는 나머지 제품도 디자인의뢰 가능 — 기본 30,000원 (최연두 제보 #12).
+                //   디자이너 정산은 70%(21,000원) — 팝업의 FREE_REQ 메타로 디자이너 보드에 전달.
+                //   제외: 디자인 자체가 불필요한 제품 (원판=인쇄 없는 원자재 / 금액주문 / 기성품 나무조형물).
+                else {
+                    var _drNoDesign = !!(state.isRawBoard || state.isAmountOrder || window._soPzReadyMade === true);
+                    if (!_drNoDesign && p && p.code) {
+                        _drProd = '기본디자인';
+                        _drPrice = 30000;
+                        _drSub = '디자인 의뢰 <span style="color:#007AFF; font-weight:700;">30,000원</span> · 전문 디자이너가 제작해 드립니다 · 영업일 2~3일';
+                    }
+                }
             }
             var _drBan = document.getElementById('soDesignReqBanner');
             if (!_drBan) return;

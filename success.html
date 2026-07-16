@@ -579,6 +579,39 @@
                     console.error('[design-req] pending requests processing error:', drOuterErr);
                 }
 
+                // 2026-07-16: [보강] 주문서(items) 기준으로도 flip — localStorage 스태시가 없어도 동작.
+                //   기존엔 dm_pending_design_requests(로컬) 에만 의존해서, 매니저가 디자인의뢰를 만들어 고객에게
+                //   보내면 고객 브라우저엔 스태시가 없어 결제해도 영영 payment_pending 에 갇혀 디자인의뢰
+                //   게시판에 안 뜨던 문제(최연두 제보). 주문 items 의 designRequest.request_id 로 직접 flip.
+                try {
+                    let _tok3 = SUPABASE_KEY;
+                    try {
+                        const _raw3 = localStorage.getItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+                        if (_raw3) { const _p3 = JSON.parse(_raw3); const _t3 = _p3?.access_token || _p3?.currentSession?.access_token; if (_t3) _tok3 = _t3; }
+                    } catch (_) {}
+                    const _oRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(dbId)}&select=items`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${_tok3}` }
+                    });
+                    const _oRows = await _oRes.json();
+                    const _items = (_oRows && _oRows[0] && _oRows[0].items) || [];
+                    const _reqIds = [];
+                    (Array.isArray(_items) ? _items : []).forEach(function (it) {
+                        const _rid = it && it.designRequest && it.designRequest.request_id;
+                        if (_rid && _reqIds.indexOf(_rid) < 0) _reqIds.push(_rid);
+                    });
+                    for (const _rid of _reqIds) {
+                        try {
+                            // status=eq.payment_pending 조건 — 이미 claimed/settled 인 건은 건드리지 않음
+                            const _r2 = await fetch(`${SUPABASE_URL}/rest/v1/design_requests?id=eq.${encodeURIComponent(_rid)}&status=eq.payment_pending`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_tok3}`, 'apikey': SUPABASE_KEY, 'Prefer': 'return=minimal' },
+                                body: JSON.stringify({ status: 'open' })
+                            });
+                            console.log('[design-req] order-based flip', _rid, _r2.status);
+                        } catch (e2) { console.warn('[design-req] order-based flip failed', _rid, e2); }
+                    }
+                } catch (e1) { console.warn('[design-req] order-based flip outer', e1); }
+
                 // 결제 성공 처리
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('title').innerText = "";
