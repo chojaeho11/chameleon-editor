@@ -4,7 +4,8 @@
 # 2026-07-17 신규.
 #
 # 사용법:
-#   1) 카톡 등에서 받은 제작물 사진을  작업/홍보사진/  폴더에 넣는다
+#   1) 카톡에서 받은 제작물 사진을  카카오톡 받은 파일/홍보사진/  폴더에 넣는다
+#      (경로는 .promo.env 의 PROMO_DIR 로 바꿀 수 있음)
 #   2) ./promo-sync.sh          ← 업로드만 (cron 이 매일 18시에 발행)
 #      ./promo-sync.sh --now    ← 업로드 + 즉시 발행
 #
@@ -23,8 +24,6 @@ set -uo pipefail
 cd "$(dirname "$0")"
 
 ENV_FILE=".promo.env"
-SRC_DIR="홍보사진"
-DONE_DIR="홍보사진/_완료"
 BUCKET="community"
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -39,7 +38,16 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_KEY:-}" ]; then
     exit 1
 fi
 
-mkdir -p "$DONE_DIR"
+# 사진 폴더 — .promo.env 의 PROMO_DIR 로 지정 (기본: 카카오톡 받은 파일/홍보사진).
+# 폴더를 옮기고 싶으면 .promo.env 의 PROMO_DIR 한 줄만 바꾸면 된다.
+SRC_DIR="${PROMO_DIR:-$HOME/Documents/카카오톡 받은 파일/홍보사진}"
+DONE_DIR="$SRC_DIR/_완료"
+
+if [ ! -d "$SRC_DIR" ]; then
+    echo "[promo] 사진 폴더가 없어 새로 만듭니다: $SRC_DIR"
+fi
+mkdir -p "$DONE_DIR" || { echo "[promo] ERROR: 폴더를 만들 수 없습니다: $SRC_DIR"; exit 1; }
+echo "[promo] 사진 폴더: $SRC_DIR"
 
 shopt -s nullglob nocaseglob
 FILES=("$SRC_DIR"/*.jpg "$SRC_DIR"/*.jpeg "$SRC_DIR"/*.png "$SRC_DIR"/*.webp)
