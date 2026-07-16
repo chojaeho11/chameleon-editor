@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260716213235';
+    var CV = '20260716213852';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2253,7 +2253,7 @@ window._tcmFallbackClick = function(code) {
                     try {
                         var sb = window.sb;
                         if (!sb) {
-                            try { var mod = await import('./config.js?v=442'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
+                            try { var mod = await import('./config.js?v=443'); sb = mod.sb || window.sb; } catch(e){ console.warn('[mgrPhones] config import 실패:', e); }
                         }
                         if (!sb) { console.warn('[mgrPhones] sb 미초기화 — 슬롯 정리'); _cleanupSlot(); return; }
                         // 1차 fetch 실패 시 1.5초 후 재시도 (모바일 네트워크 불안정 대응)
@@ -2649,10 +2649,12 @@ window._tcmFallbackClick = function(code) {
         (async function(){
             var sb = window.sb;
             if (!sb && typeof supabase !== 'undefined') {
+                // 2026-07-16: config.js 와 동일한 auth 옵션으로 통일 — 누가 먼저 만들든 정상 클라이언트 1개만 존재하게.
+                //   (옵션이 다르면 storageKey/detectSessionInUrl 이 어긋나 OAuth 세션이 유실됨)
                 sb = supabase.createClient(
                     'https://qinvtnhiidtmrzosyvys.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
-                    { auth: { persistSession: true } }
+                    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } }
                 );
                 window.sb = sb;
             }
@@ -3297,7 +3299,7 @@ window._tcmFallbackClick = function(code) {
                 if (quoteId) _addPendingId(quoteId);
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=442'); sb = mod.sb || window.sb; }
+                    try { var mod = await import('./config.js?v=443'); sb = mod.sb || window.sb; }
                     catch(e) { console.warn('[mgrQuote banner] sb load failed:', e); return; }
                 }
                 if (!sb) return;
@@ -3619,7 +3621,7 @@ window._tcmFallbackClick = function(code) {
             msg.textContent = '...';
             try {
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=442'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=443'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { msg.style.color = '#dc2626'; msg.textContent = 'Supabase ' + t.lookupErr; return; }
                 var res = await sb.from('orders').select('id, total_amount, payment_status, status').eq('id', val).maybeSingle();
                 if (res.error || !res.data) {
@@ -3647,7 +3649,7 @@ window._tcmFallbackClick = function(code) {
                 // 1) 주문의 items 를 카트에 로드
                 var sb = window.sb;
                 if (!sb) {
-                    try { var mod = await import('./config.js?v=442'); sb = mod.sb || window.sb; } catch(e){}
+                    try { var mod = await import('./config.js?v=443'); sb = mod.sb || window.sb; } catch(e){}
                 }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var { data: order, error } = await sb
@@ -3753,7 +3755,7 @@ window._tcmFallbackClick = function(code) {
             try {
                 if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '⏳ 처리중...'; }
                 var sb = window.sb;
-                if (!sb) { try { var mod = await import('./config.js?v=442'); sb = mod.sb || window.sb; } catch(e){} }
+                if (!sb) { try { var mod = await import('./config.js?v=443'); sb = mod.sb || window.sb; } catch(e){} }
                 if (!sb) { alert('Supabase 연결 실패'); return; }
                 var em = '';
                 try { var { data: sess } = await sb.auth.getUser(); em = sess?.user?.email || ''; } catch (e) {}
@@ -5585,7 +5587,8 @@ window.addEventListener('load', function() {
                 return;
             }
             // 2026-05-13: config.js 가 만든 글로벌 sb 재사용 (Multiple GoTrueClient 경고 제거 + 빠른 응답)
-            var sb = window.sb || window.supabase.createClient(SB_URL_CP, SB_KEY_CP);
+            // 2026-07-16: 새로 만들 땐 config.js 와 동일 auth 옵션 (OAuth 세션 유실 방지 — 단일 클라이언트 보장)
+            var sb = window.sb || window.supabase.createClient(SB_URL_CP, SB_KEY_CP, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } });
             if (!window.sb) window.sb = sb;
             var from = (_cpHomePage - 1) * CP_PAGE_SIZE;
             var to = from + CP_PAGE_SIZE - 1;
@@ -10240,7 +10243,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 메인 페이지에서 ~16개 모듈, 약 1MB JS 다운로드/파싱 절감. -->
 <!-- 남은 정적 import: config(필수), order(필수, canvas-core/size/pages/export 도 자동 동반), login(필수), main(orchestrator). -->
 <!-- wall-3d-* 는 에디터 진입 후 wall 3D 미리보기에서 lazy-init 되도록 defer 유지. -->
-<script type="module" src="./config.js?v=442"></script>
+<script type="module" src="./config.js?v=443"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
 <script type="module" src="./order.js?v=733"></script>
@@ -10411,7 +10414,7 @@ window.filterFxCards = function(cat, btn) {
     else document.addEventListener('DOMContentLoaded', function(){ setTimeout(initRefEvent, 500); });
 })();
 </script>
-<script type="module" src="./main.js?v=448"></script>
+<script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=3"></script>
 <script src="/simple_order.js?v=787"></script>
@@ -11549,8 +11552,9 @@ window.filterFxCards = function(cat, btn) {
     //   에 추가하면 자동으로 이 팝업에 반영. 휴가(is_active=false)는 제외.
     async function _loadActiveManagers() {
         try {
+            // 2026-07-16: 새로 만들 땐 config.js 와 동일 auth 옵션 + 전역 공개 (중복 GoTrueClient → OAuth 세션 유실 방지)
             const _sb = window.sb || (window.supabase && window.SB_URL && window.SB_KEY
-                ? window.supabase.createClient(window.SB_URL, window.SB_KEY) : null);
+                ? (window.sb = window.supabase.createClient(window.SB_URL, window.SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } })) : null);
             if (!_sb) return null;
             const { data } = await _sb.from('chatbot_knowledge')
                 .select('question, answer')
@@ -11752,7 +11756,7 @@ window.filterFxCards = function(cat, btn) {
     import { canvas, setMaxLimits } from './canvas-core.js?v=435';
     import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=733'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=435';
-    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=442';
+    import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=443';
 
     // -----------------------------------------------------------
     // [1] 전역 변수 및 헬퍼 함수 설정
@@ -17226,7 +17230,7 @@ if (w >= 20 && h >= 20) {
                         async (editedDataURL, cutlineDataURL) => {
                             window.isDirectCartAddInProgress = true;
                             try {
-                                const _sb = window.sb || (await import('./config.js?v=442')).sb;
+                                const _sb = window.sb || (await import('./config.js?v=443')).sb;
                                 // 편집 이미지 업로드
                                 const blob = await (await fetch(editedDataURL)).blob();
                                 const ts = Date.now();
@@ -17278,7 +17282,7 @@ if (w >= 20 && h >= 20) {
                 window.isDirectCartAddInProgress = true;
                 showToast(lang==='ja'?'ファイルアップロード中...':lang==='en'?'Uploading files...':lang==='zh'?'文件上传中...':'파일 업로드 중...', 'info');
                 try {
-                    const _sb = window.sb || (await import('./config.js?v=442')).sb;
+                    const _sb = window.sb || (await import('./config.js?v=443')).sb;
                     const productToCart = { ...product };
                     productToCart.price = finalPricePerItem;
                     if (window.isCustomModeCurrent) {
@@ -21419,7 +21423,7 @@ window.loadHomeHcGrid = function(){
 };
 </script>
 <script type="module">
-    import { sb, initConfig } from './config.js?v=442';
+    import { sb, initConfig } from './config.js?v=443';
 
     // [유입 경로 상세 분석 함수 v3 — 봇 기록, 광고 정밀 감지]
     function getTrafficSource() {

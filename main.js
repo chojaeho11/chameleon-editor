@@ -1,6 +1,6 @@
 ﻿// main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=442";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=443";
 import { initOrderSystem } from "./order.js?v=733";
 import { initAuth } from "./login.js?v=444";
 

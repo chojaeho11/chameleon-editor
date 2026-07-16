@@ -42,17 +42,26 @@ export function initConfig() {
         try {
             // 중복 초기화 방지 로직 추가
             // 2026-06-18 v581: storageKey 명시 — fabric/cotton_print 등 모든 페이지가 동일 키로 세션 공유 (SSO).
+            // 2026-07-16: [중요] window.sb 도 확인해 재사용. 이전엔 모듈 변수 sb 만 봐서, index.html 인라인 스크립트가
+            //   먼저 만든 클라이언트가 있어도 여기서 2번째 GoTrueClient 를 또 만들었음.
+            //   두 클라이언트 모두 detectSessionInUrl:true 라 구글 OAuth 복귀(#access_token=...) 시 서로 해시를 낚아채는
+            //   경쟁 발생 → 한쪽이 해시를 소비·제거하면 UI 쪽 클라이언트는 세션을 못 얻어 '로그인했는데 로그아웃' 상태가 됨.
+            //   (타이밍 의존이라 사람/기기마다 증상이 달랐음) → 전역 단일 인스턴스로 통일.
             if (!sb) {
-                sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-                    auth: {
-                        persistSession: true,
-                        autoRefreshToken: true,
-                        detectSessionInUrl: true,
-                        storage: localStorage,
-                        storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token'
-                    }
-                });
-            } else {
+                if (window.sb) {
+                    sb = window.sb;
+                } else {
+                    sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+                        auth: {
+                            persistSession: true,
+                            autoRefreshToken: true,
+                            detectSessionInUrl: true,
+                            storage: localStorage,
+                            storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token'
+                        }
+                    });
+                }
+                window.sb = sb;   // 이후 인라인 스크립트들이 재사용하도록 전역 공개
             }
             
             // 2. 세션 상태 확인 + 데이터 로드 병렬 실행 (25초 타임아웃 — 크로스링크 콜드스타트 대응)
