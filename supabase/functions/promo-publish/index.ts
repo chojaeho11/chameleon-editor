@@ -144,6 +144,10 @@ serve(async (req) => {
         const catalog = products
             .map((p: any) => `${p.code} | ${p.name} | ${catName[p.category] || p.category || "-"}`)
             .join("\n");
+        // 2026-07-17: 제품군(카테고리) 목록 — 227개 SKU 중 하나를 정확히 고르라고 하면 AI 가 몸을 사려서
+        //   실제로 우리 제품인 사진(가벽·포토존 등)도 전부 스킵됐다. 제품군 단위로 먼저 맞추게 한다.
+        const catNames = [...new Set(products.map((p: any) => catName[p.category]).filter(Boolean))];
+        const catalogCats = catNames.join(", ");
 
         // ── 3) 이미지 로드
         const imgs: any[] = [];
@@ -158,18 +162,24 @@ serve(async (req) => {
         // ── 4) Vision — 각 사진이 우리 제품 중 무엇인지 판별 (1회 호출)
         const visionSystem = `당신은 인쇄·광고물 제작업체 '카멜레온프린팅'의 제품 분류 전문가입니다.
 사용자가 자사에서 제작한 결과물 사진 ${usable.length}장을 순서대로 보냅니다.
-각 사진이 아래 제품 목록 중 무엇인지 판별하세요.
+각 사진의 제작물이 어느 제품군(category)에 속하는지 판별하세요.
 
-[제품 목록: 코드 | 이름 | 카테고리]
+[우리 제품군 목록 — 이 중에서 고르세요]
+${catalogCats}
+
+[참고: 세부 제품 목록 (코드 | 이름 | 제품군)]
 ${catalog}
 
 규칙:
 - 출력은 오직 JSON. 설명·마크다운 금지.
-- 형식: {"items":[{"index":0,"product_code":"...","product_name":"...","note":"사진 속 제작물 한 줄 설명"}]}
+- 형식: {"items":[{"index":0,"category":"허니콤 포토존","product_code":"","note":"사진에 보이는 제작물 설명"}]}
 - index 는 사진 순서(0부터).
-- 확신이 없으면 product_code 를 빈 문자열 "" 로 두세요. (틀린 판별로 엉뚱한 홍보글이 나가는 것보다 낫습니다)
-- product_name 은 위 목록의 카테고리 이름(명함, 현수막, 리플릿, 허니콤보드, 배너 등)을 우선 사용하세요.
-- note 는 한국어로, 사진에서 실제로 보이는 것만 적으세요. 추측 금지.`;
+- **category 는 위 제품군 목록에 있는 이름을 그대로** 쓰세요. 우리 제품군 중 하나로 보이면 반드시 채우세요.
+  (예: 한옥 대문 모양 포토존 → "허니콤 포토존" / 기와지붕·돌담 질감 벽 → "허니콤 가벽" / 전시 안내 패널 → 해당 보드·판넬 제품군)
+- product_code 는 세부 제품까지 확신할 때만 채우고, 아니면 빈 문자열 "" 로 두세요. (category 만 맞아도 충분합니다)
+- 우리 제품군 어디에도 해당하지 않으면(예: 음식 사진, 풍경, 사람만 찍힌 사진) category 를 "" 로 두세요.
+- note 는 한국어로, **사진에서 실제로 보이는 것만** 구체적으로 적으세요. 용도·사용처를 추측하지 마세요.
+  글감이 되므로 무엇이 어떻게 만들어졌는지(형태·소재감·인쇄된 문구·설치 형태)를 자세히 적으세요.`;
 
         const visionContent: any[] = [];
         imgs.forEach((im, i) => {
@@ -186,23 +196,30 @@ ${catalog}
         const items: any[] = Array.isArray(vision.items) ? vision.items : [];
 
         // 판별 결과 기록 + 실패분 skipped
+        // 2026-07-17: 제품군(category)만 맞아도 발행한다. 정확한 SKU 는 링크용 보너스.
+        //   (SKU 강제였을 때 한옥 포토존·가벽 사진 6장 중 5장이 스킵됐다)
         const identified: any[] = [];
         for (let i = 0; i < usable.length; i++) {
             const it = items.find((x: any) => Number(x.index) === i) || {};
-            const code = String(it.product_code || "").trim();
-            const known = code ? products.find((p: any) => p.code === code) : null;
-            if (!known) {
+            const cat = String(it.category || "").trim();
+            const knownCat = catNames.find((c: any) => c === cat);
+            if (!knownCat) {
                 await sb.from("promo_photos").update({
                     status: "skipped", vision_note: it.note || null,
-                    error: "제품 판별 실패 — 발행 제외",
+                    error: "우리 제품군으로 판별되지 않음 — 발행 제외",
                 }).eq("id", usable[i].id);
                 continue;
             }
-            const pname = String(it.product_name || known.name || "").trim();
+            const code = String(it.product_code || "").trim();
+            const known = code ? products.find((p: any) => p.code === code) : null;
             await sb.from("promo_photos").update({
-                product_code: known.code, product_name: pname, vision_note: it.note || null,
+                product_code: known ? known.code : null,
+                product_name: knownCat,          // 제품군 이름으로 표기 (SKU 이름은 오해를 부름 — 아래 주석)
+                vision_note: it.note || null,
             }).eq("id", usable[i].id);
-            identified.push({ photo: usable[i], product: known, name: pname, note: it.note || "" });
+            identified.push({
+                photo: usable[i], product: known, name: knownCat, note: it.note || "",
+            });
         }
 
         if (identified.length === 0) {
@@ -210,8 +227,12 @@ ${catalog}
         }
 
         // ── 5) 언어별 글 생성 + 발행
+        // 글의 주제는 "사진에 실제로 보이는 것"(note)이어야 한다.
+        //   제품 카탈로그 이름을 주제로 주면 AI 가 사진을 무시하고 그 이름으로 소설을 쓴다.
+        //   (실제 사고: 한옥 포토존 사진에 hb_pt_1 이 매칭됐는데 그 제품명이 '등신대 POP' 이라
+        //    "매장 앞 등신대POP, 카페 손님 시선 집중" 이라는 완전히 엉뚱한 글이 발행됐다.)
         const productSummary = identified
-            .map((d, i) => `${i + 1}. ${d.name} (코드 ${d.product.code}) — ${d.note}`)
+            .map((d, i) => `${i + 1}. [제품군: ${d.name}] 사진 속 실제 모습: ${d.note}`)
             .join("\n");
         const uniqNames = [...new Set(identified.map((d) => d.name))];
         const batchId = Date.now();
@@ -220,15 +241,19 @@ ${catalog}
 
         for (const L of LANGS) {
             try {
-                const nameField = L.lang === "ja" ? "name_jp" : L.lang === "en" ? "name_us" : "name";
-                const localNames = [...new Set(identified.map((d) => d.product[nameField] || d.name))];
-
                 const sys = `당신은 인쇄·광고물 제작업체 '카멜레온프린팅'의 ${L.label} 콘텐츠 마케터입니다.
 오늘 실제로 제작한 결과물 사진들을 소개하는 블로그 글을 ${L.label}로 씁니다.
 
-[회사 핵심 컨셉 — 글 전체가 이 메시지를 향해야 합니다]
+[가장 중요한 규칙 — 어기면 글을 폐기합니다]
+아래 "오늘의 제작물"에 적힌 **사진 속 실제 모습**이 글의 주제입니다.
+제품군 이름만 보고 일반적인 홍보 문구를 지어내지 마세요.
+사진에 없는 사용처·상황·고객을 상상해서 쓰지 마세요.
+(예: 사진이 '전시장 한옥 포토존' 이면 그 전시 이야기를 쓰는 것이지,
+ 제품군이 '보드 인쇄' 라고 해서 "매장 앞 홍보물" 같은 없는 이야기를 만들면 안 됩니다)
+
+[회사 핵심 컨셉 — 글이 향해야 할 메시지]
 "세상의 모든 인쇄물·광고물을, 튜토리얼 가이드를 따라 게임하듯 클릭 몇 번으로 디자인부터 제작까지."
-→ 반드시 담을 메시지: "{제품명}을 게임하듯 가이드에 따라 클릭 몇 번으로 쉽게 만드세요. 전문가처럼 멋진 홍보물이 만들어집니다."
+→ 반드시 담을 메시지: "이런 것도 게임하듯 가이드에 따라 클릭 몇 번으로 쉽게 만드세요. 전문가처럼 멋진 홍보물이 만들어집니다."
    (${L.label}로 자연스럽게 표현. 직역투 금지)
 
 [오늘의 제작물]
@@ -239,9 +264,10 @@ ${productSummary}
 - 형식: {"title":"...","meta_description":"...","focus_keyword":"...","body":"<p>...</p>","hashtags":["..."]}
 - body 는 HTML (<p>, <h2>, <ul>, <strong> 만 사용). 이미지 태그는 넣지 마세요 — 시스템이 자동으로 붙입니다.
 - 길이: 600~900자 분량. 과장 광고·허위 표현 금지. 가격은 언급하지 마세요.
-- 디자인이 어렵다고 느끼는 사장님·소상공인이 읽는다는 전제로, 쉽다는 점을 구체적으로.
+- 사진 속 제작물이 어떤 작업이었는지 구체적으로 소개하고, 그 다음에 "이런 것도 쉽게 만들 수 있다"로 연결하세요.
+- 디자인이 어렵다고 느끼는 사장님·소상공인이 읽는다는 전제.
 - 링크는 https://${L.site} 만 사용.
-- ${L.label} 원어민이 읽기에 자연스러워야 합니다.`;
+- ${L.label} 원어민이 읽기에 자연스러워야 합니다. 제품군 이름은 ${L.label}로 자연스럽게 옮겨 쓰세요.`;
 
                 // max_tokens 8000 — 3000 은 한국어 글에서 잘렸다(실측). 한국어/일본어는 토큰 소모가 큼.
                 // 1회 재시도: 일시적 실패로 KR 이 빠지면 source_id 연결까지 어긋나므로 그냥 넘기지 않는다.
@@ -250,7 +276,7 @@ ${productSummary}
                     try {
                         const raw = await callClaude(ANTHROPIC_API_KEY, {
                             max_tokens: 8000, system: sys,
-                            messages: [{ role: "user", content: `오늘 제작물: ${localNames.join(", ")}. 위 규칙대로 ${L.label} 블로그 글을 JSON 으로 작성하세요.` }],
+                            messages: [{ role: "user", content: `위 "오늘의 제작물"의 사진 속 실제 모습을 주제로 ${L.label} 블로그 글을 JSON 으로 작성하세요.` }],
                         });
                         c = parseJson(raw);
                         break;
@@ -263,7 +289,12 @@ ${productSummary}
 
                 // 본문 + 사진 전부 임베드 (사진 여러 장 = 글 1개)
                 const gallery = identified
-                    .map((d) => `<figure style="margin:18px 0;"><img src="${d.photo.storage_url}" alt="${esc(d.product[nameField] || d.name)}" style="max-width:100%;border-radius:10px;"><figcaption style="font-size:13px;color:#64748b;margin-top:6px;">${esc(d.product[nameField] || d.name)}</figcaption></figure>`)
+                    // 캡션은 사진에 실제로 보이는 것(note) — 제품 카탈로그 이름을 쓰면 사진과 어긋난다.
+                    //   (product 는 SKU 까지 특정됐을 때만 존재하므로 null 접근 주의)
+                    .map((d) => {
+                        const cap = esc(d.note || d.name);
+                        return `<figure style="margin:18px 0;"><img src="${d.photo.storage_url}" alt="${cap}" style="max-width:100%;border-radius:10px;"><figcaption style="font-size:13px;color:#64748b;margin-top:6px;">${cap}</figcaption></figure>`;
+                    })
                     .join("\n");
                 const cta = `<p style="margin-top:22px;"><a href="https://${L.site}" style="display:inline-block;padding:12px 20px;background:#0f172a;color:#fff;border-radius:8px;text-decoration:none;">${L.lang === "ja" ? "今すぐ作ってみる" : L.lang === "en" ? "Start creating now" : "지금 만들어보기"}</a></p>`;
                 const htmlBody = `${c.body || ""}\n${gallery}\n${cta}`;
@@ -279,7 +310,8 @@ ${productSummary}
                 // (기존 marketing_bot 은 source_id 를 안 넣어서 board.html 의 hreflang 형제 조회가 늘 자기 자신만 반환했다)
                 if (sourceId) seoMeta.source_id = sourceId;
 
-                const ins = await sb.from("blog_posts").insert({
+                // 명시적 any — payload 안의 source_id 가 아래에서 ins 로부터 채워져 타입 추론이 순환한다(TS7022)
+                const ins: any = await sb.from("blog_posts").insert({
                     category: "blog",
                     country_code: L.countryCode,
                     title: c.title || uniqNames.join(", "),
