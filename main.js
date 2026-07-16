@@ -1,8 +1,8 @@
 ﻿// main.js - Complete Integrated Version
 
-import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=441";
-import { initOrderSystem } from "./order.js?v=463";
-import { initAuth } from "./login.js?v=438";
+import { initConfig, sb, currentUser, PRODUCT_DB } from "./config.js?v=442";
+import { initOrderSystem } from "./order.js?v=733";
+import { initAuth } from "./login.js?v=444";
 
 // 2026-05-30 perf: 에디터 모듈은 동적 import 로 변경 (runEditorInits 안에서 로드).
 // 메인 페이지 첫 로드에서 ~1MB JS 다운로드/파싱 절감. 에디터 진입 시 한 번만 로드.
@@ -152,7 +152,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 import('./canvas-icons.js?v=435'),
                 import('./shortcuts.js?v=434'),
                 import('./context-menu.js?v=434'),
-                import('./export.js?v=441'),
+                import('./export.js?v=443'),
                 import('./my-design.js?v=434'),
                 import('./video-maker.js?v=434'),
                 import('./ppt-mode.js?v=434'),

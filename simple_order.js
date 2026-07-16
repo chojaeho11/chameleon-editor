@@ -1,7 +1,7 @@
 ﻿/* simple_order.js — 간편 주문 모달 (v=4 — 2단 레이아웃: 좌 업로드 / 우 옵션)
  *
  * 사용:
- *   <script src="simple_order.js?v=351"></script>
+ *   <script src="simple_order.js?v=733"></script>
  *   window.openSimpleOrderModal(productCode)   ← 어디서든 호출 가능
  *
  * 디자인 가이드:
