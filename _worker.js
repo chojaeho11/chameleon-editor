@@ -1017,9 +1017,12 @@ export default {
                             ? `<script type="application/ld+json">${JSON.stringify({ "@context": "http://schema.org", "@type": "ItemList", "itemListElement": homeCarouselItems })}</script>`
                             : '';
                         // Category links for bots to discover
+                        // 2026-07-17: 블로그 링크 추가 — 봇이 받는 홈에는 블로그로 가는 링크가 아예 없어서
+                        //   블로그 글이 사이트맵에만 존재하고 내부 링크가 0개였다(색인·AI 인용에 불리).
                         const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
                             `<a href="${homeData.domain}/${c}">${c}</a>`
-                        ).join(' | ');
+                        ).join(' | ') + ` | <a href="${homeData.domain}/board.html?cat=blog">${
+                            cc === 'JP' ? '制作事例ブログ' : cc === 'US' ? 'Project Blog' : '제작사례 블로그'}</a>`;
 
                         const homeHtml = `<!DOCTYPE html><html lang="${homeData.lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(homeData.title)}</title>
@@ -1186,7 +1189,9 @@ ${homeCarouselLd}
                         });
 
                         const catLinks = Object.keys(SEO_CATEGORIES).map(c =>
-                            `<a href="${ed.domain}/${c}">${c}</a>`).join(' | ');
+                            `<a href="${ed.domain}/${c}">${c}</a>`).join(' | ') +
+                            ` | <a href="${ed.domain}/board.html?cat=blog">${
+                                cc === 'JP' ? '制作事例ブログ' : cc === 'US' ? 'Project Blog' : '제작사례 블로그'}</a>`;
 
                         return new Response(`<!DOCTYPE html><html lang="${ed.lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escHtml(ed.title)}</title>
