@@ -9,3 +9,4 @@ nul
 #   (gitignore 된 경로는 wrangler pages deploy 에서도 제외됨 — 확인: 패턴/ 파일이 사이트에서 404)
 .promo.env
 홍보사진/
+promo-sync.log
