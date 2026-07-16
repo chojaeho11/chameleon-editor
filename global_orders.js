@@ -2157,11 +2157,11 @@ window.updateActionButtons = () => {
     if(!div) return;
     const s = currentOrderStatus;
     if (s === '입금대기') {
-        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">🚫 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="confirmDepositSelected()">일괄 입금처리</button><button class="btn btn-danger" onclick="cancelDepositSelected()">🚫 주문취소</button><button class="btn" onclick="sendOrderErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 주문에러</button>`;
     } else if (s === '결제완료') {
-        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
+        div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('칼선작업')">작업시작</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendOrderErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 주문에러</button>`;
     } else if (s === '칼선작업') {
-        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button>`;
+        div.innerHTML = `<button class="btn btn-success" onclick="downloadBulkFiles()">다운로드</button><button class="btn btn-vip" onclick="changeStatusSelected('완료됨')">완료처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendOrderErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 주문에러</button>`;
     } else if (s === '완료됨') {
         div.innerHTML = `<button class="btn btn-primary" onclick="changeStatusSelected('발송완료')">발송처리</button><button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button>`;
     } else if (s === '배송') {
@@ -2180,7 +2180,7 @@ window.updateActionButtons = () => {
         div.innerHTML = `<button class="btn btn-warning" onclick="retryRefundSelected()" style="background:#dc2626;color:white;">🔄 환불 재시도</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)">영구삭제</button>`;
     } else {
         // 전체 탭
-        div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendFileErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 파일에러</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
+        div.innerHTML = `<button class="btn btn-danger" onclick="adminCancelSelected()">❌ 주문취소</button><button class="btn" onclick="sendOrderErrorSelected()" style="background:#f59e0b;color:#fff;font-weight:bold;">⚠️ 주문에러</button><button class="btn btn-danger" onclick="deleteOrdersSelected(true)" style="margin-left:4px;">선택 삭제</button>`;
     }
     // 모든 탭에 공통 버튼 추가
     div.innerHTML += `<button class="btn" onclick="manualDownloadSelected()" style="background:#0ea5e9;color:white;margin-left:6px;">📥 수동다운</button>`;
@@ -2775,20 +2775,88 @@ function _showReasonModal(title, emoji, placeholder, btnText, btnColor) {
 }
 
 // ★ 고객 메시지 전송 헬퍼
-async function _sendCustomerMessage(orderId, msgContent) {
+// 2026-07-16: order_id / kind / 번역본(ja·en) 을 함께 저장할 수 있도록 확장.
+//   opts 없이 호출하는 기존 호출부(주문취소 등)는 그대로 동작.
+async function _sendCustomerMessage(orderId, msgContent, opts) {
     try {
         const { data: order, error: oErr } = await sb.from('orders').select('user_id').eq('id', orderId).single();
-        if (oErr) { console.warn('주문 조회 실패:', oErr.message); return; }
-        if (order?.user_id) {
-            const { error: iErr } = await sb.from('messages').insert({
-                user_id: order.user_id,
-                sender: 'admin',
-                content: msgContent,
-                is_read: false
-            });
-            if (iErr) console.warn('메시지 저장 실패:', iErr.message);
+        if (oErr) { console.warn('주문 조회 실패:', oErr.message); return false; }
+        if (!order?.user_id) return false;   // 비회원 주문 — 팝업으로 알릴 대상이 없음
+        const row = {
+            user_id: order.user_id,
+            sender: 'admin',
+            content: msgContent,
+            is_read: false
+        };
+        if (opts) {
+            if (opts.orderId) row.order_id = Number(opts.orderId);
+            if (opts.kind) row.kind = opts.kind;
+            if (opts.contentJa) row.content_ja = opts.contentJa;
+            if (opts.contentEn) row.content_en = opts.contentEn;
         }
-    } catch(e) { console.warn('알림 발송 실패:', e); }
+        const { error: iErr } = await sb.from('messages').insert(row);
+        if (iErr) { console.warn('메시지 저장 실패:', iErr.message); return false; }
+        return true;
+    } catch(e) { console.warn('알림 발송 실패:', e); return false; }
+}
+
+// 2026-07-16: [주문에러] 전용 모달 — 유형(파일에러/일반) 라디오 + 사유.
+//   _showReasonModal 은 textarea 하나뿐이고 닫기 로직이 DOM 위치에 결합돼 있어 확장 불가 → 별도 작성.
+//   반환: { kind, msg } | null
+function _showOrderErrorModal(count) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:20000;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:28px;width:480px;max-width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h3 style="margin:0 0 6px;font-size:18px;">⚠️ 주문에러 알림 (${count}건)</h3>
+                <p style="margin:0 0 16px;font-size:13px;color:#64748b;">고객이 접속하면 팝업으로 표시됩니다. <b>한국어로 적으면 일본·영어권 고객에게는 자동 번역</b>되어 전달됩니다.</p>
+                <div style="display:flex;gap:8px;margin-bottom:14px;">
+                    <label style="flex:1;display:flex;align-items:center;gap:7px;padding:11px 12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;">
+                        <input type="radio" name="_oeKind" value="file_error" checked style="margin:0;">
+                        <span>파일에러 <span style="color:#64748b;font-size:11.5px;">— 재접수 버튼 표시</span></span>
+                    </label>
+                    <label style="flex:1;display:flex;align-items:center;gap:7px;padding:11px 12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-size:13px;">
+                        <input type="radio" name="_oeKind" value="order_error" style="margin:0;">
+                        <span>일반 주문에러</span>
+                    </label>
+                </div>
+                <textarea id="_oeInput" rows="4" placeholder="예: 홀로그램박은 별색 레이어가 필요합니다. 별색 데이터(일러스트 또는 PDF)를 다시 올려주세요." style="width:100%;box-sizing:border-box;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;resize:vertical;outline:none;font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                <div style="font-size:11.5px;color:#94a3b8;margin-top:7px;">파일에러는 고객이 파일을 다시 올릴 때까지 접속할 때마다 다시 표시됩니다.</div>
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button id="_oeCancel" style="padding:10px 20px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#64748b;">닫기</button>
+                    <button id="_oeSend" style="padding:10px 20px;border:none;background:#f59e0b;color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold;">주문에러 전송</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        const done = (val) => { overlay.remove(); resolve(val); };
+        overlay.querySelector('#_oeCancel').onclick = () => done(null);
+        overlay.querySelector('#_oeSend').onclick = () => {
+            const kind = (overlay.querySelector('input[name="_oeKind"]:checked') || {}).value || 'file_error';
+            done({ kind: kind, msg: overlay.querySelector('#_oeInput').value });
+        };
+        overlay.querySelector('#_oeInput').focus();
+    });
+}
+
+// 2026-07-16: 한국어 원문 → ja/en 배치 번역.
+//   translate 엣지 함수는 실패해도 HTTP 200 이라 res.error 가 null → data.error 를 직접 확인해야 함.
+//   실패 시 한국어 그대로 폴백 (알림이 아예 안 가는 것보다 나음).
+async function _translateForCustomer(text) {
+    try {
+        const res = await sb.functions.invoke('translate', {
+            body: { text: text, sourceLang: 'kr', targetLangs: ['ja', 'en'] }
+        });
+        const d = res && res.data;
+        if (res.error || !d || d.error || !d.translations) {
+            console.warn('[주문에러] 번역 실패 — 한국어로 발송:', (res && res.error) || (d && d.error));
+            return { ja: '', en: '' };
+        }
+        return { ja: d.translations.ja || '', en: d.translations.en || '' };
+    } catch (e) {
+        console.warn('[주문에러] 번역 예외 — 한국어로 발송:', e);
+        return { ja: '', en: '' };
+    }
 }
 
 // [주문취소] 입금대기 탭 — 결제 취소 + 고객 메시지
@@ -2834,35 +2902,51 @@ window.cancelDepositSelected = async () => {
     updateCancelReqBadge();
 };
 
-// [파일에러] 주문 취소 없이 고객에게 파일 오류 메시지만 전송
-window.sendFileErrorSelected = async () => {
+// [주문에러] 주문 취소 없이 고객에게 오류 메시지만 전송 → 고객 접속 시 팝업 (order-error-popup.js)
+// 2026-07-16: 기존 [파일에러] 를 흡수. 유형(파일에러/일반) 선택 + 한국어 원문 자동 번역(ja/en) 저장.
+//   파일에러는 팝업에 '파일 다시 접수' 버튼이 뜨고, 재접수 전까진 접속할 때마다 다시 표시된다.
+window.sendOrderErrorSelected = async () => {
     const ids = Array.from(document.querySelectorAll('.row-chk:checked')).map(c => c.value);
     if (ids.length === 0) { showToast("선택된 주문이 없습니다.", "warn"); return; }
 
-    const msg = await _showReasonModal(
-        `파일에러 알림 (${ids.length}건)`, '⚠️',
-        '예: 업로드하신 파일의 해상도가 낮습니다. 300dpi 이상의 파일로 다시 업로드해주세요.',
-        '파일에러 메시지 전송', '#f59e0b'
-    );
-    if (msg === null) return;
+    const r = await _showOrderErrorModal(ids.length);
+    if (r === null) return;
 
-    const errorMsg = msg.trim() || '업로드하신 파일에 문제가 있습니다. 확인 후 다시 업로드해주세요.';
+    const kind = r.kind || 'file_error';
+    const isFile = kind === 'file_error';
+    const errorMsg = (r.msg || '').trim()
+        || (isFile ? '업로드하신 파일에 문제가 있습니다. 확인 후 다시 업로드해주세요.'
+                   : '주문 내용에 확인이 필요한 부분이 있습니다.');
 
-    let ok = 0;
+    // 번역은 메시지가 동일하므로 건수와 무관하게 1회만 호출
+    showToast('번역 중...', 'info');
+    const tr = await _translateForCustomer(errorMsg);
+
+    const tag = isFile ? '파일에러' : '주문에러';
+    let ok = 0, noUser = 0;
     for (const id of ids) {
         try {
-            // admin_note에 파일에러 기록
+            // admin_note 에 기록 (직원이 이력 확인)
             const { data: existing } = await sb.from('orders').select('admin_note').eq('id', id).single();
             const prevNote = existing?.admin_note || '';
-            const newNote = prevNote ? `${prevNote}\n[파일에러] ${errorMsg}` : `[파일에러] ${errorMsg}`;
-            await sb.from('orders').update({ admin_note: newNote }).eq('id', id);
-            await _sendCustomerMessage(id, `[파일에러] 주문번호 ${id}\n${errorMsg}\n\n파일을 수정하여 다시 업로드해주세요.`);
-            ok++;
-        } catch(e) { console.warn('파일에러 처리 실패:', id, e); }
+            const line = `[${tag}] ${errorMsg}`;
+            await sb.from('orders').update({ admin_note: prevNote ? `${prevNote}\n${line}` : line }).eq('id', id);
+
+            const sent = await _sendCustomerMessage(id, errorMsg, {
+                orderId: id, kind: kind, contentJa: tr.ja, contentEn: tr.en
+            });
+            if (sent) ok++; else noUser++;
+        } catch(e) { console.warn('주문에러 처리 실패:', id, e); }
     }
-    showToast(`${ok}건 파일에러 알림 전송 완료`, 'success');
+    if (noUser > 0) {
+        showToast(`${ok}건 전송 완료 · ${noUser}건은 비회원 주문이라 팝업 알림 불가 (전화 필요)`, 'warn');
+    } else {
+        showToast(`${ok}건 주문에러 알림 전송 완료`, 'success');
+    }
     loadOrders();
 };
+// 기존 이름 alias — 다른 호출부 보호
+window.sendFileErrorSelected = () => window.sendOrderErrorSelected();
 
 // admin_note 마커 추출/병합 헬퍼 (사용자에게는 보이지 않게 분리)
 function _splitAdminNote(raw) {

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260716223818';
+    var CV = '20260716230455';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -575,6 +575,8 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js" defer></script>
+<!-- 2026-07-16: 주문에러/관리자 알림 팝업 (메인+패브릭 공용). supabase UMD 뒤에 와야 함. -->
+<script src="/order-error-popup.js?v=1" defer></script>
 
 <!-- ★ 에디터 CDN 라이브러리: 초기 로드 제거, startEditorDirect() 진입 시 동적 로드 -->
 <!-- fabric.js, jsPDF, PDF.js, Paper.js, PptxGenJS 등 ~2.5MB → 에디터 열 때만 다운로드 -->
@@ -11980,59 +11982,10 @@ window.filterFxCards = function(cat, btn) {
     };
 
     // ★ 읽지 않은 관리자 메시지 팝업
-    window.checkUnreadMessages = async function() {
-        if (!window.currentUser || !sb) return;
-        try {
-            const { data, error } = await sb.from('messages')
-                .select('id, content, created_at')
-                .eq('user_id', window.currentUser.id)
-                .eq('is_read', false)
-                .order('created_at', { ascending: false })
-                .limit(5);
-            if (error || !data || data.length === 0) return;
-
-            // 팝업 생성
-            const overlay = document.createElement('div');
-            overlay.id = 'msgPopupOverlay';
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:30000;display:flex;align-items:center;justify-content:center;';
-            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-
-            let msgsHtml = '';
-            data.forEach(function(m) {
-                const d = new Date(m.created_at);
-                const dateStr = (d.getMonth()+1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0');
-                const isError = m.content.includes('[파일에러]');
-                const icon = isError ? '⚠️' : '📢';
-                const borderColor = isError ? '#f59e0b' : '#6366f1';
-                msgsHtml += '<div style="background:#fff;border-left:4px solid ' + borderColor + ';padding:14px 16px;border-radius:8px;margin-bottom:8px;">' +
-                    '<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">' + icon + ' ' + dateStr + '</div>' +
-                    '<div style="font-size:14px;color:#1e293b;white-space:pre-wrap;line-height:1.5;">' + m.content.replace(/</g,'&lt;') + '</div>' +
-                    '</div>';
-            });
-
-            const lang = (window.SITE_CONFIG && window.SITE_CONFIG.LANG) || 'kr';
-            const title = lang === 'ja' ? 'お知らせ' : lang === 'en' ? 'Notifications' : '알림';
-            const btnText = lang === 'ja' ? '確認しました' : lang === 'en' ? 'Got it' : '확인했습니다';
-
-            overlay.innerHTML = '<div style="background:#fff;border-radius:20px;padding:0;width:440px;max-width:92%;box-shadow:0 25px 80px rgba(0,0,0,0.3);overflow:hidden;" onclick="event.stopPropagation()">' +
-                '<div style="background:linear-gradient(135deg,#6366f1,#a855f7);padding:20px 24px;color:#fff;">' +
-                '<div style="font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;">🔔 ' + title + ' <span style="background:rgba(255,255,255,0.3);font-size:12px;padding:2px 8px;border-radius:20px;">' + data.length + '</span></div>' +
-                '</div>' +
-                '<div style="padding:20px 24px;max-height:60vh;overflow-y:auto;">' + msgsHtml + '</div>' +
-                '<div style="padding:16px 24px;border-top:1px solid #f1f5f9;text-align:center;">' +
-                '<button onclick="window._markMessagesRead([' + data.map(function(m){return m.id}).join(',') + ']);this.closest(\'#msgPopupOverlay\').remove();" style="width:100%;padding:14px;border:none;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;">' + btnText + '</button>' +
-                '</div></div>';
-
-            document.body.appendChild(overlay);
-        } catch(e) { console.warn('메시지 확인 실패:', e); }
-    };
-
-    window._markMessagesRead = async function(ids) {
-        if (!sb || !ids.length) return;
-        for (let i = 0; i < ids.length; i++) {
-            await sb.from('messages').update({ is_read: true }).eq('id', ids[i]);
-        }
-    };
+    // 2026-07-16: order-error-popup.js 로 이전 (메인+패브릭 공용).
+    //   여기 있던 구현은 window.currentUser + 모듈스코프 sb 에 묶여 패브릭에서 재사용 불가였고,
+    //   SITE_CONFIG.LANG(존재하지 않는 키)을 읽어 모든 도메인에서 한국어로만 뜨던 버그가 있었다.
+    //   window.checkUnreadMessages / _markMessagesRead 는 그 파일이 동일한 이름으로 제공한다.
 
     // ★ 쿠폰 상세 팝업
     window.showCouponDetail = function(type) {
