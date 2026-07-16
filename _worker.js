@@ -7,6 +7,11 @@
 
 const BOT_UA = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|slurp|duckduckbot|msnbot|applebot|petalbot|yeti|daumoa|sogou|360spider|bytespider|qwant|seznambot|ia_archiver|archive\.org_bot|semrushbot|ahrefsbot|mj12bot|dotbot|rogerbot|facebookexternalhit|twitterbot|linkedinbot|kakaotalk-scrap|line-scrap|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|tumblr|embedly|quora link preview|outbrain|vkshare|w3c_validator/i;
 
+// 2026-07-17: AI 크롤러 — 이 목록에 하나도 없었다.
+//   AI 크롤러는 자바스크립트를 실행하지 않으므로, 서버 렌더링을 안 주면 우리 글을 영원히 못 본다.
+//   (ChatGPT/Claude/Perplexity 답변에 우리가 인용되려면 이들이 본문을 읽을 수 있어야 함)
+const AI_BOT_UA = /gptbot|oai-searchbot|chatgpt-user|claudebot|claude-web|anthropic-ai|perplexitybot|perplexity-user|ccbot|google-extended|bingbot|amazonbot|applebot-extended|meta-externalagent|cohere-ai|youbot|diffbot|timpibot/i;
+
 const SUPABASE_URL = 'https://qinvtnhiidtmrzosyvys.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
 const PRERENDER_TOKEN = '2JsjKgGMzVH9qEqjkYam';
@@ -396,6 +401,98 @@ ${desc ? `<p>${escHtml(desc)}</p>` : ''}
 <p><a href="${domain}/">${escHtml(siteName)}</a></p></body></html>`;
 }
 
+// ══════════════════════════════════════════════════════════════
+// 2026-07-17: 블로그 글 서버 렌더링 (generateProductHtml 과 같은 패턴)
+//   왜 필요한가: board.html 은 브라우저에서 JS 로 Supabase 를 불러 글을 그린다.
+//   → JS 를 실행하지 않는 크롤러(특히 GPTBot/ClaudeBot/PerplexityBot 등 AI 크롤러)는
+//     제목도 본문도 없는 빈 껍데기만 받았다(실측 확인). 구글도 렌더 큐에 의존해 불확실.
+//   → 봇 요청이면 워커가 Supabase 에서 글을 직접 읽어 완성된 HTML 을 돌려준다.
+//   사람은 기존 board.html(JS 버전)을 그대로 받는다.
+// ══════════════════════════════════════════════════════════════
+const BLOG_DOMAINS = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.cafe3355.com' };
+
+function generateBlogHtml(post, cc) {
+    const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
+    const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
+    const domain = BLOG_DOMAINS[cc] || BLOG_DOMAINS.KR;
+    const title = post.title || siteName;
+
+    let meta = {};
+    try { meta = JSON.parse(post.markdown || '{}') || {}; } catch (_) { meta = {}; }
+
+    // 본문은 이미 안전한 HTML(우리가 생성) — 설명용으로만 태그를 벗겨 요약
+    const plain = String(post.content || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    const desc = (meta.meta_description || plain).slice(0, 160);
+    const postUrl = `${domain}/board.html?cat=blog&country=${cc}&id=${post.id}`;
+    const img = post.thumbnail || meta.og_image || '';
+
+    const jsonLd = JSON.stringify({
+        "@context": "https://schema.org", "@type": "BlogPosting",
+        "headline": title, "description": desc,
+        "image": img ? [img] : undefined,
+        "datePublished": post.created_at, "dateModified": post.created_at,
+        "author": { "@type": "Organization", "name": post.author_name || siteName },
+        "publisher": { "@type": "Organization", "name": siteName, "url": domain },
+        "mainEntityOfPage": { "@type": "WebPage", "@id": postUrl },
+        "inLanguage": lang
+    });
+
+    // 같은 글의 다른 언어판 — source_id 로 묶인 형제글 (있으면 hreflang 으로)
+    let alts = '';
+    if (Array.isArray(post._siblings)) {
+        post._siblings.forEach((s) => {
+            const sd = BLOG_DOMAINS[s.country_code];
+            if (!sd) return;
+            const sl = s.country_code === 'JP' ? 'ja' : s.country_code === 'US' ? 'en' : 'ko';
+            alts += `<link rel="alternate" hreflang="${sl}" href="${sd}/board.html?cat=blog&country=${s.country_code}&id=${s.id}">\n`;
+        });
+    }
+
+    return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(title)} - ${escHtml(siteName)}</title>
+<meta name="description" content="${escHtml(desc)}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="${escHtml(siteName)}">
+<meta property="og:title" content="${escHtml(title)}">
+<meta property="og:description" content="${escHtml(desc)}">
+<meta property="og:image" content="${escHtml(img)}">
+<meta property="og:url" content="${escHtml(postUrl)}">
+<meta property="article:published_time" content="${escHtml(post.created_at || '')}">
+<link rel="canonical" href="${escHtml(postUrl)}">
+${alts}<script type="application/ld+json">${jsonLd}</script>
+</head><body>
+<article>
+<h1>${escHtml(title)}</h1>
+<p><time datetime="${escHtml(post.created_at || '')}">${escHtml(String(post.created_at || '').slice(0, 10))}</time> · ${escHtml(post.author_name || siteName)}</p>
+${post.content || ''}
+</article>
+<p><a href="${domain}/board.html?cat=blog&country=${cc}">${escHtml(cc === 'JP' ? 'ブログ一覧' : cc === 'US' ? 'All posts' : '블로그 목록')}</a> · <a href="${domain}/">${escHtml(siteName)}</a></p>
+</body></html>`;
+}
+
+function generateBlogListHtml(posts, cc) {
+    const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
+    const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
+    const domain = BLOG_DOMAINS[cc] || BLOG_DOMAINS.KR;
+    const title = cc === 'JP' ? `制作事例ブログ | ${siteName}` : cc === 'US' ? `Project Blog | ${siteName}` : `제작사례 블로그 | ${siteName}`;
+    const desc = cc === 'JP' ? '実際の制作事例をご紹介します。ガイドに沿ってクリックするだけで、プロ級の印刷物・広告物が作れます。'
+        : cc === 'US' ? 'Real projects we made. Follow the guide and create professional printed materials in just a few clicks.'
+        : '실제 제작 사례를 소개합니다. 가이드를 따라 클릭 몇 번으로 전문가처럼 멋진 인쇄물·홍보물을 만드세요.';
+    const listUrl = `${domain}/board.html?cat=blog&country=${cc}`;
+    const items = (posts || []).map((p) =>
+        `<li><a href="${domain}/board.html?cat=blog&country=${cc}&id=${p.id}">${escHtml(p.title || '')}</a> <time datetime="${escHtml(p.created_at || '')}">${escHtml(String(p.created_at || '').slice(0, 10))}</time></li>`
+    ).join('\n');
+    return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(title)}</title>
+<meta name="description" content="${escHtml(desc)}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="${escHtml(listUrl)}">
+</head><body><h1>${escHtml(title)}</h1><p>${escHtml(desc)}</p>
+<ul>${items}</ul>
+<p><a href="${domain}/">${escHtml(siteName)}</a></p></body></html>`;
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -742,6 +839,53 @@ export default {
         // ========== BOT PRE-RENDERING ==========
         // Skip if request is FROM Prerender.io's renderer (avoid infinite loop)
         const isPrerender = request.headers.get('X-Prerender') === '1' || /prerender/i.test(ua);
+
+        // ══════════════════════════════════════════════════════════
+        // 2026-07-17: 블로그 서버 렌더링 (봇 전용) — 아래 기존 봇 블록보다 먼저 처리해야 한다.
+        //   기존 블록은 (a) path 에 '.' 이 있으면 진입조차 안 하고(board.html 은 항상 해당)
+        //   (b) skipPaths 에 'board' 가 있어 이중으로 막혀 있었다. 그래서 블로그 글은
+        //   크롤러에게 빈 껍데기만 나갔다(실측: GPTBot/Googlebot 모두 제목·본문 없음).
+        //   AI 크롤러는 JS 를 실행하지 않으므로 이 경로가 없으면 영원히 우리 글을 못 본다.
+        // ══════════════════════════════════════════════════════════
+        if (!isPrerender && (BOT_UA.test(ua) || AI_BOT_UA.test(ua)) &&
+            (path === 'board' || path === 'board.html') && url.searchParams.get('cat') === 'blog') {
+            try {
+                const cc = getCountry(url.hostname, request);
+                // 노출 규칙: 한국어=KR 사이트, 일본어=JP 사이트, 영어=그 외 전 국가
+                const postCC = cc === 'KR' ? 'KR' : cc === 'JP' ? 'JP' : 'US';
+                const id = url.searchParams.get('id');
+
+                if (id && /^[0-9a-f-]{36}$/i.test(id)) {
+                    const rows = await fetchFromSupabase(
+                        `blog_posts?select=id,title,content,thumbnail,markdown,author_name,created_at,country_code,source_id&id=eq.${encodeURIComponent(id)}&limit=1`
+                    );
+                    if (rows && rows.length > 0) {
+                        const post = rows[0];
+                        // 다른 언어판 (hreflang) — source_id 로 묶인 형제글
+                        const sid = post.source_id || post.id;
+                        const sibs = await fetchFromSupabase(
+                            `blog_posts?select=id,country_code&category=eq.blog&or=(id.eq.${sid},source_id.eq.${sid})`
+                        );
+                        post._siblings = sibs || [];
+                        return new Response(generateBlogHtml(post, post.country_code || postCC), {
+                            status: 200,
+                            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
+                        });
+                    }
+                } else {
+                    // 목록 — 크롤러가 개별 글로 타고 들어갈 수 있는 유일한 내부 링크
+                    const posts = await fetchFromSupabase(
+                        `blog_posts?select=id,title,created_at&category=eq.blog&country_code=eq.${postCC}&order=created_at.desc&limit=100`
+                    );
+                    return new Response(generateBlogListHtml(posts || [], cc), {
+                        status: 200,
+                        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, s-maxage=600' }
+                    });
+                }
+            } catch (e) {
+                // 실패하면 그냥 원래 board.html 을 내보낸다 (크롤러에게 500 을 주면 안 됨)
+            }
+        }
 
         if (!isPrerender && BOT_UA.test(ua) && !path.includes('.')) {
             // Skip admin/internal paths

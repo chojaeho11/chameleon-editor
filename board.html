@@ -624,7 +624,21 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('cat') || 'free';
-    const currentCountry = (urlParams.get('country') || 'KR').toUpperCase();
+    // 2026-07-17: ?country= 가 없으면 무조건 KR 이 되던 문제 — 도메인으로 폴백.
+    //   (일본 사이트에서 파라미터 없이 열면 한국 글이 보였다)
+    function _boardHostCountry() {
+        const h = location.hostname;
+        if (h.includes('cafe0101') || h.includes('cotton-printer')) return 'JP';
+        if (h.includes('cafe3355') || h.includes('chameleon.design')) return 'US';
+        return 'KR';
+    }
+    const currentCountry = (urlParams.get('country') || _boardHostCountry()).toUpperCase();
+    // 블로그 노출 규칙: 한국어=한국만, 일본어=일본만, 영어=한국·일본 제외 전 국가(US/CN/AR/ES/DE/FR…)
+    function _blogCountryFor(cc) {
+        if (cc === 'KR') return 'KR';
+        if (cc === 'JP') return 'JP';
+        return 'US';
+    }
     const postId = urlParams.get('id');
     
     const subCode = urlParams.get('sub_code'); 
@@ -903,22 +917,16 @@
             // 리뷰/거래 등: 기존처럼 국가 필터 적용
             let data, error;
             if (category === 'blog') {
-                // 블로그는 모든 국가 글을 보여줌 (Google SEO용)
+                // 2026-07-17: 언어별 노출 분리 (사장님 요청).
+                //   한국어(KR) → 한국 사이트만 / 일본어(JP) → 일본 사이트만 / 영어(US) → 한국·일본 제외 전 국가
+                //   (기존엔 "블로그는 모든 국가 글을 보여줌" 이라 일본어 글이 한국 사이트에도 다 떴다)
                 let query = sb.from('blog_posts')
                     .select('id, title, author_name, created_at, view_count, thumbnail, rating, country_code')
-                    .eq('category', 'blog');
+                    .eq('category', 'blog')
+                    .eq('country_code', _blogCountryFor(currentCountry));
                 if (subCode) query = query.eq('target_code', subCode);
                 const result = await query.order('created_at', { ascending: false }).range(from, to);
                 data = result.data; error = result.error;
-                // 현재 국가 글을 맨 앞으로 정렬
-                if (data && data.length > 0) {
-                    data.sort((a, b) => {
-                        const aMatch = a.country_code === currentCountry ? 0 : 1;
-                        const bMatch = b.country_code === currentCountry ? 0 : 1;
-                        if (aMatch !== bMatch) return aMatch - bMatch;
-                        return new Date(b.created_at) - new Date(a.created_at);
-                    });
-                }
             } else {
                 let query = sb.from('blog_posts')
                     .select('id, title, author_name, created_at, view_count, thumbnail, rating, country_code')
