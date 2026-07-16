@@ -295,6 +295,13 @@ body { font-family:'Noto Sans KR',sans-serif; background:#e7e5e4; color:#1f2937;
         </div>
     </div>
 
+    <!-- 2026-07-16: 고객 오더오류 경고 — 첫 페이지에 모아서 표시 (작업 전 매니저가 고객에게 연락).
+         내용은 _woRenderWarnings() 가 항목별로 채운다. 경고 없으면 통째로 숨김. -->
+    <div class="section" id="woWarnSection" style="display:none;">
+        <div class="section-title" style="border-left-color:#dc2626; background:#fef2f2; color:#dc2626;">주의 — 작업 전 확인 필요</div>
+        <div id="woWarnList"></div>
+    </div>
+
     <div class="section">
         <div class="section-title">제작 항목 (<span id="woItemCount">0</span>건)</div>
         <div id="woItemList"></div>
@@ -547,6 +554,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
         const items = order.items || [];
         document.getElementById('woItemCount').textContent = items.length;
         const list = document.getElementById('woItemList');
+        // 2026-07-16: 첫 페이지 경고 칸 — 고객 오더오류(별색 데이터 누락 등) 를 작업 전에 잡는다.
+        try { window._woRenderWarnings(items); } catch (e) { console.warn('[wo warn]', e); }
 
         // 2026-05-22: 작업지시서는 한국에서 인쇄하므로 제품명을 항상 한국어로.
         // 주문 시점의 product.name 은 고객 언어(JP/EN 등) 로 저장되어 있어 admin_products 에서 한글명을 재조회.
@@ -1434,6 +1443,63 @@ function _woApplyPaged() {
 
     document.body.classList.add('wo-paged');
 }
+
+// ────────────────────────────────────────────────
+// 2026-07-16: 첫 페이지 경고 칸 — 고객이 잘못 주문한 건을 작업 전에 잡아낸다.
+//   현재 규칙: 박(별색) 옵션이 있는데 별색 레이어 데이터가 필요한 경우.
+//   박(금박/은박/홀로그램박 등)은 별색 전용 레이어가 있어야 판을 뜬다 → 디자인 이미지만으로는 제작 불가.
+//   자동 판별이 불가능(파일 안의 별색 레이어 유무를 알 수 없음)하므로 박 주문은 항상 확인 대상으로 띄운다.
+//   새 오더오류 유형이 생기면 _woItemWarnings 에 push 만 추가하면 됨.
+// ────────────────────────────────────────────────
+const WO_FOIL_ALL_LBL = {
+    gold_matte: '무광 금박', gold_gloss: '유광 금박', silver_gloss: '먹박', black_matte: '흑박',
+    red_foil: '적박', blue_foil: '청박', holo_foil: '홀로그램박',
+    gold: '금별색', silver: '은별색'
+};
+function _woItemWarnings(it) {
+    if (!it) return [];
+    const out = [];
+    // 박 / 별색 — 명함(bizCard.foil) · 스티커(sticker.foils[]) · 기타(cpFoil)
+    const foils = [];
+    if (it.bizCard && it.bizCard.foil) foils.push(it.bizCard.foil);
+    if (it.cpFoil) foils.push(it.cpFoil);
+    if (it.sticker && Array.isArray(it.sticker.foils)) it.sticker.foils.forEach(f => foils.push(f));
+    if (foils.length > 0) {
+        const lbl = foils.map(f => WO_FOIL_ALL_LBL[f] || f).join(', ');
+        out.push({
+            title: '별색 데이터 필요 — ' + lbl,
+            lines: [
+                '박(' + lbl + ')은 <b>별색 전용 레이어</b>가 있어야 판을 뜰 수 있습니다. 디자인 이미지만으로는 제작 불가.',
+                '고객이 보낸 파일에 별색 레이어가 있는지 확인하세요.'
+            ],
+            action: '별색 레이어가 없으면 고객에게 <b>별색 데이터 (일러스트 또는 PDF) 파일을 받아주세요.</b>'
+        });
+    }
+    return out;
+}
+window._woRenderWarnings = function (items) {
+    const sec = document.getElementById('woWarnSection');
+    const list = document.getElementById('woWarnList');
+    if (!sec || !list) return;
+    const rows = [];
+    (items || []).forEach((it, i) => {
+        const ws = _woItemWarnings(it);
+        if (!ws.length) return;
+        const nm = (it.product && (it.product.name_kr || it.product.name)) || it.product_name || '제작 항목';
+        ws.forEach(w => {
+            rows.push(
+                '<div style="margin-bottom:8px; padding:10px 12px; background:#fef2f2; border:2px solid #dc2626; border-radius:6px; line-height:1.65;">'
+              + '<div style="font-size:12.5px; color:#dc2626; margin-bottom:5px;">항목 ' + (i + 1) + '. ' + nm + ' — ' + w.title + '</div>'
+              + '<div style="font-size:11px; color:#7f1d1d;">' + w.lines.map(l => '· ' + l).join('<br>') + '</div>'
+              + (w.action ? '<div style="font-size:11.5px; color:#7f1d1d; margin-top:6px; padding:6px 8px; background:#fee2e2; border-radius:4px;">' + w.action + '</div>' : '')
+              + '</div>'
+            );
+        });
+    });
+    if (!rows.length) { sec.style.display = 'none'; return; }
+    list.innerHTML = rows.join('');
+    sec.style.display = '';
+};
 
 // 2026-06-03: admin_note 헤더 부분(자동 시스템 + [제품종류] + [직원메모] + [작업지시완료]) 합쳐서 다시 저장
 async function _woRebuildAndSaveAdminNote(newCategory, newStaffNote, newComplete) {
