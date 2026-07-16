@@ -49,10 +49,10 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
 .card .btn { background:#0f172a; color:#fff; border:none; padding:10px; border-radius:8px; font-size:12.5px; font-weight:500; font-family:inherit; cursor:pointer; }
 .card .btn:hover { background:#1e293b; }
 
-/* 주의 안내 */
-.warn { background:#fef9c3; color:#92400e; border:1px solid #fde68a; border-radius:12px; padding:16px 18px; margin-top:20px; font-size:12.5px; line-height:1.65; }
-.warn b { font-weight:700; color:#78350f; }
-.warn .warn-title { display:flex; align-items:center; gap:6px; font-weight:700; color:#78350f; font-size:13.5px; margin-bottom:8px; }
+/* 주의 안내 — 2026-07-17: 노란 바탕 → 빨강 바탕 흰 글씨 (눈에 띄게) */
+.warn { background:#dc2626; color:#fff; border:1px solid #b91c1c; border-radius:12px; padding:16px 18px; margin-top:20px; font-size:12.5px; line-height:1.65; }
+.warn b { font-weight:700; color:#fff; }
+.warn .warn-title { display:flex; align-items:center; gap:6px; font-weight:700; color:#fff; font-size:13.5px; margin-bottom:8px; }
 
 /* 진행 방법 */
 .how { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:24px; margin-top:20px; }
@@ -214,6 +214,7 @@ body { font-family:'Noto Sans KR',sans-serif; background:#f8fafc; color:#0f172a;
     <div class="warn">
         <div class="warn-title"><i class="fa-solid fa-triangle-exclamation"></i> <span id="i18nWarnTitle">주의</span></div>
         <div id="i18nWarnBody">저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>
+        PNG 이미지와 벡터에 <b>글씨나 배경색이 있는 경우 반려</b>됩니다. 배경을 투명으로 하고 글씨를 넣지 마세요.<br>
         디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>
         판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.<br>
         적립금은 <b>100,000원(미화 $100) 초과 시 출금</b>이 가능합니다.<br>
@@ -400,7 +401,7 @@ const STR = {
         CardLogoDesc: '로고도 배경이 투명한 로고만 승인됩니다. SVG와 PNG 모두 가능합니다.',
         CardLogoBtn: '+ 로고 등록',
         WarnTitle: '주의',
-        WarnBody: '저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.<br>적립금은 <b>100,000원(미화 $100) 초과 시 출금</b>이 가능합니다.<br>좋은 디자인을 많이 올린 디자이너를 매월 선정해 <b>1,000,000원(미화 $1,000) 보너스</b>를 드립니다.',
+        WarnBody: '저작권에 문제없는 <b>개인 작품</b>을 올려주세요. 저작권에 대한 책임은 디자이너 본인에게 있습니다.<br>PNG 이미지와 벡터에 <b>글씨나 배경색이 있는 경우 반려</b>됩니다. 배경을 투명으로 하고 글씨를 넣지 마세요.<br>디자인을 올리고 <b>승인된 디자인에 한해</b> 비용이 지급됩니다.<br>판매에 대한 보너스는 <b>매월 30일 합산 적립</b>됩니다. 마이페이지를 확인해주세요.<br>적립금은 <b>100,000원(미화 $100) 초과 시 출금</b>이 가능합니다.<br>좋은 디자인을 많이 올린 디자이너를 매월 선정해 <b>1,000,000원(미화 $1,000) 보너스</b>를 드립니다.',
         HowH2: '진행 방법',
         Step1H4: '업로드', Step1P: '유형 선택 후 파일·이름·키워드 입력. 키워드는 5개 언어로 자동 번역되어 저장됩니다.',
         Step2H4: '관리자 검토', Step2P: '저작권 · 품질 검토 후 승인 또는 거절. 거절 시 row 자동 삭제.',
@@ -449,7 +450,7 @@ const STR = {
         CardLogoDesc: 'ロゴも背景が透明なものだけが承認されます。SVG・PNGどちらも可能です。',
         CardLogoBtn: '+ ロゴ登録',
         WarnTitle: '注意',
-        WarnBody: '著作権に問題のない<b>個人作品</b>をアップロードしてください。著作権の責任はデザイナー本人にあります。<br>デザインをアップロードし、<b>承認されたデザインに限り</b>費用が支払われます。<br>販売ボーナスは<b>毎月30日に合算積立</b>されます。マイページをご確認ください。<br>積立金は<b>¥10,000（米ドル $100）を超えると出金</b>できます。<br>優れたデザインを多くアップロードしたデザイナーを毎月選び、<b>¥100,000（米ドル $1,000）のボーナス</b>を差し上げます。',
+        WarnBody: '著作権に問題のない<b>個人作品</b>をアップロードしてください。著作権の責任はデザイナー本人にあります。<br>PNG画像とベクターに<b>文字や背景色が入っている場合は不承認</b>となります。背景は透明にし、文字は入れないでください。<br>デザインをアップロードし、<b>承認されたデザインに限り</b>費用が支払われます。<br>販売ボーナスは<b>毎月30日に合算積立</b>されます。マイページをご確認ください。<br>積立金は<b>¥10,000（米ドル $100）を超えると出金</b>できます。<br>優れたデザインを多くアップロードしたデザイナーを毎月選び、<b>¥100,000（米ドル $1,000）のボーナス</b>を差し上げます。',
         HowH2: '進行方法',
         Step1H4: 'アップロード', Step1P: 'タイプ選択後、ファイル・名前・キーワードを入力。キーワードは5言語に自動翻訳されて保存されます。',
         Step2H4: '管理者レビュー', Step2P: '著作権・品質レビュー後、承認または却下。却下時はrow自動削除。',
@@ -498,7 +499,7 @@ const STR = {
         CardLogoDesc: 'Logos are approved only if they have a transparent background. Both SVG and PNG are accepted.',
         CardLogoBtn: '+ Register Logo',
         WarnTitle: 'Notice',
-        WarnBody: 'Only upload <b>your own work</b> with no copyright issues. Copyright responsibility rests with the designer.<br>Payment is made <b>only for approved designs</b>.<br>Sales bonuses are <b>aggregated and credited on the 30th of each month</b>. Check My Page.<br>Earnings can be withdrawn once they exceed <b>USD $100</b>.<br>Each month we select designers who upload many great designs and award a <b>USD $1,000 bonus</b>.',
+        WarnBody: 'Only upload <b>your own work</b> with no copyright issues. Copyright responsibility rests with the designer.<br>PNG images and vectors <b>will be rejected if they contain text or a background color</b>. Keep the background transparent and do not add text.<br>Payment is made <b>only for approved designs</b>.<br>Sales bonuses are <b>aggregated and credited on the 30th of each month</b>. Check My Page.<br>Earnings can be withdrawn once they exceed <b>USD $100</b>.<br>Each month we select designers who upload many great designs and award a <b>USD $1,000 bonus</b>.',
         HowH2: 'How it works',
         Step1H4: 'Upload', Step1P: 'Pick a type, then enter file · name · keywords. Keywords are auto-translated into 5 languages.',
         Step2H4: 'Admin Review', Step2P: 'Copyright & quality review → approve or reject. Rejected rows are auto-deleted.',
