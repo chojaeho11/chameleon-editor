@@ -398,6 +398,10 @@ window.__CD_I18N = {
     roll_narrow_price: { ko:'10,000원', ja:'¥1,000', en:'$10' },
     roll_supplied_price:{ ko:'3,000원',  ja:'¥300',   en:'$3' },
     roll_per_yard:     { ko:'/ 1마', ja:'/ 1ヤード', en:'/ yd' },
+    roll_supplied_min: { ko:'최소 10마', ja:'最低10ヤード', en:'Min 10 yd' },
+    supplied_notice:   { ko:'고객님이 보내주신 원단에 인쇄만 진행합니다 (원단 선택 불가). 로스를 포함해 최소 10마부터 주문 가능합니다.',
+                         ja:'お客様からお送りいただいた生地にプリントのみを行います（生地の選択はできません）。ロスを含め、最低10ヤードからのご注文となります。',
+                         en:'We print only on the fabric you send us (fabric selection unavailable). Minimum order is 10 yards including loss.' },
     roll_yard_unit:    { ko:'마', ja:'ヤード', en:'yd' },
     roll_hint:         { ko:'1마 = 약 91cm. 100마 이상 주문 시 자동 50% 할인 적용.', ja:'1ヤード ≈ 91cm。100ヤード以上で自動50%OFF。', en:'1 yard ≈ 91cm. 50% off automatically applied at 100+ yards.' },
     // 2026-05-30: 상세/리뷰
@@ -1535,6 +1539,7 @@ window._cpAuthClick = async function() {
                 <button type="button" class="roll-w-btn" data-roll="supplied" onclick="window._cdPickRollWidth('supplied')">
                     <div class="roll-w-name" data-cdi18n="roll_supplied">원단 제공</div>
                     <div class="roll-w-price"><span data-cdi18n="roll_supplied_price">3,000원</span> <span class="roll-w-unit" data-cdi18n="roll_per_yard">/ 1마</span></div>
+                    <div class="roll-w-unit" style="color:#9a3412; margin-top:2px;" data-cdi18n="roll_supplied_min">최소 10마</div>
                 </button>
             </div>
             <div class="side-card-title" style="margin-top:14px;">
@@ -1551,8 +1556,11 @@ window._cpAuthClick = async function() {
 
         <!-- 2026-06-01: sideUploadCard 는 사이드바 최상단으로 이동했습니다. -->
 
-        <!-- 원단 선택 (8종 고정) -->
-        <div class="side-card">
+        <!-- 2026-07-16: 원단 제공(임가공) 안내 — 롤 폭에서 '원단 제공' 선택 시에만 표시 -->
+        <div id="suppliedNotice" style="display:none; margin-bottom:10px; padding:10px 12px; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; font-size:11.5px; color:#9a3412; line-height:1.6;"></div>
+
+        <!-- 원단 선택 (8종 고정) — 원단 제공 선택 시 잠김(_cdSyncSuppliedUi) -->
+        <div class="side-card" id="fabricSelectCard">
             <div class="side-card-title" data-cdi18n="side_fabric">원단 선택</div>
             <div class="fabric-types" style="margin-bottom:8px;">
                 <div class="fabric-type active" data-fab="cotton20" onclick="window._cdSelectFabricType('cotton20')">
@@ -2069,7 +2077,7 @@ if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
 </script>
-<script src="/cotton_designer.js?v=116"></script>
+<script src="/cotton_designer.js?v=117"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

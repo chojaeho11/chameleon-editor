@@ -482,7 +482,49 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             halfbrick: '패턴원단인쇄 (반칸 어긋남)', mirror: '패턴원단인쇄 (대칭)',
             brick: '패턴원단인쇄 (반칸 어긋남)', half_drop: '패턴원단인쇄 (반칸 내림)'
         };
+        // 2026-07-16: 롤 폭 표기 + '원단 제공'(고객 지참 임가공) 주문 식별.
+        //   roll_width 는 2026-07-16 부터 저장 — 그 이전 주문은 단가 3,000원(패턴 모드)으로 역추정.
+        //   supplied 인데 우리 원단이 찍혀 있거나 10마 미만이면 고객 오더 오류 → 매니저 연락 필요.
+        const CW_ROLL_KR = { wide: '대폭 (130cm)', narrow: '소폭 (100cm)', supplied: '원단 제공 (고객 지참)' };
+        function _cwIsSuppliedItem(it) {
+            if (!it || _cwIsPoster(it.layout)) return false;
+            if (it.roll_width) return it.roll_width === 'supplied';
+            return Number(it.unit_price) === 3000;   // 레거시 주문 역추정
+        }
+        function _cwRollWidthKr(it) {
+            var w = it && it.roll_width;
+            if (!w && _cwIsSuppliedItem(it)) w = 'supplied';
+            if (!w) {
+                // 레거시 — 단가로 역추정
+                var up = Number(it && it.unit_price);
+                w = up === 13000 ? 'wide' : up === 10000 ? 'narrow' : null;
+            }
+            if (!w) return '<span style="color:#9ca3af;">정보 없음</span>';
+            var lbl = CW_ROLL_KR[w] || w;
+            return w === 'supplied' ? '<b style="color:#dc2626;">' + lbl + '</b>' : '<b>' + lbl + '</b>';
+        }
+        function _cwSuppliedWarn(it) {
+            if (!_cwIsSuppliedItem(it)) return '';
+            var yards = Number(it.roll_yards || it.qty || 1);
+            var fabricCode = String((it.product_code || '')).toLowerCase();
+            var ourFabric = fabricCode && fabricCode !== 'supplied';   // 우리 원단이 선택된 채 3,000원 결제됨
+            var short = yards < 10;
+            if (!ourFabric && !short) {
+                // 정상적인 원단 제공 주문
+                return '<div style="margin:8px 0; padding:8px 10px; background:#fff7ed; border:1px solid #fdba74; border-radius:6px; font-size:11px; color:#9a3412; line-height:1.5;">'
+                     + '원단 제공 주문 — 고객이 보낸 원단에 인쇄만 진행합니다. 원단 입고 확인 후 작업.</div>';
+            }
+            var reasons = [];
+            if (ourFabric) reasons.push('원단이 <b>' + _cwFabricKr(it.product_code, it.fabric) + '</b> 로 선택됨 (원단 제공 단가 3,000원/마 인데 우리 원단이 지정됨)');
+            if (short) reasons.push('수량 <b>' + yards + '마</b> — 원단 제공 오더는 로스 포함 <b>최소 10마</b>');
+            return '<div style="margin:8px 0; padding:10px 12px; background:#fef2f2; border:2px solid #dc2626; border-radius:6px; line-height:1.6;">'
+                 + '<div style="font-size:13px; color:#dc2626; margin-bottom:4px;">고객 오더오류 — 원단제공 오더</div>'
+                 + '<div style="font-size:11px; color:#7f1d1d;">' + reasons.map(function(r){ return '· ' + r; }).join('<br>') + '</div>'
+                 + '<div style="font-size:11px; color:#7f1d1d; margin-top:5px;">작업 전 담당 매니저가 고객에게 연락하세요. (원단제공 오더는 샘플이라도 로스 포함 최소 10마 주문)</div>'
+                 + '</div>';
+        }
         function _cwFabricKr(productCode, fallback) {
+            if (productCode === 'supplied') return '고객 공급 원단';
             if (!productCode) return fallback || '-';
             const code = String(productCode).toLowerCase().trim();
             // cotton20_white → 면20수 평직 화이트
@@ -605,7 +647,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                         <div class="lbl">인쇄 방식</div><div class="val"><b>${_cwLayoutKr(it.layout)}</b></div>
                         <div class="lbl">수량</div><div class="val"><b>${it.qty || 1}${_cwIsPoster(it.layout) ? '장' : '마'}</b></div>
                         <div class="lbl">단가 (출력)</div><div class="val">${fmt(it.unit_price)}원</div>
+                        ${_cwIsPoster(it.layout) ? '' : `<div class="lbl">롤 폭</div><div class="val">${_cwRollWidthKr(it)}</div>`}
                     </div>
+                    ${_cwSuppliedWarn(it)}
                     ${oversize}
                     ${pinfo}
                     <div class="opt-grid">${opts || '<div class="opt-empty" style="grid-column:1/-1;">옵션 정보 없음</div>'}</div>

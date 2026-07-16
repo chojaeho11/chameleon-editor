@@ -150,6 +150,13 @@ const state = {
     rollYards: 1
 };
 const ROLL_PRICE_PER_YARD = { wide: 13000, narrow: 10000, supplied: 3000 };
+// 2026-07-16: '원단 제공'(고객이 원단을 직접 보내는 임가공, 3,000원/마) 규칙.
+//   - 우리 원단(옥스포드 등) 선택 불가 → '고객 공급 원단' 고정. (기존엔 옥스포드를 고르고도 3,000원에 나감 — 주문 4740)
+//   - 로스 포함 최소 10마 (샘플이라도).
+const SUPPLIED_MIN_YARDS = 10;
+const SUPPLIED_FABRIC_NAME = { ko: '고객 공급 원단', ja: 'お客様持込生地', en: 'Customer Supplied Fabric' };
+function _cdIsSuppliedRoll() { return state.layout !== 'centered' && state.rollWidth === 'supplied'; }
+function _cdRollYardsMin() { return _cdIsSuppliedRoll() ? SUPPLIED_MIN_YARDS : 1; }
 // 2026-06-15: 롤폭별 출력 가로 사이즈 (cm). 패턴 모드에서 자동 적용.
 //   wide(대폭)=130cm, narrow(소폭)=100cm. supplied(고객 공급)은 기존 값 유지.
 const ROLL_OUTPUT_WIDTH_CM = { wide: 130, narrow: 100 };
@@ -170,17 +177,51 @@ window._cdPickRollWidth = function(w) {
             try { window._cdRender(); } catch (e) {}
         }
     }
+    // 2026-07-16: 원단 제공 ↔ 우리 원단 전환 시 원단선택 잠금/해제 + 최소 마수 보정
+    _cdSyncSuppliedUi();
     if (typeof updatePrice === 'function') updatePrice();
 };
+
+// 2026-07-16: '원단 제공' 이면 원단 선택을 잠그고(고객이 보내는 원단이라 우리 원단 고를 이유 없음)
+//   최소 10마로 올린다. 다른 롤 폭으로 바꾸면 원상복구.
+function _cdSyncSuppliedUi() {
+    var sup = _cdIsSuppliedRoll();
+    // 최소 마수 — 원단 제공이면 10마 미만 불가
+    var _min = _cdRollYardsMin();
+    if ((state.rollYards || 1) < _min) {
+        state.rollYards = _min;
+        var _ry = document.getElementById('rollYards'); if (_ry) _ry.value = _min;
+    }
+    var _ryEl = document.getElementById('rollYards'); if (_ryEl) _ryEl.min = _min;
+    // 원단 선택 카드 잠금 (클릭 차단 + 흐리게)
+    var _fw = document.getElementById('fabricSelectCard');
+    if (_fw) {
+        _fw.style.opacity = sup ? '0.45' : '';
+        _fw.style.pointerEvents = sup ? 'none' : '';
+    }
+    var _cw = document.getElementById('fabricColorWrap');
+    if (_cw && sup) _cw.style.display = 'none';
+    // 안내문 표시
+    var _n = document.getElementById('suppliedNotice');
+    if (_n) {
+        _n.style.display = sup ? '' : 'none';
+        if (sup) _n.textContent = (window.cdT && window.cdT('supplied_notice')) || '고객님이 보내주신 원단에 인쇄만 진행합니다 (원단 선택 불가). 로스를 포함해 최소 10마부터 주문 가능합니다.';
+    }
+    if (typeof updateFabricDetail === 'function') { try { updateFabricDetail(); } catch (e) {} }
+}
+window._cdSyncSuppliedUi = _cdSyncSuppliedUi;
+
 window._cdOnRollYardsInput = function() {
     var el = document.getElementById('rollYards');
-    var v = Math.max(1, Math.min(9999, parseInt(el.value || '1', 10) || 1));
+    var _min = _cdRollYardsMin();
+    var v = Math.max(_min, Math.min(9999, parseInt(el.value || String(_min), 10) || _min));
     state.rollYards = v;
     el.value = v;
     if (typeof updatePrice === 'function') updatePrice();
 };
 window._cdRollYardsChg = function(d) {
-    state.rollYards = Math.max(1, Math.min(9999, (state.rollYards || 1) + d));
+    var _min = _cdRollYardsMin();
+    state.rollYards = Math.max(_min, Math.min(9999, (state.rollYards || _min) + d));
     var el = document.getElementById('rollYards'); if (el) el.value = state.rollYards;
     if (typeof updatePrice === 'function') updatePrice();
 };
@@ -213,6 +254,19 @@ function getLangColorName(color) {
 }
 
 function getFabric() {
+    // 2026-07-16: 원단 제공(임가공) — 우리 원단이 아니라 고객이 보내는 원단. 이름/코드 고정.
+    //   (기존엔 옥스포드 선택 상태로 3,000원 결제 → 작업지시서에 '옥스포드'로 떠서 구분 불가)
+    if (_cdIsSuppliedRoll()) {
+        var _sl = window.__CD_LANG || 'ko';
+        return {
+            code: 'supplied',
+            name: SUPPLIED_FABRIC_NAME[_sl] || SUPPLIED_FABRIC_NAME.ko,
+            desc: '',
+            isCotton: false,
+            type: 'supplied',
+            color: null
+        };
+    }
     const t = FABRIC_TYPES[state.fabricType] || FABRIC_TYPES.cotton20;
     const isCotton = t.isCotton;
     const localizedName = getLangFabricName(state.fabricType);
@@ -944,6 +998,9 @@ window._cdSelectLayout = function(name) {
         const oHp = document.getElementById('orderHcm'); if (oHp) oHp.value = _cdMm(state.orderHcm);
         if (typeof window._cdCalcHoebae === 'function') window._cdCalcHoebae();
     }
+    // 2026-07-16: 포스터(centered) ↔ 패턴 전환 시 '원단 제공' 잠금 상태 재적용
+    //   (원단 제공은 패턴 모드에서만 유효 — 포스터로 가면 원단 선택이 다시 풀려야 함)
+    if (typeof _cdSyncSuppliedUi === 'function') { try { _cdSyncSuppliedUi(); } catch (e) {} }
     window._cdRender();
 };
 
@@ -2022,6 +2079,17 @@ function captureThumbDataUrl() {
 function buildCartItem() {
     const f = getFabric();
     if (!f) { showToast(window.cdT?window.cdT("alert_no_fabric"):"원단을 선택해주세요"); return null; }
+    // 2026-07-16: 원단 제공(임가공) — 로스 포함 최소 10마. 담기/바로구매 공통 관문에서 차단.
+    if (_cdIsSuppliedRoll() && (state.rollYards || 1) < SUPPLIED_MIN_YARDS) {
+        var _sL = window.__CD_LANG || 'ko';
+        showToast(_sL === 'ja' ? '生地持込のご注文は、ロスを含め最低10ヤードからとなります。'
+                : _sL === 'en' ? 'Customer-supplied fabric orders require a minimum of 10 yards (including loss).'
+                : '원단 제공 주문은 로스를 포함해 최소 10마부터 가능합니다.');
+        state.rollYards = SUPPLIED_MIN_YARDS;
+        var _syEl = document.getElementById('rollYards'); if (_syEl) _syEl.value = SUPPLIED_MIN_YARDS;
+        if (typeof updatePrice === 'function') updatePrice();
+        return null;
+    }
     // 2026-05-31: 패턴 모드는 회배/마감/고리/부자재 무시, 롤폭×야드로 계산.
     const isPatternMode = (state.layout !== 'centered');
     let rawHoebae, hoebae, itemPrice, finishPerItem, otherPerItem, subtotal, disc, discountAmt, price;
@@ -2807,6 +2875,12 @@ window._cpSubmitOrder = async function() {
                 })(),
                 unit_price: it.unitPrice,
                 price: it.price,
+                // 2026-07-16: 롤 폭 — 여태 주문서에 안 실려서 작업지시서가 '원단 제공'(고객 지참) 주문을
+                //   우리 원단 주문과 구분 못 했다 (주문 4740: 옥스포드 3,000원). 이제 저장.
+                roll_width: it.rollWidth || null,               // wide | narrow | supplied
+                roll_width_label: it.rollWidthLabel || null,
+                roll_per_yard: it.rollPerYard || null,
+                roll_yards: it.rollYards || null,
                 source: 'cotton-print',
                 artwork_url: artworkUrl,                                  // 최상위에도 — 작업지시서/관리자 조회 편의
                 artwork_later: !!it.artworkLater,                         // 2026-05-22: 이미지 추후 전달(이메일 등) 주문 표시
