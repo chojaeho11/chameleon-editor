@@ -29,11 +29,38 @@ const MODEL_MAIN = "claude-sonnet-4-5-20250929";
 const MODEL_FALLBACK = "claude-haiku-4-5-20251001";
 
 // 발행 언어 — 사장님 결정: 8개국어 → 한/일/영 3개만 (하루 3글 = 스팸 안전)
+//   노출: 한국어=한국 사이트만 / 일본어=일본 사이트만 / 영어=한국·일본 제외 전 국가
+//   2026-07-17: 영어권 도메인은 chameleon.design. cafe3355.com 은 종이매대 전용 랜딩이라
+//   블로그가 없다(_worker.js:609) — 글 안의 링크가 엉뚱한 페이지로 가고 있었다.
 const LANGS = [
     { lang: "kr", countryCode: "KR", label: "한국어", site: "www.cafe2626.com" },
     { lang: "ja", countryCode: "JP", label: "日本語", site: "www.cafe0101.com" },
-    { lang: "en", countryCode: "US", label: "English", site: "www.cafe3355.com" },
+    { lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design" },
 ];
+const INDEXNOW_KEY = "cf8e9a2b4d6f1c3e5a7b9d0f2e4c6a8b";
+
+// 2026-07-17: 발행 즉시 색인 요청 (IndexNow → Bing/Yandex/Naver 등).
+//   기존 search-index-notify 는 제품 URL 만 제출해서 블로그 글은 색인 요청이 한 번도 안 나갔다.
+async function pingIndexNow(urls: string[]) {
+    const byHost: Record<string, string[]> = {};
+    urls.forEach((u) => {
+        try { const h = new URL(u).hostname; (byHost[h] = byHost[h] || []).push(u); } catch (_) {}
+    });
+    for (const host of Object.keys(byHost)) {
+        try {
+            const r = await fetch("https://yandex.com/indexnow", {
+                method: "POST",
+                headers: { "Content-Type": "application/json; charset=utf-8" },
+                body: JSON.stringify({
+                    host, key: INDEXNOW_KEY,
+                    keyLocation: `https://${host}/${INDEXNOW_KEY}.txt`,
+                    urlList: byHost[host],
+                }),
+            });
+            console.log(`[promo] IndexNow ${host}: ${r.status}`);
+        } catch (e) { console.warn("[promo] IndexNow 실패:", host, e); }
+    }
+}
 
 async function callClaude(apiKey: string, body: any): Promise<any> {
     for (const model of [MODEL_MAIN, MODEL_FALLBACK]) {
@@ -363,6 +390,17 @@ ${productSummary}
                 results.push({ lang: L.lang, error: String(e && (e as any).message || e) });
             }
         }
+
+        // ── 5-1) 색인 요청 — 발행된 글 URL 을 IndexNow 로 즉시 제출
+        try {
+            const idxUrls = results
+                .filter((r: any) => r.post_id && r.lang)
+                .map((r: any) => {
+                    const L = LANGS.find((x) => x.lang === r.lang)!;
+                    return `https://${L.site}/board.html?cat=blog&country=${L.countryCode}&id=${r.post_id}`;
+                });
+            if (idxUrls.length) await pingIndexNow(idxUrls);
+        } catch (e) { console.warn("[promo] 색인 요청 실패:", e); }
 
         // ── 6) 사진 상태 갱신
         const publishedIds = identified.map((d) => d.photo.id);

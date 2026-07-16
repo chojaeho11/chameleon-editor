@@ -1,16 +1,6 @@
-[한국 cafe2626.com]
-  list title: 제작사례 블로그 | 카멜레온프린팅
-  posts: 3
-    - K-뷰티 브랜드 전시 부스, 허니콤보드로 완성하다 — 디자인부터 제작까지 클릭 몇 번
-    - 공공기관 전시 패널과 한옥 포토존 제작 후기 — 전문가처럼 쉽게 만드는 법
-    - 빛과 그림의 조화를 담은 아프로바 자립형코롯토
-
-[일본 cafe0101.com]
-  list title: 制作事例ブログ | カメレオンプリンティング
-  posts: 2
-    - K-BEAUTY ブランド展示ブースの制作事例｜ハニカムボード × ショッピングバッグ × 大型バナー
-    - 公共施設の情報パネルから伝統韓屋フォトゾーンまで。ガイドに沿ってクリックするだけで、プロ級の展示物が完成
-
-[영어권 cafe3355.com]
-  list title: 종이매대 - 카멜레온프린팅 | 친환경 종이 진열대 전문
-  posts: 0
+EN post via GPTBot:
+  title: K-BEAUTY Exhibition Booth: From Design to Reality in Just a 
+  hreflang alternates:
+    ja -> https://www.cafe0101.com/board.html?cat=blog&country=JP&id
+    ko -> https://www.cafe2626.com/board.html?cat=blog&country=KR&id
+    en -> https://www.chameleon.design/board.html?cat=blog&country=U

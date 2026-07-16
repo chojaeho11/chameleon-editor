@@ -9,7 +9,10 @@ const corsHeaders = {
 const domainMap: Record<string, string> = {
     KR: "https://www.cafe2626.com",
     JP: "https://www.cafe0101.com",
-    US: "https://www.cafe3355.com",
+    // 2026-07-17: 영어권은 chameleon.design.
+    //   cafe3355.com 은 2026-05-15 부터 종이매대 전용 랜딩 도메인이라 블로그를 서빙하지 않는다
+    //   (_worker.js:609). 그대로 두면 사이트맵이 색인기에 존재하지 않는 URL 을 계속 제출한다.
+    US: "https://www.chameleon.design",
 };
 
 const langMap: Record<string, string> = {

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717040524';
+    var CV = '20260717040805';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -7018,7 +7018,9 @@ async function handleSubReturn() {
     <!-- 게시판 -->
 <div class="community-nav-wrapper">
     <div class="comm-grid">
-        <a href="#" onclick="goBoard('blog'); return false;" class="comm-btn blog">
+        <!-- 2026-07-17: href 를 실제 URL 로 — 기존 href="#" + JS 라 크롤러가 블로그를 발견하지 못했다
+             (블로그 글이 사이트맵에만 있고 내부 링크가 0개라 색인이 잘 안 됨). 클릭 동작은 그대로. -->
+        <a href="/board.html?cat=blog" onclick="goBoard('blog'); return false;" class="comm-btn blog">
             <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
             <span data-i18n="menu_blog">카멜레온<br>블로그</span>
         </a>
