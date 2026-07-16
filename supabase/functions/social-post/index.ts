@@ -55,6 +55,9 @@ serve(async (req) => {
             case "reddit":
                 result = await postToReddit(cfg, title, summary, link);
                 break;
+            case "threads":
+                result = await postToThreads(cfg, title, summary, link, image_url, hashtags);
+                break;
             default:
                 return jsonRes({ error: "Unknown platform: " + platform }, 400);
         }
@@ -208,6 +211,54 @@ async function postToInstagram(
     const publishData = await publishRes.json();
     if (publishData.error) throw new Error("Instagram publish error: " + publishData.error.message);
     return { media_id: publishData.id };
+}
+
+// ═══ Threads API (2026-07-17 추가) ═══
+// 인스타와 같은 2단계(컨테이너 → 발행) 패턴이지만 호스트가 graph.threads.net 이고
+// 컨테이너에 media_type 을 명시해야 한다. 이미지 없으면 TEXT 로 발행.
+// 설정(marketing_social_config.config): { threads_user_id, access_token }
+//   토큰 발급: Meta 개발자 앱 → Threads API → threads_basic + threads_content_publish 권한
+async function postToThreads(
+    cfg: any, title: string, summary: string, link: string,
+    image_url: string, hashtags: string[]
+) {
+    const { threads_user_id, access_token } = cfg;
+    if (!threads_user_id || !access_token) throw new Error("Threads credentials missing");
+
+    const tags = (hashtags || []).slice(0, 10).map((t: string) => "#" + t.replace(/\s/g, "")).join(" ");
+    // 쓰레드 본문은 500자 제한
+    let text = `${title}\n\n${summary || ""}\n\n${link || ""}\n\n${tags}`.trim();
+    if (text.length > 495) text = text.slice(0, 495) + "…";
+
+    // Step 1: 컨테이너
+    const createParams: Record<string, string> = {
+        media_type: image_url ? "IMAGE" : "TEXT",
+        text,
+        access_token,
+    };
+    if (image_url) createParams.image_url = image_url;
+
+    const createRes = await fetch(`https://graph.threads.net/v1.0/${threads_user_id}/threads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createParams),
+    });
+    const createData = await createRes.json();
+    if (createData.error) throw new Error("Threads create error: " + createData.error.message);
+    const creationId = createData.id;
+
+    // 컨테이너 처리 대기 — 이미지가 있으면 서버가 내려받는 시간이 필요 (권장 30초, 여기선 5초)
+    if (image_url) await new Promise((r) => setTimeout(r, 5000));
+
+    // Step 2: 발행
+    const publishRes = await fetch(`https://graph.threads.net/v1.0/${threads_user_id}/threads_publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ creation_id: creationId, access_token }),
+    });
+    const publishData = await publishRes.json();
+    if (publishData.error) throw new Error("Threads publish error: " + publishData.error.message);
+    return { thread_id: publishData.id };
 }
 
 // ═══ Reddit API ═══

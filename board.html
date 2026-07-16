@@ -1030,13 +1030,17 @@
                 }
 
                 // ★ hreflang: 같은 글의 다른 언어 버전 찾기 (source_id로 연결)
-                const sourceId = seoMeta.source_id || post.id; // 원본 ID (자기 자신이면 원본)
+                // 2026-07-17: markdown->>source_id 필터는 동작하지 않았다 —
+                //   markdown 은 jsonb 가 아니라 text 컬럼이라 PostgREST 가 JSON 연산자를 적용하지 못해
+                //   형제글 조회가 항상 자기 자신 1건만 반환했다(= 다국어 hreflang 이 계속 비어 있었음).
+                //   → 실제 source_id 컬럼을 추가하고 그걸로 조회한다. (markdown 안의 값도 폴백으로 유지)
+                const sourceId = post.source_id || seoMeta.source_id || post.id; // 원본 ID (자기 자신이면 원본)
                 try {
                     // 같은 source_id를 가진 다른 언어 버전 검색
                     const { data: siblings } = await sb.from('blog_posts')
                         .select('id, country_code, markdown')
                         .eq('category', 'blog')
-                        .or(`id.eq.${sourceId},markdown->>source_id.eq.${sourceId}`);
+                        .or(`id.eq.${sourceId},source_id.eq.${sourceId}`);
 
                     // 기존 hreflang 제거 후 재생성
                     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());

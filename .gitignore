@@ -3,3 +3,8 @@ node_modules/
 nul
 .claude/settings.local.json
 패턴/
+# 2026-07-17: 홍보사진 자동발행 파이프라인.
+#   gitignore 된 경로는 wrangler pages deploy 에서도 제외됨(확인: 패턴/ 파일이 사이트에서 404).
+#   .promo.env 에는 service_role 키가 들어가므로 절대 커밋/배포되면 안 됨.
+홍보사진/
+.promo.env

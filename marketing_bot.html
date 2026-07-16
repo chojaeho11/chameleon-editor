@@ -201,6 +201,10 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="tab" onclick="switchTab('youtube',this)"><i class="fa-brands fa-youtube"></i> <span>YouTube</span></div>
     <div class="tab" onclick="switchTab('blog',this)"><i class="fa-solid fa-blog"></i> <span>블로그</span></div>
     <div class="tab" onclick="switchTab('settings',this)"><i class="fa-solid fa-gear"></i> <span>설정</span></div>
+    <!-- 2026-07-17: 홍보사진 자동발행. 반드시 맨 뒤에 둘 것 —
+         :1007 등에서 switchTab('youtube', document.querySelector('.tab:nth-child(5)')) 처럼
+         위치 기반으로 탭을 찾는 코드가 있어 중간에 끼우면 엉뚱한 탭이 활성화된다. -->
+    <div class="tab" onclick="switchTab('promo',this)"><i class="fa-solid fa-camera"></i> <span>홍보사진</span></div>
 </div>
 
 <!-- ===== 대시보드 탭 ===== -->
@@ -693,6 +697,33 @@ textarea.form-input { resize:vertical; min-height:80px; }
     </div>
 </div>
 
+<!-- 2026-07-17: 홍보사진 자동발행 -->
+<div class="tab-panel" id="panel-promo">
+    <div class="card">
+        <div class="card-title"><i class="fa-solid fa-camera"></i> 홍보사진 자동발행</div>
+        <div style="font-size:13px; color:#475569; line-height:1.8; background:#f8fafc; border-radius:10px; padding:14px 16px; margin-bottom:14px;">
+            <b>작업폴더 → 홍보사진</b> 폴더에 제작물 사진을 넣고 <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px;">./promo-sync.sh</code> 실행 →
+            매일 <b>18시</b>에 AI가 사진을 보고 제품을 판별해 <b>한국어·일본어·영어</b> 블로그 글을 자동 발행합니다.<br>
+            여러 장이 <b>글 1개</b>로 묶입니다. 제품 판별에 실패한 사진은 발행하지 않고 <b>보류</b>됩니다.<br>
+            바로 올리려면 <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px;">./promo-sync.sh --now</code>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:14px;">
+            <label style="display:flex; align-items:center; gap:9px; cursor:pointer; font-size:14px;">
+                <input type="checkbox" id="promoAutoToggle" onchange="togglePromoAuto(this.checked)" style="width:18px; height:18px;">
+                <span>매일 자동 발행 <span style="color:#64748b; font-size:12px;">(끄면 대기열에 쌓이기만 하고 글이 나가지 않습니다)</span></span>
+            </label>
+            <div style="margin-left:auto; display:flex; gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="loadPromoPhotos()"><i class="fa-solid fa-rotate"></i> 새로고침</button>
+                <button class="btn btn-primary btn-sm" onclick="publishPromoNow(this)"><i class="fa-solid fa-paper-plane"></i> 지금 발행</button>
+            </div>
+        </div>
+
+        <div id="promoStats" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;"></div>
+        <div id="promoList" style="font-size:13px; color:#64748b;">불러오는 중...</div>
+    </div>
+</div>
+
 </div><!-- /main-content -->
 
 <!-- 콘텐츠 상세 모달 -->
@@ -753,6 +784,88 @@ window.switchTab = function(tabId, el) {
     if (tabId === 'content') loadContentList();
     if (tabId === 'topics') loadTopics();
     if (tabId === 'blog') loadBlogHistory();
+    if (tabId === 'promo') loadPromoPhotos();
+};
+
+// ===== 홍보사진 자동발행 (2026-07-17) =====
+//   promo-sync.sh 가 홍보사진/ 폴더의 사진을 올려 promo_photos 에 쌓고,
+//   pg_cron 이 매일 18시에 promo-publish 를 불러 한/일/영 블로그를 발행한다.
+//   이 화면은 대기열 확인 + 킬스위치 + 수동 발행용.
+const PROMO_STATUS_KR = {
+    new: { label: '대기', color: '#0369a1', bg: '#e0f2fe' },
+    published: { label: '발행됨', color: '#166534', bg: '#dcfce7' },
+    skipped: { label: '보류 (제품 판별 실패)', color: '#92400e', bg: '#fef3c7' },
+    error: { label: '오류', color: '#991b1b', bg: '#fee2e2' }
+};
+
+window.loadPromoPhotos = async function () {
+    const listEl = document.getElementById('promoList');
+    const statsEl = document.getElementById('promoStats');
+    if (!listEl) return;
+    try {
+        const [{ data: photos }, { data: st }] = await Promise.all([
+            sb.from('promo_photos').select('*').order('created_at', { ascending: false }).limit(60),
+            sb.from('promo_settings').select('auto_publish').eq('id', 1).maybeSingle()
+        ]);
+        const tg = document.getElementById('promoAutoToggle');
+        if (tg) tg.checked = !st || st.auto_publish !== false;
+
+        const rows = photos || [];
+        const count = (s) => rows.filter(r => r.status === s).length;
+        statsEl.innerHTML = ['new', 'published', 'skipped', 'error'].map(s => {
+            const c = PROMO_STATUS_KR[s];
+            return `<div style="padding:9px 14px; background:${c.bg}; color:${c.color}; border-radius:8px; font-size:13px;">${c.label} <b>${count(s)}</b></div>`;
+        }).join('');
+
+        if (rows.length === 0) {
+            listEl.innerHTML = '<div style="padding:24px; text-align:center; color:#94a3b8;">아직 올라온 홍보사진이 없습니다. 홍보사진/ 폴더에 사진을 넣고 ./promo-sync.sh 를 실행하세요.</div>';
+            return;
+        }
+        listEl.innerHTML = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px;">' + rows.map(r => {
+            const c = PROMO_STATUS_KR[r.status] || PROMO_STATUS_KR.new;
+            return `<div style="border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;">
+                <img src="${r.storage_url}" alt="" style="width:100%; height:130px; object-fit:cover; display:block; background:#f1f5f9;">
+                <div style="padding:9px 10px;">
+                    <div style="display:inline-block; padding:2px 7px; background:${c.bg}; color:${c.color}; border-radius:5px; font-size:11px; margin-bottom:5px;">${c.label}</div>
+                    <div style="font-size:13px; color:#0f172a;">${r.product_name ? _pEsc(r.product_name) : '<span style="color:#94a3b8;">제품 미판별</span>'}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; line-height:1.5;">${r.vision_note ? _pEsc(r.vision_note).slice(0, 70) : ''}</div>
+                </div>
+            </div>`;
+        }).join('') + '</div>';
+    } catch (e) {
+        listEl.innerHTML = '<div style="color:#dc2626;">불러오기 실패: ' + _pEsc(e.message || e) + '</div>';
+    }
+};
+function _pEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+window.togglePromoAuto = async function (on) {
+    try {
+        const { error } = await sb.from('promo_settings')
+            .upsert({ id: 1, auto_publish: !!on, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+        if (error) throw error;
+        showToast(on ? '매일 자동 발행 ON' : '자동 발행 OFF — 대기열에 쌓이기만 합니다', on ? 'success' : 'warn');
+    } catch (e) {
+        showToast('설정 저장 실패: ' + (e.message || e), 'error');
+    }
+};
+
+window.publishPromoNow = async function (btn) {
+    if (!confirm('대기 중인 홍보사진으로 지금 블로그 글(한/일/영)을 발행할까요?')) return;
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 발행 중... (1~2분)';
+    try {
+        const { data, error } = await sb.functions.invoke('promo-publish', { body: { maxPhotos: 12, force: true } });
+        if (error) throw error;
+        // 엣지 함수는 실패해도 HTTP 200 이라 body 를 직접 확인해야 한다
+        if (data && data.ok === false) throw new Error(data.error || '발행 실패');
+        if (data && data.message) showToast(data.message, 'warn');
+        else showToast(`발행 완료 — 사진 ${data.photos}장 · 보류 ${data.skipped}장 · ${(data.products || []).join(', ')}`, 'success');
+        loadPromoPhotos();
+    } catch (e) {
+        showToast('발행 실패: ' + (e.message || e), 'error');
+    } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+    }
 };
 
 // ===== 대시보드 =====
