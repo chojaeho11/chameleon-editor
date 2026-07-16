@@ -561,28 +561,6 @@ async function handleResetPassword() {
     }
 }
 
-// 2026-07-15: 일본 전용 도메인(cafe0101 / cotton-printer = 패브릭 JP) — 로그인/가입된 사용자 중
-//   profiles.site 가 비어있는 경우(소셜 Google 가입 등 site 미설정) JP 로 채움.
-//   NULL/빈값만 채우므로 기존에 국가가 잡힌 사용자(KR 등)는 절대 덮어쓰지 않음 → 오염 없음.
-//   이메일 가입은 위 signUp 흐름에서 이미 site 설정. 소셜 가입 커버용.
-(function _jpSiteBackfill(){
-    try {
-        var h = (location.hostname || '').toLowerCase();
-        if (h.indexOf('cafe0101') < 0 && h.indexOf('cotton-printer') < 0) return;
-        var tries = 0;
-        (function run(){
-            var _sb = window.sb;
-            if (!_sb || !_sb.auth) { if (tries++ < 20) setTimeout(run, 500); return; }
-            _sb.auth.getSession().then(function(r){
-                var u = r && r.data && r.data.session && r.data.session.user;
-                if (!u) return;
-                _sb.from('profiles').select('site').eq('id', u.id).maybeSingle().then(function(p){
-                    var cur = p && p.data && p.data.site;
-                    if (!cur) {
-                        _sb.from('profiles').update({ site: 'JP' }).eq('id', u.id).then(function(){}, function(){});
-                    }
-                }, function(){});
-            }, function(){});
-        })();
-    } catch(e){}
-})();
+// 2026-07-15: [제거됨] 일본 도메인 site 자동 보정(_jpSiteBackfill).
+//   site 가 비어있는 '기존 사용자'가 JP 도메인을 방문만 해도 JP 로 바뀌어, 한국 관리자/직원 계정까지
+//   JP 로 잘못 귀속되는 문제 발생(사장님 계정 포함) → 제거. 신규 가입 시 site 는 signUp 흐름에서 설정함.

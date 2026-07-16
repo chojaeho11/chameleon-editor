@@ -5273,10 +5273,8 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 var prf = await sb.from('profiles').select('username, site').eq('id', user.id).maybeSingle();
                 if (prf && prf.data && prf.data.username) label = prf.data.username;
-                // 2026-07-15: 소셜(구글) 가입 등 site 미설정이면 JP 로 채움(일본 패브릭 도메인). 기존 국가는 덮어쓰지 않음.
-                if (prf && prf.data && !prf.data.site) {
-                    try { await sb.from('profiles').update({ site: 'JP' }).eq('id', user.id).is('site', null); } catch(_se){}
-                }
+                // 2026-07-15: [제거됨] site 자동 JP 보정 — 기존 사용자(국가 미설정)가 이 페이지를 방문만 해도
+                //   JP 로 바뀌어 한국 관리자/직원까지 JP 로 잘못 귀속됨. 신규 가입은 아래 signUp 흐름에서 site 설정.
             } catch(e){}
             if ($('cpAuthLoginBtn')) $('cpAuthLoginBtn').style.display = 'none';
             var li = $('cpAuthLoggedIn'); if (li) li.style.display = 'inline-flex';
