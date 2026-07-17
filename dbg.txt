@@ -1,8 +1,24 @@
-[KR] sitemap-blog.xml: 2 URLs, cafe3355 잘못된 URL: 0
-   ex: https://www.cafe2626.com/board.html?cat=blog&amp;country=KR&amp;id=fab
-[JP] sitemap-blog.xml: 2 URLs, cafe3355 잘못된 URL: 0
-   ex: https://www.cafe0101.com/board.html?cat=blog&amp;country=JP&amp;id=fc1
-[US] sitemap-blog.xml: 2 URLs, cafe3355 잘못된 URL: 0
-   ex: https://www.cafe2626.com/board.html?cat=blog&amp;country=KR&amp;id=fab
-
-메인에 크롤 가능한 블로그 링크: 없음
+{
+ "보류된 사진": [
+  {
+   "filename": "KakaoTalk_20260714_112624668_02.jpg",
+   "vision_note": "대형 배 모양 입체 포토존. 진한 파란색 선체에 'Sailing with Midas' 금색 곡선 필기체 텍스트, 금색 닻 장식이 있으며, 상단에 베이지색 돛 구조가 있음. 상단 화면에 '2026 MIDAS WEEK GLOBAL' 텍스트가 인쇄되어 있고 배 주변으로 파도 그래픽 표현",
+   "error": "우리 제품군으로 판별되지 않음 — 발행 제외"
+  }
+ ],
+ "status 집계": [
+  {
+   "status": "skipped",
+   "count": 1
+  },
+  {
+   "status": "published",
+   "count": 25
+  }
+ ],
+ "KR 블로그 글 수": [
+  {
+   "count": 3
+  }
+ ]
+}

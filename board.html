@@ -541,6 +541,8 @@
                     <option value="FR">🇫🇷 Français</option>
                 </select>
                 <button id="btnWrite" class="btn primary" style="display:inline-block; margin-left:10px;" data-i18n="btn_write_post">✏️ 글쓰기</button>
+                <!-- 2026-07-17: 홍보사진 즉시 발행 — 관리자에게만, 블로그 탭에서만 보임 (아래 _syncPromoBtn) -->
+                <button id="btnPromoNow" class="btn" style="display:none; margin-left:8px; background:#f59e0b; color:#fff;" onclick="promoPublishNow(this)" title="홍보사진 폴더에 올라온 대기 사진으로 지금 글을 발행합니다">📷 지금 발행</button>
             </div>
         </div>
 
@@ -756,6 +758,12 @@
         
         document.getElementById('btnWrite').style.display = 'inline-block';
         document.getElementById('btnWrite').innerHTML = T.writePost;
+
+        // 2026-07-17: 「지금 발행」 노출 판정.
+        //   isAdmin 은 config.js 에서 이메일로 1차 판정 후 profiles.role 로 비동기 승격되므로
+        //   (config.js:310-322) 지금과 잠시 뒤 두 번 확인한다.
+        _syncPromoBtn();
+        setTimeout(() => _syncPromoBtn(), 1500);
 
         // i18n: 정적 UI 번역 적용
         document.getElementById('btnBackList').textContent = T.back;
@@ -1312,7 +1320,40 @@
             btnWrite.style.display = 'none';
             if(loadMore) loadMore.style.display = 'none';
         }
+        _syncPromoBtn(sec);
     }
+
+    // 2026-07-17: 「지금 발행」 — 관리자 + 블로그 목록에서만 노출.
+    //   (marketing_bot 까지 안 들어가고 블로그 화면에서 바로 발행할 수 있게)
+    //   sec 를 안 주면 현재 화면 상태를 DOM 에서 읽는다 (글 상세를 보는 중이면 숨겨야 함).
+    function _syncPromoBtn(sec) {
+        const b = document.getElementById('btnPromoNow');
+        if (!b) return;
+        if (!sec) {
+            const list = document.getElementById('boardList');
+            sec = (list && list.style.display !== 'none') ? 'list' : 'other';
+        }
+        b.style.display = (sec === 'list' && category === 'blog' && isAdmin) ? 'inline-block' : 'none';
+    }
+
+    window.promoPublishNow = async function (btn) {
+        if (!confirm('홍보사진 폴더에 대기 중인 사진으로 지금 블로그 글(한/일/영)을 발행할까요?\n1~2분 걸립니다.')) return;
+        const orig = btn.innerHTML;
+        btn.disabled = true; btn.innerHTML = '⏳ 발행 중...';
+        try {
+            const { data, error } = await sb.functions.invoke('promo-publish', { body: { maxPhotos: 12, force: true } });
+            if (error) throw error;
+            // 엣지 함수는 실패해도 HTTP 200 이라 body 를 직접 확인해야 한다
+            if (data && data.ok === false) throw new Error(data.error || '발행 실패');
+            if (data && data.message) { alert(data.message); return; }   // 대기 사진 없음
+            alert(`발행 완료\n사진 ${data.photos}장 · 보류 ${data.skipped}장\n${(data.products || []).join(', ')}`);
+            location.reload();
+        } catch (e) {
+            alert('발행 실패: ' + (e.message || e));
+        } finally {
+            btn.disabled = false; btn.innerHTML = orig;
+        }
+    };
 
     window.editCurrentPost = function() {
         if(!confirm(T.confirmEdit)) return;

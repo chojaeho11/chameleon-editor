@@ -137,6 +137,22 @@ serve(async (req) => {
         if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not configured" });
         if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return json({ error: "Supabase env not configured" });
 
+        // 2026-07-17: 호출자 검증.
+        //   블로그 화면(board.html)에 「지금 발행」 버튼을 노출하면서 이 엔드포인트가 사실상 공개된다.
+        //   버튼은 관리자에게만 보이지만 엔드포인트 자체는 로그인한 누구나 부를 수 있으므로
+        //   (Claude 토큰 소모 + 임의 발행) 서버에서 직접 막는다.
+        //   허용: service_role (cron/스크립트) 또는 관리자 이메일 (config.js ADMIN_EMAILS 와 동일)
+        const ADMIN_EMAILS = ["korea900as@gmail.com", "ceo@test.com", "scr3257@naver.com"];
+        const authz = req.headers.get("Authorization") || "";
+        let allowed = false;
+        try {
+            const jwt = authz.replace(/^Bearer\s+/i, "");
+            const payload = JSON.parse(atob(jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+            if (payload.role === "service_role") allowed = true;
+            else if (payload.email && ADMIN_EMAILS.includes(String(payload.email).toLowerCase())) allowed = true;
+        } catch (_) { allowed = false; }
+        if (!allowed) return json({ ok: false, error: "관리자만 실행할 수 있습니다." });
+
         const body = await req.json().catch(() => ({}));
         const maxPhotos = Math.min(Number(body.maxPhotos) || 12, 12);
         const force = body.force === true;   // 킬스위치 무시 (관리자 수동 발행)
