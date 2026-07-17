@@ -1512,10 +1512,12 @@ async function submitRollFabricRequest() {
             <span class="cp-six-icon"><i class="fa-solid fa-palette"></i></span>
             <span class="cp-six-label" id="cpLblDesign">디자인 의뢰</span>
         </button>
-        <button type="button" class="cp-six-btn cp-six-coupon" onclick="window._openCpCouponModal && window._openCpCouponModal()">
-            <span class="cp-six-icon"><i class="fa-solid fa-gift"></i></span>
-            <span class="cp-six-label" id="cpLblCoupon">이벤트 쿠폰</span>
-        </button>
+        <!-- 2026-07-17: 이벤트 쿠폰 → 블로그. (쿠폰/추천인 안내는 위 회원가입이벤트 배너에 그대로 있음)
+             a 태그: 크롤러가 따라갈 수 있는 실제 링크가 필요 (button+onclick 은 못 따라감). -->
+        <a class="cp-six-btn cp-six-coupon" href="/board.html?cat=blog" style="text-decoration:none;">
+            <span class="cp-six-icon"><i class="fa-solid fa-pen-nib"></i></span>
+            <span class="cp-six-label" id="cpLblCoupon">블로그</span>
+        </a>
     </div>
 </section>
 
@@ -1684,15 +1686,15 @@ async function submitRollFabricRequest() {
     })();
     // 6 버튼 라벨
     var L = {
-        ko: { phone:'전화 안내', chat:'주문 조회', vip:'VIP 개인결제', scrap:'금액 결제', design:'디자인 의뢰', coupon:'이벤트 쿠폰',
+        ko: { phone:'전화 안내', chat:'주문 조회', vip:'VIP 개인결제', scrap:'금액 결제', design:'디자인 의뢰', coupon:'블로그',
               phoneTitle:'📞 본사 · 담당자 전화', hqLabel:'본사 (대한민국)', hqHours:'평일 09:00 - 18:00 KST',
               quoteTitle:'⚡ 상담 후 금액주문', quoteDesc:'담당 매니저와 통화·LINE 상담 후 합의된 금액을 입력하면 즉시 결제창이 열립니다.', quoteUnit:'원', quoteBtn:'주문하기',
               modalHint:'상담 후 합의된 금액은 「상담 후 금액주문」 버튼으로 직접 결제하실 수 있습니다.' },
-        ja: { phone:'担当へお電話', chat:'ご注文照会', vip:'特定商取引法', scrap:'金額決済', design:'デザイン依頼', coupon:'クーポン',
+        ja: { phone:'担当へお電話', chat:'ご注文照会', vip:'特定商取引法', scrap:'金額決済', design:'デザイン依頼', coupon:'ブログ',
               phoneTitle:'📞 本社・担当の電話', hqLabel:'本社 (韓国)', hqHours:'平日 09:00 - 18:00 KST',
               quoteTitle:'⚡ 相談後の金額決済', quoteDesc:'担当と通話・LINE 相談後、合意金額を入力すると即座に決済画面が開きます。', quoteUnit:'円', quoteBtn:'注文する',
               modalHint:'相談後に合意した金額は「相談後の金額決済」ボタンから直接お支払いいただけます。' },
-        en: { phone:'Call Manager', chat:'Track Order', vip:'Legal Notice', scrap:'Quote Pay', design:'Design Request', coupon:'Coupon',
+        en: { phone:'Call Manager', chat:'Track Order', vip:'Legal Notice', scrap:'Quote Pay', design:'Design Request', coupon:'Blog',
               phoneTitle:'📞 Headquarters · Direct Line', hqLabel:'Headquarters (Korea)', hqHours:'Mon-Fri 09:00 - 18:00 KST',
               quoteTitle:'⚡ Order by Quote', quoteDesc:'After consulting your manager, enter the agreed amount to open checkout instantly.', quoteUnit:'$', quoteBtn:'Order',
               modalHint:'After consultation, you can pay the agreed amount directly through the "Order by Quote" button.' }
