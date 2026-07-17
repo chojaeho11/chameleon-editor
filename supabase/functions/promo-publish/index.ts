@@ -32,11 +32,23 @@ const MODEL_FALLBACK = "claude-haiku-4-5-20251001";
 //   노출: 한국어=한국 사이트만 / 일본어=일본 사이트만 / 영어=한국·일본 제외 전 국가
 //   2026-07-17: 영어권 도메인은 chameleon.design. cafe3355.com 은 종이매대 전용 랜딩이라
 //   블로그가 없다(_worker.js:609) — 글 안의 링크가 엉뚱한 페이지로 가고 있었다.
+//   contact/fabricSite: 글 말미 안내에 들어갈 실제 연락처·사이트 (2026-07-17 사장님 지시).
+//     한국 = 본사 031-366-1984 / 일본 = 나나미 090-5397-0420 (LINE @astro.0420)
+//     번호는 실제 사이트에서 확인한 값 — 임의로 바꾸지 말 것.
 const LANGS = [
     // author: 작성자명도 해당 언어로 (일본 사이트에 '카멜레온프린팅' 이 한글로 뜨던 문제)
-    { lang: "kr", countryCode: "KR", label: "한국어", site: "www.cafe2626.com", author: "카멜레온프린팅" },
-    { lang: "ja", countryCode: "JP", label: "日本語", site: "www.cafe0101.com", author: "カメレオンプリンティング" },
-    { lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design", author: "Chameleon Printing" },
+    {
+        lang: "kr", countryCode: "KR", label: "한국어", site: "www.cafe2626.com", author: "카멜레온프린팅",
+        contact: "본사 031-366-1984", fabricSite: "www.cotton-print.com",
+    },
+    {
+        lang: "ja", countryCode: "JP", label: "日本語", site: "www.cafe0101.com", author: "カメレオンプリンティング",
+        contact: "ナナミ 090-5397-0420 (LINE: @astro.0420)", fabricSite: "www.cotton-printer.com",
+    },
+    {
+        lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design", author: "Chameleon Printing",
+        contact: "Hiba +82 10-3491-3535 (WhatsApp)", fabricSite: "www.cotton-printer.com",
+    },
 ];
 const INDEXNOW_KEY = "cf8e9a2b4d6f1c3e5a7b9d0f2e4c6a8b";
 
@@ -285,32 +297,46 @@ ${catalog}
 
         for (const L of LANGS) {
             try {
-                const sys = `당신은 인쇄·광고물 제작업체 '카멜레온프린팅'의 ${L.label} 콘텐츠 마케터입니다.
-오늘 실제로 제작한 결과물 사진들을 소개하는 블로그 글을 ${L.label}로 씁니다.
+                // 2026-07-17: 구조를 「검색어 → 답변 → 우리 사례」 로 변경.
+                //   기존엔 "우리가 만든 것" 이 주제라, 아무도 검색하지 않는 제목이 나왔다
+                //   (예: "공공기관 전시 패널과 한옥 포토존 제작 후기" = 검색량 0).
+                //   이제 제품군에서 실제 검색 수요가 있는 키워드를 뽑아 그 답을 먼저 주고,
+                //   사진은 그 답을 뒷받침하는 실제 사례로 배치한다.
+                const isHoneycomb = uniqNames.some((n) => /허니콤|하니컴/.test(n));
+                const sys = `당신은 인쇄·광고물 제작업체 '카멜레온프린팅'의 ${L.label} SEO 콘텐츠 마케터입니다.
+
+[글의 구조 — 반드시 이 순서]
+1) **검색어**: 아래 제품군을 찾는 사람이 실제로 검색창에 칠 만한 질문/키워드를 하나 정한다.
+   (예: "허니콤보드 가벽 설치 방법", "아크릴 키링 소량 제작", "전시 부스 포토존 제작")
+   → 그 검색어가 제목(title)과 focus_keyword 에 자연스럽게 들어가야 한다.
+   → "제작 후기", "사례 소개" 같은 제목은 금지. 아무도 그렇게 검색하지 않는다.
+2) **답변**: 그 검색어에 대한 실질적인 답을 먼저 준다. 재질/크기/설치/제작 방식/주의점 등
+   읽는 사람이 궁금해할 정보를 구체적으로. 광고보다 답변이 먼저다.
+3) **우리 사례**: 그 다음에 아래 사진 속 실제 제작물을 "이렇게 실제로 만들었습니다" 로 연결한다.
 
 [가장 중요한 규칙 — 어기면 글을 폐기합니다]
-아래 "오늘의 제작물"에 적힌 **사진 속 실제 모습**이 글의 주제입니다.
-제품군 이름만 보고 일반적인 홍보 문구를 지어내지 마세요.
-사진에 없는 사용처·상황·고객을 상상해서 쓰지 마세요.
+사진에 없는 사용처·상황·고객을 상상해서 쓰지 마세요. 사례 부분은 아래 "사진 속 실제 모습" 만 근거로.
 (예: 사진이 '전시장 한옥 포토존' 이면 그 전시 이야기를 쓰는 것이지,
  제품군이 '보드 인쇄' 라고 해서 "매장 앞 홍보물" 같은 없는 이야기를 만들면 안 됩니다)
 
-[회사 핵심 컨셉 — 글이 향해야 할 메시지]
-"세상의 모든 인쇄물·광고물을, 튜토리얼 가이드를 따라 게임하듯 클릭 몇 번으로 디자인부터 제작까지."
-→ 반드시 담을 메시지: "이런 것도 게임하듯 가이드에 따라 클릭 몇 번으로 쉽게 만드세요. 전문가처럼 멋진 홍보물이 만들어집니다."
-   (${L.label}로 자연스럽게 표현. 직역투 금지)
+[반드시 포함할 내용]
+- **주문이 매우 쉽다**: 홈페이지의 튜토리얼 가이드를 따라가면 게임하듯 클릭 몇 번으로
+  디자인부터 주문까지 끝난다는 점. 디자인 프로그램·전문가 없이도 가능하다는 점을 구체적으로.
+${isHoneycomb ? `- **허니콤보드 강점(중요)**: 카멜레온프린팅은 **수도권에 무료로 배송·설치까지 해주는 유일한 업체**입니다.
+  이 점을 눈에 띄게 강조하세요. (${L.lang === "kr" ? "수도권" : L.lang === "ja" ? "韓国・首都圏" : "the Seoul metropolitan area"} 기준)` : ""}
+- **문의처**: ${L.contact}
+- **홈페이지**: https://${L.site} (인쇄·광고물 전반) / https://${L.fabricSite} (패브릭·원단 인쇄)
 
-[오늘의 제작물]
+[사진 속 실제 모습 — 사례 부분의 유일한 근거]
 ${productSummary}
 
 [규칙]
 - 출력은 오직 JSON. 설명·마크다운 펜스 금지.
 - 형식: {"title":"...","meta_description":"...","focus_keyword":"...","body":"<p>...</p>","hashtags":["..."]}
 - body 는 HTML (<p>, <h2>, <ul>, <strong> 만 사용). 이미지 태그는 넣지 마세요 — 시스템이 자동으로 붙입니다.
-- 길이: 600~900자 분량. 과장 광고·허위 표현 금지. 가격은 언급하지 마세요.
-- 사진 속 제작물이 어떤 작업이었는지 구체적으로 소개하고, 그 다음에 "이런 것도 쉽게 만들 수 있다"로 연결하세요.
-- 디자인이 어렵다고 느끼는 사장님·소상공인이 읽는다는 전제.
-- 링크는 https://${L.site} 만 사용.
+- 길이: 800~1200자 분량. 과장 광고·허위 표현 금지. 가격은 언급하지 마세요.
+- 문의처와 홈페이지 주소는 글 마지막 문단에 자연스럽게 넣으세요. 전화번호는 위에 준 것을 그대로.
+- 링크는 https://${L.site} 와 https://${L.fabricSite} 만 사용.
 - ${L.label} 원어민이 읽기에 자연스러워야 합니다. 제품군 이름은 ${L.label}로 자연스럽게 옮겨 쓰세요.`;
 
                 // max_tokens 8000 — 3000 은 한국어 글에서 잘렸다(실측). 한국어/일본어는 토큰 소모가 큼.
@@ -320,7 +346,7 @@ ${productSummary}
                     try {
                         const raw = await callClaude(ANTHROPIC_API_KEY, {
                             max_tokens: 8000, system: sys,
-                            messages: [{ role: "user", content: `위 "오늘의 제작물"의 사진 속 실제 모습을 주제로 ${L.label} 블로그 글을 JSON 으로 작성하세요.` }],
+                            messages: [{ role: "user", content: `제품군: ${uniqNames.join(", ")}\n위 구조(검색어 → 답변 → 우리 사례)대로 ${L.label} 블로그 글을 JSON 으로 작성하세요.` }],
                         });
                         c = parseJson(raw);
                         break;
@@ -340,7 +366,16 @@ ${productSummary}
                         return `<figure style="margin:18px 0;"><img src="${d.photo.storage_url}" alt="${cap}" style="max-width:100%;border-radius:10px;"><figcaption style="font-size:13px;color:#64748b;margin-top:6px;">${cap}</figcaption></figure>`;
                     })
                     .join("\n");
-                const cta = `<p style="margin-top:22px;"><a href="https://${L.site}" style="display:inline-block;padding:12px 20px;background:#0f172a;color:#fff;border-radius:8px;text-decoration:none;">${L.lang === "ja" ? "今すぐ作ってみる" : L.lang === "en" ? "Start creating now" : "지금 만들어보기"}</a></p>`;
+                // 2026-07-17: CTA + 문의처·사이트 안내를 본문과 별개로 항상 붙인다.
+                //   (AI 가 문단 안에 자연스럽게 녹이되, 빠뜨려도 여기서 보장)
+                const ctaLabel = L.lang === "ja" ? "ガイドに沿って今すぐ作る" : L.lang === "en" ? "Start with the guide" : "가이드 따라 지금 만들기";
+                const inquiryLabel = L.lang === "ja" ? "お問い合わせ" : L.lang === "en" ? "Contact" : "문의";
+                const fabricLabel = L.lang === "ja" ? "生地・ファブリック印刷" : L.lang === "en" ? "Fabric printing" : "패브릭·원단 인쇄";
+                const cta = `<p style="margin-top:22px;"><a href="https://${L.site}" style="display:inline-block;padding:12px 20px;background:#0f172a;color:#fff;border-radius:8px;text-decoration:none;">${ctaLabel}</a></p>
+<p style="margin-top:14px;font-size:13.5px;color:#475569;line-height:1.8;">
+${inquiryLabel}: ${esc(L.contact)}<br>
+<a href="https://${L.site}">https://${L.site}</a> · ${fabricLabel}: <a href="https://${L.fabricSite}">https://${L.fabricSite}</a>
+</p>`;
                 const htmlBody = `${c.body || ""}\n${gallery}\n${cta}`;
 
                 const seoMeta: any = {
