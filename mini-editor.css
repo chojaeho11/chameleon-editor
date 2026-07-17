@@ -101,9 +101,12 @@
         .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
         .me-side-tab:hover { border-color:#c4b5fd; }
         .me-side-tab.active { background:#6d28d9; color:#fff; border-color:#6d28d9; }
-        /* 2026-07-18: 대지 밖으로 나간 이미지도 보이도록 overflow:visible + 대지 경계 점선(outline 은 레이아웃 불변).
+        /* 2026-07-18: 대지 밖으로 나간 이미지도 보이도록 overflow:visible. 대지 경계·바깥 어둡게는 .me-artboard-mask 가 담당.
            export(_meExportPNG)는 natW×natH 캔버스에 좌표로 다시 그려 대지 밖은 자동 클립되므로 PDF/PNG 는 안전. */
-        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:visible; max-width:none; max-height:none; touch-action:none; user-select:none; border-radius:2px; outline:2px dashed rgba(255,255,255,0.85); outline-offset:0; }
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:visible; max-width:none; max-height:none; touch-action:none; user-select:none; border-radius:2px; }
+        /* 대지 마스크 — 대지 크기의 투명 박스 + 거대한 box-shadow 로 대지 '밖'만 어둡게 덮는다(안은 통과).
+           대지 밖으로 나간 이미지도 이 어두운 색에 묻혀 잘리는 경계가 명확해진다. 밝은 점선으로 대지 테두리 표시. */
+        .me-artboard-mask { position:absolute; inset:0; pointer-events:none; z-index:999990; box-shadow:0 0 0 9999px rgba(2,6,23,0.82); outline:2px dashed rgba(255,255,255,0.95); outline-offset:0; border-radius:2px; }
         .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
         .me-item.selected { outline:1.5px solid #007AFF; outline-offset:2px; }
         .me-item img { display:block; max-width:none; pointer-events:none; }

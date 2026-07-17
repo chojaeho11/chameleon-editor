@@ -81,10 +81,21 @@
         //   2026-07-18: 대지(85%) 위아래 여백만큼 wrap 을 더 크게 → 대지 밖 이미지가 위아래로도 보임.
         if (wrap) wrap.style.height = (Math.round(sh / _MARGIN) + 20) + 'px';
         me.items.forEach(_meSyncItemDisplay);
+        _meEnsureArtboardMask();
         _meUpdateSizeLabel();
         _meApplyPan();
         _meUpdateZoomUI();
     }
+    // 2026-07-18: 대지 마스크 — 대지 밖을 어둡게(box-shadow veil) + 경계 점선. 항상 최상단.
+    //   me.items 가 아니라 순수 오버레이라 export/썸네일엔 안 잡힘.
+    function _meEnsureArtboardMask() {
+        var stage = $('meStage'); if (!stage) return;
+        var m = stage.querySelector(':scope > .me-artboard-mask');
+        if (!m) { m = document.createElement('div'); m.className = 'me-artboard-mask'; }
+        // 항상 마지막 자식으로(=DOM 상 최상단; z-index 로도 최상단이라 이중 안전)
+        stage.appendChild(m);
+    }
+    window._meEnsureArtboardMask = _meEnsureArtboardMask;
     // 2026-06-27: 줄자 대신 캔버스 크기(mm)를 #meSizeLabel 에 표시.
     function _meUpdateSizeLabel() {
         // 2026-06-28: 에디터↔PDF 차이 안내 (다운로드로 PDF 확인 후 주문)
