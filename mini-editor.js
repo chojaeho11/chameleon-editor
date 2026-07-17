@@ -6218,16 +6218,18 @@
               '<div style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
                 _meAiTr('타이틀을 입력해 주세요.', 'タイトルを入力してください。', 'Enter a title.') +
               '</div>' +
-              // 비율 선택
+              // 비율 선택 — 1행: 기본 비율 (2026-07-18: 16:9 등 비율표기 제거, 이름만)
               '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각 1:1', '正方形 1:1', 'Square') + '</button>' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로 9:16', '縦 9:16', 'Portrait') + '</button>' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 16:9', '横 16:9', 'Landscape') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각', '正方形', 'Square') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로포스터', '縦ポスター', 'Portrait') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로포스터', '横ポスター', 'Landscape') + '</button>' +
               '</div>' +
-              // 2026-07-18: 가로 현수막 전용 — 5m×0.9m 처럼 아주 긴 가로. gpt-image 최대 가로(3:2)로 만들되
-              //   위아래 큰 여백 + 중앙 가로띠에 타이틀/서브만 배치하도록 프롬프트가 지시한다.
+              // 2행: 제품 전용 프리셋 — 가로현수막 / 세로배너 / 명함 (2026-07-18)
+              //   가로현수막: 위아래 큰 여백 + 중앙 가로띠. 세로배너: 좌우 큰 여백 + 중앙 세로열. 명함: 사방 여백.
               '<div style="display:flex; gap:6px; margin-bottom:12px;">' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="banner-h" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 현수막 (위아래 여백)', '横断幕（上下に余白）', 'Wide Banner (top/bottom margin)') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="banner-h" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로현수막', '横断幕', 'Wide Banner') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="banner-v" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로배너', '縦バナー', 'Tall Banner') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="namecard" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('명함', '名刺', 'Card') + '</button>' +
               '</div>' +
               '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
@@ -6274,7 +6276,9 @@
     };
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
 
-    // 생성 이미지를 대지 꽉 채우고 20% 넘치게(cover×1.2) + 뒤로 보내기(배경/풀블리드).
+    // 생성 이미지를 대지에 삽입 + 뒤로 보내기(배경/풀블리드).
+    //   기본: cover(대지 꽉 채움, 넘치는 부분은 잘림) — 배너·포스터는 프롬프트가 여백을 확보해 글자 안 잘림.
+    //   명함: contain(대지 안에 통째로, 잘림 없음) — 사방 여백을 반드시 보존해야 하므로.
     function _meAiInsert() {
         if (!_meAiPendingUrl) return;
         var opts = { toBack: true };
@@ -6282,14 +6286,16 @@
             var imgEl = document.querySelector('#meAiResult img');
             var iw = imgEl && imgEl.naturalWidth, ih = imgEl && imgEl.naturalHeight;
             if (me && me.natW && me.natH && iw && ih) {
-                var cover = Math.max(me.natW / iw, me.natH / ih); // 대지에 여백 없이 딱 꽉 차게(cover, 오버플로 없음)
-                var w = iw * cover, h = ih * cover;
+                var scale = (_meAiRatio === 'namecard')
+                    ? Math.min(me.natW / iw, me.natH / ih)   // contain — 명함: 전체가 보이도록(여백 잘림 방지)
+                    : Math.max(me.natW / iw, me.natH / ih);  // cover  — 그 외: 대지 꽉 채움
+                var w = iw * scale, h = ih * scale;
                 var x = (me.natW - w) / 2, y = (me.natH - h) / 2; // 중앙 정렬
                 opts.explicitPos = { x: x, y: y, w: w, h: h };
             } else {
                 opts.fitCanvas = true; // 자연크기 못 구하면 최소한 대지에 맞춤
             }
-        } catch (err) { console.warn('[meAi] cover calc', err); opts = { fitCanvas: true, toBack: true }; }
+        } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
         try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
         _meAiGenClose();
     }
@@ -6347,23 +6353,32 @@
                 // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
                 //   banner-h(가로 현수막)도 gpt-image 최대 가로(1536x1024)로 생성 — 5:0.9 는 API 로 못 만들어서
                 //   위아래 큰 여백 + 중앙 가로띠 구성으로 대응한다.
-                var _isWideBanner = (_meAiRatio === 'banner-h');
+                var _isWideBanner = (_meAiRatio === 'banner-h');   // 가로현수막
+                var _isVBanner    = (_meAiRatio === 'banner-v');   // 세로배너 (버튼)
+                var _isNameCard   = (_meAiRatio === 'namecard');   // 명함
+                // 2026-07-10: 아주 긴 세로 제품(대지 H/W ≥ 2)도 자동으로 세로배너 취급.
+                //   세로배너 버튼(banner-v)을 누르면 대지와 무관하게 강제.
+                var _isTallBanner = _isVBanner;
+                try { if (!_isTallBanner && me && me.natW && me.natH && (me.natH / me.natW) >= 2.0) _isTallBanner = true; } catch (_) {}
+
                 var size = _meAiRatio === '9:16' ? '1024x1536'
                          : (_meAiRatio === '16:9' || _isWideBanner) ? '1536x1024'
+                         : _isNameCard ? '1536x1024'   // 명함은 가로형 (좌우가 긴 명함)
                          : '1024x1024';
-                // 2026-07-10: 아주 긴 세로 제품(배너 등, 캔버스 H/W ≥ 2)은 gpt-image 최대 세로(1024x1536)로 생성 +
-                //   글자·요소를 좁은 중앙 세로열에 몰고 좌우 여백 크게 → cover 삽입 시 옆만 잘리고 글자는 안 잘림.
-                //   (배너는 1:3 등 매우 길지만 API 최대 세로는 2:3 이라 정확히 못 맞춤 → 중앙열 구성으로 대응.)
-                var _isTallBanner = false;
-                try { _isTallBanner = !!(me && me.natW && me.natH && (me.natH / me.natW) >= 2.0); } catch (_) {}
-                if (_isTallBanner) size = '1024x1536';
+                if (_isTallBanner) size = '1024x1536';   // 세로배너: gpt-image 최대 세로
+
                 var _bannerHint = _isTallBanner
+                    // 세로배너: 좌우 큰 여백 + 중앙 세로열 (cover 삽입 시 옆만 잘리고 글자는 안 잘림)
                     ? ' Compose as a TALL VERTICAL BANNER: place ALL text and key elements in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
                     : '';
                 // 2026-07-18: 가로 현수막 — 5m×0.9m 등 아주 긴 가로. 최종 대지는 위아래로 크게 잘리므로
-                //   타이틀/서브를 화면 세로 중앙의 가로 띠(중앙 ~40% 높이)에 몰고, 위·아래로 큰 배경 여백을 둔다.
+                //   타이틀/서브를 화면 세로 중앙의 가로 띠(중앙 ~30% 높이)에 몰고, 위·아래로 큰 배경 여백을 둔다.
                 if (_isWideBanner) {
                     _bannerHint = ' Compose as a WIDE HORIZONTAL BANNER (like a 5m x 0.9m long banner). Put the TITLE (and an optional short subtitle below it) on ONE or TWO horizontal lines, perfectly CENTERED both horizontally and vertically, and kept inside a TIGHT central horizontal strip no taller than the middle 30% of the image height. The TOP third and BOTTOM third must be LARGE EMPTY background margin with nothing important in them. Use big, bold, highly legible lettering. Keep it a clean, simple title banner — not a busy poster. Full-bleed background, no border or frame.';
+                }
+                // 2026-07-18: 명함 — 세련되고 심플하게. 사방(상하좌우)에 넉넉한 여백을 두어 어느 방향으로도 글자가 안 잘리게.
+                if (_isNameCard) {
+                    _bannerHint = ' Design a CLEAN, MODERN, MINIMAL BUSINESS CARD. Elegant and professional: refined typography, a tasteful color palette, plenty of negative space. Keep the name and all text WELL INSIDE the card with GENEROUS EMPTY MARGINS on ALL FOUR SIDES (top, bottom, left, right) so no text is ever cut off near an edge. Simple layout — do not clutter. Full-bleed background color or subtle texture, but no printed border or frame line.';
                 }
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
