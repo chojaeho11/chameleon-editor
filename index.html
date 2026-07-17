@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718010841';
+    var CV = '20260718011427';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1788,9 +1788,11 @@ window._tcmFallbackClick = function(code) {
                 content:'';
                 position:absolute;
                 left:0; top:0; bottom:0;
-                /* 2026-06-28: 넓고 부드러운 블렌딩 — 색이 사진 배경으로 서서히 사라지도록 폭 확대 + 부드러운 곡선 */
-                width:55%;
-                background:linear-gradient(90deg, var(--bg) 0%, var(--bg) 8%, transparent 100%);
+                /* 2026-07-18: 어두운 슬라이드에서 사진 위 오버레이가 다시 진해져 어색했음(우측 사진 쪽 색 띠).
+                   폭을 55%→38% 로 줄이고, 시작부터 바로 투명으로 빠지게 해서 사진 위에는 색을 거의 안 얹는다.
+                   왼쪽 텍스트 영역과의 이음새는 hc-content 그라데이션이 이미 담당. */
+                width:38%;
+                background:linear-gradient(90deg, var(--bg) 0%, transparent 70%);
                 z-index:2;
                 pointer-events:none;
             }
@@ -1902,8 +1904,9 @@ window._tcmFallbackClick = function(code) {
                     z-index:1;
                 }
                 .hc-visual::before {
-                    width:55%;
-                    background:linear-gradient(90deg, var(--bg) 0%, var(--bg) 8%, transparent 100%);
+                    /* 2026-07-18: 데스크톱과 동일 — 사진 위 색 띠 제거 */
+                    width:38%;
+                    background:linear-gradient(90deg, var(--bg) 0%, transparent 70%);
                 }
                 .hc-visual img {
                     width:100%;
