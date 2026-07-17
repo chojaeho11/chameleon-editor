@@ -36,8 +36,15 @@ Write-Host "[promo] 작업폴더: $WorkDir"
 $BashWorkDir = $WorkDir -replace '\\', '/' -replace '^([A-Za-z]):', '/$1'
 $BashWorkDir = $BashWorkDir.Substring(0,2).ToLower() + $BashWorkDir.Substring(2)
 
-$Action = New-ScheduledTaskAction -Execute $Bash `
-    -Argument "-lc `"cd '$BashWorkDir' && ./promo-sync.sh >> promo-sync.log 2>&1`""
+# 2026-07-17: bash.exe 를 직접 실행하면 5분마다 검은 명령창이 뜬다.
+#   wscript 로 vbs 를 태우면 창 없이 돈다 (vbs 안에서 Run(cmd, 0, False)).
+#   S4U(비대화형) 로도 숨길 수 있지만 등록에 관리자 권한이 필요해 실패한다(실측: Access denied).
+$Vbs = Join-Path $WorkDir 'promo-sync-hidden.vbs'
+if (-not (Test-Path $Vbs)) {
+    Write-Host "[promo] ERROR: promo-sync-hidden.vbs 가 없습니다: $Vbs" -ForegroundColor Red
+    exit 1
+}
+$Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$Vbs`""
 
 # 2026-07-17: 30분 → 5분.
 #   30분이면 "사진 넣고 바로 [지금 발행]" 을 눌렀을 때 아직 업로드 전이라
@@ -47,7 +54,7 @@ $Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date.AddMinutes(1) `
 
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
     -DontStopOnIdleEnd -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
-    -MultipleInstances IgnoreNew
+    -MultipleInstances IgnoreNew -Hidden
 
 # 기존 등록이 있으면 교체
 if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
@@ -56,7 +63,8 @@ if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
 }
 
 Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger `
-    -Settings $Settings -Description "카카오톡 받은 파일/홍보사진 폴더의 새 사진을 5분마다 업로드. 발행은 서버 cron(매일 18시)이 담당." | Out-Null
+    -Settings $Settings `
+    -Description "카카오톡 받은 파일/홍보사진 폴더의 새 사진을 5분마다 업로드(창 없이 wscript 로 실행). 발행은 서버 cron(매일 18시)이 담당." | Out-Null
 
 Write-Host ""
 Write-Host "[promo] 등록 완료 - '$TaskName'" -ForegroundColor Green
