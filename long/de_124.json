@@ -2010,6 +2010,9 @@
   "me_sz_banner": "Banner",
   "me_sz_landscape": "Querformat",
   "me_sz_square": "Quadrat",
-  "me_img_upload": "Bild hochladen",
-  "me_ai_gen": "KI-Bild"
+  "me_img_upload": "Foto hochladen",
+  "me_ai_gen": "KI-Bild",
+  "me_intro_ai": "KI-Design mit einem Klick",
+  "me_intro_edit": "Design bearbeiten",
+  "me_back_simple": "Einfache Ansicht"
 }

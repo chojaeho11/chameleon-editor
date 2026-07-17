@@ -1823,7 +1823,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
-    <link rel="stylesheet" href="./mini-editor.css?v=6">
+    <link rel="stylesheet" href="./mini-editor.css?v=7">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
@@ -1837,17 +1837,27 @@ async function submitRollFabricRequest() {
                     <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형"><span data-i18n="me_sz_landscape">가로형</span></button>
                     <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
                 </div>
-                <div class="me-toolbar">
-                    <!-- 2026-06-18 v573: 모바일 3행 레이아웃 — Row1: 템플릿(full) / Row2: 되돌리기/업로드/누끼/칼선 / Row3: 글씨/가이드/배경/도형 -->
-                    <!-- Row 1: 템플릿 promo (mobile 가로 100%) -->
-                    <button type="button" class="me-tool-btn me-r1" id="meTemplateBtn" onclick="window._meOpenTemplatePicker && window._meOpenTemplatePicker()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6); color:#fff; border-color:#5b21b6;" title="디자인 템플릿"><i class="fa-solid fa-layer-group me-tb-ic"></i><span data-i18n="me_template_promo" class="me-tb-lbl" style="font-weight:700;">템플릿 — 글씨만 바꾸면 디자인 끝</span></button>
+                <!-- 2026-07-18: 에디터 진입 화면 — 원클릭 AI디자인 / 디자인 편집하기 (인터페이스 단순화) -->
+                <div class="me-intro" id="meIntro">
+                    <button type="button" class="me-intro-btn me-intro-ai" onclick="window._meAiGenOpen && window._meAiGenOpen()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span data-i18n="me_intro_ai">원클릭 AI디자인</span>
+                    </button>
+                    <button type="button" class="me-intro-btn me-intro-edit" onclick="window._meShowToolbar && window._meShowToolbar()">
+                        <i class="fa-solid fa-pen-ruler"></i>
+                        <span data-i18n="me_intro_edit">디자인 편집하기</span>
+                    </button>
+                </div>
+                <div class="me-toolbar" id="meToolbar" style="display:none;">
+                    <!-- 2026-07-18: 간편 진입에서 '디자인 편집하기' 눌러야 노출. 템플릿·AI이미지 버튼 제거. -->
+                    <!-- Row 1: 간편 보기로 돌아가기 -->
+                    <button type="button" class="me-tool-btn me-r1" id="meBackBtn" onclick="window._meHideToolbar && window._meHideToolbar()" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1; font-weight:700;" title="간편 보기"><i class="fa-solid fa-chevron-left me-tb-ic"></i><span data-i18n="me_back_simple" class="me-tb-lbl">간편 보기로</span></button>
                     <!-- Row 2 -->
                     <button type="button" class="me-tool-btn me-r2" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 / Undo (Ctrl+Z)" style="opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i></button>
-                    <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="업로드 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">업로드</span></button>
+                    <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="내 사진 올리기 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">내사진 올리기</span></button>
                     <input type="file" id="meImgInput" accept="image/*,.svg,image/svg+xml,.pdf,application/pdf" style="display:none;" onchange="window._meAddImageFromFile(this)">
                     <input type="file" id="meChangeImgInput" accept="image/*" style="display:none;" onchange="window._meChangeImgUpload(this)">
-                    <button type="button" class="me-tool-btn me-r2" id="meAiGenBtn" onclick="window._meAiGenOpen && window._meAiGenOpen()" style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border-color:#4338ca;" title="AI 이미지 생성"><i class="fa-solid fa-wand-magic-sparkles me-tb-ic"></i><span data-i18n="me_ai_gen" class="me-tb-lbl">AI 이미지</span></button>
-                    <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="누끼 (배경제거)"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">누끼</span></button>
+                    <button type="button" class="me-tool-btn me-r2" id="meBgRemoveBtn" onclick="window._meBgRemoveSelected && window._meBgRemoveSelected()" disabled style="opacity:0.45; cursor:not-allowed; background:linear-gradient(135deg,#7dd3fc,#38bdf8); color:#fff; border-color:#0ea5e9;" title="배경제거"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutout" class="me-tb-lbl">배경제거</span></button>
                     <button type="button" class="me-tool-btn me-r2" id="meCutlineBtn" onclick="window._meCutlineOpen && window._meCutlineOpen()" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border-color:#b91c1c; display:none;" title="칼선 / Cutline / カットライン"><i class="fa-solid fa-scissors me-tb-ic"></i><span data-i18n="me_cutline" class="me-tb-lbl">칼선</span></button>
                     <!-- Row 3 -->
                     <button type="button" class="me-tool-btn me-r3" onclick="window._meAddText()" title="글씨"><i class="fa-solid fa-font me-tb-ic"></i><span data-i18n="me_text" class="me-tb-lbl">글씨</span></button>
@@ -1908,7 +1918,7 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=478"></script>
+<script src="./mini-editor.js?v=479"></script>
 <script src="./editor-rail.js?v=3"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄

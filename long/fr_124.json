@@ -2010,6 +2010,9 @@
   "me_sz_banner": "Bannière",
   "me_sz_landscape": "Paysage",
   "me_sz_square": "Carré",
-  "me_img_upload": "Téléverser image",
-  "me_ai_gen": "Image IA"
+  "me_img_upload": "Importer photo",
+  "me_ai_gen": "Image IA",
+  "me_intro_ai": "Design IA en un clic",
+  "me_intro_edit": "Modifier le design",
+  "me_back_simple": "Vue simple"
 }

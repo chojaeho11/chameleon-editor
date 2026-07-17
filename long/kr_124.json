@@ -1645,12 +1645,14 @@
   "me_sz_banner": "배너",
   "me_sz_landscape": "가로형",
   "me_sz_square": "정사각",
-  "me_img_upload": "업로드",
+  "me_img_upload": "내사진 올리기",
   "me_ai_gen": "AI 이미지",
   "me_undo": "되돌리기",
   "me_template": "템플릿",
   "me_template_promo": "템플릿 — 글씨만 바꾸면 디자인 끝",
-  "me_cutout": "누끼",
   "me_cutline": "칼선",
-  "me_guides": "가이드"
+  "me_guides": "가이드",
+  "me_intro_ai": "원클릭 AI디자인",
+  "me_intro_edit": "디자인 편집하기",
+  "me_back_simple": "간편 보기로"
 }

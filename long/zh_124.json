@@ -1976,7 +1976,7 @@
   "me_rect": "矩形",
   "me_circle": "圆形",
   "me_bg": "背景",
-  "me_cutout": "抠图",
+  "me_cutout": "去背景",
   "me_shape": "图形",
   "me_clear": "清除全部",
   "me_download": "下载",
@@ -2008,6 +2008,9 @@
   "me_sz_banner": "横幅",
   "me_sz_landscape": "横向",
   "me_sz_square": "正方形",
-  "me_img_upload": "上传图片",
-  "me_ai_gen": "AI图片"
+  "me_img_upload": "上传照片",
+  "me_ai_gen": "AI图片",
+  "me_intro_ai": "一键AI设计",
+  "me_intro_edit": "编辑设计",
+  "me_back_simple": "简易视图"
 }

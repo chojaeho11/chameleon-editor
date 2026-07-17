@@ -6319,6 +6319,22 @@
         if (p) p.setAttribute('placeholder', g.ph);
     }
 
+    // 2026-07-18: 간편 진입(원클릭 AI디자인 / 디자인 편집하기) ↔ 상세 툴바 전환.
+    //   meIntro/meToolbar 는 index.html·cotton_print.html 에 있고 simple_order 는 이 DOM 을 portal 로 재사용.
+    //   전역 함수라 세 군데 모두에서 동작.
+    window._meShowToolbar = function () {
+        var intro = document.getElementById('meIntro');
+        var tb = document.getElementById('meToolbar');
+        if (intro) intro.style.display = 'none';
+        if (tb) tb.style.display = '';   // CSS 기본 표시(flex/grid)로 복귀
+    };
+    window._meHideToolbar = function () {
+        var intro = document.getElementById('meIntro');
+        var tb = document.getElementById('meToolbar');
+        if (tb) tb.style.display = 'none';
+        if (intro) intro.style.display = '';
+    };
+
     window._meAiGenOpen = function () {
         _meAiEnsureModal();
         _meAiPendingUrl = null;
