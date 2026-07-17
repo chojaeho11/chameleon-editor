@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718020054';
+    var CV = '20260718020502';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1038,13 +1038,14 @@ window._tcmFallbackClick = function(code) {
                      완전 검정 바탕 + 그라데이션 타이틀 (사장님 지시). 최저가보장 배지는 삭제 지시.
                        accent=흰색 → tag-bg 를 낮춰야 흰 태그 글씨가 보임
                        타이틀은 hc-title-grad 로 그라데이션 (사이트 기존 background-clip:text 패턴) -->
-                <article class="hc-slide" data-slide="1" style="--bg:#0a0a0c; --bg2:#000; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#000; --cta-hover:#e5e7eb;">
+                <article class="hc-slide" data-slide="5" style="--bg:#ca8a04; --bg2:#a16207; --txt:#fff; --accent:#fff; --tag-bg:rgba(255,255,255,0.16); --cta-txt:#a16207; --cta-hover:#fef9c3;">
                     <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-1">BRANDING</span>
-                        <h2 class="hc-title hc-title-grad" data-hc="title-1">눈에 확 띄는<br>나만의 브랜딩</h2>
-                        <p class="hc-sub" data-hc="sub-1">명함·배너 하나를 맞춰도<br>클릭 한 번으로 브랜딩이 됩니다</p>
+                        <span class="hc-tag" data-hc="tag-5">METRO DELIVERY</span>
+                        <h2 class="hc-title" data-hc="title-5">수도권 무료배송<br>무료설치</h2>
+                        <p class="hc-sub" data-hc="sub-5">국내 70% 최대설치<br>1등이 1등인 이유</p>
+                        <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_branding_1784295414.png" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="수도권 무료배송" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 3. 종이매대 — 파스텔 베이지 -->
                 <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
@@ -1081,14 +1082,13 @@ window._tcmFallbackClick = function(code) {
                     <div class="hc-visual"><img src="/fabric/poster.jpg" alt="패브릭 인쇄" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 6. 수도권 무료배송·무료설치 — 노란색 밝은 톤 (2026-07-18) -->
-                <article class="hc-slide" data-slide="5" style="--bg:#ca8a04; --bg2:#a16207; --txt:#fff; --accent:#fff; --tag-bg:rgba(255,255,255,0.16); --cta-txt:#a16207; --cta-hover:#fef9c3;">
+                <article class="hc-slide" data-slide="1" style="--bg:#0a0a0c; --bg2:#000; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#000; --cta-hover:#e5e7eb;">
                     <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-5">METRO DELIVERY</span>
-                        <h2 class="hc-title" data-hc="title-5">수도권 무료배송<br>무료설치</h2>
-                        <p class="hc-sub" data-hc="sub-5">국내 70% 최대설치<br>1등이 1등인 이유</p>
-                        <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
+                        <span class="hc-tag" data-hc="tag-1">BRANDING</span>
+                        <h2 class="hc-title hc-title-grad" data-hc="title-1">눈에 확 띄는<br>나만의 브랜딩</h2>
+                        <p class="hc-sub" data-hc="sub-1">명함·배너 하나를 맞춰도<br>클릭 한 번으로 브랜딩이 됩니다</p>
                     </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="수도권 무료배송" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_branding_1784295414.png" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
                 </article>
             </div>
             <button class="hc-arrow hc-prev" aria-label="이전">‹</button>
