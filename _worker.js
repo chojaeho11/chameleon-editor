@@ -7,6 +7,15 @@
 
 const BOT_UA = /googlebot|google-inspectiontool|bingbot|yandex|baiduspider|slurp|duckduckbot|msnbot|applebot|petalbot|yeti|daumoa|sogou|360spider|bytespider|qwant|seznambot|ia_archiver|archive\.org_bot|semrushbot|ahrefsbot|mj12bot|dotbot|rogerbot|facebookexternalhit|twitterbot|linkedinbot|kakaotalk-scrap|line-scrap|whatsapp|telegrambot|slackbot|discordbot|pinterestbot|tumblr|embedly|quora link preview|outbrain|vkshare|w3c_validator/i;
 
+// 2026-07-17: 검색엔진 소유확인 태그.
+//   index.html:124-125 에 있지만 봇은 아래 프리렌더 HTML 을 받으므로 그 태그를 못 본다(실측 확인).
+//   구글은 google624fc809d06901b9.html 파일로도 확인되지만, **네이버는 이 메타태그가 유일한 수단**이라
+//   Yeti 가 재확인할 때 실패할 수 있다 → 프리렌더 head 에도 그대로 넣는다.
+//   (index.html 의 값과 반드시 동일해야 함)
+const SITE_VERIFY_TAGS =
+    '<meta name="google-site-verification" content="Dhvn0owXlH08MDDE8HdQQ59qiwneoNd54FJdTA6IcbE">\n' +
+    '<meta name="naver-site-verification" content="f6465982272d82eb6c3ce4c620a905c666e8831d">';
+
 // 2026-07-17: AI 크롤러 — 이 목록에 하나도 없었다.
 //   AI 크롤러는 자바스크립트를 실행하지 않으므로, 서버 렌더링을 안 주면 우리 글을 영원히 못 본다.
 //   (ChatGPT/Claude/Perplexity 답변에 우리가 인용되려면 이들이 본문을 읽을 수 있어야 함)
@@ -1028,6 +1037,7 @@ export default {
 <title>${escHtml(homeData.title)}</title>
 <meta name="description" content="${escHtml(homeData.desc)}">
 ${homeData.keywords ? `<meta name="keywords" content="${escHtml(homeData.keywords)}">` : ''}
+${SITE_VERIFY_TAGS}
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escHtml(homeData.title)}">
