@@ -6163,6 +6163,23 @@
         });
         _meFitStage();
         window.addEventListener('resize', _meFitStage);
+        // 2026-07-18: 간편 진입 기본 — 편집 상세 UI(툴바·속성·qd-rail 등) 숨김. 작품 갤러리는 로드.
+        //   meIntro 가 있을 때만(에디터 간편모드 사용처) 숨김 적용.
+        try {
+            if (document.getElementById('meIntro')) { _meEditUISet(false); }
+            // window._meGalleryLoad 는 이 파일 뒤쪽(모듈 평가 후반)에서 할당됨 → setTimeout 안에서 확인/호출.
+            //   window.sb 가 아직 준비 안 됐을 수 있어 준비될 때까지(최대 ~8s) 제한 재시도.
+            if (document.getElementById('meGalGrid')) {
+                var _galTries = 0;
+                var _galTick = setInterval(function () {
+                    _galTries++;
+                    if (window.sb && window._meGalleryLoad) {
+                        clearInterval(_galTick);
+                        try { window._meGalleryLoad(0, ''); } catch (_) {}
+                    } else if (_galTries > 16) { clearInterval(_galTick); }
+                }, 500);
+            }
+        } catch (_e0) {}
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _meInit);
     else _meInit();
@@ -6243,7 +6260,8 @@
     var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
     var _meAiRatio = '16:9';      // 기본 가로 16:9
     var _meAiPendingUrl = null;
-    var _meAiRefDataUrl = null;   // 2026-07-18: 합성할 참조 사진 (dataURL)
+    var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
+    var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽)
 
     function _meAiEnsureModal() {
         if (document.getElementById('meAiGenModal')) return;
@@ -6331,17 +6349,30 @@
     }
 
     // 참조 사진 설정/해제 + 썸네일·안내 토글
-    function _meAiSetRef(dataUrl) {
+    function _meAiSetRef(dataUrl, mode) {
         _meAiRefDataUrl = dataUrl || null;
+        _meAiRefMode = (mode === 'reference') ? 'reference' : 'blend';   // 파일 업로드=blend, 갤러리 픽=reference
         var thumb = document.getElementById('meAiRefThumb');
         var img = document.getElementById('meAiRefImg');
         var btn = document.getElementById('meAiRefBtn');
         var hint = document.getElementById('meAiRefHint');
+        var isRef = (_meAiRefMode === 'reference');
         if (_meAiRefDataUrl) {
             if (img) img.src = _meAiRefDataUrl;
             if (thumb) thumb.style.display = 'inline-flex';
-            if (hint) hint.style.display = 'block';
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + _meAiTr('사진 바꾸기', '写真を変更', 'Change photo');
+            if (hint) {
+                hint.style.display = 'block';
+                hint.textContent = isRef
+                    ? _meAiTr('이 작품을 참고해 비슷한 스타일로 새로 디자인해요. 어떻게 만들지 아래에 적어주세요.',
+                              'この作品を参考に、似た雰囲気で新しくデザインします。下に内容を入力してください。',
+                              'We\'ll design a NEW piece inspired by this one\'s style. Describe it below.')
+                    : _meAiTr('넣은 사진을 활용해 디자인해 드려요. 어떻게 만들지 아래에 적어주세요.',
+                              'お写真を活かしてデザインします。どう仕上げるか下に入力してください。',
+                              'We\'ll design using your photo. Describe how below.');
+            }
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + (isRef
+                ? _meAiTr('참고 작품 바꾸기', '参考作品を変更', 'Change reference')
+                : _meAiTr('사진 바꾸기', '写真を変更', 'Change photo'));
         } else {
             if (thumb) thumb.style.display = 'none';
             if (hint) hint.style.display = 'none';
@@ -6415,12 +6446,16 @@
     //   meIntro/meToolbar 는 index.html·cotton_print.html 에 있고 simple_order 는 이 DOM 을 portal 로 재사용.
     //   전역 함수라 세 군데 모두에서 동작.
     // 편집기 상세 UI — 툴바 + 속성패널 + 사이즈표시 + PDF경고 (간편모드에선 전부 숨김)
+    //   2026-07-18: 템플릿/사진/벡터/요소/장식 탭(qd-rail)도 함께 숨김. 작품 갤러리(meGallery)는 항상 표시.
     var _ME_EDIT_IDS = ['meToolbar', 'meProps', 'meSizeLabel', 'meDiffNotice'];
     function _meEditUISet(show) {
         _ME_EDIT_IDS.forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.style.display = show ? '' : 'none';   // '' → 각 요소 CSS/자체로직으로 복귀
         });
+        // qd-rail 은 simple_order/editor-rail 이 나중에 만드는 DOM → 타이밍 안전하게 html 클래스+CSS 로 토글.
+        //   기본(편집 아님)엔 CSS 가 .qd-rail 숨김. 편집 진입 시 html.me-editing 으로 노출.
+        try { document.documentElement.classList.toggle('me-editing', !!show); } catch (_) {}
     }
     window._meShowToolbar = function () {
         var intro = document.getElementById('meIntro');
@@ -6449,6 +6484,72 @@
         setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
     };
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
+
+    // 2026-07-18: 작품 갤러리 ─────────────────────────────
+    //   다른 고객이 만든(개인정보 없는) 디자인을 검색·구경하고, 고르면 그 스타일을 참고해 새로 생성.
+    var _meGalPage = 0, _meGalQ = '', _meGalPer = 10, _meGalTotal = 0, _meGalBusy = false;
+    async function _meGalleryLoad(page, q) {
+        var grid = document.getElementById('meGalGrid');
+        if (!grid) return;
+        if (typeof page === 'number') _meGalPage = Math.max(0, page);
+        if (typeof q === 'string') { _meGalQ = q.trim(); if (typeof page !== 'number') _meGalPage = 0; }
+        var sb = window.sb;
+        if (!sb) { grid.innerHTML = ''; return; }
+        _meGalBusy = true;
+        grid.style.opacity = '0.5';
+        try {
+            var from = _meGalPage * _meGalPer, to = from + _meGalPer - 1;
+            var query = sb.from('design_gallery').select('id,image_url,thumb_url,prompt', { count: 'exact' }).eq('status', 'public');
+            if (_meGalQ) {
+                var like = '%' + _meGalQ.replace(/[%,]/g, ' ') + '%';
+                query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
+            }
+            var res = await query.order('created_at', { ascending: false }).range(from, to);
+            _meGalTotal = res.count || 0;
+            var rows = res.data || [];
+            grid.innerHTML = rows.length
+                ? rows.map(function (r) {
+                    var u = r.thumb_url || r.image_url;
+                    return '<button type="button" class="me-gal-item" data-gal="' + r.id + '" title="' + _meAiEsc(r.prompt || '') + '"><img src="' + u + '" loading="lazy" alt=""></button>';
+                }).join('')
+                : '<div class="me-gal-empty">' + _meAiTr('아직 등록된 작품이 없어요.', 'まだ作品がありません。', 'No designs yet.') + '</div>';
+            grid.querySelectorAll('.me-gal-item').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var id = b.getAttribute('data-gal');
+                    var row = rows.filter(function (x) { return String(x.id) === String(id); })[0];
+                    if (row) _meGalleryPick(row);
+                });
+            });
+            _meGalUpdatePager();
+        } catch (e) { console.warn('[meGallery] load', e); }
+        finally { _meGalBusy = false; grid.style.opacity = ''; }
+    }
+    function _meGalUpdatePager() {
+        var info = document.getElementById('meGalPageInfo');
+        var prev = document.getElementById('meGalPrev');
+        var next = document.getElementById('meGalNext');
+        var pages = Math.max(1, Math.ceil(_meGalTotal / _meGalPer));
+        if (info) info.textContent = (_meGalPage + 1) + ' / ' + pages;
+        if (prev) prev.disabled = _meGalPage <= 0;
+        if (next) next.disabled = _meGalPage >= pages - 1;
+    }
+    function _meAiEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    // 갤러리 픽 → AI 모달 열고 '참고' 모드로 세팅
+    async function _meGalleryPick(row) {
+        try {
+            window._meAiGenOpen();
+            var url = row.image_url;
+            // CORS 안전하게 dataURL 로 변환 후 참조로
+            var dataUrl = url;
+            if (url.indexOf('data:') !== 0) {
+                try { var r = await fetch(url, { mode: 'cors' }); var b = await r.blob(); dataUrl = await new Promise(function (rs, rj) { var fr = new FileReader(); fr.onload = function () { rs(String(fr.result)); }; fr.onerror = rj; fr.readAsDataURL(b); }); } catch (_) {}
+            }
+            _meAiSetRef(dataUrl, 'reference');
+        } catch (e) { console.warn('[meGallery] pick', e); }
+    }
+    window._meGalleryLoad = _meGalleryLoad;
+    window._meGalleryPage = function (d) { var pages = Math.max(1, Math.ceil(_meGalTotal / _meGalPer)); var np = Math.min(pages - 1, Math.max(0, _meGalPage + d)); if (np !== _meGalPage) _meGalleryLoad(np); };
+    window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(0, v || ''); }, 300); }; })();
 
     // 생성 이미지를 대지에 cover(꽉 채움, 넘치는 부분만 잘림)로 삽입 + 뒤로 보내기(배경/풀블리드).
     //   명함 포함 전부 cover — 프롬프트가 사방/상하/좌우 여백을 확보하므로 잘려도 글자는 안전.
@@ -6493,6 +6594,72 @@
         _meAiBarStop();
     }
     function _meAiBarStop() { if (_meAiBarTimer) { clearInterval(_meAiBarTimer); _meAiBarTimer = null; } }
+
+    // 2026-07-18: 작품 갤러리 자동등록 ─────────────────────────────
+    //   개인정보 보호: 명함(namecard) 제외 + 프롬프트에 전화/이메일/긴 숫자열 있으면 등록 안 함.
+    //   그래도 프롬프트는 스크럽(마스킹) 후 저장하고, 스크럽본으로 키워드 번역.
+    var _ME_PII_RE = [
+        /\d{2,4}[-\s.]?\d{3,4}[-\s.]?\d{4}/,        // 전화번호류
+        /[\w.+-]+@[\w-]+\.[\w.]+/,                   // 이메일
+        /\b\d{6,}\b/                                 // 긴 숫자열(사업자번호 등)
+    ];
+    function _meHasPII(s) { s = String(s || ''); return _ME_PII_RE.some(function (re) { return re.test(s); }); }
+    function _meScrubPII(s) {
+        s = String(s || '');
+        s = s.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, ' ');
+        s = s.replace(/\d{2,4}[-\s.]?\d{3,4}[-\s.]?\d{4}/g, ' ');
+        s = s.replace(/\b\d{5,}\b/g, ' ');
+        return s.replace(/\s{2,}/g, ' ').trim();
+    }
+    async function _meAiTryRegisterGallery(imageUrl, rawPrompt, ratio) {
+        try {
+            // 개인정보 안전장치: 명함이거나 PII 감지되면 등록 안 함
+            if (ratio === 'namecard') return;
+            if (_meHasPII(rawPrompt)) return;
+            var sb = window.sb; if (!sb || !imageUrl) return;
+            var scrubbed = _meScrubPII(rawPrompt).slice(0, 300);
+            if (scrubbed.length < 2) return;
+
+            // 1) dataURL → Blob → storage 업로드 (design 버킷 gallery/ 경로)
+            var blob;
+            if (imageUrl.indexOf('data:') === 0) {
+                var r = await fetch(imageUrl); blob = await r.blob();
+            } else {
+                var r2 = await fetch(imageUrl, { mode: 'cors' }); blob = await r2.blob();
+            }
+            var ts = (window.performance && performance.now ? Math.floor(performance.now()) : 0) + '_' + Math.floor(Math.random() * 1e6);
+            var path = 'gallery/' + ts + '.png';
+            var up = await sb.storage.from('design').upload(path, blob, { contentType: 'image/png', upsert: false });
+            if (up.error) { console.warn('[meGallery] upload', up.error); return; }
+            var pub = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+
+            // 2) 키워드 번역 (ko/en/ja)
+            var kw = { ko: scrubbed, en: scrubbed, ja: scrubbed };
+            try {
+                var tr = await fetch(SB_URL + '/functions/v1/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
+                    body: JSON.stringify({ text: scrubbed, sourceLang: 'ko', targetLangs: ['ko', 'en', 'ja'] })
+                });
+                var td = await tr.json();
+                if (td && td.translations) {
+                    kw.ko = td.translations.ko || scrubbed;
+                    kw.en = td.translations.en || scrubbed;
+                    kw.ja = td.translations.ja || scrubbed;
+                }
+            } catch (_t) {}
+
+            // 3) 사용자 id (있으면)
+            var uid = null;
+            try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user ? u.data.user.id : null; } catch (_u) {}
+
+            // 4) insert
+            await sb.from('design_gallery').insert({
+                image_url: pub, thumb_url: pub, prompt: scrubbed,
+                kw_ko: kw.ko, kw_en: kw.en, kw_ja: kw.ja, ratio: ratio || null, user_id: uid
+            });
+        } catch (e) { console.warn('[meGallery] register failed', e); }
+    }
 
     async function _meAiGenerate() {
         var promptEl = document.getElementById('meAiPrompt');
@@ -6566,9 +6733,14 @@
                 var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image.'
                     + ' IMPORTANT SAFE MARGIN: keep ALL text and every important element inside the CENTER, staying at least 18-22% away from every edge (top, bottom, left AND right). Leave a LARGE empty background margin on all four sides — roughly one-fifth of the width/height on each side must be clear background. The final print may be cropped or a different aspect ratio, so nothing important — especially text — may sit near any edge, or it will be cut off.'
                     + _bannerHint;
-                // 2026-07-18: 합성할 사진이 있으면 그 사진을 살려 디자인하도록 지시 + refImage 전달(edits API)
+                // 2026-07-18: 참조 이미지가 있으면 모드에 따라 다른 지시 + refImage 전달(edits API)
+                //   blend = 사진을 살려 합성 / reference = 스타일·구도만 참고해 완전히 새로 (내용 복사 금지)
                 if (_meAiRefDataUrl) {
-                    genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
+                    if (_meAiRefMode === 'reference') {
+                        genPrompt1 = 'Use the attached image ONLY as a STYLE, LAYOUT and MOOD reference. Create a COMPLETELY NEW, original design in a similar visual style, color mood and composition — do NOT copy its text, logos, photos, or specific content. ' + genPrompt1;
+                    } else {
+                        genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
+                    }
                 }
                 var _reqBody = { prompt: genPrompt1, size: size };
                 if (_meAiRefDataUrl) _reqBody.refImage = _meAiRefDataUrl;
@@ -6615,6 +6787,8 @@
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             if (ins) ins.style.display = 'block';
             var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
+            // 2026-07-18: 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
+            try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
         } catch (e) {
             console.error('[meAi] generate', e);
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
