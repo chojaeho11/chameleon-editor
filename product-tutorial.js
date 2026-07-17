@@ -103,6 +103,8 @@
       + '.tut-opt.accent{border-color:#6d28d9;background:#faf5ff;}'
       + '.tut-choice{position:fixed;pointer-events:auto;left:50%;top:50%;transform:translate(-50%,-50%);'
       + 'width:min(360px,calc(100vw - 28px));background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;}'
+      + '.tut-choice .tut-x{position:absolute;top:12px;right:12px;width:28px;height:28px;border:none;background:#f3f4f6;color:#6b7280;border-radius:50%;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}'
+      + '.tut-choice .tut-x:hover{background:#e5e7eb;color:#374151;}'
       + '.tut-choice h3{margin:0 0 6px;font-size:18px;font-weight:700;color:#111827;}'
       + '.tut-choice p{margin:0 0 16px;font-size:13px;line-height:1.6;color:#6b7280;}'
       + '.tut-toast{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%);pointer-events:none;max-width:300px;text-align:center;'
@@ -645,7 +647,8 @@
     _choice = document.createElement('div');
     _choice.className = 'tut-choice';
     _choice.innerHTML =
-      '<h3>' + T({ kr: '주문이 처음이신가요?', ja: '初めてのご注文ですか?', en: 'First time ordering?' }) + '</h3>'
+      '<button class="tut-x" data-act="close" aria-label="' + T({ kr: '닫기', ja: '閉じる', en: 'Close' }) + '">✕</button>'
+      + '<h3>' + T({ kr: '주문이 처음이신가요?', ja: '初めてのご注文ですか?', en: 'First time ordering?' }) + '</h3>'
       + '<p>' + T({ kr: '처음이라면 제가 옆에서 안내할게요.<br>안내대로 클릭만 하면 끝! 이리오세요.',
         ja: '初めてなら私がご案内します。<br>クリックするだけで完了!こちらへどうぞ。',
         en: "First time? I'll guide you step by step.<br>Just click along — that's it!" }) + '</p>'
@@ -658,6 +661,7 @@
     _root.appendChild(_choice);
     _choice.querySelector('[data-act="tut"]').addEventListener('click', function () { run(scn.steps); });
     _choice.querySelector('[data-act="norm"]').addEventListener('click', closeChooser);
+    _choice.querySelector('[data-act="close"]').addEventListener('click', closeChooser);   // 2026-07-18: X 닫기
   }
 
   // ── 다시보기 버튼 ─────────────────────────────────────────────────────

@@ -6562,7 +6562,10 @@
                 }
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
-                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.' + _bannerHint;
+                //   2026-07-18: 대지 비율이 생성 비율과 달라 삽입(cover) 시 가장자리가 잘리므로 사방 여백을 크게 강조.
+                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image.'
+                    + ' IMPORTANT SAFE MARGIN: keep ALL text and every important element inside the CENTER, staying at least 12-15% away from every edge (top, bottom, left AND right). Leave generous empty background margin on all four sides. The final print may be cropped or a different aspect ratio, so nothing important — especially text — may sit near any edge, or it will be cut off.'
+                    + _bannerHint;
                 // 2026-07-18: 합성할 사진이 있으면 그 사진을 살려 디자인하도록 지시 + refImage 전달(edits API)
                 if (_meAiRefDataUrl) {
                     genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
@@ -6578,7 +6581,7 @@
                 if (!r1.ok || d1.error) throw new Error(d1.detail || d1.error || ('HTTP ' + r1.status));
                 url = d1.url;
             } else {
-                var genPrompt2 = prompt + ' The background must extend fully to all edges (full bleed). Do NOT draw any border, frame, or colored margin. Keep the main subject within the central area, away from the outer edges.';
+                var genPrompt2 = prompt + ' The background must extend fully to all edges (full bleed). Do NOT draw any border, frame, or colored margin. Keep ALL text and important elements in the CENTER, at least 12-15% away from every edge (top, bottom, left and right), with generous empty margin on all four sides — the print may be cropped, so nothing important may sit near an edge.';
                 var r2 = await fetch(SB_URL + '/functions/v1/generate-image-flux', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
