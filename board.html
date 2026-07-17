@@ -1347,7 +1347,12 @@
             if (error) throw error;
             // 엣지 함수는 실패해도 HTTP 200 이라 body 를 직접 확인해야 한다
             if (data && data.ok === false) throw new Error(data.error || '발행 실패');
-            if (data && data.message) { alert(data.message); return; }   // 대기 사진 없음
+            // 대기 사진 없음 — 방금 폴더에 넣었는데 아직 업로드 전인 경우가 많다.
+            //   (폴더→클라우드 업로드는 PC 의 작업 스케줄러가 5분마다 수행. 버튼은 업로드된 것만 발행한다)
+            if (data && data.message) {
+                alert('대기 중인 사진이 없습니다.\n\n방금 홍보사진 폴더에 넣으셨다면 업로드까지 최대 5분 걸립니다.\n잠시 후 다시 눌러주세요.');
+                return;
+            }
             alert(`발행 완료\n사진 ${data.photos}장 · 보류 ${data.skipped}장\n${(data.products || []).join(', ')}`);
             location.reload();
         } catch (e) {
