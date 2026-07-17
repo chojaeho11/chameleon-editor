@@ -6733,8 +6733,8 @@
                 if (_isTallBanner) size = '1024x1536';   // 세로배너: gpt-image 최대 세로
 
                 var _bannerHint = _isTallBanner
-                    // 세로배너: 좌우 큰 여백 + 중앙 세로열. 타이틀은 크게, 서브는 그 아래 작게.
-                    ? ' Compose as a TALL VERTICAL BANNER. Read the user text as a TITLE plus a shorter SUBTITLE: render the TITLE large and bold at the top-center, and the SUBTITLE smaller just below it. Place ALL text in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
+                    // 세로배너: 좌우 큰 여백 + 아주 좁은 중앙 세로열. 긴 글자는 3~4자씩 줄바꿈해 세로로 쌓음.
+                    ? ' Compose as a TALL VERTICAL BANNER. Read the user text as a TITLE plus a shorter SUBTITLE: render the TITLE large and bold at the top-center, and the SUBTITLE smaller just below it. Place ALL text in a VERY NARROW vertical column down the CENTER — keep every line of text within the central ~35% of the width only, with large empty background areas on the LEFT and RIGHT. CRITICAL: never let a line of text run wide toward the sides. If any word or phrase is long, BREAK IT into SHORT STACKED LINES of at most 3-4 Korean characters each and stack them vertically — for example "한우불고기" must become two lines "한우" / "불고기", and "방어회오픈" becomes "방어회" / "오픈". Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner, so wide text will be cut off.'
                     : '';
                 // 2026-07-18: 가로 현수막 — 5m×0.9m 등 아주 긴 가로. 최종 대지는 위아래로 크게 잘리므로
                 //   타이틀/서브를 화면 세로 중앙의 가로 띠(중앙 ~30% 높이)에 몰고, 위·아래로 큰 배경 여백을 둔다.
