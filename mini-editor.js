@@ -6235,6 +6235,12 @@
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
               '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
               '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
+              // 2026-07-18: 삽입 후 꾸미기 안내 (이미지 생성 성공 시에만 노출)
+              '<div id="meAiTip" style="display:none; margin-top:10px; font-size:12.5px; color:#475569; line-height:1.6; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px;">' +
+                _meAiTr('이미지를 넣은 뒤 위치를 이동해 더 예쁜 구도로 맞춰보세요. 벡터나 요소를 이용해 더 예쁘게 꾸며보세요.',
+                        '画像を追加したら、位置を動かしてより美しい構図に整えてみましょう。ベクターや素材を使って、さらに素敵に飾ってみてください。',
+                        'After adding the image, move it to get a nicer composition. Use vectors or elements to decorate it even more beautifully.') +
+              '</div>' +
               '<div id="meAiErr" style="display:none; margin-top:10px; font-size:12.5px; color:#dc2626; line-height:1.5;"></div>' +
             '</div>';
         document.body.appendChild(wrap);
@@ -6322,15 +6328,17 @@
         var err = document.getElementById('meAiErr');
         if (res) { res.innerHTML = _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here'); res.style.color = '#cbd5e1'; }
         if (ins) ins.style.display = 'none';
+        var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
         m.style.display = 'flex';
         setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
     };
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
 
-    // 생성 이미지를 대지에 삽입 + 뒤로 보내기(배경/풀블리드).
-    //   기본: cover(대지 꽉 채움, 넘치는 부분은 잘림) — 배너·포스터는 프롬프트가 여백을 확보해 글자 안 잘림.
-    //   명함: contain(대지 안에 통째로, 잘림 없음) — 사방 여백을 반드시 보존해야 하므로.
+    // 생성 이미지를 대지에 cover(꽉 채움, 넘치는 부분만 잘림)로 삽입 + 뒤로 보내기(배경/풀블리드).
+    //   명함 포함 전부 cover — 프롬프트가 사방/상하/좌우 여백을 확보하므로 잘려도 글자는 안전.
+    //   (2026-07-18: 명함을 contain 으로 넣었더니 좌우가 남아서 다시 cover 로. 대지 90x50 ≈ 1.77:1,
+    //    생성 이미지 1.5:1 이라 좌우는 꽉 차고 위아래만 조금 잘린다 → 여백 있는 명함이라 안전.)
     function _meAiInsert() {
         if (!_meAiPendingUrl) return;
         var opts = { toBack: true };
@@ -6338,9 +6346,7 @@
             var imgEl = document.querySelector('#meAiResult img');
             var iw = imgEl && imgEl.naturalWidth, ih = imgEl && imgEl.naturalHeight;
             if (me && me.natW && me.natH && iw && ih) {
-                var scale = (_meAiRatio === 'namecard')
-                    ? Math.min(me.natW / iw, me.natH / ih)   // contain — 명함: 전체가 보이도록(여백 잘림 방지)
-                    : Math.max(me.natW / iw, me.natH / ih);  // cover  — 그 외: 대지 꽉 채움
+                var scale = Math.max(me.natW / iw, me.natH / ih);  // cover — 대지 꽉 채움
                 var w = iw * scale, h = ih * scale;
                 var x = (me.natW - w) / 2, y = (me.natH - h) / 2; // 중앙 정렬
                 opts.explicitPos = { x: x, y: y, w: w, h: h };
@@ -6382,6 +6388,7 @@
         var prompt = (promptEl && promptEl.value || '').trim();
         if (err) err.style.display = 'none';
         if (ins) ins.style.display = 'none';
+        var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         _meAiPendingUrl = null;
         if (prompt.length < 3) {
             if (err) { err.textContent = _meAiTr('설명을 조금 더 자세히 적어주세요.', 'もう少し詳しく説明してください。', 'Please describe a bit more.'); err.style.display = 'block'; }
@@ -6483,6 +6490,7 @@
             _meAiPendingUrl = url;
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             if (ins) ins.style.display = 'block';
+            var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
         } catch (e) {
             console.error('[meAi] generate', e);
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
