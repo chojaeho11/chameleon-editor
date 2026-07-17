@@ -347,6 +347,15 @@ ${catalog}
 ${isHoneycomb ? `- **허니콤보드 강점(중요)**: 카멜레온프린팅은 **수도권에 무료로 배송·설치까지 해주는 유일한 업체**입니다.
   이 점을 눈에 띄게 강조하세요. (${L.lang === "kr" ? "수도권" : L.lang === "ja" ? "韓国・首都圏" : "the Seoul metropolitan area"} 기준)` : ""}
 
+[자주 묻는 질문 (faq) — 3~5개]
+- 이 제품군(${uniqNames.join(", ")})을 주문하려는 사람이 **실제로 궁금해할 질문**만.
+  제품에 맞춰 다르게: 허니콤보드/가벽/포토존이면 설치·무게·강도·운반,
+  굿즈·키링이면 소량 제작·최소수량·납기, 인쇄물이면 용지·규격·시안 확인 등.
+- 답변은 카멜레온프린팅이 직접 답하는 말투로, 실제로 도움이 되는 구체적인 내용.
+  (질문을 지어내 자랑하는 식 금지. "정말 저렴한가요?" 같은 자문자답 광고 금지)
+- 답변 안에 강점을 자연스럽게: 튜토리얼로 클릭 몇 번이면 주문 완료${isHoneycomb ? ", 수도권 무료 배송·설치" : ""}.
+- 가격·금액은 쓰지 마세요. 전화번호·URL 도 쓰지 마세요.
+
 [쓰지 말아야 할 것 — 시스템이 자동으로 붙입니다. 쓰면 중복됩니다]
 - 전화번호·문의처 (${L.contact})
 - 홈페이지 주소 (https://${L.site}, https://${L.fabricSite})
@@ -358,7 +367,8 @@ ${productSummary}
 
 [규칙]
 - 출력은 오직 JSON. 설명·마크다운 펜스 금지.
-- 형식: {"title":"...","meta_description":"...","focus_keyword":"...","body":"<p>...</p>","hashtags":["..."]}
+- 형식: {"title":"...","meta_description":"...","focus_keyword":"...","body":"<p>...</p>","hashtags":["..."],"faq":[{"q":"...","a":"..."}]}
+- faq 는 3~5개. body 안에는 넣지 마세요 — 시스템이 별도 섹션으로 렌더링합니다.
 - body 는 HTML (<p>, <h2>, <ul>, <strong> 만 사용). 이미지 태그는 넣지 마세요 — 시스템이 자동으로 붙입니다.
 - 길이: 800~1200자 분량. 과장 광고·허위 표현 금지. 가격은 언급하지 마세요.
 - 본문에는 링크·전화번호를 넣지 마세요 (시스템이 하단에 붙입니다).
@@ -366,20 +376,32 @@ ${productSummary}
 
                 // max_tokens 8000 — 3000 은 한국어 글에서 잘렸다(실측). 한국어/일본어는 토큰 소모가 큼.
                 // 1회 재시도: 일시적 실패로 KR 이 빠지면 source_id 연결까지 어긋나므로 그냥 넘기지 않는다.
-                let c: any = null, lastErr: any = null;
+                // 2026-07-17: faq 누락도 재시도 사유 (실측: 영어만 faq 를 빼먹고 나왔다).
+                //   단 재시도해도 없으면 첫 결과라도 발행한다 — FAQ 때문에 글 자체를 잃으면 안 된다.
+                let c: any = null, lastErr: any = null, partial: any = null;
                 for (let attempt = 0; attempt < 2; attempt++) {
                     try {
                         const raw = await callClaude(ANTHROPIC_API_KEY, {
                             max_tokens: 8000, system: sys,
-                            messages: [{ role: "user", content: `제품군: ${uniqNames.join(", ")}\n위 구조(검색어 → 답변 → 우리 사례)대로 ${L.label} 블로그 글을 JSON 으로 작성하세요.` }],
+                            messages: [{ role: "user", content: `제품군: ${uniqNames.join(", ")}\n위 구조(검색어 → 답변 → 우리 사례)대로 ${L.label} 블로그 글을 JSON 으로 작성하세요.\n**faq 3~5개를 반드시 포함**하세요.` }],
                         });
-                        c = parseJson(raw);
+                        const parsed = parseJson(raw);
+                        const faqOk = Array.isArray(parsed.faq) && parsed.faq.filter((f: any) => f && f.q && f.a).length >= 3;
+                        if (!faqOk && attempt === 0) {
+                            partial = parsed;   // 본문은 살려두고 faq 만 다시 받아본다
+                            lastErr = new Error("faq 누락 — 재시도");
+                            console.warn(`[promo] ${L.lang} faq 누락 → 재시도`);
+                            continue;
+                        }
+                        c = parsed;
                         break;
                     } catch (e) {
                         lastErr = e;
                         console.warn(`[promo] ${L.lang} 생성 실패 (시도 ${attempt + 1}/2):`, e);
                     }
                 }
+                // 재시도까지 faq 가 안 나왔으면 첫 결과로 발행 (FAQ 없다고 글을 버리진 않는다)
+                if (!c && partial) { c = partial; console.warn(`[promo] ${L.lang} faq 없이 발행`); }
                 if (!c) throw lastErr || new Error("생성 실패");
 
                 // 본문 + 사진 전부 임베드 (사진 여러 장 = 글 1개)
@@ -391,6 +413,23 @@ ${productSummary}
                         return `<figure style="margin:18px 0;"><img src="${d.photo.storage_url}" alt="${cap}" style="max-width:100%;border-radius:10px;"><figcaption style="font-size:13px;color:#64748b;margin-top:6px;">${cap}</figcaption></figure>`;
                     })
                     .join("\n");
+                // 2026-07-17: 자주 묻는 질문 — 카멜레온프린팅이 직접 답하는 형식.
+                //   고객인 척하는 가짜 댓글 대신 회사가 드러내놓고 답한다(정직 + FAQPage 리치결과).
+                //   아래에서 FAQPage JSON-LD 로도 내보내 구글 검색결과에 질문/답변이 펼쳐지게 한다.
+                const faqList: any[] = Array.isArray(c.faq)
+                    ? c.faq.filter((f: any) => f && f.q && f.a).slice(0, 5)
+                    : [];
+                const faqTitle = L.lang === "ja" ? "よくあるご質問" : L.lang === "en" ? "Frequently asked questions" : "자주 묻는 질문";
+                const faqHtml = faqList.length
+                    ? `<section style="margin:26px 0;">
+<h2 style="font-size:18px;color:#0f172a;margin:0 0 14px;">${faqTitle}</h2>
+${faqList.map((f: any) => `<div style="padding:14px 0;border-top:1px solid #e2e8f0;">
+<p style="margin:0 0 7px;font-size:15px;color:#0f172a;">Q. ${esc(f.q)}</p>
+<p style="margin:0;font-size:14px;color:#475569;line-height:1.8;">A. ${esc(f.a)} <span style="color:#94a3b8;font-size:12.5px;">— ${esc(L.author)}</span></p>
+</div>`).join("\n")}
+</section>`
+                    : "";
+
                 // 2026-07-17: 고정 브랜드 메시지 — 모든 글에 동일하게 들어간다(사장님 지시).
                 //   플랫 디자인: 그림자 없음, 볼드 대신 색·크기·여백으로 강조 (CLAUDE.md 디자인 원칙)
                 const P = BRAND_PITCH[L.lang] || BRAND_PITCH.kr;
@@ -410,8 +449,8 @@ ${productSummary}
 ${inquiryLabel}: ${esc(L.contact)}<br>
 <a href="https://${L.site}">https://${L.site}</a> · ${fabricLabel}: <a href="https://${L.fabricSite}">https://${L.fabricSite}</a>
 </p>`;
-                // 본문 → 사진 → 브랜드 메시지 → CTA·문의처 순
-                const htmlBody = `${c.body || ""}\n${gallery}\n${pitch}\n${cta}`;
+                // 본문 → 사진 → 자주묻는질문 → 브랜드 메시지 → CTA·문의처 순
+                const htmlBody = `${c.body || ""}\n${gallery}\n${faqHtml}\n${pitch}\n${cta}`;
 
                 const seoMeta: any = {
                     meta_description: c.meta_description || "",
@@ -419,6 +458,8 @@ ${inquiryLabel}: ${esc(L.contact)}<br>
                     hashtags: c.hashtags || [],
                     og_image: identified[0].photo.storage_url,
                     promo_batch: batchId,
+                    // _worker.js 가 이걸 읽어 FAQPage 구조화 데이터를 내보낸다 (구글 리치결과)
+                    faq: faqList,
                 };
                 // KR 이 원본 → ja/en 은 source_id 로 KR 을 가리킨다.
                 // (기존 marketing_bot 은 source_id 를 안 넣어서 board.html 의 hreflang 형제 조회가 늘 자기 자신만 반환했다)

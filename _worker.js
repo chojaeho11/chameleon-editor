@@ -449,6 +449,21 @@ function generateBlogHtml(post, cc) {
         "inLanguage": lang
     });
 
+    // 2026-07-17: FAQPage — 글의 「자주 묻는 질문」(카멜레온프린팅이 직접 답변)을 구조화 데이터로.
+    //   구글이 검색결과에 질문/답변을 펼쳐 보여줄 수 있고, AI 크롤러도 Q&A 형식을 잘 인용한다.
+    let faqLd = '';
+    if (Array.isArray(meta.faq) && meta.faq.length > 0) {
+        faqLd = '<script type="application/ld+json">' + JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": meta.faq.filter(f => f && f.q && f.a).map(f => ({
+                "@type": "Question",
+                "name": String(f.q),
+                "acceptedAnswer": { "@type": "Answer", "text": String(f.a) }
+            }))
+        }) + '<\/script>';
+    }
+
     // 같은 글의 다른 언어판 — source_id 로 묶인 형제글 (있으면 hreflang 으로)
     let alts = '';
     if (Array.isArray(post._siblings)) {
@@ -473,6 +488,7 @@ function generateBlogHtml(post, cc) {
 <meta property="article:published_time" content="${escHtml(post.created_at || '')}">
 <link rel="canonical" href="${escHtml(postUrl)}">
 ${alts}<script type="application/ld+json">${jsonLd}</script>
+${faqLd}
 </head><body>
 <article>
 <h1>${escHtml(title)}</h1>
