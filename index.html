@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718072356';
+    var CV = '20260718073624';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5860,7 +5860,7 @@ function scrollHotdeal(gridId, dir) {
 <!-- 2026-06-13: 미니에디터 + 누끼따기 (배경 제거) — PC: 좌우 / 모바일: 위아래 -->
 <!-- 2026-06-14: 메인 화면에선 숨김 — simple_order 모달 진입 시 portal 로 이동해 사용. simple_order.js 의 _mountEditor 가 display 복구. -->
 <div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0; display:none;">
-    <link rel="stylesheet" href="./mini-editor.css?v=12">
+    <link rel="stylesheet" href="./mini-editor.css?v=13">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
 
     <div id="aiNbWrap">
@@ -5947,6 +5947,10 @@ function scrollHotdeal(gridId, dir) {
             </div>
             <!-- 2026-07-18: 작품 갤러리 — 다운로드와 템플릿 탭 사이. 항상 표시. 고른 작품을 참고해 새 디자인. -->
             <div class="me-gallery" id="meGallery">
+                <div class="me-gal-tip">
+                    <span class="me-gal-tip-badge" data-i18n="me_tip">팁!!</span>
+                    <span data-i18n="me_gallery_tip">그냥 원클릭 AI로 디자인을 하셔도 됩니다. 원하는 스타일을 찾고 싶다면 아래 다른 고객들의 작품을 검색하면 인공지능이 참고하여 디자인합니다.</span>
+                </div>
                 <div class="me-gal-head">
                     <span class="me-gal-title" data-i18n="me_gallery">작품</span>
                     <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-ph="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">

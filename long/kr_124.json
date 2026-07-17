@@ -1618,6 +1618,8 @@
   "me_clear": "전체 삭제",
   "me_download": "다운로드",
   "me_gallery": "작품",
+  "me_tip": "팁!!",
+  "me_gallery_tip": "그냥 원클릭 AI로 디자인을 하셔도 됩니다. 원하는 스타일을 찾고 싶다면 아래 다른 고객들의 작품을 검색하면 인공지능이 참고하여 디자인합니다.",
   "me_gallery_search": "검색",
   "me_prev": "이전",
   "me_next": "다음",

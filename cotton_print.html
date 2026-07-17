@@ -1823,7 +1823,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
-    <link rel="stylesheet" href="./mini-editor.css?v=12">
+    <link rel="stylesheet" href="./mini-editor.css?v=13">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
@@ -1909,6 +1909,10 @@ async function submitRollFabricRequest() {
                 </div>
                 <!-- 2026-07-18: 작품 갤러리 -->
                 <div class="me-gallery" id="meGallery">
+                    <div class="me-gal-tip">
+                        <span class="me-gal-tip-badge" data-i18n="me_tip">팁!!</span>
+                        <span data-i18n="me_gallery_tip">그냥 원클릭 AI로 디자인을 하셔도 됩니다. 원하는 스타일을 찾고 싶다면 아래 다른 고객들의 작품을 검색하면 인공지능이 참고하여 디자인합니다.</span>
+                    </div>
                     <div class="me-gal-head">
                         <span class="me-gal-title" data-i18n="me_gallery">작품</span>
                         <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-ph="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">

@@ -1981,6 +1981,8 @@
   "me_clear": "清除全部",
   "me_download": "下载",
   "me_gallery": "作品集",
+  "me_tip": "提示!!",
+  "me_gallery_tip": "直接用一键AI设计也可以。如果想找特定风格，搜索下方其他客户的作品，AI会参考它们来为您设计。",
   "me_gallery_search": "搜索",
   "me_prev": "上一页",
   "me_next": "下一页",
