@@ -6593,6 +6593,7 @@
     function _meAiBarStart() {
         _meAiBarStop();
         var pct = 6;
+        var _msgSwitched = false;
         var bar = document.getElementById('meAiBar');
         if (bar) bar.style.width = pct + '%';
         _meAiBarTimer = setInterval(function () {
@@ -6600,6 +6601,12 @@
             if (pct > 92) pct = 92;
             var b = document.getElementById('meAiBar');
             if (b) b.style.width = pct.toFixed(1) + '%';
+            // 2026-07-18: 바가 후반(≥78%)에 오면 문구를 "다듬는 중 · 거의 완료"로 교체.
+            if (!_msgSwitched && pct >= 78) {
+                _msgSwitched = true;
+                var msg = document.getElementById('meAiBarMsg');
+                if (msg) msg.textContent = _meAiTr('디자인을 다듬고 있어요 · 거의 다 됐어요', 'デザインを仕上げています · もうすぐ完成です', 'Refining the design · almost done');
+            }
         }, 400);
     }
     function _meAiBarDone() {
@@ -6697,7 +6704,7 @@
             res.style.color = '';
             res.innerHTML =
                 '<div style="width:100%; padding:6px 8px;">' +
-                  '<div style="font-size:13px; color:#64748b; margin-bottom:9px;">' + _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight') + '</div>' +
+                  '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight') + '</div>' +
                   '<div style="height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden;">' +
                     '<div id="meAiBar" style="height:100%; width:6%; background:linear-gradient(90deg,#6366f1,#4338ca); border-radius:99px; transition:width .45s ease;"></div>' +
                   '</div>' +
