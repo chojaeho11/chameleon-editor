@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717114014';
+    var CV = '20260717215247';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1025,12 +1025,13 @@ window._tcmFallbackClick = function(code) {
                 <!-- 1. 허니콤보드 — 파스텔 블루 -->
                 <article class="hc-slide is-active" data-slide="0" style="--bg:#e0f2fe; --bg2:#bae6fd; --txt:#075985; --accent:#0c4a6e;">
                     <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-0">HONEYCOMB</span>
-                        <h2 class="hc-title" data-hc="title-0">허니콤보드<br>업계 1위</h2>
-                        <p class="hc-sub" data-hc="sub-0">전시·POP·인테리어 도매가 50% 할인<br>국내 직접 생산, 무료설치 가능</p>
+                        <span class="hc-tag" data-hc="tag-0">EASY ORDER</span>
+                        <h2 class="hc-title" data-hc="title-0">초보자도<br>쉽게 주문</h2>
+                        <p class="hc-sub" data-hc="sub-0">튜토리얼만 따라가면 주문 뚝딱<br>AI가 고퀄리티 디자인을 무료로 해드립니다</p>
                         <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770042960042_Honeycomb%20Board%20(945).jpg" alt="허니콤보드" loading="lazy" decoding="async"></div>
+                    <!-- 2026-07-17: 1번 슬라이드 교체 (허니콤보드 업계 1위 → 초보자도 쉽게 주문). 이미지=1면.png -->
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_easy_order_1784292694.png" alt="초보자도 쉽게 주문" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 2. 광고인쇄 / 광고 기획사 도매쇼핑몰 — 파스텔 민트 -->
                 <article class="hc-slide" data-slide="1" style="--bg:#d1fae5; --bg2:#a7f3d0; --txt:#065f46; --accent:#064e3b;">
@@ -1172,7 +1173,7 @@ window._tcmFallbackClick = function(code) {
             // 슬라이드 다국어
             var SLIDES = {
                 kr: {
-                    'tag-0':'HONEYCOMB','title-0':'허니콤보드<br>업계 1위','sub-0':'전시·POP·인테리어 도매가 50% 할인<br>국내 직접 생산, 무료설치 가능',
+                    'tag-0':'EASY ORDER','title-0':'초보자도<br>쉽게 주문','sub-0':'튜토리얼만 따라가면 주문 뚝딱<br>AI가 고퀄리티 디자인을 무료로 해드립니다',
                     'tag-1':'AD PRINT','title-1':'광고 기획사를 위한<br>도매쇼핑몰','sub-1':'최대 도매출력소<br>업자들의 쇼핑몰',
                     'tag-2':'PAPER STAND','title-2':'종이매대<br>친환경 진열대','sub-2':'팝업·전시·매장 진열용<br>친환경 종이로 부담 없이',
                     'tag-3':'BEST GOODS','title-3':'베스트 굿즈<br>100개+ 반값','sub-3':'키링·코롯토·텀블러·머그<br>세계에서 가장 저렴한 도매가',
@@ -1181,7 +1182,7 @@ window._tcmFallbackClick = function(code) {
                     'cta':'자세히 보기','cta-lowest':'🏆 최저가보장'
                 },
                 ja: {
-                    'tag-0':'HONEYCOMB','title-0':'ハニカムボード<br>業界1位','sub-0':'展示・POP・インテリア 卸価格50%OFF<br>国内自社生産、無料設置可能',
+                    'tag-0':'EASY ORDER','title-0':'初めてでも<br>かんたん注文','sub-0':'チュートリアル通りに進めるだけで注文完了<br>AIが高品質デザインを無料で作成します',
                     'tag-1':'AD PRINT','title-1':'広告代理店のための<br>卸売ショッピングモール','sub-1':'最大級の卸売印刷所<br>業者のためのモール',
                     'tag-2':'PAPER STAND','title-2':'紙ディスプレイ<br>エコスタンド','sub-2':'ポップアップ・展示・店頭陳列用<br>環境配慮の紙素材で気軽に',
                     'tag-3':'BEST GOODS','title-3':'ベストグッズ<br>100個~半額','sub-3':'キーリング・コロット・タンブラー・マグ<br>世界最安値の卸売価格',
@@ -1190,7 +1191,7 @@ window._tcmFallbackClick = function(code) {
                     'cta':'詳しく見る','cta-lowest':'🏆 最安値保証'
                 },
                 en: {
-                    'tag-0':'HONEYCOMB','title-0':'Honeycomb Board<br>#1 in Industry','sub-0':'50% off wholesale for exhibitions, POP, interiors<br>Domestic manufacturing, free installation available',
+                    'tag-0':'EASY ORDER','title-0':'Easy Ordering<br>for Beginners','sub-0':'Just follow the tutorial and your order is done<br>Our AI creates high-quality designs for free',
                     'tag-1':'AD PRINT','title-1':'Wholesale Mall for<br>Ad Agencies','sub-1':'Largest Wholesale Printer<br>The Mall for Pros',
                     'tag-2':'PAPER STAND','title-2':'Paper Display<br>Eco-Friendly Stand','sub-2':'For pop-ups, exhibitions, retail displays<br>Eco-friendly paper, lightweight and affordable',
                     'tag-3':'BEST GOODS','title-3':'Best Goods<br>50% off for 100+','sub-3':'Keychains, korotto, tumblers, mugs<br>World\'s most affordable wholesale prices',
