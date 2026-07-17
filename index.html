@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717223803';
+    var CV = '20260717224400';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1698,11 +1698,16 @@ window._tcmFallbackClick = function(code) {
                 font-family:'Pretendard Variable', sans-serif;
                 font-size:11.5px;
                 font-weight:800;
-                letter-spacing:0.32em;
-                padding-left:0.32em;
+                /* 2026-07-17: 자간 0.32em → 0.16em 으로 축소 + 가운데 정렬 보정.
+                   letter-spacing 은 마지막 글자 뒤에도 여백을 넣기 때문에 그만큼 글씨가 왼쪽으로 치우친다.
+                   원래 padding-left 로 보정하고 있었으나 바로 아래 padding 단축속성이 그걸 덮어써서
+                   보정이 죽어 있었다(= 6개 슬라이드 태그가 전부 좌측으로 쏠림).
+                   → 단축속성 한 줄에서 왼쪽만 자간만큼 더 주어 시각적 중앙을 맞춘다. */
+                letter-spacing:0.16em;
                 color:var(--accent);
                 display:inline-block;
-                padding:6px 14px;
+                padding:6px 14px 6px calc(14px + 0.16em);
+                text-align:center;
                 /* 2026-07-17: 진한 배경 슬라이드용 변수화. 기본값은 기존 그대로라 다른 슬라이드는 불변. */
                 background:var(--tag-bg, rgba(255,255,255,0.55));
                 border:1px solid rgba(255,255,255,0.8);
@@ -1880,9 +1885,12 @@ window._tcmFallbackClick = function(code) {
                     text-align:center;
                     background:none;
                 }
+                /* 2026-07-17: 데스크톱과 동일 — 자간 축소 + 마지막 글자 뒤 여백만큼 왼쪽 보정.
+                   (기존 padding-left:0.28em 는 10px 를 덮어써 좌우 여백이 아예 어긋나 있었다) */
                 .hc-tag {
-                    font-size:9.5px; padding:4px 10px; margin-bottom:10px;
-                    letter-spacing:0.28em; padding-left:0.28em;
+                    font-size:9.5px; margin-bottom:10px;
+                    letter-spacing:0.14em;
+                    padding:4px 10px 4px calc(10px + 0.14em);
                 }
                 .hc-title { font-size:22px; margin-bottom:8px; line-height:1.15; }
                 .hc-sub { font-size:11.5px; margin-bottom:14px; line-height:1.45; }
