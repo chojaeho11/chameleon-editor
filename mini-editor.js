@@ -6613,9 +6613,11 @@
     }
     async function _meAiTryRegisterGallery(imageUrl, rawPrompt, ratio) {
         try {
-            // 개인정보 안전장치: 명함이거나 PII 감지되면 등록 안 함
-            if (ratio === 'namecard') return;
-            if (_meHasPII(rawPrompt)) return;
+            // 개인정보 안전장치: 명함이거나 PII 감지되면 '즉시 공개'하지 않고 관리자 승인 대기(pending).
+            //   pending 행은 RLS(dg_read = status='public')로 anon 이 못 읽음 → 관리자만 RPC 로 조회/승인.
+            //   안전한 일반 디자인은 status='public' 로 바로 갤러리 노출.
+            var needsReview = (ratio === 'namecard') || _meHasPII(rawPrompt);
+            var status = needsReview ? 'pending' : 'public';
             var sb = window.sb; if (!sb || !imageUrl) return;
             var scrubbed = _meScrubPII(rawPrompt).slice(0, 300);
             if (scrubbed.length < 2) return;
@@ -6653,10 +6655,11 @@
             var uid = null;
             try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user ? u.data.user.id : null; } catch (_u) {}
 
-            // 4) insert
+            // 4) insert (needsReview 면 status='pending' → 관리자 승인 후 공개)
             await sb.from('design_gallery').insert({
                 image_url: pub, thumb_url: pub, prompt: scrubbed,
-                kw_ko: kw.ko, kw_en: kw.en, kw_ja: kw.ja, ratio: ratio || null, user_id: uid
+                kw_ko: kw.ko, kw_en: kw.en, kw_ja: kw.ja, ratio: ratio || null, user_id: uid,
+                status: status
             });
         } catch (e) { console.warn('[meGallery] register failed', e); }
     }

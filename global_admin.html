@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260718061836';
+        var CV = '20260718064742';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -228,6 +228,7 @@
             </li>
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 주문관리</li>
             <li class="nav-item" onclick="showSection('sec-bugreport', this); if(window.loadBugReports) loadBugReports();" style="color:#fca5a5;"><i class="fa-solid fa-bug" style="color:#fca5a5;"></i> <span id="navBugReport">🐞 버그 제보</span></li>
+            <li class="nav-item" onclick="showSection('sec-gallery-mod', this); if(window.loadGalleryMod) loadGalleryMod();" style="color:#5eead4;"><i class="fa-solid fa-images" style="color:#5eead4;"></i> 🖼 작품 승인</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 배송관리</li>
             <li class="nav-item" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
@@ -297,6 +298,33 @@
                 </div>
                 <h3 id="bugRecentH" style="margin:26px 0 12px; font-size:15px; color:#334155;">최근 제보</h3>
                 <div id="bugList"><div style="color:#94a3b8; font-size:13px;">로딩 중...</div></div>
+              </div>
+            </div>
+
+            <!-- 2026-07-18: 작품 갤러리 승인 — 명함/개인정보 감지 디자인은 pending 으로 대기, 여기서 승인해야 공개. -->
+            <div id="sec-gallery-mod" class="section">
+              <style>
+                #sec-gallery-mod .gm-wrap { max-width: 960px; margin: 0 auto; }
+                #sec-gallery-mod .gm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+                #sec-gallery-mod .gm-item { background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+                #sec-gallery-mod .gm-thumb { width:100%; aspect-ratio:1/1; object-fit:cover; background:#f1f5f9; cursor:zoom-in; }
+                #sec-gallery-mod .gm-body { padding:10px 12px; display:flex; flex-direction:column; gap:8px; flex:1; }
+                #sec-gallery-mod .gm-prompt { font-size:12px; color:#334155; line-height:1.5; word-break:break-word; max-height:4.5em; overflow:hidden; }
+                #sec-gallery-mod .gm-kw { font-size:10.5px; color:#94a3b8; }
+                #sec-gallery-mod .gm-meta { font-size:10px; color:#cbd5e1; }
+                #sec-gallery-mod .gm-actions { display:flex; gap:6px; margin-top:auto; }
+                #sec-gallery-mod .gm-btn { flex:1; padding:8px 0; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; }
+                #sec-gallery-mod .gm-approve { background:#14b8a6; color:#fff; }
+                #sec-gallery-mod .gm-reject { background:#fee2e2; color:#b91c1c; }
+              </style>
+              <div class="gm-wrap">
+                <h2 style="margin:0 0 4px;">🖼 작품 갤러리 승인</h2>
+                <p style="color:#64748b; margin:0 0 6px; font-size:13.5px; line-height:1.6;">명함·개인정보가 감지된 AI 디자인은 자동 공개하지 않고 여기서 대기합니다. 이미지를 확인 후 <b style="color:#0f766e;">승인</b>하면 작품 갤러리에 공개되고, <b style="color:#b91c1c;">거절</b>하면 삭제됩니다.</p>
+                <div style="display:flex; gap:8px; align-items:center; margin:10px 0 16px;">
+                  <button onclick="if(window.loadGalleryMod) loadGalleryMod()" style="padding:7px 14px; border:1px solid #e2e8f0; background:#fff; border-radius:9px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer;">새로고침</button>
+                  <span id="galModCount" style="font-size:12.5px; color:#94a3b8;"></span>
+                </div>
+                <div id="galModList"><div style="color:#94a3b8; font-size:13px;">로딩 중...</div></div>
               </div>
             </div>
 
@@ -6736,6 +6764,64 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
 
   try { window.applyBugI18n(); } catch(e){}
   document.addEventListener('DOMContentLoaded', function(){ try { window.applyBugI18n(); } catch(e){} });
+})();
+</script>
+
+<!-- 2026-07-18: 작품 갤러리 승인 — pending(명함/개인정보 감지) 디자인 조회/승인/거절. SECURITY DEFINER RPC(profiles.role='admin' 게이트). -->
+<script>
+(function(){
+  function gmSb(){ return window.sb; }
+  var _gmEsc = function(s){ return String(s==null?'':s).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); };
+
+  window.loadGalleryMod = async function(){
+    var listEl = document.getElementById('galModList'); if (!listEl) return;
+    var cntEl = document.getElementById('galModCount');
+    var sb = gmSb();
+    if (!sb) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">DB 연결이 없습니다. 새로고침 해주세요.</div>'; return; }
+    listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">로딩 중...</div>';
+    try {
+      var r = await sb.rpc('dg_list_pending', { _limit: 100 });
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      if (cntEl) cntEl.textContent = '대기 중 ' + rows.length + '건';
+      if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">승인 대기 중인 작품이 없습니다.</div>'; return; }
+      listEl.innerHTML = '<div class="gm-grid">' + rows.map(function(g){
+        var u = g.thumb_url || g.image_url;
+        var kw = [g.kw_ko, g.kw_en, g.kw_ja].filter(Boolean).join(' · ');
+        var dt = g.created_at ? new Date(g.created_at).toLocaleString() : '';
+        return '<div class="gm-item" id="gm-'+g.id+'">'
+          + '<img class="gm-thumb" src="'+_gmEsc(u)+'" onclick="window.open(\''+_gmEsc(g.image_url)+'\',\'_blank\')">'
+          + '<div class="gm-body">'
+            + '<div class="gm-prompt">'+_gmEsc(g.prompt||'')+'</div>'
+            + (kw ? '<div class="gm-kw">'+_gmEsc(kw)+'</div>' : '')
+            + '<div class="gm-meta">#'+g.id+' · '+(g.ratio?_gmEsc(g.ratio)+' · ':'')+dt+'</div>'
+            + '<div class="gm-actions">'
+              + '<button class="gm-btn gm-approve" onclick="moderateGallery('+g.id+',\'approve\')">승인</button>'
+              + '<button class="gm-btn gm-reject" onclick="moderateGallery('+g.id+',\'reject\')">거절</button>'
+            + '</div>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    } catch(e) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">불러오기 실패: '+_gmEsc(e.message||e)+'</div>'; }
+  };
+
+  window.moderateGallery = async function(id, action){
+    var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
+    if (action === 'reject' && !confirm('이 작품을 거절(삭제)하시겠습니까? 되돌릴 수 없습니다.')) return;
+    var card = document.getElementById('gm-'+id);
+    if (card) card.style.opacity = '0.4';
+    try {
+      var r = await sb.rpc('dg_moderate', { _id: id, _action: action });
+      if (r.error) throw r.error;
+      if (window.showToast) showToast(action==='approve'?'승인 완료 — 갤러리에 공개됩니다':'거절(삭제) 완료', 'success');
+      if (card) card.remove();
+      var listEl = document.getElementById('galModList');
+      var cntEl = document.getElementById('galModCount');
+      if (listEl && !listEl.querySelector('.gm-item')) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">승인 대기 중인 작품이 없습니다.</div>'; if (cntEl) cntEl.textContent = '대기 중 0건'; }
+    } catch(e) {
+      if (card) card.style.opacity = '';
+      if (window.showToast) showToast('처리 실패: '+(e.message||e), 'error'); else alert('처리 실패: '+(e.message||e));
+    }
+  };
 })();
 </script>
 
