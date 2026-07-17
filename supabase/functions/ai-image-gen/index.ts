@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
         });
     }
 
-    let body: { prompt?: string; size?: string } = {};
+    // 2026-07-18: refImage 추가 — 고객이 합성할 사진을 넣으면 그 사진을 활용해 디자인(gpt-image-2 edits).
+    //   refImage 는 dataURL(data:image/...;base64,...) 또는 base64 문자열.
+    let body: { prompt?: string; size?: string; refImage?: string } = {};
     try { body = await req.json(); } catch (_) {
         return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
@@ -49,22 +51,62 @@ Deno.serve(async (req) => {
     const validSizes = ['1024x1024', '1536x1024', '1024x1536'];
     const size = validSizes.includes(body.size || '') ? body.size : '1024x1024';
 
+    // 참조 이미지 파싱 (dataURL / 순수 base64 모두 허용)
+    let refBytes: Uint8Array | null = null;
+    let refMime = 'image/png';
+    if (body.refImage && typeof body.refImage === 'string') {
+        try {
+            let b64 = body.refImage;
+            const m = b64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
+            if (m) { refMime = m[1]; b64 = m[2]; }
+            const bin = atob(b64);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            // 너무 큰 이미지는 거부 (edits 는 처리 느림 — 대략 8MB 상한)
+            if (arr.length > 8 * 1024 * 1024) {
+                return new Response(JSON.stringify({ error: 'reference image too large (max 8MB)' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
+            }
+            refBytes = arr;
+        } catch (_e) {
+            return new Response(JSON.stringify({ error: 'invalid refImage' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
+        }
+    }
+
     try {
-        const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENAI_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'gpt-image-2',
-                prompt,
-                size,
-                quality: 'medium',   // 'high' 는 150s 엣지 타임아웃 초과 위험 — medium 도 텍스트/품질 충분
-                output_format: 'png',
-                n: 1,
-            }),
-        });
+        let openaiRes: Response;
+        if (refBytes) {
+            // ── 참조 이미지 합성 → /v1/images/edits (multipart)
+            const ext = refMime.includes('jpeg') || refMime.includes('jpg') ? 'jpg' : refMime.includes('webp') ? 'webp' : 'png';
+            const fd = new FormData();
+            fd.append('model', 'gpt-image-2');
+            fd.append('prompt', prompt);
+            fd.append('size', size!);
+            fd.append('quality', 'medium');
+            fd.append('n', '1');
+            fd.append('image[]', new Blob([refBytes], { type: refMime }), `ref.${ext}`);
+            openaiRes = await fetch('https://api.openai.com/v1/images/edits', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${OPENAI_KEY}` },   // Content-Type 은 FormData 가 자동 설정
+                body: fd,
+            });
+        } else {
+            // ── 텍스트만 → /v1/images/generations
+            openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENAI_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'gpt-image-2',
+                    prompt,
+                    size,
+                    quality: 'medium',   // 'high' 는 150s 엣지 타임아웃 초과 위험 — medium 도 텍스트/품질 충분
+                    output_format: 'png',
+                    n: 1,
+                }),
+            });
+        }
 
         if (!openaiRes.ok) {
             const errText = await openaiRes.text();

@@ -6243,6 +6243,7 @@
     var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
     var _meAiRatio = '16:9';      // 기본 가로 16:9
     var _meAiPendingUrl = null;
+    var _meAiRefDataUrl = null;   // 2026-07-18: 합성할 참조 사진 (dataURL)
 
     function _meAiEnsureModal() {
         if (document.getElementById('meAiGenModal')) return;
@@ -6271,6 +6272,20 @@
                 '<button type="button" class="meAiRatioBtn" data-ratio="banner-v" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로배너', '縦バナー', 'Tall Banner') + '</button>' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="namecard" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('명함', '名刺', 'Card') + '</button>' +
               '</div>' +
+              // 2026-07-18: 합성할 사진 넣기 — 넣으면 그 사진을 활용해 AI 가 디자인(gpt-image-2 edits)
+              '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">' +
+                '<button type="button" id="meAiRefBtn" style="display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1.5px dashed #a5b4fc; border-radius:10px; background:#eef2ff; color:#4338ca; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;"><i class="fa-solid fa-image"></i>' + _meAiTr('합성할 사진 넣기', '合成する写真を追加', 'Add a photo to blend') + '</button>' +
+                '<div id="meAiRefThumb" style="display:none; align-items:center; gap:6px;">' +
+                  '<img id="meAiRefImg" alt="" style="width:38px; height:38px; object-fit:cover; border-radius:7px; border:1px solid #e2e8f0;">' +
+                  '<button type="button" id="meAiRefClear" title="' + _meAiTr('사진 빼기','削除','Remove') + '" style="border:none; background:transparent; color:#94a3b8; font-size:16px; cursor:pointer; line-height:1;">✕</button>' +
+                '</div>' +
+                '<input type="file" id="meAiRefInput" accept="image/*" style="display:none;">' +
+              '</div>' +
+              '<div id="meAiRefHint" style="display:none; font-size:11.5px; color:#64748b; margin:-4px 0 10px; line-height:1.5;">' +
+                _meAiTr('넣은 사진을 활용해 디자인해 드려요. 어떻게 만들지 아래에 적어주세요.',
+                        'お写真を活かしてデザインします。どう仕上げるか下に入力してください。',
+                        'We\'ll design using your photo. Describe how below.') +
+              '</div>' +
               '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
               '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
@@ -6294,7 +6309,44 @@
         });
         document.getElementById('meAiGoBtn').addEventListener('click', _meAiGenerate);
         document.getElementById('meAiInsertBtn').addEventListener('click', _meAiInsert);
+
+        // 2026-07-18: 합성할 사진 넣기/빼기
+        var refBtn = document.getElementById('meAiRefBtn');
+        var refInput = document.getElementById('meAiRefInput');
+        var refClear = document.getElementById('meAiRefClear');
+        if (refBtn && refInput) {
+            refBtn.addEventListener('click', function () { refInput.click(); });
+            refInput.addEventListener('change', function () {
+                var f = refInput.files && refInput.files[0];
+                if (!f) return;
+                var fr = new FileReader();
+                fr.onload = function () { _meAiSetRef(String(fr.result)); };
+                fr.readAsDataURL(f);
+                refInput.value = '';   // 같은 파일 다시 선택 가능하게
+            });
+        }
+        if (refClear) refClear.addEventListener('click', function () { _meAiSetRef(null); });
+
         _meAiSyncBtns();
+    }
+
+    // 참조 사진 설정/해제 + 썸네일·안내 토글
+    function _meAiSetRef(dataUrl) {
+        _meAiRefDataUrl = dataUrl || null;
+        var thumb = document.getElementById('meAiRefThumb');
+        var img = document.getElementById('meAiRefImg');
+        var btn = document.getElementById('meAiRefBtn');
+        var hint = document.getElementById('meAiRefHint');
+        if (_meAiRefDataUrl) {
+            if (img) img.src = _meAiRefDataUrl;
+            if (thumb) thumb.style.display = 'inline-flex';
+            if (hint) hint.style.display = 'block';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + _meAiTr('사진 바꾸기', '写真を変更', 'Change photo');
+        } else {
+            if (thumb) thumb.style.display = 'none';
+            if (hint) hint.style.display = 'none';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + _meAiTr('합성할 사진 넣기', '合成する写真を追加', 'Add a photo to blend');
+        }
     }
 
     function _meAiSyncBtns() {
@@ -6392,6 +6444,7 @@
         if (ins) ins.style.display = 'none';
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
+        try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
         m.style.display = 'flex';
         setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
     };
@@ -6510,10 +6563,16 @@
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
                 var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.' + _bannerHint;
+                // 2026-07-18: 합성할 사진이 있으면 그 사진을 살려 디자인하도록 지시 + refImage 전달(edits API)
+                if (_meAiRefDataUrl) {
+                    genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
+                }
+                var _reqBody = { prompt: genPrompt1, size: size };
+                if (_meAiRefDataUrl) _reqBody.refImage = _meAiRefDataUrl;
                 var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
-                    body: JSON.stringify({ prompt: genPrompt1, size: size })
+                    body: JSON.stringify(_reqBody)
                 });
                 var d1 = await r1.json();
                 if (!r1.ok || d1.error) throw new Error(d1.detail || d1.error || ('HTTP ' + r1.status));
