@@ -6471,6 +6471,20 @@
     window._meAiGenOpen = function () {
         _meAiEnsureModal();
         _meAiPendingUrl = null;
+        // 2026-07-18: 현재 제품 종류에 맞는 기본 프리셋 자동 선택 (명함/배너/현수막).
+        //   simple_order._soAiPresetHint() = 'namecard' | 'banner' | null.
+        //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
+        try {
+            var _hint = (typeof window._soAiPresetHint === 'function') ? window._soAiPresetHint() : null;
+            if (_hint === 'namecard') {
+                _meAiRatio = 'namecard';
+            } else if (_hint === 'banner') {
+                var w = (me && me.natW) || 0, h = (me && me.natH) || 0;
+                if (h > w * 1.15) _meAiRatio = 'banner-v';        // 세로(허니콤배너·X배너 등)
+                else if (w > h * 1.15) _meAiRatio = 'banner-h';   // 가로(현수막)
+            }
+            _meAiSyncBtns();
+        } catch (_ph) {}
         var m = document.getElementById('meAiGenModal');
         var res = document.getElementById('meAiResult');
         var ins = document.getElementById('meAiInsertBtn');

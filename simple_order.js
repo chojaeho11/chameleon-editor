@@ -6346,6 +6346,18 @@ html, body { background: #ffffff !important; }
     window._soLoadPlacardVariants = _soLoadPlacardVariants;
     window._soIsPlacardProduct = _soIsPlacardProduct;
 
+    // 2026-07-18: AI 이미지 생성 모달의 기본 프리셋 힌트 — 현재 제품 종류를 미니에디터에 알려줌.
+    //   'namecard'(명함) / 'banner'(배너·현수막 = 방향은 미니에디터가 대지 비율로 판단) / null(기본 유지).
+    window._soAiPresetHint = function () {
+        try {
+            if (state.isBizCard) return 'namecard';
+            var p = state.product;
+            var isPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
+            if (isPlac || state.isBannerOutput) return 'banner';
+        } catch (_) {}
+        return null;
+    };
+
     window._soSwitchPlacard = function (code) {
         if (!code) return;
         // 2026-07-14: 튜토리얼 진행 중이면 리로드 후 '종류'가 아니라 '사이즈'부터 이어가도록 진행상태 저장.
