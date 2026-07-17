@@ -6215,7 +6215,7 @@
                 '<div style="font-size:16px; color:#4338ca;">' + _meAiTr('AI 이미지 생성', 'AI画像生成', 'AI image') + '</div>' +
                 '<button type="button" id="meAiClose" style="border:none; background:transparent; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">✕</button>' +
               '</div>' +
-              '<div style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
+              '<div id="meAiHint" style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
                 _meAiTr('타이틀을 입력해 주세요.', 'タイトルを入力してください。', 'Enter a title.') +
               '</div>' +
               // 비율 선택 — 1행: 기본 비율 (2026-07-18: 16:9 등 비율표기 제거, 이름만)
@@ -6259,6 +6259,58 @@
             b.style.background = on ? '#eef2ff' : '#fff';
             b.style.color = on ? '#4338ca' : '#334155';
         });
+        _meAiSyncHint();
+    }
+
+    // 2026-07-18: 프리셋별로 입력 안내문 + placeholder 를 다르게 → 고객이 뭘 적어야 할지 알려준다.
+    //   여기서 유도한 내용을 프롬프트에도 반영해 결과가 더 정확해진다.
+    function _meAiPresetGuide() {
+        switch (_meAiRatio) {
+            case 'namecard':
+                return {
+                    hint: _meAiTr('상호·성함·전화번호·주소·이메일·SNS 등을 적어주세요.',
+                                  '会社名・お名前・電話番号・住所・メール・SNSなどを入力してください。',
+                                  'Enter your company, name, phone, address, email, SNS, etc.'),
+                    ph:   _meAiTr('예: 카멜레온 디자인 · 홍길동 대표 · 010-1234-5678 · 서울 강남구 · hong@cha.com · @chameleon',
+                                  '例: カメレオンデザイン · 山田太郎 · 090-1234-5678 · 東京都渋谷区 · info@cha.com',
+                                  'e.g. Chameleon Design · John Kim · 010-1234-5678 · Seoul · john@cha.com · @chameleon') };
+            case 'banner-h':
+                return {
+                    hint: _meAiTr('메인 타이틀과 서브 문구를 적어주세요.',
+                                  'メインタイトルとサブ文言を入力してください。',
+                                  'Enter the main title and a subtitle.'),
+                    ph:   _meAiTr('예: 여름 라면 축제 / 7월 한강공원',
+                                  '例: 夏ラーメン祭り / 7月 河川敷',
+                                  'e.g. Summer Ramen Festival / July, Han River Park') };
+            case 'banner-v':
+                return {
+                    hint: _meAiTr('타이틀 글씨와 서브 글씨를 적어주세요.',
+                                  'タイトルとサブ文言を入力してください。',
+                                  'Enter the title and a subtitle.'),
+                    ph:   _meAiTr('예: 신메뉴 출시 / 아메리카노 1+1',
+                                  '例: 新メニュー登場 / アメリカーノ 1+1',
+                                  'e.g. New Menu / Americano 1+1') };
+            case '9:16':
+            case '16:9':
+                return {
+                    hint: _meAiTr('타이틀·주최·일시·장소 등 내용을 자세히 적어주세요.',
+                                  'タイトル・主催・日時・場所など、詳しく入力してください。',
+                                  'Enter details: title, host, date, place, etc.'),
+                    ph:   _meAiTr('예: 카멜레온 창립 10주년 페스티벌 / 주최: 카멜레온 / 8월 15일 오후 6시 / 한강공원 잔디마당',
+                                  '例: カメレオン10周年フェス / 主催: カメレオン / 8月15日 18時 / 河川敷広場',
+                                  'e.g. Chameleon 10th Anniversary / Host: Chameleon / Aug 15, 6PM / Han River Park') };
+            default: // 1:1
+                return {
+                    hint: _meAiTr('타이틀·내용을 적어주세요.', 'タイトル・内容を入力してください。', 'Enter a title and details.'),
+                    ph:   _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') };
+        }
+    }
+    function _meAiSyncHint() {
+        var g = _meAiPresetGuide();
+        var h = document.getElementById('meAiHint');
+        var p = document.getElementById('meAiPrompt');
+        if (h) h.textContent = g.hint;
+        if (p) p.setAttribute('placeholder', g.ph);
     }
 
     window._meAiGenOpen = function () {
@@ -6368,17 +6420,23 @@
                 if (_isTallBanner) size = '1024x1536';   // 세로배너: gpt-image 최대 세로
 
                 var _bannerHint = _isTallBanner
-                    // 세로배너: 좌우 큰 여백 + 중앙 세로열 (cover 삽입 시 옆만 잘리고 글자는 안 잘림)
-                    ? ' Compose as a TALL VERTICAL BANNER: place ALL text and key elements in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
+                    // 세로배너: 좌우 큰 여백 + 중앙 세로열. 타이틀은 크게, 서브는 그 아래 작게.
+                    ? ' Compose as a TALL VERTICAL BANNER. Read the user text as a TITLE plus a shorter SUBTITLE: render the TITLE large and bold at the top-center, and the SUBTITLE smaller just below it. Place ALL text in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
                     : '';
                 // 2026-07-18: 가로 현수막 — 5m×0.9m 등 아주 긴 가로. 최종 대지는 위아래로 크게 잘리므로
                 //   타이틀/서브를 화면 세로 중앙의 가로 띠(중앙 ~30% 높이)에 몰고, 위·아래로 큰 배경 여백을 둔다.
                 if (_isWideBanner) {
-                    _bannerHint = ' Compose as a WIDE HORIZONTAL BANNER (like a 5m x 0.9m long banner). Put the TITLE (and an optional short subtitle below it) on ONE or TWO horizontal lines, perfectly CENTERED both horizontally and vertically, and kept inside a TIGHT central horizontal strip no taller than the middle 30% of the image height. The TOP third and BOTTOM third must be LARGE EMPTY background margin with nothing important in them. Use big, bold, highly legible lettering. Keep it a clean, simple title banner — not a busy poster. Full-bleed background, no border or frame.';
+                    _bannerHint = ' Compose as a WIDE HORIZONTAL BANNER (like a 5m x 0.9m long banner). Read the user text as a MAIN TITLE plus a shorter SUBTITLE: render the MAIN TITLE big and bold, with the SUBTITLE smaller on the line below. Center all of it both horizontally and vertically, kept inside a TIGHT central horizontal strip no taller than the middle 30% of the image height. The TOP third and BOTTOM third must be LARGE EMPTY background margin with nothing important in them. Highly legible lettering. Clean and simple — a title banner, not a busy poster. Full-bleed background, no border or frame.';
                 }
-                // 2026-07-18: 명함 — 세련되고 심플하게. 사방(상하좌우)에 넉넉한 여백을 두어 어느 방향으로도 글자가 안 잘리게.
+                // 2026-07-18: 명함 — 고객이 적은 상호/이름/연락처를 모두 담되, 그 상호의 업종·컨셉에 어울리는 디자인.
+                //   일정한 템플릿이 아니라 상호에 맞춰 색·분위기·모티프를 다르게. 사방 여백은 반드시 넉넉히.
                 if (_isNameCard) {
-                    _bannerHint = ' Design a CLEAN, MODERN, MINIMAL BUSINESS CARD. Elegant and professional: refined typography, a tasteful color palette, plenty of negative space. Keep the name and all text WELL INSIDE the card with GENEROUS EMPTY MARGINS on ALL FOUR SIDES (top, bottom, left, right) so no text is ever cut off near an edge. Simple layout — do not clutter. Full-bleed background color or subtle texture, but no printed border or frame line.';
+                    _bannerHint = ' Design a CLEAN, MODERN, PROFESSIONAL BUSINESS CARD. Read the user text as business-card fields (company/brand name, person name and title, phone, address, email, social handles) and lay them out clearly with a natural visual hierarchy — the brand name most prominent. IMPORTANT: tailor the whole look (colors, mood, typography, any simple icon or motif) to suit the BRAND and its industry as implied by the company name — e.g. a cafe feels warm and cozy, a law firm feels formal and navy, a design studio feels artful and minimal. Do NOT use one fixed generic template. Use plenty of negative space and keep ALL text well inside with GENEROUS EMPTY MARGINS on ALL FOUR SIDES so nothing is cut off near an edge. Full-bleed background color or subtle texture, but no printed border or frame line.';
+                }
+                // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치.
+                var _isPoster = (_meAiRatio === '9:16' || _meAiRatio === '16:9');
+                if (_isPoster) {
+                    _bannerHint += ' Design it as an EVENT POSTER. Read the user text as poster information (main title, host/organizer, date & time, place, and any extra details) and arrange it with a clear visual hierarchy: the MAIN TITLE largest and most eye-catching, with the host, date/time and location shown as clearly readable supporting text (often near the bottom). Make it attractive and well-composed, and keep all text within the central safe area away from the edges.';
                 }
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
