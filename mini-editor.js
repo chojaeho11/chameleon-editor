@@ -57,14 +57,17 @@
         if (_sideP && _sideP.style.display !== 'none') { var _spr = _sideP.getBoundingClientRect(); if (_spr.width) wrapW -= (_spr.width + 16); }
         var pad = 20;                         // me-stage-wrap 좌우 padding 합 (10*2)
         var maxH = window._meStageMaxH || 540;
+        // 2026-07-18: 대지 주변에 회색 여백을 두어 대지 밖으로 나간 이미지가 보이도록 (고객이 크기 맞추기 쉽게).
+        //   대지를 가용영역의 85%만 차지시켜 15% 여백 확보. drag/resize/export 는 me.wScale 기준이라 자동 정합.
+        var _MARGIN = 0.85;
         var sw, sh;
         if (landscape) {
-            var availWL = Math.max(200, wrapW - pad);
+            var availWL = Math.max(200, wrapW - pad) * _MARGIN;
             sw = availWL; sh = sw * (me.natH / me.natW);
-            if (sh > maxH) { sh = maxH; sw = sh * (me.natW / me.natH); }   // 줄자 없앤 만큼 상단 26px 안 뺌
+            if (sh > maxH * _MARGIN) { sh = maxH * _MARGIN; sw = sh * (me.natW / me.natH); }
         } else {
-            var availWP = Math.max(160, wrapW - pad);  // 줄자(22)+gap(8) 제거 → 더 넓게
-            sh = maxH; sw = sh * (me.natW / me.natH);
+            var availWP = Math.max(160, wrapW - pad) * _MARGIN;
+            sh = maxH * _MARGIN; sw = sh * (me.natW / me.natH);
             if (sw > availWP) { sw = availWP; sh = sw * (me.natH / me.natW); }
         }
         // 2026-06-27: zoom — base fit 스케일에 zoom 곱. 드래그/리사이즈/export 는 모두 me.wScale 기준이라 자동 정합.
@@ -74,8 +77,9 @@
         stage.style.maxWidth = 'none'; stage.style.maxHeight = 'none';
         stage.style.width = Math.round(sw * _z) + 'px';
         stage.style.height = Math.round(sh * _z) + 'px';
-        // 뷰포트 고정 — zoom 해도 에디터 영역 높이는 fit 기준 유지 (넘침은 wrap overflow:hidden 클립 + pan 으로 이동). 줄자 제거로 +24 불필요.
-        if (wrap) wrap.style.height = (Math.round(sh) + 20) + 'px';
+        // 뷰포트 고정 — zoom 해도 에디터 영역 높이는 fit 기준 유지 (넘침은 wrap overflow:hidden 클립 + pan 으로 이동).
+        //   2026-07-18: 대지(85%) 위아래 여백만큼 wrap 을 더 크게 → 대지 밖 이미지가 위아래로도 보임.
+        if (wrap) wrap.style.height = (Math.round(sh / _MARGIN) + 20) + 'px';
         me.items.forEach(_meSyncItemDisplay);
         _meUpdateSizeLabel();
         _meApplyPan();
@@ -229,6 +233,31 @@
         _meFitStage();
     };
     window._meZoomFit = function () { me.zoom = 1; me.panX = 0; me.panY = 0; _meFitStage(); };
+
+    // 2026-07-18: 「대지에 맞추기」 — 선택 이미지(없으면 이미지 중 최상단)를 대지에 cover(꽉차게) + 중앙.
+    //   고객이 이미지를 대지에 정확히 맞추기 어려워해서 원터치 버튼 제공.
+    window._meFitSelectedToCanvas = function () {
+        var items = me.items || [];
+        // 대상: 선택 이미지 → 없으면 이미지 타입 중 마지막(제일 위)
+        var it = (me.selected && me.selected.type === 'image') ? me.selected : null;
+        if (!it) { for (var i = items.length - 1; i >= 0; i--) { if (items[i] && items[i].type === 'image') { it = items[i]; break; } } }
+        if (!it) {
+            try { alert(_meT('me_alert_fit_noimg', '대지에 맞출 이미지가 없어요. 먼저 이미지를 올려주세요.')); } catch (_) {}
+            return;
+        }
+        // 원본 비율 — <img> naturalW/H, 없으면 현재 박스 비율
+        var iw = it.w, ih = it.h;
+        try { var im = it.el && it.el.querySelector('img'); if (im && im.naturalWidth && im.naturalHeight) { iw = im.naturalWidth; ih = im.naturalHeight; } } catch (_) {}
+        if (!iw || !ih) return;
+        var cover = Math.max(me.natW / iw, me.natH / ih);   // 대지 꽉차게(넘침은 export 시 클립)
+        var w = iw * cover, h = ih * cover;
+        _meSnapshot();
+        it.w = w; it.h = h;
+        it.x = (me.natW - w) / 2;   // 중앙 정렬 (it.rotation 등 나머지 속성은 그대로 유지)
+        it.y = (me.natH - h) / 2;
+        _meSyncItemDisplay(it);
+        try { if (window._meSelect) window._meSelect(it); } catch (_) {}
+    };
     window._meTogglePan = function () {
         me._panLock = !me._panLock;
         var b = document.getElementById('mePanBtn');

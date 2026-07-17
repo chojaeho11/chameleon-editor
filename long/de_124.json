@@ -2016,5 +2016,7 @@
   "me_intro_edit": "Design bearbeiten",
   "me_back_simple": "Zurück",
   "me_intro_ai_desc": "Hochwertiges KI-Design, das kein anderer konnte — von Chameleon",
-  "me_intro_edit_desc": "Noch schöner? Fügen Sie eigene Elemente hinzu und ordnen Sie sie an"
+  "me_intro_edit_desc": "Noch schöner? Fügen Sie eigene Elemente hinzu und ordnen Sie sie an",
+  "me_fit_canvas": "An Fläche anpassen",
+  "me_alert_fit_noimg": "Kein Bild zum Anpassen. Bitte zuerst ein Bild hinzufügen."
 }

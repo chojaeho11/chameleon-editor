@@ -92,12 +92,18 @@
         /* 대지 외 어두운 배경 */
         /* 2026-06-26: 여백 최소화 — 캔버스 가득 차게. 가로비율=줄자 상단 / 세로비율=줄자 좌측 (JS 제어) */
         .me-stage-wrap { position:relative; background:#808080; border:none; border-radius:14px; padding:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06); }
+        /* 2026-07-18: 대지에 맞추기 — 대지 우측 위 작은 버튼 (선택 이미지를 대지 꽉차게) */
+        .me-fit-btn { position:absolute; top:8px; right:8px; z-index:20; display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border:none; border-radius:980px; background:rgba(15,23,42,0.72); color:#fff; font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); transition:background .15s; }
+        .me-fit-btn:hover { background:rgba(15,23,42,0.9); }
+        .me-fit-btn i { font-size:11px; }
         /* 2026-06-25: 양면(앞/뒤) 탭 — 캔버스 바로 위 */
         .me-side-tabs { display:flex; gap:8px; margin-bottom:10px; }
         .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
         .me-side-tab:hover { border-color:#c4b5fd; }
         .me-side-tab.active { background:#6d28d9; color:#fff; border-color:#6d28d9; }
-        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:hidden; max-width:100%; max-height:540px; touch-action:none; user-select:none; border-radius:2px; }
+        /* 2026-07-18: 대지 밖으로 나간 이미지도 보이도록 overflow:visible + 대지 경계 점선(outline 은 레이아웃 불변).
+           export(_meExportPNG)는 natW×natH 캔버스에 좌표로 다시 그려 대지 밖은 자동 클립되므로 PDF/PNG 는 안전. */
+        .me-stage { position:relative; background:#ffffff; box-shadow:0 12px 36px rgba(0,0,0,0.45); overflow:visible; max-width:none; max-height:none; touch-action:none; user-select:none; border-radius:2px; outline:2px dashed rgba(255,255,255,0.85); outline-offset:0; }
         .me-item { position:absolute; cursor:move; user-select:none; touch-action:none; box-sizing:border-box; }
         .me-item.selected { outline:1.5px solid #007AFF; outline-offset:2px; }
         .me-item img { display:block; max-width:none; pointer-events:none; }

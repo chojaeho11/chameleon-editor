@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718044254';
+    var CV = '20260718050248';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5860,7 +5860,7 @@ function scrollHotdeal(gridId, dir) {
 <!-- 2026-06-13: 미니에디터 + 누끼따기 (배경 제거) — PC: 좌우 / 모바일: 위아래 -->
 <!-- 2026-06-14: 메인 화면에선 숨김 — simple_order 모달 진입 시 portal 로 이동해 사용. simple_order.js 의 _mountEditor 가 display 복구. -->
 <div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0; display:none;">
-    <link rel="stylesheet" href="./mini-editor.css?v=8">
+    <link rel="stylesheet" href="./mini-editor.css?v=9">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
 
     <div id="aiNbWrap">
@@ -5924,6 +5924,8 @@ function scrollHotdeal(gridId, dir) {
                 <button type="button" class="me-side-tab" data-side="back" onclick="window._meSwitchSide('back')"><span data-i18n="editor_face_back">뒷면</span></button>
             </div>
             <div class="me-stage-wrap">
+                <!-- 2026-07-18: 대지에 맞추기 — 선택 이미지를 대지 꽉차게. 대지 우측 위 작은 버튼. -->
+                <button type="button" class="me-fit-btn" id="meFitBtn" onclick="window._meFitSelectedToCanvas && window._meFitSelectedToCanvas()" title="대지에 맞추기"><i class="fa-solid fa-expand"></i><span data-i18n="me_fit_canvas">대지에 맞추기</span></button>
                 <div class="me-stage-row" style="display:flex; align-items:stretch; gap:8px; max-width:100%; width:100%;">
                     <!-- 세로비율: 좌측 세로 줄자 / 가로비율: 숨김 (JS _meFitStage 제어) -->
                     <div id="meRulerV" class="me-ruler-v" style="position:relative; width:22px; flex:0 0 22px; align-self:stretch;"></div>
@@ -5950,7 +5952,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=481"></script>
+<script src="./mini-editor.js?v=482"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
