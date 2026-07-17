@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717222905';
+    var CV = '20260717223803';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1034,21 +1034,17 @@ window._tcmFallbackClick = function(code) {
                     <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_easy_order_1784292694.png" alt="초보자도 쉽게 주문" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 2. 광고인쇄 / 광고 기획사 도매쇼핑몰 — 파스텔 민트 -->
-                <!-- 2026-07-17: 2번 슬라이드 교체 (광고 도매쇼핑몰 → 나만의 브랜딩).
-                     검정 바탕 + 그라데이션 타이틀 (사장님 지시).
-                       accent=흰색 → 버튼이 흰배경+흰글씨가 되므로 cta-txt 로 글씨를 검정으로 되돌림
-                       tag-bg 도 낮춰야 흰 태그 글씨가 보임
+                <!-- 2026-07-17: 2번 슬라이드 교체 (광고 도매쇼핑몰 → 나만의 브랜딩). 이미지=3면.png
+                     완전 검정 바탕 + 그라데이션 타이틀 (사장님 지시). 최저가보장 배지는 삭제 지시.
+                       accent=흰색 → tag-bg 를 낮춰야 흰 태그 글씨가 보임
                        타이틀은 hc-title-grad 로 그라데이션 (사이트 기존 background-clip:text 패턴) -->
-                <article class="hc-slide" data-slide="1" style="--bg:#0b0b0f; --bg2:#1c1c24; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#0b0b0f; --cta-hover:#e5e7eb;">
+                <article class="hc-slide" data-slide="1" style="--bg:#000; --bg2:#0a0a0c; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#000; --cta-hover:#e5e7eb;">
                     <div class="hc-content">
                         <span class="hc-tag" data-hc="tag-1">BRANDING</span>
                         <h2 class="hc-title hc-title-grad" data-hc="title-1">눈에 확 띄는<br>나만의 브랜딩</h2>
                         <p class="hc-sub" data-hc="sub-1">카멜레온에서 브랜딩하세요<br>전단지·명함·스티커·굿즈·배너 모든 걸 전문가 수준으로 1초만에 뚝딱</p>
-                        <!-- 최저가보장 배지는 원래 이 슬라이드에 있던 것 — 그대로 유지.
-                             (일반 '자세히 보기' CTA 는 :1688 에서 사이트 전체 비활성이라 넣어도 안 보임) -->
-                        <span class="hc-cta hc-cta-show" data-hc="cta-lowest" style="cursor:default; pointer-events:none;">🏆 최저가보장</span>
                     </div>
-                    <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_branding_1784295414.png" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 3. 종이매대 — 파스텔 베이지 -->
                 <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
