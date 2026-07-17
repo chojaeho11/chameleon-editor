@@ -1823,7 +1823,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
-    <link rel="stylesheet" href="./mini-editor.css?v=7">
+    <link rel="stylesheet" href="./mini-editor.css?v=8">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
@@ -1837,15 +1837,15 @@ async function submitRollFabricRequest() {
                     <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형"><span data-i18n="me_sz_landscape">가로형</span></button>
                     <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
                 </div>
-                <!-- 2026-07-18: 에디터 진입 화면 — 원클릭 AI디자인 / 디자인 편집하기 (인터페이스 단순화) -->
+                <!-- 2026-07-18: 에디터 진입 화면 — 원클릭 AI디자인 / 디자인 편집하기 (아이콘 없이 화려한 그라데이션) -->
                 <div class="me-intro" id="meIntro">
                     <button type="button" class="me-intro-btn me-intro-ai" onclick="window._meAiGenOpen && window._meAiGenOpen()">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span data-i18n="me_intro_ai">원클릭 AI디자인</span>
+                        <span class="me-intro-ttl" data-i18n="me_intro_ai">원클릭 AI디자인</span>
+                        <span class="me-intro-desc" data-i18n="me_intro_ai_desc">어떤 업체도 못했던 고퀄리티 AI 디자인, 카멜레온이 만들었어요</span>
                     </button>
                     <button type="button" class="me-intro-btn me-intro-edit" onclick="window._meShowToolbar && window._meShowToolbar()">
-                        <i class="fa-solid fa-pen-ruler"></i>
-                        <span data-i18n="me_intro_edit">디자인 편집하기</span>
+                        <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 편집하기</span>
+                        <span class="me-intro-desc" data-i18n="me_intro_edit_desc">더 예쁘게 꾸미고 싶다면, 여러 요소를 추가할 수 있어요</span>
                     </button>
                 </div>
                 <div class="me-toolbar" id="meToolbar" style="display:none;">
@@ -1875,11 +1875,11 @@ async function submitRollFabricRequest() {
                     <!-- 2026-06-18 v574: 중복 칼선 버튼 제거 — v573 에서 row 2 에 추가했으므로 여기엔 불필요 -->
                 </div>
                 <!-- 선택 시 속성 패널 -->
-                <div class="me-props" id="meProps"></div>
+                <div class="me-props" id="meProps" style="display:none;"></div>
                 <!-- 2026-06-27: 줄자 대신 캔버스 크기(mm) 표시 -->
-                <div id="meSizeLabel" style="font-size:12.5px; color:#64748b; padding:3px 6px 0; font-weight:600; letter-spacing:-0.2px;"></div>
+                <div id="meSizeLabel" style="display:none; font-size:12.5px; color:#64748b; padding:3px 6px 0; font-weight:600; letter-spacing:-0.2px;"></div>
                 <!-- 2026-06-28: 에디터↔PDF 차이 안내 -->
-                <div id="meDiffNotice" style="font-size:11px; color:#b45309; background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:6px 9px; margin:5px 6px 0; line-height:1.45; font-weight:600;"></div>
+                <div id="meDiffNotice" style="display:none; font-size:11px; color:#b45309; background:#fffbeb; border:1px solid #fde68a; border-radius:7px; padding:6px 9px; margin:5px 6px 0; line-height:1.45; font-weight:600;"></div>
                 <!-- 2026-06-25: 양면(앞/뒤) 탭 — 명함 등 양면 제품에서만 표시 (_meSidesInit) -->
                 <div class="me-side-tabs" id="meSideTabs" style="display:none;">
                     <button type="button" class="me-side-tab active" data-side="front" onclick="window._meSwitchSide('front')"><span data-i18n="editor_face_front">앞면</span></button>
@@ -1918,7 +1918,7 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=479"></script>
+<script src="./mini-editor.js?v=480"></script>
 <script src="./editor-rail.js?v=3"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄

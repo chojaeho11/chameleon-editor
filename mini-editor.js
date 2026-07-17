@@ -6322,16 +6322,22 @@
     // 2026-07-18: 간편 진입(원클릭 AI디자인 / 디자인 편집하기) ↔ 상세 툴바 전환.
     //   meIntro/meToolbar 는 index.html·cotton_print.html 에 있고 simple_order 는 이 DOM 을 portal 로 재사용.
     //   전역 함수라 세 군데 모두에서 동작.
+    // 편집기 상세 UI — 툴바 + 속성패널 + 사이즈표시 + PDF경고 (간편모드에선 전부 숨김)
+    var _ME_EDIT_IDS = ['meToolbar', 'meProps', 'meSizeLabel', 'meDiffNotice'];
+    function _meEditUISet(show) {
+        _ME_EDIT_IDS.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = show ? '' : 'none';   // '' → 각 요소 CSS/자체로직으로 복귀
+        });
+    }
     window._meShowToolbar = function () {
         var intro = document.getElementById('meIntro');
-        var tb = document.getElementById('meToolbar');
         if (intro) intro.style.display = 'none';
-        if (tb) tb.style.display = '';   // CSS 기본 표시(flex/grid)로 복귀
+        _meEditUISet(true);
     };
     window._meHideToolbar = function () {
+        _meEditUISet(false);
         var intro = document.getElementById('meIntro');
-        var tb = document.getElementById('meToolbar');
-        if (tb) tb.style.display = 'none';
         if (intro) intro.style.display = '';
     };
 
