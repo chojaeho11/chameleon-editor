@@ -531,9 +531,11 @@
             </div>
             <div>
                 <select id="countrySelect" class="ai-input-pretty" style="width:auto; display:inline-block; margin:0;">
-                    <option value="KR">🇰🇷 한국</option>
-                    <option value="JP">🇯🇵 일본</option>
-                    <option value="US">🇺🇸 미국</option>
+                    <!-- 2026-07-17: 각 항목을 그 나라 언어로 (기존엔 KR/JP/US 만 한국어라 일본 사이트에
+                         '일본', '미국' 으로 떴다. CN/AR/ES/DE/FR 은 원래부터 현지어라 이제 통일됨) -->
+                    <option value="KR">🇰🇷 한국어</option>
+                    <option value="JP">🇯🇵 日本語</option>
+                    <option value="US">🇺🇸 English</option>
                     <option value="CN">🇨🇳 中文</option>
                     <option value="AR">🇸🇦 العربية</option>
                     <option value="ES">🇪🇸 Español</option>

@@ -33,9 +33,10 @@ const MODEL_FALLBACK = "claude-haiku-4-5-20251001";
 //   2026-07-17: 영어권 도메인은 chameleon.design. cafe3355.com 은 종이매대 전용 랜딩이라
 //   블로그가 없다(_worker.js:609) — 글 안의 링크가 엉뚱한 페이지로 가고 있었다.
 const LANGS = [
-    { lang: "kr", countryCode: "KR", label: "한국어", site: "www.cafe2626.com" },
-    { lang: "ja", countryCode: "JP", label: "日本語", site: "www.cafe0101.com" },
-    { lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design" },
+    // author: 작성자명도 해당 언어로 (일본 사이트에 '카멜레온프린팅' 이 한글로 뜨던 문제)
+    { lang: "kr", countryCode: "KR", label: "한국어", site: "www.cafe2626.com", author: "카멜레온프린팅" },
+    { lang: "ja", countryCode: "JP", label: "日本語", site: "www.cafe0101.com", author: "カメレオンプリンティング" },
+    { lang: "en", countryCode: "US", label: "English", site: "www.chameleon.design", author: "Chameleon Printing" },
 ];
 const INDEXNOW_KEY = "cf8e9a2b4d6f1c3e5a7b9d0f2e4c6a8b";
 
@@ -359,7 +360,7 @@ ${productSummary}
                     country_code: L.countryCode,
                     title: c.title || uniqNames.join(", "),
                     content: htmlBody,
-                    author_name: "카멜레온프린팅",
+                    author_name: L.author,
                     author_email: "",
                     author_id: null,
                     thumbnail: identified[0].photo.storage_url,
