@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717221016';
+    var CV = '20260717221508';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1045,8 +1045,10 @@ window._tcmFallbackClick = function(code) {
                 </article>
                 <!-- 3. 종이매대 — 파스텔 베이지 -->
                 <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
-                     배경도 앰버 → 청록으로: 새 이미지가 청록 물색이라 기존 노란 배경과 충돌했음 -->
-                <article class="hc-slide" data-slide="2" style="--bg:#ccfbf1; --bg2:#99f6e4; --txt:#115e59; --accent:#134e4a;">
+                     진핑크 바탕 + 흰 글씨 (사장님 지시). 이 슬라이드만 배경이 진하므로:
+                       accent=흰색(타이틀·태그글씨·버튼배경) → 버튼은 cta-txt 로 글씨를 진핑크로 되돌림
+                       tag-bg 도 낮춰야 흰 글씨가 보임 (기본 rgba(255,255,255,.55) 위에 흰 글씨 = 안 보임) -->
+                <article class="hc-slide" data-slide="2" style="--bg:#be185d; --bg2:#db2777; --txt:#fff; --accent:#fff; --tag-bg:rgba(255,255,255,0.18); --cta-txt:#be185d; --cta-hover:#fce7f3;">
                     <div class="hc-content">
                         <span class="hc-tag" data-hc="tag-2">AI DESIGN</span>
                         <h2 class="hc-title" data-hc="title-2">국내 1등 수준높은<br>인공지능 디자인</h2>
@@ -1698,7 +1700,8 @@ window._tcmFallbackClick = function(code) {
                 color:var(--accent);
                 display:inline-block;
                 padding:6px 14px;
-                background:rgba(255,255,255,0.55);
+                /* 2026-07-17: 진한 배경 슬라이드용 변수화. 기본값은 기존 그대로라 다른 슬라이드는 불변. */
+                background:var(--tag-bg, rgba(255,255,255,0.55));
                 border:1px solid rgba(255,255,255,0.8);
                 border-radius:999px;
                 margin-bottom:22px;
@@ -1734,7 +1737,8 @@ window._tcmFallbackClick = function(code) {
                 gap:8px;
                 padding:13px 28px;
                 background:var(--accent);
-                color:#fff;
+                /* 2026-07-17: accent 가 흰색인 슬라이드(진한 배경)에선 흰 배경+흰 글씨가 되므로 변수화 */
+                color:var(--cta-txt, #fff);
                 border-radius:999px;
                 font-family:'Pretendard Variable', sans-serif;
                 font-weight:800;
@@ -1747,7 +1751,7 @@ window._tcmFallbackClick = function(code) {
             .hc-cta:hover {
                 transform:translateY(-2px);
                 box-shadow:0 14px 28px rgba(15,23,42,0.25);
-                background:var(--txt);
+                background:var(--cta-hover, var(--txt));
             }
             .hc-cta span { transition:transform .25s ease; }
             .hc-cta:hover span { transform:translateX(4px); }
