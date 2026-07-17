@@ -50,6 +50,27 @@ const LANGS = [
         contact: "Hiba +82 10-3491-3535 (WhatsApp)", fabricSite: "www.cotton-printer.com",
     },
 ];
+
+// 2026-07-17: 모든 블로그 글에 들어가는 고정 브랜드 메시지 (사장님 지시 문구 그대로).
+//   AI 에게 매번 쓰게 하면 문구가 조금씩 달라지므로 코드에서 그대로 붙인다.
+//   번역도 고정 — 매번 번역하면 표현이 흔들리고 토큰만 더 든다.
+const BRAND_PITCH: Record<string, { q: string; body: string; slogan: string }> = {
+    kr: {
+        q: "이런 거 만들려고 하는데 디자인을 어디서 의뢰하지? 사이즈도 잘 모르겠고, 설치는 어떻게 의뢰하지? 가격이 비싸지 않을까?",
+        body: "이런 고민 많죠? 쓰고 싶은 내용만 넣으면 최신 인공지능이 놀라운 디자인을 해주고, 그 다음은 튜토리얼대로 클릭 몇 번만 하면 그냥 뚝딱! 담당 매니저가 내 물건이 잘 만들어지고 있는지 세심하게 챙겨드리니까 안심. 이제 모든 인쇄 광고물 굿즈는 카멜레온프린팅에서 쉽게 빠르게 저렴하게.",
+        slogan: "1등이 1등인 이유, 카멜레온프린팅!",
+    },
+    ja: {
+        q: "こんなものを作りたいけど、デザインはどこに頼めばいい？サイズもよく分からないし、設置は誰に頼むの？値段も高いんじゃない？",
+        body: "そんなお悩み、ありませんか？ 入れたい内容を入力するだけで、最新のAIが驚くようなデザインに仕上げます。あとはチュートリアル通りにクリック数回、それだけで完成！ 担当マネージャーがお客様の商品がきちんと作られているか細かく見守るので安心です。これからは、印刷物・広告物・グッズのすべてをカメレオンプリンティングで。簡単に、速く、お手頃に。",
+        slogan: "1位が1位である理由。カメレオンプリンティング！",
+    },
+    en: {
+        q: "I want to make something like this — but where do I get the design done? I'm not sure about the size, and who handles the installation? Won't it be expensive?",
+        body: "Sound familiar? Just enter what you want on it, and our latest AI turns it into a stunning design. After that, follow the tutorial — a few clicks and it's done. Your dedicated manager keeps a close eye on your order while it's being made, so you can relax. From now on, every printed item, sign, and piece of merch: easy, fast and affordable at Chameleon Printing.",
+        slogan: "There's a reason the No.1 is No.1 — Chameleon Printing!",
+    },
+};
 const INDEXNOW_KEY = "cf8e9a2b4d6f1c3e5a7b9d0f2e4c6a8b";
 
 // 2026-07-17: 발행 즉시 색인 요청 (IndexNow → Bing/Yandex/Naver 등).
@@ -322,10 +343,15 @@ ${catalog}
 [반드시 포함할 내용]
 - **주문이 매우 쉽다**: 홈페이지의 튜토리얼 가이드를 따라가면 게임하듯 클릭 몇 번으로
   디자인부터 주문까지 끝난다는 점. 디자인 프로그램·전문가 없이도 가능하다는 점을 구체적으로.
+  (단, 2)답변 또는 3)사례 안에 자연스럽게 녹이세요. 마지막에 따로 홍보 문단을 만들지 마세요)
 ${isHoneycomb ? `- **허니콤보드 강점(중요)**: 카멜레온프린팅은 **수도권에 무료로 배송·설치까지 해주는 유일한 업체**입니다.
   이 점을 눈에 띄게 강조하세요. (${L.lang === "kr" ? "수도권" : L.lang === "ja" ? "韓国・首都圏" : "the Seoul metropolitan area"} 기준)` : ""}
-- **문의처**: ${L.contact}
-- **홈페이지**: https://${L.site} (인쇄·광고물 전반) / https://${L.fabricSite} (패브릭·원단 인쇄)
+
+[쓰지 말아야 할 것 — 시스템이 자동으로 붙입니다. 쓰면 중복됩니다]
+- 전화번호·문의처 (${L.contact})
+- 홈페이지 주소 (https://${L.site}, https://${L.fabricSite})
+- 글 마지막의 홍보/마무리 멘트 ("~에서 만나보세요", "지금 문의하세요" 류)
+→ 본문은 3)우리 사례 설명으로 끝내세요.
 
 [사진 속 실제 모습 — 사례 부분의 유일한 근거]
 ${productSummary}
@@ -335,8 +361,7 @@ ${productSummary}
 - 형식: {"title":"...","meta_description":"...","focus_keyword":"...","body":"<p>...</p>","hashtags":["..."]}
 - body 는 HTML (<p>, <h2>, <ul>, <strong> 만 사용). 이미지 태그는 넣지 마세요 — 시스템이 자동으로 붙입니다.
 - 길이: 800~1200자 분량. 과장 광고·허위 표현 금지. 가격은 언급하지 마세요.
-- 문의처와 홈페이지 주소는 글 마지막 문단에 자연스럽게 넣으세요. 전화번호는 위에 준 것을 그대로.
-- 링크는 https://${L.site} 와 https://${L.fabricSite} 만 사용.
+- 본문에는 링크·전화번호를 넣지 마세요 (시스템이 하단에 붙입니다).
 - ${L.label} 원어민이 읽기에 자연스러워야 합니다. 제품군 이름은 ${L.label}로 자연스럽게 옮겨 쓰세요.`;
 
                 // max_tokens 8000 — 3000 은 한국어 글에서 잘렸다(실측). 한국어/일본어는 토큰 소모가 큼.
@@ -366,7 +391,16 @@ ${productSummary}
                         return `<figure style="margin:18px 0;"><img src="${d.photo.storage_url}" alt="${cap}" style="max-width:100%;border-radius:10px;"><figcaption style="font-size:13px;color:#64748b;margin-top:6px;">${cap}</figcaption></figure>`;
                     })
                     .join("\n");
-                // 2026-07-17: CTA + 문의처·사이트 안내를 본문과 별개로 항상 붙인다.
+                // 2026-07-17: 고정 브랜드 메시지 — 모든 글에 동일하게 들어간다(사장님 지시).
+                //   플랫 디자인: 그림자 없음, 볼드 대신 색·크기·여백으로 강조 (CLAUDE.md 디자인 원칙)
+                const P = BRAND_PITCH[L.lang] || BRAND_PITCH.kr;
+                const pitch = `<div style="margin:26px 0;padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #0f172a;border-radius:10px;">
+<p style="margin:0 0 12px;font-size:15px;color:#0f172a;line-height:1.75;">“${esc(P.q)}”</p>
+<p style="margin:0 0 12px;font-size:14px;color:#334155;line-height:1.85;">${esc(P.body)}</p>
+<p style="margin:0;font-size:16px;color:#0f172a;letter-spacing:-0.2px;">${esc(P.slogan)}</p>
+</div>`;
+
+                // CTA + 문의처·사이트 안내를 본문과 별개로 항상 붙인다.
                 //   (AI 가 문단 안에 자연스럽게 녹이되, 빠뜨려도 여기서 보장)
                 const ctaLabel = L.lang === "ja" ? "ガイドに沿って今すぐ作る" : L.lang === "en" ? "Start with the guide" : "가이드 따라 지금 만들기";
                 const inquiryLabel = L.lang === "ja" ? "お問い合わせ" : L.lang === "en" ? "Contact" : "문의";
@@ -376,7 +410,8 @@ ${productSummary}
 ${inquiryLabel}: ${esc(L.contact)}<br>
 <a href="https://${L.site}">https://${L.site}</a> · ${fabricLabel}: <a href="https://${L.fabricSite}">https://${L.fabricSite}</a>
 </p>`;
-                const htmlBody = `${c.body || ""}\n${gallery}\n${cta}`;
+                // 본문 → 사진 → 브랜드 메시지 → CTA·문의처 순
+                const htmlBody = `${c.body || ""}\n${gallery}\n${pitch}\n${cta}`;
 
                 const seoMeta: any = {
                     meta_description: c.meta_description || "",
