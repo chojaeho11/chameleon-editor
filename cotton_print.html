@@ -1837,17 +1837,6 @@ async function submitRollFabricRequest() {
                     <button type="button" class="me-size-btn" data-w="600" data-h="400" data-label="가로형"><span data-i18n="me_sz_landscape">가로형</span></button>
                     <button type="button" class="me-size-btn" data-w="500" data-h="500" data-label="정사각"><span data-i18n="me_sz_square">정사각</span></button>
                 </div>
-                <!-- 2026-07-18: 에디터 진입 화면 — 원클릭 AI디자인 / 디자인 편집하기 (아이콘 없이 화려한 그라데이션) -->
-                <div class="me-intro" id="meIntro">
-                    <button type="button" class="me-intro-btn me-intro-ai" onclick="window._meAiGenOpen && window._meAiGenOpen()">
-                        <span class="me-intro-ttl" data-i18n="me_intro_ai">원클릭 AI디자인</span>
-                        <span class="me-intro-desc" data-i18n="me_intro_ai_desc">어떤 업체도 못했던 고퀄리티 AI 디자인, 카멜레온이 만들었어요</span>
-                    </button>
-                    <button type="button" class="me-intro-btn me-intro-edit" onclick="window._meShowToolbar && window._meShowToolbar()">
-                        <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 편집하기</span>
-                        <span class="me-intro-desc" data-i18n="me_intro_edit_desc">더 예쁘게 꾸미고 싶다면, 여러 요소를 추가할 수 있어요</span>
-                    </button>
-                </div>
                 <div class="me-toolbar" id="meToolbar" style="display:none;">
                     <!-- 2026-07-18: 간편 진입에서 '디자인 편집하기' 눌러야 노출. 템플릿·AI이미지 버튼 제거. -->
                     <!-- Row 1: 간편 보기로 돌아가기 -->
@@ -1906,6 +1895,17 @@ async function submitRollFabricRequest() {
                         <button type="button" class="me-zoom-btn" title="확대 (휠 위)" onclick="window._meZoom(1)">+</button>
                         <button type="button" class="me-zoom-btn" id="mePanBtn" title="화면 이동 (스페이스바+드래그)" onclick="window._meTogglePan()" style="font-size:13px;"><span data-i18n="me_pan">이동</span></button>
                     </div>
+                </div>
+                <!-- 2026-07-18: 에디터 진입 버튼(원클릭 AI디자인 / 디자인 편집하기) — 다운로드 아래, 작품 갤러리 위로 이동 -->
+                <div class="me-intro" id="meIntro">
+                    <button type="button" class="me-intro-btn me-intro-ai" onclick="window._meAiGenOpen && window._meAiGenOpen()">
+                        <span class="me-intro-ttl" data-i18n="me_intro_ai">원클릭 AI디자인</span>
+                        <span class="me-intro-desc" data-i18n="me_intro_ai_desc">어떤 업체도 못했던 고퀄리티 AI 디자인, 카멜레온이 만들었어요</span>
+                    </button>
+                    <button type="button" class="me-intro-btn me-intro-edit" onclick="window._meShowToolbar && window._meShowToolbar()">
+                        <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 편집하기</span>
+                        <span class="me-intro-desc" data-i18n="me_intro_edit_desc">더 예쁘게 꾸미고 싶다면, 여러 요소를 추가할 수 있어요</span>
+                    </button>
                 </div>
                 <!-- 2026-07-18: 작품 갤러리 -->
                 <div class="me-gallery" id="meGallery">
