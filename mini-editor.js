@@ -6219,10 +6219,15 @@
                 _meAiTr('타이틀을 입력해 주세요.', 'タイトルを入力してください。', 'Enter a title.') +
               '</div>' +
               // 비율 선택
-              '<div style="display:flex; gap:6px; margin-bottom:12px;">' +
+              '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각 1:1', '正方形 1:1', 'Square') + '</button>' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로 9:16', '縦 9:16', 'Portrait') + '</button>' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 16:9', '横 16:9', 'Landscape') + '</button>' +
+              '</div>' +
+              // 2026-07-18: 가로 현수막 전용 — 5m×0.9m 처럼 아주 긴 가로. gpt-image 최대 가로(3:2)로 만들되
+              //   위아래 큰 여백 + 중앙 가로띠에 타이틀/서브만 배치하도록 프롬프트가 지시한다.
+              '<div style="display:flex; gap:6px; margin-bottom:12px;">' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="banner-h" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로 현수막 (위아래 여백)', '横断幕（上下に余白）', 'Wide Banner (top/bottom margin)') + '</button>' +
               '</div>' +
               '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
@@ -6340,7 +6345,12 @@
             var url;
             if (_meAiModel === 'ideogram') {
                 // 비율 → gpt-image 사이즈 문자열 (ai-image-gen 내부에서 aspect_ratio 로 매핑)
-                var size = _meAiRatio === '9:16' ? '1024x1536' : _meAiRatio === '16:9' ? '1536x1024' : '1024x1024';
+                //   banner-h(가로 현수막)도 gpt-image 최대 가로(1536x1024)로 생성 — 5:0.9 는 API 로 못 만들어서
+                //   위아래 큰 여백 + 중앙 가로띠 구성으로 대응한다.
+                var _isWideBanner = (_meAiRatio === 'banner-h');
+                var size = _meAiRatio === '9:16' ? '1024x1536'
+                         : (_meAiRatio === '16:9' || _isWideBanner) ? '1536x1024'
+                         : '1024x1024';
                 // 2026-07-10: 아주 긴 세로 제품(배너 등, 캔버스 H/W ≥ 2)은 gpt-image 최대 세로(1024x1536)로 생성 +
                 //   글자·요소를 좁은 중앙 세로열에 몰고 좌우 여백 크게 → cover 삽입 시 옆만 잘리고 글자는 안 잘림.
                 //   (배너는 1:3 등 매우 길지만 API 최대 세로는 2:3 이라 정확히 못 맞춤 → 중앙열 구성으로 대응.)
@@ -6350,6 +6360,11 @@
                 var _bannerHint = _isTallBanner
                     ? ' Compose as a TALL VERTICAL BANNER: place ALL text and key elements in a NARROW vertical column down the CENTER (within the central ~45% of the width), with large empty background areas on the LEFT and RIGHT sides. Keep nothing important near the left/right edges — the sides get cropped on a very tall narrow banner.'
                     : '';
+                // 2026-07-18: 가로 현수막 — 5m×0.9m 등 아주 긴 가로. 최종 대지는 위아래로 크게 잘리므로
+                //   타이틀/서브를 화면 세로 중앙의 가로 띠(중앙 ~40% 높이)에 몰고, 위·아래로 큰 배경 여백을 둔다.
+                if (_isWideBanner) {
+                    _bannerHint = ' Compose as a WIDE HORIZONTAL BANNER (like a 5m x 0.9m long banner). Put the TITLE (and an optional short subtitle below it) on ONE or TWO horizontal lines, perfectly CENTERED both horizontally and vertically, and kept inside a TIGHT central horizontal strip no taller than the middle 30% of the image height. The TOP third and BOTTOM third must be LARGE EMPTY background margin with nothing important in them. Use big, bold, highly legible lettering. Keep it a clean, simple title banner — not a busy poster. Full-bleed background, no border or frame.';
+                }
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
                 var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image. Only keep the TEXT and key subjects within the central safe area, comfortably away from the outer edges, so no text is cut off when trimmed.' + _bannerHint;
