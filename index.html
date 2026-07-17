@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717215247';
+    var CV = '20260717221016';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1026,8 +1026,8 @@ window._tcmFallbackClick = function(code) {
                 <article class="hc-slide is-active" data-slide="0" style="--bg:#e0f2fe; --bg2:#bae6fd; --txt:#075985; --accent:#0c4a6e;">
                     <div class="hc-content">
                         <span class="hc-tag" data-hc="tag-0">EASY ORDER</span>
-                        <h2 class="hc-title" data-hc="title-0">초보자도<br>쉽게 주문</h2>
-                        <p class="hc-sub" data-hc="sub-0">튜토리얼만 따라가면 주문 뚝딱<br>AI가 고퀄리티 디자인을 무료로 해드립니다</p>
+                        <h2 class="hc-title" data-hc="title-0">튜토리얼 따라가면<br>초보자도 주문뚝딱!</h2>
+                        <p class="hc-sub" data-hc="sub-0">AI가 고퀄리티 디자인을 무료로 해드립니다</p>
                         <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
                     </div>
                     <!-- 2026-07-17: 1번 슬라이드 교체 (허니콤보드 업계 1위 → 초보자도 쉽게 주문). 이미지=1면.png -->
@@ -1044,14 +1044,16 @@ window._tcmFallbackClick = function(code) {
                     <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="광고 인쇄" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 3. 종이매대 — 파스텔 베이지 -->
-                <article class="hc-slide" data-slide="2" style="--bg:#fef3c7; --bg2:#fde68a; --txt:#92400e; --accent:#78350f;">
+                <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
+                     배경도 앰버 → 청록으로: 새 이미지가 청록 물색이라 기존 노란 배경과 충돌했음 -->
+                <article class="hc-slide" data-slide="2" style="--bg:#ccfbf1; --bg2:#99f6e4; --txt:#115e59; --accent:#134e4a;">
                     <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-2">PAPER STAND</span>
-                        <h2 class="hc-title" data-hc="title-2">종이매대<br>친환경 진열대</h2>
-                        <p class="hc-sub" data-hc="sub-2">팝업·전시·매장 진열용<br>친환경 종이로 부담 없이</p>
-                        <a href="/paper_stand" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
+                        <span class="hc-tag" data-hc="tag-2">AI DESIGN</span>
+                        <h2 class="hc-title" data-hc="title-2">국내 1등 수준높은<br>인공지능 디자인</h2>
+                        <p class="hc-sub" data-hc="sub-2">타이틀·설명 내용·전화번호·장소 등을 적어주세요<br>전문가 이상의 고퀄리티 무료 AI 디자인</p>
+                        <a href="/editor" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
                     </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1774978114372_20260401_012118.png" alt="종이매대" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_ai_design_1784293737.png" alt="인공지능 디자인" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 4. 굿즈 / 키링 — 파스텔 핑크 -->
                 <article class="hc-slide" data-slide="3" style="--bg:#fce7f3; --bg2:#fbcfe8; --txt:#9d174d; --accent:#831843;">
@@ -1173,27 +1175,27 @@ window._tcmFallbackClick = function(code) {
             // 슬라이드 다국어
             var SLIDES = {
                 kr: {
-                    'tag-0':'EASY ORDER','title-0':'초보자도<br>쉽게 주문','sub-0':'튜토리얼만 따라가면 주문 뚝딱<br>AI가 고퀄리티 디자인을 무료로 해드립니다',
+                    'tag-0':'EASY ORDER','title-0':'튜토리얼 따라가면<br>초보자도 주문뚝딱!','sub-0':'AI가 고퀄리티 디자인을 무료로 해드립니다',
                     'tag-1':'AD PRINT','title-1':'광고 기획사를 위한<br>도매쇼핑몰','sub-1':'최대 도매출력소<br>업자들의 쇼핑몰',
-                    'tag-2':'PAPER STAND','title-2':'종이매대<br>친환경 진열대','sub-2':'팝업·전시·매장 진열용<br>친환경 종이로 부담 없이',
+                    'tag-2':'AI DESIGN','title-2':'국내 1등 수준높은<br>인공지능 디자인','sub-2':'타이틀·설명 내용·전화번호·장소 등을 적어주세요<br>전문가 이상의 고퀄리티 무료 AI 디자인',
                     'tag-3':'BEST GOODS','title-3':'베스트 굿즈<br>100개+ 반값','sub-3':'키링·코롯토·텀블러·머그<br>세계에서 가장 저렴한 도매가',
                     'tag-4':'FABRIC PRINT','title-4':'패브릭 인쇄<br>고해상도 출력','sub-4':'현수막·배너·전시용 패브릭<br>실내·실외 모두 대응 가능',
                     'tag-5':'METRO DELIVERY','title-5':'허니콤보드 수도권<br>무료배송·무료설치','sub-5':'허니콤보드 한정 · 국내 설치 70%<br>1등이 1등인 이유',
                     'cta':'자세히 보기','cta-lowest':'🏆 최저가보장'
                 },
                 ja: {
-                    'tag-0':'EASY ORDER','title-0':'初めてでも<br>かんたん注文','sub-0':'チュートリアル通りに進めるだけで注文完了<br>AIが高品質デザインを無料で作成します',
+                    'tag-0':'EASY ORDER','title-0':'チュートリアル通りで<br>初めてでも注文かんたん！','sub-0':'AIが高品質デザインを無料で作成します',
                     'tag-1':'AD PRINT','title-1':'広告代理店のための<br>卸売ショッピングモール','sub-1':'最大級の卸売印刷所<br>業者のためのモール',
-                    'tag-2':'PAPER STAND','title-2':'紙ディスプレイ<br>エコスタンド','sub-2':'ポップアップ・展示・店頭陳列用<br>環境配慮の紙素材で気軽に',
+                    'tag-2':'AI DESIGN','title-2':'国内トップクラスの<br>AIデザイン','sub-2':'タイトル・説明・電話番号・場所などを入力するだけ<br>プロ以上の高品質デザインを無料で',
                     'tag-3':'BEST GOODS','title-3':'ベストグッズ<br>100個~半額','sub-3':'キーリング・コロット・タンブラー・マグ<br>世界最安値の卸売価格',
                     'tag-4':'FABRIC PRINT','title-4':'ファブリック印刷<br>高解像度出力','sub-4':'横断幕・バナー・展示用ファブリック<br>屋内・屋外 すべて対応',
                     'tag-5':'METRO DELIVERY','title-5':'ハニカムボード 首都圏<br>送料・設置 無料','sub-5':'ハニカムボード限定 · 設置シェア70%<br>1位が1位である理由',
                     'cta':'詳しく見る','cta-lowest':'🏆 最安値保証'
                 },
                 en: {
-                    'tag-0':'EASY ORDER','title-0':'Easy Ordering<br>for Beginners','sub-0':'Just follow the tutorial and your order is done<br>Our AI creates high-quality designs for free',
+                    'tag-0':'EASY ORDER','title-0':'Follow the Tutorial,<br>Ordering Made Easy!','sub-0':'Our AI creates high-quality designs for free',
                     'tag-1':'AD PRINT','title-1':'Wholesale Mall for<br>Ad Agencies','sub-1':'Largest Wholesale Printer<br>The Mall for Pros',
-                    'tag-2':'PAPER STAND','title-2':'Paper Display<br>Eco-Friendly Stand','sub-2':'For pop-ups, exhibitions, retail displays<br>Eco-friendly paper, lightweight and affordable',
+                    'tag-2':'AI DESIGN','title-2':'Top-Tier<br>AI Design','sub-2':'Just enter your title, details, phone number and location<br>Better-than-pro quality, completely free',
                     'tag-3':'BEST GOODS','title-3':'Best Goods<br>50% off for 100+','sub-3':'Keychains, korotto, tumblers, mugs<br>World\'s most affordable wholesale prices',
                     'tag-4':'FABRIC PRINT','title-4':'Fabric Print<br>High-Resolution','sub-4':'Banners, signs, exhibition fabrics<br>Suitable for both indoor and outdoor use',
                     'tag-5':'METRO DELIVERY','title-5':'Honeycomb Board<br>Free Metro Delivery & Install','sub-5':'Honeycomb board only · 70% of installs<br>Why #1 Stays #1',
