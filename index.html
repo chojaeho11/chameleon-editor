@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718043808';
+    var CV = '20260718044254';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5889,7 +5889,7 @@ function scrollHotdeal(gridId, dir) {
             <div class="me-toolbar" id="meToolbar" style="display:none;">
                 <!-- 2026-07-18: 간편 진입(meIntro)에서 '디자인 편집하기' 눌러야 노출. 템플릿·AI이미지 버튼 제거. -->
                 <!-- Row 1: 간편 보기로 돌아가기 -->
-                <button type="button" class="me-tool-btn me-r1" id="meBackBtn" onclick="window._meHideToolbar && window._meHideToolbar()" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1; font-weight:700;" title="간편 보기"><i class="fa-solid fa-chevron-left me-tb-ic"></i><span data-i18n="me_back_simple" class="me-tb-lbl">간편 보기로</span></button>
+                <button type="button" class="me-tool-btn me-r1" id="meBackBtn" onclick="window._meHideToolbar && window._meHideToolbar()" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9); color:#fff; border-color:#0284c7; font-weight:700;" title="뒤로"><i class="fa-solid fa-chevron-left me-tb-ic"></i><span data-i18n="me_back_simple" class="me-tb-lbl">뒤로</span></button>
                 <!-- Row 2 -->
                 <button type="button" class="me-tool-btn me-r2" id="meUndoBtn" onclick="window._meUndo && window._meUndo()" title="되돌리기 / Undo (Ctrl+Z)" style="opacity:0.35;" disabled><i class="fa-solid fa-rotate-left me-tb-ic"></i></button>
                 <button type="button" class="me-tool-btn accent me-r2" onclick="document.getElementById('meImgInput').click()" title="내 사진 올리기 / Upload / アップロード"><i class="fa-solid fa-image me-tb-ic"></i><span data-i18n="me_img_upload" class="me-tb-lbl">내사진 올리기</span></button>
@@ -5950,7 +5950,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=480"></script>
+<script src="./mini-editor.js?v=481"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
