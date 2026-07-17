@@ -138,7 +138,8 @@
         /* 2026-06-14: 4 모서리 핸들 + 회전 핸들 (Photoshop/Figma 스타일) */
         /* 2026-07-14: 핸들/삭제/칩은 항상 클릭 가능 — 부모(칼선 박스)가 pointer-events:none 여도 조작되도록 (pointer-events 는 상속됨). */
         .me-handle, .me-handle-rot, .me-del, .me-imgchip { pointer-events:auto; }
-        .me-handle { position:absolute; width:13px; height:13px; background:#007AFF; border:2px solid #fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.25); z-index:5; }
+        /* 2026-07-18: 어두운 대지밖 배경에서도 잘 보이게 — 흰색 채움 + 파란 테두리 + 밝은 이중 링(어두운 배경/밝은 이미지 양쪽 대비 확보) */
+        .me-handle { position:absolute; width:15px; height:15px; background:#fff; border:2px solid #0A84FF; border-radius:50%; box-shadow:0 0 0 1.5px rgba(0,0,0,0.4), 0 0 6px 2px rgba(255,255,255,0.9); z-index:5; }
         .me-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
         .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
         .me-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
@@ -149,8 +150,8 @@
         .me-handle-e  { right:-6px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
         .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
         /* 2026-06-28: 회전 핸들 — 우측상단 바깥 + 회전(↻) 모양 + grab 커서 (일러스트식). 녹색 점/줄기 제거. */
-        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:22px; height:22px; background:#fff; border:1.5px solid #007AFF; cursor:grab; display:flex; align-items:center; justify-content:center; }
-        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#007AFF; font-size:14px; font-weight:800; line-height:1; -webkit-text-stroke:0; }
+        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:24px; height:24px; background:#fff; border:2px solid #0A84FF; cursor:grab; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1.5px rgba(0,0,0,0.4), 0 0 7px 2px rgba(255,255,255,0.9); }
+        .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#0A84FF; font-size:16px; font-weight:900; line-height:1; -webkit-text-stroke:0; }
         /* 2026-06-28: 글씨 테두리(-webkit-text-stroke)가 자식 핸들·삭제버튼·칩까지 상속되어 회전 화살표에 테두리가 생기고 드래그 잔상이 남던 문제 차단 */
         .me-handle, .me-handle::before, .me-handle-rot, .me-handle-rot::before, .me-del, .me-imgchip { -webkit-text-stroke:0 !important; -webkit-text-stroke-width:0 !important; paint-order:normal !important; text-shadow:none !important; }
         .me-item.text {
