@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260717221508';
+    var CV = '20260717222905';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1034,14 +1034,21 @@ window._tcmFallbackClick = function(code) {
                     <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_easy_order_1784292694.png" alt="초보자도 쉽게 주문" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 2. 광고인쇄 / 광고 기획사 도매쇼핑몰 — 파스텔 민트 -->
-                <article class="hc-slide" data-slide="1" style="--bg:#d1fae5; --bg2:#a7f3d0; --txt:#065f46; --accent:#064e3b;">
+                <!-- 2026-07-17: 2번 슬라이드 교체 (광고 도매쇼핑몰 → 나만의 브랜딩).
+                     검정 바탕 + 그라데이션 타이틀 (사장님 지시).
+                       accent=흰색 → 버튼이 흰배경+흰글씨가 되므로 cta-txt 로 글씨를 검정으로 되돌림
+                       tag-bg 도 낮춰야 흰 태그 글씨가 보임
+                       타이틀은 hc-title-grad 로 그라데이션 (사이트 기존 background-clip:text 패턴) -->
+                <article class="hc-slide" data-slide="1" style="--bg:#0b0b0f; --bg2:#1c1c24; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#0b0b0f; --cta-hover:#e5e7eb;">
                     <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-1">AD PRINT</span>
-                        <h2 class="hc-title" data-hc="title-1">광고 기획사를 위한<br>도매쇼핑몰</h2>
-                        <p class="hc-sub" data-hc="sub-1">최대 도매출력소<br>업자들의 쇼핑몰</p>
+                        <span class="hc-tag" data-hc="tag-1">BRANDING</span>
+                        <h2 class="hc-title hc-title-grad" data-hc="title-1">눈에 확 띄는<br>나만의 브랜딩</h2>
+                        <p class="hc-sub" data-hc="sub-1">카멜레온에서 브랜딩하세요<br>전단지·명함·스티커·굿즈·배너 모든 걸 전문가 수준으로 1초만에 뚝딱</p>
+                        <!-- 최저가보장 배지는 원래 이 슬라이드에 있던 것 — 그대로 유지.
+                             (일반 '자세히 보기' CTA 는 :1688 에서 사이트 전체 비활성이라 넣어도 안 보임) -->
                         <span class="hc-cta hc-cta-show" data-hc="cta-lowest" style="cursor:default; pointer-events:none;">🏆 최저가보장</span>
                     </div>
-                    <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="광고 인쇄" loading="lazy" decoding="async"></div>
+                    <div class="hc-visual"><img src="/fabric/adv1.jpg" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
                 </article>
                 <!-- 3. 종이매대 — 파스텔 베이지 -->
                 <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
@@ -1178,7 +1185,7 @@ window._tcmFallbackClick = function(code) {
             var SLIDES = {
                 kr: {
                     'tag-0':'EASY ORDER','title-0':'튜토리얼 따라가면<br>초보자도 주문뚝딱!','sub-0':'AI가 고퀄리티 디자인을 무료로 해드립니다',
-                    'tag-1':'AD PRINT','title-1':'광고 기획사를 위한<br>도매쇼핑몰','sub-1':'최대 도매출력소<br>업자들의 쇼핑몰',
+                    'tag-1':'BRANDING','title-1':'눈에 확 띄는<br>나만의 브랜딩','sub-1':'카멜레온에서 브랜딩하세요<br>전단지·명함·스티커·굿즈·배너 모든 걸 전문가 수준으로 1초만에 뚝딱',
                     'tag-2':'AI DESIGN','title-2':'국내 1등 수준높은<br>인공지능 디자인','sub-2':'타이틀·설명 내용·전화번호·장소 등을 적어주세요<br>전문가 이상의 고퀄리티 무료 AI 디자인',
                     'tag-3':'BEST GOODS','title-3':'베스트 굿즈<br>100개+ 반값','sub-3':'키링·코롯토·텀블러·머그<br>세계에서 가장 저렴한 도매가',
                     'tag-4':'FABRIC PRINT','title-4':'패브릭 인쇄<br>고해상도 출력','sub-4':'현수막·배너·전시용 패브릭<br>실내·실외 모두 대응 가능',
@@ -1187,7 +1194,7 @@ window._tcmFallbackClick = function(code) {
                 },
                 ja: {
                     'tag-0':'EASY ORDER','title-0':'チュートリアル通りで<br>初めてでも注文かんたん！','sub-0':'AIが高品質デザインを無料で作成します',
-                    'tag-1':'AD PRINT','title-1':'広告代理店のための<br>卸売ショッピングモール','sub-1':'最大級の卸売印刷所<br>業者のためのモール',
+                    'tag-1':'BRANDING','title-1':'ひと目で伝わる<br>自分だけのブランディング','sub-1':'ブランディングはカメレオンで<br>チラシ・名刺・ステッカー・グッズ・バナー、すべてプロ級に一瞬で',
                     'tag-2':'AI DESIGN','title-2':'国内トップクラスの<br>AIデザイン','sub-2':'タイトル・説明・電話番号・場所などを入力するだけ<br>プロ以上の高品質デザインを無料で',
                     'tag-3':'BEST GOODS','title-3':'ベストグッズ<br>100個~半額','sub-3':'キーリング・コロット・タンブラー・マグ<br>世界最安値の卸売価格',
                     'tag-4':'FABRIC PRINT','title-4':'ファブリック印刷<br>高解像度出力','sub-4':'横断幕・バナー・展示用ファブリック<br>屋内・屋外 すべて対応',
@@ -1196,7 +1203,7 @@ window._tcmFallbackClick = function(code) {
                 },
                 en: {
                     'tag-0':'EASY ORDER','title-0':'Follow the Tutorial,<br>Ordering Made Easy!','sub-0':'Our AI creates high-quality designs for free',
-                    'tag-1':'AD PRINT','title-1':'Wholesale Mall for<br>Ad Agencies','sub-1':'Largest Wholesale Printer<br>The Mall for Pros',
+                    'tag-1':'BRANDING','title-1':'Branding That<br>Turns Heads','sub-1':'Build your brand with Chameleon<br>Flyers, cards, stickers, merch, banners — all pro-level in a second',
                     'tag-2':'AI DESIGN','title-2':'Top-Tier<br>AI Design','sub-2':'Just enter your title, details, phone number and location<br>Better-than-pro quality, completely free',
                     'tag-3':'BEST GOODS','title-3':'Best Goods<br>50% off for 100+','sub-3':'Keychains, korotto, tumblers, mugs<br>World\'s most affordable wholesale prices',
                     'tag-4':'FABRIC PRINT','title-4':'Fabric Print<br>High-Resolution','sub-4':'Banners, signs, exhibition fabrics<br>Suitable for both indoor and outdoor use',
@@ -1718,6 +1725,15 @@ window._tcmFallbackClick = function(code) {
                 color:var(--accent);
                 text-align:center;
                 word-break:keep-all;   /* 2026-06-28: 한글/일본어 — 글자 단위 줄바꿈 금지, 단어(공백) 단위로만 */
+            }
+            /* 2026-07-17: 그라데이션 타이틀 (검정 바탕 슬라이드용).
+               사이트 기존 패턴(background-clip:text)과 동일. 미지원 브라우저에선
+               text-fill-color 가 무시되고 color:var(--accent) 로 그대로 보인다 = 안전한 폴백. */
+            .hc-title-grad {
+                background:linear-gradient(100deg,#f472b6 0%,#a78bfa 45%,#38bdf8 100%);
+                -webkit-background-clip:text;
+                background-clip:text;
+                -webkit-text-fill-color:transparent;
             }
             .hc-sub {
                 font-family:'Pretendard Variable', sans-serif;
