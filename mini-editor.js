@@ -6259,6 +6259,7 @@
 
     var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
     var _meAiRatio = '16:9';      // 기본 가로 16:9
+    var _meAiScarci = false;      // 2026-07-18: 글씨 스카시 = 입체 글씨 포토존 컨셉 모드
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽)
@@ -6474,9 +6475,21 @@
         // 2026-07-18: 현재 제품 종류에 맞는 기본 프리셋 자동 선택 (명함/배너/현수막).
         //   simple_order._soAiPresetHint() = 'namecard' | 'banner' | null.
         //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
+        _meAiScarci = false;
         try {
             var _hint = (typeof window._soAiPresetHint === 'function') ? window._soAiPresetHint() : null;
-            if (_hint === 'namecard') {
+            if (_hint === 'scarci') {
+                // 글씨 스카시 = 입체 글씨 포토존. 대지가 가로로 넓으므로 가로 프리셋 + 타이틀/서브 문구 자동 채움.
+                _meAiScarci = true;
+                _meAiRatio = '16:9';
+                try {
+                    var _st = (typeof window._soScarciAiText === 'function') ? window._soScarciAiText() : null;
+                    var _pEl = document.getElementById('meAiPrompt');
+                    if (_st && _pEl && !(_pEl.value || '').trim()) {
+                        _pEl.value = [_st.title, _st.sub].filter(Boolean).join(' ');
+                    }
+                } catch (_stf) {}
+            } else if (_hint === 'namecard') {
                 _meAiRatio = 'namecard';
             } else if (_hint === 'banner') {
                 var w = (me && me.natW) || 0, h = (me && me.natH) || 0;
@@ -6585,6 +6598,8 @@
             }
         } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
         try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
+        // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
+        if (_meAiScarci) { try { if (typeof window._soScarciAttachAiImage === 'function') window._soScarciAttachAiImage(_meAiPendingUrl); } catch (_sc) {} }
         _meAiGenClose();
     }
 
@@ -6746,8 +6761,12 @@
                 if (_isNameCard) {
                     _bannerHint = ' Design a CLEAN, MODERN, PROFESSIONAL BUSINESS CARD. Read the user text as business-card fields (company/brand name, person name and title, phone, address, email, social handles) and lay them out clearly with a natural visual hierarchy — the brand name most prominent. IMPORTANT: tailor the whole look (colors, mood, typography, any simple icon or motif) to suit the BRAND and its industry as implied by the company name — e.g. a cafe feels warm and cozy, a law firm feels formal and navy, a design studio feels artful and minimal. Do NOT use one fixed generic template. Use plenty of negative space and keep ALL text well inside with GENEROUS EMPTY MARGINS on ALL FOUR SIDES so nothing is cut off near an edge. Full-bleed background color or subtle texture, but no printed border or frame line.';
                 }
-                // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치.
-                var _isPoster = (_meAiRatio === '9:16' || _meAiRatio === '16:9');
+                // 2026-07-18: 글씨 스카시 — 입체 글씨 포토존 컨셉 목업 (실제 입체 제작은 전문 디자이너).
+                if (_meAiScarci) {
+                    _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE (an event photo-zone made of large freestanding 3D letters). Read the user text as the MAIN TITLE plus an optional smaller SUBTITLE. Show the TITLE as BIG, BOLD, DIMENSIONAL standalone 3D letters — like thick acrylic or foam cut-out letters standing on the floor — as the clear hero of the image, centered. Present it as a clean, modern photo-zone installation at an event entrance or lobby, well lit, with NO people and a simple, uncluttered background. This is a design concept mockup for a 3D letter photo zone.';
+                }
+                // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시는 제외)
+                var _isPoster = (!_meAiScarci) && (_meAiRatio === '9:16' || _meAiRatio === '16:9');
                 if (_isPoster) {
                     _bannerHint += ' Design it as an EVENT POSTER. Read the user text as poster information (main title, host/organizer, date & time, place, and any extra details) and arrange it with a clear visual hierarchy: the MAIN TITLE largest and most eye-catching, with the host, date/time and location shown as clearly readable supporting text (often near the bottom). Make it attractive and well-composed, and keep all text within the central safe area away from the edges.';
                 }
@@ -6811,8 +6830,9 @@
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             if (ins) ins.style.display = 'block';
             var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
-            // 2026-07-18: 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
-            try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
+            // 2026-07-18: 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget.
+            //   스카시 포토존 시안은 완성 디자인이 아니라 컨셉 목업이므로 갤러리 등록 제외.
+            if (!_meAiScarci) { try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {} }
         } catch (e) {
             console.error('[meAi] generate', e);
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }

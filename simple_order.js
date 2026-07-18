@@ -6347,15 +6347,42 @@ html, body { background: #ffffff !important; }
     window._soIsPlacardProduct = _soIsPlacardProduct;
 
     // 2026-07-18: AI 이미지 생성 모달의 기본 프리셋 힌트 — 현재 제품 종류를 미니에디터에 알려줌.
-    //   'namecard'(명함) / 'banner'(배너·현수막 = 방향은 미니에디터가 대지 비율로 판단) / null(기본 유지).
+    //   'scarci'(글씨 스카시 = 입체 글씨 포토존) / 'namecard'(명함) / 'banner'(배너·현수막) / null(기본 유지).
     window._soAiPresetHint = function () {
         try {
+            if (typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(state.product)) return 'scarci';
             if (state.isBizCard) return 'namecard';
             var p = state.product;
             var isPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
             if (isPlac || state.isBannerOutput) return 'banner';
         } catch (_) {}
         return null;
+    };
+
+    // 2026-07-18: 글씨 스카시 — AI 포토존 생성용 문구(타이틀/서브) 제공 + 생성 이미지를 디자이너 참고자료로 자동 첨부.
+    window._soScarciAiText = function () {
+        return { title: (state.scarciTitle || '').trim(), sub: (state.scarciSub || '').trim() };
+    };
+    window._soScarciAttachAiImage = async function (dataUrl) {
+        try {
+            if (!dataUrl) return;
+            if (!Array.isArray(state._scarciRefItems)) state._scarciRefItems = [];
+            if (!Array.isArray(state.scarciRefUrls)) state.scarciRefUrls = [];
+            var item = { url: null, name: 'ai-photozone.png', thumb: dataUrl, uploading: true, ai: true };
+            state._scarciRefItems.push(item);
+            _soScarciRefRender();
+            var blob;
+            if (dataUrl.indexOf('data:') === 0) { var r = await fetch(dataUrl); blob = await r.blob(); }
+            else { var r2 = await fetch(dataUrl, { mode: 'cors' }); blob = await r2.blob(); }
+            var path = 'scarci-ref/ai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '.png';
+            var up = await sb.storage.from('design').upload(path, blob, { contentType: 'image/png', upsert: false });
+            if (up && up.error) throw up.error;
+            item.url = sb.storage.from('design').getPublicUrl(path).data.publicUrl;
+            item.uploading = false;
+            state.scarciRefUrls = state._scarciRefItems.map(function (it) { return it.url; }).filter(Boolean);
+            _soScarciRefRender();
+            try { showStatus(tr('AI 포토존 시안을 디자이너 참고자료에 첨부했어요.', 'AIフォトゾーン案をデザイナー資料に添付しました。', 'Attached the AI photo-zone concept to the designer references.'), 'ok'); } catch (_st) {}
+        } catch (e) { console.warn('[scarci ai attach]', e); try { if (Array.isArray(state._scarciRefItems)) { state._scarciRefItems = state._scarciRefItems.filter(function (it) { return !(it.ai && it.uploading); }); _soScarciRefRender(); } } catch (_) {} }
     };
 
     window._soSwitchPlacard = function (code) {
