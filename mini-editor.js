@@ -7026,14 +7026,19 @@
                             _faceRatio = ' The front face measures ' + _bd.w + 'mm x ' + _bd.h + 'mm — draw it at EXACTLY that aspect ratio ('
                                 + (_bd.w / _g) + ':' + (_bd.h / _g) + (_bd.w === _bd.h ? ', i.e. a perfect square' : '') + '), not a generic rectangle.';
                         }
-                        _bannerHint = ' Create a WIDE two-panel packaging design presentation board, SPLIT LEFT AND RIGHT.'
-                            + ' LEFT HALF: a photorealistic MOCKUP of the closed, assembled CORRUGATED CARDBOARD BOX, shown at a three-quarter angle so the front, one side and the top are all visible.' + _boxSize
-                            + ' RIGHT HALF: a large FLAT, STRAIGHT-ON view of the BOX FRONT FACE ONLY — just that single panel of artwork by itself, filling the right half, with no perspective, no angle, no other faces, no fold lines and no dieline. Show it like finished print artwork so the design reads clearly at full size.' + _faceRatio
+                        // 2026-07-19: 허니콤보드 박스는 "택배 상자" 가 아니다 (사장님 지적).
+                        //   종이 허니콤 패널로 만든 전시·디스플레이용 조형물 — FRP 조형물처럼 매끈하고 고급스럽다.
+                        //   골판지 골·박스테이프·배송라벨·접힘날개가 나오면 완전히 다른 물건이 되므로 명시적으로 금지.
+                        _bannerHint = ' Create a WIDE two-panel design presentation board, SPLIT LEFT AND RIGHT.'
+                            + ' LEFT HALF: a photorealistic MOCKUP of a PREMIUM FREESTANDING DISPLAY CUBE / PEDESTAL made of smooth honeycomb board, shown at a three-quarter angle so the front, one side and the top are all visible.' + _boxSize
+                            + ' It must look like a high-end exhibition or retail display plinth — think a sculpted FRP/fiberglass display object or a museum pedestal: perfectly smooth MATTE surfaces, crisp sharp clean edges and corners, seamless faces with the artwork printed edge to edge across each face, sturdy and refined.'
+                            + ' ABSOLUTELY NOT a shipping or moving carton. FORBIDDEN: packing tape or any tape strip, shipping labels or barcodes, corrugated fluting or visible cardboard ridges, brown kraft parcel look, opening flaps or folded lids, dented or scuffed surfaces, handwriting or courier stickers.'
+                            + ' RIGHT HALF: a large FLAT, STRAIGHT-ON view of the FRONT FACE ONLY — just that single panel of artwork by itself, filling the right half, with no perspective, no angle, no other faces, no fold lines and no dieline. Show it like finished print artwork so the design reads clearly at full size.' + _faceRatio
                             + ' CRITICAL: the front-face artwork must be IDENTICAL on the left mockup and the right flat view.'
-                            + ' CRITICAL: show NO merchandise or props — no products spilling out, no people, no hands. Just the box and its front artwork.'
+                            + ' CRITICAL: show NO merchandise or props — no products, no people, no hands. Just the display cube and its front artwork.'
                             + _pdBrandClause + _pdProdClause + _pdMoodClause
-                            + ' Keep all printed text crisp, upright and readable, and keep it well inside the face away from its edges, since panels get creased and trimmed.'
-                            + ' Evenly lit studio product photography for the mockup, plain uncluttered light neutral background behind both halves. This is a packaging design concept board for a printed cardboard box.';
+                            + ' Keep all printed text crisp, upright and readable, and keep it well inside the face away from its edges, since panels get trimmed.'
+                            + ' Evenly lit studio product photography for the mockup with a soft gradient shadow on a clean floor, plain uncluttered light neutral background behind both halves. This is a design concept board for a printed honeycomb-board display cube.';
                     } else if (_meAiPdKind === 'table') {
                         // 허니콤 테이블(hb_tb_*) — 부스/행사용 조립식 테이블(카운터). 인쇄면은 앞면 패널.
                         _bannerHint = ' Create a WIDE two-panel design presentation board, SPLIT LEFT AND RIGHT.'

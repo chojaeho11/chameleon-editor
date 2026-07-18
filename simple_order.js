@@ -6454,7 +6454,7 @@ html, body { background: #ffffff !important; }
             if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(state.product)) return 'paper-display';
             // 2026-07-18: 허니콤 테이블(hb_tb_*) — 매대와 같은 입력/첨부를 쓰되 프롬프트만 테이블용
             if (typeof _soIsTableProduct === 'function' && _soIsTableProduct(state.product)) return 'hb-table';
-            // 2026-07-19: 허니콤 박스(hb_bx_*) — 목업 + 6면 전개도
+            // 2026-07-19: 허니콤 박스(hb_bx_*) — 목업 + 정면 시안
             if (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(state.product)) return 'hb-box';
             if (state.isBizCard) return 'namecard';
             var p = state.product;
@@ -6551,7 +6551,7 @@ html, body { background: #ffffff !important; }
             state.pdRefUrls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
             try {
                 showStatus(state.isHbBox
-                    ? tr('AI 박스 시안(목업 + 6면 전개도)을 디자이너 참고자료에 첨부했어요.', 'AIボックス案(モックアップ+6面展開図)をデザイナー資料に添付しました。', 'Attached the AI box concept (mockup + dieline) to the designer references.')
+                    ? tr('AI 박스 시안(목업 + 정면 시안)을 디자이너 참고자료에 첨부했어요.', 'AIボックス案(モックアップ+正面案)をデザイナー資料に添付しました。', 'Attached the AI box concept (mockup + front face) to the designer references.')
                     : state.isHbTable
                     ? tr('AI 테이블 시안을 디자이너 참고자료에 첨부했어요.', 'AIテーブル案をデザイナー資料に添付しました。', 'Attached the AI table concept to the designer references.')
                     : tr('AI 매대 시안을 디자이너 참고자료에 첨부했어요.', 'AI什器案をデザイナー資料に添付しました。', 'Attached the AI display concept to the designer references.'), 'ok');
@@ -13625,9 +13625,9 @@ html, body { background: #ffffff !important; }
                 if (_pdT && _pdD) {
                     if (state.isHbBox) {
                         _pdT.textContent = '📝 ' + tr('박스 디자인 컨셉', 'ボックスデザインコンセプト', 'Box design concept');
-                        _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 입력하신 박스 사이즈 그대로 목업과 6면 전개도를 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
-                                              'ブランド·製品·コンセプトを入力すると、AIデザイン実行が入力されたボックスサイズのままモックアップと6面展開図を作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
-                                              'Enter your brand, products and concept — Run AI Design makes a mockup plus a six-panel dieline at the box size you entered. A professional designer then crafts the real print design from it and contacts you.');
+                        _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 입력하신 박스 사이즈 비율 그대로 목업과 정면 시안을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                                              'ブランド·製品·コンセプトを入力すると、AIデザイン実行が入力されたボックスサイズの比率のままモックアップと正面デザイン案を作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                                              'Enter your brand, products and concept — Run AI Design makes a mockup plus a flat front-face design at the proportions you entered. A professional designer then crafts the real print design from it and contacts you.');
                     } else if (state.isHbTable) {
                         _pdT.textContent = '📝 ' + tr('테이블 디자인 컨셉', 'テーブルデザインコンセプト', 'Table design concept');
                         _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 이 테이블 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
@@ -15581,7 +15581,7 @@ html, body { background: #ffffff !important; }
                 if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) {
                     wMm = 1800; hMm = 1200;
                 } else if (p && typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(p)) {
-                    // 2026-07-19: 허니콤 박스 — 좌측 목업 + 우측 6면 전개도를 담는 가로 대지.
+                    // 2026-07-19: 허니콤 박스 — 좌측 목업 + 우측 정면 시안을 담는 가로 대지.
                     //   박스 실치수(W/H/D)는 가격·칼선용으로 그대로 쓰이고, 대지는 목업 뷰어 역할만 한다.
                     wMm = 1800; hMm = 1200;
                 } else if (p && typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(p)) {
