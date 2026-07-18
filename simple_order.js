@@ -17654,7 +17654,7 @@ html, body { background: #ffffff !important; }
                             <span></span>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="so-cart-item-price">${fmtPrice(it.price || 0)}</span>
-                                <button class="so-cart-item-remove" onclick="window._soRemoveFabricItem(${allIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
+                                <button class="so-cart-item-remove" onclick="window._soRemoveFabricItem('${escapeHtml(String(it.__cart_id || it.uid || ''))}', ${allIdx})" title="${tr('삭제', '削除', 'Remove')}">🗑</button>
                             </div>
                         </div>
                     </div>
@@ -17768,14 +17768,37 @@ html, body { background: #ffffff !important; }
     }
 
     // 2026-05-12: 카트 드로어에서 패브릭 항목 삭제
-    window._soRemoveFabricItem = function (allIdx) {
+    // 2026-07-19 [반복 신고된 "지웠는데 또 올라와" 버그의 원인]
+    //   예전엔 렌더 시점의 위치 인덱스(allIdx)로 splice 했다. 그런데 cart_sync 가
+    //   dedupById / pickFreshState / 다른 탭의 storage 이벤트로 배열을 수시로 재구성하기 때문에,
+    //   클릭 시점엔 그 인덱스가 다른 항목을 가리키거나(→ 엉뚱한 항목 삭제) 배열 밖이 된다(→ 조용히 아무 일도 안 함).
+    //   후자가 바로 패브릭 항목이 안 지워지고 계속 남아 있던 이유.
+    //   일반 상품은 2026-06-09 에 uid 기반(_findCartIdxByUid)으로 이미 고쳤는데 패브릭만 인덱스로 남아 있었다.
+    //   → cart_sync 가 모든 항목에 붙여주는 안정 식별자 __cart_id(없으면 uid) 로 찾는다.
+    window._soRemoveFabricItem = function (key, fallbackIdx) {
         try {
             var all = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
-            if (!all[allIdx]) return;
-            all.splice(allIdx, 1);
+            var idx = -1;
+            if (key != null && key !== '') {
+                var s = String(key);
+                for (var i = 0; i < all.length; i++) {
+                    var it = all[i];
+                    if (!it) continue;
+                    if (String(it.__cart_id) === s || String(it.uid) === s) { idx = i; break; }
+                }
+            }
+            // 식별자가 없는 옛 항목만 위치 인덱스로 폴백 (그 자리가 정말 패브릭일 때만)
+            if (idx < 0 && fallbackIdx != null && all[fallbackIdx] && isFabricItem(all[fallbackIdx])) idx = fallbackIdx;
+            if (idx < 0) {
+                console.warn('[cart] 패브릭 항목을 찾지 못해 삭제하지 못했습니다. key=', key);
+                renderSoCart();
+                return;
+            }
+            all.splice(idx, 1);
+            // setItem 은 cart_sync 인터셉터를 거쳐 로컬 시각 갱신 + 서버 push 까지 처리한다.
             localStorage.setItem('chameleon_cart_current', JSON.stringify(all));
             renderSoCart();
-        } catch (e) {}
+        } catch (e) { console.error('[cart] 패브릭 삭제 실패', e); }
     };
 
     window._soCartQtyChg = function(uid, delta) {
@@ -18999,7 +19022,7 @@ html, body { background: #ffffff !important; }
             }
             var p = _soCalcItemPrice(it);
             return '<div class="so-co-summary-item" style="position:relative;">' +
-                '<button type="button" onclick="window._soRemoveCheckoutItem(' + idx + ')" title="삭제" ' +
+                '<button type="button" onclick="window._soRemoveCheckoutItem(\'' + escapeHtml(String(it.__cart_id || it.uid || '')) + '\', ' + idx + ')" title="삭제" ' +
                   'style="position:absolute; top:6px; right:6px; width:22px; height:22px; padding:0; border:none; background:transparent; color:#9ca3af; font-size:16px; cursor:pointer; border-radius:50%; line-height:1;" ' +
                   'onmouseover="this.style.background=\'#fee2e2\'; this.style.color=\'#dc2626\';" ' +
                   'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#9ca3af\';">×</button>' +
@@ -19042,14 +19065,25 @@ html, body { background: #ffffff !important; }
     }
 
     // 2026-05-13: 주문 요약에서 항목 삭제
-    window._soRemoveCheckoutItem = function (idx) {
+    // 2026-07-19: 위치 인덱스 → __cart_id/uid 기반. (패브릭 삭제와 같은 버그였음 —
+    //   cart_sync 가 배열을 재구성하면 렌더 시점 인덱스가 어긋나 엉뚱한 항목이 지워지거나 아무 일도 안 남.)
+    window._soRemoveCheckoutItem = function (key, fallbackIdx) {
         try {
             var cart = JSON.parse(localStorage.getItem('chameleon_cart_current') || '[]') || [];
-            if (idx >= 0 && idx < cart.length) {
-                cart.splice(idx, 1);
-                localStorage.setItem('chameleon_cart_current', JSON.stringify(cart));
+            var idx = -1;
+            if (key != null && key !== '') {
+                var s = String(key);
+                for (var i = 0; i < cart.length; i++) {
+                    var it = cart[i];
+                    if (!it) continue;
+                    if (String(it.__cart_id) === s || String(it.uid) === s) { idx = i; break; }
+                }
             }
-        } catch (e) {}
+            if (idx < 0 && fallbackIdx != null && fallbackIdx >= 0 && fallbackIdx < cart.length) idx = fallbackIdx;
+            if (idx < 0) { console.warn('[checkout] 삭제할 항목을 찾지 못했습니다. key=', key); _renderCheckoutSummary(); return; }
+            cart.splice(idx, 1);
+            localStorage.setItem('chameleon_cart_current', JSON.stringify(cart));
+        } catch (e) { console.error('[checkout] 항목 삭제 실패', e); }
         _renderCheckoutSummary();
     };
 

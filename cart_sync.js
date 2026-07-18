@@ -230,11 +230,26 @@
             row = { session_id: SID, items: items, updated_at: new Date().toISOString() };
             conflict = 'session_id';
         }
-        return c.from('carts').upsert(row, { onConflict: conflict })
+        // 2026-07-19: 저장된 updated_at 을 돌려받아 로컬 시각을 서버 진실과 맞춘다.
+        //   서버 트리거가 updated_at 을 서버 now() 로 덮어쓰기 때문에, 이걸 반영해두지 않으면
+        //   (브라우저 시계가 빠른 경우) 로컬이 영원히 서버를 이겨 다른 기기의 정상적인 변경을 무시한다.
+        //   단, push 응답을 기다리는 동안 사용자가 또 바꿨다면(pushTimer 대기중) 건드리지 않는다.
+        return c.from('carts').upsert(row, { onConflict: conflict }).select('updated_at')
             .then(function (res) {
-                if (res.error) console.warn('[cart_sync] push', res.error);
+                if (res.error) {
+                    // 조용히 넘기면 삭제가 서버에 반영 안 된 걸 아무도 모른다 → 반드시 눈에 띄게.
+                    console.error('[cart_sync] push 실패 — 서버에 반영되지 않음:', res.error.message || res.error);
+                    return;
+                }
+                try {
+                    var srvIso = res.data && res.data[0] && res.data[0].updated_at;
+                    if (srvIso && !pushTimer) {
+                        var srvTs = Date.parse(srvIso);
+                        if (srvTs && srvTs > readLocalTs()) writeLocalTs(new Date(srvTs).toISOString());
+                    }
+                } catch (_e) {}
             })
-            .catch(function (e) { console.warn('[cart_sync] push exc', e); });
+            .catch(function (e) { console.error('[cart_sync] push 예외 — 서버에 반영되지 않음:', e); });
     }
 
     // 로그인 직후: 익명 세션 행(session_id=SID, user_id=NULL)을 삭제하여 orphan 정리
@@ -341,6 +356,36 @@
     function writeLocalTs(iso) {
         try { __origLocalSet(LOCAL_TS_KEY, iso); } catch (e) {}
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 2026-07-19 [삭제 항목 부활 버그의 진짜 원인 — 시계가 서로 다름]
+    //
+    //   carts 테이블에는 BEFORE UPDATE 트리거가 있어서, UPDATE 시 클라이언트가 보낸
+    //   updated_at 을 무시하고 서버의 now() 로 덮어쓴다. (REST 로 직접 검증:
+    //   INSERT 는 보낸 값 유지 / UPDATE 는 서버시각으로 교체, 마이크로초 6자리)
+    //
+    //   그 결과 pickFreshState 는 서로 다른 두 시계를 비교하게 된다:
+    //     · localTs  = 브라우저 시계 (사용자가 카트를 바꾼 순간)
+    //     · serverTs = 서버 시계 (그 변경이 push 된 순간, 약 120ms 뒤)
+    //
+    //   ① 정상 흐름에서도 serverTs 가 항상 조금 더 최신이라 매 로드마다 server 가 이긴다.
+    //      (내용이 같으니 평소엔 티가 안 남)
+    //   ② 그리고 init 은 server 가 이기면 localTs := serverTs 로 맞춘다.
+    //      → 브라우저 시계가 서버보다 조금이라도 느리면, 그 다음 로컬 변경이 찍는
+    //        브라우저 시각이 방금 저장한 serverTs 보다 과거가 된다 = localTs 가 뒤로 감김.
+    //      → 이후 로컬은 영원히 서버를 못 이긴다. push 가 한 번이라도 실패하면
+    //        그 삭제는 되돌릴 방법이 없고, 지울 때마다 옛 항목이 계속 부활한다.
+    //        (사장님이 반복 신고하신 "지웠는데 또 올라와" 의 정체)
+    //
+    //   해결: 로컬 시각을 절대 뒤로 가지 않게(단조 증가) 만든다. 로컬 변경은 언제나
+    //   "마지막으로 알고 있는 상태보다 최신" 으로 기록되므로, 시계 오차와 무관하게
+    //   사용자의 최신 조작이 이긴다. push 가 실패해도 다음 로드에서 로컬이 이겨 삭제가 유지된다.
+    // ─────────────────────────────────────────────────────────────────────────
+    function bumpLocalTs() {
+        var next = Math.max(Date.now(), readLocalTs() + 1);
+        writeLocalTs(new Date(next).toISOString());
+        return next;
+    }
     // server: {items, updatedAt} | null   local: Array
     // 반환: { items: Array, source: 'server'|'local', tsIso: string }
     function pickFreshState(server, localItems) {
@@ -409,7 +454,7 @@
         //         (2) 무거운 필드(thumb/imgDataUrl/fileData) 를 떼고 재시도 → localStorage 라도 보존
         //         (3) 그래도 실패하면 사용자에게 토스트 경고
         _unified = mine;
-        writeLocalTs(new Date().toISOString());
+        bumpLocalTs();   // 2026-07-19: 단조 증가 — 시계 오차로 로컬 변경이 서버에 지는 것 방지
         // 2026-07-14: 항상 초대용량(>100KB) 인라인 문자열은 localStorage 저장 전에 제거 — 정상 저장도 비대해지지 않게.
         //   (팬시 스티커 등 대용량 SVG/base64. 서버 _unified 엔 원본 유지, 디자인/칼선은 Storage URL 로 보존.)
         //   썸네일(<100KB data URL)은 유지 → 카트 미리보기 정상.
@@ -577,7 +622,7 @@
                             _userId = newUid;
                             // 이전 사용자 카트를 메모리·로컬에서 비움 (사용자 전환 시 절대 이전 카트가 따라오면 안 됨)
                             _unified = [];
-                            writeLocalTs(new Date().toISOString());
+                            bumpLocalTs();
                             rebuildLocalFromUnified();
                             // 새 사용자 server 카트 pull (또는 로그아웃이면 빈 상태 유지)
                             (newUid ? cleanupAnonRow() : Promise.resolve())
@@ -632,8 +677,7 @@
     //   부분 비움 (소스별 정리) 가 누적시키는 phantom 항목 문제 해결.
     function clearAllCart() {
         _unified = [];
-        var nowIso = new Date().toISOString();
-        writeLocalTs(nowIso);
+        bumpLocalTs();   // 2026-07-19: 전체 비우기도 단조 증가 — 비운 상태가 서버에 지지 않게
         writeLocalRaw([]);
         // 서버 즉시 push (350ms 디바운스 우회)
         if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
