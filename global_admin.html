@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260718190057';
+        var CV = '20260718190801';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -317,6 +317,7 @@
                 #sec-gallery-mod .gm-approve { background:#14b8a6; color:#fff; }
                 #sec-gallery-mod .gm-reject { background:#fee2e2; color:#b91c1c; }
                 #sec-gallery-mod .gm-del { background:#fee2e2; color:#b91c1c; }
+                #sec-gallery-mod .gm-title { font-size:12.5px; color:#334155; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
                 #sec-gallery-mod .gm-search { flex:1; min-width:0; border:1.5px solid #e2e8f0; border-radius:9px; padding:8px 12px; font-size:13px; font-family:inherit; outline:none; }
                 #sec-gallery-mod .gm-divider { margin:34px 0 0; border:0; border-top:1px solid #e2e8f0; }
               </style>
@@ -338,6 +339,11 @@
                   <span id="galPubCount" style="font-size:12.5px; color:#94a3b8;"></span>
                 </div>
                 <div id="galPubList"><div style="color:#94a3b8; font-size:13px;">검색 버튼을 눌러 불러오세요.</div></div>
+                <div id="galPubPager" style="display:none; align-items:center; justify-content:center; gap:14px; margin-top:16px;">
+                  <button id="galPubPrev" onclick="window._galPubGo && _galPubGo(-1)" style="padding:7px 16px; border:1.5px solid #e2e8f0; background:#fff; border-radius:8px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer;">이전</button>
+                  <span id="galPubInfo" style="font-size:12.5px; color:#64748b;"></span>
+                  <button id="galPubNext" onclick="window._galPubGo && _galPubGo(1)" style="padding:7px 16px; border:1.5px solid #e2e8f0; background:#fff; border-radius:8px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer;">다음</button>
+                </div>
               </div>
             </div>
 
@@ -6836,36 +6842,62 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     }
   };
 
-  // 2026-07-18: 공개된 작품 관리 — 최신순 검색 + 삭제 (dg_admin_list / dg_moderate reject)
-  window.loadGalleryPublic = async function(q){
+  // 2026-07-18: 공개된 작품 관리 — 최신순, 제목+이미지만 간략히, 8개씩 이전/다음 (dg_admin_list offset / dg_moderate reject)
+  var _galPubPage = 0, _galPubQ = '', _galPubHasNext = false, _galPubBusy = false;
+  var GAL_PUB_PER = 8;
+  window.loadGalleryPublic = function(q){ _galPubQ = (q||'').trim(); _galPubPage = 0; _galPubRender(); };
+  window._galPubGo = function(d){
+    if (_galPubBusy) return;
+    var np = _galPubPage + d;
+    if (np < 0) return;
+    if (d > 0 && !_galPubHasNext) return;
+    _galPubPage = np; _galPubRender();
+  };
+  async function _galPubRender(){
     var listEl = document.getElementById('galPubList'); if (!listEl) return;
     var cntEl = document.getElementById('galPubCount');
+    var pager = document.getElementById('galPubPager');
     var sb = gmSb();
     if (!sb) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">DB 연결이 없습니다.</div>'; return; }
+    _galPubBusy = true;
     listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">로딩 중...</div>';
     try {
-      var r = await sb.rpc('dg_admin_list', { _status: 'public', _q: (q||'').trim(), _limit: 120 });
+      // 8개 + 1개(다음 페이지 존재 여부 판별) 만 가져와 로딩 최소화
+      var r = await sb.rpc('dg_admin_list', { _status: 'public', _q: _galPubQ, _limit: GAL_PUB_PER + 1, _offset: _galPubPage * GAL_PUB_PER });
       if (r.error) throw r.error;
-      var rows = r.data || [];
-      if (cntEl) cntEl.textContent = '공개 ' + rows.length + '건';
-      if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">공개된 작품이 없습니다.</div>'; return; }
+      var all = r.data || [];
+      _galPubHasNext = all.length > GAL_PUB_PER;
+      var rows = all.slice(0, GAL_PUB_PER);
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">' + (_galPubPage>0?'더 이상 작품이 없습니다.':'공개된 작품이 없습니다.') + '</div>';
+        if (pager) pager.style.display = 'none';
+        if (cntEl) cntEl.textContent = '';
+        return;
+      }
+      if (cntEl) cntEl.textContent = _galPubQ ? ('검색결과') : '';
       listEl.innerHTML = '<div class="gm-grid">' + rows.map(function(g){
         var u = g.thumb_url || g.image_url;
-        var kw = [g.kw_ko, g.kw_en, g.kw_ja].filter(Boolean).join(' · ');
-        var dt = g.created_at ? new Date(g.created_at).toLocaleString() : '';
+        // 제목: 프롬프트(스크럽본) 한 줄만 — 없으면 키워드
+        var title = (g.prompt || g.kw_ko || '').trim();
         return '<div class="gm-item" id="gp-'+g.id+'">'
           + '<img class="gm-thumb" src="'+_gmEsc(u)+'" onclick="window.open(\''+_gmEsc(g.image_url)+'\',\'_blank\')">'
           + '<div class="gm-body">'
-            + '<div class="gm-prompt">'+_gmEsc(g.prompt||'')+'</div>'
-            + (kw ? '<div class="gm-kw">'+_gmEsc(kw)+'</div>' : '')
-            + '<div class="gm-meta">#'+g.id+' · '+(g.ratio?_gmEsc(g.ratio)+' · ':'')+dt+'</div>'
+            + '<div class="gm-title" title="'+_gmEsc(title)+'">'+_gmEsc(title || ('#'+g.id))+'</div>'
             + '<div class="gm-actions">'
               + '<button class="gm-btn gm-del" onclick="deleteGalleryItem('+g.id+')">삭제</button>'
             + '</div>'
           + '</div></div>';
       }).join('') + '</div>';
+      if (pager) {
+        pager.style.display = 'flex';
+        var prev = document.getElementById('galPubPrev'), next = document.getElementById('galPubNext'), info = document.getElementById('galPubInfo');
+        if (prev) prev.disabled = _galPubPage <= 0, prev.style.opacity = _galPubPage<=0?'0.4':'';
+        if (next) next.disabled = !_galPubHasNext, next.style.opacity = !_galPubHasNext?'0.4':'';
+        if (info) info.textContent = (_galPubPage + 1) + ' 페이지';
+      }
     } catch(e) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">불러오기 실패: '+_gmEsc(e.message||e)+'</div>'; }
-  };
+    finally { _galPubBusy = false; }
+  }
   window.deleteGalleryItem = async function(id){
     var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
     if (!confirm('이 작품을 갤러리에서 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
@@ -6875,10 +6907,11 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
       var r = await sb.rpc('dg_moderate', { _id: id, _action: 'reject' });
       if (r.error) throw r.error;
       if (window.showToast) showToast('삭제 완료', 'success');
-      if (card) card.remove();
-      var listEl = document.getElementById('galPubList');
-      var cntEl = document.getElementById('galPubCount');
-      if (listEl && !listEl.querySelector('.gm-item')) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">공개된 작품이 없습니다.</div>'; if (cntEl) cntEl.textContent = '공개 0건'; }
+      // 현재 페이지 다시 로드 (삭제 후 빈 페이지면 이전으로)
+      _galPubRender().then(function(){
+        var listEl = document.getElementById('galPubList');
+        if (_galPubPage > 0 && listEl && !listEl.querySelector('.gm-item')) { _galPubPage--; _galPubRender(); }
+      });
     } catch(e) {
       if (card) card.style.opacity = '';
       if (window.showToast) showToast('삭제 실패: '+(e.message||e), 'error'); else alert('삭제 실패: '+(e.message||e));
