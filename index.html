@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718201251';
+    var CV = '20260718201808';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -6752,18 +6752,8 @@ async function handleSubReturn() {
 }
 </script>
 
-    <!-- 디자인 검색 + 템플릿 갤러리 (2026-07-18: 미리캔버스식 2줄 마퀴 — 위:좌→우, 아래:우→좌, 크게) -->
-    <div style="max-width:600px; margin:24px auto 18px; padding:0 15px; position:relative;">
-        <input type="text" id="startTplSearch"
-               placeholder="🔍 템플릿 검색..." data-i18n-placeholder="ph_search_template"
-               onkeyup="if(window.searchTemplates) window.searchTemplates(this.value)"
-               style="width:100%; padding:12px 12px 12px 15px; border:2px solid #e2e8f0; border-radius:12px; font-size:14px; outline:none; background:#f8fafc; transition:border-color 0.2s;"
-               onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
-    </div>
-    <div class="tpl-marquee">
-        <div class="tpl-marq-row"><div class="tpl-marq-track tpl-marq-right" id="startTplTrackTop"></div></div>
-        <div class="tpl-marq-row"><div class="tpl-marq-track tpl-marq-left" id="startTplTrackBot"></div></div>
-    </div>
+    <!-- 2026-07-18: 홈 템플릿 갤러리(검색+마퀴) 제거 — 사용자 요청 -->
+
 
 <div class="gallery-section">
 
@@ -6919,7 +6909,7 @@ async function handleSubReturn() {
 
     <div class="review-section">
     <div class="review-header">
-    <h2 data-i18n="review_section_title">✨ 고객님들의 생생한 후기</h2>
+    <h2 data-i18n="review_section_title">고객님들의 생생한 후기</h2>
     <p data-i18n="review_section_desc">카멜레온으로 완성된 멋진 결과물들을 확인해보세요.</p>
 </div>
 
@@ -12478,7 +12468,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         // 허니콤보드 소분류 그리드 (메인 VIP 섹션)
         if (typeof window.loadHomeHcGrid === 'function') window.loadHomeHcGrid();
 
-        if(window.searchTemplates) window.searchTemplates('');
+        /* 2026-07-18: 홈 템플릿 갤러리 제거 — 초기 로드 비활성화 */
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 20);
@@ -19082,7 +19072,7 @@ if (w >= 20 && h >= 20) {
         if (typeof renderQuickMenu === 'function') renderQuickMenu();
         
         // 3. 템플릿 및 상품 로드
-        if(window.searchTemplates) window.searchTemplates('');
+        /* 2026-07-18: 홈 템플릿 갤러리 제거 — 초기 로드 비활성화 */
         if (window.preloadLanguageFont) window.preloadLanguageFont();
         if (typeof loadSpecialProducts === 'function') {
             loadSpecialProducts('hotDealSection', 'hotDealGrid', 'is_hot_deal', 20);
