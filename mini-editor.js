@@ -94,6 +94,11 @@
         if (!m) { m = document.createElement('div'); m.className = 'me-artboard-mask'; }
         // 항상 마지막 자식으로(=DOM 상 최상단; z-index 로도 최상단이라 이중 안전)
         stage.appendChild(m);
+        // 2026-07-19: 경계 점선은 별도 레이어로 — 선택된 항목(veil 위)보다도 위에 있어야
+        //   조작 중에도 "어디서 잘리는지" 가 계속 보인다.
+        var l = stage.querySelector(':scope > .me-artboard-line');
+        if (!l) { l = document.createElement('div'); l.className = 'me-artboard-line'; }
+        stage.appendChild(l);
     }
     window._meEnsureArtboardMask = _meEnsureArtboardMask;
     // 2026-06-27: 줄자 대신 캔버스 크기(mm)를 #meSizeLabel 에 표시.
