@@ -1353,15 +1353,12 @@
         en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
       cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
     },
-    { // 2) 원클릭 AI 디자인 + 로고(선택)
+    { // 2) 디자인 문구 입력 + 원클릭 AI 디자인
       target: ['.me-intro-ai', '#aiNbAi'], mode: 'next',
       onEnter: function () { return _secVisible('#aiNbAi'); },
-      buttons: [
-        { action: '_soScarciPickLogo', label: { kr: '📎 로고·참고사진 올리기', ja: '📎 ロゴ·参考写真をアップ', en: '📎 Upload logo/refs' } }
-      ],
-      msg: { kr: '<b>원클릭 AI디자인</b>으로 입체 글씨 포토존을 만들어요. 넣고 싶은 <b>문구</b>는 AI 창에 그대로 적으면 돼요. 로고·참고사진이 있으면 아래 <b>[로고·참고사진 올리기]</b>로 올려주세요. 다 되면 <b>다음</b>!',
-        ja: '<b>ワンクリックAIデザイン</b> で立体文字フォトゾーンを作ります。入れたい <b>文言</b> はAI画面にそのまま入力。ロゴ·参考写真があれば下の <b>[ロゴ·参考写真をアップ]</b> から。完成したら <b>次へ</b>!',
-        en: 'Make a 3D-letter photo zone with <b>one-click AI design</b>. Type the <b>text</b> you want right in the AI window. Got a logo/reference? Use <b>[Upload logo/refs]</b> below. When done, tap <b>Next</b>!' },
+      msg: { kr: '오른쪽 <b>[디자인 문구]</b>에 포토존에 넣을 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요. 그다음 <b>원클릭 AI디자인</b>을 누르면 적은 문구로 입체 글씨 포토존을 만들어드려요. 다 되면 <b>다음</b>!',
+        ja: '右の <b>[デザイン文字]</b> にフォトゾーンの <b>タイトル文</b> と <b>サブ文</b> をご記入ください。その後 <b>ワンクリックAIデザイン</b> を押すと、入力した文言で立体文字フォトゾーンを作ります。完成したら <b>次へ</b>!',
+        en: 'Enter the <b>title</b> and <b>subtitle</b> for your photo zone in <b>[Design text]</b> on the right. Then tap <b>one-click AI design</b> to build a 3D-letter photo zone from your text. When done, tap <b>Next</b>!' },
       cheer: { kr: '디자인 시작! 🎨', ja: 'デザイン開始! 🎨', en: 'Designing! 🎨' }
     },
     { // 3) 완료 확인 — 다음이동(=다음) / 다시만들기

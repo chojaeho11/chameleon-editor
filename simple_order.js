@@ -2010,46 +2010,38 @@ html, body { background: #ffffff !important; }
             ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
           </div>
           <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
-            ${tr('좌측에 <b>로고와 참고 사진·글귀</b> 등을 올려주시면, 결제 후 전문 디자이너가 입체 디자인을 해드립니다 (누끼·칼선 포함).<br>결제하면 자동으로 디자인 작업이 의뢰되며, <b style="color:#16a34a;">디자인은 무료</b>입니다.',
-                 '左側にロゴや参考写真・テキストをアップロードしていただくと、お支払い後に専門デザイナーが立体デザインを行います。<br>お支払いで自動的にデザイン依頼され、<b style="color:#16a34a;">デザインは無料</b>です。',
-                 'Upload your logo, reference photos & text on the left — after payment a designer will create the 3D design (cutout & cutline included).<br>The design is auto-requested on payment and is <b style="color:#16a34a;">free of charge</b>.')}
+            ${tr('<b>원클릭 AI디자인</b>으로 포토존을 만들고 <b>문구·요청사항</b>을 적어주시면, 결제 후 전문 디자이너가 그 디자인을 참고해 입체 디자인을 해드립니다 (누끼·칼선 포함).<br>결제하면 자동으로 디자인 작업이 의뢰되며, <b style="color:#16a34a;">디자인은 무료</b>입니다.',
+                 '<b>ワンクリックAIデザイン</b> でフォトゾーンを作り、<b>文言·ご要望</b> をご記入いただくと、お支払い後に専門デザイナーがそれを参考に立体デザインを行います（背景除去·カットライン含む）。<br>お支払いで自動的にデザイン依頼され、<b style="color:#16a34a;">デザインは無料</b>です。',
+                 'Make a photo zone with <b>one-click AI design</b> and enter your <b>text & requests</b> — after payment a designer crafts the 3D design referring to it (cutout & cutline included).<br>The design is auto-requested on payment and is <b style="color:#16a34a;">free of charge</b>.')}
           </div>
         </div>
 
-        <!-- 2026-06-04: 글씨 스카시 family 전용 — 타이틀 문구 + 서브 문구 입력 (우측) -->
-        <div class="so-section" id="soScarciTextInputs" style="display:none;">
-          <div class="so-section-title">📝 ${tr('디자인 문구', 'デザイン文字', 'Design text')}</div>
+        <!-- 2026-07-18: 옛 디자인 문구 섹션(#soScarciTextInputs) 제거 — 타이틀/서브 문구는 #soScarciRequest 로 통합. -->
+
+        <!-- 2026-07-18: 글씨 스카시 전용 — 디자인 문구(타이틀/서브) + 요청사항. 참고사진 업로드는 제거(의미없음). AI 시안을 참고해 디자이너가 제작. scarci 에서 항상 표시. -->
+        <div class="so-section" id="soScarciRequest" style="display:none;">
+          <div class="so-section-title">📝 ${tr('디자인 문구 · 요청사항', 'デザイン文字 · ご要望', 'Design text / Requests')}</div>
+          <div style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:12px;">
+            ${tr('포토존에 넣을 문구를 적어주세요. 만든 디자인을 참고해서 전문 디자이너가 작업하여 고객님께 연락드립니다.',
+                 'フォトゾーンに入れる文言をご記入ください。作成したデザインを参考に、専門デザイナーが制作してご連絡します。',
+                 'Enter the text for your photo zone. A professional designer crafts it referring to your design and contacts you.')}
+          </div>
           <div style="margin-bottom:10px;">
             <label for="soScarciTitle" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('타이틀 문구', 'タイトル文', 'Title text')} <span style="color:#dc2626; font-weight:900;">*</span></label>
             <input type="text" id="soScarciTitle" oninput="window._soOnScarciTitleChange()"
               placeholder="${tr('예: VISANG VIVAME', '例: VISANG VIVAME', 'e.g. VISANG VIVAME')}"
               style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
           </div>
-          <div>
+          <div style="margin-bottom:10px;">
             <label for="soScarciSub" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('서브 문구', 'サブ文', 'Subtitle')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
             <input type="text" id="soScarciSub" oninput="window._soOnScarciSubChange()"
               placeholder="${tr('예: 2025 신입사원 환영', '例: 2025年新入社員歓迎', 'e.g. Welcome New Hires 2025')}"
               style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
           </div>
-        </div>
-
-        <!-- 2026-07-18: 글씨 스카시 전용 — 로고·참고사진 업로드 + 요청사항(자유 입력). AI 시안을 참고해 디자이너가 제작. scarci 에서 항상 표시. -->
-        <div class="so-section" id="soScarciRequest" style="display:none;">
-          <div class="so-section-title">📝 ${tr('로고 · 요청사항', 'ロゴ · ご要望', 'Logo / Requests')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></div>
-          <div style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:10px;">
-            ${tr('만든 디자인을 참고해서 전문 디자이너가 작업하여 고객님께 연락드립니다. 로고·참고사진이 있으면 올려주시고, 색상·글씨체·분위기 등 원하시는 점이 있으면 적어주세요.',
-                 '作成したデザインを参考に、専門デザイナーが制作してご連絡します。ロゴ·参考写真があればアップロードし、色·書体·雰囲気などご希望があればご記入ください。',
-                 'A professional designer will craft it referring to your design and contact you. Upload a logo/reference if any, and note wishes — colors, fonts, mood, etc.')}
-          </div>
-          <button type="button" onclick="window._soScarciPickLogo && window._soScarciPickLogo()"
-            style="width:100%; padding:12px; border:2px dashed #94a3b8; border-radius:11px; background:#f8fafc; color:#334155; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:4px;">
-            ${tr('로고 · 참고사진 올리기 (여러 장 가능)', 'ロゴ · 参考写真をアップロード (複数可)', 'Upload logo / references (multiple)')}
-          </button>
-          <div id="soScarciRefList" style="display:none; margin-top:10px; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px;"></div>
-          <div style="margin-top:12px;">
-            <label for="soScarciReq" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('요청사항', 'ご要望', 'Requests')}</label>
-            <textarea id="soScarciReq" oninput="window._soOnScarciReqChange && window._soOnScarciReqChange()" rows="3"
-              placeholder="${tr('예: 골드 계열 고급스럽게, 회사 로고 크게 넣어주세요', '例: ゴールド系で高級感、ロゴを大きく', 'e.g. Elegant gold tone, make the logo bigger')}"
+          <div>
+            <label for="soScarciReq" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('요청사항', 'ご要望', 'Requests')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <textarea id="soScarciReq" oninput="window._soOnScarciReqChange && window._soOnScarciReqChange()" rows="2"
+              placeholder="${tr('예: 골드 계열 고급스럽게 해주세요', '例: ゴールド系で高級感を', 'e.g. Elegant gold tone please')}"
               style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:500; box-sizing:border-box; font-family:inherit; resize:vertical; line-height:1.5;"></textarea>
           </div>
         </div>
@@ -13463,11 +13455,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-04: 글씨 스카시 family 전용 — 안내문 + 타이틀/서브 문구 input + 업로드 라벨 변경 + 가격 +50,000원
         try {
             var _scNotice = document.getElementById('soScarciNotice');
-            var _scTextIn = document.getElementById('soScarciTextInputs');
             if (_scNotice) _scNotice.style.display = _isScarci ? '' : 'none';
-            // 2026-07-18: 디자인 문구(타이틀/서브) 입력은 AI 디자인 창으로 통합 → 별도 섹션 숨김.
-            //   고객이 AI 프롬프트에 적은 문구를 삽입 시 state.scarciTitle 로 캡처(디자이너 전달용).
-            if (_scTextIn) _scTextIn.style.display = 'none';
+            // 2026-07-18: 디자인 문구(타이틀/서브)는 #soScarciRequest 섹션으로 통합(참고사진 업로드 제거).
             // 타이틀/서브/요청사항 input 초기화
             var _scT = document.getElementById('soScarciTitle');
             var _scS = document.getElementById('soScarciSub');
