@@ -7013,17 +7013,26 @@
                     if (_meAiPdKind === 'box') {
                         // 2026-07-19: 허니콤 박스 — 좌=완성 박스 목업 / 우=6면 전개도(다이라인).
                         //   고객이 입력한 W×H×D 를 그대로 지시해 비율이 실제 박스와 맞게.
+                        // 2026-07-19: 전개도 제거 — 우측은 "정면 1면" 평면 시안만. (사장님 요청)
+                        //   전개도는 AI 가 면 개수·접선을 자주 틀리고, 실제 칼선은 어차피 디자이너가 도안에 맞춰 작업한다.
                         var _bd = _pdt.boxDims;
-                        var _boxSize = _bd
-                            ? ' The box measures ' + _bd.w + 'mm wide x ' + _bd.h + 'mm high x ' + _bd.d + 'mm deep — render both the mockup and the dieline in these exact proportions.'
-                            : '';
+                        var _boxSize = '', _faceRatio = '';
+                        if (_bd) {
+                            _boxSize = ' The box measures exactly ' + _bd.w + 'mm wide x ' + _bd.h + 'mm high x ' + _bd.d + 'mm deep.'
+                                + ' CRITICAL: reproduce these proportions faithfully — the width:height:depth relationship must visibly match these numbers'
+                                + (_bd.w === _bd.h ? ' (the front face is a perfect SQUARE).' : '.');
+                            // 정면 = 가로 W x 세로 H. 비율을 숫자로 못박아 "약간 다른 비율" 로 나오는 걸 막는다.
+                            var _g = (function gcd(a, b) { return b ? gcd(b, a % b) : a; })(_bd.w, _bd.h) || 1;
+                            _faceRatio = ' The front face measures ' + _bd.w + 'mm x ' + _bd.h + 'mm — draw it at EXACTLY that aspect ratio ('
+                                + (_bd.w / _g) + ':' + (_bd.h / _g) + (_bd.w === _bd.h ? ', i.e. a perfect square' : '') + '), not a generic rectangle.';
+                        }
                         _bannerHint = ' Create a WIDE two-panel packaging design presentation board, SPLIT LEFT AND RIGHT.'
                             + ' LEFT HALF: a photorealistic MOCKUP of the closed, assembled CORRUGATED CARDBOARD BOX, shown at a three-quarter angle so the front, one side and the top are all visible.' + _boxSize
-                            + ' RIGHT HALF: the FLAT UNFOLDED DIELINE (net) of that same box laid out flat, showing ALL SIX FACES — front, back, left, right, top and bottom — connected as one continuous unfolded sheet, drawn straight-on with no perspective, with thin fold lines between the panels and small glue/tuck flaps at the edges. Each face must carry the SAME artwork it has on the mockup, so the two halves clearly correspond.'
-                            + ' CRITICAL: the artwork, colors and typography must be IDENTICAL between the assembled mockup and the dieline.'
-                            + ' CRITICAL: show NO merchandise or props — no products spilling out, no people, no hands. Just the box and its dieline.'
+                            + ' RIGHT HALF: a large FLAT, STRAIGHT-ON view of the BOX FRONT FACE ONLY — just that single panel of artwork by itself, filling the right half, with no perspective, no angle, no other faces, no fold lines and no dieline. Show it like finished print artwork so the design reads clearly at full size.' + _faceRatio
+                            + ' CRITICAL: the front-face artwork must be IDENTICAL on the left mockup and the right flat view.'
+                            + ' CRITICAL: show NO merchandise or props — no products spilling out, no people, no hands. Just the box and its front artwork.'
                             + _pdBrandClause + _pdProdClause + _pdMoodClause
-                            + ' Keep all printed text crisp, upright and readable, and keep it well inside each face away from the fold lines and edges, since panels get creased and trimmed.'
+                            + ' Keep all printed text crisp, upright and readable, and keep it well inside the face away from its edges, since panels get creased and trimmed.'
                             + ' Evenly lit studio product photography for the mockup, plain uncluttered light neutral background behind both halves. This is a packaging design concept board for a printed cardboard box.';
                     } else if (_meAiPdKind === 'table') {
                         // 허니콤 테이블(hb_tb_*) — 부스/행사용 조립식 테이블(카운터). 인쇄면은 앞면 패널.
