@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718195858';
+    var CV = '20260718201251';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -19197,8 +19197,13 @@ if (w >= 20 && h >= 20) {
     async function loadTemplatePage(page) {
         var topT = document.getElementById('startTplTrackTop');
         var botT = document.getElementById('startTplTrackBot');
-        if (!topT || !botT) return;
-        if (!sb) { console.warn("[loadTemplatePage] sb가 아직 초기화되지 않음"); return; }
+        // 2026-07-18: 트랙/ sb 가 아직 준비 안 됐으면 준비될 때까지 재시도(최대 ~8s) — 빈 화면 방지
+        if (!topT || !botT || !sb) {
+            loadTemplatePage._t = (loadTemplatePage._t || 0) + 1;
+            if (loadTemplatePage._t <= 20) setTimeout(function () { loadTemplatePage(page); }, 400);
+            return;
+        }
+        loadTemplatePage._t = 0;
         topT.innerHTML = '<div style="padding:30px 12px; color:#888;"><i class="fa-solid fa-spinner fa-spin"></i> 로딩 중...</div>';
         botT.innerHTML = '';
         try {
@@ -19238,6 +19243,7 @@ if (w >= 20 && h >= 20) {
                 return;
             }
             _tplMarqRows = data;
+            try { console.log('[tplMarq] rendered', data.length, 'items'); } catch(_){}
             var half = Math.ceil(data.length / 2);
             var top = data.slice(0, half);
             var bot = data.slice(half);
