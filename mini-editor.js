@@ -6260,9 +6260,10 @@
     var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
     var _meAiRatio = '16:9';      // 기본 가로 16:9
     var _meAiScarci = false;      // 2026-07-18: 글씨 스카시 = 입체 글씨 포토존 컨셉 모드
+    var _meAiPaperDisplay = false;// 2026-07-18: 종이매대 = 제품 썸네일 구조 유지 목업 모드
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
-    var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽)
+    var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
 
     function _meAiEnsureModal() {
         if (document.getElementById('meAiGenModal')) return;
@@ -6341,7 +6342,11 @@
         var _scAcceptBtn = document.getElementById('meAiScAccept');
         if (_scRemakeBtn) _scRemakeBtn.addEventListener('click', function () {
             _meAiGenClose();
-            try { if (typeof window._soScarciEditText === 'function') window._soScarciEditText(); } catch (_) {}
+            // 2026-07-18: 종이매대는 브랜드/제품/컨셉 입력칸으로, 스카시는 문구칸으로 돌아감
+            try {
+                if (_meAiPaperDisplay) { if (typeof window._soPdEditText === 'function') window._soPdEditText(); }
+                else if (typeof window._soScarciEditText === 'function') window._soScarciEditText();
+            } catch (_) {}
         });
         if (_scAcceptBtn) _scAcceptBtn.addEventListener('click', _meAiScarciAccept);
 
@@ -6368,18 +6373,24 @@
     // 참조 사진 설정/해제 + 썸네일·안내 토글
     function _meAiSetRef(dataUrl, mode) {
         _meAiRefDataUrl = dataUrl || null;
-        _meAiRefMode = (mode === 'reference') ? 'reference' : 'blend';   // 파일 업로드=blend, 갤러리 픽=reference
+        // 파일 업로드=blend, 갤러리 픽=reference, 종이매대 썸네일=structure(형태 유지)
+        _meAiRefMode = (mode === 'reference' || mode === 'structure') ? mode : 'blend';
         var thumb = document.getElementById('meAiRefThumb');
         var img = document.getElementById('meAiRefImg');
         var btn = document.getElementById('meAiRefBtn');
         var hint = document.getElementById('meAiRefHint');
         var isRef = (_meAiRefMode === 'reference');
+        var isStruct = (_meAiRefMode === 'structure');
         if (_meAiRefDataUrl) {
             if (img) img.src = _meAiRefDataUrl;
             if (thumb) thumb.style.display = 'inline-flex';
             if (hint) {
                 hint.style.display = 'block';
-                hint.textContent = isRef
+                hint.textContent = isStruct
+                    ? _meAiTr('이 매대 모양 그대로 두고, 겉면 디자인만 새로 입혀요.',
+                              'この什器の形はそのままに、表面のデザインだけ新しく仕上げます。',
+                              'We keep this display\'s exact shape and only redress its surfaces.')
+                    : isRef
                     ? _meAiTr('이 작품을 참고해 비슷한 스타일로 새로 디자인해요. 어떻게 만들지 아래에 적어주세요.',
                               'この作品を参考に、似た雰囲気で新しくデザインします。下に内容を入力してください。',
                               'We\'ll design a NEW piece inspired by this one\'s style. Describe it below.')
@@ -6387,7 +6398,9 @@
                               'お写真を活かしてデザインします。どう仕上げるか下に入力してください。',
                               'We\'ll design using your photo. Describe how below.');
             }
-            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + (isRef
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + (isStruct
+                ? _meAiTr('매대 사진 바꾸기', '什器写真を変更', 'Change display photo')
+                : isRef
                 ? _meAiTr('참고 작품 바꾸기', '参考作品を変更', 'Change reference')
                 : _meAiTr('사진 바꾸기', '写真を変更', 'Change photo'));
         } else {
@@ -6492,10 +6505,24 @@
         //   simple_order._soAiPresetHint() = 'namecard' | 'banner' | null.
         //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
         _meAiScarci = false;
+        _meAiPaperDisplay = false;
         var _scarciAuto = false, _scarciTitleTxt = '', _scarciSubTxt = '';
+        var _pdAuto = false, _pdThumbUrl = '', _pdTxt = null;
         try {
             var _hint = (typeof window._soAiPresetHint === 'function') ? window._soAiPresetHint() : null;
-            if (_hint === 'scarci') {
+            if (_hint === 'paper-display') {
+                // 종이매대: 제품 썸네일(매대 구조)을 참조로 두고 브랜드/제품/컨셉 문구로 바로 자동 생성.
+                _meAiPaperDisplay = true;
+                _meAiRatio = '9:16';   // 바닥에 서는 세로형 매대 목업
+                _pdTxt = (typeof window._soPdAiText === 'function') ? (window._soPdAiText() || {}) : {};
+                // 브랜드/타이틀이 없으면 열지 않고 입력칸으로 안내
+                if (!(_pdTxt.brand || '').trim()) {
+                    try { if (typeof window._soPdNeedBrand === 'function') window._soPdNeedBrand(); } catch (_nb) {}
+                    return;
+                }
+                _pdThumbUrl = (typeof window._soPdThumbUrl === 'function') ? (window._soPdThumbUrl() || '') : '';
+                _pdAuto = true;
+            } else if (_hint === 'scarci') {
                 // 글씨 스카시 = 입체 글씨 포토존. 타이틀/서브 문구로 바로 자동 생성(프롬프트 입력창 숨김).
                 _meAiScarci = true;
                 _meAiRatio = '16:9';
@@ -6531,17 +6558,41 @@
         var _hintEl = document.getElementById('meAiHint');
         var _scBtns = document.getElementById('meAiScarciBtns');
         if (_scBtns) _scBtns.style.display = 'none';
-        if (_scarciAuto) {
+        if (_scarciAuto || _pdAuto) {
             if (_inputArea) _inputArea.style.display = 'none';
             if (_hintEl) _hintEl.style.display = 'none';
             var _pEl2 = document.getElementById('meAiPrompt');
-            if (_pEl2) _pEl2.value = [_scarciTitleTxt, _scarciSubTxt].filter(Boolean).join(' ');
+            if (_pEl2) _pEl2.value = _pdAuto
+                ? [(_pdTxt.brand || ''), (_pdTxt.products || ''), (_pdTxt.concept || '')].filter(Boolean).join(' / ')
+                : [_scarciTitleTxt, _scarciSubTxt].filter(Boolean).join(' ');
         } else {
             if (_inputArea) _inputArea.style.display = '';
             if (_hintEl) _hintEl.style.display = '';
         }
         m.style.display = 'flex';
-        if (_scarciAuto) {
+        if (_pdAuto) {
+            // 종이매대: 제품 썸네일을 dataURL 참조(structure)로 실은 뒤 생성 시작.
+            //   썸네일을 못 가져와도(CORS/404) 문구만으로 생성은 진행.
+            (async function () {
+                try {
+                    if (_pdThumbUrl) {
+                        var _du = _pdThumbUrl;
+                        if (_du.indexOf('data:') !== 0) {
+                            var _r = await fetch(_pdThumbUrl, { mode: 'cors' });
+                            var _b = await _r.blob();
+                            _du = await new Promise(function (rs, rj) {
+                                var fr = new FileReader();
+                                fr.onload = function () { rs(String(fr.result)); };
+                                fr.onerror = rj;
+                                fr.readAsDataURL(_b);
+                            });
+                        }
+                        _meAiSetRef(_du, 'structure');
+                    }
+                } catch (_pdRef) { console.warn('[meAi] paper-display thumb ref', _pdRef); }
+                try { _meAiGenerate(); } catch (_g2) {}
+            })();
+        } else if (_scarciAuto) {
             // 바로 생성 시작
             setTimeout(function () { try { _meAiGenerate(); } catch (_g) {} }, 60);
         } else {
@@ -6649,6 +6700,14 @@
                 if (typeof window._soScarciAttachAiImage === 'function') window._soScarciAttachAiImage(_meAiPendingUrl, _scPromptTxt);
             } catch (_sc) {}
         }
+        // 2026-07-18: 종이매대 — 만든 매대 목업을 디자이너 참고자료로 자동 첨부 (결제 시 design_requests.files 로 전달).
+        if (_meAiPaperDisplay) {
+            try {
+                var _pdPromptEl = document.getElementById('meAiPrompt');
+                var _pdPromptTxt = _pdPromptEl ? (_pdPromptEl.value || '').trim() : '';
+                if (typeof window._soPdAttachAiImage === 'function') window._soPdAttachAiImage(_meAiPendingUrl, _pdPromptTxt);
+            } catch (_pd) {}
+        }
     }
     function _meAiInsert() { _meAiDoInsert(); _meAiGenClose(); }
     // 2026-07-18: 스카시 '이대로 제작' — 삽입+디자이너 첨부 + 작품 갤러리 등록 후 바로 닫고 배송으로 진행(확인 화면 없음)
@@ -6662,6 +6721,7 @@
         _meAiGenClose();   // 확인 과정 없이 바로 닫음
         // 튜토리얼 대기(waitEvent) 진행 — '이대로 제작' 완료 신호
         try { document.dispatchEvent(new CustomEvent('me-scarci-accepted')); } catch (_ev) {}
+        try { if (_meAiPaperDisplay) document.dispatchEvent(new CustomEvent('me-pd-accepted')); } catch (_ev2) {}
         // 바로 배송 단계로 스크롤 (비튜토리얼 포함)
         try { var _sch = document.getElementById('soScheduleSection'); if (_sch) _sch.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_scl) {}
     }
@@ -6782,7 +6842,7 @@
             res.style.color = '';
             res.innerHTML =
                 '<div style="width:100%; padding:6px 8px;">' +
-                  '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + (_meAiScarci ? _meAiTr('디자인을 만들고 있어요 · 1분만 기다려주세요', 'デザインを作成中 · 1分ほどお待ちください', 'Creating your design · about 1 min') : _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight')) + '</div>' +
+                  '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + ((_meAiScarci || _meAiPaperDisplay) ? _meAiTr('디자인을 만들고 있어요 · 1분만 기다려주세요', 'デザインを作成中 · 1分ほどお待ちください', 'Creating your design · about 1 min') : _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight')) + '</div>' +
                   '<div style="height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden;">' +
                     '<div id="meAiBar" style="height:100%; width:6%; background:linear-gradient(90deg,#6366f1,#4338ca); border-radius:99px; transition:width .45s ease;"></div>' +
                   '</div>' +
@@ -6848,21 +6908,48 @@
                             + ' Keep the event NAME only in the big top 3D letters.' + _edgeClause + ' Present it as a standalone photo-zone installation at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
                     }
                 }
-                // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시는 제외)
-                var _isPoster = (!_meAiScarci) && (_meAiRatio === '9:16' || _meAiRatio === '16:9');
+                // 2026-07-18: 종이매대 — 첨부한 제품 썸네일의 매대 "구조"는 그대로 두고 겉면 그래픽만 새로 입힌 목업.
+                //   실제 인쇄 데이터/칼선은 결제 후 전문 디자이너가 제작 (이건 컨셉 참고용).
+                if (_meAiPaperDisplay) {
+                    var _pdt = (typeof window._soPdAiText === 'function') ? (window._soPdAiText() || {}) : {};
+                    var _pdBrandClause = _pdt.brand
+                        ? ' The BRAND NAME / HEADER text is: "' + _pdt.brand + '" — render it large and clearly legible on the top header board of the display.'
+                        : ' Render the brand name from the input large on the top header board.';
+                    var _pdProdClause = _pdt.products
+                        ? ' The products and supporting copy to show are: "' + _pdt.products + '". Show these as the actual retail products sitting on the shelves, plus short readable copy on the shelf fronts or side panels.'
+                        : ' Fill the shelves with plausible retail products that suit the brand, and keep any extra copy short.';
+                    var _pdMoodClause = _pdt.concept
+                        ? ' The color scheme and overall mood must be: "' + _pdt.concept + '". Apply this palette consistently across the header, shelf fronts and side panels.'
+                        : ' Choose a clean color scheme that suits the brand and apply it consistently.';
+                    _bannerHint = ' Render a photorealistic MOCKUP of the CARDBOARD RETAIL DISPLAY STAND shown in the attached reference image.'
+                        + ' CRITICAL: keep the EXACT physical STRUCTURE of the attached display — the same silhouette, the same number of shelves at the same heights, the same header/topper shape, the same side panels, the same proportions and the same viewing angle. Do NOT invent a different fixture, do NOT add or remove shelves, do NOT change its shape. ONLY replace the printed GRAPHICS on its surfaces.'
+                        + _pdBrandClause + _pdProdClause + _pdMoodClause
+                        + ' Keep all printed text crisp, upright and readable, and keep it well inside each panel away from the panel edges and fold lines, since panels get trimmed and creased.'
+                        + ' Show the whole display standing on a clean floor, straight-on front view, evenly lit studio product photography, plain uncluttered light background, NO people, NO other fixtures in frame. This is a design concept mockup of a printed cardboard display stand.';
+                }
+                // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시/종이매대는 제외)
+                var _isPoster = (!_meAiScarci) && (!_meAiPaperDisplay) && (_meAiRatio === '9:16' || _meAiRatio === '16:9');
                 if (_isPoster) {
                     _bannerHint += ' Design it as an EVENT POSTER. Read the user text as poster information (main title, host/organizer, date & time, place, and any extra details) and arrange it with a clear visual hierarchy: the MAIN TITLE largest and most eye-catching, with the host, date/time and location shown as clearly readable supporting text (often near the bottom). Make it attractive and well-composed, and keep all text within the central safe area away from the edges.';
                 }
                 // 기본 안전영역 지시 — 배경은 가장자리까지 꽉 채우되(풀블리드) 글자·핵심요소만 안쪽에.
                 //   ※ "여백" 이라고 하면 실제 테두리를 그려버려서, 테두리 금지 + 배경 풀블리드를 명시.
                 //   2026-07-18: 대지 비율이 생성 비율과 달라 삽입(cover) 시 가장자리가 잘리므로 사방 여백을 크게 강조.
-                var genPrompt1 = prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image.'
-                    + ' IMPORTANT SAFE MARGIN: keep ALL text and every important element inside the CENTER, staying at least 18-22% away from every edge (top, bottom, left AND right). Leave a LARGE empty background margin on all four sides — roughly one-fifth of the width/height on each side must be clear background. The final print may be cropped or a different aspect ratio, so nothing important — especially text — may sit near any edge, or it will be cut off.'
-                    + _bannerHint;
+                // 2026-07-18: 종이매대는 매대 전체가 프레임에 들어와야 하는 목업이라 '사방 여백' 지시를 빼고
+                //   대신 매대가 잘리지 않게 프레임 안에 온전히 담으라고 지시. (그 외 제품은 기존 안전영역 유지)
+                var genPrompt1 = _meAiPaperDisplay
+                    ? prompt + ' Frame the shot so the ENTIRE display stand is fully visible inside the image — do not crop the header, the base, or the sides. Leave a little clean floor and background around it. Do NOT draw any border, frame or outline around the image itself.'
+                        + _bannerHint
+                    : prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image.'
+                        + ' IMPORTANT SAFE MARGIN: keep ALL text and every important element inside the CENTER, staying at least 18-22% away from every edge (top, bottom, left AND right). Leave a LARGE empty background margin on all four sides — roughly one-fifth of the width/height on each side must be clear background. The final print may be cropped or a different aspect ratio, so nothing important — especially text — may sit near any edge, or it will be cut off.'
+                        + _bannerHint;
                 // 2026-07-18: 참조 이미지가 있으면 모드에 따라 다른 지시 + refImage 전달(edits API)
                 //   blend = 사진을 살려 합성 / reference = 스타일·구도만 참고해 완전히 새로 (내용 복사 금지)
                 if (_meAiRefDataUrl) {
-                    if (_meAiRefMode === 'reference') {
+                    if (_meAiRefMode === 'structure') {
+                        // 종이매대: 첨부 썸네일의 형태·구조는 그대로, 겉면 그래픽만 교체
+                        genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the physical object. Reproduce its exact shape, proportions, shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below. Do NOT copy the reference\'s branding, text or artwork. ' + genPrompt1;
+                    } else if (_meAiRefMode === 'reference') {
                         genPrompt1 = 'Use the attached image ONLY as a STYLE, LAYOUT and MOOD reference. Create a COMPLETELY NEW, original design in a similar visual style, color mood and composition — do NOT copy its text, logos, photos, or specific content. ' + genPrompt1;
                     } else {
                         genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
@@ -6911,8 +6998,8 @@
             }
             _meAiPendingUrl = url;
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
-            // 2026-07-18: 스카시면 결과 버튼(수정해서 다시만들기/이대로 제작)으로 스와프, 아니면 기존 '캔버스에 넣기'
-            if (_meAiScarci) {
+            // 2026-07-18: 스카시/종이매대면 결과 버튼(수정해서 다시만들기/이대로 제작)으로 스와프, 아니면 기존 '캔버스에 넣기'
+            if (_meAiScarci || _meAiPaperDisplay) {
                 if (ins) ins.style.display = 'none';
                 var _scB = document.getElementById('meAiScarciBtns'); if (_scB) _scB.style.display = 'block';
                 var _tip2s=document.getElementById('meAiTip'); if(_tip2s)_tip2s.style.display='none';

@@ -2046,6 +2046,34 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-07-18: 종이매대 전용 — 브랜드/제품/컨셉 입력. 원클릭 AI가 제품 썸네일(구조) 참고해 매대 목업 생성. 종이매대에서만 표시. -->
+        <div class="so-section" id="soPaperDisplayRequest" style="display:none;">
+          <div class="so-section-title">📝 ${tr('매대 디자인 컨셉', '什器デザインコンセプト', 'Display design concept')}</div>
+          <div style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:12px;">
+            ${tr('브랜드·제품·컨셉을 적으면 원클릭 AI가 이 매대 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                 'ブランド·製品·コンセプトを入力すると、ワンクリックAIがこの什器の形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                 'Enter your brand, products and concept — one-click AI makes a mockup in this display\'s shape. A professional designer then crafts the real print design from it and contacts you.')}
+          </div>
+          <div style="margin-bottom:10px;">
+            <label for="soPdBrand" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('브랜드명 · 타이틀 문구', 'ブランド名·タイトル', 'Brand / Title')} <span style="color:#dc2626; font-weight:900;">*</span></label>
+            <input type="text" id="soPdBrand" oninput="window._soOnPdBrandChange()"
+              placeholder="${tr('예: 릴리스 키친 · Natural & Nutritious', '例: リリーズキッチン', 'e.g. Lilys Kitchen · Natural & Nutritious')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:700; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div style="margin-bottom:10px;">
+            <label for="soPdProducts" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('주요 제품 · 내용 문구', '主要製品·内容', 'Products / Content')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soPdProducts" oninput="window._soOnPdProductsChange()"
+              placeholder="${tr('예: 강아지 습식 사료, REAL MEAT / HEALTH BENEFITS', '例: ドッグフード, REAL MEAT', 'e.g. Dog wet food, REAL MEAT / HEALTH BENEFITS')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:600; box-sizing:border-box; font-family:inherit;">
+          </div>
+          <div>
+            <label for="soPdConcept" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('색상 · 분위기 컨셉', '色·雰囲気', 'Color / Mood')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></label>
+            <input type="text" id="soPdConcept" oninput="window._soOnPdConceptChange()"
+              placeholder="${tr('예: 초록 자연 컨셉, 고급스럽고 깔끔하게', '例: グリーン自然コンセプト', 'e.g. Green natural concept, clean & premium')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:500; box-sizing:border-box; font-family:inherit;">
+          </div>
+        </div>
+
         <!-- 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 안내 + 4종 입력 (우측) -->
         <div class="so-section" id="soInstaNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -5543,6 +5571,10 @@ html, body { background: #ffffff !important; }
         var el = document.getElementById('soScarciReq');
         if (el) state.scarciRequest = (el.value || '').trim();
     };
+    // 2026-07-18: 종이매대 — 브랜드/제품/컨셉 입력 핸들러
+    window._soOnPdBrandChange = function () { var el = document.getElementById('soPdBrand'); if (el) state.pdBrand = (el.value || '').trim(); };
+    window._soOnPdProductsChange = function () { var el = document.getElementById('soPdProducts'); if (el) state.pdProducts = (el.value || '').trim(); };
+    window._soOnPdConceptChange = function () { var el = document.getElementById('soPdConcept'); if (el) state.pdConcept = (el.value || '').trim(); };
     // 2026-07-18: 튜토리얼/흐름용 전역 — 로고 업로드 열기 / AI 재생성 / 요청사항 노출.
     window._soScarciPickLogo = function () {
         try { var f = document.getElementById('soScarciRefFile'); if (f) f.click(); } catch (_) {}
@@ -6403,6 +6435,7 @@ html, body { background: #ffffff !important; }
     window._soAiPresetHint = function () {
         try {
             if (typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(state.product)) return 'scarci';
+            if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(state.product)) return 'paper-display';
             if (state.isBizCard) return 'namecard';
             var p = state.product;
             var isPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
@@ -6449,6 +6482,47 @@ html, body { background: #ffffff !important; }
             _soScarciRefRender();
             try { showStatus(tr('AI 포토존 시안을 디자이너 참고자료에 첨부했어요.', 'AIフォトゾーン案をデザイナー資料に添付しました。', 'Attached the AI photo-zone concept to the designer references.'), 'ok'); } catch (_st) {}
         } catch (e) { console.warn('[scarci ai attach]', e); try { if (Array.isArray(state._scarciRefItems)) { state._scarciRefItems = state._scarciRefItems.filter(function (it) { return !(it.ai && it.uploading); }); _soScarciRefRender(); } } catch (_) {} }
+    };
+
+    // ─────────────────────── 종이매대(Paper Display) — 원클릭 AI 목업 (스카시 미러) ───────────────────────
+    // 2026-07-18: 브랜드/제품/컨셉 필드 → 제품 썸네일(구조 참고)로 매대 목업 생성 → 디자이너 참고자료 첨부.
+    window._soPdAiText = function () {
+        return { brand: (state.pdBrand || '').trim(), products: (state.pdProducts || '').trim(), concept: (state.pdConcept || '').trim() };
+    };
+    window._soPdThumbUrl = function () {
+        try { return (typeof pickImg === 'function') ? (pickImg(state.product) || '') : ((state.product && state.product.img_url) || ''); } catch (_) { return ''; }
+    };
+    window._soPdNeedBrand = function () {
+        try {
+            var sec = document.getElementById('soPaperDisplayRequest');
+            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            var t = document.getElementById('soPdBrand');
+            if (t) setTimeout(function () { try { t.focus(); } catch (_) {} }, 350);
+            showStatus(tr('먼저 브랜드명/타이틀 문구를 적어주세요.', 'まずブランド名/タイトルをご記入ください。', 'Please enter the brand/title first.'), 'err');
+        } catch (_) {}
+    };
+    window._soPdEditText = function () {
+        try {
+            var sec = document.getElementById('soPaperDisplayRequest');
+            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            var t = document.getElementById('soPdBrand');
+            if (t) setTimeout(function () { try { t.focus(); t.select && t.select(); } catch (_) {} }, 350);
+        } catch (_) {}
+    };
+    window._soPdAttachAiImage = async function (dataUrl, promptText) {
+        try {
+            if (!dataUrl) return;
+            if (promptText && !state.pdBrand) { state.pdBrand = String(promptText).trim().slice(0, 300); }
+            if (!Array.isArray(state.pdRefUrls)) state.pdRefUrls = [];
+            var blob;
+            if (dataUrl.indexOf('data:') === 0) { var r = await fetch(dataUrl); blob = await r.blob(); }
+            else { var r2 = await fetch(dataUrl, { mode: 'cors' }); blob = await r2.blob(); }
+            var path = 'pd-ref/ai-' + Date.now() + '-' + Math.floor(Math.random() * 1e6) + '.png';
+            var up = await sb.storage.from('design').upload(path, blob, { contentType: 'image/png', upsert: false });
+            if (up && up.error) throw up.error;
+            state.pdRefUrls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
+            try { showStatus(tr('AI 매대 시안을 디자이너 참고자료에 첨부했어요.', 'AI什器案をデザイナー資料に添付しました。', 'Attached the AI display concept to the designer references.'), 'ok'); } catch (_st) {}
+        } catch (e) { console.warn('[pd ai attach]', e); }
     };
 
     window._soSwitchPlacard = function (code) {
@@ -13489,6 +13563,11 @@ html, body { background: #ffffff !important; }
             if (_scReq) _scReq.value = '';
             state.scarciRequest = '';
             if (_scReqSec) _scReqSec.style.display = _isScarci ? '' : 'none';
+            // 2026-07-18: 종이매대 — 브랜드/제품/컨셉 필드 초기화 + 종이매대에서만 표시
+            var _pdSec = document.getElementById('soPaperDisplayRequest');
+            ['soPdBrand', 'soPdProducts', 'soPdConcept'].forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ''; });
+            state.pdBrand = ''; state.pdProducts = ''; state.pdConcept = ''; state.pdRefUrls = [];
+            if (_pdSec) _pdSec.style.display = state.isPaperDisplay ? '' : 'none';
             // 가격 +50,000원 일괄 적용 (DB 가격 그대로 두고 모달 표시·계산 단가만 inflate)
             if (_isScarci && p && typeof p.price === 'number' && !p._scarciInflated) {
                 p.price = p.price + 50000;
@@ -16077,8 +16156,14 @@ html, body { background: #ffffff !important; }
             scarciTitle: (state.scarciTitle || '') || null,
             scarciSub: (state.scarciSub || '') || null,
             scarciRequest: (state.scarciRequest || '') || null,   // 2026-07-18: 요청사항 → design_requests
-            // 2026-07-15: 글씨 스카시 참고자료(로고/사진) URL 배열 — 주문 시 design_requests.files 로 첨부
-            uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice() : null,
+            // 2026-07-18: 종이매대 — 브랜드/제품/컨셉 → design_requests
+            pdBrand: (state.pdBrand || '') || null,
+            pdProducts: (state.pdProducts || '') || null,
+            pdConcept: (state.pdConcept || '') || null,
+            // 2026-07-15: 글씨 스카시/종이매대 참고자료(AI 목업 등) URL 배열 — 주문 시 design_requests.files 로 첨부
+            uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice()
+                : (state.isPaperDisplay && Array.isArray(state.pdRefUrls) && state.pdRefUrls.length) ? state.pdRefUrls.slice()
+                : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
             isInstaPanel: !!state.isInstaPanel,
             instaTitle: (state.instaTitle || '') || null,
@@ -19872,6 +19957,61 @@ html, body { background: #ffffff !important; }
                     }
                 }
             } catch (e) { console.warn('[scarci dreq batch]', e); }
+
+            // 2026-07-18: 종이매대 — AI 목업 + 브랜드/제품/컨셉을 디자이너 의뢰(design_requests)로 전달 (스카시 미러)
+            try {
+                var _pdSb = sb;
+                var _pdU = await _pdSb.auth.getUser();
+                var _pdUid = (_pdU && _pdU.data && _pdU.data.user && _pdU.data.user.id) || loggedInUid || null;
+                for (var _pi = 0; _pi < items.length; _pi++) {
+                    var _pi_it = items[_pi];
+                    if (!_pi_it) continue;
+                    var _pi_isPd = (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_pi_it.product))
+                        || (_pi_it.product && _pi_it.product.code && /^pd_/i.test(_pi_it.product.code));
+                    if (!_pi_isPd) continue;
+                    if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
+                    var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || '종이매대');
+                    var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
+                    var _pi_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
+                    var _pi_brand = (_pi_it.pdBrand || '').trim();
+                    var _pi_products = (_pi_it.pdProducts || '').trim();
+                    var _pi_concept = (_pi_it.pdConcept || '').trim();
+                    var _pi_qty = Math.max(1, Number(_pi_it.qty) || 1);
+                    var _pi_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_pi_it) : ((_pi_it.product && _pi_it.product.price) || 0);
+                    var _pi_unitPrice = Math.round((Number(_pi_price) || 0) / _pi_qty);
+                    var _pi_payout = 40000;   // 디자이너 지급 — 1건당 (종이매대 상이하면 조정)
+                    var _pi_files = [];
+                    ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function (f) { if (_pi_it[f] && typeof _pi_it[f] === 'string') _pi_files.push(_pi_it[f]); });
+                    if (Array.isArray(_pi_it.uploadedFiles)) _pi_it.uploadedFiles.forEach(function (u) { if (u && typeof u === 'string') _pi_files.push(u); });
+                    var _pi_desc = '[' + (_pi_custName || '고객') + ' · ' + (_pi_custPhone || '-') + ']\n'
+                        + '제품: ' + _pi_prodName + (_pi_qty > 1 ? ' · 수량 ' + _pi_qty : '') + '\n'
+                        + (_pi_brand ? '브랜드/타이틀: ' + _pi_brand + '\n' : '')
+                        + (_pi_products ? '주요 제품/내용: ' + _pi_products + '\n' : '')
+                        + (_pi_concept ? '색상/컨셉: ' + _pi_concept + '\n' : '')
+                        + '주문번호: ' + (newOrderId || '-') + '\n'
+                        + '※ 종이매대 인쇄 디자인 (AI 목업 참고, 칼선·인쇄데이터 검증 필요)\n\n'
+                        + '[FREE_REQ:{"customerPrice":' + _pi_unitPrice + ',"designerPayout":' + _pi_payout + '}]';
+                    var _pi_payload = {
+                        customer_id: _pdUid,
+                        title: '[종이매대] ' + _pi_prodName + (_pi_brand ? ' — ' + _pi_brand : ''),
+                        description: _pi_desc,
+                        category: '종이매대',
+                        country: 'KR',
+                        budget_min: _pi_payout,
+                        budget_max: _pi_payout,
+                        phone: _pi_custPhone || null,
+                        files: _pi_files,
+                        status: 'open'
+                    };
+                    try {
+                        var _pi_ins = await _pdSb.from('design_requests').insert(_pi_payload).select().single();
+                        if (!_pi_ins.error && _pi_ins.data) {
+                            if (!_pi_it.designRequest) _pi_it.designRequest = {};
+                            _pi_it.designRequest.request_id = _pi_ins.data.id;
+                        }
+                    } catch (_pie) { console.warn('[pd dreq insert]', _pie); }
+                }
+            } catch (e) { console.warn('[pd dreq batch]', e); }
 
             // 2026-06-13: 디자인 의뢰 row 들에 order_id 태그 — 디자이너 보드 / 출금관리에서 결제 연결 추적
             try {
