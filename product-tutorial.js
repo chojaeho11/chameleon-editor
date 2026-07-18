@@ -50,6 +50,7 @@
   var _cur = null;          // 현재 렌더 레코드 {kind,i,...}
   var _hist = [];           // 이전 레코드들 (이전 버튼용)
   var _targets = [];
+  var _curStepTargetSel = null;   // 2026-07-18: 현재 스텝 target 셀렉터 — 비동기 로드로 늦게 뜨는 타깃 재해석용
   var _stepCleanup = [];
   var _looping = false;
   var _freeMode = false;    // 에디터 자유 디자인 모드
@@ -179,6 +180,16 @@
 
   function place() {
     if (!_active || _freeMode) return;
+    // 2026-07-18: 타깃이 비었는데 스텝에 target 셀렉터가 있으면 재해석 — 비동기 로드(예: 스카시 종류 카드)로
+    //   renderStep 시점엔 아직 안 떠서 스포트라이트가 안 잡히던 문제. 매 프레임 재시도(뜨면 자동 하이라이트).
+    if (!_targets.length && _curStepTargetSel) {
+      var _re = resolveTargets(_curStepTargetSel);
+      if (_re.length) {
+        _targets = _re;
+        try { _blocker.style.display = 'none'; } catch (_) {}
+        try { scrollToEl(_targets[0]); } catch (_) {}
+      }
+    }
     var rect = unionRect(_targets);
     if (rect) {
       var pad = 6;
@@ -373,6 +384,7 @@
   function renderStep(i) {
     clearStep(); removeDoneBar(); _freeMode = false;
     var step = _steps[i];
+    _curStepTargetSel = step.target || null;   // 2026-07-18: 비동기 타깃 재해석용
     _targets = resolveTargets(step.target);
     if (step.mode === 'wait' && !_targets.length) { enterStep(i + 1); return; }
     if (_targets[0]) scrollToEl(_targets[0]);
