@@ -1678,6 +1678,36 @@
     cheer: { kr: '디자인 완성! 🎨', ja: 'デザイン完成! 🎨', en: 'Design done! 🎨' }
   };
 
+  // 2026-07-19: 목업 뷰어 전용 시안 확인 — [다시 만들기] / [다음] 두 갈래.
+  //   공용 PROOF_STEP 은 '다운로드로 PDF 확인' 안내라 목업 제품엔 맞지 않는다
+  //   (여기서 만든 건 인쇄 원고가 아니라 컨셉 목업이고, 인쇄용 PDF 는 디자이너가 따로 만든다).
+  var MOCKUP_PROOF_STEP = {
+    target: ['#embeddedEditorPreview', '#meStage'], mode: 'next', hideBack: true,
+    onEnter: function () { return _secVisible('#meStage') || _secVisible('#embeddedEditorPreview'); },
+    buttons: [{ action: '_tutRemakeMockup', label: { kr: '다시 만들기', ja: '作り直す', en: 'Make it again' } }],
+    hint: { kr: '이 화면의 시안을 확인해 주세요', ja: 'この画面の案をご確認ください', en: 'Check the concept on screen' },
+    msg: { kr: '<b>최종 시안 확인</b>! 마음에 드시나요?<br>수정이 필요하면 <b>다시 만들기</b>를 눌러주세요 — 문구를 고쳐 새로 만들 수 있어요. 이대로 좋으시면 <b>다음</b>을 눌러주세요.',
+      ja: '<b>最終案の確認</b>!気に入りましたか?<br>修正が必要なら <b>作り直す</b> を押してください — 文言を直して作り直せます。このままで良ければ <b>次へ</b> を押してください。',
+      en: '<b>Final check</b> — happy with it?<br>Need changes? Tap <b>Make it again</b> to edit your text and regenerate. If it looks good, tap <b>Next</b>.' },
+    cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
+  };
+
+  // [다시 만들기] — 브랜드명·타이틀 입력칸으로 되돌아간다 (거기서 다시 [AI디자인 실행] 흐름을 탄다).
+  window._tutRemakeMockup = function () {
+    try {
+      if (!_steps) return;
+      var i = _steps.indexOf(MOCKUP_DESIGN_CHOOSE_STEP);
+      if (i < 0) return;
+      var opt = null;
+      (MOCKUP_DESIGN_CHOOSE_STEP.branch || []).forEach(function (o) { if (o && o.key === 'ai') opt = o; });
+      if (!opt) return;
+      _chosenBranch = 'ai';
+      if (_cur) _hist.push(_cur);
+      _cur = { kind: 'branch', i: i };   // renderDetail 은 branch 의 하위 상태라 _cur 를 branch 로 둔다
+      renderDetail(i, opt);
+    } catch (_) {}
+  };
+
   var PAPER_DISPLAY_STEPS = [
     MOCKUP_DESIGN_CHOOSE_STEP,   // 1) 디자인 방법 (AI 무료디자인 / 칼선 다운로드 / 디자인 의뢰)
     MOCKUP_AI_RUN_STEP,          // 1-b) AI 선택 시 — [AI디자인 실행] → [이대로 제작] 까지
@@ -1697,7 +1727,7 @@
         en: 'Set the <b>quantity</b> — sample 1, 100 (min), 300/500/1,000, or type 2–99. More = lower unit price 💰' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
     },
-    PROOF_STEP,           // 5) 시안 최종 확인
+    MOCKUP_PROOF_STEP,    // 5) 최종 시안 확인 — [다시 만들기] / [다음]
     MOCKUP_HANDOFF_STEP,  // 6) 목업 → 디자이너 리디자인 안내 (장바구니 직전)
     GENERIC_STEPS[2]      // 7) 장바구니
   ];
