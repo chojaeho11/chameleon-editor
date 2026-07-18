@@ -6371,6 +6371,40 @@
         _meAiSyncBtns();
     }
 
+    // 2026-07-18: 참조 이미지 정규화 — 캔버스에 다시 그려 깨끗한 PNG 로 만들고 긴 변을 maxPx 로 축소.
+    //   [왜 필요한가] 허니콤 테이블 썸네일이 MPO(폰 카메라가 만드는 다중 이미지 JPEG)였는데,
+    //   Content-Type 은 image/jpeg 라 통과하지만 OpenAI edits 가 디코딩을 거부해
+    //   "Invalid image file or mode for image 1" (invalid_image_file) 로 생성이 실패했다.
+    //   고객이 올리는 폰 사진도 같은 함정이 있어 참조 이미지 전체에 적용한다.
+    //   덤으로 5712x4284(4.4MB) 같은 원본이 1536px 로 줄어 전송·생성이 빨라지고 8MB 상한도 안전해진다.
+    function _meAiNormalizeRef(dataUrl, maxPx) {
+        return new Promise(function (resolve) {
+            try {
+                if (!dataUrl) return resolve(null);
+                var im = new Image();
+                im.onload = function () {
+                    try {
+                        var w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+                        if (!w || !h) return resolve(dataUrl);
+                        var lim = maxPx || 1536;
+                        var sc = Math.min(1, lim / Math.max(w, h));
+                        var cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+                        var cv = document.createElement('canvas');
+                        cv.width = cw; cv.height = ch;
+                        var cx = cv.getContext('2d');
+                        // 투명 배경은 흰색으로 — edits 가 알파를 편집영역 마스크로 오인하는 걸 방지
+                        cx.fillStyle = '#ffffff';
+                        cx.fillRect(0, 0, cw, ch);
+                        cx.drawImage(im, 0, 0, cw, ch);
+                        resolve(cv.toDataURL('image/png'));
+                    } catch (e) { console.warn('[meAi] normalize ref', e); resolve(dataUrl); }
+                };
+                im.onerror = function () { console.warn('[meAi] normalize ref: load failed'); resolve(dataUrl); };
+                im.src = dataUrl;
+            } catch (e) { resolve(dataUrl); }
+        });
+    }
+
     // 참조 사진 설정/해제 + 썸네일·안내 토글
     function _meAiSetRef(dataUrl, mode) {
         _meAiRefDataUrl = dataUrl || null;
@@ -7009,7 +7043,11 @@
                     }
                 }
                 var _reqBody = { prompt: genPrompt1, size: size };
-                if (_meAiRefDataUrl) _reqBody.refImage = _meAiRefDataUrl;
+                // 2026-07-18: 참조 이미지는 반드시 정규화해서 보낸다 (아래 _meAiNormalizeRef 주석 참고).
+                if (_meAiRefDataUrl) {
+                    var _refNorm = await _meAiNormalizeRef(_meAiRefDataUrl, 1536);
+                    if (_refNorm) _reqBody.refImage = _refNorm;
+                }
                 var r1 = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
