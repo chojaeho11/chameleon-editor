@@ -6841,8 +6841,8 @@
                         var _subClause = _sst.sub
                             ? ' The bottom bar shows ONLY this short subtitle on ONE single line: "' + _sst.sub + '".'
                             : ' The bottom bar has NO extra text (or at most a tiny one-line label) — do NOT invent dates, schedules, organizers or event details to fill it.';
-                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE with TWO parts. TOP (taking up MOST of the height): the MAIN TITLE as BIG, BOLD, DIMENSIONAL freestanding 3D cut-out letters (thick acrylic/foam letters) arranged in AT MOST 3 lines — the clear hero.' + _titleClause
-                            + ' BOTTOM: a LOW, SHORT, SLIM horizontal BASE BAR that the 3D title letters stand on — only about the height of a SINGLE line of text, clearly MUCH shorter than the title letters (like a thin plinth). It must NOT be a tall block and must NOT contain multiple stacked rows of information; keep any text on it to ONE short line at most.' + _subClause
+                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE with TWO parts. TOP (taking up most of the height): the MAIN TITLE as BIG, BOLD, DIMENSIONAL freestanding 3D cut-out letters (thick acrylic/foam letters) arranged in AT MOST 3 lines — the clear hero.' + _titleClause
+                            + ' BOTTOM: a solid horizontal BASE BOX that the 3D title letters stand on. Its height should be MODERATE — about the height of TWO lines of text, roughly ONE-QUARTER (about 25%) of the total image height. It must NOT be a tall multi-row block, but also NOT a thin sliver — a clear, real base box of medium height. Show any subtitle on it in ONE or at most TWO short lines; do NOT stack many rows of details.' + _subClause
                             + ' Keep the event NAME only in the big top 3D letters.' + _edgeClause + ' Present it as a standalone photo-zone installation at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
                     }
                 }
