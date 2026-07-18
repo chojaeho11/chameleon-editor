@@ -1607,12 +1607,21 @@
       ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
       en: "I'll help you order! First, choose <b>how to design</b>." },
     branch: [
-      { key: 'ai', mode: 'free', template: 'pd-input', target: ['#soPaperDisplayRequest', '.me-intro-ai'],
+      // 2026-07-19: mode 없음 → renderDetail. 입력칸만 스포트라이트(주변 어둡게)로 비추고,
+      //   다 적으면 '다음 ▶' 으로 진행 → 다음 스텝에서 [AI디자인 실행] 버튼을 비춘다.
+      { key: 'ai', target: ['#soPaperDisplayRequest'],
         label: { kr: '인공지능 무료디자인', ja: 'AI無料デザイン', en: 'Free AI design' },
         sub: { kr: '이벤트 기간 무료 · 브랜드만 적으면 끝', ja: 'イベント期間中は無料 · ブランドを書くだけ', en: 'Free during the event — just enter your brand' },
-        msg: { kr: '먼저 <b>반짝이는 칸</b>에 내용을 적어주세요! <b>브랜드명·타이틀</b>은 필수, 제품·컨셉은 선택이에요. 다 적으셨으면 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요 — 이 제품 모양 그대로 <b>목업</b>을 만들어드려요. 마음에 들 때까지 다시 만들 수 있고, 글씨·요소를 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러주세요!',
-          ja: 'まず <b>光っている入力欄</b> に内容をご記入ください!<b>ブランド名·タイトル</b> は必須、製品·コンセプトは任意です。書けたら左の <b>[AIデザイン実行]</b> を押してください — この製品の形のまま <b>モックアップ</b> を作成します。気に入るまで作り直せますし、文字·要素を足して飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
-          en: 'First fill in the <b>glowing box</b>! <b>Brand / title</b> is required; products and concept are optional. Then tap <b>[Run AI Design]</b> on the left — we\'ll build a <b>mockup</b> in this product\'s exact shape. Regenerate as often as you like, and add text or elements too. When done, tap <b>"Done → Continue"</b> below!' }
+        msg: { kr: '밝게 보이는 칸에 내용을 적어주세요! <b>브랜드명·타이틀</b>은 필수, 제품·컨셉은 선택이에요. 적을수록 원하는 느낌에 가깝게 나와요. 다 적으셨으면 <b>다음</b>을 눌러주세요.',
+          ja: '明るく表示されている欄にご記入ください!<b>ブランド名·タイトル</b> は必須、製品·コンセプトは任意です。詳しく書くほどイメージに近づきます。書けたら <b>次へ</b> を押してください。',
+          en: 'Fill in the highlighted box! <b>Brand / title</b> is required; products and concept are optional — the more you write, the closer the result. Then tap <b>Next</b>.' },
+        // 커서를 브랜드 칸에 바로 놓아준다 (advance 는 호출하지 않음 — '다음' 으로만 진행)
+        hook: function () {
+          var t = setTimeout(function () {
+            try { var b = document.getElementById('soPdBrand'); if (b) b.focus(); } catch (_) {}
+          }, 450);
+          return function () { clearTimeout(t); };
+        }
       },
       // mode 미지정 → renderDetail (안내 팝업 + 스포트라이트 + 다음). 칼선 버튼이 없는 제품이면
       // renderBranch 의 target 가시성 필터가 이 선택지를 자동으로 빼준다.
@@ -1654,8 +1663,24 @@
     cheer: { kr: '사이즈 확정! 📦', ja: 'サイズOK! 📦', en: 'Size set! 📦' }
   };
 
+  // 2026-07-19: 내용을 적고 '다음' 을 누르면 → [AI디자인 실행] 버튼을 스포트라이트로 비춘다.
+  //   'ai' 를 고른 경우에만 등장하고, 버튼을 누르면 다음(자유 디자인) 으로 넘어간다.
+  //   생성창이 열려 있는 동안엔 place() 가 튜토리얼 UI 를 자동으로 숨긴다.
+  //   [이대로 제작] 을 눌러 완료(me-pd-accepted) 할 때만 다음으로 넘어가므로,
+  //   마음에 들 때까지 몇 번이든 다시 만들 수 있다. 생성창이 열려 있는 동안엔 place() 가 튜토리얼 UI 를 숨긴다.
+  var MOCKUP_AI_RUN_STEP = {
+    target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-pd-accepted',
+    onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
+    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
+    msg: { kr: '이제 밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 적어주신 내용으로 <b>이 제품 모양 그대로</b> 목업을 만들어드려요 (<b>1분쯤</b> 걸려요 ☕). 마음에 안 들면 <b>[수정해서 다시 만들기]</b>로 몇 번이든 새로, 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가요!',
+      ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ご記入いただいた内容で <b>この製品の形のまま</b> モックアップを作成します(<b>1分ほど</b> ☕)。気に入らなければ <b>[修正して作り直す]</b> で何度でも、気に入ったら <b>[このまま製作]</b> を押すと次へ進みます!',
+      en: 'Now tap the highlighted <b>[Run AI Design]</b>! We\'ll build a mockup in this product\'s exact shape from what you entered (about <b>a minute</b> ☕). Not quite right? Use <b>[Edit & remake]</b> as often as you like; when you\'re happy, tap <b>[Make it like this]</b> to continue!' },
+    cheer: { kr: '디자인 완성! 🎨', ja: 'デザイン完成! 🎨', en: 'Design done! 🎨' }
+  };
+
   var PAPER_DISPLAY_STEPS = [
     MOCKUP_DESIGN_CHOOSE_STEP,   // 1) 디자인 방법 (AI 무료디자인 / 칼선 다운로드 / 디자인 의뢰)
+    MOCKUP_AI_RUN_STEP,          // 1-b) AI 선택 시 — [AI디자인 실행] → [이대로 제작] 까지
     { // 3) 시공/배송 옵션
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
