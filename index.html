@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718215019';
+    var CV = '20260718222638';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5937,11 +5937,11 @@ function scrollHotdeal(gridId, dir) {
             <!-- 2026-07-18: 에디터 진입 버튼(원클릭 AI디자인 / 디자인 편집하기) — 다운로드 아래, 작품 갤러리 위로 이동 -->
             <div class="me-intro" id="meIntro">
                 <button type="button" class="me-intro-btn me-intro-ai" onclick="window._meAiGenOpen && window._meAiGenOpen()">
-                    <span class="me-intro-ttl" data-i18n="me_intro_ai">원클릭 AI디자인</span>
+                    <span class="me-intro-ttl" data-i18n="me_intro_ai">AI디자인 실행</span>
                     <span class="me-intro-desc" data-i18n="me_intro_ai_desc">어떤 업체도 못했던 고퀄리티 AI 디자인, 카멜레온이 만들었어요</span>
                 </button>
                 <button type="button" class="me-intro-btn me-intro-edit" onclick="window._meShowToolbar && window._meShowToolbar()">
-                    <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 편집하기</span>
+                    <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 수정도구</span>
                     <span class="me-intro-desc" data-i18n="me_intro_edit_desc">더 예쁘게 꾸미고 싶다면, 여러 요소를 추가할 수 있어요</span>
                 </button>
             </div>
@@ -5949,7 +5949,7 @@ function scrollHotdeal(gridId, dir) {
             <div class="me-gallery" id="meGallery">
                 <div class="me-gal-tip">
                     <span class="me-gal-tip-badge" data-i18n="me_tip">팁!!</span>
-                    <span data-i18n="me_gallery_tip">그냥 원클릭 AI로 디자인을 하셔도 됩니다. 원하는 스타일을 찾고 싶다면 아래 다른 고객들의 작품을 검색하면 인공지능이 참고하여 디자인합니다.</span>
+                    <span data-i18n="me_gallery_tip">그냥 [AI디자인 실행]을 눌러 만드셔도 됩니다. 아래 작품을 누르면 위 대지에 올려 크게 볼 수 있고, 이어서 [AI디자인 실행]을 누르면 그 작품을 참고해 새 디자인으로 덮어씁니다.</span>
                 </div>
                 <div class="me-gal-head">
                     <span class="me-gal-title" data-i18n="me_gallery">작품</span>
@@ -5968,7 +5968,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=504"></script>
+<script src="./mini-editor.js?v=505"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -10496,9 +10496,9 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=3"></script>
-<script src="/simple_order.js?v=795"></script>
+<script src="/simple_order.js?v=796"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
-<script src="/product-tutorial.js?v=703"></script>
+<script src="/product-tutorial.js?v=704"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=21"></script>
 

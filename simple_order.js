@@ -2010,9 +2010,9 @@ html, body { background: #ffffff !important; }
             ${tr('글씨 스카시는 입체디자인이 필요해요!', 'スカシは立体デザインが必要です！', 'Script Scarci needs 3D design!')}
           </div>
           <div style="font-size:12px; color:#451a03; line-height:1.65; font-weight:600;">
-            ${tr('<b>원클릭 AI디자인</b>으로 포토존을 만들고 <b>문구·요청사항</b>을 적어주시면, 결제 후 전문 디자이너가 그 디자인을 참고해 입체 디자인을 해드립니다 (누끼·칼선 포함).<br>결제하면 자동으로 디자인 작업이 의뢰되며, <b style="color:#16a34a;">디자인은 무료</b>입니다.',
-                 '<b>ワンクリックAIデザイン</b> でフォトゾーンを作り、<b>文言·ご要望</b> をご記入いただくと、お支払い後に専門デザイナーがそれを参考に立体デザインを行います（背景除去·カットライン含む）。<br>お支払いで自動的にデザイン依頼され、<b style="color:#16a34a;">デザインは無料</b>です。',
-                 'Make a photo zone with <b>one-click AI design</b> and enter your <b>text & requests</b> — after payment a designer crafts the 3D design referring to it (cutout & cutline included).<br>The design is auto-requested on payment and is <b style="color:#16a34a;">free of charge</b>.')}
+            ${tr('<b>AI디자인 실행</b>으로 포토존을 만들고 <b>문구·요청사항</b>을 적어주시면, 결제 후 전문 디자이너가 그 디자인을 참고해 입체 디자인을 해드립니다 (누끼·칼선 포함).<br>결제하면 자동으로 디자인 작업이 의뢰되며, <b style="color:#16a34a;">디자인은 무료</b>입니다.',
+                 '<b>AIデザイン実行</b> でフォトゾーンを作り、<b>文言·ご要望</b> をご記入いただくと、お支払い後に専門デザイナーがそれを参考に立体デザインを行います（背景除去·カットライン含む）。<br>お支払いで自動的にデザイン依頼され、<b style="color:#16a34a;">デザインは無料</b>です。',
+                 'Make a photo zone with <b>Run AI Design</b> and enter your <b>text & requests</b> — after payment a designer crafts the 3D design referring to it (cutout & cutline included).<br>The design is auto-requested on payment and is <b style="color:#16a34a;">free of charge</b>.')}
           </div>
         </div>
 

@@ -6555,6 +6555,9 @@
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
         try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
+        // 2026-07-18: 갤러리에서 고른 작품이 있으면 '참고' 모드로 복원 (위 초기화 직후여야 함).
+        //   스카시/종이매대 자동 모드는 각자 참조를 쓰므로 제외.
+        try { if (_meGalPendingRef && !_scarciAuto && !_pdAuto) _meAiSetRef(_meGalPendingRef, 'reference'); } catch (_) {}
         // 2026-07-18: 스카시 자동모드 — 입력 UI 숨기고 문구로 바로 생성 / 그 외엔 입력 UI 노출
         var _inputArea = document.getElementById('meAiInputArea');
         var _hintEl = document.getElementById('meAiHint');
@@ -6656,17 +6659,39 @@
         });
     }
     function _meAiEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-    // 갤러리 픽 → AI 모달 열고 '참고' 모드로 세팅
+    // 2026-07-18: 갤러리에서 고른 작품을 AI 실행 때 참고로 쓰기 위해 보관.
+    //   모달을 열 때 _meAiSetRef(null) 로 초기화되므로, 여기 담아뒀다가 그 직후 다시 적용한다.
+    var _meGalPendingRef = null;
+
+    // 대지에 올려둔 갤러리 미리보기 제거 (연속 클릭 시 쌓임 방지 / AI 결과로 덮어쓸 때 정리)
+    function _meGalRemovePreview() {
+        try {
+            (me && me.items ? me.items : []).slice().forEach(function (it) {
+                if (it && it._isGalPreview) {
+                    try { if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); } catch (_) {}
+                    var ix = me.items.indexOf(it); if (ix >= 0) me.items.splice(ix, 1);
+                }
+            });
+        } catch (e) { console.warn('[meGallery] remove preview', e); }
+    }
+
+    // 갤러리 픽 → ① 대지에 바로 올려 크게 확인 ② AI 실행 시 이 작품을 참고로 사용
+    //   2026-07-18: 예전엔 클릭 즉시 AI 모달을 열어 작품을 크게 볼 수 없었음(사장님 요청으로 변경).
     async function _meGalleryPick(row) {
         try {
-            window._meAiGenOpen();
             var url = row.image_url;
-            // CORS 안전하게 dataURL 로 변환 후 참조로
+            // CORS 안전하게 dataURL 로 변환 (대지 삽입 + 참조 양쪽에 사용)
             var dataUrl = url;
             if (url.indexOf('data:') !== 0) {
                 try { var r = await fetch(url, { mode: 'cors' }); var b = await r.blob(); dataUrl = await new Promise(function (rs, rj) { var fr = new FileReader(); fr.onload = function () { rs(String(fr.result)); }; fr.onerror = rj; fr.readAsDataURL(b); }); } catch (_) {}
             }
-            _meAiSetRef(dataUrl, 'reference');
+            // ① 대지에 올림 — 이전 미리보기는 교체
+            _meGalRemovePreview();
+            window._meAddImage(dataUrl, { fillCanvas: true, toBack: true }, function (it) {
+                if (it) it._isGalPreview = true;
+            });
+            // ② AI 실행 시 참고 이미지로 예약 (생성 결과가 이 작품을 덮어씀)
+            _meGalPendingRef = dataUrl;
         } catch (e) { console.warn('[meGallery] pick', e); }
     }
     window._meGalleryLoad = _meGalleryLoad;
@@ -6692,6 +6717,9 @@
                 opts.fitCanvas = true; // 자연크기 못 구하면 최소한 대지에 맞춤
             }
         } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
+        // 2026-07-18: 갤러리에서 골라 대지에 올려둔 미리보기는 제거 — AI 결과가 그 자리를 덮어쓴다.
+        //   (둘 다 toBack 이라 그냥 두면 어느 쪽이 위인지 화면과 저장 결과가 어긋남)
+        try { _meGalRemovePreview(); } catch (_gp) {}
         try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
         // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
         //   AI 프롬프트에 적은 문구도 함께 넘겨 디자이너에게 전달.

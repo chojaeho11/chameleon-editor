@@ -1386,10 +1386,10 @@
     { // 3) 원클릭 AI디자인 (왼쪽 버튼) — 눌러 생성. '이대로 제작' 완료(me-scarci-accepted) 시에만 다음으로.
       target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-scarci-accepted',
       onEnter: function () { return _secVisible('#aiNbAi'); },
-      msg: { kr: '이제 왼쪽 <b>[원클릭 AI디자인]</b>을 눌러주세요! 화면 <b>가운데에 생성 창</b>이 떠서, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가요. <span style="color:#94a3b8;">(고치고 싶으면 [수정해서 다시 만들기])</span>',
-        ja: '左の <b>[ワンクリックAIデザイン]</b> を押してください!画面 <b>中央に生成ウィンドウ</b> が開き、入力した文言で立体文字フォトゾーンを <b>すぐに作成</b>。気に入ったら <b>[このまま製作]</b> を押すと次へ進みます。<span style="color:#94a3b8;">(直すなら [修正して作り直す])</span>',
-        en: 'Tap <b>[one-click AI design]</b> on the left! A <b>window opens in the center</b> and <b>instantly builds</b> a 3D-letter photo zone from your text. If you like it, tap <b>[Make it like this]</b> to continue. <span style="color:#94a3b8;">(to change it, [Edit & remake])</span>' },
-      hint: { kr: '원클릭 AI디자인을 눌러 만들어주세요', ja: 'ワンクリックAIデザインを押して作成', en: 'Tap one-click AI design to create' },
+      msg: { kr: '이제 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요! 화면 <b>가운데에 생성 창</b>이 떠서, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 마음에 들면 <b>[이대로 제작]</b>을 누르면 다음으로 넘어가요. <span style="color:#94a3b8;">(고치고 싶으면 [수정해서 다시 만들기])</span>',
+        ja: '左の <b>[AIデザイン実行]</b> を押してください!画面 <b>中央に生成ウィンドウ</b> が開き、入力した文言で立体文字フォトゾーンを <b>すぐに作成</b>。気に入ったら <b>[このまま製作]</b> を押すと次へ進みます。<span style="color:#94a3b8;">(直すなら [修正して作り直す])</span>',
+        en: 'Tap <b>[Run AI Design]</b> on the left! A <b>window opens in the center</b> and <b>instantly builds</b> a 3D-letter photo zone from your text. If you like it, tap <b>[Make it like this]</b> to continue. <span style="color:#94a3b8;">(to change it, [Edit & remake])</span>' },
+      hint: { kr: 'AI디자인 실행을 눌러 만들어주세요', ja: 'AIデザイン実行を押して作成', en: 'Tap Run AI Design to create' },
       cheer: { kr: '디자인 완성! 🎨', ja: 'デザイン完成! 🎨', en: 'Design done! 🎨' }
     },
     { // 4) 배송 (수도권 무료 / 지방)
