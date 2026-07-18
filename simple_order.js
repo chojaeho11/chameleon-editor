@@ -5336,6 +5336,20 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
+    // 2026-07-18: "목업 뷰어" 제품군 — 종이매대 + 허니콤 테이블.
+    //   이 제품군의 대지는 인쇄 원고가 아니라 AI 목업/테마를 크게 보기 위한 뷰어다
+    //   (실제 인쇄 디자인은 결제 후 전문 디자이너가 칼선 도안에 맞춰 따로 제작).
+    //   → 대지 비율을 AI 생성물(1536×1024 = 3:2)과 똑같이 맞추고 해상도도 1:1 로 둔다.
+    function _soIsMockupViewerProduct(p) {
+        if (!p) return false;
+        try {
+            if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(p)) return true;
+            if (typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) return true;
+        } catch (_e) {}
+        return false;
+    }
+    window._soIsMockupViewerProduct = _soIsMockupViewerProduct;
+
     // 2026-06-30: 종이매대 소형 판정 (소형 종이매대 pd_sm_* + 종이 칸막이 pd_tr_*).
     function _soIsSmallPaperStand(p) {
         var c = ((p && p.code) || '').toLowerCase();
@@ -15470,7 +15484,12 @@ html, body { background: #ffffff !important; }
         //   v411 버그: 각 변을 개별 cap 하여 1000×2400 → 1200×1200 정사각이 되었음. v412 비례 처리로 수정.
         function _mmPairToPx(wMm, hMm) {
             var BASE = 3.78;  // 96dpi
-            var MAX = 1200, MIN = 100;
+            // 2026-07-18: 목업 뷰어 제품군(종이매대·허니콤 테이블)만 상한 1536px.
+            //   AI 생성물이 1536×1024 라 대지를 같은 픽셀로 두면 축소·확대 없이 1:1 로 가장 선명하다.
+            //   그 외 전 제품은 기존 1200 그대로 (공유 함수라 전역 변경 금지).
+            var _isMockupView = false;
+            try { _isMockupView = (typeof _soIsMockupViewerProduct === 'function') && _soIsMockupViewerProduct(state && state.product); } catch (_mv) {}
+            var MAX = _isMockupView ? 1536 : 1200, MIN = 100;
             var wPx = wMm * BASE, hPx = hMm * BASE;
             var maxPx = Math.max(wPx, hPx);
             if (maxPx > MAX) {
@@ -15529,6 +15548,9 @@ html, body { background: #ffffff !important; }
             try {
                 if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) {
                     wMm = 1800; hMm = 1200;
+                } else if (p && typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(p)) {
+                    // 종이매대도 같은 이유로 정확한 3:2 로 통일 (기존 2500×1600 = 1.5625 라 좌우가 약 4% 잘렸음)
+                    wMm = 2400; hMm = 1600;
                 }
             } catch (_tbe) {}
             return { wMm: Math.round(wMm), hMm: Math.round(hMm) };
