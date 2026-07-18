@@ -780,12 +780,12 @@
           }
         },
         // 2026-07-19: 명함도 템플릿 대신 인공지능으로.
-        { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai'],
+        { key: 'ai', target: ['.me-intro-ai'],
           label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
           sub: { kr: '상호·이름·연락처만 적으면 끝', ja: '社名·氏名·連絡先を書くだけ', en: 'Just enter name & contact' },
-          msg: { kr: '반짝이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>상호·이름·직함·연락처</b> 등 명함에 넣을 내용을 적고 만들기를 누르면, 업종에 어울리는 명함을 만들어드려요. 마음에 들 때까지 다시 만들 수 있어요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요!',
-            ja: '光る <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>社名·氏名·肩書·連絡先</b> など名刺に入れる内容を書いて作成を押すと、業種に合う名刺を作ります。気に入るまで作り直せます。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
-            en: 'Tap the glowing <b>[Run AI Design]</b>! Enter what goes on the card — <b>company, name, title, contact</b> — and hit create; we\'ll design one that suits your industry. Regenerate as often as you like. When done, tap <b>"Done → Continue"</b> below!' }
+          msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>상호·이름·직함·연락처</b> 등 명함에 넣을 내용을 적고 만들기를 누르면, 업종에 어울리는 명함을 만들어드려요. 마음에 들 때까지 다시 만들 수 있어요.<br>디자인이 끝나면 <b>다음</b>을 눌러주세요.',
+            ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>社名·氏名·肩書·連絡先</b> など名刺に入れる内容を書いて作成を押すと、業種に合う名刺を作ります。気に入るまで作り直せます。<br>デザインが終わったら <b>次へ</b> を押してください。',
+            en: 'Tap the highlighted <b>[Run AI Design]</b>! Enter what goes on the card — <b>company, name, title, contact</b> — and hit create; we\'ll design one that suits your industry. Regenerate as often as you like.<br>When your design is done, tap <b>Next</b>.' }
         },
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
@@ -869,12 +869,15 @@
         // 2026-07-19: 템플릿 분기 폐지 — 이제 디자인은 인공지능으로 한다(사장님 방침).
         //   버튼도 툴바의 #meAiGenBtn 이 아니라 간편 진입의 [AI디자인 실행](.me-intro-ai) 를 가리킨다.
         //   (툴바 버튼은 '디자인 수정도구'로 들어가야 보이므로 첫 화면에선 안 보인다.)
-        { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai'],
+        // 2026-07-19: mode 'free' → 기본(renderDetail). free 모드는 화면을 어둡게 하지 않고 토스트만 띄워
+        //   "어딜 눌러야 할지 모르겠다" 는 피드백이 있었다. renderDetail 은 나머지를 어둡게 깔고
+        //   [AI디자인 실행] 만 밝게 뚫어준다. (구멍은 pointer-events:none 이라 그대로 클릭 가능)
+        { key: 'ai', target: ['.me-intro-ai'],
           label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
           sub: { kr: '내용만 적으면 AI가 만들어줘요', ja: '内容を書くだけでAIが作成', en: 'Just describe it — AI makes it' },
-          msg: { kr: '반짝이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 마음에 들 때까지 다시 만들 수 있고, <b>글씨·요소·사진</b>을 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요!',
-            ja: '光る <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。気に入るまで作り直せますし、<b>文字·要素·写真</b> を加えて飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
-            en: 'Tap the glowing <b>[Run AI Design]</b>! When the window opens, <b>describe the design you want</b> and hit create. Regenerate as often as you like, and add <b>text, elements and photos</b> too. When done, tap <b>"Done → Continue"</b> below!' }
+          msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 마음에 들 때까지 다시 만들 수 있고, <b>글씨·요소·사진</b>을 더해 꾸며도 좋아요.<br>디자인이 끝나면 <b>다음</b>을 눌러주세요.',
+            ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。気に入るまで作り直せますし、<b>文字·要素·写真</b> を加えて飾ってもOK。<br>デザインが終わったら <b>次へ</b> を押してください。',
+            en: 'Tap the highlighted <b>[Run AI Design]</b>! When the window opens, <b>describe the design you want</b> and hit create. Regenerate as often as you like, and add <b>text, elements and photos</b> too.<br>When your design is done, tap <b>Next</b>.' }
         },
         { key: 'upload', always: true,
           // 업로드 후엔 원래 업로드 버튼이 숨고 '파일 변경' 버튼이 나옴 → 그것도 가리켜 재업로드 가능하게.
