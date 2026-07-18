@@ -5336,7 +5336,7 @@ html, body { background: #ffffff !important; }
         return false;
     }
 
-    // 2026-07-18: "목업 뷰어" 제품군 — 종이매대 + 허니콤 테이블.
+    // 2026-07-18: "목업 뷰어" 제품군 — 종이매대 + 허니콤 테이블 (+2026-07-19: 허니콤 박스).
     //   이 제품군의 대지는 인쇄 원고가 아니라 AI 목업/테마를 크게 보기 위한 뷰어다
     //   (실제 인쇄 디자인은 결제 후 전문 디자이너가 칼선 도안에 맞춰 따로 제작).
     //   → 대지 비율을 AI 생성물(1536×1024 = 3:2)과 똑같이 맞추고 해상도도 1:1 로 둔다.
@@ -5345,6 +5345,7 @@ html, body { background: #ffffff !important; }
         try {
             if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(p)) return true;
             if (typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) return true;
+            if (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(p)) return true;
         } catch (_e) {}
         return false;
     }
@@ -6453,6 +6454,8 @@ html, body { background: #ffffff !important; }
             if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(state.product)) return 'paper-display';
             // 2026-07-18: 허니콤 테이블(hb_tb_*) — 매대와 같은 입력/첨부를 쓰되 프롬프트만 테이블용
             if (typeof _soIsTableProduct === 'function' && _soIsTableProduct(state.product)) return 'hb-table';
+            // 2026-07-19: 허니콤 박스(hb_bx_*) — 목업 + 6면 전개도
+            if (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(state.product)) return 'hb-box';
             if (state.isBizCard) return 'namecard';
             var p = state.product;
             var isPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
@@ -6504,7 +6507,15 @@ html, body { background: #ffffff !important; }
     // ─────────────────────── 종이매대(Paper Display) — 원클릭 AI 목업 (스카시 미러) ───────────────────────
     // 2026-07-18: 브랜드/제품/컨셉 필드 → 제품 썸네일(구조 참고)로 매대 목업 생성 → 디자이너 참고자료 첨부.
     window._soPdAiText = function () {
-        return { brand: (state.pdBrand || '').trim(), products: (state.pdProducts || '').trim(), concept: (state.pdConcept || '').trim() };
+        var o = { brand: (state.pdBrand || '').trim(), products: (state.pdProducts || '').trim(), concept: (state.pdConcept || '').trim() };
+        // 2026-07-19: 허니콤 박스 — 고객이 입력한 실제 치수(W×H×D mm)를 프롬프트에 넘겨 비율을 맞춘다.
+        try {
+            if (state.isHbBox) {
+                var w = parseInt(state.boxW, 10) || 0, h = parseInt(state.boxH, 10) || 0, d = parseInt(state.boxD, 10) || 0;
+                if (w && h && d) o.boxDims = { w: w, h: h, d: d };
+            }
+        } catch (_bd) {}
+        return o;
     };
     window._soPdThumbUrl = function () {
         try { return (typeof pickImg === 'function') ? (pickImg(state.product) || '') : ((state.product && state.product.img_url) || ''); } catch (_) { return ''; }
@@ -6539,7 +6550,9 @@ html, body { background: #ffffff !important; }
             if (up && up.error) throw up.error;
             state.pdRefUrls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
             try {
-                showStatus(state.isHbTable
+                showStatus(state.isHbBox
+                    ? tr('AI 박스 시안(목업 + 6면 전개도)을 디자이너 참고자료에 첨부했어요.', 'AIボックス案(モックアップ+6面展開図)をデザイナー資料に添付しました。', 'Attached the AI box concept (mockup + dieline) to the designer references.')
+                    : state.isHbTable
                     ? tr('AI 테이블 시안을 디자이너 참고자료에 첨부했어요.', 'AIテーブル案をデザイナー資料に添付しました。', 'Attached the AI table concept to the designer references.')
                     : tr('AI 매대 시안을 디자이너 참고자료에 첨부했어요.', 'AI什器案をデザイナー資料に添付しました。', 'Attached the AI display concept to the designer references.'), 'ok');
             } catch (_st) {}
@@ -13592,6 +13605,7 @@ html, body { background: #ffffff !important; }
             state.pdBrand = ''; state.pdProducts = ''; state.pdConcept = ''; state.pdRefUrls = [];
             // 2026-07-18: 허니콤 테이블(hb_tb_* 4종)도 종이매대와 동일한 브랜드/제품/컨셉 입력 사용
             state.isHbTable = (typeof _soIsTableProduct === 'function') ? !!_soIsTableProduct(p) : false;
+            state.isHbBox = (typeof _soIsBoxProduct === 'function') ? !!_soIsBoxProduct(p) : false;   // 2026-07-19
             // 2026-07-19: 다른 제품으로 바뀌면 이전 제품의 AI 목업/갤러리 미리보기를 대지에서 제거.
             //   제품 전환(_soSwitchTable 등)은 페이지를 리로드하지 않아 대지가 그대로 남는다 →
             //   3단테이블에서 만든 목업이 십자선반 주문서에 실려 나가던 문제. 같은 제품 재진입 때는 유지.
@@ -13603,13 +13617,18 @@ html, body { background: #ffffff !important; }
                 }
                 window._soLastLoadedProductCode = _pcNow;
             } catch (_pcw) {}
-            if (_pdSec) _pdSec.style.display = (state.isPaperDisplay || state.isHbTable) ? '' : 'none';
-            // 제목/설명을 제품군(매대 ↔ 테이블)에 맞게 교체
+            if (_pdSec) _pdSec.style.display = (state.isPaperDisplay || state.isHbTable || state.isHbBox) ? '' : 'none';
+            // 제목/설명을 제품군(매대 ↔ 테이블 ↔ 박스)에 맞게 교체
             try {
                 var _pdT = document.getElementById('soPdReqTitle');
                 var _pdD = document.getElementById('soPdReqDesc');
                 if (_pdT && _pdD) {
-                    if (state.isHbTable) {
+                    if (state.isHbBox) {
+                        _pdT.textContent = '📝 ' + tr('박스 디자인 컨셉', 'ボックスデザインコンセプト', 'Box design concept');
+                        _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 입력하신 박스 사이즈 그대로 목업과 6면 전개도를 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                                              'ブランド·製品·コンセプトを入力すると、AIデザイン実行が入力されたボックスサイズのままモックアップと6面展開図を作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                                              'Enter your brand, products and concept — Run AI Design makes a mockup plus a six-panel dieline at the box size you entered. A professional designer then crafts the real print design from it and contacts you.');
+                    } else if (state.isHbTable) {
                         _pdT.textContent = '📝 ' + tr('테이블 디자인 컨셉', 'テーブルデザインコンセプト', 'Table design concept');
                         _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 이 테이블 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
                                               'ブランド·製品·コンセプトを入力すると、AIデザイン実行がこのテーブルの形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
@@ -15561,6 +15580,10 @@ html, body { background: #ffffff !important; }
             try {
                 if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) {
                     wMm = 1800; hMm = 1200;
+                } else if (p && typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(p)) {
+                    // 2026-07-19: 허니콤 박스 — 좌측 목업 + 우측 6면 전개도를 담는 가로 대지.
+                    //   박스 실치수(W/H/D)는 가격·칼선용으로 그대로 쓰이고, 대지는 목업 뷰어 역할만 한다.
+                    wMm = 1800; hMm = 1200;
                 } else if (p && typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(p)) {
                     // 종이매대도 같은 이유로 정확한 3:2 로 통일 (기존 2500×1600 = 1.5625 라 좌우가 약 4% 잘렸음)
                     wMm = 2400; hMm = 1600;
@@ -16235,7 +16258,7 @@ html, body { background: #ffffff !important; }
             // 2026-07-15: 글씨 스카시/종이매대 참고자료(AI 목업 등) URL 배열 — 주문 시 design_requests.files 로 첨부
             uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice()
                 // 2026-07-18: 종이매대 + 허니콤 테이블 — AI 목업을 디자이너 참고자료로
-                : ((state.isPaperDisplay || state.isHbTable) && Array.isArray(state.pdRefUrls) && state.pdRefUrls.length) ? state.pdRefUrls.slice()
+                : ((state.isPaperDisplay || state.isHbTable || state.isHbBox) && Array.isArray(state.pdRefUrls) && state.pdRefUrls.length) ? state.pdRefUrls.slice()
                 : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
             isInstaPanel: !!state.isInstaPanel,
@@ -20078,8 +20101,11 @@ html, body { background: #ffffff !important; }
                     // 2026-07-18: 허니콤 테이블(hb_tb_*)도 같은 흐름으로 디자이너 의뢰
                     var _pi_isTb = (typeof _soIsTableProduct === 'function' && _soIsTableProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^hb_tb/i.test(_pi_it.product.code));
-                    if (!_pi_isPd && !_pi_isTb) continue;
-                    var _pi_kind = _pi_isTb ? '테이블' : '종이매대';
+                    // 2026-07-19: 허니콤 박스(hb_bx_*)도 같은 흐름으로 디자이너 의뢰
+                    var _pi_isBx = (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(_pi_it.product))
+                        || (_pi_it.product && _pi_it.product.code && /^hb_bx/i.test(_pi_it.product.code));
+                    if (!_pi_isPd && !_pi_isTb && !_pi_isBx) continue;
+                    var _pi_kind = _pi_isBx ? '박스' : _pi_isTb ? '테이블' : '종이매대';
                     if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
                     var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || _pi_kind);
                     var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
@@ -20090,7 +20116,9 @@ html, body { background: #ffffff !important; }
                     var _pi_qty = Math.max(1, Number(_pi_it.qty) || 1);
                     var _pi_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_pi_it) : ((_pi_it.product && _pi_it.product.price) || 0);
                     var _pi_unitPrice = Math.round((Number(_pi_price) || 0) / _pi_qty);
-                    var _pi_payout = 40000;   // 디자이너 지급 — 1건당 (종이매대 상이하면 조정)
+                    // 디자이너 지급 — 1건당. 2026-07-19: 박스는 단가가 40,000원부터라 40,000 지급이면
+                    //   마진이 남지 않아 사이트 표기 기준(디자인 의뢰 30,000원)에 맞춰 낮춤. 확정 정책 나오면 조정 필요.
+                    var _pi_payout = _pi_isBx ? 30000 : 40000;
                     var _pi_files = [];
                     ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function (f) { if (_pi_it[f] && typeof _pi_it[f] === 'string') _pi_files.push(_pi_it[f]); });
                     if (Array.isArray(_pi_it.uploadedFiles)) _pi_it.uploadedFiles.forEach(function (u) { if (u && typeof u === 'string') _pi_files.push(u); });

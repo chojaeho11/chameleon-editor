@@ -6261,7 +6261,7 @@
     var _meAiRatio = '16:9';      // 기본 가로 16:9
     var _meAiScarci = false;      // 2026-07-18: 글씨 스카시 = 입체 글씨 포토존 컨셉 모드
     var _meAiPaperDisplay = false;// 2026-07-18: 종이매대/허니콤테이블 = 제품 썸네일 구조 유지 목업 모드
-    var _meAiPdIsTable = false;   // 2026-07-18: 위 모드 중 허니콤 테이블(hb_tb_*) 이면 true — 프롬프트만 다름
+    var _meAiPdKind = 'display';  // 2026-07-19: 목업 모드의 종류 — 'display' | 'table' | 'box'. 프롬프트만 달라진다.
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
@@ -6541,15 +6541,15 @@
         //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
         _meAiScarci = false;
         _meAiPaperDisplay = false;
-        _meAiPdIsTable = false;
+        _meAiPdKind = 'display';
         var _scarciAuto = false, _scarciTitleTxt = '', _scarciSubTxt = '';
         var _pdAuto = false, _pdThumbUrl = '', _pdTxt = null;
         try {
             var _hint = (typeof window._soAiPresetHint === 'function') ? window._soAiPresetHint() : null;
-            if (_hint === 'paper-display' || _hint === 'hb-table') {
+            if (_hint === 'paper-display' || _hint === 'hb-table' || _hint === 'hb-box') {
                 // 종이매대/허니콤테이블: 제품 썸네일(구조)을 참조로 두고 브랜드/제품/컨셉 문구로 바로 자동 생성.
                 _meAiPaperDisplay = true;
-                _meAiPdIsTable = (_hint === 'hb-table');
+                _meAiPdKind = (_hint === 'hb-table') ? 'table' : (_hint === 'hb-box') ? 'box' : 'display';
                 // 2026-07-18: 대지가 가로(2500x1600 등)라 세로 생성물은 삽입 시 잘림 → 가로 16:9 고정.
                 //   좌측 매대 목업 + 우측 메인 광고판 실사 2분할 구성이라 가로가 맞음.
                 _meAiRatio = '16:9';
@@ -6559,7 +6559,13 @@
                     try { if (typeof window._soPdNeedBrand === 'function') window._soPdNeedBrand(); } catch (_nb) {}
                     return;
                 }
-                _pdThumbUrl = (typeof window._soPdThumbUrl === 'function') ? (window._soPdThumbUrl() || '') : '';
+                // 2026-07-19: 박스는 썸네일을 참조로 쓰지 않는다.
+                //   매대·테이블은 "이 집기 모양 그대로" 가 핵심이라 썸네일 구조를 따라야 하지만,
+                //   박스 썸네일은 여러 박스가 쌓인 일반 제품컷이라 구조 참조로 쓰면 오히려 방해되고,
+                //   무엇보다 비율은 고객이 입력한 W×H×D 를 따라야 해서 썸네일 비율과 충돌한다.
+                _pdThumbUrl = (_meAiPdKind === 'box')
+                    ? ''
+                    : ((typeof window._soPdThumbUrl === 'function') ? (window._soPdThumbUrl() || '') : '');
                 _pdAuto = true;
             } else if (_hint === 'scarci') {
                 // 글씨 스카시 = 입체 글씨 포토존. 타이틀/서브 문구로 바로 자동 생성(프롬프트 입력창 숨김).
@@ -6992,8 +6998,8 @@
                 //   실제 인쇄 데이터/칼선은 결제 후 전문 디자이너가 제작 (이건 컨셉 참고용).
                 if (_meAiPaperDisplay) {
                     var _pdt = (typeof window._soPdAiText === 'function') ? (window._soPdAiText() || {}) : {};
-                    var _pdMainPanel = _meAiPdIsTable ? 'front panel of the table' : 'top header board of the display';
-                    var _pdSubPanel = _meAiPdIsTable ? 'the front panel and side panels' : 'the header and the shelf front edges or side panels';
+                    var _pdMainPanel = (_meAiPdKind === 'table') ? 'front panel of the table' : (_meAiPdKind === 'box') ? 'main front face of the box' : 'top header board of the display';
+                    var _pdSubPanel = (_meAiPdKind === 'table') ? 'the front panel and side panels' : (_meAiPdKind === 'box') ? 'the side and top faces' : 'the header and the shelf front edges or side panels';
                     var _pdBrandClause = _pdt.brand
                         ? ' The BRAND NAME / HEADLINE text is: "' + _pdt.brand + '" — render it large and clearly legible on the ' + _pdMainPanel + '.'
                         : ' Render the brand name from the input large on the ' + _pdMainPanel + '.';
@@ -7004,7 +7010,22 @@
                         ? ' The color scheme and overall mood must be: "' + _pdt.concept + '". Apply this palette consistently across the header, shelf fronts and side panels.'
                         : ' Choose a clean color scheme that suits the brand and apply it consistently.';
                     // 2026-07-18: 좌=빈 목업 / 우=메인 인쇄면 실사 정면. 제품(상품)은 절대 넣지 않음.
-                    if (_meAiPdIsTable) {
+                    if (_meAiPdKind === 'box') {
+                        // 2026-07-19: 허니콤 박스 — 좌=완성 박스 목업 / 우=6면 전개도(다이라인).
+                        //   고객이 입력한 W×H×D 를 그대로 지시해 비율이 실제 박스와 맞게.
+                        var _bd = _pdt.boxDims;
+                        var _boxSize = _bd
+                            ? ' The box measures ' + _bd.w + 'mm wide x ' + _bd.h + 'mm high x ' + _bd.d + 'mm deep — render both the mockup and the dieline in these exact proportions.'
+                            : '';
+                        _bannerHint = ' Create a WIDE two-panel packaging design presentation board, SPLIT LEFT AND RIGHT.'
+                            + ' LEFT HALF: a photorealistic MOCKUP of the closed, assembled CORRUGATED CARDBOARD BOX, shown at a three-quarter angle so the front, one side and the top are all visible.' + _boxSize
+                            + ' RIGHT HALF: the FLAT UNFOLDED DIELINE (net) of that same box laid out flat, showing ALL SIX FACES — front, back, left, right, top and bottom — connected as one continuous unfolded sheet, drawn straight-on with no perspective, with thin fold lines between the panels and small glue/tuck flaps at the edges. Each face must carry the SAME artwork it has on the mockup, so the two halves clearly correspond.'
+                            + ' CRITICAL: the artwork, colors and typography must be IDENTICAL between the assembled mockup and the dieline.'
+                            + ' CRITICAL: show NO merchandise or props — no products spilling out, no people, no hands. Just the box and its dieline.'
+                            + _pdBrandClause + _pdProdClause + _pdMoodClause
+                            + ' Keep all printed text crisp, upright and readable, and keep it well inside each face away from the fold lines and edges, since panels get creased and trimmed.'
+                            + ' Evenly lit studio product photography for the mockup, plain uncluttered light neutral background behind both halves. This is a packaging design concept board for a printed cardboard box.';
+                    } else if (_meAiPdKind === 'table') {
                         // 허니콤 테이블(hb_tb_*) — 부스/행사용 조립식 테이블(카운터). 인쇄면은 앞면 패널.
                         _bannerHint = ' Create a WIDE two-panel design presentation board, SPLIT LEFT AND RIGHT.'
                             + ' LEFT HALF: a photorealistic MOCKUP of the PROMOTIONAL EVENT TABLE / RECEPTION COUNTER shown in the attached reference image, shown in full.'
@@ -7048,7 +7069,7 @@
                 if (_meAiRefDataUrl) {
                     if (_meAiRefMode === 'structure') {
                         // 종이매대: 첨부 썸네일의 형태·구조는 그대로, 겉면 그래픽만 교체
-                        genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the ' + (_meAiPdIsTable ? 'event table' : 'display stand') + ' rendered in the LEFT half of the output. Reproduce its exact shape, proportions, tier/shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below, and leave it completely empty with nothing placed on it. Do NOT copy the reference\'s branding, text, artwork or any merchandise shown on it. ' + genPrompt1;
+                        genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the ' + ((_meAiPdKind === 'table') ? 'event table' : (_meAiPdKind === 'box') ? 'box' : 'display stand') + ' rendered in the LEFT half of the output. Reproduce its exact shape, proportions, tier/shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below, and leave it completely empty with nothing placed on it. Do NOT copy the reference\'s branding, text, artwork or any merchandise shown on it. ' + genPrompt1;
                     } else if (_meAiRefMode === 'reference') {
                         genPrompt1 = 'Use the attached image ONLY as a STYLE, LAYOUT and MOOD reference. Create a COMPLETELY NEW, original design in a similar visual style, color mood and composition — do NOT copy its text, logos, photos, or specific content. ' + genPrompt1;
                     } else {
