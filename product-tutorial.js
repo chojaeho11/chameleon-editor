@@ -755,6 +755,39 @@
     cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
   };
 
+  // ════════════════════════════════════════════════════════════════════
+  //  2026-07-19: 일반 제품 AI 디자인 2단계 (GENERIC_STEPS[0] 에서 '인공지능으로 디자인' 을 고른 경우만)
+  //   ① 실행 — 나머지는 어둡게, [AI디자인 실행] 만 밝게. '다음' 버튼을 두지 않는다.
+  //      (버튼이 있으면 습관적으로 눌러 디자인을 건너뛰게 된다는 피드백)
+  //      캔버스에 시안을 넣으면(me-ai-inserted) 자동으로 ② 로 넘어간다.
+  //   ② 확인 — "시안이 마음에 드시나요?" → [다시 생성] / [다음 진행]
+  // ════════════════════════════════════════════════════════════════════
+  var GENERIC_AI_RUN_STEP = {
+    target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-ai-inserted',
+    onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
+    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
+    msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 만들어진 시안을 <b>캔버스에 넣으면</b> 다음으로 넘어가요.',
+      ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。できた案を <b>キャンバスに追加</b> すると次へ進みます。',
+      en: 'Tap the highlighted <b>[Run AI Design]</b>! Describe the design you want and hit create. Add the result to the canvas to continue.' },
+    cheer: { kr: '시안 완성! 🎨', ja: '案が完成! 🎨', en: 'Concept ready! 🎨' }
+  };
+
+  var GENERIC_AI_CONFIRM_STEP = {
+    target: ['#embeddedEditorPreview', '#meStage'], mode: 'next', hideBack: true,
+    onEnter: function () { return _chosenBranch === 'ai' && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); },
+    buttons: [{ action: '_tutAiRegenerate', label: { kr: '다시 생성', ja: '作り直す', en: 'Regenerate' } }],
+    nextLabel: { kr: '다음 진행 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
+    msg: { kr: '<b>시안이 마음에 드시나요?</b><br>다른 느낌으로 보고 싶으면 <b>다시 생성</b>을 눌러주세요. 글씨·요소·사진을 더해 꾸며도 좋아요. 이대로 좋으시면 <b>다음 진행</b>을 눌러주세요.',
+      ja: '<b>この案でよろしいですか?</b><br>別の雰囲気で見たい場合は <b>作り直す</b> を押してください。文字·要素·写真を加えて飾ってもOK。このままで良ければ <b>次へ進む</b> を押してください。',
+      en: '<b>Happy with this concept?</b><br>Want a different feel? Tap <b>Regenerate</b>. You can also add text, elements and photos. If it looks good, tap <b>Continue</b>.' },
+    cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
+  };
+
+  // [다시 생성] — AI 생성창을 다시 연다. 넣고 나면 이 단계에 그대로 머물러 또 확인할 수 있다.
+  window._tutAiRegenerate = function () {
+    try { if (typeof window._meAiGenOpen === 'function') window._meAiGenOpen(); } catch (_) {}
+  };
+
   var BIZCARD_STEPS = [
     // 2026-06-25: 명함은 항상 양면 기본 — 단/양면 선택 단계 폐지.
     { // 1) 디자인 방법 — 3갈래 (양면: 앞/뒤 모두)
@@ -780,12 +813,13 @@
           }
         },
         // 2026-07-19: 명함도 템플릿 대신 인공지능으로.
-        { key: 'ai', target: ['.me-intro-ai'],
+        // 2026-07-19: 일반 제품과 동일 — 고르는 즉시 실행 단계로 (분기 안내창의 '다음' 으로 건너뛰지 못하게)
+        { key: 'ai', mode: 'jump', target: ['.me-intro-ai'],
           label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
           sub: { kr: '상호·이름·연락처만 적으면 끝', ja: '社名·氏名·連絡先を書くだけ', en: 'Just enter name & contact' },
-          msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>상호·이름·직함·연락처</b> 등 명함에 넣을 내용을 적고 만들기를 누르면, 업종에 어울리는 명함을 만들어드려요. 마음에 들 때까지 다시 만들 수 있어요.<br>디자인이 끝나면 <b>다음</b>을 눌러주세요.',
-            ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>社名·氏名·肩書·連絡先</b> など名刺に入れる内容を書いて作成を押すと、業種に合う名刺を作ります。気に入るまで作り直せます。<br>デザインが終わったら <b>次へ</b> を押してください。',
-            en: 'Tap the highlighted <b>[Run AI Design]</b>! Enter what goes on the card — <b>company, name, title, contact</b> — and hit create; we\'ll design one that suits your industry. Regenerate as often as you like.<br>When your design is done, tap <b>Next</b>.' }
+          run: function () {
+            try { _chosenBranch = 'ai'; enterStep(((_cur && _cur.i != null) ? _cur.i : 0) + 1); } catch (_) {}
+          },
         },
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
@@ -796,6 +830,7 @@
         }
       ]
     },
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 3) 용지
       target: '#soBizPaperGrid', mode: 'wait', awaitPick: 'paper',
       hint: { kr: '설명을 보고 맘에 드는 용지를 골라주세요', ja: '説明を見てお好みの用紙をお選びください', en: 'Read the notes and pick the paper you like' },
@@ -933,38 +968,6 @@
     }
   ];
 
-  // ════════════════════════════════════════════════════════════════════
-  //  2026-07-19: 일반 제품 AI 디자인 2단계 (GENERIC_STEPS[0] 에서 '인공지능으로 디자인' 을 고른 경우만)
-  //   ① 실행 — 나머지는 어둡게, [AI디자인 실행] 만 밝게. '다음' 버튼을 두지 않는다.
-  //      (버튼이 있으면 습관적으로 눌러 디자인을 건너뛰게 된다는 피드백)
-  //      캔버스에 시안을 넣으면(me-ai-inserted) 자동으로 ② 로 넘어간다.
-  //   ② 확인 — "시안이 마음에 드시나요?" → [다시 생성] / [다음 진행]
-  // ════════════════════════════════════════════════════════════════════
-  var GENERIC_AI_RUN_STEP = {
-    target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-ai-inserted',
-    onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
-    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
-    msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 만들어진 시안을 <b>캔버스에 넣으면</b> 다음으로 넘어가요.',
-      ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。できた案を <b>キャンバスに追加</b> すると次へ進みます。',
-      en: 'Tap the highlighted <b>[Run AI Design]</b>! Describe the design you want and hit create. Add the result to the canvas to continue.' },
-    cheer: { kr: '시안 완성! 🎨', ja: '案が完成! 🎨', en: 'Concept ready! 🎨' }
-  };
-
-  var GENERIC_AI_CONFIRM_STEP = {
-    target: ['#embeddedEditorPreview', '#meStage'], mode: 'next', hideBack: true,
-    onEnter: function () { return _chosenBranch === 'ai' && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); },
-    buttons: [{ action: '_tutAiRegenerate', label: { kr: '다시 생성', ja: '作り直す', en: 'Regenerate' } }],
-    nextLabel: { kr: '다음 진행 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
-    msg: { kr: '<b>시안이 마음에 드시나요?</b><br>다른 느낌으로 보고 싶으면 <b>다시 생성</b>을 눌러주세요. 글씨·요소·사진을 더해 꾸며도 좋아요. 이대로 좋으시면 <b>다음 진행</b>을 눌러주세요.',
-      ja: '<b>この案でよろしいですか?</b><br>別の雰囲気で見たい場合は <b>作り直す</b> を押してください。文字·要素·写真を加えて飾ってもOK。このままで良ければ <b>次へ進む</b> を押してください。',
-      en: '<b>Happy with this concept?</b><br>Want a different feel? Tap <b>Regenerate</b>. You can also add text, elements and photos. If it looks good, tap <b>Continue</b>.' },
-    cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
-  };
-
-  // [다시 생성] — AI 생성창을 다시 연다. 넣고 나면 이 단계에 그대로 머물러 또 확인할 수 있다.
-  window._tutAiRegenerate = function () {
-    try { if (typeof window._meAiGenOpen === 'function') window._meAiGenOpen(); } catch (_) {}
-  };
 
   // ════════════════════════════════════════════════════════════════════
   //  시나리오 — 사이즈 지정 제품 (스티커 / 실사출력 / 현수막 / 광고인쇄 등)  2026-07-14
