@@ -144,8 +144,11 @@
         /* 2026-06-14: 4 모서리 핸들 + 회전 핸들 (Photoshop/Figma 스타일) */
         /* 2026-07-14: 핸들/삭제/칩은 항상 클릭 가능 — 부모(칼선 박스)가 pointer-events:none 여도 조작되도록 (pointer-events 는 상속됨). */
         .me-handle, .me-handle-rot, .me-del, .me-imgchip { pointer-events:auto; }
-        /* 2026-07-18: 어두운 대지밖 배경에서도 잘 보이게 — 흰색 채움 + 파란 테두리 + 밝은 이중 링(어두운 배경/밝은 이미지 양쪽 대비 확보) */
-        .me-handle { position:absolute; width:15px; height:15px; background:#fff; border:2px solid #0A84FF; border-radius:50%; box-shadow:0 0 0 1.5px rgba(0,0,0,0.4), 0 0 6px 2px rgba(255,255,255,0.9); z-index:5; }
+        /* 2026-07-19: 핸들이 안 보인다는 재요청 — 07-18 판(흰 채움 + 흰 발광)은 어두운 배경만 고려해서,
+           물/하늘처럼 밝은 이미지 위에서는 흰 원 + 흰 발광이 배경에 묻혀 사라졌다.
+           → 채움을 진한 파랑으로 뒤집고 흰 링을 둘러, 밝은 곳에선 파란 알맹이가 / 어두운 곳에선 흰 링이 보이게.
+           발광(box-shadow)은 대비를 흐리기만 해서 제거하고, 얇은 어두운 outline 으로 흰 배경에서도 링 경계를 남긴다. */
+        .me-handle { position:absolute; width:15px; height:15px; background:#0A84FF; border:3px solid #fff; border-radius:50%; outline:1.5px solid rgba(15,23,42,0.65); z-index:5; }
         .me-handle-nw { left:-6px; top:-6px; cursor:nwse-resize; }
         .me-handle-ne { right:-6px; top:-6px; cursor:nesw-resize; }
         .me-handle-sw { left:-6px; bottom:-6px; cursor:nesw-resize; }
@@ -156,7 +159,8 @@
         .me-handle-e  { right:-6px; top:50%; transform:translateY(-50%); cursor:ew-resize; }
         .me-handle-w  { left:-6px;  top:50%; transform:translateY(-50%); cursor:ew-resize; }
         /* 2026-06-28: 회전 핸들 — 우측상단 바깥 + 회전(↻) 모양 + grab 커서 (일러스트식). 녹색 점/줄기 제거. */
-        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:24px; height:24px; background:#fff; border:2px solid #0A84FF; cursor:grab; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1.5px rgba(0,0,0,0.4), 0 0 7px 2px rgba(255,255,255,0.9); }
+        /* 회전 핸들은 ↻ 글자가 읽혀야 해서 흰 채움 유지 — 대신 테두리를 두껍게 + 어두운 outline 으로 밝은 배경 대비 확보 */
+        .me-handle-rot { left:auto; right:-28px; top:-28px; margin-left:0; width:24px; height:24px; background:#fff; border:3px solid #0A84FF; border-radius:50%; cursor:grab; display:flex; align-items:center; justify-content:center; outline:1.5px solid rgba(15,23,42,0.65); }
         .me-handle-rot::before { content:'\21BB'; position:static; width:auto; height:auto; background:none; transform:none; color:#0A84FF; font-size:16px; font-weight:900; line-height:1; -webkit-text-stroke:0; }
         /* 2026-06-28: 글씨 테두리(-webkit-text-stroke)가 자식 핸들·삭제버튼·칩까지 상속되어 회전 화살표에 테두리가 생기고 드래그 잔상이 남던 문제 차단 */
         .me-handle, .me-handle::before, .me-handle-rot, .me-handle-rot::before, .me-del, .me-imgchip { -webkit-text-stroke:0 !important; -webkit-text-stroke-width:0 !important; paint-order:normal !important; text-shadow:none !important; }
@@ -184,7 +188,7 @@
         .me-guide-h { height:1px; left:0; right:0; box-shadow:0 0 6px rgba(236,72,153,0.6); }
         /* 2026-06-14: 모바일 — 핸들·삭제버튼 터치 친화적 크기 + 텍스트 편집 UX */
         @media (max-width: 768px) {
-            .me-handle { width:20px; height:20px; border-width:2.5px; }
+            .me-handle { width:20px; height:20px; border-width:3px; }   /* 2026-07-19: 흰 링 두께 데스크탑과 동일하게 */
             .me-handle-nw { left:-10px; top:-10px; }
             .me-handle-ne { right:-10px; top:-10px; }
             .me-handle-sw { left:-10px; bottom:-10px; }
