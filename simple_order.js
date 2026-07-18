@@ -2435,19 +2435,19 @@ html, body { background: #ffffff !important; }
           <div style="display:flex; gap:6px; align-items:center; margin-bottom:8px;">
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '幅 (W)', 'Width (W)')}</div>
-              <input type="number" id="soBoxW" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+              <input type="number" id="soBoxW" value="300" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
             </div>
             <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('높이 (H)', '高さ (H)', 'Height (H)')}</div>
-              <input type="number" id="soBoxH" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+              <input type="number" id="soBoxH" value="300" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
             </div>
             <span style="color:#94a3b8; font-weight:bold; margin-top:14px;">×</span>
             <div style="flex:1; text-align:center;">
               <div style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('깊이 (D)', '奥行 (D)', 'Depth (D)')}</div>
-              <input type="number" id="soBoxD" value="400" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
+              <input type="number" id="soBoxD" value="300" min="50" max="1200" oninput="window._soOnBoxDimsChange()"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
             </div>
           </div>
@@ -10282,7 +10282,7 @@ html, body { background: #ffffff !important; }
         if (state.isBox) {
             state.boxW = p.width_mm || 400;
             state.boxH = p.height_mm || 400;
-            state.boxD = 400;
+            state.boxD = 300;   // 2026-07-19: 기본 300x300x300 (사장님 요청)
             var bw = document.getElementById('soBoxW'); if (bw) bw.value = state.boxW;
             var bh = document.getElementById('soBoxH'); if (bh) bh.value = state.boxH;
             var bd = document.getElementById('soBoxD'); if (bd) bd.value = state.boxD;
@@ -10441,7 +10441,7 @@ html, body { background: #ffffff !important; }
         if (state.isBox) {
             state.boxW = p.width_mm || 400;
             state.boxH = p.height_mm || 400;
-            state.boxD = 400;
+            state.boxD = 300;   // 2026-07-19: 기본 300x300x300 (사장님 요청)
             var _bw = document.getElementById('soBoxW'); if (_bw) _bw.value = state.boxW;
             var _bh = document.getElementById('soBoxH'); if (_bh) _bh.value = state.boxH;
             var _bd = document.getElementById('soBoxD'); if (_bd) _bd.value = state.boxD;
@@ -13170,7 +13170,7 @@ html, body { background: #ffffff !important; }
         state.isBox = _soIsBoxProduct(p);
         state.boxW = parseInt(p.width_mm || 400, 10) || 400;
         state.boxH = parseInt(p.height_mm || 400, 10) || 400;
-        state.boxD = 400;
+        state.boxD = 300;   // 2026-07-19: 기본 300x300x300 (사장님 요청)
         state.boxUnitPrice = 0;
         state.boxNesting = null;
         var wallSec = document.getElementById('soWallSizeSection');
