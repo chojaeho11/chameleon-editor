@@ -6700,11 +6700,16 @@
     //   모달을 열 때 _meAiSetRef(null) 로 초기화되므로, 여기 담아뒀다가 그 직후 다시 적용한다.
     var _meGalPendingRef = null;
 
-    // 대지에 올려둔 갤러리 미리보기 제거 (연속 클릭 시 쌓임 방지 / AI 결과로 덮어쓸 때 정리)
+    // 대지에 깔아둔 "배경 레이어"(갤러리 미리보기 / 직전 AI 결과) 제거.
+    //   2026-07-18 [중요] toBack 레이어를 지우지 않고 쌓으면 화면과 저장본이 서로 다른 그림이 된다:
+    //     · 화면 = DOM 순서(둘 다 z-index 0 → 나중에 append 된 새 이미지가 위)  → 최신 그림이 보임
+    //     · 저장 = me.items 배열 순서(toBack 은 unshift 라 최신이 index 0 = 맨 아래) → 옛 그림이 위에 덮임
+    //   실제로 3단테이블에서 만든 목업이 십자선반 테이블 주문서에 찍혀 나갔다(2026-07-18 사장님 제보).
+    //   그래서 새 배경을 넣기 전에 항상 이전 배경을 먼저 없앤다 = 언제나 한 장만 존재.
     function _meGalRemovePreview() {
         try {
             (me && me.items ? me.items : []).slice().forEach(function (it) {
-                if (it && it._isGalPreview) {
+                if (it && (it._isGalPreview || it._isAiBg)) {
                     try { if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); } catch (_) {}
                     var ix = me.items.indexOf(it); if (ix >= 0) me.items.splice(ix, 1);
                 }
@@ -6754,10 +6759,14 @@
                 opts.fitCanvas = true; // 자연크기 못 구하면 최소한 대지에 맞춤
             }
         } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
-        // 2026-07-18: 갤러리에서 골라 대지에 올려둔 미리보기는 제거 — AI 결과가 그 자리를 덮어쓴다.
-        //   (둘 다 toBack 이라 그냥 두면 어느 쪽이 위인지 화면과 저장 결과가 어긋남)
+        // 2026-07-18: 이전 배경 레이어(갤러리 미리보기 + 직전 AI 결과)를 먼저 제거 — 새 결과가 그 자리를 덮어쓴다.
         try { _meGalRemovePreview(); } catch (_gp) {}
-        try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
+        try {
+            window._meAddImage(_meAiPendingUrl, opts, function (it) {
+                // 다음 생성 때 이 레이어를 확실히 걷어내기 위한 표식
+                if (it) it._isAiBg = true;
+            });
+        } catch (err2) { console.warn('[meAi] add', err2); }
         // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
         //   AI 프롬프트에 적은 문구도 함께 넘겨 디자이너에게 전달.
         if (_meAiScarci) {
