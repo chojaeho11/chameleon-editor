@@ -6513,7 +6513,9 @@
             if (_hint === 'paper-display') {
                 // 종이매대: 제품 썸네일(매대 구조)을 참조로 두고 브랜드/제품/컨셉 문구로 바로 자동 생성.
                 _meAiPaperDisplay = true;
-                _meAiRatio = '9:16';   // 바닥에 서는 세로형 매대 목업
+                // 2026-07-18: 대지가 가로(2500x1600 등)라 세로 생성물은 삽입 시 잘림 → 가로 16:9 고정.
+                //   좌측 매대 목업 + 우측 메인 광고판 실사 2분할 구성이라 가로가 맞음.
+                _meAiRatio = '16:9';
                 _pdTxt = (typeof window._soPdAiText === 'function') ? (window._soPdAiText() || {}) : {};
                 // 브랜드/타이틀이 없으면 열지 않고 입력칸으로 안내
                 if (!(_pdTxt.brand || '').trim()) {
@@ -6916,16 +6918,21 @@
                         ? ' The BRAND NAME / HEADER text is: "' + _pdt.brand + '" — render it large and clearly legible on the top header board of the display.'
                         : ' Render the brand name from the input large on the top header board.';
                     var _pdProdClause = _pdt.products
-                        ? ' The products and supporting copy to show are: "' + _pdt.products + '". Show these as the actual retail products sitting on the shelves, plus short readable copy on the shelf fronts or side panels.'
-                        : ' Fill the shelves with plausible retail products that suit the brand, and keep any extra copy short.';
+                        ? ' The supporting copy to print is: "' + _pdt.products + '". Render it as short readable printed text on the header and the shelf front edges or side panels.'
+                        : ' Keep any extra printed copy short.';
                     var _pdMoodClause = _pdt.concept
                         ? ' The color scheme and overall mood must be: "' + _pdt.concept + '". Apply this palette consistently across the header, shelf fronts and side panels.'
                         : ' Choose a clean color scheme that suits the brand and apply it consistently.';
-                    _bannerHint = ' Render a photorealistic MOCKUP of the CARDBOARD RETAIL DISPLAY STAND shown in the attached reference image.'
-                        + ' CRITICAL: keep the EXACT physical STRUCTURE of the attached display — the same silhouette, the same number of shelves at the same heights, the same header/topper shape, the same side panels, the same proportions and the same viewing angle. Do NOT invent a different fixture, do NOT add or remove shelves, do NOT change its shape. ONLY replace the printed GRAPHICS on its surfaces.'
+                    // 2026-07-18: 좌=빈 매대 목업 / 우=메인 광고판(헤더) 실사 정면. 제품(상품)은 절대 넣지 않음.
+                    _bannerHint = ' Create a WIDE two-panel design presentation board, SPLIT LEFT AND RIGHT.'
+                        + ' LEFT HALF: a photorealistic MOCKUP of the CARDBOARD RETAIL DISPLAY STAND shown in the attached reference image, shown in full.'
+                        + ' CRITICAL: keep the EXACT physical STRUCTURE of the attached display — the same silhouette, the same number of shelves at the same heights, the same header/topper shape, the same side panels, the same proportions and the same straight-on viewing angle. Do NOT invent a different fixture, do NOT add or remove shelves, do NOT change its shape. ONLY replace the printed GRAPHICS on its surfaces.'
+                        + ' CRITICAL: the shelves must be COMPLETELY EMPTY. Show absolutely NO merchandise, NO product packages, NO boxes, NO bottles, NO bags and NO items of any kind on any shelf or on the floor. This is an empty unstocked display stand showing only its printed graphics.'
+                        + ' RIGHT HALF: a large FLAT, STRAIGHT-ON, FRONT-FACING photorealistic view of that display\'s MAIN HEADER ADVERTISING BOARD (the topper signage panel) on its own, filling the right half — no perspective, no angle, no shelves, shown flat like printed artwork so the header design is clearly readable at full size.'
+                        + ' The header artwork on the left mockup and on the right flat view must be IDENTICAL.'
                         + _pdBrandClause + _pdProdClause + _pdMoodClause
                         + ' Keep all printed text crisp, upright and readable, and keep it well inside each panel away from the panel edges and fold lines, since panels get trimmed and creased.'
-                        + ' Show the whole display standing on a clean floor, straight-on front view, evenly lit studio product photography, plain uncluttered light background, NO people, NO other fixtures in frame. This is a design concept mockup of a printed cardboard display stand.';
+                        + ' Evenly lit studio product photography, plain uncluttered light neutral background behind both halves, NO people, NO other fixtures in frame. This is a design concept mockup board for a printed cardboard display stand.';
                 }
                 // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시/종이매대는 제외)
                 var _isPoster = (!_meAiScarci) && (!_meAiPaperDisplay) && (_meAiRatio === '9:16' || _meAiRatio === '16:9');
@@ -6938,7 +6945,7 @@
                 // 2026-07-18: 종이매대는 매대 전체가 프레임에 들어와야 하는 목업이라 '사방 여백' 지시를 빼고
                 //   대신 매대가 잘리지 않게 프레임 안에 온전히 담으라고 지시. (그 외 제품은 기존 안전영역 유지)
                 var genPrompt1 = _meAiPaperDisplay
-                    ? prompt + ' Frame the shot so the ENTIRE display stand is fully visible inside the image — do not crop the header, the base, or the sides. Leave a little clean floor and background around it. Do NOT draw any border, frame or outline around the image itself.'
+                    ? prompt + ' Frame it so BOTH halves are fully visible inside the image — do not crop the display stand\'s header, base or sides on the left, and do not crop the flat header board on the right. Leave a little clean background around each. Do NOT draw any border, frame or outline around the image itself.'
                         + _bannerHint
                     : prompt + ' The background and imagery must extend fully to all edges (full bleed). Do NOT draw any border, frame, outline, or colored margin around the image.'
                         + ' IMPORTANT SAFE MARGIN: keep ALL text and every important element inside the CENTER, staying at least 18-22% away from every edge (top, bottom, left AND right). Leave a LARGE empty background margin on all four sides — roughly one-fifth of the width/height on each side must be clear background. The final print may be cropped or a different aspect ratio, so nothing important — especially text — may sit near any edge, or it will be cut off.'
@@ -6948,7 +6955,7 @@
                 if (_meAiRefDataUrl) {
                     if (_meAiRefMode === 'structure') {
                         // 종이매대: 첨부 썸네일의 형태·구조는 그대로, 겉면 그래픽만 교체
-                        genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the physical object. Reproduce its exact shape, proportions, shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below. Do NOT copy the reference\'s branding, text or artwork. ' + genPrompt1;
+                        genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the display stand rendered in the LEFT half of the output. Reproduce its exact shape, proportions, shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below, and leave its shelves completely empty. Do NOT copy the reference\'s branding, text, artwork or any merchandise shown on it. ' + genPrompt1;
                     } else if (_meAiRefMode === 'reference') {
                         genPrompt1 = 'Use the attached image ONLY as a STYLE, LAYOUT and MOOD reference. Create a COMPLETELY NEW, original design in a similar visual style, color mood and composition — do NOT copy its text, logos, photos, or specific content. ' + genPrompt1;
                     } else {
