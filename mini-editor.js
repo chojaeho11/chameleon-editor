@@ -6660,13 +6660,15 @@
             res.innerHTML = '<div style="width:100%; padding:14px 12px; text-align:center;">' +
                 '<div style="font-size:30px; margin-bottom:8px;">✅</div>' +
                 '<div style="font-size:13.5px; color:#334155; line-height:1.65; font-weight:600; margin-bottom:12px;">' +
-                  _meAiTr('이 디자인으로 접수했어요! 세부 디자인은 <b>전문 디자이너</b>가 만들어 <b>고객님께 연락</b>드립니다. 아래 요청사항·배송을 이어서 진행해 주세요.',
-                          'このデザインで受付しました!細部は <b>専門デザイナー</b> が仕上げて <b>ご連絡</b> します。続けてご要望·配送へお進みください。',
-                          'Received with this design! A <b>professional designer</b> finalizes the details and <b>contacts you</b>. Please continue with requests & delivery below.') +
+                  _meAiTr('이 디자인으로 접수했어요! 세부 디자인은 <b>전문 디자이너</b>가 만들어 <b>고객님께 연락</b>드립니다. 아래 <b>배송</b>을 이어서 진행해 주세요.',
+                          'このデザインで受付しました!細部は <b>専門デザイナー</b> が仕上げて <b>ご連絡</b> します。続けて <b>配送</b> へお進みください。',
+                          'Received with this design! A <b>professional designer</b> finalizes the details and <b>contacts you</b>. Please continue with <b>delivery</b> below.') +
                 '</div>' +
                 '<button type="button" onclick="window._meAiGenClose && window._meAiGenClose()" style="padding:10px 22px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">' + _meAiTr('확인', 'OK', 'OK') + '</button>' +
               '</div>';
         }
+        // 2026-07-18: 튜토리얼 대기(waitEvent) 진행 — '이대로 제작' 완료 신호
+        try { document.dispatchEvent(new CustomEvent('me-scarci-accepted')); } catch (_ev) {}
     }
 
     // 로딩 진행바 — 실제 진행률을 알 수 없어 90%까지 부드럽게 채운 뒤 완료 시 100%.
