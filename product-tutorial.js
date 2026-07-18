@@ -1342,32 +1342,48 @@
   //  동기 플래그(window._soCurrentIsScarci)로 판정.
   // ════════════════════════════════════════════════════════════════════
   function _tutIsScarci() { try { return window._soCurrentIsScarci === true; } catch (_) { return false; } }
+  // 2026-07-18: 재설계 — 종류선택 → 원클릭 AI 디자인(+로고) → 다음이동/다시만들기 → 요청사항 → 배송 → 장바구니.
+  //   디자인 문구는 AI 창에 통합(별도 단계 제거), 참고사진 패널은 숨기고 로고 업로드는 흐름 안으로.
   var SCARCI_STEPS = [
-    { // 1) 스카시 종류 선택 (카드) — 클릭 시 variant 리로드 → 다음 챕터로 이어감
+    { // 1) 스카시 종류(스타일) 선택 (카드) — 클릭 시 variant 리로드 → 다음 챕터로 이어감
       target: ['#soScarciVariants', '#soScarciVariantsSec'], mode: 'next', resumeNext: true,
       onEnter: function () { return window._soCurrentIsScarci === true; },
-      msg: { kr: '먼저 <b>스카시 종류</b>를 골라요. 1장짜리·하단박스·묵직한 스타일·아크릴 허니콤 글씨 등 카드를 눌러 종류를 바꿀 수 있어요.',
+      msg: { kr: '먼저 <b>스카시 종류</b>를 골라요. 1장짜리·하단박스·묵직한 스타일·아크릴 허니콤 글씨 등 카드를 눌러 종류(가격)를 바꿀 수 있어요.',
         ja: 'まず <b>スカシの種類</b> を選びます。1枚·下段ボックス·重厚スタイル·アクリルハニカム文字など、カードをタップで切替できます。',
         en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
       cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
     },
-    { // 2) 디자인 문구 (타이틀/서브) — 디자이너가 직접 디자인해주는 상품 안내
-      target: '#soScarciTextInputs', mode: 'next',
-      onEnter: function () { return _secVisible('#soScarciTextInputs'); },
-      msg: { kr: '이 제품은 디자인이 까다로워 <b>전문 디자이너가 직접 만들어드려요</b> (디자인 무료). 넣고 싶은 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요.',
-        ja: 'この商品はデザインが難しいため <b>専門デザイナーが直接制作</b> します（デザイン無料）。入れたい <b>タイトル文</b> と <b>サブ文</b> をご記入ください。',
-        en: 'This product is crafted by a <b>professional designer</b> for you (free). Enter the <b>title</b> and <b>subtitle</b> text you\'d like.' },
-      cheer: { kr: '문구 입력! 📝', ja: '文言OK! 📝', en: 'Text set! 📝' }
+    { // 2) 원클릭 AI 디자인 + 로고(선택)
+      target: ['.me-intro-ai', '#aiNbAi'], mode: 'next',
+      onEnter: function () { return _secVisible('#aiNbAi'); },
+      buttons: [
+        { action: '_soScarciPickLogo', label: { kr: '📎 로고·참고사진 올리기', ja: '📎 ロゴ·参考写真をアップ', en: '📎 Upload logo/refs' } }
+      ],
+      msg: { kr: '<b>원클릭 AI디자인</b>으로 입체 글씨 포토존을 만들어요. 넣고 싶은 <b>문구</b>는 AI 창에 그대로 적으면 돼요. 로고·참고사진이 있으면 아래 <b>[로고·참고사진 올리기]</b>로 올려주세요. 다 되면 <b>다음</b>!',
+        ja: '<b>ワンクリックAIデザイン</b> で立体文字フォトゾーンを作ります。入れたい <b>文言</b> はAI画面にそのまま入力。ロゴ·参考写真があれば下の <b>[ロゴ·参考写真をアップ]</b> から。完成したら <b>次へ</b>!',
+        en: 'Make a 3D-letter photo zone with <b>one-click AI design</b>. Type the <b>text</b> you want right in the AI window. Got a logo/reference? Use <b>[Upload logo/refs]</b> below. When done, tap <b>Next</b>!' },
+      cheer: { kr: '디자인 시작! 🎨', ja: 'デザイン開始! 🎨', en: 'Designing! 🎨' }
     },
-    { // 3) 참고사진 · 로고 올리기 (여러 장) + 30분 안내
-      target: '#soScarciRefUpload', mode: 'next',
-      onEnter: function () { return _secVisible('#soScarciRefUpload'); },
-      msg: { kr: '<b>참고사진·로고</b>를 올려주세요 — <b>여러 장 한 번에</b> 올릴 수 있어요. 결제 후 담당 디자이너·매니저가 배정되어 자료를 검토하는 데 <b>약 30분</b> 소요돼요. 기다려주시면 고객님께 연락드립니다. <b>디자인 비용은 무료</b>예요!',
-        ja: '<b>参考写真·ロゴ</b>をアップロード — <b>複数まとめて</b> OK。ご決済後、担当デザイナー·マネージャーが決まり資料を確認するまで <b>約30分</b> かかります。お待ちいただければご連絡します。<b>デザイン費用は無料</b>です!',
-        en: 'Upload <b>reference photos & logos</b> — <b>several at once</b> is fine. After payment, a designer and manager are assigned and review your materials in <b>about 30 min</b>, then contact you. <b>The design is free</b>!' },
-      cheer: { kr: '자료 업로드! 📎', ja: '資料OK! 📎', en: 'Files uploaded! 📎' }
+    { // 3) 완료 확인 — 다음이동(=다음) / 다시만들기
+      target: ['#meStage', '#aiNbAi'], mode: 'next',
+      nextLabel: { kr: '다음이동 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
+      buttons: [
+        { action: '_soScarciRemake', label: { kr: '🔄 다시 만들기', ja: '🔄 作り直す', en: '🔄 Remake' } }
+      ],
+      msg: { kr: '디자인이 <b>마음에 드시나요?</b> 좋으면 <b>[다음이동]</b>, 다시 만들고 싶으면 <b>[다시 만들기]</b>를 눌러요.',
+        ja: 'デザインは <b>気に入りましたか?</b> 良ければ <b>[次へ進む]</b>、作り直すなら <b>[作り直す]</b> を。',
+        en: '<b>Happy with the design?</b> If so tap <b>[Continue]</b>, or <b>[Remake]</b> to try again.' },
+      cheer: { kr: '좋아요! 👍', ja: 'いいね! 👍', en: 'Nice! 👍' }
     },
-    { // 4) 배송 (수도권 무료 / 지방)
+    { // 4) 요청사항 — 디자이너가 이 디자인을 참고해 제작
+      target: '#soScarciRequest', mode: 'next',
+      onEnter: function () { try { if (window._soScarciRevealRequest) window._soScarciRevealRequest(); } catch (_) {} return true; },
+      msg: { kr: '이 디자인을 <b>참고해서 전문 디자이너가 작업</b>하여 고객님께 연락드려요. 원하시는 점(색·글씨체·분위기, 로고 위치 등)이 있으면 <b>요청사항</b>에 적어주세요. <span style="color:#94a3b8;">(없으면 그냥 다음)</span>',
+        ja: 'このデザインを <b>参考に専門デザイナーが制作</b> し、ご連絡します。ご希望(色·書体·雰囲気、ロゴ位置など)があれば <b>ご要望</b> にご記入ください。<span style="color:#94a3b8;">(なければ次へ)</span>',
+        en: 'A <b>professional designer crafts it</b> referring to your design, then contacts you. Note any wishes (colors, fonts, mood, logo position) in <b>Requests</b>. <span style="color:#94a3b8;">(none? just tap Next)</span>' },
+      cheer: { kr: '요청 접수! 📝', ja: 'ご要望OK! 📝', en: 'Noted! 📝' }
+    },
+    { // 5) 배송 (수도권 무료 / 지방)
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
       msg: { kr: '<b>배송 방법</b>을 골라요. <b>수도권 무료배송</b> 또는 <b>지방배송</b> 중에서 선택할 수 있어요.',
@@ -1375,7 +1391,7 @@
         en: 'Choose the <b>delivery method</b> — <b>free metro delivery</b> or <b>regional delivery</b>.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
     },
-    GENERIC_STEPS[2]  // 5) 장바구니
+    GENERIC_STEPS[2]  // 6) 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════

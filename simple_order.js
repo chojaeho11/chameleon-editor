@@ -2033,6 +2033,27 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
+        <!-- 2026-07-18: 글씨 스카시 전용 — 로고·참고사진 업로드 + 요청사항(자유 입력). AI 시안을 참고해 디자이너가 제작. scarci 에서 항상 표시. -->
+        <div class="so-section" id="soScarciRequest" style="display:none;">
+          <div class="so-section-title">📝 ${tr('로고 · 요청사항', 'ロゴ · ご要望', 'Logo / Requests')} <span style="color:#94a3b8; font-weight:600; font-size:11px;">(${tr('선택', '任意', 'optional')})</span></div>
+          <div style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:10px;">
+            ${tr('만든 디자인을 참고해서 전문 디자이너가 작업하여 고객님께 연락드립니다. 로고·참고사진이 있으면 올려주시고, 색상·글씨체·분위기 등 원하시는 점이 있으면 적어주세요.',
+                 '作成したデザインを参考に、専門デザイナーが制作してご連絡します。ロゴ·参考写真があればアップロードし、色·書体·雰囲気などご希望があればご記入ください。',
+                 'A professional designer will craft it referring to your design and contact you. Upload a logo/reference if any, and note wishes — colors, fonts, mood, etc.')}
+          </div>
+          <button type="button" onclick="window._soScarciPickLogo && window._soScarciPickLogo()"
+            style="width:100%; padding:12px; border:2px dashed #94a3b8; border-radius:11px; background:#f8fafc; color:#334155; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:4px;">
+            ${tr('로고 · 참고사진 올리기 (여러 장 가능)', 'ロゴ · 参考写真をアップロード (複数可)', 'Upload logo / references (multiple)')}
+          </button>
+          <div id="soScarciRefList" style="display:none; margin-top:10px; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px;"></div>
+          <div style="margin-top:12px;">
+            <label for="soScarciReq" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('요청사항', 'ご要望', 'Requests')}</label>
+            <textarea id="soScarciReq" oninput="window._soOnScarciReqChange && window._soOnScarciReqChange()" rows="3"
+              placeholder="${tr('예: 골드 계열 고급스럽게, 회사 로고 크게 넣어주세요', '例: ゴールド系で高級感、ロゴを大きく', 'e.g. Elegant gold tone, make the logo bigger')}"
+              style="width:100%; padding:10px 12px; border:2px solid #e7e5e4; border-radius:9px; font-size:14px; font-weight:500; box-sizing:border-box; font-family:inherit; resize:vertical; line-height:1.5;"></textarea>
+          </div>
+        </div>
+
         <!-- 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 안내 + 4종 입력 (우측) -->
         <div class="so-section" id="soInstaNotice" style="display:none; padding:14px 16px; background:linear-gradient(135deg,#dcfce7,#bbf7d0); border:2px solid #22c55e; border-radius:12px; box-shadow:0 4px 12px -4px rgba(34,197,94,0.3);">
           <div style="font-size:14px; font-weight:900; color:#14532d; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
@@ -2676,7 +2697,7 @@ html, body { background: #ffffff !important; }
                  '複数ファイルを一度に選択できます。ファイルはメール(<b>design@chameleon.design</b>)でお送りいただいてもOKです。',
                  'You can select multiple files at once. You may also email files to <b>design@chameleon.design</b>.')}
           </div>
-          <div id="soScarciRefList" style="display:none; margin-top:12px; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:8px;"></div>
+          <!-- 2026-07-18: 썸네일 목록(#soScarciRefList)은 항상 보이는 #soScarciRequest 섹션으로 이동함 -->
         </div>
 
         <!-- 2026-06-01: 뒷면 디자인 파일 업로드 — 가벽 양면일 때만 표시. 동일 패턴 (점선 → 보라 완료 + 썸네일). -->
@@ -5525,6 +5546,26 @@ html, body { background: #ffffff !important; }
         var el = document.getElementById('soScarciSub');
         if (el) state.scarciSub = (el.value || '').trim();
     };
+    // 2026-07-18: 요청사항(자유 입력) → state.scarciRequest (주문 design_requests 로 전달)
+    window._soOnScarciReqChange = function () {
+        var el = document.getElementById('soScarciReq');
+        if (el) state.scarciRequest = (el.value || '').trim();
+    };
+    // 2026-07-18: 튜토리얼/흐름용 전역 — 로고 업로드 열기 / AI 재생성 / 요청사항 노출.
+    window._soScarciPickLogo = function () {
+        try { var f = document.getElementById('soScarciRefFile'); if (f) f.click(); } catch (_) {}
+    };
+    window._soScarciRemake = function () {
+        try { if (typeof window._meAiGenOpen === 'function') window._meAiGenOpen(); } catch (_) {}
+    };
+    window._soScarciRevealRequest = function () {
+        try {
+            var sec = document.getElementById('soScarciRequest');
+            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            var ta = document.getElementById('soScarciReq');
+            if (ta) setTimeout(function () { try { ta.focus(); } catch (_) {} }, 350);
+        } catch (_) {}
+    };
 
     // 2026-07-15: 글씨 스카시 전용 — 참고사진·로고 여러 장 업로드. 각 파일을 design 버킷에 올려
     //   URL 을 state.scarciRefUrls 에 축적 → 카트 item.uploadedFiles 로 전달 → 주문 시 design_requests.files 로 첨부.
@@ -6375,9 +6416,11 @@ html, body { background: #ffffff !important; }
         } catch (_) {}
         return 'box';
     };
-    window._soScarciAttachAiImage = async function (dataUrl) {
+    window._soScarciAttachAiImage = async function (dataUrl, promptText) {
         try {
             if (!dataUrl) return;
+            // 2026-07-18: 디자인 문구 섹션을 숨겼으므로, AI 프롬프트에 적은 문구를 디자이너 전달용으로 캡처.
+            if (promptText && !state.scarciTitle) { state.scarciTitle = String(promptText).trim().slice(0, 300); }
             if (!Array.isArray(state._scarciRefItems)) state._scarciRefItems = [];
             if (!Array.isArray(state.scarciRefUrls)) state.scarciRefUrls = [];
             var item = { url: null, name: 'ai-photozone.png', thumb: dataUrl, uploading: true, ai: true };
@@ -13422,14 +13465,22 @@ html, body { background: #ffffff !important; }
             var _scNotice = document.getElementById('soScarciNotice');
             var _scTextIn = document.getElementById('soScarciTextInputs');
             if (_scNotice) _scNotice.style.display = _isScarci ? '' : 'none';
-            if (_scTextIn) _scTextIn.style.display = _isScarci ? '' : 'none';
-            // 타이틀/서브 input 초기화
+            // 2026-07-18: 디자인 문구(타이틀/서브) 입력은 AI 디자인 창으로 통합 → 별도 섹션 숨김.
+            //   고객이 AI 프롬프트에 적은 문구를 삽입 시 state.scarciTitle 로 캡처(디자이너 전달용).
+            if (_scTextIn) _scTextIn.style.display = 'none';
+            // 타이틀/서브/요청사항 input 초기화
             var _scT = document.getElementById('soScarciTitle');
             var _scS = document.getElementById('soScarciSub');
             if (_scT) _scT.value = '';
             if (_scS) _scS.value = '';
             state.scarciTitle = '';
             state.scarciSub = '';
+            // 2026-07-18: 요청사항 필드 초기화 + scarci 에서만 표시
+            var _scReqSec = document.getElementById('soScarciRequest');
+            var _scReq = document.getElementById('soScarciReq');
+            if (_scReq) _scReq.value = '';
+            state.scarciRequest = '';
+            if (_scReqSec) _scReqSec.style.display = _isScarci ? '' : 'none';
             // 가격 +50,000원 일괄 적용 (DB 가격 그대로 두고 모달 표시·계산 단가만 inflate)
             if (_isScarci && p && typeof p.price === 'number' && !p._scarciInflated) {
                 p.price = p.price + 50000;
@@ -14562,9 +14613,11 @@ html, body { background: #ffffff !important; }
         try {
             var _scRefSec = document.getElementById('soScarciRefUpload');
             var _scInline = document.getElementById('soInlineUploadCard');
+            // 2026-07-18: 우측 참고사진·로고 패널은 숨김(주문흐름을 AI 디자인 중심으로 단순화).
+            //   로고 업로드는 좌측 에디터 컬럼의 소형 버튼 + 튜토리얼 흐름으로 접어넣음. 업로드 배관(_soScarciRefUpload)은 유지.
             if (state.isScarci) {
                 if (_scInline) { _scInline.style.display = 'none'; _scInline.style.order = ''; }
-                if (_scRefSec) { _scRefSec.style.display = ''; _scRefSec.style.order = '-210'; }
+                if (_scRefSec) { _scRefSec.style.display = 'none'; _scRefSec.style.order = ''; }
             } else {
                 if (_scRefSec) { _scRefSec.style.display = 'none'; _scRefSec.style.order = ''; }
             }
@@ -16015,6 +16068,7 @@ html, body { background: #ffffff !important; }
             // 2026-06-04: 글씨 스카시 family 전용 — 타이틀/서브 문구 (담당자 디자인용)
             scarciTitle: (state.scarciTitle || '') || null,
             scarciSub: (state.scarciSub || '') || null,
+            scarciRequest: (state.scarciRequest || '') || null,   // 2026-07-18: 요청사항 → design_requests
             // 2026-07-15: 글씨 스카시 참고자료(로고/사진) URL 배열 — 주문 시 design_requests.files 로 첨부
             uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice() : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
@@ -19768,6 +19822,7 @@ html, body { background: #ffffff !important; }
                     var _si_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
                     var _si_title = (_si_it.scarciTitle || '').trim();
                     var _si_sub = (_si_it.scarciSub || '').trim();
+                    var _si_req = (_si_it.scarciRequest || '').trim();   // 2026-07-18: 고객 요청사항
                     var _si_qty = Math.max(1, Number(_si_it.qty) || 1);
                     var _si_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_si_it) : ((_si_it.product && _si_it.product.price) || 0);
                     var _si_unitPrice = Math.round((Number(_si_price) || 0) / _si_qty);
@@ -19783,6 +19838,7 @@ html, body { background: #ffffff !important; }
                             + '제품: ' + _si_prodName + (_si_qty > 1 ? ' · ' + (_su + 1) + '/' + _si_qty + '번째' : '') + '\n'
                             + (_si_title ? '타이틀 문구: ' + _si_title + '\n' : '')
                             + (_si_sub ? '서브 문구: ' + _si_sub + '\n' : '')
+                            + (_si_req ? '요청사항: ' + _si_req + '\n' : '')
                             + '주문번호: ' + (newOrderId || '-') + '\n'
                             + '※ 입체 글씨 스카시 디자인 (누끼·칼선 포함)\n\n'
                             + '[FREE_REQ:{"customerPrice":' + _si_unitPrice + ',"designerPayout":' + _si_payout + '}]';

@@ -6599,7 +6599,14 @@
         } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
         try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
         // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
-        if (_meAiScarci) { try { if (typeof window._soScarciAttachAiImage === 'function') window._soScarciAttachAiImage(_meAiPendingUrl); } catch (_sc) {} }
+        //   AI 프롬프트에 적은 문구도 함께 넘겨 디자이너에게 전달(문구 섹션 숨김 대체).
+        if (_meAiScarci) {
+            try {
+                var _scPromptEl = document.getElementById('meAiPrompt');
+                var _scPromptTxt = _scPromptEl ? (_scPromptEl.value || '').trim() : '';
+                if (typeof window._soScarciAttachAiImage === 'function') window._soScarciAttachAiImage(_meAiPendingUrl, _scPromptTxt);
+            } catch (_sc) {}
+        }
         _meAiGenClose();
     }
 
