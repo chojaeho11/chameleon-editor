@@ -6529,12 +6529,26 @@ html, body { background: #ffffff !important; }
             showStatus(tr('먼저 브랜드명/타이틀 문구를 적어주세요.', 'まずブランド名/タイトルをご記入ください。', 'Please enter the brand/title first.'), 'err');
         } catch (_) {}
     };
+    // 2026-07-19: [수정해서 다시 만들기] → 입력칸으로 돌아가 "색상·분위기 컨셉" 을 다시 잡게 한다.
+    //   브랜드명은 이미 적어둔 상태라, 예전처럼 브랜드칸을 focus+select 하면 타이핑 한 번에 지워질 위험이 있었다.
+    //   → 커서는 컨셉칸에 두고(내용은 보존), 세 칸 전체를 잠깐 강조해 어디를 고치면 되는지 보이게 한다.
     window._soPdEditText = function () {
         try {
             var sec = document.getElementById('soPaperDisplayRequest');
-            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-            var t = document.getElementById('soPdBrand');
-            if (t) setTimeout(function () { try { t.focus(); t.select && t.select(); } catch (_) {} }, 350);
+            if (sec) {
+                sec.style.display = '';
+                sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 잠깐 강조 (튜토리얼이 꺼져 있어도 어디로 왔는지 알 수 있게)
+                try {
+                    sec.style.transition = 'box-shadow .25s ease';
+                    sec.style.boxShadow = '0 0 0 3px rgba(109,40,217,0.55)';
+                    setTimeout(function () { try { sec.style.boxShadow = ''; } catch (_) {} }, 2200);
+                } catch (_hl) {}
+            }
+            var t = document.getElementById('soPdConcept') || document.getElementById('soPdBrand');
+            if (t) setTimeout(function () { try { t.focus(); } catch (_) {} }, 380);
+            // 튜토리얼 진행 중이면 입력 단계로 되돌린다 (스포트라이트 재점등)
+            try { document.dispatchEvent(new CustomEvent('me-pd-remake')); } catch (_ev) {}
         } catch (_) {}
     };
     window._soPdAttachAiImage = async function (dataUrl, promptText) {

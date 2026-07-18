@@ -1692,7 +1692,20 @@
     cheer: { kr: '확인 완료! 👀', ja: '確認OK! 👀', en: 'Checked! 👀' }
   };
 
-  // [다시 만들기] — 브랜드명·타이틀 입력칸으로 되돌아간다 (거기서 다시 [AI디자인 실행] 흐름을 탄다).
+  // 2026-07-19: 생성창의 [수정해서 다시 만들기] 를 눌렀을 때도 튜토리얼을 입력 단계로 되돌린다.
+  //   (simple_order._soPdEditText 가 'me-pd-remake' 를 발행한다.)
+  //   안 되돌리면 튜토리얼은 [AI디자인 실행] 버튼을 계속 비추고 있어, 정작 고쳐야 할 입력칸이 어두운 채로 남는다.
+  try {
+    document.addEventListener('me-pd-remake', function () {
+      try {
+        if (!_active || !_steps) return;
+        if (_steps.indexOf(MOCKUP_DESIGN_CHOOSE_STEP) < 0) return;   // 목업 시나리오일 때만
+        setTimeout(function () { try { window._tutRemakeMockup(); } catch (_) {} }, 260);
+      } catch (_) {}
+    });
+  } catch (_) {}
+
+  // [다시 만들기] — 브랜드명·타이틀·컨셉 입력칸으로 되돌아간다 (거기서 다시 [AI디자인 실행] 흐름을 탄다).
   window._tutRemakeMockup = function () {
     try {
       if (!_steps) return;
