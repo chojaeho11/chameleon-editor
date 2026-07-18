@@ -872,12 +872,14 @@
         // 2026-07-19: mode 'free' → 기본(renderDetail). free 모드는 화면을 어둡게 하지 않고 토스트만 띄워
         //   "어딜 눌러야 할지 모르겠다" 는 피드백이 있었다. renderDetail 은 나머지를 어둡게 깔고
         //   [AI디자인 실행] 만 밝게 뚫어준다. (구멍은 pointer-events:none 이라 그대로 클릭 가능)
-        { key: 'ai', target: ['.me-intro-ai'],
+        // 2026-07-19: 'jump' — 선택 즉시 다음 스텝(GENERIC_AI_RUN_STEP)으로. 분기 안내창에 머무르면
+        //   '다음' 버튼이 있어 습관적으로 눌러 디자인을 건너뛰게 된다(사장님 피드백).
+        { key: 'ai', mode: 'jump', target: ['.me-intro-ai'],
           label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
           sub: { kr: '내용만 적으면 AI가 만들어줘요', ja: '内容を書くだけでAIが作成', en: 'Just describe it — AI makes it' },
-          msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 마음에 들 때까지 다시 만들 수 있고, <b>글씨·요소·사진</b>을 더해 꾸며도 좋아요.<br>디자인이 끝나면 <b>다음</b>을 눌러주세요.',
-            ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。気に入るまで作り直せますし、<b>文字·要素·写真</b> を加えて飾ってもOK。<br>デザインが終わったら <b>次へ</b> を押してください。',
-            en: 'Tap the highlighted <b>[Run AI Design]</b>! When the window opens, <b>describe the design you want</b> and hit create. Regenerate as often as you like, and add <b>text, elements and photos</b> too.<br>When your design is done, tap <b>Next</b>.' }
+          run: function () {
+            try { _chosenBranch = 'ai'; enterStep(((_cur && _cur.i != null) ? _cur.i : 0) + 1); } catch (_) {}
+          }
         },
         { key: 'upload', always: true,
           // 업로드 후엔 원래 업로드 버튼이 숨고 '파일 변경' 버튼이 나옴 → 그것도 가리켜 재업로드 가능하게.
@@ -932,6 +934,39 @@
   ];
 
   // ════════════════════════════════════════════════════════════════════
+  //  2026-07-19: 일반 제품 AI 디자인 2단계 (GENERIC_STEPS[0] 에서 '인공지능으로 디자인' 을 고른 경우만)
+  //   ① 실행 — 나머지는 어둡게, [AI디자인 실행] 만 밝게. '다음' 버튼을 두지 않는다.
+  //      (버튼이 있으면 습관적으로 눌러 디자인을 건너뛰게 된다는 피드백)
+  //      캔버스에 시안을 넣으면(me-ai-inserted) 자동으로 ② 로 넘어간다.
+  //   ② 확인 — "시안이 마음에 드시나요?" → [다시 생성] / [다음 진행]
+  // ════════════════════════════════════════════════════════════════════
+  var GENERIC_AI_RUN_STEP = {
+    target: ['.me-intro-ai'], mode: 'wait', waitEvent: 'me-ai-inserted',
+    onEnter: function () { return _chosenBranch === 'ai' && _secVisible('.me-intro-ai'); },
+    hint: { kr: 'AI디자인 실행을 눌러주세요', ja: 'AIデザイン実行を押してください', en: 'Tap Run AI Design' },
+    msg: { kr: '밝게 보이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 만들어진 시안을 <b>캔버스에 넣으면</b> 다음으로 넘어가요.',
+      ja: '明るく表示されている <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。できた案を <b>キャンバスに追加</b> すると次へ進みます。',
+      en: 'Tap the highlighted <b>[Run AI Design]</b>! Describe the design you want and hit create. Add the result to the canvas to continue.' },
+    cheer: { kr: '시안 완성! 🎨', ja: '案が完成! 🎨', en: 'Concept ready! 🎨' }
+  };
+
+  var GENERIC_AI_CONFIRM_STEP = {
+    target: ['#embeddedEditorPreview', '#meStage'], mode: 'next', hideBack: true,
+    onEnter: function () { return _chosenBranch === 'ai' && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); },
+    buttons: [{ action: '_tutAiRegenerate', label: { kr: '다시 생성', ja: '作り直す', en: 'Regenerate' } }],
+    nextLabel: { kr: '다음 진행 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
+    msg: { kr: '<b>시안이 마음에 드시나요?</b><br>다른 느낌으로 보고 싶으면 <b>다시 생성</b>을 눌러주세요. 글씨·요소·사진을 더해 꾸며도 좋아요. 이대로 좋으시면 <b>다음 진행</b>을 눌러주세요.',
+      ja: '<b>この案でよろしいですか?</b><br>別の雰囲気で見たい場合は <b>作り直す</b> を押してください。文字·要素·写真を加えて飾ってもOK。このままで良ければ <b>次へ進む</b> を押してください。',
+      en: '<b>Happy with this concept?</b><br>Want a different feel? Tap <b>Regenerate</b>. You can also add text, elements and photos. If it looks good, tap <b>Continue</b>.' },
+    cheer: { kr: '좋아요! 👍', ja: 'いいですね! 👍', en: 'Nice! 👍' }
+  };
+
+  // [다시 생성] — AI 생성창을 다시 연다. 넣고 나면 이 단계에 그대로 머물러 또 확인할 수 있다.
+  window._tutAiRegenerate = function () {
+    try { if (typeof window._meAiGenOpen === 'function') window._meAiGenOpen(); } catch (_) {}
+  };
+
+  // ════════════════════════════════════════════════════════════════════
   //  시나리오 — 사이즈 지정 제품 (스티커 / 실사출력 / 현수막 / 광고인쇄 등)  2026-07-14
   //  사용자 요청: 사이즈를 정해야 하는 제품은 먼저 우측의 사이즈·용지·별색·수량 옵션을
   //  순서대로 고른 뒤에 디자인 방법 선택 화면이 나오게. 없는 옵션 단계는 onEnter 로 자동 스킵.
@@ -967,6 +1002,7 @@
         en: 'Choose the <b>quantity</b> — more pieces, lower unit price 💰' }
     },
     GENERIC_STEPS[0], // 5) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 6) 모양(재단) 선택 (스티커만) — 사각(기본)/간단도형(+10,000)/복잡모양(+30,000). 없는 제품은 자동 스킵.
       target: '#soStickerShapeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerShapeWrap'); },
@@ -998,6 +1034,7 @@
   // ════════════════════════════════════════════════════════════════════
   var HONEYCOMB_WALL_STEPS = [
     GENERIC_STEPS[0], // 1) 디자인 방법 (AI 이미지 / 템플릿 / 파일 / 의뢰) — 공통 재사용
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 2) 가벽 사이즈
       target: '#soWallSizeSection', mode: 'next',
       msg: { kr: '📐 이제 <b>가벽 사이즈</b>를 골라요. 설치할 공간에 맞춰 <b>가로(m)</b>와 <b>세로(m)</b>를 선택하면 가격이 자동으로 계산돼요.',
@@ -1052,6 +1089,7 @@
         en: 'First pick the <b>banner type</b> — tap a card (<b>honeycomb / linked / shelf / stand set</b>). Then we\'ll continue to the design.' }
     },
     GENERIC_STEPS[0], // 2) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 3) 단면/양면 — 허니콤배너·연결형만 (섹션 안 보이면 자동 스킵)
       target: '#soBannerSideSec', mode: 'next',
       onEnter: function () { return _secVisible('#soBannerSideSec'); },
@@ -1091,6 +1129,7 @@
         en: 'Pick the <b>board type</b> — honeycomb, foamex, foamboard, etc. Same price, so choose the material you like.' }
     },
     GENERIC_STEPS[0], // 3) 디자인 방법 (보통 파일 업로드 — AI/템플릿/의뢰도 가능)
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 4) 업로드 후 — 자동(배경제거+칼선) or 네모 그대로, 버튼으로 선택
       target: '#meBgRemoveBtn', mode: 'wait', waitEvent: 'me-standee-ready',
       onEnter: function () { return _secVisible('#meBgRemoveBtn'); },
@@ -1263,6 +1302,7 @@
         en: 'Add <b>special finishing</b> (emboss, perforation, scoring, hole, round-corner) if needed <span style="color:#94a3b8;">(optional — or Next)</span>.' }
     },
     GENERIC_STEPS[0], // 7) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰) — 옵션 다 고른 뒤 디자인
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     PROOF_STEP,       // 8) 시안 최종 확인
     GENERIC_STEPS[2]  // 9) 장바구니
   ];
@@ -1301,6 +1341,7 @@
         en: 'Choose <b>finishing</b> — eyelets, rope, coating, etc. Selected items are assembled & shipped <span style="color:#94a3b8;">(or Next)</span>.' }
     },
     GENERIC_STEPS[0], // 4) 디자인 방법 (파일 업로드 / 만들기 / 의뢰)
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     PROOF_STEP,       // 5) 시안 최종 확인
     { // 6) 수량
       target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
@@ -1357,6 +1398,7 @@
       cheer: { kr: '고리 선택! 🔗', ja: 'リングOK! 🔗', en: 'Ring set! 🔗' }
     },
     GENERIC_STEPS[0], // 6) 파일 업로드 / 디자인 방법
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 7) 누끼 + 칼선 (모양따기 등)
       target: '#meStage', mode: 'next',
       buttons: [
@@ -1459,6 +1501,7 @@
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
     GENERIC_STEPS[0], // 4) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰)
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 5) 누끼 + 칼선 (모양커팅 선택 시) — 사각커팅이면 그냥 다음
       target: '#meStage', mode: 'next',
       onEnter: function () { return _secVisible('#meStage'); },
@@ -1523,6 +1566,7 @@
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
     GENERIC_STEPS[0], // 5) 디자인 방법
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 5) 누끼 + 칼선 (모양커팅 선택 시) — 사각커팅이면 그냥 다음
       target: '#meStage', mode: 'next',
       onEnter: function () { return _secVisible('#meStage'); },
@@ -1806,7 +1850,7 @@
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
     //   2026-07-14: 장바구니 직전 시안확인(PROOF_STEP) 삽입 (GENERIC_STEPS 배열은 그대로 두고 조합).
     //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 (종류 카드 없으면 자동 스킵).
-    { id: 'generic', match: /.*/, steps: [CHOOSE_VARIANT_STEP, GENERIC_STEPS[0], GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
+    { id: 'generic', match: /.*/, steps: [CHOOSE_VARIANT_STEP, GENERIC_STEPS[0], GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP, GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
   ];
   function pickScenario(code) {
     if (!code) return null;

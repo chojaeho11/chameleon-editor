@@ -6795,7 +6795,12 @@
             } catch (_pd) {}
         }
     }
-    function _meAiInsert() { _meAiDoInsert(); _meAiGenClose(); }
+    function _meAiInsert() {
+        _meAiDoInsert();
+        _meAiGenClose();
+        // 2026-07-19: 캔버스에 넣었음을 알림 — 튜토리얼이 '시안 확인' 단계로 넘어가는 신호.
+        try { document.dispatchEvent(new CustomEvent('me-ai-inserted')); } catch (_ev) {}
+    }
     // 2026-07-18: 스카시 '이대로 제작' — 삽입+디자이너 첨부 + 작품 갤러리 등록 후 바로 닫고 배송으로 진행(확인 화면 없음)
     function _meAiScarciAccept() {
         _meAiDoInsert();   // 캔버스 삽입 + 디자이너 참고자료 첨부
