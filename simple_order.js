@@ -13592,6 +13592,17 @@ html, body { background: #ffffff !important; }
             state.pdBrand = ''; state.pdProducts = ''; state.pdConcept = ''; state.pdRefUrls = [];
             // 2026-07-18: 허니콤 테이블(hb_tb_* 4종)도 종이매대와 동일한 브랜드/제품/컨셉 입력 사용
             state.isHbTable = (typeof _soIsTableProduct === 'function') ? !!_soIsTableProduct(p) : false;
+            // 2026-07-19: 다른 제품으로 바뀌면 이전 제품의 AI 목업/갤러리 미리보기를 대지에서 제거.
+            //   제품 전환(_soSwitchTable 등)은 페이지를 리로드하지 않아 대지가 그대로 남는다 →
+            //   3단테이블에서 만든 목업이 십자선반 주문서에 실려 나가던 문제. 같은 제품 재진입 때는 유지.
+            try {
+                var _pcNow = (p && p.code) || '';
+                if (window._soLastLoadedProductCode && window._soLastLoadedProductCode !== _pcNow
+                    && typeof window._meClearBgLayers === 'function') {
+                    window._meClearBgLayers();
+                }
+                window._soLastLoadedProductCode = _pcNow;
+            } catch (_pcw) {}
             if (_pdSec) _pdSec.style.display = (state.isPaperDisplay || state.isHbTable) ? '' : 'none';
             // 제목/설명을 제품군(매대 ↔ 테이블)에 맞게 교체
             try {

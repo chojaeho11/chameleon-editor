@@ -6717,6 +6717,10 @@
         } catch (e) { console.warn('[meGallery] remove preview', e); }
     }
 
+    // 2026-07-19: 제품이 바뀔 때 simple_order 가 호출 — 이전 제품의 목업 배경만 걷어낸다.
+    //   (고객이 직접 넣은 글씨·요소는 건드리지 않는다.)
+    window._meClearBgLayers = function () { try { _meGalRemovePreview(); } catch (_) {} };
+
     // 갤러리 픽 → ① 대지에 바로 올려 크게 확인 ② AI 실행 시 이 작품을 참고로 사용
     //   2026-07-18: 예전엔 클릭 즉시 AI 모달을 열어 작품을 크게 볼 수 없었음(사장님 요청으로 변경).
     async function _meGalleryPick(row) {
