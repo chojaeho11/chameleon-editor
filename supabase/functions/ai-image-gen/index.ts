@@ -43,8 +43,8 @@ Deno.serve(async (req) => {
     if (!prompt || prompt.length < 3) {
         return new Response(JSON.stringify({ error: 'prompt is required (min 3 chars)' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
-    if (prompt.length > 2000) {
-        return new Response(JSON.stringify({ error: 'prompt too long (max 2000 chars)' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    if (prompt.length > 4000) {   // 2026-07-18: 2000→4000 (스카시 등 상세 지시 프롬프트가 길어짐. gpt-image-2 는 여유 있게 처리)
+        return new Response(JSON.stringify({ error: 'prompt too long (max 4000 chars)' }), { status: 400, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
     // gpt-image-2 지원 사이즈: 1024x1024, 1536x1024 (landscape), 1024x1536 (portrait)

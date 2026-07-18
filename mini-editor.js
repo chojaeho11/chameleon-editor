@@ -6839,11 +6839,11 @@
                             + ' Render the TITLE as BIG, BOLD, DIMENSIONAL 3D letters (thick acrylic/foam cut-out letters) arranged in AT MOST 3 lines, as the clear hero. Any remaining detail text (dates, period, place) may appear as smaller 3D lettering below the title, but still with absolutely NO box or platform.' + _edgeClause + ' Present it as a clean standalone photo zone at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
                     } else {
                         var _subClause = _sst.sub
-                            ? ' The BOTTOM BOX shows this detail text: "' + _sst.sub + '".'
-                            : ' The BOTTOM BOX shows the dates, period, place and other detail text from the input.';
-                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE with TWO clearly separated parts. TOP: the MAIN TITLE as BIG, BOLD, DIMENSIONAL freestanding 3D cut-out letters (thick acrylic/foam letters) arranged in AT MOST 3 lines — this is the hero.' + _titleClause
-                            + ' BOTTOM: a LARGE solid rectangular BASE BOX — a raised pedestal/platform that is clearly BIGGER and TALLER than a thin base — that the 3D title letters stand on top of.' + _subClause
-                            + ' Show that detail text neatly on the front face of the bottom box. IMPORTANT: keep the event NAME only in the big top 3D letters, and keep the dates/period/place only inside the bottom box — do NOT mix the two.' + _edgeClause + ' Present it as a standalone photo-zone installation at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
+                            ? ' The bottom bar shows ONLY this short subtitle on ONE single line: "' + _sst.sub + '".'
+                            : ' The bottom bar has NO extra text (or at most a tiny one-line label) — do NOT invent dates, schedules, organizers or event details to fill it.';
+                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE with TWO parts. TOP (taking up MOST of the height): the MAIN TITLE as BIG, BOLD, DIMENSIONAL freestanding 3D cut-out letters (thick acrylic/foam letters) arranged in AT MOST 3 lines — the clear hero.' + _titleClause
+                            + ' BOTTOM: a LOW, SHORT, SLIM horizontal BASE BAR that the 3D title letters stand on — only about the height of a SINGLE line of text, clearly MUCH shorter than the title letters (like a thin plinth). It must NOT be a tall block and must NOT contain multiple stacked rows of information; keep any text on it to ONE short line at most.' + _subClause
+                            + ' Keep the event NAME only in the big top 3D letters.' + _edgeClause + ' Present it as a standalone photo-zone installation at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
                     }
                 }
                 // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시는 제외)
