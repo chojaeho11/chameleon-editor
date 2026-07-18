@@ -6363,6 +6363,18 @@ html, body { background: #ffffff !important; }
     window._soScarciAiText = function () {
         return { title: (state.scarciTitle || '').trim(), sub: (state.scarciSub || '').trim() };
     };
+    // 2026-07-18: 스카시 포토존 스타일 — 'letters'(글씨만) vs 'box'(하단 박스 있음).
+    //   글씨만: hb_ss_1(1장짜리 간단 등신대형), hb_ss_4(10장짜리 묵직한 스타일).
+    //   하단박스: 나머지(hb_ss_2 하단박스 위1장 / hb_ss_3 하단박스 위3장 / 아크릴 허니콤 등).
+    window._soScarciStyle = function () {
+        try {
+            var c = (state.product && state.product.code) || '';
+            if (c === 'hb_ss_1' || c === 'hb_ss_4') return 'letters';
+            var nm = (state.product && state.product.name) || '';
+            if (/하단\s*박스|하단박스/.test(nm)) return 'box';
+        } catch (_) {}
+        return 'box';
+    };
     window._soScarciAttachAiImage = async function (dataUrl) {
         try {
             if (!dataUrl) return;

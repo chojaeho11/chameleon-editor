@@ -6762,8 +6762,25 @@
                     _bannerHint = ' Design a CLEAN, MODERN, PROFESSIONAL BUSINESS CARD. Read the user text as business-card fields (company/brand name, person name and title, phone, address, email, social handles) and lay them out clearly with a natural visual hierarchy — the brand name most prominent. IMPORTANT: tailor the whole look (colors, mood, typography, any simple icon or motif) to suit the BRAND and its industry as implied by the company name — e.g. a cafe feels warm and cozy, a law firm feels formal and navy, a design studio feels artful and minimal. Do NOT use one fixed generic template. Use plenty of negative space and keep ALL text well inside with GENEROUS EMPTY MARGINS on ALL FOUR SIDES so nothing is cut off near an edge. Full-bleed background color or subtle texture, but no printed border or frame line.';
                 }
                 // 2026-07-18: 글씨 스카시 — 입체 글씨 포토존 컨셉 목업 (실제 입체 제작은 전문 디자이너).
+                //   스타일 2종: 'letters'(글씨만) / 'box'(위 타이틀 + 큰 하단 박스).
+                //   타이틀(=큰 입체글씨, 최대 3줄)과 서브(=날짜·장소, 박스 안)를 분리해 지시.
                 if (_meAiScarci) {
-                    _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE (an event photo-zone made of large freestanding 3D letters). Read the user text as the MAIN TITLE plus an optional smaller SUBTITLE. Show the TITLE as BIG, BOLD, DIMENSIONAL standalone 3D letters — like thick acrylic or foam cut-out letters standing on the floor — as the clear hero of the image, centered. Present it as a clean, modern photo-zone installation at an event entrance or lobby, well lit, with NO people and a simple, uncluttered background. This is a design concept mockup for a 3D letter photo zone.';
+                    var _sst = (typeof window._soScarciAiText === 'function') ? (window._soScarciAiText() || {}) : {};
+                    var _sStyle = (typeof window._soScarciStyle === 'function') ? window._soScarciStyle() : 'box';
+                    var _titleClause = _sst.title
+                        ? ' The MAIN TITLE text is: "' + _sst.title + '".'
+                        : ' From the input, treat the main event or brand NAME as the MAIN TITLE.';
+                    if (_sStyle === 'letters') {
+                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE made ONLY of large freestanding 3D cut-out letters standing directly on the floor — NO base box, NO pedestal, NO bottom platform of any kind.' + _titleClause
+                            + ' Render the TITLE as BIG, BOLD, DIMENSIONAL 3D letters (thick acrylic/foam cut-out letters) arranged in AT MOST 3 lines, as the clear hero. Any remaining detail text (dates, period, place) may appear as smaller 3D lettering below the title, but still with absolutely NO box or platform. Present it as a clean standalone photo zone at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
+                    } else {
+                        var _subClause = _sst.sub
+                            ? ' The BOTTOM BOX shows this detail text: "' + _sst.sub + '".'
+                            : ' The BOTTOM BOX shows the dates, period, place and other detail text from the input.';
+                        _bannerHint = ' Render a realistic 3D CUT-OUT LETTERING PHOTO ZONE with TWO clearly separated parts. TOP: the MAIN TITLE as BIG, BOLD, DIMENSIONAL freestanding 3D cut-out letters (thick acrylic/foam letters) arranged in AT MOST 3 lines — this is the hero.' + _titleClause
+                            + ' BOTTOM: a LARGE solid rectangular BASE BOX — a raised pedestal/platform that is clearly BIGGER and TALLER than a thin base — that the 3D title letters stand on top of.' + _subClause
+                            + ' Show that detail text neatly on the front face of the bottom box. IMPORTANT: keep the event NAME only in the big top 3D letters, and keep the dates/period/place only inside the bottom box — do NOT mix the two. Present it as a standalone photo-zone installation at an event entrance/lobby, well lit, NO people, simple uncluttered background. Design concept mockup for a 3D letter photo zone.';
+                    }
                 }
                 // 2026-07-18: 포스터(세로/가로) — 타이틀·주최·일시·장소 등 여러 정보를 계층적으로 배치. (스카시는 제외)
                 var _isPoster = (!_meAiScarci) && (_meAiRatio === '9:16' || _meAiRatio === '16:9');
