@@ -6169,13 +6169,13 @@
             if (document.getElementById('meIntro')) { _meEditUISet(false); }
             // window._meGalleryLoad 는 이 파일 뒤쪽(모듈 평가 후반)에서 할당됨 → setTimeout 안에서 확인/호출.
             //   window.sb 가 아직 준비 안 됐을 수 있어 준비될 때까지(최대 ~8s) 제한 재시도.
-            if (document.getElementById('meGalGrid')) {
+            if (document.getElementById('meGalTrackTop')) {
                 var _galTries = 0;
                 var _galTick = setInterval(function () {
                     _galTries++;
                     if (window.sb && window._meGalleryLoad) {
                         clearInterval(_galTick);
-                        try { window._meGalleryLoad(0, ''); } catch (_) {}
+                        try { window._meGalleryLoad(''); } catch (_) {}
                     } else if (_galTries > 16) { clearInterval(_galTick); }
                 }, 500);
             }
@@ -6551,53 +6551,56 @@
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
     window._meAiGenClose = _meAiGenClose;
 
-    // 2026-07-18: 작품 갤러리 ─────────────────────────────
-    //   다른 고객이 만든(개인정보 없는) 디자인을 검색·구경하고, 고르면 그 스타일을 참고해 새로 생성.
-    var _meGalPage = 0, _meGalQ = '', _meGalPer = 10, _meGalTotal = 0, _meGalBusy = false;
-    async function _meGalleryLoad(page, q) {
-        var grid = document.getElementById('meGalGrid');
-        if (!grid) return;
-        if (typeof page === 'number') _meGalPage = Math.max(0, page);
-        if (typeof q === 'string') { _meGalQ = q.trim(); if (typeof page !== 'number') _meGalPage = 0; }
+    // 2026-07-18: 작품 갤러리 — 미리캔버스식 2줄 마퀴(위:좌→우, 아래:우→좌). 높이 고정·가로폭 자동, 이미지 전체 표시.
+    //   다른 고객이 만든(개인정보 없는) 디자인을 구경/검색하고, 고르면 그 스타일을 참고해 새로 생성.
+    var _meGalQ = '', _meGalBusy = false, _meGalRows = [];
+    async function _meGalleryLoad(q) {
+        var topT = document.getElementById('meGalTrackTop');
+        var botT = document.getElementById('meGalTrackBot');
+        if (!topT || !botT) return;
+        if (typeof q === 'string') _meGalQ = q.trim();
         var sb = window.sb;
-        if (!sb) { grid.innerHTML = ''; return; }
+        if (!sb) { topT.innerHTML = ''; botT.innerHTML = ''; return; }
         _meGalBusy = true;
-        grid.style.opacity = '0.5';
         try {
-            var from = _meGalPage * _meGalPer, to = from + _meGalPer - 1;
-            var query = sb.from('design_gallery').select('id,image_url,thumb_url,prompt', { count: 'exact' }).eq('status', 'public');
+            var query = sb.from('design_gallery').select('id,image_url,thumb_url,prompt').eq('status', 'public');
             if (_meGalQ) {
                 var like = '%' + _meGalQ.replace(/[%,]/g, ' ') + '%';
                 query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
             }
-            var res = await query.order('created_at', { ascending: false }).range(from, to);
-            _meGalTotal = res.count || 0;
+            var res = await query.order('created_at', { ascending: false }).limit(24);
             var rows = res.data || [];
-            grid.innerHTML = rows.length
-                ? rows.map(function (r) {
-                    var u = r.thumb_url || r.image_url;
-                    return '<button type="button" class="me-gal-item" data-gal="' + r.id + '" title="' + _meAiEsc(r.prompt || '') + '"><img src="' + u + '" loading="lazy" alt=""></button>';
-                }).join('')
-                : '<div class="me-gal-empty">' + _meAiTr('아직 등록된 작품이 없어요.', 'まだ作品がありません。', 'No designs yet.') + '</div>';
-            grid.querySelectorAll('.me-gal-item').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    var id = b.getAttribute('data-gal');
-                    var row = rows.filter(function (x) { return String(x.id) === String(id); })[0];
-                    if (row) _meGalleryPick(row);
-                });
-            });
-            _meGalUpdatePager();
+            _meGalRows = rows;
+            if (!rows.length) {
+                topT.innerHTML = '<div class="me-gal-empty">' + _meAiTr('아직 등록된 작품이 없어요.', 'まだ作品がありません。', 'No designs yet.') + '</div>';
+                botT.innerHTML = '';
+                return;
+            }
+            // 위/아래 두 줄로 분배 (항목이 적으면 아래줄도 위줄과 같은 걸로 채워 흐름 유지)
+            var half = Math.ceil(rows.length / 2);
+            var top = rows.slice(0, half);
+            var bot = rows.slice(half);
+            if (bot.length < 2) bot = rows.slice();
+            _meGalFillTrack(topT, top);
+            _meGalFillTrack(botT, bot);
         } catch (e) { console.warn('[meGallery] load', e); }
-        finally { _meGalBusy = false; grid.style.opacity = ''; }
+        finally { _meGalBusy = false; }
     }
-    function _meGalUpdatePager() {
-        var info = document.getElementById('meGalPageInfo');
-        var prev = document.getElementById('meGalPrev');
-        var next = document.getElementById('meGalNext');
-        var pages = Math.max(1, Math.ceil(_meGalTotal / _meGalPer));
-        if (info) info.textContent = (_meGalPage + 1) + ' / ' + pages;
-        if (prev) prev.disabled = _meGalPage <= 0;
-        if (next) next.disabled = _meGalPage >= pages - 1;
+    function _meGalItemHtml(r) {
+        var u = r.thumb_url || r.image_url;
+        return '<button type="button" class="me-gal-item" data-gal="' + r.id + '" title="' + _meAiEsc(r.prompt || '') + '"><img src="' + u + '" loading="lazy" alt=""></button>';
+    }
+    function _meGalFillTrack(track, items) {
+        // 이음새 없는 무한 스크롤을 위해 항목을 2배 복제(-50% translate 로 딱 한 세트 이동)
+        var html = items.map(_meGalItemHtml).join('');
+        track.innerHTML = html + html;
+        track.querySelectorAll('.me-gal-item').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var id = b.getAttribute('data-gal');
+                var row = _meGalRows.filter(function (x) { return String(x.id) === String(id); })[0];
+                if (row) _meGalleryPick(row);
+            });
+        });
     }
     function _meAiEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     // 갤러리 픽 → AI 모달 열고 '참고' 모드로 세팅
@@ -6614,8 +6617,7 @@
         } catch (e) { console.warn('[meGallery] pick', e); }
     }
     window._meGalleryLoad = _meGalleryLoad;
-    window._meGalleryPage = function (d) { var pages = Math.max(1, Math.ceil(_meGalTotal / _meGalPer)); var np = Math.min(pages - 1, Math.max(0, _meGalPage + d)); if (np !== _meGalPage) _meGalleryLoad(np); };
-    window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(0, v || ''); }, 300); }; })();
+    window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(v || ''); }, 300); }; })();
 
     // 생성 이미지를 대지에 cover(꽉 채움, 넘치는 부분만 잘림)로 삽입 + 뒤로 보내기(배경/풀블리드).
     //   명함 포함 전부 cover — 프롬프트가 사방/상하/좌우 여백을 확보하므로 잘려도 글자는 안전.

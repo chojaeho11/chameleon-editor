@@ -1823,7 +1823,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
-    <link rel="stylesheet" href="./mini-editor.css?v=13">
+    <link rel="stylesheet" href="./mini-editor.css?v=14">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
@@ -1917,11 +1917,10 @@ async function submitRollFabricRequest() {
                         <span class="me-gal-title" data-i18n="me_gallery">작품</span>
                         <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-ph="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">
                     </div>
-                    <div class="me-gal-grid" id="meGalGrid"></div>
-                    <div class="me-gal-pager">
-                        <button type="button" id="meGalPrev" class="me-gal-nav" onclick="window._meGalleryPage && window._meGalleryPage(-1)"><span data-i18n="me_prev">이전</span></button>
-                        <span id="meGalPageInfo" class="me-gal-info">1 / 1</span>
-                        <button type="button" id="meGalNext" class="me-gal-nav" onclick="window._meGalleryPage && window._meGalleryPage(1)"><span data-i18n="me_next">다음</span></button>
+                    <!-- 2026-07-18: 미리캔버스식 2줄 마퀴 -->
+                    <div class="me-gal-marquee">
+                        <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="meGalTrackTop"></div></div>
+                        <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="meGalTrackBot"></div></div>
                     </div>
                 </div>
                 <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
@@ -1937,7 +1936,7 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=501"></script>
+<script src="./mini-editor.js?v=502"></script>
 <script src="./editor-rail.js?v=3"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄

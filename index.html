@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260718191350';
+    var CV = '20260718194939';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5860,7 +5860,7 @@ function scrollHotdeal(gridId, dir) {
 <!-- 2026-06-13: 미니에디터 + 누끼따기 (배경 제거) — PC: 좌우 / 모바일: 위아래 -->
 <!-- 2026-06-14: 메인 화면에선 숨김 — simple_order 모달 진입 시 portal 로 이동해 사용. simple_order.js 의 _mountEditor 가 display 복구. -->
 <div id="embeddedEditorPreview" style="width:96%; max-width:1100px; margin:30px auto; padding:0; position:relative; overflow:visible; flex-shrink:0; display:none;">
-    <link rel="stylesheet" href="./mini-editor.css?v=13">
+    <link rel="stylesheet" href="./mini-editor.css?v=14">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
 
     <div id="aiNbWrap">
@@ -5955,11 +5955,10 @@ function scrollHotdeal(gridId, dir) {
                     <span class="me-gal-title" data-i18n="me_gallery">작품</span>
                     <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-ph="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">
                 </div>
-                <div class="me-gal-grid" id="meGalGrid"></div>
-                <div class="me-gal-pager">
-                    <button type="button" id="meGalPrev" class="me-gal-nav" onclick="window._meGalleryPage && window._meGalleryPage(-1)"><span data-i18n="me_prev">이전</span></button>
-                    <span id="meGalPageInfo" class="me-gal-info">1 / 1</span>
-                    <button type="button" id="meGalNext" class="me-gal-nav" onclick="window._meGalleryPage && window._meGalleryPage(1)"><span data-i18n="me_next">다음</span></button>
+                <!-- 2026-07-18: 미리캔버스식 2줄 마퀴 — 위:좌→우, 아래:우→좌 -->
+                <div class="me-gal-marquee">
+                    <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="meGalTrackTop"></div></div>
+                    <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="meGalTrackBot"></div></div>
                 </div>
             </div>
             <div class="aiNb-error" id="aiNbAiErr" style="display:none;"></div>
@@ -5969,7 +5968,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=501"></script>
+<script src="./mini-editor.js?v=502"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">

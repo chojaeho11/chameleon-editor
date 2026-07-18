@@ -105,17 +105,20 @@
         .me-gal-title { font-size:14px; font-weight:800; color:#1d1d1f; }
         .me-gal-search { flex:1; min-width:0; border:1.5px solid #e2e8f0; border-radius:9px; padding:7px 11px; font-size:13px; font-family:inherit; outline:none; }
         .me-gal-search:focus { border-color:#4338ca; }
-        .me-gal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; min-height:72px; }
-        @media (max-width:520px) { .me-gal-grid { grid-template-columns:repeat(3,1fr); } }
-        .me-gal-item { padding:0; border:1.5px solid #e5e7eb; border-radius:9px; overflow:hidden; cursor:pointer; background:#f8fafc; aspect-ratio:1/1; transition:border-color .15s, transform .15s; }
-        .me-gal-item:hover { border-color:#4338ca; transform:translateY(-1px); }
-        .me-gal-item img { width:100%; height:100%; object-fit:cover; display:block; }
-        .me-gal-empty { grid-column:1/-1; text-align:center; color:#94a3b8; font-size:12.5px; padding:20px 0; }
-        .me-gal-pager { display:flex; align-items:center; justify-content:center; gap:12px; margin-top:10px; }
-        .me-gal-nav { border:1.5px solid #e2e8f0; background:#fff; color:#475569; border-radius:8px; padding:6px 14px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
-        .me-gal-nav:hover:not(:disabled) { background:#f1f5f9; }
-        .me-gal-nav:disabled { opacity:0.4; cursor:not-allowed; }
-        .me-gal-info { font-size:12.5px; color:#64748b; font-variant-numeric:tabular-nums; }
+        /* 2026-07-18: 미리캔버스식 2줄 마퀴 — 위:좌→우, 아래:우→좌. 높이 고정·가로폭 자동(전체 표시), hover 시 정지 */
+        .me-gal-marquee { display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+        .me-gal-row { overflow:hidden; width:100%; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 4%, #000 96%, transparent 100%); }
+        .me-gal-track { display:flex; gap:8px; width:max-content; will-change:transform; }
+        .me-marq-left { animation: meMarqL 70s linear infinite; }
+        .me-marq-right { animation: meMarqR 70s linear infinite; }
+        .me-gal-row:hover .me-gal-track { animation-play-state:paused; }
+        @keyframes meMarqL { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+        @keyframes meMarqR { from { transform:translateX(-50%); } to { transform:translateX(0); } }
+        .me-gal-item { flex:0 0 auto; height:132px; padding:0; border:1.5px solid #e5e7eb; border-radius:10px; overflow:hidden; cursor:pointer; background:#f8fafc; transition:border-color .15s; }
+        .me-gal-item:hover { border-color:#4338ca; }
+        .me-gal-item img { height:100%; width:auto; display:block; }
+        .me-gal-empty { text-align:center; color:#94a3b8; font-size:12.5px; padding:20px 0; }
+        @media (max-width:520px) { .me-gal-item { height:100px; } }
         /* 2026-07-18: 템플릿/사진/벡터/요소/장식 탭(qd-rail) — 기본 숨김, 디자인 편집하기(html.me-editing) 시 노출.
            editor-rail.css 의 `.qd-rail{display:flex}` 와 특정성 충돌 방지 위해 :not() 로 우선순위 확보.
            편집 중엔 이 규칙이 안 걸려 editor-rail 의 flex 레이아웃이 정상 적용됨. */
