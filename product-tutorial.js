@@ -51,6 +51,7 @@
   var _hist = [];           // 이전 레코드들 (이전 버튼용)
   var _targets = [];
   var _curStepTargetSel = null;   // 2026-07-18: 현재 스텝 target 셀렉터 — 비동기 로드로 늦게 뜨는 타깃 재해석용
+  var _aiModalHiding = false;     // 2026-07-18: AI 생성 모달이 열렸을 때 튜토리얼 팝업/하이라이트 숨김 상태
   var _stepCleanup = [];
   var _looping = false;
   var _freeMode = false;    // 에디터 자유 디자인 모드
@@ -180,6 +181,15 @@
 
   function place() {
     if (!_active || _freeMode) return;
+    // 2026-07-18: AI 생성 모달(#meAiGenModal)이 열려 있으면 튜토리얼 팝업/하이라이트를 숨김.
+    //   모달이 반투명 배경이라 뒤에 튜토리얼 안내창이 비쳐 보이던 문제. 모달 닫히면 복구.
+    var _aiM = document.getElementById('meAiGenModal');
+    if (_aiM && _aiM.style.display === 'flex') {
+      _pop.style.display = 'none'; _hole.style.display = 'none'; _blocker.style.display = 'none';
+      _aiModalHiding = true;
+      return;
+    }
+    if (_aiModalHiding) { _pop.style.display = ''; _aiModalHiding = false; }
     // 2026-07-18: 타깃이 비었는데 스텝에 target 셀렉터가 있으면 재해석 — 비동기 로드(예: 스카시 종류 카드)로
     //   renderStep 시점엔 아직 안 떠서 스포트라이트가 안 잡히던 문제. 매 프레임 재시도(뜨면 자동 하이라이트).
     if (!_targets.length && _curStepTargetSel) {
