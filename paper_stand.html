@@ -257,6 +257,8 @@ a { text-decoration: none; color: inherit; }
     background: #fff; border-radius: var(--radius); overflow: hidden;
     box-shadow: var(--card-shadow); cursor: pointer;
     transition: all 0.25s;
+    /* 2026-07-18: 카드가 div → a(진짜 링크)로 바뀜 — 링크 기본 스타일 제거 */
+    display: block; text-decoration: none; color: inherit;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
 .product-img {
@@ -1721,7 +1723,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- 상품 로딩 스크립트 -->
-<script src="paper_stand.js?v=190"></script>
+<script src="paper_stand.js?v=191"></script>
 
 <!-- 2026-06-10: ChannelTalk 위젯 전체 제거 (PC/모바일 모두). 모바일 투명 버그 해결 안되어 사용 중단. -->
 <style>

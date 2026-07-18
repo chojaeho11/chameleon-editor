@@ -77,6 +77,12 @@
             ko:'상품명 없음', ja:'商品名なし', en:'No Name',
             zh:'无名称', ar:'بدون اسم', es:'Sin Nombre',
             de:'Kein Name', fr:'Sans Nom'
+        },
+        // 2026-07-18: 상세(주문 에디터) 페이지가 무거워 수 초 걸림 → 이동 중임을 즉시 표시
+        opening: {
+            ko:'상품 페이지 여는 중...', ja:'商品ページを開いています...', en:'Opening product page...',
+            zh:'正在打开产品页面...', ar:'جاري فتح صفحة المنتج...', es:'Abriendo la pagina del producto...',
+            de:'Produktseite wird geoffnet...', fr:'Ouverture de la page produit...'
         }
     };
 
@@ -147,10 +153,40 @@
         return LANG.customSize;
     }
 
+    // 2026-07-18: 상품 상세로 이동할 URL (언어별 도메인)
+    function productHref(product) {
+        var lang = window.__PS_LANG || 'ko';
+        var base;
+        if (lang === 'ko') base = 'https://www.cafe2626.com';
+        else if (lang === 'ja') base = 'https://www.cafe0101.com';
+        else base = 'https://chameleon.design';
+        var params = '?product=' + encodeURIComponent(product.code);
+        if (lang !== 'ko' && lang !== 'ja' && lang !== 'en') params += '&lang=' + lang;
+        return base + '/' + params;
+    }
+
+    // 2026-07-18: 이동 중 오버레이 — 상세 페이지(메인 에디터)가 무거워 로드에 수 초 걸린다.
+    //   그동안 아무 반응이 없어 고객이 계속 다시 클릭 → 진행 중이던 이동이 매번 취소돼
+    //   "여러 번 눌러야 겨우 들어가는" 증상이 났음. 즉시 피드백 + 중복 클릭 차단으로 해결.
+    var _psNavigating = false;
+    function showNavOverlay() {
+        if (document.getElementById('psNavOverlay')) return;
+        var ov = document.createElement('div');
+        ov.id = 'psNavOverlay';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:1000100; background:rgba(255,255,255,0.82);'
+            + ' display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;'
+            + ' font-family:inherit; color:#4338ca; font-size:15px; cursor:progress;';
+        ov.innerHTML = '<div class="loading-spinner"></div><div>' + ls('opening') + '</div>';
+        document.body.appendChild(ov);
+    }
+
     // 상품 카드 생성
     function createProductCard(product) {
-        const card = document.createElement('div');
+        // 2026-07-18: div → a 로 변경. 진짜 링크라 새 탭 열기·주소 미리보기가 되고,
+        //   JS 핸들러가 늦게 붙거나 실패해도 이동은 브라우저가 보장한다.
+        const card = document.createElement('a');
         card.className = 'product-card';
+        card.href = productHref(product);
 
         const name = getProductName(product);
         const imgSrc = getThumb(product.img_url, 400);
@@ -169,18 +205,14 @@
                 '<div class="product-price">' + price + '</div>' +
             '</div>';
 
-        // 클릭 시 메인 에디터로 이동 (언어별 도메인)
-        card.onclick = function() {
-            var lang = window.__PS_LANG || 'ko';
-            var base;
-            if (lang === 'ko') base = 'https://www.cafe2626.com';
-            else if (lang === 'ja') base = 'https://www.cafe0101.com';
-            else if (lang === 'en') base = 'https://chameleon.design';
-            else base = 'https://chameleon.design';
-            var params = '?product=' + encodeURIComponent(product.code);
-            if (lang !== 'ko' && lang !== 'ja' && lang !== 'en') params += '&lang=' + lang;
-            window.location.href = base + '/' + params;
-        };
+        // 클릭 = 기본 링크 이동. 두 번째부터의 클릭은 막아 진행 중인 이동이 취소되지 않게 한다.
+        card.addEventListener('click', function(e) {
+            // 새 탭/새 창(Ctrl·Cmd·가운데버튼)은 그대로 브라우저에 맡김
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+            if (_psNavigating) { e.preventDefault(); return; }
+            _psNavigating = true;
+            showNavOverlay();
+        });
 
         return card;
     }
@@ -247,5 +279,12 @@
 
     // 초기화
     document.addEventListener('DOMContentLoaded', loadProducts);
+
+    // 2026-07-18: 뒤로가기(bfcache 복귀) 시 이동중 잠금·오버레이 해제 — 안 풀면 카드가 안 눌림
+    window.addEventListener('pageshow', function() {
+        _psNavigating = false;
+        var ov = document.getElementById('psNavOverlay');
+        if (ov) ov.remove();
+    });
 
 })();
