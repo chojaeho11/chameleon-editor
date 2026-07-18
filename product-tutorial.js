@@ -1353,26 +1353,15 @@
         en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
       cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
     },
-    { // 2) 디자인 문구 입력 + 원클릭 AI 디자인
+    { // 2) 디자인 문구 입력 + 원클릭 AI 자동생성 (결과창에서 수정해서 다시만들기 / 이대로 제작)
       target: ['.me-intro-ai', '#aiNbAi'], mode: 'next',
       onEnter: function () { return _secVisible('#aiNbAi'); },
-      msg: { kr: '오른쪽 <b>[디자인 문구]</b>에 포토존에 넣을 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요. 그다음 <b>원클릭 AI디자인</b>을 누르면 적은 문구로 입체 글씨 포토존을 만들어드려요. 다 되면 <b>다음</b>!',
-        ja: '右の <b>[デザイン文字]</b> にフォトゾーンの <b>タイトル文</b> と <b>サブ文</b> をご記入ください。その後 <b>ワンクリックAIデザイン</b> を押すと、入力した文言で立体文字フォトゾーンを作ります。完成したら <b>次へ</b>!',
-        en: 'Enter the <b>title</b> and <b>subtitle</b> for your photo zone in <b>[Design text]</b> on the right. Then tap <b>one-click AI design</b> to build a 3D-letter photo zone from your text. When done, tap <b>Next</b>!' },
+      msg: { kr: '오른쪽 <b>[디자인 문구]</b>에 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적고 <b>원클릭 AI디자인</b>을 누르면, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 <b>[수정해서 다시 만들기]</b> 또는 <b>[이대로 제작]</b>을 고르세요. 다 되면 <b>다음</b>!',
+        ja: '右の <b>[デザイン文字]</b> に <b>タイトル文</b> と <b>サブ文</b> を入力し <b>ワンクリックAIデザイン</b> を押すと、その文言で立体文字フォトゾーンを <b>すぐに作成</b>。結果で <b>[修正して作り直す]</b> か <b>[このまま製作]</b> を選んでください。完成したら <b>次へ</b>!',
+        en: 'Enter the <b>title</b> and <b>subtitle</b> in <b>[Design text]</b> on the right, then tap <b>one-click AI design</b> to <b>instantly build</b> a 3D-letter photo zone. In the result, choose <b>[Edit & remake]</b> or <b>[Make it like this]</b>. When done, tap <b>Next</b>!' },
       cheer: { kr: '디자인 시작! 🎨', ja: 'デザイン開始! 🎨', en: 'Designing! 🎨' }
     },
-    { // 3) 완료 확인 — 다음이동(=다음) / 다시만들기
-      target: ['#meStage', '#aiNbAi'], mode: 'next',
-      nextLabel: { kr: '다음이동 ▶', ja: '次へ進む ▶', en: 'Continue ▶' },
-      buttons: [
-        { action: '_soScarciRemake', label: { kr: '🔄 다시 만들기', ja: '🔄 作り直す', en: '🔄 Remake' } }
-      ],
-      msg: { kr: '디자인이 <b>마음에 드시나요?</b> 좋으면 <b>[다음이동]</b>, 다시 만들고 싶으면 <b>[다시 만들기]</b>를 눌러요.',
-        ja: 'デザインは <b>気に入りましたか?</b> 良ければ <b>[次へ進む]</b>、作り直すなら <b>[作り直す]</b> を。',
-        en: '<b>Happy with the design?</b> If so tap <b>[Continue]</b>, or <b>[Remake]</b> to try again.' },
-      cheer: { kr: '좋아요! 👍', ja: 'いいね! 👍', en: 'Nice! 👍' }
-    },
-    { // 4) 요청사항 — 디자이너가 이 디자인을 참고해 제작
+    { // 3) 요청사항 — 디자이너가 이 디자인을 참고해 제작
       target: '#soScarciRequest', mode: 'next',
       onEnter: function () { try { if (window._soScarciRevealRequest) window._soScarciRevealRequest(); } catch (_) {} return true; },
       msg: { kr: '이 디자인을 <b>참고해서 전문 디자이너가 작업</b>하여 고객님께 연락드려요. 원하시는 점(색·글씨체·분위기, 로고 위치 등)이 있으면 <b>요청사항</b>에 적어주세요. <span style="color:#94a3b8;">(없으면 그냥 다음)</span>',

@@ -5558,6 +5558,25 @@ html, body { background: #ffffff !important; }
             if (ta) setTimeout(function () { try { ta.focus(); } catch (_) {} }, 350);
         } catch (_) {}
     };
+    // 2026-07-18: 원클릭 AI(스카시) — 타이틀 문구 없으면 생성 대신 문구칸으로 안내
+    window._soScarciNeedTitle = function () {
+        try {
+            var sec = document.getElementById('soScarciRequest');
+            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            var t = document.getElementById('soScarciTitle');
+            if (t) setTimeout(function () { try { t.focus(); } catch (_) {} }, 350);
+            showStatus(tr('먼저 타이틀 문구를 적어주세요.', 'まずタイトル文をご記入ください。', 'Please enter the title text first.'), 'err');
+        } catch (_) {}
+    };
+    // 2026-07-18: '수정해서 다시만들기' — 문구 섹션으로 스크롤 + 타이틀 focus
+    window._soScarciEditText = function () {
+        try {
+            var sec = document.getElementById('soScarciRequest');
+            if (sec) { sec.style.display = ''; sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            var t = document.getElementById('soScarciTitle');
+            if (t) setTimeout(function () { try { t.focus(); t.select && t.select(); } catch (_) {} }, 350);
+        } catch (_) {}
+    };
 
     // 2026-07-15: 글씨 스카시 전용 — 참고사진·로고 여러 장 업로드. 각 파일을 design 버킷에 올려
     //   URL 을 state.scarciRefUrls 에 축적 → 카트 item.uploadedFiles 로 전달 → 주문 시 design_requests.files 로 첨부.

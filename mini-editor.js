@@ -6278,6 +6278,8 @@
               '<div id="meAiHint" style="font-size:13px; color:#64748b; margin-bottom:12px; line-height:1.6;">' +
                 _meAiTr('타이틀을 입력해 주세요.', 'タイトルを入力してください。', 'Enter a title.') +
               '</div>' +
+              // 2026-07-18: 입력 UI(프리셋·합성사진·프롬프트·생성버튼) 래퍼 — 스카시 자동모드에선 숨김
+              '<div id="meAiInputArea">' +
               // 비율 선택 — 1행: 기본 비율 (2026-07-18: 16:9 등 비율표기 제거, 이름만)
               '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각', '正方形', 'Square') + '</button>' +
@@ -6307,8 +6309,14 @@
               '</div>' +
               '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
+              '</div>' +  // /#meAiInputArea
               '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
               '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
+              // 2026-07-18: 스카시 전용 결과 버튼 — 수정해서 다시만들기 / 이대로 제작
+              '<div id="meAiScarciBtns" style="display:none; margin-top:10px; gap:8px;">' +
+                '<button type="button" id="meAiScRemake" style="width:100%; padding:12px; border:1.5px solid #c7d2fe; border-radius:11px; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px;">' + _meAiTr('✏️ 수정해서 다시 만들기', '✏️ 修正して作り直す', '✏️ Edit & remake') + '</button>' +
+                '<button type="button" id="meAiScAccept" style="width:100%; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">' + _meAiTr('이대로 제작', 'このまま製作', 'Make it like this') + '</button>' +
+              '</div>' +
               // 2026-07-18: 삽입 후 꾸미기 안내 (이미지 생성 성공 시에만 노출)
               '<div id="meAiTip" style="display:none; margin-top:10px; font-size:12.5px; color:#475569; line-height:1.6; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px;">' +
                 _meAiTr('이미지를 넣은 뒤 위치를 이동해 더 예쁜 구도로 맞춰보세요. 벡터나 요소를 이용해 더 예쁘게 꾸며보세요.',
@@ -6328,6 +6336,14 @@
         });
         document.getElementById('meAiGoBtn').addEventListener('click', _meAiGenerate);
         document.getElementById('meAiInsertBtn').addEventListener('click', _meAiInsert);
+        // 2026-07-18: 스카시 결과 버튼 — 수정해서 다시만들기 / 이대로 제작
+        var _scRemakeBtn = document.getElementById('meAiScRemake');
+        var _scAcceptBtn = document.getElementById('meAiScAccept');
+        if (_scRemakeBtn) _scRemakeBtn.addEventListener('click', function () {
+            _meAiGenClose();
+            try { if (typeof window._soScarciEditText === 'function') window._soScarciEditText(); } catch (_) {}
+        });
+        if (_scAcceptBtn) _scAcceptBtn.addEventListener('click', _meAiScarciAccept);
 
         // 2026-07-18: 합성할 사진 넣기/빼기
         var refBtn = document.getElementById('meAiRefBtn');
@@ -6476,19 +6492,22 @@
         //   simple_order._soAiPresetHint() = 'namecard' | 'banner' | null.
         //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
         _meAiScarci = false;
+        var _scarciAuto = false, _scarciTitleTxt = '', _scarciSubTxt = '';
         try {
             var _hint = (typeof window._soAiPresetHint === 'function') ? window._soAiPresetHint() : null;
             if (_hint === 'scarci') {
-                // 글씨 스카시 = 입체 글씨 포토존. 대지가 가로로 넓으므로 가로 프리셋 + 타이틀/서브 문구 자동 채움.
+                // 글씨 스카시 = 입체 글씨 포토존. 타이틀/서브 문구로 바로 자동 생성(프롬프트 입력창 숨김).
                 _meAiScarci = true;
                 _meAiRatio = '16:9';
-                try {
-                    var _st = (typeof window._soScarciAiText === 'function') ? window._soScarciAiText() : null;
-                    var _pEl = document.getElementById('meAiPrompt');
-                    if (_st && _pEl && !(_pEl.value || '').trim()) {
-                        _pEl.value = [_st.title, _st.sub].filter(Boolean).join(' ');
-                    }
-                } catch (_stf) {}
+                var _st = (typeof window._soScarciAiText === 'function') ? (window._soScarciAiText() || {}) : {};
+                _scarciTitleTxt = (_st.title || '').trim();
+                _scarciSubTxt = (_st.sub || '').trim();
+                // 타이틀 문구가 없으면 열지 않고 문구칸으로 안내
+                if (!_scarciTitleTxt) {
+                    try { if (typeof window._soScarciNeedTitle === 'function') window._soScarciNeedTitle(); } catch (_nt) {}
+                    return;
+                }
+                _scarciAuto = true;
             } else if (_hint === 'namecard') {
                 _meAiRatio = 'namecard';
             } else if (_hint === 'banner') {
@@ -6507,10 +6526,30 @@
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
         try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
+        // 2026-07-18: 스카시 자동모드 — 입력 UI 숨기고 문구로 바로 생성 / 그 외엔 입력 UI 노출
+        var _inputArea = document.getElementById('meAiInputArea');
+        var _hintEl = document.getElementById('meAiHint');
+        var _scBtns = document.getElementById('meAiScarciBtns');
+        if (_scBtns) _scBtns.style.display = 'none';
+        if (_scarciAuto) {
+            if (_inputArea) _inputArea.style.display = 'none';
+            if (_hintEl) _hintEl.style.display = 'none';
+            var _pEl2 = document.getElementById('meAiPrompt');
+            if (_pEl2) _pEl2.value = [_scarciTitleTxt, _scarciSubTxt].filter(Boolean).join(' ');
+        } else {
+            if (_inputArea) _inputArea.style.display = '';
+            if (_hintEl) _hintEl.style.display = '';
+        }
         m.style.display = 'flex';
-        setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
+        if (_scarciAuto) {
+            // 바로 생성 시작
+            setTimeout(function () { try { _meAiGenerate(); } catch (_g) {} }, 60);
+        } else {
+            setTimeout(function () { var p = document.getElementById('meAiPrompt'); if (p) p.focus(); }, 80);
+        }
     };
     function _meAiGenClose() { var m = document.getElementById('meAiGenModal'); if (m) m.style.display = 'none'; }
+    window._meAiGenClose = _meAiGenClose;
 
     // 2026-07-18: 작품 갤러리 ─────────────────────────────
     //   다른 고객이 만든(개인정보 없는) 디자인을 검색·구경하고, 고르면 그 스타일을 참고해 새로 생성.
@@ -6582,7 +6621,8 @@
     //   명함 포함 전부 cover — 프롬프트가 사방/상하/좌우 여백을 확보하므로 잘려도 글자는 안전.
     //   (2026-07-18: 명함을 contain 으로 넣었더니 좌우가 남아서 다시 cover 로. 대지 90x50 ≈ 1.77:1,
     //    생성 이미지 1.5:1 이라 좌우는 꽉 차고 위아래만 조금 잘린다 → 여백 있는 명함이라 안전.)
-    function _meAiInsert() {
+    // 캔버스 삽입 + (스카시면)디자이너 첨부 — 모달은 닫지 않음(코어)
+    function _meAiDoInsert() {
         if (!_meAiPendingUrl) return;
         var opts = { toBack: true };
         try {
@@ -6599,7 +6639,7 @@
         } catch (err) { console.warn('[meAi] scale calc', err); opts = { fitCanvas: true, toBack: true }; }
         try { window._meAddImage(_meAiPendingUrl, opts); } catch (err2) { console.warn('[meAi] add', err2); }
         // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
-        //   AI 프롬프트에 적은 문구도 함께 넘겨 디자이너에게 전달(문구 섹션 숨김 대체).
+        //   AI 프롬프트에 적은 문구도 함께 넘겨 디자이너에게 전달.
         if (_meAiScarci) {
             try {
                 var _scPromptEl = document.getElementById('meAiPrompt');
@@ -6607,7 +6647,26 @@
                 if (typeof window._soScarciAttachAiImage === 'function') window._soScarciAttachAiImage(_meAiPendingUrl, _scPromptTxt);
             } catch (_sc) {}
         }
-        _meAiGenClose();
+    }
+    function _meAiInsert() { _meAiDoInsert(); _meAiGenClose(); }
+    // 2026-07-18: 스카시 '이대로 제작' — 삽입+디자이너 첨부 후 안내만 보이고 멈춤(자동진행 없음)
+    function _meAiScarciAccept() {
+        _meAiDoInsert();
+        var res = document.getElementById('meAiResult');
+        var scB = document.getElementById('meAiScarciBtns');
+        if (scB) scB.style.display = 'none';
+        if (res) {
+            res.style.color = '';
+            res.innerHTML = '<div style="width:100%; padding:14px 12px; text-align:center;">' +
+                '<div style="font-size:30px; margin-bottom:8px;">✅</div>' +
+                '<div style="font-size:13.5px; color:#334155; line-height:1.65; font-weight:600; margin-bottom:12px;">' +
+                  _meAiTr('이 디자인으로 접수했어요! 세부 디자인은 <b>전문 디자이너</b>가 만들어 <b>고객님께 연락</b>드립니다. 아래 요청사항·배송을 이어서 진행해 주세요.',
+                          'このデザインで受付しました!細部は <b>専門デザイナー</b> が仕上げて <b>ご連絡</b> します。続けてご要望·配送へお進みください。',
+                          'Received with this design! A <b>professional designer</b> finalizes the details and <b>contacts you</b>. Please continue with requests & delivery below.') +
+                '</div>' +
+                '<button type="button" onclick="window._meAiGenClose && window._meAiGenClose()" style="padding:10px 22px; border:none; border-radius:10px; background:#16a34a; color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">' + _meAiTr('확인', 'OK', 'OK') + '</button>' +
+              '</div>';
+        }
     }
 
     // 로딩 진행바 — 실제 진행률을 알 수 없어 90%까지 부드럽게 채운 뒤 완료 시 100%.
@@ -6726,7 +6785,7 @@
             res.style.color = '';
             res.innerHTML =
                 '<div style="width:100%; padding:6px 8px;">' +
-                  '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight') + '</div>' +
+                  '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + (_meAiScarci ? _meAiTr('디자인을 만들고 있어요 · 1분만 기다려주세요', 'デザインを作成中 · 1分ほどお待ちください', 'Creating your design · about 1 min') : _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight')) + '</div>' +
                   '<div style="height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden;">' +
                     '<div id="meAiBar" style="height:100%; width:6%; background:linear-gradient(90deg,#6366f1,#4338ca); border-radius:99px; transition:width .45s ease;"></div>' +
                   '</div>' +
@@ -6852,11 +6911,17 @@
             }
             _meAiPendingUrl = url;
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
-            if (ins) ins.style.display = 'block';
-            var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
-            // 2026-07-18: 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget.
-            //   스카시 포토존 시안은 완성 디자인이 아니라 컨셉 목업이므로 갤러리 등록 제외.
-            if (!_meAiScarci) { try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {} }
+            // 2026-07-18: 스카시면 결과 버튼(수정해서 다시만들기/이대로 제작)으로 스와프, 아니면 기존 '캔버스에 넣기'
+            if (_meAiScarci) {
+                if (ins) ins.style.display = 'none';
+                var _scB = document.getElementById('meAiScarciBtns'); if (_scB) _scB.style.display = 'block';
+                var _tip2s=document.getElementById('meAiTip'); if(_tip2s)_tip2s.style.display='none';
+            } else {
+                if (ins) ins.style.display = 'block';
+                var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
+                // 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
+                try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
+            }
         } catch (e) {
             console.error('[meAi] generate', e);
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
