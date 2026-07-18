@@ -2046,13 +2046,14 @@ html, body { background: #ffffff !important; }
           </div>
         </div>
 
-        <!-- 2026-07-18: 종이매대 전용 — 브랜드/제품/컨셉 입력. 원클릭 AI가 제품 썸네일(구조) 참고해 매대 목업 생성. 종이매대에서만 표시. -->
+        <!-- 2026-07-18: 종이매대 + 허니콤 테이블(hb_tb_*) 공용 — 브랜드/제품/컨셉 입력.
+             AI디자인 실행이 제품 썸네일(구조)을 참고해 목업 생성. 제목/설명은 제품군에 맞춰 JS 가 교체. -->
         <div class="so-section" id="soPaperDisplayRequest" style="display:none;">
-          <div class="so-section-title">📝 ${tr('매대 디자인 컨셉', '什器デザインコンセプト', 'Display design concept')}</div>
-          <div style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:12px;">
-            ${tr('브랜드·제품·컨셉을 적으면 원클릭 AI가 이 매대 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
-                 'ブランド·製品·コンセプトを入力すると、ワンクリックAIがこの什器の形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
-                 'Enter your brand, products and concept — one-click AI makes a mockup in this display\'s shape. A professional designer then crafts the real print design from it and contacts you.')}
+          <div class="so-section-title" id="soPdReqTitle">📝 ${tr('매대 디자인 컨셉', '什器デザインコンセプト', 'Display design concept')}</div>
+          <div id="soPdReqDesc" style="font-size:12px; color:#78716c; line-height:1.55; margin-bottom:12px;">
+            ${tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 이 매대 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                 'ブランド·製品·コンセプトを入力すると、AIデザイン実行がこの什器の形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                 'Enter your brand, products and concept — Run AI Design makes a mockup in this display\'s shape. A professional designer then crafts the real print design from it and contacts you.')}
           </div>
           <div style="margin-bottom:10px;">
             <label for="soPdBrand" style="display:block; font-size:12.5px; font-weight:800; color:#451a03; margin-bottom:5px;">${tr('브랜드명 · 타이틀 문구', 'ブランド名·タイトル', 'Brand / Title')} <span style="color:#dc2626; font-weight:900;">*</span></label>
@@ -6436,6 +6437,8 @@ html, body { background: #ffffff !important; }
         try {
             if (typeof _soIsScarciProduct === 'function' && _soIsScarciProduct(state.product)) return 'scarci';
             if (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(state.product)) return 'paper-display';
+            // 2026-07-18: 허니콤 테이블(hb_tb_*) — 매대와 같은 입력/첨부를 쓰되 프롬프트만 테이블용
+            if (typeof _soIsTableProduct === 'function' && _soIsTableProduct(state.product)) return 'hb-table';
             if (state.isBizCard) return 'namecard';
             var p = state.product;
             var isPlac = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p);
@@ -6521,7 +6524,11 @@ html, body { background: #ffffff !important; }
             var up = await sb.storage.from('design').upload(path, blob, { contentType: 'image/png', upsert: false });
             if (up && up.error) throw up.error;
             state.pdRefUrls.push(sb.storage.from('design').getPublicUrl(path).data.publicUrl);
-            try { showStatus(tr('AI 매대 시안을 디자이너 참고자료에 첨부했어요.', 'AI什器案をデザイナー資料に添付しました。', 'Attached the AI display concept to the designer references.'), 'ok'); } catch (_st) {}
+            try {
+                showStatus(state.isHbTable
+                    ? tr('AI 테이블 시안을 디자이너 참고자료에 첨부했어요.', 'AIテーブル案をデザイナー資料に添付しました。', 'Attached the AI table concept to the designer references.')
+                    : tr('AI 매대 시안을 디자이너 참고자료에 첨부했어요.', 'AI什器案をデザイナー資料に添付しました。', 'Attached the AI display concept to the designer references.'), 'ok');
+            } catch (_st) {}
         } catch (e) { console.warn('[pd ai attach]', e); }
     };
 
@@ -13567,7 +13574,27 @@ html, body { background: #ffffff !important; }
             var _pdSec = document.getElementById('soPaperDisplayRequest');
             ['soPdBrand', 'soPdProducts', 'soPdConcept'].forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ''; });
             state.pdBrand = ''; state.pdProducts = ''; state.pdConcept = ''; state.pdRefUrls = [];
-            if (_pdSec) _pdSec.style.display = state.isPaperDisplay ? '' : 'none';
+            // 2026-07-18: 허니콤 테이블(hb_tb_* 4종)도 종이매대와 동일한 브랜드/제품/컨셉 입력 사용
+            state.isHbTable = (typeof _soIsTableProduct === 'function') ? !!_soIsTableProduct(p) : false;
+            if (_pdSec) _pdSec.style.display = (state.isPaperDisplay || state.isHbTable) ? '' : 'none';
+            // 제목/설명을 제품군(매대 ↔ 테이블)에 맞게 교체
+            try {
+                var _pdT = document.getElementById('soPdReqTitle');
+                var _pdD = document.getElementById('soPdReqDesc');
+                if (_pdT && _pdD) {
+                    if (state.isHbTable) {
+                        _pdT.textContent = '📝 ' + tr('테이블 디자인 컨셉', 'テーブルデザインコンセプト', 'Table design concept');
+                        _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 이 테이블 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                                              'ブランド·製品·コンセプトを入力すると、AIデザイン実行がこのテーブルの形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                                              'Enter your brand, products and concept — Run AI Design makes a mockup in this table\'s shape. A professional designer then crafts the real print design from it and contacts you.');
+                    } else {
+                        _pdT.textContent = '📝 ' + tr('매대 디자인 컨셉', '什器デザインコンセプト', 'Display design concept');
+                        _pdD.textContent = tr('브랜드·제품·컨셉을 적으면 AI디자인 실행이 이 매대 모양 그대로 목업을 만들어줘요. 만든 목업을 참고해서 전문 디자이너가 실제 인쇄 디자인을 제작하여 연락드립니다.',
+                                              'ブランド·製品·コンセプトを入力すると、AIデザイン実行がこの什器の形のままモックアップを作成。それを参考に専門デザイナーが実際の印刷デザインを制作しご連絡します。',
+                                              'Enter your brand, products and concept — Run AI Design makes a mockup in this display\'s shape. A professional designer then crafts the real print design from it and contacts you.');
+                    }
+                }
+            } catch (_pdtx) {}
             // 가격 +50,000원 일괄 적용 (DB 가격 그대로 두고 모달 표시·계산 단가만 inflate)
             if (_isScarci && p && typeof p.price === 'number' && !p._scarciInflated) {
                 p.price = p.price + 50000;
@@ -15494,6 +15521,14 @@ html, body { background: #ffffff !important; }
             if (p && /^pp_bc/i.test(String(p.code || ''))) {
                 wMm = 90; hMm = 50;
             }
+            // 2026-07-18: 허니콤 테이블(hb_tb_*) — DB 는 900×1800 처럼 세로로 들어있지만 실제 인쇄면은 가로.
+            //   (칼선 도안 .ai 도 가로형) → 긴 변을 가로로 놓아 대지를 가로 비율로 만든다.
+            try {
+                if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p) && wMm && hMm) {
+                    var _tbLong = Math.max(wMm, hMm), _tbShort = Math.min(wMm, hMm);
+                    wMm = _tbLong; hMm = _tbShort;
+                }
+            } catch (_tbe) {}
             return { wMm: Math.round(wMm), hMm: Math.round(hMm) };
         }
 
@@ -16162,7 +16197,8 @@ html, body { background: #ffffff !important; }
             pdConcept: (state.pdConcept || '') || null,
             // 2026-07-15: 글씨 스카시/종이매대 참고자료(AI 목업 등) URL 배열 — 주문 시 design_requests.files 로 첨부
             uploadedFiles: (state.isScarci && Array.isArray(state.scarciRefUrls) && state.scarciRefUrls.length) ? state.scarciRefUrls.slice()
-                : (state.isPaperDisplay && Array.isArray(state.pdRefUrls) && state.pdRefUrls.length) ? state.pdRefUrls.slice()
+                // 2026-07-18: 종이매대 + 허니콤 테이블 — AI 목업을 디자이너 참고자료로
+                : ((state.isPaperDisplay || state.isHbTable) && Array.isArray(state.pdRefUrls) && state.pdRefUrls.length) ? state.pdRefUrls.slice()
                 : null,
             // 2026-06-05: 인스타판넬 family 전용 — 무료 디자인 입력 4종 (담당자 디자인용)
             isInstaPanel: !!state.isInstaPanel,
@@ -19968,9 +20004,13 @@ html, body { background: #ffffff !important; }
                     if (!_pi_it) continue;
                     var _pi_isPd = (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^pd_/i.test(_pi_it.product.code));
-                    if (!_pi_isPd) continue;
+                    // 2026-07-18: 허니콤 테이블(hb_tb_*)도 같은 흐름으로 디자이너 의뢰
+                    var _pi_isTb = (typeof _soIsTableProduct === 'function' && _soIsTableProduct(_pi_it.product))
+                        || (_pi_it.product && _pi_it.product.code && /^hb_tb/i.test(_pi_it.product.code));
+                    if (!_pi_isPd && !_pi_isTb) continue;
+                    var _pi_kind = _pi_isTb ? '테이블' : '종이매대';
                     if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
-                    var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || '종이매대');
+                    var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || _pi_kind);
                     var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
                     var _pi_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
                     var _pi_brand = (_pi_it.pdBrand || '').trim();
@@ -19989,13 +20029,13 @@ html, body { background: #ffffff !important; }
                         + (_pi_products ? '주요 제품/내용: ' + _pi_products + '\n' : '')
                         + (_pi_concept ? '색상/컨셉: ' + _pi_concept + '\n' : '')
                         + '주문번호: ' + (newOrderId || '-') + '\n'
-                        + '※ 종이매대 인쇄 디자인 (AI 목업 참고, 칼선·인쇄데이터 검증 필요)\n\n'
+                        + '※ ' + _pi_kind + ' 인쇄 디자인 (AI 목업 참고, 칼선·인쇄데이터 검증 필요)\n\n'
                         + '[FREE_REQ:{"customerPrice":' + _pi_unitPrice + ',"designerPayout":' + _pi_payout + '}]';
                     var _pi_payload = {
                         customer_id: _pdUid,
-                        title: '[종이매대] ' + _pi_prodName + (_pi_brand ? ' — ' + _pi_brand : ''),
+                        title: '[' + _pi_kind + '] ' + _pi_prodName + (_pi_brand ? ' — ' + _pi_brand : ''),
                         description: _pi_desc,
-                        category: '종이매대',
+                        category: _pi_kind,
                         country: 'KR',
                         budget_min: _pi_payout,
                         budget_max: _pi_payout,
