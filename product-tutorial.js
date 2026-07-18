@@ -552,6 +552,22 @@
       setTimeout(function () {
         try { var b = document.getElementById('meAiGenBtn'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
       }, 300);
+    } else if (opt.template === 'pd-input') {
+      // 2026-07-19: 목업 뷰어(종이매대·테이블·박스) — '인공지능 무료디자인' 을 고르면
+      //   무조건 내용 입력칸(브랜드/제품/컨셉)으로 데려가고, 거기만 강조한다.
+      //   내용이 있어야 AI 가 만들 수 있으므로 버튼보다 입력칸이 먼저다.
+      setTimeout(function () {
+        try {
+          var sec = document.getElementById('soPaperDisplayRequest');
+          if (sec) {
+            sec.style.display = '';
+            sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          _tutBlink(['#soPaperDisplayRequest']);
+          var brand = document.getElementById('soPdBrand');
+          if (brand) setTimeout(function () { try { brand.focus(); } catch (_) {} }, 420);
+        } catch (_) {}
+      }, 120);
     } else if (opt.template === 'ai-intro') {
       // 2026-07-18: 목업 뷰어 제품군(종이매대·허니콤 테이블) — 간편 진입의 [AI디자인 실행] 버튼을 반짝이게.
       //   여긴 #meAiGenBtn(툴바 안쪽 버튼)이 아니라 인트로 큰 버튼을 눌러야 브랜드 문구로 자동 생성된다.
@@ -1591,12 +1607,12 @@
       ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
       en: "I'll help you order! First, choose <b>how to design</b>." },
     branch: [
-      { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai', '#soPaperDisplayRequest'],
+      { key: 'ai', mode: 'free', template: 'pd-input', target: ['#soPaperDisplayRequest', '.me-intro-ai'],
         label: { kr: '인공지능 무료디자인', ja: 'AI無料デザイン', en: 'Free AI design' },
         sub: { kr: '이벤트 기간 무료 · 브랜드만 적으면 끝', ja: 'イベント期間中は無料 · ブランドを書くだけ', en: 'Free during the event — just enter your brand' },
-        msg: { kr: '오른쪽 <b>브랜드명·제품·컨셉</b>을 적고, 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요. 이 제품 모양 그대로 <b>목업</b>을 만들어드려요. 마음에 들 때까지 다시 만들 수 있고, 글씨·요소를 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러주세요!',
-          ja: '右側に <b>ブランド名·製品·コンセプト</b> を入力し、左の <b>[AIデザイン実行]</b> を押してください。この製品の形のまま <b>モックアップ</b> を作成します。気に入るまで作り直せますし、文字·要素を足して飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
-          en: 'Enter your <b>brand, products and concept</b> on the right, then tap <b>[Run AI Design]</b> on the left. We\'ll build a <b>mockup</b> in this product\'s exact shape. Regenerate as often as you like, and add text or elements too. When done, tap <b>"Done → Continue"</b> below!' }
+        msg: { kr: '먼저 <b>반짝이는 칸</b>에 내용을 적어주세요! <b>브랜드명·타이틀</b>은 필수, 제품·컨셉은 선택이에요. 다 적으셨으면 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요 — 이 제품 모양 그대로 <b>목업</b>을 만들어드려요. 마음에 들 때까지 다시 만들 수 있고, 글씨·요소를 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러주세요!',
+          ja: 'まず <b>光っている入力欄</b> に内容をご記入ください!<b>ブランド名·タイトル</b> は必須、製品·コンセプトは任意です。書けたら左の <b>[AIデザイン実行]</b> を押してください — この製品の形のまま <b>モックアップ</b> を作成します。気に入るまで作り直せますし、文字·要素を足して飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
+          en: 'First fill in the <b>glowing box</b>! <b>Brand / title</b> is required; products and concept are optional. Then tap <b>[Run AI Design]</b> on the left — we\'ll build a <b>mockup</b> in this product\'s exact shape. Regenerate as often as you like, and add text or elements too. When done, tap <b>"Done → Continue"</b> below!' }
       },
       // mode 미지정 → renderDetail (안내 팝업 + 스포트라이트 + 다음). 칼선 버튼이 없는 제품이면
       // renderBranch 의 target 가시성 필터가 이 선택지를 자동으로 빼준다.
