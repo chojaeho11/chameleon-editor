@@ -123,6 +123,13 @@
            editor-rail.css 의 `.qd-rail{display:flex}` 와 특정성 충돌 방지 위해 :not() 로 우선순위 확보.
            편집 중엔 이 규칙이 안 걸려 editor-rail 의 flex 레이아웃이 정상 적용됨. */
         html:not(.me-editing) .qd-rail { display:none; }
+        /* 2026-07-19: [디자인 수정도구] 모드 레이아웃 —
+           수정도구(툴바 + 속성패널)를 대지 위가 아니라 "작품 갤러리가 있던 자리"(대지·다운로드 아래)로 내리고,
+           작품 갤러리는 숨긴다. 그 아래로 템플릿/사진/벡터 레일이 이어진다.
+           #aiNbAi 는 flex column 이므로 order 로 자리만 바꾼다 — DOM 을 옮기지 않아 기존 이벤트·로직은 그대로. */
+        html.me-editing #meToolbar { order:8; }
+        html.me-editing #meProps   { order:9; }
+        html.me-editing #meGallery { display:none !important; }
         /* 2026-06-25: 양면(앞/뒤) 탭 — 캔버스 바로 위 */
         .me-side-tabs { display:flex; gap:8px; margin-bottom:10px; }
         .me-side-tab { flex:1; padding:10px 14px; border:1.5px solid #e5e7eb; background:#f8fafc; color:#475569; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
