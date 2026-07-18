@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260718185349';
+        var CV = '20260718190057';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -228,7 +228,7 @@
             </li>
             <li class="nav-item" onclick="window.open('order_management.html','_blank')" style="color:#a78bfa;"><i class="fa-solid fa-cart-shopping" style="color:#a78bfa;"></i> 주문관리</li>
             <li class="nav-item" onclick="showSection('sec-bugreport', this); if(window.loadBugReports) loadBugReports();" style="color:#fca5a5;"><i class="fa-solid fa-bug" style="color:#fca5a5;"></i> <span id="navBugReport">🐞 버그 제보</span></li>
-            <li class="nav-item" onclick="showSection('sec-gallery-mod', this); if(window.loadGalleryMod) loadGalleryMod();" style="color:#5eead4;"><i class="fa-solid fa-images" style="color:#5eead4;"></i> 🖼 작품 승인</li>
+            <li class="nav-item" onclick="showSection('sec-gallery-mod', this); if(window.loadGalleryMod) loadGalleryMod(); if(window.loadGalleryPublic) loadGalleryPublic('');" style="color:#5eead4;"><i class="fa-solid fa-images" style="color:#5eead4;"></i> 🖼 작품 승인</li>
             <li class="nav-item" onclick="showSection('sec-stats', this)"><i class="fa-solid fa-chart-line"></i> 매출통계</li>
             <li class="nav-item" onclick="showSection('sec-tasks', this)"><i class="fa-solid fa-calendar-check"></i> 배송관리</li>
             <li class="nav-item" onclick="showSection('sec-design-orders', this); if(window.loadDesignOrders) loadDesignOrders();"><i class="fa-solid fa-palette"></i> 🎨 디자인마켓 주문관리</li>
@@ -316,6 +316,9 @@
                 #sec-gallery-mod .gm-btn { flex:1; padding:8px 0; border:none; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer; font-family:inherit; }
                 #sec-gallery-mod .gm-approve { background:#14b8a6; color:#fff; }
                 #sec-gallery-mod .gm-reject { background:#fee2e2; color:#b91c1c; }
+                #sec-gallery-mod .gm-del { background:#fee2e2; color:#b91c1c; }
+                #sec-gallery-mod .gm-search { flex:1; min-width:0; border:1.5px solid #e2e8f0; border-radius:9px; padding:8px 12px; font-size:13px; font-family:inherit; outline:none; }
+                #sec-gallery-mod .gm-divider { margin:34px 0 0; border:0; border-top:1px solid #e2e8f0; }
               </style>
               <div class="gm-wrap">
                 <h2 style="margin:0 0 4px;">🖼 작품 갤러리 승인</h2>
@@ -325,6 +328,16 @@
                   <span id="galModCount" style="font-size:12.5px; color:#94a3b8;"></span>
                 </div>
                 <div id="galModList"><div style="color:#94a3b8; font-size:13px;">로딩 중...</div></div>
+
+                <hr class="gm-divider">
+                <h2 style="margin:22px 0 4px;">🗑 공개된 작품 관리 (최신순)</h2>
+                <p style="color:#64748b; margin:0 0 12px; font-size:13.5px; line-height:1.6;">현재 작품 갤러리에 공개된 이미지들입니다. 키워드로 검색하고, 부적절한 작품은 <b style="color:#b91c1c;">삭제</b>할 수 있습니다.</p>
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:16px;">
+                  <input type="text" id="galPubSearch" class="gm-search" placeholder="키워드 검색 (한/영/일)" onkeydown="if(event.key==='Enter'){ window.loadGalleryPublic && loadGalleryPublic(this.value); }">
+                  <button onclick="window.loadGalleryPublic && loadGalleryPublic(document.getElementById('galPubSearch').value)" style="padding:8px 16px; border:none; background:#4338ca; color:#fff; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer;">검색</button>
+                  <span id="galPubCount" style="font-size:12.5px; color:#94a3b8;"></span>
+                </div>
+                <div id="galPubList"><div style="color:#94a3b8; font-size:13px;">검색 버튼을 눌러 불러오세요.</div></div>
               </div>
             </div>
 
@@ -6820,6 +6833,55 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     } catch(e) {
       if (card) card.style.opacity = '';
       if (window.showToast) showToast('처리 실패: '+(e.message||e), 'error'); else alert('처리 실패: '+(e.message||e));
+    }
+  };
+
+  // 2026-07-18: 공개된 작품 관리 — 최신순 검색 + 삭제 (dg_admin_list / dg_moderate reject)
+  window.loadGalleryPublic = async function(q){
+    var listEl = document.getElementById('galPubList'); if (!listEl) return;
+    var cntEl = document.getElementById('galPubCount');
+    var sb = gmSb();
+    if (!sb) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">DB 연결이 없습니다.</div>'; return; }
+    listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">로딩 중...</div>';
+    try {
+      var r = await sb.rpc('dg_admin_list', { _status: 'public', _q: (q||'').trim(), _limit: 120 });
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      if (cntEl) cntEl.textContent = '공개 ' + rows.length + '건';
+      if (!rows.length) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">공개된 작품이 없습니다.</div>'; return; }
+      listEl.innerHTML = '<div class="gm-grid">' + rows.map(function(g){
+        var u = g.thumb_url || g.image_url;
+        var kw = [g.kw_ko, g.kw_en, g.kw_ja].filter(Boolean).join(' · ');
+        var dt = g.created_at ? new Date(g.created_at).toLocaleString() : '';
+        return '<div class="gm-item" id="gp-'+g.id+'">'
+          + '<img class="gm-thumb" src="'+_gmEsc(u)+'" onclick="window.open(\''+_gmEsc(g.image_url)+'\',\'_blank\')">'
+          + '<div class="gm-body">'
+            + '<div class="gm-prompt">'+_gmEsc(g.prompt||'')+'</div>'
+            + (kw ? '<div class="gm-kw">'+_gmEsc(kw)+'</div>' : '')
+            + '<div class="gm-meta">#'+g.id+' · '+(g.ratio?_gmEsc(g.ratio)+' · ':'')+dt+'</div>'
+            + '<div class="gm-actions">'
+              + '<button class="gm-btn gm-del" onclick="deleteGalleryItem('+g.id+')">삭제</button>'
+            + '</div>'
+          + '</div></div>';
+      }).join('') + '</div>';
+    } catch(e) { listEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">불러오기 실패: '+_gmEsc(e.message||e)+'</div>'; }
+  };
+  window.deleteGalleryItem = async function(id){
+    var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
+    if (!confirm('이 작품을 갤러리에서 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
+    var card = document.getElementById('gp-'+id);
+    if (card) card.style.opacity = '0.4';
+    try {
+      var r = await sb.rpc('dg_moderate', { _id: id, _action: 'reject' });
+      if (r.error) throw r.error;
+      if (window.showToast) showToast('삭제 완료', 'success');
+      if (card) card.remove();
+      var listEl = document.getElementById('galPubList');
+      var cntEl = document.getElementById('galPubCount');
+      if (listEl && !listEl.querySelector('.gm-item')) { listEl.innerHTML = '<div style="color:#94a3b8;font-size:13px;">공개된 작품이 없습니다.</div>'; if (cntEl) cntEl.textContent = '공개 0건'; }
+    } catch(e) {
+      if (card) card.style.opacity = '';
+      if (window.showToast) showToast('삭제 실패: '+(e.message||e), 'error'); else alert('삭제 실패: '+(e.message||e));
     }
   };
 })();
