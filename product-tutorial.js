@@ -763,12 +763,13 @@
             return function () { if (f) f.removeEventListener('change', on); if (bf) bf.removeEventListener('change', on); };
           }
         },
-        { key: 'editor', mode: 'free', target: ['.qd-head-row', '#soQuickDesignSec'],
-          label: { kr: '에디터로 직접 디자인', ja: 'エディタで自分でデザイン', en: 'Design it yourself' },
-          sub: { kr: '템플릿에 글씨만 바꾸면 끝', ja: 'テンプレの文字を変えるだけ', en: 'Just edit text on a template' },
-          msg: { kr: '🎨 템플릿을 띄웠어요! 마음에 드는 걸 고르고 <b>글씨만 바꾸면</b> 끝. 사진·요소도 자유롭게 넣으세요.<br>다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
-            ja: '🎨 テンプレートを表示しました! お好きなものを選んで <b>文字を変えるだけ</b>。写真·要素も自由に。<br>完成したら下の <b>「デザイン完了 → 次へ進む」</b> を押してください!',
-            en: '🎨 Templates are open! Pick one and <b>just change the text</b>. Add photos & elements freely.<br>When done, tap <b>"Done designing → Continue"</b> below!' }
+        // 2026-07-19: 명함도 템플릿 대신 인공지능으로.
+        { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai'],
+          label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
+          sub: { kr: '상호·이름·연락처만 적으면 끝', ja: '社名·氏名·連絡先を書くだけ', en: 'Just enter name & contact' },
+          msg: { kr: '반짝이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>상호·이름·직함·연락처</b> 등 명함에 넣을 내용을 적고 만들기를 누르면, 업종에 어울리는 명함을 만들어드려요. 마음에 들 때까지 다시 만들 수 있어요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요!',
+            ja: '光る <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>社名·氏名·肩書·連絡先</b> など名刺に入れる内容を書いて作成を押すと、業種に合う名刺を作ります。気に入るまで作り直せます。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
+            en: 'Tap the glowing <b>[Run AI Design]</b>! Enter what goes on the card — <b>company, name, title, contact</b> — and hit create; we\'ll design one that suits your industry. Regenerate as often as you like. When done, tap <b>"Done → Continue"</b> below!' }
         },
         { key: 'request', target: '#soDesignReqBanner',
           label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
@@ -849,19 +850,15 @@
         ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
         en: "I'll help you order! First, choose <b>how to design</b>." },
       branch: [
-        { key: 'ai', mode: 'free', template: 'ai', target: '#meAiGenBtn',
-          label: { kr: 'AI 이미지로 생성', ja: 'AIで画像生成', en: 'Generate with AI' },
-          sub: { kr: '설명만 쓰면 AI가 그려줘요', ja: '説明するだけでAIが描く', en: 'Describe it, AI draws it' },
-          msg: { kr: '반짝이는 <b>AI 이미지</b> 버튼을 눌러 이미지를 만들고, <b>글씨·요소·이미지</b>도 더해 디자인을 마무리하세요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요! (AI 이미지는 큰 출력물에선 약간 뭉개질 수 있어요 — 선명한 대형은 템플릿 추천)',
-            ja: '光る <b>AI画像</b> ボタンを押して画像を作り、<b>文字·要素·画像</b> も加えてデザインを仕上げてください。完成したら下の <b>「デザイン完了 → 次へ」</b> を!(AI画像は大判では少しにじむことがあります — 鮮明な大判はテンプレート推奨)',
-            en: 'Tap the glowing <b>AI image</b> button to create an image, then add <b>text/elements/images</b> to finish your design. When done, tap <b>"Done → Continue"</b> below! (AI images can look slightly blurry at large sizes — use a template for crisp large output)' }
-        },
-        { key: 'editor', mode: 'free', template: 'rail', target: ['#soQdRailThumbs', '.qd-rail', '#soQuickDesignSec'],
-          label: { kr: '템플릿으로 디자인', ja: 'テンプレートでデザイン', en: 'Design with a template' },
-          sub: { kr: '벡터라 크게 뽑아도 선명해요', ja: 'ベクターで大判でも鮮明', en: 'Vector — crisp even large' },
-          msg: { kr: '🎨 아래 <b>템플릿</b>들 중 마음에 드는 걸 고르고 <b>글씨·사진만 바꾸면</b> 끝!<br><b>템플릿은 벡터라 가벽·현수막처럼 크게 인쇄해도 깨끗하게</b> 나와요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b> 버튼을 눌러주세요!',
-            ja: '🎨 下の <b>テンプレート</b> からお好きなものを選んで <b>文字·写真を変えるだけ</b>!<br><b>テンプレートはベクターなので、間仕切りや横断幕のように大きく印刷しても鮮明</b>です。完成したら下の <b>「デザイン完了 → 次へ」</b> を押してください!',
-            en: '🎨 Pick a <b>template</b> from below and <b>just change text & photos</b>!<br><b>Templates are vector, so they print cleanly even at large sizes</b> (walls, banners). When done, tap <b>"Done → Continue"</b> below!' }
+        // 2026-07-19: 템플릿 분기 폐지 — 이제 디자인은 인공지능으로 한다(사장님 방침).
+        //   버튼도 툴바의 #meAiGenBtn 이 아니라 간편 진입의 [AI디자인 실행](.me-intro-ai) 를 가리킨다.
+        //   (툴바 버튼은 '디자인 수정도구'로 들어가야 보이므로 첫 화면에선 안 보인다.)
+        { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai'],
+          label: { kr: '인공지능으로 디자인', ja: 'AIでデザイン', en: 'Design with AI' },
+          sub: { kr: '내용만 적으면 AI가 만들어줘요', ja: '内容を書くだけでAIが作成', en: 'Just describe it — AI makes it' },
+          msg: { kr: '반짝이는 <b>[AI디자인 실행]</b>을 눌러주세요! 창이 열리면 <b>어떤 디자인을 원하는지 내용을 적고</b> 만들기를 누르면 됩니다. 마음에 들 때까지 다시 만들 수 있고, <b>글씨·요소·사진</b>을 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러요!',
+            ja: '光る <b>[AIデザイン実行]</b> を押してください!ウィンドウが開いたら <b>どんなデザインにしたいか内容を入力</b> して作成を押します。気に入るまで作り直せますし、<b>文字·要素·写真</b> を加えて飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
+            en: 'Tap the glowing <b>[Run AI Design]</b>! When the window opens, <b>describe the design you want</b> and hit create. Regenerate as often as you like, and add <b>text, elements and photos</b> too. When done, tap <b>"Done → Continue"</b> below!' }
         },
         { key: 'upload', always: true,
           // 업로드 후엔 원래 업로드 버튼이 숨고 '파일 변경' 버튼이 나옴 → 그것도 가리켜 재업로드 가능하게.
@@ -1630,6 +1627,17 @@
     cheer: { kr: '확인! 🤝', ja: '確認! 🤝', en: 'Got it! 🤝' }
   };
 
+  // 2026-07-19: 허니콤 박스 — AI 가 목업을 "입력한 치수 비율" 로 그리므로 사이즈를 반드시 먼저 받는다.
+  //   (디자인 방법 선택보다 앞에 와야 함 — 사이즈 없이 생성하면 엉뚱한 비율의 박스가 나온다.)
+  var BOX_SIZE_STEP = {
+    target: '#soBoxSizeSection', mode: 'next', resumeNext: true,
+    onEnter: function () { return _secVisible('#soBoxSizeSection'); },
+    msg: { kr: '먼저 <b>박스 사이즈</b>부터 정해요! <b>가로(W) · 높이(H) · 깊이(D)</b> 를 mm 로 입력해주세요. 이 치수로 단가가 계산되고, <b>인공지능도 이 비율 그대로</b> 목업을 그려줘요. 다 넣었으면 <b>다음</b>을 눌러주세요.',
+      ja: 'まず <b>ボックスサイズ</b> から!<b>幅(W)·高さ(H)·奥行(D)</b> を mm で入力してください。この寸法で単価が決まり、<b>AIもこの比率のまま</b> モックアップを描きます。入力できたら <b>次へ</b> を押してください。',
+      en: 'Start with the <b>box size</b>! Enter <b>width, height and depth</b> in mm. Pricing is based on these, and <b>the AI draws the mockup at exactly these proportions</b>. Then tap <b>Next</b>.' },
+    cheer: { kr: '사이즈 확정! 📦', ja: 'サイズOK! 📦', en: 'Size set! 📦' }
+  };
+
   var PAPER_DISPLAY_STEPS = [
     MOCKUP_DESIGN_CHOOSE_STEP,   // 1) 디자인 방법 (AI 무료디자인 / 칼선 다운로드 / 디자인 의뢰)
     { // 3) 시공/배송 옵션
@@ -1690,6 +1698,9 @@
     //   종류 카드가 없는 종이매대는 CHOOSE_VARIANT_STEP 의 onEnter 가 false 라 자동 스킵된다.
     //   (CHOOSE_VARIANT_STEP 이 PAPER_DISPLAY_STEPS 보다 아래에 정의돼 있어 여기서 concat)
     { id: 'paper-display', match: { test: function () { return _tutIsPaperDisplay(); } }, steps: [CHOOSE_VARIANT_STEP].concat(PAPER_DISPLAY_STEPS) },
+    // 2026-07-19: 허니콤 박스 — 매대/테이블과 같은 목업 흐름이되, 사이즈 입력을 맨 앞에.
+    //   honeycomb 계열 시나리오보다 앞에 둬야 이쪽이 매치된다.
+    { id: 'hb-box', match: /^hb_bx/i, steps: [BOX_SIZE_STEP].concat(PAPER_DISPLAY_STEPS) },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
     { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
