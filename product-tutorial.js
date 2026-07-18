@@ -1686,7 +1686,10 @@
     // 2026-07-15: 허니콤 포토존/조형물 — 종류·칼선다운·디자인·배송. 나무조형물 2종은 기성품(디자인 스킵). generic 보다 앞.
     { id: 'photozone', match: { test: function () { return _tutIsPhotozone(); } }, steps: PHOTOZONE_STEPS },
     // 2026-07-15: 종이매대 — 칼선다운→파일업로드→배송→수량. size-product/generic 보다 앞.
-    { id: 'paper-display', match: { test: function () { return _tutIsPaperDisplay(); } }, steps: PAPER_DISPLAY_STEPS },
+    // 2026-07-18: 맨 앞에 '종류 먼저 고르기' — 허니콤 테이블 4종 카드에서 종류부터 선택.
+    //   종류 카드가 없는 종이매대는 CHOOSE_VARIANT_STEP 의 onEnter 가 false 라 자동 스킵된다.
+    //   (CHOOSE_VARIANT_STEP 이 PAPER_DISPLAY_STEPS 보다 아래에 정의돼 있어 여기서 concat)
+    { id: 'paper-display', match: { test: function () { return _tutIsPaperDisplay(); } }, steps: [CHOOSE_VARIANT_STEP].concat(PAPER_DISPLAY_STEPS) },
     // 2026-07-14: 아크릴 키링/코롯토 — 모양·면·사이즈·포장·고리·업로드·누끼칼선. generic 보다 앞.
     { id: 'keyring', match: { test: function () { return _tutIsKeyring(); } }, steps: KEYRING_STEPS },
     // 2026-07-14: 스티커(일반/팬시 공통) — 종류 선택 챕터 먼저. size-product/fancy 보다 앞.
