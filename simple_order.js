@@ -13250,6 +13250,8 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 종이매대 — 5단 프리셋 (1/100/300/500/1000). 기본 100.
         state.isPaperDisplay = _soIsPaperDisplayProduct(p);
         window._soCurrentIsPaperDisplay = !!state.isPaperDisplay;   // 2026-07-15: 튜토리얼 매칭용(종이매대)
+        // 2026-07-18: 튜토리얼 매칭용(허니콤 테이블) — 종이매대와 같은 목업 뷰어 시나리오를 탄다.
+        try { window._soCurrentIsHbTable = (typeof _soIsTableProduct === 'function') ? !!_soIsTableProduct(p) : false; } catch (_hbt) { window._soCurrentIsHbTable = false; }
         if (state.isPaperDisplay) {
             state.qty = 100; // 기본 MOQ
             var _qtyInpInit = document.getElementById('soQty');

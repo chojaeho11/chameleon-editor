@@ -552,6 +552,13 @@
       setTimeout(function () {
         try { var b = document.getElementById('meAiGenBtn'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
       }, 300);
+    } else if (opt.template === 'ai-intro') {
+      // 2026-07-18: 목업 뷰어 제품군(종이매대·허니콤 테이블) — 간편 진입의 [AI디자인 실행] 버튼을 반짝이게.
+      //   여긴 #meAiGenBtn(툴바 안쪽 버튼)이 아니라 인트로 큰 버튼을 눌러야 브랜드 문구로 자동 생성된다.
+      _tutBlink(['.me-intro-ai']);
+      setTimeout(function () {
+        try { var ib = document.querySelector('.me-intro-ai'); if (ib) ib.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+      }, 300);
     } else if (opt.template === 'rail') {
       // 2026-07-10: 공통 템플릿 레일(editor-rail.js) 사용 — 명함/인스타판넬 같은 제품별 전용 모달 대신
       //   대부분 제품은 하단 레일의 공통 템플릿을 씀. 레일의 '템플릿' 탭을 켜고 그쪽으로 스크롤 + 반짝임.
@@ -1575,21 +1582,56 @@
   //  칼선 다운받기 → 파일 업로드(칼선에 맞춰 작업) → 시공/배송 → 주문 수량 → 시안 → 장바구니.
   //  종류 카드가 없는 단일 제품군 — window._soCurrentIsPaperDisplay 로 판정.
   // ════════════════════════════════════════════════════════════════════
-  function _tutIsPaperDisplay() { try { return window._soCurrentIsPaperDisplay === true; } catch (_) { return false; } }
+  // 2026-07-18: 목업 뷰어 제품군 — 종이매대 + 허니콤 테이블(hb_tb_*). 둘 다 같은 시나리오를 쓴다.
+  function _tutIsPaperDisplay() {
+    try { return window._soCurrentIsPaperDisplay === true || window._soCurrentIsHbTable === true; } catch (_) { return false; }
+  }
+  // 2026-07-18: 목업 뷰어 제품군(종이매대 + 허니콤 테이블) 디자인 방법 3분기.
+  //   이 제품군은 대지에 그린 게 곧 인쇄물이 아니라 "컨셉 목업"이고, 실제 인쇄 디자인은
+  //   디자이너가 목업을 참고해 따로 제작한다 → 분기를 AI 무료디자인 / 칼선 / 의뢰 셋으로 단순화.
+  var MOCKUP_DESIGN_CHOOSE_STEP = {
+    msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
+      ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
+      en: "I'll help you order! First, choose <b>how to design</b>." },
+    branch: [
+      { key: 'ai', mode: 'free', template: 'ai-intro', target: ['.me-intro-ai', '#soPaperDisplayRequest'],
+        label: { kr: '인공지능 무료디자인', ja: 'AI無料デザイン', en: 'Free AI design' },
+        sub: { kr: '이벤트 기간 무료 · 브랜드만 적으면 끝', ja: 'イベント期間中は無料 · ブランドを書くだけ', en: 'Free during the event — just enter your brand' },
+        msg: { kr: '오른쪽 <b>브랜드명·제품·컨셉</b>을 적고, 왼쪽 <b>[AI디자인 실행]</b>을 눌러주세요. 이 제품 모양 그대로 <b>목업</b>을 만들어드려요. 마음에 들 때까지 다시 만들 수 있고, 글씨·요소를 더해 꾸며도 좋아요. 다 되면 아래 <b>「디자인 끝나고 다음 진행하기」</b>를 눌러주세요!',
+          ja: '右側に <b>ブランド名·製品·コンセプト</b> を入力し、左の <b>[AIデザイン実行]</b> を押してください。この製品の形のまま <b>モックアップ</b> を作成します。気に入るまで作り直せますし、文字·要素を足して飾ってもOK。完成したら下の <b>「デザイン完了 → 次へ」</b> を!',
+          en: 'Enter your <b>brand, products and concept</b> on the right, then tap <b>[Run AI Design]</b> on the left. We\'ll build a <b>mockup</b> in this product\'s exact shape. Regenerate as often as you like, and add text or elements too. When done, tap <b>"Done → Continue"</b> below!' }
+      },
+      // mode 미지정 → renderDetail (안내 팝업 + 스포트라이트 + 다음). 칼선 버튼이 없는 제품이면
+      // renderBranch 의 target 가시성 필터가 이 선택지를 자동으로 빼준다.
+      { key: 'cutline', target: ['#soCutlineDownloadBtn', '#soCutlineDownload'],
+        label: { kr: '칼선 다운로드', ja: 'カットラインDL', en: 'Download cutline' },
+        sub: { kr: '직접 인쇄용 파일을 만들래요', ja: '自分で印刷用ファイルを作る', en: "I'll make the print file myself" },
+        msg: { kr: '가장 많이 쓰는 <b>기본 규격 칼선</b>을 다운받아 그 규격에 맞춰 작업할 수 있어요. 만약 <b>별도 규격이나 선반 갯수</b>가 필요하다면 본사담당자 <b>031-366-1984</b>로 전화해 칼선을 요청하신 뒤 작업해 주세요. 완성한 파일은 <b>파일 업로드</b>로 올려주시면 됩니다.',
+          ja: '最もよく使う <b>基本規格のカットライン</b> をダウンロードして、その規格に合わせて作業できます。<b>別途の規格や棚の数</b> が必要な場合は、担当のナナミ <b>090-5397-0420</b> へお電話でカットラインをご依頼のうえ作業してください。完成したファイルは <b>ファイルアップロード</b> から。',
+          en: 'Download the <b>most-used standard-size cutline</b> and design to fit it. If you need a <b>custom size or a different number of shelves</b>, please call our HQ manager at <b>+82 31-366-1984</b> to request one first. Upload your finished file with <b>Upload file</b>.' },
+        cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
+      },
+      { key: 'request', mode: 'request', target: '#soDesignReqBanner',
+        label: { kr: '디자인 의뢰하기', ja: 'デザインを依頼', en: 'Request a design' },
+        sub: { kr: '전문 디자이너에게 맡겨요', ja: 'プロのデザイナーに任せる', en: 'Leave it to a pro' },
+        msg: { kr: '전문가에게 맡겨요! <b>디자인 의뢰</b>를 작성하고 등록하면, 이어서 다음 단계로 안내해 드릴게요 ✏️',
+          ja: 'プロにお任せ! <b>デザイン依頼</b> を作成·登録すると、続けて次のステップをご案内します ✏️',
+          en: 'Leave it to a pro! Fill out and submit the <b>design request</b>, and I\'ll continue to the next step ✏️' }
+      }
+    ]
+  };
+
+  // 2026-07-18: 장바구니 직전 안내 — 이 제품군은 목업이 최종 인쇄물이 아니라는 점을 분명히 알린다.
+  var MOCKUP_HANDOFF_STEP = {
+    target: '#soBtnCart', mode: 'next',
+    msg: { kr: '잠깐만요! 이런 <b>목업 작업 후 디자인을 별개로 해야 하는 경우</b>, 디자이너가 <b>해당 이미지를 참고하여 새롭게 디자인</b>해서 고객님과 소통합니다. <b>결제 후 기다려 주시면 고객님께 연락</b>을 드립니다.<br>현재 <b style="color:#16a34a;">인공지능 컨셉의 리디자인은 이벤트 기간으로 무료</b>로 이용이 가능합니다 🎁',
+      ja: 'ちょっとだけ! このように <b>モックアップの後にデザインを別途行う場合</b>、デザイナーが <b>その画像を参考に新しくデザイン</b> し、お客様とやり取りします。<b>お支払い後お待ちいただければ、こちらからご連絡</b> いたします。<br>現在 <b style="color:#16a34a;">AIコンセプトのリデザインはイベント期間につき無料</b> でご利用いただけます 🎁',
+      en: 'One moment! When a <b>mockup like this needs a separate print design</b>, our designer <b>creates a new design referring to your image</b> and works with you directly. <b>After payment, just sit tight — we\'ll contact you.</b><br>Right now the <b style="color:#16a34a;">AI-concept redesign is free during our event period</b> 🎁' },
+    cheer: { kr: '확인! 🤝', ja: '確認! 🤝', en: 'Got it! 🤝' }
+  };
+
   var PAPER_DISPLAY_STEPS = [
-    { // 1) 칼선 다운받기 — 기본 규격 도안 + 별도 규격/선반 갯수는 본사(한국)·나나미(일본) 전화 요청
-      target: ['#soCutlineDownloadBtn', '#soCutlineDownload'], mode: 'next',
-      onEnter: function () { return _secVisible('#soCutlineDownload'); },
-      msg: { kr: '가장 많이 쓰는 <b>기본 규격 칼선</b>을 다운받아 그 규격에 맞춰 작업할 수 있어요. 만약 <b>별도 규격이나 선반 갯수</b>가 필요하다면 본사담당자 <b>031-366-1984</b>로 전화해 칼선을 요청하신 뒤 작업해 주세요.',
-        ja: '最もよく使う <b>基本規格のカットライン</b> をダウンロードして、その規格に合わせて作業できます。<b>別途の規格や棚の数</b> が必要な場合は、担当のナナミ <b>090-5397-0420</b> へお電話でカットラインをご依頼のうえ作業してください。',
-        en: 'Download the <b>most-used standard-size cutline</b> and design to fit it. If you need a <b>custom size or a different number of shelves</b>, please call our HQ manager at <b>+82 31-366-1984</b> to request a cutline first.' },
-      cheer: { kr: '도안 받기! 📐', ja: 'テンプレOK! 📐', en: 'Got it! 📐' }
-    },
-    Object.assign({}, GENERIC_STEPS[0], { // 2) 파일 업로드(칼선에 맞춰 작업한 완성본)
-      msg: { kr: '받은 <b>칼선 도안에 맞춰 디자인</b>한 뒤 <b>파일 업로드</b>로 올려주세요. 직접 하기 어려우면 <b>디자인 의뢰</b>도 가능해요.',
-        ja: '<b>型抜きテンプレートに合わせてデザイン</b> し <b>ファイルアップロード</b> してください。難しければ <b>デザイン依頼</b> も可能です。',
-        en: 'Design <b>to fit the die-cut template</b>, then <b>upload the file</b>. You can also <b>request a design</b> if it\'s tricky.' }
-    }),
+    MOCKUP_DESIGN_CHOOSE_STEP,   // 1) 디자인 방법 (AI 무료디자인 / 칼선 다운로드 / 디자인 의뢰)
     { // 3) 시공/배송 옵션
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
@@ -1606,8 +1648,9 @@
         en: 'Set the <b>quantity</b> — sample 1, 100 (min), 300/500/1,000, or type 2–99. More = lower unit price 💰' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
     },
-    PROOF_STEP,       // 5) 시안 최종 확인
-    GENERIC_STEPS[2]  // 6) 장바구니
+    PROOF_STEP,           // 5) 시안 최종 확인
+    MOCKUP_HANDOFF_STEP,  // 6) 목업 → 디자이너 리디자인 안내 (장바구니 직전)
+    GENERIC_STEPS[2]      // 7) 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════
