@@ -15521,12 +15521,14 @@ html, body { background: #ffffff !important; }
             if (p && /^pp_bc/i.test(String(p.code || ''))) {
                 wMm = 90; hMm = 50;
             }
-            // 2026-07-18: 허니콤 테이블(hb_tb_*) — DB 는 900×1800 처럼 세로로 들어있지만 실제 인쇄면은 가로.
-            //   (칼선 도안 .ai 도 가로형) → 긴 변을 가로로 놓아 대지를 가로 비율로 만든다.
+            // 2026-07-18: 허니콤 테이블(hb_tb_* 4종) — 대지를 4종 모두 동일한 1800×1200mm(3:2 가로)로 고정.
+            //   이 제품군의 대지는 "인쇄 원고"가 아니라 AI 목업·테마를 크게 보기 위한 뷰어다
+            //   (실제 인쇄 디자인은 결제 후 전문 디자이너가 칼선 도안에 맞춰 따로 제작).
+            //   AI 생성물이 1536×1024(3:2)라 대지를 같은 3:2 로 두면 cover 삽입 시 한 픽셀도 잘리지 않는다.
+            //   ※ DB 의 900×1800 등 제품별 실치수와는 별개 — 대지 비율만 통일한 것.
             try {
-                if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p) && wMm && hMm) {
-                    var _tbLong = Math.max(wMm, hMm), _tbShort = Math.min(wMm, hMm);
-                    wMm = _tbLong; hMm = _tbShort;
+                if (p && typeof _soIsTableProduct === 'function' && _soIsTableProduct(p)) {
+                    wMm = 1800; hMm = 1200;
                 }
             } catch (_tbe) {}
             return { wMm: Math.round(wMm), hMm: Math.round(hMm) };
