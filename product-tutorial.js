@@ -1354,8 +1354,8 @@
   //  동기 플래그(window._soCurrentIsScarci)로 판정.
   // ════════════════════════════════════════════════════════════════════
   function _tutIsScarci() { try { return window._soCurrentIsScarci === true; } catch (_) { return false; } }
-  // 2026-07-18: 재설계 — 종류선택 → 원클릭 AI 디자인(+로고) → 다음이동/다시만들기 → 요청사항 → 배송 → 장바구니.
-  //   디자인 문구는 AI 창에 통합(별도 단계 제거), 참고사진 패널은 숨기고 로고 업로드는 흐름 안으로.
+  // 2026-07-18: 재설계 — 종류선택 → 디자인 문구 입력(오른쪽) → 원클릭 AI디자인(왼쪽·중앙 생성창) → 배송 → 장바구니.
+  //   문구 입력 단계는 오른쪽 #soScarciRequest 를 하이라이트해 바로 입력 가능. AI 생성창은 화면 중앙 모달.
   var SCARCI_STEPS = [
     { // 1) 스카시 종류(스타일) 선택 (카드) — 클릭 시 variant 리로드 → 다음 챕터로 이어감
       target: ['#soScarciVariants', '#soScarciVariantsSec'], mode: 'next', resumeNext: true,
@@ -1365,23 +1365,23 @@
         en: 'First pick the <b>scarci type</b>. Tap a card to switch (single, base-box, heavy style, acrylic honeycomb lettering…).' },
       cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
     },
-    { // 2) 디자인 문구 입력 + 원클릭 AI 자동생성 (결과창에서 수정해서 다시만들기 / 이대로 제작)
-      target: ['.me-intro-ai', '#aiNbAi'], mode: 'next',
-      onEnter: function () { return _secVisible('#aiNbAi'); },
-      msg: { kr: '오른쪽 <b>[디자인 문구]</b>에 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적고 <b>원클릭 AI디자인</b>을 누르면, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 <b>[수정해서 다시 만들기]</b> 또는 <b>[이대로 제작]</b>을 고르세요. 다 되면 <b>다음</b>!',
-        ja: '右の <b>[デザイン文字]</b> に <b>タイトル文</b> と <b>サブ文</b> を入力し <b>ワンクリックAIデザイン</b> を押すと、その文言で立体文字フォトゾーンを <b>すぐに作成</b>。結果で <b>[修正して作り直す]</b> か <b>[このまま製作]</b> を選んでください。完成したら <b>次へ</b>!',
-        en: 'Enter the <b>title</b> and <b>subtitle</b> in <b>[Design text]</b> on the right, then tap <b>one-click AI design</b> to <b>instantly build</b> a 3D-letter photo zone. In the result, choose <b>[Edit & remake]</b> or <b>[Make it like this]</b>. When done, tap <b>Next</b>!' },
-      cheer: { kr: '디자인 시작! 🎨', ja: 'デザイン開始! 🎨', en: 'Designing! 🎨' }
-    },
-    { // 3) 요청사항 — 디자이너가 이 디자인을 참고해 제작
+    { // 2) 디자인 문구 입력 (오른쪽) — 타이틀/서브 + 요청사항. 오른쪽을 하이라이트해 바로 입력 가능.
       target: '#soScarciRequest', mode: 'next',
       onEnter: function () { try { if (window._soScarciRevealRequest) window._soScarciRevealRequest(); } catch (_) {} return true; },
-      msg: { kr: '이 디자인을 <b>참고해서 전문 디자이너가 작업</b>하여 고객님께 연락드려요. 원하시는 점(색·글씨체·분위기, 로고 위치 등)이 있으면 <b>요청사항</b>에 적어주세요. <span style="color:#94a3b8;">(없으면 그냥 다음)</span>',
-        ja: 'このデザインを <b>参考に専門デザイナーが制作</b> し、ご連絡します。ご希望(色·書体·雰囲気、ロゴ位置など)があれば <b>ご要望</b> にご記入ください。<span style="color:#94a3b8;">(なければ次へ)</span>',
-        en: 'A <b>professional designer crafts it</b> referring to your design, then contacts you. Note any wishes (colors, fonts, mood, logo position) in <b>Requests</b>. <span style="color:#94a3b8;">(none? just tap Next)</span>' },
-      cheer: { kr: '요청 접수! 📝', ja: 'ご要望OK! 📝', en: 'Noted! 📝' }
+      msg: { kr: '먼저 오른쪽 <b>[디자인 문구]</b>에 포토존에 넣을 <b>타이틀 문구</b>와 <b>서브 문구</b>를 적어주세요. 원하시는 점(색·글씨체 등)이 있으면 <b>요청사항</b>에도 적을 수 있어요. 다 적었으면 <b>다음</b>!',
+        ja: 'まず右の <b>[デザイン文字]</b> にフォトゾーンの <b>タイトル文</b> と <b>サブ文</b> をご記入ください。ご希望(色·書体など)があれば <b>ご要望</b> にも記入OK。記入したら <b>次へ</b>!',
+        en: 'First, enter the <b>title</b> and <b>subtitle</b> for your photo zone in <b>[Design text]</b> on the right. You can also note wishes (colors, fonts…) in <b>Requests</b>. Then tap <b>Next</b>!' },
+      cheer: { kr: '문구 입력! 📝', ja: '文言OK! 📝', en: 'Text set! 📝' }
     },
-    { // 5) 배송 (수도권 무료 / 지방)
+    { // 3) 원클릭 AI디자인 (왼쪽 버튼) — 누르면 화면 가운데에 생성 창이 떠서 바로 생성
+      target: ['.me-intro-ai'], mode: 'next',
+      onEnter: function () { return _secVisible('#aiNbAi'); },
+      msg: { kr: '이제 왼쪽 <b>[원클릭 AI디자인]</b>을 누르면 화면 <b>가운데에 생성 창</b>이 떠서, 적은 문구로 입체 글씨 포토존을 <b>바로 만들어드려요</b>. 결과에서 <b>[수정해서 다시 만들기]</b> 또는 <b>[이대로 제작]</b>을 고르세요. 다 되면 <b>다음</b>!',
+        ja: '次に左の <b>[ワンクリックAIデザイン]</b> を押すと、画面 <b>中央に生成ウィンドウ</b> が開き、入力した文言で立体文字フォトゾーンを <b>すぐに作成</b>。結果で <b>[修正して作り直す]</b> か <b>[このまま製作]</b> を選んでください。完成したら <b>次へ</b>!',
+        en: 'Now tap <b>[one-click AI design]</b> on the left — a <b>window opens in the center</b> and <b>instantly builds</b> a 3D-letter photo zone from your text. In the result, choose <b>[Edit & remake]</b> or <b>[Make it like this]</b>. When done, tap <b>Next</b>!' },
+      cheer: { kr: '디자인 시작! 🎨', ja: 'デザイン開始! 🎨', en: 'Designing! 🎨' }
+    },
+    { // 4) 배송 (수도권 무료 / 지방)
       target: '#soScheduleSection', mode: 'next',
       onEnter: function () { return _secVisible('#soScheduleSection'); },
       msg: { kr: '<b>배송 방법</b>을 골라요. <b>수도권 무료배송</b> 또는 <b>지방배송</b> 중에서 선택할 수 있어요.',
@@ -1389,7 +1389,7 @@
         en: 'Choose the <b>delivery method</b> — <b>free metro delivery</b> or <b>regional delivery</b>.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
     },
-    GENERIC_STEPS[2]  // 6) 장바구니
+    GENERIC_STEPS[2]  // 5) 장바구니
   ];
 
   // ════════════════════════════════════════════════════════════════════
