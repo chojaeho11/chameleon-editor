@@ -131,6 +131,8 @@
         if (!it || typeof it !== 'object') return it;
         if (!it.__source) it.__source = SOURCE;
         if (!it.__cart_id) it.__cart_id = uuid();
+        // 2026-07-19: 담은 시각 도장 — 이게 없으면 7일 만료 대상에서 영영 제외됐다.
+        if (!it.__added_at) it.__added_at = new Date().toISOString();
         return it;
     }
 
@@ -445,7 +447,9 @@
     // 2026-05-15: 30일 이상 묵은 항목 자동 정리.
     //   addedAt (패브릭) / uid (timestamp, 일반상품 simple_order) 둘 다 인식.
     //   user_id 키잉이라 옛 세션·옛 기기에서 추가된 항목이 영원히 살아있던 문제 보강.
-    var STALE_AGE_MS = 30 * 24 * 3600 * 1000; // 30 days
+    // 2026-07-19: 30일 → 7일 (사장님 요청). 보통 담고 2~4일 안에 결제하므로 그보다 오래된 항목은
+    //   장바구니에 남겨둘 이유가 없고, 옛 항목이 오래 살아있을수록 부활 사고의 불씨가 된다.
+    var STALE_AGE_MS = 7 * 24 * 3600 * 1000; // 7 days
     function isStaleCartItem(it) {
         if (!it || typeof it !== 'object') return false;
         var ts = 0;
@@ -456,6 +460,8 @@
         if (!ts && typeof it.uid === 'string' && /^\d{13}/.test(it.uid)) ts = parseInt(it.uid, 10);
         // 3) item-level updated_at
         if (!ts && it.updated_at) ts = Date.parse(it.updated_at);
+        // 4) 2026-07-19: tagItem 이 찍어두는 담은 시각 — 위 셋이 없는 항목도 만료되게 (예전엔 영원히 남았음)
+        if (!ts && it.__added_at) ts = Date.parse(it.__added_at);
         if (!ts) return false; // 타임스탬프 추적 불가 → 보존 (안전)
         return (Date.now() - ts) > STALE_AGE_MS;
     }
