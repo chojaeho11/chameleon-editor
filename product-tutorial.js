@@ -1036,26 +1036,28 @@
   //  시공/배송(설명) → 배송희망일(설명) → 장바구니. 각 단계 실제 섹션을 하이라이트.
   // ════════════════════════════════════════════════════════════════════
   var HONEYCOMB_WALL_STEPS = [
-    GENERIC_STEPS[0], // 1) 디자인 방법 (AI 이미지 / 템플릿 / 파일 / 의뢰) — 공통 재사용
-    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
-    { // 2) 가벽 사이즈
+    // 2026-07-19: 순서 변경 — 사이즈/단면/모양을 먼저 정한 뒤 디자인.
+    //   대지 비율이 사이즈에 따라 정해지므로, 디자인을 먼저 하면 비율이 바뀌어 시안이 어긋난다.
+    { // 1) 가벽 사이즈
       target: '#soWallSizeSection', mode: 'next',
       msg: { kr: '📐 이제 <b>가벽 사이즈</b>를 골라요. 설치할 공간에 맞춰 <b>가로(m)</b>와 <b>세로(m)</b>를 선택하면 가격이 자동으로 계산돼요.',
         ja: '📐 次は <b>壁面サイズ</b>。設置スペースに合わせて <b>横(m)</b> と <b>縦(m)</b> を選ぶと価格が自動計算されます。',
         en: '📐 Now pick the <b>wall size</b>. Choose <b>width (m)</b> and <b>height (m)</b> to fit your space — the price updates automatically.' }
     },
-    { // 3) 단면 / 양면
+    { // 2) 단면 / 양면
       target: ['#soWallSideRow', '#soWallSizeSection'], mode: 'next',
       msg: { kr: '<b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. 뒤쪽도 사람들에게 보이는 자리라면 <b>양면</b>을 추천해요.',
         ja: '<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷。裏側も見える場所なら <b>両面</b> がおすすめ。',
         en: '<b>Single</b> prints the front only; <b>double</b> prints both sides. If the back is also visible, we recommend <b>double</b>.' }
     },
-    { // 4) 공간 모양 (일자/꺾임)
+    { // 3) 공간 모양 (일자/꺾임)
       target: '#soWallShapeSection', mode: 'next',
       msg: { kr: '위에서 봤을 때 <b>가벽 모양</b>을 골라요. <b>一자</b>(일자) · <b>ㄱ자</b>(한 번 꺾임) · <b>ㄷ자</b>(양쪽 꺾임) 중 공간에 맞는 걸 선택하세요.',
         ja: '上から見た <b>壁の形</b> を選びます。<b>一字</b>(まっすぐ) · <b>L字</b>(1回曲げ) · <b>コ字</b>(両側曲げ) から空間に合うものを。',
         en: 'Pick the <b>floor-plan shape</b> (seen from above): <b>Straight</b> · <b>L-shape</b> (one bend) · <b>U-shape</b> (both sides) — choose what fits your space.' }
     },
+    GENERIC_STEPS[0], // 4) 디자인 방법 — 사이즈가 정해진 뒤에 디자인
+    GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
     { // 5) 추가 옵션 (설명 포함)
       target: '#soAddonSection', mode: 'next',
       msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요.<br>• 야외나 아이들이 많은 곳이라면 <b>보조받침대</b>를 선택해 주세요.<br>• 특별한 연출을 원한다면 <b>비싸지 않은 비용으로 조명</b>을 설치할 수 있어요. 조명은 <b>콘센트형</b>이라 끼우면 설치 끝!',
@@ -1843,7 +1845,9 @@
     { id: 'leaflet', match: { test: function () { return _tutIsLeaflet(); } }, steps: LEAFLET_STEPS },
     // 2026-07-14: 현수막(placard) — 종류·사이즈·마감·수량 전용 스텝. size-product 보다 앞.
     { id: 'placard', match: { test: function () { return _tutIsPlacard(); } }, steps: PLACARD_STEPS },
-    { id: 'honeycomb-wall', match: /^hb_dw/i, steps: HONEYCOMB_WALL_STEPS },
+    // 2026-07-19: 강화 골판지 가벽 등은 코드가 hb_dw 가 아니라 generic 으로 빠져
+    //   사이즈·배송 단계가 통째로 없었다(디자인 후 바로 장바구니). 가벽 사이즈 섹션이 보이면 가벽으로 간주.
+    { id: 'honeycomb-wall', match: { test: function () { return _secVisible('#soWallSizeSection'); } }, steps: HONEYCOMB_WALL_STEPS },
     { id: 'honeycomb-banner', match: /^hb_bn/i, steps: HONEYCOMB_BANNER_STEPS },
     { id: 'standee', match: /^hb_pt/i, steps: STANDEE_STEPS },
     // 2026-07-14: 사이즈 지정 제품(스티커/실사출력/현수막/광고인쇄 등) — 우측 사이즈·옵션 먼저, 그다음 디자인 방법.
