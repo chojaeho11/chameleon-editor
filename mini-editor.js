@@ -1739,15 +1739,16 @@
             }
             // 2026-07-19: [일러스트에서 "연결된 파일 없음" 뜨던 원인]
             //   <image href=...> 만 쓰면 SVG 1.1 만 읽는 Adobe Illustrator 가 링크를 못 읽어
-            //   "연결된 파일 ''" (빈 파일명) 오류를 낸다. → xlink:href 를 함께 출력해야 한다.
-            //   또한 dataURL 이 아니라 원격 URL 이면 일러스트가 가져오지 못하므로 경고를 남긴다.
+            //   "연결된 파일 ''" (빈 파일명) 오류를 낸다. → SVG 1.1 속성인 xlink:href 로 출력한다.
+            //   [주의] 둘 다 넣으면 base64 dataURL 이 통째로 복제돼 파일이 2배가 된다(3MB → 6MB).
+            //   xlink:href 는 SVG2 에서 deprecated 지만 모든 브라우저가 계속 지원하므로 이것만 쓴다.
+            //   dataURL 이 아니라 원격 URL 이면 일러스트가 가져오지 못하므로 경고를 남긴다.
             function _imgTag(src, x, y, w, h) {
                 if (!src) return '';
                 if (!/^data:/i.test(src)) {
                     console.warn('[_meExportSVG] 이미지를 내장하지 못해 외부 링크로 출력됨 (일러스트에서 링크 끊김):', String(src).slice(0, 120));
                 }
-                var e = _esc(src);
-                return '<image xlink:href="' + e + '" href="' + e + '" '
+                return '<image xlink:href="' + _esc(src) + '" '
                     + 'x="' + _fmt(x) + '" y="' + _fmt(y) + '" '
                     + 'width="' + _fmt(w) + '" height="' + _fmt(h) + '" '
                     + 'preserveAspectRatio="none"/>';
