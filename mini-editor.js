@@ -1737,6 +1737,21 @@
                 if (!isFinite(n)) return '0';
                 return (Math.round(n * 100) / 100).toString();
             }
+            // 2026-07-19: [일러스트에서 "연결된 파일 없음" 뜨던 원인]
+            //   <image href=...> 만 쓰면 SVG 1.1 만 읽는 Adobe Illustrator 가 링크를 못 읽어
+            //   "연결된 파일 ''" (빈 파일명) 오류를 낸다. → xlink:href 를 함께 출력해야 한다.
+            //   또한 dataURL 이 아니라 원격 URL 이면 일러스트가 가져오지 못하므로 경고를 남긴다.
+            function _imgTag(src, x, y, w, h) {
+                if (!src) return '';
+                if (!/^data:/i.test(src)) {
+                    console.warn('[_meExportSVG] 이미지를 내장하지 못해 외부 링크로 출력됨 (일러스트에서 링크 끊김):', String(src).slice(0, 120));
+                }
+                var e = _esc(src);
+                return '<image xlink:href="' + e + '" href="' + e + '" '
+                    + 'x="' + _fmt(x) + '" y="' + _fmt(y) + '" '
+                    + 'width="' + _fmt(w) + '" height="' + _fmt(h) + '" '
+                    + 'preserveAspectRatio="none"/>';
+            }
             // base64 → data URL (외부 이미지 embedding) — image src 가 cross-origin 일 수도 있어 fetch + blob → dataURL
             async function _imgToDataUrl(src) {
                 if (!src) return null;
@@ -1944,10 +1959,7 @@
                         }
                     }
                     if (!_imgEmitted) {
-                        parts.push('<image href="' + _esc(dataUrl || it.src) + '" '
-                            + 'x="' + _fmt(it.x) + '" y="' + _fmt(it.y) + '" '
-                            + 'width="' + _fmt(it.w) + '" height="' + _fmt(it.h) + '" '
-                            + 'preserveAspectRatio="none"/>');
+                        parts.push(_imgTag(dataUrl || it.src, it.x, it.y, it.w, it.h));
                     }
                 } else if (it.type === 'shape') {
                     var fill = _esc(it.fill || '#000000');
@@ -1985,7 +1997,7 @@
                         try {
                             var _stPng = _meTextItemToPng(it, lines);
                             if (_stPng && _stPng.dataUrl) {
-                                parts.push('<image href="' + _esc(_stPng.dataUrl) + '" x="' + _fmt(_stPng.x) + '" y="' + _fmt(_stPng.y) + '" width="' + _fmt(_stPng.w) + '" height="' + _fmt(_stPng.h) + '" preserveAspectRatio="none"/>');
+                                parts.push(_imgTag(_stPng.dataUrl, _stPng.x, _stPng.y, _stPng.w, _stPng.h));
                                 outlinedOk = true;
                             }
                         } catch (_ste) { console.warn('[stroked text raster]', _ste); }
@@ -2114,7 +2126,7 @@
                     if (!outlinedOk && rasterize) {
                         var _txtPng = _meTextItemToPng(it, lines);
                         if (_txtPng && _txtPng.dataUrl) {
-                            parts.push('<image href="' + _esc(_txtPng.dataUrl) + '" x="' + _fmt(_txtPng.x) + '" y="' + _fmt(_txtPng.y) + '" width="' + _fmt(_txtPng.w) + '" height="' + _fmt(_txtPng.h) + '" preserveAspectRatio="none"/>');
+                            parts.push(_imgTag(_txtPng.dataUrl, _txtPng.x, _txtPng.y, _txtPng.w, _txtPng.h));
                             outlinedOk = true;
                         }
                     }
