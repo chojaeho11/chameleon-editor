@@ -392,8 +392,18 @@
         var serverTs = server && server.updatedAt ? Date.parse(server.updatedAt) : 0;
         var localTs = readLocalTs();
         var nowIso = new Date().toISOString();
-        // 1. 서버 없거나 비어있으면 → local 채택
-        if (!server || !Array.isArray(server.items) || server.items.length === 0) {
+        // 1. 서버 행이 아예 없으면 → local 채택
+        if (!server || !Array.isArray(server.items)) {
+            return { items: localItems || [], source: 'local', tsIso: localTs ? new Date(localTs).toISOString() : nowIso };
+        }
+        // 2026-07-19: [빈 서버가 절대 못 이기던 버그]
+        //   예전엔 "서버가 비어있으면 무조건 local 채택" 이었다. 그래서 한 기기/탭에서 전체비우기를 해
+        //   서버를 비워도, 옛 항목을 들고 있는 다른 기기·탭이 그걸 다시 살려서 재푸시했다.
+        //   → "비어있음" 도 하나의 상태다. 서버가 더 최근에 비워졌으면 그 빈 상태를 따른다.
+        if (server.items.length === 0) {
+            if (serverTs && serverTs > localTs) {
+                return { items: [], source: 'server', tsIso: server.updatedAt || nowIso };
+            }
             return { items: localItems || [], source: 'local', tsIso: localTs ? new Date(localTs).toISOString() : nowIso };
         }
         // 2026-05-15: local 이 비어있어도 ts 가 server 보다 최신이면 "의도적 비움" 으로 간주.
