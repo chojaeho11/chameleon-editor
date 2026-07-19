@@ -744,6 +744,8 @@
 
   // 2026-07-14: 장바구니 담기 직전 — 미니에디터 시안 최종 확인 + PDF 다운로드 점검 (모든 제품 공통).
   //   에디터가 없는 제품(원판/금액주문 등)은 onEnter 로 자동 스킵.
+  // 2026-07-19: [미사용] 장바구니 직전 '시안 최종 확인' 단계 — 사장님 요청으로 전 튜토리얼에서 제거.
+  //   날짜/수량을 고르면 바로 장바구니로 간다. (되돌릴 수 있게 정의만 남겨둠)
   var PROOF_STEP = {
     // 2026-07-14: 다운로드 버튼이 아니라 '에디터 디자인 화면'을 밝게 하이라이트 (버튼만 비추면 대지가 어둡게 보임).
     target: ['#embeddedEditorPreview', '#meStage'], mode: 'next',
@@ -877,7 +879,6 @@
         ja: '箔押し・ミシン目・スジ・型押しを選びましたね!イラストで <b>別レイヤー</b> に <b>C100 (シアン100%) 特色</b> または <b>金箔</b> 指定で作成してください 🎨',
         en: 'You picked foil/perforation/crease/emboss! In Illustrator, mark them on a <b>separate layer</b> using <b>C100 (cyan 100%) spot</b> or specify <b>gold foil</b> 🎨' }
     },
-    PROOF_STEP, // 7) 시안 최종 확인 (다운로드 PDF 점검)
     { // 8) 장바구니
       target: '#soBtnCart', mode: 'wait',
       hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
@@ -1026,7 +1027,6 @@
       hint: { kr: '이미지·칼선을 각각 맞춘 뒤 다음을 눌러요', ja: '画像·カットラインを合わせてから次へ', en: 'Align image & cutline, then Next' },
       cheer: { kr: '칼선 정렬 완료! ✂️', ja: 'カットライン整列OK! ✂️', en: 'Aligned! ✂️' }
     },
-    PROOF_STEP,       // 7) 시안 최종 확인
     GENERIC_STEPS[2]  // 8) 장바구니
   ];
 
@@ -1092,7 +1092,6 @@
         ja: '最後に <b>配送希望日</b> を決めます(営業日基準で <b>最短3日後</b>)。<b>100万ウォン以上</b> の注文は <b>時間指定</b> も可能、それ以下は <b>日付のみ</b>。',
         en: 'Finally, set your <b>preferred delivery date</b> (from <b>3 business days</b>). Orders <b>over ₩1,000,000</b> can also pick a <b>time</b>; below that, <b>date only</b>.' }
     },
-    PROOF_STEP,      // 시안 최종 확인
     GENERIC_STEPS[2] // 장바구니 — 공통 재사용
   ];
 
@@ -1125,7 +1124,6 @@
         ja: '<b>数量</b>を決めます。複数枚は1ファイルにまとめて数量を入力してください。',
         en: 'Set the <b>quantity</b>. For multiple banners, put them in one file and enter the count.' }
     },
-    PROOF_STEP,      // 시안 최종 확인
     GENERIC_STEPS[2] // 장바구니
   ];
 
@@ -1198,7 +1196,6 @@
         ja: '<b>配送方法</b>を選びます。等身大は宅配可能で、地域·サイズにより選択肢が変わります。',
         en: 'Choose the <b>delivery method</b>. Standees can ship by parcel; options vary by region and size.' }
     },
-    PROOF_STEP,      // 시안 최종 확인
     GENERIC_STEPS[2] // 8) 장바구니
   ];
 
@@ -1241,7 +1238,6 @@
         ja: '<b>数量(セット)</b>を決めます。ファンシーは <b>4枚単位</b> です。',
         en: 'Choose the <b>quantity (sets)</b>. Fancy stickers are ordered in <b>units of 4</b>.' }
     },
-    PROOF_STEP,       // 시안 최종 확인
     GENERIC_STEPS[2]  // 장바구니
   ];
 
@@ -1324,7 +1320,6 @@
     },
     GENERIC_STEPS[0], // 7) 디자인 방법 (AI / 템플릿 / 파일 / 의뢰) — 옵션 다 고른 뒤 디자인
     GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
-    PROOF_STEP,       // 8) 시안 최종 확인
     GENERIC_STEPS[2]  // 9) 장바구니
   ];
 
@@ -1363,7 +1358,6 @@
     },
     GENERIC_STEPS[0], // 4) 디자인 방법 (파일 업로드 / 만들기 / 의뢰)
     GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
-    PROOF_STEP,       // 5) 시안 최종 확인
     { // 6) 수량
       target: ['#soQtySection', '#soLfQtySlot'], mode: 'next',
       onEnter: function () { return _secVisible('#soQtySection'); },
@@ -1439,7 +1433,6 @@
         en: 'Choose the <b>quantity</b>! More = lower unit price 💰 <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
     },
-    PROOF_STEP,       // 9) 시안 확인
     GENERIC_STEPS[2]  // 10) 장바구니
   ];
 
@@ -1543,7 +1536,6 @@
         en: 'Choose the <b>quantity</b>! <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
     },
-    PROOF_STEP,       // 7) 시안 최종 확인
     GENERIC_STEPS[2]  // 8) 장바구니
   ];
 
@@ -1608,7 +1600,6 @@
         en: 'Choose the <b>quantity</b>! <span style="color:#94a3b8;">(type it in)</span>' },
       cheer: { kr: '수량 확인! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
     },
-    PROOF_STEP,       // 7) 시안 최종 확인
     GENERIC_STEPS[2]  // 8) 장바구니
   ];
 
@@ -1652,9 +1643,6 @@
         en: 'Choose <b>delivery/installation</b> — metro free delivery/install or regional, and pick your <b>preferred date</b> below.' },
       cheer: { kr: '배송 선택! 🚚', ja: '配送OK! 🚚', en: 'Delivery set! 🚚' }
     },
-    Object.assign({}, PROOF_STEP, { // 5) 시안 최종 확인 — 기성품이면 스킵
-      onEnter: function () { return _pzNotReadyMade() && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview')); }
-    }),
     GENERIC_STEPS[2]  // 6) 장바구니
   ];
 
@@ -1871,9 +1859,8 @@
     //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 — 종류 카드 있는 제품(봉투/실사출력/탁상 등)은 제품부터, 없으면 자동 스킵.
     { id: 'size-product', match: { test: function () { return _tutIsSizeProduct(); } }, steps: [CHOOSE_VARIANT_STEP].concat(SIZE_PRODUCT_STEPS) },
     // catch-all — 위 전용 시나리오에 안 걸리는 모든 제품. 반드시 마지막.
-    //   2026-07-14: 장바구니 직전 시안확인(PROOF_STEP) 삽입 (GENERIC_STEPS 배열은 그대로 두고 조합).
     //   2026-07-15: 맨 앞에 공통 '종류 먼저 고르기' 스텝 (종류 카드 없으면 자동 스킵).
-    { id: 'generic', match: /.*/, steps: [CHOOSE_VARIANT_STEP, GENERIC_STEPS[0], GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP, GENERIC_STEPS[1], PROOF_STEP, GENERIC_STEPS[2]] }
+    { id: 'generic', match: /.*/, steps: [CHOOSE_VARIANT_STEP, GENERIC_STEPS[0], GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP, GENERIC_STEPS[1], GENERIC_STEPS[2]] }
   ];
   function pickScenario(code) {
     if (!code) return null;
