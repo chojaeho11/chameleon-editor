@@ -6290,8 +6290,8 @@
               // 비율 선택 — 1행: 기본 비율 (2026-07-18: 16:9 등 비율표기 제거, 이름만)
               '<div style="display:flex; gap:6px; margin-bottom:8px;">' +
                 '<button type="button" class="meAiRatioBtn" data-ratio="1:1" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #4338ca; background:#eef2ff; color:#4338ca; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('정사각', '正方形', 'Square') + '</button>' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로포스터', '縦ポスター', 'Portrait') + '</button>' +
-                '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로포스터', '横ポスター', 'Landscape') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="9:16" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('세로형', '縦型', 'Portrait') + '</button>' +
+                '<button type="button" class="meAiRatioBtn" data-ratio="16:9" style="flex:1; padding:8px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#334155; font-size:12px; cursor:pointer; font-family:inherit;">' + _meAiTr('가로형', '横型', 'Landscape') + '</button>' +
               '</div>' +
               // 2행: 제품 전용 프리셋 — 가로현수막 / 세로배너 / 명함 (2026-07-18)
               //   가로현수막: 위아래 큰 여백 + 중앙 가로띠. 세로배너: 좌우 큰 여백 + 중앙 세로열. 명함: 사방 여백.
