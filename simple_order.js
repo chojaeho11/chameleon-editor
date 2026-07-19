@@ -9283,8 +9283,15 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 아크릴 인쇄 family (acrl2*/acrl3* + 반투명아크릴 + 글씨스카시) 는 키링 자동 추가 차단.
         var _isAcrylicPrintFam = (function(){
             if (!p) return false;
-            if (/^acrl[23]/i.test(p.code || '')) return true;
             var nm = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_jp || '')).toLowerCase();
+            // 2026-07-19: [키링 고리가 안 보이던 원인]
+            //   아래 '반투명' 차단은 아크릴 *인쇄* 제품(판재)을 걸러내려고 넣은 것인데,
+            //   '반투명 무광 아크릴 키링' · '반투명 홀로그램 아크릴 키링' 처럼 이름에 반투명이 든
+            //   *키링* 까지 걸려서 고리 부자재가 통째로 안 붙었다.
+            //   → 키링 제품이면(카테고리 acr_key_ring 또는 이름에 키링/키홀더) 인쇄 family 판정에서 제외.
+            var _cat = (p.category || '').toLowerCase();
+            if (_cat === 'acr_key_ring' || /키링|키홀더|keyring|key\s*ring|key\s*chain|키체인/i.test(nm)) return false;
+            if (/^acrl[23]/i.test(p.code || '')) return true;
             if (/반투명|半透明|translucent|frosted/.test(nm)) return true;
             if (/스카시|スカシ|scarci|글씨\s*커팅|letter\s*cutout/.test(nm)) return true;
             return false;
