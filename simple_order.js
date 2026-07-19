@@ -1595,9 +1595,9 @@ html, body { background: #ffffff !important; }
           <div class="qd-edit-grid">
             <aside class="qd-rail">
               <div class="qd-rail-tabs">
-                <button type="button" class="qd-rail-tab active" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch('design_tpl')"><span>${tr('템플릿','テンプレ','Template')}</span></button>
+                <button type="button" class="qd-rail-tab" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch('design_tpl')"><span>${tr('템플릿','テンプレ','Template')}</span></button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch('template')"><span>${tr('사진','写真','Photo')}</span></button>
-                <button type="button" class="qd-rail-tab" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch('vector')"><span>${tr('벡터','ベクター','Vector')}</span></button>
+                <button type="button" class="qd-rail-tab active" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch('vector')"><span>${tr('벡터','ベクター','Vector')}</span></button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch('element')"><span>${tr('요소','要素','Elem')}</span></button>
                 <button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch('decoration')"><span>${tr('장식','装飾','Deco')}</span></button>
               </div>

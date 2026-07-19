@@ -66,9 +66,9 @@
     function _railHtml(){
         return '<aside class="qd-rail">' +
   '<div class="qd-rail-tabs">' +
-    '<button type="button" class="qd-rail-tab active" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'design_tpl\')"><span>' + _cfg.tr('템플릿','テンプレ','Template') + '</span></button>' +
+    '<button type="button" class="qd-rail-tab" data-rail-tab="design_tpl" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'design_tpl\')"><span>' + _cfg.tr('템플릿','テンプレ','Template') + '</span></button>' +
     '<button type="button" class="qd-rail-tab" data-rail-tab="template" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'template\')"><span>' + _cfg.tr('사진','写真','Photo') + '</span></button>' +
-    '<button type="button" class="qd-rail-tab" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'vector\')"><span>' + _cfg.tr('벡터','ベクター','Vector') + '</span></button>' +
+    '<button type="button" class="qd-rail-tab active" data-rail-tab="vector" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'vector\')"><span>' + _cfg.tr('벡터','ベクター','Vector') + '</span></button>' +
     '<button type="button" class="qd-rail-tab" data-rail-tab="element" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'element\')"><span>' + _cfg.tr('요소','要素','Elem') + '</span></button>' +
     '<button type="button" class="qd-rail-tab" data-rail-tab="decoration" onclick="window._soQdRailSwitch && window._soQdRailSwitch(\'decoration\')"><span>' + _cfg.tr('장식','装飾','Deco') + '</span></button>' +
   '</div>' +
@@ -115,8 +115,8 @@
         };
 
         // 2026-06-15: 좌측 사이드바 (qd-rail) — 4개 페이지 + 탭 + 검색 + 이전/다음. 전체보기는 기존 팝업 재사용.
-        // 2026-06-19 v644: 기본 활성 탭 — design_tpl (디자인 템플릿 = admin_templates.status='approved' && asset_type='template')
-        var _railTab = 'design_tpl';
+        // 2026-07-19: 기본 활성 탭 — vector (사장님 요청: 템플릿 대신 벡터가 먼저 보이게)
+        var _railTab = 'vector';
         var _railSearch = '';
         var _railSearchDebounce = null;
         var _railAllItems = [];
