@@ -8713,6 +8713,11 @@ html, body { background: #ffffff !important; }
         const cat = (p.category || '').toLowerCase();
         const name = ((p.name || '') + ' ' + (p.name_us || '') + ' ' + (p.name_kr || '')).toLowerCase();
         if (/^gds_acr|^gds_kr|^acr_kr|^acr_g/.test(code)) return true;
+        // 2026-07-19: gds_ksty_* (반짝이·반투명무광 아크릴 키링) 가 코드 접두사만 달라 감지에서 빠졌다.
+        //   → 키링 고리 부자재가 안 붙고 기본 사이즈도 대형 제품값으로 잡히던 문제.
+        //   네 제품 모두 category='acr_key_ring' 를 공유하므로 카테고리로도 잡는다(앞으로 추가될 코드도 커버).
+        if (/^gds_ksty/.test(code)) return true;
+        if (cat === 'acr_key_ring') return true;
         if (/^(gds_acr|acrylic_goods|acrylic|굿즈|goods)$/.test(cat)) return true;
         if (/아크릴\s*키링|아크릴\s*키홀더|아크릴\s*굿즈|아크릴\s*스탠드|코롯도|korotto|acrylic\s*(keyring|charm|stand|goods|holder|tag)/i.test(name)) return true;
         return false;
