@@ -1035,6 +1035,10 @@
   //  디자인 방법(공통) → 가벽 사이즈 → 단/양면 → 공간모양 → 추가옵션(설명) →
   //  시공/배송(설명) → 배송희망일(설명) → 장바구니. 각 단계 실제 섹션을 하이라이트.
   // ════════════════════════════════════════════════════════════════════
+  // 2026-07-19: 강화 골판지 가벽 — 허니콤 가벽과 달리 시공/단면양면/공간모양/추가옵션이 전부 없다.
+  function _tutIsReinforcedWall() {
+    try { return window._soCurrentIsReinforcedWall === true; } catch (_) { return false; }
+  }
   var HONEYCOMB_WALL_STEPS = [
     // 2026-07-19: 순서 변경 — 사이즈/단면/모양을 먼저 정한 뒤 디자인.
     //   대지 비율이 사이즈에 따라 정해지므로, 디자인을 먼저 하면 비율이 바뀌어 시안이 어긋난다.
@@ -1044,31 +1048,43 @@
         ja: '📐 次は <b>壁面サイズ</b>。設置スペースに合わせて <b>横(m)</b> と <b>縦(m)</b> を選ぶと価格が自動計算されます。',
         en: '📐 Now pick the <b>wall size</b>. Choose <b>width (m)</b> and <b>height (m)</b> to fit your space — the price updates automatically.' }
     },
-    { // 2) 단면 / 양면
-      target: ['#soWallSideRow', '#soWallSizeSection'], mode: 'next',
+    { // 2) 단면 / 양면 — 2026-07-19: 강화 골판지 가벽은 기본 양면이라 이 줄이 숨겨진다 → 그때는 스킵.
+      //   (target 폴백에 #soWallSizeSection 이 있어 onEnter 없이는 항상 떴다)
+      target: ['#soWallSideRow'], mode: 'next',
+      onEnter: function () { return _secVisible('#soWallSideRow'); },
       msg: { kr: '<b>단면</b>은 앞면만, <b>양면</b>은 앞·뒤 모두 인쇄해요. 뒤쪽도 사람들에게 보이는 자리라면 <b>양면</b>을 추천해요.',
         ja: '<b>片面</b>は表のみ、<b>両面</b>は表裏とも印刷。裏側も見える場所なら <b>両面</b> がおすすめ。',
         en: '<b>Single</b> prints the front only; <b>double</b> prints both sides. If the back is also visible, we recommend <b>double</b>.' }
     },
-    { // 3) 공간 모양 (일자/꺾임)
+    { // 3) 공간 모양 (일자/꺾임) — 2026-07-19: 강화 골판지 가벽은 ㄱ자·ㄷ자가 없어 섹션이 숨겨진다 → 스킵.
       target: '#soWallShapeSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soWallShapeSection'); },
       msg: { kr: '위에서 봤을 때 <b>가벽 모양</b>을 골라요. <b>一자</b>(일자) · <b>ㄱ자</b>(한 번 꺾임) · <b>ㄷ자</b>(양쪽 꺾임) 중 공간에 맞는 걸 선택하세요.',
         ja: '上から見た <b>壁の形</b> を選びます。<b>一字</b>(まっすぐ) · <b>L字</b>(1回曲げ) · <b>コ字</b>(両側曲げ) から空間に合うものを。',
         en: 'Pick the <b>floor-plan shape</b> (seen from above): <b>Straight</b> · <b>L-shape</b> (one bend) · <b>U-shape</b> (both sides) — choose what fits your space.' }
     },
     GENERIC_STEPS[0], // 4) 디자인 방법 — 사이즈가 정해진 뒤에 디자인
     GENERIC_AI_RUN_STEP, GENERIC_AI_CONFIRM_STEP,   // AI 선택 시에만 (onEnter 로 자동 스킵)
-    { // 5) 추가 옵션 (설명 포함)
+    { // 5) 추가 옵션 (설명 포함) — 2026-07-19: 보조받침대·조명이 없는 제품(강화 골판지)에서는 스킵.
       target: '#soAddonSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soAddonSection'); },
       msg: { kr: '필요한 <b>추가 옵션</b>만 체크하세요.<br>• 야외나 아이들이 많은 곳이라면 <b>보조받침대</b>를 선택해 주세요.<br>• 특별한 연출을 원한다면 <b>비싸지 않은 비용으로 조명</b>을 설치할 수 있어요. 조명은 <b>콘센트형</b>이라 끼우면 설치 끝!',
         ja: '必要な <b>追加オプション</b> だけチェックしてください。<br>• 屋外や子供が多い場所なら <b>補助スタンド</b> を選んでください。<br>• 特別な演出をご希望なら <b>手頃な価格で照明</b> を設置できます。照明は <b>コンセント式</b> なので差し込むだけで設置完了!',
         en: 'Check only the <b>add-ons</b> you need.<br>• For outdoor spots or places crowded with kids, pick the <b>support base</b>.<br>• Want a special touch? Add <b>affordable lighting</b> — it\'s <b>plug-in type</b>, just plug it in and it\'s done!' }
     },
     { // 6) 시공/배송 (설명)
       target: '#soScheduleSection', mode: 'next',
-      msg: { kr: '<b>시공/배송</b>을 골라요. <b>수도권(서울·경기)</b>은 <b>무료 배송·무료 설치</b>! <b>지방</b>은 용차배송 또는 설치배송 중에 고르면 되고, 설치까지 원하면 <b>설치배송</b>을 선택하세요.',
-        ja: '<b>施工/配送</b> を選びます。<b>首都圏</b>は <b>送料・設置 無料</b>!<b>地方</b>はトラック配送か設置配送から選び、設置も希望なら <b>設置配送</b> を。',
-        en: 'Choose <b>install/delivery</b>. <b>Metro area</b> = <b>free delivery & install</b>! For <b>regional</b>, pick truck delivery or install delivery — choose <b>install delivery</b> if you want it set up.' }
+      // 2026-07-19: 강화 골판지 가벽은 시공 서비스가 없다(박스처럼 펼쳐 고객이 직접 설치) → 문구를 따로.
+      msg: function () {
+        if (_tutIsReinforcedWall()) {
+          return { kr: '<b>배송</b>을 골라요. 이 제품은 <b>박스처럼 펼쳐서 직접 설치</b>하는 셀프 제품이라 시공 서비스는 없어요.<br><b>수도권(서울·경기)</b>은 <b>무료배송</b>, <b>지방</b>은 <b>용차배송</b> 중에서 선택하시면 됩니다.',
+            ja: '<b>配送</b> を選びます。この商品は <b>箱のように広げてご自身で設置</b> するセルフ商品のため、施工サービスはありません。<br><b>首都圏</b>は <b>送料無料</b>、<b>地方</b>は <b>トラック配送</b> からお選びください。',
+            en: 'Choose <b>delivery</b>. This is a <b>self-assembly</b> product — it unfolds like a box, so there is no installation service.<br>Pick <b>free metro delivery</b> or <b>regional truck delivery</b>.' };
+        }
+        return { kr: '<b>시공/배송</b>을 골라요. <b>수도권(서울·경기)</b>은 <b>무료 배송·무료 설치</b>! <b>지방</b>은 용차배송 또는 설치배송 중에 고르면 되고, 설치까지 원하면 <b>설치배송</b>을 선택하세요.',
+          ja: '<b>施工/配送</b> を選びます。<b>首都圏</b>は <b>送料・設置 無料</b>!<b>地方</b>はトラック配送か設置配送から選び、設置も希望なら <b>設置配送</b> を。',
+          en: 'Choose <b>install/delivery</b>. <b>Metro area</b> = <b>free delivery & install</b>! For <b>regional</b>, pick truck delivery or install delivery — choose <b>install delivery</b> if you want it set up.' };
+      }
     },
     { // 7) 배송 희망일 (설명)
       target: ['#soScheduleDateWrap', '#soScheduleSection'], mode: 'next',

@@ -12914,6 +12914,8 @@ html, body { background: #ffffff !important; }
         // 2026-05-14: 가벽 변종 분기 — 파티션 / 강화 골판지 / 단면 전용 / 기본
         state.isPartition = _soIsPartitionProduct(p);
         state.isReinforcedWall = _soIsReinforcedWall(p);
+        // 2026-07-19: 튜토리얼 매칭용 — 강화 골판지 가벽은 시공/단면양면/공간모양/추가옵션이 모두 없는 셀프 제품.
+        try { window._soCurrentIsReinforcedWall = !!state.isReinforcedWall; } catch (_rw) {}
         state.isFoldingWall = _soIsFoldingScreenWall(p);
         state.isSingleSideWall = state.isReinforcedWall ? false : _soIsSingleSideWall(p);
         if (state.isReinforcedWall) {
@@ -14864,6 +14866,10 @@ html, body { background: #ffffff !important; }
         if (state.isAmountOrder) {
             // 2026-05-15: 금액주문 — 배송 개념 없음. 입력 금액 그대로 (배송비 포함된 금액).
             allowed = ['self_pickup'];
+        } else if (state.isReinforcedWall) {
+            // 2026-07-19: 강화 골판지 가벽 — 시공 서비스 없음. 박스처럼 펼쳐 고객이 직접 설치하는 셀프 제품.
+            //   수도권 무료배송 / 지방 용차배송 2종만 (야간·주말설치, 철거, 지방설치배송 제외).
+            allowed = ['metro_install', 'regional_truck'];
         } else if (state.isWall || state.isPhotozone) {
             // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합) — 5종 시공
             allowed = installKeys.slice();
@@ -14939,6 +14945,26 @@ html, body { background: #ffffff !important; }
         if (state.isForexFoam && typeof window._soFoamApplyAutoShip === 'function') {
             window._soFoamApplyAutoShip();
         }
+        // 2026-07-19: 강화 골판지 가벽 — 시공이 아니라 배송만. 라벨에 '셀프설치 제품' 명시해 오해 방지.
+        //   (같은 버튼을 허니콤 가벽도 쓰므로 이 제품일 때만 라벨을 바꾸고, 아니면 원래 문구로 되돌린다.)
+        try {
+            var _rwMetro = document.querySelector('.so-ship-btn[data-ship="metro_install"]');
+            var _rwTruck = document.querySelector('.so-ship-btn[data-ship="regional_truck"]');
+            if (_rwMetro) {
+                _rwMetro.innerHTML = state.isReinforcedWall
+                    ? tr('수도권 무료배송', '首都圏 送料無料', 'Metro · FREE delivery')
+                      + '<div style="font-size:11px; font-weight:600; opacity:0.9; margin-top:3px;">'
+                      + tr('셀프설치 제품', 'セルフ設置商品', 'Self-assembly') + '</div>'
+                    : tr('수도권 무료배송 · 무료설치', '首都圏 送料・設置 無料', 'Metro · FREE delivery & install');
+            }
+            if (_rwTruck) {
+                _rwTruck.innerHTML = state.isReinforcedWall
+                    ? tr('지방 용차배송', '地方トラック', 'Regional truck')
+                      + '<div style="font-size:11px; font-weight:600; opacity:0.9; margin-top:3px;">'
+                      + tr('셀프설치 제품', 'セルフ設置商品', 'Self-assembly') + '</div>'
+                    : tr('지방 용차배송', '地方トラック', 'Regional truck');
+            }
+        } catch (_rwlbl) {}
         // 2026-05-15: 원판 — 배송 버튼 라벨 커스텀 (수도권 무료 기준 + 지방 착불 안내)
         var _rb_metroBtn = document.querySelector('.so-ship-btn[data-ship="metro_delivery"]');
         var _rb_regBtn = document.querySelector('.so-ship-btn[data-ship="regional_delivery"]');
