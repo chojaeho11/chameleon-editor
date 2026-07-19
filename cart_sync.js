@@ -185,13 +185,32 @@
     // ── Server ops ───────────────────────────────────────
     // Key by user_id if logged in (cross-domain auto-sync), else by session_id.
     var _userId = null;
-    function getUserId() {
+    // 2026-07-19: 로그인 상태인데 세션 복원이 늦으면 익명(session_id) 카트로 잘못 붙는 문제 방지.
+    //   익명 키로 붙으면 그 SID 행의 옛 항목을 끌어와 로컬에 덮어써서, 지웠던 상품이 되살아난다.
+    //   localStorage 에 auth 토큰이 있는데 getSession() 이 아직 null 이면 잠깐(최대 ~3초) 기다렸다 재시도한다.
+    function _hasStoredAuthToken() {
+        try {
+            var raw = localStorage.getItem('sb-qinvtnhiidtmrzosyvys-auth-token');
+            if (!raw) return false;
+            var p = JSON.parse(raw);
+            return !!(p && (p.access_token || (p.currentSession && p.currentSession.access_token)));
+        } catch (e) { return false; }
+    }
+    function getUserId(_tries) {
         var c = sb();
         if (!c || !c.auth || typeof c.auth.getSession !== 'function') return Promise.resolve(null);
         return c.auth.getSession()
             .then(function (r) {
-                return r && r.data && r.data.session && r.data.session.user
+                var uid = (r && r.data && r.data.session && r.data.session.user)
                     ? r.data.session.user.id : null;
+                if (uid) return uid;
+                var n = _tries || 0;
+                if (n < 10 && _hasStoredAuthToken()) {
+                    // 토큰은 있는데 세션이 아직 안 올라옴 → 300ms 뒤 재시도
+                    return new Promise(function (rs) { setTimeout(rs, 300); }).then(function () { return getUserId(n + 1); });
+                }
+                if (n >= 10) console.warn('[cart_sync] 로그인 토큰은 있으나 세션 복원 실패 — 익명 카트로 진행');
+                return null;
             })
             .catch(function () { return null; });
     }
@@ -603,6 +622,33 @@
             var _dupCleaned = _preDedup - _unified.length;
             if (_dupCleaned > 0) console.warn('[cart_sync] init — 중복 항목 ' + _dupCleaned + '개 정리');
             console.log('[cart_sync] init —', picked.source, '/', _unified.length, 'items @', picked.tsIso);
+            // 2026-07-19: [부활 원인 추적] 매 로드마다 "로컬 vs 서버 중 무엇을 왜 채택했는지" 를 남긴다.
+            //   증상이 "몇 시간~하루 뒤 새로 담을 때 옛 항목이 같이 올라옴" 이라 재현이 어렵다.
+            //   다음 재발 시 콘솔에서 cartSync.audit() 만 실행하면 어느 쪽에서 되살아났는지 즉시 확인 가능.
+            try {
+                var _names = function (arr) {
+                    return (arr || []).slice(0, 6).map(function (it) {
+                        if (!it) return '?';
+                        return it.productName || (it.product && (it.product.name_kr || it.product.name))
+                            || it.title || it.fabricName || '?';
+                    });
+                };
+                var _rec = {
+                    t: new Date().toISOString(),
+                    key: _userId ? ('user:' + String(_userId).slice(0, 8)) : ('sid:' + String(SID).slice(0, 8)),
+                    picked: picked.source,
+                    localN: local.length, localTs: readLocalTs() ? new Date(readLocalTs()).toISOString() : null,
+                    serverN: (serverState && serverState.items) ? serverState.items.length : -1,
+                    serverTs: (serverState && serverState.updatedAt) || null,
+                    localNames: _names(local),
+                    serverNames: _names(serverState && serverState.items)
+                };
+                var _log = [];
+                try { _log = JSON.parse(localStorage.getItem('cart_sync_audit') || '[]') || []; } catch (_) {}
+                _log.push(_rec);
+                if (_log.length > 30) _log = _log.slice(-30);
+                __origLocalSet('cart_sync_audit', JSON.stringify(_log));
+            } catch (_au) {}
             // 로컬에 timestamp 가 없거나 server 가 더 최신이면 ts 동기화
             writeLocalTs(picked.tsIso);
             rebuildLocalFromUnified();
@@ -730,7 +776,14 @@
         clearAll: clearAllCart,
         linkToSibling: function (url) { return attachSid(url); },
         renderBanner: renderCrossDomainBanner,
-        _debug: function () { return { sid: SID, unified: _unified, source: SOURCE, key: LOCAL_KEY }; }
+        _debug: function () { return { sid: SID, unified: _unified, source: SOURCE, key: LOCAL_KEY }; },
+        // 2026-07-19: 카트 부활 추적 — 콘솔에서 cartSync.audit() 실행 시 최근 30회 로드의 채택 내역 표시.
+        audit: function () {
+            var log = [];
+            try { log = JSON.parse(localStorage.getItem('cart_sync_audit') || '[]') || []; } catch (_) {}
+            try { console.table(log); } catch (_) { console.log(log); }
+            return log;
+        }
     };
 
 })();
