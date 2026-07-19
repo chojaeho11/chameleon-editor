@@ -396,6 +396,9 @@
     var step = _steps[i];
     _curStepTargetSel = step.target || null;   // 2026-07-18: 비동기 타깃 재해석용
     _targets = resolveTargets(step.target);
+    // 2026-07-19: firstTargetOnly — 타깃 여러 개가 부모/자식 관계면 unionRect 가 부모까지 통째로 비춰
+    //   "어디를 눌러야 하는지" 가 흐려진다. 이 옵션이 있으면 목록 중 먼저 잡힌 하나만 스포트라이트.
+    if (step.firstTargetOnly && _targets.length > 1) _targets = [_targets[0]];
     if (step.mode === 'wait' && !_targets.length) { enterStep(i + 1); return; }
     if (_targets[0]) scrollToEl(_targets[0]);
     _blocker.style.display = _targets.length ? 'none' : 'block';
@@ -1390,7 +1393,9 @@
         en: 'Choose the <b>print side</b>. <b>Single</b> = front only, <b>Double</b> = both sides <span style="color:#94a3b8;">(double = base ×2)</span>.' }
     },
     { // 3) 사이즈 선택
-      target: ['#soPresetSizePills', '#soCustomSizeSection'], mode: 'next',
+      // 2026-07-19: 사이즈 알약(#soPresetSizePills)만 비춘다. 이 요소가 #soCustomSizeSection 안에 있어
+      //   둘 다 잡으면 인쇄면·고리안내까지 통째로 밝아져 어디를 고르는지 알 수 없었다.
+      target: ['#soPresetSizePills', '#soCustomSizeSection'], mode: 'next', firstTargetOnly: true,
       onEnter: function () { return _secVisible('#soPresetSizePills') || _secVisible('#soCustomSizeSection'); },
       msg: { kr: '<b>사이즈</b>를 골라요 (4×4 ~ 10×10cm). 큰 사이즈일수록 단가가 올라가요.',
         ja: '<b>サイズ</b>を選びます (4×4〜10×10cm)。大きいほど単価UP。',

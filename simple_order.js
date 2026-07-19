@@ -6506,6 +6506,22 @@ html, body { background: #ffffff !important; }
 
     // ─────────────────────── 종이매대(Paper Display) — 원클릭 AI 목업 (스카시 미러) ───────────────────────
     // 2026-07-18: 브랜드/제품/컨셉 필드 → 제품 썸네일(구조 참고)로 매대 목업 생성 → 디자이너 참고자료 첨부.
+    // 2026-07-19: 현재 선택된 실제 제작 크기 문구 ("5 × 7 cm"). 누끼 후 안내 토스트에 사용.
+    //   customW/H 는 cm 단위. 없으면 제품 치수(mm)를 cm 로 환산.
+    window._soCurrentSizeText = function () {
+        try {
+            var w = parseFloat(state.customW), h = parseFloat(state.customH);
+            if (!(w > 0 && h > 0)) {
+                var p = state.product || {};
+                w = (parseFloat(p.width_mm) || 0) / 10;
+                h = (parseFloat(p.height_mm) || 0) / 10;
+            }
+            if (!(w > 0 && h > 0)) return '';
+            var fmt = function (v) { return (Math.round(v * 10) / 10).toString().replace(/\.0$/, ''); };
+            return fmt(w) + ' × ' + fmt(h) + ' cm';
+        } catch (e) { return ''; }
+    };
+
     window._soPdAiText = function () {
         var o = { brand: (state.pdBrand || '').trim(), products: (state.pdProducts || '').trim(), concept: (state.pdConcept || '').trim() };
         // 2026-07-19: 허니콤 박스 — 고객이 입력한 실제 치수(W×H×D mm)를 프롬프트에 넘겨 비율을 맞춘다.
@@ -13851,6 +13867,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 아크릴 family 는 is_popular 가 true 여도 광고인쇄 레이아웃 비활성 — 다른 아크릴과 일관성 유지.
         //   mm 입력 + 사이즈 섹션이 우측 picker/옵션 아래로 가도록.
         state.isAcrylicFamily = !!(typeof window._soIsAcrylicFamilyProduct === 'function' && window._soIsAcrylicFamilyProduct(p));
+        // 2026-07-19: 아크릴 굿즈/키링 — 대지가 곧 주문한 실제 크기라, 누끼 후 피사체를 대지에 꽉 맞춰야
+        //   고객이 고른 사이즈대로 제작된다. (미니에디터가 이 플래그를 보고 자동 확대 + 실제 크기 안내)
+        try { window._soFitAfterCutout = !!state.isAcrylicFamily; } catch (_fc) {}
         if (state.isAcrylicFamily) {
             state.isAdPrint = false;
             state.isCustomSize = true;

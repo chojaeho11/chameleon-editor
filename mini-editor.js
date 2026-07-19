@@ -274,6 +274,29 @@
         _meSyncItemDisplay(it);
         try { if (window._meSelect) window._meSelect(it); } catch (_) {}
     };
+    // 2026-07-19: 누끼 직후 — 피사체를 대지 안에 "최대한 크게, 약간의 여백만" 배치.
+    //   _meFitSelectedToCanvas 는 cover(꽉 채우고 넘치는 부분은 잘림)라 키링처럼 모양 그대로 잘라내는
+    //   제품에는 쓸 수 없다. 여기선 contain + 여백이라 잘리지 않으면서 주문 사이즈를 꽉 채운다.
+    window._meFitSelectedInside = function (marginPct) {
+        var items = me.items || [];
+        var it = (me.selected && me.selected.type === 'image') ? me.selected : null;
+        if (!it) { for (var i = items.length - 1; i >= 0; i--) { if (items[i] && items[i].type === 'image') { it = items[i]; break; } } }
+        if (!it) return;
+        var iw = it.w, ih = it.h;
+        try { var im = it.el && it.el.querySelector('img'); if (im && im.naturalWidth && im.naturalHeight) { iw = im.naturalWidth; ih = im.naturalHeight; } } catch (_) {}
+        if (!iw || !ih) return;
+        var m = (typeof marginPct === 'number') ? marginPct : 0.05;   // 한쪽 5% 여백
+        var scale = Math.min((me.natW * (1 - m * 2)) / iw, (me.natH * (1 - m * 2)) / ih);
+        if (!(scale > 0)) return;
+        var w = iw * scale, h = ih * scale;
+        try { _meSnapshot(); } catch (_) {}
+        it.w = w; it.h = h;
+        it.x = (me.natW - w) / 2;
+        it.y = (me.natH - h) / 2;
+        _meSyncItemDisplay(it);
+        try { if (window._meSelect) window._meSelect(it); } catch (_) {}
+    };
+
     window._meTogglePan = function () {
         me._panLock = !me._panLock;
         var b = document.getElementById('mePanBtn');
@@ -5441,6 +5464,22 @@
                         } else {
                             console.warn('[me cutout v577] no subject pixels found (alpha threshold)');
                         }
+                        // 2026-07-19: 아크릴 굿즈/키링처럼 "대지 = 주문한 실제 크기" 인 제품은
+                        //   누끼 직후 피사체를 대지에 최대한 크게 맞춘다. 작게 남으면 실제 키링이 그만큼 작게 나온다.
+                        //   simple_order 가 제품에 따라 window._soFitAfterCutout 를 켜준다.
+                        try {
+                            if (window._soFitAfterCutout && typeof window._meFitSelectedInside === 'function') {
+                                window._meFitSelectedInside(0.05);
+                                // 실제 제작 크기 안내 — 고객이 "이 크기로 나온다" 를 바로 알 수 있게
+                                var _szTxt = (typeof window._soCurrentSizeText === 'function') ? window._soCurrentSizeText() : '';
+                                if (_szTxt && typeof window.showToast === 'function') {
+                                    window.showToast(_meAiTr(
+                                        '대지에 맞춰 키웠어요 · 실제 제작 크기 ' + _szTxt,
+                                        'アートボードに合わせて拡大しました · 実際の製作サイズ ' + _szTxt,
+                                        'Scaled to fit — actual size ' + _szTxt), 'success');
+                                }
+                            }
+                        } catch (_fitEr) { console.warn('[me cutout] fit-inside', _fitEr); }
                         // 2026-07-11: 크롭(피사체 bbox 보정) 완료 알림 — 자동 칼선 플로우가 정확한 박스로 trace 하도록.
                         try { document.dispatchEvent(new CustomEvent('me-cutout-cropped')); } catch(_cev){}
                     } catch(_ce) { console.warn('[me cutout v577] center adjust failed', _ce); }
