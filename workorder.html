@@ -1068,7 +1068,9 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const _extraFieldLines = [];
             // 2026-06-25: 에디터 디자인 벡터(SVG) — raw URL 덤프 대신 클릭 링크
             if (it.templateSvgUrl) {
-                _extraFieldLines.push('<div style="font-size:11.5px;"><span style="color:#64748b;">디자인 벡터(SVG):</span> <a href="' + esc(it.templateSvgUrl) + '" target="_blank" style="color:#6366f1; font-weight:800; text-decoration:underline;">파일 열기 ↗</a></div>');
+                // 2026-07-20: SVG 가 뭔지 모르겠다는 현장 피드백 — 용도와 "출력용 아님" 을 라벨에 명시.
+                //   에디터에서 만든 원본 벡터라 일러스트에서 수정할 때만 쓴다. 출력은 위 [출력 파일] PDF.
+                _extraFieldLines.push('<div style="font-size:11.5px;"><span style="color:#64748b;">디자인 원본(SVG) <span style="color:#94a3b8; font-weight:600;">— 수정용, 출력엔 사용 안 함</span>:</span> <a href="' + esc(it.templateSvgUrl) + '" target="_blank" style="color:#6366f1; font-weight:800; text-decoration:underline;">파일 열기 ↗</a></div>');
             }
             try {
                 Object.keys(it || {}).forEach(function(k){
@@ -1172,8 +1174,20 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
             const extraFilesArr = (i === 0 && _legacyExtraPool.length > extraStart)
                 ? _legacyExtraPool.slice(extraStart)
                 : [];
+            // 2026-07-20: [출력 파일] 과 [참고 자료] 분리.
+            //   칼선 PDF 는 칼선 + 디자인 이미지가 함께 들어간 "실제 출력용 파일" 인데
+            //   그동안 '참고 바람' 박스 안에 섞여 있어 현장에서 참고자료로 오해할 소지가 있었다(사장님 지적).
+            //   → 이름이 [칼선] 으로 시작하거나 cutline 경로인 파일은 출력 파일로 분류해 앞쪽에 크게 표시.
+            const _isPrintFile = (f) => {
+                const nm = String((f && f.name) || '');
+                const url = String((f && f.url) || '');
+                return /^\s*\[칼선\]/.test(nm) || /\/cutlines?\//i.test(url);
+            };
+            const printFilesArr = extraFilesArr.filter(_isPrintFile);
+            const refFilesArr = extraFilesArr.filter(f => !_isPrintFile(f));
+
             // 2026-06-15: 각 extra file 에 다운로드 / 삭제 버튼 (관리자만 삭제).
-            const extraFiles = extraFilesArr.map(f => {
+            const _renderFile = (f) => {
                 const _safeUrl = esc(f.url);
                 const _safeName = esc(f.name || '');
                 const _isPdf = /\.pdf(?:\?|#|$)/i.test(f.url || '');
@@ -1191,10 +1205,18 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                     + '<div class="ef-name">' + _safeName + '</div>'
                     + '<div style="display:flex; gap:6px; justify-content:center; margin-top:6px;">' + _dlBtn + _delBtn + '</div>'
                 + '</div>';
-            }).join('');
-            const extraFilesHtml = extraFiles ? `<div class="extra-files">
-                <div class="ef-head" style="display:flex; align-items:baseline; gap:8px;"><i class="fa-solid fa-clipboard-list"></i> <span style="font-size:13px; font-weight:900; color:#b45309;">📌 참고 바람</span> <span style="font-size:10.5px; font-weight:600; color:#92400e;">(옆면 색상 · 메모 · 마감 등) — ${extraFilesArr.length}건</span></div>
-                <div class="ef-list">${extraFiles}</div>
+            };
+            const printFiles = printFilesArr.map(_renderFile).join('');
+            const refFiles = refFilesArr.map(_renderFile).join('');
+
+            // 출력 파일 — 초록 강조 박스로 눈에 띄게 (칼선 + 디자인이 합쳐진 실제 인쇄용 파일)
+            const printFilesHtml = printFiles ? `<div class="extra-files" style="background:#ecfdf5; border:2px solid #10b981; border-left:5px solid #059669;">
+                <div class="ef-head" style="display:flex; align-items:baseline; gap:8px;"><i class="fa-solid fa-print"></i> <span style="font-size:15px; font-weight:900; color:#047857;">출력 파일</span> <span style="font-size:11px; font-weight:700; color:#059669;">칼선 + 디자인 포함 · 이 파일로 출력하세요 — ${printFilesArr.length}건</span></div>
+                <div class="ef-list">${printFiles}</div>
+            </div>` : '';
+            const extraFilesHtml = refFiles ? `<div class="extra-files">
+                <div class="ef-head" style="display:flex; align-items:baseline; gap:8px;"><i class="fa-solid fa-clipboard-list"></i> <span style="font-size:13px; font-weight:900; color:#b45309;">📌 참고 바람</span> <span style="font-size:10.5px; font-weight:600; color:#92400e;">(옆면 색상 · 메모 · 마감 등) — ${refFilesArr.length}건</span></div>
+                <div class="ef-list">${refFiles}</div>
             </div>` : '';
 
             // 사이즈: 자동 감지된 값 우선, 매니저가 수동 입력한 mgr_size_w/h 가 있으면 그걸로 override
@@ -1282,6 +1304,8 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                                 : '')}
                         ${itemAttachHtml}
                     </div>
+                    <!-- 2026-07-20: 출력 파일은 옵션·참고자료보다 앞에 — 현장에서 가장 먼저 봐야 하는 파일. -->
+                    ${printFilesHtml}
                     ${optGrid}
                     ${extraFilesHtml}
                     <!-- 2026-06-15: 항목 하단 매니저 메모(좌) + 참고 이미지(우) 2단 레이아웃. -->
