@@ -14868,8 +14868,8 @@ html, body { background: #ffffff !important; }
             allowed = ['self_pickup'];
         } else if (state.isReinforcedWall) {
             // 2026-07-19: 강화 골판지 가벽 — 시공 서비스 없음. 박스처럼 펼쳐 고객이 직접 설치하는 셀프 제품.
-            //   수도권 무료배송 / 지방 용차배송 2종만 (야간·주말설치, 철거, 지방설치배송 제외).
-            allowed = ['metro_install', 'regional_truck'];
+            //   수도권 무료배송 / 지방 용차배송 + 공장 방문 수령 (야간·주말설치, 철거, 지방설치배송 제외).
+            allowed = ['metro_install', 'regional_truck', 'self_pickup'];
         } else if (state.isWall || state.isPhotozone) {
             // 2026-06-04: 가벽/포토존 — 본사방문수령 제거 (수도권 무료배송·무료설치 = metro_install 으로 통합) — 5종 시공
             allowed = installKeys.slice();
@@ -14963,6 +14963,14 @@ html, body { background: #ffffff !important; }
                       + '<div style="font-size:11px; font-weight:600; opacity:0.9; margin-top:3px;">'
                       + tr('셀프설치 제품', 'セルフ設置商品', 'Self-assembly') + '</div>'
                     : tr('지방 용차배송', '地方トラック', 'Regional truck');
+            }
+            // 방문 수령 — 이 제품은 '공장 방문 수령'. DOM 상 맨 앞 버튼이라 order 로 지방 용차배송 오른쪽에 배치.
+            var _rwPick = document.querySelector('.so-ship-btn[data-ship="self_pickup"]');
+            if (_rwPick) {
+                _rwPick.innerHTML = state.isReinforcedWall
+                    ? tr('공장 방문 수령', '工場受取', 'Factory pickup')
+                    : tr('본사 방문 수령', '本社受取', 'HQ pickup');
+                _rwPick.style.order = state.isReinforcedWall ? '9' : '';
             }
         } catch (_rwlbl) {}
         // 2026-05-15: 원판 — 배송 버튼 라벨 커스텀 (수도권 무료 기준 + 지방 착불 안내)
