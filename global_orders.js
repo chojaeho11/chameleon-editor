@@ -1799,7 +1799,11 @@ window.loadOrders = async () => {
         if (orderDateFilter) query = query.gte('created_at', orderDateFilter + 'T00:00:00').lte('created_at', orderDateFilter + 'T23:59:59');
         if (searchKeyword) {
             // 2026-07-07: 주문 금액 검색 추가 — 콤마/공백 제거 후 숫자면 주문번호(id)·주문금액(total_amount)도 매칭.
-            const numKeyword = searchKeyword.replace(/[,\s원¥$]/g, '');
+            // 2026-07-20: '#' 제거 추가. 화면·엑셀·외부 시트가 주문번호를 '#4607' 로 표기하는데
+            //   여기서 '#' 를 안 벗겨서 isNum 이 false → 이름/전화 검색으로 빠지고 "주문이 없다" 로 보였다.
+            //   (실제 사고: 일본 시딩 주문 #4607·#4600·#4567·#4626 을 시트에서 복사해 검색 → 전부 미검출)
+            //   전각 ＃, 하이픈 표기(4,607)도 함께 정규화.
+            const numKeyword = searchKeyword.replace(/[#＃,\s원¥$￥]/g, '');
             const isNum = /^\d+$/.test(numKeyword);
             if (isNum) {
                 query = query.or(`manager_name.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,depositor_name.ilike.%${searchKeyword}%,id.eq.${numKeyword},total_amount.eq.${numKeyword}`);
