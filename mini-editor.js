@@ -6822,21 +6822,27 @@
     // 2026-07-20: 메인 홈 히어로(고객작품 마퀴 + 프롬프트 입력) 전용 진입점.
     //   _meAiSetRef / _meGalPendingRef 는 모듈 스코프라 외부에서 못 건드린다 → 이 함수가 유일한 seam.
     //   refUrl 은 storage 공개 URL 이므로 dataURL 로 바꿔서 넘긴다 (CORS — _meGalleryPick 과 동일 방식).
-    // 히어로 모드 전용 삽입 — 메인 에디터 fabric 캔버스에 contain 으로 올린다.
-    //   ai-design-hero.js 의 injectAiImageToCanvas 와 같은 방식(중앙·비율유지·선택가능).
+    // 히어로 모드 전용 삽입 — 메인 에디터 fabric 캔버스에 cover(꽉 채움)로 올린다.
+    //   2026-07-20: 처음엔 contain(Math.min)이라 위아래 흰 여백이 남았다 → 사장님 요청대로
+    //   Math.max 로 바꿔 대지를 가득 채우고 넘치는 부분만 잘리게 한다. 위치는 항상 중앙.
     function _meHeroInsertToMain(url) {
         try {
             var cv = window.canvas;
             fabric.Image.fromURL(url, function (img) {
                 if (!img) { console.warn('[meHero] 이미지 로드 실패'); return; }
+                // 대지 실제 크기 — getWidth() 는 줌이 반영된 화면 크기라 쓰면 안 된다.
                 var cw = cv.width || 1000, ch = cv.height || 1000;
                 var iw = img.width || 1024, ih = img.height || 1024;
-                var sc = Math.min(cw / iw, ch / ih);
+                var sc = Math.max(cw / iw, ch / ih);   // cover — 대지를 꽉 채움
                 img.set({
                     left: (cw - iw * sc) / 2, top: (ch - ih * sc) / 2,
                     scaleX: sc, scaleY: sc, selectable: true, hasControls: true
                 });
-                cv.add(img); cv.setActiveObject(img); cv.requestRenderAll();
+                cv.add(img);
+                // 배경처럼 깔리도록 맨 뒤로 — 이후 텍스트·도형을 그 위에 얹을 수 있다.
+                try { cv.sendToBack(img); } catch (_b) {}
+                cv.setActiveObject(img);
+                cv.requestRenderAll();
             }, { crossOrigin: 'anonymous' });
         } catch (e) { console.warn('[meHero] 메인 캔버스 삽입 실패', e); }
     }
