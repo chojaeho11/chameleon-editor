@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720145708';
+    var CV = '20260720150022';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1720,8 +1720,11 @@ window._tcmFallbackClick = function(code) {
                     font-size:13px !important; color:#475569 !important; white-space:nowrap;
                 }
                 .topbar #mgrActionsGrid .mgr-action:hover .mgr-action-label { color:#4338ca !important; }
-                /* 아이콘을 떼어가면 원래 자리는 비므로 그 공간을 없앤다 */
+                /* 아이콘을 떼어가면 원래 자리는 비므로 그 공간을 없앤다.
+                   대신 갤러리와 제품 섹션이 딱 붙어버려서 아래 여백은 히어로에서 따로 준다. */
                 #mgrQuoteHero:empty, #mgrQuoteHero.mgr-moved { min-height:0 !important; margin:0 !important; }
+                /* 2026-07-20: 디자인 갤러리 ↔ 제품 섹션 사이 여유 공간 (사장님 지시) */
+                #heroWorks { margin-bottom:64px; }
                 #heroWorks .me-gal-marquee { gap:12px; }
                 #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
                 #heroWorks .me-gal-item { height:220px; }
@@ -1742,6 +1745,7 @@ window._tcmFallbackClick = function(code) {
                    대신 작품을 20% 키워(92 → 110px) 잘 보이게. 아래줄은 숨김.
                    (.hero-section 의 min-height/height 는 건드리지 않는다 — 건드렸더니
                     히어로 전체가 접혀서 아무것도 안 보였다) */
+                #heroWorks { margin-bottom:28px; }   /* 모바일도 제품 섹션과 붙지 않게 */
                 #heroWorks .me-gal-marquee { gap:0; }
                 #heroWorks .me-gal-row:nth-child(2) { display:none; }
                 #heroWorks .me-gal-row { min-height:110px; }
