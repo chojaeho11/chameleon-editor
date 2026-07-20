@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720235423';
+    var CV = '20260721051430';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1059,21 +1059,21 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'이제는 인공지능 디자인 시대',
-                      sub:'에디터로 쉽게 만드는 카멜레온프린팅 디자인서비스',
+                kr: { title:'<span class="hw-t-brand">국카인</span> <span class="hw-t-rest">국민인쇄소 카멜레온 디자인</span>',
+                      sub:'에디터는 귀찮다! 몇 글자면 끝나는 AI 고퀄 디자인!',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'これからはAIデザインの時代',
-                      sub:'エディターで簡単に作れるカメレオンプリンティングのデザインサービス',
+                ja: { title:'<span class="hw-t-brand">カメレオン</span> <span class="hw-t-rest">国民印刷所デザイン</span>',
+                      sub:'エディターは面倒！数文字でプロ級のAIデザイン！',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
-                en: { title:'The age of AI design is here',
-                      sub:'Chameleon Printing design service — easy to make in the editor',
+                en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">AI Design</span>',
+                      sub:'Editors are a hassle — pro-quality AI design in just a few words!',
                       ph:'The more detail the better — title, price, date, place!', go:'Create',
                       need:'Please tell us what to make' }
             };
             var t = T[lang] || T.kr;
-            document.getElementById('hwTitle').textContent = t.title;
+            document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
             // (안내문 .hw-tip 은 2026-07-20 삭제 — 사장님 지시)
             var inp = document.getElementById('hwPrompt');
@@ -1666,15 +1666,18 @@ window._tcmFallbackClick = function(code) {
                 padding-left:16px; padding-right:16px; box-sizing:border-box;
             }
             #heroWorks .hw-head { text-align:center; }
-            /* 2026-07-20: 제목은 굵게 + 청록→보라 그라데이션 (사장님 지시).
-               background-clip:text 는 사이트 다른 그라데이션 타이틀과 같은 방식. */
+            /* 2026-07-21: 두 가지 색 제목 — 브랜드어(국카인/カメレオン/Chameleon)는 청록→보라 그라데이션,
+               나머지(국민인쇄소 카멜레온 디자인)는 진회색. 컨테이너엔 그라데이션을 걸지 않고 스팬별로 준다
+               (컨테이너에 text-fill:transparent 를 걸면 회색 스팬까지 투명해진다). */
             #heroWorks .hw-title {
                 margin:0; font-size:34px; letter-spacing:-0.8px; font-weight:800;
+            }
+            #heroWorks .hw-t-brand {
                 background:linear-gradient(90deg, #06b6d4 0%, #3b82f6 45%, #7c3aed 100%);
                 -webkit-background-clip:text; background-clip:text;
                 -webkit-text-fill-color:transparent; color:transparent;
-                display:inline-block;
             }
+            #heroWorks .hw-t-rest { color:#374151; }
             #heroWorks .hw-sub {
                 margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6;
             }
