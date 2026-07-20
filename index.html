@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720141015';
+    var CV = '20260720144426';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1059,15 +1059,18 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'고객님들이 만든 디자인', sub:'문구만 적으면 인공지능이 몇 초 만에 만들어 드립니다',
+                kr: { title:'이제는 인공지능 디자인 시대',
+                      sub:'에디터의 시대는 끝났다. 타이틀·시간·장소·상세내용을 적기만 하면 디자인이 뚝딱! 인쇄까지 한번에.',
                       ph:'어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터', go:'만들기',
-                      tip:'마음에 드는 작품을 누르면 그 느낌으로 새로 만들어 드려요', need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'お客様が作ったデザイン', sub:'文章を入れるだけでAIが数秒で仕上げます',
+                      need:'만들고 싶은 내용을 적어주세요' },
+                ja: { title:'これからはAIデザインの時代',
+                      sub:'エディターの時代は終わり。タイトル・日時・場所・詳細を入れるだけでデザインが完成！印刷までまとめて。',
                       ph:'どんなデザインをお探しですか？ 例: 夏祭りのポスター', go:'作る',
-                      tip:'気に入った作品を押すと、その雰囲気で新しく作ります', need:'作りたい内容を入力してください' },
-                en: { title:'Designs made by our customers', sub:'Just type what you need — AI designs it in seconds',
+                      need:'作りたい内容を入力してください' },
+                en: { title:'The age of AI design is here',
+                      sub:'The era of design editors is over. Just enter your title, time, place and details — the design is done, printing included.',
                       ph:'What do you need? e.g. Summer festival poster', go:'Create',
-                      tip:'Tap any design and we will create a new one in that style', need:'Please tell us what to make' }
+                      need:'Please tell us what to make' }
             };
             var t = T[lang] || T.kr;
             document.getElementById('hwTitle').textContent = t.title;
@@ -1666,6 +1669,17 @@ window._tcmFallbackClick = function(code) {
             }
             /* PC: 작품을 크게 (마퀴는 위에서 이미 화면 폭 전체) */
             @media (min-width: 701px) {
+                /* 2026-07-20: 바로가기 아이콘 6개를 히어로 '위 우측' 으로 (사장님 지시).
+                   #mgrQuoteHero 는 재배치 스크립트가 #startScreen 직계자식(히어로 다음)으로 옮기고,
+                   #startScreen 은 flex column 이라 order 로 순서만 앞당기면 된다.
+                   ※ 절대위치를 쓰지 않는 이유: #mgrQuoteHero 안에 position:fixed 모달 2개
+                     (전화안내·금액주문)가 들어있어서 transform/contain 계열을 걸면 모달이 그 안에 갇힌다. */
+                #mgrQuoteHero { order:-1; margin:8px auto 0 !important; }
+                #mgrActionsGrid {
+                    display:flex !important; justify-content:flex-end !important;
+                    gap:12px !important; flex-wrap:wrap;
+                }
+                #mgrActionsGrid .mgr-action { width:auto; min-width:64px; }
                 #heroWorks .me-gal-marquee { gap:12px; }
                 #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
                 #heroWorks .me-gal-item { height:220px; }
@@ -5748,7 +5762,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=522"></script>
+<script src="./mini-editor.js?v=523"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">

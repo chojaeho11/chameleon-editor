@@ -6687,10 +6687,12 @@
         //   (참조 이미지는 _meHeroAiStart 가 _meGalPendingRef 에 넣어둬서 위 복원 로직이 처리)
         var _hero = _meHeroPending; _meHeroPending = null;
         if (_hero) {
+            // 2026-07-20: 자동 생성하지 않는다 (사장님 지시).
+            //   홈에서 친 문구만 채워두고, 고객이 비율(정사각/세로/가로/현수막/배너/명함)을 고른 뒤
+            //   [이미지 생성] 을 직접 눌러야 만들어진다. 비율을 못 고르고 바로 생성되던 문제 해결.
             var _hpEl = document.getElementById('meAiPrompt');
             if (_hpEl) _hpEl.value = _hero.prompt || '';
-            if (_hero.prompt) setTimeout(function () { try { _meAiGenerate(); } catch (_h) {} }, 60);
-            else setTimeout(function () { if (_hpEl) _hpEl.focus(); }, 80);
+            setTimeout(function () { if (_hpEl) _hpEl.focus(); }, 80);
         } else if (_pdAuto) {
             // 종이매대: 제품 썸네일을 dataURL 참조(structure)로 실은 뒤 생성 시작.
             //   썸네일을 못 가져와도(CORS/404) 문구만으로 생성은 진행.
@@ -6843,8 +6845,128 @@
                 try { cv.sendToBack(img); } catch (_b) {}
                 cv.setActiveObject(img);
                 cv.requestRenderAll();
+                // 2026-07-20: 삽입 직후 "이 디자인으로 뭘 만들까요?" 제품 선택 → 주문으로 연결.
+                setTimeout(function () { try { _meHeroProductPicker(url); } catch (_p) {} }, 400);
             }, { crossOrigin: 'anonymous' });
         } catch (e) { console.warn('[meHero] 메인 캔버스 삽입 실패', e); }
+    }
+
+    // ── 히어로 흐름 마지막 단계: 만든 디자인으로 어떤 제품을 만들지 고르게 한다 ──
+    //   2026-07-20 신규. 지금까지는 AI 로 디자인을 만들어도 currentProductKey='custom' 이라
+    //   주문으로 이어지는 길이 없었다. 여기서 제품을 고르면 주문창이 열리고 디자인이 자동 첨부된다.
+    //   목록은 사장님이 지정한 8개 고정 (순서도 지정하신 그대로).
+    var _ME_HERO_PRODUCTS = [
+        { code: 'hb_dw_1',   name: '허니콤 가벽' },
+        { code: 'hb_bn_1',   name: '허니콤배너' },
+        { code: '44578',     name: '초저가 현수막' },
+        { code: '645646544', name: '스티커' },
+        { code: 'pp_lf_2',   name: '종이 인쇄' },
+        { code: '345645645', name: '캘지 인쇄 실사출력' },
+        { code: 'acrl20002', name: '아크릴인쇄 3T' },
+        { code: '4653231',   name: '반팔티' }
+    ];
+
+    function _meHeroProductPicker(imgUrl) {
+        var old = document.getElementById('meHeroProdPicker');
+        if (old) old.remove();
+        var ov = document.createElement('div');
+        ov.id = 'meHeroProdPicker';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:100050; background:rgba(15,23,42,0.55);'
+            + 'display:flex; align-items:center; justify-content:center; padding:20px;';
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff; border-radius:16px; max-width:760px; width:100%;'
+            + 'max-height:86vh; overflow:auto; padding:24px;';
+        card.innerHTML =
+            '<div style="font-size:19px; color:#0f172a; margin-bottom:6px;">'
+          + _meAiTr('이 디자인으로 무엇을 만들까요?', 'このデザインで何を作りますか？', 'What would you like to make with this design?')
+          + '</div>'
+          + '<div style="font-size:13px; color:#64748b; margin-bottom:18px;">'
+          + _meAiTr('제품을 고르면 방금 만든 디자인이 자동으로 첨부됩니다.',
+                    '製品を選ぶと、今作ったデザインが自動で添付されます。',
+                    'Pick a product and your new design is attached automatically.')
+          + '</div>'
+          + '<div id="meHeroProdGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px;"></div>'
+          + '<div style="margin-top:18px; text-align:right;">'
+          + '<button type="button" id="meHeroProdLater" style="padding:10px 18px; border:1px solid #e2e8f0;'
+          + 'background:#fff; color:#475569; border-radius:9px; cursor:pointer; font-family:inherit; font-size:14px;">'
+          + _meAiTr('나중에 하기', '後で', 'Maybe later') + '</button></div>';
+        ov.appendChild(card);
+        document.body.appendChild(ov);
+        var close = function () { ov.remove(); };
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        card.querySelector('#meHeroProdLater').addEventListener('click', close);
+
+        var grid = card.querySelector('#meHeroProdGrid');
+        function cardHtml(p, thumb, price) {
+            return '<button type="button" data-code="' + _meAiEsc(p.code) + '" '
+                + 'style="border:1px solid #e2e8f0; border-radius:12px; background:#fff; padding:0; cursor:pointer;'
+                + 'overflow:hidden; text-align:left; font-family:inherit;">'
+                + '<div style="width:100%; aspect-ratio:4/3; background:#f1f5f9; overflow:hidden;">'
+                + (thumb ? '<img src="' + _meAiEsc(thumb) + '" loading="lazy" alt="" style="width:100%; height:100%; object-fit:cover; display:block;">' : '')
+                + '</div>'
+                + '<div style="padding:10px 12px;">'
+                + '<div style="font-size:13.5px; color:#0f172a;">' + _meAiEsc(p.name) + '</div>'
+                + (price ? '<div style="font-size:12px; color:#64748b; margin-top:3px;">' + price + '</div>' : '')
+                + '</div></button>';
+        }
+        // 먼저 이름만으로 즉시 그리고, 썸네일·가격은 조회되면 채운다 (조회 실패해도 동작)
+        grid.innerHTML = _ME_HERO_PRODUCTS.map(function (p) { return cardHtml(p, '', ''); }).join('');
+        grid.querySelectorAll('button[data-code]').forEach(function (b) {
+            b.addEventListener('click', function () { close(); _meHeroGoProduct(b.getAttribute('data-code'), imgUrl); });
+        });
+        (async function () {
+            try {
+                if (!window.sb) return;
+                var codes = _ME_HERO_PRODUCTS.map(function (p) { return p.code; });
+                var r = await window.sb.from('admin_products').select('code,img_url,price').in('code', codes);
+                if (r.error || !r.data) return;
+                var by = {};
+                r.data.forEach(function (row) { by[row.code] = row; });
+                grid.innerHTML = _ME_HERO_PRODUCTS.map(function (p) {
+                    var d = by[p.code] || {};
+                    var pr = d.price ? (Number(d.price).toLocaleString() + _meAiTr('원~', '円~', ' KRW~')) : '';
+                    return cardHtml(p, d.img_url || '', pr);
+                }).join('');
+                grid.querySelectorAll('button[data-code]').forEach(function (b) {
+                    b.addEventListener('click', function () { close(); _meHeroGoProduct(b.getAttribute('data-code'), imgUrl); });
+                });
+            } catch (e) { console.warn('[meHero] 제품 썸네일 조회 실패 — 이름만 표시', e); }
+        })();
+    }
+
+    // 제품 선택 → 주문창 열고 디자인을 인쇄파일로 첨부.
+    //   스티커 업로드 흐름(_soStickerFinalFileUpload)과 같은 방식:
+    //   _soHandleFile 이 state.file/thumbDataUrl 을 채우므로 결제 단계에서 자동으로 인쇄파일이 된다.
+    async function _meHeroGoProduct(code, imgUrl) {
+        try {
+            // 원격 URL 을 그대로 캔버스에 쓰면 taint 되어 내보내기가 깨진다 → dataURL 로 변환
+            var blob = await (await fetch(imgUrl, { mode: 'cors' })).blob();
+            var dataUrl = await new Promise(function (rs, rj) {
+                var fr = new FileReader();
+                fr.onload = function () { rs(String(fr.result)); };
+                fr.onerror = rj;
+                fr.readAsDataURL(blob);
+            });
+            // 메인 에디터 닫기 (열려 있으면)
+            try {
+                var me2 = document.getElementById('mainEditor');
+                if (me2) me2.style.display = 'none';
+                document.body.classList.remove('editor-active');
+            } catch (_c) {}
+            if (typeof window.openSimpleOrderModal !== 'function') {
+                location.href = '/?product=' + encodeURIComponent(code);
+                return;
+            }
+            await window.openSimpleOrderModal(code);
+            // 모달이 state 를 초기화하므로 반드시 연 '뒤' 에 파일을 넣는다
+            var file = new File([blob], 'ai-design-' + Date.now() + '.png', { type: blob.type || 'image/png' });
+            if (typeof window._soHandleFile === 'function') await window._soHandleFile(file);
+            try { if (window.me && window.me.items) window.me.items.length = 0; } catch (_e0) {}
+            if (typeof window._meAddImage === 'function') window._meAddImage(dataUrl, { fitCanvas: true });
+        } catch (e) {
+            console.warn('[meHero] 제품 주문 연결 실패 — 제품 페이지로 이동', e);
+            location.href = '/?product=' + encodeURIComponent(code);
+        }
     }
 
     window._meHeroAiStart = async function (prompt, refUrl) {
