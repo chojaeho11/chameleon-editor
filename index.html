@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720145152';
+    var CV = '20260720145708';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1060,15 +1060,15 @@ window._tcmFallbackClick = function(code) {
             lang = String(lang).toLowerCase();
             var T = {
                 kr: { title:'이제는 인공지능 디자인 시대',
-                      sub:'에디터의 시대는 끝났다. 타이틀·시간·장소·상세내용을 적기만 하면 디자인이 뚝딱! 인쇄까지 한번에.',
+                      sub:'에디터로 쉽게 만드는 카멜레온프린팅 디자인서비스',
                       ph:'어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'これからはAIデザインの時代',
-                      sub:'エディターの時代は終わり。タイトル・日時・場所・詳細を入れるだけでデザインが完成！印刷までまとめて。',
+                      sub:'エディターで簡単に作れるカメレオンプリンティングのデザインサービス',
                       ph:'どんなデザインをお探しですか？ 例: 夏祭りのポスター', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'The age of AI design is here',
-                      sub:'The era of design editors is over. Just enter your title, time, place and details — the design is done, printing included.',
+                      sub:'Chameleon Printing design service — easy to make in the editor',
                       ph:'What do you need? e.g. Summer festival poster', go:'Create',
                       need:'Please tell us what to make' }
             };
@@ -1194,6 +1194,30 @@ window._tcmFallbackClick = function(code) {
             // 2026-07-20: 로그인 복귀(?heroai=1) 재개 로직 제거 — 이제 로그인 없이 바로 진입한다.
             //   혹시 예전 링크로 들어오는 경우를 대비해 남은 요청은 정리만 한다.
             try { if ((new URLSearchParams(location.search)).get('heroai') === '1') sessionStorage.removeItem('_heroAi'); } catch(e) {}
+
+            // ── 바로가기 6개를 탑바로 이동 (PC 전용) ──────────────────────────
+            //   본문 어디에 놓아도 작품 갤러리와 겹쳐서 상단 고정영역으로 올린다.
+            //   #mgrActionsGrid 만 옮기고 #mgrQuoteHero(모달·전화목록·스크립트)는 그대로 둔다 →
+            //   모달의 position:fixed 와 기존 핸들러(getElementById 기반)가 그대로 동작.
+            //   모바일은 탑바에 자리가 없으므로 옮기지 않는다.
+            (function moveShortcutsToTopbar(){
+                if (window.matchMedia && !window.matchMedia('(min-width: 701px)').matches) return;
+                var tries = 0;
+                var iv = setInterval(function(){
+                    var grid = document.getElementById('mgrActionsGrid');
+                    var bar = document.querySelector('.topbar');
+                    if (grid && bar) {
+                        clearInterval(iv);
+                        if (grid.parentNode === bar) return;
+                        // 우측 버튼들(HOME/로그인/My page)을 밀어내는 flex 스페이서 '앞' 에 넣어 좌측에 붙인다
+                        var spacer = bar.querySelector(':scope > div[style*="flex:1"]');
+                        var wrap = document.getElementById('mgrQuoteHero');
+                        if (wrap) wrap.classList.add('mgr-moved');
+                        if (spacer) bar.insertBefore(grid, spacer);
+                        else bar.appendChild(grid);
+                    } else if (++tries > 40) clearInterval(iv);
+                }, 150);
+            })();
         })();
         </script>
 
@@ -1675,9 +1699,29 @@ window._tcmFallbackClick = function(code) {
             }
             /* PC: 작품을 크게 (마퀴는 위에서 이미 화면 폭 전체) */
             @media (min-width: 701px) {
-                /* 2026-07-20: 바로가기 아이콘은 원래 자리(디자인 갤러리 ↔ 제품 섹션 사이)로 되돌림.
-                   한때 히어로 위 우측으로 올렸다가 사장님 지시로 복귀 — 위치 관련 override 는 두지 않는다.
-                   (겹침 문제는 .hero-section 의 justify-content:flex-start + padding-bottom 으로 이미 해결됨) */
+                /* 2026-07-20: 바로가기 6개를 아예 탑바로 올림 (사장님 지시).
+                   본문 어디에 두든 갤러리와 겹쳐서, 아예 상단 고정영역으로 옮긴다.
+                   JS 가 #mgrActionsGrid 를 .topbar 안으로 이동시키고(아래 스크립트), 여기선 탑바용 축소 스타일만.
+                   ※ 모달(#mgrPhoneModal 등)은 #mgrQuoteHero 에 그대로 남아 position:fixed 로 정상 동작한다. */
+                .topbar #mgrActionsGrid {
+                    display:flex !important; align-items:center; gap:2px !important;
+                    margin:0 !important; padding:0 !important; grid-template-columns:none !important;
+                }
+                .topbar #mgrActionsGrid .mgr-action {
+                    flex-direction:row !important; gap:0 !important;
+                    padding:6px 9px !important; min-height:0 !important; height:auto !important;
+                    background:transparent !important; border:none !important; border-radius:7px !important;
+                    width:auto !important; cursor:pointer;
+                }
+                .topbar #mgrActionsGrid .mgr-action:hover { background:#eef2ff !important; }
+                /* 탑바에선 아이콘 칩을 빼고 글씨만 — 공간이 좁고, 텍스트가 더 읽힌다 */
+                .topbar #mgrActionsGrid .mgr-action-icon-wrap { display:none !important; }
+                .topbar #mgrActionsGrid .mgr-action-label {
+                    font-size:13px !important; color:#475569 !important; white-space:nowrap;
+                }
+                .topbar #mgrActionsGrid .mgr-action:hover .mgr-action-label { color:#4338ca !important; }
+                /* 아이콘을 떼어가면 원래 자리는 비므로 그 공간을 없앤다 */
+                #mgrQuoteHero:empty, #mgrQuoteHero.mgr-moved { min-height:0 !important; margin:0 !important; }
                 #heroWorks .me-gal-marquee { gap:12px; }
                 #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
                 #heroWorks .me-gal-item { height:220px; }
