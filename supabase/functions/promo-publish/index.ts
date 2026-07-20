@@ -256,7 +256,7 @@ ${catalog}
 - product_code 는 세부 제품까지 확신할 때만 채우고, 아니면 빈 문자열 "" 로 두세요. (category 만 맞아도 충분합니다)
 - 우리 제품군 어디에도 해당하지 않으면(예: 음식 사진, 풍경, 사람만 찍힌 사진) category 를 "" 로 두세요.
 - note 는 한국어로, **사진에서 실제로 보이는 것만** 구체적으로 적으세요. 용도·사용처를 추측하지 마세요.
-  글감이 되므로 무엇이 어떻게 만들어졌는지(형태·소재감·인쇄된 문구·설치 형태)를 자세히 적으세요.`;
+  글감이 되므로 무엇이 어떻게 만들어졌는지(형태·소재감·인쇄된 문구·설치 형태)를 적되, **사진 한 장당 150자 이내**로 압축하세요.`;
 
         const visionContent: any[] = [];
         imgs.forEach((im, i) => {
@@ -265,11 +265,25 @@ ${catalog}
         });
         visionContent.push({ type: "text", text: "위 사진들을 판별해 JSON 으로만 답하세요." });
 
-        const visionRaw = await callClaude(ANTHROPIC_API_KEY, {
-            max_tokens: 2000, system: visionSystem,
-            messages: [{ role: "user", content: visionContent }],
-        });
-        const vision = parseJson(visionRaw);
+        // 2026-07-20: max_tokens 2000 → 8000.
+        //   사진 12장 × 한국어 note(형태·소재·문구·설치형태) 를 JSON 으로 뱉으면 2000 을 넘어
+        //   "응답이 max_tokens(2000)에서 잘렸습니다" 로 발행 전체가 죽었다 (본문 생성은 이미 8000).
+        //   Vision 은 재시도 경로가 없어 여기서 던지면 그날 발행이 통째로 날아간다 → 1회 재시도 추가.
+        let vision: any = null, visionErr: any = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const visionRaw = await callClaude(ANTHROPIC_API_KEY, {
+                    max_tokens: 8000, system: visionSystem,
+                    messages: [{ role: "user", content: visionContent }],
+                });
+                vision = parseJson(visionRaw);
+                break;
+            } catch (e) {
+                visionErr = e;
+                console.warn(`[promo] vision 판별 실패 (시도 ${attempt + 1}/2):`, e);
+            }
+        }
+        if (!vision) throw visionErr || new Error("vision 판별 실패");
         const items: any[] = Array.isArray(vision.items) ? vision.items : [];
 
         // 판별 결과 기록 + 실패분 skipped
