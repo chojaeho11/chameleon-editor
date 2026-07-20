@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720140302';
+    var CV = '20260720140804';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1654,6 +1654,16 @@ window._tcmFallbackClick = function(code) {
             }
             /* 로딩 중 빈 줄이 덜 허전하게 — 작품이 채워지면 자연히 가려진다 */
             #heroWorks .me-gal-row { min-height:132px; background:#f1f5f9; border-radius:10px; }
+            /* 2026-07-20: 히어로가 내용만큼 아래로만 늘어나게 한다.
+               .hero-section 은 캐러셀(420px 고정) 시절 값이라 justify-content:center 인데,
+               고객작품 갤러리는 그보다 키가 커서 중앙정렬 때문에 내용이 위·아래로 동시에 넘쳤다.
+               → 위쪽 글자가 상단바에 잘리고, 아래쪽은 바로가기 아이콘과 겹침 (로그아웃 상태에서 특히 뚜렷).
+               flex-start 로 바꾸면 넘침이 아래로만 생기고, 아래 여백을 줘서 겹침도 없앤다.
+               (min-height / height 는 건드리지 않는다 — 이전에 건드렸다가 히어로가 통째로 접혔다) */
+            .hero-section {
+                justify-content:flex-start !important;
+                padding-bottom:56px !important;
+            }
             /* PC: 작품을 크게 (마퀴는 위에서 이미 화면 폭 전체) */
             @media (min-width: 701px) {
                 #heroWorks .me-gal-marquee { gap:12px; }
