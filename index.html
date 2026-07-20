@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720155656';
+    var CV = '20260720160036';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1061,15 +1061,15 @@ window._tcmFallbackClick = function(code) {
             var T = {
                 kr: { title:'이제는 인공지능 디자인 시대',
                       sub:'에디터로 쉽게 만드는 카멜레온프린팅 디자인서비스',
-                      ph:'어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터', go:'만들기',
+                      ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
                 ja: { title:'これからはAIデザインの時代',
                       sub:'エディターで簡単に作れるカメレオンプリンティングのデザインサービス',
-                      ph:'どんなデザインをお探しですか？ 例: 夏祭りのポスター', go:'作る',
+                      ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
                 en: { title:'The age of AI design is here',
                       sub:'Chameleon Printing design service — easy to make in the editor',
-                      ph:'What do you need? e.g. Summer festival poster', go:'Create',
+                      ph:'The more detail the better — title, price, date, place!', go:'Create',
                       need:'Please tell us what to make' }
             };
             var t = T[lang] || T.kr;
