@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720144523';
+    var CV = '20260720144838';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1624,8 +1624,14 @@ window._tcmFallbackClick = function(code) {
                 padding-left:16px; padding-right:16px; box-sizing:border-box;
             }
             #heroWorks .hw-head { text-align:center; }
+            /* 2026-07-20: 제목은 굵게 + 청록→보라 그라데이션 (사장님 지시).
+               background-clip:text 는 사이트 다른 그라데이션 타이틀과 같은 방식. */
             #heroWorks .hw-title {
-                margin:0; font-size:30px; letter-spacing:-0.6px; color:#0f172a; font-weight:600;
+                margin:0; font-size:34px; letter-spacing:-0.8px; font-weight:800;
+                background:linear-gradient(90deg, #06b6d4 0%, #3b82f6 45%, #7c3aed 100%);
+                -webkit-background-clip:text; background-clip:text;
+                -webkit-text-fill-color:transparent; color:transparent;
+                display:inline-block;
             }
             #heroWorks .hw-sub {
                 margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6;
@@ -1674,7 +1680,13 @@ window._tcmFallbackClick = function(code) {
                    #startScreen 은 flex column 이라 order 로 순서만 앞당기면 된다.
                    ※ 절대위치를 쓰지 않는 이유: #mgrQuoteHero 안에 position:fixed 모달 2개
                      (전화안내·금액주문)가 들어있어서 transform/contain 계열을 걸면 모달이 그 안에 갇힌다. */
-                #mgrQuoteHero { order:-1; margin:8px auto 0 !important; }
+                /* 2026-07-20: 1100px 박스 안에서 우측정렬하면 화면 기준으론 가운데로 보인다.
+                   → 데스크톱에선 폭 제한을 풀어 진짜 화면 오른쪽 끝으로 보낸다. */
+                #mgrQuoteHero {
+                    order:-1;
+                    max-width:none !important; width:100% !important;
+                    margin:6px 0 0 !important; padding:0 28px 0 0 !important;
+                }
                 #mgrActionsGrid {
                     display:flex !important; justify-content:flex-end !important;
                     gap:12px !important; flex-wrap:wrap;
