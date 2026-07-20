@@ -6966,7 +6966,13 @@
             // 2026-07-20: fitCanvas(안쪽 맞춤)면 대지 비율이 다를 때 흰 여백이 크게 남는다.
             //   (세로배너 디자인 → 600x1800 허니콤배너 대지에서 좁은 쪽 기준으로 축소돼 여백 다수)
             //   → fillCanvas(꽉 채움)로 바꿔 넘치는 부분만 잘리게 한다. 배경이므로 toBack.
-            if (typeof window._meAddImage === 'function') window._meAddImage(dataUrl, { fillCanvas: true, toBack: true });
+            // 2026-07-20 [중요] _isAiBg 표식을 반드시 달아야 한다.
+            //   안 달면 _meGalRemovePreview 가 못 찾아 다음 수정 때 이전 배경이 안 지워지고,
+            //   화면(DOM 순서)엔 새 그림 / 저장·내보내기(items 순서)엔 옛 그림이 나오는
+            //   위 6786 주석의 그 버그가 그대로 재현된다 (실제로 '자세히보기' 에서 옛 그림이 나왔다).
+            if (typeof window._meAddImage === 'function') {
+                window._meAddImage(dataUrl, { fillCanvas: true, toBack: true }, function (it) { if (it) it._isAiBg = true; });
+            }
         } catch (e) {
             console.warn('[meHero] 제품 주문 연결 실패 — 제품 페이지로 이동', e);
             location.href = '/?product=' + encodeURIComponent(code);
@@ -6999,18 +7005,55 @@
     window._meViewLarge = async function () {
         var png = null;
         try { png = await window._meExportPNG(); } catch (e) { console.warn('[meView] export', e); }
-        if (!png) return;
+        if (png) _meShowLargeImage(png);
+    };
+
+    // 수정 이력 — [0]=수정 전 원본, 이후 수정할 때마다 결과가 쌓인다. 대지 아래 썸네일로 보여준다.
+    var _meFixHistory = [];
+    function _meFixRenderHistory() {
+        var box = document.getElementById('meFixHistory');
+        if (!box) return;
+        if (_meFixHistory.length < 2) { box.style.display = 'none'; return; }   // 원본만 있으면 숨김
+        box.style.display = 'block';
+        var last = _meFixHistory.length - 1;
+        box.innerHTML =
+            '<div style="font-size:12px; color:#64748b; margin-bottom:6px;">'
+          + _meAiTr('수정 이력 — 눌러서 크게 보기', '修正履歴 — タップで拡大', 'Revision history — tap to enlarge') + '</div>'
+          + '<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;">'
+          + _meFixHistory.map(function (h, i) {
+                var label = (i === 0) ? _meAiTr('수정 전', '修正前', 'Before')
+                          : (i === last) ? _meAiTr('현재', '現在', 'Current')
+                          : (i + _meAiTr('차', '回目', ''));
+                var on = (i === last);
+                return '<button type="button" data-fh="' + i + '" style="flex:0 0 auto; border:'
+                     + (on ? '2px solid #4338ca' : '1px solid #e2e8f0')
+                     + '; border-radius:9px; background:#fff; padding:0; cursor:pointer; overflow:hidden; width:64px;">'
+                     + '<img src="' + h + '" style="width:100%; height:74px; object-fit:cover; display:block;">'
+                     + '<div style="font-size:10.5px; color:' + (on ? '#4338ca' : '#94a3b8') + '; padding:3px 0;">' + label + '</div>'
+                     + '</button>';
+            }).join('')
+          + '</div>';
+        box.querySelectorAll('button[data-fh]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                _meShowLargeImage(_meFixHistory[Number(b.getAttribute('data-fh'))]);
+            });
+        });
+    }
+
+    // 이미지 하나를 라이트박스로 크게 (자세히보기 / 이력 썸네일 공용)
+    function _meShowLargeImage(src) {
+        if (!src) return;
         var old = document.getElementById('meViewLargeOv'); if (old) old.remove();
         var ov = document.createElement('div');
         ov.id = 'meViewLargeOv';
         ov.style.cssText = 'position:fixed; inset:0; z-index:100060; background:rgba(15,23,42,0.88);'
             + 'display:flex; align-items:center; justify-content:center; padding:24px; cursor:zoom-out;';
-        ov.innerHTML = '<img src="' + png + '" style="max-width:96%; max-height:92%; object-fit:contain; border-radius:8px;">'
+        ov.innerHTML = '<img src="' + src + '" style="max-width:96%; max-height:92%; object-fit:contain; border-radius:8px;">'
             + '<button type="button" style="position:absolute; top:18px; right:22px; width:38px; height:38px;'
             + 'border:none; border-radius:50%; background:rgba(255,255,255,0.9); color:#0f172a; font-size:20px; cursor:pointer;">&times;</button>';
         ov.addEventListener('click', function () { ov.remove(); });
         document.body.appendChild(ov);
-    };
+    }
 
     // 수정 패널 열기/닫기
     window._meFixToggle = function (force) {
@@ -7034,6 +7077,8 @@
             // 지금 화면(대지) 그대로를 참조로 — 고객이 손댄 것까지 반영된다
             var cur = await window._meExportPNG();
             if (!cur) throw new Error('현재 디자인을 읽지 못했습니다');
+            // 첫 수정이면 '수정 전' 을 이력 맨 앞에 남긴다
+            if (!_meFixHistory.length) _meFixHistory.push(cur);
             var refNorm = await _meAiNormalizeRef(cur, 1536);
             var prompt = 'Reproduce the attached image AS CLOSELY AS POSSIBLE — same layout, same composition, same colors, same fonts, same wording, same illustration style. '
                 + 'Change ONLY this and nothing else: "' + note + '". '
@@ -7052,9 +7097,14 @@
             // 이전 배경(갤러리 미리보기/직전 AI 결과)을 걷어내고 새 결과를 꽉 채워 깐다
             try { _meGalRemovePreview(); } catch (_g) {}
             window._meAddImage(d.url, { fillCanvas: true, toBack: true }, function (it) { if (it) it._isAiBg = true; });
-            say(_meAiTr('수정 완료!', '修正しました！', 'Done!'), '#16a34a');
+            _meFixHistory.push(d.url);
+            _meFixRenderHistory();
+            say(_meAiTr('수정 완료! 아래에서 이전 디자인과 비교해 보세요.',
+                        '修正しました！下で以前のデザインと見比べられます。',
+                        'Done! Compare with the previous versions below.'), '#16a34a');
             if (t) t.value = '';
-            setTimeout(function () { window._meFixToggle(false); if (msg) msg.style.display = 'none'; }, 1200);
+            // 이력을 볼 수 있게 패널은 닫지 않는다 (안내 문구만 잠시 후 정리)
+            setTimeout(function () { if (msg) msg.style.display = 'none'; }, 2600);
         } catch (e) {
             console.warn('[meFix]', e);
             say('⚠️ ' + (e.message || _meAiTr('수정 실패', '修正失敗', 'Failed')), '#dc2626');

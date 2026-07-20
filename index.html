@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720171216';
+    var CV = '20260720171754';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5819,6 +5819,8 @@ function scrollHotdeal(gridId, dir) {
                     <button type="button" id="meFixRunBtn" style="flex:1; padding:11px; border:none; border-radius:10px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;" onclick="window._meFixRun && window._meFixRun()">수정하기</button>
                 </div>
                 <div id="meFixMsg" style="display:none; margin-top:8px; font-size:12.5px; color:#64748b;"></div>
+                <!-- 수정 이력 썸네일 (수정 전 / 1차 / 2차 … / 현재) — JS 가 채운다 -->
+                <div id="meFixHistory" style="display:none; margin-top:10px; border-top:1px solid #e2e8f0; padding-top:10px;"></div>
             </div>
             <!-- 2026-07-18: 에디터 진입 버튼(원클릭 AI디자인 / 디자인 편집하기) — 다운로드 아래, 작품 갤러리 위로 이동 -->
             <div class="me-intro" id="meIntro">
@@ -5854,7 +5856,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=527"></script>
+<script src="./mini-editor.js?v=528"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
