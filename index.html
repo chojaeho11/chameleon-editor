@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720131246';
+    var CV = '20260720132743';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1029,7 +1029,13 @@ window._tcmFallbackClick = function(code) {
                 <p class="hw-sub" id="hwSub">문구만 적으면 인공지능이 몇 초 만에 만들어 드립니다</p>
             </div>
             <div class="hw-prompt">
-                <input type="text" id="hwPrompt" autocomplete="off"
+                <!-- 2026-07-20: type=search + 비표준 name.
+                     type=text 였을 때 Edge/Chrome 암호관리자가 이 칸을 아이디 입력칸으로 오인해
+                     저장된 값('99' 등)을 자동으로 채워 넣었다. 검색 타입 + 사전에 없는 name +
+                     각 확장 무시 속성으로 자동완성 자체를 막는다. -->
+                <input type="search" id="hwPrompt" name="hw_freeform_q"
+                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                       data-lpignore="true" data-1p-ignore data-form-type="other"
                        placeholder="어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터">
                 <button type="button" id="hwGoBtn">만들기</button>
             </div>
@@ -1627,6 +1633,11 @@ window._tcmFallbackClick = function(code) {
                 outline:none; transition:border-color .18s;
             }
             #heroWorks #hwPrompt::placeholder { color:#9aa4b2; }
+            /* type=search 기본 장식(✕ 버튼 등) 제거 — 자동완성 차단용으로만 쓴 타입이라 외형은 text 와 동일하게 */
+            #heroWorks #hwPrompt::-webkit-search-decoration,
+            #heroWorks #hwPrompt::-webkit-search-cancel-button,
+            #heroWorks #hwPrompt::-webkit-search-results-button { -webkit-appearance:none; appearance:none; }
+            #heroWorks #hwPrompt { -webkit-appearance:none; appearance:none; }
             #heroWorks #hwPrompt:focus { border-color:#6366f1; }
             #heroWorks #hwGoBtn {
                 flex:0 0 auto; padding:14px 26px; font-size:15px; font-family:inherit;
@@ -5702,7 +5713,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=520"></script>
+<script src="./mini-editor.js?v=521"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">

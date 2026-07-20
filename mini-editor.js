@@ -6322,6 +6322,8 @@
     // 2026-07-20: 메인 홈 히어로(고객작품 갤러리)에서 넘어온 요청. {prompt} 를 담아두면
     //   _meAiGenOpen 이 모달을 연 직후 프롬프트를 채우고 자동 생성한다. 한 번 쓰면 비운다.
     var _meHeroPending = null;
+    // 히어로에서 시작한 세션인지 — true 면 생성 결과를 미니에디터가 아니라 메인 에디터 캔버스에 넣는다.
+    var _meHeroMode = false;
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
@@ -6602,6 +6604,8 @@
         _meAiScarci = false;
         _meAiPaperDisplay = false;
         _meAiPdKind = 'display';
+        // 이번 열기가 히어로에서 온 것인지로 삽입 대상을 정한다 (제품 주문 플로우는 항상 false).
+        _meHeroMode = !!_meHeroPending;
         var _scarciAuto = false, _scarciTitleTxt = '', _scarciSubTxt = '';
         var _pdAuto = false, _pdThumbUrl = '', _pdTxt = null;
         try {
@@ -6818,7 +6822,27 @@
     // 2026-07-20: 메인 홈 히어로(고객작품 마퀴 + 프롬프트 입력) 전용 진입점.
     //   _meAiSetRef / _meGalPendingRef 는 모듈 스코프라 외부에서 못 건드린다 → 이 함수가 유일한 seam.
     //   refUrl 은 storage 공개 URL 이므로 dataURL 로 바꿔서 넘긴다 (CORS — _meGalleryPick 과 동일 방식).
+    // 히어로 모드 전용 삽입 — 메인 에디터 fabric 캔버스에 contain 으로 올린다.
+    //   ai-design-hero.js 의 injectAiImageToCanvas 와 같은 방식(중앙·비율유지·선택가능).
+    function _meHeroInsertToMain(url) {
+        try {
+            var cv = window.canvas;
+            fabric.Image.fromURL(url, function (img) {
+                if (!img) { console.warn('[meHero] 이미지 로드 실패'); return; }
+                var cw = cv.width || 1000, ch = cv.height || 1000;
+                var iw = img.width || 1024, ih = img.height || 1024;
+                var sc = Math.min(cw / iw, ch / ih);
+                img.set({
+                    left: (cw - iw * sc) / 2, top: (ch - ih * sc) / 2,
+                    scaleX: sc, scaleY: sc, selectable: true, hasControls: true
+                });
+                cv.add(img); cv.setActiveObject(img); cv.requestRenderAll();
+            }, { crossOrigin: 'anonymous' });
+        } catch (e) { console.warn('[meHero] 메인 캔버스 삽입 실패', e); }
+    }
+
     window._meHeroAiStart = async function (prompt, refUrl) {
+        _meHeroMode = true;
         if (refUrl) {
             try {
                 var r = await fetch(refUrl, { mode: 'cors' });
@@ -6846,6 +6870,13 @@
     // 캔버스 삽입 + (스카시면)디자이너 첨부 — 모달은 닫지 않음(코어)
     function _meAiDoInsert() {
         if (!_meAiPendingUrl) return;
+        // 2026-07-20: 홈 히어로에서 온 경우 삽입 대상은 메인 에디터(fabric window.canvas)다.
+        //   [버그] 히어로는 startEditorDirect 로 메인 에디터를 여는데 이 함수는 미니에디터(me)에
+        //   넣고 있었다 → 생성은 됐는데 "캔버스에 넣기" 를 눌러도 빈 화면. 대상만 갈라준다.
+        if (_meHeroMode && window.canvas && typeof fabric !== 'undefined' && fabric.Image) {
+            _meHeroInsertToMain(_meAiPendingUrl);
+            return;
+        }
         var opts = { toBack: true };
         try {
             var imgEl = document.querySelector('#meAiResult img');
@@ -6912,19 +6943,31 @@
     function _meAiBarStart() {
         _meAiBarStop();
         var pct = 6;
-        var _msgSwitched = false;
+        var _msgSwitched = false, _lateSwitched = false;
+        var _t0 = Date.now();
         var bar = document.getElementById('meAiBar');
-        if (bar) bar.style.width = pct + '%';
+        if (bar) {
+            bar.style.width = pct + '%';
+            bar.style.background = 'linear-gradient(90deg,#6366f1,#4338ca)';   // 재실행 대비 초기색 복구
+        }
         _meAiBarTimer = setInterval(function () {
             pct += (90 - pct) * 0.10 + 0.6;      // 90% 로 점근
             if (pct > 92) pct = 92;
             var b = document.getElementById('meAiBar');
             if (b) b.style.width = pct.toFixed(1) + '%';
+            var msg = document.getElementById('meAiBarMsg');
             // 2026-07-18: 바가 후반(≥78%)에 오면 문구를 "다듬는 중 · 거의 완료"로 교체.
             if (!_msgSwitched && pct >= 78) {
                 _msgSwitched = true;
-                var msg = document.getElementById('meAiBarMsg');
                 if (msg) msg.textContent = _meAiTr('디자인을 다듬고 있어요 · 거의 다 됐어요', 'デザインを仕上げています · もうすぐ完成です', 'Refining the design · almost done');
+            }
+            // 2026-07-20: '거의 다 됐어요' 에 너무 오래 머물러 멈춘 것처럼 보인다는 지적.
+            //   바는 시간을 모르고 %만 보고 문구를 바꿔서, 느린 생성일수록 같은 문구로 몇 분씩 머물렀다.
+            //   90초가 지나면 시간 기준으로 문구를 한 번 더 바꾸고 바 색도 바꿔 "진행 중"임을 보여준다.
+            if (!_lateSwitched && (Date.now() - _t0) >= 90000) {
+                _lateSwitched = true;
+                if (msg) msg.textContent = _meAiTr('30초만 더 기다려 주세요', 'あと30秒ほどお待ちください', 'Just 30 more seconds');
+                if (b) b.style.background = 'linear-gradient(90deg,#f59e0b,#ea580c)';   // 보라 → 주황
             }
         }, 400);
     }
