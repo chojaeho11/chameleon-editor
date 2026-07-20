@@ -689,11 +689,37 @@
         me.natW = w; me.natH = h;
         $('meStage').style.background = me.bg;
         _meFitStage();
+        // 2026-07-20: 대지 크기가 바뀌면 배경으로 깔린 AI 디자인을 새 대지에 다시 꽉 채운다.
+        //   (예전엔 처음 만든 크기 그대로 남아 200x300cm 로 바꾸면 사방이 심하게 잘리거나 모자랐다)
+        try { _meRefitBgLayers(); } catch (_rf) {}
         // 재단 가이드가 있으면 새 대지 크기에 맞춰 재계산
         try { if (me._trimGuideMm && typeof _meRenderTrimGuide === 'function') _meRenderTrimGuide(); } catch(_) {}
         // 2026-06-28: 사이즈 변경 후 디자인을 캔버스 중앙으로 (위로 붙던 문제). 연속 입력(타이핑) 시 튀지 않게 debounce.
         try { clearTimeout(me._centerT); me._centerT = setTimeout(function(){ try { if (window._meCenterDesign) window._meCenterDesign(); } catch(_) {} }, 220); } catch(_) {}
     }
+    // 2026-07-20: 배경 AI 디자인(_isAiBg)을 현재 대지에 cover 로 다시 맞춘다.
+    //   고객이 직접 넣은 글씨·요소는 건드리지 않는다 — 배경 레이어만 대상.
+    function _meRefitBgLayers() {
+        if (!me || !me.items || !me.natW || !me.natH) return;
+        me.items.forEach(function (it) {
+            if (!it || !it._isAiBg || !it.el) return;
+            // 원본 비율은 <img> 의 자연 크기에서 (아직 로드 전이면 현재 w/h 로 대체)
+            var im = it.el.querySelector ? it.el.querySelector('img') : null;
+            var iw = (im && im.naturalWidth) || it.w || 1;
+            var ih = (im && im.naturalHeight) || it.h || 1;
+            var ratio = ih / iw;
+            var stageRatio = me.natH / me.natW;
+            var w, h;
+            if (ratio > stageRatio) { w = me.natW; h = w * ratio; }   // cover
+            else { h = me.natH; w = h / ratio; }
+            it.w = w; it.h = h;
+            it.x = (me.natW - w) / 2;
+            it.y = (me.natH - h) / 2;
+            // 위치·크기 반영은 아이템 표시 동기화 함수가 담당 (직접 style 을 만지면 다른 로직과 어긋난다)
+            try { _meSyncItemDisplay(it); } catch (_) {}
+        });
+    }
+
     // 2026-06-14: simple_order 모달에서 호출하기 위해 window 노출
     window._meSetSize = _meSetSize;
     // 2026-06-16 v13: 실제 mm 사이즈 별도 저장 — natW/H 는 _mmPairToPx 가 1200 으로 capped 한 픽셀이라
@@ -6325,6 +6351,8 @@
     // 히어로에서 시작한 세션인지 — true 면 생성 결과를 미니에디터가 아니라 메인 에디터 캔버스에 넣는다.
     var _meHeroMode = false;
     var _meAiPendingUrl = null;
+    // 2026-07-20: 마지막으로 만든 결과 — 모달을 다시 열었을 때 빈 화면 대신 이걸 보여준다.
+    var _meAiLastUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
 
@@ -6598,7 +6626,10 @@
 
     window._meAiGenOpen = function () {
         _meAiEnsureModal();
-        _meAiPendingUrl = null;
+        // 2026-07-20: 여기서 _meAiPendingUrl 을 지우면 '직전 결과 보여주기' 가 불가능해진다.
+        //   대신 마지막 결과를 _meAiLastUrl 에 남겨두고, 모달을 열 때 그걸 복원한다.
+        if (_meAiPendingUrl) _meAiLastUrl = _meAiPendingUrl;
+        _meAiPendingUrl = _meAiLastUrl || null;
         // 2026-07-18: 현재 제품 종류에 맞는 기본 프리셋 자동 선택 (명함/배너/현수막).
         //   simple_order._soAiPresetHint() = 'namecard' | 'banner' | null.
         //   배너/현수막은 대지 비율로 세로배너(banner-v)/가로현수막(banner-h) 결정.
@@ -6658,8 +6689,23 @@
         var res = document.getElementById('meAiResult');
         var ins = document.getElementById('meAiInsertBtn');
         var err = document.getElementById('meAiErr');
-        if (res) { res.innerHTML = _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here'); res.style.color = '#cbd5e1'; }
-        if (ins) ins.style.display = 'none';
+        // 2026-07-20: 이미 만들어 둔 디자인이 있으면(예: 홈에서 생성 후 제품으로 들어온 경우)
+        //   빈 화면 대신 그 결과를 그대로 보여준다 — 튜토리얼에서 또 만들 필요 없이 바로 넣을 수 있게.
+        if (_meAiPendingUrl) {
+            if (res) {
+                res.innerHTML = '<div style="width:100%;">'
+                    + '<div style="font-size:12.5px; color:#64748b; margin-bottom:8px;">'
+                    + _meAiTr('직전에 만든 디자인이에요. 이대로 쓰려면 아래 버튼을 누르세요.',
+                              '直前に作ったデザインです。このまま使うなら下のボタンを押してください。',
+                              'Your latest design. Use it as is with the button below.')
+                    + '</div><img src="' + _meAiPendingUrl + '" style="max-width:100%; max-height:230px; border-radius:8px; object-fit:contain; display:block; margin:0 auto;"></div>';
+                res.style.color = '';
+            }
+            if (ins) ins.style.display = 'block';
+        } else {
+            if (res) { res.innerHTML = _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here'); res.style.color = '#cbd5e1'; }
+            if (ins) ins.style.display = 'none';
+        }
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
         try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
@@ -7574,6 +7620,7 @@
                 } catch (_conv) { console.warn('[meAi] dataURL convert failed, using raw url', _conv); }
             }
             _meAiPendingUrl = url;
+            _meAiLastUrl = url;
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             // 2026-07-18: 스카시/종이매대면 결과 버튼(수정해서 다시만들기/이대로 제작)으로 스와프, 아니면 기존 '캔버스에 넣기'
             if (_meAiScarci || _meAiPaperDisplay) {
