@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720150022';
+    var CV = '20260720150438';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1200,23 +1200,46 @@ window._tcmFallbackClick = function(code) {
             //   #mgrActionsGrid 만 옮기고 #mgrQuoteHero(모달·전화목록·스크립트)는 그대로 둔다 →
             //   모달의 position:fixed 와 기존 핸들러(getElementById 기반)가 그대로 동작.
             //   모바일은 탑바에 자리가 없으므로 옮기지 않는다.
-            (function moveShortcutsToTopbar(){
-                if (window.matchMedia && !window.matchMedia('(min-width: 701px)').matches) return;
-                var tries = 0;
-                var iv = setInterval(function(){
+            //   2026-07-20: 모바일에서도 탑바로 올라가 글씨가 뭉개지는 문제 → 폭이 바뀔 때마다
+            //   다시 판정해서 좁아지면 원래 자리로 되돌린다 (원래 부모/위치를 기억해 둔다).
+            (function manageShortcutPlacement(){
+                var origParent = null, origNext = null;
+                function apply(){
                     var grid = document.getElementById('mgrActionsGrid');
                     var bar = document.querySelector('.topbar');
-                    if (grid && bar) {
-                        clearInterval(iv);
-                        if (grid.parentNode === bar) return;
-                        // 우측 버튼들(HOME/로그인/My page)을 밀어내는 flex 스페이서 '앞' 에 넣어 좌측에 붙인다
-                        var spacer = bar.querySelector(':scope > div[style*="flex:1"]');
-                        var wrap = document.getElementById('mgrQuoteHero');
+                    if (!grid || !bar) return false;
+                    if (!origParent && grid.parentNode !== bar) {
+                        origParent = grid.parentNode; origNext = grid.nextElementSibling;
+                    }
+                    var wide = !window.matchMedia || window.matchMedia('(min-width: 701px)').matches;
+                    var wrap = document.getElementById('mgrQuoteHero');
+                    if (wide) {
+                        if (grid.parentNode !== bar) {
+                            // 우측 버튼들(HOME/로그인/My page)을 밀어내는 flex 스페이서 '앞' = 좌측
+                            var spacer = bar.querySelector(':scope > div[style*="flex:1"]');
+                            if (spacer) bar.insertBefore(grid, spacer); else bar.appendChild(grid);
+                        }
                         if (wrap) wrap.classList.add('mgr-moved');
-                        if (spacer) bar.insertBefore(grid, spacer);
-                        else bar.appendChild(grid);
-                    } else if (++tries > 40) clearInterval(iv);
+                    } else {
+                        // 모바일 — 원래 자리(히어로 아래)로 복귀
+                        if (origParent && grid.parentNode !== origParent) {
+                            if (origNext && origNext.parentNode === origParent) origParent.insertBefore(grid, origNext);
+                            else origParent.appendChild(grid);
+                        }
+                        if (wrap) wrap.classList.remove('mgr-moved');
+                    }
+                    return true;
+                }
+                var tries = 0;
+                var iv = setInterval(function(){
+                    if (apply() || ++tries > 40) clearInterval(iv);
                 }, 150);
+                if (window.matchMedia) {
+                    var mq = window.matchMedia('(min-width: 701px)');
+                    if (mq.addEventListener) mq.addEventListener('change', apply);
+                    else if (mq.addListener) mq.addListener(apply);
+                }
+                window.addEventListener('resize', function(){ clearTimeout(window._mgrPlaceT); window._mgrPlaceT = setTimeout(apply, 200); });
             })();
         })();
         </script>
@@ -1720,11 +1743,16 @@ window._tcmFallbackClick = function(code) {
                     font-size:13px !important; color:#475569 !important; white-space:nowrap;
                 }
                 .topbar #mgrActionsGrid .mgr-action:hover .mgr-action-label { color:#4338ca !important; }
-                /* 아이콘을 떼어가면 원래 자리는 비므로 그 공간을 없앤다.
-                   대신 갤러리와 제품 섹션이 딱 붙어버려서 아래 여백은 히어로에서 따로 준다. */
-                #mgrQuoteHero:empty, #mgrQuoteHero.mgr-moved { min-height:0 !important; margin:0 !important; }
-                /* 2026-07-20: 디자인 갤러리 ↔ 제품 섹션 사이 여유 공간 (사장님 지시) */
-                #heroWorks { margin-bottom:64px; }
+                /* 2026-07-20: 갤러리 ↔ 제품 섹션 여백.
+                   #heroWorks 에 margin-bottom 을 줬더니 전혀 안 먹었다 — .hero-section 이
+                   style.css 의 overflow:hidden + 고정 min-height 때문에 내용을 잘라내고 있어서,
+                   히어로 '안' 의 여백은 잘려 없어진다. → 여백은 히어로 '밖' 에서 준다.
+                   아이콘이 탑바로 빠져 비어버린 #mgrQuoteHero 를 그대로 간격으로 쓴다. */
+                #mgrQuoteHero.mgr-moved {
+                    min-height:72px !important; margin:0 !important; padding:0 !important;
+                }
+                /* 마퀴 아랫줄이 잘리지 않게 — .hero-section(클래스 1개)보다 특정성을 높여 확실히 이긴다 */
+                #startScreen .hero-section { overflow:visible !important; }
                 #heroWorks .me-gal-marquee { gap:12px; }
                 #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
                 #heroWorks .me-gal-item { height:220px; }
