@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720134423';
+    var CV = '20260720135143';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1692,12 +1692,14 @@ window._tcmFallbackClick = function(code) {
                 #heroWorks #hwPrompt { padding:11px 15px; font-size:14px; }
                 #heroWorks #hwGoBtn { padding:11px 18px; font-size:14px; }
                 #heroWorks .hw-tip { font-size:11.5px; }
-                /* 2026-07-20: 모바일은 작품을 작게 해서 두 줄이 모두 들어가게 한다.
+                /* 2026-07-20: 모바일은 두 줄을 넣으면 아래줄이 계속 잘려서 한 줄만 보여준다.
+                   대신 작품을 20% 키워(92 → 110px) 잘 보이게. 아래줄은 숨김.
                    (.hero-section 의 min-height/height 는 건드리지 않는다 — 건드렸더니
                     히어로 전체가 접혀서 아무것도 안 보였다) */
-                #heroWorks .me-gal-marquee { gap:6px; }
-                #heroWorks .me-gal-row { min-height:92px; }
-                #heroWorks .me-gal-item { height:92px; }
+                #heroWorks .me-gal-marquee { gap:0; }
+                #heroWorks .me-gal-row:nth-child(2) { display:none; }
+                #heroWorks .me-gal-row { min-height:110px; }
+                #heroWorks .me-gal-item { height:110px; }
                 #heroWorks .hw-head, #heroWorks .hw-prompt, #heroWorks .hw-tip { padding-left:10px; padding-right:10px; }
             }
 
@@ -1900,10 +1902,13 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-palette"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_design_request">디자인 의뢰하기</span>
                 </button>
-                <button type="button" class="mgr-action mgr-coupon" onclick="window._openCouponShareModal && window._openCouponShareModal()">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-gift"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_event_coupon">회원가입</span>
-                </button>
+                <!-- 2026-07-20: 회원가입 → 디자이너(모집) 로 교체.
+                     아래 긴 배너 2개(디자이너 모집·추천인 이벤트)를 없애면서 디자이너 모집 링크를
+                     이 자리로 옮겼다. a 태그 = 크롤러가 따라갈 수 있는 실제 링크. -->
+                <a class="mgr-action mgr-coupon" href="/contribute" style="text-decoration:none;">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-ruler"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_designer_apply">디자이너</span>
+                </a>
                 <!-- 2026-07-17: 6번째 — 디자이너 모집 → 블로그 (디자이너 모집은 위 큰 배너에 그대로 있음).
                      a 태그로 둔 이유: 크롤러가 따라갈 수 있는 실제 링크가 필요 (button+onclick 은 못 따라감). -->
                 <a class="mgr-action mgr-dapply" href="/board.html?cat=blog" style="text-decoration:none;">
@@ -2292,8 +2297,12 @@ window._tcmFallbackClick = function(code) {
         </div>
     </div>
 
-    <!-- 2026-06-19 v639: 디자이너 모집 배너 — 5버튼 직후, z-index 로 위에 올림 (캐러셀에 가려지지 않게) -->
-    <div id="designerRecruitWrap" style="max-width:1100px; margin:8px auto 20px; padding:0 20px; box-sizing:border-box; position:relative; z-index:60; display:flex; gap:12px; align-items:stretch;">
+    <!-- 2026-07-20: 긴 배너 2개(디자이너 모집·추천인 이벤트) 제거 (사장님 지시).
+         히어로가 고객작품 갤러리로 바뀌면서 이 배너가 바로가기 아이콘과 겹쳤고,
+         디자이너 모집은 위 바로가기 「디자이너」 버튼(/contribute)으로 옮겼다.
+         마크업은 display:none 으로 남겨둔다 — 다국어 스크립트(setI18n)와 _startSignupEventFlow 가
+         이 안의 id 들을 참조해서 통째로 지우면 콘솔 에러가 난다. -->
+    <div id="designerRecruitWrap" style="display:none; max-width:1100px; margin:8px auto 20px; padding:0 20px; box-sizing:border-box; position:relative; z-index:60; display:flex; gap:12px; align-items:stretch;">
         <button type="button" id="designerRecruitBar" onclick="location.href='/contribute'">
             <span class="dr-center">
                 <span class="dr-title" data-i18n="btn_designer_recruit">디자이너 모집</span>
