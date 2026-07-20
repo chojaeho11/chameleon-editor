@@ -6319,6 +6319,9 @@
     var _meAiScarci = false;      // 2026-07-18: 글씨 스카시 = 입체 글씨 포토존 컨셉 모드
     var _meAiPaperDisplay = false;// 2026-07-18: 종이매대/허니콤테이블 = 제품 썸네일 구조 유지 목업 모드
     var _meAiPdKind = 'display';  // 2026-07-19: 목업 모드의 종류 — 'display' | 'table' | 'box'. 프롬프트만 달라진다.
+    // 2026-07-20: 메인 홈 히어로(고객작품 갤러리)에서 넘어온 요청. {prompt} 를 담아두면
+    //   _meAiGenOpen 이 모달을 연 직후 프롬프트를 채우고 자동 생성한다. 한 번 쓰면 비운다.
+    var _meHeroPending = null;
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
@@ -6675,7 +6678,16 @@
             if (_hintEl) _hintEl.style.display = '';
         }
         m.style.display = 'flex';
-        if (_pdAuto) {
+        // 2026-07-20: 홈 히어로에서 넘어온 경우 — 문구를 채우고 바로 생성.
+        //   문구 없이 작품만 고른 경우(작품 클릭)는 참조만 걸린 채 입력창에 포커스를 준다.
+        //   (참조 이미지는 _meHeroAiStart 가 _meGalPendingRef 에 넣어둬서 위 복원 로직이 처리)
+        var _hero = _meHeroPending; _meHeroPending = null;
+        if (_hero) {
+            var _hpEl = document.getElementById('meAiPrompt');
+            if (_hpEl) _hpEl.value = _hero.prompt || '';
+            if (_hero.prompt) setTimeout(function () { try { _meAiGenerate(); } catch (_h) {} }, 60);
+            else setTimeout(function () { if (_hpEl) _hpEl.focus(); }, 80);
+        } else if (_pdAuto) {
             // 종이매대: 제품 썸네일을 dataURL 참조(structure)로 실은 뒤 생성 시작.
             //   썸네일을 못 가져와도(CORS/404) 문구만으로 생성은 진행.
             (async function () {
@@ -6803,6 +6815,27 @@
             _meGalPendingRef = dataUrl;
         } catch (e) { console.warn('[meGallery] pick', e); }
     }
+    // 2026-07-20: 메인 홈 히어로(고객작품 마퀴 + 프롬프트 입력) 전용 진입점.
+    //   _meAiSetRef / _meGalPendingRef 는 모듈 스코프라 외부에서 못 건드린다 → 이 함수가 유일한 seam.
+    //   refUrl 은 storage 공개 URL 이므로 dataURL 로 바꿔서 넘긴다 (CORS — _meGalleryPick 과 동일 방식).
+    window._meHeroAiStart = async function (prompt, refUrl) {
+        if (refUrl) {
+            try {
+                var r = await fetch(refUrl, { mode: 'cors' });
+                var b = await r.blob();
+                _meGalPendingRef = await new Promise(function (rs, rj) {
+                    var fr = new FileReader();
+                    fr.onload = function () { rs(String(fr.result)); };
+                    fr.onerror = rj;
+                    fr.readAsDataURL(b);
+                });
+            } catch (e) { console.warn('[meHero] 참조 이미지 로드 실패 — 문구만으로 생성', e); }
+        }
+        _meHeroPending = { prompt: String(prompt || '').trim() };
+        try { window._meAiGenOpen(); }
+        catch (e) { console.warn('[meHero] AI 모달 열기 실패', e); _meHeroPending = null; }
+    };
+
     window._meGalleryLoad = _meGalleryLoad;
     window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(v || ''); }, 300); }; })();
 

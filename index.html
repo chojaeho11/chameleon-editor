@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720120459';
+    var CV = '20260720131246';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1019,89 +1019,180 @@ window._tcmFallbackClick = function(code) {
         </video>
         <div class="hero-video-overlay"></div>
         <div class="hero-deco-line"></div>
-        <!-- 2026-06-11: 카테고리 캐러셀 — 3초 자동, 좌측정렬, 파스텔 BG + 같은 계열 진한 글씨 -->
-        <div class="hero-carousel" id="heroCarousel">
-            <div class="hc-track">
-                <!-- 1. 허니콤보드 — 파스텔 블루 -->
-                <article class="hc-slide is-active" data-slide="0" style="--bg:#e0f2fe; --bg2:#bae6fd; --txt:#075985; --accent:#0c4a6e;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-0">EASY ORDER</span>
-                        <h2 class="hc-title" data-hc="title-0">튜토리얼 따라가면<br>초보자도 주문뚝딱!</h2>
-                        <p class="hc-sub" data-hc="sub-0">안심하세요! 튜토리얼이 쉽게 주문할 수 있게 안내합니다</p>
-                        <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <!-- 2026-07-17: 1번 슬라이드 교체 (허니콤보드 업계 1위 → 초보자도 쉽게 주문). 이미지=1면.png -->
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_easy_order_1784292694.png" alt="초보자도 쉽게 주문" loading="lazy" decoding="async"></div>
-                </article>
-                <!-- 2. 광고인쇄 / 광고 기획사 도매쇼핑몰 — 파스텔 민트 -->
-                <!-- 2026-07-17: 2번 슬라이드 교체 (광고 도매쇼핑몰 → 나만의 브랜딩). 이미지=3면.png
-                     완전 검정 바탕 + 그라데이션 타이틀 (사장님 지시). 최저가보장 배지는 삭제 지시.
-                       accent=흰색 → tag-bg 를 낮춰야 흰 태그 글씨가 보임
-                       타이틀은 hc-title-grad 로 그라데이션 (사이트 기존 background-clip:text 패턴) -->
-                <article class="hc-slide" data-slide="5" style="--bg:#ca8a04; --bg2:#a16207; --txt:#fff; --accent:#fff; --tag-bg:rgba(255,255,255,0.16); --cta-txt:#a16207; --cta-hover:#fef9c3;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-5">METRO DELIVERY</span>
-                        <h2 class="hc-title" data-hc="title-5">수도권 무료배송<br>무료설치</h2>
-                        <p class="hc-sub" data-hc="sub-5">국내 70% 최대설치<br>1등이 1등인 이유</p>
-                        <a href="/?cat=honeycomb" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1771941698890_Honeycomb%20Board%20(5).jpg" alt="수도권 무료배송" loading="lazy" decoding="async"></div>
-                </article>
-                <!-- 3. 종이매대 — 파스텔 베이지 -->
-                <!-- 2026-07-17: 3번 슬라이드 교체 (종이매대 → 인공지능 디자인). 이미지=2면.png
-                     진핑크 바탕 + 흰 글씨 (사장님 지시). 이 슬라이드만 배경이 진하므로:
-                       accent=흰색(타이틀·태그글씨·버튼배경) → 버튼은 cta-txt 로 글씨를 진핑크로 되돌림
-                       tag-bg 도 낮춰야 흰 글씨가 보임 (기본 rgba(255,255,255,.55) 위에 흰 글씨 = 안 보임) -->
-                <article class="hc-slide" data-slide="2" style="--bg:#db2777; --bg2:#be185d; --txt:#fff; --accent:#fff; --tag-bg:rgba(255,255,255,0.18); --cta-txt:#be185d; --cta-hover:#fce7f3;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-2">AI DESIGN</span>
-                        <h2 class="hc-title" data-hc="title-2">국내 1등 수준높은<br>인공지능 디자인</h2>
-                        <p class="hc-sub" data-hc="sub-2">인공지능이 프로 수준의 디자인을<br>몇 초 만에 뚝딱 해드립니다</p>
-                        <a href="/editor" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_ai_design_1784293737.png" alt="인공지능 디자인" loading="lazy" decoding="async"></div>
-                </article>
-                <!-- 4. 돈버는 도매몰 — 밝은 핑크 파스텔 + 아주 진한 글씨 (2026-07-18) -->
-                <article class="hc-slide" data-slide="3" style="--bg:#fce7f3; --bg2:#fbcfe8; --txt:#500724; --accent:#831843;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-3">WHOLESALE</span>
-                        <h2 class="hc-title" data-hc="title-3">돈 버는 쇼핑몰<br>전제품 반값할인</h2>
-                        <p class="hc-sub" data-hc="sub-3">대량 자동화 생산으로 타사 대비 모든 제품이 절반 가격<br>사장님이라면 꼭 알아야 할 필수 도매인쇄몰</p>
-                        <a href="/goods" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/1770968526644_1000004100_detail_07.jpg" alt="베스트 굿즈" loading="lazy" decoding="async"></div>
-                </article>
-                <!-- 5. 판매자 필수 도매공장 — 밝은 그린 파스텔 + 아주 진한 글씨 (2026-07-18) -->
-                <article class="hc-slide" data-slide="4" style="--bg:#ffffff; --bg2:#eef2f6; --txt:#1e293b; --accent:#0f172a;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-4">FOR SELLERS</span>
-                        <h2 class="hc-title" data-hc="title-4">판매자라면<br>카멜레온은 필수선택!</h2>
-                        <p class="hc-sub" data-hc="sub-4">전국의 광고사·기획사·도매상이 판매를 위해 찾는<br>진정한 도매공장</p>
-                        <a href="/?cat=fabric" class="hc-cta" data-hc="cta">자세히 보기 <span>→</span></a>
-                    </div>
-                    <div class="hc-visual"><img src="/fabric/poster.jpg" alt="패브릭 인쇄" loading="lazy" decoding="async"></div>
-                </article>
-                <!-- 6. 수도권 무료배송·무료설치 — 노란색 밝은 톤 (2026-07-18) -->
-                <article class="hc-slide" data-slide="1" style="--bg:#0a0a0c; --bg2:#000; --txt:#e5e7eb; --accent:#fff; --tag-bg:rgba(255,255,255,0.14); --cta-txt:#000; --cta-hover:#e5e7eb;">
-                    <div class="hc-content">
-                        <span class="hc-tag" data-hc="tag-1">BRANDING</span>
-                        <h2 class="hc-title hc-title-grad" data-hc="title-1">눈에 확 띄는<br>나만의 브랜딩</h2>
-                        <p class="hc-sub" data-hc="sub-1">명함·배너 하나를 맞춰도<br>클릭 한 번으로 브랜딩이 됩니다</p>
-                    </div>
-                    <div class="hc-visual"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/products/products/hero_branding_1784295414.png" alt="나만의 브랜딩" loading="lazy" decoding="async"></div>
-                </article>
+        <!-- 2026-07-20: 히어로 = 고객작품 갤러리 + AI 프롬프트 (기존 6장 홍보 캐러셀 대체).
+             홍보 문구 대신 고객이 미니에디터로 실제 만든 결과물(design_gallery)을 2줄 마퀴로 보여주고,
+             그 자리에서 바로 "나도 만들어보기" 로 이어지게 한다.
+             마퀴 CSS 는 mini-editor.css 의 .me-gal-marquee 계열을 그대로 재사용 (위=우향/아래=좌향). -->
+        <div id="heroWorks">
+            <div class="hw-head">
+                <h2 class="hw-title" id="hwTitle">고객님들이 만든 디자인</h2>
+                <p class="hw-sub" id="hwSub">문구만 적으면 인공지능이 몇 초 만에 만들어 드립니다</p>
             </div>
-            <button class="hc-arrow hc-prev" aria-label="이전">‹</button>
-            <button class="hc-arrow hc-next" aria-label="다음">›</button>
-            <div class="hc-dots" role="tablist">
-                <button class="hc-dot is-active" data-idx="0" aria-label="1"></button>
-                <button class="hc-dot" data-idx="1" aria-label="2"></button>
-                <button class="hc-dot" data-idx="2" aria-label="3"></button>
-                <button class="hc-dot" data-idx="3" aria-label="4"></button>
-                <button class="hc-dot" data-idx="4" aria-label="5"></button>
-                <button class="hc-dot" data-idx="5" aria-label="6"></button>
+            <div class="hw-prompt">
+                <input type="text" id="hwPrompt" autocomplete="off"
+                       placeholder="어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터">
+                <button type="button" id="hwGoBtn">만들기</button>
             </div>
+            <div class="me-gal-marquee" id="hwMarquee">
+                <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="hwTrackTop"></div></div>
+                <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackBot"></div></div>
+            </div>
+            <p class="hw-tip" id="hwTip">마음에 드는 작품을 누르면 그 느낌으로 새로 만들어 드려요</p>
         </div>
+
+        <!-- 2026-07-20: 히어로 고객작품 로더 + 프롬프트 핸들러 -->
+        <script>
+        (function(){
+            var box = document.getElementById('heroWorks');
+            if (!box) return;
+
+            // ── 다국어 (기존 캐러셀 SLIDES 와 같은 인라인 방식) ──
+            var host = location.hostname || '';
+            var lang = (new URLSearchParams(location.search)).get('lang') ||
+                (host.indexOf('cafe0101') >= 0 ? 'ja' :
+                 (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
+                 (window.CURRENT_LANG || 'kr'));
+            lang = String(lang).toLowerCase();
+            var T = {
+                kr: { title:'고객님들이 만든 디자인', sub:'문구만 적으면 인공지능이 몇 초 만에 만들어 드립니다',
+                      ph:'어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터', go:'만들기',
+                      tip:'마음에 드는 작품을 누르면 그 느낌으로 새로 만들어 드려요', need:'만들고 싶은 내용을 적어주세요' },
+                ja: { title:'お客様が作ったデザイン', sub:'文章を入れるだけでAIが数秒で仕上げます',
+                      ph:'どんなデザインをお探しですか？ 例: 夏祭りのポスター', go:'作る',
+                      tip:'気に入った作品を押すと、その雰囲気で新しく作ります', need:'作りたい内容を入力してください' },
+                en: { title:'Designs made by our customers', sub:'Just type what you need — AI designs it in seconds',
+                      ph:'What do you need? e.g. Summer festival poster', go:'Create',
+                      tip:'Tap any design and we will create a new one in that style', need:'Please tell us what to make' }
+            };
+            var t = T[lang] || T.kr;
+            document.getElementById('hwTitle').textContent = t.title;
+            document.getElementById('hwSub').textContent = t.sub;
+            document.getElementById('hwTip').textContent = t.tip;
+            var inp = document.getElementById('hwPrompt');
+            var btn = document.getElementById('hwGoBtn');
+            inp.placeholder = t.ph;
+            btn.textContent = t.go;
+
+            // ── 고객작품 로드 (design_gallery 공개분) ──
+            //   mini-editor.js 의 _meGalleryLoad 와 같은 쿼리지만 트랙 id 가 달라서(중복 id 방지)
+            //   여기서 따로 그린다. 실패하면 히어로를 통째로 숨겨 빈 자리가 남지 않게 한다.
+            var works = [];
+            function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+            function itemHtml(r, i){
+                var u = r.thumb_url || r.image_url;
+                return '<button type="button" class="me-gal-item" data-hw="'+i+'" title="'+esc(r.prompt||'')+'">'
+                     + '<img src="'+esc(u)+'" loading="lazy" alt=""></button>';
+            }
+            function fill(el, rows, base){
+                if (!el) return;
+                var html = rows.map(function(r,k){ return itemHtml(r, base+k); }).join('');
+                el.innerHTML = html + html;   // 무한루프용 2벌 (-50% translate)
+            }
+            async function load(){
+                try {
+                    var res = await window.sb.from('design_gallery')
+                        .select('id,image_url,thumb_url,prompt')
+                        .eq('status','public')
+                        .order('created_at',{ascending:false}).limit(24);
+                    if (res.error) throw res.error;
+                    works = res.data || [];
+                    if (!works.length) { box.style.display='none'; return; }
+                    var half = Math.ceil(works.length/2);
+                    var top = works.slice(0,half);
+                    var bot = works.slice(half).length >= 2 ? works.slice(half) : works;
+                    fill(document.getElementById('hwTrackTop'), top, 0);
+                    fill(document.getElementById('hwTrackBot'), bot, works.slice(half).length >= 2 ? half : 0);
+                } catch(e) {
+                    console.warn('[heroWorks] 작품 로드 실패', e);
+                    box.style.display = 'none';
+                }
+            }
+            (function wait(n){
+                if (window.sb && window.sb.from) { load(); return; }
+                if (n > 40) { box.style.display='none'; return; }   // ~10초
+                setTimeout(function(){ wait(n+1); }, 250);
+            })(0);
+
+            // ── 실행: 에디터를 열고 미니에디터 AI 로 생성 ──
+            //   startEditorDirect 는 자체 로그인 게이트가 /?product=custom 으로 보내버리므로
+            //   여기서 로그인을 먼저 처리하고, 복귀 후 ?heroai=1 로 이어서 실행한다.
+            var CANVAS_W = 400, CANVAS_H = 267;   // 3:2 — gpt-image-2 가로 출력비와 동일
+            async function startAi(prompt, refUrl){
+                var payload = { prompt: String(prompt||'').trim(), refUrl: refUrl || '' };
+                if (!payload.prompt && !payload.refUrl) {
+                    inp.focus();
+                    if (window.showToast) window.showToast(t.need, 'warn');
+                    return;
+                }
+                try { sessionStorage.setItem('_heroAi', JSON.stringify(payload)); } catch(e) {}
+                if (!window.currentUser) {
+                    if (typeof window.openAuthModal === 'function') {
+                        window.openAuthModal('login', function(){ location.href = '/?heroai=1'; });
+                    } else {
+                        var lm = document.getElementById('loginModal');
+                        if (lm) lm.style.display = 'flex';
+                    }
+                    return;
+                }
+                btn.disabled = true;
+                try {
+                    await window.startEditorDirect('custom', CANVAS_W, CANVAS_H);
+                    await runPending();
+                } catch(e) {
+                    console.warn('[heroWorks] 에디터 진입 실패', e);
+                } finally { btn.disabled = false; }
+            }
+            // 에디터가 뜬 뒤 미니에디터 AI 모달을 띄운다 (_meHeroAiStart 준비될 때까지 대기)
+            function runPending(){
+                var raw = null;
+                try { raw = sessionStorage.getItem('_heroAi'); } catch(e) {}
+                if (!raw) return Promise.resolve();
+                try { sessionStorage.removeItem('_heroAi'); } catch(e) {}
+                var d = {};
+                try { d = JSON.parse(raw) || {}; } catch(e) { return Promise.resolve(); }
+                return new Promise(function(resolve){
+                    var n = 0;
+                    (function poll(){
+                        if (typeof window._meHeroAiStart === 'function') {
+                            try { window._meHeroAiStart(d.prompt || '', d.refUrl || ''); } catch(e) { console.warn('[heroWorks]', e); }
+                            resolve(); return;
+                        }
+                        if (++n > 40) { resolve(); return; }   // ~10초
+                        setTimeout(poll, 250);
+                    })();
+                });
+            }
+
+            btn.addEventListener('click', function(){ startAi(inp.value, ''); });
+            inp.addEventListener('keydown', function(e){
+                if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); startAi(inp.value, ''); }
+            });
+            // 작품 클릭 → 그 작품을 참고(reference)로 새 디자인
+            box.addEventListener('click', function(e){
+                var it = e.target.closest ? e.target.closest('.me-gal-item[data-hw]') : null;
+                if (!it) return;
+                var r = works[Number(it.getAttribute('data-hw'))];
+                if (!r) return;
+                startAi(inp.value, r.image_url || r.thumb_url || '');
+            });
+
+            // 로그인 복귀(?heroai=1) → 저장해둔 요청 이어서 실행
+            if ((new URLSearchParams(location.search)).get('heroai') === '1') {
+                var resume = function(){
+                    var raw = null;
+                    try { raw = sessionStorage.getItem('_heroAi'); } catch(e) {}
+                    if (!raw || !window.currentUser) return;
+                    var d = {}; try { d = JSON.parse(raw) || {}; } catch(e) { return; }
+                    window.startEditorDirect('custom', CANVAS_W, CANVAS_H).then(runPending);
+                };
+                var tries = 0;
+                var iv = setInterval(function(){
+                    if (window.currentUser && typeof window.startEditorDirect === 'function') { clearInterval(iv); resume(); }
+                    else if (++tries > 40) clearInterval(iv);
+                }, 250);
+            }
+        })();
+        </script>
 
         <!-- 기존 hero 요소들 (호환성 위해 보존, CSS 로 숨김) -->
         <img src="/mascot-character.webp" class="hero-mascot bouncing-char mobile-only-mascot" alt="Chameleon mascot" loading="lazy" decoding="async"
@@ -1117,56 +1208,6 @@ window._tcmFallbackClick = function(code) {
             <span class="mhb-text">업자라면 꼭 알아야 하는 인쇄종합 쇼핑몰</span>
         </div>
 
-        <!-- 2026-06-11: 캐러셀 자동회전 JS -->
-        <script>
-        (function(){
-            var carousel = document.getElementById('heroCarousel');
-            if (!carousel) return;
-            var slides = carousel.querySelectorAll('.hc-slide');
-            var dots = carousel.querySelectorAll('.hc-dot');
-            var current = 0, timer = null;
-            var INTERVAL = 3000;
-
-            function show(idx){
-                var n = slides.length;
-                var prevIdx = (idx - 1 + n) % n;
-                var nextIdx = (idx + 1) % n;
-                slides.forEach(function(s, i){
-                    s.classList.remove('is-active', 'is-prev', 'is-next');
-                    if (i === idx) s.classList.add('is-active');
-                    else if (i === prevIdx) s.classList.add('is-prev');
-                    else if (i === nextIdx) s.classList.add('is-next');
-                });
-                dots.forEach(function(d, i){ d.classList.toggle('is-active', i === idx); });
-                current = idx;
-            }
-            function next(){ show((current + 1) % slides.length); }
-            function prev(){ show((current - 1 + slides.length) % slides.length); }
-            function start(){ stop(); timer = setInterval(next, INTERVAL); }
-            function stop(){ if (timer) clearInterval(timer); timer = null; }
-
-            var prevBtn = carousel.querySelector('.hc-prev');
-            var nextBtn = carousel.querySelector('.hc-next');
-            if (prevBtn) prevBtn.addEventListener('click', function(){ prev(); start(); });
-            if (nextBtn) nextBtn.addEventListener('click', function(){ next(); start(); });
-            dots.forEach(function(d, i){
-                d.addEventListener('click', function(){ show(i); start(); });
-            });
-            // hover/touch 일시정지
-            carousel.addEventListener('mouseenter', stop);
-            carousel.addEventListener('mouseleave', start);
-            carousel.addEventListener('touchstart', stop, { passive: true });
-            carousel.addEventListener('touchend', function(){ setTimeout(start, 800); }, { passive: true });
-
-            // 페이지 가시성 변경 시 일시정지
-            document.addEventListener('visibilitychange', function(){
-                if (document.hidden) stop(); else start();
-            });
-
-            start();
-        })();
-        </script>
-
         <!-- 2026-06-11: 캐러셀 슬라이드 다국어 (JP/EN) + 매니저 영역 버튼 로케일 분기 -->
         <script>
         (function(){
@@ -1176,52 +1217,6 @@ window._tcmFallbackClick = function(code) {
                 (host.indexOf('cafe0101') >= 0 ? 'ja' :
                  (host.indexOf('cafe3355') >= 0 || host.indexOf('chameleon.design') >= 0) ? 'en' :
                  (window.CURRENT_LANG || 'kr')).toLowerCase();
-
-            // 슬라이드 다국어
-            var SLIDES = {
-                kr: {
-                    'tag-0':'EASY ORDER','title-0':'튜토리얼 따라가면<br>초보자도 주문뚝딱!','sub-0':'안심하세요! 튜토리얼이 쉽게 주문할 수 있게 안내합니다',
-                    'tag-1':'BRANDING','title-1':'눈에 확 띄는<br>나만의 브랜딩','sub-1':'명함·배너 하나를 맞춰도<br>클릭 한 번으로 브랜딩이 됩니다',
-                    'tag-2':'AI DESIGN','title-2':'국내 1등 수준높은<br>인공지능 디자인','sub-2':'인공지능이 프로 수준의 디자인을<br>몇 초 만에 뚝딱 해드립니다',
-                    'tag-3':'WHOLESALE','title-3':'돈 버는 쇼핑몰<br>전제품 반값할인','sub-3':'대량 자동화 생산으로 타사 대비 모든 제품이 절반 가격<br>사장님이라면 꼭 알아야 할 필수 도매인쇄몰',
-                    'tag-4':'FOR SELLERS','title-4':'판매자라면<br>카멜레온은 필수선택!','sub-4':'전국의 광고사·기획사·도매상이 판매를 위해 찾는<br>진정한 도매공장',
-                    'tag-5':'METRO DELIVERY','title-5':'허니콤보드 수도권<br>무료배송·무료설치','sub-5':'허니콤보드 한정 · 국내 설치 70%<br>1등이 1등인 이유',
-                    'cta':'자세히 보기','cta-lowest':'🏆 최저가보장'
-                },
-                ja: {
-                    'tag-0':'EASY ORDER','title-0':'チュートリアル通りで<br>初めてでも注文かんたん！','sub-0':'ご安心ください！チュートリアルが簡単にご注文をご案内します',
-                    'tag-1':'BRANDING','title-1':'ひと目で伝わる<br>自分だけのブランディング','sub-1':'ブランディングはカメレオンで<br>チラシ・名刺・ステッカー・グッズ・バナー、すべてプロ級に一瞬で',
-                    'tag-2':'AI DESIGN','title-2':'国内トップクラスの<br>AIデザイン','sub-2':'タイトル・説明・電話番号・場所などを入力するだけ<br>プロ以上の高品質デザインを無料で',
-                    'tag-3':'WHOLESALE','title-3':'儲かるショップ<br>全商品 半額セール','sub-3':'大量自動化生産で他社比すべての商品が半額水準<br>経営者なら知っておくべき必須の卸売印刷モール',
-                    'tag-4':'FOR SELLERS','title-4':'販売者なら<br>カメレオンは必須！','sub-4':'全国の広告会社・企画会社・卸業者が販売のために選ぶ<br>本物の卸売工場',
-                    'tag-5':'METRO DELIVERY','title-5':'ハニカムボード 首都圏<br>送料・設置 無料','sub-5':'ハニカムボード限定 · 設置シェア70%<br>1位が1位である理由',
-                    'cta':'詳しく見る','cta-lowest':'🏆 最安値保証'
-                },
-                en: {
-                    'tag-0':'EASY ORDER','title-0':'Follow the Tutorial,<br>Ordering Made Easy!','sub-0':'Our AI creates high-quality designs for free',
-                    'tag-1':'BRANDING','title-1':'Branding That<br>Turns Heads','sub-1':'Build your brand with Chameleon<br>Flyers, cards, stickers, merch, banners — all pro-level in a second',
-                    'tag-2':'AI DESIGN','title-2':'Top-Tier<br>AI Design','sub-2':'Just enter your title, details, phone number and location<br>Better-than-pro quality, completely free',
-                    'tag-3':'WHOLESALE','title-3':'The Mall That Pays<br>Half Price on Everything','sub-3':'Mass automated production makes every product half the price of competitors<br>The wholesale print mall every business owner should know',
-                    'tag-4':'FOR SELLERS','title-4':'If You Sell,<br>Chameleon Is a Must!','sub-4':'The real wholesale factory that ad agencies, planners and distributors nationwide choose to sell',
-                    'tag-5':'METRO DELIVERY','title-5':'Honeycomb Board<br>Free Metro Delivery & Install','sub-5':'Honeycomb board only · 70% of installs<br>Why #1 Stays #1',
-                    'cta':'Learn more','cta-lowest':'🏆 Lowest Price Guarantee'
-                }
-            };
-            var dict = SLIDES[lang] || SLIDES.kr;
-            document.querySelectorAll('[data-hc]').forEach(function(el){
-                var key = el.getAttribute('data-hc');
-                if (dict[key] != null) {
-                    if (key === 'cta') {
-                        // 일반 CTA 는 텍스트 + 화살표
-                        el.innerHTML = dict[key] + ' <span>→</span>';
-                    } else if (key === 'cta-lowest') {
-                        // 2026-06-13: 최저가보장 버튼 — 화살표 없이 텍스트만 (사용자 요청)
-                        el.innerHTML = dict[key];
-                    } else {
-                        el.innerHTML = dict[key];
-                    }
-                }
-            });
 
             // 매니저 영역 로케일별 분기: 전화 / VIP 결제 라벨 + onclick
             //   JP: 나나미 직통 / VIP → 특정상거래법 (/tokushoho)
@@ -1609,315 +1604,54 @@ window._tcmFallbackClick = function(code) {
             /* 2026-06-12: US/EN — Hyerim Seo (Director) 단일 카드만 표시 */
             html[data-site="US"] #mgrPhoneList #mgrPhoneUsQr { display:flex !important; }
             /* 2026-06-12: 중복 작은 카드(mgrPhoneUs) 는 노출 안 함 — 정보 풀와이드 mgrPhoneUsQr 에 통합 */
-            /* ─── 캐러셀 ─── */
-            .hero-carousel {
-                max-width:1100px;
-                width:100%;
-                margin:0 auto;
-                position:relative;
-                height:420px;
-                isolation:isolate;
-                z-index:1;
-                padding:0;
-                flex-shrink:0;
+            /* ─── 히어로: 고객작품 갤러리 (2026-07-20, 캐러셀 대체) ───
+               마퀴 자체(.me-gal-*)는 mini-editor.css 에 있고 여기선 주변 UI 만.
+               CLAUDE.md 디자인 원칙: 아이콘 없음 / 그림자 없음 / 볼드 대신 색·크기·여백. */
+            #heroWorks {
+                max-width:1100px; width:100%; margin:0 auto; padding:0 16px;
+                box-sizing:border-box; display:flex; flex-direction:column; gap:14px;
             }
-            .hc-track {
-                position:relative;
-                width:100%; height:100%;
+            #heroWorks .hw-head { text-align:center; }
+            #heroWorks .hw-title {
+                margin:0; font-size:30px; letter-spacing:-0.6px; color:#0f172a; font-weight:600;
             }
-            /* 모든 슬라이드 동일 크기 — translateX 만으로 위치 이동, scale 없음 */
-            .hc-slide {
-                position:absolute;
-                top:0; bottom:0;
-                left:0;
-                width:100%;
-                border-radius:24px;
-                opacity:0;
-                transform:translateX(0);
-                transition:opacity 0.6s ease, transform 0.7s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s ease;
-                pointer-events:none;
-                /* 2026-06-28: 좌측 진한색(--bg2) → 우측(이미지쪽) 연한색(--bg) 가로 그라데이션 — 사진 배경색에 가깝게 자연 블렌딩 */
-                background:linear-gradient(90deg, var(--bg2) 0%, var(--bg) 48%);
-                overflow:hidden;
-                box-shadow:0 8px 20px -10px rgba(15,23,42,0.1);
-                z-index:1;
+            #heroWorks .hw-sub {
+                margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6;
             }
-            .hc-slide::before {
-                content:''; position:absolute; inset:0;
-                background:
-                    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.4) 0%, transparent 55%),
-                    radial-gradient(circle at 0% 100%, rgba(255,255,255,0.2) 0%, transparent 55%);
-                pointer-events:none;
+            #heroWorks .hw-prompt {
+                display:flex; gap:8px; max-width:620px; width:100%; margin:0 auto;
             }
-            .hc-slide.is-active {
-                opacity:1;
-                transform:translateX(0);
-                pointer-events:auto;
-                z-index:5;
-                box-shadow:0 24px 50px -20px rgba(15,23,42,0.22), 0 8px 18px -8px rgba(15,23,42,0.12);
+            #heroWorks #hwPrompt {
+                flex:1; min-width:0; padding:14px 18px; font-size:15px; font-family:inherit;
+                border:1.5px solid #d7dce5; border-radius:999px; background:#fff; color:#0f172a;
+                outline:none; transition:border-color .18s;
             }
-            /* peek — 동일 크기, 좌우 102% (carousel 외부로 약간 + 간격) */
-            .hc-slide.is-prev {
-                opacity:0.85;
-                transform:translateX(-102%);
-                z-index:2;
+            #heroWorks #hwPrompt::placeholder { color:#9aa4b2; }
+            #heroWorks #hwPrompt:focus { border-color:#6366f1; }
+            #heroWorks #hwGoBtn {
+                flex:0 0 auto; padding:14px 26px; font-size:15px; font-family:inherit;
+                border:none; border-radius:999px; background:#4f46e5; color:#fff;
+                cursor:pointer; transition:background .18s; white-space:nowrap;
             }
-            .hc-slide.is-next {
-                opacity:0.85;
-                transform:translateX(102%);
-                z-index:2;
+            #heroWorks #hwGoBtn:hover { background:#4338ca; }
+            #heroWorks #hwGoBtn:disabled { background:#a5b4fc; cursor:default; }
+            #heroWorks .hw-tip {
+                margin:0; text-align:center; font-size:12.5px; color:#94a3b8;
             }
-            .hc-content {
-                position:absolute;
-                left:0; top:0; bottom:0;
-                width:55%;
-                /* 2026-06-12: 우측으로 살짝 쏠려보이던 글씨를 좌측으로 조정 (우측 패딩 추가) */
-                padding:48px 80px 48px 40px;
-                color:var(--txt);
-                display:flex;
-                flex-direction:column;
-                justify-content:center;
-                align-items:center;       /* 모든 자식 가운데 정렬 */
-                text-align:center;
-                z-index:2;
-            }
-            /* 2026-06-12: hero carousel "자세히 보기" CTA 버튼 전체 비활성 (해외몰 포함 — 사용자 요청) */
-            /* 단, .hc-cta-show 클래스가 있으면 노출 — 슬라이드별 강조 CTA (예: 최저가보장) */
-            .hc-cta:not(.hc-cta-show) { display:none !important; }
-            /* 최저가보장 강조 버튼 — 골드 그라데이션, 트로피 아이콘 */
-            .hc-cta.hc-cta-show {
-                display:inline-flex !important;
-                background:linear-gradient(135deg,#fbbf24 0%,#d97706 100%) !important;
-                color:#fff !important;
-                font-weight:900 !important;
-                box-shadow:0 8px 22px -6px rgba(217,119,6,0.55) !important;
-                border:2px solid #fde68a !important;
-                letter-spacing:0.02em;
-            }
-            .hc-tag {
-                font-family:'Pretendard Variable', sans-serif;
-                font-size:11.5px;
-                font-weight:800;
-                /* 2026-07-17: 자간 0.32em → 0.16em 으로 축소 + 가운데 정렬 보정.
-                   letter-spacing 은 마지막 글자 뒤에도 여백을 넣기 때문에 그만큼 글씨가 왼쪽으로 치우친다.
-                   원래 padding-left 로 보정하고 있었으나 바로 아래 padding 단축속성이 그걸 덮어써서
-                   보정이 죽어 있었다(= 6개 슬라이드 태그가 전부 좌측으로 쏠림).
-                   → 단축속성 한 줄에서 왼쪽만 자간만큼 더 주어 시각적 중앙을 맞춘다. */
-                letter-spacing:0.16em;
-                color:var(--accent);
-                display:inline-block;
-                padding:6px 14px 6px calc(14px + 0.16em);
-                text-align:center;
-                /* 2026-07-17: 진한 배경 슬라이드용 변수화. 기본값은 기존 그대로라 다른 슬라이드는 불변. */
-                background:var(--tag-bg, rgba(255,255,255,0.55));
-                border:1px solid rgba(255,255,255,0.8);
-                border-radius:999px;
-                margin-bottom:22px;
-                backdrop-filter:blur(8px);
-                -webkit-backdrop-filter:blur(8px);
-            }
-            .hc-title {
-                font-family:'Pretendard Variable', sans-serif;
-                font-size:48px;
-                font-weight:900;
-                line-height:1.12;
-                letter-spacing:-0.025em;
-                margin:0 0 18px;
-                color:var(--accent);
-                text-align:center;
-                word-break:keep-all;   /* 2026-06-28: 한글/일본어 — 글자 단위 줄바꿈 금지, 단어(공백) 단위로만 */
-            }
-            /* 2026-07-17: 그라데이션 타이틀 (검정 바탕 슬라이드용).
-               사이트 기존 패턴(background-clip:text)과 동일. 미지원 브라우저에선
-               text-fill-color 가 무시되고 color:var(--accent) 로 그대로 보인다 = 안전한 폴백. */
-            .hc-title-grad {
-                background:linear-gradient(100deg,#f472b6 0%,#a78bfa 45%,#38bdf8 100%);
-                -webkit-background-clip:text;
-                background-clip:text;
-                -webkit-text-fill-color:transparent;
-            }
-            .hc-sub {
-                font-family:'Pretendard Variable', sans-serif;
-                font-size:15px;
-                font-weight:600;
-                line-height:1.6;
-                color:var(--txt);
-                opacity:0.85;
-                margin:0 0 30px;
-                max-width:none;
-                text-align:center;
-                word-break:keep-all;   /* 2026-06-28: 한글/일본어 — 글자 단위 줄바꿈 금지 */
-            }
-            .hc-cta {
-                display:inline-flex;
-                align-items:center;
-                gap:8px;
-                padding:13px 28px;
-                background:var(--accent);
-                /* 2026-07-17: accent 가 흰색인 슬라이드(진한 배경)에선 흰 배경+흰 글씨가 되므로 변수화 */
-                color:var(--cta-txt, #fff);
-                border-radius:999px;
-                font-family:'Pretendard Variable', sans-serif;
-                font-weight:800;
-                font-size:14px;
-                text-decoration:none;
-                width:fit-content;
-                box-shadow:0 10px 24px rgba(15,23,42,0.18);
-                transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
-            }
-            .hc-cta:hover {
-                transform:translateY(-2px);
-                box-shadow:0 14px 28px rgba(15,23,42,0.25);
-                background:var(--cta-hover, var(--txt));
-            }
-            .hc-cta span { transition:transform .25s ease; }
-            .hc-cta:hover span { transform:translateX(4px); }
-            .hc-visual {
-                position:absolute;
-                right:0;
-                top:0;
-                bottom:0;
-                z-index:1;
-                width:50%;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                overflow:hidden;
-            }
-            .hc-visual::before {
-                content:'';
-                position:absolute;
-                left:0; top:0; bottom:0;
-                /* 2026-07-18: 어두운 슬라이드에서 사진 위 오버레이가 다시 진해져 어색했음(우측 사진 쪽 색 띠).
-                   폭 20% 로 더 축소 + 시작부터 바로 투명으로 빠지게 해서 사진 위에는 색을 거의 안 얹는다.
-                   왼쪽 텍스트 영역과의 이음새는 hc-content 그라데이션이 이미 담당. */
-                width:20%;
-                background:linear-gradient(90deg, var(--bg) 0%, transparent 70%);
-                z-index:2;
-                pointer-events:none;
-            }
-            .hc-visual img {
-                width:100%;
-                height:100%;
-                object-fit:cover;
-                object-position:center;
-                filter:saturate(1.05);
-            }
-            /* 화살표 — 파스텔 톤 매칭 */
-            .hc-arrow {
-                position:absolute;
-                top:50%;
-                transform:translateY(-50%);
-                width:44px; height:44px;
-                border-radius:50%;
-                background:rgba(255,255,255,0.85);
-                border:1px solid rgba(255,255,255,0.6);
-                font-size:22px;
-                font-weight:300;
-                color:var(--accent);
-                cursor:pointer;
-                z-index:10;
-                box-shadow:0 6px 16px rgba(15,23,42,0.14);
-                display:flex; align-items:center; justify-content:center;
-                line-height:1;
-                backdrop-filter:blur(8px);
-                -webkit-backdrop-filter:blur(8px);
-                transition:transform .2s ease, background .2s ease;
-            }
-            .hc-arrow:hover { background:#fff; transform:translateY(-50%) scale(1.06); }
-            .hc-prev { left:18px; }
-            .hc-next { right:18px; }
-            /* 도트 인디케이터 */
-            .hc-dots {
-                position:absolute;
-                bottom:22px;
-                left:56px;
-                display:flex;
-                gap:7px;
-                z-index:10;
-                background:rgba(255,255,255,0.55);
-                padding:7px 12px;
-                border-radius:999px;
-                backdrop-filter:blur(10px);
-                -webkit-backdrop-filter:blur(10px);
-                border:1px solid rgba(255,255,255,0.4);
-            }
-            .hc-dot {
-                width:8px; height:8px;
-                border-radius:50%;
-                background:rgba(15,23,42,0.25);
-                border:none;
-                padding:0;
-                cursor:pointer;
-                transition:all .3s ease;
-            }
-            .hc-dot.is-active {
-                background:var(--accent);
-                width:26px;
-                border-radius:4px;
-            }
+            /* 로딩 중 빈 줄이 덜 허전하게 — 작품이 채워지면 자연히 가려진다 */
+            #heroWorks .me-gal-row { min-height:132px; background:#f1f5f9; border-radius:10px; }
+
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
                 .hero-section { padding:8px 0 4px !important; min-height:240px !important; display:block !important; overflow:visible !important; }
-                .hero-carousel {
-                    height:220px;
-                    border-radius:18px;
-                    display:block !important;
-                    width:auto;
-                    max-width:100%;
-                    margin:0 12px !important;
-                }
-                /* 모바일에선 peek 카드 안 보이게 — 활성 슬라이드만 표시 */
-                .hc-slide { border-radius:18px; box-shadow:none !important; }
-                .hc-slide.is-active { box-shadow:0 6px 14px -8px rgba(15,23,42,0.12) !important; }
-                .hc-slide.is-prev, .hc-slide.is-next {
-                    opacity:0 !important;
-                    transform:scale(0.9) translateX(0) !important;
-                    pointer-events:none !important;
-                }
-                .hc-content {
-                    position:absolute;
-                    left:0; top:0; bottom:0;
-                    width:62%;
-                    /* 2026-06-12: 모바일 — 글씨가 우측으로 쏠려보이는 문제 해결. 우측 padding 키워서 전체 좌측 이동 */
-                    padding:22px 30px 22px 8px;
-                    z-index:3;
-                    justify-content:center;
-                    align-items:center;
-                    text-align:center;
-                    background:none;
-                }
-                /* 2026-07-17: 데스크톱과 동일 — 자간 축소 + 마지막 글자 뒤 여백만큼 왼쪽 보정.
-                   (기존 padding-left:0.28em 는 10px 를 덮어써 좌우 여백이 아예 어긋나 있었다) */
-                .hc-tag {
-                    font-size:9.5px; margin-bottom:10px;
-                    letter-spacing:0.14em;
-                    padding:4px 10px 4px calc(10px + 0.14em);
-                }
-                .hc-title { font-size:22px; margin-bottom:8px; line-height:1.15; }
-                .hc-sub { font-size:11.5px; margin-bottom:14px; line-height:1.45; }
-                .hc-cta { padding:9px 16px; font-size:11.5px; }
-                .hc-visual {
-                    position:absolute;
-                    right:0; top:0; bottom:0;
-                    width:48%;
-                    z-index:1;
-                }
-                .hc-visual::before {
-                    /* 2026-07-18: 데스크톱과 동일 — 사진 위 색 띠 제거 */
-                    width:20%;
-                    background:linear-gradient(90deg, var(--bg) 0%, transparent 70%);
-                }
-                .hc-visual img {
-                    width:100%;
-                    height:100%;
-                    object-fit:cover;
-                    filter:saturate(1.05);
-                }
-                .hc-arrow { display:none; }
-                .hc-dots { bottom:12px; left:18px; padding:5px 10px; gap:5px; z-index:4; }
-                .hc-dot { width:6px; height:6px; }
-                .hc-dot.is-active { width:20px; }
+                #heroWorks { padding:0 10px; gap:11px; }
+                #heroWorks .hw-title { font-size:21px; }
+                #heroWorks .hw-sub { font-size:12.5px; margin-top:5px; }
+                #heroWorks .hw-prompt { gap:6px; }
+                #heroWorks #hwPrompt { padding:11px 15px; font-size:14px; }
+                #heroWorks #hwGoBtn { padding:11px 18px; font-size:14px; }
+                #heroWorks .hw-tip { font-size:11.5px; }
+                #heroWorks .me-gal-row { min-height:100px; }
             }
 
             /* 기존 hero 요소들 (호환성 위해 보존, 화면에선 안 보임) */
@@ -5968,7 +5702,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=519"></script>
+<script src="./mini-editor.js?v=520"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
