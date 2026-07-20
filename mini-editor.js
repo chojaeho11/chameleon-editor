@@ -6801,7 +6801,19 @@
 
     // 2026-07-19: 제품이 바뀔 때 simple_order 가 호출 — 이전 제품의 목업 배경만 걷어낸다.
     //   (고객이 직접 넣은 글씨·요소는 건드리지 않는다.)
-    window._meClearBgLayers = function () { try { _meGalRemovePreview(); } catch (_) {} };
+    // 2026-07-20 [수정] 예전엔 _meGalRemovePreview() 를 그대로 불러 배경을 '전부' 지웠다.
+    //   그래서 AI 로 디자인을 만든 뒤 다른 제품을 고르면 디자인이 통째로 사라졌다(사장님 제보).
+    //   제품 전용 목업(_isPdMockup: 종이매대/테이블/박스)만 지우고, 고객 디자인은 유지한다.
+    window._meClearBgLayers = function () {
+        try {
+            (me && me.items ? me.items : []).slice().forEach(function (it) {
+                if (it && it._isPdMockup) {
+                    try { if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); } catch (_) {}
+                    var ix = me.items.indexOf(it); if (ix >= 0) me.items.splice(ix, 1);
+                }
+            });
+        } catch (e) { console.warn('[meClearBg]', e); }
+    };
 
     // 갤러리 픽 → ① 대지에 바로 올려 크게 확인 ② AI 실행 시 이 작품을 참고로 사용
     //   2026-07-18: 예전엔 클릭 즉시 AI 모달을 열어 작품을 크게 볼 수 없었음(사장님 요청으로 변경).
@@ -7147,8 +7159,12 @@
         try { _meGalRemovePreview(); } catch (_gp) {}
         try {
             window._meAddImage(_meAiPendingUrl, opts, function (it) {
+                if (!it) return;
                 // 다음 생성 때 이 레이어를 확실히 걷어내기 위한 표식
-                if (it) it._isAiBg = true;
+                it._isAiBg = true;
+                // 2026-07-20: 종이매대/테이블/박스 목업만 '제품 전용' 으로 따로 표시.
+                //   제품을 바꾸면 이것만 지우고, 고객이 만든 일반 디자인은 그대로 가져간다.
+                if (_meAiPaperDisplay) it._isPdMockup = true;
             });
         } catch (err2) { console.warn('[meAi] add', err2); }
         // 2026-07-18: 글씨 스카시 — 삽입한 포토존 시안을 디자이너 참고자료로 자동 첨부 (컨셉 미리보기 + 의뢰 자료).
