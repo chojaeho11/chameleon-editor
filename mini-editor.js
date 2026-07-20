@@ -6512,14 +6512,22 @@
             if (thumb) thumb.style.display = 'inline-flex';
             if (hint) {
                 hint.style.display = 'block';
+                // 2026-07-20: 참고(reference) 모드 안내는 빨간 배경 + 흰 글씨로 눈에 띄게 (사장님 지시).
+                //   나머지 모드는 기존 회색 안내문 그대로.
+                if (isRef) {
+                    hint.style.cssText = 'display:block; background:#dc2626; color:#fff; font-size:12.5px;'
+                        + 'line-height:1.6; padding:11px 13px; border-radius:9px; margin:-2px 0 10px;';
+                } else {
+                    hint.style.cssText = 'display:block; font-size:11.5px; color:#64748b; margin:-4px 0 10px; line-height:1.5;';
+                }
                 hint.textContent = isStruct
                     ? _meAiTr('이 매대 모양 그대로 두고, 겉면 디자인만 새로 입혀요.',
                               'この什器の形はそのままに、表面のデザインだけ新しく仕上げます。',
                               'We keep this display\'s exact shape and only redress its surfaces.')
                     : isRef
-                    ? _meAiTr('이 작품을 참고해 비슷한 스타일로 새로 디자인해요. 어떻게 만들지 아래에 적어주세요.',
-                              'この作品を参考に、似た雰囲気で新しくデザインします。下に内容を入力してください。',
-                              'We\'ll design a NEW piece inspired by this one\'s style. Describe it below.')
+                    ? _meAiTr('이 디자인 스타일로 고객님이 만드실 내용으로 다시 디자인합니다. 제목과 상세내용을 적어주세요. 놀라운 경험을 위해 1분만 기다려주세요.',
+                              'このデザインのスタイルで、お客様の内容に合わせて作り直します。タイトルと詳細をご記入ください。素晴らしい仕上がりのため、1分ほどお待ちください。',
+                              'We\'ll redesign in this style with your own content. Enter your title and details — it takes about a minute.')
                     : _meAiTr('넣은 사진을 활용해 디자인해 드려요. 어떻게 만들지 아래에 적어주세요.',
                               'お写真を活かしてデザインします。どう仕上げるか下に入力してください。',
                               'We\'ll design using your photo. Describe how below.');
