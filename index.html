@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720132743';
+    var CV = '20260720133354';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1033,7 +1033,7 @@ window._tcmFallbackClick = function(code) {
                      type=text 였을 때 Edge/Chrome 암호관리자가 이 칸을 아이디 입력칸으로 오인해
                      저장된 값('99' 등)을 자동으로 채워 넣었다. 검색 타입 + 사전에 없는 name +
                      각 확장 무시 속성으로 자동완성 자체를 막는다. -->
-                <input type="search" id="hwPrompt" name="hw_freeform_q"
+                <input type="search" id="hwPrompt" name="hw_freeform_q" readonly
                        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                        data-lpignore="true" data-1p-ignore data-form-type="other"
                        placeholder="어떤 디자인이 필요하세요? 예: 한강 라면축제 포스터">
@@ -1078,6 +1078,20 @@ window._tcmFallbackClick = function(code) {
             var btn = document.getElementById('hwGoBtn');
             inp.placeholder = t.ph;
             btn.textContent = t.go;
+
+            // 2026-07-20: 브라우저 암호관리자 자동입력 차단 (실제로 '99' 가 계속 채워졌다).
+            //   type/name/autocomplete 속성만으론 Edge·Chrome 이 무시하고 채운다.
+            //   확실한 방법은 readonly 로 시작 → 사용자가 만질 때 해제하는 것.
+            //   그래도 이미 채워진 값이 남을 수 있어 초반 몇 초간 값을 지운다.
+            var unlock = function(){ inp.removeAttribute('readonly'); };
+            ['focus','click','touchstart','keydown'].forEach(function(ev){
+                inp.addEventListener(ev, unlock, { once:false });
+            });
+            var clearTries = 0;
+            var clearIv = setInterval(function(){
+                if (document.activeElement !== inp && inp.value) inp.value = '';
+                if (++clearTries > 12) clearInterval(clearIv);   // ~3초간 감시 후 중단
+            }, 250);
 
             // ── 고객작품 로드 (design_gallery 공개분) ──
             //   mini-editor.js 의 _meGalleryLoad 와 같은 쿼리지만 트랙 id 가 달라서(중복 id 방지)
@@ -1651,6 +1665,20 @@ window._tcmFallbackClick = function(code) {
             }
             /* 로딩 중 빈 줄이 덜 허전하게 — 작품이 채워지면 자연히 가려진다 */
             #heroWorks .me-gal-row { min-height:132px; background:#f1f5f9; border-radius:10px; }
+            /* 2026-07-20: PC 는 작품을 크게, 화면 끝까지 꽉 차게 (사장님 요청).
+               1100px 컨테이너를 뚫고 뷰포트 전체 폭으로 — #startScreen 이 overflow-x:hidden 이라 안전. */
+            @media (min-width: 701px) {
+                #heroWorks .me-gal-marquee {
+                    width:100vw; margin-left:calc(50% - 50vw); gap:12px;
+                }
+                #heroWorks .me-gal-row { min-height:230px; border-radius:0; }
+                #heroWorks .me-gal-item { height:230px; }
+                #heroWorks .me-gal-track { gap:12px; }
+            }
+            @media (min-width: 1500px) {
+                #heroWorks .me-gal-row { min-height:270px; }
+                #heroWorks .me-gal-item { height:270px; }
+            }
 
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
@@ -1662,7 +1690,14 @@ window._tcmFallbackClick = function(code) {
                 #heroWorks #hwPrompt { padding:11px 15px; font-size:14px; }
                 #heroWorks #hwGoBtn { padding:11px 18px; font-size:14px; }
                 #heroWorks .hw-tip { font-size:11.5px; }
-                #heroWorks .me-gal-row { min-height:100px; }
+                /* 2026-07-20: 모바일에서 아래(2번째) 줄이 잘려 보이던 문제.
+                   .hero-section 이 display:block + min-height 로 묶여 있어 두 줄이 다 들어갈
+                   높이를 확보하지 못했다 → 히어로가 내용만큼 늘어나도록 풀고 아이템을 줄인다. */
+                .hero-section { height:auto !important; min-height:0 !important; overflow:visible !important; }
+                #heroWorks { overflow:visible; }
+                #heroWorks .me-gal-marquee { gap:6px; }
+                #heroWorks .me-gal-row { min-height:88px; }
+                #heroWorks .me-gal-item { height:88px; }
             }
 
             /* 기존 hero 요소들 (호환성 위해 보존, 화면에선 안 보임) */
