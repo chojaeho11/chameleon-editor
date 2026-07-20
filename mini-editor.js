@@ -6324,6 +6324,8 @@
     var _meHeroPending = null;
     // 히어로에서 시작한 세션인지 — true 면 생성 결과를 미니에디터가 아니라 메인 에디터 캔버스에 넣는다.
     var _meHeroMode = false;
+    // 2026-07-20: 부분수정 지시문 ("글씨 더 크게" 등). _meAiRefMode==='fix' 일 때만 사용, 1회용.
+    var _meAiFixNote = '';
     var _meAiPendingUrl = null;
     var _meAiRefDataUrl = null;   // 2026-07-18: 참조 사진 (dataURL)
     var _meAiRefMode = 'blend';   // 'blend'=합성(내용 살림) | 'reference'=스타일만 참고(갤러리 픽) | 'structure'=형태 유지(종이매대 썸네일)
@@ -6381,6 +6383,25 @@
                 '<button type="button" id="meAiScRemake" style="width:100%; padding:12px; border:1.5px solid #c7d2fe; border-radius:11px; background:#eef2ff; color:#4338ca; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; margin-bottom:8px;">' + _meAiTr('✏️ 수정해서 다시 만들기', '✏️ 修正して作り直す', '✏️ Edit & remake') + '</button>' +
                 '<button type="button" id="meAiScAccept" style="width:100%; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;">' + _meAiTr('이대로 제작', 'このまま製作', 'Make it like this') + '</button>' +
               '</div>' +
+              // 2026-07-20: 생성 후 부분수정 패널 — "여기만 고쳐주세요" 를 적으면
+              //   직전 결과를 참조 이미지로 넘겨 나머지는 그대로 두고 그 부분만 다시 그린다.
+              '<div id="meAiFixWrap" style="display:none; margin-top:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:13px;">' +
+                '<div style="font-size:14px; color:#0f172a; margin-bottom:4px;">' +
+                  _meAiTr('디자인이 마음에 드시나요?', 'デザインは気に入りましたか？', 'Do you like this design?') + '</div>' +
+                '<div style="font-size:12.5px; color:#64748b; line-height:1.6; margin-bottom:9px;">' +
+                  _meAiTr('수정할 곳이 있다면 알려주세요. 나머지는 그대로 두고 그 부분만 고쳐 드립니다.<br>이대로 좋다면 다음 작업을 진행해 주세요.',
+                          '修正したい箇所を教えてください。他はそのままに、その部分だけ直します。<br>このままで良ければ次へお進みください。',
+                          'Tell us what to change — everything else stays the same.<br>If you like it as is, continue to the next step.') + '</div>' +
+                '<textarea id="meAiFixText" rows="2" placeholder="' +
+                  _meAiTr('예: 글씨를 더 크게, 배경을 파란색으로', '例: 文字をもっと大きく、背景を青に', 'e.g. bigger text, blue background') +
+                  '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; font-size:13.5px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
+                '<div style="display:flex; gap:8px; margin-top:9px;">' +
+                  '<button type="button" id="meAiFixBtn" style="flex:1; padding:12px; border:1.5px solid #c7d2fe; border-radius:11px; background:#eef2ff; color:#4338ca; font-size:14px; cursor:pointer; font-family:inherit;">' +
+                    _meAiTr('수정하기', '修正する', 'Revise') + '</button>' +
+                  '<button type="button" id="meAiNextBtn" style="flex:1; padding:12px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' +
+                    _meAiTr('다음', '次へ', 'Next') + '</button>' +
+                '</div>' +
+              '</div>' +
               // 2026-07-18: 삽입 후 꾸미기 안내 (이미지 생성 성공 시에만 노출)
               '<div id="meAiTip" style="display:none; margin-top:10px; font-size:12.5px; color:#475569; line-height:1.6; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px;">' +
                 _meAiTr('이미지를 넣은 뒤 위치를 이동해 더 예쁜 구도로 맞춰보세요. 벡터나 요소를 이용해 더 예쁘게 꾸며보세요.',
@@ -6400,6 +6421,28 @@
         });
         document.getElementById('meAiGoBtn').addEventListener('click', _meAiGenerate);
         document.getElementById('meAiInsertBtn').addEventListener('click', _meAiInsert);
+        // 2026-07-20: 부분수정 / 다음
+        var _fixBtn = document.getElementById('meAiFixBtn');
+        var _nextBtn = document.getElementById('meAiNextBtn');
+        if (_fixBtn) _fixBtn.addEventListener('click', function () {
+            var t = document.getElementById('meAiFixText');
+            var note = (t && t.value || '').trim();
+            var e2 = document.getElementById('meAiErr');
+            if (note.length < 2) {
+                if (t) t.focus();
+                if (e2) {
+                    e2.textContent = _meAiTr('어디를 어떻게 고칠지 적어주세요.', 'どこをどう直すか入力してください。', 'Please describe what to change.');
+                    e2.style.display = 'block';
+                }
+                return;
+            }
+            if (!_meAiPendingUrl) return;
+            // 직전 결과를 참조 이미지로 → 나머지는 유지하고 지시한 부분만 변경
+            _meAiFixNote = note;
+            _meAiSetRef(_meAiPendingUrl, 'fix');
+            _meAiGenerate();
+        });
+        if (_nextBtn) _nextBtn.addEventListener('click', _meAiInsert);
         // 2026-07-18: 스카시 결과 버튼 — 수정해서 다시만들기 / 이대로 제작
         var _scRemakeBtn = document.getElementById('meAiScRemake');
         var _scAcceptBtn = document.getElementById('meAiScAccept');
@@ -6470,14 +6513,21 @@
     // 참조 사진 설정/해제 + 썸네일·안내 토글
     function _meAiSetRef(dataUrl, mode) {
         _meAiRefDataUrl = dataUrl || null;
-        // 파일 업로드=blend, 갤러리 픽=reference, 종이매대 썸네일=structure(형태 유지)
-        _meAiRefMode = (mode === 'reference' || mode === 'structure') ? mode : 'blend';
+        // 파일 업로드=blend, 갤러리 픽=reference, 종이매대 썸네일=structure(형태 유지),
+        // 2026-07-20 추가: fix=직전 결과 부분수정 (모드 누락 시 blend 로 떨어져 '합성' 이 되어버리므로 반드시 등록)
+        _meAiRefMode = (mode === 'reference' || mode === 'structure' || mode === 'fix') ? mode : 'blend';
         var thumb = document.getElementById('meAiRefThumb');
         var img = document.getElementById('meAiRefImg');
         var btn = document.getElementById('meAiRefBtn');
         var hint = document.getElementById('meAiRefHint');
         var isRef = (_meAiRefMode === 'reference');
         var isStruct = (_meAiRefMode === 'structure');
+        // fix 모드는 결과 아래 수정 패널에서 안내하므로 상단 참조 썸네일/문구는 띄우지 않는다
+        if (_meAiRefMode === 'fix') {
+            if (thumb) thumb.style.display = 'none';
+            if (hint) hint.style.display = 'none';
+            return;
+        }
         if (_meAiRefDataUrl) {
             if (img) img.src = _meAiRefDataUrl;
             if (thumb) thumb.style.display = 'inline-flex';
@@ -7188,6 +7238,7 @@
         if (err) err.style.display = 'none';
         if (ins) ins.style.display = 'none';
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
+        var _fixW0=document.getElementById('meAiFixWrap'); if(_fixW0)_fixW0.style.display='none';
         _meAiPendingUrl = null;
         if (prompt.length < 3) {
             if (err) { err.textContent = _meAiTr('설명을 조금 더 자세히 적어주세요.', 'もう少し詳しく説明してください。', 'Please describe a bit more.'); err.style.display = 'block'; }
@@ -7353,6 +7404,13 @@
                     if (_meAiRefMode === 'structure') {
                         // 종이매대: 첨부 썸네일의 형태·구조는 그대로, 겉면 그래픽만 교체
                         genPrompt1 = 'Use the attached image as a STRICT STRUCTURAL reference for the ' + ((_meAiPdKind === 'table') ? 'event table' : (_meAiPdKind === 'box') ? 'box' : 'display stand') + ' rendered in the LEFT half of the output. Reproduce its exact shape, proportions, tier/shelf count and layout, and camera angle, but REPLACE all printed graphics, colors and text on its surfaces with a new design as described below, and leave it completely empty with nothing placed on it. Do NOT copy the reference\'s branding, text, artwork or any merchandise shown on it. ' + genPrompt1;
+                    } else if (_meAiRefMode === 'fix') {
+                        // 2026-07-20: 부분수정 — 첨부 이미지를 그대로 재현하되 지시한 곳만 바꾼다.
+                        //   "완전히 새로" 그리지 않도록 동일성 유지를 강하게 못 박는다.
+                        genPrompt1 = 'Reproduce the attached image AS CLOSELY AS POSSIBLE — same layout, same composition, same colors, same fonts, same wording, same illustration style. '
+                            + 'Change ONLY this and nothing else: "' + (_meAiFixNote || '') + '". '
+                            + 'Everything not mentioned must stay visually identical to the attached image. Do NOT redesign, do NOT rearrange, do NOT alter other text. '
+                            + 'Original design brief for context: ' + genPrompt1;
                     } else if (_meAiRefMode === 'reference') {
                         genPrompt1 = 'Use the attached image ONLY as a STYLE, LAYOUT and MOOD reference. Create a COMPLETELY NEW, original design in a similar visual style, color mood and composition — do NOT copy its text, logos, photos, or specific content. ' + genPrompt1;
                     } else {
@@ -7412,11 +7470,19 @@
                 var _scB = document.getElementById('meAiScarciBtns'); if (_scB) _scB.style.display = 'block';
                 var _tip2s=document.getElementById('meAiTip'); if(_tip2s)_tip2s.style.display='none';
             } else {
-                if (ins) ins.style.display = 'block';
+                // 2026-07-20: '캔버스에 넣기' 단독 버튼 대신 수정/다음 패널을 쓴다.
+                //   (다음 = 같은 _meAiInsert. 수정하기 = 직전 결과를 참조로 부분수정 재생성)
+                if (ins) ins.style.display = 'none';
+                var _fixW = document.getElementById('meAiFixWrap');
+                if (_fixW) _fixW.style.display = 'block';
+                var _fixT = document.getElementById('meAiFixText');
+                if (_fixT) _fixT.value = '';   // 다음 수정 요청을 새로 적을 수 있게 비운다
                 var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
                 // 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
                 try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
             }
+            // 수정 모드는 1회용 — 다음에 '이미지 생성' 을 누르면 참조 없이 새로 그린다
+            if (_meAiRefMode === 'fix') { _meAiFixNote = ''; try { _meAiSetRef(null); } catch (_r0) {} }
         } catch (e) {
             console.error('[meAi] generate', e);
             if (res) { res.innerHTML = _meAiTr('생성 실패', '生成失敗', 'Failed'); res.style.color = '#dc2626'; }
