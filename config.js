@@ -363,6 +363,33 @@ function updateUserSession(session) {
             btnLogin.classList.remove('primary');
             btnLogin.style.backgroundColor = '';
         }
+        // 2026-07-20: onclick 도 여기서 같이 붙인다.
+        //   [버그] 지금까지 이 블록은 라벨만 '로그아웃' 으로 바꿨고, 실제 onclick 은
+        //   index.html 의 load 핸들러에서만 붙었다. 모달 로그인은 새로고침이 없으므로
+        //   버튼에 '로그아웃' 이라고 쓰여 있는데 누르면 로그인 모달이 다시 뜬다
+        //   (고객 문의 실사례: "로그아웃 누르면 로그인 화면이 나온다").
+        //   라벨과 동작이 항상 같은 자리에서 정해지도록 여기서 함께 갱신한다.
+        btnLogin.onclick = currentUser
+            ? function () {
+                if (!confirm(window.t ? window.t('msg_logout_confirm', 'Log out?') : '로그아웃 하시겠습니까?')) return;
+                window.__authInProgress = true;
+                const _done = function () {
+                    window.__authInProgress = false;
+                    try { localStorage.removeItem('sb-qinvtnhiidtmrzosyvys-auth-token'); } catch (e) {}
+                    if (document.body.classList.contains('editor-active')) return;
+                    const h = window.location.hostname;
+                    if (h.includes('cafe0101')) window.location.replace('/?lang=ja');
+                    else if (h.includes('cafe3355') || h.includes('chameleon.design')) window.location.replace('/');
+                    else window.location.reload();
+                };
+                const _sb2 = sb || window.sb;
+                if (_sb2 && _sb2.auth) _sb2.auth.signOut().then(_done).catch(_done);
+                else _done();
+            }
+            : function () {
+                const m = document.getElementById('loginModal');
+                if (m) m.style.display = 'flex';
+            };
         if (btnLogin.updateState) btnLogin.updateState();
     }
     const btnLib = document.getElementById("btnMyLibrary");

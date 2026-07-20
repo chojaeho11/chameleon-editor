@@ -1,6 +1,6 @@
 ﻿console.log('🔵 order.js v174 loaded');
 import { canvas } from "./canvas-core.js?v=435";
-import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=443";
+import { PRODUCT_DB, ADDON_DB, ADDON_CAT_DB, cartData, currentUser, sb } from "./config.js?v=444";
 import { SITE_CONFIG } from "./site-config.js?v=435";
 import { applySize } from "./canvas-size.js?v=435";
 import { pageDataList, currentPageIndex } from "./canvas-pages.js?v=435";
