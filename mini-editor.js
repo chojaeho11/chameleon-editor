@@ -7242,7 +7242,8 @@
             if (note) { note.textContent = _meAiTr('불러오는 중…', '読み込み中…', 'Loading…'); note.style.display = 'block'; }
             var r = await sb.from('design_gallery')
                 .select('id,image_url,thumb_url,prompt,created_at')
-                .eq('user_id', uid).order('created_at', { ascending: false }).limit(40);
+                // 5개씩 2줄 = 최신 10개만 (사장님 지시). 더 보기가 필요해지면 여기서 늘린다.
+                .eq('user_id', uid).order('created_at', { ascending: false }).limit(10);
             if (r.error) throw r.error;
             _meMyRows = r.data || [];
             if (!_meMyRows.length) {
