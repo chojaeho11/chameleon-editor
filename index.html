@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720144838';
+    var CV = '20260720145152';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1675,23 +1675,9 @@ window._tcmFallbackClick = function(code) {
             }
             /* PC: 작품을 크게 (마퀴는 위에서 이미 화면 폭 전체) */
             @media (min-width: 701px) {
-                /* 2026-07-20: 바로가기 아이콘 6개를 히어로 '위 우측' 으로 (사장님 지시).
-                   #mgrQuoteHero 는 재배치 스크립트가 #startScreen 직계자식(히어로 다음)으로 옮기고,
-                   #startScreen 은 flex column 이라 order 로 순서만 앞당기면 된다.
-                   ※ 절대위치를 쓰지 않는 이유: #mgrQuoteHero 안에 position:fixed 모달 2개
-                     (전화안내·금액주문)가 들어있어서 transform/contain 계열을 걸면 모달이 그 안에 갇힌다. */
-                /* 2026-07-20: 1100px 박스 안에서 우측정렬하면 화면 기준으론 가운데로 보인다.
-                   → 데스크톱에선 폭 제한을 풀어 진짜 화면 오른쪽 끝으로 보낸다. */
-                #mgrQuoteHero {
-                    order:-1;
-                    max-width:none !important; width:100% !important;
-                    margin:6px 0 0 !important; padding:0 28px 0 0 !important;
-                }
-                #mgrActionsGrid {
-                    display:flex !important; justify-content:flex-end !important;
-                    gap:12px !important; flex-wrap:wrap;
-                }
-                #mgrActionsGrid .mgr-action { width:auto; min-width:64px; }
+                /* 2026-07-20: 바로가기 아이콘은 원래 자리(디자인 갤러리 ↔ 제품 섹션 사이)로 되돌림.
+                   한때 히어로 위 우측으로 올렸다가 사장님 지시로 복귀 — 위치 관련 override 는 두지 않는다.
+                   (겹침 문제는 .hero-section 의 justify-content:flex-start + padding-bottom 으로 이미 해결됨) */
                 #heroWorks .me-gal-marquee { gap:12px; }
                 #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
                 #heroWorks .me-gal-item { height:220px; }
