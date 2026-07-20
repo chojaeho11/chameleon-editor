@@ -7041,6 +7041,77 @@
         catch (e) { console.warn('[meHero] AI 모달 열기 실패', e); _meHeroPending = null; }
     };
 
+    // ─── 2026-07-20: 대지 아래 [자세히보기 / 수정하기] ────────────────────────
+    //   수정은 AI 모달이 아니라 이 화면에서 하도록 (사장님 지시).
+
+    // 지금 대지를 크게 보여준다 (라이트박스)
+    window._meViewLarge = async function () {
+        var png = null;
+        try { png = await window._meExportPNG(); } catch (e) { console.warn('[meView] export', e); }
+        if (!png) return;
+        var old = document.getElementById('meViewLargeOv'); if (old) old.remove();
+        var ov = document.createElement('div');
+        ov.id = 'meViewLargeOv';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:100060; background:rgba(15,23,42,0.88);'
+            + 'display:flex; align-items:center; justify-content:center; padding:24px; cursor:zoom-out;';
+        ov.innerHTML = '<img src="' + png + '" style="max-width:96%; max-height:92%; object-fit:contain; border-radius:8px;">'
+            + '<button type="button" style="position:absolute; top:18px; right:22px; width:38px; height:38px;'
+            + 'border:none; border-radius:50%; background:rgba(255,255,255,0.9); color:#0f172a; font-size:20px; cursor:pointer;">&times;</button>';
+        ov.addEventListener('click', function () { ov.remove(); });
+        document.body.appendChild(ov);
+    };
+
+    // 수정 패널 열기/닫기
+    window._meFixToggle = function (force) {
+        var p = document.getElementById('meFixPanel'); if (!p) return;
+        var show = (force === undefined) ? (p.style.display === 'none') : !!force;
+        p.style.display = show ? 'block' : 'none';
+        if (show) { var t = document.getElementById('meFixInput'); if (t) setTimeout(function () { t.focus(); }, 60); }
+    };
+
+    // 현재 대지를 참조로 넘겨 적은 부분만 다시 그린다
+    window._meFixRun = async function () {
+        var t = document.getElementById('meFixInput');
+        var msg = document.getElementById('meFixMsg');
+        var btn = document.getElementById('meFixRunBtn');
+        var note = (t && t.value || '').trim();
+        var say = function (s, color) { if (msg) { msg.textContent = s; msg.style.color = color || '#64748b'; msg.style.display = 'block'; } };
+        if (note.length < 2) { if (t) t.focus(); say(_meAiTr('어디를 어떻게 고칠지 적어주세요.', 'どこをどう直すか入力してください。', 'Describe what to change.'), '#dc2626'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = _meAiTr('수정 중…', '修正中…', 'Revising…'); }
+        say(_meAiTr('디자인을 수정하고 있어요 · 1분쯤 걸려요', 'デザインを修正中 · 1分ほどかかります', 'Revising · about a minute'));
+        try {
+            // 지금 화면(대지) 그대로를 참조로 — 고객이 손댄 것까지 반영된다
+            var cur = await window._meExportPNG();
+            if (!cur) throw new Error('현재 디자인을 읽지 못했습니다');
+            var refNorm = await _meAiNormalizeRef(cur, 1536);
+            var prompt = 'Reproduce the attached image AS CLOSELY AS POSSIBLE — same layout, same composition, same colors, same fonts, same wording, same illustration style. '
+                + 'Change ONLY this and nothing else: "' + note + '". '
+                + 'Everything not mentioned must stay visually identical to the attached image. Do NOT redesign, do NOT rearrange, do NOT alter other text. '
+                + 'The background must extend fully to all edges (full bleed). Do NOT draw any border or frame.';
+            var size = (me && me.natW && me.natH)
+                ? (me.natW > me.natH * 1.15 ? '1536x1024' : (me.natH > me.natW * 1.15 ? '1024x1536' : '1024x1024'))
+                : '1024x1024';
+            var r = await fetch(SB_URL + '/functions/v1/ai-image-gen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY },
+                body: JSON.stringify({ prompt: prompt, size: size, refImage: refNorm || cur })
+            });
+            var d = await r.json();
+            if (!r.ok || d.error) throw new Error(d.detail || d.error || ('HTTP ' + r.status));
+            // 이전 배경(갤러리 미리보기/직전 AI 결과)을 걷어내고 새 결과를 꽉 채워 깐다
+            try { _meGalRemovePreview(); } catch (_g) {}
+            window._meAddImage(d.url, { fillCanvas: true, toBack: true }, function (it) { if (it) it._isAiBg = true; });
+            say(_meAiTr('수정 완료!', '修正しました！', 'Done!'), '#16a34a');
+            if (t) t.value = '';
+            setTimeout(function () { window._meFixToggle(false); if (msg) msg.style.display = 'none'; }, 1200);
+        } catch (e) {
+            console.warn('[meFix]', e);
+            say('⚠️ ' + (e.message || _meAiTr('수정 실패', '修正失敗', 'Failed')), '#dc2626');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = _meAiTr('수정하기', '修正する', 'Revise'); }
+        }
+    };
+
     window._meGalleryLoad = _meGalleryLoad;
     window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(v || ''); }, 300); }; })();
 

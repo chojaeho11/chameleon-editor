@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720170044';
+    var CV = '20260720170638';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5795,13 +5795,30 @@ function scrollHotdeal(gridId, dir) {
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-                <a id="aiNbAiDl" class="aiNb-btn" style="flex:1; padding:12px 14px; font-size:14px; white-space:nowrap;" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
+                <!-- 2026-07-20: 다운로드 1개 → 자세히보기 / 수정하기 / 다운로드 3개로 분리 (사장님 지시) -->
+                <button type="button" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap; background:#fff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meViewLarge && window._meViewLarge()">자세히보기</button>
+                <button type="button" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap; background:#eef2ff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meFixToggle && window._meFixToggle()">수정하기</button>
+                <a id="aiNbAiDl" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap;" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
                 <div id="meZoomBar" style="display:flex; align-items:center; gap:4px; flex:0 0 auto;">
                     <button type="button" class="me-zoom-btn" title="축소 (휠 아래)" onclick="window._meZoom(-1)">−</button>
                     <button type="button" class="me-zoom-btn" id="meZoomPct" title="화면 맞춤 (100%)" onclick="window._meZoomFit()" style="min-width:50px; font-size:13px; font-variant-numeric:tabular-nums;">100%</button>
                     <button type="button" class="me-zoom-btn" title="확대 (휠 위)" onclick="window._meZoom(1)">+</button>
                     <button type="button" class="me-zoom-btn" id="mePanBtn" title="화면 이동 (스페이스바+드래그)" onclick="window._meTogglePan()" style="font-size:13px;"><span data-i18n="me_pan">이동</span></button>
                 </div>
+            </div>
+            <!-- 2026-07-20: 인라인 수정 패널 — [수정하기] 를 누르면 열린다.
+                 지금 대지에 있는 디자인을 참조로 넘겨, 적은 부분만 고쳐 다시 생성한다. -->
+            <div id="meFixPanel" style="display:none; margin-top:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
+                <div style="font-size:13px; color:#475569; line-height:1.6; margin-bottom:8px;">
+                    고치고 싶은 부분을 적어주세요. 나머지는 그대로 두고 그 부분만 다시 그려 드립니다.
+                </div>
+                <textarea id="meFixInput" rows="2" placeholder="예: 글씨를 더 크게, 배경을 파란색으로, 가격을 5,000원으로"
+                    style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:10px; font-size:13.5px; font-family:inherit; resize:vertical; outline:none;"></textarea>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button type="button" id="meFixCancel" style="flex:0 0 auto; padding:11px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-size:13.5px; cursor:pointer; font-family:inherit;" onclick="window._meFixToggle && window._meFixToggle(false)">닫기</button>
+                    <button type="button" id="meFixRunBtn" style="flex:1; padding:11px; border:none; border-radius:10px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;" onclick="window._meFixRun && window._meFixRun()">수정하기</button>
+                </div>
+                <div id="meFixMsg" style="display:none; margin-top:8px; font-size:12.5px; color:#64748b;"></div>
             </div>
             <!-- 2026-07-18: 에디터 진입 버튼(원클릭 AI디자인 / 디자인 편집하기) — 다운로드 아래, 작품 갤러리 위로 이동 -->
             <div class="me-intro" id="meIntro">
@@ -5837,7 +5854,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=525"></script>
+<script src="./mini-editor.js?v=526"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
