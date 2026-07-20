@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720133354';
+    var CV = '20260720134423';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1627,9 +1627,18 @@ window._tcmFallbackClick = function(code) {
             /* ─── 히어로: 고객작품 갤러리 (2026-07-20, 캐러셀 대체) ───
                마퀴 자체(.me-gal-*)는 mini-editor.css 에 있고 여기선 주변 UI 만.
                CLAUDE.md 디자인 원칙: 아이콘 없음 / 그림자 없음 / 볼드 대신 색·크기·여백. */
+            /* 2026-07-20: 마퀴만 화면 폭 전체로 흐르게 하려고 컨테이너를 풀고,
+               글/입력창만 1100px 로 가운데 정렬한다.
+               (100vw + 음수 마진 방식은 레이아웃이 깨져서 폐기 — 겹침·요소 사라짐 발생) */
             #heroWorks {
-                max-width:1100px; width:100%; margin:0 auto; padding:0 16px;
+                max-width:none; width:100%; margin:0; padding:0;
                 box-sizing:border-box; display:flex; flex-direction:column; gap:14px;
+            }
+            #heroWorks .hw-head,
+            #heroWorks .hw-prompt,
+            #heroWorks .hw-tip {
+                max-width:1100px; width:100%; margin-left:auto; margin-right:auto;
+                padding-left:16px; padding-right:16px; box-sizing:border-box;
             }
             #heroWorks .hw-head { text-align:center; }
             #heroWorks .hw-title {
@@ -1639,7 +1648,7 @@ window._tcmFallbackClick = function(code) {
                 margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6;
             }
             #heroWorks .hw-prompt {
-                display:flex; gap:8px; max-width:620px; width:100%; margin:0 auto;
+                display:flex; gap:8px; max-width:620px;
             }
             #heroWorks #hwPrompt {
                 flex:1; min-width:0; padding:14px 18px; font-size:15px; font-family:inherit;
@@ -1665,39 +1674,31 @@ window._tcmFallbackClick = function(code) {
             }
             /* 로딩 중 빈 줄이 덜 허전하게 — 작품이 채워지면 자연히 가려진다 */
             #heroWorks .me-gal-row { min-height:132px; background:#f1f5f9; border-radius:10px; }
-            /* 2026-07-20: PC 는 작품을 크게, 화면 끝까지 꽉 차게 (사장님 요청).
-               1100px 컨테이너를 뚫고 뷰포트 전체 폭으로 — #startScreen 이 overflow-x:hidden 이라 안전. */
+            /* PC: 작품을 크게 (마퀴는 위에서 이미 화면 폭 전체) */
             @media (min-width: 701px) {
-                #heroWorks .me-gal-marquee {
-                    width:100vw; margin-left:calc(50% - 50vw); gap:12px;
-                }
-                #heroWorks .me-gal-row { min-height:230px; border-radius:0; }
-                #heroWorks .me-gal-item { height:230px; }
+                #heroWorks .me-gal-marquee { gap:12px; }
+                #heroWorks .me-gal-row { min-height:220px; border-radius:0; }
+                #heroWorks .me-gal-item { height:220px; }
                 #heroWorks .me-gal-track { gap:12px; }
-            }
-            @media (min-width: 1500px) {
-                #heroWorks .me-gal-row { min-height:270px; }
-                #heroWorks .me-gal-item { height:270px; }
             }
 
             /* ─── 모바일 ─── */
             @media (max-width: 700px) {
                 .hero-section { padding:8px 0 4px !important; min-height:240px !important; display:block !important; overflow:visible !important; }
-                #heroWorks { padding:0 10px; gap:11px; }
+                #heroWorks { padding:0; gap:11px; }
                 #heroWorks .hw-title { font-size:21px; }
                 #heroWorks .hw-sub { font-size:12.5px; margin-top:5px; }
                 #heroWorks .hw-prompt { gap:6px; }
                 #heroWorks #hwPrompt { padding:11px 15px; font-size:14px; }
                 #heroWorks #hwGoBtn { padding:11px 18px; font-size:14px; }
                 #heroWorks .hw-tip { font-size:11.5px; }
-                /* 2026-07-20: 모바일에서 아래(2번째) 줄이 잘려 보이던 문제.
-                   .hero-section 이 display:block + min-height 로 묶여 있어 두 줄이 다 들어갈
-                   높이를 확보하지 못했다 → 히어로가 내용만큼 늘어나도록 풀고 아이템을 줄인다. */
-                .hero-section { height:auto !important; min-height:0 !important; overflow:visible !important; }
-                #heroWorks { overflow:visible; }
+                /* 2026-07-20: 모바일은 작품을 작게 해서 두 줄이 모두 들어가게 한다.
+                   (.hero-section 의 min-height/height 는 건드리지 않는다 — 건드렸더니
+                    히어로 전체가 접혀서 아무것도 안 보였다) */
                 #heroWorks .me-gal-marquee { gap:6px; }
-                #heroWorks .me-gal-row { min-height:88px; }
-                #heroWorks .me-gal-item { height:88px; }
+                #heroWorks .me-gal-row { min-height:92px; }
+                #heroWorks .me-gal-item { height:92px; }
+                #heroWorks .hw-head, #heroWorks .hw-prompt, #heroWorks .hw-tip { padding-left:10px; padding-right:10px; }
             }
 
             /* 기존 hero 요소들 (호환성 위해 보존, 화면에선 안 보임) */
