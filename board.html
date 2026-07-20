@@ -1853,12 +1853,35 @@
                 detectedSite = _detectCountry();
             }
 
+            // 2026-07-20: 신규/재방문 구분용 방문자 ID. tracker.js 와 같은 키(cm_vid)를 써서
+            //   블로그 방문도 같은 사람으로 이어진다. 안 넣으면 블로그 유입이 전부 '신규' 로 잡힌다.
+            let _vid = null, _isRet = null, _uid = null;
+            try {
+                _vid = localStorage.getItem('cm_vid');
+                _isRet = !!_vid;
+                if (!_vid) {
+                    _vid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                         : 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+                    localStorage.setItem('cm_vid', _vid);
+                }
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k || k.indexOf('-auth-token') < 0) continue;
+                    const s = JSON.parse(localStorage.getItem(k) || '{}');
+                    const u = (s && s.user) || (s && s.currentSession && s.currentSession.user);
+                    if (u && u.id) { _uid = u.id; break; }
+                }
+            } catch (_) {}
+
             const { data, error } = await sb
                 .from('page_views')
                 .insert([{
                     referrer: finalReferrer,
                     duration: 0,
-                    site: detectedSite
+                    site: detectedSite,
+                    visitor_id: _vid,
+                    is_returning: _isRet,
+                    user_id: _uid
                 }])
                 .select()
                 .single();

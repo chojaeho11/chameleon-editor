@@ -266,6 +266,42 @@
         } catch (_) { return null; }
     }
 
+    // ── 2026-07-20: 방문자 식별 (신규 / 재방문 구분) ─────────────────────────
+    //   page_views 에는 방문자를 구분할 값이 하나도 없어서 "같은 사람이 10번 온 것"과
+    //   "10명이 온 것"이 구별되지 않았다. 브라우저마다 UUID 를 하나 심어 구분한다.
+    //   판정은 클라이언트에서 한다 — 관리자 화면에서 13만 행을 훑어 중복 제거하는 방식은 느리고 부정확.
+    var VID_KEY = 'cm_vid';
+
+    // 반환: { id, isReturning }  — 키가 이미 있었으면 재방문
+    function getVisitorId() {
+        try {
+            var id = localStorage.getItem(VID_KEY);
+            if (id) return { id: id, isReturning: true };
+            id = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+            localStorage.setItem(VID_KEY, id);
+            return { id: id, isReturning: false };
+        } catch (_) { return { id: null, isReturning: null }; }   // 프라이빗 모드 등 — 판정 불가
+    }
+
+    // 로그인 사용자 id.
+    //   ⚠ window.currentUser 를 쓰면 안 된다 — config.js 가 getSession() await 뒤에 채우는데
+    //     이 트래커는 DOMContentLoaded 에 돌아서, 로그인 상태여도 그 시점엔 거의 항상 비어 있다.
+    //     Supabase 가 세션을 넣어두는 localStorage 키를 직접 읽으면 동기적으로 확실히 얻는다.
+    function getLoggedUserId() {
+        try {
+            for (var i = 0; i < localStorage.length; i++) {
+                var k = localStorage.key(i);
+                if (!k || k.indexOf('-auth-token') < 0) continue;
+                var s = JSON.parse(localStorage.getItem(k) || '{}');
+                var u = (s && s.user) || (s && s.currentSession && s.currentSession.user);
+                if (u && u.id) return u.id;
+            }
+        } catch (_) {}
+        return null;
+    }
+
     function track() {
         // 동일 페이지 로드에서 중복 호출 방지
         if (window.__tracker_fired) return;
@@ -287,13 +323,19 @@
         }
 
         var siteDomain = detectSiteDomain();
+        // __INTERNAL__ 로 빠진 뒤에 만든다 — 내부 이동으로 재방문 판정이 오염되지 않게
+        var vis = getVisitorId();
+        var uid = getLoggedUserId();
 
         detectCountry(function (country) {
             var payload = {
                 referrer: source,
                 duration: 0,
                 site: country,
-                site_domain: siteDomain
+                site_domain: siteDomain,
+                visitor_id: vis.id,
+                is_returning: vis.isReturning,
+                user_id: uid
             };
             insertVisit(payload, function (visitId) {
                 if (!visitId) return;
