@@ -2584,16 +2584,30 @@ html, body { background: #ffffff !important; }
               </label>
             </div>
           </div>
+          <!-- 2026-07-20: 실사출력 전용 규격 프리셋 (A4/A3/A2/A1). 실사출력이 아닐 땐 숨김.
+               입력칸이 정수 cm 라 A 규격 소수점(29.7 등)은 반올림해서 넣는다 — 실사출력은
+               재단이 있어 1~3mm 차이는 무의미하고, 값을 그대로 넣으면 브라우저가 step 오류로 막는다. -->
+          <div id="soSizePresetRow" style="display:none; gap:6px; margin-bottom:8px;">
+            ${[['A4', 21, 30], ['A3', 30, 42], ['A2', 42, 59], ['A1', 59, 84]].map(function (s) {
+              return '<button type="button" class="so-size-preset" data-w="' + s[1] + '" data-h="' + s[2] + '"'
+                + ' onclick="window._soPickSizePreset(' + s[1] + ',' + s[2] + ',this)"'
+                + ' style="flex:1 1 0; padding:8px 4px; border:1.5px solid #d1d5db; border-radius:8px; background:#fff;'
+                + ' cursor:pointer; font-family:inherit; line-height:1.25;">'
+                + '<span style="display:block; font-size:13px; color:#0f172a;">' + s[0] + '</span>'
+                + '<span style="display:block; font-size:9.5px; color:#94a3b8;">' + s[1] + '×' + s[2] + '</span>'
+                + '</button>';
+            }).join('')}
+          </div>
           <div id="soCustomDimsRow" style="display:flex; flex-direction:row; flex-wrap:nowrap; gap:6px; align-items:flex-end; margin-bottom:8px;">
             <div style="flex:1 1 0; min-width:0; text-align:center;">
               <div id="soCustomWLabel" style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('가로 (W)', '横 (W)', 'Width (W)')}</div>
-              <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
+              <input type="number" id="soCustomW" value="100" min="10" max="2000" oninput="window._soOnCustomDimsChange(); window._soSyncSizePreset && window._soSyncSizePreset();"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
             <span style="color:#94a3b8; font-weight:bold; padding-bottom:8px; flex:0 0 auto;">×</span>
             <div style="flex:1 1 0; min-width:0; text-align:center;">
               <div id="soCustomHLabel" style="font-size:10px; color:#64748b; font-weight:700; margin-bottom:3px;">${tr('세로 (H)', '縦 (H)', 'Height (H)')}</div>
-              <input type="number" id="soCustomH" value="60" min="10" max="2000" oninput="window._soOnCustomDimsChange()"
+              <input type="number" id="soCustomH" value="60" min="10" max="2000" oninput="window._soOnCustomDimsChange(); window._soSyncSizePreset && window._soSyncSizePreset();"
                 style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box; min-width:0;">
             </div>
           </div>
@@ -9963,6 +9977,34 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
     };
 
+    // 2026-07-20: 실사출력 규격 프리셋 (A4/A3/A2/A1) — 값 채우고 기존 변경 핸들러를 그대로 태운다.
+    window._soPickSizePreset = function (w, h) {
+        var wEl = document.getElementById('soCustomW');
+        var hEl = document.getElementById('soCustomH');
+        if (!wEl || !hEl) return;
+        // 제품별 최대폭(캘지·유포지 150 / 그 외 300) 을 넘지 않게
+        var maxW = parseInt(wEl.max, 10) || 300;
+        if (w > maxW) { var t = w; w = h; h = t; }          // 눕혀서 들어가면 가로/세로를 바꿔 담는다
+        wEl.value = Math.min(w, maxW);
+        hEl.value = h;
+        if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+        window._soSyncSizePreset();
+    };
+    // 현재 입력값과 일치하는 프리셋에 선택 표시
+    window._soSyncSizePreset = function () {
+        var wEl = document.getElementById('soCustomW');
+        var hEl = document.getElementById('soCustomH');
+        var cw = wEl ? parseInt(wEl.value, 10) : 0;
+        var ch = hEl ? parseInt(hEl.value, 10) : 0;
+        document.querySelectorAll('.so-size-preset').forEach(function (b) {
+            var bw = parseInt(b.getAttribute('data-w'), 10);
+            var bh = parseInt(b.getAttribute('data-h'), 10);
+            var on = (cw === bw && ch === bh) || (cw === bh && ch === bw);   // 눕힌 경우도 인정
+            b.style.borderColor = on ? '#4338ca' : '#d1d5db';
+            b.style.background  = on ? '#eef2ff' : '#fff';
+        });
+    };
+
     window._soOnCustomDimsChange = function () {
         // 프리셋 모드면 W/H input 입력 무시 (pill 선택값 유지)
         if (state && state.presetSizeFixed) return;
@@ -14647,6 +14689,10 @@ html, body { background: #ffffff !important; }
                     var _wEl = document.getElementById('soCustomW');
                     if (_wEl) { _wEl.max = _rpMaxW; _wEl.value = Math.min(parseInt(_wEl.value, 10) || 100, _rpMaxW); }
                     var _hEl = document.getElementById('soCustomH'); if (_hEl) _hEl.max = 3000;
+                    // 2026-07-20: 규격 프리셋(A4~A1) 은 실사출력에서만 노출 (사장님 지시)
+                    var _psRow = document.getElementById('soSizePresetRow');
+                    if (_psRow) _psRow.style.display = 'flex';
+                    if (typeof window._soSyncSizePreset === 'function') window._soSyncSizePreset();
                     if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
                 } catch (_rpe) {}
                 if (qtySec) {
@@ -14690,6 +14736,10 @@ html, body { background: #ffffff !important; }
                 if (_rpQtyInp) { _rpQtyInp.value = Math.max(1, parseInt(_rpQtyInp.value, 10) || 1); _rpQtyInp.min = 1; }
             } else if (_rpSec) {
                 _rpSec.style.display = 'none';
+                // 2026-07-20: 규격 프리셋은 실사출력 전용 — 다른 제품에선 반드시 숨긴다
+                //   (안 숨기면 현수막·명함 등 다른 제품 사이즈 칸 위에 그대로 남는다)
+                var _psRow2 = document.getElementById('soSizePresetRow');
+                if (_psRow2) _psRow2.style.display = 'none';
                 // 다른 상품 진입 시 qty 단위 라벨 복원
                 if (qtySec) {
                     var _qtyUnit2 = qtySec.querySelector('.so-qty-unit');
