@@ -7220,11 +7220,16 @@
     // 캔버스 삽입 + (스카시면)디자이너 첨부 — 모달은 닫지 않음(코어)
     function _meAiDoInsert() {
         if (!_meAiPendingUrl) return;
-        // 2026-07-20: 홈 히어로에서 온 경우 삽입 대상은 메인 에디터(fabric window.canvas)다.
-        //   [버그] 히어로는 startEditorDirect 로 메인 에디터를 여는데 이 함수는 미니에디터(me)에
-        //   넣고 있었다 → 생성은 됐는데 "캔버스에 넣기" 를 눌러도 빈 화면. 대상만 갈라준다.
-        if (_meHeroMode && window.canvas && typeof fabric !== 'undefined' && fabric.Image) {
-            _meHeroInsertToMain(_meAiPendingUrl);
+        // 2026-07-20: 홈 히어로에서 온 경우 — 에디터를 거치지 않고 바로 제품 선택으로 간다.
+        //   예전엔 모달을 띄우려고 메인 에디터를 열어뒀는데, 어차피 제품 주문창으로 넘어가므로
+        //   뒤에 어두운 에디터 화면만 남아 방해가 됐다(사장님 지적). 에디터가 열려 있는 경우에만
+        //   그 캔버스에도 얹어준다.
+        if (_meHeroMode) {
+            if (window.canvas && typeof fabric !== 'undefined' && fabric.Image) {
+                _meHeroInsertToMain(_meAiPendingUrl);
+            } else {
+                setTimeout(function () { try { _meHeroProductPicker(_meAiPendingUrl); } catch (_p) {} }, 200);
+            }
             return;
         }
         var opts = { toBack: true };

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720181803';
+    var CV = '20260720182246';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1132,9 +1132,8 @@ window._tcmFallbackClick = function(code) {
             })(0);
 
             // ── 실행: 에디터를 열고 미니에디터 AI 로 생성 ──
-            //   startEditorDirect 는 자체 로그인 게이트가 /?product=custom 으로 보내버리므로
-            //   여기서 로그인을 먼저 처리하고, 복귀 후 ?heroai=1 로 이어서 실행한다.
-            var CANVAS_W = 400, CANVAS_H = 267;   // 3:2 — gpt-image-2 가로 출력비와 동일
+            //   2026-07-20: 에디터를 열지 않으므로 캔버스 크기 상수도 필요 없어졌다.
+            //   생성된 디자인은 제품 선택 → 그 제품 주문창의 대지 크기에 맞춰 들어간다.
             async function startAi(prompt, refUrl){
                 var payload = { prompt: String(prompt||'').trim(), refUrl: refUrl || '' };
                 if (!payload.prompt && !payload.refUrl) {
@@ -1143,15 +1142,14 @@ window._tcmFallbackClick = function(code) {
                     return;
                 }
                 try { sessionStorage.setItem('_heroAi', JSON.stringify(payload)); } catch(e) {}
-                // 2026-07-20: 비회원도 바로 만들어볼 수 있게 로그인 게이트를 건너뛴다 (사장님 지시).
-                //   회원가입은 상단바 로그인 버튼으로, 저장·주문 시점에 어차피 로그인이 요구된다.
+                // 2026-07-20: 에디터를 열지 않고 홈 화면 위에 AI 모달만 띄운다 (사장님 지시).
+                //   전에는 모달을 얹으려고 메인 에디터를 열었는데, 생성 후엔 곧바로 제품 선택 →
+                //   제품 주문창으로 가므로 뒤에 남는 어두운 에디터 화면이 방해만 됐다.
+                //   로그인도 필요 없다 — 주문 단계에서 어차피 요구된다.
                 btn.disabled = true;
-                try {
-                    await window.startEditorDirect('custom', CANVAS_W, CANVAS_H, null, { skipLogin: true });
-                    await runPending();
-                } catch(e) {
-                    console.warn('[heroWorks] 에디터 진입 실패', e);
-                } finally { btn.disabled = false; }
+                try { await runPending(); }
+                catch(e) { console.warn('[heroWorks] AI 모달 열기 실패', e); }
+                finally { btn.disabled = false; }
             }
             // 에디터가 뜬 뒤 미니에디터 AI 모달을 띄운다 (_meHeroAiStart 준비될 때까지 대기)
             function runPending(){
@@ -5856,7 +5854,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=532"></script>
+<script src="./mini-editor.js?v=533"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
