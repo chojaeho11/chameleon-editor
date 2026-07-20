@@ -6962,7 +6962,10 @@
             var file = new File([blob], 'ai-design-' + Date.now() + '.png', { type: blob.type || 'image/png' });
             if (typeof window._soHandleFile === 'function') await window._soHandleFile(file);
             try { if (window.me && window.me.items) window.me.items.length = 0; } catch (_e0) {}
-            if (typeof window._meAddImage === 'function') window._meAddImage(dataUrl, { fitCanvas: true });
+            // 2026-07-20: fitCanvas(안쪽 맞춤)면 대지 비율이 다를 때 흰 여백이 크게 남는다.
+            //   (세로배너 디자인 → 600x1800 허니콤배너 대지에서 좁은 쪽 기준으로 축소돼 여백 다수)
+            //   → fillCanvas(꽉 채움)로 바꿔 넘치는 부분만 잘리게 한다. 배경이므로 toBack.
+            if (typeof window._meAddImage === 'function') window._meAddImage(dataUrl, { fillCanvas: true, toBack: true });
         } catch (e) {
             console.warn('[meHero] 제품 주문 연결 실패 — 제품 페이지로 이동', e);
             location.href = '/?product=' + encodeURIComponent(code);
