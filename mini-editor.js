@@ -7210,6 +7210,84 @@
         }
     };
 
+    // ─── 2026-07-20: 「내가 만든 디자인」 개인 보관함 ─────────────────────────
+    //   design_gallery 를 본인(user_id) 것만 필터링해서 쓴다. status 는 '공개 여부' 일 뿐이라
+    //   pending/hidden/rejected 도 본인에게는 모두 보인다 (RLS 정책 dg_read_own).
+    //   관리자가 거절해도 여기서는 사라지지 않는다 — sql/design_gallery_soft_reject.sql 참고.
+    var _meMyRows = [];
+
+    window._meMyDesignsToggle = function (force) {
+        var p = document.getElementById('meMyDesigns'); if (!p) return;
+        var show = (force === undefined) ? (p.style.display === 'none' || !p.style.display) : !!force;
+        p.style.display = show ? 'block' : 'none';
+        if (show) _meMyDesignsLoad();
+    };
+
+    async function _meMyDesignsLoad() {
+        var grid = document.getElementById('meMyGrid');
+        var note = document.getElementById('meMyNote');
+        if (!grid) return;
+        var say = function (msg) { if (note) { note.textContent = msg; note.style.display = 'block'; } grid.innerHTML = ''; };
+        try {
+            var sb = window.sb;
+            if (!sb) { say(_meAiTr('잠시 후 다시 열어주세요.', 'しばらくしてから開いてください。', 'Please try again in a moment.')); return; }
+            var u = await sb.auth.getUser();
+            var uid = u && u.data && u.data.user && u.data.user.id;
+            if (!uid) {
+                say(_meAiTr('로그인하시면 만드신 디자인이 여기에 보관됩니다.',
+                            'ログインすると、作成したデザインがここに保存されます。',
+                            'Log in and your designs will be kept here.'));
+                return;
+            }
+            if (note) { note.textContent = _meAiTr('불러오는 중…', '読み込み中…', 'Loading…'); note.style.display = 'block'; }
+            var r = await sb.from('design_gallery')
+                .select('id,image_url,thumb_url,prompt,created_at')
+                .eq('user_id', uid).order('created_at', { ascending: false }).limit(40);
+            if (r.error) throw r.error;
+            _meMyRows = r.data || [];
+            if (!_meMyRows.length) {
+                say(_meAiTr('아직 만드신 디자인이 없어요. [AI디자인 실행] 으로 만들어 보세요.',
+                            'まだ作成したデザインがありません。[AIデザイン実行] から作ってみてください。',
+                            'No designs yet — try [AI Design].'));
+                return;
+            }
+            if (note) note.style.display = 'none';
+            grid.innerHTML = _meMyRows.map(function (row) {
+                var u2 = row.thumb_url || row.image_url;
+                return '<button type="button" class="me-my-item" data-my="' + row.id + '" title="' + _meAiEsc(row.prompt || '') + '">'
+                     + '<img src="' + _meAiEsc(u2) + '" loading="lazy" alt=""></button>';
+            }).join('');
+            grid.querySelectorAll('button[data-my]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var row = _meMyRows.filter(function (x) { return String(x.id) === b.getAttribute('data-my'); })[0];
+                    if (row) _meMyDesignPick(row);
+                });
+            });
+        } catch (e) {
+            console.warn('[meMy] 보관함 로드 실패', e);
+            say(_meAiTr('불러오지 못했어요.', '読み込めませんでした。', 'Could not load.'));
+        }
+    }
+
+    // 보관함에서 고른 디자인을 대지에 올린다.
+    //   원격 URL 을 그대로 쓰면 canvas 가 taint 되어 다운로드·주문 PDF 가 깨진다 → dataURL 로 변환.
+    async function _meMyDesignPick(row) {
+        var url = row.image_url || row.thumb_url;
+        if (!url) return;
+        try {
+            var blob = await (await fetch(url, { mode: 'cors' })).blob();
+            var dataUrl = await new Promise(function (rs, rj) {
+                var fr = new FileReader();
+                fr.onload = function () { rs(String(fr.result)); };
+                fr.onerror = rj;
+                fr.readAsDataURL(blob);
+            });
+            try { _meGalRemovePreview(); } catch (_g) {}
+            window._meAddImage(dataUrl, { fillCanvas: true, toBack: true }, function (it) { if (it) it._isAiBg = true; });
+            window._meMyDesignsToggle(false);
+        } catch (e) { console.warn('[meMy] 삽입 실패', e); }
+    }
+
     window._meGalleryLoad = _meGalleryLoad;
     window._meGallerySearch = (function () { var t = null; return function (v) { clearTimeout(t); t = setTimeout(function () { _meGalleryLoad(v || ''); }, 300); }; })();
 
@@ -7362,7 +7440,10 @@
             var status = needsReview ? 'pending' : 'public';
             var sb = window.sb; if (!sb || !imageUrl) return;
             var scrubbed = _meScrubPII(rawPrompt).slice(0, 300);
-            if (scrubbed.length < 2) return;
+            // 2026-07-20: 예전엔 여기서 return 해 등록 자체를 건너뛰었다 →
+            //   프롬프트가 짧은 생성물은 고객 개인 보관함(「내가 만든 디자인」)에서도 사라졌다.
+            //   이제는 공개만 막고(hidden) 저장은 한다 — 본인은 언제든 다시 꺼내 쓸 수 있어야 한다.
+            if (scrubbed.length < 2) status = 'hidden';
 
             // 1) dataURL → Blob → storage 업로드 (design 버킷 gallery/ 경로)
             var blob;

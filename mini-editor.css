@@ -64,8 +64,27 @@
             50% { background-position:100% 50%; }
             100% { background-position:0% 50%; }
         }
-        @media (prefers-reduced-motion:reduce) { .me-intro-ai, .me-intro-edit { animation:none; } }
+        /* 2026-07-20: 내가 만든 디자인 — 차분한 남색 계열 (앞 두 버튼과 구분되게) */
+        .me-intro-mine {
+            background:linear-gradient(120deg,#0f172a,#1e3a8a,#334155,#0f172a);
+            background-size:300% 300%;
+            animation:meIntroFlow 10s ease infinite;
+        }
+        @media (prefers-reduced-motion:reduce) { .me-intro-ai, .me-intro-edit, .me-intro-mine { animation:none; } }
+        /* 버튼이 3개가 되면서 한 줄에 다 넣으면 좁아진다 → 좁은 화면에선 줄바꿈 */
+        @media (max-width:760px) { .me-intro { flex-wrap:wrap; } .me-intro-btn { flex:1 1 calc(50% - 6px); } }
         @media (max-width:520px) { .me-intro-btn { padding:16px 12px; } .me-intro-ttl { font-size:14px; } .me-intro-desc { font-size:10.5px; } }
+        /* 개인 보관함 그리드 — 마퀴가 아니라 격자 (내 것은 흘러가면 찾기 어렵다) */
+        .me-my-grid {
+            display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr));
+            gap:8px; margin-top:10px; max-height:320px; overflow-y:auto;
+        }
+        .me-my-item {
+            border:1px solid #e2e8f0; border-radius:10px; background:#fff; padding:0;
+            cursor:pointer; overflow:hidden; aspect-ratio:1/1;
+        }
+        .me-my-item:hover { border-color:#4338ca; }
+        .me-my-item img { width:100%; height:100%; object-fit:cover; display:block; }
         /* 2026-06-15: PC 툴바 — 아이콘과 글씨 사이 간격 8px (이전 5px 은 너무 붙어보임). */
         /* 2026-06-18 v610: 배경 잠금 시각 표시 — 잠긴 배경은 살짝 어둡게, 호버 시 안내 */
         .me-item.me-bg-locked { pointer-events:none; }

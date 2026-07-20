@@ -1823,7 +1823,7 @@ async function submitRollFabricRequest() {
         <div id="cpEdTitle" style="font-size:24px; font-weight:900; color:#1e293b; letter-spacing:-0.5px;">간단한 디자인 바로바로</div>
         <div id="cpEdSub" style="font-size:14px; color:#64748b; margin-top:6px;">사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드</div>
     </div>
-    <link rel="stylesheet" href="./mini-editor.css?v=18">
+    <link rel="stylesheet" href="./mini-editor.css?v=19">
     <link rel="stylesheet" href="./editor-rail.css?v=2">
         <div id="aiNbWrap">
             <!-- 패널 1 — 미니 에디터 -->
@@ -1906,7 +1906,16 @@ async function submitRollFabricRequest() {
                         <span class="me-intro-ttl" data-i18n="me_intro_edit">디자인 수정도구</span>
                         <span class="me-intro-desc" data-i18n="me_intro_edit_desc">더 예쁘게 꾸미고 싶다면, 여러 요소를 추가할 수 있어요</span>
                     </button>
+                    <!-- 2026-07-20: 개인 보관함. AI 버튼(.me-intro-ai)은 튜토리얼이 타깃으로 쓰므로 첫 자리 유지 -->
+                    <button type="button" class="me-intro-btn me-intro-mine" onclick="window._meMyDesignsToggle && window._meMyDesignsToggle()">
+                        <span class="me-intro-ttl">내가 만든 디자인</span>
+                        <span class="me-intro-desc">전에 만드신 디자인을 다시 불러올 수 있어요</span>
+                    </button>
                 </div>
+                    <div id="meMyDesigns" style="display:none;">
+                        <div id="meMyNote" style="display:none; font-size:12.5px; color:#64748b; padding:14px 4px;"></div>
+                        <div id="meMyGrid" class="me-my-grid"></div>
+                    </div>
                 <!-- 2026-07-18: 작품 갤러리 -->
                 <div class="me-gallery" id="meGallery">
                     <div class="me-gal-tip">
@@ -1936,7 +1945,7 @@ async function submitRollFabricRequest() {
 </section>
 
 <script src="./editor-libs.js?v=1"></script>
-<script src="./mini-editor.js?v=533"></script>
+<script src="./mini-editor.js?v=534"></script>
 <script src="./editor-rail.js?v=4"></script>
 <script>
   // 패브릭 단독 부트스트랩 — 템플릿(banner) + 라이브러리 선로드 + 기본 대지 정사각 + 인라인 템플릿 줄
