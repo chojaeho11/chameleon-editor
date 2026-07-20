@@ -7196,6 +7196,15 @@
             _meFixHistory.push(outUrl);
             _meFixCurIdx = _meFixHistory.length - 1;
             _meFixRenderHistory();
+            // 2026-07-20 [버그] 수정으로 만든 결과가 갤러리·개인 보관함에 등록되지 않아
+            //   「내가 만든 디자인」과 메인 작품 갤러리 어디에도 안 보였다(사장님 제보).
+            //   AI 모달 생성분과 동일하게 등록한다. 실패해도 디자인 삽입은 이미 끝났으므로 무시.
+            try {
+                var _fxRatio = (me && me.natW && me.natH)
+                    ? (me.natW > me.natH * 1.15 ? '16:9' : (me.natH > me.natW * 1.15 ? '9:16' : '1:1'))
+                    : '1:1';
+                _meAiTryRegisterGallery(outUrl, note, _fxRatio);
+            } catch (_reg) { console.warn('[meFix] 갤러리 등록', _reg); }
             say(_meAiTr('수정 완료! 아래에서 이전 디자인과 비교해 보세요.',
                         '修正しました！下で以前のデザインと見比べられます。',
                         'Done! Compare with the previous versions below.'), '#16a34a');

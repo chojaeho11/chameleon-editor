@@ -2059,7 +2059,7 @@
   "me_intro_edit": "デザイン編集ツール",
   "me_back_simple": "シンプルモード",
   "me_intro_ai_desc": "どこにもなかった高品質AIデザイン、カメレオンが実現しました",
-  "me_intro_edit_desc": "もっと素敵に飾りたいなら、いろいろな要素を追加できます",
+  "me_intro_edit_desc": "もっと素敵に飾りたいなら<br>いろいろな要素を追加できます",
   "me_fit_canvas": "キャンバスに合わせる",
   "me_alert_fit_noimg": "合わせる画像がありません。先に画像を追加してください。"
 }
