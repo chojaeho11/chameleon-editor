@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260720135453';
+    var CV = '20260720140302';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1043,7 +1043,6 @@ window._tcmFallbackClick = function(code) {
                 <div class="me-gal-row"><div class="me-gal-track me-marq-right" id="hwTrackTop"></div></div>
                 <div class="me-gal-row"><div class="me-gal-track me-marq-left" id="hwTrackBot"></div></div>
             </div>
-            <p class="hw-tip" id="hwTip">마음에 드는 작품을 누르면 그 느낌으로 새로 만들어 드려요</p>
         </div>
 
         <!-- 2026-07-20: 히어로 고객작품 로더 + 프롬프트 핸들러 -->
@@ -1073,7 +1072,7 @@ window._tcmFallbackClick = function(code) {
             var t = T[lang] || T.kr;
             document.getElementById('hwTitle').textContent = t.title;
             document.getElementById('hwSub').textContent = t.sub;
-            document.getElementById('hwTip').textContent = t.tip;
+            // (안내문 .hw-tip 은 2026-07-20 삭제 — 사장님 지시)
             var inp = document.getElementById('hwPrompt');
             var btn = document.getElementById('hwGoBtn');
             inp.placeholder = t.ph;
@@ -1145,18 +1144,11 @@ window._tcmFallbackClick = function(code) {
                     return;
                 }
                 try { sessionStorage.setItem('_heroAi', JSON.stringify(payload)); } catch(e) {}
-                if (!window.currentUser) {
-                    if (typeof window.openAuthModal === 'function') {
-                        window.openAuthModal('login', function(){ location.href = '/?heroai=1'; });
-                    } else {
-                        var lm = document.getElementById('loginModal');
-                        if (lm) lm.style.display = 'flex';
-                    }
-                    return;
-                }
+                // 2026-07-20: 비회원도 바로 만들어볼 수 있게 로그인 게이트를 건너뛴다 (사장님 지시).
+                //   회원가입은 상단바 로그인 버튼으로, 저장·주문 시점에 어차피 로그인이 요구된다.
                 btn.disabled = true;
                 try {
-                    await window.startEditorDirect('custom', CANVAS_W, CANVAS_H);
+                    await window.startEditorDirect('custom', CANVAS_W, CANVAS_H, null, { skipLogin: true });
                     await runPending();
                 } catch(e) {
                     console.warn('[heroWorks] 에디터 진입 실패', e);
@@ -1196,21 +1188,9 @@ window._tcmFallbackClick = function(code) {
                 startAi(inp.value, r.image_url || r.thumb_url || '');
             });
 
-            // 로그인 복귀(?heroai=1) → 저장해둔 요청 이어서 실행
-            if ((new URLSearchParams(location.search)).get('heroai') === '1') {
-                var resume = function(){
-                    var raw = null;
-                    try { raw = sessionStorage.getItem('_heroAi'); } catch(e) {}
-                    if (!raw || !window.currentUser) return;
-                    var d = {}; try { d = JSON.parse(raw) || {}; } catch(e) { return; }
-                    window.startEditorDirect('custom', CANVAS_W, CANVAS_H).then(runPending);
-                };
-                var tries = 0;
-                var iv = setInterval(function(){
-                    if (window.currentUser && typeof window.startEditorDirect === 'function') { clearInterval(iv); resume(); }
-                    else if (++tries > 40) clearInterval(iv);
-                }, 250);
-            }
+            // 2026-07-20: 로그인 복귀(?heroai=1) 재개 로직 제거 — 이제 로그인 없이 바로 진입한다.
+            //   혹시 예전 링크로 들어오는 경우를 대비해 남은 요청은 정리만 한다.
+            try { if ((new URLSearchParams(location.search)).get('heroai') === '1') sessionStorage.removeItem('_heroAi'); } catch(e) {}
         })();
         </script>
 
@@ -17925,7 +17905,11 @@ if (w >= 20 && h >= 20) {
     }
 
     // [수정됨] 에디터 진입 (DB 데이터 안전 로딩 추가)
-    window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null) {
+    // 2026-07-20: 5번째 인자 opts 추가 (선택). { skipLogin:true } 면 로그인 게이트를 건너뛴다.
+    //   홈 히어로의 「만들기」(AI 디자인 체험) 전용 — 비회원도 일단 만들어보게 하는 게 전환에 유리.
+    //   저장·주문 단계에서는 여전히 로그인이 필요하므로 보호가 사라지는 건 아니다.
+    //   기존 호출부 23곳은 인자를 안 넘기므로 동작 그대로(로그인 필수).
+    window.startEditorDirect = async function(key, customW = null, customH = null, customPrice = null, opts = null) {
 
         // ★ 에디터 CDN 라이브러리 동적 로드 (Fabric.js, jsPDF, PDF.js 등)
         if (!window._editorLibsLoaded) {
@@ -17941,7 +17925,8 @@ if (w >= 20 && h >= 20) {
         }
 
         // ★ 에디터 진입 전 로그인 필수 — 미로그인 시 로그인 모달 표시
-        if (!window.currentUser) {
+        //   (opts.skipLogin 이면 건너뜀 — 홈 히어로 AI 체험 전용)
+        if (!window.currentUser && !(opts && opts.skipLogin)) {
             // 소셜 로그인(페이지 리다이렉트) 대비: 상태를 sessionStorage에 저장
             try {
                 sessionStorage.setItem('_pendingEditorAction', JSON.stringify({
