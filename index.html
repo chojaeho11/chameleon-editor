@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260721051430';
+    var CV = '20260721052524';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1059,15 +1059,15 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-brand">국카인</span> <span class="hw-t-rest">국민인쇄소 카멜레온 디자인</span>',
+                kr: { title:'<span class="hw-t-brand">힙카인</span> <span class="hw-t-rest">힙한 스타일! 카멜레온 인쇄소</span>',
                       sub:'에디터는 귀찮다! 몇 글자면 끝나는 AI 고퀄 디자인!',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-brand">カメレオン</span> <span class="hw-t-rest">国民印刷所デザイン</span>',
+                ja: { title:'<span class="hw-t-brand">カメレオン</span> <span class="hw-t-rest">ヒップなスタイル！カメレオン印刷所</span>',
                       sub:'エディターは面倒！数文字でプロ級のAIデザイン！',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
-                en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">AI Design</span>',
+                en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">Hip style! Chameleon Print</span>',
                       sub:'Editors are a hassle — pro-quality AI design in just a few words!',
                       ph:'The more detail the better — title, price, date, place!', go:'Create',
                       need:'Please tell us what to make' }
