@@ -1563,7 +1563,7 @@ html, body { background: #ffffff !important; }
         <div id="soTshirtUploadSection" style="display:none;">
           <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
           <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
-          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 클릭해서 업로드.', '選択した印刷位置ごとに画像を個別にアップロードしてください', 'Upload an image for each selected print area separately')}</div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 칸을 클릭하면 업로드, 드래그하면 인쇄할 위치를 옮길 수 있어요. 인쇄 크기는 위치마다 정해져 있어 바꿀 수 없고(가격이 달라져요), 이미지는 박스 안에 맞춰집니다.', '選択した印刷位置ごとに画像を個別にアップロードしてください。枠をクリックでアップロード、ドラッグで印刷位置を移動できます。印刷サイズは位置ごとに決まっているため変更できません(料金が変わるため)。画像は枠の中に収まります。', 'Upload an image for each selected print area. Click a slot to upload, drag it to move the print position. The print size is fixed per area (it changes the price), and your image is fitted inside the box.')}</div>
         </div>
 
         <!-- 2026-06-14 v3: 메인 페이지의 미니 디자인 에디터 + 누끼따기 패널을 simple_order 안으로 이식 (DOM portal).
@@ -9710,7 +9710,10 @@ html, body { background: #ffffff !important; }
                   + '<span>' + tr('드래그로 이동<br>클릭하여 업로드','ドラッグ移動<br>クリック追加','Drag to move<br>Click to upload') + '</span>'
                   + '</div>';
             var status = f.dataUrl
+                // 2026-07-21: 업로드 후에도 "박스를 끌어 인쇄 위치를 맞출 수 있다"는 안내를 남긴다.
+                //   크기는 위치별 고정(가격이 달라서) — 이미지는 박스 안에 맞춰짐.
                 ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (f.name || 'image') + '</div>'
+                  + '<div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.45;">' + tr('박스를 끌어 인쇄할 위치를 맞춰주세요 · 크기는 고정', 'ボックスをドラッグして印刷位置を調整 · サイズは固定', 'Drag the box to place the print · size is fixed') + '</div>'
                 : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('박스를 끌어 위치 조정 → 클릭하여 이미지 업로드', 'ボックスをドラッグして配置 → クリックでアップロード', 'Drag box to position → Click to upload') + '</div>';
             // 2026-05-30: template literals — 따옴표/문자열 결합 실수 방지
             var sideLabel = (cfg.side === 'back') ? 'BACK' : 'FRONT';

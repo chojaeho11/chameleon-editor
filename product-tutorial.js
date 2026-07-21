@@ -1856,9 +1856,9 @@
       target: '#soTshirtUploadSection', mode: 'wait', waitEvent: 'tshirt-file-uploaded',
       onEnter: function () { return _secVisible('#soTshirtUploadSection'); },
       hint: { kr: '칸을 눌러 이미지를 올려주세요', ja: '枠をタップして画像をアップ', en: 'Tap a slot to upload your image' },
-      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 왼쪽 옷 그림 위에서 <b>드래그로 위치</b>를, <b>모서리 핸들로 크기</b>를 조정할 수 있어요.',
-        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は左のTシャツ図の上で <b>ドラッグして位置</b>、<b>角のハンドルでサイズ</b> を調整できます。',
-        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag</b> it on the shirt at the left to move it, and use the <b>corner handles</b> to resize.' },
+      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 <b>여기서 옷 그림 위의 박스를 끌어</b> 인쇄할 위치를 원하는 곳으로 옮길 수 있어요. <span style="color:#94a3b8;">인쇄 크기는 위치마다 정해져 있어 바꿀 수 없고(위치별로 가격이 달라요), 이미지는 박스 안에 맞춰집니다.</span>',
+        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は <b>ここでTシャツ図の上の枠をドラッグ</b> して、印刷したい位置に動かせます。<span style="color:#94a3b8;">印刷サイズは位置ごとに決まっていて変更できません(位置によって料金が違うため)。画像は枠の中に収まります。</span>',
+        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag the box on the shirt right here</b> to place the print where you want it. <span style="color:#94a3b8;">The print size is fixed per area (each area is priced differently) and your image is fitted inside the box.</span>' },
       cheer: { kr: '이미지 등록! 🖼', ja: '画像OK! 🖼', en: 'Image added! 🖼' }
     },
     { // 4) 컬러
