@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260722035546';
+    var CV = '20260722040346';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -137,7 +137,7 @@ a { text-decoration:none; color:inherit; }
         <div class="desc" data-mpi="login_desc">패턴 등록 시 사용한 디자이너명으로 로그인하세요</div>
         <input id="loginName" class="cpm-input" placeholder="디자이너명 (Author)" data-mpi-ph="login_name_ph" autocomplete="off">
         <input id="loginCode" class="cpm-input" placeholder="비밀코드 (선택)" data-mpi-ph="login_code_ph" autocomplete="off">
-        <button class="cpm-btn" onclick="cpmLogin()"><i class="fa-solid fa-right-to-bracket"></i> <span data-mpi="login_btn">로그인</span></button>
+        <button class="cpm-btn" onclick="cpmLogin()"><i class="fa-solid fa-right-to-bracket"></i> <span data-mpi="login_btn">Login</span></button>
         <div style="margin-top:14px; padding:10px; background:var(--cream); border-radius:8px; font-size:11px; color:var(--brown); line-height:1.6; text-align:center;">
             <span data-mpi="not_designer">아직 디자이너가 아니신가요?</span><br><a href="https://www.cotton-print.com" style="color:var(--accent); font-weight:700; text-decoration:underline;" data-mpi="register_first">cotton-print.com에서 패턴 등록으로 시작하세요</a>
         </div>
@@ -229,13 +229,13 @@ const MP_I18N = {
     login_desc: { ko:'패턴 등록 시 사용한 디자이너명으로 로그인하세요', ja:'パターン登録時のデザイナー名でログインしてください', en:'Log in with the designer name you used when uploading patterns' },
     login_name_ph: { ko:'디자이너명 (Author)', ja:'デザイナー名', en:'Designer Name (Author)' },
     login_code_ph: { ko:'비밀코드 (선택)', ja:'シークレットコード (任意)', en:'Secret Code (optional)' },
-    login_btn: { ko:'로그인', ja:'ログイン', en:'Log In' },
+    login_btn: { ko:'Login', ja:'Login', en:'Login' },   // 2026-07-22: 전 페이지 영문 통일
     not_designer: { ko:'아직 디자이너가 아니신가요?', ja:'まだデザイナー登録していない方', en:'Not a designer yet?' },
     register_first: { ko:'cotton-print.com에서 패턴 등록으로 시작하세요', ja:'cotton-print.comでパターン登録から始める', en:'Start by uploading a pattern on cotton-print.com' },
     hello: { ko:'안녕하세요', ja:'こんにちは', en:'Welcome,' },
     hello_suffix: { ko:'님 ✨', ja:'様 ✨', en:'✨' },
     dash_sub: { ko:'디자이너 활동 현황과 적립금을 확인하세요.', ja:'デザイナー活動状況と報酬を確認してください。', en:'Check your designer activity and royalties.' },
-    logout: { ko:'로그아웃', ja:'ログアウト', en:'Log out' },
+    logout: { ko:'Logout', ja:'Logout', en:'Logout' },
     stat_patterns: { ko:'등록 패턴', ja:'登録パターン', en:'Patterns' },
     stat_approved: { ko:'승인 완료', ja:'承認済み', en:'Approved' },
     stat_sales: { ko:'판매 건수', ja:'販売件数', en:'Sales' },

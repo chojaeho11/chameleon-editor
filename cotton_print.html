@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260722035546';
+    var CV = '20260722040346';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -515,7 +515,7 @@ img, video, canvas { max-width: 100%; height: auto; }
                  → 일본 카멜레온(cafe0101)과 동일 계정(공유 Supabase). 가입 시 site='JP' 귀속. -->
             <button type="button" id="cpAuthLoginBtn" onclick="window._cpOpenAuth && window._cpOpenAuth()"
                 style="display:none; padding:7px 16px; border:1.5px solid var(--brown,#7c4a2d); background:#fff; color:var(--brown,#7c4a2d); border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;">
-                <span id="cpLoginBtnLbl">ログイン</span>
+                <span id="cpLoginBtnLbl">Login</span>
             </button>
             <div id="cpAuthLoggedIn" style="display:none; align-items:center; gap:8px;">
                 <span id="cpAuthUserLabel" style="font-size:13px; color:#334155; font-weight:700; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
@@ -5241,8 +5241,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if ($('cpAuthOrLbl'))     $('cpAuthOrLbl').textContent     = t.or;
     if ($('cpAuthNotice') && t.signupNotice) $('cpAuthNotice').innerHTML = t.signupNotice;
     // 헤더 버튼 라벨
-    if ($('cpLoginBtnLbl')) $('cpLoginBtnLbl').textContent = t.login;
-    if ($('cpLogoutLbl'))   $('cpLogoutLbl').textContent   = t.logout;
+    // 2026-07-22: 헤더 로그인/로그아웃 버튼은 전 페이지 영문 통일 (사장님 지시) — 번역어로 되돌리지 않는다.
+    if ($('cpLoginBtnLbl')) $('cpLoginBtnLbl').textContent = 'Login';
+    if ($('cpLogoutLbl'))   $('cpLogoutLbl').textContent   = 'Logout';
 
     var isSignupMode = false;
 

@@ -1906,7 +1906,7 @@ window._cpCartOpen = function() {
             } else {
                 // 로그인 필요 — 메인 사이트 로그인 페이지로
                 loginLink.style.display = '';
-                if (label) label.textContent = (window.cdT && window.cdT('login_btn')) || '로그인';
+                if (label) label.textContent = 'Login';   // 2026-07-22: 전 페이지 영문 통일
                 loginLink.href = '/login?return=' + encodeURIComponent(location.pathname + location.search);
             }
         } catch (e) {}

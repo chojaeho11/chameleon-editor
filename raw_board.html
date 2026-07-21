@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260722035546';
+    var CV = '20260722040346';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -449,7 +449,7 @@ a { text-decoration: none; color: inherit; }
         <nav class="nav-links">
             <!-- 2026-06-04: 로그인 버튼 — 적립금/이벤트쿠폰/예치금/PRO 할인 사용 위한 인증 -->
             <button id="hbAuthBtn" onclick="window.hbOpenLogin()" style="display:inline-flex; align-items:center; gap:5px; padding:7px 12px; border-radius:8px; background:#fff; color:var(--primary); border:1.5px solid var(--primary); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; font-family:inherit;">
-                <i class="fa-solid fa-user" style="font-size:11px;"></i> <span id="hbAuthBtnLabel">로그인</span>
+                <i class="fa-solid fa-user" style="font-size:11px;"></i> <span id="hbAuthBtnLabel">Login</span>
             </button>
             <div class="lang-selector" id="langSelector"></div>
         </nav>
@@ -508,7 +508,8 @@ a { text-decoration: none; color: inherit; }
     var _isSignup = false;
     function setText(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; }
     function setMsg(txt, color){ var el = document.getElementById('hbAuthMsg'); if (el){ el.textContent = txt; el.style.color = color || '#dc2626'; } }
-    function L(ko, ja, en){ var lang = window.__PS_LANG || 'ko'; return lang==='ja'?ja:(lang==='en'?en:ko); }
+    // 2026-07-22: zh/ar/es/de/fr 이 전부 ko 로 떨어져 중국어 페이지에 한국어가 보였다 → ko/ja 외에는 영어.
+    function L(ko, ja, en){ var lang = window.__PS_LANG || 'ko'; return lang==='ja'?ja:((lang==='ko'||lang==='kr')?ko:en); }
 
     window.hbOpenLogin = function(){
         var modal = document.getElementById('hbLoginModal');
@@ -632,9 +633,9 @@ a { text-decoration: none; color: inherit; }
         if (user) {
             var disp = (user.email || '').replace('@cafe2626.com','').replace('@chameleon-print.local','');
             if (disp.length > 12) disp = disp.substring(0,11) + '…';
-            lbl.textContent = disp + ' · ' + L('로그아웃','ログアウト','Sign out');
+            lbl.textContent = disp + ' · Logout';   // 2026-07-22: 로그인/로그아웃 버튼은 전 페이지 영문 통일
         } else {
-            lbl.textContent = L('로그인','ログイン','Sign in');
+            lbl.textContent = 'Login';
         }
     }
     // 페이지 로드 시 세션 확인
