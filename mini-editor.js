@@ -6783,6 +6783,16 @@
     // 2026-07-18: 작품 갤러리 — 미리캔버스식 2줄 마퀴(위:좌→우, 아래:우→좌). 높이 고정·가로폭 자동, 이미지 전체 표시.
     //   다른 고객이 만든(개인정보 없는) 디자인을 구경/검색하고, 고르면 그 스타일을 참고해 새로 생성.
     var _meGalQ = '', _meGalBusy = false, _meGalRows = [];
+    // 2026-07-21: 작품이 어느 나라 갤러리에 속하는지 — 프롬프트에 실제로 쓰인 문자로 판정.
+    //   한글 → ko / 카나 → ja / 판정 불가(한자만 쓴 일본어 등) → 사이트 언어로 폴백.
+    //   값은 _meAiLang() 및 kw_ko·kw_ja·kw_en 컬럼 명명과 맞춰 ko/ja/en. (sql/design_gallery_lang.sql 과 같은 규칙)
+    function _meDetectLang(text) {
+        var t = String(text || '');
+        if (/[가-힣]/.test(t)) return 'ko';
+        if (/[぀-ヿ]/.test(t)) return 'ja';
+        return _meAiLang();
+    }
+
     async function _meGalleryLoad(q) {
         var topT = document.getElementById('meGalTrackTop');
         var botT = document.getElementById('meGalTrackBot');
@@ -6793,6 +6803,11 @@
         _meGalBusy = true;
         try {
             var query = sb.from('design_gallery').select('id,image_url,thumb_url,prompt').eq('status', 'public');
+            // 2026-07-21: 한국 사이트엔 한국어 프롬프트만, 일본 사이트엔 일본어만 (사장님 지시).
+            //   영문·글로벌은 작품 수가 적어 거르지 않는다. lang 이 비어 있는 행은 어디서든 보이게 둔다
+            //   (등록 경로가 lang 을 빠뜨려도 작품이 아예 사라지진 않도록).
+            var _galLang = _meAiLang();
+            if (_galLang === 'ko' || _galLang === 'ja') query = query.or('lang.eq.' + _galLang + ',lang.is.null');
             if (_meGalQ) {
                 var like = '%' + _meGalQ.replace(/[%,]/g, ' ') + '%';
                 query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
@@ -7492,7 +7507,8 @@
             await sb.from('design_gallery').insert({
                 image_url: pub, thumb_url: pub, prompt: scrubbed,
                 kw_ko: kw.ko, kw_en: kw.en, kw_ja: kw.ja, ratio: ratio || null, user_id: uid,
-                status: status
+                status: status,
+                lang: _meDetectLang(scrubbed)   // 2026-07-21: 갤러리 언어 분리 (한국어=한국 사이트 / 일본어=일본 사이트)
             });
         } catch (e) { console.warn('[meGallery] register failed', e); }
     }

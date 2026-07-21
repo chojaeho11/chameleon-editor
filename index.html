@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260721120321';
+    var CV = '20260721132003';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1108,10 +1108,15 @@ window._tcmFallbackClick = function(code) {
             }
             async function load(){
                 try {
-                    var res = await window.sb.from('design_gallery')
+                    var qy = window.sb.from('design_gallery')
                         .select('id,image_url,thumb_url,prompt')
-                        .eq('status','public')
-                        .order('created_at',{ascending:false}).limit(24);
+                        .eq('status','public');
+                    // 2026-07-21: 한국 사이트엔 한국어 프롬프트만, 일본 사이트엔 일본어만 (사장님 지시).
+                    //   ⚠ 이 스크립트의 lang 은 'kr' 을 쓰는데 DB 값은 'ko' 다 → 정규화 필요.
+                    //   영문·글로벌은 작품 수가 적어 거르지 않는다. lang 이 비어 있으면 어디서든 노출.
+                    var gLang = (lang === 'kr' || lang === 'ko') ? 'ko' : (lang === 'ja' ? 'ja' : '');
+                    if (gLang) qy = qy.or('lang.eq.' + gLang + ',lang.is.null');
+                    var res = await qy.order('created_at',{ascending:false}).limit(24);
                     if (res.error) throw res.error;
                     works = res.data || [];
                     if (!works.length) { box.style.display='none'; return; }
@@ -5866,7 +5871,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=536"></script>
+<script src="./mini-editor.js?v=537"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
