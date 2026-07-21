@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260722034003';
+    var CV = '20260722035546';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1087,9 +1087,31 @@ window._tcmFallbackClick = function(code) {
                 en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">Hip style! Chameleon Print</span>',
                       sub:'Editors are a hassle — pro-quality AI design in just a few words!',
                       ph:'The more detail the better — title, price, date, place!', go:'Create',
-                      need:'Please tell us what to make' }
+                      need:'Please tell us what to make' },
+                // 2026-07-22: ko/ja/en 만 있어서 아랍어·중국어·스페인어·독일어·프랑스어 방문자에게
+                //   한국어가 그대로 보였다(사장님 지적). 5개 언어 추가 + 아래 fallback 은 en 으로.
+                zh: { title:'<span class="hw-t-brand">变色龙印刷</span> <span class="hw-t-rest">几个字，就有潮流设计</span>',
+                      sub:'不用再折腾编辑器！输入几个字，AI 就做出专业级设计',
+                      ph:'标题、价格、日期、地点等写得越详细越好！', go:'制作',
+                      need:'请输入想要制作的内容' },
+                ar: { title:'<span class="hw-t-brand">طباعة كاميليون</span> <span class="hw-t-rest">تصميم أنيق ببضع كلمات</span>',
+                      sub:'لا حاجة لبرامج التصميم المعقّدة — بضع كلمات ويصنع الذكاء الاصطناعي تصميمًا احترافيًا',
+                      ph:'كلما زادت التفاصيل كان أفضل — العنوان والسعر والتاريخ والمكان!', go:'إنشاء',
+                      need:'من فضلك اكتب ما تريد تصميمه' },
+                es: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">diseño con estilo en pocas palabras</span>',
+                      sub:'Olvídate de los editores complicados: unas pocas palabras y la IA crea un diseño profesional',
+                      ph:'Cuanto más detalle, mejor: título, precio, fecha, lugar…', go:'Crear',
+                      need:'Cuéntanos qué quieres crear' },
+                de: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">stylisches Design in wenigen Worten</span>',
+                      sub:'Schluss mit mühsamen Editoren – ein paar Worte genügen für ein professionelles KI-Design',
+                      ph:'Je mehr Details, desto besser – Titel, Preis, Datum, Ort …', go:'Erstellen',
+                      need:'Bitte beschreiben Sie, was erstellt werden soll' },
+                fr: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">un design stylé en quelques mots</span>',
+                      sub:'Fini les éditeurs fastidieux : quelques mots suffisent pour un design professionnel généré par IA',
+                      ph:'Plus il y a de détails, mieux c’est — titre, prix, date, lieu…', go:'Créer',
+                      need:'Indiquez ce que vous souhaitez créer' }
             };
-            var t = T[lang] || T.kr;
+            var t = T[lang] || T.en || T.kr;
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
             // (안내문 .hw-tip 은 2026-07-20 삭제 — 사장님 지시)
@@ -2484,7 +2506,7 @@ window._tcmFallbackClick = function(code) {
                 amountPh:'50', unit:'$', memoPh:'e.g. 10 standees', orderBtn:'⚡ Order'
             }
         };
-        var t = L[lang] || L.kr;
+        var t = L[lang] || L.en || L.kr;
         function setText(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
         function setI18n(sel, v){ var el = document.querySelector(sel); if (el) el.textContent = v; }
         // 6 버튼 라벨
@@ -2583,7 +2605,7 @@ window._tcmFallbackClick = function(code) {
                   alertReq:'Email, SNS URL, and screenshot are required.',
                   alertLogin:'Please log in first. Signup grants a $30 coupon automatically.' }
         };
-        var t = COUPON[lang] || COUPON.kr;
+        var t = COUPON[lang] || COUPON.en || COUPON.kr;
         function $(id){ return document.getElementById(id); }
         // 2026-06-01: 독립 카드 → 각 contact 박스 내부 inline 버튼으로 이동. 인라인 라벨만 lang 별 갱신.
         if ($('couponInlineBtnLabel')) $('couponInlineBtnLabel').textContent = t.title;
@@ -2809,7 +2831,7 @@ window._tcmFallbackClick = function(code) {
                               errPwMatch:"Passwords don't match.", errSignup:'Signup failed:',
                               successHtml:'🎉 Welcome!<br>$30 coupon has been credited automatically.' }
                     };
-                    var t = T[lang] || T.ko;
+                    var t = T[lang] || T.en || T.ko;
                     if ($('quickSignupDesc'))   $('quickSignupDesc').innerHTML = t.desc;
                     if ($('quickSignupEmail'))  { $('quickSignupEmail').placeholder = t.phEmail; $('quickSignupEmail').type = 'text'; }
                     if ($('quickSignupPw'))     $('quickSignupPw').placeholder    = t.phPw;
@@ -2917,7 +2939,7 @@ window._tcmFallbackClick = function(code) {
                   line2:'Post your <b>Chameleon-made artwork</b> on SNS for a <b style="color:#be185d;">$100</b> coupon',
                   fEmail:'Account ID or email', fScreenshot:'Screenshot', hintScreenshot:'Please upload a screenshot.', submit:'Submit' }
         };
-        var t = L[lang] || L.kr;
+        var t = L[lang] || L.en || L.kr;
         if ($('couponModalTitle')) $('couponModalTitle').textContent = t.title;
         // children[1] = content span (1️⃣ span is [0], → arrow is [2] in button; or just one content span in info-line2 div)
         if ($('couponInfoLine1')) $('couponInfoLine1').children[1].innerHTML = t.line1;
@@ -2956,7 +2978,7 @@ window._tcmFallbackClick = function(code) {
             fr: { title:'N°1 en impression honeycomb — Chameleon', desc:'Production interne de honeycomb et livraison gratuite en métropole pour plus d\'économies.', ph:'', unit:'€', btn:'⚡ Commander', hint:'Minimum €1 • Paiement immédiat' },
             zh: { title:'蜂窝板印刷业界第一 — Chameleon Printing', desc:'蜂窝板自有生产与首都圈巡回免费配送，让您以更低价格使用。', ph:'', unit:'元', btn:'⚡ 下单', hint:'最低5元起 • 立即开启付款' }
         };
-        var t = T[L] || T.kr;
+        var t = T[L] || T.en || T.kr;
         function $(id){ return document.getElementById(id); }
         if ($('mgrQuoteTitle')) $('mgrQuoteTitle').textContent = t.title;
         if ($('mgrQuoteDesc'))  $('mgrQuoteDesc').textContent  = t.desc;
@@ -5379,14 +5401,24 @@ window.addEventListener('load', function() {
               ftTitlePattern:'Pattern Roll Print', ftDescPattern:'Roll pattern printing ordered by clothing makers and wholesale fabric shops for resale.',
               chips:{all:'All',animal:'Animal',plant:'Plant',people:'People',modern:'Modern',scenery:'Scenery',typo:'Typo',kids:'Kids',etc:'Etc'} },
         zh: { badge:'面料事业部', desc:'幅宽130cm 卷布 · 每单位 ¥75 · 设计师图案市场', btn1:'设计我的布料', btn2:'设计师图案合集', btn3:'上传并销售', btnSample:'免费样品申请', allBtn:'查看所有图案', searchPh:'搜索图案 (名称、设计师、关键词)',
+              btn1Sub:'印在环保面料上', ftTitlePoster:'面料海报', ftDescPoster:'整幅满印的单张印刷，常用于装饰周边和礼品。',
+              ftTitlePattern:'图案卷布印刷', ftDescPattern:'服装厂与批发布料店为销售而订购的卷装图案印刷。',
               chips:{all:'全部',animal:'动物',plant:'植物',people:'人物',modern:'现代',scenery:'风景',typo:'字体',kids:'儿童',etc:'其他'} },
         ar: { badge:'قسم النسيج', desc:'عرض 130 سم · 15$/وحدة · سوق انماط المصممين', btn1:'صمم قماشي', btn2:'مجموعة المصممين', btn3:'حمّل وبع', btnSample:'عينة مجانية', allBtn:'كل الانماط', searchPh:'بحث الأنماط (الاسم، المصمم، الكلمة)',
+              btn1Sub:'طباعة على قماش صديق للبيئة', ftTitlePoster:'ملصق قماشي', ftDescPoster:'طباعة بقطعة واحدة تغطي السطح بالكامل، تُستخدم كثيرًا للديكور والهدايا.',
+              ftTitlePattern:'طباعة أقمشة بنقشات', ftDescPattern:'طباعة نقشات على رولات يطلبها مصنّعو الملابس ومتاجر الأقمشة بالجملة لإعادة البيع.',
               chips:{all:'الكل',animal:'حيوانات',plant:'نباتات',people:'اشخاص',modern:'حديث',scenery:'مناظر',typo:'طباعة',kids:'اطفال',etc:'اخرى'} },
         es: { badge:'Division Tela', desc:'130 cm rollo · $15/unidad · Mercado de Disenadores', btn1:'Disenar Mi Tela', btn2:'Coleccion Disenadores', btn3:'Subir y Vender', btnSample:'Muestra Gratis', allBtn:'Ver todos los patrones', searchPh:'Buscar patrones (nombre, diseñador, palabra)',
+              btn1Sub:'Impresión en tejido ecológico', ftTitlePoster:'Póster de tela', ftDescPoster:'Impresión en una sola pieza que cubre toda la superficie; muy usada para decoración y regalos.',
+              ftTitlePattern:'Impresión de tela por rollo', ftDescPattern:'Impresión de estampados en rollo que encargan fabricantes de ropa y tiendas mayoristas para su reventa.',
               chips:{all:'Todo',animal:'Animal',plant:'Planta',people:'Personas',modern:'Moderno',scenery:'Paisaje',typo:'Tipografia',kids:'Ninos',etc:'Otros'} },
         de: { badge:'Stoff-Abteilung', desc:'130cm Rolle · $15/Einheit · Designer-Marktplatz', btn1:'Stoff entwerfen', btn2:'Designer-Kollektion', btn3:'Hochladen & Verkaufen', btnSample:'Gratis-Muster', allBtn:'Alle Muster', searchPh:'Muster suchen (Name, Designer, Stichwort)',
+              btn1Sub:'Druck auf Öko-Stoff', ftTitlePoster:'Stoffposter', ftDescPoster:'Einzeldruck über die gesamte Fläche – beliebt für Deko-Artikel und Geschenke.',
+              ftTitlePattern:'Musterstoff von der Rolle', ftDescPattern:'Musterdruck auf Rollenware, den Bekleidungshersteller und Stoffgroßhändler zum Weiterverkauf bestellen.',
               chips:{all:'Alle',animal:'Tier',plant:'Pflanze',people:'Mensch',modern:'Modern',scenery:'Landschaft',typo:'Typo',kids:'Kinder',etc:'Sonst.'} },
         fr: { badge:'Division Tissu', desc:'Largeur 130cm · $15/unite · Marche des designers', btn1:'Concevoir mon tissu', btn2:'Collection de designers', btn3:'Uploader & Vendre', btnSample:'Échantillon Gratuit', allBtn:'Voir tous les motifs', searchPh:'Rechercher motifs (nom, designer, mot-clé)',
+              btn1Sub:'Impression sur tissu écologique', ftTitlePoster:'Affiche en tissu', ftDescPoster:'Impression pleine surface à l’unité, très utilisée pour la décoration et les cadeaux.',
+              ftTitlePattern:'Impression de tissu au rouleau', ftDescPattern:'Impression de motifs au rouleau commandée par les fabricants de vêtements et les grossistes en tissu pour la revente.',
               chips:{all:'Tous',animal:'Animal',plant:'Plante',people:'Personne',modern:'Moderne',scenery:'Paysage',typo:'Typographie',kids:'Enfants',etc:'Autres'} }
     };
     function applyCpHomeI18n() {
@@ -5394,7 +5426,7 @@ window.addEventListener('load', function() {
         // 정규화: jp→ja, us→en, cn→zh
         var langMap = { jp:'ja', us:'en', cn:'zh' };
         if (langMap[lang]) lang = langMap[lang];
-        var t = DICT[lang] || DICT.kr;
+        var t = DICT[lang] || DICT.en || DICT.kr;
         function setTxt(id, v) { var el = document.getElementById(id); if (el && v) el.textContent = v; }
         setTxt('cpHomeBadge', t.badge);
         setTxt('cpHomeDesc', t.desc);
@@ -8812,7 +8844,7 @@ async function handleSubReturn() {
                     ja:'カメレオンプリンティングは <b>IDとパスワードを1回</b> 入力するだけで簡単に登録できます。<b>個人情報は一切要求しません。</b> 安心してご登録ください。<br>ご登録で イベント積立金 <b style="color:#34d399;">3,000円</b> が即時付与されます。🎁',
                     en:'Signing up takes just <b>one ID &amp; password</b> — <b>no personal info required.</b> Sign up with confidence.<br>Get <b style="color:#34d399;">$30</b> event credit instantly. 🎁'
                 };
-                el.innerHTML = m[l] || m.ko;
+                el.innerHTML = m[l] || m.en || m.ko;
             }
             _setGuide();
             document.addEventListener('langChanged', _setGuide);   // 언어 전환 시 갱신(있으면)
@@ -12798,7 +12830,7 @@ async function loadScrollBanner() {
             fr:['Honeycomb','Tissus','Imprimerie','Cadeaux','Pub']
         };
         const _lang = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG !== 'kr') ? CURRENT_LANG : ((window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) ? {KR:'kr',JP:'ja',US:'en',CN:'zh',SA:'ar',ES:'es',DE:'de',FR:'fr'}[window.SITE_CONFIG.COUNTRY] || 'kr' : 'kr');
-        const badgeNames = _bl[_lang] || _bl.kr;
+        const badgeNames = _bl[_lang] || _bl.en || _bl.kr;
         const buckets = [];
         const seen = new Set();
         results.forEach((r, idx) => {
@@ -13414,7 +13446,7 @@ async function renderQuickMenu() {
                 goodsBtn.className = 'tcm-btn';
                 var lab = { kr:'🎁 굿즈', ko:'🎁 굿즈', ja:'🎁 グッズ', en:'🎁 Goods',
                             zh:'🎁 礼品', ar:'🎁 هدايا', es:'🎁 Goods', de:'🎁 Goods', fr:'🎁 Goods' };
-                goodsBtn.textContent = lab[CURRENT_LANG] || lab.kr;
+                goodsBtn.textContent = lab[CURRENT_LANG] || lab.en || lab.kr;
                 goodsBtn.onclick = function(){
                     var goodsLangMap = { ja:'ja', en:'en', zh:'en', ar:'en', es:'en', de:'en', fr:'en' };
                     var gLang = goodsLangMap[CURRENT_LANG];
@@ -19311,7 +19343,7 @@ if (w >= 20 && h >= 20) {
             de: { price:'Stückpreis', qty:'Menge', unit:'Stk', total:'Gesamtbetrag', cart:'🛒 In den Warenkorb', cancel:'Abbrechen' },
             fr: { price:'Prix unitaire', qty:'Quantité', unit:'pcs', total:'Montant total', cart:'🛒 Ajouter au panier', cancel:'Annuler' },
         };
-        const lb = _l[cl] || _l.ko;
+        const lb = _l[cl] || _l.en || _l.ko;
         document.getElementById('genLabelPrice').innerText = lb.price;
         document.getElementById('genLabelQty').innerText = lb.qty;
         document.getElementById('genLabelUnit').innerText = lb.unit;
@@ -20990,7 +21022,7 @@ if (w >= 20 && h >= 20) {
     };
     function _dapApplyI18n() {
         var lang = _dapDetectLang();
-        var t = DAP_I18N[lang] || DAP_I18N.kr;
+        var t = DAP_I18N[lang] || DAP_I18N.en || DAP_I18N.kr;
         var root = document.getElementById('designerApplyPopup');
         if (!root) return;
         root.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');

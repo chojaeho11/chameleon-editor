@@ -2030,5 +2030,11 @@
   "me_fix_hint": "请写下想修改的部分，其余保持不变，只重画该部分。",
   "me_fix_ph": "例：文字更大、背景改成蓝色、价格改为5,000",
   "me_intro_mine": "我的设计",
-  "me_intro_mine_desc": "可以重新调用之前做过的设计"
+  "me_intro_mine_desc": "可以重新调用之前做过的设计",
+  "btn_mgr_phones": "客户经理电话",
+  "btn_vip_pay": "VIP 专属支付",
+  "btn_scrap_pay": "咨询后按金额下单",
+  "btn_design_request": "委托设计",
+  "btn_designer_apply": "设计师",
+  "btn_designer_recruit_btn": "博客"
 }

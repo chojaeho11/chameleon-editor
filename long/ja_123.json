@@ -1999,5 +1999,11 @@
   "btn_outline_off": "縁取りオン",
   "btn_outline_on": "縁取りオフ",
   "menu_make_menuboard": "メニュー表作成",
-  "ph_effect_search": "検索..."
+  "ph_effect_search": "検索...",
+  "btn_mgr_phones": "担当者 電話案内",
+  "btn_vip_pay": "VIP 個人決済",
+  "btn_scrap_pay": "相談後の金額注文",
+  "btn_design_request": "デザイン依頼",
+  "btn_designer_apply": "デザイナー",
+  "btn_designer_recruit_btn": "ブログ"
 }

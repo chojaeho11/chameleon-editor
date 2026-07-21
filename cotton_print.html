@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260722034003';
+    var CV = '20260722035546';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -714,7 +714,28 @@ window._cottonSearch = function(){
             en: { 'tag-0':'SAFETY','title-0':"Not UV-printed",'sub-0':'OEKO-TEX® certified eco inks<br>ZERO color bleed · ZERO chemical odor<br>Razor-sharp even at 6pt',
                   'tag-1':'GREENGUARD GOLD','title-1':'GREENGUARD Gold<br>Non-toxic & Safe','sub-1':'Safe for hospitals & infant products<br>Highest-grade safety certification<br>Skin-friendly eco inks',
                   'tag-2':'WHOLESALE','title-2':'A system built for<br>wholesalers','sub-2':'Fabric posters · apparel goods<br>Optimized for resellers<br>Thorough quality inspection',
-                  'tag-3':'BEST PRICE','title-3':"Industry's<br>lowest price",'sub-3':'Low prices even for small orders<br>Special rates for 100+ units<br>Best value guaranteed' }
+                  'tag-3':'BEST PRICE','title-3':"Industry's<br>lowest price",'sub-3':'Low prices even for small orders<br>Special rates for 100+ units<br>Best value guaranteed' },
+            // 2026-07-22: ko/ja/en 만 있어 아랍어 등 나머지 언어에서 한국어가 그대로 노출됐다.
+            zh: { 'tag-0':'SAFETY','title-0':'并非<br>UV 打印','sub-0':'采用环保 OEKO-TEX® 墨水<br>零掉色 · 零化学气味<br>6pt 小字也清晰锐利',
+                  'tag-1':'GREENGUARD GOLD','title-1':'绿色卫士金级<br>无毒安全','sub-1':'医院与婴幼儿用品也可使用<br>最高等级安全认证<br>对皮肤无害的墨水',
+                  'tag-2':'WHOLESALE','title-2':'为批发商<br>打造的系统','sub-2':'面料海报 · 服装周边<br>为生产销售客户优化<br>严格检验，安心交付',
+                  'tag-3':'BEST PRICE','title-3':'定制印刷<br>业界最低价','sub-3':'小批量订购也实惠<br>100件以上享特惠价<br>回馈客户的支持' },
+            ar: { 'tag-0':'SAFETY','title-0':'ليست طباعة<br>UV','sub-0':'أحبار صديقة للبيئة معتمدة OEKO-TEX®<br>صفر بهتان للألوان · صفر روائح كيميائية<br>وضوح تام حتى بحجم 6 نقاط',
+                  'tag-1':'GREENGUARD GOLD','title-1':'شهادة جرين جارد<br>الذهبية وآمنة','sub-1':'آمنة للمستشفيات ومنتجات الأطفال<br>أعلى درجات شهادات الأمان<br>أحبار لا تضر البشرة',
+                  'tag-2':'WHOLESALE','title-2':'نظام مصمّم<br>لتجار الجملة','sub-2':'ملصقات قماشية · منتجات ملابس<br>مُحسَّن لعملاء الإنتاج وإعادة البيع<br>فحص دقيق وتسليم مطمئن',
+                  'tag-3':'BEST PRICE','title-3':'الطباعة المخصصة<br>بأقل سعر في السوق','sub-3':'أسعار مناسبة حتى للطلبات الصغيرة<br>سعر خاص عند طلب 100 قطعة فأكثر<br>تقديرًا لثقة عملائنا' },
+            es: { 'tag-0':'SAFETY','title-0':'No es<br>impresión UV','sub-0':'Tintas ecológicas certificadas OEKO-TEX®<br>CERO desteñido · CERO olor químico<br>Nitidez perfecta incluso a 6 pt',
+                  'tag-1':'GREENGUARD GOLD','title-1':'GREENGUARD Gold<br>no tóxico y seguro','sub-1':'Apto para hospitales y productos infantiles<br>Certificación de seguridad del más alto nivel<br>Tintas inofensivas para la piel',
+                  'tag-2':'WHOLESALE','title-2':'Un sistema para<br>mayoristas','sub-2':'Pósteres de tela · productos textiles<br>Optimizado para fabricantes y revendedores<br>Inspección minuciosa y entrega segura',
+                  'tag-3':'BEST PRICE','title-3':'Impresión personalizada<br>al mejor precio','sub-3':'Precios bajos incluso en pedidos pequeños<br>Tarifa especial a partir de 100 unidades<br>Gracias por su confianza' },
+            de: { 'tag-0':'SAFETY','title-0':'Kein<br>UV-Druck','sub-0':'Umweltfreundliche OEKO-TEX®-Tinten<br>KEIN Ausbluten · KEIN Chemiegeruch<br>Gestochen scharf selbst bei 6 pt',
+                  'tag-1':'GREENGUARD GOLD','title-1':'GREENGUARD Gold<br>ungiftig & sicher','sub-1':'Auch für Kliniken und Babyartikel geeignet<br>Sicherheitszertifikat der höchsten Stufe<br>Hautfreundliche Tinten',
+                  'tag-2':'WHOLESALE','title-2':'Ein System für<br>den Großhandel','sub-2':'Stoffposter · Textilprodukte<br>Optimiert für Hersteller und Wiederverkäufer<br>Sorgfältige Prüfung, sichere Lieferung',
+                  'tag-3':'BEST PRICE','title-3':'Individueller Druck<br>zum Bestpreis','sub-3':'Günstig auch bei Kleinauflagen<br>Sonderpreis ab 100 Stück<br>Danke für Ihr Vertrauen' },
+            fr: { 'tag-0':'SAFETY','title-0':'Ce n’est pas<br>de l’impression UV','sub-0':'Encres écologiques certifiées OEKO-TEX®<br>ZÉRO dégorgement · ZÉRO odeur chimique<br>Netteté parfaite même en 6 pt',
+                  'tag-1':'GREENGUARD GOLD','title-1':'GREENGUARD Gold<br>non toxique et sûr','sub-1':'Convient aux hôpitaux et aux articles pour bébés<br>Certification de sécurité du plus haut niveau<br>Encres sans danger pour la peau',
+                  'tag-2':'WHOLESALE','title-2':'Un système pensé<br>pour les grossistes','sub-2':'Affiches en tissu · articles textiles<br>Optimisé pour les fabricants et revendeurs<br>Contrôle rigoureux, livraison sereine',
+                  'tag-3':'BEST PRICE','title-3':'Impression personnalisée<br>au meilleur prix','sub-3':'Des tarifs bas même en petite quantité<br>Prix spécial dès 100 pièces<br>Merci de votre confiance' }
         };
         var lang = window.__PS_LANG || (function(){
             var h = location.hostname;
@@ -722,7 +743,7 @@ window._cottonSearch = function(){
             if (h.indexOf('cafe3355')>=0 || h.indexOf('chameleon.design')>=0) return 'en';
             return 'ko';
         })();
-        var trans = SLIDES[lang] || SLIDES.ko;
+        var trans = SLIDES[lang] || SLIDES.en || SLIDES.ko;
         Object.keys(trans).forEach(function(k){
             var el = carousel.querySelector('[data-cphc="' + k + '"]');
             if (el) el.innerHTML = trans[k];
@@ -844,7 +865,7 @@ window._cottonSearch = function(){
                 ja: { title:'ナナミ担当と相談後、ご注文金額を入力してください', desc:'LINE・お電話で相談後、合意金額を入力すると即座に決済画面が開きます。', unit:'円', btn:'⚡ 注文する', ph:'5,000', min:100, minAlert:'最低100円から入力可能です。' },
                 en: { title:'After consulting your manager, enter the quote amount', desc:'Checkout opens immediately after entering the agreed amount.', unit:'$', btn:'⚡ Order', ph:'50', min:1, minAlert:'Minimum $1.' }
             };
-            var t = L[lang] || L.ko;
+            var t = L[lang] || L.en || L.ko;
             function $(id){ return document.getElementById(id); }
             if ($('cpMgrQuoteTitle')) $('cpMgrQuoteTitle').textContent = t.title;
             if ($('cpMgrQuoteDesc'))  $('cpMgrQuoteDesc').textContent  = t.desc;
@@ -972,8 +993,8 @@ window._cottonSearch = function(){
                       refSuccess:'🎉 Done! A $30 coupon was credited to both you and your referrer.',
                       signupRedirect:'Signup is on the main site (Chameleon). Continue?\nA $30 coupon is granted after signup.' }
             };
-            var s = SAMPLE[lang] || SAMPLE.ko;
-            var c = COUPON[lang] || COUPON.ko;
+            var s = SAMPLE[lang] || SAMPLE.en || SAMPLE.ko;
+            var c = COUPON[lang] || COUPON.en || COUPON.ko;
             function $(id){ return document.getElementById(id); }
             if ($('cpFreeSampleTitle')) $('cpFreeSampleTitle').textContent = s.t;
             if ($('cpFreeSampleDesc'))  $('cpFreeSampleDesc').textContent  = s.d;
@@ -1748,7 +1769,7 @@ async function submitRollFabricRequest() {
               quoteTitle:'⚡ Order by Quote', quoteDesc:'After consulting your manager, enter the agreed amount to open checkout instantly.', quoteUnit:'$', quoteBtn:'Order',
               modalHint:'After consultation, you can pay the agreed amount directly through the "Order by Quote" button.' }
     };
-    var t = L[lang] || L.ko;
+    var t = L[lang] || L.en || L.ko;
     // 6 버튼 라벨
     if ($('cpLblPhone'))  $('cpLblPhone').textContent  = t.phone;
     if ($('cpLblChat'))   $('cpLblChat').textContent   = t.chat;
@@ -2003,11 +2024,18 @@ async function submitRollFabricRequest() {
   try { if (typeof window.loadEditorLibraries === "function") window.loadEditorLibraries(); } catch(e){}
   (function(){
     var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y';
-    var L = (window.__PS_LANG === 'ja') ? 'ja' : (window.__PS_LANG === 'en' ? 'en' : 'kr');
+    // 2026-07-22: ja/en 만 매핑돼 아랍어·중국어·스페인어·독일어·프랑스어가 전부 'kr' 로 떨어져
+    //   미니에디터 라벨이 한국어로 나왔다(사장님 지적). long/{lang}_124.json 이 있는 언어는 전부 매핑.
+    var L = ({ ja:'ja', en:'en', zh:'zh', ar:'ar', es:'es', de:'de', fr:'fr' })[window.__PS_LANG] || 'kr';
     var STR = {
       kr:{ title:'디자인 템플릿', sub:'클릭하면 캔버스에 바로 적용', loading:'로딩 중...', empty:'등록된 템플릿이 없습니다.', size:'사이즈 직접 입력', apply:'적용', edTitle:'간단한 디자인 바로바로', edSub:'사진 배경 지우기 · 글씨·이미지·템플릿으로 꾸며 바로 다운로드' },
       ja:{ title:'デザインテンプレート', sub:'クリックするとキャンバスに適用', loading:'読み込み中...', empty:'登録されたテンプレートがありません。', size:'サイズを入力', apply:'適用', edTitle:'かんたんデザインをすぐに', edSub:'写真の背景消し · 文字・画像・テンプレートで飾ってすぐダウンロード' },
-      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.', size:'Custom size', apply:'Apply', edTitle:'Quick & Easy Design', edSub:'Remove photo background · add text, images, templates, then download' }
+      en:{ title:'Design Templates', sub:'Click to apply to the canvas', loading:'Loading...', empty:'No templates yet.', size:'Custom size', apply:'Apply', edTitle:'Quick & Easy Design', edSub:'Remove photo background · add text, images, templates, then download' },
+      zh:{ title:'设计模板', sub:'点击即可应用到画布', loading:'加载中...', empty:'暂无模板。', size:'自定义尺寸', apply:'应用', edTitle:'简单设计，立刻完成', edSub:'去除照片背景 · 添加文字、图片、模板后直接下载' },
+      ar:{ title:'قوالب التصميم', sub:'انقر لتطبيقه على لوحة العمل', loading:'جارٍ التحميل...', empty:'لا توجد قوالب بعد.', size:'مقاس مخصص', apply:'تطبيق', edTitle:'تصميم سهل وفوري', edSub:'أزل خلفية الصورة · أضف النصوص والصور والقوالب ثم نزّل التصميم' },
+      es:{ title:'Plantillas de diseño', sub:'Haz clic para aplicarla al lienzo', loading:'Cargando...', empty:'Aún no hay plantillas.', size:'Tamaño personalizado', apply:'Aplicar', edTitle:'Diseño fácil al instante', edSub:'Quita el fondo de la foto · añade texto, imágenes y plantillas, y descarga' },
+      de:{ title:'Design-Vorlagen', sub:'Zum Anwenden auf die Arbeitsfläche klicken', loading:'Wird geladen...', empty:'Noch keine Vorlagen.', size:'Eigene Größe', apply:'Anwenden', edTitle:'Einfaches Design sofort', edSub:'Fotohintergrund entfernen · Text, Bilder und Vorlagen hinzufügen und herunterladen' },
+      fr:{ title:'Modèles de design', sub:'Cliquez pour l’appliquer au canevas', loading:'Chargement...', empty:'Aucun modèle pour l’instant.', size:'Taille personnalisée', apply:'Appliquer', edTitle:'Un design simple, tout de suite', edSub:'Supprimez le fond de la photo · ajoutez texte, images et modèles, puis téléchargez' }
     }[L];
     // 미니에디터 내부 라벨(서체/테두리/두께 등)은 T()=window.t(key,fallback) 를 사용 → window.t 를 long JSON 사전으로 정의
     window.__cpI18nDict = window.__cpI18nDict || {};
@@ -2841,7 +2869,7 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                 return dict[k][__lang] || dict[k].ko || '';
             } catch(_) { return ''; }
         };
-        var __L = function(map){ return map[__lang] || map.ko || ''; };
+        var __L = function(map){ return map[__lang] || map.en || map.ko || ''; };
         var name = document.getElementById('upPatternName').value.trim();
         var cat = (document.getElementById('upPatternCat') && document.getElementById('upPatternCat').value) || 'etc';
         var desc = '';  // 2026-05-13: 설명 필드 제거 — 패턴명을 키워드로 사용
@@ -2986,7 +3014,7 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             }
 
             var doneMsg = { ko:'✅ 등록 완료! 카탈로그에 즉시 노출됩니다. 디자이너 마이페이지에서 디자이너명 "' + (author||name) + '"으로 로그인하세요.', ja:'✅ 登録完了！カタログに即時表示されます。デザイナーマイページで「' + (author||name) + '」でログインしてください。', en:'✅ Registered! Now visible in catalog. Log in to Designer My Page with name "' + (author||name) + '".', zh:'✅ 已登记！立即显示在目录中。', ar:'✅ تم التسجيل', es:'✅ Registrado', de:'✅ Registriert', fr:'✅ Enregistre' };
-            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[__lang]||doneMsg.ko) + '</span>';
+            statusEl.innerHTML = '<span style="color:#16a34a; font-weight:700;">' + (doneMsg[__lang]||doneMsg.en || doneMsg.ko) + '</span>';
             // 폼 초기화 (안전 가드)
             ['upPatternName'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
             var oName = document.getElementById('upOriginalName'); if (oName) oName.textContent = '';
@@ -5206,7 +5234,7 @@ document.addEventListener('DOMContentLoaded', function() {
               signupNotice:'Signing up takes just <b>one ID &amp; password</b> — <b>no personal info required.</b> Sign up with confidence.<br>Get <b style="color:#34d399;">$30</b> event credit instantly. 🎁',
               googleBtn:'Continue with Google', lineBtn:'Continue with LINE', or:'or' }
     };
-    var t = T[lang] || T.ko;
+    var t = T[lang] || T.en || T.ko;
     // 소셜 로그인 버튼 / OR 라벨 i18n
     if ($('cpAuthGoogleLbl')) $('cpAuthGoogleLbl').textContent = t.googleBtn;
     if ($('cpAuthLineLbl'))   $('cpAuthLineLbl').textContent   = t.lineBtn;
@@ -5558,7 +5586,7 @@ document.addEventListener('DOMContentLoaded', function() {
               notFound:'No orders found.', err:'An error occurred during search.',
               digitsErr:'Please enter the last 4 digits.', back:'Search Again' }
     };
-    var t = T[lang] || T.ko;
+    var t = T[lang] || T.en || T.ko;
     // 라벨 i18n
     if ($('cpLookupTitle'))     $('cpLookupTitle').textContent     = t.title;
     if ($('cpLookupDesc'))      $('cpLookupDesc').textContent      = t.desc;

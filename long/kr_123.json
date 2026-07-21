@@ -1605,5 +1605,11 @@
   "btn_outline_off": "테두리 켜기",
   "btn_outline_on": "테두리 끄기",
   "menu_make_menuboard": "메뉴판 만들기",
-  "ph_effect_search": "검색..."
+  "ph_effect_search": "검색...",
+  "btn_mgr_phones": "매니저 전화안내",
+  "btn_vip_pay": "VIP 개인결제",
+  "btn_scrap_pay": "상담 후 금액주문",
+  "btn_design_request": "디자인 의뢰하기",
+  "btn_designer_apply": "디자이너",
+  "btn_designer_recruit_btn": "블로그"
 }

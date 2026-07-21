@@ -2033,5 +2033,11 @@
   "me_fix_hint": "اكتب ما تريد تغييره، وسيبقى الباقي كما هو.",
   "me_fix_ph": "مثال: خط أكبر، خلفية زرقاء، السعر 50",
   "me_intro_mine": "تصاميمي",
-  "me_intro_mine_desc": "أعد تحميل تصميم أنشأته سابقًا"
+  "me_intro_mine_desc": "أعد تحميل تصميم أنشأته سابقًا",
+  "btn_mgr_phones": "أرقام هواتف المسؤولين",
+  "btn_vip_pay": "دفع خاص لكبار العملاء",
+  "btn_scrap_pay": "طلب بالمبلغ بعد الاستشارة",
+  "btn_design_request": "اطلب تصميمًا",
+  "btn_designer_apply": "المصممون",
+  "btn_designer_recruit_btn": "المدونة"
 }

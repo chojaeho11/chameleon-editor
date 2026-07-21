@@ -2032,5 +2032,11 @@
   "me_fix_hint": "Schreiben Sie, was geändert werden soll — der Rest bleibt unverändert.",
   "me_fix_ph": "z. B. größere Schrift, blauer Hintergrund, Preis auf 50 €",
   "me_intro_mine": "Meine Designs",
-  "me_intro_mine_desc": "Frühere Designs erneut laden"
+  "me_intro_mine_desc": "Frühere Designs erneut laden",
+  "btn_mgr_phones": "Ansprechpartner – Telefon",
+  "btn_vip_pay": "VIP-Direktzahlung",
+  "btn_scrap_pay": "Betragsbestellung nach Beratung",
+  "btn_design_request": "Design beauftragen",
+  "btn_designer_apply": "Designer",
+  "btn_designer_recruit_btn": "Blog"
 }

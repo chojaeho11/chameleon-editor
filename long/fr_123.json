@@ -1970,5 +1970,11 @@
   "btn_outline_off": "Activer le contour",
   "btn_outline_on": "Désactiver le contour",
   "menu_make_menuboard": "Créer un menu",
-  "ph_effect_search": "Rechercher..."
+  "ph_effect_search": "Rechercher...",
+  "btn_mgr_phones": "Téléphones des responsables",
+  "btn_vip_pay": "Paiement direct VIP",
+  "btn_scrap_pay": "Commande au montant après conseil",
+  "btn_design_request": "Demander un design",
+  "btn_designer_apply": "Designers",
+  "btn_designer_recruit_btn": "Blog"
 }

@@ -2002,5 +2002,11 @@
   "btn_outline_off": "Outline On",
   "btn_outline_on": "Outline Off",
   "menu_make_menuboard": "Make Menu Board",
-  "ph_effect_search": "Search..."
+  "ph_effect_search": "Search...",
+  "btn_mgr_phones": "Manager contacts",
+  "btn_vip_pay": "VIP direct payment",
+  "btn_scrap_pay": "Quote-based order",
+  "btn_design_request": "Request a design",
+  "btn_designer_apply": "Designers",
+  "btn_designer_recruit_btn": "Blog"
 }

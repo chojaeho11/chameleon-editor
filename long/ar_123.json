@@ -1971,5 +1971,11 @@
   "btn_outline_off": "تفعيل الحدود",
   "btn_outline_on": "إيقاف الحدود",
   "menu_make_menuboard": "إنشاء قائمة",
-  "ph_effect_search": "بحث..."
+  "ph_effect_search": "بحث...",
+  "btn_mgr_phones": "أرقام هواتف المسؤولين",
+  "btn_vip_pay": "دفع خاص لكبار العملاء",
+  "btn_scrap_pay": "طلب بالمبلغ بعد الاستشارة",
+  "btn_design_request": "اطلب تصميمًا",
+  "btn_designer_apply": "المصممون",
+  "btn_designer_recruit_btn": "المدونة"
 }

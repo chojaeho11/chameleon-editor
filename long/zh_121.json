@@ -5,24 +5,20 @@
   "wall_option_desc": "开始自定义设计",
   "search_placeholder": "您今天想找什么产品？",
   "btn_search": "搜索",
-
   "tab_all": "模板",
   "tab_vector": "矢量图",
   "tab_graphic": "素材(PNG)",
   "tab_photo": "照片",
   "tab_pattern": "图案",
   "tab_logo": "Logo(PNG)",
-
   "btn_my_library": "📂 我的素材库",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
   "btn_login": "登录",
   "btn_logout": "退出登录",
-
   "wall_option_title": "墙面高度",
   "tool_size_change": "📏 调整尺寸(mm)",
   "btn_save_cost": "应用",
-
   "label_canvas_tools": "画布工具",
   "btn_fit_screen": "适应屏幕",
   "btn_lock": "锁定",
@@ -30,7 +26,6 @@
   "btn_ai_gen": "AI 生成器",
   "btn_save_design": "💾 保存设计",
   "btn_logo_share": "Logo 共享中心",
-
   "label_basic_tools": "基本工具",
   "btn_add_text": "+ 文字",
   "btn_font": "🅰️ 字体",
@@ -38,7 +33,6 @@
   "label_stroke": "🖌️ 描边",
   "label_shapes": "形状",
   "label_upload": "上传",
-
   "label_edit_layer": "编辑 & 图层",
   "btn_undo": "撤销",
   "btn_redo": "重做",
@@ -47,22 +41,18 @@
   "btn_front": "置于顶层",
   "btn_back": "置于底层",
   "btn_del": "删除",
-
   "label_align": "对齐",
   "btn_center_all": "居中对齐",
   "btn_full_bg": "设为背景",
-
   "label_cut_shape": "裁切选项",
   "msg_select_click": "选择图片后点击",
   "btn_make_cutline": "创建刀模线",
   "btn_keyring_hole": "钥匙扣孔",
   "btn_stand_base": "立牌底座",
-
   "label_ai_image_tools": "AI 图像工具",
   "btn_bg_remove": "(去除背景)",
   "btn_enhance": "增强",
   "btn_text_outline": "文字描边",
-
   "cart_title": "购物车",
   "label_payment_amt": "支付金额",
   "label_product_price": "小计",
@@ -71,7 +61,6 @@
   "label_total_price": "合计",
   "btn_do_checkout": "结算",
   "btn_print_quote": "打印报价单",
-
   "label_material": "① 材质/厚度",
   "label_finish": "② 表面处理",
   "label_addons": "③ 附加选项",
@@ -87,7 +76,6 @@
   "label_user_design": "用户设计",
   "msg_cart_empty": "购物车为空。",
   "msg_cart_added": "已添加到购物车。",
-
   "modal_login_title": "登录",
   "placeholder_email": "邮箱地址",
   "placeholder_pw": "密码",
@@ -95,7 +83,6 @@
   "msg_no_account": "还没有账号？",
   "btn_signup": "注册",
   "btn_close": "关闭",
-
   "modal_delivery_title": "📝 收货信息",
   "label_manager_name": "联系人姓名",
   "label_contact_phone": "联系电话",
@@ -108,7 +95,6 @@
   "doc_receipt": "收据",
   "doc_order_sheet": "生产工单",
   "doc_statement": "发票",
-
   "modal_checkout_title": "确认订单并支付",
   "label_orderer_name": "下单人",
   "label_shipping_addr": "收货地址",
@@ -121,14 +107,12 @@
   "btn_bank_confirm": "✅ 已转账（请求确认）",
   "btn_download_quote": "下载报价单",
   "btn_download_work_sheet": "下载生产工单",
-
   "choice_modal_title": "🎨 选择创建方式",
   "choice_modal_desc": "使用编辑器开始设计，或上传已完成的文件。",
   "btn_design_direct": "使用编辑器设计",
   "btn_design_direct_sub": "使用模板和工具",
   "btn_order_file": "上传文件",
   "btn_order_file_sub": "上传 PDF/AI 文件",
-
   "modal_size_select_title": "Q. 您要制作什么？",
   "modal_calendar_title": "期望交货日期 [制作周期：3天]",
   "btn_rotate": "旋转",
@@ -138,11 +122,9 @@
   "label_opacity": "不透明度",
   "modal_size_select_sub": "（选择尺寸）",
   "modal_size_select_desc": "选择尺寸以开始设计。",
-
   "msg_loading": "加载中...",
   "btn_guide_on": "参考线",
   "help_text_shortcuts": "空格: 平移 / 滚轮: 缩放 / 方向键: 微调",
-
   "review_section_title": "客户评价",
   "review_section_desc": "了解使用变色龙印刷完成的成功案例。",
   "rev_1_text": "\"每次活动我们都会使用。对于广告公司来说没有更好的合作伙伴了。蜂窝板价格实惠，交货快，质量一流。\"",
@@ -163,7 +145,6 @@
   "rev_8_user": "AdPop 标识",
   "rev_9_text": "\"比普通横幅高级感强得多。独特的质感和环保处理方式是巨大的优势。\"",
   "rev_9_user": "创意总监 Ryan Brooks",
-
   "footer_company_label": "公司 :",
   "footer_company_value": "变色龙印刷有限公司",
   "footer_ceo_label": "CEO :",
@@ -180,11 +161,9 @@
   "footer_cs_time": "周一至周五 09:00 ~ 18:00",
   "footer_cs_lunch": "午休 12:00 ~ 13:00",
   "footer_cs_closed": "* 周末及法定节假日休息",
-
   "msg_deposit_complete": "已请求确认转账。\n点击 [关闭] 重置。",
   "msg_confirm_bank_transfer": "确定使用银行转账？",
   "btn_confirm": "确认",
-
   "pdf_quote_title": "报 价 单",
   "pdf_order_sheet_title": "生产工单",
   "pdf_date": "日期",
@@ -218,49 +197,39 @@
   "pdf_label_subtotal": "小计",
   "pdf_label_tax": "销售税",
   "pdf_footer_msg": "感谢您的惠顾！",
-
   "msg_logout_confirm": "确定要退出登录吗？",
   "msg_login_required": "需要登录。",
   "msg_login_required_design": "需要登录才能开始设计。",
   "msg_template_apply_confirm": "将模板应用到当前画布？\n（将叠加在您的设计上方）",
   "msg_large_product_warning": "📢 编辑器简单又方便。\n\n创建出色的设计。\n点击模板即可开始。",
-
   "msg_processing_file": "正在处理文件...",
   "msg_unsupported_file": "不支持的文件格式。",
   "msg_pdf_loaded": "✅ PDF 加载成功。（原文件已保存至服务器）",
-
   "msg_select_image_for_outline": "请选择图片以创建轮廓！",
   "msg_generating": "正在生成...",
   "msg_generating_docs": "正在生成单据...",
-
   "prompt_partner_name": "请输入公司名称（店铺名称）",
   "prompt_partner_phone": "请输入联系电话",
   "prompt_partner_region": "请输入期望区域（例：拉斯维加斯, NV）",
   "confirm_partner_apply": "[确认申请]\n名称: {name}\n电话: {phone}\n区域: {region}\n\n确定提交此申请？",
   "msg_partner_apply_success": "🎉 申请提交成功！\n管理员审批后即可使用合作伙伴功能。",
-
   "confirm_order_accept": "确定接受此订单？",
   "msg_order_already_taken": "此订单已被其他合作伙伴接单。",
   "msg_order_accept_success": "已接单！请在「我的订单」标签页查看。",
-
   "alert_vip_info_needed": "请输入联系人姓名和电话号码。",
   "alert_vip_file_needed": "请至少选择一个文件上传。",
   "msg_uploading_files": "正在上传文件...",
   "msg_vip_order_success": "🎉 提交完成。\n{manager} 经理将尽快与您联系。",
-
   "alert_input_shipping": "请填写完整的收货信息。",
   "msg_creating_order": "正在创建订单...",
   "msg_order_received": "订单已接收。\n已应用会员折扣（{rate}%）。",
   "btn_submit_complete": "提交完成",
-
   "confirm_bank_payment": "确定使用银行转账下单？\n确认付款后开始生产。",
   "msg_order_complete_bank": "订单已完成。请转账至指定账户。",
-
   "alert_deposit_shortage": "余额不足。\n（差额: {amount}）",
   "confirm_deposit_pay": "确定使用余额 {amount} 支付？",
   "msg_processing_payment": "正在处理支付...",
   "msg_payment_complete": "支付完成！",
-
   "home_quick_badge": "提交营业执照即享9折优惠 + 拉斯维加斯都市圈免费配送。",
   "home_quick_title": "企业专属优惠 — 拉斯维加斯都市圈免费配送",
   "home_vip_title": "大宗订单 VIP 通道",
@@ -270,7 +239,6 @@
   "home_hotdeal_desc": "不要错过超值特惠。适合送礼。乔迁礼品每单限购10件。",
   "home_biz_title": "企业批量折扣",
   "home_biz_desc": "企业客户专享价格！最低起订量10-100件。经销商专属折扣。",
-
   "menu_blog": "变色龙<br>博客",
   "menu_review": "客户<br>评价",
   "menu_promo": "本地广告<br>推广",
@@ -278,7 +246,6 @@
   "menu_job": "招聘<br>市场",
   "menu_manual": "产品<br>手册",
   "menu_orders": "订单追踪",
-
   "tier_main_title": "会员<span>折扣优惠</span>指南",
   "tier_gold_name": "黄金",
   "tier_gold_discount": "9.7折",
@@ -295,29 +262,23 @@
   "tier_partner_cond_label": "条件",
   "tier_partner_cond_fee": "合作伙伴申请人",
   "tier_partner_cond_note": "（需提供营业执照）",
-
   "partner_banner_title": "面向卖家的低佣金市场平台<br><span style='color: #818cf8;'>高利润全球销售 — 交给变色龙！</span>",
   "partner_banner_desc": "只需在变色龙注册 — 我们负责物流和手续！<br>在我们的批发广告市场上架您的T恤印花、定制商品、促销品等。<br><b style='color:#818cf8;'>行业最低6.5%佣金</b> + 来自韩国第一广告印刷网络的客户资源，<br>还可以<b style='color:#818cf8;'>在全球市场以2倍价格销售</b>。立即抢占先机！",
   "btn_partner_console": "合作伙伴管理后台",
   "btn_partner_apply": "申请成为合作伙伴",
-
   "contrib_title": "变色龙贡献者系统",
-  "contrib_balance_label": "我的收益",
+  "contrib_balance_label": "我的累计收益",
   "contrib_desc": "分享您的设计素材，赚取现金奖励。<br>重复上传低质量图片会降低您的等级。升级奖励x2、x4；降级奖励减半。<br><span style='color:#ef4444; font-weight:bold;'>请注意分类！</span>分类不匹配或关键词少于3个将被取消上传权限。",
   "contrib_btn_png": "PNG 素材",
   "contrib_btn_svg": "SVG 素材",
   "contrib_btn_logo": "上传Logo",
   "contrib_btn_template": "创建模板",
-
   "footer_menu_company": "关于我们",
   "footer_menu_notice": "公告",
   "footer_menu_terms": "服务条款",
   "footer_menu_privacy": "隐私政策",
-
   "//_COMMENT": "=== JS 动态字符串 ===",
-
   "btn_guide_off": "隐藏参考线",
-
   "msg_no_fonts": "未注册字体。<br>请在管理页面注册字体。",
   "msg_select_text_font": "请选择文字对象以更改字体。",
   "msg_select_obj_outline": "请选择对象以应用描边。",
@@ -327,13 +288,11 @@
   "msg_uploading": "上传中...",
   "tag_user_upload": "用户上传",
   "suffix_logo": " Logo",
-
   "confirm_unlock_all": "确定解锁所有 {count} 个已锁定对象？",
   "msg_select_obj_lock": "请选择要锁定的对象。",
   "btn_lock_selection": "锁定选中项",
   "btn_unlock_all": "全部解锁",
   "btn_lock_wizard": "锁定向导",
-
   "prod_wall_1": "1段墙面",
   "prod_wall_2": "2段墙面",
   "prod_wall_3": "3段墙面",
@@ -344,11 +303,9 @@
   "prod_photo_zone": "文字拍照区",
   "prod_fabric_wide": "宽幅布料",
   "prod_paper_stand": "纸质立牌",
-
   "msg_invalid_number": "请输入有效数字。",
   "msg_max_size_exceeded": "不能超过最大尺寸（{w}x{h}mm）。",
   "msg_size_rotated": "尺寸已旋转以适应画布。",
-
   "msg_data_loading": "正在加载数据...",
   "msg_db_disconnected": "数据库未连接",
   "msg_no_data": "无数据可显示。",
@@ -356,11 +313,9 @@
   "msg_load_failed": "数据加载失败。",
   "btn_retry": "重试",
   "btn_apply_now": "立即申请",
-
   "btn_prev_page": "上一页",
   "btn_next_page": "下一页",
   "label_page": "页",
-
   "msg_select_template": "请选择模板。",
   "msg_click_select": "点击选择文件",
   "msg_drag_drop": "或将文件拖放到此处",
@@ -375,7 +330,6 @@
   "msg_bg_remove_server": "去除背景需要连接服务器。",
   "msg_select_image": "请选择图片。",
   "msg_pdf_error": "请在「下单」步骤上传PDF文件。编辑器仅支持图片。",
-
   "//_COMMENT_2": "=== 补充缺失字符串 ===",
   "confirm_apply_bg": "应用此背景设计？\n（当前背景将被替换）",
   "confirm_bg_remove": "是否去除背景？",
@@ -384,7 +338,6 @@
   "msg_gen_fail": "生成失败",
   "msg_min_page_limit": "至少需要一页。",
   "btn_my_page": "📂 我的页面",
-
   "msg_generating_quote": "正在生成报价单...",
   "err_quote_gen_failed": "报价单生成失败。",
   "err_quote_error": "报价单生成错误: ",
@@ -407,7 +360,6 @@
   "msg_sending": "发送中...",
   "msg_withdraw_success": "提现申请已提交。\n管理员审核后5天内到账。",
   "msg_clipboard_empty": "剪贴板为空。",
-
   "mp_menu_dashboard": "仪表盘",
   "mp_menu_designs": "我的设计",
   "mp_menu_sales": "在售中",
@@ -426,11 +378,9 @@
   "default_customer": "客户",
   "msg_canvas_not_ready": "画布未就绪。",
   "err_canvas_not_ready": "画布尚未完全加载，请稍候。",
-
   "msg_no_locked_bg": "未找到已锁定的背景。",
   "msg_bg_unlocked": "背景已解锁。",
   "msg_bg_locked": "背景已锁定。",
-
   "ctx_undo": "撤销",
   "ctx_redo": "重做",
   "ctx_copy": "复制",
@@ -441,7 +391,6 @@
   "ctx_lock": "锁定",
   "ctx_unlock": "解锁",
   "ctx_unlock_all": "全部解锁",
-
   "btn_google_login": "使用Google账号登录",
   "placeholder_pw_confirm": "确认密码",
   "label_select_manager": "选择客户经理（可选）",
@@ -459,7 +408,7 @@
   "mp_recent_logs": "📢 最近收益记录",
   "mp_saved_designs": "📂 已保存的设计",
   "msg_wait_moment": "请稍候。",
-  "confirm_select_partner": "选择此合作伙伴？\n将显示联系方式并关闭其他投标。",
+  "confirm_select_partner": "将您的号码（{myPhone}）分享给合作伙伴\n并确认此选择？",
   "msg_review_saved": "评价保存成功！",
   "msg_no_partner_auth": "未找到合作伙伴权限。",
   "msg_post_deleted": "此帖子已被删除。",
@@ -484,7 +433,6 @@
   "alert_input_depositor": "请输入汇款人姓名。",
   "msg_outline_failed": "无法为此图片生成矢量轮廓。",
   "msg_image_load_failed": "图片加载失败。",
-
   "vip_fast_inquiry": "⚡ 快速咨询",
   "vip_manager_intro": "\"我们的专属客户经理将通过电话快速回复\"",
   "vip_manager_jisuk": "经理 Alex",
@@ -509,7 +457,6 @@
   "btn_next": "下一页",
   "label_page_suffix": "页",
   "search_placeholder_start": "您在找什么设计？（例：猫、海洋、天空）",
-
   "//_COMMENT_3": "=== 编辑器界面 ===",
   "editor_size": "大小",
   "editor_char_spacing": "字间距",
@@ -526,7 +473,6 @@
   "editor_text_edit": "编辑文字",
   "editor_lock_selection": "锁定选中项",
   "btn_mobile_template": "🎨 模板",
-
   "//_COMMENT_4": "=== 设计向导按钮 ===",
   "wiz_flyer": "传单",
   "wiz_poster": "海报",
@@ -535,7 +481,6 @@
   "wiz_banner_h": "横幅",
   "wiz_banner_v": "竖幅",
   "wiz_insta_panel": "Instagram面板",
-
   "//_COMMENT_5": "=== 参考线选项 ===",
   "guide_off": "🚫 关闭",
   "guide_cross": "✚ 十字线",
@@ -543,7 +488,6 @@
   "guide_4col": "4列",
   "guide_5col": "5列",
   "guide_grid": "▦ 网格",
-
   "//_COMMENT_6": "=== 模板弹窗 ===",
   "tpl_load_title": "🎨 加载模板",
   "tpl_load_desc": "您有正在进行的设计。\n请选择如何应用所选模板？",
@@ -559,7 +503,6 @@
   "ph_search_input": "搜索...",
   "tpl_obj_label": "🧩 素材",
   "tpl_search_product": "搜索产品模板",
-
   "//_COMMENT_7": "=== AI 绘图 ===",
   "ai_title": "✨ AI 图像生成器",
   "ai_prompt_label": "描述（提示词）",
@@ -567,12 +510,10 @@
   "btn_generate": "生成",
   "ai_waiting": "等待结果",
   "btn_add_to_canvas": "添加到画布",
-
   "//_COMMENT_8": "=== 下单完成弹窗 ===",
   "msg_order_complete_title": "🎉 下单完成！",
   "btn_download_order_sheet": "📄 下载生产工单",
   "btn_download_quotation": "📑 下载报价单",
-
   "//_COMMENT_9": "=== 设计销售弹窗 ===",
   "sell_title": "💎 分享/出售设计",
   "sell_benefit_1": "即时获得 <span class='highlight'>100积分</span>，每次使用 <span class='highlight'>200积分</span>",
@@ -585,13 +526,11 @@
   "ph_sell_title": "例：诊所活动、夏季海报",
   "btn_register": "注册",
   "modal_font_title": "选择字体",
-
   "//_COMMENT_10": "=== 选择弹窗 ===",
   "btn_purchase": "购买",
   "btn_purchase_sub": "通过购物车上传文件",
   "btn_detail_page": "查看详情",
   "btn_story_page": "查看故事",
-
   "//_COMMENT_11": "=== 模板创建弹窗 ===",
   "tpl_create_title": "开始创建模板",
   "tpl_create_desc": "注册您的设计并赚取收益！",
@@ -603,17 +542,15 @@
   "ph_width": "宽度",
   "ph_height": "高度",
   "btn_start_design": "🚀 开始设计",
-
   "//_COMMENT_12": "=== 移动端编辑器 ===",
   "btn_delete_obj": "删除",
   "btn_done_edit": "完成",
   "ph_text_input": "在此输入文字...",
-
   "//_COMMENT_13": "=== JS 动态提示 (main.js) ===",
   "msg_product_info_missing": "⚠️ 未找到此设计的产品信息。\n请重新选择产品规格。",
   "msg_cannot_load_form": "无法加载申请表。",
   "confirm_status_change": "确定将状态更改为 '{status}'？",
-  "msg_min_withdraw": "最低提现金额为 $100。",
+  "msg_min_withdraw": "最低提现金额为 $20。",
   "msg_input_real_name": "请输入账户持有人姓名。",
   "msg_input_phone": "请输入电话号码。",
   "msg_input_id_number": "请正确输入身份证号码。",
@@ -635,7 +572,6 @@
   "confirm_go_editor": "前往设计编辑器？",
   "msg_submit_error": "提交错误: ",
   "msg_apply_error": "申请错误: ",
-
   "//_COMMENT_PARTNER_MODAL": "=== 合作伙伴申请弹窗 ===",
   "partner_apply_title": "🤝 合作伙伴（加盟）申请",
   "partner_apply_desc": "成为区域广告/制造合作伙伴，赚取收益。",
@@ -651,7 +587,6 @@
   "partner_btn_apply": "提交申请",
   "partner_btn_cancel": "撤回申请",
   "partner_btn_close": "关闭",
-
   "//_COMMENT_14": "=== 合作伙伴控制台 ===",
   "partner_console_title": "合作伙伴控制台",
   "partner_region_unset": "未设置区域",
@@ -672,7 +607,6 @@
   "th_status_col": "状态",
   "my_order_tracking_title": "📦 订单追踪",
   "msg_loading_text": "加载中...",
-
   "//_COMMENT_15": "=== 购物车 & 支付页面 ===",
   "cart_upload_guide": "在此上传您的设计文件",
   "btn_bulk_upload": "批量上传文件",
@@ -703,7 +637,6 @@
   "rv_total_reviews": "条评价",
   "rv_avg_rating": "平均评分",
   "rv_submitted": "评价已提交！",
-
   "//_COMMENT_PARTNER": "=== 合作伙伴控制台 i18n ===",
   "pt_no_pool_orders": "当前没有可接订单。",
   "pt_no_my_orders": "没有进行中的订单。",
@@ -724,7 +657,6 @@
   "pt_badge_admin": "管理员（主管）",
   "pt_badge_partner": "合作伙伴",
   "pt_no_access": "🚫 访问被拒绝。\n\n请等待管理员审批。",
-
   "pt_tab_products": "我的产品",
   "pt_tab_register": "注册产品",
   "pt_tab_orders": "订单管理",
@@ -793,7 +725,6 @@
   "pt_guide_flow_4": "标记为已发货",
   "pt_guide_flow_5": "客户确认收货 → 等待15天",
   "pt_guide_flow_6": "申请提现 + 附上税务发票 → 到账",
-
   "//_COMMENT_PT_PAGE": "=== 合作伙伴页面 (partner.html) ===",
   "pt_btn_home": "返回首页",
   "pt_btn_logout": "退出登录",
@@ -835,7 +766,6 @@
   "pt_guide_global_margin": "国际销售利润约 <strong>2倍</strong>！",
   "pt_wd_bank_ph": "例：Chase Bank 123-456-789",
   "pt_wd_holder_ph": "John Smith",
-
   "mp_sales_title": "🎨 在售设计（我的模板）",
   "mp_sales_total": "预估收益",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> 上传模板即获 <b>100积分</b>，Logo即获 <b>150积分</b>。<br>每次其他用户购买您的设计，额外获得 <b>200积分</b>。",
@@ -868,7 +798,6 @@
   "mp_wd_cancel": "取消",
   "mp_order_history": "📦 订单 / 物流",
   "mp_min_withdraw_notice": "最低提现金额：$20",
-  "msg_min_withdraw": "最低提现金额为 $20。",
   "msg_insufficient_deposit": "余额不足。",
   "msg_enter_bank_info": "请输入银行名称、账号和持有人姓名。",
   "msg_enter_contact_id": "请输入联系电话和税号。",
@@ -877,7 +806,6 @@
   "label_withdrawal": "提现",
   "label_admin_adjust": "管理员调整",
   "label_other": "其他",
-
   "contrib_upload_title": "📤 上传",
   "contrib_upload_png": "PNG 素材上传",
   "contrib_upload_svg": "SVG 矢量上传",
@@ -890,8 +818,6 @@
   "contrib_file_tip": "* 建议使用透明PNG文件。",
   "contrib_btn_submit": "上传并获得积分",
   "contrib_btn_cancel": "取消",
-  "contrib_balance_label": "我的累计收益",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== 我的页面订单 ===",
   "btn_reorder": "再次订购",
   "btn_cancel_order": "取消订单",
@@ -916,7 +842,6 @@
   "btn_view_reviews": "查看评价",
   "prompt_enter_phone": "请输入电话号码以分享给合作伙伴：",
   "msg_phone_required": "需要提供电话号码才能与合作伙伴对接。",
-  "confirm_select_partner": "将您的号码（{myPhone}）分享给合作伙伴\n并确认此选择？",
   "msg_matching_complete": "匹配完成！\n合作伙伴联系方式现已可用。",
   "prompt_enter_rating": "请输入合作伙伴评分（1-5）：",
   "prompt_enter_review": "为其他客户留下评价：",
@@ -930,7 +855,6 @@
   "msg_penalty_notice_title": "账户处罚通知",
   "msg_penalty_notice_body": "您的账户已被 <b>处罚</b>。<br>处罚期间，销售收益限制为每次注册 <b>50积分</b>。",
   "label_reason": "原因",
-
   "//_COMMENT_ORDER_STATUS": "=== 订单状态 ===",
   "status_접수대기": "待受理",
   "status_입금대기": "待付款",
@@ -942,5 +866,11 @@
   "status_구매확정": "确认收货",
   "status_완료됨": "已完成",
   "status_취소됨": "已取消",
-  "status_임시작성": "草稿"
+  "status_임시작성": "草稿",
+  "btn_mgr_phones": "客户经理电话",
+  "btn_vip_pay": "VIP 专属支付",
+  "btn_scrap_pay": "咨询后按金额下单",
+  "btn_design_request": "委托设计",
+  "btn_designer_apply": "设计师",
+  "btn_designer_recruit_btn": "博客"
 }

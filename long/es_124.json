@@ -2032,5 +2032,11 @@
   "me_fix_hint": "Indica qué quieres cambiar; el resto se mantiene igual.",
   "me_fix_ph": "ej.: texto más grande, fondo azul, precio a 50 €",
   "me_intro_mine": "Mis diseños",
-  "me_intro_mine_desc": "Recupera un diseño que hiciste antes"
+  "me_intro_mine_desc": "Recupera un diseño que hiciste antes",
+  "btn_mgr_phones": "Teléfonos de los gestores",
+  "btn_vip_pay": "Pago directo VIP",
+  "btn_scrap_pay": "Pedido por importe tras consulta",
+  "btn_design_request": "Solicitar un diseño",
+  "btn_designer_apply": "Diseñadores",
+  "btn_designer_recruit_btn": "Blog"
 }

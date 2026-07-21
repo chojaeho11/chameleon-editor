@@ -1970,5 +1970,11 @@
   "btn_outline_off": "Umrandung an",
   "btn_outline_on": "Umrandung aus",
   "menu_make_menuboard": "Menütafel erstellen",
-  "ph_effect_search": "Suchen..."
+  "ph_effect_search": "Suchen...",
+  "btn_mgr_phones": "Ansprechpartner – Telefon",
+  "btn_vip_pay": "VIP-Direktzahlung",
+  "btn_scrap_pay": "Betragsbestellung nach Beratung",
+  "btn_design_request": "Design beauftragen",
+  "btn_designer_apply": "Designer",
+  "btn_designer_recruit_btn": "Blog"
 }

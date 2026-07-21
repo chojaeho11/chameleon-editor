@@ -5,24 +5,20 @@
   "wall_option_desc": "ابدأ التصميم المخصص",
   "search_placeholder": "ما المنتج الذي تبحث عنه اليوم؟",
   "btn_search": "بحث",
-
   "tab_all": "القوالب",
   "tab_vector": "رسوم متجهة",
   "tab_graphic": "عناصر(PNG)",
   "tab_photo": "صور",
   "tab_pattern": "أنماط",
   "tab_logo": "شعارات(PNG)",
-
   "btn_my_library": "📂 مكتبتي",
   "btn_cart": "🛒",
   "btn_add_to_cart": "🛒",
   "btn_login": "تسجيل الدخول",
   "btn_logout": "تسجيل الخروج",
-
   "wall_option_title": "ارتفاع الجدار",
   "tool_size_change": "📏 تغيير الحجم(مم)",
   "btn_save_cost": "تطبيق",
-
   "label_canvas_tools": "أدوات اللوحة",
   "btn_fit_screen": "ملاءمة الشاشة",
   "btn_lock": "قفل",
@@ -30,7 +26,6 @@
   "btn_ai_gen": "مولّد الذكاء الاصطناعي",
   "btn_save_design": "💾 حفظ التصميم",
   "btn_logo_share": "مركز الشعارات",
-
   "label_basic_tools": "الأدوات الأساسية",
   "btn_add_text": "+ نص",
   "btn_font": "🅰️ الخطوط",
@@ -38,7 +33,6 @@
   "label_stroke": "🖌️ حد",
   "label_shapes": "الأشكال",
   "label_upload": "رفع",
-
   "label_edit_layer": "تحرير والطبقات",
   "btn_undo": "تراجع",
   "btn_redo": "إعادة",
@@ -47,22 +41,18 @@
   "btn_front": "إلى الأمام",
   "btn_back": "إلى الخلف",
   "btn_del": "حذف",
-
   "label_align": "محاذاة",
   "btn_center_all": "توسيط",
   "btn_full_bg": "تعيين كخلفية",
-
   "label_cut_shape": "خيارات القص",
   "msg_select_click": "حدد صورة وانقر",
   "btn_make_cutline": "إنشاء خط قص",
   "btn_keyring_hole": "فتحة سلسلة مفاتيح",
   "btn_stand_base": "قاعدة ستاند",
-
   "label_ai_image_tools": "أدوات صور الذكاء الاصطناعي",
   "btn_bg_remove": "(إزالة الخلفية)",
   "btn_enhance": "تحسين",
   "btn_text_outline": "حدود النص",
-
   "cart_title": "سلة التسوق",
   "label_payment_amt": "مبلغ الدفع",
   "label_product_price": "المجموع الفرعي",
@@ -71,7 +61,6 @@
   "label_total_price": "الإجمالي",
   "btn_do_checkout": "إتمام الشراء",
   "btn_print_quote": "طباعة عرض السعر",
-
   "label_material": "① المادة/السُمك",
   "label_finish": "② التشطيب",
   "label_addons": "③ إضافات",
@@ -87,7 +76,6 @@
   "label_user_design": "تصميم المستخدم",
   "msg_cart_empty": "سلة التسوق فارغة.",
   "msg_cart_added": "تمت إضافة المنتج إلى السلة.",
-
   "modal_login_title": "تسجيل الدخول",
   "placeholder_email": "البريد الإلكتروني",
   "placeholder_pw": "كلمة المرور",
@@ -95,7 +83,6 @@
   "msg_no_account": "ليس لديك حساب؟",
   "btn_signup": "إنشاء حساب",
   "btn_close": "إغلاق",
-
   "modal_delivery_title": "📝 معلومات الشحن",
   "label_manager_name": "اسم جهة الاتصال",
   "label_contact_phone": "رقم الهاتف",
@@ -108,7 +95,6 @@
   "doc_receipt": "إيصال",
   "doc_order_sheet": "أمر العمل",
   "doc_statement": "فاتورة",
-
   "modal_checkout_title": "تأكيد الطلب والدفع",
   "label_orderer_name": "مقدم الطلب",
   "label_shipping_addr": "عنوان الشحن",
@@ -121,14 +107,12 @@
   "btn_bank_confirm": "✅ لقد قمت بالتحويل (طلب التأكيد)",
   "btn_download_quote": "تحميل عرض السعر",
   "btn_download_work_sheet": "تحميل أمر العمل",
-
   "choice_modal_title": "🎨 اختر طريقة الإنشاء",
   "choice_modal_desc": "ابدأ التصميم باستخدام المحرر أو ارفع ملفاً جاهزاً.",
   "btn_design_direct": "التصميم بالمحرر",
   "btn_design_direct_sub": "استخدم القوالب والأدوات",
   "btn_order_file": "رفع ملف",
   "btn_order_file_sub": "رفع ملف PDF/AI",
-
   "modal_size_select_title": "س. ماذا تريد أن تصنع؟",
   "modal_calendar_title": "تاريخ التسليم المطلوب [مدة التنفيذ: 3 أيام]",
   "btn_rotate": "تدوير",
@@ -138,11 +122,9 @@
   "label_opacity": "الشفافية",
   "modal_size_select_sub": "(اختر الحجم)",
   "modal_size_select_desc": "اختر حجماً لبدء التصميم.",
-
   "msg_loading": "جارٍ التحميل...",
   "btn_guide_on": "الأدلة",
   "help_text_shortcuts": "مسافة: تحريك / تمرير: تكبير / الأسهم: تحريك دقيق",
-
   "review_section_title": "آراء العملاء",
   "review_section_desc": "اكتشف المشاريع الناجحة التي تم إنشاؤها مع طباعة كاميليون.",
   "rev_1_text": "\"نستخدمها في كل فعالية. لا يوجد شريك أفضل لوكالات الإعلان. ألواح Honeycomb Board بأسعار معقولة، ومدة التنفيذ سريعة، والجودة ممتازة.\"",
@@ -163,7 +145,6 @@
   "rev_8_user": "أدبوب للافتات",
   "rev_9_text": "\"تبدو أكثر فخامة من اللافتات العادية. الملمس الفريد والتخلص الصديق للبيئة مزايا كبيرة.\"",
   "rev_9_user": "المدير الإبداعي ريان بروكس",
-
   "footer_company_label": "الشركة :",
   "footer_company_value": "شركة طباعة كاميليون المحدودة",
   "footer_ceo_label": "المدير التنفيذي :",
@@ -180,11 +161,9 @@
   "footer_cs_time": "الاثنين-الجمعة 09:00 ~ 18:00",
   "footer_cs_lunch": "استراحة الغداء 12:00 ~ 13:00",
   "footer_cs_closed": "* مغلق في عطلات نهاية الأسبوع والعطل الرسمية",
-
   "msg_deposit_complete": "تم طلب تأكيد الإيداع.\nانقر [إغلاق] لإعادة التعيين.",
   "msg_confirm_bank_transfer": "هل تريد المتابعة بالتحويل البنكي؟",
   "btn_confirm": "تأكيد",
-
   "pdf_quote_title": "ع ر ض   س ع ر",
   "pdf_order_sheet_title": "أمر العمل",
   "pdf_date": "التاريخ",
@@ -218,49 +197,39 @@
   "pdf_label_subtotal": "المجموع الفرعي",
   "pdf_label_tax": "ضريبة المبيعات",
   "pdf_footer_msg": "شكراً لتعاملكم معنا!",
-
   "msg_logout_confirm": "هل تريد تسجيل الخروج؟",
   "msg_login_required": "تسجيل الدخول مطلوب.",
   "msg_login_required_design": "تسجيل الدخول مطلوب لبدء التصميم.",
   "msg_template_apply_confirm": "تطبيق القالب على اللوحة الحالية؟\n(سيتم إضافته فوق تصميمك)",
   "msg_large_product_warning": "📢 المحرر سهل ومريح.\n\nأنشئ تصميماً رائعاً.\nانقر على قالب للبدء.",
-
   "msg_processing_file": "جارٍ معالجة الملف...",
   "msg_unsupported_file": "صيغة ملف غير مدعومة.",
   "msg_pdf_loaded": "✅ تم تحميل ملف PDF بنجاح. (تم حفظ الأصل على الخادم)",
-
   "msg_select_image_for_outline": "يرجى تحديد صورة لإنشاء حدود خارجية!",
   "msg_generating": "جارٍ الإنشاء...",
   "msg_generating_docs": "جارٍ إنشاء المستندات...",
-
   "prompt_partner_name": "أدخل اسم الشركة (اسم المتجر)",
   "prompt_partner_phone": "أدخل رقم هاتف الاتصال",
   "prompt_partner_region": "أدخل المنطقة المطلوبة (مثال: لاس فيغاس، نيفادا)",
   "confirm_partner_apply": "[تأكيد الطلب]\nالاسم: {name}\nالهاتف: {phone}\nالمنطقة: {region}\n\nهل تريد تقديم هذا الطلب؟",
   "msg_partner_apply_success": "🎉 تم تقديم الطلب بنجاح!\nيمكنك استخدام ميزات الشريك بعد موافقة المسؤول.",
-
   "confirm_order_accept": "هل تريد قبول هذا الطلب؟",
   "msg_order_already_taken": "تم أخذ هذا الطلب بالفعل من قبل شريك آخر.",
   "msg_order_accept_success": "تم قبول الطلب! تحقق من علامة تبويب 'طلباتي'.",
-
   "alert_vip_info_needed": "يرجى إدخال اسم جهة الاتصال ورقم الهاتف.",
   "alert_vip_file_needed": "يرجى اختيار ملف واحد على الأقل للرفع.",
   "msg_uploading_files": "جارٍ رفع الملفات...",
   "msg_vip_order_success": "🎉 تم الإرسال بنجاح.\nالمدير {manager} سيتواصل معك قريباً.",
-
   "alert_input_shipping": "يرجى إدخال جميع معلومات الشحن.",
   "msg_creating_order": "جارٍ إنشاء الطلب...",
   "msg_order_received": "تم استلام الطلب بنجاح.\nتم تطبيق خصم العضوية ({rate}%).",
   "btn_submit_complete": "اكتمل الإرسال",
-
   "confirm_bank_payment": "تقديم الطلب عبر التحويل البنكي؟\nيبدأ الإنتاج بعد تأكيد الدفع.",
   "msg_order_complete_bank": "اكتمل الطلب. يرجى التحويل إلى الحساب المحدد.",
-
   "alert_deposit_shortage": "رصيد الإيداع غير كافٍ.\n(النقص: {amount})",
   "confirm_deposit_pay": "الدفع باستخدام {amount} من رصيدك؟",
   "msg_processing_payment": "جارٍ معالجة الدفع...",
   "msg_payment_complete": "تم الدفع بنجاح!",
-
   "home_quick_badge": "أرسل رخصتك التجارية واحصل على خصم 10% + شحن مجاني لمنطقة لاس فيغاس الحضرية.",
   "home_quick_title": "مزايا حصرية للأعمال — توصيل مجاني لمنطقة لاس فيغاس الحضرية",
   "home_vip_title": "صالة VIP للطلبات الكبيرة",
@@ -270,7 +239,6 @@
   "home_hotdeal_desc": "لا تفوت هذه الأسعار الخاصة جداً. رائعة للهدايا. حد أقصى 10 قطع لكل طلب لهدايا المنزل الجديد.",
   "home_biz_title": "خصم الشركات بالجملة",
   "home_biz_desc": "أسعار حصرية لعملاء الأعمال! الحد الأدنى للطلب 10-100 وحدة. خصومات خاصة للموزعين.",
-
   "menu_blog": "مدونة<br>كاميليون",
   "menu_review": "آراء<br>العملاء",
   "menu_promo": "إعلانات<br>محلية",
@@ -278,7 +246,6 @@
   "menu_job": "سوق<br>العمل",
   "menu_manual": "أدلة<br>المنتجات",
   "menu_orders": "تتبع الطلبات",
-
   "tier_main_title": "دليل <span>مزايا خصومات</span> العضوية",
   "tier_gold_name": "ذهبي",
   "tier_gold_discount": "خصم 3%",
@@ -295,29 +262,23 @@
   "tier_partner_cond_label": "الشرط",
   "tier_partner_cond_fee": "متقدم للشراكة",
   "tier_partner_cond_note": "(مطلوب رخصة تجارية)",
-
   "partner_banner_title": "سوق بعمولة منخفضة للبائعين<br><span style='color: #818cf8;'>مبيعات عالمية بهوامش ربح عالية — اتركها لكاميليون!</span>",
   "partner_banner_desc": "فقط سجّل في كاميليون — نحن نتولى الشحن والأوراق!<br>اعرض طباعة التيشيرتات والمنتجات المخصصة والمواد الترويجية والمزيد في سوق الإعلانات بالجملة.<br><b style='color:#818cf8;'>أقل عمولة في الصناعة 6.5%</b> + الوصول إلى عملاء من شبكة الطباعة الإعلانية الأولى في كوريا،<br>بالإضافة إلى <b style='color:#818cf8;'>البيع بضعف السعر في الأسواق العالمية</b>. احجز مكانك الآن!",
   "btn_partner_console": "الوصول إلى لوحة الشريك",
   "btn_partner_apply": "تقديم طلب شراكة",
-
   "contrib_title": "نظام المساهمين في كاميليون",
-  "contrib_balance_label": "أرباحي",
+  "contrib_balance_label": "إجمالي أرباحي",
   "contrib_desc": "شارك مصادر تصميمك واكسب مكافآت نقدية.<br>رفع صور منخفضة الجودة بشكل متكرر سيخفض تقييمك. رفع التقييم x2، x4؛ خفض التقييم يقلل الدفع للنصف.<br><span style='color:#ef4444; font-weight:bold;'>تحقق من الفئات!</span> سيتم إلغاء حقوق الرفع إذا لم تتطابق الفئات أو تم تسجيل أقل من 3 كلمات مفتاحية.",
   "contrib_btn_png": "كائن PNG",
   "contrib_btn_svg": "كائن SVG",
   "contrib_btn_logo": "رفع شعار",
   "contrib_btn_template": "إنشاء قالب",
-
   "footer_menu_company": "من نحن",
   "footer_menu_notice": "إشعارات",
   "footer_menu_terms": "شروط الخدمة",
   "footer_menu_privacy": "سياسة الخصوصية",
-
   "//_COMMENT": "=== نصوص JS الديناميكية ===",
-
   "btn_guide_off": "إخفاء الأدلة",
-
   "msg_no_fonts": "لا توجد خطوط مسجلة.<br>يرجى تسجيل الخطوط في صفحة الإدارة.",
   "msg_select_text_font": "يرجى تحديد كائن نصي لتغيير الخط.",
   "msg_select_obj_outline": "يرجى تحديد كائن لتطبيق الحدود الخارجية.",
@@ -327,13 +288,11 @@
   "msg_uploading": "جارٍ الرفع...",
   "tag_user_upload": "رفع المستخدم",
   "suffix_logo": " شعار",
-
   "confirm_unlock_all": "هل تريد إلغاء قفل جميع الكائنات المقفلة ({count})؟",
   "msg_select_obj_lock": "يرجى تحديد كائن لقفله.",
   "btn_lock_selection": "قفل التحديد",
   "btn_unlock_all": "إلغاء قفل الكل",
   "btn_lock_wizard": "معالج القفل",
-
   "prod_wall_1": "جدار قسم واحد",
   "prod_wall_2": "جدار قسمين",
   "prod_wall_3": "جدار 3 أقسام",
@@ -344,11 +303,9 @@
   "prod_photo_zone": "منطقة صور نصية",
   "prod_fabric_wide": "قماش عريض",
   "prod_paper_stand": "ستاند ورقي",
-
   "msg_invalid_number": "يرجى إدخال رقم صحيح.",
   "msg_max_size_exceeded": "لا يمكن تجاوز الحجم الأقصى ({w}x{h} مم).",
   "msg_size_rotated": "تم تدوير الأبعاد لتناسب اللوحة.",
-
   "msg_data_loading": "جارٍ تحميل البيانات...",
   "msg_db_disconnected": "قاعدة البيانات غير متصلة",
   "msg_no_data": "لا توجد بيانات لعرضها.",
@@ -356,11 +313,9 @@
   "msg_load_failed": "فشل تحميل البيانات.",
   "btn_retry": "إعادة المحاولة",
   "btn_apply_now": "تقديم الآن",
-
   "btn_prev_page": "السابق",
   "btn_next_page": "التالي",
   "label_page": "صفحة",
-
   "msg_select_template": "يرجى اختيار قالب.",
   "msg_click_select": "انقر لاختيار الملفات",
   "msg_drag_drop": "أو اسحب الملفات وأفلتها هنا",
@@ -375,7 +330,6 @@
   "msg_bg_remove_server": "إزالة الخلفية تتطلب الاتصال بالخادم.",
   "msg_select_image": "يرجى تحديد صورة.",
   "msg_pdf_error": "يرجى رفع ملفات PDF في خطوة 'الطلب'. المحرر يدعم الصور فقط.",
-
   "//_COMMENT_2": "=== نصوص مفقودة مضافة ===",
   "confirm_apply_bg": "تطبيق تصميم الخلفية هذا؟\n(سيتم استبدال الخلفية الحالية)",
   "confirm_bg_remove": "هل تريد إزالة الخلفية؟",
@@ -384,7 +338,6 @@
   "msg_gen_fail": "فشل الإنشاء",
   "msg_min_page_limit": "مطلوب صفحة واحدة على الأقل.",
   "btn_my_page": "📂 صفحتي",
-
   "msg_generating_quote": "جارٍ إنشاء عرض السعر...",
   "err_quote_gen_failed": "فشل إنشاء عرض السعر.",
   "err_quote_error": "خطأ في إنشاء عرض السعر: ",
@@ -407,7 +360,6 @@
   "msg_sending": "جارٍ الإرسال...",
   "msg_withdraw_success": "تم تقديم طلب السحب.\nالإيداع خلال 5 أيام بعد مراجعة المسؤول.",
   "msg_clipboard_empty": "الحافظة فارغة.",
-
   "mp_menu_dashboard": "لوحة التحكم",
   "mp_menu_designs": "تصاميمي",
   "mp_menu_sales": "معروض للبيع",
@@ -426,11 +378,9 @@
   "default_customer": "عميل",
   "msg_canvas_not_ready": "اللوحة غير جاهزة.",
   "err_canvas_not_ready": "لم يتم تحميل اللوحة بالكامل. يرجى الانتظار.",
-
   "msg_no_locked_bg": "لم يتم العثور على خلفية مقفلة.",
   "msg_bg_unlocked": "تم إلغاء قفل الخلفية.",
   "msg_bg_locked": "تم قفل الخلفية.",
-
   "ctx_undo": "تراجع",
   "ctx_redo": "إعادة",
   "ctx_copy": "نسخ",
@@ -441,7 +391,6 @@
   "ctx_lock": "قفل",
   "ctx_unlock": "إلغاء القفل",
   "ctx_unlock_all": "إلغاء قفل الكل",
-
   "btn_google_login": "المتابعة مع Google",
   "placeholder_pw_confirm": "تأكيد كلمة المرور",
   "label_select_manager": "اختر مديراً (اختياري)",
@@ -459,7 +408,7 @@
   "mp_recent_logs": "📢 سجلات الأرباح الأخيرة",
   "mp_saved_designs": "📂 التصاميم المحفوظة",
   "msg_wait_moment": "يرجى الانتظار لحظة.",
-  "confirm_select_partner": "اختيار هذا الشريك؟\nسيتم الكشف عن معلومات الاتصال وإغلاق العروض الأخرى.",
+  "confirm_select_partner": "مشاركة رقمك ({myPhone}) مع الشريك\nوتأكيد هذا الاختيار؟",
   "msg_review_saved": "تم حفظ المراجعة بنجاح!",
   "msg_no_partner_auth": "لم يتم العثور على صلاحية شريك.",
   "msg_post_deleted": "تم حذف هذا المنشور.",
@@ -484,7 +433,6 @@
   "alert_input_depositor": "يرجى إدخال اسم المودع.",
   "msg_outline_failed": "تعذر إنشاء حدود متجهة لهذه الصورة.",
   "msg_image_load_failed": "فشل تحميل الصورة.",
-
   "vip_fast_inquiry": "⚡ استفسار سريع",
   "vip_manager_intro": "\"مديرونا المخصصون سيردون بسرعة عبر الهاتف\"",
   "vip_manager_jisuk": "المدير أليكس",
@@ -509,7 +457,6 @@
   "btn_next": "التالي",
   "label_page_suffix": "صفحة",
   "search_placeholder_start": "ما التصميم الذي تبحث عنه؟ (مثال: قطة، محيط، سماء)",
-
   "//_COMMENT_3": "=== واجهة المحرر ===",
   "editor_size": "الحجم",
   "editor_char_spacing": "التباعد",
@@ -526,7 +473,6 @@
   "editor_text_edit": "تحرير النص",
   "editor_lock_selection": "قفل التحديد",
   "btn_mobile_template": "🎨 القوالب",
-
   "//_COMMENT_4": "=== أزرار معالج التصميم ===",
   "wiz_flyer": "منشور إعلاني",
   "wiz_poster": "ملصق",
@@ -535,7 +481,6 @@
   "wiz_banner_h": "لافتة أفقية",
   "wiz_banner_v": "لافتة عمودية",
   "wiz_insta_panel": "لوحة إنستا",
-
   "//_COMMENT_5": "=== خيارات الأدلة ===",
   "guide_off": "🚫 إيقاف",
   "guide_cross": "✚ تقاطع",
@@ -543,7 +488,6 @@
   "guide_4col": "4 أعمدة",
   "guide_5col": "5 أعمدة",
   "guide_grid": "▦ شبكة",
-
   "//_COMMENT_6": "=== نوافذ القوالب ===",
   "tpl_load_title": "🎨 تحميل قالب",
   "tpl_load_desc": "لديك تصميم قيد التنفيذ.\nكيف تريد تطبيق القالب المحدد؟",
@@ -559,7 +503,6 @@
   "ph_search_input": "بحث...",
   "tpl_obj_label": "🧩 العناصر",
   "tpl_search_product": "البحث عن منتجات للقالب",
-
   "//_COMMENT_7": "=== مولّد الذكاء الاصطناعي ===",
   "ai_title": "✨ مولّد صور الذكاء الاصطناعي",
   "ai_prompt_label": "الوصف (الأمر)",
@@ -567,12 +510,10 @@
   "btn_generate": "إنشاء",
   "ai_waiting": "في انتظار النتيجة",
   "btn_add_to_canvas": "إضافة إلى اللوحة",
-
   "//_COMMENT_8": "=== نافذة إتمام الطلب ===",
   "msg_order_complete_title": "🎉 اكتمل الطلب!",
   "btn_download_order_sheet": "📄 تحميل أمر العمل",
   "btn_download_quotation": "📑 تحميل عرض السعر",
-
   "//_COMMENT_9": "=== نافذة بيع التصميم ===",
   "sell_title": "💎 مشاركة/بيع التصميم",
   "sell_benefit_1": "اكسب <span class='highlight'>100 نقطة</span> فوراً، <span class='highlight'>200 نقطة</span> لكل استخدام",
@@ -585,13 +526,11 @@
   "ph_sell_title": "مثال: فعالية عيادة، ملصق صيفي",
   "btn_register": "تسجيل",
   "modal_font_title": "اختيار الخط",
-
   "//_COMMENT_10": "=== نافذة الاختيار ===",
   "btn_purchase": "شراء",
   "btn_purchase_sub": "رفع الملفات عبر السلة",
   "btn_detail_page": "عرض التفاصيل",
   "btn_story_page": "عرض القصة",
-
   "//_COMMENT_11": "=== نافذة إنشاء القالب ===",
   "tpl_create_title": "بدء إنشاء القالب",
   "tpl_create_desc": "سجّل تصميمك واكسب الإيرادات!",
@@ -603,17 +542,15 @@
   "ph_width": "العرض",
   "ph_height": "الارتفاع",
   "btn_start_design": "🚀 ابدأ التصميم",
-
   "//_COMMENT_12": "=== محرر الجوال ===",
   "btn_delete_obj": "حذف",
   "btn_done_edit": "تم",
   "ph_text_input": "أدخل النص هنا...",
-
   "//_COMMENT_13": "=== تنبيهات JS الديناميكية (main.js) ===",
   "msg_product_info_missing": "⚠️ معلومات المنتج غير موجودة لهذا التصميم.\nيرجى إعادة اختيار مواصفات المنتج.",
   "msg_cannot_load_form": "تعذر تحميل نموذج الطلب.",
   "confirm_status_change": "تغيير الحالة إلى '{status}'؟",
-  "msg_min_withdraw": "الحد الأدنى لمبلغ السحب هو 100$.",
+  "msg_min_withdraw": "الحد الأدنى لمبلغ السحب هو 20$.",
   "msg_input_real_name": "يرجى إدخال اسم صاحب الحساب.",
   "msg_input_phone": "يرجى إدخال رقم هاتفك.",
   "msg_input_id_number": "يرجى إدخال رقم الهوية بشكل صحيح.",
@@ -635,7 +572,6 @@
   "confirm_go_editor": "الانتقال إلى محرر التصميم؟",
   "msg_submit_error": "خطأ في الإرسال: ",
   "msg_apply_error": "خطأ في الطلب: ",
-
   "//_COMMENT_PARTNER_MODAL": "=== نافذة طلب الشراكة ===",
   "partner_apply_title": "🤝 طلب شراكة (امتياز تجاري)",
   "partner_apply_desc": "كن شريكاً إقليمياً للإعلان/التصنيع واكسب الإيرادات.",
@@ -651,7 +587,6 @@
   "partner_btn_apply": "تقديم الطلب",
   "partner_btn_cancel": "سحب الطلب",
   "partner_btn_close": "إغلاق",
-
   "//_COMMENT_14": "=== لوحة تحكم الشريك ===",
   "partner_console_title": "لوحة تحكم الشريك",
   "partner_region_unset": "المنطقة غير محددة",
@@ -672,7 +607,6 @@
   "th_status_col": "الحالة",
   "my_order_tracking_title": "📦 تتبع الطلب",
   "msg_loading_text": "جارٍ التحميل...",
-
   "//_COMMENT_15": "=== صفحة السلة والدفع ===",
   "cart_upload_guide": "ارفع ملفات التصميم الخاصة بك هنا",
   "btn_bulk_upload": "رفع ملفات بالجملة",
@@ -703,7 +637,6 @@
   "rv_total_reviews": "مراجعات",
   "rv_avg_rating": "متوسط التقييم",
   "rv_submitted": "تم إرسال المراجعة!",
-
   "//_COMMENT_PARTNER": "=== ترجمة لوحة تحكم الشريك ===",
   "pt_no_pool_orders": "لا توجد طلبات متاحة حالياً.",
   "pt_no_my_orders": "لا توجد طلبات قيد التنفيذ.",
@@ -724,7 +657,6 @@
   "pt_badge_admin": "مسؤول (رئيسي)",
   "pt_badge_partner": "شركاء",
   "pt_no_access": "🚫 تم رفض الوصول.\n\nيرجى انتظار موافقة المسؤول.",
-
   "pt_tab_products": "منتجاتي",
   "pt_tab_register": "تسجيل منتج",
   "pt_tab_orders": "إدارة الطلبات",
@@ -793,7 +725,6 @@
   "pt_guide_flow_4": "التحديد كمشحون",
   "pt_guide_flow_5": "تأكيد العميل للاستلام ← انتظار 15 يوماً",
   "pt_guide_flow_6": "طلب سحب + إرفاق فاتورة ضريبية ← الإيداع",
-
   "//_COMMENT_PT_PAGE": "=== صفحة الشريك (partner.html) ===",
   "pt_btn_home": "العودة إلى الرئيسية",
   "pt_btn_logout": "تسجيل الخروج",
@@ -835,7 +766,6 @@
   "pt_guide_global_margin": "هامش ربح تقريبي <strong>مضاعف</strong> على المبيعات الدولية!",
   "pt_wd_bank_ph": "مثال: Chase Bank 123-456-789",
   "pt_wd_holder_ph": "جون سميث",
-
   "mp_sales_title": "🎨 التصاميم المعروضة للبيع (قوالبي)",
   "mp_sales_total": "الأرباح المقدرة",
   "mp_sales_guide": "<i class='fa-solid fa-circle-info'></i> اكسب <b>100 نقطة</b> للقوالب، <b>150 نقطة</b> للشعارات المرفوعة فوراً.<br>اكسب <b>200 نقطة</b> إضافية في كل مرة يشتري مستخدم آخر تصميمك.",
@@ -868,7 +798,6 @@
   "mp_wd_cancel": "إلغاء",
   "mp_order_history": "📦 الطلبات / التوصيل",
   "mp_min_withdraw_notice": "الحد الأدنى للسحب: 20$",
-  "msg_min_withdraw": "الحد الأدنى لمبلغ السحب هو 20$.",
   "msg_insufficient_deposit": "الرصيد غير كافٍ.",
   "msg_enter_bank_info": "يرجى إدخال اسم البنك ورقم الحساب واسم صاحب الحساب.",
   "msg_enter_contact_id": "يرجى إدخال رقم الهاتف والرقم الضريبي.",
@@ -877,7 +806,6 @@
   "label_withdrawal": "سحب",
   "label_admin_adjust": "تعديل المسؤول",
   "label_other": "أخرى",
-
   "contrib_upload_title": "📤 رفع",
   "contrib_upload_png": "رفع كائن PNG",
   "contrib_upload_svg": "رفع متجه SVG",
@@ -890,8 +818,6 @@
   "contrib_file_tip": "* يُوصى بملفات PNG شفافة.",
   "contrib_btn_submit": "رفع واكسب النقاط",
   "contrib_btn_cancel": "إلغاء",
-  "contrib_balance_label": "إجمالي أرباحي",
-
   "//_COMMENT_MYPAGE_ORDERS": "=== طلبات صفحتي ===",
   "btn_reorder": "إعادة الطلب",
   "btn_cancel_order": "إلغاء الطلب",
@@ -916,7 +842,6 @@
   "btn_view_reviews": "عرض المراجعات",
   "prompt_enter_phone": "أدخل رقم هاتفك لمشاركته مع الشريك:",
   "msg_phone_required": "رقم الهاتف مطلوب للتواصل مع الشريك.",
-  "confirm_select_partner": "مشاركة رقمك ({myPhone}) مع الشريك\nوتأكيد هذا الاختيار؟",
   "msg_matching_complete": "اكتمل التوافق!\nمعلومات اتصال الشريك متاحة الآن.",
   "prompt_enter_rating": "أدخل تقييم الشريك (1-5):",
   "prompt_enter_review": "اترك مراجعة للعملاء الآخرين:",
@@ -930,7 +855,6 @@
   "msg_penalty_notice_title": "إشعار عقوبة الحساب",
   "msg_penalty_notice_body": "تم وضع حسابك تحت <b>حالة العقوبة</b>.<br>خلال هذه الفترة، تقتصر إيرادات المبيعات على <b>50 نقطة لكل تسجيل</b>.",
   "label_reason": "السبب",
-
   "//_COMMENT_ORDER_STATUS": "=== حالة الطلب ===",
   "status_접수대기": "قيد الانتظار",
   "status_입금대기": "بانتظار الدفع",
@@ -942,5 +866,11 @@
   "status_구매확정": "مؤكد",
   "status_완료됨": "مكتمل",
   "status_취소됨": "ملغي",
-  "status_임시작성": "مسودة"
+  "status_임시작성": "مسودة",
+  "btn_mgr_phones": "أرقام هواتف المسؤولين",
+  "btn_vip_pay": "دفع خاص لكبار العملاء",
+  "btn_scrap_pay": "طلب بالمبلغ بعد الاستشارة",
+  "btn_design_request": "اطلب تصميمًا",
+  "btn_designer_apply": "المصممون",
+  "btn_designer_recruit_btn": "المدونة"
 }

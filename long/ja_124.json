@@ -2069,5 +2069,11 @@
   "me_fix_hint": "修正したい箇所をご記入ください。他はそのままに、その部分だけ描き直します。",
   "me_fix_ph": "例: 文字をもっと大きく、背景を青に、価格を5,000円に",
   "me_intro_mine": "作成したデザイン",
-  "me_intro_mine_desc": "以前作ったデザインを呼び出せます"
+  "me_intro_mine_desc": "以前作ったデザインを呼び出せます",
+  "btn_mgr_phones": "担当者 電話案内",
+  "btn_vip_pay": "VIP 個人決済",
+  "btn_scrap_pay": "相談後の金額注文",
+  "btn_design_request": "デザイン依頼",
+  "btn_designer_apply": "デザイナー",
+  "btn_designer_recruit_btn": "ブログ"
 }
