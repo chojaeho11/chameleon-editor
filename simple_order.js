@@ -8630,6 +8630,11 @@ html, body { background: #ffffff !important; }
         var shapeFee = _stickerShapeFee(stState.shape, stState.dieCut);
         return subtotal + shapeFee;
     }
+    // 2026-07-21: 스티커 "~부터" 표기의 공통 기준 수량. 메인 카드·상세 카드·제품선택 팝업이
+    //   각각 500매/1,000매/DB단가 로 제각각이라 같은 제품이 ¥500·¥800·¥2 로 보였다 → 100매로 통일.
+    //   (100×100mm 기준, 일반 4종 100매 낱장 40원 = 4,000원 = ¥400)
+    var STICKER_REF_QTY = 100;
+    window._soStickerRefQty = STICKER_REF_QTY;
     // 일반(기본가) 종류 4종 — 강접까지. 나머지는 특수(고가).
     var STICKER_BASE_TYPES = ['art_matte', 'matte', 'gloss', 'strong'];
     function _stickerIsBaseType(typeKey) { return STICKER_BASE_TYPES.indexOf(typeKey || 'art_matte') >= 0; }
@@ -11407,13 +11412,16 @@ html, body { background: #ffffff !important; }
                     var sel = (state.stickerProductCode === v.code);
                     var label = _stickerVariantLabel(v);
                     var fancy = _stickerIsFancy(v);
-                    // 2026-07-03: 카드 가격 = 실제 계산가(통화 환산). 재단 스티커는 1,000매 기준(사장님 요청), 팬시는 4매 세트 기준.
+                    // 2026-07-03: 카드 가격 = 실제 계산가(통화 환산). 팬시는 4매 세트 기준.
+                    // 2026-07-21: 재단 스티커 기준을 1,000매 → 100매 로 통일 (사장님 지시).
+                    //   메인 카드·상세 카드·제품선택 팝업이 각각 다른 수량 기준을 써서 금액이 다 달라 보였다.
+                    //   기준 = 100×100mm 100매 (STICKER_REF_QTY).
                     var _stHintPrice = fancy
                         ? _stickerCalcPrice({ productCode: v.code, qty: 4, type: 'art_matte', isFancy: true })
-                        : _stickerCalcPrice({ productCode: v.code, w: 100, h: 100, qty: 1000, type: 'art_matte', shape: 'square', isFancy: false });
+                        : _stickerCalcPrice({ productCode: v.code, w: 100, h: 100, qty: STICKER_REF_QTY, type: 'art_matte', shape: 'square', isFancy: false });
                     var priceHint = fancy
                         ? ('4' + tr('매','枚','pc') + ' ' + fmtPrice(_stHintPrice))
-                        : ('100×100mm 1,000' + tr('매','枚','pcs') + ' ' + fmtPrice(_stHintPrice) + '~');
+                        : ('100×100mm ' + STICKER_REF_QTY.toLocaleString() + tr('매','枚','pcs') + ' ' + fmtPrice(_stHintPrice) + '~');
                     var img = v.img_url ? '<img src="' + String(v.img_url).replace(/"/g,'&quot;') + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; background:#f8fafc;">'
                         : '<div style="width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,#f1f5f9,#e2e8f0); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:22px;">🏷️</div>';
                     return '<button type="button" onclick="window._soStickerPickVariant(\'' + v.code + '\')" '

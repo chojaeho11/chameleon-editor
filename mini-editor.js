@@ -7033,7 +7033,10 @@
                 grid.innerHTML = _ME_HERO_PRODUCTS.map(function (p) {
                     var d = by[p.code] || {};
                     var nm = _meLocalName(d) || p.name;
-                    return cardHtml({ code: p.code, name: nm }, d.img_url || '', _meFmtPrice(d.price));
+                    // 2026-07-21: 스티커는 admin_products.price 가 '낱장 단가'(20원)라 그대로 쓰면 ¥2 로 보인다.
+                    //   메인·상세와 같은 기준(100×100mm 100매 = 4,000원)으로 맞춘다.
+                    var _basePrice = (p.code === '645646544') ? 4000 : d.price;
+                    return cardHtml({ code: p.code, name: nm }, d.img_url || '', _meFmtPrice(_basePrice));
                 }).join('');
                 grid.querySelectorAll('button[data-code]').forEach(function (b) {
                     b.addEventListener('click', function () { close(); _meHeroGoProduct(b.getAttribute('data-code'), imgUrl); });
