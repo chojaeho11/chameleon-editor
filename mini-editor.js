@@ -7180,7 +7180,13 @@
             var prompt = 'Reproduce the attached image AS CLOSELY AS POSSIBLE — same layout, same composition, same colors, same fonts, same wording, same illustration style. '
                 + 'Change ONLY this and nothing else: "' + note + '". '
                 + 'Everything not mentioned must stay visually identical to the attached image. Do NOT redesign, do NOT rearrange, do NOT alter other text. '
-                + 'The background must extend fully to all edges (full bleed). Do NOT draw any border or frame.';
+                + 'The background must extend fully to all edges (full bleed). Do NOT draw any border or frame.'
+                // 2026-07-21: 수정할 때 글씨가 다른 문자로 바뀌지 않게 — 생성 경로와 같은 지시.
+                + (_meDetectLang(note) === 'ja'
+                    ? ' Keep all visible text in JAPANESE (hiragana, katakana, kanji) — never romanize or substitute Korean hangul.'
+                    : _meDetectLang(note) === 'ko'
+                    ? ' Keep all visible text in KOREAN (Hangul) — never romanize or substitute Japanese kana.'
+                    : ' Keep all visible text in the same language and script as the attached image.');
             var size = (me && me.natW && me.natH)
                 ? (me.natW > me.natH * 1.15 ? '1536x1024' : (me.natH > me.natW * 1.15 ? '1024x1536' : '1024x1024'))
                 : '1024x1024';
@@ -7694,6 +7700,16 @@
                         genPrompt1 = 'Use the provided photo as the main subject/material. Keep its recognizable content, and design around it as requested. ' + genPrompt1;
                     }
                 }
+                // 2026-07-21: 어떤 문자로 글씨를 그릴지 명시. 지금까지 지시가 아예 없어서
+                //   일본 고객이 일본어로 적어도 로마자로 나오거나 한글이 섞여 나오는 일이 있었다.
+                //   판정은 고객이 적은 문구 기준(_meDetectLang) — 사이트 언어보다 실제 입력이 우선.
+                var _scriptLang = _meDetectLang(prompt);
+                genPrompt1 += (_scriptLang === 'ja')
+                    ? ' TEXT LANGUAGE: render every visible word in JAPANESE, using natural hiragana, katakana and kanji exactly as written in the brief.'
+                      + ' Never romanize, never transliterate, and never substitute Korean hangul or Chinese-only wording. Use a clean Japanese typeface with correct kana shapes.'
+                    : (_scriptLang === 'ko')
+                    ? ' TEXT LANGUAGE: render every visible word in KOREAN (Hangul) exactly as written in the brief. Never romanize and never substitute Japanese kana or Chinese characters.'
+                    : ' TEXT LANGUAGE: render every visible word in ENGLISH exactly as written in the brief.';
                 var _reqBody = { prompt: genPrompt1, size: size };
                 // 2026-07-18: 참조 이미지는 반드시 정규화해서 보낸다 (아래 _meAiNormalizeRef 주석 참고).
                 if (_meAiRefDataUrl) {
