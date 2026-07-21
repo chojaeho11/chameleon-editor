@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260721154703';
+        var CV = '20260721155222';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6825,9 +6825,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
 
   window.moderateGallery = async function(id, action){
     var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
-    if (action === 'reject' && !confirm('이 작품을 거절하시겠습니까?
-
-갤러리에는 공개되지 않지만, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
+    if (action === 'reject' && !confirm('이 작품을 거절하시겠습니까? 갤러리에는 공개되지 않지만, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
     var card = document.getElementById('gm-'+id);
     if (card) card.style.opacity = '0.4';
     try {
@@ -6902,9 +6900,7 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
   }
   window.deleteGalleryItem = async function(id){
     var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
-    if (!confirm('이 작품을 갤러리에서 내리시겠습니까?
-
-메인 갤러리에서만 사라지고, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
+    if (!confirm('이 작품을 갤러리에서 내리시겠습니까? 메인 갤러리에서만 사라지고, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
     var card = document.getElementById('gp-'+id);
     if (card) card.style.opacity = '0.4';
     try {
