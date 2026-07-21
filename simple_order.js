@@ -20300,9 +20300,9 @@ html, body { background: #ffffff !important; }
                 if (it.boxSize && it.boxSize.w) {
                     lines.push('   박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
                 }
-                // 2026-07-22: 허니콤 박스는 디자이너 의뢰(design_requests)를 만들지 않으므로,
+                // 2026-07-22: 허니콤 박스·종이매대는 디자이너 의뢰(design_requests)를 만들지 않으므로,
                 //   고객이 적은 브랜드/제품/컨셉과 AI 목업 참고자료가 갈 곳이 여기밖에 없다.
-                if (it.product && it.product.code && /^hb_bx/i.test(it.product.code)) {
+                if (it.product && it.product.code && /^(hb_bx|pd_)/i.test(it.product.code)) {
                     if (it.pdBrand)    lines.push('   브랜드/타이틀: ' + it.pdBrand);
                     if (it.pdProducts) lines.push('   주요 제품/내용: ' + it.pdProducts);
                     if (it.pdConcept)  lines.push('   색상/컨셉: ' + it.pdConcept);
@@ -20608,15 +20608,16 @@ html, body { background: #ffffff !important; }
                     // 2026-07-18: 허니콤 테이블(hb_tb_*)도 같은 흐름으로 디자이너 의뢰
                     var _pi_isTb = (typeof _soIsTableProduct === 'function' && _soIsTableProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^hb_tb/i.test(_pi_it.product.code));
-                    // 2026-07-19: 허니콤 박스(hb_bx_*)도 같은 흐름으로 디자이너 의뢰 —
-                    // 2026-07-22 철회: 박스는 디자이너 지급이 없는 항목인데 디자인마켓 주문관리에
-                    //   지급 30,000원짜리 건으로 올라왔다(사장님 지적). 의뢰 자체를 만들지 않는다.
-                    //   대신 고객이 적은 브랜드/제품/컨셉은 주문서 전달사항에 남긴다(아래 _soBoxBriefLines).
                     var _pi_isBx = (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^hb_bx/i.test(_pi_it.product.code));
-                    if (_pi_isBx) continue;
-                    if (!_pi_isPd && !_pi_isTb) continue;
-                    var _pi_kind = _pi_isTb ? '테이블' : '종이매대';
+                    // 2026-07-22 철회 (사장님 지시): 박스(07-19 추가)·종이매대(07-18 추가)는 주문만 하면
+                    //   지급 30,000/40,000원짜리 디자이너 의뢰가 자동 생성돼 디자인마켓 주문관리에 쌓였다.
+                    //   디자이너 지급은 "고객이 의뢰비를 결제한 경우"에만 발생해야 한다 —
+                    //   그 경로는 openDesignRequestPopup(디자인 의뢰 3만원 → 지급 70% = 21,000원)이 따로 처리한다.
+                    //   여기서 만들지 않는 대신, 고객이 적은 브랜드/제품/컨셉은 주문서 전달사항에 남긴다.
+                    if (_pi_isBx || _pi_isPd) continue;
+                    if (!_pi_isTb) continue;
+                    var _pi_kind = '테이블';
                     if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
                     var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || _pi_kind);
                     var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
