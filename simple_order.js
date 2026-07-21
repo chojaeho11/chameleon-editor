@@ -9917,6 +9917,162 @@ html, body { background: #ffffff !important; }
         if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
     };
 
+    // ══════════════════════════════════════════════════════════════════
+    //  2026-07-21: 티셔츠 배치 합성 + 배치도 PDF
+    //  그동안 티셔츠는 고객이 올린 원본 파일이 어디에도 업로드되지 않고 파일명만 주문서에
+    //  남아, 관리자/공장이 실제 인쇄물을 받을 수 없었다. 여기서 (1) 목업 위에 디자인을 얹은
+    //  합성 이미지, (2) 위치별 배치도 PDF 를 만든다. 원본 업로드는 장바구니 담기에서 처리.
+    // ══════════════════════════════════════════════════════════════════
+    var _TSHIRT_AREA_KO = { front_logo: '앞면 로고', front_full: '앞면 전체', back_full: '뒷면 전체' };
+    var _TSHIRT_AREA_MAX = { front_logo: { w:18, h:18 }, front_full: { w:42, h:60 }, back_full: { w:42, h:60 } };
+    function _soLoadImgEl(src) {
+        return new Promise(function (res, rej) {
+            var im = new Image();
+            im.onload = function () { res(im); };
+            im.onerror = function () { rej(new Error('img load fail')); };
+            if (!/^data:/i.test(String(src))) im.crossOrigin = 'anonymous';
+            im.src = src;
+        });
+    }
+    // 목업(앞/뒤 한 장) + 인쇄 박스 + 디자인을 정사각 캔버스에 합성.
+    //   화면 CSS(background-size:200% auto / position-x 0%·100% / center)를 그대로 재현해야
+    //   고객이 본 위치와 공장이 받는 배치도가 어긋나지 않는다.
+    window._soTshirtCompositeCanvas = async function (area, sizePx) {
+        sizePx = sizePx || 1000;
+        var f = (state.tshirtFiles && state.tshirtFiles[area]) || {};
+        var cv = document.createElement('canvas');
+        cv.width = sizePx; cv.height = sizePx;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#0a0a0f';
+        ctx.fillRect(0, 0, sizePx, sizePx);
+        try {
+            var mock = await _soLoadImgEl('/t/tshirt_mockup.jpg');
+            if (mock && mock.width) {
+                var sc = (2 * sizePx) / mock.width;      // background-size: 200% auto
+                var dispH = mock.height * sc;
+                var offY = (sizePx - dispH) / 2;         // background-position-y: center
+                var offX = (area === 'back_full') ? -sizePx : 0;  // position-x: 100% / 0%
+                ctx.drawImage(mock, offX, offY, 2 * sizePx, dispH);
+            }
+        } catch (_me) { console.warn('[tshirt composite] mockup load fail', _me); }
+        var box = f.box;
+        if (box && isFinite(box.left)) {
+            var bw = box.width / 100 * sizePx, bh = box.height / 100 * sizePx;
+            var cx = box.left / 100 * sizePx + bw / 2, cy = box.top / 100 * sizePx + bh / 2;
+            var rot = (box.rotation || 0) * Math.PI / 180;
+            var art = null;
+            if (f.dataUrl && /^data:image\//i.test(f.dataUrl)) {
+                try { art = await _soLoadImgEl(f.dataUrl); } catch (_ae) { art = null; }
+            }
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rot);
+            if (art && art.width) {
+                var s = Math.min(bw / art.width, bh / art.height);   // object-fit: contain
+                ctx.drawImage(art, -art.width * s / 2, -art.height * s / 2, art.width * s, art.height * s);
+            } else {
+                // PDF 등 캔버스에 못 그리는 파일 — 자리와 파일명만 표시
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+                ctx.fillStyle = '#334155';
+                ctx.font = '700 ' + Math.round(sizePx * 0.022) + 'px "Malgun Gothic","Apple SD Gothic Neo",sans-serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(f.name || '(파일)', 0, 0, bw * 0.9);
+            }
+            // 인쇄 영역 점선 — 공장이 인쇄 범위를 눈으로 확인
+            ctx.strokeStyle = 'rgba(99,102,241,0.95)';
+            ctx.lineWidth = Math.max(2, sizePx * 0.003);
+            ctx.setLineDash([sizePx * 0.012, sizePx * 0.008]);
+            ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
+            ctx.restore();
+        }
+        return cv;
+    };
+    // 배치도 PDF 한 페이지 (A4 150dpi 캔버스). 한글은 캔버스 fillText 로 그려 폰트 임베딩 문제를 피한다.
+    async function _soTshirtLayoutPage(area) {
+        var W = 1240, H = 1754;
+        var cv = document.createElement('canvas');
+        cv.width = W; cv.height = H;
+        var ctx = cv.getContext('2d');
+        var KF = '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+        var areaKo = _TSHIRT_AREA_KO[area] || area;
+        var mx = _TSHIRT_AREA_MAX[area] || { w:18, h:18 };
+        var f = (state.tshirtFiles && state.tshirtFiles[area]) || {};
+        var box = f.box || {};
+        var p = state.product || {};
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '700 46px ' + KF;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('의류 인쇄 배치도 · ' + areaKo, 70, 96);
+        ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(70, 120); ctx.lineTo(W - 70, 120); ctx.stroke();
+        ctx.font = '400 26px ' + KF;
+        ctx.fillStyle = '#475569';
+        ctx.fillText((p.name_kr || p.name || '의류') + '  ·  ' + (p.code || ''), 70, 160);
+        // 합성 이미지
+        try {
+            var comp = await window._soTshirtCompositeCanvas(area, 900);
+            ctx.drawImage(comp, 170, 200, 900, 900);
+        } catch (_ce) { console.warn('[tshirt pdf] composite fail', _ce); }
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+        ctx.strokeRect(170, 200, 900, 900);
+        // 상세
+        var y = 1180;
+        function row(label, value) {
+            ctx.font = '400 26px ' + KF; ctx.fillStyle = '#64748b';
+            ctx.fillText(label, 70, y);
+            ctx.font = '700 28px ' + KF; ctx.fillStyle = '#0f172a';
+            ctx.fillText(String(value), 330, y);
+            y += 52;
+        }
+        var pm = state.tshirtPrintMethod === 'dtf' ? 'DTF (전사 필름)'
+               : state.tshirtPrintMethod === 'hologram' ? '홀로그램'
+               : 'DTG (직접 인쇄)';
+        row('인쇄 방식', pm);
+        row('인쇄 위치', areaKo);
+        row('디자인 파일', (f.name || '(미업로드)') + (f.size ? '  (' + Math.round(f.size / 1024) + ' KB)' : ''));
+        var sz = state.tshirtSizes || {};
+        row('사이즈별 수량', 'S ' + (sz.S || 0) + '장 · M ' + (sz.M || 0) + '장 · L ' + (sz.L || 0) + '장  (합계 ' + ((sz.S||0)+(sz.M||0)+(sz.L||0)) + '장)');
+        if (isFinite(box.left)) {
+            row('위치 (목업 기준)', '좌 ' + Math.round(box.left) + '% · 상 ' + Math.round(box.top) + '%');
+            var pct = mx.w ? Math.round((box.width || mx.w) / mx.w * 100) : 100;
+            row('인쇄 크기', Math.round(box.width) + '% × ' + Math.round(box.height) + '%  (해당 위치 최대 크기의 ' + pct + '%)');
+            if (box.rotation && box.rotation > 0.5) row('회전', Math.round(box.rotation) + '°');
+        }
+        ctx.font = '400 22px ' + KF; ctx.fillStyle = '#94a3b8';
+        ctx.fillText('※ %는 위 목업 이미지(정사각) 기준입니다. 점선이 실제 인쇄 범위입니다.', 70, H - 90);
+        ctx.fillText('※ 원본 인쇄 파일은 주문서의 파일 링크에서 내려받으세요.', 70, H - 54);
+        return cv;
+    }
+    // 선택한 인쇄 위치마다 한 페이지씩 — 배치도 PDF Blob
+    window._soTshirtLayoutPdfBlob = async function () {
+        var areas = Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas : [];
+        if (!areas.length) return null;
+        if (!window.jspdf) {
+            try { if (typeof window.loadEditorLibraries === 'function') await window.loadEditorLibraries(); } catch (_le) {}
+        }
+        if (!window.jspdf) {
+            try {
+                await new Promise(function (res, rej) {
+                    var s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    s.onload = res; s.onerror = function () { rej(new Error('jsPDF load fail')); };
+                    document.head.appendChild(s);
+                });
+            } catch (_je) { console.warn('[tshirt pdf] jsPDF load failed', _je); return null; }
+        }
+        var jsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!jsPDF) return null;
+        var doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+        for (var i = 0; i < areas.length; i++) {
+            if (i > 0) doc.addPage();
+            var pg = await _soTshirtLayoutPage(areas[i]);
+            doc.addImage(pg.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+        }
+        return doc.output('blob');
+    };
+
     // 2026-05-30: 티셔츠 인쇄 위치 토글 (복수 선택). 최소 1개 유지 (모두 해제 불가)
     //   앞면 로고 = 무료 / 앞면 전체·뒷면 전체 = +3,000원/장
     //   앞면 전체 ↔ 앞면 로고 상호 배제 (둘 다 앞면이라 영역이 겹침)
@@ -16418,6 +16574,19 @@ html, body { background: #ffffff !important; }
     function buildCartItem(fileUrl, filePath) {
         const p = state.product;
         const calc = calcFinal();
+        // 2026-07-21: 티셔츠 대표 파일 (첫 인쇄 위치) — fileName / originalUrl 채우기용
+        var _tshirtMainFile = null, _tshirtMainUp = null;
+        if (state.presetType === 'tshirt') {
+            var _tmAreas = Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas : [];
+            for (var _tm = 0; _tm < _tmAreas.length; _tm++) {
+                var _tmf = state.tshirtFiles && state.tshirtFiles[_tmAreas[_tm]];
+                if (_tmf && _tmf.name) {
+                    _tshirtMainFile = _tmf;
+                    _tshirtMainUp = (state._cartTshirtUploads && state._cartTshirtUploads[_tmAreas[_tm]]) || null;
+                    break;
+                }
+            }
+        }
         // 2026-05-13: 전달사항 + 선택된 addon + 가벽 사이즈 정보 + 시공/배송 일정 캡처
         var noteEl = document.getElementById('soItemNote');
         var itemNote = noteEl ? (noteEl.value || '').trim() : '';
@@ -16473,15 +16642,21 @@ html, body { background: #ffffff !important; }
             },
             type: 'file_upload',
             // 2026-05-15: 원판·금액주문은 파일 없이도 주문 가능 — fileName/mimeType null safe
+            // 2026-07-21: 티셔츠는 위치별 업로드라 state.file 이 없다 — 첫 인쇄 위치 파일을 대표로 걸어
+            //   주문관리의 기존 '원본 다운로드' UI 가 그대로 동작하게 한다 (나머지 위치는 주문서 링크).
             fileName: state.file ? state.file.name
+                : (_tshirtMainFile ? _tshirtMainFile.name
                 : (state.isRawBoard ? '(원판 발송 — 파일 없음)'
-                : (state.isAmountOrder ? '(금액주문 — 파일 없음)' : '')),
-            mimeType: state.file ? state.file.type : '',
+                : (state.isAmountOrder ? '(금액주문 — 파일 없음)' : ''))),
+            mimeType: state.file ? state.file.type : (_tshirtMainFile ? (_tshirtMainFile.type || '') : ''),
             fileData: null,
-            originalUrl: fileUrl,
-            filePath: filePath,
+            originalUrl: fileUrl || (_tshirtMainUp ? _tshirtMainUp.url : null),
+            filePath: filePath || (_tshirtMainUp ? _tshirtMainUp.path : null),
             // 2026-05-15: 카트엔 축소 썸네일만 — 원본은 originalUrl(Storage) 로 보존
-            thumb: state._cartThumb || (state.isRawBoard ? (pickImg(state.product) || null) : null),
+            // 2026-07-21: 티셔츠는 state.file 을 안 써서 썸네일이 비었고, 장바구니에 제품 사진만 떴다.
+            //   → 목업 위에 디자인을 얹은 배치 합성 이미지를 쓴다 (작업지시서 이미지도 동일).
+            thumb: (state.presetType === 'tshirt' && state._cartTshirtPreviewUrl) ? state._cartTshirtPreviewUrl
+                : (state._cartThumb || (state.isRawBoard ? (pickImg(state.product) || null) : null)),
             isOpen: false,
             qty: state.isWall ? (state.wallWidth || 1) : state.qty,
             selectedAddons: Object.assign({}, state.selectedAddons || {}),
@@ -16642,11 +16817,15 @@ html, body { background: #ffffff !important; }
                         if (!f) return;
                         // localStorage 용량 보호: dataUrl 은 작은 썸네일만 (50KB 이하만 보존)
                         var thumb = (f.dataUrl && f.dataUrl.length < 50000) ? f.dataUrl : null;
+                        var _up = (state._cartTshirtUploads && state._cartTshirtUploads[k]) || null;
                         out[k] = {
                             name: f.name || '',
                             size: f.size || 0,
                             type: f.type || '',
                             thumb: thumb,
+                            // 2026-07-21: 실제 인쇄 원본 (Storage) — 관리자·공장이 내려받는 파일
+                            url: _up ? _up.url : null,
+                            path: _up ? _up.path : null,
                             // 사용자가 드래그한 인쇄 위치 박스 (% 기준)
                             box: f.box ? { left: f.box.left, top: f.box.top, width: f.box.width, height: f.box.height, rotation: f.box.rotation || 0 } : null
                         };
@@ -16654,6 +16833,8 @@ html, body { background: #ffffff !important; }
                     return out;
                   })()
                 : null,
+            // 2026-07-21: 위치별 배치도 PDF (인쇄 위치마다 1페이지) — 작업지시서·주문관리에서 열람
+            tshirtLayoutPdfUrl: (state.presetType === 'tshirt') ? (state._cartTshirtLayoutPdfUrl || null) : null,
             _simple: { unit: calc.unit, subtotal: calc.subtotal, discountPct: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.tierPct, discount: (state.isRawBoard || state.isHoneycomb || state.isBizCard || state.isSticker) ? 0 : calc.discount, final: calc.final },
             // 2026-06-13: 낱장 인쇄 — 사이즈/면/용지/박/후가공 + 비규격 입력값
             leafletSize: state.isLeaflet ? (state.leafletSize || 'A4') : null,
@@ -17075,6 +17256,61 @@ html, body { background: #ffffff !important; }
                     }
                 }
             } catch (_pve) { console.warn('[design png preview upload]', _pve); }
+            // ── 2026-07-21: 티셔츠 — 위치별 원본 파일 + 배치 합성 PNG + 배치도 PDF 업로드 ──
+            //   그동안 원본이 전혀 업로드되지 않아(state.file 미사용) 관리자·공장이 인쇄 파일을 못 받았다.
+            state._cartTshirtUploads = null;
+            state._cartTshirtPreviewUrl = null;
+            state._cartTshirtLayoutPdfUrl = null;
+            if (state.presetType === 'tshirt' && state.tshirtFiles) {
+                try {
+                    var _sbT = getSb();
+                    var _tAreas = Array.isArray(state.tshirtPrintAreas) ? state.tshirtPrintAreas : [];
+                    if (_sbT && _tAreas.length) {
+                        var _tUp = {};
+                        for (var _ti = 0; _ti < _tAreas.length; _ti++) {
+                            var _ta = _tAreas[_ti];
+                            var _tf = state.tshirtFiles[_ta];
+                            if (!_tf || !_tf.file) continue;
+                            updateUploadStep(tr('인쇄 파일 업로드 중 (' + (_ti + 1) + '/' + _tAreas.length + ')...',
+                                                '印刷ファイルをアップロード中 (' + (_ti + 1) + '/' + _tAreas.length + ')...',
+                                                'Uploading print file (' + (_ti + 1) + '/' + _tAreas.length + ')...'));
+                            var _tExt = (String(_tf.name || '').match(/\.([a-z0-9]+)$/i) || [, 'png'])[1].toLowerCase();
+                            var _tPath = 'simple_order/tshirt-' + _ta + '-' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '.' + _tExt;
+                            var _tRes = await _sbT.storage.from('design').upload(_tPath, _tf.file, { contentType: _tf.type || 'application/octet-stream', upsert: false });
+                            if (_tRes.error) { console.warn('[tshirt file] upload error', _ta, _tRes.error); continue; }
+                            _tUp[_ta] = { url: _sbT.storage.from('design').getPublicUrl(_tPath).data.publicUrl, path: _tPath };
+                            console.log('[tshirt file] uploaded', _ta, _tUp[_ta].url);
+                        }
+                        state._cartTshirtUploads = _tUp;
+                        // 배치 합성 미리보기 — 장바구니 썸네일 + 작업지시서 이미지
+                        updateUploadStep(tr('배치 이미지 생성 중...', '配置イメージ作成中...', 'Building layout preview...'));
+                        try {
+                            var _tComp = await window._soTshirtCompositeCanvas(_tAreas[0], 800);
+                            var _tPng = _tComp.toDataURL('image/png');
+                            var _tBin = atob(_tPng.split(',')[1]);
+                            var _tArr = new Uint8Array(_tBin.length);
+                            for (var _tj = 0; _tj < _tBin.length; _tj++) _tArr[_tj] = _tBin.charCodeAt(_tj);
+                            var _tPvPath = 'simple_order/tshirt-preview-' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '.png';
+                            var _tPvUp = await _sbT.storage.from('design').upload(_tPvPath, new Blob([_tArr], { type: 'image/png' }), { contentType: 'image/png', upsert: false });
+                            if (!_tPvUp.error) state._cartTshirtPreviewUrl = _sbT.storage.from('design').getPublicUrl(_tPvPath).data.publicUrl;
+                            else console.warn('[tshirt preview] upload error', _tPvUp.error);
+                        } catch (_tpe) { console.warn('[tshirt preview]', _tpe); }
+                        // 배치도 PDF (위치마다 1페이지)
+                        updateUploadStep(tr('인쇄 배치도 PDF 생성 중...', '印刷配置図PDF作成中...', 'Building layout PDF...'));
+                        try {
+                            var _tPdf = await window._soTshirtLayoutPdfBlob();
+                            if (_tPdf && _tPdf.size > 200) {
+                                var _tPdfPath = 'cutlines/tshirt-layout-' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '.pdf';
+                                var _tPdfUp = await _sbT.storage.from('design').upload(_tPdfPath, _tPdf, { contentType: 'application/pdf', upsert: false });
+                                if (!_tPdfUp.error) {
+                                    state._cartTshirtLayoutPdfUrl = _sbT.storage.from('design').getPublicUrl(_tPdfPath).data.publicUrl;
+                                    console.log('[tshirt pdf] uploaded', state._cartTshirtLayoutPdfUrl);
+                                } else console.warn('[tshirt pdf] upload error', _tPdfUp.error);
+                            }
+                        } catch (_tde) { console.warn('[tshirt layout pdf]', _tde); }
+                    }
+                } catch (_te) { console.warn('[tshirt uploads]', _te); }
+            }
             // 2026-06-06: 담기 직전 사이즈 입력값 강제 재계산 (oninput 미발생 케이스 안전망)
             //   예: 키보드 입력 후 모달 닫기 전 다른 곳 클릭으로 blur 가 안 일어난 경우.
             try { if (state.isCustomSize && typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange(); } catch (e) {}
@@ -20041,6 +20277,8 @@ html, body { background: #ffffff !important; }
                                 var areaKo = a === 'front_logo' ? '앞면 로고' : a === 'front_full' ? '앞면 전체' : a === 'back_full' ? '뒷면 전체' : a;
                                 if (meta && meta.name) {
                                     lines.push('       └ 📎 ' + areaKo + ' 파일: ' + meta.name + ' (' + Math.round((meta.size||0)/1024) + ' KB)');
+                                    // 2026-07-21: 실제 인쇄 원본 링크 — 이게 없어서 공장이 파일을 못 받았다.
+                                    if (meta.url) lines.push('         └ 원본 다운로드: ' + meta.url);
                                 } else {
                                     lines.push('       └ ' + areaKo + ' 파일: 미업로드');
                                 }
@@ -20051,6 +20289,8 @@ html, body { background: #ffffff !important; }
                                 }
                             });
                         }
+                        // 2026-07-21: 위치별 배치도 PDF — 목업 위 실제 배치·좌표·크기·회전이 페이지마다 들어있다.
+                        if (it.tshirtLayoutPdfUrl) lines.push('       └ 🖨 인쇄 배치도 PDF: ' + it.tshirtLayoutPdfUrl);
                     }
                 }
                 // 2026-05-30: 키링/코롯토 모양 (선택된 컷)
