@@ -1563,7 +1563,7 @@ html, body { background: #ffffff !important; }
         <div id="soTshirtUploadSection" style="display:none;">
           <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
           <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
-          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 칸을 클릭하면 업로드, 드래그하면 인쇄할 위치를 옮길 수 있어요. 인쇄 크기는 위치마다 정해져 있어 바꿀 수 없고(가격이 달라져요), 이미지는 박스 안에 맞춰집니다.', '選択した印刷位置ごとに画像を個別にアップロードしてください。枠をクリックでアップロード、ドラッグで印刷位置を移動できます。印刷サイズは位置ごとに決まっているため変更できません(料金が変わるため)。画像は枠の中に収まります。', 'Upload an image for each selected print area. Click a slot to upload, drag it to move the print position. The print size is fixed per area (it changes the price), and your image is fitted inside the box.')}</div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 칸을 클릭하면 업로드, 드래그하면 인쇄할 위치를 옮길 수 있어요. 오른쪽아래 ↘ 를 끌면 크기를 줄일 수 있습니다 — 위치별 최대 크기보다 크게는 안 돼요(가격이 달라져요).', '選択した印刷位置ごとに画像を個別にアップロードしてください。枠をクリックでアップロード、ドラッグで印刷位置を移動できます。右下の ↘ をドラッグするとサイズを小さくできます — 位置ごとの最大サイズより大きくはできません(料金が変わるため)。', 'Upload an image for each selected print area. Click a slot to upload, drag it to move the print position. Drag the ↘ corner to make it smaller — it cannot exceed the maximum size for that area (which changes the price).')}</div>
         </div>
 
         <!-- 2026-06-14 v3: 메인 페이지의 미니 디자인 에디터 + 누끼따기 패널을 simple_order 안으로 이식 (DOM portal).
@@ -9694,6 +9694,11 @@ html, body { background: #ffffff !important; }
                 height:   (typeof src.height   === 'number' && isFinite(src.height))   ? src.height   : cfg.init.height,
                 rotation: (typeof src.rotation === 'number' && isFinite(src.rotation)) ? src.rotation : 0
             };
+            // 2026-07-21: 인쇄 크기는 위치별 최대치를 넘을 수 없다 (넘으면 더 비싼 위치가 되므로).
+            //   작게 줄이는 것만 허용 — 저장값이 어떤 이유로든 최대치를 넘으면 여기서 되돌린다.
+            if (box.width > cfg.init.width || box.height > cfg.init.height) {
+                box.width = cfg.init.width; box.height = cfg.init.height;
+            }
             // 저장
             state.tshirtFiles[a] = state.tshirtFiles[a] || {};
             state.tshirtFiles[a].box = box;
@@ -9712,7 +9717,7 @@ html, body { background: #ffffff !important; }
                 // 2026-07-21: 업로드 후에도 "박스를 끌어 인쇄 위치를 맞출 수 있다"는 안내를 남긴다.
                 //   크기는 위치별 고정(가격이 달라서) — 이미지는 박스 안에 맞춰짐.
                 ? '<div style="font-size:10.5px; color:#10b981; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (f.name || 'image') + '</div>'
-                  + '<div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.45;">' + tr('박스를 끌어 인쇄할 위치를 맞춰주세요 · 크기는 고정', 'ボックスをドラッグして印刷位置を調整 · サイズは固定', 'Drag the box to place the print · size is fixed') + '</div>'
+                  + '<div style="font-size:10px; color:#64748b; margin-top:3px; line-height:1.45;">' + tr('박스를 끌어 위치를, 오른쪽아래 ↘ 를 끌어 크기를 조정하세요 (더 크게는 안 되고 작게만)', 'ボックスをドラッグで位置、右下の ↘ をドラッグでサイズ調整 (拡大は不可・縮小のみ)', 'Drag the box to move it, drag the ↘ corner to resize (smaller only)') + '</div>'
                 : '<div style="font-size:10.5px; color:#6366f1; font-weight:800; text-align:center;">' + tr('박스를 끌어 위치 조정 → 클릭하여 이미지 업로드', 'ボックスをドラッグして配置 → クリックでアップロード', 'Drag box to position → Click to upload') + '</div>';
             // 2026-05-30: template literals — 따옴표/문자열 결합 실수 방지
             var sideLabel = (cfg.side === 'back') ? 'BACK' : 'FRONT';
@@ -9727,7 +9732,7 @@ html, body { background: #ffffff !important; }
                 </div>
                 <input type="file" id="${inputId}" accept="image/png,image/jpeg,application/pdf,.pdf,.png,.jpg,.jpeg" onchange="window._soTshirtPickFile('${areaSafe}', this.files)" style="display:none;">
                 <div class="so-tshirt-mockup" data-area="${areaSafe}" style="position:relative; width:100%; aspect-ratio:1/1; background:#0a0a0f url(${MOCKUP}) no-repeat center; background-size:200% auto; background-position:${cfg.bgPos} center; border-radius:8px; overflow:hidden; user-select:none; touch-action:none;">
-                  <div class="so-tshirt-box" data-area="${areaSafe}" style="position:absolute; left:${box.left}%; top:${box.top}%; width:${box.width}%; height:${box.height}%; transform:rotate(${box.rotation}deg); transform-origin:center center; border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">${boxInner}<div class="so-tshirt-rot-handle" data-area="${areaSafe}" style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; display:flex; align-items:center; justify-content:center; cursor:grab; box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:15px; touch-action:none; pointer-events:auto; font-weight:900;">↻</div><div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div></div>
+                  <div class="so-tshirt-box" data-area="${areaSafe}" data-maxw="${cfg.init.width}" data-maxh="${cfg.init.height}" style="position:absolute; left:${box.left}%; top:${box.top}%; width:${box.width}%; height:${box.height}%; transform:rotate(${box.rotation}deg); transform-origin:center center; border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">${boxInner}<div class="so-tshirt-size-handle" data-area="${areaSafe}" title="${tr('끌어서 작게','ドラッグで小さく','Drag to shrink')}" style="position:absolute; right:-10px; bottom:-10px; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid #6366f1; color:#4338ca; display:flex; align-items:center; justify-content:center; cursor:nwse-resize; font-size:11px; touch-action:none; pointer-events:auto;">↘</div><div class="so-tshirt-rot-handle" data-area="${areaSafe}" style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; display:flex; align-items:center; justify-content:center; cursor:grab; box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:15px; touch-action:none; pointer-events:auto; font-weight:900;">↻</div><div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div></div>
                 </div>
                 <div style="margin-top:6px;">${status}</div>
                 ${removeBtn}
@@ -9740,6 +9745,9 @@ html, body { background: #ffffff !important; }
         grid.querySelectorAll('.so-tshirt-rot-handle').forEach(function(h){
             _attachTshirtBoxRotate(h);
         });
+        grid.querySelectorAll('.so-tshirt-size-handle').forEach(function(h){
+            _attachTshirtBoxResize(h);
+        });
     };
 
     // 드래그 + 클릭 부착
@@ -9750,8 +9758,8 @@ html, body { background: #ffffff !important; }
         var container = box.parentElement;
         var area = box.getAttribute('data-area');
         box.addEventListener('pointerdown', function(e){
-            // 회전 핸들에서 시작한 이벤트면 무시
-            if (e.target && e.target.closest && e.target.closest('.so-tshirt-rot-handle')) return;
+            // 회전/크기 핸들에서 시작한 이벤트면 무시
+            if (e.target && e.target.closest && (e.target.closest('.so-tshirt-rot-handle') || e.target.closest('.so-tshirt-size-handle'))) return;
             dragging = true;
             moved = false;
             startX = e.clientX;
@@ -9792,6 +9800,56 @@ html, body { background: #ffffff !important; }
             }
         });
         box.addEventListener('pointercancel', function(){ dragging = false; });
+    }
+
+    // 2026-07-21: 크기 핸들 부착 — 위치별 최대 크기(data-maxw/maxh)보다 크게는 못 키우고,
+    //   작게만 줄일 수 있다. 앞면로고 ↔ 앞면전체는 인쇄 크기로 가격이 갈리므로 확대는 막아야 한다.
+    //   비율은 그대로 유지(정사각 로고는 정사각, 전체는 A4 비례) — 한 배율로 폭·높이를 같이 줄인다.
+    var _TSHIRT_MIN_SCALE = 0.3;   // 최대 크기의 30% 까지만 축소 (더 줄이면 인쇄가 무의미)
+    function _attachTshirtBoxResize(handle) {
+        var box = handle.closest('.so-tshirt-box');
+        if (!box) return;
+        var area = handle.getAttribute('data-area');
+        var container = box.parentElement;
+        var maxW = parseFloat(box.getAttribute('data-maxw'));
+        var maxH = parseFloat(box.getAttribute('data-maxh'));
+        if (!isFinite(maxW) || !isFinite(maxH)) return;
+        var sizing = false, startX, startY, startW, startH;
+        handle.addEventListener('pointerdown', function(e){
+            sizing = true;
+            startX = e.clientX; startY = e.clientY;
+            startW = parseFloat(box.style.width);
+            startH = parseFloat(box.style.height);
+            try { handle.setPointerCapture(e.pointerId); } catch(_){}
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        handle.addEventListener('pointermove', function(e){
+            if (!sizing) return;
+            var bounds = container.getBoundingClientRect();
+            if (!bounds.width || !bounds.height) return;
+            // 좌상단 고정 — 오른쪽아래 핸들을 끈 만큼 폭/높이 변화. 두 축 중 변화가 큰 쪽을 따른다.
+            var dW = ((e.clientX - startX) / bounds.width) * 100;
+            var dH = ((e.clientY - startY) / bounds.height) * 100;
+            var scale = Math.max((startW + dW) / maxW, (startH + dH) / maxH);
+            scale = Math.max(_TSHIRT_MIN_SCALE, Math.min(1, scale));
+            var newW = maxW * scale, newH = maxH * scale;
+            // 목업 밖으로 나가지 않게 (좌상단 기준이므로 left/top + 크기가 100% 이내)
+            var left = parseFloat(box.style.left) || 0, top = parseFloat(box.style.top) || 0;
+            if (left + newW > 100 || top + newH > 100) return;
+            box.style.width = newW + '%';
+            box.style.height = newH + '%';
+            if (state.tshirtFiles && state.tshirtFiles[area] && state.tshirtFiles[area].box) {
+                state.tshirtFiles[area].box.width = newW;
+                state.tshirtFiles[area].box.height = newH;
+            }
+        });
+        handle.addEventListener('pointerup', function(e){
+            sizing = false;
+            try { handle.releasePointerCapture(e.pointerId); } catch(_){}
+            e.stopPropagation();
+        });
+        handle.addEventListener('pointercancel', function(){ sizing = false; });
     }
 
     // 회전 핸들 부착 — 박스 중심 기준 각도 계산
@@ -9850,8 +9908,6 @@ html, body { background: #ffffff !important; }
                 box: prevBox  // 드래그한 위치 유지
             };
             if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
-            // 2026-07-21: 튜토리얼이 '업로드 완료'를 기다린다 (mode:'wait' waitEvent)
-            try { document.dispatchEvent(new CustomEvent('tshirt-file-uploaded', { detail: { area: area } })); } catch (_e) {}
         };
         reader.readAsDataURL(f);
     };

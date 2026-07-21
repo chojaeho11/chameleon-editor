@@ -1852,13 +1852,14 @@
         en: 'Choose <b>where to print</b>: <b>front logo</b> (small, chest), <b>full front</b>, or <b>full back</b>. Tap <b>more than one</b> if you want front and back together.' },
       cheer: { kr: '위치 선택! 👕', ja: '位置OK! 👕', en: 'Area set! 👕' }
     },
-    { // 3) 위치별 이미지 업로드 + 크기·위치 조정
-      target: '#soTshirtUploadSection', mode: 'wait', waitEvent: 'tshirt-file-uploaded',
+    { // 3) 위치별 이미지 업로드 + 위치·크기 조정
+      // 2026-07-21: 업로드 즉시 넘어가면 위치를 옮기거나 다시 올릴 틈이 없다 → '다음'을 눌러야 진행.
+      target: '#soTshirtUploadSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtUploadSection'); },
-      hint: { kr: '칸을 눌러 이미지를 올려주세요', ja: '枠をタップして画像をアップ', en: 'Tap a slot to upload your image' },
-      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 <b>여기서 옷 그림 위의 박스를 끌어</b> 인쇄할 위치를 원하는 곳으로 옮길 수 있어요. <span style="color:#94a3b8;">인쇄 크기는 위치마다 정해져 있어 바꿀 수 없고(위치별로 가격이 달라요), 이미지는 박스 안에 맞춰집니다.</span>',
-        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は <b>ここでTシャツ図の上の枠をドラッグ</b> して、印刷したい位置に動かせます。<span style="color:#94a3b8;">印刷サイズは位置ごとに決まっていて変更できません(位置によって料金が違うため)。画像は枠の中に収まります。</span>',
-        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag the box on the shirt right here</b> to place the print where you want it. <span style="color:#94a3b8;">The print size is fixed per area (each area is priced differently) and your image is fitted inside the box.</span>' },
+      hint: { kr: '이미지를 올리고 위치·크기까지 맞춘 뒤 다음을 눌러주세요', ja: '画像をアップし、位置とサイズを調整してから次へ', en: 'Upload, adjust position and size, then tap Next' },
+      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 <b>박스를 끌어 인쇄할 위치</b>를 옮기고, <b>오른쪽아래 ↘ 를 끌어 크기</b>를 줄일 수 있어요. 마음에 안 들면 <b>제거 / 다시 업로드</b>로 바꿔도 됩니다. <span style="color:#94a3b8;">크기는 위치별 최대치보다 크게는 안 돼요 — 위치에 따라 가격이 다르거든요.</span>',
+        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は <b>枠をドラッグして印刷位置</b> を動かし、<b>右下の ↘ をドラッグしてサイズ</b> を小さくできます。気に入らなければ <b>削除 / 再アップロード</b> でやり直せます。<span style="color:#94a3b8;">位置ごとの最大サイズより大きくはできません — 位置によって料金が違うためです。</span>',
+        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag the box to place the print</b> and <b>drag the ↘ corner to shrink it</b>. Not happy? Use <b>remove / re-upload</b>. <span style="color:#94a3b8;">It cannot go bigger than that area\'s maximum — each area is priced differently.</span>' },
       cheer: { kr: '이미지 등록! 🖼', ja: '画像OK! 🖼', en: 'Image added! 🖼' }
     },
     { // 4) 컬러
