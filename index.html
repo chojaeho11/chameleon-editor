@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260721144859';
+    var CV = '20260721145429';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -95,13 +95,30 @@
                 if (!v) return;
                 v = v.trim();
                 if (!v || v === CV) return;                              // 이미 최신
-                if (sessionStorage.getItem('_vr_target') === v) return;  // 같은 서버버전 이미 시도 → deep-cache 루프 방지
+                // 2026-07-21: 예전엔 같은 버전에 1회만 시도하고 영영 포기했다(_vr_target 일치 시 return).
+                //   그래서 모바일 웹뷰처럼 캐시가 깊게 박힌 기기는 자가치유가 한 번 실패하면 계속 구버전이었다
+                //   (일본 직원 모바일에서 옛 화면·옛 금액이 계속 보인 원인).
+                //   → 같은 버전이라도 2회까지 재시도. 그 이상은 무한 새로고침 방지를 위해 중단.
+                var _k = '_vr_try_' + v;
+                var _tries = parseInt(sessionStorage.getItem(_k) || '0', 10);
+                if (_tries >= 2) return;
                 if (!force && _verBusy()) return;                        // 작업 중이면 보류 (다음 안전 시점 재체크)
-                sessionStorage.setItem('_vr_target', v);
-                // location.reload() 가 일부 WebView 캐시를 못 깨므로 URL 변경으로 강제 새요청
-                var params = new URLSearchParams(location.search);
-                params.set('_cb', Date.now());
-                location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
+                sessionStorage.setItem(_k, String(_tries + 1));
+                // 2026-07-21: 브라우저 캐시 저장소(Cache API)도 비운다 — 옛 헤더로 저장된 항목은
+                //   지금 no-store 를 내려줘도 그대로 남아 있어서, 지우지 않으면 새로고침해도 옛 파일이 나온다.
+                var _go = function () {
+                    // location.reload() 가 일부 WebView 캐시를 못 깨므로 URL 변경으로 강제 새요청
+                    var params = new URLSearchParams(location.search);
+                    params.set('_cb', Date.now());
+                    location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
+                };
+                try {
+                    if (window.caches && caches.keys) {
+                        caches.keys().then(function (ks) {
+                            return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+                        }).then(_go).catch(_go);
+                    } else { _go(); }
+                } catch (e) { _go(); }
             }).catch(function(){});
         } catch(e){}
     }
