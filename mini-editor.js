@@ -6949,6 +6949,29 @@
         { code: '4653231',   name: '반팔티' }
     ];
 
+    // 2026-07-21 [버그수정] 제품 선택 팝업이 원화 금액에 엔화 기호만 붙여 보여줬다
+    //   (일본 사이트에서 3,000원짜리가 "3,000円~" = 실제의 10배). CLAUDE.md §6 대로
+    //   DB 는 KRW 만 저장하고 프론트에서 CURRENCY_RATE 로 환산해야 한다 (KR=1 / JP=0.1 / US=0.001).
+    function _meFmtPrice(krw) {
+        if (!krw) return '';
+        var cfg = window.SITE_CONFIG || {};
+        var cc = cfg.COUNTRY || 'KR';
+        var rate = (cfg.CURRENCY_RATE && cfg.CURRENCY_RATE[cc]) || 1;
+        var v = Number(krw) * rate;
+        // 소수점이 남는 통화(US 등)만 두 자리, 원·엔은 정수
+        var shown = (v > 0 && v < 100 && rate < 0.01) ? v.toFixed(2) : Math.round(v).toLocaleString();
+        return shown + _meAiTr('원~', '円~', '~');
+    }
+
+    // 제품명 — 사이트 언어에 맞는 컬럼 사용 (simple_order.js 의 이름 선택 방식과 동일)
+    function _meLocalName(row) {
+        if (!row) return '';
+        var l = _meAiLang();
+        if (l === 'ja' && row.name_jp) return row.name_jp;
+        if (l === 'en' && row.name_us) return row.name_us;
+        return row.name || '';
+    }
+
     function _meHeroProductPicker(imgUrl) {
         var old = document.getElementById('meHeroProdPicker');
         if (old) old.remove();
@@ -7001,14 +7024,16 @@
             try {
                 if (!window.sb) return;
                 var codes = _ME_HERO_PRODUCTS.map(function (p) { return p.code; });
-                var r = await window.sb.from('admin_products').select('code,img_url,price').in('code', codes);
+                // 2026-07-21: 제품명도 언어별로 (name_jp/name_us) — 하드코딩 한글이 일본 사이트에 그대로 나왔다.
+                var r = await window.sb.from('admin_products')
+                    .select('code,img_url,price,name,name_jp,name_us').in('code', codes);
                 if (r.error || !r.data) return;
                 var by = {};
                 r.data.forEach(function (row) { by[row.code] = row; });
                 grid.innerHTML = _ME_HERO_PRODUCTS.map(function (p) {
                     var d = by[p.code] || {};
-                    var pr = d.price ? (Number(d.price).toLocaleString() + _meAiTr('원~', '円~', ' KRW~')) : '';
-                    return cardHtml(p, d.img_url || '', pr);
+                    var nm = _meLocalName(d) || p.name;
+                    return cardHtml({ code: p.code, name: nm }, d.img_url || '', _meFmtPrice(d.price));
                 }).join('');
                 grid.querySelectorAll('button[data-code]').forEach(function (b) {
                     b.addEventListener('click', function () { close(); _meHeroGoProduct(b.getAttribute('data-code'), imgUrl); });
