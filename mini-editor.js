@@ -6515,8 +6515,9 @@
                 // 2026-07-20: 참고(reference) 모드 안내는 빨간 배경 + 흰 글씨로 눈에 띄게 (사장님 지시).
                 //   나머지 모드는 기존 회색 안내문 그대로.
                 if (isRef) {
+                    // white-space:pre-line — 안내문의 \n 을 줄바꿈으로 살린다 (textContent 로 넣으므로)
                     hint.style.cssText = 'display:block; background:#dc2626; color:#fff; font-size:12.5px;'
-                        + 'line-height:1.6; padding:11px 13px; border-radius:9px; margin:-2px 0 10px;';
+                        + 'line-height:1.6; padding:11px 13px; border-radius:9px; margin:-2px 0 10px; white-space:pre-line;';
                 } else {
                     hint.style.cssText = 'display:block; font-size:11.5px; color:#64748b; margin:-4px 0 10px; line-height:1.5;';
                 }
@@ -6525,9 +6526,9 @@
                               'この什器の形はそのままに、表面のデザインだけ新しく仕上げます。',
                               'We keep this display\'s exact shape and only redress its surfaces.')
                     : isRef
-                    ? _meAiTr('이 디자인 스타일로 고객님이 만드실 내용으로 다시 디자인합니다. 제목과 상세내용을 적어주세요. 놀라운 경험을 위해 1분만 기다려주세요.',
-                              'このデザインのスタイルで、お客様の内容に合わせて作り直します。タイトルと詳細をご記入ください。素晴らしい仕上がりのため、1分ほどお待ちください。',
-                              'We\'ll redesign in this style with your own content. Enter your title and details — it takes about a minute.')
+                    ? _meAiTr('고르신 이미지를 토대로, 고객님이 아래에 만들고 싶은 내용을 적어주시면 멋지게 만들어 드립니다.\n제목·일시·장소 등을 자세히 적을수록 좋아요. (약 1분 소요)',
+                              'お選びいただいた画像をもとに、下に作りたい内容をご記入いただければ素敵に仕上げます。\nタイトル・日時・場所など詳しく書くほど良い仕上がりになります。(約1分)',
+                              'Using the image you picked, just write below what you want to make and we\'ll design it.\nThe more detail (title, date, place) the better. (about a minute)')
                     : _meAiTr('넣은 사진을 활용해 디자인해 드려요. 어떻게 만들지 아래에 적어주세요.',
                               'お写真を活かしてデザインします。どう仕上げるか下に入力してください。',
                               'We\'ll design using your photo. Describe how below.');
@@ -7531,7 +7532,23 @@
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         _meAiPendingUrl = null;
         if (prompt.length < 3) {
-            if (err) { err.textContent = _meAiTr('설명을 조금 더 자세히 적어주세요.', 'もう少し詳しく説明してください。', 'Please describe a bit more.'); err.style.display = 'block'; }
+            // 2026-07-21: 참고 이미지만 고르고 내용 없이 [이미지 생성] 을 눌러버리는 고객이 많았다.
+            //   경고는 원래도 있었지만 모달 맨 아래(#meAiErr)라 화면 밖이라 못 봤다
+            //   → 입력칸을 빨갛게 표시하고 포커스까지 줘서 어디에 적어야 하는지 바로 보이게 한다.
+            var _warn = _meAiTr('디자인하실 내용을 적어주세요!',
+                                'デザインする内容を入力してください！',
+                                'Please tell us what to design!');
+            if (err) { err.textContent = '⚠️ ' + _warn; err.style.display = 'block'; }
+            if (promptEl) {
+                promptEl.style.borderColor = '#dc2626';
+                promptEl.style.background = '#fef2f2';
+                try { promptEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_sv) {}
+                promptEl.focus();
+                setTimeout(function () {
+                    promptEl.style.borderColor = '#e2e8f0';
+                    promptEl.style.background = '';
+                }, 2500);
+            }
             return;
         }
         if (res) {
