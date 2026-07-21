@@ -1828,8 +1828,76 @@
     cheer: { kr: '종류 선택! ✨', ja: '種類OK! ✨', en: 'Type set! ✨' }
   };
 
+  // ════════════════════════════════════════════════════════════════════
+  //  시나리오 — 의류(티셔츠 등, 카테고리 3244432)   2026-07-21
+  //  기존에는 generic 으로 빠져 '파일 업로드' 단계가 티셔츠에 없는 요소(#soUniversalUpload,
+  //  #soFile)를 가리켜 사실상 동작하지 않았다. 사장님 지시 흐름:
+  //    인쇄방식 → 인쇄위치 → 그 자리에 업로드·크기조정 → 컬러 → 사이즈별 수량 → 합계 → 장바구니
+  //  업로드 섹션은 simple_order 의 _soMoveTshirtUpload 가 우측 패널로 옮겨준다.
+  // ════════════════════════════════════════════════════════════════════
+  function _tutIsTshirt() { try { return _secVisible('#soTshirtPrintAreaSection'); } catch (_) { return false; } }
+  var TSHIRT_STEPS = [
+    { // 1) 인쇄 방식
+      target: '#soTshirtPrintMethodSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soTshirtPrintMethodSection'); },
+      msg: { kr: '먼저 <b>인쇄 방식</b>을 골라요. <b>DTG</b>는 옷에 직접 인쇄해 부드럽고, <b>DTF</b>는 전사 필름이라 색이 선명해요. <b>홀로그램</b>은 반짝이는 특수 전사예요.',
+        ja: 'まず <b>印刷方式</b> を選びます。<b>DTG</b> は生地に直接印刷でやわらかい仕上がり、<b>DTF</b> は転写フィルムで発色が鮮やか。<b>ホログラム</b> はきらめく特殊転写です。',
+        en: 'First pick the <b>print method</b>. <b>DTG</b> prints straight onto the fabric (soft finish), <b>DTF</b> is transfer film (vivid colour), <b>Hologram</b> is a sparkling special transfer.' }
+    },
+    { // 2) 인쇄 위치 (복수 선택)
+      target: '#soTshirtPrintAreaSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soTshirtPrintAreaSection'); },
+      msg: { kr: '<b>어디에 인쇄</b>할지 골라요. <b>앞면 로고</b>(가슴 부분 작게) · <b>앞면 전체</b> · <b>뒷면 전체</b> 중에서 고르고, 앞뒤 모두 인쇄하려면 <b>여러 개</b>를 눌러 함께 선택할 수 있어요.',
+        ja: '<b>どこに印刷</b> するか選びます。<b>前面ロゴ</b>(胸元に小さく) · <b>前面全体</b> · <b>背面全体</b> から選択。前後とも印刷したい場合は <b>複数</b> タップで同時選択できます。',
+        en: 'Choose <b>where to print</b>: <b>front logo</b> (small, chest), <b>full front</b>, or <b>full back</b>. Tap <b>more than one</b> if you want front and back together.' },
+      cheer: { kr: '위치 선택! 👕', ja: '位置OK! 👕', en: 'Area set! 👕' }
+    },
+    { // 3) 위치별 이미지 업로드 + 크기·위치 조정
+      target: '#soTshirtUploadSection', mode: 'wait', waitEvent: 'tshirt-file-uploaded',
+      onEnter: function () { return _secVisible('#soTshirtUploadSection'); },
+      hint: { kr: '칸을 눌러 이미지를 올려주세요', ja: '枠をタップして画像をアップ', en: 'Tap a slot to upload your image' },
+      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 왼쪽 옷 그림 위에서 <b>드래그로 위치</b>를, <b>모서리 핸들로 크기</b>를 조정할 수 있어요.',
+        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は左のTシャツ図の上で <b>ドラッグして位置</b>、<b>角のハンドルでサイズ</b> を調整できます。',
+        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag</b> it on the shirt at the left to move it, and use the <b>corner handles</b> to resize.' },
+      cheer: { kr: '이미지 등록! 🖼', ja: '画像OK! 🖼', en: 'Image added! 🖼' }
+    },
+    { // 4) 컬러
+      target: '#soAddonSection', mode: 'next',
+      onEnter: function () { return _secVisible('#soAddonSection'); },
+      msg: { kr: '<b>티셔츠 색상</b>을 골라요. 인쇄할 그림이 잘 보이는 색으로 고르면 더 예뻐요. <span style="color:#94a3b8;">(어두운 옷에 밝은 그림, 밝은 옷에 진한 그림)</span>',
+        ja: '<b>Tシャツの色</b> を選びます。プリントが映える色にすると仕上がりがきれいです。<span style="color:#94a3b8;">(濃い色には明るい柄、淡い色には濃い柄)</span>',
+        en: 'Pick the <b>shirt colour</b>. It looks best when the artwork contrasts with the fabric. <span style="color:#94a3b8;">(light art on dark shirts, dark art on light shirts)</span>' },
+      cheer: { kr: '색상 선택! 🎨', ja: '色OK! 🎨', en: 'Colour set! 🎨' }
+    },
+    { // 5) 사이즈별 수량
+      target: '#soTshirtSizeSection', mode: 'wait', waitEvent: 'tshirt-qty-set',
+      onEnter: function () { return _secVisible('#soTshirtSizeSection'); },
+      hint: { kr: '필요한 사이즈에 수량을 적어주세요', ja: '必要なサイズに数量を入力', en: 'Type the quantity for each size you need' },
+      msg: { kr: '이제 <b>사이즈별로 수량</b>을 적어주세요. <b>S · M · L</b> 칸에 각각 필요한 장수를 넣으면 돼요. 필요 없는 사이즈는 <b>0</b>으로 두면 됩니다. <span style="color:#94a3b8;">(전체 주문 수량 = S+M+L 합계)</span>',
+        ja: '次に <b>サイズ別の数量</b> を入力します。<b>S · M · L</b> の欄に必要な枚数を入れてください。不要なサイズは <b>0</b> のままでOK。<span style="color:#94a3b8;">(注文数量 = S+M+L の合計)</span>',
+        en: 'Now enter the <b>quantity per size</b> — fill in <b>S, M and L</b> with how many you need, leaving unwanted sizes at <b>0</b>. <span style="color:#94a3b8;">(total order = S+M+L)</span>' },
+      cheer: { kr: '수량 입력! 🔢', ja: '数量OK! 🔢', en: 'Quantity set! 🔢' }
+    },
+    { // 6) 합계 확인
+      target: '#soPriceBox', mode: 'next',
+      onEnter: function () { return _secVisible('#soPriceBox'); },
+      msg: { kr: '<b>합계</b>를 확인해요. 사이즈별로 넣은 <b>총 장수</b>와 <b>금액</b>이 맞는지 한 번 봐주세요. 고칠 게 있으면 <b>이전</b>으로 돌아가 수정할 수 있어요.',
+        ja: '<b>合計</b> を確認します。サイズ別に入力した <b>合計枚数</b> と <b>金額</b> が合っているかご確認ください。直したい場合は <b>戻る</b> で修正できます。',
+        en: 'Check the <b>total</b> — make sure the <b>piece count</b> and the <b>price</b> match what you entered. Tap <b>Back</b> if you need to change anything.' }
+    },
+    { // 7) 장바구니
+      target: '#soBtnCart', mode: 'wait',
+      hint: { kr: '장바구니를 눌러주세요', ja: 'カートを押してください', en: 'Tap the cart button' },
+      msg: { kr: '자, 이제 <b>장바구니에 담아</b>볼까요? 🛒',
+        ja: 'さあ、<b>カートに入れて</b>みましょう 🛒',
+        en: "Now, let's <b>add it to the cart</b> 🛒" }
+    }
+  ];
+
   var SCENARIOS = [
     { id: 'bizcard', match: /^pp_bc/i, steps: BIZCARD_STEPS },
+    // 2026-07-21: 의류(티셔츠) — 인쇄방식·위치·위치별 업로드·컬러·사이즈별 수량. generic 보다 앞.
+    { id: 'tshirt', match: { test: function () { return _tutIsTshirt(); } }, steps: TSHIRT_STEPS },
     // 2026-07-15: 글씨 스카시 — 종류·문구·참고자료·배송 전용 스텝. honeycomb/size-product 보다 앞.
     { id: 'scarci', match: { test: function () { return _tutIsScarci(); } }, steps: SCARCI_STEPS },
     // 2026-07-15: 아크릴 인쇄 — 종류·커팅/인쇄방식·사이즈·디자인·누끼칼선. size-product 보다 앞.

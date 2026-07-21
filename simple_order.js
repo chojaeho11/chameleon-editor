@@ -9594,6 +9594,8 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
         // 2026-06-22 v702: S/M/L 합계 변경 시 카트 버튼 활성화 상태 재계산
         if (typeof updateButtons === 'function') updateButtons();
+        // 2026-07-21: 튜토리얼이 '수량 입력됨'을 기다린다. 0 이면 아직 안 넣은 것.
+        if (total > 0) { try { document.dispatchEvent(new CustomEvent('tshirt-qty-set', { detail: { total: total } })); } catch (_e) {} }
     };
 
     // 2026-05-30: 티셔츠 인쇄 방식 선택 (DTG / DTF / 홀로그램)
@@ -9617,6 +9619,50 @@ html, body { background: #ffffff !important; }
     //   front_logo: 로고 사이즈 정사각 (가슴 위치 기본)
     //   front_full / back_full: A4 비례(210:297) 큰 직사각형
     //   사용자가 박스 드래그 → 인쇄 위치 지정 → 박스 클릭 또는 박스에 이미지 업로드
+    // 2026-07-21: 티셔츠 이미지 업로드 섹션을 우측 패널로 옮긴다(또는 원위치 복귀).
+    //   모달 하나를 전 제품이 재사용하므로, 티셔츠가 아닐 땐 반드시 원래 부모로 돌려놔야 한다.
+    //   우측 패널은 flex 라 style.order 로 순서를 잡는다 — 사장님이 요청한 진행 순서:
+    //     인쇄방식 → 인쇄위치 → 이미지 업로드·크기조정 → 컬러 → 사이즈별 수량 → 합계 → 장바구니
+    var _soTshirtUpHome = null;   // { parent, next } 원위치 기억
+    window._soMoveTshirtUpload = function (toRight) {
+        try {
+            var sec = document.getElementById('soTshirtUploadSection');
+            if (!sec) return;
+            var right = document.querySelector('.so-right');
+            if (toRight) {
+                if (!_soTshirtUpHome) _soTshirtUpHome = { parent: sec.parentNode, next: sec.nextElementSibling };
+                if (right && sec.parentNode !== right) right.appendChild(sec);
+                sec.classList.add('so-section');   // 우측 카드들과 같은 흰 박스 모양
+                // DOM 자연 순서는 컬러 → 사이즈 → 인쇄방식 → 인쇄위치 라 그대로 두면 순서가 거꾸로다.
+                // 가격박스는 DOM 상 맨 끝이고 order 를 안 주면 0 = 아래에 남으므로 건드리지 않는다.
+                var ORD = {
+                    soTshirtPrintMethodSection: '-60',
+                    soTshirtPrintAreaSection:   '-58',
+                    soTshirtUploadSection:      '-57',
+                    soAddonSection:             '-56',
+                    soTshirtSizeSection:        '-55'
+                };
+                Object.keys(ORD).forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.style.order = ORD[id];
+                });
+            } else if (_soTshirtUpHome && sec.parentNode !== _soTshirtUpHome.parent) {
+                // 원래 자리로 (next 가 아직 같은 부모에 있으면 그 앞에, 아니면 끝에)
+                if (_soTshirtUpHome.next && _soTshirtUpHome.next.parentNode === _soTshirtUpHome.parent) {
+                    _soTshirtUpHome.parent.insertBefore(sec, _soTshirtUpHome.next);
+                } else {
+                    _soTshirtUpHome.parent.appendChild(sec);
+                }
+                sec.style.order = '';
+                sec.classList.remove('so-section');
+                ['soTshirtPrintMethodSection','soTshirtPrintAreaSection','soAddonSection',
+                 'soTshirtSizeSection'].forEach(function (id) {
+                    var el = document.getElementById(id); if (el) el.style.order = '';
+                });
+            }
+        } catch (e) { console.warn('[so] tshirt upload move', e); }
+    };
+
     window._soRenderTshirtUploads = function () {
         var grid = document.getElementById('soTshirtUploadGrid');
         if (!grid) return;
@@ -9802,6 +9848,8 @@ html, body { background: #ffffff !important; }
                 box: prevBox  // 드래그한 위치 유지
             };
             if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
+            // 2026-07-21: 튜토리얼이 '업로드 완료'를 기다린다 (mode:'wait' waitEvent)
+            try { document.dispatchEvent(new CustomEvent('tshirt-file-uploaded', { detail: { area: area } })); } catch (_e) {}
         };
         reader.readAsDataURL(f);
     };
@@ -14242,10 +14290,19 @@ html, body { background: #ffffff !important; }
             if (_stdUpload) _stdUpload.style.display = 'none';
             if (_stdUploadLabel) _stdUploadLabel.style.display = 'none';
             if (_tshirtUpload) _tshirtUpload.style.display = '';
+            // 2026-07-21: 업로드 섹션을 좌측 목업 위 → 우측 패널로 이동 (사장님 지시).
+            //   좌측에만 있어서 "어디에 올리는지 모르겠다"는 혼란이 있었다.
+            //   마크업 자체를 옮기면 렌더러·드래그핸들러·모바일 CSS 가 흔들리므로 런타임 이동만 한다.
+            //   원위치는 기억해 뒀다가 티셔츠가 아닌 제품에서 되돌린다(모달을 재사용하므로 필수).
+            if (typeof window._soMoveTshirtUpload === 'function') window._soMoveTshirtUpload(true);
             // 에디터 카드는 이미 hideEditor 로직이 처리 — 추가 보강
             if (editorBtn) editorBtn.style.display = 'none';
             // 초기 렌더
-            setTimeout(function(){ if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads(); }, 0);
+            setTimeout(function(){
+                // 이동 함수가 아직 정의 전일 수 있어(핸들러 등록이 모달 오픈 시점) 여기서 한 번 더 시도
+                if (typeof window._soMoveTshirtUpload === 'function') window._soMoveTshirtUpload(true);
+                if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
+            }, 0);
         } else {
             state.tshirtSizes = null;
             state.tshirtPrintMethod = null;
@@ -14263,6 +14320,7 @@ html, body { background: #ffffff !important; }
             if (_stdUpload2) _stdUpload2.style.display = _keepHidden ? 'none' : '';
             if (_stdUploadLabel2) _stdUploadLabel2.style.display = _keepHidden ? 'none' : '';
             if (_tshirtUpload2) _tshirtUpload2.style.display = 'none';
+            if (typeof window._soMoveTshirtUpload === 'function') window._soMoveTshirtUpload(false);   // 좌측 원위치로 복귀
         }
         // 2026-05-30: 프리셋 감지 후 custSec display 결정 — 손수건도 정상적으로 pill UI 표시
         // 2026-06-12: 배너 family 는 사이즈 선택 불필요 — 자리에 할인 안내 (eligible 면)
@@ -14552,7 +14610,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-05: cutPrint 도 숨김 — 큐 라인별 인라인 수량 input 으로 대체.
         var qtySec = document.getElementById('soQtySection');
         // 2026-07-11: 객체크기 모드(등신대/자유인쇄커팅)는 주문 수량 입력 노출 — 수량↔받침대 동기화 위해.
-        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || (state.isCutPrint && !state.isObjSizeMode) || state.isSticker) ? 'none' : '';
+        // 2026-07-21: 티셔츠도 숨김 — S/M/L 각각의 수량 input 합계가 수량이라, 여기서 다시 노출되면
+        //   「주문 수량 0」 이 뜨고 사이즈별 합계와 따로 논다(위 tshirt 분기의 display='none' 를 덮어쓰던 버그).
+        if (qtySec) qtySec.style.display = (state.isWall || state.isRawBoard || (state.isCutPrint && !state.isObjSizeMode) || state.isSticker || state.presetType === 'tshirt') ? 'none' : '';
 
         // 2026-06-01: 광고인쇄 — 사이즈 카드 → qty 위 / 추가옵션 / 배송 순서 + 단위 mm + 인라인 업로드 + 멀티-라인
         (function _soApplyAdPrintLayout(){
