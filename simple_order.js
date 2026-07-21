@@ -20300,9 +20300,9 @@ html, body { background: #ffffff !important; }
                 if (it.boxSize && it.boxSize.w) {
                     lines.push('   박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
                 }
-                // 2026-07-22: 허니콤 박스·종이매대는 디자이너 의뢰(design_requests)를 만들지 않으므로,
+                // 2026-07-22: 박스·종이매대·허니콤 테이블은 디자이너 의뢰(design_requests)를 만들지 않으므로,
                 //   고객이 적은 브랜드/제품/컨셉과 AI 목업 참고자료가 갈 곳이 여기밖에 없다.
-                if (it.product && it.product.code && /^(hb_bx|pd_)/i.test(it.product.code)) {
+                if (it.product && it.product.code && /^(hb_bx|hb_tb|pd_)/i.test(it.product.code)) {
                     if (it.pdBrand)    lines.push('   브랜드/타이틀: ' + it.pdBrand);
                     if (it.pdProducts) lines.push('   주요 제품/내용: ' + it.pdProducts);
                     if (it.pdConcept)  lines.push('   색상/컨셉: ' + it.pdConcept);
@@ -20595,73 +20595,12 @@ html, body { background: #ffffff !important; }
                 }
             } catch (e) { console.warn('[scarci dreq batch]', e); }
 
-            // 2026-07-18: 종이매대 — AI 목업 + 브랜드/제품/컨셉을 디자이너 의뢰(design_requests)로 전달 (스카시 미러)
-            try {
-                var _pdSb = sb;
-                var _pdU = await _pdSb.auth.getUser();
-                var _pdUid = (_pdU && _pdU.data && _pdU.data.user && _pdU.data.user.id) || loggedInUid || null;
-                for (var _pi = 0; _pi < items.length; _pi++) {
-                    var _pi_it = items[_pi];
-                    if (!_pi_it) continue;
-                    var _pi_isPd = (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_pi_it.product))
-                        || (_pi_it.product && _pi_it.product.code && /^pd_/i.test(_pi_it.product.code));
-                    // 2026-07-18: 허니콤 테이블(hb_tb_*)도 같은 흐름으로 디자이너 의뢰
-                    var _pi_isTb = (typeof _soIsTableProduct === 'function' && _soIsTableProduct(_pi_it.product))
-                        || (_pi_it.product && _pi_it.product.code && /^hb_tb/i.test(_pi_it.product.code));
-                    var _pi_isBx = (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(_pi_it.product))
-                        || (_pi_it.product && _pi_it.product.code && /^hb_bx/i.test(_pi_it.product.code));
-                    // 2026-07-22 철회 (사장님 지시): 박스(07-19 추가)·종이매대(07-18 추가)는 주문만 하면
-                    //   지급 30,000/40,000원짜리 디자이너 의뢰가 자동 생성돼 디자인마켓 주문관리에 쌓였다.
-                    //   디자이너 지급은 "고객이 의뢰비를 결제한 경우"에만 발생해야 한다 —
-                    //   그 경로는 openDesignRequestPopup(디자인 의뢰 3만원 → 지급 70% = 21,000원)이 따로 처리한다.
-                    //   여기서 만들지 않는 대신, 고객이 적은 브랜드/제품/컨셉은 주문서 전달사항에 남긴다.
-                    if (_pi_isBx || _pi_isPd) continue;
-                    if (!_pi_isTb) continue;
-                    var _pi_kind = '테이블';
-                    if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
-                    var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || _pi_kind);
-                    var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
-                    var _pi_custPhone = (typeof phone !== 'undefined' && phone) ? phone : '';
-                    var _pi_brand = (_pi_it.pdBrand || '').trim();
-                    var _pi_products = (_pi_it.pdProducts || '').trim();
-                    var _pi_concept = (_pi_it.pdConcept || '').trim();
-                    var _pi_qty = Math.max(1, Number(_pi_it.qty) || 1);
-                    var _pi_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_pi_it) : ((_pi_it.product && _pi_it.product.price) || 0);
-                    var _pi_unitPrice = Math.round((Number(_pi_price) || 0) / _pi_qty);
-                    // 디자이너 지급 — 1건당 (종이매대·테이블만. 박스는 위에서 제외)
-                    var _pi_payout = 40000;
-                    var _pi_files = [];
-                    ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function (f) { if (_pi_it[f] && typeof _pi_it[f] === 'string') _pi_files.push(_pi_it[f]); });
-                    if (Array.isArray(_pi_it.uploadedFiles)) _pi_it.uploadedFiles.forEach(function (u) { if (u && typeof u === 'string') _pi_files.push(u); });
-                    var _pi_desc = '[' + (_pi_custName || '고객') + ' · ' + (_pi_custPhone || '-') + ']\n'
-                        + '제품: ' + _pi_prodName + (_pi_qty > 1 ? ' · 수량 ' + _pi_qty : '') + '\n'
-                        + (_pi_brand ? '브랜드/타이틀: ' + _pi_brand + '\n' : '')
-                        + (_pi_products ? '주요 제품/내용: ' + _pi_products + '\n' : '')
-                        + (_pi_concept ? '색상/컨셉: ' + _pi_concept + '\n' : '')
-                        + '주문번호: ' + (newOrderId || '-') + '\n'
-                        + '※ ' + _pi_kind + ' 인쇄 디자인 (AI 목업 참고, 칼선·인쇄데이터 검증 필요)\n\n'
-                        + '[FREE_REQ:{"customerPrice":' + _pi_unitPrice + ',"designerPayout":' + _pi_payout + '}]';
-                    var _pi_payload = {
-                        customer_id: _pdUid,
-                        title: '[' + _pi_kind + '] ' + _pi_prodName + (_pi_brand ? ' — ' + _pi_brand : ''),
-                        description: _pi_desc,
-                        category: _pi_kind,
-                        country: 'KR',
-                        budget_min: _pi_payout,
-                        budget_max: _pi_payout,
-                        phone: _pi_custPhone || null,
-                        files: _pi_files,
-                        status: 'open'
-                    };
-                    try {
-                        var _pi_ins = await _pdSb.from('design_requests').insert(_pi_payload).select().single();
-                        if (!_pi_ins.error && _pi_ins.data) {
-                            if (!_pi_it.designRequest) _pi_it.designRequest = {};
-                            _pi_it.designRequest.request_id = _pi_ins.data.id;
-                        }
-                    } catch (_pie) { console.warn('[pd dreq insert]', _pie); }
-                }
-            } catch (e) { console.warn('[pd dreq batch]', e); }
+            // 2026-07-18~19: 종이매대·허니콤 테이블·박스 주문이 들어오면 디자이너 의뢰(design_requests)를
+            //   자동 생성하던 블록이 여기 있었다. 2026-07-22 사장님 지시로 전부 철회 —
+            //   주문만 하면 지급 40,000/30,000원짜리 건이 디자인마켓 주문관리에 쌓였는데,
+            //   디자이너 지급은 '고객이 의뢰비를 결제한 경우'에만 발생해야 한다.
+            //   결제 경로는 openDesignRequestPopup (3만원 결제 → 지급 70% = 21,000원) 이 따로 처리한다.
+            //   고객이 적은 브랜드/제품/컨셉·AI 목업은 주문서 전달사항(itemSummaries)에 기록된다.
 
             // 2026-06-13: 디자인 의뢰 row 들에 order_id 태그 — 디자이너 보드 / 출금관리에서 결제 연결 추적
             try {
