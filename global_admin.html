@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260721152643';
+        var CV = '20260721154254';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -323,7 +323,7 @@
               </style>
               <div class="gm-wrap">
                 <h2 style="margin:0 0 4px;">🖼 작품 갤러리 승인</h2>
-                <p style="color:#64748b; margin:0 0 6px; font-size:13.5px; line-height:1.6;">명함·개인정보가 감지된 AI 디자인은 자동 공개하지 않고 여기서 대기합니다. 이미지를 확인 후 <b style="color:#0f766e;">승인</b>하면 작품 갤러리에 공개되고, <b style="color:#b91c1c;">거절</b>하면 삭제됩니다.</p>
+                <p style="color:#64748b; margin:0 0 6px; font-size:13.5px; line-height:1.6;">명함·개인정보가 감지된 AI 디자인은 자동 공개하지 않고 여기서 대기합니다. 이미지를 확인 후 <b style="color:#0f766e;">승인</b>하면 작품 갤러리에 공개되고, <b style="color:#b91c1c;">거절</b>하면 갤러리에 공개되지 않습니다. (고객 본인의 「내가 만든 디자인」에는 그대로 남습니다)</p>
                 <div style="display:flex; gap:8px; align-items:center; margin:10px 0 16px;">
                   <button onclick="if(window.loadGalleryMod) loadGalleryMod()" style="padding:7px 14px; border:1px solid #e2e8f0; background:#fff; border-radius:9px; font-size:12.5px; font-weight:700; color:#475569; cursor:pointer;">새로고침</button>
                   <span id="galModCount" style="font-size:12.5px; color:#94a3b8;"></span>
@@ -332,7 +332,7 @@
 
                 <hr class="gm-divider">
                 <h2 style="margin:22px 0 4px;">🗑 공개된 작품 관리 (최신순)</h2>
-                <p style="color:#64748b; margin:0 0 12px; font-size:13.5px; line-height:1.6;">현재 작품 갤러리에 공개된 이미지들입니다. 키워드로 검색하고, 부적절한 작품은 <b style="color:#b91c1c;">삭제</b>할 수 있습니다.</p>
+                <p style="color:#64748b; margin:0 0 12px; font-size:13.5px; line-height:1.6;">현재 작품 갤러리에 공개된 이미지들입니다. 키워드로 검색하고, 부적절하거나 한 고객이 너무 많이 올린 작품은 <b style="color:#b91c1c;">삭제</b>할 수 있습니다. 갤러리에서만 내려가고 고객 본인의 「내가 만든 디자인」에는 그대로 남습니다.</p>
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:16px;">
                   <input type="text" id="galPubSearch" class="gm-search" placeholder="키워드 검색 (한/영/일)" onkeydown="if(event.key==='Enter'){ window.loadGalleryPublic && loadGalleryPublic(this.value); }">
                   <button onclick="window.loadGalleryPublic && loadGalleryPublic(document.getElementById('galPubSearch').value)" style="padding:8px 16px; border:none; background:#4338ca; color:#fff; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer;">검색</button>
@@ -6825,7 +6825,9 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
 
   window.moderateGallery = async function(id, action){
     var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
-    if (action === 'reject' && !confirm('이 작품을 거절(삭제)하시겠습니까? 되돌릴 수 없습니다.')) return;
+    if (action === 'reject' && !confirm('이 작품을 거절하시겠습니까?
+
+갤러리에는 공개되지 않지만, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
     var card = document.getElementById('gm-'+id);
     if (card) card.style.opacity = '0.4';
     try {
@@ -6900,7 +6902,9 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
   }
   window.deleteGalleryItem = async function(id){
     var sb = gmSb(); if (!sb) { alert('DB 연결이 없습니다.'); return; }
-    if (!confirm('이 작품을 갤러리에서 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
+    if (!confirm('이 작품을 갤러리에서 내리시겠습니까?
+
+메인 갤러리에서만 사라지고, 만든 고객의 「내가 만든 디자인」에는 그대로 남습니다.')) return;
     var card = document.getElementById('gp-'+id);
     if (card) card.style.opacity = '0.4';
     try {
