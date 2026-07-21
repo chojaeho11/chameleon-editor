@@ -1,6 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+// [버전 자동 갱신] 2026-07-21: index.html 에만 있던 자가치유를 고객 진입 페이지 전체로 확대.
+//   배포된 version.txt 와 아래 CV 가 다르면 구버전 → 스스로 새로고침 (고객 수동 새로고침 불필요).
+//   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
+//     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
+(function(){
+    var CV = '20260721150404';
+    function _verBusy(){
+        try {
+            var ae = document.activeElement;
+            if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return true;
+            if (window.me && window.me.items && window.me.items.length > 0) return true;
+            return false;
+        } catch(e){ return true; }
+    }
+    function _verCheck(force){
+        try {
+            fetch('/version.txt?_t=' + Date.now(), {cache:'no-store'})
+            .then(function(r){ return r.ok ? r.text() : null; })
+            .then(function(v){
+                if (!v) return;
+                v = v.trim();
+                if (!v || v === CV) return;
+                var k = '_vr_try_' + v;
+                var t = parseInt(sessionStorage.getItem(k) || '0', 10);
+                if (t >= 2) return;                       // 무한 새로고침 방지
+                if (!force && _verBusy()) return;         // 입력·작업 중이면 보류
+                sessionStorage.setItem(k, String(t + 1));
+                var go = function(){
+                    var p = new URLSearchParams(location.search);
+                    p.set('_cb', Date.now());
+                    location.replace(location.pathname + '?' + p.toString() + (location.hash || ''));
+                };
+                try {
+                    if (window.caches && caches.keys) {
+                        caches.keys().then(function(ks){
+                            return Promise.all(ks.map(function(x){ return caches.delete(x); }));
+                        }).then(go).catch(go);
+                    } else { go(); }
+                } catch(e){ go(); }
+            }).catch(function(){});
+        } catch(e){}
+    }
+    _verCheck(true);
+    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') _verCheck(false); });
+    window.addEventListener('online', function(){ _verCheck(false); });
+    window.addEventListener('pageshow', function(e){ if (e && e.persisted) _verCheck(false); });
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>디자이너 마이페이지 - Cotton Print</title>

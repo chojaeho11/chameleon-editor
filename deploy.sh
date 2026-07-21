@@ -14,13 +14,18 @@ STAMP="$(date +%Y%m%d%H%M%S)"
 # 1) version.txt = 새 stamp
 printf '%s' "$STAMP" > version.txt
 
-# 2) index.html + global_admin.html 내장 CV = 같은 stamp (버전 자동 갱신 블록)
-sed -i "s/var CV = '[^']*';/var CV = '$STAMP';/" index.html
-sed -i "s/var CV = '[^']*';/var CV = '$STAMP';/" global_admin.html
+# 2) 내장 CV = 같은 stamp (버전 자동 갱신 블록)
+#    2026-07-21: index.html/global_admin.html 만 하드코딩하던 것을 자동 탐지로 변경.
+#    새 페이지에 자동갱신 블록을 넣고 여기 추가하는 걸 잊으면, 그 페이지는 CV 가 영영 안 바뀌어
+#    version.txt 와 항상 불일치 = 무한 새로고침에 빠진다. 그래서 블록이 든 HTML 을 전부 찾아 갱신한다.
+CV_FILES="$(grep -l "var CV = '" *.html 2>/dev/null)"
+for _f in $CV_FILES; do
+    sed -i "s/var CV = '[^']*';/var CV = '$STAMP';/" "$_f"
+    grep -q "var CV = '$STAMP'" "$_f" || { echo "[deploy] ERROR: CV not updated in $_f"; exit 1; }
+done
+echo "[deploy] CV stamped: $(echo $CV_FILES | tr '\n' ' ')"
 
 echo "[deploy] build stamp = $STAMP"
-grep -n "var CV = '$STAMP'" index.html >/dev/null && echo "[deploy] index.html CV updated OK" || { echo "[deploy] ERROR: CV not updated in index.html"; exit 1; }
-grep -n "var CV = '$STAMP'" global_admin.html >/dev/null && echo "[deploy] global_admin.html CV updated OK" || echo "[deploy] WARN: CV not updated in global_admin.html"
 
 # 3) git
 git add -A
