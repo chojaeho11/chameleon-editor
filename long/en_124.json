@@ -2064,5 +2064,13 @@
   "me_intro_ai_desc": "High-quality AI design no one else could do — made by Chameleon",
   "me_intro_edit_desc": "Want it prettier?<br>Add and arrange your own elements",
   "me_fit_canvas": "Fit to canvas",
-  "me_alert_fit_noimg": "No image to fit. Please add an image first."
+  "me_alert_fit_noimg": "No image to fit. Please add an image first.",
+  "me_view_large": "View large",
+  "me_fix_open": "Revise",
+  "me_fix_run": "Revise",
+  "me_fix_close": "Close",
+  "me_fix_hint": "Tell us what to change — everything else stays as it is.",
+  "me_fix_ph": "e.g. bigger text, blue background, price to $50",
+  "me_intro_mine": "My designs",
+  "me_intro_mine_desc": "Reload a design you made before"
 }

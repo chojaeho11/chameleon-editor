@@ -2022,5 +2022,13 @@
   "me_intro_ai_desc": "别家做不到的高质量AI设计，卡姆莱昂为您实现",
   "me_intro_edit_desc": "想装饰得更漂亮<br>可以添加各种元素",
   "me_fit_canvas": "铺满画布",
-  "me_alert_fit_noimg": "没有可铺满的图片，请先上传图片。"
+  "me_alert_fit_noimg": "没有可铺满的图片，请先上传图片。",
+  "me_view_large": "查看大图",
+  "me_fix_open": "修改",
+  "me_fix_run": "修改",
+  "me_fix_close": "关闭",
+  "me_fix_hint": "请写下想修改的部分，其余保持不变，只重画该部分。",
+  "me_fix_ph": "例：文字更大、背景改成蓝色、价格改为5,000",
+  "me_intro_mine": "我的设计",
+  "me_intro_mine_desc": "可以重新调用之前做过的设计"
 }

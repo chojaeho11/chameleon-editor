@@ -2024,5 +2024,13 @@
   "me_intro_ai_desc": "Diseño IA de alta calidad que nadie más podía hacer, creado por Chameleon",
   "me_intro_edit_desc": "¿Lo quieres más bonito?<br>Añade tus propios elementos",
   "me_fit_canvas": "Ajustar al lienzo",
-  "me_alert_fit_noimg": "No hay imagen para ajustar. Añade una imagen primero."
+  "me_alert_fit_noimg": "No hay imagen para ajustar. Añade una imagen primero.",
+  "me_view_large": "Ver grande",
+  "me_fix_open": "Editar",
+  "me_fix_run": "Editar",
+  "me_fix_close": "Cerrar",
+  "me_fix_hint": "Indica qué quieres cambiar; el resto se mantiene igual.",
+  "me_fix_ph": "ej.: texto más grande, fondo azul, precio a 50 €",
+  "me_intro_mine": "Mis diseños",
+  "me_intro_mine_desc": "Recupera un diseño que hiciste antes"
 }

@@ -2024,5 +2024,13 @@
   "me_intro_ai_desc": "Hochwertiges KI-Design, das kein anderer konnte — von Chameleon",
   "me_intro_edit_desc": "Noch schöner?<br>Fügen Sie eigene Elemente hinzu",
   "me_fit_canvas": "An Fläche anpassen",
-  "me_alert_fit_noimg": "Kein Bild zum Anpassen. Bitte zuerst ein Bild hinzufügen."
+  "me_alert_fit_noimg": "Kein Bild zum Anpassen. Bitte zuerst ein Bild hinzufügen.",
+  "me_view_large": "Groß ansehen",
+  "me_fix_open": "Ändern",
+  "me_fix_run": "Ändern",
+  "me_fix_close": "Schließen",
+  "me_fix_hint": "Schreiben Sie, was geändert werden soll — der Rest bleibt unverändert.",
+  "me_fix_ph": "z. B. größere Schrift, blauer Hintergrund, Preis auf 50 €",
+  "me_intro_mine": "Meine Designs",
+  "me_intro_mine_desc": "Frühere Designs erneut laden"
 }

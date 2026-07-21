@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260721154254';
+    var CV = '20260721154703';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1957,8 +1957,8 @@ async function submitRollFabricRequest() {
                     </button>
                     <!-- 2026-07-20: 개인 보관함. AI 버튼(.me-intro-ai)은 튜토리얼이 타깃으로 쓰므로 첫 자리 유지 -->
                     <button type="button" class="me-intro-btn me-intro-mine" onclick="window._meMyDesignsToggle && window._meMyDesignsToggle()">
-                        <span class="me-intro-ttl">내가 만든 디자인</span>
-                        <span class="me-intro-desc">전에 만드신 디자인을 다시 불러올 수 있어요</span>
+                        <span class="me-intro-ttl" data-i18n="me_intro_mine">내가 만든 디자인</span>
+                        <span class="me-intro-desc" data-i18n="me_intro_mine_desc">전에 만드신 디자인을 다시 불러올 수 있어요</span>
                     </button>
                 </div>
                     <div id="meMyDesigns" style="display:none;">
@@ -1973,7 +1973,7 @@ async function submitRollFabricRequest() {
                     </div>
                     <div class="me-gal-head">
                         <span class="me-gal-title" data-i18n="me_gallery">작품</span>
-                        <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-ph="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">
+                        <input type="text" id="meGalSearch" class="me-gal-search" placeholder="검색" data-i18n-placeholder="me_gallery_search" oninput="window._meGallerySearch && window._meGallerySearch(this.value)">
                     </div>
                     <!-- 2026-07-18: 미리캔버스식 2줄 마퀴 -->
                     <div class="me-gal-marquee">
