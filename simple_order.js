@@ -20300,6 +20300,18 @@ html, body { background: #ffffff !important; }
                 if (it.boxSize && it.boxSize.w) {
                     lines.push('   박스 사이즈: ' + it.boxSize.w + ' × ' + it.boxSize.h + ' × ' + it.boxSize.d + 'mm');
                 }
+                // 2026-07-22: 허니콤 박스는 디자이너 의뢰(design_requests)를 만들지 않으므로,
+                //   고객이 적은 브랜드/제품/컨셉과 AI 목업 참고자료가 갈 곳이 여기밖에 없다.
+                if (it.product && it.product.code && /^hb_bx/i.test(it.product.code)) {
+                    if (it.pdBrand)    lines.push('   브랜드/타이틀: ' + it.pdBrand);
+                    if (it.pdProducts) lines.push('   주요 제품/내용: ' + it.pdProducts);
+                    if (it.pdConcept)  lines.push('   색상/컨셉: ' + it.pdConcept);
+                    if (Array.isArray(it.uploadedFiles) && it.uploadedFiles.length) {
+                        it.uploadedFiles.forEach(function (u, ui) {
+                            if (u && typeof u === 'string') lines.push('   참고자료 ' + (ui + 1) + ': ' + u);
+                        });
+                    }
+                }
                 if (it.cutPrint && it.cutPrint.size) {
                     lines.push('   재단: ' + (it.cutPrint.size === 'half' ? '반판 이내' : '한판') + (it.wallSide === 'double' ? ' · 양면 (×2)' : ' · 단면'));
                 }
@@ -20596,11 +20608,15 @@ html, body { background: #ffffff !important; }
                     // 2026-07-18: 허니콤 테이블(hb_tb_*)도 같은 흐름으로 디자이너 의뢰
                     var _pi_isTb = (typeof _soIsTableProduct === 'function' && _soIsTableProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^hb_tb/i.test(_pi_it.product.code));
-                    // 2026-07-19: 허니콤 박스(hb_bx_*)도 같은 흐름으로 디자이너 의뢰
+                    // 2026-07-19: 허니콤 박스(hb_bx_*)도 같은 흐름으로 디자이너 의뢰 —
+                    // 2026-07-22 철회: 박스는 디자이너 지급이 없는 항목인데 디자인마켓 주문관리에
+                    //   지급 30,000원짜리 건으로 올라왔다(사장님 지적). 의뢰 자체를 만들지 않는다.
+                    //   대신 고객이 적은 브랜드/제품/컨셉은 주문서 전달사항에 남긴다(아래 _soBoxBriefLines).
                     var _pi_isBx = (typeof _soIsBoxProduct === 'function' && _soIsBoxProduct(_pi_it.product))
                         || (_pi_it.product && _pi_it.product.code && /^hb_bx/i.test(_pi_it.product.code));
-                    if (!_pi_isPd && !_pi_isTb && !_pi_isBx) continue;
-                    var _pi_kind = _pi_isBx ? '박스' : _pi_isTb ? '테이블' : '종이매대';
+                    if (_pi_isBx) continue;
+                    if (!_pi_isPd && !_pi_isTb) continue;
+                    var _pi_kind = _pi_isTb ? '테이블' : '종이매대';
                     if (_pi_it.designRequest && _pi_it.designRequest.request_id) continue;
                     var _pi_prodName = (_pi_it.productName || (_pi_it.product && (_pi_it.product.name_kr || _pi_it.product.name)) || _pi_kind);
                     var _pi_custName = (typeof name !== 'undefined' && name) ? name : '';
@@ -20611,9 +20627,8 @@ html, body { background: #ffffff !important; }
                     var _pi_qty = Math.max(1, Number(_pi_it.qty) || 1);
                     var _pi_price = (typeof _soCalcItemPrice === 'function') ? _soCalcItemPrice(_pi_it) : ((_pi_it.product && _pi_it.product.price) || 0);
                     var _pi_unitPrice = Math.round((Number(_pi_price) || 0) / _pi_qty);
-                    // 디자이너 지급 — 1건당. 2026-07-19: 박스는 단가가 40,000원부터라 40,000 지급이면
-                    //   마진이 남지 않아 사이트 표기 기준(디자인 의뢰 30,000원)에 맞춰 낮춤. 확정 정책 나오면 조정 필요.
-                    var _pi_payout = _pi_isBx ? 30000 : 40000;
+                    // 디자이너 지급 — 1건당 (종이매대·테이블만. 박스는 위에서 제외)
+                    var _pi_payout = 40000;
                     var _pi_files = [];
                     ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function (f) { if (_pi_it[f] && typeof _pi_it[f] === 'string') _pi_files.push(_pi_it[f]); });
                     if (Array.isArray(_pi_it.uploadedFiles)) _pi_it.uploadedFiles.forEach(function (u) { if (u && typeof u === 'string') _pi_files.push(u); });
