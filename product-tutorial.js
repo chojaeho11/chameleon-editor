@@ -1870,9 +1870,11 @@
       cheer: { kr: '색상 선택! 🎨', ja: '色OK! 🎨', en: 'Colour set! 🎨' }
     },
     { // 5) 사이즈별 수량
-      target: '#soTshirtSizeSection', mode: 'wait', waitEvent: 'tshirt-qty-set',
+      // 2026-07-21: waitEvent 였을 때 한 사이즈만 넣어도 바로 넘어가버렸다(S만 넣고 M·L 을 못 넣음).
+      //   여러 칸에 나눠 넣는 단계라 '다음'을 눌러 직접 마치게 한다.
+      target: '#soTshirtSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtSizeSection'); },
-      hint: { kr: '필요한 사이즈에 수량을 적어주세요', ja: '必要なサイズに数量を入力', en: 'Type the quantity for each size you need' },
+      hint: { kr: '필요한 사이즈에 수량을 모두 적고 다음을 눌러주세요', ja: '必要なサイズの数量をすべて入力して次へ', en: 'Fill in every size you need, then tap Next' },
       msg: { kr: '이제 <b>사이즈별로 수량</b>을 적어주세요. <b>S · M · L</b> 칸에 각각 필요한 장수를 넣으면 돼요. 필요 없는 사이즈는 <b>0</b>으로 두면 됩니다. <span style="color:#94a3b8;">(전체 주문 수량 = S+M+L 합계)</span>',
         ja: '次に <b>サイズ別の数量</b> を入力します。<b>S · M · L</b> の欄に必要な枚数を入れてください。不要なサイズは <b>0</b> のままでOK。<span style="color:#94a3b8;">(注文数量 = S+M+L の合計)</span>',
         en: 'Now enter the <b>quantity per size</b> — fill in <b>S, M and L</b> with how many you need, leaving unwanted sizes at <b>0</b>. <span style="color:#94a3b8;">(total order = S+M+L)</span>' },

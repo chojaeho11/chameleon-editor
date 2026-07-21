@@ -9594,8 +9594,6 @@ html, body { background: #ffffff !important; }
         if (typeof recalc === 'function') recalc();
         // 2026-06-22 v702: S/M/L 합계 변경 시 카트 버튼 활성화 상태 재계산
         if (typeof updateButtons === 'function') updateButtons();
-        // 2026-07-21: 튜토리얼이 '수량 입력됨'을 기다린다. 0 이면 아직 안 넣은 것.
-        if (total > 0) { try { document.dispatchEvent(new CustomEvent('tshirt-qty-set', { detail: { total: total } })); } catch (_e) {} }
     };
 
     // 2026-05-30: 티셔츠 인쇄 방식 선택 (DTG / DTF / 홀로그램)
@@ -9705,9 +9703,10 @@ html, body { background: #ffffff !important; }
             // 박스 내부: 이미지 (있으면) 또는 점선 안내
             var boxInner = (f.dataUrl)
                 ? '<img src="' + f.dataUrl + '" alt="" style="width:100%; height:100%; object-fit:contain; pointer-events:none;">'
-                : '<div style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#4338ca; font-size:10.5px; font-weight:800; gap:4px; pointer-events:none; text-align:center; padding:4px;">'
-                  + '<i class="fa-solid fa-cloud-arrow-up" style="font-size:18px;"></i>'
-                  + '<span>' + tr('드래그로 이동<br>클릭하여 업로드','ドラッグ移動<br>クリック追加','Drag to move<br>Click to upload') + '</span>'
+                // 2026-07-21: 박스가 작아(앞면로고 18%) 두 줄 안내가 뭉개져 읽히지 않았다.
+                //   박스 안은 '업로드' 한 단어만, 이동/크기 설명은 박스 아래 status 줄에서 한다.
+                : '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#4338ca; font-size:11px; font-weight:800; pointer-events:none; text-align:center;">'
+                  + tr('업로드','アップロード','Upload')
                   + '</div>';
             var status = f.dataUrl
                 // 2026-07-21: 업로드 후에도 "박스를 끌어 인쇄 위치를 맞출 수 있다"는 안내를 남긴다.
