@@ -6,9 +6,9 @@
 # 사용법:
 #   1) 카톡에서 받은 제작물 사진을  카카오톡 받은 파일/홍보사진/  폴더에 넣는다
 #      (경로는 .promo.env 의 PROMO_DIR 로 바꿀 수 있음)
-#   2) ./promo-sync.sh          ← 업로드 + (새 사진이 있으면) 즉시 발행
-#      ./promo-sync.sh --now    ← 새 사진이 없어도 발행까지 강제로 시도
-#      2026-07-23: 예약발행(매일 18시 pg_cron) 폐지 — 넣는 즉시 나간다.
+#   2) ./promo-sync.sh          ← 업로드만 (발행은 블로그의 [지금 발행] 버튼)
+#      ./promo-sync.sh --now    ← 업로드 + 발행까지 한 번에
+#      2026-07-23: 예약발행(매일 18시 pg_cron) 폐지. 발행은 수동.
 #
 # 하는 일:
 #   - 사진마다 SHA-256 해시 → 같은 사진은 두 번 안 올라감 (promo_photos.file_hash unique)
@@ -131,15 +131,16 @@ done
 
 echo "[promo] 새 사진 ${ok}장 · 중복 ${dup}장 · 실패 ${fail}장"
 
-# 4) 발행 — 2026-07-23 (사장님 지시): 예약발행 폐지.
-#    폴더에 사진을 넣으면 기다릴 것 없이 바로 글이 나가야 한다.
-#    새 사진을 하나라도 올렸으면 그 자리에서 발행하고, --now 면 새 사진이 없어도 발행을 시도한다.
-#    (예전에는 올리기만 하고 pg_cron 이 매일 18시에 발행 → 최대 하루를 기다려야 했다)
-if [ $ok -gt 0 ] || [ "${1:-}" = "--now" ]; then
+# 4) 발행 — 2026-07-23 (사장님 지시): 자동발행 취소, 올리기만 한다.
+#    글이 나가는 시점은 사장님이 정하는 게 맞다 → 블로그 화면의 「지금 발행」 버튼으로 발행.
+#    --now 를 붙였을 때만 이 스크립트가 발행까지 한다.
+if [ "${1:-}" = "--now" ]; then
     echo "[promo] 발행 요청..."
     curl -s -X POST "${SUPABASE_URL}/functions/v1/promo-publish" \
         -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
         -H "Content-Type: application/json" \
         -d '{"maxPhotos":12,"force":true}'
     echo
+elif [ $ok -gt 0 ]; then
+    echo "[promo] ${ok}장 올렸습니다. 블로그 화면의 [지금 발행] 버튼을 누르면 글이 나갑니다."
 fi

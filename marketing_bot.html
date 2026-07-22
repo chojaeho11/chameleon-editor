@@ -702,11 +702,12 @@ textarea.form-input { resize:vertical; min-height:80px; }
     <div class="card">
         <div class="card-title"><i class="fa-solid fa-camera"></i> 홍보사진 자동발행</div>
         <div style="font-size:13px; color:#475569; line-height:1.8; background:#f8fafc; border-radius:10px; padding:14px 16px; margin-bottom:14px;">
-            <b>작업폴더 → 홍보사진</b> 폴더에 제작물 사진을 넣기만 하면 됩니다. 1분 안에 자동으로 올라가고,
-            AI가 사진을 보고 제품을 판별해 <b>한국어·일본어·영어</b> 블로그 글을 <b>바로 발행</b>합니다.<br>
+            <b>작업폴더 → 홍보사진</b> 폴더에 제작물 사진을 넣으면 <b>1분 안에 자동으로 업로드</b>되어 아래 대기열에 쌓입니다.
+            글은 자동으로 나가지 않고, <b>블로그 화면의 [지금 발행] 버튼</b>을 누를 때 AI가 사진을 보고 제품을 판별해
+            <b>한국어·일본어·영어</b> 글을 씁니다 (1~3분 소요).<br>
             여러 장이 <b>글 1개</b>로 묶입니다. 제품 판별에 실패한 사진은 발행하지 않고 <b>보류</b>됩니다.<br>
-            <span style="color:#64748b;">2026-07-23: 예약발행(매일 18시) 폐지 — 넣는 즉시 나갑니다. 손으로 돌리려면
-            <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px;">./promo-sync.sh</code></span>
+            <span style="color:#64748b;">2026-07-23: 예약발행(매일 18시)·자동발행 모두 폐지 — 발행 시점은 직접 정합니다.
+            터미널에서 한 번에 하려면 <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px;">./promo-sync.sh --now</code></span>
         </div>
 
         <div style="display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:14px;">
@@ -790,8 +791,8 @@ window.switchTab = function(tabId, el) {
 
 // ===== 홍보사진 자동발행 (2026-07-17) =====
 //   promo-sync.sh 가 홍보사진/ 폴더의 사진을 올려 promo_photos 에 쌓고,
-//   2026-07-23: 예약발행(pg_cron 매일 18시) 폐지 — promo-sync.sh 가 사진을 올린 직후
-//   promo-publish 를 직접 호출해 바로 발행한다. 이 화면은 대기열 확인 + 킬스위치 + 수동 발행용.
+//   2026-07-23: 예약발행(pg_cron 매일 18시)·자동발행 모두 폐지. promo-sync.sh 는 업로드만 하고,
+//   발행은 블로그의 [지금 발행] 버튼(수동)으로만 한다. 이 화면은 대기열 확인 + 킬스위치용.
 //   이 화면은 대기열 확인 + 킬스위치 + 수동 발행용.
 const PROMO_STATUS_KR = {
     new: { label: '대기', color: '#0369a1', bg: '#e0f2fe' },
