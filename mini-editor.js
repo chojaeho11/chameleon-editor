@@ -7499,6 +7499,19 @@
     function _meAiInsert() {
         _meAiDoInsert();
         _meAiGenClose();
+        // 2026-07-23: 넣은 직후 대지를 화면에 맞춰준다 — 모달이 닫히면 대지가 화면 위로 벗어나
+        //   디자인 윗부분이 잘려 보였다(사장님 제보). 대지가 화면보다 크면 윗변 기준으로.
+        try {
+            setTimeout(function () {
+                var st = document.getElementById('soQuickDesignSec') || document.getElementById('meStage');
+                if (!st) return;
+                var r = st.getBoundingClientRect();
+                var vh = window.innerHeight || 800;
+                var tall = r.height > vh * 0.8;
+                if (tall) { try { st.style.scrollMarginTop = '14px'; } catch (_sm) {} }
+                st.scrollIntoView({ behavior: 'smooth', block: tall ? 'start' : 'center' });
+            }, 120);
+        } catch (_sc) {}
         // 2026-07-19: 캔버스에 넣었음을 알림 — 튜토리얼이 '시안 확인' 단계로 넘어가는 신호.
         try { document.dispatchEvent(new CustomEvent('me-ai-inserted')); } catch (_ev) {}
     }

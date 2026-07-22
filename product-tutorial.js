@@ -177,7 +177,18 @@
     if (l === Infinity) return null;
     return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
   }
-  function scrollToEl(el) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {} }
+  // 2026-07-23 [버그] block:'center' 는 화면보다 큰 요소(대지에 세로 이미지가 들어간 에디터)를
+  //   가운데 맞추느라 위아래를 잘라먹었다 — 디자인 윗부분이 안 보인다는 제보(사장님).
+  //   대상이 화면보다 크면 윗변 기준으로 붙여 전체가 위에서부터 보이게 한다.
+  function scrollToEl(el) {
+    try {
+      var r = el.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight || 800;
+      var tall = r.height > vh * 0.8;
+      if (tall) { try { el.style.scrollMarginTop = '14px'; } catch (_sm) {} }
+      el.scrollIntoView({ behavior: 'smooth', block: tall ? 'start' : 'center' });
+    } catch (_) {}
+  }
 
   function place() {
     if (!_active || _freeMode) return;
