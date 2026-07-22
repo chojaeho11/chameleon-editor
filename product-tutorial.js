@@ -745,6 +745,19 @@
     return ft.indexOf('✓') === 0 || xt.indexOf('✓') === 0;
   }
 
+  // 2026-07-23 (사장님 지시): 미니에디터에 이미 디자인이 올라와 있으면 「디자인 방법 고르기」를 건너뛴다.
+  //   홈 화면에서 AI 로 만든 뒤 [캔버스에 넣기] → 제품으로 들어오면 대지에 이미 그림이 있는데도
+  //   "AI로 만들래요 / 파일 올릴래요 / 의뢰할래요" 를 다시 물어 흐름이 끊겼다. 전 제품 공통.
+  function _tutEditorHasDesign() {
+    try {
+      var m = window.me;
+      if (m && Array.isArray(m.items) && m.items.length > 0) return true;
+      var st = document.getElementById('meStage');
+      if (st && st.querySelectorAll('.me-item').length > 0) return true;
+    } catch (_) {}
+    return false;
+  }
+
   // 2026-07-14: 장바구니 담기 직전 — 미니에디터 시안 최종 확인 + PDF 다운로드 점검 (모든 제품 공통).
   //   에디터가 없는 제품(원판/금액주문 등)은 onEnter 로 자동 스킵.
   // 2026-07-19: [미사용] 장바구니 직전 '시안 최종 확인' 단계 — 사장님 요청으로 전 튜토리얼에서 제거.
@@ -796,6 +809,8 @@
   var BIZCARD_STEPS = [
     // 2026-06-25: 명함은 항상 양면 기본 — 단/양면 선택 단계 폐지.
     { // 1) 디자인 방법 — 3갈래 (양면: 앞/뒤 모두)
+      // 2026-07-23: 대지에 이미 디자인이 있으면 건너뛴다 (홈에서 AI로 만들고 들어온 경우).
+      onEnter: function () { return !_tutEditorHasDesign(); },
       msg: { kr: '디자인은 <b>3가지 방법</b>이 있어요. 마음에 드는 걸 골라보세요!',
         ja: 'デザイン方法は <b>3つ</b>。お好きなものを選んでください!',
         en: 'There are <b>3 ways</b> to design. Pick the one you like!' },
@@ -901,6 +916,8 @@
   // ════════════════════════════════════════════════════════════════════
   var GENERIC_STEPS = [
     { // 1) 디자인 방법 — AI 생성 / 템플릿 / 파일 / 의뢰 (없는 분기는 자동 제외)
+      // 2026-07-23: 대지에 이미 디자인이 있으면 이 질문 자체를 건너뛴다(홈에서 AI로 만들고 들어온 경우).
+      onEnter: function () { return !_tutEditorHasDesign(); },
       msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
         ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
         en: "I'll help you order! First, choose <b>how to design</b>." },
@@ -1664,6 +1681,8 @@
   //   이 제품군은 대지에 그린 게 곧 인쇄물이 아니라 "컨셉 목업"이고, 실제 인쇄 디자인은
   //   디자이너가 목업을 참고해 따로 제작한다 → 분기를 AI 무료디자인 / 칼선 / 의뢰 셋으로 단순화.
   var MOCKUP_DESIGN_CHOOSE_STEP = {
+    // 2026-07-23: 대지에 이미 디자인이 있으면 건너뛴다 (홈에서 AI로 만들고 들어온 경우).
+    onEnter: function () { return !_tutEditorHasDesign(); },
     msg: { kr: '주문을 도와드릴게요! 먼저 <b>디자인 방법</b>을 골라주세요.',
       ja: 'ご注文をお手伝いします!まず <b>デザイン方法</b> をお選びください。',
       en: "I'll help you order! First, choose <b>how to design</b>." },
