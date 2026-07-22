@@ -1563,7 +1563,7 @@ html, body { background: #ffffff !important; }
         <div id="soTshirtUploadSection" style="display:none;">
           <div style="font-size:13px; font-weight:800; color:#451a03; margin-bottom:8px;">${tr('인쇄 위치별 이미지 업로드', '印刷位置別 画像アップロード', 'Upload image per print area')}</div>
           <div id="soTshirtUploadGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;"></div>
-          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 칸을 클릭하면 업로드, 드래그하면 인쇄할 위치를 옮길 수 있어요. 오른쪽아래 ↘ 를 끌면 크기를 줄일 수 있습니다 — 위치별 최대 크기보다 크게는 안 돼요(가격이 달라져요).', '選択した印刷位置ごとに画像を個別にアップロードしてください。枠をクリックでアップロード、ドラッグで印刷位置を移動できます。右下の ↘ をドラッグするとサイズを小さくできます — 位置ごとの最大サイズより大きくはできません(料金が変わるため)。', 'Upload an image for each selected print area. Click a slot to upload, drag it to move the print position. Drag the ↘ corner to make it smaller — it cannot exceed the maximum size for that area (which changes the price).')}</div>
+          <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.5;">${tr('선택한 인쇄 위치마다 별도로 이미지를 올려주세요. 파일이 있으면 [파일 올리기], 없으면 [AI 이미지 생성]으로 만들어 드립니다. 박스를 드래그하면 인쇄할 위치를 옮기고, 오른쪽아래 ↘ 를 끌면 크기를 줄일 수 있어요 — 위치별 최대 크기보다 크게는 안 돼요(가격이 달라져요).', '選択した印刷位置ごとに画像を個別にご用意ください。ファイルがあれば[ファイルを選ぶ]、なければ[AI画像を作る]でお作りします。枠をドラッグで印刷位置を移動、右下の ↘ をドラッグでサイズを小さくできます — 位置ごとの最大サイズより大きくはできません(料金が変わるため)。', 'Add artwork for each selected print area — [Upload file] if you have one, or [Generate with AI] if you do not. Drag the box to move the print position and drag the ↘ corner to make it smaller — it cannot exceed that the area maximum size (which changes the price).')}</div>
         </div>
 
         <!-- 2026-06-14 v3: 메인 페이지의 미니 디자인 에디터 + 누끼따기 패널을 simple_order 안으로 이식 (DOM portal).
@@ -9735,6 +9735,10 @@ html, body { background: #ffffff !important; }
                   <div class="so-tshirt-box" data-area="${areaSafe}" data-maxw="${cfg.init.width}" data-maxh="${cfg.init.height}" style="position:absolute; left:${box.left}%; top:${box.top}%; width:${box.width}%; height:${box.height}%; transform:rotate(${box.rotation}deg); transform-origin:center center; border:2.5px dashed #6366f1; background:rgba(255,255,255,0.18); border-radius:4px; cursor:move; box-shadow:0 4px 12px rgba(99,102,241,0.45);">${boxInner}<div class="so-tshirt-size-handle" data-area="${areaSafe}" title="${tr('끌어서 작게','ドラッグで小さく','Drag to shrink')}" style="position:absolute; right:-10px; bottom:-10px; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid #6366f1; color:#4338ca; display:flex; align-items:center; justify-content:center; cursor:nwse-resize; font-size:11px; touch-action:none; pointer-events:auto;">↘</div><div class="so-tshirt-rot-handle" data-area="${areaSafe}" style="position:absolute; top:-28px; left:50%; transform:translateX(-50%); width:28px; height:28px; border-radius:50%; background:#6366f1; color:#fff; display:flex; align-items:center; justify-content:center; cursor:grab; box-shadow:0 4px 12px rgba(99,102,241,0.5); font-size:15px; touch-action:none; pointer-events:auto; font-weight:900;">↻</div><div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:0; height:14px; border-left:2px dashed #6366f1; pointer-events:none;"></div></div>
                 </div>
                 <div style="margin-top:6px;">${status}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:7px;">
+                  <button type="button" onclick="document.getElementById('${inputId}').click()" style="padding:7px 4px; border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('파일 올리기','ファイルを選ぶ','Upload file')}</button>
+                  <button type="button" onclick="window._soTshirtAiOpen('${areaSafe}')" style="padding:7px 4px; border:1px solid #6366f1; background:#eef2ff; color:#4338ca; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;">${tr('AI 이미지 생성','AI画像を作る','Generate with AI')}</button>
+                </div>
                 ${removeBtn}
               </div>`;
         }).join('');
@@ -9916,6 +9920,183 @@ html, body { background: #ffffff !important; }
         delete state.tshirtFiles[area];
         if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
     };
+
+    // ══════════════════════════════════════════════════════════════════
+    //  2026-07-22: 티셔츠 전용 AI 이미지 생성 (파일 올리기 / AI 생성 분기)
+    //  ★ 티셔츠(presetType==='tshirt') 에서만 쓴다. 다른 제품은 대지 전체를 채우는
+    //    풀블리드 디자인이 필요한데 여기서 만드는 건 "흰 배경 위 단독 객체 + 배경제거" 라
+    //    현수막·명함 등에 쓰면 인쇄물이 통째로 망가진다. 진입점은 _soRenderTshirtUploads
+    //    안의 버튼뿐이고, 아래 함수도 presetType 을 다시 확인한다.
+    //
+    //  인쇄 위치에 따라 프롬프트가 갈린다 (사장님 지시):
+    //    front_logo            → 로고. 흰 배경에 심플한 벡터 로고 → 배경제거
+    //    front_full/back_full  → 이미지. 흰 배경에 배경 없는 깔끔한 객체형 그래픽 → 배경제거
+    // ══════════════════════════════════════════════════════════════════
+    var _soTshirtAiArea = null;
+    function _soTshirtAiIsLogo(area) { return area === 'front_logo'; }
+    function _soTshirtAiPrompt(area, userText) {
+        var t = String(userText || '').trim();
+        if (_soTshirtAiIsLogo(area)) {
+            return 'Design a single clean LOGO for apparel printing: "' + t + '". '
+                 + 'Flat vector-style emblem, bold simple shapes, high contrast, crisp sharp edges. '
+                 + 'Centered on a PURE WHITE (#FFFFFF) background with generous margin. '
+                 + 'STRICT: no background scenery, no gradient background, no drop shadow, no reflection, '
+                 + 'no frame or border, no mockup, no t-shirt, no person, no photo. '
+                 + 'The logo must be a single isolated graphic on plain white so the background can be removed cleanly.';
+        }
+        return 'Create a single clean isolated graphic for apparel printing: "' + t + '". '
+             + 'One main subject only, centered, bold and high contrast, crisp sharp edges, rich saturated colors. '
+             + 'Placed on a PURE WHITE (#FFFFFF) background with generous margin. '
+             + 'STRICT: no background scenery, no environment, no ground shadow, no gradient background, '
+             + 'no frame or border, no mockup, no t-shirt, no hanger, no photo studio setting. '
+             + 'The subject must be a single isolated object on plain white so the background can be removed cleanly.';
+    }
+    window._soTshirtAiOpen = function (area) {
+        if (state.presetType !== 'tshirt') return;   // 안전장치 — 티셔츠 외에는 절대 열지 않는다
+        _soTshirtAiArea = area;
+        var isLogo = _soTshirtAiIsLogo(area);
+        var m = document.getElementById('soTshirtAiModal');
+        if (!m) {
+            m = document.createElement('div');
+            m.id = 'soTshirtAiModal';
+            m.style.cssText = 'position:fixed; inset:0; z-index:100050; background:rgba(15,23,42,0.6); display:flex; align-items:center; justify-content:center; padding:16px;';
+            m.innerHTML =
+                '<div style="background:#fff; border-radius:14px; width:100%; max-width:420px; padding:18px;" onclick="event.stopPropagation()">'
+              +   '<div id="soTaiTitle" style="font-size:15px; font-weight:800; color:#0f172a; margin-bottom:4px;"></div>'
+              +   '<div id="soTaiDesc" style="font-size:12px; color:#64748b; line-height:1.55; margin-bottom:12px;"></div>'
+              +   '<textarea id="soTaiInput" rows="3" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:9px; font-size:13px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>'
+              +   '<div id="soTaiMsg" style="font-size:12px; color:#64748b; margin-top:9px; min-height:17px; line-height:1.5;"></div>'
+              +   '<div id="soTaiPreview" style="display:none; margin-top:8px; text-align:center;">'
+              +     '<img id="soTaiPreviewImg" alt="" style="max-width:100%; max-height:220px; border:1px solid #e2e8f0; border-radius:9px; background:#f8fafc;">'
+              +   '</div>'
+              +   '<div style="display:flex; gap:8px; margin-top:14px;">'
+              +     '<button type="button" id="soTaiCancel" style="flex:1; padding:11px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;"></button>'
+              +     '<button type="button" id="soTaiGo" style="flex:2; padding:11px; border:none; background:#4f46e5; color:#fff; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;"></button>'
+              +   '</div>'
+              + '</div>';
+            m.addEventListener('click', function (e) { if (e.target === m) window._soTshirtAiClose(); });
+            document.body.appendChild(m);
+            document.getElementById('soTaiCancel').onclick = window._soTshirtAiClose;
+            document.getElementById('soTaiGo').onclick = window._soTshirtAiRun;
+        }
+        m.style.display = 'flex';
+        document.getElementById('soTaiTitle').textContent = isLogo
+            ? tr('AI 로고 만들기', 'AIでロゴを作る', 'Create a logo with AI')
+            : tr('AI 이미지 만들기', 'AIで画像を作る', 'Create an image with AI');
+        document.getElementById('soTaiDesc').textContent = isLogo
+            ? tr('브랜드 이름과 분위기를 적어주세요. 흰 배경 위 로고로 만든 뒤 배경을 지워 티셔츠에 바로 얹습니다.',
+                 'ブランド名と雰囲気を入力してください。白背景のロゴを作り、背景を消してTシャツに載せます。',
+                 'Describe your brand name and style. We make a logo on white, then remove the background for the shirt.')
+            : tr('넣고 싶은 그림을 적어주세요. 배경 없이 그림만 깔끔하게 만들어 티셔츠에 바로 얹습니다.',
+                 '入れたい絵を入力してください。背景なしのイラストだけを作ってTシャツに載せます。',
+                 'Describe the artwork you want. We make just the subject with no background, ready for the shirt.');
+        var inp = document.getElementById('soTaiInput');
+        inp.setAttribute('placeholder', isLogo
+            ? tr('예) 카페 이름 BLOOM, 커피잔과 잎사귀, 미니멀한 라인 로고',
+                 '例) カフェ名 BLOOM、コーヒーカップと葉、ミニマルなラインロゴ',
+                 'e.g. Cafe named BLOOM, coffee cup and leaf, minimal line logo')
+            : tr('예) 파도를 타는 호랑이, 굵은 선의 레트로 일러스트',
+                 '例) 波に乗る虎、太い線のレトロイラスト',
+                 'e.g. A tiger riding a wave, bold retro illustration'));
+        document.getElementById('soTaiCancel').textContent = tr('닫기', '閉じる', 'Close');
+        document.getElementById('soTaiGo').textContent = tr('만들기', '作る', 'Generate');
+        document.getElementById('soTaiMsg').textContent = '';
+        document.getElementById('soTaiPreview').style.display = 'none';
+        setTimeout(function () { try { inp.focus(); } catch (_) {} }, 50);
+    };
+    window._soTshirtAiClose = function () {
+        var m = document.getElementById('soTshirtAiModal');
+        if (m) m.style.display = 'none';
+    };
+    window._soTshirtAiRun = async function () {
+        if (state.presetType !== 'tshirt') return;
+        var area = _soTshirtAiArea;
+        if (!area) return;
+        var inp = document.getElementById('soTaiInput');
+        var go = document.getElementById('soTaiGo');
+        var msg = document.getElementById('soTaiMsg');
+        var text = (inp && inp.value || '').trim();
+        if (!text) {
+            msg.style.color = '#dc2626';
+            msg.textContent = tr('만들고 싶은 내용을 적어주세요.', '作りたい内容を入力してください。', 'Please describe what to create.');
+            return;
+        }
+        go.disabled = true;
+        go.style.background = '#a5b4fc';
+        msg.style.color = '#64748b';
+        msg.textContent = tr('이미지를 만드는 중… 40초 정도 걸려요', '画像を作成中… 40秒ほどかかります', 'Generating… this takes about 40 seconds');
+        try {
+            // 로고는 정사각, 앞/뒷면 전체는 박스 비율(42:60)에 맞춰 세로형
+            var size = _soTshirtAiIsLogo(area) ? '1024x1024' : '1024x1536';
+            var r = await fetch(SUPABASE_URL + '/functions/v1/ai-image-gen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY, 'apikey': SUPABASE_KEY },
+                body: JSON.stringify({ prompt: _soTshirtAiPrompt(area, text), size: size })
+            });
+            var d = await r.json();
+            if (!r.ok || d.error) throw new Error(d.detail || d.error || ('HTTP ' + r.status));
+            // 원격 URL 은 캔버스를 taint 시켜 배치 합성/PDF 가 깨진다 → dataURL 로 변환
+            var dataUrl = d.url;
+            if (dataUrl && dataUrl.indexOf('data:') !== 0) {
+                var blob = await (await fetch(dataUrl, { mode: 'cors' })).blob();
+                dataUrl = await new Promise(function (rs, rj) {
+                    var fr = new FileReader();
+                    fr.onload = function () { rs(String(fr.result)); };
+                    fr.onerror = rj;
+                    fr.readAsDataURL(blob);
+                });
+            }
+            // 배경 제거 — 흰 배경을 지워 티셔츠 색이 그대로 비치게 (실패해도 원본은 유지)
+            msg.textContent = tr('배경을 지우는 중…', '背景を消しています…', 'Removing the background…');
+            try {
+                var b64 = String(dataUrl).split(',')[1];
+                var rb = await fetch(SUPABASE_URL + '/functions/v1/bg-remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY, 'apikey': SUPABASE_KEY },
+                    body: JSON.stringify({ image_base64: b64 })
+                });
+                var db = await rb.json();
+                if (rb.ok && db.image_base64) dataUrl = 'data:image/png;base64,' + db.image_base64;
+                else console.warn('[tshirt ai] bg-remove empty', db && (db.error || db));
+            } catch (_bge) { console.warn('[tshirt ai] bg-remove fail — 원본 사용', _bge); }
+            // 업로드 파일과 똑같은 모양으로 저장 (박스 위치는 유지)
+            var prevBox = (state.tshirtFiles && state.tshirtFiles[area] && state.tshirtFiles[area].box) || null;
+            var fname = 'ai-' + area + '-' + Date.now() + '.png';
+            var file = _soDataUrlToFile(dataUrl, fname);
+            if (!state.tshirtFiles) state.tshirtFiles = {};
+            state.tshirtFiles[area] = {
+                name: fname, type: 'image/png', size: file ? file.size : 0,
+                dataUrl: dataUrl, file: file, box: prevBox, _aiPrompt: text
+            };
+            if (typeof window._soRenderTshirtUploads === 'function') window._soRenderTshirtUploads();
+            var pv = document.getElementById('soTaiPreview');
+            document.getElementById('soTaiPreviewImg').src = dataUrl;
+            pv.style.display = '';
+            msg.style.color = '#16a34a';
+            msg.textContent = tr('완성! 티셔츠에 올렸어요. 마음에 안 들면 내용을 바꿔 다시 만들어보세요.',
+                                 '完成！Tシャツに載せました。気に入らなければ内容を変えて作り直せます。',
+                                 'Done — added to the shirt. Not happy? Tweak the text and generate again.');
+        } catch (e) {
+            console.error('[tshirt ai]', e);
+            msg.style.color = '#dc2626';
+            msg.textContent = tr('실패했어요. 잠시 후 다시 시도해주세요.', '失敗しました。しばらくしてからもう一度お試しください。', 'Failed. Please try again in a moment.')
+                + ' (' + ((e && e.message) || '') + ')';
+        } finally {
+            go.disabled = false;
+            go.style.background = '#4f46e5';
+        }
+    };
+    // dataURL → File (장바구니 담기에서 Storage 로 올릴 때 업로드 파일과 동일하게 다뤄진다)
+    function _soDataUrlToFile(dataUrl, name) {
+        try {
+            var parts = String(dataUrl).split(',');
+            var mime = (parts[0].match(/:(.*?);/) || [, 'image/png'])[1];
+            var bin = atob(parts[1]);
+            var arr = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return new File([new Blob([arr], { type: mime })], name, { type: mime });
+        } catch (e) { console.warn('[tshirt ai] dataURL→File', e); return null; }
+    }
 
     // ══════════════════════════════════════════════════════════════════
     //  2026-07-21: 티셔츠 배치 합성 + 배치도 PDF

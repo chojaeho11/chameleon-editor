@@ -1857,9 +1857,9 @@
       target: '#soTshirtUploadSection', mode: 'next',
       onEnter: function () { return _secVisible('#soTshirtUploadSection'); },
       hint: { kr: '이미지를 올리고 위치·크기까지 맞춘 뒤 다음을 눌러주세요', ja: '画像をアップし、位置とサイズを調整してから次へ', en: 'Upload, adjust position and size, then tap Next' },
-      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 칸을 눌러 <b>이미지를 올려주세요</b>. 올린 뒤에는 <b>박스를 끌어 인쇄할 위치</b>를 옮기고, <b>오른쪽아래 ↘ 를 끌어 크기</b>를 줄일 수 있어요. 마음에 안 들면 <b>제거 / 다시 업로드</b>로 바꿔도 됩니다. <span style="color:#94a3b8;">크기는 위치별 최대치보다 크게는 안 돼요 — 위치에 따라 가격이 다르거든요.</span>',
-        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。枠をタップして <b>画像をアップ</b> してください。アップ後は <b>枠をドラッグして印刷位置</b> を動かし、<b>右下の ↘ をドラッグしてサイズ</b> を小さくできます。気に入らなければ <b>削除 / 再アップロード</b> でやり直せます。<span style="color:#94a3b8;">位置ごとの最大サイズより大きくはできません — 位置によって料金が違うためです。</span>',
-        en: 'A <b>slot appeared for each area</b> you picked. Tap a slot to <b>upload your image</b>. Then <b>drag the box to place the print</b> and <b>drag the ↘ corner to shrink it</b>. Not happy? Use <b>remove / re-upload</b>. <span style="color:#94a3b8;">It cannot go bigger than that area\'s maximum — each area is priced differently.</span>' },
+      msg: { kr: '고른 위치마다 <b>칸이 하나씩</b> 생겼어요. 그림은 두 가지 방법 중에 고르시면 됩니다 — 갖고 계신 파일이 있으면 <b>[파일 올리기]</b>, 없으면 <b>[AI 이미지 생성]</b>으로 만들어드려요. <span style="color:#94a3b8;">앞면 로고 자리는 로고로, 앞면·뒷면 전체 자리는 배경 없는 그림으로 만들어 티셔츠에 바로 얹어드립니다.</span><br>올린 뒤에는 <b>박스를 끌어 인쇄할 위치</b>를 옮기고, <b>오른쪽아래 ↘ 를 끌어 크기</b>를 줄일 수 있어요.',
+        ja: '選んだ位置ごとに <b>枠がひとつずつ</b> できました。絵は2つの方法から選べます — お手持ちのファイルがあれば <b>[ファイルを選ぶ]</b>、なければ <b>[AI画像を作る]</b> でお作りします。<span style="color:#94a3b8;">前面ロゴの枠はロゴとして、前面・背面全体の枠は背景なしのイラストとして作成し、そのままTシャツに載せます。</span><br>アップ後は <b>枠をドラッグして印刷位置</b> を動かし、<b>右下の ↘ をドラッグしてサイズ</b> を小さくできます。',
+        en: 'A <b>slot appeared for each area</b> you picked. There are two ways to add art — <b>[Upload file]</b> if you already have one, or <b>[Generate with AI]</b> if you don\'t. <span style="color:#94a3b8;">The front-logo slot is made as a logo, the full front/back slots as background-free artwork, ready to sit on the shirt.</span><br>Then <b>drag the box to place the print</b> and <b>drag the ↘ corner to shrink it</b>.' },
       cheer: { kr: '이미지 등록! 🖼', ja: '画像OK! 🖼', en: 'Image added! 🖼' }
     },
     { // 4) 컬러
