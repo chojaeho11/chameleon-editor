@@ -6539,6 +6539,8 @@
             res.style.display = 'flex';
             if (lbl) lbl.textContent = (which === 'result')
                 ? _meAiTr('만들어진 디자인', '完成したデザイン', 'Your design')
+                : (which === 'loading')
+                ? _meAiTr('만드는 중…', '作成中…', 'Creating…')
                 : _meAiTr('미리보기', 'プレビュー', 'Preview');
         }
     }
@@ -7639,13 +7641,17 @@
         if (res) {
             res.style.color = '';
             res.innerHTML =
-                '<div style="width:100%; padding:6px 8px;">' +
+                '<div style="width:100%; max-width:520px; margin:0 auto; padding:6px 8px;">' +
                   '<div id="meAiBarMsg" style="font-size:13px; color:#64748b; margin-bottom:9px;">' + ((_meAiScarci || _meAiPaperDisplay) ? _meAiTr('디자인을 만들고 있어요 · 1분만 기다려주세요', 'デザインを作成中 · 1分ほどお待ちください', 'Creating your design · about 1 min') : _meAiTr('AI가 만드는 중이에요… 잠시만요', 'AIが生成中です… 少々お待ちを', 'AI is creating… hang tight')) + '</div>' +
                   '<div style="height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden;">' +
                     '<div id="meAiBar" style="height:100%; width:6%; background:linear-gradient(90deg,#6366f1,#4338ca); border-radius:99px; transition:width .45s ease;"></div>' +
                   '</div>' +
                 '</div>';
         }
+        // 2026-07-22 [버그] 2단 레이아웃 이후, 참고 작품을 고른 상태면 무대가 참고 이미지를 띄우느라
+        //   #meAiResult 가 display:none 이라 제작중 진행바가 통째로 안 보였다(사장님 제보).
+        //   생성 시작과 동시에 무대를 결과칸으로 되돌려 바가 크게 보이게 한다.
+        try { _meAiStageShow('loading'); } catch (_stl) {}
         _meAiBarStart();
         if (go) go.disabled = true;
         try {
