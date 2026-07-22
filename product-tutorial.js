@@ -1002,6 +1002,21 @@
           || _secVisible('#soCustomSizeSection') || _secVisible('#soRealPrintSection');
     } catch (_) { return false; }
   }
+  // 2026-07-23 (사장님 지시): 사이즈를 정한 다음 — 왼쪽 에디터를 비추고 «이 디자인으로 인쇄» 로 넘어간다.
+  //   홈에서 AI로 만들어 들어온 고객은 디자인이 이미 대지에 있으므로, 글자를 더 넣거나 위치만
+  //   손보고 바로 인쇄로 가면 된다. 대지가 비어 있으면(직접 올릴 사람) 이 단계는 건너뛴다.
+  var EDITOR_TWEAK_STEP = {
+    target: ['#soQuickDesignSec', '#embeddedEditorPreview', '#meStage'], mode: 'next', firstTargetOnly: true,
+    onEnter: function () {
+      return _tutEditorHasDesign() && (_secVisible('#meStage') || _secVisible('#embeddedEditorPreview') || _secVisible('#soQuickDesignSec'));
+    },
+    nextLabel: { kr: '이 디자인으로 인쇄 ▶', ja: 'このデザインで印刷 ▶', en: 'Print this design ▶' },
+    msg: { kr: '왼쪽이 <b>실제로 인쇄될 디자인</b>이에요. <b>[디자인 수정도구]</b>를 누르면 글자를 넣거나 그림·요소를 추가할 수 있고, 마우스로 끌어 <b>위치와 크기</b>도 맞출 수 있어요.<br><span style="color:#94a3b8;">고칠 게 없으면 아래 <b>[이 디자인으로 인쇄]</b>를 눌러 다음으로 넘어가세요.</span>',
+      ja: '左が <b>実際に印刷されるデザイン</b> です。<b>[デザイン編集ツール]</b> から文字や画像·素材を追加でき、ドラッグで <b>位置やサイズ</b> も調整できます。<br><span style="color:#94a3b8;">直すところがなければ下の <b>[このデザインで印刷]</b> を押して次へ進んでください。</span>',
+      en: 'On the left is <b>the design that will actually be printed</b>. Open <b>[Design tools]</b> to add text, images or elements, and drag to adjust <b>position and size</b>.<br><span style="color:#94a3b8;">Happy with it? Tap <b>[Print this design]</b> below to continue.</span>' },
+    cheer: { kr: '디자인 확정! 🖨', ja: 'デザイン確定! 🖨', en: 'Design locked in! 🖨' }
+  };
+
   var SIZE_PRODUCT_STEPS = [
     { // 1) 사이즈
       target: ['#soStickerSizeWrap', '#soCustomSizeSection', '#soRealPrintSection'], mode: 'next',
@@ -1011,6 +1026,7 @@
         en: 'First set the <b>size</b> — the price is <b>calculated automatically</b> from it.' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
+    EDITOR_TWEAK_STEP,   // 2026-07-23: 사이즈 다음 — 에디터에서 다듬고 «이 디자인으로 인쇄»
     { // 2) 종류(용지)
       target: '#soStickerTypeWrap', mode: 'next',
       onEnter: function () { return _secVisible('#soStickerTypeWrap'); },
@@ -1364,11 +1380,12 @@
       target: '#soCustomSizeSection', mode: 'next',
       onEnter: function () { return _secVisible('#soCustomSizeSection'); },
       blockNext: function () { return window._soPlacardOversized === true; },
-      msg: { kr: '<b>사이즈</b>를 정해요. 현수막은 <b>가로·세로 10cm 단위</b>로 주문해요 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼요.',
-        ja: '<b>サイズ</b>を決めます。横断幕は <b>横·縦10cm単位</b>（例: 300×60）。価格は面積(㎡)で自動計算。',
-        en: 'Set the <b>size</b>. Banners are ordered in <b>10 cm steps</b> (e.g. 300×60). Price is auto-calculated by area (㎡).' },
+      msg: { kr: '<b>사이즈</b>를 정해요. 원하시는 <b>가로·세로</b>를 직접 입력하면 돼요 (예: 300×60). 가격은 면적(㎡)에 따라 자동 계산돼요.',
+        ja: '<b>サイズ</b>を決めます。ご希望の <b>横·縦</b> をそのまま入力してください（例: 300×60）。価格は面積(㎡)で自動計算。',
+        en: 'Set the <b>size</b> — just type the <b>width and height</b> you need (e.g. 300×60). Price is auto-calculated by area (㎡).' },
       cheer: { kr: '사이즈 확인! 📏', ja: 'サイズOK! 📏', en: 'Size set! 📏' }
     },
+    EDITOR_TWEAK_STEP,   // 2026-07-23: 사이즈 다음 — 에디터에서 다듬고 «이 디자인으로 인쇄»
     { // 3) 마감 (고리·로프·코팅 등 추가옵션)
       target: '#soAddonSection', mode: 'next',
       onEnter: function () { return _secVisible('#soAddonSection'); },
