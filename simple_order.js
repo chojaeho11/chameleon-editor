@@ -6603,8 +6603,13 @@ html, body { background: #ffffff !important; }
         } catch (e) { console.warn('[pd ai attach]', e); }
     };
 
-    window._soSwitchPlacard = function (code) {
+    // 2026-07-22: 종류를 바꿔도 고객이 입력한 치수는 그대로 이어간다 (자동 전환 시 필수 —
+    //   전환 후 기본 사이즈로 돌아가면 왜 바뀌었는지 알 수 없고 다시 입력해야 한다).
+    window._soSwitchPlacard = function (code, keepSize) {
         if (!code) return;
+        if (keepSize) {
+            window._soPendingPlacardSize = { w: state.customW || 0, h: state.customH || 0 };
+        }
         // 2026-07-14: 튜토리얼 진행 중이면 리로드 후 '종류'가 아니라 '사이즈'부터 이어가도록 진행상태 저장.
         try { if (typeof window._tutBeforeVariantReload === 'function') window._tutBeforeVariantReload(); } catch(_){}
         try {
@@ -10454,6 +10459,8 @@ html, body { background: #ffffff !important; }
     };
 
 
+    var _soPlacardAutoTimer = null;   // 2026-07-22: 롤 폭 초과 → 대폭현수막 자동 전환 디바운스
+
     window._soOnCustomDimsChange = function () {
         // 프리셋 모드면 W/H input 입력 무시 (pill 선택값 유지)
         if (state && state.presetSizeFixed) return;
@@ -10491,13 +10498,36 @@ html, body { background: #ffffff !important; }
                 state._placardOversized = _plOversized;
                 state._placardSizeInvalid = (wCm < 10 || hCm < 10);   // 2026-07-22: 10cm 배수 조건 제거
                 _plNote.style.display = '';
+                // 2026-07-22 (사장님 지시): 롤 폭(160cm)을 넘으면 고객이 버튼을 누를 필요 없이
+                //   UV 3미터 대폭현수막으로 자동 전환하고 금액도 그 제품 단가로 계산한다.
+                //   입력 도중(예: 5 → 50 → 500)에 튀지 않도록 0.8초 멈춘 뒤에 전환한다.
+                if (_plOversized) {
+                    if (_soPlacardAutoTimer) clearTimeout(_soPlacardAutoTimer);
+                    _soPlacardAutoTimer = setTimeout(function () {
+                        _soPlacardAutoTimer = null;
+                        try {
+                            if (!state._placardOversized) return;                       // 그 사이 사이즈를 줄였으면 취소
+                            if (((state.product && state.product.code) || '') !== '44578') return;
+                            window._soPlacardAutoSwitched = true;                        // 전환 후 안내문에 사용
+                            window._soSwitchPlacard('44578_copy', true);                 // 치수 이어받기
+                        } catch (_ase) { console.warn('[so] placard auto switch', _ase); }
+                    }, 800);
+                }
                 if (_plOversized) {
                     _plNote.style.background = '#fff7ed'; _plNote.style.border = '1.5px solid #fb923c'; _plNote.style.color = '#9a3412';
                     _plNote.innerHTML = '⚠ ' + tr(
-                        '초저가 현수막은 롤 폭이 <b>최대 1600mm(160cm)</b>예요. 롤이라 <b>가로·세로 한쪽만 160cm 이내</b>면 되는데, 지금 ' + wCm + '×' + hCm + 'cm 는 <b>둘 다 초과</b>라 제작이 안 돼요. 더 넓은 <b>UV 3미터 대폭현수막</b>으로 주문해 주세요.',
-                        '激安横断幕はロール幅 <b>最大1600mm(160cm)</b>。ロールなので <b>横・縦どちらかが160cm以内</b> ならOKですが、現在 ' + wCm + '×' + hCm + 'cm は <b>両方超過</b> で製作できません。より広い <b>UV3メートル大幅横断幕</b> をご利用ください。',
-                        'The low-cost banner roll is <b>max 1600 mm (160 cm)</b> wide. Since it is a roll, <b>one side within 160 cm</b> is enough — but ' + wCm + ' x ' + hCm + ' cm exceeds on <b>both</b>. Please use the wider <b>UV 3 m banner</b>.'
-                    ) + '<div style="margin-top:8px;"><button type="button" onclick="window._soSwitchPlacard(\'44578_copy\')" style="width:100%; padding:9px; border:0; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12.5px;">' + tr('UV 3미터 대폭현수막으로 변경 →', 'UV3メートル大幅横断幕へ変更 →', 'Switch to UV 3 m banner →') + '</button></div>';
+                        '초저가 현수막은 롤 폭이 <b>최대 1600mm(160cm)</b>라 ' + wCm + '×' + hCm + 'cm 는 제작이 안 돼요. <b>UV 3미터 대폭현수막으로 자동 변경</b>합니다…',
+                        '激安横断幕はロール幅 <b>最大1600mm(160cm)</b> のため ' + wCm + '×' + hCm + 'cm は製作できません。<b>UV3メートル大幅横断幕へ自動変更</b>します…',
+                        'The low-cost banner roll is <b>max 1600 mm (160 cm)</b>, so ' + wCm + ' x ' + hCm + ' cm cannot be made. <b>Switching to the UV 3 m wide banner</b>…'
+                    );
+                } else if (window._soPlacardAutoSwitched && _plCode === '44578_copy') {
+                    // 2026-07-22: 자동 전환 직후 — 왜 종류가 바뀌었는지 알려준다(모르면 당황한다).
+                    _plNote.style.background = '#ecfdf5'; _plNote.style.border = '1.5px solid #6ee7b7'; _plNote.style.color = '#065f46';
+                    _plNote.innerHTML = tr(
+                        '입력하신 ' + wCm + '×' + hCm + 'cm 는 초저가 현수막 롤 폭(160cm)을 넘어 <b>UV 3미터 대폭현수막</b>으로 자동 변경했어요. 금액도 이 제품 단가로 계산됩니다.',
+                        'ご入力の ' + wCm + '×' + hCm + 'cm は激安横断幕のロール幅(160cm)を超えるため <b>UV3メートル大幅横断幕</b> へ自動変更しました。料金もこの商品の単価で計算されます。',
+                        'At ' + wCm + ' x ' + hCm + ' cm your banner exceeds the low-cost roll width (160 cm), so we switched it to the <b>UV 3 m wide banner</b>. Pricing follows that product.'
+                    );
                 } else {
                     _plNote.style.background = '#eff6ff'; _plNote.style.border = '1.5px solid #bfdbfe'; _plNote.style.color = '#1e40af';
                     _plNote.innerHTML = tr(
@@ -10510,6 +10540,7 @@ html, body { background: #ffffff !important; }
                 _plNote.style.display = 'none';
                 state._placardSizeInvalid = false;
                 state._placardOversized = false;
+                window._soPlacardAutoSwitched = false;
                 // 현수막에서 붙은 빨간 테두리가 다른 제품으로 넘어가 남지 않게 원복 (모달 공용)
                 if (wEl) wEl.style.borderColor = '#d1d5db';
                 if (hEl) hEl.style.borderColor = '#d1d5db';
@@ -15649,6 +15680,19 @@ html, body { background: #ffffff !important; }
         document.getElementById('simpleOrderModal').classList.add('open');
         document.body.style.overflow = 'hidden';
 
+        // 2026-07-22: 현수막 종류 자동/수동 전환 시 이어받은 치수 복원 (롤 폭 초과 → 대폭현수막 등)
+        try {
+            var _pps = window._soPendingPlacardSize;
+            if (_pps && (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(p)) {
+                var _pw = document.getElementById('soCustomW');
+                var _ph = document.getElementById('soCustomH');
+                if (_pw && _pps.w > 0) _pw.value = _pps.w;
+                if (_ph && _pps.h > 0) _ph.value = _pps.h;
+                if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+            }
+            window._soPendingPlacardSize = null;
+        } catch (_pse) { console.warn('[so] placard size carry', _pse); }
+
         // 2026-06-25: 게임형 제품 튜토리얼 (product-tutorial.js) — 명함 등 시나리오 매칭 시 모드 선택 창.
         try { if (typeof window._tutMaybeStart === 'function') window._tutMaybeStart(p); } catch(_tut) {}
 
@@ -17148,7 +17192,7 @@ html, body { background: #ffffff !important; }
                     '激安横断幕はロール幅 最大1600mm(160cm)。横・縦のどちらかは160cm以内が必要です。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm（両方超過）\n\nOKを押すと [UV3メートル大幅横断幕] へ移動します。',
                     'The low-cost banner roll is max 1600 mm (160 cm) wide — one side must be within 160 cm.\nEntered: ' + _plWc + ' x ' + _plHc + ' cm (both exceed)\n\nPress OK to switch to the wider [UV 3 m banner].'
                 )); } catch(e) {}
-                if (_moveUv) { try { window._soSwitchPlacard('44578_copy'); } catch(_){} }
+                if (_moveUv) { try { window._soPlacardAutoSwitched = true; window._soSwitchPlacard('44578_copy', true); } catch(_){} }   // 2026-07-22: 치수 유지
                 return false;
             }
             // 2026-07-22 (사장님 지시): 10cm 단위 강제 폐지 — 고객이 원하는 치수를 그대로 쓰게 한다.
