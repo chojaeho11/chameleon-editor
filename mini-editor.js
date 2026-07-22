@@ -6362,7 +6362,20 @@
         wrap.id = 'meAiGenModal';
         wrap.style.cssText = 'position:fixed; inset:0; z-index:2147483200; background:rgba(15,23,42,0.5); display:none; align-items:center; justify-content:center; padding:16px; font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Segoe UI",sans-serif;';
         wrap.innerHTML =
-            '<div style="background:#fff; border-radius:16px; width:min(440px,100%); max-height:92vh; overflow-y:auto; padding:20px;">' +
+            // 2026-07-22: 에디터처럼 2단 레이아웃 (사장님 지시) —
+            //   왼쪽 = 참고 작품/생성 결과를 크게 보는 무대, 오른쪽 = 생성 패널.
+            //   기존 요소 id 는 하나도 바꾸지 않았다(참조하는 코드가 여러 곳이라 이름을 바꾸면 깨진다).
+            '<div id="meAiCard" style="background:#fff; border-radius:16px; width:min(1120px,100%); max-height:92vh; display:flex; overflow:hidden;">' +
+              // ── 왼쪽 무대 ──
+              '<div id="meAiStage" style="flex:1.15; min-width:0; background:#f1f5f9; padding:18px; display:flex; flex-direction:column; gap:10px;">' +
+                '<div id="meAiStageLbl" style="font-size:12px; color:#64748b; font-weight:700; flex:0 0 auto;"></div>' +
+                '<div id="meAiStageBody" style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">' +
+                  '<img id="meAiStageRef" alt="" style="display:none; max-width:100%; max-height:100%; object-fit:contain; border-radius:10px; background:#fff;">' +
+                  '<div id="meAiResult" style="width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px; overflow:auto; box-sizing:border-box;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
+                '</div>' +
+              '</div>' +
+              // ── 오른쪽 생성 패널 ──
+              '<div id="meAiPanel" style="width:400px; flex:0 0 400px; max-height:92vh; overflow-y:auto; padding:20px; box-sizing:border-box;">' +
               '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">' +
                 '<div style="font-size:16px; color:#4338ca;">' + _meAiTr('AI 이미지 생성', 'AI画像生成', 'AI image') + '</div>' +
                 '<button type="button" id="meAiClose" style="border:none; background:transparent; font-size:20px; color:#94a3b8; cursor:pointer; line-height:1;">✕</button>' +
@@ -6402,7 +6415,7 @@
               '<textarea id="meAiPrompt" rows="3" placeholder="' + _meAiTr('예: 한강 라면 축제', '例: 夏祭り 花火大会', 'e.g. Summer Ramen Festival') + '" style="width:100%; box-sizing:border-box; border:1.5px solid #e2e8f0; border-radius:10px; padding:11px; font-size:14px; font-family:inherit; resize:vertical; outline:none;"></textarea>' +
               '<button type="button" id="meAiGoBtn" style="width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('이미지 생성', '画像を生成', 'Generate') + '</button>' +
               '</div>' +  // /#meAiInputArea
-              '<div id="meAiResult" style="margin-top:14px; min-height:120px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; color:#cbd5e1; font-size:13px; padding:10px;">' + _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here') + '</div>' +
+              // (#meAiResult 는 2026-07-22 부터 왼쪽 무대(#meAiStage)로 이동)
               '<button type="button" id="meAiInsertBtn" style="display:none; width:100%; margin-top:10px; padding:13px; border:none; border-radius:11px; background:#4338ca; color:#fff; font-size:14px; cursor:pointer; font-family:inherit;">' + _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas') + '</button>' +
               // 2026-07-18: 스카시 전용 결과 버튼 — 수정해서 다시만들기 / 이대로 제작
               '<div id="meAiScarciBtns" style="display:none; margin-top:10px; gap:8px;">' +
@@ -6416,7 +6429,20 @@
                         'After adding the image, move it to get a nicer composition. Use vectors or elements to decorate it even more beautifully.') +
               '</div>' +
               '<div id="meAiErr" style="display:none; margin-top:10px; font-size:12.5px; color:#dc2626; line-height:1.5;"></div>' +
+              '</div>' +   // /#meAiPanel
             '</div>';
+        // 좁은 화면에서는 위(무대)-아래(패널)로 쌓는다 — 인라인 style 로는 미디어쿼리를 못 걸어 <style> 로.
+        if (!document.getElementById('meAiLayoutCss')) {
+            var st = document.createElement('style');
+            st.id = 'meAiLayoutCss';
+            st.textContent =
+                '@media (max-width: 900px){'
+              + '  #meAiCard{ flex-direction:column; overflow-y:auto; }'
+              + '  #meAiPanel{ width:100%; flex:0 0 auto; max-height:none; overflow-y:visible; }'
+              + '  #meAiStage{ flex:0 0 auto; min-height:38vh; }'
+              + '}';
+            document.head.appendChild(st);
+        }
         document.body.appendChild(wrap);
 
         // pointerdown: 프롬프트 글씨를 드래그 선택하다 배경에서 놓아도 닫히지 않게 (click 은 드래그 종료도 잡아 닫힘)
@@ -6496,6 +6522,28 @@
         });
     }
 
+    // 2026-07-22: 왼쪽 무대 전환 — 'ref'(참고 작품 크게) / 'result'(생성 결과 크게) / 'empty'
+    //   참고 작품을 고르면 그게 크게 보이고, 생성하면 그 자리에 결과가 크게 들어온다.
+    function _meAiStageShow(which) {
+        var refImg = document.getElementById('meAiStageRef');
+        var res = document.getElementById('meAiResult');
+        var lbl = document.getElementById('meAiStageLbl');
+        if (!refImg || !res) return;
+        if (which === 'ref' && _meAiRefDataUrl) {
+            refImg.src = _meAiRefDataUrl;
+            refImg.style.display = '';
+            res.style.display = 'none';
+            if (lbl) lbl.textContent = _meAiTr('고르신 참고 작품', 'お選びの参考作品', 'Your reference');
+        } else {
+            refImg.style.display = 'none';
+            res.style.display = 'flex';
+            if (lbl) lbl.textContent = (which === 'result')
+                ? _meAiTr('만들어진 디자인', '完成したデザイン', 'Your design')
+                : _meAiTr('미리보기', 'プレビュー', 'Preview');
+        }
+    }
+    window._meAiStageShow = _meAiStageShow;
+
     // 참조 사진 설정/해제 + 썸네일·안내 토글
     function _meAiSetRef(dataUrl, mode) {
         _meAiRefDataUrl = dataUrl || null;
@@ -6543,6 +6591,12 @@
             if (hint) hint.style.display = 'none';
             if (btn) btn.innerHTML = '<i class="fa-solid fa-image"></i>' + _meAiTr('합성할 사진 넣기', '合成する写真を追加', 'Add a photo to blend');
         }
+        // 2026-07-22: 참고 작품을 고르면 왼쪽 무대에 크게 띄운다.
+        //   단 이미 결과가 나와 있으면 결과를 계속 크게 보여준다(무대를 빼앗지 않는다).
+        try {
+            var hasResult = !!document.querySelector('#meAiResult img');
+            if (!hasResult) _meAiStageShow(_meAiRefDataUrl ? 'ref' : 'empty');
+        } catch (_) {}
     }
 
     function _meAiSyncBtns() {
@@ -6707,7 +6761,7 @@
                     + _meAiTr('직전에 만든 디자인이에요. 이대로 쓰려면 아래 버튼을 누르세요.',
                               '直前に作ったデザインです。このまま使うなら下のボタンを押してください。',
                               'Your latest design. Use it as is with the button below.')
-                    + '</div><img src="' + _meAiPendingUrl + '" style="max-width:100%; max-height:230px; border-radius:8px; object-fit:contain; display:block; margin:0 auto;"></div>';
+                    + '</div><img src="' + _meAiPendingUrl + '" style="max-width:100%; max-height:100%; border-radius:8px; object-fit:contain; display:block; margin:0 auto;"></div>';
                 res.style.color = '';
             }
             if (ins) ins.style.display = 'block';
@@ -6715,6 +6769,9 @@
             if (res) { res.innerHTML = _meAiTr('여기에 이미지가 표시됩니다', 'ここに画像が表示されます', 'Image will appear here'); res.style.color = '#cbd5e1'; }
             if (ins) ins.style.display = 'none';
         }
+        // 2026-07-22: 왼쪽 무대 초기화 — 직전 결과가 있으면 그걸, 없으면 빈 미리보기.
+        //   (참고 작품을 고르고 들어온 경우는 뒤따르는 _meAiSetRef 가 'ref' 로 바꾼다)
+        try { _meAiStageShow(_meAiPendingUrl ? 'result' : 'empty'); } catch (_st0) {}
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
         if (err) err.style.display = 'none';
         try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
@@ -7802,7 +7859,9 @@
             }
             _meAiPendingUrl = url;
             _meAiLastUrl = url;
-            if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:260px; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
+            // 2026-07-22: 결과는 왼쪽 무대에 꽉 차게 (max-height 260px 고정이던 것을 무대 높이에 맞춤)
+            if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:100%; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
+            try { _meAiStageShow('result'); } catch (_st) {}
             // 2026-07-18: 스카시/종이매대면 결과 버튼(수정해서 다시만들기/이대로 제작)으로 스와프, 아니면 기존 '캔버스에 넣기'
             if (_meAiScarci || _meAiPaperDisplay) {
                 if (ins) ins.style.display = 'none';
