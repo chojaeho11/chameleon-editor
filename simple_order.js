@@ -10453,15 +10453,6 @@ html, body { background: #ffffff !important; }
         });
     };
 
-    // 2026-07-22: 현수막 10cm 단위 — 경고 안의 버튼으로 한 번에 맞추기 (W/H 중 어긋난 칸만)
-    window._soPlacardSnap = function (which, val) {
-        var el = document.getElementById(which === 'W' ? 'soCustomW' : 'soCustomH');
-        if (!el) return;
-        el.value = val;
-        try { el.focus(); el.select(); } catch (_) {}
-        if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
-        if (typeof window._soSyncSizePreset === 'function') window._soSyncSizePreset();
-    };
 
     window._soOnCustomDimsChange = function () {
         // 프리셋 모드면 W/H input 입력 무시 (pill 선택값 유지)
@@ -10489,16 +10480,16 @@ html, body { background: #ffffff !important; }
                 //   아래 경고 + 담기 차단으로 우리가 직접 검사하므로 입력 자체는 자유롭게 둔다.
                 if (wEl) wEl.step = '1';
                 if (hEl) hEl.step = '1';
-                var _plBad = (wCm % 10 !== 0) || (hCm % 10 !== 0);
-                // 어긋난 칸을 빨갛게 — 어디를 고쳐야 하는지 바로 보이게
-                if (wEl) wEl.style.borderColor = (wCm % 10 !== 0) ? '#dc2626' : '#d1d5db';
-                if (hEl) hEl.style.borderColor = (hCm % 10 !== 0) ? '#dc2626' : '#d1d5db';
+                // 2026-07-22 (사장님 지시): 10cm 단위 강제·경고 폐지 — 원하는 치수를 그대로 입력.
+                //   위 사이즈 선택 버튼이 예시 역할을 하므로 별도 경고는 두지 않는다.
+                if (wEl) wEl.style.borderColor = '#d1d5db';
+                if (hEl) hEl.style.borderColor = '#d1d5db';
                 // 2026-07-14: 초저가 현수막(44578) 롤 폭 최대 1600mm(160cm) — 롤이라 한쪽만 160cm 이내면 됨.
                 //   가로·세로 둘 다 160cm 초과면 롤에 안 들어감 → UV 3미터 대폭현수막(44578_copy) 안내·이동.
                 var _plCode = (state.product && state.product.code) || '';
                 var _plOversized = (_plCode === '44578') && (wCm > 160) && (hCm > 160);
                 state._placardOversized = _plOversized;
-                state._placardSizeInvalid = _plBad || wCm < 10 || hCm < 10;
+                state._placardSizeInvalid = (wCm < 10 || hCm < 10);   // 2026-07-22: 10cm 배수 조건 제거
                 _plNote.style.display = '';
                 if (_plOversized) {
                     _plNote.style.background = '#fff7ed'; _plNote.style.border = '1.5px solid #fb923c'; _plNote.style.color = '#9a3412';
@@ -10507,28 +10498,12 @@ html, body { background: #ffffff !important; }
                         '激安横断幕はロール幅 <b>最大1600mm(160cm)</b>。ロールなので <b>横・縦どちらかが160cm以内</b> ならOKですが、現在 ' + wCm + '×' + hCm + 'cm は <b>両方超過</b> で製作できません。より広い <b>UV3メートル大幅横断幕</b> をご利用ください。',
                         'The low-cost banner roll is <b>max 1600 mm (160 cm)</b> wide. Since it is a roll, <b>one side within 160 cm</b> is enough — but ' + wCm + ' x ' + hCm + ' cm exceeds on <b>both</b>. Please use the wider <b>UV 3 m banner</b>.'
                     ) + '<div style="margin-top:8px;"><button type="button" onclick="window._soSwitchPlacard(\'44578_copy\')" style="width:100%; padding:9px; border:0; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12.5px;">' + tr('UV 3미터 대폭현수막으로 변경 →', 'UV3メートル大幅横断幕へ変更 →', 'Switch to UV 3 m banner →') + '</button></div>';
-                } else if (_plBad) {
-                    // 2026-07-22: 경고만 띄우고 끝내지 말고, 가까운 10cm 로 한 번에 고칠 수 있게 버튼 제공.
-                    //   (사장님: "295 를 넣으면 10cm 단위로만 가능하다고 안내하고 다시 입력받게")
-                    var _badEl = (wCm % 10 !== 0) ? 'W' : 'H';
-                    var _badVal = (wCm % 10 !== 0) ? wCm : hCm;
-                    var _down = Math.max(10, Math.floor(_badVal / 10) * 10);
-                    var _up = Math.min(2000, Math.ceil(_badVal / 10) * 10);
-                    _plNote.style.background = '#fef2f2'; _plNote.style.border = '1.5px solid #fca5a5'; _plNote.style.color = '#b91c1c';
-                    _plNote.innerHTML = '⚠ ' + tr(
-                        '현수막은 <b>가로·세로 10cm 단위</b>로만 주문할 수 있어요. ' + _badVal + 'cm 는 주문되지 않습니다 — 아래에서 고르거나 직접 다시 입력해 주세요.',
-                        '横断幕は <b>横・縦とも 10cm 単位</b>のみご注文可能です。' + _badVal + 'cm ではご注文いただけません — 下から選ぶか、直接入力し直してください。',
-                        'Banners can only be ordered in <b>10 cm steps</b> (W & H). ' + _badVal + ' cm cannot be ordered — pick one below or type it again.'
-                    ) + '<div style="display:flex; gap:6px; margin-top:8px;">'
-                      + '<button type="button" onclick="window._soPlacardSnap(\'' + _badEl + '\',' + _down + ')" style="flex:1; padding:8px; border:1px solid #fca5a5; background:#fff; color:#b91c1c; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">' + _down + 'cm</button>'
-                      + (_up !== _down ? '<button type="button" onclick="window._soPlacardSnap(\'' + _badEl + '\',' + _up + ')" style="flex:1; padding:8px; border:1px solid #fca5a5; background:#fff; color:#b91c1c; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">' + _up + 'cm</button>' : '')
-                      + '</div>';
                 } else {
                     _plNote.style.background = '#eff6ff'; _plNote.style.border = '1.5px solid #bfdbfe'; _plNote.style.color = '#1e40af';
                     _plNote.innerHTML = tr(
-                        '현수막은 <b>가로·세로 10cm 단위</b>로 주문됩니다. (예: 300×60)',
-                        '横断幕は <b>横・縦とも 10cm 単位</b>でご注文いただけます。(例: 300×60)',
-                        'Banners are ordered in <b>10 cm steps</b> for width &amp; height. (e.g. 300 x 60)'
+                        '원하시는 <b>가로·세로 치수</b>를 직접 입력하세요. 가격은 면적(m²)으로 자동 계산됩니다. (예: 300×60)',
+                        'ご希望の <b>横・縦のサイズ</b> を直接ご入力ください。料金は面積(m²)で自動計算されます。(例: 300×60)',
+                        'Enter any <b>width and height</b> you need — the price is calculated automatically by area (m²). (e.g. 300 x 60)'
                     );
                 }
             } else {
@@ -17176,11 +17151,14 @@ html, body { background: #ffffff !important; }
                 if (_moveUv) { try { window._soSwitchPlacard('44578_copy'); } catch(_){} }
                 return false;
             }
-            if (_plWc < 10 || _plHc < 10 || _plWc % 10 !== 0 || _plHc % 10 !== 0) {
+            // 2026-07-22 (사장님 지시): 10cm 단위 강제 폐지 — 고객이 원하는 치수를 그대로 쓰게 한다.
+            //   사이즈 선택 예시 버튼이 위에 있어 안내는 그걸로 충분하고, 가격은 m² 계산이라 문제없다.
+            //   (2026-07-04~07-22 까지는 10 배수가 아니면 담기를 막았다.)
+            if (_plWc < 10 || _plHc < 10) {
                 try { alert(tr(
-                    '현수막은 가로·세로를 10cm 단위로만 주문할 수 있습니다.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm\n(예: 300 × 60 가능 / 300 × 65 불가)',
-                    '横断幕は 横・縦とも 10cm 単位でのみご注文いただけます。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm\n(例: 300 × 60 可 / 300 × 65 不可)',
-                    'Banners can only be ordered in 10 cm increments (width & height).\nEntered: ' + _plWc + ' x ' + _plHc + ' cm\n(e.g. 300 x 60 OK / 300 x 65 not allowed)'
+                    '가로·세로는 10cm 이상으로 입력해 주세요.\n입력하신 크기: ' + _plWc + ' × ' + _plHc + ' cm',
+                    '横・縦は10cm以上でご入力ください。\n入力サイズ: ' + _plWc + ' × ' + _plHc + ' cm',
+                    'Width and height must be at least 10 cm.\nEntered: ' + _plWc + ' x ' + _plHc + ' cm'
                 )); } catch(e) {}
                 return false;
             }
