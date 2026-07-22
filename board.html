@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260723023504';
+    var CV = '20260723025359';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1402,8 +1402,8 @@
                 alert('대기 중인 사진이 없습니다.\n\n홍보사진 폴더에 넣으면 1분 안에 자동으로 발행됩니다.\n방금 넣으셨다면 잠시 후 다시 확인해 주세요.');
                 return;
             }
-            alert(`발행 완료\n사진 ${data.photos}장 · 보류 ${data.skipped}장\n${(data.products || []).join(', ')}`);
-            location.reload();
+            // 2026-07-23: 발행은 백그라운드에서 진행된다(504 방지) — 시작만 확인하고 안내한다.
+            alert('발행을 시작했습니다. 사진 ' + (data.photos || 0) + '장\n글 작성에 1~3분 걸립니다. 잠시 후 목록을 새로고침해 주세요.');
         } catch (e) {
             alert('발행 실패: ' + (e.message || e));
         } finally {

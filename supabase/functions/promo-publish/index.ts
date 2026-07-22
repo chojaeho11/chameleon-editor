@@ -202,12 +202,28 @@ serve(async (req) => {
         }
 
         // ── 1) 대기 사진
+        //   2026-07-23: status=processing 도 회수 대상 — 발행 도중 함수가 죽으면(504 등) 사진이
+        //   processing 에 갇혀 영영 안 나갔다. 15분 넘게 매달려 있으면 실패로 보고 다시 집는다.
+        const staleCut = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        await sb.from("promo_photos").update({ status: "new" })
+            .eq("status", "processing").lt("claimed_at", staleCut);
         const { data: photos, error: pErr } = await sb
             .from("promo_photos").select("id, storage_url, filename")
             .eq("status", "new").order("created_at", { ascending: true }).limit(maxPhotos);
         if (pErr) throw pErr;
         if (!photos || photos.length === 0) return json({ ok: true, message: "대기 중인 사진이 없습니다." });
 
+        // 2026-07-23: 같은 사진을 두 번 발행하지 않도록 즉시 선점.
+        //   폴더 감시가 1분마다 돌기 때문에 겹칠 수 있다.
+        await sb.from("promo_photos").update({ status: "processing", claimed_at: new Date().toISOString() })
+            .in("id", photos.map((x: any) => x.id));
+
+        // ── 2026-07-23: 게이트웨이 타임아웃(504) 대응 —
+        //   사진 5장 × 3개 언어 글 생성은 2~5분이 걸려 응답을 기다리면 무조건 504 가 났고,
+        //   사진은 계속 대기 상태로 남았다(사장님 제보: "5분째 발행 중").
+        //   → 여기서 바로 응답하고, 실제 작업은 EdgeRuntime.waitUntil 로 백그라운드에서 끝낸다.
+        const work = (async () => {
+          try {
         // ── 2) 제품 목록 (ua_* 고객 아트워크 1,600여 행 제외 — 안 거르면 아트워크를 제품으로 오인)
         const [prodRes, catRes] = await Promise.all([
             sb.from("admin_products").select("code,name,name_jp,name_us,category")
@@ -234,7 +250,13 @@ serve(async (req) => {
             if (im) { imgs.push(im); usable.push(ph); }
             else await sb.from("promo_photos").update({ status: "error", error: "이미지 로드 실패" }).eq("id", ph.id);
         }
-        if (usable.length === 0) return json({ ok: false, error: "로드 가능한 사진이 없습니다." });
+        if (usable.length === 0) {
+            // 2026-07-23: 백그라운드라 응답을 못 만든다 — 사진만 정리하고 끝낸다.
+            await sb.from("promo_photos").update({ status: "error", error: "이미지 로드 실패" })
+                .in("id", photos.map((x: any) => x.id));
+            console.warn("[promo-publish] 로드 가능한 사진이 없습니다.");
+            return;
+        }
 
         // ── 4) Vision — 각 사진이 우리 제품 중 무엇인지 판별 (1회 호출)
         const visionSystem = `당신은 인쇄·광고물 제작업체 '카멜레온프린팅'의 제품 분류 전문가입니다.
@@ -314,7 +336,11 @@ ${catalog}
         }
 
         if (identified.length === 0) {
-            return json({ ok: false, error: "판별된 제품이 없어 발행하지 않았습니다.", checked: usable.length });
+            // 2026-07-23: 백그라운드 — 제품 판별 실패분은 '보류(skipped)' 로 남긴다.
+            await sb.from("promo_photos").update({ status: "skipped" })
+                .in("id", photos.map((x: any) => x.id));
+            console.warn("[promo-publish] 판별된 제품이 없어 발행하지 않았습니다. checked=", usable.length);
+            return;
         }
 
         // ── 5) 언어별 글 생성 + 발행
@@ -550,11 +576,21 @@ ${inquiryLabel}: ${esc(L.contact)}<br>
             status: "published", batch_id: batchId, published_at: new Date().toISOString(),
         }).in("id", publishedIds);
 
-        return json({
-            ok: true, batch_id: batchId,
-            photos: publishedIds.length, skipped: usable.length - identified.length,
-            products: uniqNames, results,
-        });
+            console.log("[promo-publish] 완료:", publishedIds.length, "장 ·", uniqNames.join(", "));
+          } catch (bgErr) {
+            // 실패하면 사진을 대기 상태로 되돌려 다음 시도에 다시 잡히게 한다 (사진이 유실되지 않도록)
+            console.error("[promo-publish] 백그라운드 실패:", bgErr);
+            try {
+              await sb.from("promo_photos")
+                .update({ status: "new", error: String(bgErr && (bgErr as any).message || bgErr).slice(0, 300) })
+                .in("id", photos.map((x: any) => x.id));
+            } catch (_revert) { /* 되돌리기까지 실패하면 15분 뒤 stale 회수가 처리한다 */ }
+          }
+        })();
+        try { (globalThis as any).EdgeRuntime?.waitUntil?.(work); } catch (_wu) { /* 로컬 실행 등 */ }
+
+        // 기다리지 않고 바로 응답 — 화면은 "발행을 시작했습니다" 로 안내한다.
+        return json({ ok: true, started: true, photos: photos.length });
     } catch (e) {
         console.error("[promo-publish]", e);
         return json({ ok: false, error: String(e && (e as any).message || e) });
