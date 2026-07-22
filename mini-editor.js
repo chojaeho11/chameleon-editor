@@ -6772,6 +6772,12 @@
         var res = document.getElementById('meAiResult');
         var ins = document.getElementById('meAiInsertBtn');
         var err = document.getElementById('meAiErr');
+        // 2026-07-23 (사장님 지시): 홈에서 만든 경우 이 버튼은 대지에 넣는 게 아니라
+        //   제품(재질) 고르기로 넘어간다 → 하는 일 그대로 «재질 골라서 인쇄하기» 로 표기.
+        //   에디터 안에서 쓸 때는 실제로 대지에 넣으므로 기존 문구 유지.
+        if (ins) ins.textContent = _meHeroMode
+            ? _meAiTr('재질 골라서 인쇄하기', '素材を選んで印刷する', 'Choose a material & print')
+            : _meAiTr('캔버스에 넣기', 'キャンバスに追加', 'Add to canvas');
         // 2026-07-20: 이미 만들어 둔 디자인이 있으면(예: 홈에서 생성 후 제품으로 들어온 경우)
         //   빈 화면 대신 그 결과를 그대로 보여준다 — 튜토리얼에서 또 만들 필요 없이 바로 넣을 수 있게.
         if (_meAiPendingUrl) {
