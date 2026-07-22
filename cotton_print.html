@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260722220918';
+    var CV = '20260723015441';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -3209,18 +3209,18 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             if (!sb) { grid.innerHTML = ''; return; }
             var from = (_currentPage - 1) * PAGE_SIZE;
             var to = from + PAGE_SIZE - 1;
-            var q = sb.from('user_patterns')
-                .select('*', { count: 'exact' })
+            // 2026-07-23 (사장님 지시): 이 컬렉션을 카멜레온프린팅 에디터의 자산
+            //   (배경·요소·벡터 = admin_templates 의 image / vector / logo) 으로 채운다.
+            //   기존 user_patterns(고객 업로드 패턴)는 등록 수가 적고 썸네일이 깨져 있었다.
+            var q = sb.from('admin_templates')
+                .select('id, name, thumbnail_url, background_url, asset_url, asset_type, keywords', { count: 'exact' })
                 .eq('status','approved')
-                // 옛 시드(2026-05-10) 자동 숨김
-                .gte('created_at', '2026-05-11T00:00:00Z')
-                // 2026-05-12: 새로 업로드된 패턴이 제일 앞으로 — 일반적인 최신순 정렬
-                .order('created_at', { ascending: false })
+                .in('asset_type', ['vector','image','logo'])
+                .order('id', { ascending: false })
                 .range(from, to);
-            if (_currentCat) q = q.eq('category', _currentCat);
             if (_currentSearch) {
                 var s = _currentSearch.replace(/'/g, "''");
-                q = q.or('name.ilike.%' + s + '%,author.ilike.%' + s + '%,description.ilike.%' + s + '%');
+                q = q.ilike('name', '%' + s + '%');
             }
             var { data, error, count } = await q;
             if (error) throw error;
@@ -3234,18 +3234,27 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                 return;
             }
             grid.innerHTML = data.map(function(p){
-                var cat = getCatLabel(p.category);
-                var rawThumb = p.thumb_url || (p.mockup_urls && p.mockup_urls[0]) || 'https://placehold.co/400?text=Pattern';
+                // 2026-07-23: 에디터 자산 — 배경/요소/벡터 라벨. 이미지는 thumbnail → asset → background 순.
+                var _aL = window.__PS_LANG || 'ko';
+                var _CATS = (_aL === 'ja') ? { vector:'ベクター', image:'背景', logo:'素材' }
+                          : (_aL === 'ko') ? { vector:'벡터', image:'배경', logo:'요소' }
+                          : { vector:'Vector', image:'Background', logo:'Element' };
+                var cat = _CATS[p.asset_type] || _CATS.logo;
+                var rawThumb = p.thumbnail_url || p.asset_url || p.background_url || 'https://placehold.co/400?text=Asset';
                 // 2026-05-11: Supabase image transform으로 320px 리사이즈 → 50KB↓ (3배 가속)
                 //   /storage/v1/object/public/... → /storage/v1/render/image/public/...?width=320&resize=contain&quality=72
                 //   단일 객체 PNG(library/graphic)에는 contain이 맞음 — cover는 객체를 확대 크롭함
-                var thumb = rawThumb.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
-                    (rawThumb.indexOf('?') >= 0 ? '&' : '?') + 'width=320&resize=contain&quality=72';
-                var author = p.author ? '<div class="pattern-author"><i class="fa-solid fa-user-pen" style="font-size:9px; opacity:0.7;"></i> ' + p.author + '</div>' : '';
+                // 2026-07-23: Supabase 이미지 변환(render) 을 거치지 않고 원본 public URL 을 그대로 쓴다.
+                //   변환 엔드포인트가 실패하면 갤러리 전체가 깨진 이미지로 보였다(사장님 제보).
+                var thumb = rawThumb;
+                var author = '';
                 var langSfx = window._cpLangSuffix || '';
                 // 2026-05-11: '/designer' → '/cotton-designer' — cafe2626.com에서 '/designer'는 SPA가 product 코드로 해석함.
                 //   '/cotton-designer'는 STANDALONE_PAGES 별칭으로 양쪽 호스트에서 cotton_designer.html을 직접 서빙.
-                var href = '/cotton-designer?pattern=' + encodeURIComponent(p.id) + langSfx;
+                // 2026-07-23: admin_templates 자산은 user_patterns 에 없으므로 이미지 URL 을 직접 넘긴다.
+                var _full = p.asset_url || p.background_url || p.thumbnail_url || '';
+                var href = '/cotton-designer?patternimg=' + encodeURIComponent(_full)
+                         + '&patternname=' + encodeURIComponent(p.name || '') + langSfx;
                 // 2026-05-11: <div onclick>에서 <a href>로 변경 — 트래킹 방지/캐시 깨짐/JS 에러 등으로
                 //   onclick이 안 먹는 환경에서도 네이티브 네비게이션은 100% 동작.
                 return '<a href="' + href + '" class="pattern-card" data-pid="' + p.id + '">' +
@@ -3280,64 +3289,8 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
 <div id="productGrid" style="display:none;"></div>
 <div id="emptyState" style="display:none;"></div>
 
-<!-- 베스트 작가 -->
-<style>
-.bd-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.bd-card { position:relative; background:linear-gradient(135deg,var(--cream),#fef9e7); border:1px solid var(--cream-dark); border-radius:16px; padding:24px 16px 18px; text-align:center; transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s; }
-.bd-card:hover { transform:translateY(-6px); box-shadow:0 18px 34px -16px rgba(69,26,3,0.4); }
-.bd-rank { position:absolute; top:11px; left:11px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#fff; box-shadow:0 3px 8px rgba(0,0,0,.18); }
-.bd-r1 { background:linear-gradient(135deg,#fbbf24,#d97706); }
-.bd-r2 { background:linear-gradient(135deg,#cbd5e1,#94a3b8); }
-.bd-r3 { background:linear-gradient(135deg,#dca87f,#b45309); }
-.bd-r4 { background:linear-gradient(135deg,#a8a29e,#78716c); }
-.bd-avatar { width:66px; height:66px; border-radius:50%; margin:4px auto 12px; overflow:hidden; background:#fff; box-shadow:0 6px 16px rgba(0,0,0,.2); border:2px solid #fff; }
-.bd-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
-.bd-name { font-weight:900; font-size:15px; color:var(--brown-dark); margin-bottom:2px; }
-.bd-handle { font-size:12px; color:var(--text-light); margin-bottom:14px; font-weight:600; }
-.bd-earn { border-top:1px dashed var(--cream-dark); padding-top:12px; display:flex; flex-direction:column; gap:3px; }
-.bd-earn span { font-size:11px; color:var(--text-light); font-weight:700; letter-spacing:0.5px; }
-.bd-earn strong { font-size:18px; color:var(--accent); font-weight:900; }
-@media (max-width:760px){ .bd-grid{ grid-template-columns:repeat(2,1fr); gap:12px; } }
-</style>
-<section class="section" style="background:#fff; padding-top:24px; padding-bottom:36px;">
-    <div style="max-width:980px; margin:0 auto;">
-        <div style="text-align:center; margin-bottom:22px;">
-            <div style="font-size:11px; letter-spacing:5px; color:var(--accent); font-weight:700; margin-bottom:8px;">— BEST DESIGNERS —</div>
-            <h3 style="font-size:22px; font-weight:900; color:var(--brown-dark); margin:0 0 6px;" data-i18n="bd_title">베스트 작가</h3>
-            <p style="color:var(--text-light); font-size:13.5px; margin:0; font-weight:600;" data-i18n="bd_subtitle">가장 많은 사랑을 받은 디자이너들의 누적 수익</p>
-        </div>
-        <div class="bd-grid">
-            <div class="bd-card">
-                <div class="bd-rank bd-r1">1</div>
-                <div class="bd-avatar"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/render/image/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220574012_1rhb000p.png?width=160&resize=contain&quality=75" loading="lazy" alt="" onerror="this.onerror=null;this.src='https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220574012_1rhb000p.png'"></div>
-                <div class="bd-name" data-i18n="bd_name1">김서연</div>
-                <div class="bd-handle">@seoyeon</div>
-                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt1">12,840,000원</strong></div>
-            </div>
-            <div class="bd-card">
-                <div class="bd-rank bd-r2">2</div>
-                <div class="bd-avatar"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/render/image/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220605118_mn5mkgvu.png?width=160&resize=contain&quality=75" loading="lazy" alt="" onerror="this.onerror=null;this.src='https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220605118_mn5mkgvu.png'"></div>
-                <div class="bd-name" data-i18n="bd_name2">사쿠라이 유이</div>
-                <div class="bd-handle">@yui.s</div>
-                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt2">9,520,000원</strong></div>
-            </div>
-            <div class="bd-card">
-                <div class="bd-rank bd-r3">3</div>
-                <div class="bd-avatar"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/render/image/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220594359_itacu4tf.png?width=160&resize=contain&quality=75" loading="lazy" alt="" onerror="this.onerror=null;this.src='https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/user_assets/png/48323aaa-586a-497e-a034-d30bea4bb1fb_1768220594359_itacu4tf.png'"></div>
-                <div class="bd-name" data-i18n="bd_name3">이준호</div>
-                <div class="bd-handle">@junho</div>
-                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt3">7,360,000원</strong></div>
-            </div>
-            <div class="bd-card">
-                <div class="bd-rank bd-r4">4</div>
-                <div class="bd-avatar"><img src="https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/render/image/public/design/user_assets/png/484f3533-29a1-4542-b7f1-c2e094b545f7_1768387309739_z3oeec82.png?width=160&resize=contain&quality=75" loading="lazy" alt="" onerror="this.onerror=null;this.src='https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/user_assets/png/484f3533-29a1-4542-b7f1-c2e094b545f7_1768387309739_z3oeec82.png'"></div>
-                <div class="bd-name" data-i18n="bd_name4">타나카 하루토</div>
-                <div class="bd-handle">@haruto</div>
-                <div class="bd-earn"><span data-i18n="bd_earn_label">누적 수익</span><strong data-i18n="bd_amt4">5,180,000원</strong></div>
-            </div>
-        </div>
-    </div>
-</section>
+<!-- 2026-07-23: 「베스트 작가」 섹션 삭제 (사장님 지시) — 실제 데이터가 아니라 하드코딩된 가상의
+     디자이너 이름·누적 수익이었고, 아바타는 깨진 이미지로 노출되고 있었다. -->
 
 <!-- 카푸 AI 챗봇 (페이지 내 오버레이 iframe)
      id="chatIframeWrap"으로도 참조 — chameleon-chatbot.html의 닫기 버튼이 이 ID를 찾음

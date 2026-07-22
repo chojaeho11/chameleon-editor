@@ -3119,6 +3119,55 @@ function showToast(msg) {
 // ────────────────────────────────────────────────
 async function autoLoadPatternFromUrl() {
     const params = new URLSearchParams(location.search);
+    // 2026-07-23: 패턴 컬렉션이 에디터 자산(admin_templates)으로 바뀌면서, user_patterns 에 없는
+    //   이미지를 직접 URL 로 받아 여는 경로가 필요해졌다. ?patternimg=<url>&patternname=<이름>
+    const directImg = params.get('patternimg');
+    if (directImg) {
+        try {
+            showToast('🎨 ' + (params.get('patternname') || '') + ' 불러오는 중...');
+            const resp = await fetch(directImg);
+            const blob = await resp.blob();
+            const dataUrl = await new Promise(function (rs, rj) {
+                const fr = new FileReader();
+                fr.onload = function (e) { rs(e.target.result); };
+                fr.onerror = rj;
+                fr.readAsDataURL(blob);
+            });
+            await new Promise(function (rs) {
+                const im = new Image();
+                im.onload = function () {
+                    // 아래 셋업은 기존 ?pattern= 경로와 동일하게 맞춘다 (한 곳만 달라도 캔버스/가격이 어긋난다)
+                    state.img = im;
+                    state.imgDataUrl = dataUrl;
+                    state.imgFileName = (params.get('patternname') || 'pattern') + '.png';
+                    const ratio = im.width / im.height;
+                    state.imgAspect = ratio;
+                    state.layout = 'centered';
+                    state.imgWcm = state.orderWcm || 130;
+                    state.imgHcm = Math.round(state.imgWcm / ratio * 10) / 10;
+                    state.orderHcm = state.imgHcm;
+                    try {
+                        document.getElementById('imgWcm').value = _cdMm(state.imgWcm);
+                        document.getElementById('imgHcm').value = _cdMm(state.imgHcm);
+                        const oW = document.getElementById('orderWcm'); if (oW) oW.value = _cdMm(state.orderWcm);
+                        const oH = document.getElementById('orderHcm'); if (oH) oH.value = _cdMm(state.orderHcm);
+                        document.getElementById('uploadZone').style.display = 'none';
+                        document.getElementById('previewArea').classList.add('active');
+                        document.getElementById('btnReset').style.display = '';
+                        document.getElementById('btnReplace').style.display = '';
+                        const _bs = document.getElementById('btnShrink'); if (_bs) _bs.style.display = '';
+                        document.getElementById('orderBtn').disabled = false;
+                        const _bn = document.getElementById('buyNowBtn'); if (_bn) _bn.disabled = false;
+                    } catch (_ui) { console.warn('[cd] patternimg ui', _ui); }
+                    try { window._cdRender(); } catch (_r) {}
+                    rs();
+                };
+                im.onerror = function () { rs(); };
+                im.src = dataUrl;
+            });
+        } catch (e) { console.warn('[cd] patternimg load', e); }
+        return;
+    }
     const patternId = params.get('pattern');
     if (!patternId) return;
 
