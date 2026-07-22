@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260723021124';
+    var CV = '20260723023504';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1388,7 +1388,7 @@
     }
 
     window.promoPublishNow = async function (btn) {
-        if (!confirm('홍보사진 폴더에 대기 중인 사진으로 지금 블로그 글(한/일/영)을 발행할까요?\n1~2분 걸립니다.')) return;
+        if (!confirm('대기 중인 사진으로 지금 블로그 글(한/일/영)을 발행할까요?\n1~2분 걸립니다.\n(폴더에 넣으면 1분 안에 자동 발행되므로 보통은 누를 필요가 없습니다)')) return;
         const orig = btn.innerHTML;
         btn.disabled = true; btn.innerHTML = '⏳ 발행 중...';
         try {
@@ -1396,10 +1396,10 @@
             if (error) throw error;
             // 엣지 함수는 실패해도 HTTP 200 이라 body 를 직접 확인해야 한다
             if (data && data.ok === false) throw new Error(data.error || '발행 실패');
-            // 대기 사진 없음 — 방금 폴더에 넣었는데 아직 업로드 전인 경우가 많다.
-            //   (폴더→클라우드 업로드는 PC 의 작업 스케줄러가 5분마다 수행. 버튼은 업로드된 것만 발행한다)
+            // 2026-07-23: 폴더에 넣으면 1분 안에 자동으로 올라가고 그 자리에서 발행된다(예약발행 폐지).
+            //   그래도 대기 사진이 없다면 방금 넣어 아직 안 올라갔거나, 이미 다 발행된 것이다.
             if (data && data.message) {
-                alert('대기 중인 사진이 없습니다.\n\n방금 홍보사진 폴더에 넣으셨다면 업로드까지 최대 5분 걸립니다.\n잠시 후 다시 눌러주세요.');
+                alert('대기 중인 사진이 없습니다.\n\n홍보사진 폴더에 넣으면 1분 안에 자동으로 발행됩니다.\n방금 넣으셨다면 잠시 후 다시 확인해 주세요.');
                 return;
             }
             alert(`발행 완료\n사진 ${data.photos}장 · 보류 ${data.skipped}장\n${(data.products || []).join(', ')}`);
