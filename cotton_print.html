@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260723015441';
+    var CV = '20260723020522';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -3219,8 +3219,13 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                 .order('id', { ascending: false })
                 .range(from, to);
             if (_currentSearch) {
-                var s = _currentSearch.replace(/'/g, "''");
-                q = q.ilike('name', '%' + s + '%');
+                // 2026-07-23 [버그] name(영문)만 검색해서, 승인 시 넣어둔 한국어·일본어 키워드로는
+                //   아무것도 안 나왔다(사장님 제보). keywords 는 jsonb {ko,ja,en,fr,ar} 이므로
+                //   제목 + 각 언어 키워드를 전부 훑는다. 콤마·괄호는 or() 문법을 깨뜨려 제거.
+                //   keywords 는 jsonb 라 PostgREST 의 keywords->>ko 필터가 이 게이트웨이에서 500 을 낸다.
+                //   → DB 에 생성열 keywords_text (name + ko/ja/en/fr/ar 를 이어붙인 text) 를 만들어 거기서 찾는다.
+                var s = _currentSearch.replace(/[,()]/g, ' ').trim();
+                if (s) q = q.ilike('keywords_text', '%' + s + '%');
             }
             var { data, error, count } = await q;
             if (error) throw error;
@@ -3236,6 +3241,16 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
             grid.innerHTML = data.map(function(p){
                 // 2026-07-23: 에디터 자산 — 배경/요소/벡터 라벨. 이미지는 thumbnail → asset → background 순.
                 var _aL = window.__PS_LANG || 'ko';
+                // 2026-07-23: 카드 제목도 사이트 언어로 — name 은 영문뿐이라 한국/일본 고객에게
+                //   전부 영어로 보였다. keywords[lang] 의 첫 구절을 제목으로 쓴다(없으면 영문 name).
+                var _locName = '';
+                try {
+                    var _kw = p.keywords;
+                    if (_kw && typeof _kw === 'object' && _kw[_aL]) {
+                        _locName = String(_kw[_aL]).split(',')[0].trim();
+                    }
+                } catch (_kwe) {}
+                var _title = _locName || p.name || '';
                 var _CATS = (_aL === 'ja') ? { vector:'ベクター', image:'背景', logo:'素材' }
                           : (_aL === 'ko') ? { vector:'벡터', image:'배경', logo:'요소' }
                           : { vector:'Vector', image:'Background', logo:'Element' };
@@ -3254,14 +3269,14 @@ html:not([lang="ko"]) .cp-kr-only-phone { display: none !important; }
                 // 2026-07-23: admin_templates 자산은 user_patterns 에 없으므로 이미지 URL 을 직접 넘긴다.
                 var _full = p.asset_url || p.background_url || p.thumbnail_url || '';
                 var href = '/cotton-designer?patternimg=' + encodeURIComponent(_full)
-                         + '&patternname=' + encodeURIComponent(p.name || '') + langSfx;
+                         + '&patternname=' + encodeURIComponent(_title || p.name || '') + langSfx;
                 // 2026-05-11: <div onclick>에서 <a href>로 변경 — 트래킹 방지/캐시 깨짐/JS 에러 등으로
                 //   onclick이 안 먹는 환경에서도 네이티브 네비게이션은 100% 동작.
                 return '<a href="' + href + '" class="pattern-card" data-pid="' + p.id + '">' +
-                    '<div class="pattern-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + (p.name||'') + '" onerror="this.onerror=null; this.src=\'' + rawThumb.replace(/'/g, "\\'") + '\'"></div>' +
+                    '<div class="pattern-thumb"><img src="' + thumb + '" loading="lazy" decoding="async" alt="' + _title.replace(/"/g,'') + '" onerror="this.onerror=null; this.src=\'' + rawThumb.replace(/'/g, "\\'") + '\'"></div>' +
                     '<div class="pattern-meta">' +
                         (cat ? '<div class="pattern-cat-badge">' + cat + '</div>' : '') +
-                        '<div class="pattern-name">' + (p.name||'(이름 없음)') + '</div>' +
+                        '<div class="pattern-name">' + (_title || '(이름 없음)') + '</div>' +
                         author +
                     '</div>' +
                 '</a>';
