@@ -6331,6 +6331,16 @@
     // ══════════════════════════════════════════════════════════════════
     function _meAiLang() {
         try { var s = (window.__SITE_CODE || '').toString().toUpperCase(); if (s === 'JP' || s === 'JA') return 'ja'; if (s === 'US' || s === 'EN') return 'en'; } catch (_) {}
+        // 2026-07-23 [버그] 코튼프린트(패브릭)는 페이지 언어를 window.__PS_LANG 로 정하는데
+        //   여기서는 그걸 안 보고 호스트명으로 따로 판정했다. 그래서 화면은 한국어인데
+        //   작품 갤러리만 일본어 작품이 뜨는 불일치가 생겼다(사장님 제보).
+        //   → 페이지가 정한 언어를 그대로 따른다. index.html 은 __PS_LANG 이 없어 영향 없음.
+        try {
+            var ps = (window.__PS_LANG || '').toString().toLowerCase();
+            if (ps === 'ja' || ps === 'jp') return 'ja';
+            if (ps === 'ko' || ps === 'kr') return 'ko';
+            if (ps) return 'en';   // zh/ar/es/de/fr 등 — 갤러리는 거르지 않고 라벨은 영문
+        } catch (_) {}
         try { var l = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); if (l === 'ja' || l === 'jp') return 'ja'; if (l === 'en' || l === 'us') return 'en'; if (l === 'ko' || l === 'kr') return 'ko'; } catch (_) {}
         var h = (location.hostname || '').toLowerCase();
         // 2026-07-15: cotton-printer(패브릭 JP) / chameleon.design(글로벌 EN) 도 포함 — 빠져서 AI 생성 모달이 한국어로 남던 문제.
