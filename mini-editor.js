@@ -6435,11 +6435,19 @@
         if (!document.getElementById('meAiLayoutCss')) {
             var st = document.createElement('style');
             st.id = 'meAiLayoutCss';
+            // 2026-07-22: 모바일은 위=이미지 통째로 / 아래=입력 내용, 모달 전체가 한 번에 스크롤.
+            //   ★ 이 요소들은 전부 인라인 style 을 갖고 있어 !important 없이는 규칙이 먹지 않는다
+            //     (인라인이 스타일시트를 이긴다). 세로로 긴 작품이 아래 패널을 덮치던 원인.
             st.textContent =
                 '@media (max-width: 900px){'
-              + '  #meAiCard{ flex-direction:column; overflow-y:auto; }'
-              + '  #meAiPanel{ width:100%; flex:0 0 auto; max-height:none; overflow-y:visible; }'
-              + '  #meAiStage{ flex:0 0 auto; min-height:38vh; }'
+              + '  #meAiGenModal{ align-items:flex-start !important; overflow-y:auto !important; }'
+              + '  #meAiCard{ flex-direction:column !important; max-height:none !important; overflow:visible !important; }'
+              + '  #meAiStage{ flex:0 0 auto !important; min-height:0 !important; }'
+              + '  #meAiStageBody{ display:block !important; flex:0 0 auto !important; min-height:0 !important; }'
+              + '  #meAiStageRef{ width:100% !important; height:auto !important; max-height:none !important; }'
+              + '  #meAiResult{ width:100% !important; height:auto !important; min-height:150px !important; }'
+              + '  #meAiResult img{ max-height:none !important; width:100% !important; height:auto !important; }'
+              + '  #meAiPanel{ width:100% !important; flex:0 0 auto !important; max-height:none !important; overflow-y:visible !important; }'
               + '}';
             document.head.appendChild(st);
         }
