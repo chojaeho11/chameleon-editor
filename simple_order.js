@@ -10453,6 +10453,16 @@ html, body { background: #ffffff !important; }
         });
     };
 
+    // 2026-07-22: 현수막 10cm 단위 — 경고 안의 버튼으로 한 번에 맞추기 (W/H 중 어긋난 칸만)
+    window._soPlacardSnap = function (which, val) {
+        var el = document.getElementById(which === 'W' ? 'soCustomW' : 'soCustomH');
+        if (!el) return;
+        el.value = val;
+        try { el.focus(); el.select(); } catch (_) {}
+        if (typeof window._soOnCustomDimsChange === 'function') window._soOnCustomDimsChange();
+        if (typeof window._soSyncSizePreset === 'function') window._soSyncSizePreset();
+    };
+
     window._soOnCustomDimsChange = function () {
         // 프리셋 모드면 W/H input 입력 무시 (pill 선택값 유지)
         if (state && state.presetSizeFixed) return;
@@ -10474,9 +10484,15 @@ html, body { background: #ffffff !important; }
         var _isPlacardCk = (typeof window._soIsPlacardProduct === 'function') && window._soIsPlacardProduct(state.product);
         if (_plNote) {
             if (_isPlacardCk) {
-                if (wEl) wEl.step = '10';
-                if (hEl) hEl.step = '10';
+                // 2026-07-22 [버그] step='10' 이면 브라우저가 10 배수가 아닌 값을 invalid 로 잡고
+                //   스피너·검증이 입력을 방해해 "숫자를 쓸 수가 없다"는 제보(사장님). 10cm 규칙은
+                //   아래 경고 + 담기 차단으로 우리가 직접 검사하므로 입력 자체는 자유롭게 둔다.
+                if (wEl) wEl.step = '1';
+                if (hEl) hEl.step = '1';
                 var _plBad = (wCm % 10 !== 0) || (hCm % 10 !== 0);
+                // 어긋난 칸을 빨갛게 — 어디를 고쳐야 하는지 바로 보이게
+                if (wEl) wEl.style.borderColor = (wCm % 10 !== 0) ? '#dc2626' : '#d1d5db';
+                if (hEl) hEl.style.borderColor = (hCm % 10 !== 0) ? '#dc2626' : '#d1d5db';
                 // 2026-07-14: 초저가 현수막(44578) 롤 폭 최대 1600mm(160cm) — 롤이라 한쪽만 160cm 이내면 됨.
                 //   가로·세로 둘 다 160cm 초과면 롤에 안 들어감 → UV 3미터 대폭현수막(44578_copy) 안내·이동.
                 var _plCode = (state.product && state.product.code) || '';
@@ -10492,12 +10508,21 @@ html, body { background: #ffffff !important; }
                         'The low-cost banner roll is <b>max 1600 mm (160 cm)</b> wide. Since it is a roll, <b>one side within 160 cm</b> is enough — but ' + wCm + ' x ' + hCm + ' cm exceeds on <b>both</b>. Please use the wider <b>UV 3 m banner</b>.'
                     ) + '<div style="margin-top:8px;"><button type="button" onclick="window._soSwitchPlacard(\'44578_copy\')" style="width:100%; padding:9px; border:0; background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit; font-size:12.5px;">' + tr('UV 3미터 대폭현수막으로 변경 →', 'UV3メートル大幅横断幕へ変更 →', 'Switch to UV 3 m banner →') + '</button></div>';
                 } else if (_plBad) {
+                    // 2026-07-22: 경고만 띄우고 끝내지 말고, 가까운 10cm 로 한 번에 고칠 수 있게 버튼 제공.
+                    //   (사장님: "295 를 넣으면 10cm 단위로만 가능하다고 안내하고 다시 입력받게")
+                    var _badEl = (wCm % 10 !== 0) ? 'W' : 'H';
+                    var _badVal = (wCm % 10 !== 0) ? wCm : hCm;
+                    var _down = Math.max(10, Math.floor(_badVal / 10) * 10);
+                    var _up = Math.min(2000, Math.ceil(_badVal / 10) * 10);
                     _plNote.style.background = '#fef2f2'; _plNote.style.border = '1.5px solid #fca5a5'; _plNote.style.color = '#b91c1c';
                     _plNote.innerHTML = '⚠ ' + tr(
-                        '현수막은 <b>가로·세로 10cm 단위</b>로만 주문할 수 있어요. 현재 ' + wCm + '×' + hCm + 'cm 는 이대로 주문되지 않습니다. (예: 65 → 60 또는 70)',
-                        '横断幕は <b>横・縦とも 10cm 単位</b>のみご注文可能です。現在 ' + wCm + '×' + hCm + 'cm はこのままではご注文いただけません。(例: 65 → 60 か 70)',
-                        'Banners can only be ordered in <b>10 cm steps</b> (W & H). ' + wCm + ' x ' + hCm + ' cm cannot be ordered as-is. (e.g. 65 -> 60 or 70)'
-                    );
+                        '현수막은 <b>가로·세로 10cm 단위</b>로만 주문할 수 있어요. ' + _badVal + 'cm 는 주문되지 않습니다 — 아래에서 고르거나 직접 다시 입력해 주세요.',
+                        '横断幕は <b>横・縦とも 10cm 単位</b>のみご注文可能です。' + _badVal + 'cm ではご注文いただけません — 下から選ぶか、直接入力し直してください。',
+                        'Banners can only be ordered in <b>10 cm steps</b> (W & H). ' + _badVal + ' cm cannot be ordered — pick one below or type it again.'
+                    ) + '<div style="display:flex; gap:6px; margin-top:8px;">'
+                      + '<button type="button" onclick="window._soPlacardSnap(\'' + _badEl + '\',' + _down + ')" style="flex:1; padding:8px; border:1px solid #fca5a5; background:#fff; color:#b91c1c; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">' + _down + 'cm</button>'
+                      + (_up !== _down ? '<button type="button" onclick="window._soPlacardSnap(\'' + _badEl + '\',' + _up + ')" style="flex:1; padding:8px; border:1px solid #fca5a5; background:#fff; color:#b91c1c; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;">' + _up + 'cm</button>' : '')
+                      + '</div>';
                 } else {
                     _plNote.style.background = '#eff6ff'; _plNote.style.border = '1.5px solid #bfdbfe'; _plNote.style.color = '#1e40af';
                     _plNote.innerHTML = tr(
@@ -10510,6 +10535,9 @@ html, body { background: #ffffff !important; }
                 _plNote.style.display = 'none';
                 state._placardSizeInvalid = false;
                 state._placardOversized = false;
+                // 현수막에서 붙은 빨간 테두리가 다른 제품으로 넘어가 남지 않게 원복 (모달 공용)
+                if (wEl) wEl.style.borderColor = '#d1d5db';
+                if (hEl) hEl.style.borderColor = '#d1d5db';
             }
         }
         // 2026-07-14: 롤 폭 초과 상태 반영 — 담기/주문 버튼 즉시 비활성/활성 + 튜토리얼 '다음' 차단용 전역 플래그.
