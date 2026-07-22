@@ -423,6 +423,17 @@ ${desc ? `<p>${escHtml(desc)}</p>` : ''}
 //   위쪽 generateProductHtml/hreflangTags 의 도메인 맵은 기존 동작 보존을 위해 건드리지 않았다.
 const BLOG_DOMAINS = { KR: 'https://www.cafe2626.com', JP: 'https://www.cafe0101.com', US: 'https://www.chameleon.design' };
 
+// 2026-07-23 (사장님 지시): 블로그 글 상단 인사말 — 크롤러가 받는 서버 렌더링에도 동일하게 넣는다.
+//   board.html(사람이 보는 화면)의 _INTRO 와 문구를 맞출 것. 한쪽만 고치면 서로 달라진다.
+function blogIntro(cc) {
+    const t = cc === 'JP'
+        ? 'カメレオンプリンティングをご利用いただくお客様の多くは、ご自身でお店を営む個人事業主の方々です。そうした皆さまがより手軽に、より低価格で宣伝できるよう印刷物をお作りすることが、私たちの仕事です。これからも、できる限り安く、できる限り簡単に。ぜひ私たちと一緒に成長していきましょう。'
+        : cc === 'US'
+        ? 'Most of the people who come to Chameleon Printing run their own small business. Our job is to make printed materials that help them get the word out — more easily, and for less. We will keep it as affordable and as simple as we can. We would love to grow alongside you.'
+        : '카멜레온프린팅을 찾아주시는 분들의 대부분은 작은 가게를 직접 꾸려가는 자영업자입니다. 그런 분들이 더 쉽고 더 저렴하게 알릴 수 있도록 인쇄물을 만들어 드리는 것이 저희가 하는 일입니다. 앞으로도 가장 저렴하게, 가장 쉽게 만들어 드리겠습니다. 저희와 함께 성장해 주세요.';
+    return `<p>${escHtml(t)}</p>`;
+}
+
 function generateBlogHtml(post, cc) {
     const lang = cc === 'JP' ? 'ja' : cc === 'US' ? 'en' : 'ko';
     const siteName = cc === 'JP' ? 'カメレオンプリンティング' : cc === 'US' ? 'Chameleon Printing' : '카멜레온프린팅';
@@ -493,6 +504,7 @@ ${faqLd}
 <article>
 <h1>${escHtml(title)}</h1>
 <p><time datetime="${escHtml(post.created_at || '')}">${escHtml(String(post.created_at || '').slice(0, 10))}</time> · ${escHtml(post.author_name || siteName)}</p>
+${blogIntro(cc)}
 ${post.content || ''}
 </article>
 <p><a href="${domain}/board.html?cat=blog&country=${cc}">${escHtml(cc === 'JP' ? 'ブログ一覧' : cc === 'US' ? 'All posts' : '블로그 목록')}</a> · <a href="${domain}/">${escHtml(siteName)}</a></p>

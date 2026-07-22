@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260723031359';
+    var CV = '20260723033502';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1193,7 +1193,28 @@
             document.getElementById('viewAuthor').innerHTML = `<i class="fa-regular fa-user"></i> ${post.author_name}`;
             document.getElementById('viewDate').innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date(post.created_at).toLocaleString()}`;
             document.getElementById('viewCount').innerHTML = `<i class="fa-regular fa-eye"></i> ${post.view_count}`;
-            document.getElementById('viewContent').innerHTML = post.content;
+            // 2026-07-23 (사장님 지시): 블로그 글 상단에 항상 들어가는 인사말.
+            //   글마다 저장하지 않고 표시할 때 붙인다 — 한 곳만 고치면 과거 글까지 같이 바뀐다.
+            //   현수막·명함처럼 CLAUDE.md 0장 원칙대로 아이콘·그림자 없이, 색과 여백으로만.
+            const _introCC = (typeof currentCountry !== 'undefined' && currentCountry) || 'KR';
+            const _INTRO = {
+                KR: '카멜레온프린팅을 찾아주시는 분들의 대부분은 작은 가게를 직접 꾸려가는 자영업자입니다.'
+                  + ' 그런 분들이 더 쉽고 더 저렴하게 알릴 수 있도록 인쇄물을 만들어 드리는 것이 저희가 하는 일입니다.'
+                  + ' 앞으로도 가장 저렴하게, 가장 쉽게 만들어 드리겠습니다. 저희와 함께 성장해 주세요.',
+                JP: 'カメレオンプリンティングをご利用いただくお客様の多くは、ご自身でお店を営む個人事業主の方々です。'
+                  + ' そうした皆さまがより手軽に、より低価格で宣伝できるよう印刷物をお作りすることが、私たちの仕事です。'
+                  + ' これからも、できる限り安く、できる限り簡単に。ぜひ私たちと一緒に成長していきましょう。',
+                US: 'Most of the people who come to Chameleon Printing run their own small business.'
+                  + ' Our job is to make printed materials that help them get the word out — more easily, and for less.'
+                  + ' We will keep it as affordable and as simple as we can. We would love to grow alongside you.'
+            };
+            const _introTxt = _INTRO[_introCC] || _INTRO.KR;
+            const _introHtml = category === 'blog'
+                ? '<div class="blog-intro-note" style="background:#faf7f0; border-left:3px solid #c8a96a; border-radius:6px;'
+                  + ' padding:16px 18px; margin:0 0 24px; font-size:14px; line-height:1.85; color:#5b5347;">'
+                  + _introTxt + '</div>'
+                : '';
+            document.getElementById('viewContent').innerHTML = _introHtml + post.content;
             // 업로드된 MP4 주소를 실제 재생 가능한 <video> 태그로 변환
             // [수정] 자동 재생 및 여백 제거 설정
             const videoElements = document.querySelectorAll('#viewContent .ql-video, #viewContent video');
@@ -1419,6 +1440,9 @@
         // [수정] 에디터 진입 시 video 태그를 Quill이 인식하는 iframe으로 일시 변환
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = document.getElementById('viewContent').innerHTML;
+        // 2026-07-23: 상단 인사말은 표시용으로 붙인 것 — 편집기로 가져가면 본문에 저장돼
+        //   다음 조회부터 두 번 나온다. 편집 전에 반드시 떼어낸다.
+        tempDiv.querySelectorAll('.blog-intro-note').forEach(el => el.remove());
         tempDiv.querySelectorAll('video').forEach(v => {
             const iframe = document.createElement('iframe');
             iframe.setAttribute('class', 'ql-video');
