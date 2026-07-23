@@ -290,7 +290,7 @@ window._advOpenEditor = function() {
 window._quoteToCart = async function(quoteId) {
     const qData = window['_pendingQuote_' + quoteId];
     if (!qData || !qData.items || qData.items.length === 0) {
-        alert('견적 데이터를 찾을 수 없습니다. 다시 시도해주세요.');
+        alert(getLang()==='ja' ? '見積もりデータが見つかりません。もう一度お試しください。' : (getLang()==='kr'||getLang()==='ko') ? '견적 데이터를 찾을 수 없습니다. 다시 시도해주세요.' : 'Quote data not found. Please try again.');
         return;
     }
     try {
@@ -381,7 +381,7 @@ window._quoteToCart = async function(quoteId) {
         }
     } catch (err) {
         console.error('견적 장바구니 추가 실패:', err);
-        alert('장바구니 추가 중 오류가 발생했습니다.');
+        alert(getLang()==='ja' ? 'カートへの追加中にエラーが発生しました。' : (getLang()==='kr'||getLang()==='ko') ? '장바구니 추가 중 오류가 발생했습니다.' : 'An error occurred while adding to the cart.');
     }
 };
 
@@ -2371,12 +2371,12 @@ function buildAddonHtml(rec, i) {
     // 카테고리별 그룹핑
     const groups = {};
     rec.addons.forEach(a => {
-        const cat = a.category || (getLang() === 'ja' ? 'オプション' : getLang() === 'en' ? 'Options' : '옵션');
+        const cat = a.category || (getLang() === 'ja' ? 'オプション' : (getLang() === 'kr' || getLang() === 'ko') ? '옵션' : 'Options');
         if (!groups[cat]) groups[cat] = [];
         groups[cat].push(a);
     });
 
-    const optLabel = getLang() === 'ja' ? 'オプション選択' : getLang() === 'en' ? 'Select Options' : '옵션 선택';
+    const optLabel = getLang() === 'ja' ? 'オプション選択' : (getLang() === 'kr' || getLang() === 'ko') ? '옵션 선택' : 'Select Options';
     let html = `<div class="adv-addon-area" data-product-i="${i}">
         <div style="font-size:11px;font-weight:700;color:#6366f1;margin:8px 0 4px;"><i class="fa-solid fa-sliders"></i> ${optLabel}</div>`;
 

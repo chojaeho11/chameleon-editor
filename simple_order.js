@@ -92,9 +92,12 @@
         //   라는 의도인데, en||ko 는 ''(falsy)를 '번역 없음'으로 보고 한국어 '개' 를 돌려줬다.
         //   → 영어 사이트에 1개·10개·B5 16절 같은 한글이 남았다(사장님 제보).
         //   en/ja 가 undefined(=인자 미전달)일 때만 한국어로 폴백하고, ''는 의도된 빈 값으로 존중한다.
+        // 2026-07-23 (사장님 지시): 중국어·아랍어·스페인어·독일어·프랑스어(zh/ar/es/de/fr)는
+        //   이 모달에 전용 번역이 없다. 예전엔 전부 한국어로 떨어졌는데, 한국어보다 영어가
+        //   훨씬 널리 읽히므로 ja/ko 외 모든 언어는 영어로 폴백한다. (index/cotton_print 와 동일 원칙)
+        if (lang === 'ko' || lang === 'kr') return ko;
         if (lang === 'ja') return (ja != null) ? ja : ko;
-        if (lang === 'en') return (en != null) ? en : ko;
-        return ko;
+        return (en != null) ? en : ko;   // en, zh, ar, es, de, fr …
     }
 
     // ─────────────────────────────────────────────
@@ -12137,12 +12140,12 @@ html, body { background: #ffffff !important; }
                 heightMm = Math.round(r2.heightPx / 300 * 25.4);
                 thumbDataUrl = r2.dataUrl;
             } else {
-                alert('지원하지 않는 파일 형식입니다. PDF·PNG·JPG 만 가능합니다.');
+                alert(tr('지원하지 않는 파일 형식입니다. PDF·PNG·JPG 만 가능합니다.','対応していないファイル形式です。PDF・PNG・JPG のみ可能です。','Unsupported file type. Only PDF, PNG and JPG are allowed.'));
                 return;
             }
             hideStatus();
             if (!widthMm || !heightMm || widthMm < 5 || heightMm < 5) {
-                alert('파일 사이즈를 인식하지 못했습니다.');
+                alert(tr('파일 사이즈를 인식하지 못했습니다.','ファイルサイズを認識できませんでした。','Could not read the file size.'));
                 return;
             }
             // state 갱신 — 카트 담을 때 그대로 인쇄소 전달.
@@ -12198,7 +12201,7 @@ html, body { background: #ffffff !important; }
         } catch (e) {
             console.error('[final file upload]', e);
             hideStatus();
-            alert('파일 업로드 처리 실패: ' + (e && e.message ? e.message : e));
+            alert(tr('파일 업로드 처리 실패','ファイルアップロード処理に失敗','File upload failed') + ': ' + (e && e.message ? e.message : e));
         }
     };
     window._soStickerQtyInput = function() {
@@ -17842,7 +17845,7 @@ html, body { background: #ffffff !important; }
     // 2026-06-14: payment_pending stash 도 함께 정리 — 결제 시 stale id 가 flip 되지 않도록.
     window._soCancelDesignRequest = async function() {
         if (!state.designReqId) return;
-        if (!confirm('등록한 디자인 의뢰를 취소하시겠습니까? 합계에서 디자인비가 빠집니다.')) return;
+        if (!confirm(tr('등록한 디자인 의뢰를 취소하시겠습니까? 합계에서 디자인비가 빠집니다.','登録したデザイン依頼をキャンセルしますか?合計からデザイン費が引かれます。','Cancel the design request you added? The design fee will be removed from the total.'))) return;
         try {
             var sb = window.sb || window.supabaseClient;
             if (sb) {
@@ -19664,7 +19667,7 @@ html, body { background: #ffffff !important; }
     window._soOpenCheckout = function () {
         var cart = _soReadAllCart();
         if (cart.length === 0) {
-            alert('장바구니가 비어있습니다.');
+            alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.'));
             return;
         }
         _renderCheckoutSummary();
@@ -19901,7 +19904,7 @@ html, body { background: #ffffff !important; }
             var company = (document.getElementById('soRcptCompany').value || '').trim();
             var rep = (document.getElementById('soRcptRepName').value || '').trim();
             var em = (document.getElementById('soRcptEmail').value || '').trim();
-            if (!biz || !company || !rep || !em) { alert('세금계산서 필수 항목을 모두 입력해주세요. (사업자번호/회사명/대표자명/이메일)'); return false; }
+            if (!biz || !company || !rep || !em) { alert(tr('세금계산서 필수 항목을 모두 입력해주세요. (사업자번호/회사명/대표자명/이메일)','税金計算書の必須項目をすべて入力してください。(事業者番号/会社名/代表者名/メール)','Please fill in all tax-invoice fields (business no. / company / representative / email).')); return false; }
             return {
                 type: t,
                 biz_number: biz, company_name: company, rep_name: rep, email: em,
@@ -19911,7 +19914,7 @@ html, body { background: #ffffff !important; }
             };
         }
         var idNum = (document.getElementById('soRcptIdNumber').value || '').trim();
-        if (!idNum) { alert('현금영수증 식별번호를 입력해주세요.'); return false; }
+        if (!idNum) { alert(tr('현금영수증 식별번호를 입력해주세요.','現金領収書の識別番号を入力してください。','Please enter the cash-receipt ID number.')); return false; }
         return { type: t, id_number: idNum };
     }
 
@@ -19921,7 +19924,7 @@ html, body { background: #ffffff !important; }
         try {
             if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + tr('생성중', '生成中', 'Generating'); }
             var cart = _soReadAllCart();
-            if (!cart || cart.length === 0) { alert('장바구니가 비어있습니다.'); return; }
+            if (!cart || cart.length === 0) { alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.')); return; }
 
             // export.js 동적 import (ES module)
             var mod = await import('./export.js?v=443');
@@ -20171,11 +20174,11 @@ html, body { background: #ffffff !important; }
         var memo = (document.getElementById('soCoMemo').value || '').trim();
         var payMethod = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'bank';
 
-        if (!name)  { alert('받으시는 분 성함을 입력해주세요.'); return; }
+        if (!name)  { alert(tr('받으시는 분 성함을 입력해주세요.','受取人のお名前を入力してください。','Please enter the recipient name.')); return; }
         // JP 사이트에서는 후리가나 필수
         if (window.__SITE_CODE === 'JP' && !nameFurigana) { alert('フリガナを入力してください。'); return; }
-        if (!phone) { alert('연락처를 입력해주세요.'); return; }
-        if (!addr1) { alert('배송지를 입력해주세요.'); return; }
+        if (!phone) { alert(tr('연락처를 입력해주세요.','連絡先を入力してください。','Please enter a contact number.')); return; }
+        if (!addr1) { alert(tr('배송지를 입력해주세요.','配送先を入力してください。','Please enter a delivery address.')); return; }
 
         // 2026-05-14: 무통장 입금 + KR 한정으로 증빙 정보 수집 (선택)
         var receiptInfo = null;
@@ -20972,7 +20975,7 @@ html, body { background: #ffffff !important; }
             }
         } catch (e) {
             console.error('[_soSubmitOrder]', e);
-            alert('주문 처리 중 오류: ' + (e.message || e));
+            alert(tr('주문 처리 중 오류','注文処理中にエラー','Error while processing the order') + ': ' + (e.message || e));
             btn.disabled = false;
             btn.innerHTML = origLabel;
         }

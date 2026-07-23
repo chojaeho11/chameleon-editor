@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260723213250';
+    var CV = '20260723220811';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -593,7 +593,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js" defer></script>
 <!-- 2026-07-16: 주문에러/관리자 알림 팝업 (메인+패브릭 공용). supabase UMD 뒤에 와야 함. -->
-<script src="/order-error-popup.js?v=1" defer></script>
+<script src="/order-error-popup.js?v=2" defer></script>
 
 <!-- ★ 에디터 CDN 라이브러리: 초기 로드 제거, startEditorDirect() 진입 시 동적 로드 -->
 <!-- fabric.js, jsPDF, PDF.js, Paper.js, PptxGenJS 등 ~2.5MB → 에디터 열 때만 다운로드 -->
@@ -5920,7 +5920,7 @@ function scrollHotdeal(gridId, dir) {
     </div>
 </div>
 
-<script src="./mini-editor.js?v=547"></script>
+<script src="./mini-editor.js?v=548"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -10277,7 +10277,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./config.js?v=444"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
-<script type="module" src="./order.js?v=733"></script>
+<script type="module" src="./order.js?v=734"></script>
 <script type="module" src="./login.js?v=444"></script>
 <!-- 2026-06-29: 회원가입이벤트 — 패브릭에서 ?signup_event=1 로 진입 → 가입창 자동 + 추천인 적립 + 쇼핑 이어가기 -->
 <script>
@@ -10448,9 +10448,9 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=827"></script>
+<script src="/simple_order.js?v=828"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
-<script src="/product-tutorial.js?v=727"></script>
+<script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
 <script src="/cart_sync.js?v=25"></script>
 
@@ -11731,7 +11731,7 @@ window.filterFxCards = function(cat, btn) {
     <script src="/jp-nanami-fab.js?v=2" defer></script>
 
     <!-- 2026-06-12: JP 주문조회 모달 (cotton_print 패턴 — 로그인 자동조회 + 전화 4자리) — JP 에서만 활성 -->
-    <script src="/cp-order-lookup.js?v=1" defer></script>
+    <script src="/cp-order-lookup.js?v=2" defer></script>
 
     <!-- 2026-06-12: JP 챗봇 FAB (cotton_print 스타일 보라 그라데이션 원형) — JP 사이트에서만 노출 -->
     <div id="kapuChatWrap" style="display:none; position:fixed; bottom:80px; right:16px; width:400px; height:620px; z-index:99998; border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.25); background:#374151;">
@@ -11785,7 +11785,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=435';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=733'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=734'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=435';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=444';
 
@@ -12439,7 +12439,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=465').then(m => {
+        import('./advisor-panel.js?v=466').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
@@ -17274,7 +17274,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=733');
+                    const m = await import('./order.js?v=734');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -17344,7 +17344,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=733').then(m => {
+            import('./order.js?v=734').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -17972,7 +17972,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=733').then(m => {
+        import('./order.js?v=734').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -23564,7 +23564,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=733').then(function(mod) {
+            import('./order.js?v=734').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;
@@ -24559,7 +24559,7 @@ window.dsmRenderProducts = async function(keyword) {
 })();
 </script>
 <script src="./gif-maker.js?v=434" defer></script>
-<script src="./npc-wizard.js?v=434" defer></script>
+<script src="./npc-wizard.js?v=435" defer></script>
 
 <!-- ═══ PPT 프레젠테이션 미리보기 오버레이 ═══ -->
 <div id="pptPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:99999; background:#000; flex-direction:column; align-items:center; justify-content:center;">

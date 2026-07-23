@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260723213250';
+    var CV = '20260723220811';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -136,7 +136,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 2026-07-16: 주문에러/관리자 알림 팝업 (메인 index.html 과 공용). __CD_LANG 기준. -->
-<script src="/order-error-popup.js?v=1" defer></script>
+<script src="/order-error-popup.js?v=2" defer></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cafe2626/0101/3355 + cotton-print 공유) -->
 <script src="/cart_sync.js?v=25"></script>
 <!-- Toss Payments SDK (한국 카드결제) -->
@@ -487,7 +487,7 @@ window.__CD_I18N = {
     co_mgr_quote_btn:       { ko:'🎁 고객 결제창 만들어주기 (매니저)', ja:'🎁 お客様用 決済リンクを作成 (担当者)', en:'🎁 Create Customer Checkout Link (Manager)' },
     co_mgr_quote_hint:      { ko:'☎️ 패브릭 카트 그대로 고객에게 결제 URL 만 발송됩니다.', ja:'☎️ ファブリックカートをそのままお客様に決済URLとして送信します。', en:'☎️ Send the fabric cart as a checkout URL to the customer.' }
 };
-window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.ko || ''; };
+window.cdT = function(k){ var d = window.__CD_I18N[k]; if (!d) return ''; return d[window.__CD_LANG] || d.en || d.ko || ''; };   /* 2026-07-23: 한/일 외 언어는 영어로 */
 function applyCdI18n() {
     document.querySelectorAll('[data-cdi18n]').forEach(function(el){
         var k = el.getAttribute('data-cdi18n');

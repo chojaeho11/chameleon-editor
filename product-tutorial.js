@@ -35,7 +35,10 @@
     return 'kr';
   }
   function tr(kr, ja, en) {
-    return _lang === 'ja' ? (ja != null ? ja : kr) : _lang === 'en' ? (en != null ? en : kr) : kr;
+    // 2026-07-23 (사장님 지시): 한/일 외 언어(en/zh/ar/es/de/fr)는 영어로. 한국어보다 널리 읽힌다.
+    if (_lang === 'kr' || _lang === 'ko') return kr;
+    if (_lang === 'ja') return ja != null ? ja : kr;
+    return en != null ? en : kr;   // en, zh, ar, es, de, fr …
   }
   function T(o) {
     if (o == null) return '';

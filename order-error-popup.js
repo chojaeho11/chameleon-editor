@@ -72,7 +72,7 @@
               done: 'Your file has been re-submitted. We will contact you after review.',
               fail: 'Upload failed. Please try again in a moment.', order: 'Order' }
     };
-    function t(lang) { return T[lang] || T.kr; }
+    function t(lang) { return T[lang] || T.en || T.kr; }   // 2026-07-23: 한/일 외 언어는 영어로
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

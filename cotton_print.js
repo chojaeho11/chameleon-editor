@@ -83,7 +83,7 @@
     function ls(key) {
         var entry = LANG_STRINGS[key];
         if (!entry) return '';
-        return entry[psLang] || entry['ko'] || '';
+        return entry[psLang] || entry['en'] || entry['ko'] || '';   // 2026-07-23: 영어 폴백
     }
 
     const LANG = {

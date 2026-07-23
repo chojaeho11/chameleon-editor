@@ -3917,7 +3917,7 @@
         mode = mode || 'outer';
         var sel = me.selected;
         if (!sel || sel.type !== 'image') {
-            alert('이미지 요소를 먼저 선택해주세요. (복잡모양/팬시 스티커는 업로드한 이미지의 윤곽선을 따라 칼선이 생성됩니다.)');
+            alert(_meAiTr('이미지 요소를 먼저 선택해주세요. (복잡모양/팬시 스티커는 업로드한 이미지의 윤곽선을 따라 칼선이 생성됩니다.)','先に画像を選択してください。(複雑な形/ファンシーステッカーはアップロード画像の輪郭に沿ってカットラインが作られます)','Please select an image first. (For complex/fancy stickers, the cutline follows the outline of your uploaded image.)'));
             return;
         }
         var img = sel.el.querySelector('img');
@@ -3933,7 +3933,7 @@
         } catch(e){ console.warn('[cutline trace draw]', e); }
         var data;
         try { data = ctx.getImageData(0, 0, W, H).data; }
-        catch(e){ alert('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.'); return; }
+        catch(e){ alert(_meAiTr('이미지 윤곽선 추적 실패 — CORS 보호된 이미지입니다.','画像の輪郭抽出に失敗 — CORS保護された画像です。','Could not trace the outline — the image is CORS-protected.')); return; }
         var THR = 20;   // 2026-06-17: 30→20 으로 복원 — 반투명 alpha 가 있는 이미지 (스티커/이모지 등) trace 실패 해결
 
         // 2026-06-17: Moore neighborhood 로 윤곽선 추적 — 팔다리 오목한 부분까지 정확히 따라감
@@ -3948,7 +3948,7 @@
                     if (y < minY) minY = y; if (y > maxY) maxY = y;
                 }
             }
-            if (maxX < 0) { alert('이미지에서 유효한 윤곽선을 찾을 수 없습니다.'); return; }
+            if (maxX < 0) { alert(_meAiTr('이미지에서 유효한 윤곽선을 찾을 수 없습니다.','画像から有効な輪郭を見つけられませんでした。','Could not find a usable outline in the image.')); return; }
             var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
             var N = 360, fbRays = [], maxR = Math.hypot(W, H);
             for (var k = 0; k < N; k++) {
@@ -3965,7 +3965,7 @@
             }
             rays = fbRays;
         }
-        if (rays.length < 10) { alert('윤곽선을 충분히 추출하지 못했습니다.'); return; }
+        if (rays.length < 10) { alert(_meAiTr('윤곽선을 충분히 추출하지 못했습니다.','輪郭を十分に抽出できませんでした。','Could not extract enough of the outline.')); return; }
         // 2026-06-17: 디버그 로그 — 어떤 알고리즘이 몇 점 잡았는지 확인용
         try { console.log('[cutline trace] W=' + W + ' H=' + H + ' THR=' + THR + ' points=' + rays.length + ' mode=' + mode); } catch(_le){}
         // 2026-06-16 v8: 결과를 item 에 캐시 — 슬라이더로 마진 재계산 시 다시 trace 안 함 (즉시 반응).
@@ -4462,7 +4462,7 @@
                 _meAddTemplateSlot(slot, x, y, sx, sy);
             });
         };
-        bgImg.onerror = function() { alert('템플릿 배경 이미지를 불러오지 못했습니다.'); };
+        bgImg.onerror = function() { alert(_meAiTr('템플릿 배경 이미지를 불러오지 못했습니다.','テンプレート背景画像を読み込めませんでした。','Could not load the template background image.')); };
         bgImg.src = tpl.background_url;
     };
 
@@ -4653,7 +4653,7 @@
             if (typeof window.loadEditorLibraries === 'function') { try { await window.loadEditorLibraries(); } catch (_) {} }
             var pdfjs = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
             if (!pdfjs || typeof pdfjs.getDocument !== 'function') {
-                alert('PDF 미리보기 라이브러리를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.');
+                alert(_meAiTr('PDF 미리보기 라이브러리를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.','PDFプレビューのライブラリを読み込めませんでした。画像(PNG/JPG)でアップしてください。','Could not load the PDF preview library. Please upload an image (PNG/JPG) instead.'));
                 return;
             }
             try { if (pdfjs.GlobalWorkerOptions && !pdfjs.GlobalWorkerOptions.workerSrc) pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (_) {}
@@ -4680,7 +4680,7 @@
             } catch (_) {}
         } catch (e) {
             console.warn('[me pdf]', e);
-            alert('PDF 미리보기를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.');
+            alert(_meAiTr('PDF 미리보기를 불러오지 못했어요. 이미지(PNG/JPG)로 올려주세요.','PDFプレビューを読み込めませんでした。画像(PNG/JPG)でアップしてください。','Could not load the PDF preview. Please upload an image (PNG/JPG) instead.'));
         }
     }
 
@@ -5531,7 +5531,7 @@
             try { document.dispatchEvent(new CustomEvent('me-cutout-done')); } catch(_ev){}
         } catch (e) {
             console.error('[me bgRemove]', e);
-            alert('⚠️ ' + (e.message || '배경 제거 실패. 잠시 후 다시 시도해주세요'));
+            alert('⚠️ ' + (e.message || _meAiTr('배경 제거 실패. 잠시 후 다시 시도해주세요','背景除去に失敗しました。しばらくしてからもう一度お試しください','Background removal failed. Please try again in a moment.')));
         } finally {
             if (btn) {
                 btn.innerHTML = origHtml;
@@ -6049,12 +6049,12 @@
             if (pdf) { _dlBlob(pdf, 'my-design.pdf'); return false; }
             // 최후 폴백: PNG
             var url = await window._meExportPNG();
-            if (!url) { alert('다운로드 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단'); return false; }
+            if (!url) { alert(_meAiTr('다운로드 실패 — 캔버스가 비어있거나 외부 이미지 CORS 차단','ダウンロード失敗 — キャンバスが空か、外部画像のCORSブロック','Download failed — the canvas is empty or an external image is CORS-blocked.')); return false; }
             var a = document.createElement('a');
             a.href = url; a.download = 'my-design.png';
             document.body.appendChild(a); a.click(); a.remove();
         } catch (e) {
-            alert('다운로드 실패: ' + (e.message || e));
+            alert(_meAiTr('다운로드 실패','ダウンロード失敗','Download failed') + ': ' + (e.message || e));
         }
         return false;
     };
@@ -6341,14 +6341,17 @@
             if (ps === 'ko' || ps === 'kr') return 'ko';
             if (ps) return 'en';   // zh/ar/es/de/fr 등 — 갤러리는 거르지 않고 라벨은 영문
         } catch (_) {}
-        try { var l = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); if (l === 'ja' || l === 'jp') return 'ja'; if (l === 'en' || l === 'us') return 'en'; if (l === 'ko' || l === 'kr') return 'ko'; } catch (_) {}
+        // 2026-07-23: zh/ar/es/de/fr 도 그대로 반환 (예전엔 ja/en/ko 만 보고 나머지는 hostname='ko'
+        //   로 떨어져 AI 모달이 한국어로 남았다). _meAiTr 가 이 코드로 영어 폴백을 결정한다.
+        try { var l = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); if (l === 'jp') return 'ja'; if (l === 'us') return 'en'; if (l === 'kr') return 'ko'; if (l) return l; } catch (_) {}
         var h = (location.hostname || '').toLowerCase();
         // 2026-07-15: cotton-printer(패브릭 JP) / chameleon.design(글로벌 EN) 도 포함 — 빠져서 AI 생성 모달이 한국어로 남던 문제.
         if (h.indexOf('cafe0101') >= 0 || h.indexOf('cotton-printer') >= 0) return 'ja';
         if (h.indexOf('cafe3355') >= 0 || h.indexOf('chameleon.design') >= 0) return 'en';
         return 'ko';
     }
-    function _meAiTr(ko, ja, en) { var l = _meAiLang(); return l === 'ja' ? (ja || ko) : l === 'en' ? (en || ko) : ko; }
+    // 2026-07-23 (사장님 지시): 한/일 외 언어(en/zh/ar/es/de/fr)는 영어로 — 한국어보다 널리 읽힌다.
+    function _meAiTr(ko, ja, en) { var l = _meAiLang(); if (l === 'ko' || l === 'kr') return ko; if (l === 'ja') return ja || ko; return en || ko; }
 
     var _meAiModel = 'ideogram';  // 2026-07-10: 글씨까지 넣는 GPT Image 2(ai-image-gen) 단일 사용. (flux/글씨없음 옵션 제거)
     var _meAiRatio = '16:9';      // 기본 가로 16:9

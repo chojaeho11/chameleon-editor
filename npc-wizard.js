@@ -680,7 +680,7 @@ function _npcLang() {
 }
 function _t(key) {
     const lang = _npcLang();
-    return (NPC_TEXTS[lang] && NPC_TEXTS[lang][key]) || NPC_TEXTS.kr[key] || key;
+    return (NPC_TEXTS[lang] && NPC_TEXTS[lang][key]) || (NPC_TEXTS.en && NPC_TEXTS.en[key]) || NPC_TEXTS.kr[key] || key;   // 2026-07-23: 영어 폴백
 }
 
 window.NpcWizard = {

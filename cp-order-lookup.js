@@ -45,7 +45,7 @@
               notFound:'No orders found.', err:'An error occurred during search.',
               digitsErr:'Please enter the last 4 digits.', back:'Search Again' }
     };
-    var t = T[lang()] || T.ko;
+    var t = T[lang()] || T.en || T.ko;   // 2026-07-23: 한/일 외 언어는 영어로
 
     function $(id){ return document.getElementById(id); }
     function fmtDate(iso){

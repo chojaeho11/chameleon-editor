@@ -4533,7 +4533,12 @@ window.toggleCartAccordion = function(idx) {
 window._uploadCartItemFile = async function(idx, input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 50 * 1024 * 1024) { alert('50MB 이하 파일만 업로드 가능합니다.'); return; }
+    if (file.size > 50 * 1024 * 1024) {
+        // 2026-07-23: 한/일 외 언어는 영어로
+        var _uL = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) || 'kr';
+        alert(_uL === 'ja' ? '50MB以下のファイルのみアップロード可能です。' : (_uL === 'ko' || _uL === 'kr') ? '50MB 이하 파일만 업로드 가능합니다.' : 'Only files up to 50MB can be uploaded.');
+        return;
+    }
     const CART_KEY = 'chameleon_cart_current';
     let items = [];
     try { items = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return; }
@@ -4581,7 +4586,8 @@ window._uploadCartItemFile = async function(idx, input) {
         console.error('파일 업로드 실패:', e);
         btn.innerHTML = origHtml;
         btn.style.pointerEvents = '';
-        alert('파일 업로드에 실패했습니다. 다시 시도해주세요.');
+        var _uL2 = (typeof CURRENT_LANG !== 'undefined' && CURRENT_LANG) || 'kr';
+        alert(_uL2 === 'ja' ? 'ファイルのアップロードに失敗しました。もう一度お試しください。' : (_uL2 === 'ko' || _uL2 === 'kr') ? '파일 업로드에 실패했습니다. 다시 시도해주세요.' : 'File upload failed. Please try again.');
     }
 };
 
