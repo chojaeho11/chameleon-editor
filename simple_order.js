@@ -88,8 +88,12 @@
 
     function tr(ko, ja, en) {
         const lang = getLang();
-        if (lang === 'ja') return ja || ko;
-        if (lang === 'en') return en || ko;
+        // 2026-07-23 [버그] en 을 빈 문자열('')로 넘긴 곳(예: tr('개','個',''))은 "영어에선 단위 없이"
+        //   라는 의도인데, en||ko 는 ''(falsy)를 '번역 없음'으로 보고 한국어 '개' 를 돌려줬다.
+        //   → 영어 사이트에 1개·10개·B5 16절 같은 한글이 남았다(사장님 제보).
+        //   en/ja 가 undefined(=인자 미전달)일 때만 한국어로 폴백하고, ''는 의도된 빈 값으로 존중한다.
+        if (lang === 'ja') return (ja != null) ? ja : ko;
+        if (lang === 'en') return (en != null) ? en : ko;
         return ko;
     }
 
