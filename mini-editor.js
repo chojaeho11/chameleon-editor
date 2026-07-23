@@ -1041,7 +1041,9 @@
             _meRestore(snap);
             var _png = null, _pdf = null;
             try { _png = await window._meExportPNG(); } catch (e) { console.warn('[me sides png]', s, e); }
-            try { if (typeof window._meExportPDF === 'function') _pdf = await window._meExportPDF({ pngDataUrl: _png }); } catch (e2) { console.warn('[me sides pdf]', s, e2); }
+            // 2026-07-23: 면 전환 직후 SVG 벡터 경로가 흰 백지 PDF 를 만드는 경합이 있어(사장님 제보),
+            //   검증된 PNG 를 그대로 PDF 에 심는다(forcePng). 백지보다 확실하다.
+            try { if (typeof window._meExportPDF === 'function') _pdf = await window._meExportPDF({ pngDataUrl: _png, forcePng: true }); } catch (e2) { console.warn('[me sides pdf]', s, e2); }
             out[s] = { pdf: _pdf, png: _png };
         }
         _meRestore(_meSideSnap[_meSideCur] || _meEmptyState());  // 보던 면 복원
@@ -2250,6 +2252,18 @@
                 try { holder.remove(); } catch(_){}
                 return null;
             }
+        }
+        // 2026-07-23 [버그] 명함 양면 등 면 전환 export 에서, _meRestore 직후 SVG 벡터 경로가
+        //   갓 복원된 DOM/이미지와 경합해 '흰 백지 PDF' 를 만들었다(사장님 제보: 작업지시서엔 앞면이
+        //   보이는데 파일 열면 흰색). PNG 는 폰트·이미지 로드를 기다려 항상 정상이므로, 이런 경우
+        //   호출부가 forcePng 로 검증된 PNG 를 그대로 PDF 에 심게 한다.
+        if (opts.forcePng && opts.pngDataUrl) {
+            try {
+                var docF = new jsPDF({ orientation: widthMm > heightMm ? 'l' : 'p', unit: 'mm', format: [widthMm, heightMm], compress: true });
+                var fmtF = /^data:image\/jpe?g/.test(opts.pngDataUrl) ? 'JPEG' : 'PNG';
+                docF.addImage(opts.pngDataUrl, fmtF, 0, 0, widthMm, heightMm);
+                return docF.output('blob');
+            } catch (eF) { console.warn('[me pdf] forcePng failed, fall through', eF); }
         }
         try {
             if (typeof window._meExportSVG === 'function' && (await _loadSvg2PdfIfNeeded())) {
