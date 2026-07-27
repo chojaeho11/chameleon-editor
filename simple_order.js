@@ -1535,9 +1535,9 @@ html, body { background: #ffffff !important; }
                 <span id="soPdNoticeTitle">${tr('담당자에게 전화해서 칼선을 받은 후 작업해서 올려주세요', '担当者に電話してカットラインを受け取ってから作業してアップロードしてください', 'Please call our staff to receive the die-cut template, then prepare your design and upload.')}</span>
               </div>
               <div id="soPdBranchContacts" style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px;">
-                <a href="tel:0313661984" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('한국사무실', '韓国本社', 'Korea HQ')}</span> <b style="color:#b45309;">031-366-1984</b></a>
-                <a href="tel:09053970420" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇯🇵 <span>${tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami')}</span> <b style="color:#b45309;">090-5397-0420</b></a>
-                <a href="tel:212617901092" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇲🇦 <span>${tr('모로코지사 히바', 'モロッコ支社 ヒバ', 'Morocco · Hiba')}</span> <b style="color:#b45309;">212-617-901-092</b></a>
+                <a id="soPdContactKR" href="tel:0313661984" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('한국사무실', '韓国本社', 'Korea HQ')}</span> <b style="color:#b45309;">031-366-1984</b></a>
+                <a id="soPdContactJP" href="tel:09053970420" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇯🇵 <span>${tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami')}</span> <b style="color:#b45309;">090-5397-0420</b></a>
+                <a id="soPdContactMA" href="tel:212617901092" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇲🇦 <span>${tr('모로코지사 히바', 'モロッコ支社 ヒバ', 'Morocco · Hiba')}</span> <b style="color:#b45309;">212-617-901-092</b></a>
               </div>
               <div style="font-size:12px; font-weight:700; color:#92400e; display:flex; align-items:center; gap:6px;">
                 <span>🌐</span>
@@ -13388,7 +13388,32 @@ html, body { background: #ffffff !important; }
         var isPdNow = _soIsPaperDisplayProduct(p);
         if (descEl) descEl.style.display = (isWallNow || isPdNow) ? 'none' : '';
         if (wallGuide) wallGuide.style.display = isWallNow ? '' : 'none';
-        if (pdNotice) pdNotice.style.display = isPdNow ? '' : 'none';
+        if (pdNotice) {
+            pdNotice.style.display = isPdNow ? '' : 'none';
+            // 2026-07-27: 사이트 국가에 맞는 지사 전화번호 1개만 크게 노출 (KR=한국본사 / JP=일본 나나미 / 그 외=히바)
+            if (isPdNow) {
+                var _pdSc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toUpperCase();
+                var _pdShowId = _pdSc === 'KR' ? 'soPdContactKR' : _pdSc === 'JP' ? 'soPdContactJP' : 'soPdContactMA';
+                ['soPdContactKR','soPdContactJP','soPdContactMA'].forEach(function(id){
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    if (id === _pdShowId) {
+                        el.style.display = 'inline-flex';
+                        el.style.width = '100%';
+                        el.style.boxSizing = 'border-box';
+                        el.style.justifyContent = 'center';
+                        el.style.gap = '8px';
+                        el.style.padding = '13px 18px';
+                        el.style.fontSize = '15px';
+                        el.style.borderWidth = '2px';
+                        var _num = el.querySelector('b');
+                        if (_num) { _num.style.fontSize = '22px'; _num.style.letterSpacing = '0.5px'; }
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+        }
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
         if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
