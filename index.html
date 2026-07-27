@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260727133407';
+    var CV = '20260727160952';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1076,38 +1076,38 @@ window._tcmFallbackClick = function(code) {
                  (window.CURRENT_LANG || 'kr'));
             lang = String(lang).toLowerCase();
             var T = {
-                kr: { title:'<span class="hw-t-rest">요즘대세 카멜레온프린팅,</span> <span class="hw-t-brand">카프</span>',
+                kr: { title:'<span class="hw-t-rest">대한민국 대표 도매 인쇄소</span> <span class="hw-t-brand">카멜레온프린팅</span>',
                       sub:'귀찮은 에디터는 이제 그만! 몇 글자면 완성되는 힙한 디자인',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-brand">カメレオン印刷</span> <span class="hw-t-rest">数文字で映えるデザイン</span>',
+                ja: { title:'<span class="hw-t-rest">日本を代表する卸売印刷所</span> <span class="hw-t-brand">カメレオン印刷</span>',
                       // 2026-07-27: モバイルで折り返して下の画像を隠す → 大幅に短縮(사장님 지시)
                       sub:'文字だけでAIがプロ級に。',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
-                en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">Hip style! Chameleon Print</span>',
+                en: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Global wholesale printing leader</span>',
                       sub:'Editors are a hassle — pro-quality AI design in just a few words!',
                       ph:'The more detail the better — title, price, date, place!', go:'Create',
                       need:'Please tell us what to make' },
                 // 2026-07-22: ko/ja/en 만 있어서 아랍어·중국어·스페인어·독일어·프랑스어 방문자에게
                 //   한국어가 그대로 보였다(사장님 지적). 5개 언어 추가 + 아래 fallback 은 en 으로.
-                zh: { title:'<span class="hw-t-brand">变色龙印刷</span> <span class="hw-t-rest">几个字，就有潮流设计</span>',
+                zh: { title:'<span class="hw-t-rest">全球领先的批发印刷厂</span> <span class="hw-t-brand">变色龙印刷</span>',
                       sub:'不用再折腾编辑器！输入几个字，AI 就做出专业级设计',
                       ph:'标题、价格、日期、地点等写得越详细越好！', go:'制作',
                       need:'请输入想要制作的内容' },
-                ar: { title:'<span class="hw-t-brand">طباعة كاميليون</span> <span class="hw-t-rest">تصميم أنيق ببضع كلمات</span>',
+                ar: { title:'<span class="hw-t-brand">طباعة كاميليون</span> <span class="hw-t-rest">— المطبعة الرائدة عالميًا بالجملة</span>',
                       sub:'لا حاجة لبرامج التصميم المعقّدة — بضع كلمات ويصنع الذكاء الاصطناعي تصميمًا احترافيًا',
                       ph:'كلما زادت التفاصيل كان أفضل — العنوان والسعر والتاريخ والمكان!', go:'إنشاء',
                       need:'من فضلك اكتب ما تريد تصميمه' },
-                es: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">diseño con estilo en pocas palabras</span>',
+                es: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Imprenta mayorista líder global</span>',
                       sub:'Olvídate de los editores complicados: unas pocas palabras y la IA crea un diseño profesional',
                       ph:'Cuanto más detalle, mejor: título, precio, fecha, lugar…', go:'Crear',
                       need:'Cuéntanos qué quieres crear' },
-                de: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">stylisches Design in wenigen Worten</span>',
+                de: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Weltweit führende Großhandelsdruckerei</span>',
                       sub:'Schluss mit mühsamen Editoren – ein paar Worte genügen für ein professionelles KI-Design',
                       ph:'Je mehr Details, desto besser – Titel, Preis, Datum, Ort …', go:'Erstellen',
                       need:'Bitte beschreiben Sie, was erstellt werden soll' },
-                fr: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">un design stylé en quelques mots</span>',
+                fr: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Imprimeur de gros leader mondial</span>',
                       sub:'Fini les éditeurs fastidieux : quelques mots suffisent pour un design professionnel généré par IA',
                       ph:'Plus il y a de détails, mieux c’est — titre, prix, date, lieu…', go:'Créer',
                       need:'Indiquez ce que vous souhaitez créer' }
@@ -1723,6 +1723,7 @@ window._tcmFallbackClick = function(code) {
                 background:linear-gradient(90deg, #06b6d4 0%, #3b82f6 45%, #7c3aed 100%);
                 -webkit-background-clip:text; background-clip:text;
                 -webkit-text-fill-color:transparent; color:transparent;
+                white-space:nowrap; /* 2026-07-27: 브랜드명이 줄바꿈으로 쪼개지지 않게 */
             }
             #heroWorks .hw-t-rest { color:#374151; }
             #heroWorks .hw-sub {
