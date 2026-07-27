@@ -86,39 +86,65 @@
         };
         var title = opt.title || titleMap[opt.kind] || titleMap.generic;
 
-        var lines = [];
-        if (opt.aiCredit) lines.push(tr('AI 이미지 생성권 ', 'AI画像生成チケット ', 'AI image credits ') + '+' + opt.aiCredit + tr('장', '枚', ''));
-        if (opt.mileage) lines.push(tr('마일리지 ', 'マイル ', 'Mileage ') + '+' + Number(opt.mileage).toLocaleString() + tr('원', '円相当', ' KRW'));
-        var detail = lines.join(' · ');
-        var given = tr('지급되었습니다', '付与されました', 'granted');
+        // 선물 아이템 — AI 생성권=카멜레온, 마일리지=돈주머니 이미지
+        var items = [];
+        if (opt.aiCredit) items.push({ img: '/reward-ai.jpg', ring: '#22c55e',
+            amt: '+' + opt.aiCredit + tr('장', '枚', ''), lbl: tr('AI 이미지 생성권', 'AI画像生成', 'AI credits') });
+        if (opt.mileage) items.push({ img: '/reward-mileage.jpg', ring: '#f59e0b',
+            amt: '+' + Number(opt.mileage).toLocaleString() + tr('원', '円', ''), lbl: tr('마일리지', 'マイル', 'Mileage') });
+        var given = tr('지급되었습니다!', '付与されました！', 'Granted!');
+        var closeLbl = tr('받기 완료', '受け取る', 'Got it');
+
+        if (!document.getElementById('rwPopupStyle')) {
+            var stEl = document.createElement('style');
+            stEl.id = 'rwPopupStyle';
+            stEl.textContent =
+                '@keyframes rwPop{0%{transform:scale(.6) translateY(24px);opacity:0}60%{transform:scale(1.06) translateY(0);opacity:1}100%{transform:scale(1)}}'
+              + '@keyframes rwFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}'
+              + '.rw-ov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.62);opacity:0;transition:opacity .2s;padding:20px}'
+              + '.rw-card{position:relative;width:346px;max-width:calc(100% - 40px);border-radius:26px;overflow:hidden;background:#fff;animation:rwPop .5s cubic-bezier(.2,1.1,.35,1) both}'
+              + '.rw-top{background:linear-gradient(135deg,#7c3aed,#4f46e5 55%,#0ea5e9);padding:22px 20px 16px;text-align:center;color:#fff}'
+              + '.rw-top h3{margin:0;font-size:18px;letter-spacing:-.3px}'
+              + '.rw-top p{margin:5px 0 0;font-size:12px;opacity:.9}'
+              + '.rw-body{padding:22px 18px 16px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}'
+              + '.rw-gift{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:104px}'
+              + '.rw-badge{width:92px;height:92px;border-radius:50%;overflow:hidden;border:4px solid #fff;outline:3px solid var(--rg,#e2e8f0);background:#f8fafc;animation:rwFloat 2.6s ease-in-out infinite}'
+              + '.rw-badge img{width:100%;height:100%;object-fit:cover;display:block}'
+              + '.rw-amt{font-size:21px;color:#4f46e5;letter-spacing:-.3px}'
+              + '.rw-lbl{font-size:12px;color:#64748b}'
+              + '.rw-foot{padding:2px 18px 20px}'
+              + '.rw-btn{display:block;width:100%;padding:13px;border:none;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;cursor:pointer}'
+              + '.rw-x{position:absolute;top:10px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(255,255,255,.28);color:#fff;font-size:20px;line-height:1;cursor:pointer;z-index:2}';
+            document.head.appendChild(stEl);
+        }
+
+        var giftHtml = items.map(function (g) {
+            return '<div class="rw-gift"><div class="rw-badge" style="--rg:' + g.ring + '"><img src="' + g.img + '" alt=""></div>'
+                + '<div class="rw-amt">' + g.amt + '</div><div class="rw-lbl">' + g.lbl + '</div></div>';
+        }).join('');
 
         var ov = document.createElement('div');
+        ov.className = 'rw-ov';
         ov.setAttribute('role', 'dialog');
-        ov.style.cssText = 'position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;'
-            + 'background:rgba(15,23,42,0.5);opacity:0;transition:opacity .2s;';
-        var card = document.createElement('div');
-        card.style.cssText = 'background:#fff;border-radius:20px;padding:26px 30px;max-width:340px;width:calc(100% - 48px);'
-            + 'text-align:center;transform:scale(.85);transition:transform .28s cubic-bezier(.2,1.2,.4,1);border:1px solid #eef0f5;';
-        card.innerHTML =
-            '<div style="font-size:40px;line-height:1;margin-bottom:12px;">🎁</div>'
-            + '<div style="font-size:16px;color:#0f172a;margin-bottom:6px;">' + title + '</div>'
-            + (detail ? '<div style="font-size:20px;color:#4f46e5;letter-spacing:-0.3px;margin:8px 0 4px;">' + detail + '</div>' : '')
-            + '<div style="font-size:13px;color:#94a3b8;margin-top:6px;">' + given + '</div>';
-        ov.appendChild(card);
+        ov.innerHTML = '<div class="rw-card">'
+            + '<button class="rw-x" aria-label="close">&times;</button>'
+            + '<div class="rw-top"><h3>' + title + '</h3><p>' + given + '</p></div>'
+            + '<div class="rw-body">' + giftHtml + '</div>'
+            + '<div class="rw-foot"><button class="rw-btn">' + closeLbl + '</button></div></div>';
         document.body.appendChild(ov);
+        requestAnimationFrame(function () { ov.style.opacity = '1'; });
+        setTimeout(confetti, 140);
 
-        requestAnimationFrame(function () { ov.style.opacity = '1'; card.style.transform = 'scale(1)'; });
-        setTimeout(confetti, 120);
-
+        // 2026-07-28: 자동 닫힘 없음 — X / 받기완료 버튼 / 배경클릭 으로만 닫힌다(사장님 지시).
         var closed = false;
         function close() {
             if (closed) return; closed = true;
-            ov.style.opacity = '0'; card.style.transform = 'scale(.9)';
-            setTimeout(function () { try { ov.remove(); } catch (e) {} _popupBusy = false; }, 220);
+            ov.style.opacity = '0';
+            setTimeout(function () { try { ov.remove(); } catch (e) {} _popupBusy = false; }, 200);
         }
-        ov.addEventListener('click', close);
-        var autoT = setTimeout(close, 2800);
-        ov.addEventListener('click', function () { clearTimeout(autoT); });
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        try { ov.querySelector('.rw-x').addEventListener('click', close); } catch (e) {}
+        try { ov.querySelector('.rw-btn').addEventListener('click', close); } catch (e) {}
     };
 
     // ── RPC 래퍼 ──
@@ -147,6 +173,17 @@
         catch (e) { return { ok: false, reason: 'err' }; }
     };
 
+    // 간단 안내 토스트 (출석 이미 완료 등 — 선물팝업 아님)
+    function _rwInfo(msg) {
+        var t = document.createElement('div');
+        t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);z-index:2147483002;'
+            + 'background:#1e293b;color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;max-width:88%;text-align:center;opacity:0;transition:opacity .2s;';
+        t.textContent = msg; document.body.appendChild(t);
+        requestAnimationFrame(function () { t.style.opacity = '1'; });
+        setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { try { t.remove(); } catch (e) {} }, 220); }, 2400);
+    }
+
+    // 자동(페이지 로드) 출석 — 지급될 때만 선물팝업, 아니면 조용히.
     window.rewardAttendance = async function () {
         var sb = await sbReady(); if (!sb) return;
         var uid = await loggedInUid(sb); if (!uid) return;
@@ -154,6 +191,19 @@
             var r = await sb.rpc('attendance_claim'); var d = r && r.data;
             if (d && d.ok) window.showRewardPopup({ kind: 'attendance', mileage: d.mileage_added, aiCredit: d.credit_added });
         } catch (e) {}
+    };
+
+    // 수동(출석체크 버튼) — 지급/이미완료/미로그인 모두 피드백.
+    window.attendanceCheck = async function () {
+        var sb = await sbReady(); if (!sb) { _rwInfo(tr('잠시 후 다시 시도해주세요', '少し後にお試しください', 'Please try again shortly.')); return; }
+        var uid = await loggedInUid(sb);
+        if (!uid) { _rwInfo(tr('로그인 후 출석체크를 이용해주세요', 'ログイン後にご利用ください', 'Please log in to check in.')); return; }
+        try {
+            var r = await sb.rpc('attendance_claim'); var d = r && r.data;
+            if (d && d.ok) window.showRewardPopup({ kind: 'attendance', mileage: d.mileage_added, aiCredit: d.credit_added });
+            else if (d && d.already) _rwInfo(tr('오늘은 이미 출석했어요! 내일 또 만나요 🎁', '本日は出席済みです！また明日 🎁', 'Already checked in today — see you tomorrow! 🎁'));
+            else _rwInfo(tr('출석 처리 중 오류가 났어요', '出席処理でエラーが発生しました', 'Check-in error, please try again.'));
+        } catch (e) { _rwInfo(tr('출석 처리 중 오류가 났어요', '出席処理エラー', 'Check-in error.')); }
     };
 
     async function _grant(type, ref, kind) {

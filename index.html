@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260728052953';
+    var CV = '20260728054258';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1527,9 +1527,9 @@ window._tcmFallbackClick = function(code) {
                 #mgrPhoneList .mgr-kr-only { grid-column:1 / -1; }
                 #mgrPhoneList #mgrPhoneJp { grid-column:1 / -1; }
             }
-            /* 2026-06-19 v640: 6 버튼 1줄 — 이벤트 옆에 디자이너 모집 추가 */
+            /* 2026-07-28: 8 버튼 1줄 (자유게시판·출석체크 추가) */
             #mgrActionsGrid {
-                display:grid; grid-template-columns:repeat(6, 1fr); gap:10px;
+                display:grid; grid-template-columns:repeat(8, 1fr); gap:10px;
                 margin-bottom:4px; justify-content:center;
             }
             .mgr-action {
@@ -1864,9 +1864,9 @@ window._tcmFallbackClick = function(code) {
                 -webkit-backdrop-filter:none !important;
             }
             #mgrQuoteHero #mgrQuoteTitle, #mgrQuoteHero #mgrQuoteDesc { display:none !important; }
-            /* 2026-06-19 v640: 6 버튼 1줄 — 이벤트 옆에 디자이너 모집 추가 */
+            /* 2026-07-28: 모바일은 8버튼을 4열 2줄로 */
             #mgrActionsGrid {
-                grid-template-columns:repeat(6, 1fr) !important;
+                grid-template-columns:repeat(4, 1fr) !important;
                 gap:14px !important;
                 padding:0 !important;
                 justify-content:center !important;
@@ -2049,6 +2049,15 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-pen-nib"></i></span>
                     <span class="mgr-action-label" data-i18n="btn_designer_recruit_btn">블로그</span>
                 </a>
+                <!-- 2026-07-28: 자유게시판(글 쓰면 보상) + 출석체크(하루 1회 보상) -->
+                <a class="mgr-action mgr-freetalk" href="/board.html?cat=freetalk" style="text-decoration:none;">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots"></i></span>
+                    <span class="mgr-action-label" data-i18n="menu_freetalk">자유게시판</span>
+                </a>
+                <button type="button" class="mgr-action mgr-attend" onclick="window.attendanceCheck && window.attendanceCheck()">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-calendar-check"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_attendance">출석체크</span>
+                </button>
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
 
@@ -5942,7 +5951,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=553"></script>
-<script src="./rewards.js?v=1"></script>
+<script src="./rewards.js?v=2"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -7092,42 +7101,7 @@ async function handleSubReturn() {
 
     </div>
 
-    <!-- 게시판 -->
-<div class="community-nav-wrapper">
-    <div class="comm-grid">
-        <!-- 2026-07-17: href 를 실제 URL 로 — 기존 href="#" + JS 라 크롤러가 블로그를 발견하지 못했다
-             (블로그 글이 사이트맵에만 있고 내부 링크가 0개라 색인이 잘 안 됨). 클릭 동작은 그대로. -->
-        <a href="/board.html?cat=blog" onclick="goBoard('blog'); return false;" class="comm-btn blog">
-            <div class="comm-icon"><i class="fa-solid fa-pen-nib"></i></div>
-            <span data-i18n="menu_blog">카멜레온<br>블로그</span>
-        </a>
-        <!-- 2026-07-28: 자유게시판 — 글 쓰면 마일리지+생성권 지급 -->
-        <a href="/board.html?cat=freetalk" onclick="goBoard('freetalk'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-comment-dots"></i></div>
-            <span data-i18n="menu_freetalk">자유게시판</span>
-        </a>
-        <a href="#" onclick="goBoard('review'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-star"></i></div>
-            <span data-i18n="menu_review">고객<br>제작후기</span>
-        </a>
-        <a href="#" onclick="goBoard('promo'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-bullhorn"></i></div>
-            <span data-i18n="menu_promo">지역광고사<br>홍보</span>
-        </a>
-        <a href="#" onclick="goBoard('trade'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-handshake"></i></div>
-            <span data-i18n="menu_trade">중고장비<br>거래</span>
-        </a>
-        <a href="#" onclick="goBoard('job'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-briefcase"></i></div>
-            <span data-i18n="menu_job">구인구직</span>
-        </a>
-        <a href="#" onclick="goBoard('free'); return false;" class="comm-btn">
-            <div class="comm-icon"><i class="fa-solid fa-comments"></i></div>
-            <span data-i18n="menu_manual">제품설명서</span>
-        </a>
-    </div>
-</div>
+    <!-- 2026-07-28: 커뮤니티 바로가기 그리드 삭제(사장님 지시). 자유게시판·출석체크는 상단 메뉴바로 이동. -->
 
     <!-- 2026-06-13: EDITOR / BAND / WITH 3 바로가기 — 미니에디터 위 dsmInlinePanel로 이동됨 (id 중복 방지) -->
 
