@@ -1282,8 +1282,18 @@ function openQQSurvey(cat) {
         const lockPrefix = isVIP1000 ? `[LOCK:${btoa(autoPw)}:${autoManager}]\n` : '';
         const body = lockPrefix + [`[QQ:${c}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
         try {
-            const sb = window.sb || window.supabase;
-            if (!sb) { alert(T.connErr); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+            // 2026-07-27: window.supabase 는 UMD 네임스페이스(createClient 만 있음, .from 없음).
+            //   모바일에서 window.sb 미준비 시 이걸로 폴백돼 "sb.from is not a function" 발생 → 진짜 클라이언트로 자가치유.
+            let sb = window.sb;
+            if ((!sb || typeof sb.from !== 'function') && typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                sb = window.supabase.createClient(
+                    'https://qinvtnhiidtmrzosyvys.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } }
+                );
+                if (!window.sb) window.sb = sb;
+            }
+            if (!sb || typeof sb.from !== 'function') { alert(T.connErr); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
             const uploaded = [];
             if (fileInput && fileInput.files && fileInput.files.length) {
                 const ts = Date.now(); const rnd = Math.random().toString(36).substring(2,8);

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260727125912';
+    var CV = '20260727133407';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -4520,8 +4520,19 @@ window.addEventListener('load', function() {
             const lockPrefix = isVIP1000 ? `[LOCK:${btoa(autoPw)}:${autoManager}]\n` : '';
             const body = lockPrefix + [`[QQ:${cat}]`, budget && `예산금액: ${budget}`, memo && `요청사항:\n${memo}`].filter(Boolean).join('\n');
             try {
-                const sb = window.sb || window.supabase;
-                if (!sb) { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
+                // 2026-07-27: window.supabase 는 UMD 네임스페이스(createClient 만 있음, .from 없음).
+                //   모바일에서 window.sb(진짜 클라이언트)가 아직 준비 전이면 이걸로 폴백돼 "sb.from is not a function" 발생.
+                //   → 클라이언트가 없거나 .from 이 없으면 config.js 와 동일 옵션으로 즉시 생성해서 자가치유.
+                let sb = window.sb;
+                if ((!sb || typeof sb.from !== 'function') && typeof supabase !== 'undefined' && supabase.createClient) {
+                    sb = supabase.createClient(
+                        'https://qinvtnhiidtmrzosyvys.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbnZ0bmhpaWR0bXJ6b3N5dnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyMDE3NjQsImV4cCI6MjA3ODc3Nzc2NH0.3z0f7R4w3bqXTOMTi19ksKSeAkx8HOOTONNSos8Xz8Y',
+                        { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: localStorage, storageKey: 'sb-qinvtnhiidtmrzosyvys-auth-token' } }
+                    );
+                    if (!window.sb) window.sb = sb;
+                }
+                if (!sb || typeof sb.from !== 'function') { alert('연결 오류. 새로고침 후 다시 시도해주세요.'); if(btn){btn.disabled=false;btn.textContent=origLabel;} return false; }
                 const uploaded = [];
                 if (fileInput && fileInput.files && fileInput.files.length) {
                     const ts = Date.now(); const rnd = Math.random().toString(36).substring(2,8);
@@ -12442,7 +12453,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=466').then(m => {
+        import('./advisor-panel.js?v=467').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
