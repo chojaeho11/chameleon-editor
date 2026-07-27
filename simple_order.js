@@ -1499,7 +1499,7 @@ html, body { background: #ffffff !important; }
   <div class="so-modal">
     <div class="so-head">
       <div class="so-head-left">
-        <button class="so-back" onclick="window.closeSimpleOrderModal()" title="${tr('메인으로', 'メインへ', 'Back')}">
+        <button class="so-back" onclick="window._soBackToMainOrClose()" title="${tr('메인으로', 'メインへ', 'Back')}">
           ← ${tr('메인으로', 'メインへ', 'Main')}
         </button>
         <button class="so-back so-cat-home" id="soCatHome" style="display:none" onclick="window._soBackToCategory()" title="${tr('카테고리 목록', 'カテゴリー一覧', 'Category list')}">
@@ -1512,7 +1512,7 @@ html, body { background: #ffffff !important; }
         <button class="so-back" id="soCartBtn" onclick="window._soToggleCart(true)" title="${tr('장바구니', 'カート', 'Cart')}">
           <span id="soCartCount">0</span>
         </button>
-        <button class="so-close" onclick="window.closeSimpleOrderModal()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
+        <button class="so-close" onclick="window._soBackToMainOrClose()" title="${tr('닫기', '閉じる', 'Close')}">×</button>
       </div>
     </div>
 
@@ -16756,6 +16756,25 @@ html, body { background: #ffffff !important; }
         if (typeof window._soAdSyncAddBtn === 'function') {
             try { window._soAdSyncAddBtn(); } catch(e) {}
         }
+    };
+
+    // 2026-07-27: 메인/닫기 버튼 — 일반 사이트에선 모달만 닫지만,
+    //   hexa-board.com 상세는 index.html 위 모달로 떠서 닫으면 뒤의 index.html 이 한국 메인처럼 보인다.
+    //   해외(en/그외) 상세에선 '메인' 을 그 국가 메인으로 보낸다 (URL ?lang= 기준).
+    window._soBackToMainOrClose = function() {
+        try {
+            if (location.hostname.indexOf('hexa-board') >= 0) {
+                var _lang = (new URLSearchParams(location.search).get('lang')
+                    || window.__PS_LANG || 'ko').toLowerCase();
+                var _dest = _lang === 'ko' ? 'https://www.cafe2626.com/'
+                          : _lang === 'ja' ? 'https://www.cafe0101.com/'
+                          : _lang === 'en' ? 'https://chameleon.design/'
+                          : 'https://chameleon.design/?lang=' + _lang;
+                window.location.href = _dest;
+                return;
+            }
+        } catch (e) {}
+        window.closeSimpleOrderModal();
     };
 
     // ─────────────────────────────────────────────
