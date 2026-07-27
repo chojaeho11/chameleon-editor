@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260727225151';
+    var CV = '20260728052750';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -256,7 +256,16 @@
                         <span data-i18n="mp_label_mileage">Mileage</span>
                     </div>
                 </div>
-                
+
+                <!-- 2026-07-28: AI 이미지 생성권 -->
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#eef2ff; color:#4f46e5;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="stat-info">
+                        <span id="aiCreditDisplay">0</span>
+                        <span data-i18n="mp_label_ai_credit">AI 이미지 생성권</span>
+                    </div>
+                </div>
+
                 <div class="stat-card">
                     <div class="stat-icon" style="background:#fff7ed; color:#ea580c;">
                         <i class="fa-solid fa-money-bill-wave"></i>
@@ -430,7 +439,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=283"></script>
+    <script type="module" src="./mypage.js?v=284"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

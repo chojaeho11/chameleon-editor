@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260727225151';
+    var CV = '20260728052750';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -563,6 +563,7 @@
 </head>
 <body>
 <script src="toast.js?v=434"></script>
+<script src="rewards.js?v=1"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -720,14 +721,14 @@
     // [SEO]
     function updateBoardSEO(postTitle = null, postContent = null, postImage = null) {
         const catMap = {
-            'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실' },
-            'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室' },
-            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files' },
-            'CN': { 'blog': '博客', 'review': '评价', 'promo': '推广', 'trade': '二手', 'job': '招聘', 'free': '资料' },
-            'AR': { 'blog': 'مدونة', 'review': 'مراجعات', 'promo': 'ترويج', 'trade': 'سوق', 'job': 'وظائف', 'free': 'ملفات' },
-            'ES': { 'blog': 'Blog', 'review': 'Reseñas', 'promo': 'Promo', 'trade': 'Mercado', 'job': 'Empleo', 'free': 'Archivos' },
-            'DE': { 'blog': 'Blog', 'review': 'Bewertungen', 'promo': 'Werbung', 'trade': 'Markt', 'job': 'Jobs', 'free': 'Dateien' },
-            'FR': { 'blog': 'Blog', 'review': 'Avis', 'promo': 'Promo', 'trade': 'Marché', 'job': 'Emploi', 'free': 'Fichiers' }
+            'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실', 'freetalk': '자유게시판' },
+            'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室', 'freetalk': '自由掲示板' },
+            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files', 'freetalk': 'Free Board' },
+            'CN': { 'blog': '博客', 'review': '评价', 'promo': '推广', 'trade': '二手', 'job': '招聘', 'free': '资料', 'freetalk': '自由论坛' },
+            'AR': { 'blog': 'مدونة', 'review': 'مراجعات', 'promo': 'ترويج', 'trade': 'سوق', 'job': 'وظائف', 'free': 'ملفات', 'freetalk': 'منتدى حر' },
+            'ES': { 'blog': 'Blog', 'review': 'Reseñas', 'promo': 'Promo', 'trade': 'Mercado', 'job': 'Empleo', 'free': 'Archivos', 'freetalk': 'Foro Libre' },
+            'DE': { 'blog': 'Blog', 'review': 'Bewertungen', 'promo': 'Werbung', 'trade': 'Markt', 'job': 'Jobs', 'free': 'Dateien', 'freetalk': 'Freies Forum' },
+            'FR': { 'blog': 'Blog', 'review': 'Avis', 'promo': 'Promo', 'trade': 'Marché', 'job': 'Emploi', 'free': 'Fichiers', 'freetalk': 'Forum Libre' }
         };
         const activeCatName = (catMap[currentCountry] || catMap['KR'])[category] || 'Board';
         const metaData = {
@@ -794,7 +795,8 @@
             'promo': { KR: '지역광고사 홍보', US: 'Local Partners', JP: '地域広告会社', CN: '本地合作伙伴', AR: 'شركاء محليون', ES: 'Socios Locales', DE: 'Lokale Partner', FR: 'Partenaires Locaux' },
             'trade': { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引', CN: '二手设备', AR: 'معدات مستعملة', ES: 'Equipos Usados', DE: 'Gebrauchtgeräte', FR: 'Équipements Occasion' },
             'job': { KR: '구인구직', US: 'Job Market', JP: '求人・求職', CN: '招聘信息', AR: 'سوق العمل', ES: 'Empleo', DE: 'Stellenmarkt', FR: 'Emploi' },
-            'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書', CN: '产品说明', AR: 'وصف المنتج', ES: 'Descripción', DE: 'Produktbeschreibung', FR: 'Description Produit' }
+            'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書', CN: '产品说明', AR: 'وصف المنتج', ES: 'Descripción', DE: 'Produktbeschreibung', FR: 'Description Produit' },
+            'freetalk': { KR: '자유게시판', US: 'Free Board', JP: '自由掲示板', CN: '自由论坛', AR: 'المنتدى الحر', ES: 'Foro Libre', DE: 'Freies Forum', FR: 'Forum Libre' }
         }[category] || { KR: '게시판', US: 'Board', JP: '掲示板', CN: '公告板', AR: 'لوحة', ES: 'Tablero', DE: 'Forum', FR: 'Forum' };
         
         if (subName && category === 'review') {
@@ -1569,9 +1571,16 @@
                     
                     const { error } = await sb.from('blog_posts').insert(payload);
                     if (error) throw error;
-                    
+
                     showToast(T.posted, "success");
-                    window.goToList(); 
+                    // 2026-07-28: 자유게시판 글 보상 (로그인 회원 + 본문 10자↑). 한도·중복은 서버 RPC 가 최종 판정.
+                    try {
+                        if (category === 'freetalk' && currentUser && window.rewardPost
+                            && (content || '').replace(/<[^>]*>/g, '').trim().length >= 10) {
+                            window.rewardPost('post:' + currentUser.id + ':' + Date.now());
+                        }
+                    } catch (_rw) {}
+                    window.goToList();
                 }
             } catch (e) {
                 console.error(e);
@@ -1587,7 +1596,15 @@
             const cmtAuthorId = currentUser ? currentUser.id : null;
             const cmtAuthorName = currentUser ? (currentUser.user_metadata.full_name || currentUser.email.split('@')[0]) : '익명(Guest)';
             const { error } = await sb.from('community_comments').insert({ post_id: postId, author_id: cmtAuthorId, author_name: cmtAuthorName, content: txt });
-            if(error) showToast("실패", "error"); else { document.getElementById('commentInput').value = ''; loadComments(postId); }
+            if(error) showToast("실패", "error"); else {
+                document.getElementById('commentInput').value = ''; loadComments(postId);
+                // 2026-07-28: 댓글 보상 (로그인 회원 + 10자↑, 모든 게시판/후기). 한도·중복은 서버 RPC 가 최종 판정.
+                try {
+                    if (currentUser && window.rewardComment && txt.trim().length >= 10) {
+                        window.rewardComment('comment:' + postId + ':' + Date.now());
+                    }
+                } catch (_rw) {}
+            }
         };
     }
 // 게시글 다른 언어로 복제 기능 (DeepL/Google 번역 연동 대신 구조 복제)

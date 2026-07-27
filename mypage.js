@@ -27,6 +27,7 @@ const I18N_KO = {
     "mp_welcome_desc": "혹시 설치시공이 필요하다면 주문내역에서 시공입찰에 참여한 가까운 파트너스에게 연락해보세요. 저렴하고 친절합니다.",
     "btn_back_to_editor": "에디터로 돌아가기",
     "mp_label_mileage": "보유 마일리지",
+    "mp_label_ai_credit": "AI 이미지 생성권",
     "mp_label_total_spend": "총 구매금액",
     "mp_label_logo_count": "공유한 로고",
     "mp_label_active_orders": "진행중 주문",
@@ -303,7 +304,7 @@ async function loadDashboardStats() {
         let profile;
         try {
             const res = await sb.from('profiles')
-                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason, event_coupon')
+                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason, event_coupon, ai_credit')
                 .eq('id', currentUser.id)
                 .single();
             if (res.error) throw res.error;
@@ -356,6 +357,10 @@ async function loadDashboardStats() {
 
         const elMileage = document.getElementById('mileageDisplay');
         if(elMileage) elMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim() + ' P';
+
+        // 2026-07-28: AI 이미지 생성권 (신규 회원 기본 3장 — 컬럼 null 이면 3으로 표시)
+        const elAiCredit = document.getElementById('aiCreditDisplay');
+        if(elAiCredit) elAiCredit.innerText = (profile.ai_credit == null ? 3 : profile.ai_credit);
 
         const elSpend = document.getElementById('totalSpendDisplay');
         if(elSpend) elSpend.innerText = fmtMoney(profile.total_spend || 0);

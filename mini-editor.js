@@ -7311,6 +7311,19 @@
         var note = (t && t.value || '').trim();
         var say = function (s, color) { if (msg) { msg.textContent = s; msg.style.color = color || '#64748b'; msg.style.display = 'block'; } };
         if (note.length < 2) { if (t) t.focus(); say(_meAiTr('어디를 어떻게 고칠지 적어주세요.', 'どこをどう直すか入力してください。', 'Describe what to change.'), '#dc2626'); return; }
+        // 2026-07-28: 재생성도 이미지 생성권 1장 소비 — 생성 전 확인(실패엔 과금 안 됨).
+        if (typeof window.canGenerateAi === 'function') {
+            var _fgate = await window.canGenerateAi();
+            if (!_fgate || !_fgate.ok) {
+                say((_fgate && _fgate.reason === 'auth')
+                        ? _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요.', 'ログインで無料の画像生成チケット3枚。', 'Log in to get 3 free image credits.')
+                        : (_fgate && _fgate.reason === 'empty')
+                        ? _meAiTr('생성권을 다 썼어요. 출석·자유게시판 글쓰기로 충전하거나 구독하면 무제한이에요.', 'チケット切れ。出席・自由掲示板の投稿でチャージ、購読で無制限。', 'Out of credits — earn more via check-in or the free board, or subscribe.')
+                        : _meAiTr('생성권 확인 중 오류가 났어요. 잠시 후 다시 시도해주세요.', 'チケット確認エラー。後で再試行してください。', 'Credit check error, try again shortly.'),
+                    '#dc2626');
+                return;
+            }
+        }
         if (btn) { btn.disabled = true; btn.textContent = _meAiTr('수정 중…', '修正中…', 'Revising…'); }
         say(_meAiTr('디자인을 수정하고 있어요 · 1분쯤 걸려요', 'デザインを修正中 · 1分ほどかかります', 'Revising · about a minute'));
         try {
@@ -7340,6 +7353,8 @@
             });
             var d = await r.json();
             if (!r.ok || d.error) throw new Error(d.detail || d.error || ('HTTP ' + r.status));
+            // 2026-07-28: 재생성 성공 → 생성권 1장 차감(구독자 no-op).
+            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit(); } catch (_cc) {}
             // 2026-07-20 [중요] 원격 URL 을 그대로 대지에 올리면 canvas 가 taint 되어
             //   _meExportPNG(다운로드·주문 인쇄파일) 가 깨진다 → 반드시 dataURL 로 변환해서 넣는다.
             var outUrl = d.url;
@@ -7739,6 +7754,28 @@
             }
             return;
         }
+        // 2026-07-28: AI 생성권 게이트 — 무료 3장/구독자 무제한. 실패한 생성엔 과금 않도록 "생성 전 확인 → 성공 후 차감".
+        if (typeof window.canGenerateAi === 'function') {
+            var _gate = await window.canGenerateAi();
+            if (!_gate || !_gate.ok) {
+                var _gmsg;
+                if (_gate && _gate.reason === 'auth') {
+                    _gmsg = _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요. 로그인 후 이용해주세요.',
+                                    'ログインすると無料の画像生成チケット3枚をプレゼント。ログインしてご利用ください。',
+                                    'Log in to get 3 free image credits. Please log in first.');
+                } else if (_gate && _gate.reason === 'empty') {
+                    _gmsg = _meAiTr('이미지 생성권을 모두 사용했어요. 출석하거나 자유게시판에 글을 쓰면 충전되고, 구독하면 무제한이에요.',
+                                    '画像生成チケットを使い切りました。出席や自由掲示板の投稿でチャージ、購読で無制限になります。',
+                                    'You are out of image credits. Earn more with daily check-in or a free-board post, or subscribe for unlimited.');
+                } else {
+                    _gmsg = _meAiTr('생성권 확인 중 오류가 났어요. 잠시 후 다시 시도해주세요.',
+                                    'チケット確認中にエラーが発生しました。少し後にお試しください。',
+                                    'Could not verify your credits. Please try again shortly.');
+                }
+                if (err) { err.textContent = _gmsg; err.style.display = 'block'; try { err.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} }
+                return;
+            }
+        }
         if (res) {
             res.style.color = '';
             res.innerHTML =
@@ -7966,6 +8003,8 @@
             }
             _meAiPendingUrl = url;
             _meAiLastUrl = url;
+            // 2026-07-28: 생성 성공 → 생성권 1장 차감(구독자면 서버에서 no-op). 실패한 생성엔 과금 안 됨.
+            try { if (typeof window.consumeAiCredit === 'function') window.consumeAiCredit(); } catch (_cc) {}
             // 2026-07-22: 결과는 왼쪽 무대에 꽉 차게 (max-height 260px 고정이던 것을 무대 높이에 맞춤)
             if (res) { res.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:100%; border-radius:8px; object-fit:contain;">'; res.style.color = ''; }
             try { _meAiStageShow('result'); } catch (_st) {}
