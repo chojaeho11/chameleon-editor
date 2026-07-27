@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260727160952';
+    var CV = '20260727161930';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1080,41 +1080,44 @@ window._tcmFallbackClick = function(code) {
                       sub:'귀찮은 에디터는 이제 그만! 몇 글자면 완성되는 힙한 디자인',
                       ph:'타이틀 가격 날짜 장소 등 자세히 적으면 좋아요!', go:'만들기',
                       need:'만들고 싶은 내용을 적어주세요' },
-                ja: { title:'<span class="hw-t-rest">日本を代表する卸売印刷所</span> <span class="hw-t-brand">カメレオン印刷</span>',
-                      // 2026-07-27: モバイルで折り返して下の画像を隠す → 大幅に短縮(사장님 지시)
+                ja: { title:'<span class="hw-t-rest">日本の卸売印刷所</span> <span class="hw-t-brand">カメレオン印刷</span>',
+                      // 2026-07-27: モバイルで折り返して下の画像を隠す → タイトル短縮＋フォント縮小で1行に
                       sub:'文字だけでAIがプロ級に。',
                       ph:'タイトル・価格・日時・場所など詳しく書くほど良いです！', go:'作る',
                       need:'作りたい内容を入力してください' },
-                en: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Global wholesale printing leader</span>',
-                      sub:'Editors are a hassle — pro-quality AI design in just a few words!',
+                en: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Global wholesale printer</span>',
+                      sub:'Pro-level AI design in a few words.',
                       ph:'The more detail the better — title, price, date, place!', go:'Create',
                       need:'Please tell us what to make' },
                 // 2026-07-22: ko/ja/en 만 있어서 아랍어·중국어·스페인어·독일어·프랑스어 방문자에게
                 //   한국어가 그대로 보였다(사장님 지적). 5개 언어 추가 + 아래 fallback 은 en 으로.
-                zh: { title:'<span class="hw-t-rest">全球领先的批发印刷厂</span> <span class="hw-t-brand">变色龙印刷</span>',
-                      sub:'不用再折腾编辑器！输入几个字，AI 就做出专业级设计',
+                zh: { title:'<span class="hw-t-rest">全球批发印刷厂</span> <span class="hw-t-brand">变色龙印刷</span>',
+                      sub:'几个字，AI 做出专业设计。',
                       ph:'标题、价格、日期、地点等写得越详细越好！', go:'制作',
                       need:'请输入想要制作的内容' },
-                ar: { title:'<span class="hw-t-brand">طباعة كاميليون</span> <span class="hw-t-rest">— المطبعة الرائدة عالميًا بالجملة</span>',
-                      sub:'لا حاجة لبرامج التصميم المعقّدة — بضع كلمات ويصنع الذكاء الاصطناعي تصميمًا احترافيًا',
+                ar: { title:'<span class="hw-t-brand">كاميليون</span> <span class="hw-t-rest">— طباعة الجملة عالميًا</span>',
+                      sub:'تصميم احترافي بالذكاء الاصطناعي ببضع كلمات.',
                       ph:'كلما زادت التفاصيل كان أفضل — العنوان والسعر والتاريخ والمكان!', go:'إنشاء',
                       need:'من فضلك اكتب ما تريد تصميمه' },
-                es: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Imprenta mayorista líder global</span>',
-                      sub:'Olvídate de los editores complicados: unas pocas palabras y la IA crea un diseño profesional',
+                es: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Imprenta mayorista global</span>',
+                      sub:'Diseño pro con IA en pocas palabras.',
                       ph:'Cuanto más detalle, mejor: título, precio, fecha, lugar…', go:'Crear',
                       need:'Cuéntanos qué quieres crear' },
-                de: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Weltweit führende Großhandelsdruckerei</span>',
-                      sub:'Schluss mit mühsamen Editoren – ein paar Worte genügen für ein professionelles KI-Design',
+                de: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Globaler Großhandelsdruck</span>',
+                      sub:'Profi-Design per KI in wenigen Worten.',
                       ph:'Je mehr Details, desto besser – Titel, Preis, Datum, Ort …', go:'Erstellen',
                       need:'Bitte beschreiben Sie, was erstellt werden soll' },
-                fr: { title:'<span class="hw-t-brand">Chameleon Printing</span> <span class="hw-t-rest">— Imprimeur de gros leader mondial</span>',
-                      sub:'Fini les éditeurs fastidieux : quelques mots suffisent pour un design professionnel généré par IA',
+                fr: { title:'<span class="hw-t-brand">Chameleon</span> <span class="hw-t-rest">— Imprimeur en gros mondial</span>',
+                      sub:'Design pro par IA en quelques mots.',
                       ph:'Plus il y a de détails, mieux c’est — titre, prix, date, lieu…', go:'Créer',
                       need:'Indiquez ce que vous souhaitez créer' }
             };
             var t = T[lang] || T.en || T.kr;
             document.getElementById('hwTitle').innerHTML = t.title;   // 2026-07-21: 두 가지 색(브랜드·회색) 스팬이라 HTML
             document.getElementById('hwSub').textContent = t.sub;
+            // 2026-07-27: 해외(비한국) 사이트는 타이틀이 길어 모바일에서 2줄로 넘어가 아래 이미지를 가림.
+            //   hw-i18n 클래스로 모바일 타이틀 폰트를 줄여 한 줄에 들어오게 한다(한국어는 그대로).
+            document.getElementById('heroWorks').classList.toggle('hw-i18n', lang !== 'kr' && lang !== 'ko');
             // (안내문 .hw-tip 은 2026-07-20 삭제 — 사장님 지시)
             var inp = document.getElementById('hwPrompt');
             var btn = document.getElementById('hwGoBtn');
@@ -1814,6 +1817,9 @@ window._tcmFallbackClick = function(code) {
                 .hero-section { padding:8px 0 4px !important; min-height:240px !important; display:block !important; overflow:visible !important; }
                 #heroWorks { padding:0; gap:11px; }
                 #heroWorks .hw-title { font-size:21px; }
+                /* 2026-07-27: 해외 사이트는 타이틀·서브가 길어 2줄로 넘어감 → 모바일 폰트 축소로 한 줄 유지 */
+                #heroWorks.hw-i18n .hw-title { font-size:16px; letter-spacing:-0.3px; }
+                #heroWorks.hw-i18n .hw-sub { font-size:11.5px; }
                 #heroWorks .hw-sub { font-size:12.5px; margin-top:5px; }
                 #heroWorks .hw-prompt { gap:6px; }
                 #heroWorks #hwPrompt { padding:11px 15px; font-size:14px; }
