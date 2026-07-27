@@ -16760,17 +16760,14 @@ html, body { background: #ffffff !important; }
 
     // 2026-07-27: 메인/닫기 버튼 — 일반 사이트에선 모달만 닫지만,
     //   hexa-board.com 상세는 index.html 위 모달로 떠서 닫으면 뒤의 index.html 이 한국 메인처럼 보인다.
-    //   해외(en/그외) 상세에선 '메인' 을 그 국가 메인으로 보낸다 (URL ?lang= 기준).
+    //   해외 상세에선 '메인' 을 그 국가의 허니콤보드 랜딩(hexa-board.com)으로, 언어까지 유지해 보낸다.
     window._soBackToMainOrClose = function() {
         try {
             if (location.hostname.indexOf('hexa-board') >= 0) {
                 var _lang = (new URLSearchParams(location.search).get('lang')
                     || window.__PS_LANG || 'ko').toLowerCase();
-                var _dest = _lang === 'ko' ? 'https://www.cafe2626.com/'
-                          : _lang === 'ja' ? 'https://www.cafe0101.com/'
-                          : _lang === 'en' ? 'https://chameleon.design/'
-                          : 'https://chameleon.design/?lang=' + _lang;
-                window.location.href = _dest;
+                var _base = 'https://www.hexa-board.com/';
+                window.location.href = (_lang && _lang !== 'ko') ? (_base + '?lang=' + _lang) : _base;
                 return;
             }
         } catch (e) {}
