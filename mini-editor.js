@@ -6455,6 +6455,17 @@
                         '画像を追加したら、位置を動かしてより美しい構図に整えてみましょう。ベクターや素材を使って、さらに素敵に飾ってみてください。',
                         'After adding the image, move it to get a nicer composition. Use vectors or elements to decorate it even more beautifully.') +
               '</div>' +
+              // 2026-07-27 (사장님 지시): 만든 작품이 메인 갤러리에 올라간다는 안내 + [사용 금지] 옵트아웃.
+              '<div id="meAiGalleryNotice" style="display:none; margin-top:10px; font-size:12px; color:#475569; line-height:1.6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:11px 13px;">' +
+                '<div style="margin-bottom:9px;">' +
+                _meAiTr('고객님께서 만드신 작품은 <b>2일 동안 메인 화면</b>에 소개됩니다. 원하지 않으시면 아래 <b>사용 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">사용 금지해도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
+                        'お作りいただいた作品は <b>2日間メイン画面</b> に紹介されます。ご希望でなければ下の <b>掲載しない</b> ボタンを押してください。<span style="color:#64748b;">掲載しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
+                        'Your design will be featured on the <b>main page for 2 days</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
+                '</div>' +
+                '<button type="button" id="meAiOptOutBtn" onclick="window._meAiOptOutGallery(this)" style="width:100%; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">' +
+                _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Don\'t show on the main page') +
+                '</button>' +
+              '</div>' +
               '<div id="meAiErr" style="display:none; margin-top:10px; font-size:12.5px; color:#dc2626; line-height:1.5;"></div>' +
               '</div>' +   // /#meAiPanel
             '</div>';
@@ -6816,6 +6827,7 @@
         //   (참고 작품을 고르고 들어온 경우는 뒤따르는 _meAiSetRef 가 'ref' 로 바꾼다)
         try { _meAiStageShow(_meAiPendingUrl ? 'result' : 'empty'); } catch (_st0) {}
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
+        var _gnh=document.getElementById('meAiGalleryNotice'); if(_gnh)_gnh.style.display='none';   // 2026-07-27
         if (err) err.style.display = 'none';
         try { _meAiSetRef(null); } catch (_) {}   // 2026-07-18: 참조 사진 초기화
         // 2026-07-18: 갤러리에서 고른 작품이 있으면 '참고' 모드로 복원 (위 초기화 직후여야 함).
@@ -6913,6 +6925,8 @@
                 var like = '%' + _meGalQ.replace(/[%,]/g, ' ') + '%';
                 query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
             }
+            // 2026-07-27 (사장님 지시): "고객 작품은 2일 동안 메인에 소개" 약속을 실제로 지킨다 — 최근 2일만.
+            query = query.gte('created_at', new Date(Date.now() - 2 * 864e5).toISOString());
             var res = await query.order('created_at', { ascending: false }).limit(24);
             var rows = res.data || [];
             _meGalRows = rows;
@@ -7652,14 +7666,38 @@
             try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user ? u.data.user.id : null; } catch (_u) {}
 
             // 4) insert (needsReview 면 status='pending' → 관리자 승인 후 공개)
-            await sb.from('design_gallery').insert({
+            //   2026-07-27: 삽입된 row id 를 보관 → 결과 화면의 [사용 금지] 버튼이 이 작품만 숨길 수 있게.
+            var _ins = await sb.from('design_gallery').insert({
                 image_url: pub, thumb_url: pub, prompt: scrubbed,
                 kw_ko: kw.ko, kw_en: kw.en, kw_ja: kw.ja, ratio: ratio || null, user_id: uid,
                 status: status,
                 lang: _meDetectLang(scrubbed)   // 2026-07-21: 갤러리 언어 분리 (한국어=한국 사이트 / 일본어=일본 사이트)
-            });
+            }).select('id').single();
+            if (!_ins.error && _ins.data) _meLastGalleryId = _ins.data.id;
         } catch (e) { console.warn('[meGallery] register failed', e); }
     }
+    var _meLastGalleryId = null;   // 방금 등록한 작품 id (사용 금지 대상)
+    // 2026-07-27 (사장님 지시): 고객이 방금 만든 작품을 메인 갤러리에서 빼기 (본인은 계속 사용 가능).
+    window._meAiOptOutGallery = async function (btn) {
+        if (!_meLastGalleryId) { // 아직 등록 전이거나 이미 처리됨
+            if (btn) btn.textContent = _meAiTr('메인에 올라가지 않아요', 'メインに載りません', 'Not shown on main');
+            return;
+        }
+        var id = _meLastGalleryId; _meLastGalleryId = null;
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        try {
+            var sb = window.sb;
+            // status='hidden' → 갤러리 쿼리(status='public')에서 제외. 본인 보관함엔 그대로 남는다.
+            if (sb) await sb.from('design_gallery').update({ status: 'hidden' }).eq('id', id);
+            if (btn) {
+                btn.textContent = _meAiTr('✓ 메인에 올리지 않아요', '✓ メインに載せません', '✓ Won\'t show on main');
+                btn.style.background = '#f0fdf4'; btn.style.borderColor = '#86efac'; btn.style.color = '#15803d'; btn.style.opacity = '1';
+            }
+        } catch (e) {
+            console.warn('[meGallery] opt-out', e);
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = _meAiTr('다시 시도', 'もう一度', 'Retry'); }
+        }
+    };
 
     async function _meAiGenerate() {
         var promptEl = document.getElementById('meAiPrompt');
@@ -7671,6 +7709,7 @@
         if (err) err.style.display = 'none';
         if (ins) ins.style.display = 'none';
         var _tip=document.getElementById('meAiTip'); if(_tip)_tip.style.display='none';
+        var _gnh=document.getElementById('meAiGalleryNotice'); if(_gnh)_gnh.style.display='none';   // 2026-07-27
         _meAiPendingUrl = null;
         if (prompt.length < 3) {
             // 2026-07-21: 참고 이미지만 고르고 내용 없이 [이미지 생성] 을 눌러버리는 고객이 많았다.
@@ -7932,6 +7971,14 @@
                 var _tip2=document.getElementById('meAiTip'); if(_tip2)_tip2.style.display='block';
                 // 작품 갤러리 자동등록 (개인정보 없는 새 디자인만) — 비동기 fire&forget
                 try { _meAiTryRegisterGallery(url, prompt, _meAiRatio); } catch (_reg) {}
+                // 2026-07-27: 갤러리 등록 안내 + [사용 금지] 노출 (히어로 세션 아닐 때만 — 히어로는 곧 제품으로 넘어감)
+                try {
+                    var _gn = document.getElementById('meAiGalleryNotice');
+                    var _gb = document.getElementById('meAiOptOutBtn');
+                    if (_gb) { _gb.disabled = false; _gb.style.opacity = '1'; _gb.style.background='#fff'; _gb.style.borderColor='#cbd5e1'; _gb.style.color='#475569';
+                        _gb.textContent = _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Do not show on the main page'); }
+                    if (_gn) _gn.style.display = _meHeroMode ? 'none' : 'block';
+                } catch (_gne) {}
             }
         } catch (e) {
             console.error('[meAi] generate', e);
