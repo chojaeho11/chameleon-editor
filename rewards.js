@@ -216,4 +216,106 @@
     }
     window.rewardComment = function (ref) { return _grant('comment', ref, 'comment'); };
     window.rewardPost = function (ref) { return _grant('post', ref, 'post'); };
+
+    // ── 끝말잇기 게임 (출석체크 대체) ──
+    function _wcStyle() {
+        if (document.getElementById('wcStyle')) return;
+        var s = document.createElement('style'); s.id = 'wcStyle';
+        s.textContent =
+            '.wc-ov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.62);opacity:0;transition:opacity .2s;padding:20px}'
+          + '.wc-card{position:relative;width:380px;max-width:calc(100% - 40px);border-radius:22px;overflow:hidden;background:#fff;animation:rwPop .5s cubic-bezier(.2,1.1,.35,1) both}'
+          + '.wc-top{background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;padding:18px 20px;text-align:center}'
+          + '.wc-top h3{margin:0;font-size:18px}.wc-top p{margin:4px 0 0;font-size:12px;opacity:.9}'
+          + '.wc-body{padding:18px 20px 20px}'
+          + '.wc-chain{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:14px;min-height:26px}'
+          + '.wc-word{background:#eef2ff;color:#4338ca;border-radius:999px;padding:4px 11px;font-size:13px}'
+          + '.wc-word.last{background:#4f46e5;color:#fff}'
+          + '.wc-need{text-align:center;font-size:14px;color:#0f172a;margin-bottom:12px}'
+          + '.wc-need b{color:#4f46e5;font-size:19px}'
+          + '.wc-inrow{display:flex;gap:8px}'
+          + '.wc-in{flex:1;padding:12px 14px;border:1.5px solid #d7dce5;border-radius:12px;font-size:16px;font-family:inherit;outline:none}'
+          + '.wc-go{padding:12px 18px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;cursor:pointer;white-space:nowrap}'
+          + '.wc-msg{min-height:18px;font-size:13px;margin-top:10px;text-align:center}'
+          + '.wc-foot{margin-top:12px;font-size:12px;color:#94a3b8;text-align:center}'
+          + '.wc-x{position:absolute;top:9px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(255,255,255,.28);color:#fff;font-size:20px;cursor:pointer}';
+        document.head.appendChild(s);
+    }
+
+    window.openWordChain = async function () {
+        var sb = await sbReady();
+        _wcStyle();
+        var ov = document.createElement('div'); ov.className = 'wc-ov';
+        ov.innerHTML =
+            '<div class="wc-card">'
+            + '<button class="wc-x">&times;</button>'
+            + '<div class="wc-top"><h3>' + tr('끝말잇기 🎮', 'しりとり 🎮', 'Word Chain 🎮') + '</h3>'
+            + '<p>' + tr('단어를 이으면 마일리지 500원 + 생성권 1장! (하루 3회)', '単語をつなぐと500 +チケット1（1日3回）', 'Chain a word: +500 mileage & 1 credit (3/day)') + '</p></div>'
+            + '<div class="wc-body">'
+            + '<div class="wc-chain" id="wcChain"></div>'
+            + '<div class="wc-need" id="wcNeed"></div>'
+            + '<div class="wc-inrow"><input class="wc-in" id="wcInput" maxlength="20" placeholder="' + tr('단어 입력', '単語を入力', 'Enter a word') + '"><button class="wc-go" id="wcGo">' + tr('잇기', 'つなぐ', 'Chain') + '</button></div>'
+            + '<div class="wc-msg" id="wcMsg"></div>'
+            + '<div class="wc-foot" id="wcFoot"></div>'
+            + '</div></div>';
+        document.body.appendChild(ov);
+        requestAnimationFrame(function () { ov.style.opacity = '1'; });
+        var closed = false;
+        function close() { if (closed) return; closed = true; ov.style.opacity = '0'; setTimeout(function () { try { ov.remove(); } catch (e) {} }, 200); }
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        ov.querySelector('.wc-x').addEventListener('click', close);
+
+        var input = ov.querySelector('#wcInput');
+        var msgEl = ov.querySelector('#wcMsg');
+        var nextChar = null;
+
+        function render(st) {
+            var chainEl = ov.querySelector('#wcChain');
+            var recent = (st && st.recent) || [];
+            chainEl.innerHTML = recent.slice().reverse().map(function (w, i) {
+                var isLast = (i === recent.length - 1);
+                return '<span class="wc-word' + (isLast ? ' last' : '') + '">' + String(w).replace(/</g, '&lt;') + '</span>';
+            }).join('') || ('<span style="color:#94a3b8;font-size:13px">' + tr('아직 단어가 없어요. 첫 단어를 시작!', 'まだ単語がありません', 'No words yet — start it!') + '</span>');
+            nextChar = st && st.next_char;
+            ov.querySelector('#wcNeed').innerHTML = nextChar
+                ? (tr('다음 시작 글자: ', '次の頭文字: ', 'Next starts with: ') + '<b>' + nextChar + '</b>')
+                : tr('아무 단어나 시작하세요!', '好きな単語で開始！', 'Start with any word!');
+            ov.querySelector('#wcFoot').textContent = tr('오늘 보상 ', '本日 ', 'Today ') + ((st && st.plays_today) || 0) + ' / ' + ((st && st.cap) || 3);
+        }
+
+        if (!sb) { msgEl.style.color = '#dc2626'; msgEl.textContent = tr('잠시 후 다시 시도해주세요', '少し後に', 'Try again shortly'); }
+        else {
+            try { var s0 = await sb.rpc('word_chain_status'); render(s0 && s0.data); } catch (e) { render(null); }
+        }
+
+        async function submit() {
+            var w = (input.value || '').trim();
+            msgEl.style.color = '#dc2626';
+            if (!sb) { msgEl.textContent = tr('연결 오류', '接続エラー', 'Connection error'); return; }
+            var uid = await loggedInUid(sb);
+            if (!uid) { msgEl.textContent = tr('로그인 후 이용해주세요', 'ログインしてください', 'Please log in first.'); return; }
+            if (w.length < 2) { msgEl.textContent = tr('2글자 이상 한글 단어를 입력하세요', '2文字以上', 'At least 2 Korean letters'); return; }
+            if (/[^가-힣]/.test(w)) { msgEl.textContent = tr('순수 한글 단어만 가능해요', 'ハングルのみ', 'Korean letters only'); return; }
+            if (nextChar && w[0] !== nextChar) { msgEl.textContent = tr('「' + nextChar + '」(으)로 시작해야 해요', '「' + nextChar + '」で始めて', 'Must start with 「' + nextChar + '」'); return; }
+            try {
+                var r = await sb.rpc('word_chain_play', { p_word: w }); var d = r && r.data;
+                if (d && d.ok) {
+                    input.value = '';
+                    if (d.rewarded) window.showRewardPopup({ title: tr('끝말잇기 성공!', 'しりとり成功！', 'Word chained!'), mileage: d.mileage_added, aiCredit: d.credit_added });
+                    else { msgEl.style.color = '#16a34a'; msgEl.textContent = tr('이어졌어요! (오늘 보상은 다 받았어요)', 'つながった！(本日の報酬は上限)', 'Chained! (daily reward maxed)'); }
+                    var s2 = await sb.rpc('word_chain_status'); render(s2 && s2.data);
+                } else {
+                    var rs = d && d.reason;
+                    msgEl.textContent = rs === 'chain' ? (tr('「' + (d.need || '') + '」(으)로 시작해야 해요', '「' + (d.need || '') + '」で始めて', 'Must start with 「' + (d.need || '') + '」'))
+                        : rs === 'dup' ? tr('이미 사용된 단어예요', '既出の単語です', 'Already used')
+                        : rs === 'short' ? tr('2글자 이상 입력하세요', '2文字以上', 'Too short')
+                        : rs === 'notkorean' ? tr('순수 한글 단어만 가능해요', 'ハングルのみ', 'Korean only')
+                        : rs === 'auth' ? tr('로그인 후 이용해주세요', 'ログインしてください', 'Please log in')
+                        : tr('다시 시도해주세요', '再試行してください', 'Try again');
+                }
+            } catch (e) { msgEl.textContent = tr('오류가 났어요. 다시 시도해주세요', 'エラー', 'Error, try again'); }
+        }
+        ov.querySelector('#wcGo').addEventListener('click', submit);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+        setTimeout(function () { try { input.focus(); } catch (e) {} }, 300);
+    };
 })();

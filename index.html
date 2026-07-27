@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260728060433';
+    var CV = '20260728062508';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -2054,9 +2054,9 @@ window._tcmFallbackClick = function(code) {
                     <span class="mgr-action-icon-wrap"><i class="fa-solid fa-comment-dots"></i></span>
                     <span class="mgr-action-label" data-i18n="menu_freetalk">자유게시판</span>
                 </a>
-                <button type="button" class="mgr-action mgr-attend" onclick="window.attendanceCheck && window.attendanceCheck()">
-                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-calendar-check"></i></span>
-                    <span class="mgr-action-label" data-i18n="btn_attendance">출석체크</span>
+                <button type="button" class="mgr-action mgr-attend" onclick="window.openWordChain && window.openWordChain()">
+                    <span class="mgr-action-icon-wrap"><i class="fa-solid fa-dice"></i></span>
+                    <span class="mgr-action-label" data-i18n="btn_wordchain">끝말잇기</span>
                 </button>
             </div>
             <!-- 2026-06-19 v637: 디자이너 모집 배너 — mgrQuoteHero 밖으로 이동됨. 아래 hotDealSection 직전 참고. -->
@@ -5951,7 +5951,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=553"></script>
-<script src="./rewards.js?v=2"></script>
+<script src="./rewards.js?v=3"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -19117,8 +19117,6 @@ if (w >= 20 && h >= 20) {
         // config.js에서 설정된 currentUser 변수 사용
         if (window.currentUser) {
             console.log("✅ 로그인 됨:", window.currentUser.email);
-            // 2026-07-28: 출석 보상 — 그날 첫 방문 시 서버 RPC 가 하루 1회만 지급, 지급되면 폭죽 팝업.
-            try { if (window.rewardAttendance) window.rewardAttendance(); } catch (_att) {}
             if (btnLogin) {
                 // [수정] "로그아웃" -> window.t('btn_logout')
                 btnLogin.innerText = window.t('btn_logout');
