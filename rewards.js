@@ -217,6 +217,80 @@
     window.rewardComment = function (ref) { return _grant('comment', ref, 'comment'); };
     window.rewardPost = function (ref) { return _grant('post', ref, 'post'); };
 
+    // ── 오늘의 선물(접속 보상) + 오늘의 미션 안내 팝업 ──
+    function _dgStyle() {
+        if (document.getElementById('dgStyle')) return;
+        var s = document.createElement('style'); s.id = 'dgStyle';
+        s.textContent =
+            '.dg-ov{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.62);opacity:0;transition:opacity .2s;padding:20px}'
+          + '.dg-card{position:relative;width:380px;max-width:calc(100% - 40px);max-height:92vh;overflow-y:auto;border-radius:24px;background:#fff;animation:rwPop .5s cubic-bezier(.2,1.1,.35,1) both}'
+          + '.dg-top{background:linear-gradient(135deg,#7c3aed,#4f46e5 55%,#0ea5e9);color:#fff;padding:20px;text-align:center}'
+          + '.dg-top h3{margin:0;font-size:19px}.dg-top p{margin:4px 0 0;font-size:12px;opacity:.9}'
+          + '.dg-gifts{display:flex;gap:16px;justify-content:center;padding:18px 0 6px}'
+          + '.dg-gift{display:flex;flex-direction:column;align-items:center;gap:6px}'
+          + '.dg-badge{width:82px;height:82px;border-radius:50%;overflow:hidden;border:4px solid #fff;outline:3px solid var(--rg,#e2e8f0);animation:rwFloat 2.6s ease-in-out infinite}'
+          + '.dg-badge img{width:100%;height:100%;object-fit:cover;display:block}'
+          + '.dg-amt{font-size:18px;color:#4f46e5}.dg-lbl{font-size:11px;color:#64748b}'
+          + '.dg-given{text-align:center;font-size:13px;color:#94a3b8;padding-bottom:8px}'
+          + '.dg-miss{margin:6px 16px 4px;background:#f8fafc;border:1px solid #eef0f5;border-radius:14px;padding:14px 16px}'
+          + '.dg-miss h4{margin:0 0 9px;font-size:13px;color:#0f172a}'
+          + '.dg-miss ul{margin:0;padding:0;list-style:none}'
+          + '.dg-miss li{font-size:12.5px;color:#334155;padding:5px 0;line-height:1.4}'
+          + '.dg-miss li b{color:#4f46e5}'
+          + '.dg-btns{display:flex;gap:8px;padding:14px 16px 18px}'
+          + '.dg-btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:14px;cursor:pointer}'
+          + '.dg-btn.p{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}'
+          + '.dg-btn.s{background:#eef2ff;color:#4338ca}'
+          + '.dg-x{position:absolute;top:10px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:rgba(255,255,255,.28);color:#fff;font-size:20px;cursor:pointer;z-index:2}';
+        document.head.appendChild(s);
+    }
+
+    // 로그인 후 그날 첫 방문 시 index.html 에서 호출. attendance_claim 이 하루 1회만 지급 → 지급될 때만 팝업.
+    window.dailyGiftPopup = async function () {
+        var sb = await sbReady(); if (!sb) return;
+        var uid = await loggedInUid(sb); if (!uid) return;
+        var d;
+        try { var r = await sb.rpc('attendance_claim'); d = r && r.data; } catch (e) { return; }
+        if (!d || !d.ok) return;   // 이미 오늘 받았으면 팝업 없음
+        _dgStyle();
+        var _l = lang();
+        var gameName = (_l === 'ja') ? 'しりとり' : (_l === 'ko' || _l === 'kr') ? '끝말잇기' : 'Word Chain';
+        var boardName = tr('자유게시판', '自由掲示板', 'Free Board');
+        var missions = tr(
+            '<li>🎮 <b>' + gameName + '</b> — 단어당 500원 + 생성권 1장 (하루 3회)</li>'
+            + '<li>✍ <b>' + boardName + ' 글쓰기</b> — 1,000원 + 생성권 1장 (하루 2회)</li>'
+            + '<li>💬 <b>댓글 달기</b> — 3,000원 (하루 3회)</li>',
+            '<li>🎮 <b>' + gameName + '</b> — 1語500 + チケット1（1日3回）</li>'
+            + '<li>✍ <b>' + boardName + '投稿</b> — 1,000 + チケット1（1日2回）</li>'
+            + '<li>💬 <b>コメント</b> — 3,000（1日3回）</li>',
+            '<li>🎮 <b>' + gameName + '</b> — +500 & 1 credit per word (3/day)</li>'
+            + '<li>✍ <b>' + boardName + ' post</b> — +1,000 & 1 credit (2/day)</li>'
+            + '<li>💬 <b>Comment</b> — +3,000 (3/day)</li>'
+        );
+
+        var ov = document.createElement('div'); ov.className = 'dg-ov';
+        ov.innerHTML = '<div class="dg-card"><button class="dg-x">&times;</button>'
+            + '<div class="dg-top"><h3>🎁 ' + tr('오늘의 선물 도착!', '本日のプレゼント到着！', 'Your daily gift!') + '</h3>'
+            + '<p>' + tr('접속 보상이 지급되었어요', 'ログイン報酬を付与しました', 'Daily check-in reward granted') + '</p></div>'
+            + '<div class="dg-gifts">'
+            + '<div class="dg-gift"><div class="dg-badge" style="--rg:#22c55e"><img src="/reward-ai.jpg" alt=""></div><div class="dg-amt">+' + (d.credit_added || 3) + tr('장', '枚', '') + '</div><div class="dg-lbl">' + tr('생성권', 'チケット', 'credits') + '</div></div>'
+            + '<div class="dg-gift"><div class="dg-badge" style="--rg:#f59e0b"><img src="/reward-mileage.jpg" alt=""></div><div class="dg-amt">+' + Number(d.mileage_added || 1000).toLocaleString() + tr('원', '', '') + '</div><div class="dg-lbl">' + tr('마일리지', 'マイル', 'mileage') + '</div></div>'
+            + '</div>'
+            + '<div class="dg-given">' + tr('지급되었습니다!', '付与されました！', 'Granted!') + '</div>'
+            + '<div class="dg-miss"><h4>' + tr('오늘 더 받는 방법 (게임하고 글 남기면 선물 더!)', '今日もっと貰う方法（遊んで投稿でプレゼント！）', 'Earn more today — play & post for gifts!') + '</h4><ul>' + missions + '</ul></div>'
+            + '<div class="dg-btns"><button class="dg-btn p" id="dgGame">' + gameName + '</button><button class="dg-btn s" id="dgBoard">' + boardName + '</button></div>'
+            + '</div>';
+        document.body.appendChild(ov);
+        requestAnimationFrame(function () { ov.style.opacity = '1'; });
+        setTimeout(confetti, 150);
+        var closed = false;
+        function close() { if (closed) return; closed = true; ov.style.opacity = '0'; setTimeout(function () { try { ov.remove(); } catch (e) {} }, 200); }
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        ov.querySelector('.dg-x').addEventListener('click', close);
+        ov.querySelector('#dgGame').addEventListener('click', function () { close(); if (window.openWordChain) window.openWordChain(); });
+        ov.querySelector('#dgBoard').addEventListener('click', function () { location.href = '/board.html?cat=freetalk'; });
+    };
+
     // ── 끝말잇기 게임 (출석체크 대체) ──
     function _wcStyle() {
         if (document.getElementById('wcStyle')) return;
