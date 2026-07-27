@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260728054258';
+    var CV = '20260728060433';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -531,18 +531,22 @@
             border-color: #e2e8f0;
             font-family: 'Pretendard';
         }
-        /* Quill 1.3.6 ql-video 버튼 사이즈 강제 (브라우저/CSS 엣지케이스 대응) */
+        /* 2026-07-28 [버그수정] style.css 의 .ql-video{min-height:400px}(본문 임베드 영상용)가
+           툴바의 영상 삽입 버튼(button.ql-video)까지 잡아 버튼이 400px 로 부풀며 툴바가 깨졌다
+           (툴바가 중앙으로 밀리고 입력칸이 박스 밖으로 흘러넘침). min-height 무효화 + 크기 강제 + float 제거. */
         .ql-toolbar.ql-snow button.ql-video {
             width: 28px !important;
             height: 24px !important;
+            min-height: 0 !important;
             padding: 3px 5px !important;
             display: inline-block !important;
-            float: left !important;
+            float: none !important;
+            vertical-align: middle !important;
         }
         .ql-toolbar.ql-snow button.ql-video svg {
-            width: 18px;
-            height: 18px;
-            float: left;
+            width: 18px !important;
+            height: 18px !important;
+            float: none !important;
         }
 
         /* ===== 모바일 반응형 ===== */
