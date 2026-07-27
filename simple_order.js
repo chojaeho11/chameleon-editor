@@ -1538,6 +1538,8 @@ html, body { background: #ffffff !important; }
                 <a id="soPdContactKR" href="tel:0313661984" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('한국사무실', '韓国本社', 'Korea HQ')}</span> <b style="color:#b45309;">031-366-1984</b></a>
                 <a id="soPdContactJP" href="tel:09053970420" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇯🇵 <span>${tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami')}</span> <b style="color:#b45309;">090-5397-0420</b></a>
                 <a id="soPdContactMA" href="tel:212617901092" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇲🇦 <span>${tr('모로코지사 히바', 'モロッコ支社 ヒバ', 'Morocco · Hiba')}</span> <b style="color:#b45309;">212-617-901-092</b></a>
+                <a id="soPdContactDirector" href="tel:+821034913535" style="display:none; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('해외총괄 서혜림 디렉터', '海外統括 ソ・ヘリム', 'Global Director · Hyerim Seo')}</span> <b style="color:#b45309;">+82 10-3491-3535</b></a>
+                <a id="soPdContactDirectorWa" href="https://wa.me/821034913535" target="_blank" rel="noopener" style="display:none; align-items:center; justify-content:center; gap:6px; padding:11px 16px; background:#25D366; border:2px solid #128C7E; border-radius:999px; font-size:14px; font-weight:800; color:#fff; text-decoration:none;"><span>${tr('왓츠앱 상담', 'WhatsApp相談', 'WhatsApp')}</span> <b>+82 10-3491-3535</b></a>
               </div>
               <div style="font-size:12px; font-weight:700; color:#92400e; display:flex; align-items:center; gap:6px;">
                 <span>🌐</span>
@@ -13390,28 +13392,37 @@ html, body { background: #ffffff !important; }
         if (wallGuide) wallGuide.style.display = isWallNow ? '' : 'none';
         if (pdNotice) {
             pdNotice.style.display = isPdNow ? '' : 'none';
-            // 2026-07-27: 사이트 국가에 맞는 지사 전화번호 1개만 크게 노출 (KR=한국본사 / JP=일본 나나미 / 그 외=히바)
+            // 2026-07-27: 사이트 국가에 맞는 지사 전화번호만 노출.
+            //   KR=한국본사 / JP=일본 나나미 / 그 외 해외=해외총괄 서혜림 디렉터(+82, 크게+왓츠앱) + 히바.
             if (isPdNow) {
                 var _pdSc = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR').toUpperCase();
-                var _pdShowId = _pdSc === 'KR' ? 'soPdContactKR' : _pdSc === 'JP' ? 'soPdContactJP' : 'soPdContactMA';
-                ['soPdContactKR','soPdContactJP','soPdContactMA'].forEach(function(id){
-                    var el = document.getElementById(id);
+                var _pdAll = ['soPdContactKR','soPdContactJP','soPdContactMA','soPdContactDirector','soPdContactDirectorWa'];
+                _pdAll.forEach(function(id){ var el = document.getElementById(id); if (el) el.style.display = 'none'; });
+                var _pdBig = function(el){
                     if (!el) return;
-                    if (id === _pdShowId) {
-                        el.style.display = 'inline-flex';
-                        el.style.width = '100%';
-                        el.style.boxSizing = 'border-box';
-                        el.style.justifyContent = 'center';
-                        el.style.gap = '8px';
-                        el.style.padding = '13px 18px';
-                        el.style.fontSize = '15px';
-                        el.style.borderWidth = '2px';
-                        var _num = el.querySelector('b');
-                        if (_num) { _num.style.fontSize = '22px'; _num.style.letterSpacing = '0.5px'; }
-                    } else {
-                        el.style.display = 'none';
-                    }
-                });
+                    el.style.display = 'inline-flex';
+                    el.style.width = '100%';
+                    el.style.boxSizing = 'border-box';
+                    el.style.justifyContent = 'center';
+                    el.style.gap = '8px';
+                    el.style.padding = '13px 18px';
+                    el.style.fontSize = '15px';
+                    el.style.borderWidth = '2px';
+                    var _num = el.querySelector('b');
+                    if (_num) { _num.style.fontSize = '22px'; _num.style.letterSpacing = '0.5px'; }
+                };
+                if (_pdSc === 'KR') {
+                    _pdBig(document.getElementById('soPdContactKR'));
+                } else if (_pdSc === 'JP') {
+                    _pdBig(document.getElementById('soPdContactJP'));
+                } else {
+                    // 해외: 서혜림 디렉터가 모든 해외 상담 담당 → 크게 + 왓츠앱, 히바는 보조로 함께 표시
+                    _pdBig(document.getElementById('soPdContactDirector'));
+                    var _pdWa = document.getElementById('soPdContactDirectorWa');
+                    if (_pdWa) { _pdWa.style.display = 'inline-flex'; _pdWa.style.width = '100%'; _pdWa.style.boxSizing = 'border-box'; }
+                    var _pdHiba = document.getElementById('soPdContactMA');
+                    if (_pdHiba) _pdHiba.style.display = 'inline-flex';
+                }
             }
         }
         const img = document.getElementById('soImg');
