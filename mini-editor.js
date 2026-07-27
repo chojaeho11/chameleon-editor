@@ -6458,9 +6458,9 @@
               // 2026-07-27 (사장님 지시): 만든 작품이 메인 갤러리에 올라간다는 안내 + [사용 금지] 옵트아웃.
               '<div id="meAiGalleryNotice" style="display:none; margin-top:10px; font-size:12px; color:#475569; line-height:1.6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:11px 13px;">' +
                 '<div style="margin-bottom:9px;">' +
-                _meAiTr('고객님께서 만드신 작품은 <b>2일 동안 메인 화면</b>에 소개됩니다. 원하지 않으시면 아래 <b>사용 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">사용 금지해도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
-                        'お作りいただいた作品は <b>2日間メイン画面</b> に紹介されます。ご希望でなければ下の <b>掲載しない</b> ボタンを押してください。<span style="color:#64748b;">掲載しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
-                        'Your design will be featured on the <b>main page for 2 days</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
+                _meAiTr('고객님께서 만드신 작품은 <b>7일 동안 메인 화면</b>에 소개됩니다. 원하지 않으시면 아래 <b>사용 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">사용 금지해도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
+                        'お作りいただいた作品は <b>7日間メイン画面</b> に紹介されます。ご希望でなければ下の <b>掲載しない</b> ボタンを押してください。<span style="color:#64748b;">掲載しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
+                        'Your design will be featured on the <b>main page for 7 days</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
                 '</div>' +
                 '<button type="button" id="meAiOptOutBtn" onclick="window._meAiOptOutGallery(this)" style="width:100%; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">' +
                 _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Don\'t show on the main page') +
@@ -6926,7 +6926,7 @@
                 query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
             }
             // 2026-07-27 (사장님 지시): "고객 작품은 2일 동안 메인에 소개" 약속을 실제로 지킨다 — 최근 2일만.
-            query = query.gte('created_at', new Date(Date.now() - 2 * 864e5).toISOString());
+            query = query.gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
             var res = await query.order('created_at', { ascending: false }).limit(24);
             var rows = res.data || [];
             _meGalRows = rows;
@@ -7688,7 +7688,11 @@
         try {
             var sb = window.sb;
             // status='hidden' → 갤러리 쿼리(status='public')에서 제외. 본인 보관함엔 그대로 남는다.
-            if (sb) await sb.from('design_gallery').update({ status: 'hidden' }).eq('id', id);
+            //   design_gallery 는 RLS 로 클라이언트 update 가 막혀 있어 SECURITY DEFINER RPC 로 처리.
+            if (sb) {
+                var _r = await sb.rpc('dg_optout', { p_id: id });
+                if (_r.error) throw _r.error;
+            }
             if (btn) {
                 btn.textContent = _meAiTr('✓ 메인에 올리지 않아요', '✓ メインに載せません', '✓ Won\'t show on main');
                 btn.style.background = '#f0fdf4'; btn.style.borderColor = '#86efac'; btn.style.color = '#15803d'; btn.style.opacity = '1';
