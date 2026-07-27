@@ -6458,8 +6458,8 @@
               // 2026-07-27 (사장님 지시): 만든 작품이 메인 갤러리에 올라간다는 안내 + [사용 금지] 옵트아웃.
               '<div id="meAiGalleryNotice" style="display:none; margin-top:10px; font-size:12px; color:#475569; line-height:1.6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:11px 13px;">' +
                 '<div style="margin-bottom:9px;">' +
-                _meAiTr('고객님께서 만드신 작품은 <b>7일 동안 메인 화면</b>에 소개됩니다. 원하지 않으시면 아래 <b>사용 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">사용 금지해도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
-                        'お作りいただいた作品は <b>7日間メイン画面</b> に紹介されます。ご希望でなければ下の <b>掲載しない</b> ボタンを押してください。<span style="color:#64748b;">掲載しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
+                _meAiTr('고객님께서 만드신 작품은 <b>7일 동안 메인 화면</b>에 소개됩니다. 공개를 원하지 않으시면 아래 <b>내 작품 공개 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">공개하지 않아도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
+                        'お作りいただいた作品は <b>7日間メイン画面</b> に紹介されます。公開をご希望でなければ下の <b>作品を公開しない</b> ボタンを押してください。<span style="color:#64748b;">公開しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
                         'Your design will be featured on the <b>main page for 7 days</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
                 '</div>' +
                 '<button type="button" id="meAiOptOutBtn" onclick="window._meAiOptOutGallery(this)" style="width:100%; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">' +
@@ -7679,12 +7679,16 @@
     var _meLastGalleryId = null;   // 방금 등록한 작품 id (사용 금지 대상)
     // 2026-07-27 (사장님 지시): 고객이 방금 만든 작품을 메인 갤러리에서 빼기 (본인은 계속 사용 가능).
     window._meAiOptOutGallery = async function (btn) {
-        if (!_meLastGalleryId) { // 아직 등록 전이거나 이미 처리됨
-            if (btn) btn.textContent = _meAiTr('메인에 올라가지 않아요', 'メインに載りません', 'Not shown on main');
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        // 갤러리 등록은 비동기(fire&forget)라 방금 눌렀을 때 아직 id 가 안 잡혔을 수 있다 → 잠깐 기다린다.
+        if (!_meLastGalleryId) {
+            for (var _w = 0; _w < 30 && !_meLastGalleryId; _w++) { await new Promise(function (r) { setTimeout(r, 200); }); }
+        }
+        if (!_meLastGalleryId) { // 그래도 없으면 (등록 실패/PII pending 등) — 공개 안 된 것으로 안내
+            if (btn) { btn.textContent = _meAiTr('공개되지 않아요', '公開されません', 'Kept private'); btn.style.background = '#f0fdf4'; btn.style.borderColor = '#86efac'; btn.style.color = '#15803d'; btn.style.opacity = '1'; }
             return;
         }
         var id = _meLastGalleryId; _meLastGalleryId = null;
-        if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
         try {
             var sb = window.sb;
             // status='hidden' → 갤러리 쿼리(status='public')에서 제외. 본인 보관함엔 그대로 남는다.
@@ -7980,8 +7984,8 @@
                     var _gn = document.getElementById('meAiGalleryNotice');
                     var _gb = document.getElementById('meAiOptOutBtn');
                     if (_gb) { _gb.disabled = false; _gb.style.opacity = '1'; _gb.style.background='#fff'; _gb.style.borderColor='#cbd5e1'; _gb.style.color='#475569';
-                        _gb.textContent = _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Do not show on the main page'); }
-                    if (_gn) _gn.style.display = _meHeroMode ? 'none' : 'block';
+                        _gb.textContent = _meAiTr('내 작품 공개 금지', '作品を公開しない', 'Keep my design private'); }
+                    if (_gn) _gn.style.display = 'block';   // 2026-07-27: 히어로 흐름에서도 노출 (사장님 지시)
                 } catch (_gne) {}
             }
         } catch (e) {
