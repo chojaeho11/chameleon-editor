@@ -711,17 +711,7 @@ export function renderShortcutButtons(containerId) {
             .cta3-btn{min-width:0;padding:11px 13px;font-size:12px;}
         }
         </style>
-        <!-- 2026-06-14: EDITOR 카드 삭제 + 의뢰/신청 페어는 #designRequestPair 로 분리 + WITH(쇼핑몰) 카드만 유지 -->
-        <div class="adv-ext-wrap">
-            <a href="${location.origin}/franchise" class="cta3-card cta3-with">
-                <div class="cta3-word">WITH</div>
-                <div class="cta3-text">
-                    <div class="cta3-title">${t.tg_title}</div>
-                    <div class="cta3-sub">${t.tg_sub}</div>
-                </div>
-                <div class="cta3-btn">${t.tg_cta} <i class="fa-solid fa-arrow-right"></i></div>
-            </a>
-        </div>
+        <!-- 2026-07-27: WITH 쇼핑몰 배너 삭제(사장님 지시) — 컨테이너 비움 -->
     `;
 }
 

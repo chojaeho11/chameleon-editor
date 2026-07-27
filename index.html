@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260727161930';
+    var CV = '20260727164207';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -601,7 +601,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 <!-- Three.js loaded dynamically by wall-3d-preview.js -->
 
 <!-- Pretendard 폰트는 loadLanguageFont()에서 국가별로 동적 로드 -->
-<link rel="stylesheet" href="./style.css?v=458">
+<link rel="stylesheet" href="./style.css?v=459">
 
 <script>
     // 0. [핵심] 인라인 사이트 코드 결정 — CDN 캐시 무관하게 항상 최신 hostname 기반
@@ -6982,40 +6982,102 @@ async function handleSubReturn() {
                 return;
             }
 
-            grid.innerHTML = '';
-            top10.forEach(function(r) {
-                var stars = '';
-                for (var i = 0; i < 5; i++) {
-                    stars += i < r.rating ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-regular fa-star"></i>';
-                }
-                var date = new Date(r.created_at);
-                var dateStr = date.getFullYear() + '.' + String(date.getMonth()+1).padStart(2,'0') + '.' + String(date.getDate()).padStart(2,'0');
-                var photoHtml = '';
-                if (r.photo_url && r.photo_url.trim()) {
-                    photoHtml = '<div class="home-rv-photo"><img src="' + r.photo_url + '" alt="review" loading="lazy"></div>';
-                }
+            // 2026-07-27: 그리드 → 좌→우로 흘러가는 마퀴 + 클릭 시 큰 댓글 팝업.
+            //   국가 배지(리뷰 언어 기준)로 "국가별" 느낌을 살리고, 카드/글씨를 키워 내용이 잘 보이게.
+            function _esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+            var _ctryLabel = { kr:'한국', ja:'日本', en:'USA', zh:'中国', ar:'중동', es:'España', de:'Deutschland', fr:'France' };
+            function _starsHtml(n){ var s=''; for (var i=0;i<5;i++) s += (i<n?'<i class="fa-solid fa-star"></i>':'<i class="fa-regular fa-star"></i>'); return s; }
+            function _dateStr(v){ var d=new Date(v); return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0'); }
+            function _buildCard(r, dup){
+                var stars = _starsHtml(r.rating);
+                var dateStr = _dateStr(r.created_at);
+                var ctry = _ctryLabel[r.lang] || '';
+                var photoHtml = (r.photo_url && r.photo_url.trim())
+                    ? '<div class="home-rv-photo"><img src="'+_esc(r.photo_url)+'" alt="review" loading="lazy"></div>' : '';
                 var card = document.createElement('div');
                 card.className = 'home-rv-card';
-                if (r.product_code) {
-                    card.style.cursor = 'pointer';
-                    card.onclick = (function(code) { return function() { if (window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(code); }; })(r.product_code);
-                }
+                if (dup) card.setAttribute('aria-hidden','true');
                 card.innerHTML = photoHtml +
                     '<div class="home-rv-body">' +
-                        '<div class="home-rv-stars">' + stars + '</div>' +
-                        '<p class="home-rv-text">"' + (r.comment || '').replace(/</g,'&lt;') + '"</p>' +
+                        '<div class="home-rv-top">' +
+                            '<div class="home-rv-stars">' + stars + '</div>' +
+                            (ctry ? '<span class="home-rv-ctry">' + _esc(ctry) + '</span>' : '') +
+                        '</div>' +
+                        '<p class="home-rv-text">"' + _esc(r.comment || '') + '"</p>' +
                         '<div class="home-rv-user">' +
-                            '<span class="u-name">' + (r.user_name || '').replace(/</g,'&lt;') + '</span>' +
+                            '<span class="u-name">' + _esc(r.user_name || '') + '</span>' +
                             '<span class="u-date">' + dateStr + '</span>' +
                         '</div>' +
                     '</div>';
-                grid.appendChild(card);
-            });
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function(){ window._openReviewModal(r, dateStr, stars, ctry); });
+                return card;
+            }
+
+            grid.innerHTML = '';
+            grid.classList.add('home-review-marquee');
+            var track = document.createElement('div');
+            track.className = 'home-rv-track';
+            top10.forEach(function(r){ track.appendChild(_buildCard(r, false)); });
+            // 카드가 3개 이상이면 끊김 없는 무한 마퀴를 위해 한 벌 복제
+            if (top10.length >= 3) {
+                top10.forEach(function(r){ track.appendChild(_buildCard(r, true)); });
+                track.classList.add('is-marquee');
+                // 카드 수에 비례해 속도 조절 (한 장당 약 5초)
+                track.style.animationDuration = (top10.length * 5) + 's';
+            }
+            grid.appendChild(track);
         } catch(e) {
             console.warn('[홈 후기] 로드 실패:', e);
             grid.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;">후기를 불러올 수 없습니다.</div>';
         }
     };
+
+    // 2026-07-27: 후기 클릭 시 전체 댓글을 크게 보여주는 팝업
+    window._openReviewModal = function(r, dateStr, starsHtml, ctry) {
+        function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        var _cl = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR';
+        var CLOSE = {KR:'닫기', JP:'閉じる', US:'Close', CN:'关闭', AR:'إغلاق', ES:'Cerrar', DE:'Schließen', FR:'Fermer'};
+        var VIEW  = {KR:'이 상품 보러가기', JP:'この商品を見る', US:'View this product', CN:'查看该商品', AR:'عرض المنتج', ES:'Ver producto', DE:'Produkt ansehen', FR:'Voir le produit'};
+        var closeTxt = CLOSE[_cl] || CLOSE.US, viewTxt = VIEW[_cl] || VIEW.US;
+        var modal = document.getElementById('reviewDetailModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'reviewDetailModal';
+            modal.className = 'rv-modal';
+            modal.addEventListener('click', function(e){ if (e.target === modal) window._closeReviewModal(); });
+            document.body.appendChild(modal);
+        }
+        var photo = (r.photo_url && r.photo_url.trim())
+            ? '<div class="rv-modal-photo"><img src="'+esc(r.photo_url)+'" alt="review"></div>' : '';
+        var prodBtn = r.product_code
+            ? '<button type="button" class="rv-modal-prod" onclick="window._closeReviewModal(); if(window.loadProductDetailAndOpen) window.loadProductDetailAndOpen(\''+esc(r.product_code)+'\');">'+esc(viewTxt)+'</button>' : '';
+        modal.innerHTML =
+            '<div class="rv-modal-box" role="dialog" aria-modal="true">' +
+                '<button type="button" class="rv-modal-x" aria-label="'+esc(closeTxt)+'" onclick="window._closeReviewModal()">&times;</button>' +
+                photo +
+                '<div class="rv-modal-body">' +
+                    '<div class="rv-modal-top">' +
+                        '<div class="rv-modal-stars">'+starsHtml+'</div>' +
+                        (ctry ? '<span class="rv-modal-ctry">'+esc(ctry)+'</span>' : '') +
+                    '</div>' +
+                    '<p class="rv-modal-text">"'+esc(r.comment || '')+'"</p>' +
+                    '<div class="rv-modal-user">' +
+                        '<span class="u-name">'+esc(r.user_name || '')+'</span>' +
+                        '<span class="u-date">'+esc(dateStr)+'</span>' +
+                    '</div>' +
+                    prodBtn +
+                '</div>' +
+            '</div>';
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    };
+    window._closeReviewModal = function(){
+        var m = document.getElementById('reviewDetailModal');
+        if (m) m.classList.remove('open');
+        document.body.style.overflow = '';
+    };
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') window._closeReviewModal(); });
 
     if (document.readyState === 'complete') {
         window.loadHomeReviews();
@@ -12460,7 +12522,7 @@ document.querySelectorAll('[data-i18n-title]').forEach(el => {
         if (scSec) scSec.style.display = 'block';
 
         // AI 어드바이저 패널 초기화
-        import('./advisor-panel.js?v=467').then(m => {
+        import('./advisor-panel.js?v=468').then(m => {
             if (m.initAdvisorPanel) m.initAdvisorPanel();
             if (m.renderShortcutButtons) m.renderShortcutButtons('advShortcutBtns');
             // 2026-05-15: 해외도 KR 처럼 3 바로가기 버튼을 글로벌 지사 카드 아래 그대로 표시
