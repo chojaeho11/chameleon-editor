@@ -244,19 +244,22 @@
     window.openWordChain = async function () {
         var sb = await sbReady();
         _wcStyle();
+        // 게임 언어: JP=しりとり(ja) / KR=끝말잇기(kr) / 그 외=영어 워드체인(en)
+        var _l = lang();
+        var gl = (_l === 'ja') ? 'ja' : (_l === 'ko' || _l === 'kr') ? 'kr' : 'en';
+        var G = ({
+            kr: { re: /[^가-힣]/, title: '끝말잇기 🎮', desc: '단어를 이으면 마일리지 500원 + 생성권 1장! (하루 3회)', place: '단어 입력', go: '잇기', next: '다음 시작 글자: ', any: '아무 단어나 시작하세요!', empty: '아직 단어가 없어요. 첫 단어를 시작!', invalid: '순수 한글 단어만 가능해요', dup: '이미 사용된 단어예요', short: '2글자 이상 입력하세요', endn: '', today: '오늘 보상 ', success: '끝말잇기 성공!', maxed: '이어졌어요! (오늘 보상은 다 받았어요)', login: '로그인 후 이용해주세요', retry: '다시 시도해주세요', chain: function (c) { return '「' + c + '」(으)로 시작해야 해요'; } },
+            ja: { re: /[^ぁ-んァ-ヶー]/, title: 'しりとり 🎮', desc: '単語をつなぐと500 + チケット1枚！(1日3回)', place: 'ひらがな・カタカナ', go: 'つなぐ', next: '次の頭文字: ', any: '好きな単語で開始！', empty: 'まだ単語がありません。最初の単語を！', invalid: 'ひらがな・カタカナのみ', dup: '既に使われた単語です', short: '2文字以上入力してください', endn: '「ん」で終わる単語はダメ！', today: '本日 ', success: 'しりとり成功！', maxed: 'つながった！(本日の報酬は上限)', login: 'ログインしてください', retry: '再試行してください', chain: function (c) { return '「' + c + '」で始めてください'; } },
+            en: { re: /[^a-zA-Z]/, title: 'Word Chain 🎮', desc: 'Chain a word: +500 mileage & 1 credit! (3/day)', place: 'Type an English word', go: 'Chain', next: 'Next starts with: ', any: 'Start with any word!', empty: 'No words yet — start it!', invalid: 'English letters only', dup: 'Already used', short: 'At least 2 letters', endn: '', today: 'Today ', success: 'Word chained!', maxed: 'Chained! (daily reward maxed)', login: 'Please log in first.', retry: 'Try again', chain: function (c) { return 'Must start with "' + c + '"'; } }
+        })[gl];
+        var norm = function (s) { return gl === 'en' ? s.toLowerCase() : s; };
+
         var ov = document.createElement('div'); ov.className = 'wc-ov';
-        ov.innerHTML =
-            '<div class="wc-card">'
-            + '<button class="wc-x">&times;</button>'
-            + '<div class="wc-top"><h3>' + tr('끝말잇기 🎮', 'しりとり 🎮', 'Word Chain 🎮') + '</h3>'
-            + '<p>' + tr('단어를 이으면 마일리지 500원 + 생성권 1장! (하루 3회)', '単語をつなぐと500 +チケット1（1日3回）', 'Chain a word: +500 mileage & 1 credit (3/day)') + '</p></div>'
-            + '<div class="wc-body">'
-            + '<div class="wc-chain" id="wcChain"></div>'
-            + '<div class="wc-need" id="wcNeed"></div>'
-            + '<div class="wc-inrow"><input class="wc-in" id="wcInput" maxlength="20" placeholder="' + tr('단어 입력', '単語を入力', 'Enter a word') + '"><button class="wc-go" id="wcGo">' + tr('잇기', 'つなぐ', 'Chain') + '</button></div>'
-            + '<div class="wc-msg" id="wcMsg"></div>'
-            + '<div class="wc-foot" id="wcFoot"></div>'
-            + '</div></div>';
+        ov.innerHTML = '<div class="wc-card"><button class="wc-x">&times;</button>'
+            + '<div class="wc-top"><h3>' + G.title + '</h3><p>' + G.desc + '</p></div>'
+            + '<div class="wc-body"><div class="wc-chain" id="wcChain"></div><div class="wc-need" id="wcNeed"></div>'
+            + '<div class="wc-inrow"><input class="wc-in" id="wcInput" maxlength="24" placeholder="' + G.place + '"><button class="wc-go" id="wcGo">' + G.go + '</button></div>'
+            + '<div class="wc-msg" id="wcMsg"></div><div class="wc-foot" id="wcFoot"></div></div></div>';
         document.body.appendChild(ov);
         requestAnimationFrame(function () { ov.style.opacity = '1'; });
         var closed = false;
@@ -269,50 +272,46 @@
         var nextChar = null;
 
         function render(st) {
-            var chainEl = ov.querySelector('#wcChain');
             var recent = (st && st.recent) || [];
-            chainEl.innerHTML = recent.slice().reverse().map(function (w, i) {
-                var isLast = (i === recent.length - 1);
-                return '<span class="wc-word' + (isLast ? ' last' : '') + '">' + String(w).replace(/</g, '&lt;') + '</span>';
-            }).join('') || ('<span style="color:#94a3b8;font-size:13px">' + tr('아직 단어가 없어요. 첫 단어를 시작!', 'まだ単語がありません', 'No words yet — start it!') + '</span>');
+            ov.querySelector('#wcChain').innerHTML = recent.slice().reverse().map(function (w, i) {
+                return '<span class="wc-word' + (i === recent.length - 1 ? ' last' : '') + '">' + String(w).replace(/</g, '&lt;') + '</span>';
+            }).join('') || ('<span style="color:#94a3b8;font-size:13px">' + G.empty + '</span>');
             nextChar = st && st.next_char;
-            ov.querySelector('#wcNeed').innerHTML = nextChar
-                ? (tr('다음 시작 글자: ', '次の頭文字: ', 'Next starts with: ') + '<b>' + nextChar + '</b>')
-                : tr('아무 단어나 시작하세요!', '好きな単語で開始！', 'Start with any word!');
-            ov.querySelector('#wcFoot').textContent = tr('오늘 보상 ', '本日 ', 'Today ') + ((st && st.plays_today) || 0) + ' / ' + ((st && st.cap) || 3);
+            ov.querySelector('#wcNeed').innerHTML = nextChar ? (G.next + '<b>' + nextChar + '</b>') : G.any;
+            ov.querySelector('#wcFoot').textContent = G.today + ((st && st.plays_today) || 0) + ' / ' + ((st && st.cap) || 3);
         }
 
-        if (!sb) { msgEl.style.color = '#dc2626'; msgEl.textContent = tr('잠시 후 다시 시도해주세요', '少し後に', 'Try again shortly'); }
-        else {
-            try { var s0 = await sb.rpc('word_chain_status'); render(s0 && s0.data); } catch (e) { render(null); }
-        }
+        if (!sb) { msgEl.style.color = '#dc2626'; msgEl.textContent = G.login; }
+        else { try { var s0 = await sb.rpc('word_chain_status', { p_lang: gl }); render(s0 && s0.data); } catch (e) { render(null); } }
 
         async function submit() {
             var w = (input.value || '').trim();
             msgEl.style.color = '#dc2626';
-            if (!sb) { msgEl.textContent = tr('연결 오류', '接続エラー', 'Connection error'); return; }
+            if (!sb) { msgEl.textContent = G.login; return; }
             var uid = await loggedInUid(sb);
-            if (!uid) { msgEl.textContent = tr('로그인 후 이용해주세요', 'ログインしてください', 'Please log in first.'); return; }
-            if (w.length < 2) { msgEl.textContent = tr('2글자 이상 한글 단어를 입력하세요', '2文字以上', 'At least 2 Korean letters'); return; }
-            if (/[^가-힣]/.test(w)) { msgEl.textContent = tr('순수 한글 단어만 가능해요', 'ハングルのみ', 'Korean letters only'); return; }
-            if (nextChar && w[0] !== nextChar) { msgEl.textContent = tr('「' + nextChar + '」(으)로 시작해야 해요', '「' + nextChar + '」で始めて', 'Must start with 「' + nextChar + '」'); return; }
+            if (!uid) { msgEl.textContent = G.login; return; }
+            if (w.length < 2) { msgEl.textContent = G.short; return; }
+            if (G.re.test(w)) { msgEl.textContent = G.invalid; return; }
+            if (gl === 'ja' && w.slice(-1) === 'ん') { msgEl.textContent = G.endn; return; }
+            if (nextChar && norm(w[0]) !== nextChar) { msgEl.textContent = G.chain(nextChar); return; }
             try {
-                var r = await sb.rpc('word_chain_play', { p_word: w }); var d = r && r.data;
+                var r = await sb.rpc('word_chain_play', { p_word: w, p_lang: gl }); var d = r && r.data;
                 if (d && d.ok) {
                     input.value = '';
-                    if (d.rewarded) window.showRewardPopup({ title: tr('끝말잇기 성공!', 'しりとり成功！', 'Word chained!'), mileage: d.mileage_added, aiCredit: d.credit_added });
-                    else { msgEl.style.color = '#16a34a'; msgEl.textContent = tr('이어졌어요! (오늘 보상은 다 받았어요)', 'つながった！(本日の報酬は上限)', 'Chained! (daily reward maxed)'); }
-                    var s2 = await sb.rpc('word_chain_status'); render(s2 && s2.data);
+                    if (d.rewarded) window.showRewardPopup({ title: G.success, mileage: d.mileage_added, aiCredit: d.credit_added });
+                    else { msgEl.style.color = '#16a34a'; msgEl.textContent = G.maxed; }
+                    var s2 = await sb.rpc('word_chain_status', { p_lang: gl }); render(s2 && s2.data);
                 } else {
                     var rs = d && d.reason;
-                    msgEl.textContent = rs === 'chain' ? (tr('「' + (d.need || '') + '」(으)로 시작해야 해요', '「' + (d.need || '') + '」で始めて', 'Must start with 「' + (d.need || '') + '」'))
-                        : rs === 'dup' ? tr('이미 사용된 단어예요', '既出の単語です', 'Already used')
-                        : rs === 'short' ? tr('2글자 이상 입력하세요', '2文字以上', 'Too short')
-                        : rs === 'notkorean' ? tr('순수 한글 단어만 가능해요', 'ハングルのみ', 'Korean only')
-                        : rs === 'auth' ? tr('로그인 후 이용해주세요', 'ログインしてください', 'Please log in')
-                        : tr('다시 시도해주세요', '再試行してください', 'Try again');
+                    msgEl.textContent = rs === 'chain' ? G.chain(d.need || '')
+                        : rs === 'dup' ? G.dup
+                        : rs === 'endn' ? G.endn
+                        : rs === 'short' ? G.short
+                        : rs === 'notvalid' ? G.invalid
+                        : rs === 'auth' ? G.login
+                        : G.retry;
                 }
-            } catch (e) { msgEl.textContent = tr('오류가 났어요. 다시 시도해주세요', 'エラー', 'Error, try again'); }
+            } catch (e) { msgEl.textContent = G.retry; }
         }
         ov.querySelector('#wcGo').addEventListener('click', submit);
         input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
