@@ -255,7 +255,7 @@
         _dgStyle();
         var _l = lang();
         var gameName = (_l === 'ja') ? 'しりとり' : (_l === 'ko' || _l === 'kr') ? '끝말잇기' : 'Word Chain';
-        var boardName = tr('자유게시판', '自由掲示板', 'Free Board');
+        var boardName = tr('홍보하기', '宣伝', 'Promotions');
         var missions = tr(
             '<li>🎮 <b>' + gameName + '</b> — 단어당 500원 + 생성권 1장 (하루 3회)</li>'
             + '<li>✍ <b>' + boardName + ' 글쓰기</b> — 1,000원 + 생성권 1장 (하루 2회)</li>'

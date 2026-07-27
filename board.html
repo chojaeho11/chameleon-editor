@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260728070227';
+    var CV = '20260728075631';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -575,7 +575,7 @@
 </head>
 <body>
 <script src="toast.js?v=434"></script>
-<script src="rewards.js?v=5"></script>
+<script src="rewards.js?v=6"></script>
 
     <div class="topbar">
         <div class="brand" onclick="location.href='/'">
@@ -733,14 +733,14 @@
     // [SEO]
     function updateBoardSEO(postTitle = null, postContent = null, postImage = null) {
         const catMap = {
-            'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실', 'freetalk': '자유게시판' },
-            'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室', 'freetalk': '自由掲示板' },
-            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files', 'freetalk': 'Free Board' },
-            'CN': { 'blog': '博客', 'review': '评价', 'promo': '推广', 'trade': '二手', 'job': '招聘', 'free': '资料', 'freetalk': '自由论坛' },
-            'AR': { 'blog': 'مدونة', 'review': 'مراجعات', 'promo': 'ترويج', 'trade': 'سوق', 'job': 'وظائف', 'free': 'ملفات', 'freetalk': 'منتدى حر' },
-            'ES': { 'blog': 'Blog', 'review': 'Reseñas', 'promo': 'Promo', 'trade': 'Mercado', 'job': 'Empleo', 'free': 'Archivos', 'freetalk': 'Foro Libre' },
-            'DE': { 'blog': 'Blog', 'review': 'Bewertungen', 'promo': 'Werbung', 'trade': 'Markt', 'job': 'Jobs', 'free': 'Dateien', 'freetalk': 'Freies Forum' },
-            'FR': { 'blog': 'Blog', 'review': 'Avis', 'promo': 'Promo', 'trade': 'Marché', 'job': 'Emploi', 'free': 'Fichiers', 'freetalk': 'Forum Libre' }
+            'KR': { 'blog': '블로그', 'review': '제작후기', 'promo': '홍보', 'trade': '장비거래', 'job': '구인구직', 'free': '자료실', 'freetalk': '홍보하기' },
+            'JP': { 'blog': 'ブログ', 'review': 'レビュー', 'promo': 'PR', 'trade': '中古機器', 'job': '求人', 'free': '資料室', 'freetalk': '宣伝' },
+            'US': { 'blog': 'Blog', 'review': 'Reviews', 'promo': 'Promo', 'trade': 'Market', 'job': 'Jobs', 'free': 'Files', 'freetalk': 'Promotions' },
+            'CN': { 'blog': '博客', 'review': '评价', 'promo': '推广', 'trade': '二手', 'job': '招聘', 'free': '资料', 'freetalk': '宣传' },
+            'AR': { 'blog': 'مدونة', 'review': 'مراجعات', 'promo': 'ترويج', 'trade': 'سوق', 'job': 'وظائف', 'free': 'ملفات', 'freetalk': 'الترويج' },
+            'ES': { 'blog': 'Blog', 'review': 'Reseñas', 'promo': 'Promo', 'trade': 'Mercado', 'job': 'Empleo', 'free': 'Archivos', 'freetalk': 'Promoción' },
+            'DE': { 'blog': 'Blog', 'review': 'Bewertungen', 'promo': 'Werbung', 'trade': 'Markt', 'job': 'Jobs', 'free': 'Dateien', 'freetalk': 'Werbung' },
+            'FR': { 'blog': 'Blog', 'review': 'Avis', 'promo': 'Promo', 'trade': 'Marché', 'job': 'Emploi', 'free': 'Fichiers', 'freetalk': 'Promotion' }
         };
         const activeCatName = (catMap[currentCountry] || catMap['KR'])[category] || 'Board';
         const metaData = {
@@ -808,7 +808,7 @@
             'trade': { KR: '중고장비 거래', US: 'Used Equipment', JP: '中古機器取引', CN: '二手设备', AR: 'معدات مستعملة', ES: 'Equipos Usados', DE: 'Gebrauchtgeräte', FR: 'Équipements Occasion' },
             'job': { KR: '구인구직', US: 'Job Market', JP: '求人・求職', CN: '招聘信息', AR: 'سوق العمل', ES: 'Empleo', DE: 'Stellenmarkt', FR: 'Emploi' },
             'free': { KR: '제품설명서', US: 'Product Description', JP: '製品説明書', CN: '产品说明', AR: 'وصف المنتج', ES: 'Descripción', DE: 'Produktbeschreibung', FR: 'Description Produit' },
-            'freetalk': { KR: '자유게시판', US: 'Free Board', JP: '自由掲示板', CN: '自由论坛', AR: 'المنتدى الحر', ES: 'Foro Libre', DE: 'Freies Forum', FR: 'Forum Libre' }
+            'freetalk': { KR: '홍보하기', US: 'Promotions', JP: '宣伝', CN: '宣传', AR: 'الترويج', ES: 'Promoción', DE: 'Werbung', FR: 'Promotion' }
         }[category] || { KR: '게시판', US: 'Board', JP: '掲示板', CN: '公告板', AR: 'لوحة', ES: 'Tablero', DE: 'Forum', FR: 'Forum' };
         
         if (subName && category === 'review') {
