@@ -6300,6 +6300,10 @@ html, body { -webkit-font-smoothing: antialiased; }
 .review-header p {
     color: var(--dr-ink-2) !important;
     font-size: 15px !important;
+    /* 2026-07-27: 1~2글자만 다음 줄로 떨어지는 것 방지 — 줄을 고르게 나눔 */
+    text-wrap: balance;
+    max-width: 32em;
+    margin-left: auto; margin-right: auto;
 }
 .home-review-grid {
     gap: 16px !important;
@@ -6341,11 +6345,12 @@ html, body { -webkit-font-smoothing: antialiased; }
     padding: 12px 18px;
     will-change: transform;
 }
-.home-rv-track.is-marquee { animation: hrvScrollLR 60s linear infinite; }
+.home-rv-track.is-marquee { animation: hrvScrollRL 60s linear infinite; }
 .home-review-marquee:hover .home-rv-track.is-marquee { animation-play-state: paused; }
-@keyframes hrvScrollLR {
-    from { transform: translateX(-50%); }
-    to   { transform: translateX(0); }
+/* 2026-07-27: 우 → 좌 로 흐르게 (사장님 지시) */
+@keyframes hrvScrollRL {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
 }
 .home-review-marquee .home-rv-card {
     flex: 0 0 auto;
