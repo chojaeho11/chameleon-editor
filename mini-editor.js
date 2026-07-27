@@ -7311,15 +7311,13 @@
         var note = (t && t.value || '').trim();
         var say = function (s, color) { if (msg) { msg.textContent = s; msg.style.color = color || '#64748b'; msg.style.display = 'block'; } };
         if (note.length < 2) { if (t) t.focus(); say(_meAiTr('어디를 어떻게 고칠지 적어주세요.', 'どこをどう直すか入力してください。', 'Describe what to change.'), '#dc2626'); return; }
-        // 2026-07-28: 재생성도 이미지 생성권 1장 소비 — 생성 전 확인(실패엔 과금 안 됨).
+        // 2026-07-28: 재생성도 이미지 생성권 1장 소비 — 생성 전 확인. fail-open(로그인안됨/소진 일 때만 차단).
         if (typeof window.canGenerateAi === 'function') {
             var _fgate = await window.canGenerateAi();
-            if (!_fgate || !_fgate.ok) {
-                say((_fgate && _fgate.reason === 'auth')
+            if (_fgate && !_fgate.ok && (_fgate.reason === 'auth' || _fgate.reason === 'empty')) {
+                say((_fgate.reason === 'auth')
                         ? _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요.', 'ログインで無料の画像生成チケット3枚。', 'Log in to get 3 free image credits.')
-                        : (_fgate && _fgate.reason === 'empty')
-                        ? _meAiTr('생성권을 다 썼어요. 출석·자유게시판 글쓰기로 충전하거나 구독하면 무제한이에요.', 'チケット切れ。出席・自由掲示板の投稿でチャージ、購読で無制限。', 'Out of credits — earn more via check-in or the free board, or subscribe.')
-                        : _meAiTr('생성권 확인 중 오류가 났어요. 잠시 후 다시 시도해주세요.', 'チケット確認エラー。後で再試行してください。', 'Credit check error, try again shortly.'),
+                        : _meAiTr('생성권을 다 썼어요. 출석·자유게시판 글쓰기로 충전하거나 구독하면 무제한이에요.', 'チケット切れ。出席・自由掲示板の投稿でチャージ、購読で無制限。', 'Out of credits — earn more via check-in or the free board, or subscribe.'),
                     '#dc2626');
                 return;
             }
@@ -7755,23 +7753,17 @@
             return;
         }
         // 2026-07-28: AI 생성권 게이트 — 무료 3장/구독자 무제한. 실패한 생성엔 과금 않도록 "생성 전 확인 → 성공 후 차감".
+        //   fail-open: 로그인안됨(auth)/소진(empty) 일 때만 차단. sb미준비·일시오류(nosb/err)는 통과시켜 정상 생성을 막지 않는다.
         if (typeof window.canGenerateAi === 'function') {
             var _gate = await window.canGenerateAi();
-            if (!_gate || !_gate.ok) {
-                var _gmsg;
-                if (_gate && _gate.reason === 'auth') {
-                    _gmsg = _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요. 로그인 후 이용해주세요.',
-                                    'ログインすると無料の画像生成チケット3枚をプレゼント。ログインしてご利用ください。',
-                                    'Log in to get 3 free image credits. Please log in first.');
-                } else if (_gate && _gate.reason === 'empty') {
-                    _gmsg = _meAiTr('이미지 생성권을 모두 사용했어요. 출석하거나 자유게시판에 글을 쓰면 충전되고, 구독하면 무제한이에요.',
-                                    '画像生成チケットを使い切りました。出席や自由掲示板の投稿でチャージ、購読で無制限になります。',
-                                    'You are out of image credits. Earn more with daily check-in or a free-board post, or subscribe for unlimited.');
-                } else {
-                    _gmsg = _meAiTr('생성권 확인 중 오류가 났어요. 잠시 후 다시 시도해주세요.',
-                                    'チケット確認中にエラーが発生しました。少し後にお試しください。',
-                                    'Could not verify your credits. Please try again shortly.');
-                }
+            if (_gate && !_gate.ok && (_gate.reason === 'auth' || _gate.reason === 'empty')) {
+                var _gmsg = (_gate.reason === 'auth')
+                    ? _meAiTr('로그인하면 무료 이미지 생성권 3장을 드려요. 로그인 후 이용해주세요.',
+                              'ログインすると無料の画像生成チケット3枚をプレゼント。ログインしてご利用ください。',
+                              'Log in to get 3 free image credits. Please log in first.')
+                    : _meAiTr('이미지 생성권을 모두 사용했어요. 출석하거나 자유게시판에 글을 쓰면 충전되고, 구독하면 무제한이에요.',
+                              '画像生成チケットを使い切りました。出席や自由掲示板の投稿でチャージ、購読で無制限になります。',
+                              'You are out of image credits. Earn more with daily check-in or a free-board post, or subscribe for unlimited.');
                 if (err) { err.textContent = _gmsg; err.style.display = 'block'; try { err.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_e) {} }
                 return;
             }
