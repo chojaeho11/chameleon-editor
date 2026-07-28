@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260729005659';
+        var CV = '20260729010415';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6604,8 +6604,8 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
     btnDone:  { ko:'완료 처리', ja:'完了にする', en:'Mark done', zh:'标记完成', ar:'وضع علامة تم', es:'Marcar hecho', de:'Als erledigt', fr:'Terminer' },
     st_closed:{ ko:'종료', ja:'クローズ', en:'Closed', zh:'已关闭', ar:'مغلق', es:'Cerrado', de:'Geschlossen', fr:'Clôturé' },
     st_reopen:{ ko:'⚠ 재접수', ja:'⚠ 再受付', en:'⚠ Reopened', zh:'⚠ 重新提交', ar:'⚠ أعيد فتحه', es:'⚠ Reabierto', de:'⚠ Wieder offen', fr:'⚠ Rouvert' },
-    btnClose: { ko:'✓ 확인·종료', ja:'✓ 確認・クローズ', en:'✓ Confirm & close', zh:'✓ 确认并关闭', ar:'✓ تأكيد وإغلاق', es:'✓ Confirmar y cerrar', de:'✓ Bestätigen & schließen', fr:'✓ Confirmer et clôturer' },
-    btnReopen:{ ko:'↩ 재접수 (미해결)', ja:'↩ 再受付 (未解決)', en:'↩ Reopen (not fixed)', zh:'↩ 重新提交 (未解决)', ar:'↩ إعادة فتح (لم يُحل)', es:'↩ Reabrir (no resuelto)', de:'↩ Wieder öffnen (nicht gelöst)', fr:'↩ Rouvrir (non résolu)' },
+    btnClose: { ko:'👍 정상처리되었어요', ja:'👍 正常に処理されました', en:'👍 Resolved!', zh:'👍 已正常处理', ar:'👍 تمت المعالجة بنجاح', es:'👍 ¡Resuelto!', de:'👍 Erledigt!', fr:'👍 Résolu !' },
+    btnReopen:{ ko:'해결되지 않았어요 다시접수합니다', ja:'解決していません 再受付します', en:'Not fixed — reopening', zh:'未解决，重新提交', ar:'لم يُحل — إعادة الفتح', es:'No resuelto — reabrir', de:'Nicht gelöst — erneut öffnen', fr:'Non résolu — rouvrir' },
     btnDel:   { ko:'🗑 삭제', ja:'🗑 削除', en:'🗑 Delete', zh:'🗑 删除', ar:'🗑 حذف', es:'🗑 Eliminar', de:'🗑 Löschen', fr:'🗑 Supprimer' }
   };
   function _bl(){ var l; try { l = localStorage.getItem('bugLang') || (navigator.language||'ko').slice(0,2); } catch(e){ l='ko'; } return (BUG_LANGS.indexOf(l) >= 0) ? l : 'ko'; }
