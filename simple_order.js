@@ -3115,7 +3115,7 @@ html, body { background: #ffffff !important; }
             <!-- 2026-05-13: 포맥스·폼보드 대형택배 (3만원) -->
             <button type="button" class="so-ship-btn" data-ship="large_parcel" onclick="window._soPickShip('large_parcel')" style="display:none;">${tr('대형택배', '大型宅配', 'Large parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(30000)}</span></button>
             <!-- 2026-05-13: 일반 인쇄물 소형 묶음택배 (5천원) -->
-            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(5000)}</span></button>
+            <button type="button" class="so-ship-btn" data-ship="small_parcel" onclick="window._soPickShip('small_parcel')" style="display:none;">${tr('묶음 소형택배', '小型宅配', 'Small parcel')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(2500)}</span></button>
             <!-- 2026-05-13: 등신대·자유인쇄커팅 컴팩트 택배 (60×40 이하, 1만원) -->
             <button type="button" class="so-ship-btn" data-ship="compact_parcel" onclick="window._soPickShip('compact_parcel')" style="display:none;">${tr('택배배송 (60×40 이하)', '宅配 ≤60×40', 'Parcel ≤60×40')}<br><span style="font-size:11px; opacity:0.8;">${fmtPrice(10000)}</span></button>
             <!-- 2026-05-15: 종이매대 전용 — 1개씩 / 2개씩 택배 (수량 곱셈) -->
@@ -8846,7 +8846,7 @@ html, body { background: #ffffff !important; }
         // 2026-05-13: 포맥스·폼보드 대형택배 (3만원 고정)
         large_parcel:         { fee: 30000,  label_ko: '대형택배',           parts: [['대형택배', 30000]] },
         // 2026-05-13: 일반 인쇄물 묶음 소형택배 (5천원, 모든 수량 동일)
-        small_parcel:         { fee: 5000,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 5000]] },
+        small_parcel:         { fee: 2500,   label_ko: '묶음 소형택배',     parts: [['묶음 소형택배', 2500]] },
         // 2026-05-13: 등신대·자유인쇄커팅 택배 (60×40cm 이하, 1만원)
         compact_parcel:       { fee: 10000,  label_ko: '택배배송 (60×40cm 이하)', parts: [['택배배송 60×40 이하', 10000]] },
         // 2026-05-15: 종이매대 전용 — 동적 가격
@@ -8916,7 +8916,7 @@ html, body { background: #ffffff !important; }
             && !state.isWall && !state.isRawBoard && !state.isPaperDisplay
             && !state.isInstallEligible && !state.isAmountOrder) {
             state._shipUpgradeReason = null;
-            return 5000;
+            return 2500;   // 2026-07-28: JP 일반택배 500엔(5,000원)→250엔(2,500원) (사장님 지시)
         }
         // 2026-06-24: 아크릴 family — 무료배송 (이전 정액 10,000원 제거, 사용자 요청)
         if (state.isAcrylicFamily) {
@@ -8991,12 +8991,12 @@ html, body { background: #ffffff !important; }
         //   (item.shipping.fee 미설정 → _soItmShipInc=0). JP 는 위 JP 분기서 이미 5,000(=500엔).
         if (state.isLeaflet) {
             state._shipUpgradeReason = null;
-            return 5000;
+            return 2500;   // 2026-07-28: 일반택배 5,000→2,500원
         }
         // 2026-07-14: 스티커 — 일반택배 5,000원 (사용자 요청, 무료 아님). JP 는 위 JP 분기에서 이미 5,000 처리.
         if (state.isSticker) {
             state._shipUpgradeReason = null;
-            return 5000;
+            return 2500;   // 2026-07-28: 일반택배 5,000→2,500원
         }
         // 2026-05-29: 베스트굿즈 전체 — 정액 배송비 3,000원 (통화변환 → JP ¥300 / US $3).
         //   2026-06-30: 제품페이지가 JP만 10,000원으로 달라 장바구니(_soCalcItemPrice/CartTotal=3,000)와 불일치 → 3,000 으로 통일.
@@ -9012,7 +9012,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-28: 실사출력 — 5m² 이상 주문 무료배송, 5m² 미만은 택배비 1만원(JP 1000엔·US $10 환율 자동).
         if (state.isRealPrint) {
             state._shipUpgradeReason = null;
-            return 5000;   // 2026-07-06: 실사출력도 일반 택배 5,000원 정액 (사용자 요청: 배송비 5천원 통일). 카트합계는 _soCalcCartTotal 정액룰로 5,000 처리.
+            return 2500;   // 2026-07-28: 실사출력 일반택배 5,000→2,500원. 카트합계는 _soCalcCartTotal 정액룰로 2,500 처리.
         }
         // 2026-06-28: 광고인쇄(자유인쇄) — 기본 포장+배송비 1만원.
         if (state.isAdPrint) {
@@ -19442,7 +19442,7 @@ html, body { background: #ffffff !important; }
                 return _cat === 'design_fee' || _code.indexOf('design_fee_') === 0;
             });
             var _shipExempt = _hasAmountOrder || _allProductSub <= 0 || _allDesignFee;
-            shipTotal = _shipExempt ? 0 : 5000;
+            shipTotal = _shipExempt ? 0 : 2500;   // 2026-07-28: 일반택배 정액 5,000→2,500원 (사장님 지시)
         }
         // 2026-06-30: JP 사이트 — 일반 택배 카트 배송비 500엔(5,000원) 정액 통일 (2026-07-01 1000엔→500엔).
         //   제외(실비/면제 유지): 시공(가벽·등신대·스카시)·원판/종이매대 트럭·금액주문·디자인비 전용·패브릭전용.
@@ -19450,7 +19450,7 @@ html, body { background: #ffffff !important; }
             && !cart.some(function (_it) { return _it && _it.product && ((typeof _soIsRawBoardProduct === 'function' && _soIsRawBoardProduct(_it.product)) || (typeof _soIsPaperDisplayProduct === 'function' && _soIsPaperDisplayProduct(_it.product))); })
             && cart.some(function (_it) { return _it && !_soIsFabricItem(_it); })
             && !cart.every(function (_it) { var _p = (_it && _it.product) || {}; return String(_p.category || '') === 'design_fee' || String(_p.code || '').indexOf('design_fee_') === 0; })) {
-            shipTotal = 5000;
+            shipTotal = 2500;   // 2026-07-28: JP 정액 배송비 500엔(5,000원)→250엔(2,500원) (사장님 지시)
         }
         // 2026-06-04: 금액 자동할인 (1M/5M/10M tier) 제거 — PRO 구독 가입 유도 정책으로 단일화
         var amountPct = 0;
