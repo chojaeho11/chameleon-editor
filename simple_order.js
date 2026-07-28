@@ -4874,7 +4874,11 @@ html, body { background: #ffffff !important; }
         // 2026-06-12: 거치대 없는 배너 (현수막/패트/매쉬) — 같은 디자인 10장+ 50% 할인 이벤트
         // 2026-06-12: 미니배너 — 100장+ 30% 할인
         // 2026-06-25: 모든 수량/번들 자동 할인 폐지 (사용자 요청) — 굿즈/베스트굿즈/종이매대/배너/미니배너 정가.
+        // 2026-07-28: 키링 100개 이상 50% 할인 재도입 (사장님 지시) — 상품 단가(subtotal)에만 적용 (고리·포장·배송 제외).
         let presetBulkDiscount = 0;
+        if (state.presetType === 'keyring' && qty >= 100) {
+            presetBulkDiscount = Math.round(subtotal * 0.5);
+        }
         // 2026-05-30: 티셔츠 — 인쇄 위치별 인쇄비 (앞면로고 3000 / 앞면전체 8000 / 뒷면전체 8000, /장)
         //   3장 이상 주문 시 인쇄비만 50% 할인
         let tshirtPrintFee = 0;
@@ -4889,7 +4893,9 @@ html, body { background: #ffffff !important; }
         //   개별포장(인쇄없음) plain = 200원/개 / 내지인쇄·상단인쇄 = 500원/개 (JP 20엔 / 50엔)
         let presetWrapFee = 0;
         if (state.isPresetGoods) {
-            if (state.presetWrapType === 'insert' || state.presetWrapType === 'top') {
+            if (state.presetWrapType === 'bulk') {
+                presetWrapFee = 0;   // 2026-07-28: 벌크포장 무료
+            } else if (state.presetWrapType === 'insert' || state.presetWrapType === 'top') {
                 presetWrapFee = 500 * qty;
             } else {
                 // 'plain' (인쇄없음) 또는 미설정/legacy → 200원/개
@@ -14976,15 +14982,22 @@ html, body { background: #ffffff !important; }
                 var WRAP_OPTS = [
                     { type:'plain',  img:'/keyringcut/pac3.jpg', label_ko:'개별포장 (인쇄없음)', label_jp:'個別包装（印刷なし）', label_en:'Individual (no print)', fee:200 },
                     { type:'insert', img:'/keyringcut/pac1.jpg', label_ko:'내지인쇄 포장', label_jp:'内側印刷ラッピング', label_en:'Insert print',    fee:500 },
-                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단인쇄 포장', label_jp:'上部印刷ラッピング', label_en:'Top print',       fee:500 }
+                    { type:'top',    img:'/keyringcut/pac2.jpg', label_ko:'상단인쇄 포장', label_jp:'上部印刷ラッピング', label_en:'Top print',       fee:500 },
+                    // 2026-07-28: 벌크포장(개별포장 없음) — 무료 (사장님 지시)
+                    { type:'bulk',   img:'', label_ko:'벌크포장 (개별포장 없음)', label_jp:'バルク梱包（個別なし）', label_en:'Bulk (no wrap)', fee:0 }
                 ];
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
                     var act = (w.type === 'plain'); // 기본 = 개별포장(인쇄없음)
                     var lbl = tr(w.label_ko, w.label_jp, w.label_en);
                     // 2026-06-29: 괄호(인쇄없음/印刷なし) 부분은 통째로 다음 줄로 — 1글자만 떨어지는 현상 방지
                     var lblHtml = lbl.replace(/\s*[（(]/, '<br>$&');
-                    var feeStr = '+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc');
-                    var feeColor = '#dc2626';
+                    // 2026-07-28: 무료(벌크)면 초록 '무료', 유료면 빨강 '+원/개'
+                    var feeStr = (w.fee > 0) ? ('+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc')) : tr('무료', '無料', 'FREE');
+                    var feeColor = (w.fee > 0) ? '#dc2626' : '#059669';
+                    // 벌크는 전용 이미지가 없어 회색 박스 + 라벨로 표시
+                    var imgHtml = w.img
+                        ? ('<img src="' + w.img + '" alt="' + lbl + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">')
+                        : ('<div style="width:100%; aspect-ratio:1/1; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:12px; font-weight:800; text-align:center; line-height:1.3;">' + tr('개별포장<br>없음', '個別なし', 'No wrap') + '</div>');
                     return '<button type="button" class="so-wrap-card' + (act ? ' active' : '') + '" '
                         + 'data-wrap-type="' + w.type + '" data-wrap-fee="' + w.fee + '" '
                         + 'onclick="window._soPickPresetWrap(this)" '
@@ -14992,8 +15005,7 @@ html, body { background: #ffffff !important; }
                         + 'background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; '
                         + 'display:flex; flex-direction:column; align-items:center; gap:6px; '
                         + 'transition:border-color 0.15s ease; font-family:inherit;">'
-                        + '<img src="' + w.img + '" alt="' + lbl + '" loading="lazy" '
-                        + 'style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">'
+                        + imgHtml
                         + '<span style="font-size:11.5px; font-weight:800; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.25; word-break:keep-all;">' + lblHtml + '</span>'
                         + '<span style="font-size:10.5px; font-weight:800; color:' + feeColor + ';">' + feeStr + '</span>'
                         + '</button>';
@@ -19154,6 +19166,10 @@ html, body { background: #ffffff !important; }
         var isDouble = (it.wallSide === 'double');
         if (isDouble && !_isBannerItm) subtotal *= 2;
         var base = subtotal;
+        // 2026-07-28: 키링 100개 이상 50% 할인 (상품 단가에만) — recalc 와 일치.
+        if (it._presetType === 'keyring' && qty >= 100) {
+            base -= Math.round(subtotal * 0.5);
+        }
         // 2026-06-30: 종이매대 — recalc 와 동일 (샘플/낱개/대량). 카트에서 샘플 ×5 누락 + 낱개 추가요금 일치.
         if (_soIsPaperDisplayProduct(it.product)) {
             base = _soPaperStandSubtotal(unit, qty, _soIsSmallPaperStand(it.product));
@@ -19197,7 +19213,9 @@ html, body { background: #ffffff !important; }
         // 2026-06-30: 프리셋 굿즈 개별포장 — 전부 개당(×수량). plain(인쇄없음)=200, 내지/상단인쇄=500. (recalc 와 일치)
         if (_isPreset) {
             var _wt = it._presetWrapType;
-            if (_wt && _wt !== 'none') {
+            if (_wt === 'bulk') {
+                // 2026-07-28: 벌크포장 무료 — 포장비 없음
+            } else if (_wt && _wt !== 'none') {
                 base += ((_wt === 'insert' || _wt === 'top') ? 500 : 200) * qty;
             } else if (it._presetWrap) {
                 base += 200 * qty;   // legacy
@@ -20627,6 +20645,8 @@ html, body { background: #ffffff !important; }
                     if (_wt2 === 'insert' || _wt2 === 'top') {
                         var _wrapName = _wt2 === 'insert' ? '내지인쇄 포장' : '상단인쇄 포장';
                         lines.push('   개별포장: ' + _wrapName + ' (정액 50,000원, 수량 무관)');
+                    } else if (_wt2 === 'bulk') {
+                        lines.push('   포장: 벌크포장 (개별포장 없음, 무료)');   // 2026-07-28
                     } else if (it._presetWrap && !_wt2) {
                         var _wrapQ = it.qty || 1;
                         lines.push('   개별포장 × ' + _wrapQ + ' = ' + ((200 * _wrapQ).toLocaleString()) + '원');
