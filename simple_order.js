@@ -19400,7 +19400,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 무료배송 carryover — 일반 상품 중 0원 항목 있으면 패브릭도 묶어 무료.
         if (cart.some(_soIsFabricItem) && !_hasFreeShipItem) {
             var _siteC = (window.__SITE_CODE || (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || 'KR');
-            shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 10000 : 5000;
+            shipTotal += (_siteC === 'JP' || _siteC === 'US') ? 5000 : 2500;   // 2026-07-28: 패브릭 배송비 절반 인하 (cotton_designer getShippingFeeKrw 와 동일)
         }
         // 2026-06-05: 카트 합계 룰 통합 — 장바구니 전체 상품가 합계 기준 단일 임계값.
         //   사용자 요청: "최소 제작비 10만원 미만이면 3만원 가산, 10만원 이상이면 무료".
