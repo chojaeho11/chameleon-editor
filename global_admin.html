@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260729010415';
+        var CV = '20260729012549';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -6738,7 +6738,19 @@ window.batchTranslateBlogPosts = async function(targetCountries = ['JP', 'US']) 
           if (!_ex) patch.resolution = BUG_DONE_NOTICE;
         } catch(_re){ patch.resolution = BUG_DONE_NOTICE; }
       } else if (status === 'new') {
+        // 2026-07-29: 재접수 시 '어떤 부분이 아직 안 됐는지' 메모 필수 입력 → 개발자가 참고해 다시 고침.
+        var _memo = prompt('어떤 부분이 아직 해결되지 않았나요?\n개발자가 참고할 수 있게 구체적으로 적어주세요.\n\n예) 100개 담아도 할인이 여전히 안 돼요 / 일본 사이트에서만 안 됩니다 / 작업지시서에 사이즈가 아직 안 보여요');
+        if (_memo === null) return;                 // 취소 → 재접수 안 함
+        _memo = (_memo || '').trim();
+        if (!_memo) { alert('미해결 사유를 적어주세요. 사유가 있어야 다시 고칠 수 있어요.'); return; }
         // 재접수(미해결로 되돌림) — 완료 안내/완료시각 초기화 + reopened_at 기록(목록 맨 위로 + '재접수' 배지).
+        // 미해결 사유는 제보 내용(description) 아래에 시각과 함께 덧붙여 개발자·제보자 모두 볼 수 있게 한다.
+        try {
+          var _curD = await sb.from('bug_reports').select('description').eq('id', id).maybeSingle();
+          var _prevDesc = (_curD && _curD.data && _curD.data.description) || '';
+          var _stamp = new Date().toLocaleString('ko-KR');
+          patch.description = _prevDesc + '\n\n──── ⚠ 재접수 · 아직 안 된 부분 (' + _stamp + ') ────\n' + _memo;
+        } catch(_de) { /* description 조회 실패해도 재접수는 진행 */ }
         patch.resolution = null;
         patch.resolved_at = null;
         patch.reopened_at = new Date().toISOString();
