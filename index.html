@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260728154030';
+    var CV = '20260728155028';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -1864,15 +1864,6 @@ window._tcmFallbackClick = function(code) {
                 -webkit-backdrop-filter:none !important;
             }
             #mgrQuoteHero #mgrQuoteTitle, #mgrQuoteHero #mgrQuoteDesc { display:none !important; }
-            /* 2026-07-28: 모바일은 홍보하기·끝말잇기 숨김 → 남는 6버튼을 3열 2줄로 */
-            #mgrActionsGrid .mgr-freetalk,
-            #mgrActionsGrid .mgr-attend { display:none !important; }
-            #mgrActionsGrid {
-                grid-template-columns:repeat(3, 1fr) !important;
-                gap:14px !important;
-                padding:0 !important;
-                justify-content:center !important;
-            }
             /* 버튼 — 테두리/그림자 없이 깔끔, 아이콘 칩 + 라벨만 */
             #mgrActionsGrid .mgr-action {
                 aspect-ratio:auto !important;
@@ -1948,6 +1939,9 @@ window._tcmFallbackClick = function(code) {
             }
             #mgrActionsGrid .mgr-action.mgr-dapply .mgr-action-icon-wrap i { color:#ffffff !important; }
             @media (max-width: 700px) {
+                /* 2026-07-28: 모바일에서는 홍보하기·끝말잇기 숨김 (남는 6버튼이 1줄에 딱 맞음) */
+                #mgrActionsGrid .mgr-freetalk,
+                #mgrActionsGrid .mgr-attend { display:none !important; }
                 /* 2026-06-19 v641: 모바일 6버튼 1줄 — 아이콘 작게 줄여서 6개 모두 한 줄에 */
                 #mgrQuoteHero { margin:8px auto 20px !important; padding:0 8px !important; min-height:80px !important; }
                 #mgrActionsGrid {

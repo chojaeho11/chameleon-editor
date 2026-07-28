@@ -295,7 +295,11 @@
       "Bash(./deploy.sh \"JP fabric login: \\(1\\) cross-domain session handoff cotton-printer->cafe0101/fabric via URL hash \\(login now carries to designer\\). \\(2\\) cotton_designer login label KR->JP \\(login/logout\\). \\(3\\) LINE login button on cotton-printer auth modal \\(_cpDoLine\\).\")",
       "Bash(./deploy.sh \"JP fabric fixes: \\(1\\) 가재단 -> 仮裁断 in designer price box \\(raw finish default was showing Korean; now translated by lang\\) + fix wrong ガサイダン->仮裁断 in note. \\(2\\) LINE login now shown for JP \\(was hidden - JP showed Apple only, LINE is dominant in Japan\\); btnLine already wired to handleSocialLogin\\(line\\). login.js v441 cotton_designer.js v116\")",
       "Bash(./deploy.sh \"keyring bulk packaging: render as full-width horizontal bar without image \\(label + FREE\\), instead of a square card in the grid \\(simple_order v836\\)\")",
-      "Bash(./deploy.sh \"mobile: hide the Promote \\(freetalk\\) and Word-chain buttons in the top action grid; remaining 6 buttons flow as 3 columns x 2 rows\")"
+      "Bash(./deploy.sh \"mobile: hide the Promote \\(freetalk\\) and Word-chain buttons in the top action grid; remaining 6 buttons flow as 3 columns x 2 rows\")",
+      "Bash(awk 'NR>=1780 && NR<=1870 && /@media/' index.html)",
+      "Bash(awk -F: '$1<1867')",
+      "Bash(awk 'NR>=1816 && NR<=1869{ o=gsub\\(/\\\\{/,\"{\"\\); c=gsub\\(/\\\\}/,\"}\"\\); bal+=o-c; print NR\": bal=\"bal\"  \"$0 }' index.html)",
+      "Bash(./deploy.sh \"mobile: hide promo and word-chain buttons in top action grid \\(scope to max-width 700px, keep desktop 8\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
