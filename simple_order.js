@@ -5094,7 +5094,7 @@ html, body { background: #ffffff !important; }
                 setText('soShipAmount', tr('무료', '無料', 'FREE'));
             }
         } else if (state.isBestGoods) {
-            // 베스트굿즈는 정액 3K 별도 (기존 유지)
+            // 베스트굿즈는 정액 배송비 별도 (shipFee = 2,500, 2026-07-28)
             setText('soShipLabel', tr('배송비', '送料', 'Shipping'));
             setText('soShipAmount', state.bundleShipping ? fmtPrice(0) : ('+' + fmtPrice(shipFee)));
         } else if (state.isCutPrint) {
@@ -9004,11 +9004,12 @@ html, body { background: #ffffff !important; }
             state._shipUpgradeReason = null;
             return 2500;   // 2026-07-28: 일반택배 5,000→2,500원
         }
-        // 2026-05-29: 베스트굿즈 전체 — 정액 배송비 3,000원 (통화변환 → JP ¥300 / US $3).
-        //   2026-06-30: 제품페이지가 JP만 10,000원으로 달라 장바구니(_soCalcItemPrice/CartTotal=3,000)와 불일치 → 3,000 으로 통일.
+        // 2026-05-29: 베스트굿즈 전체 — 정액 배송비 (통화변환 → JP ¥250 / US $2.5).
+        //   2026-06-30: 제품페이지가 JP만 10,000원으로 달라 장바구니(_soCalcItemPrice/CartTotal)와 불일치 → 값 통일.
+        //   2026-07-28: 일반택배 인하에 맞춰 3,000→2,500원 통일 (버그제보 #15: 상품페이지 3,000/장바구니 2,500 불일치).
         if (state.isBestGoods) {
             state._shipUpgradeReason = null;
-            return 3000;
+            return 2500;
         }
         // 2026-05-13: 묶음배송 모드면 이 상품의 배송비는 0
         if (state.bundleShipping) {
@@ -17999,7 +18000,7 @@ html, body { background: #ffffff !important; }
         // 2026-06-06: 라인 표시용 = 배송비 빼고 상품 가격만 (장바구니에서 배송비는 합계에서 1회만 부과).
         //   _soCalcItemPrice 는 항목별 shipping.fee 를 포함하므로 row 표시 시 이를 차감해 중복 표시 방지.
         var rowShipFee = (item && item.shipping && typeof item.shipping.fee === 'number') ? item.shipping.fee : 0;
-        if (item._isBestGoods) rowShipFee = 3000;  // 정액 3K (별도 가산 — _soCalcItemPrice 가 +3000 포함하므로 차감)
+        if (item._isBestGoods) rowShipFee = 2500;  // 2026-07-28: 정액 2.5K (별도 가산 — _soCalcItemPrice 가 +2500 포함하므로 차감. 버그#15 3,000→2,500)
         // 2026-07-04: _soCalcItemPrice 가 배송비를 포함하지 않는 상품(아크릴/실사출력/굿즈/묶음)은 final 에서 빼면 안 됨.
         //   기존엔 item.shipping.fee(정액 스탬프)를 빼서 JP lineDisplay(=합계)가 유령 차감돼 単価와 불일치(아크릴 키링 사례).
         else if ((typeof _soIsAcrylicFamilyItem === 'function' && _soIsAcrylicFamilyItem(item))
@@ -19399,8 +19400,8 @@ html, body { background: #ffffff !important; }
             shipTotal = 0;
         }
         var _hasFreeShipItem = _hasInstall || _hasFreeNonWall;
-        // 베스트굿즈는 정액 3천원을 항목 수만큼 별도 가산 (묶음 룰 제외)
-        cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 3000; });
+        // 베스트굿즈는 정액 배송비를 항목 수만큼 별도 가산 (묶음 룰 제외)
+        cart.forEach(function (it) { if (it && it._isBestGoods) shipTotal += 2500; });   // 2026-07-28: 3,000→2,500 (버그#15)
         // 2026-06-08: 실사출력 family batch 배송비 — 카트 내 모든 실사출력 항목 합산.
         //   합산 < 10만원 → +10,000원 / 합산 ≥ 10만원 → 무료. 가벽/등신대/스카시 carryover 시에는 무시 (시공 트럭이 묶음).
         if (!_hasInstall) {

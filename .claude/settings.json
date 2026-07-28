@@ -299,7 +299,9 @@
       "Bash(awk 'NR>=1780 && NR<=1870 && /@media/' index.html)",
       "Bash(awk -F: '$1<1867')",
       "Bash(awk 'NR>=1816 && NR<=1869{ o=gsub\\(/\\\\{/,\"{\"\\); c=gsub\\(/\\\\}/,\"}\"\\); bal+=o-c; print NR\": bal=\"bal\"  \"$0 }' index.html)",
-      "Bash(./deploy.sh \"mobile: hide promo and word-chain buttons in top action grid \\(scope to max-width 700px, keep desktop 8\\)\")"
+      "Bash(./deploy.sh \"mobile: hide promo and word-chain buttons in top action grid \\(scope to max-width 700px, keep desktop 8\\)\")",
+      "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_mgr.js\")",
+      "Bash(./deploy.sh \"bug#15 keyring shipping text 3000->2500 \\(best goods flat, 3 spots\\) + bug#14 work order keyring options box \\(shape/side/size/wrap\\) + so v837\")"
     ],
     "additionalDirectories": [
       "\\tmp",

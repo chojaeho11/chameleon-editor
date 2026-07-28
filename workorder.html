@@ -966,6 +966,32 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 }
             }
 
+            // 2026-07-29 (버그#14): 키링/코롯토 옵션 박스 — 모양(칼선)/인쇄면/사이즈/포장이 작업지시서에 안 뜨던 문제.
+            //   고리 종류(부자재)는 위 '마감/부자재/옵션' 박스(it.addons)에서 이미 표시됨 → 여기선 나머지만.
+            const _isKeyringItem = it._presetType === 'keyring' || it._presetType === 'korotto';
+            if (_isKeyringItem) {
+                const _kLines = [];
+                const _kCut = it._keyringCut;
+                if (_kCut && (_kCut.label || _kCut.label_jp)) {
+                    const _cutStr = _kCut.label + (_kCut.label_jp && _kCut.label_jp !== _kCut.label ? ' (' + _kCut.label_jp + ')' : '');
+                    _kLines.push('모양 / 칼선: <b>' + esc(_cutStr) + '</b>');
+                }
+                if (it._keyringSide) {
+                    _kLines.push('인쇄면: <b>' + (it._keyringSide === 'double' ? '양면 (両面)' : '단면 (片面)') + '</b>');
+                }
+                const _kcs = it.customSize || {};
+                if (_kcs.w_cm || _kcs.h_cm) {
+                    _kLines.push('사이즈: <b>' + (_kcs.w_cm || '?') + ' × ' + (_kcs.h_cm || '?') + ' cm</b>');
+                }
+                const _KWRAP = { plain: '개별포장 (인쇄 없음)', insert: '내지인쇄 포장', top: '상단인쇄 포장', bulk: '벌크포장 (개별포장 없음)', none: '포장 없음' };
+                if (it._presetWrapType && it._presetWrapType !== 'none') {
+                    _kLines.push('포장: <b>' + esc(_KWRAP[it._presetWrapType] || it._presetWrapType) + '</b>');
+                }
+                if (_kLines.length > 0) {
+                    boxes.push(`<div class="opt-box" style="border-color:#bae6fd; background:#f0f9ff;"><div class="opt-head" style="color:#075985;"><i class="fa-solid fa-key"></i> 키링 옵션</div><div class="opt-val" style="line-height:1.9;">${_kLines.join('<br>')}</div></div>`);
+                }
+            }
+
             // 2026-06-13: 인스타판넬 디자인 문구 박스 (담당자 무료디자인 작업용)
             if (it.isInstaPanel || it.instaTitle || it.instaSub || it.instaHashtag || it.instaLogo) {
                 const _ipLines = [];
