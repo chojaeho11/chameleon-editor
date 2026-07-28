@@ -14987,17 +14987,24 @@ html, body { background: #ffffff !important; }
                     { type:'bulk',   img:'', label_ko:'벌크포장 (개별포장 없음)', label_jp:'バルク梱包（個別なし）', label_en:'Bulk (no wrap)', fee:0 }
                 ];
                 _wrapGrid.innerHTML = WRAP_OPTS.map(function(w, i){
-                    var act = (w.type === 'plain'); // 기본 = 개별포장(인쇄없음)
                     var lbl = tr(w.label_ko, w.label_jp, w.label_en);
-                    // 2026-06-29: 괄호(인쇄없음/印刷なし) 부분은 통째로 다음 줄로 — 1글자만 떨어지는 현상 방지
-                    var lblHtml = lbl.replace(/\s*[（(]/, '<br>$&');
                     // 2026-07-28: 무료(벌크)면 초록 '무료', 유료면 빨강 '+원/개'
                     var feeStr = (w.fee > 0) ? ('+' + fmtPrice(w.fee) + '/' + tr('개', '個', 'pc')) : tr('무료', '無料', 'FREE');
                     var feeColor = (w.fee > 0) ? '#dc2626' : '#059669';
-                    // 벌크는 전용 이미지가 없어 회색 박스 + 라벨로 표시
-                    var imgHtml = w.img
-                        ? ('<img src="' + w.img + '" alt="' + lbl + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">')
-                        : ('<div style="width:100%; aspect-ratio:1/1; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:12px; font-weight:800; text-align:center; line-height:1.3;">' + tr('개별포장<br>없음', '個別なし', 'No wrap') + '</div>');
+                    // 2026-07-28: 벌크포장 — 사진 없이 가로로 긴 바 (그리드 전체 폭) (사장님 지시)
+                    if (w.type === 'bulk') {
+                        return '<button type="button" class="so-wrap-card" data-wrap-type="bulk" data-wrap-fee="0" '
+                            + 'onclick="window._soPickPresetWrap(this)" '
+                            + 'style="grid-column:1 / -1; border:2px solid #e2e8f0; background:#fff; border-radius:12px; '
+                            + 'padding:12px 16px; cursor:pointer; display:flex; flex-direction:row; align-items:center; '
+                            + 'justify-content:space-between; gap:10px; transition:border-color 0.15s ease; font-family:inherit;">'
+                            + '<span style="font-size:13px; font-weight:800; color:#334155;">' + lbl + '</span>'
+                            + '<span style="font-size:13px; font-weight:800; color:' + feeColor + '; white-space:nowrap;">' + feeStr + '</span>'
+                            + '</button>';
+                    }
+                    var act = (w.type === 'plain'); // 기본 = 개별포장(인쇄없음)
+                    // 2026-06-29: 괄호(인쇄없음/印刷なし) 부분은 통째로 다음 줄로 — 1글자만 떨어지는 현상 방지
+                    var lblHtml = lbl.replace(/\s*[（(]/, '<br>$&');
                     return '<button type="button" class="so-wrap-card' + (act ? ' active' : '') + '" '
                         + 'data-wrap-type="' + w.type + '" data-wrap-fee="' + w.fee + '" '
                         + 'onclick="window._soPickPresetWrap(this)" '
@@ -15005,7 +15012,7 @@ html, body { background: #ffffff !important; }
                         + 'background:#fff; border-radius:12px; padding:8px 6px; cursor:pointer; '
                         + 'display:flex; flex-direction:column; align-items:center; gap:6px; '
                         + 'transition:border-color 0.15s ease; font-family:inherit;">'
-                        + imgHtml
+                        + '<img src="' + w.img + '" alt="' + lbl + '" loading="lazy" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px; background:#f8fafc;">'
                         + '<span style="font-size:11.5px; font-weight:800; color:' + (act ? '#0f172a' : '#334155') + '; text-align:center; line-height:1.25; word-break:keep-all;">' + lblHtml + '</span>'
                         + '<span style="font-size:10.5px; font-weight:800; color:' + feeColor + ';">' + feeStr + '</span>'
                         + '</button>';
