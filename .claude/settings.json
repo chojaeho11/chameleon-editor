@@ -304,7 +304,8 @@
       "Bash(./deploy.sh \"bug#15 keyring shipping text 3000->2500 \\(best goods flat, 3 spots\\) + bug#14 work order keyring options box \\(shape/side/size/wrap\\) + so v837\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_bugs.js\")",
       "Bash(./deploy.sh \"bug admin: relabel done-report buttons to friendlier phrasing \\(Confirm-close -> Resolved thumbsup / Reopen -> Not fixed reopening\\), 8 langs\")",
-      "Bash(./deploy.sh \"bug admin: reopen now requires an unresolved-reason memo, appended to the report description with timestamp for the developer to act on\")"
+      "Bash(./deploy.sh \"bug admin: reopen now requires an unresolved-reason memo, appended to the report description with timestamp for the developer to act on\")",
+      "Bash(./deploy.sh \"fabric shipping unified to flat 2500 KRW all sites \\(JP 250yen / US 2.5usd\\), same as general parcel - remove JP/US 5000 branch in cotton_designer getShippingFeeKrw + simple_order unified-cart fabric line \\(so v838, cotton_designer v121\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

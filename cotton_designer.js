@@ -1602,7 +1602,7 @@ function getGeneralItems() {
     return getAllCartItems().filter(function (it) { return !_isFabricItem(it); });
 }
 
-// 2026-05-14: 택배비 — 사이트별 KRW 고정 (KR 5000, JP 10000 = ¥1000, US 10000 = $10).
+// 2026-07-29: 택배비 — 전 사이트 정액 2,500원 (KR ₩2,500 / JP ¥250 / US $2.5). 일반택배와 동일 통일.
 //   카트에 아이템이 1개 이상일 때만 부과. 매니저 견적 등 일부 흐름에서는 별도 처리될 수 있음.
 // 2026-06-06: 무료배송 carryover — 일반 상품 중 0원(무료) 또는 "가벽" 이 있으면 패브릭도 묶음.
 //   가벽은 자체 시공/배송비 (수도권 10만 / 지방 20만 / 지방 설치 70만 등) 가 이미 들어가므로,
@@ -1632,12 +1632,9 @@ function _cdHasFreeShipItem() {
 function getShippingFeeKrw() {
     try {
         if (_cdHasFreeShipItem()) return 0;   // 무료배송 항목 있음 → 패브릭도 무료
-        var cc = (window.SITE_CONFIG && window.SITE_CONFIG.COUNTRY) || '';
-        var lang = (window.__CD_LANG || '').toLowerCase();
-        // 2026-07-28: 패브릭 배송비 절반 인하 (사장님 지시) — 일반택배와 동일 방향.
-        if (cc === 'JP' || lang === 'ja') return 5000;    // ¥500 (기존 ¥1,000)
-        if (cc === 'US' || lang === 'en') return 5000;    // $5 (기존 $10)
-        return 2500;                                      // KR ₩2,500 (기존 ₩5,000)
+        // 2026-07-29: 패브릭 배송비를 일반택배와 완전히 동일하게 정액 2,500원 통일 (사장님 지시).
+        //   전 사이트 2,500원 = KR ₩2,500 / JP ¥250 / US $2.5 (기존 JP¥500·US$5 → 일반과 동일하게 인하).
+        return 2500;
     } catch (_) { return 2500; }
 }
 
