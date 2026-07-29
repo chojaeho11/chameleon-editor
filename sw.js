@@ -1,58 +1,16 @@
-// Chameleon Service Worker - HTML 캐시 강제 무효화 + 이미지 캐시
-var CACHE_VERSION = '20260531a';
-var IMG_CACHE = 'img-cache-v1';
-
-self.addEventListener('install', function(e) {
-    self.skipWaiting();
+// 2026-07-29: 최소 서비스워커 — PWA "앱 설치" 요건(fetch 핸들러 존재)만 충족.
+//   ★ 캐시하지 않는다 (오프라인 캐시 없음 → 항상 최신). 기존 stale-cache 방지 정책 유지.
+//   (이전 버전은 이미지/HTML 캐싱을 했으나 구버전 노출 문제로 폐기 → 무캐시 패스스루로 교체.)
+self.addEventListener('install', function () { self.skipWaiting(); });
+self.addEventListener('activate', function (e) {
+  e.waitUntil((async function () {
+    // 레거시(구버전 캐싱 SW) 캐시가 남아 있으면 전부 삭제 — 구버전 노출 방지.
+    try {
+      var keys = await caches.keys();
+      await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    } catch (_) {}
+    try { await self.clients.claim(); } catch (_) {}
+  })());
 });
-
-self.addEventListener('activate', function(e) {
-    e.waitUntil(
-        caches.keys().then(function(names) {
-            return Promise.all(
-                names.filter(function(n) { return n !== CACHE_VERSION && n !== IMG_CACHE; })
-                    .map(function(n) { return caches.delete(n); })
-            );
-        }).then(function() { return self.clients.claim(); })
-    );
-});
-
-self.addEventListener('fetch', function(e) {
-    var url = new URL(e.request.url);
-
-    // HTML 요청: 네트워크 우선
-    if (e.request.mode === 'navigate' ||
-        (e.request.method === 'GET' && e.request.headers.get('accept') && e.request.headers.get('accept').indexOf('text/html') >= 0)) {
-        e.respondWith(
-            fetch(e.request, { cache: 'no-store' }).then(function(res) {
-                return res;
-            }).catch(function() {
-                return caches.match(e.request);
-            })
-        );
-        return;
-    }
-
-    // 이미지 요청: 캐시 우선 (외부 CDN 이미지 포함)
-    if (e.request.method === 'GET' && e.request.destination === 'image') {
-        e.respondWith(
-            caches.match(e.request).then(function(cached) {
-                if (cached) return cached;
-                return fetch(e.request).then(function(res) {
-                    if (res && res.status === 200) {
-                        var clone = res.clone();
-                        caches.open(IMG_CACHE).then(function(cache) {
-                            cache.put(e.request, clone);
-                        });
-                    }
-                    return res;
-                }).catch(function() {
-                    return new Response('', { status: 404 });
-                });
-            })
-        );
-        return;
-    }
-
-    // 나머지 (JS, CSS 등)는 기본 동작 그대로
-});
+// 설치가능 판정용 fetch 핸들러. respondWith 하지 않으므로 브라우저 기본 네트워크로 처리(가로채지 않음 = 항상 최신).
+self.addEventListener('fetch', function () { /* passthrough — no caching */ });

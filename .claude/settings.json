@@ -312,7 +312,9 @@
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_fabric.js\")",
       "Bash(./deploy.sh \"main fabric cards: add price line \\(1ma 12000 KRW\\) + wholesale discount note \\(100pcs 50%\\) to all 5 fabric cards with JP/EN currency i18n; change purple banner subtitle to No.1 fabric-print shop wording \\(KR Dongdaemun / JP Nippori textile town / EN wholesalers-trust\\)\")",
       "Bash(./deploy.sh \"main fabric cards: price 12000 to 13000 KRW/ma \\(JP 1300yen, US 13usd\\) to match order page + remove green border for a clean borderless look\")",
-      "Bash(./deploy.sh \"main fabric cards: mobile shows 2 per row like other products with organza added \\(6 cards even\\) - organza card is mobile-only hidden on desktop 5-in-row; give cards a white bg + subtle shadow to match product cards\")"
+      "Bash(./deploy.sh \"main fabric cards: mobile shows 2 per row like other products with organza added \\(6 cards even\\) - organza card is mobile-only hidden on desktop 5-in-row; give cards a white bg + subtle shadow to match product cards\")",
+      "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_fab2.js\")",
+      "Bash(./deploy.sh \"PWA add-to-home/app-install + bookmark reward: manifest.json + non-caching sw.js \\(replaces old caching SW, keep registered for installability\\) + floating 'add shortcut 3000P' button above chat \\(KR/JP/EN\\) with install prompt / iOS+desktop guide modal; reward_grant gains once-per-user bookmark type 3000 KRW, rewards.js rewardBookmark v7\")"
     ],
     "additionalDirectories": [
       "\\tmp",

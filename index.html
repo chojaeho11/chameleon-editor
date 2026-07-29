@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729100259';
+    var CV = '20260729140049';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -127,8 +127,16 @@
     window.addEventListener('online', function(){ _verCheck(false); });
     window.addEventListener('pageshow', function(e){ if (e && e.persisted) _verCheck(false); });
 })();
-// [Service Worker] 불필요한 SW 정리 (등록하지 않음)
-if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister();})}); }
+// [Service Worker] 2026-07-29: PWA 앱 설치를 위해 무캐시 sw.js 등록. 레거시(캐싱) SW 는 제거.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(r){
+    r.forEach(function(reg){
+      var u = (reg.active && reg.active.scriptURL) || (reg.waiting && reg.waiting.scriptURL) || (reg.installing && reg.installing.scriptURL) || '';
+      if (u.indexOf('/sw.js') < 0) reg.unregister();   // 레거시만 제거, 우리 무캐시 SW 는 유지
+    });
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }).catch(function(){ try { navigator.serviceWorker.register('/sw.js'); } catch(_){} });
+}
 </script>
 <base href="/">
 <meta charset="UTF-8" />
@@ -222,6 +230,12 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().t
 <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" href="/mascot-favicon.png">
 <link rel="apple-touch-icon" href="/mascot-favicon.png">
+<!-- 2026-07-29: PWA(홈화면/앱 설치)용 매니페스트 + 테마색 -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6d28d9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="카멜레온">
 <link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://chameleon.design/">
@@ -727,10 +741,13 @@ setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opac
 </script>
 <script src="toast.js?v=434"></script>
 <script>
-// v175: 서비스 워커 + 모든 캐시 강제 삭제
+// v175: 레거시 캐싱 SW + 모든 캐시 강제 삭제. (2026-07-29: 무캐시 sw.js 는 유지 — 앱 설치용)
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
+        regs.forEach(function(r) {
+            var u = (r.active && r.active.scriptURL) || '';
+            if (u.indexOf('/sw.js') < 0) r.unregister();
+        });
     });
 }
 if ('caches' in window) {
@@ -5978,7 +5995,7 @@ function scrollHotdeal(gridId, dir) {
 </div>
 
 <script src="./mini-editor.js?v=554"></script>
-<script src="./rewards.js?v=6"></script>
+<script src="./rewards.js?v=7"></script>
 
 <!-- 고객 작품 판매 마켓플레이스 (2026-06-13: 임시 비활성화 — embed editor 로 대체 예정) -->
 <div id="artworkMarketBanner" style="display:none; width:96%; max-width:1100px; margin:30px auto; background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%); border-radius:16px; padding:30px; color:#fff; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(30,27,75,0.3); flex-shrink:0;">
@@ -24908,5 +24925,61 @@ document.addEventListener('click', function(e) {
 #ch-plugin, [id^="ch-plugin"] { display:none !important; }
 </style>
 
+<!-- 2026-07-29: 바로가기(홈화면/앱/즐겨찾기) 추가 버튼 — 채팅 버튼 위. 추가 시 3,000P 지급(1인1회, B안). -->
+<div id="pwaInstallWrap" style="display:none; position:fixed; right:20px; bottom:96px; z-index:99997;">
+  <button id="pwaInstallBtn" type="button" onclick="window._pwaInstallClick && window._pwaInstallClick()"
+    style="display:flex; align-items:center; gap:6px; padding:11px 15px; border:none; border-radius:24px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(217,119,6,0.42); font-family:inherit; white-space:nowrap; letter-spacing:-0.01em;">
+    <span id="pwaInstallLabel">바로가기 추가 · 3,000P</span>
+  </button>
+</div>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function _lang(){ var l=(window.CURRENT_LANG||'kr').toLowerCase(); return (l==='kr'||l==='ko')?'kr':((l==='jp'||l==='ja')?'ja':'en'); }
+  function _tr(o){ return o[_lang()]||o.en||o.kr; }
+  function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+  function standalone(){ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+  var _dp = null;
+
+  function applyLabel(){ var el=$('pwaInstallLabel'); if(el) el.textContent=_tr({kr:'바로가기 추가 · 3,000P', ja:'ショートカット追加 · 3,000P', en:'Add shortcut · 3,000P'}); }
+  function showBtn(){ if(standalone()) return; var w=$('pwaInstallWrap'); if(w) w.style.display=''; applyLabel(); }
+  function hideBtn(){ var w=$('pwaInstallWrap'); if(w) w.style.display='none'; }
+
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); _dp=e; showBtn(); });
+  window.addEventListener('appinstalled', function(){ hideBtn(); try{ window.rewardBookmark && window.rewardBookmark(); }catch(_){} });
+
+  // 설치 프롬프트가 없어도(사파리/조건 미충족) 버튼은 노출 — 안내 모달로 유도. 이미 설치(앱 실행)면 숨김.
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', showBtn); else showBtn();
+
+  window._pwaInstallClick = async function(){
+    if (standalone()) { window.rewardBookmark && window.rewardBookmark(); return; }
+    if (_dp) { _dp.prompt(); try{ await _dp.userChoice; }catch(_){} _dp=null; return; } // 수락 시 appinstalled 에서 지급
+    showGuide();
+  };
+
+  function showGuide(){
+    if ($('pwaGuideOv')) { $('pwaGuideOv').style.display='flex'; return; }
+    var steps = isIOS()
+      ? _tr({kr:'① 하단 <b>공유</b> 버튼을 누르세요<br>② <b>홈 화면에 추가</b>를 누르세요', ja:'① 下部の<b>共有</b>ボタンを押す<br>②<b>ホーム画面に追加</b>を押す', en:'① Tap the <b>Share</b> button<br>② Tap <b>Add to Home Screen</b>'})
+      : _tr({kr:'① <b>Ctrl + D</b> 로 즐겨찾기에 추가<br>② 또는 주소창의 <b>설치</b> 아이콘을 누르세요', ja:'①<b>Ctrl + D</b>でお気に入りに追加<br>②またはアドレスバーの<b>インストール</b>アイコン', en:'① Press <b>Ctrl + D</b> to bookmark<br>② or click the <b>install</b> icon in the address bar'});
+    var title=_tr({kr:'바로가기 추가하고 3,000P 받기', ja:'ショートカット追加で3,000P GET', en:'Add a shortcut & get 3,000P'});
+    var doneBtn=_tr({kr:'추가했어요 · 3,000P 받기', ja:'追加した · 3,000P受取', en:'Done · Get 3,000P'});
+    var closeBtn=_tr({kr:'닫기', ja:'閉じる', en:'Close'});
+    var ov=document.createElement('div'); ov.id='pwaGuideOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.6);padding:20px;';
+    ov.innerHTML='<div style="width:360px;max-width:100%;background:#fff;border-radius:20px;overflow:hidden;font-family:inherit;">'
+      +'<div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:18px 20px;text-align:center;font-size:16px;">'+title+'</div>'
+      +'<div style="padding:20px;color:#334155;font-size:14px;line-height:1.9;">'+steps+'</div>'
+      +'<div style="display:flex;gap:8px;padding:0 16px 18px;">'
+      +'<button id="pwaGuideDone" style="flex:1;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:14px;cursor:pointer;font-family:inherit;">'+doneBtn+'</button>'
+      +'<button id="pwaGuideClose" style="padding:12px 16px;border:none;border-radius:12px;background:#eef2ff;color:#4338ca;font-size:14px;cursor:pointer;font-family:inherit;">'+closeBtn+'</button>'
+      +'</div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e){ if(e.target===ov) ov.style.display='none'; });
+    $('pwaGuideClose').onclick=function(){ ov.style.display='none'; };
+    $('pwaGuideDone').onclick=async function(){ ov.style.display='none'; if(window.rewardBookmark) await window.rewardBookmark(); };
+  }
+})();
+</script>
 </body>
 </html>

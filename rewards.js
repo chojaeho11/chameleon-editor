@@ -217,6 +217,19 @@
     window.rewardComment = function (ref) { return _grant('comment', ref, 'comment'); };
     window.rewardPost = function (ref) { return _grant('post', ref, 'post'); };
 
+    // 2026-07-29: 바로가기(홈화면/앱/즐겨찾기) 추가 보상 — 1인 1회 3,000원. 피드백 포함(미로그인/이미받음).
+    window.rewardBookmark = async function () {
+        var sb = await sbReady(); if (!sb) { _rwInfo(tr('잠시 후 다시 시도해주세요', '少し後にお試しください', 'Please try again shortly.')); return false; }
+        var uid = await loggedInUid(sb);
+        if (!uid) { _rwInfo(tr('로그인하면 3,000P를 받을 수 있어요', 'ログインで3,000Pを獲得できます', 'Log in to get 3,000P.')); return false; }
+        try {
+            var r = await sb.rpc('reward_grant', { p_type: 'bookmark', p_ref: 'bookmark' }); var d = r && r.data;
+            if (d && d.ok) { window.showRewardPopup({ kind: 'mileage', title: tr('바로가기 추가 완료!', 'ショートカット追加完了！', 'Shortcut added!'), mileage: d.mileage_added, aiCredit: d.credit_added }); return true; }
+            if (d && (d.reason === 'cap' || d.reason === 'dup')) { _rwInfo(tr('이미 바로가기 보상을 받으셨어요 🎁', 'ショートカット特典は受取済みです 🎁', 'You already claimed the shortcut reward 🎁')); return true; }
+            _rwInfo(tr('잠시 후 다시 시도해주세요', '少し後にお試しください', 'Please try again shortly.')); return false;
+        } catch (e) { _rwInfo(tr('처리 중 오류가 났어요', 'エラーが発生しました', 'Something went wrong.')); return false; }
+    };
+
     // ── 오늘의 선물(접속 보상) + 오늘의 미션 안내 팝업 ──
     function _dgStyle() {
         if (document.getElementById('dgStyle')) return;
