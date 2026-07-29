@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729180301';
+    var CV = '20260729181431';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -233,6 +233,17 @@ if ('serviceWorker' in navigator) {
 <!-- 2026-07-29: 바로가기(북마크형) 매니페스트 + 테마색. display:browser 라 별도 앱창 없이 브라우저 탭에서 열림. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#6d28d9">
+<style id="cjkWrapFix">
+/* 2026-07-29: 일본어 등 CJK 모바일에서 한두 글자가 다음 줄로 흘러넘치는(고아 문자) 현상 정리 —
+   text-wrap: pretty/balance 로 줄바꿈을 재분배해 마지막 줄에 한두 글자만 남지 않게 한다. */
+.me-intro-ttl, .me-intro-desc { text-wrap: balance; }
+.so-prod-detail-body { word-break: keep-all; }
+@media (max-width:600px){
+  .so-prod-detail-body p, .so-prod-detail-body li, .so-prod-detail-body td,
+  .so-prod-detail-body h1, .so-prod-detail-body h2, .so-prod-detail-body h3, .so-prod-detail-body h4,
+  .so-prod-detail-body div, .so-prod-detail-body span { text-wrap: pretty; }
+}
+</style>
 <link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://chameleon.design/">

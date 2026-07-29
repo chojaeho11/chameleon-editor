@@ -319,7 +319,9 @@
       "Bash(./deploy.sh \"shortcut: change to bookmark-style \\(manifest display browser, remove iOS standalone metas\\) so it opens in the normal browser tab instead of a separate app window; guide modal reworded to bookmark steps \\(Ctrl+D / menu add-to-home\\)\")",
       "Bash(./deploy.sh \"mobile mockup viewer: shorten view/edit/download buttons to compact round \\(Bogi/Sujeong/Daun, JP/EN too\\) so the zoom bar no longer gets pushed off-screen \\(flex-wrap + zoom bar flex-grow right-aligned\\); align tutorial/add-shortcut/chatbot floating buttons into one bottom row on mobile \\(add-shortcut centered\\)\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_float.js\")",
-      "Bash(./deploy.sh \"paper-stand: hide product photo + redesign phone-contact card cleaner \\(label small over big number, vertical stack, softer bg\\) so it no longer looks cramped on mobile \\(so v839\\); mobile floating buttons: place add-shortcut + tutorial side by side on the left, chatbot right\")"
+      "Bash(./deploy.sh \"paper-stand: hide product photo + redesign phone-contact card cleaner \\(label small over big number, vertical stack, softer bg\\) so it no longer looks cramped on mobile \\(so v839\\); mobile floating buttons: place add-shortcut + tutorial side by side on the left, chatbot right\")",
+      "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_pd.js\")",
+      "Bash(./deploy.sh \"JP mobile typography: add text-wrap balance/pretty to AI-design intro cards and product-detail body so Japanese text no longer strands 1-2 orphan characters on the last line \\(word-break keep-all on detail body\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
