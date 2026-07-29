@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729095350';
+    var CV = '20260729095642';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5397,31 +5397,31 @@ window.addEventListener('load', function() {
         <a href="/fabric?mode=poster&fabric=cotton20" class="cp-fabric-type-card cp-home-link">
             <div class="cp-ft-thumb"><img src="/fabric/cotton20.jpg" alt="면20수" loading="lazy"></div>
             <div class="cp-ft-title" data-cpfab="cotton20">면20수</div>
-            <div class="cp-ft-price" data-cpfabprice>1마 12,000원</div>
+            <div class="cp-ft-price" data-cpfabprice>1마 13,000원</div>
             <div class="cp-ft-note" data-cpfabnote>업자할인 · 100장 구매 50%</div>
         </a>
         <a href="/fabric?mode=poster&fabric=cotton30" class="cp-fabric-type-card cp-home-link">
             <div class="cp-ft-thumb"><img src="/fabric/cotton30.jpg" alt="면30수" loading="lazy"></div>
             <div class="cp-ft-title" data-cpfab="cotton30">면30수</div>
-            <div class="cp-ft-price" data-cpfabprice>1마 12,000원</div>
+            <div class="cp-ft-price" data-cpfabprice>1마 13,000원</div>
             <div class="cp-ft-note" data-cpfabnote>업자할인 · 100장 구매 50%</div>
         </a>
         <a href="/fabric?mode=poster&fabric=chiffon" class="cp-fabric-type-card cp-home-link">
             <div class="cp-ft-thumb"><img src="/fabric/chiffon.jpg" alt="쉬폰" loading="lazy"></div>
             <div class="cp-ft-title" data-cpfab="chiffon">쉬폰</div>
-            <div class="cp-ft-price" data-cpfabprice>1마 12,000원</div>
+            <div class="cp-ft-price" data-cpfabprice>1마 13,000원</div>
             <div class="cp-ft-note" data-cpfabnote>업자할인 · 100장 구매 50%</div>
         </a>
         <a href="/fabric?mode=poster&fabric=rayon" class="cp-fabric-type-card cp-home-link">
             <div class="cp-ft-thumb"><img src="/fabric/rayon.jpg" alt="레이온" loading="lazy"></div>
             <div class="cp-ft-title" data-cpfab="rayon">레이온</div>
-            <div class="cp-ft-price" data-cpfabprice>1마 12,000원</div>
+            <div class="cp-ft-price" data-cpfabprice>1마 13,000원</div>
             <div class="cp-ft-note" data-cpfabnote>업자할인 · 100장 구매 50%</div>
         </a>
         <a href="/fabric?mode=poster&fabric=linen" class="cp-fabric-type-card cp-home-link">
             <div class="cp-ft-thumb"><img src="/fabric/linen.jpg" alt="린넨" loading="lazy"></div>
             <div class="cp-ft-title" data-cpfab="linen">린넨</div>
-            <div class="cp-ft-price" data-cpfabprice>1마 12,000원</div>
+            <div class="cp-ft-price" data-cpfabprice>1마 13,000원</div>
             <div class="cp-ft-note" data-cpfabnote>업자할인 · 100장 구매 50%</div>
         </a>
     </div>
@@ -5491,7 +5491,7 @@ window.addEventListener('load', function() {
             if (m && m[_fabLang]) el.textContent = m[_fabLang];
         });
         // 원단 카드 가격/업자할인 문구 (전 카드 공통, 통화 환산)
-        var FAB_PRICE = { kr:'1마 12,000원', ja:'1ヤード 1,200円', en:'$12 / yard' };
+        var FAB_PRICE = { kr:'1마 13,000원', ja:'1ヤード 1,300円', en:'$13 / yard' };
         var FAB_NOTE  = { kr:'업자할인 · 100장 구매 50%', ja:'業者割引 · 100枚購入で50%', en:'Wholesale · 100pcs 50% off' };
         document.querySelectorAll('[data-cpfabprice]').forEach(function(el){ el.textContent = FAB_PRICE[_fabLang] || FAB_PRICE.en; });
         document.querySelectorAll('[data-cpfabnote]').forEach(function(el){ el.textContent = FAB_NOTE[_fabLang] || FAB_NOTE.en; });
@@ -5578,7 +5578,7 @@ window.addEventListener('load', function() {
 
 /* 2026-07-29: 원단 종류 5종 카드 — 다른 상품처럼 한 줄에 5개 (세로형: 사진 위 + 이름 아래) */
 .cp-fabric-type-grid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px; margin-top:12px; width:100%; box-sizing:border-box; }
-.cp-fabric-type-card { display:flex; flex-direction:column; gap:8px; padding:10px; border:2px solid #16a34a; border-radius:16px; background:#fff; color:inherit; text-decoration:none; align-items:center; text-align:center; transition: transform .15s; box-sizing:border-box; min-width:0; }
+.cp-fabric-type-card { display:flex; flex-direction:column; gap:8px; padding:8px; border:none; border-radius:14px; background:transparent; color:inherit; text-decoration:none; align-items:center; text-align:center; transition: transform .15s; box-sizing:border-box; min-width:0; }
 .cp-fabric-type-card:hover { transform:translateY(-2px); color:inherit; text-decoration:none; }
 .cp-fabric-type-card:visited { color:inherit; text-decoration:none; }
 .cp-ft-thumb { width:100%; aspect-ratio:1 / 1; border-radius:12px; overflow:hidden; background:#f0fdf4; }
@@ -5589,7 +5589,7 @@ window.addEventListener('load', function() {
 /* 태블릿/모바일: 5개가 너무 좁아지지 않게 살짝 줄이기 (한 줄 5개는 유지) */
 @media (max-width:600px) {
     .cp-fabric-type-grid { gap:6px; }
-    .cp-fabric-type-card { padding:6px; border-radius:12px; border-width:1.5px; }
+    .cp-fabric-type-card { padding:5px; border-radius:10px; }
     .cp-ft-thumb { border-radius:9px; }
     .cp-ft-title { font-size:11px; }
     .cp-ft-price { font-size:11px; }
