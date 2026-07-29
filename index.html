@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729091459';
+    var CV = '20260729094209';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5392,21 +5392,27 @@ window.addEventListener('load', function() {
         <span id="cpHomeBtn1Sub" style="font-size:12px; font-weight:500; opacity:0.9; letter-spacing:0;">친환경 패브릭에 인쇄</span>
     </a>
 
-    <!-- 패브릭포스터 / 패턴 원단 인쇄 카드 → /fabric -->
+    <!-- 2026-07-29: 원단 종류 5종 카드 → 클릭 시 그 원단이 선택된 패브릭포스터 주문 화면(/fabric?mode=poster&fabric=..) -->
     <div class="cp-fabric-type-grid">
-        <a href="/fabric" class="cp-fabric-type-card cp-home-link">
-            <div class="cp-ft-thumb"><img src="/fabric/poster.jpg" alt="패브릭포스터" loading="lazy"></div>
-            <div class="cp-ft-text">
-                <div class="cp-ft-title" id="cpFtTitlePoster">패브릭포스터</div>
-                <div class="cp-ft-desc" id="cpFtDescPoster">화면 전체를 인쇄하는 낱장 인쇄로, 장식용 굿즈나 선물용으로 많이 사용합니다.</div>
-            </div>
+        <a href="/fabric?mode=poster&fabric=cotton20" class="cp-fabric-type-card cp-home-link">
+            <div class="cp-ft-thumb"><img src="/fabric/cotton20.jpg" alt="면20수" loading="lazy"></div>
+            <div class="cp-ft-title" data-cpfab="cotton20">면20수</div>
         </a>
-        <a href="/fabric" class="cp-fabric-type-card cp-home-link">
-            <div class="cp-ft-thumb"><img src="/fabric/patten.jpg" alt="패턴 원단 인쇄" loading="lazy"></div>
-            <div class="cp-ft-text">
-                <div class="cp-ft-title" id="cpFtTitlePattern">패턴 원단 인쇄</div>
-                <div class="cp-ft-desc" id="cpFtDescPattern">의류 업체와 도매 원단 매장에서 판매용으로 주문하는 롤 패턴 인쇄입니다.</div>
-            </div>
+        <a href="/fabric?mode=poster&fabric=cotton30" class="cp-fabric-type-card cp-home-link">
+            <div class="cp-ft-thumb"><img src="/fabric/cotton30.jpg" alt="면30수" loading="lazy"></div>
+            <div class="cp-ft-title" data-cpfab="cotton30">면30수</div>
+        </a>
+        <a href="/fabric?mode=poster&fabric=chiffon" class="cp-fabric-type-card cp-home-link">
+            <div class="cp-ft-thumb"><img src="/fabric/chiffon.jpg" alt="쉬폰" loading="lazy"></div>
+            <div class="cp-ft-title" data-cpfab="chiffon">쉬폰</div>
+        </a>
+        <a href="/fabric?mode=poster&fabric=rayon" class="cp-fabric-type-card cp-home-link">
+            <div class="cp-ft-thumb"><img src="/fabric/rayon.jpg" alt="레이온" loading="lazy"></div>
+            <div class="cp-ft-title" data-cpfab="rayon">레이온</div>
+        </a>
+        <a href="/fabric?mode=poster&fabric=linen" class="cp-fabric-type-card cp-home-link">
+            <div class="cp-ft-thumb"><img src="/fabric/linen.jpg" alt="린넨" loading="lazy"></div>
+            <div class="cp-ft-title" data-cpfab="linen">린넨</div>
         </a>
     </div>
 </div>
@@ -5461,11 +5467,19 @@ window.addEventListener('load', function() {
         setTxt('cpHomeBtn2', t.btn2);
         setTxt('cpHomeBtn3', t.btn3);
         setTxt('cpHomeBtnSample', t.btnSample);
-        // 2026-06-01: 패브릭포스터 / 패턴원단인쇄 카드
-        setTxt('cpFtTitlePoster', t.ftTitlePoster);
-        setTxt('cpFtDescPoster', t.ftDescPoster);
-        setTxt('cpFtTitlePattern', t.ftTitlePattern);
-        setTxt('cpFtDescPattern', t.ftDescPattern);
+        // 2026-07-29: 원단 종류 5종 카드 이름 다국어 (kr 기본은 HTML, ja/그외는 여기서 교체)
+        var FAB_I18N = {
+            cotton20: { kr:'면20수', ja:'コットン20番', en:'Cotton 20s' },
+            cotton30: { kr:'면30수', ja:'コットン30番', en:'Cotton 30s' },
+            chiffon:  { kr:'쉬폰',   ja:'シフォン',      en:'Chiffon' },
+            rayon:    { kr:'레이온', ja:'レーヨン',      en:'Rayon' },
+            linen:    { kr:'린넨',   ja:'リネン',        en:'Linen' }
+        };
+        var _fabLang = (lang === 'kr' || lang === 'ko') ? 'kr' : (lang === 'ja' ? 'ja' : 'en');
+        document.querySelectorAll('[data-cpfab]').forEach(function(el){
+            var m = FAB_I18N[el.getAttribute('data-cpfab')];
+            if (m && m[_fabLang]) el.textContent = m[_fabLang];
+        });
         // 검색창 placeholder 다국어 적용
         var srch = document.querySelector('[data-cp-search-ph]');
         if (srch && t.searchPh) srch.setAttribute('placeholder', t.searchPh);
@@ -5547,29 +5561,20 @@ window.addEventListener('load', function() {
     .cp-home-card .cp-name { font-size:11px; }
 }
 
-/* 2026-06-01: 패브릭포스터/패턴원단인쇄 카드 (스크린샷 디자인) */
-/* 모바일: 1열 위아래 / PC(768+): 2열 좌우 */
-.cp-fabric-type-grid { display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; width:100%; box-sizing:border-box; }
-.cp-fabric-type-card { display:flex; gap:14px; padding:12px; border:2px solid #16a34a; border-radius:18px; background:#fff; color:inherit; text-decoration:none; align-items:center; transition: transform .15s, box-shadow .15s; box-sizing:border-box; min-width:0; }
-.cp-fabric-type-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px -8px rgba(22,163,74,0.35); color:inherit; text-decoration:none; }
+/* 2026-07-29: 원단 종류 5종 카드 — 다른 상품처럼 한 줄에 5개 (세로형: 사진 위 + 이름 아래) */
+.cp-fabric-type-grid { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:10px; margin-top:12px; width:100%; box-sizing:border-box; }
+.cp-fabric-type-card { display:flex; flex-direction:column; gap:8px; padding:10px; border:2px solid #16a34a; border-radius:16px; background:#fff; color:inherit; text-decoration:none; align-items:center; text-align:center; transition: transform .15s; box-sizing:border-box; min-width:0; }
+.cp-fabric-type-card:hover { transform:translateY(-2px); color:inherit; text-decoration:none; }
 .cp-fabric-type-card:visited { color:inherit; text-decoration:none; }
-.cp-ft-thumb { flex-shrink:0; width:96px; height:96px; border-radius:14px; overflow:hidden; background:#f0fdf4; }
+.cp-ft-thumb { width:100%; aspect-ratio:1 / 1; border-radius:12px; overflow:hidden; background:#f0fdf4; }
 .cp-ft-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.cp-ft-text { flex:1; min-width:0; }
-.cp-ft-title { font-size:16px; font-weight:800; color:#14532d; margin-bottom:4px; line-height:1.3; word-break:keep-all; }
-.cp-ft-desc { font-size:12.5px; color:#4b5563; line-height:1.5; word-break:keep-all; overflow-wrap:anywhere; }
-/* PC: 2열 좌우 + 카드 통일 높이 + 썸네일 약간 확대 */
-@media (min-width:768px) {
-    .cp-fabric-type-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; }
-    .cp-fabric-type-card { padding:16px; }
-    .cp-ft-thumb { width:110px; height:110px; }
-    .cp-ft-title { font-size:17px; }
-    .cp-ft-desc { font-size:13px; }
-}
-@media (max-width:480px) {
-    .cp-ft-thumb { width:80px; height:80px; border-radius:12px; }
-    .cp-ft-title { font-size:15px; }
-    .cp-ft-desc { font-size:12px; }
+.cp-ft-title { font-size:15px; font-weight:700; color:#14532d; line-height:1.3; word-break:keep-all; }
+/* 태블릿/모바일: 5개가 너무 좁아지지 않게 살짝 줄이기 (한 줄 5개는 유지) */
+@media (max-width:600px) {
+    .cp-fabric-type-grid { gap:6px; }
+    .cp-fabric-type-card { padding:6px; border-radius:12px; border-width:1.5px; }
+    .cp-ft-thumb { border-radius:9px; }
+    .cp-ft-title { font-size:11px; }
 }
 </style>
 

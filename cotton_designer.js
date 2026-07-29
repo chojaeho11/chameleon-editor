@@ -110,6 +110,9 @@ function classifyGroup(p) {
 //   (자동 패턴 반복이 아닌 단일 이미지 출력 의도)
 const _cdQsMode = (function(){ try { return new URLSearchParams(location.search).get('mode') || ''; } catch(_) { return ''; } })();
 const _cdIsPosterMode = _cdQsMode === 'poster';
+// 2026-07-29: 메인 페이지 원단 카드(면20수/면30수/쉬폰/레이온/린넨)에서 ?fabric=<type> 로 진입 시
+//   해당 원단을 미리 선택된(체크된) 상태로 연다. 기본 모드는 패브릭포스터(layout='centered'=기본).
+const _cdQsFabric = (function(){ try { return new URLSearchParams(location.search).get('fabric') || ''; } catch(_) { return ''; } })();
 
 // 상태
 const state = {
@@ -294,6 +297,14 @@ window._cdSelectFabricType = function(type) {
     // 2026-05-30: 상세/리뷰 섹션도 새 fabricType 기준으로 갱신
     if (typeof window._cdRefreshDetailAndReviews === 'function') window._cdRefreshDetailAndReviews();
 };
+
+// 2026-07-29: ?fabric=<type> 로 들어온 경우, 로드 직후 해당 원단을 선택(카드 active + 상세/가격 반영).
+if (_cdQsFabric && FABRIC_TYPES[_cdQsFabric]) {
+    var _cdApplyQsFabric = function(){ try { window._cdSelectFabricType(_cdQsFabric); } catch(_e){} };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ setTimeout(_cdApplyQsFabric, 0); });
+    } else { setTimeout(_cdApplyQsFabric, 0); }
+}
 
 window._cdSelectColor = function(color, btn) {
     state.fabricColor = color;
