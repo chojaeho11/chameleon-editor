@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729141935';
+    var CV = '20260729173350';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5920,12 +5920,12 @@ function scrollHotdeal(gridId, dir) {
                     </div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <!-- 2026-07-20: 다운로드 1개 → 자세히보기 / 수정하기 / 다운로드 3개로 분리 (사장님 지시) -->
-                <button type="button" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap; background:#fff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meViewLarge && window._meViewLarge()"><span data-i18n="me_view_large">자세히보기</span></button>
-                <button type="button" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap; background:#eef2ff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meFixToggle && window._meFixToggle()"><span data-i18n="me_fix_open">수정하기</span></button>
-                <a id="aiNbAiDl" class="aiNb-btn" style="flex:1; padding:12px 10px; font-size:14px; white-space:nowrap;" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운로드</span></a>
-                <div id="meZoomBar" style="display:flex; align-items:center; gap:4px; flex:0 0 auto;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <!-- 2026-07-29: 보기/수정/다운 컴팩트 라운드 버튼 (짧게+동그랗게) → 모바일에서 줌바가 우측으로 밀려 잘리던 문제 해결 -->
+                <button type="button" class="aiNb-btn" style="flex:0 0 auto; min-width:52px; padding:10px 13px; font-size:14px; white-space:nowrap; background:#fff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meViewLarge && window._meViewLarge()"><span data-i18n="me_view_large">보기</span></button>
+                <button type="button" class="aiNb-btn" style="flex:0 0 auto; min-width:52px; padding:10px 13px; font-size:14px; white-space:nowrap; background:#eef2ff; color:#4338ca; border:1.5px solid #c7d2fe;" onclick="window._meFixToggle && window._meFixToggle()"><span data-i18n="me_fix_open">수정</span></button>
+                <a id="aiNbAiDl" class="aiNb-btn" style="flex:0 0 auto; min-width:52px; padding:10px 13px; font-size:14px; white-space:nowrap;" download="my-design.png" onclick="return window._meDownload(event)"><span data-i18n="me_download">다운</span></a>
+                <div id="meZoomBar" style="display:flex; align-items:center; gap:4px; flex:1 1 auto; justify-content:flex-end; min-width:0;">
                     <button type="button" class="me-zoom-btn" title="축소 (휠 아래)" onclick="window._meZoom(-1)">−</button>
                     <button type="button" class="me-zoom-btn" id="meZoomPct" title="화면 맞춤 (100%)" onclick="window._meZoomFit()" style="min-width:50px; font-size:13px; font-variant-numeric:tabular-nums;">100%</button>
                     <button type="button" class="me-zoom-btn" title="확대 (휠 위)" onclick="window._meZoom(1)">+</button>
@@ -24923,6 +24923,13 @@ document.addEventListener('click', function(e) {
 </style>
 
 <!-- 2026-07-29: 바로가기(홈화면/앱/즐겨찾기) 추가 버튼 — 채팅 버튼 위. 추가 시 3,000P 지급(1인1회, B안). -->
+<style>
+/* 모바일: 튜토리얼(좌) · 바로가기(중앙) · 챗봇(우) 을 한 줄(바닥)에 정렬 */
+@media (max-width:600px){
+  #pwaInstallWrap{ left:50% !important; right:auto !important; bottom:18px !important; transform:translateX(-50%); }
+  #pwaInstallBtn{ padding:9px 12px !important; font-size:12px !important; }
+}
+</style>
 <div id="pwaInstallWrap" style="display:none; position:fixed; right:20px; bottom:96px; z-index:99997;">
   <button id="pwaInstallBtn" type="button" onclick="window._pwaInstallClick && window._pwaInstallClick()"
     style="display:flex; align-items:center; gap:6px; padding:11px 15px; border:none; border-radius:24px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(217,119,6,0.42); font-family:inherit; white-space:nowrap; letter-spacing:-0.01em;">
