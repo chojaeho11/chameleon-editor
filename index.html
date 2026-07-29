@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729183056';
+    var CV = '20260729184320';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -237,6 +237,14 @@ if ('serviceWorker' in navigator) {
 /* 2026-07-29: 일본어 등 CJK 모바일에서 한두 글자가 다음 줄로 흘러넘치는(고아 문자) 현상 정리 —
    text-wrap: pretty/balance 로 줄바꿈을 재분배해 마지막 줄에 한두 글자만 남지 않게 한다. */
 .me-intro-ttl, .me-intro-desc { text-wrap: balance; }
+/* 2026-07-29: AI디자인/편집 카드 설명 — keep-all 때문에 일본어(띄어쓰기 없음)가 줄바꿈 안 돼 카드 밖으로 넘치던 문제.
+   normal 로 바꿔 줄바꿈 허용 + 좁은 폰에서 글씨 축소로 좌우 넘침 방지. */
+.me-intro-desc { word-break: normal !important; overflow-wrap: anywhere !important; }
+@media (max-width:500px){
+  .me-intro-desc { font-size:10px !important; line-height:1.4 !important; }
+  .me-intro-ttl { font-size:13px !important; }
+  .me-intro-btn { padding:14px 10px !important; }
+}
 .so-prod-detail-body { word-break: keep-all; }
 @media (max-width:600px){
   .so-prod-detail-body p, .so-prod-detail-body li, .so-prod-detail-body td,
