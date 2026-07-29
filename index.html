@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729173350';
+    var CV = '20260729180301';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -10552,7 +10552,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=838"></script>
+<script src="/simple_order.js?v=839"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
@@ -24924,10 +24924,11 @@ document.addEventListener('click', function(e) {
 
 <!-- 2026-07-29: 바로가기(홈화면/앱/즐겨찾기) 추가 버튼 — 채팅 버튼 위. 추가 시 3,000P 지급(1인1회, B안). -->
 <style>
-/* 모바일: 튜토리얼(좌) · 바로가기(중앙) · 챗봇(우) 을 한 줄(바닥)에 정렬 */
+/* 모바일: 바로가기 + 튜토리얼을 나란히(좌측) + 챗봇(우) 을 한 줄(바닥)에 정렬 */
 @media (max-width:600px){
-  #pwaInstallWrap{ left:50% !important; right:auto !important; bottom:18px !important; transform:translateX(-50%); }
-  #pwaInstallBtn{ padding:9px 12px !important; font-size:12px !important; }
+  #pwaInstallWrap{ left:12px !important; right:auto !important; bottom:18px !important; transform:none !important; }
+  #pwaInstallBtn{ padding:9px 11px !important; font-size:12px !important; }
+  #tut-replay{ left:158px !important; right:auto !important; bottom:18px !important; }
 }
 </style>
 <div id="pwaInstallWrap" style="display:none; position:fixed; right:20px; bottom:96px; z-index:99997;">

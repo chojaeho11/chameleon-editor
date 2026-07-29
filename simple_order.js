@@ -1529,22 +1529,16 @@ html, body { background: #ffffff !important; }
             <div id="soName" class="so-prod-name">-</div>
             <div id="soDesc" class="so-prod-desc"></div>
             <!-- 2026-05-15: 종이매대 상품 전용 안내 — 일반 설명 대신 표시 -->
-            <div id="soPaperDisplayNotice" style="display:none; margin-top:10px; padding:14px 16px; background:linear-gradient(135deg,#fef3c7 0%,#fed7aa 100%); border:1.5px solid #fbbf24; border-radius:12px; color:#78350f; font-size:13px; line-height:1.6;">
-              <div style="font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                <span style="font-size:18px;">📞</span>
-                <span id="soPdNoticeTitle">${tr('담당자에게 전화해서 칼선을 받은 후 작업해서 올려주세요', '担当者に電話してカットラインを受け取ってから作業してアップロードしてください', 'Please call our staff to receive the die-cut template, then prepare your design and upload.')}</span>
-              </div>
-              <div id="soPdBranchContacts" style="display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 10px;">
+            <div id="soPaperDisplayNotice" style="display:none; margin-top:10px; padding:16px; background:#fffbeb; border:1px solid #fde68a; border-radius:14px; color:#78350f; line-height:1.55;">
+              <div id="soPdNoticeTitle" style="font-weight:700; font-size:13px; color:#92400e; margin-bottom:13px; line-height:1.55;">${tr('담당자에게 전화해서 칼선을 받은 후 작업해서 올려주세요', '担当者に電話してカットラインを受け取ってから作業してアップロードしてください', 'Please call our staff to receive the die-cut template, then prepare your design and upload.')}</div>
+              <div id="soPdBranchContacts" style="display:flex; flex-direction:column; gap:8px;">
                 <a id="soPdContactKR" href="tel:0313661984" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('한국사무실', '韓国本社', 'Korea HQ')}</span> <b style="color:#b45309;">031-366-1984</b></a>
                 <a id="soPdContactJP" href="tel:09053970420" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇯🇵 <span>${tr('일본지사 나나미', '日本支社 ナナミ', 'Japan · Nanami')}</span> <b style="color:#b45309;">090-5397-0420</b></a>
                 <a id="soPdContactMA" href="tel:212617901092" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇲🇦 <span>${tr('모로코지사 히바', 'モロッコ支社 ヒバ', 'Morocco · Hiba')}</span> <b style="color:#b45309;">212-617-901-092</b></a>
                 <a id="soPdContactDirector" href="tel:+821034913535" style="display:none; align-items:center; gap:4px; padding:5px 10px; background:#fff; border:1px solid #fbbf24; border-radius:999px; font-size:12px; font-weight:700; color:#78350f; text-decoration:none;">🇰🇷 <span>${tr('해외총괄 서혜림 디렉터', '海外統括 ソ・ヘリム', 'Global Director · Hyerim Seo')}</span> <b style="color:#b45309;">+82 10-3491-3535</b></a>
                 <a id="soPdContactDirectorWa" href="https://wa.me/821034913535" target="_blank" rel="noopener" style="display:none; align-items:center; justify-content:center; gap:6px; padding:11px 16px; background:#25D366; border:2px solid #128C7E; border-radius:999px; font-size:14px; font-weight:800; color:#fff; text-decoration:none;"><span>${tr('왓츠앱 상담', 'WhatsApp相談', 'WhatsApp')}</span> <b>+82 10-3491-3535</b></a>
               </div>
-              <div style="font-size:12px; font-weight:700; color:#92400e; display:flex; align-items:center; gap:6px;">
-                <span>🌐</span>
-                <span>${tr('해외 배송은 FOB 방식으로 배송됩니다.', '海外配送はFOB方式で発送されます。', 'International orders are shipped on FOB terms.')}</span>
-              </div>
+              <div style="font-size:11.5px; color:#a16207; margin-top:13px; line-height:1.5;">🌐 ${tr('해외 배송은 FOB 방식으로 배송됩니다.', '海外配送はFOB方式で発送されます。', 'International orders are shipped on FOB terms.')}</div>
             </div>
             <!-- 2026-05-31: 가벽 설명 카드 (#soWallGuide) 제거 — 사용자 요청. 우측 사이즈 셀렉터로 충분. -->
             <div id="soWallGuide" style="display:none;"></div>
@@ -13407,16 +13401,20 @@ html, body { background: #ffffff !important; }
                 _pdAll.forEach(function(id){ var el = document.getElementById(id); if (el) el.style.display = 'none'; });
                 var _pdBig = function(el){
                     if (!el) return;
-                    el.style.display = 'inline-flex';
+                    // 2026-07-29: 라벨(작게 위) + 번호(크게 아래) 세로 카드 — 좁은 모바일에서 줄바꿈 안 깨지게.
+                    el.style.display = 'flex';
+                    el.style.flexDirection = 'column';
+                    el.style.alignItems = 'center';
                     el.style.width = '100%';
                     el.style.boxSizing = 'border-box';
-                    el.style.justifyContent = 'center';
-                    el.style.gap = '8px';
-                    el.style.padding = '13px 18px';
-                    el.style.fontSize = '15px';
-                    el.style.borderWidth = '2px';
+                    el.style.gap = '4px';
+                    el.style.padding = '14px 16px';
+                    el.style.borderWidth = '1.5px';
+                    el.style.borderRadius = '12px';
+                    var _lbl = el.querySelector('span');
+                    if (_lbl) { _lbl.style.fontSize = '12px'; _lbl.style.fontWeight = '600'; _lbl.style.opacity = '0.85'; }
                     var _num = el.querySelector('b');
-                    if (_num) { _num.style.fontSize = '22px'; _num.style.letterSpacing = '0.5px'; }
+                    if (_num) { _num.style.fontSize = '21px'; _num.style.letterSpacing = '0.5px'; _num.style.display = 'block'; }
                 };
                 if (_pdSc === 'KR') {
                     _pdBig(document.getElementById('soPdContactKR'));
@@ -13434,7 +13432,9 @@ html, body { background: #ffffff !important; }
         }
         const img = document.getElementById('soImg');
         const imgUrl = pickImg(p);
-        if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
+        // 2026-07-29: 종이매대는 상품 사진 숨김 → 전화상담 안내 카드가 좁게 눌리지 않고 넓게 깔끔히 (사장님 지시)
+        if (isPdNow) { img.style.display = 'none'; }
+        else if (imgUrl) { img.src = imgUrl; img.style.display = ''; img.onerror = () => { img.style.display = 'none'; }; }
         else { img.style.display = 'none'; }
 
         // 2026-05-14: 칼선 도안 다운로드 — admin_products.cutline_url 있을 때만 표시

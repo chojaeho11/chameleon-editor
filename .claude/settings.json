@@ -317,7 +317,9 @@
       "Bash(./deploy.sh \"PWA add-to-home/app-install + bookmark reward: manifest.json + non-caching sw.js \\(replaces old caching SW, keep registered for installability\\) + floating 'add shortcut 3000P' button above chat \\(KR/JP/EN\\) with install prompt / iOS+desktop guide modal; reward_grant gains once-per-user bookmark type 3000 KRW, rewards.js rewardBookmark v7\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_pwa.js\")",
       "Bash(./deploy.sh \"shortcut: change to bookmark-style \\(manifest display browser, remove iOS standalone metas\\) so it opens in the normal browser tab instead of a separate app window; guide modal reworded to bookmark steps \\(Ctrl+D / menu add-to-home\\)\")",
-      "Bash(./deploy.sh \"mobile mockup viewer: shorten view/edit/download buttons to compact round \\(Bogi/Sujeong/Daun, JP/EN too\\) so the zoom bar no longer gets pushed off-screen \\(flex-wrap + zoom bar flex-grow right-aligned\\); align tutorial/add-shortcut/chatbot floating buttons into one bottom row on mobile \\(add-shortcut centered\\)\")"
+      "Bash(./deploy.sh \"mobile mockup viewer: shorten view/edit/download buttons to compact round \\(Bogi/Sujeong/Daun, JP/EN too\\) so the zoom bar no longer gets pushed off-screen \\(flex-wrap + zoom bar flex-grow right-aligned\\); align tutorial/add-shortcut/chatbot floating buttons into one bottom row on mobile \\(add-shortcut centered\\)\")",
+      "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_float.js\")",
+      "Bash(./deploy.sh \"paper-stand: hide product photo + redesign phone-contact card cleaner \\(label small over big number, vertical stack, softer bg\\) so it no longer looks cramped on mobile \\(so v839\\); mobile floating buttons: place add-shortcut + tutorial side by side on the left, chatbot right\")"
     ],
     "additionalDirectories": [
       "\\tmp",
