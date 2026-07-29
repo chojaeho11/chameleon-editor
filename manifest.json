@@ -5,7 +5,7 @@
   "lang": "ko",
   "start_url": "/?src=pwa",
   "scope": "/",
-  "display": "standalone",
+  "display": "browser",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#6d28d9",

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260729140049';
+    var CV = '20260729141935';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -230,12 +230,9 @@ if ('serviceWorker' in navigator) {
 <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" href="/mascot-favicon.png">
 <link rel="apple-touch-icon" href="/mascot-favicon.png">
-<!-- 2026-07-29: PWA(홈화면/앱 설치)용 매니페스트 + 테마색 -->
+<!-- 2026-07-29: 바로가기(북마크형) 매니페스트 + 테마색. display:browser 라 별도 앱창 없이 브라우저 탭에서 열림. -->
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#6d28d9">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="카멜레온">
 <link rel="canonical" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="ko" href="https://www.cafe2626.com/">
     <link rel="alternate" hreflang="en" href="https://chameleon.design/">
@@ -24961,7 +24958,7 @@ document.addEventListener('click', function(e) {
     if ($('pwaGuideOv')) { $('pwaGuideOv').style.display='flex'; return; }
     var steps = isIOS()
       ? _tr({kr:'① 하단 <b>공유</b> 버튼을 누르세요<br>② <b>홈 화면에 추가</b>를 누르세요', ja:'① 下部の<b>共有</b>ボタンを押す<br>②<b>ホーム画面に追加</b>を押す', en:'① Tap the <b>Share</b> button<br>② Tap <b>Add to Home Screen</b>'})
-      : _tr({kr:'① <b>Ctrl + D</b> 로 즐겨찾기에 추가<br>② 또는 주소창의 <b>설치</b> 아이콘을 누르세요', ja:'①<b>Ctrl + D</b>でお気に入りに追加<br>②またはアドレスバーの<b>インストール</b>アイコン', en:'① Press <b>Ctrl + D</b> to bookmark<br>② or click the <b>install</b> icon in the address bar'});
+      : _tr({kr:'PC: <b>Ctrl + D</b> 로 즐겨찾기에 추가<br>모바일: 브라우저 메뉴(⋮) → <b>북마크 / 홈 화면에 추가</b>', ja:'PC: <b>Ctrl + D</b> でお気に入りに追加<br>モバイル: メニュー(⋮) → <b>ブックマーク / ホーム画面に追加</b>', en:'PC: press <b>Ctrl + D</b> to bookmark<br>Mobile: browser menu (⋮) → <b>Bookmark / Add to Home Screen</b>'});
     var title=_tr({kr:'바로가기 추가하고 3,000P 받기', ja:'ショートカット追加で3,000P GET', en:'Add a shortcut & get 3,000P'});
     var doneBtn=_tr({kr:'추가했어요 · 3,000P 받기', ja:'追加した · 3,000P受取', en:'Done · Get 3,000P'});
     var closeBtn=_tr({kr:'닫기', ja:'閉じる', en:'Close'});
