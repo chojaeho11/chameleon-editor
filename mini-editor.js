@@ -6458,9 +6458,9 @@
               // 2026-07-27 (사장님 지시): 만든 작품이 메인 갤러리에 올라간다는 안내 + [사용 금지] 옵트아웃.
               '<div id="meAiGalleryNotice" style="display:none; margin-top:10px; font-size:12px; color:#475569; line-height:1.6; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:11px 13px;">' +
                 '<div style="margin-bottom:9px;">' +
-                _meAiTr('고객님께서 만드신 작품은 <b>7일 동안 메인 화면</b>에 소개됩니다. 공개를 원하지 않으시면 아래 <b>내 작품 공개 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">공개하지 않아도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
-                        'お作りいただいた作品は <b>7日間メイン画面</b> に紹介されます。公開をご希望でなければ下の <b>作品を公開しない</b> ボタンを押してください。<span style="color:#64748b;">公開しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
-                        'Your design will be featured on the <b>main page for 7 days</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
+                _meAiTr('고객님께서 만드신 작품은 <b>메인 화면</b>에 소개됩니다. 공개를 원하지 않으시면 아래 <b>내 작품 공개 금지</b> 버튼을 눌러주세요. <span style="color:#64748b;">공개하지 않아도 고객님은 이 디자인을 그대로 사용하실 수 있어요.</span>',
+                        'お作りいただいた作品は <b>メイン画面</b> に紹介されます。公開をご希望でなければ下の <b>作品を公開しない</b> ボタンを押してください。<span style="color:#64748b;">公開しなくても、お客様はこのデザインをそのままご利用いただけます。</span>',
+                        'Your design will be featured on the <b>main page</b>. If you\'d rather not, tap <b>Don\'t show</b> below. <span style="color:#64748b;">Either way, you can still use this design for your order.</span>') +
                 '</div>' +
                 '<button type="button" id="meAiOptOutBtn" onclick="window._meAiOptOutGallery(this)" style="width:100%; padding:9px; border:1px solid #cbd5e1; background:#fff; color:#475569; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit;">' +
                 _meAiTr('메인 화면에 올리지 않기', 'メイン画面に載せない', 'Don\'t show on the main page') +
@@ -6925,8 +6925,9 @@
                 var like = '%' + _meGalQ.replace(/[%,]/g, ' ') + '%';
                 query = query.or('kw_ko.ilike.' + like + ',kw_en.ilike.' + like + ',kw_ja.ilike.' + like);
             }
-            // 2026-07-27 (사장님 지시): "고객 작품은 2일 동안 메인에 소개" 약속을 실제로 지킨다 — 최근 2일만.
-            query = query.gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
+            // 2026-07-29 (사장님 지시): 기간 필터 제거 — 오래된 작품도 사라지지 않게 한다.
+            //   특히 일본은 생성 수가 적어 7일 필터에 걸려 갤러리가 비어 보였음. limit(24) 로 최신 24개만
+            //   노출하므로(오래되면 새 작품에 자연히 밀려남) 기간 제한 없이도 과다 노출 없음. 삭제가 아니라 표시만.
             var res = await query.order('created_at', { ascending: false }).limit(24);
             var rows = res.data || [];
             _meGalRows = rows;
