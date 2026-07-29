@@ -306,7 +306,8 @@
       "Bash(./deploy.sh \"bug admin: relabel done-report buttons to friendlier phrasing \\(Confirm-close -> Resolved thumbsup / Reopen -> Not fixed reopening\\), 8 langs\")",
       "Bash(./deploy.sh \"bug admin: reopen now requires an unresolved-reason memo, appended to the report description with timestamp for the developer to act on\")",
       "Bash(./deploy.sh \"fabric shipping unified to flat 2500 KRW all sites \\(JP 250yen / US 2.5usd\\), same as general parcel - remove JP/US 5000 branch in cotton_designer getShippingFeeKrw + simple_order unified-cart fabric line \\(so v838, cotton_designer v121\\)\")",
-      "Bash(./deploy.sh \"design gallery: remove 7-day created_at filter so older AI designs no longer disappear from main gallery \\(limit 24 newest still caps it\\) - fixes empty JP gallery + reword customer notice to drop the 7-day claim \\(mini-editor v554\\)\")"
+      "Bash(./deploy.sh \"design gallery: remove 7-day created_at filter so older AI designs no longer disappear from main gallery \\(limit 24 newest still caps it\\) - fixes empty JP gallery + reword customer notice to drop the 7-day claim \\(mini-editor v554\\)\")",
+      "Bash(./deploy.sh \"design gallery hero: remove the duplicate 7-day created_at filter in index.html hero loader too \\(the main-page hero marquee had its own copy\\) - so JP hero now shows accumulated designs not just 4\")"
     ],
     "additionalDirectories": [
       "\\tmp",
