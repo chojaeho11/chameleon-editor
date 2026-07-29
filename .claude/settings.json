@@ -321,7 +321,8 @@
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_float.js\")",
       "Bash(./deploy.sh \"paper-stand: hide product photo + redesign phone-contact card cleaner \\(label small over big number, vertical stack, softer bg\\) so it no longer looks cramped on mobile \\(so v839\\); mobile floating buttons: place add-shortcut + tutorial side by side on the left, chatbot right\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_pd.js\")",
-      "Bash(./deploy.sh \"JP mobile typography: add text-wrap balance/pretty to AI-design intro cards and product-detail body so Japanese text no longer strands 1-2 orphan characters on the last line \\(word-break keep-all on detail body\\)\")"
+      "Bash(./deploy.sh \"JP mobile typography: add text-wrap balance/pretty to AI-design intro cards and product-detail body so Japanese text no longer strands 1-2 orphan characters on the last line \\(word-break keep-all on detail body\\)\")",
+      "Bash(./deploy.sh \"editor toolbar: icon-only on narrow phones \\(<=500px\\) for the compact tool buttons \\(keep the full-width back-to-simple button labeled\\), and shorten verbose JP labels \\(photo-upload -> 写真, simple-mode -> 基本モード\\) so labels stay concise\")"
     ],
     "additionalDirectories": [
       "\\tmp",
