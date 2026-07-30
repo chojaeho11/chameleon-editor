@@ -5386,8 +5386,10 @@ html, body { background: #ffffff !important; }
     //             고가 제품(특수설계·트리·테이블형 등)은 2배 없이 정가(1배)로.
     //             (원터치 60,000×10=600,000 / 소형 20,000×10=200,000 / 트리 100,000×10=1,000,000 / 특수 150,000×10=1,500,000)
     //   100개+ = 정가 × 수량
-    var _PD_SAMPLE = 150000;       // 1개 기본 샘플비(디자인+제작비) · 10~99 2배 캡 기준값 겸용
-    var _PD_SAMPLE_ADD = 50000;    // 2026-07-30: 2개부터 개당 추가 샘플비
+    var _PD_SAMPLE = 150000;       // 일반 종이매대 1개 샘플비(디자인+제작비) · 10~99 2배 캡 기준값 겸용
+    var _PD_SAMPLE_ADD = 50000;    // 2026-07-30: 일반 2개부터 개당 추가 샘플비
+    var _PD_SM_SAMPLE = 100000;    // 2026-07-30: 소형(pd_sm)·칸막이(pd_tr) 1개 샘플비
+    var _PD_SM_SAMPLE_ADD = 20000; // 2026-07-30: 소형 2개부터 개당 추가 (9개=26만)
     function _soPdUnit10(unit) {                         // 10~99개 실효 단가
         var per2x = unit * 2;
         return (per2x > _PD_SAMPLE) ? unit : per2x;      // 2배가 샘플비 초과 고가품은 정가(1배)
@@ -5396,7 +5398,9 @@ html, body { background: #ffffff !important; }
         qty = Math.max(1, parseInt(qty, 10) || 1);
         if (qty >= 100) return unit * qty;              // 100개+ = 정가 × 수량
         if (qty >= 10) return _soPdUnit10(unit) * qty;   // 10~99개 = 실효 단가 × 수량
-        return _PD_SAMPLE + (qty - 1) * _PD_SAMPLE_ADD;  // 1~9개 = 15만 + (수량-1)×5만
+        // 1~9개 샘플가: 소형은 10만+개당2만, 일반은 15만+개당5만
+        if (isSmall) return _PD_SM_SAMPLE + (qty - 1) * _PD_SM_SAMPLE_ADD;
+        return _PD_SAMPLE + (qty - 1) * _PD_SAMPLE_ADD;
     }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
@@ -13901,7 +13905,14 @@ html, body { background: #ffffff !important; }
                 btn.classList.toggle('is-active', btn.getAttribute('data-pd-qty') === '100');
             });
             var _note = document.getElementById('soPdSampleNote');
-            if (_note) _note.style.display = 'none';
+            if (_note) {
+                _note.style.display = 'none';
+                // 2026-07-30: 소형(pd_sm/pd_tr)=10만+개당2만 / 일반=15만+개당5만 — 제품에 맞는 안내 문구 동적 설정
+                var _pdSmall = (typeof _soIsSmallPaperStand === 'function') && _soIsSmallPaperStand(state.product);
+                _note.innerHTML = '<i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ' + (_pdSmall
+                    ? tr('1개 샘플 10만원(기본 디자인+제작비), 2개부터 개당 +2만원 (2개 12만·3개 14만…). 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1個サンプル10万ウォン(基本デザイン+制作費)、2個目から1個ごとに+2万ウォン(2個12万・3個14万…)。10~99個は定価の2倍単価、100個から通常単価です。', '1 sample = ₩100,000 (base design + fee); +₩20,000 per extra piece (2 pcs ₩120k, 3 pcs ₩140k…). 10–99 pcs: 2× unit price. 100+ regular.')
+                    : tr('1개 샘플 15만원(기본 디자인+제작비), 2개부터 개당 +5만원 (2개 20만·3개 25만…). 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1個サンプル15万ウォン(基本デザイン+制作費)、2個目から1個ごとに+5万ウォン(2個20万・3個25万…)。10~99個は定価の2倍単価、100個から通常単価です。', '1 sample = ₩150,000 (base design + fee); +₩50,000 per extra piece (2 pcs ₩200k, 3 pcs ₩250k…). 10–99 pcs: 2× unit price. 100+ regular.'));
+            }
             var _pdCustomRow = document.getElementById('soPdQtyCustomRow');
             if (_pdCustomRow) { _pdCustomRow.style.display = 'flex'; var _pdc = document.getElementById('soPdQtyCustom'); if (_pdc) _pdc.value = ''; }
         } else {
