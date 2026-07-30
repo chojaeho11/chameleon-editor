@@ -326,7 +326,8 @@
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_toolbar.js\")",
       "Bash(./deploy.sh \"AI design intro cards: fix Japanese description overflowing the card sides \\(word-break keep-all prevented CJK wrapping\\) - set word-break normal + smaller font on narrow phones so text stays inside the card\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_intro.js\")",
-      "Bash(./deploy.sh \"product card titles: add text-wrap balance to .hotdeal-title \\(and fabric/mgr labels\\) so Japanese titles like Honeycomb Board Partition dont strand the last 1-2 characters on their own line\")"
+      "Bash(./deploy.sh \"product card titles: add text-wrap balance to .hotdeal-title \\(and fabric/mgr labels\\) so Japanese titles like Honeycomb Board Partition dont strand the last 1-2 characters on their own line\")",
+      "Bash(./deploy.sh \"paper-stand sample pricing \\(bug#16\\): 1~9 pcs now 150,000 for 1pc + 50,000 per extra piece \\(2pc=200k, 3pc=250k ... 9pc=550k\\) instead of flat 150k; update customer notice \\(so v840\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

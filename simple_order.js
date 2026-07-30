@@ -2210,7 +2210,7 @@ html, body { background: #ffffff !important; }
           </div>
           <!-- 2026-06-12: 종이매대 1개 선택 시 샘플 안내 -->
           <div id="soPdSampleNote" style="display:none; margin-top:8px; padding:10px 12px; background:#fff7ed; border:1.5px solid #fed7aa; border-radius:8px; font-size:12px; color:#9a3412; line-height:1.55;">
-            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1~9개는 샘플비(기본 디자인+제작비)입니다. 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1~9個はサンプル費(基本デザイン+制作費)です。10~99個は定価の2倍単価、100個から通常単価です。', '1–9 pcs = sample fee (base design + fee). 10–99 pcs: 2× unit price. 100+ at regular unit price.')}
+            <i class="fa-solid fa-flask" style="margin-right:6px; color:#ea580c;"></i> ${tr('1개 샘플 15만원(기본 디자인+제작비), 2개부터 개당 +5만원 (2개 20만·3개 25만…). 10~99개는 정가의 2배 단가, 100개부터 정상 단가입니다.', '1個サンプル15万ウォン(基本デザイン+制作費)、2個目から1個ごとに+5万ウォン(2個20万・3個25万…)。10~99個は定価の2倍単価、100個から通常単価です。', '1 sample = ₩150,000 (base design + fee); +₩50,000 per extra piece (2 pcs ₩200k, 3 pcs ₩250k…). 10–99 pcs: 2× unit price. 100+ at regular unit price.')}
           </div>
           <!-- 2026-06-04: 금액 자동할인 제거 → PRO 구독 안내 + 가입 링크만 노출 (사용자 요청) -->
           <div class="so-tier-table" id="soTierTable" style="grid-template-columns:1fr; padding:0; background:transparent; border:none; gap:0;">
@@ -5381,12 +5381,13 @@ html, body { background: #ffffff !important; }
     }
     // 2026-06-30: 종이매대 가격 통합 — 제품페이지(recalc) / 장바구니(_soCalcItemPrice) 공용 단일 진실.
     // 2026-07-15: 수량 티어 재정의(사장님 요청).
-    //   1~9개  = 샘플비 150,000 (전 제품 통일)
+    //   1~9개  = 샘플비. 1개 150,000 + 2개부터 개당 +50,000 (2개=200,000, 3개=250,000 … 9개=550,000). (2026-07-30 사장님 지시)
     //   10~99개 = 실효 단가 × 수량. 실효 단가 = 정가의 2배. 단, 2배가 샘플비(150,000)를 넘는
     //             고가 제품(특수설계·트리·테이블형 등)은 2배 없이 정가(1배)로.
     //             (원터치 60,000×10=600,000 / 소형 20,000×10=200,000 / 트리 100,000×10=1,000,000 / 특수 150,000×10=1,500,000)
     //   100개+ = 정가 × 수량
-    var _PD_SAMPLE = 150000;
+    var _PD_SAMPLE = 150000;       // 1개 기본 샘플비(디자인+제작비) · 10~99 2배 캡 기준값 겸용
+    var _PD_SAMPLE_ADD = 50000;    // 2026-07-30: 2개부터 개당 추가 샘플비
     function _soPdUnit10(unit) {                         // 10~99개 실효 단가
         var per2x = unit * 2;
         return (per2x > _PD_SAMPLE) ? unit : per2x;      // 2배가 샘플비 초과 고가품은 정가(1배)
@@ -5395,7 +5396,7 @@ html, body { background: #ffffff !important; }
         qty = Math.max(1, parseInt(qty, 10) || 1);
         if (qty >= 100) return unit * qty;              // 100개+ = 정가 × 수량
         if (qty >= 10) return _soPdUnit10(unit) * qty;   // 10~99개 = 실효 단가 × 수량
-        return _PD_SAMPLE;                              // 1~9개 = 샘플비
+        return _PD_SAMPLE + (qty - 1) * _PD_SAMPLE_ADD;  // 1~9개 = 15만 + (수량-1)×5만
     }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
