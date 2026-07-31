@@ -330,7 +330,9 @@
       "Bash(./deploy.sh \"paper-stand sample pricing \\(bug#16\\): 1~9 pcs now 150,000 for 1pc + 50,000 per extra piece \\(2pc=200k, 3pc=250k ... 9pc=550k\\) instead of flat 150k; update customer notice \\(so v840\\)\")",
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_pd_price.js\")",
       "Bash(sed -i 's|simple_order.js?v=840|simple_order.js?v=841|' index.html)",
-      "Bash(./deploy.sh \"paper-stand small type \\(pd_sm/pd_tr\\): sample pricing 100,000 for 1pc + 20,000 per extra \\(2pc=120k ... 9pc=260k\\); regular type keeps 150k+50k; dynamic notice per product type \\(so v841\\)\")"
+      "Bash(./deploy.sh \"paper-stand small type \\(pd_sm/pd_tr\\): sample pricing 100,000 for 1pc + 20,000 per extra \\(2pc=120k ... 9pc=260k\\); regular type keeps 150k+50k; dynamic notice per product type \\(so v841\\)\")",
+      "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_pd2.js\")",
+      "Bash(./deploy.sh \"goods: fabric coaster \\(패브릭 티코스터\\) no longer wrongly redirects to the fabric designer just because its name contains fabric - opens as a normal 10x10cm 4000won goods product \\(exclude coaster from name-based fabric redirect\\); DB product set to 100x100mm price 4000\")"
     ],
     "additionalDirectories": [
       "\\tmp",
