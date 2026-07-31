@@ -379,6 +379,11 @@
                 return;
             }
 
+            // 2026-07-31 (버그#18): 결제 승인(confirm-payment) 성공 후 후처리(추천인/디자인의뢰/성공모달)에서
+            //   에러가 나면 catch 가 주문을 '카드결제실패'로 덮어써 실제 결제된 주문이 미결제로 뜨던 문제.
+            //   승인이 끝나면 이 플래그를 세워, catch 에서는 실패 기록을 하지 않도록 방어.
+            let paymentConfirmed = false;
+
             try {
                 if (sessionId) {
                     // ====== Stripe 결제 확인 ======
@@ -399,6 +404,7 @@
                         payment_method: 'Stripe Card',
                         toss_payment_key: sessionId
                     });
+                    paymentConfirmed = true;   // Stripe 승인 완료
 
                 } else if (paymentKey) {
                     // ====== Toss 결제 확인 ======
@@ -418,6 +424,7 @@
                     if (data.error) {
                         throw new Error(data.error);
                     }
+                    paymentConfirmed = true;   // confirm-payment 성공 = 카드 승인 완료 (이후 에러는 후처리 문제일 뿐)
 
                     // confirm-payment이 DB 업데이트를 이미 처리함 (실제 결제수단 포함)
                     // 혹시 실패했을 때를 대비한 fallback
@@ -638,9 +645,19 @@
             } catch (e) {
                 console.error("Payment verification error:", e);
 
+                // 2026-07-31 (버그#18): 결제 승인은 이미 끝났고(카드 승인 완료) 후처리 단계에서만 에러가 난 경우 →
+                //   주문을 실패로 기록하지 않는다. 결제는 정상이므로 성공 안내만 보여주고 종료.
+                if (paymentConfirmed && dbId) {
+                    console.warn("★ 결제는 승인 완료 — 후처리 단계 오류일 뿐. 주문 상태는 결제완료 유지.");
+                    document.getElementById('loader').style.display = 'none';
+                    try { await showPaymentSuccessModal(dbId); }
+                    catch (mErr2) { window.location.href = _frHome(); }
+                    return;
+                }
+
                 // ★ 결제 승인 실패 시: paymentKey는 승인 전에 발급되므로
                 //   paymentKey가 있다고 결제 성공이 아님. DB를 결제완료로 변경하지 않음.
-                if (paymentKey && dbId) {
+                if (paymentKey && dbId && !paymentConfirmed) {
                     try {
                         // 승인 실패 상태를 DB에 기록 (결제완료가 아닌 미결제 유지 + 에러 로그)
                         await updateOrder(dbId, {

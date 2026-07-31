@@ -3481,7 +3481,11 @@ async function loadDesignerShowcase() {
         <div class="name" style="color:#7c3aed;">${t('register_designer')}</div>
     </div>`;
     for (const d of designers) {
-        const specs = (d.specialties || []).slice(0, 3).map(s => `<span class="specialty-tag">${s}</span>`).join('');
+        // 2026-07-31: specialties 가 배열이 아닌 경우(문자열/객체) .slice 크래시 방지 (버그#17 콘솔 에러)
+        let _dSpecs = d.specialties;
+        if (typeof _dSpecs === 'string') { try { _dSpecs = JSON.parse(_dSpecs); } catch(e) { _dSpecs = []; } }
+        if (!Array.isArray(_dSpecs)) _dSpecs = [];
+        const specs = _dSpecs.slice(0, 3).map(s => `<span class="specialty-tag">${s}</span>`).join('');
         const _dFallback = 'https://i.pravatar.cc/200?u=' + encodeURIComponent(d.id || d.display_name || 'd');
         const avatarHtml = d.photo_url
             ? `<img class="designer-avatar" src="${d.photo_url}" alt="" onerror="this.onerror=null;this.src='${_dFallback}';">`
@@ -5480,17 +5484,23 @@ window.hqMarkCompleteAndPay = async function(requestId, bidId) {
     if (!sel) return;
     if (!confirm(`담당 매니저: ${sel}\n\n완료 처리 후 디자이너에게 비용이 지급됩니다. 진행하시겠습니까?`)) return;
     try {
-        // 1. 디자이너 지갑에 지급 (기존 RPC 재사용)
-        const { error: rpcErr } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
-        if (rpcErr) {
-            // RPC 가 paid 상태를 요구하면 → 먼저 paid 로 만들고 재시도
-            console.warn('[hqMarkComplete] RPC fail, will pre-mark paid:', rpcErr.message || '');
-            await sb.from('design_bids').update({
-                payment_status: 'paid',
-                paid_at: new Date().toISOString()
-            }).eq('id', bidId);
-            const { error: rpcErr2 } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
-            if (rpcErr2) throw rpcErr2;
+        // 1. 디자이너 지갑에 지급 — release RPC 는 'completed_pending_files' 상태를 요구한다.
+        //   2026-07-31 (버그#17): 본사의뢰는 바로 지급하는데 bid 가 'paid' 상태면 RPC 가 거부했음
+        //   (기존 폴백은 다시 'paid' 로 마킹해 무한 실패). 현재 상태를 보고 알맞게 전이 후 릴리즈. 멱등 처리.
+        const { data: _bidRow } = await sb.from('design_bids').select('payment_status').eq('id', bidId).maybeSingle();
+        const _pstat = _bidRow && _bidRow.payment_status;
+        if (_pstat === 'released') {
+            // 이미 지급 완료 — 재지급하지 않고 의뢰 완료 처리만 진행 (중복 지급 방지)
+        } else {
+            // completed_pending_files 가 아니면(예: paid) 먼저 그 상태로 전이해야 RPC 통과
+            if (_pstat !== 'completed_pending_files') {
+                await sb.from('design_bids').update({
+                    payment_status: 'completed_pending_files',
+                    client_completed_at: new Date().toISOString()
+                }).eq('id', bidId);
+            }
+            const { error: rpcErr } = await sb.rpc('release_design_bid_payment', { _bid_id: bidId });
+            if (rpcErr) throw rpcErr;
         }
         // 2. 의뢰 상태 → completed + 담당 매니저 이름 description 에 append
         const { data: _curReq } = await sb.from('design_requests').select('description').eq('id', requestId).maybeSingle();

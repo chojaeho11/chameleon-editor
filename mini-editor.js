@@ -5729,20 +5729,25 @@
         var x = cellX + (cellW - w) / 2, y = cellY + (cellH - h) / 2;
         if (typeof opts.onStage === 'function') { try { opts.onStage('place'); } catch(_) {} }
         var added = await new Promise(function(res){
-            try { window._meAddImage(src, { explicitPos: { x: x, y: y, w: w, h: h } }, res); }
-            catch(_) { res(null); }
+            var _done = false; var _fin = function(v){ if (!_done) { _done = true; res(v); } };
+            try { window._meAddImage(src, { explicitPos: { x: x, y: y, w: w, h: h } }, _fin); }
+            catch(_) { _fin(null); }
+            setTimeout(function(){ _fin(null); }, 12000);   // 2026-07-31 (버그#19): 배치 단계 무한대기 방지
         });
         if (!added) return null;
         _meSelect(added);
         if (window._meImageMostlyOpaque(added)) {
             if (typeof opts.onStage === 'function') { try { opts.onStage('bg'); } catch(_) {} }
-            try { await window._meBgRemoveSelected(); } catch(_) {}
+            // 2026-07-31 (버그#19): 배경제거가 서버/네트워크 지연으로 멈추면 전체가 '검은 화면'에서 무한 대기하던 문제.
+            //   최대 25초 타임아웃 후 원본 그대로 다음 단계(칼선)로 진행 — 절대 멈추지 않게.
+            try { await Promise.race([ window._meBgRemoveSelected(), new Promise(function(res){ setTimeout(res, 25000); }) ]); } catch(_) {}
         }
         var img = added.el && added.el.querySelector('img');
         if (img && !img.complete) { await new Promise(function(rr){ img.onload = rr; img.onerror = rr; setTimeout(rr, 1500); }); }
         if (img && img.decode) { try { await img.decode(); } catch(_) {} }
         if (typeof opts.onStage === 'function') { try { opts.onStage('cut'); } catch(_) {} }
-        try { await _meCutlineTrace('outer'); } catch(_) {}
+        // 2026-07-31 (버그#19): 칼선 추적도 무한 대기 방지 — 최대 15초 타임아웃.
+        try { await Promise.race([ _meCutlineTrace('outer'), new Promise(function(res){ setTimeout(res, 15000); }) ]); } catch(_) {}
         try { _meCutlineRenderAll(); } catch(_) {}
         if (typeof opts.onStage === 'function') { try { opts.onStage('done'); } catch(_) {} }
         return added;
