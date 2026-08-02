@@ -336,7 +336,8 @@
       "Bash(NODE_PATH=\"c:/Users/win 10/Desktop/작업/node_modules\" node \"C:/Users/WIN10~1/AppData/Local/Temp/claude/c--Users-win-10-Desktop---/248d2997-9c8e-4d31-b39a-3f1ad20d9dee/scratchpad/verify_coaster.js\")",
       "Bash(sed -i 's|mini-editor.js?v=554|mini-editor.js?v=555|' index.html cotton_print.html)",
       "Bash(./deploy.sh \"bug fixes: #17 design-market HQ complete-and-pay now handles bid already in paid state \\(idempotent release, set completed_pending_files before RPC\\) + guard specialties non-array; #18 payment success.html no longer marks a confirmed card payment as failed when a post-confirm step throws \\(paymentConfirmed flag\\) + corrected 31 mislabeled paid orders in DB; #19 fancy-sticker editor bg-remove/cutline/place steps get timeouts so it never hangs on a black screen \\(mini-editor v555\\)\")",
-      "Bash(./deploy.sh \"admin dashboard: move 국가별 접속자 + 신규 회원 국적별 sections to the very bottom \\(below all other cards\\) per request; IDs preserved so the JS still populates them\")"
+      "Bash(./deploy.sh \"admin dashboard: move 국가별 접속자 + 신규 회원 국적별 sections to the very bottom \\(below all other cards\\) per request; IDs preserved so the JS still populates them\")",
+      "Bash(./deploy.sh \"admin country report: revenue counts only paid orders \\(was summing all incl unpaid/refunded ~1B, now KR 611M/JP 3.1M\\); ad channel now catches Naver/Yahoo ads not just Google; country buttons KR+JP only; move country sections to dashboard bottom\")"
     ],
     "additionalDirectories": [
       "\\tmp",
