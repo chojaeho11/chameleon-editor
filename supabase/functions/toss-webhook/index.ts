@@ -61,7 +61,8 @@ Deno.serve(async (req) => {
     const orderId = data?.orderId || ''
     const paymentKey = data?.paymentKey || ''
 
-    if (!paymentKey || !orderId) return ack('missing paymentKey/orderId')
+    // DEPOSIT_CALLBACK(가상계좌 입금)은 body 가 flat + paymentKey 없음 → orderId 로 조회.
+    if (!orderId) return ack('missing orderId')
 
     const dbId = extractDbId(orderId)
     if (!dbId) return ack('non-CP orderId, skip: ' + orderId)
@@ -86,10 +87,12 @@ Deno.serve(async (req) => {
     if (!FLIPPABLE.has(order.payment_status)) return ack('non-flippable status: ' + order.payment_status)
 
     // 2) ★ 토스 API 재조회로 실제 승인 여부/금액 서버 검증 (웹훅 body 신뢰 안 함)
+    //    paymentKey 있으면 그걸로, 없으면(가상계좌 콜백) orderId 로 결제 조회.
     const basicAuth = btoa(tossSecret + ':')
-    const pRes = await fetch(`https://api.tosspayments.com/v1/payments/${encodeURIComponent(paymentKey)}`, {
-      headers: { Authorization: `Basic ${basicAuth}` },
-    })
+    const lookupUrl = paymentKey
+      ? `https://api.tosspayments.com/v1/payments/${encodeURIComponent(paymentKey)}`
+      : `https://api.tosspayments.com/v1/payments/orders/${encodeURIComponent(orderId)}`
+    const pRes = await fetch(lookupUrl, { headers: { Authorization: `Basic ${basicAuth}` } })
     const p = await pRes.json()
     if (!pRes.ok) return ack('toss lookup failed: ' + (p?.message || pRes.status))
     if (p?.status !== 'DONE') return ack('toss status not DONE: ' + p?.status)
@@ -109,7 +112,7 @@ Deno.serve(async (req) => {
         status: '접수됨',
         payment_status: '결제완료',
         payment_method: deriveMethod(p),
-        toss_payment_key: paymentKey,
+        toss_payment_key: p?.paymentKey || paymentKey,
       }),
     })
     console.log(`[toss-webhook] ${eventType} → order ${dbId} 결제완료 (${deriveMethod(p)})`)
