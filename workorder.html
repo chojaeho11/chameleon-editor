@@ -908,10 +908,14 @@ function show(id, val) { const el = document.getElementById(id); if (el) el.text
                 const _STK_COAT = { matte: '무광코팅 (기본)', gloss: '유광코팅', none: '무코팅', transparent: '투명용지 (×2)' };
                 const _STK_FOIL = { gold: '금별색 (+50,000)', silver: '은별색 (+50,000)' };
                 const _STK_CAT = { glossy: '유광', matte: '무광', removable: '리무벌', kraft: '크라프트지', transparent: '투명', holo: '홀로그램', metallic: '메탈릭' };
-                const _STK_SHAPE = { square: '사각', circle: '원형', oval: '타원', freeform: '자유형(도무송)', heart: '하트', star: '별' };
+                // 2026-08-03: 새 schema 모양(재단) 값 + 구 도형값 함께 매핑 (작업지시서 가독성)
+                const _STK_SHAPE = { square: '사각', simple: '도형따기', complex: '모양따기(칼선)', circle: '원형', oval: '타원', freeform: '자유형(도무송)', heart: '하트', star: '별' };
+                // 2026-08-03 (버그#21): 종류(용지) 표기 누락 수정 — simple_order STICKER_TYPES 와 동일 라벨.
+                const _STK_TYPE = { art_matte:'아트지 무코팅', matte:'무광코팅', gloss:'유광코팅', strong:'강접 스티커', removable:'탈부착 스티커', sparkle:'스파클링 스티커', clear:'투명 스티커', holo:'홀로그램 스티커', emboss_gold:'엠보싱 금박', emboss_holo:'엠보싱 홀로그램박', paper:'종이 스티커', transfer:'전사지 스티커' };
                 const _stLines = [];
                 // 새 schema
                 if (_st.productCode) _stLines.push('변형 코드: <b>' + esc(_st.productCode) + '</b>');
+                if (_st.type)        _stLines.push('종류: <b>' + esc(_STK_TYPE[_st.type] || _st.type) + '</b>');
                 if (_st.isFancy)     _stLines.push('<span style="background:#fce7f3; color:#831843; padding:2px 8px; border-radius:5px; font-weight:800;">팬시 스티커 (4매 1셋)</span>');
                 if (_st.w && _st.h)  _stLines.push('사이즈: <b>' + esc(_st.w) + ' × ' + esc(_st.h) + ' mm</b>');
                 if (_st.qty)         _stLines.push('수량: <b>' + Number(_st.qty).toLocaleString() + '매</b>');

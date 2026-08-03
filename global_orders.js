@@ -1931,9 +1931,12 @@ window.loadOrders = async () => {
             const isEasyPay = pmLower.includes('카카오') || pmLower.includes('네이버') || pmLower.includes('토스페이') || pmLower.includes('삼성페이') || pmLower.includes('애플페이') || pmLower.includes('페이');
             const isGodo = pmLower.includes('고도몰');
             const isCard = pmLower.includes('카드') || pmLower.includes('card') || pmLower.includes('stripe') || pmLower.includes('간편결제') || isEasyPay || isGodo;
-            const isBank = pmLower.includes('무통장') || pmLower.includes('bank');
             const isDeposit = pmLower.includes('예치금');
             const depositor = order.depositor_name || order.depositor || '';
+            const _hasReceipt = !!(order.receipt_info && order.receipt_info.type && order.receipt_info.type !== 'none');
+            // 2026-08-03 (버그#20): payment_method 미기록(매니저견적 수동확정 등)이라도 입금자명/증빙(세금계산서·현금영수증)이
+            //   있으면 무통장으로 인식해 결제수단을 노출 (경리가 '-' 만 보고 방법을 몰라 헤매던 문제).
+            const isBank = pmLower.includes('무통장') || pmLower.includes('bank') || (!isCard && !isDeposit && (!!depositor || _hasReceipt));
             const isPaid = order.payment_status === '결제완료' || order.payment_status === '입금확인';
 
             let payHtml = '';
@@ -1955,6 +1958,10 @@ window.loadOrders = async () => {
                 if (isPaid) payHtml += `<div style="font-size:10px;color:#15803d;">확인</div>`;
             } else if (isBank) {
                 payHtml = `<div style="font-size:11px;font-weight:bold;color:#d97706;">🏦 무통장</div>`;
+                if (depositor) payHtml += `<div style="font-size:10px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55px;" title="${depositor}">${depositor}</div>`;
+            } else if (isPaid) {
+                // 2026-08-03 (버그#20): 결제완료인데 결제수단 미기록 — '-' 대신 경리가 확인하도록 명시.
+                payHtml = `<div style="font-size:10px;color:#d97706;font-weight:bold;">⚠ 수단 미기록</div>`;
                 if (depositor) payHtml += `<div style="font-size:10px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55px;" title="${depositor}">${depositor}</div>`;
             } else {
                 payHtml = `<div style="font-size:10px;color:#94a3b8;">-</div>`;
