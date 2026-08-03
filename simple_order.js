@@ -20830,7 +20830,10 @@ html, body { background: #ffffff !important; }
                     var _ci_it = items[_ci];
                     if (!_ci_it || !_ci_it.cutlineWork) continue;
                     if (!_ci_firstIt) _ci_firstIt = _ci_it;
-                    _ci_totalUnits += Math.max(1, parseInt(_ci_it.cutlineCharCount, 10) || 1) * Math.max(1, Number(_ci_it.qty) || 1);
+                    // 2026-08-03 (버그#22): × qty 제거 — 칼선작업은 '디자인 1건당(cutlineCharCount)' 정산이며 인쇄 수량과 무관.
+                    //   고객 청구도 qty 무관(cutlineCharCount×10,000 — line 4919 "qty 와 무관")인데, 디자이너 정산 요청만 ×qty 로
+                    //   부풀어(예: 키링 200개 주문 → 고객 1만원 청구인데 정산요청 200만원) 회사가 과지급하던 버그.
+                    _ci_totalUnits += Math.max(1, parseInt(_ci_it.cutlineCharCount, 10) || 1);
                     _ci_names[(_ci_it.productName || (_ci_it.product && (_ci_it.product.name_kr || _ci_it.product.name)) || '제품')] = true;
                     ['originalUrl', 'file', 'file_url', 'artwork_url', 'back_file_url'].forEach(function(f){ if (_ci_it[f] && typeof _ci_it[f] === 'string' && /^https?:/.test(_ci_it[f])) _ci_files.push(_ci_it[f]); });
                     if (typeof _ci_it.filePath === 'string' && _ci_it.filePath) _ci_files.push('https://qinvtnhiidtmrzosyvys.supabase.co/storage/v1/object/public/design/' + _ci_it.filePath.replace(/^\/+/, ''));
