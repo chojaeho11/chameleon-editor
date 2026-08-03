@@ -58,7 +58,10 @@ Deno.serve(async (req) => {
         paymentKey: data.paymentKey,
         method: data.method,           // '카드' / '계좌이체' / '간편결제' 등
         approvedAt: data.approvedAt,
-        totalAmount: data.totalAmount,
+        totalAmount: data.totalAmount,     // 최초 승인 금액
+        balanceAmount: data.balanceAmount, // 부분취소 후 잔액(=실제 잔여 결제액)
+        status: data.status,               // DONE / PARTIAL_CANCELED / CANCELED
+        cancels: data.cancels || null,     // 부분/전체 취소 내역
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
