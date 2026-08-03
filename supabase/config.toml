@@ -68,3 +68,7 @@ verify_jwt = false
 [functions.safe-tx-stripe-webhook]
 enabled = true
 verify_jwt = false
+
+[functions.toss-webhook]
+enabled = true
+verify_jwt = false
