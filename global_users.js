@@ -2491,3 +2491,105 @@ window.loadCommunityHubStats = async () => {
         console.warn('[communityHub] stats load failed:', e);
     }
 };
+
+// ==========================================================================
+// 2026-08-04: 회원 연락처 CSV 내보내기 (이메일 / 전화번호) — 사장님 요청.
+//   국가 = 상단 국가필터(memberFilterSite: all/KR/JP/US) 사용.
+//   이름 깨짐 방지 위해 브라우저에서 UTF-8 BOM CSV 직접 생성(엑셀 호환).
+//   이메일 = 실제 이메일만(아이디@cafe2626/0101/3355 placeholder 제외).
+//   전화 = profiles.phone 우선, 없으면 회원 최신 주문 전화번호. 010-0000-0000 형식 정규화.
+//   "둘다 있으면 따로따로" = 이메일/전화 각각 독립 목록(둘 다 가진 회원은 양쪽에 포함).
+// ==========================================================================
+function _exStamp() { const d = new Date(); return '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); }
+function _exNormPhone(raw) {
+    if (!raw) return '';
+    let d = String(raw).replace(/[^\d+]/g, '').replace(/^\+/, '');
+    if (/^82(1\d{8,9})$/.test(d)) d = '0' + d.slice(2);          // +82 휴대폰 → 0
+    else if (/^82(\d{8,9})$/.test(d)) d = '0' + d.slice(2);      // +82 유선 → 0
+    let m;
+    if ((m = d.match(/^(01\d)(\d{4})(\d{4})$/))) return m[1] + '-' + m[2] + '-' + m[3];   // 010-XXXX-XXXX
+    if ((m = d.match(/^(01\d)(\d{3})(\d{4})$/))) return m[1] + '-' + m[2] + '-' + m[3];   // 011-XXX-XXXX
+    if ((m = d.match(/^(02)(\d{4})(\d{4})$/)))  return m[1] + '-' + m[2] + '-' + m[3];    // 02-XXXX-XXXX
+    if ((m = d.match(/^(02)(\d{3})(\d{4})$/)))  return m[1] + '-' + m[2] + '-' + m[3];    // 02-XXX-XXXX
+    if ((m = d.match(/^(0\d{2})(\d{3,4})(\d{4})$/))) return m[1] + '-' + m[2] + '-' + m[3]; // 0XX-XXX(X)-XXXX
+    return d;   // 해외/비정형: 숫자만
+}
+function _exDownloadCsv(filename, headers, rows) {
+    const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [headers.map(esc).join(',')];
+    for (const r of rows) lines.push(r.map(esc).join(','));
+    const csv = '\uFEFF' + lines.join('\r\n');   // BOM → 엑셀 한글 정상
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+async function _exFetchAll(builder) {
+    const PAGE = 1000; let out = [];
+    for (let start = 0; ; start += PAGE) {
+        const { data, error } = await builder().range(start, start + PAGE - 1);
+        if (error) throw error;
+        out = out.concat(data || []);
+        if (!data || data.length < PAGE) break;
+    }
+    return out;
+}
+window.exportMembersCsv = async function (kind) {
+    const siteVal = document.getElementById('memberFilterSite') ? document.getElementById('memberFilterSite').value : 'all';
+    const siteLabel = siteVal === 'all' ? '전체' : (siteVal === 'KR' ? '한국' : siteVal === 'JP' ? '일본' : siteVal === 'US' ? '미국' : siteVal);
+    const btns = Array.from(document.querySelectorAll('.member-export-btn'));
+    const orig = btns.map(b => b.textContent);
+    btns.forEach(b => { b.disabled = true; });
+    const active = btns.find(b => b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'" + kind + "'") >= 0);
+    if (active) active.textContent = '내보내는 중...';
+    try {
+        // 1) 회원(profiles) 전체 — 국가필터 적용
+        const profs = await _exFetchAll(() => {
+            let q = sb.from('profiles').select('id, username, email, site, created_at').order('created_at', { ascending: false });
+            if (siteVal !== 'all') q = q.eq('site', siteVal);
+            return q;
+        });
+        const isPlaceholder = e => /@(cafe2626|cafe0101|cafe3355)\.com$/i.test(e || '');
+        const validEmail = e => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e || '');
+        const dOnly = d => (d || '').slice(0, 10);
+        let headers, rows, fname;
+
+        if (kind === 'email') {
+            rows = profs
+                .filter(p => validEmail(p.email) && !isPlaceholder(p.email))
+                .map(p => [dOnly(p.created_at), (p.username || '').trim(), p.email, p.site || '']);
+            headers = ['가입일', '이름', '이메일', '국가'];
+            fname = `회원_이메일_${siteLabel}_${_exStamp()}.csv`;
+        } else {
+            // 2) 전화번호 — 회원 최신 주문 전화번호(profiles.phone 우선). order_date desc → 첫 등장이 최신.
+            const idSet = new Set(profs.map(p => p.id));
+            const ords = await _exFetchAll(() =>
+                sb.from('orders').select('user_id, phone, order_date')
+                    .not('user_id', 'is', null).not('phone', 'is', null)
+                    .order('order_date', { ascending: false, nullsFirst: false })
+            );
+            const phoneMap = {};
+            for (const o of ords) {
+                if (!o.user_id || phoneMap[o.user_id] || !idSet.has(o.user_id)) continue;
+                if (o.phone && /[0-9]/.test(o.phone)) phoneMap[o.user_id] = o.phone;
+            }
+            rows = profs
+                .map(p => ({ p, ph: phoneMap[p.id] }))
+                .filter(x => x.ph && /[0-9]/.test(x.ph))
+                .map(x => [dOnly(x.p.created_at), (x.p.username || '').trim(), _exNormPhone(x.ph), x.p.email || '', x.p.site || '']);
+            headers = ['가입일', '이름', '전화번호', '이메일', '국가'];
+            fname = `회원_전화번호_${siteLabel}_${_exStamp()}.csv`;
+        }
+
+        if (!rows.length) { alert('해당 국가(' + siteLabel + ')에 ' + (kind === 'email' ? '이메일' : '전화번호') + ' 회원이 없습니다.'); return; }
+        _exDownloadCsv(fname, headers, rows);
+        alert((kind === 'email' ? '📧 이메일' : '📞 전화번호') + ' 회원 ' + rows.length.toLocaleString() + '명 다운로드 완료\n' + fname);
+    } catch (e) {
+        console.error('[exportMembersCsv]', e);
+        alert('내보내기 오류: ' + (e.message || e));
+    } finally {
+        btns.forEach((b, i) => { b.disabled = false; b.textContent = orig[i]; });
+    }
+};
