@@ -225,10 +225,16 @@ async function postToThreads(
     const { threads_user_id, access_token } = cfg;
     if (!threads_user_id || !access_token) throw new Error("Threads credentials missing");
 
-    const tags = (hashtags || []).slice(0, 10).map((t: string) => "#" + t.replace(/\s/g, "")).join(" ");
-    // 쓰레드 본문은 500자 제한
-    let text = `${title}\n\n${summary || ""}\n\n${link || ""}\n\n${tags}`.trim();
-    if (text.length > 495) text = text.slice(0, 495) + "…";
+    // 2026-08-05: 쓰레드 문법 — 4줄 스타일(제목 / 요약 1줄 / 링크 / 해시태그). 캐주얼·간결.
+    const tags = (hashtags || []).slice(0, 5).map((t: string) => "#" + t.replace(/\s/g, "")).join(" ");
+    let sum = (summary || "").replace(/\s+/g, " ").trim();     // 요약은 1줄로 압축
+    if (sum.length > 90) sum = sum.slice(0, 88) + "…";
+    const lines: string[] = [title];
+    if (sum) lines.push(sum);
+    if (link) lines.push("👉 " + link);
+    if (tags) lines.push(tags);
+    let text = lines.join("\n\n");                              // 4블록 (쓰레드에서 보기 좋게 빈 줄)
+    if (text.length > 495) text = text.slice(0, 495) + "…";     // 쓰레드 500자 제한
 
     // Step 1: 컨테이너
     const createParams: Record<string, string> = {
