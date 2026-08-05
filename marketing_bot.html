@@ -672,6 +672,23 @@ textarea.form-input { resize:vertical; min-height:80px; }
             </div>
         </div>
 
+        <!-- Threads (2026-08-05) -->
+        <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-weight:bold; font-size:15px;"><i class="fa-brands fa-threads"></i> Threads (쓰레드)</span>
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input type="checkbox" id="snsThreadsEnabled"> <span style="font-size:13px;">활성화</span>
+                </label>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+                <a href="https://developers.facebook.com/apps" target="_blank" style="color:#3b82f6;">developers.facebook.com</a> → 앱에 <b>Threads API</b> 추가 → 그래프 API로 <b>Threads User ID</b> + <b>장기 액세스 토큰</b>(threads_basic, threads_content_publish 권한) 발급. 블로그 발행 시 자동으로 4줄 글 게시.
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Threads User ID</label><input type="text" class="form-input" id="snsThreadsUserId" placeholder="Threads User ID (숫자)"></div>
+                <div class="form-group" style="margin:0;"><label style="font-size:12px;">Access Token</label><input type="password" class="form-input" id="snsThreadsToken" placeholder="장기 액세스 토큰 (60일, 갱신형)"></div>
+            </div>
+        </div>
+
         <!-- Reddit -->
         <div style="border:1px solid #334155; border-radius:8px; padding:16px; margin-bottom:12px; background:#0f172a;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1752,6 +1769,10 @@ window.saveSocialConfig = async function() {
             ig_user_id: document.getElementById('snsInstagramUserId').value,
             access_token: document.getElementById('snsInstagramToken').value
         }},
+        { platform: 'threads', enabled: document.getElementById('snsThreadsEnabled').checked, config: {
+            threads_user_id: document.getElementById('snsThreadsUserId').value,
+            access_token: document.getElementById('snsThreadsToken').value
+        }},
         { platform: 'reddit', enabled: document.getElementById('snsRedditEnabled').checked, config: {
             client_id: document.getElementById('snsRedditClientId').value,
             client_secret: document.getElementById('snsRedditSecret').value,
@@ -1808,6 +1829,11 @@ async function loadSocialConfig() {
                     document.getElementById('snsInstagramEnabled').checked = row.enabled;
                     document.getElementById('snsInstagramUserId').value = cfg.ig_user_id || '';
                     document.getElementById('snsInstagramToken').value = cfg.access_token || '';
+                    break;
+                case 'threads':
+                    document.getElementById('snsThreadsEnabled').checked = row.enabled;
+                    document.getElementById('snsThreadsUserId').value = cfg.threads_user_id || '';
+                    document.getElementById('snsThreadsToken').value = cfg.access_token || '';
                     break;
                 case 'reddit':
                     document.getElementById('snsRedditEnabled').checked = row.enabled;
