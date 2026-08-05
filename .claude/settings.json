@@ -342,7 +342,8 @@
       "Bash(./deploy.sh \"bug #22: cutline \\(칼선작업\\) designer-settlement request no longer multiplies units by print qty - customer is charged per cutline design \\(cutlineCharCount, qty-independent per line 4919\\) but the design_request was created with charCount*qty, inflating designer payout \\(e.g. keyring qty200 -> 200 units/2M won for a 10k won cutline\\). Now units = sum of cutlineCharCount only \\(simple_order v842\\)\")",
       "Bash(./deploy.sh \"member management: add email/phone CSV export buttons on 고객관리 page - respects country filter \\(KR/JP/US\\), excludes id-only @cafe2626 placeholder emails, phone from latest order normalized to 010-0000-0000, browser-generated UTF-8 BOM so Korean names never mojibake \\(global_users v314\\)\")",
       "Bash(date +%s%N)",
-      "Bash(./deploy.sh \"version auto-heal: on version mismatch also unregister legacy caching service workers \\(not just clear Cache API\\) - fixes recurring stale-JS where a customer's old caching SW kept serving pre-fix simple_order.js \\(소형매대 20만->40만 재발\\). Current no-cache /sw.js kept. Also refresh.html remains the manual one-click cache/SW reset\")"
+      "Bash(./deploy.sh \"version auto-heal: on version mismatch also unregister legacy caching service workers \\(not just clear Cache API\\) - fixes recurring stale-JS where a customer's old caching SW kept serving pre-fix simple_order.js \\(소형매대 20만->40만 재발\\). Current no-cache /sw.js kept. Also refresh.html remains the manual one-click cache/SW reset\")",
+      "Bash(./deploy.sh \"dashboard: 신규/재구매 stats now refresh incrementally on every reload \\(was memoized after first load, so orders placed later were missing while the live headline counted them - caused 오늘 매출 vs 신규/재구매 mismatch, e.g. 8건/8.25M vs 6건/2.85M\\). Now both use same live all-sites/same-status/created_at data and reconcile exactly\")"
     ],
     "additionalDirectories": [
       "\\tmp",
