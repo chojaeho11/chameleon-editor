@@ -340,7 +340,9 @@
       "Bash(./deploy.sh \"admin country report: revenue counts only paid orders \\(was summing all incl unpaid/refunded ~1B, now KR 611M/JP 3.1M\\); ad channel now catches Naver/Yahoo ads not just Google; country buttons KR+JP only; move country sections to dashboard bottom\")",
       "Bash(./deploy.sh \"bug fixes: #21 work-order sticker box now shows 종류\\(paper type\\) via STICKER_TYPES label map + readable shape labels \\(simple/complex\\); #20 admin order 결제 column infers 무통장 from depositor/receipt when payment_method is blank and flags paid-but-unrecorded orders instead of bare dash \\(global_orders v485\\)\")",
       "Bash(./deploy.sh \"bug #22: cutline \\(칼선작업\\) designer-settlement request no longer multiplies units by print qty - customer is charged per cutline design \\(cutlineCharCount, qty-independent per line 4919\\) but the design_request was created with charCount*qty, inflating designer payout \\(e.g. keyring qty200 -> 200 units/2M won for a 10k won cutline\\). Now units = sum of cutlineCharCount only \\(simple_order v842\\)\")",
-      "Bash(./deploy.sh \"member management: add email/phone CSV export buttons on 고객관리 page - respects country filter \\(KR/JP/US\\), excludes id-only @cafe2626 placeholder emails, phone from latest order normalized to 010-0000-0000, browser-generated UTF-8 BOM so Korean names never mojibake \\(global_users v314\\)\")"
+      "Bash(./deploy.sh \"member management: add email/phone CSV export buttons on 고객관리 page - respects country filter \\(KR/JP/US\\), excludes id-only @cafe2626 placeholder emails, phone from latest order normalized to 010-0000-0000, browser-generated UTF-8 BOM so Korean names never mojibake \\(global_users v314\\)\")",
+      "Bash(date +%s%N)",
+      "Bash(./deploy.sh \"version auto-heal: on version mismatch also unregister legacy caching service workers \\(not just clear Cache API\\) - fixes recurring stale-JS where a customer's old caching SW kept serving pre-fix simple_order.js \\(소형매대 20만->40만 재발\\). Current no-cache /sw.js kept. Also refresh.html remains the manual one-click cache/SW reset\")"
     ],
     "additionalDirectories": [
       "\\tmp",

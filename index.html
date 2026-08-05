@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260804144813';
+    var CV = '20260805160043';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -112,13 +112,27 @@
                     params.set('_cb', Date.now());
                     location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
                 };
+                // 2026-08-05: 캐시 삭제 후 '레거시 캐싱 서비스워커'도 해제한다 — 구버전 JS/HTML 을 계속
+                //   물어다 주는 진짜 주범(소형매대 가격이 어제 20만→오늘 40만 재발한 원인). 현재 무캐시 /sw.js 는 유지.
+                var _swThenGo = function () {
+                    try {
+                        if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+                            navigator.serviceWorker.getRegistrations().then(function (regs) {
+                                return Promise.all(regs.map(function (r) {
+                                    var u = (r.active && r.active.scriptURL) || (r.waiting && r.waiting.scriptURL) || (r.installing && r.installing.scriptURL) || '';
+                                    return (u.indexOf('/sw.js') < 0) ? r.unregister() : null;   // 레거시만 제거
+                                }));
+                            }).then(_go).catch(_go);
+                        } else { _go(); }
+                    } catch (e) { _go(); }
+                };
                 try {
                     if (window.caches && caches.keys) {
                         caches.keys().then(function (ks) {
                             return Promise.all(ks.map(function (k) { return caches.delete(k); }));
-                        }).then(_go).catch(_go);
-                    } else { _go(); }
-                } catch (e) { _go(); }
+                        }).then(_swThenGo).catch(_swThenGo);
+                    } else { _swThenGo(); }
+                } catch (e) { _swThenGo(); }
             }).catch(function(){});
         } catch(e){}
     }
