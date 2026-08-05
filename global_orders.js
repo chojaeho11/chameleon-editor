@@ -1756,7 +1756,7 @@ window.loadOrders = async () => {
         }
 
         let query = sb.from('orders')
-            .select('id, franchise_slug, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info' + (window.__hasDesignCompleteCol === false ? '' : ', design_complete, design_complete_at, design_complete_by'), { count: 'exact' })
+            .select('id, franchise_slug, status, total_amount, items, created_at, payment_status, payment_method, toss_payment_key, discount_amount, manager_name, phone, address, request_note, delivery_target_date, site_code, staff_manager_id, staff_driver_id, files, user_id, depositor_name, admin_note, receipt_info, attribution_channel' + (window.__hasDesignCompleteCol === false ? '' : ', design_complete, design_complete_at, design_complete_by'), { count: 'exact' })
             .order('created_at', { ascending: false });
 
         // [핵심 2] 임시작성 및 관리자차단 건 숨김
@@ -1981,6 +1981,13 @@ window.loadOrders = async () => {
                 const ri = order.receipt_info;
                 const rl = ri.type === 'tax_invoice' ? '📄세금계산서' : '🧾현금영수증';
                 payHtml += `<div style="font-size:9px;color:#7c3aed;cursor:pointer;text-decoration:underline;margin-top:2px;" onclick="event.stopPropagation();window.openReceiptInfo('${order.id}')">${rl}</div>`;
+            }
+            // 2026-08-05: 유입경로 배지 (구매직전 유입)
+            if (order.attribution_channel) {
+                const _ac = order.attribution_channel;
+                const _acColor = _ac.indexOf('광고') === 0 ? '#ef4444' : _ac === '자연검색' ? '#16a34a' : _ac === 'SNS' ? '#8b5cf6' : _ac === '즐겨찾기·직접' ? '#2563eb' : '#94a3b8';
+                const _acLabel = _ac.indexOf('광고') === 0 ? ('📢 ' + _ac.replace('광고-', '')) : _ac;
+                payHtml += `<div style="font-size:9px; color:${_acColor}; margin-top:2px;" title="유입경로(구매직전)">${_acLabel}</div>`;
             }
 
             // ═══ [상태 칼럼] 주문 진행상태만 깔끔하게 ═══

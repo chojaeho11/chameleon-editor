@@ -3925,6 +3925,8 @@ async function createRealOrderInDb(finalPayAmount, useMileage) {
         franchise_slug: _frSlug,
         franchise_commission: _frCommission,
         staff_manager_id: window.tempOrderInfo?.staffManagerId || null,
+        attribution_channel: (window.getOrderAttribution && window.getOrderAttribution().attribution_channel) || null,   // 2026-08-05: 유입경로(last-touch)
+        attribution: (window.getOrderAttribution && window.getOrderAttribution().attribution) || null,
         admin_note: (() => {
             let note = '';
             if (window.tempOrderInfo?.isHqOrder) note += '[고객지정] 본사 직접 처리 요청\n';

@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260805163716';
+    var CV = '20260805174158';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -10424,7 +10424,8 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./config.js?v=444"></script>
 <script src="./wall-3d-preview.js?v=434" defer></script>
 <script src="./wall-3d-walls.js?v=434" defer></script>
-<script type="module" src="./order.js?v=734"></script>
+<script src="/attribution.js?v=1"></script>
+<script type="module" src="./order.js?v=735"></script>
 <script type="module" src="./login.js?v=444"></script>
 <!-- 2026-06-29: 회원가입이벤트 — 패브릭에서 ?signup_event=1 로 진입 → 가입창 자동 + 추천인 적립 + 쇼핑 이어가기 -->
 <script>
@@ -10595,7 +10596,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=842"></script>
+<script src="/simple_order.js?v=843"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
@@ -11932,7 +11933,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module">
     // ★ 여기 파일명 뒤에 ?v=434 를 꼭 붙여야 캐시가 깨집니다!
     import { canvas, setMaxLimits } from './canvas-core.js?v=435';
-    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=734'; // [수정] 함수 추가됨
+    import { openProductDetail, startDesignFromProduct, addProductToCartDirectly } from './order.js?v=735'; // [수정] 함수 추가됨
     import { applySize } from './canvas-size.js?v=435';
     import { sb, PRODUCT_DB, cartData, currentUser, initConfig, getLocalizedData } from './config.js?v=444';
 
@@ -17423,7 +17424,7 @@ if (w >= 20 && h >= 20) {
                         productToCart.width_mm = finalW; productToCart.height_mm = finalH;
                         productToCart.is_custom = true;
                     }
-                    const m = await import('./order.js?v=734');
+                    const m = await import('./order.js?v=735');
                     const uploadedFiles = [];
                     let firstThumb = null;
                     for (let i = 0; i < fileInput.files.length; i++) {
@@ -17493,7 +17494,7 @@ if (w >= 20 && h >= 20) {
             window.isDirectCartAddInProgress = true;
             setTimeout(() => { window.isDirectCartAddInProgress = false; }, 3000);
 
-            import('./order.js?v=734').then(m => {
+            import('./order.js?v=735').then(m => {
                 const productToCart = { ...product };
                 productToCart.price = finalPricePerItem;
 
@@ -18121,7 +18122,7 @@ if (w >= 20 && h >= 20) {
     // [추가] 장바구니 일괄 업로드 핸들러
     window.handleBulkCartUpload = function(input) {
         if (input.files.length === 0) return;
-        import('./order.js?v=734').then(m => {
+        import('./order.js?v=735').then(m => {
             m.processBulkCartUpload(input.files);
             input.value = ''; // 초기화
         });
@@ -20903,7 +20904,9 @@ if (w >= 20 && h >= 20) {
                             design_request_id: requestId,
                             _designRequestId: requestId
                         }],
-                        site_code: _siteCode
+                        site_code: _siteCode,
+                        attribution_channel: (window.getOrderAttribution && window.getOrderAttribution().attribution_channel) || null,
+                        attribution: (window.getOrderAttribution && window.getOrderAttribution().attribution) || null
                     };
                     var _ordIns = await sb.from('orders').insert(_orderRow).select('id').single();
                     if (_ordIns.error) throw _ordIns.error;
@@ -23715,7 +23718,7 @@ window.dsmRenderProducts = async function(keyword) {
         var rec = window._chamLastProducts && window._chamLastProducts[idx];
         if (!rec) return;
         try {
-            import('./order.js?v=734').then(function(mod) {
+            import('./order.js?v=735').then(function(mod) {
                 var addFn = mod.addProductToCartDirectly;
                 if (!addFn) { console.error('addProductToCartDirectly not found'); return; }
                 var priceKRW = rec._raw_price_krw || 50000;

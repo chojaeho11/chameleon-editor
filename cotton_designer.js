@@ -2977,6 +2977,8 @@ window._cpSubmitOrder = async function() {
             items: items,
             site_code: _cpSiteCode(),
             files: uploadedFiles.length ? uploadedFiles : null,
+            attribution_channel: (window.getOrderAttribution && window.getOrderAttribution().attribution_channel) || null,   // 2026-08-05: 유입경로(last-touch)
+            attribution: (window.getOrderAttribution && window.getOrderAttribution().attribution) || null,
             admin_note: _finalAdminNote
         };
         const { data: orderData, error: orderErr } = await sb.from('orders').insert([orderInsertPayload]).select();

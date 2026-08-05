@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>디자인 마켓 결제 · Chameleon</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/attribution.js?v=1"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#f1f0f7;color:#1e293b;min-height:100vh;}
@@ -293,7 +294,9 @@ body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background
       items: [{ name:'디자인 의뢰 결제 — '+(state.request.title||''), price:amount, qty:1,
                 design_bid_id:state.bid.id, design_request_id:state.request.id,
                 _designBidId:state.bid.id, _designRequestId:state.request.id }],
-      site_code: (state.country==='JP'?'JP':(state.country==='US'?'US':'KR'))
+      site_code: (state.country==='JP'?'JP':(state.country==='US'?'US':'KR')),
+      attribution_channel: (window.getOrderAttribution && window.getOrderAttribution().attribution_channel) || null,
+      attribution: (window.getOrderAttribution && window.getOrderAttribution().attribution) || null
     };
     var ins = await sb.from('orders').insert(row).select('id').single();
     if (ins.error) throw ins.error;

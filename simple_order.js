@@ -20758,6 +20758,8 @@ html, body { background: #ffffff !important; }
             // 2026-05-12: 패브릭 (_cpSubmitOrder) 와 동일 schema 사용 — orders 테이블 컬럼 일치
             // 2026-05-16: 가맹점 스토어(/store/{slug}) 경유 주문 — fr 태그 + 본사 중계수수료 20%
             var _frSlug2 = (function(){ try { return sessionStorage.getItem('_franchise_ref') || null; } catch(e){ return null; } })();
+            // 2026-08-05: 유입경로(어트리뷰션) — attribution.js 가 랜딩 시 저장한 first/last-touch. 대시보드 기본=last.
+            var _soAttr = (window.getOrderAttribution && window.getOrderAttribution()) || {};
             var orderRow = {
                 order_date: new Date().toISOString(),
                 user_id: loggedInUid,   // 2026-05-26: 로그인 고객 주문은 user_id 연결 → 마이페이지 주문내역에 노출
@@ -20777,6 +20779,8 @@ html, body { background: #ffffff !important; }
                 franchise_slug: _frSlug2,
                 franchise_commission: _frSlug2 ? 0 : null,
                 files: orderFiles.length ? orderFiles : null,
+                attribution_channel: _soAttr.attribution_channel || null,
+                attribution: _soAttr.attribution || null,
                 admin_note: adminNote
             };
             // 2026-05-14: 무통장 입금 증빙 정보 (세금계산서/현금영수증) — 관리자 페이지 receipt_info 컬럼과 연결
@@ -20803,6 +20807,8 @@ html, body { background: #ffffff !important; }
                 updateRow.discount_amount = _useMileage + _useDeposit;
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
                 if (!_fullyCovered && payMethod === 'bank') updateRow.depositor_name = depositorName;
+                // 2026-08-05: 매니저견적을 고객이 결제 → 고객 유입경로 기록(생성은 관리자라 null 이었음)
+                if (_soAttr.attribution_channel) { updateRow.attribution_channel = _soAttr.attribution_channel; updateRow.attribution = _soAttr.attribution || null; }
                 var upRes = await sb.from('orders').update(updateRow).eq('id', pendingId).select().single();
                 insertedOrder = upRes.data; insertErr = upRes.error;
                 if (insertErr) throw insertErr;
