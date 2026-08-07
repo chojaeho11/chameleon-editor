@@ -350,7 +350,12 @@
       "Bash(sed -i \"s#global_orders.js?v=485#global_orders.js?v=486#g\" order_management.html global_admin.js)",
       "Bash(./deploy.sh \"order traffic attribution \\(B\\): new attribution.js captures first/last-touch \\(ad gclid/utm/naver + search/bookmark/SNS/QR\\) to localStorage on landing; attached to all customer order inserts \\(simple_order, order.js, cotton_designer, design-pay, index design-fee\\); orders gains attribution_channel+attribution columns; admin dashboard new '유입경로별 매출' card \\(last-touch, revenue/orders/avg per channel, ad campaign breakdown, forward-only from deploy\\); order_management shows per-order channel badge \\(global_orders v486\\)\")",
       "Bash(awk '/async function postToThreads/,/^}/' supabase/functions/social-post/index.ts)",
-      "Bash(./deploy.sh \"marketing bot: add Threads \\(쓰레드\\) credential fields to SNS auto-post config \\(threads_user_id + access_token + enable toggle\\) - blog auto-publish already fans out to threads, now configurable in UI; social-post threads text reformatted to 4-line threads style\")"
+      "Bash(./deploy.sh \"marketing bot: add Threads \\(쓰레드\\) credential fields to SNS auto-post config \\(threads_user_id + access_token + enable toggle\\) - blog auto-publish already fans out to threads, now configurable in UI; social-post threads text reformatted to 4-line threads style\")",
+      "Bash(awk 'NR>=19100 && NR<=19196 && /_soCalcItemPrice|var unit|unit =|var subtotal|subtotal =|it\\\\.price|product\\\\.price/' simple_order.js)",
+      "Bash(awk 'NR>=17030 && NR<=17075' simple_order.js)",
+      "Bash(awk 'NR>=16893 && NR<=16990' simple_order.js)",
+      "Bash(sed -i 's#simple_order.js?v=843#simple_order.js?v=844#g' index.html)",
+      "Bash(./deploy.sh \"bug #23: paper-stand cart price self-heals from live PRODUCT_DB price - fixes stale cart items \\(소형매대 old 20,000 unit baked in showing 400,000 for 10ea while product page correctly shows 200,000\\). _soPaperStandBaseUnit prefers live DB price over stored item price \\(simple_order v844\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

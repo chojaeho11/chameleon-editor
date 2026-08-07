@@ -5402,6 +5402,14 @@ html, body { background: #ffffff !important; }
         if (isSmall) return _PD_SM_SAMPLE + (qty - 1) * _PD_SM_SAMPLE_ADD;
         return _PD_SAMPLE + (qty - 1) * _PD_SAMPLE_ADD;
     }
+    // 2026-08-07 (버그#23): 종이매대 단가는 항상 라이브 DB(PRODUCT_DB) 우선 — 장바구니에 옛 단가(예: 소형매대
+    //   20,000)로 박힌 stale 항목이 recalc 때 옛 값으로 400,000 뜨던 버그 자가치유. 없으면 저장값 폴백.
+    function _soPaperStandBaseUnit(p) {
+        var stored = (p && Number(p.price)) || 0;
+        var code = p && p.code;
+        var live = (code && window.PRODUCT_DB && window.PRODUCT_DB[code] && Number(window.PRODUCT_DB[code].price)) || 0;
+        return live > 0 ? live : stored;
+    }
 
     // 2026-05-14: 허니콤보드 파티션 가림막 감지
     // - code: hb_par_* / hb_dw_par_* / 또는 admin 이 다른 코드로 등록한 경우 이름으로 매칭
@@ -18337,7 +18345,7 @@ html, body { background: #ffffff !important; }
                 // 2026-07-15: 종이매대 — 샘플(1~9)/2배(10~99)/정가(100+) 티어 실효 단가로 표시 (단가 × 수량 = 소계 일치)
                 var _isPdRow = (typeof _soIsPaperDisplayProduct === 'function') && _soIsPaperDisplayProduct(item.product);
                 if (_isPdRow && typeof _soPaperStandSubtotal === 'function') {
-                    var _pdSubC = _soPaperStandSubtotal((item.product && item.product.price) || 0, _bdQty, (typeof _soIsSmallPaperStand === 'function') && _soIsSmallPaperStand(item.product));
+                    var _pdSubC = _soPaperStandSubtotal(_soPaperStandBaseUnit(item.product), _bdQty, (typeof _soIsSmallPaperStand === 'function') && _soIsSmallPaperStand(item.product));
                     _bdUnit = (_bdQty > 0) ? Math.round(_pdSubC / _bdQty) : _pdSubC;
                 }
                 var _bdSub = _bdUnit * _bdQty;
@@ -19192,7 +19200,7 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-30: 종이매대 — recalc 와 동일 (샘플/낱개/대량). 카트에서 샘플 ×5 누락 + 낱개 추가요금 일치.
         if (_soIsPaperDisplayProduct(it.product)) {
-            base = _soPaperStandSubtotal(unit, qty, _soIsSmallPaperStand(it.product));
+            base = _soPaperStandSubtotal(_soPaperStandBaseUnit(it.product), qty, _soIsSmallPaperStand(it.product));
         }
         // 가벽 세로 3m → 가로 m당 +5만 (양면이면 2배)
         if (it.wallSize && parseFloat(it.wallSize.h_m) === 3) {
