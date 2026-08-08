@@ -356,7 +356,11 @@
       "Bash(awk 'NR>=16893 && NR<=16990' simple_order.js)",
       "Bash(sed -i 's#simple_order.js?v=843#simple_order.js?v=844#g' index.html)",
       "Bash(./deploy.sh \"bug #23: paper-stand cart price self-heals from live PRODUCT_DB price - fixes stale cart items \\(소형매대 old 20,000 unit baked in showing 400,000 for 10ea while product page correctly shows 200,000\\). _soPaperStandBaseUnit prefers live DB price over stored item price \\(simple_order v844\\)\")",
-      "Bash(./deploy.sh \"bug #17 \\(re-submit\\): design-market complete-and-pay now works. release_design_bid_payment RPC redone - accepts paid+completed_pending_files, idempotent \\(no double-pay if already released\\), and marks the design_request completed server-side \\(was RLS-blocked client update AND referenced non-existent completed_at column -> request stuck at in_progress even after designer paid\\). Client always calls RPC. Fixed remaining specialties non-array crashes. Un-stuck 강은미 request\")"
+      "Bash(./deploy.sh \"bug #17 \\(re-submit\\): design-market complete-and-pay now works. release_design_bid_payment RPC redone - accepts paid+completed_pending_files, idempotent \\(no double-pay if already released\\), and marks the design_request completed server-side \\(was RLS-blocked client update AND referenced non-existent completed_at column -> request stuck at in_progress even after designer paid\\). Client always calls RPC. Fixed remaining specialties non-array crashes. Un-stuck 강은미 request\")",
+      "Bash(awk '/function _soIsCutPrintProduct/,/^    }/' simple_order.js)",
+      "Bash(awk 'NR>=14925 && NR<=14975 && /dimsRow|pillsBox|isObjSizeMode|display|isCustomSize/' simple_order.js)",
+      "Bash(sed -i 's#simple_order.js?v=844#simple_order.js?v=845#g' index.html)",
+      "Bash(./deploy.sh \"bug #28: free-print/standee \\(등신대 보드류 hb_pt\\) size input now explicitly shown \\(display+order set together\\) so the mm size field can't be hidden by later layout timing\")"
     ],
     "additionalDirectories": [
       "\\tmp",

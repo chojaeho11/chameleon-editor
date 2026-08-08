@@ -14534,7 +14534,9 @@ html, body { background: #ffffff !important; }
                 if (_boardSec) _boardSec.style.order = '-250';
                 if (_inlineCardCP) _inlineCardCP.style.order = '-240';
                 if (_backCardCP) _backCardCP.style.order = '-235';
-                if (_sizeSec) _sizeSec.style.order = '-230';
+                // 2026-08-08 (버그#28): 자유인쇄커팅(등신대 보드류 hb_pt_*) 사이즈 입력칸이 안 보이던 문제 —
+                //   order 뿐 아니라 display 도 여기서 확정해, 이후 로직 타이밍과 무관하게 사이즈 입력을 항상 노출.
+                if (_sizeSec) { _sizeSec.style.display = ''; _sizeSec.style.order = '-230'; }
                 // 인쇄면 안내 라벨이 잘 보이도록 섹션 타이틀 추가/갱신
                 if (!_cutSec.querySelector('.so-cut-side-title')) {
                     var _t = document.createElement('div');
