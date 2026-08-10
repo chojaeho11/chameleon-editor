@@ -415,7 +415,8 @@
       "Bash(./deploy.sh \"SNS event UI: replace mid-page banner with cute top-bar 'SNS 체험단' button \\(KR/JP, gentle pulse\\); change ranking theme from dark to bright/cute pastel pink-purple \\(sns-ranking v3\\)\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\blog12_countall.sql\")",
       "Bash(./deploy.sh \"SNS ranking: count posts immediately \\(no admin-verify gate\\) so submissions reflect right away + admin delete for fake posts; darker popup/modal backdrops \\(blur\\) so it stands out; \\(sns-ranking v4\\)\")",
-      "Bash(./deploy.sh \"SNS event: score system \\(post=1pt/quality=3pt/viral=5pt, admin assigns via 1/3/5 buttons\\); event window 8/10~9/15 16:00; ranking ranks by score + shows end date + short description \\(KR/JP\\); \\(sns-ranking v5\\)\")"
+      "Bash(./deploy.sh \"SNS event: score system \\(post=1pt/quality=3pt/viral=5pt, admin assigns via 1/3/5 buttons\\); event window 8/10~9/15 16:00; ranking ranks by score + shows end date + short description \\(KR/JP\\); \\(sns-ranking v5\\)\")",
+      "Bash(./deploy.sh \"SNS event: add prize-exclusion notice \\(irrelevant/spam posts excluded\\) to ranking widget + mypage + popup \\(KR/JP\\); secret dashboard: add point-payment total section \\(this-month + cumulative, revenue-excluded\\); sns-ranking v6\")"
     ],
     "additionalDirectories": [
       "\\tmp",
