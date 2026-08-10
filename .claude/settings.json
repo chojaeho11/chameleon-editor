@@ -385,7 +385,9 @@
       "Bash(./deploy.sh \"blog monitor: replace recruit banner with SNS design images \\(KR/JP\\), add 30-day dismiss button, separate SNS-event stats section on secret dashboard \\(granted/used/coupon-orders/per-member\\) via blog_event_summary RPC\")",
       "Bash(./deploy.sh \"blog monitor: swap in updated SNS banner images \\(KR/JP\\), cache-bust v2\")",
       "Bash(./deploy.sh \"blog monitor: show SNS design image at top of recruit popup, bump image cache v3\")",
-      "Bash(./deploy.sh \"blog recruit popup: add top-right close button, drop 'monthly 10th' from copy, two-line Threads message, add 'Threads friend 2x' CTA button\")"
+      "Bash(./deploy.sh \"blog recruit popup: add top-right close button, drop 'monthly 10th' from copy, two-line Threads message, add 'Threads friend 2x' CTA button\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\blog7_autoapprove.sql\")",
+      "Bash(./deploy.sh \"blog monitor: auto-approve KR/JP applicants with instant grant; admin table name is clickable to reveal review links\")"
     ],
     "additionalDirectories": [
       "\\tmp",

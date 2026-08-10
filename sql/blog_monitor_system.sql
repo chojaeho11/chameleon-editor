@@ -560,3 +560,63 @@ $$;
 grant execute on function public.blog_event_summary() to anon, authenticated;
 
 select public.blog_event_summary() as summary;
+-- ===== 블로그 체험단 : 7) 한국/일본 신청자 즉시 승인 + 지급 =====
+-- 기존 1-인자 버전 제거 (2-인자 default 와 모호성 방지)
+drop function if exists public.blog_monitor_apply(text);
+
+create or replace function public.blog_monitor_apply(_channel_url text, _country text default null) returns jsonb
+language plpgsql security definer as $$
+declare
+  _uid uuid := auth.uid();
+  _mail text; _uname text; _name text;
+  _exist public.blog_monitors%rowtype;
+  _threads boolean; _monthly int;
+  _auto boolean; _cycle text := public._blog_current_cycle();
+  _mid uuid;
+begin
+  if _uid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if coalesce(trim(_channel_url),'') = '' then return jsonb_build_object('ok', false, 'error', 'channel_required'); end if;
+  select email, username into _mail, _uname from public.profiles where id = _uid;
+  _name := coalesce(_uname, split_part(coalesce(_mail,''),'@',1));
+  _threads := (_channel_url ~* 'threads\.(net|com)');
+  _monthly := case when _threads then 200000 else 100000 end;
+  _auto := (upper(coalesce(_country,'')) in ('KR','JP'));   -- 한국/일본 신청자 즉시 승인
+
+  select * into _exist from public.blog_monitors
+    where user_id = _uid or lower(id_key) = lower(coalesce(_mail,'')) limit 1;
+
+  if found then
+    if _exist.status = 'approved' then
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads,
+        monthly_amount=greatest(monthly_amount, _monthly), user_id=coalesce(user_id,_uid) where id=_exist.id;
+      return jsonb_build_object('ok', true, 'status', 'approved', 'already', true);
+    end if;
+    _mid := _exist.id;
+    if _auto then
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads, monthly_amount=_monthly,
+        user_id=coalesce(user_id,_uid), name=coalesce(name,_name), status='approved', is_active=true,
+        approved_at=now(), applied_at=coalesce(applied_at,now()), last_grant_cycle=_cycle, last_grant_at=now() where id=_mid;
+    else
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads, monthly_amount=_monthly,
+        user_id=coalesce(user_id,_uid), name=coalesce(name,_name), status='pending', applied_at=now(), is_active=false where id=_mid;
+    end if;
+  else
+    insert into public.blog_monitors(user_id, name, id_key, channel_url, is_threads, monthly_amount, is_active, status, applied_at, approved_at, last_grant_cycle, last_grant_at)
+      values (_uid, _name, coalesce(_mail, _uid::text), _channel_url, _threads, _monthly,
+              _auto, case when _auto then 'approved' else 'pending' end, now(),
+              case when _auto then now() else null end,
+              case when _auto then _cycle else null end,
+              case when _auto then now() else null end)
+      returning id into _mid;
+  end if;
+
+  if _auto then
+    update public.profiles set blog_coupon = _monthly where id = _uid;
+    insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+      values (_uid, null, _monthly, 'grant', _cycle);
+    return jsonb_build_object('ok', true, 'status', 'approved', 'granted', _monthly, 'is_threads', _threads);
+  end if;
+
+  return jsonb_build_object('ok', true, 'status', 'pending', 'is_threads', _threads);
+end; $$;
+grant execute on function public.blog_monitor_apply(text, text) to authenticated;
