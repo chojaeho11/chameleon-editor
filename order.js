@@ -3012,11 +3012,8 @@ function updateSummary(prodTotal, addonTotal, total) {
         const elOwn = document.getElementById('cartOwnMileage');
         const myMileage = elOwn ? parseInt(elOwn.innerText.replace(/[^0-9]/g, '')) || 0 : 0;
 
-        let realLimit = 0;
-        if (discountableAmount > 0) {
-            const fivePercent = Math.floor(discountableAmount * 0.05);
-            realLimit = Math.min(myMileage, fivePercent);
-        }
+        // 2026-08-10: 포인트 통합 — 회당 한도(5%) 제거. 상품금액 전액까지(배송비는 displayTotal 계산 후 아래에서 확장).
+        let realLimit = Math.min(myMileage, Math.max(0, finalTotal));
 
         window.mileageLimitMax = realLimit; // KRW 기준 저장
 
@@ -3121,6 +3118,20 @@ function updateSummary(prodTotal, addonTotal, total) {
     const displayTotal = finalTotal + quoteShipping;
     window.finalPaymentAmount = displayTotal;
     finalPaymentAmount = displayTotal;
+
+    // 2026-08-10: 포인트 한도를 배송비 포함 최종액까지 확장 (전액 사용 가능, 한도 없음)
+    try {
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            const _elOwnM = document.getElementById('cartOwnMileage');
+            const _myM = _elOwnM ? (parseInt(_elOwnM.innerText.replace(/[^0-9]/g, '')) || 0) : 0;
+            window.mileageLimitMax = Math.min(_myM, Math.max(0, displayTotal));
+            const _rate2 = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
+            const _ldEl = document.getElementById('cartMileageLimit');
+            if (_ldEl) _ldEl.innerText = formatCurrency(window.mileageLimitMax).replace(/[원¥$]/g, '').trim() + ' P';
+            const _mInp = document.getElementById('cartMileageInput');
+            if (_mInp) { const _iv = parseInt(_mInp.value) || 0; const _limLocal = window.mileageLimitMax * _rate2; if (_iv > _limLocal) _mInp.value = _limLocal > 0 ? _limLocal : ''; }
+        }
+    } catch (e) {}
 
     // ★ 배송 선택지: 카트 비어있지 않으면 항상 표시 (선택 후에도 변경 가능)
     //   단, 천원/만원 단위 주문만 담긴 카트는 배송 불필요이므로 숨김
@@ -3507,6 +3518,7 @@ async function processOrderSubmission() {
     // 장바구니에서 입력한 마일리지 반영 (현지 통화 → KRW 역환산)
     const cartUsedMileageKRW = window.getCartMileageKRW ? window.getCartMileageKRW() : 0;
     const checkoutFinal = finalTotal - cartUsedMileageKRW;
+    window._pointPayableBefore = finalTotal;   // 2026-08-10: 포인트 차감 전 결제액(배송비 포함) — 전액충당 시 정확 차감용
 
     window.originalPayAmount = checkoutFinal > 0 ? checkoutFinal : 0;
     window.finalPaymentAmount = window.originalPayAmount;
@@ -4198,6 +4210,12 @@ async function processFinalPayment() {
         const selected = document.querySelector('input[name="paymentMethod"]:checked');
         const method = selected ? selected.value : 'card';
 
+        // 2026-08-10: 포인트로 전액(배송비 포함) 충당 → PG 결제 불필요, 즉시 완료 처리 (디자인비 전용 카트 제외)
+        if (realFinalPayAmount <= 0 && useMileage > 0 && !(typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart())) {
+            await processMileageFullPayment(useMileage);
+            return;
+        }
+
         // ★ 디자인비 주문은 카드결제 필수 (무통장/예치금 차단 — 사기 방지)
         if (typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart() && method !== 'card') {
             const lang = CURRENT_LANG || 'kr';
@@ -4391,6 +4409,42 @@ async function processFinalPayment() {
     } finally {
         document.getElementById("loading").style.display = "none";
         btn.disabled = false;
+    }
+}
+
+// ============================================================
+// 2026-08-10: 포인트 전액 결제 (배송비 포함 전액을 포인트로 충당 → PG 미호출, 예치금 결제 미러)
+// ============================================================
+async function processMileageFullPayment(useMileage) {
+    if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
+    // 실제 차감액 = min(입력 포인트, 포인트 차감 전 결제액) — 과차감 방지
+    const payable = Math.max(0, window._pointPayableBefore || 0);
+    const actualUse = payable > 0 ? Math.min(useMileage, payable) : useMileage;
+    if (!confirm((window.t('confirm_point_full_pay', '포인트 {amount}으로 전액 결제하시겠습니까?') || '').replace('{amount}', formatCurrency(actualUse)))) {
+        const _l = document.getElementById("loading"); if (_l) _l.style.display = "none";
+        const _b = document.getElementById("btnFinalPay"); if (_b) _b.disabled = false;
+        return;
+    }
+    try {
+        const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+        const cur = (m && m.mileage) || 0;
+        await sb.from('profiles').update({ mileage: Math.max(0, cur - actualUse) }).eq('id', currentUser.id);
+        await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -actualUse, description: `주문 포인트 전액결제 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
+        await sb.from('orders').update({ payment_status: '결제완료', payment_method: '포인트', status: '접수됨', discount_amount: actualUse }).eq('id', window.currentDbId);
+        try { sb.functions.invoke('sync-order-to-drive', { body: { order_id: window.currentDbId } }).then(({ error }) => { if (error) console.warn('[drive sync]', error?.message || error); }).catch(e => {}); } catch (e) {}
+        if (window.tempOrderInfo?.referrerId) { await creditReferralBonus(window.currentDbId, window.tempOrderInfo.referrerId); }
+        showToast(window.t('msg_payment_complete', '결제가 완료되었습니다'), "success");
+        try {
+            localStorage.setItem(cartStorageKey(), '[]');
+            Object.keys(localStorage).forEach(k => { if (k.startsWith('chameleon_cart_') && k !== cartStorageKey()) localStorage.removeItem(k); });
+            cartData.length = 0;
+        } catch (e2) {}
+        location.reload();
+    } catch (e) {
+        console.error(e);
+        showToast(window.t('msg_payment_error', "Payment processing error: ") + e.message, "error");
+        const _l2 = document.getElementById("loading"); if (_l2) _l2.style.display = "none";
+        const _b2 = document.getElementById("btnFinalPay"); if (_b2) _b2.disabled = false;
     }
 }
 
@@ -5317,9 +5371,8 @@ window.updateCartMileageLimit = function() {
     const cartTotalKRW = calculateCartTotalKRW();
     const mileRate = SITE_CONFIG.CURRENCY_RATE?.[SITE_CONFIG.COUNTRY] || 1;
 
-    // 원래 금액 기준 5% 한도 계산 (KRW)
-    const fivePercentKRW = Math.floor(cartTotalKRW * 0.05);
-    const realLimitKRW = Math.min(myMileage, fivePercentKRW);
+    // 2026-08-10: 포인트 통합 — 회당 한도(5%) 제거. 카트 금액 전액까지 사용 가능.
+    const realLimitKRW = Math.min(myMileage, cartTotalKRW);
 
     window._cartMileageLimitMax = realLimitKRW; // KRW 기준 저장
 
