@@ -362,7 +362,8 @@
       "Bash(sed -i 's#simple_order.js?v=844#simple_order.js?v=845#g' index.html)",
       "Bash(./deploy.sh \"bug #28: free-print/standee \\(등신대 보드류 hb_pt\\) size input now explicitly shown \\(display+order set together\\) so the mm size field can't be hidden by later layout timing\")",
       "Bash(sed -i 's#simple_order.js?v=845#simple_order.js?v=846#g' index.html)",
-      "Bash(./deploy.sh \"bug #25/#26/#29: honeycomb furniture tables \\(hb_tb_*\\) now show shipping/install options \\(added to isInstallEligible, all options: 5 install + parcel + pickup, default free metro_install\\); 글씨스카시 shipping now includes 야간/주말 설치\\(metro_weekend, 10만\\) per 최연두. simple_order v846\")"
+      "Bash(./deploy.sh \"bug #25/#26/#29: honeycomb furniture tables \\(hb_tb_*\\) now show shipping/install options \\(added to isInstallEligible, all options: 5 install + parcel + pickup, default free metro_install\\); 글씨스카시 shipping now includes 야간/주말 설치\\(metro_weekend, 10만\\) per 최연두. simple_order v846\")",
+      "Bash(./deploy.sh \"designer template review: add checkboxes + bulk approve/reject \\(no reload between items\\) to speed up multi-approval\")"
     ],
     "additionalDirectories": [
       "\\tmp",
