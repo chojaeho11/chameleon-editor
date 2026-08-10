@@ -3428,6 +3428,15 @@ html, body { background: #ffffff !important; }
             <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
             <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
           </label>
+          <!-- 5) SNS 이벤트 포인트 (블로그 체험단 무료쿠폰) — 배송비 포함 전액 커버, 체험단 회원만 노출 -->
+          <label class="so-disc-card" data-disc="blogcoupon" id="soDiscBlogCard" style="display:none; cursor:pointer; padding:10px 12px; border:2px solid #e9d5ff; background:#faf5ff; border-radius:10px; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="soDiscBlogChk" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#a855f7;">🎟 ${tr('SNS 이벤트 포인트','SNSイベントポイント','SNS Event Point')} <span style="font-size:9.5px; color:#a855f7; font-weight:800;">${tr('배송비포함','送料込み','incl. ship')}</span></b>
+            </div>
+            <div style="font-size:13px; font-weight:800; color:#a855f7;" id="soDiscBlogAmount">0</div>
+            <div style="font-size:10.5px; color:#a855f7;" id="soDiscBlogHint">${tr('남은 포인트','残ポイント','Remaining')}</div>
+          </label>
         </div>
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
           * ${tr('쿠폰·마일리지·PRO는 1개만 · 예치금은 중복 사용 가능','クーポン・マイル・PROは1つのみ · 預り金は併用可','Coupon / Mileage / PRO: pick one · Deposit stacks')}
@@ -19549,6 +19558,38 @@ html, body { background: #ffffff !important; }
     //   마일리지 한도 = min(보유, 할인적용금액(taxBase)의 5%), 제외 카테고리 포함 시 마일리지 불가.
     //   잔액(profiles.mileage/deposit)·원장(wallet_logs)은 order.js 와 동일 스키마 사용.
     window._soWallet = { ready: false };
+    // 비-KR(일본 등): 4-box 할인은 통화이슈로 미노출. 블로그 체험단 SNS 포인트만 노출(내부 KRW, _soFormatPrice 로 현지통화 표시).
+    window._soInitBlogOnly = async function (box) {
+        var sb = getSb(); if (!sb) return;
+        var uid = null;
+        try { var u = await sb.auth.getUser(); uid = u && u.data && u.data.user && u.data.user.id; } catch (e) {}
+        var blogCard = document.getElementById('soDiscBlogCard');
+        if (!uid) { if (blogCard) blogCard.style.display = 'none'; window._soWallet = { ready:false, discChoice:null }; return; }
+        var bal = 0;
+        try { var r = await sb.from('profiles').select('blog_coupon').eq('id', uid).maybeSingle(); bal = parseInt((r.data && r.data.blog_coupon) || 0) || 0; } catch (e) {}
+        if (bal <= 0) { if (blogCard) blogCard.style.display = 'none'; window._soWallet = { ready:false, discChoice:null }; return; }
+        var cart = _soReadAllCart();
+        var calc = _soCalcCartTotal(cart);
+        var grand = Math.max(0, calc.grandTotal || 0);
+        var blogMax = Math.min(bal, grand);
+        window._soWallet = {
+            ready: true, userId: uid,
+            mileageBalKRW: 0, depositBalKRW: 0, eventCouponBalKRW: 0, blogCouponBalKRW: bal,
+            eventMax: 0, mileageMax: 0, depositMax: 0, proMax: 0, blogMax: blogMax,
+            capKRW: 0, discChoice: null, depositOn: false, blogOn: false, excluded: false
+        };
+        ['event_coupon','mileage','deposit','pro'].forEach(function (d) { var c = document.querySelector('.so-disc-card[data-disc="' + d + '"]'); if (c) c.style.display = 'none'; });
+        if (blogCard) {
+            blogCard.style.display = 'flex';
+            var amtEl = document.getElementById('soDiscBlogAmount'); if (amtEl) amtEl.textContent = '-' + _soFormatPrice(blogMax);
+            var hintEl = document.getElementById('soDiscBlogHint'); if (hintEl) hintEl.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(bal);
+            var chkEl = document.getElementById('soDiscBlogChk'); if (chkEl) chkEl.disabled = false;
+        }
+        var lblEl = box ? box.querySelector('.so-co-label') : null;
+        if (lblEl) lblEl.textContent = tr('SNS 이벤트 포인트', 'SNSイベントポイント', 'SNS Event Point');
+        if (box) box.style.display = '';
+        _soApplyWalletToTotal();
+    };
     window._soInitWallet = async function () {
         var box = document.getElementById('soCoWalletBox');
         window._soWallet = { ready: false, discChoice: null };
@@ -19556,9 +19597,10 @@ html, body { background: #ffffff !important; }
         var bd = document.getElementById('soCoWalletBreakdown'); if (bd) bd.innerHTML = '';
         var inp = document.getElementById('soUseMileage'); if (inp) inp.value = '0';
         var chk = document.getElementById('soUseDepositAll'); if (chk) chk.checked = false;
+        var _bchk0 = document.getElementById('soDiscBlogChk'); if (_bchk0) _bchk0.checked = false;
         // 라디오 전부 해제
         document.querySelectorAll('input[name="soDiscChoice"]').forEach(function(r){ r.checked = false; });
-        if ((window.__SITE_CODE || 'KR') !== 'KR') return; // 통화 환산 이슈 — KR 전용
+        if ((window.__SITE_CODE || 'KR') !== 'KR') { await _soInitBlogOnly(box); return; } // 4-box 는 KR 전용(통화이슈). SNS 포인트(블로그체험단, KRW 고정)만 비-KR 에도 노출
         // 2026-06-01: 배너 카트도 4-box 쿠폰/마일리지/예치금/PRO 할인 표시 (사용자 요청 변경).
         //   배너 자체 가격은 여전히 flat (55K/80K) — 볼륨티어 자동할인은 별도 룰.
         // 2026-06-04: hexa-board.com 등 별도 도메인에서도 4-box UI 항상 노출 (비로그인 시 disabled + 로그인 안내)
@@ -19589,13 +19631,14 @@ html, body { background: #ffffff !important; }
         }
         // 2026-06-01: event_coupon 컬럼 분리 — mileage(legacy 5%) / event_coupon(50%, 50k cap) / deposit
         var prof = null;
-        try { var r = await sb.from('profiles').select('mileage, deposit, event_coupon').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
+        try { var r = await sb.from('profiles').select('mileage, deposit, event_coupon, blog_coupon').eq('id', uid).maybeSingle(); prof = r.data; } catch (e) {}
         if (!prof) {
-            // event_coupon 컬럼 미적용 환경 — mileage/deposit 만으로 fallback
+            // event_coupon/blog_coupon 컬럼 미적용 환경 — mileage/deposit 만으로 fallback
             try { var r2 = await sb.from('profiles').select('mileage, deposit').eq('id', uid).maybeSingle(); prof = r2.data; } catch (e) {}
-            if (!prof) prof = { mileage: 0, deposit: 0, event_coupon: 0 };
-            else prof.event_coupon = 0;
+            if (!prof) prof = { mileage: 0, deposit: 0, event_coupon: 0, blog_coupon: 0 };
+            else { prof.event_coupon = 0; prof.blog_coupon = 0; }
         }
+        if (prof && prof.blog_coupon == null) prof.blog_coupon = 0;
         var mileageBal = parseInt(prof.mileage || 0) || 0;
         var depositBal = parseInt(prof.deposit || 0) || 0;
         var eventCouponBal = parseInt(prof.event_coupon || 0) || 0;
@@ -19660,6 +19703,19 @@ html, body { background: #ffffff !important; }
         setCard('pro', 'soDiscProAmount', 'soDiscProHint', isPro ? 1 : 0, proMax,
             isPro ? tr('주문의 10%','注文金額の10%','10% of order') : tr('미구독','未加入','Not subscribed'),
             '원');
+        // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
+        var blogBal = parseInt(prof.blog_coupon || 0) || 0;
+        var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase));
+        window._soWallet.blogCouponBalKRW = blogBal;
+        window._soWallet.blogMax = blogMax;
+        window._soWallet.blogOn = false;
+        var _blogCardK = document.getElementById('soDiscBlogCard');
+        if (blogBal > 0) {
+            if (_blogCardK) _blogCardK.style.display = 'flex';
+            var _bAmt = document.getElementById('soDiscBlogAmount'); if (_bAmt) _bAmt.textContent = '-' + _soFormatPrice(blogMax);
+            var _bHint = document.getElementById('soDiscBlogHint'); if (_bHint) _bHint.textContent = tr('남은 ','残り ','Remaining ') + _soFormatPrice(blogBal);
+            var _bChk = document.getElementById('soDiscBlogChk'); if (_bChk) _bChk.disabled = false;
+        } else if (_blogCardK) { _blogCardK.style.display = 'none'; }
         var exMsg = document.getElementById('soWalletExcludedMsg'); if (exMsg) exMsg.style.display = excluded ? '' : 'none';
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
@@ -19693,7 +19749,10 @@ html, body { background: #ffffff !important; }
         var afterDiscount = Math.max(0, (proSuppressed ? (grand + proDisc) : grand) - useMileage - proApplied);
         // 예치금 — 중복 사용. 남은 결제금액까지.
         var useDeposit = st.depositOn ? Math.min(st.depositBalKRW || 0, afterDiscount) : 0;
-        return { useMileage: useMileage, useDeposit: useDeposit, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
+        // SNS 이벤트 포인트(블로그 체험단) — 예치금과 동일하게 중복 사용, 남은 결제금액(배송비 포함)까지.
+        var afterDeposit = Math.max(0, afterDiscount - useDeposit);
+        var useBlogCoupon = st.blogOn ? Math.min(st.blogCouponBalKRW || 0, afterDeposit) : 0;
+        return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
         var grand = window._soCheckoutGrandTotal || 0;
@@ -19701,7 +19760,7 @@ html, body { background: #ffffff !important; }
         var w = _soGetWalletUseKRW(grand);
         // grand 는 이미 PRO 할인이 빠진 상태. 사용자가 event_coupon/mileage/deposit 을 골랐다면 PRO 가 제외되므로 복원
         var grandAdjusted = w.proSuppressed ? (grand + proDisc) : grand;
-        var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit - (w.proApplied || 0));
+        var finalAmt = Math.max(0, grandAdjusted - w.useMileage - w.useDeposit - (w.useBlogCoupon || 0) - (w.proApplied || 0));
         var totalEl = document.getElementById('soCoTotalAmt');
         if (totalEl) totalEl.textContent = _soFormatPrice(finalAmt);
         var bd = document.getElementById('soCoWalletBreakdown');
@@ -19716,14 +19775,17 @@ html, body { background: #ffffff !important; }
             if (w.source === 'deposit' && w.useDeposit > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· 💰 ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
             }
+            if ((w.useBlogCoupon || 0) > 0) {
+                html += '<div style="display:flex; justify-content:space-between; color:#a855f7;"><span>· 🎟 ' + tr('SNS 이벤트 포인트','SNSイベントポイント','SNS Point') + '</span><span>-' + _soFormatPrice(w.useBlogCoupon) + '</span></div>';
+            }
             if (w.source === 'pro' && (w.proApplied || 0) > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
             }
             if (w.proSuppressed && proDisc > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#9ca3af; font-size:11.5px; font-style:italic;"><span>· ' + tr('PRO 10% 할인 — 위 할인 선택으로 자동 제외','PRO 10%割引 — 上記割引選択により自動除外','PRO 10% — auto-excluded by selected discount') + '</span><span style="text-decoration:line-through;">-' + _soFormatPrice(proDisc) + '</span></div>';
             }
-            // 마일리지/예치금이 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
-            if ((w.useMileage > 0 || w.useDeposit > 0) && finalAmt > 0) {
+            // 마일리지/예치금/SNS포인트가 주문금액보다 모자라면 — 남은 금액은 카드/무통장으로 결제.
+            if ((w.useMileage > 0 || w.useDeposit > 0 || (w.useBlogCoupon || 0) > 0) && finalAmt > 0) {
                 var _pm = (document.querySelector('input[name="soPayMethod"]:checked') || {}).value || 'card';
                 var _pmLabel = _pm === 'bank' ? tr('무통장 입금','銀行振込','Bank transfer') : tr('카드','カード','Card');
                 html += '<div style="display:flex; justify-content:space-between; color:#111827; font-weight:700; border-top:1px dashed #e5e7eb; margin-top:4px; padding-top:4px;"><span>' + _pmLabel + ' ' + tr('결제','決済','payment') + '</span><span>' + _soFormatPrice(finalAmt) + '</span></div>';
@@ -19737,13 +19799,16 @@ html, body { background: #ffffff !important; }
         var v = sel ? sel.value : null;
         var depChk = document.getElementById('soDiscDepositChk');
         var depositOn = !!(depChk && depChk.checked && !depChk.disabled);
+        var blogChk = document.getElementById('soDiscBlogChk');
+        var blogOn = !!(blogChk && blogChk.checked && !blogChk.disabled);
         if (!window._soWallet) window._soWallet = { ready:false };
         window._soWallet.discChoice = v;
         window._soWallet.depositOn = depositOn;
-        // 시각 강조 — 선택된 카드 굵게 (예치금은 독립 체크)
+        window._soWallet.blogOn = blogOn;
+        // 시각 강조 — 선택된 카드 굵게 (예치금·SNS포인트는 독립 체크)
         document.querySelectorAll('.so-disc-card').forEach(function(c){
             var d = c.dataset.disc;
-            var isSel = (d === 'deposit') ? depositOn : (d === v);
+            var isSel = (d === 'deposit') ? depositOn : (d === 'blogcoupon') ? blogOn : (d === v);
             c.style.boxShadow = isSel ? '0 0 0 3px rgba(99,102,241,0.25)' : 'none';
         });
         _soApplyWalletToTotal();
@@ -20338,10 +20403,10 @@ html, body { background: #ffffff !important; }
             window._soCheckoutProDisc = cartCalc.proDisc || 0;
 
             // 2026-05-22: 마일리지/예치금 사용 — KR + 로그인 시. 실제 잔액 재조회로 검증 후 차감은 주문 생성 직후.
-            var _useMileage = 0, _useDeposit = 0, _walletUid = null, _proSuppressed = false, _proApplied = 0;
+            var _useMileage = 0, _useDeposit = 0, _useBlogCoupon = 0, _walletUid = null, _proSuppressed = false, _proApplied = 0;
             if (window._soWallet && window._soWallet.ready) {
                 var _wu = _soGetWalletUseKRW(total);
-                _useMileage = _wu.useMileage; _useDeposit = _wu.useDeposit;
+                _useMileage = _wu.useMileage; _useDeposit = _wu.useDeposit; _useBlogCoupon = _wu.useBlogCoupon || 0;
                 _proSuppressed = !!_wu.proSuppressed;
                 _proApplied = _wu.proApplied || 0;   // 2026-07-08: PRO 카드 선택 시 매니저견적 등 추가 10% 차감분
                 _walletUid = window._soWallet.userId;
@@ -20373,7 +20438,7 @@ html, body { background: #ffffff !important; }
             // 2026-06-01: 쿠폰 사용 시 PRO 할인은 자동 제외 — total 에서 빠져있는 PRO 복원 후 쿠폰 차감
             var _totalForFinal = _proSuppressed ? (total + (cartCalc.proDisc || 0)) : total;
             // 2026-07-08: PRO 카드 추가 할인(_proApplied: 매니저견적 등 auto proDisc 미포함분)도 최종액에서 차감. total_amount 에 녹아 관리자 실입금액에 반영.
-            var _finalTotal = Math.max(0, _totalForFinal - _useMileage - _useDeposit - _proApplied);
+            var _finalTotal = Math.max(0, _totalForFinal - _useMileage - _useDeposit - _useBlogCoupon - _proApplied);
 
             // 카트 항목 → orders.items 형식 (관리자 페이지에서 인식)
             // 동시에 orderRow.files 도 채우기 위해 파일 정보 수집
@@ -20746,9 +20811,11 @@ html, body { background: #ffffff !important; }
             // 2026-06-25: 베스트굿즈/수량 자동 할인 폐지 (사용자 요청) — 요약 표기 제거.
             if (_useMileage > 0) discountSummary += '\n🎁 이벤트 쿠폰 사용 (-' + _useMileage.toLocaleString() + '원, 최대 50,000원 한도)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
-            // 마일리지/예치금으로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
-            var _fullyCovered = (_useMileage > 0 || _useDeposit > 0) && _finalTotal <= 0;
-            var _walletPayLabel = _useDeposit > 0 ? '예치금' : '마일리지';
+            if (_useBlogCoupon > 0) discountSummary += '\nSNS 이벤트 포인트(블로그 체험단) 사용 (-' + _useBlogCoupon.toLocaleString() + '원)';
+            // 마일리지/예치금/SNS포인트로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
+            var _fullyCovered = (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0) && _finalTotal <= 0;
+            // SNS 포인트 사용 시 결제수단 '블로그체험단쿠폰' (매출집계 제외 구분용) 우선
+            var _walletPayLabel = _useBlogCoupon > 0 ? '블로그체험단쿠폰' : (_useDeposit > 0 ? '예치금' : '마일리지');
             // 2026-06-13: 디자인 의뢰 정보 요약 (작업지시서/관리자가 한눈에 보도록)
             var _dreqSummary = '';
             try {
@@ -20788,7 +20855,7 @@ html, body { background: #ffffff !important; }
                 payment_method: _fullyCovered ? _walletPayLabel : (payMethod === 'bank' ? '무통장입금' : '카드'),
                 depositor_name: (!_fullyCovered && payMethod === 'bank') ? depositorName : null,
                 total_amount: _finalTotal,
-                discount_amount: _useMileage + _useDeposit,
+                discount_amount: _useMileage + _useDeposit + _useBlogCoupon,
                 items: items,
                 site_code: _soGetSiteCode(),
                 franchise_slug: _frSlug2,
@@ -20819,7 +20886,7 @@ html, body { background: #ffffff !important; }
                 //   기존엔 마일리지/예치금 쓸 때만 갱신 → 쿠폰·PRO 할인만 쓰면 주문금액이 협의가(full) 그대로 남아
                 //   관리자 실입금액 ≠ 고객 실제 결제액(경리 불일치). 할인 없으면 _finalTotal=협의가라 동일(무해).
                 updateRow.total_amount = _finalTotal;
-                updateRow.discount_amount = _useMileage + _useDeposit;
+                updateRow.discount_amount = _useMileage + _useDeposit + _useBlogCoupon;
                 if (receiptInfo) updateRow.receipt_info = receiptInfo;
                 if (!_fullyCovered && payMethod === 'bank') updateRow.depositor_name = depositorName;
                 // 2026-08-05: 매니저견적을 고객이 결제 → 고객 유입경로 기록(생성은 관리자라 null 이었음)
@@ -20982,7 +21049,7 @@ html, body { background: #ffffff !important; }
             //   - source='deposit'      → profiles.deposit 에서 차감
             //   - source='pro'/null     → 차감 없음 (PRO 는 자동 적용)
             var _walletSource = (window._soWallet && window._soWallet.discChoice) || null;
-            if (_walletUid && (_useMileage > 0 || _useDeposit > 0)) {
+            if (_walletUid && (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0)) {
                 try {
                     if (_useMileage > 0 && _walletSource === 'event_coupon') {
                         // 이벤트 쿠폰 컬럼에서 차감
@@ -21012,6 +21079,11 @@ html, body { background: #ffffff !important; }
                         await sb.from('profiles').update({ deposit: Math.max(0, _cd - _useDeposit) }).eq('id', _walletUid);
                         await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'payment_order', amount: -_useDeposit, description: '간편주문 예치금 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     }
+                    if (_useBlogCoupon > 0) {
+                        // SNS 이벤트 포인트(블로그 체험단) — 서버 RPC 로 원자적 차감 + 원장 기록
+                        var _bcRes = await sb.rpc('blog_coupon_consume', { _order_id: newOrderId, _amount: _useBlogCoupon });
+                        if (_bcRes && _bcRes.error) throw _bcRes.error;
+                    }
                 } catch (we) {
                     console.error('[so wallet deduct]', we);
                     try { await sb.from('orders').update({ admin_note: adminNote + '\n[경고] 마일리지/쿠폰/예치금 차감 실패 — 수동 확인 필요: ' + (we.message || we) }).eq('id', newOrderId); } catch (e2) {}
@@ -21038,6 +21110,7 @@ html, body { background: #ffffff !important; }
                     tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
                     (_useMileage > 0 ? (tr('마일리지', 'マイル', 'Mileage') + ' ' + _useMileage.toLocaleString() + ' P\n') : '') +
                     (_useDeposit > 0 ? (tr('예치금', '預り金', 'Deposit') + ' ' + _useDeposit.toLocaleString() + tr('원', '円', ' KRW') + '\n') : '') +
+                    (_useBlogCoupon > 0 ? (tr('SNS 이벤트 포인트', 'SNSポイント', 'SNS Point') + ' ' + _soFormatPrice(_useBlogCoupon) + '\n') : '') +
                     tr('영업일 내 제작이 시작됩니다.', '営業日内に製作を開始します。', 'Production starts within business days.')
                 );
                 _showLoadingShield();
