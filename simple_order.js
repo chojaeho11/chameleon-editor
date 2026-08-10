@@ -17982,6 +17982,20 @@ html, body { background: #ffffff !important; }
     // ─────────────────────────────────────────────
     // 카트 드로어 — 우측 슬라이드 + 아이템 목록 + 수량 조절
     // ─────────────────────────────────────────────
+    // 2026-08-10: 상단 헤더 장바구니 배지 갱신 (드로어 안 열어도 개수 표시)
+    window._soUpdateHeaderCartCount = function () {
+        try {
+            var n = (typeof _soReadAllCart === 'function' ? _soReadAllCart() : []).length;
+            var el = document.getElementById('soHeaderCartCount');
+            if (el) { el.textContent = n; el.style.display = n > 0 ? '' : 'none'; }
+        } catch (e) {}
+    };
+    try {
+        if (document.readyState !== 'loading') window._soUpdateHeaderCartCount();
+        else document.addEventListener('DOMContentLoaded', function () { window._soUpdateHeaderCartCount(); });
+        window.addEventListener('storage', function (e) { if (!e || !e.key || e.key.indexOf('chameleon_cart') === 0) window._soUpdateHeaderCartCount(); });
+        window.addEventListener('focus', function () { window._soUpdateHeaderCartCount(); });
+    } catch (e) {}
     window._soToggleCart = function(open) {
         const ov = document.getElementById('soCartOverlay');
         const dr = document.getElementById('soCartDrawer');
@@ -18121,6 +18135,8 @@ html, body { background: #ffffff !important; }
 
         countEl && (countEl.textContent = totalCount);
         titleCountEl && (titleCountEl.textContent = '(' + totalCount + ')');
+        // 2026-08-10: 상단 헤더 장바구니 배지 동기화
+        try { var _hcc = document.getElementById('soHeaderCartCount'); if (_hcc) { _hcc.textContent = totalCount; _hcc.style.display = totalCount > 0 ? '' : 'none'; } } catch (e) {}
 
         if (totalCount === 0) {
             list.innerHTML = '<div class="so-cart-empty"><i></i>' +

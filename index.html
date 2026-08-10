@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810190430';
+    var CV = '20260810191046';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -865,6 +865,13 @@ if ('caches' in window) {
         </div>
         
         <div style="flex:1;"></div>
+
+        <!-- 2026-08-10: 상단 장바구니 버튼 (클릭 시 카트 드로어 → 주문하기) -->
+        <button class="btn" id="btnCartTop" onclick="if(window._soToggleCart)window._soToggleCart(true)" style="position:relative; margin-right:5px; background:#fff; border:1px solid #c7d2fe; color:#6366f1; padding:8px 14px; border-radius:8px; font-weight:700;">
+            <span id="cartTopLabel">장바구니</span>
+            <span id="soHeaderCartCount" style="display:none; position:absolute; top:-7px; right:-7px; background:#ef4444; color:#fff; border-radius:980px; min-width:19px; height:19px; line-height:19px; font-size:11px; text-align:center; padding:0 5px; box-sizing:border-box;">0</span>
+        </button>
+        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('cartTopLabel');if(el){el.textContent=(c==='JP')?'カート':(c==='US'||c==='CN'||c==='SA'||c==='ES'||c==='DE'||c==='FR')?'Cart':'장바구니';}try{if(window._soUpdateHeaderCartCount)window._soUpdateHeaderCartCount();}catch(e){}})();</script>
 
         <button class="btn" id="btnHomeTop" onclick="if(typeof window.goHome==='function'){window.goHome()}else{location.href='/'}" style="margin-right:5px; background:#6366f1; border:none; color:#fff; padding:8px 14px; border-radius:8px; font-weight:700;">
     <i class="fa-solid fa-house"></i> <span style="font-weight:bold;">HOME</span>
@@ -10709,7 +10716,7 @@ window.filterFxCards = function(cat, btn) {
 <script type="module" src="./main.js?v=449"></script>
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
-<script src="/simple_order.js?v=848"></script>
+<script src="/simple_order.js?v=849"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->
