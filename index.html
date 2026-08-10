@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810212931';
+    var CV = '20260810213855';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5478,7 +5478,9 @@ function _blogRecruitBuild(jp, loggedIn, status){
     ov.innerHTML = '<div style="position:relative; background:#fff; border-radius:16px; max-width:440px; width:100%; max-height:92vh; overflow-y:auto; color:#334155;">'
         + '<div onclick="_blogRecruitClose()" title="닫기" style="position:absolute; top:10px; right:12px; z-index:3; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.5); color:#fff; font-size:20px; line-height:31px; text-align:center; cursor:pointer; user-select:none;">×</div>'
         + '<img src="'+imgSrc+'" alt="'+title+'" style="width:100%; height:auto; display:block; border-radius:16px 16px 0 0;">'
-        + '<div style="padding:22px 26px 26px;">' + inner + '</div>'
+        + '<div style="padding:22px 26px 26px;">' + inner
+        + '<button onclick="if(window.openSnsRankingModal)openSnsRankingModal()" style="width:100%; margin-top:10px; padding:11px; background:#1c1712; color:#e6c766; border:1px solid #3a2f1e; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer;">🏆 '+(jp?'リアルタイムランキングを見る':'실시간 랭킹 보기')+'</button>'
+        + '</div>'
         + '</div>';
     ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
     document.body.appendChild(ov);
@@ -10722,6 +10724,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
 <script src="/simple_order.js?v=851"></script>
+<script src="/sns-ranking.js?v=1"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->

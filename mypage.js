@@ -267,6 +267,8 @@ function switchTab(tabId) {
 async function loadBlogMonitorTab() {
     const listEl = document.getElementById('blogLinkList');
     if (!listEl) return;
+    // 게임풍 공개 랭킹 (조회수 합산 순위)
+    try { if (window.loadSnsRankingInto) window.loadSnsRankingInto('snsRankMypage'); } catch(e) {}
     // 상태 배너 (잔액 + 다음 지급까지 후기 진행 + Threads)
     try {
         const { data: st } = await sb.rpc('blog_monitor_sync');
