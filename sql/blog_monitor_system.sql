@@ -533,3 +533,30 @@ begin
     'needs_more_posts', (_due and _posts < _needed));
 end; $$;
 grant execute on function public.blog_monitor_sync() to authenticated;
+-- ===== 블로그 체험단 : 6) 이벤트 집계 (admin_m_secret_882 대시보드용) =====
+-- 무료쿠폰은 실매출 아님 → 리포트에서 제외했고, 이벤트 규모는 여기서 별도 집계.
+-- admin_country_report 와 동일하게 anon 에도 grant (secret 대시보드가 anon 으로 RPC 호출).
+create or replace function public.blog_event_summary() returns jsonb
+language sql security definer set search_path = public as $$
+  select jsonb_build_object(
+    'granted_total', (select coalesce(sum(amount),0) from blog_coupon_usages where kind='grant'),
+    'used_total',    (select coalesce(sum(amount),0) from blog_coupon_usages where kind='use'),
+    'order_count',   (select count(*) from orders
+                        where normalize(coalesce(payment_method,''), nfc) = normalize('블로그체험단쿠폰', nfc)),
+    'order_amount',  (select coalesce(sum(total_amount),0) from orders
+                        where normalize(coalesce(payment_method,''), nfc) = normalize('블로그체험단쿠폰', nfc)),
+    'member_count',  (select count(*) from blog_monitors where status='approved'),
+    'pending_count', (select count(*) from blog_monitors where status='pending'),
+    'threads_count', (select count(*) from blog_monitors where status='approved' and is_threads),
+    'members', (select coalesce(jsonb_agg(x order by x.used desc), '[]'::jsonb) from (
+        select m.name, m.is_threads,
+          (select coalesce(sum(u.amount),0) from blog_coupon_usages u where u.user_id=m.user_id and u.kind='use') as used,
+          (select count(*) from orders o where o.user_id=m.user_id
+             and normalize(coalesce(o.payment_method,''), nfc)=normalize('블로그체험단쿠폰', nfc)) as orders
+        from blog_monitors m where m.status='approved'
+      ) x)
+  );
+$$;
+grant execute on function public.blog_event_summary() to anon, authenticated;
+
+select public.blog_event_summary() as summary;
