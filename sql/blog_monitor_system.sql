@@ -620,3 +620,178 @@ begin
   return jsonb_build_object('ok', true, 'status', 'pending', 'is_threads', _threads);
 end; $$;
 grant execute on function public.blog_monitor_apply(text, text) to authenticated;
+-- ===== SNS 체험단 금액 변경(5만/10만) + 월간 조회수 랭킹 현금이벤트 =====
+
+-- (A) 지급액 변경: 일반 5만, Threads 10만 (기존 10만/20만 → 절반)
+update public.blog_monitors set monthly_amount = case when is_threads then 100000 else 50000 end;
+
+-- 신규 신청 즉시승인 금액도 변경 (blog_monitor_apply 의 _monthly 만 수정)
+create or replace function public.blog_monitor_apply(_channel_url text, _country text default null) returns jsonb
+language plpgsql security definer as $$
+declare
+  _uid uuid := auth.uid();
+  _mail text; _uname text; _name text;
+  _exist public.blog_monitors%rowtype;
+  _threads boolean; _monthly int;
+  _auto boolean; _cycle text := public._blog_current_cycle();
+  _mid uuid;
+begin
+  if _uid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if coalesce(trim(_channel_url),'') = '' then return jsonb_build_object('ok', false, 'error', 'channel_required'); end if;
+  select email, username into _mail, _uname from public.profiles where id = _uid;
+  _name := coalesce(_uname, split_part(coalesce(_mail,''),'@',1));
+  _threads := (_channel_url ~* 'threads\.(net|com)');
+  _monthly := case when _threads then 100000 else 50000 end;   -- 변경: 5만 / Threads 10만
+  _auto := (upper(coalesce(_country,'')) in ('KR','JP'));
+
+  select * into _exist from public.blog_monitors
+    where user_id = _uid or lower(id_key) = lower(coalesce(_mail,'')) limit 1;
+  if found then
+    if _exist.status = 'approved' then
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads,
+        monthly_amount=_monthly, user_id=coalesce(user_id,_uid) where id=_exist.id;
+      return jsonb_build_object('ok', true, 'status', 'approved', 'already', true);
+    end if;
+    _mid := _exist.id;
+    if _auto then
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads, monthly_amount=_monthly,
+        user_id=coalesce(user_id,_uid), name=coalesce(name,_name), status='approved', is_active=true,
+        approved_at=now(), applied_at=coalesce(applied_at,now()), last_grant_cycle=_cycle, last_grant_at=now() where id=_mid;
+    else
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads, monthly_amount=_monthly,
+        user_id=coalesce(user_id,_uid), name=coalesce(name,_name), status='pending', applied_at=now(), is_active=false where id=_mid;
+    end if;
+  else
+    insert into public.blog_monitors(user_id, name, id_key, channel_url, is_threads, monthly_amount, is_active, status, applied_at, approved_at, last_grant_cycle, last_grant_at)
+      values (_uid, _name, coalesce(_mail, _uid::text), _channel_url, _threads, _monthly,
+              _auto, case when _auto then 'approved' else 'pending' end, now(),
+              case when _auto then now() else null end,
+              case when _auto then _cycle else null end,
+              case when _auto then now() else null end)
+      returning id into _mid;
+  end if;
+
+  if _auto then
+    update public.profiles set blog_coupon = coalesce(blog_coupon,0) + _monthly where id = _uid;   -- 트리거가 mileage 로 흡수
+    insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+      values (_uid, null, _monthly, 'grant', _cycle);
+    return jsonb_build_object('ok', true, 'status', 'approved', 'granted', _monthly, 'is_threads', _threads);
+  end if;
+  return jsonb_build_object('ok', true, 'status', 'pending', 'is_threads', _threads);
+end; $$;
+grant execute on function public.blog_monitor_apply(text,text) to authenticated;
+
+-- (B) 조회수(뷰) 컬럼 + 링크 제출/조회 RPC 에 views 반영
+alter table public.blog_monitor_links add column if not exists views integer not null default 0;
+
+create or replace function public.blog_link_add(_url text, _memo text, _views int default 0) returns jsonb
+language plpgsql security definer as $$
+declare _uid uuid := auth.uid(); _list jsonb;
+begin
+  if _uid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if not exists(select 1 from public.blog_monitors where user_id = _uid and is_active = true) then
+    return jsonb_build_object('ok', false, 'error', 'not_monitor');
+  end if;
+  if coalesce(trim(_url),'') = '' then return jsonb_build_object('ok', false, 'error', 'empty'); end if;
+  insert into public.blog_monitor_links(user_id, url, memo, views) values (_uid, trim(_url), _memo, greatest(0, coalesce(_views,0)));
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'url',url,'memo',memo,'views',views,'admin_checked',admin_checked,'created_at',created_at) order by created_at desc), '[]'::jsonb)
+    into _list from public.blog_monitor_links where user_id = _uid;
+  return jsonb_build_object('ok', true, 'links', _list);
+end; $$;
+grant execute on function public.blog_link_add(text,text,int) to authenticated;
+
+create or replace function public.blog_my_links() returns jsonb
+language plpgsql security definer as $$
+declare _uid uuid := auth.uid(); _list jsonb;
+begin
+  if _uid is null then return '[]'::jsonb; end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'url',url,'memo',memo,'views',views,'admin_checked',admin_checked,'created_at',created_at) order by created_at desc), '[]'::jsonb)
+    into _list from public.blog_monitor_links where user_id = _uid;
+  return _list;
+end; $$;
+
+-- (C) 월간 조회수 랭킹 + 현금상금 지급 기록
+create table if not exists public.blog_view_payouts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  month text,          -- 'YYYY-MM' (JST 달력월)
+  rnk integer,
+  amount integer,
+  paid_at timestamptz default now()
+);
+create unique index if not exists uq_blog_view_payout on public.blog_view_payouts(user_id, month);
+
+-- 관리자용: 이번 달(JST 달력월) 회원별 조회수 합산 랭킹 (승인=한국/일본 회원만)
+create or replace function public.blog_view_ranking(_month text default null) returns jsonb
+language plpgsql security definer as $$
+declare _mon text := coalesce(_month, to_char((now() at time zone 'Asia/Tokyo'), 'YYYY-MM')); _res jsonb;
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  select jsonb_build_object('month', _mon,
+    'prizes', jsonb_build_array(1000000,500000,250000,100000,50000),
+    'ranking', coalesce(jsonb_agg(to_jsonb(r) order by r.total_views desc, r.name), '[]'::jsonb))
+  into _res
+  from (
+    select bm.id as monitor_id, bm.user_id, bm.name, bm.is_threads, bm.channel_url,
+      (select coalesce(sum(l.views),0) from public.blog_monitor_links l
+         where l.user_id = bm.user_id
+           and to_char((l.created_at at time zone 'Asia/Tokyo'),'YYYY-MM') = _mon) as total_views,
+      (select count(*) from public.blog_monitor_links l
+         where l.user_id = bm.user_id
+           and to_char((l.created_at at time zone 'Asia/Tokyo'),'YYYY-MM') = _mon) as link_count,
+      (select coalesce(max(amount),0) from public.blog_view_payouts p where p.user_id=bm.user_id and p.month=_mon) as paid_amount
+    from public.blog_monitors bm
+    where bm.status='approved' and bm.user_id is not null
+  ) r
+  where r.total_views > 0;
+  return _res;
+end; $$;
+grant execute on function public.blog_view_ranking(text) to authenticated;
+
+-- 관리자용: 상금 지급 기록(현금은 별도 지급, 여기선 지급확정만 기록)
+create or replace function public.blog_view_payout(_user_id uuid, _month text, _rnk int, _amount int) returns jsonb
+language plpgsql security definer as $$
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  insert into public.blog_view_payouts(user_id, month, rnk, amount, paid_at)
+    values (_user_id, _month, _rnk, _amount, now())
+  on conflict (user_id, month) do update set rnk=excluded.rnk, amount=excluded.amount, paid_at=now();
+  return jsonb_build_object('ok', true);
+end; $$;
+grant execute on function public.blog_view_payout(uuid,text,int,int) to authenticated;
+
+-- admin_list 의 links 에 views 포함 (관리자 상세에서 조회수 표시)
+create or replace function public.blog_monitor_admin_list() returns jsonb
+language plpgsql security definer as $$
+declare _cycle text := public._blog_current_cycle(); _res jsonb;
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  select jsonb_build_object('cycle', _cycle,
+           'monitors', coalesce(jsonb_agg(to_jsonb(m) order by (m.status='pending') desc, m.created_at), '[]'::jsonb))
+  into _res
+  from (
+    select bm.id, bm.name, bm.id_key, bm.user_id, bm.monthly_amount, bm.is_active, bm.status,
+           bm.channel_url, bm.is_threads, bm.last_grant_cycle, bm.last_grant_at, bm.created_at,
+           coalesce(p.mileage,0) as balance,
+           coalesce(p.email, au.email) as email,
+           (bm.user_id is not null) as linked,
+           (select count(*) from public.blog_monitor_links l3
+              where l3.user_id=bm.user_id and l3.created_at > coalesce(bm.last_grant_at,'epoch'::timestamptz)) as posts_since_grant,
+           (select coalesce(sum(amount),0) from public.blog_coupon_usages u
+              where u.user_id=bm.user_id and u.kind='use') as total_used,
+           (select coalesce(sum(amount),0) from public.blog_coupon_usages u
+              where u.user_id=bm.user_id and u.kind='use' and u.cycle=_cycle) as cycle_used,
+           (select coalesce(jsonb_agg(jsonb_build_object('id',l.id,'url',l.url,'memo',l.memo,'views',l.views,
+                     'admin_checked',l.admin_checked,'created_at',l.created_at) order by l.created_at desc), '[]'::jsonb)
+              from public.blog_monitor_links l where l.user_id=bm.user_id) as links,
+           (select coalesce(jsonb_agg(jsonb_build_object('amount',u.amount,'kind',u.kind,
+                     'order_id',u.order_id,'cycle',u.cycle,'created_at',u.created_at) order by u.created_at desc), '[]'::jsonb)
+              from public.blog_coupon_usages u where u.user_id=bm.user_id) as usages
+    from public.blog_monitors bm
+    left join public.profiles p on p.id = bm.user_id
+    left join auth.users au on au.id = bm.user_id
+  ) m;
+  return _res;
+end; $$;
+
+select 'done' as step, (select string_agg(distinct monthly_amount::text, ',') from public.blog_monitors) as amounts;

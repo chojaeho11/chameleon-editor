@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810211544';
+    var CV = '20260810212931';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5440,26 +5440,31 @@ function _blogRecruitBuild(jp, loggedIn, status){
     ov.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100000; display:flex; align-items:center; justify-content:center; padding:20px;';
     var title = jp ? 'ブログ体験モニター募集' : '블로그 체험단 모집';
     var intro = jp
-        ? 'SNS体験団の皆さまに毎月10,000円分（送料込み）の無料クーポンを進呈します。お好きな商品を無料で購入し、ブログにレビューを書いてください。未使用分は繰り越されず、毎月あらたに満額チャージされます。'
-        : 'SNS 체험단에게 매월 10만원(배송비 포함)의 무료쿠폰을 드립니다. 원하는 제품을 무료로 구매하고 블로그에 후기를 남겨주세요. 미사용분은 이월되지 않고 매월 새롭게 가득 충전됩니다.';
+        ? 'SNS体験団の皆さまに毎月5,000円分（送料込み）の無料ポイントを進呈します。お好きな商品を無料で購入し、SNS・ブログにPRレビューを投稿してください。'
+        : 'SNS 체험단에게 매월 5만 포인트(배송비 포함)를 드립니다. 원하는 제품을 무료로 구매하고 SNS·블로그에 홍보 후기를 남겨주세요.';
     var threadsMsg = jp
-        ? '🧵 Threads ユーザーは特典2倍！<br><br>- 応援イベント クーポン20,000円分！'
-        : '🧵 스레드(Threads) 이용자는 혜택 2배!<br><br>- 응원 이벤트 쿠폰 20만원!';
+        ? '🧵 Threads ユーザーは特典2倍！<br><br>- 応援イベント ポイント10,000円分！'
+        : '🧵 스레드(Threads) 이용자는 혜택 2배!<br><br>- 응원 이벤트 포인트 10만!';
+    var rankMsg = jp
+        ? '🏆 毎月 閲覧数ランキング現金イベント<br>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円！'
+        : '🏆 매월 조회수 랭킹 현금 이벤트<br>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원!';
     var btnStyle='width:100%; padding:12px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;';
     var inner='';
     if (!loggedIn) {
         inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:14px;">'+intro+'</div>'
-              + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:16px; line-height:1.6;">'+threadsMsg+'</div>'
+              + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.6;">'+threadsMsg+'</div>'
+              + '<div style="background:#fff7ed; color:#7c2d12; border:1px solid #fdba74; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; line-height:1.6;">'+rankMsg+'</div>'
               + '<button onclick="_blogRecruitLogin()" style="'+btnStyle+'">'+(jp?'ログインして応募':'로그인하고 신청')+'</button>';
     } else if (status==='approved') {
-        inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:16px;">'+(jp?'🎉 体験モニターに承認されました！マイページでクーポン（10,000円分）をご確認ください。':'🎉 체험단으로 승인되었습니다! 마이페이지에서 쿠폰(10만원)을 확인하세요.')+'</div>'
+        inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:16px;">'+(jp?'🎉 体験モニターに承認されました！マイページでポイント（5,000円分）をご確認ください。':'🎉 체험단으로 승인되었습니다! 마이페이지에서 포인트(5만)를 확인하세요.')+'</div>'
               + '<button onclick="location.href=\'mypage.html\'" style="'+btnStyle+'">'+(jp?'マイページへ':'마이페이지로')+'</button>';
     } else if (status==='pending') {
         inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:16px;">'+(jp?'応募を受け付けました。承認までしばらくお待ちください。承認されるとマイページにクーポンが表示されます。':'신청이 접수되었습니다. 승인을 기다려 주세요. 승인되면 마이페이지에 쿠폰이 표시됩니다.')+'</div>'
               + '<button onclick="_blogRecruitClose()" style="'+btnStyle+'">'+(jp?'閉じる':'닫기')+'</button>';
     } else {
         inner = '<div style="font-size:13.5px; line-height:1.75; margin-bottom:12px;">'+intro+'</div>'
-              + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:16px; line-height:1.6;">'+threadsMsg+'</div>'
+              + '<div style="background:#111; color:#fff; border-radius:10px; padding:12px 14px; font-size:13px; margin-bottom:12px; line-height:1.6;">'+threadsMsg+'</div>'
+              + '<div style="background:#fff7ed; color:#7c2d12; border:1px solid #fdba74; border-radius:10px; padding:12px 14px; font-size:12.5px; margin-bottom:16px; line-height:1.6;">'+rankMsg+'</div>'
               + '<div style="font-size:12.5px; color:#334155; margin-bottom:6px;">'+(jp?'あなたの宣伝チャンネルURL（ブログ / Threads / Instagram など）':'홍보채널 주소 (블로그 / 스레드 / 인스타 등)')+'</div>'
               + '<input id="blogApplyChannel" type="url" placeholder="https://..." style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box;">'
               + '<button id="blogApplyBtn" onclick="_blogRecruitApply()" style="'+btnStyle+'">'+(jp?'応募する':'신청하기')+'</button>'

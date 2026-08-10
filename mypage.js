@@ -323,9 +323,12 @@ function renderBlogLinkList(links) {
             : '<span style="color:#94a3b8; font-size:12px;">' + window.t('mp_blog_pending', '확인 대기') + '</span>';
         const safeUrl = String(l.url || '').replace(/"/g, '%22');
         const safeMemo = l.memo ? String(l.memo).replace(/[<>&]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}) : '';
+        const views = parseInt(l.views) || 0;
+        const viewsLbl = (window.__SITE_CODE === 'JP') ? '閲覧数 ' : '조회수 ';
         return '<div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px;">'
              + '<div style="flex:1; min-width:0;">'
              +   '<a href="' + safeUrl + '" target="_blank" rel="noopener" style="color:#7c3aed; word-break:break-all; font-size:13px;">' + safeUrl + '</a>'
+             +   '<div style="color:#f59e0b; font-size:12px; margin-top:3px; font-weight:700;">' + viewsLbl + views.toLocaleString() + '</div>'
              +   (safeMemo ? '<div style="color:#64748b; font-size:12px; margin-top:3px;">' + safeMemo + '</div>' : '')
              +   '<div style="color:#94a3b8; font-size:11px; margin-top:3px;">' + dt + '</div>'
              + '</div>'
@@ -337,17 +340,20 @@ function renderBlogLinkList(links) {
 async function submitBlogLink() {
     const urlEl = document.getElementById('blogLinkUrl');
     const memoEl = document.getElementById('blogLinkMemo');
+    const viewsEl = document.getElementById('blogLinkViews');
     const btn = document.getElementById('blogLinkSubmitBtn');
     const url = (urlEl && urlEl.value || '').trim();
     if (!url) { if (window.showToast) showToast(window.t('mp_blog_url_required', '블로그 링크를 입력해 주세요.'), 'warn'); return; }
     if (!/^https?:\/\//i.test(url)) { if (window.showToast) showToast(window.t('mp_blog_url_invalid', 'http(s):// 로 시작하는 올바른 링크를 입력해 주세요.'), 'warn'); return; }
     if (btn) { btn.disabled = true; btn.textContent = window.t('mp_blog_submitting', '제출 중...'); }
     try {
-        const { data, error } = await sb.rpc('blog_link_add', { _url: url, _memo: (memoEl && memoEl.value || '').trim() || null });
+        const _views = viewsEl ? (parseInt(viewsEl.value) || 0) : 0;
+        const { data, error } = await sb.rpc('blog_link_add', { _url: url, _memo: (memoEl && memoEl.value || '').trim() || null, _views: _views });
         if (error) throw error;
         if (!data || !data.ok) throw new Error(data && data.error === 'not_monitor' ? window.t('mp_blog_not_monitor', '체험단 회원만 제출할 수 있습니다.') : (data && data.error) || 'error');
         if (urlEl) urlEl.value = '';
         if (memoEl) memoEl.value = '';
+        if (viewsEl) viewsEl.value = '';
         renderBlogLinkList(Array.isArray(data.links) ? data.links : []);
         if (window.showToast) showToast(window.t('mp_blog_submitted', '링크가 제출되었습니다. 감사합니다!'), 'success');
     } catch(e) {

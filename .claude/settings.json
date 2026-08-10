@@ -398,7 +398,10 @@
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\q_verify.sql\")",
       "Bash(./deploy.sh \"order.js legacy cart: unify point usage - remove 5% mileage cap \\(points cover full incl shipping\\), add point-full-cover bypass \\(no PG when total=0\\), payment_method '포인트' \\(order.js v737\\)\")",
       "Bash(sed -i 's#global_stats.js?v=436#global_stats.js?v=437#g' order_management.html)",
-      "Bash(./deploy.sh \"revenue stats: exclude point-paid \\('포인트'\\) and free-coupon orders from revenue everywhere \\(매출통계 + settlement + country report\\), and show them separately as 'point payment \\(excluded\\)' total+count \\(global_stats v437\\)\")"
+      "Bash(./deploy.sh \"revenue stats: exclude point-paid \\('포인트'\\) and free-coupon orders from revenue everywhere \\(매출통계 + settlement + country report\\), and show them separately as 'point payment \\(excluded\\)' total+count \\(global_stats v437\\)\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\blog9_snsevent.sql\")",
+      "Bash(sed -i 's#mypage.js?v=287#mypage.js?v=288#g' mypage.html)",
+      "Bash(./deploy.sh \"SNS monitor: reward 50k/Threads 100k \\(was 100k/200k\\); add monthly SNS view-count ranking cash event \\(1st 100man..5th 5man, KR/JP\\), members enter view counts in mypage, admin ranking+payout in blog-monitor tab; full JP translations \\(mypage v288\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",
