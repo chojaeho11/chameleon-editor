@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810180423';
+    var CV = '20260810180753';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5410,8 +5410,8 @@ window.addEventListener('load', function() {
     html[data-site="JP"] #blogRecruitBanner .brb-ja{ display:block; }
 </style>
 <div id="blogRecruitBanner" onclick="openBlogRecruitInfo()" title="클릭해서 신청하기">
-    <img class="brb-ko" src="/sns_recruit_kr.jpg?v=2" alt="카멜레온프린팅 SNS 체험단 모집" loading="lazy">
-    <img class="brb-ja" src="/sns_recruit_jp.jpg?v=2" alt="カメレオンプリンティング SNS体験団 募集" loading="lazy">
+    <img class="brb-ko" src="/sns_recruit_kr.jpg?v=3" alt="카멜레온프린팅 SNS 체험단 모집" loading="lazy">
+    <img class="brb-ja" src="/sns_recruit_jp.jpg?v=3" alt="カメレオンプリンティング SNS体験団 募集" loading="lazy">
 </div>
 <script>
 function _blogRecruitClose(){ var m=document.getElementById('blogRecruitModal'); if(m) m.remove(); }
@@ -5461,9 +5461,11 @@ function _blogRecruitBuild(jp, loggedIn, status){
               +   '<span onclick="_blogRecruitHide(30)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'1ヶ月間表示しない':'한 달간 보지 않기')+'</span>'
               + '</div>';
     }
-    ov.innerHTML = '<div style="background:#fff; border-radius:16px; max-width:440px; width:100%; padding:26px; color:#334155;">'
-        + '<div style="font-size:18px; font-weight:800; color:#7c3aed; margin-bottom:14px;">'+title+'</div>'
-        + inner + '</div>';
+    var imgSrc = jp ? '/sns_recruit_jp.jpg?v=3' : '/sns_recruit_kr.jpg?v=3';
+    ov.innerHTML = '<div style="background:#fff; border-radius:16px; max-width:440px; width:100%; max-height:92vh; overflow-y:auto; color:#334155;">'
+        + '<img src="'+imgSrc+'" alt="'+title+'" style="width:100%; height:auto; display:block; border-radius:16px 16px 0 0;">'
+        + '<div style="padding:22px 26px 26px;">' + inner + '</div>'
+        + '</div>';
     ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
     document.body.appendChild(ov);
 }
