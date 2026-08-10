@@ -28,22 +28,22 @@
         var rank = data.ranking || [];
         var css = ''
             + '<style>'
-            + '.snsrk{background:linear-gradient(180deg,#1c1712,#0f0c09);border:1px solid #3a2f1e;border-radius:14px;padding:16px 14px;color:#e8dcc0;font-family:inherit;}'
-            + '.snsrk-h{display:flex;align-items:center;gap:8px;margin:0 6px 12px;}'
-            + '.snsrk-h b{font-size:17px;color:#e6c766;letter-spacing:.5px;}'
-            + '.snsrk-h .mo{font-size:12px;color:#9a8c6a;margin-left:auto;}'
+            + '.snsrk{background:linear-gradient(180deg,#ffffff,#fdf4ff);border:2px solid #f5d0fe;border-radius:18px;padding:18px 15px;color:#6b4d7a;font-family:inherit;}'
+            + '.snsrk-h{display:flex;align-items:center;gap:8px;margin:0 6px 14px;}'
+            + '.snsrk-h b{font-size:18px;color:#c026d3;letter-spacing:.3px;}'
+            + '.snsrk-h .mo{font-size:12px;color:#c084bc;margin-left:auto;background:#fce7f3;border-radius:980px;padding:2px 10px;}'
             + '.snsrk table{width:100%;border-collapse:collapse;font-size:13px;}'
-            + '.snsrk thead th{color:#9a8c6a;font-weight:600;font-size:11.5px;text-align:left;padding:8px 10px;border-bottom:1px solid #3a2f1e;letter-spacing:.4px;}'
-            + '.snsrk tbody td{padding:11px 10px;border-bottom:1px solid #241d14;}'
-            + '.snsrk tbody tr.top{background:linear-gradient(90deg,rgba(230,199,102,.10),transparent);}'
-            + '.snsrk .rk{font-weight:800;font-size:15px;width:44px;text-align:center;}'
-            + '.snsrk .nm{color:#f0e7d0;font-weight:600;}'
-            + '.snsrk .vw{text-align:right;color:#e6c766;font-weight:800;font-size:15px;}'
-            + '.snsrk .ct{text-align:center;color:#bcae8c;}'
-            + '.snsrk .pz{text-align:right;color:#ffd97a;font-weight:700;}'
-            + '.snsrk .th{display:inline-block;background:#000;color:#fff;border-radius:4px;padding:0 5px;font-size:9px;margin-left:5px;vertical-align:middle;}'
-            + '.snsrk-note{margin:12px 6px 2px;font-size:11px;color:#8a7c5c;text-align:center;}'
-            + '.snsrk-empty{padding:34px 10px;text-align:center;color:#9a8c6a;font-size:13px;}'
+            + '.snsrk thead th{color:#b07cc0;font-weight:700;font-size:11.5px;text-align:left;padding:8px 10px;border-bottom:2px solid #fae8ff;letter-spacing:.3px;}'
+            + '.snsrk tbody td{padding:12px 10px;border-bottom:1px solid #faf0ff;}'
+            + '.snsrk tbody tr.top{background:linear-gradient(90deg,#fdf2fb,transparent);}'
+            + '.snsrk tbody tr.top td:first-child{border-left:3px solid #f0abfc;}'
+            + '.snsrk .rk{font-weight:800;font-size:16px;width:44px;text-align:center;}'
+            + '.snsrk .nm{color:#5b3b6e;font-weight:700;}'
+            + '.snsrk .vw{text-align:right;color:#c026d3;font-weight:800;font-size:16px;}'
+            + '.snsrk .pz{text-align:right;color:#ea580c;font-weight:800;}'
+            + '.snsrk .th{display:inline-block;background:#a21caf;color:#fff;border-radius:6px;padding:0 6px;font-size:9px;margin-left:5px;vertical-align:middle;}'
+            + '.snsrk-note{margin:14px 6px 2px;font-size:11.5px;color:#c084bc;text-align:center;}'
+            + '.snsrk-empty{padding:34px 10px;text-align:center;color:#c084bc;font-size:13.5px;}'
             + '</style>';
         var head = '<div class="snsrk"><div class="snsrk-h"><b>🏆 ' + esc(T.title) + '</b><span class="mo">' + esc(data.month || '') + '</span></div>';
         if (!rank.length) {
@@ -87,10 +87,10 @@
         if (ov) ov.remove();
         ov = document.createElement('div');
         ov.id = 'snsRankModal';
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(88,28,110,.42);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;';
         ov.innerHTML = '<div style="max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">'
-            + '<div id="snsRankModalBody"><div style="padding:40px;text-align:center;color:#9a8c6a;">' + esc(T.loading) + '</div></div>'
-            + '<button onclick="document.getElementById(\'snsRankModal\').remove()" style="margin-top:12px;width:100%;padding:12px;background:#2a2118;color:#e6c766;border:1px solid #3a2f1e;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">' + esc(T.close) + '</button>'
+            + '<div id="snsRankModalBody"><div style="padding:40px;text-align:center;color:#c084bc;background:#fff;border-radius:18px;">' + esc(T.loading) + '</div></div>'
+            + '<button onclick="document.getElementById(\'snsRankModal\').remove()" style="margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#f9a8d4,#c084fc);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;">' + esc(T.close) + '</button>'
             + '</div>';
         ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
         document.body.appendChild(ov);
