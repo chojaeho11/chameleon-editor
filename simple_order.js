@@ -19750,8 +19750,11 @@ html, body { background: #ffffff !important; }
         // 예치금 — 중복 사용. 남은 결제금액까지.
         var useDeposit = st.depositOn ? Math.min(st.depositBalKRW || 0, afterDiscount) : 0;
         // SNS 이벤트 포인트(블로그 체험단) — 예치금과 동일하게 중복 사용, 남은 결제금액(배송비 포함)까지.
+        // 2026-08-10: state/DOM desync 로 인한 '미선택인데 0원' 방지 — 체크박스 라이브 상태를 단일 기준으로 판정.
         var afterDeposit = Math.max(0, afterDiscount - useDeposit);
-        var useBlogCoupon = st.blogOn ? Math.min(st.blogCouponBalKRW || 0, afterDeposit) : 0;
+        var _bcChkLive = document.getElementById('soDiscBlogChk');
+        var _blogOnLive = !!(_bcChkLive && _bcChkLive.checked && !_bcChkLive.disabled);
+        var useBlogCoupon = _blogOnLive ? Math.min(st.blogCouponBalKRW || 0, afterDeposit) : 0;
         return { useMileage: useMileage, useDeposit: useDeposit, useBlogCoupon: useBlogCoupon, source: source, proSuppressed: proSuppressed, proApplied: proApplied };
     }
     function _soApplyWalletToTotal() {
