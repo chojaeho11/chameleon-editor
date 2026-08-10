@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260810171025';
+    var CV = '20260810173354';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -341,10 +341,12 @@
 
         <div id="tab-blog" class="mp-section">
             <h3 data-i18n="mp_blog_title">블로그 체험단</h3>
-            <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px; margin:14px 0 22px; color:#475569; font-size:13px; line-height:1.7;">
+            <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px; margin:14px 0 16px; color:#475569; font-size:13px; line-height:1.7;">
                 <div style="color:#a855f7; font-size:15px; margin-bottom:6px;" data-i18n="mp_blog_intro_title">매월 10일, 무료쿠폰이 새롭게 채워집니다</div>
-                <span data-i18n="mp_blog_intro_desc">제품을 무료로 구매(배송비 포함)하고 블로그에 후기를 남겨주세요. 작성하신 후기 링크를 아래에 등록해 주시면 확인 후 반영됩니다.</span>
+                <span data-i18n="mp_blog_intro_desc">제품을 무료로 구매(배송비 포함)하고 블로그에 후기를 남겨주세요. 다음 달 쿠폰을 받으려면 후기 링크를 최소 2개 등록해야 합니다.</span>
             </div>
+
+            <div id="blogMonStatus" style="margin-bottom:22px;"></div>
 
             <div style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
                 <div style="font-size:14px; color:#334155; margin-bottom:12px;" data-i18n="mp_blog_submit_title">후기 링크 등록</div>
@@ -475,7 +477,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=285"></script>
+    <script type="module" src="./mypage.js?v=286"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

@@ -301,3 +301,235 @@ select bm.name, bm.id_key, (bm.user_id is not null) as linked,
 from public.blog_monitors bm
 left join public.profiles p on p.id = bm.user_id
 order by bm.created_at;
+-- ===== 블로그 체험단 : 4) 신청/승인 + Threads 2배 + 후기 2개 재지급 게이트 =====
+alter table public.blog_monitors add column if not exists status text not null default 'approved';   -- 'pending'|'approved'|'rejected'
+alter table public.blog_monitors add column if not exists channel_url text;
+alter table public.blog_monitors add column if not exists is_threads boolean not null default false;
+alter table public.blog_monitors add column if not exists last_grant_at timestamptz;
+alter table public.blog_monitors add column if not exists applied_at timestamptz;
+alter table public.blog_monitors add column if not exists approved_at timestamptz;
+
+-- 기존(시드) 회원: 이미 지급된 회차는 last_grant_at 채워 다음 회차부터 2개 게이트 적용
+update public.blog_monitors set last_grant_at = now()
+  where last_grant_cycle is not null and last_grant_at is null;
+
+-- 신청: 로그인 회원이 홍보채널 URL 제출 → pending. Threads URL 이면 2배(20만).
+create or replace function public.blog_monitor_apply(_channel_url text) returns jsonb
+language plpgsql security definer as $$
+declare
+  _uid uuid := auth.uid();
+  _mail text; _uname text; _name text;
+  _exist public.blog_monitors%rowtype;
+  _threads boolean; _monthly int;
+begin
+  if _uid is null then return jsonb_build_object('ok', false, 'error', 'auth'); end if;
+  if coalesce(trim(_channel_url),'') = '' then return jsonb_build_object('ok', false, 'error', 'channel_required'); end if;
+  select email, username into _mail, _uname from public.profiles where id = _uid;
+  _name := coalesce(_uname, split_part(coalesce(_mail,''),'@',1));
+  _threads := (_channel_url ~* 'threads\.(net|com)');
+  _monthly := case when _threads then 200000 else 100000 end;
+
+  select * into _exist from public.blog_monitors
+    where user_id = _uid or lower(id_key) = lower(coalesce(_mail,'')) limit 1;
+  if found then
+    if _exist.status = 'approved' then
+      update public.blog_monitors set channel_url=_channel_url, is_threads=_threads,
+        monthly_amount=greatest(monthly_amount, _monthly), user_id=coalesce(user_id,_uid) where id=_exist.id;
+      return jsonb_build_object('ok', true, 'status', 'approved', 'already', true);
+    else
+      update public.blog_monitors set status='pending', channel_url=_channel_url, is_threads=_threads,
+        monthly_amount=_monthly, user_id=coalesce(user_id,_uid), name=coalesce(name,_name),
+        applied_at=now(), is_active=false where id=_exist.id;
+      return jsonb_build_object('ok', true, 'status', 'pending', 'is_threads', _threads);
+    end if;
+  else
+    insert into public.blog_monitors(user_id, name, id_key, channel_url, is_threads, monthly_amount, is_active, status, applied_at)
+      values (_uid, _name, coalesce(_mail, _uid::text), _channel_url, _threads, _monthly, false, 'pending', now());
+    return jsonb_build_object('ok', true, 'status', 'pending', 'is_threads', _threads);
+  end if;
+end; $$;
+
+-- 승인/거절 (관리자). 승인 시 즉시 지급(첫 지급 — 후기 게이트 면제).
+create or replace function public.blog_monitor_approve(_id uuid, _approve bool) returns jsonb
+language plpgsql security definer as $$
+declare _m public.blog_monitors%rowtype; _cycle text := public._blog_current_cycle();
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  select * into _m from public.blog_monitors where id = _id;
+  if not found then return jsonb_build_object('ok', false, 'error', 'not_found'); end if;
+  if _approve then
+    update public.blog_monitors set status='approved', is_active=true, approved_at=now(),
+      last_grant_cycle=_cycle, last_grant_at=now() where id=_id;
+    if _m.user_id is not null then
+      update public.profiles set blog_coupon = _m.monthly_amount where id = _m.user_id;
+      insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+        values (_m.user_id, null, _m.monthly_amount, 'grant', _cycle);
+    end if;
+    return jsonb_build_object('ok', true, 'status', 'approved', 'granted', _m.monthly_amount, 'linked', (_m.user_id is not null));
+  else
+    update public.blog_monitors set status='rejected', is_active=false where id=_id;
+    return jsonb_build_object('ok', true, 'status', 'rejected');
+  end if;
+end; $$;
+
+-- 동기화: 승인회원이면 새 회차 재지급(후기 2개 이상일 때만). pending/none 도 상태 반환.
+create or replace function public.blog_monitor_sync() returns jsonb
+language plpgsql security definer as $$
+declare
+  _uid uuid := auth.uid();
+  _m public.blog_monitors%rowtype;
+  _cycle text := public._blog_current_cycle();
+  _bal int; _mail text; _uname text; _posts int; _needed int := 2; _due boolean;
+begin
+  if _uid is null then return jsonb_build_object('is_monitor', false, 'status', 'none'); end if;
+
+  select * into _m from public.blog_monitors where user_id = _uid limit 1;
+  if not found then
+    select email, username into _mail, _uname from public.profiles where id = _uid;
+    select * into _m from public.blog_monitors bm
+      where bm.user_id is null
+        and (lower(bm.id_key)=lower(coalesce(_mail,'')) or lower(bm.id_key)=lower(coalesce(_uname,'')))
+      limit 1;
+    if found then update public.blog_monitors set user_id=_uid where id=_m.id; _m.user_id := _uid; end if;
+  end if;
+  if _m.id is null then return jsonb_build_object('is_monitor', false, 'status', 'none'); end if;
+
+  if _m.status is distinct from 'approved' or _m.is_active = false then
+    select coalesce(blog_coupon,0) into _bal from public.profiles where id = _uid;
+    return jsonb_build_object('is_monitor', false, 'status', coalesce(_m.status,'pending'),
+      'channel_url', _m.channel_url, 'is_threads', _m.is_threads, 'balance', _bal);
+  end if;
+
+  select count(*) into _posts from public.blog_monitor_links
+    where user_id = _uid and created_at > coalesce(_m.last_grant_at, 'epoch'::timestamptz);
+
+  _due := (_m.last_grant_cycle is distinct from _cycle);
+  if _due and _posts >= _needed then
+    update public.profiles set blog_coupon = _m.monthly_amount where id = _uid;
+    update public.blog_monitors set last_grant_cycle=_cycle, last_grant_at=now() where id=_m.id;
+    insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+      values (_uid, null, _m.monthly_amount, 'grant', _cycle);
+    _due := false; _posts := 0;
+  end if;
+
+  select coalesce(blog_coupon,0) into _bal from public.profiles where id = _uid;
+  return jsonb_build_object('is_monitor', true, 'status', 'approved', 'balance', _bal,
+    'monthly_amount', _m.monthly_amount, 'is_threads', _m.is_threads, 'channel_url', _m.channel_url,
+    'cycle', _cycle, 'posts_since_grant', _posts, 'posts_needed', _needed,
+    'needs_more_posts', (_due and _posts < _needed));
+end; $$;
+
+-- 일괄 지급: 새 회차 미지급 + (첫지급 or 후기 2개 이상) 인 승인회원만. 지급/보류 수 반환.
+create or replace function public.blog_monitor_grant_all() returns jsonb
+language plpgsql security definer as $$
+declare _cycle text := public._blog_current_cycle(); _n int := 0; _skip int := 0; _posts int; _r record;
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  for _r in select * from public.blog_monitors
+             where status='approved' and is_active=true and user_id is not null
+               and last_grant_cycle is distinct from _cycle loop
+    select count(*) into _posts from public.blog_monitor_links
+      where user_id=_r.user_id and created_at > coalesce(_r.last_grant_at,'epoch'::timestamptz);
+    if _r.last_grant_at is null or _posts >= 2 then
+      update public.profiles set blog_coupon=_r.monthly_amount where id=_r.user_id;
+      update public.blog_monitors set last_grant_cycle=_cycle, last_grant_at=now() where id=_r.id;
+      insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+        values (_r.user_id, null, _r.monthly_amount, 'grant', _cycle);
+      _n := _n + 1;
+    else
+      _skip := _skip + 1;
+    end if;
+  end loop;
+  return jsonb_build_object('ok', true, 'granted', _n, 'skipped', _skip, 'cycle', _cycle);
+end; $$;
+
+-- 관리자 목록: status/channel/threads/posts_since_grant 추가
+create or replace function public.blog_monitor_admin_list() returns jsonb
+language plpgsql security definer as $$
+declare _cycle text := public._blog_current_cycle(); _res jsonb;
+begin
+  if not public._blog_is_admin() then return jsonb_build_object('error','forbidden'); end if;
+  select jsonb_build_object('cycle', _cycle,
+           'monitors', coalesce(jsonb_agg(to_jsonb(m) order by (m.status='pending') desc, m.created_at), '[]'::jsonb))
+  into _res
+  from (
+    select bm.id, bm.name, bm.id_key, bm.user_id, bm.monthly_amount, bm.is_active, bm.status,
+           bm.channel_url, bm.is_threads, bm.last_grant_cycle, bm.last_grant_at, bm.created_at,
+           coalesce(p.blog_coupon,0) as balance,
+           coalesce(p.email, au.email) as email,
+           (bm.user_id is not null) as linked,
+           (select count(*) from public.blog_monitor_links l3
+              where l3.user_id=bm.user_id and l3.created_at > coalesce(bm.last_grant_at,'epoch'::timestamptz)) as posts_since_grant,
+           (select coalesce(sum(amount),0) from public.blog_coupon_usages u
+              where u.user_id=bm.user_id and u.kind='use') as total_used,
+           (select coalesce(sum(amount),0) from public.blog_coupon_usages u
+              where u.user_id=bm.user_id and u.kind='use' and u.cycle=_cycle) as cycle_used,
+           (select coalesce(jsonb_agg(jsonb_build_object('id',l.id,'url',l.url,'memo',l.memo,
+                     'admin_checked',l.admin_checked,'created_at',l.created_at) order by l.created_at desc), '[]'::jsonb)
+              from public.blog_monitor_links l where l.user_id=bm.user_id) as links,
+           (select coalesce(jsonb_agg(jsonb_build_object('amount',u.amount,'kind',u.kind,
+                     'order_id',u.order_id,'cycle',u.cycle,'created_at',u.created_at) order by u.created_at desc), '[]'::jsonb)
+              from public.blog_coupon_usages u where u.user_id=bm.user_id) as usages
+    from public.blog_monitors bm
+    left join public.profiles p on p.id = bm.user_id
+    left join auth.users au on au.id = bm.user_id
+  ) m;
+  return _res;
+end; $$;
+
+grant execute on function public.blog_monitor_apply(text) to authenticated;
+grant execute on function public.blog_monitor_approve(uuid,bool) to authenticated;
+grant execute on function public.blog_monitor_sync() to authenticated;
+grant execute on function public.blog_monitor_grant_all() to authenticated;
+grant execute on function public.blog_monitor_admin_list() to authenticated;
+
+-- 확인
+select id_key, status, is_threads, monthly_amount, last_grant_at is not null as has_grant_ts from public.blog_monitors order by created_at;
+-- sync: 첫 지급(last_grant_at null)은 후기 게이트 면제 (grant_all 과 동일 규칙)
+create or replace function public.blog_monitor_sync() returns jsonb
+language plpgsql security definer as $$
+declare
+  _uid uuid := auth.uid();
+  _m public.blog_monitors%rowtype;
+  _cycle text := public._blog_current_cycle();
+  _bal int; _mail text; _uname text; _posts int; _needed int := 2; _due boolean; _first boolean;
+begin
+  if _uid is null then return jsonb_build_object('is_monitor', false, 'status', 'none'); end if;
+
+  select * into _m from public.blog_monitors where user_id = _uid limit 1;
+  if not found then
+    select email, username into _mail, _uname from public.profiles where id = _uid;
+    select * into _m from public.blog_monitors bm
+      where bm.user_id is null
+        and (lower(bm.id_key)=lower(coalesce(_mail,'')) or lower(bm.id_key)=lower(coalesce(_uname,'')))
+      limit 1;
+    if found then update public.blog_monitors set user_id=_uid where id=_m.id; _m.user_id := _uid; end if;
+  end if;
+  if _m.id is null then return jsonb_build_object('is_monitor', false, 'status', 'none'); end if;
+
+  if _m.status is distinct from 'approved' or _m.is_active = false then
+    select coalesce(blog_coupon,0) into _bal from public.profiles where id = _uid;
+    return jsonb_build_object('is_monitor', false, 'status', coalesce(_m.status,'pending'),
+      'channel_url', _m.channel_url, 'is_threads', _m.is_threads, 'balance', _bal);
+  end if;
+
+  select count(*) into _posts from public.blog_monitor_links
+    where user_id = _uid and created_at > coalesce(_m.last_grant_at, 'epoch'::timestamptz);
+
+  _first := (_m.last_grant_at is null);
+  _due := (_m.last_grant_cycle is distinct from _cycle);
+  if _due and (_first or _posts >= _needed) then
+    update public.profiles set blog_coupon = _m.monthly_amount where id = _uid;
+    update public.blog_monitors set last_grant_cycle=_cycle, last_grant_at=now() where id=_m.id;
+    insert into public.blog_coupon_usages(user_id, order_id, amount, kind, cycle)
+      values (_uid, null, _m.monthly_amount, 'grant', _cycle);
+    _due := false; _posts := 0;
+  end if;
+
+  select coalesce(blog_coupon,0) into _bal from public.profiles where id = _uid;
+  return jsonb_build_object('is_monitor', true, 'status', 'approved', 'balance', _bal,
+    'monthly_amount', _m.monthly_amount, 'is_threads', _m.is_threads, 'channel_url', _m.channel_url,
+    'cycle', _cycle, 'posts_since_grant', _posts, 'posts_needed', _needed,
+    'needs_more_posts', (_due and _posts < _needed));
+end; $$;
+grant execute on function public.blog_monitor_sync() to authenticated;

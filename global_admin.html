@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260810171025';
+        var CV = '20260810173354';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -3295,7 +3295,7 @@ window.tplReviewDelete = async function(id, name, btn) {
             <button onclick="loadBlogMonitor()" style="padding:7px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">새로고침</button>
         </div>
         <div style="font-size:12.5px; color:#475569; margin-bottom:14px; line-height:1.7; background:#faf5ff; padding:12px 14px; border-radius:10px;">
-            매월 10일 각 회원 쿠폰이 <b style="color:#a855f7;">10만원(¥10,000)</b>으로 새로 채워집니다(미사용분 소멸). 쿠폰은 <b>배송비 포함</b> 전액을 커버하며, 회원이 마이페이지에서 결제 시 자동 차감됩니다. 초과분만 카드로 결제됩니다. 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결됩니다.
+            매월 10일 각 회원 쿠폰이 <b style="color:#a855f7;">10만원(¥10,000)</b>으로 새로 채워집니다(미사용분 소멸). 쿠폰은 <b>배송비 포함</b> 전액을 커버하며, 결제 시 자동 차감·초과분만 카드결제. <b style="color:#111;">Threads 이용자는 2배(20만원)</b>. 신청건은 <b>상태=대기</b>에서 <b style="color:#16a34a;">승인</b>하면 즉시 지급됩니다. <b>첫 지급 이후</b>에는 후기(마이페이지 링크) <b>2개 이상</b> 등록해야 다음 회차 쿠폰이 지급됩니다(후기 열 N/2). 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결.
         </div>
         <div id="blogMonAddForm" style="display:none; background:#fff; border:1px solid #e9d5ff; border-radius:10px; padding:14px; margin-bottom:14px; display:none;">
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -3330,31 +3330,52 @@ window.loadBlogMonitor = async function() {
         if (!mons.length) { box.innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">등록된 체험단이 없습니다.</div>'; return; }
         let html = '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
             + '<thead><tr style="background:#f8fafc; color:#64748b; text-align:left;">'
-            + '<th style="padding:10px;">이름</th><th style="padding:10px;">연결 계정</th>'
+            + '<th style="padding:10px;">이름</th><th style="padding:10px;">연결 계정 / 채널</th>'
+            + '<th style="padding:10px; text-align:center;">상태</th>'
             + '<th style="padding:10px; text-align:right;">이번달 잔액</th><th style="padding:10px; text-align:right;">이번달 사용</th>'
-            + '<th style="padding:10px; text-align:right;">누적 사용</th><th style="padding:10px; text-align:center;">링크</th>'
+            + '<th style="padding:10px; text-align:right;">누적 사용</th>'
+            + '<th style="padding:10px; text-align:center;">후기(→다음)</th><th style="padding:10px; text-align:center;">링크</th>'
             + '<th style="padding:10px; text-align:center;">활성</th><th style="padding:10px;"></th></tr></thead><tbody>';
         mons.forEach(function(m){
-            const linked = m.linked
+            const threadsBadge = m.is_threads ? ' <span style="background:#111; color:#fff; border-radius:5px; padding:1px 6px; font-size:10px;">Threads 2배</span>' : '';
+            const acct = m.linked
                 ? '<span style="color:#16a34a; font-size:12px;">' + _bmEsc(m.email || '연결됨') + '</span>'
                 : '<span style="color:#f59e0b; font-size:12px;">미연결 (' + _bmEsc(m.id_key) + ')</span>';
+            const channel = m.channel_url
+                ? '<div style="margin-top:3px;"><a href="' + _bmEsc(m.channel_url) + '" target="_blank" rel="noopener" style="color:#7c3aed; font-size:11.5px; word-break:break-all;">' + _bmEsc(m.channel_url) + '</a></div>'
+                : '';
+            let statusCell;
+            if (m.status === 'pending') {
+                statusCell = '<div style="display:flex; gap:4px; justify-content:center;">'
+                    + '<button onclick="blogMonApprove(\'' + m.id + '\', true)" style="padding:4px 9px; background:#16a34a; color:#fff; border:none; border-radius:6px; font-size:11.5px; cursor:pointer;">승인</button>'
+                    + '<button onclick="blogMonApprove(\'' + m.id + '\', false)" style="padding:4px 9px; background:#e2e8f0; color:#334155; border:none; border-radius:6px; font-size:11.5px; cursor:pointer;">거절</button></div>';
+            } else if (m.status === 'rejected') {
+                statusCell = '<span style="color:#dc2626; font-size:12px;">거절됨</span>';
+            } else {
+                statusCell = '<span style="color:#16a34a; font-size:12px;">승인</span>';
+            }
             const linkCnt = (m.links || []).length;
             const uncheckedCnt = (m.links || []).filter(function(l){ return !l.admin_checked; }).length;
             const linkBadge = linkCnt
                 ? linkCnt + '건' + (uncheckedCnt ? ' <span style="color:#dc2626;">(' + uncheckedCnt + ' 신규)</span>' : '')
                 : '<span style="color:#cbd5e1;">0</span>';
-            html += '<tr style="border-bottom:1px solid #f1f5f9;">'
-                + '<td style="padding:10px;">' + _bmEsc(m.name || '-') + '</td>'
-                + '<td style="padding:10px;">' + linked + '</td>'
+            const posts = m.posts_since_grant || 0;
+            const postsCell = '<span style="color:' + (posts >= 2 ? '#16a34a' : '#f59e0b') + ';">' + posts + ' / 2</span>';
+            const rowBg = m.status === 'pending' ? ' background:#fffbeb;' : '';
+            html += '<tr style="border-bottom:1px solid #f1f5f9;' + rowBg + '">'
+                + '<td style="padding:10px;">' + _bmEsc(m.name || '-') + threadsBadge + '</td>'
+                + '<td style="padding:10px;">' + acct + channel + '</td>'
+                + '<td style="padding:10px; text-align:center;">' + statusCell + '</td>'
                 + '<td style="padding:10px; text-align:right; color:#a855f7; font-weight:700;">' + _bmMoney(m.balance) + '</td>'
                 + '<td style="padding:10px; text-align:right;">' + _bmMoney(m.cycle_used) + '</td>'
                 + '<td style="padding:10px; text-align:right;">' + _bmMoney(m.total_used) + '</td>'
+                + '<td style="padding:10px; text-align:center;">' + postsCell + '</td>'
                 + '<td style="padding:10px; text-align:center;">' + linkBadge + '</td>'
                 + '<td style="padding:10px; text-align:center;"><input type="checkbox" ' + (m.is_active ? 'checked' : '') + ' onchange="blogMonSetActive(\'' + m.id + '\', this.checked)" style="width:16px; height:16px; cursor:pointer;"></td>'
                 + '<td style="padding:10px;"><button onclick="blogMonToggleDetail(\'' + m.id + '\')" style="padding:5px 10px; background:#f1f5f9; color:#334155; border:none; border-radius:6px; font-size:12px; cursor:pointer;">상세</button></td>'
                 + '</tr>';
             // 상세행 (링크 + 사용내역)
-            html += '<tr id="bmDetail_' + m.id + '" style="display:none;"><td colspan="8" style="padding:0 10px 14px;">'
+            html += '<tr id="bmDetail_' + m.id + '" style="display:none;"><td colspan="10" style="padding:0 10px 14px;">'
                 + '<div style="background:#f8fafc; border-radius:10px; padding:14px;">';
             // 링크
             html += '<div style="font-size:12.5px; color:#334155; margin-bottom:8px;">제출한 후기 링크</div>';
@@ -3428,6 +3449,17 @@ window.blogMonSetActive = async function(id, active) {
         if (error) throw error;
         if (window.showToast) showToast(active ? '활성화' : '비활성화', 'success');
     } catch(e) { alert('변경 실패: ' + (e.message || e)); loadBlogMonitor(); }
+};
+
+window.blogMonApprove = async function(id, approve) {
+    if (!confirm(approve ? '이 신청을 승인하고 즉시 쿠폰을 지급합니다. 진행할까요?' : '이 신청을 거절합니다. 진행할까요?')) return;
+    try {
+        const { data, error } = await window.sb.rpc('blog_monitor_approve', { _id: id, _approve: approve });
+        if (error) throw error;
+        if (!data || !data.ok) throw new Error((data && data.error) || '처리 실패');
+        if (window.showToast) showToast(approve ? ('승인 완료 — ' + _bmMoney(data.granted || 0) + ' 지급') : '거절 처리됨', 'success');
+        loadBlogMonitor();
+    } catch(e) { alert('처리 실패: ' + (e.message || e)); }
 };
 
 window.blogMonCheckLink = async function(id, checked) {

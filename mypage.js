@@ -267,6 +267,11 @@ function switchTab(tabId) {
 async function loadBlogMonitorTab() {
     const listEl = document.getElementById('blogLinkList');
     if (!listEl) return;
+    // 상태 배너 (잔액 + 다음 지급까지 후기 진행 + Threads)
+    try {
+        const { data: st } = await sb.rpc('blog_monitor_sync');
+        renderBlogMonStatus(st || {});
+    } catch(e) { /* ignore */ }
     listEl.innerHTML = '<div style="padding:20px; color:#94a3b8; text-align:center;">' + window.t('mp_loading', '불러오는 중...') + '</div>';
     try {
         const { data } = await sb.rpc('blog_my_links');
@@ -275,6 +280,33 @@ async function loadBlogMonitorTab() {
         console.error('[blog links]', e);
         listEl.innerHTML = '<div style="padding:20px; color:#dc2626; text-align:center;">' + (e.message || e) + '</div>';
     }
+}
+
+function renderBlogMonStatus(st) {
+    const box = document.getElementById('blogMonStatus');
+    if (!box) return;
+    if (!st || !st.is_monitor) { box.innerHTML = ''; return; }
+    const bal = fmtMoney(st.balance || 0);
+    const posts = st.posts_since_grant || 0;
+    const needed = st.posts_needed || 2;
+    const threads = st.is_threads
+        ? '<span style="background:#111; color:#fff; border-radius:6px; padding:2px 8px; font-size:11px; margin-left:8px;">Threads 2배</span>'
+        : '';
+    const done = posts >= needed;
+    const progressTxt = done
+        ? window.t('mp_blog_posts_ok', '다음 회차 지급 조건 충족 (후기 {n}개)').replace('{n}', posts)
+        : window.t('mp_blog_posts_need', '다음 쿠폰까지 후기 {have}/{need}개').replace('{have}', posts).replace('{need}', needed);
+    box.innerHTML =
+        '<div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center; background:#fff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px;">'
+      + '<div style="flex:1; min-width:160px;">'
+      +   '<div style="font-size:12px; color:#94a3b8;">' + window.t('mp_blog_balance', '현재 쿠폰 잔액') + threads + '</div>'
+      +   '<div style="font-size:24px; color:#a855f7; margin-top:2px;">' + bal + '</div>'
+      + '</div>'
+      + '<div style="flex:1.4; min-width:200px;">'
+      +   '<div style="font-size:12px; color:' + (done ? '#16a34a' : '#f59e0b') + '; margin-bottom:6px;">' + progressTxt + '</div>'
+      +   '<div style="height:8px; background:#f1f5f9; border-radius:980px; overflow:hidden;"><div style="height:100%; width:' + Math.min(100, (posts/needed)*100) + '%; background:' + (done ? '#16a34a' : '#a855f7') + ';"></div></div>'
+      + '</div>'
+      + '</div>';
 }
 
 function renderBlogLinkList(links) {

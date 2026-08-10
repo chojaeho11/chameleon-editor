@@ -36,6 +36,7 @@ ord as (
   where site_code = p_cc
     and order_date > now() - (p_days || ' days')::interval
     and normalize(payment_status, nfc) ilike normalize('%결제완료%', nfc)   -- '결제완료'+'카드결제완료' (NFC 정규화)
+    and coalesce(normalize(payment_method, nfc),'') <> normalize('블로그체험단쿠폰', nfc)  -- 2026-08-10: 블로그체험단 무료쿠폰 주문은 실매출 아님 → 제외
 )
 select jsonb_build_object(
   'cc', p_cc,

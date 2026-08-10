@@ -33,7 +33,7 @@ window.loadStatsData = async () => {
     try {
         // [검색 기간 데이터 조회]
         const { data: orders, error } = await sb.from('orders')
-            .select('id, total_amount, items, staff_manager_id, staff_driver_id, status, created_at, payment_status')
+            .select('id, total_amount, items, staff_manager_id, staff_driver_id, status, created_at, payment_status, payment_method')
             .gte('created_at', startDate + 'T00:00:00')
             .lte('created_at', endDate + 'T23:59:59')
             .not('status', 'eq', '임시작성') 
@@ -53,6 +53,7 @@ window.loadStatsData = async () => {
             // 매출 인정 기준: 결제완료 계열 상태
             const validPayment = ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'].includes(o.payment_status);
             if(!validPayment) return; // 미결제 건은 매출 통계에서 제외 (원하시면 주석 처리)
+            if(o.payment_method === '블로그체험단쿠폰') return; // 2026-08-10: 블로그체험단 무료쿠폰 주문은 실매출 아님 → 제외
 
             let amt = o.total_amount || 0;
             totalRevenue += amt;
@@ -92,7 +93,8 @@ async function loadDashboardCharts() {
         const { data: orders, error } = await sb.from('orders')
             .select('created_at, total_amount, payment_status')
             .gte('created_at', startOfYear)
-            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
+            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
+            .neq('payment_method', '블로그체험단쿠폰'); // 2026-08-10: 체험단 무료쿠폰 주문 매출 제외
 
         if(error) throw error;
 
@@ -255,7 +257,8 @@ window.loadAccountingData = async () => {
                 .select('id, total_amount, discount_amount, items, payment_status')
                 .gte('created_at', start + 'T00:00:00')
                 .lte('created_at', end + 'T23:59:59')
-                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']),
+                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
+                .neq('payment_method', '블로그체험단쿠폰'), // 2026-08-10: 체험단 무료쿠폰 주문 매출 제외
             sb.from('admin_products').select('name, price')
         ]);
 
