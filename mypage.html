@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260810204711';
+    var CV = '20260810205201';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -245,20 +245,18 @@
 
         <div id="tab-dashboard" class="mp-section">
             <div class="stat-grid">
-                <!-- 2026-06-01: 이벤트 쿠폰 카드 — 회원가입 30K + SNS 공유 100K 보너스 (mileage 와 분리) -->
+                <!-- 2026-08-10: 이벤트 쿠폰 통합 → '포인트'(mileage) 로 합쳐짐. 이 카드는 숨김(호환용 요소 유지). -->
+                <div class="stat-card" style="display:none;">
+                    <div class="stat-info"><span id="eventCouponDisplay">0 P</span><span data-i18n="mp_label_event_coupon">이벤트 쿠폰</span></div>
+                </div>
+                <!-- 통합 포인트 (마일리지·이벤트쿠폰·SNS·출석·가입 등 전부 합산) -->
                 <div class="stat-card" style="position:relative; overflow:hidden;">
                     <div style="position:absolute; top:-12px; right:-12px; font-size:48px; opacity:0.08; transform:rotate(-12deg); pointer-events:none;">🎁</div>
-                    <div class="stat-icon" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3); color:#be185d;"><i class="fa-solid fa-gift"></i></div>
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#eef2ff,#e0e7ff); color:#4338ca;"><i class="fa-solid fa-coins"></i></div>
                     <div class="stat-info">
-                        <span id="eventCouponDisplay" style="color:#be185d;">0 P</span>
-                        <span data-i18n="mp_label_event_coupon">이벤트 쿠폰</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fa-solid fa-won-sign"></i></div>
-                    <div class="stat-info">
-                        <span id="mileageDisplay">0 P</span>
-                        <span data-i18n="mp_label_mileage">Mileage</span>
+                        <span id="mileageDisplay" style="color:#4338ca;">0 P</span>
+                        <span id="mileageCardLabel">포인트</span>
+                        <script>(function(){var c=window.__SITE_CODE;var el=document.getElementById('mileageCardLabel');if(el)el.textContent=(c==='JP')?'ポイント':(c&&c!=='KR')?'Points':'포인트';})();</script>
                     </div>
                 </div>
 
@@ -477,7 +475,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=286"></script>
+    <script type="module" src="./mypage.js?v=287"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

@@ -481,14 +481,11 @@ async function loadDashboardStats() {
             const _bcCard = document.getElementById('blogCouponCard');
             const _bcNav  = document.getElementById('navBlogMonitor');
             window._isBlogMonitor = _isMon;
+            // 2026-08-10: 블로그 체험단 쿠폰은 '포인트'(mileage)로 통합됨 → 대시보드 별도카드 숨김. 후기 링크 탭은 유지.
+            if (_bcCard) _bcCard.style.display = 'none';
             if (_isMon) {
-                const _bal = _bc.balance || 0;
-                const elBc = document.getElementById('blogCouponDisplay');
-                if (elBc) elBc.innerText = fmtMoney(_bal);   // 통화기호 유지 (¥10,000 / 100,000원)
-                if (_bcCard) _bcCard.style.display = '';
                 if (_bcNav)  _bcNav.style.display = '';
             } else {
-                if (_bcCard) _bcCard.style.display = 'none';
                 if (_bcNav)  _bcNav.style.display = 'none';
             }
         } catch(_be) { console.warn('[blog monitor sync]', _be); }
