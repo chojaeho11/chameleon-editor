@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260810222103';
+    var CV = '20260810224044';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -204,7 +204,7 @@
 </head>
 <body class="mypage-body">
 <script src="toast.js?v=267"></script>
-<script src="./sns-ranking.js?v=4"></script>
+<script src="./sns-ranking.js?v=5"></script>
 
     <nav class="mp-sidebar">
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
@@ -347,8 +347,8 @@
 
             <!-- 월간 게시글 수 랭킹 현금 이벤트 -->
             <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5); border:1px solid #fdba74; border-radius:12px; padding:16px 18px; margin-bottom:16px; color:#7c2d12; font-size:13px; line-height:1.7;">
-                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 매월 게시글 수 랭킹 현금 이벤트</div>
-                <span id="blogEventDesc">SNS 홍보 게시글을 <b>많이 올릴수록</b> 순위가 올라갑니다(등록 즉시 반영). <b>1위 100만원 · 2위 50만원 · 3위 25만원 · 4위 10만원 · 5위 5만원</b> 현금 지급! (한국·일본 회원 대상)</span>
+                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 SNS 홍보 랭킹 현금 이벤트 <span style="font-size:12px; background:#fff; border:1px solid #fdba74; border-radius:980px; padding:1px 8px; margin-left:4px;">⏰ 9/15 16:00 종료</span></div>
+                <span id="blogEventDesc">제품을 구매하고 SNS에 후기·홍보 글을 올려주세요! <b>게시글 1개=1점 · 정성글=3점 · 조회수 터짐=5점</b>(관리자 확인, 실시간 반영). 점수 상위 <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급! (한국·일본 회원 · 8/10 이후 게시글만 인정)</span>
             </div>
 
             <div id="snsRankMypage" style="margin-bottom:20px;"></div>
@@ -373,8 +373,8 @@
                     blogTitle:'ブログ・SNSモニター',
                     blogIntroTitle:'毎月 無料ポイントを進呈します',
                     blogIntroDesc:'商品を無料で購入（送料込み）し、SNS・ブログにPRレビューを投稿してください。毎月<b>5,000円分</b>（Threads利用者は<b>10,000円分</b>）のポイントを進呈します。翌月のポイントを受け取るには、レビューリンクを2件以上登録してください。',
-                    blogEventTitle:'🏆 毎月 投稿数ランキング 現金イベント',
-                    blogEventDesc:'SNSのPR投稿を<b>多く投稿するほど</b>順位が上がります（登録後すぐ反映）。<b>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円</b>の現金を進呈！（韓国・日本の会員対象）',
+                    blogEventTitle:'🏆 SNS PRランキング 現金イベント <span style="font-size:12px;background:#fff;border:1px solid #fdba74;border-radius:980px;padding:1px 8px;margin-left:4px;">⏰ 9/15 16:00 終了</span>',
+                    blogEventDesc:'商品を購入し、SNSにレビュー・PRを投稿！ <b>投稿1件=1点・力作=3点・バズり=5点</b>（管理者確認, リアルタイム反映）。点数上位 <b>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円</b>の現金を進呈！（韓国・日本の会員 · 8/10以降の投稿のみ）',
                     blogSubmitTitle:'レビュー・PRリンク登録',
                     blogMyLinksTitle:'登録したリンク'
                 };

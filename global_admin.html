@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260810222103';
+        var CV = '20260810224044';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -3295,8 +3295,8 @@ window.tplReviewDelete = async function(id, name, btn) {
             <button onclick="loadBlogMonitor()" style="padding:7px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">새로고침</button>
         </div>
         <div style="font-size:12.5px; color:#475569; margin-bottom:14px; line-height:1.7; background:#faf5ff; padding:12px 14px; border-radius:10px;">
-            매월 각 회원에게 <b style="color:#a855f7;">5만 포인트(¥5,000)</b>가 지급됩니다. 포인트는 <b>배송비 포함</b> 전액을 커버하며, 결제 시 자동 차감·초과분만 카드결제. <b style="color:#111;">Threads 이용자는 2배(10만 포인트)</b>. 신청건은 <b>상태=대기</b>에서 <b style="color:#16a34a;">승인</b> 눌러야 지급됩니다(자동승인 없음). <b>첫 지급 이후</b>에는 후기(마이페이지 링크) <b>2개 이상</b> 등록해야 다음 달 포인트가 지급됩니다(후기 열 N/2). <b>이름을 클릭</b>하면 해당 회원의 게시글 링크가 보입니다. 게시글은 <b>등록 즉시 랭킹에 집계</b>되며, 부정/가짜 게시물은 이름 클릭 → <b style="color:#dc2626;">「삭제」</b>로 제외하세요. 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결.
-            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e9d5ff;">🏆 <b>매월 게시글 수 랭킹 현금 이벤트</b> — 회원별 <b>게시글 수</b>가 많을수록 상위 → <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급(한국·일본 회원). 아래 「게시글 랭킹」에서 확인·지급 처리.</div>
+            매월 각 회원에게 <b style="color:#a855f7;">5만 포인트(¥5,000)</b>가 지급됩니다. 포인트는 <b>배송비 포함</b> 전액을 커버하며, 결제 시 자동 차감·초과분만 카드결제. <b style="color:#111;">Threads 이용자는 2배(10만 포인트)</b>. 신청건은 <b>상태=대기</b>에서 <b style="color:#16a34a;">승인</b> 눌러야 지급됩니다(자동승인 없음). <b>첫 지급 이후</b>에는 후기(마이페이지 링크) <b>2개 이상</b> 등록해야 다음 달 포인트가 지급됩니다(후기 열 N/2). <b>이름을 클릭</b>하면 해당 회원의 게시글 링크가 보입니다. 각 게시글에 <b style="color:#db2777;">점수 부여(1 기본 / 3 정성글 / 5 조회수 터짐)</b> 하거나 부정/가짜는 <b style="color:#dc2626;">「삭제」</b>. 게시글은 등록 즉시 1점으로 집계됩니다. 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결.
+            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e9d5ff;">🏆 <b>SNS 홍보 랭킹 현금 이벤트 (~9/15 16:00 종료, 8/10 이후 글만)</b> — 게시글 1개 1점·정성글 3점·조회수 터짐 5점 → <b>점수 상위 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급(한국·일본 회원).</div>
         </div>
         <div id="blogMonAddForm" style="display:none; background:#fff; border:1px solid #e9d5ff; border-radius:10px; padding:14px; margin-bottom:14px; display:none;">
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -3316,7 +3316,7 @@ window.tplReviewDelete = async function(id, name, btn) {
                 <h3 style="font-size:16px; font-weight:800; flex:1;">🏆 SNS 게시글 랭킹 <span id="blogRankMonth" style="font-size:12px; color:#64748b; font-weight:600;"></span></h3>
                 <button onclick="loadBlogViewRanking()" style="padding:6px 11px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">새로고침</button>
             </div>
-            <div style="font-size:12px; color:#64748b; margin-bottom:12px;">이번 달 <b>게시글 수</b> 상위 5명에게 현금 지급 — 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원. 게시글은 등록 즉시 집계되며, 부정/가짜는 <b>이름 클릭 → 「삭제」</b>로 제외. 「지급 확정」은 실제 현금 지급 후 기록용.</div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:12px;"><b>점수</b> 상위 5명에게 현금 지급(~9/15 16:00) — 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원. 게시글 1개=1점, 정성글=3점, 조회수터짐=5점(이름 클릭 → 각 글에 점수 부여). 「지급 확정」은 실제 현금 지급 후 기록용.</div>
             <div id="blogRankList" style="overflow-x:auto;"><div style="text-align:center; padding:24px; color:#94a3b8;">로딩 중...</div></div>
         </div>
     </div>
@@ -3335,24 +3335,26 @@ window.loadBlogViewRanking = async function() {
         const { data, error } = await window.sb.rpc('blog_view_ranking', {});
         if (error) throw error;
         if (!data || data.error) throw new Error((data && data.error) || 'no data');
-        const mEl = document.getElementById('blogRankMonth'); if (mEl) mEl.textContent = '(' + (data.month||'') + ')';
+        const mEl = document.getElementById('blogRankMonth'); if (mEl) mEl.textContent = '(~' + (data.ends||'') + ' 종료)';
         const prizes = data.prizes || [1000000,500000,250000,100000,50000];
+        const _ev = data.event || '2026-sns';
         const rank = data.ranking || [];
-        if (!rank.length) { box.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">이번 달 게시글 등록 내역이 없습니다.</div>'; return; }
+        if (!rank.length) { box.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">아직 게시글 등록 내역이 없습니다.</div>'; return; }
         let html = '<table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#fff7ed; color:#7c2d12; text-align:left;">'
-            + '<th style="padding:9px;">순위</th><th style="padding:9px;">이름</th><th style="padding:9px; text-align:center;">게시글 수</th><th style="padding:9px; text-align:right;">상금</th><th style="padding:9px; text-align:center;">지급</th></tr></thead><tbody>';
+            + '<th style="padding:9px;">순위</th><th style="padding:9px;">이름</th><th style="padding:9px; text-align:center;">점수</th><th style="padding:9px; text-align:center;">글수</th><th style="padding:9px; text-align:right;">상금</th><th style="padding:9px; text-align:center;">지급</th></tr></thead><tbody>';
         rank.forEach(function(r, i){
-            const prize = (r.total_posts>0 && i < prizes.length) ? prizes[i] : 0;
-            const medal = (r.total_posts>0) ? (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위') : '-';
+            const prize = (r.total_score>0 && i < prizes.length) ? prizes[i] : 0;
+            const medal = (r.total_score>0) ? (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위') : '-';
             const paid = (r.paid_amount||0) > 0;
-            html += '<tr style="border-bottom:1px solid #f1f5f9;' + (i<5 && r.total_posts>0?' background:#fffbeb;':'') + '">'
+            html += '<tr style="border-bottom:1px solid #f1f5f9;' + (i<5 && r.total_score>0?' background:#fffbeb;':'') + '">'
                 + '<td style="padding:9px; font-weight:700;">' + medal + '</td>'
                 + '<td style="padding:9px;">' + _bmEsc(r.name||'-') + (r.is_threads?' <span style="background:#111;color:#fff;border-radius:4px;padding:0 5px;font-size:9px;">Threads</span>':'') + '</td>'
-                + '<td style="padding:9px; text-align:center; color:#f59e0b; font-weight:800; font-size:15px;">' + (Number(r.total_posts)||0).toLocaleString() + '</td>'
+                + '<td style="padding:9px; text-align:center; color:#db2777; font-weight:800; font-size:15px;">' + (Number(r.total_score)||0).toLocaleString() + '점</td>'
+                + '<td style="padding:9px; text-align:center; color:#94a3b8;">' + (r.post_count||0) + '</td>'
                 + '<td style="padding:9px; text-align:right; font-weight:700;">' + (prize>0 ? _bmMoney(prize) : '-') + '</td>'
                 + '<td style="padding:9px; text-align:center;">' + (prize>0
                     ? (paid ? '<span style="color:#16a34a; font-size:12px;">지급완료</span>'
-                            : '<button onclick="blogPayoutConfirm(\'' + r.user_id + '\',\'' + (data.month||'') + '\',' + (i+1) + ',' + prize + ')" style="padding:4px 9px; background:#16a34a; color:#fff; border:none; border-radius:6px; font-size:11.5px; cursor:pointer;">지급 확정</button>')
+                            : '<button onclick="blogPayoutConfirm(\'' + r.user_id + '\',\'' + _ev + '\',' + (i+1) + ',' + prize + ')" style="padding:4px 9px; background:#16a34a; color:#fff; border:none; border-radius:6px; font-size:11.5px; cursor:pointer;">지급 확정</button>')
                     : '-') + '</td>'
                 + '</tr>';
         });
@@ -3442,7 +3444,12 @@ window.loadBlogMonitor = async function() {
                         + '<a href="' + _bmEsc(l.url) + '" target="_blank" rel="noopener" style="flex:1; min-width:0; color:#7c3aed; word-break:break-all; font-size:12.5px;">' + _bmEsc(l.url) + '</a>'
                         + (l.memo ? '<span style="color:#64748b; font-size:12px;">' + _bmEsc(l.memo) + '</span>' : '')
                         + '<span style="color:#94a3b8; font-size:11px;">' + dt + '</span>'
-                        + '<label style="font-size:12px; color:#16a34a; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" ' + (l.admin_checked ? 'checked' : '') + ' onchange="blogMonCheckLink(\'' + l.id + '\', this.checked)" style="width:15px; height:15px; cursor:pointer;"> 확인</label>'
+                        + '<span style="font-size:12.5px; color:#db2777; font-weight:800; min-width:34px; text-align:right;">' + (l.score==null?1:l.score) + '점</span>'
+                        + '<span style="display:flex; gap:3px;">'
+                        +   '<button onclick="blogMonSetScore(\'' + l.id + '\',1)" title="기본 1점" style="padding:3px 8px; background:#eef2ff; color:#4338ca; border:none; border-radius:6px; font-size:11px; cursor:pointer;">1</button>'
+                        +   '<button onclick="blogMonSetScore(\'' + l.id + '\',3)" title="정성글 3점" style="padding:3px 8px; background:#fce7f3; color:#be185d; border:none; border-radius:6px; font-size:11px; cursor:pointer;">3</button>'
+                        +   '<button onclick="blogMonSetScore(\'' + l.id + '\',5)" title="조회수 터짐 5점" style="padding:3px 8px; background:#fef3c7; color:#b45309; border:none; border-radius:6px; font-size:11px; cursor:pointer;">5</button>'
+                        + '</span>'
                         + '<button onclick="blogMonDeleteLink(\'' + l.id + '\')" title="부정/가짜 게시물 삭제" style="padding:3px 8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; font-size:11px; cursor:pointer;">삭제</button>'
                         + '</div>';
                 });
@@ -3535,6 +3542,15 @@ window.blogMonDeleteLink = async function(id) {
         if (window.showToast) showToast('게시물 삭제됨', 'success');
         loadBlogMonitor();
     } catch(e) { alert('삭제 실패: ' + (e.message || e)); }
+};
+window.blogMonSetScore = async function(id, score) {
+    try {
+        const { data, error } = await window.sb.rpc('blog_link_set_score', { _id: id, _score: score });
+        if (error) throw error;
+        if (!data || !data.ok) throw new Error((data && data.error) || '실패');
+        if (window.showToast) showToast(score + '점 부여됨', 'success');
+        loadBlogMonitor();
+    } catch(e) { alert('점수 변경 실패: ' + (e.message || e)); }
 };
 
 window.blogMonGrantAll = async function() {

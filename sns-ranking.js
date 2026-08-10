@@ -6,10 +6,12 @@
         title: JP ? 'SNS PRランキング' : 'SNS 홍보 랭킹',
         rank: JP ? '順位' : '순위',
         name: JP ? '名前' : '이름',
-        posts: JP ? '投稿数' : '게시글 수',
+        score: JP ? '点数' : '점수',
         prize: JP ? '賞金' : '보상',
-        empty: JP ? '今月の登録がまだありません。最初のランカーになりましょう！' : '이번 달 등록 내역이 없습니다. 첫 랭커가 되어보세요!',
-        note: JP ? '順位はリアルタイム反映 · 投稿が多いほど上位 · 上位5名に現金進呈' : '순위는 실시간 반영 · 게시글이 많을수록 상위 · 상위 5명 현금 지급',
+        ends: JP ? '9/15(月) 16:00 終了' : '9/15(월) 16:00 종료',
+        desc: JP ? '商品を購入し、SNSにレビュー・PRを投稿！ 投稿1件=1点・力作=3点・バズり=5点（管理者確認, リアルタイム反映）。8/10以降の投稿のみ有効。' : '제품을 구매하고 SNS에 후기·홍보 글을 올려주세요! 게시글 1개=1점 · 정성글=3점 · 조회수 터짐=5점 (관리자 확인, 실시간 반영). 8/10 이후 게시글만 인정.',
+        empty: JP ? 'まだ登録がありません。最初のランカーになりましょう！' : '아직 등록 내역이 없습니다. 첫 랭커가 되어보세요!',
+        note: JP ? '順位はリアルタイム反映 · 点数が高いほど上位 · 上位5名に現金進呈' : '순위는 실시간 반영 · 점수가 높을수록 상위 · 상위 5명 현금 지급',
         loading: JP ? '読み込み中...' : '불러오는 중...',
         close: JP ? '閉じる' : '닫기',
         won: JP ? '円' : '원'
@@ -44,8 +46,11 @@
             + '.snsrk .th{display:inline-block;background:#a21caf;color:#fff;border-radius:6px;padding:0 6px;font-size:9px;margin-left:5px;vertical-align:middle;}'
             + '.snsrk-note{margin:14px 6px 2px;font-size:11.5px;color:#c084bc;text-align:center;}'
             + '.snsrk-empty{padding:34px 10px;text-align:center;color:#c084bc;font-size:13.5px;}'
+            + '.snsrk-desc{margin:0 6px 12px;font-size:11.5px;line-height:1.65;color:#8a6a97;background:#faf0ff;border:1px solid #f5d0fe;border-radius:12px;padding:10px 12px;}'
+            + '.snsrk-h .mo{background:#fce7f3;color:#db2777 !important;font-weight:800;}'
             + '</style>';
-        var head = '<div class="snsrk"><div class="snsrk-h"><b>🏆 ' + esc(T.title) + '</b><span class="mo">' + esc(data.month || '') + '</span></div>';
+        var head = '<div class="snsrk"><div class="snsrk-h"><b>🏆 ' + esc(T.title) + '</b><span class="mo">⏰ ' + esc(T.ends) + '</span></div>'
+            + '<div class="snsrk-desc">' + esc(T.desc) + '</div>';
         if (!rank.length) {
             return css + head + '<div class="snsrk-empty">' + esc(T.empty) + '</div><div class="snsrk-note">' + esc(T.note) + '</div></div>';
         }
@@ -56,14 +61,14 @@
             return '<tr class="' + (i < 5 ? 'top' : '') + '">'
                  + '<td class="rk">' + medal + '</td>'
                  + '<td class="nm">' + esc(r.name || '-') + th + '</td>'
-                 + '<td class="vw">' + (Number(r.total_posts) || 0).toLocaleString() + '</td>'
+                 + '<td class="vw">' + (Number(r.total_score) || 0).toLocaleString() + (JP ? '点' : '점') + '</td>'
                  + '<td class="pz">' + (prize > 0 ? money(prize) : '-') + '</td>'
                  + '</tr>';
         }).join('');
         return css + head
             + '<table><thead><tr>'
             + '<th style="text-align:center;">' + esc(T.rank) + '</th><th>' + esc(T.name) + '</th>'
-            + '<th style="text-align:right;">' + esc(T.posts) + '</th>'
+            + '<th style="text-align:right;">' + esc(T.score) + '</th>'
             + '<th style="text-align:right;">' + esc(T.prize) + '</th></tr></thead><tbody>'
             + rows + '</tbody></table>'
             + '<div class="snsrk-note">' + esc(T.note) + '</div></div>';
