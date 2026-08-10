@@ -3390,27 +3390,18 @@ html, body { background: #ffffff !important; }
 
       <!-- 2026-06-01: 할인 4종 (이벤트 쿠폰 / 마일리지 / 예치금 / 구독할인) — 라디오 1개 선택 (중복 불가) -->
       <div class="so-co-section" id="soCoWalletBox" style="display:none;">
-        <span class="so-co-label">${tr('할인 적용 (1개 선택)','割引選択 (1つのみ)','Discount (pick one)')}</span>
+        <span class="so-co-label">${tr('포인트 · 할인 적용','ポイント · 割引','Points &amp; Discount')}</span>
         <div id="soDiscountGrid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; margin-top:6px;">
-          <!-- 1) 이벤트 쿠폰 -->
-          <label class="so-disc-card" data-disc="event_coupon" style="cursor:pointer; padding:10px 12px; border:2px solid #fde68a; background:#fffbeb; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
+          <!-- 2026-08-10: 통합 포인트 (마일리지·이벤트쿠폰·SNS·출석·가입 등 전부 합침) — 배송비 포함 전액 사용, 한도 없음. 예치금처럼 독립 체크박스 -->
+          <label class="so-disc-card" data-disc="blogcoupon" id="soDiscBlogCard" style="display:none; cursor:pointer; padding:10px 12px; border:2px solid #c7d2fe; background:#eef2ff; border-radius:10px; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <input type="radio" name="soDiscChoice" value="event_coupon" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#92400e;">🎁 ${tr('이벤트 쿠폰','イベントクーポン','Event Coupon')}</b>
+              <input type="checkbox" id="soDiscBlogChk" onchange="window._soOnDiscountSelect()" style="margin:0;">
+              <b style="font-size:12px; color:#4338ca;">${tr('포인트','ポイント','Points')} <span style="font-size:9.5px; color:#4f46e5; font-weight:800;">${tr('전액·배송비포함','全額·送料込み','full · incl. ship')}</span></b>
             </div>
-            <div style="font-size:13px; font-weight:800; color:#b45309;" id="soDiscEventAmount">0 P</div>
-            <div style="font-size:10.5px; color:#92400e;" id="soDiscEventHint">${tr('보유 0','残高 0','Balance 0')}</div>
+            <div style="font-size:13px; font-weight:800; color:#4338ca;" id="soDiscBlogAmount">0</div>
+            <div style="font-size:10.5px; color:#4338ca;" id="soDiscBlogHint">${tr('남은 포인트','残ポイント','Remaining')}</div>
           </label>
-          <!-- 2) 마일리지 (legacy 5%) -->
-          <label class="so-disc-card" data-disc="mileage" style="cursor:pointer; padding:10px 12px; border:2px solid #c7d2fe; background:#eef2ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <input type="radio" name="soDiscChoice" value="mileage" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#3730a3;">⭐ ${tr('마일리지','マイル','Mileage')}</b>
-            </div>
-            <div style="font-size:13px; font-weight:800; color:#4338ca;" id="soDiscMileageAmount">0 P</div>
-            <div style="font-size:10.5px; color:#4338ca;" id="soDiscMileageHint">${tr('보유 0 · 5%','残高 0 · 5%','Balance 0 · 5%')}</div>
-          </label>
-          <!-- 3) 예치금 — 2026-07-03: 할인이 아니라 고객이 맡긴 돈 → 다른 할인과 중복 사용 가능 (독립 체크박스) -->
+          <!-- 예치금 — 고객이 맡긴 돈 → 포인트와 별개, 중복 사용 가능 (독립 체크박스) -->
           <label class="so-disc-card" data-disc="deposit" style="cursor:pointer; padding:10px 12px; border:2px solid #99f6e4; background:#ecfeff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <input type="checkbox" id="soDiscDepositChk" onchange="window._soOnDiscountSelect()" style="margin:0;">
@@ -3419,7 +3410,7 @@ html, body { background: #ffffff !important; }
             <div style="font-size:13px; font-weight:800; color:#0e7490;" id="soDiscDepositAmount">0 P</div>
             <div style="font-size:10.5px; color:#0e7490;" id="soDiscDepositHint">${tr('전액 사용','全額使用','Full balance')}</div>
           </label>
-          <!-- 4) 구독할인 -->
+          <!-- 구독할인 -->
           <label class="so-disc-card" data-disc="pro" style="cursor:pointer; padding:10px 12px; border:2px solid #ddd6fe; background:#f5f3ff; border-radius:10px; display:flex; flex-direction:column; gap:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <input type="radio" name="soDiscChoice" value="pro" onchange="window._soOnDiscountSelect()" style="margin:0;">
@@ -3428,18 +3419,12 @@ html, body { background: #ffffff !important; }
             <div style="font-size:13px; font-weight:800; color:#7c3aed;" id="soDiscProAmount">-</div>
             <div style="font-size:10.5px; color:#7c3aed;" id="soDiscProHint">${tr('주문의 10%','注文金額の10%','10% of order')}</div>
           </label>
-          <!-- 5) SNS 이벤트 포인트 (블로그 체험단 무료쿠폰) — 배송비 포함 전액 커버, 체험단 회원만 노출 -->
-          <label class="so-disc-card" data-disc="blogcoupon" id="soDiscBlogCard" style="display:none; cursor:pointer; padding:10px 12px; border:2px solid #e9d5ff; background:#faf5ff; border-radius:10px; flex-direction:column; gap:4px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <input type="checkbox" id="soDiscBlogChk" onchange="window._soOnDiscountSelect()" style="margin:0;">
-              <b style="font-size:12px; color:#a855f7;">🎟 ${tr('SNS 이벤트 포인트','SNSイベントポイント','SNS Event Point')} <span style="font-size:9.5px; color:#a855f7; font-weight:800;">${tr('배송비포함','送料込み','incl. ship')}</span></b>
-            </div>
-            <div style="font-size:13px; font-weight:800; color:#a855f7;" id="soDiscBlogAmount">0</div>
-            <div style="font-size:10.5px; color:#a855f7;" id="soDiscBlogHint">${tr('남은 포인트','残ポイント','Remaining')}</div>
-          </label>
+          <!-- (숨김) 통합 전 개별 카드 — JS 호환용 placeholder (event_coupon/mileage 는 포인트로 합쳐짐) -->
+          <label class="so-disc-card" data-disc="event_coupon" style="display:none;"><input type="radio" name="soDiscChoice" value="event_coupon" style="display:none;"><span id="soDiscEventAmount"></span><span id="soDiscEventHint"></span></label>
+          <label class="so-disc-card" data-disc="mileage" style="display:none;"><input type="radio" name="soDiscChoice" value="mileage" style="display:none;"><span id="soDiscMileageAmount"></span><span id="soDiscMileageHint"></span></label>
         </div>
         <div style="font-size:11px; color:#6b7280; margin-top:8px; text-align:center; font-weight:600;">
-          * ${tr('쿠폰·마일리지·PRO는 1개만 · 예치금은 중복 사용 가능','クーポン・マイル・PROは1つのみ · 預り金は併用可','Coupon / Mileage / PRO: pick one · Deposit stacks')}
+          * ${tr('포인트·예치금은 전액 사용 가능 (배송비 포함) · PRO는 구독 할인','ポイント·預り金は全額利用可(送料込み) · PROは会員割引','Points / Deposit: full balance (incl. shipping) · PRO: member discount')}
         </div>
         <!-- legacy hidden inputs — 기존 코드 호환용 (값은 _soOnDiscountSelect 에서 동기화) -->
         <input id="soUseMileage" type="hidden" value="0">
@@ -19592,7 +19577,7 @@ html, body { background: #ffffff !important; }
         var blogCard = document.getElementById('soDiscBlogCard');
         if (!uid) { if (blogCard) blogCard.style.display = 'none'; window._soWallet = { ready:false, discChoice:null }; return; }
         var bal = 0;
-        try { var r = await sb.from('profiles').select('blog_coupon').eq('id', uid).maybeSingle(); bal = parseInt((r.data && r.data.blog_coupon) || 0) || 0; } catch (e) {}
+        try { var r = await sb.from('profiles').select('mileage').eq('id', uid).maybeSingle(); bal = parseInt((r.data && r.data.mileage) || 0) || 0; } catch (e) {}   // 통합 포인트 = mileage
         if (bal <= 0) { if (blogCard) blogCard.style.display = 'none'; window._soWallet = { ready:false, discChoice:null }; return; }
         var cart = _soReadAllCart();
         var calc = _soCalcCartTotal(cart);
@@ -19612,7 +19597,7 @@ html, body { background: #ffffff !important; }
             var chkEl = document.getElementById('soDiscBlogChk'); if (chkEl) chkEl.disabled = false;
         }
         var lblEl = box ? box.querySelector('.so-co-label') : null;
-        if (lblEl) lblEl.textContent = tr('SNS 이벤트 포인트', 'SNSイベントポイント', 'SNS Event Point');
+        if (lblEl) lblEl.textContent = tr('포인트', 'ポイント', 'Points');
         if (box) box.style.display = '';
         _soApplyWalletToTotal();
     };
@@ -19730,7 +19715,7 @@ html, body { background: #ffffff !important; }
             isPro ? tr('주문의 10%','注文金額の10%','10% of order') : tr('미구독','未加入','Not subscribed'),
             '원');
         // SNS 이벤트 포인트 (블로그 체험단) — 배송비 포함 전액 커버, 잔액>0 인 체험단 회원만 노출. KRW 고정.
-        var blogBal = parseInt(prof.blog_coupon || 0) || 0;
+        var blogBal = parseInt(prof.mileage || 0) || 0;   // 2026-08-10: 통합 포인트 = mileage (이벤트쿠폰/SNS/블로그 등 전부 합산 이전됨)
         var blogMax = Math.min(blogBal, Math.max(0, calc.grandTotal || discBase));
         window._soWallet.blogCouponBalKRW = blogBal;
         window._soWallet.blogMax = blogMax;
@@ -19805,7 +19790,7 @@ html, body { background: #ffffff !important; }
                 html += '<div style="display:flex; justify-content:space-between; color:#0e7490;"><span>· 💰 ' + tr('예치금 사용','預り金使用','Deposit') + '</span><span>-' + _soFormatPrice(w.useDeposit) + '</span></div>';
             }
             if ((w.useBlogCoupon || 0) > 0) {
-                html += '<div style="display:flex; justify-content:space-between; color:#a855f7;"><span>· 🎟 ' + tr('SNS 이벤트 포인트','SNSイベントポイント','SNS Point') + '</span><span>-' + _soFormatPrice(w.useBlogCoupon) + '</span></div>';
+                html += '<div style="display:flex; justify-content:space-between; color:#4338ca;"><span>· ' + tr('포인트 사용','ポイント使用','Points') + '</span><span>-' + _soFormatPrice(w.useBlogCoupon) + '</span></div>';
             }
             if (w.source === 'pro' && (w.proApplied || 0) > 0) {
                 html += '<div style="display:flex; justify-content:space-between; color:#6d28d9;"><span>· 👑 ' + tr('PRO 구독 10% 할인','PRO会員10%割引','PRO 10% off') + '</span><span>-' + _soFormatPrice(w.proApplied) + '</span></div>';
@@ -20842,11 +20827,11 @@ html, body { background: #ffffff !important; }
             // 2026-06-25: 베스트굿즈/수량 자동 할인 폐지 (사용자 요청) — 요약 표기 제거.
             if (_useMileage > 0) discountSummary += '\n🎁 이벤트 쿠폰 사용 (-' + _useMileage.toLocaleString() + '원, 최대 50,000원 한도)';
             if (_useDeposit > 0) discountSummary += '\n예치금 사용 (-' + _useDeposit.toLocaleString() + '원)';
-            if (_useBlogCoupon > 0) discountSummary += '\nSNS 이벤트 포인트(블로그 체험단) 사용 (-' + _useBlogCoupon.toLocaleString() + '원)';
+            if (_useBlogCoupon > 0) discountSummary += '\n포인트 사용 (-' + _useBlogCoupon.toLocaleString() + '원)';
             // 마일리지/예치금/SNS포인트로 전액 충당되어 카드/무통장 결제가 필요 없는 경우
             var _fullyCovered = (_useMileage > 0 || _useDeposit > 0 || _useBlogCoupon > 0) && _finalTotal <= 0;
             // SNS 포인트 사용 시 결제수단 '블로그체험단쿠폰' (매출집계 제외 구분용) 우선
-            var _walletPayLabel = _useBlogCoupon > 0 ? '블로그체험단쿠폰' : (_useDeposit > 0 ? '예치금' : '마일리지');
+            var _walletPayLabel = _useBlogCoupon > 0 ? '포인트' : (_useDeposit > 0 ? '예치금' : '마일리지');
             // 2026-06-13: 디자인 의뢰 정보 요약 (작업지시서/관리자가 한눈에 보도록)
             var _dreqSummary = '';
             try {
@@ -21111,9 +21096,11 @@ html, body { background: #ffffff !important; }
                         await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'payment_order', amount: -_useDeposit, description: '간편주문 예치금 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     }
                     if (_useBlogCoupon > 0) {
-                        // SNS 이벤트 포인트(블로그 체험단) — 서버 RPC 로 원자적 차감 + 원장 기록
-                        var _bcRes = await sb.rpc('blog_coupon_consume', { _order_id: newOrderId, _amount: _useBlogCoupon });
-                        if (_bcRes && _bcRes.error) throw _bcRes.error;
+                        // 2026-08-10: 통합 포인트 = mileage 에서 차감 (이벤트쿠폰/SNS/블로그 등 전부 mileage 로 합쳐짐)
+                        var _pr = await sb.from('profiles').select('mileage').eq('id', _walletUid).maybeSingle();
+                        var _cp = parseInt((_pr.data && _pr.data.mileage) || 0) || 0;
+                        await sb.from('profiles').update({ mileage: Math.max(0, _cp - _useBlogCoupon) }).eq('id', _walletUid);
+                        await sb.from('wallet_logs').insert({ user_id: _walletUid, type: 'usage_purchase', amount: -_useBlogCoupon, description: '간편주문 포인트 사용 (주문번호: ' + newOrderId + ')', related_order_id: newOrderId });
                     }
                 } catch (we) {
                     console.error('[so wallet deduct]', we);
@@ -21141,7 +21128,7 @@ html, body { background: #ffffff !important; }
                     tr('주문번호', '注文番号', 'Order #') + ': #' + (newOrderId || '...') + '\n' +
                     (_useMileage > 0 ? (tr('마일리지', 'マイル', 'Mileage') + ' ' + _useMileage.toLocaleString() + ' P\n') : '') +
                     (_useDeposit > 0 ? (tr('예치금', '預り金', 'Deposit') + ' ' + _useDeposit.toLocaleString() + tr('원', '円', ' KRW') + '\n') : '') +
-                    (_useBlogCoupon > 0 ? (tr('SNS 이벤트 포인트', 'SNSポイント', 'SNS Point') + ' ' + _soFormatPrice(_useBlogCoupon) + '\n') : '') +
+                    (_useBlogCoupon > 0 ? (tr('포인트', 'ポイント', 'Points') + ' ' + _soFormatPrice(_useBlogCoupon) + '\n') : '') +
                     tr('영업일 내 제작이 시작됩니다.', '営業日内に製作を開始します。', 'Production starts within business days.')
                 );
                 _showLoadingShield();
