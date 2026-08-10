@@ -8645,8 +8645,10 @@ html, body { background: #ffffff !important; }
         // variant 캐시에서 찾음 — 모달 진입 시 _soLoadStickerVariants 가 미리 채워둠.
         var variants = _stickerVariantsCache || [];
         var v = stState.productCode ? variants.find(function(x){ return x.code === stState.productCode; }) : null;
-        if (!v) return 0;
-        var basePrice = Number(v.price) || 0;
+        // 2026-08-10: 캐시(_stickerVariantsCache)는 스티커 모달 열 때만 채워짐 → 체크아웃/새로고침 경로에선 miss.
+        //   일반 스티커는 _stickerPerUnitRef(type,qty)로 계산돼 basePrice 불필요, 팬시는 add-time 에 저장한 _basePrice fallback.
+        //   (예전: if(!v) return 0 → 스티커 상품가 0 → grandTotal 0 버그)
+        var basePrice = v ? (Number(v.price) || 0) : (Number(stState._basePrice) || 0);
         var qty = Math.max(1, Number(stState.qty) || 1000);
         // 낱장(개당) 단가를 먼저 반올림 후 × 수량 — 제품페이지 '단가 × 수량' 표기와 카트 합계 완전 일치.
         var perUnit;
@@ -17066,7 +17068,9 @@ html, body { background: #ffffff !important; }
                 qty: state.stickerQty, type: state.stickerType, shape: state.stickerShape || (state.stickerDieCut ? 'complex' : 'square'),
                 shapeKind: state.stickerShapeKind || null,
                 dieCut: !!state.stickerDieCut,
-                isFancy: !!(_stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode && _stickerIsFancy(x); }))
+                isFancy: !!(_stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode && _stickerIsFancy(x); })),
+                // 2026-08-10: 단가를 항목에 저장 → 체크아웃/새로고침 시 캐시 없어도 팬시 가격 계산 가능(0원 버그 방지)
+                _basePrice: (function(){ try { var _sv = _stickerVariantsCache && _stickerVariantsCache.find(function(x){ return x.code === state.stickerProductCode; }); return _sv ? (Number(_sv.price) || 0) : null; } catch(e){ return null; } })()
             } : null,
             _isSticker: !!state.isSticker,
             // 2026-06-16: 칼선 SVG — Storage 업로드된 URL. order.js uploadOrderFiles 가 orders.files[]
@@ -18004,6 +18008,12 @@ html, body { background: #ffffff !important; }
         if (open) {
             ov.classList.add('open');
             dr.classList.add('open');
+            // 2026-08-10: 스티커 단가 캐시 없으면 선로딩 후 재렌더 (카트 총액 0원 방지)
+            try {
+                if (!_stickerVariantsCache && (typeof _soReadAllCart === 'function' ? _soReadAllCart() : []).some(function (it) { return it && (it.sticker || it._isSticker); })) {
+                    _soLoadStickerVariants().then(function () { renderSoCart(); }).catch(function () {});
+                }
+            } catch (e) {}
             renderSoCart();
             // 2026-05-12: 크로스도메인 배너 렌더 (cart_sync.js)
             try { if (window.cartSync && window.cartSync.renderBanner) window.cartSync.renderBanner(); } catch (e) {}
@@ -19852,12 +19862,14 @@ html, body { background: #ffffff !important; }
     }
     window._soIsDesignFeeOnlyCart = _soIsDesignFeeOnlyCart;
 
-    window._soOpenCheckout = function () {
+    window._soOpenCheckout = async function () {
         var cart = _soReadAllCart();
         if (cart.length === 0) {
             alert(tr('장바구니가 비어있습니다.','カートが空です。','Your cart is empty.'));
             return;
         }
+        // 2026-08-10: 스티커 단가 캐시 선로딩 — 캐시 miss 시 스티커가 0원 계산되는 버그 방지(구 카트항목 대비)
+        try { if (!_stickerVariantsCache && cart.some(function (it) { return it && (it.sticker || it._isSticker); })) await _soLoadStickerVariants(); } catch (e) {}
         _renderCheckoutSummary();
         // 2026-06-26: 원판 배송 메모 → 체크아웃 메모(소CoMemo) 자동 채움 → 주문 request_note 로 저장돼
         //   작업지시서의 "고객 요청사항 (배송 메모)" 박스에 표시됨. (소CoMemo 비어있을 때만)
