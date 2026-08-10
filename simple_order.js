@@ -14325,7 +14325,7 @@ html, body { background: #ffffff !important; }
         state.scarciRefUrls = [];
         state._scarciRefItems = [];
         try { _soScarciRefRender(); } catch (_e) {}
-        state.isInstallEligible = state.isWall || state.isStandee || state.isScarci;
+        state.isInstallEligible = state.isWall || state.isStandee || state.isScarci || _soIsTableProduct(p);   // 2026-08-10 (버그#25): 허니콤 가구테이블(hb_tb_*)도 배송/시공 옵션 노출 (기존엔 허니콤 무료배송으로 배송선택란 자체가 없었음)
         // 2026-07-11: 객체크기 모드 — 자유인쇄커팅/등신대(글씨스카시 등)는 가로·세로·가격을 대지가 아닌 "객체(칼선 바깥 윤곽)" 크기로.
         //   편집기에 알려 대지 숨김 + 객체 크기 컨트롤 노출. (이 flag 로만 신규 분기 gating → 타 제품 회귀 방지)
         //   등신대 V2(hb_pi_5, 실물 100~150cm preset 플로우)는 제외 — 기존 사이즈 파이프라인 유지.
@@ -15538,10 +15538,14 @@ html, body { background: #ffffff !important; }
             allowed = installKeys.slice();
         } else if (state.isScarci) {
             // 2026-06-09: 글씨포토존/스카시 — 택배 불가 (크기 큼). 수도권 무료 + 지방배송 20만 (카트 묶음은 자동 carryover)
-            allowed = ['metro_install_simple', 'regional_delivery_simple'];
+            // 2026-08-10 (버그#26/#29 최연두): 야간·주말 설치(수도권 10만원) 대상 — metro_weekend 추가.
+            allowed = ['metro_install_simple', 'metro_weekend', 'regional_delivery_simple'];
         } else if (state.isStandee) {
             // 2026-06-09: 등신대 — 설치 없이 배송만. 3가지: 수도권 무료 / 60×180 택배 3만 / 지방배송 20만 (카트 묶음은 자동 carryover)
             allowed = ['metro_install_simple', 'regional_compact_60_180', 'regional_delivery_simple'];
+        } else if (_soIsTableProduct(p)) {
+            // 2026-08-10 (버그#25 최연두): 허니콤 가구테이블 — 배송 옵션 '전부'(시공 5종 + 택배 + 방문수령).
+            allowed = installKeys.concat(['parcel_shipping', 'self_pickup']);
         } else if (state.isPaperDisplay) {
             // 2026-06-12: 종이매대 — 배송 옵션 단순화. MOQ 100, 기본 벌크배송 무료.
             //   1개씩 / 2개씩 포장 옵션 추가 가능. self_pickup / metro_delivery / regional_delivery 제거.
@@ -15577,8 +15581,9 @@ html, body { background: #ffffff !important; }
         var defaultShip = 'self_pickup';
         if (state.isPaperDisplay) {
             defaultShip = 'pd_bulk_free'; // 항상 무료 벌크 기본
-        } else if ((state.isWall || state.isPhotozone) && allowed.indexOf('metro_install') >= 0) {
+        } else if ((state.isWall || state.isPhotozone || _soIsTableProduct(p)) && allowed.indexOf('metro_install') >= 0) {
             // 2026-06-01: 가벽/포토존 — 기본 배송 = 수도권 설치 (사용자 요청)
+            // 2026-08-10 (버그#25): 가구테이블도 기본 = 수도권 무료설치(0원) — 택배 유료(3만)로 기본 튀지 않게.
             defaultShip = 'metro_install';
         } else if (_isHbFreeShip) {
             // 2026-06-01: 허니콤 가벽 외 — 무료 배송. shipMethod 는 self_pickup 으로 (배송비 0)
