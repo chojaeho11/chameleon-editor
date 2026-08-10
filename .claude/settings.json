@@ -404,7 +404,13 @@
       "Bash(./deploy.sh \"SNS monitor: reward 50k/Threads 100k \\(was 100k/200k\\); add monthly SNS view-count ranking cash event \\(1st 100man..5th 5man, KR/JP\\), members enter view counts in mypage, admin ranking+payout in blog-monitor tab; full JP translations \\(mypage v288\\)\")",
       "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\blog10_publicrank.sql\")",
       "Bash(sed -i 's#mypage.js?v=288#mypage.js?v=289#g' mypage.html)",
-      "Bash(./deploy.sh \"public game-style SNS view ranking leaderboard \\(dark/gold, medals\\): viewable by customers via recruit popup 'ranking' button + shown on mypage blog tab; new sns-ranking.js + blog_view_ranking_public RPC \\(anon, masked names\\); shows rank/name/count/total-views/prize, KR+JP \\(mypage v289\\)\")"
+      "Bash(./deploy.sh \"public game-style SNS view ranking leaderboard \\(dark/gold, medals\\): viewable by customers via recruit popup 'ranking' button + shown on mypage blog tab; new sns-ranking.js + blog_view_ranking_public RPC \\(anon, masked names\\); shows rank/name/count/total-views/prize, KR+JP \\(mypage v289\\)\")",
+      "Bash(awk '{print $5\" bytes\"}')",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\q_nt.sql\")",
+      "PowerShell(& \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\sbq.ps1\" -SqlFile \"C:\\\\Users\\\\WIN10~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-win-10-Desktop---\\\\248d2997-9c8e-4d31-b39a-3f1ad20d9dee\\\\scratchpad\\\\blog11_revised.sql\")",
+      "Bash(sed -i 's#sns-ranking.js?v=1#sns-ranking.js?v=2#g' index.html mypage.html)",
+      "Bash(sed -i 's#mypage.js?v=289#mypage.js?v=290#g' mypage.html)",
+      "Bash(./deploy.sh \"SNS event: rank by verified POST COUNT \\(not views, anti-fraud\\); revert to manual approval \\(apply->pending->admin approve\\); revoke ntakahashi846 fraudulent 200k points \\(used company Threads URL\\) + set pending; only admin-checked posts count in ranking; JP translations \\(mypage v290, sns-ranking v2\\)\")"
     ],
     "additionalDirectories": [
       "\\tmp",

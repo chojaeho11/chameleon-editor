@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810213855';
+    var CV = '20260810215823';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5446,8 +5446,8 @@ function _blogRecruitBuild(jp, loggedIn, status){
         ? '🧵 Threads ユーザーは特典2倍！<br><br>- 応援イベント ポイント10,000円分！'
         : '🧵 스레드(Threads) 이용자는 혜택 2배!<br><br>- 응원 이벤트 포인트 10만!';
     var rankMsg = jp
-        ? '🏆 毎月 閲覧数ランキング現金イベント<br>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円！'
-        : '🏆 매월 조회수 랭킹 현금 이벤트<br>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원!';
+        ? '🏆 毎月 投稿数ランキング現金イベント<br>PR投稿が多いほど上位！ 1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円！'
+        : '🏆 매월 게시글 수 랭킹 현금 이벤트<br>홍보 글이 많을수록 상위! 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원!';
     var btnStyle='width:100%; padding:12px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;';
     var inner='';
     if (!loggedIn) {
@@ -10724,7 +10724,7 @@ window.filterFxCards = function(cat, btn) {
 <!-- 2026-05-12: 간편 주문 모달 (window.openSimpleOrderModal(productCode)) + showChoiceModal 자동 라우팅 -->
 <script src="/editor-rail.js?v=4"></script>
 <script src="/simple_order.js?v=851"></script>
-<script src="/sns-ranking.js?v=1"></script>
+<script src="/sns-ranking.js?v=2"></script>
 <!-- 2026-06-25: 게임형 제품 주문 튜토리얼 (window._tutMaybeStart). simple_order.js 다음에 로드 -->
 <script src="/product-tutorial.js?v=728"></script>
 <!-- 2026-05-12: 크로스도메인 통합 카트 동기화 (cotton-print + cafe2626/0101/3355 공유) -->

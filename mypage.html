@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260810213855';
+    var CV = '20260810215823';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -204,7 +204,7 @@
 </head>
 <body class="mypage-body">
 <script src="toast.js?v=267"></script>
-<script src="./sns-ranking.js?v=1"></script>
+<script src="./sns-ranking.js?v=2"></script>
 
     <nav class="mp-sidebar">
         <div class="mp-logo" onclick="location.href='index.html'"><i class="fa-solid fa-palette"></i> Chameleon</div>
@@ -345,10 +345,10 @@
                 <span id="blogIntroDesc">제품을 무료로 구매(배송비 포함)하고 SNS·블로그에 홍보 후기를 남겨주세요. 매월 <b>5만 포인트</b>(Threads 이용자 <b>10만 포인트</b>)가 지급됩니다. 다음 달 포인트를 받으려면 후기 링크를 최소 2개 등록해야 합니다.</span>
             </div>
 
-            <!-- 월간 조회수 랭킹 현금 이벤트 -->
+            <!-- 월간 게시글 수 랭킹 현금 이벤트 -->
             <div style="background:linear-gradient(135deg,#fff7ed,#ffedd5); border:1px solid #fdba74; border-radius:12px; padding:16px 18px; margin-bottom:16px; color:#7c2d12; font-size:13px; line-height:1.7;">
-                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 매월 조회수 랭킹 현금 이벤트</div>
-                <span id="blogEventDesc">한 달간 등록한 SNS 홍보물의 <b>조회수를 합산</b>해 순위를 매깁니다. <b>1위 100만원 · 2위 50만원 · 3위 25만원 · 4위 10만원 · 5위 5만원</b> 현금 지급! (한국·일본 회원 대상)</span>
+                <div id="blogEventTitle" style="font-size:15px; margin-bottom:6px;">🏆 매월 게시글 수 랭킹 현금 이벤트</div>
+                <span id="blogEventDesc">SNS 홍보 게시글을 <b>많이 올릴수록</b> 순위가 올라갑니다(관리자 확인 후 집계). <b>1위 100만원 · 2위 50만원 · 3위 25만원 · 4위 10만원 · 5위 5만원</b> 현금 지급! (한국·일본 회원 대상)</span>
             </div>
 
             <div id="snsRankMypage" style="margin-bottom:20px;"></div>
@@ -358,8 +358,6 @@
             <div style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
                 <div id="blogSubmitTitle" style="font-size:14px; color:#334155; margin-bottom:12px;">후기·홍보 링크 등록</div>
                 <input id="blogLinkUrl" type="url" placeholder="https://..."
-                    style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
-                <input id="blogLinkViews" type="number" min="0" placeholder="조회수 (숫자만 입력)"
                     style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
                 <input id="blogLinkMemo" type="text" placeholder="메모 (선택)"
                     style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box;">
@@ -375,13 +373,13 @@
                     blogTitle:'ブログ・SNSモニター',
                     blogIntroTitle:'毎月 無料ポイントを進呈します',
                     blogIntroDesc:'商品を無料で購入（送料込み）し、SNS・ブログにPRレビューを投稿してください。毎月<b>5,000円分</b>（Threads利用者は<b>10,000円分</b>）のポイントを進呈します。翌月のポイントを受け取るには、レビューリンクを2件以上登録してください。',
-                    blogEventTitle:'🏆 毎月 閲覧数ランキング 現金イベント',
-                    blogEventDesc:'1ヶ月間に登録したSNS投稿の<b>閲覧数を合算</b>してランキングを決定します。<b>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円</b>の現金を進呈！（韓国・日本の会員対象）',
+                    blogEventTitle:'🏆 毎月 投稿数ランキング 現金イベント',
+                    blogEventDesc:'SNSのPR投稿を<b>多く投稿するほど</b>順位が上がります（管理者確認後に集計）。<b>1位 10万円・2位 5万円・3位 2.5万円・4位 1万円・5位 5千円</b>の現金を進呈！（韓国・日本の会員対象）',
                     blogSubmitTitle:'レビュー・PRリンク登録',
                     blogMyLinksTitle:'登録したリンク'
                 };
                 Object.keys(t).forEach(function(k){ var e=document.getElementById(k); if(e) e.innerHTML=t[k]; });
-                var ph={ blogLinkViews:'閲覧数（数字のみ）', blogLinkMemo:'メモ（任意）' };
+                var ph={ blogLinkMemo:'メモ（任意）' };
                 Object.keys(ph).forEach(function(k){ var e=document.getElementById(k); if(e) e.placeholder=ph[k]; });
                 var b=document.getElementById('blogLinkSubmitBtn'); if(b) b.textContent='登録';
             })();</script>
@@ -501,7 +499,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=289"></script>
+    <script type="module" src="./mypage.js?v=290"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

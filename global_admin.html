@@ -8,7 +8,7 @@
     // 2026-07-07: [버전 자동 갱신] 관리자 페이지도 구버전 캐시를 스스로 최신화 (deploy.sh 가 아래 CV + version.txt 를 동일 stamp 로 교체).
     //   이게 없어서 관리자 페이지가 구버전 코드로 남아 '버그제보 승인이 저장 안 됨' 등 반영 지연이 있었음.
     (function(){
-        var CV = '20260810213855';
+        var CV = '20260810215823';
         function _verBusy(){
             try {
                 var ae = document.activeElement;
@@ -3295,8 +3295,8 @@ window.tplReviewDelete = async function(id, name, btn) {
             <button onclick="loadBlogMonitor()" style="padding:7px 12px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">새로고침</button>
         </div>
         <div style="font-size:12.5px; color:#475569; margin-bottom:14px; line-height:1.7; background:#faf5ff; padding:12px 14px; border-radius:10px;">
-            매월 각 회원에게 <b style="color:#a855f7;">5만 포인트(¥5,000)</b>가 지급됩니다. 포인트는 <b>배송비 포함</b> 전액을 커버하며, 결제 시 자동 차감·초과분만 카드결제. <b style="color:#111;">Threads 이용자는 2배(10만 포인트)</b>. <b style="color:#16a34a;">한국·일본 신청자는 자동 승인·즉시 지급</b>됩니다(그 외 국가만 대기→승인). <b>첫 지급 이후</b>에는 후기(마이페이지 링크) <b>2개 이상</b> 등록해야 다음 달 포인트가 지급됩니다(후기 열 N/2). <b>이름을 클릭</b>하면 해당 회원의 후기 링크·조회수를 볼 수 있습니다. 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결.
-            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e9d5ff;">🏆 <b>매월 조회수 랭킹 현금 이벤트</b> — 회원별 SNS 홍보물 조회수 합산 → <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급(한국·일본 회원). 아래 「조회수 랭킹」에서 확인·지급 처리.</div>
+            매월 각 회원에게 <b style="color:#a855f7;">5만 포인트(¥5,000)</b>가 지급됩니다. 포인트는 <b>배송비 포함</b> 전액을 커버하며, 결제 시 자동 차감·초과분만 카드결제. <b style="color:#111;">Threads 이용자는 2배(10만 포인트)</b>. 신청건은 <b>상태=대기</b>에서 <b style="color:#16a34a;">승인</b> 눌러야 지급됩니다(자동승인 없음). <b>첫 지급 이후</b>에는 후기(마이페이지 링크) <b>2개 이상</b> 등록해야 다음 달 포인트가 지급됩니다(후기 열 N/2). <b>이름을 클릭</b>하면 해당 회원의 게시글 링크가 보이며, <b>「확인」 체크한 게시글만 랭킹에 집계</b>됩니다(가짜/도용 방지). 미가입 회원은 해당 이메일/아이디로 가입 후 최초 로그인 시 자동 연결.
+            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #e9d5ff;">🏆 <b>매월 게시글 수 랭킹 현금 이벤트</b> — 회원별 <b>확인된 게시글 수</b>가 많을수록 상위 → <b>1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원</b> 현금 지급(한국·일본 회원). 아래 「게시글 랭킹」에서 확인·지급 처리.</div>
         </div>
         <div id="blogMonAddForm" style="display:none; background:#fff; border:1px solid #e9d5ff; border-radius:10px; padding:14px; margin-bottom:14px; display:none;">
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -3313,10 +3313,10 @@ window.tplReviewDelete = async function(id, name, btn) {
         <!-- 2026-08-10: 월간 SNS 조회수 랭킹 (현금 상금) -->
         <div style="margin-top:26px; border-top:2px solid #f59e0b; padding-top:16px;">
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                <h3 style="font-size:16px; font-weight:800; flex:1;">🏆 SNS 조회수 랭킹 <span id="blogRankMonth" style="font-size:12px; color:#64748b; font-weight:600;"></span></h3>
+                <h3 style="font-size:16px; font-weight:800; flex:1;">🏆 SNS 게시글 랭킹 <span id="blogRankMonth" style="font-size:12px; color:#64748b; font-weight:600;"></span></h3>
                 <button onclick="loadBlogViewRanking()" style="padding:6px 11px; background:#e2e8f0; color:#334155; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">새로고침</button>
             </div>
-            <div style="font-size:12px; color:#64748b; margin-bottom:12px;">이번 달(회원이 등록한 SNS 홍보물 조회수 합산) 상위 5명에게 현금 지급 — 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원. 「지급 확정」은 실제 현금 지급 후 기록용.</div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:12px;">이번 달 <b>확인된 게시글 수</b> 상위 5명에게 현금 지급 — 1위 100만 · 2위 50만 · 3위 25만 · 4위 10만 · 5위 5만원. 회원 게시글은 <b>이름 클릭 → 링크 확인 후 「확인」 체크</b>해야 집계됩니다(가짜 방지). 「지급 확정」은 실제 현금 지급 후 기록용.</div>
             <div id="blogRankList" style="overflow-x:auto;"><div style="text-align:center; padding:24px; color:#94a3b8;">로딩 중...</div></div>
         </div>
     </div>
@@ -3338,18 +3338,18 @@ window.loadBlogViewRanking = async function() {
         const mEl = document.getElementById('blogRankMonth'); if (mEl) mEl.textContent = '(' + (data.month||'') + ')';
         const prizes = data.prizes || [1000000,500000,250000,100000,50000];
         const rank = data.ranking || [];
-        if (!rank.length) { box.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">이번 달 조회수 등록 내역이 없습니다.</div>'; return; }
+        if (!rank.length) { box.innerHTML = '<div style="text-align:center; padding:24px; color:#94a3b8;">이번 달 게시글 등록 내역이 없습니다.</div>'; return; }
         let html = '<table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#fff7ed; color:#7c2d12; text-align:left;">'
-            + '<th style="padding:9px;">순위</th><th style="padding:9px;">이름</th><th style="padding:9px; text-align:right;">조회수 합계</th><th style="padding:9px; text-align:center;">링크수</th><th style="padding:9px; text-align:right;">상금</th><th style="padding:9px; text-align:center;">지급</th></tr></thead><tbody>';
+            + '<th style="padding:9px;">순위</th><th style="padding:9px;">이름</th><th style="padding:9px; text-align:center;">게시글 수<br><span style="font-size:9px; color:#c99;">(확인분)</span></th><th style="padding:9px; text-align:center;">대기</th><th style="padding:9px; text-align:right;">상금</th><th style="padding:9px; text-align:center;">지급</th></tr></thead><tbody>';
         rank.forEach(function(r, i){
-            const prize = i < prizes.length ? prizes[i] : 0;
-            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위';
+            const prize = (r.total_posts>0 && i < prizes.length) ? prizes[i] : 0;
+            const medal = (r.total_posts>0) ? (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위') : '-';
             const paid = (r.paid_amount||0) > 0;
-            html += '<tr style="border-bottom:1px solid #f1f5f9;' + (i<5?' background:#fffbeb;':'') + '">'
+            html += '<tr style="border-bottom:1px solid #f1f5f9;' + (i<5 && r.total_posts>0?' background:#fffbeb;':'') + '">'
                 + '<td style="padding:9px; font-weight:700;">' + medal + '</td>'
                 + '<td style="padding:9px;">' + _bmEsc(r.name||'-') + (r.is_threads?' <span style="background:#111;color:#fff;border-radius:4px;padding:0 5px;font-size:9px;">Threads</span>':'') + '</td>'
-                + '<td style="padding:9px; text-align:right; color:#f59e0b; font-weight:800;">' + (Number(r.total_views)||0).toLocaleString() + '</td>'
-                + '<td style="padding:9px; text-align:center;">' + (r.link_count||0) + '</td>'
+                + '<td style="padding:9px; text-align:center; color:#f59e0b; font-weight:800; font-size:15px;">' + (Number(r.total_posts)||0).toLocaleString() + '</td>'
+                + '<td style="padding:9px; text-align:center;">' + ((r.pending_posts||0)>0 ? '<span style="color:#dc2626;">'+r.pending_posts+'</span>' : '0') + '</td>'
                 + '<td style="padding:9px; text-align:right; font-weight:700;">' + (prize>0 ? _bmMoney(prize) : '-') + '</td>'
                 + '<td style="padding:9px; text-align:center;">' + (prize>0
                     ? (paid ? '<span style="color:#16a34a; font-size:12px;">지급완료</span>'

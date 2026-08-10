@@ -6,11 +6,10 @@
         title: JP ? 'SNS PRランキング' : 'SNS 홍보 랭킹',
         rank: JP ? '順位' : '순위',
         name: JP ? '名前' : '이름',
-        cnt:  JP ? '件数' : '건수',
-        views: JP ? '閲覧数' : '조회수',
+        posts: JP ? '投稿数' : '게시글 수',
         prize: JP ? '賞金' : '보상',
         empty: JP ? '今月の登録がまだありません。最初のランカーになりましょう！' : '이번 달 등록 내역이 없습니다. 첫 랭커가 되어보세요!',
-        note: JP ? '順位はリアルタイム反映 · 毎月 合算閲覧数 上位5名に現金進呈' : '순위는 실시간 반영 · 매월 합산 조회수 상위 5명 현금 지급',
+        note: JP ? '順位はリアルタイム反映 · 投稿数が多いほど上位 · 上位5名に現金進呈（管理者確認分）' : '순위는 실시간 반영 · 게시글이 많을수록 상위 · 상위 5명 현금 지급(관리자 확인분)',
         loading: JP ? '読み込み中...' : '불러오는 중...',
         close: JP ? '閉じる' : '닫기',
         won: JP ? '円' : '원'
@@ -57,15 +56,14 @@
             return '<tr class="' + (i < 5 ? 'top' : '') + '">'
                  + '<td class="rk">' + medal + '</td>'
                  + '<td class="nm">' + esc(r.name || '-') + th + '</td>'
-                 + '<td class="ct">' + (r.link_count || 0) + '</td>'
-                 + '<td class="vw">' + (Number(r.total_views) || 0).toLocaleString() + '</td>'
+                 + '<td class="vw">' + (Number(r.total_posts) || 0).toLocaleString() + '</td>'
                  + '<td class="pz">' + (prize > 0 ? money(prize) : '-') + '</td>'
                  + '</tr>';
         }).join('');
         return css + head
             + '<table><thead><tr>'
             + '<th style="text-align:center;">' + esc(T.rank) + '</th><th>' + esc(T.name) + '</th>'
-            + '<th style="text-align:center;">' + esc(T.cnt) + '</th><th style="text-align:right;">' + esc(T.views) + '</th>'
+            + '<th style="text-align:right;">' + esc(T.posts) + '</th>'
             + '<th style="text-align:right;">' + esc(T.prize) + '</th></tr></thead><tbody>'
             + rows + '</tbody></table>'
             + '<div class="snsrk-note">' + esc(T.note) + '</div></div>';
