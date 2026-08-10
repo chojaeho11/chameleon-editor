@@ -9,7 +9,7 @@
         posts: JP ? '投稿数' : '게시글 수',
         prize: JP ? '賞金' : '보상',
         empty: JP ? '今月の登録がまだありません。最初のランカーになりましょう！' : '이번 달 등록 내역이 없습니다. 첫 랭커가 되어보세요!',
-        note: JP ? '順位はリアルタイム反映 · 投稿数が多いほど上位 · 上位5名に現金進呈（管理者確認分）' : '순위는 실시간 반영 · 게시글이 많을수록 상위 · 상위 5명 현금 지급(관리자 확인분)',
+        note: JP ? '順位はリアルタイム反映 · 投稿が多いほど上位 · 上位5名に現金進呈' : '순위는 실시간 반영 · 게시글이 많을수록 상위 · 상위 5명 현금 지급',
         loading: JP ? '読み込み中...' : '불러오는 중...',
         close: JP ? '閉じる' : '닫기',
         won: JP ? '円' : '원'
@@ -87,7 +87,7 @@
         if (ov) ov.remove();
         ov = document.createElement('div');
         ov.id = 'snsRankModal';
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(88,28,110,.42);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;';
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,6,28,.85);backdrop-filter:blur(3px);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;';
         ov.innerHTML = '<div style="max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;">'
             + '<div id="snsRankModalBody"><div style="padding:40px;text-align:center;color:#c084bc;background:#fff;border-radius:18px;">' + esc(T.loading) + '</div></div>'
             + '<button onclick="document.getElementById(\'snsRankModal\').remove()" style="margin-top:12px;width:100%;padding:12px;background:linear-gradient(135deg,#f9a8d4,#c084fc);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;">' + esc(T.close) + '</button>'
