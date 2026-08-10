@@ -43,6 +43,7 @@ window.loadStatsData = async () => {
 
         // 집계 변수
         let totalRevenue = 0;
+        let pointPaidTotal = 0, pointPaidCount = 0;   // 2026-08-10: 포인트 전액결제 별도 집계 (매출 제외)
         const managerStats = {};
         const driverStats = {};
 
@@ -53,9 +54,12 @@ window.loadStatsData = async () => {
             // 매출 인정 기준: 결제완료 계열 상태
             const validPayment = ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'].includes(o.payment_status);
             if(!validPayment) return; // 미결제 건은 매출 통계에서 제외 (원하시면 주석 처리)
-            if(o.payment_method === '블로그체험단쿠폰') return; // 2026-08-10: 블로그체험단 무료쿠폰 주문은 실매출 아님 → 제외
 
             let amt = o.total_amount || 0;
+            // 2026-08-10: 포인트/체험단 무료쿠폰 결제는 실매출 아님 → 매출 제외. 포인트는 별도 집계.
+            if(o.payment_method === '포인트') { pointPaidTotal += amt; pointPaidCount++; return; }
+            if(o.payment_method === '블로그체험단쿠폰') { pointPaidTotal += amt; pointPaidCount++; return; }
+
             totalRevenue += amt;
 
             if(o.staff_manager_id) managerStats[o.staff_manager_id] = (managerStats[o.staff_manager_id] || 0) + amt;
@@ -64,6 +68,8 @@ window.loadStatsData = async () => {
 
         document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + '원';
         document.getElementById('totalCount').innerText = orders.length + '건';
+        const _ppEl = document.getElementById('pointPaidTotal');
+        if(_ppEl) _ppEl.innerText = pointPaidTotal.toLocaleString() + '원 (' + pointPaidCount + '건)';
 
         renderStaffStats('statManagerBody', managerStats, staffList || [], totalRevenue);
         renderStaffStats('statDriverBody', driverStats, staffList || [], totalRevenue);
@@ -91,10 +97,9 @@ async function loadDashboardCharts() {
     try {
         // 올해 전체 주문 가져오기 (결제완료된 것만)
         const { data: orders, error } = await sb.from('orders')
-            .select('created_at, total_amount, payment_status')
+            .select('created_at, total_amount, payment_status, payment_method')
             .gte('created_at', startOfYear)
-            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
-            .neq('payment_method', '블로그체험단쿠폰'); // 2026-08-10: 체험단 무료쿠폰 주문 매출 제외
+            .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']);
 
         if(error) throw error;
 
@@ -116,6 +121,7 @@ async function loadDashboardCharts() {
 
         // 데이터 집계
         orders.forEach(o => {
+            if(o.payment_method === '포인트' || o.payment_method === '블로그체험단쿠폰') return; // 2026-08-10: 포인트/무료쿠폰 결제 매출 제외
             const amt = o.total_amount || 0;
             const date = new Date(o.created_at);
             const dateStr = o.created_at.split('T')[0];
@@ -254,11 +260,10 @@ window.loadAccountingData = async () => {
         const [depositRes, ordersRes, prodsRes] = await Promise.all([
             sb.from('profiles').select('deposit'),
             sb.from('orders')
-                .select('id, total_amount, discount_amount, items, payment_status')
+                .select('id, total_amount, discount_amount, items, payment_status, payment_method')
                 .gte('created_at', start + 'T00:00:00')
                 .lte('created_at', end + 'T23:59:59')
-                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid'])
-                .neq('payment_method', '블로그체험단쿠폰'), // 2026-08-10: 체험단 무료쿠폰 주문 매출 제외
+                .in('payment_status', ['결제완료', '입금확인', '카드결제완료', '입금확인됨', 'paid']),
             sb.from('admin_products').select('name, price')
         ]);
 
@@ -269,7 +274,8 @@ window.loadAccountingData = async () => {
         const totalDeposit = cachedAccProfiles.reduce((acc, cur) => acc + (cur.deposit || 0), 0);
         document.getElementById('accTotalDeposit').innerText = totalDeposit.toLocaleString() + "원";
 
-        cachedAccOrders = ordersRes.data || [];
+        // 2026-08-10: 포인트/무료쿠폰 결제 주문은 실매출 아님 → 결산에서 제외
+        cachedAccOrders = (ordersRes.data || []).filter(o => o.payment_method !== '포인트' && o.payment_method !== '블로그체험단쿠폰');
 
         let totalSales = 0;
         let totalDiscount = 0;

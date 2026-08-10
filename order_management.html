@@ -459,6 +459,11 @@ window.showSection = function(){};
                     <div class="stat-icon" style="background:#ecfdf5; color:#059669;"><i class="fa-solid fa-receipt"></i></div>
                     <div class="stat-info"><div>총 주문 건수</div><div id="totalCount">0건</div></div>
                 </div>
+                <!-- 2026-08-10: 포인트 전액결제 별도 집계 (위 매출에는 미포함) -->
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#eef2ff; color:#4338ca;"><i class="fa-solid fa-coins"></i></div>
+                    <div class="stat-info"><div>포인트 결제 <span style="font-size:11px; color:#94a3b8;">(매출 제외)</span></div><div id="pointPaidTotal">0원 (0건)</div></div>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
@@ -577,7 +582,7 @@ window.showSection = function(){};
 import { sb, initConfig } from './global_config.js?v=435';
 import { checkAdminAccess, showLoading } from './global_common.js?v=435';
 import './global_orders.js?v=486';
-import './global_stats.js?v=436';
+import './global_stats.js?v=437';
 
 window.sb = sb;
 window._supabase = sb;
