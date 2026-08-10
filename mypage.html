@@ -7,7 +7,7 @@
 //   ⚠ CV 는 deploy.sh 가 'var CV = ...' 를 가진 모든 HTML 을 찾아 매 배포마다 갱신한다.
 //     (여기 값을 손으로 고치거나 형식을 바꾸면 갱신에서 누락돼 무한 새로고침이 된다)
 (function(){
-    var CV = '20260810113208';
+    var CV = '20260810171025';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -219,7 +219,12 @@
         <div class="mp-nav-item" onclick="switchTab('profit')">
             <i class="fa-solid fa-sack-dollar" style="width:20px;"></i> <span data-i18n="mp_menu_profit">Profit & Points</span>
         </div>
-        
+
+        <!-- 블로그 체험단 (체험단 회원만 노출) -->
+        <div class="mp-nav-item" id="navBlogMonitor" style="display:none;" onclick="switchTab('blog')">
+            <i class="fa-solid fa-ticket" style="width:20px;"></i> <span data-i18n="mp_menu_blog_monitor">블로그 체험단</span>
+        </div>
+
         <div style="margin-top: auto;">
             <div class="mp-nav-item" style="color:#ef4444;" onclick="logout()">
                 <i class="fa-solid fa-right-from-bracket" style="width:20px;"></i> <span data-i18n="btn_logout">Logout</span>
@@ -254,6 +259,15 @@
                     <div class="stat-info">
                         <span id="mileageDisplay">0 P</span>
                         <span data-i18n="mp_label_mileage">Mileage</span>
+                    </div>
+                </div>
+
+                <!-- 블로그 체험단 무료쿠폰 잔액 (체험단 회원만 노출) -->
+                <div class="stat-card" id="blogCouponCard" style="display:none; position:relative; overflow:hidden;">
+                    <div class="stat-icon" style="background:#faf5ff; color:#a855f7;"><i class="fa-solid fa-ticket"></i></div>
+                    <div class="stat-info">
+                        <span id="blogCouponDisplay" style="color:#a855f7;">0</span>
+                        <span data-i18n="mp_label_blog_coupon">블로그 체험단 쿠폰</span>
                     </div>
                 </div>
 
@@ -323,6 +337,28 @@
             <ul id="recentLogs" style="list-style:none; padding:0; margin-top:15px; color:#475569;">
                 <li data-i18n="msg_loading">로딩 중...</li>
             </ul>
+        </div>
+
+        <div id="tab-blog" class="mp-section">
+            <h3 data-i18n="mp_blog_title">블로그 체험단</h3>
+            <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:12px; padding:16px 18px; margin:14px 0 22px; color:#475569; font-size:13px; line-height:1.7;">
+                <div style="color:#a855f7; font-size:15px; margin-bottom:6px;" data-i18n="mp_blog_intro_title">매월 10일, 무료쿠폰이 새롭게 채워집니다</div>
+                <span data-i18n="mp_blog_intro_desc">제품을 무료로 구매(배송비 포함)하고 블로그에 후기를 남겨주세요. 작성하신 후기 링크를 아래에 등록해 주시면 확인 후 반영됩니다.</span>
+            </div>
+
+            <div style="border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+                <div style="font-size:14px; color:#334155; margin-bottom:12px;" data-i18n="mp_blog_submit_title">후기 링크 등록</div>
+                <input id="blogLinkUrl" type="url" placeholder="https://..." data-i18n-ph="mp_blog_url_ph"
+                    style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:10px; box-sizing:border-box;">
+                <input id="blogLinkMemo" type="text" placeholder="메모 (선택)" data-i18n-ph="mp_blog_memo_ph"
+                    style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:12px; box-sizing:border-box;">
+                <button id="blogLinkSubmitBtn" onclick="submitBlogLink()"
+                    style="padding:11px 22px; background:#a855f7; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;"
+                    data-i18n="mp_blog_submit">링크 제출</button>
+            </div>
+
+            <div style="font-size:14px; color:#334155; margin:26px 0 12px;" data-i18n="mp_blog_my_links">내가 제출한 링크</div>
+            <div id="blogLinkList"></div>
         </div>
 
         <div id="tab-designs" class="mp-section">
@@ -439,7 +475,7 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script type="module" src="./mypage.js?v=284"></script>
+    <script type="module" src="./mypage.js?v=285"></script>
     <div id="withdrawModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-box" style="background:white; padding:25px; border-radius:12px; width:380px;">
         

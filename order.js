@@ -3522,6 +3522,27 @@ async function processOrderSubmission() {
             elBal.innerText = `(${window.t('label_balance', 'Balance')}: ${formatCurrency(balance)})`;
             elBal.dataset.balance = balance;
         }
+
+        // 블로그 체험단 무료쿠폰 — 활성 체험단이면 이번 회차 자동지급 후 결제수단 노출 (배송비 포함 전액 커버)
+        try {
+            const bcRadioRow = document.getElementById('payMethodBlogCoupon');
+            const _bcDesignFeeOnly = typeof _isDesignFeeOnlyCart === 'function' && _isDesignFeeOnlyCart();
+            let _bcBal = 0, _isMon = false;
+            const { data: _bcSync } = await sb.rpc('blog_monitor_sync');
+            if (_bcSync && _bcSync.is_monitor) { _isMon = true; _bcBal = _bcSync.balance || 0; }
+            window._blogCouponBalance = _isMon ? _bcBal : 0;
+            if (bcRadioRow) {
+                if (_isMon && _bcBal > 0 && !_bcDesignFeeOnly) {
+                    bcRadioRow.style.display = '';
+                    const elBc = document.getElementById('myBlogCouponDisplay');
+                    if (elBc) { elBc.innerText = `(${window.t('label_balance', 'Balance')}: ${formatCurrency(_bcBal)})`; elBc.dataset.balance = _bcBal; }
+                } else {
+                    bcRadioRow.style.display = 'none';
+                    const _bcInput = bcRadioRow.querySelector('input[value="blogcoupon"]');
+                    if (_bcInput && _bcInput.checked) { const _cardR = document.querySelector('input[name="paymentMethod"][value="card"]'); if (_cardR) _cardR.checked = true; }
+                }
+            }
+        } catch(_bce) { console.warn('[blog coupon sync]', _bce); window._blogCouponBalance = 0; }
     }
 }
 
@@ -4328,6 +4349,38 @@ async function processFinalPayment() {
                 `;
                 document.body.appendChild(bankPopup);
             }
+        } else if (method === 'blogcoupon') {
+            // 블로그 체험단 무료쿠폰 (예치금 결제 미러 — 배송비 포함 전액 커버, 초과분만 카드)
+            const bcSpan = document.getElementById('myBlogCouponDisplay');
+            const bcBalance = parseInt(bcSpan?.dataset?.balance || window._blogCouponBalance || 0);
+            if (bcBalance >= realFinalPayAmount) {
+                await processBlogCouponPayment(realFinalPayAmount, useMileage);
+            } else if (bcBalance > 0) {
+                // 혼합결제: 쿠폰 전액 + 나머지 카드
+                const cardAmount = realFinalPayAmount - bcBalance;
+                const _mixMsg = (window.t('confirm_mixed_blogcoupon', '블로그체험단 쿠폰 {coupon} 사용 + 카드 {card} 결제하시겠습니까?') || '')
+                    .replace('{coupon}', formatCurrency(bcBalance)).replace('{card}', formatCurrency(cardAmount));
+                if (!confirm(_mixMsg)) { btn.disabled = false; document.getElementById("loading").style.display = "none"; return; }
+                // 1) 쿠폰 차감 (RPC — 서버 원자적, 원장 기록)
+                const { data: _cRes } = await sb.rpc('blog_coupon_consume', { _order_id: window.currentDbId, _amount: bcBalance });
+                const _used = (_cRes && _cRes.used) ? _cRes.used : 0;
+                // 마일리지도 차감
+                if (useMileage > 0) {
+                    const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+                    await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
+                    await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
+                }
+                // 2) 주문에 쿠폰 사용액 기록
+                await sb.from('orders').update({
+                    discount_amount: (useMileage || 0) + _used,
+                    request_note: (window.tempOrderInfo?.request || '') + `\n[블로그체험단쿠폰 ${_used}원 사용, 카드 ${realFinalPayAmount - _used}원 결제]`
+                }).eq('id', window.currentDbId);
+                // 3) 나머지 카드결제
+                processCardPayment(realFinalPayAmount - _used);
+            } else {
+                showToast(window.t('msg_no_blogcoupon', '쿠폰 잔액이 없습니다. 카드결제로 진행합니다.'), 'warn');
+                processCardPayment(realFinalPayAmount);
+            }
         } else {
             processCardPayment(realFinalPayAmount);
         }
@@ -4413,6 +4466,65 @@ async function processDepositPayment(payAmount, useMileage) {
         } catch(e2) {}
         location.reload();
 
+    } catch (e) {
+        console.error(e);
+        showToast(window.t('msg_payment_error', "Payment processing error: ") + e.message, "error");
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("btnFinalPay").disabled = false;
+    }
+}
+
+// ============================================================
+// 블로그 체험단 무료쿠폰 결제 (예치금 결제 미러 — 배송비 포함 전액 쿠폰 차감, PG 미호출)
+// ============================================================
+async function processBlogCouponPayment(payAmount, useMileage) {
+    if (!currentUser) { showToast(window.t('msg_login_required', "Login is required."), "warn"); return; }
+    const bcSpan = document.getElementById('myBlogCouponDisplay');
+    const currentBalance = parseInt(bcSpan?.dataset?.balance || window._blogCouponBalance || 0);
+    if (currentBalance < payAmount) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("btnFinalPay").disabled = false;
+        showToast(window.t('msg_blogcoupon_shortage', '쿠폰 잔액이 부족합니다.'), "warn"); return;
+    }
+    if (!confirm((window.t('confirm_blogcoupon_pay', '블로그체험단 무료쿠폰 {amount}으로 결제하시겠습니까?') || '').replace('{amount}', formatCurrency(payAmount)))) {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("btnFinalPay").disabled = false;
+        return;
+    }
+    try {
+        // 마일리지 차감 (있으면)
+        if (useMileage > 0) {
+            const { data: m } = await sb.from('profiles').select('mileage').eq('id', currentUser.id).maybeSingle();
+            await sb.from('profiles').update({ mileage: m.mileage - useMileage }).eq('id', currentUser.id);
+            await sb.from('wallet_logs').insert({ user_id: currentUser.id, type: 'usage_purchase', amount: -useMileage, description: `주문 결제 사용 (주문번호: ${window.currentDbId})`, related_order_id: window.currentDbId });
+        }
+        // 쿠폰 차감 (RPC — 서버 원자적, 원장 기록)
+        const { data: cRes, error: cErr } = await sb.rpc('blog_coupon_consume', { _order_id: window.currentDbId, _amount: payAmount });
+        if (cErr) throw cErr;
+        if (!cRes || !cRes.ok) throw new Error(window.t('msg_blogcoupon_consume_fail', '쿠폰 차감 실패 (잔액 부족)'));
+        // 주문 결제완료 처리 (PG 미호출) — 결제수단 '블로그체험단쿠폰' 으로 구분 (매출집계 제외용)
+        await sb.from('orders').update({
+            payment_status: '결제완료',
+            payment_method: '블로그체험단쿠폰',
+            status: '접수됨'
+        }).eq('id', window.currentDbId);
+        // Google Drive 동기화 (fire-and-forget)
+        try {
+            sb.functions.invoke('sync-order-to-drive', { body: { order_id: window.currentDbId } })
+              .then(({ data, error }) => { if (error) console.warn('[drive sync] failed:', error?.message || error); }).catch(e => {});
+        } catch(e) {}
+        // 추천인 적립
+        if (window.tempOrderInfo?.referrerId) {
+            await creditReferralBonus(window.currentDbId, window.tempOrderInfo.referrerId);
+        }
+        showToast(window.t('msg_payment_complete', '결제가 완료되었습니다'), "success");
+        // 장바구니 비우기 (중복 주문 방지)
+        try {
+            localStorage.setItem(cartStorageKey(), '[]');
+            Object.keys(localStorage).forEach(k => { if (k.startsWith('chameleon_cart_') && k !== cartStorageKey()) localStorage.removeItem(k); });
+            cartData.length = 0;
+        } catch(e2) {}
+        location.reload();
     } catch (e) {
         console.error(e);
         showToast(window.t('msg_payment_error', "Payment processing error: ") + e.message, "error");

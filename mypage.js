@@ -260,7 +260,73 @@ function switchTab(tabId) {
     if (tabId === 'designs') loadMyDesigns();
     if (tabId === 'orders') loadOrders();
     if (tabId === 'sales') loadMySales();
+    if (tabId === 'blog') loadBlogMonitorTab();
 }
+
+// ===== 블로그 체험단 탭 — 후기 링크 제출 + 내 링크 목록 =====
+async function loadBlogMonitorTab() {
+    const listEl = document.getElementById('blogLinkList');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="padding:20px; color:#94a3b8; text-align:center;">' + window.t('mp_loading', '불러오는 중...') + '</div>';
+    try {
+        const { data } = await sb.rpc('blog_my_links');
+        renderBlogLinkList(Array.isArray(data) ? data : []);
+    } catch(e) {
+        console.error('[blog links]', e);
+        listEl.innerHTML = '<div style="padding:20px; color:#dc2626; text-align:center;">' + (e.message || e) + '</div>';
+    }
+}
+
+function renderBlogLinkList(links) {
+    const listEl = document.getElementById('blogLinkList');
+    if (!listEl) return;
+    if (!links.length) {
+        listEl.innerHTML = '<div style="padding:20px; color:#94a3b8; text-align:center;">' + window.t('mp_blog_no_links', '아직 제출한 링크가 없습니다.') + '</div>';
+        return;
+    }
+    listEl.innerHTML = links.map(function(l){
+        const dt = l.created_at ? new Date(l.created_at).toLocaleDateString() : '';
+        const chk = l.admin_checked
+            ? '<span style="color:#16a34a; font-size:12px;">' + window.t('mp_blog_checked', '확인됨') + '</span>'
+            : '<span style="color:#94a3b8; font-size:12px;">' + window.t('mp_blog_pending', '확인 대기') + '</span>';
+        const safeUrl = String(l.url || '').replace(/"/g, '%22');
+        const safeMemo = l.memo ? String(l.memo).replace(/[<>&]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}) : '';
+        return '<div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px;">'
+             + '<div style="flex:1; min-width:0;">'
+             +   '<a href="' + safeUrl + '" target="_blank" rel="noopener" style="color:#7c3aed; word-break:break-all; font-size:13px;">' + safeUrl + '</a>'
+             +   (safeMemo ? '<div style="color:#64748b; font-size:12px; margin-top:3px;">' + safeMemo + '</div>' : '')
+             +   '<div style="color:#94a3b8; font-size:11px; margin-top:3px;">' + dt + '</div>'
+             + '</div>'
+             + chk
+             + '</div>';
+    }).join('');
+}
+
+async function submitBlogLink() {
+    const urlEl = document.getElementById('blogLinkUrl');
+    const memoEl = document.getElementById('blogLinkMemo');
+    const btn = document.getElementById('blogLinkSubmitBtn');
+    const url = (urlEl && urlEl.value || '').trim();
+    if (!url) { if (window.showToast) showToast(window.t('mp_blog_url_required', '블로그 링크를 입력해 주세요.'), 'warn'); return; }
+    if (!/^https?:\/\//i.test(url)) { if (window.showToast) showToast(window.t('mp_blog_url_invalid', 'http(s):// 로 시작하는 올바른 링크를 입력해 주세요.'), 'warn'); return; }
+    if (btn) { btn.disabled = true; btn.textContent = window.t('mp_blog_submitting', '제출 중...'); }
+    try {
+        const { data, error } = await sb.rpc('blog_link_add', { _url: url, _memo: (memoEl && memoEl.value || '').trim() || null });
+        if (error) throw error;
+        if (!data || !data.ok) throw new Error(data && data.error === 'not_monitor' ? window.t('mp_blog_not_monitor', '체험단 회원만 제출할 수 있습니다.') : (data && data.error) || 'error');
+        if (urlEl) urlEl.value = '';
+        if (memoEl) memoEl.value = '';
+        renderBlogLinkList(Array.isArray(data.links) ? data.links : []);
+        if (window.showToast) showToast(window.t('mp_blog_submitted', '링크가 제출되었습니다. 감사합니다!'), 'success');
+    } catch(e) {
+        console.error('[blog link add]', e);
+        if (window.showToast) showToast((e.message || e), 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = window.t('mp_blog_submit', '링크 제출'); }
+    }
+}
+window.submitBlogLink = submitBlogLink;
+window.loadBlogMonitorTab = loadBlogMonitorTab;
 
 // [3] 등급 자동 승급 체크
 async function checkAndUpgradeTier(userId, currentRole) {
@@ -304,7 +370,7 @@ async function loadDashboardStats() {
         let profile;
         try {
             const res = await sb.from('profiles')
-                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason, event_coupon, ai_credit')
+                .select('mileage, role, total_spend, logo_count, deposit, contributor_tier, penalty_reason, event_coupon, ai_credit, blog_coupon')
                 .eq('id', currentUser.id)
                 .single();
             if (res.error) throw res.error;
@@ -319,6 +385,7 @@ async function loadDashboardStats() {
             if (res2.error) throw res2.error;
             profile = res2.data;
             profile.event_coupon = 0;
+            profile.blog_coupon = 0;
         }
 
         // ★ [핵심] 패널티 등급 확인 및 알림 표시 로직
@@ -373,6 +440,26 @@ async function loadDashboardStats() {
 
         const elTotalMileage = document.getElementById('displayTotalMileage');
         if(elTotalMileage) elTotalMileage.innerText = fmtMoney(profile.mileage || 0).replace(/[원¥$]/g, '').trim();
+
+        // 블로그 체험단 무료쿠폰 — 활성 체험단이면 카드/탭 노출 + 이번 회차 자동지급(서버)
+        try {
+            const _bcRes = await sb.rpc('blog_monitor_sync');
+            const _bc = _bcRes && _bcRes.data;
+            const _isMon = !!(_bc && _bc.is_monitor);
+            const _bcCard = document.getElementById('blogCouponCard');
+            const _bcNav  = document.getElementById('navBlogMonitor');
+            window._isBlogMonitor = _isMon;
+            if (_isMon) {
+                const _bal = _bc.balance || 0;
+                const elBc = document.getElementById('blogCouponDisplay');
+                if (elBc) elBc.innerText = fmtMoney(_bal);   // 통화기호 유지 (¥10,000 / 100,000원)
+                if (_bcCard) _bcCard.style.display = '';
+                if (_bcNav)  _bcNav.style.display = '';
+            } else {
+                if (_bcCard) _bcCard.style.display = 'none';
+                if (_bcNav)  _bcNav.style.display = 'none';
+            }
+        } catch(_be) { console.warn('[blog monitor sync]', _be); }
 
         // 구독 정보 표시
         try {
