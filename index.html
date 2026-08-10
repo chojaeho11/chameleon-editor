@@ -78,7 +78,7 @@
 //   deploy.sh 가 매 배포마다 version.txt + 아래 CV 를 동일 stamp 로 교체 → 구버전 클라이언트가 스스로 최신화.
 //   최초 로드 시 즉시(입력 전이라 안전) + 탭 재포커스/온라인/bfcache 복귀 시 재체크(작업 중이면 보류).
 (function(){
-    var CV = '20260810180753';
+    var CV = '20260810181842';
     function _verBusy(){
         try {
             var ae = document.activeElement;
@@ -5433,11 +5433,11 @@ function _blogRecruitBuild(jp, loggedIn, status){
     ov.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100000; display:flex; align-items:center; justify-content:center; padding:20px;';
     var title = jp ? 'ブログ体験モニター募集' : '블로그 체험단 모집';
     var intro = jp
-        ? '毎月10日、10,000円分（送料込み）の無料クーポンを進呈。お好きな商品を無料で購入し、ブログにレビューを書いてください。未使用分は繰り越されず、毎月あらたに満額チャージされます。'
-        : '매월 10일, 10만원(배송비 포함) 무료쿠폰을 드립니다. 원하는 제품을 무료로 구매하고 블로그에 후기를 남겨주세요. 미사용분은 이월되지 않고 매월 새롭게 가득 충전됩니다.';
+        ? 'SNS体験団の皆さまに毎月10,000円分（送料込み）の無料クーポンを進呈します。お好きな商品を無料で購入し、ブログにレビューを書いてください。未使用分は繰り越されず、毎月あらたに満額チャージされます。'
+        : 'SNS 체험단에게 매월 10만원(배송비 포함)의 무료쿠폰을 드립니다. 원하는 제품을 무료로 구매하고 블로그에 후기를 남겨주세요. 미사용분은 이월되지 않고 매월 새롭게 가득 충전됩니다.';
     var threadsMsg = jp
-        ? '🧵 Threads ユーザーは特典2倍！「スレ友、助けて〜」応援キャンペーン — クーポン20,000円分！'
-        : '🧵 스레드(Threads) 이용자는 혜택 2배! "스친아 도와줘" 응원 이벤트 — 쿠폰 20만원!';
+        ? '🧵 Threads ユーザーは特典2倍！<br><br>- 応援イベント クーポン20,000円分！'
+        : '🧵 스레드(Threads) 이용자는 혜택 2배!<br><br>- 응원 이벤트 쿠폰 20만원!';
     var btnStyle='width:100%; padding:12px; background:#7c3aed; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;';
     var inner='';
     if (!loggedIn) {
@@ -5456,13 +5456,15 @@ function _blogRecruitBuild(jp, loggedIn, status){
               + '<div style="font-size:12.5px; color:#334155; margin-bottom:6px;">'+(jp?'あなたの宣伝チャンネルURL（ブログ / Threads / Instagram など）':'홍보채널 주소 (블로그 / 스레드 / 인스타 등)')+'</div>'
               + '<input id="blogApplyChannel" type="url" placeholder="https://..." style="width:100%; padding:11px 13px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; margin-bottom:14px; box-sizing:border-box;">'
               + '<button id="blogApplyBtn" onclick="_blogRecruitApply()" style="'+btnStyle+'">'+(jp?'応募する':'신청하기')+'</button>'
+              + '<button onclick="_blogRecruitApply()" style="width:100%; margin-top:10px; padding:12px; background:#111; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer;">'+(jp?'🧵 スレ友ならクリック！2倍還元！':'🧵 쓰레드 친구라면 클릭! 2배 적립!')+'</button>'
               + '<div style="margin-top:14px; display:flex; gap:18px; justify-content:center;">'
               +   '<span onclick="_blogRecruitHide(1)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'今日は表示しない':'오늘 그만 보기')+'</span>'
               +   '<span onclick="_blogRecruitHide(30)" style="font-size:12px; color:#94a3b8; cursor:pointer;">'+(jp?'1ヶ月間表示しない':'한 달간 보지 않기')+'</span>'
               + '</div>';
     }
     var imgSrc = jp ? '/sns_recruit_jp.jpg?v=3' : '/sns_recruit_kr.jpg?v=3';
-    ov.innerHTML = '<div style="background:#fff; border-radius:16px; max-width:440px; width:100%; max-height:92vh; overflow-y:auto; color:#334155;">'
+    ov.innerHTML = '<div style="position:relative; background:#fff; border-radius:16px; max-width:440px; width:100%; max-height:92vh; overflow-y:auto; color:#334155;">'
+        + '<div onclick="_blogRecruitClose()" title="닫기" style="position:absolute; top:10px; right:12px; z-index:3; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.5); color:#fff; font-size:20px; line-height:31px; text-align:center; cursor:pointer; user-select:none;">×</div>'
         + '<img src="'+imgSrc+'" alt="'+title+'" style="width:100%; height:auto; display:block; border-radius:16px 16px 0 0;">'
         + '<div style="padding:22px 26px 26px;">' + inner + '</div>'
         + '</div>';
